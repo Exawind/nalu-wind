@@ -63,7 +63,9 @@ SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     coordinates_(get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
     RANSBelowKs_(realm_.solutionOptions_->RANSBelowKs_),
     z0_(realm_.solutionOptions_->roughnessHeight_),
-    lengthScaleLimiter_(realm_.solutionOptions_->lengthScaleLimiter_)
+    lengthScaleLimiter_(realm_.solutionOptions_->lengthScaleLimiter_),
+    eastVector_(realm_.solutionOptions_->eastVector_),
+    northVector_(realm_.solutionOptions_->northVector_)
 {
 }
 
@@ -120,10 +122,16 @@ SSTAMSAveragesAlg::execute()
 
   const bool RANSBelowKs = RANSBelowKs_;
   DblType k_s;
+  int gravity_i; 
   if (RANSBelowKs) {
     // relationship b/w sand grain roughness height, k_s, and aerodynamic roughness, z0,
     // as described in ref. Bau11, Eq. (2.29)
     k_s = 30.*z0_;
+    for (int i = 0; i < 3; ++i) {
+      if ((eastVector_[i] == 0.0) && (northVector_[i] == 0.0)) {
+        gravity_i = i;
+      }
+    }
   }
 
   nalu_ngp::run_entity_algorithm(
@@ -132,7 +140,8 @@ SSTAMSAveragesAlg::execute()
       // Calculate alpha
       if (tke.get(mi, 0) == 0.0)
         beta.get(mi, 0) = 1.0;
-      else if ((RANSBelowKs) && (coords.get(mi,2) <= k_s)) {
+      //else if ((RANSBelowKs) && (coords.get(mi,2) <= k_s)) {
+      else if ((RANSBelowKs) && (coords.get(mi, gravity_i) <= k_s)) {
         beta.get(mi, 0) = 1.0;
       }
       else {
@@ -374,7 +383,8 @@ SSTAMSAveragesAlg::execute()
       // Handle case where tke = 0, should only occur at a wall boundary
       if (tke.get(mi, 0) == 0.0)
         resAdeq.get(mi, 0) = 1.0;
-      else if ((RANSBelowKs) && (coords.get(mi,2) <= k_s)) {
+      //else if ((RANSBelowKs) && (coords.get(mi,2) <= k_s)) {
+      else if ((RANSBelowKs) && (coords.get(mi, gravity_i) <= k_s)) {
         resAdeq.get(mi, 0) = 1.0;
       }
       else {

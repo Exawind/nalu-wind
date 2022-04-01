@@ -41,6 +41,8 @@ private:
   const bool RANSBelowKs_;
   const DblType z0_;
   const bool lengthScaleLimiter_;
+  const std::vector<double> eastVector_;
+  const std::vector<double> northVector_;
 
   unsigned velocity_{stk::mesh::InvalidOrdinal};
   unsigned density_{stk::mesh::InvalidOrdinal};

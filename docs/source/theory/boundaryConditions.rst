@@ -948,7 +948,7 @@ advection operator.
 Strong Symmetry Boundary Condition
 ++++++++++++++++++++++++++++++++++
 
-There are two implementations of the symmetry boundary condition: strong and weak. In the strong symmetry implementation, the normal velocity is set to zero at the boundary. Strong symmetry has only been implemented for a cartesian mesh, meaning it can be used for flat surfaces that are aligned with the principle Cartesian directions. It cannot be used for curved surfaces or flat surfaces that are not aligned with the principle Cartesian directions. Both the strong and weak symmetry boundary conditions have an associated error. In the strong form the associated error lies not on the boundary but in the domain.
+There are two implementations of the symmetry boundary condition: strong and weak. In the strong symmetry implementation, the normal velocity is set to zero at the boundary. Strong symmetry has only been implemented for a cartesian mesh, meaning it can be used for flat surfaces that are aligned with the principle cartesian directions. It cannot be used for curved surfaces or flat surfaces that are not aligned with the principle cartesian directions. Both the strong and weak symmetry boundary conditions have an associated error. In the strong form the associated error lies not on the boundary but in the domain.
 
 .. _theory_weak_symmetry_bc:
 
@@ -973,7 +973,7 @@ which can be written in general component form as,
 
 The momentum equation also penalizes non-zero normal velocity. The strength of this penality depends on the penalty factor. One can enforce a stronger representation of the boundary by amplifying the penalty factor through the `symmetry_bc_penalty_factor` variable in `solution_options`. Its default value is 2.0 which is the minimum required for stability. Amplifying the penalty factor will enforce the boundary in a stronger sense, but can also lead to a more difficult matrix solve as with any large penalty term.
 
-Both strong and weak symmetry boundary conditions have associated error. In the weak form the error manifests as non-zero local velocities at the boundary. As the mesh is refined, the weak symmetry boundary condition converges to the strong symmetry boundary condition (zero normal velocity) with a first order rate. Note that this doesn't mean the error goes away; the error just moves off the boundary and into the domain.
+Both strong and weak symmetry boundary conditions have associated error. In the weak form the error manifests as non-zero local velocities at the boundary. As the mesh is refined, the weak symmetry boundary condition converges to the strong symmetry boundary condition (zero normal velocity) with a first order rate. Note that switching from weak to strong symmetry boundary condition does not make the error go away; the error just moves off the boundary and into the domain. The errors for both weak and strong symmetry boundary conditions do go away as the mesh is refined, decreasing with first order rate.
 
 Weak symmetry has not been implemented for Active Model Split (AMS).
 
