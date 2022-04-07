@@ -162,9 +162,12 @@ public:
   Teuchos::RCP<LinSys::Map> getOwnedRowsMap() { return ownedRowsMap_; }
   Teuchos::RCP<LinSys::Map> getOwnedAndSharedRowsMap() { return ownedAndSharedRowsMap_; }
 
-  LinSys::LocalMatrix getOwnedLocalMatrix() { return ownedLocalMatrix_; }
-  LinSys::LocalMatrix getSharedNotOwnedLocalMatrix() { return sharedNotOwnedLocalMatrix_; }
+  LinSys::LocalMatrix getOwnedLocalMatrix() { return ownedMatrix_->getLocalMatrixDevice(); }
+  LinSys::LocalMatrix getSharedNotOwnedLocalMatrix() { return sharedNotOwnedMatrix_->getLocalMatrixDevice(); }
   LinSys::LocalOrdinal getMaxOwnedRowId() { return maxOwnedRowId_; }
+
+  LinSys::LocalVector getOwnedLocalRhs() { return ownedRhs_->getLocalViewDevice(Tpetra::Access::ReadWrite); }
+  LinSys::LocalVector getSharedNotOwnedLocalRhs() { return sharedNotOwnedRhs_->getLocalViewDevice(Tpetra::Access::ReadWrite); }
   
   class TpetraLinSysCoeffApplier : public CoeffApplier
   {
@@ -273,16 +276,11 @@ public:
   // owned first, then shared
   Teuchos::RCP<LinSys::Map> ownedAndSharedRowsMap_;
 
-
   Teuchos::RCP<LinSys::Graph>  ownedGraph_;
   Teuchos::RCP<LinSys::Graph>  sharedNotOwnedGraph_;
 
   Teuchos::RCP<LinSys::Matrix> ownedMatrix_;
   Teuchos::RCP<LinSys::MultiVector> ownedRhs_;
-  LinSys::LocalMatrix ownedLocalMatrix_;
-  LinSys::LocalMatrix sharedNotOwnedLocalMatrix_;
-  LinSys::LocalVector ownedLocalRhs_;
-  LinSys::LocalVector sharedNotOwnedLocalRhs_;
 
   Teuchos::RCP<LinSys::Matrix>      sharedNotOwnedMatrix_;
   Teuchos::RCP<LinSys::MultiVector> sharedNotOwnedRhs_;

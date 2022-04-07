@@ -1058,14 +1058,8 @@ void TpetraLinearSystem::finalizeLinearSystem()
   ownedMatrix_ = Teuchos::rcp(new LinSys::Matrix(ownedGraph_));
   sharedNotOwnedMatrix_ = Teuchos::rcp(new LinSys::Matrix(sharedNotOwnedGraph_));
 
-  ownedLocalMatrix_ = ownedMatrix_->getLocalMatrix();
-  sharedNotOwnedLocalMatrix_ = sharedNotOwnedMatrix_->getLocalMatrix();
-
   ownedRhs_ = Teuchos::rcp(new LinSys::MultiVector(ownedRowsMap_, 1));
   sharedNotOwnedRhs_ = Teuchos::rcp(new LinSys::MultiVector(sharedNotOwnedRowsMap_, 1));
-
-  ownedLocalRhs_ = ownedRhs_->getLocalView<sierra::nalu::DeviceSpace>();
-  sharedNotOwnedLocalRhs_ = sharedNotOwnedRhs_->getLocalView<sierra::nalu::DeviceSpace>();
 
   sln_ = Teuchos::rcp(new LinSys::MultiVector(ownedRowsMap_, 1));
 
@@ -1327,8 +1321,8 @@ sierra::nalu::CoeffApplier* TpetraLinearSystem::get_coeff_applier()
 {
   if (!hostCoeffApplier) {
     hostCoeffApplier.reset(new TpetraLinSysCoeffApplier(
-      ownedLocalMatrix_, sharedNotOwnedLocalMatrix_, ownedLocalRhs_,
-      sharedNotOwnedLocalRhs_, entityToLID_, entityToColLID_, maxOwnedRowId_,
+      getOwnedLocalMatrix(), getSharedNotOwnedLocalMatrix(), getOwnedLocalRhs(),
+      getSharedNotOwnedLocalRhs(), entityToLID_, entityToColLID_, maxOwnedRowId_,
       maxSharedNotOwnedRowId_, numDof_));
     deviceCoeffApplier = hostCoeffApplier->device_pointer();
   }
@@ -1410,8 +1404,8 @@ void TpetraLinearSystem::sumInto(unsigned numEntities,
   ThrowAssertMsg(sortPermutation.span_is_contiguous(), "sortPermutation assumed contiguous");
 
   sum_into(
-      ownedLocalMatrix_, sharedNotOwnedLocalMatrix_,
-      ownedLocalRhs_, sharedNotOwnedLocalRhs_,
+      getOwnedLocalMatrix(), getSharedNotOwnedLocalMatrix(),
+      getOwnedLocalRhs(), getSharedNotOwnedLocalRhs(),
       numEntities, entities,
       rhs, lhs,
       localIds, sortPermutation,
@@ -1460,15 +1454,15 @@ void TpetraLinearSystem::sumInto(const std::vector<stk::mesh::Entity> & entities
     ThrowAssertMsg(std::isfinite(cur_rhs), "Invalid rhs");
 
     if(rowLid < maxOwnedRowId_) {
-      sum_into_row(ownedLocalMatrix_.row(rowLid),  n_obj, numDof_, scratchIds.data(), sortPermutation_.data(), cur_lhs);
-      ownedLocalRhs_(rowLid,0) += cur_rhs;
+      sum_into_row(getOwnedLocalMatrix().row(rowLid),  n_obj, numDof_, scratchIds.data(), sortPermutation_.data(), cur_lhs);
+      getOwnedLocalRhs()(rowLid,0) += cur_rhs;
     }
     else if (rowLid < maxSharedNotOwnedRowId_) {
       LocalOrdinal actualLocalId = rowLid - maxOwnedRowId_;
-      sum_into_row(sharedNotOwnedLocalMatrix_.row(actualLocalId),  n_obj, numDof_,
+      sum_into_row(getSharedNotOwnedLocalMatrix().row(actualLocalId),  n_obj, numDof_,
         scratchIds.data(), sortPermutation_.data(), cur_lhs);
 
-      sharedNotOwnedLocalRhs_(actualLocalId,0) += cur_rhs;
+      getSharedNotOwnedLocalRhs()(actualLocalId,0) += cur_rhs;
     }
   }
 }
@@ -1520,10 +1514,10 @@ void TpetraLinearSystem::applyDirichletBCs(stk::mesh::FieldBase * solutionField,
   auto entityToLID = entityToLID_;
   const int maxOwnedRowId = maxOwnedRowId_;
   const int maxSharedNotOwnedRowId = maxSharedNotOwnedRowId_;
-  auto ownedLocalMatrix = ownedLocalMatrix_;
-  auto sharedNotOwnedLocalMatrix = sharedNotOwnedLocalMatrix_;
-  auto ownedLocalRhs = ownedLocalRhs_;
-  auto sharedNotOwnedLocalRhs = sharedNotOwnedLocalRhs_;
+  auto ownedLocalMatrix = getOwnedLocalMatrix();
+  auto sharedNotOwnedLocalMatrix = getSharedNotOwnedLocalMatrix();
+  auto ownedLocalRhs = getOwnedLocalRhs();
+  auto sharedNotOwnedLocalRhs = getSharedNotOwnedLocalRhs();
 
   // Suppress unused variable warning on non-debug builds
   (void) maxSharedNotOwnedRowId;
@@ -1574,8 +1568,8 @@ void TpetraLinearSystem::resetRows(
     const double diag_value,
     const double rhs_residual)
 {
-  reset_rows(ownedLocalMatrix_, sharedNotOwnedLocalMatrix_,
-             ownedLocalRhs_, sharedNotOwnedLocalRhs_,
+  reset_rows(getOwnedLocalMatrix(), getSharedNotOwnedLocalMatrix(),
+             getOwnedLocalRhs(), getSharedNotOwnedLocalRhs(),
              numNodes, nodeList, beginPos, endPos, diag_value, rhs_residual,
              entityToLID_, maxOwnedRowId_, maxSharedNotOwnedRowId_);
 }
