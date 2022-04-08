@@ -113,6 +113,8 @@ FixPressureAtNodeAlgorithm::execute()
       }
     });
   });
+
+  eqSystem_->linsys_->free_coeff_applier(deviceCoeffApplier);
 }
 
 void

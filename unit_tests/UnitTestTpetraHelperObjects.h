@@ -58,10 +58,10 @@ struct TpetraHelperObjectsBase {
     std::cerr.precision(14);
 
     using MatrixType = sierra::nalu::LinSys::LocalMatrix;
-    const MatrixType& localMatrix = linsys->getOwnedMatrix()->getLocalMatrix();
+    const MatrixType& localMatrix = linsys->getOwnedLocalMatrix();
 
     using VectorType = sierra::nalu::LinSys::LocalVector;
-    const VectorType& localRhs = linsys->getOwnedRhs()->getLocalView<sierra::nalu::DeviceSpace>();
+    const VectorType& localRhs = linsys->getOwnedLocalRhs();
 
     int localProc = realm.bulkData_->parallel_rank();
 
@@ -147,10 +147,10 @@ struct TpetraHelperObjectsBase {
   void check_against_dense_gold_values(unsigned rhsSize, const LHSType& lhs, const RHSType& rhs)
   {
     using MatrixType = sierra::nalu::LinSys::LocalMatrix;
-    const MatrixType& localMatrix = linsys->getOwnedMatrix()->getLocalMatrix();
+    const MatrixType& localMatrix = linsys->getOwnedLocalMatrix();
 
     using VectorType = sierra::nalu::LinSys::LocalVector;
-    const VectorType& localRhs = linsys->getOwnedRhs()->getLocalView<sierra::nalu::DeviceSpace>();
+    const VectorType& localRhs = linsys->getOwnedLocalRhs();
 
     EXPECT_EQ(rhsSize, localMatrix.numRows());
     EXPECT_EQ(rhsSize, localRhs.size());

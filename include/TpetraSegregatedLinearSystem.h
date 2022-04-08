@@ -73,7 +73,8 @@ public:
   void storeOwnersForShared();
   void finalizeLinearSystem();
 
-  sierra::nalu::CoeffApplier* get_coeff_applier();
+  CoeffApplier* get_coeff_applier();
+  void free_coeff_applier(CoeffApplier* coeffApplier);
 
   // Matrix Assembly
   void zeroSystem();
@@ -168,8 +169,7 @@ public:
       sharedNotOwnedLocalRhs_(sharedNotOwnedLclRhs),
       entityToLID_(entityLIDs),
       entityToColLID_(entityColLIDs),
-      maxOwnedRowId_(maxOwnedRowId), maxSharedNotOwnedRowId_(maxSharedNotOwnedRowId), numDof_(numDof),
-      devicePointer_(nullptr)
+      maxOwnedRowId_(maxOwnedRowId), maxSharedNotOwnedRowId_(maxSharedNotOwnedRowId), numDof_(numDof)
     {}
 
     KOKKOS_DEFAULTED_FUNCTION
@@ -192,9 +192,9 @@ public:
                             const SharedMemView<const double**,DeviceShmem> & lhs,
                             const char * trace_tag);
 
-    void free_device_pointer();
+    void free_device_pointer() {}
 
-    sierra::nalu::CoeffApplier* device_pointer();
+    sierra::nalu::CoeffApplier* device_pointer() { return nullptr; }
 
   private:
     LinSys::LocalMatrix ownedLocalMatrix_, sharedNotOwnedLocalMatrix_;
@@ -203,7 +203,6 @@ public:
     LinSys::EntityToLIDView entityToColLID_;
     int maxOwnedRowId_, maxSharedNotOwnedRowId_;
     unsigned numDof_;
-    TpetraLinSysCoeffApplier* devicePointer_;
   };
 
 private:

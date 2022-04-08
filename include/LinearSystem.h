@@ -70,6 +70,15 @@ public:
   
 };
 
+struct CoeffApplierDestructor
+{
+  using ptr_t = CoeffApplier;
+
+  void free(ptr_t* coeffApplier) {
+    kokkos_free_on_device(coeffApplier);
+  }
+};
+
 class LinearSystem
 {
 public:
@@ -114,6 +123,8 @@ public:
    */
   virtual void buildDirichletNodeGraph(const std::vector<stk::mesh::Entity>&) {}
   virtual void buildDirichletNodeGraph(const stk::mesh::NgpMesh::ConnectedNodes) {}
+
+  virtual void free_coeff_applier(CoeffApplier*) {}
 
   // Matrix Assembly
   virtual void zeroSystem()=0;

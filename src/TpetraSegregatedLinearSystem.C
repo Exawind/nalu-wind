@@ -1111,15 +1111,33 @@ void reset_rows(
 
 sierra::nalu::CoeffApplier* TpetraSegregatedLinearSystem::get_coeff_applier()
 {
-  if (!hostCoeffApplier) {
-    hostCoeffApplier.reset(new TpetraLinSysCoeffApplier(
-      getOwnedLocalMatrix(), getSharedNotOwnedLocalMatrix(), getOwnedLocalRhs(),
-      getSharedNotOwnedLocalRhs(), entityToLID_, entityToColLID_, maxOwnedRowId_,
-      maxSharedNotOwnedRowId_, numDof_));
-    deviceCoeffApplier = hostCoeffApplier->device_pointer();
-  }
+  auto ownedLocalMatrix = getOwnedLocalMatrix();
+  auto sharedNotOwnedLocalMatrix = getSharedNotOwnedLocalMatrix();
+  auto ownedLocalRhs = getOwnedLocalRhs();
+  auto sharedNotOwnedLocalRhs = getSharedNotOwnedLocalRhs();
+  auto entityToLID = entityToLID_;
+  auto entityToColLID = entityToColLID_;
+  auto maxOwnedRowId = maxOwnedRowId_;
+  auto maxSharedNotOwnedRowId = maxSharedNotOwnedRowId_;
+  auto numDof = numDof_;
+  auto newDeviceCoeffApplier = kokkos_malloc_on_device<TpetraLinSysCoeffApplier>("deviceCoeffApplier");
+  Kokkos::parallel_for(1,
+    KOKKOS_LAMBDA (const int&) {
+      new (newDeviceCoeffApplier) TpetraLinSysCoeffApplier(
+        ownedLocalMatrix, sharedNotOwnedLocalMatrix, ownedLocalRhs,
+        sharedNotOwnedLocalRhs, entityToLID, entityToColLID, maxOwnedRowId,
+        maxSharedNotOwnedRowId, numDof);
+    }
+  );
 
-  return deviceCoeffApplier;
+  return newDeviceCoeffApplier;
+}
+
+void TpetraSegregatedLinearSystem::free_coeff_applier(CoeffApplier* coeffApplier)
+{
+  if(coeffApplier != nullptr) {
+    sierra::nalu::kokkos_free_on_device(coeffApplier);
+  }
 }
 
 KOKKOS_FUNCTION
@@ -1153,30 +1171,6 @@ void TpetraSegregatedLinearSystem::TpetraLinSysCoeffApplier::operator() (unsigne
                       entityToLID_, entityToColLID_,
                       maxOwnedRowId_, maxSharedNotOwnedRowId_,
                       numDof_);
-}
-
-void TpetraSegregatedLinearSystem::TpetraLinSysCoeffApplier::free_device_pointer()
-{
-#ifdef KOKKOS_ENABLE_CUDA
-  if (this != devicePointer_) {
-    sierra::nalu::kokkos_free_on_device(devicePointer_);
-    devicePointer_ = nullptr;
-  }
-#endif
-}
-
-sierra::nalu::CoeffApplier* TpetraSegregatedLinearSystem::TpetraLinSysCoeffApplier::device_pointer()
-{
-#ifdef KOKKOS_ENABLE_CUDA
-  if (devicePointer_ != nullptr) {
-    sierra::nalu::kokkos_free_on_device(devicePointer_);
-    devicePointer_ = nullptr;
-  }
-  devicePointer_ = sierra::nalu::create_device_expression(*this);
-#else
-  devicePointer_ = this;
-#endif
-  return devicePointer_;
 }
 
 void TpetraSegregatedLinearSystem::sumInto(unsigned numEntities,
