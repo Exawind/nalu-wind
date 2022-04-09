@@ -65,7 +65,7 @@ size_t get_neighbor_index(const std::vector<int>& neighborProcs, int proc);
 
 void sort_connections(std::vector<std::vector<stk::mesh::Entity> >& connections);
 
-void add_to_length(LinSys::DeviceRowLengths& v_owned, LinSys::DeviceRowLengths& v_shared,
+void add_to_length(LinSys::HostRowLengths& v_owned, LinSys::HostRowLengths& v_shared,
                    unsigned numDof, LinSys::LocalOrdinal lid_a, LinSys::LocalOrdinal maxOwnedRowId,
                    bool a_owned, unsigned numColEntities);
 
@@ -93,7 +93,7 @@ void communicate_remote_columns(const stk::mesh::BulkData& bulk,
                                 stk::CommNeighbors& commNeighbors,
                                 unsigned numDof,
                                 const Teuchos::RCP<LinSys::Map>& ownedRowsMap,
-                                LinSys::DeviceRowLengths& deviceLocallyOwnedRowLengths,
+                                LinSys::HostRowLengths& hostLocallyOwnedRowLengths,
                                 std::set<std::pair<int, LinSys::GlobalOrdinal> >& communicatedColIndices);
 
 void insert_single_dof_row_into_graph(LocalGraphArrays& crsGraph, LinSys::LocalOrdinal rowLid,
@@ -109,7 +109,15 @@ void insert_communicated_col_indices(const std::vector<int>& neighborProcs,
 
 void fill_in_extra_dof_rows_per_node(LocalGraphArrays& csg, int numDof);
 
-void remove_invalid_indices(LocalGraphArrays& csg, LinSys::DeviceRowLengths& rowLengths);
+void remove_invalid_indices(LocalGraphArrays& csg, LinSys::HostRowLengths& rowLengths);
+
+template <typename ViewType>
+inline void sync_dual_view_host_to_device(ViewType viewToSync) {
+
+  viewToSync.template modify<typename ViewType::host_mirror_space>();
+  viewToSync.template sync<typename ViewType::execution_space>();
+}
+
 
 } // nalu
 } // sierra

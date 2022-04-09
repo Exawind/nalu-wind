@@ -69,12 +69,13 @@ struct LinSys {
   using GlobalOrdinal = Tpetra::Details::DefaultTypes::global_ordinal_type;
   using LocalOrdinal  = Tpetra::Details::DefaultTypes::local_ordinal_type;
 
-  using RowLengths        = Kokkos::DualView<size_t*, DeviceSpace>;
+  using RowLengths        = Kokkos::DualView<size_t*, MemSpace>;
   using DeviceRowLengths  = RowLengths::t_dev;
   using HostRowLengths    = RowLengths::t_host;
   using Node              = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
   using Graph             = Tpetra::CrsGraph< LocalOrdinal, GlobalOrdinal, Node>;
-  using LocalGraph        = typename Graph::local_graph_type;
+  using LocalGraph        = typename Graph::local_graph_device_type;
+  using LocalGraphHost    = typename Graph::local_graph_host_type;
   using Comm              = Teuchos::MpiComm<int>;
   using Export            = Tpetra::Export< LocalOrdinal, GlobalOrdinal, Node >;
   using Import            = Tpetra::Import< LocalOrdinal, GlobalOrdinal, Node >;
@@ -82,9 +83,9 @@ struct LinSys {
   using MultiVector       = Tpetra::MultiVector<Scalar,LocalOrdinal,GlobalOrdinal,Node>;
   using OneDVector        = Teuchos::ArrayRCP<Scalar >;
   using ConstOneDVector   = Teuchos::ArrayRCP<const Scalar >;
-  using LocalVector       = MultiVector::dual_view_type::t_host;
+  using LocalVector       = MultiVector::dual_view_type::t_dev;
   using Matrix            = Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
-  using LocalMatrix       = Matrix::local_matrix_type;
+  using LocalMatrix       = Matrix::local_matrix_device_type;
   using Operator          = Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using MultiVectorTraits = Belos::MultiVecTraits<Scalar, MultiVector>;
   using OperatorTraits    = Belos::OperatorTraits<Scalar,MultiVector, Operator>;
@@ -93,8 +94,10 @@ struct LinSys {
   using SolverFactory     = Belos::TpetraSolverFactory<Scalar, MultiVector, Operator>;
   using Preconditioner    = Ifpack2::Preconditioner<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
 
-  using EntityToLIDView = Kokkos::View<LocalOrdinal*, Kokkos::LayoutRight, LinSysMemSpace>;
-  using ConstEntityToLIDView = Kokkos::View<const LocalOrdinal*, Kokkos::LayoutRight, LinSysMemSpace>;
+  using EntityToLIDView = Kokkos::View<LocalOrdinal*, Kokkos::LayoutRight, MemSpace>;
+  using EntityToLIDHostView = typename EntityToLIDView::HostMirror;
+  using ConstEntityToLIDView = Kokkos::View<const LocalOrdinal*, Kokkos::LayoutRight, MemSpace>;
+  using ConstEntityToLIDHostView = typename ConstEntityToLIDView::HostMirror;
 
 };
 

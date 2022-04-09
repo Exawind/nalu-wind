@@ -278,7 +278,9 @@ private:
 
   MyLIDMapType myLIDs_;
   LinSys::EntityToLIDView entityToColLID_;
+  LinSys::EntityToLIDHostView entityToColLIDHost_;
   LinSys::EntityToLIDView entityToLID_;
+  LinSys::EntityToLIDHostView entityToLIDHost_;
   LocalOrdinal maxOwnedRowId_; // = num_owned_nodes * numDof_
   LocalOrdinal maxSharedNotOwnedRowId_; // = (num_owned_nodes + num_sharedNotOwned_nodes) * numDof_
 

@@ -294,7 +294,7 @@ void TpetraSegregatedLinearSystem::beginLinearSystemConstruction()
 
 int TpetraSegregatedLinearSystem::insert_connection(stk::mesh::Entity a, stk::mesh::Entity b)
 {
-    const size_t idx = entityToLID_[a.local_offset()];
+    const size_t idx = entityToLIDHost_[a.local_offset()];
 
     ThrowRequireMsg(idx < ownedAndSharedNodes_.size(),"Error, insert_connection got index out of range.");
 
@@ -664,8 +664,8 @@ void TpetraSegregatedLinearSystem::compute_graph_row_lengths(const std::vector<s
                                                              LinSys::RowLengths& locallyOwnedRowLengths,
                                                              stk::CommNeighbors& commNeighbors)
 {
-  LinSys::DeviceRowLengths deviceSharedNotOwnedRowLengths = sharedNotOwnedRowLengths.view<DeviceSpace>();
-  LinSys::DeviceRowLengths deviceLocallyOwnedRowLengths = locallyOwnedRowLengths.view<DeviceSpace>();
+  LinSys::HostRowLengths hostSharedNotOwnedRowLengths = sharedNotOwnedRowLengths.view<HostSpace>();
+  LinSys::HostRowLengths hostLocallyOwnedRowLengths = locallyOwnedRowLengths.view<HostSpace>();
 
   const stk::mesh::BulkData& bulk = realm_.bulk_data();
 
@@ -690,11 +690,11 @@ void TpetraSegregatedLinearSystem::compute_graph_row_lengths(const std::vector<s
 
     const int entity_a_status = getDofStatus(entity_a);
     const bool entity_a_owned = entity_a_status & DS_OwnedDOF;
-    LocalOrdinal lid_a = entityToLID_[entity_a.local_offset()];
+    LocalOrdinal lid_a = entityToLIDHost_[entity_a.local_offset()];
     stk::mesh::Entity entity_a_master = get_entity_master(bulk, entity_a, entityId_a);
     int entity_a_owner = bulk.parallel_owner_rank(entity_a_master);
 
-    add_to_length(deviceLocallyOwnedRowLengths, deviceSharedNotOwnedRowLengths, 1,
+    add_to_length(hostLocallyOwnedRowLengths, hostSharedNotOwnedRowLengths, 1,
                   lid_a, maxOwnedRowId_, entity_a_owned, numColEntities);
 
     const bool entity_a_shared = entity_a_status & DS_SharedNotOwnedDOF;
@@ -711,8 +711,8 @@ void TpetraSegregatedLinearSystem::compute_graph_row_lengths(const std::vector<s
         const stk::mesh::EntityId entityId_b = colEntityIds[ii];
         const int entity_b_status = getDofStatus(entity_b);
         const bool entity_b_owned = entity_b_status & DS_OwnedDOF;
-        LocalOrdinal lid_b = entityToLID_[entity_b.local_offset()];
-        add_to_length(deviceLocallyOwnedRowLengths, deviceSharedNotOwnedRowLengths, 1,
+        LocalOrdinal lid_b = entityToLIDHost_[entity_b.local_offset()];
+        add_to_length(hostLocallyOwnedRowLengths, hostSharedNotOwnedRowLengths, 1,
                       lid_b, maxOwnedRowId_, entity_b_owned, 1);
 
         const bool entity_b_shared = entity_b_status & DS_SharedNotOwnedDOF;
@@ -722,6 +722,9 @@ void TpetraSegregatedLinearSystem::compute_graph_row_lengths(const std::vector<s
         }
     }
   }
+
+  sync_dual_view_host_to_device(sharedNotOwnedRowLengths);
+  sync_dual_view_host_to_device(locallyOwnedRowLengths);
 }
 
 void TpetraSegregatedLinearSystem::insert_graph_connections(const std::vector<stk::mesh::Entity>& rowEntities,
@@ -743,24 +746,24 @@ void TpetraSegregatedLinearSystem::insert_graph_connections(const std::vector<st
 
     const stk::mesh::Entity entity_a = rowEntities[i];
     int dofStatus_a = getDofStatus(entity_a);
-    localDofs_a[0] = entityToColLID_[entity_a.local_offset()];
+    localDofs_a[0] = entityToColLIDHost_[entity_a.local_offset()];
 
     for(size_t j=0; j<numColEntities; ++j) {
       const stk::mesh::Entity entity_b = entities_b[j];
       dofStatus[j] = getDofStatus(entity_b);
-      localDofs_b[j] = entityToColLID_[entity_b.local_offset()];
+      localDofs_b[j] = entityToColLIDHost_[entity_b.local_offset()];
     }
 
     {
       LocalGraphArrays& crsGraph = (dofStatus_a & DS_OwnedDOF) ? locallyOwnedGraph : sharedNotOwnedGraph;
-      insert_single_dof_row_into_graph(crsGraph, entityToLID_[entity_a.local_offset()],
+      insert_single_dof_row_into_graph(crsGraph, entityToLIDHost_[entity_a.local_offset()],
                                        maxOwnedRowId_, 1, numColEntities, localDofs_b);
     }
 
     for(unsigned j=0; j<numColEntities; ++j) {
       if (entities_b[j] != entity_a) {
         LocalGraphArrays& crsGraph = (dofStatus[j] & DS_OwnedDOF) ? locallyOwnedGraph : sharedNotOwnedGraph;
-        insert_single_dof_row_into_graph(crsGraph, entityToLID_[entities_b[j].local_offset()],
+        insert_single_dof_row_into_graph(crsGraph, entityToLIDHost_[entities_b[j].local_offset()],
                                          maxOwnedRowId_, 1, 1, localDofs_a);
       }
     }
@@ -771,7 +774,7 @@ void TpetraSegregatedLinearSystem::fill_entity_to_row_LID_mapping()
 {
   const stk::mesh::BulkData& bulk = realm_.bulk_data();
   stk::mesh::Selector selector = bulk.mesh_meta_data().universal_part() & !(realm_.get_inactive_selector());
-  entityToLID_ = LinSys::EntityToLIDView("entityToLID",bulk.get_size_of_entity_index_space());
+  entityToLIDHost_ = LinSys::EntityToLIDHostView("entityToLID",bulk.get_size_of_entity_index_space());
   const stk::mesh::BucketVector& nodeBuckets = realm_.get_buckets(stk::topology::NODE_RANK, selector);
   for(const stk::mesh::Bucket* bptr : nodeBuckets) {
     const stk::mesh::Bucket& b = *bptr;
@@ -781,22 +784,24 @@ void TpetraSegregatedLinearSystem::fill_entity_to_row_LID_mapping()
 
       MyLIDMapType::const_iterator iter = myLIDs_.find(nodeIds[i]);
       if (iter != myLIDs_.end()) {
-        entityToLID_[node.local_offset()] = iter->second;
+        entityToLIDHost_[node.local_offset()] = iter->second;
         if (nodeIds[i] != bulk.identifier(node)) {
           stk::mesh::Entity master = get_entity_master(bulk, node, nodeIds[i]);
           if (master != node) {
-            entityToLID_[master.local_offset()] = entityToLID_[node.local_offset()];
+            entityToLIDHost_[master.local_offset()] = entityToLIDHost_[node.local_offset()];
           }
         }
       }
     }
   }
+
+  Kokkos::deep_copy(entityToLID_, entityToLIDHost_);
 }
 
 void TpetraSegregatedLinearSystem::fill_entity_to_col_LID_mapping()
 {
     const stk::mesh::BulkData& bulk = realm_.bulk_data();
-    entityToColLID_ = LinSys::EntityToLIDView("entityToLID",bulk.get_size_of_entity_index_space());
+    entityToColLIDHost_ = LinSys::EntityToLIDView("entityToColLID",bulk.get_size_of_entity_index_space());
     const stk::mesh::BucketVector& nodeBuckets = bulk.buckets(stk::topology::NODE_RANK);
     for(const stk::mesh::Bucket* bptr : nodeBuckets) {
         const stk::mesh::Bucket& b = *bptr;
@@ -804,9 +809,11 @@ void TpetraSegregatedLinearSystem::fill_entity_to_col_LID_mapping()
         for(size_t i=0; i<b.size(); ++i) {
             stk::mesh::Entity node = b[i];
             GlobalOrdinal gid = static_cast<GlobalOrdinal>(nodeIds[i]);
-            entityToColLID_[node.local_offset()] = totalColsMap_->getLocalElement(gid);
+            entityToColLIDHost_[node.local_offset()] = totalColsMap_->getLocalElement(gid);
         }
     }
+
+    Kokkos::deep_copy(entityToColLID_, entityToColLIDHost_);
 }
 
 void TpetraSegregatedLinearSystem::storeOwnersForShared()
@@ -844,8 +851,8 @@ void TpetraSegregatedLinearSystem::finalizeLinearSystem()
   size_t numLocallyOwned = ownedRowsMap_->getMyGlobalIndices().extent(0);
   LinSys::RowLengths sharedNotOwnedRowLengths("rowLengths", numSharedNotOwned);
   LinSys::RowLengths locallyOwnedRowLengths("rowLengths", numLocallyOwned);
-  LinSys::DeviceRowLengths ownedRowLengths = locallyOwnedRowLengths.view<DeviceSpace>();
-  LinSys::DeviceRowLengths globalRowLengths = sharedNotOwnedRowLengths.view<DeviceSpace>();
+  LinSys::HostRowLengths globalRowLengths = sharedNotOwnedRowLengths.view<HostSpace>();
+  LinSys::HostRowLengths ownedRowLengths = locallyOwnedRowLengths.view<HostSpace>();
 
   std::vector<int> neighborProcs;
   fill_neighbor_procs(neighborProcs, bulkData, realm_);
@@ -859,6 +866,8 @@ void TpetraSegregatedLinearSystem::finalizeLinearSystem()
   storeOwnersForShared();
 
   communicate_remote_columns(bulkData, neighborProcs, commNeighbors, 1, ownedRowsMap_, ownedRowLengths, ownersAndGids_);
+
+  sync_dual_view_host_to_device(locallyOwnedRowLengths);
 
   LocalGraphArrays ownedGraph(ownedRowLengths);
   LocalGraphArrays sharedNotOwnedGraph(globalRowLengths);
@@ -884,8 +893,13 @@ void TpetraSegregatedLinearSystem::finalizeLinearSystem()
 
   ownedGraph_ = Teuchos::rcp(new LinSys::Graph(ownedRowsMap_, totalColsMap_, locallyOwnedRowLengths, Tpetra::StaticProfile));
 
-  ownedGraph_->setAllIndices(ownedGraph.rowPointers, ownedGraph.colIndices);
-  sharedNotOwnedGraph_->setAllIndices(sharedNotOwnedGraph.rowPointers, sharedNotOwnedGraph.colIndices);
+  auto deviceOwnedGraphRowPointers = Kokkos::create_mirror_view_and_copy(MemSpace(), ownedGraph.rowPointers);
+  auto deviceOwnedGraphColIndices = Kokkos::create_mirror_view_and_copy(MemSpace(), ownedGraph.colIndices);
+  ownedGraph_->setAllIndices(deviceOwnedGraphRowPointers, deviceOwnedGraphColIndices);
+
+  auto deviceSharedNotOwnedGraphRowPointers = Kokkos::create_mirror_view_and_copy(MemSpace(), sharedNotOwnedGraph.rowPointers);
+  auto deviceSharedNotOwnedGraphColIndices = Kokkos::create_mirror_view_and_copy(MemSpace(), sharedNotOwnedGraph.colIndices);
+  sharedNotOwnedGraph_->setAllIndices(deviceSharedNotOwnedGraphRowPointers, deviceSharedNotOwnedGraphColIndices);
 
   Teuchos::RCP<Teuchos::ParameterList> params = Teuchos::rcp(new Teuchos::ParameterList);
   params->set<bool>("No Nonlocal Changes", true);
@@ -1191,7 +1205,7 @@ void TpetraSegregatedLinearSystem::sumInto(unsigned numEntities,
                       numEntities, entities,
                       rhs, lhs,
                       localIds, sortPermutation,
-                      entityToLID_, entityToColLID_,
+                      entityToLIDHost_, entityToColLIDHost_,
                       maxOwnedRowId_, maxSharedNotOwnedRowId_,
                       numDof_);
 }
@@ -1212,14 +1226,14 @@ void TpetraSegregatedLinearSystem::sumInto(const std::vector<stk::mesh::Entity> 
   scratchIds.resize(numRows);
   sortPermutation_.resize(numRows);
   for(size_t i = 0; i < n_obj; i++) {
-    scratchIds[i] = entityToColLID_[entities[i].local_offset()];
+    scratchIds[i] = entityToColLIDHost_[entities[i].local_offset()];
     sortPermutation_[i] = i;
   }
   Tpetra::Details::shellSortKeysAndValues(scratchIds.data(), sortPermutation_.data(), (int)numRows);
 
   for (unsigned r = 0; r < numRows; r++) {
     int i = sortPermutation_[r];
-    LocalOrdinal rowLid = entityToLID_[entities[i].local_offset()];
+    LocalOrdinal rowLid = entityToLIDHost_[entities[i].local_offset()];
     const LocalOrdinal cur_perm_index = sortPermutation_[r];
     const double* const cur_lhs = &lhs[(cur_perm_index*numDof_)*(numRows*numDof_)];
 
@@ -1344,7 +1358,7 @@ void TpetraSegregatedLinearSystem::resetRows(unsigned numNodes,
   reset_rows(getOwnedLocalMatrix(), getSharedNotOwnedLocalMatrix(),
              getOwnedLocalRhs(), getSharedNotOwnedLocalRhs(),
              numNodes, nodeList, beginPos, endPos, diag_value, rhs_residual,
-             entityToLID_, maxOwnedRowId_, maxSharedNotOwnedRowId_);
+             entityToLIDHost_, maxOwnedRowId_, maxSharedNotOwnedRowId_);
 }
 
 void TpetraSegregatedLinearSystem::loadComplete()
@@ -1745,7 +1759,7 @@ void TpetraSegregatedLinearSystem::copy_tpetra_to_stk(const Teuchos::RCP<LinSys:
     const stk::mesh::EntityId *naluGlobalId = stk::mesh::field_data(*realm_.naluGlobalId_, *b.begin());
     for (stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
       stk::mesh::Entity node = b[k];
-      const LocalOrdinal localIdOffset = entityToLID_[node.local_offset()];
+      const LocalOrdinal localIdOffset = entityToLIDHost_[node.local_offset()];
       for(unsigned dofIdx = 0; dofIdx < fieldSize; ++dofIdx) {
         const LocalOrdinal localId = localIdOffset;
         bool useOwned = true;

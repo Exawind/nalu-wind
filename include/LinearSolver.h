@@ -59,8 +59,8 @@ class Simulation;
 
 const LocalOrdinal INVALID = std::numeric_limits<LocalOrdinal>::max();
 
-using RowPointers    = typename LinSys::LocalGraph::row_map_type::non_const_type;
-using ColumnIndices  = typename LinSys::LocalGraph::entries_type::non_const_type;
+using RowPointers       = typename LinSys::LocalGraphHost::row_map_type::non_const_type;
+using ColumnIndices     = typename LinSys::LocalGraphHost::entries_type::non_const_type;
 
 /** LocalGraphArrays is a helper class for building the arrays describing
  * the local csr graph, rowPointers and colIndices. These arrays are passed
@@ -82,7 +82,7 @@ public:
     rowPointersData = rowPointers.data();
 
     size_t nnz = compute_row_pointers(rowPointers, rowLengths);
-    colIndices = Kokkos::View<LocalOrdinal*,LinSysMemSpace>(Kokkos::ViewAllocateWithoutInitializing("colIndices"), nnz);
+    colIndices = Kokkos::View<LocalOrdinal*, typename LinSys::HostRowLengths::memory_space>(Kokkos::ViewAllocateWithoutInitializing("colIndices"), nnz);
     Kokkos::deep_copy(colIndices, INVALID);
   }
 

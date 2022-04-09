@@ -43,18 +43,17 @@ namespace sierra {
 namespace nalu {
 
 #ifdef KOKKOS_ENABLE_CUDA
-typedef Kokkos::CudaSpace    MemSpace;
-typedef Kokkos::CudaUVMSpace UVMSpace;
-#elif defined(KOKKOS_HAVE_OPENMP)
-typedef Kokkos::OpenMP       MemSpace;
-typedef Kokkos::OpenMP       UVMSpace;
+#ifdef KOKKOS_ENABLE_CUDA_UVM
+typedef Kokkos::CudaUVMSpace MemSpace;
 #else
-typedef Kokkos::HostSpace    MemSpace;
-typedef Kokkos::HostSpace    UVMSpace;
+typedef Kokkos::CudaSpace    MemSpace;
 #endif
 
-// Tpetra requires UVM on Cuda
-using LinSysMemSpace = UVMSpace;
+#elif defined(KOKKOS_HAVE_OPENMP)
+typedef Kokkos::OpenMP       MemSpace;
+#else
+typedef Kokkos::HostSpace    MemSpace;
+#endif
 
 using HostSpace = Kokkos::DefaultHostExecutionSpace;
 using DeviceSpace = Kokkos::DefaultExecutionSpace;
