@@ -693,7 +693,7 @@ modeling is supported through the activation of the SST equation set.
 
 It has been observed that standard 1998 :math:`k-\omega` models display
 a strong sensitivity to the free stream value of :math:`\omega` (see
-Menter, :cite:`Menter:2003`). To remedy, this, an
+Menter, :cite:`Mentor:2003`). To remedy, this, an
 alternative set of transport equations have been used that are based on
 smoothly blending the :math:`k-\omega` model near a wall with
 :math:`k-\epsilon` away from the wall. Because of the relationship
@@ -776,28 +776,6 @@ The final parameter is
 
    arg_{2} = \max\left( \frac{2 \sqrt{k}}{\beta^* \omega y},
    \frac{500 \mu}{\bar{\rho} \omega y^{2}} \right).
-
-
-The Menter SST Two-Equation Model with Controlled Decay (SST-SUST) is
-also supported, :cite:`Spalart:2007`. Two new constants are added that
-are incorporated into additional source terms for the transport
-equations:
-
-.. math::
-
-   + \int \left(\beta^* \bar{\rho} k_{amb} \omega_{amb}\right) \text{d} V,
-
-.. math::
-
-   + \int \left(\hat \beta \bar{\rho} \omega_{amb}^{2}\right) \text{d}V.
-
-where the constants are :math:`k_{amb}` and
-:math:`\omega_{amb}`. Typically these are set to :math:`k_{amb} =
-10^{-6} U_{\infty}^2` and :math:`\omega_{amb} = \frac{5 U_\infty}{L}`,
-where :math:`L` is a defining length scale for the particular problem,
-and :math:`U_\infty` is the freestream velocity. The value chosen for
-these constants should match the values for :math:`\omega` and
-:math:`k` at the inflow BC.
 
 .. _eqn_sst_des:
 
