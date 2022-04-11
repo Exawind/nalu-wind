@@ -70,20 +70,16 @@ void ElemDataRequestsGPU::fill_host_fields(
   const ElemDataRequests& dataReq, const nalu_ngp::FieldManager& fieldMgr)
 {
 #ifdef KOKKOS_ENABLE_CUDA
-  // std::cout << dataReq.get_fields().size() << std::endl;
   fields = FieldInfoView(Kokkos::ViewAllocateWithoutInitializing("Fields"), dataReq.get_fields().size());
-  // std::cout << "field byte size: " << fields.size() << " ptr: " << fields.data() << std::endl;
 #else
   fields = FieldInfoView("Fields", dataReq.get_fields().size());
 #endif
   hostFields = Kokkos::create_mirror_view(fields);
   unsigned i = 0;
   for (const FieldInfo& finfo : dataReq.get_fields()) {
-auto temp = FieldInfoType(
+    hostFields(i++) = FieldInfoType(
       fieldMgr.get_field<double>(finfo.field->mesh_meta_data_ordinal()),
       finfo.scalarsDim1, finfo.scalarsDim2);
-  // std::cout << "hostfield byte size: " << hostFields.size() << " ptr: " << hostFields.data() << std::endl;
-    hostFields(i++) = temp;
   }
 }
 

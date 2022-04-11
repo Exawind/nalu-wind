@@ -44,20 +44,16 @@ namespace nalu {
 
 #ifdef KOKKOS_ENABLE_CUDA
 typedef Kokkos::CudaSpace    MemSpace;
-typedef Kokkos::CudaUVMSpace UVMSpace;
 #elif defined(KOKKOS_HAVE_OPENMP)
 typedef Kokkos::OpenMP       MemSpace;
-typedef Kokkos::OpenMP       UVMSpace;
 #else
 typedef Kokkos::HostSpace    MemSpace;
-typedef Kokkos::HostSpace    UVMSpace;
 #endif
-
-// Tpetra requires UVM on Cuda
-using LinSysMemSpace = UVMSpace;
 
 using HostSpace = Kokkos::DefaultHostExecutionSpace;
 using DeviceSpace = Kokkos::DefaultExecutionSpace;
+
+using LinSysMemSpace = DeviceSpace::memory_space;
 
 using DeviceShmem = DeviceSpace::scratch_memory_space;
 using HostShmem = HostSpace::scratch_memory_space;
