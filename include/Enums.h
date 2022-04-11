@@ -234,14 +234,12 @@ enum TurbulenceModelConstant {
   TM_ams_peclet_offset = 50,
   TM_ams_peclet_slope = 51,
   TM_ams_peclet_scale = 52,
-  TM_tkeAmb = 53,
-  TM_sdrAmb = 54,
-  TM_caOne = 55,
-  TM_caTwo = 56,
-  TM_ceOne = 57,
-  TM_ceTwo = 58,
-  TM_c0t = 59,
-  TM_END = 60
+  TM_caOne = 53,
+  TM_caTwo = 54,
+  TM_ceOne = 55,
+  TM_ceTwo = 56,
+  TM_c0t = 57,
+  TM_END = 58
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
@@ -298,8 +296,6 @@ static const std::string TurbulenceModelConstantNames[] = {
   "ams_peclet_offset",
   "ams_peclet_slope",
   "ams_peclet_scale",
-  "tke_amb",
-  "sdr_amb",
   "END"};
 
 enum ActuatorType {
