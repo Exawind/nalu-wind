@@ -86,9 +86,7 @@ SolutionOptions::SolutionOptions()
     explicitlyZeroOpenPressureGradient_(false),
     resetAMSAverages_(true),
     transition_model_(false),
-    gammaEqActive_(false),
-    iterSwitchTransition_(250),
-    xcoordEndFixedTurb_(-0.04)
+    gammaEqActive_(false)
 {
   // nothing to do
 }
@@ -209,12 +207,6 @@ SolutionOptions::load(const YAML::Node & y_node)
         y_solution_options, "transition_model", transition_model_,
         transition_model_);
         if (transition_model_ == true) gammaEqActive_ = true;
-
-      get_if_present(
-        y_solution_options, "iter_switch_transition", iterSwitchTransition_, iterSwitchTransition_);
-
-      get_if_present(
-        y_solution_options, "xcoord_end_fixed_turb", xcoordEndFixedTurb_, xcoordEndFixedTurb_);
     }
     // initialize turbulence constants since some laminar models may need such variables, e.g., kappa
     initialize_turbulence_constants();
@@ -611,7 +603,6 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_caTwo] = 0.06;
   turbModelConstantMap_[TM_ceOne] = 1.0;
   turbModelConstantMap_[TM_ceTwo] = 50.0;
-  turbModelConstantMap_[TM_c0t] = 0.03;
 }
 
 

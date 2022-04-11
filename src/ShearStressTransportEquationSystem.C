@@ -584,8 +584,7 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
       const double rho = density.get(mi, 0);
       const double mu = viscosity.get(mi, 0);
       const double minD = ndtw.get(mi, 0);
-      const double timeStepCount_ = realm_.get_time_step_count();
-      const int iterSwitchTransition_ = realm_.solutionOptions_->iterSwitchTransition_;
+
       // cross diffusion
       double crossdiff = 0.0;
       for (int d = 0; d < ndim; ++d)
@@ -603,16 +602,6 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
 
       fOneBlend.get(mi, 0) =
         stk::math::tanh(fArgOne * fArgOne * fArgOne * fArgOne);
-
-      if (realm_.solutionOptions_->gammaEqActive_ && timeStepCount_ >= iterSwitchTransition_) {
-        // modifications for transition model
-        const double f1Orig = fOneBlend.get(mi, 0);
-        const double ry = rho * minD * std::sqrt(tke)/mu;
-        const double arg = ry / 120.0;
-        const double f3 = std::exp(-arg*arg*arg*arg*arg*arg*arg*arg);
-        fOneBlend.get(mi, 0) = std::max(f1Orig, f3);
-      }
-
     });
 
   fOneBlend.modify_on_device();
