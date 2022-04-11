@@ -61,14 +61,6 @@
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
 
-#include "ngp_algorithms/WallDistGradEdgeAlg.h"
-#include "ngp_algorithms/WallDistGradElemAlg.h"
-#include "ngp_algorithms/WallDistGradBndryElemAlg.h"
-
-#include "ngp_algorithms/NDotVGradEdgeAlg.h"
-#include "ngp_algorithms/NDotVGradElemAlg.h"
-#include "ngp_algorithms/NDotVGradBndryElemAlg.h"
-
 #include "ngp_algorithms/EffSSTDiffFluxCoeffAlg.h"
 #include "utils/StkHelpers.h"
 
@@ -232,10 +224,10 @@ GammaEquationSystem::register_interior_algorithm(
     nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone);
 
-    walldistGradAlgDriver_.register_edge_algorithm<ScalarWallDistGradEdgeAlg>(
+    walldistGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
       algType, part, "gamma_walldist_grad", &minD, &dWallDistdxNone);
 
-    ndotvGradAlgDriver_.register_edge_algorithm<ScalarNDotVGradEdgeAlg>(
+    ndotvGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
       algType, part, "gamma_ndotv_grad", &NDotV, &dNDotVdxNone);
     }
   else {
@@ -243,11 +235,11 @@ GammaEquationSystem::register_interior_algorithm(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
       edgeNodalGradient_);
 
-    walldistGradAlgDriver_.register_elem_algorithm<ScalarWallDistGradElemAlg>(
+    walldistGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
       algType, part, "gamma_walldist_grad", &minD, &dWallDistdxNone,
       edgeNodalGradient_);
 
-    ndotvGradAlgDriver_.register_elem_algorithm<ScalarNDotVGradElemAlg>(
+    ndotvGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
       algType, part, "gamma_ndotv_grad", &NDotV, &dNDotVdxNone,
       edgeNodalGradient_);
 
@@ -387,10 +379,10 @@ GammaEquationSystem::register_inflow_bc(
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone, edgeNodalGradient_);
 
-  walldistGradAlgDriver_.register_face_algorithm<ScalarWallDistGradBndryElemAlg>(
+  walldistGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
      algType, part, "gamma_walldist_grad", &minD, &dWallDistdxNone, edgeNodalGradient_);
 
-  ndotvGradAlgDriver_.register_face_algorithm<ScalarNDotVGradBndryElemAlg>(
+  ndotvGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
      algType, part, "gamma_ndotv_grad", &NDotV, &dNDotVdxNone, edgeNodalGradient_);
 
   // Dirichlet bc
@@ -433,10 +425,10 @@ GammaEquationSystem::register_open_bc(
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone, edgeNodalGradient_);
 
-  walldistGradAlgDriver_.register_face_algorithm<ScalarWallDistGradBndryElemAlg>(
+  walldistGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_walldist_grad", &minD, &dWallDistdxNone, edgeNodalGradient_);
                                
-  ndotvGradAlgDriver_.register_face_algorithm<ScalarNDotVGradBndryElemAlg>(
+  ndotvGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_ndotv_grad", &NDotV, &dNDotVdxNone, edgeNodalGradient_);
 }
 
@@ -466,10 +458,10 @@ GammaEquationSystem::register_wall_bc(
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone, edgeNodalGradient_);
 
-  walldistGradAlgDriver_.register_face_algorithm<ScalarWallDistGradBndryElemAlg>(
+  walldistGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_walldist_grad", &minD, &dWallDistdxNone, edgeNodalGradient_);
      
-  ndotvGradAlgDriver_.register_face_algorithm<ScalarNDotVGradBndryElemAlg>(
+  ndotvGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_ndotv_grad", &NDotV, &dNDotVdxNone, edgeNodalGradient_);
 }
 
@@ -499,10 +491,10 @@ GammaEquationSystem::register_symmetry_bc(
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone, edgeNodalGradient_);
 
-  walldistGradAlgDriver_.register_face_algorithm<ScalarWallDistGradBndryElemAlg>(
+  walldistGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_walldist_grad", &minD, &dWallDistdxNone, edgeNodalGradient_);
   
-  ndotvGradAlgDriver_.register_face_algorithm<ScalarNDotVGradBndryElemAlg>(
+  ndotvGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_ndotv_grad", &NDotV, &dNDotVdxNone, edgeNodalGradient_);
 }
 

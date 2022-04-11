@@ -17,8 +17,6 @@
 #include <NaluParsedTypes.h>
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
-#include "ngp_algorithms/WallDistGradAlgDriver.h"
-#include "ngp_algorithms/NDotVGradAlgDriver.h"
 
 namespace stk{
 struct topology;
@@ -96,8 +94,8 @@ public:
   ScalarFieldType *tvisc_;
   ScalarFieldType *evisc_;
   ScalarNodalGradAlgDriver nodalGradAlgDriver_;
-  ScalarWallDistGradAlgDriver walldistGradAlgDriver_;
-  ScalarNDotVGradAlgDriver ndotvGradAlgDriver_;
+  ScalarNodalGradAlgDriver walldistGradAlgDriver_;
+  ScalarNodalGradAlgDriver ndotvGradAlgDriver_;
   std::unique_ptr<Algorithm> effDiffFluxAlg_;
 
 };
