@@ -112,7 +112,7 @@ void fill_in_extra_dof_rows_per_node(LocalGraphArrays& csg, int numDof);
 void remove_invalid_indices(LocalGraphArrays& csg, LinSys::HostRowLengths& rowLengths);
 
 template <typename ViewType>
-inline void sync_dual_view_host_to_device(ViewType viewToSync) {
+void sync_dual_view_host_to_device(ViewType viewToSync) {
 
   viewToSync.template modify<typename ViewType::host_mirror_space>();
   viewToSync.template sync<typename ViewType::execution_space>();

@@ -899,6 +899,7 @@ void TpetraLinearSystem::fill_entity_to_row_LID_mapping()
   const stk::mesh::BulkData& bulk = realm_.bulk_data();
   stk::mesh::Selector selector = bulk.mesh_meta_data().universal_part() & !(realm_.get_inactive_selector());
   entityToLIDHost_ = LinSys::EntityToLIDHostView("entityToLID",bulk.get_size_of_entity_index_space());
+  entityToLID_ = Kokkos::create_mirror_view(entityToLIDHost_);
   const stk::mesh::BucketVector& nodeBuckets = realm_.get_buckets(stk::topology::NODE_RANK, selector);
   for(const stk::mesh::Bucket* bptr : nodeBuckets) {
     const stk::mesh::Bucket& b = *bptr;
@@ -927,6 +928,7 @@ void TpetraLinearSystem::fill_entity_to_col_LID_mapping()
     const stk::mesh::BulkData& bulk = realm_.bulk_data();
     stk::mesh::Selector selector = bulk.mesh_meta_data().universal_part() & !(realm_.get_inactive_selector());
     entityToColLIDHost_ = LinSys::EntityToLIDHostView("entityToColLID",bulk.get_size_of_entity_index_space());
+    entityToColLID_ = Kokkos::create_mirror_view(entityToColLIDHost_);
     const stk::mesh::BucketVector& nodeBuckets = realm_.get_buckets(stk::topology::NODE_RANK,selector);
     const bool throwIfMasterNotFound = false;
     for(const stk::mesh::Bucket* bptr : nodeBuckets) {
@@ -1051,12 +1053,12 @@ void TpetraLinearSystem::finalizeLinearSystem()
 
   ownedGraph_ = Teuchos::rcp(new LinSys::Graph(ownedRowsMap_, totalColsMap_, locallyOwnedRowLengths, Tpetra::StaticProfile));
 
-  auto deviceOwnedGraphRowPointers = Kokkos::create_mirror_view_and_copy(MemSpace(), ownedGraph.rowPointers);
-  auto deviceOwnedGraphColIndices = Kokkos::create_mirror_view_and_copy(MemSpace(), ownedGraph.colIndices);
+  auto deviceOwnedGraphRowPointers = Kokkos::create_mirror_view_and_copy(LinSysMemSpace(), ownedGraph.rowPointers);
+  auto deviceOwnedGraphColIndices = Kokkos::create_mirror_view_and_copy(LinSysMemSpace(), ownedGraph.colIndices);
   ownedGraph_->setAllIndices(deviceOwnedGraphRowPointers, deviceOwnedGraphColIndices);
 
-  auto deviceSharedNotOwnedGraphRowPointers = Kokkos::create_mirror_view_and_copy(MemSpace(), sharedNotOwnedGraph.rowPointers);
-  auto deviceSharedNotOwnedGraphColIndices = Kokkos::create_mirror_view_and_copy(MemSpace(), sharedNotOwnedGraph.colIndices);
+  auto deviceSharedNotOwnedGraphRowPointers = Kokkos::create_mirror_view_and_copy(LinSysMemSpace(), sharedNotOwnedGraph.rowPointers);
+  auto deviceSharedNotOwnedGraphColIndices = Kokkos::create_mirror_view_and_copy(LinSysMemSpace(), sharedNotOwnedGraph.colIndices);
   sharedNotOwnedGraph_->setAllIndices(deviceSharedNotOwnedGraphRowPointers, deviceSharedNotOwnedGraphColIndices);
 
   Teuchos::RCP<Teuchos::ParameterList> params = Teuchos::rcp(new Teuchos::ParameterList);

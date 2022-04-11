@@ -893,12 +893,12 @@ void TpetraSegregatedLinearSystem::finalizeLinearSystem()
 
   ownedGraph_ = Teuchos::rcp(new LinSys::Graph(ownedRowsMap_, totalColsMap_, locallyOwnedRowLengths, Tpetra::StaticProfile));
 
-  auto deviceOwnedGraphRowPointers = Kokkos::create_mirror_view_and_copy(MemSpace(), ownedGraph.rowPointers);
-  auto deviceOwnedGraphColIndices = Kokkos::create_mirror_view_and_copy(MemSpace(), ownedGraph.colIndices);
+  auto deviceOwnedGraphRowPointers = Kokkos::create_mirror_view_and_copy(LinSysMemSpace(), ownedGraph.rowPointers);
+  auto deviceOwnedGraphColIndices = Kokkos::create_mirror_view_and_copy(LinSysMemSpace(), ownedGraph.colIndices);
   ownedGraph_->setAllIndices(deviceOwnedGraphRowPointers, deviceOwnedGraphColIndices);
 
-  auto deviceSharedNotOwnedGraphRowPointers = Kokkos::create_mirror_view_and_copy(MemSpace(), sharedNotOwnedGraph.rowPointers);
-  auto deviceSharedNotOwnedGraphColIndices = Kokkos::create_mirror_view_and_copy(MemSpace(), sharedNotOwnedGraph.colIndices);
+  auto deviceSharedNotOwnedGraphRowPointers = Kokkos::create_mirror_view_and_copy(LinSysMemSpace(), sharedNotOwnedGraph.rowPointers);
+  auto deviceSharedNotOwnedGraphColIndices = Kokkos::create_mirror_view_and_copy(LinSysMemSpace(), sharedNotOwnedGraph.colIndices);
   sharedNotOwnedGraph_->setAllIndices(deviceSharedNotOwnedGraphRowPointers, deviceSharedNotOwnedGraphColIndices);
 
   Teuchos::RCP<Teuchos::ParameterList> params = Teuchos::rcp(new Teuchos::ParameterList);

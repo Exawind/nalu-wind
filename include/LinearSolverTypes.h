@@ -69,7 +69,7 @@ struct LinSys {
   using GlobalOrdinal = Tpetra::Details::DefaultTypes::global_ordinal_type;
   using LocalOrdinal  = Tpetra::Details::DefaultTypes::local_ordinal_type;
 
-  using RowLengths        = Kokkos::DualView<size_t*, MemSpace>;
+  using RowLengths        = Kokkos::DualView<size_t*, DeviceSpace>;
   using DeviceRowLengths  = RowLengths::t_dev;
   using HostRowLengths    = RowLengths::t_host;
   using Node              = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
@@ -94,9 +94,9 @@ struct LinSys {
   using SolverFactory     = Belos::TpetraSolverFactory<Scalar, MultiVector, Operator>;
   using Preconditioner    = Ifpack2::Preconditioner<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
 
-  using EntityToLIDView = Kokkos::View<LocalOrdinal*, Kokkos::LayoutRight, MemSpace>;
+  using EntityToLIDView = Kokkos::View<LocalOrdinal*, Kokkos::LayoutRight, LinSysMemSpace>;
   using EntityToLIDHostView = typename EntityToLIDView::HostMirror;
-  using ConstEntityToLIDView = Kokkos::View<const LocalOrdinal*, Kokkos::LayoutRight, MemSpace>;
+  using ConstEntityToLIDView = Kokkos::View<const LocalOrdinal*, Kokkos::LayoutRight, LinSysMemSpace>;
   using ConstEntityToLIDHostView = typename ConstEntityToLIDView::HostMirror;
 
 };
