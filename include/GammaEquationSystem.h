@@ -28,6 +28,7 @@ namespace nalu{
 class Realm;
 class LinearSystem;
 class EquationSystems;
+class WallDistEquationSystem;
 
 
 class GammaEquationSystem : public EquationSystem {
@@ -71,20 +72,30 @@ public:
   void reinitialize_linear_system();
   
   void predict_state();
+
+  void normalize_dwalldistdx();
+  void compute_norm_dot_vel();
+
   void assemble_nodal_gradient();
+  void assemble_walldist_gradient();
+  void assemble_ndotv_gradient();
   void compute_effective_diff_flux_coeff();
   
   const bool managePNG_;
 
   ScalarFieldType *gamma_;
   VectorFieldType *dgamdx_;
+  VectorFieldType *dWallDistdx_;
+  VectorFieldType *dNDotVdx_;
   ScalarFieldType *gamTmp_;
   ScalarFieldType *minDistanceToWall_;
+  ScalarFieldType *NDotV_;
   ScalarFieldType *visc_;
   ScalarFieldType *tvisc_;
   ScalarFieldType *evisc_;
   ScalarNodalGradAlgDriver nodalGradAlgDriver_;
-  
+  ScalarNodalGradAlgDriver walldistGradAlgDriver_;
+  ScalarNodalGradAlgDriver ndotvGradAlgDriver_;
   std::unique_ptr<Algorithm> effDiffFluxAlg_;
 
 };

@@ -87,7 +87,7 @@ SolutionOptions::SolutionOptions()
     resetAMSAverages_(true),
     transition_model_(false),
     gammaEqActive_(false),
-    iterSwitchTransition_(250),
+    iterSwitchTransition_(0),
     xcoordEndFixedTurb_(-0.04)
 {
   // nothing to do
