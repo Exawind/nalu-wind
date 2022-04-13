@@ -126,7 +126,6 @@ HypreLinearSolverConfig::boomerAMG_solver_config(const YAML::Node& node)
   get_if_present(node, "bamg_num_sweeps", bamgNumSweeps_, bamgNumSweeps_);
   get_if_present(node, "bamg_max_levels", bamgMaxLevels_, bamgMaxLevels_);
   get_if_present(node, "bamg_strong_threshold", bamgStrongThreshold_, bamgStrongThreshold_);
-  get_if_present(node, "bamg_use_cusparse_sgemm", useCusparseSGEMM_, useCusparseSGEMM_);
 
   // Setup AMG parameters
   funcParams_.resize(10);
@@ -192,7 +191,6 @@ HypreLinearSolverConfig::boomerAMG_precond_config(const YAML::Node& node)
   get_if_present(node, "bamg_output_level", output_level, output_level);
   get_if_present(node, "bamg_logging", logging, logging);
   get_if_present(node, "bamg_debug", debug, debug);
-  get_if_present(node, "bamg_use_cusparse_sgemm", useCusparseSGEMM_, useCusparseSGEMM_);
 
   funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
     Ifpack2::Hypre::Prec, &HYPRE_BoomerAMGSetPrintLevel,
