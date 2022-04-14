@@ -165,8 +165,6 @@ ShearStressTransportEquationSystem::register_nodal_fields(
   // add to restart field
   realm_.augment_restart_variable_list("minimum_distance_to_wall");
   realm_.augment_restart_variable_list("sst_f_one_blending");
-  realm_.augment_restart_variable_list("l_t");
-  realm_.augment_restart_variable_list("gamma");
 }
 
 //--------------------------------------------------------------------------
