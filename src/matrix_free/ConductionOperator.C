@@ -42,19 +42,19 @@ ConductionResidualOperator<p>::compute(mv_type& owned_rhs)
       gammas_, elem_offsets_, residual_fields_.qm1, residual_fields_.qp0,
       residual_fields_.qp1, residual_fields_.volume_metric,
       residual_fields_.diffusion_metric,
-      cached_shared_rhs_.getLocalViewDevice());
+      cached_shared_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
     if (flux_bc_active_) {
       scalar_neumann_residual<p>(
         flux_bc_offsets_, flux_, exposed_areas_,
-        cached_shared_rhs_.getLocalViewDevice());
+        cached_shared_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
 
     if (dirichlet_bc_active_) {
       dirichlet_residual(
         dirichlet_bc_offsets_, bc_nodal_solution_field_,
         bc_nodal_specified_field_, owned_rhs.getLocalLength(),
-        cached_shared_rhs_.getLocalViewDevice());
+        cached_shared_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
 
     cached_shared_rhs_.modify_device();
@@ -66,19 +66,19 @@ ConductionResidualOperator<p>::compute(mv_type& owned_rhs)
     conduction_residual<p>(
       gammas_, elem_offsets_, residual_fields_.qm1, residual_fields_.qp0,
       residual_fields_.qp1, residual_fields_.volume_metric,
-      residual_fields_.diffusion_metric, owned_rhs.getLocalViewDevice());
+      residual_fields_.diffusion_metric, owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
     if (flux_bc_active_) {
       scalar_neumann_residual<p>(
         flux_bc_offsets_, flux_, exposed_areas_,
-        owned_rhs.getLocalViewDevice());
+        owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
 
     if (dirichlet_bc_active_) {
       dirichlet_residual(
         dirichlet_bc_offsets_, bc_nodal_solution_field_,
         bc_nodal_specified_field_, owned_rhs.getLocalLength(),
-        owned_rhs.getLocalViewDevice());
+        owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
     owned_rhs.modify_device();
   }
@@ -114,12 +114,12 @@ ConductionLinearizedResidualOperator<p>::apply(
 
     conduction_linearized_residual<p>(
       gamma_, elem_offsets_, fields_.volume_metric, fields_.diffusion_metric,
-      cached_sln_.getLocalViewDevice(), cached_rhs_.getLocalViewDevice());
+      cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite), cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
     if (dirichlet_bc_active_) {
       dirichlet_linearized(
         dirichlet_bc_offsets_, owned_rhs.getLocalLength(),
-        cached_sln_.getLocalViewDevice(), cached_rhs_.getLocalViewDevice());
+        cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite), cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
 
     cached_rhs_.modify_device();
@@ -131,12 +131,12 @@ ConductionLinearizedResidualOperator<p>::apply(
     owned_rhs.putScalar(0.);
     conduction_linearized_residual<p>(
       gamma_, elem_offsets_, fields_.volume_metric, fields_.diffusion_metric,
-      owned_sln.getLocalViewDevice(), owned_rhs.getLocalViewDevice());
+      owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly), owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
     if (dirichlet_bc_active_) {
       dirichlet_linearized(
         dirichlet_bc_offsets_, owned_rhs.getLocalLength(),
-        owned_sln.getLocalViewDevice(), owned_rhs.getLocalViewDevice());
+        owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly), owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
     owned_rhs.modify_device();
   }

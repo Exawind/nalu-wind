@@ -128,7 +128,7 @@ TEST_F(
   resid_op.compute(rhs);
 
   rhs.sync_host();
-  auto view_h = rhs.getLocalViewHost();
+  auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   //  side should be #(faces connectded to node) * (scale/nx)^2
   const auto interior_selector =
@@ -148,7 +148,7 @@ TEST_F(
   ContinuityOperatorFixture,
   linearized_residual_operator_zero_for_linear_function)
 {
-  auto host_lhs = lhs.getLocalViewHost();
+  auto host_lhs = lhs.getLocalViewHost(Tpetra::Access::ReadWrite);
   for (const auto* ib :
        bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {
     for (auto node : *ib) {
@@ -168,7 +168,7 @@ TEST_F(
   resid_op.apply(lhs, rhs);
 
   rhs.sync_host();
-  auto view_h = rhs.getLocalViewHost();
+  auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   const auto interior_selector = active() - side();
   for (const auto* ib :
@@ -186,7 +186,7 @@ TEST_F(
   ContinuityOperatorFixture,
   linearized_residual_operator_nonzero_for_quadratic_function)
 {
-  auto host_lhs = lhs.getLocalViewHost();
+  auto host_lhs = lhs.getLocalViewHost(Tpetra::Access::ReadWrite);
   for (const auto* ib :
        bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {
     for (auto node : *ib) {
@@ -206,7 +206,7 @@ TEST_F(
   resid_op.apply(lhs, rhs);
 
   rhs.sync_host();
-  auto view_h = rhs.getLocalViewHost();
+  auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   //  side should be #(faces connectded to node) * (scale/nx)^2
   double max_val = -1;

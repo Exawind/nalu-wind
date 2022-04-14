@@ -110,13 +110,13 @@ TEST_F(DirichletFixture, bc_residual_scalar)
   owned_and_shared_rhs.putScalar(0.);
   dirichlet_residual(
     dirichlet_offsets, qp1, qbc, owned_rhs.getLocalLength(),
-    owned_and_shared_rhs.getLocalViewDevice());
+    owned_and_shared_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
   owned_and_shared_rhs.modify_device();
   owned_rhs.putScalar(0.);
   owned_rhs.doExport(owned_and_shared_rhs, exporter, Tpetra::ADD);
 
   owned_rhs.sync_host();
-  auto view_h = owned_rhs.getLocalViewHost();
+  auto view_h = owned_rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   double maxval = -1;
   for (size_t k = 0u; k < owned_rhs.getLocalLength(); ++k) {
@@ -136,13 +136,13 @@ TEST_F(DirichletFixture, bc_residual_vector)
   owned_and_shared_rhs.putScalar(0.);
   dirichlet_residual(
     dirichlet_offsets, qp1, qbc, owned_rhs.getLocalLength(),
-    owned_and_shared_rhs.getLocalViewDevice());
+    owned_and_shared_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
   owned_and_shared_rhs.modify_device();
   owned_rhs.putScalar(0.);
   owned_rhs.doExport(owned_and_shared_rhs, exporter, Tpetra::ADD);
 
   owned_rhs.sync_host();
-  auto view_h = owned_rhs.getLocalViewHost();
+  auto view_h = owned_rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   double maxval = -1;
   for (size_t k = 0u; k < owned_rhs.getLocalLength(); ++k) {
@@ -162,15 +162,15 @@ TEST_F(DirichletFixture, linearized_bc_residual)
 
   dirichlet_linearized(
     dirichlet_offsets, owned_lhs.getLocalLength(),
-    owned_and_shared_lhs.getLocalViewDevice(),
-    owned_and_shared_rhs.getLocalViewDevice());
+    owned_and_shared_lhs.getLocalViewDevice(Tpetra::Access::ReadWrite),
+    owned_and_shared_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
   owned_and_shared_rhs.modify_device();
   owned_rhs.putScalar(0.);
   owned_rhs.doExport(owned_and_shared_rhs, exporter, Tpetra::ADD);
 
   owned_rhs.sync_host();
-  auto view_h = owned_rhs.getLocalViewHost();
+  auto view_h = owned_rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   constexpr double tol = 1.0e-14;
   double maxval = -1;

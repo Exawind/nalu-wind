@@ -60,7 +60,7 @@ MomentumResidualOperator<p>::compute(mv_type& owned_rhs)
   stk::mesh::ProfilingBlock pf("MomentumResidualOperator<p>::apply");
   if (exporter_.getTargetMap()->isDistributed()) {
     ThrowRequire(owned_rhs.getLocalLength() == size_t(max_owned_row_id_));
-    local_compute(cached_rhs_.getLocalViewDevice());
+    local_compute(cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
     cached_rhs_.modify_device();
     {
       stk::mesh::ProfilingBlock pfinner("export from owned-shared to owned");
@@ -68,7 +68,7 @@ MomentumResidualOperator<p>::compute(mv_type& owned_rhs)
       owned_rhs.doExport(cached_rhs_, exporter_, Tpetra::ADD);
     }
   } else {
-    local_compute(owned_rhs.getLocalViewDevice());
+    local_compute(owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
     owned_rhs.modify_device();
   }
 }
@@ -130,7 +130,7 @@ MomentumLinearizedResidualOperator<p>::apply(
 
     ThrowRequire(owned_rhs.getLocalLength() == size_t(max_owned_row_id_));
     local_apply(
-      cached_sln_.getLocalViewDevice(), cached_rhs_.getLocalViewDevice());
+      cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite), cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
     cached_rhs_.modify_device();
 
     {
@@ -140,7 +140,7 @@ MomentumLinearizedResidualOperator<p>::apply(
     }
   } else {
     stk::mesh::ProfilingBlock pfinner("local apply");
-    local_apply(owned_sln.getLocalViewDevice(), owned_rhs.getLocalViewDevice());
+    local_apply(owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly), owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
 }
 INSTANTIATE_POLYCLASS(MomentumLinearizedResidualOperator);

@@ -91,7 +91,7 @@ TEST_F(GradientResidualFixture, residual_executes)
 {
   rhs.putScalar(0.);
   gradient_residual<order>(
-    offsets, area_metric, volume_metric, qp1, dqdx, rhs.getLocalViewDevice());
+    offsets, area_metric, volume_metric, qp1, dqdx, rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 
 TEST_F(GradientResidualFixture, linearized_residual_executes)
@@ -99,8 +99,8 @@ TEST_F(GradientResidualFixture, linearized_residual_executes)
   delta.putScalar(0.);
   rhs.putScalar(0.);
   filter_linearized_residual<order>(
-    offsets, volume_metric, delta.getLocalViewDevice(),
-    rhs.getLocalViewDevice());
+    offsets, volume_metric, delta.getLocalViewDevice(Tpetra::Access::ReadWrite),
+    rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 } // namespace matrix_free
 } // namespace nalu

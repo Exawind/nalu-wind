@@ -122,12 +122,12 @@ public:
 
 TEST_F(MomentumResidualFixture, residual_executes)
 {
-  decltype(rhs.getLocalViewDevice()) shared_rhs("empty_rhs", 1, 3);
+  decltype(rhs.getLocalViewDevice(Tpetra::Access::ReadWrite)) shared_rhs("empty_rhs", 1, 3);
 
   rhs.putScalar(0.);
   momentum_residual<order>(
     gammas, offsets, xc, rho, visc, vol, vol, vol, um1, up0, up1, gp, force,
-    mdot, rhs.getLocalViewDevice());
+    mdot, rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 
 TEST_F(MomentumResidualFixture, linearized_residual_executes)
@@ -137,8 +137,8 @@ TEST_F(MomentumResidualFixture, linearized_residual_executes)
 
   rhs.putScalar(0.);
   momentum_linearized_residual<order>(
-    gammas[0], offsets, vol, mdot, metric, delta.getLocalViewDevice(),
-    rhs.getLocalViewDevice());
+    gammas[0], offsets, vol, mdot, metric, delta.getLocalViewDevice(Tpetra::Access::ReadWrite),
+    rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 } // namespace matrix_free
 } // namespace nalu

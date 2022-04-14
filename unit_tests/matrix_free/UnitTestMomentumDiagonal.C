@@ -120,7 +120,7 @@ TEST_F(MomentumDiagonalFixture, diagonal_executes)
 {
   rhs.putScalar(0.);
   advdiff_diagonal<order>(
-    1., offsets, vol, mdot, metric, rhs.getLocalViewDevice());
+    1., offsets, vol, mdot, metric, rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 
 } // namespace matrix_free
