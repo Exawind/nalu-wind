@@ -59,6 +59,8 @@ SDRSSTAMSNodeKernel::setup(Realm& realm)
   sigmaWTwo_ = realm.get_turb_model_constant(TM_sigmaWTwo);
   betaOne_ = realm.get_turb_model_constant(TM_betaOne);
   betaTwo_ = realm.get_turb_model_constant(TM_betaTwo);
+  gammaOne_ = realm.get_turb_model_constant(TM_gammaOne);
+  gammaTwo_ = realm.get_turb_model_constant(TM_gammaTwo);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
 
   lengthScaleLimiter_ = realm.solutionOptions_->lengthScaleLimiter_;
@@ -68,8 +70,6 @@ SDRSSTAMSNodeKernel::setup(Realm& realm)
     const NodeKernelTraits::DblType latitude = realm.solutionOptions_->latitude_*pi/180.0;
     corfac_ = 2.0*earthAngularVelocity*std::sin(latitude);
     referenceVelocity_ = realm.solutionOptions_->referenceVelocity_;
-    gammaOne_ = realm.get_turb_model_constant(TM_gammaOne);
-    gammaTwo_ = realm.get_turb_model_constant(TM_gammaTwo);
   }
 }
 
@@ -126,8 +126,8 @@ SDRSSTAMSNodeKernel::execute(
     gammaTwo_apply = cEpsOneStar_two - 1.;
   }
   else {
-     gammaOne_apply = gammaOne_;
-     gammaTwo_apply = gammaTwo_;
+    gammaOne_apply = gammaOne_;
+    gammaTwo_apply = gammaTwo_;
   }
   const NodeKernelTraits::DblType gamma = fOneBlend * gammaOne_apply + om_fOneBlend * gammaTwo_apply;
 

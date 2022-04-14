@@ -140,7 +140,6 @@ SSTAMSAveragesAlg::execute()
       // Calculate alpha
       if (tke.get(mi, 0) == 0.0)
         beta.get(mi, 0) = 1.0;
-      //else if ((RANSBelowKs) && (coords.get(mi,2) <= k_s)) {
       else if ((RANSBelowKs) && (coords.get(mi, gravity_i) <= k_s)) {
         beta.get(mi, 0) = 1.0;
       }
@@ -157,13 +156,13 @@ SSTAMSAveragesAlg::execute()
       const DblType alpha = stk::math::pow(beta.get(mi, 0), 1.7);
 
       // store RANS time scale
-     if (lengthScaleLimiter_) {
-       const DblType l_t = stk::math::sqrt(tke.get(mi, 0))/(stk::math::pow(betaStar, .25)*sdr.get(mi, 0));
-       avgTime.get(mi, 0) = avgTimeCoeff * l_t / stk::math::sqrt(tke.get(mi, 0));
-     }
-     else {
-       avgTime.get(mi, 0) = avgTimeCoeff / (betaStar * sdr.get(mi, 0)); 
-     }
+      if (lengthScaleLimiter_) {
+        const DblType l_t = stk::math::sqrt(tke.get(mi, 0))/(stk::math::pow(betaStar, .25)*sdr.get(mi, 0));
+        avgTime.get(mi, 0) = avgTimeCoeff * l_t / stk::math::sqrt(tke.get(mi, 0));
+      }
+      else {
+        avgTime.get(mi, 0) = avgTimeCoeff / (betaStar * sdr.get(mi, 0)); 
+      }
 
       // causal time average ODE: d<phi>/dt = 1/avgTime * (phi - <phi>)
       const DblType weightAvg =
@@ -383,7 +382,6 @@ SSTAMSAveragesAlg::execute()
       // Handle case where tke = 0, should only occur at a wall boundary
       if (tke.get(mi, 0) == 0.0)
         resAdeq.get(mi, 0) = 1.0;
-      //else if ((RANSBelowKs) && (coords.get(mi,2) <= k_s)) {
       else if ((RANSBelowKs) && (coords.get(mi, gravity_i) <= k_s)) {
         resAdeq.get(mi, 0) = 1.0;
       }
