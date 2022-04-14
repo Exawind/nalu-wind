@@ -120,7 +120,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_open_edge)
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, expectedRhs, 1.0e-12);
 
-  const auto& lhs = helperObjs.linsys->lhs_;
+  Kokkos::deep_copy(helperObjs.linsys->hostlhs_, helperObjs.linsys->lhs_);
+  const auto& lhs = helperObjs.linsys->hostlhs_;
+
   for (int i=0; i < 4; ++i)
     EXPECT_NEAR(lhs(i, i), expectedLhs, 1.0e-12);
 }

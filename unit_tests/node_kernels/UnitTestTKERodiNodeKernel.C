@@ -54,8 +54,12 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_kenetic_energy_Rodi)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
 
-  const Kokkos::View<double**>lhs = helperObjs.linsys->lhs_;
-  const Kokkos::View<double*> rhs = helperObjs.linsys->rhs_;
+  Kokkos::deep_copy(helperObjs.linsys->hostlhs_, helperObjs.linsys->lhs_);
+  Kokkos::deep_copy(helperObjs.linsys->hostrhs_, helperObjs.linsys->rhs_);
+
+  auto lhs = helperObjs.linsys->hostlhs_;
+  auto rhs = helperObjs.linsys->hostrhs_;
+
   double lhs_norm = 0, rhs_norm=0;
   for (unsigned i=0; i < rhs.extent(0); ++i)
      rhs_norm += rhs(i)*rhs(i);

@@ -60,10 +60,11 @@ TEST_F(KsgsKernelHex8Mesh, NGP_tke_ksgs_node)
 
   helperObjs.execute();
 
+  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->hostNumSumIntoCalls_(0), 8u);
 
   namespace hex8_golds = hex8_golds::tke_ksgs;
   unit_test_kernel_utils::expect_all_near(

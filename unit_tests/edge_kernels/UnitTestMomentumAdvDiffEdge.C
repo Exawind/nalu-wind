@@ -83,10 +83,12 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_advection_diffusion)
 
   helperObjs.execute();
 
+  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 12u);
+  EXPECT_EQ(helperObjs.linsys->hostNumSumIntoCalls_(0), 12u);
 
   namespace gold_values = ::hex8_golds::adv_diff;
   unit_test_kernel_utils::expect_all_near(

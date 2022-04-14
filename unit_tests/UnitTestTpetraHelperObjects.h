@@ -110,18 +110,15 @@ struct TpetraHelperObjectsBase {
                                         const std::vector<double>& vals,
                                         const std::vector<double>& rhs)
   {
-    using MatrixType = sierra::nalu::LinSys::LocalMatrix;
-    const MatrixType& localMatrix = linsys->getOwnedMatrix()->getLocalMatrix();
-
-    using VectorType = sierra::nalu::LinSys::LocalVector;
-    const VectorType& localRhs = linsys->getOwnedRhs()->getLocalView<sierra::nalu::DeviceSpace>();
+    auto localMatrix = linsys->getOwnedMatrix()->getLocalMatrixHost();
+    auto localRhs = linsys->getOwnedRhs()->getLocalViewHost(Tpetra::Access::ReadWrite);
 
     EXPECT_EQ(rowOffsets.size()-1, static_cast<unsigned>(localMatrix.numRows()));
     EXPECT_EQ(rhs.size(), localRhs.size());
     EXPECT_EQ(rhs.size(), static_cast<unsigned>(localMatrix.numRows()));
 
     for(int i=0; i<localMatrix.numRows(); ++i) {
-      KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(i);
+      auto constRowView = localMatrix.rowConst(i);
       for(int offset=rowOffsets[i]; offset<rowOffsets[i+1]; ++offset) {
         int goldCol = cols[offset];
         bool foundGoldCol = false;
@@ -146,11 +143,8 @@ struct TpetraHelperObjectsBase {
   template<typename LHSType, typename RHSType>
   void check_against_dense_gold_values(unsigned rhsSize, const LHSType& lhs, const RHSType& rhs)
   {
-    using MatrixType = sierra::nalu::LinSys::LocalMatrix;
-    const MatrixType& localMatrix = linsys->getOwnedLocalMatrix();
-
-    using VectorType = sierra::nalu::LinSys::LocalVector;
-    const VectorType& localRhs = linsys->getOwnedLocalRhs();
+    auto localMatrix = linsys->getOwnedMatrix()->getLocalMatrixHost();
+    auto localRhs = linsys->getOwnedRhs()->getLocalViewHost(Tpetra::Access::ReadWrite);
 
     EXPECT_EQ(rhsSize, localMatrix.numRows());
     EXPECT_EQ(rhsSize, localRhs.size());
@@ -163,7 +157,7 @@ struct TpetraHelperObjectsBase {
     for(unsigned i=0; i<numElemNodes; ++i) {
       int rowId = linsys->getRowLID(elemNodes[i]);
       for(unsigned d=0; d<linsys->numDof(); ++d) {
-        KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(rowId+d);
+        auto constRowView = localMatrix.rowConst(rowId+d);
         EXPECT_EQ(rhsSize, constRowView.length);
 
         for(unsigned j=0; j<numElemNodes; ++j) {

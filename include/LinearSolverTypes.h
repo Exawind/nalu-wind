@@ -86,6 +86,7 @@ struct LinSys {
   using LocalVector       = MultiVector::dual_view_type::t_dev;
   using Matrix            = Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using LocalMatrix       = Matrix::local_matrix_device_type;
+  using LocalMatrixHost   = Matrix::local_matrix_host_type;
   using Operator          = Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using MultiVectorTraits = Belos::MultiVecTraits<Scalar, MultiVector>;
   using OperatorTraits    = Belos::OperatorTraits<Scalar,MultiVector, Operator>;
