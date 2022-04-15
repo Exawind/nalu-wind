@@ -62,6 +62,15 @@ SDRSSTAMSNodeKernel::setup(Realm& realm)
   gammaOne_ = realm.get_turb_model_constant(TM_gammaOne);
   gammaTwo_ = realm.get_turb_model_constant(TM_gammaTwo);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
+
+  lengthScaleLimiter_ = realm.solutionOptions_->lengthScaleLimiter_;
+  if (lengthScaleLimiter_) {
+    const NodeKernelTraits::DblType earthAngularVelocity = realm.solutionOptions_->earthAngularVelocity_;
+    const NodeKernelTraits::DblType pi = std::acos(-1.0);
+    const NodeKernelTraits::DblType latitude = realm.solutionOptions_->latitude_*pi/180.0;
+    corfac_ = 2.0*earthAngularVelocity*std::sin(latitude);
+    referenceVelocity_ = realm.solutionOptions_->referenceVelocity_;
+  }
 }
 
 void
@@ -90,9 +99,37 @@ SDRSSTAMSNodeKernel::execute(
   const NodeKernelTraits::DblType om_fOneBlend = 1.0 - fOneBlend;
   const NodeKernelTraits::DblType beta =
     fOneBlend * betaOne_ + om_fOneBlend * betaTwo_;
-  const NodeKernelTraits::DblType gamma =
-    fOneBlend * gammaOne_ + om_fOneBlend * gammaTwo_;
   const NodeKernelTraits::DblType sigmaD = 2.0 * om_fOneBlend * sigmaWTwo_;
+
+  NodeKernelTraits::DblType gammaOne_apply;
+  NodeKernelTraits::DblType gammaTwo_apply;
+  // apply limiter to gamma
+  if (lengthScaleLimiter_) {
+    // calculate mixing length
+    const NodeKernelTraits::DblType l_t = stk::math::sqrt(tke)/(stk::math::pow(betaStar_, .25)*sdr);
+ 
+    // calculate maximum mixing length
+    // the proportionality constant (.00027) was found by fitting to measurements
+    // of atmospheric conditions as described in ref. Kob13
+    const NodeKernelTraits::DblType l_e = .00027*referenceVelocity_/corfac_;
+ 
+    // apply limiter to cEpsOne -> calculate gammaOne
+    const NodeKernelTraits::DblType cEpsOne_one = gammaOne_ + 1.;
+    const NodeKernelTraits::DblType cEpsTwo_one = betaOne_/betaStar_ + 1.;
+    const NodeKernelTraits::DblType cEpsOneStar_one = cEpsOne_one + (cEpsTwo_one - cEpsOne_one) * (l_t/l_e);
+    gammaOne_apply = cEpsOneStar_one - 1.;
+ 
+    // apply limiter to cEpsTwo -> calculate gammaTwo
+    const NodeKernelTraits::DblType cEpsOne_two = gammaTwo_ + 1.;
+    const NodeKernelTraits::DblType cEpsTwo_two = betaTwo_/betaStar_ + 1.;
+    const NodeKernelTraits::DblType cEpsOneStar_two = cEpsOne_two + (cEpsTwo_two - cEpsOne_two) * (l_t/l_e);
+    gammaTwo_apply = cEpsOneStar_two - 1.;
+  }
+  else {
+    gammaOne_apply = gammaOne_;
+    gammaTwo_apply = gammaTwo_;
+  }
+  const NodeKernelTraits::DblType gamma = fOneBlend * gammaOne_apply + om_fOneBlend * gammaTwo_apply;
 
   // Pw includes 1/tvisc scaling; tvisc may be zero at a dirichlet low Re
   // approach (clip)

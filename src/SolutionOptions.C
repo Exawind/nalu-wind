@@ -86,7 +86,11 @@ SolutionOptions::SolutionOptions()
     explicitlyZeroOpenPressureGradient_(false),
     resetAMSAverages_(true),
     transition_model_(false),
-    gammaEqActive_(false)
+    gammaEqActive_(false),
+    lengthScaleLimiter_(false),
+    referenceVelocity_(6.6),
+    roughnessHeight_(0.1),
+    RANSBelowKs_(false)
 {
   // nothing to do
 }
@@ -349,6 +353,10 @@ SolutionOptions::load(const YAML::Node & y_node)
           get_if_present(y_user_constants, "earth_angular_velocity", earthAngularVelocity_, earthAngularVelocity_);
           get_if_present(y_user_constants, "latitude", latitude_, latitude_);
           get_if_present(y_user_constants, "boussinesq_time_scale", raBoussinesqTimeScale_, raBoussinesqTimeScale_);
+          get_if_present(y_user_constants, "roughness_height", roughnessHeight_, roughnessHeight_);
+          get_if_present(y_user_constants, "length_scale_limiter", lengthScaleLimiter_, lengthScaleLimiter_);
+          get_if_present(y_user_constants, "reference_velocity", referenceVelocity_, referenceVelocity_);
+          get_if_present(y_user_constants, "rans_below_ks", RANSBelowKs_, RANSBelowKs_);
 
           if (expect_sequence( y_user_constants, "gravity", optional) ) {
             const int gravSize = y_user_constants["gravity"].size();
@@ -599,6 +607,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_ams_peclet_scale] = 100.0;
   turbModelConstantMap_[TM_tkeAmb] = 0.0;
   turbModelConstantMap_[TM_sdrAmb] = 0.0;
+  turbModelConstantMap_[TM_avgTimeCoeff] = 1.0;
   turbModelConstantMap_[TM_caOne] = 2.0;
   turbModelConstantMap_[TM_caTwo] = 0.06;
   turbModelConstantMap_[TM_ceOne] = 1.0;

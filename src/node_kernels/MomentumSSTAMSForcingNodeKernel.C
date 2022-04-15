@@ -84,6 +84,10 @@ MomentumSSTAMSForcingNodeKernel::setup(Realm& realm)
   avgVelocity_ = fieldMgr.get_field<double>(avgVelocityID_);
   avgResAdeq_ = fieldMgr.get_field<double>(avgResAdeqID_);
   forcingComp_ = fieldMgr.get_field<double>(forcingCompID_);
+  RANSBelowKs_ = realm.solutionOptions_->RANSBelowKs_;
+  z0_ = realm.solutionOptions_->roughnessHeight_;
+  eastVector_ = realm.solutionOptions_->eastVector_;
+  northVector_ = realm.solutionOptions_->northVector_; 
 }
 
 void
@@ -210,6 +214,23 @@ MomentumSSTAMSForcingNodeKernel::execute(
   NodeKernelTraits::DblType gX = C_F * hX;
   NodeKernelTraits::DblType gY = C_F * hY;
   NodeKernelTraits::DblType gZ = C_F * hZ;
+
+  if (RANSBelowKs_) {
+    // relationship b/w sand grain roughness height, k_s, and aerodynamic roughness, z0,
+    // as described in ref. Bau11, Eq. (2.29)
+    const NodeKernelTraits::DblType k_s = 30.*z0_;
+    int gravity_i;
+    for (int i = 0; i < 3; ++i) {
+      if ((eastVector_[i] == 0.0) && (northVector_[i] == 0.0)) {
+        gravity_i = i;
+      }
+    }
+    if (coords[gravity_i] <= k_s) {
+      gX = 0.0;
+      gY = 0.0;
+      gZ = 0.0;
+    }
+  }
 
   forcingComp_.get(node, 0) = gX;
   forcingComp_.get(node, 1) = gY;

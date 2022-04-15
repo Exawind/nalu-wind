@@ -71,10 +71,14 @@ private:
   NodeKernelTraits::DblType sigmaWTwo_;
   NodeKernelTraits::DblType betaOne_;
   NodeKernelTraits::DblType betaTwo_;
-  NodeKernelTraits::DblType gammaOne_;
-  NodeKernelTraits::DblType gammaTwo_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
   const int nDim_;
+
+  bool lengthScaleLimiter_;
+  NodeKernelTraits::DblType corfac_;
+  NodeKernelTraits::DblType referenceVelocity_;
+  NodeKernelTraits::DblType gammaOne_;
+  NodeKernelTraits::DblType gammaTwo_;
 };
 
 } // namespace nalu

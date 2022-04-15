@@ -74,6 +74,10 @@ private:
   NodeKernelTraits::DblType relaxFac_;
 
   const int nDim_;
+
+  bool lengthScaleLimiter_;
+  NodeKernelTraits::DblType corfac_;
+  NodeKernelTraits::DblType referenceVelocity_;
 };
 
 }  // nalu

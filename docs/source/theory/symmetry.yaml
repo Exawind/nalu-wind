@@ -1,0 +1,7 @@
+realms:
+  - name: fluidRealm
+    boundary_conditions:
+    - abltop_boundary_condition: bc_upper
+      target_name: upper
+      symmetry_user_data:
+        symmetry_type: "z_direction_strong"

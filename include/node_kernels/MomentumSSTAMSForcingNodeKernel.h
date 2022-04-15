@@ -90,6 +90,12 @@ private:
 
   double time_;
   double dt_;
+
+  bool RANSBelowKs_;
+  double z0_;
+  std::vector<double> eastVector_;
+  std::vector<double> northVector_;
+  
 };
 
 } // namespace nalu

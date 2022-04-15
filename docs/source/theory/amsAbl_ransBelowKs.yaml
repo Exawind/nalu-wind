@@ -1,0 +1,7 @@
+realms:
+  - name: fluidRealm
+    solution_options:
+      options:
+        - user_constants:
+          roughness_height: 0.3
+          rans_below_ks: true

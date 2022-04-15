@@ -150,6 +150,10 @@ public:
   double latitude_;
   double raBoussinesqTimeScale_;
   double symmetryBcPenaltyFactor_;
+  double roughnessHeight_;
+  bool lengthScaleLimiter_;
+  double referenceVelocity_;
+  bool RANSBelowKs_;
   bool useStreletsUpwinding_;
   bool transition_model_;
   bool gammaEqActive_;

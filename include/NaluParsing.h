@@ -271,6 +271,7 @@ struct SymmetryBoundaryConditionData : public BoundaryCondition {
 struct ABLTopBoundaryConditionData : public BoundaryCondition {
   ABLTopBoundaryConditionData(BoundaryConditions& bcs) : BoundaryCondition(bcs){};
   ABLTopUserData userData_;
+  SymmetryUserData symmetryUserData_;
 };
 
 struct PeriodicBoundaryConditionData : public BoundaryCondition {
