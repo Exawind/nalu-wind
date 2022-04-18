@@ -13,12 +13,11 @@ False         CavitCheck         - Perform cavitation check? (flag) [AFAeroMod m
 False         CompAA             - Flag to compute AeroAcoustics calculation [only used when WakeMod=1 or 2]
 "unused"      AA_InputFile       - Aeroacoustics input file
 ======  Environmental Conditions  ===================================================================
-      1.225   AirDens            - Air density (kg/m^3)
-  1.464E-05   KinVisc            - Kinematic air viscosity (m^2/s)
-        335   SpdSound           - Speed of sound (m/s)
-     103500   Patm               - Atmospheric pressure (Pa) [used only when CavitCheck=True]
-       1700   Pvap               - Vapour pressure of fluid (Pa) [used only when CavitCheck=True]
-        0.5   FluidDepth         - Water depth above mid-hub height (m) [used only when CavitCheck=True]
+"default"     AirDens            - Air density (kg/m^3)
+"default"     KinVisc            - Kinematic air viscosity (m^2/s)
+"default"     SpdSound           - Speed of sound (m/s)
+"default"     Patm               - Atmospheric pressure (Pa) [used only when CavitCheck=True]
+"default"     Pvap               - Vapour pressure of fluid (Pa) [used only when CavitCheck=True]
 ======  Blade-Element/Momentum Theory Options  ====================================================== [unused when WakeMod=0]
           2   SkewMod            - Type of skewed-wake correction model (switch) {1=uncoupled, 2=Pitt/Peters, 3=coupled} [unused when WakeMod=0]
 "default"     SkewModFactor      - Constant used in Pitt/Peters skewed wake model {or "default" is 15/32*pi} (-) [used only when SkewMod=2; unused when WakeMod=0]
