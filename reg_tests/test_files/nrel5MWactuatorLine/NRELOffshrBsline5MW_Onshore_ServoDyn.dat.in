@@ -73,11 +73,6 @@ True          GenTiStp     - Method to stop the generator {T: timed using TimGen
 "unused"      SStCfiles    - Name of the files for substructure structural controllers (quoted strings) [unused when NumSStC==0]
 ---------------------- CABLE CONTROL -------------------------------------------
           0   CCmode       - Cable control mode {0: none, 4: user-defined from Simulink/Labview, 5: user-defined from Bladed-style DLL} (switch)
----------------------- TUNED MASS DAMPER ---------------------------------------
-False         CompNTMD     - Compute nacelle tuned mass damper {true/false} (flag)
-"NRELOffshrBsline5MW_ServoDyn_TMD.dat"    NTMDfile     - Name of the file for nacelle tuned mass damper (quoted string) [unused when CompNTMD is false]
-False         CompTTMD     - Compute tower tuned mass damper {true/false} (flag)
-"NRELOffshrBsline5MW_ServoDyn_TMD.dat"    TTMDfile     - Name of the file for tower tuned mass damper (quoted string) [unused when CompTTMD is false]
 ---------------------- BLADED INTERFACE ---------------------------------------- [used only with Bladed Interface]
 "ServoData/@NREL5MW_DISCON_LIB@"    DLL_FileName - Name/location of the dynamic library {.dll [Windows] or .so [Linux]} in the Bladed-DLL format (-) [used only with Bladed Interface]
 "DISCON.IN"    DLL_InFile   - Name of input file sent to the DLL (-) [used only with Bladed Interface]
