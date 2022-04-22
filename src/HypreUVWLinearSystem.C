@@ -592,6 +592,12 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
   /* Compute RHS norm */
   std::vector<double> rhsnorm(nDim);
   std::fill(rhsnorm.begin(), rhsnorm.end(), 0);
+#if 1
+   /* Use Hypre internal APIs */
+   for (unsigned d = 0; d < nDim; ++d)
+       rhsNorm[d] = hypre_ParVectorInnerProd ( (hypre_ParVector*)hypre_IJVectorObject(rhs_[d]),
+                                               (hypre_ParVector*)hypre_IJVectorObject(rhs_[d]) );
+#else
 
   for (unsigned d = 0; d < nDim; ++d) {
     double* rhs_data = hypre_VectorData(hypre_ParVectorLocalVector(
@@ -605,9 +611,9 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
       rhsnorm[d]);
   }
 
-  /* initialize this */
-  std::fill(rhsNorm.begin(), rhsNorm.end(), 0);
   stk::all_reduce_sum(bulk.parallel(), rhsnorm.data(), rhsNorm.data(), nDim);
+#endif
+
   for (unsigned i = 0; i < nDim; ++i)
     rhsNorm[i] = std::sqrt(rhsNorm[i]);
 
