@@ -2450,6 +2450,11 @@ HypreLinearSystem::copy_hypre_to_stk(stk::mesh::FieldBase* stkField)
 
   /********************/
   /* Compute RHS norm */
+#if 1
+  /* Use Hypre internal APIs */
+  double gblnorm2 = hypre_ParVectorInnerProd ( (hypre_ParVector*)hypre_IJVectorObject(rhs_),
+                                               (hypre_ParVector*)hypre_IJVectorObject(rhs_) );
+#else
   double rhsnorm2 = 0.0;
 
   /* use internal hypre APIs to get directly at the pointer to the owned RHS
@@ -2466,6 +2471,7 @@ HypreLinearSystem::copy_hypre_to_stk(stk::mesh::FieldBase* stkField)
 
   double gblnorm2 = 0.0;
   stk::all_reduce_sum(bulk.parallel(), &rhsnorm2, &gblnorm2, 1);
+#endif
 
 #ifdef HYPRE_LINEAR_SYSTEM_DEBUG
   scanBufferForBadValues(rhs_data, N, __FILE__,__FUNCTION__,__LINE__,"RHS");
