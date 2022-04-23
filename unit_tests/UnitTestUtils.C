@@ -458,7 +458,7 @@ double initialize_linear_scalar_field(
   const VectorFieldType& coordField,
   const ScalarFieldType& qField)
 {
-  // q = a + b^T x + 1/2 x^T H x
+  // q = a + b^T x
   std::mt19937 rng;
   rng.seed(0); // fixed seed
   std::uniform_real_distribution<double> coeff(-1.0, 1.0);
