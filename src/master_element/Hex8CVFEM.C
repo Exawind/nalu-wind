@@ -11,6 +11,7 @@
 #include <master_element/Hex8CVFEM.h>
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFunctions.h>
+#include <master_element/MasterElementWork.h>
 #include <master_element/TensorOps.h>
 #include <master_element/Hex8GeometryFunctions.h>
 
@@ -329,11 +330,7 @@ void HexSCS::determinant(
   double *areav,
   double *error)
 {
-  const int npe  = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(hex_scs_det)
-    ( &nelem, &npe, &nint, coords, areav );
-
+  sierra::nalu::hex_scs_det( nelem, coords, areav );
   // all is always well; no error checking
   *error = 0;
 }

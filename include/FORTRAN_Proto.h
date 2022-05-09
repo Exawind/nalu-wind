@@ -20,13 +20,6 @@
 //------------------------------------------------------------------------------
 
 extern "C" void
-SIERRA_FORTRAN( hex_scs_det ) ( const int*  nelem,
-                                const int*  npe,
-                                const int*  nscs,
-                                const double* coords,
-                                double* area_vec);
-
-extern "C" void
 SIERRA_FORTRAN( hex_scv_det ) ( const int*  nelem,
                                 const int*  npe,
                                 const int*  nscv,
