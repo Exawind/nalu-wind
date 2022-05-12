@@ -6,7 +6,7 @@ Simulations:
 # Hypre memory and other configurations
 hypre_config:
     memory_pool_mbs: 1500
-    use_cusparse_sgemm: no
+    use_vendor_sgemm: no
 
 # Specify the linear system solvers.
 linear_solvers:
