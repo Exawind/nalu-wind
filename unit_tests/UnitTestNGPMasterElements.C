@@ -211,7 +211,9 @@ TEST(Hex27SCV, detj)
   stk::mesh::Entity elem = unit_test_utils::create_one_reference_element(*bulk, stk::topology::HEXAHEDRON_27);
   const auto* node_rels = bulk->begin_nodes(elem);
   sierra::nalu::Hex27SCV me;
+
   auto& coordField = *static_cast<const VectorFieldType*>(bulk->mesh_meta_data().coordinate_field());
+
   int dim = me.nDim_;
 
   std::mt19937 rng;
