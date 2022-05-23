@@ -171,7 +171,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPScratchViews)
   const double velVec[nDim] = {1.0, 0.0, 0.0};
 
   stk::mesh::EntityVector nodes;
-  stk::mesh::get_entities(bulk, stk::topology::NODE_RANK, nodes);
+  stk::mesh::get_entities(*bulk, stk::topology::NODE_RANK, nodes);
 
   for(stk::mesh::Entity node : nodes) {
     double* fieldData = static_cast<double*>(stk::mesh::field_data(*velocity, node));
@@ -180,7 +180,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPScratchViews)
     }
   }
 
-  do_the_test(bulk, pressure, velocity);
+  do_the_test(*bulk, pressure, velocity);
 }
 
 void do_assemble_elem_solver_test(
