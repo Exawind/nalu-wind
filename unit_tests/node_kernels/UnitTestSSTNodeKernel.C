@@ -104,7 +104,7 @@ static constexpr double lhs[8][8] = {
 TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -114,9 +114,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
-    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTNodeKernel>(meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTNodeKernel>(*meta_);
 
   helperObjs.execute();
 
@@ -135,7 +135,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
 TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -145,9 +145,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
-    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTDESNodeKernel>(meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTDESNodeKernel>(*meta_);
 
   helperObjs.execute();
 
@@ -166,7 +166,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -176,9 +176,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
-    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTNodeKernel>(meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTNodeKernel>(*meta_);
 
   helperObjs.execute();
 
@@ -197,7 +197,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -207,9 +207,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
-    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTDESNodeKernel>(meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTDESNodeKernel>(*meta_);
 
   helperObjs.execute();
 

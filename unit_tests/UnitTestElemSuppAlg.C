@@ -169,7 +169,7 @@ TEST_F(Hex8Mesh, elem_supp_alg_views)
 {
     fill_mesh_and_initialize_test_fields("generated:20x20x20");
 
-    TestElemAlgorithmWithSuppAlgViews testAlgorithm(bulk);
+    TestElemAlgorithmWithSuppAlgViews testAlgorithm(*bulk);
 
     //DiscreteLapacianSuppAlg constructor says which data it needs, by inserting
     //things into the 'dataNeededByKernels_' container.

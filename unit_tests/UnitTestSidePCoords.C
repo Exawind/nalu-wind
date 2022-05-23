@@ -35,11 +35,13 @@ namespace
     std::vector<double> sideIsoPoint = { perturb(rng), perturb(rng) };
 
     int dim = topo.dimension();
-    stk::mesh::MetaData meta(topo.dimension());
-    stk::mesh::BulkData bulk(meta, MPI_COMM_WORLD);
+    stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);
+    meshBuilder.set_spatial_dimension(dim);
+    auto bulk = meshBuilder.create();
+    auto& meta = bulk->mesh_meta_data();
 
-    auto elem = unit_test_utils::create_one_reference_element(bulk, topo);
-    const stk::mesh::Entity* elem_node_rels = bulk.begin_nodes(elem);
+    auto elem = unit_test_utils::create_one_reference_element(*bulk, topo);
+    const stk::mesh::Entity* elem_node_rels = bulk->begin_nodes(elem);
     auto* meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
 
     using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
@@ -55,7 +57,7 @@ namespace
       }
     }
 
-    const auto& face_buckets = bulk.get_buckets(meta.side_rank(), meta.universal_part());
+    const auto& face_buckets = bulk->get_buckets(meta.side_rank(), meta.universal_part());
     for (const auto* ib : face_buckets) {
       const auto& b = *ib;
 
@@ -65,7 +67,7 @@ namespace
 
       for (size_t k = 0; k < b.size(); ++k) {
         auto face = b[k];
-        const auto* face_node_rels = bulk.begin_nodes(face);
+        const auto* face_node_rels = bulk->begin_nodes(face);
 
         std::vector<double> faceCoords(dim * meSide->nodesPerElement_);
         for (int d = 0; d < dim; ++d) {
@@ -86,7 +88,7 @@ namespace
         }
 
         std::vector<double> sideElemCoords(dim, 0.0);
-        const int side_ordinal = bulk.begin_element_ordinals(face)[0];
+        const int side_ordinal = bulk->begin_element_ordinals(face)[0];
         meSCS->sidePcoords_to_elemPcoords(side_ordinal, 1, sideIsoPoint.data(), sideElemCoords.data());
 
         std::vector<double> faceInterpCoords(dim, 0.0);

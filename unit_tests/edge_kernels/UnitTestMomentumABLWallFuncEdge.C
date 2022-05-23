@@ -18,7 +18,7 @@
 
 TEST_F(MomentumABLKernelHex8Mesh, NGP_abl_wall_func)
 {
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -28,13 +28,13 @@ TEST_F(MomentumABLKernelHex8Mesh, NGP_abl_wall_func)
   solnOpts_.meshMotion_ = false;
   solnOpts_.externalMeshDeformation_ = false;
 
-  auto* part = meta_.get_part("surface_5");
+  auto* part = meta_->get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(
-    bulk_, stk::topology::QUAD_4, 3, part);
+    *bulk_, stk::topology::QUAD_4, 3, part);
 
   std::unique_ptr<sierra::nalu::Kernel> kernel(
     new sierra::nalu::MomentumABLWallFuncEdgeKernel<sierra::nalu::AlgTraitsQuad4>(
-      meta_, gravity_, z0_, Tref_, kappa_,
+      *meta_, gravity_, z0_, Tref_, kappa_,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());

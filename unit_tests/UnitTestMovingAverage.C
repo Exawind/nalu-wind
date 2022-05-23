@@ -7,6 +7,7 @@
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
+#include <stk_mesh/base/MeshBuilder.hpp>
 #include <stk_mesh/base/Bucket.hpp>
 #include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
@@ -28,10 +29,14 @@ class PostProcessor : public ::testing::Test
 public:
   PostProcessor()
     : timeIntegrator_(),
-      meta_(2u),
-      bulk_(meta_, MPI_COMM_WORLD),
       numSteps(2000)
  {
+    auto numberOfDimensions = 2u;
+    stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);
+    meshBuilder.set_spatial_dimension(numberOfDimensions);
+    bulk_ = meshBuilder.create();
+    auto& meta_ = bulk_->mesh_meta_data();
+
     temperature_ = &meta_.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "temperature");
 
     raTemperature_ = &meta_.declare_field<ScalarFieldType>(
@@ -42,17 +47,16 @@ public:
     stk::mesh::put_field_on_mesh(*raTemperature_, meta_.universal_part(), nullptr);
     meta_.commit();
 
-    bulk_.modification_begin();
-    node = bulk_.declare_node(1u);
-    bulk_.modification_end();
+    bulk_->modification_begin();
+    node = bulk_->declare_node(1u);
+    bulk_->modification_end();
 
     const double final_time = 2.0 * std::acos(-1.0);
     timeIntegrator_.timeStepN_ = final_time/(numSteps);
  }
 
   sierra::nalu::TimeIntegrator timeIntegrator_;
-  stk::mesh::MetaData meta_;
-  stk::mesh::BulkData bulk_;
+  std::unique_ptr<stk::mesh::BulkData> bulk_;
   int numSteps;
 
   stk::mesh::Entity node;
@@ -67,7 +71,7 @@ TEST_F(PostProcessor, moving_average_constant)
     std::vector<double> constant_realization(numSteps, 10.0);
 
     double timeScale = 0.1;
-    sierra::nalu::MovingAveragePostProcessor avgPP(bulk_, timeIntegrator_, false);
+    sierra::nalu::MovingAveragePostProcessor avgPP(*bulk_, timeIntegrator_, false);
     avgPP.add_fields({"temperature"});
     avgPP.set_time_scale(timeScale);
 
@@ -113,7 +117,7 @@ TEST_F(PostProcessor, moving_average_ou)
     auto realization = ou_realization(1.0, dt, numSteps);
 
     double timeScale = 0.1;
-    sierra::nalu::MovingAveragePostProcessor avgPP(bulk_, timeIntegrator_, false);
+    sierra::nalu::MovingAveragePostProcessor avgPP(*bulk_, timeIntegrator_, false);
     avgPP.add_fields({"temperature"});
     avgPP.set_time_scale(timeScale);
 

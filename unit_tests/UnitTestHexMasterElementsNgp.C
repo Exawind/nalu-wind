@@ -331,30 +331,33 @@ class MasterElementHexSerialNGP : public ::testing::Test
 protected:
     MasterElementHexSerialNGP()
     : comm(MPI_COMM_WORLD), spatialDimension(3),
-      meta(spatialDimension), bulk(meta, comm),
-      ngpMesh(stk::mesh::get_updated_ngp_mesh(bulk)),
       poly_order(1), topo(stk::topology::HEX_8)
     {
+      stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);
+      meshBuilder.set_spatial_dimension(spatialDimension);
+      bulk = meshBuilder.create();
+      meta = &bulk->mesh_meta_data();
+      ngpMesh = stk::mesh::get_updated_ngp_mesh(*bulk);
     }
 
     void setup_poly_order_1_hex_8() {
       poly_order = 1;
       topo = stk::topology::HEX_8;
-      unit_test_utils::create_one_reference_element(bulk, stk::topology::HEX_8);
+      unit_test_utils::create_one_reference_element(*bulk, stk::topology::HEX_8);
     }
 
 #ifndef KOKKOS_ENABLE_CUDA
     void setup_poly_order_2_hex_27() {
       poly_order = 2;
       topo = stk::topology::HEX_27;
-      unit_test_utils::create_one_reference_element(bulk, stk::topology::HEX_27);
+      unit_test_utils::create_one_reference_element(*bulk, stk::topology::HEX_27);
     }
 #endif
 
     stk::ParallelMachine comm;
     unsigned spatialDimension;
-    stk::mesh::MetaData meta;
-    stk::mesh::BulkData bulk;
+    stk::mesh::MetaData* meta;
+    std::unique_ptr<stk::mesh::BulkData> bulk;
     stk::mesh::NgpMesh ngpMesh;
     unsigned poly_order;
     stk::topology topo;
@@ -366,7 +369,7 @@ TEST_F(MasterElementHexSerialNGP, hex8_scs_interpolation)
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_1_hex_8();
     using AlgTraits = sierra::nalu::AlgTraitsHex8;
-    check_interpolation<AlgTraits, AlgTraits::masterElementScs_, true> (meta, bulk);
+    check_interpolation<AlgTraits, AlgTraits::masterElementScs_, true> (*meta, *bulk);
   }
 }
 
@@ -375,7 +378,7 @@ TEST_F(MasterElementHexSerialNGP, hex8_scv_interpolation)
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_1_hex_8();
     using AlgTraits = sierra::nalu::AlgTraitsHex8;
-    check_interpolation<AlgTraits, AlgTraits::masterElementScv_, false>(meta, bulk);
+    check_interpolation<AlgTraits, AlgTraits::masterElementScv_, false>(*meta, *bulk);
   }
 }
 
@@ -384,7 +387,7 @@ TEST_F(MasterElementHexSerialNGP, hex8_scs_derivatives)
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_1_hex_8();
     using AlgTraits = sierra::nalu::AlgTraitsHex8;
-    check_derivatives<AlgTraits>(meta, bulk);
+    check_derivatives<AlgTraits>(*meta, *bulk);
   }
 }
 
@@ -395,7 +398,7 @@ TEST_F(MasterElementHexSerialNGP, hex27_scs_interpolation)
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_2_hex_27();
     using AlgTraits = sierra::nalu::AlgTraitsHex27;
-    check_interpolation<AlgTraits, AlgTraits::masterElementScs_, true>(meta, bulk);
+    check_interpolation<AlgTraits, AlgTraits::masterElementScs_, true>(*meta, *bulk);
   }
 }
 
@@ -404,7 +407,7 @@ TEST_F(MasterElementHexSerialNGP, hex27_scv_interpolation)
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_2_hex_27();
     using AlgTraits = sierra::nalu::AlgTraitsHex27;
-    check_interpolation<AlgTraits, AlgTraits::masterElementScv_, false>(meta, bulk);
+    check_interpolation<AlgTraits, AlgTraits::masterElementScv_, false>(*meta, *bulk);
   }
 }
 
@@ -413,7 +416,7 @@ TEST_F(MasterElementHexSerialNGP, hex27_scs_derivatives)
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_2_hex_27();
     using AlgTraits = sierra::nalu::AlgTraitsHex27;
-    check_derivatives<AlgTraits>(meta, bulk);
+    check_derivatives<AlgTraits>(*meta, *bulk);
   }
 }
 

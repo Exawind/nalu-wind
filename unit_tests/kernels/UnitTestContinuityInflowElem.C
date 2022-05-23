@@ -39,8 +39,8 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_inflow)
   solnOpts_.mdotInterpRhoUTogether_ = true;
   solnOpts_.activateOpenMdotCorrection_ = true;
 
-  auto* part = meta_.get_part("surface_2");
-  unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::QUAD_4, 1, part);
+  auto* part = meta_->get_part("surface_2");
+  unit_test_utils::HelperObjects helperObjs(*bulk_, stk::topology::QUAD_4, 1, part);
 
   sierra::nalu::TimeIntegrator timeIntegrator;
   timeIntegrator.gamma1_ = 1.0;
@@ -50,7 +50,7 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_inflow)
 
   std::unique_ptr<sierra::nalu::Kernel> inflowKernel(
     new sierra::nalu::ContinuityInflowElemKernel<sierra::nalu::AlgTraitsQuad4>(
-      bulk_, solnOpts_, true,
+      *bulk_, solnOpts_, true,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 
   // Register the kernel for execution

@@ -24,7 +24,7 @@
 TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   //const std::string meshSpec = "generated:1x1x1";
   const bool doPerturb = false;
@@ -35,10 +35,10 @@ TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
 
   fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
-  unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+  unit_test_utils::HelperObjects helperObjs(*bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   helperObjs.realm.solutionOptions_->activateOpenMdotCorrection_ = true;
 
-  stk::mesh::Part* surface1 = meta_.get_part("surface_1");
+  stk::mesh::Part* surface1 = meta_->get_part("surface_1");
   {
     sierra::nalu::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
     geomAlgDriver.register_face_algorithm<sierra::nalu::GeometryBoundaryAlg>(
@@ -58,7 +58,7 @@ TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
   ngpPres.sync_to_device();
   ngpDnvF.sync_to_device();
 
-  const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, meta_.universal_part());
+  const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, meta_->universal_part());
 
   std::function<void(bool,bool)> run_alg = [&](bool zeroGrad, bool useShifted) {
     stk::mesh::field_fill(0.0, *dpdx_);

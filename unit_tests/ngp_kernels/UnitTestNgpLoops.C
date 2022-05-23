@@ -29,46 +29,45 @@ class NgpLoopTest : public ::testing::Test
 {
 public:
   NgpLoopTest()
-    : meta(3),
-      bulk(meta, MPI_COMM_WORLD),
-      partVec(),
-      density(&meta.declare_field<ScalarFieldType>(
-                 stk::topology::NODE_RANK, "density")),
-      pressure(&meta.declare_field<ScalarFieldType>(
-                 stk::topology::NODE_RANK, "pressure")),
-      velocity(&meta.declare_field<VectorFieldType>(
-                 stk::topology::NODE_RANK, "velocity")),
-      mdotEdge(&meta.declare_field<ScalarFieldType>(
-                 stk::topology::EDGE_RANK, "mass_flow_rate")),
-      massFlowRate(&meta.declare_field<GenericFieldType>(
-                     stk::topology::ELEM_RANK, "mass_flow_rate_scs"))
+    : partVec()
   {
+    stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);
+    meshBuilder.set_spatial_dimension(3);
+    bulk = meshBuilder.create();
+    meta = &bulk->mesh_meta_data();
+
+    density = &meta->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
+    pressure = &meta->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure");
+    velocity = &meta->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
+    mdotEdge = &meta->declare_field<ScalarFieldType>(stk::topology::EDGE_RANK, "mass_flow_rate");
+    massFlowRate = &meta->declare_field<GenericFieldType>(stk::topology::ELEM_RANK, "mass_flow_rate_scs");
+
     const double ten = 10.0;
     const double zero = 0.0;
     const double oneVec[3] = {1.0, 1.0, 1.0};
     sierra::nalu::HexSCS hex8SCS;
-    stk::mesh::put_field_on_mesh(*density, meta.universal_part(), 1, &ten);
-    stk::mesh::put_field_on_mesh(*pressure, meta.universal_part(), 1, &zero);
-    stk::mesh::put_field_on_mesh(*velocity, meta.universal_part(), 3, oneVec);
+    stk::mesh::put_field_on_mesh(*density, meta->universal_part(), 1, &ten);
+    stk::mesh::put_field_on_mesh(*pressure, meta->universal_part(), 1, &zero);
+    stk::mesh::put_field_on_mesh(*velocity, meta->universal_part(), 3, oneVec);
     stk::mesh::put_field_on_mesh(
-      *massFlowRate, meta.universal_part(), hex8SCS.num_integration_points(),
+      *massFlowRate, meta->universal_part(), hex8SCS.num_integration_points(),
       &zero);
-    stk::mesh::put_field_on_mesh(*mdotEdge, meta.universal_part(), 1, &zero);
+    stk::mesh::put_field_on_mesh(*mdotEdge, meta->universal_part(), 1, &zero);
   }
 
   ~NgpLoopTest() = default;
 
   void fill_mesh_and_init_fields(const std::string& meshSpec = "generated:2x2x2")
   {
-    unit_test_utils::fill_hex8_mesh(meshSpec, bulk);
-    partVec = { meta.get_part("block_1")};
+    unit_test_utils::fill_hex8_mesh(meshSpec, *bulk);
+    partVec = { meta->get_part("block_1")};
 
-    coordField = static_cast<const VectorFieldType*>(meta.coordinate_field());
+    coordField = static_cast<const VectorFieldType*>(meta->coordinate_field());
     EXPECT_TRUE(coordField != nullptr);
   }
 
-  stk::mesh::MetaData meta;
-  stk::mesh::BulkData bulk;
+  stk::mesh::MetaData* meta;
+  std::unique_ptr<stk::mesh::BulkData> bulk;
   stk::mesh::PartVector partVec;
   const VectorFieldType* coordField{nullptr};
   ScalarFieldType* density{nullptr};
@@ -834,114 +833,114 @@ TEST_F(NgpLoopTest, NGP_basic_node_loop)
 {
   fill_mesh_and_init_fields("generated:2x2x2");
 
-  basic_node_loop(bulk, *pressure);
+  basic_node_loop(*bulk, *pressure);
 }
 
 TEST_F(NgpLoopTest, NGP_basic_node_reduce)
 {
   fill_mesh_and_init_fields("generated:16x16x16");
 
-  basic_node_reduce(bulk, *pressure);
+  basic_node_reduce(*bulk, *pressure);
 }
 
 TEST_F(NgpLoopTest, NGP_basic_node_reduce_array)
 {
   fill_mesh_and_init_fields("generated:2x2x2");
 
-  basic_node_reduce_array(bulk, *pressure, 3*3*3);
+  basic_node_reduce_array(*bulk, *pressure, 3*3*3);
 }
 
 TEST_F(NgpLoopTest, NGP_basic_node_reduce_minmax)
 {
   fill_mesh_and_init_fields("generated:16x16x16");
 
-  basic_node_reduce_minmax(bulk, 0.0, 16.0);
-  basic_node_reduce_minmax_alt(bulk, 0.0, 16.0);
+  basic_node_reduce_minmax(*bulk, 0.0, 16.0);
+  basic_node_reduce_minmax_alt(*bulk, 0.0, 16.0);
 
-  stk::mesh::Selector sel = bulk.mesh_meta_data().universal_part();
-  const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+  stk::mesh::Selector sel = bulk->mesh_meta_data().universal_part();
+  const auto& bkts = bulk->get_buckets(stk::topology::NODE_RANK, sel);
   size_t numNodes = 0;
   for (auto* b: bkts) {
     numNodes += b->size();
   }
 
-  basic_node_reduce_minmaxsum(bulk, 0.0, 16.0, static_cast<double>(numNodes));
+  basic_node_reduce_minmaxsum(*bulk, 0.0, 16.0, static_cast<double>(numNodes));
 }
 
 TEST_F(NgpLoopTest, NGP_basic_elem_loop)
 {
   fill_mesh_and_init_fields("generated:2x2x2");
 
-  basic_elem_loop(bulk, *pressure, *massFlowRate);
+  basic_elem_loop(*bulk, *pressure, *massFlowRate);
 }
 
 TEST_F(NgpLoopTest, NGP_basic_edge_loop)
 {
   fill_mesh_and_init_fields("generated:2x2x2");
 
-  basic_edge_loop(bulk, *pressure, *mdotEdge);
+  basic_edge_loop(*bulk, *pressure, *mdotEdge);
 }
 
 TEST_F(NgpLoopTest, NGP_elem_loop_scratch_views)
 {
   fill_mesh_and_init_fields("generated:2x2x2");
 
-  elem_loop_scratch_views(bulk, *pressure, *velocity);
+  elem_loop_scratch_views(*bulk, *pressure, *velocity);
 }
 
 TEST_F(NgpLoopTest, NGP_elem_loop_par_reduce)
 {
   fill_mesh_and_init_fields("generated:2x2x2");
 
-  elem_loop_par_reduce(bulk, *pressure);
+  elem_loop_par_reduce(*bulk, *pressure);
 }
 
 TEST_F(NgpLoopTest, NGP_calc_mdot_elem_loop)
 {
   fill_mesh_and_init_fields("generated:2x2x2");
 
-  calc_mdot_elem_loop(bulk, *density, *velocity, *massFlowRate);
+  calc_mdot_elem_loop(*bulk, *density, *velocity, *massFlowRate);
 }
 
 TEST_F(NgpLoopTest, NGP_basic_face_elem_loop)
 {
-  if (bulk.parallel_size() > 1) return;
+  if (bulk->parallel_size() > 1) return;
 
-  auto& exposedAreaVec = meta.declare_field<GenericFieldType>(
-    meta.side_rank(), "exposed_area_vector");
-  auto& wallArea = meta.declare_field<ScalarFieldType>(
+  auto& exposedAreaVec = meta->declare_field<GenericFieldType>(
+    meta->side_rank(), "exposed_area_vector");
+  auto& wallArea = meta->declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "wall_area");
-  auto& wallNormDist = meta.declare_field<ScalarFieldType>(
+  auto& wallNormDist = meta->declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "wall_normal_dist");
 
   stk::mesh::put_field_on_mesh(
-    exposedAreaVec, meta.universal_part(),
-    meta.spatial_dimension() * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+    exposedAreaVec, meta->universal_part(),
+    meta->spatial_dimension() * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
   stk::mesh::put_field_on_mesh(
-    wallArea, meta.universal_part(), 1, nullptr);
+    wallArea, meta->universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(
-    wallNormDist, meta.universal_part(), 1, nullptr);
+    wallNormDist, meta->universal_part(), 1, nullptr);
 
   fill_mesh_and_init_fields("generated:4x4x1|sideset:xXyYzZ");
   unit_test_kernel_utils::calc_exposed_area_vec(
-    bulk, sierra::nalu::AlgTraitsQuad4::topo_, *coordField, exposedAreaVec);
+    *bulk, sierra::nalu::AlgTraitsQuad4::topo_, *coordField, exposedAreaVec);
 
-  basic_face_elem_loop(bulk, *coordField, exposedAreaVec, wallArea, wallNormDist);
+  basic_face_elem_loop(*bulk, *coordField, exposedAreaVec, wallArea, wallNormDist);
 }
 
 TEST_F(NgpLoopTest, NGP_basic_face_elem_reduce)
 {
-  if (bulk.parallel_size() > 1) return;
+  if (bulk->parallel_size() > 1) return;
 
-  auto& exposedAreaVec = meta.declare_field<GenericFieldType>(
-    meta.side_rank(), "exposed_area_vector");
+  auto& exposedAreaVec = meta->declare_field<GenericFieldType>(
+    meta->side_rank(), "exposed_area_vector");
   stk::mesh::put_field_on_mesh(
-    exposedAreaVec, meta.universal_part(),
-    meta.spatial_dimension() * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+    exposedAreaVec, meta->universal_part(),
+    meta->spatial_dimension() * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
 
   fill_mesh_and_init_fields("generated:4x4x1|sideset:xXyYzZ");
   unit_test_kernel_utils::calc_exposed_area_vec(
-    bulk, sierra::nalu::AlgTraitsQuad4::topo_, *coordField, exposedAreaVec);
+    *bulk, sierra::nalu::AlgTraitsQuad4::topo_, *coordField, exposedAreaVec);
 
-  basic_face_elem_reduce(bulk, *coordField, exposedAreaVec);
+  basic_face_elem_reduce(*bulk, *coordField, exposedAreaVec);
 }

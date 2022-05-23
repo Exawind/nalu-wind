@@ -155,5 +155,5 @@ TEST_F(Hex8MeshWithNSOFields, NGPMeshField)
 {
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
-  test_ngp_mesh_field_values(bulk, velocity, massFlowRate);
+  test_ngp_mesh_field_values(*bulk, velocity, massFlowRate);
 }

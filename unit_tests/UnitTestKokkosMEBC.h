@@ -33,10 +33,12 @@ class KokkosMEBC
 public:
   KokkosMEBC(int faceOrdinal,bool doInit=true, bool doPerturb=false)
      : comm_(MPI_COMM_WORLD),
-       meta_(BcAlgTraits::nDim_),
-       bulk_(meta_, comm_),
        faceOrdinal_(faceOrdinal)
    {
+     stk::mesh::MeshBuilder meshBuilder(comm_);
+     meshBuilder.set_spatial_dimension(BcAlgTraits::nDim_);
+     bulk_ = meshBuilder.create();
+     meta_ = &bulk_->mesh_meta_data();
      if (doInit)
        fill_mesh_and_init_data(doPerturb);
    }
@@ -54,18 +56,18 @@ public:
    void fill_mesh(bool doPerturb=false)
    {
      if (doPerturb)
-       unit_test_utils::create_one_perturbed_element(bulk_, BcAlgTraits::elemTopo_);
+       unit_test_utils::create_one_perturbed_element(*bulk_, BcAlgTraits::elemTopo_);
      else
-       unit_test_utils::create_one_reference_element(bulk_,  BcAlgTraits::elemTopo_);
+       unit_test_utils::create_one_reference_element(*bulk_,  BcAlgTraits::elemTopo_);
 
-     partVec_ = {meta_.get_part("surface_" + std::to_string(faceOrdinal_))};
-     coordinates_ = static_cast<const VectorFieldType*>( meta_.coordinate_field());
+     partVec_ = {meta_->get_part("surface_" + std::to_string(faceOrdinal_))};
+     coordinates_ = static_cast<const VectorFieldType*>( meta_->coordinate_field());
 
      EXPECT_TRUE(coordinates_ != nullptr);
 
      const int numDof = 1;
      helperObjs_.reset(new FaceElemHelperObjects(
-       bulk_, BcAlgTraits::faceTopo_, BcAlgTraits::elemTopo_, numDof,
+       *bulk_, BcAlgTraits::faceTopo_, BcAlgTraits::elemTopo_, numDof,
        partVec_[0]));
 
      elemDataNeeded().add_coordinates_field(
@@ -91,11 +93,11 @@ public:
        )
    {
      ThrowRequireMsg(partVec_.size()==1, "KokkosMEViews unit-test assumes partVec_.size==1");
-     ThrowRequireMsg(!bulk_.get_buckets(meta_.side_rank(), *partVec_[0]).empty(), "part does not contain side-ranked elements");
+     ThrowRequireMsg(!bulk_->get_buckets(meta_->side_rank(), *partVec_[0]).empty(), "part does not contain side-ranked elements");
 
 #ifndef KOKKOS_ENABLE_CUDA
      sierra::nalu::AssembleFaceElemSolverAlgorithm& alg = *(helperObjs_->assembleFaceElemSolverAlg);
-     alg.run_face_elem_algorithm(bulk_, func);
+     alg.run_face_elem_algorithm(*bulk_, func);
 #endif
    }
 
@@ -110,8 +112,8 @@ public:
   }
 
    stk::ParallelMachine comm_;
-   stk::mesh::MetaData meta_;
-   stk::mesh::BulkData bulk_;
+   stk::mesh::MetaData* meta_;
+   std::unique_ptr<stk::mesh::BulkData> bulk_;
    int faceOrdinal_;
    stk::mesh::PartVector partVec_;
    const VectorFieldType* coordinates_{nullptr};

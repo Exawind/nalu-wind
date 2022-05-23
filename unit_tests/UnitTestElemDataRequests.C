@@ -58,18 +58,18 @@ TEST_F(Hex8MeshWithNSOFields, NGPElemDataRequests)
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
   stk::topology elemTopo = stk::topology::HEX_8;
 
-  sierra::nalu::ElemDataRequests dataReq(bulk.mesh_meta_data());
+  sierra::nalu::ElemDataRequests dataReq(bulk->mesh_meta_data());
   auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo);
   dataReq.add_cvfem_volume_me(meSCV);
 
   dataReq.add_gathered_nodal_field(*velocity, 3);
   dataReq.add_gathered_nodal_field(*pressure, 1);
 
-  dataReq.add_coordinates_field(*bulk.mesh_meta_data().coordinate_field(), 3, sierra::nalu::CURRENT_COORDINATES);
-  dataReq.add_coordinates_field(*bulk.mesh_meta_data().coordinate_field(), 3, sierra::nalu::MODEL_COORDINATES);
+  dataReq.add_coordinates_field(*bulk->mesh_meta_data().coordinate_field(), 3, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_coordinates_field(*bulk->mesh_meta_data().coordinate_field(), 3, sierra::nalu::MODEL_COORDINATES);
 
   EXPECT_EQ(3u, dataReq.get_fields().size());
 
-  do_the_test_gpu(dataReq, bulk);
+  do_the_test_gpu(dataReq, *bulk);
 }
 

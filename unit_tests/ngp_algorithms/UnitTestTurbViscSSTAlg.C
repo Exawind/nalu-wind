@@ -16,7 +16,7 @@
 TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sst_alg)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   SSTKernelHex8Mesh::fill_mesh_and_init_fields();
 
@@ -24,7 +24,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sst_alg)
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::HelperObjects helperObjs(
-    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   sierra::nalu::TurbViscSSTAlg TurbViscSSTAlg(
     helperObjs.realm, partVec_[0], tvisc_);
@@ -50,8 +50,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sst_alg)
 
     const double tol = 1.0e-15;
 
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
     for (const auto* b: bkts)
@@ -65,7 +65,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sst_alg)
 TEST_F(AMSKernelHex8Mesh, NGP_turb_visc_sstams_alg)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   AMSKernelHex8Mesh::fill_mesh_and_init_fields();
 
@@ -73,7 +73,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_turb_visc_sstams_alg)
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::HelperObjects helperObjs(
-    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   sierra::nalu::TurbViscSSTAlg TurbViscSSTAlg(
     helperObjs.realm, partVec_[0], tvisc_, true);
@@ -99,8 +99,8 @@ TEST_F(AMSKernelHex8Mesh, NGP_turb_visc_sstams_alg)
 
     const double tol = 1.0e-15;
 
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
     for (const auto* b: bkts)

@@ -149,8 +149,8 @@ class ActuatorFunctorTests : public ::testing::Test
 {
 protected:
   std::string inputFileSurrogate_;
-  stk::mesh::MetaData stkMeta_;
-  stk::mesh::BulkData stkBulk_;
+  stk::mesh::MetaData* stkMeta_;
+  std::unique_ptr<stk::mesh::BulkData> stkBulk_;
   const double tol_;
   const VectorFieldType* coordinates_{nullptr};
   VectorFieldType* velocity_{nullptr};
@@ -158,37 +158,37 @@ protected:
   ScalarFieldType* dualNodalVolume_{nullptr};
 
   ActuatorFunctorTests()
-    : stkMeta_(3),
-      stkBulk_(stkMeta_, MPI_COMM_WORLD),
-      tol_(1e-8),
-      coordinates_(nullptr),
-      velocity_(&stkMeta_.declare_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "velocity")),
-      actuatorForce_(&stkMeta_.declare_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "actuator_source")),
-      dualNodalVolume_(&stkMeta_.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "dual_nodal_volume"))
-
+    : tol_(1e-8),
+      coordinates_(nullptr)
   {
+    stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);
+    meshBuilder.set_spatial_dimension(3);
+    stkBulk_ = meshBuilder.create();
+    stkMeta_ = &stkBulk_->mesh_meta_data();
+
+    velocity_ = &stkMeta_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
+    actuatorForce_ = &stkMeta_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "actuator_source");
+      dualNodalVolume_ = &stkMeta_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
+
     stk::mesh::put_field_on_mesh(
-      *velocity_, stkMeta_.universal_part(), 3, nullptr);
+      *velocity_, stkMeta_->universal_part(), 3, nullptr);
     stk::mesh::put_field_on_mesh(
-      *actuatorForce_, stkMeta_.universal_part(), 3, nullptr);
+      *actuatorForce_, stkMeta_->universal_part(), 3, nullptr);
     stk::mesh::put_field_on_mesh(
-      *dualNodalVolume_, stkMeta_.universal_part(), 1, nullptr);
+      *dualNodalVolume_, stkMeta_->universal_part(), 1, nullptr);
     stk::mesh::field_fill(1.0, *dualNodalVolume_);
   }
 
   void SetUp()
   {
     const std::string meshSpec = "generated:5x5x5";
-    unit_test_utils::fill_hex8_mesh(meshSpec, stkBulk_);
+    unit_test_utils::fill_hex8_mesh(meshSpec, *stkBulk_);
     coordinates_ =
-      static_cast<const VectorFieldType*>(stkMeta_.coordinate_field());
+      static_cast<const VectorFieldType*>(stkMeta_->coordinate_field());
     const stk::mesh::Selector selector =
-      stkMeta_.locally_owned_part() | stkMeta_.globally_shared_part();
+      stkMeta_->locally_owned_part() | stkMeta_->globally_shared_part();
     const auto& buckets =
-      stkBulk_.get_buckets(stk::topology::NODE_RANK, selector);
+      stkBulk_->get_buckets(stk::topology::NODE_RANK, selector);
     for (const stk::mesh::Bucket* bptr : buckets) {
       for (stk::mesh::Entity node : *bptr) {
         const double* coords = stk::mesh::field_data(*coordinates_, node);
@@ -220,7 +220,7 @@ TEST_F(ActuatorFunctorTests, NGP_testSearchAndInterpolate)
   ActuatorBulk actBulk(actMeta);
 
   // what gets called in the time loop
-  ActuatorTestInterpVelFunctors(actMeta, actBulk, stkBulk_);
+  ActuatorTestInterpVelFunctors(actMeta, actBulk, *stkBulk_);
 
   // check results
   const int nTotal = actMeta.numPointsTotal_;
@@ -257,7 +257,7 @@ TEST_F(ActuatorFunctorTests, NGP_testSpreadForces)
   actMeta.add_turbine(actInfo);
 
   ActuatorBulk actBulk(actMeta);
-  ActuatorTestSpreadForceFunctor(actMeta, actBulk, stkBulk_)();
+  ActuatorTestSpreadForceFunctor(actMeta, actBulk, *stkBulk_)();
 
   auto coarseElems = actBulk.coarseSearchElemIds_.view_host();
   const int numCoarse = coarseElems.extent_int(0);
@@ -267,9 +267,9 @@ TEST_F(ActuatorFunctorTests, NGP_testSpreadForces)
 
   for (int i = 0; i < numCoarse; ++i) {
     const stk::mesh::Entity elem =
-      stkBulk_.get_entity(stk::topology::ELEMENT_RANK, coarseElems(i));
-    stk::mesh::Entity const* elem_node_rels = stkBulk_.begin_nodes(elem);
-    const unsigned numNodes = stkBulk_.num_nodes(elem);
+      stkBulk_->get_entity(stk::topology::ELEMENT_RANK, coarseElems(i));
+    stk::mesh::Entity const* elem_node_rels = stkBulk_->begin_nodes(elem);
+    const unsigned numNodes = stkBulk_->num_nodes(elem);
     for (unsigned j = 0; j < numNodes; ++j) {
       stk::mesh::Entity node = elem_node_rels[j];
       nodesMatch.push_back(node);
@@ -286,9 +286,9 @@ TEST_F(ActuatorFunctorTests, NGP_testSpreadForces)
 
   // make sure all nodes are now zero
   const stk::mesh::Selector selector =
-    stkMeta_.locally_owned_part() | stkMeta_.globally_shared_part();
+    stkMeta_->locally_owned_part() | stkMeta_->globally_shared_part();
   const auto& buckets =
-    stkBulk_.get_buckets(stk::topology::NODE_RANK, selector);
+    stkBulk_->get_buckets(stk::topology::NODE_RANK, selector);
   for (const stk::mesh::Bucket* bptr : buckets) {
     for (stk::mesh::Entity node : *bptr) {
       if (

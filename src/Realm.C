@@ -109,6 +109,7 @@
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
+#include <stk_mesh/base/MeshBuilder.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
@@ -267,7 +268,7 @@ Realm::~Realm()
   meshInfo_.reset();
 
   delete bulkData_;
-  delete metaData_;
+  metaData_ = nullptr;
   delete ioBroker_;
 
   // prop algs
@@ -1856,8 +1857,10 @@ Realm::create_mesh()
   stk::ParallelMachine pm = NaluEnv::self().parallel_comm();
   
   // news for mesh constructs
-  metaData_ = new stk::mesh::MetaData();
-  bulkData_ = new stk::mesh::BulkData(*metaData_, pm, activateAura_ ? stk::mesh::BulkData::AUTO_AURA : stk::mesh::BulkData::NO_AUTO_AURA);
+  stk::mesh::MeshBuilder meshBuilder(pm);
+  meshBuilder.set_aura_option(activateAura_ ? stk::mesh::BulkData::AUTO_AURA : stk::mesh::BulkData::NO_AUTO_AURA);
+  bulkData_ = meshBuilder.create().release();
+  metaData_ = &bulkData_->mesh_meta_data();
   ioBroker_ = new stk::io::StkMeshIoBroker( pm );
   ioBroker_->set_auto_load_distribution_factor_per_nodeset(false);
   ioBroker_->set_bulk_data(*bulkData_);

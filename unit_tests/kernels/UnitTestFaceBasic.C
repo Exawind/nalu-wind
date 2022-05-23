@@ -47,14 +47,14 @@ TEST_F(Hex8Mesh, faceBasic)
     return;
   }
   fill_mesh("generated:1x1x1|sideset:xXyYzZ");
-  verify_faces_exist(bulk);
+  verify_faces_exist(*bulk);
 
   stk::topology faceTopo = stk::topology::QUAD_4;
   sierra::nalu::MasterElement* meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(faceTopo);
 
-  stk::mesh::Part* surface1 = meta.get_part("surface_1");
+  stk::mesh::Part* surface1 = meta->get_part("surface_1");
   int numDof = 1;
-  unit_test_utils::HelperObjects helperObjs(bulk, faceTopo, numDof, surface1);
+  unit_test_utils::HelperObjects helperObjs(*bulk, faceTopo, numDof, surface1);
   helperObjs.assembleElemSolverAlg->dataNeededByKernels_.add_cvfem_face_me(meFC);
 
   TestFaceKernel faceKernel(faceTopo, scalarQ, helperObjs.assembleElemSolverAlg->dataNeededByKernels_);

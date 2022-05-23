@@ -18,16 +18,16 @@
 TEST_F(KsgsKernelHex8Mesh, NGP_turb_kenetic_energy_Rodi)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
-  const int nprocs = bulk_.parallel_size();
+  const int nprocs = bulk_->parallel_size();
   
   std::mt19937 rng;
   rng.seed(0); // fixed seed
 
   fill_mesh_and_init_fields(false,false,true);
 
-  unit_test_utils::NodeHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 3, partVec_[0]);
+  unit_test_utils::NodeHelperObjects helperObjs(*bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   // set solution options
   sierra::nalu::SolutionOptions *solnOpts=helperObjs.nodeAlg->realm_.solutionOptions_;
@@ -46,7 +46,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_kenetic_energy_Rodi)
   solnOpts_.thermalExpansionCoeff_ = 3.0e-3;
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::TKERodiNodeKernel>
-   (bulk_.mesh_meta_data(), *solnOpts);
+   (bulk_->mesh_meta_data(), *solnOpts);
 
   helperObjs.execute();
 

@@ -19,17 +19,17 @@
 TEST_F(MomentumNodeHex8Mesh, NGP_momentum_body_force)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
   const std::vector<double> forceVector{8.0, 8.0, 8.0};
 
   unit_test_utils::NodeHelperObjects helperObjs(
-    bulk_, stk::topology::HEX_8, 3, partVec_[0]);
+    *bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumBodyForceNodeKernel>(
-    bulk_, forceVector);
+    *bulk_, forceVector);
 
   helperObjs.execute();
 

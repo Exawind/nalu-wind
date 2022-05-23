@@ -127,8 +127,8 @@ TEST_F(Hex8Mesh, NGP_faceElemBasic)
     return;
   }
   fill_mesh("generated:1x1x1|sideset:xXyYzZ");
-  verify_faces_exist(bulk);
-  fill_with_node_ids(bulk, idField);
+  verify_faces_exist(*bulk);
+  fill_with_node_ids(*bulk, idField);
 
   stk::topology faceTopo = stk::topology::QUAD_4;
   stk::topology elemTopo = stk::topology::HEX_8;
@@ -136,10 +136,10 @@ TEST_F(Hex8Mesh, NGP_faceElemBasic)
   sierra::nalu::MasterElement* meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element<sierra::nalu::AlgTraitsHex8>();
   sierra::nalu::MasterElement* meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<sierra::nalu::AlgTraitsHex8>();
 
-  stk::mesh::Part* surface1 = meta.get_part("surface_1");
+  stk::mesh::Part* surface1 = meta->get_part("surface_1");
   unsigned numDof = 3;
 
-  unit_test_utils::HelperObjects helperObjs(bulk, elemTopo, numDof, surface1);
+  unit_test_utils::HelperObjects helperObjs(*bulk, elemTopo, numDof, surface1);
 
   sierra::nalu::AssembleFaceElemSolverAlgorithm faceElemAlg(helperObjs.realm, surface1, &helperObjs.eqSystem,
                                                           faceTopo.num_nodes(), elemTopo.num_nodes());
@@ -147,7 +147,7 @@ TEST_F(Hex8Mesh, NGP_faceElemBasic)
   faceElemAlg.elemDataNeeded_.add_cvfem_surface_me(meSCS);
   faceElemAlg.elemDataNeeded_.add_cvfem_volume_me(meSCV);
 
-  do_assemble_face_elem_solver_test(bulk, faceElemAlg, idField);
+  do_assemble_face_elem_solver_test(*bulk, faceElemAlg, idField);
 }
 
 #ifndef KOKKOS_ENABLE_CUDA
@@ -188,20 +188,20 @@ TEST_F(Hex8ElementWithBCFields, faceElemMomentumSymmetry)
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1) {
     return;
   }
-  verify_faces_exist(bulk);
+  verify_faces_exist(*bulk);
 
   sierra::nalu::SolutionOptions solnOptions;
 
   stk::topology faceTopo = stk::topology::QUAD_4;
   stk::topology elemTopo = stk::topology::HEX_8;
-  stk::mesh::Part* surface1 = meta.get_part("all_surfaces");
-  unit_test_utils::HelperObjects helperObjs(bulk, elemTopo, sierra::nalu::AlgTraitsQuad4Hex8::nDim_, surface1);
+  stk::mesh::Part* surface1 = meta->get_part("all_surfaces");
+  unit_test_utils::HelperObjects helperObjs(*bulk, elemTopo, sierra::nalu::AlgTraitsQuad4Hex8::nDim_, surface1);
 
   sierra::nalu::AssembleFaceElemSolverAlgorithm faceElemAlg(helperObjs.realm, surface1, &helperObjs.eqSystem,
                                                           faceTopo.num_nodes(), elemTopo.num_nodes());
 
   auto  momentumSymmetryElemKernel =
-      new sierra::nalu::MomentumSymmetryElemKernel<sierra::nalu::AlgTraitsQuad4Hex8>(meta, solnOptions, &velocity, &viscosity,
+      new sierra::nalu::MomentumSymmetryElemKernel<sierra::nalu::AlgTraitsQuad4Hex8>(*meta, solnOptions, &velocity, &viscosity,
                                     faceElemAlg.faceDataNeeded_, faceElemAlg.elemDataNeeded_);
 
   faceElemAlg.activeKernels_.push_back(momentumSymmetryElemKernel);
@@ -214,20 +214,20 @@ TEST_F(Hex8ElementWithBCFields, faceElemMomentumOpen)
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1) {
     return;
   }
-  verify_faces_exist(bulk);
+  verify_faces_exist(*bulk);
 
   sierra::nalu::SolutionOptions solnOptions;
 
   stk::topology faceTopo = stk::topology::QUAD_4;
   stk::topology elemTopo = stk::topology::HEX_8;
-  stk::mesh::Part* surface1 = meta.get_part("all_surfaces");
-  unit_test_utils::HelperObjects helperObjs(bulk, elemTopo, sierra::nalu::AlgTraitsQuad4Hex8::nDim_, surface1);
+  stk::mesh::Part* surface1 = meta->get_part("all_surfaces");
+  unit_test_utils::HelperObjects helperObjs(*bulk, elemTopo, sierra::nalu::AlgTraitsQuad4Hex8::nDim_, surface1);
 
   sierra::nalu::AssembleFaceElemSolverAlgorithm faceElemAlg(helperObjs.realm, surface1, &helperObjs.eqSystem,
                                                           faceTopo.num_nodes(), elemTopo.num_nodes());
 
   auto  momentumOpenAdvDiffElemKernel =
-    new sierra::nalu::MomentumOpenAdvDiffElemKernel<sierra::nalu::AlgTraitsQuad4Hex8>(meta, solnOptions, &helperObjs.eqSystem, &velocity, &Gjui, &viscosity,
+    new sierra::nalu::MomentumOpenAdvDiffElemKernel<sierra::nalu::AlgTraitsQuad4Hex8>(*meta, solnOptions, &helperObjs.eqSystem, &velocity, &Gjui, &viscosity,
                                                                                         faceElemAlg.faceDataNeeded_, faceElemAlg.elemDataNeeded_);
 
   faceElemAlg.activeKernels_.push_back(momentumOpenAdvDiffElemKernel);
@@ -240,20 +240,20 @@ TEST_F(Hex8ElementWithBCFields, faceElemScalarOpen)
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1) {
     return;
   }
-  verify_faces_exist(bulk);
+  verify_faces_exist(*bulk);
 
   sierra::nalu::SolutionOptions solnOptions;
 
   stk::topology faceTopo = stk::topology::QUAD_4;
   stk::topology elemTopo = stk::topology::HEX_8;
-  stk::mesh::Part* surface1 = meta.get_part("all_surfaces");
-  unit_test_utils::HelperObjects helperObjs(bulk, elemTopo, sierra::nalu::AlgTraitsQuad4Hex8::nDim_, surface1);
+  stk::mesh::Part* surface1 = meta->get_part("all_surfaces");
+  unit_test_utils::HelperObjects helperObjs(*bulk, elemTopo, sierra::nalu::AlgTraitsQuad4Hex8::nDim_, surface1);
 
   sierra::nalu::AssembleFaceElemSolverAlgorithm faceElemAlg(helperObjs.realm, surface1, &helperObjs.eqSystem,
                                                           faceTopo.num_nodes(), elemTopo.num_nodes());
 
   auto  scalarOpenAdvElemKernel =
-    new sierra::nalu::ScalarOpenAdvElemKernel<sierra::nalu::AlgTraitsQuad4Hex8>(meta, solnOptions, &helperObjs.eqSystem, 
+    new sierra::nalu::ScalarOpenAdvElemKernel<sierra::nalu::AlgTraitsQuad4Hex8>(*meta, solnOptions, &helperObjs.eqSystem, 
                                                                                 &scalarQ, &bcScalarQ, &Gjq, &viscosity,
                                                                                 faceElemAlg.faceDataNeeded_, faceElemAlg.elemDataNeeded_);
 

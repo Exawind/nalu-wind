@@ -115,14 +115,17 @@ TEST(SingleHexPromotion, coords_p2)
   int dim = 3;
   int polynomialOrder = 2;
 
-  stk::mesh::MetaData meta(dim);
-  stk::mesh::BulkData bulk(meta, MPI_COMM_WORLD, stk::mesh::BulkData::NO_AUTO_AURA);
+  stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);
+  meshBuilder.set_spatial_dimension(dim);
+  meshBuilder.set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA);
+  auto bulk = meshBuilder.create();
+  auto& meta = bulk->mesh_meta_data();
 
   std::string singleElemMeshSpec = "generated:1x1x1";
-  fill_and_promote_hex_mesh(singleElemMeshSpec, bulk, polynomialOrder);
+  fill_and_promote_hex_mesh(singleElemMeshSpec, *bulk, polynomialOrder);
   const stk::mesh::PartVector promotedElemParts = sierra::nalu::only_super_elem_parts(meta.get_parts());
   const stk::mesh::Selector promotedElemSelector = stk::mesh::selectUnion(promotedElemParts);
-  const stk::mesh::BucketVector& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, promotedElemSelector);
+  const stk::mesh::BucketVector& buckets = bulk->get_buckets(stk::topology::ELEM_RANK, promotedElemSelector);
 
   stk::mesh::EntityVector elems;
   stk::mesh::get_selected_entities(promotedElemSelector, buckets, elems);
@@ -130,8 +133,8 @@ TEST(SingleHexPromotion, coords_p2)
 
   VectorFieldType* coordField = meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
   for (stk::mesh::Entity elem : elems) {
-    const stk::mesh::Entity* elemNodeRelations = bulk.begin_nodes(elem);
-    for (unsigned k = 0; k < bulk.num_nodes(elem); ++k) {
+    const stk::mesh::Entity* elemNodeRelations = bulk->begin_nodes(elem);
+    for (unsigned k = 0; k < bulk->num_nodes(elem); ++k) {
       const stk::mesh::Entity node = elemNodeRelations[k];
       const double* stkCoordsForNodeK = stk::mesh::field_data(*coordField, node);
       for (int d = 0; d < dim; ++d) {
@@ -142,6 +145,6 @@ TEST(SingleHexPromotion, coords_p2)
 
   bool doOutput = false;
   if (doOutput) {
-    dump_promoted_mesh_file(bulk, polynomialOrder);
+    dump_promoted_mesh_file(*bulk, polynomialOrder);
   }
 }

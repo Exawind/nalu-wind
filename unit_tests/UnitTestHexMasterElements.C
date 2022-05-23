@@ -6,6 +6,7 @@
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
+#include <stk_mesh/base/MeshBuilder.hpp>
 #include <stk_mesh/base/Bucket.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
 #include <stk_mesh/base/Field.hpp>
@@ -237,27 +238,30 @@ class MasterElementHexSerial : public ::testing::Test
 protected:
     MasterElementHexSerial()
     : comm(MPI_COMM_WORLD), spatialDimension(3),
-      meta(spatialDimension), bulk(meta, comm),
       poly_order(1), topo(stk::topology::HEX_8)
     {
+      stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);
+      meshBuilder.set_spatial_dimension(spatialDimension);
+      bulk = meshBuilder.create();
+      meta = &bulk->mesh_meta_data();
     }
 
     void setup_poly_order_1_hex_8() {
       poly_order = 1;
       topo = stk::topology::HEX_8;
-      unit_test_utils::create_one_reference_element(bulk, stk::topology::HEX_8);
+      unit_test_utils::create_one_reference_element(*bulk, stk::topology::HEX_8);
     }
 
     void setup_poly_order_2_hex_27() {
       poly_order = 2;
       topo = stk::topology::HEX_27;
-      unit_test_utils::create_one_reference_element(bulk, stk::topology::HEX_27);
+      unit_test_utils::create_one_reference_element(*bulk, stk::topology::HEX_27);
     }
 
     stk::ParallelMachine comm;
     unsigned spatialDimension;
-    stk::mesh::MetaData meta;
-    stk::mesh::BulkData bulk;
+    stk::mesh::MetaData* meta;
+    std::unique_ptr<stk::mesh::BulkData> bulk;
     unsigned poly_order;
     stk::topology topo;
 };
@@ -268,7 +272,7 @@ TEST_F(MasterElementHexSerial, hex8_scs_interpolation)
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_1_hex_8();
     sierra::nalu::HexSCS hexscs;
-    check_interpolation(bulk, topo, hexscs, poly_order);
+    check_interpolation(*bulk, topo, hexscs, poly_order);
   }
 }
 
@@ -277,7 +281,7 @@ TEST_F(MasterElementHexSerial, hex8_scv_interpolation)
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_1_hex_8();
     sierra::nalu::HexSCV hexscv;
-    check_interpolation(bulk, topo, hexscv, poly_order);
+    check_interpolation(*bulk, topo, hexscv, poly_order);
   }
 }
 
@@ -286,7 +290,7 @@ TEST_F(MasterElementHexSerial, hex8_scs_derivatives)
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_1_hex_8();
     sierra::nalu::HexSCS hexscs;
-    check_derivatives(bulk, topo, hexscs, poly_order);
+    check_derivatives(*bulk, topo, hexscs, poly_order);
   }
 }
 
@@ -295,7 +299,7 @@ TEST_F(MasterElementHexSerial, hex27_scs_interpolation)
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_2_hex_27();
     sierra::nalu::Hex27SCS hex27scs;
-    check_interpolation(bulk, topo, hex27scs, poly_order);
+    check_interpolation(*bulk, topo, hex27scs, poly_order);
   }
 }
 
@@ -304,7 +308,7 @@ TEST_F(MasterElementHexSerial, hex27_scv_interpolation)
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_2_hex_27();
     sierra::nalu::Hex27SCV hex27scv;
-    check_interpolation(bulk, topo, hex27scv, poly_order);
+    check_interpolation(*bulk, topo, hex27scv, poly_order);
   }
 }
 
@@ -313,7 +317,7 @@ TEST_F(MasterElementHexSerial, hex27_scs_derivatives)
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_2_hex_27();
     sierra::nalu::Hex27SCS hex27scs;
-    check_derivatives(bulk, topo, hex27scs, poly_order);
+    check_derivatives(*bulk, topo, hex27scs, poly_order);
   }
 }
 

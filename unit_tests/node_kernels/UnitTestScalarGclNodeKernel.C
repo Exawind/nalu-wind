@@ -28,7 +28,7 @@ static constexpr double rhs[8] =
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_gcl_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -40,11 +40,11 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_gcl_node)
   timeIntegrator.gamma3_ = 0.0;
 
   unit_test_utils::NodeHelperObjects helperObjs(
-    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::ScalarGclNodeKernel>(bulk_, mixFraction_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::ScalarGclNodeKernel>(*bulk_, mixFraction_);
 
   helperObjs.execute();
 

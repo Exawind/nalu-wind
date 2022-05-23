@@ -21,16 +21,16 @@
 TEST_F(EnthalpyABLKernelHex8Mesh, NGP_abl_force)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
   unit_test_utils::NodeHelperObjects helperObjs(
-    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   helperObjs.realm.ablForcingAlg_ = new unit_test_utils::TestABLForcingAlg(helperObjs.realm);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::EnthalpyABLForceNodeKernel>(bulk_, solnOpts_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::EnthalpyABLForceNodeKernel>(*bulk_, solnOpts_);
 
   helperObjs.execute();
 

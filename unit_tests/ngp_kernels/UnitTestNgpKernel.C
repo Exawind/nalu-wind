@@ -31,12 +31,12 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelBasic)
 
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
-  unit_test_utils::HelperObjects helperObjs(bulk, stk::topology::HEX_8, 1, partVec[0]);
+  unit_test_utils::HelperObjects helperObjs(*bulk, stk::topology::HEX_8, 1, partVec[0]);
   auto* assembleElemSolverAlg = helperObjs.assembleElemSolverAlg;
   auto& dataNeeded = assembleElemSolverAlg->dataNeededByKernels_;
 
   std::unique_ptr<TestContinuityKernel> testKernel(
-    new TestContinuityKernel(bulk, dataNeeded));
+    new TestContinuityKernel(*bulk, dataNeeded));
   assembleElemSolverAlg->activeKernels_.push_back(testKernel.get());
 
   EXPECT_EQ(3u, dataNeeded.get_fields().size());
@@ -72,18 +72,18 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelRunAlg)
 
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
-  unit_test_utils::HelperObjects helperObjs(bulk, stk::topology::HEX_8, 1, partVec[0]);
+  unit_test_utils::HelperObjects helperObjs(*bulk, stk::topology::HEX_8, 1, partVec[0]);
   auto* assembleElemSolverAlg = helperObjs.assembleElemSolverAlg;
   auto& dataNeeded = assembleElemSolverAlg->dataNeededByKernels_;
 
   std::unique_ptr<TestContinuityKernel> testKernel(
-    new TestContinuityKernel(bulk, dataNeeded));
+    new TestContinuityKernel(*bulk, dataNeeded));
   assembleElemSolverAlg->activeKernels_.push_back(testKernel.get());
 
   EXPECT_EQ(3u, dataNeeded.get_fields().size());
   EXPECT_EQ(1u, assembleElemSolverAlg->activeKernels_.size());
 
-  kernel_runalg_test(bulk, *assembleElemSolverAlg);
+  kernel_runalg_test(*bulk, *assembleElemSolverAlg);
   assembleElemSolverAlg->activeKernels_.clear();
 }
 
@@ -95,12 +95,12 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelExecute)
 
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
-  unit_test_utils::HelperObjects helperObjs(bulk, stk::topology::HEX_8, 1, partVec[0]);
+  unit_test_utils::HelperObjects helperObjs(*bulk, stk::topology::HEX_8, 1, partVec[0]);
   auto* assembleElemSolverAlg = helperObjs.assembleElemSolverAlg;
   auto& dataNeeded = assembleElemSolverAlg->dataNeededByKernels_;
 
   std::unique_ptr<TestContinuityKernel> testKernel(
-    new TestContinuityKernel(bulk, dataNeeded));
+    new TestContinuityKernel(*bulk, dataNeeded));
   assembleElemSolverAlg->activeKernels_.push_back(testKernel.get());
 
   EXPECT_EQ(3u, dataNeeded.get_fields().size());
