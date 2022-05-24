@@ -538,6 +538,7 @@ void Realm::initialize_epilog()
   // check job run size after mesh creation, linear system initialization
   check_job(false);
 
+
   NaluEnv::self().naluOutputP0() << "Realm::initialize() End " << std::endl;
 }
 
@@ -577,9 +578,17 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
 
     const YAML::Node lidar_spec = (*foundProbe[0])["data_probes"]["lidar_specifications"];
     if (lidar_spec) {
-      LidarLineOfSite lidarLOS;
-      auto lidarDBSpec = lidarLOS.determine_line_of_site_info(lidar_spec);
-      dataProbePostProcessing_->add_external_data_probe_spec_info(lidarDBSpec.release());
+      std::string output_type = "netcdf";
+      get_if_present(lidar_spec, "output", output_type);
+      if (output_type == "dataprobes") {
+        LidarLineOfSite lidarLOS;
+        auto lidarDBSpec = lidarLOS.determine_line_of_site_info(lidar_spec);
+        dataProbePostProcessing_->add_external_data_probe_spec_info(lidarDBSpec.release());
+      }
+      else {
+        lidarLOS_ = std::make_unique<LidarLineOfSite>();
+        lidarLOS_->load(lidar_spec);
+      }
     }
   }
 
@@ -2245,6 +2254,10 @@ Realm::initialize_post_processing_algorithms()
 
   if (actuatorModel_)
     actuatorModel_->init(bulk_data());
+
+  if (lidarLOS_) {
+    lidarLOS_->set_time(timeIntegrator_->get_current_time());
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -4187,8 +4200,27 @@ Realm::post_converged_work()
   if ( NULL != turbulenceAveragingPostProcessing_ )
     turbulenceAveragingPostProcessing_->execute();
 
-  if ( NULL != dataProbePostProcessing_ )
+  if ( NULL != dataProbePostProcessing_ ) {
     dataProbePostProcessing_->execute();
+  }
+
+  if (lidarLOS_) {
+    const double small = 1e-8 * timeIntegrator_->get_time_step();
+    const double next_time =
+      timeIntegrator_->get_current_time() + timeIntegrator_->get_time_step();
+    NaluEnv::self().naluOutputP0()
+      << "LidarLineOfSite::output begin" << std::endl;
+    while (lidarLOS_->time() < next_time - small) {
+      const double dtratio =
+        (lidarLOS_->time() - timeIntegrator_->get_current_time()) /
+        timeIntegrator_->get_time_step();
+      lidarLOS_->output(
+        bulk_data(), !get_inactive_selector(), get_coordinates_name(), dtratio);
+      lidarLOS_->increment_time();
+    }
+    NaluEnv::self().naluOutputP0()
+      << "LidarLineOfSite::output end" << std::endl;
+  }
 
   if (nullptr != bdyLayerStats_)
     bdyLayerStats_->execute();
