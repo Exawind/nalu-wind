@@ -201,7 +201,7 @@ TEST_F(Hex8ElementWithBCFields, faceElemMomentumSymmetry)
                                                           faceTopo.num_nodes(), elemTopo.num_nodes());
 
   auto  momentumSymmetryElemKernel =
-      new sierra::nalu::MomentumSymmetryElemKernel<sierra::nalu::AlgTraitsQuad4Hex8>(*meta, solnOptions, &velocity, &viscosity,
+      new sierra::nalu::MomentumSymmetryElemKernel<sierra::nalu::AlgTraitsQuad4Hex8>(*meta, solnOptions, velocity, viscosity,
                                     faceElemAlg.faceDataNeeded_, faceElemAlg.elemDataNeeded_);
 
   faceElemAlg.activeKernels_.push_back(momentumSymmetryElemKernel);
@@ -227,7 +227,7 @@ TEST_F(Hex8ElementWithBCFields, faceElemMomentumOpen)
                                                           faceTopo.num_nodes(), elemTopo.num_nodes());
 
   auto  momentumOpenAdvDiffElemKernel =
-    new sierra::nalu::MomentumOpenAdvDiffElemKernel<sierra::nalu::AlgTraitsQuad4Hex8>(*meta, solnOptions, &helperObjs.eqSystem, &velocity, &Gjui, &viscosity,
+    new sierra::nalu::MomentumOpenAdvDiffElemKernel<sierra::nalu::AlgTraitsQuad4Hex8>(*meta, solnOptions, &helperObjs.eqSystem, velocity, Gjui, viscosity,
                                                                                         faceElemAlg.faceDataNeeded_, faceElemAlg.elemDataNeeded_);
 
   faceElemAlg.activeKernels_.push_back(momentumOpenAdvDiffElemKernel);
@@ -254,7 +254,7 @@ TEST_F(Hex8ElementWithBCFields, faceElemScalarOpen)
 
   auto  scalarOpenAdvElemKernel =
     new sierra::nalu::ScalarOpenAdvElemKernel<sierra::nalu::AlgTraitsQuad4Hex8>(*meta, solnOptions, &helperObjs.eqSystem, 
-                                                                                &scalarQ, &bcScalarQ, &Gjq, &viscosity,
+                                                                                scalarQ, bcScalarQ, Gjq, viscosity,
                                                                                 faceElemAlg.faceDataNeeded_, faceElemAlg.elemDataNeeded_);
 
   faceElemAlg.activeKernels_.push_back(scalarOpenAdvElemKernel);

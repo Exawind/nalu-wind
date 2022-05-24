@@ -168,7 +168,7 @@ protected:
 
     velocity_ = &stkMeta_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
     actuatorForce_ = &stkMeta_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "actuator_source");
-      dualNodalVolume_ = &stkMeta_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
+    dualNodalVolume_ = &stkMeta_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
 
     stk::mesh::put_field_on_mesh(
       *velocity_, stkMeta_->universal_part(), 3, nullptr);

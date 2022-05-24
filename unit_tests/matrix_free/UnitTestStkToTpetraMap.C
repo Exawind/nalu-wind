@@ -14,6 +14,7 @@
 #include "Tpetra_Map.hpp"
 #include "stk_io/StkMeshIoBroker.hpp"
 #include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/MeshBuilder.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
@@ -35,8 +36,9 @@ class StkMeshFixture : public ::testing::Test
 {
 protected:
   StkMeshFixture()
-    : meta(3u),
-      bulk(meta, MPI_COMM_WORLD, stk::mesh::BulkData::NO_AUTO_AURA),
+    : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD).set_spatial_dimension(3u).set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA).create()),
+      bulk(*bulkPtr),
+      meta(bulk.mesh_meta_data()),
       gid_field_h(
         meta.declare_field<
           stk::mesh::Field<typename Tpetra::Map<>::global_ordinal_type>>(
@@ -55,8 +57,10 @@ protected:
     using gid_type = typename Tpetra::Map<>::global_ordinal_type;
     gid_field = stk::mesh::get_updated_ngp_field<gid_type>(gid_field_h);
   }
-  stk::mesh::MetaData meta;
-  stk::mesh::BulkData bulk;
+
+  std::unique_ptr<stk::mesh::BulkData> bulkPtr;
+  stk::mesh::BulkData& bulk;
+  stk::mesh::MetaData& meta;
   stk::mesh::Field<typename Tpetra::Map<>::global_ordinal_type>& gid_field_h;
   stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gid_field;
   stk::mesh::NgpMesh mesh;

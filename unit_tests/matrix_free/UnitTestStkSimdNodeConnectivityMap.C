@@ -18,6 +18,7 @@
 
 #include "gtest/gtest.h"
 #include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/MeshBuilder.hpp"
 #include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/FEMHelpers.hpp"
 #include "stk_mesh/base/Field.hpp"
@@ -38,7 +39,10 @@ namespace matrix_free {
 class SimdNodeConnectivityFixture : public ::testing::Test
 {
 protected:
-  SimdNodeConnectivityFixture() : meta(3u), bulk(meta, MPI_COMM_WORLD)
+  SimdNodeConnectivityFixture() 
+    : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD).set_spatial_dimension(3u).create()), 
+      bulk(*bulkPtr), 
+      meta(bulk.mesh_meta_data())
   {
     stk::topology topo(stk::topology::HEX_8);
 
@@ -99,8 +103,9 @@ protected:
     }
     mesh = stk::mesh::NgpMesh(bulk);
   }
-  stk::mesh::MetaData meta;
-  stk::mesh::BulkData bulk;
+  std::unique_ptr<stk::mesh::BulkData> bulkPtr;
+  stk::mesh::BulkData& bulk;
+  stk::mesh::MetaData& meta;
   stk::mesh::NgpMesh mesh;
 };
 

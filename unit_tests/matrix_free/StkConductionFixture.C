@@ -12,6 +12,7 @@
 #include "matrix_free/StkToTpetraMap.h"
 #include "stk_io/StkMeshIoBroker.hpp"
 #include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/MeshBuilder.hpp"
 #include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
@@ -32,8 +33,9 @@
 #include <string>
 
 ConductionFixture::ConductionFixture(int nx, double scale)
-  : meta(3u),
-    bulk(meta, MPI_COMM_WORLD, stk::mesh::BulkData::NO_AUTO_AURA),
+  : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD).set_spatial_dimension(3u).set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA).create()),
+    meta(bulkPtr->mesh_meta_data()),
+    bulk(*bulkPtr),
     io(bulk.parallel()),
     q_field(meta.declare_field<stk::mesh::Field<double>>(
       stk::topology::NODE_RANK,
