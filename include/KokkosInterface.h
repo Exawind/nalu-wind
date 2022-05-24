@@ -153,7 +153,7 @@ get_shmem_view_3D(
     team.team_rank(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
 }
 
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP)
+#if !defined(KOKKOS_ENABLE_GPU)
 template <
   typename T,
   typename TEAMHANDLETYPE,

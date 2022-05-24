@@ -24,9 +24,12 @@ TEST(BasicKokkos, discover_execution_space)
 
 #if defined(KOKKOS_ENABLE_CUDA)
     std::cout << "Kokkos::Cuda is available." << std::endl;
-#elif defined(KOKKOS_ENABLE_HIP)
+#endif
+
+#if defined(KOKKOS_ENABLE_HIP)
     std::cout << "Kokkos::Experimental::HIP is available." << std::endl;
 #endif
+
     std::cout << "Default execution space info: ";
     Kokkos::DefaultExecutionSpace{}.print_configuration(std::cout);
 
