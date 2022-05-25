@@ -308,7 +308,7 @@ public:
   stk::ParallelMachine comm_;
   unsigned spatialDim_;
   stk::mesh::MetaData* meta_;
-  std::unique_ptr<stk::mesh::BulkData> bulk_;
+  std::shared_ptr<stk::mesh::BulkData> bulk_;
   stk::mesh::PartVector partVec_;
 
   sierra::nalu::SolutionOptions solnOpts_;

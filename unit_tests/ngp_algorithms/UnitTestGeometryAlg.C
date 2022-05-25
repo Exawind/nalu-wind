@@ -31,7 +31,7 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
   stk::mesh::field_fill(0.0, *edgeAreaVec_);
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   // Force computation of edge area vector
   helperObjs.realm.realmUsesEdges_ = true;
@@ -114,7 +114,7 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
   stk::mesh::field_fill(0.0, *exposedAreaVec_);
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   const auto& fieldMgr = helperObjs.realm.mesh_info().ngp_field_manager();
   auto& ngpArea = fieldMgr.get_field<double>(
@@ -168,7 +168,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
   stk::mesh::field_fill(0.0, *wallArea_);
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   auto* part = meta_->get_part("surface_5");
   auto* surfPart = part->subsets()[0];

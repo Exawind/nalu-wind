@@ -26,7 +26,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_abl_force)
   fill_mesh_and_init_fields();
 
   unit_test_utils::NodeHelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 3, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   helperObjs.realm.ablForcingAlg_ = new unit_test_utils::TestABLForcingAlg(helperObjs.realm);
 

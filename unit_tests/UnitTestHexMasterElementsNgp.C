@@ -357,7 +357,7 @@ protected:
     stk::ParallelMachine comm;
     unsigned spatialDimension;
     stk::mesh::MetaData* meta;
-    std::unique_ptr<stk::mesh::BulkData> bulk;
+    std::shared_ptr<stk::mesh::BulkData> bulk;
     stk::mesh::NgpMesh ngpMesh;
     unsigned poly_order;
     stk::topology topo;

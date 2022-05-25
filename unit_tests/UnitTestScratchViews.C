@@ -209,7 +209,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPAssembleElemSolver)
 {
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
-  unit_test_utils::HelperObjects helperObjs(*bulk, stk::topology::HEX_8, 1, partVec[0]);
+  unit_test_utils::HelperObjects helperObjs(bulk, stk::topology::HEX_8, 1, partVec[0]);
   auto* assembleElemSolverAlg = helperObjs.assembleElemSolverAlg;
   auto& dataNeeded = assembleElemSolverAlg->dataNeededByKernels_;
 

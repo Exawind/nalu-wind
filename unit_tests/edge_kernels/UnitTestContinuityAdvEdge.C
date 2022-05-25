@@ -47,8 +47,7 @@ TEST_F(ContinuityEdgeHex8Mesh, NGP_advection)
   solnOpts_.externalMeshDeformation_ = false;
   solnOpts_.mdotInterpRhoUTogether_ = true;
 
-  unit_test_utils::EdgeHelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1);
+  unit_test_utils::EdgeHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 1);
 
   sierra::nalu::TimeIntegrator timeIntegrator;
   timeIntegrator.gamma1_ = 1.0;

@@ -37,7 +37,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_lowRE)
 
   const bool useShifted = false;
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   helperObjs.realm.solutionOptions_->initialize_turbulence_constants();
 
   auto* part = meta_->get_part("surface_5");
@@ -100,7 +100,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_func)
   stk::mesh::field_fill(utau, *wallFricVel_);
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   helperObjs.realm.solutionOptions_->initialize_turbulence_constants();
 
   auto* part = meta_->get_part("surface_5");

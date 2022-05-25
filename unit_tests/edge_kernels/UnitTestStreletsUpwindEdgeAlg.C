@@ -80,7 +80,7 @@ TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
   YAML::Node realm_node = YAML::Load(realmInput);
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0], true,
+    bulk_, stk::topology::HEX_8, 1, partVec_[0], true,
     unit_test_utils::get_default_inputs(), realm_node[0]);
 
   Realm& realm = helperObjs.realm;

@@ -41,7 +41,7 @@ protected:
   static constexpr int order = 1;
   ConductionFixture(int nx, double scale);
   stk::mesh::Field<double, stk::mesh::Cartesian3d>& coordinate_field();
-  std::unique_ptr<stk::mesh::BulkData> bulkPtr;
+  std::shared_ptr<stk::mesh::BulkData> bulkPtr;
   stk::mesh::BulkData& bulk;
   stk::mesh::MetaData& meta;
   stk::io::StkMeshIoBroker io;

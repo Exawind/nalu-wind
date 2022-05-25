@@ -26,7 +26,7 @@ TEST_F(EnthalpyABLKernelHex8Mesh, NGP_enthalpy_eff_diff_flux_coeff)
   stk::mesh::field_fill(sigmaTurb, *tvisc_);
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   sierra::nalu::EnthalpyEffDiffFluxCoeffAlg enthalpyDiffFluxAlg(
     helperObjs.realm, partVec_[0], thermalCond_, specificHeat_, tvisc_, evisc_,
     sigmaTurb, isTurbulent);

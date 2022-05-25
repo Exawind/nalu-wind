@@ -32,7 +32,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_edge)
   const double zCoeff = 2.0;
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
                                            xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
@@ -82,7 +82,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
   const double zCoeff = 2.0;
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *velocity_,
                                            xCoeff, yCoeff, zCoeff);
   velocity_->sync_to_device();
@@ -136,7 +136,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem)
   const double zCoeff = 2.0;
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
                                            xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
@@ -187,7 +187,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem_shifted)
   const bool useShifted = true;
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
                                            xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
@@ -238,7 +238,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
   const bool useShifted = false;
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *velocity_,
                                            xCoeff, yCoeff, zCoeff);
   velocity_->sync_to_device();
@@ -293,7 +293,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
   const bool useShifted = true;
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *velocity_,
                                            xCoeff, yCoeff, zCoeff);
   velocity_->sync_to_device();
@@ -351,7 +351,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry)
 
   auto* part = meta_->get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::QUAD_4, 1, part);
+    bulk_, stk::topology::QUAD_4, 1, part);
   unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
                                            xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
@@ -401,7 +401,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry_shifted)
 
   auto* part = meta_->get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::QUAD_4, 1, part);
+    bulk_, stk::topology::QUAD_4, 1, part);
   unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
                                            xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
@@ -451,7 +451,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_bndry_elem_vec)
 
   auto* part = meta_->get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::QUAD_4, 1, part);
+    bulk_, stk::topology::QUAD_4, 1, part);
   unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *velocity_,
                                            xCoeff, yCoeff, zCoeff);
   velocity_->sync_to_device();

@@ -49,7 +49,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_momentum_mass_node)
   timeIntegrator.gamma3_ = 0.0;
 
   unit_test_utils::NodeHelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, nDofs, partVec_[0]);
+    bulk_, stk::topology::HEX_8, nDofs, partVec_[0]);
 
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 

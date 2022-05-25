@@ -28,7 +28,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_eff_diff_flux_coeff)
   stk::mesh::field_fill(sigmaTurb, *tvisc_);
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   sierra::nalu::EffDiffFluxCoeffAlg diffFluxAlg(
     helperObjs.realm, partVec_[0], viscosity_, tvisc_, evisc_,
     sigmaLam, sigmaTurb, isTurbulent);

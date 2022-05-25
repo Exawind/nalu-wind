@@ -29,8 +29,7 @@ TEST_F(MomentumABLKernelHex8Mesh, NGP_abl_wall_func)
   solnOpts_.externalMeshDeformation_ = false;
 
   auto* part = meta_->get_part("surface_5");
-  unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::QUAD_4, 3, part);
+  unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::QUAD_4, 3, part);
 
   std::unique_ptr<sierra::nalu::Kernel> kernel(
     new sierra::nalu::MomentumABLWallFuncEdgeKernel<sierra::nalu::AlgTraitsQuad4>(

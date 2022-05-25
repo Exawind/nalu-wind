@@ -57,7 +57,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
 
   auto* part = meta_->get_part("surface_2");
   unit_test_utils::FaceElemHelperObjects helperObjs(
-    *bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 1, part);
+    bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 1, part);
 
   sierra::nalu::TimeIntegrator timeIntegrator;
   timeIntegrator.gamma1_ = 1.0;

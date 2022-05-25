@@ -32,7 +32,7 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_calc_edge)
   solnOpts_.mdotInterpRhoUTogether_ = true;
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   helperObjs.realm.interiorPartVec_.push_back(partVec_[0]);
 
   stk::mesh::field_fill(1.0, *density_);
@@ -103,7 +103,7 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_rho_accum)
   density_->field_of_state(stk::mesh::StateN).sync_to_device();
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   helperObjs.realm.interiorPartVec_.push_back(partVec_[0]);
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
   helperObjs.realm.solutionOptions_->mdotInterpRhoUTogether_ = true;
@@ -138,7 +138,7 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_open_correction)
   stk::mesh::field_fill(0.0, *openMassFlowRate_);
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   helperObjs.realm.solutionOptions_->activateOpenMdotCorrection_ = true;
   auto* part = meta_->get_part("surface_5");
   auto* surfPart = part->subsets()[0];
@@ -186,7 +186,7 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_inflow)
   velocity_->sync_to_device();
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   auto* part = meta_->get_part("surface_5");
   auto* surfPart = part->subsets()[0];
   const bool elementContinuityEqs = true;
@@ -228,7 +228,7 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_open_edge)
   dpdx_->sync_to_device();
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   auto* part = meta_->get_part("surface_6");
   auto* surfPart = part->subsets()[0];
   const bool elementContinuityEqs = true;

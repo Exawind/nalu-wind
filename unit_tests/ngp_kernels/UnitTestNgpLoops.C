@@ -67,7 +67,7 @@ public:
   }
 
   stk::mesh::MetaData* meta;
-  std::unique_ptr<stk::mesh::BulkData> bulk;
+  std::shared_ptr<stk::mesh::BulkData> bulk;
   stk::mesh::PartVector partVec;
   const VectorFieldType* coordField{nullptr};
   ScalarFieldType* density{nullptr};

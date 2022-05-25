@@ -24,7 +24,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sst_alg)
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   sierra::nalu::TurbViscSSTAlg TurbViscSSTAlg(
     helperObjs.realm, partVec_[0], tvisc_);
@@ -73,7 +73,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_turb_visc_sstams_alg)
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   sierra::nalu::TurbViscSSTAlg TurbViscSSTAlg(
     helperObjs.realm, partVec_[0], tvisc_, true);

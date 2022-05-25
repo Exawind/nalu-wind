@@ -67,7 +67,7 @@ public:
 
      const int numDof = 1;
      helperObjs_.reset(new FaceElemHelperObjects(
-       *bulk_, BcAlgTraits::faceTopo_, BcAlgTraits::elemTopo_, numDof,
+       bulk_, BcAlgTraits::faceTopo_, BcAlgTraits::elemTopo_, numDof,
        partVec_[0]));
 
      elemDataNeeded().add_coordinates_field(
@@ -113,7 +113,7 @@ public:
 
    stk::ParallelMachine comm_;
    stk::mesh::MetaData* meta_;
-   std::unique_ptr<stk::mesh::BulkData> bulk_;
+   std::shared_ptr<stk::mesh::BulkData> bulk_;
    int faceOrdinal_;
    stk::mesh::PartVector partVec_;
    const VectorFieldType* coordinates_{nullptr};

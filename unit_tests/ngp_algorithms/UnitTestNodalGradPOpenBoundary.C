@@ -35,7 +35,7 @@ TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
 
   fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
-  unit_test_utils::HelperObjects helperObjs(*bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+  unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   helperObjs.realm.solutionOptions_->activateOpenMdotCorrection_ = true;
 
   stk::mesh::Part* surface1 = meta_->get_part("surface_1");

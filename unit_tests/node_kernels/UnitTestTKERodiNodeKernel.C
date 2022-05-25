@@ -27,7 +27,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_kenetic_energy_Rodi)
 
   fill_mesh_and_init_fields(false,false,true);
 
-  unit_test_utils::NodeHelperObjects helperObjs(*bulk_, stk::topology::HEX_8, 3, partVec_[0]);
+  unit_test_utils::NodeHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   // set solution options
   sierra::nalu::SolutionOptions *solnOpts=helperObjs.nodeAlg->realm_.solutionOptions_;

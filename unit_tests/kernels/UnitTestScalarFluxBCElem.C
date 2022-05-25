@@ -23,8 +23,7 @@ TEST_F(EnthalpyABLKernelHex8Mesh, NGP_heat_flux_bc)
   fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
   auto* part = meta_->get_part("surface_5");
-  unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::QUAD_4, 1, part);
+  unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::QUAD_4, 1, part);
 
   const std::string coordsName = "coordinates";
   const bool useShifted = false;

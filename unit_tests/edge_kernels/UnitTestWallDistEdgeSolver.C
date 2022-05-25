@@ -39,7 +39,7 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist_edge)
   solnOpts_.meshMotion_ = false;
   solnOpts_.externalMeshDeformation_ = false;
 
-  unit_test_utils::EdgeHelperObjects helperObjs(*bulk_, stk::topology::HEX_8, 1);
+  unit_test_utils::EdgeHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 1);
   helperObjs.create<sierra::nalu::WallDistEdgeSolverAlg>(partVec_[0]);
 
   helperObjs.execute();

@@ -125,7 +125,7 @@ protected:
     stk::ParallelMachine comm;
     unsigned spatialDimension;
     stk::mesh::MetaData* meta;
-    std::unique_ptr<stk::mesh::BulkData> bulk;
+    std::shared_ptr<stk::mesh::BulkData> bulk;
     stk::topology topo; 
     VectorFieldType* elemCentroidField;
     ScalarFieldType* nodalPressureField;
@@ -244,7 +244,7 @@ class Hex8ElementWithBCFields : public ::testing::Test
   ~Hex8ElementWithBCFields() {}
 
   stk::mesh::MetaData* meta;
-  std::unique_ptr<stk::mesh::BulkData> bulk;
+  std::shared_ptr<stk::mesh::BulkData> bulk;
   VectorFieldType* velocity;
   VectorFieldType* bcVelocity;
   ScalarFieldType* density;

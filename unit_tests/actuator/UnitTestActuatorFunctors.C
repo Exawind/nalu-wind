@@ -150,7 +150,7 @@ class ActuatorFunctorTests : public ::testing::Test
 protected:
   std::string inputFileSurrogate_;
   stk::mesh::MetaData* stkMeta_;
-  std::unique_ptr<stk::mesh::BulkData> stkBulk_;
+  std::shared_ptr<stk::mesh::BulkData> stkBulk_;
   const double tol_;
   const VectorFieldType* coordinates_{nullptr};
   VectorFieldType* velocity_{nullptr};

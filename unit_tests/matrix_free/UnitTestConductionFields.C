@@ -134,7 +134,7 @@ protected:
     mesh = stk::mesh::get_updated_ngp_mesh(*bulk);
   }
   stk::mesh::MetaData* meta;
-  std::unique_ptr<stk::mesh::BulkData> bulk;
+  std::shared_ptr<stk::mesh::BulkData> bulk;
   stk::mesh::Field<double>* q_field;
   stk::mesh::Field<double>* alpha_field;
   stk::mesh::Field<double>* lambda_field;

@@ -594,7 +594,7 @@ protected:
 
     stk::ParallelMachine comm;
     stk::mesh::MetaData* meta;
-    std::unique_ptr<stk::mesh::BulkData> bulk;
+    std::shared_ptr<stk::mesh::BulkData> bulk;
     stk::mesh::Entity elem;
     sierra::nalu::MasterElement* meSS;
     sierra::nalu::MasterElement* meSV;

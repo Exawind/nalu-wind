@@ -86,7 +86,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_ams_node)
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTAMSNodeKernel>(*meta_, solnOpts_.get_coordinates_name());
 
@@ -118,7 +118,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_sdr_ams_node)
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTAMSNodeKernel>(*meta_, solnOpts_.get_coordinates_name());
 
@@ -151,7 +151,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_forcing)
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 3, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumSSTAMSForcingNodeKernel>(
     *bulk_, solnOpts_);

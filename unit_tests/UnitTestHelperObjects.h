@@ -22,7 +22,7 @@ namespace unit_test_utils {
 struct HelperObjectsBase
 {
   HelperObjectsBase(
-    stk::mesh::BulkData& bulk,
+    std::shared_ptr<stk::mesh::BulkData> bulk,
     YAML::Node yaml_node = unit_test_utils::get_default_inputs(),
     YAML::Node realm_node = unit_test_utils::get_realm_default_node())
     : yamlNode(yaml_node),
@@ -32,15 +32,11 @@ struct HelperObjectsBase
       eqSystems(realm),
       eqSystem(eqSystems)
   {
-    realm.metaData_ = &bulk.mesh_meta_data();
-    realm.bulkData_ = &bulk;
+    realm.bulkData_ = bulk;
   }
 
   virtual ~HelperObjectsBase()
   {
-    realm.metaData_ = nullptr;
-    realm.bulkData_ = nullptr;
-
     delete naluObj;
   }
 
@@ -78,7 +74,7 @@ struct HelperObjectsBase
 struct HelperObjects : public HelperObjectsBase
 {
   HelperObjects(
-    stk::mesh::BulkData& bulk,
+    std::shared_ptr<stk::mesh::BulkData> bulk,
     stk::topology topo,
     int numDof,
     stk::mesh::Part* part,
@@ -152,7 +148,7 @@ struct HelperObjects : public HelperObjectsBase
 };
 
 struct FaceElemHelperObjects : HelperObjects {
-  FaceElemHelperObjects(stk::mesh::BulkData& bulk, stk::topology faceTopo, stk::topology elemTopo, int numDof, stk::mesh::Part* part, bool isEdge = false)
+  FaceElemHelperObjects(std::shared_ptr<stk::mesh::BulkData> bulk, stk::topology faceTopo, stk::topology elemTopo, int numDof, stk::mesh::Part* part, bool isEdge = false)
     : HelperObjects(bulk, elemTopo, numDof, part, isEdge)
   {
     assembleFaceElemSolverAlg = new sierra::nalu::AssembleFaceElemSolverAlgorithm(realm, part, &eqSystem, faceTopo.num_nodes(), elemTopo.num_nodes());
@@ -181,7 +177,7 @@ struct FaceElemHelperObjects : HelperObjects {
 struct EdgeHelperObjects : public HelperObjectsBase
 {
   EdgeHelperObjects(
-    stk::mesh::BulkData& bulk,
+    std::shared_ptr<stk::mesh::BulkData> bulk,
     stk::topology topo,
     int numDof
   ) : HelperObjectsBase(bulk),
@@ -224,7 +220,7 @@ struct EdgeHelperObjects : public HelperObjectsBase
 struct EdgeKernelHelperObjects : public HelperObjectsBase
 {
   EdgeKernelHelperObjects(
-    stk::mesh::BulkData& bulk,
+    std::shared_ptr<stk::mesh::BulkData> bulk,
     stk::topology topo,
     int numDof,
     stk::mesh::Part* part
@@ -256,7 +252,7 @@ struct EdgeKernelHelperObjects : public HelperObjectsBase
 struct NodeHelperObjects : public HelperObjectsBase
 {
   NodeHelperObjects(
-    stk::mesh::BulkData& bulk,
+    std::shared_ptr<stk::mesh::BulkData> bulk,
     stk::topology topo,
     int numDof,
     stk::mesh::Part* part

@@ -139,7 +139,7 @@ TEST_F(Hex8Mesh, NGP_faceElemBasic)
   stk::mesh::Part* surface1 = meta->get_part("surface_1");
   unsigned numDof = 3;
 
-  unit_test_utils::HelperObjects helperObjs(*bulk, elemTopo, numDof, surface1);
+  unit_test_utils::HelperObjects helperObjs(bulk, elemTopo, numDof, surface1);
 
   sierra::nalu::AssembleFaceElemSolverAlgorithm faceElemAlg(helperObjs.realm, surface1, &helperObjs.eqSystem,
                                                           faceTopo.num_nodes(), elemTopo.num_nodes());
@@ -195,7 +195,7 @@ TEST_F(Hex8ElementWithBCFields, faceElemMomentumSymmetry)
   stk::topology faceTopo = stk::topology::QUAD_4;
   stk::topology elemTopo = stk::topology::HEX_8;
   stk::mesh::Part* surface1 = meta->get_part("all_surfaces");
-  unit_test_utils::HelperObjects helperObjs(*bulk, elemTopo, sierra::nalu::AlgTraitsQuad4Hex8::nDim_, surface1);
+  unit_test_utils::HelperObjects helperObjs(bulk, elemTopo, sierra::nalu::AlgTraitsQuad4Hex8::nDim_, surface1);
 
   sierra::nalu::AssembleFaceElemSolverAlgorithm faceElemAlg(helperObjs.realm, surface1, &helperObjs.eqSystem,
                                                           faceTopo.num_nodes(), elemTopo.num_nodes());
@@ -221,7 +221,7 @@ TEST_F(Hex8ElementWithBCFields, faceElemMomentumOpen)
   stk::topology faceTopo = stk::topology::QUAD_4;
   stk::topology elemTopo = stk::topology::HEX_8;
   stk::mesh::Part* surface1 = meta->get_part("all_surfaces");
-  unit_test_utils::HelperObjects helperObjs(*bulk, elemTopo, sierra::nalu::AlgTraitsQuad4Hex8::nDim_, surface1);
+  unit_test_utils::HelperObjects helperObjs(bulk, elemTopo, sierra::nalu::AlgTraitsQuad4Hex8::nDim_, surface1);
 
   sierra::nalu::AssembleFaceElemSolverAlgorithm faceElemAlg(helperObjs.realm, surface1, &helperObjs.eqSystem,
                                                           faceTopo.num_nodes(), elemTopo.num_nodes());
@@ -247,7 +247,7 @@ TEST_F(Hex8ElementWithBCFields, faceElemScalarOpen)
   stk::topology faceTopo = stk::topology::QUAD_4;
   stk::topology elemTopo = stk::topology::HEX_8;
   stk::mesh::Part* surface1 = meta->get_part("all_surfaces");
-  unit_test_utils::HelperObjects helperObjs(*bulk, elemTopo, sierra::nalu::AlgTraitsQuad4Hex8::nDim_, surface1);
+  unit_test_utils::HelperObjects helperObjs(bulk, elemTopo, sierra::nalu::AlgTraitsQuad4Hex8::nDim_, surface1);
 
   sierra::nalu::AssembleFaceElemSolverAlgorithm faceElemAlg(helperObjs.realm, surface1, &helperObjs.eqSystem,
                                                           faceTopo.num_nodes(), elemTopo.num_nodes());

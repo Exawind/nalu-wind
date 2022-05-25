@@ -40,7 +40,7 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_inflow)
   solnOpts_.activateOpenMdotCorrection_ = true;
 
   auto* part = meta_->get_part("surface_2");
-  unit_test_utils::HelperObjects helperObjs(*bulk_, stk::topology::QUAD_4, 1, part);
+  unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::QUAD_4, 1, part);
 
   sierra::nalu::TimeIntegrator timeIntegrator;
   timeIntegrator.gamma1_ = 1.0;

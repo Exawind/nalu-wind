@@ -76,7 +76,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_diff)
   solnOpts_.upwMap_["velocity"] = 0.0;
   solnOpts_.initialize_turbulence_constants();
 
-  unit_test_utils::EdgeKernelHelperObjects helperObjs(*bulk_, stk::topology::HEX_8, 3, partVec_[0]);
+  unit_test_utils::EdgeKernelHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   helperObjs.edgeAlg->add_kernel<sierra::nalu::MomentumSSTAMSDiffEdgeKernel>(*bulk_, solnOpts_);
     

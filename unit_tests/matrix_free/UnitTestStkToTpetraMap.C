@@ -58,7 +58,7 @@ protected:
     gid_field = stk::mesh::get_updated_ngp_field<gid_type>(gid_field_h);
   }
 
-  std::unique_ptr<stk::mesh::BulkData> bulkPtr;
+  std::shared_ptr<stk::mesh::BulkData> bulkPtr;
   stk::mesh::BulkData& bulk;
   stk::mesh::MetaData& meta;
   stk::mesh::Field<typename Tpetra::Map<>::global_ordinal_type>& gid_field_h;

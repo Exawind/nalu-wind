@@ -24,7 +24,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_visc_ksgs_alg)
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   sierra::nalu::TurbViscKsgsAlg TurbViscKsgsAlg(
     helperObjs.realm, partVec_[0], tvisc_);

@@ -103,7 +103,7 @@ protected:
     }
     mesh = stk::mesh::NgpMesh(bulk);
   }
-  std::unique_ptr<stk::mesh::BulkData> bulkPtr;
+  std::shared_ptr<stk::mesh::BulkData> bulkPtr;
   stk::mesh::BulkData& bulk;
   stk::mesh::MetaData& meta;
   stk::mesh::NgpMesh mesh;

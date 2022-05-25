@@ -77,7 +77,7 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_advection_diffusion)
   solnOpts_.alphaUpwMap_["velocity"] = 0.0;
   solnOpts_.upwMap_["velocity"] = 0.0;
 
-  unit_test_utils::EdgeHelperObjects helperObjs(*bulk_, stk::topology::HEX_8, 3);
+  unit_test_utils::EdgeHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 3);
 
   helperObjs.create<sierra::nalu::MomentumEdgeSolverAlg>(partVec_[0]);
 

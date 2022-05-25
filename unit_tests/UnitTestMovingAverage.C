@@ -56,7 +56,7 @@ public:
  }
 
   sierra::nalu::TimeIntegrator timeIntegrator_;
-  std::unique_ptr<stk::mesh::BulkData> bulk_;
+  std::shared_ptr<stk::mesh::BulkData> bulk_;
   int numSteps;
 
   stk::mesh::Entity node;

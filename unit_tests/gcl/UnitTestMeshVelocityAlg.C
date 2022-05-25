@@ -106,7 +106,7 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
   fill_mesh_and_init_fields();
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   sierra::nalu::TimeIntegrator timeIntegrator;
   timeIntegrator.timeStepN_ = 0.5;   // first time step size
@@ -238,7 +238,7 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
   fill_mesh_and_init_fields();
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   sierra::nalu::TimeIntegrator timeIntegrator;
   timeIntegrator.timeStepN_ = 0.5;   // first time step size
@@ -370,7 +370,7 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
   fill_mesh_and_init_fields();
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   sierra::nalu::TimeIntegrator timeIntegrator;
   timeIntegrator.timeStepN_ = 0.25;   // first time step size

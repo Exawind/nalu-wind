@@ -59,7 +59,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_courant_reynolds)
   timeIntegrator.gamma3_ = 0.0;
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
   sierra::nalu::CourantReAlgDriver algDriver(helperObjs.realm);

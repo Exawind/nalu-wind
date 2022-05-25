@@ -41,7 +41,7 @@ public:
   }
 
   stk::mesh::MetaData* meta;
-  std::unique_ptr<stk::mesh::BulkData> bulk;
+  std::shared_ptr<stk::mesh::BulkData> bulk;
   // stk::io::StkMeshIoBroker io;
   stk::mesh::Field<double>* test_field;
   stk::mesh::Field<double, stk::mesh::Cartesian3d>* test_vector_field;

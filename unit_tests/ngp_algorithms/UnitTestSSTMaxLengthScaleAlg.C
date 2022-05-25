@@ -27,7 +27,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_SST_Max_Length_Scale)
   stk::mesh::field_fill(0.0, *maxLengthScale_);
 
   unit_test_utils::HelperObjects helperObjs(
-    *bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   // Force computation of edge area vector
   helperObjs.realm.realmUsesEdges_ = true;

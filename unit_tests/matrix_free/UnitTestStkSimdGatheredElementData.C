@@ -132,7 +132,7 @@ protected:
     q_field_ngp = stk::mesh::get_updated_ngp_field<double>(q_field);
     coord_field_ngp = stk::mesh::get_updated_ngp_field<double>(coordField);
   }
-  std::unique_ptr<stk::mesh::BulkData> bulkPtr;
+  std::shared_ptr<stk::mesh::BulkData> bulkPtr;
   stk::mesh::BulkData& bulk;
   stk::mesh::MetaData& meta;
   stk::mesh::NgpMesh mesh;

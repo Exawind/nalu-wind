@@ -16,7 +16,7 @@ TEST_F(DofStatusHex8Mesh, getDofStatus_basic)
 {
   fill_mesh_and_initialize_test_fields("generated:1x1x2");
 
-  unit_test_utils::HelperObjects helperObjs(*bulk, stk::topology::HEX_8, 1, partVec[0]);
+  unit_test_utils::HelperObjects helperObjs(bulk, stk::topology::HEX_8, 1, partVec[0]);
 
   stk::mesh::Entity node1 = bulk->get_entity(stk::topology::NODE_RANK, 1);
   if (bulk->is_valid(node1)) {
@@ -30,7 +30,7 @@ TEST_F(DofStatusHex8Mesh, getDofStatus_shared)
 {
   fill_mesh_and_initialize_test_fields("generated:10x10x10");
 
-  unit_test_utils::HelperObjects helperObjs(*bulk, stk::topology::HEX_8, 1, partVec[0]);
+  unit_test_utils::HelperObjects helperObjs(bulk, stk::topology::HEX_8, 1, partVec[0]);
 
   stk::mesh::Selector shared = bulk->mesh_meta_data().globally_shared_part();
   const stk::mesh::BucketVector& sharedBuckets = bulk->get_buckets(stk::topology::NODE_RANK, shared);

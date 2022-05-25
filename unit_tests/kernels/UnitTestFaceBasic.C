@@ -54,7 +54,7 @@ TEST_F(Hex8Mesh, faceBasic)
 
   stk::mesh::Part* surface1 = meta->get_part("surface_1");
   int numDof = 1;
-  unit_test_utils::HelperObjects helperObjs(*bulk, faceTopo, numDof, surface1);
+  unit_test_utils::HelperObjects helperObjs(bulk, faceTopo, numDof, surface1);
   helperObjs.assembleElemSolverAlg->dataNeededByKernels_.add_cvfem_face_me(meFC);
 
   TestFaceKernel faceKernel(faceTopo, scalarQ, helperObjs.assembleElemSolverAlg->dataNeededByKernels_);

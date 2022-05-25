@@ -65,7 +65,7 @@ public:
     EXPECT_TRUE(coordinates_ != nullptr);
 
     const int numDof = 1;
-    helperObjs_.reset(new HelperObjects(*bulk_, AlgTraits::topo_, numDof, partVec_[0]));
+    helperObjs_.reset(new HelperObjects(bulk_, AlgTraits::topo_, numDof, partVec_[0]));
     dataNeeded().add_coordinates_field(
       *coordinates_, AlgTraits::nDim_, sierra::nalu::CURRENT_COORDINATES);
   }
@@ -115,7 +115,7 @@ public:
 
   stk::ParallelMachine comm_;
   stk::mesh::MetaData* meta_;
-  std::unique_ptr<stk::mesh::BulkData> bulk_;
+  std::shared_ptr<stk::mesh::BulkData> bulk_;
   stk::mesh::PartVector partVec_;
   const VectorFieldType* coordinates_{nullptr};
 

@@ -66,7 +66,7 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_open_edge)
   auto* part = meta_->get_part("surface_2");
   bool isEdge = true;
   unit_test_utils::FaceElemHelperObjects helperObjs(
-    *bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 3, part, isEdge);
+    bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 3, part, isEdge);
 
   std::unique_ptr<sierra::nalu::Kernel> kernel(
     new sierra::nalu::MomentumOpenEdgeKernel<

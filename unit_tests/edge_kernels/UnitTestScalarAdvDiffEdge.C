@@ -92,7 +92,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
   solnOpts_.upwMap_["mixture_fraction"] = 0.0;
 
   const int numDof = 1;
-  unit_test_utils::TpetraHelperObjectsEdge helperObjs(*bulk_, numDof);
+  unit_test_utils::TpetraHelperObjectsEdge helperObjs(bulk_, numDof);
 
   helperObjs.realm.naluGlobalId_ = naluGlobalId_;
   helperObjs.realm.tpetGlobalId_ = tpetGlobalId_;
@@ -152,7 +152,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra_fix_pressure_at_n
   fill_mesh_and_init_fields();
 
   const int numDof = 1;
-  unit_test_utils::TpetraHelperObjectsEdge helperObjs(*bulk_, numDof);
+  unit_test_utils::TpetraHelperObjectsEdge helperObjs(bulk_, numDof);
 
   sierra::nalu::SolutionOptions* solnOpts = helperObjs.realm.solutionOptions_;
 
@@ -212,7 +212,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra_dirichlet)
   fill_mesh_and_init_fields();
 
   const int numDof = 1;
-  unit_test_utils::TpetraHelperObjectsEdge helperObjs(*bulk_, numDof);
+  unit_test_utils::TpetraHelperObjectsEdge helperObjs(bulk_, numDof);
 
   sierra::nalu::SolutionOptions* solnOpts = helperObjs.realm.solutionOptions_;
 

@@ -36,7 +36,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_boussinesq)
   solnOpts_.referenceTemperature_ = 298;
   solnOpts_.thermalExpansionCoeff_ = 1.0;
 
-  unit_test_utils::NodeHelperObjects helperObjs(*bulk_, stk::topology::HEX_8, 3, partVec_[0]);
+  unit_test_utils::NodeHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumBoussinesqNodeKernel>(
     *bulk_, solnOpts_);

@@ -50,7 +50,7 @@ TEST_F(ContinuityKernelHex8Mesh,NGP_open_edge)
   const int numDof = 1;
   bool isEdge = true;
   unit_test_utils::FaceElemHelperObjects helperObjs(
-    *bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, numDof, part, isEdge);
+    bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, numDof, part, isEdge);
 
   sierra::nalu::TimeIntegrator timeIntegrator;
   timeIntegrator.gamma1_ = 1.0;
