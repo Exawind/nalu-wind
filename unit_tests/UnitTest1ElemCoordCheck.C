@@ -59,13 +59,14 @@ TEST(Basic, CheckCoords1Elem)
     stk::ParallelMachine comm = MPI_COMM_WORLD;
 
     unsigned spatialDimension = 3;
-    stk::mesh::MetaData meta(spatialDimension);
-    stk::mesh::BulkData bulk(meta, comm);
+    stk::mesh::MeshBuilder meshBuilder(comm);
+    meshBuilder.set_spatial_dimension(spatialDimension);
+    auto bulk = meshBuilder.create();
 
-    unit_test_utils::fill_mesh_1_elem_per_proc_hex8(bulk);
+    unit_test_utils::fill_mesh_1_elem_per_proc_hex8(*bulk);
 
-    EXPECT_EQ(1u, count_locally_owned_elems(bulk));
+    EXPECT_EQ(1u, count_locally_owned_elems(*bulk));
 
-    verify_elems_are_unit_cubes(bulk);
+    verify_elems_are_unit_cubes(*bulk);
 }
 

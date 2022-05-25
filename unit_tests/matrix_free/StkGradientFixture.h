@@ -57,8 +57,9 @@ protected:
     return meta.get_topology_root_part(stk::topology::QUAD_4);
   }
 
-  stk::mesh::MetaData meta;
-  stk::mesh::BulkData bulk;
+  std::shared_ptr<stk::mesh::BulkData> bulkPtr;
+  stk::mesh::BulkData& bulk;
+  stk::mesh::MetaData& meta;
   stk::io::StkMeshIoBroker io;
   stk::mesh::Field<double>& q_field;
   stk::mesh::Field<double>& dqdx_field;

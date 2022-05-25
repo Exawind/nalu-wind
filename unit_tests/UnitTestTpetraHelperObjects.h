@@ -28,7 +28,7 @@ bool find_col(int col,
 }
 
 struct TpetraHelperObjectsBase {
-  TpetraHelperObjectsBase(stk::mesh::BulkData& bulk, int numDof)
+  TpetraHelperObjectsBase(std::shared_ptr<stk::mesh::BulkData> bulk, int numDof)
   : yamlNode(unit_test_utils::get_default_inputs()),
     realmDefaultNode(unit_test_utils::get_realm_default_node()),
     naluObj(new unit_test_utils::NaluTest(yamlNode)),
@@ -37,16 +37,12 @@ struct TpetraHelperObjectsBase {
     eqSystem(eqSystems),
     linsys(new sierra::nalu::TpetraLinearSystem(realm, numDof, &eqSystem, nullptr))
   {
-    realm.metaData_ = &bulk.mesh_meta_data();
-    realm.bulkData_ = &bulk;
+    realm.bulkData_ = bulk;
     eqSystem.linsys_ = linsys;
   }
 
   virtual ~TpetraHelperObjectsBase()
   {
-    realm.metaData_ = nullptr;
-    realm.bulkData_ = nullptr;
-
     delete naluObj;
   }
 
@@ -188,7 +184,7 @@ struct TpetraHelperObjectsBase {
 };
 
 struct TpetraHelperObjectsElem : public TpetraHelperObjectsBase {
-  TpetraHelperObjectsElem(stk::mesh::BulkData& bulk, stk::topology topo, int numDof, stk::mesh::Part* part)
+  TpetraHelperObjectsElem(std::shared_ptr<stk::mesh::BulkData> bulk, stk::topology topo, int numDof, stk::mesh::Part* part)
   : TpetraHelperObjectsBase(bulk, numDof),
     assembleElemSolverAlg(new sierra::nalu::AssembleElemSolverAlgorithm(realm, part, &eqSystem, topo.rank(), topo.num_nodes()))
   {
@@ -201,7 +197,7 @@ struct TpetraHelperObjectsElem : public TpetraHelperObjectsBase {
 
   virtual void execute()
   {
-    linsys->buildElemToNodeGraph({&realm.metaData_->universal_part()});
+    linsys->buildElemToNodeGraph({&realm.meta_data().universal_part()});
     linsys->finalizeLinearSystem();
     assembleElemSolverAlg->execute();
     for (auto kern: assembleElemSolverAlg->activeKernels_)
@@ -214,7 +210,7 @@ struct TpetraHelperObjectsElem : public TpetraHelperObjectsBase {
 
 
 struct TpetraHelperObjectsFaceElem : public TpetraHelperObjectsBase {
-  TpetraHelperObjectsFaceElem(stk::mesh::BulkData& bulk, stk::topology faceTopo, stk::topology elemTopo, int numDof, stk::mesh::Part* part)
+  TpetraHelperObjectsFaceElem(std::shared_ptr<stk::mesh::BulkData> bulk, stk::topology faceTopo, stk::topology elemTopo, int numDof, stk::mesh::Part* part)
   : TpetraHelperObjectsBase(bulk, numDof),
     assembleFaceElemSolverAlg(new sierra::nalu::AssembleFaceElemSolverAlgorithm(realm, part, &eqSystem, faceTopo.num_nodes(), elemTopo.num_nodes()))
   {
@@ -227,7 +223,7 @@ struct TpetraHelperObjectsFaceElem : public TpetraHelperObjectsBase {
 
   virtual void execute() override
   {
-    linsys->buildElemToNodeGraph({&realm.metaData_->universal_part()});
+    linsys->buildElemToNodeGraph({&realm.meta_data().universal_part()});
     linsys->finalizeLinearSystem();
     assembleFaceElemSolverAlg->execute();
     for (auto kern: assembleFaceElemSolverAlg->activeKernels_)
@@ -238,7 +234,7 @@ struct TpetraHelperObjectsFaceElem : public TpetraHelperObjectsBase {
 };
 
 struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase {
-  TpetraHelperObjectsEdge(stk::mesh::BulkData& bulk, int numDof)
+  TpetraHelperObjectsEdge(std::shared_ptr<stk::mesh::BulkData> bulk, int numDof)
   : TpetraHelperObjectsBase(bulk, numDof),
     edgeAlg(nullptr)
   {
@@ -259,7 +255,7 @@ struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase {
   virtual void execute() override
   {
     ThrowRequire(edgeAlg != nullptr);
-    linsys->buildEdgeToNodeGraph({&realm.metaData_->universal_part()});
+    linsys->buildEdgeToNodeGraph({&realm.meta_data().universal_part()});
     linsys->finalizeLinearSystem();
 
     edgeAlg->execute();

@@ -36,7 +36,7 @@ static constexpr double lhs[8][8] =
 
 TEST_F(ContinuityKernelHex8Mesh,NGP_open_edge)
 {
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -46,7 +46,7 @@ TEST_F(ContinuityKernelHex8Mesh,NGP_open_edge)
   solnOpts_.meshMotion_ = false;
   solnOpts_.externalMeshDeformation_ = false;
 
-  auto* part = meta_.get_part("surface_2");
+  auto* part = meta_->get_part("surface_2");
   const int numDof = 1;
   bool isEdge = true;
   unit_test_utils::FaceElemHelperObjects helperObjs(
@@ -60,7 +60,7 @@ TEST_F(ContinuityKernelHex8Mesh,NGP_open_edge)
 
   std::unique_ptr<sierra::nalu::Kernel> kernel(
     new sierra::nalu::ContinuityOpenEdgeKernel<sierra::nalu::AlgTraitsQuad4Hex8>(
-      meta_, &solnOpts_,
+      *meta_, &solnOpts_,
       helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
       helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_));
 

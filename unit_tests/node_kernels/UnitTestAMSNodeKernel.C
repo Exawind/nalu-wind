@@ -76,7 +76,7 @@ static constexpr double rhs[24] = {
 TEST_F(AMSKernelHex8Mesh, NGP_tke_ams_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -88,7 +88,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_ams_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTAMSNodeKernel>(meta_, solnOpts_.get_coordinates_name());
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTAMSNodeKernel>(*meta_, solnOpts_.get_coordinates_name());
 
   helperObjs.execute();
 
@@ -108,7 +108,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_ams_node)
 TEST_F(AMSKernelHex8Mesh, NGP_sdr_ams_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -120,7 +120,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_sdr_ams_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTAMSNodeKernel>(meta_, solnOpts_.get_coordinates_name());
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTAMSNodeKernel>(*meta_, solnOpts_.get_coordinates_name());
 
   helperObjs.execute();
 
@@ -140,7 +140,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_sdr_ams_node)
 TEST_F(AMSKernelHex8Mesh, NGP_ams_forcing)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1)
+  if (bulk_->parallel_size() > 1)
     return;
 
   fill_mesh_and_init_fields();
@@ -154,7 +154,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_forcing)
     bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumSSTAMSForcingNodeKernel>(
-    bulk_, solnOpts_);
+    *bulk_, solnOpts_);
 
   sierra::nalu::TimeIntegrator timeIntegrator;
   timeIntegrator.currentTime_ = 0.0;

@@ -16,13 +16,13 @@
 
 TEST_F(EnthalpyABLKernelHex8Mesh, NGP_tgrad_bc)
 {
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
   fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
-  auto* part = meta_.get_part("surface_5");
+  auto* part = meta_->get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, 1, part);
 
@@ -32,7 +32,7 @@ TEST_F(EnthalpyABLKernelHex8Mesh, NGP_tgrad_bc)
   // Initialize the kernel
   std::unique_ptr<sierra::nalu::Kernel> kernel(
     new sierra::nalu::EnthalpyTGradBCElemKernel<sierra::nalu::AlgTraitsQuad4>(
-      bulk_, tGradBC_, viscosity_, specificHeat_, coordsName, useShifted,
+      *bulk_, tGradBC_, viscosity_, specificHeat_, coordsName, useShifted,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 
   // Register the kernel for execution

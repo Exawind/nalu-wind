@@ -63,7 +63,7 @@ static constexpr double lhs[24][24] = {
 
 TEST_F(AMSKernelHex8Mesh, NGP_ams_diff)
 {
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -78,7 +78,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_diff)
 
   unit_test_utils::EdgeKernelHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
-  helperObjs.edgeAlg->add_kernel<sierra::nalu::MomentumSSTAMSDiffEdgeKernel>(bulk_, solnOpts_);
+  helperObjs.edgeAlg->add_kernel<sierra::nalu::MomentumSSTAMSDiffEdgeKernel>(*bulk_, solnOpts_);
     
   helperObjs.execute();
 

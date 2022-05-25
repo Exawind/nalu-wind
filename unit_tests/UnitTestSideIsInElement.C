@@ -70,14 +70,16 @@ namespace
       std::vector<double> sideIsoPoint = { random_pt(rng), random_pt(rng) };
 
       int dim = topo.dimension();
-      stk::mesh::MetaData meta(topo.dimension());
-      stk::mesh::BulkData bulk(meta, MPI_COMM_WORLD);
+      stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);
+      meshBuilder.set_spatial_dimension(dim);
+      auto bulk = meshBuilder.create();
+      auto& meta = bulk->mesh_meta_data();
 
-      auto elem = unit_test_utils::create_one_reference_element(bulk, topo);
+      auto elem = unit_test_utils::create_one_reference_element(*bulk, topo);
       const VectorFieldType& coordField = *static_cast<const VectorFieldType*>(meta.coordinate_field());
-      randomly_perturb_element_coords(rng, topo.num_nodes(), bulk.begin_nodes(elem), coordField);
+      randomly_perturb_element_coords(rng, topo.num_nodes(), bulk->begin_nodes(elem), coordField);
 
-      const auto& face_buckets = bulk.get_buckets(meta.side_rank(), meta.universal_part());
+      const auto& face_buckets = bulk->get_buckets(meta.side_rank(), meta.universal_part());
       for (const auto* ib : face_buckets) {
         const auto& b = *ib;
 
@@ -87,7 +89,7 @@ namespace
 
         for (size_t k = 0; k < b.size(); ++k) {
           auto face = b[k];
-          const auto* face_node_rels = bulk.begin_nodes(face);
+          const auto* face_node_rels = bulk->begin_nodes(face);
 
           std::vector<double> faceCoords(dim * meSide->nodesPerElement_);
           for (int d = 0; d < dim; ++d) {

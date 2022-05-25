@@ -31,10 +31,12 @@ class KokkosMEViews
 {
 public:
   KokkosMEViews(bool doInit=true, bool doPerturb=false)
-    : comm_(MPI_COMM_WORLD),
-      meta_(AlgTraits::nDim_),
-      bulk_(meta_, comm_)
+    : comm_(MPI_COMM_WORLD)
   {
+    stk::mesh::MeshBuilder meshBuilder(comm_);
+    meshBuilder.set_spatial_dimension(AlgTraits::nDim_);
+    bulk_ = meshBuilder.create();
+    meta_ = &bulk_->mesh_meta_data();
     if (doInit)
       fill_mesh_and_init_data(doPerturb);
   }
@@ -52,13 +54,13 @@ public:
   void fill_mesh(bool doPerturb=false)
   {
     if (doPerturb)
-      unit_test_utils::create_one_perturbed_element(bulk_, AlgTraits::topo_);
+      unit_test_utils::create_one_perturbed_element(*bulk_, AlgTraits::topo_);
     else
-      unit_test_utils::create_one_reference_element(bulk_, AlgTraits::topo_);
+      unit_test_utils::create_one_reference_element(*bulk_, AlgTraits::topo_);
 
-    partVec_ = {meta_.get_part("block_1")};
+    partVec_ = {meta_->get_part("block_1")};
     coordinates_ = static_cast<const VectorFieldType*>(
-      meta_.coordinate_field());
+      meta_->coordinate_field());
 
     EXPECT_TRUE(coordinates_ != nullptr);
 
@@ -104,7 +106,7 @@ public:
     ThrowAssertMsg(partVec_.size()==1, "KokkosMEViews unit-test assumes partVec_.size==1");
 
 #ifndef KOKKOS_ENABLE_CUDA
-    helperObjs_->assembleElemSolverAlg->run_algorithm(bulk_, func);
+    helperObjs_->assembleElemSolverAlg->run_algorithm(*bulk_, func);
 #endif
   }
 
@@ -112,8 +114,8 @@ public:
   { return helperObjs_->assembleElemSolverAlg->dataNeededByKernels_; }
 
   stk::ParallelMachine comm_;
-  stk::mesh::MetaData meta_;
-  stk::mesh::BulkData bulk_;
+  stk::mesh::MetaData* meta_;
+  std::shared_ptr<stk::mesh::BulkData> bulk_;
   stk::mesh::PartVector partVec_;
   const VectorFieldType* coordinates_{nullptr};
 

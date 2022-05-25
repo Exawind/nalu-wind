@@ -19,7 +19,7 @@
 TEST_F(SSTKernelHex8Mesh, NGP_SST_Max_Length_Scale)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -47,10 +47,10 @@ TEST_F(SSTKernelHex8Mesh, NGP_SST_Max_Length_Scale)
   ngpMaxLen.sync_to_host();
 
   const double tol = 1.0e-16;
-  stk::mesh::Selector sel = meta_.universal_part();
+  stk::mesh::Selector sel = meta_->universal_part();
 
   {
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
     int counter = 0;
     for (const auto* b: bkts)
       for (const auto node: *b) {

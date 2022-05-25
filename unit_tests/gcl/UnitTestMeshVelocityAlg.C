@@ -72,35 +72,35 @@ static constexpr double face_vel_mag[12] = {0.125, 0.0,  -0.125,  0.0,
 TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1)
+  if (bulk_->parallel_size() > 1)
     return;
 
   // declare relevant fields
-  dnvField_ = &(meta_.declare_field<ScalarFieldType>(
+  dnvField_ = &(meta_->declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume", 3));
-  stk::mesh::put_field_on_mesh(*dnvField_, meta_.universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
 
-  VectorFieldType* meshDisp_ = &(meta_.declare_field<VectorFieldType>(
+  VectorFieldType* meshDisp_ = &(meta_->declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement", 3));
-  stk::mesh::put_field_on_mesh(*meshDisp_, meta_.universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(*meshDisp_, meta_->universal_part(), nullptr);
 
-  VectorFieldType* cCoords_ = &(meta_.declare_field<VectorFieldType>(
+  VectorFieldType* cCoords_ = &(meta_->declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "current_coordinates"));
-  stk::mesh::put_field_on_mesh(*cCoords_, meta_.universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(*cCoords_, meta_->universal_part(), nullptr);
 
   const auto& meSCS =
     sierra::nalu::MasterElementRepo::get_surface_master_element(
       stk::topology::HEX_8);
-  GenericFieldType* sweptVolume_ = &(meta_.declare_field<GenericFieldType>(
+  GenericFieldType* sweptVolume_ = &(meta_->declare_field<GenericFieldType>(
     stk::topology::ELEM_RANK, "swept_face_volume", 3));
   stk::mesh::put_field_on_mesh(
-    *sweptVolume_, meta_.universal_part(), meSCS->num_integration_points(),
+    *sweptVolume_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
-  GenericFieldType* faceVelMag_ = &(meta_.declare_field<GenericFieldType>(
+  GenericFieldType* faceVelMag_ = &(meta_->declare_field<GenericFieldType>(
     stk::topology::ELEM_RANK, "face_velocity_mag", 2));
   stk::mesh::put_field_on_mesh(
-    *faceVelMag_, meta_.universal_part(), meSCS->num_integration_points(),
+    *faceVelMag_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
   fill_mesh_and_init_fields();
@@ -141,8 +141,8 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
     &(meshDisp_->field_of_state(stk::mesh::StateNM1));
 
   {
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
     for (const auto* b : bkts) {
       for (const auto node : *b) {
         double* dispNp1 = stk::mesh::field_data(*meshDispNp1, node);
@@ -184,8 +184,8 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
   const double tol = 1.0e-15;
   namespace gold_values = ::hex8_golds_x_rot::mesh_velocity;
   {
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::ELEM_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::ELEM_RANK, sel);
     int counter = 0;
     for (const auto* b : bkts) {
       const double* sv = stk::mesh::field_data(*sweptVolume_, *b, 0);
@@ -204,35 +204,35 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
 TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1)
+  if (bulk_->parallel_size() > 1)
     return;
 
   // declare relevant fields
-  dnvField_ = &(meta_.declare_field<ScalarFieldType>(
+  dnvField_ = &(meta_->declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume", 3));
-  stk::mesh::put_field_on_mesh(*dnvField_, meta_.universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
 
-  VectorFieldType* meshDisp_ = &(meta_.declare_field<VectorFieldType>(
+  VectorFieldType* meshDisp_ = &(meta_->declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement", 3));
-  stk::mesh::put_field_on_mesh(*meshDisp_, meta_.universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(*meshDisp_, meta_->universal_part(), nullptr);
 
-  VectorFieldType* cCoords_ = &(meta_.declare_field<VectorFieldType>(
+  VectorFieldType* cCoords_ = &(meta_->declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "current_coordinates"));
-  stk::mesh::put_field_on_mesh(*cCoords_, meta_.universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(*cCoords_, meta_->universal_part(), nullptr);
 
   const auto& meSCS =
     sierra::nalu::MasterElementRepo::get_surface_master_element(
       stk::topology::HEX_8);
-  GenericFieldType* sweptVolume_ = &(meta_.declare_field<GenericFieldType>(
+  GenericFieldType* sweptVolume_ = &(meta_->declare_field<GenericFieldType>(
     stk::topology::ELEM_RANK, "swept_face_volume", 3));
   stk::mesh::put_field_on_mesh(
-    *sweptVolume_, meta_.universal_part(), meSCS->num_integration_points(),
+    *sweptVolume_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
-  GenericFieldType* faceVelMag_ = &(meta_.declare_field<GenericFieldType>(
+  GenericFieldType* faceVelMag_ = &(meta_->declare_field<GenericFieldType>(
     stk::topology::ELEM_RANK, "face_velocity_mag", 2));
   stk::mesh::put_field_on_mesh(
-    *faceVelMag_, meta_.universal_part(), meSCS->num_integration_points(),
+    *faceVelMag_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
   fill_mesh_and_init_fields();
@@ -273,8 +273,8 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
     &(meshDisp_->field_of_state(stk::mesh::StateNM1));
 
   {
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
     for (const auto* b : bkts) {
       for (const auto node : *b) {
         double* dispNp1 = stk::mesh::field_data(*meshDispNp1, node);
@@ -316,8 +316,8 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
   const double tol = 1.0e-15;
   namespace gold_values = ::hex8_golds_y_rot::mesh_velocity;
   {
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::ELEM_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::ELEM_RANK, sel);
     int counter = 0;
     for (const auto* b : bkts) {
       const double* sv = stk::mesh::field_data(*sweptVolume_, *b, 0);
@@ -336,35 +336,35 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
 TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1)
+  if (bulk_->parallel_size() > 1)
     return;
 
   // declare relevant fields
-  dnvField_ = &(meta_.declare_field<ScalarFieldType>(
+  dnvField_ = &(meta_->declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume", 3));
-  stk::mesh::put_field_on_mesh(*dnvField_, meta_.universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
 
-  VectorFieldType* meshDisp_ = &(meta_.declare_field<VectorFieldType>(
+  VectorFieldType* meshDisp_ = &(meta_->declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement", 3));
-  stk::mesh::put_field_on_mesh(*meshDisp_, meta_.universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(*meshDisp_, meta_->universal_part(), nullptr);
 
-  VectorFieldType* cCoords_ = &(meta_.declare_field<VectorFieldType>(
+  VectorFieldType* cCoords_ = &(meta_->declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "current_coordinates"));
-  stk::mesh::put_field_on_mesh(*cCoords_, meta_.universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(*cCoords_, meta_->universal_part(), nullptr);
 
   const auto& meSCS =
     sierra::nalu::MasterElementRepo::get_surface_master_element(
       stk::topology::HEX_8);
-  GenericFieldType* sweptVolume_ = &(meta_.declare_field<GenericFieldType>(
+  GenericFieldType* sweptVolume_ = &(meta_->declare_field<GenericFieldType>(
     stk::topology::ELEM_RANK, "swept_face_volume", 3));
   stk::mesh::put_field_on_mesh(
-    *sweptVolume_, meta_.universal_part(), meSCS->num_integration_points(),
+    *sweptVolume_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
-  GenericFieldType* faceVelMag_ = &(meta_.declare_field<GenericFieldType>(
+  GenericFieldType* faceVelMag_ = &(meta_->declare_field<GenericFieldType>(
     stk::topology::ELEM_RANK, "face_velocity_mag", 2));
   stk::mesh::put_field_on_mesh(
-    *faceVelMag_, meta_.universal_part(), meSCS->num_integration_points(),
+    *faceVelMag_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
   fill_mesh_and_init_fields();
@@ -405,8 +405,8 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
     &(meshDisp_->field_of_state(stk::mesh::StateNM1));
 
   {
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
     for (const auto* b : bkts) {
       for (const auto node : *b) {
         double* dispNp1 = stk::mesh::field_data(*meshDispNp1, node);
@@ -448,8 +448,8 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
   const double tol = 1.0e-15;
   namespace gold_values = ::hex8_golds_y_rot::mesh_velocity;
   {
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::ELEM_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::ELEM_RANK, sel);
     int counter = 0;
     for (const auto* b : bkts) {
       const double* sv = stk::mesh::field_data(*sweptVolume_, *b, 0);

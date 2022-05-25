@@ -23,7 +23,7 @@
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_edge)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -33,7 +33,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_edge)
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
-  unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *tke_,
+  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
                                            xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
 
@@ -56,8 +56,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_edge)
     };
 
     const double tol = 1.0e-16;
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
     for (const auto* b: bkts)
@@ -73,7 +73,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_edge)
 TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -83,7 +83,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
-  unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *velocity_,
+  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *velocity_,
                                            xCoeff, yCoeff, zCoeff);
   velocity_->sync_to_device();
 
@@ -111,8 +111,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
     };
 
     const double tol = 1.0e-16;
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
     for (const auto* b: bkts)
@@ -127,7 +127,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -137,7 +137,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem)
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
-  unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *tke_,
+  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
                                            xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
 
@@ -160,8 +160,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem)
     };
 
     const double tol = 1.0e-16;
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
     for (const auto* b: bkts)
@@ -177,7 +177,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem)
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem_shifted)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -188,7 +188,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem_shifted)
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
-  unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *tke_,
+  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
                                            xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
 
@@ -211,8 +211,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem_shifted)
     };
 
     const double tol = 1.0e-16;
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
     for (const auto* b: bkts)
@@ -228,7 +228,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem_shifted)
 TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -239,7 +239,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
-  unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *velocity_,
+  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *velocity_,
                                            xCoeff, yCoeff, zCoeff);
   velocity_->sync_to_device();
 
@@ -267,8 +267,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
     };
 
     const double tol = 1.0e-16;
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
     for (const auto* b: bkts)
@@ -283,7 +283,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
 TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -294,7 +294,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
-  unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *velocity_,
+  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *velocity_,
                                            xCoeff, yCoeff, zCoeff);
   velocity_->sync_to_device();
 
@@ -322,8 +322,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
     };
 
     const double tol = 1.0e-16;
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
     for (const auto* b: bkts)
@@ -338,7 +338,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -349,10 +349,10 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry)
   const double zCoeff = 2.0;
   const bool useShifted = false;
 
-  auto* part = meta_.get_part("surface_5");
+  auto* part = meta_->get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, 1, part);
-  unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *tke_,
+  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
                                            xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
 
@@ -372,7 +372,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry)
 
     const double tol = 1.0e-16;
     stk::mesh::Selector sel(*part);
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
     for (const auto* b: bkts)
@@ -388,7 +388,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry)
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry_shifted)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -399,10 +399,10 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry_shifted)
   const double zCoeff = 2.0;
   const bool useShifted = true;
 
-  auto* part = meta_.get_part("surface_5");
+  auto* part = meta_->get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, 1, part);
-  unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *tke_,
+  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
                                            xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
 
@@ -422,7 +422,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry_shifted)
 
     const double tol = 1.0e-16;
     stk::mesh::Selector sel(*part);
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
     for (const auto* b: bkts)
@@ -438,7 +438,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry_shifted)
 TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_bndry_elem_vec)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -449,10 +449,10 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_bndry_elem_vec)
   const double zCoeff = 2.0;
   const bool useShifted = false;
 
-  auto* part = meta_.get_part("surface_5");
+  auto* part = meta_->get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, 1, part);
-  unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *velocity_,
+  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *velocity_,
                                            xCoeff, yCoeff, zCoeff);
   velocity_->sync_to_device();
 
@@ -480,7 +480,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_bndry_elem_vec)
 
     const double tol = 1.0e-16;
     stk::mesh::Selector sel(*part);
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
     for (const auto* b: bkts)

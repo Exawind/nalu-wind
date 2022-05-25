@@ -94,18 +94,18 @@ InputOutputRealm::register_io_fields() {
     // loop over target parts and declare/put the field
     for ( size_t j = 0; j < targetNames.size(); ++j ) {
       const std::string targetName = targetNames[j];
-      stk::mesh::Part *targetPart = metaData_->get_part(targetName);
+      stk::mesh::Part *targetPart = meta_data().get_part(targetName);
       if ( NULL == targetPart ) {
         throw std::runtime_error("Sorry, no part name found by the name: " + targetName + " for field: " + fieldName);
       }
       else { 
         if ( fieldName.find(velocityName) != std::string::npos ) { //FIXME: require FieldType?
-          VectorFieldType *velocity = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, fieldName));
+          VectorFieldType *velocity = &(meta_data().declare_field<VectorFieldType>(stk::topology::NODE_RANK, fieldName));
           stk::mesh::put_field_on_mesh(*velocity, *targetPart, fieldSize, nullptr);
         }
         else {
           stk::mesh::FieldBase *theField 
-            = &(metaData_->declare_field< stk::mesh::Field<double, stk::mesh::SimpleArrayTag> >(stk::topology::NODE_RANK, fieldName));
+            = &(meta_data().declare_field< stk::mesh::Field<double, stk::mesh::SimpleArrayTag> >(stk::topology::NODE_RANK, fieldName));
           stk::mesh::put_field_on_mesh(*theField,*targetPart,fieldSize, nullptr);
         }
       }

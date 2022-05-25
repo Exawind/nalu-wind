@@ -21,7 +21,7 @@
 TEST_F(MomentumNodeHex8Mesh, NGP_abl_force)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -30,7 +30,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_abl_force)
 
   helperObjs.realm.ablForcingAlg_ = new unit_test_utils::TestABLForcingAlg(helperObjs.realm);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumABLForceNodeKernel>(bulk_, solnOpts_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumABLForceNodeKernel>(*bulk_, solnOpts_);
 
   helperObjs.execute();
 

@@ -20,11 +20,11 @@
 TEST_F(MomentumKernelHex8Mesh, NGP_courant_reynolds)
 {
   auto& elemCourant =
-    meta_.declare_field<GenericFieldType>(stk::topology::ELEM_RANK, "element_courant");
+    meta_->declare_field<GenericFieldType>(stk::topology::ELEM_RANK, "element_courant");
   auto& elemReynolds =
-    meta_.declare_field<GenericFieldType>(stk::topology::ELEM_RANK, "element_reynolds");
-  stk::mesh::put_field_on_mesh(elemCourant, meta_.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(elemReynolds, meta_.universal_part(), 1, nullptr);
+    meta_->declare_field<GenericFieldType>(stk::topology::ELEM_RANK, "element_reynolds");
+  stk::mesh::put_field_on_mesh(elemCourant, meta_->universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(elemReynolds, meta_->universal_part(), 1, nullptr);
   fill_mesh_and_init_fields();
 
   std::mt19937 rng;

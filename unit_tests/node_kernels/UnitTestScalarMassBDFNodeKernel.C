@@ -39,7 +39,7 @@ static constexpr double rhs[8] =
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_mass_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -55,7 +55,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_mass_node)
 
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::ScalarMassBDFNodeKernel>(bulk_, mixFraction_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::ScalarMassBDFNodeKernel>(*bulk_, mixFraction_);
 
   helperObjs.execute();
 

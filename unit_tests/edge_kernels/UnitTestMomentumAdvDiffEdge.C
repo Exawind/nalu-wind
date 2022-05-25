@@ -66,7 +66,7 @@ static constexpr double lhs[24][24] = {
 
 TEST_F(MomentumEdgeHex8Mesh, NGP_advection_diffusion)
 {
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 

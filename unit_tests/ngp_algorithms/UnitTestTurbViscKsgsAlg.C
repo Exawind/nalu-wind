@@ -16,7 +16,7 @@
 TEST_F(KsgsKernelHex8Mesh, NGP_turb_visc_ksgs_alg)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   KsgsKernelHex8Mesh::fill_mesh_and_init_fields(false, false, false);
 
@@ -49,8 +49,8 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_visc_ksgs_alg)
     };
 
     const double tol = 1.0e-16;
-    stk::mesh::Selector sel = meta_.universal_part();
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    stk::mesh::Selector sel = meta_->universal_part();
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
     for (const auto* b: bkts)

@@ -33,7 +33,7 @@ static constexpr double rhs[24] =
 TEST_F(MomentumNodeHex8Mesh, NGP_momentum_gcl_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -49,7 +49,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_gcl_node)
 
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumGclSrcNodeKernel>(bulk_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumGclSrcNodeKernel>(*bulk_);
 
   helperObjs.execute();
 

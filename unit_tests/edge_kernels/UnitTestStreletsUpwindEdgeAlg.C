@@ -103,7 +103,7 @@ TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
   // we need to make a consistent velocity field to pair with
   const stk::mesh::Selector sel = stk::mesh::selectField(*velocity_);
 
-  for (const auto* ib : bulk_.get_buckets(stk::topology::NODE_RANK, sel)) {
+  for (const auto* ib : bulk_->get_buckets(stk::topology::NODE_RANK, sel)) {
     const auto& b = *ib;
     const size_t length = b.size();
     for (size_t k = 0; k < length; ++k) {
@@ -173,18 +173,18 @@ TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
 
   // check on host for values
   const auto rank = NaluEnv::self().parallel_rank();
-  for (const auto* ib : bulk_.get_buckets(
-         stk::topology::EDGE_RANK, meta_.locally_owned_part())) {
+  for (const auto* ib : bulk_->get_buckets(
+         stk::topology::EDGE_RANK, meta_->locally_owned_part())) {
     const auto& b = *ib;
     const size_t length = b.size();
     for (size_t k = 0; k < length; ++k) {
       stk::mesh::Entity edge = b[k];
-      const auto* nodes = bulk_.begin_nodes(edge);
-      const auto gEdge = bulk_.identifier(edge);
+      const auto* nodes = bulk_->begin_nodes(edge);
+      const auto gEdge = bulk_->identifier(edge);
       const double* x1 = stk::mesh::field_data(*coordinates_, nodes[0]);
       const double* x2 = stk::mesh::field_data(*coordinates_, nodes[1]);
-      const auto nId1 = bulk_.identifier(nodes[0]);
-      const auto nId2 = bulk_.identifier(nodes[1]);
+      const auto nId1 = bulk_->identifier(nodes[0]);
+      const auto nId2 = bulk_->identifier(nodes[1]);
       const double fieldVal = *stk::mesh::field_data(*pecletFactor_, edge);
 
       EXPECT_NEAR(tanhOne, fieldVal, 1e-12)

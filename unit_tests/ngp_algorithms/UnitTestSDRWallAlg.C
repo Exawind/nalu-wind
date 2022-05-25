@@ -21,7 +21,7 @@
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_lowRE)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -40,7 +40,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_lowRE)
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   helperObjs.realm.solutionOptions_->initialize_turbulence_constants();
 
-  auto* part = meta_.get_part("surface_5");
+  auto* part = meta_->get_part("surface_5");
   auto* surfPart = part->subsets()[0];
   sierra::nalu::SDRWallFuncAlgDriver algDriver(helperObjs.realm);
   algDriver.register_face_elem_algorithm<sierra::nalu::SDRLowReWallAlg>(
@@ -64,7 +64,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_lowRE)
     ngpWallArea.sync_to_host();
 
     stk::mesh::Selector sel(*part);
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
     const double wAreaGold = 0.25;
 
     auto& realm = helperObjs.realm;
@@ -87,7 +87,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_lowRE)
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_func)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -103,7 +103,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_func)
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   helperObjs.realm.solutionOptions_->initialize_turbulence_constants();
 
-  auto* part = meta_.get_part("surface_5");
+  auto* part = meta_->get_part("surface_5");
   auto* surfPart = part->subsets()[0];
   sierra::nalu::SDRWallFuncAlgDriver algDriver(helperObjs.realm);
   algDriver.register_face_elem_algorithm<sierra::nalu::SDRWallFuncAlg>(
@@ -127,7 +127,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_func)
     ngpWallArea.sync_to_host();
 
     stk::mesh::Selector sel(*part);
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
     const double wAreaGold = 0.25;
 
     auto& realm = helperObjs.realm;

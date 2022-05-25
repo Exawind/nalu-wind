@@ -41,7 +41,7 @@ static constexpr double lhs[8][8] = {
 TEST_F(KsgsKernelHex8Mesh, NGP_tke_ksgs_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = false;
@@ -56,7 +56,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_tke_ksgs_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKEKsgsNodeKernel>(meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKEKsgsNodeKernel>(*meta_);
 
   helperObjs.execute();
 

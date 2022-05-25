@@ -37,7 +37,7 @@ static constexpr double lhs[8][8] = {
 
 TEST_F(SSTKernelHex8Mesh, NGP_scalar_edge_open_solver_alg)
 {
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -47,14 +47,14 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_edge_open_solver_alg)
   solnOpts_.meshMotion_ = false;
   solnOpts_.externalMeshDeformation_ = false;
 
-  auto* part = meta_.get_part("surface_2");
+  auto* part = meta_->get_part("surface_2");
   unit_test_utils::FaceElemHelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 1, part);
 
   std::unique_ptr<sierra::nalu::ScalarEdgeOpenSolverAlg<sierra::nalu::AlgTraitsQuad4Hex8>>
     kernel (new sierra::nalu::ScalarEdgeOpenSolverAlg<
       sierra::nalu::AlgTraitsQuad4Hex8>(
-      meta_, solnOpts_, tke_, tkebc_, dkdx_, tvisc_, 
+      *meta_, solnOpts_, tke_, tkebc_, dkdx_, tvisc_, 
       helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
       helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_));
 
@@ -74,7 +74,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_edge_open_solver_alg)
 
 TEST_F(SSTKernelHex8Mesh, NGP_scalar_open_edge)
 {
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -98,13 +98,13 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_open_edge)
   solnOpts_.externalMeshDeformation_ = false;
   solnOpts_.relaxFactorMap_["turbulent_ke"] = 0.5;
 
-  auto* part = meta_.get_part("surface_5");
+  auto* part = meta_->get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, 1, part);
 
   std::unique_ptr<sierra::nalu::Kernel> kernel(
     new sierra::nalu::ScalarOpenEdgeKernel<sierra::nalu::AlgTraitsQuad4>(
-      meta_, solnOpts_,tke_, tkebc_,
+      *meta_, solnOpts_,tke_, tkebc_,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());
 

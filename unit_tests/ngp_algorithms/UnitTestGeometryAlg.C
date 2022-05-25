@@ -21,7 +21,7 @@
 TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -51,11 +51,11 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
   ngpElemVol.sync_to_host();
 
   const double tol = 1.0e-16;
-  stk::mesh::Selector sel = meta_.universal_part();
+  stk::mesh::Selector sel = meta_->universal_part();
 
   // Dual volume check
   {
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int counter = 0;
     for (const auto* b: bkts)
@@ -69,7 +69,7 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
 
   // Element volume check
   {
-    const auto& bkts = bulk_.get_buckets(stk::topology::ELEM_RANK, sel);
+    const auto& bkts = bulk_->get_buckets(stk::topology::ELEM_RANK, sel);
 
     int counter = 0;
     for (const auto* b: bkts)
@@ -83,7 +83,7 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
 
   // Edge area vector check
   {
-    const auto& bkts = bulk_.get_buckets(stk::topology::EDGE_RANK, sel);
+    const auto& bkts = bulk_->get_buckets(stk::topology::EDGE_RANK, sel);
     const double aMagSqrGold = 0.25 * 0.25;
 
     int counter = 0;
@@ -104,7 +104,7 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
 TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -120,7 +120,7 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
   auto& ngpArea = fieldMgr.get_field<double>(
       exposedAreaVec_->mesh_meta_data_ordinal());
 
-  auto* part = meta_.get_part("surface_5");
+  auto* part = meta_->get_part("surface_5");
   auto* surfPart = part->subsets()[0];
   sierra::nalu::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
   geomAlgDriver.register_face_algorithm<sierra::nalu::GeometryBoundaryAlg>(
@@ -134,7 +134,7 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
   // Exposed area vector check
   {
     stk::mesh::Selector sel(*part);
-    const auto& bkts = bulk_.get_buckets(stk::topology::FACE_RANK, sel);
+    const auto& bkts = bulk_->get_buckets(stk::topology::FACE_RANK, sel);
     const double aMagSqrGold = 0.25 * 0.25;
 
     const double tol = 1.0e-16;
@@ -157,7 +157,7 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
 TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -170,7 +170,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  auto* part = meta_.get_part("surface_5");
+  auto* part = meta_->get_part("surface_5");
   auto* surfPart = part->subsets()[0];
   sierra::nalu::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
   geomAlgDriver.register_wall_func_algorithm<sierra::nalu::WallFuncGeometryAlg>(
@@ -188,7 +188,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
   // wall distance and area check
   {
     stk::mesh::Selector sel(*part);
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
     const double wdistGold = 1.0;
     const double wAreaGold = 0.25;
 

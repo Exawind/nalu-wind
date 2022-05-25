@@ -159,14 +159,14 @@ private:
 
 TEST_F(Hex8Mesh, supp_alg_data_sharing)
 {
-    ScalarFieldType& nodalScalarField = meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "nodalScalarField");
-    VectorFieldType& nodalVectorField = meta.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "nodalVectorField");
-    TensorFieldType& nodalTensorField = meta.declare_field<TensorFieldType>(stk::topology::NODE_RANK, "nodalTensorField");
-    ScalarFieldType& elemScalarField = meta.declare_field<ScalarFieldType>(stk::topology::ELEM_RANK, "elemScalarField");
-    VectorFieldType& elemVectorField = meta.declare_field<VectorFieldType>(stk::topology::ELEM_RANK, "elemVectorField");
-    TensorFieldType& elemTensorField = meta.declare_field<TensorFieldType>(stk::topology::ELEM_RANK, "elemTensorField");
+    ScalarFieldType& nodalScalarField = meta->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "nodalScalarField");
+    VectorFieldType& nodalVectorField = meta->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "nodalVectorField");
+    TensorFieldType& nodalTensorField = meta->declare_field<TensorFieldType>(stk::topology::NODE_RANK, "nodalTensorField");
+    ScalarFieldType& elemScalarField = meta->declare_field<ScalarFieldType>(stk::topology::ELEM_RANK, "elemScalarField");
+    VectorFieldType& elemVectorField = meta->declare_field<VectorFieldType>(stk::topology::ELEM_RANK, "elemVectorField");
+    TensorFieldType& elemTensorField = meta->declare_field<TensorFieldType>(stk::topology::ELEM_RANK, "elemTensorField");
 
-    const stk::mesh::Part& wholemesh = meta.universal_part();
+    const stk::mesh::Part& wholemesh = meta->universal_part();
 
     stk::mesh::put_field_on_mesh(nodalScalarField, wholemesh, nullptr);
     stk::mesh::put_field_on_mesh(nodalVectorField, wholemesh, 4, nullptr);
@@ -178,7 +178,7 @@ TEST_F(Hex8Mesh, supp_alg_data_sharing)
 
     fill_mesh("generated:10x10x10");
 
-    TestAlgorithm testAlgorithm(bulk);
+    TestAlgorithm testAlgorithm(*bulk);
 
     //TestSuppAlg constructor says which data it needs, by inserting
     //things into the 'dataNeededByKernels_' container.
@@ -196,12 +196,12 @@ TEST_F(Hex8Mesh, supp_alg_data_sharing)
 
 TEST_F(Hex8Mesh, inconsistent_field_requests)
 {
-    ScalarFieldType& nodalScalarField = meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "nodalScalarField");
-    TensorFieldType& nodalTensorField = meta.declare_field<TensorFieldType>(stk::topology::NODE_RANK, "nodalTensorField");
-    ScalarFieldType& elemScalarField = meta.declare_field<ScalarFieldType>(stk::topology::ELEM_RANK, "elemScalarField");
-    TensorFieldType& elemTensorField = meta.declare_field<TensorFieldType>(stk::topology::ELEM_RANK, "elemTensorField");
+    ScalarFieldType& nodalScalarField = meta->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "nodalScalarField");
+    TensorFieldType& nodalTensorField = meta->declare_field<TensorFieldType>(stk::topology::NODE_RANK, "nodalTensorField");
+    ScalarFieldType& elemScalarField = meta->declare_field<ScalarFieldType>(stk::topology::ELEM_RANK, "elemScalarField");
+    TensorFieldType& elemTensorField = meta->declare_field<TensorFieldType>(stk::topology::ELEM_RANK, "elemTensorField");
 
-    const stk::mesh::Part& wholemesh = meta.universal_part();
+    const stk::mesh::Part& wholemesh = meta->universal_part();
 
     stk::mesh::put_field_on_mesh(nodalScalarField, wholemesh, nullptr);
     stk::mesh::put_field_on_mesh(nodalTensorField, wholemesh, 3, 3, nullptr);
@@ -211,7 +211,7 @@ TEST_F(Hex8Mesh, inconsistent_field_requests)
 
     fill_mesh("generated:10x10x10");
 
-    sierra::nalu::ElemDataRequests prereqData(meta);
+    sierra::nalu::ElemDataRequests prereqData(*meta);
 
     prereqData.add_gathered_nodal_field(nodalScalarField, 1);
     EXPECT_THROW(prereqData.add_gathered_nodal_field(nodalScalarField, 2), std::logic_error);

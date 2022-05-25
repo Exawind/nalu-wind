@@ -19,6 +19,7 @@
 
 #include "stk_io/IossBridge.hpp"
 #include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/MeshBuilder.hpp"
 #include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/Entity.hpp"
 #include "stk_mesh/base/FEMHelpers.hpp"
@@ -46,7 +47,10 @@ namespace matrix_free {
 class SimdConnectivityFixture : public ::testing::Test
 {
 protected:
-  SimdConnectivityFixture() : meta(3u), bulk(meta, MPI_COMM_WORLD)
+  SimdConnectivityFixture() 
+    : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD).set_spatial_dimension(3u).create()), 
+      bulk(*bulkPtr), 
+      meta(bulk.mesh_meta_data())
   {
     stk::topology topo(stk::topology::HEX_8);
 
@@ -108,8 +112,9 @@ protected:
     }
     mesh = stk::mesh::NgpMesh(bulk);
   }
-  stk::mesh::MetaData meta;
-  stk::mesh::BulkData bulk;
+  std::shared_ptr<stk::mesh::BulkData> bulkPtr;
+  stk::mesh::BulkData& bulk;
+  stk::mesh::MetaData& meta;
   stk::mesh::NgpMesh mesh;
 };
 

@@ -57,7 +57,7 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist)
   // Initialize the kernel
   std::unique_ptr<sierra::nalu::Kernel> wallKernel(
     new sierra::nalu::WallDistElemKernel<sierra::nalu::AlgTraitsHex8>(
-      bulk_, solnOpts_, helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
+      *bulk_, solnOpts_, helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 
   // Add to kernels to be tested
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(wallKernel.get());
@@ -88,7 +88,7 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist_shifted)
   // Initialize the kernel
   std::unique_ptr<sierra::nalu::Kernel> wallKernel(
     new sierra::nalu::WallDistElemKernel<sierra::nalu::AlgTraitsHex8>(
-      bulk_, solnOpts_, helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
+      *bulk_, solnOpts_, helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 
   // Add to kernels to be tested
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(wallKernel.get());

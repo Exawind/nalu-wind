@@ -31,7 +31,7 @@ static constexpr double lhs[8][8] = {
 
 TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist_edge)
 {
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 

@@ -17,7 +17,7 @@
 TEST_F(MomentumNodeHex8Mesh, NGP_momentum_coriolis)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
@@ -44,7 +44,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_coriolis)
     bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumCoriolisNodeKernel>(
-    bulk_, solnOpts_);
+    *bulk_, solnOpts_);
 
   helperObjs.execute();
 

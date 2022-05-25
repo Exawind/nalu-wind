@@ -37,7 +37,7 @@ static constexpr double lhs[8][8] = {
 
 TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
 {
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -55,7 +55,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
   solnOpts_.shiftedGradOpMap_["mixture_fraction"] = true;
   solnOpts_.skewSymmetricMap_["mixture_fraction"] = true;
 
-  auto* part = meta_.get_part("surface_2");
+  auto* part = meta_->get_part("surface_2");
   unit_test_utils::FaceElemHelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 1, part);
 
@@ -67,7 +67,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
 
   std::unique_ptr<sierra::nalu::Kernel> openKernel(
     new sierra::nalu::ScalarOpenAdvElemKernel<sierra::nalu::AlgTraitsQuad4Hex8>(
-      meta_, solnOpts_, &helperObjs.eqSystem, mixFraction_, mixFraction_, dzdx_,
+      *meta_, solnOpts_, &helperObjs.eqSystem, mixFraction_, mixFraction_, dzdx_,
       viscosity_, helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
       helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_));
 

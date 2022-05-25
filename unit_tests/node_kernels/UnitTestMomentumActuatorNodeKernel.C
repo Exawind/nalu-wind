@@ -19,7 +19,7 @@
 TEST_F(ActuatorSourceKernelHex8Mesh, NGP_momentum_actuator)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   std::mt19937 rng;
   rng.seed(0); // fixed seed
@@ -32,7 +32,7 @@ TEST_F(ActuatorSourceKernelHex8Mesh, NGP_momentum_actuator)
 
   unit_test_utils::NodeHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumActuatorNodeKernel>(bulk_.mesh_meta_data());
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumActuatorNodeKernel>(bulk_->mesh_meta_data());
 
   helperObjs.execute();
 

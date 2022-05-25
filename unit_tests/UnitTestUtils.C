@@ -620,11 +620,11 @@ std::array<double,9> random_linear_transformation(int dim, double scale, std::mt
 
 void Hex8Mesh::check_discrete_laplacian(double exactLaplacian)
 {
-   const stk::mesh::Selector selector = meta.locally_owned_part() & !meta.globally_shared_part();
-   const stk::mesh::BucketVector& nodeBuckets = bulk.get_buckets(stk::topology::NODE_RANK, selector);
+   const stk::mesh::Selector selector = meta->locally_owned_part() & !meta->globally_shared_part();
+   const stk::mesh::BucketVector& nodeBuckets = bulk->get_buckets(stk::topology::NODE_RANK, selector);
    kokkos_thread_team_bucket_loop(nodeBuckets, [&](stk::mesh::Entity node)
    {
-     if (bulk.num_elements(node) == 8) {
+     if (bulk->num_elements(node) == 8) {
          EXPECT_NEAR(*stk::mesh::field_data(*discreteLaplacianOfPressure, node), exactLaplacian    , tol);
      }
    });

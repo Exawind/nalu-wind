@@ -17,14 +17,14 @@
 TEST_F(WallDistKernelHex8Mesh, walldist_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1) return;
 
   fill_mesh_and_init_fields();
 
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::WallDistNodeKernel>(bulk_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::WallDistNodeKernel>(*bulk_);
 
   helperObjs.execute();
 

@@ -30,7 +30,7 @@ static constexpr double rhs[24] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0,
 TEST_F(MomentumNodeHex8Mesh, NGP_momentum_body_force_box_inside)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1)
+  if (bulk_->parallel_size() > 1)
     return;
 
   fill_mesh_and_init_fields();
@@ -60,7 +60,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_body_force_box_inside)
 TEST_F(MomentumNodeHex8Mesh, NGP_momentum_body_force_box_outside)
 {
   // Only execute for 1 processor runs
-  if (bulk_.parallel_size() > 1)
+  if (bulk_->parallel_size() > 1)
     return;
 
   fill_mesh_and_init_fields();

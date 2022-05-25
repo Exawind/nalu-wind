@@ -4,6 +4,7 @@
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
+#include <stk_mesh/base/MeshBuilder.hpp>
 #include <stk_mesh/base/Bucket.hpp>
 #include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
@@ -77,12 +78,13 @@ TEST(HexSCV, determinant)
     stk::ParallelMachine comm = MPI_COMM_WORLD;
 
     unsigned spatialDimension = 3;
-    stk::mesh::MetaData meta(spatialDimension);
-    stk::mesh::BulkData bulk(meta, comm);
+    stk::mesh::MeshBuilder meshBuilder(comm);
+    meshBuilder.set_spatial_dimension(spatialDimension);
+    auto bulk = meshBuilder.create();
 
-    unit_test_utils::fill_mesh_1_elem_per_proc_hex8(bulk);
+    unit_test_utils::fill_mesh_1_elem_per_proc_hex8(*bulk);
 
-    check_HexSCV_determinant(bulk);
+    check_HexSCV_determinant(*bulk);
 }
 
 TEST(HexSCV, grandyvol)
@@ -90,11 +92,12 @@ TEST(HexSCV, grandyvol)
   stk::ParallelMachine comm = MPI_COMM_WORLD;
 
   unsigned spatialDimension = 3;
-  stk::mesh::MetaData meta(spatialDimension);
-  stk::mesh::BulkData bulk(meta, comm);
+  stk::mesh::MeshBuilder meshBuilder(comm);
+  meshBuilder.set_spatial_dimension(spatialDimension);
+  auto bulk = meshBuilder.create();
 
-  unit_test_utils::fill_mesh_1_elem_per_proc_hex8(bulk);
-  const auto& coordField = *static_cast<const VectorFieldType*>(meta.coordinate_field());
+  unit_test_utils::fill_mesh_1_elem_per_proc_hex8(*bulk);
+  const auto& coordField = *static_cast<const VectorFieldType*>(bulk->mesh_meta_data().coordinate_field());
 
   double v_coords[8][3];
 
@@ -109,10 +112,10 @@ TEST(HexSCV, grandyvol)
   };
   double detQ = determinant33(Q);
 
-  for (auto* ib : bulk.get_buckets(stk::topology::ELEM_RANK, meta.universal_part())) {
+  for (auto* ib : bulk->get_buckets(stk::topology::ELEM_RANK, bulk->mesh_meta_data().universal_part())) {
     const auto& b = *ib;
     for (size_t k = 0u; k < b.size(); ++k) {
-      const auto* node_rels = bulk.begin_nodes(b[k]);
+      const auto* node_rels = bulk->begin_nodes(b[k]);
       for (int n = 0; n < 8; ++n) {
         for (int j = 0; j < 3; ++j) {
           v_coords[n][j] = 0.0;

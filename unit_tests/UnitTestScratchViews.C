@@ -171,7 +171,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPScratchViews)
   const double velVec[nDim] = {1.0, 0.0, 0.0};
 
   stk::mesh::EntityVector nodes;
-  stk::mesh::get_entities(bulk, stk::topology::NODE_RANK, nodes);
+  stk::mesh::get_entities(*bulk, stk::topology::NODE_RANK, nodes);
 
   for(stk::mesh::Entity node : nodes) {
     double* fieldData = static_cast<double*>(stk::mesh::field_data(*velocity, node));
@@ -180,7 +180,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPScratchViews)
     }
   }
 
-  do_the_test(bulk, pressure, velocity);
+  do_the_test(*bulk, pressure, velocity);
 }
 
 void do_assemble_elem_solver_test(
@@ -215,7 +215,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPAssembleElemSolver)
 
   auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<sierra::nalu::AlgTraitsHex8>();
   dataNeeded.add_cvfem_volume_me(meSCV);
-  auto* coordsField = bulk.mesh_meta_data().coordinate_field();
+  auto* coordsField = bulk->mesh_meta_data().coordinate_field();
 
   dataNeeded.add_coordinates_field(*coordsField, 3, sierra::nalu::CURRENT_COORDINATES);
   dataNeeded.add_gathered_nodal_field(*velocity, 3);
@@ -226,7 +226,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPAssembleElemSolver)
   EXPECT_EQ(3u, dataNeeded.get_fields().size());
 
   do_assemble_elem_solver_test(
-    bulk, *assembleElemSolverAlg, velocity->mesh_meta_data_ordinal(),
+    *bulk, *assembleElemSolverAlg, velocity->mesh_meta_data_ordinal(),
     pressure->mesh_meta_data_ordinal());
 }
 
@@ -323,7 +323,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPSharedMemData)
   if (stk::parallel_machine_size(comm) == 1) {
     fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
-    do_the_smdata_test(bulk, pressure, velocity);
+    do_the_smdata_test(*bulk, pressure, velocity);
   }
 }
 

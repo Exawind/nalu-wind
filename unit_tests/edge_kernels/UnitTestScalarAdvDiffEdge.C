@@ -77,10 +77,10 @@ static const std::vector<double> dirichlet_rhs_P1 = {-2, -2, -2, -2};
 
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
 {
-  int numProcs = bulk_.parallel_size();
+  int numProcs = bulk_->parallel_size();
   if (numProcs > 2) return;
 
-  int myProc = bulk_.parallel_rank();
+  int myProc = bulk_->parallel_rank();
 
   fill_mesh_and_init_fields();
 
@@ -131,8 +131,8 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
   auto ngpField = helperObjs.realm.ngp_field_manager().get_field<double>(mixFraction_->mesh_meta_data_ordinal());
   ngpField.sync_to_host();
 
-  const stk::mesh::BucketVector& buckets = bulk_.get_buckets(stk::topology::NODE_RANK,
-                                  bulk_.mesh_meta_data().locally_owned_part());
+  const stk::mesh::BucketVector& buckets = bulk_->get_buckets(stk::topology::NODE_RANK,
+                                  bulk_->mesh_meta_data().locally_owned_part());
   for(const stk::mesh::Bucket* bptr : buckets) {
     for(stk::mesh::Entity node : *bptr) {
       const double* data1 = static_cast<double*>(stk::mesh::field_data(*viscosity_, node));
@@ -144,10 +144,10 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
 
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra_fix_pressure_at_node)
 {
-  int numProcs = bulk_.parallel_size();
+  int numProcs = bulk_->parallel_size();
   if (numProcs > 2) return;
 
-  int myProc = bulk_.parallel_rank();
+  int myProc = bulk_->parallel_rank();
 
   fill_mesh_and_init_fields();
 
@@ -206,7 +206,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra_fix_pressure_at_n
 
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra_dirichlet)
 {
-  int numProcs = bulk_.parallel_size();
+  int numProcs = bulk_->parallel_size();
   if (numProcs > 2) return;
 
   fill_mesh_and_init_fields();
@@ -255,8 +255,8 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra_dirichlet)
   ngpSolutionField.modify_on_host();
   ngpBCValuesField.modify_on_host();
 
-  stk::mesh::Entity node1 = bulk_.get_entity(stk::topology::NODE_RANK, 1);
-  if (bulk_.is_valid(node1)) {
+  stk::mesh::Entity node1 = bulk_->get_entity(stk::topology::NODE_RANK, 1);
+  if (bulk_->is_valid(node1)) {
     double* node1value = static_cast<double*>(stk::mesh::field_data(*bcValuesField, node1));
     *node1value = 1.0;
   }
@@ -265,7 +265,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra_dirichlet)
 
   namespace golds = ::hex8_golds::adv_diff;
 
-  int myProc = bulk_.parallel_rank();
+  int myProc = bulk_->parallel_rank();
 
   if (numProcs == 1) {
     helperObjs.check_against_sparse_gold_values(golds::rowOffsets_serial, golds::cols_serial,
