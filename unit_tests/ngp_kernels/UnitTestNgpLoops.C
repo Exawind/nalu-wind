@@ -944,3 +944,51 @@ TEST_F(NgpLoopTest, NGP_basic_face_elem_reduce)
 
   basic_face_elem_reduce(*bulk, *coordField, exposedAreaVec);
 }
+
+void basic_reduce_with_teams(const int num_mesh_buckets)
+{
+  using Mesh           = stk::mesh::NgpMesh;
+  using Traits         = sierra::nalu::nalu_ngp::NGPMeshTraits<Mesh>;
+  using TeamPolicy     = typename Traits::TeamPolicy;
+  using TeamHandleType = typename Traits::TeamHandleType;
+  using ReducerValueType = int;
+  using ReducerType    = Kokkos::Sum<ReducerValueType>;
+
+  ReducerValueType intVal = 0;
+  ReducerType intReducer(intVal);
+
+  const std::string algName = "ReduceOverBuckets";
+  const int bytes_per_team = 0;
+  const int bytes_per_thread = 117;
+
+  TeamPolicy team_exec(num_mesh_buckets, Kokkos::AUTO);
+  team_exec.set_scratch_size(
+    1, Kokkos::PerTeam(bytes_per_team), Kokkos::PerThread(bytes_per_thread));
+  
+  Kokkos::parallel_reduce(
+    algName, team_exec,
+    KOKKOS_LAMBDA(const TeamHandleType& team, ReducerValueType& teamVal) {
+      ReducerValueType bktVal;
+      const size_t simdBktLen = 1;
+      Kokkos::parallel_reduce(
+        Kokkos::TeamThreadRange(team, simdBktLen),
+        [&](const size_t& bktIndex, ReducerValueType& threadVal) {
+        }, ReducerType(bktVal));
+
+      Kokkos::single(
+        Kokkos::PerTeam(team),
+        [&]() {
+          intReducer.join(teamVal, bktVal);
+        });
+    }, intReducer);
+}
+
+TEST_F(NgpLoopTest, NGP_one_reduce_with_teams)
+{
+  basic_reduce_with_teams(1);
+}
+
+TEST_F(NgpLoopTest, NGP_zero_reduce_with_teams)
+{
+  basic_reduce_with_teams(0);
+}
