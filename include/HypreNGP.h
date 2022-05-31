@@ -48,17 +48,19 @@ inline void hypre_set_params(YAML::Node nodes)
 
   const YAML::Node node = nodes["hypre_config"];
   if ( node ) {
+#ifdef HYPRE_USING_DEVICE_POOL
     int memory_pool_mbs=2000;
     sierra::nalu::get_if_present(node, "memory_pool_mbs", memory_pool_mbs, memory_pool_mbs);
     mempool_max_cached_bytes = ((size_t)memory_pool_mbs) * 1024 * 1024;
+#endif
 
     sierra::nalu::get_if_present(node, "use_vendor_sgemm", use_vendor_sgemm, use_vendor_sgemm);
   }
 
 #ifdef HYPRE_USING_DEVICE_POOL
-    /* To be effective, hypre_SetCubMemPoolSize must immediately follow HYPRE_Init */
-    HYPRE_SetGPUMemoryPoolSize( mempool_bin_growth, mempool_min_bin,
-                                mempool_max_bin, mempool_max_cached_bytes );
+  /* To be effective, hypre_SetCubMemPoolSize must immediately follow HYPRE_Init */
+  HYPRE_SetGPUMemoryPoolSize( mempool_bin_growth, mempool_min_bin,
+							  mempool_max_bin, mempool_max_cached_bytes );
 #endif
 
   HYPRE_SetSpGemmUseVendor(use_vendor_sgemm);
