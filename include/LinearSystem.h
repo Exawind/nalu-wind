@@ -75,7 +75,9 @@ struct CoeffApplierDestructor
   using ptr_t = CoeffApplier;
 
   void free(ptr_t* coeffApplier) {
-    kokkos_free_on_device(coeffApplier);
+    if(coeffApplier != nullptr) {
+      kokkos_free_on_device(coeffApplier);
+    }
   }
 };
 
