@@ -33,7 +33,7 @@ def num_lines_output(fname):
 def tail(fname, n):
     exit_if_file_does_not_exist(fname)
     cmdline = "tail -n " + str(n) + " " + fname
-    pp = subprocess.run(cmdline, shell=True, capture_output=True)
+    pp = subprocess.run(cmdline, shell=True, stdout=subprocess.PIPE)
     lines = pp.stdout.decode("UTF-8").strip().split("\n")
     return lines
 
