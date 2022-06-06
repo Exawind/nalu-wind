@@ -66,8 +66,6 @@ struct NGPApplyCoeff
   mutable stk::mesh::NgpField<double> diagField_;
   stk::mesh::NgpField<int> iblankField_;
 
-  // Teuchos::RCP<CoeffApplier> deviceSumInto_;
-  // CoeffApplier* deviceSumIntoPtr_;
   CoeffApplier* deviceSumInto_;
 
   const unsigned nDim_{3};

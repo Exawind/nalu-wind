@@ -59,7 +59,6 @@ namespace nalu{
 
 NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
   : ngpMesh_(eqSystem->realm_.ngp_mesh()),
-    // deviceSumInto_(nullptr),
     deviceSumInto_(eqSystem->linsys_->get_coeff_applier()),
     nDim_(eqSystem->linsys_->numDof()),
     hasOverset_(eqSystem->realm_.hasOverset_),
@@ -74,9 +73,6 @@ NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
   if (hasOverset_) {
     iblankField_ = nalu_ngp::get_ngp_field<int>(eqSystem->realm_.mesh_info(), "iblank");
   }
-
-  // deviceSumInto_ = Teuchos::RCP<CoeffApplier>(eqSystem->linsys_->get_coeff_applier(), CoeffApplierDestructor(), true);
-  // deviceSumIntoPtr_ = deviceSumInto_.get();
 }
 
 void NGPApplyCoeff::extract_diagonal(
@@ -135,7 +131,6 @@ void NGPApplyCoeff::operator()(
   if (hasOverset_ && resetOversetRows_)
     reset_overset_rows(numMeshobjs, symMeshobjs, rhs, lhs);
 
-  // (*deviceSumIntoPtr_)(
   (*deviceSumInto_)(
     numMeshobjs, symMeshobjs, scratchIds, sortPermutation, rhs, lhs, trace_tag);
 }
