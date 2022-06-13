@@ -1775,18 +1775,18 @@ Realm::advance_time_step()
     ablForcingAlg_->execute();
   }
 
-  nonlinear_iterations(equationSystems_.maxIterations_);
+  nonlinear_iterations();
 }
 
-void Realm::nonlinear_iterations(const int numNonLinearIterations){
-    for ( int i = 0; i < numNonLinearIterations; ++i ) {
+void Realm::nonlinear_iterations(){
+    for ( int i = 0; i < equationSystems_.maxIterations_; ++i ) {
       currentNonlinearIteration_ = i+1;
       NaluEnv::self().naluOutputP0()
         << currentNonlinearIteration_
-        << "/" << numNonLinearIterations
+        << "/" << equationSystems_.maxIterations_
         << std::setw(29) << std::right << "Equation System Iteration" << std::endl;
 
-      isFinalOuterIter_ = ((i+1) == numNonLinearIterations);
+      isFinalOuterIter_ = ((i+1) == equationSystems_.maxIterations_);
 
       const bool isConverged = equationSystems_.solve_and_update();
 
