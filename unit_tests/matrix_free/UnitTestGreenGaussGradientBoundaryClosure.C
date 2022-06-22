@@ -102,13 +102,13 @@ TEST_F(GradientBoundaryFixture, bc_residual)
   owned_and_shared_rhs.putScalar(0.);
   gradient_boundary_closure<order>(
     grad_bc_offsets, q_face, exposed_areas,
-    owned_and_shared_rhs.getLocalViewDevice());
+    owned_and_shared_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
   owned_and_shared_rhs.modify_device();
   owned_rhs.putScalar(0.);
   owned_rhs.doExport(owned_and_shared_rhs, exporter, Tpetra::ADD);
 
   owned_rhs.sync_host();
-  auto view_h = owned_rhs.getLocalViewHost();
+  auto view_h = owned_rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   double maxval = -1;
   for (size_t k = 0u; k < owned_rhs.getLocalLength(); ++k) {

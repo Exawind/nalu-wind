@@ -90,7 +90,7 @@ TEST_F(FilterJacobiFixture, jacobi_operator_is_stricly_positive_for_mass)
 
   auto& result = prec_op.get_inverse_diagonal();
   result.sync_host();
-  auto view_h = result.getLocalViewHost();
+  auto view_h = result.getLocalViewHost(Tpetra::Access::ReadWrite);
   for (size_t k = 0u; k < result.getLocalLength(); ++k) {
     ASSERT_TRUE(std::isfinite(stk::simd::get_data(view_h(k, 0), 0)));
     ASSERT_GT(view_h(k, 0), 1.0e-2);

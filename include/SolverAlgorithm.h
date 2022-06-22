@@ -14,6 +14,7 @@
 
 #include <Algorithm.h>
 #include <KokkosInterface.h>
+#include <LinearSystem.h>
 
 #include <stk_mesh/base/Entity.hpp>
 #include <stk_mesh/base/Ngp.hpp>

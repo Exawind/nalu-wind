@@ -41,12 +41,12 @@ GradientResidualOperator<p>::compute(mv_type& owned_rhs)
     gradient_residual<p>(
       elem_offsets_, residual_fields_.areas, residual_fields_.vols,
       residual_fields_.q, residual_fields_.dqdx,
-      cached_rhs_.getLocalViewDevice());
+      cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
     if (face_bc_active_) {
       gradient_boundary_closure<p>(
         face_bc_offsets_, face_q_, exposed_areas_,
-        cached_rhs_.getLocalViewDevice());
+        cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
 
     cached_rhs_.modify_device();
@@ -58,13 +58,13 @@ GradientResidualOperator<p>::compute(mv_type& owned_rhs)
     owned_rhs.putScalar(0.);
     gradient_residual<p>(
       elem_offsets_, residual_fields_.areas, residual_fields_.vols,
-      residual_fields_.q, residual_fields_.dqdx, owned_rhs.getLocalViewDevice(),
+      residual_fields_.q, residual_fields_.dqdx, owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite),
       false);
 
     if (face_bc_active_) {
       gradient_boundary_closure<p>(
         face_bc_offsets_, face_q_, exposed_areas_,
-        owned_rhs.getLocalViewDevice());
+        owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
     owned_rhs.modify_device();
   }
@@ -103,8 +103,8 @@ GradientLinearizedResidualOperator<p>::apply(
     cached_rhs_.putScalar(0.);
 
     filter_linearized_residual<p>(
-      elem_offsets_, volumes_, cached_sln_.getLocalViewDevice(),
-      cached_rhs_.getLocalViewDevice());
+      elem_offsets_, volumes_, cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite),
+      cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
     cached_rhs_.modify_device();
     owned_rhs.putScalar(0.);
@@ -117,8 +117,8 @@ GradientLinearizedResidualOperator<p>::apply(
   } else {
     owned_rhs.putScalar(0.);
     filter_linearized_residual<p>(
-      elem_offsets_, volumes_, owned_sln.getLocalViewDevice(),
-      owned_rhs.getLocalViewDevice());
+      elem_offsets_, volumes_, owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
 }
 INSTANTIATE_POLYCLASS(GradientLinearizedResidualOperator);

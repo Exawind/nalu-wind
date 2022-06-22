@@ -73,7 +73,8 @@ public:
   void storeOwnersForShared();
   void finalizeLinearSystem();
 
-  sierra::nalu::CoeffApplier* get_coeff_applier();
+  CoeffApplier* get_coeff_applier();
+  void free_coeff_applier(CoeffApplier* coeffApplier);
 
   // Matrix Assembly
   void zeroSystem();
@@ -145,6 +146,12 @@ public:
   Teuchos::RCP<LinSys::Matrix> getOwnedMatrix() { return ownedMatrix_; }
   Teuchos::RCP<LinSys::MultiVector> getOwnedRhs() { return ownedRhs_; }
 
+  LinSys::LocalMatrix getOwnedLocalMatrix() { return ownedMatrix_->getLocalMatrixDevice(); }
+  LinSys::LocalMatrix getSharedNotOwnedLocalMatrix() { return sharedNotOwnedMatrix_->getLocalMatrixDevice(); }
+
+  LinSys::LocalVector getOwnedLocalRhs() { return ownedRhs_->getLocalViewDevice(Tpetra::Access::ReadWrite); }
+  LinSys::LocalVector getSharedNotOwnedLocalRhs() { return sharedNotOwnedRhs_->getLocalViewDevice(Tpetra::Access::ReadWrite); }
+
   class TpetraLinSysCoeffApplier : public CoeffApplier
   {
   public:
@@ -162,8 +169,7 @@ public:
       sharedNotOwnedLocalRhs_(sharedNotOwnedLclRhs),
       entityToLID_(entityLIDs),
       entityToColLID_(entityColLIDs),
-      maxOwnedRowId_(maxOwnedRowId), maxSharedNotOwnedRowId_(maxSharedNotOwnedRowId), numDof_(numDof),
-      devicePointer_(nullptr)
+      maxOwnedRowId_(maxOwnedRowId), maxSharedNotOwnedRowId_(maxSharedNotOwnedRowId), numDof_(numDof)
     {}
 
     KOKKOS_DEFAULTED_FUNCTION
@@ -186,9 +192,9 @@ public:
                             const SharedMemView<const double**,DeviceShmem> & lhs,
                             const char * trace_tag);
 
-    void free_device_pointer();
+    void free_device_pointer() {}
 
-    sierra::nalu::CoeffApplier* device_pointer();
+    sierra::nalu::CoeffApplier* device_pointer() { return nullptr; }
 
   private:
     LinSys::LocalMatrix ownedLocalMatrix_, sharedNotOwnedLocalMatrix_;
@@ -197,7 +203,6 @@ public:
     LinSys::EntityToLIDView entityToColLID_;
     int maxOwnedRowId_, maxSharedNotOwnedRowId_;
     unsigned numDof_;
-    TpetraLinSysCoeffApplier* devicePointer_;
   };
 
 private:
@@ -263,10 +268,6 @@ private:
 
   Teuchos::RCP<LinSys::Matrix> ownedMatrix_;
   Teuchos::RCP<LinSys::MultiVector> ownedRhs_;
-  LinSys::LocalMatrix ownedLocalMatrix_;
-  LinSys::LocalMatrix sharedNotOwnedLocalMatrix_;
-  LinSys::LocalVector ownedLocalRhs_;
-  LinSys::LocalVector sharedNotOwnedLocalRhs_;
 
   Teuchos::RCP<LinSys::Matrix>      sharedNotOwnedMatrix_;
   Teuchos::RCP<LinSys::MultiVector> sharedNotOwnedRhs_;
@@ -277,7 +278,9 @@ private:
 
   MyLIDMapType myLIDs_;
   LinSys::EntityToLIDView entityToColLID_;
+  LinSys::EntityToLIDHostView entityToColLIDHost_;
   LinSys::EntityToLIDView entityToLID_;
+  LinSys::EntityToLIDHostView entityToLIDHost_;
   LocalOrdinal maxOwnedRowId_; // = num_owned_nodes * numDof_
   LocalOrdinal maxSharedNotOwnedRowId_; // = (num_owned_nodes + num_sharedNotOwned_nodes) * numDof_
 

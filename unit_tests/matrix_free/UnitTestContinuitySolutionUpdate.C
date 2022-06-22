@@ -131,7 +131,7 @@ TEST_F(ContinuitySolutionUpdateFixture, solve_is_reasonable)
 
   copy_tpetra_solution_vector_to_stk_field(
     stk::mesh::get_updated_ngp_mesh(bulk), meta.universal_part(),
-    linsys.stk_lid_to_tpetra_lid, delta_mv.getLocalViewDevice(), delta);
+    linsys.stk_lid_to_tpetra_lid, delta_mv.getLocalViewDevice(Tpetra::Access::ReadOnly), delta);
 
   if (bulk.parallel_size() > 1) {
     stk::mesh::communicate_field_data<double>(bulk, {&delta});

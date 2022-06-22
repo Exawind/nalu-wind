@@ -122,7 +122,7 @@ TEST_F(
   resid_op.compute(rhs);
 
   rhs.sync_host();
-  auto view_h = rhs.getLocalViewHost();
+  auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   //  side should be #(faces connectded to node) * (scale/nx)^2
   const auto interior_selector = active() - side();
@@ -143,7 +143,7 @@ TEST_F(
   MomentumOperatorFixture,
   linearized_residual_operator_nonzero_for_nonconstant_velocity)
 {
-  auto host_lhs = lhs.getLocalViewHost();
+  auto host_lhs = lhs.getLocalViewHost(Tpetra::Access::ReadWrite);
   ThrowRequire(host_lhs.extent(1) == 3u);
   for (const auto* ib : bulk.get_buckets(stk::topology::NODE_RANK, active())) {
     for (auto node : *ib) {

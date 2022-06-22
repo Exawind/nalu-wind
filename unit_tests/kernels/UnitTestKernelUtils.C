@@ -1517,40 +1517,46 @@ void calc_projected_nodal_gradient(
 #endif // KOKKOS_ENABLE_CUDA
 
 void expect_all_near(
-  const Kokkos::View<double*>& calcValue,
+  const Kokkos::View<double*>& devCalcValue,
   const double* exactValue,
   const double tol)
 {
-  const int length = calcValue.extent(0);
+  const int length = devCalcValue.extent(0);
+
+  auto hostCalcValue = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), devCalcValue);
 
   for (int i=0; i < length; ++i) {
-    EXPECT_NEAR(calcValue[i], exactValue[i], tol);
+    EXPECT_NEAR(hostCalcValue[i], exactValue[i], tol);
   }
 }
 
 void expect_all_near(
-  const Kokkos::View<double*>& calcValue,
+  const Kokkos::View<double*>& devCalcValue,
   const double exactValue,
   const double tol)
 {
-  const int length = calcValue.extent(0);
+  const int length = devCalcValue.extent(0);
+
+  auto hostCalcValue = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), devCalcValue);
 
   for (int i=0; i < length; ++i) {
-    EXPECT_NEAR(calcValue[i], exactValue, tol);
+    EXPECT_NEAR(hostCalcValue[i], exactValue, tol);
   }
 }
 
 void expect_all_near_2d(
-  const Kokkos::View<double**>& calcValue,
+  const Kokkos::View<double**>& devCalcValue,
   const double* exactValue,
   const double tol)
 {
-  const int dim1 = calcValue.extent(0);
-  const int dim2 = calcValue.extent(1);
+  const int dim1 = devCalcValue.extent(0);
+  const int dim2 = devCalcValue.extent(1);
+
+  auto hostCalcValue = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), devCalcValue);
 
   for (int i=0; i < dim1; i++)
     for (int j=0; j < dim2; j++)
-      EXPECT_NEAR(calcValue(i,j),exactValue[i*dim2+j], tol);
+      EXPECT_NEAR(hostCalcValue(i,j),exactValue[i*dim2+j], tol);
 }
 
 } // unit_test_kernel_utils

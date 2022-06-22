@@ -205,34 +205,38 @@ void expect_all_near_2d(
 
 template<int N>
 void expect_all_near(
-  const Kokkos::View<double**>& calcValue,
+  const Kokkos::View<double**>& devCalcValue,
   const double (*exactValue)[N],
   const double tol = 1.0e-15)
 {
-  const int dim1 = calcValue.extent(0);
-  const int dim2 = calcValue.extent(1);
+  const int dim1 = devCalcValue.extent(0);
+  const int dim2 = devCalcValue.extent(1);
   EXPECT_EQ(dim2, N);
+
+  auto hostCalcValue = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), devCalcValue);
 
   for (int i=0; i < dim1; ++i) {
     for (int j=0; j < dim2; ++j) {
-      EXPECT_NEAR(calcValue(i,j), exactValue[i][j], tol);
+      EXPECT_NEAR(hostCalcValue(i,j), exactValue[i][j], tol);
     }
   }
 }
 
 template<int N>
 void expect_all_near(
-  const Kokkos::View<double**>& calcValue,
+  const Kokkos::View<double**>& devCalcValue,
   const double exactValue,
   const double tol = 1.0e-15)
 {
-  const int dim1 = calcValue.extent(0);
-  const int dim2 = calcValue.extent(1);
+  const int dim1 = devCalcValue.extent(0);
+  const int dim2 = devCalcValue.extent(1);
   EXPECT_EQ(dim2, N);
+
+  auto hostCalcValue = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), devCalcValue);
 
   for (int i=0; i < dim1; ++i) {
     for (int j=0; j < dim2; ++j) {
-      EXPECT_NEAR(calcValue(i,j), exactValue, tol);
+      EXPECT_NEAR(hostCalcValue(i,j), exactValue, tol);
     }
   }
 }

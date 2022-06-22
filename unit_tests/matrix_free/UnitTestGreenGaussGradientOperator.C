@@ -147,7 +147,7 @@ TEST_F(GradientOperatorFixture, residual_operator_zero_for_zero_data)
   resid_op.compute(rhs);
 
   rhs.sync_host();
-  auto view_h = rhs.getLocalViewHost();
+  auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   for (size_t k = 0u; k < rhs.getLocalLength(); ++k) {
     ASSERT_NEAR(view_h(k, 0), 0, 1.0e-14);
@@ -162,7 +162,7 @@ TEST_F(GradientOperatorFixture, residual_operator_not_zero_for_nonconstant_data)
   resid_op.compute(rhs);
 
   rhs.sync_host();
-  auto view_h = rhs.getLocalViewHost();
+  auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
   double max_error = -1;
   for (size_t k = 0u; k < rhs.getLocalLength(); ++k) {
     max_error = std::max(std::abs(view_h(k, 0)), max_error);
@@ -182,7 +182,7 @@ TEST_F(
   lin_op.apply(lhs, rhs);
 
   rhs.sync_host();
-  auto view_h = rhs.getLocalViewHost();
+  auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
   for (size_t k = 0u; k < rhs.getLocalLength(); ++k) {
     ASSERT_NEAR(view_h(k, 0), 0, 1.e-14);
   }
@@ -202,7 +202,7 @@ TEST_F(
   lin_op.apply(lhs, rhs);
 
   rhs.sync_host();
-  auto view_h = rhs.getLocalViewHost();
+  auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   double max_error = -1;
   for (size_t k = 0u; k < rhs.getLocalLength(); ++k) {

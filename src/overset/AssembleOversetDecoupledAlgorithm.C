@@ -40,6 +40,8 @@ void AssembleOversetDecoupledAlgorithm::execute()
     fringeNodes.size(), KOKKOS_LAMBDA(const size_t& i) {
       coeffApplier->resetRows(1, &fringeNodes(i), 0, numDof, 1.0, 0.0);
     });
+
+  eqSystem_->linsys_->free_coeff_applier(coeffApplier);
 }
 
 }  // nalu

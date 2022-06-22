@@ -479,7 +479,7 @@ MatrixFreeLowMachEquationSystem::setup_and_compute_continuity_preconditioner()
 {
   stk::mesh::ProfilingBlock pf("setup_continuity_preconditioner");
 
-  auto device_mat = matrix_free::NoAuraDeviceMatrix(
+  auto device_mat = std::make_unique<matrix_free::NoAuraDeviceMatrix>(
     precond_linsys_->getMaxOwnedRowId(), precond_linsys_->getOwnedLocalMatrix(),
     precond_linsys_->getSharedNotOwnedLocalMatrix(),
     precond_linsys_->getRowLIDs(), precond_linsys_->getColLIDs());
@@ -493,11 +493,13 @@ MatrixFreeLowMachEquationSystem::setup_and_compute_continuity_preconditioner()
     precond_linsys_->zeroSystem();
     matrix_free::assemble_sparsified_edge_laplacian(
       polynomial_order_, realm_.ngp_mesh(), interior_selector_, coords,
-      device_mat);
+      *device_mat);
     precond_linsys_->loadComplete();
   }
 
   auto xml_name = get_muelu_xml_file_name();
+  device_mat.reset();
+
   update_->create_continuity_preconditioner(
     coords, *precond_linsys_->getOwnedMatrix(), xml_name);
 }

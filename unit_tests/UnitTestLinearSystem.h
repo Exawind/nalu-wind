@@ -71,8 +71,8 @@ class TestCoeffApplier : public sierra::nalu::CoeffApplier
 {
 public:
   KOKKOS_FUNCTION
-  TestCoeffApplier(LHSView& lhs, RHSView& rhs, UnsignedView& numSumIntoCalls,
-                   bool isEdge=false, unsigned nDof=1, unsigned numContributionsToAccept=1)
+  TestCoeffApplier(LHSView const& lhs, RHSView const& rhs, UnsignedView const& numSumIntoCalls,
+                   const bool isEdge=false, const unsigned nDof=1, const unsigned numContributionsToAccept=1)
   : numSumIntoCalls_(numSumIntoCalls),
     lhs_(lhs), rhs_(rhs), devicePointer_(nullptr),
     numContributionsToAccept_(numContributionsToAccept),
@@ -200,11 +200,21 @@ public:
 
   sierra::nalu::CoeffApplier* get_coeff_applier()
   {
-    if (!hostCoeffApplier) {
-      hostCoeffApplier.reset(new TestCoeffApplier(lhs_, rhs_, numSumIntoCalls_, isEdge_, numDof_));
-      deviceCoeffApplier = hostCoeffApplier->device_pointer();
-    }
-    return deviceCoeffApplier;
+    auto lhs = lhs_;
+    auto rhs = rhs_;
+    auto numSumIntoCalls = numSumIntoCalls_;
+    auto isEdge = isEdge_;
+    auto numDof = numDof_;
+
+    auto newDeviceCoeffApplier = sierra::nalu::kokkos_malloc_on_device<TestCoeffApplier>("deviceCoeffApplier");
+
+    Kokkos::parallel_for(1,
+      [=] KOKKOS_FUNCTION (const int&) {
+        new (newDeviceCoeffApplier) TestCoeffApplier(lhs, rhs, numSumIntoCalls, isEdge, numDof);
+      }
+    );
+
+    return newDeviceCoeffApplier;
   }
 
   virtual void sumInto(

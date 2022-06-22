@@ -87,13 +87,13 @@ MomentumJacobiOperator<p>::apply(
   const mv_type& x, mv_type& y, Teuchos::ETransp, double, double) const
 {
   element_multiply(
-    owned_diagonal.getLocalViewDevice(), x.getLocalViewDevice(),
-    y.getLocalViewDevice());
+    owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadOnly), x.getLocalViewDevice(Tpetra::Access::ReadOnly),
+    y.getLocalViewDevice(Tpetra::Access::ReadWrite));
   for (int n = 1; n < num_sweeps; ++n) {
     op->apply(y, cached_mv);
     update_jacobi_sweep(
-      owned_diagonal.getLocalViewDevice(), cached_mv.getLocalViewDevice(),
-      x.getLocalViewDevice(), y.getLocalViewDevice());
+      owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadOnly), cached_mv.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      x.getLocalViewDevice(Tpetra::Access::ReadOnly), y.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
   y.modify_device();
 }
@@ -109,17 +109,17 @@ MomentumJacobiOperator<p>::compute_diagonal(
   owned_and_shared_diagonal.putScalar(0.);
   advdiff_diagonal<p>(
     gamma, elem_offsets, vol, adv, diff,
-    owned_and_shared_diagonal.getLocalViewDevice());
+    owned_and_shared_diagonal.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
   if (dirichlet_bc_active_) {
     dirichlet_diagonal(
       dirichlet_bc_offsets_, owned_diagonal.getLocalLength(),
-      owned_and_shared_diagonal.getLocalViewDevice());
+      owned_and_shared_diagonal.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
   owned_and_shared_diagonal.modify_device();
   owned_diagonal.putScalar(0.);
   owned_diagonal.doExport(owned_and_shared_diagonal, exporter, Tpetra::ADD);
-  reciprocal(owned_diagonal.getLocalViewDevice());
+  reciprocal(owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 INSTANTIATE_POLYCLASS(MomentumJacobiOperator);
 } // namespace matrix_free

@@ -90,13 +90,13 @@ JacobiOperator<p>::apply(
   const mv_type& x, mv_type& y, Teuchos::ETransp, double, double) const
 {
   element_multiply(
-    owned_diagonal_.getLocalViewDevice(), x.getLocalViewDevice(),
-    y.getLocalViewDevice());
+    owned_diagonal_.getLocalViewDevice(Tpetra::Access::ReadOnly), x.getLocalViewDevice(Tpetra::Access::ReadOnly),
+    y.getLocalViewDevice(Tpetra::Access::ReadWrite));
   for (int n = 1; n < num_sweeps_; ++n) {
     op_->apply(y, cached_mv_);
     update_jacobi_sweep(
-      owned_diagonal_.getLocalViewDevice(), cached_mv_.getLocalViewDevice(),
-      x.getLocalViewDevice(), y.getLocalViewDevice());
+      owned_diagonal_.getLocalViewDevice(Tpetra::Access::ReadOnly), cached_mv_.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      x.getLocalViewDevice(Tpetra::Access::ReadOnly), y.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
   y.modify_device();
 }
@@ -108,17 +108,17 @@ JacobiOperator<p>::compute_diagonal()
   owned_and_shared_diagonal_.putScalar(0.);
   conduction_diagonal<p>(
     gamma_, elem_offsets_, fields_.volume_metric, fields_.diffusion_metric,
-    owned_and_shared_diagonal_.getLocalViewDevice());
+    owned_and_shared_diagonal_.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
   if (dirichlet_bc_active_) {
     dirichlet_diagonal(
       dirichlet_bc_offsets_, owned_diagonal_.getLocalLength(),
-      owned_and_shared_diagonal_.getLocalViewDevice());
+      owned_and_shared_diagonal_.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
   owned_and_shared_diagonal_.modify_device();
   owned_diagonal_.putScalar(0.);
   owned_diagonal_.doExport(owned_and_shared_diagonal_, exporter_, Tpetra::ADD);
-  reciprocal(owned_diagonal_.getLocalViewDevice());
+  reciprocal(owned_diagonal_.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 INSTANTIATE_POLYCLASS(JacobiOperator);
 } // namespace matrix_free

@@ -34,10 +34,11 @@ TEST_F(MomentumNodeHex8Mesh, NGP_abl_force)
 
   helperObjs.execute();
 
+  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->hostNumSumIntoCalls_(0), 8u);
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, 1.25, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<24>(helperObjs.linsys->lhs_, 0.0, 1.0e-12);

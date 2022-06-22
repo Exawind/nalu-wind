@@ -42,7 +42,7 @@ ContinuityResidualOperator<p>::compute(mv_type& owned_rhs)
   if (exporter_.getTargetMap()->isDistributed()) {
     cached_rhs_.putScalar(0.);
     continuity_residual<p>(
-      time_scale_, elem_offsets_, mdot_, cached_rhs_.getLocalViewDevice());
+      time_scale_, elem_offsets_, mdot_, cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
     cached_rhs_.modify_device();
     owned_rhs.putScalar(0.);
@@ -54,7 +54,7 @@ ContinuityResidualOperator<p>::compute(mv_type& owned_rhs)
   } else {
     owned_rhs.putScalar(0.);
     continuity_residual<p>(
-      time_scale_, elem_offsets_, mdot_, owned_rhs.getLocalViewDevice());
+      time_scale_, elem_offsets_, mdot_, owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
     owned_rhs.modify_device();
   }
 }
@@ -91,8 +91,8 @@ ContinuityLinearizedResidualOperator<p>::apply(
     }
     cached_rhs_.putScalar(0.);
     continuity_linearized_residual<p>(
-      elem_offsets_, metric_, cached_sln_.getLocalViewDevice(),
-      cached_rhs_.getLocalViewDevice());
+      elem_offsets_, metric_, cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite),
+      cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
     cached_rhs_.modify_device();
     exec_space().fence();
@@ -103,8 +103,8 @@ ContinuityLinearizedResidualOperator<p>::apply(
   } else {
     owned_rhs.putScalar(0.);
     continuity_linearized_residual<p>(
-      elem_offsets_, metric_, owned_sln.getLocalViewDevice(),
-      owned_rhs.getLocalViewDevice());
+      elem_offsets_, metric_, owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
     owned_rhs.modify_device();
   }
 }

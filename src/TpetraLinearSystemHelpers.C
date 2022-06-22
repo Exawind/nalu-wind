@@ -147,11 +147,11 @@ void sort_connections(std::vector<std::vector<stk::mesh::Entity> >& connections)
   }
 }
 
-void add_to_length(LinSys::DeviceRowLengths& v_owned, LinSys::DeviceRowLengths& v_shared,
+void add_to_length(LinSys::HostRowLengths& v_owned, LinSys::HostRowLengths& v_shared,
                    unsigned numDof, LinSys::LocalOrdinal lid_a, LinSys::LocalOrdinal maxOwnedRowId,
                    bool a_owned, unsigned numColEntities)
 {
-    LinSys::DeviceRowLengths& v_a = a_owned ? v_owned : v_shared;
+    LinSys::HostRowLengths& v_a = a_owned ? v_owned : v_shared;
     LinSys::LocalOrdinal lid = a_owned ? lid_a : lid_a - maxOwnedRowId;
 
     for (unsigned d=0; d < numDof; ++d) {
@@ -211,7 +211,7 @@ void communicate_remote_columns(const stk::mesh::BulkData& bulk,
                                 stk::CommNeighbors& commNeighbors,
                                 unsigned numDof,
                                 const Teuchos::RCP<LinSys::Map>& ownedRowsMap,
-                                LinSys::DeviceRowLengths& deviceLocallyOwnedRowLengths,
+                                LinSys::HostRowLengths& hostLocallyOwnedRowLengths,
                                 std::set<std::pair<int, LinSys::GlobalOrdinal> >& communicatedColIndices)
 {
     commNeighbors.communicate();
@@ -233,7 +233,7 @@ void communicate_remote_columns(const stk::mesh::BulkData& bulk,
                 std::cerr<<"P"<<bulk.parallel_rank()<<" lid="<<lid<<" for rowGid="<<rowGid<<" sent from proc "<<p<<std::endl;
             }
             for(unsigned d=0; d<numDof; ++d) {
-                deviceLocallyOwnedRowLengths(lid++) += numCols*numDof;
+                hostLocallyOwnedRowLengths(lid++) += numCols*numDof;
             }
             for(unsigned i=0; i<numCols; ++i) {
                 LinSys::GlobalOrdinal colGid = 0;
@@ -320,7 +320,7 @@ void fill_in_extra_dof_rows_per_node(LocalGraphArrays& csg, int numDof)
   }
 }
 
-void remove_invalid_indices(LocalGraphArrays& csg, LinSys::DeviceRowLengths& rowLengths)
+void remove_invalid_indices(LocalGraphArrays& csg, LinSys::HostRowLengths& rowLengths)
 {
   size_t nnz = csg.rowPointers(rowLengths.size());
   auto cols = csg.colIndices.data();
@@ -339,7 +339,7 @@ void remove_invalid_indices(LocalGraphArrays& csg, LinSys::DeviceRowLengths& row
   }
 
   if (newNnz < nnz) {
-    Kokkos::View<LocalOrdinal*, DeviceSpace> newColIndices(Kokkos::ViewAllocateWithoutInitializing("colInds"),newNnz);
+    Kokkos::View<LocalOrdinal*, typename LinSys::HostRowLengths::memory_space> newColIndices(Kokkos::ViewAllocateWithoutInitializing("colInds"),newNnz);
     LocalOrdinal* newCols = newColIndices.data();
     auto rowLens = rowLengths.data();
     int index = 0;

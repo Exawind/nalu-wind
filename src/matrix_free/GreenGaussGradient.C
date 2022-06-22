@@ -165,7 +165,7 @@ ComputeGradient<p>::gradient(
   update_.compute_residual(fields, bc_fields);
   const auto& delta = update_.compute_delta(vols_);
   add_tpetra_solution_vector_to_stk_field(
-    mesh, sel, elid_, delta.getLocalViewDevice(), dqdx);
+    mesh, sel, elid_, delta.getLocalViewDevice(Tpetra::Access::ReadOnly), dqdx);
 }
 
 INSTANTIATE_POLYCLASS(ComputeGradient);
