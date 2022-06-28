@@ -44,7 +44,9 @@ inline void hypre_set_params(YAML::Node nodes)
              mempool_max_bin      = 9;
   size_t mempool_max_cached_bytes = 2000LL * 1024 * 1024;
 #endif
-  bool use_vendor_sgemm = false;
+  bool use_vendor_spgemm = false;
+  bool use_vendor_spmv = false;
+  bool use_vendor_sptrans = false;
 
   const YAML::Node node = nodes["hypre_config"];
   if ( node ) {
@@ -54,7 +56,9 @@ inline void hypre_set_params(YAML::Node nodes)
     mempool_max_cached_bytes = ((size_t)memory_pool_mbs) * 1024 * 1024;
 #endif
 
-    sierra::nalu::get_if_present(node, "use_vendor_sgemm", use_vendor_sgemm, use_vendor_sgemm);
+    sierra::nalu::get_if_present(node, "use_vendor_spgemm", use_vendor_spgemm, use_vendor_spgemm);
+    sierra::nalu::get_if_present(node, "use_vendor_spmv", use_vendor_spmv, use_vendor_spmv);
+    sierra::nalu::get_if_present(node, "use_vendor_sptrans", use_vendor_sptrans, use_vendor_sptrans);
   }
 
 #ifdef HYPRE_USING_DEVICE_POOL
@@ -63,7 +67,9 @@ inline void hypre_set_params(YAML::Node nodes)
 							  mempool_max_bin, mempool_max_cached_bytes );
 #endif
 
-  HYPRE_SetSpGemmUseVendor(use_vendor_sgemm);
+  HYPRE_SetSpGemmUseVendor(use_vendor_spgemm);
+  HYPRE_SetSpMVUseVendor(use_vendor_spmv);
+  HYPRE_SetSpTransUseVendor(use_vendor_sptrans);
   HYPRE_SetMemoryLocation(HYPRE_MEMORY_DEVICE);
   HYPRE_SetExecutionPolicy(HYPRE_EXEC_DEVICE);
   HYPRE_SetUseGpuRand(true);
