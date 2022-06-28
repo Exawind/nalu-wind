@@ -139,6 +139,7 @@ AssembleNGPNodeSolverAlgorithm::execute()
             smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
         });
     });
+    coeffApplier.free_coeff_applier();
 }
 
 }  // nalu

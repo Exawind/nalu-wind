@@ -39,6 +39,8 @@ struct NGPApplyCoeff
   KOKKOS_DEFAULTED_FUNCTION
   ~NGPApplyCoeff() = default;
 
+  void free_coeff_applier();
+
   KOKKOS_FUNCTION
   void operator()(
     unsigned numMeshobjs,
