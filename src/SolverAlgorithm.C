@@ -75,7 +75,7 @@ NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
   }
 }
 
-NGPApplyCoeff::~NGPApplyCoeff()
+void NGPApplyCoeff::free_coeff_applier()
 {
   if(deviceSumInto_ != nullptr) {
     kokkos_free_on_device(deviceSumInto_);

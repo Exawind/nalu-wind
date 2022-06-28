@@ -36,8 +36,10 @@ struct NGPApplyCoeff
   KOKKOS_DEFAULTED_FUNCTION
   NGPApplyCoeff() = default;
 
-  KOKKOS_FUNCTION
-  ~NGPApplyCoeff();
+  KOKKOS_DEFAULTED_FUNCTION
+  ~NGPApplyCoeff() = default;
+
+  void free_coeff_applier();
 
   KOKKOS_FUNCTION
   void operator()(
