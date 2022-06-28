@@ -75,6 +75,13 @@ NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
   }
 }
 
+NGPApplyCoeff::~NGPApplyCoeff()
+{
+  if(deviceSumInto_ != nullptr) {
+    kokkos_free_on_device(deviceSumInto_);
+  }
+}
+
 void NGPApplyCoeff::extract_diagonal(
   const unsigned int nEntities,
   const stk::mesh::NgpMesh::ConnectedNodes& entities,
