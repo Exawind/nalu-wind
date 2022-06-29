@@ -46,7 +46,7 @@ TEST(SpinnerLidar, print_tip_location)
 
   for (int j = 0; j < nsamp; ++j) {
     const double time = dt * j;
-    auto seg = slgen.generate_path_segment(time);
+    auto seg = slgen.generate(time);
     ASSERT_TRUE(seg.tip_.at(0) > seg.tail_.at(0));
     ASSERT_TRUE(seg.tip_.at(1) > seg.tail_.at(1));
     ASSERT_DOUBLE_EQ(seg.tail_.at(0), 500);

@@ -50,7 +50,7 @@ def runDoxygen(doxyfileIn, doxyfileOut):
     doxname = os.path.join(sourcedir, doxyfileOut)
     with open(doxname, 'w') as fh:
         fh.write(c2)
-    print 'Running Doxygen on %s' % doxyfileOut
+    print('Running Doxygen on %s' % doxyfileOut)
     try:
         subprocess.call(('doxygen', doxname))
     except:

@@ -271,6 +271,28 @@ realms:
       output_frequency: 10
       time_hist_output_frequency: 2
 
+    data_probes:
+      output_frequency: 10
+      search_method: stk_kdtree
+      search_tolerance: 1.0e-3
+      search_expansion_factor: 2.0
+
+      lidar_specifications:
+        from_target_part: [fluid_part]
+        type: scanning
+        frequency: 10 #Hz
+        points_along_line: 2
+        output: text
+        scanning_lidar_specifications:
+          center: [500,500,100] #m
+          beam_length: 50.0 #m
+          axis: [1,0,0] #m
+          stare_time: 1 #s
+          sweep_angle: 20 #deg
+          step_delta_angle: 1 #deg
+          reset_time_delta: 1 #s
+
+
     # This defines the ABL forcing to drive the winds to 8 m/s from
     # 245 degrees (southwest) at 90 m above the surface in a planar
     # averaged sense.
