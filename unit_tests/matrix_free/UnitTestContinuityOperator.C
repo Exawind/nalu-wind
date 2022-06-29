@@ -101,7 +101,10 @@ protected:
   Tpetra::MultiVector<> lhs;
   Tpetra::MultiVector<> rhs;
   const const_entity_row_view_type elid;
-  const typename decltype(elid)::HostMirror elid_h;
+
+  using host_space = Kokkos::DefaultHostExecutionSpace;
+  using host_type = decltype(Kokkos::create_mirror_view_and_copy(host_space{}, elid));
+  const host_type elid_h;
 
   elem_mesh_index_view<order> conn;
   elem_offset_view<order> offsets;
