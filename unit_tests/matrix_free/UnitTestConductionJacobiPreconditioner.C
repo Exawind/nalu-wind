@@ -85,7 +85,6 @@ TEST_F(JacobiFixture, jacobi_operator_is_stricly_positive_for_laplacian)
   jac_op.set_coefficients(0.0, coefficient_fields);
   jac_op.compute_diagonal();
   auto& result = jac_op.get_inverse_diagonal();
-  result.sync_host();
   auto view_h = result.getLocalViewHost(Tpetra::Access::ReadWrite);
   for (size_t k = 0u; k < result.getLocalLength(); ++k) {
     ASSERT_GT(view_h(k, 0), 1.0e-2);

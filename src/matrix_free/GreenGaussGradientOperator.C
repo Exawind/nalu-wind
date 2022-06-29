@@ -48,8 +48,6 @@ GradientResidualOperator<p>::compute(mv_type& owned_rhs)
         face_bc_offsets_, face_q_, exposed_areas_,
         cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
-
-    cached_rhs_.modify_device();
     {
       stk::mesh::ProfilingBlock pfinner("export from owned-shared to owned");
       owned_rhs.doExport(cached_rhs_, exporter_, Tpetra::ADD);
@@ -66,7 +64,6 @@ GradientResidualOperator<p>::compute(mv_type& owned_rhs)
         face_bc_offsets_, face_q_, exposed_areas_,
         owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
-    owned_rhs.modify_device();
   }
 }
 
@@ -106,10 +103,7 @@ GradientLinearizedResidualOperator<p>::apply(
       elem_offsets_, volumes_, cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite),
       cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
-    cached_rhs_.modify_device();
     owned_rhs.putScalar(0.);
-    owned_rhs.modify_device();
-    exec_space().fence();
     {
       stk::mesh::ProfilingBlock pfinner("export from owned-shared to owned");
       owned_rhs.doExport(cached_rhs_, exporter_, Tpetra::ADD);

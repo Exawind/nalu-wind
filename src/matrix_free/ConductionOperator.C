@@ -57,9 +57,7 @@ ConductionResidualOperator<p>::compute(mv_type& owned_rhs)
         cached_shared_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
 
-    cached_shared_rhs_.modify_device();
     owned_rhs.putScalar(0.);
-    owned_rhs.modify_device();
     owned_rhs.doExport(cached_shared_rhs_, exporter_, Tpetra::ADD);
   } else {
     owned_rhs.putScalar(0.);
@@ -80,7 +78,6 @@ ConductionResidualOperator<p>::compute(mv_type& owned_rhs)
         bc_nodal_specified_field_, owned_rhs.getLocalLength(),
         owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
-    owned_rhs.modify_device();
   }
 }
 INSTANTIATE_POLYCLASS(ConductionResidualOperator);
@@ -122,10 +119,7 @@ ConductionLinearizedResidualOperator<p>::apply(
         cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite), cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
 
-    cached_rhs_.modify_device();
     owned_rhs.putScalar(0.);
-    owned_rhs.modify_device();
-    exec_space().fence();
     owned_rhs.doExport(cached_rhs_, exporter_, Tpetra::ADD);
   } else {
     owned_rhs.putScalar(0.);
@@ -138,7 +132,6 @@ ConductionLinearizedResidualOperator<p>::apply(
         dirichlet_bc_offsets_, owned_rhs.getLocalLength(),
         owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly), owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
-    owned_rhs.modify_device();
   }
 }
 INSTANTIATE_POLYCLASS(ConductionLinearizedResidualOperator);

@@ -25,7 +25,7 @@ MomentumResidualOperator<p>::MomentumResidualOperator(
   const_elem_offset_view<p> elem_offsets_in, const export_type& exporter_in)
   : elem_offsets_(elem_offsets_in),
     exporter_(exporter_in),
-    max_owned_row_id_(exporter_in.getTargetMap()->getNodeNumElements()),
+    max_owned_row_id_(exporter_in.getTargetMap()->getLocalNumElements()),
     cached_rhs_(exporter_in.getSourceMap(), num_vectors)
 {
 }
@@ -61,7 +61,6 @@ MomentumResidualOperator<p>::compute(mv_type& owned_rhs)
   if (exporter_.getTargetMap()->isDistributed()) {
     ThrowRequire(owned_rhs.getLocalLength() == size_t(max_owned_row_id_));
     local_compute(cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
-    cached_rhs_.modify_device();
     {
       stk::mesh::ProfilingBlock pfinner("export from owned-shared to owned");
       owned_rhs.putScalar(0.);
@@ -69,7 +68,6 @@ MomentumResidualOperator<p>::compute(mv_type& owned_rhs)
     }
   } else {
     local_compute(owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
-    owned_rhs.modify_device();
   }
 }
 INSTANTIATE_POLYCLASS(MomentumResidualOperator);
@@ -79,7 +77,7 @@ MomentumLinearizedResidualOperator<p>::MomentumLinearizedResidualOperator(
   const_elem_offset_view<p> elem_offsets_in, const export_type& exporter_in)
   : elem_offsets_(elem_offsets_in),
     exporter_(exporter_in),
-    max_owned_row_id_(exporter_in.getTargetMap()->getNodeNumElements()),
+    max_owned_row_id_(exporter_in.getTargetMap()->getLocalNumElements()),
     cached_sln_(exporter_in.getSourceMap(), num_vectors),
     cached_rhs_(exporter_in.getSourceMap(), num_vectors)
 {
@@ -131,7 +129,6 @@ MomentumLinearizedResidualOperator<p>::apply(
     ThrowRequire(owned_rhs.getLocalLength() == size_t(max_owned_row_id_));
     local_apply(
       cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite), cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
-    cached_rhs_.modify_device();
 
     {
       stk::mesh::ProfilingBlock pfinner("export from owned-shared to owned");

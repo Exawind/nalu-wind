@@ -68,6 +68,7 @@ protected:
       rhs(Teuchos::rcpFromRef(owned_map), 3),
       elid(make_stk_lid_to_tpetra_lid_map(
         mesh(), active(), gid_field_ngp, owned_and_shared_map.getLocalMap())),
+      elid_h(Kokkos::create_mirror_view_and_copy(Kokkos::DefaultHostExecutionSpace{}, elid)),
       conn(stk_connectivity_map<order>(mesh(), active())),
       offsets(create_offset_map<order>(mesh(), active(), elid))
   {
@@ -81,6 +82,10 @@ protected:
   Tpetra::MultiVector<> lhs;
   Tpetra::MultiVector<> rhs;
   const const_entity_row_view_type elid;
+
+  using host_space = Kokkos::DefaultHostExecutionSpace;
+  using host_type = decltype(Kokkos::create_mirror_view_and_copy(host_space{}, elid));
+  const host_type elid_h;
 
   elem_mesh_index_view<order> conn;
   elem_offset_view<order> offsets;
@@ -121,7 +126,7 @@ TEST_F(
   resid_op.set_fields({{+1, -1, 0}}, fields);
   resid_op.compute(rhs);
 
-  rhs.sync_host();
+
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   //  side should be #(faces connectded to node) * (scale/nx)^2
@@ -129,7 +134,7 @@ TEST_F(
   for (const auto* ib :
        bulk.get_buckets(stk::topology::NODE_RANK, interior_selector)) {
     for (auto node : *ib) {
-      auto lid = elid(node.local_offset());
+      auto lid = elid_h(node.local_offset());
       if (lid < view_h.extent_int(0)) {
         for (int d = 0; d < 3; ++d) {
           ASSERT_NEAR(view_h(lid, d), 0, 1.0e-14);
@@ -143,24 +148,24 @@ TEST_F(
   MomentumOperatorFixture,
   linearized_residual_operator_nonzero_for_nonconstant_velocity)
 {
-  auto host_lhs = lhs.getLocalViewHost(Tpetra::Access::ReadWrite);
-  ThrowRequire(host_lhs.extent(1) == 3u);
-  for (const auto* ib : bulk.get_buckets(stk::topology::NODE_RANK, active())) {
-    for (auto node : *ib) {
-      const auto x = stk::mesh::field_data(coordinate_field(), node)[0];
-      const auto y = stk::mesh::field_data(coordinate_field(), node)[1];
-      const auto z = stk::mesh::field_data(coordinate_field(), node)[2];
+  {
+    auto host_lhs = lhs.getLocalViewHost(Tpetra::Access::ReadWrite);
+    ThrowRequire(host_lhs.extent(1) == 3u);
+    for (const auto* ib : bulk.get_buckets(stk::topology::NODE_RANK, active())) {
+      for (auto node : *ib) {
+        const auto x = stk::mesh::field_data(coordinate_field(), node)[0];
+        const auto y = stk::mesh::field_data(coordinate_field(), node)[1];
+        const auto z = stk::mesh::field_data(coordinate_field(), node)[2];
 
-      const auto lid = elid(node.local_offset());
-      if (lid < host_lhs.extent_int(0)) {
-        host_lhs(lid, 0) = y * z;
-        host_lhs(lid, 1) = x * z;
-        host_lhs(lid, 2) = x * y;
+        const auto lid = elid_h(node.local_offset());
+        if (lid < host_lhs.extent_int(0)) {
+          host_lhs(lid, 0) = y * z;
+          host_lhs(lid, 1) = x * z;
+          host_lhs(lid, 2) = x * y;
+        }
       }
     }
   }
-  lhs.modify_host();
-  lhs.sync_device();
 
   auto fields = gather_required_lowmach_fields<order>(meta, conn);
   LowMachLinearizedResidualFields<order> coefficient_fields;
@@ -173,6 +178,7 @@ TEST_F(
   MomentumLinearizedResidualOperator<order> resid_op(offsets, exporter);
   resid_op.set_fields(1., coefficient_fields);
   resid_op.apply(lhs, rhs);
+  
 
   Teuchos::Array<double> mv_norm(3);
   rhs.norm2(mv_norm());

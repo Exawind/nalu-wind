@@ -404,7 +404,6 @@ LowMachUpdate<p>::create_continuity_preconditioner(
   copy_stk_field_to_owned_tpetra_vector(
     stk::mesh::get_updated_ngp_mesh(bulk_), active_, linsys_.stk_lid_to_tpetra_lid,
     coords, coord_mv->getLocalViewDevice(Tpetra::Access::ReadWrite));
-  coord_mv->modify_device();
 
   muelu_params.set("xml parameter file", xmlname);
   muelu_params.sublist("user data").set("Coordinates", coord_mv);

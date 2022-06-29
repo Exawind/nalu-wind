@@ -111,11 +111,10 @@ TEST_F(DirichletFixture, bc_residual_scalar)
   dirichlet_residual(
     dirichlet_offsets, qp1, qbc, owned_rhs.getLocalLength(),
     owned_and_shared_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
-  owned_and_shared_rhs.modify_device();
   owned_rhs.putScalar(0.);
   owned_rhs.doExport(owned_and_shared_rhs, exporter, Tpetra::ADD);
 
-  owned_rhs.sync_host();
+  
   auto view_h = owned_rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   double maxval = -1;
@@ -137,11 +136,10 @@ TEST_F(DirichletFixture, bc_residual_vector)
   dirichlet_residual(
     dirichlet_offsets, qp1, qbc, owned_rhs.getLocalLength(),
     owned_and_shared_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
-  owned_and_shared_rhs.modify_device();
   owned_rhs.putScalar(0.);
   owned_rhs.doExport(owned_and_shared_rhs, exporter, Tpetra::ADD);
 
-  owned_rhs.sync_host();
+  
   auto view_h = owned_rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   double maxval = -1;
@@ -164,12 +162,10 @@ TEST_F(DirichletFixture, linearized_bc_residual)
     dirichlet_offsets, owned_lhs.getLocalLength(),
     owned_and_shared_lhs.getLocalViewDevice(Tpetra::Access::ReadWrite),
     owned_and_shared_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
-
-  owned_and_shared_rhs.modify_device();
   owned_rhs.putScalar(0.);
   owned_rhs.doExport(owned_and_shared_rhs, exporter, Tpetra::ADD);
 
-  owned_rhs.sync_host();
+  
   auto view_h = owned_rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   constexpr double tol = 1.0e-14;

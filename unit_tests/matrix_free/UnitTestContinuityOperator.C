@@ -68,6 +68,7 @@ protected:
       rhs(Teuchos::rcpFromRef(owned_map), 1),
       elid(make_stk_lid_to_tpetra_lid_map(
         mesh(), active(), gid_field_ngp, owned_and_shared_map.getLocalMap())),
+      elid_h(Kokkos::create_mirror_view_and_copy(Kokkos::DefaultHostExecutionSpace{}, elid)),
       conn(stk_connectivity_map<order>(mesh(), active())),
       offsets(create_offset_map<order>(mesh(), active(), elid))
   {
@@ -101,6 +102,10 @@ protected:
   Tpetra::MultiVector<> rhs;
   const const_entity_row_view_type elid;
 
+  using host_space = Kokkos::DefaultHostExecutionSpace;
+  using host_type = decltype(Kokkos::create_mirror_view_and_copy(host_space{}, elid));
+  const host_type elid_h;
+
   elem_mesh_index_view<order> conn;
   elem_offset_view<order> offsets;
 
@@ -127,7 +132,7 @@ TEST_F(
   resid_op.set_fields(tau, mdot);
   resid_op.compute(rhs);
 
-  rhs.sync_host();
+
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   //  side should be #(faces connectded to node) * (scale/nx)^2
@@ -136,7 +141,7 @@ TEST_F(
   for (const auto* ib :
        bulk.get_buckets(stk::topology::NODE_RANK, interior_selector)) {
     for (auto node : *ib) {
-      const int lid = elid(node.local_offset());
+      const int lid = elid_h(node.local_offset());
       if (lid < view_h.extent_int(0)) {
         ASSERT_NEAR(view_h(lid, 0), 0, 1.0e-14);
       }
@@ -148,33 +153,32 @@ TEST_F(
   ContinuityOperatorFixture,
   linearized_residual_operator_zero_for_linear_function)
 {
-  auto host_lhs = lhs.getLocalViewHost(Tpetra::Access::ReadWrite);
-  for (const auto* ib :
-       bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {
-    for (auto node : *ib) {
-      const auto x = *stk::mesh::field_data(coordinate_field(), node);
-      const int lid = elid(node.local_offset());
-      if (lid < host_lhs.extent_int(0)) {
-        host_lhs(lid, 0) = x;
+  {
+    auto host_lhs = lhs.getLocalViewHost(Tpetra::Access::ReadWrite);
+    for (const auto* ib :
+         bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {
+      for (auto node : *ib) {
+        const auto x = *stk::mesh::field_data(coordinate_field(), node);
+        const int lid = elid_h(node.local_offset());
+        if (lid < host_lhs.extent_int(0)) {
+          host_lhs(lid, 0) = x;
+        }
       }
     }
   }
-  lhs.modify_host();
-  lhs.sync_device();
 
   const auto metric = compute_metric();
   ContinuityLinearizedResidualOperator<order> resid_op(offsets, exporter);
   resid_op.set_metric(metric);
   resid_op.apply(lhs, rhs);
 
-  rhs.sync_host();
-  auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
+  auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
   const auto interior_selector = active() - side();
   for (const auto* ib :
        bulk.get_buckets(stk::topology::NODE_RANK, interior_selector)) {
     for (auto node : *ib) {
-      const int lid = elid(node.local_offset());
+      const int lid = elid_h(node.local_offset());
       if (lid < view_h.extent_int(0)) {
         ASSERT_NEAR(view_h(lid, 0), 0, 1.0e-14);
       }
@@ -186,26 +190,26 @@ TEST_F(
   ContinuityOperatorFixture,
   linearized_residual_operator_nonzero_for_quadratic_function)
 {
-  auto host_lhs = lhs.getLocalViewHost(Tpetra::Access::ReadWrite);
-  for (const auto* ib :
-       bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {
-    for (auto node : *ib) {
-      const auto x = *stk::mesh::field_data(coordinate_field(), node);
-      const int lid = elid(node.local_offset());
-      if (lid < host_lhs.extent_int(0)) {
-        host_lhs(elid(node.local_offset()), 0) = x * x;
+  {
+    auto host_lhs = lhs.getLocalViewHost(Tpetra::Access::ReadWrite);
+    for (const auto* ib :
+         bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {
+      for (auto node : *ib) {
+        const auto x = *stk::mesh::field_data(coordinate_field(), node);
+        const int lid = elid_h(node.local_offset());
+        if (lid < host_lhs.extent_int(0)) {
+          host_lhs(lid, 0) = x * x;
+        }
       }
     }
   }
-  lhs.modify_host();
-  lhs.sync_device();
 
   const auto metric = compute_metric();
   ContinuityLinearizedResidualOperator<order> resid_op(offsets, exporter);
   resid_op.set_metric(metric);
   resid_op.apply(lhs, rhs);
 
-  rhs.sync_host();
+
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   //  side should be #(faces connectded to node) * (scale/nx)^2
@@ -214,7 +218,7 @@ TEST_F(
   for (const auto* ib :
        bulk.get_buckets(stk::topology::NODE_RANK, interior_selector)) {
     for (auto node : *ib) {
-      const int lid = elid(node.local_offset());
+      const int lid = elid_h(node.local_offset());
       if (lid < view_h.extent_int(0)) {
         max_val = stk::math::max(stk::math::abs(view_h(lid, 0)), max_val);
       }

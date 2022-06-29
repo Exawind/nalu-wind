@@ -95,7 +95,6 @@ MomentumJacobiOperator<p>::apply(
       owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadOnly), cached_mv.getLocalViewDevice(Tpetra::Access::ReadOnly),
       x.getLocalViewDevice(Tpetra::Access::ReadOnly), y.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
-  y.modify_device();
 }
 
 template <int p>
@@ -116,7 +115,6 @@ MomentumJacobiOperator<p>::compute_diagonal(
       dirichlet_bc_offsets_, owned_diagonal.getLocalLength(),
       owned_and_shared_diagonal.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
-  owned_and_shared_diagonal.modify_device();
   owned_diagonal.putScalar(0.);
   owned_diagonal.doExport(owned_and_shared_diagonal, exporter, Tpetra::ADD);
   reciprocal(owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadWrite));

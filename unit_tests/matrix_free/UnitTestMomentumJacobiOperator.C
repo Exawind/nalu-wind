@@ -98,7 +98,6 @@ TEST_F(MomentumJacobiOperatorFixture, diagonal_positive)
     1., fields.volume_metric, fields.advection_metric, fields.diffusion_metric);
 
   auto& result = prec_op.get_inverse_diagonal();
-  result.sync_host();
   auto view_h = result.getLocalViewHost(Tpetra::Access::ReadWrite);
   for (size_t k = 0u; k < result.getLocalLength(); ++k) {
     ASSERT_TRUE(std::isfinite(stk::simd::get_data(view_h(k, 0), 0)));
