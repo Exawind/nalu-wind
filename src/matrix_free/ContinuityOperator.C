@@ -44,9 +44,7 @@ ContinuityResidualOperator<p>::compute(mv_type& owned_rhs)
     continuity_residual<p>(
       time_scale_, elem_offsets_, mdot_, cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
-    cached_rhs_.modify_device();
     owned_rhs.putScalar(0.);
-    owned_rhs.modify_device();
     {
       stk::mesh::ProfilingBlock pfinner("export from owned-shared to owned");
       owned_rhs.doExport(cached_rhs_, exporter_, Tpetra::ADD);
@@ -55,7 +53,6 @@ ContinuityResidualOperator<p>::compute(mv_type& owned_rhs)
     owned_rhs.putScalar(0.);
     continuity_residual<p>(
       time_scale_, elem_offsets_, mdot_, owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
-    owned_rhs.modify_device();
   }
 }
 INSTANTIATE_POLYCLASS(ContinuityResidualOperator);
@@ -93,9 +90,6 @@ ContinuityLinearizedResidualOperator<p>::apply(
     continuity_linearized_residual<p>(
       elem_offsets_, metric_, cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite),
       cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
-
-    cached_rhs_.modify_device();
-    exec_space().fence();
     {
       stk::mesh::ProfilingBlock pfinner("export from owned-shared to owned");
       owned_rhs.doExport(cached_rhs_, exporter_, Tpetra::ADD);
@@ -105,7 +99,6 @@ ContinuityLinearizedResidualOperator<p>::apply(
     continuity_linearized_residual<p>(
       elem_offsets_, metric_, owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly),
       owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
-    owned_rhs.modify_device();
   }
 }
 INSTANTIATE_POLYCLASS(ContinuityLinearizedResidualOperator);

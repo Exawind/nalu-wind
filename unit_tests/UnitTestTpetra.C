@@ -171,7 +171,7 @@ void verify_graph_for_2_hex8_mesh(int numProcs, int localProc, sierra::nalu::Tpe
     expectedNumOwnedRows = localProc==0 ? 8 : 4;
   }
   EXPECT_EQ(expectedNumGlobalRows, tpetraLinsys->getOwnedGraph()->getGlobalNumRows());
-  EXPECT_EQ(expectedNumOwnedRows, tpetraLinsys->getOwnedGraph()->getNodeNumRows());
+  EXPECT_EQ(expectedNumOwnedRows, tpetraLinsys->getOwnedGraph()->getLocalNumRows());
 
   std::vector<unsigned> goldRowLengths = get_gold_row_lengths(numProcs, localProc);
 
@@ -190,7 +190,7 @@ void verify_matrix_for_2_hex8_mesh(int numProcs, int localProc, sierra::nalu::Tp
     expectedLocalNumRows = localProc==0 ? 8 : 4;
   }
   EXPECT_EQ(expectedGlobalNumRows, ownedMatrix->getGlobalNumRows());
-  EXPECT_EQ((unsigned)expectedLocalNumRows, ownedMatrix->getNodeNumRows());
+  EXPECT_EQ((unsigned)expectedLocalNumRows, ownedMatrix->getLocalNumRows());
 
   Teuchos::RCP<const sierra::nalu::LinSys::Map> rowMap = ownedMatrix->getRowMap();
   Teuchos::RCP<const sierra::nalu::LinSys::Map> colMap = ownedMatrix->getColMap();
@@ -198,8 +198,8 @@ void verify_matrix_for_2_hex8_mesh(int numProcs, int localProc, sierra::nalu::Tp
   for(sierra::nalu::LinSys::LocalOrdinal rowlid=0; rowlid<expectedLocalNumRows; ++rowlid) {
     sierra::nalu::LinSys::GlobalOrdinal rowgid = rowMap->getGlobalElement(rowlid);
     unsigned rowLength = ownedMatrix->getNumEntriesInGlobalRow(rowgid);
-    Teuchos::ArrayView<const sierra::nalu::LinSys::LocalOrdinal> inds;
-    Teuchos::ArrayView<const double> vals;
+    sierra::nalu::LinSys::LocalIndicesHost inds;
+    sierra::nalu::LinSys::LocalValuesHost vals;
     ownedMatrix->getLocalRowView(rowlid, inds, vals);
     for(unsigned j=0; j<rowLength; ++j) {
       sierra::nalu::LinSys::GlobalOrdinal colgid = colMap->getGlobalElement(inds[j]);

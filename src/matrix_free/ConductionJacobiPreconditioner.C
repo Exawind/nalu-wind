@@ -98,7 +98,6 @@ JacobiOperator<p>::apply(
       owned_diagonal_.getLocalViewDevice(Tpetra::Access::ReadOnly), cached_mv_.getLocalViewDevice(Tpetra::Access::ReadOnly),
       x.getLocalViewDevice(Tpetra::Access::ReadOnly), y.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
-  y.modify_device();
 }
 
 template <int p>
@@ -115,7 +114,6 @@ JacobiOperator<p>::compute_diagonal()
       dirichlet_bc_offsets_, owned_diagonal_.getLocalLength(),
       owned_and_shared_diagonal_.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
-  owned_and_shared_diagonal_.modify_device();
   owned_diagonal_.putScalar(0.);
   owned_diagonal_.doExport(owned_and_shared_diagonal_, exporter_, Tpetra::ADD);
   reciprocal(owned_diagonal_.getLocalViewDevice(Tpetra::Access::ReadWrite));

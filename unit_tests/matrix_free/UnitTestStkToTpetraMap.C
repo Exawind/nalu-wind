@@ -155,7 +155,7 @@ TEST_F(MapFixture, owned_map_has_correct_local_size)
   // that ever changes, this will fail
   const auto asserted_local_size = (bulk.parallel_rank() == 0) ? 8u : 4u;
   ASSERT_EQ(
-    make_owned_row_map(mesh, active).getNodeNumElements(), asserted_local_size);
+    make_owned_row_map(mesh, active).getLocalNumElements(), asserted_local_size);
 }
 
 TEST_F(MapFixture, owned_and_shared_is_just_owned_in_serial)

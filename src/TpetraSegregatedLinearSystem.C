@@ -891,9 +891,9 @@ void TpetraSegregatedLinearSystem::finalizeLinearSystem()
 
   remove_invalid_indices(ownedGraph, ownedRowLengths);
 
-  sharedNotOwnedGraph_ = Teuchos::rcp(new LinSys::Graph(sharedNotOwnedRowsMap_, totalColsMap_, sharedNotOwnedRowLengths, Tpetra::StaticProfile));
+  sharedNotOwnedGraph_ = Teuchos::rcp(new LinSys::Graph(sharedNotOwnedRowsMap_, totalColsMap_, sharedNotOwnedRowLengths));
 
-  ownedGraph_ = Teuchos::rcp(new LinSys::Graph(ownedRowsMap_, totalColsMap_, locallyOwnedRowLengths, Tpetra::StaticProfile));
+  ownedGraph_ = Teuchos::rcp(new LinSys::Graph(ownedRowsMap_, totalColsMap_, locallyOwnedRowLengths));
 
   auto deviceOwnedGraphRowPointers = Kokkos::create_mirror_view_and_copy(LinSysMemSpace(), ownedGraph.rowPointers);
   auto deviceOwnedGraphColIndices = Kokkos::create_mirror_view_and_copy(LinSysMemSpace(), ownedGraph.colIndices);
@@ -1294,8 +1294,8 @@ void TpetraSegregatedLinearSystem::applyDirichletBCs(stk::mesh::FieldBase * solu
     const double * solution = (double*)stk::mesh::field_data(*solutionField, *b.begin());
     const double * bcValues = (double*)stk::mesh::field_data(*bcValuesField, *b.begin());
 
-    Teuchos::ArrayView<const LocalOrdinal> indices;
-    Teuchos::ArrayView<const double> values;
+    LinSys::LocalIndicesHost indices;
+    LinSys::LocalValuesHost values;
     std::vector<double> new_values;
 
     for (stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
@@ -1467,10 +1467,10 @@ void TpetraSegregatedLinearSystem::checkForNaN(bool useOwned)
   Teuchos::RCP<LinSys::Matrix> matrix = useOwned ? ownedMatrix_ : sharedNotOwnedMatrix_;
   Teuchos::RCP<LinSys::MultiVector> rhs = useOwned ? ownedRhs_ : sharedNotOwnedRhs_;
 
-  Teuchos::ArrayView<const LocalOrdinal> indices;
-  Teuchos::ArrayView<const double> values;
+  LinSys::LocalIndicesHost indices;
+  LinSys::LocalValuesHost values;
 
-  size_t n = matrix->getRowMap()->getNodeNumElements();
+  size_t n = matrix->getRowMap()->getLocalNumElements();
   for(size_t i=0; i<n; ++i) {
 
     matrix->getLocalRowView(i, indices, values);
@@ -1501,11 +1501,11 @@ bool TpetraSegregatedLinearSystem::checkForZeroRow(bool useOwned, bool doThrow, 
   Teuchos::RCP<LinSys::MultiVector> rhs = useOwned ? ownedRhs_ : sharedNotOwnedRhs_;
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
 
-  Teuchos::ArrayView<const LocalOrdinal> indices;
-  Teuchos::ArrayView<const double> values;
+  LinSys::LocalIndicesHost indices;
+  LinSys::LocalValuesHost values;
 
   size_t nrowG = matrix->getRangeMap()->getGlobalNumElements();
-  size_t n = matrix->getRowMap()->getNodeNumElements();
+  size_t n = matrix->getRowMap()->getLocalNumElements();
   GlobalOrdinal max_gid = 0, g_max_gid=0;
   //KOKKOS: Loop parallel reduce
   kokkos_parallel_for("Nalu::TpetraSegregatedLinearSystem::checkForZeroRowA", n, [&] (const size_t& i) {

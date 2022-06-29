@@ -109,7 +109,6 @@ FilterJacobiOperator<p>::apply(
       owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadOnly), cached_mv.getLocalViewDevice(Tpetra::Access::ReadOnly),
       x.getLocalViewDevice(Tpetra::Access::ReadOnly), y.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
-  y.modify_device();
 }
 
 template <int p>
@@ -118,7 +117,6 @@ FilterJacobiOperator<p>::compute_diagonal(const_scalar_view<p> vols)
 {
   shared_diagonal.putScalar(0.);
   filter_diagonal<p>(elem_offsets, vols, shared_diagonal.getLocalViewDevice(Tpetra::Access::ReadWrite));
-  shared_diagonal.modify_device();
   owned_diagonal.putScalar(0.);
   owned_diagonal.doExport(shared_diagonal, exporter, Tpetra::ADD);
   reciprocal(owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadWrite));

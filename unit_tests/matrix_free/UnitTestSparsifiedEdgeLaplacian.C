@@ -128,23 +128,21 @@ protected:
 TEST_F(SparsifiedEdgeLaplacianFixture, laplacian_is_an_l_matrix)
 {
   if (bulk.parallel_size() > 1) {
-    return;
+    GTEST_SKIP();
   }
-  auto local_mat = mat->getLocalMatrix();
-  decltype(local_mat) shared_mat{};
-  NoAuraDeviceMatrix devmat(
-    mat->getNodeNumRows(), local_mat, shared_mat, linsys.stk_lid_to_tpetra_lid,
-    linsys.stk_lid_to_tpetra_lid);
 
   auto& coords = coordinate_field();
   auto coords_ngp = stk::mesh::get_updated_ngp_field<double>(coords);
 
   Tpetra::beginAssembly(*mat);
   assemble_sparsified_edge_laplacian(
-    order, mesh, meta.universal_part(), coords_ngp, devmat);
+    order, mesh, meta.universal_part(), coords_ngp, NoAuraDeviceMatrix(
+    mat->getLocalNumRows(), mat->getLocalMatrixDevice(), {}, linsys.stk_lid_to_tpetra_lid,
+    linsys.stk_lid_to_tpetra_lid));
   Tpetra::endAssembly(*mat);
 
-  for (unsigned i = 0; i < mat->getNodeNumRows(); ++i) {
+  for (unsigned i = 0; i < mat->getLocalNumRows(); ++i) {
+    auto local_mat = mat->getLocalMatrixHost();
     auto row = local_mat.row(i);
     for (int j = 0; j < row.length; ++j) {
       if (static_cast<unsigned>(row.colidx(j)) == i) {
@@ -159,20 +157,17 @@ TEST_F(SparsifiedEdgeLaplacianFixture, laplacian_is_an_l_matrix)
 TEST_F(SparsifiedEdgeLaplacianFixture, row_and_column_sums_are_zero)
 {
   if (bulk.parallel_size() > 1) {
-    return;
+    GTEST_SKIP();
   }
-  auto local_mat = mat->getLocalMatrix();
-  decltype(local_mat) shared_mat{};
-  NoAuraDeviceMatrix devmat(
-    mat->getNodeNumRows(), local_mat, shared_mat, linsys.stk_lid_to_tpetra_lid,
-    linsys.stk_lid_to_tpetra_lid);
 
   auto& coords = coordinate_field();
   auto coords_ngp = stk::mesh::get_updated_ngp_field<double>(coords);
 
   Tpetra::beginAssembly(*mat);
   assemble_sparsified_edge_laplacian(
-    order, mesh, meta.universal_part(), coords_ngp, devmat);
+    order, mesh, meta.universal_part(), coords_ngp, NoAuraDeviceMatrix(
+    mat->getLocalNumRows(), mat->getLocalMatrixDevice(), {}, linsys.stk_lid_to_tpetra_lid,
+    linsys.stk_lid_to_tpetra_lid));
   Tpetra::endAssembly(*mat);
 
   Tpetra::Vector<> ones(Teuchos::rcpFromRef(linsys.owned));
@@ -191,18 +186,15 @@ TEST_F(SparsifiedEdgeLaplacianFixture, sample_for_positive_definiteness)
   if (bulk.parallel_size() > 1) {
     return;
   }
-  auto local_mat = mat->getLocalMatrix();
-  decltype(local_mat) shared_mat{};
-  NoAuraDeviceMatrix devmat(
-    mat->getNodeNumRows(), local_mat, shared_mat, linsys.stk_lid_to_tpetra_lid,
-    linsys.stk_lid_to_tpetra_lid);
 
   auto& coords = coordinate_field();
   auto coords_ngp = stk::mesh::get_updated_ngp_field<double>(coords);
 
   Tpetra::beginAssembly(*mat);
   assemble_sparsified_edge_laplacian(
-    order, mesh, meta.universal_part(), coords_ngp, devmat);
+    order, mesh, meta.universal_part(), coords_ngp, NoAuraDeviceMatrix(
+    mat->getLocalNumRows(), mat->getLocalMatrixDevice(), {}, linsys.stk_lid_to_tpetra_lid,
+    linsys.stk_lid_to_tpetra_lid));
   Tpetra::endAssembly(*mat);
 
   Tpetra::Vector<> ones(Teuchos::rcpFromRef(linsys.owned));
