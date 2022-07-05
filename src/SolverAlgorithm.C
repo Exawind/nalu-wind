@@ -63,7 +63,8 @@ NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
     nDim_(eqSystem->linsys_->numDof()),
     hasOverset_(eqSystem->realm_.hasOverset_),
     extractDiagonal_(eqSystem->extractDiagonal_),
-    resetOversetRows_(eqSystem->resetOversetRows_)
+    resetOversetRows_(eqSystem->resetOversetRows_),
+    linSysOwnsCoeffApplier(eqSystem->linsys_->owns_coeff_applier())
 {
   if (extractDiagonal_) {
     diagField_ = nalu_ngp::get_ngp_field(
@@ -77,8 +78,9 @@ NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
 
 void NGPApplyCoeff::free_coeff_applier()
 {
-  if(deviceSumInto_ != nullptr) {
+  if(deviceSumInto_ != nullptr && !linSysOwnsCoeffApplier) {
     kokkos_free_on_device(deviceSumInto_);
+    deviceSumInto_ = nullptr;
   }
 }
 

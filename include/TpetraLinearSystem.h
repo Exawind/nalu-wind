@@ -79,6 +79,8 @@ public:
   CoeffApplier* get_coeff_applier();
   void free_coeff_applier(CoeffApplier* coeffApplier);
 
+  bool owns_coeff_applier() override { return false; }
+
   // Matrix Assembly
   void zeroSystem();
 

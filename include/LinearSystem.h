@@ -137,6 +137,7 @@ public:
     return nullptr;
   }
 
+  virtual bool owns_coeff_applier() { return true; }
 
   virtual void sumInto(
     unsigned numEntities,
