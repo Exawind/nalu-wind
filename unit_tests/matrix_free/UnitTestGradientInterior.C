@@ -28,10 +28,10 @@ static constexpr int num_elems = 1;
 Teuchos::RCP<const Tpetra::Map<>>
 make_map()
 {
-  return make_rcp<Tpetra::Map<>>(
+  return matrix_free::make_rcp<Tpetra::Map<>>(
     Teuchos::OrdinalTraits<Tpetra::global_size_t>::invalid(),
     num_elems * nodes_per_elem, 1,
-    make_rcp<Teuchos::MpiComm<int>>(MPI_COMM_WORLD));
+    matrix_free::make_rcp<Teuchos::MpiComm<int>>(MPI_COMM_WORLD));
 }
 
 template <int p>

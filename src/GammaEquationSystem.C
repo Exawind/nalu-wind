@@ -239,11 +239,14 @@ GammaEquationSystem::register_interior_algorithm(
       "gamma_transition_time_derivative",
       "lumped_gamma_transition_time_derivative"};
     bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
+    if (elementMassAlg) {
+      throw std::runtime_error("consistent mass integration of gamma time-derivative unavailable");
+    }
+
     auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
     process_ngp_node_kernels(
       solverAlgMap, realm_, part, this,
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
-        if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), gamma_);
           
           NaluEnv::self().naluOutputP0() << "call BLTGammaM2015NodeKernel: " <<std::endl;
@@ -352,8 +355,8 @@ GammaEquationSystem::register_inflow_bc(
 void
 GammaEquationSystem::register_open_bc(
   stk::mesh::Part *part,
-  const stk::topology & partTopo,
-  const OpenBoundaryConditionData &openBCData)
+  const stk::topology & /* partTopo */,
+  const OpenBoundaryConditionData & /* openBCData */)
 {
 
   // algorithm type
@@ -375,7 +378,7 @@ void
 GammaEquationSystem::register_wall_bc(
   stk::mesh::Part *part,
   const stk::topology &/*theTopo*/,
-  const WallBoundaryConditionData &wallBCData)
+  const WallBoundaryConditionData &/* wallBCData */)
 {
 
   // algorithm type

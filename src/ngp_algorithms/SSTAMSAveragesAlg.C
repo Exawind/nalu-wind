@@ -30,6 +30,11 @@ SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     aspectRatioSwitch_(realm.get_turb_model_constant(TM_aspRatSwitch)),
     avgTimeCoeff_(realm.get_turb_model_constant(TM_avgTimeCoeff)),
     meshMotion_(realm.does_mesh_move()),
+    RANSBelowKs_(realm_.solutionOptions_->RANSBelowKs_),
+    z0_(realm_.solutionOptions_->roughnessHeight_),
+    lengthScaleLimiter_(realm_.solutionOptions_->lengthScaleLimiter_),
+    eastVector_(realm_.solutionOptions_->eastVector_),
+    northVector_(realm_.solutionOptions_->northVector_),
     velocity_(get_field_ordinal(realm.meta_data(), "velocity")),
     density_(get_field_ordinal(realm.meta_data(), "density")),
     dudx_(get_field_ordinal(realm.meta_data(), "dudx")),
@@ -59,13 +64,7 @@ SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     visc_(get_field_ordinal(realm.meta_data(), "viscosity")),
     beta_(get_field_ordinal(realm.meta_data(), "k_ratio")),
     Mij_(get_field_ordinal(realm.meta_data(), "metric_tensor")),
-    wallDist_(get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall")),
-    coordinates_(get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
-    RANSBelowKs_(realm_.solutionOptions_->RANSBelowKs_),
-    z0_(realm_.solutionOptions_->roughnessHeight_),
-    lengthScaleLimiter_(realm_.solutionOptions_->lengthScaleLimiter_),
-    eastVector_(realm_.solutionOptions_->eastVector_),
-    northVector_(realm_.solutionOptions_->northVector_)
+    wallDist_(get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall"))
 {
 }
 
