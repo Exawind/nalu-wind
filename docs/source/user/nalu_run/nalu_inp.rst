@@ -1514,6 +1514,34 @@ Data probes
    The orientation vector for the LIDAR measurements.
 
 
+.. inpfile:: data_probes.lidar_specifications.output
+
+   Output type for subsampling LIDAR. Either `text` or `netcdf` (default).
+
+
+.. inpfile:: data_probes.lidar_specifications.type
+
+   Type of LIDAR scan pattern. `scanning` or `spinner` (default).
+
+
+.. inpfile:: data_probes.lidar_specifications.scanning_lidar_specifications
+
+   Block specifying parameters for the scanning lidar sampling
+
+   ========================== ===================================================================
+   Parameter                  Description
+   ========================== ===================================================================
+   beam_length                Required. Length over which to measure, e.g. 50.
+   axis                       Required. Zero angle vector for the angular sweep, e.g. [1,0,0].
+   center                     Required. Location of the scanning LIDAR, e.g. [0,0,0].
+   stare_time                 Default 1 second. Time line spends at a particular scan angle.
+   sweep_angle                Default 20 degrees. Extent of angular sweep between sweep_angle/2 to -sweep_angle/2.
+   step_delta_angle           Default 1 degree. Measurement interval of scan angles over the sweep
+   reset_time_delta           Default 1 second. Time to reset LIDAR after sweep.
+   ground_direction           Default [0,0,1]. Orthogonal orientation vector for the LIDAR
+   ========================== ===================================================================
+
+
 .. inpfile:: dataprobes.lidar_specifications.misc
 
    The user may also set a number of parameters corresponding to the hardware
