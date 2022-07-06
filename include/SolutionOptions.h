@@ -150,18 +150,20 @@ public:
   double latitude_;
   double raBoussinesqTimeScale_;
   double symmetryBcPenaltyFactor_;
-  double roughnessHeight_;
-  bool lengthScaleLimiter_;
-  double referenceVelocity_;
-  bool RANSBelowKs_;
   bool useStreletsUpwinding_;
-  bool transition_model_;
-  bool gammaEqActive_;
 
   // global mdot correction alg
   bool activateOpenMdotCorrection_;
   double mdotAlgOpenCorrection_;
   bool explicitlyZeroOpenPressureGradient_;
+
+  bool resetAMSAverages_;
+  bool transition_model_;
+  bool gammaEqActive_;
+  bool lengthScaleLimiter_;
+  double referenceVelocity_;
+  double roughnessHeight_;
+  bool RANSBelowKs_;
 
   // turbulence model coeffs
   std::map<TurbulenceModelConstant, double> turbModelConstantMap_;
@@ -229,8 +231,6 @@ public:
   std::string name_;
 
   bool newHO_;
-
-  bool resetAMSAverages_;
 };
 
 } // namespace nalu

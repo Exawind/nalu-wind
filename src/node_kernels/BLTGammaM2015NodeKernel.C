@@ -28,8 +28,6 @@ BLTGammaM2015NodeKernel::BLTGammaM2015NodeKernel(
     dudxID_(get_field_ordinal(meta, "dudx")),
     minDID_(get_field_ordinal(meta, "minimum_distance_to_wall")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
-    coordinatesID_(get_field_ordinal(meta, "coordinates")),
-    velocityNp1ID_(get_field_ordinal(meta, "velocity")),
     gamintID_(get_field_ordinal(meta, "gamma_transition")),
     nDim_(meta.spatial_dimension())
 {}
@@ -46,8 +44,6 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   dudx_            = fieldMgr.get_field<double>(dudxID_);
   minD_            = fieldMgr.get_field<double>(minDID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
-  coordinates_     = fieldMgr.get_field<double>(coordinatesID_);
-  velocityNp1_     = fieldMgr.get_field<double>(velocityNp1ID_);
   gamint_          = fieldMgr.get_field<double>(gamintID_);
 
   // Update transition model constants
@@ -92,11 +88,6 @@ BLTGammaM2015NodeKernel::execute(
 {
   using DblType = NodeKernelTraits::DblType;
 
-  NALU_ALIGNED NodeKernelTraits::DblType coords[NodeKernelTraits::NDimMax]; // coordinates
-  NALU_ALIGNED NodeKernelTraits::DblType vel[NodeKernelTraits::NDimMax];
-  NALU_ALIGNED NodeKernelTraits::DblType dwalldistdx[NodeKernelTraits::NDimMax];
-  NALU_ALIGNED NodeKernelTraits::DblType dndotvdx[NodeKernelTraits::NDimMax];
-
   const DblType tke       = tke_.get(node, 0);
   const DblType sdr       = sdr_.get(node, 0);
   const DblType gamint    = gamint_.get(node, 0);
@@ -128,10 +119,6 @@ BLTGammaM2015NodeKernel::execute(
   DblType Ctu2=1000.;
   DblType Ctu3=1.0;
 
-  for (int d = 0; d < nDim_; d++) {
-    coords[d] = coordinates_.get(node, d);
-    vel[d] = velocityNp1_.get(node, d);
-  }
 
   for (int i=0; i < nDim_; ++i) {
     for (int j=0; j < nDim_; ++j) {

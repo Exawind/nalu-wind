@@ -181,6 +181,7 @@ namespace nalu{
           default:
             ThrowRequireMsg(false,
               "Quad4 exposed face is not attached to either a hex8, pyr5, or wedge6.");
+              return nullptr;
         }
       case stk::topology::QUAD_9:
         return new T<AlgTraitsQuad9Hex27>(std::forward<Args>(args)...);
@@ -195,6 +196,7 @@ namespace nalu{
           default :
             ThrowRequireMsg(false,
               "Tri3 exposed face is not attached to either a tet4, pyr5, or wedge6.");
+              return nullptr;
         }
       case stk::topology::LINE_2:
         switch(elemTopo) {

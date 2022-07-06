@@ -70,8 +70,6 @@ private:
   unsigned dudxID_            {stk::mesh::InvalidOrdinal};
   unsigned minDID_            {stk::mesh::InvalidOrdinal};
   unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
-  unsigned coordinatesID_     {stk::mesh::InvalidOrdinal};
-  unsigned velocityNp1ID_     {stk::mesh::InvalidOrdinal};
   unsigned gamintID_          {stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType caOne_;
