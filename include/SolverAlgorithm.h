@@ -74,6 +74,7 @@ struct NGPApplyCoeff
   const bool hasOverset_{false};
   const bool extractDiagonal_{false};
   const bool resetOversetRows_{true};
+  const bool linSysOwnsCoeffApplier;
 };
 
 class SolverAlgorithm : public Algorithm
