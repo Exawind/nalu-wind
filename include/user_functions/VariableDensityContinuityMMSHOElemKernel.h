@@ -39,7 +39,7 @@ public:
     SolutionOptions& solnOpts,
     ElemDataRequests& dataPreReqs);
 
-  void setup(const TimeIntegrator& ti) final;
+  void setup(const TimeIntegratorData& ti) final;
 
   using Kernel::execute;
   void execute(

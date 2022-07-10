@@ -63,14 +63,14 @@ ContinuityInflowElemKernel<BcAlgTraits>::ContinuityInflowElemKernel(
   dataPreReqs.add_master_element_call(shp_fcn, CURRENT_COORDINATES);
  }
 
-
-template<typename BcAlgTraits>
-void
-ContinuityInflowElemKernel<BcAlgTraits>::setup(const TimeIntegrator &timeIntegrator)
-{
-  const double dt = timeIntegrator.get_time_step();
-  const double gamma1 = timeIntegrator.get_gamma1();
-  projTimeScale_ = dt/gamma1;
+ template <typename BcAlgTraits>
+ void
+ ContinuityInflowElemKernel<BcAlgTraits>::setup(
+   const TimeIntegratorData& timeIntegrator)
+ {
+   const double dt = timeIntegrator.timeStepN_;
+   const double gamma1 = timeIntegrator.gamma1_;
+   projTimeScale_ = dt / gamma1;
 }
 
 template<typename BcAlgTraits>

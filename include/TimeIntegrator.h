@@ -16,6 +16,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include "TimeIntegratorData.h"
 
 namespace YAML { class Node; }
 
@@ -56,11 +57,7 @@ public:
   double totalSimTime_;
   double currentTime_;
   double timeStepFromFile_;
-  double timeStepN_;
-  double timeStepNm1_;
-  double gamma1_;
-  double gamma2_;
-  double gamma3_;
+  TimeIntegratorData data_;
   int timeStepCount_;
   int maxTimeStepCount_;
   bool secondOrderTimeAccurate_;

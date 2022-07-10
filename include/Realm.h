@@ -19,6 +19,7 @@
 #include <InitialConditions.h>
 #include <MaterialPropertys.h>
 #include <EquationSystems.h>
+#include "TimeIntegratorData.h"
 
 #if defined(NALU_USES_PERCEPT)
 #include <Teuchos_RCP.hpp>
@@ -70,7 +71,6 @@ class PeriodicManager;
 class Realms;
 class Simulation;
 class SolutionOptions;
-class TimeIntegrator;
 class MasterElement;
 class PropertyEvaluator;
 class Transfer;
@@ -429,8 +429,7 @@ class Realm {
   std::unique_ptr<GeometryAlgDriver> geometryAlgDriver_;
   unsigned numInitialElements_;
 
-
-  TimeIntegrator *timeIntegrator_;
+  TimeIntegratorData& timeIntegratorData_;
 
   BoundaryConditions boundaryConditions_;
   InitialConditions initialConditions_;

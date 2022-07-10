@@ -24,7 +24,7 @@ namespace nalu {
 
 class ElemDataRequests;
 class MasterElement;
-class TimeIntegrator;
+class TimeIntegratorData;
 
 /** Add Int rho*uj*nj*dS
  */
@@ -43,7 +43,7 @@ public:
 
   /** Perform pre-timestep work for the computational kernel
    */
-  virtual void setup(const TimeIntegrator&);
+  virtual void setup(const TimeIntegratorData&);
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve

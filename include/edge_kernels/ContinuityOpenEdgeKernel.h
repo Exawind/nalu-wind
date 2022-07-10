@@ -22,7 +22,7 @@ namespace sierra {
 namespace nalu {
 
 class SolutionOptions;
-class TimeIntegrator;
+class TimeIntegratorData;
 
 template<typename BcAlgTraits>
 class ContinuityOpenEdgeKernel : public NGPKernel<ContinuityOpenEdgeKernel<BcAlgTraits>>
@@ -40,7 +40,7 @@ public:
   KOKKOS_DEFAULTED_FUNCTION
   virtual ~ContinuityOpenEdgeKernel() = default;
 
-  virtual void setup(const TimeIntegrator&);
+  virtual void setup(const TimeIntegratorData&);
 
   using Kernel::execute;
 

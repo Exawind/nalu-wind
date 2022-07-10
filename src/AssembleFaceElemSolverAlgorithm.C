@@ -87,7 +87,7 @@ void
 AssembleFaceElemSolverAlgorithm::execute()
 {
   for (auto kernel : activeKernels_) {
-    kernel->setup(*realm_.timeIntegrator_);
+    kernel->setup(realm_.timeIntegratorData_);
   }
 
   auto ngpKernels = nalu_ngp::create_ngp_view<Kernel>(activeKernels_);

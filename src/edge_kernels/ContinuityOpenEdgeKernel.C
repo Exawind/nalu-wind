@@ -12,7 +12,7 @@
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
 #include "SolutionOptions.h"
-#include "TimeIntegrator.h"
+#include "TimeIntegratorData.h"
 
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
@@ -67,10 +67,10 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::ContinuityOpenEdgeKernel(
 }
 
 template <typename BcAlgTraits>
-void ContinuityOpenEdgeKernel<BcAlgTraits>::setup(const TimeIntegrator& timeIntegrator)
+void ContinuityOpenEdgeKernel<BcAlgTraits>::setup(const TimeIntegratorData& timeIntegrator)
 {
-  const double dt = timeIntegrator.get_time_step();
-  const double gamma1 = timeIntegrator.get_gamma1();
+  const double dt = timeIntegrator.timeStepN_;
+  const double gamma1 = timeIntegrator.gamma1_;
   tauScale_ = dt / gamma1;
 
   // FIXME: Remove dependence on SolutionOptions

@@ -88,7 +88,7 @@ AssembleElemSolverAlgorithm::execute()
 {
   const size_t numKernels = activeKernels_.size();
   for ( size_t i = 0; i < numKernels; ++i )
-    activeKernels_[i]->setup(*realm_.timeIntegrator_);
+    activeKernels_[i]->setup(realm_.timeIntegratorData_);
 
   auto ngpKernels = nalu_ngp::create_ngp_view<Kernel>(activeKernels_);
   auto coeffApplier = coeff_applier();
