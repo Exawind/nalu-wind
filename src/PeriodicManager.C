@@ -1127,6 +1127,7 @@ PeriodicManager::ngp_set_slave_to_master(
   KokkosEntityPairView deviceMasterSlaves = deviceMasterSlaves_;
 
   // iterate vector of masterEntity:slaveEntity pairs
+  ngpField.sync_to_device();
   if ( bypassFieldCheck ) {
     // fields are expected to be defined on all master/slave nodes
     Kokkos::parallel_for("set_slave_to_master", masterSlaveCommunicator_.size(), KOKKOS_LAMBDA(const int i)
@@ -1165,6 +1166,7 @@ PeriodicManager::ngp_set_slave_to_master(
   }
 
   ngpField.modify_on_device();
+  ngpField.sync_to_host();
 
   if (doCommunication) {
     ngp_periodic_parallel_communicate_field(theField);
