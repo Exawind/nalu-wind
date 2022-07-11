@@ -64,7 +64,8 @@ SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     visc_(get_field_ordinal(realm.meta_data(), "viscosity")),
     beta_(get_field_ordinal(realm.meta_data(), "k_ratio")),
     Mij_(get_field_ordinal(realm.meta_data(), "metric_tensor")),
-    wallDist_(get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall"))
+    wallDist_(get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall")),
+    coordinates_(get_field_ordinal(realm.meta_data(), realm.get_coordinates_name()))
 {
 }
 
