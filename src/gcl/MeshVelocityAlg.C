@@ -82,9 +82,9 @@ MeshVelocityAlg<AlgTraits>::execute()
     sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
-  const DoubleType dt = realm_.get_time_step();
-  const DoubleType gamma1 = realm_.get_gamma1();
-  const DoubleType gamma2 = realm_.get_gamma2();
+  const DoubleType dt = realm_.timeIntegratorData_.timeStepN_;
+  const DoubleType gamma1 = realm_.timeIntegratorData_.gamma1_;
+  const DoubleType gamma2 = realm_.timeIntegratorData_.gamma2_;
   const auto& ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto faceVel = fieldMgr.template get_field<double>(faceVelMag_);

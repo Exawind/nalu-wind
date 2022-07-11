@@ -256,10 +256,8 @@ TurbulenceAveragingPostProcessing::setup()
     realm_.augment_restart_variable_list(fTempName);
 
     movingAvgPP_ = std::make_unique<MovingAveragePostProcessor>(
-      realm_.bulk_data(),
-      *realm_.timeIntegrator_,
-      realm_.restarted_simulation()
-    );
+      realm_.bulk_data(), *realm_.timeIntegratorData_,
+      realm_.restarted_simulation());
     movingAvgPP_->add_fields({temperatureName});
     movingAvgPP_->set_time_scale(realm_.solutionOptions_->raBoussinesqTimeScale_);
   }
@@ -595,7 +593,7 @@ TurbulenceAveragingPostProcessing::execute()
 {
   stk::mesh::MetaData &metaData = realm_.meta_data();
 
-  const double dt = realm_.get_time_step();
+  const double dt = realm_.timeIntegratorData_.timeStepN_;
   double oldTimeFilter = currentTimeFilter_;
   double zeroCurrent = 1.0;
 

@@ -55,8 +55,8 @@ ContinuityLowSpeedCompressibleNodeSuppAlg::ContinuityLowSpeedCompressibleNodeSup
 void
 ContinuityLowSpeedCompressibleNodeSuppAlg::setup()
 {
-  gamma1_ = realm_.get_gamma1();
-  dt_ = realm_.timeIntegrator_->get_time_step();
+  gamma1_ = realm_.timeIntegratorData_.gamma1_;
+  dt_ = realm_.timeIntegratorData_.timeStepN_;
 }
 
 //--------------------------------------------------------------------------

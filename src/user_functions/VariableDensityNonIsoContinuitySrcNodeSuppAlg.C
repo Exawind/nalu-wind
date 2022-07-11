@@ -64,7 +64,8 @@ VariableDensityNonIsoContinuitySrcNodeSuppAlg::VariableDensityNonIsoContinuitySr
 void
 VariableDensityNonIsoContinuitySrcNodeSuppAlg::setup()
 {
-  projTimeScale_ = realm_.get_time_step()/realm_.get_gamma1();
+  projTimeScale_ =
+    realm_.timeIntegratorData_.timeStepN_ / realm_.timeIntegratorData_.gamma1_;
 }
 
 //--------------------------------------------------------------------------

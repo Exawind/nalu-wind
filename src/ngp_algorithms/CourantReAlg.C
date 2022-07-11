@@ -78,7 +78,7 @@ void CourantReAlg<AlgTraits>::execute()
   const unsigned velID = velocity_;
   const unsigned rhoID = density_;
   const unsigned viscID = viscosity_;
-  const DoubleType dt = realm_.get_time_step();
+  const DoubleType dt = realm_.timeIntegratorData_.timeStepN_;
   const DoubleType small = 1.0e-16;
   MasterElement* meSCS = meSCS_;
 

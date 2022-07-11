@@ -2331,8 +2331,8 @@ MomentumEquationSystem::initialize()
   // We need an estimate of projTimeScale for the computational of mdot in
   // initialization phase
   if (!realm_.restarted_simulation() || !extractDiagonal_) {
-    const double dt = realm_.get_time_step();
-    const double gamma1 = realm_.get_gamma1();
+    const double dt = realm_.timeIntegratorData_.timeStepN_;
+    const double gamma1 = realm_.timeIntegratorData_.gamma1_;
     stk::mesh::field_fill(gamma1/dt, *Udiag_);
 
     Udiag_->modify_on_host();
@@ -2587,8 +2587,8 @@ MomentumEquationSystem::assemble_and_solve(
   {
     double projTimeScale = 0.0;
     if (realm_.solutionOptions_->tscaleType_ == TSCALE_DEFAULT) {
-      const double dt = realm_.get_time_step();
-      const double gamma1 = realm_.get_gamma1();
+      const double dt = realm_.timeIntegratorData_.timeStepN_;
+      const double gamma1 = realm_.timeIntegratorData_.gamma1_;
       projTimeScale = gamma1 / dt;
     }
 
@@ -2607,8 +2607,8 @@ MomentumEquationSystem::assemble_and_solve(
 
   if (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV) {
     const std::string dofName = "velocity";
-    const double dt = realm_.get_time_step();
-    const double gamma1 = realm_.get_gamma1();
+    const double dt = realm_.timeIntegratorData_.timeStepN_;
+    const double gamma1 = realm_.timeIntegratorData_.gamma1_;
     const double projTimeScale = gamma1 / dt;
     const double alphaU = realm_.solutionOptions_->get_relaxation_factor(dofName);
 

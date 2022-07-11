@@ -243,7 +243,7 @@ ABLForcingAlgorithm::execute()
 void
 ABLForcingAlgorithm::compute_momentum_sources()
 {
-  const double dt = realm_.get_time_step();
+  const double dt = realm_.timeIntegratorData_.timeStepN_;
   const double currTime = realm_.get_current_time();
 
   if (momSrcType_ == COMPUTED) {
@@ -320,7 +320,7 @@ ABLForcingAlgorithm::compute_momentum_sources()
 void
 ABLForcingAlgorithm::compute_temperature_sources()
 {
-  const double dt = realm_.get_time_step();
+  const double dt = realm_.timeIntegratorData_.timeStepN_;
   const double currTime = realm_.get_current_time();
 
   if (tempSrcType_ == COMPUTED) {

@@ -61,7 +61,8 @@ public:
       dVoldt_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "dvol_dt"))
   {
-    realm_.timeIntegrator_ = naluObj_.sim_.timeIntegrator_;
+    realm_.timeIntegratorData_ =
+      naluObj_.sim_.timeIntegrator_.timeIntegratorData_;
     stk::mesh::put_field_on_mesh(
       *currCoords_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*dualVol_, meta_.universal_part(), 1, nullptr);
@@ -116,7 +117,7 @@ public:
   void init_time_integrator(
     bool secondOrder = true, double timeStep = 0.1, int timeStepCount = 2)
   {
-    auto& timeInt = *realm_.timeIntegrator_;
+    auto& timeInt = *realm_.timeIntegratorData_;
     timeInt.secondOrderTimeAccurate_ = secondOrder;
     if (!secondOrder)
       numStates_ = 2;
@@ -155,10 +156,10 @@ public:
   void compute_mesh_velocity()
   {
     const stk::mesh::Selector sel = meta_.universal_part();
-    const double dt = realm_.get_time_step();
-    const double gamma1 = realm_.get_gamma1();
-    const double gamma2 = realm_.get_gamma2();
-    const double gamma3 = realm_.get_gamma3();
+    const double dt = realm_.timeIntegratorData_.timeStepN_;
+    const double gamma1 = realm_.timeIntegratorData_.gamma1_;
+    const double gamma2 = realm_.timeIntegratorData_.gamma2_;
+    const double gamma3 = realm_.timeIntegratorData_.gamma3_;
 
     const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
 
@@ -202,10 +203,10 @@ public:
     const auto& dVolNm1 = dualVol_->field_of_state(stk::mesh::StateNM1);
     const auto& dVolN = dualVol_->field_of_state(stk::mesh::StateN);
     const auto& dVolNp1 = dualVol_->field_of_state(stk::mesh::StateNP1);
-    const double dt = realm_.get_time_step();
-    const double gamma1 = realm_.get_gamma1();
-    const double gamma2 = realm_.get_gamma2();
-    const double gamma3 = realm_.get_gamma3();
+    const double dt = realm_.timeIntegratorData_.timeStepN_;
+    const double gamma1 = realm_.timeIntegratorData_.gamma1_;
+    const double gamma2 = realm_.timeIntegratorData_.gamma2_;
+    const double gamma3 = realm_.timeIntegratorData_.gamma3_;
 
     for (auto* b : bkts) {
       const double* dvNm1 = stk::mesh::field_data(dVolNm1, *b);
@@ -225,7 +226,7 @@ public:
     const double tol = 1e-14;
     const stk::mesh::Selector sel = get_selector();
     const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
-    const double dt = realm_.get_time_step();
+    const double dt = realm_.timeIntegratorData_.timeStepN_;
 
     for (auto* b : bkts) {
       const double* divV = stk::mesh::field_data(*divMeshVel_, *b);
@@ -266,7 +267,7 @@ public:
 
   void init_states()
   {
-    const double deltaT = realm_.get_time_step();
+    const double deltaT = realm_.timeIntegratorData_.timeStepN_;
     auto& motionAlg = *realm_.meshMotionAlg_;
     motionAlg.initialize(0.0);
     for (int it = 0; it < numStates_; ++it) {

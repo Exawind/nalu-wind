@@ -53,7 +53,7 @@ EnthalpyLowSpeedCompressibleNodeSuppAlg::EnthalpyLowSpeedCompressibleNodeSuppAlg
 void
 EnthalpyLowSpeedCompressibleNodeSuppAlg::setup()
 {
-  dt_ = realm_.timeIntegrator_->get_time_step();
+  dt_ = realm_.timeIntegratorData_.timeStepN_;
 }
 
 //--------------------------------------------------------------------------

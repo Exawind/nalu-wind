@@ -78,7 +78,7 @@ SSTAMSAveragesAlg::execute()
   if (meta.spatial_dimension() != 3) {
     throw std::runtime_error("SSTAMSAveragesAlg only supported in 3D.");
   }
-  const DblType dt = realm_.get_time_step();
+  const DblType dt = realm_.timeIntegratorData_.timeStepN_;
 
   const stk::mesh::Selector sel =
     (meta.locally_owned_part() | meta.globally_shared_part()) &

@@ -173,7 +173,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-Realm::Realm(Realms& realms, const YAML::Node& node)
+Realm::Realm(Realms& realms, const YAML::Node& node, )
   : realms_(realms),
     name_("na"),
     type_("multi_physics"),
@@ -2253,7 +2253,7 @@ Realm::initialize_post_processing_algorithms()
     actuatorModel_->init(bulk_data());
 
   if (lidarLOS_) {
-    lidarLOS_->set_time(timeIntegrator_->get_current_time());
+    lidarLOS_->set_time(timeIntegratorData_.timeStepN_);
   }
 }
 
@@ -4374,85 +4374,6 @@ Realm::physics_part_names(std::vector<std::string> names) const
     });
   }
   return names;
-}
-
-//--------------------------------------------------------------------------
-//-------- get_current_time() ----------------------------------------------
-//--------------------------------------------------------------------------
-double
-Realm::get_current_time()
-{
-  return timeIntegrator_->get_current_time();
-}
-
-//--------------------------------------------------------------------------
-//-------- get_time_step() ----------------------------------------------
-//--------------------------------------------------------------------------
-double
-Realm::get_time_step()
-{
-  return timeIntegrator_->get_time_step();
-}
-
-double 
-Realm::get_time_step_from_file() {
-  return timeIntegrator_->get_time_step_from_file();
-}
-
-bool 
-Realm::get_is_fixed_time_step() {
-  return timeIntegrator_->get_is_fixed_time_step();
-}
-
-bool 
-Realm::get_is_terminate_based_on_time() {
-  return timeIntegrator_->get_is_terminate_based_on_time();
-}
-
-double 
-Realm::get_total_sim_time() {
-  return timeIntegrator_->get_total_sim_time();
-}
-
-int
-Realm::get_max_time_step_count() {
-  return timeIntegrator_->get_max_time_step_count();
-}
-
-//--------------------------------------------------------------------------
-//-------- get_gamma1() ----------------------------------------------------
-//--------------------------------------------------------------------------
-double
-Realm::get_gamma1()
-{
-  return timeIntegrator_->get_gamma1();
-}
-
-//--------------------------------------------------------------------------
-//-------- get_gamma2() ----------------------------------------------------
-//--------------------------------------------------------------------------
-double
-Realm::get_gamma2()
-{
-  return timeIntegrator_->get_gamma2();
-}
-
-//--------------------------------------------------------------------------
-//-------- get_gamma3() ----------------------------------------------------
-//--------------------------------------------------------------------------
-double
-Realm::get_gamma3()
-{
-  return timeIntegrator_->get_gamma3();
-}
-
-//--------------------------------------------------------------------------
-//-------- get_time_step_count() ----------------------------------------------
-//--------------------------------------------------------------------------
-int
-Realm::get_time_step_count() const
-{
-  return timeIntegrator_->get_time_step_count();
 }
 
 //--------------------------------------------------------------------------

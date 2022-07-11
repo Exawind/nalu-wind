@@ -68,10 +68,10 @@ void MdotDensityAccumAlg<AlgTraits>::execute()
   const unsigned rhoNm1ID = rhoNm1_;
   const bool lumpedMass = lumpedMass_;
 
-  const DoubleType dt = realm_.get_time_step();
-  const DoubleType gamma1 = realm_.get_gamma1();
-  const DoubleType gamma2 = realm_.get_gamma2();
-  const DoubleType gamma3 = realm_.get_gamma3();
+  const DoubleType dt = realm_.timeIntegratorData_.timeStepN_;
+  const DoubleType gamma1 = realm_.timeIntegratorData_.gamma1_;
+  const DoubleType gamma2 = realm_.timeIntegratorData_.gamma2_;
+  const DoubleType gamma3 = realm_.timeIntegratorData_.gamma3_;
 
   const std::string algName = "mdot_density_accum_" + std::to_string(AlgTraits::topo_);
   DoubleType rhoAcc = 0.0;

@@ -7,10 +7,8 @@
 // for more details.
 //
 
-
-
-#ifndef ContinuityInflowElemKernel_h
-#define ContinuityInflowElemKernel_h
+#ifndef CONTINUITYINFLOWELEMKERNEL_H
+#define CONTINUITYINFLOWELEMKERNEL_H
 
 #include "FieldTypeDef.h"
 #include "kernel/Kernel.h"
@@ -74,4 +72,4 @@ private:
 }  // nalu
 }  // sierra
 
-#endif /* ContinuityInflowElemKernel_h */
+#endif /* CONTINUITYINFLOWELEMKERNEL_H */

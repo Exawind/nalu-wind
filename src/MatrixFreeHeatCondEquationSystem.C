@@ -275,11 +275,11 @@ MatrixFreeHeatCondEquationSystem::sync_field_on_periodic_nodes(
 namespace {
 
 Kokkos::Array<double, 3>
-compute_scaled_gammas(const TimeIntegrator& ti)
+compute_scaled_gammas(const TimeIntegratorData& ti)
 {
   return Kokkos::Array<double, 3>{
-    {ti.get_gamma1() / ti.get_time_step(), ti.get_gamma2() / ti.get_time_step(),
-     ti.get_gamma3() / ti.get_time_step()}};
+    {ti.gamma1_ / ti.timeStepN_, ti.gamma2_ / ti.timeStepN_,
+     ti.gamma3_ / ti.timeStepN_}};
 }
 
 void
@@ -322,8 +322,7 @@ MatrixFreeHeatCondEquationSystem::solve_and_update()
 
   const auto time_start_preconditioner = NaluEnv::self().nalu_time();
   update_->compute_preconditioner(
-    realm_.timeIntegrator_->get_gamma1() /
-    realm_.timeIntegrator_->get_time_step());
+    realm_.timeIntegratorData_.gamma1_ / realm_.timeIntegratorData_.timeStepN_);
   const auto time_end_preconditioner = NaluEnv::self().nalu_time();
   timerPrecond_ += time_end_preconditioner - time_start_preconditioner;
 
@@ -333,7 +332,7 @@ MatrixFreeHeatCondEquationSystem::solve_and_update()
 
     const auto time_start_solve = NaluEnv::self().nalu_time();
     update_->compute_update(
-      compute_scaled_gammas(*realm_.timeIntegrator_),
+      compute_scaled_gammas(realm_.timeIntegratorData_),
       get_node_field(meta_, names::delta));
     const auto time_end_solve = NaluEnv::self().nalu_time();
     timerSolve_ += time_end_solve - time_start_solve;

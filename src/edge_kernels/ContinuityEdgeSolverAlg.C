@@ -47,8 +47,8 @@ ContinuityEdgeSolverAlg::execute()
     = (realm_.get_noc_usage(dofName) == true) ? 1.0 : 0.0;
 
   // Classic Nalu projection timescale
-  const DblType dt = realm_.get_time_step();
-  const DblType gamma1 = realm_.get_gamma1();
+  const DblType dt = realm_.timeIntegratorData_.timeStepN_;
+  const DblType gamma1 = realm_.timeIntegratorData_.gamma1_;
   const DblType tauScale = dt / gamma1;
 
   // Interpolation option for rho*U

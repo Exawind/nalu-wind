@@ -66,8 +66,8 @@ AssembleOversetSolverConstraintAlgorithm::execute()
 
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
 
-  const double dt = realm_.get_time_step();
-  const double gamma1 = realm_.get_gamma1();
+  const double dt = realm_.timeIntegratorData_.timeStepN_;
+  const double gamma1 = realm_.timeIntegratorData_.gamma1_;
   const double tauScale = gamma1 / dt;
 
   // space for LHS/RHS (nodesPerElem+1)*numDof*(nodesPerElem+1)*numDof; (nodesPerElem+1)*numDof

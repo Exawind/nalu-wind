@@ -153,9 +153,9 @@ GeometryAlgDriver::mesh_motion_prework()
   ngpSweptVol.sync_to_device();
 
   if (realm_.realmUsesEdges_) {
-    const double dt = realm_.get_time_step();
-    const double gamma1 = realm_.get_gamma1();
-    const double gamma2 = realm_.get_gamma2();
+    const double dt = realm_.timeIntegratorData_.timeStepN_;
+    const double gamma1 = realm_.timeIntegratorData_.gamma1_;
+    const double gamma2 = realm_.timeIntegratorData_.gamma2_;
     auto ngpSweptVolEdgeN = nalu_ngp::get_ngp_field(
       realm_.mesh_info(), "edge_swept_face_volume", stk::mesh::StateN,
       stk::topology::EDGE_RANK);

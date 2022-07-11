@@ -117,8 +117,8 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
   const double om_interpTogether = 1.0-interpTogether;
 
   // Classic Nalu projection timescale
-  const double dt = realm_.get_time_step();
-  const double gamma1 = realm_.get_gamma1();
+  const double dt = realm_.timeIntegratorData_.timeStepN_;
+  const double gamma1 = realm_.timeIntegratorData_.gamma1_;
   const double tauScale = dt / gamma1;
 
   // space for LHS/RHS; nodesPerElem*nodesPerElem and nodesPerElem

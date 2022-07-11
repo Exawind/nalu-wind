@@ -85,7 +85,7 @@ ComputeHeatTransferEdgeWallAlgorithm::execute()
 
   const int nDim = meta_data.spatial_dimension();
 
-  const double dt = realm_.get_time_step();
+  const double dt = realm_.timeIntegratorData_.timeStepN_;
 
   // define vector of parent topos; should always be UNITY in size
   std::vector<stk::topology> parentTopo;

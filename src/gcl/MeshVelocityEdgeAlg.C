@@ -76,8 +76,8 @@ MeshVelocityEdgeAlg<AlgTraits>::execute()
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
-  const DoubleType dt = realm_.get_time_step();
-  const DoubleType gamma1 = realm_.get_gamma1();
+  const DoubleType dt = realm_.timeIntegratorData_.timeStepN_;
+  const DoubleType gamma1 = realm_.timeIntegratorData_.gamma1_;
   const auto& ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto edgeFaceVelMag = fieldMgr.template get_field<double>(edgeFaceVelMag_);

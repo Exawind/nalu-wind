@@ -402,21 +402,21 @@ MatrixFreeLowMachEquationSystem::sync_field_on_periodic_nodes(
 namespace {
 
 Kokkos::Array<double, 3>
-compute_scaled_gammas(const TimeIntegrator& ti)
+compute_scaled_gammas(const TimeIntegratorData& ti)
 {
-  ThrowRequire(ti.get_time_step() > 0);
-  ThrowRequire(ti.get_gamma1() > 0);
+  ThrowRequire(ti.timeStepN_1 > 0);
+  ThrowRequire(ti.gamma1_ > 0);
   return Kokkos::Array<double, 3>{
-    {ti.get_gamma1() / ti.get_time_step(), ti.get_gamma2() / ti.get_time_step(),
-     ti.get_gamma3() / ti.get_time_step()}};
+    {ti.gamma1_ / ti.timeStepN_, ti.gamma2_ / ti.timeStepN_,
+     ti.gamma3_ / ti.timeStepN_}};
 }
 
 double
-compute_projected_timescale(const TimeIntegrator& ti)
+compute_projected_timescale(const TimeIntegratorData& ti)
 {
-  ThrowRequire(ti.get_time_step() > 0);
-  ThrowRequire(ti.get_gamma1() > 0);
-  return ti.get_time_step() / ti.get_gamma1();
+  ThrowRequire(ti.timeStepN_ > 0);
+  ThrowRequire(ti.gamma1_ > 0);
+  return ti.timeStepN_ / ti.gamma1_;
 }
 
 void
@@ -530,7 +530,7 @@ MatrixFreeLowMachEquationSystem::initialize_solve_and_update()
   update_->grad_p_banner(names::dpdx, log());
   update_->gather_grad_p();
   update_->gather_velocity();
-  correct_velocity(compute_projected_timescale(*realm_.timeIntegrator_));
+  correct_velocity(compute_projected_timescale(realm_.timeIntegratorData_));
   initialized_ = true;
 }
 
@@ -638,8 +638,8 @@ MatrixFreeLowMachEquationSystem::compute_courant_reynolds()
 
   const auto& pp = update_->post_processor();
   auto comm = realm_.bulk_data().parallel();
-  auto l_cflre =
-    pp.compute_local_courant_reynolds_numbers(realm_.get_time_step());
+  auto l_cflre = pp.compute_local_courant_reynolds_numbers(
+    realm_.timeIntegratorData_.timeStepN_);
 
   {
     stk::mesh::ProfilingBlock pfinner("all reduce");
@@ -708,9 +708,9 @@ MatrixFreeLowMachEquationSystem::solve_and_update()
     initialize_solve_and_update();
   }
 
-  const auto gammas = compute_scaled_gammas(*realm_.timeIntegrator_);
+  const auto gammas = compute_scaled_gammas(realm_.timeIntegratorData_);
   const auto proj_time_scale =
-    compute_projected_timescale(*realm_.timeIntegrator_);
+    compute_projected_timescale(realm_.timeIntegratorData_);
 
   {
     ScopeTimer st{timerAssemble_};
