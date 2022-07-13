@@ -37,6 +37,15 @@ static constexpr double lhs[8][8] = {
 };
 } // tke_sst
 
+namespace tke_sst_sust {
+static constexpr double rhs[8] = {
+  2.7675000000000001, 1.6266956857194192,
+  1.6159962999110988, 1.0095285753751273,
+  1.6266956857194192, 0.95614773403366649,
+  0.94615361618261018, 0.61580632549878811,
+ };
+} // tke_sst_sust
+
 namespace tke_sst_des {
 static constexpr double rhs[8] = {
   -1.1591914445681, -0.68135563570074,
@@ -56,6 +65,15 @@ static constexpr double lhs[8][8] = {
   {0, 0, 0, 0, 0, 0, 0, 0.17023402848587, },
 };
 } // tke_sst_des
+
+namespace tke_sst_des_sust {
+static constexpr double rhs[8] = {
+  3.4229150667019503, 2.0119389960571135,
+  1.5591709764645274, 1.088651351457735,
+  2.0119389960571135, 1.0001556684351871,
+  1.0315739632341863, 0.63878416505705449,
+};
+} // tke_sst_des_sust
 
 namespace sdr_sst {
 static constexpr double rhs[8] = {
@@ -77,6 +95,14 @@ static constexpr double lhs[8][8] = {
 };
 } // sdr_sst
 
+namespace sdr_sst_sust {
+static constexpr double rhs[8] = {
+  25.833600000000001, 15.184609093622832,
+  15.184609093622832, 8.9542115909208313,
+  15.184609093622832, 8.374986317368819,
+  8.9143958021253162, 5.0713291662427222,
+};
+} // sdr_sst_sust
 
 namespace sdr_sst_des {
 static constexpr double rhs[8] = {
@@ -97,6 +123,15 @@ static constexpr double lhs[8][8] = {
   {0, 0, 0, 0, 0, 0, 0, 0.0096611889086056, },
 };
 } // sdr_sst_des
+
+namespace sdr_sst_des_sust {
+static constexpr double rhs[8] = {
+  25.8336, 15.184609093622832,
+  15.184609093622832, 8.9542115909208313,
+  15.184609093622832, 8.374986317368819,
+  8.9143958021253162, 5.0713291662427222,
+};
+} // sdr_sst_des_sust
 
 } // hex8_golds
 }
@@ -133,6 +168,41 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
 }
 
+TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_sust_node)
+{
+  // Only execute for 1 processor runs
+  if (bulk_->parallel_size() > 1) return;
+
+  fill_mesh_and_init_fields();
+
+  // Setup solution options
+  solnOpts_.meshMotion_ = false;
+  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.initialize_turbulence_constants();
+
+  unit_test_utils::NodeHelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+
+  sierra::nalu::Realm& realm = helperObjs.realm;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_tkeAmb] = 5.0;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_sdrAmb] = 50.0;
+
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTNodeKernel>(*meta_);
+
+  helperObjs.execute();
+
+  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->hostNumSumIntoCalls_(0), 8u);
+
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->rhs_, hex8_golds::tke_sst_sust::rhs, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near<8>(
+    helperObjs.linsys->lhs_, hex8_golds::tke_sst::lhs, 1.0e-12);
+}
+
 TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
 {
   // Only execute for 1 processor runs
@@ -163,6 +233,41 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
+}
+
+TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_sust_node)
+{
+  // Only execute for 1 processor runs
+  if (bulk_->parallel_size() > 1) return;
+
+  fill_mesh_and_init_fields();
+
+  // Setup solution options
+  solnOpts_.meshMotion_ = false;
+  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.initialize_turbulence_constants();
+
+  unit_test_utils::NodeHelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+
+  sierra::nalu::Realm& realm = helperObjs.realm;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_tkeAmb] = 5.0;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_sdrAmb] = 50.0;
+
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTDESNodeKernel>(*meta_);
+
+  helperObjs.execute();
+
+  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->hostNumSumIntoCalls_(0), 8u);
+
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->rhs_, hex8_golds::tke_sst_des_sust::rhs, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near<8>(
+    helperObjs.linsys->lhs_, hex8_golds::tke_sst_des::lhs, 1.0e-12);
 }
 
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
@@ -197,6 +302,41 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
 }
 
+TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_sust_node)
+{
+  // Only execute for 1 processor runs
+  if (bulk_->parallel_size() > 1) return;
+
+  fill_mesh_and_init_fields();
+
+  // Setup solution options
+  solnOpts_.meshMotion_ = false;
+  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.initialize_turbulence_constants();
+
+  unit_test_utils::NodeHelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+
+  sierra::nalu::Realm& realm = helperObjs.realm;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_tkeAmb] = 5.0;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_sdrAmb] = 50.0;
+
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTNodeKernel>(*meta_);
+
+  helperObjs.execute();
+
+  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->hostNumSumIntoCalls_(0), 8u);
+
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->rhs_, hex8_golds::sdr_sst_sust::rhs, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near<8>(
+    helperObjs.linsys->lhs_, hex8_golds::sdr_sst::lhs, 1.0e-12);
+}
+
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
 {
   // Only execute for 1 processor runs
@@ -228,4 +368,40 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
+}
+
+TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_sust_node)
+{
+  // Only execute for 1 processor runs
+  if (bulk_->parallel_size() > 1) return;
+
+  fill_mesh_and_init_fields();
+
+  // Setup solution options
+  solnOpts_.meshMotion_ = false;
+  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.initialize_turbulence_constants();
+
+  unit_test_utils::NodeHelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+
+  sierra::nalu::Realm& realm = helperObjs.realm;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_tkeAmb] = 5.0;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_sdrAmb] = 50.0;
+
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTDESNodeKernel>(*meta_);
+
+  helperObjs.execute();
+
+  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->hostNumSumIntoCalls_(0), 8u);
+
+  // only differs by a production limiting, which is never active in this case
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->rhs_, hex8_golds::sdr_sst_des_sust::rhs, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near<8>(
+    helperObjs.linsys->lhs_, hex8_golds::sdr_sst_des::lhs, 1.0e-12);
 }
