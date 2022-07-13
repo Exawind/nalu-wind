@@ -71,7 +71,9 @@ private:
   NodeKernelTraits::DblType iddes_Cdt1_;    
   NodeKernelTraits::DblType iddes_Cdt2_;    
   NodeKernelTraits::DblType iddes_Cl_;    
-  NodeKernelTraits::DblType iddes_Ct_;    
+  NodeKernelTraits::DblType iddes_Ct_;
+  NodeKernelTraits::DblType tkeAmb_;
+  NodeKernelTraits::DblType sdrAmb_;
   NodeKernelTraits::DblType relaxFac_;
 
   const int nDim_;

@@ -65,6 +65,8 @@ private:
   NodeKernelTraits::DblType tkeProdLimitRatio_;
   NodeKernelTraits::DblType cDESke_;
   NodeKernelTraits::DblType cDESkw_;
+  NodeKernelTraits::DblType tkeAmb_;
+  NodeKernelTraits::DblType sdrAmb_;
   NodeKernelTraits::DblType relaxFac_;
 
   const int nDim_;

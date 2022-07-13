@@ -65,6 +65,8 @@ TKESSTIDDESNodeKernel::setup(Realm& realm)
   iddes_Cdt2_ = realm.get_turb_model_constant(TM_iddes_Cdt2);
   iddes_Cl_ = realm.get_turb_model_constant(TM_iddes_Cl);
   iddes_Ct_ = realm.get_turb_model_constant(TM_iddes_Ct);
+  tkeAmb_ = realm.get_turb_model_constant(TM_tkeAmb);
+  sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
 }
 
 void TKESSTIDDESNodeKernel::execute(
@@ -142,7 +144,14 @@ void TKESSTIDDESNodeKernel::execute(
   // Clip production term
   Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk);
 
-  rhs(0) += (Pk - Dk) * dVol;
+  // SUST source term
+  const DblType sqrtTkeAmb = stk::math::sqrt(tkeAmb_);
+  const DblType lSSTAmb = sqrtTkeAmb / betaStar_ / sdrAmb_;
+  const DblType lIDDESAmb =
+    stk::math::max(1.0e-16, ransInd * lSSTAmb + (1.0 - fdHat) * lLES);
+  const DblType Dkamb = density * tkeAmb_ * sqrtTkeAmb / lIDDESAmb;
+
+  rhs(0) += (Pk - Dk + Dkamb) * dVol;
   lhs(0, 0) += 1.5 * density / lIDDES * sqrtTke * dVol;
 }
 
