@@ -1007,11 +1007,10 @@ void
 Realm::setup_bc()
 {
   // loop over all bcs and register
-  for (size_t ibc = 0; ibc < boundaryConditions_.size(); ++ibc) {
-    BoundaryCondition& bc = *boundaryConditions_[ibc];
-    std::string name = physics_part_name(bc.targetName_);
+  for (auto&& bc : boundaryConditions_.boundaryConditionVector_) {
+    std::string name = physics_part_name(bc->targetName_);
 
-    switch(bc.theBcType_) {
+    switch(bc->theBcType_) {
       case WALL_BC:
         equationSystems_.register_wall_bc(name, *reinterpret_cast<const WallBoundaryConditionData *>(&bc));
         break;
@@ -2314,9 +2313,8 @@ Realm::has_non_matching_boundary_face_alg() const
 bool 
 Realm::query_for_overset() 
 {
-  for (size_t ibc = 0; ibc < boundaryConditions_.size(); ++ibc) {
-    BoundaryCondition& bc = *boundaryConditions_[ibc];
-    switch(bc.theBcType_) {
+  for (auto&& bc : boundaryConditions_.boundaryConditionVector_) {
+    switch(bc->theBcType_) {
     case OVERSET_BC:
       hasOverset_ = true;
       break;

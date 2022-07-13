@@ -54,11 +54,7 @@ public:
 
   void load(const YAML::Node& node);
 
-  // TODO(psakiev) Delete this unused function
-  void breadboard() {}
-
   // ease of access methods to particular boundary condition
-  size_t size() { return boundaryConditionVector_.size(); }
   BoundaryCondition* operator[](int i)
   {
     return boundaryConditionVector_[i].get();
