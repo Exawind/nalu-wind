@@ -2167,7 +2167,7 @@ MomentumEquationSystem::register_abltop_bc(
   auto userData = abltopBCData.userData_;
 
   if (!userData.ABLTopBC_) {
-    SymmetryBoundaryConditionData symData(abltopBCData.boundaryConditions_);
+    SymmetryBoundaryConditionData symData;
     symData.userData_ = abltopBCData.symmetryUserData_;
     register_symmetry_bc(part, partTopo, symData);
     return;
@@ -3176,7 +3176,7 @@ ContinuityEquationSystem::register_abltop_bc(
   auto userData = abltopBCData.userData_;
 
   if (!userData.ABLTopBC_) {
-    SymmetryBoundaryConditionData symData(abltopBCData.boundaryConditions_);
+    SymmetryBoundaryConditionData symData;
     register_symmetry_bc(part, partTopo, symData);
     return;
   }

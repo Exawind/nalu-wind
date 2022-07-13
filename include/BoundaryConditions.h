@@ -24,46 +24,27 @@ namespace YAML {
 }
 
 namespace sierra{
-  namespace nalu{
-
-class Realm;
-class BoundaryConditions;
-class Simulation;
+namespace nalu {
 
 class BoundaryCondition {
  public:
- BoundaryCondition(BoundaryConditions& bcs) : boundaryConditions_(bcs) {}
-  
-  virtual ~BoundaryCondition() {}
+   BoundaryCondition() {}
+   virtual ~BoundaryCondition() {}
 
-  std::unique_ptr<BoundaryCondition> load(const YAML::Node& node);
-
-  std::string bcName_;
-  std::string targetName_;
-  BoundaryConditionType theBcType_;
-  BoundaryConditions& boundaryConditions_;
+   std::string bcName_;
+   std::string targetName_;
+   BoundaryConditionType theBcType_;
 };
 
 typedef std::vector<std::unique_ptr<BoundaryCondition>> BoundaryConditionVector;
-
-class BoundaryConditions
+struct BoundaryConditionCreator
 {
 public:
-  BoundaryConditions(Realm& realm) : realm_(realm) {}
-  ~BoundaryConditions() = default;
+  BoundaryConditionVector create_bc_vector(const YAML::Node& node);
 
-  void load(const YAML::Node& node);
-
-  // ease of access methods to particular boundary condition
-  BoundaryCondition* operator[](int i)
-  {
-    return boundaryConditionVector_[i].get();
-  }
-
-  Realm& realm_;
-  BoundaryConditionVector boundaryConditionVector_;
+  std::unique_ptr<BoundaryCondition>
+  load_single_bc_node(const YAML::Node& node);
 };
-
 } // namespace nalu
 } // namespace Sierra
 

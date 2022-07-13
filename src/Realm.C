@@ -190,7 +190,6 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     restartFileIndex_(99),
     numInitialElements_(0),
     timeIntegrator_(0),
-    boundaryConditions_(*this),
     initialConditions_(*this),
     materialPropertys_(*this),
     equationSystems_(*this),
@@ -769,7 +768,7 @@ Realm::load(const YAML::Node & node)
     NaluEnv::self().naluOutputP0() << std::endl;
     NaluEnv::self().naluOutputP0() << "Boundary Condition Review: " << std::endl;
     NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
-    boundaryConditions_.load(node);
+    boundaryConditions_ = BoundaryConditionCreator().create_bc_vector(node);
     NaluEnv::self().naluOutputP0() << std::endl;
     NaluEnv::self().naluOutputP0() << "Initial Condition Review:  " << std::endl;
     NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
@@ -1007,7 +1006,7 @@ void
 Realm::setup_bc()
 {
   // loop over all bcs and register
-  for (auto&& bc : boundaryConditions_.boundaryConditionVector_) {
+  for (auto&& bc : boundaryConditions_) {
     std::string name = physics_part_name(bc->targetName_);
 
     switch(bc->theBcType_) {
@@ -2313,7 +2312,7 @@ Realm::has_non_matching_boundary_face_alg() const
 bool 
 Realm::query_for_overset() 
 {
-  for (auto&& bc : boundaryConditions_.boundaryConditionVector_) {
+  for (auto&& bc : boundaryConditions_) {
     switch(bc->theBcType_) {
     case OVERSET_BC:
       hasOverset_ = true;
