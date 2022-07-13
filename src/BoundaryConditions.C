@@ -38,72 +38,62 @@ namespace nalu{
 //--------------------------------------------------------------------------
 
 
-/// this is an example of a load() method with polymorphism - the type of
-/// the node is determined from some information, then a particular type
-/// of object is created and returned to the parent.
+template<typename T>
+std::unique_ptr<BoundaryCondition> register_bc(const YAML::Node& node, BoundaryConditions& bcs){
+    std::unique_ptr<BoundaryCondition>this_bc = std::make_unique<T>(bcs);
+    auto* cast_bc = dynamic_cast<T*>(this_bc.get());
+    node >> *cast_bc;
+    return this_bc;
+}
 
 std::unique_ptr<BoundaryCondition> BoundaryCondition::load(const YAML::Node & node) 
 {
   std::unique_ptr<BoundaryCondition> this_bc;
   if ( node["wall_boundary_condition"] ){
-    //this_bc.reset(new WallBoundaryConditionData(boundaryConditions_));
-    this_bc = std::make_unique<WallBoundaryConditionData>(boundaryConditions_);
-    auto* wallBC = dynamic_cast<WallBoundaryConditionData*>(this_bc.get());
-
-    node >> *wallBC;
-    NaluEnv::self().naluOutputP0() << "Wall BC name:        " << wallBC->bcName_
-                    << " on " << wallBC->targetName_ << std::endl;
+    this_bc = std::move(register_bc<WallBoundaryConditionData>(node, boundaryConditions_));
+    NaluEnv::self().naluOutputP0()<<"Wall BC name:        " << this_bc->bcName_ \
+                    << " on " << this_bc->targetName_ << std::endl;
   }
   else if (node["inflow_boundary_condition"]) {
-    InflowBoundaryConditionData& inflowBC = *new InflowBoundaryConditionData(*parent());
-    node >> inflowBC;
-    NaluEnv::self().naluOutputP0() << "Inflow BC name:      " << inflowBC.bcName_
-                    << " on " << inflowBC.targetName_ << std::endl;
+    this_bc = std::move(register_bc<InflowBoundaryConditionData>(node, boundaryConditions_));
+    NaluEnv::self().naluOutputP0()<<"Inflow BC name:        " << this_bc->bcName_ \
+                    << " on " << this_bc->targetName_ << std::endl;
   }
   else if (node["open_boundary_condition"]) {
-    OpenBoundaryConditionData& openBC = *new OpenBoundaryConditionData(*parent());
-    node >> openBC;
-    NaluEnv::self().naluOutputP0() << "Open BC name:        " << openBC.bcName_
-                    << " on " << openBC.targetName_ << std::endl;
+    this_bc = std::move(register_bc<OpenBoundaryConditionData>(node, boundaryConditions_));
+    NaluEnv::self().naluOutputP0()<<"Open BC name:        " << this_bc->bcName_ \
+                    << " on " << this_bc->targetName_ << std::endl;
   }
   else if (node["symmetry_boundary_condition"]) {
-    SymmetryBoundaryConditionData& symmetryBC = *new SymmetryBoundaryConditionData(*parent());
-    node >> symmetryBC;
-    NaluEnv::self().naluOutputP0() << "Symmetry BC name:    " << symmetryBC.bcName_
-                    << " on " << symmetryBC.targetName_ << std::endl;
+    this_bc = std::move(register_bc<SymmetryBoundaryConditionData>(node, boundaryConditions_));
+    NaluEnv::self().naluOutputP0()<<"Symmetry BC name:        " << this_bc->bcName_ \
+                    << " on " << this_bc->targetName_ << std::endl;
   }
   else if (node["abltop_boundary_condition"]) {
-    ABLTopBoundaryConditionData& abltopBC = *new ABLTopBoundaryConditionData(*parent());
-    node >> abltopBC;
-    NaluEnv::self().naluOutputP0() << "ABLTop BC name:    " << abltopBC.bcName_
-                    << " on " << abltopBC.targetName_ << std::endl;
+    this_bc = std::move(register_bc<ABLTopBoundaryConditionData>(node, boundaryConditions_));
+    NaluEnv::self().naluOutputP0()<<"ABLTop BC name:        " << this_bc->bcName_ \
+                    << " on " << this_bc->targetName_ << std::endl;
   }
   else if (node["periodic_boundary_condition"]) {
-    PeriodicBoundaryConditionData& periodicBC = *new PeriodicBoundaryConditionData(*parent());
-    node >> periodicBC;
-    NaluEnv::self().naluOutputP0() << "Periodic BC name:    " << periodicBC.bcName_
-                    << " between " << periodicBC.masterSlave_.master_
-                    << " and "<< periodicBC.masterSlave_.slave_ << std::endl;
+    this_bc = std::move(register_bc<PeriodicBoundaryConditionData>(node, boundaryConditions_));
+    auto* periodicBC = dynamic_cast<PeriodicBoundaryConditionData*>(this_bc.get());
+    NaluEnv::self().naluOutputP0() << "Periodic BC name:    " << periodicBC->bcName_
+                    << " between " << periodicBC->masterSlave_.master_
+                    << " and "<< periodicBC->masterSlave_.slave_ << std::endl;
   }
   else if (node["non_conformal_boundary_condition"]) {
-    NonConformalBoundaryConditionData& nonConformalBC = *new NonConformalBoundaryConditionData(*parent());
-    node >> nonConformalBC;
-    NaluEnv::self().naluOutputP0() << "NonConformal BC name:    " << nonConformalBC.bcName_
-                    << " using " << nonConformalBC.targetName_ << std::endl;
+    this_bc = std::move(register_bc<NonConformalBoundaryConditionData>(node, boundaryConditions_));
+    NaluEnv::self().naluOutputP0() << "NonConformal BC name:    " << this_bc->bcName_
+                    << " using " << this_bc->targetName_ << std::endl;
   }
   else if (node["overset_boundary_condition"]) {
-    OversetBoundaryConditionData& oversetBC = *new OversetBoundaryConditionData(*parent());
-    node >> oversetBC;
-    NaluEnv::self().naluOutputP0() << "Overset BC name: " << oversetBC.bcName_ << std::endl;
+    this_bc = std::move(register_bc<OversetBoundaryConditionData>(node, boundaryConditions_));
+    NaluEnv::self().naluOutputP0() << "Overset BC name: " << this_bc->bcName_ << std::endl;
   } 
   else {
     throw std::runtime_error("parser error BoundaryConditions::load: no such bc type");
   }
   return this_bc;
-// Avoid nvcc unreachable statement warnings
-#ifndef __CUDACC__
-  return 0;
-#endif
 }
 
   Simulation* BoundaryCondition::root() { return parent()->root(); }
