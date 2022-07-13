@@ -238,17 +238,17 @@ struct NonConformalUserData : public UserData {
 };
 
 struct WallBoundaryConditionData : public BoundaryCondition {
-  WallBoundaryConditionData(){};
+  WallBoundaryConditionData(BoundaryConditions& bcs) : BoundaryCondition(bcs){};
   WallUserData userData_;
 };
 
 struct InflowBoundaryConditionData : public BoundaryCondition {
-  InflowBoundaryConditionData(){};
+  InflowBoundaryConditionData(BoundaryConditions& bcs) : BoundaryCondition(bcs){};
   InflowUserData userData_;
 };
 
 struct OpenBoundaryConditionData : public BoundaryCondition {
-  OpenBoundaryConditionData(){};
+  OpenBoundaryConditionData(BoundaryConditions& bcs) : BoundaryCondition(bcs){};
   OpenUserData userData_;
 };
 
@@ -258,30 +258,30 @@ struct OversetBoundaryConditionData : public BoundaryCondition {
     OVERSET_NONE  = 1  ///< Guard for error messages
   };
 
-  OversetBoundaryConditionData(){};
+  OversetBoundaryConditionData(BoundaryConditions& bcs) : BoundaryCondition(bcs){};
   OversetUserData userData_;
   OversetAPI oversetConnectivityType_;
 };
 
 struct SymmetryBoundaryConditionData : public BoundaryCondition {
-  SymmetryBoundaryConditionData(){};
+  SymmetryBoundaryConditionData(BoundaryConditions& bcs) : BoundaryCondition(bcs){};
   SymmetryUserData userData_;
 };
 
 struct ABLTopBoundaryConditionData : public BoundaryCondition {
-  ABLTopBoundaryConditionData(){};
+  ABLTopBoundaryConditionData(BoundaryConditions& bcs) : BoundaryCondition(bcs){};
   ABLTopUserData userData_;
   SymmetryUserData symmetryUserData_;
 };
 
 struct PeriodicBoundaryConditionData : public BoundaryCondition {
-  PeriodicBoundaryConditionData(){};
+  PeriodicBoundaryConditionData(BoundaryConditions& bcs) : BoundaryCondition(bcs){};
   MasterSlave masterSlave_;
   PeriodicUserData userData_;
 };
 
 struct NonConformalBoundaryConditionData : public BoundaryCondition {
-  NonConformalBoundaryConditionData(){};
+  NonConformalBoundaryConditionData(BoundaryConditions& bcs) : BoundaryCondition(bcs){};
   std::vector<std::string> currentPartNameVec_;
   std::vector<std::string> opposingPartNameVec_;
   NonConformalUserData userData_;

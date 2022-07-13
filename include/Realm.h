@@ -432,7 +432,7 @@ class Realm {
 
   TimeIntegrator *timeIntegrator_;
 
-  BoundaryConditionVector boundaryConditions_;
+  BoundaryConditions boundaryConditions_;
   InitialConditions initialConditions_;
   MaterialPropertys materialPropertys_;
   
