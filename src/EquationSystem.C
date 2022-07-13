@@ -562,7 +562,7 @@ void EquationSystem::register_abltop_bc(
   const stk::topology &theTopo,
   const ABLTopBoundaryConditionData &abltopBCData)
 {
-  SymmetryBoundaryConditionData simData(abltopBCData.boundaryConditions_);
+  SymmetryBoundaryConditionData simData;
   register_symmetry_bc( part, theTopo, simData );
 }
 
