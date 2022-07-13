@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef ShearStressTransportEquationSystem_h
-#define ShearStressTransportEquationSystem_h
+#ifndef WilcoxKOmegaEquationSystem_h
+#define WilcoxKOmegaEquationSystem_h
 
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
@@ -28,14 +28,13 @@ class EquationSystems;
 class AlgorithmDriver;
 class TurbKineticEnergyEquationSystem;
 class SpecificDissipationRateEquationSystem;
-class GammaEquationSystem;
 
-class ShearStressTransportEquationSystem : public EquationSystem
+class WilcoxKOmegaEquationSystem : public EquationSystem
 {
 
 public:
-  ShearStressTransportEquationSystem(EquationSystems& equationSystems);
-  virtual ~ShearStressTransportEquationSystem();
+  WilcoxKOmegaEquationSystem(EquationSystems& equationSystems);
+  virtual ~WilcoxKOmegaEquationSystem();
 
   virtual void load(const YAML::Node&);
 
@@ -54,36 +53,24 @@ public:
 
   void initial_work();
   virtual void post_external_data_transfer_work();
-  void post_iter_work() final;
-  void pre_iter_work() final;
+  virtual void post_iter_work();
 
   void clip_min_distance_to_wall();
-  void compute_f_one_blending();
   void update_and_clip();
-  void update_and_clip_gamma();
-  void clip_sst(
+  void clip_ko(
     const stk::mesh::NgpMesh& ngpMesh,
     const stk::mesh::Selector& sel,
     stk::mesh::NgpField<double>& tke,
     stk::mesh::NgpField<double>& sdr);
-  void clip_sst_gamma(
-    const stk::mesh::NgpMesh& ngpMesh,
-    const stk::mesh::Selector& sel,
-    stk::mesh::NgpField<double>& gamma);
 
   TurbKineticEnergyEquationSystem* tkeEqSys_;
   SpecificDissipationRateEquationSystem* sdrEqSys_;
-  GammaEquationSystem* gammaEqSys_;
 
   ScalarFieldType* tke_;
   ScalarFieldType* sdr_;
-  ScalarFieldType* gamma_;
   ScalarFieldType* minDistanceToWall_;
-  ScalarFieldType* fOneBlending_;
-  ScalarFieldType* maxLengthScale_;
 
   bool isInit_;
-  AlgorithmDriver* sstMaxLengthScaleAlgDriver_;
 
   // saved of mesh parts that are for wall bcs
   std::vector<stk::mesh::Part*> wallBcPart_;
@@ -92,8 +79,6 @@ public:
 
   const double tkeMinValue_{1.0e-8};
   const double sdrMinValue_{1.0e-8};
-  const double gammaMinValue_{0.0};
-  const double gammaMaxValue_{1.0};
 };
 
 } // namespace nalu

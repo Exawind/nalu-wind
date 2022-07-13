@@ -23,6 +23,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/AuxFunctionAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AveragingInfo.C
    ${CMAKE_CURRENT_SOURCE_DIR}/BoundaryConditions.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ChienKEpsilonEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeHeatTransferEdgeWallAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotNonConformalAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeSSTMaxLengthScaleElemAlgorithm.C
@@ -86,6 +87,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentAlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentWallFunctionAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TimeIntegrator.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/TotalDissipationRateEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystemHelpers.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraSegregatedLinearSystem.C
@@ -94,6 +96,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscWaleAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbulenceAveragingPostProcessing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/WallDistEquationSystem.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/WilcoxKOmegaEquationSystem.C
 )
 
 if(ENABLE_FFTW)

@@ -7,13 +7,11 @@
 // for more details.
 //
 
-
-#ifndef TKEKSGSNODEKERNEL_H
-#define TKEKSGSNODEKERNEL_H
+#ifndef TKEKENODEKERNEL_H
+#define TKEKENODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
 #include "FieldTypeDef.h"
-
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpField.hpp"
@@ -24,15 +22,15 @@ namespace nalu {
 
 class Realm;
 
-class TKEKsgsNodeKernel : public NGPNodeKernel<TKEKsgsNodeKernel>
+class TKEKENodeKernel : public NGPNodeKernel<TKEKENodeKernel>
 {
 public:
-  TKEKsgsNodeKernel(const stk::mesh::MetaData&);
+  TKEKENodeKernel(const stk::mesh::MetaData&);
 
-  TKEKsgsNodeKernel() = delete;
+  TKEKENodeKernel() = delete;
 
   KOKKOS_DEFAULTED_FUNCTION
-  virtual ~TKEKsgsNodeKernel() = default;
+  virtual ~TKEKENodeKernel() = default;
 
   virtual void setup(Realm&) override;
 
@@ -44,27 +42,30 @@ public:
 
 private:
   stk::mesh::NgpField<double> tke_;
-  stk::mesh::NgpField<double> sdr_;
+  stk::mesh::NgpField<double> tdr_;
   stk::mesh::NgpField<double> density_;
+  stk::mesh::NgpField<double> visc_;
   stk::mesh::NgpField<double> tvisc_;
   stk::mesh::NgpField<double> dudx_;
+  stk::mesh::NgpField<double> wallDist_;
   stk::mesh::NgpField<double> dualNodalVolume_;
 
-  unsigned tkeID_             {stk::mesh::InvalidOrdinal};
-  //unsigned sdrID_             {stk::mesh::InvalidOrdinal};
-  unsigned densityID_         {stk::mesh::InvalidOrdinal};
-  unsigned tviscID_           {stk::mesh::InvalidOrdinal};
-  unsigned dudxID_            {stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
+  unsigned tkeID_{stk::mesh::InvalidOrdinal};
+  unsigned tdrID_{stk::mesh::InvalidOrdinal};
+  unsigned densityID_{stk::mesh::InvalidOrdinal};
+  unsigned tviscID_{stk::mesh::InvalidOrdinal};
+  unsigned viscID_{stk::mesh::InvalidOrdinal};
+  unsigned dudxID_{stk::mesh::InvalidOrdinal};
+  unsigned wallDistID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
 
-  NodeKernelTraits::DblType cEps_;
+  NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
 
   const int nDim_;
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
-
-#endif /* TKEKSGSNODEKERNEL_H */
+#endif /* TKEKENODEKERNEL_H */

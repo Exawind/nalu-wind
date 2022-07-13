@@ -42,9 +42,6 @@ TKEKsgsNodeKernel::setup(Realm& realm)
   dudx_            = fieldMgr.get_field<double>(dudxID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
 
-  const std::string dofName = "turbulent_ke";
-  relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
-
   // Update turbulence model constants
   cEps_ = realm.get_turb_model_constant(TM_cEps);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);

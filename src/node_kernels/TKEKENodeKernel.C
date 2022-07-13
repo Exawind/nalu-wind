@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include "node_kernels/TKESSTNodeKernel.h"
+#include "node_kernels/TKEKENodeKernel.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "SimdInterface.h"
@@ -19,39 +19,41 @@
 namespace sierra {
 namespace nalu {
 
-TKESSTNodeKernel::TKESSTNodeKernel(const stk::mesh::MetaData& meta)
-  : NGPNodeKernel<TKESSTNodeKernel>(),
+TKEKENodeKernel::TKEKENodeKernel(const stk::mesh::MetaData& meta)
+  : NGPNodeKernel<TKEKENodeKernel>(),
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
-    sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
+    tdrID_(get_field_ordinal(meta, "total_dissipation_rate")),
     densityID_(get_field_ordinal(meta, "density")),
     tviscID_(get_field_ordinal(meta, "turbulent_viscosity")),
+    viscID_(get_field_ordinal(meta, "viscosity")),
     dudxID_(get_field_ordinal(meta, "dudx")),
+    wallDistID_(get_field_ordinal(meta, "minimum_distance_to_wall")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     nDim_(meta.spatial_dimension())
 {
 }
 
 void
-TKESSTNodeKernel::setup(Realm& realm)
+TKEKENodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
 
   tke_ = fieldMgr.get_field<double>(tkeID_);
-  sdr_ = fieldMgr.get_field<double>(sdrID_);
+  tdr_ = fieldMgr.get_field<double>(tdrID_);
   density_ = fieldMgr.get_field<double>(densityID_);
+  visc_ = fieldMgr.get_field<double>(viscID_);
   tvisc_ = fieldMgr.get_field<double>(tviscID_);
   dudx_ = fieldMgr.get_field<double>(dudxID_);
+  wallDist_ = fieldMgr.get_field<double>(wallDistID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
 
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
-  tkeAmb_ = realm.get_turb_model_constant(TM_tkeAmb);
-  sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
 }
 
 void
-TKESSTNodeKernel::execute(
+TKEKENodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
@@ -61,9 +63,11 @@ TKESSTNodeKernel::execute(
   // See https://turbmodels.larc.nasa.gov/sst.html for details
 
   const DblType tke = tke_.get(node, 0);
-  const DblType sdr = sdr_.get(node, 0);
+  const DblType tdr = tdr_.get(node, 0);
   const DblType density = density_.get(node, 0);
   const DblType tvisc = tvisc_.get(node, 0);
+  const DblType visc = visc_.get(node, 0);
+  const DblType wallDist = wallDist_.get(node, 0);
   const DblType dVol = dualNodalVolume_.get(node, 0);
 
   DblType Pk = 0.0;
@@ -75,16 +79,14 @@ TKESSTNodeKernel::execute(
     }
   }
   Pk *= tvisc;
-  const DblType Dk = betaStar_ * density * sdr * tke;
 
-  // Clip production term and prevent Pk from being negative
-  Pk = stk::math::min(tkeProdLimitRatio_ * Dk, stk::math::max(Pk, 0.0));
+  DblType Dk = density * tdr;
 
-  // SUST source term
-  const DblType Dkamb = betaStar_ * density * sdrAmb_ * tkeAmb_;
+  const DblType lFac = 2.0 * visc / wallDist / wallDist;
+  DblType Lk = -lFac * tke;
 
-  rhs(0) += (Pk - Dk + Dkamb) * dVol;
-  lhs(0, 0) += betaStar_ * density * sdr * dVol;
+  rhs(0) += (Pk - Dk + Lk) * dVol;
+  lhs(0, 0) += lFac * dVol;
 }
 
 } // namespace nalu

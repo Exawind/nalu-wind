@@ -116,6 +116,8 @@
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 #include "ngp_algorithms/TurbViscKsgsAlg.h"
 #include "ngp_algorithms/TurbViscSSTAlg.h"
+#include "ngp_algorithms/TurbViscKEAlg.h"
+#include "ngp_algorithms/TurbViscKOAlg.h"
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
 #include "ngp_algorithms/DynamicPressureOpenAlg.h"
 #include "ngp_algorithms/MomentumABLWallFuncMaskUtil.h"
@@ -1488,6 +1490,14 @@ MomentumEquationSystem::register_interior_algorithm(
 
       case TurbulenceModel::SST_AMS:
         tviscAlg_.reset(new TurbViscSSTAlg(realm_, part, tvisc_, true));
+        break;
+
+      case TurbulenceModel::KE:
+        tviscAlg_.reset(new TurbViscKEAlg(realm_, part, tvisc_));
+        break;
+
+      case TurbulenceModel::KO:
+        tviscAlg_.reset(new TurbViscKOAlg(realm_, part, tvisc_));
         break;
 
       default:

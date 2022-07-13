@@ -59,7 +59,9 @@
 #include <node_kernels/TKESSTDESNodeKernel.h>
 #include <node_kernels/TKESSTIDDESNodeKernel.h>
 #include <node_kernels/TKESSTNodeKernel.h>
+#include <node_kernels/TKEKENodeKernel.h>
 #include <node_kernels/TKERodiNodeKernel.h>
+#include <node_kernels/TKEKONodeKernel.h>
 
 // ngp
 #include <ngp_utils/NgpLoopUtils.h>
@@ -146,7 +148,7 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
   if (!check_for_valid_turblence_model(turbulenceModel_)) {
     throw std::runtime_error(
       "User has requested TurbKinEnergyEqs, however, turbulence model is not "
-      "KSGS, SST, SST_DES, SST_IDDES, or SST_AMS");
+      "KSGS, SST, SST_DES, SST_IDDES, KE, SST_AMS, or KO");
   }
 
   // create projected nodal gradient equation system
@@ -165,6 +167,8 @@ TurbKineticEnergyEquationSystem::check_for_valid_turblence_model(
   case TurbulenceModel::SST_DES:
   case TurbulenceModel::SST_AMS:
   case TurbulenceModel::SST_IDDES:
+  case TurbulenceModel::KE:
+  case TurbulenceModel::KO:
     return true;
   default:
     return false;
@@ -300,6 +304,11 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
           break;
         case TurbulenceModel::SST_IDDES:
           nodeAlg.add_kernel<TKESSTIDDESNodeKernel>(realm_.meta_data());
+        case TurbulenceModel::KE:
+          nodeAlg.add_kernel<TKEKENodeKernel>(realm_.meta_data());
+          break;
+        case TurbulenceModel::KO:
+          nodeAlg.add_kernel<TKEKONodeKernel>(realm_.meta_data());
           break;
         default:
           std::runtime_error("TKEEqSys: Invalid turbulence model");
@@ -347,6 +356,19 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         realm_, part, visc_, tvisc_, evisc_, sigmaKOne, sigmaKTwo));
       break;
     }
+    case TurbulenceModel::KO: {
+      effDiffFluxCoeffAlg_.reset(new EffDiffFluxCoeffAlg(
+        realm_, part, visc_, tvisc_, evisc_, 1.0, 2.0, realm_.is_turbulent()));
+      break;
+    }
+    case TurbulenceModel::KE: {
+      const double sigmaK = realm_.get_turb_model_constant(TM_sigmaK);
+      effDiffFluxCoeffAlg_.reset(new EffDiffFluxCoeffAlg(
+        realm_, part, visc_, tvisc_, evisc_, 1.0, sigmaK,
+        realm_.is_turbulent()));
+      break;
+    }
+
     default:
       throw std::runtime_error("Unsupported turbulence model in TurbKe");
     }
@@ -774,6 +796,8 @@ TurbKineticEnergyEquationSystem::initial_work()
     (meta.locally_owned_part() | meta.globally_shared_part())
     & stk::mesh::selectField(*tke_);
 
+  ngpTke.sync_to_device();
+
   nalu_ngp::run_entity_algorithm(
     "clip_tke",
     ngpMesh, stk::topology::NODE_RANK, sel,
@@ -801,6 +825,8 @@ TurbKineticEnergyEquationSystem::post_external_data_transfer_work()
   const stk::mesh::Selector sel =
     (meta.locally_owned_part() | meta.globally_shared_part())
     & stk::mesh::selectField(*tke_);
+
+  ngpTke.sync_to_device();
 
   nalu_ngp::run_entity_algorithm(
     "clip_tke",
@@ -874,6 +900,8 @@ TurbKineticEnergyEquationSystem::update_and_clip()
     kTmp_->mesh_meta_data_ordinal());
   auto ngpTke = fieldMgr.get_field<double>(
     tke_->mesh_meta_data_ordinal());
+
+  ngpTke.sync_to_device();
 
   nalu_ngp::run_entity_par_reduce(
     "tke_update_and_clip",

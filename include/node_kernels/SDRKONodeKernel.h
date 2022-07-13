@@ -7,9 +7,8 @@
 // for more details.
 //
 
-
-#ifndef TKEKSGSNODEKERNEL_H
-#define TKEKSGSNODEKERNEL_H
+#ifndef SDRKONODEKERNEL_H
+#define SDRKONODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
 #include "FieldTypeDef.h"
@@ -24,15 +23,15 @@ namespace nalu {
 
 class Realm;
 
-class TKEKsgsNodeKernel : public NGPNodeKernel<TKEKsgsNodeKernel>
+class SDRKONodeKernel : public NGPNodeKernel<SDRKONodeKernel>
 {
 public:
-  TKEKsgsNodeKernel(const stk::mesh::MetaData&);
+  SDRKONodeKernel(const stk::mesh::MetaData&);
 
-  TKEKsgsNodeKernel() = delete;
+  SDRKONodeKernel() = delete;
 
   KOKKOS_DEFAULTED_FUNCTION
-  virtual ~TKEKsgsNodeKernel() = default;
+  virtual ~SDRKONodeKernel() = default;
 
   virtual void setup(Realm&) override;
 
@@ -47,24 +46,34 @@ private:
   stk::mesh::NgpField<double> sdr_;
   stk::mesh::NgpField<double> density_;
   stk::mesh::NgpField<double> tvisc_;
+  stk::mesh::NgpField<double> visc_;
   stk::mesh::NgpField<double> dudx_;
+  stk::mesh::NgpField<double> dkdx_;
+  stk::mesh::NgpField<double> dwdx_;
   stk::mesh::NgpField<double> dualNodalVolume_;
 
-  unsigned tkeID_             {stk::mesh::InvalidOrdinal};
-  //unsigned sdrID_             {stk::mesh::InvalidOrdinal};
-  unsigned densityID_         {stk::mesh::InvalidOrdinal};
-  unsigned tviscID_           {stk::mesh::InvalidOrdinal};
-  unsigned dudxID_            {stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
+  unsigned tkeID_{stk::mesh::InvalidOrdinal};
+  unsigned sdrID_{stk::mesh::InvalidOrdinal};
+  unsigned densityID_{stk::mesh::InvalidOrdinal};
+  unsigned tviscID_{stk::mesh::InvalidOrdinal};
+  unsigned viscID_{stk::mesh::InvalidOrdinal};
+  unsigned dudxID_{stk::mesh::InvalidOrdinal};
+  unsigned dkdxID_{stk::mesh::InvalidOrdinal};
+  unsigned dwdxID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
 
-  NodeKernelTraits::DblType cEps_;
+  NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
+  NodeKernelTraits::DblType sigmaWTwo_;
+  NodeKernelTraits::DblType betaOne_;
+  NodeKernelTraits::DblType betaTwo_;
+  NodeKernelTraits::DblType gammaOne_;
+  NodeKernelTraits::DblType gammaTwo_;
 
   const int nDim_;
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
-
-#endif /* TKEKSGSNODEKERNEL_H */
+#endif /* SDRKONODEKERNEL_H */

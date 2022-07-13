@@ -622,17 +622,30 @@ namespace YAML
     return true;
   }
 
- bool convert<sierra::nalu::GammaInf>::decode(const Node& node,
-     sierra::nalu::GammaInf& gamma)
-   {
-     if (!node.IsScalar())
-     {
-       return false;
-     }
+  bool
+  convert<sierra::nalu::TotDissRate>::decode(
+    const Node& node, sierra::nalu::TotDissRate& tdr)
+  {
+    if (!node.IsScalar()) {
+      return false;
+    }
 
-     gamma.gamma_ = node.as<double>();
+    tdr.totDissRate_ = node.as<double>();
 
-     return true;
+    return true;
+  }
+
+  bool
+  convert<sierra::nalu::GammaInf>::decode(
+    const Node& node, sierra::nalu::GammaInf& gamma)
+  {
+    if (!node.IsScalar()) {
+      return false;
+    }
+
+    gamma.gamma_ = node.as<double>();
+
+    return true;
    }
 
   bool convert<sierra::nalu::Temperature>::decode(const Node& node,
@@ -754,6 +767,13 @@ namespace YAML
       wallData.tke_ = node["turbulent_ke"].as<sierra::nalu::TurbKinEnergy>();
       wallData.bcDataSpecifiedMap_["turbulent_ke"] = true;
       wallData.bcDataTypeMap_["turbulent_ke"] = sierra::nalu::CONSTANT_UD;
+    }
+    if (node["total_dissipation_rate"]) {
+      wallData.tdr_ =
+        node["total_dissipation_rate"].as<sierra::nalu::TotDissRate>();
+      wallData.bcDataSpecifiedMap_["total_dissipation_rate"] = true;
+      wallData.bcDataTypeMap_["total_dissipation_rate"] =
+        sierra::nalu::CONSTANT_UD;
     }
     if (node["temperature"])
     {
@@ -932,6 +952,11 @@ namespace YAML
           sierra::nalu::SpecDissRate>();
       inflowData.sdrSpec_ = true;
     }
+    if (node["total_dissipation_rate"]) {
+      inflowData.tdr_ =
+        node["total_dissipation_rate"].as<sierra::nalu::TotDissRate>();
+      inflowData.tdrSpec_ = true;
+    }
     if (node["mixture_fraction"])
     {
       inflowData.mixFrac_ = node["mixture_fraction"].as<
@@ -1007,6 +1032,11 @@ namespace YAML
       openData.sdr_ = node["specific_dissipation_rate"].as<
           sierra::nalu::SpecDissRate>();
       openData.sdrSpec_ = true;
+    }
+    if (node["total_dissipation_rate"]) {
+      openData.tdr_ =
+        node["total_dissipation_rate"].as<sierra::nalu::TotDissRate>();
+      openData.tdrSpec_ = true;
     }
     if (node["pressure"])
     {

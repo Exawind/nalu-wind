@@ -168,6 +168,18 @@ struct TrigFieldFunction
       std::sin(a * pi * z));
   }
 
+  void tdr(const double* coords, double* qField) const
+  {
+    double x = coords[0];
+    double y = coords[1];
+    double z = coords[2];
+
+    qField[0] = 2*tdrnot + tdrnot * (
+      std::cos(a * pi * x) *
+      std::sin(a * pi * y) *
+      std::sin(a * pi * z));
+  }
+
   void dwdx(const double* coords, double* qField) const
   {
     const double x = coords[0];
@@ -235,6 +247,12 @@ struct TrigFieldFunction
     qField[0] = 10*x+10;
   }
 
+  void dplus_wall_function(const double* coords, double* qField) const
+  {
+    double x = coords[0];
+    qField[0] = 2*x+2;
+  }
+
   void dhdx(const double* /*coords*/, double* qField) const
   {
     qField[0] = 30.0;
@@ -272,6 +290,9 @@ private:
 
   /// Factor for sdr field
   static constexpr double sdrnot{1.0};
+
+  /// Factor for tdr field
+  static constexpr double tdrnot{1.0};
 
   /// Factor for tvisc field
   static constexpr double tviscnot{1.0};
@@ -318,6 +339,8 @@ void init_trigonometric_field(
     funcPtr = &TrigFieldFunction::dkdx;
   else if (fieldName == "specific_dissipation_rate")
     funcPtr = &TrigFieldFunction::sdr;
+  else if (fieldName == "total_dissipation_rate")
+    funcPtr = &TrigFieldFunction::tdr;
   else if (fieldName == "dwdx")
     funcPtr = &TrigFieldFunction::dwdx;
   else if (fieldName == "dhdx")
@@ -330,6 +353,8 @@ void init_trigonometric_field(
     funcPtr = &TrigFieldFunction::sst_f_one_blending;
   else if (fieldName == "minimum_distance_to_wall")
     funcPtr = &TrigFieldFunction::minimum_distance_to_wall;
+  else if (fieldName == "dplus_wall_function")
+    funcPtr = &TrigFieldFunction::dplus_wall_function;
   else
     funcPtr = nullptr;
 
@@ -461,6 +486,14 @@ void sdr_test_function(
   init_trigonometric_field(bulk, coordinates, sdr);
 }
 
+void tdr_test_function(
+  const stk::mesh::BulkData& bulk,
+  const VectorFieldType& coordinates,
+  ScalarFieldType& tdr)
+{
+  init_trigonometric_field(bulk, coordinates, tdr);
+}
+
 void dwdx_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
@@ -498,6 +531,14 @@ void minimum_distance_to_wall_test_function(
   ScalarFieldType& minimum_distance_to_wall)
 {
   init_trigonometric_field(bulk, coordinates, minimum_distance_to_wall);
+}
+
+void dplus_test_function(
+  const stk::mesh::BulkData& bulk,
+  const VectorFieldType& coordinates,
+  ScalarFieldType& dplus)
+{
+  init_trigonometric_field(bulk, coordinates, dplus);
 }
 
 void property_from_mixture_fraction_test_function(

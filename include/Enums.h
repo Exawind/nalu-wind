@@ -74,15 +74,16 @@ enum EquationType {
   EQ_ENTHALPY = 6,
   EQ_MESH_DISPLACEMENT = 7,
   EQ_SPEC_DISS_RATE = 8,
-  EQ_MASS_FRACTION = 9,
-  EQ_PNG   = 10,
-  EQ_PNG_P = 11,
-  EQ_PNG_Z = 12,
-  EQ_PNG_H = 13,
-  EQ_PNG_U = 14,
-  EQ_PNG_TKE = 15, // FIXME... Last PNG managed like this..
-  EQ_WALL_DISTANCE = 16,
-  EQ_GAMMA_TRANS = 17,
+  EQ_TOT_DISS_RATE = 9,
+  EQ_MASS_FRACTION = 10,
+  EQ_PNG = 11,
+  EQ_PNG_P = 12,
+  EQ_PNG_Z = 13,
+  EQ_PNG_H = 14,
+  EQ_PNG_U = 15,
+  EQ_PNG_TKE = 16, // FIXME... Last PNG managed like this..
+  EQ_WALL_DISTANCE = 17,
+  EQ_GAMMA_TRANS = 18,
   EquationSystemType_END
 };
 
@@ -96,6 +97,7 @@ static const std::string EquationTypeMap[] = {
   "Enthalpy",
   "MeshVelocity",
   "Specific_Dissipation_Rate",
+  "Total_Dissipation_Rate",
   "Mass_Fraction",
   "PNG",
   "PNG_P",
@@ -103,8 +105,7 @@ static const std::string EquationTypeMap[] = {
   "PNG_H",
   "PNG_U",
   "PNG_TKE",
-  "Wall_Distance"
-};
+  "Wall_Distance"};
 
 enum UserDataType {
   CONSTANT_UD = 0,
@@ -166,19 +167,15 @@ enum class TurbulenceModel {
   SST_DES,
   SST_AMS,
   SST_IDDES,
+  KE,
+  KO,
   TurbulenceModel_END
 };
 
 // matching string name index into above enums (must match PERFECTLY)
 static const std::string TurbulenceModelNames[] = {
-  "laminar",
-  "ksgs",
-  "smagorinsky",
-  "wale",
-  "sst",
-  "sst_des",
-  "sst_ams",
-  "sst_iddes"};
+  "laminar", "ksgs",      "smagorinsky", "wale", "sst", "sst_des",
+  "sst_ams", "sst_iddes",   "ke",  "ko"};
 
 enum TurbulenceModelConstant {
   TM_cMu = 0,
@@ -234,15 +231,23 @@ enum TurbulenceModelConstant {
   TM_ams_peclet_offset = 50,
   TM_ams_peclet_slope = 51,
   TM_ams_peclet_scale = 52,
-  TM_tkeAmb = 53,
-  TM_sdrAmb = 54,
-  TM_caOne = 55,
-  TM_caTwo = 56,
-  TM_ceOne = 57,
-  TM_ceTwo = 58,
-  TM_c0t = 59,
-  TM_avgTimeCoeff = 60,
-  TM_END = 61
+  TM_fMuExp = 53,
+  TM_utau = 54,
+  TM_cEpsOne = 55,
+  TM_cEpsTwo = 56,
+  TM_fOne = 57,
+  TM_sigmaK = 58,
+  TM_sigmaEps = 59,
+  TM_tkeAmb = 60,
+  TM_sdrAmb = 61,
+  TM_avgTimeCoeff = 62,
+  TM_alphaInf = 63,
+  TM_caOne = 64,
+  TM_caTwo = 65,
+  TM_ceOne = 66,
+  TM_ceTwo = 67,
+  TM_c0t = 68,
+  TM_END = 69
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
@@ -299,9 +304,22 @@ static const std::string TurbulenceModelConstantNames[] = {
   "ams_peclet_offset",
   "ams_peclet_slope",
   "ams_peclet_scale",
+  "fMuExp",
+  "utau",
+  "cEpsOne",
+  "cEpsTwo",
+  "fOne",
+  "sigmaK",
+  "sigmaEps",
   "tke_amb",
   "sdr_amb",
   "avgTimeCoeff",
+  "alphaInf",
+  "caOne",
+  "caTwo",
+  "ceOne",
+  "ceTwo",
+  "c0t",
   "END"};
 
 enum ActuatorType {

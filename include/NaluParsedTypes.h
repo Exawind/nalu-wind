@@ -54,6 +54,12 @@ struct SpecDissRate {
   {}
 };
 
+struct TotDissRate
+{
+  double totDissRate_;
+  TotDissRate() : totDissRate_(0.0) {}
+};
+
 struct GammaInf {
   double gamma_;
   GammaInf()
