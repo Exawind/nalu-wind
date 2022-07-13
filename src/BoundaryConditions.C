@@ -123,28 +123,6 @@ BoundaryCondition::load(const YAML::Node& node)
   return this_bc;
 }
 
-Simulation*
-BoundaryCondition::root()
-{
-  return parent()->root();
-}
-BoundaryConditions*
-BoundaryCondition::parent()
-{
-  return &boundaryConditions_;
-}
-
-Simulation*
-BoundaryConditions::root()
-{
-  return parent()->root();
-}
-Realm*
-BoundaryConditions::parent()
-{
-  return &realm_;
-}
-
 void
 BoundaryConditions::load(const YAML::Node& node)
 {
@@ -152,14 +130,11 @@ BoundaryConditions::load(const YAML::Node& node)
 
   if (node["boundary_conditions"]) {
     const YAML::Node boundary_conditions = node["boundary_conditions"];
-    for (size_t iboundary_condition = 0;
-         iboundary_condition < boundary_conditions.size();
-         ++iboundary_condition) {
-      const YAML::Node boundary_condition_node =
-        boundary_conditions[iboundary_condition];
-      boundaryConditionVector_.emplace_back(
-        bc_factory.load(boundary_condition_node));
+
+    for (auto&& bc_node : boundary_conditions) {
+      boundaryConditionVector_.emplace_back(bc_factory.load(bc_node));
     }
+
   } else {
     throw std::runtime_error("parser error BoundaryConditions::load");
   }

@@ -37,8 +37,6 @@ class BoundaryCondition {
   virtual ~BoundaryCondition() {}
 
   std::unique_ptr<BoundaryCondition> load(const YAML::Node& node);
-  Simulation *root();
-  BoundaryConditions *parent();
 
   std::string bcName_;
   std::string targetName_;
@@ -58,9 +56,6 @@ public:
 
   // TODO(psakiev) Delete this unused function
   void breadboard() {}
-
-  Simulation* root();
-  Realm* parent();
 
   // ease of access methods to particular boundary condition
   size_t size() { return boundaryConditionVector_.size(); }
