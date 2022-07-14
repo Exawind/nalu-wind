@@ -74,7 +74,7 @@ TEST(SpinnerLidar, volume_interp)
 
   io.set_bulk_data(bulk);
 
-  const int n = 64;
+  const int n = 16;
   const auto nx = std::to_string(n);
   const auto ny = std::to_string(n);
   const auto nz = std::to_string(n / 2);

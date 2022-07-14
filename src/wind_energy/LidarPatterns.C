@@ -68,9 +68,7 @@ rotate_euler_vec(
   const std::array<double, 3>& axis, double angle, std::array<double, 3> vec)
 {
   enum { XH = 0, YH = 1, ZH = 2 };
-
   normalize_vec3(vec.data());
-
   std::array<double, 9> nX = {
     {0, -axis[ZH], +axis[YH], +axis[ZH], 0, -axis[XH], -axis[YH], +axis[XH],
      0}};
@@ -184,6 +182,14 @@ ScanningLidarSegmentGenerator::load(const YAML::Node& node)
     ground_normal_ = to_array3(node["ground_direction"].as<Coordinates>());
     normalize_vec3(ground_normal_.data());
   }
+
+  if (node["elevation_angles"]) {
+    elevation_table_ = node["elevation_angles"].as<std::vector<double>>();
+    std::transform(
+      elevation_table_.cbegin(), elevation_table_.cend(),
+      elevation_table_.begin(), convert::degrees_to_radians);
+  }
+
   end_of_forward_phase_ = determine_end_of_forward_phase();
 }
 
@@ -192,6 +198,20 @@ ScanningLidarSegmentGenerator::periodic_time(double time) const
 {
   const double total_sweep_time = end_of_forward_phase_ + reset_time_delta_;
   return time - std::floor(time / total_sweep_time) * total_sweep_time;
+}
+
+int
+ScanningLidarSegmentGenerator::periodic_count(double time) const
+{
+  const double total_sweep_time = end_of_forward_phase_ + reset_time_delta_;
+  return std::floor(time / total_sweep_time);
+}
+
+double
+ScanningLidarSegmentGenerator::determine_elevation_angle(int count) const
+{
+  const int orientation = (dir_ == direction::CLOCKWISE) ? -1 : 1;
+  return orientation * elevation_table_.at(count % elevation_table_.size());
 }
 
 ScanningLidarSegmentGenerator::phase
@@ -230,6 +250,14 @@ ScanningLidarSegmentGenerator::determine_current_angle(
            : angle_if_during_reset(periodic_time);
 }
 
+std::array<double, 3>
+cross(std::array<double, 3> u, std::array<double, 3> v)
+{
+  return {
+    u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2],
+    u[0] * v[1] - u[1] * v[0]};
+}
+
 Segment
 ScanningLidarSegmentGenerator::generate(double time) const
 {
@@ -239,8 +267,14 @@ ScanningLidarSegmentGenerator::generate(double time) const
    starting angle (-sweep angle/2) over some finite period of time.
   */
   const auto tail = center_;
-  const auto sight_vector = rotate_euler_vec(
-    ground_normal_, determine_current_angle(periodic_time(time)), axis_);
+  const auto yaw_angle = determine_current_angle(periodic_time(time));
+  const auto pitch_angle = determine_elevation_angle(periodic_count(time));
+
+  const auto yaxis = cross(axis_, ground_normal_);
+  const auto xprime = rotate_euler_vec(yaxis, pitch_angle, axis_);
+  const auto zprime = rotate_euler_vec(yaxis, pitch_angle, ground_normal_);
+  const auto sight_vector = rotate_euler_vec(zprime, yaw_angle, xprime);
+
   const auto tip = affine(center_, beam_length_, sight_vector);
   return Segment{tip, tail};
 }
