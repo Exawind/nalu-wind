@@ -313,7 +313,7 @@ TimeIntegrator::integrate_realm()
 
   bool update_overset = false;
   for (auto* realm: realmVec_) {
-    if (realm->has_mesh_motion()) {
+    if (realm->does_mesh_move()) {
       update_overset = true;
       break;
     }

@@ -40,6 +40,8 @@ void FrameBase::load(const YAML::Node& node)
   // get any part names associated with current motion group
   populate_part_vec(node);
 
+  return;
+
   // check if centroid needs to be computed
   get_if_present(node, "compute_centroid", computeCentroid_, computeCentroid_);
 
@@ -81,6 +83,8 @@ void FrameBase::load(const YAML::Node& node)
 void FrameBase::populate_part_vec(const YAML::Node& node)
 {
 
+  return ;
+  
   if (!node["mesh_parts"]) {
     throw std::runtime_error(
       "FrameBase: No mesh parts found.");
@@ -107,6 +111,10 @@ void FrameBase::populate_part_vec(const YAML::Node& node)
       }
     }
   }
+
+  partNamesVec.push_back("blade1-HEX");
+  partNamesVec.push_back("blade2-HEX");
+  partNamesVec.push_back("blade3-HEX");
 
   // store all parts associated with current motion frame
   int numParts = partNamesVec.size();

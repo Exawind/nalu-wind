@@ -201,7 +201,7 @@ void OpenfastFSI::initialize(double dtNalu, double restartFreqNalu, double curTi
 
         compute_mapping();
         if (FAST.isTimeZero()) {
-            send_loads(0.0);
+            //send_loads(0.0);
             FAST.solution0();
         }
         get_displacements(curTime);
@@ -291,14 +291,14 @@ void OpenfastFSI::predict_struct_states()
 
 void OpenfastFSI::predict_struct_timestep(const double curTime)
 {
-    send_loads(curTime);
-    FAST.update_states_driver_time_step();
+    //send_loads(curTime);
+    // FAST.update_states_driver_time_step();
 }
 
 void OpenfastFSI::advance_struct_timestep(const double curTime)
 {
     
-    FAST.advance_to_next_driver_time_step();
+    // FAST.advance_to_next_driver_time_step();
 
     tStep_ += 1;
     
@@ -350,12 +350,12 @@ void OpenfastFSI::get_displacements(double current_time) {
         if(fsiTurbineData_[i] != NULL) {// This may not be a turbine intended for blade-resolved simulation
             int turbProc = fsiTurbineData_[i]->getProc();
             if (bulk_.parallel_rank() == turbProc) {
-                FAST.getTowerDisplacements(fsiTurbineData_[i]->brFSIdata_.twr_def, fsiTurbineData_[i]->brFSIdata_.twr_vel, i);
-                FAST.getBladeDisplacements(fsiTurbineData_[i]->brFSIdata_.bld_def, fsiTurbineData_[i]->brFSIdata_.bld_vel, i);
-                FAST.getBladeRootDisplacements(fsiTurbineData_[i]->brFSIdata_.bld_root_def, i);
-                FAST.getBladePitch(fsiTurbineData_[i]->brFSIdata_.bld_pitch, i);
-                FAST.getHubDisplacement(fsiTurbineData_[i]->brFSIdata_.hub_def, fsiTurbineData_[i]->brFSIdata_.hub_vel, i);
-                FAST.getNacelleDisplacement(fsiTurbineData_[i]->brFSIdata_.nac_def, fsiTurbineData_[i]->brFSIdata_.nac_vel, i);
+                // FAST.getTowerDisplacements(fsiTurbineData_[i]->brFSIdata_.twr_def, fsiTurbineData_[i]->brFSIdata_.twr_vel, i);
+                // FAST.getBladeDisplacements(fsiTurbineData_[i]->brFSIdata_.bld_def, fsiTurbineData_[i]->brFSIdata_.bld_vel, i);
+                // FAST.getBladeRootDisplacements(fsiTurbineData_[i]->brFSIdata_.bld_root_def, i);
+                // FAST.getBladePitch(fsiTurbineData_[i]->brFSIdata_.bld_pitch, i);
+                // FAST.getHubDisplacement(fsiTurbineData_[i]->brFSIdata_.hub_def, fsiTurbineData_[i]->brFSIdata_.hub_vel, i);
+                // FAST.getNacelleDisplacement(fsiTurbineData_[i]->brFSIdata_.nac_def, fsiTurbineData_[i]->brFSIdata_.nac_vel, i);
             }
 
             int iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.twr_def.data(), (fsiTurbineData_[i]->params_.nBRfsiPtsTwr)*6, MPI_DOUBLE, turbProc, bulk_.parallel());
@@ -416,10 +416,10 @@ void OpenfastFSI::get_displacements(double current_time) {
             //     bld_bm_mesh.close();
             // }
 
-//            fsiTurbineData_[i]->setSampleDisplacement(current_time);
+            //fsiTurbineData_[i]->setSampleDisplacement(current_time);
 
             //For testing purposes
-//            fsiTurbineData_[i]->setRefDisplacement(current_time);
+            //fsiTurbineData_[i]->setRefDisplacement(current_time);
         }
     }
 }
@@ -447,13 +447,13 @@ void OpenfastFSI::set_rotational_displacement(std::array<double,3> axis, double 
 void OpenfastFSI::map_displacements(double current_time)
 {
 
-    get_displacements(current_time); // Get displacements from the OpenFAST - C++ API
+//    get_displacements(current_time); // Get displacements from the OpenFAST - C++ API
 
     int nTurbinesGlob = FAST.get_nTurbinesGlob();
     for (int i=0; i < nTurbinesGlob; i++) {
         if(fsiTurbineData_[i] != NULL) {// This may not be a turbine intended for blade-resolved simulation {
-//            fsiTurbineData_[i]->setSampleDisplacement(current_time);
-//            fsiTurbineData_[i]->setRefDisplacement(current_time);
+            //fsiTurbineData_[i]->setSampleDisplacement(current_time);
+            //fsiTurbineData_[i]->setRefDisplacement(current_time);
             fsiTurbineData_[i]->mapDisplacements();
         }
     }

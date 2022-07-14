@@ -2231,6 +2231,7 @@ Realm::get_coordinates_name()
 bool
 Realm::has_mesh_motion() const
 {
+  return true;
   return solutionOptions_->meshMotion_;
 }
 

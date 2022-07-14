@@ -151,6 +151,18 @@ tauWallSCS_(NULL)
         tauWallSCS_ =  &(meta_.declare_field<VectorFieldType>(
                              meta_.side_rank(), "tau_wall_scs"));
 
+    VectorFieldType * mesh_disp_ref = meta_.get_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "mesh_displacement_ref");
+    if (mesh_disp_ref == NULL)
+        mesh_disp_ref = &(meta_.declare_field<VectorFieldType>(
+                             stk::topology::NODE_RANK, "mesh_displacement_ref"));    
+
+    VectorFieldType * mesh_vel_ref = meta_.get_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "mesh_velocity_ref");
+    if (mesh_vel_ref == NULL)
+        mesh_vel_ref = &(meta_.declare_field<VectorFieldType>(
+                              stk::topology::NODE_RANK, "mesh_velocity_ref"));    
+    
 }
 
 fsiTurbine::~fsiTurbine() {
@@ -1201,7 +1213,7 @@ void fsiTurbine::setSampleDisplacement(double curTime) {
 
     //Turbine rotates at 12.1 rpm
     double omega=(12.1/60.0)*2.0*M_PI; //12.1 rpm
-    double theta=omega*curTime;
+    double theta= omega*curTime;
 
     double sinOmegaT = std::sin(omega*curTime);
 
@@ -1844,9 +1856,9 @@ void fsiTurbine::computeMapping() {
 
                     // std::cout << "Can't find a projection for point (" + std::to_string(ptCoords[0]) + "," + std::to_string(ptCoords[1]) + "," + std::to_string(ptCoords[2]) + ") on blade " + std::to_string(iBlade) + " on turbine " + std::to_string(params_.TurbID) + ". The blade extends from " + std::to_string(lStart[0]) + "," + std::to_string(lStart[1]) + "," + std::to_string(lStart[2]) + ") to " + std::to_string(lEnd[0]) + "," + std::to_string(lEnd[1]) + "," + std::to_string(lEnd[2]) + ")." << std::endl ;
                     double perpDist = perpProjectDist_Pt2Line(ptCoords, lStart, lEnd);
-                    if (perpDist > 1.0) {// Something's wrong if a node on the surface mesh of the blade is more than 20% of the blade length away from the blade axis.
-                        throw std::runtime_error("Can't find a projection for point (" + std::to_string(ptCoords[0]) + "," + std::to_string(ptCoords[1]) + "," + std::to_string(ptCoords[2]) + ") on blade " + std::to_string(iBlade) + " on turbine " + std::to_string(params_.TurbID) + ". The blade extends from " + std::to_string(lStart[0]) + "," + std::to_string(lStart[1]) + "," + std::to_string(lStart[2]) + ") to " + std::to_string(lEnd[0]) + "," + std::to_string(lEnd[1]) + "," + std::to_string(lEnd[2]) + "). Are you sure the initial position and orientation of the mesh is consistent with the input file parameters and the OpenFAST model.");
-                    }
+                    // if (perpDist > 1.0) {// Something's wrong if a node on the surface mesh of the blade is more than 20% of the blade length away from the blade axis.
+                    //     throw std::runtime_error("Can't find a projection for point (" + std::to_string(ptCoords[0]) + "," + std::to_string(ptCoords[1]) + "," + std::to_string(ptCoords[2]) + ") on blade " + std::to_string(iBlade) + " on turbine " + std::to_string(params_.TurbID) + ". The blade extends from " + std::to_string(lStart[0]) + "," + std::to_string(lStart[1]) + "," + std::to_string(lStart[2]) + ") to " + std::to_string(lEnd[0]) + "," + std::to_string(lEnd[1]) + "," + std::to_string(lEnd[2]) + "). Are you sure the initial position and orientation of the mesh is consistent with the input file parameters and the OpenFAST model.");
+                    // }
 
                     if (nDimCoord < 0.0)  {
                         //Assign this node to the first point and element of the OpenFAST mesh

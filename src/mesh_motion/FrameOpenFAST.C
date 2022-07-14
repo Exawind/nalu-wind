@@ -23,7 +23,6 @@ void FrameOpenFAST::update_coordinates_velocity(const double time)
           stk::topology::NODE_RANK, "mesh_displacement");
       //VectorFieldType &displacementN = displacement->field_of_state(stk::mesh::StateN);
       //VectorFieldType &displacementNp1 = displacement->field_of_state(stk::mesh::StateNP1);
-
       VectorFieldType* meshVelocity = meta_.get_field<VectorFieldType>(
           stk::topology::NODE_RANK, "mesh_velocity");
 
