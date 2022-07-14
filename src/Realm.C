@@ -1011,24 +1011,35 @@ Realm::setup_bc()
 
     switch(bc->theBcType_) {
       case WALL_BC:
-        equationSystems_.register_wall_bc(name, *reinterpret_cast<const WallBoundaryConditionData *>(&bc));
+        equationSystems_.register_wall_bc(
+          name, *reinterpret_cast<const WallBoundaryConditionData*>(bc.get()));
         break;
       case INFLOW_BC:
-        equationSystems_.register_inflow_bc(name, *reinterpret_cast<const InflowBoundaryConditionData *>(&bc));
+        equationSystems_.register_inflow_bc(
+          name,
+          *reinterpret_cast<const InflowBoundaryConditionData*>(bc.get()));
         break;
       case OPEN_BC:
-        equationSystems_.register_open_bc(name, *reinterpret_cast<const OpenBoundaryConditionData *>(&bc));
+        equationSystems_.register_open_bc(
+          name, *reinterpret_cast<const OpenBoundaryConditionData*>(bc.get()));
         break;
       case SYMMETRY_BC:
-        equationSystems_.register_symmetry_bc(name, *reinterpret_cast<const SymmetryBoundaryConditionData *>(&bc));
+        equationSystems_.register_symmetry_bc(
+          name,
+          *reinterpret_cast<const SymmetryBoundaryConditionData*>(bc.get()));
         break;
       case ABLTOP_BC:
-        equationSystems_.register_abltop_bc(name, *reinterpret_cast<const ABLTopBoundaryConditionData *>(&bc));
+        equationSystems_.register_abltop_bc(
+          name,
+          *reinterpret_cast<const ABLTopBoundaryConditionData*>(bc.get()));
         break;
       case PERIODIC_BC:
       {
-        ThrowAssert(reinterpret_cast<const PeriodicBoundaryConditionData *>(&bc) != nullptr);
-        const auto& pbc = (*reinterpret_cast<const PeriodicBoundaryConditionData *>(&bc));
+        ThrowAssert(
+          reinterpret_cast<const PeriodicBoundaryConditionData*>(bc.get()) !=
+          nullptr);
+        const auto& pbc =
+          (*reinterpret_cast<const PeriodicBoundaryConditionData*>(bc.get()));
 
         std::string masterName = physics_part_name(pbc.masterSlave_.master_);
         std::string slaveName = physics_part_name(pbc.masterSlave_.slave_);
@@ -1036,7 +1047,9 @@ Realm::setup_bc()
         break;
       }
       case NON_CONFORMAL_BC:
-        equationSystems_.register_non_conformal_bc(*reinterpret_cast<const NonConformalBoundaryConditionData *>(&bc));
+        equationSystems_.register_non_conformal_bc(
+          *reinterpret_cast<const NonConformalBoundaryConditionData*>(
+            bc.get()));
         break;
       case OVERSET_BC: {
         const OversetBoundaryConditionData& obc =
