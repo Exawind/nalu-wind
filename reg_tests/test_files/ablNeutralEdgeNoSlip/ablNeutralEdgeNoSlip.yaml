@@ -291,6 +291,7 @@ realms:
           sweep_angle: 20 #deg
           step_delta_angle: 1 #deg
           reset_time_delta: 1 #s
+          elevation_angles: [-5,0,5]
 
 
     # This defines the ABL forcing to drive the winds to 8 m/s from

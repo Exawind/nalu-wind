@@ -13,6 +13,7 @@
 #include <array>
 #include <cmath>
 #include <memory>
+#include <vector>
 
 namespace YAML {
 class Node;
@@ -71,8 +72,13 @@ private:
   {
     return (sweep_angle_ / step_delta_angle_) * stare_time_;
   }
+
+  int periodic_count(double time) const;
+  double determine_elevation_angle(int sweep_count) const;
+
   double end_of_forward_phase_{determine_end_of_forward_phase()};
 
+  std::vector<double> elevation_table_{0};
   double beam_length_{1.0};
   std::array<double, 3> center_{0, 0, 0};
   std::array<double, 3> axis_{1, 0, 0};

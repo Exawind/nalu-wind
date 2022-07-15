@@ -28,6 +28,7 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNgpMesh1.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestPecletFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestRealm.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScanningLidarPattern.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScratchViews.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestShmemAlignment.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSideIsInElement.C
