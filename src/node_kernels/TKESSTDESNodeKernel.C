@@ -56,6 +56,8 @@ TKESSTDESNodeKernel::setup(Realm& realm)
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
   cDESke_ = realm.get_turb_model_constant(TM_cDESke);
   cDESkw_ = realm.get_turb_model_constant(TM_cDESkw);
+  tkeAmb_ = realm.get_turb_model_constant(TM_tkeAmb);
+  sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
 }
 
 void TKESSTDESNodeKernel::execute(
@@ -100,7 +102,14 @@ void TKESSTDESNodeKernel::execute(
   // Clip production term
   Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk);
 
-  rhs(0) += (Pk - Dk) * dVol;
+  // SUST source term
+  const DblType sqrtTkeAmb = stk::math::sqrt(tkeAmb_);
+  const DblType lSSTAmb = sqrtTkeAmb / betaStar_ / sdrAmb_;
+  const DblType lDESAmb = stk::math::max(
+    1.0e-16, (lSST < cDES * maxLenScale) ? lSSTAmb : cDES * maxLenScale);
+  const DblType Dkamb = density * tkeAmb_ * sqrtTkeAmb / lDESAmb;
+
+  rhs(0) += (Pk - Dk + Dkamb) * dVol;
   lhs(0, 0) += 1.5 * density / lDES * sqrtTke * dVol;
 }
 

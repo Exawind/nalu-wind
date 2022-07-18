@@ -78,6 +78,7 @@ private:
   NodeKernelTraits::DblType relaxFac_;
   NodeKernelTraits::DblType cDESke_;
   NodeKernelTraits::DblType cDESkw_;
+  NodeKernelTraits::DblType sdrAmb_;
 
   const int nDim_;
 };
