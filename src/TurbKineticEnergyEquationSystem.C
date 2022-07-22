@@ -160,11 +160,11 @@ TurbKineticEnergyEquationSystem::check_for_valid_turblence_model(
   TurbulenceModel turbModel)
 {
   switch (turbModel) {
-  case SST:
-  case KSGS:
-  case SST_DES:
-  case SST_AMS:
-  case SST_IDDES:
+  case TurbulenceModel::SST:
+  case TurbulenceModel::KSGS:
+  case TurbulenceModel::SST_DES:
+  case TurbulenceModel::SST_AMS:
+  case TurbulenceModel::SST_IDDES:
     return true;
   default:
     return false;
@@ -251,7 +251,8 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
     if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
       SolverAlgorithm *theAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
-        const bool useAvgMdot = (turbulenceModel_ == SST_AMS) ? true : false;
+        const bool useAvgMdot =
+          (turbulenceModel_ == TurbulenceModel::SST_AMS) ? true : false;
         theAlg = new ScalarEdgeSolverAlg(realm_, part, this, tke_, dkdx_, evisc_, useAvgMdot);
       }
       else {
@@ -285,21 +286,21 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), tke_);
 
         switch(turbulenceModel_) {
-        case KSGS:
+        case TurbulenceModel::KSGS:
           nodeAlg.add_kernel<TKEKsgsNodeKernel>(realm_.meta_data());
           break;
-        case SST:
+        case TurbulenceModel::SST:
           nodeAlg.add_kernel<TKESSTNodeKernel>(realm_.meta_data());
           break;
-        case SST_DES:
+        case TurbulenceModel::SST_DES:
           nodeAlg.add_kernel<TKESSTDESNodeKernel>(realm_.meta_data());
           break;
-        case SST_AMS:
+        case TurbulenceModel::SST_AMS:
           nodeAlg.add_kernel<TKESSTAMSNodeKernel>(realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());
           break;
-        case SST_IDDES:
-            nodeAlg.add_kernel<TKESSTIDDESNodeKernel>(realm_.meta_data());
-            break;
+        case TurbulenceModel::SST_IDDES:
+          nodeAlg.add_kernel<TKESSTIDDESNodeKernel>(realm_.meta_data());
+          break;
         default:
           std::runtime_error("TKEEqSys: Invalid turbulence model");
           break;
@@ -328,7 +329,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
   // effective viscosity alg
   if (!effDiffFluxCoeffAlg_) {
     switch(turbulenceModel_) {
-    case KSGS: {
+    case TurbulenceModel::KSGS: {
       const double lamSc = realm_.get_lam_schmidt(tke_->name());
       const double turbSc = realm_.get_turb_schmidt(tke_->name());
       effDiffFluxCoeffAlg_.reset(new EffDiffFluxCoeffAlg(
@@ -336,10 +337,10 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         realm_.is_turbulent()));
       break;
     }
-    case SST:
-    case SST_DES:
-    case SST_AMS:
-    case SST_IDDES: {
+    case TurbulenceModel::SST:
+    case TurbulenceModel::SST_DES:
+    case TurbulenceModel::SST_AMS:
+    case TurbulenceModel::SST_IDDES: {
       const double sigmaKOne = realm_.get_turb_model_constant(TM_sigmaKOne);
       const double sigmaKTwo = realm_.get_turb_model_constant(TM_sigmaKTwo);
       effDiffFluxCoeffAlg_.reset(new EffSSTDiffFluxCoeffAlg(
@@ -712,7 +713,7 @@ TurbKineticEnergyEquationSystem::solve_and_update()
 {
 
   // sometimes, a higher level equation system manages the solve and update
-  if ( turbulenceModel_ != KSGS)
+  if (turbulenceModel_ != TurbulenceModel::KSGS)
     return;
 
   // compute dk/dx

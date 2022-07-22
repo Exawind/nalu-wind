@@ -218,7 +218,10 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
     if (itsi == solverAlgDriver_->solverAlgMap_.end()) {
       SolverAlgorithm* theAlg = NULL;
       if (realm_.realmUsesEdges_) {
-        const bool useAvgMdot = (realm_.solutionOptions_->turbulenceModel_ == SST_AMS) ? true : false;
+        const bool useAvgMdot = (realm_.solutionOptions_->turbulenceModel_ ==
+                                 TurbulenceModel::SST_AMS)
+                                  ? true
+                                  : false;
         theAlg = new ScalarEdgeSolverAlg(realm_, part, this, sdr_, dwdx_, evisc_, useAvgMdot);
       }
       else {
@@ -254,14 +257,17 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
 
-        if (SST == realm_.solutionOptions_->turbulenceModel_){
+        if (TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_) {
           NaluEnv::self().naluOutputP0() << "call SDRSSTNodeKernel1: " <<std::endl;
           nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
-        }
-        else if ( (SST_DES == realm_.solutionOptions_->turbulenceModel_) || (SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) ){
+        } else if (
+          (TurbulenceModel::SST_DES ==
+           realm_.solutionOptions_->turbulenceModel_) ||
+          (TurbulenceModel::SST_IDDES ==
+           realm_.solutionOptions_->turbulenceModel_)) {
           nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
-        }
-        else if (SST_AMS == realm_.solutionOptions_->turbulenceModel_)
+        } else if (
+          TurbulenceModel::SST_AMS == realm_.solutionOptions_->turbulenceModel_)
           nodeAlg.add_kernel<SDRSSTAMSNodeKernel>(
             realm_.meta_data(),
             realm_.solutionOptions_->get_coordinates_name());

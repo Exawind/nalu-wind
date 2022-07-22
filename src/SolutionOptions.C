@@ -53,7 +53,7 @@ SolutionOptions::SolutionOptions()
     includeDivU_(0.0),
     mdotInterpRhoUTogether_(true),
     isTurbulent_(false),
-    turbulenceModel_(LAMINAR),
+    turbulenceModel_(TurbulenceModel::LAMINAR),
     meshMotion_(false),
     meshTransformation_(false),
     externalMeshDeformation_(false),
@@ -180,7 +180,8 @@ SolutionOptions::load(const YAML::Node & y_node)
         "turbulence_model", specifiedTurbModel, defaultTurbModel);
 
     bool matchedTurbulenceModel = false;
-    for ( int k=0; k < TurbulenceModel_END; ++k ) {
+    for (int k = 0; k < static_cast<int>(TurbulenceModel::TurbulenceModel_END);
+         ++k) {
       if (case_insensitive_compare(specifiedTurbModel, TurbulenceModelNames[k])) {
         turbulenceModel_ = TurbulenceModel(k);
         matchedTurbulenceModel = true;
@@ -192,21 +193,24 @@ SolutionOptions::load(const YAML::Node & y_node)
       std::string msg = "Turbulence model `" + specifiedTurbModel +
           "' not implemented.\n  Available turbulence models are ";
 
-     for ( int k=0; k < TurbulenceModel_END; ++k ) {
-       msg += "`" + TurbulenceModelNames[k] + "'";
-       if ( k != TurbulenceModel_END-1) { msg += ", "; }
-     }
+      for (int k = 0;
+           k < static_cast<int>(TurbulenceModel::TurbulenceModel_END); ++k) {
+        msg += "`" + TurbulenceModelNames[k] + "'";
+        if (k != static_cast<int>(TurbulenceModel::TurbulenceModel_END) - 1) {
+          msg += ", ";
+        }
+      }
       throw std::runtime_error(msg);
     }
-    if ( turbulenceModel_ != LAMINAR ) {
+    if (turbulenceModel_ != TurbulenceModel::LAMINAR) {
       isTurbulent_ = true;
     }
-    if (turbulenceModel_ == SST_IDDES) {
+    if (turbulenceModel_ == TurbulenceModel::SST_IDDES) {
       get_if_present(
         y_solution_options, "strelets_upwinding", useStreletsUpwinding_,
         useStreletsUpwinding_);
     }
-    if (turbulenceModel_ == SST) {
+    if (turbulenceModel_ == TurbulenceModel::SST) {
       get_if_present(
         y_solution_options, "transition_model", transition_model_,
         transition_model_);
@@ -502,8 +506,10 @@ SolutionOptions::load(const YAML::Node & y_node)
    NaluEnv::self().naluOutputP0() << std::endl;
    NaluEnv::self().naluOutputP0() << "Turbulence Model Review:   " << std::endl;
    NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
-   NaluEnv::self().naluOutputP0() << "Turbulence Model is: "
-       << TurbulenceModelNames[turbulenceModel_] << " " << isTurbulent_ <<std::endl;
+   NaluEnv::self().naluOutputP0()
+     << "Turbulence Model is: "
+     << TurbulenceModelNames[static_cast<int>(turbulenceModel_)] << " "
+     << isTurbulent_ << std::endl;
    if (gammaEqActive_ == true)  {
      NaluEnv::self().naluOutputP0() << "Transition Model is: One Equation Gamma" << std::endl;
    }
@@ -553,8 +559,10 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_cDESke] = 0.61; 
   turbModelConstantMap_[TM_cDESkw] = 0.78;
   turbModelConstantMap_[TM_tkeProdLimitRatio] =
-    (turbulenceModel_ == SST || turbulenceModel_ == SST_DES ||
-     turbulenceModel_ == SST_AMS || turbulenceModel_ == SST_IDDES)
+    (turbulenceModel_ == TurbulenceModel::SST ||
+     turbulenceModel_ == TurbulenceModel::SST_DES ||
+     turbulenceModel_ == TurbulenceModel::SST_AMS ||
+     turbulenceModel_ == TurbulenceModel::SST_IDDES)
       ? 10.0
       : 500.0;
   turbModelConstantMap_[TM_cmuEps] = 0.0856; 

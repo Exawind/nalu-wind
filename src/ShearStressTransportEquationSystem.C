@@ -155,8 +155,8 @@ ShearStressTransportEquationSystem::register_nodal_fields(
 
   // DES model
   if (
-    (SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
-    (SST_IDDES == realm_.solutionOptions_->turbulenceModel_)) {
+    (TurbulenceModel::SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
+    (TurbulenceModel::SST_IDDES == realm_.solutionOptions_->turbulenceModel_)) {
     maxLengthScale_ = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "sst_max_length_scale"));
     stk::mesh::put_field_on_mesh(*maxLengthScale_, *part, nullptr);
@@ -178,8 +178,8 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
   if (
-    (SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
-    (SST_IDDES == realm_.solutionOptions_->turbulenceModel_)) {
+    (TurbulenceModel::SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
+    (TurbulenceModel::SST_IDDES == realm_.solutionOptions_->turbulenceModel_)) {
 
     if (NULL == sstMaxLengthScaleAlgDriver_)
       sstMaxLengthScaleAlgDriver_ = new AlgorithmDriver(realm_);
@@ -251,8 +251,8 @@ ShearStressTransportEquationSystem::solve_and_update()
 
     // deal with DES option
     if (
-      (SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
-      (SST_IDDES == realm_.solutionOptions_->turbulenceModel_))
+      (TurbulenceModel::SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
+      (TurbulenceModel::SST_IDDES == realm_.solutionOptions_->turbulenceModel_))
       sstMaxLengthScaleAlgDriver_->execute();
 
     isInit_ = false;
@@ -261,8 +261,8 @@ ShearStressTransportEquationSystem::solve_and_update()
       clip_min_distance_to_wall();
 
     if (
-      (SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
-      (SST_IDDES == realm_.solutionOptions_->turbulenceModel_))
+      (TurbulenceModel::SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
+      (TurbulenceModel::SST_IDDES == realm_.solutionOptions_->turbulenceModel_))
       sstMaxLengthScaleAlgDriver_->execute();
   }
 
@@ -611,7 +611,7 @@ void
 ShearStressTransportEquationSystem::pre_iter_work()
 {
   const auto turbModel = realm_.solutionOptions_->turbulenceModel_;
-  if (turbModel == SST_IDDES) {
+  if (turbModel == TurbulenceModel::SST_IDDES) {
     const auto& fieldMgr = realm_.ngp_field_manager();
     const auto& meta = realm_.meta_data();
 
@@ -625,7 +625,7 @@ void
 ShearStressTransportEquationSystem::post_iter_work()
 {
   const auto turbModel = realm_.solutionOptions_->turbulenceModel_;
-  if (turbModel == SST_IDDES) {
+  if (turbModel == TurbulenceModel::SST_IDDES) {
     const auto& fieldMgr = realm_.ngp_field_manager();
     const auto& meta = realm_.meta_data();
     auto& bulk = realm_.bulk_data();

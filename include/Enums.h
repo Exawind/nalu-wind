@@ -157,17 +157,17 @@ enum NaluState {
   NALU_STATE_NM1 = 1
 };
 
-enum TurbulenceModel {
-  LAMINAR = 0,
-  KSGS = 1,
-  SMAGORINSKY = 2,
-  WALE = 3,
-  SST = 4,
-  SST_DES = 5,
-  SST_AMS = 6,
-  SST_IDDES = 7,
+enum class TurbulenceModel {
+  LAMINAR,
+  KSGS,
+  SMAGORINSKY,
+  WALE,
+  SST,
+  SST_DES,
+  SST_AMS,
+  SST_IDDES,
   TurbulenceModel_END
-};  
+};
 
 // matching string name index into above enums (must match PERFECTLY)
 static const std::string TurbulenceModelNames[] = {

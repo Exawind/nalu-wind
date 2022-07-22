@@ -36,8 +36,10 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   velocity_ = get_field_ordinal(meta, velName, stk::mesh::StateNP1);
 
   std::string viscName;
-  if ((realm.is_turbulent()) && (realm.solutionOptions_->turbulenceModel_ != SST_AMS))
-       viscName = "effective_viscosity_u";
+  if (
+    (realm.is_turbulent()) &&
+    (realm.solutionOptions_->turbulenceModel_ != TurbulenceModel::SST_AMS))
+    viscName = "effective_viscosity_u";
   else 
        viscName = "viscosity";
 

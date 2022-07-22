@@ -646,8 +646,8 @@ void
 LowMachEquationSystem::pre_iter_work()
 {
   momentumEqSys_->pre_iter_work();
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS) 
-      momentumEqSys_->AMSAlgDriver_->execute();
+  if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
+    momentumEqSys_->AMSAlgDriver_->execute();
   continuityEqSys_->pre_iter_work();
 }
 
@@ -666,7 +666,7 @@ LowMachEquationSystem::solve_and_update()
     timeB = NaluEnv::self().nalu_time();
     continuityEqSys_->timerMisc_ += (timeB-timeA);
 
-    if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS) {
+    if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS) {
       momentumEqSys_->AMSAlgDriver_->initial_mdot();
     }
 
@@ -983,7 +983,7 @@ LowMachEquationSystem::post_converged_work()
 void
 LowMachEquationSystem::post_iter_work()
 {
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS) 
+  if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
     momentumEqSys_->AMSAlgDriver_->post_iter_work();
 }
 
@@ -1033,7 +1033,7 @@ MomentumEquationSystem::MomentumEquationSystem(
      manage_projected_nodal_gradient(eqSystems);
   }
 
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
+  if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
     AMSAlgDriver_.reset(new AMSAlgDriver(realm_));
 }
 
@@ -1065,7 +1065,7 @@ MomentumEquationSystem::initial_work()
 
   compute_projected_nodal_gradient();
 
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
+  if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
     AMSAlgDriver_->initial_work();
 
   {
@@ -1079,7 +1079,7 @@ MomentumEquationSystem::initial_work()
     timerMisc_ += (timeB-timeA);
   }
 
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
+  if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
     AMSAlgDriver_->initial_production();
 }
 
@@ -1093,7 +1093,7 @@ MomentumEquationSystem::pre_timestep_work()
   EquationSystem::pre_timestep_work();
 
   if (
-    (realm_.solutionOptions_->turbulenceModel_ == SST_AMS) &&
+    (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS) &&
     (realm_.solutionOptions_->meshMotion_ ||
      realm_.solutionOptions_->externalMeshDeformation_)) {
     AMSAlgDriver_->compute_metric_tensor();
@@ -1136,10 +1136,11 @@ MomentumEquationSystem::register_nodal_fields(
     evisc_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "effective_viscosity_u"));
     stk::mesh::put_field_on_mesh(*evisc_, *part, nullptr);
 
-    if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
+    if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
       AMSAlgDriver_->register_nodal_fields(part);
 
-    if (realm_.solutionOptions_->turbulenceModel_ == SST_IDDES) {
+    if (
+      realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_IDDES) {
       iddesRansIndicator_ = &(meta_data.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "iddes_rans_indicator"));
       stk::mesh::put_field_on_mesh(*iddesRansIndicator_, *part, nullptr);
@@ -1224,7 +1225,7 @@ MomentumEquationSystem::register_edge_fields(
     &(realm_.meta_data().declare_field<ScalarFieldType>(
       stk::topology::EDGE_RANK, "peclet_number"));
   stk::mesh::put_field_on_mesh(*pecletNumber, *part, nullptr);
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
+  if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
     AMSAlgDriver_->register_edge_fields(part);
 }
 
@@ -1267,7 +1268,7 @@ MomentumEquationSystem::register_interior_algorithm(
       SolverAlgorithm *theSolverAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
         theSolverAlg = new MomentumEdgeSolverAlg(realm_, part, this);
-        if (theTurbModel == SST_AMS) {
+        if (theTurbModel == TurbulenceModel::SST_AMS) {
           SolverAlgorithm *theSolverSrcAlg = NULL;
           theSolverSrcAlg = new AssembleAMSEdgeKernelAlg(realm_, part, this);
           solverAlgDriver_->solverAlgMap_[SRC] = theSolverSrcAlg;
@@ -1276,7 +1277,8 @@ MomentumEquationSystem::register_interior_algorithm(
           realm_.is_turbulent() &&
           realm_.solutionOptions_->useStreletsUpwinding_) {
           pecletAlg_.reset(new StreletsUpwindEdgeAlg(realm_, part));
-        } else if (realm_.is_turbulent() && theTurbModel == SST_AMS) {
+        } else if (
+          realm_.is_turbulent() && theTurbModel == TurbulenceModel::SST_AMS) {
           pecletAlg_.reset(new AMSMomentumEdgePecletAlg(realm_, part, this));
         } else {
           pecletAlg_.reset(new MomentumEdgePecletAlg(realm_, part, this));
@@ -1298,7 +1300,8 @@ MomentumEquationSystem::register_interior_algorithm(
     } else {
       itsi->second->partVec_.push_back(part);
 
-      const bool hasAMS = realm_.realmUsesEdges_ && (theTurbModel == SST_AMS);
+      const bool hasAMS =
+        realm_.realmUsesEdges_ && (theTurbModel == TurbulenceModel::SST_AMS);
       if (hasAMS) {
         auto* tamsAlg = solverAlgDriver_->solverAlgMap_.at(SRC);
         tamsAlg->partVec_.push_back(part);
@@ -1332,7 +1335,8 @@ MomentumEquationSystem::register_interior_algorithm(
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
         if (!elementMassAlg)
           nodeAlg.add_kernel<MomentumMassBDFNodeKernel>(realm_.bulk_data());
-        if ( realm_.solutionOptions_->turbulenceModel_ == SST_AMS )
+        if (
+          realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
           nodeAlg.add_kernel<MomentumSSTAMSForcingNodeKernel>(realm_.bulk_data(), *realm_.solutionOptions_);
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
@@ -1463,26 +1467,26 @@ MomentumEquationSystem::register_interior_algorithm(
     // deal with tvisc better? - possibly should be on EqSysManager?
     if (!tviscAlg_) {
       switch (realm_.solutionOptions_->turbulenceModel_) {
-      case KSGS:
+      case TurbulenceModel::KSGS:
         tviscAlg_.reset(new TurbViscKsgsAlg(realm_, part, tvisc_));
         break;
 
-      case SMAGORINSKY:
+      case TurbulenceModel::SMAGORINSKY:
         tviscAlg_.reset(new TurbViscSmagorinskyAlgorithm(realm_, part));
         break;
 
-      case WALE:
+      case TurbulenceModel::WALE:
         tviscAlg_.reset(new TurbViscWaleAlgorithm(realm_, part));
         break;
 
-      case SST:
-      case SST_DES:
-      case SST_IDDES:
+      case TurbulenceModel::SST:
+      case TurbulenceModel::SST_DES:
+      case TurbulenceModel::SST_IDDES:
 
         tviscAlg_.reset(new TurbViscSSTAlg(realm_, part, tvisc_));
         break;
 
-      case SST_AMS:
+      case TurbulenceModel::SST_AMS:
         tviscAlg_.reset(new TurbViscSSTAlg(realm_, part, tvisc_, true));
         break;
 
@@ -1493,7 +1497,7 @@ MomentumEquationSystem::register_interior_algorithm(
       tviscAlg_->partVec_.push_back(part);
     }
 
-    if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
+    if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
       AMSAlgDriver_->register_interior_algorithm(part);
   }
 }
@@ -2386,7 +2390,7 @@ MomentumEquationSystem::predict_state()
   nalu_ngp::field_copy(ngpMesh, sel, velNp1, velN, meta.spatial_dimension());
   velNp1.modify_on_device();
 
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
+  if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
     AMSAlgDriver_->predict_state();
 }
 
