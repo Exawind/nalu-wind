@@ -146,7 +146,8 @@ void TKESSTIDDESNodeKernel::execute(
 
   // SUST source term
   const DblType sqrtTkeAmb = stk::math::sqrt(tkeAmb_);
-  const DblType lSSTAmb = sqrtTkeAmb / betaStar_ / sdrAmb_;
+  const DblType lSSTAmb =
+    sqrtTkeAmb / betaStar_ / stk::math::max(1.0e-16, sdrAmb_);
   const DblType lIDDESAmb =
     stk::math::max(1.0e-16, ransInd * lSSTAmb + (1.0 - fdHat) * lLES);
   const DblType Dkamb = density * tkeAmb_ * sqrtTkeAmb / lIDDESAmb;
