@@ -209,7 +209,10 @@ GammaEquationSystem::register_interior_algorithm(
     if (itsi == solverAlgDriver_->solverAlgMap_.end()) {
       SolverAlgorithm* theAlg = NULL;
       if (realm_.realmUsesEdges_) {
-        const bool useAvgMdot = (realm_.solutionOptions_->turbulenceModel_ == SST_AMS) ? true : false;
+        const bool useAvgMdot = (realm_.solutionOptions_->turbulenceModel_ ==
+                                 TurbulenceModel::SST_AMS)
+                                  ? true
+                                  : false;
         theAlg = new ScalarEdgeSolverAlg(realm_, part, this, gamma_, dgamdx_, evisc_, useAvgMdot);
       }
       else {

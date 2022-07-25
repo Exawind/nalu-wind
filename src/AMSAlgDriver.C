@@ -53,7 +53,7 @@ AMSAlgDriver::AMSAlgDriver(Realm& realm)
 {
   if (!realm.realmUsesEdges_)
     throw std::runtime_error("AMS not supported on element runs.");
-  if (turbulenceModel_ != SST_AMS) {
+  if (turbulenceModel_ != TurbulenceModel::SST_AMS) {
     throw std::runtime_error(
       "User has requested AMS, however, turbulence model has not been set "
       "to sst_ams, the only one supported by this driver currently.");
@@ -146,7 +146,7 @@ AMSAlgDriver::register_interior_algorithm(stk::mesh::Part* part)
 
   if (!avgAlg_) {
     switch (realm_.solutionOptions_->turbulenceModel_) {
-    case SST_AMS:
+    case TurbulenceModel::SST_AMS:
       avgAlg_.reset(new SSTAMSAveragesAlg(realm_, part));
       break;
     default:

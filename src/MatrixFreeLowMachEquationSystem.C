@@ -256,13 +256,13 @@ MatrixFreeLowMachEquationSystem::compute_filter_scale() const
 
     double scaling = 0;
     switch (realm_.get_turbulence_model()) {
-    case LAMINAR:
+    case TurbulenceModel::LAMINAR:
       scaling = 0;
       break;
-    case SMAGORINSKY:
+    case TurbulenceModel::SMAGORINSKY:
       scaling = realm_.get_turb_model_constant(TM_cmuCs);
       break;
-    case WALE:
+    case TurbulenceModel::WALE:
       scaling = realm_.get_turb_model_constant(TM_Cw);
       break;
     default:
@@ -685,11 +685,11 @@ matrix_free::GradTurbModel
 gradient_turbulence_model(TurbulenceModel all_models)
 {
   switch (all_models) {
-  case LAMINAR:
+  case TurbulenceModel::LAMINAR:
     return matrix_free::GradTurbModel::LAM;
-  case SMAGORINSKY:
+  case TurbulenceModel::SMAGORINSKY:
     return matrix_free::GradTurbModel::SMAG;
-  case WALE:
+  case TurbulenceModel::WALE:
     return matrix_free::GradTurbModel::WALE;
   default:
     throw std::runtime_error("Invalid turbulence model for matrix-free");
