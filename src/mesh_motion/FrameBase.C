@@ -40,7 +40,7 @@ void FrameBase::load(const YAML::Node& node)
   // get any part names associated with current motion group
   populate_part_vec(node);
 
-  return;
+  return ;
 
   // check if centroid needs to be computed
   get_if_present(node, "compute_centroid", computeCentroid_, computeCentroid_);
@@ -83,34 +83,36 @@ void FrameBase::load(const YAML::Node& node)
 void FrameBase::populate_part_vec(const YAML::Node& node)
 {
 
-  return ;
-  
-  if (!node["mesh_parts"]) {
-    throw std::runtime_error(
-      "FrameBase: No mesh parts found.");
-  }
+  // if (!node["mesh_parts"]) {
+  //   throw std::runtime_error(
+  //     "FrameBase: No mesh parts found.");
+  // }
 
   // declare temporary part name vectors
   std::vector<std::string> partNamesVec;
   std::vector<std::string> partNamesVecBc;
 
-  // populate volume parts
-  const auto& fparts = node["mesh_parts"];
-  if (fparts.Type() == YAML::NodeType::Scalar)
-    partNamesVec.push_back(fparts.as<std::string>());
-  else
-    partNamesVec = fparts.as<std::vector<std::string>>();
+  partNamesVec.push_back("blade1-HEX");
+  partNamesVec.push_back("blade2-HEX");
+  partNamesVec.push_back("blade3-HEX");
+  
+  // // populate volume parts
+  // const auto& fparts = node["mesh_parts"];
+  // if (fparts.Type() == YAML::NodeType::Scalar)
+  //   partNamesVec.push_back(fparts.as<std::string>());
+  // else
+  //   partNamesVec = fparts.as<std::vector<std::string>>();
 
-  // get all mesh parts if all blocks were requested
-  if (std::find(partNamesVec.begin(), partNamesVec.end(), "all_blocks") != partNamesVec.end()) {
-    partNamesVec.clear();
-    for (const auto* part : meta_.get_mesh_parts()) {
-      ThrowRequire(part);
-      if (part->topology().rank() == stk::topology::ELEMENT_RANK) {
-        partNamesVec.push_back(part->name());
-      }
-    }
-  }
+  // // get all mesh parts if all blocks were requested
+  // if (std::find(partNamesVec.begin(), partNamesVec.end(), "all_blocks") != partNamesVec.end()) {
+  //   partNamesVec.clear();
+  //   for (const auto* part : meta_.get_mesh_parts()) {
+  //     ThrowRequire(part);
+  //     if (part->topology().rank() == stk::topology::ELEMENT_RANK) {
+  //       partNamesVec.push_back(part->name());
+  //     }
+  //   }
+  // }
 
   partNamesVec.push_back("blade1-HEX");
   partNamesVec.push_back("blade2-HEX");
@@ -125,8 +127,9 @@ void FrameBase::populate_part_vec(const YAML::Node& node)
     if (nullptr == part)
       throw std::runtime_error(
         "FrameBase: Invalid part name encountered: " + partNamesVec[i]);
-    else
-      partVec_[i] = part;
+    else {
+        partVec_[i] = part;
+    }
   }
 
   // populate bc parts if any defined
@@ -135,9 +138,9 @@ void FrameBase::populate_part_vec(const YAML::Node& node)
 
   const auto& fpartsBc = node["mesh_parts_bc"];
   if (fpartsBc.Type() == YAML::NodeType::Scalar)
-    partNamesVecBc.push_back(fparts.as<std::string>());
+    partNamesVecBc.push_back(fpartsBc.as<std::string>());
   else
-    partNamesVecBc = fparts.as<std::vector<std::string>>();
+    partNamesVecBc = fpartsBc.as<std::vector<std::string>>();
 
   // store all Bc parts associated with current motion frame
   numParts = partNamesVecBc.size();

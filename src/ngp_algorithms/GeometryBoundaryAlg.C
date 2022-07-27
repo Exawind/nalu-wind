@@ -60,9 +60,7 @@ void GeometryBoundaryAlg<AlgTraits>::execute()
   for ( size_t j = 0; j < partVec_.size(); ++j ) {
       // extract the part
       stk::mesh::Part *targetPart = partVec_[j];
-
-      std::cerr << targetPart->name() << std::endl ;
-  }  
+  }
   const std::string algName = "GeometryBoundaryAlg_" + std::to_string(AlgTraits::topo_);
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     algName, meshInfo, meta.side_rank(), dataNeeded_, sel,

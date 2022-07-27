@@ -416,7 +416,7 @@ void OpenfastFSI::get_displacements(double current_time) {
             //     bld_bm_mesh.close();
             // }
 
-            //fsiTurbineData_[i]->setSampleDisplacement(current_time);
+            fsiTurbineData_[i]->setSampleDisplacement(current_time);
 
             //For testing purposes
             //fsiTurbineData_[i]->setRefDisplacement(current_time);

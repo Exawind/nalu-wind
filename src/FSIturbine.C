@@ -1209,8 +1209,6 @@ void fsiTurbine::setRotationDisplacement(std::array<double,3> axis, double omega
 //! Set sample displacement on the OpenFAST mesh before mapping to the turbine blade surface mesh
 void fsiTurbine::setSampleDisplacement(double curTime) {
 
-
-
     //Turbine rotates at 12.1 rpm
     double omega=(12.1/60.0)*2.0*M_PI; //12.1 rpm
     double theta= omega*curTime;
@@ -1231,20 +1229,32 @@ void fsiTurbine::setSampleDisplacement(double curTime) {
         std::vector<double> wmRotBlade(3,0.0);
         composeWM(wmHubRot.data(), wmRotBlade_ref.data(), wmRotBlade.data());
 
+        //Set rotational displacement due to pitch
+        std::vector<double> wmRotPitch = {0.0,0.0,1.0};
+        double rot = 4.0*tan(0.25 * (60.0 * M_PI / 180.0) * sinOmegaT );
+        for(int j= 0; j < 3; j++)
+            wmRotPitch[j] *= rot;
+        std::vector<double> wmRotPitchBlade(3, 0.0);
+        applyWMrotation(wmRotBlade.data(), wmRotPitch.data(), wmRotPitchBlade.data());
+
+        for(int j=0; j < 3; j++)
+            brFSIdata_.bld_root_def[iBlade*6+3+j] = -wmRotBlade[j];
+        
         int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
         for (int i=0; i < nPtsBlade; i++) {
 
             double rDistSq = calcDistanceSquared(&(brFSIdata_.bld_ref_pos[(iStart+i)*6]), &(brFSIdata_.bld_ref_pos[(iStart)*6]) )/10000.0;
             double sinRdistSq = std::sin(rDistSq);
             double tanRdistSq = std::tan(rDistSq);
-            //Set rotational displacement
+
+                
+            //Set local rotational displacement
             std::vector<double> wmRot1 = {1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0)};
             std::vector<double> wmRot(3,0.0);
             applyWMrotation(wmRotBlade.data(), wmRot1.data(), wmRot.data());
-            double rot = 4.0*tan(0.25 * (45.0 * M_PI / 180.0) * sinRdistSq  * sinOmegaT ); // 4.0 * tan(phi/4.0) parameter for Wiener-Milenkovic
-            for(int j= 0; j < 3; j++) {
+            rot = 4.0*tan(0.25 * (45.0 * M_PI / 180.0) * sinRdistSq  * sinOmegaT ); // 4.0 * tan(phi/4.0) parameter for Wiener-Milenkovic
+            for(int j= 0; j < 3; j++)
                 wmRot[j] *= rot;
-            }
 
             std::vector<double> finalRot(3,0.0);
             composeWM(wmRot.data(), wmRotBlade.data(), finalRot.data()); //Compose with hub orientation to account for rotation of turbine
@@ -1481,7 +1491,7 @@ void fsiTurbine::mapDisplacements() {
                 linInterpTotDisplacement(&brFSIdata_.bld_def[(*dispMapNode + iStart)*6], &brFSIdata_.bld_def[(*dispMapNode + iStart + 1)*6], *dispMapInterpNode, totDispNode.data());
 
                 //Now transfer the interpolated displacement to the CFD mesh node
-                computeBladeDisplacement(totDispNode.data(), tmpNodePos.data(), dx, oldxyz, brFSIdata_.bld_pitch[iBlade], &brFSIdata_.bld_root_def[iBlade*6 + 3], brFSIdata_.bld_pitch[iStart]);
+                computeBladeDisplacement(totDispNode.data(), tmpNodePos.data(), dx, oldxyz, brFSIdata_.bld_pitch[iBlade], &brFSIdata_.bld_root_def[iBlade*6 + 3], brFSIdata_.bld_rloc[*dispMapNode + iStart]);
 
                 //Now linearly interpolate the velocity to the intermediate location
                 linInterpTotVelocity(&brFSIdata_.bld_vel[(*dispMapNode + iStart)*6], &brFSIdata_.bld_vel[(*dispMapNode + iStart + 1)*6], *dispMapInterpNode, totVelNode.data());
