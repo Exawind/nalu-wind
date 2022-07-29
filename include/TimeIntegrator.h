@@ -50,6 +50,7 @@ public:
   void pre_realm_advance_stage1();
   void pre_realm_advance_stage2();
   void post_realm_advance();
+  void interstep_updates(int nonLinearIterationIndex);
 
   Simulation* sim_{nullptr};
 
