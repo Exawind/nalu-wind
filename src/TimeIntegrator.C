@@ -344,9 +344,8 @@ TimeIntegrator::integrate_realm()
         << "   Realm Nonlinear Iteration: " << k+1 << "/" << nonlinearIterations_ << std::endl
         << std::endl;
 
-      if (overset_->is_external_overset()) {
-        overset_->exchange_solution();
-      }
+      // update overset and geometry as needed
+      interstep_updates(k);
 
       for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
         (*ii)->advance_time_step();
