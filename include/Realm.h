@@ -7,10 +7,8 @@
 // for more details.
 //
 
-
-
-#ifndef Realm_h
-#define Realm_h
+#ifndef REALM_H
+#define REALM_H
 
 #include <Enums.h>
 #include <FieldTypeDef.h>
@@ -272,8 +270,8 @@ class Realm {
   virtual double compute_adaptive_time_step();
   virtual void swap_states();
   virtual void predict_state();
-  virtual void pre_timestep_work_prolog();
-  virtual void pre_timestep_work_epilog();
+  virtual void update_geometry_due_to_mesh_motion();
+  virtual void update_graph_connectivity_and_coordinates_due_to_mesh_motion();
   virtual void output_banner();
   virtual void advance_time_step();
   virtual void nonlinear_iterations(const int);
@@ -697,4 +695,4 @@ protected:
 } // namespace nalu
 } // namespace Sierra
 
-#endif
+#endif /* REALM_H */

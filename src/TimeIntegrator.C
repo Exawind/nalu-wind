@@ -283,7 +283,7 @@ void TimeIntegrator::pre_realm_advance_stage1()
   }
 
   for (auto realm: realmVec_) {
-    realm->pre_timestep_work_prolog();
+    realm->update_geometry_due_to_mesh_motion();
   }
 }
 
@@ -292,7 +292,7 @@ void TimeIntegrator::pre_realm_advance_stage2()
   std::vector<Realm *>::iterator ii;
 
   for (auto realm: realmVec_) {
-    realm->pre_timestep_work_epilog();
+    realm->update_graph_connectivity_and_coordinates_due_to_mesh_motion();
   }
 
   // populate boundary data
@@ -435,7 +435,7 @@ TimeIntegrator::interstep_updates(int nonLinearIterationIndex)
     bool updateOverset = false;
 
     for (auto&& realm : realmVec_) {
-      realm->pre_timestep_work_prolog();
+      realm->update_geometry_due_to_mesh_motion();
       if (realm->does_mesh_move()) {
         updateOverset = true;
       }
@@ -454,7 +454,7 @@ TimeIntegrator::interstep_updates(int nonLinearIterationIndex)
   // computations
   if (updateGeomInsideNL) {
     for (auto&& realm : realmVec_) {
-      realm->pre_timestep_work_epilog();
+      realm->update_graph_connectivity_and_coordinates_due_to_mesh_motion();
     }
   }
 }
