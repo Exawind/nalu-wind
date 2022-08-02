@@ -613,6 +613,13 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_ams_peclet_offset] = 0.6;
   turbModelConstantMap_[TM_ams_peclet_slope] = 12.0;
   turbModelConstantMap_[TM_ams_peclet_scale] = 100.0;
+  turbModelConstantMap_[TM_fMuExp] = -0.0115;
+  turbModelConstantMap_[TM_utau] = 1.0;
+  turbModelConstantMap_[TM_cEpsOne] = 1.35;
+  turbModelConstantMap_[TM_cEpsTwo] = 1.80;
+  turbModelConstantMap_[TM_fOne] = 1.0;
+  turbModelConstantMap_[TM_sigmaK] = 1.0;
+  turbModelConstantMap_[TM_sigmaEps] = 1.3;
   turbModelConstantMap_[TM_tkeAmb] = 0.0;
   turbModelConstantMap_[TM_sdrAmb] = 0.0;
   turbModelConstantMap_[TM_avgTimeCoeff] = 1.0;

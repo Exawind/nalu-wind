@@ -166,14 +166,14 @@ One Equation :math:`k^{sgs}`
 
 See :math:`k^{sgs}` :ref:`PDE <theory_ksgs_les_model>` section.
 
-SST RANS Model
-++++++++++++++
+RANS Models
++++++++++++
 
-As noted, Nalu-Wind does support a SST RANS-based model (the reader is
-referred to the SST equation set description).
+As noted, Nalu-Wind supports several different RANS-based model (the
+reader is referred to the RANS model equation set description).
 
 Hybrid RANS/LES Models
-+++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++
 
 Nalu-Wind supports the Active Model Split (AMS) hybrid RANS/LES turbulence model :cite:`Haering-etal:2020`. 
 The reader is referred to the AMS equation set for more details.

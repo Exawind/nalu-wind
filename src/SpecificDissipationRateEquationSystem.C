@@ -52,6 +52,7 @@
 #include <node_kernels/SDRSSTNodeKernel.h>
 #include <node_kernels/SDRSSTDESNodeKernel.h>
 #include <node_kernels/ScalarGclNodeKernel.h>
+#include <node_kernels/SDRKONodeKernel.h>
 
 // ngp
 #include "ngp_utils/NgpFieldBLAS.h"
@@ -59,6 +60,7 @@
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
 #include "ngp_algorithms/EffSSTDiffFluxCoeffAlg.h"
+#include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 #include "ngp_algorithms/SDRWallFuncAlg.h"
 #include "ngp_algorithms/SDRLowReWallAlg.h"
 #include "ngp_algorithms/SDRWallFuncAlgDriver.h"
@@ -258,7 +260,6 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
 
         if (TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_) {
-          NaluEnv::self().naluOutputP0() << "call SDRSSTNodeKernel1: " <<std::endl;
           nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
         } else if (
           (TurbulenceModel::SST_DES ==
@@ -267,13 +268,14 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
            realm_.solutionOptions_->turbulenceModel_)) {
           nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
         } else if (
-          TurbulenceModel::SST_AMS == realm_.solutionOptions_->turbulenceModel_)
+          TurbulenceModel::SST_AMS == realm_.solutionOptions_->turbulenceModel_){
           nodeAlg.add_kernel<SDRSSTAMSNodeKernel>(
             realm_.meta_data(),
             realm_.solutionOptions_->get_coordinates_name());
-        else {
-          nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
-          NaluEnv::self().naluOutputP0() << "call SDRSSTNodeKernel2: " <<std::endl;
+        } else if (TurbulenceModel::KO == realm_.solutionOptions_->turbulenceModel_) {
+          nodeAlg.add_kernel<SDRKONodeKernel>(realm_.meta_data());
+        } else {
+          throw std::runtime_error("Invalid turbulence model in SDR equation system: " + TurbulenceModelNames[static_cast<int>(realm_.solutionOptions_->turbulenceModel_)]);
         }
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
@@ -292,10 +294,15 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
 
   // effective diffusive flux coefficient alg for SST
   if (!effDiffFluxAlg_) {
-    const double sigmaWOne = realm_.get_turb_model_constant(TM_sigmaWOne);
-    const double sigmaWTwo = realm_.get_turb_model_constant(TM_sigmaWTwo);
-    effDiffFluxAlg_.reset(new EffSSTDiffFluxCoeffAlg(
-      realm_, part, visc_, tvisc_, evisc_, sigmaWOne, sigmaWTwo));
+    if (TurbulenceModel::KO == realm_.solutionOptions_->turbulenceModel_) {
+      effDiffFluxAlg_.reset(new EffDiffFluxCoeffAlg(
+        realm_, part, visc_, tvisc_, evisc_, 1.0, 2.0, realm_.is_turbulent()));
+    } else {
+      const double sigmaWOne = realm_.get_turb_model_constant(TM_sigmaWOne);
+      const double sigmaWTwo = realm_.get_turb_model_constant(TM_sigmaWTwo);
+      effDiffFluxAlg_.reset(new EffSSTDiffFluxCoeffAlg(
+        realm_, part, visc_, tvisc_, evisc_, sigmaWOne, sigmaWTwo));
+    }
   } else {
     effDiffFluxAlg_->partVec_.push_back(part);
   }
@@ -663,7 +670,6 @@ SpecificDissipationRateEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
     & stk::mesh::selectField(*sdr_);
   nalu_ngp::field_copy(ngpMesh, sel, sdrNp1, sdrN);
-  sdrNp1.modify_on_device();
 }
 
 } // namespace nalu

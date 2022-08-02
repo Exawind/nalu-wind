@@ -49,9 +49,6 @@ TKESSTIDDESNodeKernel::setup(Realm& realm)
   fOneBlend_ = fieldMgr.get_field<double>(fOneBlendID_);
   ransIndicator_ = fieldMgr.get_field<double>(ransIndicatorID_);
 
-  const std::string dofName = "turbulent_ke";
-  relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
-
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);

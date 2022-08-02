@@ -53,6 +53,7 @@ struct WallUserData : public UserData {
   Velocity u_;
   Velocity dx_;
   TurbKinEnergy tke_;
+  TotDissRate tdr_;
   MixtureFraction mixFrac_;
   MassFraction massFraction_;
   NormalHeatFlux q_;
@@ -96,6 +97,7 @@ struct InflowUserData : public UserData {
   Velocity u_;
   TurbKinEnergy tke_;
   SpecDissRate sdr_;
+  TotDissRate tdr_;
   MixtureFraction mixFrac_;
   MassFraction massFraction_;
   GammaInf gamma_;
@@ -103,12 +105,19 @@ struct InflowUserData : public UserData {
   bool uSpec_;
   bool tkeSpec_;
   bool sdrSpec_;
+  bool tdrSpec_;
   bool mixFracSpec_;
   bool massFractionSpec_;
   bool gammaSpec_;
   InflowUserData()
     : UserData(),
-    uSpec_(false), tkeSpec_(false), sdrSpec_(false), mixFracSpec_(false), massFractionSpec_(false), gammaSpec_(false)
+      uSpec_(false),
+      tkeSpec_(false),
+      sdrSpec_(false),
+      tdrSpec_(false),
+      mixFracSpec_(false),
+      massFractionSpec_(false),
+      gammaSpec_(false)
   {}
 };
 
@@ -117,6 +126,7 @@ struct OpenUserData : public UserData {
   Pressure p_;
   TurbKinEnergy tke_;
   SpecDissRate sdr_;
+  TotDissRate tdr_;
   MixtureFraction mixFrac_;
   MassFraction massFraction_;
   GammaOpen gamma_;
@@ -125,6 +135,7 @@ struct OpenUserData : public UserData {
   bool pSpec_;
   bool tkeSpec_;
   bool sdrSpec_;
+  bool tdrSpec_;
   bool mixFracSpec_;
   bool massFractionSpec_;
   bool totalP_;
@@ -133,9 +144,16 @@ struct OpenUserData : public UserData {
 
   OpenUserData()
     : UserData(),
-      uSpec_(false), pSpec_(false), tkeSpec_(false), 
-      sdrSpec_(false), mixFracSpec_(false), massFractionSpec_(false), 
-      totalP_{false}, gammaSpec_(false), entrainMethod_{EntrainmentMethod::COMPUTED}
+      uSpec_(false),
+      pSpec_(false),
+      tkeSpec_(false),
+      sdrSpec_(false),
+      tdrSpec_(false),
+      mixFracSpec_(false),
+      massFractionSpec_(false),
+      totalP_{false},
+      gammaSpec_(false),
+      entrainMethod_{EntrainmentMethod::COMPUTED}
   {}
 };
 
@@ -448,6 +466,12 @@ template<> struct convert<sierra::nalu::TurbKinEnergy> {
 
 template<> struct convert<sierra::nalu::SpecDissRate> {
   static bool decode(const Node& node, sierra::nalu::SpecDissRate& rhs) ;
+};
+
+template <>
+struct convert<sierra::nalu::TotDissRate>
+{
+  static bool decode(const Node& node, sierra::nalu::TotDissRate& rhs);
 };
 
 template<> struct convert<sierra::nalu::GammaInf> {

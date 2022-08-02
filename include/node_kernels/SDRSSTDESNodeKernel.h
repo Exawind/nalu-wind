@@ -75,7 +75,6 @@ private:
   NodeKernelTraits::DblType betaTwo_;
   NodeKernelTraits::DblType gammaOne_;
   NodeKernelTraits::DblType gammaTwo_;
-  NodeKernelTraits::DblType relaxFac_;
   NodeKernelTraits::DblType cDESke_;
   NodeKernelTraits::DblType cDESkw_;
   NodeKernelTraits::DblType sdrAmb_;

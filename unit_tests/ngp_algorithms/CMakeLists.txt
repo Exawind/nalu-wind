@@ -8,6 +8,8 @@ target_sources(${utest_ex_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMdotAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTurbViscKsgsAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTurbViscSSTAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTurbViscKEAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTurbViscKOAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestGeometryAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSDRWallAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNodalGradPOpenBoundary.C

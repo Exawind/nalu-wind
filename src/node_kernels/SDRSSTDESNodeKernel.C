@@ -52,9 +52,6 @@ SDRSSTDESNodeKernel::setup(Realm& realm)
   fOneBlend_       = fieldMgr.get_field<double>(fOneBlendID_);
   cellLengthScale_  = fieldMgr.get_field<double>(cellLengthScaleID_);
 
-  const std::string dofName = "specific_dissipation_rate";
-  relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
-
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);

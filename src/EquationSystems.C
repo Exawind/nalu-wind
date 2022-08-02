@@ -27,6 +27,8 @@
 #include <MatrixFreeHeatCondEquationSystem.h>
 #include <MatrixFreeLowMachEquationSystem.h>
 #include <ShearStressTransportEquationSystem.h>
+#include <ChienKEpsilonEquationSystem.h>
+#include <WilcoxKOmegaEquationSystem.h>
 #include <TurbKineticEnergyEquationSystem.h>
 #include <WallDistEquationSystem.h>
 
@@ -124,6 +126,16 @@ void EquationSystems::load(const YAML::Node & y_node)
           if (root()->debug())
             NaluEnv::self().naluOutputP0() << "eqSys = tke/sdr " << std::endl;
           eqSys = new ShearStressTransportEquationSystem(*this);
+        } else if (expect_map(y_system, "ChienKEpsilon", true)) {
+          y_eqsys = expect_map(y_system, "ChienKEpsilon", true);
+          if (root()->debug())
+            NaluEnv::self().naluOutputP0() << "eqSys = tke/tdr " << std::endl;
+          eqSys = new ChienKEpsilonEquationSystem(*this);
+        } else if (expect_map(y_system, "WilcoxKOmega", true)) {
+          y_eqsys = expect_map(y_system, "WilcoxKOmega", true);
+          if (root()->debug())
+            NaluEnv::self().naluOutputP0() << "eqSys = tke/sdr " << std::endl;
+          eqSys = new WilcoxKOmegaEquationSystem(*this);
         } else if (expect_map(y_system, "TurbKineticEnergy", true)) {
           y_eqsys = expect_map(y_system, "TurbKineticEnergy", true);
           if (root()->debug())

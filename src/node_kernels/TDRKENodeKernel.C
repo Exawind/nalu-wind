@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include "node_kernels/TKESSTNodeKernel.h"
+#include "node_kernels/TDRKENodeKernel.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "SimdInterface.h"
@@ -19,12 +19,15 @@
 namespace sierra {
 namespace nalu {
 
-TKESSTNodeKernel::TKESSTNodeKernel(const stk::mesh::MetaData& meta)
-  : NGPNodeKernel<TKESSTNodeKernel>(),
+TDRKENodeKernel::TDRKENodeKernel(const stk::mesh::MetaData& meta)
+  : NGPNodeKernel<TDRKENodeKernel>(),
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
-    sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
+    tdrID_(get_field_ordinal(meta, "total_dissipation_rate")),
     densityID_(get_field_ordinal(meta, "density")),
     tviscID_(get_field_ordinal(meta, "turbulent_viscosity")),
+    viscID_(get_field_ordinal(meta, "viscosity")),
+    wallDistID_(get_field_ordinal(meta, "minimum_distance_to_wall")),
+    dplusID_(get_field_ordinal(meta, "dplus_wall_function")),
     dudxID_(get_field_ordinal(meta, "dudx")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     nDim_(meta.spatial_dimension())
@@ -32,38 +35,41 @@ TKESSTNodeKernel::TKESSTNodeKernel(const stk::mesh::MetaData& meta)
 }
 
 void
-TKESSTNodeKernel::setup(Realm& realm)
+TDRKENodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
 
   tke_ = fieldMgr.get_field<double>(tkeID_);
-  sdr_ = fieldMgr.get_field<double>(sdrID_);
+  tdr_ = fieldMgr.get_field<double>(tdrID_);
   density_ = fieldMgr.get_field<double>(densityID_);
   tvisc_ = fieldMgr.get_field<double>(tviscID_);
+  visc_ = fieldMgr.get_field<double>(viscID_);
+  wallDist_ = fieldMgr.get_field<double>(wallDistID_);
+  dplus_ = fieldMgr.get_field<double>(dplusID_);
   dudx_ = fieldMgr.get_field<double>(dudxID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
 
   // Update turbulence model constants
-  betaStar_ = realm.get_turb_model_constant(TM_betaStar);
-  tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
-  tkeAmb_ = realm.get_turb_model_constant(TM_tkeAmb);
-  sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
+  cEpsOne_ = realm.get_turb_model_constant(TM_cEpsOne);
+  cEpsTwo_ = realm.get_turb_model_constant(TM_cEpsTwo);
+  fOne_ = realm.get_turb_model_constant(TM_fOne);
 }
 
 void
-TKESSTNodeKernel::execute(
+TDRKENodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
 {
   using DblType = NodeKernelTraits::DblType;
 
-  // See https://turbmodels.larc.nasa.gov/sst.html for details
-
   const DblType tke = tke_.get(node, 0);
-  const DblType sdr = sdr_.get(node, 0);
+  const DblType tdr = tdr_.get(node, 0);
   const DblType density = density_.get(node, 0);
   const DblType tvisc = tvisc_.get(node, 0);
+  const DblType visc = visc_.get(node, 0);
+  const DblType wallDist = wallDist_.get(node, 0);
+  const DblType dplus = dplus_.get(node, 0);
   const DblType dVol = dualNodalVolume_.get(node, 0);
 
   DblType Pk = 0.0;
@@ -75,16 +81,21 @@ TKESSTNodeKernel::execute(
     }
   }
   Pk *= tvisc;
-  const DblType Dk = betaStar_ * density * sdr * tke;
 
-  // Clip production term and prevent Pk from being negative
-  Pk = stk::math::min(tkeProdLimitRatio_ * Dk, stk::math::max(Pk, 0.0));
+  const double Re_t = density * tke * tke / visc / stk::math::max(tdr, 1.0e-16);
+  const double fTwo = 1.0 - 0.4 / 1.8 * stk::math::exp(-Re_t * Re_t / 36.0);
 
-  // SUST source term
-  const DblType Dkamb = betaStar_ * density * sdrAmb_ * tkeAmb_;
+  // Production term with appropriate clipping of tvisc
+  const DblType Pe = cEpsOne_ * fOne_ * Pk * tdr / stk::math::max(tke, 1.0e-16);
+  const DblType DeFac =
+    cEpsTwo_ * fTwo * density * tdr / stk::math::max(tke, 1.0e-16);
+  const DblType De = DeFac * tdr;
+  const DblType LeFac =
+    2.0 * visc * stk::math::exp(-0.5 * dplus) / wallDist / wallDist;
+  const DblType Le = -LeFac * tdr;
 
-  rhs(0) += (Pk - Dk + Dkamb) * dVol;
-  lhs(0, 0) += betaStar_ * density * sdr * dVol;
+  rhs(0) += (Pe - De + Le) * dVol;
+  lhs(0, 0) += (2.0 * DeFac + LeFac) * dVol;
 }
 
 } // namespace nalu

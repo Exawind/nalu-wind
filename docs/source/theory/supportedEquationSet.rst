@@ -685,14 +685,22 @@ For simulations in which a buoyancy source term is desired, the code supports th
 
 .. _eqn_komega_sst:
 
-Shear Stress Transport (SST) RANS Model Suite
-+++++++++++++++++++++++++++++++++++++++++++++
+RANS Model Suite
+++++++++++++++++
 
-SST Formulation
-~~~~~~~~~~~~~~~
+Although Nalu-Wind is primarily expected to be a LES simulation tool,
+RANS modeling is supported through the activation of different
+two-equation RANS models: the Chien :math:`k-\epsilon` model
+:cite:`chien1982predictions`, the Wilcox 1998 :math:`k-\omega` model
+:cite:`wilcox1998turbulence`, and the SST model. For the first two
+models, the reader is referred to the reference papers and the NASA
+Turbulence Modeling Resource for the `Chien
+<https://turbmodels.larc.nasa.gov/ke-chien.html>`_ and `Wilcox
+<https://turbmodels.larc.nasa.gov/wilcox.html>`_ models. The SST model
+is explained in more details below.
 
-Although Nalu-Wind is primarily expected to be a LES simulation tool, RANS
-modeling is supported through the activation of the SST equation set.
+Shear Stress Transport (SST) Formulation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It has been observed that standard 1998 :math:`k-\omega` models display
 a strong sensitivity to the free stream value of :math:`\omega` (see

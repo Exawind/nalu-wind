@@ -85,6 +85,11 @@ void sdr_test_function(
   const VectorFieldType& coordinates,
   ScalarFieldType& sdr);
 
+void tdr_test_function(
+  const stk::mesh::BulkData& bulk,
+  const VectorFieldType& coordinates,
+  ScalarFieldType& tdr);
+
 void dwdx_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
@@ -109,6 +114,11 @@ void minimum_distance_to_wall_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   ScalarFieldType& minimum_distance_to_wall);
+
+void dplus_test_function(
+  const stk::mesh::BulkData& bulk,
+  const VectorFieldType& coordinates,
+  ScalarFieldType& dplus);
 
 void property_from_mixture_fraction_test_function(
   const stk::mesh::BulkData&,
@@ -769,6 +779,131 @@ public:
   ScalarFieldType* sdrWallArea_{nullptr};
   GenericFieldType* wallFricVel_{nullptr};
   ScalarFieldType* pecletFactor_ {nullptr};
+};
+
+/** Test Fixture for the KE Kernels
+ *
+ */
+class KEKernelHex8Mesh : public LowMachKernelHex8Mesh
+{
+public:
+  KEKernelHex8Mesh()
+    : LowMachKernelHex8Mesh(),
+      tke_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "turbulent_ke")),
+      tdr_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "total_dissipation_rate")),
+      visc_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "viscosity")),
+      tvisc_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "turbulent_viscosity")),
+      minDistance_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "minimum_distance_to_wall")),
+      dplus_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "dplus_wall_function")),
+      dudx_(&meta_->declare_field<GenericFieldType>(
+        stk::topology::NODE_RANK, "dudx"))
+  {
+    stk::mesh::put_field_on_mesh(*tke_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*tdr_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*visc_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*tvisc_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*minDistance_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*dplus_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *dudx_, meta_->universal_part(), spatialDim_ * spatialDim_, nullptr);
+  }
+
+  virtual ~KEKernelHex8Mesh() {}
+
+  virtual void fill_mesh_and_init_fields(
+    const bool doPerturb = false, const bool generateSidesets = false) override
+  {
+    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    stk::mesh::field_fill(0.2, *visc_);
+    stk::mesh::field_fill(0.3, *tvisc_);
+    unit_test_kernel_utils::density_test_function(
+      *bulk_, *coordinates_, *density_);
+    unit_test_kernel_utils::tke_test_function(*bulk_, *coordinates_, *tke_);
+    unit_test_kernel_utils::tdr_test_function(*bulk_, *coordinates_, *tdr_);
+    unit_test_kernel_utils::minimum_distance_to_wall_test_function(*bulk_, *coordinates_, *minDistance_);
+    unit_test_kernel_utils::dplus_test_function(*bulk_, *coordinates_, *dplus_);
+    unit_test_kernel_utils::dudx_test_function(*bulk_, *coordinates_, *dudx_);
+  }
+
+  ScalarFieldType* tke_{nullptr};
+  ScalarFieldType* tdr_{nullptr};
+  ScalarFieldType* visc_{nullptr};
+  ScalarFieldType* tvisc_{nullptr};
+  ScalarFieldType* minDistance_{nullptr};
+  ScalarFieldType* dplus_{nullptr};
+  GenericFieldType* dudx_{nullptr};
+};
+
+/** Test Fixture for the KO Kernels
+ *
+ */
+class KOKernelHex8Mesh : public LowMachKernelHex8Mesh
+{
+public:
+  KOKernelHex8Mesh()
+    : LowMachKernelHex8Mesh(),
+      tke_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "turbulent_ke")),
+      sdr_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "specific_dissipation_rate")),
+      visc_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "viscosity")),
+      tvisc_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "turbulent_viscosity")),
+      minDistance_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "minimum_distance_to_wall")),
+      dudx_(&meta_->declare_field<GenericFieldType>(
+        stk::topology::NODE_RANK, "dudx")),
+      dkdx_(&meta_->declare_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "dkdx")),
+      dwdx_(&meta_->declare_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "dwdx"))
+  {
+    stk::mesh::put_field_on_mesh(*tke_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*sdr_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*visc_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*tvisc_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*minDistance_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *dudx_, meta_->universal_part(), spatialDim_ * spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *dkdx_, meta_->universal_part(), spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *dwdx_, meta_->universal_part(), spatialDim_, nullptr);
+  }
+
+  virtual ~KOKernelHex8Mesh() {}
+
+  virtual void fill_mesh_and_init_fields(
+    const bool doPerturb = false, const bool generateSidesets = false) override
+  {
+    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    stk::mesh::field_fill(0.2, *visc_);
+    stk::mesh::field_fill(0.3, *tvisc_);
+    unit_test_kernel_utils::density_test_function(
+      *bulk_, *coordinates_, *density_);
+    unit_test_kernel_utils::tke_test_function(*bulk_, *coordinates_, *tke_);
+    unit_test_kernel_utils::sdr_test_function(*bulk_, *coordinates_, *sdr_);
+    unit_test_kernel_utils::minimum_distance_to_wall_test_function(*bulk_, *coordinates_, *minDistance_);
+    unit_test_kernel_utils::dudx_test_function(*bulk_, *coordinates_, *dudx_);
+    stk::mesh::field_fill(0.0, *dkdx_);
+    stk::mesh::field_fill(0.0, *dwdx_);
+  }
+
+  ScalarFieldType* tke_{nullptr};
+  ScalarFieldType* sdr_{nullptr};
+  ScalarFieldType* visc_{nullptr};
+  ScalarFieldType* tvisc_{nullptr};
+  ScalarFieldType* minDistance_{nullptr};
+  GenericFieldType* dudx_{nullptr};
+  VectorFieldType* dkdx_{nullptr};
+  VectorFieldType* dwdx_{nullptr};
 };
 
 /** Test Fixture for the Turbulence Kernels

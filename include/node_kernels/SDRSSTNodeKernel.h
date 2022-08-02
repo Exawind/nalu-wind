@@ -71,7 +71,6 @@ private:
   NodeKernelTraits::DblType gammaOne_;
   NodeKernelTraits::DblType gammaTwo_;
   NodeKernelTraits::DblType sdrAmb_;
-  NodeKernelTraits::DblType relaxFac_;
 
   const int nDim_;
 
