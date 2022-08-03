@@ -283,7 +283,7 @@ void TimeIntegrator::pre_realm_advance_stage1()
   }
 
   for (auto realm: realmVec_) {
-    realm->pre_timestep_work_prolog();
+    realm->update_geometry_due_to_mesh_motion();
   }
 }
 
@@ -292,7 +292,7 @@ void TimeIntegrator::pre_realm_advance_stage2()
   std::vector<Realm *>::iterator ii;
 
   for (auto realm: realmVec_) {
-    realm->pre_timestep_work_epilog();
+    realm->update_graph_connectivity_and_coordinates_due_to_mesh_motion();
   }
 
   // populate boundary data
@@ -320,7 +320,7 @@ TimeIntegrator::integrate_realm()
 
   bool update_overset = false;
   for (auto* realm: realmVec_) {
-    if (realm->has_mesh_motion()) {
+    if (realm->does_mesh_move()) {
       update_overset = true;
       break;
     }
@@ -343,8 +343,10 @@ TimeIntegrator::integrate_realm()
       NaluEnv::self().naluOutputP0()
         << "   Realm Nonlinear Iteration: " << k+1 << "/" << nonlinearIterations_ << std::endl
         << std::endl;
-      if (overset_->is_external_overset())
-        overset_->exchange_solution();
+
+      // update overset and geometry as needed
+      interstep_updates(k);
+
       for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
         (*ii)->advance_time_step();
         (*ii)->process_multi_physics_transfer();
@@ -418,6 +420,43 @@ TimeIntegrator::provide_mean_norm()
   NaluEnv::self().naluOutputP0() << "Mean System Norm: "
       << std::setprecision(16) << sumNorm/realmIncrement << " "
       << std::setprecision(6) << timeStepCount_ << " " << currentTime_ << std::endl;
+}
+
+//--------------------------------------------------------------------------
+void
+TimeIntegrator::interstep_updates(int nonLinearIterationIndex)
+{
+  // hard code as false for now. We want to only trigger this when there is
+  // FSI so we need to add an indicator for fsi
+  const bool updateGeomInsideNL = nonLinearIterationIndex > 0 && false;
+
+  // perform mesh motion, recompute geometry, etc fsi
+  if (updateGeomInsideNL) {
+    bool updateOverset = false;
+
+    for (auto&& realm : realmVec_) {
+      realm->update_geometry_due_to_mesh_motion();
+      if (realm->does_mesh_move()) {
+        updateOverset = true;
+      }
+    }
+
+    if (updateOverset) {
+      overset_->update_connectivity();
+    }
+  }
+
+  if (overset_->is_external_overset()) {
+    overset_->exchange_solution();
+  }
+
+  // reinit linear systems, reset current coordinates and other topology
+  // computations
+  if (updateGeomInsideNL) {
+    for (auto&& realm : realmVec_) {
+      realm->update_graph_connectivity_and_coordinates_due_to_mesh_motion();
+    }
+  }
 }
 
 //--------------------------------------------------------------------------

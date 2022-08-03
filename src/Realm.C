@@ -1671,7 +1671,8 @@ Realm::makeSureNodesHaveValidTopology()
   ThrowRequire(0 == nodes_vector.size());
 }
 
-void Realm::pre_timestep_work_prolog()
+void
+Realm::update_geometry_due_to_mesh_motion()
 {
   // check for mesh motion
   if ( solutionOptions_->meshMotion_ ) {
@@ -1688,7 +1689,8 @@ void Realm::pre_timestep_work_prolog()
   }
 }
 
-void Realm::pre_timestep_work_epilog()
+void
+Realm::update_graph_connectivity_and_coordinates_due_to_mesh_motion()
 {
   if ( solutionOptions_->meshMotion_ ) {
     // Reset the stk::mesh::NgpMesh instance
