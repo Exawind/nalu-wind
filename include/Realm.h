@@ -103,6 +103,7 @@ class Realm {
 
   virtual void load(const YAML::Node & node);
   void look_ahead_and_creation(const YAML::Node & node);
+  void look_ahead_create_lidar(const YAML::Node & node);
 
   virtual void breadboard();
 
@@ -453,7 +454,7 @@ class Realm {
   BdyLayerStatistics* bdyLayerStats_{nullptr};
   std::unique_ptr<MeshMotionAlg> meshMotionAlg_;
   std::unique_ptr<MeshTransformationAlg> meshTransformationAlg_;
-  std::unique_ptr<LidarLineOfSite> lidarLOS_;
+  std::vector<LidarLineOfSite> lidarLOS_;
 
   std::vector<Algorithm *> propertyAlg_;
   std::map<PropertyIdentifier, ScalarFieldType *> propertyMap_;

@@ -570,22 +570,9 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
     if ( foundProbe.size() != 1 ) {
       throw std::runtime_error("look_ahead_and_create::error: Too many data probe blocks");
     }
-    dataProbePostProcessing_ =  new DataProbePostProcessing(*this, *foundProbe[0]);
-
-    const YAML::Node lidar_spec = (*foundProbe[0])["data_probes"]["lidar_specifications"];
-    if (lidar_spec) {
-      std::string output_type = "netcdf";
-      get_if_present(lidar_spec, "output", output_type);
-      if (output_type == "dataprobes") {
-        LidarLineOfSite lidarLOS;
-        auto lidarDBSpec = lidarLOS.determine_line_of_site_info(lidar_spec);
-        dataProbePostProcessing_->add_external_data_probe_spec_info(lidarDBSpec.release());
-      }
-      else {
-        lidarLOS_ = std::make_unique<LidarLineOfSite>();
-        lidarLOS_->load(lidar_spec);
-      }
-    }
+    auto& probe_block = *foundProbe.front();
+    dataProbePostProcessing_ =  new DataProbePostProcessing(*this, probe_block);
+    look_ahead_create_lidar(probe_block["data_probes"]);
   }
 
   // look for Actuator
@@ -612,6 +599,38 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
   }
 }
   
+void Realm::look_ahead_create_lidar(const YAML::Node& node)
+{
+  auto lidar_spec = node["lidar_specifications"];
+
+  auto create_lidar = [&](const YAML::Node& node) {
+    std::string output_type = "netcdf";
+    get_if_present(node, "output", output_type);
+    if (output_type == "dataprobes") {
+      LidarLineOfSite lidarLOS;
+      auto lidarDBSpec = lidarLOS.determine_line_of_site_info(node);
+      ThrowRequireMsg(dataProbePostProcessing_, "Lidar processing with dataprobe output requires valid data probe object");
+      dataProbePostProcessing_->add_external_data_probe_spec_info(lidarDBSpec.release());
+     }
+     else {
+      lidarLOS_.emplace_back();
+      lidarLOS_.back().load(node);
+     }
+  };
+
+  if (lidar_spec) {
+    const auto is_scalar = lidar_spec.Type() == YAML::NodeType::Map;
+    if (is_scalar) {
+      create_lidar(lidar_spec);
+    }
+    else {
+      for (auto spec : lidar_spec) {
+        create_lidar(spec);
+      }
+    }
+  }
+}
+
 //--------------------------------------------------------------------------
 //-------- load ------------------------------------------------------------
 //--------------------------------------------------------------------------
@@ -2254,8 +2273,8 @@ Realm::initialize_post_processing_algorithms()
   if (actuatorModel_)
     actuatorModel_->init(bulk_data());
 
-  if (lidarLOS_) {
-    lidarLOS_->set_time(timeIntegrator_->get_current_time());
+  for (auto& los : lidarLOS_) {
+    los.set_time(timeIntegrator_->get_current_time());
   }
 }
 
@@ -4203,23 +4222,24 @@ Realm::post_converged_work()
     dataProbePostProcessing_->execute();
   }
 
-  if (lidarLOS_) {
+   NaluEnv::self().naluOutputP0()
+      << "LidarLineOfSite::output begin" << std::endl;
+  for (auto& los : lidarLOS_) {
     const double small = 1e-8 * timeIntegrator_->get_time_step();
     const double next_time =
       timeIntegrator_->get_current_time() + timeIntegrator_->get_time_step();
-    NaluEnv::self().naluOutputP0()
-      << "LidarLineOfSite::output begin" << std::endl;
-    while (lidarLOS_->time() < next_time - small) {
+
+    while (los.time() < next_time - small) {
       const double dtratio =
-        (lidarLOS_->time() - timeIntegrator_->get_current_time()) /
+        (los.time() - timeIntegrator_->get_current_time()) /
         timeIntegrator_->get_time_step();
-      lidarLOS_->output(
+      los.output(
         bulk_data(), !get_inactive_selector(), get_coordinates_name(), dtratio);
-      lidarLOS_->increment_time();
+      los.increment_time();
     }
-    NaluEnv::self().naluOutputP0()
-      << "LidarLineOfSite::output end" << std::endl;
   }
+  NaluEnv::self().naluOutputP0()
+      << "LidarLineOfSite::output end" << std::endl;
 
   if (nullptr != bdyLayerStats_)
     bdyLayerStats_->execute();
