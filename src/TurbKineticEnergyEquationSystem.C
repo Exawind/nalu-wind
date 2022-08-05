@@ -304,6 +304,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
           break;
         case TurbulenceModel::SST_IDDES:
           nodeAlg.add_kernel<TKESSTIDDESNodeKernel>(realm_.meta_data());
+          break;
         case TurbulenceModel::KE:
           nodeAlg.add_kernel<TKEKENodeKernel>(realm_.meta_data());
           break;
