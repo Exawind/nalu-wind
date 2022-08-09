@@ -64,11 +64,13 @@ LidarLineOfSite::load(const YAML::Node& node)
   }
 
   const YAML::Node fromTargets = node["from_target_part"];
-  if (fromTargets.Type() == YAML::NodeType::Scalar) {
-    fromTargetNames_.push_back(fromTargets.as<std::string>());
-  } else {
-    for (const auto& target : fromTargets) {
-      fromTargetNames_.push_back(target.as<std::string>());
+  if (fromTargets) {
+    if (fromTargets.Type() == YAML::NodeType::Scalar) {
+      fromTargetNames_.push_back(fromTargets.as<std::string>());
+    } else {
+      for (const auto& target : fromTargets) {
+        fromTargetNames_.push_back(target.as<std::string>());
+      }
     }
   }
 

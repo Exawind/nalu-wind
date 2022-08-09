@@ -276,22 +276,52 @@ realms:
       search_method: stk_kdtree
       search_tolerance: 1.0e-3
       search_expansion_factor: 2.0
-
       lidar_specifications:
-        from_target_part: [fluid_part]
-        type: scanning
-        frequency: 10 #Hz
-        points_along_line: 2
-        output: text
-        scanning_lidar_specifications:
-          center: [500,500,100] #m
-          beam_length: 50.0 #m
-          axis: [1,0,0] #m
-          stare_time: 1 #s
-          sweep_angle: 20 #deg
-          step_delta_angle: 1 #deg
-          reset_time_delta: 1 #s
-          elevation_angles: [-5,0,5]
+          - name: scan-1-inflow
+            type: scanning
+            frequency: 5
+            points_along_line: 10
+            output: text
+            scanning_lidar_specifications:
+              center: &lidar_center [500,500,100]  # Location of the scanning LIDAR
+              beam_length: 20
+              axis: [-1,0,0] # Zero angle vector for the angular sweep
+              stare_time: 1 #s
+              sweep_angle: 30 #deg, Extent of angular sweep between sweep_angle/2 to -sweep_angle/2
+              step_delta_angle: 2 #deg
+              reset_time_delta: 0 #s, Time to reset LIDAR after sweep.
+              elevation_angles: [-5,0,5]
+
+          - name: scan-1-outflow
+            type: scanning
+            frequency: 10
+            points_along_line: 10
+            output: netcdf
+            scanning_lidar_specifications:
+              center: *lidar_center
+              beam_length: 20
+              axis: [1,0,0] # Zero angle vector for the angular sweep
+              stare_time: 1 #s
+              sweep_angle: 30 #deg, Extent of angular sweep between sweep_angle/2 to -sweep_angle/2
+              step_delta_angle: 2 #deg
+              reset_time_delta: 0 #s, Time to reset LIDAR after sweep.
+              elevation_angles: [0]
+
+          - name: scan-2
+            type: scanning
+            frequency: 10 #Hz
+            points_along_line: 2
+            output: text
+            scanning_lidar_specifications:
+              center: *lidar_center
+              beam_length: 20 #m
+              axis: [1,0,0] # Zero angle vector for the angular sweep
+              stare_time: 1 #s
+              sweep_angle: 30 #deg, Extent of angular sweep between sweep_angle/2 to -sweep_angle/2
+              step_delta_angle: 2 #deg
+              reset_time_delta: 1 #s, Time to reset LIDAR after sweep.
+              elevation_angles: [0]
+
 
 
     # This defines the ABL forcing to drive the winds to 8 m/s from
