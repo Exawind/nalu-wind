@@ -84,10 +84,6 @@ TurbViscKOAlg::execute()
       const DblType a0Star = 0.072 / 3.0;
       const DblType aStar = (a0Star + ReTurb / rK) / (1.0 + ReTurb / rK);
 
-      const DblType omegaHat = stk::math::max(
-        sdr.get(meshIdx, 0),
-        (7.0 / 8.0) * (sijMag / stk::math::sqrt(0.09 / aStar)));
-
       tvisc.get(meshIdx, 0) = aStar * density.get(meshIdx, 0) *
                               tke.get(meshIdx, 0) /
                               stk::math::max(sdr.get(meshIdx, 0), 1.e-8);
