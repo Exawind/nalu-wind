@@ -190,7 +190,6 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     restartFileIndex_(99),
     numInitialElements_(0),
     timeIntegrator_(0),
-    boundaryConditions_(*this),
     initialConditions_(*this),
     materialPropertys_(*this),
     equationSystems_(*this),
@@ -788,7 +787,7 @@ Realm::load(const YAML::Node & node)
     NaluEnv::self().naluOutputP0() << std::endl;
     NaluEnv::self().naluOutputP0() << "Boundary Condition Review: " << std::endl;
     NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
-    boundaryConditions_.load(node);
+    boundaryConditions_ = BoundaryConditionCreator().create_bc_vector(node);
     NaluEnv::self().naluOutputP0() << std::endl;
     NaluEnv::self().naluOutputP0() << "Initial Condition Review:  " << std::endl;
     NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
@@ -1026,30 +1025,40 @@ void
 Realm::setup_bc()
 {
   // loop over all bcs and register
-  for (size_t ibc = 0; ibc < boundaryConditions_.size(); ++ibc) {
-    BoundaryCondition& bc = *boundaryConditions_[ibc];
-    std::string name = physics_part_name(bc.targetName_);
+  for (auto&& bc : boundaryConditions_) {
+    std::string name = physics_part_name(bc->targetName_);
 
-    switch(bc.theBcType_) {
+    switch(bc->theBcType_) {
       case WALL_BC:
-        equationSystems_.register_wall_bc(name, *reinterpret_cast<const WallBoundaryConditionData *>(&bc));
+        equationSystems_.register_wall_bc(
+          name, *reinterpret_cast<const WallBoundaryConditionData*>(bc.get()));
         break;
       case INFLOW_BC:
-        equationSystems_.register_inflow_bc(name, *reinterpret_cast<const InflowBoundaryConditionData *>(&bc));
+        equationSystems_.register_inflow_bc(
+          name,
+          *reinterpret_cast<const InflowBoundaryConditionData*>(bc.get()));
         break;
       case OPEN_BC:
-        equationSystems_.register_open_bc(name, *reinterpret_cast<const OpenBoundaryConditionData *>(&bc));
+        equationSystems_.register_open_bc(
+          name, *reinterpret_cast<const OpenBoundaryConditionData*>(bc.get()));
         break;
       case SYMMETRY_BC:
-        equationSystems_.register_symmetry_bc(name, *reinterpret_cast<const SymmetryBoundaryConditionData *>(&bc));
+        equationSystems_.register_symmetry_bc(
+          name,
+          *reinterpret_cast<const SymmetryBoundaryConditionData*>(bc.get()));
         break;
       case ABLTOP_BC:
-        equationSystems_.register_abltop_bc(name, *reinterpret_cast<const ABLTopBoundaryConditionData *>(&bc));
+        equationSystems_.register_abltop_bc(
+          name,
+          *reinterpret_cast<const ABLTopBoundaryConditionData*>(bc.get()));
         break;
       case PERIODIC_BC:
       {
-        ThrowAssert(reinterpret_cast<const PeriodicBoundaryConditionData *>(&bc) != nullptr);
-        const auto& pbc = (*reinterpret_cast<const PeriodicBoundaryConditionData *>(&bc));
+        ThrowAssert(
+          reinterpret_cast<const PeriodicBoundaryConditionData*>(bc.get()) !=
+          nullptr);
+        const auto& pbc =
+          (*reinterpret_cast<const PeriodicBoundaryConditionData*>(bc.get()));
 
         std::string masterName = physics_part_name(pbc.masterSlave_.master_);
         std::string slaveName = physics_part_name(pbc.masterSlave_.slave_);
@@ -1057,7 +1066,9 @@ Realm::setup_bc()
         break;
       }
       case NON_CONFORMAL_BC:
-        equationSystems_.register_non_conformal_bc(*reinterpret_cast<const NonConformalBoundaryConditionData *>(&bc));
+        equationSystems_.register_non_conformal_bc(
+          *reinterpret_cast<const NonConformalBoundaryConditionData*>(
+            bc.get()));
         break;
       case OVERSET_BC: {
         const OversetBoundaryConditionData& obc =
@@ -2335,9 +2346,8 @@ Realm::has_non_matching_boundary_face_alg() const
 bool 
 Realm::query_for_overset() 
 {
-  for (size_t ibc = 0; ibc < boundaryConditions_.size(); ++ibc) {
-    BoundaryCondition& bc = *boundaryConditions_[ibc];
-    switch(bc.theBcType_) {
+  for (auto&& bc : boundaryConditions_) {
+    switch(bc->theBcType_) {
     case OVERSET_BC:
       hasOverset_ = true;
       break;
