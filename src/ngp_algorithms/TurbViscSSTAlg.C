@@ -62,6 +62,8 @@ TurbViscSSTAlg::execute()
   const auto dudx = fieldMgr.get_field<double>(dudx_);
   auto tvisc = fieldMgr.get_field<double>(tvisc_);
 
+  tvisc.sync_to_device();
+
   const DblType aOne = aOne_;
   const DblType betaStar = betaStar_;
   const int nDim = meta.spatial_dimension();

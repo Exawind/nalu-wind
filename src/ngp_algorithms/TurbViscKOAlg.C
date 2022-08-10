@@ -61,6 +61,8 @@ TurbViscKOAlg::execute()
   const auto dudx = fieldMgr.get_field<double>(dudx_);
   auto tvisc = fieldMgr.get_field<double>(tvisc_);
 
+  tvisc.sync_to_device();
+
   const int nDim = meta.spatial_dimension();
 
   nalu_ngp::run_entity_algorithm(
