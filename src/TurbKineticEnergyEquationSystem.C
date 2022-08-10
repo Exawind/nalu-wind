@@ -59,6 +59,7 @@
 #include <node_kernels/TKESSTDESNodeKernel.h>
 #include <node_kernels/TKESSTIDDESNodeKernel.h>
 #include <node_kernels/TKESSTNodeKernel.h>
+#include <node_kernels/TKESSTLRNodeKernel.h>
 #include <node_kernels/TKEKENodeKernel.h>
 #include <node_kernels/TKERodiNodeKernel.h>
 #include <node_kernels/TKEKONodeKernel.h>
@@ -148,7 +149,7 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
   if (!check_for_valid_turblence_model(turbulenceModel_)) {
     throw std::runtime_error(
       "User has requested TurbKinEnergyEqs, however, turbulence model is not "
-      "KSGS, SST, SST_DES, SST_IDDES, KE, SST_AMS, or KO");
+      "KSGS, SST, SSTLR, SST_DES, SST_IDDES, SST_AMS, KE, or KO");
   }
 
   // create projected nodal gradient equation system
@@ -163,6 +164,7 @@ TurbKineticEnergyEquationSystem::check_for_valid_turblence_model(
 {
   switch (turbModel) {
   case TurbulenceModel::SST:
+  case TurbulenceModel::SSTLR:
   case TurbulenceModel::KSGS:
   case TurbulenceModel::SST_DES:
   case TurbulenceModel::SST_AMS:
@@ -296,6 +298,9 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         case TurbulenceModel::SST:
           nodeAlg.add_kernel<TKESSTNodeKernel>(realm_.meta_data());
           break;
+        case TurbulenceModel::SSTLR:
+          nodeAlg.add_kernel<TKESSTLRNodeKernel>(realm_.meta_data());
+          break;
         case TurbulenceModel::SST_DES:
           nodeAlg.add_kernel<TKESSTDESNodeKernel>(realm_.meta_data());
           break;
@@ -348,6 +353,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
       break;
     }
     case TurbulenceModel::SST:
+    case TurbulenceModel::SSTLR:
     case TurbulenceModel::SST_DES:
     case TurbulenceModel::SST_AMS:
     case TurbulenceModel::SST_IDDES: {

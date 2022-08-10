@@ -560,6 +560,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_cDESkw] = 0.78;
   turbModelConstantMap_[TM_tkeProdLimitRatio] =
     (turbulenceModel_ == TurbulenceModel::SST ||
+     turbulenceModel_ == TurbulenceModel::SSTLR ||
      turbulenceModel_ == TurbulenceModel::SST_DES ||
      turbulenceModel_ == TurbulenceModel::SST_AMS ||
      turbulenceModel_ == TurbulenceModel::SST_IDDES)
@@ -620,13 +621,17 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_fOne] = 1.0;
   turbModelConstantMap_[TM_sigmaK] = 1.0;
   turbModelConstantMap_[TM_sigmaEps] = 1.3;
+  turbModelConstantMap_[TM_sstLRDestruct] = 1.0;
+  turbModelConstantMap_[TM_sstLRProd] = 1.0;
   turbModelConstantMap_[TM_tkeAmb] = 0.0;
   turbModelConstantMap_[TM_sdrAmb] = 0.0;
   turbModelConstantMap_[TM_avgTimeCoeff] = 1.0;
+  turbModelConstantMap_[TM_alphaInf] = 0.52;
   turbModelConstantMap_[TM_caOne] = 2.0;
   turbModelConstantMap_[TM_caTwo] = 0.06;
   turbModelConstantMap_[TM_ceOne] = 1.0;
   turbModelConstantMap_[TM_ceTwo] = 50.0;
+  turbModelConstantMap_[TM_c0t] = 0.03;
 }
 
 

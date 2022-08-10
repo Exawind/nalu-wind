@@ -164,6 +164,7 @@ enum class TurbulenceModel {
   SMAGORINSKY,
   WALE,
   SST,
+  SSTLR,
   SST_DES,
   SST_AMS,
   SST_IDDES,
@@ -174,7 +175,7 @@ enum class TurbulenceModel {
 
 // matching string name index into above enums (must match PERFECTLY)
 static const std::string TurbulenceModelNames[] = {
-  "laminar", "ksgs",      "smagorinsky", "wale", "sst", "sst_des",
+  "laminar", "ksgs",      "smagorinsky", "wale", "sst", "sstlr", "sst_des",
   "sst_ams", "sst_iddes",   "ke",  "ko"};
 
 enum TurbulenceModelConstant {
@@ -238,16 +239,18 @@ enum TurbulenceModelConstant {
   TM_fOne = 57,
   TM_sigmaK = 58,
   TM_sigmaEps = 59,
-  TM_tkeAmb = 60,
-  TM_sdrAmb = 61,
-  TM_avgTimeCoeff = 62,
-  TM_alphaInf = 63,
-  TM_caOne = 64,
-  TM_caTwo = 65,
-  TM_ceOne = 66,
-  TM_ceTwo = 67,
-  TM_c0t = 68,
-  TM_END = 69
+  TM_sstLRDestruct = 60,
+  TM_sstLRProd = 61,
+  TM_tkeAmb = 62,
+  TM_sdrAmb = 63,
+  TM_avgTimeCoeff = 64,
+  TM_alphaInf = 65,
+  TM_caOne = 66,
+  TM_caTwo = 67,
+  TM_ceOne = 68,
+  TM_ceTwo = 69,
+  TM_c0t = 70,
+  TM_END = 71
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
@@ -311,6 +314,8 @@ static const std::string TurbulenceModelConstantNames[] = {
   "fOne",
   "sigmaK",
   "sigmaEps",
+  "sstLRDestruct",
+  "sstLRProd",
   "tke_amb",
   "sdr_amb",
   "avgTimeCoeff",

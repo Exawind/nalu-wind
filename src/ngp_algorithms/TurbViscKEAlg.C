@@ -56,6 +56,8 @@ TurbViscKEAlg::execute()
   const auto dplus = fieldMgr.get_field<double>(dplus_);
   auto tvisc = fieldMgr.get_field<double>(tvisc_);
 
+  tvisc.sync_to_device();
+
   const DblType cMu = cMu_;
   const DblType fMuExp = fMuExp_;
 

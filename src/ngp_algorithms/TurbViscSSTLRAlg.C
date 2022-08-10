@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include "ngp_algorithms/TurbViscSSTAlg.h"
+#include "ngp_algorithms/TurbViscSSTLRAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpTypes.h"
 #include "ngp_utils/NgpFieldManager.h"
@@ -19,7 +19,7 @@
 namespace sierra {
 namespace nalu {
 
-TurbViscSSTAlg::TurbViscSSTAlg(
+TurbViscSSTLRAlg::TurbViscSSTLRAlg(
   Realm& realm,
   stk::mesh::Part* part,
   ScalarFieldType* tvisc,
@@ -30,6 +30,7 @@ TurbViscSSTAlg::TurbViscSSTAlg(
     viscosity_(get_field_ordinal(realm.meta_data(), "viscosity")),
     tke_(get_field_ordinal(realm.meta_data(), "turbulent_ke")),
     sdr_(get_field_ordinal(realm.meta_data(), "specific_dissipation_rate")),
+    fOneBlend_(get_field_ordinal(realm.meta_data(), "sst_f_one_blending")),
     minDistance_(
       get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall")),
     dudx_(get_field_ordinal(
@@ -41,7 +42,7 @@ TurbViscSSTAlg::TurbViscSSTAlg(
 }
 
 void
-TurbViscSSTAlg::execute()
+TurbViscSSTLRAlg::execute()
 {
   using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
@@ -58,6 +59,7 @@ TurbViscSSTAlg::execute()
   const auto visc = fieldMgr.get_field<double>(viscosity_);
   const auto tke = fieldMgr.get_field<double>(tke_);
   const auto sdr = fieldMgr.get_field<double>(sdr_);
+  const auto fOneBlend = fieldMgr.get_field<double>(fOneBlend_);
   const auto minD = fieldMgr.get_field<double>(minDistance_);
   const auto dudx = fieldMgr.get_field<double>(dudx_);
   auto tvisc = fieldMgr.get_field<double>(tvisc_);
@@ -69,7 +71,7 @@ TurbViscSSTAlg::execute()
   const int nDim = meta.spatial_dimension();
 
   nalu_ngp::run_entity_algorithm(
-    "TurbViscSSTAlg", ngpMesh, stk::topology::NODE_RANK, sel,
+    "TurbViscSSTLRAlg", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
       DblType sijMag = 0.0;
       for (int i = 0; i < nDim; ++i) {
@@ -91,9 +93,25 @@ TurbViscSSTAlg::execute()
       const DblType fArgTwo = stk::math::max(2.0 * trbDiss, lamDiss);
       const DblType fTwo = stk::math::tanh(fArgTwo * fArgTwo);
 
-      tvisc.get(meshIdx, 0) =
+      const DblType ReTurb = density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
+                             sdr.get(meshIdx, 0) / visc.get(meshIdx, 0);
+
+      const DblType rK = 6.0;
+      const DblType a0Star = 0.072 / 3.0;
+      const DblType aStar = (a0Star + ReTurb / rK) / (1.0 + ReTurb / rK);
+
+      const DblType omegaHat = stk::math::max(
+        sdr.get(meshIdx, 0),
+        (7.0 / 8.0) * (sijMag / stk::math::sqrt(0.09 / aStar)));
+
+      const DblType fOne = fOneBlend.get(meshIdx, 0);
+      const DblType tviscSST =
         aOne * density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
         stk::math::max(aOne * sdr.get(meshIdx, 0), sijMag * fTwo);
+      const DblType tviscKW = aStar * density.get(meshIdx, 0) *
+                              tke.get(meshIdx, 0) /
+                              stk::math::max(omegaHat, 1.e-8);
+      tvisc.get(meshIdx, 0) = fOne * tviscKW + (1 - fOne) * tviscSST;
     });
   tvisc.modify_on_device();
 }
