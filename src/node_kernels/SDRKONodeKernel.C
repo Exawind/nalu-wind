@@ -115,6 +115,9 @@ SDRKONodeKernel::execute(
     (1.0 + stk::math::pow(ReT / Rbeta, 4.0));
   DblType Dk = betaStarLowRe * density * sdr * tke;
 
+  // Clip production term and clip negative productions
+  Pk = stk::math::min(tkeProdLimitRatio_ * Dk, stk::math::max(Pk, 0.0));
+
   const DblType chi_omega = stk::math::abs(
     chi_numer / stk::math::pow(0.09 * stk::math::max(sdr, 1.e-8), 3.0));
   const DblType beta =

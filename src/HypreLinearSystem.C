@@ -2400,7 +2400,6 @@ double
 HypreLinearSystem::copy_hypre_to_stk(stk::mesh::FieldBase* stkField)
 {
   auto& meta = realm_.meta_data();
-  auto& bulk = realm_.bulk_data();
   const auto selector =
     stk::mesh::selectField(*stkField) & meta.locally_owned_part() &
     !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
@@ -2419,7 +2418,6 @@ HypreLinearSystem::copy_hypre_to_stk(stk::mesh::FieldBase* stkField)
   auto iLower = iLower_;
   auto iUpper = iUpper_;
   auto numDof = numDof_;
-  auto N = numRows_;
 
   /******************************/
   /* Move solution to stk field */
