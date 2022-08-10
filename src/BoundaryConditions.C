@@ -34,42 +34,42 @@ BoundaryConditionCreator::load_single_bc_node(const YAML::Node& node)
 {
   std::unique_ptr<BoundaryCondition> this_bc;
   if (node["wall_boundary_condition"]) {
-    this_bc = std::move(register_bc<WallBoundaryConditionData>(node));
+    this_bc = register_bc<WallBoundaryConditionData>(node);
 
     NaluEnv::self().naluOutputP0()
       << "Wall BC name:        " << this_bc->bcName_ << " on "
       << this_bc->targetName_ << std::endl;
 
   } else if (node["inflow_boundary_condition"]) {
-    this_bc = std::move(register_bc<InflowBoundaryConditionData>(node));
+    this_bc = register_bc<InflowBoundaryConditionData>(node);
 
     NaluEnv::self().naluOutputP0()
       << "Inflow BC name:        " << this_bc->bcName_ << " on "
       << this_bc->targetName_ << std::endl;
 
   } else if (node["open_boundary_condition"]) {
-    this_bc = std::move(register_bc<OpenBoundaryConditionData>(node));
+    this_bc = register_bc<OpenBoundaryConditionData>(node);
 
     NaluEnv::self().naluOutputP0()
       << "Open BC name:        " << this_bc->bcName_ << " on "
       << this_bc->targetName_ << std::endl;
 
   } else if (node["symmetry_boundary_condition"]) {
-    this_bc = std::move(register_bc<SymmetryBoundaryConditionData>(node));
+    this_bc = register_bc<SymmetryBoundaryConditionData>(node);
 
     NaluEnv::self().naluOutputP0()
       << "Symmetry BC name:        " << this_bc->bcName_ << " on "
       << this_bc->targetName_ << std::endl;
 
   } else if (node["abltop_boundary_condition"]) {
-    this_bc = std::move(register_bc<ABLTopBoundaryConditionData>(node));
+    this_bc = register_bc<ABLTopBoundaryConditionData>(node);
 
     NaluEnv::self().naluOutputP0()
       << "ABLTop BC name:        " << this_bc->bcName_ << " on "
       << this_bc->targetName_ << std::endl;
 
   } else if (node["periodic_boundary_condition"]) {
-    this_bc = std::move(register_bc<PeriodicBoundaryConditionData>(node));
+    this_bc = register_bc<PeriodicBoundaryConditionData>(node);
 
     auto* periodicBC =
       dynamic_cast<PeriodicBoundaryConditionData*>(this_bc.get());
@@ -80,14 +80,14 @@ BoundaryConditionCreator::load_single_bc_node(const YAML::Node& node)
       << periodicBC->masterSlave_.slave_ << std::endl;
 
   } else if (node["non_conformal_boundary_condition"]) {
-    this_bc = std::move(register_bc<NonConformalBoundaryConditionData>(node));
+    this_bc = register_bc<NonConformalBoundaryConditionData>(node);
 
     NaluEnv::self().naluOutputP0()
       << "NonConformal BC name:    " << this_bc->bcName_ << " using "
       << this_bc->targetName_ << std::endl;
 
   } else if (node["overset_boundary_condition"]) {
-    this_bc = std::move(register_bc<OversetBoundaryConditionData>(node));
+    this_bc = register_bc<OversetBoundaryConditionData>(node);
 
     NaluEnv::self().naluOutputP0()
       << "Overset BC name: " << this_bc->bcName_ << std::endl;
