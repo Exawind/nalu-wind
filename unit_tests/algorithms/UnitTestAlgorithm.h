@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef UNITTESTALGORITHM_H
 #define UNITTESTALGORITHM_H
 
@@ -19,11 +18,10 @@
 #include <memory>
 #include <cassert>
 
-class TestAlgorithm: public ::testing::Test
+class TestAlgorithm : public ::testing::Test
 {
 public:
-  TestAlgorithm()
-    : comm_(MPI_COMM_WORLD)
+  TestAlgorithm() : comm_(MPI_COMM_WORLD)
   {
     YAML::Node doc = unit_test_utils::get_default_inputs();
     naluObj_.reset(new unit_test_utils::NaluTest(doc));
@@ -39,15 +37,15 @@ public:
     return *realm_;
   }
 
-  inline sierra::nalu::Realm& create_realm(
-    const std::string realm_type = "multi_physics")
+  inline sierra::nalu::Realm&
+  create_realm(const std::string realm_type = "multi_physics")
   {
     const YAML::Node realm_node = unit_test_utils::get_realm_default_node();
     realm_ = &naluObj_->create_realm(realm_node, realm_type);
     return *realm_;
   }
 
-  void fill_mesh(const std::string mesh_spec="generated:10x10x10");
+  void fill_mesh(const std::string mesh_spec = "generated:10x10x10");
 
   virtual void declare_fields() = 0;
 
@@ -57,17 +55,12 @@ public:
     return *realm_;
   }
 
-  inline stk::mesh::MetaData& meta() const
-  {
-    return realm().meta_data();
-  }
+  inline stk::mesh::MetaData& meta() const { return realm().meta_data(); }
 
-  inline stk::mesh::BulkData& bulk() const
-  {
-    return realm().bulk_data();
-  }
+  inline stk::mesh::BulkData& bulk() const { return realm().bulk_data(); }
 
-  double field_norm(const ScalarFieldType & field, stk::mesh::Selector* selector = nullptr);
+  double field_norm(
+    const ScalarFieldType& field, stk::mesh::Selector* selector = nullptr);
 
   //! Reference to test Nalu instance used to hold Simulation and Realm
   std::unique_ptr<unit_test_utils::NaluTest> naluObj_;
@@ -80,19 +73,17 @@ public:
   stk::ParallelMachine comm_;
 };
 
-class TestTurbulenceAlgorithm: public TestAlgorithm
+class TestTurbulenceAlgorithm : public TestAlgorithm
 {
 public:
-  TestTurbulenceAlgorithm()
-    : TestAlgorithm()
-  {}
+  TestTurbulenceAlgorithm() : TestAlgorithm() {}
 
   virtual ~TestTurbulenceAlgorithm() {}
 
   virtual void declare_fields();
 
-  virtual void fill_mesh_and_init_fields(
-    const std::string mesh_spec="generated:10x10x10");
+  virtual void
+  fill_mesh_and_init_fields(const std::string mesh_spec = "generated:10x10x10");
 
   ScalarFieldType* density_{nullptr};
   ScalarFieldType* viscosity_{nullptr};
@@ -115,15 +106,19 @@ public:
   ScalarFieldType* avgTime_{nullptr};
 };
 
-struct NodeSuppHelper {
+struct NodeSuppHelper
+{
   NodeSuppHelper()
-  : yamlNode(unit_test_utils::get_default_inputs()),
-    realmDefaultNode(unit_test_utils::get_realm_default_node()),
-    naluObj(std::unique_ptr<unit_test_utils::NaluTest>(new unit_test_utils::NaluTest(yamlNode))),
-    realm(naluObj->create_realm(realmDefaultNode, "multi_physics"))
-  {}
+    : yamlNode(unit_test_utils::get_default_inputs()),
+      realmDefaultNode(unit_test_utils::get_realm_default_node()),
+      naluObj(std::unique_ptr<unit_test_utils::NaluTest>(
+        new unit_test_utils::NaluTest(yamlNode))),
+      realm(naluObj->create_realm(realmDefaultNode, "multi_physics"))
+  {
+  }
 
-  stk::mesh::Entity make_one_node_mesh() {
+  stk::mesh::Entity make_one_node_mesh()
+  {
     realm.bulk_data().modification_begin();
     node = realm.bulk_data().declare_node(1u);
     realm.bulk_data().modification_end();

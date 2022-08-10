@@ -114,15 +114,16 @@ struct ActuatorBulkMod : public ActuatorBulk
 //-----------------------------------------------------------------
 // host or device execution example
 
- void
- ActPostIter(ActuatorBulkMod& actBulk)
+void
+ActPostIter(ActuatorBulkMod& actBulk)
 {
   ActDualViewHelper<ActuatorMemSpace> helper;
   helper.touch_dual_view(actBulk.scalar_);
-  actBulk.velocity_.sync_device();;
+  actBulk.velocity_.sync_device();
+  ;
   actBulk.pointCentroid_.sync_device();
 
-  // can get device view from the helper object 
+  // can get device view from the helper object
   auto scalar = helper.get_local_view(actBulk.scalar_);
 
   // or just use kokkos API
@@ -131,8 +132,8 @@ struct ActuatorBulkMod : public ActuatorBulk
 
   Kokkos::parallel_for(
     "ActPostIter",
-    Kokkos::RangePolicy<ActuatorExecutionSpace>(0,
-    actBulk.scalar_.extent_int(0)),
+    Kokkos::RangePolicy<ActuatorExecutionSpace>(
+      0, actBulk.scalar_.extent_int(0)),
     KOKKOS_LAMBDA(int index) {
       scalar(index) = point(index, 0) * vel(index, 1);
     });

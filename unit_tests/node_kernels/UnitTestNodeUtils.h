@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef UNITTESTNODEUTILS_H
 #define UNITTESTNODEUTILS_H
 
@@ -19,20 +18,20 @@ namespace unit_test_utils {
 class TestABLForcingAlg : public sierra::nalu::ABLForcingAlgorithm
 {
 public:
-  TestABLForcingAlg(
-    sierra::nalu::Realm& realm
-  ) : ABLForcingAlgorithm(realm)
+  TestABLForcingAlg(sierra::nalu::Realm& realm) : ABLForcingAlgorithm(realm)
   {
     USource_ = {{10.0}, {10.0}, {10.0}};
-    TSource_ = { 300.0 };
+    TSource_ = {300.0};
 
     std::vector<double> heights(1, 90.0);
 
-    USrcInterp_.reset(new sierra::nalu::ABLVectorInterpolator(heights, USource_));
-    TSrcInterp_.reset(new sierra::nalu::ABLScalarInterpolator(heights, TSource_));
+    USrcInterp_.reset(
+      new sierra::nalu::ABLVectorInterpolator(heights, USource_));
+    TSrcInterp_.reset(
+      new sierra::nalu::ABLScalarInterpolator(heights, TSource_));
   }
 };
 
-}
+} // namespace unit_test_utils
 
 #endif /* UNITTESTNODEUTILS_H */

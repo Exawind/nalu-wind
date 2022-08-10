@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef UNITTESTREALM_H
 #define UNITTESTREALM_H
 
@@ -32,7 +31,7 @@ public:
 
   sierra::nalu::Realm& create_realm(
     const YAML::Node& realm_node = get_realm_default_node(),
-    const std::string realm_type="multi_physics",
+    const std::string realm_type = "multi_physics",
     const bool createMeshObjects = true);
 
   YAML::Node doc_;
@@ -46,6 +45,6 @@ private:
   NaluTest(const NaluTest&) = delete;
 };
 
-}  // unit_test_utils
+} // namespace unit_test_utils
 
 #endif /* UNITTESTREALM_H */

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef UNITTESTFIELDUTILS_H
 #define UNITTESTFIELDUTILS_H
 
@@ -17,7 +16,10 @@
 
 namespace unit_test_utils {
 
-double field_norm(const ScalarFieldType& field, const stk::mesh::BulkData& bulk, stk::mesh::Selector selector);
+double field_norm(
+  const ScalarFieldType& field,
+  const stk::mesh::BulkData& bulk,
+  stk::mesh::Selector selector);
 
 }
 
