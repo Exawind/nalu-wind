@@ -15,7 +15,7 @@ jobs:
     - name: Check formatting
       uses: DoozyX/clang-format-lint-action@v0.13
       with:
-        source: './include ./src ./unit-tests'
+        source: './include ./src ./unit_tests'
         exclude: '.'
         extensions: 'H,h,cpp,C'
         clangFormatVersion: 13
