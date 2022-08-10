@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef TKESSTDESNODEKERNEL_H
 #define TKESSTDESNODEKERNEL_H
 
@@ -52,14 +51,14 @@ private:
   stk::mesh::NgpField<double> maxLenScale_;
   stk::mesh::NgpField<double> fOneBlend_;
 
-  unsigned tkeID_             {stk::mesh::InvalidOrdinal};
-  unsigned sdrID_             {stk::mesh::InvalidOrdinal};
-  unsigned densityID_         {stk::mesh::InvalidOrdinal};
-  unsigned tviscID_           {stk::mesh::InvalidOrdinal};
-  unsigned dudxID_            {stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
-  unsigned maxLenScaleID_     {stk::mesh::InvalidOrdinal};
-  unsigned fOneBlendID_       {stk::mesh::InvalidOrdinal};
+  unsigned tkeID_{stk::mesh::InvalidOrdinal};
+  unsigned sdrID_{stk::mesh::InvalidOrdinal};
+  unsigned densityID_{stk::mesh::InvalidOrdinal};
+  unsigned tviscID_{stk::mesh::InvalidOrdinal};
+  unsigned dudxID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
+  unsigned maxLenScaleID_{stk::mesh::InvalidOrdinal};
+  unsigned fOneBlendID_{stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
@@ -71,8 +70,7 @@ private:
   const int nDim_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* TKESSTDESNODEKERNEL_H */

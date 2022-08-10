@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef KERNEL_H
 #define KERNEL_H
 
@@ -23,73 +22,93 @@
 
 #include <master_element/MasterElementFactory.h>
 
-
 namespace sierra {
 namespace nalu {
 
 class TimeIntegrator;
 class SolutionOptions;
 
-template<typename AlgTraits, typename LambdaFunction, typename ViewType>
-void get_scv_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_view)
+template <typename AlgTraits, typename LambdaFunction, typename ViewType>
+void
+get_scv_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_view)
 {
   static_assert(ViewType::Rank == 2u, "2D View");
-  ThrowRequireMsg(shape_fn_view.extent_int(0) == AlgTraits::numScvIp_, "Inconsistent number of scv ips");
-  ThrowRequireMsg(shape_fn_view.extent_int(1) == AlgTraits::nodesPerElement_, "Inconsistent number of of nodes");
+  ThrowRequireMsg(
+    shape_fn_view.extent_int(0) == AlgTraits::numScvIp_,
+    "Inconsistent number of scv ips");
+  ThrowRequireMsg(
+    shape_fn_view.extent_int(1) == AlgTraits::nodesPerElement_,
+    "Inconsistent number of of nodes");
 
-  double tmp_data[AlgTraits::numScvIp_*AlgTraits::nodesPerElement_];
+  double tmp_data[AlgTraits::numScvIp_ * AlgTraits::nodesPerElement_];
   lambdaFunction(tmp_data);
 
-  DoubleType* data = &shape_fn_view(0,0);
-  for(int i=0; i<AlgTraits::numScvIp_*AlgTraits::nodesPerElement_; ++i) {
+  DoubleType* data = &shape_fn_view(0, 0);
+  for (int i = 0; i < AlgTraits::numScvIp_ * AlgTraits::nodesPerElement_; ++i) {
     data[i] = tmp_data[i];
   }
 }
 
-template<typename AlgTraits, typename LambdaFunction, typename ViewType>
-void get_scs_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_view)
+template <typename AlgTraits, typename LambdaFunction, typename ViewType>
+void
+get_scs_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_view)
 {
   static_assert(ViewType::Rank == 2u, "2D View");
-  ThrowRequireMsg(shape_fn_view.extent_int(0) == AlgTraits::numScsIp_, "Inconsistent number of scs ips");
-  ThrowRequireMsg(shape_fn_view.extent_int(1) == AlgTraits::nodesPerElement_, "Inconsistent number of of nodes");
+  ThrowRequireMsg(
+    shape_fn_view.extent_int(0) == AlgTraits::numScsIp_,
+    "Inconsistent number of scs ips");
+  ThrowRequireMsg(
+    shape_fn_view.extent_int(1) == AlgTraits::nodesPerElement_,
+    "Inconsistent number of of nodes");
 
-  double tmp_data[AlgTraits::numScsIp_*AlgTraits::nodesPerElement_];
+  double tmp_data[AlgTraits::numScsIp_ * AlgTraits::nodesPerElement_];
   lambdaFunction(tmp_data);
 
-  DoubleType* data = &shape_fn_view(0,0);
-  for(int i=0; i<AlgTraits::numScsIp_*AlgTraits::nodesPerElement_; ++i) {
+  DoubleType* data = &shape_fn_view(0, 0);
+  for (int i = 0; i < AlgTraits::numScsIp_ * AlgTraits::nodesPerElement_; ++i) {
     data[i] = tmp_data[i];
   }
 }
 
-template<typename AlgTraits, typename LambdaFunction, typename ViewType>
-void get_fem_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_view)
+template <typename AlgTraits, typename LambdaFunction, typename ViewType>
+void
+get_fem_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_view)
 {
   static_assert(ViewType::Rank == 2u, "2D View");
-  ThrowRequireMsg(shape_fn_view.extent_int(0) == AlgTraits::numGp_, "Inconsistent number of Gauss points");
-  ThrowRequireMsg(shape_fn_view.extent_int(1) == AlgTraits::nodesPerElement_, "Inconsistent number of of nodes");
+  ThrowRequireMsg(
+    shape_fn_view.extent_int(0) == AlgTraits::numGp_,
+    "Inconsistent number of Gauss points");
+  ThrowRequireMsg(
+    shape_fn_view.extent_int(1) == AlgTraits::nodesPerElement_,
+    "Inconsistent number of of nodes");
 
-  double tmp_data[AlgTraits::numGp_*AlgTraits::nodesPerElement_];
+  double tmp_data[AlgTraits::numGp_ * AlgTraits::nodesPerElement_];
   lambdaFunction(tmp_data);
 
-  DoubleType* data = &shape_fn_view(0,0);
-  for(int i=0; i<AlgTraits::numGp_*AlgTraits::nodesPerElement_; ++i) {
+  DoubleType* data = &shape_fn_view(0, 0);
+  for (int i = 0; i < AlgTraits::numGp_ * AlgTraits::nodesPerElement_; ++i) {
     data[i] = tmp_data[i];
   }
 }
 
-template<typename BcAlgTraits, typename LambdaFunction, typename ViewType>
-void get_face_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_view)
+template <typename BcAlgTraits, typename LambdaFunction, typename ViewType>
+void
+get_face_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_view)
 {
   static_assert(ViewType::Rank == 2u, "2D View");
-  ThrowRequireMsg(shape_fn_view.extent_int(0) == BcAlgTraits::numFaceIp_, "Inconsistent number of face ips");
-  ThrowRequireMsg(shape_fn_view.extent_int(1) == BcAlgTraits::nodesPerFace_, "Inconsistent number of of nodes");
+  ThrowRequireMsg(
+    shape_fn_view.extent_int(0) == BcAlgTraits::numFaceIp_,
+    "Inconsistent number of face ips");
+  ThrowRequireMsg(
+    shape_fn_view.extent_int(1) == BcAlgTraits::nodesPerFace_,
+    "Inconsistent number of of nodes");
 
-  double tmp_data[BcAlgTraits::numFaceIp_*BcAlgTraits::nodesPerFace_];
+  double tmp_data[BcAlgTraits::numFaceIp_ * BcAlgTraits::nodesPerFace_];
   lambdaFunction(tmp_data);
 
-  DoubleType* data = &shape_fn_view(0,0);
-  for(int i=0; i<BcAlgTraits::numFaceIp_*BcAlgTraits::nodesPerFace_; ++i) {
+  DoubleType* data = &shape_fn_view(0, 0);
+  for (int i = 0; i < BcAlgTraits::numFaceIp_ * BcAlgTraits::nodesPerFace_;
+       ++i) {
     data[i] = tmp_data[i];
   }
 }
@@ -119,22 +138,23 @@ public:
    *  the linear solve
    */
   virtual void execute(
-    SharedMemView<DoubleType**> & /* lhs */,
-    SharedMemView<DoubleType*> & /* rhs */,
-    ScratchViews<DoubleType> & /* scratchViews */)
-  {}
-
+    SharedMemView<DoubleType**>& /* lhs */,
+    SharedMemView<DoubleType*>& /* rhs */,
+    ScratchViews<DoubleType>& /* scratchViews */)
+  {
+  }
 
   /** Special execute for face-element kernels
    *
    */
   virtual void execute(
-    SharedMemView<DoubleType**> & /* lhs */,
-    SharedMemView<DoubleType*> & /* rhs */,
-    ScratchViews<DoubleType> & /* faceScratchViews */,
-    ScratchViews<DoubleType> & /* elemScratchViews */,
+    SharedMemView<DoubleType**>& /* lhs */,
+    SharedMemView<DoubleType*>& /* rhs */,
+    ScratchViews<DoubleType>& /* faceScratchViews */,
+    ScratchViews<DoubleType>& /* elemScratchViews */,
     int /* elemFaceOrdinal */)
-  {}
+  {
+  }
 
   /** Execute for NGP Kernels
    *
@@ -144,7 +164,8 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>&,
     SharedMemView<DoubleType*, DeviceShmem>&,
     ScratchViews<double, DeviceTeamHandleType, DeviceShmem>&)
-  {}
+  {
+  }
 
 #ifdef KOKKOS_ENABLE_CUDA
   KOKKOS_FUNCTION
@@ -152,23 +173,31 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>&,
     SharedMemView<DoubleType*, DeviceShmem>&,
     ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&)
-  {}
+  {
+  }
 
   KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType**,DeviceShmem> & /* lhs */,
-    SharedMemView<DoubleType*,DeviceShmem> & /* rhs */,
-    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem> & /* faceScratchViews */,
-    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem> & /* elemScratchViews */,
+    SharedMemView<DoubleType**, DeviceShmem>& /* lhs */,
+    SharedMemView<DoubleType*, DeviceShmem>& /* rhs */,
+    ScratchViews<
+      DoubleType,
+      DeviceTeamHandleType,
+      DeviceShmem>& /* faceScratchViews */,
+    ScratchViews<
+      DoubleType,
+      DeviceTeamHandleType,
+      DeviceShmem>& /* elemScratchViews */,
     int /* elemFaceOrdinal */)
-  {}
+  {
+  }
 #endif
 };
 
 /** Kernel that can be transferred to a device
  *
  */
-template<typename T>
+template <typename T>
 class NGPKernel : public Kernel
 {
 public:
@@ -205,7 +234,7 @@ protected:
   T* deviceCopy_{nullptr};
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* KERNEL_H */

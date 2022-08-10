@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <GammaEquationSystem.h>
 #include <AlgorithmDriver.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
@@ -83,8 +81,8 @@
 // stk_util
 #include <stk_util/parallel/ParallelReduce.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -94,9 +92,8 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-GammaEquationSystem::GammaEquationSystem(
-  EquationSystems& eqSystems)
-  : EquationSystem(eqSystems, "GammaEQS","gamma_transition"),
+GammaEquationSystem::GammaEquationSystem(EquationSystems& eqSystems)
+  : EquationSystem(eqSystems, "GammaEQS", "gamma_transition"),
     managePNG_(realm_.get_consistent_mass_matrix_png("gamma_transition")),
     gamma_(NULL),
     dgamdx_(NULL),
@@ -110,20 +107,25 @@ GammaEquationSystem::GammaEquationSystem(
   dofName_ = "gamma_transition";
 
   // extract solver name and solver object
-  std::string solverName = realm_.equationSystems_.get_solver_block_name("gamma_transition");
-  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, realm_.name(), EQ_GAMMA_TRANS);
+  std::string solverName =
+    realm_.equationSystems_.get_solver_block_name("gamma_transition");
+  LinearSolver* solver = realm_.root()->linearSolvers_->create_solver(
+    solverName, realm_.name(), EQ_GAMMA_TRANS);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   // determine nodal gradient form
   set_nodal_gradient("gamma_transition");
-  NaluEnv::self().naluOutputP0() << "Edge projected nodal gradient for gamma_transition: " << edgeNodalGradient_ <<std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "Edge projected nodal gradient for gamma_transition: "
+    << edgeNodalGradient_ << std::endl;
 
   // push back EQ to manager
   realm_.push_equation_to_systems(this);
 
   // create projected nodal gradient equation system
-  if ( managePNG_ )
-    throw std::runtime_error("GammaEquationSystem::Error managePNG is not complete");
+  if (managePNG_)
+    throw std::runtime_error(
+      "GammaEquationSystem::Error managePNG is not complete");
 }
 
 //--------------------------------------------------------------------------
@@ -135,46 +137,50 @@ GammaEquationSystem::~GammaEquationSystem() = default;
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-GammaEquationSystem::register_nodal_fields(
-  stk::mesh::Part *part)
+GammaEquationSystem::register_nodal_fields(stk::mesh::Part* part)
 {
 
-  stk::mesh::MetaData &meta_data = realm_.meta_data();
+  stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   const int nDim = meta_data.spatial_dimension();
   const int numStates = realm_.number_of_states();
 
   // register dof; set it as a restart variable
-  gamma_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "gamma_transition", numStates));
+  gamma_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "gamma_transition", numStates));
   stk::mesh::put_field_on_mesh(*gamma_, *part, nullptr);
   realm_.augment_restart_variable_list("gamma_transition");
 
-  dgamdx_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dgamdx"));
+  dgamdx_ = &(meta_data.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "dgamdx"));
   stk::mesh::put_field_on_mesh(*dgamdx_, *part, nDim, nullptr);
 
   // delta solution for linear solver; share delta since this is a split system
-  gamTmp_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "gamTmp"));
+  gamTmp_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "gamTmp"));
   stk::mesh::put_field_on_mesh(*gamTmp_, *part, nullptr);
 
-  visc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity"));
+  visc_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "viscosity"));
   stk::mesh::put_field_on_mesh(*visc_, *part, nullptr);
 
-  tvisc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_viscosity"));
+  tvisc_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "turbulent_viscosity"));
   stk::mesh::put_field_on_mesh(*tvisc_, *part, nullptr);
 
-  evisc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "effective_viscosity_gamma"));
+  evisc_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "effective_viscosity_gamma"));
   stk::mesh::put_field_on_mesh(*evisc_, *part, nullptr);
 
   // make sure all states are properly populated (restart can handle this)
-  if ( numStates > 2 && (!realm_.restarted_simulation() || realm_.support_inconsistent_restart()) ) {
-    ScalarFieldType &gammaN = gamma_->field_of_state(stk::mesh::StateN);
-    ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
+  if (
+    numStates > 2 &&
+    (!realm_.restarted_simulation() || realm_.support_inconsistent_restart())) {
+    ScalarFieldType& gammaN = gamma_->field_of_state(stk::mesh::StateN);
+    ScalarFieldType& gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
 
-    CopyFieldAlgorithm *theCopyAlg
-      = new CopyFieldAlgorithm(realm_, part,
-                               &gammaNp1, &gammaN,
-                               0, 1,
-                               stk::topology::NODE_RANK);
+    CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
+      realm_, part, &gammaNp1, &gammaN, 0, 1, stk::topology::NODE_RANK);
     copyStateAlg_.push_back(theCopyAlg);
   }
 }
@@ -183,15 +189,14 @@ GammaEquationSystem::register_nodal_fields(
 //-------- register_interior_algorithm -------------------------------------
 //--------------------------------------------------------------------------
 void
-GammaEquationSystem::register_interior_algorithm(
-  stk::mesh::Part *part)
+GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 {
 
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
 
-  ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType &dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
+  ScalarFieldType& gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType& dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
 
   if (edgeNodalGradient_ && realm_.realmUsesEdges_)
     nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
@@ -204,8 +209,8 @@ GammaEquationSystem::register_interior_algorithm(
   // solver; interior contribution (advection + diffusion)
   if (!realm_.solutionOptions_->useConsolidatedSolverAlg_) {
 
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
-      = solverAlgDriver_->solverAlgMap_.find(algType);
+    std::map<AlgorithmType, SolverAlgorithm*>::iterator itsi =
+      solverAlgDriver_->solverAlgMap_.find(algType);
     if (itsi == solverAlgDriver_->solverAlgMap_.end()) {
       SolverAlgorithm* theAlg = NULL;
       if (realm_.realmUsesEdges_) {
@@ -213,17 +218,17 @@ GammaEquationSystem::register_interior_algorithm(
                                  TurbulenceModel::SST_AMS)
                                   ? true
                                   : false;
-        theAlg = new ScalarEdgeSolverAlg(realm_, part, this, gamma_, dgamdx_, evisc_, useAvgMdot);
-      }
-      else {
-          throw std::runtime_error(
-              "GAMMAEQS: Attempt to use non-NGP element solver algorithm");
+        theAlg = new ScalarEdgeSolverAlg(
+          realm_, part, this, gamma_, dgamdx_, evisc_, useAvgMdot);
+      } else {
+        throw std::runtime_error(
+          "GAMMAEQS: Attempt to use non-NGP element solver algorithm");
       }
       solverAlgDriver_->solverAlgMap_[algType] = theAlg;
 
       // look for fully integrated source terms
-      std::map<std::string, std::vector<std::string> >::iterator isrc
-        = realm_.solutionOptions_->elemSrcTermsMap_.find("gamma_transition");
+      std::map<std::string, std::vector<std::string>>::iterator isrc =
+        realm_.solutionOptions_->elemSrcTermsMap_.find("gamma_transition");
       if (isrc != realm_.solutionOptions_->elemSrcTermsMap_.end()) {
         throw std::runtime_error(
           "GammaElemSrcTerms::Error can not use element source "
@@ -236,38 +241,37 @@ GammaEquationSystem::register_interior_algorithm(
     // Check if the user has requested CMM or LMM algorithms; if so, do not
     // include Nodal Mass algorithms
     //
-    NaluEnv::self().naluOutputP0() << "register gamma interior: " <<std::endl;
+    NaluEnv::self().naluOutputP0() << "register gamma interior: " << std::endl;
 
     std::vector<std::string> checkAlgNames = {
       "gamma_transition_time_derivative",
       "lumped_gamma_transition_time_derivative"};
     bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
     if (elementMassAlg) {
-      throw std::runtime_error("consistent mass integration of gamma time-derivative unavailable");
+      throw std::runtime_error(
+        "consistent mass integration of gamma time-derivative unavailable");
     }
 
     auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
     process_ngp_node_kernels(
       solverAlgMap, realm_, part, this,
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
-          nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), gamma_);
-          
-          NaluEnv::self().naluOutputP0() << "call BLTGammaM2015NodeKernel: " <<std::endl;
+        nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), gamma_);
 
-          nodeAlg.add_kernel<BLTGammaM2015NodeKernel>(realm_.meta_data());
+        NaluEnv::self().naluOutputP0()
+          << "call BLTGammaM2015NodeKernel: " << std::endl;
+
+        nodeAlg.add_kernel<BLTGammaM2015NodeKernel>(realm_.meta_data());
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         if (srcName == "gcl") {
           nodeAlg.add_kernel<ScalarGclNodeKernel>(realm_.bulk_data(), gamma_);
           NaluEnv::self().naluOutputP0() << " - " << srcName << std::endl;
-        }
-        else
+        } else
           throw std::runtime_error("SDREqSys: Invalid source term: " + srcName);
       });
-  }
-  else {
-      throw std::runtime_error(
-          "GAMMAEQS: Element terms not supported");
+  } else {
+    throw std::runtime_error("GAMMAEQS: Element terms not supported");
   }
 
   // effective diffusive flux coefficient alg
@@ -284,21 +288,22 @@ GammaEquationSystem::register_interior_algorithm(
 //--------------------------------------------------------------------------
 void
 GammaEquationSystem::register_inflow_bc(
-  stk::mesh::Part *part,
-  const stk::topology &/*theTopo*/,
-  const InflowBoundaryConditionData &inflowBCData)
+  stk::mesh::Part* part,
+  const stk::topology& /*theTopo*/,
+  const InflowBoundaryConditionData& inflowBCData)
 {
 
   // algorithm type
   const AlgorithmType algType = INFLOW;
 
-  ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType &dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
+  ScalarFieldType& gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType& dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
 
-  stk::mesh::MetaData &meta_data = realm_.meta_data();
+  stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   // register boundary data; gamma_bc
-  ScalarFieldType *theBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "gamma_bc"));
+  ScalarFieldType* theBcField = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "gamma_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specified tke and save off the AuxFunction
@@ -308,48 +313,41 @@ GammaEquationSystem::register_inflow_bc(
   userSpec[0] = gamma.gamma_;
 
   // new it
-  ConstantAuxFunction *theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
+  ConstantAuxFunction* theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
 
   // bc data alg
-  AuxFunctionAlgorithm *auxAlg
-    = new AuxFunctionAlgorithm(realm_, part,
-                               theBcField, theAuxFunc,
-                               stk::topology::NODE_RANK);
+  AuxFunctionAlgorithm* auxAlg = new AuxFunctionAlgorithm(
+    realm_, part, theBcField, theAuxFunc, stk::topology::NODE_RANK);
 
   // how to populate the field?
-  if ( userData.externalData_ ) {
+  if (userData.externalData_) {
     // xfer will handle population; only need to populate the initial value
     realm_.initCondAlg_.push_back(auxAlg);
-  }
-  else {
+  } else {
     // put it on bcData
     bcDataAlg_.push_back(auxAlg);
   }
 
   // copy gamma_bc to gamma_transition np1...
-  CopyFieldAlgorithm *theCopyAlg
-    = new CopyFieldAlgorithm(realm_, part,
-                             theBcField, &gammaNp1,
-                             0, 1,
-                             stk::topology::NODE_RANK);
+  CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
+    realm_, part, theBcField, &gammaNp1, 0, 1, stk::topology::NODE_RANK);
   bcDataMapAlg_.push_back(theCopyAlg);
 
   // non-solver; dgamdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-      algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone, edgeNodalGradient_);
+    algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
+    edgeNodalGradient_);
 
   // Dirichlet bc
-  std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =
+  std::map<AlgorithmType, SolverAlgorithm*>::iterator itd =
     solverAlgDriver_->solverDirichAlgMap_.find(algType);
-  if ( itd == solverAlgDriver_->solverDirichAlgMap_.end() ) {
-    DirichletBC *theAlg =
-        new DirichletBC(realm_, this, part, &gammaNp1, theBcField, 0, 1);
+  if (itd == solverAlgDriver_->solverDirichAlgMap_.end()) {
+    DirichletBC* theAlg =
+      new DirichletBC(realm_, this, part, &gammaNp1, theBcField, 0, 1);
     solverAlgDriver_->solverDirichAlgMap_[algType] = theAlg;
-  }
-  else {
+  } else {
     itd->second->partVec_.push_back(part);
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -357,21 +355,21 @@ GammaEquationSystem::register_inflow_bc(
 //--------------------------------------------------------------------------
 void
 GammaEquationSystem::register_open_bc(
-  stk::mesh::Part *part,
-  const stk::topology & /* partTopo */,
-  const OpenBoundaryConditionData & /* openBCData */)
+  stk::mesh::Part* part,
+  const stk::topology& /* partTopo */,
+  const OpenBoundaryConditionData& /* openBCData */)
 {
 
   // algorithm type
   const AlgorithmType algType = OPEN;
 
-  ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType &dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
+  ScalarFieldType& gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType& dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; dgamdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-      algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone, edgeNodalGradient_);
-
+    algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
+    edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -379,21 +377,22 @@ GammaEquationSystem::register_open_bc(
 //--------------------------------------------------------------------------
 void
 GammaEquationSystem::register_wall_bc(
-  stk::mesh::Part *part,
-  const stk::topology &/*theTopo*/,
-  const WallBoundaryConditionData &/* wallBCData */)
+  stk::mesh::Part* part,
+  const stk::topology& /*theTopo*/,
+  const WallBoundaryConditionData& /* wallBCData */)
 {
 
   // algorithm type
   const AlgorithmType algType = WALL;
 
   // np1
-  ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType &dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
+  ScalarFieldType& gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType& dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; dgamdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-      algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone, edgeNodalGradient_);
+    algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
+    edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -401,21 +400,22 @@ GammaEquationSystem::register_wall_bc(
 //--------------------------------------------------------------------------
 void
 GammaEquationSystem::register_symmetry_bc(
-  stk::mesh::Part *part,
-  const stk::topology &/*theTopo*/,
-  const SymmetryBoundaryConditionData & /* symmetryBCData */)
+  stk::mesh::Part* part,
+  const stk::topology& /*theTopo*/,
+  const SymmetryBoundaryConditionData& /* symmetryBCData */)
 {
 
   // algorithm type
   const AlgorithmType algType = SYMMETRY;
 
   // np1
-  ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType &dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
+  ScalarFieldType& gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType& dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; dgamdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-      algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone, edgeNodalGradient_);
+    algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
+    edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -447,14 +447,17 @@ GammaEquationSystem::reinitialize_linear_system()
 {
   // If this is decoupled overset simulation and the user has requested that the
   // linear system be reused, then do nothing
-  if (decoupledOverset_ && linsys_->config().reuseLinSysIfPossible()) return;
+  if (decoupledOverset_ && linsys_->config().reuseLinSysIfPossible())
+    return;
 
   // delete linsys
   delete linsys_;
 
   // create new solver
-  std::string solverName = realm_.equationSystems_.get_solver_block_name("gamma_transition");
-  LinearSolver *solver = realm_.root()->linearSolvers_->reinitialize_solver(solverName, realm_.name(), EQ_GAMMA_TRANS);
+  std::string solverName =
+    realm_.equationSystems_.get_solver_block_name("gamma_transition");
+  LinearSolver* solver = realm_.root()->linearSolvers_->reinitialize_solver(
+    solverName, realm_.name(), EQ_GAMMA_TRANS);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   // initialize
@@ -499,11 +502,12 @@ GammaEquationSystem::predict_state()
 
   const auto& meta = realm_.meta_data();
   const stk::mesh::Selector sel =
-    (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
-    & stk::mesh::selectField(*gamma_);
+    (meta.locally_owned_part() | meta.globally_shared_part() |
+     meta.aura_part()) &
+    stk::mesh::selectField(*gamma_);
   nalu_ngp::field_copy(ngpMesh, sel, gammaNp1, gammaN);
   gammaNp1.modify_on_device();
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

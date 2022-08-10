@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef MaterialPropertys_h
 #define MaterialPropertys_h
 
@@ -22,8 +20,8 @@ namespace YAML {
 class Node;
 }
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 class MaterialProperty;
@@ -32,26 +30,27 @@ class ReferencePropertyData;
 class PropertyEvaluator;
 class Simulation;
 
-typedef std::vector<MaterialProperty *> MaterialPropertyVector;
+typedef std::vector<MaterialProperty*> MaterialPropertyVector;
 
-class MaterialPropertys {
+class MaterialPropertys
+{
 public:
   MaterialPropertys(Realm& realm);
-  
+
   ~MaterialPropertys();
-  
-  void load(const YAML::Node & node);
-  
+
+  void load(const YAML::Node& node);
+
   void breadboard(){};
-  
+
   // ease of access methods to particular initial condition
-  size_t size() {return materialPropertyVector_.size();}
-  MaterialProperty *operator[](int i) { return materialPropertyVector_[i];}
+  size_t size() { return materialPropertyVector_.size(); }
+  MaterialProperty* operator[](int i) { return materialPropertyVector_[i]; }
 
-  Simulation *root();
-  Realm *parent();  
+  Simulation* root();
+  Realm* parent();
 
-  Realm &realm_;
+  Realm& realm_;
   MaterialPropertyVector materialPropertyVector_;
   std::string propertyTableName_;
 
@@ -59,13 +58,13 @@ public:
   std::vector<std::string> targetNames_;
   std::map<std::string, double> universalConstantMap_;
   std::map<PropertyIdentifier, MaterialPropertyData*> propertyDataMap_;
-  std::map<std::string, ReferencePropertyData*> referencePropertyDataMap_; /* defines overall species ordering */
+  std::map<std::string, ReferencePropertyData*>
+    referencePropertyDataMap_; /* defines overall species ordering */
   std::map<PropertyIdentifier, PropertyEvaluator*> propertyEvalMap_;
   std::map<std::string, ReferencePropertyData*> tablePropertyMap_;
 };
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

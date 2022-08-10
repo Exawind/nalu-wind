@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef CONTINUITYOPENEDGEKERNEL_H
 #define CONTINUITYOPENEDGEKERNEL_H
 
@@ -24,8 +23,9 @@ namespace nalu {
 class SolutionOptions;
 class TimeIntegrator;
 
-template<typename BcAlgTraits>
-class ContinuityOpenEdgeKernel : public NGPKernel<ContinuityOpenEdgeKernel<BcAlgTraits>>
+template <typename BcAlgTraits>
+class ContinuityOpenEdgeKernel
+  : public NGPKernel<ContinuityOpenEdgeKernel<BcAlgTraits>>
 {
 public:
   ContinuityOpenEdgeKernel(
@@ -56,15 +56,15 @@ private:
   // TODO: This needs to go away
   SolutionOptions* solnOpts_{nullptr};
 
-  const unsigned coordinates_ {stk::mesh::InvalidOrdinal};
-  const unsigned velocityRTM_ {stk::mesh::InvalidOrdinal};
-  const unsigned pressure_ {stk::mesh::InvalidOrdinal};
-  const unsigned density_ {stk::mesh::InvalidOrdinal};
-  const unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
-  const unsigned pressureBC_ {stk::mesh::InvalidOrdinal};
-  const unsigned Gpdx_ {stk::mesh::InvalidOrdinal};
-  const unsigned Udiag_ {stk::mesh::InvalidOrdinal};
-  const unsigned dynPress_ {stk::mesh::InvalidOrdinal};
+  const unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  const unsigned velocityRTM_{stk::mesh::InvalidOrdinal};
+  const unsigned pressure_{stk::mesh::InvalidOrdinal};
+  const unsigned density_{stk::mesh::InvalidOrdinal};
+  const unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
+  const unsigned pressureBC_{stk::mesh::InvalidOrdinal};
+  const unsigned Gpdx_{stk::mesh::InvalidOrdinal};
+  const unsigned Udiag_{stk::mesh::InvalidOrdinal};
+  const unsigned dynPress_{stk::mesh::InvalidOrdinal};
 
   DoubleType tauScale_;
   DoubleType mdotCorr_;
@@ -75,8 +75,7 @@ private:
   MasterElement* meSCS_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* CONTINUITYOPENEDGEKERNEL_H */

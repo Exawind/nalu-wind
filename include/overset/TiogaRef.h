@@ -46,16 +46,10 @@ public:
   TiogaRef(const TiogaRef&) = delete;
   TiogaRef& operator=(const TiogaRef&) = delete;
 
-  inline operator TIOGA::tioga&()
-  {
-    return *tg_;
-  }
+  inline operator TIOGA::tioga&() { return *tg_; }
 
   //! Access the underlying TIOGA reference
-  inline TIOGA::tioga& get()
-  {
-    return *tg_;
-  }
+  inline TIOGA::tioga& get() { return *tg_; }
 
 private:
   TiogaRef();
@@ -67,6 +61,6 @@ private:
   bool owned_{false};
 };
 
-}
+} // namespace tioga_nalu
 
 #endif /* TIOGAREF_H */

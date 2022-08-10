@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <TpetraLinearSystemHelpers.h>
 
 #include <Realm.h>
@@ -27,15 +25,19 @@
 namespace sierra {
 namespace nalu {
 
-void add_procs_to_neighbors(const std::vector<int>& procs, std::vector<int>& neighbors)
+void
+add_procs_to_neighbors(
+  const std::vector<int>& procs, std::vector<int>& neighbors)
 {
   neighbors.insert(neighbors.end(), procs.begin(), procs.end());
   stk::util::sort_and_unique(neighbors);
 }
 
-void fill_neighbor_procs(std::vector<int>& neighborProcs,
-                         const stk::mesh::BulkData& bulk,
-                         const Realm& realm)
+void
+fill_neighbor_procs(
+  std::vector<int>& neighborProcs,
+  const stk::mesh::BulkData& bulk,
+  const Realm& realm)
 {
   if (bulk.parallel_size() > 1) {
     neighborProcs = bulk.all_sharing_procs(stk::topology::NODE_RANK);
@@ -45,24 +47,29 @@ void fill_neighbor_procs(std::vector<int>& neighborProcs,
       add_procs_to_neighbors(ghostCommProcs, neighborProcs);
     }
     if (realm.hasPeriodic_) {
-      add_procs_to_neighbors(realm.periodicManager_->ghostCommProcs_, neighborProcs);
+      add_procs_to_neighbors(
+        realm.periodicManager_->ghostCommProcs_, neighborProcs);
     }
     if (realm.nonConformalManager_) {
-      add_procs_to_neighbors(realm.nonConformalManager_->ghostCommProcs_, neighborProcs);
+      add_procs_to_neighbors(
+        realm.nonConformalManager_->ghostCommProcs_, neighborProcs);
     }
     if (realm.oversetManager_) {
-      add_procs_to_neighbors(realm.oversetManager_->ghostCommProcs_, neighborProcs);
+      add_procs_to_neighbors(
+        realm.oversetManager_->ghostCommProcs_, neighborProcs);
     }
   }
 }
 
-void fill_owned_and_shared_then_nonowned_ordered_by_proc(std::vector<LinSys::GlobalOrdinal>& totalGids,
-                                                         std::vector<int>& srcPids,
-                                                         int localProc,
-                                                         const Teuchos::RCP<LinSys::Map>& ownedRowsMap,
-                                                         const Teuchos::RCP<LinSys::Map>& sharedNotOwnedRowsMap,
-                                                         const std::set<std::pair<int, LinSys::GlobalOrdinal> >& ownersAndGids,
-                                                         const std::vector<int>& sharedPids)
+void
+fill_owned_and_shared_then_nonowned_ordered_by_proc(
+  std::vector<LinSys::GlobalOrdinal>& totalGids,
+  std::vector<int>& srcPids,
+  int localProc,
+  const Teuchos::RCP<LinSys::Map>& ownedRowsMap,
+  const Teuchos::RCP<LinSys::Map>& sharedNotOwnedRowsMap,
+  const std::set<std::pair<int, LinSys::GlobalOrdinal>>& ownersAndGids,
+  const std::vector<int>& sharedPids)
 {
   auto ownedIndices = ownedRowsMap->getMyGlobalIndices();
   totalGids.clear();
@@ -71,40 +78,46 @@ void fill_owned_and_shared_then_nonowned_ordered_by_proc(std::vector<LinSys::Glo
   srcPids.clear();
   srcPids.reserve(ownersAndGids.size());
 
-  for(unsigned i=0; i<ownedIndices.size(); ++i) {
+  for (unsigned i = 0; i < ownedIndices.size(); ++i) {
     totalGids.push_back(ownedIndices[i]);
   }
 
   auto sharedIndices = sharedNotOwnedRowsMap->getMyGlobalIndices();
-  for(unsigned i=0; i<sharedIndices.size(); ++i) {
+  for (unsigned i = 0; i < sharedIndices.size(); ++i) {
     totalGids.push_back(sharedIndices[i]);
     srcPids.push_back(sharedPids[i]);
-    ThrowRequireMsg(sharedPids[i] != localProc && sharedPids[i] >= 0,
-                    "Error, bad sharedPid = "<<sharedPids[i]<<
-                    ", localProc = "<<localProc<<", gid = "<<sharedIndices[i]);
+    ThrowRequireMsg(
+      sharedPids[i] != localProc && sharedPids[i] >= 0,
+      "Error, bad sharedPid = " << sharedPids[i] << ", localProc = "
+                                << localProc << ", gid = " << sharedIndices[i]);
   }
 
-  for(const std::pair<int, LinSys::GlobalOrdinal>& procAndGid : ownersAndGids) {
+  for (const std::pair<int, LinSys::GlobalOrdinal>& procAndGid :
+       ownersAndGids) {
     int proc = procAndGid.first;
     LinSys::GlobalOrdinal gid = procAndGid.second;
-    if (proc != localProc &&
-        !ownedRowsMap->isNodeGlobalElement(gid) &&
-        !sharedNotOwnedRowsMap->isNodeGlobalElement(gid)) {
+    if (
+      proc != localProc && !ownedRowsMap->isNodeGlobalElement(gid) &&
+      !sharedNotOwnedRowsMap->isNodeGlobalElement(gid)) {
       totalGids.push_back(gid);
       srcPids.push_back(procAndGid.first);
-      ThrowRequireMsg(procAndGid.first != localProc && procAndGid.first >= 0,
-                      "Error, bad remote proc = "<<procAndGid.first);
+      ThrowRequireMsg(
+        procAndGid.first != localProc && procAndGid.first >= 0,
+        "Error, bad remote proc = " << procAndGid.first);
     }
   }
 
-  ThrowRequireMsg(srcPids.size() == (totalGids.size() - ownedIndices.size()),
-                  "Error, bad srcPids.size() = "<<srcPids.size());
+  ThrowRequireMsg(
+    srcPids.size() == (totalGids.size() - ownedIndices.size()),
+    "Error, bad srcPids.size() = " << srcPids.size());
 }
 
-stk::mesh::Entity get_entity_master(const stk::mesh::BulkData& bulk,
-                                    stk::mesh::Entity entity,
-                                    stk::mesh::EntityId naluId,
-                                    bool throwIfMasterNotFound)
+stk::mesh::Entity
+get_entity_master(
+  const stk::mesh::BulkData& bulk,
+  stk::mesh::Entity entity,
+  stk::mesh::EntityId naluId,
+  bool throwIfMasterNotFound)
 {
   bool thisEntityIsMaster = (bulk.identifier(entity) == naluId);
   if (thisEntityIsMaster) {
@@ -115,191 +128,237 @@ stk::mesh::Entity get_entity_master(const stk::mesh::BulkData& bulk,
     std::ostringstream os;
     const stk::mesh::Entity* elems = bulk.begin_elements(entity);
     unsigned numElems = bulk.num_elements(entity);
-    os<<" elems: ";
-    for(unsigned i=0; i<numElems; ++i) {
-       os<<"{"<<bulk.identifier(elems[i])<<","<<bulk.bucket(elems[i]).topology()
-         <<",owned="<<bulk.bucket(elems[i]).owned()<<"}";
+    os << " elems: ";
+    for (unsigned i = 0; i < numElems; ++i) {
+      os << "{" << bulk.identifier(elems[i]) << ","
+         << bulk.bucket(elems[i]).topology()
+         << ",owned=" << bulk.bucket(elems[i]).owned() << "}";
     }
-    ThrowRequireMsg(bulk.is_valid(master),
-                    "get_entity_master, P"<<bulk.parallel_rank()
-                    <<" failed to get entity for naluId="<<naluId
-                    <<", from entity with stkId="<<bulk.identifier(entity)
-                    <<", owned="<<bulk.bucket(entity).owned()
-                    <<", shared="<<bulk.bucket(entity).shared()
-                    <<", "<<os.str());
+    ThrowRequireMsg(
+      bulk.is_valid(master),
+      "get_entity_master, P"
+        << bulk.parallel_rank() << " failed to get entity for naluId=" << naluId
+        << ", from entity with stkId=" << bulk.identifier(entity)
+        << ", owned=" << bulk.bucket(entity).owned()
+        << ", shared=" << bulk.bucket(entity).shared() << ", " << os.str());
   }
   return master;
 }
 
-size_t get_neighbor_index(const std::vector<int>& neighborProcs, int proc)
+size_t
+get_neighbor_index(const std::vector<int>& neighborProcs, int proc)
 {
-    std::vector<int>::const_iterator neighbor = std::find(neighborProcs.begin(), neighborProcs.end(), proc);
-    ThrowRequireMsg(neighbor != neighborProcs.end(),"Error, failed to find p="<<proc<<" in neighborProcs.");
+  std::vector<int>::const_iterator neighbor =
+    std::find(neighborProcs.begin(), neighborProcs.end(), proc);
+  ThrowRequireMsg(
+    neighbor != neighborProcs.end(),
+    "Error, failed to find p=" << proc << " in neighborProcs.");
 
-    size_t neighborIndex = neighbor-neighborProcs.begin();
-    return neighborIndex;
+  size_t neighborIndex = neighbor - neighborProcs.begin();
+  return neighborIndex;
 }
 
-void sort_connections(std::vector<std::vector<stk::mesh::Entity> >& connections)
+void
+sort_connections(std::vector<std::vector<stk::mesh::Entity>>& connections)
 {
-  for(std::vector<stk::mesh::Entity>& vec : connections) {
+  for (std::vector<stk::mesh::Entity>& vec : connections) {
     std::sort(vec.begin(), vec.end());
   }
 }
 
-void add_to_length(LinSys::HostRowLengths& v_owned, LinSys::HostRowLengths& v_shared,
-                   unsigned numDof, LinSys::LocalOrdinal lid_a, LinSys::LocalOrdinal maxOwnedRowId,
-                   bool a_owned, unsigned numColEntities)
+void
+add_to_length(
+  LinSys::HostRowLengths& v_owned,
+  LinSys::HostRowLengths& v_shared,
+  unsigned numDof,
+  LinSys::LocalOrdinal lid_a,
+  LinSys::LocalOrdinal maxOwnedRowId,
+  bool a_owned,
+  unsigned numColEntities)
 {
-    LinSys::HostRowLengths& v_a = a_owned ? v_owned : v_shared;
-    LinSys::LocalOrdinal lid = a_owned ? lid_a : lid_a - maxOwnedRowId;
+  LinSys::HostRowLengths& v_a = a_owned ? v_owned : v_shared;
+  LinSys::LocalOrdinal lid = a_owned ? lid_a : lid_a - maxOwnedRowId;
 
-    for (unsigned d=0; d < numDof; ++d) {
-      v_a(lid+d) += numDof*numColEntities;
-    }
+  for (unsigned d = 0; d < numDof; ++d) {
+    v_a(lid + d) += numDof * numColEntities;
+  }
 }
 
-void add_lengths_to_comm(const stk::mesh::BulkData&  /* bulk */,
-                         stk::CommNeighbors& commNeighbors,
-                         int entity_a_owner,
-                         stk::mesh::EntityId entityId_a,
-                         unsigned numDof,
-                         unsigned numColEntities,
-                         const stk::mesh::EntityId* colEntityIds,
-                         const int* colOwners)
+void
+add_lengths_to_comm(
+  const stk::mesh::BulkData& /* bulk */,
+  stk::CommNeighbors& commNeighbors,
+  int entity_a_owner,
+  stk::mesh::EntityId entityId_a,
+  unsigned numDof,
+  unsigned numColEntities,
+  const stk::mesh::EntityId* colEntityIds,
+  const int* colOwners)
 {
-    int owner = entity_a_owner;
-    stk::CommBufferV& sbuf = commNeighbors.send_buffer(owner);
-    LinSys::GlobalOrdinal rowGid = GID_(entityId_a, numDof , 0);
+  int owner = entity_a_owner;
+  stk::CommBufferV& sbuf = commNeighbors.send_buffer(owner);
+  LinSys::GlobalOrdinal rowGid = GID_(entityId_a, numDof, 0);
 
-    sbuf.pack(rowGid);
-    sbuf.pack(numColEntities*2);
-    for(unsigned c=0; c<numColEntities; ++c) {
-        LinSys::GlobalOrdinal colGid0 = GID_(colEntityIds[c], numDof , 0);
-        sbuf.pack(colGid0);
-        sbuf.pack(colOwners[c]);
-    }
+  sbuf.pack(rowGid);
+  sbuf.pack(numColEntities * 2);
+  for (unsigned c = 0; c < numColEntities; ++c) {
+    LinSys::GlobalOrdinal colGid0 = GID_(colEntityIds[c], numDof, 0);
+    sbuf.pack(colGid0);
+    sbuf.pack(colOwners[c]);
+  }
 }
 
-void add_lengths_to_comm_tpet(const stk::mesh::BulkData&  bulk /* bulk */,
-                              TpetIDFieldType * tpetGID_label,
-                         stk::CommNeighbors& commNeighbors,
-                         int entity_a_owner,
-                         stk::mesh::EntityId entityId_a,
-                              //                         unsigned numDof,
-                         unsigned numColEntities,
-                         const stk::mesh::EntityId* colEntityIds,
-                         const int* colOwners)
+void
+add_lengths_to_comm_tpet(
+  const stk::mesh::BulkData& bulk /* bulk */,
+  TpetIDFieldType* tpetGID_label,
+  stk::CommNeighbors& commNeighbors,
+  int entity_a_owner,
+  stk::mesh::EntityId entityId_a,
+  //                         unsigned numDof,
+  unsigned numColEntities,
+  const stk::mesh::EntityId* colEntityIds,
+  const int* colOwners)
 {
-    int owner = entity_a_owner;
-    stk::CommBufferV& sbuf = commNeighbors.send_buffer(owner);
-    const auto node = bulk.get_entity(stk::topology::NODE_RANK, entityId_a);
-    LinSys::GlobalOrdinal rowGid = * stk::mesh::field_data(*tpetGID_label, node);
-    ThrowRequireMsg( rowGid != 0 && rowGid != std::numeric_limits<LinSys::GlobalOrdinal>::max(), "add_lengths_to_comm_tpet");
-    sbuf.pack(rowGid);
-    sbuf.pack(numColEntities*2);
-    for(unsigned c=0; c<numColEntities; ++c) {
-      const auto centity = bulk.get_entity(stk::topology::NODE_RANK,colEntityIds[c]);
-      LinSys::GlobalOrdinal colGid0 = * stk::mesh::field_data(*tpetGID_label, centity);
-      ThrowRequireMsg( colGid0 != 0 && colGid0 != std::numeric_limits<LinSys::GlobalOrdinal>::max(), "add_lengths_to_comm_tpet");
-        sbuf.pack(colGid0);
-        sbuf.pack(colOwners[c]);
-    }
+  int owner = entity_a_owner;
+  stk::CommBufferV& sbuf = commNeighbors.send_buffer(owner);
+  const auto node = bulk.get_entity(stk::topology::NODE_RANK, entityId_a);
+  LinSys::GlobalOrdinal rowGid = *stk::mesh::field_data(*tpetGID_label, node);
+  ThrowRequireMsg(
+    rowGid != 0 && rowGid != std::numeric_limits<LinSys::GlobalOrdinal>::max(),
+    "add_lengths_to_comm_tpet");
+  sbuf.pack(rowGid);
+  sbuf.pack(numColEntities * 2);
+  for (unsigned c = 0; c < numColEntities; ++c) {
+    const auto centity =
+      bulk.get_entity(stk::topology::NODE_RANK, colEntityIds[c]);
+    LinSys::GlobalOrdinal colGid0 =
+      *stk::mesh::field_data(*tpetGID_label, centity);
+    ThrowRequireMsg(
+      colGid0 != 0 &&
+        colGid0 != std::numeric_limits<LinSys::GlobalOrdinal>::max(),
+      "add_lengths_to_comm_tpet");
+    sbuf.pack(colGid0);
+    sbuf.pack(colOwners[c]);
+  }
 }
-void communicate_remote_columns(const stk::mesh::BulkData& bulk,
-                                const std::vector<int>& neighborProcs,
-                                stk::CommNeighbors& commNeighbors,
-                                unsigned numDof,
-                                const Teuchos::RCP<LinSys::Map>& ownedRowsMap,
-                                LinSys::HostRowLengths& hostLocallyOwnedRowLengths,
-                                std::set<std::pair<int, LinSys::GlobalOrdinal> >& communicatedColIndices)
+void
+communicate_remote_columns(
+  const stk::mesh::BulkData& bulk,
+  const std::vector<int>& neighborProcs,
+  stk::CommNeighbors& commNeighbors,
+  unsigned numDof,
+  const Teuchos::RCP<LinSys::Map>& ownedRowsMap,
+  LinSys::HostRowLengths& hostLocallyOwnedRowLengths,
+  std::set<std::pair<int, LinSys::GlobalOrdinal>>& communicatedColIndices)
 {
-    commNeighbors.communicate();
+  commNeighbors.communicate();
 
-    for(int p : neighborProcs) {
-        stk::CommBufferV& rbuf = commNeighbors.recv_buffer(p);
-        size_t bufSize = rbuf.size_in_bytes();
-        while(rbuf.size_in_bytes() > 0) {
-            LinSys::GlobalOrdinal rowGid = 0;
-            rbuf.unpack(rowGid);
+  for (int p : neighborProcs) {
+    stk::CommBufferV& rbuf = commNeighbors.recv_buffer(p);
+    size_t bufSize = rbuf.size_in_bytes();
+    while (rbuf.size_in_bytes() > 0) {
+      LinSys::GlobalOrdinal rowGid = 0;
+      rbuf.unpack(rowGid);
 
-            ThrowRequireMsg( rowGid != 0 && rowGid != std::numeric_limits<LinSys::GlobalOrdinal>::max(), "communicate_remote_columns");
+      ThrowRequireMsg(
+        rowGid != 0 &&
+          rowGid != std::numeric_limits<LinSys::GlobalOrdinal>::max(),
+        "communicate_remote_columns");
 
-            unsigned len = 0;
-            rbuf.unpack(len);
-            unsigned numCols = len/2;
-            LinSys::LocalOrdinal lid = ownedRowsMap->getLocalElement(rowGid);
-            if (lid < 0) {
-                std::cerr<<"P"<<bulk.parallel_rank()<<" lid="<<lid<<" for rowGid="<<rowGid<<" sent from proc "<<p<<std::endl;
-            }
-            for(unsigned d=0; d<numDof; ++d) {
-                hostLocallyOwnedRowLengths(lid++) += numCols*numDof;
-            }
-            for(unsigned i=0; i<numCols; ++i) {
-                LinSys::GlobalOrdinal colGid = 0;
-                rbuf.unpack(colGid);
+      unsigned len = 0;
+      rbuf.unpack(len);
+      unsigned numCols = len / 2;
+      LinSys::LocalOrdinal lid = ownedRowsMap->getLocalElement(rowGid);
+      if (lid < 0) {
+        std::cerr << "P" << bulk.parallel_rank() << " lid=" << lid
+                  << " for rowGid=" << rowGid << " sent from proc " << p
+                  << std::endl;
+      }
+      for (unsigned d = 0; d < numDof; ++d) {
+        hostLocallyOwnedRowLengths(lid++) += numCols * numDof;
+      }
+      for (unsigned i = 0; i < numCols; ++i) {
+        LinSys::GlobalOrdinal colGid = 0;
+        rbuf.unpack(colGid);
 
+        ThrowRequireMsg(
+          colGid != 0 &&
+            colGid != std::numeric_limits<LinSys::GlobalOrdinal>::max(),
+          "communicate_remote_columns");
 
-                ThrowRequireMsg( colGid != 0 && colGid != std::numeric_limits<LinSys::GlobalOrdinal>::max(), "communicate_remote_columns");
-
-                int owner = 0;
-                rbuf.unpack(owner);
-                for(unsigned dd=0; dd<numDof; ++dd) {
-                    communicatedColIndices.insert(std::make_pair(owner,colGid++));
-                }
-            }
+        int owner = 0;
+        rbuf.unpack(owner);
+        for (unsigned dd = 0; dd < numDof; ++dd) {
+          communicatedColIndices.insert(std::make_pair(owner, colGid++));
         }
-        rbuf.resize(bufSize);
+      }
     }
+    rbuf.resize(bufSize);
+  }
 }
 
-void insert_single_dof_row_into_graph(LocalGraphArrays& crsGraph, LinSys::LocalOrdinal rowLid,
-                                      LinSys::LocalOrdinal maxOwnedRowId, unsigned numDof,
-                                      unsigned numCols, const std::vector<LinSys::LocalOrdinal>& colLids)
+void
+insert_single_dof_row_into_graph(
+  LocalGraphArrays& crsGraph,
+  LinSys::LocalOrdinal rowLid,
+  LinSys::LocalOrdinal maxOwnedRowId,
+  unsigned numDof,
+  unsigned numCols,
+  const std::vector<LinSys::LocalOrdinal>& colLids)
 {
-    if (rowLid >= maxOwnedRowId) {
-      rowLid -= maxOwnedRowId;
-    }
-    crsGraph.insertIndices(rowLid++, numCols, colLids.data(), numDof);
+  if (rowLid >= maxOwnedRowId) {
+    rowLid -= maxOwnedRowId;
+  }
+  crsGraph.insertIndices(rowLid++, numCols, colLids.data(), numDof);
 }
 
-void insert_communicated_col_indices(const std::vector<int>& neighborProcs,
-                                     stk::CommNeighbors& commNeighbors,
-                                     unsigned numDof,
-                                     LocalGraphArrays& ownedGraph,
-                                     const LinSys::Map& rowMap,
-                                     const LinSys::Map& colMap)
+void
+insert_communicated_col_indices(
+  const std::vector<int>& neighborProcs,
+  stk::CommNeighbors& commNeighbors,
+  unsigned numDof,
+  LocalGraphArrays& ownedGraph,
+  const LinSys::Map& rowMap,
+  const LinSys::Map& colMap)
 {
-    std::vector<LocalOrdinal> colLids;
-    for(int p : neighborProcs) {
-        stk::CommBufferV& rbuf = commNeighbors.recv_buffer(p);
-        while(rbuf.size_in_bytes() > 0) {
-            stk::mesh::EntityId rowGid = 0;
-            rbuf.unpack(rowGid);
+  std::vector<LocalOrdinal> colLids;
+  for (int p : neighborProcs) {
+    stk::CommBufferV& rbuf = commNeighbors.recv_buffer(p);
+    while (rbuf.size_in_bytes() > 0) {
+      stk::mesh::EntityId rowGid = 0;
+      rbuf.unpack(rowGid);
 
-            ThrowRequireMsg( rowGid != 0 && rowGid != std::numeric_limits<LinSys::GlobalOrdinal>::max()," insert_communicated_col_indices");
+      ThrowRequireMsg(
+        rowGid != 0 &&
+          rowGid != std::numeric_limits<LinSys::GlobalOrdinal>::max(),
+        " insert_communicated_col_indices");
 
-            unsigned len = 0;
-            rbuf.unpack(len);
-            unsigned numCols = len/2;
-            colLids.resize(numCols);
-            LocalOrdinal rowLid = rowMap.getLocalElement(rowGid);
-            for(unsigned i=0; i<numCols; ++i) {
-                GlobalOrdinal colGid = 0;
-                rbuf.unpack(colGid);
+      unsigned len = 0;
+      rbuf.unpack(len);
+      unsigned numCols = len / 2;
+      colLids.resize(numCols);
+      LocalOrdinal rowLid = rowMap.getLocalElement(rowGid);
+      for (unsigned i = 0; i < numCols; ++i) {
+        GlobalOrdinal colGid = 0;
+        rbuf.unpack(colGid);
 
-            ThrowRequireMsg( colGid != 0 && colGid != std::numeric_limits<LinSys::GlobalOrdinal>::max()," insert_communicated_col_indices");
+        ThrowRequireMsg(
+          colGid != 0 &&
+            colGid != std::numeric_limits<LinSys::GlobalOrdinal>::max(),
+          " insert_communicated_col_indices");
 
-                int owner = 0;
-                rbuf.unpack(owner);
-                colLids[i] = colMap.getLocalElement(colGid);
-            }
-            ownedGraph.insertIndices(rowLid++,numCols,colLids.data(), numDof);
-        }
+        int owner = 0;
+        rbuf.unpack(owner);
+        colLids[i] = colMap.getLocalElement(colGid);
+      }
+      ownedGraph.insertIndices(rowLid++, numCols, colLids.data(), numDof);
     }
+  }
 }
 
-void fill_in_extra_dof_rows_per_node(LocalGraphArrays& csg, int numDof)
+void
+fill_in_extra_dof_rows_per_node(LocalGraphArrays& csg, int numDof)
 {
   if (numDof == 1) {
     return;
@@ -307,12 +366,12 @@ void fill_in_extra_dof_rows_per_node(LocalGraphArrays& csg, int numDof)
 
   auto rowPtrs = csg.rowPointers.data();
   LocalOrdinal* cols = csg.colIndices.data();
-  for(int i=0, ie=csg.rowPointers.size()-1; i<ie;) {
-    const LocalOrdinal* row = cols+rowPtrs[i];
+  for (int i = 0, ie = csg.rowPointers.size() - 1; i < ie;) {
+    const LocalOrdinal* row = cols + rowPtrs[i];
     int rowLen = csg.get_row_length(i);
-    for(int d=1; d<numDof; ++d) {
-      LocalOrdinal* row_d = cols + rowPtrs[i] + rowLen*d;
-      for(int j=0; j<rowLen; ++j) {
+    for (int d = 1; d < numDof; ++d) {
+      LocalOrdinal* row_d = cols + rowPtrs[i] + rowLen * d;
+      for (int j = 0; j < rowLen; ++j) {
         row_d[j] = row[j];
       }
     }
@@ -320,18 +379,20 @@ void fill_in_extra_dof_rows_per_node(LocalGraphArrays& csg, int numDof)
   }
 }
 
-void remove_invalid_indices(LocalGraphArrays& csg, LinSys::HostRowLengths& rowLengths)
+void
+remove_invalid_indices(
+  LocalGraphArrays& csg, LinSys::HostRowLengths& rowLengths)
 {
   size_t nnz = csg.rowPointers(rowLengths.size());
   auto cols = csg.colIndices.data();
   auto rowPtrs = csg.rowPointers.data();
   size_t newNnz = 0;
-  for(int i=0, ie=csg.rowPointers.size()-1; i<ie; ++i) {
-    const LocalOrdinal* row = cols+rowPtrs[i];
+  for (int i = 0, ie = csg.rowPointers.size() - 1; i < ie; ++i) {
+    const LocalOrdinal* row = cols + rowPtrs[i];
     int rowLen = csg.get_row_length(i);
-    for(int j=rowLen-1; j>=0; --j) {
+    for (int j = rowLen - 1; j >= 0; --j) {
       if (row[j] != INVALID) {
-        rowLengths(i) = j+1;
+        rowLengths(i) = j + 1;
         break;
       }
     }
@@ -339,13 +400,14 @@ void remove_invalid_indices(LocalGraphArrays& csg, LinSys::HostRowLengths& rowLe
   }
 
   if (newNnz < nnz) {
-    Kokkos::View<LocalOrdinal*, typename LinSys::HostRowLengths::memory_space> newColIndices(Kokkos::ViewAllocateWithoutInitializing("colInds"),newNnz);
+    Kokkos::View<LocalOrdinal*, typename LinSys::HostRowLengths::memory_space>
+      newColIndices(Kokkos::ViewAllocateWithoutInitializing("colInds"), newNnz);
     LocalOrdinal* newCols = newColIndices.data();
     auto rowLens = rowLengths.data();
     int index = 0;
-    for(int i=0, ie=csg.rowPointers.size()-1; i<ie; ++i) {
-      auto row = cols+rowPtrs[i];
-      for(size_t j=0; j<rowLens[i]; ++j) {
+    for (int i = 0, ie = csg.rowPointers.size() - 1; i < ie; ++i) {
+      auto row = cols + rowPtrs[i];
+      for (size_t j = 0; j < rowLens[i]; ++j) {
         newCols[index++] = row[j];
       }
     }
@@ -354,5 +416,5 @@ void remove_invalid_indices(LocalGraphArrays& csg, LinSys::HostRowLengths& rowLe
   }
 }
 
-} // nalu
-} // sierra
+} // namespace nalu
+} // namespace sierra

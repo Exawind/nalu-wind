@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef SDRWALLFUNCALG_H
 #define SDRWALLFUNCALG_H
 
@@ -24,15 +23,11 @@ namespace nalu {
  *
  *  \sa SDRWallFuncAlgDriver
  */
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 class SDRWallFuncAlg : public Algorithm
 {
 public:
-  SDRWallFuncAlg(
-    Realm&,
-    stk::mesh::Part*,
-    bool = false,
-    double = 0.0);
+  SDRWallFuncAlg(Realm&, stk::mesh::Part*, bool = false, double = 0.0);
 
   virtual ~SDRWallFuncAlg() = default;
 
@@ -42,11 +37,11 @@ private:
   ElemDataRequests faceData_;
   ElemDataRequests elemData_;
 
-  unsigned coordinates_    {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
-  unsigned wallFricVel_    {stk::mesh::InvalidOrdinal};
-  unsigned wallArea_       {stk::mesh::InvalidOrdinal};
-  unsigned sdrbc_          {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned wallFricVel_{stk::mesh::InvalidOrdinal};
+  unsigned wallArea_{stk::mesh::InvalidOrdinal};
+  unsigned sdrbc_{stk::mesh::InvalidOrdinal};
 
   const DoubleType sqrtBetaStar_;
   const DoubleType kappa_;
@@ -58,8 +53,7 @@ private:
   double z0_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* SDRWALLFUNCALG_H */

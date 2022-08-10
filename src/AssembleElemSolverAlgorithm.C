@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 // nalu
 #include <AssembleElemSolverAlgorithm.h>
 #include <EquationSystem.h>
@@ -39,8 +37,8 @@
 #include <ScratchViews.h>
 #include <CopyAndInterleave.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -51,20 +49,20 @@ namespace nalu{
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 AssembleElemSolverAlgorithm::AssembleElemSolverAlgorithm(
-  Realm &realm,
-  stk::mesh::Part *part,
-  EquationSystem *eqSystem,
+  Realm& realm,
+  stk::mesh::Part* part,
+  EquationSystem* eqSystem,
   stk::mesh::EntityRank entityRank,
   unsigned nodesPerEntity)
   : SolverAlgorithm(realm, part, eqSystem),
     dataNeededByKernels_(realm.meta_data()),
     entityRank_(entityRank),
     nodesPerEntity_(nodesPerEntity),
-    rhsSize_(nodesPerEntity*eqSystem->linsys_->numDof())
+    rhsSize_(nodesPerEntity * eqSystem->linsys_->numDof())
 {
   if (eqSystem->dofName_ != "pressure") {
-    diagRelaxFactor_ = realm.solutionOptions_->get_relaxation_factor(
-      eqSystem->dofName_);
+    diagRelaxFactor_ =
+      realm.solutionOptions_->get_relaxation_factor(eqSystem->dofName_);
   }
 }
 
@@ -87,7 +85,7 @@ void
 AssembleElemSolverAlgorithm::execute()
 {
   const size_t numKernels = activeKernels_.size();
-  for ( size_t i = 0; i < numKernels; ++i )
+  for (size_t i = 0; i < numKernels; ++i)
     activeKernels_[i]->setup(*realm_.timeIntegrator_);
 
   auto ngpKernels = nalu_ngp::create_ngp_view<Kernel>(activeKernels_);
@@ -102,7 +100,7 @@ AssembleElemSolverAlgorithm::execute()
     KOKKOS_LAMBDA(SharedMemData<DeviceTeamHandleType, DeviceShmem> & smdata) {
       set_vals(smdata.simdrhs, 0.0);
       set_vals(smdata.simdlhs, 0.0);
-      for (size_t i=0; i < numKernels; i++) {
+      for (size_t i = 0; i < numKernels; i++) {
         Kernel* kernel = ngpKernels(i);
         kernel->execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
       }
@@ -110,19 +108,21 @@ AssembleElemSolverAlgorithm::execute()
 #ifdef KOKKOS_ENABLE_CUDA
       const int simdElemIndex = 0;
 #else
-      for(int simdElemIndex=0; simdElemIndex<smdata.numSimdElems; ++simdElemIndex)
+      for (int simdElemIndex = 0; simdElemIndex < smdata.numSimdElems;
+           ++simdElemIndex)
 #endif
       {
         extract_vector_lane(smdata.simdrhs, simdElemIndex, smdata.rhs);
         extract_vector_lane(smdata.simdlhs, simdElemIndex, smdata.lhs);
-        for (int ir=0; ir < rhsSize; ++ir)
+        for (int ir = 0; ir < rhsSize; ++ir)
           smdata.lhs(ir, ir) /= diagRelaxFactor;
-        coeffApplier(nodesPerEntity, smdata.ngpElemNodes[simdElemIndex],
-                    smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
+        coeffApplier(
+          nodesPerEntity, smdata.ngpElemNodes[simdElemIndex], smdata.scratchIds,
+          smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
       }
     });
-    coeffApplier.free_coeff_applier();
+  coeffApplier.free_coeff_applier();
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

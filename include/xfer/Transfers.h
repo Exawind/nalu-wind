@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef Transfers_h
 #define Transfers_h
 
@@ -22,29 +20,30 @@ namespace YAML {
 class Node;
 }
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Simulation;
 class Transfer;
 
-class Transfers {
+class Transfers
+{
 public:
   Transfers(Simulation& sim);
   ~Transfers();
 
-  void load(const YAML::Node & node);
+  void load(const YAML::Node& node);
   void breadboard();
   void initialize();
   void execute(); // general method to execute all xfers (as apposed to Realm)
-  Simulation *root();
-  Simulation *parent();
+  Simulation* root();
+  Simulation* parent();
 
-  Simulation &simulation_;
-  std::vector<Transfer *> transferVector_;
+  Simulation& simulation_;
+  std::vector<Transfer*> transferVector_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

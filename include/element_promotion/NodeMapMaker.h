@@ -12,18 +12,17 @@
 
 #include <KokkosInterface.h>
 
-namespace stk { struct topology; }
+namespace stk {
+struct topology;
+}
 
-namespace sierra
-{
-namespace nalu
-{
+namespace sierra {
+namespace nalu {
 
-Kokkos::View<int***> make_node_map_hex(int, bool  = false);
+Kokkos::View<int***> make_node_map_hex(int, bool = false);
 Kokkos::View<int***> make_inverse_node_map_hex(int, bool = false);
 Kokkos::View<int**> make_node_map_quad(int);
 Kokkos::View<int**> make_side_node_ordinal_map_hex(int);
-
 
 } // namespace nalu
 } // namespace sierra

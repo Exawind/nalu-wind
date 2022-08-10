@@ -31,28 +31,28 @@ class DatabaseIO;
 class ElementBlock;
 class NodeBlock;
 class SideBlock;
-}  // namespace Ioss
+} // namespace Ioss
 namespace sierra {
 namespace nalu {
 class PromoteElement;
 struct ElementDescription;
-}  // namespace nalu
-}  // namespace sierra
+} // namespace nalu
+} // namespace sierra
 
 // field types
-typedef stk::mesh::Field<double>  ScalarFieldType;
-typedef stk::mesh::Field<double, stk::mesh::SimpleArrayTag>  GenericFieldType;
-typedef stk::mesh::Field<double, stk::mesh::Cartesian>  VectorFieldType;
+typedef stk::mesh::Field<double> ScalarFieldType;
+typedef stk::mesh::Field<double, stk::mesh::SimpleArrayTag> GenericFieldType;
+typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
 
 namespace stk {
-  namespace mesh {
-    class BulkData;
-    class MetaData;
-    class Part;
+namespace mesh {
+class BulkData;
+class MetaData;
+class Part;
 
-    typedef std::vector<Part*> PartVector;
-  }
-}
+typedef std::vector<Part*> PartVector;
+} // namespace mesh
+} // namespace stk
 
 namespace sierra {
 namespace nalu {
@@ -62,36 +62,43 @@ class PromotedElementIO
 
 public:
   // constructor/destructor
-  PromotedElementIO(int p,
+  PromotedElementIO(
+    int p,
     const stk::mesh::MetaData& metaData,
     stk::mesh::BulkData& bulkData,
     const stk::mesh::PartVector& baseParts,
     const std::string& fileName,
-    const VectorFieldType& coordField
-  );
+    const VectorFieldType& coordField);
 
   virtual ~PromotedElementIO() = default;
 
   void add_fields(const std::vector<stk::mesh::FieldBase*>& fields);
-  std::map<const std::string, const stk::mesh::FieldBase*> get_output_fields() { return fields_; }
-  bool has_field(const std::string field_name) { return (fields_.find(field_name) != fields_.end()); }
+  std::map<const std::string, const stk::mesh::FieldBase*> get_output_fields()
+  {
+    return fields_;
+  }
+  bool has_field(const std::string field_name)
+  {
+    return (fields_.find(field_name) != fields_.end());
+  }
   void write_database_data(double currentTime);
 
 private:
-  void output_results(const std::vector<const stk::mesh::FieldBase*> fields) const;
+  void
+  output_results(const std::vector<const stk::mesh::FieldBase*> fields) const;
 
   void write_element_connectivity(
     const stk::mesh::PartVector& baseParts,
     const std::vector<stk::mesh::EntityId>& entityIds);
 
   size_t sub_element_global_id() const;
-  void write_node_block_definitions(
-      const stk::mesh::PartVector& superElemParts);
+  void
+  write_node_block_definitions(const stk::mesh::PartVector& superElemParts);
   void write_elem_block_definitions(const stk::mesh::PartVector& baseParts);
   void write_coordinate_list(const stk::mesh::PartVector& superElemParts);
 
-  template<typename T> void
-  put_data_on_node_block(
+  template <typename T>
+  void put_data_on_node_block(
     Ioss::NodeBlock& nodeBlock,
     const std::vector<int64_t>& ids,
     const stk::mesh::FieldBase& field,
@@ -118,6 +125,6 @@ private:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

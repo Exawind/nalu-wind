@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef ContinuityGclNodeKernel_h
 #define ContinuityGclNodeKernel_h
 
@@ -19,17 +18,15 @@
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class ContinuityGclNodeKernel : public NGPNodeKernel<ContinuityGclNodeKernel>
 {
 public:
-
-  ContinuityGclNodeKernel(
-    const stk::mesh::BulkData&);
+  ContinuityGclNodeKernel(const stk::mesh::BulkData&);
 
   KOKKOS_DEFAULTED_FUNCTION
   ContinuityGclNodeKernel() = default;
@@ -45,24 +42,24 @@ public:
     NodeKernelTraits::RhsType&,
     const stk::mesh::FastMeshIndex&) override;
 
-private: 
+private:
   stk::mesh::NgpField<double> densityNp1_;
   stk::mesh::NgpField<double> divV_;
   stk::mesh::NgpField<double> dualNdVolNm1_;
   stk::mesh::NgpField<double> dualNdVolN_;
   stk::mesh::NgpField<double> dualNdVolNp1_;
 
-  unsigned densityNp1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned divVID_ {stk::mesh::InvalidOrdinal};
-  unsigned dualNdVolNm1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned dualNdVolNID_ {stk::mesh::InvalidOrdinal};
-  unsigned dualNdVolNp1ID_ {stk::mesh::InvalidOrdinal};
+  unsigned densityNp1ID_{stk::mesh::InvalidOrdinal};
+  unsigned divVID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNdVolNm1ID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNdVolNID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNdVolNp1ID_{stk::mesh::InvalidOrdinal};
 
   double dt_;
   double gamma1_, gamma2_, gamma3_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

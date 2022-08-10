@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef SolutionOptions_h
 #define SolutionOptions_h
 
@@ -21,21 +19,23 @@
 #include <memory>
 #include <vector>
 
-namespace YAML { class Node; }
+namespace YAML {
+class Node;
+}
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 struct FixPressureAtNodeInfo;
 
 enum ErrorIndicatorType {
-  EIT_NONE                = 0,
-  EIT_PSTAB               = 1 << 1,
-  EIT_LIMITER             = 1 << 2 ,
-  EIT_SIMPLE_BASE         = 1 << 3,
-  EIT_SIMPLE_VORTICITY    = EIT_SIMPLE_BASE + (1 << 4),
+  EIT_NONE = 0,
+  EIT_PSTAB = 1 << 1,
+  EIT_LIMITER = 1 << 2,
+  EIT_SIMPLE_BASE = 1 << 3,
+  EIT_SIMPLE_VORTICITY = EIT_SIMPLE_BASE + (1 << 4),
   EIT_SIMPLE_VORTICITY_DX = EIT_SIMPLE_BASE + (1 << 5),
-  EIT_SIMPLE_DUDX2        = EIT_SIMPLE_BASE + (1 << 6)
+  EIT_SIMPLE_DUDX2 = EIT_SIMPLE_BASE + (1 << 6)
 };
 
 /** Form of projection timescale used in pressure equation
@@ -50,19 +50,15 @@ enum ProjTScaleType {
 class SolutionOptions
 {
 public:
-
   SolutionOptions();
   ~SolutionOptions();
 
-  void load(const YAML::Node & node);
+  void load(const YAML::Node& node);
   void initialize_turbulence_constants();
 
   inline bool has_mesh_motion() const { return meshMotion_; }
 
-  inline bool has_mesh_deformation() const
-  {
-    return externalMeshDeformation_;
-  }
+  inline bool has_mesh_deformation() const { return externalMeshDeformation_; }
 
   inline bool does_mesh_move() const
   {
@@ -75,7 +71,9 @@ public:
   }
 
   inline double get_mdot_interp() const
-  { return mdotInterpRhoUTogether_ ? 1.0 : 0.0; }
+  {
+    return mdotInterpRhoUTogether_ ? 1.0 : 0.0;
+  }
 
   double get_alpha_factor(const std::string&) const;
 
@@ -88,15 +86,14 @@ public:
   bool primitive_uses_limiter(const std::string&) const;
 
   bool get_shifted_grad_op(const std::string&) const;
-  
+
   bool get_skew_symmetric(const std::string&) const;
 
   std::vector<double> get_gravity_vector(const unsigned nDim) const;
- 
-  double get_turb_model_constant(
-    TurbulenceModelConstant turbModelEnum) const;
-  
-  bool get_noc_usage(const std::string &dofName) const;
+
+  double get_turb_model_constant(TurbulenceModelConstant turbModelEnum) const;
+
+  bool get_noc_usage(const std::string& dofName) const;
 
   bool has_set_boussinesq_time_scale();
 
@@ -167,7 +164,7 @@ public:
 
   // turbulence model coeffs
   std::map<TurbulenceModelConstant, double> turbModelConstantMap_;
-  
+
   // numerics related
   std::map<std::string, double> hybridMap_;
   std::map<std::string, double> alphaMap_;
@@ -188,20 +185,20 @@ public:
   std::map<std::string, double> turbPrMap_;
 
   // source; nodal and fully integrated
-  std::map<std::string, std::vector<std::string> > srcTermsMap_;
-  std::map<std::string, std::vector<double> > srcTermParamMap_;
-  std::map<std::string, std::vector<std::string> > elemSrcTermsMap_;
-  std::map<std::string, std::vector<double> > elemSrcTermParamMap_;
+  std::map<std::string, std::vector<std::string>> srcTermsMap_;
+  std::map<std::string, std::vector<double>> srcTermParamMap_;
+  std::map<std::string, std::vector<std::string>> elemSrcTermsMap_;
+  std::map<std::string, std::vector<double>> elemSrcTermParamMap_;
 
   // nodal gradient
   std::map<std::string, std::string> nodalGradMap_;
 
   // non-orthogonal correction
   std::map<std::string, bool> nocMap_;
-  
+
   // shifting of Laplace operator for the element-based grad_op
   std::map<std::string, bool> shiftedGradOpMap_;
-  
+
   // read any fields from input files
   std::map<std::string, std::string> inputVarFromFileMap_;
 
@@ -234,6 +231,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

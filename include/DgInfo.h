@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef DgInfo_h
 #define DgInfo_h
 
@@ -39,10 +37,10 @@ class MasterElement;
  * -
  */
 //=============================================================================
-class DgInfo {
+class DgInfo
+{
 
- public:
-
+public:
   // constructor and destructor
   DgInfo(
     int parallelRank,
@@ -52,12 +50,12 @@ class DgInfo {
     stk::mesh::Entity currentFace,
     stk::mesh::Entity currentElement,
     const int currentFaceOrdinal,
-    MasterElement *meFCCurrent,
-    MasterElement *meSCSurrent,
+    MasterElement* meFCCurrent,
+    MasterElement* meSCSurrent,
     stk::topology currentElementTopo,
     const int nDim,
     double searchTolerance);
-  
+
   ~DgInfo();
 
   void dump_info();
@@ -70,10 +68,10 @@ class DgInfo {
   stk::mesh::Entity currentFace_;
   stk::mesh::Entity currentElement_;
   const int currentFaceOrdinal_;
-  MasterElement *meFCCurrent_;
-  MasterElement *meSCSCurrent_;
+  MasterElement* meFCCurrent_;
+  MasterElement* meSCSCurrent_;
   stk::topology currentElementTopo_;
-  
+
   int nDim_;
 
   const double bestXRef_;
@@ -96,10 +94,10 @@ class DgInfo {
   int opposingFaceOrdinal_;
 
   // master element for opposing face
-  MasterElement *meFCOpposing_;
+  MasterElement* meFCOpposing_;
 
   // master element for opposing face connected element
-  MasterElement *meSCSOpposing_;
+  MasterElement* meSCSOpposing_;
 
   // coordinates of gauss points on current face
   std::vector<double> currentGaussPointCoords_;
@@ -108,14 +106,14 @@ class DgInfo {
   std::vector<double> currentIsoParCoords_;
 
   // iso-parametric coordinates for gauss point on opposing face (-1:1)
-  std::vector<double> opposingIsoParCoords_;  
+  std::vector<double> opposingIsoParCoords_;
 
   // possible reuse
   std::vector<uint64_t> allOpposingFaceIds_;
   std::vector<uint64_t> allOpposingFaceIdsOld_;
 };
-  
-} // end sierra namespace
-} // end nalu namespace
+
+} // namespace nalu
+} // namespace sierra
 
 #endif

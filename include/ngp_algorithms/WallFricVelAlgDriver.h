@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef WALLFRICVELALGDRIVER_H
 #define WALLFRICVELALGDRIVER_H
 
@@ -35,7 +34,8 @@ public:
 
   virtual ~WallFricVelAlgDriver() = default;
 
-  //! Reset utau accumulators before topology specialized algorithms are executed
+  //! Reset utau accumulators before topology specialized algorithms are
+  //! executed
   virtual void pre_work() override;
 
   //! Perform global integration of utau and update ABL statistics instance
@@ -43,12 +43,12 @@ public:
 
   /** Accumulate partial sum from topology-specific element algorithms
    *
-   *  @param utau_area_sum Partial sum of (utau * area) over the integration points
+   *  @param utau_area_sum Partial sum of (utau * area) over the integration
+   * points
    *  @param area_sum Partially integrated area for the integration points
    */
   inline void accumulate_utau_area_sum(
-    const DoubleType& utau_area_sum,
-    const DoubleType& area_sum)
+    const DoubleType& utau_area_sum, const DoubleType& area_sum)
   {
     utauAreaSum_[0] += utau_area_sum;
     utauAreaSum_[1] += area_sum;
@@ -65,7 +65,7 @@ private:
   DoubleType utauAreaSum_[2];
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* WALLFRICVELALGDRIVER_H */

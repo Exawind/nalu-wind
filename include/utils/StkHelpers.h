@@ -1,7 +1,6 @@
 #ifndef STKHELPERS_H
 #define STKHELPERS_H
 
-
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/GetNgpField.hpp>
@@ -16,13 +15,13 @@ namespace nalu {
 
 class Realm;
 
-void
-populate_ghost_comm_procs(
+void populate_ghost_comm_procs(
   const stk::mesh::BulkData& bulk_data,
   stk::mesh::Ghosting& ghosting,
   std::vector<int>& ghostCommProcs);
 
-stk::topology get_elem_topo(const Realm& realm, const stk::mesh::Part& surfacePart);
+stk::topology
+get_elem_topo(const Realm& realm, const stk::mesh::Part& surfacePart);
 
 void add_downward_relations(
   const stk::mesh::BulkData& bulk,
@@ -54,30 +53,33 @@ void compute_precise_ghosting_lists(
 
 /** Return a field ordinal given the name of the field
  */
-inline
-unsigned get_field_ordinal(
+inline unsigned
+get_field_ordinal(
   const stk::mesh::MetaData& meta,
   const std::string fieldName,
   const stk::mesh::EntityRank entity_rank = stk::topology::NODE_RANK)
 {
   stk::mesh::FieldBase* field = meta.get_field(entity_rank, fieldName);
-  ThrowRequireMsg((field != nullptr), "Requested field does not exist: " + fieldName);
+  ThrowRequireMsg(
+    (field != nullptr), "Requested field does not exist: " + fieldName);
   return field->mesh_meta_data_ordinal();
 }
 
 /** Return a field ordinal for a particular state
  *
  */
-inline
-unsigned get_field_ordinal(
+inline unsigned
+get_field_ordinal(
   const stk::mesh::MetaData& meta,
   const std::string fieldName,
   const stk::mesh::FieldState state,
   const stk::mesh::EntityRank entity_rank = stk::topology::NODE_RANK)
 {
   const auto* field = meta.get_field(entity_rank, fieldName);
-  ThrowRequireMsg((field != nullptr), "Requested field does not exist: " + fieldName);
-  ThrowRequireMsg((field->is_state_valid(state)), "Requested invalid state: " + fieldName);
+  ThrowRequireMsg(
+    (field != nullptr), "Requested field does not exist: " + fieldName);
+  ThrowRequireMsg(
+    (field->is_state_valid(state)), "Requested invalid state: " + fieldName);
 
   const auto* fState = field->field_state(state);
   return fState->mesh_meta_data_ordinal();
@@ -97,22 +99,19 @@ get_node_field(
     *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
 }
 
-void
-register_scalar_nodal_field_on_part(
+void register_scalar_nodal_field_on_part(
   stk::mesh::MetaData& meta,
   std::string name,
   const stk::mesh::Part& selector,
   int num_states,
   double ic = 0);
 
-void
-register_vector_nodal_field_on_part(
+void register_vector_nodal_field_on_part(
   stk::mesh::MetaData& meta,
   std::string name,
   const stk::mesh::Part& selector,
   int num_states,
-  std::array<double, 3> x = {{0,0,0}});
-
+  std::array<double, 3> x = {{0, 0, 0}});
 
 } // namespace nalu
 } // namespace sierra

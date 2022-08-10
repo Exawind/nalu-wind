@@ -7,19 +7,18 @@
 // for more details.
 //
 
-
-
 #ifndef CoriolisSrc_h
 #define CoriolisSrc_h
 
 #include "KokkosInterface.h"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class SolutionOptions;
 
-class CoriolisSrc {
+class CoriolisSrc
+{
 public:
   CoriolisSrc(const SolutionOptions& solnOpts);
 
@@ -45,6 +44,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

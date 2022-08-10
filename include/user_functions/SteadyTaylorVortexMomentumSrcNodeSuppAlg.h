@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef SteadyTaylorVortexMomentumSrcNodeSuppAlg_h
 #define SteadyTaylorVortexMomentumSrcNodeSuppAlg_h
 
@@ -17,29 +15,24 @@
 
 #include <stk_mesh/base/Entity.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class SteadyTaylorVortexMomentumSrcNodeSuppAlg : public SupplementalAlgorithm
 {
 public:
-
-  SteadyTaylorVortexMomentumSrcNodeSuppAlg(
-    Realm &realm);
+  SteadyTaylorVortexMomentumSrcNodeSuppAlg(Realm& realm);
 
   virtual ~SteadyTaylorVortexMomentumSrcNodeSuppAlg() {}
 
   virtual void setup();
 
-  virtual void node_execute(
-    double *lhs,
-    double *rhs,
-    stk::mesh::Entity node);
-  
-  VectorFieldType *coordinates_;
-  ScalarFieldType *dualNodalVolume_;
+  virtual void node_execute(double* lhs, double* rhs, stk::mesh::Entity node);
+
+  VectorFieldType* coordinates_;
+  ScalarFieldType* dualNodalVolume_;
 
   const int nDim_;
   const double unot_;
@@ -51,6 +44,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

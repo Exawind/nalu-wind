@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef ASSEMBLEEDGEKERNEL_H
 #define ASSEMBLEEDGEKERNEL_H
 

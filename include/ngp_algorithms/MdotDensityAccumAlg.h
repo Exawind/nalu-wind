@@ -19,7 +19,7 @@ namespace nalu {
 
 class MdotAlgDriver;
 
-template<typename AlgTraits>
+template <typename AlgTraits>
 class MdotDensityAccumAlg : public Algorithm
 {
 public:
@@ -34,17 +34,16 @@ private:
 
   ElemDataRequests elemData_;
 
-  const unsigned rhoNp1_ {stk::mesh::InvalidOrdinal};
-  const unsigned rhoN_ {stk::mesh::InvalidOrdinal};
-  const unsigned rhoNm1_ {stk::mesh::InvalidOrdinal};
+  const unsigned rhoNp1_{stk::mesh::InvalidOrdinal};
+  const unsigned rhoN_{stk::mesh::InvalidOrdinal};
+  const unsigned rhoNm1_{stk::mesh::InvalidOrdinal};
 
   MasterElement* meSCV_{nullptr};
 
   const bool lumpedMass_{false};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MDOTDENSITYACCUMALG_H */

@@ -18,15 +18,16 @@
 namespace sierra {
 namespace nalu {
 
-
 // Tensor contractions for SIMD types
 // maybe specialize to switch to BLAS if value type is float/double
 
 namespace tensor_internal {
 
-template<int p, typename Scalar, int nx, int ny, int nz>
-KOKKOS_FORCEINLINE_FUNCTION
-void apply_x(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_scalar_view<p, Scalar>& in,
+template <int p, typename Scalar, int nx, int ny, int nz>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_x(
+  const scs_matrix_view<p, Scalar>& coeffMatrix,
+  const nodal_scalar_view<p, Scalar>& in,
   nodal_scalar_view<p, Scalar>& out)
 {
   constexpr int n = p + 1;
@@ -43,10 +44,13 @@ void apply_x(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_scalar_v
   }
 }
 
-template<int p, typename Scalar, int nx, int ny, int nz>
-KOKKOS_FORCEINLINE_FUNCTION
-void apply_x(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_scalar_view<p, Scalar>& in,
-  nodal_vector_view<p, Scalar>& out, int component)
+template <int p, typename Scalar, int nx, int ny, int nz>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_x(
+  const scs_matrix_view<p, Scalar>& coeffMatrix,
+  const nodal_scalar_view<p, Scalar>& in,
+  nodal_vector_view<p, Scalar>& out,
+  int component)
 {
   constexpr int n = p + 1;
   for (int k = 0; k < nz; ++k) {
@@ -62,9 +66,11 @@ void apply_x(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_scalar_v
   }
 }
 
-template<int p, typename Scalar, int nx, int ny, int nz>
-KOKKOS_FORCEINLINE_FUNCTION
-void apply_x(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_vector_view<p, Scalar>& in,
+template <int p, typename Scalar, int nx, int ny, int nz>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_x(
+  const scs_matrix_view<p, Scalar>& coeffMatrix,
+  const nodal_vector_view<p, Scalar>& in,
   nodal_vector_view<p, Scalar>& out)
 {
   constexpr int n = p + 1;
@@ -88,10 +94,13 @@ void apply_x(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_vector_v
   }
 }
 
-template<int p, typename Scalar, int nx, int ny, int nz>
-KOKKOS_FORCEINLINE_FUNCTION
-void apply_x(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_vector_view<p, Scalar>& in,
-  nodal_tensor_view<p, Scalar>& out, int out_comp)
+template <int p, typename Scalar, int nx, int ny, int nz>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_x(
+  const scs_matrix_view<p, Scalar>& coeffMatrix,
+  const nodal_vector_view<p, Scalar>& in,
+  nodal_tensor_view<p, Scalar>& out,
+  int out_comp)
 {
   constexpr int n = p + 1;
   for (int k = 0; k < nz; ++k) {
@@ -114,9 +123,11 @@ void apply_x(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_vector_v
   }
 }
 
-template<int p, typename Scalar, int nx, int ny, int nz>
-KOKKOS_FORCEINLINE_FUNCTION
-void apply_y(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_scalar_view<p, Scalar>& in,
+template <int p, typename Scalar, int nx, int ny, int nz>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_y(
+  const scs_matrix_view<p, Scalar>& coeffMatrix,
+  const nodal_scalar_view<p, Scalar>& in,
   nodal_scalar_view<p, Scalar>& out)
 {
   constexpr int n = p + 1;
@@ -135,10 +146,13 @@ void apply_y(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_scalar_v
   }
 }
 
-template<int p, typename Scalar, int nx, int ny, int nz>
-KOKKOS_FORCEINLINE_FUNCTION
-void apply_y(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_scalar_view<p, Scalar>& in,
-  nodal_vector_view<p, Scalar>& out, int component)
+template <int p, typename Scalar, int nx, int ny, int nz>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_y(
+  const scs_matrix_view<p, Scalar>& coeffMatrix,
+  const nodal_scalar_view<p, Scalar>& in,
+  nodal_vector_view<p, Scalar>& out,
+  int component)
 {
   constexpr int n = p + 1;
   for (int k = 0; k < nz; ++k) {
@@ -156,9 +170,11 @@ void apply_y(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_scalar_v
   }
 }
 
-template<int p, typename Scalar, int nx, int ny, int nz>
-KOKKOS_FORCEINLINE_FUNCTION
-void apply_y(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_vector_view<p, Scalar>& in,
+template <int p, typename Scalar, int nx, int ny, int nz>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_y(
+  const scs_matrix_view<p, Scalar>& coeffMatrix,
+  const nodal_vector_view<p, Scalar>& in,
   nodal_vector_view<p, Scalar>& out)
 {
   constexpr int n = p + 1;
@@ -181,10 +197,13 @@ void apply_y(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_vector_v
     }
   }
 }
-template<int p, typename Scalar, int nx, int ny, int nz>
-KOKKOS_FORCEINLINE_FUNCTION
-void apply_y(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_vector_view<p, Scalar>& in,
-  nodal_tensor_view<p, Scalar>& out, int out_col)
+template <int p, typename Scalar, int nx, int ny, int nz>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_y(
+  const scs_matrix_view<p, Scalar>& coeffMatrix,
+  const nodal_vector_view<p, Scalar>& in,
+  nodal_tensor_view<p, Scalar>& out,
+  int out_col)
 {
   constexpr int n = p + 1;
   for (int k = 0; k < nz; ++k) {
@@ -207,9 +226,11 @@ void apply_y(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_vector_v
   }
 }
 
-template<int p, typename Scalar, int nx, int ny, int nz>
-KOKKOS_FORCEINLINE_FUNCTION
-void apply_z(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_scalar_view<p, Scalar>& in,
+template <int p, typename Scalar, int nx, int ny, int nz>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_z(
+  const scs_matrix_view<p, Scalar>& coeffMatrix,
+  const nodal_scalar_view<p, Scalar>& in,
   nodal_scalar_view<p, Scalar>& out)
 {
   constexpr int n = p + 1;
@@ -231,10 +252,13 @@ void apply_z(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_scalar_v
   }
 }
 
-template<int p, typename Scalar, int nx, int ny, int nz>
-KOKKOS_FORCEINLINE_FUNCTION
-void apply_z(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_scalar_view<p, Scalar>& in,
-  nodal_vector_view<p, Scalar>& out, int component)
+template <int p, typename Scalar, int nx, int ny, int nz>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_z(
+  const scs_matrix_view<p, Scalar>& coeffMatrix,
+  const nodal_scalar_view<p, Scalar>& in,
+  nodal_vector_view<p, Scalar>& out,
+  int component)
 {
   constexpr int n = p + 1;
   for (int k = 0; k < nz; ++k) {
@@ -255,9 +279,11 @@ void apply_z(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_scalar_v
   }
 }
 
-template<int p, typename Scalar, int nx, int ny, int nz>
-KOKKOS_FORCEINLINE_FUNCTION
-void apply_z(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_vector_view<p, Scalar>& in,
+template <int p, typename Scalar, int nx, int ny, int nz>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_z(
+  const scs_matrix_view<p, Scalar>& coeffMatrix,
+  const nodal_vector_view<p, Scalar>& in,
   nodal_vector_view<p, Scalar>& out)
 {
   constexpr int n = p + 1;
@@ -283,10 +309,13 @@ void apply_z(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_vector_v
   }
 }
 
-template<int p, typename Scalar, int nx, int ny, int nz>
-KOKKOS_FORCEINLINE_FUNCTION
-void apply_z(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_vector_view<p, Scalar>& in,
-  nodal_tensor_view<p, Scalar>& out, int out_col)
+template <int p, typename Scalar, int nx, int ny, int nz>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_z(
+  const scs_matrix_view<p, Scalar>& coeffMatrix,
+  const nodal_vector_view<p, Scalar>& in,
+  nodal_tensor_view<p, Scalar>& out,
+  int out_col)
 {
   constexpr int n = p + 1;
   for (int k = 0; k < nz; ++k) {
@@ -309,9 +338,10 @@ void apply_z(const scs_matrix_view<p, Scalar>& coeffMatrix, const nodal_vector_v
   }
 }
 
-template<int p, typename Scalar>
-KOKKOS_FORCEINLINE_FUNCTION
-void difference_x(const nodal_scalar_view<p, Scalar>& in, nodal_scalar_view<p, Scalar>& out)
+template <int p, typename Scalar>
+KOKKOS_FORCEINLINE_FUNCTION void
+difference_x(
+  const nodal_scalar_view<p, Scalar>& in, nodal_scalar_view<p, Scalar>& out)
 {
   constexpr int n = p + 1;
   for (int k = 0; k < n; ++k) {
@@ -325,9 +355,10 @@ void difference_x(const nodal_scalar_view<p, Scalar>& in, nodal_scalar_view<p, S
   }
 }
 
-template<int p, typename Scalar>
-KOKKOS_FORCEINLINE_FUNCTION
-void difference_x(const nodal_vector_view<p, Scalar>& in, nodal_vector_view<p, Scalar>& out)
+template <int p, typename Scalar>
+KOKKOS_FORCEINLINE_FUNCTION void
+difference_x(
+  const nodal_vector_view<p, Scalar>& in, nodal_vector_view<p, Scalar>& out)
 {
   constexpr int n = p + 1;
   for (int k = 0; k < n; ++k) {
@@ -339,7 +370,6 @@ void difference_x(const nodal_vector_view<p, Scalar>& in, nodal_vector_view<p, S
         out(k, j, q, XH) -= in(k, j, q, XH) - in(k, j, q - 1, XH);
         out(k, j, q, YH) -= in(k, j, q, YH) - in(k, j, q - 1, YH);
         out(k, j, q, ZH) -= in(k, j, q, ZH) - in(k, j, q - 1, ZH);
-
       }
       out(k, j, p, XH) += in(k, j, p - 1, XH);
       out(k, j, p, YH) += in(k, j, p - 1, YH);
@@ -348,9 +378,10 @@ void difference_x(const nodal_vector_view<p, Scalar>& in, nodal_vector_view<p, S
   }
 }
 
-template<int p, typename Scalar>
-KOKKOS_FORCEINLINE_FUNCTION
-void difference_y(const nodal_scalar_view<p, Scalar>& in, nodal_scalar_view<p, Scalar>& out)
+template <int p, typename Scalar>
+KOKKOS_FORCEINLINE_FUNCTION void
+difference_y(
+  const nodal_scalar_view<p, Scalar>& in, nodal_scalar_view<p, Scalar>& out)
 {
   constexpr int n = p + 1;
   for (int k = 0; k < n; ++k) {
@@ -364,9 +395,10 @@ void difference_y(const nodal_scalar_view<p, Scalar>& in, nodal_scalar_view<p, S
   }
 }
 
-template<int p, typename Scalar>
-KOKKOS_FORCEINLINE_FUNCTION
-void difference_y(const nodal_vector_view<p, Scalar>& in, nodal_vector_view<p, Scalar>& out)
+template <int p, typename Scalar>
+KOKKOS_FORCEINLINE_FUNCTION void
+difference_y(
+  const nodal_vector_view<p, Scalar>& in, nodal_vector_view<p, Scalar>& out)
 {
   constexpr int n = p + 1;
   for (int k = 0; k < n; ++k) {
@@ -386,9 +418,10 @@ void difference_y(const nodal_vector_view<p, Scalar>& in, nodal_vector_view<p, S
   }
 }
 
-template<int p, typename Scalar>
-KOKKOS_FORCEINLINE_FUNCTION
-void difference_z(const nodal_scalar_view<p, Scalar>& in, nodal_scalar_view<p, Scalar>& out)
+template <int p, typename Scalar>
+KOKKOS_FORCEINLINE_FUNCTION void
+difference_z(
+  const nodal_scalar_view<p, Scalar>& in, nodal_scalar_view<p, Scalar>& out)
 {
   constexpr int n = p + 1;
   for (int j = 0; j < n; ++j) {
@@ -402,9 +435,10 @@ void difference_z(const nodal_scalar_view<p, Scalar>& in, nodal_scalar_view<p, S
   }
 }
 
-template<int p, typename Scalar>
-KOKKOS_FORCEINLINE_FUNCTION
-void difference_z(const nodal_vector_view<p, Scalar>& in, nodal_vector_view<p, Scalar>& out)
+template <int p, typename Scalar>
+KOKKOS_FORCEINLINE_FUNCTION void
+difference_z(
+  const nodal_vector_view<p, Scalar>& in, nodal_vector_view<p, Scalar>& out)
 {
   constexpr int n = p + 1;
   for (int j = 0; j < n; ++j) {
@@ -424,10 +458,9 @@ void difference_z(const nodal_vector_view<p, Scalar>& in, nodal_vector_view<p, S
   }
 }
 
-}
+} // namespace tensor_internal
 
-} // namespace Sierra
-}
+} // namespace nalu
+} // namespace sierra
 
 #endif
-

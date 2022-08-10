@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef NGPSCRATCHDATA_H
 #define NGPSCRATCHDATA_H
 
@@ -31,7 +30,7 @@ namespace nalu_ngp {
  *  element data (ScratchViews) within element loops.
  *
  */
-template<typename Mesh>
+template <typename Mesh>
 struct ElemSimdData
 {
   using MeshTraits = NGPMeshTraits<Mesh>;
@@ -50,10 +49,9 @@ struct ElemSimdData
 #ifdef KOKKOS_ENABLE_CUDA
     scrView[0] = &simdScrView;
 #else
-    for (int si=0; si < simdLen; ++si) {
-      scrView[si].reset(
-        new ScratchViews<double, TeamHandleType, ShmemType>(
-          team, ndim, nodesPerElem, dataReq));
+    for (int si = 0; si < simdLen; ++si) {
+      scrView[si].reset(new ScratchViews<double, TeamHandleType, ShmemType>(
+        team, ndim, nodesPerElem, dataReq));
     }
 #endif
 
@@ -63,8 +61,7 @@ struct ElemSimdData
   KOKKOS_DEFAULTED_FUNCTION ~ElemSimdData() = default;
 
   KOKKOS_INLINE_FUNCTION
-  const EntityInfoType* info() const
-  { return elemInfo; }
+  const EntityInfoType* info() const { return elemInfo; }
 
   //! Gathered element data (always in SIMD datatype)
   ScratchViews<DoubleType, TeamHandleType, ShmemType> simdScrView;
@@ -76,7 +73,8 @@ struct ElemSimdData
 #ifdef KOKKOS_ENABLE_CUDA
   ScratchViews<DoubleType, TeamHandleType, ShmemType>* scrView[1];
 #else
-  std::unique_ptr<ScratchViews<double, TeamHandleType, ShmemType>> scrView[simdLen];
+  std::unique_ptr<ScratchViews<double, TeamHandleType, ShmemType>>
+    scrView[simdLen];
 #endif
 
   //! Element connectivity info for each element within the SIMD group
@@ -86,7 +84,7 @@ struct ElemSimdData
   int numSimdElems;
 };
 
-template<typename Mesh>
+template <typename Mesh>
 struct FaceElemSimdData
 {
   using MeshTraits = NGPMeshTraits<Mesh>;
@@ -109,13 +107,11 @@ struct FaceElemSimdData
     scrFaceView[0] = &simdFaceView;
     scrElemView[0] = &simdElemView;
 #else
-    for (int si=0; si < simdLen; ++si) {
-      scrFaceView[si].reset(
-        new ScratchViews<double, TeamHandleType, ShmemType>(
-          team, ndim, nodesPerFace, faceDataReqs));
-      scrElemView[si].reset(
-        new ScratchViews<double, TeamHandleType, ShmemType>(
-          team, ndim, nodesPerElem, elemDataReqs));
+    for (int si = 0; si < simdLen; ++si) {
+      scrFaceView[si].reset(new ScratchViews<double, TeamHandleType, ShmemType>(
+        team, ndim, nodesPerFace, faceDataReqs));
+      scrElemView[si].reset(new ScratchViews<double, TeamHandleType, ShmemType>(
+        team, ndim, nodesPerElem, elemDataReqs));
     }
 #endif
 
@@ -126,8 +122,7 @@ struct FaceElemSimdData
   KOKKOS_DEFAULTED_FUNCTION ~FaceElemSimdData() = default;
 
   KOKKOS_INLINE_FUNCTION
-  const EntityInfoType* info() const
-  { return faceInfo; }
+  const EntityInfoType* info() const { return faceInfo; }
 
   ScratchViews<DoubleType, TeamHandleType, ShmemType> simdFaceView;
   ScratchViews<DoubleType, TeamHandleType, ShmemType> simdElemView;
@@ -140,8 +135,10 @@ struct FaceElemSimdData
   ScratchViews<DoubleType, TeamHandleType, ShmemType>* scrFaceView[1];
   ScratchViews<DoubleType, TeamHandleType, ShmemType>* scrElemView[1];
 #else
-  std::unique_ptr<ScratchViews<double, TeamHandleType, ShmemType>> scrFaceView[simdLen];
-  std::unique_ptr<ScratchViews<double, TeamHandleType, ShmemType>> scrElemView[simdLen];
+  std::unique_ptr<ScratchViews<double, TeamHandleType, ShmemType>>
+    scrFaceView[simdLen];
+  std::unique_ptr<ScratchViews<double, TeamHandleType, ShmemType>>
+    scrElemView[simdLen];
 #endif
 
   EntityInfoType faceInfo[simdLen];
@@ -152,10 +149,8 @@ struct FaceElemSimdData
   int numSimdElems;
 };
 
-}  // nalu_ngp
-}  // nalu
-}  // sierra
-
-
+} // namespace nalu_ngp
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NGPSCRATCHDATA_H */

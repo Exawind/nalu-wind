@@ -13,21 +13,22 @@
 #include <Algorithm.h>
 #include <stk_mesh/base/Types.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
-class MomentumABLWallFuncMaskUtil : public Algorithm{
+class MomentumABLWallFuncMaskUtil : public Algorithm
+{
 public:
   MomentumABLWallFuncMaskUtil(Realm&, stk::mesh::Part*);
   virtual ~MomentumABLWallFuncMaskUtil() = default;
   void execute() override;
+
 private:
   unsigned maskNodeIndex_{stk::mesh::InvalidOrdinal};
-
 };
 
-}
-}
+} // namespace nalu
+} // namespace sierra
 #endif /* MOMENTUMABLWALLFUNCMASKUTIL_H_ */

@@ -7,32 +7,29 @@
 // for more details.
 //
 
-
-
 #ifndef ComputeWallFrictionVelocityAlgorithm_h
 #define ComputeWallFrictionVelocityAlgorithm_h
 
-#include<Algorithm.h>
-#include<FieldTypeDef.h>
-#include<NaluParsedTypes.h>
+#include <Algorithm.h>
+#include <FieldTypeDef.h>
+#include <NaluParsedTypes.h>
 
 // stk
 #include <stk_mesh/base/Part.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class ComputeWallFrictionVelocityAlgorithm : public Algorithm
 {
 public:
-
   ComputeWallFrictionVelocityAlgorithm(
-    Realm &realm,
-    stk::mesh::Part *part,
-    const bool &useShifted,
-    const WallBoundaryConditionData &wallBCData);
+    Realm& realm,
+    stk::mesh::Part* part,
+    const bool& useShifted,
+    const WallBoundaryConditionData& wallBCData);
   virtual ~ComputeWallFrictionVelocityAlgorithm();
 
   void execute();
@@ -40,10 +37,12 @@ public:
   void zero_nodal_fields();
 
   void compute_utau(
-      const double &up, const double &yp,
-      const double &density, const double &viscosity,
-      double &utau);
-  
+    const double& up,
+    const double& yp,
+    const double& density,
+    const double& viscosity,
+    double& utau);
+
   void normalize_nodal_fields();
 
   const bool useShifted_;
@@ -53,16 +52,16 @@ public:
   const int maxIteration_;
   const double tolerance_;
 
-  VectorFieldType *velocity_;
-  VectorFieldType *bcVelocity_;
-  VectorFieldType *coordinates_;
-  ScalarFieldType *density_;
-  ScalarFieldType *viscosity_;
-  GenericFieldType *exposedAreaVec_;
-  GenericFieldType *wallFrictionVelocityBip_;
-  GenericFieldType *wallNormalDistanceBip_;
-  ScalarFieldType *assembledWallNormalDistance_;
-  ScalarFieldType *assembledWallArea_;
+  VectorFieldType* velocity_;
+  VectorFieldType* bcVelocity_;
+  VectorFieldType* coordinates_;
+  ScalarFieldType* density_;
+  ScalarFieldType* viscosity_;
+  GenericFieldType* exposedAreaVec_;
+  GenericFieldType* wallFrictionVelocityBip_;
+  GenericFieldType* wallNormalDistanceBip_;
+  ScalarFieldType* assembledWallNormalDistance_;
+  ScalarFieldType* assembledWallArea_;
 
   bool RANSAblBcApproach_;
   double uRef_;
@@ -71,6 +70,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

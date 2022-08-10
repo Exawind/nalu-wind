@@ -38,7 +38,7 @@ struct ActuatorMeta
 {
   ActuatorMeta(
     int numTurbines, ActuatorType actType = ActuatorType::ActLinePointDrag);
-  virtual ~ActuatorMeta(){}
+  virtual ~ActuatorMeta() {}
   void add_turbine(const ActuatorInfoNGP& info);
   const int numberOfActuators_;
   const ActuatorType actuatorType_;
@@ -63,7 +63,7 @@ struct ActuatorMeta
 struct ActuatorBulk
 {
   ActuatorBulk(const ActuatorMeta& actMeta);
-  virtual ~ActuatorBulk(){}
+  virtual ~ActuatorBulk() {}
 
   void stk_search_act_pnts(
     const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk);

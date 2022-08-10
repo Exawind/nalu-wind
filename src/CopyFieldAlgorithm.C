@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 // nalu
 #include <CopyFieldAlgorithm.h>
 
@@ -24,8 +22,8 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Part.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -35,10 +33,10 @@ namespace nalu{
 //                      should it be operating on integration point data
 //==========================================================================
 CopyFieldAlgorithm::CopyFieldAlgorithm(
-  Realm &realm,
-  stk::mesh::Part *part,
-  stk::mesh::FieldBase * fromField,
-  stk::mesh::FieldBase * toField,
+  Realm& realm,
+  stk::mesh::Part* part,
+  stk::mesh::FieldBase* fromField,
+  stk::mesh::FieldBase* toField,
   const unsigned beginPos,
   const unsigned endPos,
   const stk::mesh::EntityRank entityRank)
@@ -48,24 +46,25 @@ CopyFieldAlgorithm::CopyFieldAlgorithm(
     beginPos_(beginPos),
     endPos_(endPos),
     entityRank_(entityRank)
-{}
+{
+}
 
 void
 CopyFieldAlgorithm::execute()
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(partVec_);
   const auto& fieldMgr = realm_.ngp_field_manager();
-  auto& toField = fieldMgr.get_field<double>(
-    toField_->mesh_meta_data_ordinal());
-  auto& fromField = fieldMgr.get_field<double>(
-    fromField_->mesh_meta_data_ordinal());
+  auto& toField =
+    fieldMgr.get_field<double>(toField_->mesh_meta_data_ordinal());
+  auto& fromField =
+    fieldMgr.get_field<double>(fromField_->mesh_meta_data_ordinal());
   fromField.sync_to_device();
   toField.sync_to_device();
   nalu_ngp::field_copy(
-    realm_.ngp_mesh(), selector, toField, fromField,
-    beginPos_, endPos_, entityRank_);
+    realm_.ngp_mesh(), selector, toField, fromField, beginPos_, endPos_,
+    entityRank_);
   toField.modify_on_device();
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

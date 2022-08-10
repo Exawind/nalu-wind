@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef MetricTensorElemAlg_h
 #define MetricTensorElemAlg_h
 

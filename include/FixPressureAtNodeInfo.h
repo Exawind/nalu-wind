@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef FIXPRESSUREATNODEINFO_H
 #define FIXPRESSUREATNODEINFO_H
 
@@ -41,13 +40,14 @@ struct FixPressureAtNodeInfo
   void create_part_vector(const stk::mesh::MetaData& meta)
   {
     auto nParts = searchParts_.size();
-    for (size_t i=0; i < nParts; i++) {
+    for (size_t i = 0; i < nParts; i++) {
       stk::mesh::Part* part = meta.get_part(searchParts_[i]);
       if (nullptr != part)
         partVec_.push_back(part);
       else
-        throw std::runtime_error("FixPressureAtNodeInfo: Target search part is null "
-                                 + searchParts_[i]);
+        throw std::runtime_error(
+          "FixPressureAtNodeInfo: Target search part is null " +
+          searchParts_[i]);
     }
   }
 
@@ -69,7 +69,7 @@ struct FixPressureAtNodeInfo
   stk::mesh::EntityId stkNodeId_;
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* FIXPRESSUREATNODEINFO_H */

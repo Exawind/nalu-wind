@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef ContinuityInflowElemKernel_h
 #define ContinuityInflowElemKernel_h
 
@@ -28,15 +26,16 @@ class TimeIntegrator;
 
 /** Add Int rho*uj*nj*dS
  */
-template<typename BcAlgTraits>
-class ContinuityInflowElemKernel: public NGPKernel<ContinuityInflowElemKernel<BcAlgTraits>>
+template <typename BcAlgTraits>
+class ContinuityInflowElemKernel
+  : public NGPKernel<ContinuityInflowElemKernel<BcAlgTraits>>
 {
 public:
   ContinuityInflowElemKernel(
     const stk::mesh::BulkData& bulkData,
-    const SolutionOptions &solnOpts,
-    const bool &useShifted,
-    ElemDataRequests &faceDataPreReqs);
+    const SolutionOptions& solnOpts,
+    const bool& useShifted,
+    ElemDataRequests& faceDataPreReqs);
 
   KOKKOS_DEFAULTED_FUNCTION
   virtual ~ContinuityInflowElemKernel() = default;
@@ -52,16 +51,16 @@ public:
 
   KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType **, DeviceShmem>&lhs,
-    SharedMemView<DoubleType *, DeviceShmem>&rhs,
+    SharedMemView<DoubleType**, DeviceShmem>& lhs,
+    SharedMemView<DoubleType*, DeviceShmem>& rhs,
     ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews);
 
 private:
   ContinuityInflowElemKernel() = delete;
 
-  unsigned velocityBC_ {stk::mesh::InvalidOrdinal};
-  unsigned densityBC_ {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
+  unsigned velocityBC_{stk::mesh::InvalidOrdinal};
+  unsigned densityBC_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
 
   const bool useShifted_;
   double projTimeScale_;
@@ -71,7 +70,7 @@ private:
   MasterElement* meFC_{nullptr};
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ContinuityInflowElemKernel_h */

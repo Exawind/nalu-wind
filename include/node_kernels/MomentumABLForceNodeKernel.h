@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef MOMENTUMABLFORCENODEKERNEL_H
 #define MOMENTUMABLFORCENODEKERNEL_H
 
@@ -24,12 +23,12 @@ namespace nalu {
 
 class SolutionOptions;
 
-class MomentumABLForceNodeKernel : public NGPNodeKernel<MomentumABLForceNodeKernel>
+class MomentumABLForceNodeKernel
+  : public NGPNodeKernel<MomentumABLForceNodeKernel>
 {
 public:
   MomentumABLForceNodeKernel(
-    const stk::mesh::BulkData&,
-    const SolutionOptions&);
+    const stk::mesh::BulkData&, const SolutionOptions&);
 
   MomentumABLForceNodeKernel() = delete;
 
@@ -50,14 +49,13 @@ private:
 
   ABLVectorInterpolator ablSrc_;
 
-  unsigned coordinatesID_ {stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinatesID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
 
   const int nDim_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MOMENTUMABLFORCENODEKERNEL_H */

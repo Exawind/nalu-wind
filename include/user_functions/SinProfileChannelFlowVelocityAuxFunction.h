@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef SinProfileChannelFlowVelocityAuxFunction_h
 #define SinProfileChannelFlowVelocityAuxFunction_h
 
@@ -15,35 +14,33 @@
 
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class SinProfileChannelFlowVelocityAuxFunction : public AuxFunction
 {
 public:
-
   SinProfileChannelFlowVelocityAuxFunction(
-    const unsigned beginPos,
-    const unsigned endPos);
+    const unsigned beginPos, const unsigned endPos);
 
   virtual ~SinProfileChannelFlowVelocityAuxFunction() {}
-  
+
   using AuxFunction::do_evaluate;
   virtual void do_evaluate(
-    const double * coords,
+    const double* coords,
     const double time,
     const unsigned spatialDimension,
     const unsigned numPoints,
-    double * fieldPtr,
+    double* fieldPtr,
     const unsigned fieldSize,
     const unsigned beginPos,
     const unsigned endPos) const;
-  
+
 private:
   const double u_m;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

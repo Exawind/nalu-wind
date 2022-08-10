@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include <NaluEnv.h>
 
 #include <mpi.h>
@@ -20,8 +19,8 @@
 
 #include <stk_util/environment/WallTime.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -48,7 +47,8 @@ NaluEnv::NaluEnv()
 //--------------------------------------------------------------------------
 //-------- self ------------------------------------------------------------
 //--------------------------------------------------------------------------
-NaluEnv &NaluEnv::self()
+NaluEnv&
+NaluEnv::self()
 {
   static NaluEnv s;
   return s;
@@ -57,7 +57,7 @@ NaluEnv &NaluEnv::self()
 //--------------------------------------------------------------------------
 //-------- naluOutputP0 ----------------------------------------------------
 //--------------------------------------------------------------------------
-std::ostream &
+std::ostream&
 NaluEnv::naluOutputP0()
 {
   return *naluLogStream_;
@@ -66,7 +66,7 @@ NaluEnv::naluOutputP0()
 //--------------------------------------------------------------------------
 //-------- naluOutput ------------------------------------------------------
 //--------------------------------------------------------------------------
-std::ostream &
+std::ostream&
 NaluEnv::naluOutput()
 {
   return *naluParallelStream_;
@@ -106,11 +106,10 @@ void
 NaluEnv::set_log_file_stream(
   std::string naluLogName, bool pprint, const bool capture_cout)
 {
-  if ( pRank_ == 0 ) {
+  if (pRank_ == 0) {
     naluStreamBuffer_.open(naluLogName.c_str(), std::ios::out);
     naluLogStream_->rdbuf(&naluStreamBuffer_);
-  }
-  else {
+  } else {
     naluLogStream_->rdbuf(&naluEmptyStreamBuffer_);
   }
 
@@ -120,18 +119,17 @@ NaluEnv::set_log_file_stream(
   // default to an empty stream buffer for parallel unless pprint is set
   parallelLog_ = pprint;
   if (parallelLog_) {
-    int numPlaces = static_cast<int>(std::log10(pSize_-1)+1);
+    int numPlaces = static_cast<int>(std::log10(pSize_ - 1) + 1);
 
     std::stringstream paddedRank;
     paddedRank << std::setw(numPlaces) << std::setfill('0') << parallel_rank();
 
     // inputname.log -> inputname.log.16.02 for the rank 2 proc of a 16 proc job
     std::string parallelLogName =
-        naluLogName + "." + std::to_string(pSize_) + "." + paddedRank.str();
+      naluLogName + "." + std::to_string(pSize_) + "." + paddedRank.str();
     naluParallelStreamBuffer_.open(parallelLogName.c_str(), std::ios::out);
     naluParallelStream_->rdbuf(&naluParallelStreamBuffer_);
-  }
-  else {
+  } else {
     naluParallelStream_->rdbuf(stdoutStream_);
   }
 }
@@ -142,13 +140,12 @@ NaluEnv::set_log_file_stream(
 void
 NaluEnv::close_log_file_stream()
 {
-  if ( pRank_ == 0 ) {
+  if (pRank_ == 0) {
     naluStreamBuffer_.close();
   }
   if (parallelLog_) {
     naluParallelStreamBuffer_.close();
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -174,4 +171,4 @@ NaluEnv::nalu_time()
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

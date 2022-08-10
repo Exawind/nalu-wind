@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef NGPFIELDOPS_H
 #define NGPFIELDOPS_H
 
@@ -31,7 +30,7 @@ namespace nalu {
 namespace nalu_ngp {
 namespace impl {
 
-template<typename Mesh, typename Field>
+template <typename Mesh, typename Field>
 struct SimpleNodeFieldOp
 {
   static_assert(
@@ -44,11 +43,10 @@ struct SimpleNodeFieldOp
    *  @param einfo Entity information for this loop instance
    */
   KOKKOS_INLINE_FUNCTION
-  SimpleNodeFieldOp(
-    const Mesh& ngpMesh,
-    const Field& ngpField)
+  SimpleNodeFieldOp(const Mesh& ngpMesh, const Field& ngpField)
     : ngpMesh_(ngpMesh), ngpField_(ngpField)
-  {}
+  {
+  }
 
   KOKKOS_DEFAULTED_FUNCTION ~SimpleNodeFieldOp() = default;
 
@@ -118,8 +116,9 @@ struct SimpleNodeFieldOp
 template <typename Mesh, typename Field, typename SimdDataType>
 struct NodeFieldOp
 {
-  static_assert(std::is_floating_point<typename Field::value_type>::value,
-                "NGP field must have a floating type");
+  static_assert(
+    std::is_floating_point<typename Field::value_type>::value,
+    "NGP field must have a floating type");
 
   /**
    *  @param ngpMesh Instance of the NGP mesh on device
@@ -127,12 +126,10 @@ struct NodeFieldOp
    *  @param Element connectivity information for this loop instance
    */
   KOKKOS_INLINE_FUNCTION
-  NodeFieldOp(
-    const Mesh& ngpMesh,
-    const Field& ngpField
-  ) : ngpMesh_(ngpMesh),
-      ngpField_(ngpField)
-  {}
+  NodeFieldOp(const Mesh& ngpMesh, const Field& ngpField)
+    : ngpMesh_(ngpMesh), ngpField_(ngpField)
+  {
+  }
 
   KOKKOS_DEFAULTED_FUNCTION
   NodeFieldOp() = default;
@@ -149,16 +146,15 @@ struct NodeFieldOp
     KOKKOS_DEFAULTED_FUNCTION ~Ops() = default;
 
     KOKKOS_INLINE_FUNCTION
-    void operator= (const DoubleType& val) const
+    void operator=(const DoubleType& val) const
     {
       const auto& msh = obj_.ngpMesh_;
       const auto& fld = obj_.ngpField_;
       const auto* einfo = edata_.info();
 #ifdef STK_SIMD_NONE
-      fld.get(msh, einfo[0].entityNodes[ni], ic) =
-        stk::simd::get_data(val, 0);
+      fld.get(msh, einfo[0].entityNodes[ni], ic) = stk::simd::get_data(val, 0);
 #else
-      for (int is=0; is < edata_.numSimdElems; ++is) {
+      for (int is = 0; is < edata_.numSimdElems; ++is) {
         fld.get(msh, einfo[is].entityNodes[ni], ic) =
           stk::simd::get_data(val, is);
       }
@@ -166,7 +162,7 @@ struct NodeFieldOp
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator+= (const DoubleType& val) const
+    void operator+=(const DoubleType& val) const
     {
       const auto& msh = obj_.ngpMesh_;
       const auto& fld = obj_.ngpField_;
@@ -176,7 +172,7 @@ struct NodeFieldOp
         &fld.get(msh, einfo[0].entityNodes[ni], ic),
         stk::simd::get_data(val, 0));
 #else
-      for (int is=0; is < edata_.numSimdElems; ++is) {
+      for (int is = 0; is < edata_.numSimdElems; ++is) {
         Kokkos::atomic_add(
           &fld.get(msh, einfo[is].entityNodes[ni], ic),
           stk::simd::get_data(val, is));
@@ -185,7 +181,7 @@ struct NodeFieldOp
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator= (const double& val) const
+    void operator=(const double& val) const
     {
       const auto& msh = obj_.ngpMesh_;
       const auto& fld = obj_.ngpField_;
@@ -193,14 +189,14 @@ struct NodeFieldOp
 #ifdef STK_SIMD_NONE
       fld.get(msh, einfo[0].entityNodes[ni], ic) = val;
 #else
-      for (int is=0; is < edata_.numSimdElems; ++is) {
+      for (int is = 0; is < edata_.numSimdElems; ++is) {
         fld.get(msh, einfo[is].entityNodes[ni], ic) = val;
       }
 #endif
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator+= (const double& val) const
+    void operator+=(const double& val) const
     {
       const auto& msh = obj_.ngpMesh_;
       const auto& fld = obj_.ngpField_;
@@ -208,23 +204,17 @@ struct NodeFieldOp
 #ifdef STK_SIMD_NONE
       Kokkos::atomic_add(&fld.get(msh, einfo[0].entityNodes[ni], ic), val);
 #else
-      for (int is=0; is < edata_.numSimdElems; ++is) {
+      for (int is = 0; is < edata_.numSimdElems; ++is) {
         Kokkos::atomic_add(&fld.get(msh, einfo[is].entityNodes[ni], ic), val);
       }
 #endif
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator-= (const DoubleType& val) const
-    {
-      Ops::operator+=(-val);
-    }
+    void operator-=(const DoubleType& val) const { Ops::operator+=(-val); }
 
     KOKKOS_INLINE_FUNCTION
-    void operator-= (const double& val) const
-    {
-      Ops::operator+=(-val);
-    }
+    void operator-=(const double& val) const { Ops::operator+=(-val); }
 
     const NodeFieldOp<Mesh, Field, SimdDataType>& obj_;
 
@@ -258,15 +248,15 @@ struct NodeFieldOp
 
 /** Update an NGP field registered to ELEM_RANk from within SIMD-ized loop
  */
-template<typename Mesh, typename Field, typename SimdDataType>
+template <typename Mesh, typename Field, typename SimdDataType>
 struct ElemFieldOp
 {
-  static_assert(std::is_floating_point<typename Field::value_type>::value,
-                "NGP field must have a floating type");
+  static_assert(
+    std::is_floating_point<typename Field::value_type>::value,
+    "NGP field must have a floating type");
 
   KOKKOS_INLINE_FUNCTION
-  ElemFieldOp(const Field& ngpField) : ngpField_(ngpField)
-  {}
+  ElemFieldOp(const Field& ngpField) : ngpField_(ngpField) {}
 
   KOKKOS_DEFAULTED_FUNCTION ~ElemFieldOp() = default;
 
@@ -280,21 +270,21 @@ struct ElemFieldOp
     KOKKOS_DEFAULTED_FUNCTION ~Ops() = default;
 
     KOKKOS_INLINE_FUNCTION
-    void operator= (const DoubleType& val) const
+    void operator=(const DoubleType& val) const
     {
       const auto& fld = obj_.ngpField_;
       const auto* einfo = edata_.info();
 #ifdef STK_SIMD_NONE
       fld.get(einfo[0].meshIdx, ic) = stk::simd::get_data(val, 0);
 #else
-      for (int is=0; is < edata_.numSimdElems; ++is) {
+      for (int is = 0; is < edata_.numSimdElems; ++is) {
         fld.get(einfo[is].meshIdx, ic) = stk::simd::get_data(val, is);
       }
 #endif
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator+= (const DoubleType& val) const
+    void operator+=(const DoubleType& val) const
     {
       const auto& fld = obj_.ngpField_;
       const auto* einfo = edata_.info();
@@ -303,51 +293,45 @@ struct ElemFieldOp
 #ifdef STK_SIMD_NONE
       fld.get(einfo[0].meshIdx, ic) += stk::simd::get_data(val, 0);
 #else
-      for (int is=0; is < edata_.numSimdElems; ++is) {
+      for (int is = 0; is < edata_.numSimdElems; ++is) {
         fld.get(einfo[is].meshIdx, ic) += stk::simd::get_data(val, is);
       }
 #endif
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator= (const double& val) const
+    void operator=(const double& val) const
     {
       const auto& fld = obj_.ngpField_;
       const auto* einfo = edata_.info();
 #ifdef STK_SIMD_NONE
       fld.get(einfo[0].meshIdx, ic) = val;
 #else
-      for (int is=0; is < edata_.numSimdElems; ++is) {
+      for (int is = 0; is < edata_.numSimdElems; ++is) {
         fld.get(einfo[is].meshIdx, ic) = val;
       }
 #endif
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator+= (const double& val) const
+    void operator+=(const double& val) const
     {
       const auto& fld = obj_.ngpField_;
       const auto* einfo = edata_.info();
 #ifdef STK_SIMD_NONE
       fld.get(einfo[0].meshIdx, ic) += val;
 #else
-      for (int is=0; is < edata_.numSimdElems; ++is) {
+      for (int is = 0; is < edata_.numSimdElems; ++is) {
         fld.get(einfo[is].meshIdx, ic) += val;
       }
 #endif
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator-= (const DoubleType& val) const
-    {
-      Ops::operator+=(-val);
-    }
+    void operator-=(const DoubleType& val) const { Ops::operator+=(-val); }
 
     KOKKOS_INLINE_FUNCTION
-    void operator-= (const double& val) const
-    {
-      Ops::operator+=(-val);
-    }
+    void operator-=(const double& val) const { Ops::operator+=(-val); }
 
     const ElemFieldOp<Mesh, Field, SimdDataType>& obj_;
 
@@ -369,13 +353,12 @@ struct ElemFieldOp
   const Field ngpField_;
 };
 
-}  // impl
+} // namespace impl
 
 /** Wrapper to generate a nodal field updater instance
  */
 template <typename Mesh, typename Field>
-KOKKOS_INLINE_FUNCTION
-impl::NodeFieldOp<Mesh, Field, ElemSimdData<Mesh>>
+KOKKOS_INLINE_FUNCTION impl::NodeFieldOp<Mesh, Field, ElemSimdData<Mesh>>
 simd_elem_nodal_field_updater(const Mesh& mesh, const Field& fld)
 {
   NGP_ThrowAssert(fld.get_rank() == stk::topology::NODE_RANK);
@@ -383,8 +366,7 @@ simd_elem_nodal_field_updater(const Mesh& mesh, const Field& fld)
 }
 
 template <typename Mesh, typename Field>
-KOKKOS_INLINE_FUNCTION
-impl::NodeFieldOp<Mesh, Field, FaceElemSimdData<Mesh>>
+KOKKOS_INLINE_FUNCTION impl::NodeFieldOp<Mesh, Field, FaceElemSimdData<Mesh>>
 simd_face_elem_nodal_field_updater(const Mesh& mesh, const Field& fld)
 {
   NGP_ThrowAssert(fld.get_rank() == stk::topology::NODE_RANK);
@@ -394,42 +376,38 @@ simd_face_elem_nodal_field_updater(const Mesh& mesh, const Field& fld)
 /** Wrapper to generate an element field updater instance
  */
 template <typename Mesh, typename Field>
-KOKKOS_INLINE_FUNCTION
-impl::ElemFieldOp<Mesh, Field, ElemSimdData<Mesh>>
+KOKKOS_INLINE_FUNCTION impl::ElemFieldOp<Mesh, Field, ElemSimdData<Mesh>>
 simd_elem_field_updater(const Mesh&, const Field& fld)
 {
   NGP_ThrowAssert(
-    (fld.get_rank() == stk::topology::ELEM_RANK)
-    || (fld.get_rank() == stk::topology::FACE_RANK)
-    || (fld.get_rank() == stk::topology::EDGE_RANK));
+    (fld.get_rank() == stk::topology::ELEM_RANK) ||
+    (fld.get_rank() == stk::topology::FACE_RANK) ||
+    (fld.get_rank() == stk::topology::EDGE_RANK));
   return impl::ElemFieldOp<Mesh, Field, ElemSimdData<Mesh>>{fld};
 }
 
 /** Wrapper to generate an element field updater instance
  */
 template <typename Mesh, typename Field>
-KOKKOS_INLINE_FUNCTION
-impl::ElemFieldOp<Mesh, Field, FaceElemSimdData<Mesh>>
+KOKKOS_INLINE_FUNCTION impl::ElemFieldOp<Mesh, Field, FaceElemSimdData<Mesh>>
 simd_face_elem_field_updater(const Mesh&, const Field& fld)
 {
-  NGP_ThrowAssert((fld.get_rank() == stk::topology::FACE_RANK)
-                  || (fld.get_rank() == stk::topology::EDGE_RANK));
+  NGP_ThrowAssert(
+    (fld.get_rank() == stk::topology::FACE_RANK) ||
+    (fld.get_rank() == stk::topology::EDGE_RANK));
   return impl::ElemFieldOp<Mesh, Field, FaceElemSimdData<Mesh>>{fld};
 }
 
-template<typename Mesh, typename Field>
-KOKKOS_INLINE_FUNCTION
-impl::SimpleNodeFieldOp<Mesh, Field>
-edge_nodal_field_updater(
-  const Mesh& mesh, const Field& fld)
+template <typename Mesh, typename Field>
+KOKKOS_INLINE_FUNCTION impl::SimpleNodeFieldOp<Mesh, Field>
+edge_nodal_field_updater(const Mesh& mesh, const Field& fld)
 {
   NGP_ThrowAssert(fld.get_rank() == stk::topology::NODE_RANK);
   return impl::SimpleNodeFieldOp<Mesh, Field>{mesh, fld};
 }
 
-}  // nalu_ngp
-}  // nalu
-}  // sierra
-
+} // namespace nalu_ngp
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NGPFIELDOPS_H */

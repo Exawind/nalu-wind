@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef FIELDUPDATEALGDRIVER_H
 #define FIELDUPDATEALGDRIVER_H
 

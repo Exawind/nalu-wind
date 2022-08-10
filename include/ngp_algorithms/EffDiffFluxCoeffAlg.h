@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef EFFDIFFFLUXCOEFFALG_H
 #define EFFDIFFFLUXCOEFFALG_H
 
@@ -44,16 +43,16 @@ public:
 
 private:
   // For use within selectField to determine selector
-  ScalarFieldType* viscField_ {nullptr};
+  ScalarFieldType* viscField_{nullptr};
 
   //! Laminar viscosity field
-  unsigned visc_  {stk::mesh::InvalidOrdinal};
+  unsigned visc_{stk::mesh::InvalidOrdinal};
 
   //! Turbulent viscosity field (computed in TurbVisc Algorithms)
-  unsigned tvisc_ {stk::mesh::InvalidOrdinal};
+  unsigned tvisc_{stk::mesh::InvalidOrdinal};
 
   //! Effective viscosity used in diffusion terms
-  unsigned evisc_ {stk::mesh::InvalidOrdinal};
+  unsigned evisc_{stk::mesh::InvalidOrdinal};
 
   //! reciprocal of the laminar sigma coefficient
   const DblType invSigmaLam_;
@@ -65,8 +64,7 @@ private:
   const bool isTurbulent_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* EFFDIFFFLUXCOEFFALG_H */

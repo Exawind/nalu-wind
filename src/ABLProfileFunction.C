@@ -12,8 +12,8 @@
 // basic c++
 #include <cmath>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 // ABLProfileFunction - base class
 //==========================================================================
@@ -24,7 +24,6 @@ ABLProfileFunction::ABLProfileFunction()
 {
   // nothing to do
 }
-
 
 //--------------------------------------------------------------------------
 //-------- destructor ------------------------------------------------------
@@ -37,14 +36,14 @@ ABLProfileFunction::~ABLProfileFunction()
 //==========================================================================
 // Class Definition
 //==========================================================================
-// StableABLProfileFunction - stably stratified ABL 
+// StableABLProfileFunction - stably stratified ABL
 //==========================================================================
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-StableABLProfileFunction::StableABLProfileFunction( const double gamma_m, const double gamma_h)
-  : gamma_m_(gamma_m),
-    gamma_h_(gamma_h)
+StableABLProfileFunction::StableABLProfileFunction(
+  const double gamma_m, const double gamma_h)
+  : gamma_m_(gamma_m), gamma_h_(gamma_h)
 {
   // nothing else to do
 }
@@ -78,14 +77,14 @@ StableABLProfileFunction::temperature(const double znorm) const
 //==========================================================================
 // Class Definition
 //==========================================================================
-// UnstableABLProfileFunction - unstably stratified ABL 
+// UnstableABLProfileFunction - unstably stratified ABL
 //==========================================================================
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-UnstableABLProfileFunction::UnstableABLProfileFunction( const double beta_m, const double beta_h)
-  : beta_m_(beta_m),
-    beta_h_(beta_h)
+UnstableABLProfileFunction::UnstableABLProfileFunction(
+  const double beta_m, const double beta_h)
+  : beta_m_(beta_m), beta_h_(beta_h)
 {
   pi_ = std::acos(-1.0);
 }
@@ -104,9 +103,11 @@ UnstableABLProfileFunction::~UnstableABLProfileFunction()
 double
 UnstableABLProfileFunction::velocity(const double znorm) const
 {
-  const double xarg = (1.0 - beta_m_*znorm);
-  const double xfun = std::pow(xarg,0.25);
-  double psi_m = 2.0*std::log(0.5*(1.0+xfun)) + std::log(0.5*(1.0+xfun*xfun)) - 2.0*std::atan(xfun) + 0.5*pi_;
+  const double xarg = (1.0 - beta_m_ * znorm);
+  const double xfun = std::pow(xarg, 0.25);
+  double psi_m = 2.0 * std::log(0.5 * (1.0 + xfun)) +
+                 std::log(0.5 * (1.0 + xfun * xfun)) - 2.0 * std::atan(xfun) +
+                 0.5 * pi_;
   return psi_m;
 }
 
@@ -117,14 +118,14 @@ double
 UnstableABLProfileFunction::temperature(const double znorm) const
 {
   const double yarg = std::sqrt(1.0 - beta_h_ * znorm);
-  double psi_h = std::log(0.5*(1.0+yarg));
+  double psi_h = std::log(0.5 * (1.0 + yarg));
   return psi_h;
 }
 
 //==========================================================================
 // Class Definition
 //==========================================================================
-// NeutralABLProfileFunction - neutrally stratified ABL 
+// NeutralABLProfileFunction - neutrally stratified ABL
 //==========================================================================
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
@@ -161,4 +162,4 @@ NeutralABLProfileFunction::temperature(const double /* znorm */) const
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

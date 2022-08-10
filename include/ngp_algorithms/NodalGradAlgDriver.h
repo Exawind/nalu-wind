@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef NODALGRADALGDRIVER_H
 #define NODALGRADALGDRIVER_H
 
@@ -17,12 +16,12 @@
 namespace sierra {
 namespace nalu {
 
-template<typename GradPhiType>
+template <typename GradPhiType>
 class NodalGradAlgDriver : public NgpAlgDriver
 {
   static_assert(
     std::is_same<GradPhiType, VectorFieldType>::value ||
-    std::is_same<GradPhiType, GenericFieldType>::value,
+      std::is_same<GradPhiType, GenericFieldType>::value,
     "Invalid field type provided to NodalGradAlgDriver");
 
 public:
@@ -44,8 +43,7 @@ private:
 using ScalarNodalGradAlgDriver = NodalGradAlgDriver<VectorFieldType>;
 using VectorNodalGradAlgDriver = NodalGradAlgDriver<GenericFieldType>;
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NODALGRADALGDRIVER_H */

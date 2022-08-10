@@ -171,21 +171,21 @@ TEST(SpinnerLidar, volume_interp)
     los.load(YAML::Load(lidar_nc)["lidar_specifications"]);
     los.set_time(0);
 
-      for (int j = 0; j < 984; ++j) {
-        for (const auto* ib : node_buckets) {
-          for (const auto& node : *ib) {
-            auto* uptr = stk::mesh::field_data(vel_field, node);
-            const auto* xptr = stk::mesh::field_data(coord_field, node);
-            const auto vel_at_x = velocity_func(xptr, los.time());
-            ASSERT_NEAR(los.time(), j * 0.01, 1e-12);
-            for (int d = 0; d < 3; ++d) {
-              uptr[d] = vel_at_x[d];
-            }
+    for (int j = 0; j < 984; ++j) {
+      for (const auto* ib : node_buckets) {
+        for (const auto& node : *ib) {
+          auto* uptr = stk::mesh::field_data(vel_field, node);
+          const auto* xptr = stk::mesh::field_data(coord_field, node);
+          const auto vel_at_x = velocity_func(xptr, los.time());
+          ASSERT_NEAR(los.time(), j * 0.01, 1e-12);
+          for (int d = 0; d < 3; ++d) {
+            uptr[d] = vel_at_x[d];
           }
         }
-        los.output(bulk, !stk::mesh::Selector{}, "coordinates", 0);
-        los.increment_time();
       }
+      los.output(bulk, !stk::mesh::Selector{}, "coordinates", 0);
+      los.increment_time();
+    }
   }
 }
 } // namespace nalu

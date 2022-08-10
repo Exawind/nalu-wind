@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef TKEWALLFUNCALGDRIVER_H
 #define TKEWALLFUNCALGDRIVER_H
 
@@ -42,14 +41,13 @@ public:
   virtual void post_work() override;
 
 private:
-  unsigned tke_ {stk::mesh::InvalidOrdinal};
-  unsigned bctke_ {stk::mesh::InvalidOrdinal};
-  unsigned bcNodalTke_ {stk::mesh::InvalidOrdinal};
-  unsigned wallArea_ {stk::mesh::InvalidOrdinal};
+  unsigned tke_{stk::mesh::InvalidOrdinal};
+  unsigned bctke_{stk::mesh::InvalidOrdinal};
+  unsigned bcNodalTke_{stk::mesh::InvalidOrdinal};
+  unsigned wallArea_{stk::mesh::InvalidOrdinal};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* TKEWALLFUNCALGDRIVER_H */

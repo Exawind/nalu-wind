@@ -7,33 +7,28 @@
 // for more details.
 //
 
-
-
 #ifndef AssembleNodeSolverAlgorithm_h
 #define AssembleNodeSolverAlgorithm_h
 
-#include<SolverAlgorithm.h>
-#include<FieldTypeDef.h>
+#include <SolverAlgorithm.h>
+#include <FieldTypeDef.h>
 
 namespace stk {
 namespace mesh {
 class Part;
 }
-}
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class AssembleNodeSolverAlgorithm : public SolverAlgorithm
 {
 public:
-
   AssembleNodeSolverAlgorithm(
-    Realm &realm,
-    stk::mesh::Part *part,
-    EquationSystem *eqSystem);
+    Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem);
 
   virtual ~AssembleNodeSolverAlgorithm() = default;
   virtual void initialize_connectivity();
@@ -43,6 +38,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

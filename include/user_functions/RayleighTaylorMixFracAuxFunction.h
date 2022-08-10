@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef RayleighTaylorMixFracAuxFunction_h
 #define RayleighTaylorMixFracAuxFunction_h
 
@@ -15,28 +14,27 @@
 
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class RayleighTaylorMixFracAuxFunction : public AuxFunction
 {
 public:
-
   RayleighTaylorMixFracAuxFunction();
 
   virtual ~RayleighTaylorMixFracAuxFunction() {}
-  
+
   using AuxFunction::do_evaluate;
   virtual void do_evaluate(
-    const double * coords,
+    const double* coords,
     const double time,
     const unsigned spatialDimension,
     const unsigned numPoints,
-    double * fieldPtr,
+    double* fieldPtr,
     const unsigned fieldSize,
     const unsigned beginPos,
     const unsigned endPos) const;
-  
+
 private:
   const double aX_;
   const double tX_;
@@ -46,6 +44,6 @@ private:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "gtest/gtest.h"
 #include "UnitTestRealm.h"
 #include "UnitTestUtils.h"
@@ -64,8 +63,7 @@ const std::string naluDefaultInputs =
   "      second_order_accuracy: yes                                        \n"
   "                                                                        \n"
   "      realms: []                                                        \n"
-  "                                                                        \n"
-  ;
+  "                                                                        \n";
 
 const std::string realmDefaultSettings =
   "- name: unitTestRealm                                                  \n"
@@ -102,27 +100,28 @@ const std::string realmDefaultSettings =
   "      - shifted_gradient_operator:                                     \n"
   "          velocity: no                                                 \n"
   "          pressure: no                                                 \n"
-  "          mixture_fraction: no                                         \n"
-  ;
-}
+  "          mixture_fraction: no                                         \n";
+} // namespace
 
 namespace unit_test_utils {
 
-YAML::Node get_default_inputs() {
+YAML::Node
+get_default_inputs()
+{
   YAML::Node doc = YAML::Load(naluDefaultInputs);
 
   return doc;
 }
 
-YAML::Node get_realm_default_node() {
+YAML::Node
+get_realm_default_node()
+{
   YAML::Node node = YAML::Load(realmDefaultSettings);
   return node[0];
 }
 
 NaluTest::NaluTest(const YAML::Node& doc)
-  : comm_(MPI_COMM_WORLD),
-    spatialDim_(3),
-    sim_(doc)
+  : comm_(MPI_COMM_WORLD), spatialDim_(3), sim_(doc)
 {
   // NaluEnv log file
   std::string logFileName = "unittestX_naluwrapper.log";
@@ -143,16 +142,17 @@ NaluTest::NaluTest(const YAML::Node& doc)
 }
 
 sierra::nalu::Realm&
-NaluTest::create_realm(const YAML::Node& realm_node, const std::string realm_type,
-                       const bool createMeshObjects)
+NaluTest::create_realm(
+  const YAML::Node& realm_node,
+  const std::string realm_type,
+  const bool createMeshObjects)
 {
   sierra::nalu::Realm* realm = nullptr;
   if (realm_type == "multi_physics") {
     realm = new sierra::nalu::Realm(*sim_.realms_, realm_node);
     realm->solutionOptions_->load(realm_node);
     realm->equationSystems_.load(realm_node);
-  }
-  else{
+  } else {
     realm = new sierra::nalu::InputOutputRealm(*sim_.realms_, realm_node);
     realm->solutionOptions_->load(realm_node);
   }
@@ -168,18 +168,24 @@ NaluTest::create_realm(const YAML::Node& realm_node, const std::string realm_typ
   return *realm;
 }
 
-void verify_field_values(double expectedValue, ScalarFieldType* maxLengthScaleField,
-                         const stk::mesh::BulkData& mesh)
+void
+verify_field_values(
+  double expectedValue,
+  ScalarFieldType* maxLengthScaleField,
+  const stk::mesh::BulkData& mesh)
 {
-  const stk::mesh::BucketVector& nodeBuckets = mesh.buckets(stk::topology::NODE_RANK);
+  const stk::mesh::BucketVector& nodeBuckets =
+    mesh.buckets(stk::topology::NODE_RANK);
   EXPECT_FALSE(nodeBuckets.empty());
-  for(const stk::mesh::Bucket* bucketPtr : nodeBuckets) {
+  for (const stk::mesh::Bucket* bucketPtr : nodeBuckets) {
     if (!bucketPtr->owned()) {
       continue;
     }
-    for(stk::mesh::Entity node : *bucketPtr) {
-      double* fieldValues = static_cast<double*>(stk::mesh::field_data(*maxLengthScaleField, node));
-      EXPECT_NEAR(expectedValue, fieldValues[0], 1.e-8) << "at node "<<mesh.entity_key(node);
+    for (stk::mesh::Entity node : *bucketPtr) {
+      double* fieldValues =
+        static_cast<double*>(stk::mesh::field_data(*maxLengthScaleField, node));
+      EXPECT_NEAR(expectedValue, fieldValues[0], 1.e-8)
+        << "at node " << mesh.entity_key(node);
     }
   }
 }
@@ -199,9 +205,11 @@ TEST(NaluMock, test_nalu_mock)
 
   // 4. Create necessary fields...
   ScalarFieldType& maxLengthScaleField =
-      realm.meta_data().declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sst_max_length_scale");
+    realm.meta_data().declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "sst_max_length_scale");
   double zero = 0.0;
-  stk::mesh::put_field_on_mesh(maxLengthScaleField, realm.meta_data().universal_part(), &zero);
+  stk::mesh::put_field_on_mesh(
+    maxLengthScaleField, realm.meta_data().universal_part(), &zero);
 
   // 5. Create mesh and get the default part for registration with Algorithm
   unit_test_utils::fill_hex8_mesh("generated:10x10x10", realm.bulk_data());
@@ -216,9 +224,10 @@ TEST(NaluMock, test_nalu_mock)
 
   sstAlg.execute();
 
-  //for our generated-mesh case, we expect the maxLengthScale_ field to be all ones...
+  // for our generated-mesh case, we expect the maxLengthScale_ field to be all
+  // ones...
   double expectedValue = 1.0;
   verify_field_values(expectedValue, &maxLengthScaleField, realm.bulk_data());
 }
 
-}  // unit_test_utils
+} // namespace unit_test_utils

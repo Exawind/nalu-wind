@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef VariableDensityMomentumSrcNodeSuppAlg_h
 #define VariableDensityMomentumSrcNodeSuppAlg_h
 
@@ -17,29 +15,24 @@
 
 #include <stk_mesh/base/Entity.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class VariableDensityMomentumSrcNodeSuppAlg : public SupplementalAlgorithm
 {
 public:
-
-  VariableDensityMomentumSrcNodeSuppAlg(
-    Realm &realm);
+  VariableDensityMomentumSrcNodeSuppAlg(Realm& realm);
 
   virtual ~VariableDensityMomentumSrcNodeSuppAlg() {}
 
   virtual void setup();
 
-  virtual void node_execute(
-    double *lhs,
-    double *rhs,
-    stk::mesh::Entity node);
-  
-  VectorFieldType *coordinates_;
-  ScalarFieldType *dualNodalVolume_;
+  virtual void node_execute(double* lhs, double* rhs, stk::mesh::Entity node);
+
+  VectorFieldType* coordinates_;
+  ScalarFieldType* dualNodalVolume_;
 
   const int nDim_;
   const double unot_;
@@ -58,12 +51,12 @@ public:
   double gx_;
   double gy_;
   double gz_;
-  
+
   // space for source terms
   std::vector<double> srcXi_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

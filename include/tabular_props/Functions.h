@@ -21,12 +21,12 @@ namespace nalu {
  *  where the solution switches to an asymptotic expansion and recovers
  *  ~1.e-16 error above about 4.2 and for all values below 3.5.
  */
-double errorf( const double x );
+double errorf(const double x);
 
 //============================================================================
 /** Compute the complementary error function using series solutions.
  */
-double errorfc( const double x );
+double errorfc(const double x);
 
 //============================================================================
 /** Compute the inverse error function using Newton's method.  Accuracy
@@ -34,7 +34,7 @@ double errorfc( const double x );
  *  couple significant figures below 1.0, where relative accuracy will
  *  fall to about 1.e-5.
  */
-double inv_errorf( const double x );
+double inv_errorf(const double x);
 
 //============================================================================
 /** Compute the quantity:
@@ -48,51 +48,58 @@ double inv_errorf( const double x );
  *
  *  Note that this function only returns F_chi(Z) and not Chi itself.
  */
-double F_chi( const double Z );
+double F_chi(const double Z);
 
 //============================================================================
 /** Class to wrap the F_chi() function with an interface that is
  *  compatible with our Functor implementation.
  */
-class FChi {
- public:
+class FChi
+{
+public:
   FChi(){};
   ~FChi(){};
 
-  double query( const double Z );
+  double query(const double Z);
 };
 
 //============================================================================
 /** Compute the quantity F_gamma (and not Gamma itself)
  */
-double F_gamma( const double Z, const double Z_st );
+double F_gamma(const double Z, const double Z_st);
 
-double F_gamma( const std::vector<double> & Z,
-                std::vector<std::vector<double> > Z_st, // local copy
-                std::vector<double> gamma_mas_st );     // local copy
+double F_gamma(
+  const std::vector<double>& Z,
+  std::vector<std::vector<double>> Z_st, // local copy
+  std::vector<double> gamma_mas_st);     // local copy
 
 //============================================================================
 /** Class to wrap the F_gamma() function with an interface that is
  *  compatible with our Functor implementation.
  */
-class FGamma {
- public:
-  explicit FGamma( const int nMixFrac ) { zBuf_.resize( nMixFrac, 0.0 ); }
+class FGamma
+{
+public:
+  explicit FGamma(const int nMixFrac) { zBuf_.resize(nMixFrac, 0.0); }
   ~FGamma(){};
 
-  void setZStoich( const std::vector<std::vector<double> > & zStoich )
-    { zStoich_ = zStoich; }
-  void setGammaMaxStoich( const std::vector<double> & gammaMaxStoich )
-    { gammaMaxStoich_ = gammaMaxStoich; }
-  double query( const double * Z ) const;
+  void setZStoich(const std::vector<std::vector<double>>& zStoich)
+  {
+    zStoich_ = zStoich;
+  }
+  void setGammaMaxStoich(const std::vector<double>& gammaMaxStoich)
+  {
+    gammaMaxStoich_ = gammaMaxStoich;
+  }
+  double query(const double* Z) const;
 
- private:
+private:
   mutable std::vector<double> zBuf_;
-  std::vector<std::vector<double> > zStoich_;
+  std::vector<std::vector<double>> zStoich_;
   std::vector<double> gammaMaxStoich_;
 };
 
-} // end nalu namespace
-} // end sierra namespace
+} // namespace nalu
+} // namespace sierra
 
 #endif

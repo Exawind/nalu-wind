@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef BDYHEIGHTALGORITHM_H
 #define BDYHEIGHTALGORITHM_H
 
@@ -15,7 +14,9 @@
 
 #include <vector>
 
-namespace YAML { class Node; }
+namespace YAML {
+class Node;
+}
 
 namespace sierra {
 namespace nalu {
@@ -30,9 +31,7 @@ public:
   virtual ~BdyHeightAlgorithm() {}
 
   virtual void calc_height_levels(
-    stk::mesh::Selector&,
-    ScalarIntFieldType&,
-    std::vector<double>&) = 0;
+    stk::mesh::Selector&, ScalarIntFieldType&, std::vector<double>&) = 0;
 
 protected:
   Realm& realm_;
@@ -45,18 +44,14 @@ private:
 class RectilinearMeshHeightAlg : public BdyHeightAlgorithm
 {
 public:
-  RectilinearMeshHeightAlg(
-    Realm&,
-    const YAML::Node&);
+  RectilinearMeshHeightAlg(Realm&, const YAML::Node&);
 
   virtual ~RectilinearMeshHeightAlg() {}
 
   /** Determine the unique height levels in this mesh
    */
   virtual void calc_height_levels(
-    stk::mesh::Selector&,
-    ScalarIntFieldType&,
-    std::vector<double>&) override;
+    stk::mesh::Selector&, ScalarIntFieldType&, std::vector<double>&) override;
 
 protected:
   //! Process yaml inputs and initialize the class data
@@ -79,8 +74,7 @@ private:
   RectilinearMeshHeightAlg(const RectilinearMeshHeightAlg&) = delete;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* BDYHEIGHTALGORITHM_H */

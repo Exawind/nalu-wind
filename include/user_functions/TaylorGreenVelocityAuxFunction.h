@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef TaylorGreenVelocityAuxFunction_h
 #define TaylorGreenVelocityAuxFunction_h
 
@@ -15,36 +14,34 @@
 
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class TaylorGreenVelocityAuxFunction : public AuxFunction
 {
 public:
-
   TaylorGreenVelocityAuxFunction(
-    const unsigned beginPos,
-    const unsigned endPos);
+    const unsigned beginPos, const unsigned endPos);
 
   virtual ~TaylorGreenVelocityAuxFunction() {}
-  
+
   using AuxFunction::do_evaluate;
   virtual void do_evaluate(
-    const double * coords,
+    const double* coords,
     const double time,
     const unsigned spatialDimension,
     const unsigned numPoints,
-    double * fieldPtr,
+    double* fieldPtr,
     const unsigned fieldSize,
     const unsigned beginPos,
     const unsigned endPos) const;
-  
+
 private:
   double uNot_;
   double L_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

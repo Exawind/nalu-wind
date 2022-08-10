@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef OVERSETMANAGER_H
 #define OVERSETMANAGER_H
 
@@ -31,8 +30,8 @@ class Ghosting;
 class FieldBase;
 typedef std::vector<Part*> PartVector;
 struct Entity;
-}
-}
+} // namespace mesh
+} // namespace stk
 
 namespace sierra {
 namespace nalu {
@@ -46,7 +45,8 @@ class OversetInfo;
 class OversetManager
 {
 public:
-  using EntityList = Kokkos::View<stk::mesh::Entity*, Kokkos::LayoutRight, MemSpace>;
+  using EntityList =
+    Kokkos::View<stk::mesh::Entity*, Kokkos::LayoutRight, MemSpace>;
 
   OversetManager(Realm& realm);
 
@@ -69,10 +69,8 @@ public:
    */
   virtual void execute(const bool isDecoupled) = 0;
 
-  virtual void overset_orphan_node_field_update(
-    stk::mesh::FieldBase*,
-    const int,
-    const int);
+  virtual void
+  overset_orphan_node_field_update(stk::mesh::FieldBase*, const int, const int);
 
   /** Return an inactive selector that contains the hole elements
    */
@@ -81,7 +79,9 @@ public:
   virtual void overset_update_fields(const std::vector<OversetFieldData>&) = 0;
 
   virtual void overset_update_field(
-    stk::mesh::FieldBase* field, const int nrows = 1, const int ncols = 1,
+    stk::mesh::FieldBase* field,
+    const int nrows = 1,
+    const int ncols = 1,
     const bool doFinalSyncToDevice = true) = 0;
 
   virtual void reset_data_structures();
@@ -113,10 +113,9 @@ public:
 private:
   OversetManager() = delete;
   OversetManager(const OversetManager&) = delete;
-
 };
 
-} // nalu
-} // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* OVERSETMANAGER_H */

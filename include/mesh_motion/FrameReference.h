@@ -8,31 +8,27 @@
 #include <cassert>
 #include <float.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class FrameReference : public FrameBase
 {
 public:
-  FrameReference(
-    stk::mesh::BulkData& bulk,
-    const YAML::Node& node
-) : FrameBase(bulk,node)
+  FrameReference(stk::mesh::BulkData& bulk, const YAML::Node& node)
+    : FrameBase(bulk, node)
   {
   }
 
-  virtual ~FrameReference()
-  {
-  }
+  virtual ~FrameReference() {}
 
   void update_coordinates(const double time);
 
 private:
-    FrameReference() = delete;
-    FrameReference(const FrameReference&) = delete;
+  FrameReference() = delete;
+  FrameReference(const FrameReference&) = delete;
 };
 
-} // nalu
-} // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* FRAMEREFERENCE_H */

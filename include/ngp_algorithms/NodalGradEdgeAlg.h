@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef NODALGRADEDGEALG_H
 #define NODALGRADEDGEALG_H
 
@@ -19,7 +18,7 @@
 namespace sierra {
 namespace nalu {
 
-template<typename PhiType, typename GradPhiType>
+template <typename PhiType, typename GradPhiType>
 class NodalGradEdgeAlg : public Algorithm
 {
   static_assert(
@@ -33,21 +32,18 @@ public:
   using DblType = double;
 
   NodalGradEdgeAlg(
-    Realm&,
-    stk::mesh::Part*,
-    PhiType* phi,
-    GradPhiType* gradPhi);
+    Realm&, stk::mesh::Part*, PhiType* phi, GradPhiType* gradPhi);
 
   virtual ~NodalGradEdgeAlg() = default;
 
   virtual void execute() override;
 
 private:
-  unsigned phi_ {stk::mesh::InvalidOrdinal};
-  unsigned gradPhi_ {stk::mesh::InvalidOrdinal};
+  unsigned phi_{stk::mesh::InvalidOrdinal};
+  unsigned gradPhi_{stk::mesh::InvalidOrdinal};
 
-  unsigned edgeAreaVec_ {stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVol_ {stk::mesh::InvalidOrdinal};
+  unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVol_{stk::mesh::InvalidOrdinal};
 
   //! Number of components (ScalarFieldType = 1; VectorFieldType = nDim)
   const int dim1_;
@@ -63,8 +59,7 @@ using ScalarNodalGradEdgeAlg =
 using VectorNodalGradEdgeAlg =
   NodalGradEdgeAlg<VectorFieldType, GenericFieldType>;
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NODALGRADEDGEALG_H */

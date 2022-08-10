@@ -13,32 +13,32 @@ class H5IO;
 
 /**
  *  @class  HDF5FilePtr
- *  @brief  Provides a HDF5 formatted file pointer 
+ *  @brief  Provides a HDF5 formatted file pointer
  *
  *  Given a filename pertaining to an HDF5 formatted file, this file will
  *  be opened, the names of properties tabulatedin that file is read
  *  and the file pointer can be returned.
  */
 
-class HDF5FilePtr {
+class HDF5FilePtr
+{
 
- public:
-
+public:
   /**
    *  Construct an empty HDF5FilePtr.  It should then be filled with
    *  Property objects by making repeated calls to add_entry().
    */
-  explicit HDF5FilePtr( const std::string & fileName = "" );
+  explicit HDF5FilePtr(const std::string& fileName = "");
 
   ~HDF5FilePtr();
 
   /** Query if the given property exists in the library */
-  bool has_entry( const std::string & name ) const;
+  bool has_entry(const std::string& name) const;
 
   /** Get a list of all contained properties */
   std::vector<std::string> property_names() const;
 
-  const std::string & filename() { return fileName_; }
+  const std::string& filename() { return fileName_; }
 
   /**
    *  Read the entire library from an HDF5 file with the name set in the
@@ -55,10 +55,9 @@ class HDF5FilePtr {
   void print_summary() const;
    */
 
- private:
-
-  HDF5FilePtr( const HDF5FilePtr & );            // no copying
-  HDF5FilePtr operator=( const HDF5FilePtr & );  // no assignment
+private:
+  HDF5FilePtr(const HDF5FilePtr&);           // no copying
+  HDF5FilePtr operator=(const HDF5FilePtr&); // no assignment
 
   /** list of properties contained in the file */
   std::vector<std::string> propertyNames_;
@@ -67,14 +66,13 @@ class HDF5FilePtr {
   std::string fileName_;
 
   /** File version to write */
-  int exportFileVersion_;  
+  int exportFileVersion_;
 
   /** Pointer to table of properties */
-  H5IO *fileIO_;
-
+  H5IO* fileIO_;
 };
 
-} // end nalu namespace
-} // end sierra namespace
+} // namespace nalu
+} // namespace sierra
 
 #endif

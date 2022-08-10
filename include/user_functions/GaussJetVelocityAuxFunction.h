@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef GaussJetVelocityAuxFunction_h
 #define GaussJetVelocityAuxFunction_h
 
@@ -15,35 +14,32 @@
 
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class GaussJetVelocityAuxFunction : public AuxFunction
 {
 public:
-
-  GaussJetVelocityAuxFunction(
-    const unsigned beginPos,
-    const unsigned endPos);
+  GaussJetVelocityAuxFunction(const unsigned beginPos, const unsigned endPos);
 
   virtual ~GaussJetVelocityAuxFunction() {}
-  
+
   using AuxFunction::do_evaluate;
   virtual void do_evaluate(
-    const double * coords,
+    const double* coords,
     const double time,
     const unsigned spatialDimension,
     const unsigned numPoints,
-    double * fieldPtr,
+    double* fieldPtr,
     const unsigned fieldSize,
     const unsigned beginPos,
     const unsigned endPos) const;
-  
+
 private:
   const double u_m;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

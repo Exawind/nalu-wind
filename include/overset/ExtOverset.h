@@ -46,7 +46,8 @@ public:
   //! Update solution fields using TIOGA
   void exchange_solution();
 
-  //! Register meshes to TIOGA to perform overset connectivity with external meshes
+  //! Register meshes to TIOGA to perform overset connectivity with external
+  //! meshes
   void pre_overset_conn_work();
 
   //! Perform IBLANK updates (and ghosting if necessary) after connectivity
@@ -60,8 +61,7 @@ public:
 
   bool multi_solver_mode() const { return multiSolverMode_; }
 
-  void set_multi_solver_mode(const bool flag)
-  { multiSolverMode_ = flag; }
+  void set_multi_solver_mode(const bool flag) { multiSolverMode_ = flag; }
 
   bool is_external_overset() const { return isExtOverset_; }
 
@@ -87,8 +87,7 @@ private:
   bool hasOverset_{false};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* EXTOVERSET_H */

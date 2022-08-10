@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef HYPREDIRECTSOLVER_H
 #define HYPREDIRECTSOLVER_H
 
@@ -39,7 +38,7 @@ namespace nalu {
  *  for detailed documentation on the Hypre functions and data structures used
  *  in this class.
  */
-class HypreDirectSolver: public LinearSolver
+class HypreDirectSolver : public LinearSolver
 {
 public:
   HypreDirectSolver(
@@ -62,9 +61,10 @@ public:
   //! Return the type of solver instance
   virtual PetraType getType() override { return PT_HYPRE; }
 
-  //! public API for resetting the flag for how often the preconditioner is recomputed
+  //! public API for resetting the flag for how often the preconditioner is
+  //! recomputed
   virtual void set_initialize_solver_flag();
-  
+
   //! Instance of the Hypre parallel matrix
   mutable HYPRE_ParCSRMatrix parMat_;
 
@@ -122,7 +122,6 @@ protected:
   HypreIntType (*solverNumItersPtr_)(HYPRE_Solver, HypreIntType*);
   HypreIntType (*solverFinalResidualNormPtr_)(HYPRE_Solver, double*);
 
-
   //! Flag indicating whether a preconditioner is used. Certain solvers like
   //! BoomerAMG do not require a preconditioner.
   bool usePrecond_{false};
@@ -138,7 +137,8 @@ protected:
   //! Flag indicating whether this class instance has been initialized fully
   bool initializeSolver_{true};
 
-  //! Used with recomputePrecondFrequency to determine when to reinitialize the solver/preconditioner
+  //! Used with recomputePrecondFrequency to determine when to reinitialize the
+  //! solver/preconditioner
   unsigned internalIterCounter_{0};
 
 private:
@@ -146,7 +146,7 @@ private:
   HypreDirectSolver(const HypreDirectSolver&) = delete;
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* HYPREDIRECTSOLVER_H */

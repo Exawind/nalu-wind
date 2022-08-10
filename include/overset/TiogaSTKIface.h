@@ -1,7 +1,6 @@
 #ifndef TIOGASTKIFACE_H
 #define TIOGASTKIFACE_H
 
-
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Entity.hpp>
@@ -28,7 +27,7 @@ namespace nalu {
 
 class OversetManagerTIOGA;
 }
-}
+} // namespace sierra
 
 namespace tioga_nalu {
 
@@ -46,9 +45,8 @@ public:
    *  @param oversetManager Reference to Nalu OversetManager object
    *  @param node YAML node containing overset inputs
    */
-  TiogaSTKIface(sierra::nalu::OversetManagerTIOGA&,
-                const YAML::Node&,
-                const std::string&);
+  TiogaSTKIface(
+    sierra::nalu::OversetManagerTIOGA&, const YAML::Node&, const std::string&);
 
   ~TiogaSTKIface();
 
@@ -78,11 +76,13 @@ public:
 
   void update_solution(const std::vector<sierra::nalu::OversetFieldData>&);
 
-  virtual void overset_update_fields(
-    const std::vector<sierra::nalu::OversetFieldData>&);
+  virtual void
+  overset_update_fields(const std::vector<sierra::nalu::OversetFieldData>&);
 
   virtual void overset_update_field(
-    stk::mesh::FieldBase* field, const int nrows = 1, const int ncols = 1,
+    stk::mesh::FieldBase* field,
+    const int nrows = 1,
+    const int ncols = 1,
     const bool doFinalSyncToDevice = true);
 
 private:
@@ -158,7 +158,6 @@ private:
   std::string coordsName_;
 };
 
-
-}  // tioga
+} // namespace tioga_nalu
 
 #endif /* TIOGASTKIFACE_H */

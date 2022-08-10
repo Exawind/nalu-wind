@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef TKEWALLFUNCALG_H
 #define TKEWALLFUNCALG_H
 
@@ -31,7 +30,7 @@ namespace nalu {
  *
  *  \sa TKEWallFuncAlgDriver
  */
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 class TKEWallFuncAlg : public Algorithm
 {
 public:
@@ -44,17 +43,16 @@ public:
 private:
   ElemDataRequests faceData_;
 
-  unsigned bcNodalTke_ {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_  {stk::mesh::InvalidOrdinal};
-  unsigned wallFricVel_ {stk::mesh::InvalidOrdinal};
+  unsigned bcNodalTke_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned wallFricVel_{stk::mesh::InvalidOrdinal};
 
   DoubleType cMu_;
 
   MasterElement* meFC_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* TKEWALLFUNCALG_H */

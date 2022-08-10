@@ -7,19 +7,17 @@
 // for more details.
 //
 
-
-
 #ifndef AssembleElemSolverAlgorithm_h
 #define AssembleElemSolverAlgorithm_h
 
-#include<Realm.h>
-#include<SolverAlgorithm.h>
+#include <Realm.h>
+#include <SolverAlgorithm.h>
 #include <KokkosInterface.h>
 #include <SimdInterface.h>
-#include<ScratchViews.h>
+#include <ScratchViews.h>
 #include <SharedMemData.h>
-#include<CopyAndInterleave.h>
-#include<FieldTypeDef.h>
+#include <CopyAndInterleave.h>
+#include <FieldTypeDef.h>
 #include <stk_mesh/base/NgpMesh.hpp>
 #include <ngp_utils/NgpFieldManager.h>
 
@@ -27,11 +25,11 @@ namespace stk {
 namespace mesh {
 class Part;
 class Topology;
-}
-}
+} // namespace mesh
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class MasterElement;
 
@@ -39,21 +37,21 @@ class AssembleElemSolverAlgorithm : public SolverAlgorithm
 {
 public:
   AssembleElemSolverAlgorithm(
-    Realm &realm,
-    stk::mesh::Part *part,
-    EquationSystem *eqSystem,
+    Realm& realm,
+    stk::mesh::Part* part,
+    EquationSystem* eqSystem,
     stk::mesh::EntityRank entityRank,
     unsigned nodesPerEntity);
   virtual ~AssembleElemSolverAlgorithm() {}
   virtual void initialize_connectivity();
   virtual void execute();
 
-  template<typename LambdaFunction>
+  template <typename LambdaFunction>
   void run_algorithm(stk::mesh::BulkData& bulk_data, LambdaFunction lambdaFunc)
   {
     stk::mesh::MetaData& meta_data = bulk_data.mesh_meta_data();
     const int nDim = meta_data.spatial_dimension();
-    const int lhsSize = rhsSize_*rhsSize_;
+    const int lhsSize = rhsSize_ * rhsSize_;
     const int scratchIdsSize = rhsSize_;
 
     const stk::mesh::NgpMesh& ngpMesh = realm_.ngp_mesh();
@@ -62,7 +60,8 @@ public:
       fieldMgr, dataNeededByKernels_, meta_data.get_fields().size());
 
     const auto reqType = (entityRank_ == stk::topology::ELEM_RANK)
-                           ? ElemReqType::ELEM : ElemReqType::FACE;
+                           ? ElemReqType::ELEM
+                           : ElemReqType::FACE;
 
     const int bytes_per_team = 0;
     const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(
@@ -103,12 +102,14 @@ public:
         const size_t simdBucketLen = get_num_simd_groups(bucketLen);
 
         Kokkos::parallel_for(
-          Kokkos::TeamThreadRange(team, simdBucketLen), [&](const size_t& bktIndex) {
+          Kokkos::TeamThreadRange(team, simdBucketLen),
+          [&](const size_t& bktIndex) {
             int numSimdElems =
               get_length_of_next_simd_group(bktIndex, bucketLen);
             smdata.numSimdElems = numSimdElems;
 
-            for (int simdElemIndex = 0; simdElemIndex < numSimdElems; ++simdElemIndex) {
+            for (int simdElemIndex = 0; simdElemIndex < numSimdElems;
+                 ++simdElemIndex) {
               stk::mesh::Entity element = b[bktIndex * simdLen + simdElemIndex];
               const auto elemIndex = ngpMesh.fast_mesh_index(element);
               smdata.ngpElemNodes[simdElemIndex] =
@@ -140,7 +141,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif
-

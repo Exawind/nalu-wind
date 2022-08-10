@@ -20,7 +20,8 @@ namespace nalu {
 namespace tensor_assembly {
 
 template <int poly_order, typename Scalar>
-void green_gauss_lhs(
+void
+green_gauss_lhs(
   const CVFEMOperators<poly_order, Scalar>& ops,
   const nodal_scalar_view<poly_order, Scalar>& vol,
   matrix_vector_view<poly_order, Scalar>& lhs)
@@ -32,10 +33,7 @@ void green_gauss_lhs(
     for (int m = 0; m < n1D; ++m) {
       for (int l = 0; l < n1D; ++l) {
         const int rowIndices[3] = {
-            idx<n1D>(XH, n, m, l),
-            idx<n1D>(YH, n, m, l),
-            idx<n1D>(ZH, n, m, l)
-        };
+          idx<n1D>(XH, n, m, l), idx<n1D>(YH, n, m, l), idx<n1D>(ZH, n, m, l)};
 
         for (int k = 0; k < n1D; ++k) {
           const Scalar Wnk = weight(n, k);
@@ -49,14 +47,14 @@ void green_gauss_lhs(
             }
           }
         }
-
       }
     }
   }
 }
 //--------------------------------------------------------------------------
 template <int poly_order, typename Scalar>
-void green_gauss_lhs_lumped(
+void
+green_gauss_lhs_lumped(
   const CVFEMOperators<poly_order, Scalar>& ops,
   const nodal_scalar_view<poly_order, Scalar>& vol,
   matrix_vector_view<poly_order, Scalar>& lhs)
@@ -65,16 +63,13 @@ void green_gauss_lhs_lumped(
   const auto& weight = ops.mat_.lumpedNodalWeights;
 
   for (int n = 0; n < n1D; ++n) {
-    const Scalar Wn = weight(n,n);
+    const Scalar Wn = weight(n, n);
     for (int m = 0; m < n1D; ++m) {
-      const Scalar WnWm = Wn * weight(m,m);
+      const Scalar WnWm = Wn * weight(m, m);
       for (int l = 0; l < n1D; ++l) {
-        const auto lhsfac = WnWm * weight(l,l) * vol(n,m,l);
+        const auto lhsfac = WnWm * weight(l, l) * vol(n, m, l);
         const int rowIndices[3] = {
-            idx<n1D>(XH, n, m, l),
-            idx<n1D>(YH, n, m, l),
-            idx<n1D>(ZH, n, m, l)
-        };
+          idx<n1D>(XH, n, m, l), idx<n1D>(YH, n, m, l), idx<n1D>(ZH, n, m, l)};
 
         lhs(rowIndices[XH], rowIndices[XH]) += lhsfac;
         lhs(rowIndices[YH], rowIndices[YH]) += lhsfac;
@@ -85,7 +80,8 @@ void green_gauss_lhs_lumped(
 }
 //--------------------------------------------------------------------------
 template <int poly_order, typename Scalar>
-void green_gauss_rhs(
+void
+green_gauss_rhs(
   const CVFEMOperators<poly_order, Scalar>& ops,
   const scs_vector_view<poly_order, Scalar>& area,
   const nodal_scalar_view<poly_order, Scalar>& vol,
@@ -152,11 +148,10 @@ void green_gauss_rhs(
     }
   }
   ops.volume(integrand, rhs);
-
 }
 
-}
-}
-}
+} // namespace tensor_assembly
+} // namespace nalu
+} // namespace sierra
 
 #endif

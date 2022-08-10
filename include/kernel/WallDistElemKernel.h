@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef WALLDISTELEMKERNEL_H
 #define WALLDISTELEMKERNEL_H
 
@@ -22,14 +21,12 @@ class SolutionOptions;
 class MasterElement;
 class ElemDataRequests;
 
-template<typename AlgTraits>
+template <typename AlgTraits>
 class WallDistElemKernel : public NGPKernel<WallDistElemKernel<AlgTraits>>
 {
 public:
   WallDistElemKernel(
-    const stk::mesh::BulkData&,
-    const SolutionOptions&,
-    ElemDataRequests&);
+    const stk::mesh::BulkData&, const SolutionOptions&, ElemDataRequests&);
 
   KOKKOS_DEFAULTED_FUNCTION WallDistElemKernel() = default;
 
@@ -43,7 +40,7 @@ public:
     ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
 
   MasterElement* meSCS_{nullptr};
   MasterElement* meSCV_{nullptr};
@@ -51,8 +48,7 @@ private:
   const bool shiftPoisson_{false};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* WALLDISTELEMKERNEL_H */

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef SCALARFACEFLUXBCELEMKERNEL_H
 #define SCALARFACEFLUXBCELEMKERNEL_H
 
@@ -66,8 +65,7 @@ private:
   MasterElement* meFC_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* SCALARFLUXBCELEMKERNEL_H */

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef MOMENTUMBOUSSINESQNODEKERNEL_h
 #define MOMENTUMBOUSSINESQNODEKERNEL_h
 
@@ -18,17 +17,17 @@
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class SolutionOptions;
 
-class MomentumBoussinesqNodeKernel : public NGPNodeKernel<MomentumBoussinesqNodeKernel>
+class MomentumBoussinesqNodeKernel
+  : public NGPNodeKernel<MomentumBoussinesqNodeKernel>
 {
 public:
   MomentumBoussinesqNodeKernel(
-    const stk::mesh::BulkData&,
-    const SolutionOptions&);
+    const stk::mesh::BulkData&, const SolutionOptions&);
 
   MomentumBoussinesqNodeKernel() = delete;
 
@@ -51,13 +50,13 @@ private:
   NodeKernelTraits::DblType rhoRef_;
   NodeKernelTraits::DblType beta_;
 
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
-  unsigned temperatureID_ {stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
+  unsigned temperatureID_{stk::mesh::InvalidOrdinal};
 
   NALU_ALIGNED NodeKernelTraits::DblType gravity_[NodeKernelTraits::NDimMax];
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef GEOMETRYBOUNDARYALG_H
 #define GEOMETRYBOUNDARYALG_H
 
@@ -30,9 +29,7 @@ template <typename AlgTraits>
 class GeometryBoundaryAlg : public Algorithm
 {
 public:
-  GeometryBoundaryAlg(
-    Realm&,
-    stk::mesh::Part*);
+  GeometryBoundaryAlg(Realm&, stk::mesh::Part*);
 
   virtual ~GeometryBoundaryAlg() = default;
 
@@ -41,13 +38,12 @@ public:
 private:
   ElemDataRequests dataNeeded_;
 
-  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
 
   MasterElement* meSCS_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* GEOMETRYBOUNDARYALG_H */

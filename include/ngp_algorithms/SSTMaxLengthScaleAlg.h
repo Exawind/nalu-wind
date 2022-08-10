@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef SSTMAXLENGTHSCALEALG_H
 #define SSTMAXLENGTHSCALEALG_H
 
@@ -26,22 +25,19 @@ template <typename AlgTraits>
 class SSTMaxLengthScaleAlg : public Algorithm
 {
 public:
-  SSTMaxLengthScaleAlg(
-    Realm&,
-    stk::mesh::Part*);
+  SSTMaxLengthScaleAlg(Realm&, stk::mesh::Part*);
 
   virtual ~SSTMaxLengthScaleAlg() = default;
 
   virtual void execute() override;
 
 private:
-  const unsigned maxLengthScale_ {stk::mesh::InvalidOrdinal};
-  const unsigned coordinates_    {stk::mesh::InvalidOrdinal};
-  MasterElement* meSCS_          {nullptr};
+  const unsigned maxLengthScale_{stk::mesh::InvalidOrdinal};
+  const unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  MasterElement* meSCS_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* SSTMAXLENGTHSCALEALG_H*/

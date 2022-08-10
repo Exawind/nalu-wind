@@ -131,9 +131,8 @@ linear_interp(
       if ((ii + 1) == xinp.size())
         --ii;
 
-      yout = yinp[ii] +
-             (yinp[ii + 1] - yinp[ii]) / (xinp[ii + 1] - xinp[ii]) *
-               (xout - xinp[ii]);
+      yout = yinp[ii] + (yinp[ii + 1] - yinp[ii]) / (xinp[ii + 1] - xinp[ii]) *
+                          (xout - xinp[ii]);
       break;
     }
     }

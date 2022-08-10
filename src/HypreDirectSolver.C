@@ -17,61 +17,91 @@ namespace {
 // <https://github.com/trilinos/xSDKTrilinos/blob/master/hypre/src/Ifpack2_Hypre.hpp>
 // for more details
 
-HypreIntType Hypre_BoomerAMGCreate(MPI_Comm, HYPRE_Solver* solver)
-{ return HYPRE_BoomerAMGCreate(solver); }
-
-HypreIntType Hypre_ParaSailsCreate(MPI_Comm comm, HYPRE_Solver* solver)
-{ return HYPRE_ParaSailsCreate(comm, solver); }
-
-HypreIntType Hypre_EuclidCreate(MPI_Comm comm, HYPRE_Solver* solver)
-{ return HYPRE_EuclidCreate(comm, solver); }
-
-HypreIntType Hypre_AMSCreate(MPI_Comm, HYPRE_Solver *solver)
-{ return HYPRE_AMSCreate(solver);}
-
-HypreIntType Hypre_ParCSRHybridCreate(MPI_Comm, HYPRE_Solver *solver)
-{ return HYPRE_ParCSRHybridCreate(solver);}
-
-HypreIntType Hypre_ParCSRPCGCreate(MPI_Comm comm, HYPRE_Solver *solver)
-{ return HYPRE_ParCSRPCGCreate(comm, solver);}
-
-HypreIntType Hypre_ParCSRGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
-{ return HYPRE_ParCSRGMRESCreate(comm, solver);}
-
-HypreIntType Hypre_ParCSRCOGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
-{ return HYPRE_ParCSRCOGMRESCreate(comm, solver);}
-
-HypreIntType Hypre_ParCSRFlexGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
-{ return HYPRE_ParCSRFlexGMRESCreate(comm, solver);}
-
-HypreIntType Hypre_ParCSRLGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
-{ return HYPRE_ParCSRLGMRESCreate(comm, solver);}
-
-HypreIntType Hypre_ParCSRBiCGSTABCreate(MPI_Comm comm, HYPRE_Solver *solver)
-{ return HYPRE_ParCSRBiCGSTABCreate(comm, solver);}
+HypreIntType
+Hypre_BoomerAMGCreate(MPI_Comm, HYPRE_Solver* solver)
+{
+  return HYPRE_BoomerAMGCreate(solver);
 }
+
+HypreIntType
+Hypre_ParaSailsCreate(MPI_Comm comm, HYPRE_Solver* solver)
+{
+  return HYPRE_ParaSailsCreate(comm, solver);
+}
+
+HypreIntType
+Hypre_EuclidCreate(MPI_Comm comm, HYPRE_Solver* solver)
+{
+  return HYPRE_EuclidCreate(comm, solver);
+}
+
+HypreIntType
+Hypre_AMSCreate(MPI_Comm, HYPRE_Solver* solver)
+{
+  return HYPRE_AMSCreate(solver);
+}
+
+HypreIntType
+Hypre_ParCSRHybridCreate(MPI_Comm, HYPRE_Solver* solver)
+{
+  return HYPRE_ParCSRHybridCreate(solver);
+}
+
+HypreIntType
+Hypre_ParCSRPCGCreate(MPI_Comm comm, HYPRE_Solver* solver)
+{
+  return HYPRE_ParCSRPCGCreate(comm, solver);
+}
+
+HypreIntType
+Hypre_ParCSRGMRESCreate(MPI_Comm comm, HYPRE_Solver* solver)
+{
+  return HYPRE_ParCSRGMRESCreate(comm, solver);
+}
+
+HypreIntType
+Hypre_ParCSRCOGMRESCreate(MPI_Comm comm, HYPRE_Solver* solver)
+{
+  return HYPRE_ParCSRCOGMRESCreate(comm, solver);
+}
+
+HypreIntType
+Hypre_ParCSRFlexGMRESCreate(MPI_Comm comm, HYPRE_Solver* solver)
+{
+  return HYPRE_ParCSRFlexGMRESCreate(comm, solver);
+}
+
+HypreIntType
+Hypre_ParCSRLGMRESCreate(MPI_Comm comm, HYPRE_Solver* solver)
+{
+  return HYPRE_ParCSRLGMRESCreate(comm, solver);
+}
+
+HypreIntType
+Hypre_ParCSRBiCGSTABCreate(MPI_Comm comm, HYPRE_Solver* solver)
+{
+  return HYPRE_ParCSRBiCGSTABCreate(comm, solver);
+}
+} // namespace
 
 HypreDirectSolver::HypreDirectSolver(
   std::string name,
   HypreLinearSolverConfig* config,
-  LinearSolvers* linearSolvers
-) : LinearSolver(name, linearSolvers, config)
-{}
-
-HypreDirectSolver::~HypreDirectSolver()
+  LinearSolvers* linearSolvers)
+  : LinearSolver(name, linearSolvers, config)
 {
-  destroyLinearSolver();
 }
+
+HypreDirectSolver::~HypreDirectSolver() { destroyLinearSolver(); }
 
 int
 HypreDirectSolver::solve(
-  int& numIterations,
-  double& finalResidualNorm,
-  bool isFinalOuterIter)
+  int& numIterations, double& finalResidualNorm, bool isFinalOuterIter)
 {
   // Initialize the solver on first entry
   double time = -NaluEnv::self().nalu_time();
-  if (initializeSolver_) initSolver();
+  if (initializeSolver_)
+    initSolver();
   time += NaluEnv::self().nalu_time();
   timerPrecond_ = time;
 
@@ -111,7 +141,7 @@ HypreDirectSolver::set_initialize_solver_flag()
   if (!config_->recomputePreconditioner() || config_->reusePreconditioner())
     initializeSolver_ = false;
   else {
-    if (internalIterCounter_%config_->recomputePrecondFrequency()==0)
+    if (internalIterCounter_ % config_->recomputePrecondFrequency() == 0)
       initializeSolver_ = true;
     else
       initializeSolver_ = false;
@@ -121,10 +151,12 @@ HypreDirectSolver::set_initialize_solver_flag()
 void
 HypreDirectSolver::destroyLinearSolver()
 {
-  if (isSolverSetup_) solverDestroyPtr_(solver_);
+  if (isSolverSetup_)
+    solverDestroyPtr_(solver_);
   isSolverSetup_ = false;
 
-  if (isPrecondSetup_) precondDestroyPtr_(precond_);
+  if (isPrecondSetup_)
+    precondDestroyPtr_(precond_);
   isPrecondSetup_ = false;
 }
 
@@ -140,14 +172,16 @@ HypreDirectSolver::initSolver()
   if (usePrecond_)
     precondType_ = plist->get("Preconditioner", Hypre::BoomerAMG);
 
-  Hypre::Hypre_Chooser chooser = plist->get("SolveOrPrecondition", Hypre::Solver);
+  Hypre::Hypre_Chooser chooser =
+    plist->get("SolveOrPrecondition", Hypre::Solver);
   if (chooser != Hypre::Solver)
-    throw std::runtime_error(
-      "HypreDirectSolver::initParameters: Invalid option provided for Hypre Solver");
+    throw std::runtime_error("HypreDirectSolver::initParameters: Invalid "
+                             "option provided for Hypre Solver");
 
   // Everything checks out... create the solver and preconditioner
   createSolver();
-  if (usePrecond_) createPrecond();
+  if (usePrecond_)
+    createPrecond();
 
   // Apply user configuration parameters to solver and precondtioner
   int numFuncs = plist->get("NumFunctions", 0);
@@ -155,7 +189,7 @@ HypreDirectSolver::initSolver()
     Teuchos::RCP<Ifpack2::FunctionParameter>* params =
       plist->get<Teuchos::RCP<Ifpack2::FunctionParameter>*>("Functions");
 
-    for (int i=0; i < numFuncs; i++) {
+    for (int i = 0; i < numFuncs; i++) {
       params[i]->CallFunction(solver_, precond_);
     }
   }
@@ -186,7 +220,7 @@ HypreDirectSolver::createSolver()
     isSolverSetup_ = false;
   }
 
-  switch(solverType_) {
+  switch (solverType_) {
   case Hypre::BoomerAMG:
     solverCreatePtr_ = &Hypre_BoomerAMGCreate;
     solverDestroyPtr_ = &HYPRE_BoomerAMGDestroy;
@@ -283,7 +317,8 @@ HypreDirectSolver::createSolver()
     solverSolvePtr_ = &HYPRE_ParCSRHybridSolve;
     solverSetTolPtr_ = &HYPRE_ParCSRHybridSetTol;
     solverNumItersPtr_ = &HYPRE_ParCSRHybridGetNumIterations;
-    solverFinalResidualNormPtr_ = &HYPRE_ParCSRHybridGetFinalRelativeResidualNorm;
+    solverFinalResidualNormPtr_ =
+      &HYPRE_ParCSRHybridGetFinalRelativeResidualNorm;
     break;
 
   default:
@@ -308,7 +343,7 @@ HypreDirectSolver::createPrecond()
     isPrecondSetup_ = false;
   }
 
-  switch(precondType_) {
+  switch (precondType_) {
   case Hypre::BoomerAMG:
     precondCreatePtr_ = &Hypre_BoomerAMGCreate;
     precondDestroyPtr_ = &HYPRE_BoomerAMGDestroy;
@@ -349,7 +384,7 @@ HypreDirectSolver::createPrecond()
   isPrecondSetup_ = true;
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif

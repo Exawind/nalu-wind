@@ -84,8 +84,7 @@ public:
     std::array<double, 3> yaxis;
     cross3(axis.data(), normal.data(), yaxis.data());
     return vector_angle(
-      axis, normalized_tip_loc,
-      rotate_euler_vec(yaxis, pitch, normal));
+      axis, normalized_tip_loc, rotate_euler_vec(yaxis, pitch, normal));
   }
 
   double elevation_angle(double time)

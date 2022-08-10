@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef ReferencePropertyData_h
 #define ReferencePropertyData_h
 
@@ -16,25 +14,24 @@
 
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-class ReferencePropertyData {
+class ReferencePropertyData
+{
 public:
-  
   ReferencePropertyData();
   ~ReferencePropertyData();
-  
+
   std::string speciesName_;
   double mw_;
   double massFraction_;
   double stoichiometry_;
   double primaryMassFraction_;
   double secondaryMassFraction_;
-
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

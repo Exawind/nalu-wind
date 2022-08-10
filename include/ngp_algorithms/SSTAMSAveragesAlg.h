@@ -68,7 +68,7 @@ private:
   unsigned wallDist_{stk::mesh::InvalidOrdinal};
   unsigned coordinates_{stk::mesh::InvalidOrdinal};
 
-  // Proper definition of beta_kol in SST-AMS doesn't work 
+  // Proper definition of beta_kol in SST-AMS doesn't work
   // near walls, so emprically tested floor is used currently
   static constexpr double beta_kol = 0.01;
 };

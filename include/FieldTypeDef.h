@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef FieldTypeDef_h
 #define FieldTypeDef_h
 
@@ -23,27 +21,26 @@
 #include "HYPRE_utilities.h"
 #endif
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 // define scalar field typedef
-typedef stk::mesh::Field<double>  ScalarFieldType;
+typedef stk::mesh::Field<double> ScalarFieldType;
 typedef stk::mesh::Field<stk::mesh::EntityId> GlobalIdFieldType;
-typedef stk::mesh::Field<int>  ScalarIntFieldType;
-typedef stk::mesh::NgpField<double>  NGPDoubleFieldType;
+typedef stk::mesh::Field<int> ScalarIntFieldType;
+typedef stk::mesh::NgpField<double> NGPDoubleFieldType;
 typedef stk::mesh::NgpField<stk::mesh::EntityId> NGPGlobalIdFieldType;
-typedef stk::mesh::NgpField<int>  NGPScalarIntFieldType;
+typedef stk::mesh::NgpField<int> NGPScalarIntFieldType;
 
 // define vector field typedef; however, what is the value of Cartesian?
-typedef stk::mesh::Field<double, stk::mesh::Cartesian>  VectorFieldType;
+typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
 
 // define generic
-typedef stk::mesh::Field<double, stk::mesh::SimpleArrayTag>  GenericFieldType;
+typedef stk::mesh::Field<double, stk::mesh::SimpleArrayTag> GenericFieldType;
 
 // field type for local ids
 typedef unsigned LocalId;
-typedef stk::mesh::Field<LocalId>  LocalIdFieldType;
-
+typedef stk::mesh::Field<LocalId> LocalIdFieldType;
 
 // Hypre Integer types
 #ifdef NALU_USES_HYPRE
@@ -52,11 +49,12 @@ typedef HYPRE_Int HypreIntType;
 typedef int HypreIntType;
 #endif
 
-typedef stk::mesh::Field<Tpetra::Details::DefaultTypes::global_ordinal_type> TpetIDFieldType;
+typedef stk::mesh::Field<Tpetra::Details::DefaultTypes::global_ordinal_type>
+  TpetIDFieldType;
 typedef stk::mesh::Field<HypreIntType> HypreIDFieldType;
 typedef stk::mesh::NgpField<HypreIntType> NGPHypreIDFieldType;
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

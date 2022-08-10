@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef AuxFunctionAlgorithm_h
 #define AuxFunctionAlgorithm_h
 
@@ -16,47 +15,46 @@
 #include <vector>
 #include <stk_mesh/base/Types.hpp>
 
-namespace stk{
-namespace mesh{
+namespace stk {
+namespace mesh {
 class Part;
 class FieldBase;
 class Selector;
 
-typedef std::vector< Part * > PartVector;
-}
-}
+typedef std::vector<Part*> PartVector;
+} // namespace mesh
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class AuxFunction;
 
 class AuxFunctionAlgorithm : public Algorithm
 {
 public:
-
   AuxFunctionAlgorithm(
-    Realm & realm,
-    stk::mesh::Part * part,
-    stk::mesh::FieldBase * field,
-    AuxFunction * auxFunction,
+    Realm& realm,
+    stk::mesh::Part* part,
+    stk::mesh::FieldBase* field,
+    AuxFunction* auxFunction,
     stk::mesh::EntityRank entityRank);
 
   virtual ~AuxFunctionAlgorithm();
   virtual void execute();
 
 private:
-  stk::mesh::FieldBase * field_;
-  AuxFunction *auxFunction_;
+  stk::mesh::FieldBase* field_;
+  AuxFunction* auxFunction_;
   stk::mesh::EntityRank entityRank_;
-  
+
 private:
   // make this non-copyable
-  AuxFunctionAlgorithm(const AuxFunctionAlgorithm & other);
-  AuxFunctionAlgorithm & operator=(const AuxFunctionAlgorithm & other);
+  AuxFunctionAlgorithm(const AuxFunctionAlgorithm& other);
+  AuxFunctionAlgorithm& operator=(const AuxFunctionAlgorithm& other);
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

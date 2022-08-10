@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef InputOutputRealm_h
 #define InputOutputRealm_h
 
@@ -25,16 +23,18 @@ namespace YAML {
 class Node;
 }
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realms;
 
-class InputOutputInfo {
+class InputOutputInfo
+{
 
 public:
-  
- InputOutputInfo() : fieldName_("na"), fieldSize_(1), fieldType_("node_rank") {}
+  InputOutputInfo() : fieldName_("na"), fieldSize_(1), fieldType_("node_rank")
+  {
+  }
   ~InputOutputInfo() {}
 
   std::string fieldName_;
@@ -42,18 +42,17 @@ public:
   std::string fieldType_;
   std::vector<std::string> targetNames_;
 };
- 
-class InputOutputRealm : public Realm 
-{  
-public:
 
-  InputOutputRealm(Realms&, const YAML::Node & node);
+class InputOutputRealm : public Realm
+{
+public:
+  InputOutputRealm(Realms&, const YAML::Node& node);
   ~InputOutputRealm();
 
   typedef size_t SizeType;
 
   // called by others; Realms
-  void load(const YAML::Node & node);
+  void load(const YAML::Node& node);
   void breadboard() {}
   void initialize_prolog();
   void initialize_epilog();
@@ -67,22 +66,22 @@ public:
   void initial_work() {}
   double compute_adaptive_time_step() { return 1.0e8; }
   void swap_states() {}
-  void predict_state() {}   
-  void pre_timestep_work() {}  
+  void predict_state() {}
+  void pre_timestep_work() {}
   void output_banner() {}
   void advance_time_step() {}
   void nonlinear_iteration(const int) {}
-  double populate_restart( double &timeStepNm1, int &timeStepCount);
+  double populate_restart(double& timeStepNm1, int& timeStepCount);
   void populate_external_variables_from_input(const double currentTime);
- 
+
   // internal calls
   void register_io_fields();
 
   // hold the field information
-  std::vector<InputOutputInfo *> inputOutputFieldInfo_;
+  std::vector<InputOutputInfo*> inputOutputFieldInfo_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

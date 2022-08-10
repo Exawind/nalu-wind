@@ -34,12 +34,14 @@ struct ActFastUpdatePoints
   fast::OpenFAST& fast_;
 };
 
-inline
-void RunActFastUpdatePoints(ActuatorBulkFAST& actBulk)
+inline void
+RunActFastUpdatePoints(ActuatorBulkFAST& actBulk)
 {
-  Kokkos::deep_copy(actBulk.pointCentroid_.view_host(),0.0);
+  Kokkos::deep_copy(actBulk.pointCentroid_.view_host(), 0.0);
   actBulk.pointCentroid_.modify_host();
-  Kokkos::parallel_for("ActFastUpdatePoints", actBulk.local_range_policy(), ActFastUpdatePoints(actBulk));
+  Kokkos::parallel_for(
+    "ActFastUpdatePoints", actBulk.local_range_policy(),
+    ActFastUpdatePoints(actBulk));
   actuator_utils::reduce_view_on_host(actBulk.pointCentroid_.view_host());
 }
 
@@ -71,12 +73,14 @@ struct ActFastComputeForce
   fast::OpenFAST& fast_;
 };
 
-inline
-void RunActFastComputeForce(ActuatorBulkFAST& actBulk)
+inline void
+RunActFastComputeForce(ActuatorBulkFAST& actBulk)
 {
-  Kokkos::deep_copy(actBulk.actuatorForce_.view_host(),0.0);
+  Kokkos::deep_copy(actBulk.actuatorForce_.view_host(), 0.0);
   actBulk.actuatorForce_.modify_host();
-  Kokkos::parallel_for("ActFastComputeForce", actBulk.local_range_policy(), ActFastComputeForce(actBulk));
+  Kokkos::parallel_for(
+    "ActFastComputeForce", actBulk.local_range_policy(),
+    ActFastComputeForce(actBulk));
   actuator_utils::reduce_view_on_host(actBulk.actuatorForce_.view_host());
 }
 
@@ -106,12 +110,14 @@ struct ActFastStashOrientationVectors
   fast::OpenFAST& fast_;
 };
 
-inline
-void RunActFastStashOrientVecs(ActuatorBulkFAST& actBulk)
+inline void
+RunActFastStashOrientVecs(ActuatorBulkFAST& actBulk)
 {
-  Kokkos::deep_copy(actBulk.orientationTensor_.view_host(),0.0);
+  Kokkos::deep_copy(actBulk.orientationTensor_.view_host(), 0.0);
   actBulk.orientationTensor_.modify_host();
-  Kokkos::parallel_for("ActFastStashOrientations", actBulk.local_range_policy(), ActFastStashOrientationVectors(actBulk));
+  Kokkos::parallel_for(
+    "ActFastStashOrientations", actBulk.local_range_policy(),
+    ActFastStashOrientationVectors(actBulk));
   actuator_utils::reduce_view_on_host(actBulk.orientationTensor_.view_host());
 }
 

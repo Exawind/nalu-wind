@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 // nalu
 #include <AssembleContinuityNonConformalSolverAlgorithm.h>
 #include <EquationSystem.h>
@@ -29,8 +27,8 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Part.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -42,12 +40,13 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-AssembleContinuityNonConformalSolverAlgorithm::AssembleContinuityNonConformalSolverAlgorithm(
-  Realm &realm,
-  stk::mesh::Part *part,
-  EquationSystem *eqSystem,
-  ScalarFieldType *pressure,
-  VectorFieldType *Gjp)
+AssembleContinuityNonConformalSolverAlgorithm::
+  AssembleContinuityNonConformalSolverAlgorithm(
+    Realm& realm,
+    stk::mesh::Part* part,
+    EquationSystem* eqSystem,
+    ScalarFieldType* pressure,
+    VectorFieldType* Gjp)
   : SolverAlgorithm(realm, part, eqSystem),
     pressure_(pressure),
     Gjp_(Gjp),
@@ -62,22 +61,27 @@ AssembleContinuityNonConformalSolverAlgorithm::AssembleContinuityNonConformalSol
     meshMotionFac_(0.0)
 {
   // save off fields
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
+  stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-  velocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-  if ( meshMotion_ ) {
+  velocity_ =
+    meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
+  if (meshMotion_) {
     meshMotionFac_ = 1.0;
-    meshVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
-  }
-  else {
+    meshVelocity_ = meta_data.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_velocity");
+  } else {
     meshMotionFac_ = 0.0;
-    meshVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
+    meshVelocity_ = meta_data.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "velocity");
   }
 
-  coordinates_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, realm_.get_coordinates_name());
-  density_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  exposedAreaVec_ = meta_data.get_field<GenericFieldType>(meta_data.side_rank(), "exposed_area_vector");  
-  
+  coordinates_ = meta_data.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, realm_.get_coordinates_name());
+  density_ =
+    meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
+  exposedAreaVec_ = meta_data.get_field<GenericFieldType>(
+    meta_data.side_rank(), "exposed_area_vector");
+
   // what do we need ghosted for this alg to work?
   ghostFieldVec_.push_back(pressure_);
   ghostFieldVec_.push_back(Gjp_);
@@ -85,10 +89,15 @@ AssembleContinuityNonConformalSolverAlgorithm::AssembleContinuityNonConformalSol
   ghostFieldVec_.push_back(velocity_);
   ghostFieldVec_.push_back(density_);
 
-  if ( useCurrentNormal_ )
-    NaluEnv::self().naluOutputP0() << "AssembleContinuityNonConformalSolverAlgorithm::Options: use_current_normal is active" << std::endl;
-  if ( includePstab_ )
-    NaluEnv::self().naluOutputP0() << "AssembleContinuityNonConformalSolverAlgorithm::Options: include_pstab is active" << std::endl;
+  if (useCurrentNormal_)
+    NaluEnv::self().naluOutputP0()
+      << "AssembleContinuityNonConformalSolverAlgorithm::Options: "
+         "use_current_normal is active"
+      << std::endl;
+  if (includePstab_)
+    NaluEnv::self().naluOutputP0() << "AssembleContinuityNonConformalSolverAlgo"
+                                      "rithm::Options: include_pstab is active"
+                                   << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -107,14 +116,14 @@ void
 AssembleContinuityNonConformalSolverAlgorithm::execute()
 {
 
-  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
+  stk::mesh::BulkData& bulk_data = realm_.bulk_data();
+  stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   const int nDim = meta_data.spatial_dimension();
 
   // deal with interpolation procedure
   const double interpTogether = realm_.get_mdot_interp();
-  const double om_interpTogether = 1.0-interpTogether;
+  const double om_interpTogether = 1.0 - interpTogether;
 
   // Classic Nalu projection timescale
   const double dt = realm_.get_time_step();
@@ -127,7 +136,7 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
   std::vector<int> scratchIds;
   std::vector<double> scratchVals;
   std::vector<stk::mesh::Entity> connected_nodes;
- 
+
   // ip values; both boundary and opposing surface
   std::vector<double> currentIsoParCoords(nDim);
   std::vector<double> opposingIsoParCoords(nDim);
@@ -153,10 +162,10 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
   // interpolate nodal values to point-in-elem
   const int sizeOfScalarField = 1;
   const int sizeOfVectorField = nDim;
- 
+
   // pointers to fixed values
-  double *p_cNx = &cNx[0];
-  double *p_oNx = &oNx[0];
+  double* p_cNx = &cNx[0];
+  double* p_oNx = &oNx[0];
 
   // nodal fields to gather; face
   std::vector<double> ws_c_pressure;
@@ -183,35 +192,36 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
   std::vector<double> ws_o_dndx;
   std::vector<double> ws_c_det_j;
   std::vector<double> ws_o_det_j;
-  std::vector <double > ws_c_general_shape_function;
-  std::vector <double > ws_o_general_shape_function;
+  std::vector<double> ws_c_general_shape_function;
+  std::vector<double> ws_o_general_shape_function;
 
   // deal with state
-  ScalarFieldType &pressureNp1 = pressure_->field_of_state(stk::mesh::StateNP1);
+  ScalarFieldType& pressureNp1 = pressure_->field_of_state(stk::mesh::StateNP1);
   ScalarFieldType* Udiag = meta_data.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "momentum_diag");
 
   // parallel communicate ghosted entities
-  if ( NULL != realm_.nonConformalManager_->nonConformalGhosting_ )
-    stk::mesh::communicate_field_data(*(realm_.nonConformalManager_->nonConformalGhosting_), ghostFieldVec_);
+  if (NULL != realm_.nonConformalManager_->nonConformalGhosting_)
+    stk::mesh::communicate_field_data(
+      *(realm_.nonConformalManager_->nonConformalGhosting_), ghostFieldVec_);
 
   // iterate nonConformalManager's dgInfoVec
-  std::vector<NonConformalInfo *>::iterator ii;
-  for( ii=realm_.nonConformalManager_->nonConformalInfoVec_.begin();
-       ii!=realm_.nonConformalManager_->nonConformalInfoVec_.end(); ++ii ) {
+  std::vector<NonConformalInfo*>::iterator ii;
+  for (ii = realm_.nonConformalManager_->nonConformalInfoVec_.begin();
+       ii != realm_.nonConformalManager_->nonConformalInfoVec_.end(); ++ii) {
 
     // extract vector of DgInfo
-    std::vector<std::vector<DgInfo *> > &dgInfoVec = (*ii)->dgInfoVec_;
-    
-    std::vector<std::vector<DgInfo*> >::iterator idg;
-    for( idg=dgInfoVec.begin(); idg!=dgInfoVec.end(); ++idg ) {
+    std::vector<std::vector<DgInfo*>>& dgInfoVec = (*ii)->dgInfoVec_;
 
-      std::vector<DgInfo *> &faceDgInfoVec = (*idg);
+    std::vector<std::vector<DgInfo*>>::iterator idg;
+    for (idg = dgInfoVec.begin(); idg != dgInfoVec.end(); ++idg) {
+
+      std::vector<DgInfo*>& faceDgInfoVec = (*idg);
 
       // now loop over all the DgInfo objects on this particular exposed face
-      for ( size_t k = 0; k < faceDgInfoVec.size(); ++k ) {
+      for (size_t k = 0; k < faceDgInfoVec.size(); ++k) {
 
-        DgInfo *dgInfo = faceDgInfoVec[k];
+        DgInfo* dgInfo = faceDgInfoVec[k];
 
         // extract current/opposing face/element
         stk::mesh::Entity currentFace = dgInfo->currentFace_;
@@ -222,18 +232,18 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
         const int opposingFaceOrdinal = dgInfo->opposingFaceOrdinal_;
 
         // master element; face and volume
-        MasterElement * meFCCurrent = dgInfo->meFCCurrent_; 
-        MasterElement * meFCOpposing = dgInfo->meFCOpposing_;
-        MasterElement * meSCSCurrent = dgInfo->meSCSCurrent_; 
-        MasterElement * meSCSOpposing = dgInfo->meSCSOpposing_;
-        
+        MasterElement* meFCCurrent = dgInfo->meFCCurrent_;
+        MasterElement* meFCOpposing = dgInfo->meFCOpposing_;
+        MasterElement* meSCSCurrent = dgInfo->meSCSCurrent_;
+        MasterElement* meSCSOpposing = dgInfo->meSCSOpposing_;
+
         // local ip, ordinals, etc
         const int currentGaussPointId = dgInfo->currentGaussPointId_;
         currentIsoParCoords = dgInfo->currentIsoParCoords_;
         opposingIsoParCoords = dgInfo->opposingIsoParCoords_;
-        
+
         // mapping from ip to nodes for this ordinal
-        const int *ipNodeMap = meSCSCurrent->ipNodeMap(currentFaceOrdinal);
+        const int* ipNodeMap = meSCSCurrent->ipNodeMap(currentFaceOrdinal);
 
         // extract some master element info
         const int currentNodesPerFace = meFCCurrent->nodesPerElement_;
@@ -243,102 +253,107 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
 
         // resize some things; matrix related
         const int totalNodes = currentNodesPerElement + opposingNodesPerElement;
-        const int lhsSize = totalNodes*totalNodes;
+        const int lhsSize = totalNodes * totalNodes;
         const int rhsSize = totalNodes;
         lhs.resize(lhsSize);
         rhs.resize(rhsSize);
         scratchIds.resize(rhsSize);
         scratchVals.resize(rhsSize);
         connected_nodes.resize(totalNodes);
-        
+
         // algorithm related; face
         ws_c_pressure.resize(currentNodesPerFace);
         ws_o_pressure.resize(opposingNodesPerFace);
-        ws_c_Gjp.resize(currentNodesPerFace*nDim);
-        ws_o_Gjp.resize(opposingNodesPerFace*nDim);
-        ws_c_velocity.resize(currentNodesPerFace*nDim);
-        ws_o_velocity.resize(opposingNodesPerFace*nDim);
-        ws_c_meshVelocity.resize(currentNodesPerFace*nDim);
+        ws_c_Gjp.resize(currentNodesPerFace * nDim);
+        ws_o_Gjp.resize(opposingNodesPerFace * nDim);
+        ws_c_velocity.resize(currentNodesPerFace * nDim);
+        ws_o_velocity.resize(opposingNodesPerFace * nDim);
+        ws_c_meshVelocity.resize(currentNodesPerFace * nDim);
         ws_c_density.resize(currentNodesPerFace);
         ws_o_density.resize(opposingNodesPerFace);
         ws_c_udiag.resize(currentNodesPerFace);
         ws_o_udiag.resize(opposingNodesPerFace);
-        ws_o_coordinates.resize(opposingNodesPerFace*nDim);
+        ws_o_coordinates.resize(opposingNodesPerFace * nDim);
         ws_c_general_shape_function.resize(currentNodesPerFace);
         ws_o_general_shape_function.resize(opposingNodesPerFace);
-        
+
         // algorithm related; element; dndx will be at a single gauss point
         ws_c_elem_pressure.resize(currentNodesPerElement);
         ws_o_elem_pressure.resize(opposingNodesPerElement);
-        ws_c_elem_coordinates.resize(currentNodesPerElement*nDim);
-        ws_o_elem_coordinates.resize(opposingNodesPerElement*nDim);
-        ws_c_dndx.resize(nDim*currentNodesPerElement);
-        ws_o_dndx.resize(nDim*opposingNodesPerElement);
+        ws_c_elem_coordinates.resize(currentNodesPerElement * nDim);
+        ws_o_elem_coordinates.resize(opposingNodesPerElement * nDim);
+        ws_c_dndx.resize(nDim * currentNodesPerElement);
+        ws_o_dndx.resize(nDim * opposingNodesPerElement);
         ws_c_det_j.resize(1);
         ws_o_det_j.resize(1);
 
         // pointers
-        double *p_lhs = &lhs[0];
-        double *p_rhs = &rhs[0];
-        
+        double* p_lhs = &lhs[0];
+        double* p_rhs = &rhs[0];
+
         // face
-        double *p_c_pressure = &ws_c_pressure[0];
-        double *p_o_pressure = &ws_o_pressure[0];
-        double *p_c_Gjp = &ws_c_Gjp[0];
-        double *p_o_Gjp = &ws_o_Gjp[0];
-        double *p_c_velocity = &ws_c_velocity[0];
-        double *p_o_velocity= &ws_o_velocity[0];
-        double *p_c_meshVelocity = &ws_c_meshVelocity[0];
-        double *p_c_density = &ws_c_density[0];
-        double *p_o_density = &ws_o_density[0];
-        double *p_c_udiag = &ws_c_udiag[0];
-        double *p_o_udiag = &ws_o_udiag[0];
-        double *p_o_coordinates = &ws_o_coordinates[0];
+        double* p_c_pressure = &ws_c_pressure[0];
+        double* p_o_pressure = &ws_o_pressure[0];
+        double* p_c_Gjp = &ws_c_Gjp[0];
+        double* p_o_Gjp = &ws_o_Gjp[0];
+        double* p_c_velocity = &ws_c_velocity[0];
+        double* p_o_velocity = &ws_o_velocity[0];
+        double* p_c_meshVelocity = &ws_c_meshVelocity[0];
+        double* p_c_density = &ws_c_density[0];
+        double* p_o_density = &ws_o_density[0];
+        double* p_c_udiag = &ws_c_udiag[0];
+        double* p_o_udiag = &ws_o_udiag[0];
+        double* p_o_coordinates = &ws_o_coordinates[0];
 
         // element
-        double *p_c_elem_pressure = &ws_c_elem_pressure[0];
-        double *p_o_elem_pressure = &ws_o_elem_pressure[0];
-        double *p_c_elem_coordinates = &ws_c_elem_coordinates[0];
-        double *p_o_elem_coordinates = &ws_o_elem_coordinates[0];
+        double* p_c_elem_pressure = &ws_c_elem_pressure[0];
+        double* p_o_elem_pressure = &ws_o_elem_pressure[0];
+        double* p_c_elem_coordinates = &ws_c_elem_coordinates[0];
+        double* p_o_elem_coordinates = &ws_o_elem_coordinates[0];
 
         // me pointers
-        double *p_c_general_shape_function = &ws_c_general_shape_function[0];
-        double *p_o_general_shape_function = &ws_o_general_shape_function[0];
-        double *p_c_dndx = &ws_c_dndx[0];
-        double *p_o_dndx = &ws_o_dndx[0];
-        
+        double* p_c_general_shape_function = &ws_c_general_shape_function[0];
+        double* p_o_general_shape_function = &ws_o_general_shape_function[0];
+        double* p_c_dndx = &ws_c_dndx[0];
+        double* p_o_dndx = &ws_o_dndx[0];
+
         // populate current face_node_ordinals
-        const int *c_face_node_ordinals = meSCSCurrent->side_node_ordinals(currentFaceOrdinal);
+        const int* c_face_node_ordinals =
+          meSCSCurrent->side_node_ordinals(currentFaceOrdinal);
 
         // gather current face data
-        stk::mesh::Entity const* current_face_node_rels = bulk_data.begin_nodes(currentFace);
+        stk::mesh::Entity const* current_face_node_rels =
+          bulk_data.begin_nodes(currentFace);
         const int current_num_face_nodes = bulk_data.num_nodes(currentFace);
-        for ( int ni = 0; ni < current_num_face_nodes; ++ni ) {
-          stk::mesh::Entity node = current_face_node_rels[ni];          
+        for (int ni = 0; ni < current_num_face_nodes; ++ni) {
+          stk::mesh::Entity node = current_face_node_rels[ni];
           // gather; scalar
           p_c_pressure[ni] = *stk::mesh::field_data(pressureNp1, node);
           p_c_density[ni] = *stk::mesh::field_data(*density_, node);
           const double udiagTmp = *stk::mesh::field_data(*Udiag, node);
           p_c_udiag[ni] = 1.0 / udiagTmp;
           // gather; vector
-          const double *velocity = stk::mesh::field_data(*velocity_, node );
-          const double *meshVelocity = stk::mesh::field_data(*meshVelocity_, node );
-          const double *Gjp = stk::mesh::field_data(*Gjp_, node );
-          for ( int i = 0; i < nDim; ++i ) {
-            const int offSet = i*current_num_face_nodes + ni; 
+          const double* velocity = stk::mesh::field_data(*velocity_, node);
+          const double* meshVelocity =
+            stk::mesh::field_data(*meshVelocity_, node);
+          const double* Gjp = stk::mesh::field_data(*Gjp_, node);
+          for (int i = 0; i < nDim; ++i) {
+            const int offSet = i * current_num_face_nodes + ni;
             p_c_velocity[offSet] = velocity[i];
             p_c_meshVelocity[offSet] = meshVelocity[i];
             p_c_Gjp[offSet] = Gjp[i] * p_c_udiag[ni];
           }
         }
-      
+
         // populate opposing face_node_ordinals
-        const int *o_face_node_ordinals = meSCSOpposing->side_node_ordinals(opposingFaceOrdinal);
+        const int* o_face_node_ordinals =
+          meSCSOpposing->side_node_ordinals(opposingFaceOrdinal);
 
         // gather opposing face data
-        stk::mesh::Entity const* opposing_face_node_rels = bulk_data.begin_nodes(opposingFace);
+        stk::mesh::Entity const* opposing_face_node_rels =
+          bulk_data.begin_nodes(opposingFace);
         const int opposing_num_face_nodes = bulk_data.num_nodes(opposingFace);
-        for ( int ni = 0; ni < opposing_num_face_nodes; ++ni ) {
+        for (int ni = 0; ni < opposing_num_face_nodes; ++ni) {
           stk::mesh::Entity node = opposing_face_node_rels[ni];
           // gather; scalar
           p_o_pressure[ni] = *stk::mesh::field_data(pressureNp1, node);
@@ -346,328 +361,338 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
           const double udiagTmp = *stk::mesh::field_data(*Udiag, node);
           p_o_udiag[ni] = 1.0 / udiagTmp;
           // gather; vector
-          const double *velocity = stk::mesh::field_data(*velocity_, node );
-          const double *Gjp = stk::mesh::field_data(*Gjp_, node );
-          const double *coords = stk::mesh::field_data(*coordinates_, node);
-          for ( int i = 0; i < nDim; ++i ) {
-            const int offSet = i*opposing_num_face_nodes + ni;        
+          const double* velocity = stk::mesh::field_data(*velocity_, node);
+          const double* Gjp = stk::mesh::field_data(*Gjp_, node);
+          const double* coords = stk::mesh::field_data(*coordinates_, node);
+          for (int i = 0; i < nDim; ++i) {
+            const int offSet = i * opposing_num_face_nodes + ni;
             p_o_velocity[offSet] = velocity[i];
             p_o_Gjp[offSet] = Gjp[i] * p_o_udiag[ni];
-            p_o_coordinates[ni*nDim+i] = coords[i];
+            p_o_coordinates[ni * nDim + i] = coords[i];
           }
         }
-        
+
         // gather current element data
-        stk::mesh::Entity const* current_elem_node_rels = bulk_data.begin_nodes(currentElement);
+        stk::mesh::Entity const* current_elem_node_rels =
+          bulk_data.begin_nodes(currentElement);
         const int current_num_elem_nodes = bulk_data.num_nodes(currentElement);
-        for ( int ni = 0; ni < current_num_elem_nodes; ++ni ) {
-          stk::mesh::Entity node = current_elem_node_rels[ni];          
+        for (int ni = 0; ni < current_num_elem_nodes; ++ni) {
+          stk::mesh::Entity node = current_elem_node_rels[ni];
           // set connected nodes
           connected_nodes[ni] = node;
           // gather; scalar
           p_c_elem_pressure[ni] = *stk::mesh::field_data(pressureNp1, node);
           // gather; vector
-          const double *coords = stk::mesh::field_data(*coordinates_, node);
-          const int niNdim = ni*nDim;
-          for ( int i = 0; i < nDim; ++i ) {
-            p_c_elem_coordinates[niNdim+i] = coords[i];
+          const double* coords = stk::mesh::field_data(*coordinates_, node);
+          const int niNdim = ni * nDim;
+          for (int i = 0; i < nDim; ++i) {
+            p_c_elem_coordinates[niNdim + i] = coords[i];
           }
         }
 
         // gather opposing element data; sneak in second connected nodes
-        stk::mesh::Entity const* opposing_elem_node_rels = bulk_data.begin_nodes(opposingElement);
-        const int opposing_num_elem_nodes = bulk_data.num_nodes(opposingElement);
-        for ( int ni = 0; ni < opposing_num_elem_nodes; ++ni ) {
+        stk::mesh::Entity const* opposing_elem_node_rels =
+          bulk_data.begin_nodes(opposingElement);
+        const int opposing_num_elem_nodes =
+          bulk_data.num_nodes(opposingElement);
+        for (int ni = 0; ni < opposing_num_elem_nodes; ++ni) {
           stk::mesh::Entity node = opposing_elem_node_rels[ni];
           // set connected nodes
-          connected_nodes[ni+current_num_elem_nodes] = node;
+          connected_nodes[ni + current_num_elem_nodes] = node;
           // gather; scalar
           p_o_elem_pressure[ni] = *stk::mesh::field_data(pressureNp1, node);
           // gather; vector
-          const double *coords = stk::mesh::field_data(*coordinates_, node);
-          const int niNdim = ni*nDim;
-          for ( int i = 0; i < nDim; ++i ) {
-            p_o_elem_coordinates[niNdim+i] = coords[i];
+          const double* coords = stk::mesh::field_data(*coordinates_, node);
+          const int niNdim = ni * nDim;
+          for (int i = 0; i < nDim; ++i) {
+            p_o_elem_coordinates[niNdim + i] = coords[i];
           }
         }
-        
-        // compute opposing normal through master element call, not using oppoing exposed area
-        meFCOpposing->general_normal(&opposingIsoParCoords[0], &p_o_coordinates[0], &p_oNx[0]);
-        
+
+        // compute opposing normal through master element call, not using
+        // oppoing exposed area
+        meFCOpposing->general_normal(
+          &opposingIsoParCoords[0], &p_o_coordinates[0], &p_oNx[0]);
+
         // pointer to face data
-        const double * c_areaVec = stk::mesh::field_data(*exposedAreaVec_, currentFace);
-        
+        const double* c_areaVec =
+          stk::mesh::field_data(*exposedAreaVec_, currentFace);
+
         double c_amag = 0.0;
-        for ( int j = 0; j < nDim; ++j ) {
-          const double c_axj = c_areaVec[currentGaussPointId*nDim+j];
-          c_amag += c_axj*c_axj;
+        for (int j = 0; j < nDim; ++j) {
+          const double c_axj = c_areaVec[currentGaussPointId * nDim + j];
+          c_amag += c_axj * c_axj;
         }
         c_amag = std::sqrt(c_amag);
 
         // now compute normal
-        for ( int i = 0; i < nDim; ++i ) {
-          p_cNx[i] = c_areaVec[currentGaussPointId*nDim+i]/c_amag;
+        for (int i = 0; i < nDim; ++i) {
+          p_cNx[i] = c_areaVec[currentGaussPointId * nDim + i] / c_amag;
         }
 
         // override opposing normal
-        if ( useCurrentNormal_ ) {
-          for ( int i = 0; i < nDim; ++i )
+        if (useCurrentNormal_) {
+          for (int i = 0; i < nDim; ++i)
             p_oNx[i] = -p_cNx[i];
         }
 
-        // project from side to element; method deals with the -1:1 isInElement range to the proper underlying CVFEM range
-        meSCSCurrent->sidePcoords_to_elemPcoords(currentFaceOrdinal, 1, &currentIsoParCoords[0], &currentElementIsoParCoords[0]);
-        meSCSOpposing->sidePcoords_to_elemPcoords(opposingFaceOrdinal, 1, &opposingIsoParCoords[0], &opposingElementIsoParCoords[0]);
-        
+        // project from side to element; method deals with the -1:1 isInElement
+        // range to the proper underlying CVFEM range
+        meSCSCurrent->sidePcoords_to_elemPcoords(
+          currentFaceOrdinal, 1, &currentIsoParCoords[0],
+          &currentElementIsoParCoords[0]);
+        meSCSOpposing->sidePcoords_to_elemPcoords(
+          opposingFaceOrdinal, 1, &opposingIsoParCoords[0],
+          &opposingElementIsoParCoords[0]);
+
         // compute dndx
         double scs_error = 0.0;
-        meSCSCurrent->general_face_grad_op(currentFaceOrdinal, &currentElementIsoParCoords[0], 
-                                           &p_c_elem_coordinates[0], &p_c_dndx[0], &ws_c_det_j[0], &scs_error);
-        meSCSOpposing->general_face_grad_op(opposingFaceOrdinal, &opposingElementIsoParCoords[0], 
-                                            &p_o_elem_coordinates[0], &p_o_dndx[0], &ws_o_det_j[0], &scs_error);
-        
-        // current inverse length scale; can loop over face nodes to avoid "nodesOnFace" array
+        meSCSCurrent->general_face_grad_op(
+          currentFaceOrdinal, &currentElementIsoParCoords[0],
+          &p_c_elem_coordinates[0], &p_c_dndx[0], &ws_c_det_j[0], &scs_error);
+        meSCSOpposing->general_face_grad_op(
+          opposingFaceOrdinal, &opposingElementIsoParCoords[0],
+          &p_o_elem_coordinates[0], &p_o_dndx[0], &ws_o_det_j[0], &scs_error);
+
+        // current inverse length scale; can loop over face nodes to avoid
+        // "nodesOnFace" array
         double currentInverseLength = 0.0;
-        for ( int ic = 0; ic < current_num_face_nodes; ++ic ) {
+        for (int ic = 0; ic < current_num_face_nodes; ++ic) {
           const int faceNodeNumber = c_face_node_ordinals[ic];
-          const int offSetDnDx = faceNodeNumber*nDim; // single intg. point
-          for ( int j = 0; j < nDim; ++j ) {
+          const int offSetDnDx = faceNodeNumber * nDim; // single intg. point
+          for (int j = 0; j < nDim; ++j) {
             const double nxj = p_cNx[j];
-            const double dndxj = p_c_dndx[offSetDnDx+j];
-            currentInverseLength += dndxj*nxj;
+            const double dndxj = p_c_dndx[offSetDnDx + j];
+            currentInverseLength += dndxj * nxj;
           }
         }
 
-        // opposing inverse length scale; can loop over face nodes to avoid "nodesOnFace" array
+        // opposing inverse length scale; can loop over face nodes to avoid
+        // "nodesOnFace" array
         double opposingInverseLength = 0.0;
-        for ( int ic = 0; ic < opposing_num_face_nodes; ++ic ) {
+        for (int ic = 0; ic < opposing_num_face_nodes; ++ic) {
           const int faceNodeNumber = o_face_node_ordinals[ic];
-          const int offSetDnDx = faceNodeNumber*nDim; // single intg. point
-          for ( int j = 0; j < nDim; ++j ) {
+          const int offSetDnDx = faceNodeNumber * nDim; // single intg. point
+          for (int j = 0; j < nDim; ++j) {
             const double nxj = p_oNx[j];
-            const double dndxj = p_o_dndx[offSetDnDx+j];
-            opposingInverseLength += dndxj*nxj;
+            const double dndxj = p_o_dndx[offSetDnDx + j];
+            opposingInverseLength += dndxj * nxj;
           }
         }
 
         // projected nodal gradient; zero out
-        for ( int j = 0; j < nDim; ++j ) {
+        for (int j = 0; j < nDim; ++j) {
           currentDpdxBip[j] = 0.0;
           opposingDpdxBip[j] = 0.0;
         }
 
         // current pressure gradient
-        for ( int ic = 0; ic < currentNodesPerElement; ++ic ) {
-          const int offSetDnDx = ic*nDim; // single intg. point
+        for (int ic = 0; ic < currentNodesPerElement; ++ic) {
+          const int offSetDnDx = ic * nDim; // single intg. point
           const double pNp1 = p_c_elem_pressure[ic];
-          for ( int j = 0; j < nDim; ++j ) {
-            const double dndxj = p_c_dndx[offSetDnDx+j];
-            currentDpdxBip[j] += dndxj*pNp1;
+          for (int j = 0; j < nDim; ++j) {
+            const double dndxj = p_c_dndx[offSetDnDx + j];
+            currentDpdxBip[j] += dndxj * pNp1;
           }
         }
 
         // opposing pressure gradient
-        for ( int ic = 0; ic < opposingNodesPerElement; ++ic ) {
-          const int offSetDnDx = ic*nDim; // single intg. point
+        for (int ic = 0; ic < opposingNodesPerElement; ++ic) {
+          const int offSetDnDx = ic * nDim; // single intg. point
           const double pNp1 = p_o_elem_pressure[ic];
-          for ( int j = 0; j < nDim; ++j ) {
-            const double dndxj = p_o_dndx[offSetDnDx+j];
-            opposingDpdxBip[j] += dndxj*pNp1;
+          for (int j = 0; j < nDim; ++j) {
+            const double dndxj = p_o_dndx[offSetDnDx + j];
+            opposingDpdxBip[j] += dndxj * pNp1;
           }
         }
 
         // interpolate to boundary ips
         double currentPressureBip = 0.0;
         meFCCurrent->interpolatePoint(
-          sizeOfScalarField,
-          &(dgInfo->currentIsoParCoords_[0]),
-          &ws_c_pressure[0],
-          &currentPressureBip);
-        
+          sizeOfScalarField, &(dgInfo->currentIsoParCoords_[0]),
+          &ws_c_pressure[0], &currentPressureBip);
+
         double opposingPressureBip = 0.0;
         meFCOpposing->interpolatePoint(
-          sizeOfScalarField,
-          &(dgInfo->opposingIsoParCoords_[0]),
-          &ws_o_pressure[0],
-          &opposingPressureBip);
+          sizeOfScalarField, &(dgInfo->opposingIsoParCoords_[0]),
+          &ws_o_pressure[0], &opposingPressureBip);
 
         double curProjTScaleBip = 0.0;
         meFCCurrent->interpolatePoint(
-          sizeOfScalarField,
-          &(dgInfo->currentIsoParCoords_[0]),
-          &ws_c_udiag[0],
+          sizeOfScalarField, &(dgInfo->currentIsoParCoords_[0]), &ws_c_udiag[0],
           &curProjTScaleBip);
 
         double oppProjTScaleBip = 0.0;
         meFCOpposing->interpolatePoint(
-          sizeOfScalarField,
-          &(dgInfo->opposingIsoParCoords_[0]),
-          &ws_o_udiag[0],
-          &oppProjTScaleBip);
+          sizeOfScalarField, &(dgInfo->opposingIsoParCoords_[0]),
+          &ws_o_udiag[0], &oppProjTScaleBip);
 
         // velocity
         meFCCurrent->interpolatePoint(
-          sizeOfVectorField,
-          &(dgInfo->currentIsoParCoords_[0]),
-          &ws_c_velocity[0],
-          &currentVelocityBip[0]);
+          sizeOfVectorField, &(dgInfo->currentIsoParCoords_[0]),
+          &ws_c_velocity[0], &currentVelocityBip[0]);
 
         meFCOpposing->interpolatePoint(
-          sizeOfVectorField,
-          &(dgInfo->opposingIsoParCoords_[0]),
-          &ws_o_velocity[0],
-          &opposingVelocityBip[0]);
+          sizeOfVectorField, &(dgInfo->opposingIsoParCoords_[0]),
+          &ws_o_velocity[0], &opposingVelocityBip[0]);
 
         // mesh velocity; only required at current
         meFCCurrent->interpolatePoint(
-          sizeOfVectorField,
-          &(dgInfo->currentIsoParCoords_[0]),
-          &ws_c_meshVelocity[0],
-          &currentMeshVelocityBip[0]);
-        
+          sizeOfVectorField, &(dgInfo->currentIsoParCoords_[0]),
+          &ws_c_meshVelocity[0], &currentMeshVelocityBip[0]);
+
         // projected nodal gradient
         meFCCurrent->interpolatePoint(
-          sizeOfVectorField,
-          &(dgInfo->currentIsoParCoords_[0]),
-          &ws_c_Gjp[0],
+          sizeOfVectorField, &(dgInfo->currentIsoParCoords_[0]), &ws_c_Gjp[0],
           &currentGjpBip[0]);
-        
+
         meFCOpposing->interpolatePoint(
-          sizeOfVectorField,
-          &(dgInfo->opposingIsoParCoords_[0]),
-          &ws_o_Gjp[0],
+          sizeOfVectorField, &(dgInfo->opposingIsoParCoords_[0]), &ws_o_Gjp[0],
           &opposingGjpBip[0]);
 
         // density
         double currentDensityBip = 0.0;
         meFCCurrent->interpolatePoint(
-          sizeOfScalarField,
-          &(dgInfo->currentIsoParCoords_[0]),
-          &ws_c_density[0],
-          &currentDensityBip);
-        
+          sizeOfScalarField, &(dgInfo->currentIsoParCoords_[0]),
+          &ws_c_density[0], &currentDensityBip);
+
         double opposingDensityBip = 0.0;
         meFCOpposing->interpolatePoint(
-          sizeOfScalarField,
-          &(dgInfo->opposingIsoParCoords_[0]),
-          &ws_o_density[0],
-          &opposingDensityBip);
+          sizeOfScalarField, &(dgInfo->opposingIsoParCoords_[0]),
+          &ws_o_density[0], &opposingDensityBip);
 
-        // product of density and velocity; current (take over previous nodal value for velocity)
-        for ( int ni = 0; ni < current_num_face_nodes; ++ni ) {
+        // product of density and velocity; current (take over previous nodal
+        // value for velocity)
+        for (int ni = 0; ni < current_num_face_nodes; ++ni) {
           const double density = p_c_density[ni];
-          for ( int i = 0; i < nDim; ++i ) {
-            const int offSet = i*current_num_face_nodes + ni;        
+          for (int i = 0; i < nDim; ++i) {
+            const int offSet = i * current_num_face_nodes + ni;
             p_c_velocity[offSet] *= density;
             p_c_meshVelocity[offSet] *= density;
           }
         }
 
         // opposite
-        for ( int ni = 0; ni < opposing_num_face_nodes; ++ni ) {
+        for (int ni = 0; ni < opposing_num_face_nodes; ++ni) {
           const double density = p_o_density[ni];
-          for ( int i = 0; i < nDim; ++i ) {
-            const int offSet = i*opposing_num_face_nodes + ni;        
+          for (int i = 0; i < nDim; ++i) {
+            const int offSet = i * opposing_num_face_nodes + ni;
             p_o_velocity[offSet] *= density;
           }
         }
 
         // interpolate velocity with density scaling
         meFCCurrent->interpolatePoint(
-          sizeOfVectorField,
-          &(dgInfo->currentIsoParCoords_[0]),
-          &ws_c_velocity[0],
-          &currentRhoVelocityBip[0]);
-        
+          sizeOfVectorField, &(dgInfo->currentIsoParCoords_[0]),
+          &ws_c_velocity[0], &currentRhoVelocityBip[0]);
+
         meFCOpposing->interpolatePoint(
-          sizeOfVectorField,
-          &(dgInfo->opposingIsoParCoords_[0]),
-          &ws_o_velocity[0],
-          &opposingRhoVelocityBip[0]);
+          sizeOfVectorField, &(dgInfo->opposingIsoParCoords_[0]),
+          &ws_o_velocity[0], &opposingRhoVelocityBip[0]);
 
         // interpolate mesh velocity with density scaling; only current
         meFCCurrent->interpolatePoint(
-          sizeOfVectorField,
-          &(dgInfo->currentIsoParCoords_[0]),
-          &ws_c_meshVelocity[0],
-          &currentRhoMeshVelocityBip[0]);
+          sizeOfVectorField, &(dgInfo->currentIsoParCoords_[0]),
+          &ws_c_meshVelocity[0], &currentRhoMeshVelocityBip[0]);
 
         // zero lhs/rhs
-        for ( int p = 0; p < lhsSize; ++p )
+        for (int p = 0; p < lhsSize; ++p)
           p_lhs[p] = 0.0;
-        for ( int p = 0; p < rhsSize; ++p )
+        for (int p = 0; p < rhsSize; ++p)
           p_rhs[p] = 0.0;
-                
-        const double projTimeScaleIp = 0.5*(curProjTScaleBip + oppProjTScaleBip);
-        const double penaltyIp = projTimeScaleIp*0.5*(currentInverseLength + opposingInverseLength);
+
+        const double projTimeScaleIp =
+          0.5 * (curProjTScaleBip + oppProjTScaleBip);
+        const double penaltyIp = projTimeScaleIp * 0.5 *
+                                 (currentInverseLength + opposingInverseLength);
 
         double ncFlux = 0.0;
         double ncPstabFlux = 0.0;
-        for ( int j = 0; j < nDim; ++j ) {
-          const double cRhoVelocity = interpTogether*currentRhoVelocityBip[j] + om_interpTogether*currentDensityBip*currentVelocityBip[j];
-          const double oRhoVelocity = interpTogether*opposingRhoVelocityBip[j] + om_interpTogether*opposingDensityBip*opposingVelocityBip[j];
-          const double cRhoMeshVelocity = interpTogether*currentRhoMeshVelocityBip[j] + om_interpTogether*currentDensityBip*currentMeshVelocityBip[j];
-          ncFlux += 0.5*(cRhoVelocity*p_cNx[j] - oRhoVelocity*p_oNx[j]) - meshMotionFac_*cRhoMeshVelocity*p_cNx[j];
-          const double cPstab = currentDpdxBip[j]*projTimeScaleIp - currentGjpBip[j];
-          const double oPstab = opposingDpdxBip[j]*projTimeScaleIp - opposingGjpBip[j];
-          ncPstabFlux += 0.5*(cPstab*p_cNx[j] - oPstab*p_oNx[j]);
+        for (int j = 0; j < nDim; ++j) {
+          const double cRhoVelocity =
+            interpTogether * currentRhoVelocityBip[j] +
+            om_interpTogether * currentDensityBip * currentVelocityBip[j];
+          const double oRhoVelocity =
+            interpTogether * opposingRhoVelocityBip[j] +
+            om_interpTogether * opposingDensityBip * opposingVelocityBip[j];
+          const double cRhoMeshVelocity =
+            interpTogether * currentRhoMeshVelocityBip[j] +
+            om_interpTogether * currentDensityBip * currentMeshVelocityBip[j];
+          ncFlux += 0.5 * (cRhoVelocity * p_cNx[j] - oRhoVelocity * p_oNx[j]) -
+                    meshMotionFac_ * cRhoMeshVelocity * p_cNx[j];
+          const double cPstab =
+            currentDpdxBip[j] * projTimeScaleIp - currentGjpBip[j];
+          const double oPstab =
+            opposingDpdxBip[j] * projTimeScaleIp - opposingGjpBip[j];
+          ncPstabFlux += 0.5 * (cPstab * p_cNx[j] - oPstab * p_oNx[j]);
         }
 
-        const double mdot = (ncFlux - includePstab_*ncPstabFlux + penaltyIp*(currentPressureBip - opposingPressureBip))*c_amag;
-        
+        const double mdot =
+          (ncFlux - includePstab_ * ncPstabFlux +
+           penaltyIp * (currentPressureBip - opposingPressureBip)) *
+          c_amag;
+
         // form residual
         const int nn = ipNodeMap[currentGaussPointId];
         p_rhs[nn] -= mdot / tauScale;
 
         // set-up row for matrix
-        const int rowR = nn*totalNodes;
-        double lhsFac = penaltyIp*c_amag / tauScale;
-        
-        // sensitivities; current face (penalty); use general shape function for this single ip
-        meFCCurrent->general_shape_fcn(1, &currentIsoParCoords[0], &ws_c_general_shape_function[0]);
-        for ( int ic = 0; ic < currentNodesPerFace; ++ic ) {
+        const int rowR = nn * totalNodes;
+        double lhsFac = penaltyIp * c_amag / tauScale;
+
+        // sensitivities; current face (penalty); use general shape function for
+        // this single ip
+        meFCCurrent->general_shape_fcn(
+          1, &currentIsoParCoords[0], &ws_c_general_shape_function[0]);
+        for (int ic = 0; ic < currentNodesPerFace; ++ic) {
           const int icnn = c_face_node_ordinals[ic];
           const double r = p_c_general_shape_function[ic];
-          p_lhs[rowR+icnn] += r*lhsFac;
-        }
-        
-        // sensitivities; current element (diffusion)
-        for ( int ic = 0; ic < currentNodesPerElement; ++ic ) {
-          const int offSetDnDx = ic*nDim; // single intg. point
-          double lhscd = 0.0;
-          for ( int j = 0; j < nDim; ++j ) {
-            const double nxj = p_cNx[j];
-            const double dndxj = p_c_dndx[offSetDnDx+j];
-            lhscd -= dndxj*nxj;
-          }
-          p_lhs[rowR+ic] += 0.5*lhscd*c_amag*includePstab_ * projTimeScaleIp / tauScale;
+          p_lhs[rowR + icnn] += r * lhsFac;
         }
 
-        // sensitivities; opposing face (penalty); use general shape function for this single ip
-        meFCOpposing->general_shape_fcn(1, &opposingIsoParCoords[0], &ws_o_general_shape_function[0]);
-        for ( int ic = 0; ic < opposingNodesPerFace; ++ic ) {
+        // sensitivities; current element (diffusion)
+        for (int ic = 0; ic < currentNodesPerElement; ++ic) {
+          const int offSetDnDx = ic * nDim; // single intg. point
+          double lhscd = 0.0;
+          for (int j = 0; j < nDim; ++j) {
+            const double nxj = p_cNx[j];
+            const double dndxj = p_c_dndx[offSetDnDx + j];
+            lhscd -= dndxj * nxj;
+          }
+          p_lhs[rowR + ic] +=
+            0.5 * lhscd * c_amag * includePstab_ * projTimeScaleIp / tauScale;
+        }
+
+        // sensitivities; opposing face (penalty); use general shape function
+        // for this single ip
+        meFCOpposing->general_shape_fcn(
+          1, &opposingIsoParCoords[0], &ws_o_general_shape_function[0]);
+        for (int ic = 0; ic < opposingNodesPerFace; ++ic) {
           const int icnn = o_face_node_ordinals[ic];
           const double r = p_o_general_shape_function[ic];
-          p_lhs[rowR+icnn+currentNodesPerElement] -= r*lhsFac * projTimeScaleIp / tauScale;
-        }
-        
-        // sensitivities; opposing element (diffusion)
-        for ( int ic = 0; ic < opposingNodesPerElement; ++ic ) {
-          const int offSetDnDx = ic*nDim; // single intg. point
-          double lhscd = 0.0;
-          for ( int j = 0; j < nDim; ++j ) {
-            const double nxj = p_oNx[j];
-            const double dndxj = p_o_dndx[offSetDnDx+j];
-            lhscd -= dndxj*nxj;
-          }
-          p_lhs[rowR+ic+currentNodesPerElement] -= 0.5*lhscd*c_amag*includePstab_*projTimeScaleIp / tauScale;
+          p_lhs[rowR + icnn + currentNodesPerElement] -=
+            r * lhsFac * projTimeScaleIp / tauScale;
         }
 
-        apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);
+        // sensitivities; opposing element (diffusion)
+        for (int ic = 0; ic < opposingNodesPerElement; ++ic) {
+          const int offSetDnDx = ic * nDim; // single intg. point
+          double lhscd = 0.0;
+          for (int j = 0; j < nDim; ++j) {
+            const double nxj = p_oNx[j];
+            const double dndxj = p_o_dndx[offSetDnDx + j];
+            lhscd -= dndxj * nxj;
+          }
+          p_lhs[rowR + ic + currentNodesPerElement] -=
+            0.5 * lhscd * c_amag * includePstab_ * projTimeScaleIp / tauScale;
+        }
+
+        apply_coeff(
+          connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);
       }
     }
   }
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

@@ -74,7 +74,7 @@ WilcoxKOmegaEquationSystem::WilcoxKOmegaEquationSystem(
   // push back EQ to manager
   realm_.push_equation_to_systems(this);
 
-  tkeEqSys_= new TurbKineticEnergyEquationSystem(eqSystems);
+  tkeEqSys_ = new TurbKineticEnergyEquationSystem(eqSystems);
   sdrEqSys_ = new SpecificDissipationRateEquationSystem(eqSystems);
 }
 

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef SCALAREDGEOPENSOLVERALG_H
 #define SCALAREDGEOPENSOLVERALG_H
 
@@ -25,8 +24,9 @@ class SolutionOptions;
 class ElemDataRequests;
 class MasterElement;
 
-template<typename BcAlgTraits>
-class ScalarEdgeOpenSolverAlg: public NGPKernel<ScalarEdgeOpenSolverAlg<BcAlgTraits>>
+template <typename BcAlgTraits>
+class ScalarEdgeOpenSolverAlg
+  : public NGPKernel<ScalarEdgeOpenSolverAlg<BcAlgTraits>>
 {
 public:
   ScalarEdgeOpenSolverAlg(
@@ -56,12 +56,12 @@ public:
     int);
 
 private:
-  unsigned scalarQ_          {stk::mesh::InvalidOrdinal};
-  unsigned bcScalarQ_        {stk::mesh::InvalidOrdinal};
-  unsigned dqdx_             {stk::mesh::InvalidOrdinal};
-  unsigned diffFluxCoeff_    {stk::mesh::InvalidOrdinal};
-  unsigned coordinates_      {stk::mesh::InvalidOrdinal};
-  unsigned openMassFlowRate_ {stk::mesh::InvalidOrdinal};
+  unsigned scalarQ_{stk::mesh::InvalidOrdinal};
+  unsigned bcScalarQ_{stk::mesh::InvalidOrdinal};
+  unsigned dqdx_{stk::mesh::InvalidOrdinal};
+  unsigned diffFluxCoeff_{stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned openMassFlowRate_{stk::mesh::InvalidOrdinal};
 
   DoubleType relaxFac_;
 
@@ -69,8 +69,7 @@ private:
   MasterElement* meSCS_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* SCALAREDGEOPENSOLVERALG_H */

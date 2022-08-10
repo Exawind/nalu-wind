@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef SolverAlgorithm_h
 #define SolverAlgorithm_h
 
@@ -22,8 +20,8 @@
 #include <stk_mesh/base/NgpField.hpp>
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class CoeffApplier;
 class EquationSystem;
@@ -45,11 +43,11 @@ struct NGPApplyCoeff
   void operator()(
     unsigned numMeshobjs,
     const stk::mesh::NgpMesh::ConnectedNodes& symMeshobjs,
-    const SharedMemView<int*,DeviceShmem> & scratchIds,
-    const SharedMemView<int*,DeviceShmem> & sortPermutation,
-    SharedMemView<double*,DeviceShmem> & rhs,
-    SharedMemView<double**,DeviceShmem> & lhs,
-    const char *trace_tag) const;
+    const SharedMemView<int*, DeviceShmem>& scratchIds,
+    const SharedMemView<int*, DeviceShmem>& sortPermutation,
+    SharedMemView<double*, DeviceShmem>& rhs,
+    SharedMemView<double**, DeviceShmem>& lhs,
+    const char* trace_tag) const;
 
   KOKKOS_FUNCTION
   void extract_diagonal(
@@ -61,7 +59,7 @@ struct NGPApplyCoeff
   void reset_overset_rows(
     const unsigned nEntities,
     const stk::mesh::NgpMesh::ConnectedNodes& entities,
-    SharedMemView<double*, DeviceShmem>&  rhs,
+    SharedMemView<double*, DeviceShmem>& rhs,
     SharedMemView<double**, DeviceShmem>& lhs) const;
 
   const stk::mesh::NgpMesh ngpMesh_;
@@ -80,34 +78,29 @@ struct NGPApplyCoeff
 class SolverAlgorithm : public Algorithm
 {
 public:
-
   SolverAlgorithm(
-    Realm &realm,
-    stk::mesh::Part *part,
-    EquationSystem *eqSystem);
+    Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem);
   virtual ~SolverAlgorithm() {}
 
   virtual void execute() = 0;
   virtual void initialize_connectivity() = 0;
 
 protected:
-
-  NGPApplyCoeff coeff_applier()
-  { return NGPApplyCoeff(eqSystem_); }
+  NGPApplyCoeff coeff_applier() { return NGPApplyCoeff(eqSystem_); }
 
   // Need to find out whether this ever gets called inside a modification cycle.
   void apply_coeff(
-    const std::vector<stk::mesh::Entity> & sym_meshobj,
-    std::vector<int> &scratchIds,
-    std::vector<double> &scratchVals,
-    std::vector<double> &rhs,
-    std::vector<double> &lhs,
-    const char *trace_tag=0);
+    const std::vector<stk::mesh::Entity>& sym_meshobj,
+    std::vector<int>& scratchIds,
+    std::vector<double>& scratchVals,
+    std::vector<double>& rhs,
+    std::vector<double>& lhs,
+    const char* trace_tag = 0);
 
-  EquationSystem *eqSystem_;
+  EquationSystem* eqSystem_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

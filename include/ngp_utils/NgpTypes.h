@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef NGPTYPES_H
 #define NGPTYPES_H
 
@@ -24,7 +23,7 @@
 namespace sierra {
 namespace nalu {
 
-template<typename T1, typename T2, typename T3>
+template <typename T1, typename T2, typename T3>
 class ScratchViews;
 
 namespace nalu_ngp {
@@ -39,7 +38,7 @@ constexpr int NDimMax = 3;
  *
  *  Depending on the bucket-loop, entity could be one of elem, edge, or face.
  */
-template<typename Mesh = stk::mesh::NgpMesh>
+template <typename Mesh = stk::mesh::NgpMesh>
 struct EntityInfo
 {
   //! Bucket information
@@ -58,7 +57,7 @@ struct EntityInfo
  *  connected nodes are always for the parent element that owns the boundary
  *  face.
  */
-template<typename Mesh = stk::mesh::NgpMesh>
+template <typename Mesh = stk::mesh::NgpMesh>
 struct BcFaceElemInfo
 {
   typename Mesh::MeshIndex meshIdx;
@@ -78,10 +77,9 @@ struct BcFaceElemInfo
   int faceOrdinal;
 };
 
-
 /** Traits for dealing with STK NGP meshes
  */
-template<typename Mesh=stk::mesh::NgpMesh>
+template <typename Mesh = stk::mesh::NgpMesh>
 struct NGPMeshTraits
 {
   //! SIMD data type used in element data structures
@@ -101,10 +99,8 @@ struct NGPMeshTraits
   using BcFaceElemInfoType = BcFaceElemInfo<Mesh>;
 };
 
-
-}  // nalu_ngp
-}  // nalu
-}  // sierra
-
+} // namespace nalu_ngp
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NGPTYPES_H */

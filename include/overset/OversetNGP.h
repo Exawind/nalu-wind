@@ -5,14 +5,16 @@
 
 namespace tioga_nalu {
 
-template<typename T,
-         typename Layout = Kokkos::LayoutRight,
-         typename Space = sierra::nalu::MemSpace>
+template <
+  typename T,
+  typename Layout = Kokkos::LayoutRight,
+  typename Space = sierra::nalu::MemSpace>
 using OversetArrayViewType = Kokkos::View<T, Layout, Space>;
 
-template<typename T,
-         typename Layout = Kokkos::LayoutRight,
-         typename Space = sierra::nalu::MemSpace>
+template <
+  typename T,
+  typename Layout = Kokkos::LayoutRight,
+  typename Space = sierra::nalu::MemSpace>
 struct OversetArrayType
 {
   using ArrayType = OversetArrayViewType<T, Layout, Space>;
@@ -41,6 +43,6 @@ struct OversetArrayType
   void sync_host() { Kokkos::deep_copy(h_view, d_view); }
 };
 
-}
+} // namespace tioga_nalu
 
 #endif /* OVERSETNGP_H */

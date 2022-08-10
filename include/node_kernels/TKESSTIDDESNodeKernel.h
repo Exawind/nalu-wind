@@ -50,27 +50,27 @@ private:
   stk::mesh::NgpField<double> fOneBlend_;
   stk::mesh::NgpField<double> ransIndicator_;
 
-  unsigned tkeID_             {stk::mesh::InvalidOrdinal};
-  unsigned sdrID_             {stk::mesh::InvalidOrdinal};
-  unsigned densityID_         {stk::mesh::InvalidOrdinal};
-  unsigned viscID_            {stk::mesh::InvalidOrdinal};
-  unsigned tviscID_           {stk::mesh::InvalidOrdinal};
-  unsigned dudxID_            {stk::mesh::InvalidOrdinal};
-  unsigned wallDistID_        {stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
-  unsigned maxLenScaleID_     {stk::mesh::InvalidOrdinal};
-  unsigned fOneBlendID_       {stk::mesh::InvalidOrdinal};
-  unsigned ransIndicatorID_   {stk::mesh::InvalidOrdinal};
+  unsigned tkeID_{stk::mesh::InvalidOrdinal};
+  unsigned sdrID_{stk::mesh::InvalidOrdinal};
+  unsigned densityID_{stk::mesh::InvalidOrdinal};
+  unsigned viscID_{stk::mesh::InvalidOrdinal};
+  unsigned tviscID_{stk::mesh::InvalidOrdinal};
+  unsigned dudxID_{stk::mesh::InvalidOrdinal};
+  unsigned wallDistID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
+  unsigned maxLenScaleID_{stk::mesh::InvalidOrdinal};
+  unsigned fOneBlendID_{stk::mesh::InvalidOrdinal};
+  unsigned ransIndicatorID_{stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
   NodeKernelTraits::DblType cDESke_;
   NodeKernelTraits::DblType cDESkw_;
-  NodeKernelTraits::DblType kappa_;    
-  NodeKernelTraits::DblType iddes_Cw_;    
-  NodeKernelTraits::DblType iddes_Cdt1_;    
-  NodeKernelTraits::DblType iddes_Cdt2_;    
-  NodeKernelTraits::DblType iddes_Cl_;    
+  NodeKernelTraits::DblType kappa_;
+  NodeKernelTraits::DblType iddes_Cw_;
+  NodeKernelTraits::DblType iddes_Cdt1_;
+  NodeKernelTraits::DblType iddes_Cdt2_;
+  NodeKernelTraits::DblType iddes_Cl_;
   NodeKernelTraits::DblType iddes_Ct_;
   NodeKernelTraits::DblType tkeAmb_;
   NodeKernelTraits::DblType sdrAmb_;
@@ -78,8 +78,7 @@ private:
   const int nDim_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* TKESSTIDDESNODEKERNEL_H */

@@ -19,41 +19,42 @@
 namespace sierra {
 namespace nalu {
 
-  struct InterpActuatorDensity
-  {
-    using execution_space = ActuatorFixedExecutionSpace;
+struct InterpActuatorDensity
+{
+  using execution_space = ActuatorFixedExecutionSpace;
 
-    InterpActuatorDensity(ActuatorBulkSimple& actBulk, stk::mesh::BulkData& stkBulk);
+  InterpActuatorDensity(
+    ActuatorBulkSimple& actBulk, stk::mesh::BulkData& stkBulk);
 
-    void operator()(int index) const;
+  void operator()(int index) const;
 
-    ActuatorBulkSimple& actBulk_;
-    stk::mesh::BulkData& stkBulk_;
-    VectorFieldType* coordinates_;
-    ScalarFieldType* density_;
-  };
+  ActuatorBulkSimple& actBulk_;
+  stk::mesh::BulkData& stkBulk_;
+  VectorFieldType* coordinates_;
+  ScalarFieldType* density_;
+};
 
-  // Things to calculate lift, drag, and AOA based on 2D airfoil theory
-  namespace AirfoilTheory2D {
-    // Can use this namespace to add functions relevant to 2D airfoil
-    // theory
-    void calculate_alpha(
-      double ws[],                 
-      const double zeroalphadir[], 
-      const double spanDir[],      
-      const double chodrNormalDir[], 
-      double twist, 
-      double ws2Da[],   
-      double &alpha);
-  }
+// Things to calculate lift, drag, and AOA based on 2D airfoil theory
+namespace AirfoilTheory2D {
+// Can use this namespace to add functions relevant to 2D airfoil
+// theory
+void calculate_alpha(
+  double ws[],
+  const double zeroalphadir[],
+  const double spanDir[],
+  const double chodrNormalDir[],
+  double twist,
+  double ws2Da[],
+  double& alpha);
+} // namespace AirfoilTheory2D
 
 #ifdef ENABLE_ACTSIMPLE_PTMOTION
 struct ActSimpleUpdatePoints
 {
   using execution_space = ActuatorFixedExecutionSpace;
 
-  ActSimpleUpdatePoints(ActuatorBulkSimple& actBulk, 
-                        int numpoints, double p1[], double p2[]);
+  ActSimpleUpdatePoints(
+    ActuatorBulkSimple& actBulk, int numpoints, double p1[], double p2[]);
   void operator()(int index) const;
 
   ActDualViewHelper<ActuatorFixedMemSpace> helper_;
@@ -61,12 +62,13 @@ struct ActSimpleUpdatePoints
   ActFixScalarInt offsets_;
   const int turbId_;
   const int numpoints_;
-  double p1_[3];  // Start position of blade
-  double p2_[3];  // End position of blade
+  double p1_[3]; // Start position of blade
+  double p2_[3]; // End position of blade
 };
 #endif
 
-void ActSimpleWriteToFile(ActuatorBulkSimple& actBulk, const ActuatorMetaSimple& actMeta);
+void ActSimpleWriteToFile(
+  ActuatorBulkSimple& actBulk, const ActuatorMetaSimple& actMeta);
 
 struct ActSimpleAssignVel
 {
@@ -95,7 +97,8 @@ void ActSimpleComputeForce(
 struct ActSimpleComputeThrustInnerLoop
 {
 
-  ActSimpleComputeThrustInnerLoop(ActuatorBulkSimple& actBulk) : actBulk_(actBulk)
+  ActSimpleComputeThrustInnerLoop(ActuatorBulkSimple& actBulk)
+    : actBulk_(actBulk)
   {
   }
   void operator()(

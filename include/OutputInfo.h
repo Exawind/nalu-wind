@@ -7,41 +7,40 @@
 // for more details.
 //
 
-
-
 #ifndef OutputInfo_h
 #define OutputInfo_h
 
 #include <string>
 #include <set>
 
-namespace YAML { class Node; }
-
-namespace Ioss{
-  class PropertyManager;
+namespace YAML {
+class Node;
 }
 
-namespace sierra{
-namespace nalu{
+namespace Ioss {
+class PropertyManager;
+}
+
+namespace sierra {
+namespace nalu {
 
 class OutputInfo
 {
 public:
-  
   OutputInfo();
   ~OutputInfo();
-  
-  void load(const YAML::Node & node);
+
+  void load(const YAML::Node& node);
 
   // helper methods for compression options
   int get_output_compression();
   bool get_output_shuffle();
-  
+
   int get_restart_compression();
   bool get_restart_shuffle();
-  
+
   std::string outputDBName_;
-  
+
   // catalyst options
   std::string catalystFileName_;
   std::string catalystParseJson_;
@@ -49,7 +48,7 @@ public:
 
   int outputFreq_;
   int outputStart_;
-  bool outputNodeSet_; 
+  bool outputNodeSet_;
   int serializedIOGroupSize_;
   bool hasOutputBlock_;
   bool hasRestartBlock_;
@@ -70,15 +69,14 @@ public:
   std::pair<bool, double> userWallTimeRestart_;
 
   // manage the properties for io
-  Ioss::PropertyManager *outputPropertyManager_;
-  Ioss::PropertyManager *restartPropertyManager_;
+  Ioss::PropertyManager* outputPropertyManager_;
+  Ioss::PropertyManager* restartPropertyManager_;
 
   std::set<std::string> outputFieldNameSet_;
   std::set<std::string> restartFieldNameSet_;
-
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

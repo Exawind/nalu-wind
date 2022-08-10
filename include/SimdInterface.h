@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef SIMDINTERFACE_H
 #define SIMDINTERFACE_H
 
@@ -30,30 +29,33 @@ typedef stk::simd::Double SimdDouble;
 
 typedef SimdDouble DoubleType;
 
-template<typename T>
-using AlignedVector = std::vector<T, non_std::AlignedAllocator<T, KOKKOS_MEMORY_ALIGNMENT>>;
+template <typename T>
+using AlignedVector =
+  std::vector<T, non_std::AlignedAllocator<T, KOKKOS_MEMORY_ALIGNMENT>>;
 
 using ScalarAlignedVector = AlignedVector<DoubleType>;
 
 static constexpr int simdLen = stk::simd::ndoubles;
 
 KOKKOS_INLINE_FUNCTION
-size_t get_num_simd_groups(size_t length)
+size_t
+get_num_simd_groups(size_t length)
 {
-    size_t numSimdGroups = length/simdLen;
-    const size_t remainder = length%simdLen;
-    if (remainder > 0) {
-      numSimdGroups += 1;
-    }
-    return numSimdGroups;
+  size_t numSimdGroups = length / simdLen;
+  const size_t remainder = length % simdLen;
+  if (remainder > 0) {
+    numSimdGroups += 1;
+  }
+  return numSimdGroups;
 }
 
 KOKKOS_INLINE_FUNCTION
-int get_length_of_next_simd_group(int index, int length)
+int
+get_length_of_next_simd_group(int index, int length)
 {
   int nextLength = simdLen;
-  if (length - index*simdLen < simdLen) {
-    nextLength = length - index*simdLen;
+  if (length - index * simdLen < simdLen) {
+    nextLength = length - index * simdLen;
   }
   if (nextLength < 0 || nextLength > simdLen) {
     nextLength = 0;
@@ -61,8 +63,8 @@ int get_length_of_next_simd_group(int index, int length)
   return nextLength;
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 typedef sierra::nalu::DoubleType DoubleType;
 #endif /* SIMDINTERFACE_H */

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef OVERSETCONSTRAINTBASE_H
 #define OVERSETCONSTRAINTBASE_H
 
@@ -21,10 +20,7 @@ class OversetConstraintBase : public SolverAlgorithm
 {
 public:
   OversetConstraintBase(
-    Realm&,
-    stk::mesh::Part*,
-    EquationSystem*,
-    stk::mesh::FieldBase*);
+    Realm&, stk::mesh::Part*, EquationSystem*, stk::mesh::FieldBase*);
 
   virtual ~OversetConstraintBase() = default;
 
@@ -45,8 +41,7 @@ protected:
   ScalarFieldType* dualNodalVolume_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* OVERSETCONSTRAINTBASE_H */

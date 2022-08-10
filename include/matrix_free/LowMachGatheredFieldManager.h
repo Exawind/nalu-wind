@@ -54,7 +54,7 @@ private:
   const const_elem_mesh_index_view<p> conn;
   const const_face_mesh_index_view<p> exposed_faces;
   const const_node_mesh_index_view dirichlet_nodes;
-  
+
   LowMachResidualFields<p> fields;
   LowMachLinearizedResidualFields<p> coefficient_fields;
   LowMachBCFields<p> bc;

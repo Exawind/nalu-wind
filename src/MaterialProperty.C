@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <Realm.h>
 #include <MaterialProperty.h>
 #include <MaterialPropertys.h>
@@ -17,8 +15,8 @@
 #include <yaml-cpp/yaml.h>
 #include <NaluParsing.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -28,8 +26,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-MaterialProperty::MaterialProperty(
-  MaterialPropertys &matPropertys)
+MaterialProperty::MaterialProperty(MaterialPropertys& matPropertys)
   : matPropertys_(matPropertys)
 {
   // nothing to do
@@ -39,7 +36,7 @@ MaterialProperty::MaterialProperty(
 //-------- destructor ------------------------------------------------------
 //--------------------------------------------------------------------------
 MaterialProperty::~MaterialProperty()
-{ 
+{
   // does nothing
 }
 
@@ -47,11 +44,10 @@ MaterialProperty::~MaterialProperty()
 //-------- load ------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-MaterialProperty::load(const YAML::Node & /* node */) 
+MaterialProperty::load(const YAML::Node& /* node */)
 {
   // nothing...
 }
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

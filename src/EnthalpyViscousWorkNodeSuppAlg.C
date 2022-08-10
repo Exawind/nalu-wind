@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <EnthalpyViscousWorkNodeSuppAlg.h>
 #include <SupplementalAlgorithm.h>
 #include <FieldTypeDef.h>
@@ -21,8 +19,8 @@
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -32,8 +30,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-EnthalpyViscousWorkNodeSuppAlg::EnthalpyViscousWorkNodeSuppAlg(
-  Realm &realm)
+EnthalpyViscousWorkNodeSuppAlg::EnthalpyViscousWorkNodeSuppAlg(Realm& realm)
   : SupplementalAlgorithm(realm),
     dudx_(NULL),
     viscosity_(NULL),
@@ -42,11 +39,15 @@ EnthalpyViscousWorkNodeSuppAlg::EnthalpyViscousWorkNodeSuppAlg(
     nDim_(realm_.meta_data().spatial_dimension())
 {
   // save off fields
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
-  dudx_ = meta_data.get_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
-  const std::string viscName = realm.is_turbulent() ? "effective_viscosity_u" : "viscosity";
-  viscosity_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, viscName);
-  dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
+  stk::mesh::MetaData& meta_data = realm_.meta_data();
+  dudx_ =
+    meta_data.get_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
+  const std::string viscName =
+    realm.is_turbulent() ? "effective_viscosity_u" : "viscosity";
+  viscosity_ =
+    meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, viscName);
+  dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
 }
 
 //--------------------------------------------------------------------------
@@ -56,44 +57,43 @@ void
 EnthalpyViscousWorkNodeSuppAlg::setup()
 {
   // nothing to do now
-  }
+}
 
 //--------------------------------------------------------------------------
 //-------- node_execute ----------------------------------------------------
 //--------------------------------------------------------------------------
 void
 EnthalpyViscousWorkNodeSuppAlg::node_execute(
-  double *lhs,
-  double *rhs,
-  stk::mesh::Entity node)
+  double* lhs, double* rhs, stk::mesh::Entity node)
 {
   // viscous work
-  const double *dudx      = stk::mesh::field_data(*dudx_, node );
-  const double viscosity  = *stk::mesh::field_data(*viscosity_, node );
-  const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node );
+  const double* dudx = stk::mesh::field_data(*dudx_, node);
+  const double viscosity = *stk::mesh::field_data(*viscosity_, node);
+  const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node);
 
   // form divU
   double divU = 0.0;
-  for ( int j = 0; j < nDim_; ++j ) {
-    const int row = j*nDim_;
-    divU += dudx[row+j];
+  for (int j = 0; j < nDim_; ++j) {
+    const int row = j * nDim_;
+    divU += dudx[row + j];
   }
 
   double viscousWork = 0.0;
-  for ( int i = 0; i < nDim_; ++i ) {
-    const int offSet = nDim_*i;
-    for ( int j = 0; j < nDim_; ++j ) {
-      viscousWork += dudx[offSet+j]*(dudx[offSet+j] + dudx[nDim_*j+i]);
-      if ( i == j )
-        viscousWork -= dudx[offSet+j]*2.0/3.0*divU*includeDivU_;
+  for (int i = 0; i < nDim_; ++i) {
+    const int offSet = nDim_ * i;
+    for (int j = 0; j < nDim_; ++j) {
+      viscousWork +=
+        dudx[offSet + j] * (dudx[offSet + j] + dudx[nDim_ * j + i]);
+      if (i == j)
+        viscousWork -= dudx[offSet + j] * 2.0 / 3.0 * divU * includeDivU_;
     }
   }
   viscousWork *= viscosity;
 
   // assemble
-  rhs[0] += viscousWork*dualVolume;
+  rhs[0] += viscousWork * dualVolume;
   lhs[0] += 0.0;
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

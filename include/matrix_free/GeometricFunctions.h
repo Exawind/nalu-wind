@@ -237,7 +237,6 @@ linear_hex_jacobian(const BoxArray& box, int k, int j, int i)
   return jac;
 }
 
-
 } // namespace geom
 } // namespace matrix_free
 } // namespace nalu

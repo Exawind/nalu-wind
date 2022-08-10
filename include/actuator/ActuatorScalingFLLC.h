@@ -17,9 +17,9 @@
 #endif
 #include <stdexcept>
 
-namespace sierra{
-namespace nalu{
-namespace FLLC{
+namespace sierra {
+namespace nalu {
+namespace FLLC {
 
 template <typename range_type, typename helper_type>
 void
@@ -94,5 +94,7 @@ scale_lift_force(
   }
   }
 }
-}}}
+} // namespace FLLC
+} // namespace nalu
+} // namespace sierra
 #endif /* ACTUATORSCALINGFLLC_H_ */

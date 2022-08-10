@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef Enums_h
 #define Enums_h
 
@@ -18,23 +16,23 @@
 namespace sierra {
 namespace nalu {
 
-enum AlgorithmType{
-  INTERIOR  = 0,
+enum AlgorithmType {
+  INTERIOR = 0,
   BOUNDARY,
-  INFLOW    ,
-  WALL      ,
-  WALL_FCN  ,
-  OPEN      ,
-  MASS      ,
-  SRC       ,
-  SYMMETRY  ,
-  WALL_HF   ,
-  WALL_CHT  ,
-  WALL_RAD  ,
-  NON_CONFORMAL ,
-  ELEM_SOURCE ,
-  OVERSET ,
-  WALL_ABL ,
+  INFLOW,
+  WALL,
+  WALL_FCN,
+  OPEN,
+  MASS,
+  SRC,
+  SYMMETRY,
+  WALL_HF,
+  WALL_CHT,
+  WALL_RAD,
+  NON_CONFORMAL,
+  ELEM_SOURCE,
+  OVERSET,
+  WALL_ABL,
 
   TOP_ABL,
 
@@ -53,15 +51,15 @@ enum AlgorithmType{
   Z_SYM_STRONG
 };
 
-enum BoundaryConditionType{
-  INFLOW_BC    = 1,
-  OPEN_BC      = 2,
-  WALL_BC      = 3,
-  SYMMETRY_BC  = 4,
-  PERIODIC_BC  = 5,
+enum BoundaryConditionType {
+  INFLOW_BC = 1,
+  OPEN_BC = 2,
+  WALL_BC = 3,
+  SYMMETRY_BC = 4,
+  PERIODIC_BC = 5,
   NON_CONFORMAL_BC = 6,
   OVERSET_BC = 7,
-  ABLTOP_BC  = 8
+  ABLTOP_BC = 8
 };
 
 enum EquationType {
@@ -140,7 +138,7 @@ static const std::string PropertyIdentifierNames[] = {
   "scattering_coefficient"};
 
 // prop enum and name below
-enum  MaterialPropertyType {
+enum MaterialPropertyType {
   CONSTANT_MAT = 0,
   MIXFRAC_MAT = 1,
   POLYNOMIAL_MAT = 2,
@@ -153,10 +151,7 @@ enum  MaterialPropertyType {
   MaterialPropertyType_END
 };
 
-enum NaluState {
-  NALU_STATE_N = 0,
-  NALU_STATE_NM1 = 1
-};
+enum NaluState { NALU_STATE_N = 0, NALU_STATE_NM1 = 1 };
 
 enum class TurbulenceModel {
   LAMINAR,
@@ -175,8 +170,8 @@ enum class TurbulenceModel {
 
 // matching string name index into above enums (must match PERFECTLY)
 static const std::string TurbulenceModelNames[] = {
-  "laminar", "ksgs",      "smagorinsky", "wale", "sst", "sstlr", "sst_des",
-  "sst_ams", "sst_iddes",   "ke",  "ko"};
+  "laminar", "ksgs",    "smagorinsky", "wale", "sst", "sstlr",
+  "sst_des", "sst_ams", "sst_iddes",   "ke",   "ko"};
 
 enum TurbulenceModelConstant {
   TM_cMu = 0,
@@ -343,23 +338,19 @@ static std::map<std::string, ActuatorType> ActuatorTypeMap = {
   {"ActLinePointDrag", ActuatorType::ActLinePointDrag},
   {"ActLineFAST", ActuatorType::ActLineFAST},
   {"ActDiskFAST", ActuatorType::ActDiskFAST},
-  {"ActLineSimple",ActuatorType::ActLineSimple},
-  {"ActLineSimpleNGP",ActuatorType::ActLineSimpleNGP},
+  {"ActLineSimple", ActuatorType::ActLineSimple},
+  {"ActLineSimpleNGP", ActuatorType::ActLineSimpleNGP},
   {"ActLineFASTNGP", ActuatorType::ActLineFASTNGP},
   {"AdvActLineFASTNGP", ActuatorType::AdvActLineFASTNGP},
   {"ActDiskFASTNGP", ActuatorType::ActDiskFASTNGP}};
 
-
 enum class EntrainmentMethod { SPECIFIED = 0, COMPUTED = 1, CLASSIC = 2 };
 
-static std::map<std::string, EntrainmentMethod> EntrainmentMethodMap
-{
-  {"computed", EntrainmentMethod::COMPUTED}, 
-  {"specified", EntrainmentMethod::SPECIFIED}
-};
-
+static std::map<std::string, EntrainmentMethod> EntrainmentMethodMap{
+  {"computed", EntrainmentMethod::COMPUTED},
+  {"specified", EntrainmentMethod::SPECIFIED}};
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

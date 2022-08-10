@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef NODEKERNELUTILS_H
 #define NODEKERNELUTILS_H
 
@@ -22,8 +21,9 @@
 namespace sierra {
 namespace nalu {
 
-template<typename LambdaGeneral, typename LambdaUserSrc>
-void process_ngp_node_kernels(
+template <typename LambdaGeneral, typename LambdaUserSrc>
+void
+process_ngp_node_kernels(
   std::map<AlgorithmType, SolverAlgorithm*>& solverAlgMap,
   Realm& realm,
   stk::mesh::Part* part,
@@ -41,11 +41,11 @@ void process_ngp_node_kernels(
     // Custom node src kernels for this equation system
     lambdaGeneral(*nodeAlg);
 
-    const auto it = realm.solutionOptions_->srcTermsMap_.find(eqSystem->eqnTypeName_);
+    const auto it =
+      realm.solutionOptions_->srcTermsMap_.find(eqSystem->eqnTypeName_);
     if (it != realm.solutionOptions_->srcTermsMap_.end()) {
-      NaluEnv::self().naluOutputP0()
-        << "Processing user source terms for "
-        << eqSystem->eqnTypeName_ << std::endl;
+      NaluEnv::self().naluOutputP0() << "Processing user source terms for "
+                                     << eqSystem->eqnTypeName_ << std::endl;
       for (auto& srcName : it->second) {
         lambdaUsrSrc(*nodeAlg, srcName);
       }
@@ -55,7 +55,7 @@ void process_ngp_node_kernels(
   }
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NODEKERNELUTILS_H */

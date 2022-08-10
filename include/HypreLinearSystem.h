@@ -49,9 +49,16 @@ using DoubleViewHost = DoubleView::HostMirror;
 using HypreIntTypeView = Kokkos::View<HypreIntType*, sierra::nalu::MemSpace>;
 using HypreIntTypeViewHost = HypreIntTypeView::HostMirror;
 
-// const random access views for read only, noncoalesced (texture) memory fetches
-using UnsignedViewRA = Kokkos::View<const unsigned*, sierra::nalu::MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >;
-using HypreIntTypeViewRA = Kokkos::View<const HypreIntType*, sierra::nalu::MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >;
+// const random access views for read only, noncoalesced (texture) memory
+// fetches
+using UnsignedViewRA = Kokkos::View<
+  const unsigned*,
+  sierra::nalu::MemSpace,
+  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+using HypreIntTypeViewRA = Kokkos::View<
+  const HypreIntType*,
+  sierra::nalu::MemSpace,
+  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 // This 2D view needs to be LayoutLeft. Do NOT change
 using DoubleView2D =
@@ -139,13 +146,13 @@ public:
   HypreIntTypeViewHost cols_host_;
 
   HypreIntTypeView rows_dev_;
-  HypreIntTypeViewHost rows_host_;  
+  HypreIntTypeViewHost rows_host_;
 
   HypreIntTypeView2D rhs_rows_dev_;
-  HypreIntTypeView2DHost rhs_rows_host_;  
+  HypreIntTypeView2DHost rhs_rows_host_;
 
 #ifdef HYPRE_LINEAR_SYSTEM_DEBUG
-  FILE * output_ = NULL;
+  FILE* output_ = NULL;
   char oname_[50];
 #endif
 
@@ -229,9 +236,27 @@ public:
   double copy_hypre_to_stk(stk::mesh::FieldBase*);
 
 #ifdef HYPRE_LINEAR_SYSTEM_DEBUG
-  void scanBufferForBadValues(double * ptr, int N, const char * file, const char * func, int line, char *bufferName);
-  void scanOwnedIndicesForBadValues(HypreIntType * rows, HypreIntType * cols, int N, const char * file, const char * func, int line);
-  void scanSharedIndicesForBadValues(HypreIntType * rows, HypreIntType * cols, int N, const char * file, const char * func, int line);
+  void scanBufferForBadValues(
+    double* ptr,
+    int N,
+    const char* file,
+    const char* func,
+    int line,
+    char* bufferName);
+  void scanOwnedIndicesForBadValues(
+    HypreIntType* rows,
+    HypreIntType* cols,
+    int N,
+    const char* file,
+    const char* func,
+    int line);
+  void scanSharedIndicesForBadValues(
+    HypreIntType* rows,
+    HypreIntType* cols,
+    int N,
+    const char* file,
+    const char* func,
+    int line);
 #endif
 
   /** Populate the LHS and RHS for the Dirichlet rows in linear system

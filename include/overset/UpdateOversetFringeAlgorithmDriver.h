@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef UPDATEOVERSETFRINGEALGORITHMDRIVER_H
 #define UPDATEOVERSETFRINGEALGORITHMDRIVER_H
 
@@ -21,7 +20,7 @@ namespace stk {
 namespace mesh {
 class FieldBase;
 }
-}
+} // namespace stk
 
 namespace sierra {
 namespace nalu {
@@ -42,7 +41,7 @@ public:
   std::vector<OversetFieldData> fields_;
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* UPDATEOVERSETFRINGEALGORITHMDRIVER_H */

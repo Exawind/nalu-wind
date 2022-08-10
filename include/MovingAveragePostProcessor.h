@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef MovingAveragePostProcessor_h
 #define MovingAveragePostProcessor_h
 
@@ -16,34 +15,36 @@
 #include <map>
 #include <vector>
 
-namespace stk { namespace mesh { class BulkData; } }
+namespace stk {
+namespace mesh {
+class BulkData;
+}
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class TimeIntegrator;
-
-
 
 class ExponentialMovingAverager
 {
 public:
-  ExponentialMovingAverager(double timeScale = 0.0, bool isInit = false, double alpha = -1.);
+  ExponentialMovingAverager(
+    double timeScale = 0.0, bool isInit = false, double alpha = -1.);
 
   double compute_updated_average(double oldAvg, double newVal);
   void compute_and_set_alpha(double dt);
   void init_state(bool init);
+
 private:
   double timeScale_;
   bool isInit_;
   double alpha_;
 };
 
-
 class MovingAveragePostProcessor
 {
 public:
-
   // Field naming rule
   static std::string filtered_field_name(std::string unfilteredFieldName)
   {
@@ -76,6 +77,6 @@ private:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <EnthalpyLowSpeedCompressibleNodeSuppAlg.h>
 #include <SupplementalAlgorithm.h>
 #include <FieldTypeDef.h>
@@ -21,8 +19,8 @@
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -32,8 +30,8 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-EnthalpyLowSpeedCompressibleNodeSuppAlg::EnthalpyLowSpeedCompressibleNodeSuppAlg(
-  Realm &realm)
+EnthalpyLowSpeedCompressibleNodeSuppAlg::
+  EnthalpyLowSpeedCompressibleNodeSuppAlg(Realm& realm)
   : SupplementalAlgorithm(realm),
     pressureN_(NULL),
     pressureNp1_(NULL),
@@ -41,10 +39,13 @@ EnthalpyLowSpeedCompressibleNodeSuppAlg::EnthalpyLowSpeedCompressibleNodeSuppAlg
     dt_(0.0)
 {
   // save off fields
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
-  pressureN_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure_old");
-  pressureNp1_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure");
-  dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
+  stk::mesh::MetaData& meta_data = realm_.meta_data();
+  pressureN_ = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "pressure_old");
+  pressureNp1_ =
+    meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure");
+  dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
 }
 
 //--------------------------------------------------------------------------
@@ -61,17 +62,15 @@ EnthalpyLowSpeedCompressibleNodeSuppAlg::setup()
 //--------------------------------------------------------------------------
 void
 EnthalpyLowSpeedCompressibleNodeSuppAlg::node_execute(
-  double *lhs,
-  double *rhs,
-  stk::mesh::Entity node)
+  double* lhs, double* rhs, stk::mesh::Entity node)
 {
   // deal with lumped mass matrix
-  const double pN       = *stk::mesh::field_data(*pressureN_, node );
-  const double pNp1     = *stk::mesh::field_data(*pressureNp1_, node );
-  const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node );
-  rhs[0] += (pNp1 - pN)*dualVolume/dt_;
+  const double pN = *stk::mesh::field_data(*pressureN_, node);
+  const double pNp1 = *stk::mesh::field_data(*pressureNp1_, node);
+  const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node);
+  rhs[0] += (pNp1 - pN) * dualVolume / dt_;
   lhs[0] += 0.0;
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

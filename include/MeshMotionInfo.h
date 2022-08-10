@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef MeshMotionInfo_h
 #define MeshMotionInfo_h
 
@@ -16,18 +14,18 @@
 #include <string>
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class MeshMotionInfo
 {
- public:
+public:
   MeshMotionInfo(
-   std::vector<std::string> meshMotionBlock, 
-   const double omega, 
-   std::vector<double> centroid,
-   std::vector<double> unitVec,
-   const bool computeCentroid);
+    std::vector<std::string> meshMotionBlock,
+    const double omega,
+    std::vector<double> centroid,
+    std::vector<double> unitVec,
+    const bool computeCentroid);
 
   ~MeshMotionInfo();
 
@@ -40,6 +38,6 @@ class MeshMotionInfo
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

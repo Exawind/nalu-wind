@@ -7,17 +7,15 @@
 // for more details.
 //
 
-
-
 #ifndef AlgorithmDriver_h
 #define AlgorithmDriver_h
 
-#include<Enums.h>
+#include <Enums.h>
 
-#include<map>
+#include <map>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 class Algorithm;
@@ -25,20 +23,18 @@ class Algorithm;
 class AlgorithmDriver
 {
 public:
-
-  AlgorithmDriver(
-    Realm &realm);
+  AlgorithmDriver(Realm& realm);
   virtual ~AlgorithmDriver();
 
   virtual void pre_work(){};
   virtual void execute();
   virtual void post_work(){};
 
-  Realm &realm_;
-  std::map<AlgorithmType, Algorithm *> algMap_;
+  Realm& realm_;
+  std::map<AlgorithmType, Algorithm*> algMap_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

@@ -3,15 +3,14 @@
 
 #include "NgpMotion.h"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-class MotionDeformingInteriorKernel : public NgpMotionKernel<MotionDeformingInteriorKernel>
+class MotionDeformingInteriorKernel
+  : public NgpMotionKernel<MotionDeformingInteriorKernel>
 {
 public:
-  MotionDeformingInteriorKernel(
-    stk::mesh::MetaData&,
-    const YAML::Node&);
+  MotionDeformingInteriorKernel(stk::mesh::MetaData&, const YAML::Node&);
 
   KOKKOS_FUNCTION
   MotionDeformingInteriorKernel() = default;
@@ -26,9 +25,8 @@ public:
    * @return Transformation matrix
    */
   KOKKOS_FUNCTION
-  virtual mm::TransMatType build_transformation(
-    const double& time,
-    const mm::ThreeDVecType& xyz);
+  virtual mm::TransMatType
+  build_transformation(const double& time, const mm::ThreeDVecType& xyz);
 
   /** Function to compute motion-specific velocity
    *
@@ -55,7 +53,7 @@ public:
     stk::mesh::BulkData&,
     stk::mesh::PartVector&,
     stk::mesh::PartVector&,
-    bool& computedMeshVelDiv );
+    bool& computedMeshVelDiv);
 
 private:
   void load(const YAML::Node&);
@@ -63,11 +61,11 @@ private:
   mm::ThreeDVecType xyzMin_;
   mm::ThreeDVecType xyzMax_;
 
-  mm::ThreeDVecType amplitude_{0.0,0.0,0.0};
-  mm::ThreeDVecType frequency_{0.0,0.0,0.0};
+  mm::ThreeDVecType amplitude_{0.0, 0.0, 0.0};
+  mm::ThreeDVecType frequency_{0.0, 0.0, 0.0};
 };
 
-} // nalu
-} // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MOTIONDEFORMINGINTERIORKERNEL_H */

@@ -15,31 +15,39 @@
 
 #include <vector>
 
-namespace stk { namespace mesh { class Part; } }
-namespace stk { namespace mesh { typedef std::vector<Part*> PartVector; } }
-namespace stk { namespace mesh { class BulkData; } }
-typedef stk::mesh::Field<double, stk::mesh::Cartesian>  VectorFieldType;
+namespace stk {
+namespace mesh {
+class Part;
+}
+} // namespace stk
+namespace stk {
+namespace mesh {
+typedef std::vector<Part*> PartVector;
+}
+} // namespace stk
+namespace stk {
+namespace mesh {
+class BulkData;
+}
+} // namespace stk
+typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
 
 namespace sierra {
 namespace nalu {
 namespace promotion {
 
-  std::pair<stk::mesh::PartVector, stk::mesh::PartVector>
-  create_tensor_product_hex_elements(
-    std::vector<double> nodeLocs1D,
-    stk::mesh::BulkData& bulk,
-    const VectorFieldType& coordField,
-    const stk::mesh::PartVector& elemPartsToBePromoted);
+std::pair<stk::mesh::PartVector, stk::mesh::PartVector>
+create_tensor_product_hex_elements(
+  std::vector<double> nodeLocs1D,
+  stk::mesh::BulkData& bulk,
+  const VectorFieldType& coordField,
+  const stk::mesh::PartVector& elemPartsToBePromoted);
 
-  stk::mesh::PartVector
-  create_promoted_boundary_elements(
-    int p,
-    stk::mesh::BulkData& bulk,
-    const stk::mesh::PartVector& meshParts);
+stk::mesh::PartVector create_promoted_boundary_elements(
+  int p, stk::mesh::BulkData& bulk, const stk::mesh::PartVector& meshParts);
 
 } // namespace promotion
 } // namespace nalu
 } // namespace sierra
-
 
 #endif

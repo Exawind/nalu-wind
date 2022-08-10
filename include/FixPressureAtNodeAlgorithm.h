@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef FIXPRESSUREATNODEALGORITHM_H
 #define FIXPRESSUREATNODEALGORITHM_H
 
@@ -21,7 +20,7 @@ namespace stk {
 namespace mesh {
 class Part;
 }
-}
+} // namespace stk
 
 namespace sierra {
 namespace nalu {
@@ -48,9 +47,10 @@ struct FixPressureAtNodeInfo;
  *    fix_pressure_at_node:
  *      node_lookup_type: spatial_location      # Use nearest node search
  *      value: 0.0                              # Reference pressure
- *      location: [10.0, 10.0, 10.0]            # Spatial location where pressure is referenced
- *      search_target_part: [Unspecified-2-HEX] # List of mesh parts to be searched
- *      search_method: stk_kdtree               # Search method to determine nearest node
+ *      location: [10.0, 10.0, 10.0]            # Spatial location where
+ * pressure is referenced search_target_part: [Unspecified-2-HEX] # List of mesh
+ * parts to be searched search_method: stk_kdtree               # Search method
+ * to determine nearest node
  *  ```
  *
  *  Alternately, the user can specify an STK node identifier instead of
@@ -72,9 +72,7 @@ class FixPressureAtNodeAlgorithm : public SolverAlgorithm
 {
 public:
   FixPressureAtNodeAlgorithm(
-    Realm& realm,
-    stk::mesh::Part* part,
-    EquationSystem* eqSystem);
+    Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem);
 
   virtual ~FixPressureAtNodeAlgorithm();
 
@@ -100,7 +98,8 @@ public:
   //! Reference to the pressure field
   ScalarFieldType* pressure_{nullptr};
 
-  //! List of nodes where pressure is referenced/fixed. Should be a list of size = 1
+  //! List of nodes where pressure is referenced/fixed. Should be a list of size
+  //! = 1
   stk::mesh::NgpMesh::ConnectedNodes refNodeList_;
   stk::mesh::Entity targetNode_;
 
@@ -113,7 +112,7 @@ public:
   bool fixPressureNode_{false};
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* FIXPRESSUREATNODEALGORITHM_H */

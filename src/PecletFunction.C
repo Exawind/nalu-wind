@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <PecletFunction.h>
 #include "SimdInterface.h"
 
@@ -16,8 +14,8 @@
 #include <algorithm>
 #include <cmath>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -27,10 +25,9 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-template<typename T>
-ClassicPecletFunction<T>::ClassicPecletFunction( const T A, const T hf)
-  : A_(A),
-    hf_(hf)
+template <typename T>
+ClassicPecletFunction<T>::ClassicPecletFunction(const T A, const T hf)
+  : A_(A), hf_(hf)
 {
   // nothing to do
 }
@@ -38,11 +35,12 @@ ClassicPecletFunction<T>::ClassicPecletFunction( const T A, const T hf)
 //--------------------------------------------------------------------------
 //-------- execute ---------------------------------------------------------
 //--------------------------------------------------------------------------
-template<typename T>
-T ClassicPecletFunction<T>::execute(const T pecletNumber)
+template <typename T>
+T
+ClassicPecletFunction<T>::execute(const T pecletNumber)
 {
-  const T modPeclet = hf_*pecletNumber;
-  return modPeclet*modPeclet/(5.0 + modPeclet*modPeclet);
+  const T modPeclet = hf_ * pecletNumber;
+  return modPeclet * modPeclet / (5.0 + modPeclet * modPeclet);
 }
 
 //==========================================================================
@@ -53,22 +51,20 @@ T ClassicPecletFunction<T>::execute(const T pecletNumber)
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-template<typename T>
-TanhFunction<T>::TanhFunction(T c1, T c2)
-  : c1_(c1),
-    c2_(c2)
+template <typename T>
+TanhFunction<T>::TanhFunction(T c1, T c2) : c1_(c1), c2_(c2)
 {
   // nothing to do; assume that the functional form varies between 0 and 1
 }
 
-
 //--------------------------------------------------------------------------
 //-------- execute ---------------------------------------------------------
 //--------------------------------------------------------------------------
-template<typename T>
-T TanhFunction<T>::execute(const T indVar)
+template <typename T>
+T
+TanhFunction<T>::execute(const T indVar)
 {
-  return 0.50*(1.0+stk::math::tanh((indVar-c1_)/c2_));
+  return 0.50 * (1.0 + stk::math::tanh((indVar - c1_) / c2_));
 }
 
 template class ClassicPecletFunction<double>;
@@ -80,4 +76,4 @@ template class TanhFunction<DoubleType>;
 #endif
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

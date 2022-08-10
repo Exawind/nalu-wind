@@ -7,15 +7,13 @@
 // for more details.
 //
 
-
-
 #include <SupplementalAlgorithm.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -25,12 +23,10 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-SupplementalAlgorithm::SupplementalAlgorithm(
-  Realm &realm) 
-  : realm_(realm)
+SupplementalAlgorithm::SupplementalAlgorithm(Realm& realm) : realm_(realm)
 {
   // nothing to do
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

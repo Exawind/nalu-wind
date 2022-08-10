@@ -7,46 +7,43 @@
 // for more details.
 //
 
-
-
 #ifndef AssembleNodalGradNonConformalAlgorithm_h
 #define AssembleNodalGradNonConformalAlgorithm_h
 
-#include<Algorithm.h>
-#include<FieldTypeDef.h>
+#include <Algorithm.h>
+#include <FieldTypeDef.h>
 
 // stk
 #include <stk_mesh/base/Part.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class AssembleNodalGradNonConformalAlgorithm : public Algorithm
 {
 public:
-
   AssembleNodalGradNonConformalAlgorithm(
-    Realm &realm,
-    stk::mesh::Part *part,
-    ScalarFieldType *scalarQ,
-    VectorFieldType *dqdx);
+    Realm& realm,
+    stk::mesh::Part* part,
+    ScalarFieldType* scalarQ,
+    VectorFieldType* dqdx);
 
   ~AssembleNodalGradNonConformalAlgorithm();
 
   void execute();
 
-  ScalarFieldType *scalarQ_;
-  VectorFieldType *dqdx_;
-  
-  ScalarFieldType *dualNodalVolume_;
-  GenericFieldType *exposedAreaVec_;
+  ScalarFieldType* scalarQ_;
+  VectorFieldType* dqdx_;
 
-  std::vector< const stk::mesh::FieldBase *> ghostFieldVec_;
+  ScalarFieldType* dualNodalVolume_;
+  GenericFieldType* exposedAreaVec_;
+
+  std::vector<const stk::mesh::FieldBase*> ghostFieldVec_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

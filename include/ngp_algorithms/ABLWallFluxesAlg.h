@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef ABLWALLFLUXESALG_H
 #define ABLWALLFLUXESALG_H
 
@@ -21,7 +20,6 @@
 
 #include "NaluParsing.h"
 
-
 namespace sierra {
 namespace nalu {
 
@@ -29,10 +27,10 @@ namespace nalu {
  *  temperature.  This boundary condition follows the algorithms outlined
  *  in
  *
- *     Basu, S., Holtslag, A. A. M., Bas, J. H., Van de Wiel, B. J. H., 
+ *     Basu, S., Holtslag, A. A. M., Bas, J. H., Van de Wiel, B. J. H.,
  *     Moene, A. F., and Steeneveld, G.-J., An Inconvenient "Truth" About
  *     Using Sensible Heat Flux As A Surface Boundary Condition in Models.
- *     Acta Geophysica, 56(1), pp. 88-99. 
+ *     Acta Geophysica, 56(1), pp. 88-99.
  *     https://doi.org/10.2478/s11600-007-0038-y
  *
  *  The velocity and temperature are sampled at the nodes opposing the
@@ -42,7 +40,7 @@ namespace nalu {
  *  compute wall shear stress with directionality related to the opposing
  *  node velocity vector.  Wall shear stress and heat flux can then be
  *  made locally fluctuating.
- * 
+ *
  *  An example from the input file is:
  *
  *```
@@ -66,9 +64,9 @@ namespace nalu {
  *           fluctuation_model: Moeng
  *           fluctuating_temperature_ref: surface
  *``
- *  
  *
- *  /sa WallFricVelAlgDriver, BdyLayerStatistics, WallFuncGeometryAlg  
+ *
+ *  /sa WallFricVelAlgDriver, BdyLayerStatistics, WallFuncGeometryAlg
  */
 
 template <typename BcAlgTraits>
@@ -100,25 +98,25 @@ private:
   ElemDataRequests faceData_;
   ElemDataRequests elemData_;
 
-  unsigned coordinates_     {stk::mesh::InvalidOrdinal};
-  unsigned velocityNp1_     {stk::mesh::InvalidOrdinal};
-  unsigned bcVelocity_      {stk::mesh::InvalidOrdinal};
-  unsigned temperatureNp1_  {stk::mesh::InvalidOrdinal};
-  unsigned density_         {stk::mesh::InvalidOrdinal};
-  unsigned bcHeatFlux_      {stk::mesh::InvalidOrdinal};
-  unsigned wallHeatFlux_    {stk::mesh::InvalidOrdinal};
-  unsigned specificHeat_    {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_  {stk::mesh::InvalidOrdinal};
-  unsigned wallFricVel_     {stk::mesh::InvalidOrdinal};
-  unsigned wallShearStress_ {stk::mesh::InvalidOrdinal};
-  unsigned wallNormDist_    {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned velocityNp1_{stk::mesh::InvalidOrdinal};
+  unsigned bcVelocity_{stk::mesh::InvalidOrdinal};
+  unsigned temperatureNp1_{stk::mesh::InvalidOrdinal};
+  unsigned density_{stk::mesh::InvalidOrdinal};
+  unsigned bcHeatFlux_{stk::mesh::InvalidOrdinal};
+  unsigned wallHeatFlux_{stk::mesh::InvalidOrdinal};
+  unsigned specificHeat_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned wallFricVel_{stk::mesh::InvalidOrdinal};
+  unsigned wallShearStress_{stk::mesh::InvalidOrdinal};
+  unsigned wallNormDist_{stk::mesh::InvalidOrdinal};
 
   //! Break the flux/surface temperature vs. time input table into vectors
   //! of each quantity and store in the following vectors.
-  std::vector<DblType> tableTimes_{0.0,999999.9};
-  std::vector<DblType> tableFluxes_{0.0,0.0};
+  std::vector<DblType> tableTimes_{0.0, 999999.9};
+  std::vector<DblType> tableFluxes_{0.0, 0.0};
   std::vector<DblType> tableSurfaceTemperatures_{301.0, 301.0};
-  std::vector<DblType> tableWeights_{0.0,0.0};
+  std::vector<DblType> tableWeights_{0.0, 0.0};
 
   //! Acceleration due to gravity (m/s^2)
   int gravityVectorComponent_{3};
@@ -133,14 +131,16 @@ private:
   //! The type of averaging to apply to the Monin-Obukhov scaling law.
   //! Current options are:
   //!   - none - Apply no averaging--treat all quantities locally.
-  //!   - planar - Apply planar averaging at the nodes adjacent to the wall nodes.
+  //!   - planar - Apply planar averaging at the nodes adjacent to the wall
+  //!   nodes.
   //! Future options that should be tried are:
-  //!   - time - Apply local time-averaging within some backward-in-time windows.
+  //!   - time - Apply local time-averaging within some backward-in-time
+  //!   windows.
   //!   - Lagrangian - Apply Lagrangian averaging backward along a streamline.
   std::string averagingType_{"planar"};
 
-  //! The model for applying fluctuations to the lower shear stress and heat flux.
-  //! Current options are:
+  //! The model for applying fluctuations to the lower shear stress and heat
+  //! flux. Current options are:
   //!   - none - Apply no fluctuations--use the base fluxes.
   //!   - Schumann - Use the model of Schumann.
   //!   - Moeng - Use the model of Moeng.
@@ -148,21 +148,23 @@ private:
   //!   - Brasseur - Brasseur's modification to Moeng.
   std::string fluctuationModel_{"Schumann"};
 
-
   //! In computing the fluctuating temperature flux, the difference between the
-  //! planar averaged or local temperature at height z1 and some reference temperature
-  //! is taken.  Moeng does not really define that reference temperature.  We find that
-  //! if it is taken as TRef, and the simulation is such that the z1 temperature crosses
-  //! Tref, the fluctuations get very large during that crossover, which is unphysical.
-  //! Therefore we add the option of using current surface temperature as this reference
-  //! that is subtracted from the z1 temperature.  
-  //! Current options are:
-  //!   - surface - Use current surface temperature (time varying) as the reference.
-  //!   - reference - Use the reference temperature (time invariant) as the reference.
+  //! planar averaged or local temperature at height z1 and some reference
+  //! temperature is taken.  Moeng does not really define that reference
+  //! temperature.  We find that if it is taken as TRef, and the simulation is
+  //! such that the z1 temperature crosses Tref, the fluctuations get very large
+  //! during that crossover, which is unphysical. Therefore we add the option of
+  //! using current surface temperature as this reference that is subtracted
+  //! from the z1 temperature. Current options are:
+  //!   - surface - Use current surface temperature (time varying) as the
+  //!   reference.
+  //!   - reference - Use the reference temperature (time invariant) as the
+  //!   reference.
   std::string fluctuatingTempRef_{"surface"};
 
   //! Monin-Obukhov scaling law constants.
-  //! These should really be variable given stability, but they are just fixed for now.
+  //! These should really be variable given stability, but they are just fixed
+  //! for now.
   DblType kappa_{0.41};
   DblType beta_m_{5.0};
   DblType beta_h_{5.0};
@@ -175,8 +177,7 @@ private:
   MasterElement* meSCS_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ABLWALLFLUXESALG_H */

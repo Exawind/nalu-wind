@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ElemDataRequestsGPU.h"
 
 namespace sierra {
@@ -15,7 +14,8 @@ namespace nalu {
 
 ElemDataRequestsGPU::ElemDataRequestsGPU(
   const nalu_ngp::FieldManager& fieldMgr,
-  const ElemDataRequests& dataReq, unsigned totalFields)
+  const ElemDataRequests& dataReq,
+  unsigned totalFields)
   : dataEnums(),
     hostDataEnums(),
     coordsFields_(),
@@ -39,13 +39,16 @@ ElemDataRequestsGPU::ElemDataRequestsGPU(
   copy_to_device();
 }
 
-void ElemDataRequestsGPU::copy_to_device()
+void
+ElemDataRequestsGPU::copy_to_device()
 {
   if (hostDataEnums[CURRENT_COORDINATES].size() > 0) {
-    Kokkos::deep_copy(dataEnums[CURRENT_COORDINATES], hostDataEnums[CURRENT_COORDINATES]);
+    Kokkos::deep_copy(
+      dataEnums[CURRENT_COORDINATES], hostDataEnums[CURRENT_COORDINATES]);
   }
   if (hostDataEnums[MODEL_COORDINATES].size() > 0) {
-    Kokkos::deep_copy(dataEnums[MODEL_COORDINATES], hostDataEnums[MODEL_COORDINATES]);
+    Kokkos::deep_copy(
+      dataEnums[MODEL_COORDINATES], hostDataEnums[MODEL_COORDINATES]);
   }
   Kokkos::deep_copy(coordsFields_, hostCoordsFields_);
   Kokkos::deep_copy(coordsFieldsTypes_, hostCoordsFieldsTypes_);
@@ -57,20 +60,24 @@ ElemDataRequestsGPU::fill_host_data_enums(
   const ElemDataRequests& dataReq, COORDS_TYPES ctype)
 {
   if (dataReq.get_data_enums(ctype).size() > 0) {
-    dataEnums[ctype] = DataEnumView("DataEnumsCurrentCoords", dataReq.get_data_enums(ctype).size());
+    dataEnums[ctype] = DataEnumView(
+      "DataEnumsCurrentCoords", dataReq.get_data_enums(ctype).size());
     hostDataEnums[ctype] = Kokkos::create_mirror_view(dataEnums[ctype]);
-    unsigned i=0;
-    for(ELEM_DATA_NEEDED d : dataReq.get_data_enums(ctype)) {
+    unsigned i = 0;
+    for (ELEM_DATA_NEEDED d : dataReq.get_data_enums(ctype)) {
       hostDataEnums[ctype](i++) = d;
     }
   }
 }
 
-void ElemDataRequestsGPU::fill_host_fields(
+void
+ElemDataRequestsGPU::fill_host_fields(
   const ElemDataRequests& dataReq, const nalu_ngp::FieldManager& fieldMgr)
 {
 #ifdef KOKKOS_ENABLE_CUDA
-  fields = FieldInfoView(Kokkos::ViewAllocateWithoutInitializing("Fields"), dataReq.get_fields().size());
+  fields = FieldInfoView(
+    Kokkos::ViewAllocateWithoutInitializing("Fields"),
+    dataReq.get_fields().size());
 #else
   fields = FieldInfoView("Fields", dataReq.get_fields().size());
 #endif
@@ -83,15 +90,20 @@ void ElemDataRequestsGPU::fill_host_fields(
   }
 }
 
-void ElemDataRequestsGPU::fill_host_coords_fields(
+void
+ElemDataRequestsGPU::fill_host_coords_fields(
   const ElemDataRequests& dataReq, const nalu_ngp::FieldManager& fieldMgr)
 {
 #ifdef KOKKOS_ENABLE_CUDA
-  coordsFields_ = FieldView(Kokkos::ViewAllocateWithoutInitializing("CoordsFields"), dataReq.get_coordinates_map().size());
+  coordsFields_ = FieldView(
+    Kokkos::ViewAllocateWithoutInitializing("CoordsFields"),
+    dataReq.get_coordinates_map().size());
 #else
-  coordsFields_ = FieldView("CoordsFields", dataReq.get_coordinates_map().size());
+  coordsFields_ =
+    FieldView("CoordsFields", dataReq.get_coordinates_map().size());
 #endif
-  coordsFieldsTypes_ = CoordsTypesView("CoordsFieldsTypes", dataReq.get_coordinates_map().size());
+  coordsFieldsTypes_ =
+    CoordsTypesView("CoordsFieldsTypes", dataReq.get_coordinates_map().size());
 
   hostCoordsFields_ = Kokkos::create_mirror_view(coordsFields_);
   hostCoordsFieldsTypes_ = Kokkos::create_mirror_view(coordsFieldsTypes_);
@@ -105,5 +117,5 @@ void ElemDataRequestsGPU::fill_host_coords_fields(
   }
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef EquationSystems_h
 #define EquationSystems_h
 
@@ -16,12 +14,12 @@
 #include "NaluParsedTypes.h"
 
 // stk
-namespace stk{
-namespace mesh{
+namespace stk {
+namespace mesh {
 class Part;
 class FieldBase;
-}
-}
+} // namespace mesh
+} // namespace stk
 
 #include <map>
 #include <string>
@@ -29,14 +27,14 @@ class FieldBase;
 #include <memory>
 
 namespace YAML {
-  class Node;
+class Node;
 }
 
-#include<vector>
-#include<string>
+#include <vector>
+#include <string>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 class EquationSystem;
@@ -44,7 +42,7 @@ class Simulation;
 class AlgorithmDriver;
 class UpdateOversetFringeAlgorithmDriver;
 
-typedef std::vector<EquationSystem *> EquationSystemVector;
+typedef std::vector<EquationSystem*> EquationSystemVector;
 
 /** A collection of Equations to be solved on a Realm
  *
@@ -57,75 +55,63 @@ typedef std::vector<EquationSystem *> EquationSystemVector;
  */
 class EquationSystems
 {
- public:
-
-  EquationSystems(
-    Realm &realm);
+public:
+  EquationSystems(Realm& realm);
   ~EquationSystems();
 
-  void load(const YAML::Node & node);
-  
-  std::string get_solver_block_name(
-    const std::string eqName) const;
+  void load(const YAML::Node& node);
+
+  std::string get_solver_block_name(const std::string eqName) const;
 
   void breadboard();
 
-  Simulation *root();
-  Realm *parent();
+  Simulation* root();
+  Realm* parent();
 
   // ease of access methods to particular equation system
-  size_t size() {return equationSystemVector_.size();}
-  EquationSystem *operator[](int i) { return equationSystemVector_[i];}
-  
-  void register_nodal_fields(
-    const std::vector<std::string> targetNames);
+  size_t size() { return equationSystemVector_.size(); }
+  EquationSystem* operator[](int i) { return equationSystemVector_[i]; }
 
-  void register_edge_fields(
-    const std::vector<std::string> targetNames);
+  void register_nodal_fields(const std::vector<std::string> targetNames);
 
-  void register_element_fields(
-    const std::vector<std::string> targetNames);
+  void register_edge_fields(const std::vector<std::string> targetNames);
 
-  void register_interior_algorithm(
-    const std::vector<std::string> targetNames);
+  void register_element_fields(const std::vector<std::string> targetNames);
+
+  void register_interior_algorithm(const std::vector<std::string> targetNames);
 
   void register_wall_bc(
-    const std::string targetName,
-    const WallBoundaryConditionData &wallBCData);
+    const std::string targetName, const WallBoundaryConditionData& wallBCData);
 
   void register_inflow_bc(
     const std::string targetName,
-    const InflowBoundaryConditionData &inflowBCData);
+    const InflowBoundaryConditionData& inflowBCData);
 
   void register_open_bc(
-    const std::string targetName,
-    const OpenBoundaryConditionData &openBCData);
+    const std::string targetName, const OpenBoundaryConditionData& openBCData);
 
   void register_symmetry_bc(
     const std::string targetName,
-    const SymmetryBoundaryConditionData &symmetryBCData);
+    const SymmetryBoundaryConditionData& symmetryBCData);
 
   void register_abltop_bc(
     const std::string targetName,
-    const ABLTopBoundaryConditionData &ablTopBCData);
+    const ABLTopBoundaryConditionData& ablTopBCData);
 
   void register_periodic_bc(
     const std::string targetNameMaster,
     const std::string targetNameSlave,
-    const PeriodicBoundaryConditionData &periodicBCData);
+    const PeriodicBoundaryConditionData& periodicBCData);
 
-  void register_overset_bc(
-    const OversetBoundaryConditionData &oversetBCData);
+  void register_overset_bc(const OversetBoundaryConditionData& oversetBCData);
 
   void register_non_conformal_bc(
-    const NonConformalBoundaryConditionData &nonConformalBCData);
+    const NonConformalBoundaryConditionData& nonConformalBCData);
 
-  void register_surface_pp_algorithm(
-    const PostProcessingData &theData);
+  void register_surface_pp_algorithm(const PostProcessingData& theData);
 
   void register_initial_condition_fcn(
-    stk::mesh::Part *part,
-    const UserFunctionInitialConditionData &fcnIC);
+    stk::mesh::Part* part, const UserFunctionInitialConditionData& fcnIC);
 
   void initialize();
   void reinitialize_linear_system();
@@ -192,19 +178,19 @@ class EquationSystems
 
   void post_external_data_transfer_work();
 
-
   void register_overset_field_update(stk::mesh::FieldBase*, int, int);
 
   bool all_systems_decoupled() const;
 
-  Realm &realm_;
+  Realm& realm_;
   std::string name_;
   int maxIterations_;
 
   EquationSystemVector equationSystemVector_;
   std::map<std::string, std::string> solverSpecMap_;
 
-  /// A list of tasks to be performed before all EquationSystem::solve_and_update
+  /// A list of tasks to be performed before all
+  /// EquationSystem::solve_and_update
   std::vector<AlgorithmDriver*> preIterAlgDriver_;
 
   /// A list of tasks to be performed after all EquationSystem::solve_and_update
@@ -230,6 +216,6 @@ class EquationSystems
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

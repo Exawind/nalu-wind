@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef MomentumWallFunctionElemKernel_h
 #define MomentumWallFunctionElemKernel_h
 
@@ -28,14 +27,12 @@ class ElemDataRequests;
 
 /** Wall function approach momentum equation (velocity DOF)
  */
-template<typename BcAlgTraits>
-class MomentumWallFunctionElemKernel: public Kernel
+template <typename BcAlgTraits>
+class MomentumWallFunctionElemKernel : public Kernel
 {
 public:
   MomentumWallFunctionElemKernel(
-    const stk::mesh::BulkData&,
-    const SolutionOptions&,
-    ElemDataRequests&);
+    const stk::mesh::BulkData&, const SolutionOptions&, ElemDataRequests&);
 
   virtual ~MomentumWallFunctionElemKernel();
 
@@ -50,28 +47,30 @@ public:
 
 private:
   MomentumWallFunctionElemKernel() = delete;
-  
-  unsigned velocityNp1_ {stk::mesh::InvalidOrdinal};
-  unsigned bcVelocity_ {stk::mesh::InvalidOrdinal};
-  unsigned density_ {stk::mesh::InvalidOrdinal};
-  unsigned viscosity_ {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
-  unsigned wallFrictionVelocityBip_ {stk::mesh::InvalidOrdinal};
-  unsigned wallNormalDistanceBip_ {stk::mesh::InvalidOrdinal};
+
+  unsigned velocityNp1_{stk::mesh::InvalidOrdinal};
+  unsigned bcVelocity_{stk::mesh::InvalidOrdinal};
+  unsigned density_{stk::mesh::InvalidOrdinal};
+  unsigned viscosity_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned wallFrictionVelocityBip_{stk::mesh::InvalidOrdinal};
+  unsigned wallNormalDistanceBip_{stk::mesh::InvalidOrdinal};
 
   // turbulence model constants (constant over time and bc surfaces)
   const double elog_;
   const double kappa_;
   const double yplusCrit_;
 
-  // Integration point to node mapping 
-  const int *ipNodeMap_{nullptr};
-  
+  // Integration point to node mapping
+  const int* ipNodeMap_{nullptr};
+
   // fixed scratch space
-  AlignedViewType<DoubleType[BcAlgTraits::numFaceIp_][BcAlgTraits::nodesPerFace_]> vf_shape_function_{"vf_shape_function"};
+  AlignedViewType<
+    DoubleType[BcAlgTraits::numFaceIp_][BcAlgTraits::nodesPerFace_]>
+    vf_shape_function_{"vf_shape_function"};
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MomentumWallFunctionElemKernel_h */

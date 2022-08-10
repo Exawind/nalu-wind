@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef LinearSolverTypes_h
 #define LinearSolverTypes_h
 
@@ -31,7 +29,7 @@ class MpiComm;
 
 class ParameterList;
 
-}
+} // namespace Teuchos
 
 namespace Belos {
 
@@ -49,63 +47,71 @@ class SolverManager;
 
 template <typename Scalar, typename MultiVector, typename Operator>
 class TpetraSolverFactory;
-}
+} // namespace Belos
 
 namespace Ifpack2 {
 
-template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Node>
+template <
+  typename Scalar,
+  typename LocalOrdinal,
+  typename GlobalOrdinal,
+  typename Node>
 class Preconditioner;
 
 }
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class TpetraLinearSolver;
 
-struct LinSys {
+struct LinSys
+{
 
-  using Scalar        = Tpetra::Details::DefaultTypes::scalar_type;
+  using Scalar = Tpetra::Details::DefaultTypes::scalar_type;
   using GlobalOrdinal = Tpetra::Details::DefaultTypes::global_ordinal_type;
-  using LocalOrdinal  = Tpetra::Details::DefaultTypes::local_ordinal_type;
+  using LocalOrdinal = Tpetra::Details::DefaultTypes::local_ordinal_type;
 
-  using RowLengths        = Kokkos::DualView<size_t*, DeviceSpace>;
-  using DeviceRowLengths  = RowLengths::t_dev;
-  using HostRowLengths    = RowLengths::t_host;
-  using Node              = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
-  using Graph             = Tpetra::CrsGraph< LocalOrdinal, GlobalOrdinal, Node>;
-  using LocalGraph        = typename Graph::local_graph_device_type;
-  using LocalGraphHost    = typename Graph::local_graph_host_type;
-  using Comm              = Teuchos::MpiComm<int>;
-  using Export            = Tpetra::Export< LocalOrdinal, GlobalOrdinal, Node >;
-  using Import            = Tpetra::Import< LocalOrdinal, GlobalOrdinal, Node >;
-  using Map               = Tpetra::Map<LocalOrdinal,GlobalOrdinal,Node>;
-  using MultiVector       = Tpetra::MultiVector<Scalar,LocalOrdinal,GlobalOrdinal,Node>;
-  using OneDVector        = Teuchos::ArrayRCP<Scalar >;
-  using ConstOneDVector   = Teuchos::ArrayRCP<const Scalar >;
-  using LocalVector       = MultiVector::dual_view_type::t_dev;
-  using Matrix            = Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
-  using LocalMatrix       = Matrix::local_matrix_device_type;
-  using LocalMatrixHost   = Matrix::local_matrix_host_type;
-  using LocalIndicesHost  = Matrix::local_inds_host_view_type;
-  using LocalValuesHost   = Matrix::values_host_view_type;
-  using Operator          = Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using RowLengths = Kokkos::DualView<size_t*, DeviceSpace>;
+  using DeviceRowLengths = RowLengths::t_dev;
+  using HostRowLengths = RowLengths::t_host;
+  using Node = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
+  using Graph = Tpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>;
+  using LocalGraph = typename Graph::local_graph_device_type;
+  using LocalGraphHost = typename Graph::local_graph_host_type;
+  using Comm = Teuchos::MpiComm<int>;
+  using Export = Tpetra::Export<LocalOrdinal, GlobalOrdinal, Node>;
+  using Import = Tpetra::Import<LocalOrdinal, GlobalOrdinal, Node>;
+  using Map = Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
+  using MultiVector =
+    Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using OneDVector = Teuchos::ArrayRCP<Scalar>;
+  using ConstOneDVector = Teuchos::ArrayRCP<const Scalar>;
+  using LocalVector = MultiVector::dual_view_type::t_dev;
+  using Matrix = Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using LocalMatrix = Matrix::local_matrix_device_type;
+  using LocalMatrixHost = Matrix::local_matrix_host_type;
+  using LocalIndicesHost = Matrix::local_inds_host_view_type;
+  using LocalValuesHost = Matrix::values_host_view_type;
+  using Operator = Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using MultiVectorTraits = Belos::MultiVecTraits<Scalar, MultiVector>;
-  using OperatorTraits    = Belos::OperatorTraits<Scalar,MultiVector, Operator>;
-  using LinearProblem     = Belos::LinearProblem<Scalar, MultiVector, Operator>;
-  using SolverManager     = Belos::SolverManager<Scalar, MultiVector, Operator>;
-  using SolverFactory     = Belos::TpetraSolverFactory<Scalar, MultiVector, Operator>;
-  using Preconditioner    = Ifpack2::Preconditioner<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using OperatorTraits = Belos::OperatorTraits<Scalar, MultiVector, Operator>;
+  using LinearProblem = Belos::LinearProblem<Scalar, MultiVector, Operator>;
+  using SolverManager = Belos::SolverManager<Scalar, MultiVector, Operator>;
+  using SolverFactory =
+    Belos::TpetraSolverFactory<Scalar, MultiVector, Operator>;
+  using Preconditioner =
+    Ifpack2::Preconditioner<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
 
-  using EntityToLIDView = Kokkos::View<LocalOrdinal*, Kokkos::LayoutRight, LinSysMemSpace>;
+  using EntityToLIDView =
+    Kokkos::View<LocalOrdinal*, Kokkos::LayoutRight, LinSysMemSpace>;
   using EntityToLIDHostView = typename EntityToLIDView::HostMirror;
-  using ConstEntityToLIDView = Kokkos::View<const LocalOrdinal*, Kokkos::LayoutRight, LinSysMemSpace>;
+  using ConstEntityToLIDView =
+    Kokkos::View<const LocalOrdinal*, Kokkos::LayoutRight, LinSysMemSpace>;
   using ConstEntityToLIDHostView = typename ConstEntityToLIDView::HostMirror;
-
 };
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

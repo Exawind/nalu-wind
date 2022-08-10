@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef NGPLOOPUTILS_H
 #define NGPLOOPUTILS_H
 
@@ -41,9 +40,7 @@ namespace impl {
 template <typename TeamPolicy>
 inline TeamPolicy
 ngp_mesh_team_policy(
-  const size_t sz,
-  const size_t bytes_per_team,
-  const size_t bytes_per_thread)
+  const size_t sz, const size_t bytes_per_team, const size_t bytes_per_thread)
 {
   TeamPolicy policy(sz, Kokkos::AUTO);
   return policy.set_scratch_size(
@@ -57,7 +54,7 @@ ngp_mesh_team_policy(
  *  @param dataReq Element data requests object
  *  @return bytes_per_thread
  */
-template<typename T, typename DataReqType>
+template <typename T, typename DataReqType>
 inline int
 ngp_calc_thread_shmem_size(
   int ndim, const DataReqType& dataReq, const ElemReqType reqType)
@@ -84,11 +81,10 @@ ngp_calc_thread_shmem_size(
  *  @param MasterElementInfo object that contains nodesPerElem/nodesPerFace etc.
  *  @return bytes_per_thread
  */
-template<typename T, typename DataReqType>
-inline int ngp_calc_thread_shmem_size(
-  int ndim,
-  const DataReqType& faceDataReq,
-  const DataReqType& elemDataReq)
+template <typename T, typename DataReqType>
+inline int
+ngp_calc_thread_shmem_size(
+  int ndim, const DataReqType& faceDataReq, const DataReqType& elemDataReq)
 {
   const int faceMemSize =
     ngp_calc_thread_shmem_size<T>(ndim, faceDataReq, ElemReqType::FACE);
@@ -98,7 +94,7 @@ inline int ngp_calc_thread_shmem_size(
   return (faceMemSize + elemMemSize);
 }
 
-} // impl
+} // namespace impl
 
 /** Execute the given functor for all entities in a Kokkos parallel loop
  *
@@ -112,32 +108,31 @@ inline int ngp_calc_thread_shmem_size(
  *  @param sel  STK mesh selector to choose buckets for looping
  *  @param algorithm A functor that will be executed for each entity
  */
-template<typename Mesh, typename AlgFunctor>
-void run_entity_algorithm(
+template <typename Mesh, typename AlgFunctor>
+void
+run_entity_algorithm(
   const std::string& algName,
   const Mesh& mesh,
   const stk::topology::rank_t rank,
   const stk::mesh::Selector& sel,
   const AlgFunctor algorithm)
 {
-  using Traits         = NGPMeshTraits<Mesh>;
-  using TeamPolicy     = typename Traits::TeamPolicy;
+  using Traits = NGPMeshTraits<Mesh>;
+  using TeamPolicy = typename Traits::TeamPolicy;
   using TeamHandleType = typename Traits::TeamHandleType;
-  using MeshIndex      = typename Traits::MeshIndex;
+  using MeshIndex = typename Traits::MeshIndex;
 
   const auto& buckets = mesh.get_bucket_ids(rank, sel);
   auto team_exec = TeamPolicy(buckets.size(), Kokkos::AUTO);
 
   Kokkos::parallel_for(
-    algName, team_exec,
-    KOKKOS_LAMBDA(const TeamHandleType& team) {
+    algName, team_exec, KOKKOS_LAMBDA(const TeamHandleType& team) {
       auto bktId = buckets.device_get(team.league_rank());
       auto& bkt = mesh.get_bucket(rank, bktId);
 
       const size_t bktLen = bkt.size();
       Kokkos::parallel_for(
-        Kokkos::TeamThreadRange(team, bktLen),
-        [&](const size_t& bktIndex) {
+        Kokkos::TeamThreadRange(team, bktLen), [&](const size_t& bktIndex) {
           MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktIndex)};
           algorithm(meshIdx);
         });
@@ -157,20 +152,22 @@ void run_entity_algorithm(
  *  @param algorithm A functor that will be executed for each entity
  *  @param reduceVal A scalar value that has the reduced value
  */
-template<typename Mesh, typename AlgFunctor, typename ReducerType>
-void run_entity_par_reduce(
+template <typename Mesh, typename AlgFunctor, typename ReducerType>
+void
+run_entity_par_reduce(
   const std::string& algName,
   const Mesh& mesh,
   const stk::topology::rank_t rank,
   const stk::mesh::Selector& sel,
   const AlgFunctor algorithm,
   ReducerType& reduceVal,
-  typename std::enable_if<std::is_arithmetic<ReducerType>::value, int>::type* = nullptr)
+  typename std::enable_if<std::is_arithmetic<ReducerType>::value, int>::type* =
+    nullptr)
 {
-  using Traits         = NGPMeshTraits<Mesh>;
-  using TeamPolicy     = typename Traits::TeamPolicy;
+  using Traits = NGPMeshTraits<Mesh>;
+  using TeamPolicy = typename Traits::TeamPolicy;
   using TeamHandleType = typename Traits::TeamHandleType;
-  using MeshIndex      = typename Traits::MeshIndex;
+  using MeshIndex = typename Traits::MeshIndex;
 
   const auto& buckets = mesh.get_bucket_ids(rank, sel);
   auto team_exec = TeamPolicy(buckets.size(), Kokkos::AUTO);
@@ -188,31 +185,31 @@ void run_entity_par_reduce(
         [&](const size_t& bktIndex, ReducerType& threadVal) {
           MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktIndex)};
           algorithm(meshIdx, threadVal);
-        }, bktVal);
+        },
+        bktVal);
 
-      Kokkos::single(
-        Kokkos::PerTeam(team),
-        [&]() {
-          teamVal += bktVal;
-        });
-    }, reduceVal);
+      Kokkos::single(Kokkos::PerTeam(team), [&]() { teamVal += bktVal; });
+    },
+    reduceVal);
 }
 
-template<typename Mesh, typename AlgFunctor, typename ReducerType>
-void run_entity_par_reduce(
+template <typename Mesh, typename AlgFunctor, typename ReducerType>
+void
+run_entity_par_reduce(
   const std::string& algName,
   const Mesh& mesh,
   const stk::topology::rank_t rank,
   const stk::mesh::Selector& sel,
   const AlgFunctor algorithm,
   ReducerType& reduceVal,
-  typename std::enable_if<!std::is_arithmetic<ReducerType>::value, int>::type* = nullptr)
+  typename std::enable_if<!std::is_arithmetic<ReducerType>::value, int>::type* =
+    nullptr)
 {
-  using Traits         = NGPMeshTraits<Mesh>;
-  using TeamPolicy     = typename Traits::TeamPolicy;
+  using Traits = NGPMeshTraits<Mesh>;
+  using TeamPolicy = typename Traits::TeamPolicy;
   using TeamHandleType = typename Traits::TeamHandleType;
-  using MeshIndex      = typename Traits::MeshIndex;
-  using value_type     = typename ReducerType::value_type;
+  using MeshIndex = typename Traits::MeshIndex;
+  using value_type = typename ReducerType::value_type;
 
   const auto& buckets = mesh.get_bucket_ids(rank, sel);
   auto team_exec = TeamPolicy(buckets.size(), Kokkos::AUTO);
@@ -230,14 +227,13 @@ void run_entity_par_reduce(
         [&](const size_t& bktIndex, value_type& threadVal) {
           MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktIndex)};
           algorithm(meshIdx, threadVal);
-        }, ReducerType(bktVal));
+        },
+        ReducerType(bktVal));
 
       Kokkos::single(
-        Kokkos::PerTeam(team),
-        [&]() {
-          reduceVal.join(teamVal, bktVal);
-        });
-    }, reduceVal);
+        Kokkos::PerTeam(team), [&]() { reduceVal.join(teamVal, bktVal); });
+    },
+    reduceVal);
 }
 
 /** Execute the given functor for all edges in a Kokkos parallel loop
@@ -251,24 +247,24 @@ void run_entity_par_reduce(
  *  @param sel  STK mesh selector to choose buckets for looping
  *  @param algorithm A functor that will be executed for each entity
  */
-template<typename Mesh, typename AlgFunctor>
-inline void run_edge_algorithm(
+template <typename Mesh, typename AlgFunctor>
+inline void
+run_edge_algorithm(
   const std::string& algName,
   const Mesh& mesh,
   const stk::mesh::Selector& sel,
   const AlgFunctor algorithm)
 {
   static constexpr stk::topology::rank_t rank = stk::topology::EDGE_RANK;
-  using Traits    = NGPMeshTraits<Mesh>;
+  using Traits = NGPMeshTraits<Mesh>;
   using MeshIndex = typename Traits::MeshIndex;
 
   run_entity_algorithm(
-    algName, mesh, rank, sel,
-    KOKKOS_LAMBDA(MeshIndex& meshIdx) {
-      algorithm(
-        EntityInfo<Mesh>{meshIdx, (*meshIdx.bucket)[meshIdx.bucketOrd],
-            mesh.get_nodes(meshIdx)});
-  });
+    algName, mesh, rank, sel, KOKKOS_LAMBDA(MeshIndex & meshIdx) {
+      algorithm(EntityInfo<Mesh>{
+        meshIdx, (*meshIdx.bucket)[meshIdx.bucketOrd],
+        mesh.get_nodes(meshIdx)});
+    });
 }
 
 /** Execute the given functor for all elements in a Kokkos parallel loop
@@ -285,23 +281,23 @@ inline void run_edge_algorithm(
  *  @param sel  STK mesh selector to choose buckets for looping
  *  @param algorithm A functor that will be executed for each entity
  */
-template<typename Mesh, typename AlgFunctor>
-inline void run_elem_algorithm(
+template <typename Mesh, typename AlgFunctor>
+inline void
+run_elem_algorithm(
   const std::string& algName,
   const Mesh& mesh,
   const stk::topology::rank_t rank,
   const stk::mesh::Selector& sel,
   const AlgFunctor algorithm)
 {
-  using Traits    = NGPMeshTraits<Mesh>;
+  using Traits = NGPMeshTraits<Mesh>;
   using MeshIndex = typename Traits::MeshIndex;
 
   run_entity_algorithm(
-    algName, mesh, rank, sel,
-    KOKKOS_LAMBDA(MeshIndex& meshIdx) {
-      algorithm(
-        EntityInfo<Mesh>{meshIdx, (*meshIdx.bucket)[meshIdx.bucketOrd],
-            mesh.get_nodes(meshIdx)});
+    algName, mesh, rank, sel, KOKKOS_LAMBDA(MeshIndex & meshIdx) {
+      algorithm(EntityInfo<Mesh>{
+        meshIdx, (*meshIdx.bucket)[meshIdx.bucketOrd],
+        mesh.get_nodes(meshIdx)});
     });
 }
 
@@ -321,12 +317,13 @@ inline void run_elem_algorithm(
  *  @param sel STK mesh selector to choose buckets for looping
  *  @param algorithm The functor to be executed on each element
  */
-template<
+template <
   typename Mesh,
   typename FieldManager,
   typename DataReqType,
   typename AlgFunctor>
-void run_elem_algorithm(
+void
+run_elem_algorithm(
   const std::string algName,
   const MeshInfo<Mesh, FieldManager>& meshInfo,
   const stk::topology::rank_t rank,
@@ -334,10 +331,10 @@ void run_elem_algorithm(
   const stk::mesh::Selector& sel,
   const AlgFunctor algorithm)
 {
-  using Traits         = NGPMeshTraits<Mesh>;
-  using TeamPolicy     = typename Traits::TeamPolicy;
+  using Traits = NGPMeshTraits<Mesh>;
+  using TeamPolicy = typename Traits::TeamPolicy;
   using TeamHandleType = typename Traits::TeamHandleType;
-  using MeshIndex      = typename Traits::MeshIndex;
+  using MeshIndex = typename Traits::MeshIndex;
 
   const auto& ndim = meshInfo.ndim();
   const auto& ngpMesh = meshInfo.ngp_mesh();
@@ -348,8 +345,8 @@ void run_elem_algorithm(
   const int nodesPerElement = nodes_per_entity(dataReqNGP);
   NGP_ThrowRequire(nodesPerElement != 0);
 
-  const auto reqType = (rank == stk::topology::ELEM_RANK)
-    ? ElemReqType::ELEM : ElemReqType::FACE;
+  const auto reqType =
+    (rank == stk::topology::ELEM_RANK) ? ElemReqType::ELEM : ElemReqType::FACE;
   const int bytes_per_team = 0;
   const int bytes_per_thread =
     impl::ngp_calc_thread_shmem_size<sierra::nalu::DoubleType>(
@@ -361,47 +358,47 @@ void run_elem_algorithm(
 
   Kokkos::parallel_for(
     algName, team_exec, KOKKOS_LAMBDA(const TeamHandleType& team) {
-    auto bktId = buckets.device_get(team.league_rank());
-    auto& bkt = ngpMesh.get_bucket(rank, bktId);
+      auto bktId = buckets.device_get(team.league_rank());
+      auto& bkt = ngpMesh.get_bucket(rank, bktId);
 
-    ElemSimdData<Mesh> elemData(team, ndim, nodesPerElement, dataReqNGP);
+      ElemSimdData<Mesh> elemData(team, ndim, nodesPerElement, dataReqNGP);
 
-    const size_t bktLen = bkt.size();
-    const size_t simdBktLen = get_num_simd_groups(bktLen);
+      const size_t bktLen = bkt.size();
+      const size_t simdBktLen = get_num_simd_groups(bktLen);
 
-    Kokkos::parallel_for(
-      Kokkos::TeamThreadRange(team, simdBktLen),
-      [&](const size_t& bktIndex) {
-        int nSimdElems = get_length_of_next_simd_group(bktIndex, bktLen);
-        elemData.numSimdElems = nSimdElems;
+      Kokkos::parallel_for(
+        Kokkos::TeamThreadRange(team, simdBktLen), [&](const size_t& bktIndex) {
+          int nSimdElems = get_length_of_next_simd_group(bktIndex, bktLen);
+          elemData.numSimdElems = nSimdElems;
 
-        for (int is=0; is < nSimdElems; ++is) {
-          const unsigned bktOrd = bktIndex * simdLen + is;
-          MeshIndex meshIdx{&bkt, bktOrd};
-          const auto& elem = bkt[bktOrd];
-          elemData.elemInfo[is] =
-            EntityInfo<Mesh>{meshIdx, elem, ngpMesh.get_nodes(meshIdx)};
+          for (int is = 0; is < nSimdElems; ++is) {
+            const unsigned bktOrd = bktIndex * simdLen + is;
+            MeshIndex meshIdx{&bkt, bktOrd};
+            const auto& elem = bkt[bktOrd];
+            elemData.elemInfo[is] =
+              EntityInfo<Mesh>{meshIdx, elem, ngpMesh.get_nodes(meshIdx)};
 
-          fill_pre_req_data(dataReqNGP, ngpMesh, rank, elem,
-                            *elemData.scrView[is]);
-        }
+            fill_pre_req_data(
+              dataReqNGP, ngpMesh, rank, elem, *elemData.scrView[is]);
+          }
 
 #ifndef KOKKOS_ENABLE_CUDA
-        copy_and_interleave(elemData.scrView, nSimdElems, elemData.simdScrView);
+          copy_and_interleave(
+            elemData.scrView, nSimdElems, elemData.simdScrView);
 #endif
 
-        fill_master_element_views(dataReqNGP, elemData.simdScrView);
-        algorithm(elemData);
-      });
-  });
+          fill_master_element_views(dataReqNGP, elemData.simdScrView);
+          algorithm(elemData);
+        });
+    });
 }
 
 /** Gather element data in ScratchViews and execute a reduction over elements
  *
- *  The reduce functor is called with an instance of ElemSimdData<Mesh> that contains
- *  an EntityInfo describing the element connectivity data, and a ScratchViews
- *  instance populated with all the data requested for a particular element
- *  through ElemDataRequests.
+ *  The reduce functor is called with an instance of ElemSimdData<Mesh> that
+ * contains an EntityInfo describing the element connectivity data, and a
+ * ScratchViews instance populated with all the data requested for a particular
+ * element through ElemDataRequests.
  *
  *  In addition to gather of element data, this function also handles the
  *  appropriate interleaving for SIMD data structures where appropriate.
@@ -413,13 +410,14 @@ void run_elem_algorithm(
  *  @param algorithm The reduce functor to be executed on each element
  *  @param reduceVal A Kokkos reducer type
  */
-template<
+template <
   typename Mesh,
   typename FieldManager,
   typename DataReqType,
   typename AlgFunctor,
   typename ReducerType>
-void run_elem_par_reduce(
+void
+run_elem_par_reduce(
   const std::string& algName,
   const MeshInfo<Mesh, FieldManager>& meshInfo,
   const stk::topology::rank_t rank,
@@ -428,10 +426,10 @@ void run_elem_par_reduce(
   const AlgFunctor algorithm,
   ReducerType& reduceVal)
 {
-  using Traits         = NGPMeshTraits<Mesh>;
-  using TeamPolicy     = typename Traits::TeamPolicy;
+  using Traits = NGPMeshTraits<Mesh>;
+  using TeamPolicy = typename Traits::TeamPolicy;
   using TeamHandleType = typename Traits::TeamHandleType;
-  using MeshIndex      = typename Traits::MeshIndex;
+  using MeshIndex = typename Traits::MeshIndex;
   using ReducerValueType = typename ReducerType::value_type;
 
   const auto& ndim = meshInfo.ndim();
@@ -443,8 +441,8 @@ void run_elem_par_reduce(
   const int nodesPerElement = nodes_per_entity(dataReqNGP);
   NGP_ThrowRequire(nodesPerElement != 0);
 
-  const auto reqType = (rank == stk::topology::ELEM_RANK)
-    ? ElemReqType::ELEM : ElemReqType::FACE;
+  const auto reqType =
+    (rank == stk::topology::ELEM_RANK) ? ElemReqType::ELEM : ElemReqType::FACE;
   const int bytes_per_team = 0;
   const int bytes_per_thread =
     impl::ngp_calc_thread_shmem_size<sierra::nalu::DoubleType>(
@@ -472,39 +470,40 @@ void run_elem_par_reduce(
           int nSimdElems = get_length_of_next_simd_group(bktIndex, bktLen);
           elemData.numSimdElems = nSimdElems;
 
-          for (int is=0; is < nSimdElems; ++is) {
+          for (int is = 0; is < nSimdElems; ++is) {
             const unsigned bktOrd = bktIndex * simdLen + is;
             MeshIndex meshIdx{&bkt, bktOrd};
             const auto& elem = bkt[bktOrd];
             elemData.elemInfo[is] =
               EntityInfo<Mesh>{meshIdx, elem, ngpMesh.get_nodes(meshIdx)};
 
-            fill_pre_req_data(dataReqNGP, ngpMesh, rank, elem,
-                              *elemData.scrView[is]);
+            fill_pre_req_data(
+              dataReqNGP, ngpMesh, rank, elem, *elemData.scrView[is]);
           }
 
 #ifndef KOKKOS_ENABLE_CUDA
-          copy_and_interleave(elemData.scrView, nSimdElems, elemData.simdScrView);
+          copy_and_interleave(
+            elemData.scrView, nSimdElems, elemData.simdScrView);
 #endif
 
           fill_master_element_views(dataReqNGP, elemData.simdScrView);
           algorithm(elemData, threadVal);
-        }, ReducerType(bktVal));
+        },
+        ReducerType(bktVal));
 
       Kokkos::single(
-        Kokkos::PerTeam(team),
-        [&]() {
-          reduceVal.join(teamVal, bktVal);
-        });
-    }, reduceVal);
+        Kokkos::PerTeam(team), [&]() { reduceVal.join(teamVal, bktVal); });
+    },
+    reduceVal);
 }
 
-template<
+template <
   typename Mesh,
   typename FieldManager,
   typename DataReqType,
   typename AlgFunctor>
-void run_face_elem_algorithm(
+void
+run_face_elem_algorithm(
   const std::string& algName,
   const MeshInfo<Mesh, FieldManager>& meshInfo,
   const DataReqType& faceDataReqs,
@@ -514,10 +513,10 @@ void run_face_elem_algorithm(
 {
   static constexpr stk::topology::rank_t elemRank = stk::topology::ELEMENT_RANK;
   const stk::topology::rank_t sideRank = meshInfo.meta().side_rank();
-  using Traits         = NGPMeshTraits<Mesh>;
-  using TeamPolicy     = typename Traits::TeamPolicy;
+  using Traits = NGPMeshTraits<Mesh>;
+  using TeamPolicy = typename Traits::TeamPolicy;
   using TeamHandleType = typename Traits::TeamHandleType;
-  using MeshIndex      = typename Traits::MeshIndex;
+  using MeshIndex = typename Traits::MeshIndex;
 
   const auto& ndim = meshInfo.ndim();
   const auto& ngpMesh = meshInfo.ngp_mesh();
@@ -553,8 +552,7 @@ void run_face_elem_algorithm(
       const size_t simdBktLen = get_num_simd_groups(bktLen);
 
       Kokkos::parallel_for(
-        Kokkos::TeamThreadRange(team, simdBktLen),
-        [&](const size_t& bktIndex) {
+        Kokkos::TeamThreadRange(team, simdBktLen), [&](const size_t& bktIndex) {
           size_t nSimdFaces = get_length_of_next_simd_group(bktIndex, bktLen);
           size_t nFacesProcessed = 0;
 
@@ -568,8 +566,7 @@ void run_face_elem_algorithm(
                 bktIndex * simdLen + nFacesProcessed + simdFaceIdx;
               const auto& face = bkt[bktOrd];
               const auto faceIdx = ngpMesh.fast_mesh_index(face);
-              int faceOrd =
-                ngpMesh.get_element_ordinals(sideRank, faceIdx)[0];
+              int faceOrd = ngpMesh.get_element_ordinals(sideRank, faceIdx)[0];
 
               // If we have one or more faces processed, then does the current
               // candidate face the same face ordinal as the ones we have
@@ -582,7 +579,9 @@ void run_face_elem_algorithm(
               const auto elem = elems[0];
               const auto elemIdx = ngpMesh.fast_mesh_index(elem);
               faceElemData.faceInfo[simdFaceIdx] = BcFaceElemInfo<Mesh>{
-                meshIdx, face, elem,
+                meshIdx,
+                face,
+                elem,
                 ngpMesh.get_nodes(sideRank, faceIdx),
                 ngpMesh.get_nodes(elemRank, elemIdx),
                 faceOrd};
@@ -620,13 +619,14 @@ void run_face_elem_algorithm(
     });
 }
 
-template<
+template <
   typename Mesh,
   typename FieldManager,
   typename DataReqType,
   typename AlgFunctor,
   typename ReducerType>
-void run_face_elem_par_reduce(
+void
+run_face_elem_par_reduce(
   const std::string& algName,
   const MeshInfo<Mesh, FieldManager>& meshInfo,
   const DataReqType& faceDataReqs,
@@ -637,10 +637,10 @@ void run_face_elem_par_reduce(
 {
   static constexpr stk::topology::rank_t elemRank = stk::topology::ELEMENT_RANK;
   const stk::topology::rank_t sideRank = meshInfo.meta().side_rank();
-  using Traits         = NGPMeshTraits<Mesh>;
-  using TeamPolicy     = typename Traits::TeamPolicy;
+  using Traits = NGPMeshTraits<Mesh>;
+  using TeamPolicy = typename Traits::TeamPolicy;
   using TeamHandleType = typename Traits::TeamHandleType;
-  using MeshIndex      = typename Traits::MeshIndex;
+  using MeshIndex = typename Traits::MeshIndex;
   using ReducerValueType = typename ReducerType::value_type;
 
   const auto& ndim = meshInfo.ndim();
@@ -694,8 +694,7 @@ void run_face_elem_par_reduce(
                 bktIndex * simdLen + nFacesProcessed + simdFaceIdx;
               const auto& face = bkt[bktOrd];
               const auto faceIdx = ngpMesh.fast_mesh_index(face);
-              int faceOrd =
-                ngpMesh.get_element_ordinals(sideRank, faceIdx)[0];
+              int faceOrd = ngpMesh.get_element_ordinals(sideRank, faceIdx)[0];
 
               // If we have one or more faces processed, then does the current
               // candidate face the same face ordinal as the ones we have
@@ -708,7 +707,9 @@ void run_face_elem_par_reduce(
               const auto elem = elems[0];
               const auto elemIdx = ngpMesh.fast_mesh_index(elem);
               faceElemData.faceInfo[simdFaceIdx] = BcFaceElemInfo<Mesh>{
-                meshIdx, face, elem,
+                meshIdx,
+                face,
+                elem,
                 ngpMesh.get_nodes(sideRank, faceIdx),
                 ngpMesh.get_nodes(elemRank, elemIdx),
                 faceOrd};
@@ -742,22 +743,22 @@ void run_face_elem_par_reduce(
 
             algorithm(faceElemData, threadVal);
           } while (nFacesProcessed < nSimdFaces);
-        }, ReducerType(bktVal));
+        },
+        ReducerType(bktVal));
 
       Kokkos::single(
-        Kokkos::PerTeam(team),
-        [&]() {
-          reduceVal.join(teamVal, bktVal);
-        });
-    }, reduceVal);
+        Kokkos::PerTeam(team), [&]() { reduceVal.join(teamVal, bktVal); });
+    },
+    reduceVal);
 }
 
-template<
+template <
   typename Mesh,
   typename FieldManager,
   typename DataReqType,
   typename AlgFunctor>
-void run_face_elem_algorithm_nosimd(
+void
+run_face_elem_algorithm_nosimd(
   const MeshInfo<Mesh, FieldManager>& meshInfo,
   const DataReqType& faceDataReqs,
   const DataReqType& elemDataReqs,
@@ -766,10 +767,10 @@ void run_face_elem_algorithm_nosimd(
 {
   static constexpr stk::topology::rank_t sideRank = meshInfo.meta().side_rank();
   static constexpr stk::topology::rank_t elemRank = stk::topology::ELEMENT_RANK;
-  using Traits         = NGPMeshTraits<Mesh>;
-  using TeamPolicy     = typename Traits::TeamPolicy;
+  using Traits = NGPMeshTraits<Mesh>;
+  using TeamPolicy = typename Traits::TeamPolicy;
   using TeamHandleType = typename Traits::TeamHandleType;
-  using MeshIndex      = typename Traits::MeshIndex;
+  using MeshIndex = typename Traits::MeshIndex;
 
   const auto& ndim = meshInfo.ndim();
   const auto& ngpMesh = meshInfo.ngp_mesh();
@@ -785,14 +786,15 @@ void run_face_elem_algorithm_nosimd(
   NGP_ThrowRequire(nodesPerFace != 0);
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = impl::ngp_calc_thread_shmem_size<double>(
-    ndim, faceDataNGP, elemDataNGP);
+  const int bytes_per_thread =
+    impl::ngp_calc_thread_shmem_size<double>(ndim, faceDataNGP, elemDataNGP);
 
   const auto& buckets = ngpMesh.get_bucket_ids(sideRank, sel);
   auto team_exec = impl::ngp_mesh_team_policy<TeamPolicy>(
     buckets.size(), bytes_per_team, bytes_per_thread);
 
-  Kokkos::parallel_for(team_exec, KOKKOS_LAMBDA(const TeamHandleType& team) {
+  Kokkos::parallel_for(
+    team_exec, KOKKOS_LAMBDA(const TeamHandleType& team) {
       auto bktId = buckets.device_get(team.league_rank());
       auto& bkt = ngpMesh.get_bucket(sideRank, bktId);
 
@@ -805,15 +807,15 @@ void run_face_elem_algorithm_nosimd(
 
       const size_t bktLen = bkt.size();
       Kokkos::parallel_for(
-        Kokkos::TeamThreadRange(team, bktLen),
-        [&](const size_t& bktIndex) {
+        Kokkos::TeamThreadRange(team, bktLen), [&](const size_t& bktIndex) {
           MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktIndex)};
           const auto face = bkt[bktIndex];
           const auto faceIdx = ngpMesh.fast_mesh_index(face);
           const auto elements = ngpMesh.get_elements(sideRank, faceIdx);
 
           NGP_ThrowAssert(elements.size() == 1);
-          const auto faceOrd = ngpMesh.get_element_ordinals(sideRank, faceIdx)[0];
+          const auto faceOrd =
+            ngpMesh.get_element_ordinals(sideRank, faceIdx)[0];
           const auto elem = elements[0];
           const auto elemIdx = ngpMesh.fast_mesh_index(elem);
 
@@ -832,10 +834,8 @@ void run_face_elem_algorithm_nosimd(
     });
 }
 
-}  // nalu_ngp
-}  // nalu
-}  // sierra
-
-
+} // namespace nalu_ngp
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NGPLOOPUTILS_H */

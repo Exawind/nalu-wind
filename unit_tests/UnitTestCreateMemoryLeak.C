@@ -7,11 +7,10 @@
 // for more details.
 //
 
-
 #include "gtest/gtest.h"
 
 TEST(CreateMemoryLeak, create_memory_leak)
 {
-  double *p = new double;
+  double* p = new double;
   *p = 1.0;
 }

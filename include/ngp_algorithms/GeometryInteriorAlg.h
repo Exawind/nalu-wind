@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef GEOMETRYINTERIORALG_H
 #define GEOMETRYINTERIORALG_H
 
@@ -33,9 +32,7 @@ template <typename AlgTraits>
 class GeometryInteriorAlg : public Algorithm
 {
 public:
-  GeometryInteriorAlg(
-    Realm&,
-    stk::mesh::Part*);
+  GeometryInteriorAlg(Realm&, stk::mesh::Part*);
 
   virtual ~GeometryInteriorAlg() = default;
 
@@ -46,20 +43,17 @@ public:
   void impl_negative_jacobian_check();
 
 private:
-
-
   ElemDataRequests dataNeeded_;
 
-  unsigned dualNodalVol_ {stk::mesh::InvalidOrdinal};
-  unsigned elemVol_ {stk::mesh::InvalidOrdinal};
-  unsigned edgeAreaVec_ {stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVol_{stk::mesh::InvalidOrdinal};
+  unsigned elemVol_{stk::mesh::InvalidOrdinal};
+  unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
 
   MasterElement* meSCV_{nullptr};
   MasterElement* meSCS_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* GEOMETRYINTERIORALG_H */

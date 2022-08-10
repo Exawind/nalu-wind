@@ -7,53 +7,50 @@
 // for more details.
 //
 
-
-
 #ifndef AssembleScalarNonConformalSolverAlgorithm_h
 #define AssembleScalarNonConformalSolverAlgorithm_h
 
-#include<SolverAlgorithm.h>
-#include<FieldTypeDef.h>
+#include <SolverAlgorithm.h>
+#include <FieldTypeDef.h>
 
 namespace stk {
 namespace mesh {
 class Part;
 }
-}
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class AssembleScalarNonConformalSolverAlgorithm : public SolverAlgorithm
 {
 public:
-
   AssembleScalarNonConformalSolverAlgorithm(
-    Realm &realm,
-    stk::mesh::Part *part,
-    EquationSystem *eqSystem,
-    ScalarFieldType *scalarQ,
-    ScalarFieldType *diffFluxCoeff);
+    Realm& realm,
+    stk::mesh::Part* part,
+    EquationSystem* eqSystem,
+    ScalarFieldType* scalarQ,
+    ScalarFieldType* diffFluxCoeff);
   virtual ~AssembleScalarNonConformalSolverAlgorithm() {}
   virtual void initialize_connectivity();
   virtual void execute();
 
-  ScalarFieldType *scalarQ_;
-  ScalarFieldType *diffFluxCoeff_;
-  VectorFieldType *coordinates_;
-  GenericFieldType *exposedAreaVec_;
-  GenericFieldType *ncMassFlowRate_;
+  ScalarFieldType* scalarQ_;
+  ScalarFieldType* diffFluxCoeff_;
+  VectorFieldType* coordinates_;
+  GenericFieldType* exposedAreaVec_;
+  GenericFieldType* ncMassFlowRate_;
 
   // options that prevail over all algorithms created
   const double eta_;
   const bool useCurrentNormal_;
 
-  std::vector< const stk::mesh::FieldBase *> ghostFieldVec_;
+  std::vector<const stk::mesh::FieldBase*> ghostFieldVec_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

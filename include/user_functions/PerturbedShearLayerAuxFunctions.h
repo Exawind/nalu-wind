@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef PerturbedShearLayerVelocityAuxFunction_h
 #define PerturbedShearLayerVelocityAuxFunction_h
 
@@ -15,26 +14,24 @@
 
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class PerturbedShearLayerVelocityAuxFunction : public AuxFunction
 {
 public:
-
   PerturbedShearLayerVelocityAuxFunction(
-    const unsigned beginPos,
-    const unsigned endPos);
+    const unsigned beginPos, const unsigned endPos);
 
   virtual ~PerturbedShearLayerVelocityAuxFunction() {}
-  
+
   using AuxFunction::do_evaluate;
   virtual void do_evaluate(
-    const double * coords,
+    const double* coords,
     const double time,
     const unsigned spatialDimension,
     const unsigned numPoints,
-    double * fieldPtr,
+    double* fieldPtr,
     const unsigned fieldSize,
     const unsigned beginPos,
     const unsigned endPos) const;
@@ -43,25 +40,23 @@ public:
 class PerturbedShearLayerMixFracAuxFunction : public AuxFunction
 {
 public:
-
   PerturbedShearLayerMixFracAuxFunction();
 
   virtual ~PerturbedShearLayerMixFracAuxFunction() {}
 
   using AuxFunction::do_evaluate;
   virtual void do_evaluate(
-    const double * coords,
+    const double* coords,
     const double time,
     const unsigned spatialDimension,
     const unsigned numPoints,
-    double * fieldPtr,
+    double* fieldPtr,
     const unsigned fieldSize,
     const unsigned beginPos,
     const unsigned endPos) const;
 };
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

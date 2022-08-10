@@ -19,7 +19,7 @@
 namespace sierra {
 namespace nalu {
 
-class ActuatorLineFastNGP: public ActuatorExecutor
+class ActuatorLineFastNGP : public ActuatorExecutor
 {
 public:
   ActuatorLineFastNGP(
@@ -30,6 +30,7 @@ public:
   virtual ~ActuatorLineFastNGP(){};
 
   void operator()() final;
+
 private:
   const ActuatorMetaFAST& actMeta_;
   ActuatorBulkFAST& actBulk_;
@@ -47,6 +48,7 @@ public:
   virtual ~ActuatorDiskFastNGP(){};
 
   void operator()() final;
+
 private:
   const ActuatorMetaFAST& actMeta_;
   ActuatorBulkDiskFAST& actBulk_;

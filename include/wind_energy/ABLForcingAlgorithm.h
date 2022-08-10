@@ -14,7 +14,9 @@
 #include <unordered_set>
 #include <memory>
 
-namespace YAML { class Node; }
+namespace YAML {
+class Node;
+}
 
 namespace sierra {
 namespace nalu {
@@ -98,13 +100,13 @@ public:
   void eval_momentum_source(
     const double,        //!< Height of the node from terrain
     std::vector<double>& //!< Source vector to be populated
-    );
+  );
 
   //! Evaluate the ABL forcing source contribution (temperature)
   void eval_temperature_source(
     const double, //!< Height of the node from terrain
     double&       //!< Temperature source term to be populated
-    );
+  );
 
   inline bool momentumForcingOn() { return (momSrcType_ != OFF); }
 
@@ -227,7 +229,7 @@ private:
   //! Uz, T. Default is "abl_sources_%s.dat"
   std::string outFileFmt_{"abl_%s_sources.dat"};
 };
-}
-}
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ABLFORCINGALGORITHM_H */

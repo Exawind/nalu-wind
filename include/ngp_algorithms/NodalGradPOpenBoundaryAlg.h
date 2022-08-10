@@ -6,26 +6,22 @@
 // This software is released under the BSD 3-clause license. See LICENSE file
 // for more details.
 
-
 #ifndef NODALGRADPOPENBOUNDARYALG_H
 #define NODALGRADPOPENBOUNDARYALG_H
 
-#include<Algorithm.h>
-#include<ElemDataRequests.h>
+#include <Algorithm.h>
+#include <ElemDataRequests.h>
 
 #include "stk_mesh/base/Types.hpp"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-template<typename AlgTraits>
+template <typename AlgTraits>
 class NodalGradPOpenBoundary : public Algorithm
 {
 public:
-  NodalGradPOpenBoundary(
-    Realm &,
-    stk::mesh::Part *,
-    const bool useShifted);
+  NodalGradPOpenBoundary(Realm&, stk::mesh::Part*, const bool useShifted);
 
   virtual ~NodalGradPOpenBoundary() = default;
 
@@ -35,15 +31,15 @@ public:
   const bool zeroGrad_;
   const bool massCorr_;
 
-  const unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
-  const unsigned dualNodalVol_   {stk::mesh::InvalidOrdinal};
-  const unsigned exposedPressureField_ {stk::mesh::InvalidOrdinal};
-  const unsigned pressureField_  {stk::mesh::InvalidOrdinal};
-  const unsigned gradP_          {stk::mesh::InvalidOrdinal};
-  const unsigned coordinates_    {stk::mesh::InvalidOrdinal};
-  const unsigned dynPress_       {stk::mesh::InvalidOrdinal};
+  const unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
+  const unsigned dualNodalVol_{stk::mesh::InvalidOrdinal};
+  const unsigned exposedPressureField_{stk::mesh::InvalidOrdinal};
+  const unsigned pressureField_{stk::mesh::InvalidOrdinal};
+  const unsigned gradP_{stk::mesh::InvalidOrdinal};
+  const unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  const unsigned dynPress_{stk::mesh::InvalidOrdinal};
 
-  MasterElement* meFC_ {nullptr};
+  MasterElement* meFC_{nullptr};
   MasterElement* meSCS_{nullptr};
 
   ElemDataRequests faceData_;
@@ -51,6 +47,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

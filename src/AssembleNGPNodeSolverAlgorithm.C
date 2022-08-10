@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "AssembleNGPNodeSolverAlgorithm.h"
 #include "EquationSystem.h"
 #include "KokkosInterface.h"
@@ -21,7 +20,8 @@ namespace sierra {
 namespace nalu {
 
 namespace {
-inline int calc_shmem_bytes_per_thread(int rhsSize)
+inline int
+calc_shmem_bytes_per_thread(int rhsSize)
 {
   // LHS (RHS^2) + RHS
   const int matSize = rhsSize * (1 + rhsSize) * sizeof(double);
@@ -31,42 +31,42 @@ inline int calc_shmem_bytes_per_thread(int rhsSize)
   return (matSize + idSize);
 }
 
-template<typename TEAMHANDLETYPE, typename SHMEM>
-struct SharedMemData_Node {
+template <typename TEAMHANDLETYPE, typename SHMEM>
+struct SharedMemData_Node
+{
   KOKKOS_FUNCTION
-  SharedMemData_Node(
-    const TEAMHANDLETYPE& team,
-    unsigned rhsSize
-  ) : ngpNodes(nodeID, 1)
+  SharedMemData_Node(const TEAMHANDLETYPE& team, unsigned rhsSize)
+    : ngpNodes(nodeID, 1)
   {
     rhs = get_shmem_view_1D<double, TEAMHANDLETYPE, SHMEM>(team, rhsSize);
-    lhs = get_shmem_view_2D<double, TEAMHANDLETYPE, SHMEM>(team, rhsSize, rhsSize);
-    scratchIds = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
-    sortPermutation = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
+    lhs =
+      get_shmem_view_2D<double, TEAMHANDLETYPE, SHMEM>(team, rhsSize, rhsSize);
+    scratchIds = get_shmem_view_1D<int, TEAMHANDLETYPE, SHMEM>(team, rhsSize);
+    sortPermutation =
+      get_shmem_view_1D<int, TEAMHANDLETYPE, SHMEM>(team, rhsSize);
   }
 
   stk::mesh::Entity nodeID[1];
   stk::mesh::NgpMesh::ConnectedNodes ngpNodes;
-  SharedMemView<double*,SHMEM> rhs;
-  SharedMemView<double**,SHMEM> lhs;
+  SharedMemView<double*, SHMEM> rhs;
+  SharedMemView<double**, SHMEM> lhs;
 
-  SharedMemView<int*,SHMEM> scratchIds;
-  SharedMemView<int*,SHMEM> sortPermutation;
+  SharedMemView<int*, SHMEM> scratchIds;
+  SharedMemView<int*, SHMEM> sortPermutation;
 };
-}
+} // namespace
 
 AssembleNGPNodeSolverAlgorithm::AssembleNGPNodeSolverAlgorithm(
-  Realm& realm,
-  stk::mesh::Part* part,
-  EquationSystem* eqSystem
-) : SolverAlgorithm(realm, part, eqSystem),
+  Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
+  : SolverAlgorithm(realm, part, eqSystem),
     rhsSize_(eqSystem->linsys_->numDof())
-{}
+{
+}
 
 AssembleNGPNodeSolverAlgorithm::~AssembleNGPNodeSolverAlgorithm()
 {
   // Release the device pointers if any
-  for (auto& kern: nodeKernels_) {
+  for (auto& kern : nodeKernels_) {
     kern->free_on_device();
   }
 }
@@ -75,7 +75,8 @@ void
 AssembleNGPNodeSolverAlgorithm::initialize_connectivity()
 {
   const size_t numKernels = nodeKernels_.size();
-  if (numKernels < 1) return;
+  if (numKernels < 1)
+    return;
 
   eqSystem_->linsys_->buildNodeGraph(partVec_);
 }
@@ -86,9 +87,10 @@ AssembleNGPNodeSolverAlgorithm::execute()
   using ShmemDataType = SharedMemData_Node<DeviceTeamHandleType, DeviceShmem>;
 
   const size_t numKernels = nodeKernels_.size();
-  if (numKernels < 1) return;
+  if (numKernels < 1)
+    return;
 
-  for (auto& kern: nodeKernels_)
+  for (auto& kern : nodeKernels_)
     kern->setup(realm_);
 
   auto ngpKernels = nalu_ngp::create_ngp_view<NodeKernel>(nodeKernels_);
@@ -103,13 +105,15 @@ AssembleNGPNodeSolverAlgorithm::execute()
   const int bytes_per_team = 0;
   const int bytes_per_thread = calc_shmem_bytes_per_thread(rhsSize);
 
-  stk::mesh::Selector sel = meta.locally_owned_part()
-    & stk::mesh::selectUnion(partVec_)
-    & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
-    & !(realm_.get_inactive_selector());
-  const auto& buckets = stk::mesh::get_bucket_ids(realm_.bulk_data(), entityRank, sel);
+  stk::mesh::Selector sel =
+    meta.locally_owned_part() & stk::mesh::selectUnion(partVec_) &
+    !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
+    !(realm_.get_inactive_selector());
+  const auto& buckets =
+    stk::mesh::get_bucket_ids(realm_.bulk_data(), entityRank, sel);
 
-  auto team_exec = get_device_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
+  auto team_exec =
+    get_device_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
 
   Kokkos::parallel_for(
     team_exec, KOKKOS_LAMBDA(const DeviceTeamHandleType& team) {
@@ -120,8 +124,7 @@ AssembleNGPNodeSolverAlgorithm::execute()
 
       const size_t bktLen = b.size();
       Kokkos::parallel_for(
-        Kokkos::TeamThreadRange(team, bktLen),
-        [&](const size_t& bktIndex) {
+        Kokkos::TeamThreadRange(team, bktLen), [&](const size_t& bktIndex) {
           auto node = b[bktIndex];
           const auto nodeIndex = ngpMesh.fast_mesh_index(node);
           smdata.nodeID[0] = node;
@@ -129,7 +132,7 @@ AssembleNGPNodeSolverAlgorithm::execute()
           set_vals(smdata.rhs, 0.0);
           set_vals(smdata.lhs, 0.0);
 
-          for (size_t i=0; i < numKernels; ++i) {
+          for (size_t i = 0; i < numKernels; ++i) {
             NodeKernel* kernel = ngpKernels(i);
             kernel->execute(smdata.lhs, smdata.rhs, nodeIndex);
           }
@@ -139,8 +142,8 @@ AssembleNGPNodeSolverAlgorithm::execute()
             smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
         });
     });
-    coeffApplier.free_coeff_applier();
+  coeffApplier.free_coeff_applier();
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

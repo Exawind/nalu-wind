@@ -14,25 +14,25 @@ namespace stk {
 namespace mesh {
 class FieldBase;
 }
-}
+} // namespace stk
 
 namespace sierra {
 namespace nalu {
 
 struct OversetFieldData
 {
-  OversetFieldData(stk::mesh::FieldBase* field, int sizeRow=1, int sizeCol=1)
-    : field_(field),
-      sizeRow_(sizeRow),
-      sizeCol_(sizeCol)
-  {}
+  OversetFieldData(
+    stk::mesh::FieldBase* field, int sizeRow = 1, int sizeCol = 1)
+    : field_(field), sizeRow_(sizeRow), sizeCol_(sizeCol)
+  {
+  }
 
   stk::mesh::FieldBase* field_;
   int sizeRow_;
   int sizeCol_;
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* OVERSETFIELDDATA_H */

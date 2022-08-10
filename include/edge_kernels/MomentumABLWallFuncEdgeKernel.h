@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef MOMENTUMABLWALLFUNCEDGEKERNEL_H
 #define MOMENTUMABLWALLFUNCEDGEKERNEL_H
 
@@ -21,8 +20,9 @@
 namespace sierra {
 namespace nalu {
 
-template<typename BcAlgTraits>
-class MomentumABLWallFuncEdgeKernel: public NGPKernel<MomentumABLWallFuncEdgeKernel<BcAlgTraits>>
+template <typename BcAlgTraits>
+class MomentumABLWallFuncEdgeKernel
+  : public NGPKernel<MomentumABLWallFuncEdgeKernel<BcAlgTraits>>
 {
 public:
   MomentumABLWallFuncEdgeKernel(
@@ -46,14 +46,14 @@ public:
     ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  unsigned velocityNp1_    {stk::mesh::InvalidOrdinal};
-  unsigned bcVelocity_     {stk::mesh::InvalidOrdinal};
-  unsigned density_        {stk::mesh::InvalidOrdinal};
-  unsigned bcHeatFlux_     {stk::mesh::InvalidOrdinal};
-  unsigned specificHeat_   {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
-  unsigned wallFricVel_    {stk::mesh::InvalidOrdinal};
-  unsigned wallNormDist_   {stk::mesh::InvalidOrdinal};
+  unsigned velocityNp1_{stk::mesh::InvalidOrdinal};
+  unsigned bcVelocity_{stk::mesh::InvalidOrdinal};
+  unsigned density_{stk::mesh::InvalidOrdinal};
+  unsigned bcHeatFlux_{stk::mesh::InvalidOrdinal};
+  unsigned specificHeat_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned wallFricVel_{stk::mesh::InvalidOrdinal};
+  unsigned wallNormDist_{stk::mesh::InvalidOrdinal};
 
   //! Acceleration due to gravity (m/s^2)
   const DoubleType gravity_;
@@ -74,8 +74,7 @@ private:
   MasterElement* meFC_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MOMENTUMABLWALLFUNCEDGEKERNEL_H */

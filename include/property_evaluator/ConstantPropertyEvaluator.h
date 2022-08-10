@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef ConstantPropertyEvaluator_h
 #define ConstantPropertyEvaluator_h
 
@@ -18,27 +16,23 @@ namespace stk {
 namespace mesh {
 struct Entity;
 }
-}
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class ConstantPropertyEvaluator : public PropertyEvaluator
 {
- public:
-
-  ConstantPropertyEvaluator(const double & value);
+public:
+  ConstantPropertyEvaluator(const double& value);
   virtual ~ConstantPropertyEvaluator();
 
-  double execute(double *indVarList,
-                 stk::mesh::Entity node);
+  double execute(double* indVarList, stk::mesh::Entity node);
 
   double value_;
-
 };
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

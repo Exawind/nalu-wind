@@ -28,7 +28,8 @@ namespace matrix_free {
 class NoAuraDeviceMatrix
 {
 public:
-  using local_matrix_type = typename Tpetra::CrsMatrix<>::local_matrix_device_type;
+  using local_matrix_type =
+    typename Tpetra::CrsMatrix<>::local_matrix_device_type;
   using lid_type = typename Tpetra::CrsMatrix<>::local_ordinal_type;
   using entity_lid_view_type = Kokkos::View<const lid_type*>;
 

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef HYPREUVWSOLVER_H
 #define HYPREUVWSOLVER_H
 
@@ -16,13 +15,10 @@
 namespace sierra {
 namespace nalu {
 
-class HypreUVWSolver: public HypreDirectSolver
+class HypreUVWSolver : public HypreDirectSolver
 {
 public:
-  HypreUVWSolver(
-    std::string,
-    HypreLinearSolverConfig*,
-    LinearSolvers*);
+  HypreUVWSolver(std::string, HypreLinearSolverConfig*, LinearSolvers*);
 
   virtual ~HypreUVWSolver();
 
@@ -43,8 +39,7 @@ private:
   HypreUVWSolver(const HypreUVWSolver&) = delete;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* HYPREUVWSOLVER_H */
