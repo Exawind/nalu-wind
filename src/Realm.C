@@ -1072,7 +1072,7 @@ Realm::setup_bc()
         break;
       case OVERSET_BC: {
         const OversetBoundaryConditionData& obc =
-          reinterpret_cast<const OversetBoundaryConditionData&>(bc);
+          reinterpret_cast<const OversetBoundaryConditionData&>(*bc);
         setup_overset_bc(obc);
         equationSystems_.register_overset_bc(obc);
         break;
