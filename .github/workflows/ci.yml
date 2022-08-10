@@ -7,18 +7,20 @@ on:
     branches: [master]
 
 jobs:
-  #Formatting:
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #  - uses: actions/checkout@v2
-  #  - uses: DoozyX/clang-format-lint-action@v0.13
-  #    with:
-  #      source: './app ./src'
-  #      exclude: '.'
-  #      extensions: 'H,h,cpp'
-  #      clangFormatVersion: 13
+  Formatting:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone
+      uses: actions/checkout@v3
+    - name: Check formatting
+      uses: DoozyX/clang-format-lint-action@v0.13
+      with:
+        source: './include ./src ./unit-tests'
+        exclude: '.'
+        extensions: 'H,h,cpp,C'
+        clangFormatVersion: 13
   CPU:
-    #needs: Formatting
+    needs: Formatting
     runs-on: ubuntu-latest
     container:
       image: ecpe4s/exawind-snapshot
