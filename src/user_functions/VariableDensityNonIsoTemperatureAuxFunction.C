@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <user_functions/VariableDensityNonIsoTemperatureAuxFunction.h>
 #include <algorithm>
 #include <NaluEnv.h>
@@ -18,39 +16,37 @@
 #include <vector>
 #include <stdexcept>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-VariableDensityNonIsoTemperatureAuxFunction::VariableDensityNonIsoTemperatureAuxFunction() :
-  AuxFunction(0,1),
-  ah_(10.0),
-  Cp_(0.01),
-  Tref_(300.0),
-  pi_(acos(-1.0))
+VariableDensityNonIsoTemperatureAuxFunction::
+  VariableDensityNonIsoTemperatureAuxFunction()
+  : AuxFunction(0, 1), ah_(10.0), Cp_(0.01), Tref_(300.0), pi_(acos(-1.0))
 {
   // does nothing
 }
 
 void
 VariableDensityNonIsoTemperatureAuxFunction::do_evaluate(
-  const double *coords,
+  const double* coords,
   const double /*time*/,
   const unsigned spatialDimension,
   const unsigned numPoints,
-  double * fieldPtr,
+  double* fieldPtr,
   const unsigned fieldSize,
   const unsigned /*beginPos*/,
   const unsigned /*endPos*/) const
 {
-  for(unsigned p=0; p < numPoints; ++p) {
+  for (unsigned p = 0; p < numPoints; ++p) {
 
     const double x = coords[0];
     const double y = coords[1];
     const double z = coords[2];
-    
-    const double h = cos(ah_*pi_*x)*cos(ah_*pi_*y)*cos(ah_*pi_*z);
 
-    const double temp = h/Cp_ + Tref_;
+    const double h =
+      cos(ah_ * pi_ * x) * cos(ah_ * pi_ * y) * cos(ah_ * pi_ * z);
+
+    const double temp = h / Cp_ + Tref_;
 
     fieldPtr[0] = temp;
 
@@ -60,4 +56,4 @@ VariableDensityNonIsoTemperatureAuxFunction::do_evaluate(
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

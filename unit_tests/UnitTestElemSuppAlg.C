@@ -122,7 +122,7 @@ private:
 };
 
 //=========== Test class that mimics an element alg with supplemental alg and
-//views ========
+// views ========
 //
 class TestElemAlgorithmWithSuppAlgViews
 {

@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <user_functions/SinProfileChannelFlowVelocityAuxFunction.h>
 #include <algorithm>
 
@@ -17,31 +15,30 @@
 #include <vector>
 #include <stdexcept>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-SinProfileChannelFlowVelocityAuxFunction::SinProfileChannelFlowVelocityAuxFunction(
-  const unsigned beginPos,
-  const unsigned endPos) :
-  AuxFunction(beginPos, endPos),
-    u_m(10.0) /*,		// bulk velocity
-    pi_(acos(-1.0)) */
+SinProfileChannelFlowVelocityAuxFunction::
+  SinProfileChannelFlowVelocityAuxFunction(
+    const unsigned beginPos, const unsigned endPos)
+  : AuxFunction(beginPos, endPos), u_m(10.0) /*,		// bulk velocity
+                                   pi_(acos(-1.0)) */
 {
   // does nothing
 }
 
 void
 SinProfileChannelFlowVelocityAuxFunction::do_evaluate(
-  const double *coords,
+  const double* coords,
   const double /*time*/,
   const unsigned spatialDimension,
   const unsigned numPoints,
-  double * fieldPtr,
+  double* fieldPtr,
   const unsigned fieldSize,
   const unsigned /*beginPos*/,
   const unsigned /*endPos*/) const
 {
-  for(unsigned p=0; p < numPoints; ++p) {
+  for (unsigned p = 0; p < numPoints; ++p) {
 
     const double x = coords[0];
     const double y = coords[1];
@@ -49,9 +46,9 @@ SinProfileChannelFlowVelocityAuxFunction::do_evaluate(
 
     const double aux_x = (y > 1) ? 1.0 : -1.0;
 
-    fieldPtr[0] = u_m*sin(x)*aux_x;
-    fieldPtr[1] = 0.1*u_m*sin(y);
-    fieldPtr[2] = 0.1*u_m*sin(z);
+    fieldPtr[0] = u_m * sin(x) * aux_x;
+    fieldPtr[1] = 0.1 * u_m * sin(y);
+    fieldPtr[2] = 0.1 * u_m * sin(z);
 
     fieldPtr += fieldSize;
     coords += spatialDimension;
@@ -59,4 +56,4 @@ SinProfileChannelFlowVelocityAuxFunction::do_evaluate(
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

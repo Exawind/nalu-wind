@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <user_functions/VariableDensityVelocityAuxFunction.h>
 #include <algorithm>
 
@@ -17,12 +15,11 @@
 #include <vector>
 #include <stdexcept>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 VariableDensityVelocityAuxFunction::VariableDensityVelocityAuxFunction(
-  const unsigned beginPos,
-  const unsigned endPos) 
+  const unsigned beginPos, const unsigned endPos)
   : AuxFunction(beginPos, endPos),
     unot_(1.0),
     vnot_(1.0),
@@ -35,24 +32,27 @@ VariableDensityVelocityAuxFunction::VariableDensityVelocityAuxFunction(
 
 void
 VariableDensityVelocityAuxFunction::do_evaluate(
-  const double *coords,
+  const double* coords,
   const double /*time*/,
   const unsigned spatialDimension,
   const unsigned numPoints,
-  double * fieldPtr,
+  double* fieldPtr,
   const unsigned fieldSize,
   const unsigned /*beginPos*/,
   const unsigned /*endPos*/) const
 {
-  for(unsigned p=0; p < numPoints; ++p) {
+  for (unsigned p = 0; p < numPoints; ++p) {
 
     const double x = coords[0];
     const double y = coords[1];
     const double z = coords[2];
 
-    fieldPtr[0] = -unot_*cos(a_*pi_*x)*sin(a_*pi_*y)*sin(a_*pi_*z);
-    fieldPtr[1] = +vnot_*sin(a_*pi_*x)*cos(a_*pi_*y)*sin(a_*pi_*z);
-    fieldPtr[2] = -wnot_*sin(a_*pi_*x)*sin(a_*pi_*y)*cos(a_*pi_*z);
+    fieldPtr[0] =
+      -unot_ * cos(a_ * pi_ * x) * sin(a_ * pi_ * y) * sin(a_ * pi_ * z);
+    fieldPtr[1] =
+      +vnot_ * sin(a_ * pi_ * x) * cos(a_ * pi_ * y) * sin(a_ * pi_ * z);
+    fieldPtr[2] =
+      -wnot_ * sin(a_ * pi_ * x) * sin(a_ * pi_ * y) * cos(a_ * pi_ * z);
 
     fieldPtr += fieldSize;
     coords += spatialDimension;
@@ -60,4 +60,4 @@ VariableDensityVelocityAuxFunction::do_evaluate(
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
