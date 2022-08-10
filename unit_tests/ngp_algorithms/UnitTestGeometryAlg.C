@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestHelperObjects.h"
 
@@ -21,7 +20,8 @@
 TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -37,8 +37,8 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
   helperObjs.realm.realmUsesEdges_ = true;
 
   const auto& fieldMgr = helperObjs.realm.mesh_info().ngp_field_manager();
-  auto& ngpElemVol = fieldMgr.get_field<double>(
-      elementVolume_->mesh_meta_data_ordinal());
+  auto& ngpElemVol =
+    fieldMgr.get_field<double>(elementVolume_->mesh_meta_data_ordinal());
 
   sierra::nalu::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
 
@@ -58,8 +58,8 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int counter = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* dVol = stk::mesh::field_data(*dnvField_, node);
         EXPECT_NEAR(0.125, dVol[0], tol);
         counter++;
@@ -72,8 +72,8 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
     const auto& bkts = bulk_->get_buckets(stk::topology::ELEM_RANK, sel);
 
     int counter = 0;
-    for (const auto* b: bkts)
-      for (const auto elem: *b) {
+    for (const auto* b : bkts)
+      for (const auto elem : *b) {
         const double* dVol = stk::mesh::field_data(*elementVolume_, elem);
         EXPECT_NEAR(1.0, dVol[0], tol);
         counter++;
@@ -87,11 +87,11 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
     const double aMagSqrGold = 0.25 * 0.25;
 
     int counter = 0;
-    for (const auto* b: bkts)
-      for (const auto edge: *b) {
+    for (const auto* b : bkts)
+      for (const auto edge : *b) {
         const double* areaVec = stk::mesh::field_data(*edgeAreaVec_, edge);
         double aMagSqr = 0.0;
-        for (int i=0; i < 3; i++)
+        for (int i = 0; i < 3; i++)
           aMagSqr += areaVec[i] * areaVec[i];
 
         EXPECT_NEAR(aMagSqrGold, aMagSqr, tol);
@@ -104,7 +104,8 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
 TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -117,8 +118,8 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   const auto& fieldMgr = helperObjs.realm.mesh_info().ngp_field_manager();
-  auto& ngpArea = fieldMgr.get_field<double>(
-      exposedAreaVec_->mesh_meta_data_ordinal());
+  auto& ngpArea =
+    fieldMgr.get_field<double>(exposedAreaVec_->mesh_meta_data_ordinal());
 
   auto* part = meta_->get_part("surface_5");
   auto* surfPart = part->subsets()[0];
@@ -138,13 +139,14 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
     const double aMagSqrGold = 0.25 * 0.25;
 
     const double tol = 1.0e-16;
-    for (const auto* b: bkts)
-      for (const auto face: *b) {
+    for (const auto* b : bkts)
+      for (const auto face : *b) {
         const double* areaVec = stk::mesh::field_data(*exposedAreaVec_, face);
-        for (int ip=0; ip < sierra::nalu::AlgTraitsQuad4::numFaceIp_; ++ip) {
+        for (int ip = 0; ip < sierra::nalu::AlgTraitsQuad4::numFaceIp_; ++ip) {
           double aMagSqr = 0.0;
-          for (int i=0; i < 3; i++) {
-            const double av = areaVec[ip * sierra::nalu::AlgTraitsQuad4::nDim_ + i];
+          for (int i = 0; i < 3; i++) {
+            const double av =
+              areaVec[ip * sierra::nalu::AlgTraitsQuad4::nDim_ + i];
             aMagSqr += av * av;
           }
 
@@ -157,7 +159,8 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
 TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -180,8 +183,8 @@ TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
   geomAlgDriver.execute();
 
   const auto& fieldMgr = helperObjs.realm.mesh_info().ngp_field_manager();
-  auto& ngpWdist = fieldMgr.get_field<double>(
-      wallNormDist_->mesh_meta_data_ordinal());
+  auto& ngpWdist =
+    fieldMgr.get_field<double>(wallNormDist_->mesh_meta_data_ordinal());
 
   ngpWdist.sync_to_host();
 
@@ -193,8 +196,8 @@ TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
     const double wAreaGold = 0.25;
 
     const double tol = 1.0e-16;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* wdist = stk::mesh::field_data(*wallNormDist_, node);
         const double* warea = stk::mesh::field_data(*wallArea_, node);
         EXPECT_NEAR(wdistGold, wdist[0], tol);

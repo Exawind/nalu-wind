@@ -45,13 +45,17 @@ protected:
     bulk = meshBuilder.create();
     meta = &bulk->mesh_meta_data();
 
-    q_field = &meta->declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, conduction_info::q_name, 3);
-    alpha_field = &meta->declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, conduction_info::volume_weight_name);
-    lambda_field = &meta->declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, conduction_info::diffusion_weight_name);
+    q_field = &meta->declare_field<stk::mesh::Field<double>>(
+      stk::topology::NODE_RANK, conduction_info::q_name, 3);
+    alpha_field = &meta->declare_field<stk::mesh::Field<double>>(
+      stk::topology::NODE_RANK, conduction_info::volume_weight_name);
+    lambda_field = &meta->declare_field<stk::mesh::Field<double>>(
+      stk::topology::NODE_RANK, conduction_info::diffusion_weight_name);
 
     stk::topology topo(stk::topology::HEX_8);
 
-    stk::mesh::Part& block_1 = meta->declare_part_with_topology("block_1", topo);
+    stk::mesh::Part& block_1 =
+      meta->declare_part_with_topology("block_1", topo);
     stk::io::put_io_part_attribute(block_1);
 
     stk::mesh::PartVector allSurfaces = {
@@ -72,7 +76,8 @@ protected:
     stk::mesh::put_field_on_mesh(*q_field, block_1, 1, nullptr);
     stk::mesh::put_field_on_mesh(*lambda_field, block_1, 1, nullptr);
     stk::mesh::put_field_on_mesh(*alpha_field, block_1, 1, nullptr);
-    stk::mesh::put_field_on_mesh(coordField, stk::mesh::selectUnion(allSurfaces), nullptr);
+    stk::mesh::put_field_on_mesh(
+      coordField, stk::mesh::selectUnion(allSurfaces), nullptr);
     meta->set_coordinate_field(&coordField);
     meta->commit();
 

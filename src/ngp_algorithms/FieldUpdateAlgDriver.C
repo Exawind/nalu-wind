@@ -2,11 +2,10 @@
 // (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
 // Northwest Research Associates. Under the terms of Contract DE-NA0003525
 // with NTESS, the U.S. Government retains certain rights in this software.
-// 
+//
 // This software is released under the BSD 3-clause license. See LICENSE file
 // for more details.
 //
-
 
 #include "ngp_algorithms/FieldUpdateAlgDriver.h"
 #include "Realm.h"
@@ -35,8 +34,8 @@ FieldUpdateAlgDriver::pre_work()
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto field = fieldMgr.get_field<double>(get_field_ordinal(meta, fieldName_));
 
-  auto* nonngpField = meta.get_field<GenericFieldType>(
-    stk::topology::NODE_RANK, fieldName_);
+  auto* nonngpField =
+    meta.get_field<GenericFieldType>(stk::topology::NODE_RANK, fieldName_);
   stk::mesh::field_fill(0.0, *nonngpField);
 
   field.set_all(ngpMesh, 0.0);

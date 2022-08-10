@@ -7,11 +7,9 @@
 // for more details.
 //
 
-
 #include <element_promotion/PromoteElement.h>
 #include <element_promotion/PromotedPartHelper.h>
 #include <element_promotion/PromoteElementImpl.h>
-
 
 #include <NaluEnv.h>
 #include <BucketLoop.h>
@@ -35,7 +33,6 @@
 #include <stk_util/parallel/ParallelComm.hpp>
 #include <stk_util/util/ReportHandler.hpp>
 
-
 #include <algorithm>
 #include <vector>
 #include <stdexcept>
@@ -54,17 +51,17 @@ create_tensor_product_hex_elements(
   const stk::mesh::PartVector& partsToBePromoted)
 {
   ThrowRequire(check_parts_for_promotion(partsToBePromoted));
-  return impl::promote_elements_hex(nodeLocs1D, bulk, coordField, partsToBePromoted);
+  return impl::promote_elements_hex(
+    nodeLocs1D, bulk, coordField, partsToBePromoted);
 }
 
 stk::mesh::PartVector
 create_promoted_boundary_elements(
-  int p,
-  stk::mesh::BulkData& bulk,
-  const stk::mesh::PartVector& parts)
+  int p, stk::mesh::BulkData& bulk, const stk::mesh::PartVector& parts)
 {
   return impl::create_boundary_elements(p, bulk, parts);
 }
 
-}}}
-
+} // namespace promotion
+} // namespace nalu
+} // namespace sierra

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
 
 #include "BuildTemplates.h"
@@ -22,12 +21,9 @@
 namespace sierra {
 namespace nalu {
 
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 WallFuncGeometryAlg<BcAlgTraits>::WallFuncGeometryAlg(
-  Realm& realm,
-  stk::mesh::Part* part,
-  bool RANSAblBcApproach,
-  double z0)
+  Realm& realm, stk::mesh::Part* part, bool RANSAblBcApproach, double z0)
   : Algorithm(realm, part),
     faceData_(realm.meta_data()),
     elemData_(realm.meta_data()),
@@ -36,11 +32,12 @@ WallFuncGeometryAlg<BcAlgTraits>::WallFuncGeometryAlg(
     exposedAreaVec_(get_field_ordinal(
       realm.meta_data(), "exposed_area_vector", realm.meta_data().side_rank())),
     wallNormDistBip_(get_field_ordinal(
-                   realm.meta_data(),
-                   "wall_normal_distance_bip",
-                   realm.meta_data().side_rank())),
+      realm.meta_data(),
+      "wall_normal_distance_bip",
+      realm.meta_data().side_rank())),
     wallArea_(get_field_ordinal(realm.meta_data(), "assembled_wall_area_wf")),
-    wallNormDist_(get_field_ordinal(realm.meta_data(), "assembled_wall_normal_distance")),
+    wallNormDist_(
+      get_field_ordinal(realm.meta_data(), "assembled_wall_normal_distance")),
     meFC_(MasterElementRepo::get_surface_master_element<
           typename BcAlgTraits::FaceTraits>()),
     meSCS_(MasterElementRepo::get_surface_master_element<
@@ -60,8 +57,9 @@ WallFuncGeometryAlg<BcAlgTraits>::WallFuncGeometryAlg(
     coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
 }
 
-template<typename BcAlgTraits>
-void WallFuncGeometryAlg<BcAlgTraits>::execute()
+template <typename BcAlgTraits>
+void
+WallFuncGeometryAlg<BcAlgTraits>::execute()
 {
   using SimdDataType = nalu_ngp::FaceElemSimdData<stk::mesh::NgpMesh>;
 
@@ -73,15 +71,15 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
   auto wdistBip = fieldMgr.template get_field<double>(wallNormDistBip_);
   auto wdist = fieldMgr.template get_field<double>(wallNormDist_);
   auto warea = fieldMgr.template get_field<double>(wallArea_);
-  const auto areaOps = nalu_ngp::simd_face_elem_nodal_field_updater(
-    ngpMesh, warea);
-  const auto distOps = nalu_ngp::simd_face_elem_nodal_field_updater(
-    ngpMesh, wdist);
-  const auto dBipOps = nalu_ngp::simd_face_elem_field_updater(
-    ngpMesh, wdistBip);
+  const auto areaOps =
+    nalu_ngp::simd_face_elem_nodal_field_updater(ngpMesh, warea);
+  const auto distOps =
+    nalu_ngp::simd_face_elem_nodal_field_updater(ngpMesh, wdist);
+  const auto dBipOps =
+    nalu_ngp::simd_face_elem_field_updater(ngpMesh, wdistBip);
 
-  const stk::mesh::Selector sel = meta.locally_owned_part()
-    & stk::mesh::selectUnion(partVec_);
+  const stk::mesh::Selector sel =
+    meta.locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
   // Bring class members into local scope for device capture
   const unsigned coordsID = coordinates_;
@@ -92,19 +90,19 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
   double z0 = z0_;
 
   const std::string algName = "WallFuncGeometryAlg_" +
-    std::to_string(BcAlgTraits::faceTopo_) + "_" +
-    std::to_string(BcAlgTraits::elemTopo_);
+                              std::to_string(BcAlgTraits::faceTopo_) + "_" +
+                              std::to_string(BcAlgTraits::elemTopo_);
 
   nalu_ngp::run_face_elem_algorithm(
     algName, meshInfo, faceData_, elemData_, sel,
-    KOKKOS_LAMBDA(SimdDataType& fdata) {
+    KOKKOS_LAMBDA(SimdDataType & fdata) {
       auto& v_coord = fdata.simdElemView.get_scratch_view_2D(coordsID);
       auto& v_area = fdata.simdFaceView.get_scratch_view_2D(exposedAreaVecID);
 
       const int* faceIpNodeMap = meFC->ipNodeMap();
-      for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
+      for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
         DoubleType aMag = 0.0;
-        for (int d=0; d < BcAlgTraits::nDim_; ++d)
+        for (int d = 0; d < BcAlgTraits::nDim_; ++d)
           aMag += v_area(ip, d) * v_area(ip, d);
         aMag = stk::math::sqrt(aMag);
 
@@ -115,12 +113,12 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
         if (RANSAblBcApproach) {
           // set ypBip to roughness height for wall function calculation
           ypBip = z0;
-        }
-        else {
+        } else {
           ypBip = 0.0;
-          for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+          for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
             const DoubleType nj = v_area(ip, d) / aMag;
-            const DoubleType ej = wallNormalHeightFactor * (v_coord(nodeR, d) - v_coord(nodeL, d));
+            const DoubleType ej =
+              wallNormalHeightFactor * (v_coord(nodeR, d) - v_coord(nodeL, d));
             ypBip += nj * ej * nj * ej;
           }
           ypBip = stk::math::sqrt(ypBip);
@@ -139,5 +137,5 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(WallFuncGeometryAlg)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

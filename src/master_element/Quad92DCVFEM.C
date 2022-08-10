@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <master_element/Quad92DCVFEM.h>
 #include <master_element/MasterElementFunctions.h>
 #include <master_element/MasterElementUtils.h>
@@ -28,14 +26,13 @@
 #include <map>
 #include <memory>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //--------------------------------------------------------------------------
 //-------- constructor------------------------------------------------------
 //--------------------------------------------------------------------------
-QuadrilateralP2Element::QuadrilateralP2Element()
-  : MasterElement()
+QuadrilateralP2Element::QuadrilateralP2Element() : MasterElement()
 {
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
@@ -47,7 +44,7 @@ QuadrilateralP2Element::QuadrilateralP2Element()
 int
 QuadrilateralP2Element::tensor_product_node_map(int i, int j) const
 {
-   return stkNodeMap_[j][i];
+  return stkNodeMap_[j][i];
 }
 
 //--------------------------------------------------------------------------
@@ -55,20 +52,18 @@ QuadrilateralP2Element::tensor_product_node_map(int i, int j) const
 //--------------------------------------------------------------------------
 double
 QuadrilateralP2Element::gauss_point_location(
-  int nodeOrdinal,
-  int gaussPointOrdinal) const
+  int nodeOrdinal, int gaussPointOrdinal) const
 {
-   return isoparametric_mapping( scsEndLoc_[nodeOrdinal+1],
-     scsEndLoc_[nodeOrdinal],
-     gaussAbscissae_[gaussPointOrdinal] );
+  return isoparametric_mapping(
+    scsEndLoc_[nodeOrdinal + 1], scsEndLoc_[nodeOrdinal],
+    gaussAbscissae_[gaussPointOrdinal]);
 }
 //--------------------------------------------------------------------------
 //-------- shifted_gauss_point_location ------------------------------------
 //--------------------------------------------------------------------------
 double
 QuadrilateralP2Element::shifted_gauss_point_location(
-  int nodeOrdinal,
-  int gaussPointOrdinal) const
+  int nodeOrdinal, int gaussPointOrdinal) const
 {
   return gaussAbscissaeShift_[nodeOrdinal][gaussPointOrdinal];
 }
@@ -77,15 +72,15 @@ QuadrilateralP2Element::shifted_gauss_point_location(
 //--------------------------------------------------------------------------
 double
 QuadrilateralP2Element::tensor_product_weight(
-  int s1Node, int s2Node,
-  int s1Ip, int s2Ip) const
+  int s1Node, int s2Node, int s1Ip, int s2Ip) const
 {
-  //surface integration
-  const double Ls1 = scsEndLoc_[s1Node+1]-scsEndLoc_[s1Node];
-  const double Ls2 = scsEndLoc_[s2Node+1]-scsEndLoc_[s2Node];
+  // surface integration
+  const double Ls1 = scsEndLoc_[s1Node + 1] - scsEndLoc_[s1Node];
+  const double Ls2 = scsEndLoc_[s2Node + 1] - scsEndLoc_[s2Node];
   const double isoparametricArea = Ls1 * Ls2;
 
-  const double weight = isoparametricArea * gaussWeight_[s1Ip] * gaussWeight_[s2Ip];
+  const double weight =
+    isoparametricArea * gaussWeight_[s1Ip] * gaussWeight_[s2Ip];
 
   return weight;
 }
@@ -96,28 +91,26 @@ QuadrilateralP2Element::tensor_product_weight(
 double
 QuadrilateralP2Element::tensor_product_weight(int s1Node, int s1Ip) const
 {
-  //line integration
-  const double isoparametricLength = scsEndLoc_[s1Node+1]-scsEndLoc_[s1Node];
+  // line integration
+  const double isoparametricLength =
+    scsEndLoc_[s1Node + 1] - scsEndLoc_[s1Node];
   const double weight = isoparametricLength * gaussWeight_[s1Ip];
 
   return weight;
 }
-
 
 //--------------------------------------------------------------------------
 //-------- quad9_shape_fcn -------------------------------------------------
 //--------------------------------------------------------------------------
 void
 QuadrilateralP2Element::quad9_shape_fcn(
-  int  numIntPoints,
-  const double *intgLoc,
-  double *shpfc) const
+  int numIntPoints, const double* intgLoc, double* shpfc) const
 {
-  for ( int ip = 0; ip < numIntPoints; ++ip ) {
+  for (int ip = 0; ip < numIntPoints; ++ip) {
     int nineIp = nodesPerElement_ * ip; // nodes per element is always 9
     int vector_offset = nDim_ * ip;
-    const double s = intgLoc[vector_offset+0];
-    const double t = intgLoc[vector_offset+1];
+    const double s = intgLoc[vector_offset + 0];
+    const double t = intgLoc[vector_offset + 1];
 
     const double one_m_s = 1.0 - s;
     const double one_p_s = 1.0 + s;
@@ -127,15 +120,15 @@ QuadrilateralP2Element::quad9_shape_fcn(
     const double one_m_ss = 1.0 - s * s;
     const double one_m_tt = 1.0 - t * t;
 
-    shpfc[nineIp  ] =  0.25 * s * t *  one_m_s *  one_m_t;
-    shpfc[nineIp+1] = -0.25 * s * t *  one_p_s *  one_m_t;
-    shpfc[nineIp+2] =  0.25 * s * t *  one_p_s *  one_p_t;
-    shpfc[nineIp+3] = -0.25 * s * t *  one_m_s *  one_p_t;
-    shpfc[nineIp+4] = -0.50 *     t *  one_p_s *  one_m_s * one_m_t;
-    shpfc[nineIp+5] =  0.50 * s     *  one_p_t *  one_m_t * one_p_s;
-    shpfc[nineIp+6] =  0.50 *     t *  one_p_s *  one_m_s * one_p_t;
-    shpfc[nineIp+7] = -0.50 * s     *  one_p_t *  one_m_t * one_m_s;
-    shpfc[nineIp+8] =  one_m_ss * one_m_tt;
+    shpfc[nineIp] = 0.25 * s * t * one_m_s * one_m_t;
+    shpfc[nineIp + 1] = -0.25 * s * t * one_p_s * one_m_t;
+    shpfc[nineIp + 2] = 0.25 * s * t * one_p_s * one_p_t;
+    shpfc[nineIp + 3] = -0.25 * s * t * one_m_s * one_p_t;
+    shpfc[nineIp + 4] = -0.50 * t * one_p_s * one_m_s * one_m_t;
+    shpfc[nineIp + 5] = 0.50 * s * one_p_t * one_m_t * one_p_s;
+    shpfc[nineIp + 6] = 0.50 * t * one_p_s * one_m_s * one_p_t;
+    shpfc[nineIp + 7] = -0.50 * s * one_p_t * one_m_t * one_m_s;
+    shpfc[nineIp + 8] = one_m_ss * one_m_tt;
   }
 }
 
@@ -144,73 +137,74 @@ QuadrilateralP2Element::quad9_shape_fcn(
 //--------------------------------------------------------------------------
 void
 QuadrilateralP2Element::quad9_shape_deriv(
-  int numIntPoints,
-  const double *intgLoc,
-  double *deriv) const
+  int numIntPoints, const double* intgLoc, double* deriv) const
 {
-  for ( int ip = 0; ip < numIntPoints; ++ip ) {
-    const int grad_offset = nDim_ * nodesPerElement_ * ip; // nodes per element is always 9
+  for (int ip = 0; ip < numIntPoints; ++ip) {
+    const int grad_offset =
+      nDim_ * nodesPerElement_ * ip; // nodes per element is always 9
     const int vector_offset = nDim_ * ip;
-    int node; int offset;
+    int node;
+    int offset;
 
-    const double s = intgLoc[vector_offset+0];
-    const double t = intgLoc[vector_offset+1];
+    const double s = intgLoc[vector_offset + 0];
+    const double t = intgLoc[vector_offset + 1];
 
-    const double s2 = s*s;
-    const double t2 = t*t;
+    const double s2 = s * s;
+    const double t2 = t * t;
 
     node = 0;
     offset = grad_offset + nDim_ * node;
-    deriv[offset+0] = 0.25 * (2.0 * s * t2 - 2.0 * s * t - t2 + t);
-    deriv[offset+1] = 0.25 * (2.0 * s2 * t - 2.0 * s * t - s2 + s);
+    deriv[offset + 0] = 0.25 * (2.0 * s * t2 - 2.0 * s * t - t2 + t);
+    deriv[offset + 1] = 0.25 * (2.0 * s2 * t - 2.0 * s * t - s2 + s);
 
     node = 1;
     offset = grad_offset + nDim_ * node;
-    deriv[offset+0] = 0.25 * (2.0 * s * t2 - 2.0 * s * t + t2 - t);
-    deriv[offset+1] = 0.25 * (2.0 * s2 * t + 2.0 * s * t - s2 - s);
+    deriv[offset + 0] = 0.25 * (2.0 * s * t2 - 2.0 * s * t + t2 - t);
+    deriv[offset + 1] = 0.25 * (2.0 * s2 * t + 2.0 * s * t - s2 - s);
 
     node = 2;
     offset = grad_offset + nDim_ * node;
-    deriv[offset+0] = 0.25 * (2.0 * s * t2 + 2.0 * s * t + t2 + t);
-    deriv[offset+1] = 0.25 * (2.0 * s2 * t + 2.0 * s * t + s2 + s);
+    deriv[offset + 0] = 0.25 * (2.0 * s * t2 + 2.0 * s * t + t2 + t);
+    deriv[offset + 1] = 0.25 * (2.0 * s2 * t + 2.0 * s * t + s2 + s);
 
     node = 3;
     offset = grad_offset + nDim_ * node;
-    deriv[offset+0] = 0.25 * (2.0 * s * t2 + 2.0 * s * t - t2 - t);
-    deriv[offset+1] = 0.25 * (2.0 * s2 * t - 2.0 * s * t + s2 - s);
+    deriv[offset + 0] = 0.25 * (2.0 * s * t2 + 2.0 * s * t - t2 - t);
+    deriv[offset + 1] = 0.25 * (2.0 * s2 * t - 2.0 * s * t + s2 - s);
 
     node = 4;
     offset = grad_offset + nDim_ * node;
-    deriv[offset+0] = -0.5 * (2.0 * s * t2 - 2.0 * s * t);
-    deriv[offset+1] = -0.5 * (2.0 * s2 * t - s2 - 2.0 * t + 1.0);
+    deriv[offset + 0] = -0.5 * (2.0 * s * t2 - 2.0 * s * t);
+    deriv[offset + 1] = -0.5 * (2.0 * s2 * t - s2 - 2.0 * t + 1.0);
 
     node = 5;
     offset = grad_offset + nDim_ * node;
-    deriv[offset+0] = -0.5 * (2.0 * s * t2 + t2 - 2.0 * s - 1.0);
-    deriv[offset+1] = -0.5 * (2.0 * s2 * t + 2.0 * s * t);
+    deriv[offset + 0] = -0.5 * (2.0 * s * t2 + t2 - 2.0 * s - 1.0);
+    deriv[offset + 1] = -0.5 * (2.0 * s2 * t + 2.0 * s * t);
 
     node = 6;
     offset = grad_offset + nDim_ * node;
-    deriv[offset+0] = -0.5 * (2.0 * s * t2 + 2.0 * s * t);
-    deriv[offset+1] = -0.5 * (2.0 * s2 * t + s2 - 2.0 * t - 1.0);
+    deriv[offset + 0] = -0.5 * (2.0 * s * t2 + 2.0 * s * t);
+    deriv[offset + 1] = -0.5 * (2.0 * s2 * t + s2 - 2.0 * t - 1.0);
 
     node = 7;
     offset = grad_offset + nDim_ * node;
-    deriv[offset+0] = -0.5 * (2.0 * s * t2 - t2 - 2.0 * s + 1.0);
-    deriv[offset+1] = -0.5 * (2.0 * s2 * t - 2.0 * s * t);
+    deriv[offset + 0] = -0.5 * (2.0 * s * t2 - t2 - 2.0 * s + 1.0);
+    deriv[offset + 1] = -0.5 * (2.0 * s2 * t - 2.0 * s * t);
 
     node = 8;
     offset = grad_offset + nDim_ * node;
-    deriv[offset+0] = 2.0 * s * t2 - 2.0 * s;
-    deriv[offset+1] = 2.0 * s2 * t - 2.0 * t;
+    deriv[offset + 0] = 2.0 * s * t2 - 2.0 * s;
+    deriv[offset + 1] = 2.0 * s2 * t - 2.0 * t;
   }
 }
 //--------------------------------------------------------------------------
 //-------- parametric_distance ---------------------------------------------
 //--------------------------------------------------------------------------
-double QuadrilateralP2Element::parametric_distance(const std::array<double, 2>& x)
+double
+QuadrilateralP2Element::parametric_distance(const std::array<double, 2>& x)
 {
-  double absXi  = std::abs(x[0]);
+  double absXi = std::abs(x[0]);
   double absEta = std::abs(x[1]);
   return (absXi > absEta) ? absXi : absEta;
 }
@@ -220,10 +214,10 @@ double QuadrilateralP2Element::parametric_distance(const std::array<double, 2>& 
 //--------------------------------------------------------------------------
 void
 QuadrilateralP2Element::interpolatePoint(
-  const int &nComp,
-  const double *isoParCoord,
-  const double *field,
-  double *result )
+  const int& nComp,
+  const double* isoParCoord,
+  const double* field,
+  double* result)
 {
   constexpr int nNodes = 9;
   std::array<double, nNodes> shapefct;
@@ -237,17 +231,17 @@ QuadrilateralP2Element::interpolatePoint(
 //--------------------------------------------------------------------------
 //-------- isInElement -----------------------------------------------------
 //--------------------------------------------------------------------------
-double QuadrilateralP2Element::isInElement(
-  const double *elemNodalCoord,
-  const double *pointCoord,
-  double *isoParCoord)
+double
+QuadrilateralP2Element::isInElement(
+  const double* elemNodalCoord, const double* pointCoord, double* isoParCoord)
 {
   // control the interation
-  double isInElemConverged = 1.0e-16; // NOTE: the square of the tolerance on the distance
+  double isInElemConverged =
+    1.0e-16; // NOTE: the square of the tolerance on the distance
   int N_MAX_ITER = 100;
 
   constexpr int dim = 2;
-  std::array<double, dim> guess = { { 0.0, 0.0 } };
+  std::array<double, dim> guess = {{0.0, 0.0}};
   std::array<double, dim> delta;
   int iter = 0;
 
@@ -257,20 +251,22 @@ double QuadrilateralP2Element::isInElement(
     std::array<double, nNodes> weights;
     quad9_shape_fcn(1, guess.data(), weights.data());
 
-    // compute difference between coordinates interpolated to the guessed isoParametric coordinates
-    // and the actual point's coordinates
+    // compute difference between coordinates interpolated to the guessed
+    // isoParametric coordinates and the actual point's coordinates
     std::array<double, dim> error_vec;
-    error_vec[0] = pointCoord[0] - ddot(weights.data(), elemNodalCoord + 0 * nNodes, nNodes);
-    error_vec[1] = pointCoord[1] - ddot(weights.data(), elemNodalCoord + 1 * nNodes, nNodes);
+    error_vec[0] =
+      pointCoord[0] - ddot(weights.data(), elemNodalCoord + 0 * nNodes, nNodes);
+    error_vec[1] =
+      pointCoord[1] - ddot(weights.data(), elemNodalCoord + 1 * nNodes, nNodes);
 
-    // update guess along gradient of mapping from physical-to-reference coordinates
-    // transpose of the jacobian of the forward mapping
+    // update guess along gradient of mapping from physical-to-reference
+    // coordinates transpose of the jacobian of the forward mapping
     constexpr int deriv_size = nNodes * dim;
     std::array<double, deriv_size> deriv;
     quad9_shape_deriv(1, guess.data(), deriv.data());
 
     std::array<double, dim * dim> jact{};
-    for(int j = 0; j < nNodes; ++j) {
+    for (int j = 0; j < nNodes; ++j) {
       jact[0] += deriv[0 + j * dim] * elemNodalCoord[j + 0 * nNodes];
       jact[1] += deriv[1 + j * dim] * elemNodalCoord[j + 0 * nNodes];
       jact[2] += deriv[0 + j * dim] * elemNodalCoord[j + 1 * nNodes];
@@ -284,8 +280,11 @@ double QuadrilateralP2Element::isInElement(
     guess[0] += delta[0];
     guess[1] += delta[1];
 
-    //continue to iterate if update was larger than the set tolerance until max iterations are reached
-  } while(!within_tolerance(vector_norm_sq(delta.data(), 2), isInElemConverged) && (++iter < N_MAX_ITER));
+    // continue to iterate if update was larger than the set tolerance until max
+    // iterations are reached
+  } while (
+    !within_tolerance(vector_norm_sq(delta.data(), 2), isInElemConverged) &&
+    (++iter < N_MAX_ITER));
 
   // output if failed:
   isoParCoord[0] = std::numeric_limits<double>::max();
@@ -302,34 +301,34 @@ double QuadrilateralP2Element::isInElement(
 }
 void
 QuadrilateralP2Element::sidePcoords_to_elemPcoords(
-  const int & side_ordinal,
-  const int & npoints,
-  const double *side_pcoords,
-  double *elem_pcoords)
+  const int& side_ordinal,
+  const int& npoints,
+  const double* side_pcoords,
+  double* elem_pcoords)
 {
   switch (side_ordinal) {
   case 0:
-    for (int i=0; i<npoints; i++) {
-      elem_pcoords[i*2+0] = side_pcoords[i];
-      elem_pcoords[i*2+1] = -1;
+    for (int i = 0; i < npoints; i++) {
+      elem_pcoords[i * 2 + 0] = side_pcoords[i];
+      elem_pcoords[i * 2 + 1] = -1;
     }
     break;
   case 1:
-    for (int i=0; i<npoints; i++) {
-      elem_pcoords[i*2+0] = 1;
-      elem_pcoords[i*2+1] = side_pcoords[i];
+    for (int i = 0; i < npoints; i++) {
+      elem_pcoords[i * 2 + 0] = 1;
+      elem_pcoords[i * 2 + 1] = side_pcoords[i];
     }
     break;
   case 2:
-    for (int i=0; i<npoints; i++) {
-      elem_pcoords[i*2+0] = -side_pcoords[i];
-      elem_pcoords[i*2+1] = 1;
+    for (int i = 0; i < npoints; i++) {
+      elem_pcoords[i * 2 + 0] = -side_pcoords[i];
+      elem_pcoords[i * 2 + 1] = 1;
     }
     break;
   case 3:
-    for (int i=0; i<npoints; i++) {
-      elem_pcoords[i*2+0] = -1;
-      elem_pcoords[i*2+1] = -side_pcoords[i];
+    for (int i = 0; i < npoints; i++) {
+      elem_pcoords[i * 2 + 0] = -1;
+      elem_pcoords[i * 2 + 1] = -side_pcoords[i];
     }
     break;
   default:
@@ -337,49 +336,53 @@ QuadrilateralP2Element::sidePcoords_to_elemPcoords(
   }
 }
 
-//-------- quad_gradient_operator ---------------------------------------------------------
+//-------- quad_gradient_operator
+//---------------------------------------------------------
 template <int nint, int npe>
-KOKKOS_FUNCTION
-void quad_gradient_operator(SharedMemView<DoubleType**, DeviceShmem>& coords,
-                            SharedMemView<DoubleType***, DeviceShmem>& gradop,
-                            SharedMemView<DoubleType***, DeviceShmem>& deriv) {
-      
+KOKKOS_FUNCTION void
+quad_gradient_operator(
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+{
+
   DoubleType dx_ds1, dx_ds2;
   DoubleType dy_ds1, dy_ds2;
 
-  for (int ki=0; ki<nint; ++ki) {
+  for (int ki = 0; ki < nint; ++ki) {
     dx_ds1 = 0.0;
     dx_ds2 = 0.0;
     dy_ds1 = 0.0;
     dy_ds2 = 0.0;
- 
-// calculate the jacobian at the integration station -
-    for (int kn=0; kn<npe; ++kn) {
-      dx_ds1 += deriv(ki,kn,0)*coords(kn,0);
-      dx_ds2 += deriv(ki,kn,1)*coords(kn,0);
-      dy_ds1 += deriv(ki,kn,0)*coords(kn,1);
-      dy_ds2 += deriv(ki,kn,1)*coords(kn,1);
+
+    // calculate the jacobian at the integration station -
+    for (int kn = 0; kn < npe; ++kn) {
+      dx_ds1 += deriv(ki, kn, 0) * coords(kn, 0);
+      dx_ds2 += deriv(ki, kn, 1) * coords(kn, 0);
+      dy_ds1 += deriv(ki, kn, 0) * coords(kn, 1);
+      dy_ds2 += deriv(ki, kn, 1) * coords(kn, 1);
     }
 
-// calculate the determinate of the jacobian at the integration station -
-    const DoubleType det_j = dx_ds1*dy_ds2 - dy_ds1*dx_ds2;
+    // calculate the determinate of the jacobian at the integration station -
+    const DoubleType det_j = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
 
-// protect against a negative or small value for the determinate of the 
-// jacobian. The value of real_min (set in precision.par) represents 
-// the smallest Real value (based upon the precision set for this 
-// compilation) which the machine can represent - 
-    const DoubleType test = stk::math::if_then_else(det_j > 1.e+6*MEconstants::realmin, det_j, 1.0);
-    const DoubleType denom = 1.0/test;
+    // protect against a negative or small value for the determinate of the
+    // jacobian. The value of real_min (set in precision.par) represents
+    // the smallest Real value (based upon the precision set for this
+    // compilation) which the machine can represent -
+    const DoubleType test =
+      stk::math::if_then_else(det_j > 1.e+6 * MEconstants::realmin, det_j, 1.0);
+    const DoubleType denom = 1.0 / test;
 
-// compute the gradient operators at the integration station -
-    const DoubleType ds1_dx =  denom*dy_ds2;
-    const DoubleType ds2_dx = -denom*dy_ds1;
-    const DoubleType ds1_dy = -denom*dx_ds2;
-    const DoubleType ds2_dy =  denom*dx_ds1;
+    // compute the gradient operators at the integration station -
+    const DoubleType ds1_dx = denom * dy_ds2;
+    const DoubleType ds2_dx = -denom * dy_ds1;
+    const DoubleType ds1_dy = -denom * dx_ds2;
+    const DoubleType ds2_dy = denom * dx_ds1;
 
-    for (int kn=0; kn<npe; ++kn) {
-      gradop(ki,kn,0) = deriv(ki,kn,0)*ds1_dx + deriv(ki,kn,1)*ds2_dx;
-      gradop(ki,kn,1) = deriv(ki,kn,0)*ds1_dy + deriv(ki,kn,1)*ds2_dy;
+    for (int kn = 0; kn < npe; ++kn) {
+      gradop(ki, kn, 0) = deriv(ki, kn, 0) * ds1_dx + deriv(ki, kn, 1) * ds2_dx;
+      gradop(ki, kn, 1) = deriv(ki, kn, 0) * ds1_dy + deriv(ki, kn, 1) * ds2_dy;
     }
   }
 }
@@ -387,8 +390,7 @@ void quad_gradient_operator(SharedMemView<DoubleType**, DeviceShmem>& coords,
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-Quad92DSCV::Quad92DSCV()
-: QuadrilateralP2Element()
+Quad92DSCV::Quad92DSCV() : QuadrilateralP2Element()
 {
   MasterElement::numIntPoints_ = numIntPoints_;
 #ifndef KOKKOS_ENABLE_CUDA
@@ -396,9 +398,9 @@ Quad92DSCV::Quad92DSCV()
   set_interior_info();
 
   // compute and save shape functions and derivatives at ips
-  quad9_shape_fcn  (numIntPoints_, intgLoc_,      shapeFunctions_);
-  quad9_shape_deriv(numIntPoints_, intgLoc_,      shapeDerivs_);
-  quad9_shape_fcn  (numIntPoints_, intgLocShift_, shapeFunctionsShift_);
+  quad9_shape_fcn(numIntPoints_, intgLoc_, shapeFunctions_);
+  quad9_shape_deriv(numIntPoints_, intgLoc_, shapeDerivs_);
+  quad9_shape_fcn(numIntPoints_, intgLocShift_, shapeFunctionsShift_);
   quad9_shape_deriv(numIntPoints_, intgLocShift_, shapeDerivsShift_);
 #endif
 }
@@ -411,24 +413,25 @@ Quad92DSCV::set_interior_info()
 {
   // define ip node mappings
   // tensor product nodes (3x3x3) x tensor product quadrature (2x2x2)
-  int vector_index = 0; int scalar_index = 0;
+  int vector_index = 0;
+  int scalar_index = 0;
   for (int l = 0; l < nodes1D_; ++l) {
     for (int k = 0; k < nodes1D_; ++k) {
-      const int nodeNumber = tensor_product_node_map(k,l);
-      //tensor-product quadrature for a particular sub-cv
+      const int nodeNumber = tensor_product_node_map(k, l);
+      // tensor-product quadrature for a particular sub-cv
       for (int j = 0; j < numQuad_; ++j) {
         for (int i = 0; i < numQuad_; ++i) {
-          //integration point location
-          intgLoc_[vector_index]     = gauss_point_location(k,i);
-          intgLoc_[vector_index + 1] = gauss_point_location(l,j);
+          // integration point location
+          intgLoc_[vector_index] = gauss_point_location(k, i);
+          intgLoc_[vector_index + 1] = gauss_point_location(l, j);
 
-          intgLocShift_[vector_index]     = shifted_gauss_point_location(k,i);
-          intgLocShift_[vector_index + 1] = shifted_gauss_point_location(l,j);
+          intgLocShift_[vector_index] = shifted_gauss_point_location(k, i);
+          intgLocShift_[vector_index + 1] = shifted_gauss_point_location(l, j);
 
-          //weight
-          ipWeight_[scalar_index] = tensor_product_weight(k,l,i,j);
+          // weight
+          ipWeight_[scalar_index] = tensor_product_weight(k, l, i, j);
 
-          //sub-control volume association
+          // sub-control volume association
           ipNodeMap_[l][k][j][i] = nodeNumber;
 
           // increment indices
@@ -443,24 +446,23 @@ Quad92DSCV::set_interior_info()
 //--------------------------------------------------------------------------
 //-------- ipNodeMap -------------------------------------------------------
 //--------------------------------------------------------------------------
-const int *
-Quad92DSCV::ipNodeMap(
-  int /*ordinal*/) const
+const int*
+Quad92DSCV::ipNodeMap(int /*ordinal*/) const
 {
- // define scv->node mappings
- return &ipNodeMap_[0][0][0][0];
+  // define scv->node mappings
+  return &ipNodeMap_[0][0][0][0];
 }
 
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-Quad92DSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+Quad92DSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int i = 0; i < numIntPoints_ ; ++i) {
+  for (int i = 0; i < numIntPoints_; ++i) {
     for (int j = 0; j < nodesPerElement_; ++j) {
-      const int ni = i*nodesPerElement_ + j;
-      shpfc(i,j) = shapeFunctions_[ni];
+      const int ni = i * nodesPerElement_ + j;
+      shpfc(i, j) = shapeFunctions_[ni];
     }
   }
 }
@@ -477,12 +479,12 @@ Quad92DSCV::shape_fcn(double* shpfc)
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-Quad92DSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+Quad92DSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int i = 0; i < numIntPoints_ ; ++i) {
+  for (int i = 0; i < numIntPoints_; ++i) {
     for (int j = 0; j < nodesPerElement_; ++j) {
-      const int ni = i*nodesPerElement_ + j;
-      shpfc(i,j) = shapeFunctionsShift_[ni];
+      const int ni = i * nodesPerElement_ + j;
+      shpfc(i, j) = shapeFunctionsShift_[ni];
     }
   }
 }
@@ -499,20 +501,22 @@ Quad92DSCV::shifted_shape_fcn(double* shpfc)
 //--------------------------------------------------------------------------
 DoubleType
 Quad92DSCV::jacobian_determinant(
-  const SharedMemView<DoubleType**, DeviceShmem> &elemNodalCoords,      
-  const double *POINTER_RESTRICT shapeDerivs) const
+  const SharedMemView<DoubleType**, DeviceShmem>& elemNodalCoords,
+  const double* POINTER_RESTRICT shapeDerivs) const
 {
-  DoubleType dx_ds1 = 0.0;  DoubleType dx_ds2 = 0.0;
-  DoubleType dy_ds1 = 0.0;  DoubleType dy_ds2 = 0.0;
+  DoubleType dx_ds1 = 0.0;
+  DoubleType dx_ds2 = 0.0;
+  DoubleType dy_ds1 = 0.0;
+  DoubleType dy_ds2 = 0.0;
 
   for (int node = 0; node < AlgTraits::nodesPerElement_; ++node) {
     const int vector_offset = node * AlgTraits::nDim_;
 
-    const DoubleType xCoord = elemNodalCoords(node,0);
-    const DoubleType yCoord = elemNodalCoords(node,1);
+    const DoubleType xCoord = elemNodalCoords(node, 0);
+    const DoubleType yCoord = elemNodalCoords(node, 1);
 
-    const double dn_ds1  = shapeDerivs[vector_offset + 0];
-    const double dn_ds2  = shapeDerivs[vector_offset + 1];
+    const double dn_ds1 = shapeDerivs[vector_offset + 0];
+    const double dn_ds2 = shapeDerivs[vector_offset + 1];
 
     dx_ds1 += dn_ds1 * xCoord;
     dx_ds2 += dn_ds2 * xCoord;
@@ -525,71 +529,76 @@ Quad92DSCV::jacobian_determinant(
   return det_j;
 }
 
-void Quad92DSCV::determinant(
-  SharedMemView<DoubleType**, DeviceShmem> &coords,
-  SharedMemView<DoubleType*, DeviceShmem>  &volume) 
+void
+Quad92DSCV::determinant(
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType*, DeviceShmem>& volume)
 {
-    for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
-      const int grad_offset = nDim_ * nodesPerElement_ * ip;
+  for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
+    const int grad_offset = nDim_ * nodesPerElement_ * ip;
 
-      //weighted jacobian determinant
-      const DoubleType det_j = 
-        jacobian_determinant(coords, &shapeDerivs_[grad_offset]);
+    // weighted jacobian determinant
+    const DoubleType det_j =
+      jacobian_determinant(coords, &shapeDerivs_[grad_offset]);
 
-      //apply weight and store to volume
-      volume[ip] = ipWeight_[ip] * det_j;
-    }
-} 
+    // apply weight and store to volume
+    volume[ip] = ipWeight_[ip] * det_j;
+  }
+}
 
-void Quad92DSCV::grad_op(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType***, DeviceShmem>& gradop,
-    SharedMemView<DoubleType***, DeviceShmem>& deriv) {
-  for (int ki=0,j=0; ki<AlgTraits::numScsIp_; ++ki) {
-    for (int kn=0; kn<AlgTraits::nodesPerElement_; ++kn) {
-      for (int n=0; n<AlgTraits::nDim_; ++n,++j) {
-        deriv(ki,kn,n) = shapeDerivs_[j];
+void
+Quad92DSCV::grad_op(
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+{
+  for (int ki = 0, j = 0; ki < AlgTraits::numScsIp_; ++ki) {
+    for (int kn = 0; kn < AlgTraits::nodesPerElement_; ++kn) {
+      for (int n = 0; n < AlgTraits::nDim_; ++n, ++j) {
+        deriv(ki, kn, n) = shapeDerivs_[j];
       }
     }
   }
-  quad_gradient_operator<AlgTraits::numScsIp_,AlgTraits::nodesPerElement_>(coords, gradop, deriv);
+  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
+    coords, gradop, deriv);
 }
 
-void Quad92DSCV::shifted_grad_op(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType***, DeviceShmem>& gradop,
-    SharedMemView<DoubleType***, DeviceShmem>& deriv) {
-  for (int ki=0,j=0; ki<AlgTraits::numScsIp_; ++ki) {
-    for (int kn=0; kn<AlgTraits::nodesPerElement_; ++kn) {
-      for (int n=0; n<AlgTraits::nDim_; ++n,++j) {
-        deriv(ki,kn,n) = shapeDerivsShift_[j];
+void
+Quad92DSCV::shifted_grad_op(
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+{
+  for (int ki = 0, j = 0; ki < AlgTraits::numScsIp_; ++ki) {
+    for (int kn = 0; kn < AlgTraits::nodesPerElement_; ++kn) {
+      for (int n = 0; n < AlgTraits::nDim_; ++n, ++j) {
+        deriv(ki, kn, n) = shapeDerivsShift_[j];
       }
     }
   }
-  quad_gradient_operator<AlgTraits::numScsIp_,AlgTraits::nodesPerElement_>(coords, gradop, deriv);
+  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
+    coords, gradop, deriv);
 }
 
-void Quad92DSCV::determinant(
-  const int  /* nelem */,
-  const double *coords,
-  double *volume,
-  double *error)
+void
+Quad92DSCV::determinant(
+  const int /* nelem */, const double* coords, double* volume, double* error)
 {
-    for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
-      const int grad_offset = nDim_ * nodesPerElement_ * ip;
+  for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
+    const int grad_offset = nDim_ * nodesPerElement_ * ip;
 
-      //weighted jacobian determinant
-      const double det_j = jacobian_determinant(coords, &shapeDerivs_[grad_offset]);
+    // weighted jacobian determinant
+    const double det_j =
+      jacobian_determinant(coords, &shapeDerivs_[grad_offset]);
 
-      //apply weight and store to volume
-      volume[ip] = ipWeight_[ip] * det_j;
+    // apply weight and store to volume
+    volume[ip] = ipWeight_[ip] * det_j;
 
-      //flag error
-      if (det_j < tiny_positive_value()) {
-        *error = 1.0;
-      }
+    // flag error
+    if (det_j < tiny_positive_value()) {
+      *error = 1.0;
     }
-
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -597,11 +606,13 @@ void Quad92DSCV::determinant(
 //--------------------------------------------------------------------------
 double
 Quad92DSCV::jacobian_determinant(
-  const double *POINTER_RESTRICT elemNodalCoords,
-  const double *POINTER_RESTRICT shapeDerivs) const
+  const double* POINTER_RESTRICT elemNodalCoords,
+  const double* POINTER_RESTRICT shapeDerivs) const
 {
-  double dx_ds1 = 0.0;  double dx_ds2 = 0.0;
-  double dy_ds1 = 0.0;  double dy_ds2 = 0.0;
+  double dx_ds1 = 0.0;
+  double dx_ds2 = 0.0;
+  double dy_ds1 = 0.0;
+  double dy_ds2 = 0.0;
 
   for (int node = 0; node < AlgTraits::nodesPerElement_; ++node) {
     const int vector_offset = node * nDim_;
@@ -609,8 +620,8 @@ Quad92DSCV::jacobian_determinant(
     const double xCoord = elemNodalCoords[vector_offset + 0];
     const double yCoord = elemNodalCoords[vector_offset + 1];
 
-    const double dn_ds1  = shapeDerivs[vector_offset + 0];
-    const double dn_ds2  = shapeDerivs[vector_offset + 1];
+    const double dn_ds1 = shapeDerivs[vector_offset + 0];
+    const double dn_ds2 = shapeDerivs[vector_offset + 1];
 
     dx_ds1 += dn_ds1 * xCoord;
     dx_ds2 += dn_ds2 * xCoord;
@@ -630,19 +641,18 @@ Quad92DSCV::jacobian_determinant(
 // This function computes the metric tensor Mij = (J J^T)^(1/2) where J is
 // the Jacobian.  This is needed for the UT-A Hybrid LES model.  For
 // reference please consult the Nalu theory manual description of the UT-A
-// Hybrid LES model or S. Haering's PhD thesis: Anisotropic hybrid turbulence 
-// modeling with specific application to the simulation of pulse-actuated 
+// Hybrid LES model or S. Haering's PhD thesis: Anisotropic hybrid turbulence
+// modeling with specific application to the simulation of pulse-actuated
 // dynamic stall control.
 //--------------------------------------------------------------------------
-void Quad92DSCV::Mij(
-  const double *coords,
-  double *metric,
-  double *deriv)
+void
+Quad92DSCV::Mij(const double* coords, double* metric, double* deriv)
 {
   generic_Mij_2d<AlgTraitsQuad9_2D>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
-void Quad92DSCV::Mij(
+void
+Quad92DSCV::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& metric,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
@@ -653,8 +663,7 @@ void Quad92DSCV::Mij(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-Quad92DSCS::Quad92DSCS()
-  : QuadrilateralP2Element()
+Quad92DSCS::Quad92DSCS() : QuadrilateralP2Element()
 {
   MasterElement::numIntPoints_ = numIntPoints_;
 #ifndef KOKKOS_ENABLE_CUDA
@@ -665,10 +674,10 @@ Quad92DSCS::Quad92DSCS()
   set_boundary_info();
 
   // compute and save shape functions and derivatives at ips
-  quad9_shape_fcn  (numIntPoints_, intgLoc_,      shapeFunctions_);
-  quad9_shape_deriv(numIntPoints_, intgLoc_,      shapeDerivs_);
-  quad9_shape_deriv(numIntPoints_, intgExpFace_,  expFaceShapeDerivs_);
-  quad9_shape_fcn  (numIntPoints_, intgLocShift_, shapeFunctionsShift_);
+  quad9_shape_fcn(numIntPoints_, intgLoc_, shapeFunctions_);
+  quad9_shape_deriv(numIntPoints_, intgLoc_, shapeDerivs_);
+  quad9_shape_deriv(numIntPoints_, intgExpFace_, expFaceShapeDerivs_);
+  quad9_shape_fcn(numIntPoints_, intgLocShift_, shapeFunctionsShift_);
   quad9_shape_deriv(numIntPoints_, intgLocShift_, shapeDerivsShift_);
 #endif
 }
@@ -682,28 +691,28 @@ Quad92DSCS::set_interior_info()
   const int linesPerDirection = nodes1D_ - 1; // 2
 
   // a list of the scs locations in 1D
-  const double scsLoc[2] =  { -scsDist_, scsDist_ };
+  const double scsLoc[2] = {-scsDist_, scsDist_};
 
   // correct orientation for area vector
-  const double orientation[2] = { -1.0, +1.0 };
+  const double orientation[2] = {-1.0, +1.0};
 
   // specify integration point locations in a dimension-by-dimension manner
 
-  //u-direction
+  // u-direction
   int vector_index = 0;
   int lrscv_index = 0;
   int scalar_index = 0;
   for (int m = 0; m < linesPerDirection; ++m) {
     for (int l = 0; l < nodes1D_; ++l) {
 
-      int leftNode; int rightNode;
+      int leftNode;
+      int rightNode;
       if (m == 0) {
-        leftNode  = tensor_product_node_map(l,m);
-        rightNode = tensor_product_node_map(l,m + 1);
-      }
-      else {
-        leftNode  = tensor_product_node_map(l,m + 1);
-        rightNode = tensor_product_node_map(l,m);
+        leftNode = tensor_product_node_map(l, m);
+        rightNode = tensor_product_node_map(l, m + 1);
+      } else {
+        leftNode = tensor_product_node_map(l, m + 1);
+        rightNode = tensor_product_node_map(l, m);
       }
 
       for (int j = 0; j < numQuad_; ++j) {
@@ -711,16 +720,17 @@ Quad92DSCS::set_interior_info()
         lrscv_[lrscv_index] = leftNode;
         lrscv_[lrscv_index + 1] = rightNode;
 
-        intgLoc_[vector_index] = gauss_point_location(l,j);
+        intgLoc_[vector_index] = gauss_point_location(l, j);
         intgLoc_[vector_index + 1] = scsLoc[m];
 
-        intgLocShift_[vector_index] = shifted_gauss_point_location(l,j);
+        intgLocShift_[vector_index] = shifted_gauss_point_location(l, j);
         intgLocShift_[vector_index + 1] = scsLoc[m];
 
-        //compute the quadrature weight
-        ipInfo_[scalar_index].weight = orientation[m]*tensor_product_weight(l,j);
+        // compute the quadrature weight
+        ipInfo_[scalar_index].weight =
+          orientation[m] * tensor_product_weight(l, j);
 
-        //direction
+        // direction
         ipInfo_[scalar_index].direction = Jacobian::T_DIRECTION;
 
         ++scalar_index;
@@ -730,35 +740,36 @@ Quad92DSCS::set_interior_info()
     }
   }
 
-  //t-direction
+  // t-direction
   for (int m = 0; m < linesPerDirection; ++m) {
     for (int l = 0; l < nodes1D_; ++l) {
 
-      int leftNode; int rightNode;
+      int leftNode;
+      int rightNode;
       if (m == 0) {
-        leftNode  = tensor_product_node_map(m,l);
-        rightNode = tensor_product_node_map(m+1,l);
-      }
-      else {
-        leftNode  = tensor_product_node_map(m+1,l);
-        rightNode = tensor_product_node_map(m,l);
+        leftNode = tensor_product_node_map(m, l);
+        rightNode = tensor_product_node_map(m + 1, l);
+      } else {
+        leftNode = tensor_product_node_map(m + 1, l);
+        rightNode = tensor_product_node_map(m, l);
       }
 
       for (int j = 0; j < numQuad_; ++j) {
 
-        lrscv_[lrscv_index]   = leftNode;
-        lrscv_[lrscv_index+1] = rightNode;
+        lrscv_[lrscv_index] = leftNode;
+        lrscv_[lrscv_index + 1] = rightNode;
 
         intgLoc_[vector_index] = scsLoc[m];
-        intgLoc_[vector_index+1] = gauss_point_location(l,j);
+        intgLoc_[vector_index + 1] = gauss_point_location(l, j);
 
         intgLocShift_[vector_index] = scsLoc[m];
-        intgLocShift_[vector_index+1] = shifted_gauss_point_location(l,j);
+        intgLocShift_[vector_index + 1] = shifted_gauss_point_location(l, j);
 
-        //compute the quadrature weight
-        ipInfo_[scalar_index].weight = -orientation[m]*tensor_product_weight(l,j);
+        // compute the quadrature weight
+        ipInfo_[scalar_index].weight =
+          -orientation[m] * tensor_product_weight(l, j);
 
-        //direction
+        // direction
         ipInfo_[scalar_index].direction = Jacobian::S_DIRECTION;
 
         ++scalar_index;
@@ -775,34 +786,36 @@ Quad92DSCS::set_interior_info()
 void
 Quad92DSCS::set_boundary_info()
 {
-  const int stkFaceNodeMap[12] = {0, 4, 1, //face 0, bottom face
-                                  1, 5, 2, //face 1, right face
-                                  2, 6, 3, //face 2, top face  -- reversed order
-                                  3, 7, 0  //face 3, left face -- reversed order
-                                  };
-
-  auto face_node_number = [=] (int number,int faceOrdinal)
-  {
-    return stkFaceNodeMap[number+nodes1D_*faceOrdinal];
+  const int stkFaceNodeMap[12] = {
+    0, 4, 1, // face 0, bottom face
+    1, 5, 2, // face 1, right face
+    2, 6, 3, // face 2, top face  -- reversed order
+    3, 7, 0  // face 3, left face -- reversed order
   };
 
-  const int faceToLine[4] = { 0, 3, 1, 2 };
+  auto face_node_number = [=](int number, int faceOrdinal) {
+    return stkFaceNodeMap[number + nodes1D_ * faceOrdinal];
+  };
+
+  const int faceToLine[4] = {0, 3, 1, 2};
   const double faceLoc[4] = {-1.0, +1.0, +1.0, -1.0};
 
-  int scalar_index = 0; int vector_index = 0;
-  int faceOrdinal = 0; //bottom face
+  int scalar_index = 0;
+  int vector_index = 0;
+  int faceOrdinal = 0; // bottom face
   int oppFaceIndex = 0;
   for (int k = 0; k < nodes1D_; ++k) {
-    const int nearNode = face_node_number(k,faceOrdinal);
-    int oppNode = tensor_product_node_map(k,1);
+    const int nearNode = face_node_number(k, faceOrdinal);
+    int oppNode = tensor_product_node_map(k, 1);
 
     for (int j = 0; j < numQuad_; ++j) {
       ipNodeMap_[0][k][j] = nearNode;
       oppNode_[scalar_index] = oppNode;
-      oppFace_[scalar_index] = oppFaceIndex + faceToLine[faceOrdinal]*ipsPerFace_;
+      oppFace_[scalar_index] =
+        oppFaceIndex + faceToLine[faceOrdinal] * ipsPerFace_;
 
-      intgExpFace_[vector_index]   = intgLoc_[oppFace_[scalar_index]*nDim_+0];
-      intgExpFace_[vector_index+1] = faceLoc[faceOrdinal];
+      intgExpFace_[vector_index] = intgLoc_[oppFace_[scalar_index] * nDim_ + 0];
+      intgExpFace_[vector_index + 1] = faceLoc[faceOrdinal];
 
       ++scalar_index;
       vector_index += nDim_;
@@ -810,40 +823,21 @@ Quad92DSCS::set_boundary_info()
     }
   }
 
-  faceOrdinal = 1; //right face
+  faceOrdinal = 1; // right face
   oppFaceIndex = 0;
   for (int k = 0; k < nodes1D_; ++k) {
-    const int nearNode = face_node_number(k,faceOrdinal);
-    int oppNode = tensor_product_node_map(1,k);
+    const int nearNode = face_node_number(k, faceOrdinal);
+    int oppNode = tensor_product_node_map(1, k);
 
     for (int j = 0; j < numQuad_; ++j) {
       ipNodeMap_[1][k][j] = nearNode;
       oppNode_[scalar_index] = oppNode;
-      oppFace_[scalar_index] = oppFaceIndex + faceToLine[faceOrdinal]*ipsPerFace_;
+      oppFace_[scalar_index] =
+        oppFaceIndex + faceToLine[faceOrdinal] * ipsPerFace_;
 
-      intgExpFace_[vector_index]   = faceLoc[faceOrdinal];
-      intgExpFace_[vector_index+1] = intgLoc_[oppFace_[scalar_index]*nDim_+1];
-
-      ++scalar_index;
-      vector_index += nDim_;
-      ++oppFaceIndex;
-    }
-  }
-
-
-  faceOrdinal = 2; //top face
-  oppFaceIndex = 0;
-  //NOTE: this face is reversed
-  for (int k = nodes1D_-1; k >= 0; --k) {
-    const int nearNode = face_node_number(nodes1D_-k-1,faceOrdinal);
-    int oppNode = tensor_product_node_map(k,1);
-    for (int j = 0; j < numQuad_; ++j) {
-      ipNodeMap_[2][k][j] = nearNode;
-      oppNode_[scalar_index] = oppNode;
-      oppFace_[scalar_index] = (ipsPerFace_-1) - oppFaceIndex + faceToLine[faceOrdinal]*ipsPerFace_;
-
-      intgExpFace_[vector_index] = intgLoc_[oppFace_[scalar_index]*nDim_+0];
-      intgExpFace_[vector_index+1] = faceLoc[faceOrdinal];
+      intgExpFace_[vector_index] = faceLoc[faceOrdinal];
+      intgExpFace_[vector_index + 1] =
+        intgLoc_[oppFace_[scalar_index] * nDim_ + 1];
 
       ++scalar_index;
       vector_index += nDim_;
@@ -851,19 +845,42 @@ Quad92DSCS::set_boundary_info()
     }
   }
 
-  faceOrdinal = 3; //left face
+  faceOrdinal = 2; // top face
   oppFaceIndex = 0;
-  //NOTE: this faces is reversed
-  for (int k = nodes1D_-1; k >= 0; --k) {
-    const int nearNode = face_node_number(nodes1D_-k-1,faceOrdinal);
-    int oppNode = tensor_product_node_map(1,k);
+  // NOTE: this face is reversed
+  for (int k = nodes1D_ - 1; k >= 0; --k) {
+    const int nearNode = face_node_number(nodes1D_ - k - 1, faceOrdinal);
+    int oppNode = tensor_product_node_map(k, 1);
     for (int j = 0; j < numQuad_; ++j) {
       ipNodeMap_[2][k][j] = nearNode;
       oppNode_[scalar_index] = oppNode;
-      oppFace_[scalar_index] = (ipsPerFace_-1) - oppFaceIndex + faceToLine[faceOrdinal]*ipsPerFace_;
+      oppFace_[scalar_index] = (ipsPerFace_ - 1) - oppFaceIndex +
+                               faceToLine[faceOrdinal] * ipsPerFace_;
 
-      intgExpFace_[vector_index]   = faceLoc[faceOrdinal];
-      intgExpFace_[vector_index+1] = intgLoc_[oppFace_[scalar_index]*nDim_+1];
+      intgExpFace_[vector_index] = intgLoc_[oppFace_[scalar_index] * nDim_ + 0];
+      intgExpFace_[vector_index + 1] = faceLoc[faceOrdinal];
+
+      ++scalar_index;
+      vector_index += nDim_;
+      ++oppFaceIndex;
+    }
+  }
+
+  faceOrdinal = 3; // left face
+  oppFaceIndex = 0;
+  // NOTE: this faces is reversed
+  for (int k = nodes1D_ - 1; k >= 0; --k) {
+    const int nearNode = face_node_number(nodes1D_ - k - 1, faceOrdinal);
+    int oppNode = tensor_product_node_map(1, k);
+    for (int j = 0; j < numQuad_; ++j) {
+      ipNodeMap_[2][k][j] = nearNode;
+      oppNode_[scalar_index] = oppNode;
+      oppFace_[scalar_index] = (ipsPerFace_ - 1) - oppFaceIndex +
+                               faceToLine[faceOrdinal] * ipsPerFace_;
+
+      intgExpFace_[vector_index] = faceLoc[faceOrdinal];
+      intgExpFace_[vector_index + 1] =
+        intgLoc_[oppFace_[scalar_index] * nDim_ + 1];
 
       ++scalar_index;
       vector_index += nDim_;
@@ -872,15 +889,13 @@ Quad92DSCS::set_boundary_info()
   }
 }
 
-
 //--------------------------------------------------------------------------
 //-------- ipNodeMap -------------------------------------------------------
 //--------------------------------------------------------------------------
-const int *
-Quad92DSCS::ipNodeMap(
-  int ordinal) const
+const int*
+Quad92DSCS::ipNodeMap(int ordinal) const
 {
-  // define ip->node mappings for each face (ordinal); 
+  // define ip->node mappings for each face (ordinal);
   return &ipNodeMap_[ordinal][0][0];
 }
 
@@ -888,12 +903,12 @@ Quad92DSCS::ipNodeMap(
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-Quad92DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+Quad92DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int i = 0; i < numIntPoints_ ; ++i) {
+  for (int i = 0; i < numIntPoints_; ++i) {
     for (int j = 0; j < nodesPerElement_; ++j) {
-      const int ni = i*nodesPerElement_ + j;
-      shpfc(i,j) = shapeFunctions_[ni];
+      const int ni = i * nodesPerElement_ + j;
+      shpfc(i, j) = shapeFunctions_[ni];
     }
   }
 }
@@ -910,12 +925,12 @@ Quad92DSCS::shape_fcn(double* shpfc)
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-Quad92DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+Quad92DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int i = 0; i < numIntPoints_ ; ++i) {
+  for (int i = 0; i < numIntPoints_; ++i) {
     for (int j = 0; j < nodesPerElement_; ++j) {
-      const int ni = i*nodesPerElement_ + j;
-      shpfc(i,j) = shapeFunctionsShift_[ni];
+      const int ni = i * nodesPerElement_ + j;
+      shpfc(i, j) = shapeFunctionsShift_[ni];
     }
   }
 }
@@ -930,85 +945,88 @@ Quad92DSCS::shifted_shape_fcn(double* shpfc)
 //--------------------------------------------------------------------------
 //-------- side_node_ordinals ----------------------------------------------
 //--------------------------------------------------------------------------
-const int *
-Quad92DSCS::side_node_ordinals ( int ordinal) const
+const int*
+Quad92DSCS::side_node_ordinals(int ordinal) const
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
-  return &sideNodeOrdinals_[ordinal*3];
+  return &sideNodeOrdinals_[ordinal * 3];
 }
 
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void 
+void
 Quad92DSCS::determinant(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType**, DeviceShmem>& areav) 
+  SharedMemView<DoubleType**, DeviceShmem>& areav)
 {
-  //returns the normal vector (dyds,-dxds) for constant t curves
-  //returns the normal vector (dydt,-dxdt) for constant s curves
+  // returns the normal vector (dyds,-dxds) for constant t curves
+  // returns the normal vector (dydt,-dxdt) for constant s curves
 
   constexpr int dim = AlgTraits::nDim_;
   constexpr int ipsPerDirection = AlgTraits::numScsIp_ / dim;
-  static_assert ( ipsPerDirection * dim == AlgTraits::numScsIp_, "Number of ips incorrect");
+  static_assert(
+    ipsPerDirection * dim == AlgTraits::numScsIp_, "Number of ips incorrect");
 
   constexpr int deriv_increment = dim * AlgTraits::nodesPerElement_;
 
   int index = 0;
 
-   //returns the normal vector x_u x x_s for constant t surfaces
+  // returns the normal vector x_u x x_s for constant t surfaces
   for (int ip = 0; ip < ipsPerDirection; ++ip) {
     ThrowAssert(ipInfo_[index].direction == Jacobian::T_DIRECTION);
-    area_vector<Jacobian::T_DIRECTION>(coords, &shapeDerivs_[deriv_increment * index], &areav(index,0));
+    area_vector<Jacobian::T_DIRECTION>(
+      coords, &shapeDerivs_[deriv_increment * index], &areav(index, 0));
     ++index;
   }
 
-  //returns the normal vector x_t x x_u for constant s curves
+  // returns the normal vector x_t x x_u for constant s curves
   for (int ip = 0; ip < ipsPerDirection; ++ip) {
     ThrowAssert(ipInfo_[index].direction == Jacobian::S_DIRECTION);
-    area_vector<Jacobian::S_DIRECTION>(coords, &shapeDerivs_[deriv_increment * index], &areav(index,0));
+    area_vector<Jacobian::S_DIRECTION>(
+      coords, &shapeDerivs_[deriv_increment * index], &areav(index, 0));
     ++index;
   }
 
   // Multiply with the integration point weighting
   for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
     double weight = ipInfo_[ip].weight;
-    areav(ip,0) *= weight;
-    areav(ip,1) *= weight;
+    areav(ip, 0) *= weight;
+    areav(ip, 1) *= weight;
   }
 }
 
 void
 Quad92DSCS::determinant(
-  const int nelem,
-  const double *coords,
-  double *areav,
-  double *error)
+  const int nelem, const double* coords, double* areav, double* error)
 {
-  //returns the normal vector (dyds,-dxds) for constant t curves
-  //returns the normal vector (dydt,-dxdt) for constant s curves
+  // returns the normal vector (dyds,-dxds) for constant t curves
+  // returns the normal vector (dydt,-dxdt) for constant s curves
 
   ThrowRequireMsg(nelem == 1, "P2 elements are processed one-at-a-time");
 
   constexpr int dim = AlgTraits::nDim_;
   constexpr int ipsPerDirection = AlgTraits::numScsIp_ / dim;
-  static_assert ( ipsPerDirection * dim == AlgTraits::numScsIp_, "Number of ips incorrect");
+  static_assert(
+    ipsPerDirection * dim == AlgTraits::numScsIp_, "Number of ips incorrect");
 
   constexpr int deriv_increment = dim * AlgTraits::nodesPerElement_;
 
   int index = 0;
 
-   //returns the normal vector x_u x x_s for constant t surfaces
+  // returns the normal vector x_u x x_s for constant t surfaces
   for (int ip = 0; ip < ipsPerDirection; ++ip) {
     ThrowAssert(ipInfo_[index].direction == Jacobian::T_DIRECTION);
-    area_vector<Jacobian::T_DIRECTION>(coords, &shapeDerivs_[deriv_increment * index], &areav[index*dim]);
+    area_vector<Jacobian::T_DIRECTION>(
+      coords, &shapeDerivs_[deriv_increment * index], &areav[index * dim]);
     ++index;
   }
 
-  //returns the normal vector x_t x x_u for constant s curves
+  // returns the normal vector x_t x x_u for constant s curves
   for (int ip = 0; ip < ipsPerDirection; ++ip) {
     ThrowAssert(ipInfo_[index].direction == Jacobian::S_DIRECTION);
-    area_vector<Jacobian::S_DIRECTION>(coords, &shapeDerivs_[deriv_increment * index], &areav[index*dim]);
+    area_vector<Jacobian::S_DIRECTION>(
+      coords, &shapeDerivs_[deriv_increment * index], &areav[index * dim]);
     ++index;
   }
 
@@ -1022,98 +1040,100 @@ Quad92DSCS::determinant(
   *error = 0; // no error checking available
 }
 
-void Quad92DSCS::grad_op(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType***, DeviceShmem>& gradop,
-    SharedMemView<DoubleType***, DeviceShmem>& deriv) {
-  for (int ki=0,j=0; ki<AlgTraits::numScsIp_; ++ki) {
-    for (int kn=0; kn<AlgTraits::nodesPerElement_; ++kn) {
-      for (int n=0; n<AlgTraits::nDim_; ++n,++j) {
-        deriv(ki,kn,n) = shapeDerivs_[j];
+void
+Quad92DSCS::grad_op(
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+{
+  for (int ki = 0, j = 0; ki < AlgTraits::numScsIp_; ++ki) {
+    for (int kn = 0; kn < AlgTraits::nodesPerElement_; ++kn) {
+      for (int n = 0; n < AlgTraits::nDim_; ++n, ++j) {
+        deriv(ki, kn, n) = shapeDerivs_[j];
       }
     }
   }
-  quad_gradient_operator<AlgTraits::numScsIp_,AlgTraits::nodesPerElement_>(coords, gradop, deriv);
+  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
+    coords, gradop, deriv);
 }
 
-void Quad92DSCS::grad_op(
+void
+Quad92DSCS::grad_op(
   const int nelem,
-  const double *coords,
-  double *gradop,
-  double *deriv,
-  double *det_j,
-  double *error)
+  const double* coords,
+  double* gradop,
+  double* deriv,
+  double* det_j,
+  double* error)
 {
   int lerr = 0;
 
-  constexpr int numShapeDerivs = AlgTraits::numScsIp_*AlgTraits::nodesPerElement_*AlgTraits::nDim_;
+  constexpr int numShapeDerivs =
+    AlgTraits::numScsIp_ * AlgTraits::nodesPerElement_ * AlgTraits::nDim_;
   for (int j = 0; j < numShapeDerivs; ++j) {
     deriv[j] = shapeDerivs_[j];
   }
 
-  const int npe  = nodesPerElement_;
+  const int npe = nodesPerElement_;
   const int nint = numIntPoints_;
   SIERRA_FORTRAN(quad_gradient_operator)
-    ( &nelem,
-      &npe,
-      &nint,
-      deriv,
-      coords, gradop, det_j, error, &lerr );
+  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
 
-  if ( lerr )
+  if (lerr)
     NaluEnv::self().naluOutput() << "sorry, negative area.." << std::endl;
-
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
-void Quad92DSCS::shifted_grad_op(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType***, DeviceShmem>& gradop,
-    SharedMemView<DoubleType***, DeviceShmem>& deriv) {
-  for (int ki=0,j=0; ki<AlgTraits::numScsIp_; ++ki) {
-    for (int kn=0; kn<AlgTraits::nodesPerElement_; ++kn) {
-      for (int n=0; n<AlgTraits::nDim_; ++n,++j) {
-        deriv(ki,kn,n) = shapeDerivsShift_[j];
+void
+Quad92DSCS::shifted_grad_op(
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+{
+  for (int ki = 0, j = 0; ki < AlgTraits::numScsIp_; ++ki) {
+    for (int kn = 0; kn < AlgTraits::nodesPerElement_; ++kn) {
+      for (int n = 0; n < AlgTraits::nDim_; ++n, ++j) {
+        deriv(ki, kn, n) = shapeDerivsShift_[j];
       }
     }
   }
-  quad_gradient_operator<AlgTraits::numScsIp_,AlgTraits::nodesPerElement_>(coords, gradop, deriv);
+  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
+    coords, gradop, deriv);
 }
 
-void Quad92DSCS::shifted_grad_op(
+void
+Quad92DSCS::shifted_grad_op(
   const int nelem,
-  const double *coords,
-  double *gradop,
-  double *deriv,
-  double *det_j,
-  double *error)
+  const double* coords,
+  double* gradop,
+  double* deriv,
+  double* det_j,
+  double* error)
 {
   int lerr = 0;
 
-  constexpr int numShapeDerivs = AlgTraits::numScsIp_*AlgTraits::nodesPerElement_*AlgTraits::nDim_;
+  constexpr int numShapeDerivs =
+    AlgTraits::numScsIp_ * AlgTraits::nodesPerElement_ * AlgTraits::nDim_;
   for (int j = 0; j < numShapeDerivs; ++j) {
     deriv[j] = shapeDerivsShift_[j];
   }
 
-  const int npe  = nodesPerElement_;
+  const int npe = nodesPerElement_;
   const int nint = numIntPoints_;
   SIERRA_FORTRAN(quad_gradient_operator)
-  ( &nelem,
-      &npe,
-      &nint,
-      deriv,
-      coords, gradop, det_j, error, &lerr );
+  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
 
-  if ( lerr )
+  if (lerr)
     NaluEnv::self().naluOutput() << "sorry, negative area.." << std::endl;
 }
 
 //--------------------------------------------------------------------------
 //-------- face_grad_op ----------------------------------------------------
 //--------------------------------------------------------------------------
-void Quad92DSCS::face_grad_op(
+void
+Quad92DSCS::face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
@@ -1121,116 +1141,110 @@ void Quad92DSCS::face_grad_op(
 {
   using traits = AlgTraitsEdge32DQuad92D;
 
-  constexpr int offset = traits::nDim_*traits::numFaceIp_*traits::nodesPerElement_;
-  const double* exp_face = &expFaceShapeDerivs_[offset*face_ordinal];
-  for (int i=0,n=0; i<traits::numFaceIp_; ++i)
-    for (int j=0; j<traits::nodesPerElement_; ++j)
-      for (int k=0; k<traits::nDim_; ++k,++n)
-          deriv(i,j,k) = exp_face[n];
+  constexpr int offset =
+    traits::nDim_ * traits::numFaceIp_ * traits::nodesPerElement_;
+  const double* exp_face = &expFaceShapeDerivs_[offset * face_ordinal];
+  for (int i = 0, n = 0; i < traits::numFaceIp_; ++i)
+    for (int j = 0; j < traits::nodesPerElement_; ++j)
+      for (int k = 0; k < traits::nDim_; ++k, ++n)
+        deriv(i, j, k) = exp_face[n];
   generic_grad_op<traits>(deriv, coords, gradop);
 }
 
-void Quad92DSCS::face_grad_op(
+void
+Quad92DSCS::face_grad_op(
   const int nelem,
   const int face_ordinal,
-  const double *coords,
-  double *gradop,
-  double *det_j,
-  double *error)
+  const double* coords,
+  double* gradop,
+  double* det_j,
+  double* error)
 {
   ThrowRequireMsg(nelem == 1, "P2 elements are processed one-at-a-time");
 
   int lerr = 0;
 
   const int nface = 1;
-  const int face_offset =  nDim_ * ipsPerFace_ * nodesPerElement_ * face_ordinal;
+  const int face_offset = nDim_ * ipsPerFace_ * nodesPerElement_ * face_ordinal;
   double* offsetFaceDerivs = &expFaceShapeDerivs_[face_offset];
 
   for (int ip = 0; ip < ipsPerFace_; ++ip) {
     const int grad_offset = nDim_ * nodesPerElement_ * ip;
 
-    const int npe  = AlgTraits::nodesPerElement_;
+    const int npe = AlgTraits::nodesPerElement_;
     SIERRA_FORTRAN(quad_gradient_operator)
-    ( & nface,
-        &npe,
-        &nface,
-        &offsetFaceDerivs[grad_offset],
-        coords,
-        &gradop[grad_offset],
-        &det_j[ip],
-        error,
-        &lerr
-    );
+    (&nface, &npe, &nface, &offsetFaceDerivs[grad_offset], coords,
+     &gradop[grad_offset], &det_j[ip], error, &lerr);
 
     if (det_j[ip] < tiny_positive_value() || lerr != 0) {
       *error = 1.0;
     }
   }
-
 }
 
 //--------------------------------------------------------------------------
 //-------- gij -------------------------------------------------------------
 //--------------------------------------------------------------------------
-void Quad92DSCS::gij(
+void
+Quad92DSCS::gij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv) {
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+{
 
-  constexpr int npe  = AlgTraits::nodesPerElement_;
+  constexpr int npe = AlgTraits::nodesPerElement_;
   constexpr int nint = AlgTraits::numScsIp_;
 
   DoubleType dx_ds[2][2], ds_dx[2][2];
 
-  for (int ki=0; ki<nint; ++ki) {
-    dx_ds[0][0] = 0.0; 
-    dx_ds[0][1] = 0.0; 
-    dx_ds[1][0] = 0.0; 
-    dx_ds[1][1] = 0.0; 
- 
-// calculate the jacobian at the integration station -
-    for (int kn=0; kn<npe; ++kn) {
-      dx_ds[0][0] += deriv(ki,kn,0)*coords(kn,0);
-      dx_ds[0][1] += deriv(ki,kn,1)*coords(kn,0);
-      dx_ds[1][0] += deriv(ki,kn,0)*coords(kn,1);
-      dx_ds[1][1] += deriv(ki,kn,1)*coords(kn,1);
-    }    
-// calculate the determinate of the jacobian at the integration station -
-    const DoubleType det_j = dx_ds[0][0]*dx_ds[1][1] - dx_ds[1][0]*dx_ds[0][1];
+  for (int ki = 0; ki < nint; ++ki) {
+    dx_ds[0][0] = 0.0;
+    dx_ds[0][1] = 0.0;
+    dx_ds[1][0] = 0.0;
+    dx_ds[1][1] = 0.0;
 
-// clip
-    const DoubleType test = stk::math::if_then_else(det_j > 1.e+6*MEconstants::realmin, det_j, 1.0);
-    const DoubleType denom = 1.0/test;
+    // calculate the jacobian at the integration station -
+    for (int kn = 0; kn < npe; ++kn) {
+      dx_ds[0][0] += deriv(ki, kn, 0) * coords(kn, 0);
+      dx_ds[0][1] += deriv(ki, kn, 1) * coords(kn, 0);
+      dx_ds[1][0] += deriv(ki, kn, 0) * coords(kn, 1);
+      dx_ds[1][1] += deriv(ki, kn, 1) * coords(kn, 1);
+    }
+    // calculate the determinate of the jacobian at the integration station -
+    const DoubleType det_j =
+      dx_ds[0][0] * dx_ds[1][1] - dx_ds[1][0] * dx_ds[0][1];
 
-// compute the inverse jacobian
-    ds_dx[0][0] =  dx_ds[1][1]*denom;
-    ds_dx[0][1] = -dx_ds[0][1]*denom;
-    ds_dx[1][0] = -dx_ds[1][0]*denom;
-    ds_dx[1][1] =  dx_ds[0][0]*denom;
-      
-    for (int i=0; i<2; ++i) {
-      for (int j=0; j<2; ++j) {
-        gupper(ki,j,i) = dx_ds[i][0]*dx_ds[j][0]+dx_ds[i][1]*dx_ds[j][1];
-        glower(ki,j,i) = ds_dx[0][i]*ds_dx[0][j]+ds_dx[1][i]*ds_dx[1][j];
-      }    
-    }    
+    // clip
+    const DoubleType test =
+      stk::math::if_then_else(det_j > 1.e+6 * MEconstants::realmin, det_j, 1.0);
+    const DoubleType denom = 1.0 / test;
+
+    // compute the inverse jacobian
+    ds_dx[0][0] = dx_ds[1][1] * denom;
+    ds_dx[0][1] = -dx_ds[0][1] * denom;
+    ds_dx[1][0] = -dx_ds[1][0] * denom;
+    ds_dx[1][1] = dx_ds[0][0] * denom;
+
+    for (int i = 0; i < 2; ++i) {
+      for (int j = 0; j < 2; ++j) {
+        gupper(ki, j, i) =
+          dx_ds[i][0] * dx_ds[j][0] + dx_ds[i][1] * dx_ds[j][1];
+        glower(ki, j, i) =
+          ds_dx[0][i] * ds_dx[0][j] + ds_dx[1][i] * ds_dx[1][j];
+      }
+    }
   }
 }
 
-void Quad92DSCS::gij(
-  const double *coords,
-  double *gupperij,
-  double *glowerij,
-  double *deriv)
+void
+Quad92DSCS::gij(
+  const double* coords, double* gupperij, double* glowerij, double* deriv)
 {
-  const int npe  = nodesPerElement_;
+  const int npe = nodesPerElement_;
   const int nint = numIntPoints_;
   SIERRA_FORTRAN(twod_gij)
-    ( &npe,
-      &nint,
-      deriv,
-      coords, gupperij, glowerij);
+  (&npe, &nint, deriv, coords, gupperij, glowerij);
 }
 
 //--------------------------------------------------------------------------
@@ -1239,19 +1253,18 @@ void Quad92DSCS::gij(
 // This function computes the metric tensor Mij = (J J^T)^(1/2) where J is
 // the Jacobian.  This is needed for the UT-A Hybrid LES model.  For
 // reference please consult the Nalu theory manual description of the UT-A
-// Hybrid LES model or S. Haering's PhD thesis: Anisotropic hybrid turbulence 
-// modeling with specific application to the simulation of pulse-actuated 
+// Hybrid LES model or S. Haering's PhD thesis: Anisotropic hybrid turbulence
+// modeling with specific application to the simulation of pulse-actuated
 // dynamic stall control.
 //--------------------------------------------------------------------------
-void Quad92DSCS::Mij(
-  const double *coords,
-  double *metric,
-  double *deriv)
+void
+Quad92DSCS::Mij(const double* coords, double* metric, double* deriv)
 {
   generic_Mij_2d<AlgTraitsQuad9_2D>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
-void Quad92DSCS::Mij(
+void
+Quad92DSCS::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& metric,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
@@ -1262,7 +1275,7 @@ void Quad92DSCS::Mij(
 //--------------------------------------------------------------------------
 //-------- adjacentNodes ---------------------------------------------------
 //--------------------------------------------------------------------------
-const int *
+const int*
 Quad92DSCS::adjacentNodes()
 {
   // define L/R mappings
@@ -1273,69 +1286,71 @@ Quad92DSCS::adjacentNodes()
 //-------- opposingNodes ---------------------------------------------------
 //--------------------------------------------------------------------------
 int
-Quad92DSCS::opposingNodes(
-  const int ordinal,
-  const int node)
+Quad92DSCS::opposingNodes(const int ordinal, const int node)
 {
-  return oppNode_[ordinal*ipsPerFace_+node];
+  return oppNode_[ordinal * ipsPerFace_ + node];
 }
 
 //--------------------------------------------------------------------------
 //-------- opposingFace ----------------------------------------------------
 //--------------------------------------------------------------------------
 int
-Quad92DSCS::opposingFace(
-  const int ordinal,
-  const int node)
+Quad92DSCS::opposingFace(const int ordinal, const int node)
 {
-  return oppFace_[ordinal*ipsPerFace_+node];
+  return oppFace_[ordinal * ipsPerFace_ + node];
 }
 
 //--------------------------------------------------------------------------
 //-------- area_vector -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <Jacobian::Direction direction> void
+template <Jacobian::Direction direction>
+void
 Quad92DSCS::area_vector(
-  const SharedMemView<DoubleType**, DeviceShmem>& elemNodalCoords,             
-  double *POINTER_RESTRICT shapeDeriv,
-  DoubleType *POINTER_RESTRICT normalVec ) const
+  const SharedMemView<DoubleType**, DeviceShmem>& elemNodalCoords,
+  double* POINTER_RESTRICT shapeDeriv,
+  DoubleType* POINTER_RESTRICT normalVec) const
 {
-  constexpr int s1Component = (direction == Jacobian::S_DIRECTION) ?
-      Jacobian::T_DIRECTION : Jacobian::S_DIRECTION;
+  constexpr int s1Component = (direction == Jacobian::S_DIRECTION)
+                                ? Jacobian::T_DIRECTION
+                                : Jacobian::S_DIRECTION;
 
-  DoubleType dxdr = 0.0;  DoubleType dydr = 0.0;
+  DoubleType dxdr = 0.0;
+  DoubleType dydr = 0.0;
   for (int node = 0; node < AlgTraits::nodesPerElement_; ++node) {
     const int vector_offset = nDim_ * node;
-    const DoubleType xCoord = elemNodalCoords(node,0);
-    const DoubleType yCoord = elemNodalCoords(node,1);
+    const DoubleType xCoord = elemNodalCoords(node, 0);
+    const DoubleType yCoord = elemNodalCoords(node, 1);
 
-    dxdr += shapeDeriv[vector_offset+s1Component] * xCoord;
-    dydr += shapeDeriv[vector_offset+s1Component] * yCoord;
+    dxdr += shapeDeriv[vector_offset + s1Component] * xCoord;
+    dydr += shapeDeriv[vector_offset + s1Component] * yCoord;
   }
 
-  normalVec[0] =  dydr;
+  normalVec[0] = dydr;
   normalVec[1] = -dxdr;
 }
-template <Jacobian::Direction direction> void
+template <Jacobian::Direction direction>
+void
 Quad92DSCS::area_vector(
-  const double *POINTER_RESTRICT elemNodalCoords,
-  double *POINTER_RESTRICT shapeDeriv,
-  double *POINTER_RESTRICT normalVec ) const
+  const double* POINTER_RESTRICT elemNodalCoords,
+  double* POINTER_RESTRICT shapeDeriv,
+  double* POINTER_RESTRICT normalVec) const
 {
-  constexpr int s1Component = (direction == Jacobian::S_DIRECTION) ?
-      Jacobian::T_DIRECTION : Jacobian::S_DIRECTION;
+  constexpr int s1Component = (direction == Jacobian::S_DIRECTION)
+                                ? Jacobian::T_DIRECTION
+                                : Jacobian::S_DIRECTION;
 
-  double dxdr = 0.0;  double dydr = 0.0;
+  double dxdr = 0.0;
+  double dydr = 0.0;
   for (int node = 0; node < AlgTraits::nodesPerElement_; ++node) {
     const int vector_offset = nDim_ * node;
-    const double xCoord = elemNodalCoords[vector_offset+0];
-    const double yCoord = elemNodalCoords[vector_offset+1];
+    const double xCoord = elemNodalCoords[vector_offset + 0];
+    const double yCoord = elemNodalCoords[vector_offset + 1];
 
-    dxdr += shapeDeriv[vector_offset+s1Component] * xCoord;
-    dydr += shapeDeriv[vector_offset+s1Component] * yCoord;
+    dxdr += shapeDeriv[vector_offset + s1Component] * xCoord;
+    dydr += shapeDeriv[vector_offset + s1Component] * yCoord;
   }
 
-  normalVec[0] =  dydr;
+  normalVec[0] = dydr;
   normalVec[1] = -dxdr;
 }
 

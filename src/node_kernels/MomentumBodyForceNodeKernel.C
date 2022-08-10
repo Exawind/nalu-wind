@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "node_kernels/MomentumBodyForceNodeKernel.h"
 #include "Realm.h"
 
@@ -19,20 +18,20 @@ namespace sierra {
 namespace nalu {
 
 MomentumBodyForceNodeKernel::MomentumBodyForceNodeKernel(
-  const stk::mesh::BulkData& bulk,
-  const std::vector<double>& params
-) : NGPNodeKernel<MomentumBodyForceNodeKernel>(),
+  const stk::mesh::BulkData& bulk, const std::vector<double>& params)
+  : NGPNodeKernel<MomentumBodyForceNodeKernel>(),
     nDim_(bulk.mesh_meta_data().spatial_dimension())
 {
   const auto& meta = bulk.mesh_meta_data();
 
   dualNodalVolumeID_ = get_field_ordinal(meta, "dual_nodal_volume");
 
-  for (int i=0; i < nDim_; ++i)
+  for (int i = 0; i < nDim_; ++i)
     forceVector_[i] = params[i];
 }
 
-void MomentumBodyForceNodeKernel::setup(Realm& realm)
+void
+MomentumBodyForceNodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
@@ -46,11 +45,11 @@ MomentumBodyForceNodeKernel::execute(
 {
   const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);
 
-  for (int i=0; i < nDim_; ++i)
+  for (int i = 0; i < nDim_; ++i)
     rhs(i) += dualVolume * forceVector_[i];
 
   // No LHS contributions
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

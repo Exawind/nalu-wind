@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "node_kernels/TKESSTDESNodeKernel.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
@@ -20,9 +19,8 @@
 namespace sierra {
 namespace nalu {
 
-TKESSTDESNodeKernel::TKESSTDESNodeKernel(
-  const stk::mesh::MetaData& meta
-) : NGPNodeKernel<TKESSTDESNodeKernel>(),
+TKESSTDESNodeKernel::TKESSTDESNodeKernel(const stk::mesh::MetaData& meta)
+  : NGPNodeKernel<TKESSTDESNodeKernel>(),
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
     sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
     densityID_(get_field_ordinal(meta, "density")),
@@ -32,21 +30,22 @@ TKESSTDESNodeKernel::TKESSTDESNodeKernel(
     maxLenScaleID_(get_field_ordinal(meta, "sst_max_length_scale")),
     fOneBlendID_(get_field_ordinal(meta, "sst_f_one_blending")),
     nDim_(meta.spatial_dimension())
-{}
+{
+}
 
 void
 TKESSTDESNodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
 
-  tke_             = fieldMgr.get_field<double>(tkeID_);
-  sdr_             = fieldMgr.get_field<double>(sdrID_);
-  density_         = fieldMgr.get_field<double>(densityID_);
-  tvisc_           = fieldMgr.get_field<double>(tviscID_);
-  dudx_            = fieldMgr.get_field<double>(dudxID_);
+  tke_ = fieldMgr.get_field<double>(tkeID_);
+  sdr_ = fieldMgr.get_field<double>(sdrID_);
+  density_ = fieldMgr.get_field<double>(densityID_);
+  tvisc_ = fieldMgr.get_field<double>(tviscID_);
+  dudx_ = fieldMgr.get_field<double>(dudxID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
-  maxLenScale_     = fieldMgr.get_field<double>(maxLenScaleID_);
-  fOneBlend_       = fieldMgr.get_field<double>(fOneBlendID_);
+  maxLenScale_ = fieldMgr.get_field<double>(maxLenScaleID_);
+  fOneBlend_ = fieldMgr.get_field<double>(fOneBlendID_);
 
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
@@ -57,7 +56,8 @@ TKESSTDESNodeKernel::setup(Realm& realm)
   sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
 }
 
-void TKESSTDESNodeKernel::execute(
+void
+TKESSTDESNodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
@@ -73,18 +73,17 @@ void TKESSTDESNodeKernel::execute(
   const DblType fOneBlend = fOneBlend_.get(node, 0);
 
   DblType Pk = 0.0;
-  for (int i=0; i < nDim_; ++i) {
+  for (int i = 0; i < nDim_; ++i) {
     const int offset = nDim_ * i;
-    for (int j=0; j < nDim_; ++j) {
-      const auto dudxij = dudx_.get(node, offset+j);
-      Pk += dudxij * (dudxij + dudx_.get(node, j*nDim_ + i));
+    for (int j = 0; j < nDim_; ++j) {
+      const auto dudxij = dudx_.get(node, offset + j);
+      Pk += dudxij * (dudxij + dudx_.get(node, j * nDim_ + i));
     }
   }
   Pk *= tvisc;
 
   // blend cDES constant
-  const DblType cDES =
-    fOneBlend * cDESkw_ + (1.0 - fOneBlend) * cDESke_;
+  const DblType cDES = fOneBlend * cDESkw_ + (1.0 - fOneBlend) * cDESke_;
 
   const DblType sqrtTke = stk::math::sqrt(tke);
   const DblType lSST = sqrtTke / betaStar_ / sdr;
@@ -111,5 +110,5 @@ void TKESSTDESNodeKernel::execute(
   lhs(0, 0) += 1.5 * density / lDES * sqrtTke * dVol;
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

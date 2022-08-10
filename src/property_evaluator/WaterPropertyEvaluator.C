@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <property_evaluator/PropertyEvaluator.h>
 #include <property_evaluator/WaterPropertyEvaluator.h>
 #include <FieldTypeDef.h>
@@ -18,8 +16,8 @@
 
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -30,11 +28,8 @@ namespace nalu{
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 WaterDensityTPropertyEvaluator::WaterDensityTPropertyEvaluator(
-  stk::mesh::MetaData & /* metaData */)
-  : PropertyEvaluator(),
-    aw_(+765.33),
-    bw_(+1.8142),
-    cw_(-3.5e-3)
+  stk::mesh::MetaData& /* metaData */)
+  : PropertyEvaluator(), aw_(+765.33), bw_(+1.8142), cw_(-3.5e-3)
 {
   // nothing to do
 }
@@ -52,11 +47,10 @@ WaterDensityTPropertyEvaluator::~WaterDensityTPropertyEvaluator()
 //--------------------------------------------------------------------------
 double
 WaterDensityTPropertyEvaluator::execute(
-  double *indVarList,
-  stk::mesh::Entity /*node*/)
+  double* indVarList, stk::mesh::Entity /*node*/)
 {
   const double T = indVarList[0];
-  const double rhoW = aw_ + T*(bw_ + T*cw_);
+  const double rhoW = aw_ + T * (bw_ + T * cw_);
   return rhoW; // kg/m^3; T in C (converted above)
 }
 
@@ -69,7 +63,7 @@ WaterDensityTPropertyEvaluator::execute(
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 WaterViscosityTPropertyEvaluator::WaterViscosityTPropertyEvaluator(
-  stk::mesh::MetaData & /* metaData */)
+  stk::mesh::MetaData& /* metaData */)
   : PropertyEvaluator(),
     aw_(+9.67e-2),
     bw_(-8.207e-4),
@@ -92,11 +86,10 @@ WaterViscosityTPropertyEvaluator::~WaterViscosityTPropertyEvaluator()
 //--------------------------------------------------------------------------
 double
 WaterViscosityTPropertyEvaluator::execute(
-  double *indVarList,
-  stk::mesh::Entity /*node*/)
+  double* indVarList, stk::mesh::Entity /*node*/)
 {
   const double T = indVarList[0];
-  const double muW = aw_ + T*(bw_ + T*(cw_ + T*dw_));
+  const double muW = aw_ + T * (bw_ + T * (cw_ + T * dw_));
   return muW; // kg/m-s; T in K
 }
 
@@ -109,7 +102,7 @@ WaterViscosityTPropertyEvaluator::execute(
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 WaterSpecHeatTPropertyEvaluator::WaterSpecHeatTPropertyEvaluator(
-  stk::mesh::MetaData & /* metaData */)
+  stk::mesh::MetaData& /* metaData */)
   : PropertyEvaluator(),
     aw_(28.07),
     bw_(-2.817e-1),
@@ -133,11 +126,11 @@ WaterSpecHeatTPropertyEvaluator::~WaterSpecHeatTPropertyEvaluator()
 //--------------------------------------------------------------------------
 double
 WaterSpecHeatTPropertyEvaluator::execute(
-  double *indVarList,
-  stk::mesh::Entity /*node*/)
+  double* indVarList, stk::mesh::Entity /*node*/)
 {
   const double T = indVarList[0];
-  const double cpW = (aw_ + T*(bw_ + T*(cw_ + T*(dw_ + T*ew_))))*1000.0;
+  const double cpW =
+    (aw_ + T * (bw_ + T * (cw_ + T * (dw_ + T * ew_)))) * 1000.0;
   return cpW; // J/kg-K; T in K (orginal correlation provided in kJ/kg-K)
 }
 
@@ -150,7 +143,7 @@ WaterSpecHeatTPropertyEvaluator::execute(
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 WaterEnthalpyTPropertyEvaluator::WaterEnthalpyTPropertyEvaluator(
-  stk::mesh::MetaData & /* metaData */)
+  stk::mesh::MetaData& /* metaData */)
   : PropertyEvaluator(),
     aw_(28.07),
     bw_(-2.817e-1),
@@ -158,7 +151,9 @@ WaterEnthalpyTPropertyEvaluator::WaterEnthalpyTPropertyEvaluator(
     dw_(-2.48e-6),
     ew_(+1.857e-9),
     Tref_(300.0),
-    hRef_((aw_ + Tref_*(bw_ + Tref_*(cw_ + Tref_*(dw_ + Tref_*ew_))))*1000.0*Tref_)
+    hRef_(
+      (aw_ + Tref_ * (bw_ + Tref_ * (cw_ + Tref_ * (dw_ + Tref_ * ew_)))) *
+      1000.0 * Tref_)
 {
   // nothing to do
 }
@@ -176,8 +171,7 @@ WaterEnthalpyTPropertyEvaluator::~WaterEnthalpyTPropertyEvaluator()
 //--------------------------------------------------------------------------
 double
 WaterEnthalpyTPropertyEvaluator::execute(
-  double *indVarList,
-  stk::mesh::Entity  /* node */)
+  double* indVarList, stk::mesh::Entity /* node */)
 {
   const double T = indVarList[0];
   const double hWT = compute_h(T);
@@ -190,10 +184,13 @@ WaterEnthalpyTPropertyEvaluator::execute(
 //-------- compute_h ---------------------------------------------------------
 //--------------------------------------------------------------------------
 double
-WaterEnthalpyTPropertyEvaluator::compute_h(
-  const double T)
+WaterEnthalpyTPropertyEvaluator::compute_h(const double T)
 {
-  const double hW = T*(aw_ + T*(bw_/2.0 + T*(cw_/3.0 + T*(dw_/4.0 + T*ew_/5.0))))*1000.0;
+  const double hW =
+    T *
+    (aw_ +
+     T * (bw_ / 2.0 + T * (cw_ / 3.0 + T * (dw_ / 4.0 + T * ew_ / 5.0)))) *
+    1000.0;
   return hW;
 }
 
@@ -206,11 +203,8 @@ WaterEnthalpyTPropertyEvaluator::compute_h(
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 WaterThermalCondTPropertyEvaluator::WaterThermalCondTPropertyEvaluator(
-  stk::mesh::MetaData & /* metaData */)
-  : PropertyEvaluator(),
-    aw_(-0.5752),
-    bw_(+6.397e-3),
-    cw_(-8.151e-6)
+  stk::mesh::MetaData& /* metaData */)
+  : PropertyEvaluator(), aw_(-0.5752), bw_(+6.397e-3), cw_(-8.151e-6)
 {
   // nothing to do
 }
@@ -228,13 +222,12 @@ WaterThermalCondTPropertyEvaluator::~WaterThermalCondTPropertyEvaluator()
 //--------------------------------------------------------------------------
 double
 WaterThermalCondTPropertyEvaluator::execute(
-  double *indVarList,
-  stk::mesh::Entity /*node*/)
+  double* indVarList, stk::mesh::Entity /*node*/)
 {
   const double T = indVarList[0];
-  const double lambdaW = aw_ + T*(bw_ + T*cw_);
+  const double lambdaW = aw_ + T * (bw_ + T * cw_);
   return lambdaW; // W/m-K; T in K
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

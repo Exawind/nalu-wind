@@ -27,7 +27,10 @@ namespace nalu {
 
 template <typename AlgTraits>
 MdotDensityAccumAlg<AlgTraits>::MdotDensityAccumAlg(
-  Realm& realm, stk::mesh::Part* part, MdotAlgDriver& mdotDriver, bool lumpedMass)
+  Realm& realm,
+  stk::mesh::Part* part,
+  MdotAlgDriver& mdotDriver,
+  bool lumpedMass)
   : Algorithm(realm, part),
     mdotDriver_(mdotDriver),
     elemData_(realm.meta_data()),
@@ -46,7 +49,8 @@ MdotDensityAccumAlg<AlgTraits>::MdotDensityAccumAlg(
 
   const auto coordID = get_field_ordinal(
     realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());
-  elemData_.add_coordinates_field(coordID, AlgTraits::nDim_, CURRENT_COORDINATES);
+  elemData_.add_coordinates_field(
+    coordID, AlgTraits::nDim_, CURRENT_COORDINATES);
   elemData_.add_gathered_nodal_field(rhoNp1_, 1);
   elemData_.add_gathered_nodal_field(rhoN_, 1);
   elemData_.add_gathered_nodal_field(rhoNm1_, 1);
@@ -56,10 +60,12 @@ MdotDensityAccumAlg<AlgTraits>::MdotDensityAccumAlg(
   elemData_.add_master_element_call(shp_fcn_type, CURRENT_COORDINATES);
 }
 
-template<typename AlgTraits>
-void MdotDensityAccumAlg<AlgTraits>::execute()
+template <typename AlgTraits>
+void
+MdotDensityAccumAlg<AlgTraits>::execute()
 {
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdDataType =
+    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
 
@@ -73,18 +79,20 @@ void MdotDensityAccumAlg<AlgTraits>::execute()
   const DoubleType gamma2 = realm_.get_gamma2();
   const DoubleType gamma3 = realm_.get_gamma3();
 
-  const std::string algName = "mdot_density_accum_" + std::to_string(AlgTraits::topo_);
+  const std::string algName =
+    "mdot_density_accum_" + std::to_string(AlgTraits::topo_);
   DoubleType rhoAcc = 0.0;
   Kokkos::Sum<DoubleType> mdotReducer(rhoAcc);
 
-  const stk::mesh::Selector sel = stk::mesh::selectField(
-    *realm_.meta_data().template get_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "density"))
-    & !(realm_.get_inactive_selector());
+  const stk::mesh::Selector sel =
+    stk::mesh::selectField(
+      *realm_.meta_data().template get_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "density")) &
+    !(realm_.get_inactive_selector());
 
   nalu_ngp::run_elem_par_reduce(
     algName, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
-    KOKKOS_LAMBDA(ElemSimdDataType & edata, DoubleType& acc) {
+    KOKKOS_LAMBDA(ElemSimdDataType & edata, DoubleType & acc) {
       auto& scrViews = edata.simdScrView;
       auto& densityNp1 = scrViews.get_scratch_view_1D(rhoNp1ID);
       auto& densityN = scrViews.get_scratch_view_1D(rhoNID);
@@ -95,26 +103,28 @@ void MdotDensityAccumAlg<AlgTraits>::execute()
       const auto& v_shape_fcn =
         lumpedMass ? meViews.scv_shifted_shape_fcn : meViews.scv_shape_fcn;
 
-      for (int ip=0; ip < AlgTraits::numScvIp_; ++ip) {
+      for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
         DoubleType rhoNm1 = 0.0;
         DoubleType rhoN = 0.0;
         DoubleType rhoNp1 = 0.0;
 
-        for (int ic=0; ic < AlgTraits::nodesPerElement_; ++ic) {
+        for (int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic) {
           const DoubleType r = v_shape_fcn(ip, ic);
           rhoNm1 += r * densityNm1(ic);
           rhoN += r * densityN(ic);
           rhoNp1 += r * densityNp1(ic);
         }
 
-        acc += (gamma1 * rhoNp1 + gamma2 * rhoN + gamma3 * rhoNm1) / dt * v_scv_vol(ip);
+        acc += (gamma1 * rhoNp1 + gamma2 * rhoN + gamma3 * rhoNm1) / dt *
+               v_scv_vol(ip);
       }
-    }, mdotReducer);
+    },
+    mdotReducer);
 
   mdotDriver_.add_density_accumulation(rhoAcc);
 }
 
 INSTANTIATE_KERNEL(MdotDensityAccumAlg)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

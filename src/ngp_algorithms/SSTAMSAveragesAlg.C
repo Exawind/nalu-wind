@@ -65,7 +65,8 @@ SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     beta_(get_field_ordinal(realm.meta_data(), "k_ratio")),
     Mij_(get_field_ordinal(realm.meta_data(), "metric_tensor")),
     wallDist_(get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall")),
-    coordinates_(get_field_ordinal(realm.meta_data(), realm.get_coordinates_name()))
+    coordinates_(
+      get_field_ordinal(realm.meta_data(), realm.get_coordinates_name()))
 {
 }
 
@@ -122,11 +123,11 @@ SSTAMSAveragesAlg::execute()
 
   const bool RANSBelowKs = RANSBelowKs_;
   DblType k_s;
-  int gravity_i; 
+  int gravity_i;
   if (RANSBelowKs) {
-    // relationship b/w sand grain roughness height, k_s, and aerodynamic roughness, z0,
-    // as described in ref. Bau11, Eq. (2.29)
-    k_s = 30.*z0_;
+    // relationship b/w sand grain roughness height, k_s, and aerodynamic
+    // roughness, z0, as described in ref. Bau11, Eq. (2.29)
+    k_s = 30. * z0_;
     for (int i = 0; i < 3; ++i) {
       if ((eastVector_[i] == 0.0) && (northVector_[i] == 0.0)) {
         gravity_i = i;
@@ -135,18 +136,17 @@ SSTAMSAveragesAlg::execute()
   }
 
   nalu_ngp::run_entity_algorithm(
-    "SSTAMSAveragesAlg_computeAverages", ngpMesh, stk::topology::NODE_RANK,
-    sel, KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
+    "SSTAMSAveragesAlg_computeAverages", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
       // Calculate alpha
       if (tke.get(mi, 0) == 0.0)
         beta.get(mi, 0) = 1.0;
       else if ((RANSBelowKs) && (coords.get(mi, gravity_i) <= k_s)) {
         beta.get(mi, 0) = 1.0;
-      }
-      else {
+      } else {
         beta.get(mi, 0) =
           (tke.get(mi, 0) - avgTkeRes.get(mi, 0)) / tke.get(mi, 0);
- 
+
         // limiters
         beta.get(mi, 0) = stk::math::min(beta.get(mi, 0), 1.0);
 
@@ -157,11 +157,12 @@ SSTAMSAveragesAlg::execute()
 
       // store RANS time scale
       if (lengthScaleLimiter_) {
-        const DblType l_t = stk::math::sqrt(tke.get(mi, 0))/(stk::math::pow(betaStar, .25)*sdr.get(mi, 0));
-        avgTime.get(mi, 0) = avgTimeCoeff * l_t / stk::math::sqrt(tke.get(mi, 0));
-      }
-      else {
-        avgTime.get(mi, 0) = avgTimeCoeff / (betaStar * sdr.get(mi, 0)); 
+        const DblType l_t = stk::math::sqrt(tke.get(mi, 0)) /
+                            (stk::math::pow(betaStar, .25) * sdr.get(mi, 0));
+        avgTime.get(mi, 0) =
+          avgTimeCoeff * l_t / stk::math::sqrt(tke.get(mi, 0));
+      } else {
+        avgTime.get(mi, 0) = avgTimeCoeff / (betaStar * sdr.get(mi, 0));
       }
 
       // causal time average ODE: d<phi>/dt = 1/avgTime * (phi - <phi>)
@@ -193,8 +194,9 @@ SSTAMSAveragesAlg::execute()
       DblType tij[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
       for (int i = 0; i < nalu_ngp::NDimMax; ++i) {
         for (int j = 0; j < nalu_ngp::NDimMax; ++j) {
-          const DblType avgSij = 0.5 * (avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
-                                        avgDudx.get(mi, j * nalu_ngp::NDimMax + i));
+          const DblType avgSij =
+            0.5 * (avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
+                   avgDudx.get(mi, j * nalu_ngp::NDimMax + i));
           tij[i][j] = 2.0 * alpha * (2.0 - alpha) * tvisc.get(mi, 0) * avgSij;
         }
       }
@@ -204,8 +206,9 @@ SSTAMSAveragesAlg::execute()
         for (int j = 0; j < nalu_ngp::NDimMax; ++j) {
           Pij[i][j] = 0.0;
           for (int m = 0; m < nalu_ngp::NDimMax; ++m) {
-            Pij[i][j] += avgDudx.get(mi, i * nalu_ngp::NDimMax + m) * tij[j][m] +
-                         avgDudx.get(mi, j * nalu_ngp::NDimMax + m) * tij[i][m];
+            Pij[i][j] +=
+              avgDudx.get(mi, i * nalu_ngp::NDimMax + m) * tij[j][m] +
+              avgDudx.get(mi, j * nalu_ngp::NDimMax + m) * tij[i][m];
           }
           Pij[i][j] *= 0.5;
         }
@@ -214,7 +217,8 @@ SSTAMSAveragesAlg::execute()
       DblType P_res = 0.0;
       for (int i = 0; i < nalu_ngp::NDimMax; ++i) {
         for (int j = 0; j < nalu_ngp::NDimMax; ++j) {
-          P_res += density.get(mi, 0) * avgDudx.get(mi, i * nalu_ngp::NDimMax + j) *
+          P_res += density.get(mi, 0) *
+                   avgDudx.get(mi, i * nalu_ngp::NDimMax + j) *
                    ((avgVel.get(mi, i) - vel.get(mi, i)) *
                     (avgVel.get(mi, j) - vel.get(mi, j)));
         }
@@ -313,8 +317,8 @@ SSTAMSAveragesAlg::execute()
           // The 2 in the coeff cancels with the 1/2 in the strain rate tensor
           const DblType coeffSGRS =
             alpha * (2.0 - alpha) * tvisc.get(mi, 0) / density.get(mi, 0);
-          tauSGRS[i][j] =
-            avgDudx.get(mi, i * nalu_ngp::NDimMax + j) + avgDudx.get(mi, j * nalu_ngp::NDimMax + i);
+          tauSGRS[i][j] = avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
+                          avgDudx.get(mi, j * nalu_ngp::NDimMax + i);
           tauSGRS[i][j] *= coeffSGRS;
 
           for (int l = 0; l < nalu_ngp::NDimMax; ++l) {
@@ -324,17 +328,20 @@ SSTAMSAveragesAlg::execute()
             // velocity gradients.
             const DblType coeffSGET = CM43scale * CM43 * epsilon13;
             const DblType fluctDudx_jl =
-              dudx.get(mi, j * nalu_ngp::NDimMax + l) - avgDudx.get(mi, j * nalu_ngp::NDimMax + l);
+              dudx.get(mi, j * nalu_ngp::NDimMax + l) -
+              avgDudx.get(mi, j * nalu_ngp::NDimMax + l);
             const DblType fluctDudx_il =
-              dudx.get(mi, i * nalu_ngp::NDimMax + l) - avgDudx.get(mi, i * nalu_ngp::NDimMax + l);
+              dudx.get(mi, i * nalu_ngp::NDimMax + l) -
+              avgDudx.get(mi, i * nalu_ngp::NDimMax + l);
             tauSGET[i][j] +=
               coeffSGET * arScale *
               (M43[i][l] * fluctDudx_jl + M43[j][l] * fluctDudx_il);
           }
-          tauSGET[i][j] +=
-            arInvScale * tvisc.get(mi, 0) / density.get(mi, 0) *
-            (dudx.get(mi, i * nalu_ngp::NDimMax + j) - avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
-             dudx.get(mi, j * nalu_ngp::NDimMax + i) - avgDudx.get(mi, j * nalu_ngp::NDimMax + i));
+          tauSGET[i][j] += arInvScale * tvisc.get(mi, 0) / density.get(mi, 0) *
+                           (dudx.get(mi, i * nalu_ngp::NDimMax + j) -
+                            avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
+                            dudx.get(mi, j * nalu_ngp::NDimMax + i) -
+                            avgDudx.get(mi, j * nalu_ngp::NDimMax + i));
         }
       }
 
@@ -384,8 +391,7 @@ SSTAMSAveragesAlg::execute()
         resAdeq.get(mi, 0) = 1.0;
       else if ((RANSBelowKs) && (coords.get(mi, gravity_i) <= k_s)) {
         resAdeq.get(mi, 0) = 1.0;
-      }
-      else {
+      } else {
         for (int i = 0; i < nalu_ngp::NDimMax; ++i)
           for (int j = 0; j < nalu_ngp::NDimMax; ++j)
             PM[i][j] = PM[i][j] * PMscale;
@@ -420,7 +426,6 @@ SSTAMSAveragesAlg::execute()
       avgResAdeq.get(mi, 0) =
         weightAvg * avgResAdeqN.get(mi, 0) + weightInst * resAdeq.get(mi, 0);
     });
-
 }
 
 } // namespace nalu

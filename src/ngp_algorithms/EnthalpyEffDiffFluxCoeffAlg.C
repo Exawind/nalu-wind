@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include <ngp_algorithms/EnthalpyEffDiffFluxCoeffAlg.h>
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpTypes.h"
@@ -18,19 +17,19 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/NgpMesh.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 EnthalpyEffDiffFluxCoeffAlg::EnthalpyEffDiffFluxCoeffAlg(
-  Realm &realm,
+  Realm& realm,
   stk::mesh::Part* part,
   ScalarFieldType* thermalCond,
   ScalarFieldType* specHeat,
   ScalarFieldType* tvisc,
   ScalarFieldType* evisc,
   const double sigmaTurb,
-  const bool isTurbulent
-) : Algorithm(realm, part),
+  const bool isTurbulent)
+  : Algorithm(realm, part),
     specHeatField_(specHeat),
     thermalCond_(thermalCond->mesh_meta_data_ordinal()),
     specHeat_(specHeat->mesh_meta_data_ordinal()),
@@ -51,9 +50,9 @@ EnthalpyEffDiffFluxCoeffAlg::execute()
 
   const auto& meta = realm_.meta_data();
 
-  stk::mesh::Selector sel = (
-    meta.locally_owned_part() | meta.globally_shared_part())
-    & stk::mesh::selectField(*specHeatField_);
+  stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part()) &
+    stk::mesh::selectField(*specHeatField_);
 
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
@@ -66,20 +65,19 @@ EnthalpyEffDiffFluxCoeffAlg::execute()
   if (isTurbulent_) {
     const auto tvisc = fieldMgr.get_field<double>(tvisc_);
     nalu_ngp::run_entity_algorithm(
-      "EnthalpyEffDiffFluxCoeffAlg_turbulent",
-      ngpMesh, stk::topology::NODE_RANK, sel,
+      "EnthalpyEffDiffFluxCoeffAlg_turbulent", ngpMesh,
+      stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
-        evisc.get(meshIdx, 0) = (
-          thermalCond.get(meshIdx, 0) / specHeat.get(meshIdx, 0) +
-          tvisc.get(meshIdx, 0) * invSigmaTurb);
+        evisc.get(meshIdx, 0) =
+          (thermalCond.get(meshIdx, 0) / specHeat.get(meshIdx, 0) +
+           tvisc.get(meshIdx, 0) * invSigmaTurb);
       });
   } else {
     nalu_ngp::run_entity_algorithm(
-      "EnthalpyEffDiffFluxCoeffAlg_laminar",
-      ngpMesh, stk::topology::NODE_RANK, sel,
-      KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
-        evisc.get(meshIdx, 0) = (
-          thermalCond.get(meshIdx, 0) / specHeat.get(meshIdx, 0));
+      "EnthalpyEffDiffFluxCoeffAlg_laminar", ngpMesh, stk::topology::NODE_RANK,
+      sel, KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
+        evisc.get(meshIdx, 0) =
+          (thermalCond.get(meshIdx, 0) / specHeat.get(meshIdx, 0));
       });
   }
 
@@ -87,4 +85,4 @@ EnthalpyEffDiffFluxCoeffAlg::execute()
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

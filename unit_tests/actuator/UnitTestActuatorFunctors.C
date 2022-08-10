@@ -21,7 +21,8 @@ using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
 
 //-----------------------------------------------------------------
 
-void SetupActPoints(ActuatorBulk& actBulk)
+void
+SetupActPoints(ActuatorBulk& actBulk)
 {
   ActDualViewHelper<ActuatorMemSpace> helper;
   ActVectorDbl point = actBulk.pointCentroid_.view_device();
@@ -29,21 +30,23 @@ void SetupActPoints(ActuatorBulk& actBulk)
 
   helper.touch_dual_view(actBulk.pointCentroid_);
   helper.touch_dual_view(actBulk.searchRadius_);
-  
-  Kokkos::parallel_for("SetupActPoints",Kokkos::RangePolicy<ActuatorExecutionSpace>
-    (0,point.extent_int(0)),KOKKOS_LAMBDA(int index)
-  {
-    point(index, 0) = 1.0 + 1.5 * index;
-    point(index, 1) = 2.5;
-    point(index, 2) = 2.5;
-    radius(index) = 2.0;
-  });
+
+  Kokkos::parallel_for(
+    "SetupActPoints",
+    Kokkos::RangePolicy<ActuatorExecutionSpace>(0, point.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
+      point(index, 0) = 1.0 + 1.5 * index;
+      point(index, 1) = 2.5;
+      point(index, 2) = 2.5;
+      radius(index) = 2.0;
+    });
 
   actBulk.searchRadius_.sync_host();
   actBulk.pointCentroid_.sync_host();
 }
 
-void ComputeActuatorForce(ActuatorBulk& actBulk)
+void
+ComputeActuatorForce(ActuatorBulk& actBulk)
 {
   ActDualViewHelper<ActuatorMemSpace> helper;
   ActVectorDbl force = actBulk.actuatorForce_.view_device();
@@ -52,33 +55,35 @@ void ComputeActuatorForce(ActuatorBulk& actBulk)
   helper.touch_dual_view(actBulk.actuatorForce_);
   helper.touch_dual_view(actBulk.velocity_);
 
-  Kokkos::parallel_for("CompActForce", Kokkos::RangePolicy<ActuatorExecutionSpace>
-    (0,force.extent_int(0)),KOKKOS_LAMBDA(int index)
-  {
-    for (int j = 0; j < 3; j++) {
-      force(index, j) = 1.2 * velocity(index, j);
-    }
-  });
+  Kokkos::parallel_for(
+    "CompActForce",
+    Kokkos::RangePolicy<ActuatorExecutionSpace>(0, force.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
+      for (int j = 0; j < 3; j++) {
+        force(index, j) = 1.2 * velocity(index, j);
+      }
+    });
   actBulk.actuatorForce_.sync_host();
   actBulk.velocity_.sync_host();
 }
 
-void  ActuatorTestInterpVelFunctors(
-    const ActuatorMeta& actMeta,
-    ActuatorBulk& actBulk,
-    stk::mesh::BulkData& stkBulk)
+void
+ActuatorTestInterpVelFunctors(
+  const ActuatorMeta& actMeta,
+  ActuatorBulk& actBulk,
+  stk::mesh::BulkData& stkBulk)
 {
-    SetupActPoints(actBulk);
+  SetupActPoints(actBulk);
 
-    actBulk.stk_search_act_pnts(actMeta, stkBulk);
+  actBulk.stk_search_act_pnts(actMeta, stkBulk);
 
-    Kokkos::parallel_for(
-      "interpVel", actMeta.numPointsTotal_, InterpActuatorVel(actBulk, stkBulk));
+  Kokkos::parallel_for(
+    "interpVel", actMeta.numPointsTotal_, InterpActuatorVel(actBulk, stkBulk));
 
-    auto vel = actBulk.velocity_.view_host();
-    actuator_utils::reduce_view_on_host(vel);
+  auto vel = actBulk.velocity_.view_host();
+  actuator_utils::reduce_view_on_host(vel);
 
-    ComputeActuatorForce(actBulk);
+  ComputeActuatorForce(actBulk);
 }
 
 struct FunctorTestSpread : public ActuatorBulk
@@ -157,18 +162,19 @@ protected:
   VectorFieldType* actuatorForce_{nullptr};
   ScalarFieldType* dualNodalVolume_{nullptr};
 
-  ActuatorFunctorTests()
-    : tol_(1e-8),
-      coordinates_(nullptr)
+  ActuatorFunctorTests() : tol_(1e-8), coordinates_(nullptr)
   {
     stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);
     meshBuilder.set_spatial_dimension(3);
     stkBulk_ = meshBuilder.create();
     stkMeta_ = &stkBulk_->mesh_meta_data();
 
-    velocity_ = &stkMeta_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-    actuatorForce_ = &stkMeta_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "actuator_source");
-    dualNodalVolume_ = &stkMeta_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
+    velocity_ = &stkMeta_->declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "velocity");
+    actuatorForce_ = &stkMeta_->declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "actuator_source");
+    dualNodalVolume_ = &stkMeta_->declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "dual_nodal_volume");
 
     stk::mesh::put_field_on_mesh(
       *velocity_, stkMeta_->universal_part(), 3, nullptr);

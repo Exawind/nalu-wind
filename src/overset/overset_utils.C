@@ -14,13 +14,14 @@ namespace sierra {
 namespace nalu {
 namespace overset_utils {
 
-std::vector<OversetFieldData> get_overset_field_data(Realm& realm, std::vector<std::string> fnames)
+std::vector<OversetFieldData>
+get_overset_field_data(Realm& realm, std::vector<std::string> fnames)
 {
   std::vector<OversetFieldData> fields;
   const auto& meta = realm.meta_data();
   const int row = 1;
 
-  for (const auto& ff: fnames) {
+  for (const auto& ff : fnames) {
     auto* fld = meta.get_field(stk::topology::NODE_RANK, ff);
     ThrowAssert(fld != nullptr);
 
@@ -31,6 +32,6 @@ std::vector<OversetFieldData> get_overset_field_data(Realm& realm, std::vector<s
   return fields;
 }
 
-}
-}  // nalu
-}  // sierra
+} // namespace overset_utils
+} // namespace nalu
+} // namespace sierra

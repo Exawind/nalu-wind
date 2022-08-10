@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernel/WallDistElemKernel.h"
 #include "AlgTraits.h"
 #include "master_element/MasterElement.h"

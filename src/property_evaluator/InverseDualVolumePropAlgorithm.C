@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <Algorithm.h>
 #include <property_evaluator/InverseDualVolumePropAlgorithm.h>
 #include <FieldTypeDef.h>
@@ -20,51 +18,47 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Selector.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 InverseDualVolumePropAlgorithm::InverseDualVolumePropAlgorithm(
-  Realm & realm,
-  stk::mesh::Part * part,
-  stk::mesh::FieldBase * prop)
-  : Algorithm(realm, part),
-    prop_(prop),
-    dualNodalVolume_(NULL)
+  Realm& realm, stk::mesh::Part* part, stk::mesh::FieldBase* prop)
+  : Algorithm(realm, part), prop_(prop), dualNodalVolume_(NULL)
 {
   // extract dual volume
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
-  dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
+  stk::mesh::MetaData& meta_data = realm_.meta_data();
+  dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
 }
 
-InverseDualVolumePropAlgorithm::~InverseDualVolumePropAlgorithm() {
-}
+InverseDualVolumePropAlgorithm::~InverseDualVolumePropAlgorithm() {}
 
 void
 InverseDualVolumePropAlgorithm::execute()
 {
 
   // make sure that partVec_ is size one
-  ThrowAssert( partVec_.size() == 1 );
+  ThrowAssert(partVec_.size() == 1);
 
   stk::mesh::Selector selector = stk::mesh::selectUnion(partVec_);
 
   stk::mesh::BucketVector const& node_buckets =
-    realm_.get_buckets( stk::topology::NODE_RANK, selector );
+    realm_.get_buckets(stk::topology::NODE_RANK, selector);
 
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
+  for (stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
+       ib != node_buckets.end(); ++ib) {
+    stk::mesh::Bucket& b = **ib;
+    const stk::mesh::Bucket::size_type length = b.size();
 
-    double *prop  = (double*)stk::mesh::field_data(*prop_, b);
-    const double *dualNodalVolume  = (double*)stk::mesh::field_data(*dualNodalVolume_, b);
+    double* prop = (double*)stk::mesh::field_data(*prop_, b);
+    const double* dualNodalVolume =
+      (double*)stk::mesh::field_data(*dualNodalVolume_, b);
 
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      prop[k] = 1.0/dualNodalVolume[k];
+    for (stk::mesh::Bucket::size_type k = 0; k < length; ++k) {
+      prop[k] = 1.0 / dualNodalVolume[k];
     }
   }
 }
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

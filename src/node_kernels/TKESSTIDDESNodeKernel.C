@@ -30,22 +30,23 @@ TKESSTIDDESNodeKernel::TKESSTIDDESNodeKernel(const stk::mesh::MetaData& meta)
     fOneBlendID_(get_field_ordinal(meta, "sst_f_one_blending")),
     ransIndicatorID_(get_field_ordinal(meta, "iddes_rans_indicator")),
     nDim_(meta.spatial_dimension())
-{}
+{
+}
 
 void
 TKESSTIDDESNodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
 
-  tke_             = fieldMgr.get_field<double>(tkeID_);
-  sdr_             = fieldMgr.get_field<double>(sdrID_);
-  density_         = fieldMgr.get_field<double>(densityID_);
-  visc_            = fieldMgr.get_field<double>(viscID_);
-  tvisc_           = fieldMgr.get_field<double>(tviscID_);
-  dudx_            = fieldMgr.get_field<double>(dudxID_);
-  wallDist_        = fieldMgr.get_field<double>(wallDistID_);
+  tke_ = fieldMgr.get_field<double>(tkeID_);
+  sdr_ = fieldMgr.get_field<double>(sdrID_);
+  density_ = fieldMgr.get_field<double>(densityID_);
+  visc_ = fieldMgr.get_field<double>(viscID_);
+  tvisc_ = fieldMgr.get_field<double>(tviscID_);
+  dudx_ = fieldMgr.get_field<double>(dudxID_);
+  wallDist_ = fieldMgr.get_field<double>(wallDistID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
-  maxLenScale_     = fieldMgr.get_field<double>(maxLenScaleID_);
+  maxLenScale_ = fieldMgr.get_field<double>(maxLenScaleID_);
   fOneBlend_ = fieldMgr.get_field<double>(fOneBlendID_);
   ransIndicator_ = fieldMgr.get_field<double>(ransIndicatorID_);
 
@@ -66,7 +67,8 @@ TKESSTIDDESNodeKernel::setup(Realm& realm)
   sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
 }
 
-void TKESSTIDDESNodeKernel::execute(
+void
+TKESSTIDDESNodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
@@ -79,24 +81,22 @@ void TKESSTIDDESNodeKernel::execute(
   const DblType visc = visc_.get(node, 0);
   const DblType tvisc = tvisc_.get(node, 0);
   const DblType dVol = dualNodalVolume_.get(node, 0);
-  const DblType dw = wallDist_.get(node,0);
+  const DblType dw = wallDist_.get(node, 0);
   const DblType maxLenScale = maxLenScale_.get(node, 0);
   const DblType fOneBlend = fOneBlend_.get(node, 0);
 
   DblType Pk = 0.0;
   DblType sijSq = 1.0e-16;
   DblType omegaSq = 1.0e-16;
-  for (int i=0; i < nDim_; ++i) {
+  for (int i = 0; i < nDim_; ++i) {
     const int offset = nDim_ * i;
-    for (int j=0; j < nDim_; ++j) {
+    for (int j = 0; j < nDim_; ++j) {
       const auto dudxij = dudx_.get(node, offset + j);
       const DblType rateOfStrain =
-          0.5*(dudxij
-               + dudx_.get(node, j*nDim_ + i));
-      sijSq += rateOfStrain*rateOfStrain;
+        0.5 * (dudxij + dudx_.get(node, j * nDim_ + i));
+      sijSq += rateOfStrain * rateOfStrain;
       const DblType rateOfOmega =
-          0.5*(dudxij
-               - dudx_.get(node, j*nDim_ + i));
+        0.5 * (dudxij - dudx_.get(node, j * nDim_ + i));
       omegaSq += rateOfOmega * rateOfOmega;
     }
   }
@@ -111,18 +111,20 @@ void TKESSTIDDESNodeKernel::execute(
   DblType rdt = tvisc / denom;
   DblType fl = stk::math::tanh(stk::math::pow(iddes_Cl_ * iddes_Cl_ * rdl, 10));
   DblType ft = stk::math::tanh(stk::math::pow(iddes_Ct_ * iddes_Ct_ * rdt, 3));
-  DblType alpha = 0.25 - dw/maxLenScale;
-  DblType fe1 = (alpha < 0) ? 2.0 * stk::math::exp(-9.0 * alpha * alpha) : 2.0 * stk::math::exp(-11.09 * alpha * alpha);
-  DblType fe2 = 1.0 - stk::math::max(ft,fl);
-  DblType fe = fe2 * stk::math::max( (fe1 - 1.0), 0.0);
+  DblType alpha = 0.25 - dw / maxLenScale;
+  DblType fe1 = (alpha < 0) ? 2.0 * stk::math::exp(-9.0 * alpha * alpha)
+                            : 2.0 * stk::math::exp(-11.09 * alpha * alpha);
+  DblType fe2 = 1.0 - stk::math::max(ft, fl);
+  DblType fe = fe2 * stk::math::max((fe1 - 1.0), 0.0);
   DblType fb = stk::math::min(2.0 * stk::math::exp(-9.0 * alpha * alpha), 1.0);
-  DblType fdt = 1.0 - stk::math::tanh( stk::math::pow(iddes_Cdt1_ * rdt, iddes_Cdt2_) );
-  DblType fdHat = stk::math::max( (1.0 - fdt), fb);
-  DblType delta = stk::math::min( iddes_Cw_ * stk::math::max(dw, maxLenScale), maxLenScale);
-      
+  DblType fdt =
+    1.0 - stk::math::tanh(stk::math::pow(iddes_Cdt1_ * rdt, iddes_Cdt2_));
+  DblType fdHat = stk::math::max((1.0 - fdt), fb);
+  DblType delta =
+    stk::math::min(iddes_Cw_ * stk::math::max(dw, maxLenScale), maxLenScale);
+
   // blend cDES constant
-  const DblType cDES =
-    fOneBlend * cDESkw_ + (1.0 - fOneBlend) * cDESke_;
+  const DblType cDES = fOneBlend * cDESkw_ + (1.0 - fOneBlend) * cDESke_;
 
   const DblType sqrtTke = stk::math::sqrt(tke);
   const DblType lSST = sqrtTke / betaStar_ / sdr;
@@ -153,5 +155,5 @@ void TKESSTIDDESNodeKernel::execute(
   lhs(0, 0) += 1.5 * density / lIDDES * sqrtTke * dVol;
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

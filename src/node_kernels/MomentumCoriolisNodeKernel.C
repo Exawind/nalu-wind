@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "node_kernels/MomentumCoriolisNodeKernel.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
@@ -17,10 +16,8 @@ namespace sierra {
 namespace nalu {
 
 MomentumCoriolisNodeKernel::MomentumCoriolisNodeKernel(
-  const stk::mesh::BulkData& bulk,
-  const SolutionOptions& solnOpts
-) : NGPNodeKernel<MomentumCoriolisNodeKernel>(),
-    cor_(solnOpts)
+  const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts)
+  : NGPNodeKernel<MomentumCoriolisNodeKernel>(), cor_(solnOpts)
 {
   const auto& meta = bulk.mesh_meta_data();
 
@@ -48,7 +45,7 @@ MomentumCoriolisNodeKernel::execute(
   NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0);
   NodeKernelTraits::DblType dualVol = dualNodalVolume_.get(node, 0);
 
-  for (int i=0; i < NodeKernelTraits::NDimMax; ++i) {
+  for (int i = 0; i < NodeKernelTraits::NDimMax; ++i) {
     vel[i] = velocityNp1_.get(node, i);
   }
 
@@ -81,18 +78,18 @@ MomentumCoriolisNodeKernel::execute(
                                        au * cor_.upVector_[2];
 
   const double fac2 = rhoNp1 * dualVol;
-  rhs(0) += fac2*ax;
-  rhs(1) += fac2*ay;
-  rhs(2) += fac2*az;
+  rhs(0) += fac2 * ax;
+  rhs(1) += fac2 * ay;
+  rhs(2) += fac2 * az;
 
   // Only the off-diagonal LHS entries are non-zero
-  lhs(0, 1) += fac2*cor_.Jxy_;
-  lhs(0, 2) += fac2*cor_.Jxz_;
-  lhs(1, 0) -= fac2*cor_.Jxy_; // Jyx = - Jxy
-  lhs(1, 2) += fac2*cor_.Jyz_;
-  lhs(2, 0) -= fac2*cor_.Jxz_; // Jzx = - Jxz
-  lhs(2, 1) -= fac2*cor_.Jyz_; // Jzy = - Jyz
+  lhs(0, 1) += fac2 * cor_.Jxy_;
+  lhs(0, 2) += fac2 * cor_.Jxz_;
+  lhs(1, 0) -= fac2 * cor_.Jxy_; // Jyx = - Jxy
+  lhs(1, 2) += fac2 * cor_.Jyz_;
+  lhs(2, 0) -= fac2 * cor_.Jxz_; // Jzx = - Jxz
+  lhs(2, 1) -= fac2 * cor_.Jyz_; // Jzy = - Jyz
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

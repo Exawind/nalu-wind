@@ -32,7 +32,8 @@ segment_generator_types(std::string name)
   return std::map<std::string, SegmentType>{
     {"spinner", SegmentType::SPINNER},
     {"scanning", SegmentType::SCANNING},
-  }.at(name);
+  }
+    .at(name);
 }
 
 std::unique_ptr<SegmentGenerator>
@@ -138,9 +139,15 @@ affine(
   return affine(
     trans,
     {
-      lin, 0, 0,
-      0, lin, 0,
-      0, 0, lin,
+      lin,
+      0,
+      0,
+      0,
+      lin,
+      0,
+      0,
+      0,
+      lin,
     },
     x);
 }

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestHelperObjects.h"
 
@@ -16,7 +15,8 @@
 TEST_F(KsgsKernelHex8Mesh, NGP_eff_sst_diff_flux_coeff_alg)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   LowMachKernelHex8Mesh::fill_mesh_and_init_fields();
 
@@ -29,8 +29,8 @@ TEST_F(KsgsKernelHex8Mesh, NGP_eff_sst_diff_flux_coeff_alg)
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   sierra::nalu::EffSSTDiffFluxCoeffAlg diffFluxAlg(
-    helperObjs.realm, partVec_[0], viscosity_, tvisc_, evisc_,
-    sigmaOne, sigmaTwo);
+    helperObjs.realm, partVec_[0], viscosity_, tvisc_, evisc_, sigmaOne,
+    sigmaTwo);
   diffFluxAlg.execute();
 
   const auto& fieldMgr = helperObjs.realm.mesh_info().ngp_field_manager();
@@ -43,8 +43,8 @@ TEST_F(KsgsKernelHex8Mesh, NGP_eff_sst_diff_flux_coeff_alg)
     stk::mesh::Selector sel = meta_->universal_part();
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* evisc = stk::mesh::field_data(*evisc_, node);
         EXPECT_NEAR(evisc[0], 1.85, tol);
       }

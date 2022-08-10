@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/SDRWallFuncAlgDriver.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldUtils.h"
@@ -25,41 +24,47 @@
 namespace sierra {
 namespace nalu {
 
-SDRWallFuncAlgDriver::SDRWallFuncAlgDriver(
-  Realm& realm
-) : NgpAlgDriver(realm)
-{}
+SDRWallFuncAlgDriver::SDRWallFuncAlgDriver(Realm& realm) : NgpAlgDriver(realm)
+{
+}
 
-void SDRWallFuncAlgDriver::pre_work()
+void
+SDRWallFuncAlgDriver::pre_work()
 {
   const auto& ngpMesh = realm_.ngp_mesh();
-  auto& bcsdr = nalu_ngp::get_ngp_field(realm_.mesh_info(), "wall_model_sdr_bc");
-  auto& wallArea = nalu_ngp::get_ngp_field(realm_.mesh_info(), "assembled_wall_area_sdr");
+  auto& bcsdr =
+    nalu_ngp::get_ngp_field(realm_.mesh_info(), "wall_model_sdr_bc");
+  auto& wallArea =
+    nalu_ngp::get_ngp_field(realm_.mesh_info(), "assembled_wall_area_sdr");
 
   bcsdr.set_all(ngpMesh, 0.0);
   wallArea.set_all(ngpMesh, 0.0);
 }
 
-void SDRWallFuncAlgDriver::post_work()
+void
+SDRWallFuncAlgDriver::post_work()
 {
   using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& ngpMesh = realm_.ngp_mesh();
 
-  auto& bcsdr = nalu_ngp::get_ngp_field(realm_.mesh_info(), "wall_model_sdr_bc");
-  auto& wallArea = nalu_ngp::get_ngp_field(realm_.mesh_info(), "assembled_wall_area_sdr");
-  auto& sdr = nalu_ngp::get_ngp_field(realm_.mesh_info(), "specific_dissipation_rate");
+  auto& bcsdr =
+    nalu_ngp::get_ngp_field(realm_.mesh_info(), "wall_model_sdr_bc");
+  auto& wallArea =
+    nalu_ngp::get_ngp_field(realm_.mesh_info(), "assembled_wall_area_sdr");
+  auto& sdr =
+    nalu_ngp::get_ngp_field(realm_.mesh_info(), "specific_dissipation_rate");
   auto& sdrWallBC = nalu_ngp::get_ngp_field(realm_.mesh_info(), "sdr_bc");
 
   bcsdr.modify_on_device();
   wallArea.modify_on_device();
 
   // Parallel synchronization
-  const std::vector<NGPDoubleFieldType*> fields {&bcsdr, &wallArea};
+  const std::vector<NGPDoubleFieldType*> fields{&bcsdr, &wallArea};
   const bool doFinalSyncToDevice = true;
   stk::mesh::parallel_sum(realm_.bulk_data(), fields, doFinalSyncToDevice);
 
-  auto* bcsdrF = realm_.meta_data().get_field(
-    stk::topology::NODE_RANK, "wall_model_sdr_bc");
+  auto* bcsdrF =
+    realm_.meta_data().get_field(stk::topology::NODE_RANK, "wall_model_sdr_bc");
   if (realm_.hasPeriodic_) {
     // Periodic synchronization
     const unsigned nComponents = 1;
@@ -74,18 +79,17 @@ void SDRWallFuncAlgDriver::post_work()
     periodicMgr->ngp_apply_constraints(
       bcsdrF, nComponents, bypassFieldCheck, addMirrorValues, setMirrorValues);
     periodicMgr->ngp_apply_constraints(
-      wallAreaF, nComponents, bypassFieldCheck, addMirrorValues, setMirrorValues);
+      wallAreaF, nComponents, bypassFieldCheck, addMirrorValues,
+      setMirrorValues);
   }
 
   // Normalize the computed BC SDR
-  const stk::mesh::Selector sel = (
-    realm_.meta_data().locally_owned_part() |
-    realm_.meta_data().globally_shared_part()) &
-    stk::mesh::selectField(*bcsdrF);
+  const stk::mesh::Selector sel = (realm_.meta_data().locally_owned_part() |
+                                   realm_.meta_data().globally_shared_part()) &
+                                  stk::mesh::selectField(*bcsdrF);
 
   nalu_ngp::run_entity_algorithm(
-    "SDRWallFuncAlgDriver_normalize",
-    ngpMesh, stk::topology::NODE_RANK, sel,
+    "SDRWallFuncAlgDriver_normalize", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double warea = wallArea.get(mi, 0);
       const double sdrVal = bcsdr.get(mi, 0) / warea;
@@ -101,5 +105,5 @@ void SDRWallFuncAlgDriver::post_work()
   sdr.modify_on_device();
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

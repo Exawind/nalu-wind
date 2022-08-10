@@ -169,10 +169,10 @@ FilteredLiftingLineCorrection::compute_induced_velocities()
 
         // limits to approximate integral and speed up computation
         const int start = std::max(i - nNeighbors, 0);
-        const int end = std::min(i  +  nNeighbors, nPoints);
-            // Compute equation 5.7 in reference paper
-            for (int j = start; j < end; ++j)
-       
+        const int end = std::min(i + nNeighbors, nPoints);
+        // Compute equation 5.7 in reference paper
+        for (int j = start; j < end; ++j)
+
         {
           if (i == j)
             continue;

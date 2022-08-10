@@ -7,14 +7,14 @@
 // for more details.
 //
 
-
 #include "overset/TiogaOptions.h"
 
 #include "tioga.h"
 
 namespace tioga_nalu {
 
-void TiogaOptions::load(const YAML::Node& node)
+void
+TiogaOptions::load(const YAML::Node& node)
 {
   if (node["symmetry_direction"])
     symmetryDir_ = node["symmetry_direction"].as<int>();
@@ -32,7 +32,7 @@ void TiogaOptions::load(const YAML::Node& node)
 
   if (node["num_exclude"]) {
     hasMexclude_ = true;
-    mExclude_= node["num_exclude"].as<int>();
+    mExclude_ = node["num_exclude"].as<int>();
   }
 
   if (node["cell_resolution_multiplier"]) {
@@ -48,13 +48,16 @@ void TiogaOptions::load(const YAML::Node& node)
   }
 }
 
-void TiogaOptions::set_options(TIOGA::tioga& tg)
+void
+TiogaOptions::set_options(TIOGA::tioga& tg)
 {
   tg.setSymmetry(symmetryDir_);
 
-  if (hasMexclude_) tg.setMexclude(&mExclude_);
+  if (hasMexclude_)
+    tg.setMexclude(&mExclude_);
 
-  if (hasNumFringe_) tg.setNfringe(&nFringe_);
+  if (hasNumFringe_)
+    tg.setNfringe(&nFringe_);
 }
 
-}
+} // namespace tioga_nalu

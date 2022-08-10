@@ -29,42 +29,39 @@
 namespace sierra {
 namespace nalu {
 
-template<typename AlgTraits>
+template <typename AlgTraits>
 CourantReAlg<AlgTraits>::CourantReAlg(
-  Realm& realm,
-  stk::mesh::Part* part,
-  CourantReAlgDriver& algDriver
-) : Algorithm(realm, part),
+  Realm& realm, stk::mesh::Part* part, CourantReAlgDriver& algDriver)
+  : Algorithm(realm, part),
     algDriver_(algDriver),
     elemData_(realm.meta_data()),
     coordinates_(
       get_field_ordinal(realm_.meta_data(), realm_.get_coordinates_name())),
-    velocity_(
-      get_field_ordinal(
-        realm_.meta_data(),
-        realm_.does_mesh_move() ? "velocity_rtm" : "velocity")),
-    density_(
-      get_field_ordinal(realm_.meta_data(), "density")),
-    viscosity_(
-      get_field_ordinal(
-        realm_.meta_data(),
-        realm_.is_turbulent() ? "effective_viscosity_u" : "viscosity")),
-    elemCFL_(
-      get_field_ordinal(realm_.meta_data(), "element_courant", stk::topology::ELEM_RANK)),
-    elemRe_(
-      get_field_ordinal(realm_.meta_data(), "element_reynolds", stk::topology::ELEM_RANK)),
+    velocity_(get_field_ordinal(
+      realm_.meta_data(),
+      realm_.does_mesh_move() ? "velocity_rtm" : "velocity")),
+    density_(get_field_ordinal(realm_.meta_data(), "density")),
+    viscosity_(get_field_ordinal(
+      realm_.meta_data(),
+      realm_.is_turbulent() ? "effective_viscosity_u" : "viscosity")),
+    elemCFL_(get_field_ordinal(
+      realm_.meta_data(), "element_courant", stk::topology::ELEM_RANK)),
+    elemRe_(get_field_ordinal(
+      realm_.meta_data(), "element_reynolds", stk::topology::ELEM_RANK)),
     meSCS_(MasterElementRepo::get_surface_master_element<AlgTraits>())
 {
   elemData_.add_cvfem_surface_me(meSCS_);
 
-  elemData_.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  elemData_.add_coordinates_field(
+    coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
   elemData_.add_gathered_nodal_field(density_, 1);
   elemData_.add_gathered_nodal_field(velocity_, AlgTraits::nDim_);
   elemData_.add_gathered_nodal_field(viscosity_, 1);
 }
 
-template<typename AlgTraits>
-void CourantReAlg<AlgTraits>::execute()
+template <typename AlgTraits>
+void
+CourantReAlg<AlgTraits>::execute()
 {
   using ElemSimdDataType = nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
@@ -85,17 +82,18 @@ void CourantReAlg<AlgTraits>::execute()
   const auto cflOps = nalu_ngp::simd_elem_field_updater(ngpMesh, ngpCFL);
   const auto reyOps = nalu_ngp::simd_elem_field_updater(ngpMesh, ngpRe);
 
-  const stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
-    & stk::mesh::selectUnion(partVec_)
-    & !(realm_.get_inactive_selector());
+  const stk::mesh::Selector sel = realm_.meta_data().locally_owned_part() &
+                                  stk::mesh::selectUnion(partVec_) &
+                                  !(realm_.get_inactive_selector());
 
   CflRe cflReMax;
   CflReMax<> reducer(cflReMax);
 
-  const std::string algName = "CourantReAlg_" + std::to_string(AlgTraits::topo_);
+  const std::string algName =
+    "CourantReAlg_" + std::to_string(AlgTraits::topo_);
   nalu_ngp::run_elem_par_reduce(
     algName, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
-    KOKKOS_LAMBDA(ElemSimdDataType& edata, CflRe& threadVal) {
+    KOKKOS_LAMBDA(ElemSimdDataType & edata, CflRe & threadVal) {
       auto& scrViews = edata.simdScrView;
       const auto& v_coords = scrViews.get_scratch_view_2D(coordID);
       const auto& v_vel = scrViews.get_scratch_view_2D(velID);
@@ -106,13 +104,13 @@ void CourantReAlg<AlgTraits>::execute()
       DoubleType elemCFL = -1.0;
 
       const int* lrscv = meSCS->adjacentNodes();
-      for (int ip=0; ip < AlgTraits::numScsIp_; ++ip) {
-        const int il = lrscv[2*ip];
-        const int ir = lrscv[2*ip + 1];
+      for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
+        const int il = lrscv[2 * ip];
+        const int ir = lrscv[2 * ip + 1];
 
         DoubleType udotx = 0.0;
         DoubleType dxSq = 0.0;
-        for (int d=0; d < AlgTraits::nDim_; ++d) {
+        for (int d = 0; d < AlgTraits::nDim_; ++d) {
           DoubleType uIp = 0.5 * (v_vel(ir, d) + v_vel(il, d));
           DoubleType dxj = (v_coords(ir, d) - v_coords(il, d));
           udotx += dxj * uIp;
@@ -132,11 +130,12 @@ void CourantReAlg<AlgTraits>::execute()
       reyOps(edata, 0) = elemRe;
       cflOps(edata, 0) = elemCFL;
 
-      for (int i=0; i < edata.numSimdElems; ++i) {
+      for (int i = 0; i < edata.numSimdElems; ++i) {
         threadVal.max_cfl = stk::math::max(threadVal.max_cfl, elemCFL[i]);
         threadVal.max_re = stk::math::max(threadVal.max_re, elemRe[i]);
       }
-    }, reducer);
+    },
+    reducer);
 
   // Accumulate max values for all topology types
   algDriver_.update_max_cfl_rey(cflReMax.max_cfl, cflReMax.max_re);
@@ -147,5 +146,5 @@ void CourantReAlg<AlgTraits>::execute()
 
 INSTANTIATE_KERNEL(CourantReAlg)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "node_kernels/MomentumBoussinesqNodeKernel.h"
 #include "Realm.h"
 
@@ -17,13 +16,12 @@
 
 #include "SolutionOptions.h"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 MomentumBoussinesqNodeKernel::MomentumBoussinesqNodeKernel(
-  const stk::mesh::BulkData& bulk,
-  const SolutionOptions& solnOpts
-) : NGPNodeKernel<MomentumBoussinesqNodeKernel>(),
+  const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts)
+  : NGPNodeKernel<MomentumBoussinesqNodeKernel>(),
     nDim_(bulk.mesh_meta_data().spatial_dimension()),
     tRef_(solnOpts.referenceTemperature_),
     rhoRef_(solnOpts.referenceDensity_),
@@ -34,12 +32,14 @@ MomentumBoussinesqNodeKernel::MomentumBoussinesqNodeKernel(
   dualNodalVolumeID_ = get_field_ordinal(meta, "dual_nodal_volume");
   temperatureID_ = get_field_ordinal(meta, "temperature");
 
-  const std::vector<double>& solnOptsGravity = solnOpts.get_gravity_vector(nDim_);
+  const std::vector<double>& solnOptsGravity =
+    solnOpts.get_gravity_vector(nDim_);
   for (int i = 0; i < nDim_; i++)
     gravity_[i] = solnOptsGravity[i];
 }
 
-void MomentumBoussinesqNodeKernel::setup(Realm& realm)
+void
+MomentumBoussinesqNodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
@@ -54,12 +54,12 @@ MomentumBoussinesqNodeKernel::execute(
 {
   const NodeKernelTraits::DblType temperature = temperature_.get(node, 0);
   const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);
-  const double fac = -rhoRef_*beta_*(temperature - tRef_)*dualVolume;
+  const double fac = -rhoRef_ * beta_ * (temperature - tRef_) * dualVolume;
 
-  for ( int i = 0; i < nDim_; ++i ) {
-    rhs(i) += fac*gravity_[i];
+  for (int i = 0; i < nDim_; ++i) {
+    rhs(i) += fac * gravity_[i];
   }
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestHelperObjects.h"
 #include "ngp_algorithms/UnitTestNgpAlgUtils.h"
@@ -23,7 +22,8 @@
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_edge)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -33,8 +33,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_edge)
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
-  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
-                                           xCoeff, yCoeff, zCoeff);
+  unit_test_alg_utils::linear_scalar_field(
+    *bulk_, *coordinates_, *tke_, xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
 
   // Reference values from original AssembleNodalGradEdge
@@ -48,20 +48,17 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_edge)
   algDriver.execute();
 
   {
-    std::vector<double> expectedValues = {
-      2, 2, 2, -2, 6, 6,
-      6, -2, 6, -6, -6, 10,
-      6, 6, -2, -6, 10, -6,
-      10, -6, -6, -10, -10, -10
-    };
+    std::vector<double> expectedValues = {2,  2,  2,  -2, 6,  6,   6,   -2,
+                                          6,  -6, -6, 10, 6,  6,   -2,  -6,
+                                          10, -6, 10, -6, -6, -10, -10, -10};
 
     const double tol = 1.0e-16;
     stk::mesh::Selector sel = meta_->universal_part();
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* dkdx = stk::mesh::field_data(*dkdx_, node);
         EXPECT_NEAR(dkdx[0], expectedValues[ii++], tol);
         EXPECT_NEAR(dkdx[1], expectedValues[ii++], tol);
@@ -73,7 +70,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_edge)
 TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -83,8 +81,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
-  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *velocity_,
-                                           xCoeff, yCoeff, zCoeff);
+  unit_test_alg_utils::linear_scalar_field(
+    *bulk_, *coordinates_, *velocity_, xCoeff, yCoeff, zCoeff);
   velocity_->sync_to_device();
 
   stk::mesh::field_fill(0.0, *dudx_);
@@ -104,10 +102,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
   {
     // Test the `du_i/dx_i \delta_ii` values
     std::vector<double> expectedValues = {
-      2, 2, 2, -2, 2, 2,
-      2, -2, 2, -2, -2, 2,
-      2, 2, -2, -2, 2, -2,
-      2, -2, -2, -2, -2, -2,
+      2, 2, 2,  -2, 2, 2,  2, -2, 2,  -2, -2, 2,
+      2, 2, -2, -2, 2, -2, 2, -2, -2, -2, -2, -2,
     };
 
     const double tol = 1.0e-16;
@@ -115,10 +111,10 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* dudx = stk::mesh::field_data(*dudx_, node);
-        for (int i1=0; i1 < 3; ++i1)
+        for (int i1 = 0; i1 < 3; ++i1)
           EXPECT_NEAR(dudx[i1 * 3 + i1], expectedValues[ii++], tol);
       }
   }
@@ -127,7 +123,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -137,8 +134,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem)
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
-  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
-                                           xCoeff, yCoeff, zCoeff);
+  unit_test_alg_utils::linear_scalar_field(
+    *bulk_, *coordinates_, *tke_, xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
 
   // Reference values from original AssembleNodalGradElem
@@ -153,10 +150,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem)
 
   {
     std::vector<double> expectedValues = {
-      4,  4,  4, -4,  6,  6,
-      6, -4,  6, -6, -6,  8,
-      6,  6, -4, -6,  8, -6,
-      8, -6, -6, -8, -8, -8,
+      4, 4, 4,  -4, 6, 6,  6, -4, 6,  -6, -6, 8,
+      6, 6, -4, -6, 8, -6, 8, -6, -6, -8, -8, -8,
     };
 
     const double tol = 1.0e-16;
@@ -164,8 +159,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem)
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* dkdx = stk::mesh::field_data(*dkdx_, node);
         EXPECT_NEAR(dkdx[0], expectedValues[ii++], tol);
         EXPECT_NEAR(dkdx[1], expectedValues[ii++], tol);
@@ -177,7 +172,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem)
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem_shifted)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -188,8 +184,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem_shifted)
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
-  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
-                                           xCoeff, yCoeff, zCoeff);
+  unit_test_alg_utils::linear_scalar_field(
+    *bulk_, *coordinates_, *tke_, xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
 
   // Reference values from original AssembleNodalGradElem
@@ -203,20 +199,17 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem_shifted)
   algDriver.execute();
 
   {
-    std::vector<double> expectedValues = {
-      2, 2, 2, -2, 6, 6,
-      6, -2, 6, -6, -6, 10,
-      6, 6, -2, -6, 10, -6,
-      10, -6, -6, -10, -10, -10
-    };
+    std::vector<double> expectedValues = {2,  2,  2,  -2, 6,  6,   6,   -2,
+                                          6,  -6, -6, 10, 6,  6,   -2,  -6,
+                                          10, -6, 10, -6, -6, -10, -10, -10};
 
     const double tol = 1.0e-16;
     stk::mesh::Selector sel = meta_->universal_part();
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* dkdx = stk::mesh::field_data(*dkdx_, node);
         EXPECT_NEAR(dkdx[0], expectedValues[ii++], tol);
         EXPECT_NEAR(dkdx[1], expectedValues[ii++], tol);
@@ -228,7 +221,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem_shifted)
 TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -239,8 +233,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
-  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *velocity_,
-                                           xCoeff, yCoeff, zCoeff);
+  unit_test_alg_utils::linear_scalar_field(
+    *bulk_, *coordinates_, *velocity_, xCoeff, yCoeff, zCoeff);
   velocity_->sync_to_device();
 
   stk::mesh::field_fill(0.0, *dudx_);
@@ -254,16 +248,15 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
 
   sierra::nalu::VectorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
   algDriver.register_elem_algorithm<sierra::nalu::VectorNodalGradElemAlg>(
-    sierra::nalu::INTERIOR, partVec_[0], "nodal_grad", velocity_, dudx_, useShifted);
+    sierra::nalu::INTERIOR, partVec_[0], "nodal_grad", velocity_, dudx_,
+    useShifted);
   algDriver.execute();
 
   {
     // Test the `du_i/dx_i \delta_ii` values
     std::vector<double> expectedValues = {
-      2, 2, 2, -2, 2, 2,
-      2, -2, 2, -2, -2, 2,
-      2, 2, -2, -2, 2, -2,
-      2, -2, -2, -2, -2, -2,
+      2, 2, 2,  -2, 2, 2,  2, -2, 2,  -2, -2, 2,
+      2, 2, -2, -2, 2, -2, 2, -2, -2, -2, -2, -2,
     };
 
     const double tol = 1.0e-16;
@@ -271,10 +264,10 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* dudx = stk::mesh::field_data(*dudx_, node);
-        for (int i1=0; i1 < 3; ++i1)
+        for (int i1 = 0; i1 < 3; ++i1)
           EXPECT_NEAR(dudx[i1 * 3 + i1], expectedValues[ii++], tol);
       }
   }
@@ -283,7 +276,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
 TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -294,8 +288,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
-  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *velocity_,
-                                           xCoeff, yCoeff, zCoeff);
+  unit_test_alg_utils::linear_scalar_field(
+    *bulk_, *coordinates_, *velocity_, xCoeff, yCoeff, zCoeff);
   velocity_->sync_to_device();
 
   stk::mesh::field_fill(0.0, *dudx_);
@@ -309,16 +303,15 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
 
   sierra::nalu::VectorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
   algDriver.register_elem_algorithm<sierra::nalu::VectorNodalGradElemAlg>(
-    sierra::nalu::INTERIOR, partVec_[0], "nodal_grad", velocity_, dudx_, useShifted);
+    sierra::nalu::INTERIOR, partVec_[0], "nodal_grad", velocity_, dudx_,
+    useShifted);
   algDriver.execute();
 
   {
     // Test the `du_i/dx_i \delta_ii` values
     std::vector<double> expectedValues = {
-      2, 2, 2, -2, 2, 2,
-      2, -2, 2, -2, -2, 2,
-      2, 2, -2, -2, 2, -2,
-      2, -2, -2, -2, -2, -2,
+      2, 2, 2,  -2, 2, 2,  2, -2, 2,  -2, -2, 2,
+      2, 2, -2, -2, 2, -2, 2, -2, -2, -2, -2, -2,
     };
 
     const double tol = 1.0e-16;
@@ -326,10 +319,10 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* dudx = stk::mesh::field_data(*dudx_, node);
-        for (int i1=0; i1 < 3; ++i1)
+        for (int i1 = 0; i1 < 3; ++i1)
           EXPECT_NEAR(dudx[i1 * 3 + i1], expectedValues[ii++], tol);
       }
   }
@@ -338,7 +331,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -352,8 +346,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry)
   auto* part = meta_->get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, 1, part);
-  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
-                                           xCoeff, yCoeff, zCoeff);
+  unit_test_alg_utils::linear_scalar_field(
+    *bulk_, *coordinates_, *tke_, xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
 
   // Reference values from original AssembleNodalGradBoundary
@@ -375,8 +369,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry)
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* dkdx = stk::mesh::field_data(*dkdx_, node);
         EXPECT_NEAR(dkdx[0], 0.0, tol);
         EXPECT_NEAR(dkdx[1], 0.0, tol);
@@ -388,7 +382,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry)
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry_shifted)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -402,8 +397,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry_shifted)
   auto* part = meta_->get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, 1, part);
-  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *tke_,
-                                           xCoeff, yCoeff, zCoeff);
+  unit_test_alg_utils::linear_scalar_field(
+    *bulk_, *coordinates_, *tke_, xCoeff, yCoeff, zCoeff);
   stk::mesh::field_fill(0.0, *dkdx_);
 
   // Reference values from original AssembleNodalGradBounndary
@@ -425,8 +420,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry_shifted)
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* dkdx = stk::mesh::field_data(*dkdx_, node);
         EXPECT_NEAR(dkdx[0], 0.0, tol);
         EXPECT_NEAR(dkdx[1], 0.0, tol);
@@ -438,7 +433,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry_shifted)
 TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_bndry_elem_vec)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -452,8 +448,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_bndry_elem_vec)
   auto* part = meta_->get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, 1, part);
-  unit_test_alg_utils::linear_scalar_field(*bulk_, *coordinates_, *velocity_,
-                                           xCoeff, yCoeff, zCoeff);
+  unit_test_alg_utils::linear_scalar_field(
+    *bulk_, *coordinates_, *velocity_, xCoeff, yCoeff, zCoeff);
   velocity_->sync_to_device();
 
   stk::mesh::field_fill(0.0, *dudx_);
@@ -474,8 +470,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_bndry_elem_vec)
   {
     // du_i/dz components
     std::vector<double> expectedValues = {
-      -1, -1, 0, -1, -3, 0,
-      -3, -1, 0, -3, -3, 0,
+      -1, -1, 0, -1, -3, 0, -3, -1, 0, -3, -3, 0,
     };
 
     const double tol = 1.0e-16;
@@ -483,10 +478,10 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_bndry_elem_vec)
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* dudx = stk::mesh::field_data(*dudx_, node);
-        for (int i1=0; i1 < 3; ++i1)
+        for (int i1 = 0; i1 < 3; ++i1)
           EXPECT_NEAR(dudx[i1 * 3 + 2], expectedValues[ii++], tol);
       }
   }

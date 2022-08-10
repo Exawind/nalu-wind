@@ -116,7 +116,8 @@ public:
 
 TEST_F(ConductionResidualFixture, residual_executes)
 {
-  decltype(rhs.getLocalViewDevice(Tpetra::Access::ReadWrite)) shared_rhs("empty_rhs", 1, 1);
+  decltype(rhs.getLocalViewDevice(Tpetra::Access::ReadWrite)) shared_rhs(
+    "empty_rhs", 1, 1);
 
   rhs.putScalar(0.);
   conduction_residual<order>(
@@ -132,7 +133,8 @@ TEST_F(ConductionResidualFixture, linearized_residual_executes)
   rhs.putScalar(0.);
   conduction_linearized_residual<order>(
     gamma[0], offsets, volume_metric, diffusion_metric,
-    delta.getLocalViewDevice(Tpetra::Access::ReadWrite), rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
+    delta.getLocalViewDevice(Tpetra::Access::ReadWrite),
+    rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 } // namespace matrix_free
 } // namespace nalu

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
@@ -17,9 +16,7 @@
 namespace {
 namespace hex8_golds {
 
-static constexpr double rhs[4] = {
-  0, 0.11888206453689, 0.11888206453689, 0
-};
+static constexpr double rhs[4] = {0, 0.11888206453689, 0.11888206453689, 0};
 
 }
 } // anonymous namespace
@@ -40,7 +37,8 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_inflow)
   solnOpts_.activateOpenMdotCorrection_ = true;
 
   auto* part = meta_->get_part("surface_2");
-  unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::QUAD_4, 1, part);
+  unit_test_utils::HelperObjects helperObjs(
+    bulk_, stk::topology::QUAD_4, 1, part);
 
   sierra::nalu::TimeIntegrator timeIntegrator;
   timeIntegrator.gamma1_ = 1.0;
@@ -54,7 +52,8 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_inflow)
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 
   // Register the kernel for execution
-  helperObjs.assembleElemSolverAlg->activeKernels_.push_back(inflowKernel.get());
+  helperObjs.assembleElemSolverAlg->activeKernels_.push_back(
+    inflowKernel.get());
 
   // Populate LHS and RHS
   helperObjs.execute();

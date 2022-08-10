@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
 
 #include "BuildTemplates.h"
@@ -38,9 +37,10 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::NodalGradBndryElemAlg(
     phi_(phi->mesh_meta_data_ordinal()),
     gradPhi_(gradPhi->mesh_meta_data_ordinal()),
     dualNodalVol_(get_field_ordinal(realm_.meta_data(), "dual_nodal_volume")),
-    exposedAreaVec_(
-      get_field_ordinal(
-        realm_.meta_data(), "exposed_area_vector", realm_.meta_data().side_rank())),
+    exposedAreaVec_(get_field_ordinal(
+      realm_.meta_data(),
+      "exposed_area_vector",
+      realm_.meta_data().side_rank())),
     useShifted_(useShifted),
     meFC_(MasterElementRepo::get_surface_master_element<AlgTraits>())
 {
@@ -48,19 +48,23 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::NodalGradBndryElemAlg(
 
   const auto coordID = get_field_ordinal(
     realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());
-  dataNeeded_.add_coordinates_field(coordID, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataNeeded_.add_coordinates_field(
+    coordID, AlgTraits::nDim_, CURRENT_COORDINATES);
   dataNeeded_.add_gathered_nodal_field(phi_, NumComp);
   dataNeeded_.add_gathered_nodal_field(dualNodalVol_, 1);
-  dataNeeded_.add_face_field(exposedAreaVec_, AlgTraits::numFaceIp_, AlgTraits::nDim_);
+  dataNeeded_.add_face_field(
+    exposedAreaVec_, AlgTraits::numFaceIp_, AlgTraits::nDim_);
 
   const auto shpfcn = useShifted_ ? FC_SHIFTED_SHAPE_FCN : FC_SHAPE_FCN;
   dataNeeded_.add_master_element_call(shpfcn, CURRENT_COORDINATES);
 }
 
 template <typename AlgTraits, typename PhiType, typename GradPhiType>
-void NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
+void
+NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
 {
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdDataType =
+    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
   using ViewHelperType = nalu_ngp::ViewHelper<ElemSimdDataType, PhiType>;
 
   const auto& meshInfo = realm_.mesh_info();
@@ -68,8 +72,8 @@ void NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto gradPhi = fieldMgr.template get_field<double>(gradPhi_);
-  const auto gradPhiOps = nalu_ngp::simd_elem_nodal_field_updater(
-    ngpMesh, gradPhi);
+  const auto gradPhiOps =
+    nalu_ngp::simd_elem_nodal_field_updater(ngpMesh, gradPhi);
 
   // Bring class members into local scope for device capture
   const bool useShifted = useShifted_;
@@ -79,14 +83,15 @@ void NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   auto* meFC = meFC_;
 
   gradPhi.sync_to_device();
-  const stk::mesh::Selector sel = meta.locally_owned_part()
-    & stk::mesh::selectUnion(partVec_);
+  const stk::mesh::Selector sel =
+    meta.locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
   const std::string algName =
-    (meta.get_fields()[gradPhi_]->name() + "_bndry_" + std::to_string(AlgTraits::topo_));
+    (meta.get_fields()[gradPhi_]->name() + "_bndry_" +
+     std::to_string(AlgTraits::topo_));
   nalu_ngp::run_elem_algorithm(
     algName, meshInfo, meta.side_rank(), dataNeeded_, sel,
-    KOKKOS_LAMBDA(ElemSimdDataType& edata) {
+    KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       const int* ipNodeMap = meFC->ipNodeMap();
 
       auto& scrView = edata.simdScrView;
@@ -95,11 +100,10 @@ void NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
       const ViewHelperType v_phi(scrView, phiID);
 
       const auto& meViews = scrView.get_me_views(CURRENT_COORDINATES);
-      const auto& v_shape_fcn = useShifted
-        ? meViews.fc_shifted_shape_fcn
-        : meViews.fc_shape_fcn;
+      const auto& v_shape_fcn =
+        useShifted ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
-      for (int di=0; di < NumComp; ++di) {
+      for (int di = 0; di < NumComp; ++di) {
         for (int ip = 0; ip < AlgTraits::numFaceIp_; ++ip) {
           DoubleType qIp = 0.0;
           for (int n = 0; n < AlgTraits::nodesPerFace_; ++n) {
@@ -109,7 +113,7 @@ void NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
           const int ni = ipNodeMap[ip];
           const DoubleType inv_vol = 1.0 / v_dnv(ni);
 
-          for (int d=0; d < AlgTraits::nDim_; ++d) {
+          for (int d = 0; d < AlgTraits::nDim_; ++d) {
             DoubleType fac = qIp * v_areav(ip, d);
             gradPhiOps(edata, ni, di * AlgTraits::nDim_ + d) += fac * inv_vol;
           }
@@ -133,4 +137,4 @@ INSTANTIATE_ALG(AlgTraitsEdge_2D);
 INSTANTIATE_ALG(AlgTraitsEdge3_2D);
 
 } // namespace nalu
-}  // sierra
+} // namespace sierra

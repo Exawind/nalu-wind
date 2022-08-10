@@ -146,7 +146,8 @@ ConductionUpdate<p>::compute_update(
     gammas[0], field_gather_.get_coefficient_fields());
 
   add_tpetra_solution_vector_to_stk_field(
-    stk::mesh::get_updated_ngp_mesh(bulk_), active_, linsys_.stk_lid_to_tpetra_lid,
+    stk::mesh::get_updated_ngp_mesh(bulk_), active_,
+    linsys_.stk_lid_to_tpetra_lid,
     delta_mv.getLocalViewDevice(Tpetra::Access::ReadOnly), delta);
 
   residual_norm_ = field_update_.residual_norm();

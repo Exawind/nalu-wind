@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "node_kernels/TKEKsgsNodeKernel.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
@@ -20,26 +19,26 @@
 namespace sierra {
 namespace nalu {
 
-TKEKsgsNodeKernel::TKEKsgsNodeKernel(
-  const stk::mesh::MetaData& meta
-) : NGPNodeKernel<TKEKsgsNodeKernel>(),
+TKEKsgsNodeKernel::TKEKsgsNodeKernel(const stk::mesh::MetaData& meta)
+  : NGPNodeKernel<TKEKsgsNodeKernel>(),
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
     densityID_(get_field_ordinal(meta, "density")),
     tviscID_(get_field_ordinal(meta, "turbulent_viscosity")),
     dudxID_(get_field_ordinal(meta, "dudx")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     nDim_(meta.spatial_dimension())
-{}
+{
+}
 
 void
 TKEKsgsNodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
 
-  tke_             = fieldMgr.get_field<double>(tkeID_);
-  density_         = fieldMgr.get_field<double>(densityID_);
-  tvisc_           = fieldMgr.get_field<double>(tviscID_);
-  dudx_            = fieldMgr.get_field<double>(dudxID_);
+  tke_ = fieldMgr.get_field<double>(tkeID_);
+  density_ = fieldMgr.get_field<double>(densityID_);
+  tvisc_ = fieldMgr.get_field<double>(tviscID_);
+  dudx_ = fieldMgr.get_field<double>(dudxID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
 
   // Update turbulence model constants
@@ -47,7 +46,8 @@ TKEKsgsNodeKernel::setup(Realm& realm)
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
 }
 
-void TKEKsgsNodeKernel::execute(
+void
+TKEKsgsNodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
@@ -61,25 +61,23 @@ void TKEKsgsNodeKernel::execute(
   const DblType filter = std::pow(dVol, 1.0 / nDim_);
 
   DblType Pk = 0.0;
-  for (int i=0; i < nDim_; ++i) {
+  for (int i = 0; i < nDim_; ++i) {
     const int offset = nDim_ * i;
-    for (int j=0; j < nDim_; ++j) {
-      const auto dudxij = dudx_.get(node, offset+j);
-      Pk += dudxij * (dudxij + dudx_.get(node, j*nDim_ + i));
+    for (int j = 0; j < nDim_; ++j) {
+      const auto dudxij = dudx_.get(node, offset + j);
+      Pk += dudxij * (dudxij + dudx_.get(node, j * nDim_ + i));
     }
   }
   Pk *= tvisc;
 
-  const DblType Dk =
-    cEps_ * density * stk::math::pow(tke, 1.5) / filter;
+  const DblType Dk = cEps_ * density * stk::math::pow(tke, 1.5) / filter;
 
   // Clip production term
   Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk);
 
   rhs(0) += (Pk - Dk) * dVol;
-  lhs(0, 0) +=
-    1.5 * cEps_ * density * stk::math::sqrt(tke) / filter * dVol;
+  lhs(0, 0) += 1.5 * cEps_ * density * stk::math::sqrt(tke) / filter * dVol;
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

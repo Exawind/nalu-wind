@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestKokkosUtils.h"
 #include "ngp_utils/NgpLoopUtils.h"
@@ -31,9 +30,7 @@ namespace {
  */
 struct TrigFieldFunction
 {
-  TrigFieldFunction()
-    : pi(std::acos(-1.0))
-  {}
+  TrigFieldFunction() : pi(std::acos(-1.0)) {}
 
   void velocity(const double* coords, double* qField) const
   {
@@ -76,8 +73,8 @@ struct TrigFieldFunction
     const double x = coords[0];
     const double y = coords[1];
 
-    qField[0] = -pnot/4.0 * (
-      std::cos(2.0 * a * pi * x) + std::cos(2.0 * a * pi * y));
+    qField[0] =
+      -pnot / 4.0 * (std::cos(2.0 * a * pi * x) + std::cos(2.0 * a * pi * y));
   }
 
   void dpdx(const double* coords, double* qField) const
@@ -95,10 +92,9 @@ struct TrigFieldFunction
     double y = coords[1];
     double z = coords[2];
 
-    qField[0] = (k/4.0) * (
-      std::cos(2.0 * aT * pi * x) +
-      std::cos(2.0 * aT * pi * y) +
-      std::cos(2.0 * aT * pi * z));
+    qField[0] =
+      (k / 4.0) * (std::cos(2.0 * aT * pi * x) + std::cos(2.0 * aT * pi * y) +
+                   std::cos(2.0 * aT * pi * z));
   }
 
   void density(const double* coords, double* qField) const
@@ -107,10 +103,8 @@ struct TrigFieldFunction
     double y = coords[1];
     double z = coords[2];
 
-    qField[0] = rhonot * (
-      std::cos(a * pi * x) *
-      std::cos(a * pi * y) *
-      std::cos(a * pi * z));
+    qField[0] = rhonot * (std::cos(a * pi * x) * std::cos(a * pi * y) *
+                          std::cos(a * pi * z));
   }
 
   void tke(const double* coords, double* qField) const
@@ -119,10 +113,9 @@ struct TrigFieldFunction
     double y = coords[1];
     double z = coords[2];
 
-    qField[0] = 2*tkenot + tkenot * (
-      std::cos(a * pi * x) *
-      std::sin(a * pi * y) *
-      std::cos(a * pi * z));
+    qField[0] =
+      2 * tkenot + tkenot * (std::cos(a * pi * x) * std::sin(a * pi * y) *
+                             std::cos(a * pi * z));
   }
 
   void alpha(const double* coords, double* qField) const
@@ -131,10 +124,9 @@ struct TrigFieldFunction
     double y = coords[1];
     double z = coords[2];
 
-    qField[0] = alphanot + alphanot * (
-      std::cos(a * pi * x) *
-      std::sin(a * pi * y) *
-      std::cos(a * pi * z));
+    qField[0] =
+      alphanot + alphanot * (std::cos(a * pi * x) * std::sin(a * pi * y) *
+                             std::cos(a * pi * z));
   }
 
   void dkdx(const double* coords, double* qField) const
@@ -162,10 +154,9 @@ struct TrigFieldFunction
     double y = coords[1];
     double z = coords[2];
 
-    qField[0] = 2*sdrnot + sdrnot * (
-      std::cos(a * pi * x) *
-      std::sin(a * pi * y) *
-      std::sin(a * pi * z));
+    qField[0] =
+      2 * sdrnot + sdrnot * (std::cos(a * pi * x) * std::sin(a * pi * y) *
+                             std::sin(a * pi * z));
   }
 
   void tdr(const double* coords, double* qField) const
@@ -174,10 +165,9 @@ struct TrigFieldFunction
     double y = coords[1];
     double z = coords[2];
 
-    qField[0] = 2*tdrnot + tdrnot * (
-      std::cos(a * pi * x) *
-      std::sin(a * pi * y) *
-      std::sin(a * pi * z));
+    qField[0] =
+      2 * tdrnot + tdrnot * (std::cos(a * pi * x) * std::sin(a * pi * y) *
+                             std::sin(a * pi * z));
   }
 
   void dwdx(const double* coords, double* qField) const
@@ -205,13 +195,13 @@ struct TrigFieldFunction
     double y = coords[1];
     double z = coords[2];
 
-    qField[0] = 2*tviscnot + tviscnot * (
-      std::cos(a * pi * x) *
-      std::cos(a * pi * y) *
-      std::cos(a * pi * z));
+    qField[0] =
+      2 * tviscnot + tviscnot * (std::cos(a * pi * x) * std::cos(a * pi * y) *
+                                 std::cos(a * pi * z));
   }
 
-  void tensor_turbulent_viscosity(const double*  /* coords */, double* qField) const
+  void
+  tensor_turbulent_viscosity(const double* /* coords */, double* qField) const
   {
     // mu_1j
     qField[0] = 0.1;
@@ -235,22 +225,21 @@ struct TrigFieldFunction
     double y = coords[1];
     double z = coords[2];
 
-    qField[0] = sst_f_one_blendingnot * (
-      std::sin(a * pi * x) *
-      std::cos(a * pi * y) *
-      std::sin(a * pi * z));
+    qField[0] =
+      sst_f_one_blendingnot *
+      (std::sin(a * pi * x) * std::cos(a * pi * y) * std::sin(a * pi * z));
   }
 
   void minimum_distance_to_wall(const double* coords, double* qField) const
   {
     double x = coords[0];
-    qField[0] = 10*x+10;
+    qField[0] = 10 * x + 10;
   }
 
   void dplus_wall_function(const double* coords, double* qField) const
   {
     double x = coords[0];
-    qField[0] = 2*x+2;
+    qField[0] = 2 * x + 2;
   }
 
   void dhdx(const double* /*coords*/, double* qField) const
@@ -308,13 +297,15 @@ private:
  * @param bulk Reference to STK BulkData
  * @param qField Field to be initialized. Template specialized on this field
  */
-template<typename T>
-void init_trigonometric_field(
+template <typename T>
+void
+init_trigonometric_field(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   T& qField)
 {
-  using FieldInitFunction = void (TrigFieldFunction::*)(const double*, double*) const;
+  using FieldInitFunction =
+    void (TrigFieldFunction::*)(const double*, double*) const;
   const TrigFieldFunction stv;
   const auto fieldName = qField.name();
   FieldInitFunction funcPtr = nullptr;
@@ -367,10 +358,8 @@ void init_trigonometric_field(
     meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::NODE_RANK, selector);
 
-  for(const stk::mesh::Bucket* bptr : buckets)
-  {
-    for(stk::mesh::Entity node : *bptr)
-    {
+  for (const stk::mesh::Bucket* bptr : buckets) {
+    for (stk::mesh::Entity node : *bptr) {
       const double* coords = stk::mesh::field_data(coordinates, node);
       double* qNode = stk::mesh::field_data(qField, node);
 
@@ -379,32 +368,31 @@ void init_trigonometric_field(
   }
 }
 
-template<typename LOOP_BODY>
-void init_trigonometric_field(
-    const stk::mesh::BulkData& bulk,
-    const LOOP_BODY& inner_loop_body)
+template <typename LOOP_BODY>
+void
+init_trigonometric_field(
+  const stk::mesh::BulkData& bulk, const LOOP_BODY& inner_loop_body)
 {
-    const auto& meta = bulk.mesh_meta_data();
-    EXPECT_EQ(meta.spatial_dimension(), 3u);
+  const auto& meta = bulk.mesh_meta_data();
+  EXPECT_EQ(meta.spatial_dimension(), 3u);
 
-    const stk::mesh::Selector selector =
-        meta.locally_owned_part() | meta.globally_shared_part();
-    const auto& buckets = bulk.get_buckets(stk::topology::NODE_RANK, selector);
+  const stk::mesh::Selector selector =
+    meta.locally_owned_part() | meta.globally_shared_part();
+  const auto& buckets = bulk.get_buckets(stk::topology::NODE_RANK, selector);
 
-    for(const stk::mesh::Bucket* bptr : buckets)
-    {
-      for(stk::mesh::Entity node : *bptr)
-      {
-        inner_loop_body(node);
-      }
+  for (const stk::mesh::Bucket* bptr : buckets) {
+    for (stk::mesh::Entity node : *bptr) {
+      inner_loop_body(node);
     }
+  }
 }
 
 } // anonymous namespace
 
 namespace unit_test_kernel_utils {
 
-void velocity_test_function(
+void
+velocity_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   VectorFieldType& velocity)
@@ -413,7 +401,8 @@ void velocity_test_function(
   init_trigonometric_field(bulk, coordinates, velocity);
 }
 
-void dudx_test_function(
+void
+dudx_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   GenericFieldType& dudx)
@@ -422,7 +411,8 @@ void dudx_test_function(
   init_trigonometric_field(bulk, coordinates, dudx);
 }
 
-void pressure_test_function(
+void
+pressure_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   ScalarFieldType& pressure)
@@ -430,7 +420,8 @@ void pressure_test_function(
   init_trigonometric_field(bulk, coordinates, pressure);
 }
 
-void dpdx_test_function(
+void
+dpdx_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   VectorFieldType& dpdx)
@@ -438,7 +429,8 @@ void dpdx_test_function(
   init_trigonometric_field(bulk, coordinates, dpdx);
 }
 
-void temperature_test_function(
+void
+temperature_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   ScalarFieldType& temperature)
@@ -446,7 +438,8 @@ void temperature_test_function(
   init_trigonometric_field(bulk, coordinates, temperature);
 }
 
-void density_test_function(
+void
+density_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   ScalarFieldType& density)
@@ -454,7 +447,8 @@ void density_test_function(
   init_trigonometric_field(bulk, coordinates, density);
 }
 
-void tke_test_function(
+void
+tke_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   ScalarFieldType& tke)
@@ -462,7 +456,8 @@ void tke_test_function(
   init_trigonometric_field(bulk, coordinates, tke);
 }
 
-void alpha_test_function(
+void
+alpha_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   ScalarFieldType& alpha)
@@ -470,7 +465,8 @@ void alpha_test_function(
   init_trigonometric_field(bulk, coordinates, alpha);
 }
 
-void dkdx_test_function(
+void
+dkdx_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   VectorFieldType& dkdx)
@@ -478,7 +474,8 @@ void dkdx_test_function(
   init_trigonometric_field(bulk, coordinates, dkdx);
 }
 
-void sdr_test_function(
+void
+sdr_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   ScalarFieldType& sdr)
@@ -486,7 +483,8 @@ void sdr_test_function(
   init_trigonometric_field(bulk, coordinates, sdr);
 }
 
-void tdr_test_function(
+void
+tdr_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   ScalarFieldType& tdr)
@@ -494,7 +492,8 @@ void tdr_test_function(
   init_trigonometric_field(bulk, coordinates, tdr);
 }
 
-void dwdx_test_function(
+void
+dwdx_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   VectorFieldType& dwdx)
@@ -502,7 +501,8 @@ void dwdx_test_function(
   init_trigonometric_field(bulk, coordinates, dwdx);
 }
 
-void turbulent_viscosity_test_function(
+void
+turbulent_viscosity_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   ScalarFieldType& turbulent_viscosity)
@@ -510,14 +510,16 @@ void turbulent_viscosity_test_function(
   init_trigonometric_field(bulk, coordinates, turbulent_viscosity);
 }
 
-void tensor_turbulent_viscosity_test_function(
+void
+tensor_turbulent_viscosity_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   GenericFieldType& mutij)
 {
   init_trigonometric_field(bulk, coordinates, mutij);
 }
-void sst_f_one_blending_test_function(
+void
+sst_f_one_blending_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   ScalarFieldType& sst_f_one_blending)
@@ -525,7 +527,8 @@ void sst_f_one_blending_test_function(
   init_trigonometric_field(bulk, coordinates, sst_f_one_blending);
 }
 
-void minimum_distance_to_wall_test_function(
+void
+minimum_distance_to_wall_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   ScalarFieldType& minimum_distance_to_wall)
@@ -533,7 +536,8 @@ void minimum_distance_to_wall_test_function(
   init_trigonometric_field(bulk, coordinates, minimum_distance_to_wall);
 }
 
-void dplus_test_function(
+void
+dplus_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   ScalarFieldType& dplus)
@@ -541,59 +545,57 @@ void dplus_test_function(
   init_trigonometric_field(bulk, coordinates, dplus);
 }
 
-void property_from_mixture_fraction_test_function(
+void
+property_from_mixture_fraction_test_function(
   const stk::mesh::BulkData& bulk,
   const ScalarFieldType& mixFraction,
   ScalarFieldType& property,
   const double primary,
   const double secondary)
-{  
-  init_trigonometric_field(
-    bulk,
-    [&](stk::mesh::Entity node){
-      const double mixFrac = *stk::mesh::field_data(mixFraction, node);
-      double *theProp = stk::mesh::field_data(property, node);
-      *theProp = primary*mixFrac + secondary*(1.0-mixFrac);
-    });
+{
+  init_trigonometric_field(bulk, [&](stk::mesh::Entity node) {
+    const double mixFrac = *stk::mesh::field_data(mixFraction, node);
+    double* theProp = stk::mesh::field_data(property, node);
+    *theProp = primary * mixFrac + secondary * (1.0 - mixFrac);
+  });
 }
 
-void inverse_property_from_mixture_fraction_test_function(
+void
+inverse_property_from_mixture_fraction_test_function(
   const stk::mesh::BulkData& bulk,
   const ScalarFieldType& mixFraction,
   ScalarFieldType& property,
   const double primary,
   const double secondary)
-{  
-  init_trigonometric_field(
-    bulk,
-    [&](stk::mesh::Entity node){
-      const double z = *stk::mesh::field_data(mixFraction, node);
-      double *theProp = stk::mesh::field_data(property, node);
-      *theProp = 1.0/(z/primary + (1.0-z)/secondary);
-    });
+{
+  init_trigonometric_field(bulk, [&](stk::mesh::Entity node) {
+    const double z = *stk::mesh::field_data(mixFraction, node);
+    double* theProp = stk::mesh::field_data(property, node);
+    *theProp = 1.0 / (z / primary + (1.0 - z) / secondary);
+  });
 }
 
-void mixture_fraction_test_function(
+void
+mixture_fraction_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   const ScalarFieldType& mixtureFrac,
   const double znot,
   const double amf)
-{  
+{
   const double pi = acos(-1.0);
-  init_trigonometric_field(
-    bulk,
-    [&](stk::mesh::Entity node){
-      const double *coords = stk::mesh::field_data(coordinates, node);
-      double *mixFrac = stk::mesh::field_data(mixtureFrac, node);      
-      const double x = coords[0];
-      const double y = coords[1];
-      const double z = coords[2];
-      *mixFrac = znot*cos(amf*pi*x)*cos(amf*pi*y)*cos(amf*pi*z);
-    });
+  init_trigonometric_field(bulk, [&](stk::mesh::Entity node) {
+    const double* coords = stk::mesh::field_data(coordinates, node);
+    double* mixFrac = stk::mesh::field_data(mixtureFrac, node);
+    const double x = coords[0];
+    const double y = coords[1];
+    const double z = coords[2];
+    *mixFrac = znot * cos(amf * pi * x) * cos(amf * pi * y) * cos(amf * pi * z);
+  });
 }
 
-void dhdx_test_function(
+void
+dhdx_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   VectorFieldType& dhdx)
@@ -601,7 +603,8 @@ void dhdx_test_function(
   init_trigonometric_field(bulk, coordinates, dhdx);
 }
 
-void calc_mass_flow_rate(
+void
+calc_mass_flow_rate(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& velocity,
   const ScalarFieldType& density,
@@ -612,14 +615,16 @@ void calc_mass_flow_rate(
   const int ndim = meta.spatial_dimension();
   EXPECT_EQ(ndim, 3);
 
-  const ScalarFieldType& densityNp1 = density.field_of_state(stk::mesh::StateNP1);
-  const VectorFieldType& velocityNp1 = velocity.field_of_state(stk::mesh::StateNP1);
+  const ScalarFieldType& densityNp1 =
+    density.field_of_state(stk::mesh::StateNP1);
+  const VectorFieldType& velocityNp1 =
+    velocity.field_of_state(stk::mesh::StateNP1);
 
   const stk::mesh::Selector selector =
     meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::EDGE_RANK, selector);
 
-  for (auto b: buckets) {
+  for (auto b : buckets) {
     const auto bktlen = b->size();
     const double* av = stk::mesh::field_data(edgeAreaVec, *b);
     double* mdot = stk::mesh::field_data(massFlowRate, *b);
@@ -636,7 +641,7 @@ void calc_mass_flow_rate(
       const double rhoR = *stk::mesh::field_data(densityNp1, nodeR);
 
       double tmdot = 0.0;
-      for (int d=0; d < ndim; ++d)
+      for (int d = 0; d < ndim; ++d)
         tmdot += 0.5 * (rhoL * velL[d] + rhoR * velR[d]) * av[ie * ndim + d];
 
       mdot[ie] = tmdot;
@@ -644,7 +649,8 @@ void calc_mass_flow_rate(
   }
 }
 
-void calc_mass_flow_rate_scs(
+void
+calc_mass_flow_rate_scs(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
@@ -664,10 +670,12 @@ void calc_mass_flow_rate_scs(
 
   // Register necessary data for element gathers
   sierra::nalu::ElemDataRequests dataReq(meta);
-  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element<Hex8Traits>();
+  auto meSCS =
+    sierra::nalu::MasterElementRepo::get_surface_master_element<Hex8Traits>();
   dataReq.add_cvfem_surface_me(meSCS);
 
-  dataReq.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_coordinates_field(
+    coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
   dataReq.add_gathered_nodal_field(velocity, ndim);
   dataReq.add_gathered_nodal_field(density, 1);
   dataReq.add_master_element_call(
@@ -685,13 +693,12 @@ void calc_mass_flow_rate_scs(
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpMdot = fieldMgr.get_field<double>(mdotID);
-  const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
-    ngpMesh, ngpMdot);
+  const auto mdotOps =
+    sierra::nalu::nalu_ngp::simd_elem_field_updater(ngpMesh, ngpMdot);
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
-    "unittest_calc_mdot_scs",
-    meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
-    KOKKOS_LAMBDA(ElemSimdData& edata) {
+    "unittest_calc_mdot_scs", meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
+    KOKKOS_LAMBDA(ElemSimdData & edata) {
       NALU_ALIGNED Traits::DblType rhoU[Hex8Traits::nDim_];
 
       auto& scrViews = edata.simdScrView;
@@ -702,17 +709,17 @@ void calc_mass_flow_rate_scs(
       auto& v_shape_fcn = meViews.scs_shape_fcn;
 
       for (int ip = 0; ip < Hex8Traits::numScsIp_; ++ip) {
-        for (int d=0; d < Hex8Traits::nDim_; ++d)
+        for (int d = 0; d < Hex8Traits::nDim_; ++d)
           rhoU[d] = 0.0;
 
-        for (int ic=0; ic < Hex8Traits::nodesPerElement_; ++ic) {
+        for (int ic = 0; ic < Hex8Traits::nodesPerElement_; ++ic) {
           const auto r = v_shape_fcn(ip, ic);
-          for (int d=0; d < Hex8Traits::nDim_; ++d)
+          for (int d = 0; d < Hex8Traits::nDim_; ++d)
             rhoU[d] += r * v_rho(ic) * v_vel(ic, d);
         }
 
         Traits::DblType tmdot = 0.0;
-        for (int d=0; d < Hex8Traits::nDim_; ++d)
+        for (int d = 0; d < Hex8Traits::nDim_; ++d)
           tmdot += rhoU[d] * v_area(ip, d);
 
         // Scatter to all elements in this SIMD group
@@ -724,7 +731,8 @@ void calc_mass_flow_rate_scs(
   ngpMdot.sync_to_host();
 }
 
-void calc_open_mass_flow_rate(
+void
+calc_open_mass_flow_rate(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
@@ -735,7 +743,8 @@ void calc_open_mass_flow_rate(
 {
   using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Quad4Traits = sierra::nalu::AlgTraitsQuad4;
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdDataType =
+    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
@@ -745,12 +754,15 @@ void calc_open_mass_flow_rate(
 
   // Register necessary element data gathers
   sierra::nalu::ElemDataRequests dataReq(meta);
-  auto meFC = sierra::nalu::MasterElementRepo::get_surface_master_element<Quad4Traits>();
+  auto meFC =
+    sierra::nalu::MasterElementRepo::get_surface_master_element<Quad4Traits>();
   dataReq.add_cvfem_surface_me(meFC);
-  dataReq.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_coordinates_field(
+    coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
   dataReq.add_gathered_nodal_field(velocity, ndim);
   dataReq.add_gathered_nodal_field(density, 1);
-  dataReq.add_face_field(exposedAreaVec, Quad4Traits::numFaceIp_, Quad4Traits::nDim_);
+  dataReq.add_face_field(
+    exposedAreaVec, Quad4Traits::numFaceIp_, Quad4Traits::nDim_);
   dataReq.add_face_field(massFlowRate, Quad4Traits::numFaceIp_);
   dataReq.add_master_element_call(
     sierra::nalu::SCS_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
@@ -766,34 +778,34 @@ void calc_open_mass_flow_rate(
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpMdot = fieldMgr.get_field<double>(mdotID);
-  const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
-    ngpMesh, ngpMdot);
+  const auto mdotOps =
+    sierra::nalu::nalu_ngp::simd_elem_field_updater(ngpMesh, ngpMdot);
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
-    "unittest_calc_open_mdot",
-    meshInfo, meta.side_rank(), dataReq, sel,
-    KOKKOS_LAMBDA(ElemSimdDataType& edata) {
+    "unittest_calc_open_mdot", meshInfo, meta.side_rank(), dataReq, sel,
+    KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       NALU_ALIGNED Traits::DblType rhoU[Quad4Traits::nDim_];
 
       auto& scrViews = edata.simdScrView;
       const auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
       const auto& v_vel = scrViews.get_scratch_view_2D(velID);
       const auto& v_area = scrViews.get_scratch_view_2D(areaID);
-      const auto& meViews = scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      const auto& meViews =
+        scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
       const auto& shape_fcn = meViews.scs_shape_fcn;
 
       for (int ip = 0; ip < Quad4Traits::numFaceIp_; ++ip) {
-        for (int d=0; d < Quad4Traits::nDim_; ++d)
+        for (int d = 0; d < Quad4Traits::nDim_; ++d)
           rhoU[d] = 0.0;
 
-        for (int ic=0; ic < Quad4Traits::nodesPerFace_; ++ic) {
+        for (int ic = 0; ic < Quad4Traits::nodesPerFace_; ++ic) {
           const Traits::DblType r = shape_fcn(ip, ic);
-          for (int d=0; d < Quad4Traits::nDim_; ++d)
+          for (int d = 0; d < Quad4Traits::nDim_; ++d)
             rhoU[d] += r * v_rho(ic) * v_vel(ic, d);
         }
 
         Traits::DblType tmdot = 0.0;
-        for (int d=0; d < Quad4Traits::nDim_; ++d)
+        for (int d = 0; d < Quad4Traits::nDim_; ++d)
           tmdot += rhoU[d] * v_area(ip, d);
 
         mdotOps(edata, ip) = tmdot;
@@ -804,7 +816,8 @@ void calc_open_mass_flow_rate(
   ngpMdot.sync_to_host();
 }
 
-void calc_edge_area_vec(
+void
+calc_edge_area_vec(
   const stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
@@ -814,7 +827,8 @@ void calc_edge_area_vec(
   const int ndim = meta.spatial_dimension();
   EXPECT_EQ(ndim, 3);
 
-  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+  auto meSCS =
+    sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
   const auto npe = meSCS->nodesPerElement_;
   const auto numScsIp = meSCS->num_integration_points();
   const int* lrscv = meSCS->adjacentNodes();
@@ -827,21 +841,22 @@ void calc_edge_area_vec(
   // Reset edge area vector to zero
   stk::mesh::field_fill(0.0, edgeAreaVec);
 
-  const stk::mesh::Selector sel = meta.locally_owned_part() | meta.globally_shared_part();
+  const stk::mesh::Selector sel =
+    meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::ELEMENT_RANK, sel);
 
-  for (auto b: buckets) {
+  for (auto b : buckets) {
     ThrowRequire(b->topology() == topo);
 
     const auto bktlen = b->size();
-    for (size_t ie=0; ie < bktlen; ++ie) {
+    for (size_t ie = 0; ie < bktlen; ++ie) {
       const auto* elem_nodes = b->begin_nodes(ie);
       const auto num_nodes = b->num_nodes(ie);
 
       for (size_t in = 0; in < num_nodes; ++in) {
         const auto node = elem_nodes[in];
         const double* coords = stk::mesh::field_data(coordinates, node);
-        for (int d=0; d < ndim; ++d) {
+        for (int d = 0; d < ndim; ++d) {
           w_coords[in * ndim + d] = coords[d];
         }
       }
@@ -851,7 +866,7 @@ void calc_edge_area_vec(
 
       const auto* elem_edges = b->begin_edges(ie);
 
-      for (int ip=0; ip < numScsIp; ++ip) {
+      for (int ip = 0; ip < numScsIp; ++ip) {
         const int iedge = scsIpEdge[ip];
         const auto edge = elem_edges[iedge];
 
@@ -867,10 +882,11 @@ void calc_edge_area_vec(
         // If the left node on both edge and element are same, then they are
         // oriented the same way, i.e., sign multiplier is just 1.0, otherwise
         // reverse sign
-        const double sgn = (lnElemId == lnEdgeId)? 1.0 : -1.0;
+        const double sgn = (lnElemId == lnEdgeId) ? 1.0 : -1.0;
 
-        // accumulate contribution from this subcontrol surface to edge area vector
-        for (int d=0; d < ndim; ++d) {
+        // accumulate contribution from this subcontrol surface to edge area
+        // vector
+        for (int d = 0; d < ndim; ++d) {
           av[d] += w_scs_areav[ip * ndim + d] * sgn;
         }
       }
@@ -878,14 +894,16 @@ void calc_edge_area_vec(
   }
 }
 
-void calc_exposed_area_vec(
+void
+calc_exposed_area_vec(
   const stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
   GenericFieldType& exposedAreaVec)
 {
   using Quad4Traits = sierra::nalu::AlgTraitsQuad4;
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdDataType =
+    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
@@ -895,10 +913,13 @@ void calc_exposed_area_vec(
 
   // Register necessary element data gathers
   sierra::nalu::ElemDataRequests dataReq(meta);
-  auto meFC = sierra::nalu::MasterElementRepo::get_surface_master_element<Quad4Traits>();
+  auto meFC =
+    sierra::nalu::MasterElementRepo::get_surface_master_element<Quad4Traits>();
   dataReq.add_cvfem_surface_me(meFC);
-  dataReq.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
-  dataReq.add_face_field(exposedAreaVec, Quad4Traits::numFaceIp_, Quad4Traits::nDim_);
+  dataReq.add_coordinates_field(
+    coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_face_field(
+    exposedAreaVec, Quad4Traits::numFaceIp_, Quad4Traits::nDim_);
   dataReq.add_master_element_call(
     sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
 
@@ -910,19 +931,19 @@ void calc_exposed_area_vec(
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto areaVec = fieldMgr.get_field<double>(areaID);
-  const auto areaVecOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
-    ngpMesh, areaVec);
+  const auto areaVecOps =
+    sierra::nalu::nalu_ngp::simd_elem_field_updater(ngpMesh, areaVec);
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
-    "unittest_calc_exposed_area_vec",
-    meshInfo, meta.side_rank(), dataReq, sel,
+    "unittest_calc_exposed_area_vec", meshInfo, meta.side_rank(), dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       auto& scrViews = edata.simdScrView;
-      const auto& meViews = scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      const auto& meViews =
+        scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
       const auto& v_area = meViews.scs_areav;
 
       for (int ip = 0; ip < Quad4Traits::numFaceIp_; ++ip)
-        for (int d=0; d < Quad4Traits::nDim_; ++d)
+        for (int d = 0; d < Quad4Traits::nDim_; ++d)
           areaVecOps(edata, ip * Quad4Traits::nDim_ + d) = v_area(ip, d);
     });
 
@@ -1010,9 +1031,9 @@ void calc_projected_nodal_gradient_interior(
 }
 #endif
 
-
-template<typename PhiType, typename GradPhiType>
-void calc_projected_nodal_gradient_interior(
+template <typename PhiType, typename GradPhiType>
+void
+calc_projected_nodal_gradient_interior(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
@@ -1028,11 +1049,14 @@ void calc_projected_nodal_gradient_interior(
     "Improper field types passed to nodal gradient calculator");
   using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Hex8Traits = sierra::nalu::AlgTraitsHex8;
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdDataType =
+    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   constexpr int ncomp = std::is_same<
-    typename stk::mesh::FieldTraits<PhiType>::tag1, stk::mesh::Cartesian>::value
-    ? Hex8Traits::nDim_ : 1;
+                          typename stk::mesh::FieldTraits<PhiType>::tag1,
+                          stk::mesh::Cartesian>::value
+                          ? Hex8Traits::nDim_
+                          : 1;
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
   const unsigned npe = Hex8Traits::nodesPerElement_;
@@ -1041,10 +1065,12 @@ void calc_projected_nodal_gradient_interior(
 
   sierra::nalu::ElemDataRequests dataReq(meta);
 
-  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element<Hex8Traits>();
+  auto meSCS =
+    sierra::nalu::MasterElementRepo::get_surface_master_element<Hex8Traits>();
 
   dataReq.add_cvfem_surface_me(meSCS);
-  dataReq.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_coordinates_field(
+    coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
   dataReq.add_gathered_nodal_field(phi, 1);
   dataReq.add_gathered_nodal_field(dnv, 1);
   dataReq.add_gathered_nodal_field(gradPhi, ndim);
@@ -1066,29 +1092,28 @@ void calc_projected_nodal_gradient_interior(
   const auto gradPhiOps = sierra::nalu::nalu_ngp::simd_elem_nodal_field_updater(
     ngpMesh, ngpGradField);
 
-
   sierra::nalu::nalu_ngp::run_elem_algorithm(
-    "unittest_calc_png_interior",
-    meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
-    KOKKOS_LAMBDA(ElemSimdDataType& edata) {
+    "unittest_calc_png_interior", meshInfo, stk::topology::ELEM_RANK, dataReq,
+    sel, KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       const int* lrscv = meSCS->adjacentNodes();
       auto& scrView = edata.simdScrView;
       const auto& v_dnv = scrView.get_scratch_view_1D(dnvID);
       const auto& v_scalar = scrView.get_scratch_view_1D(scalarID);
-      const auto& meViews = scrView.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      const auto& meViews =
+        scrView.get_me_views(sierra::nalu::CURRENT_COORDINATES);
       const auto& v_areav = meViews.scs_areav;
       const auto& v_shape_fcn = meViews.scs_shape_fcn;
 
-      for (int di =0; di < ncomp; ++di) {
-        for (int ip=0; ip < Hex8Traits::numScsIp_; ++ip) {
+      for (int di = 0; di < ncomp; ++di) {
+        for (int ip = 0; ip < Hex8Traits::numScsIp_; ++ip) {
           Traits::DblType qIp = 0.0;
-          for (int n=0; n < Hex8Traits::nodesPerElement_; ++n)
+          for (int n = 0; n < Hex8Traits::nodesPerElement_; ++n)
             qIp += v_shape_fcn(ip, n) * v_scalar(n);
 
           int il = lrscv[2 * ip];
           int ir = lrscv[2 * ip + 1];
 
-          for (int d=0; d < Hex8Traits::nDim_; ++d) {
+          for (int d = 0; d < Hex8Traits::nDim_; ++d) {
             Traits::DblType fac = qIp * v_areav(ip, d);
             Traits::DblType valL = fac / v_dnv(il);
             Traits::DblType valR = fac / v_dnv(ir);
@@ -1101,8 +1126,8 @@ void calc_projected_nodal_gradient_interior(
     });
 }
 
-template
-void calc_projected_nodal_gradient_interior<ScalarFieldType,VectorFieldType>(
+template void
+calc_projected_nodal_gradient_interior<ScalarFieldType, VectorFieldType>(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
@@ -1110,8 +1135,8 @@ void calc_projected_nodal_gradient_interior<ScalarFieldType,VectorFieldType>(
   const ScalarFieldType& phi,
   const VectorFieldType& gradPhi);
 
-template
-void calc_projected_nodal_gradient_interior<VectorFieldType,GenericFieldType>(
+template void
+calc_projected_nodal_gradient_interior<VectorFieldType, GenericFieldType>(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
@@ -1284,7 +1309,8 @@ void calc_projected_nodal_gradient_interior(
 }
 #endif
 
-void calc_projected_nodal_gradient_boundary(
+void
+calc_projected_nodal_gradient_boundary(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
@@ -1302,67 +1328,80 @@ void calc_projected_nodal_gradient_boundary(
   auto meBC = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
 
   dataNeeded.add_cvfem_surface_me(meBC);
-  dataNeeded.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataNeeded.add_coordinates_field(
+    coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
   dataNeeded.add_gathered_nodal_field(scalarField, 1);
   dataNeeded.add_gathered_nodal_field(dnv, 1);
   dataNeeded.add_gathered_nodal_field(gradField, ndim);
-  dataNeeded.add_master_element_call(sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
+  dataNeeded.add_master_element_call(
+    sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
 
-  const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
+  const stk::mesh::Selector selector =
+    meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(meta.side_rank(), selector);
 
   stk::mesh::NgpMesh ngpMesh(bulk);
   sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulk);
-  sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
+  sierra::nalu::ElemDataRequestsGPU dataNeededNGP(
+    fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM) ;
+  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(
+    dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM);
 
-  auto v_shape_function = Kokkos::View<double**>("shape_function", meBC->num_integration_points(), meBC->nodesPerElement_);
+  auto v_shape_function = Kokkos::View<double**>(
+    "shape_function", meBC->num_integration_points(), meBC->nodesPerElement_);
 
-  auto team_exec = sierra::nalu::get_host_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
+  auto team_exec = sierra::nalu::get_host_team_policy(
+    buckets.size(), bytes_per_team, bytes_per_thread);
 
-  Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team) {
-    auto& b = *buckets[team.league_rank()];
-    const auto length = b.size();
+  Kokkos::parallel_for(
+    team_exec, [&](const sierra::nalu::TeamHandleType& team) {
+      auto& b = *buckets[team.league_rank()];
+      const auto length = b.size();
 
-    EXPECT_EQ(b.topology(), topo);
+      EXPECT_EQ(b.topology(), topo);
 
-    sierra::nalu::ScratchViews<double> preReqData(team, ndim, topo.num_nodes(), dataNeededNGP);
+      sierra::nalu::ScratchViews<double> preReqData(
+        team, ndim, topo.num_nodes(), dataNeededNGP);
 
-    Kokkos::parallel_for(
-      Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
-      stk::mesh::Entity face = b[k];
-      sierra::nalu::fill_pre_req_data(
-        dataNeededNGP, ngpMesh, meta.side_rank(), face, preReqData);
-      sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
+      Kokkos::parallel_for(
+        Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
+          stk::mesh::Entity face = b[k];
+          sierra::nalu::fill_pre_req_data(
+            dataNeededNGP, ngpMesh, meta.side_rank(), face, preReqData);
+          sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
-      meBC->shape_fcn(v_shape_function.data());
-      auto v_dnv = preReqData.get_scratch_view_1D(dnv);
-      auto v_scalar = preReqData.get_scratch_view_1D(scalarField);
-      auto v_scs_areav = preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
-      const stk::mesh::NgpMesh::ConnectedNodes node_rels = preReqData.elemNodes;
-      const int* ipNodeMap = meBC->ipNodeMap();
+          meBC->shape_fcn(v_shape_function.data());
+          auto v_dnv = preReqData.get_scratch_view_1D(dnv);
+          auto v_scalar = preReqData.get_scratch_view_1D(scalarField);
+          auto v_scs_areav =
+            preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES)
+              .scs_areav;
+          const stk::mesh::NgpMesh::ConnectedNodes node_rels =
+            preReqData.elemNodes;
+          const int* ipNodeMap = meBC->ipNodeMap();
 
-      for (int ip = 0; ip < meBC->num_integration_points(); ++ip) {
-        double qIp = 0.0;
-        for (int n = 0; n < meBC->nodesPerElement_; ++n) {
-          qIp += v_shape_function(ip, n) * v_scalar(n);
-        }
+          for (int ip = 0; ip < meBC->num_integration_points(); ++ip) {
+            double qIp = 0.0;
+            for (int n = 0; n < meBC->nodesPerElement_; ++n) {
+              qIp += v_shape_function(ip, n) * v_scalar(n);
+            }
 
-        const int nn = ipNodeMap[ip];
-        double* dqdxNN = stk::mesh::field_data(gradField, node_rels[nn]);
+            const int nn = ipNodeMap[ip];
+            double* dqdxNN = stk::mesh::field_data(gradField, node_rels[nn]);
 
-        for (int d = 0; d < ndim; ++d) {
-          double fac  = qIp * v_scs_areav(ip, d) / v_dnv(nn);
-          Kokkos::atomic_add(dqdxNN + d, fac);
-        }
-      }
+            for (int d = 0; d < ndim; ++d) {
+              double fac = qIp * v_scs_areav(ip, d) / v_dnv(nn);
+              Kokkos::atomic_add(dqdxNN + d, fac);
+            }
+          }
+        });
     });
-  });
 }
 
-void calc_projected_nodal_gradient_boundary(
+void
+calc_projected_nodal_gradient_boundary(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
@@ -1380,70 +1419,82 @@ void calc_projected_nodal_gradient_boundary(
   auto meBC = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
 
   dataNeeded.add_cvfem_surface_me(meBC);
-  dataNeeded.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataNeeded.add_coordinates_field(
+    coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
   dataNeeded.add_gathered_nodal_field(vectorField, ndim);
   dataNeeded.add_gathered_nodal_field(dnv, 1);
   dataNeeded.add_gathered_nodal_field(gradField, ndim);
-  dataNeeded.add_master_element_call(sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
+  dataNeeded.add_master_element_call(
+    sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
 
-  const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
+  const stk::mesh::Selector selector =
+    meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(meta.side_rank(), selector);
 
   stk::mesh::NgpMesh ngpMesh(bulk);
   sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulk);
-  sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
+  sierra::nalu::ElemDataRequestsGPU dataNeededNGP(
+    fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM) ;
+  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(
+    dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM);
 
-  auto v_shape_function = Kokkos::View<double**>("shape_function", meBC->num_integration_points(), meBC->nodesPerElement_);
+  auto v_shape_function = Kokkos::View<double**>(
+    "shape_function", meBC->num_integration_points(), meBC->nodesPerElement_);
 
-  auto team_exec = sierra::nalu::get_host_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
+  auto team_exec = sierra::nalu::get_host_team_policy(
+    buckets.size(), bytes_per_team, bytes_per_thread);
 
-  Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team) {
-    auto& b = *buckets[team.league_rank()];
-    const auto length = b.size();
+  Kokkos::parallel_for(
+    team_exec, [&](const sierra::nalu::TeamHandleType& team) {
+      auto& b = *buckets[team.league_rank()];
+      const auto length = b.size();
 
-    EXPECT_EQ(b.topology(), topo);
+      EXPECT_EQ(b.topology(), topo);
 
-    sierra::nalu::ScratchViews<double> preReqData(
-      team, ndim, topo.num_nodes(), dataNeededNGP);
+      sierra::nalu::ScratchViews<double> preReqData(
+        team, ndim, topo.num_nodes(), dataNeededNGP);
 
-    Kokkos::parallel_for(
-      Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
-      stk::mesh::Entity face = b[k];
-      sierra::nalu::fill_pre_req_data(
-        dataNeededNGP, ngpMesh, meta.side_rank(), face, preReqData);
-      sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
+      Kokkos::parallel_for(
+        Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
+          stk::mesh::Entity face = b[k];
+          sierra::nalu::fill_pre_req_data(
+            dataNeededNGP, ngpMesh, meta.side_rank(), face, preReqData);
+          sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
-      meBC->shape_fcn(v_shape_function.data());
-      auto v_dnv = preReqData.get_scratch_view_1D(dnv);
-      auto v_vector = preReqData.get_scratch_view_2D(vectorField);
-      auto v_scs_areav = preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
-      const stk::mesh::NgpMesh::ConnectedNodes node_rels = preReqData.elemNodes;
-      const int* ipNodeMap = meBC->ipNodeMap();
+          meBC->shape_fcn(v_shape_function.data());
+          auto v_dnv = preReqData.get_scratch_view_1D(dnv);
+          auto v_vector = preReqData.get_scratch_view_2D(vectorField);
+          auto v_scs_areav =
+            preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES)
+              .scs_areav;
+          const stk::mesh::NgpMesh::ConnectedNodes node_rels =
+            preReqData.elemNodes;
+          const int* ipNodeMap = meBC->ipNodeMap();
 
-      for (int di = 0; di < ndim; ++di) {
-        for (int ip = 0; ip < meBC->num_integration_points(); ++ip) {
-          double qIp = 0.0;
-          for (int n = 0; n < meBC->nodesPerElement_; ++n) {
-            qIp += v_shape_function(ip, n) * v_vector(n,di);
+          for (int di = 0; di < ndim; ++di) {
+            for (int ip = 0; ip < meBC->num_integration_points(); ++ip) {
+              double qIp = 0.0;
+              for (int n = 0; n < meBC->nodesPerElement_; ++n) {
+                qIp += v_shape_function(ip, n) * v_vector(n, di);
+              }
+
+              const int nn = ipNodeMap[ip];
+              double* dqdxNN = stk::mesh::field_data(gradField, node_rels[nn]);
+
+              for (int d = 0; d < ndim; ++d) {
+                double fac = qIp * v_scs_areav(ip, d) / v_dnv(nn);
+                Kokkos::atomic_add(dqdxNN + di * ndim + d, fac);
+              }
+            }
           }
-
-          const int nn = ipNodeMap[ip];
-          double* dqdxNN = stk::mesh::field_data(gradField, node_rels[nn]);
-
-          for (int d = 0; d < ndim; ++d) {
-            double fac  = qIp * v_scs_areav(ip, d) / v_dnv(nn);
-            Kokkos::atomic_add(dqdxNN + di*ndim + d, fac);
-          }
-        }
-      }
+        });
     });
-  });
 }
 
-void calc_dual_nodal_volume(
+void
+calc_dual_nodal_volume(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
@@ -1458,53 +1509,66 @@ void calc_dual_nodal_volume(
   auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(topo);
 
   dataNeeded.add_cvfem_volume_me(meSCV);
-  dataNeeded.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
-  dataNeeded.add_master_element_call(sierra::nalu::SCV_VOLUME, sierra::nalu::CURRENT_COORDINATES);
+  dataNeeded.add_coordinates_field(
+    coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataNeeded.add_master_element_call(
+    sierra::nalu::SCV_VOLUME, sierra::nalu::CURRENT_COORDINATES);
 
-  const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
+  const stk::mesh::Selector selector =
+    meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
 
   stk::mesh::NgpMesh ngpMesh(bulk);
   sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulk);
-  sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
+  sierra::nalu::ElemDataRequestsGPU dataNeededNGP(
+    fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM) ;
+  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(
+    dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM);
 
-  auto v_shape_function = Kokkos::View<double**>("shape_function", meSCV->num_integration_points(), meSCV->nodesPerElement_);
+  auto v_shape_function = Kokkos::View<double**>(
+    "shape_function", meSCV->num_integration_points(), meSCV->nodesPerElement_);
 
-  auto team_exec = sierra::nalu::get_host_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
+  auto team_exec = sierra::nalu::get_host_team_policy(
+    buckets.size(), bytes_per_team, bytes_per_thread);
 
-  Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team) {
-    auto& b = *buckets[team.league_rank()];
-    const auto length = b.size();
+  Kokkos::parallel_for(
+    team_exec, [&](const sierra::nalu::TeamHandleType& team) {
+      auto& b = *buckets[team.league_rank()];
+      const auto length = b.size();
 
-    EXPECT_EQ(b.topology(), topo);
+      EXPECT_EQ(b.topology(), topo);
 
-    sierra::nalu::ScratchViews<double> preReqData(
-      team, ndim, topo.num_nodes(), dataNeededNGP);
+      sierra::nalu::ScratchViews<double> preReqData(
+        team, ndim, topo.num_nodes(), dataNeededNGP);
 
-    Kokkos::parallel_for(
-      Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
-      stk::mesh::Entity element = b[k];
-      sierra::nalu::fill_pre_req_data(
-        dataNeededNGP, ngpMesh, stk::topology::ELEMENT_RANK, element,
-        preReqData);
-      sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
+      Kokkos::parallel_for(
+        Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
+          stk::mesh::Entity element = b[k];
+          sierra::nalu::fill_pre_req_data(
+            dataNeededNGP, ngpMesh, stk::topology::ELEMENT_RANK, element,
+            preReqData);
+          sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
-      auto v_scv_vol = preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scv_volume;
-      const stk::mesh::NgpMesh::ConnectedNodes node_rels = preReqData.elemNodes;
-      const int* ipNodeMap = meSCV->ipNodeMap();
+          auto v_scv_vol =
+            preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES)
+              .scv_volume;
+          const stk::mesh::NgpMesh::ConnectedNodes node_rels =
+            preReqData.elemNodes;
+          const int* ipNodeMap = meSCV->ipNodeMap();
 
-      for (int ip = 0; ip < meSCV->num_integration_points(); ++ip) {
-        double volIp = v_scv_vol(ip);
-        Kokkos::atomic_add(stk::mesh::field_data(dnvField, node_rels[ipNodeMap[ip]]),volIp);
-      }
+          for (int ip = 0; ip < meSCV->num_integration_points(); ++ip) {
+            double volIp = v_scv_vol(ip);
+            Kokkos::atomic_add(
+              stk::mesh::field_data(dnvField, node_rels[ipNodeMap[ip]]), volIp);
+          }
+        });
     });
-  });
 }
 
-void calc_projected_nodal_gradient(
+void
+calc_projected_nodal_gradient(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
@@ -1513,7 +1577,8 @@ void calc_projected_nodal_gradient(
   VectorFieldType& gradField)
 {
   // for now
-  EXPECT_TRUE(topo != stk::topology::PYRAMID_5 && topo != stk::topology::WEDGE_6);
+  EXPECT_TRUE(
+    topo != stk::topology::PYRAMID_5 && topo != stk::topology::WEDGE_6);
   stk::mesh::field_fill(0.0, dnv);
   stk::mesh::field_fill(0.0, gradField);
 
@@ -1522,15 +1587,17 @@ void calc_projected_nodal_gradient(
     stk::mesh::parallel_sum(bulk, {&dnv});
   }
 
-  calc_projected_nodal_gradient_interior(bulk, topo, coordinates, dnv, scalarField, gradField);
-  calc_projected_nodal_gradient_boundary(bulk, topo.side_topology(0), coordinates, dnv, scalarField, gradField);
+  calc_projected_nodal_gradient_interior(
+    bulk, topo, coordinates, dnv, scalarField, gradField);
+  calc_projected_nodal_gradient_boundary(
+    bulk, topo.side_topology(0), coordinates, dnv, scalarField, gradField);
   if (bulk.parallel_size() > 1) {
     stk::mesh::parallel_sum(bulk, {&gradField});
   }
-
 }
 
-void calc_projected_nodal_gradient(
+void
+calc_projected_nodal_gradient(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
@@ -1539,7 +1606,8 @@ void calc_projected_nodal_gradient(
   GenericFieldType& gradField)
 {
   // for now
-  EXPECT_TRUE(topo != stk::topology::PYRAMID_5 && topo != stk::topology::WEDGE_6);
+  EXPECT_TRUE(
+    topo != stk::topology::PYRAMID_5 && topo != stk::topology::WEDGE_6);
   stk::mesh::field_fill(0.0, dnv);
 
   calc_dual_nodal_volume(bulk, topo, coordinates, dnv);
@@ -1548,8 +1616,10 @@ void calc_projected_nodal_gradient(
   }
 
   stk::mesh::field_fill(0.0, gradField);
-  calc_projected_nodal_gradient_interior(bulk, topo, coordinates, dnv, vectorField, gradField);
-  calc_projected_nodal_gradient_boundary(bulk, topo.side_topology(0), coordinates, dnv, vectorField, gradField);
+  calc_projected_nodal_gradient_interior(
+    bulk, topo, coordinates, dnv, vectorField, gradField);
+  calc_projected_nodal_gradient_boundary(
+    bulk, topo.side_topology(0), coordinates, dnv, vectorField, gradField);
   if (bulk.parallel_size() > 1) {
     stk::mesh::parallel_sum(bulk, {&gradField});
   }
@@ -1557,35 +1627,40 @@ void calc_projected_nodal_gradient(
 
 #endif // KOKKOS_ENABLE_CUDA
 
-void expect_all_near(
+void
+expect_all_near(
   const Kokkos::View<double*>& devCalcValue,
   const double* exactValue,
   const double tol)
 {
   const int length = devCalcValue.extent(0);
 
-  auto hostCalcValue = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), devCalcValue);
+  auto hostCalcValue =
+    Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), devCalcValue);
 
-  for (int i=0; i < length; ++i) {
+  for (int i = 0; i < length; ++i) {
     EXPECT_NEAR(hostCalcValue[i], exactValue[i], tol);
   }
 }
 
-void expect_all_near(
+void
+expect_all_near(
   const Kokkos::View<double*>& devCalcValue,
   const double exactValue,
   const double tol)
 {
   const int length = devCalcValue.extent(0);
 
-  auto hostCalcValue = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), devCalcValue);
+  auto hostCalcValue =
+    Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), devCalcValue);
 
-  for (int i=0; i < length; ++i) {
+  for (int i = 0; i < length; ++i) {
     EXPECT_NEAR(hostCalcValue[i], exactValue, tol);
   }
 }
 
-void expect_all_near_2d(
+void
+expect_all_near_2d(
   const Kokkos::View<double**>& devCalcValue,
   const double* exactValue,
   const double tol)
@@ -1593,12 +1668,12 @@ void expect_all_near_2d(
   const int dim1 = devCalcValue.extent(0);
   const int dim2 = devCalcValue.extent(1);
 
-  auto hostCalcValue = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), devCalcValue);
+  auto hostCalcValue =
+    Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), devCalcValue);
 
-  for (int i=0; i < dim1; i++)
-    for (int j=0; j < dim2; j++)
-      EXPECT_NEAR(hostCalcValue(i,j),exactValue[i*dim2+j], tol);
+  for (int i = 0; i < dim1; i++)
+    for (int j = 0; j < dim2; j++)
+      EXPECT_NEAR(hostCalcValue(i, j), exactValue[i * dim2 + j], tol);
 }
 
-} // unit_test_kernel_utils
-
+} // namespace unit_test_kernel_utils

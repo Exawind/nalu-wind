@@ -29,10 +29,12 @@ MdotOpenCorrectorAlg<BcAlgTraits>::MdotOpenCorrectorAlg(
       realm_.meta_data(),
       "open_mass_flow_rate",
       realm_.meta_data().side_rank()))
-{}
+{
+}
 
-template<typename BcAlgTraits>
-void MdotOpenCorrectorAlg<BcAlgTraits>::execute()
+template <typename BcAlgTraits>
+void
+MdotOpenCorrectorAlg<BcAlgTraits>::execute()
 {
   using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
@@ -41,19 +43,21 @@ void MdotOpenCorrectorAlg<BcAlgTraits>::execute()
   auto openMdot = fieldMgr.template get_field<double>(openMassFlowRate_);
   const double mdotCorr = mdotDriver_.mdot_open_correction();
 
-  const stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
-    & stk::mesh::selectUnion(partVec_);
+  const stk::mesh::Selector sel =
+    realm_.meta_data().locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
   double mdotSum = 0.0;
-  const std::string algName = "correct_open_mdot_" + std::to_string(BcAlgTraits::topo_);
+  const std::string algName =
+    "correct_open_mdot_" + std::to_string(BcAlgTraits::topo_);
   nalu_ngp::run_entity_par_reduce(
     algName, ngpMesh, realm_.meta_data().side_rank(), sel,
     KOKKOS_LAMBDA(const MeshIndex& mi, double& pSum) {
-      for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
+      for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
         openMdot.get(mi, ip) -= mdotCorr;
         pSum += openMdot.get(mi, ip);
       }
-    }, mdotSum);
+    },
+    mdotSum);
 
   mdotDriver_.add_open_mdot_post(mdotSum);
   openMdot.modify_on_device();
@@ -61,5 +65,5 @@ void MdotOpenCorrectorAlg<BcAlgTraits>::execute()
 
 INSTANTIATE_KERNEL_FACE(MdotOpenCorrectorAlg)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

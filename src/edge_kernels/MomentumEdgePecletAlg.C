@@ -33,9 +33,7 @@ MomentumEdgePecletAlg::MomentumEdgePecletAlg(
     density_(get_field_ordinal(realm.meta_data(), "density")),
     viscosity_(get_field_ordinal(
       realm.meta_data(),
-      realm.is_turbulent()
-        ? "effective_viscosity_u"
-        : "viscosity")),
+      realm.is_turbulent() ? "effective_viscosity_u" : "viscosity")),
     coordinates_(get_field_ordinal(
       realm.meta_data(), realm.solutionOptions_->get_coordinates_name())),
     vrtm_(get_field_ordinal(

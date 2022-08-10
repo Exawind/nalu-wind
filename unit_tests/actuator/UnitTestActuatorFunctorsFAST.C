@@ -34,7 +34,6 @@ protected:
   }
 };
 
-
 TEST_F(ActuatorFunctorFastTests, NGP_runUpdatePoints)
 {
   const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
@@ -108,7 +107,6 @@ TEST_F(ActuatorFunctorFastTests, NGP_runAssignVelAndComputeForces)
 
   Kokkos::deep_copy(actBulk.velocity_.view_host(), 1.0);
 
-
   Kokkos::parallel_for(
     "testAssignVel", localRangePolicy, ActFastAssignVel(actBulk));
 
@@ -167,7 +165,6 @@ TEST_F(ActuatorFunctorFastTests, NGP_spreadForceWhProjIdentity)
   auto vel = actBulk.velocity_.view_host();
   auto force = actBulk.actuatorForce_.view_host();
   auto points = actBulk.pointCentroid_.view_host();
-
 
   Kokkos::deep_copy(vel, 8.0);
 

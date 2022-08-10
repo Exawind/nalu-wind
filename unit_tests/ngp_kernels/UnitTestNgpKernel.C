@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include <gtest/gtest.h>
 
 #include "UnitTestUtils.h"
@@ -31,7 +30,8 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelBasic)
 
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
-  unit_test_utils::HelperObjects helperObjs(bulk, stk::topology::HEX_8, 1, partVec[0]);
+  unit_test_utils::HelperObjects helperObjs(
+    bulk, stk::topology::HEX_8, 1, partVec[0]);
   auto* assembleElemSolverAlg = helperObjs.assembleElemSolverAlg;
   auto& dataNeeded = assembleElemSolverAlg->dataNeededByKernels_;
 
@@ -42,14 +42,16 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelBasic)
   EXPECT_EQ(3u, dataNeeded.get_fields().size());
   EXPECT_EQ(1u, assembleElemSolverAlg->activeKernels_.size());
 
-  auto* ngpTestKernel = assembleElemSolverAlg->activeKernels_[0]->create_on_device();
+  auto* ngpTestKernel =
+    assembleElemSolverAlg->activeKernels_[0]->create_on_device();
 
   ASSERT_NE(ngpTestKernel, nullptr);
   assembleElemSolverAlg->activeKernels_.clear();
   testKernel->free_on_device();
 }
 
-void kernel_runalg_test(
+void
+kernel_runalg_test(
   stk::mesh::BulkData& bulk,
   sierra::nalu::AssembleElemSolverAlgorithm& solverAlg)
 {
@@ -58,7 +60,8 @@ void kernel_runalg_test(
   solverAlg.run_algorithm(
     bulk,
     KOKKOS_LAMBDA(sierra::nalu::SharedMemData<TeamType, ShmemType> & smdata) {
-      testKernel->execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
+      testKernel->execute(
+        smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
     });
 
   solverAlg.activeKernels_[0]->free_on_device();
@@ -72,7 +75,8 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelRunAlg)
 
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
-  unit_test_utils::HelperObjects helperObjs(bulk, stk::topology::HEX_8, 1, partVec[0]);
+  unit_test_utils::HelperObjects helperObjs(
+    bulk, stk::topology::HEX_8, 1, partVec[0]);
   auto* assembleElemSolverAlg = helperObjs.assembleElemSolverAlg;
   auto& dataNeeded = assembleElemSolverAlg->dataNeededByKernels_;
 
@@ -95,7 +99,8 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelExecute)
 
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
-  unit_test_utils::HelperObjects helperObjs(bulk, stk::topology::HEX_8, 1, partVec[0]);
+  unit_test_utils::HelperObjects helperObjs(
+    bulk, stk::topology::HEX_8, 1, partVec[0]);
   auto* assembleElemSolverAlg = helperObjs.assembleElemSolverAlg;
   auto& dataNeeded = assembleElemSolverAlg->dataNeededByKernels_;
 

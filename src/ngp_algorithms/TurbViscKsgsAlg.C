@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/TurbViscKsgsAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpTypes.h"
@@ -18,21 +17,20 @@
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 TurbViscKsgsAlg::TurbViscKsgsAlg(
-  Realm &realm,
-  stk::mesh::Part *part,
-  ScalarFieldType* tvisc
-) : Algorithm(realm, part),
+  Realm& realm, stk::mesh::Part* part, ScalarFieldType* tvisc)
+  : Algorithm(realm, part),
     tviscField_(tvisc),
     tke_(get_field_ordinal(realm.meta_data(), "turbulent_ke")),
     density_(get_field_ordinal(realm.meta_data(), "density")),
     tvisc_(tvisc->mesh_meta_data_ordinal()),
     dualNodalVolume_(get_field_ordinal(realm.meta_data(), "dual_nodal_volume")),
     cmuEps_(realm.get_turb_model_constant(TM_cmuEps))
-{}
+{
+}
 
 void
 TurbViscKsgsAlg::execute()
@@ -41,9 +39,9 @@ TurbViscKsgsAlg::execute()
 
   const auto& meta = realm_.meta_data();
 
-  stk::mesh::Selector sel = (
-    meta.locally_owned_part() | meta.globally_shared_part())
-    & stk::mesh::selectField(*tviscField_);
+  stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part()) &
+    stk::mesh::selectField(*tviscField_);
 
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
@@ -59,15 +57,15 @@ TurbViscKsgsAlg::execute()
   const DblType cmuEps = cmuEps_;
 
   nalu_ngp::run_entity_algorithm(
-    "TurbViscKsgsAlg",
-    ngpMesh, stk::topology::NODE_RANK, sel,
+    "TurbViscKsgsAlg", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
-      const DblType filter = stk::math::pow(dualNodalVolume.get(meshIdx, 0), 
-          invDim);
-      tvisc.get(meshIdx, 0) = cmuEps*density.get(meshIdx, 0)*std::sqrt(tke.get(meshIdx, 0))*filter;
+      const DblType filter =
+        stk::math::pow(dualNodalVolume.get(meshIdx, 0), invDim);
+      tvisc.get(meshIdx, 0) = cmuEps * density.get(meshIdx, 0) *
+                              std::sqrt(tke.get(meshIdx, 0)) * filter;
     });
   tvisc.modify_on_device();
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

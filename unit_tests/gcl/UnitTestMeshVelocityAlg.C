@@ -28,17 +28,17 @@ namespace {
 std::vector<double>
 transform(
   const sierra::nalu::mm::TransMatType& transMat,
-  const sierra::nalu::mm::ThreeDVecType& xyz )
+  const sierra::nalu::mm::ThreeDVecType& xyz)
 {
   std::vector<double> transCoord(3, 0.0);
 
   // perform matrix multiplication between transformation matrix
   // and original coordinates to obtain transformed coordinates
   for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
-    transCoord[d] = transMat[d*sierra::nalu::mm::matSize+0]*xyz[0]
-                   +transMat[d*sierra::nalu::mm::matSize+1]*xyz[1]
-                   +transMat[d*sierra::nalu::mm::matSize+2]*xyz[2]
-                   +transMat[d*sierra::nalu::mm::matSize+3];
+    transCoord[d] = transMat[d * sierra::nalu::mm::matSize + 0] * xyz[0] +
+                    transMat[d * sierra::nalu::mm::matSize + 1] * xyz[1] +
+                    transMat[d * sierra::nalu::mm::matSize + 2] * xyz[2] +
+                    transMat[d * sierra::nalu::mm::matSize + 3];
   }
 
   return transCoord;
@@ -46,25 +46,25 @@ transform(
 
 namespace hex8_golds_x_rot {
 namespace mesh_velocity {
-static constexpr double swept_vol[12] = {0.0,   -0.0625,  0.0,    -0.0625,
+static constexpr double swept_vol[12] = {0.0,    -0.0625, 0.0,     -0.0625,
                                          0.0,    0.0625,  0.0,     0.0625,
-                                         0.0625, 0.0625, -0.0625, -0.0625};
+                                         0.0625, 0.0625,  -0.0625, -0.0625};
 
-static constexpr double face_vel_mag[12] = {0.0,  -0.125,  0.0,   -0.125,
+static constexpr double face_vel_mag[12] = {0.0,   -0.125, 0.0,    -0.125,
                                             0.0,   0.125,  0.0,    0.125,
-                                            0.125, 0.125, -0.125, -0.125};
+                                            0.125, 0.125,  -0.125, -0.125};
 } // namespace mesh_velocity
 } // namespace hex8_golds_x_rot
 
 namespace hex8_golds_y_rot {
 namespace mesh_velocity {
-static constexpr double swept_vol[12] = {0.0625, 0.0,   -0.0625,  0.0,
-                                        -0.0625, 0.0,    0.0625,  0.0,
-                                        -0.0625, 0.0625, 0.0625, -0.0625};
+static constexpr double swept_vol[12] = {0.0625,  0.0,    -0.0625, 0.0,
+                                         -0.0625, 0.0,    0.0625,  0.0,
+                                         -0.0625, 0.0625, 0.0625,  -0.0625};
 
-static constexpr double face_vel_mag[12] = {0.125, 0.0,  -0.125,  0.0,
-                                           -0.125, 0.0,   0.125,  0.0,
-                                           -0.125, 0.125, 0.125, -0.125};
+static constexpr double face_vel_mag[12] = {0.125,  0.0,   -0.125, 0.0,
+                                            -0.125, 0.0,   0.125,  0.0,
+                                            -0.125, 0.125, 0.125,  -0.125};
 } // namespace mesh_velocity
 } // namespace hex8_golds_y_rot
 } // namespace
@@ -159,7 +159,8 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
         for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; ++d)
           mX[d] = mcoord[d];
 
-        sierra::nalu::mm::TransMatType transMat = rotClass.build_transformation(0.0, mX);
+        sierra::nalu::mm::TransMatType transMat =
+          rotClass.build_transformation(0.0, mX);
         std::vector<double> rot_xyz = transform(transMat, mX);
 
         dispN[0] = rot_xyz[0] - mX[0];
@@ -291,7 +292,8 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
         for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; ++d)
           mX[d] = mcoord[d];
 
-        sierra::nalu::mm::TransMatType transMat = rotClass.build_transformation(0.0, mX);
+        sierra::nalu::mm::TransMatType transMat =
+          rotClass.build_transformation(0.0, mX);
         std::vector<double> rot_xyz = transform(transMat, mX);
 
         dispN[0] = rot_xyz[0] - mX[0];
@@ -423,7 +425,8 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
         for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; ++d)
           mX[d] = mcoord[d];
 
-        sierra::nalu::mm::TransMatType transMat = rotClass.build_transformation(0.0, mX);
+        sierra::nalu::mm::TransMatType transMat =
+          rotClass.build_transformation(0.0, mX);
         std::vector<double> rot_xyz = transform(transMat, mX);
 
         dispN[0] = rot_xyz[0] - mX[0];

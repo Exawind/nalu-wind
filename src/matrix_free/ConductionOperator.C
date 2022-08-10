@@ -64,7 +64,8 @@ ConductionResidualOperator<p>::compute(mv_type& owned_rhs)
     conduction_residual<p>(
       gammas_, elem_offsets_, residual_fields_.qm1, residual_fields_.qp0,
       residual_fields_.qp1, residual_fields_.volume_metric,
-      residual_fields_.diffusion_metric, owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
+      residual_fields_.diffusion_metric,
+      owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
     if (flux_bc_active_) {
       scalar_neumann_residual<p>(
@@ -111,12 +112,14 @@ ConductionLinearizedResidualOperator<p>::apply(
 
     conduction_linearized_residual<p>(
       gamma_, elem_offsets_, fields_.volume_metric, fields_.diffusion_metric,
-      cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite), cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
+      cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite),
+      cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
     if (dirichlet_bc_active_) {
       dirichlet_linearized(
         dirichlet_bc_offsets_, owned_rhs.getLocalLength(),
-        cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite), cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
+        cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite),
+        cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
 
     owned_rhs.putScalar(0.);
@@ -125,12 +128,14 @@ ConductionLinearizedResidualOperator<p>::apply(
     owned_rhs.putScalar(0.);
     conduction_linearized_residual<p>(
       gamma_, elem_offsets_, fields_.volume_metric, fields_.diffusion_metric,
-      owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly), owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
+      owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
     if (dirichlet_bc_active_) {
       dirichlet_linearized(
         dirichlet_bc_offsets_, owned_rhs.getLocalLength(),
-        owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly), owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
+        owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly),
+        owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
     }
   }
 }

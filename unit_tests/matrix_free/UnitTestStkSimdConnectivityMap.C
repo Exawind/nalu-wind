@@ -47,9 +47,11 @@ namespace matrix_free {
 class SimdConnectivityFixture : public ::testing::Test
 {
 protected:
-  SimdConnectivityFixture() 
-    : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD).set_spatial_dimension(3u).create()), 
-      bulk(*bulkPtr), 
+  SimdConnectivityFixture()
+    : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD)
+                .set_spatial_dimension(3u)
+                .create()),
+      bulk(*bulkPtr),
       meta(bulk.mesh_meta_data())
   {
     stk::topology topo(stk::topology::HEX_8);

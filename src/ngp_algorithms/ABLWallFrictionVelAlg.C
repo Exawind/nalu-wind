@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/ABLWallFrictionVelAlg.h"
 
 #include "BuildTemplates.h"
@@ -32,8 +31,8 @@ namespace nalu {
 namespace {
 
 template <typename PsiFunc>
-KOKKOS_FUNCTION
-double calc_utau(
+KOKKOS_FUNCTION double
+calc_utau(
   const double uh,
   const double zh,
   const double term1,
@@ -55,19 +54,20 @@ double calc_utau(
   double utau0, utau1;
   // Proceed with normal computations
   utau0 = kappa * uh / term1;
-  if (Tflux > 0.0) utau0 *= 3.0;
+  if (Tflux > 0.0)
+    utau0 *= 3.0;
 
   utau1 = (1.0 + perturb) * utau0;
 
   bool converged = false;
   double utau = utau0;
-  for (int k=0; k < maxIters; ++k) {
+  for (int k = 0; k < maxIters; ++k) {
     double L0 = utau0 * utau0 * utau0 * Lfac;
     double L1 = utau1 * utau1 * utau1 * Lfac;
 
     double sgnq = (Tflux > 0.0) ? 1.0 : -1.0;
-    L0 = - sgnq * stk::math::max(1.0e-10, stk::math::abs(L0));
-    L1 = - sgnq * stk::math::max(1.1e-10, stk::math::abs(L1));
+    L0 = -sgnq * stk::math::max(1.0e-10, stk::math::abs(L0));
+    L1 = -sgnq * stk::math::max(1.1e-10, stk::math::abs(L1));
 
     const double znorm0 = zh / L0;
     const double znorm1 = zh / L1;
@@ -79,14 +79,12 @@ double calc_utau(
     const double f1 = utau1 - uh * kappa / denom1;
 
     double dutau = utau1 - utau0;
-    dutau = (dutau > 0.0)
-      ? (stk::math::max(1.0e-15, dutau))
-      : (stk::math::min(-1.0e-15, dutau));
+    dutau = (dutau > 0.0) ? (stk::math::max(1.0e-15, dutau))
+                          : (stk::math::min(-1.0e-15, dutau));
 
     double fprime = (f1 - f0) / dutau;
-    fprime = (fprime > 0.0)
-      ? (stk::math::max(1.0e-15, fprime))
-      : (stk::math::min(-1.0e-15, fprime));
+    fprime = (fprime > 0.0) ? (stk::math::max(1.0e-15, fprime))
+                            : (stk::math::min(-1.0e-15, fprime));
 
     const double utau_tmp = utau1;
     utau1 = utau0 - f0 / fprime;
@@ -99,11 +97,12 @@ double calc_utau(
     }
   }
 
-  if (!converged) printf("Issue with utau");
+  if (!converged)
+    printf("Issue with utau");
   return utau;
 }
 
-}
+} // namespace
 
 template <typename BcAlgTraits>
 ABLWallFrictionVelAlg<BcAlgTraits>::ABLWallFrictionVelAlg(
@@ -160,8 +159,9 @@ ABLWallFrictionVelAlg<BcAlgTraits>::ABLWallFrictionVelAlg(
   faceData_.add_master_element_call(shp_fcn, CURRENT_COORDINATES);
 }
 
-template<typename BcAlgTraits>
-void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
+template <typename BcAlgTraits>
+void
+ABLWallFrictionVelAlg<BcAlgTraits>::execute()
 {
   namespace mo = abl_monin_obukhov;
   using ElemSimdData = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
@@ -191,21 +191,21 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
   const double eps = 1.0e-8;
   const DoubleType Lmax = 1.0e8;
 
-  const stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
-    & stk::mesh::selectUnion(partVec_);
+  const stk::mesh::Selector sel =
+    realm_.meta_data().locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
-  const auto utauOps = nalu_ngp::simd_elem_field_updater(
-    ngpMesh, ngpUtau);
+  const auto utauOps = nalu_ngp::simd_elem_field_updater(ngpMesh, ngpUtau);
 
   // Reducer to accumulate the area-weighted utau sum as well as total area for
   // wall boundary of this specific topology.
   nalu_ngp::ArraySimdDouble2 utauSum(0.0);
   Kokkos::Sum<nalu_ngp::ArraySimdDouble2> utauReducer(utauSum);
 
-  const std::string algName = "ABLWallFrictionVelAlg_" + std::to_string(BcAlgTraits::topo_);
+  const std::string algName =
+    "ABLWallFrictionVelAlg_" + std::to_string(BcAlgTraits::topo_);
   nalu_ngp::run_elem_par_reduce(
     algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
-    KOKKOS_LAMBDA(ElemSimdData& edata, nalu_ngp::ArraySimdDouble2& uSum) {
+    KOKKOS_LAMBDA(ElemSimdData & edata, nalu_ngp::ArraySimdDouble2 & uSum) {
       // Unit normal vector
       NALU_ALIGNED DoubleType nx[BcAlgTraits::nDim_];
       NALU_ALIGNED DoubleType velIp[BcAlgTraits::nDim_];
@@ -221,18 +221,18 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
       const auto& v_wallnormdist = scrViews.get_scratch_view_1D(wDistID);
 
       const auto meViews = scrViews.get_me_views(CURRENT_COORDINATES);
-      const auto& v_shape_fcn = useShifted
-        ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
+      const auto& v_shape_fcn =
+        useShifted ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
-      for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
+      for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
         DoubleType aMag = 0.0;
-        for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+        for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
           aMag += v_areavec(ip, d) * v_areavec(ip, d);
         }
         aMag = stk::math::sqrt(aMag);
 
         // unit normal and reset velocities
-        for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+        for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
           nx[d] = v_areavec(ip, d) / aMag;
           velIp[d] = 0.0;
           bcVelIp[d] = 0.0;
@@ -244,24 +244,24 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
         DoubleType heatFluxIp = 0.0;
         DoubleType rhoIp = 0.0;
         DoubleType CpIp = 0.0;
-        for (int ic =0; ic < BcAlgTraits::nodesPerElement_; ++ic) {
+        for (int ic = 0; ic < BcAlgTraits::nodesPerElement_; ++ic) {
           const DoubleType r = v_shape_fcn(ip, ic);
           heatFluxIp += r * v_bcHeatFlux(ic);
           rhoIp += r * v_rho(ic);
           CpIp += r * v_specHeat(ic);
 
-          for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+          for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
             velIp[d] += r * v_vel(ic, d);
             bcVelIp[d] += r * v_bcvel(ic, d);
           }
         }
 
         DoubleType uTangential = 0.0;
-        for (int i=0; i < BcAlgTraits::nDim_; ++i) {
+        for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
           DoubleType uiTan = 0.0;
           DoubleType uiBcTan = 0.0;
 
-          for (int j=0; j < BcAlgTraits::nDim_; ++j) {
+          for (int j = 0; j < BcAlgTraits::nDim_; ++j) {
             DoubleType ninj = nx[i] * nx[j];
             if (i == j) {
               const DoubleType om_ninj = 1.0 - ninj;
@@ -289,24 +289,16 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
           double utau;
           if (Tflux1 < -eps) {
             utau = calc_utau(
-              stk::simd::get_data(uTangential, si),
-              stk::simd::get_data(zh, si),
-              stk::simd::get_data(term, si),
-              stk::simd::get_data(Tflux, si),
-              stk::simd::get_data(Lfac, si),
-              stk::simd::get_data(kappa, si),
-              mo::psim_stable<double>,
-              stk::simd::get_data(beta_m, si));
+              stk::simd::get_data(uTangential, si), stk::simd::get_data(zh, si),
+              stk::simd::get_data(term, si), stk::simd::get_data(Tflux, si),
+              stk::simd::get_data(Lfac, si), stk::simd::get_data(kappa, si),
+              mo::psim_stable<double>, stk::simd::get_data(beta_m, si));
           } else if (Tflux1 > eps) {
             utau = calc_utau(
-              stk::simd::get_data(uTangential, si),
-              stk::simd::get_data(zh, si),
-              stk::simd::get_data(term, si),
-              stk::simd::get_data(Tflux, si),
-              stk::simd::get_data(Lfac, si),
-              stk::simd::get_data(kappa, si),
-              mo::psim_unstable<double>,
-              stk::simd::get_data(gamma_m, si));
+              stk::simd::get_data(uTangential, si), stk::simd::get_data(zh, si),
+              stk::simd::get_data(term, si), stk::simd::get_data(Tflux, si),
+              stk::simd::get_data(Lfac, si), stk::simd::get_data(kappa, si),
+              mo::psim_unstable<double>, stk::simd::get_data(gamma_m, si));
           } else {
             utau = stk::simd::get_data(kappa, si) *
                    stk::simd::get_data(uTangential, si) /
@@ -321,12 +313,13 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
         uSum.array_[0] += utau_calc * aMag;
         uSum.array_[1] += aMag;
       }
-    }, utauReducer);
+    },
+    utauReducer);
 
   algDriver_.accumulate_utau_area_sum(utauSum.array_[0], utauSum.array_[1]);
 }
 
 INSTANTIATE_KERNEL_FACE(ABLWallFrictionVelAlg)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

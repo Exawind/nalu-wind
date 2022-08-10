@@ -7,12 +7,10 @@
 // for more details.
 //
 
-
-
 #include <property_evaluator/ConstantPropertyEvaluator.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -22,7 +20,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-ConstantPropertyEvaluator::ConstantPropertyEvaluator(const double & value)
+ConstantPropertyEvaluator::ConstantPropertyEvaluator(const double& value)
   : value_(value)
 {
   // nothing else
@@ -41,13 +39,10 @@ ConstantPropertyEvaluator::~ConstantPropertyEvaluator()
 //--------------------------------------------------------------------------
 double
 ConstantPropertyEvaluator::execute(
-  double * /* indVarList */,
-  stk::mesh::Entity /*node*/)
+  double* /* indVarList */, stk::mesh::Entity /*node*/)
 {
   return value_;
 }
 
 } // namespace nalu
-} // namespace Sierra
-
-
+} // namespace sierra

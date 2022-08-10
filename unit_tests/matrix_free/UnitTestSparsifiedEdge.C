@@ -51,7 +51,10 @@ class SparsifiedEdgeFixture : public ::ConductionFixture
 protected:
   SparsifiedEdgeFixture()
     : ConductionFixture(nx, scale),
-      linsys(stk::mesh::get_updated_ngp_mesh(bulk), meta.universal_part(), gid_field_ngp),
+      linsys(
+        stk::mesh::get_updated_ngp_mesh(bulk),
+        meta.universal_part(),
+        gid_field_ngp),
       offsets(create_offset_map<order>(
         mesh, meta.universal_part(), linsys.stk_lid_to_tpetra_lid))
   {

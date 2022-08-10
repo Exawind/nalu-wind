@@ -49,9 +49,11 @@ ConductionGatheredFieldManager<p>::ConductionGatheredFieldManager(
   : bulk(bulk_in),
     meta(bulk_in.mesh_meta_data()),
     active(active_in),
-    conn(stk_connectivity_map<p>(stk::mesh::get_updated_ngp_mesh(bulk), active)),
+    conn(
+      stk_connectivity_map<p>(stk::mesh::get_updated_ngp_mesh(bulk), active)),
     dirichlet(dirichlet_in),
-    dirichlet_nodes(simd_node_map(stk::mesh::get_updated_ngp_mesh(bulk), dirichlet)),
+    dirichlet_nodes(
+      simd_node_map(stk::mesh::get_updated_ngp_mesh(bulk), dirichlet)),
     flux(flux_in),
     flux_faces(face_node_map<p>(stk::mesh::get_updated_ngp_mesh(bulk), flux_in))
 {

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/TKEWallFuncAlg.h"
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
@@ -46,15 +45,15 @@ TKEWallFuncAlg<BcAlgTraits>::TKEWallFuncAlg(Realm& realm, stk::mesh::Part* part)
 
   faceData_.add_coordinates_field(
     get_field_ordinal(realm.meta_data(), realm.get_coordinates_name()),
-    BcAlgTraits::nDim_,
-    CURRENT_COORDINATES);
+    BcAlgTraits::nDim_, CURRENT_COORDINATES);
   faceData_.add_face_field(
     exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceData_.add_face_field(wallFricVel_, BcAlgTraits::numFaceIp_);
 }
 
-template<typename BcAlgTraits>
-void TKEWallFuncAlg<BcAlgTraits>::execute()
+template <typename BcAlgTraits>
+void
+TKEWallFuncAlg<BcAlgTraits>::execute()
 {
   using ElemSimdData = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
   const auto& meshInfo = realm_.mesh_info();
@@ -68,24 +67,24 @@ void TKEWallFuncAlg<BcAlgTraits>::execute()
   const unsigned wallFricVelID = wallFricVel_;
 
   auto ngpBcNodalTke = fieldMgr.template get_field<double>(bcNodalTke_);
-  const auto ngpTkeOps = nalu_ngp::simd_elem_nodal_field_updater(
-    ngpMesh, ngpBcNodalTke);
+  const auto ngpTkeOps =
+    nalu_ngp::simd_elem_nodal_field_updater(ngpMesh, ngpBcNodalTke);
 
-  const stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
-    & stk::mesh::selectUnion(partVec_);
+  const stk::mesh::Selector sel =
+    realm_.meta_data().locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
-  const std::string algName = "TKEWallFuncAlg_" + std::to_string(BcAlgTraits::topo_);
+  const std::string algName =
+    "TKEWallFuncAlg_" + std::to_string(BcAlgTraits::topo_);
   nalu_ngp::run_elem_algorithm(
     algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
-    KOKKOS_LAMBDA(ElemSimdData& edata) {
-
+    KOKKOS_LAMBDA(ElemSimdData & edata) {
       auto& scrViews = edata.simdScrView;
       const auto& v_areav = scrViews.get_scratch_view_2D(exposedAreaID);
       const auto& v_utau = scrViews.get_scratch_view_1D(wallFricVelID);
 
-      for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
+      for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
         DoubleType aMag = 0.0;
-        for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+        for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
           aMag += v_areav(ip, d) * v_areav(ip, d);
         }
         aMag = stk::math::sqrt(aMag);
@@ -101,5 +100,5 @@ void TKEWallFuncAlg<BcAlgTraits>::execute()
 
 INSTANTIATE_KERNEL_FACE(TKEWallFuncAlg)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

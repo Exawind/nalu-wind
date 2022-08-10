@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
@@ -19,50 +18,193 @@ namespace {
 namespace hex8_golds {
 namespace tke_ko {
 static constexpr double rhs[8] = {
-  -0.016368777801313281, -0.00740039033812396,
-  -0.011709654168113211, 0.051874097062954767,
-  -0.00740039033812396, -0.00417063108566584,
+  -0.016368777801313281,  -0.00740039033812396, -0.011709654168113211,
+  0.051874097062954767,   -0.00740039033812396, -0.00417063108566584,
   -0.0068417453675951607, 0.053763691195545707,
 };
 
 static constexpr double lhs[8][8] = {
-{0.0081843889006566403, 0, 0, 0, 0, 0, 0, 0, },
-  {0, 0.00370019516906198, 0, 0, 0, 0, 0, 0, },
-  {0, 0, 0.0041685949894791578, 0, 0, 0, 0, 0, },
-  {0, 0, 0, 0.0021018912401700412, 0, 0, 0, 0, },
-  {0, 0, 0, 0, 0.00370019516906198, 0, 0, 0, },
-  {0, 0, 0, 0, 0, 0.00208531554283292, 0, 0, },
-  {0, 0, 0, 0, 0, 0, 0.0027637516740426134, 0, },
-  {0, 0, 0, 0, 0, 0, 0, 0.0014536892633176806, },
+  {
+    0.0081843889006566403,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0.00370019516906198,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0.0041685949894791578,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0.0021018912401700412,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0.00370019516906198,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.00208531554283292,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.0027637516740426134,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.0014536892633176806,
+  },
 };
-} // tke_ko
+} // namespace tke_ko
 
 namespace sdr_ko {
 static constexpr double rhs[8] = {
- -0.035999999999999997, -0.021160269082529031,
- -0.021160269082529031, 0.029003272915464909,
- -0.021160269082529031, -0.012437694101250944,
- -0.021910289694610025, 0.053914090927629096,
+  -0.035999999999999997, -0.021160269082529031, -0.021160269082529031,
+  0.029003272915464909,  -0.021160269082529031, -0.012437694101250944,
+  -0.021910289694610025, 0.053914090927629096,
 };
 
 static constexpr double lhs[8][8] = {
-  {0.035999999999999997, 0, 0, 0, 0, 0, 0, 0, },
-  {0, 0.021160269082529031, 0, 0, 0, 0, 0, 0, },
-  {0, 0, 0.021160269082529031, 0, 0, 0, 0, 0, },
-  {0, 0, 0, 0.012437694101250944, 0, 0, 0, 0, },
-  {0, 0, 0, 0, 0.021160269082529031, 0, 0, 0, },
-  {0, 0, 0, 0, 0, 0.012437694101250944, 0, 0, },
-  {0, 0, 0, 0, 0, 0, 0.016507982338594577, 0, },
-  {0, 0, 0, 0, 0, 0, 0, 0.0087169431652403921,},
+  {
+    0.035999999999999997,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0.021160269082529031,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0.021160269082529031,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0.012437694101250944,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0.021160269082529031,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.012437694101250944,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.016507982338594577,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.0087169431652403921,
+  },
 };
-} // sdr_ko
-} // hex8_golds
-}
+} // namespace sdr_ko
+} // namespace hex8_golds
+} // namespace
 
 TEST_F(KOKernelHex8Mesh, NGP_tke_ko_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -78,7 +220,9 @@ TEST_F(KOKernelHex8Mesh, NGP_tke_ko_node)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -94,7 +238,8 @@ TEST_F(KOKernelHex8Mesh, NGP_tke_ko_node)
 TEST_F(KOKernelHex8Mesh, NGP_sdr_ko_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -110,7 +255,9 @@ TEST_F(KOKernelHex8Mesh, NGP_sdr_ko_node)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);

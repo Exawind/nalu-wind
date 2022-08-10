@@ -33,19 +33,18 @@ DynamicPressureOpenAlg<BcAlgTraits>::DynamicPressureOpenAlg(
   Realm& realm, stk::mesh::Part* part)
   : Algorithm(realm, part),
     faceData_(realm.meta_data()),
-    density_(get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1)),
-    velocity_(get_field_ordinal(realm.meta_data(), "velocity", stk::mesh::StateNP1)),
-    exposedAreaVec_(
-      get_field_ordinal(
-        realm.meta_data(), "exposed_area_vector", realm.meta_data().side_rank())),
+    density_(
+      get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1)),
+    velocity_(
+      get_field_ordinal(realm.meta_data(), "velocity", stk::mesh::StateNP1)),
+    exposedAreaVec_(get_field_ordinal(
+      realm.meta_data(), "exposed_area_vector", realm.meta_data().side_rank())),
     openMassFlowRate_(get_field_ordinal(
-                        realm_.meta_data(),
-                        "open_mass_flow_rate",
-                        realm_.meta_data().side_rank())),
+      realm_.meta_data(),
+      "open_mass_flow_rate",
+      realm_.meta_data().side_rank())),
     dynPress_(get_field_ordinal(
-                    realm_.meta_data(),
-                    "dynamic_pressure",
-                    realm_.meta_data().side_rank())),
+      realm_.meta_data(), "dynamic_pressure", realm_.meta_data().side_rank())),
     meFC_(MasterElementRepo::get_surface_master_element<BcAlgTraits>())
 {
   faceData_.add_cvfem_face_me(meFC_);
@@ -54,17 +53,19 @@ DynamicPressureOpenAlg<BcAlgTraits>::DynamicPressureOpenAlg(
     BcAlgTraits::nDim_, CURRENT_COORDINATES);
   faceData_.add_gathered_nodal_field(density_, 1);
   faceData_.add_gathered_nodal_field(velocity_, BcAlgTraits::nDim_);
-  faceData_.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  faceData_.add_face_field(
+    exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceData_.add_face_field(openMassFlowRate_, BcAlgTraits::numFaceIp_);
 
-  useShifted_ = realm.solutionOptions_->get_skew_symmetric("velocity")
-    || realm.realmUsesEdges_;
+  useShifted_ = realm.solutionOptions_->get_skew_symmetric("velocity") ||
+                realm.realmUsesEdges_;
   auto shp_fcn = useShifted_ ? FC_SHIFTED_SHAPE_FCN : FC_SHAPE_FCN;
   faceData_.add_master_element_call(shp_fcn, CURRENT_COORDINATES);
 }
 
 template <typename BcAlgTraits>
-void DynamicPressureOpenAlg<BcAlgTraits>::execute()
+void
+DynamicPressureOpenAlg<BcAlgTraits>::execute()
 {
   using ElemSimdData = nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
   const auto& meta = realm_.meta_data();
@@ -72,13 +73,14 @@ void DynamicPressureOpenAlg<BcAlgTraits>::execute()
   const auto& ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
 
-  auto dynPress=  fieldMgr.template get_field<double>(dynPress_);
+  auto dynPress = fieldMgr.template get_field<double>(dynPress_);
   auto dynPressOps = nalu_ngp::simd_elem_field_updater(ngpMesh, dynPress);
 
-  const stk::mesh::Selector sel = meta.locally_owned_part()
-    & stk::mesh::selectUnion(partVec_);
+  const stk::mesh::Selector sel =
+    meta.locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
-  const std::string algName = "DynamicPressureOpenAlg_" + std::to_string(BcAlgTraits::topo_);
+  const std::string algName =
+    "DynamicPressureOpenAlg_" + std::to_string(BcAlgTraits::topo_);
   const unsigned areavecID = exposedAreaVec_;
   const unsigned mdotID = openMassFlowRate_;
   const unsigned velID = velocity_;
@@ -86,31 +88,31 @@ void DynamicPressureOpenAlg<BcAlgTraits>::execute()
 
   nalu_ngp::run_elem_algorithm(
     algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
-    KOKKOS_LAMBDA(ElemSimdData& edata) {
+    KOKKOS_LAMBDA(ElemSimdData & edata) {
       auto& scrViews = edata.simdScrView;
       const auto& mdot = scrViews.get_scratch_view_1D(mdotID);
       const auto& area = scrViews.get_scratch_view_2D(areavecID);
       const auto& vel = scrViews.get_scratch_view_2D(velID);
 
       const auto meViews = scrViews.get_me_views(CURRENT_COORDINATES);
-      const auto& interp = useShifted
-        ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
+      const auto& interp =
+        useShifted ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
       for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
         DoubleType asq = 0.0;
-        for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+        for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
           const auto av = area(ip, d);
           asq += av * av;
         }
         DoubleType unIp = 0;
         for (int n = 0; n < BcAlgTraits::nodesPerFace_; ++n) {
           const auto r = interp(ip, n);
-          for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+          for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
             unIp += r * area(ip, d) * vel(n, d);
           }
         }
         unIp /= stk::math::sqrt(asq);
-        dynPressOps(edata, ip) = stk::math::if_then_else(mdot(ip) < 0,
-           0.5*stk::math::abs(mdot(ip)*unIp), 0);
+        dynPressOps(edata, ip) = stk::math::if_then_else(
+          mdot(ip) < 0, 0.5 * stk::math::abs(mdot(ip) * unIp), 0);
       }
     });
   dynPress.modify_on_device();
@@ -118,5 +120,5 @@ void DynamicPressureOpenAlg<BcAlgTraits>::execute()
 
 INSTANTIATE_KERNEL_FACE(DynamicPressureOpenAlg)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

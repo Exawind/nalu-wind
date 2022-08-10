@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "edge_kernels/MomentumABLWallFuncEdgeKernel.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
@@ -23,28 +22,32 @@
 namespace sierra {
 namespace nalu {
 
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 MomentumABLWallFuncEdgeKernel<BcAlgTraits>::MomentumABLWallFuncEdgeKernel(
   stk::mesh::MetaData& meta,
   const double& gravity,
   const double& z0,
   const double& Tref,
   const double& kappa,
-  ElemDataRequests& faceDataPreReqs
-) : NGPKernel<MomentumABLWallFuncEdgeKernel<BcAlgTraits>>(),
+  ElemDataRequests& faceDataPreReqs)
+  : NGPKernel<MomentumABLWallFuncEdgeKernel<BcAlgTraits>>(),
     velocityNp1_(get_field_ordinal(meta, "velocity", stk::mesh::StateNP1)),
     bcVelocity_(get_field_ordinal(meta, "wall_velocity_bc")),
     density_(get_field_ordinal(meta, "density")),
     bcHeatFlux_(get_field_ordinal(meta, "heat_flux_bc")),
     specificHeat_(get_field_ordinal(meta, "specific_heat")),
-    exposedAreaVec_(get_field_ordinal(meta, "exposed_area_vector", meta.side_rank())),
-    wallFricVel_(get_field_ordinal(meta, "wall_friction_velocity_bip", meta.side_rank())),
-    wallNormDist_(get_field_ordinal(meta, "wall_normal_distance_bip", meta.side_rank())),
+    exposedAreaVec_(
+      get_field_ordinal(meta, "exposed_area_vector", meta.side_rank())),
+    wallFricVel_(
+      get_field_ordinal(meta, "wall_friction_velocity_bip", meta.side_rank())),
+    wallNormDist_(
+      get_field_ordinal(meta, "wall_normal_distance_bip", meta.side_rank())),
     gravity_(gravity),
     z0_(z0),
     Tref_(Tref),
     kappa_(kappa),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<BcAlgTraits>())
+    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
+          BcAlgTraits>())
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);
 
@@ -53,12 +56,13 @@ MomentumABLWallFuncEdgeKernel<BcAlgTraits>::MomentumABLWallFuncEdgeKernel(
   faceDataPreReqs.add_gathered_nodal_field(density_, 1);
   faceDataPreReqs.add_gathered_nodal_field(bcHeatFlux_, 1);
   faceDataPreReqs.add_gathered_nodal_field(specificHeat_, 1);
-  faceDataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  faceDataPreReqs.add_face_field(
+    exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceDataPreReqs.add_face_field(wallFricVel_, BcAlgTraits::numFaceIp_);
   faceDataPreReqs.add_face_field(wallNormDist_, BcAlgTraits::numFaceIp_);
 }
 
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 void
 MomentumABLWallFuncEdgeKernel<BcAlgTraits>::execute(
   SharedMemView<DoubleType**, DeviceShmem>& lhs,
@@ -88,24 +92,25 @@ MomentumABLWallFuncEdgeKernel<BcAlgTraits>::execute(
     const int nodeR = ipNodeMap[ip];
 
     DoubleType amag = 0.0;
-    for (int d=0; d < BcAlgTraits::nDim_; ++d)
+    for (int d = 0; d < BcAlgTraits::nDim_; ++d)
       amag += v_areavec(ip, d) * v_areavec(ip, d);
     amag = stk::math::sqrt(amag);
 
     // unit normal
-    for (int d=0; d < BcAlgTraits::nDim_; ++d)
+    for (int d = 0; d < BcAlgTraits::nDim_; ++d)
       nx[d] = v_areavec(ip, d) / amag;
 
     const DoubleType zh = v_wallnormdist(ip);
     const DoubleType ustar = v_wallfricvel(ip);
 
-    const DoubleType heatflux =v_bcHeatFlux(nodeR);
+    const DoubleType heatflux = v_bcHeatFlux(nodeR);
     const DoubleType rho = v_density(nodeR);
     const DoubleType Cp = v_specificHeat(nodeR);
     const DoubleType Tflux = heatflux / (rho * Cp);
 
     const DoubleType Lfac = stk::math::if_then_else(
-      (stk::math::abs(Tflux) < eps), Lmax, (-Tref_ / (kappa_ * gravity_ * Tflux)));
+      (stk::math::abs(Tflux) < eps), Lmax,
+      (-Tref_ / (kappa_ * gravity_ * Tflux)));
 
     DoubleType moLen = ustar * ustar * ustar * Lfac;
     const DoubleType sign = stk::math::if_then_else((Tflux < 0.0), 1.0, -1.0);
@@ -113,20 +118,21 @@ MomentumABLWallFuncEdgeKernel<BcAlgTraits>::execute(
 
     const DoubleType zeta = (zh / moLen);
     const DoubleType psim = stk::math::if_then_else(
-      (Tflux < -eps), mo::psim_stable(zeta, beta_m_),     // Stable stratification
+      (Tflux < -eps), mo::psim_stable(zeta, beta_m_), // Stable stratification
       stk::math::if_then_else(
-        (Tflux > eps), mo::psim_unstable(zeta, gamma_m_), // Unstable stratification
-        0.0));                                            // Neutral conditions
+        (Tflux > eps),
+        mo::psim_unstable(zeta, gamma_m_), // Unstable stratification
+        0.0));                             // Neutral conditions
 
     const DoubleType lambda =
       (rho * kappa_ * ustar / (stk::math::log(zh / z0_) - psim)) * amag;
 
-    for (int i=0; i < BcAlgTraits::nDim_; ++i) {
+    for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
       const int rowR = nodeR * BcAlgTraits::nDim_ + i;
       DoubleType uiTan = 0.0;
       DoubleType uiBcTan = 0.0;
 
-      for (int j=0; j < BcAlgTraits::nDim_; ++j) {
+      for (int j = 0; j < BcAlgTraits::nDim_; ++j) {
         DoubleType ninj = nx[i] * nx[j];
         if (i == j) {
           const DoubleType om_ninj = 1.0 - ninj;
@@ -149,5 +155,5 @@ MomentumABLWallFuncEdgeKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE(MomentumABLWallFuncEdgeKernel)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

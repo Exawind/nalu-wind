@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "edge_kernels/WallDistEdgeSolverAlg.h"
 #include "utils/StkHelpers.h"
 #include "stk_mesh/base/Types.hpp"
@@ -16,15 +15,14 @@ namespace sierra {
 namespace nalu {
 
 WallDistEdgeSolverAlg::WallDistEdgeSolverAlg(
-  Realm& realm,
-  stk::mesh::Part* part,
-  EquationSystem* eqSystem)
+  Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
   : AssembleEdgeSolverAlgorithm(realm, part, eqSystem)
 {
   auto& meta = realm_.meta_data();
 
   coordinates_ = get_field_ordinal(meta, realm.get_coordinates_name());
-  edgeAreaVec_ = get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
+  edgeAreaVec_ =
+    get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
 }
 
 void
@@ -39,16 +37,15 @@ WallDistEdgeSolverAlg::execute()
   run_algorithm(
     realm_.bulk_data(),
     KOKKOS_LAMBDA(
-      ShmemDataType& smdata,
-      const stk::mesh::FastMeshIndex& edge,
+      ShmemDataType & smdata, const stk::mesh::FastMeshIndex& edge,
       const stk::mesh::FastMeshIndex& nodeL,
-      const stk::mesh::FastMeshIndex& nodeR)
-    {
+      const stk::mesh::FastMeshIndex& nodeR) {
       double asq = 0.0;
       double axdx = 0.0;
-      for (int d=0; d<ndim; d++) {
+      for (int d = 0; d < ndim; d++) {
         const double axj = edgeAreaVec.get(edge, d);
-        const double dxj = coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
+        const double dxj =
+          coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         asq += axj * axj;
         axdx += axj * dxj;
       }
@@ -61,12 +58,12 @@ WallDistEdgeSolverAlg::execute()
       smdata.lhs(0, 1) = -lhsfac;
 
       // Right node
-      smdata.lhs(1,0) = -lhsfac;
-      smdata.lhs(1,1) = +lhsfac;
+      smdata.lhs(1, 0) = -lhsfac;
+      smdata.lhs(1, 1) = +lhsfac;
 
       // No RHS contributions
     });
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

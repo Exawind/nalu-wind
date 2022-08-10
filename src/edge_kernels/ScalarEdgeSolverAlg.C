@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "edge_kernels/ScalarEdgeSolverAlg.h"
 #include "EquationSystem.h"
 #include "PecletFunction.h"
@@ -27,23 +26,29 @@ ScalarEdgeSolverAlg::ScalarEdgeSolverAlg(
   ScalarFieldType* scalarQ,
   VectorFieldType* dqdx,
   ScalarFieldType* diffFluxCoeff,
-  const bool useAverages
-) : AssembleEdgeSolverAlgorithm(realm, part, eqSystem),
+  const bool useAverages)
+  : AssembleEdgeSolverAlgorithm(realm, part, eqSystem),
     dofName_(scalarQ->name())
 {
   const auto& meta = realm.meta_data();
 
   coordinates_ = get_field_ordinal(meta, realm.get_coordinates_name());
-  const std::string vrtmName = realm.does_mesh_move()? "velocity_rtm" : "velocity";
-  const std::string avgVrtmName = realm.does_mesh_move()? "average_velocity_rtm" : "average_velocity";
+  const std::string vrtmName =
+    realm.does_mesh_move() ? "velocity_rtm" : "velocity";
+  const std::string avgVrtmName =
+    realm.does_mesh_move() ? "average_velocity_rtm" : "average_velocity";
 
   scalarQ_ = scalarQ->mesh_meta_data_ordinal();
   dqdx_ = dqdx->mesh_meta_data_ordinal();
   diffFluxCoeff_ = diffFluxCoeff->mesh_meta_data_ordinal();
   density_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
-  edgeAreaVec_ = get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
-  massFlowRate_ = get_field_ordinal(meta, (useAverages) ? "average_mass_flow_rate" : "mass_flow_rate", stk::topology::EDGE_RANK);
-  velocityRTM_ = get_field_ordinal(meta, (useAverages) ? avgVrtmName : vrtmName);
+  edgeAreaVec_ =
+    get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
+  massFlowRate_ = get_field_ordinal(
+    meta, (useAverages) ? "average_mass_flow_rate" : "mass_flow_rate",
+    stk::topology::EDGE_RANK);
+  velocityRTM_ =
+    get_field_ordinal(meta, (useAverages) ? avgVrtmName : vrtmName);
   pecletFunction_ = eqSystem->ngp_create_peclet_function<double>(dofName_);
 }
 
@@ -56,7 +61,8 @@ ScalarEdgeSolverAlg::execute()
   const DblType alpha = realm_.get_alpha_factor(dofName_);
   const DblType alphaUpw = realm_.get_alpha_upw_factor(dofName_);
   const DblType hoUpwind = realm_.get_upw_factor(dofName_);
-  const DblType relaxFac = realm_.solutionOptions_->get_relaxation_factor(dofName_);
+  const DblType relaxFac =
+    realm_.solutionOptions_->get_relaxation_factor(dofName_);
   const bool useLimiter = realm_.primitive_uses_limiter(dofName_);
 
   const DblType om_alpha = 1.0 - alpha;
@@ -79,15 +85,13 @@ ScalarEdgeSolverAlg::execute()
   run_algorithm(
     realm_.bulk_data(),
     KOKKOS_LAMBDA(
-      ShmemDataType& smdata,
-      const stk::mesh::FastMeshIndex& edge,
+      ShmemDataType & smdata, const stk::mesh::FastMeshIndex& edge,
       const stk::mesh::FastMeshIndex& nodeL,
-      const stk::mesh::FastMeshIndex& nodeR)
-    {
+      const stk::mesh::FastMeshIndex& nodeR) {
       // Scratch work array for edgeAreaVector
       NALU_ALIGNED DblType av[NDimMax_];
       // Populate area vector work array
-      for (int d=0; d < ndim; ++d)
+      for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
 
       const DblType mdot = massFlowRate.get(edge, 0);
@@ -102,14 +106,16 @@ ScalarEdgeSolverAlg::execute()
       const DblType viscosityR = dflux.get(nodeR, 0);
 
       const DblType viscIp = 0.5 * (viscosityL + viscosityR);
-      const DblType diffIp = 0.5 * (viscosityL / densityL + viscosityR / densityR);
+      const DblType diffIp =
+        0.5 * (viscosityL / densityL + viscosityR / densityR);
 
       // Compute area vector related quantities and (U dot areaVec)
       DblType axdx = 0.0;
       DblType asq = 0.0;
       DblType udotx = 0.0;
-      for (int d=0; d < ndim; ++d) {
-        const DblType dxj = coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
+      for (int d = 0; d < ndim; ++d) {
+        const DblType dxj =
+          coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         asq += av[d] * av[d];
         axdx += av[d] * dxj;
         udotx += 0.5 * dxj * (vrtm.get(nodeR, d) + vrtm.get(nodeL, d));
@@ -121,13 +127,15 @@ ScalarEdgeSolverAlg::execute()
       DblType dqR = 0.0;
       DblType nonOrth = 0.0;
 
-      for (int d=0; d < ndim; ++d) {
-        const DblType dxj = (coordinates.get(nodeR, d) - coordinates.get(nodeL, d));
+      for (int d = 0; d < ndim; ++d) {
+        const DblType dxj =
+          (coordinates.get(nodeR, d) - coordinates.get(nodeL, d));
         dqL += 0.5 * dxj * dqdx.get(nodeL, d);
         dqR += 0.5 * dxj * dqdx.get(nodeR, d);
 
         const DblType kxj = av[d] - asq * inv_axdx * dxj;
-        nonOrth += -viscIp * kxj * 0.5 * (dqdx.get(nodeR, d) + dqdx.get(nodeL, d));
+        nonOrth +=
+          -viscIp * kxj * 0.5 * (dqdx.get(nodeR, d) + dqdx.get(nodeL, d));
       }
 
       const DblType pecnum = stk::math::abs(udotx) / (diffIp + eps);
@@ -164,9 +172,8 @@ ScalarEdgeSolverAlg::execute()
       const DblType qIp = 0.5 * (qNp1R + qNp1L); // 2nd order central term
 
       // Upwinded term
-      const DblType qUpw = (mdot > 0)
-        ? (alphaUpw * qIpL + om_alphaUpw * qIp)
-        : (alphaUpw * qIpR + om_alphaUpw * qIp);
+      const DblType qUpw = (mdot > 0) ? (alphaUpw * qIpL + om_alphaUpw * qIp)
+                                      : (alphaUpw * qIpR + om_alphaUpw * qIp);
 
       const DblType qHatL = (alpha * qIpL + om_alpha * qIp);
       const DblType qHatR = (alpha * qIpR + om_alpha * qIp);
@@ -177,14 +184,15 @@ ScalarEdgeSolverAlg::execute()
       smdata.rhs(1) += adv_flux;
 
       // Left node contribution; upwind terms
-      DblType alhsfac = 0.5 * (mdot + stk::math::abs(mdot))
-        * pecfac * alphaUpw + 0.5 * alpha * om_pecfac * mdot;
+      DblType alhsfac =
+        0.5 * (mdot + stk::math::abs(mdot)) * pecfac * alphaUpw +
+        0.5 * alpha * om_pecfac * mdot;
       smdata.lhs(0, 0) += alhsfac / relaxFac;
       smdata.lhs(1, 0) -= alhsfac;
 
       // Right node contribution; upwind terms
-      alhsfac = 0.5 * (mdot - stk::math::abs(mdot))
-        * pecfac * alphaUpw + 0.5 * alpha * om_pecfac * mdot;
+      alhsfac = 0.5 * (mdot - stk::math::abs(mdot)) * pecfac * alphaUpw +
+                0.5 * alpha * om_pecfac * mdot;
       smdata.lhs(1, 1) -= alhsfac / relaxFac;
       smdata.lhs(0, 1) += alhsfac;
 
@@ -197,5 +205,5 @@ ScalarEdgeSolverAlg::execute()
     });
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

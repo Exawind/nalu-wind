@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "edge_kernels/ContinuityEdgeSolverAlg.h"
 #include "utils/StkHelpers.h"
 #include "stk_mesh/base/NgpField.hpp"
@@ -17,10 +16,8 @@ namespace sierra {
 namespace nalu {
 
 ContinuityEdgeSolverAlg::ContinuityEdgeSolverAlg(
-  Realm& realm,
-  stk::mesh::Part* part,
-  EquationSystem* eqSystem
-) : AssembleEdgeSolverAlgorithm(realm, part, eqSystem)
+  Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
+  : AssembleEdgeSolverAlgorithm(realm, part, eqSystem)
 {
   const auto& meta = realm.meta_data();
 
@@ -43,8 +40,7 @@ ContinuityEdgeSolverAlg::execute()
 
   // Non-orthogonal correction factor for continuity equation system
   const std::string dofName = "pressure";
-  const DblType nocFac
-    = (realm_.get_noc_usage(dofName) == true) ? 1.0 : 0.0;
+  const DblType nocFac = (realm_.get_noc_usage(dofName) == true) ? 1.0 : 0.0;
 
   // Classic Nalu projection timescale
   const DblType dt = realm_.get_time_step();
@@ -64,27 +60,26 @@ ContinuityEdgeSolverAlg::execute()
   const auto pressure = fieldMgr.get_field<double>(pressure_);
   const auto udiag = fieldMgr.get_field<double>(Udiag_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
-  
+
   stk::mesh::NgpField<double> edgeFaceVelMag;
   bool needs_gcl = false;
   if (realm_.has_mesh_deformation()) {
     needs_gcl = true;
-    edgeFaceVelMag_ = get_field_ordinal(realm_.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK);
+    edgeFaceVelMag_ = get_field_ordinal(
+      realm_.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK);
     edgeFaceVelMag = fieldMgr.get_field<double>(edgeFaceVelMag_);
   }
 
   run_algorithm(
     realm_.bulk_data(),
     KOKKOS_LAMBDA(
-      ShmemDataType& smdata,
-      const stk::mesh::FastMeshIndex& edge,
+      ShmemDataType & smdata, const stk::mesh::FastMeshIndex& edge,
       const stk::mesh::FastMeshIndex& nodeL,
-      const stk::mesh::FastMeshIndex& nodeR)
-    {
+      const stk::mesh::FastMeshIndex& nodeR) {
       // Scratch work array for edgeAreaVector
       NALU_ALIGNED DblType av[NDimMax_];
       // Populate area vector work array
-      for (int d=0; d < ndim; ++d)
+      for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
 
       const DblType pressureL = pressure.get(nodeL, 0);
@@ -96,13 +91,14 @@ ContinuityEdgeSolverAlg::execute()
       const DblType udiagL = udiag.get(nodeL, 0);
       const DblType udiagR = udiag.get(nodeR, 0);
 
-      const DblType projTimeScale = 0.5 * (1.0/udiagL + 1.0/udiagR);
+      const DblType projTimeScale = 0.5 * (1.0 / udiagL + 1.0 / udiagR);
       const DblType rhoIp = 0.5 * (densityL + densityR);
 
       DblType axdx = 0.0;
       DblType asq = 0.0;
-      for (int d=0; d < ndim; ++d) {
-        const DblType dxj = coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
+      for (int d = 0; d < ndim; ++d) {
+        const DblType dxj =
+          coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         asq += av[d] * av[d];
         axdx += av[d] * dxj;
       }
@@ -110,7 +106,7 @@ ContinuityEdgeSolverAlg::execute()
 
       DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx;
       if (needs_gcl) {
-        tmdot -= rhoIp * edgeFaceVelMag.get(edge,0);
+        tmdot -= rhoIp * edgeFaceVelMag.get(edge, 0);
       }
 
       for (int d = 0; d < ndim; ++d) {
@@ -120,12 +116,14 @@ ContinuityEdgeSolverAlg::execute()
         const DblType kxj = av[d] - asq * inv_axdx * dxj;
         const DblType rhoUjIp = 0.5 * (densityR * velocity.get(nodeR, d) +
                                        densityL * velocity.get(nodeL, d));
-        const DblType ujIp = 0.5 * (velocity.get(nodeR, d) + velocity.get(nodeL, d));
-        const DblType GjIp = 0.5 * (Gpdx.get(nodeR, d) / udiagR +
-                                    Gpdx.get(nodeL, d) / udiagL);
-        tmdot += (interpTogether * rhoUjIp +
-                  om_interpTogether * rhoIp * ujIp + GjIp) * av[d]
-          - kxj * GjIp * nocFac;
+        const DblType ujIp =
+          0.5 * (velocity.get(nodeR, d) + velocity.get(nodeL, d));
+        const DblType GjIp =
+          0.5 * (Gpdx.get(nodeR, d) / udiagR + Gpdx.get(nodeL, d) / udiagL);
+        tmdot +=
+          (interpTogether * rhoUjIp + om_interpTogether * rhoIp * ujIp + GjIp) *
+            av[d] -
+          kxj * GjIp * nocFac;
       }
       tmdot /= tauScale;
       const DblType lhsfac = -asq * inv_axdx * projTimeScale / tauScale;
@@ -142,5 +140,5 @@ ContinuityEdgeSolverAlg::execute()
     });
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

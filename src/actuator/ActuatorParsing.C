@@ -209,10 +209,9 @@ epsilon_parsing(int iTurb, const YAML::Node& turbNode, ActuatorMeta& actMeta)
   } else if (epsilon_chord) {
     // require epsilon chord and epsilon min
     get_required(turbNode, "epsilon_chord", epsilonTemp);
-      if (
-        epsilonTemp[0] == epsilonTemp[1] && epsilonTemp[1] == epsilonTemp[2]) {
-        actMeta.isotropicGaussian_ = true;
-      }
+    if (epsilonTemp[0] == epsilonTemp[1] && epsilonTemp[1] == epsilonTemp[2]) {
+      actMeta.isotropicGaussian_ = true;
+    }
     for (int j = 0; j < 3; j++) {
       if (epsilonTemp[j] <= 0.0) {
         throw std::runtime_error(
@@ -225,10 +224,10 @@ epsilon_parsing(int iTurb, const YAML::Node& turbNode, ActuatorMeta& actMeta)
     // Minimum epsilon allowed in simulation. This is required when
     //   specifying epsilon/chord
     get_required(turbNode, "epsilon_min", epsilonTemp);
-      if (
-        !(actMeta.isotropicGaussian_ && epsilonTemp[0] == epsilonTemp[1] && epsilonTemp[1] == epsilonTemp[2])) {
-        actMeta.isotropicGaussian_ = false;
-      }
+    if (!(actMeta.isotropicGaussian_ && epsilonTemp[0] == epsilonTemp[1] &&
+          epsilonTemp[1] == epsilonTemp[2])) {
+      actMeta.isotropicGaussian_ = false;
+    }
     for (int j = 0; j < 3; j++) {
       actMeta.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
     }

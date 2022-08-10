@@ -42,7 +42,7 @@ test_wo_lines(
     try {
       auto y_node = create_yaml_node(localCopy);
       try {
-	EXPECT_THROW(actuator_Simple_parse(y_node, actMeta), std::runtime_error)
+        EXPECT_THROW(actuator_Simple_parse(y_node, actMeta), std::runtime_error)
           << " when missing: " << testFile[i];
       } catch (
         std::exception const& err) { // yaml or some other error sliped through
@@ -80,7 +80,6 @@ private:
     inputFileLines_.push_back("    aoa_table: [-180, 0, 180]\n");
     inputFileLines_.push_back("    cl_table:  [-10,  0, 10]\n");
     inputFileLines_.push_back("    cd_table:  [0]\n");
-
   }
 };
 
@@ -88,48 +87,46 @@ TEST_F(ActuatorParsingSimpleTests, NGP_minimumRequired)
 {
   ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineSimpleNGP"]);
   try {
-    auto y_node        = create_yaml_node(inputFileLines_);
+    auto y_node = create_yaml_node(inputFileLines_);
     auto actMetaSimple = actuator_Simple_parse(y_node, actMeta);
-    EXPECT_EQ(10,           actMetaSimple.num_force_pts_blade_.h_view(0));
+    EXPECT_EQ(10, actMetaSimple.num_force_pts_blade_.h_view(0));
     // Check epsilon
     EXPECT_DOUBLE_EQ(3.0, actMetaSimple.epsilon_.h_view(0, 0));
     EXPECT_DOUBLE_EQ(3.0, actMetaSimple.epsilon_.h_view(0, 1));
     EXPECT_DOUBLE_EQ(3.0, actMetaSimple.epsilon_.h_view(0, 2));
     // Check p1_ and p2_ values
     EXPECT_DOUBLE_EQ(-25.0, actMetaSimple.p1_.h_view(0, 0));
-    EXPECT_DOUBLE_EQ(-4.0,  actMetaSimple.p1_.h_view(0, 1));
-    EXPECT_DOUBLE_EQ(0.0,   actMetaSimple.p1_.h_view(0, 2));
+    EXPECT_DOUBLE_EQ(-4.0, actMetaSimple.p1_.h_view(0, 1));
+    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.p1_.h_view(0, 2));
     EXPECT_DOUBLE_EQ(-25.0, actMetaSimple.p2_.h_view(0, 0));
-    EXPECT_DOUBLE_EQ(+4.0,  actMetaSimple.p2_.h_view(0, 1));
-    EXPECT_DOUBLE_EQ(0.0,   actMetaSimple.p2_.h_view(0, 2));
+    EXPECT_DOUBLE_EQ(+4.0, actMetaSimple.p2_.h_view(0, 1));
+    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.p2_.h_view(0, 2));
     // Check p1ZeroAlphaDir_
-    EXPECT_DOUBLE_EQ(1.0,   actMetaSimple.p1ZeroAlphaDir_.h_view(0, 0));
-    EXPECT_DOUBLE_EQ(0.0,   actMetaSimple.p1ZeroAlphaDir_.h_view(0, 1));
-    EXPECT_DOUBLE_EQ(0.0,   actMetaSimple.p1ZeroAlphaDir_.h_view(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, actMetaSimple.p1ZeroAlphaDir_.h_view(0, 0));
+    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.p1ZeroAlphaDir_.h_view(0, 1));
+    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.p1ZeroAlphaDir_.h_view(0, 2));
 
     // Check the chord/twist tables (DV)
-    for (int i=0; i<actMetaSimple.num_force_pts_blade_.h_view(0); i++) {
-      EXPECT_DOUBLE_EQ(1.0,   actMetaSimple.chord_tableDv_.h_view(0, i));
-      EXPECT_DOUBLE_EQ(0.0,   actMetaSimple.twistTableDv_.h_view(0, i));
+    for (int i = 0; i < actMetaSimple.num_force_pts_blade_.h_view(0); i++) {
+      EXPECT_DOUBLE_EQ(1.0, actMetaSimple.chord_tableDv_.h_view(0, i));
+      EXPECT_DOUBLE_EQ(0.0, actMetaSimple.twistTableDv_.h_view(0, i));
     }
     // Check the polar tables
-    for (int i=0; i<3; i++) {
-      EXPECT_DOUBLE_EQ(0.0, actMetaSimple.cdPolarTableDv_.h_view(0,i));
+    for (int i = 0; i < 3; i++) {
+      EXPECT_DOUBLE_EQ(0.0, actMetaSimple.cdPolarTableDv_.h_view(0, i));
     }
-    EXPECT_DOUBLE_EQ(-10.0, actMetaSimple.clPolarTableDv_.h_view(0,0));
-    EXPECT_DOUBLE_EQ(  0.0, actMetaSimple.clPolarTableDv_.h_view(0,1));
-    EXPECT_DOUBLE_EQ( 10.0, actMetaSimple.clPolarTableDv_.h_view(0,2));
-    EXPECT_DOUBLE_EQ(-180.0, actMetaSimple.aoaPolarTableDv_.h_view(0,0));
-    EXPECT_DOUBLE_EQ(   0.0, actMetaSimple.aoaPolarTableDv_.h_view(0,1));
-    EXPECT_DOUBLE_EQ( 180.0, actMetaSimple.aoaPolarTableDv_.h_view(0,2));
+    EXPECT_DOUBLE_EQ(-10.0, actMetaSimple.clPolarTableDv_.h_view(0, 0));
+    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.clPolarTableDv_.h_view(0, 1));
+    EXPECT_DOUBLE_EQ(10.0, actMetaSimple.clPolarTableDv_.h_view(0, 2));
+    EXPECT_DOUBLE_EQ(-180.0, actMetaSimple.aoaPolarTableDv_.h_view(0, 0));
+    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.aoaPolarTableDv_.h_view(0, 1));
+    EXPECT_DOUBLE_EQ(180.0, actMetaSimple.aoaPolarTableDv_.h_view(0, 2));
 
-
-  }catch (std::exception const& err) {
+  } catch (std::exception const& err) {
     FAIL() << err.what();
   }
   test_wo_lines(inputFileLines_, actMeta);
 }
-
 
 TEST_F(ActuatorParsingSimpleTests, NGP_oneValueEpsilonParses)
 {

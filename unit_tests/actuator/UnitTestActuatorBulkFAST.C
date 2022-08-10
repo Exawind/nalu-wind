@@ -42,7 +42,6 @@ protected:
   }
 };
 
-
 TEST_F(ActuatorBulkFastTests, NGP_initializeActuatorBulk)
 {
   std::vector<std::string> modInputs(fastParseParams_);
@@ -63,8 +62,7 @@ TEST_F(ActuatorBulkFastTests, NGP_initializeActuatorBulk)
   ASSERT_EQ(fi.dtFAST, 0.005);
   ASSERT_EQ(fi.tMax, 0.29);
 
-  ASSERT_EQ(
-    fi.globTurbineData[0].FASTInputFileName, "nrel5mw.fst");
+  ASSERT_EQ(fi.globTurbineData[0].FASTInputFileName, "nrel5mw.fst");
   ASSERT_EQ(fi.globTurbineData[0].FASTRestartFileName, "blah");
   ASSERT_EQ(fi.globTurbineData[0].TurbID, 0);
   ASSERT_EQ(fi.globTurbineData[0].numForcePtsBlade, 10);
@@ -82,14 +80,14 @@ TEST_F(ActuatorBulkFastTests, NGP_initializeActuatorBulk)
   }
 }
 
-
 TEST_F(ActuatorBulkFastTests, NGP_epsilonTowerAndAnisotropicEpsilon)
 {
 
-  auto epsLoc = std::find_if(fastParseParams_.begin(), fastParseParams_.end(),
-    [](std::string val){return val.find("epsilon:")!=std::string::npos;});
+  auto epsLoc = std::find_if(
+    fastParseParams_.begin(), fastParseParams_.end(),
+    [](std::string val) { return val.find("epsilon:") != std::string::npos; });
 
-  *epsLoc  = "    epsilon: [1.0, 0.5, 2.0]\n";
+  *epsLoc = "    epsilon: [1.0, 0.5, 2.0]\n";
   fastParseParams_.push_back("    epsilon_tower: [5.0, 5.0, 5.0]\n");
 
   const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
@@ -100,16 +98,16 @@ TEST_F(ActuatorBulkFastTests, NGP_epsilonTowerAndAnisotropicEpsilon)
     auto orient = actBulk.orientationTensor_.view_host();
 
     // check blades
-    for(int i=1; i<31; i++){
-      EXPECT_DOUBLE_EQ(1.0, epsilon(i,0));
-      EXPECT_DOUBLE_EQ(0.5, epsilon(i,1));
-      EXPECT_DOUBLE_EQ(2.0, epsilon(i,2));
+    for (int i = 1; i < 31; i++) {
+      EXPECT_DOUBLE_EQ(1.0, epsilon(i, 0));
+      EXPECT_DOUBLE_EQ(0.5, epsilon(i, 1));
+      EXPECT_DOUBLE_EQ(2.0, epsilon(i, 2));
     }
 
     // check tower
-    for(int i=31; i<41; i++){
-      for(int j=1; j<3; j++){
-        EXPECT_DOUBLE_EQ(5.0, epsilon(i,j));
+    for (int i = 31; i < 41; i++) {
+      for (int j = 1; j < 3; j++) {
+        EXPECT_DOUBLE_EQ(5.0, epsilon(i, j));
       }
     }
 
@@ -121,7 +119,7 @@ TEST_F(ActuatorBulkFastTests, NGP_epsilonTowerAndAnisotropicEpsilon)
   }
 }
 
-}
+} // namespace
 
-}
-}
+} // namespace nalu
+} // namespace sierra

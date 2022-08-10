@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "overset/UpdateOversetFringeAlgorithmDriver.h"
 #include "Realm.h"
 #include "NaluEnv.h"
@@ -22,10 +21,10 @@ namespace nalu {
 UpdateOversetFringeAlgorithmDriver::UpdateOversetFringeAlgorithmDriver(
   Realm& realm)
   : AlgorithmDriver(realm)
-{}
+{
+}
 
-UpdateOversetFringeAlgorithmDriver::~UpdateOversetFringeAlgorithmDriver()
-{}
+UpdateOversetFringeAlgorithmDriver::~UpdateOversetFringeAlgorithmDriver() {}
 
 void
 UpdateOversetFringeAlgorithmDriver::register_overset_field_update(
@@ -34,19 +33,20 @@ UpdateOversetFringeAlgorithmDriver::register_overset_field_update(
   fields_.emplace_back(field, nrows, ncols);
 }
 
-void UpdateOversetFringeAlgorithmDriver::execute()
+void
+UpdateOversetFringeAlgorithmDriver::execute()
 {
-  if (realm_.isExternalOverset_) return;
+  if (realm_.isExternalOverset_)
+    return;
 
   const double timeA = NaluEnv::self().nalu_time();
   auto* oversetManager = realm_.oversetManager_;
   if (oversetManager->oversetGhosting_ != nullptr) {
 #ifndef KOKKOS_ENABLE_CUDA
     std::vector<const stk::mesh::FieldBase*> fVec(fields_.size());
-    for (size_t i=0; i < fields_.size(); ++i)
+    for (size_t i = 0; i < fields_.size(); ++i)
       fVec[i] = fields_[i].field_;
-    stk::mesh::communicate_field_data(
-      *oversetManager->oversetGhosting_, fVec);
+    stk::mesh::communicate_field_data(*oversetManager->oversetGhosting_, fVec);
 #else
     throw std::runtime_error("Overset ghosting not supported for GPU builds");
 #endif
@@ -57,5 +57,5 @@ void UpdateOversetFringeAlgorithmDriver::execute()
   oversetManager->timerFieldUpdate_ += (timeB - timeA);
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

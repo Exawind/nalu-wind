@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
@@ -18,31 +17,175 @@ namespace {
 namespace hex8_golds {
 namespace wall_dist_default {
 static constexpr double lhs[8][8] = {
-  { 0.421875, -0.046875, -0.078125, -0.046875, -0.046875, -0.078125, -0.046875, -0.078125, },
-  {-0.046875,  0.421875, -0.046875, -0.078125, -0.078125, -0.046875, -0.078125, -0.046875, },
-  {-0.078125, -0.046875,  0.421875, -0.046875, -0.046875, -0.078125, -0.046875, -0.078125, },
-  {-0.046875, -0.078125, -0.046875,  0.421875, -0.078125, -0.046875, -0.078125, -0.046875, },
-  {-0.046875, -0.078125, -0.046875, -0.078125,  0.421875, -0.046875, -0.078125, -0.046875, },
-  {-0.078125, -0.046875, -0.078125, -0.046875, -0.046875,  0.421875, -0.046875, -0.078125, },
-  {-0.046875, -0.078125, -0.046875, -0.078125, -0.078125, -0.046875,  0.421875, -0.046875, },
-  {-0.078125, -0.046875, -0.078125, -0.046875, -0.046875, -0.078125, -0.046875,  0.421875, },
+  {
+    0.421875,
+    -0.046875,
+    -0.078125,
+    -0.046875,
+    -0.046875,
+    -0.078125,
+    -0.046875,
+    -0.078125,
+  },
+  {
+    -0.046875,
+    0.421875,
+    -0.046875,
+    -0.078125,
+    -0.078125,
+    -0.046875,
+    -0.078125,
+    -0.046875,
+  },
+  {
+    -0.078125,
+    -0.046875,
+    0.421875,
+    -0.046875,
+    -0.046875,
+    -0.078125,
+    -0.046875,
+    -0.078125,
+  },
+  {
+    -0.046875,
+    -0.078125,
+    -0.046875,
+    0.421875,
+    -0.078125,
+    -0.046875,
+    -0.078125,
+    -0.046875,
+  },
+  {
+    -0.046875,
+    -0.078125,
+    -0.046875,
+    -0.078125,
+    0.421875,
+    -0.046875,
+    -0.078125,
+    -0.046875,
+  },
+  {
+    -0.078125,
+    -0.046875,
+    -0.078125,
+    -0.046875,
+    -0.046875,
+    0.421875,
+    -0.046875,
+    -0.078125,
+  },
+  {
+    -0.046875,
+    -0.078125,
+    -0.046875,
+    -0.078125,
+    -0.078125,
+    -0.046875,
+    0.421875,
+    -0.046875,
+  },
+  {
+    -0.078125,
+    -0.046875,
+    -0.078125,
+    -0.046875,
+    -0.046875,
+    -0.078125,
+    -0.046875,
+    0.421875,
+  },
 };
-} // wall_dist_default
+} // namespace wall_dist_default
 
 namespace wall_dist_lumped {
 static constexpr double lhs[8][8] = {
-  {0.75, -0.25, 0, -0.25, -0.25, 0, 0, 0, },
-  {-0.25, 0.75, -0.25, 0, 0, -0.25, 0, 0, },
-  {0, -0.25, 0.75, -0.25, 0, 0, -0.25, 0, },
-  {-0.25, 0, -0.25, 0.75, 0, 0, 0, -0.25, },
-  {-0.25, 0, 0, 0, 0.75, -0.25, 0, -0.25, },
-  {0, -0.25, 0, 0, -0.25, 0.75, -0.25, 0, },
-  {0, 0, -0.25, 0, 0, -0.25, 0.75, -0.25, },
-  {0, 0, 0, -0.25, -0.25, 0, -0.25, 0.75, },
+  {
+    0.75,
+    -0.25,
+    0,
+    -0.25,
+    -0.25,
+    0,
+    0,
+    0,
+  },
+  {
+    -0.25,
+    0.75,
+    -0.25,
+    0,
+    0,
+    -0.25,
+    0,
+    0,
+  },
+  {
+    0,
+    -0.25,
+    0.75,
+    -0.25,
+    0,
+    0,
+    -0.25,
+    0,
+  },
+  {
+    -0.25,
+    0,
+    -0.25,
+    0.75,
+    0,
+    0,
+    0,
+    -0.25,
+  },
+  {
+    -0.25,
+    0,
+    0,
+    0,
+    0.75,
+    -0.25,
+    0,
+    -0.25,
+  },
+  {
+    0,
+    -0.25,
+    0,
+    0,
+    -0.25,
+    0.75,
+    -0.25,
+    0,
+  },
+  {
+    0,
+    0,
+    -0.25,
+    0,
+    0,
+    -0.25,
+    0.75,
+    -0.25,
+  },
+  {
+    0,
+    0,
+    0,
+    -0.25,
+    -0.25,
+    0,
+    -0.25,
+    0.75,
+  },
 };
 }
-} // hex8_golds
-} // anonymous
+} // namespace hex8_golds
+} // namespace
 
 TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist)
 {
@@ -52,12 +195,14 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist)
   solnOpts_.meshMotion_ = false;
   solnOpts_.externalMeshDeformation_ = false;
 
-  unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+  unit_test_utils::HelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   // Initialize the kernel
   std::unique_ptr<sierra::nalu::Kernel> wallKernel(
     new sierra::nalu::WallDistElemKernel<sierra::nalu::AlgTraitsHex8>(
-      *bulk_, solnOpts_, helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
+      *bulk_, solnOpts_,
+      helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 
   // Add to kernels to be tested
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(wallKernel.get());
@@ -71,7 +216,8 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist)
 
   namespace gold_values = hex8_golds::wall_dist_default;
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, 0.125);
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->lhs_, gold_values::lhs);
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->lhs_, gold_values::lhs);
 }
 
 TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist_shifted)
@@ -83,12 +229,14 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist_shifted)
   solnOpts_.externalMeshDeformation_ = false;
   solnOpts_.shiftedGradOpMap_["ndtw"] = true;
 
-  unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+  unit_test_utils::HelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   // Initialize the kernel
   std::unique_ptr<sierra::nalu::Kernel> wallKernel(
     new sierra::nalu::WallDistElemKernel<sierra::nalu::AlgTraitsHex8>(
-      *bulk_, solnOpts_, helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
+      *bulk_, solnOpts_,
+      helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 
   // Add to kernels to be tested
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(wallKernel.get());
@@ -102,5 +250,6 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist_shifted)
 
   namespace gold_values = hex8_golds::wall_dist_lumped;
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, 0.125);
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->lhs_, gold_values::lhs);
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->lhs_, gold_values::lhs);
 }

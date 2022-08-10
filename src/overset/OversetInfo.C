@@ -7,15 +7,14 @@
 // for more details.
 //
 
-
 #include <overset/OversetInfo.h>
 #include <master_element/MasterElement.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -25,9 +24,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-OversetInfo::OversetInfo(
-  stk::mesh::Entity node,
-  const int nDim)
+OversetInfo::OversetInfo(stk::mesh::Entity node, const int nDim)
   : orphanNode_(node),
     owningElement_(),
     bestX_(1.0e16),

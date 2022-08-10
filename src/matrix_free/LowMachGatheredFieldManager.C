@@ -66,9 +66,12 @@ LowMachGatheredFieldManager<p>::LowMachGatheredFieldManager(
     meta(bulk_in.mesh_meta_data()),
     active(active_in),
     dirichlet(dirichlet_in),
-    conn(stk_connectivity_map<p>(stk::mesh::get_updated_ngp_mesh(bulk), active)),
-    exposed_faces(face_node_map<p>(stk::mesh::get_updated_ngp_mesh(bulk), dirichlet)),
-    dirichlet_nodes(simd_node_map(stk::mesh::get_updated_ngp_mesh(bulk), dirichlet)),
+    conn(
+      stk_connectivity_map<p>(stk::mesh::get_updated_ngp_mesh(bulk), active)),
+    exposed_faces(
+      face_node_map<p>(stk::mesh::get_updated_ngp_mesh(bulk), dirichlet)),
+    dirichlet_nodes(
+      simd_node_map(stk::mesh::get_updated_ngp_mesh(bulk), dirichlet)),
     filter_scale("scaled_filter_length", conn.extent(0))
 {
 }

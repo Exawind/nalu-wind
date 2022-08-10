@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
@@ -26,16 +25,88 @@ static constexpr double rhs[8] = {
 };
 
 static constexpr double lhs[8][8] = {
-  {0.0225, 0, 0, 0, 0, 0, 0, 0, },
-  {0, 0.0225, 0, 0, 0, 0, 0, 0, },
-  {0, 0, 0.0225, 0, 0, 0, 0, 0, },
-  {0, 0, 0, 0.0225, 0, 0, 0, 0, },
-  {0, 0, 0, 0, 0.0225, 0, 0, 0, },
-  {0, 0, 0, 0, 0, 0.0225, 0, 0, },
-  {0, 0, 0, 0, 0, 0, 0.02986322059335908, 0, },
-  {0, 0, 0, 0, 0, 0, 0, 0.026827992474152702, },
+  {
+    0.0225,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0.0225,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0.0225,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0.0225,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0.0225,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.0225,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.02986322059335908,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.026827992474152702,
+  },
 };
-} // tke_ams
+} // namespace tke_ams
 
 namespace sdr_ams {
 static constexpr double rhs[8] = {
@@ -50,33 +121,126 @@ static constexpr double rhs[8] = {
 };
 
 static constexpr double lhs[8][8] = {
-  {0.0414, 0, 0, 0, 0, 0, 0, 0, },
-  {0, 0.0414, 0, 0, 0, 0, 0, 0, },
-  {0, 0, 0.0414, 0, 0, 0, 0, 0, },
-  {0, 0, 0, 0.0414, 0, 0, 0, 0, },
-  {0, 0, 0, 0, 0.0414, 0, 0, 0, },
-  {0, 0, 0, 0, 0, 0.038847416860968854, 0, 0, },
-  {0, 0, 0, 0, 0, 0, 0.054948325891780704, 0, },
-  {0, 0, 0, 0, 0, 0, 0, 0.047574531285689135, },
+  {
+    0.0414,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0.0414,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0.0414,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0.0414,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0.0414,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.038847416860968854,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.054948325891780704,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.047574531285689135,
+  },
 };
-} // sdr_ams
+} // namespace sdr_ams
 
 namespace forcing_ams {
 static constexpr double rhs[24] = {
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, -0.01722586002226411, 0
-};
-} // forcing_ams
-} // hex8_golds
-}
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  -0.01722586002226411,
+  0};
+} // namespace forcing_ams
+} // namespace hex8_golds
+} // namespace
 
 #endif
 
 TEST_F(AMSKernelHex8Mesh, NGP_tke_ams_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -88,7 +252,8 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_ams_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTAMSNodeKernel>(*meta_, solnOpts_.get_coordinates_name());
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTAMSNodeKernel>(
+    *meta_, solnOpts_.get_coordinates_name());
 
   helperObjs.execute();
 
@@ -108,7 +273,8 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_ams_node)
 TEST_F(AMSKernelHex8Mesh, NGP_sdr_ams_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -120,7 +286,8 @@ TEST_F(AMSKernelHex8Mesh, NGP_sdr_ams_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTAMSNodeKernel>(*meta_, solnOpts_.get_coordinates_name());
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTAMSNodeKernel>(
+    *meta_, solnOpts_.get_coordinates_name());
 
   helperObjs.execute();
 

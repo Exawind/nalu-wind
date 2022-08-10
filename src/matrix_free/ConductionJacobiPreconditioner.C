@@ -90,13 +90,16 @@ JacobiOperator<p>::apply(
   const mv_type& x, mv_type& y, Teuchos::ETransp, double, double) const
 {
   element_multiply(
-    owned_diagonal_.getLocalViewDevice(Tpetra::Access::ReadOnly), x.getLocalViewDevice(Tpetra::Access::ReadOnly),
+    owned_diagonal_.getLocalViewDevice(Tpetra::Access::ReadOnly),
+    x.getLocalViewDevice(Tpetra::Access::ReadOnly),
     y.getLocalViewDevice(Tpetra::Access::ReadWrite));
   for (int n = 1; n < num_sweeps_; ++n) {
     op_->apply(y, cached_mv_);
     update_jacobi_sweep(
-      owned_diagonal_.getLocalViewDevice(Tpetra::Access::ReadOnly), cached_mv_.getLocalViewDevice(Tpetra::Access::ReadOnly),
-      x.getLocalViewDevice(Tpetra::Access::ReadOnly), y.getLocalViewDevice(Tpetra::Access::ReadWrite));
+      owned_diagonal_.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      cached_mv_.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      x.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      y.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
 }
 

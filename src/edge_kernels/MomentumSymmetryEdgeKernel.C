@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "SimdInterface.h"
 #include "edge_kernels/MomentumSymmetryEdgeKernel.h"
 #include "master_element/MasterElement.h"
@@ -50,9 +49,12 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::MomentumSymmetryEdgeKernel(
   elemDataPreReqs.add_cvfem_surface_me(meSCS_);
 
   faceDataPreReqs.add_gathered_nodal_field(viscosity_, 1);
-  faceDataPreReqs.add_gathered_nodal_field(dudx_, BcAlgTraits::nDim_, BcAlgTraits::nDim_);
-  faceDataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
-  elemDataPreReqs.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  faceDataPreReqs.add_gathered_nodal_field(
+    dudx_, BcAlgTraits::nDim_, BcAlgTraits::nDim_);
+  faceDataPreReqs.add_face_field(
+    exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  elemDataPreReqs.add_coordinates_field(
+    coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
   elemDataPreReqs.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
 }
 
@@ -93,7 +95,7 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::execute(
     // Compute area vector related quantities
     DoubleType axdx = 0.0;
     DoubleType asq = 0.0;
-    for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+    for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
       const DoubleType dxj = v_coords(nodeR, d) - v_coords(nodeL, d);
       asq += v_areavec(ip, d) * v_areavec(ip, d);
       axdx += v_areavec(ip, d) * dxj;
@@ -102,7 +104,7 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::execute(
 
     // Populate unit vector for later use
     const DoubleType amag = stk::math::sqrt(asq);
-    for (int d=0; d < BcAlgTraits::nDim_; ++d)
+    for (int d = 0; d < BcAlgTraits::nDim_; ++d)
       nx[d] = v_areavec(ip, d) / amag;
 
     // Computation of duidxj term, reproduce original comment by S. P. Domino
@@ -112,33 +114,35 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::execute(
       dui/dxj = GjUi +[(uiR - uiL) - GlUi*dxl]*Aj/AxDx
       where Gp is the interpolated pth nodal gradient for ui
     */
-    for (int i=0; i < BcAlgTraits::nDim_; i++) {
+    for (int i = 0; i < BcAlgTraits::nDim_; i++) {
       const auto dui = v_uNp1(nodeR, i) - v_uNp1(nodeL, i);
 
       // Non-orthogonal correction
       DoubleType gjuidx = 0.0;
-      for (int j=0; j < BcAlgTraits::nDim_; j++) {
+      for (int j = 0; j < BcAlgTraits::nDim_; j++) {
         const DoubleType dxj = v_coords(nodeR, j) - v_coords(nodeL, j);
         gjuidx += v_dudx(ip, i, j) * dxj;
       }
 
       // final dui/dxj with non-orthogonal contributions
-      for (int j=0; j < BcAlgTraits::nDim_; j++) {
-        duidxj[i][j] = v_dudx(ip, i, j) + (dui - gjuidx) * v_areavec(ip, j) * inv_axdx;
+      for (int j = 0; j < BcAlgTraits::nDim_; j++) {
+        duidxj[i][j] =
+          v_dudx(ip, i, j) + (dui - gjuidx) * v_areavec(ip, j) * inv_axdx;
       }
     }
 
     // div(U) terms
     DoubleType divU = 0.0;
-    for (int d=0; d < BcAlgTraits::nDim_; ++d)
+    for (int d = 0; d < BcAlgTraits::nDim_; ++d)
       divU += duidxj[d][d];
 
     // Viscous flux terms
     DoubleType fxnx = 0.0;
-    for (int i=0; i < BcAlgTraits::nDim_; ++i) {
-      DoubleType fxi = 2.0 / 3.0 * visc * divU * v_areavec(ip, i) * includeDivU_;
+    for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
+      DoubleType fxi =
+        2.0 / 3.0 * visc * divU * v_areavec(ip, i) * includeDivU_;
 
-      for (int j=0; j < BcAlgTraits::nDim_; ++j) {
+      for (int j = 0; j < BcAlgTraits::nDim_; ++j) {
         fxi += -visc * (duidxj[i][j] + duidxj[j][i]) * v_areavec(ip, j);
       }
 
@@ -148,8 +152,8 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::execute(
     const DoubleType diffusionMassRate = -visc * asq * inv_axdx;
     const DoubleType penaltyFac = penaltyFactor_ * diffusionMassRate;
     DoubleType uN = 0;
-    for (int i =0; i < BcAlgTraits::nDim_; ++i){
-      uN += v_uNp1(nodeR,i) * nx[i];
+    for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
+      uN += v_uNp1(nodeR, i) * nx[i];
     }
 
     for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
@@ -161,7 +165,7 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::execute(
       rhs(rowR) += penaltyFac * uN * nx[i];
     }
 
-    for (int i=0; i < BcAlgTraits::nDim_; i++) {
+    for (int i = 0; i < BcAlgTraits::nDim_; i++) {
       const int rowL = nodeL * BcAlgTraits::nDim_ + i;
       const int rowR = nodeR * BcAlgTraits::nDim_ + i;
 
@@ -173,7 +177,7 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::execute(
       const DoubleType axi = v_areavec(ip, i);
       const DoubleType nxnx = nx[i] * nx[i];
 
-      for (int j=0; j < BcAlgTraits::nDim_; ++j) {
+      for (int j = 0; j < BcAlgTraits::nDim_; ++j) {
         const int colL = nodeL * BcAlgTraits::nDim_ + j;
         const int colR = nodeR * BcAlgTraits::nDim_ + j;
 
@@ -182,7 +186,8 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::execute(
         lhs(rowR, colL) -= lhsfac;
         lhs(rowR, colR) += lhsfac;
 
-        if (i == j ) continue;
+        if (i == j)
+          continue;
 
         lhsfac = -visc * asq * inv_axdx * nx[i] * nx[j];
         lhs(rowR, colL) -= lhsfac;
@@ -202,5 +207,5 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumSymmetryEdgeKernel)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

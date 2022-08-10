@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "node_kernels/WallDistNodeKernel.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
@@ -16,11 +15,12 @@
 namespace sierra {
 namespace nalu {
 
-WallDistNodeKernel::WallDistNodeKernel(
-  stk::mesh::BulkData& bulk
-) : NGPNodeKernel<WallDistNodeKernel>(),
-    dualNodalVolumeID_(get_field_ordinal(bulk.mesh_meta_data(), "dual_nodal_volume"))
-{}
+WallDistNodeKernel::WallDistNodeKernel(stk::mesh::BulkData& bulk)
+  : NGPNodeKernel<WallDistNodeKernel>(),
+    dualNodalVolumeID_(
+      get_field_ordinal(bulk.mesh_meta_data(), "dual_nodal_volume"))
+{
+}
 
 void
 WallDistNodeKernel::setup(Realm& realm)
@@ -41,5 +41,5 @@ WallDistNodeKernel::execute(
   // No LHS contributions
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

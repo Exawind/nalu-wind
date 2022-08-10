@@ -20,22 +20,22 @@
 #include <tuple>
 #include <iostream>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-std::pair<Teuchos::SerialDenseVector<int, double>, Teuchos::SerialDenseVector<int, double>>
+std::pair<
+  Teuchos::SerialDenseVector<int, double>,
+  Teuchos::SerialDenseVector<int, double>>
 jacobi_recursion_coefficients(
-    const double alpha,
-    const double beta,
-    const int order)
+  const double alpha, const double beta, const int order)
 {
   int N = order;
   Teuchos::SerialDenseVector<int, double> a(N);
   Teuchos::SerialDenseVector<int, double> b(N);
 
   double nu = (beta - alpha) / (alpha + beta + 2.0);
-  double mu = std::pow(2.0, alpha + beta + 1.0) * std::tgamma(alpha + 1.0)
-              * std::tgamma(beta + 1.0) / std::tgamma(alpha + beta + 2.0);
+  double mu = std::pow(2.0, alpha + beta + 1.0) * std::tgamma(alpha + 1.0) *
+              std::tgamma(beta + 1.0) / std::tgamma(alpha + beta + 2.0);
   double nab;
   double sqdif = beta * beta - alpha * alpha;
 
@@ -48,14 +48,14 @@ jacobi_recursion_coefficients(
       a[n] = sqdif / (nab * (nab + 2));
     }
 
-    b[1] = 4.0 * (alpha + 1.0) * (beta + 1.0)
-                    / (std::pow(alpha + beta + 2.0, 2) * (alpha + beta + 3.0));
+    b[1] = 4.0 * (alpha + 1.0) * (beta + 1.0) /
+           (std::pow(alpha + beta + 2.0, 2) * (alpha + beta + 3.0));
 
     if (N > 2) {
       for (int n = 2; n < N; ++n) {
         nab = 2 * n + alpha + beta;
-        b[n] = 4.0 * (n + alpha) * (n + beta) * n * (n + alpha + beta)
-                        / (nab * nab * (nab + 1.0) * (nab - 1.0));
+        b[n] = 4.0 * (n + alpha) * (n + beta) * n * (n + alpha + beta) /
+               (nab * nab * (nab + 1.0) * (nab - 1.0));
       }
     }
   }
@@ -91,9 +91,7 @@ gauss_legendre_rule(int order)
   }
 
   Teuchos::LAPACK<int, double>().STEQR(
-    COMPZ, N, D.values(), E.values(),
-    Z.values(), N, work.values(), &INFO
-  );
+    COMPZ, N, D.values(), E.values(), Z.values(), N, work.values(), &INFO);
 
   std::vector<double> x(N);
   std::vector<double> w(N);
@@ -104,11 +102,10 @@ gauss_legendre_rule(int order)
   return std::make_pair(x, w);
 }
 //--------------------------------------------------------------------
-std::pair<Teuchos::SerialDenseVector<int, double>, Teuchos::SerialDenseVector<int, double>>
-coefficients_for_lobatto(
-  int order,
-  double xl1,
-  double xl2)
+std::pair<
+  Teuchos::SerialDenseVector<int, double>,
+  Teuchos::SerialDenseVector<int, double>>
+coefficients_for_lobatto(int order, double xl1, double xl2)
 {
   const int N = order - 1;
 
@@ -171,17 +168,14 @@ coefficients_for_lobatto(
 }
 //--------------------------------------------------------------------
 std::pair<std::vector<double>, std::vector<double>>
-gauss_lobatto_legendre_rule(
-  int order,
-  double xleft,
-  double xright)
+gauss_lobatto_legendre_rule(int order, double xleft, double xright)
 {
   /*
    * Returns a pair of abscissae and weights for the usual Gauss-Legendre
    * quadrature rule.
    *
-   * Based on the modified Golub-Welsch algorithm.  Implementation is based on the
-   * implementation in Trilinos's rol package, which in turn is based on
+   * Based on the modified Golub-Welsch algorithm.  Implementation is based on
+   * the implementation in Trilinos's rol package, which in turn is based on
    * polylib's implementation
    */
 
@@ -190,7 +184,8 @@ gauss_lobatto_legendre_rule(
   const char COMPZ = 'I';
 
   if (order == 1) {
-    return std::make_pair(std::vector<double>{xleft, xright}, std::vector<double>{1.0, 1.0});
+    return std::make_pair(
+      std::vector<double>{xleft, xright}, std::vector<double>{1.0, 1.0});
   }
 
   Teuchos::SerialDenseVector<int, double> D(N);
@@ -206,9 +201,7 @@ gauss_lobatto_legendre_rule(
   }
 
   Teuchos::LAPACK<int, double>().STEQR(
-    COMPZ, N, D.values(), E.values(),
-    Z.values(), N, work.values(), &INFO
-  );
+    COMPZ, N, D.values(), E.values(), Z.values(), N, work.values(), &INFO);
 
   std::vector<double> x(N);
   std::vector<double> w(N);
@@ -217,7 +210,7 @@ gauss_lobatto_legendre_rule(
     w[i] = b[0] * Z(0, i) * Z(0, i);
   }
 
-  //remove machine eps from end points
+  // remove machine eps from end points
   x[0] = xleft;
   x[N - 1] = xright;
 
@@ -226,9 +219,7 @@ gauss_lobatto_legendre_rule(
 //--------------------------------------------------------------------
 Teuchos::SerialDenseVector<int, double>
 subinterval_weights_for_fixed_abscissae(
-  std::vector<double> fixedAbscissae,
-  double xleft,
-  double xright)
+  std::vector<double> fixedAbscissae, double xleft, double xright)
 {
   /*
    * The goal of this function is to produce quadrature weights
@@ -259,16 +250,15 @@ subinterval_weights_for_fixed_abscissae(
   // each node has a separate RHS
   Teuchos::SerialDenseVector<int, double> weightRHS(nrows);
   for (int i = 0; i < nrows; ++i) {
-    weightRHS(i) = (std::pow(xright, i + 1) - std::pow(xleft, i + 1)) / (i + 1.0);
+    weightRHS(i) =
+      (std::pow(xright, i + 1) - std::pow(xleft, i + 1)) / (i + 1.0);
   }
 
   Teuchos::SerialDenseSolver<int, double> solver;
   Teuchos::SerialDenseVector<int, double> quadratureWeights(nrows);
   solver.setMatrix(Teuchos::rcp(&weightLHS, false));
   solver.setVectors(
-    Teuchos::rcp(&quadratureWeights, false),
-    Teuchos::rcp(&weightRHS, false)
-  );
+    Teuchos::rcp(&quadratureWeights, false), Teuchos::rcp(&weightRHS, false));
   solver.solve();
 
   return quadratureWeights;
@@ -282,7 +272,8 @@ SGL_quadrature_rule(int order, const double* scsEndLocations)
    * N-point (order) integration rule over a fixed N-number
    * of subintervals, the locations of which are provided by scsEndLocations
    *
-   * This is the special "Segmented Gauss Lobatto" quadrature rule designed for CVFEM
+   * This is the special "Segmented Gauss Lobatto" quadrature rule designed for
+   * CVFEM
    *
    * Output is the 1-dimensional fixed abscissae with the corresponding
    * NxN weights
@@ -291,13 +282,11 @@ SGL_quadrature_rule(int order, const double* scsEndLocations)
 
   std::vector<double> fixedAbscissae = gauss_lobatto_legendre_rule(N).first;
 
-  std::vector<double> weightTensor(N*N);
+  std::vector<double> weightTensor(N * N);
   Teuchos::SerialDenseVector<int, double> scvWeights(N);
   for (int j = 0; j < N; ++j) {
     scvWeights = subinterval_weights_for_fixed_abscissae(
-      fixedAbscissae,
-      scsEndLocations[j], scsEndLocations[j+1]
-    );
+      fixedAbscissae, scsEndLocations[j], scsEndLocations[j + 1]);
 
     // save to a standard container
     for (int i = 0; i < N; ++i) {
@@ -308,30 +297,31 @@ SGL_quadrature_rule(int order, const double* scsEndLocations)
   return std::make_pair(fixedAbscissae, weightTensor);
 }
 //--------------------------------------------------------------------
-std::vector<double> pad_end_points(const std::vector<double>& x, double xleft, double xright)
+std::vector<double>
+pad_end_points(const std::vector<double>& x, double xleft, double xright)
 {
-  std::vector<double> padded_x(x.size()+2);
+  std::vector<double> padded_x(x.size() + 2);
   padded_x[0] = xleft;
-  for (unsigned j = 0; j < x.size();++j) {
-    padded_x[j+1] = x[j];
+  for (unsigned j = 0; j < x.size(); ++j) {
+    padded_x[j + 1] = x[j];
   }
-  padded_x[x.size()+1] = xright;
+  padded_x[x.size() + 1] = xright;
 
   return padded_x;
 }
 
-std::vector<double> pad_end_points(int n, const double* x, double xleft, double xright)
+std::vector<double>
+pad_end_points(int n, const double* x, double xleft, double xright)
 {
-  std::vector<double> padded_x(n+2);
+  std::vector<double> padded_x(n + 2);
   padded_x[0] = xleft;
-  for (int j = 0; j < n;++j) {
-    padded_x[j+1] = x[j];
+  for (int j = 0; j < n; ++j) {
+    padded_x[j + 1] = x[j];
   }
-  padded_x[n+1] = xright;
+  padded_x[n + 1] = xright;
 
   return padded_x;
 }
 
-
-}  // namespace nalu
-}  // namespace sierra
+} // namespace nalu
+} // namespace sierra

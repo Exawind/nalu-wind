@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
@@ -21,26 +20,32 @@
 TEST_F(EnthalpyABLKernelHex8Mesh, NGP_abl_force)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.realm.ablForcingAlg_ = new unit_test_utils::TestABLForcingAlg(helperObjs.realm);
+  helperObjs.realm.ablForcingAlg_ =
+    new unit_test_utils::TestABLForcingAlg(helperObjs.realm);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::EnthalpyABLForceNodeKernel>(*bulk_, solnOpts_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::EnthalpyABLForceNodeKernel>(
+    *bulk_, solnOpts_);
 
   helperObjs.execute();
 
-  auto numSumIntoCalls = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), helperObjs.linsys->numSumIntoCalls_);
+  auto numSumIntoCalls = Kokkos::create_mirror_view_and_copy(
+    Kokkos::HostSpace(), helperObjs.linsys->numSumIntoCalls_);
 
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
   EXPECT_EQ(numSumIntoCalls(0), 8u);
 
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, 37.5, 1.0e-12);
-  unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, 0.0, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->rhs_, 37.5, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near<8>(
+    helperObjs.linsys->lhs_, 0.0, 1.0e-12);
 }

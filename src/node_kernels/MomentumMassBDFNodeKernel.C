@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include "node_kernels/MomentumMassBDFNodeKernel.h"
 #include "Realm.h"
 #include "utils/FieldHelpers.h"
@@ -17,27 +15,30 @@
 #include "stk_mesh/base/Types.hpp"
 #include "utils/StkHelpers.h"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 MomentumMassBDFNodeKernel::MomentumMassBDFNodeKernel(
-  const stk::mesh::BulkData& bulk
-) : NGPNodeKernel<MomentumMassBDFNodeKernel>(),
+  const stk::mesh::BulkData& bulk)
+  : NGPNodeKernel<MomentumMassBDFNodeKernel>(),
     nDim_(bulk.mesh_meta_data().spatial_dimension())
 {
   const auto& meta = bulk.mesh_meta_data();
 
-  const auto* velocity = meta.get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "velocity");
+  const auto* velocity =
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
 
-  velocityNID_ = velocity->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal();
+  velocityNID_ =
+    velocity->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal();
 
   if (velocity->number_of_states() == 2)
     velocityNm1ID_ = velocityNID_;
   else
-    velocityNm1ID_ = velocity->field_of_state(stk::mesh::StateNM1).mesh_meta_data_ordinal();
+    velocityNm1ID_ =
+      velocity->field_of_state(stk::mesh::StateNM1).mesh_meta_data_ordinal();
 
-  velocityNp1ID_ = velocity->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
+  velocityNp1ID_ =
+    velocity->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
 
   densityNID_ = get_field_ordinal(meta, "density", stk::mesh::StateN);
 
@@ -66,7 +67,8 @@ MomentumMassBDFNodeKernel::setup(Realm& realm)
   densityNp1_ = fieldMgr.get_field<double>(densityNp1ID_);
   dnvNp1_ = fieldMgr.get_field<double>(dnvNp1ID_);
   dnvN_ = fieldMgr.get_field<double>(dnvNID_);
-  dnvNm1_ = fieldMgr.get_field<double>(dnvNm1ID_);  dpdx_ = fieldMgr.get_field<double>(dpdxID_);
+  dnvNm1_ = fieldMgr.get_field<double>(dnvNm1ID_);
+  dpdx_ = fieldMgr.get_field<double>(dpdxID_);
   dt_ = realm.get_time_step();
   gamma1_ = realm.get_gamma1();
   gamma2_ = realm.get_gamma2();
@@ -81,24 +83,27 @@ MomentumMassBDFNodeKernel::execute(
 {
   const int nDim = nDim_;
 
-  const NodeKernelTraits::DblType rhoNm1     = densityNm1_.get(node, 0);
-  const NodeKernelTraits::DblType rhoN       = densityN_.get(node, 0);
-  const NodeKernelTraits::DblType rhoNp1     = densityNp1_.get(node, 0);
-   const NodeKernelTraits::DblType dnvNp1    = dnvNp1_.get(node, 0);
-  const NodeKernelTraits::DblType dnvN       = dnvN_.get(node, 0);
-  const NodeKernelTraits::DblType dnvNm1     = dnvNm1_.get(node, 0);  
-  const NodeKernelTraits::DblType lhsfac     = gamma1_*rhoNp1*dnvNp1/dt_;
+  const NodeKernelTraits::DblType rhoNm1 = densityNm1_.get(node, 0);
+  const NodeKernelTraits::DblType rhoN = densityN_.get(node, 0);
+  const NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0);
+  const NodeKernelTraits::DblType dnvNp1 = dnvNp1_.get(node, 0);
+  const NodeKernelTraits::DblType dnvN = dnvN_.get(node, 0);
+  const NodeKernelTraits::DblType dnvNm1 = dnvNm1_.get(node, 0);
+  const NodeKernelTraits::DblType lhsfac = gamma1_ * rhoNp1 * dnvNp1 / dt_;
   // deal with lumped mass matrix (diagonal matrix)
-  for ( int i = 0; i < nDim; ++i ) {
-    const NodeKernelTraits::DblType uNm1   = velocityNm1_.get(node, i);
-    const NodeKernelTraits::DblType uN     = velocityN_.get(node, i);
-    const NodeKernelTraits::DblType uNp1   = velocityNp1_.get(node, i);
-    const NodeKernelTraits::DblType dpdx   = dpdx_.get(node, i);
+  for (int i = 0; i < nDim; ++i) {
+    const NodeKernelTraits::DblType uNm1 = velocityNm1_.get(node, i);
+    const NodeKernelTraits::DblType uN = velocityN_.get(node, i);
+    const NodeKernelTraits::DblType uNp1 = velocityNp1_.get(node, i);
+    const NodeKernelTraits::DblType dpdx = dpdx_.get(node, i);
 
-    rhs(i) += -(gamma1_*rhoNp1*uNp1*dnvNp1 + gamma2_*rhoN*uN*dnvN + gamma3_*rhoNm1*uNm1*dnvNm1)/dt_ - dpdx*dnvNp1;
+    rhs(i) += -(gamma1_ * rhoNp1 * uNp1 * dnvNp1 + gamma2_ * rhoN * uN * dnvN +
+                gamma3_ * rhoNm1 * uNm1 * dnvNm1) /
+                dt_ -
+              dpdx * dnvNp1;
     lhs(i, i) += lhsfac;
   }
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

@@ -39,9 +39,11 @@ namespace matrix_free {
 class SimdNodeConnectivityFixture : public ::testing::Test
 {
 protected:
-  SimdNodeConnectivityFixture() 
-    : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD).set_spatial_dimension(3u).create()), 
-      bulk(*bulkPtr), 
+  SimdNodeConnectivityFixture()
+    : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD)
+                .set_spatial_dimension(3u)
+                .create()),
+      bulk(*bulkPtr),
       meta(bulk.mesh_meta_data())
   {
     stk::topology topo(stk::topology::HEX_8);
@@ -116,8 +118,9 @@ TEST_F(SimdNodeConnectivityFixture, map_has_correct_outermost_index)
   auto map_h = Kokkos::create_mirror_view(map);
   Kokkos::deep_copy(map_h, map);
 
-  const auto answer =
-    simd_len >= 8 ? 1 : 8 % simd_len == 0 ? 8 / simd_len : 8 / simd_len + 1;
+  const auto answer = simd_len >= 8       ? 1
+                      : 8 % simd_len == 0 ? 8 / simd_len
+                                          : 8 / simd_len + 1;
   ASSERT_EQ(map_h.extent_int(0), answer);
 }
 

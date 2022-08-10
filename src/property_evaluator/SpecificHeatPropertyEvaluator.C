@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <property_evaluator/SpecificHeatPropertyEvaluator.h>
 #include <property_evaluator/PolynomialPropertyEvaluator.h>
 #include <property_evaluator/ReferencePropertyData.h>
@@ -20,8 +18,8 @@
 
 #include <stdexcept>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -32,11 +30,15 @@ namespace nalu{
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 SpecificHeatPropertyEvaluator::SpecificHeatPropertyEvaluator(
-  const std::map<std::string, ReferencePropertyData*> &referencePropertyDataMap,
-  const std::map<std::string, std::vector<double> > &lowPolynomialCoeffsMap,
-  const std::map<std::string, std::vector<double> > &highPolynomialCoeffsMap,
+  const std::map<std::string, ReferencePropertyData*>& referencePropertyDataMap,
+  const std::map<std::string, std::vector<double>>& lowPolynomialCoeffsMap,
+  const std::map<std::string, std::vector<double>>& highPolynomialCoeffsMap,
   double universalR)
-  : PolynomialPropertyEvaluator(referencePropertyDataMap, lowPolynomialCoeffsMap, highPolynomialCoeffsMap, universalR)
+  : PolynomialPropertyEvaluator(
+      referencePropertyDataMap,
+      lowPolynomialCoeffsMap,
+      highPolynomialCoeffsMap,
+      universalR)
 {
   // resize reference mass fraction and polynomial size
   refMassFraction_.resize(ykVecSize_);
@@ -44,12 +46,11 @@ SpecificHeatPropertyEvaluator::SpecificHeatPropertyEvaluator(
   // save off reference values for yk
   size_t k = 0;
   std::map<std::string, ReferencePropertyData*>::const_iterator itrp;
-  for ( itrp = referencePropertyDataMap.begin();
-        itrp!= referencePropertyDataMap.end(); ++itrp, ++k) {
-    ReferencePropertyData *propData = (*itrp).second;
+  for (itrp = referencePropertyDataMap.begin();
+       itrp != referencePropertyDataMap.end(); ++itrp, ++k) {
+    ReferencePropertyData* propData = (*itrp).second;
     refMassFraction_[k] = propData->massFraction_;
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -65,26 +66,26 @@ SpecificHeatPropertyEvaluator::~SpecificHeatPropertyEvaluator()
 //--------------------------------------------------------------------------
 double
 SpecificHeatPropertyEvaluator::execute(
-  double *indVarList,
-  stk::mesh::Entity /*node*/)
+  double* indVarList, stk::mesh::Entity /*node*/)
 {
   // hard coded to expect temperature only
   const double T = indVarList[0];
 
   // process sum
   double sum_cp_r = 0.0;
-  if ( T < TlowHigh_ ) {
-    for ( size_t k = 0; k < ykVecSize_; ++k ) {
-      sum_cp_r += refMassFraction_[k]*compute_cp_r(T, &lowPolynomialCoeffs_[k][0])/mw_[k];
+  if (T < TlowHigh_) {
+    for (size_t k = 0; k < ykVecSize_; ++k) {
+      sum_cp_r += refMassFraction_[k] *
+                  compute_cp_r(T, &lowPolynomialCoeffs_[k][0]) / mw_[k];
+    }
+  } else {
+    for (size_t k = 0; k < ykVecSize_; ++k) {
+      sum_cp_r += refMassFraction_[k] *
+                  compute_cp_r(T, &highPolynomialCoeffs_[k][0]) / mw_[k];
     }
   }
-  else {
-    for ( size_t k = 0; k < ykVecSize_; ++k ) {
-      sum_cp_r += refMassFraction_[k]*compute_cp_r(T, &highPolynomialCoeffs_[k][0])/mw_[k];
-    }
-  }
-  
-  return sum_cp_r*universalR_;
+
+  return sum_cp_r * universalR_;
 }
 
 //--------------------------------------------------------------------------
@@ -92,14 +93,10 @@ SpecificHeatPropertyEvaluator::execute(
 //--------------------------------------------------------------------------
 double
 SpecificHeatPropertyEvaluator::compute_cp_r(
-  const double &T,
-  const double *pt_poly)
+  const double& T, const double* pt_poly)
 {
-  double cp_r = pt_poly[0]
-    + pt_poly[1]*T
-    + pt_poly[2]*T*T
-    + pt_poly[3]*T*T*T
-    + pt_poly[4]*T*T*T*T;
+  double cp_r = pt_poly[0] + pt_poly[1] * T + pt_poly[2] * T * T +
+                pt_poly[3] * T * T * T + pt_poly[4] * T * T * T * T;
   return cp_r;
 }
 
@@ -112,17 +109,21 @@ SpecificHeatPropertyEvaluator::compute_cp_r(
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 SpecificHeatTYkPropertyEvaluator::SpecificHeatTYkPropertyEvaluator(
-    const std::map<std::string, ReferencePropertyData*> &referencePropertyDataMap,
-    const std::map<std::string, std::vector<double> > &lowPolynomialCoeffsMap,
-    const std::map<std::string, std::vector<double> > &highPolynomialCoeffsMap,
-    double universalR,
-    stk::mesh::MetaData &metaData)
-  : PolynomialPropertyEvaluator(referencePropertyDataMap, lowPolynomialCoeffsMap, highPolynomialCoeffsMap, universalR),
+  const std::map<std::string, ReferencePropertyData*>& referencePropertyDataMap,
+  const std::map<std::string, std::vector<double>>& lowPolynomialCoeffsMap,
+  const std::map<std::string, std::vector<double>>& highPolynomialCoeffsMap,
+  double universalR,
+  stk::mesh::MetaData& metaData)
+  : PolynomialPropertyEvaluator(
+      referencePropertyDataMap,
+      lowPolynomialCoeffsMap,
+      highPolynomialCoeffsMap,
+      universalR),
     massFraction_(NULL)
 {
   // save off mass fraction field
-  massFraction_ = metaData.get_field<GenericFieldType>(stk::topology::NODE_RANK, "mass_fraction");
-
+  massFraction_ = metaData.get_field<GenericFieldType>(
+    stk::topology::NODE_RANK, "mass_fraction");
 }
 
 //--------------------------------------------------------------------------
@@ -138,27 +139,26 @@ SpecificHeatTYkPropertyEvaluator::~SpecificHeatTYkPropertyEvaluator()
 //--------------------------------------------------------------------------
 double
 SpecificHeatTYkPropertyEvaluator::execute(
-    double *indVarList,
-    stk::mesh::Entity node)
+  double* indVarList, stk::mesh::Entity node)
 {
   const double T = indVarList[0];
-  const double *massFraction = stk::mesh::field_data(*massFraction_, node);
+  const double* massFraction = stk::mesh::field_data(*massFraction_, node);
 
   // process sum
   double sum_cp_r = 0.0;
-  if ( T < TlowHigh_ ) {
-    for ( size_t k = 0; k < ykVecSize_; ++k ) {
-      sum_cp_r += massFraction[k]*compute_cp_r(T, &lowPolynomialCoeffs_[k][0])/mw_[k];
+  if (T < TlowHigh_) {
+    for (size_t k = 0; k < ykVecSize_; ++k) {
+      sum_cp_r +=
+        massFraction[k] * compute_cp_r(T, &lowPolynomialCoeffs_[k][0]) / mw_[k];
+    }
+  } else {
+    for (size_t k = 0; k < ykVecSize_; ++k) {
+      sum_cp_r += massFraction[k] *
+                  compute_cp_r(T, &highPolynomialCoeffs_[k][0]) / mw_[k];
     }
   }
-  else {
-    for ( size_t k = 0; k < ykVecSize_; ++k ) {
-      sum_cp_r += massFraction[k]*compute_cp_r(T, &highPolynomialCoeffs_[k][0])/mw_[k];
-    }
-  }
-  
-  return sum_cp_r*universalR_;
 
+  return sum_cp_r * universalR_;
 }
 
 //--------------------------------------------------------------------------
@@ -166,14 +166,10 @@ SpecificHeatTYkPropertyEvaluator::execute(
 //--------------------------------------------------------------------------
 double
 SpecificHeatTYkPropertyEvaluator::compute_cp_r(
-  const double &T,
-  const double *pt_poly)
+  const double& T, const double* pt_poly)
 {
-  double cp_r = pt_poly[0]
-    + pt_poly[1]*T
-    + pt_poly[2]*T*T
-    + pt_poly[3]*T*T*T
-    + pt_poly[4]*T*T*T*T;
+  double cp_r = pt_poly[0] + pt_poly[1] * T + pt_poly[2] * T * T +
+                pt_poly[3] * T * T * T + pt_poly[4] * T * T * T * T;
   return cp_r;
 }
 
@@ -186,25 +182,22 @@ SpecificHeatTYkPropertyEvaluator::compute_cp_r(
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 SpecificHeatConstCpkPropertyEvaluator::SpecificHeatConstCpkPropertyEvaluator(
-  const std::map<std::string, double> &cpConstMap,
-  stk::mesh::MetaData &metaData)
-  : PropertyEvaluator(),
-    cpVecSize_(cpConstMap.size()),
-    massFraction_(NULL)
+  const std::map<std::string, double>& cpConstMap,
+  stk::mesh::MetaData& metaData)
+  : PropertyEvaluator(), cpVecSize_(cpConstMap.size()), massFraction_(NULL)
 {
   // save off mass fraction field
-  massFraction_ = metaData.get_field<GenericFieldType>(stk::topology::NODE_RANK, "mass_fraction");
+  massFraction_ = metaData.get_field<GenericFieldType>(
+    stk::topology::NODE_RANK, "mass_fraction");
 
   // save off Cp_k as vector
   cpVec_.resize(cpVecSize_);
   size_t k = 0;
   std::map<std::string, double>::const_iterator it;
-  for ( it = cpConstMap.begin();
-        it!= cpConstMap.end(); ++it, ++k) {
-      double theValue = (*it).second;
-      cpVec_[k] = theValue;
+  for (it = cpConstMap.begin(); it != cpConstMap.end(); ++it, ++k) {
+    double theValue = (*it).second;
+    cpVec_[k] = theValue;
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -220,20 +213,18 @@ SpecificHeatConstCpkPropertyEvaluator::~SpecificHeatConstCpkPropertyEvaluator()
 //--------------------------------------------------------------------------
 double
 SpecificHeatConstCpkPropertyEvaluator::execute(
-  double */*indVarList*/,
-  stk::mesh::Entity node)
+  double* /*indVarList*/, stk::mesh::Entity node)
 {
-  const double *massFraction = stk::mesh::field_data(*massFraction_, node);
+  const double* massFraction = stk::mesh::field_data(*massFraction_, node);
 
   // process sum
   double sum_cp = 0.0;
-  for ( size_t k = 0; k < cpVecSize_; ++k ) {
-    sum_cp += massFraction[k]*cpVec_[k];
+  for (size_t k = 0; k < cpVecSize_; ++k) {
+    sum_cp += massFraction[k] * cpVec_[k];
   }
-  
-  return sum_cp;
 
+  return sum_cp;
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifdef NALU_USES_TIOGA
 
 #include "overset/OversetManagerTIOGA.h"
@@ -26,36 +25,33 @@
 #include <stk_mesh/base/Part.hpp>
 #include <stk_mesh/base/Selector.hpp>
 
-
 namespace sierra {
 namespace nalu {
 
 OversetManagerTIOGA::OversetManagerTIOGA(
-  Realm& realm,
-  const OversetUserData& oversetUserData)
+  Realm& realm, const OversetUserData& oversetUserData)
   : OversetManager(realm),
     oversetUserData_(oversetUserData),
-    tiogaIface_(*this, oversetUserData.oversetBlocks_,
-                realm.get_coordinates_name())
+    tiogaIface_(
+      *this, oversetUserData.oversetBlocks_, realm.get_coordinates_name())
 {
   ThrowRequireMsg(
-    metaData_->spatial_dimension() == 3u,
-    "TIOGA only supports 3-D meshes.");
+    metaData_->spatial_dimension() == 3u, "TIOGA only supports 3-D meshes.");
 }
 
-OversetManagerTIOGA::~OversetManagerTIOGA()
-{}
+OversetManagerTIOGA::~OversetManagerTIOGA() {}
 
 void
 OversetManagerTIOGA::setup()
 {
   tiogaIface_.setup(realm_.oversetBCPartVec_);
 
-  for (auto* part: realm_.oversetBCPartVec_)
+  for (auto* part : realm_.oversetBCPartVec_)
     realm_.bcPartVec_.push_back(part);
 }
 
-void OversetManagerTIOGA::initialize()
+void
+OversetManagerTIOGA::initialize()
 {
   const double timeA = NaluEnv::self().nalu_time();
   if (isInit_) {
@@ -86,20 +82,24 @@ OversetManagerTIOGA::execute(const bool isDecoupled)
 #endif
 }
 
-void OversetManagerTIOGA::overset_update_fields(const std::vector<OversetFieldData>& fields)
+void
+OversetManagerTIOGA::overset_update_fields(
+  const std::vector<OversetFieldData>& fields)
 {
   tiogaIface_.overset_update_fields(fields);
 }
 
-void OversetManagerTIOGA::overset_update_field(
-  stk::mesh::FieldBase *field, const int nrows, const int ncols,
+void
+OversetManagerTIOGA::overset_update_field(
+  stk::mesh::FieldBase* field,
+  const int nrows,
+  const int ncols,
   const bool doFinalSyncToDevice)
 {
   tiogaIface_.overset_update_field(field, nrows, ncols, doFinalSyncToDevice);
 }
 
-
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif

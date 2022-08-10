@@ -68,7 +68,8 @@ protected:
       rhs(Teuchos::rcpFromRef(owned_map), 1),
       elid(make_stk_lid_to_tpetra_lid_map(
         mesh(), active(), gid_field_ngp, owned_and_shared_map.getLocalMap())),
-      elid_h(Kokkos::create_mirror_view_and_copy(Kokkos::DefaultHostExecutionSpace{}, elid)),
+      elid_h(Kokkos::create_mirror_view_and_copy(
+        Kokkos::DefaultHostExecutionSpace{}, elid)),
       conn(stk_connectivity_map<order>(mesh(), active())),
       offsets(create_offset_map<order>(mesh(), active(), elid))
   {
@@ -103,7 +104,8 @@ protected:
   const const_entity_row_view_type elid;
 
   using host_space = Kokkos::DefaultHostExecutionSpace;
-  using host_type = decltype(Kokkos::create_mirror_view_and_copy(host_space{}, elid));
+  using host_type =
+    decltype(Kokkos::create_mirror_view_and_copy(host_space{}, elid));
   const host_type elid_h;
 
   elem_mesh_index_view<order> conn;
@@ -131,7 +133,6 @@ TEST_F(
   ContinuityResidualOperator<order> resid_op(offsets, exporter);
   resid_op.set_fields(tau, mdot);
   resid_op.compute(rhs);
-
 
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
@@ -172,7 +173,6 @@ TEST_F(
   resid_op.set_metric(metric);
   resid_op.apply(lhs, rhs);
 
-
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
   const auto interior_selector = active() - side();
   for (const auto* ib :
@@ -208,7 +208,6 @@ TEST_F(
   ContinuityLinearizedResidualOperator<order> resid_op(offsets, exporter);
   resid_op.set_metric(metric);
   resid_op.apply(lhs, rhs);
-
 
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 

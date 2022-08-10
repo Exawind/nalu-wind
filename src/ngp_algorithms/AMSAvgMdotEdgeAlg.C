@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/AMSAvgMdotEdgeAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
@@ -21,12 +20,15 @@ namespace nalu {
 
 AMSAvgMdotEdgeAlg::AMSAvgMdotEdgeAlg(Realm& realm, stk::mesh::Part* part)
   : Algorithm(realm, part),
-    coordinates_(get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
+    coordinates_(
+      get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
     avgVelocityRTM_(get_field_ordinal(
       realm.meta_data(),
       realm.does_mesh_move() ? "average_velocity_rtm" : "average_velocity")),
-    densityNp1_(get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1)),
-    edgeAreaVec_(get_field_ordinal(realm.meta_data(), "edge_area_vector", stk::topology::EDGE_RANK)),
+    densityNp1_(
+      get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1)),
+    edgeAreaVec_(get_field_ordinal(
+      realm.meta_data(), "edge_area_vector", stk::topology::EDGE_RANK)),
     avgMassFlowRate_(get_field_ordinal(
       realm.meta_data(), "average_mass_flow_rate", stk::topology::EDGE_RANK))
 {
@@ -59,15 +61,14 @@ AMSAvgMdotEdgeAlg::execute()
                                   !(realm_.get_inactive_selector());
 
   nalu_ngp::run_edge_algorithm(
-    "compute_avgMdot_edge_interior",
-    ngpMesh, sel, 
+    "compute_avgMdot_edge_interior", ngpMesh, sel,
     KOKKOS_LAMBDA(const EntityInfoType& einfo) {
       NALU_ALIGNED DblType av[NDimMax];
       const auto& nodes = einfo.entityNodes;
       const auto nodeL = ngpMesh.fast_mesh_index(nodes[0]);
       const auto nodeR = ngpMesh.fast_mesh_index(nodes[1]);
 
-      for (int d=0; d < ndim; ++d)
+      for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(einfo.meshIdx, d);
 
       const DblType densityL = density.get(nodeL, 0);
@@ -76,13 +77,13 @@ AMSAvgMdotEdgeAlg::execute()
       const DblType rhoIp = 0.5 * (densityL + densityR);
 
       DblType tmdot = 0.0;
-      for (int d=0; d < ndim; ++d) {
+      for (int d = 0; d < ndim; ++d) {
         const DblType rhoUjIp = 0.5 * (densityR * avgVelocity.get(nodeR, d) +
                                        densityL * avgVelocity.get(nodeL, d));
         const DblType ujIp =
           0.5 * (avgVelocity.get(nodeR, d) + avgVelocity.get(nodeL, d));
-        tmdot += (interpTogether * rhoUjIp +
-                  om_interpTogether * rhoIp * ujIp) * av[d];
+        tmdot +=
+          (interpTogether * rhoUjIp + om_interpTogether * rhoIp * ujIp) * av[d];
       }
 
       // Update edge field
