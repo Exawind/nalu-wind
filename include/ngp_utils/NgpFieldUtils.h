@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef NGPFIELDUTILS_H
 #define NGPFIELDUTILS_H
 
@@ -29,7 +28,8 @@ template <
   typename T = double,
   typename Mesh = stk::mesh::NgpMesh,
   typename FieldManager = nalu_ngp::FieldManager>
-inline stk::mesh::NgpField<T>& get_ngp_field(
+inline stk::mesh::NgpField<T>&
+get_ngp_field(
   const MeshInfo<Mesh, FieldManager>& meshInfo,
   const std::string& fieldName,
   const stk::mesh::EntityRank& rank = stk::topology::NODE_RANK)
@@ -42,7 +42,8 @@ template <
   typename T = double,
   typename Mesh = stk::mesh::NgpMesh,
   typename FieldManager = nalu_ngp::FieldManager>
-inline stk::mesh::NgpField<T>& get_ngp_field(
+inline stk::mesh::NgpField<T>&
+get_ngp_field(
   const MeshInfo<Mesh, FieldManager>& meshInfo,
   const std::string& fieldName,
   const stk::mesh::FieldState state,
@@ -52,9 +53,8 @@ inline stk::mesh::NgpField<T>& get_ngp_field(
     get_field_ordinal(meshInfo.meta(), fieldName, state, rank));
 }
 
-}
-}  // nalu
-}  // sierra
-
+} // namespace nalu_ngp
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NGPFIELDUTILS_H */

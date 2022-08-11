@@ -31,8 +31,7 @@ LidarLineOfSite::load(const YAML::Node& node)
 
   if (node["type"]) {
     segGen = make_segment_generator(node["type"].as<std::string>());
-  }
-  else {
+  } else {
     segGen = make_segment_generator(SegmentType::SPINNER);
   }
 
@@ -54,10 +53,9 @@ LidarLineOfSite::load(const YAML::Node& node)
 
   if (node["time_step"] && output_type_ != Output::DATAPROBE) {
     lidar_dt_ = node["time_step"].as<double>();
-  } else if (node["frequency"] && output_type_ != Output::DATAPROBE){
-    lidar_dt_ = 1.0/node["frequency"].as<double>();
-  }
-  else {
+  } else if (node["frequency"] && output_type_ != Output::DATAPROBE) {
+    lidar_dt_ = 1.0 / node["frequency"].as<double>();
+  } else {
     get_required(node, "scan_time", scanTime_);
     get_required(node, "number_of_samples", nsamples_);
     lidar_dt_ = scanTime_ / nsamples_;
@@ -76,8 +74,7 @@ LidarLineOfSite::load(const YAML::Node& node)
 
   if (node["scanning_lidar_specifications"]) {
     segGen->load(node["scanning_lidar_specifications"]);
-  }
-  else {
+  } else {
     segGen->load(node);
   }
 }

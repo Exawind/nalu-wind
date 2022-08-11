@@ -20,11 +20,11 @@ class Converter;
  */
 class ConverterFactory
 {
- public:
-  ConverterFactory() {};
-  ~ConverterFactory() {};
+public:
+  ConverterFactory(){};
+  ~ConverterFactory(){};
 
-  Converter * create( const std::string & converterType ) const;
+  Converter* create(const std::string& converterType) const;
 };
 
 //============================================================================
@@ -38,22 +38,20 @@ class ConverterFactory
  *  new variable for use as an input in the central Table.  Derived classes
  *  provide the conversion machinery in the query() function.
  */
-class Converter {
+class Converter
+{
 
- public:
+public:
+  explicit Converter(const std::string& converterType);
 
-  explicit Converter( const std::string & converterType );
-
-  virtual ~Converter() { };
+  virtual ~Converter(){};
 
   /** Get the name of the variable returned by this Converter */
-  const std::string & name() const{ return name_; }
+  const std::string& name() const { return name_; }
 
   /** Get the list of input variables, in the order that they are to be
    *  provided to the query() call */
-  const std::vector<std::string> & input_names() const {
-    return inputNames_;
-  }
+  const std::vector<std::string>& input_names() const { return inputNames_; }
 
   /* Get the number of input variables for this Converter */
   unsigned int dimension() const { return dimension_; }
@@ -64,16 +62,15 @@ class Converter {
    *  @param inputs : Array of independent variable values
    *  @result : The resulting computed value
    */
-  virtual double query( const std::vector<double> &inputs ) const = 0;
+  virtual double query(const std::vector<double>& inputs) const = 0;
 
   /** Print a summary of this Converter configuration */
   void print_summary() const;
 
   /** Read this Converter from the provided I/O device */
-  virtual void read_hdf5( H5IO & io );
+  virtual void read_hdf5(H5IO& io);
 
- protected:
-
+protected:
   // Name of the variable returned by this Converter
   std::string name_;
 
@@ -83,13 +80,11 @@ class Converter {
   // Number of input variables
   unsigned int dimension_;
 
- private:
-
+private:
   // No copying.  (Assignment not possible with abstract class.)
-  Converter( const Converter & );
+  Converter(const Converter&);
 
   const std::string converterType_;
-
 };
 
 //============================================================================
@@ -102,18 +97,17 @@ class Converter {
  *  debugging, although it can be used for simply renaming table variables
  *  so that the Property class advertises a different input name.
  */
-class NameConverter : public Converter {
+class NameConverter : public Converter
+{
 
- public:
-
+public:
   NameConverter();
-  NameConverter( const std::string & outputName,
-                 const std::string & inputName );
+  NameConverter(const std::string& outputName, const std::string& inputName);
 
-  virtual double query( const std::vector<double>  &inputs ) const;
+  virtual double query(const std::vector<double>& inputs) const;
 
- private:
-  NameConverter operator=( const NameConverter & );  // No assignment
+private:
+  NameConverter operator=(const NameConverter&); // No assignment
 };
 
 //============================================================================
@@ -125,10 +119,10 @@ class NameConverter : public Converter {
  *  mean and variance mixture fraction and mean scalar dissipation rate.
  *  This is used by the nonadiabatic flamelet models.
  */
-class ChiConverter : public Converter {
+class ChiConverter : public Converter
+{
 
- public:
-
+public:
   ChiConverter();
   /* This version is used in Atab_ConverterBuilder.C */
   /*
@@ -148,16 +142,16 @@ class ChiConverter : public Converter {
    *  @param inputs : Array of input variable values
    *  @result : The state variable value interpolated from the table
    */
-  virtual double query( const std::vector<double>  &inputs ) const;
+  virtual double query(const std::vector<double>& inputs) const;
 
   /** Read this Converter from the provided I/O device */
-  virtual void read_hdf5( H5IO & io );
+  virtual void read_hdf5(H5IO& io);
 
- private:
-  ChiConverter operator=( const ChiConverter & );  // No assignment
+private:
+  ChiConverter operator=(const ChiConverter&); // No assignment
 
   double zStoich_;
-  const HDF5Table * fChiMeanTable_;
+  const HDF5Table* fChiMeanTable_;
 };
 
 //============================================================================
@@ -166,12 +160,12 @@ class ChiConverter : public Converter {
  *  @brief Calculates reference scalar dissipation rate
  *
  *  This converter calculates a reference scalar dissipation rate for
- *  flow where turbulence/chemistry interactions can be neglected. 
+ *  flow where turbulence/chemistry interactions can be neglected.
  */
-class DeltaChiConverter : public Converter {
+class DeltaChiConverter : public Converter
+{
 
- public:
-
+public:
   DeltaChiConverter();
   /* This version is used in Atab_ConverterBuilder.C */
   /*
@@ -189,13 +183,13 @@ class DeltaChiConverter : public Converter {
    *  @param inputs : Array of input variable values
    *  @result : The state variable value interpolated from the table
    */
-  virtual double query( const std::vector<double>  &inputs ) const;
+  virtual double query(const std::vector<double>& inputs) const;
 
   /** Read this Converter from the provided I/O device */
-  virtual void read_hdf5( H5IO & io );
+  virtual void read_hdf5(H5IO& io);
 
- private:
-  DeltaChiConverter operator=( const DeltaChiConverter & ); // No assignment
+private:
+  DeltaChiConverter operator=(const DeltaChiConverter&); // No assignment
 
   double zStoich_;
 };
@@ -209,10 +203,10 @@ class DeltaChiConverter : public Converter {
  *  mean and variance mixture fraction and mean heat loss parameter.
  *  This is used by the nonadiabatic flamelet models.
  */
-class GammaConverter : public Converter {
+class GammaConverter : public Converter
+{
 
- public:
-
+public:
   GammaConverter();
   /* This version is used in Atab_ConverterBuilder.C */
   /*
@@ -231,16 +225,16 @@ class GammaConverter : public Converter {
    *  @param inputs : Array of input variable values
    *  @result : The state variable value interpolated from the table
    */
-  virtual double query( const std::vector<double>  &inputs ) const;
+  virtual double query(const std::vector<double>& inputs) const;
 
   /** Read this Converter from the provided I/O device */
-  virtual void read_hdf5( H5IO & io );
+  virtual void read_hdf5(H5IO& io);
 
- private:
-  GammaConverter operator=( const GammaConverter & );  // No assignment
+private:
+  GammaConverter operator=(const GammaConverter&); // No assignment
 
   unsigned int numTableInputs_;
-  const HDF5Table * fGammaMeanTable_;
+  const HDF5Table* fGammaMeanTable_;
 };
 
 //============================================================================
@@ -249,12 +243,12 @@ class GammaConverter : public Converter {
  *  @brief Calculates reference heat loss parameter
  *
  *  This converter calculates a reference heat loss parameter for
- *  flow where turbulence/chemistry interactions can be neglected. 
+ *  flow where turbulence/chemistry interactions can be neglected.
  */
-class DeltaGammaConverter : public Converter {
+class DeltaGammaConverter : public Converter
+{
 
- public:
-
+public:
   DeltaGammaConverter();
   /* This version is used in Atab_ConverterBuilder.C */
   /*
@@ -273,16 +267,16 @@ class DeltaGammaConverter : public Converter {
    *  @param inputs : Array of input variable values
    *  @result : The state variable value interpolated from the table
    */
-  virtual double query( const std::vector<double>  &inputs ) const;
+  virtual double query(const std::vector<double>& inputs) const;
 
   /** Read this Converter from the provided I/O device */
-  virtual void read_hdf5( H5IO & io );
+  virtual void read_hdf5(H5IO& io);
 
- private:
-  DeltaGammaConverter operator=( const DeltaGammaConverter & ); // No assignment
+private:
+  DeltaGammaConverter operator=(const DeltaGammaConverter&); // No assignment
 
   unsigned int numMixFrac_;
-  std::vector<std::vector<double> > zStoich_;
+  std::vector<std::vector<double>> zStoich_;
   std::vector<double> gammaMaxStoich_;
   mutable std::vector<double> zMean_;
 };
@@ -298,11 +292,11 @@ class DeltaGammaConverter : public Converter {
  *  chemistry interactions may be either neglected (isDelta=true) or
  *  included (isDelta=false; default).
  */
-class HStarConverter : public Converter {
+class HStarConverter : public Converter
+{
 
- public:
-
-  explicit HStarConverter( const bool isDelta = false );
+public:
+  explicit HStarConverter(const bool isDelta = false);
 
   /* This version is used in Atab_ConverterBuilder.C */
   /*
@@ -323,32 +317,32 @@ class HStarConverter : public Converter {
    *  @param inputs : Array of input variable values
    *  @result : The state variable value interpolated from the table
    */
-  virtual double query( const std::vector<double>  &inputs ) const;
+  virtual double query(const std::vector<double>& inputs) const;
 
   /** Read this Converter from the provided I/O device */
-  virtual void read_hdf5( H5IO & io );
+  virtual void read_hdf5(H5IO& io);
 
- private:
-  HStarConverter operator=( const HStarConverter & );  // No assignment
+private:
+  HStarConverter operator=(const HStarConverter&); // No assignment
 
-  void augmented_mixfrac( const std::vector<double> &mixFrac,
-                          std::vector<double> & mixFracAug ) const;
+  void augmented_mixfrac(
+    const std::vector<double>& mixFrac, std::vector<double>& mixFracAug) const;
 
-  double mixture_property( const std::vector<double> & mixFracAug,
-                           const std::vector<double> & streamProp ) const;
+  double mixture_property(
+    const std::vector<double>& mixFracAug,
+    const std::vector<double>& streamProp) const;
 
   unsigned int numMixFrac_;
-  mutable std::vector<double> zAug_;  // Augmented mixture fraction buffer space
+  mutable std::vector<double> zAug_; // Augmented mixture fraction buffer space
 
   double hStar_ref_min_;
   std::vector<double> hStar_stream_min_;
   std::vector<double> a_;
-
 };
 
 //============================================================================
 
-} // end nalu namespace
-} // end sierra namespace
+} // namespace nalu
+} // namespace sierra
 
 #endif

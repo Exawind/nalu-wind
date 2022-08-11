@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef NGPFIELDMANAGER_H
 #define NGPFIELDMANAGER_H
 
@@ -26,40 +25,40 @@ namespace nalu_ngp {
 
 /** NGP Field Manager
  *
- *  This lightweight class wraps the new NgpField interface using the 
+ *  This lightweight class wraps the new NgpField interface using the
  *  deprecated FieldManager workflow.
-*/
+ */
 class FieldManager
 {
 public:
-  FieldManager(const stk::mesh::BulkData & bulk)
-    : m_meta(bulk.mesh_meta_data())
+  FieldManager(const stk::mesh::BulkData& bulk) : m_meta(bulk.mesh_meta_data())
   {
   }
 
-  ~FieldManager() {
-  }
+  ~FieldManager() {}
 
-  FieldManager & operator=(const FieldManager & rhs) = delete;
+  FieldManager& operator=(const FieldManager& rhs) = delete;
 
-  FieldManager(const FieldManager & rhs) = delete;
-  FieldManager(FieldManager && rhs) = delete;
+  FieldManager(const FieldManager& rhs) = delete;
+  FieldManager(FieldManager&& rhs) = delete;
 
   template <typename T>
-  stk::mesh::NgpField<T> & get_field(unsigned fieldOrdinal) const {
-    ThrowAssertMsg(m_meta.get_fields().size() > fieldOrdinal, "Invalid field ordinal.");
+  stk::mesh::NgpField<T>& get_field(unsigned fieldOrdinal) const
+  {
+    ThrowAssertMsg(
+      m_meta.get_fields().size() > fieldOrdinal, "Invalid field ordinal.");
     stk::mesh::FieldBase* stkField = m_meta.get_fields()[fieldOrdinal];
-    stk::mesh::NgpField<T>& tmp = stk::mesh::get_updated_ngp_field<T>(*stkField);
+    stk::mesh::NgpField<T>& tmp =
+      stk::mesh::get_updated_ngp_field<T>(*stkField);
     return tmp;
   }
 
-private: 
+private:
   const stk::mesh::MetaData& m_meta;
 };
 
-} 
-} 
-}
-
+} // namespace nalu_ngp
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NGPFIELDMANAGER_H */

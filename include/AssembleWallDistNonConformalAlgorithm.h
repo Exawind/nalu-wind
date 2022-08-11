@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef ASSEMBLEWALLDISTNONCONFORMALALGORITHM_H
 #define ASSEMBLEWALLDISTNONCONFORMALALGORITHM_H
 
@@ -18,7 +17,7 @@ namespace stk {
 namespace mesh {
 class Part;
 }
-}
+} // namespace stk
 
 namespace sierra {
 namespace nalu {
@@ -33,9 +32,7 @@ class AssembleWallDistNonConformalAlgorithm : public SolverAlgorithm
 {
 public:
   AssembleWallDistNonConformalAlgorithm(
-    Realm&,
-    stk::mesh::Part*,
-    EquationSystem*);
+    Realm&, stk::mesh::Part*, EquationSystem*);
 
   virtual ~AssembleWallDistNonConformalAlgorithm() = default;
 
@@ -61,9 +58,7 @@ private:
   const bool useCurrentNormal_;
 };
 
-}  // nalu
-}  // sierra
-
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ASSEMBLEWALLDISTNONCONFORMALALGORITHM_H */

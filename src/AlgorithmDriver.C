@@ -7,15 +7,13 @@
 // for more details.
 //
 
-
-
 #include <AlgorithmDriver.h>
 
 #include <Algorithm.h>
 #include <Enums.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
@@ -27,9 +25,7 @@ class Realm;
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-AlgorithmDriver::AlgorithmDriver(
-  Realm &realm)
-  : realm_(realm)
+AlgorithmDriver::AlgorithmDriver(Realm& realm) : realm_(realm)
 {
   // does nothing
 }
@@ -39,9 +35,9 @@ AlgorithmDriver::AlgorithmDriver(
 //--------------------------------------------------------------------------
 AlgorithmDriver::~AlgorithmDriver()
 {
-  std::map<AlgorithmType, Algorithm * >::iterator ii;
-  for( ii=algMap_.begin(); ii!=algMap_.end(); ++ii ) {
-    Algorithm *theAlg = ii->second;
+  std::map<AlgorithmType, Algorithm*>::iterator ii;
+  for (ii = algMap_.begin(); ii != algMap_.end(); ++ii) {
+    Algorithm* theAlg = ii->second;
     delete theAlg;
   }
 }
@@ -55,15 +51,13 @@ AlgorithmDriver::execute()
   pre_work();
 
   // assemble
-  std::map<AlgorithmType, Algorithm *>::iterator it;
-  for ( it = algMap_.begin(); it != algMap_.end(); ++it ) {
+  std::map<AlgorithmType, Algorithm*>::iterator it;
+  for (it = algMap_.begin(); it != algMap_.end(); ++it) {
     it->second->execute();
   }
 
   post_work();
-
 }
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

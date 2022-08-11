@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
@@ -18,30 +17,101 @@ namespace {
 namespace hex8_golds {
 namespace tke_ksgs {
 static constexpr double rhs[8] = {
-  -0.59750523010263, -0.35120476242195,
-  -0.58458403812095, -0.22719581319874,
-  -0.35120476242195, -0.2064329798865,
-  -0.28427320142228, -0.090566201776693,
+  -0.59750523010263, -0.35120476242195, -0.58458403812095, -0.22719581319874,
+  -0.35120476242195, -0.2064329798865,  -0.28427320142228, -0.090566201776693,
 };
 
 static constexpr double lhs[8][8] = {
-  {0.44812892257697, 0, 0, 0, 0, 0, 0, 0, },
-  {0, 0.26340357181646, 0, 0, 0, 0, 0, 0, },
-  {0, 0, 0.31216473910174, 0, 0, 0, 0, 0, },
-  {0, 0, 0, 0.17225002410294, 0, 0, 0, 0, },
-  {0, 0, 0, 0, 0.26340357181646, 0, 0, 0, },
-  {0, 0, 0, 0, 0, 0.15482473491488, 0, 0, },
-  {0, 0, 0, 0, 0, 0, 0.17225002410294, 0, },
-  {0, 0, 0, 0, 0, 0, 0, 0.097154884604998, },
+  {
+    0.44812892257697,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0.26340357181646,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0.31216473910174,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0.17225002410294,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0.26340357181646,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.15482473491488,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.17225002410294,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.097154884604998,
+  },
 };
-} // tke_ksgs
-} // hex8_golds
-}
+} // namespace tke_ksgs
+} // namespace hex8_golds
+} // namespace
 
 TEST_F(KsgsKernelHex8Mesh, NGP_tke_ksgs_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   const bool doPerturb = false;
   const bool generateSidesets = false;
@@ -60,7 +130,9 @@ TEST_F(KsgsKernelHex8Mesh, NGP_tke_ksgs_node)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);

@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef InverseDualVolumePropAlgorithm_h
 #define InverseDualVolumePropAlgorithm_h
 
@@ -19,33 +17,29 @@ namespace stk {
 namespace mesh {
 class FieldBase;
 class Part;
-}
-}
+} // namespace mesh
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class InverseDualVolumePropAlgorithm : public Algorithm
 {
 public:
-
   InverseDualVolumePropAlgorithm(
-    Realm & realm,
-    stk::mesh::Part * part,
-    stk::mesh::FieldBase * prop);
-  
+    Realm& realm, stk::mesh::Part* part, stk::mesh::FieldBase* prop);
+
   virtual ~InverseDualVolumePropAlgorithm();
-  
+
   virtual void execute();
-  
-  stk::mesh::FieldBase *prop_;
-  ScalarFieldType *dualNodalVolume_;
-  
+
+  stk::mesh::FieldBase* prop_;
+  ScalarFieldType* dualNodalVolume_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

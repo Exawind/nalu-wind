@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef NODALGRADBNDRYELEMALG_H
 #define NODALGRADBNDRYELEMALG_H
 
@@ -22,7 +21,7 @@ namespace nalu {
 
 class MasterElement;
 
-template<typename AlgTraits, typename PhiType, typename GradPhiType>
+template <typename AlgTraits, typename PhiType, typename GradPhiType>
 class NodalGradBndryElemAlg : public Algorithm
 {
   static_assert(
@@ -50,9 +49,9 @@ private:
   ElemDataRequests dataNeeded_;
 
   unsigned phi_{stk::mesh::InvalidOrdinal};
-  unsigned gradPhi_ {stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVol_ {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
+  unsigned gradPhi_{stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVol_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
 
   const bool useShifted_{false};
 
@@ -66,12 +65,11 @@ template <typename AlgTraits>
 using ScalarNodalGradBndryElemAlg =
   NodalGradBndryElemAlg<AlgTraits, ScalarFieldType, VectorFieldType>;
 
-template<typename AlgTraits>
+template <typename AlgTraits>
 using VectorNodalGradBndryElemAlg =
-  NodalGradBndryElemAlg<AlgTraits,VectorFieldType, GenericFieldType>;
+  NodalGradBndryElemAlg<AlgTraits, VectorFieldType, GenericFieldType>;
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NODALGRADBNDRYELEMALG_H */

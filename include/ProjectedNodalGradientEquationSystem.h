@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef ProjectedNodalGradientEquationSystem_h
 #define ProjectedNodalGradientEquationSystem_h
 
@@ -20,75 +18,71 @@
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/CoordinateSystems.hpp>
 
-namespace stk{
+namespace stk {
 struct topology;
 }
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 class AssembleNodalGradAlgorithmDriver;
 class AlgorithmDriver;
 class EquationSystems;
 
-class ProjectedNodalGradientEquationSystem : public EquationSystem {
+class ProjectedNodalGradientEquationSystem : public EquationSystem
+{
 
 public:
-
   ProjectedNodalGradientEquationSystem(
     EquationSystems& equationSystems,
     const EquationType eqType,
-    const std::string dofName, 
-    const std::string deltaName, 
+    const std::string dofName,
+    const std::string deltaName,
     const std::string independentDofName,
     const std::string eqSysName,
     const bool managesSolve = false);
   virtual ~ProjectedNodalGradientEquationSystem();
 
-  void set_data_map( 
-    BoundaryConditionType BC, std::string name);
+  void set_data_map(BoundaryConditionType BC, std::string name);
 
-  std::string get_name_given_bc( 
-    BoundaryConditionType BC);
+  std::string get_name_given_bc(BoundaryConditionType BC);
 
-  void register_nodal_fields(
-    stk::mesh::Part *part);
+  void register_nodal_fields(stk::mesh::Part* part);
 
-  void register_interior_algorithm(
-    stk::mesh::Part *part);
+  void register_interior_algorithm(stk::mesh::Part* part);
 
   void register_wall_bc(
-    stk::mesh::Part *part,
-    const stk::topology &theTopo,
-    const WallBoundaryConditionData &wallBCData);
+    stk::mesh::Part* part,
+    const stk::topology& theTopo,
+    const WallBoundaryConditionData& wallBCData);
 
   void register_inflow_bc(
-    stk::mesh::Part *part,
-    const stk::topology &theTopo,
-    const InflowBoundaryConditionData &inflowBCData);
+    stk::mesh::Part* part,
+    const stk::topology& theTopo,
+    const InflowBoundaryConditionData& inflowBCData);
 
   void register_open_bc(
-    stk::mesh::Part *part,
-    const stk::topology &theTopo,
-    const OpenBoundaryConditionData &openBCData);
+    stk::mesh::Part* part,
+    const stk::topology& theTopo,
+    const OpenBoundaryConditionData& openBCData);
 
   void register_symmetry_bc(
-    stk::mesh::Part *part,
-    const stk::topology &theTopo,
-    const SymmetryBoundaryConditionData &symmetryBCData);
+    stk::mesh::Part* part,
+    const stk::topology& theTopo,
+    const SymmetryBoundaryConditionData& symmetryBCData);
 
   // not supported
   void register_non_conformal_bc(
-    stk::mesh::Part *part,
-    const stk::topology &theTopo);
+    stk::mesh::Part* part, const stk::topology& theTopo);
 
   void register_overset_bc();
 
   // internal solve and update from EquationSystems
   void solve_and_update();
 
-  // external intended to be called by another EqSystem (used when someone manages PNGEqs)
+  // external intended to be called by another EqSystem (used when someone
+  // manages PNGEqs)
   void solve_and_update_external();
 
   void initialize();
@@ -110,11 +104,11 @@ public:
   std::map<BoundaryConditionType, std::string> dataMap_;
 
   // internal fields
-  VectorFieldType *dqdx_;
-  VectorFieldType *qTmp_;  
+  VectorFieldType* dqdx_;
+  VectorFieldType* qTmp_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

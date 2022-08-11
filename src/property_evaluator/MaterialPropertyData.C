@@ -7,14 +7,12 @@
 // for more details.
 //
 
-
-
 #include <property_evaluator/MaterialPropertyData.h>
 
 #include <Enums.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
@@ -41,4 +39,4 @@ MaterialPropertyData::~MaterialPropertyData()
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

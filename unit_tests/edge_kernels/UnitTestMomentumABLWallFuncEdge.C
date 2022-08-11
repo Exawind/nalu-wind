@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
@@ -18,7 +17,8 @@
 
 TEST_F(MomentumABLKernelHex8Mesh, NGP_abl_wall_func)
 {
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -29,10 +29,12 @@ TEST_F(MomentumABLKernelHex8Mesh, NGP_abl_wall_func)
   solnOpts_.externalMeshDeformation_ = false;
 
   auto* part = meta_->get_part("surface_5");
-  unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::QUAD_4, 3, part);
+  unit_test_utils::HelperObjects helperObjs(
+    bulk_, stk::topology::QUAD_4, 3, part);
 
   std::unique_ptr<sierra::nalu::Kernel> kernel(
-    new sierra::nalu::MomentumABLWallFuncEdgeKernel<sierra::nalu::AlgTraitsQuad4>(
+    new sierra::nalu::MomentumABLWallFuncEdgeKernel<
+      sierra::nalu::AlgTraitsQuad4>(
       *meta_, gravity_, z0_, Tref_, kappa_,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 
@@ -49,20 +51,21 @@ TEST_F(MomentumABLKernelHex8Mesh, NGP_abl_wall_func)
 
   // LHS - check diagonal entries
   Kokkos::deep_copy(helperObjs.linsys->hostlhs_, helperObjs.linsys->lhs_);
-  for (int i=0; i < 12; i += 3) {
+  for (int i = 0; i < 12; i += 3) {
     EXPECT_NEAR(helperObjs.linsys->hostlhs_(i, i), lhsExact, 1.0e-12);
-    EXPECT_NEAR(helperObjs.linsys->hostlhs_(i+1, i+1), lhsExact, 1.0e-12);
-    EXPECT_NEAR(helperObjs.linsys->hostlhs_(i+2, i+2), 0.0, 1.0e-12);
+    EXPECT_NEAR(helperObjs.linsys->hostlhs_(i + 1, i + 1), lhsExact, 1.0e-12);
+    EXPECT_NEAR(helperObjs.linsys->hostlhs_(i + 2, i + 2), 0.0, 1.0e-12);
   }
 
   // Off-diagonal entries in LHS
-  for (int i=0; i < 12; ++i)
-    for (int j=0; j < 12; ++j) {
-      if (i == j) continue;
+  for (int i = 0; i < 12; ++i)
+    for (int j = 0; j < 12; ++j) {
+      if (i == j)
+        continue;
       EXPECT_NEAR(helperObjs.linsys->hostlhs_(i, j), 0.0, 1.0e-12);
     }
 
   // Check RHS
-  for (int i=0; i < 12; ++i)
+  for (int i = 0; i < 12; ++i)
     EXPECT_NEAR(helperObjs.linsys->hostrhs_(i), rhsExact[i % 3], 1.0e-12);
 }

@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef AssembleOversetPressureAlgorithm_h
 #define AssembleOversetPressureAlgorithm_h
 
@@ -18,11 +16,11 @@ namespace stk {
 namespace mesh {
 class Part;
 class FieldBase;
-}
-}
+} // namespace mesh
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
@@ -37,12 +35,11 @@ class Realm;
 class AssembleOversetPressureAlgorithm : public OversetConstraintBase
 {
 public:
-
   AssembleOversetPressureAlgorithm(
-    Realm &realm,
-    stk::mesh::Part *part,
-    EquationSystem *eqSystem,
-    stk::mesh::FieldBase *fieldQ);
+    Realm& realm,
+    stk::mesh::Part* part,
+    EquationSystem* eqSystem,
+    stk::mesh::FieldBase* fieldQ);
 
   virtual ~AssembleOversetPressureAlgorithm() = default;
 
@@ -52,6 +49,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

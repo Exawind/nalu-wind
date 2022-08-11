@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef LinearPropAlgorithm_h
 #define LinearPropAlgorithm_h
 
@@ -18,23 +16,22 @@ namespace stk {
 namespace mesh {
 class FieldBase;
 class Part;
-}
-}
+} // namespace mesh
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class LinearPropAlgorithm : public Algorithm
 {
 public:
-
   LinearPropAlgorithm(
-    Realm & realm,
-    stk::mesh::Part * part,
-    stk::mesh::FieldBase * prop,
-    stk::mesh::FieldBase * indVar,
+    Realm& realm,
+    stk::mesh::Part* part,
+    stk::mesh::FieldBase* prop,
+    stk::mesh::FieldBase* indVar,
     const double primary,
     const double secondary);
 
@@ -42,14 +39,13 @@ public:
 
   virtual void execute();
 
-  stk::mesh::FieldBase *prop_;
-  stk::mesh::FieldBase *indVar_;
+  stk::mesh::FieldBase* prop_;
+  stk::mesh::FieldBase* indVar_;
   const double primary_;
   const double secondary_;
-  
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

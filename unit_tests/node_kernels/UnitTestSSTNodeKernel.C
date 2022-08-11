@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
@@ -23,164 +22,619 @@ namespace {
 namespace hex8_golds {
 namespace tke_sst {
 static constexpr double rhs[8] = {
-  -0.045, -0.026450336353161, -0.037149722161482,
-  0.037833723714897, -0.026450336353161, -0.015547117626564,
-  -0.02554123547762, 0.044658421964382, };
+  -0.045,
+  -0.026450336353161,
+  -0.037149722161482,
+  0.037833723714897,
+  -0.026450336353161,
+  -0.015547117626564,
+  -0.02554123547762,
+  0.044658421964382,
+};
 
 static constexpr double lhs[8][8] = {
-  {0.0225, 0, 0, 0, 0, 0, 0, 0, },
-  {0, 0.013225168176581, 0, 0, 0, 0, 0, 0, },
-  {0, 0, 0.013225168176581, 0, 0, 0, 0, 0, },
-  {0, 0, 0, 0.0077735588132818, 0, 0, 0, 0, },
-  {0, 0, 0, 0, 0.013225168176581, 0, 0, 0, },
-  {0, 0, 0, 0, 0, 0.0077735588132818, 0, 0, },
-  {0, 0, 0, 0, 0, 0, 0.010317488961622, 0, },
-  {0, 0, 0, 0, 0, 0, 0, 0.0054480894782752, },
+  {
+    0.0225,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0.013225168176581,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0.013225168176581,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0.0077735588132818,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0.013225168176581,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.0077735588132818,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.010317488961622,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.0054480894782752,
+  },
 };
-} // tke_sst
+} // namespace tke_sst
 
 namespace tke_sst_sust {
 static constexpr double rhs[8] = {
-  2.7675000000000001, 1.6266956857194192,
-  1.6159962999110988, 1.0095285753751273,
-  1.6266956857194192, 0.95614773403366649,
+  2.7675000000000001,  1.6266956857194192,  1.6159962999110988,
+  1.0095285753751273,  1.6266956857194192,  0.95614773403366649,
   0.94615361618261018, 0.61580632549878811,
- };
-} // tke_sst_sust
+};
+} // namespace tke_sst_sust
 
 namespace tke_sstlr {
 static constexpr double rhs[8] = {
-  -0.045, -0.026450336353161, -0.037149722161482,
-  0.037833723714897, -0.026450336353161, -0.0081011105174071153,
-  -0.02554123547762, 0.048161314116169904, };
+  -0.045,
+  -0.026450336353161,
+  -0.037149722161482,
+  0.037833723714897,
+  -0.026450336353161,
+  -0.0081011105174071153,
+  -0.02554123547762,
+  0.048161314116169904,
+};
 
 static constexpr double lhs[8][8] = {
-  {0.0225, 0, 0, 0, 0, 0, 0, 0, },
-  {0, 0.013225168176581, 0, 0, 0, 0, 0, 0, },
-  {0, 0, 0.013225168176581, 0, 0, 0, 0, 0, },
-  {0, 0, 0, 0.0077735588132818, 0, 0, 0, 0, },
-  {0, 0, 0, 0, 0.013225168176581, 0, 0, 0, },
-  {0, 0, 0, 0, 0, 0.0040505552587035577, 0, 0, },
-  {0, 0, 0, 0, 0, 0, 0.010317488961622, 0, },
-  {0, 0, 0, 0, 0, 0, 0, 0.0039114020054672209, },
+  {
+    0.0225,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0.013225168176581,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0.013225168176581,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0.0077735588132818,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0.013225168176581,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.0040505552587035577,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.010317488961622,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.0039114020054672209,
+  },
 };
-} // tke_sstlr
-
+} // namespace tke_sstlr
 
 namespace tke_sst_des {
 static constexpr double rhs[8] = {
-  -1.1591914445681, -0.68135563570074,
-  -1.1341236552933, -0.49442751316802,
-  -0.68135563570074, -0.33870892835312,
-  -0.55150490139157, -0.20162255473912,
+  -1.1591914445681,  -0.68135563570074, -1.1341236552933,  -0.49442751316802,
+  -0.68135563570074, -0.33870892835312, -0.55150490139157, -0.20162255473912,
 };
 
 static constexpr double lhs[8][8] = {
-  {0.86939358342608, 0, 0, 0, 0, 0, 0, 0, },
-  {0, 0.51101672677556, 0, 0, 0, 0, 0, 0, },
-  {0, 0, 0.60561594548791, 0, 0, 0, 0, 0, },
-  {0, 0, 0, 0.33417406945958, 0, 0, 0, 0, },
-  {0, 0, 0, 0, 0.51101672677556, 0, 0, 0, },
-  {0, 0, 0, 0, 0, 0.25403169626484, 0, 0, },
-  {0, 0, 0, 0, 0, 0, 0.33417406945958, 0, },
-  {0, 0, 0, 0, 0, 0, 0, 0.17023402848587, },
+  {
+    0.86939358342608,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0.51101672677556,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0.60561594548791,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0.33417406945958,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0.51101672677556,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.25403169626484,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.33417406945958,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.17023402848587,
+  },
 };
-} // tke_sst_des
+} // namespace tke_sst_des
 
 namespace tke_sst_des_sust {
 static constexpr double rhs[8] = {
-  3.4229150667019503, 2.0119389960571135,
-  1.5591709764645274, 1.088651351457735,
-  2.0119389960571135, 1.0001556684351871,
+  3.4229150667019503, 2.0119389960571135,  1.5591709764645274,
+  1.088651351457735,  2.0119389960571135,  1.0001556684351871,
   1.0315739632341863, 0.63878416505705449,
 };
-} // tke_sst_des_sust
+} // namespace tke_sst_des_sust
 
 namespace sdr_sst {
 static constexpr double rhs[8] = {
-  -0.0414, -0.024334309444908,
-  -0.024334309444908, 0.014618955646714,
-  -0.024334309444908, -0.013421452431681,
-  -0.025196833148802, 0.0071981412261904,
+  -0.0414,
+  -0.024334309444908,
+  -0.024334309444908,
+  0.014618955646714,
+  -0.024334309444908,
+  -0.013421452431681,
+  -0.025196833148802,
+  0.0071981412261904,
 };
 
 static constexpr double lhs[8][8] = {
-  {0.0414, 0, 0, 0, 0, 0, 0, 0, },
-  {0, 0.024334309444908, 0, 0, 0, 0, 0, 0, },
-  {0, 0, 0.024334309444908, 0, 0, 0, 0, 0, },
-  {0, 0, 0, 0.014303348216439, 0, 0, 0, 0, },
-  {0, 0, 0, 0, 0.024334309444908, 0, 0, 0, },
-  {0, 0, 0, 0, 0, 0.013421452431681, 0, 0, },
-  {0, 0, 0, 0, 0, 0, 0.018984179689384, 0, },
-  {0, 0, 0, 0, 0, 0, 0, 0.0096611889086056, },
+  {
+    0.0414,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0.024334309444908,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0.024334309444908,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0.014303348216439,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0.024334309444908,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.013421452431681,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.018984179689384,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.0096611889086056,
+  },
 };
-} // sdr_sst
+} // namespace sdr_sst
 
 namespace sdr_sst_sust {
 static constexpr double rhs[8] = {
-  25.833600000000001, 15.184609093622832,
-  15.184609093622832, 8.9542115909208313,
-  15.184609093622832, 8.374986317368819,
+  25.833600000000001, 15.184609093622832, 15.184609093622832,
+  8.9542115909208313, 15.184609093622832, 8.374986317368819,
   8.9143958021253162, 5.0713291662427222,
 };
-} // sdr_sst_sust
+} // namespace sdr_sst_sust
 
 namespace sdr_sstlr {
 static constexpr double rhs[8] = {
-  -0.0414, -0.024334309444908,
-  -0.024334309444908, 0.0059865036450417273,
-  -0.024334309444908, -0.013082261745235498,
-  -0.025196833148802, 0.029552473496357173,
+  -0.0414,
+  -0.024334309444908,
+  -0.024334309444908,
+  0.0059865036450417273,
+  -0.024334309444908,
+  -0.013082261745235498,
+  -0.025196833148802,
+  0.029552473496357173,
 };
 
 static constexpr double lhs[8][8] = {
-  {0.0414, 0, 0, 0, 0, 0, 0, 0, },
-  {0, 0.024334309444908, 0, 0, 0, 0, 0, 0, },
-  {0, 0, 0.024334309444908, 0, 0, 0, 0, 0, },
-  {0, 0, 0, 0.014303348216439, 0, 0, 0, 0, },
-  {0, 0, 0, 0, 0.024334309444908, 0, 0, 0, },
-  {0, 0, 0, 0, 0, 0.013082261745235498, 0, 0, },
-  {0, 0, 0, 0, 0, 0, 0.018984179689384, 0, },
-  {0, 0, 0, 0, 0, 0, 0, 0.0095214597811360858, },
+  {
+    0.0414,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0.024334309444908,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0.024334309444908,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0.014303348216439,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0.024334309444908,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.013082261745235498,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.018984179689384,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.0095214597811360858,
+  },
 };
-} // sdr_sstlr
+} // namespace sdr_sstlr
 
 namespace sdr_sst_des {
 static constexpr double rhs[8] = {
-  -0.0414, -0.024334309444908,
-  -0.024334309444908, 0.014618955646714,
-  -0.024334309444908, -0.013421452431681,
-  -0.025196833148802, 0.0071981412261904,
+  -0.0414,
+  -0.024334309444908,
+  -0.024334309444908,
+  0.014618955646714,
+  -0.024334309444908,
+  -0.013421452431681,
+  -0.025196833148802,
+  0.0071981412261904,
 };
 
 static constexpr double lhs[8][8] = {
-  {0.0414, 0, 0, 0, 0, 0, 0, 0, },
-  {0, 0.024334309444908, 0, 0, 0, 0, 0, 0, },
-  {0, 0, 0.024334309444908, 0, 0, 0, 0, 0, },
-  {0, 0, 0, 0.014303348216439, 0, 0, 0, 0, },
-  {0, 0, 0, 0, 0.024334309444908, 0, 0, 0, },
-  {0, 0, 0, 0, 0, 0.013421452431681, 0, 0, },
-  {0, 0, 0, 0, 0, 0, 0.018984179689384, 0, },
-  {0, 0, 0, 0, 0, 0, 0, 0.0096611889086056, },
+  {
+    0.0414,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0.024334309444908,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0.024334309444908,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0.014303348216439,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0.024334309444908,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.013421452431681,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.018984179689384,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.0096611889086056,
+  },
 };
-} // sdr_sst_des
+} // namespace sdr_sst_des
 
 namespace sdr_sst_des_sust {
 static constexpr double rhs[8] = {
-  25.8336, 15.184609093622832,
-  15.184609093622832, 8.9542115909208313,
-  15.184609093622832, 8.374986317368819,
-  8.9143958021253162, 5.0713291662427222,
+  25.8336,
+  15.184609093622832,
+  15.184609093622832,
+  8.9542115909208313,
+  15.184609093622832,
+  8.374986317368819,
+  8.9143958021253162,
+  5.0713291662427222,
 };
-} // sdr_sst_des_sust
+} // namespace sdr_sst_des_sust
 
-} // hex8_golds
-}
+} // namespace hex8_golds
+} // namespace
 
 TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -196,7 +650,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -212,7 +668,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
 TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_sust_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -232,7 +689,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_sust_node)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -247,7 +706,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_sust_node)
 TEST_F(SSTKernelHex8Mesh, NGP_tke_sstlr_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -263,7 +723,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sstlr_node)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -279,7 +741,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sstlr_node)
 TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -295,7 +758,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -311,7 +776,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
 TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_sust_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -331,7 +797,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_sust_node)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -346,7 +814,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_sust_node)
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -362,7 +831,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -378,7 +849,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_sust_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -398,7 +870,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_sust_node)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -413,7 +887,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_sust_node)
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_sstlr_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -429,7 +904,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sstlr_node)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -445,7 +922,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sstlr_node)
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -461,7 +939,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -478,7 +958,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_sust_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -498,7 +979,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_sust_node)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);

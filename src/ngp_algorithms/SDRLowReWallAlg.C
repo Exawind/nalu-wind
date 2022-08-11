@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/SDRLowReWallAlg.h"
 #include "BuildTemplates.h"
 #include "master_element/MasterElementFactory.h"
@@ -60,8 +59,9 @@ SDRLowReWallAlg<BcAlgTraits>::SDRLowReWallAlg(
   faceData_.add_master_element_call(shp_fcn, CURRENT_COORDINATES);
 }
 
-template<typename BcAlgTraits>
-void SDRLowReWallAlg<BcAlgTraits>::execute()
+template <typename BcAlgTraits>
+void
+SDRLowReWallAlg<BcAlgTraits>::execute()
 {
   using SimdDataType = nalu_ngp::FaceElemSimdData<stk::mesh::NgpMesh>;
 
@@ -72,10 +72,10 @@ void SDRLowReWallAlg<BcAlgTraits>::execute()
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto& warea = fieldMgr.template get_field<double>(wallArea_);
   auto& sdrbc = fieldMgr.template get_field<double>(sdrbc_);
-  const auto areaOps = nalu_ngp::simd_face_elem_nodal_field_updater(
-    ngpMesh, warea);
-  const auto sdrbcOps = nalu_ngp::simd_face_elem_nodal_field_updater(
-    ngpMesh, sdrbc);
+  const auto areaOps =
+    nalu_ngp::simd_face_elem_nodal_field_updater(ngpMesh, warea);
+  const auto sdrbcOps =
+    nalu_ngp::simd_face_elem_nodal_field_updater(ngpMesh, sdrbc);
 
   // Bring class members into local scope for device capture
   const auto coordsID = coordinates_;
@@ -89,8 +89,8 @@ void SDRLowReWallAlg<BcAlgTraits>::execute()
   auto* meFC = meFC_;
   auto* meSCS = meSCS_;
 
-  const stk::mesh::Selector sel = meta.locally_owned_part()
-    & stk::mesh::selectUnion(partVec_);
+  const stk::mesh::Selector sel =
+    meta.locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
   const std::string algName = "SDRLowReWallAlg_" +
                               std::to_string(BcAlgTraits::faceTopo_) + "_" +
@@ -98,20 +98,21 @@ void SDRLowReWallAlg<BcAlgTraits>::execute()
 
   nalu_ngp::run_face_elem_algorithm(
     algName, meshInfo, faceData_, elemData_, sel,
-    KOKKOS_LAMBDA(SimdDataType& fdata) {
+    KOKKOS_LAMBDA(SimdDataType & fdata) {
       auto& v_coord = fdata.simdElemView.get_scratch_view_2D(coordsID);
       auto& v_density = fdata.simdFaceView.get_scratch_view_1D(densityID);
       auto& v_viscosity = fdata.simdFaceView.get_scratch_view_1D(viscosityID);
       auto& v_area = fdata.simdFaceView.get_scratch_view_2D(exposedAreaVecID);
 
-      const auto& meViews = fdata.simdFaceView.get_me_views(CURRENT_COORDINATES);
-      const auto& v_shape_fcn = useShifted
-        ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
+      const auto& meViews =
+        fdata.simdFaceView.get_me_views(CURRENT_COORDINATES);
+      const auto& v_shape_fcn =
+        useShifted ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
       const int* faceIpNodeMap = meFC->ipNodeMap();
-      for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
+      for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
         DoubleType aMag = 0.0;
-        for (int d=0; d < BcAlgTraits::nDim_; ++d)
+        for (int d = 0; d < BcAlgTraits::nDim_; ++d)
           aMag += v_area(ip, d) * v_area(ip, d);
         aMag = stk::math::sqrt(aMag);
 
@@ -119,7 +120,7 @@ void SDRLowReWallAlg<BcAlgTraits>::execute()
         const int nodeL = meSCS->opposingNodes(fdata.faceOrd, ip);
 
         DoubleType ypBip = 0.0;
-        for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+        for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
           const DoubleType nj = v_area(ip, d) / aMag;
           const DoubleType ej = 0.25 * (v_coord(nodeR, d) - v_coord(nodeL, d));
           ypBip += nj * ej * nj * ej;
@@ -135,8 +136,8 @@ void SDRLowReWallAlg<BcAlgTraits>::execute()
         }
         const DoubleType nuIp = muIp / rhoIp;
 
-        const DoubleType lowReSdr = wallFactor * 6.0 * nuIp /
-          (betaOne * ypBip * ypBip);
+        const DoubleType lowReSdr =
+          wallFactor * 6.0 * nuIp / (betaOne * ypBip * ypBip);
 
         const int ni = faceIpNodeMap[ip];
         areaOps(fdata, ni, 0) += aMag;
@@ -150,5 +151,5 @@ void SDRLowReWallAlg<BcAlgTraits>::execute()
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(SDRLowReWallAlg)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

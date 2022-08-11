@@ -7,8 +7,7 @@
 // for more details.
 //
 
-
-#ifndef MOMENTUMACTUATORNODEKERNEL_H  
+#ifndef MOMENTUMACTUATORNODEKERNEL_H
 #define MOMENTUMACTUATORNODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
@@ -18,10 +17,11 @@
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-class MomentumActuatorNodeKernel : public NGPNodeKernel<MomentumActuatorNodeKernel>
+class MomentumActuatorNodeKernel
+  : public NGPNodeKernel<MomentumActuatorNodeKernel>
 {
 public:
   MomentumActuatorNodeKernel(const stk::mesh::MetaData&);
@@ -45,12 +45,12 @@ private:
   stk::mesh::NgpField<double> actuatorSrcLHS_;
   const int nDim_;
 
-  const unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
-  const unsigned actuatorSrcID_     {stk::mesh::InvalidOrdinal};
-  const unsigned actuatorSrcLHSID_  {stk::mesh::InvalidOrdinal};
+  const unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
+  const unsigned actuatorSrcID_{stk::mesh::InvalidOrdinal};
+  const unsigned actuatorSrcLHSID_{stk::mesh::InvalidOrdinal};
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

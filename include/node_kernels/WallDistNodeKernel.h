@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef WALLDISTNODEKERNEL_H
 #define WALLDISTNODEKERNEL_H
 
@@ -43,11 +42,10 @@ public:
 private:
   stk::mesh::NgpField<double> dualNodalVolume_;
 
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* WALLDISTNODEKERNEL_H */

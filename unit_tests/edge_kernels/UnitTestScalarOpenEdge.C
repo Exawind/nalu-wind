@@ -17,27 +17,99 @@
 #include "edge_kernels/ScalarOpenEdgeKernel.h"
 
 namespace {
-namespace hex8_golds  {
-static constexpr double rhs[8] = {
-0, -20, -24.755282581476, 0, 0, -20, -22.795084971875, 0 
-};
+namespace hex8_golds {
+static constexpr double rhs[8] = {0, -20, -24.755282581476, 0,
+                                  0, -20, -22.795084971875, 0};
 
 static constexpr double lhs[8][8] = {
-{0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 10, 0, 0, 0, 0, 0, 0, },
-{0, 0, 10, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 10, 0, 0, },
-{0, 0, 0, 0, 0, 0, 10, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    10,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    10,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    10,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    10,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
 };
-}
-}
+} // namespace hex8_golds
+} // namespace
 
 TEST_F(SSTKernelHex8Mesh, NGP_scalar_edge_open_solver_alg)
 {
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -51,10 +123,11 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_edge_open_solver_alg)
   unit_test_utils::FaceElemHelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 1, part);
 
-  std::unique_ptr<sierra::nalu::ScalarEdgeOpenSolverAlg<sierra::nalu::AlgTraitsQuad4Hex8>>
-    kernel (new sierra::nalu::ScalarEdgeOpenSolverAlg<
-      sierra::nalu::AlgTraitsQuad4Hex8>(
-      *meta_, solnOpts_, tke_, tkebc_, dkdx_, tvisc_, 
+  std::unique_ptr<
+    sierra::nalu::ScalarEdgeOpenSolverAlg<sierra::nalu::AlgTraitsQuad4Hex8>>
+    kernel(new sierra::nalu::ScalarEdgeOpenSolverAlg<
+           sierra::nalu::AlgTraitsQuad4Hex8>(
+      *meta_, solnOpts_, tke_, tkebc_, dkdx_, tvisc_,
       helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
       helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_));
 
@@ -74,7 +147,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_edge_open_solver_alg)
 
 TEST_F(SSTKernelHex8Mesh, NGP_scalar_open_edge)
 {
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -104,7 +178,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_open_edge)
 
   std::unique_ptr<sierra::nalu::Kernel> kernel(
     new sierra::nalu::ScalarOpenEdgeKernel<sierra::nalu::AlgTraitsQuad4>(
-      *meta_, solnOpts_,tke_, tkebc_,
+      *meta_, solnOpts_, tke_, tkebc_,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());
 
@@ -113,16 +187,16 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_open_edge)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 4u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 4u);
 
-  const double expectedRhs = (mdotVal > 0.0)
-    ? (- mdotVal * tkeVal)
-    : (- mdotVal * bcTkeVal);
+  const double expectedRhs =
+    (mdotVal > 0.0) ? (-mdotVal * tkeVal) : (-mdotVal * bcTkeVal);
   const double expectedLhs = (mdotVal > 0.0) ? (mdotVal * 2.0) : 0.0;
 
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, expectedRhs, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->rhs_, expectedRhs, 1.0e-12);
 
   Kokkos::deep_copy(helperObjs.linsys->hostlhs_, helperObjs.linsys->lhs_);
   const auto& lhs = helperObjs.linsys->hostlhs_;
 
-  for (int i=0; i < 4; ++i)
+  for (int i = 0; i < 4; ++i)
     EXPECT_NEAR(lhs(i, i), expectedLhs, 1.0e-12);
 }

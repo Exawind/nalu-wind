@@ -7,43 +7,40 @@
 // for more details.
 //
 
-
-
 #ifndef AssemblePNGBoundarySolverAlgorithm_h
 #define AssemblePNGBoundarySolverAlgorithm_h
 
-#include<SolverAlgorithm.h>
-#include<FieldTypeDef.h>
+#include <SolverAlgorithm.h>
+#include <FieldTypeDef.h>
 
 namespace stk {
 namespace mesh {
 class Part;
 }
-}
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class AssemblePNGBoundarySolverAlgorithm : public SolverAlgorithm
 {
 public:
-
   AssemblePNGBoundarySolverAlgorithm(
-    Realm &realm,
-    stk::mesh::Part *part,
-    EquationSystem *eqSystem,
+    Realm& realm,
+    stk::mesh::Part* part,
+    EquationSystem* eqSystem,
     std::string independentDofName);
   virtual ~AssemblePNGBoundarySolverAlgorithm() {}
   virtual void initialize_connectivity();
   virtual void execute();
 
-  ScalarFieldType *scalarQ_;
-  GenericFieldType *exposedAreaVec_;
+  ScalarFieldType* scalarQ_;
+  GenericFieldType* exposedAreaVec_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

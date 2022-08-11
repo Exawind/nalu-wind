@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef MasterElementFactory_h
 #define MasterElementFactory_h
 
@@ -20,74 +19,77 @@
 #include "AlgTraits.h"
 #include "utils/CreateDeviceExpression.h"
 
-namespace stk { struct topology; }
+namespace stk {
+struct topology;
+}
 
-namespace sierra{
-namespace nalu{
-  class MasterElement;
-  struct MasterElementRepo
-  {
-  public:
-    static MasterElement*
-    get_surface_master_element(const stk::topology& theTopo);
+namespace sierra {
+namespace nalu {
+class MasterElement;
+struct MasterElementRepo
+{
+public:
+  static MasterElement*
+  get_surface_master_element(const stk::topology& theTopo);
 
-    static MasterElement*
-    get_volume_master_element(const stk::topology& theTopo);
+  static MasterElement* get_volume_master_element(const stk::topology& theTopo);
 
-    template <typename AlgTraitsr>
-    static MasterElement* get_volume_master_element();
+  template <typename AlgTraitsr>
+  static MasterElement* get_volume_master_element();
 
-    template <typename AlgTraits>
-    static MasterElement* get_surface_master_element();
+  template <typename AlgTraits>
+  static MasterElement* get_surface_master_element();
 
-    static void clear();
-  private:
-    MasterElementRepo() = default;
-    static std::map<stk::topology, std::unique_ptr<MasterElement>> surfaceMeMap_;
-    static std::map<stk::topology, std::unique_ptr<MasterElement>> volumeMeMap_;
-    static std::map<stk::topology, MasterElement*> &volumeMeMapDev();
-    static std::map<stk::topology, MasterElement*> &surfaceMeMapDev();
+  static void clear();
 
-  public:
-    template<typename AlgTraits, typename ME>
-    static MasterElement* get_master_element(
-      std::map<stk::topology, MasterElement*> &meMapDev
-    );
-  };
+private:
+  MasterElementRepo() = default;
+  static std::map<stk::topology, std::unique_ptr<MasterElement>> surfaceMeMap_;
+  static std::map<stk::topology, std::unique_ptr<MasterElement>> volumeMeMap_;
+  static std::map<stk::topology, MasterElement*>& volumeMeMapDev();
+  static std::map<stk::topology, MasterElement*>& surfaceMeMapDev();
 
+public:
   template <typename AlgTraits, typename ME>
-  MasterElement*
-  MasterElementRepo::get_master_element(
-    std::map<stk::topology, MasterElement*>& meMap)
-  {
-    const stk::topology theTopo = AlgTraits::topo_;
-    //FIXME: ETI this
-    ThrowRequire(!theTopo.is_super_topology());
-    if (meMap.find(theTopo) == meMap.end()) {
-      const std::string& allocname = "ME_alloc_" + theTopo.name();
-      const std::string& placementname = "ME_new_" + theTopo.name();
-      ME* MEinstance = kokkos_malloc_on_device<ME>(allocname);
-      ThrowRequire(MEinstance != nullptr);
-      Kokkos::parallel_for(placementname, 1, KOKKOS_LAMBDA (const int) {
-          new (MEinstance) ME();
-        });
-      meMap[theTopo] = MEinstance;
-    }
-    return meMap.at(theTopo);
-  }
+  static MasterElement*
+  get_master_element(std::map<stk::topology, MasterElement*>& meMapDev);
+};
 
-  template <typename AlgTraits>
-  MasterElement* MasterElementRepo::get_volume_master_element()
-  {
-    return get_master_element<AlgTraits, typename AlgTraits::masterElementScv_>(volumeMeMapDev());
+template <typename AlgTraits, typename ME>
+MasterElement*
+MasterElementRepo::get_master_element(
+  std::map<stk::topology, MasterElement*>& meMap)
+{
+  const stk::topology theTopo = AlgTraits::topo_;
+  // FIXME: ETI this
+  ThrowRequire(!theTopo.is_super_topology());
+  if (meMap.find(theTopo) == meMap.end()) {
+    const std::string& allocname = "ME_alloc_" + theTopo.name();
+    const std::string& placementname = "ME_new_" + theTopo.name();
+    ME* MEinstance = kokkos_malloc_on_device<ME>(allocname);
+    ThrowRequire(MEinstance != nullptr);
+    Kokkos::parallel_for(
+      placementname, 1, KOKKOS_LAMBDA(const int) { new (MEinstance) ME(); });
+    meMap[theTopo] = MEinstance;
   }
+  return meMap.at(theTopo);
+}
 
-  template <typename AlgTraits>
-  MasterElement* MasterElementRepo::get_surface_master_element()
-  {
-    return get_master_element<AlgTraits, typename AlgTraits::masterElementScs_>(surfaceMeMapDev());
-  }
+template <typename AlgTraits>
+MasterElement*
+MasterElementRepo::get_volume_master_element()
+{
+  return get_master_element<AlgTraits, typename AlgTraits::masterElementScv_>(
+    volumeMeMapDev());
+}
 
+template <typename AlgTraits>
+MasterElement*
+MasterElementRepo::get_surface_master_element()
+{
+  return get_master_element<AlgTraits, typename AlgTraits::masterElementScs_>(
+    surfaceMeMapDev());
+}
 
 } // namespace nalu
 } // namespace sierra

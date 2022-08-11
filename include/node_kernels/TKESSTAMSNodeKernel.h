@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef TKESSTAMSNODEKERNEL_H
 #define TKESSTAMSNODEKERNEL_H
 

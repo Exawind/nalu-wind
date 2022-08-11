@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef KovasznayPressureAuxFunction_h
 #define KovasznayPressureAuxFunction_h
 
@@ -15,28 +14,27 @@
 
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class KovasznayPressureAuxFunction : public AuxFunction
 {
 public:
-
   KovasznayPressureAuxFunction();
 
   virtual ~KovasznayPressureAuxFunction() {}
-  
+
   using AuxFunction::do_evaluate;
   virtual void do_evaluate(
-    const double * coords,
+    const double* coords,
     const double time,
     const unsigned spatialDimension,
     const unsigned numPoints,
-    double * fieldPtr,
+    double* fieldPtr,
     const unsigned fieldSize,
     const unsigned beginPos,
     const unsigned endPos) const;
-  
+
 private:
   double Re_;
 };
@@ -44,20 +42,18 @@ private:
 class KovasznayPressureGradientAuxFunction : public AuxFunction
 {
 public:
-
   KovasznayPressureGradientAuxFunction(
-    const unsigned beginPos,
-    const unsigned endPos);
+    const unsigned beginPos, const unsigned endPos);
 
   virtual ~KovasznayPressureGradientAuxFunction() {}
 
   using AuxFunction::do_evaluate;
   virtual void do_evaluate(
-    const double * coords,
+    const double* coords,
     const double time,
     const unsigned spatialDimension,
     const unsigned numPoints,
-    double * fieldPtr,
+    double* fieldPtr,
     const unsigned fieldSize,
     const unsigned beginPos,
     const unsigned endPos) const;
@@ -67,6 +63,6 @@ private:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

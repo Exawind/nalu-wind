@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef MOMENTUMBODYFORCENODEKERNEL_H
 #define MOMENTUMBODYFORCENODEKERNEL_H
 
@@ -21,12 +20,12 @@
 namespace sierra {
 namespace nalu {
 
-class MomentumBodyForceNodeKernel : public NGPNodeKernel<MomentumBodyForceNodeKernel>
+class MomentumBodyForceNodeKernel
+  : public NGPNodeKernel<MomentumBodyForceNodeKernel>
 {
 public:
   MomentumBodyForceNodeKernel(
-    const stk::mesh::BulkData&,
-    const std::vector<double>&);
+    const stk::mesh::BulkData&, const std::vector<double>&);
 
   MomentumBodyForceNodeKernel() = delete;
 
@@ -44,16 +43,15 @@ public:
 private:
   stk::mesh::NgpField<double> dualNodalVolume_;
 
-  NALU_ALIGNED NodeKernelTraits::DblType forceVector_[NodeKernelTraits::NDimMax];
+  NALU_ALIGNED NodeKernelTraits::DblType
+    forceVector_[NodeKernelTraits::NDimMax];
 
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
 
   const int nDim_;
 };
 
-}  // nalu
-}  // sierra
-
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MOMENTUMBODYFORCENODEKERNEL_H */

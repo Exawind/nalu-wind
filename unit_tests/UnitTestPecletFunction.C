@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "gtest/gtest.h"
 #include "PecletFunction.h"
 #include "SimdInterface.h"
@@ -20,33 +19,33 @@ namespace {
 
 constexpr double tolerance = 1.0e-6;
 
-template<typename PecFuncType, typename ValueType>
-ValueType exec_on_device(PecFuncType* devptr, ValueType pecNum)
+template <typename PecFuncType, typename ValueType>
+ValueType
+exec_on_device(PecFuncType* devptr, ValueType pecNum)
 {
   ValueType pecFac = 0.0;
-  Kokkos::parallel_reduce(1, KOKKOS_LAMBDA(int, ValueType& pf) {
-      pf = devptr->execute(pecNum);
-    }, pecFac);
+  Kokkos::parallel_reduce(
+    1, KOKKOS_LAMBDA(int, ValueType& pf) { pf = devptr->execute(pecNum); },
+    pecFac);
   return pecFac;
 }
 
-}
+} // namespace
 
 TEST(PecletFunction, NGP_classic_double)
 {
   const double A = 5.0;
   const double hybridFactor = 1.0;
   std::vector<double> pecletNumbers = {0.0, 1.0, std::sqrt(5.0), 1e5};
-  std::vector<double> pecletFactors = {0.0, 1.0/6.0, 0.5, 1.0};
+  std::vector<double> pecletFactors = {0.0, 1.0 / 6.0, 0.5, 1.0};
 
   auto* pecFunc =
     sierra::nalu::nalu_ngp::create<sierra::nalu::ClassicPecletFunction<double>>(
       A, hybridFactor);
 
-  for (int i=0; i < 4; i++) {
-    EXPECT_NEAR(exec_on_device(pecFunc, pecletNumbers[i]),
-                pecletFactors[i],
-                tolerance);
+  for (int i = 0; i < 4; i++) {
+    EXPECT_NEAR(
+      exec_on_device(pecFunc, pecletNumbers[i]), pecletFactors[i], tolerance);
   }
 
   sierra::nalu::nalu_ngp::destroy(pecFunc);
@@ -57,18 +56,16 @@ TEST(PecletFunction, NGP_classic_simd)
   const DoubleType A = 5.0;
   const DoubleType hybridFactor = 1.0;
   NALU_ALIGNED DoubleType pecletNumbers[] = {0.0, 1.0, std::sqrt(5.0), 1e5};
-  std::vector<double> pecletFactors = {0.0, 1.0/6.0, 0.5, 1.0};
+  std::vector<double> pecletFactors = {0.0, 1.0 / 6.0, 0.5, 1.0};
 
-  auto* pecFunc =
-    sierra::nalu::nalu_ngp::create<sierra::nalu::ClassicPecletFunction<DoubleType>>(
-      A, hybridFactor);
+  auto* pecFunc = sierra::nalu::nalu_ngp::create<
+    sierra::nalu::ClassicPecletFunction<DoubleType>>(A, hybridFactor);
 
 #ifndef KOKKOS_ENABLE_CUDA
-  for (int i=0; i < 4; i++) {
+  for (int i = 0; i < 4; i++) {
     const DoubleType pecFac = exec_on_device(pecFunc, pecletNumbers[i]);
-    for (int is=0; is < stk::simd::ndoubles; is++) {
-      EXPECT_NEAR(stk::simd::get_data(pecFac, is),
-                  pecletFactors[i], tolerance);
+    for (int is = 0; is < stk::simd::ndoubles; is++) {
+      EXPECT_NEAR(stk::simd::get_data(pecFac, is), pecletFactors[i], tolerance);
     }
   }
 #endif
@@ -86,10 +83,9 @@ TEST(PecletFunction, NGP_tanh_double)
   auto* pecFunc =
     sierra::nalu::nalu_ngp::create<sierra::nalu::TanhFunction<double>>(c1, c2);
 
-  for (int i=0; i < 3; i++) {
-    EXPECT_NEAR(exec_on_device(pecFunc, pecletNumbers[i]),
-                pecletFactors[i],
-                tolerance);
+  for (int i = 0; i < 3; i++) {
+    EXPECT_NEAR(
+      exec_on_device(pecFunc, pecletNumbers[i]), pecletFactors[i], tolerance);
   }
 
   sierra::nalu::nalu_ngp::destroy(pecFunc);
@@ -103,14 +99,14 @@ TEST(PecletFunction, NGP_tanh_simd)
   std::vector<double> pecletFactors = {0.0, 0.5, 1.0};
 
   auto* pecFunc =
-    sierra::nalu::nalu_ngp::create<sierra::nalu::TanhFunction<DoubleType>>(c1, c2);
+    sierra::nalu::nalu_ngp::create<sierra::nalu::TanhFunction<DoubleType>>(
+      c1, c2);
 
 #ifndef KOKKOS_ENABLE_CUDA
-  for (int i=0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     const DoubleType pecFac = exec_on_device(pecFunc, pecletNumbers[i]);
-    for (int is=0; is < stk::simd::ndoubles; is++) {
-      EXPECT_NEAR(stk::simd::get_data(pecFac, is),
-                  pecletFactors[i], tolerance);
+    for (int is = 0; is < stk::simd::ndoubles; is++) {
+      EXPECT_NEAR(stk::simd::get_data(pecFac, is), pecletFactors[i], tolerance);
     }
   }
 #endif

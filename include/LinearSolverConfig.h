@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef LinearSolverConfig_h
 #define LinearSolverConfig_h
 
@@ -24,8 +22,8 @@ namespace YAML {
 class Node;
 }
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class LinearSolverConfig
 {
@@ -35,29 +33,30 @@ public:
 
   virtual void load(const YAML::Node&) = 0;
 
-  inline std::string name() const
-  { return name_ ; }
+  inline std::string name() const { return name_; }
 
-  const Teuchos::RCP<Teuchos::ParameterList> & params() const
-  { return params_; }
+  const Teuchos::RCP<Teuchos::ParameterList>& params() const { return params_; }
 
-  const Teuchos::RCP<Teuchos::ParameterList> & paramsPrecond() const
-  { return paramsPrecond_; }
+  const Teuchos::RCP<Teuchos::ParameterList>& paramsPrecond() const
+  {
+    return paramsPrecond_;
+  }
 
-  inline bool getWriteMatrixFiles() const
-  { return writeMatrixFiles_; }
+  inline bool getWriteMatrixFiles() const { return writeMatrixFiles_; }
 
   inline bool recomputePreconditioner() const
-  { return recomputePreconditioner_; }
+  {
+    return recomputePreconditioner_;
+  }
 
   inline unsigned recomputePrecondFrequency() const
-  { return recomputePrecondFrequency_; }
+  {
+    return recomputePrecondFrequency_;
+  }
 
-  inline bool reusePreconditioner() const
-  { return reusePreconditioner_; }
+  inline bool reusePreconditioner() const { return reusePreconditioner_; }
 
-  inline bool useSegregatedSolver() const
-  { return useSegregatedSolver_; }
+  inline bool useSegregatedSolver() const { return useSegregatedSolver_; }
 
   /** User flag indicating whether equation systems must attempt to reuse linear
    *  system data structures even for cases with mesh motion.
@@ -66,23 +65,18 @@ public:
    *  graph doesn't change, only the entries within the graph. This can be
    *  controlled on a per-solver basis.
    */
-  inline bool reuseLinSysIfPossible() const
-  { return reuseLinSysIfPossible_; }
+  inline bool reuseLinSysIfPossible() const { return reuseLinSysIfPossible_; }
 
-  std::string get_method() const
-  {return method_;}
+  std::string get_method() const { return method_; }
 
-  std::string preconditioner_type() const
-  { return preconditionerType_;}
+  std::string preconditioner_type() const { return preconditionerType_; }
 
-  std::string preconditioner_name() const
-  { return precond_;}
-  
+  std::string preconditioner_name() const { return precond_; }
+
   inline double tolerance() const { return tolerance_; }
   inline double finalTolerance() const { return finalTolerance_; }
 
-  std::string solver_type() const
-  { return solverType_; }
+  std::string solver_type() const { return solverType_; }
 
 protected:
   std::string solverType_;
@@ -93,12 +87,12 @@ protected:
   double tolerance_;
   double finalTolerance_;
 
-
   Teuchos::RCP<Teuchos::ParameterList> params_;
   Teuchos::RCP<Teuchos::ParameterList> paramsPrecond_;
 
   bool recomputePreconditioner_{true};
-  unsigned recomputePrecondFrequency_{1}; /* positive integer. Recompute precond before all solves */
+  unsigned recomputePrecondFrequency_{
+    1}; /* positive integer. Recompute precond before all solves */
   bool reusePreconditioner_{false};
   bool useSegregatedSolver_{false};
   bool writeMatrixFiles_{false};
@@ -111,10 +105,10 @@ public:
   TpetraLinearSolverConfig();
   virtual ~TpetraLinearSolverConfig();
 
-  virtual void load(const YAML::Node & node) final;
+  virtual void load(const YAML::Node& node) final;
   bool getSummarizeMueluTimer() { return summarizeMueluTimer_; }
-  std::string & muelu_xml_file() {return muelu_xml_file_;}
-  bool use_MueLu() const {return useMueLu_;}
+  std::string& muelu_xml_file() { return muelu_xml_file_; }
+  bool use_MueLu() const { return useMueLu_; }
 
 private:
   std::string muelu_xml_file_;
@@ -129,7 +123,7 @@ class HypreLinearSolverConfig : public LinearSolverConfig
 public:
   HypreLinearSolverConfig();
 
-  virtual ~HypreLinearSolverConfig() {};
+  virtual ~HypreLinearSolverConfig(){};
 
   //! Process and validate the user inputs and register calls to appropriate
   //! Hypre functions to configure the solver and preconditioner.
@@ -138,13 +132,16 @@ public:
   bool useSegregatedSolver() const { return useSegregatedSolver_; }
 
   inline bool simpleHypreMatrixAssemble() const
-  { return simpleHypreMatrixAssemble_; }
+  {
+    return simpleHypreMatrixAssemble_;
+  }
 
-  inline bool dumpHypreMatrixStats() const
-  { return dumpHypreMatrixStats_; }
+  inline bool dumpHypreMatrixStats() const { return dumpHypreMatrixStats_; }
 
   inline bool getWritePreassemblyMatrixFiles() const
-  { return writePreassemblyMatrixFiles_; }
+  {
+    return writePreassemblyMatrixFiles_;
+  }
 
 protected:
   //! List of HYPRE API calls and corresponding arugments to configure solver
@@ -204,11 +201,9 @@ private:
 
   void configure_hypre_preconditioner(const YAML::Node&);
   void configure_hypre_solver(const YAML::Node&);
-
 };
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

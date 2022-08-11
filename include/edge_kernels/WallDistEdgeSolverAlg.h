@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef WALLDISTEDGESOLVERALG_H
 #define WALLDISTEDGESOLVERALG_H
 
@@ -19,21 +18,18 @@ namespace nalu {
 class WallDistEdgeSolverAlg : public AssembleEdgeSolverAlgorithm
 {
 public:
-  WallDistEdgeSolverAlg(
-    Realm&,
-    stk::mesh::Part*,
-    EquationSystem*);
+  WallDistEdgeSolverAlg(Realm&, stk::mesh::Part*, EquationSystem*);
 
-   virtual ~WallDistEdgeSolverAlg() = default;
+  virtual ~WallDistEdgeSolverAlg() = default;
 
-   virtual void execute();
+  virtual void execute();
 
- private:
-  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
-  unsigned edgeAreaVec_ {stk::mesh::InvalidOrdinal};
+private:
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* WALLDISTEDGESOLVERALG_H */

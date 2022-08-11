@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <LinearSystem.h>
 #include <TpetraLinearSystem.h>
 #include <TpetraSegregatedLinearSystem.h>
@@ -43,8 +41,8 @@
 
 #include <sstream>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -55,10 +53,10 @@ namespace nalu{
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 LinearSystem::LinearSystem(
-  Realm &realm,
+  Realm& realm,
   const unsigned numDof,
-  EquationSystem *eqSys,
-  LinearSolver *linearSolver)
+  EquationSystem* eqSys,
+  LinearSolver* linearSolver)
   : realm_(realm),
     eqSys_(eqSys),
     inConstruction_(false),
@@ -77,36 +75,49 @@ LinearSystem::LinearSystem(
   // nothing to do
 }
 
-void LinearSystem::zero_timer_precond()
+void
+LinearSystem::zero_timer_precond()
 {
   linearSolver_->zero_timer_precond();
 }
 
-double LinearSystem::get_timer_precond()
+double
+LinearSystem::get_timer_precond()
 {
   return linearSolver_->get_timer_precond();
 }
 
-bool LinearSystem::debug()
+bool
+LinearSystem::debug()
 {
-  if (linearSolver_ && linearSolver_->root() && linearSolver_->root()->debug()) return true;
+  if (linearSolver_ && linearSolver_->root() && linearSolver_->root()->debug())
+    return true;
   return false;
 }
 
-bool LinearSystem::useSegregatedSolver() const {
-  return linearSolver_ ? linearSolver_->getConfig()->useSegregatedSolver() : false;
+bool
+LinearSystem::useSegregatedSolver() const
+{
+  return linearSolver_ ? linearSolver_->getConfig()->useSegregatedSolver()
+                       : false;
 }
 
-const LinearSolverConfig& LinearSystem::config() const
+const LinearSolverConfig&
+LinearSystem::config() const
 {
   ThrowAssert(linearSolver_ != nullptr);
   return *(linearSolver_->getConfig());
 }
 
 // static method
-LinearSystem *LinearSystem::create(Realm& realm, const unsigned numDof, EquationSystem *eqSys, LinearSolver *solver)
+LinearSystem*
+LinearSystem::create(
+  Realm& realm,
+  const unsigned numDof,
+  EquationSystem* eqSys,
+  LinearSolver* solver)
 {
-  switch(solver->getType()) {
+  switch (solver->getType()) {
   case PT_TPETRA:
     return new TpetraLinearSystem(realm, numDof, eqSys, solver);
 // Avoid nvcc unreachable statement warnings
@@ -141,15 +152,15 @@ LinearSystem *LinearSystem::create(Realm& realm, const unsigned numDof, Equation
 #endif
 }
 
-void LinearSystem::sync_field(const stk::mesh::FieldBase *field)
+void
+LinearSystem::sync_field(const stk::mesh::FieldBase* field)
 {
   const auto& fieldMgr = realm_.ngp_field_manager();
   const std::vector<NGPDoubleFieldType*> ngpFields{
-    &fieldMgr.get_field<double>(field->mesh_meta_data_ordinal())
-  };
+    &fieldMgr.get_field<double>(field->mesh_meta_data_ordinal())};
 
   stk::mesh::copy_owned_to_shared(realm_.bulk_data(), ngpFields);
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

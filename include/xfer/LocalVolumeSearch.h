@@ -52,8 +52,7 @@ struct LocalVolumeSearchData
 // interpolate to a collection of points locally
 // if the process contains the point then that the element of the second return
 // vector is marked 1
-void
-local_field_interpolation(
+void local_field_interpolation(
   const stk::mesh::BulkData& bulk,
   const stk::mesh::Selector& active,
   const std::vector<std::array<double, 3>>& points,

@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef MomentumMassBDFNodeKernel_h
 #define MomentumMassBDFNodeKernel_h
 
@@ -20,16 +18,16 @@
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
-class MomentumMassBDFNodeKernel : public NGPNodeKernel<MomentumMassBDFNodeKernel>
+class MomentumMassBDFNodeKernel
+  : public NGPNodeKernel<MomentumMassBDFNodeKernel>
 {
 public:
-  MomentumMassBDFNodeKernel(
-    const stk::mesh::BulkData&);
+  MomentumMassBDFNodeKernel(const stk::mesh::BulkData&);
 
   KOKKOS_DEFAULTED_FUNCTION
   MomentumMassBDFNodeKernel() = default;
@@ -57,25 +55,23 @@ private:
   stk::mesh::NgpField<double> dnvN_;
   stk::mesh::NgpField<double> dnvNm1_;
 
+  unsigned velocityNm1ID_{stk::mesh::InvalidOrdinal};
+  unsigned velocityNID_{stk::mesh::InvalidOrdinal};
+  unsigned velocityNp1ID_{stk::mesh::InvalidOrdinal};
+  unsigned densityNm1ID_{stk::mesh::InvalidOrdinal};
+  unsigned densityNID_{stk::mesh::InvalidOrdinal};
+  unsigned densityNp1ID_{stk::mesh::InvalidOrdinal};
+  unsigned dpdxID_{stk::mesh::InvalidOrdinal};
+  unsigned dnvNp1ID_{stk::mesh::InvalidOrdinal};
+  unsigned dnvNID_{stk::mesh::InvalidOrdinal};
+  unsigned dnvNm1ID_{stk::mesh::InvalidOrdinal};
 
-  unsigned velocityNm1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned velocityNID_ {stk::mesh::InvalidOrdinal};
-  unsigned velocityNp1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned densityNm1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned densityNID_ {stk::mesh::InvalidOrdinal};
-  unsigned densityNp1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned dpdxID_ {stk::mesh::InvalidOrdinal};
-  unsigned dnvNp1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned dnvNID_ {stk::mesh::InvalidOrdinal};
-  unsigned dnvNm1ID_ {stk::mesh::InvalidOrdinal};
-  
   double dt_;
   int nDim_;
   double gamma1_, gamma2_, gamma3_;
-  
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

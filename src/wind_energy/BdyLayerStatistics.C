@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "wind_energy/BdyLayerStatistics.h"
 #include "wind_energy/BdyHeightAlgorithm.h"
 #include "ngp_utils/NgpLoopUtils.h"
@@ -60,7 +59,9 @@ inline utils::InterpTraits<double>::index_type
 find_index(const BdyLayerStatistics::HostArrayType& xinp, const double& x)
 {
   auto idx = check_bounds(xinp, x);
-  if (idx.first == utils::OutOfBounds::UPLIM || idx.first == utils::OutOfBounds::LOWLIM)
+  if (
+    idx.first == utils::OutOfBounds::UPLIM ||
+    idx.first == utils::OutOfBounds::LOWLIM)
     return idx;
 
   auto sz = xinp.size();
@@ -73,25 +74,22 @@ find_index(const BdyLayerStatistics::HostArrayType& xinp, const double& x)
   return idx;
 }
 
-}
+} // namespace
 
-inline void check_nc_error(int code, std::string msg)
+inline void
+check_nc_error(int code, std::string msg)
 {
   if (code != 0)
     throw std::runtime_error("BdyLayerStatistics:: NetCDF error: " + msg);
 }
 
-BdyLayerStatistics::BdyLayerStatistics(
-  Realm& realm,
-  const YAML::Node& node
-) : realm_(realm),
-    nDim_(realm.spatialDimension_)
+BdyLayerStatistics::BdyLayerStatistics(Realm& realm, const YAML::Node& node)
+  : realm_(realm), nDim_(realm.spatialDimension_)
 {
   load(node);
 }
 
-BdyLayerStatistics::~BdyLayerStatistics()
-{}
+BdyLayerStatistics::~BdyLayerStatistics() {}
 
 void
 BdyLayerStatistics::load(const YAML::Node& node)
@@ -111,30 +109,33 @@ BdyLayerStatistics::load(const YAML::Node& node)
   if (heightAlg == "rectilinear_mesh") {
     bdyHeightAlg_.reset(new RectilinearMeshHeightAlg(realm_, node));
   } else {
-    throw std::runtime_error("BdyLayerStatistics::load(): Incorrect height algorithm.");
+    throw std::runtime_error(
+      "BdyLayerStatistics::load(): Incorrect height algorithm.");
   }
 
   double timeAvgWindow = 3600.0;
   get_if_present(node, "time_filter_interval", timeAvgWindow, timeAvgWindow);
-  get_if_present(node, "compute_temperature_statistics", calcTemperatureStats_,
-                 calcTemperatureStats_);
+  get_if_present(
+    node, "compute_temperature_statistics", calcTemperatureStats_,
+    calcTemperatureStats_);
 
   setup_turbulence_averaging(timeAvgWindow);
 
   get_if_present(node, "output_frequency", outputFrequency_, outputFrequency_);
-  get_if_present(node, "time_hist_output_frequency",
-                 timeHistOutFrequency_, timeHistOutFrequency_);
+  get_if_present(
+    node, "time_hist_output_frequency", timeHistOutFrequency_,
+    timeHistOutFrequency_);
   get_if_present(node, "stats_output_file", bdyStatsFile_, bdyStatsFile_);
   get_if_present(node, "process_utau_statistics", hasUTau_, hasUTau_);
 }
 
 void
-BdyLayerStatistics::setup_turbulence_averaging(
-  const double timeAvgWindow)
+BdyLayerStatistics::setup_turbulence_averaging(const double timeAvgWindow)
 {
   bool hasTurbAvg = false;
   if (realm_.turbulenceAveragingPostProcessing_ == nullptr) {
-    realm_.turbulenceAveragingPostProcessing_ = new TurbulenceAveragingPostProcessing(realm_);
+    realm_.turbulenceAveragingPostProcessing_ =
+      new TurbulenceAveragingPostProcessing(realm_);
   } else {
     hasTurbAvg = true;
   }
@@ -145,10 +146,13 @@ BdyLayerStatistics::setup_turbulence_averaging(
     const double diff = std::fabs(timeAvgWindow - turbAvg->timeFilterInterval_);
     if (diff > 1.0e-3)
       NaluEnv::self().naluOutputP0()
-        << "WARNING:: BdyLayerStatistics: timeFilterInterval inconsistent with that requested for TurbulenceAveragingPostProcessing." << std::endl;
+        << "WARNING:: BdyLayerStatistics: timeFilterInterval inconsistent with "
+           "that requested for TurbulenceAveragingPostProcessing."
+        << std::endl;
   } else {
     turbAvg->timeFilterInterval_ = timeAvgWindow;
-    turbAvg->averagingType_ = TurbulenceAveragingPostProcessing::MOVING_EXPONENTIAL;
+    turbAvg->averagingType_ =
+      TurbulenceAveragingPostProcessing::MOVING_EXPONENTIAL;
   }
 
   AveragingInfo* avInfo = new AveragingInfo();
@@ -175,17 +179,18 @@ BdyLayerStatistics::setup()
   const size_t nparts = partNames_.size();
   fluidParts_.resize(nparts);
 
-  for (size_t i=0; i < nparts; i++) {
+  for (size_t i = 0; i < nparts; i++) {
     auto* part = meta.get_part(realm_.physics_part_name(partNames_[i]));
     if (nullptr == part)
-      throw std::runtime_error("BdyLayerStatistics:: Part not found: " + partNames_[i]);
+      throw std::runtime_error(
+        "BdyLayerStatistics:: Part not found: " + partNames_[i]);
     else
       fluidParts_[i] = part;
   }
 
   heightIndex_ = &meta.declare_field<ScalarIntFieldType>(
     stk::topology::NODE_RANK, "bdy_layer_height_index_field");
-  for (auto* part: fluidParts_)
+  for (auto* part : fluidParts_)
     stk::mesh::put_field_on_mesh(*heightIndex_, *part, nullptr);
 }
 
@@ -193,55 +198,55 @@ void
 BdyLayerStatistics::initialize()
 {
   auto& meta = realm_.meta_data();
-  stk::mesh::Selector sel = meta.locally_owned_part()
-    & stk::mesh::selectUnion(fluidParts_);
+  stk::mesh::Selector sel =
+    meta.locally_owned_part() & stk::mesh::selectUnion(fluidParts_);
 
   std::vector<double> heights_vec;
   bdyHeightAlg_->calc_height_levels(sel, *heightIndex_, heights_vec);
 
   const size_t nHeights = heights_vec.size();
-  d_heights_    = ArrayType("d_heights_", nHeights);
-  d_sumVol_     = ArrayType("d_sumVol_", nHeights);
-  d_rhoAvg_     = ArrayType("d_rhoAvg_", nHeights);
-  d_velAvg_     = ArrayType("d_velAvg_", nHeights * nDim_);
-  d_velMagAvg_  = ArrayType("d_velMagAvg_", nHeights);
-  d_velBarAvg_  = ArrayType("d_velBarAvg_", nHeights * nDim_);
-  d_uiujAvg_    = ArrayType("d_uiujAvg_", nHeights * nDim_ * 2);
+  d_heights_ = ArrayType("d_heights_", nHeights);
+  d_sumVol_ = ArrayType("d_sumVol_", nHeights);
+  d_rhoAvg_ = ArrayType("d_rhoAvg_", nHeights);
+  d_velAvg_ = ArrayType("d_velAvg_", nHeights * nDim_);
+  d_velMagAvg_ = ArrayType("d_velMagAvg_", nHeights);
+  d_velBarAvg_ = ArrayType("d_velBarAvg_", nHeights * nDim_);
+  d_uiujAvg_ = ArrayType("d_uiujAvg_", nHeights * nDim_ * 2);
   d_uiujBarAvg_ = ArrayType("d_uiujBarAvg_", nHeights * nDim_ * 2);
-  d_sfsBarAvg_  = ArrayType("d_sfsBarAvg_", nHeights * nDim_ * 2);
-  d_sfsAvg_     = ArrayType("d_sfsAvg_", nHeights * nDim_ * 2);
+  d_sfsBarAvg_ = ArrayType("d_sfsBarAvg_", nHeights * nDim_ * 2);
+  d_sfsAvg_ = ArrayType("d_sfsAvg_", nHeights * nDim_ * 2);
 
-  heights_    = Kokkos::create_mirror_view(d_heights_);
-  sumVol_     = Kokkos::create_mirror_view(d_sumVol_);
-  rhoAvg_     = Kokkos::create_mirror_view(d_rhoAvg_);
-  velAvg_     = Kokkos::create_mirror_view(d_velAvg_);
-  velMagAvg_  = Kokkos::create_mirror_view(d_velMagAvg_);
-  velBarAvg_  = Kokkos::create_mirror_view(d_velBarAvg_);
-  uiujAvg_    = Kokkos::create_mirror_view(d_uiujAvg_);
+  heights_ = Kokkos::create_mirror_view(d_heights_);
+  sumVol_ = Kokkos::create_mirror_view(d_sumVol_);
+  rhoAvg_ = Kokkos::create_mirror_view(d_rhoAvg_);
+  velAvg_ = Kokkos::create_mirror_view(d_velAvg_);
+  velMagAvg_ = Kokkos::create_mirror_view(d_velMagAvg_);
+  velBarAvg_ = Kokkos::create_mirror_view(d_velBarAvg_);
+  uiujAvg_ = Kokkos::create_mirror_view(d_uiujAvg_);
   uiujBarAvg_ = Kokkos::create_mirror_view(d_uiujBarAvg_);
-  sfsBarAvg_  = Kokkos::create_mirror_view(d_sfsBarAvg_);
-  sfsAvg_     = Kokkos::create_mirror_view(d_sfsAvg_);
+  sfsBarAvg_ = Kokkos::create_mirror_view(d_sfsBarAvg_);
+  sfsAvg_ = Kokkos::create_mirror_view(d_sfsAvg_);
 
   if (calcTemperatureStats_) {
-    d_thetaAvg_       = ArrayType("thetaAvg_", nHeights);
-    d_thetaBarAvg_    = ArrayType("thetaBarAvg_", nHeights);
-    d_thetaUjAvg_     = ArrayType("thetaUjAvg_", nHeights * nDim_);
+    d_thetaAvg_ = ArrayType("thetaAvg_", nHeights);
+    d_thetaBarAvg_ = ArrayType("thetaBarAvg_", nHeights);
+    d_thetaUjAvg_ = ArrayType("thetaUjAvg_", nHeights * nDim_);
     d_thetaSFSBarAvg_ = ArrayType("thetaSFSBarAvg_", nHeights * nDim_);
-    d_thetaUjBarAvg_  = ArrayType("thetaUjBarAvg_", nHeights * nDim_);
-    d_thetaVarAvg_    = ArrayType("thetaVarAvg_", nHeights);
+    d_thetaUjBarAvg_ = ArrayType("thetaUjBarAvg_", nHeights * nDim_);
+    d_thetaVarAvg_ = ArrayType("thetaVarAvg_", nHeights);
     d_thetaBarVarAvg_ = ArrayType("thetaBarVarAvg_", nHeights);
 
-    thetaAvg_       = Kokkos::create_mirror_view(d_thetaAvg_);
-    thetaBarAvg_    = Kokkos::create_mirror_view(d_thetaBarAvg_);
-    thetaUjAvg_     = Kokkos::create_mirror_view(d_thetaUjAvg_);
+    thetaAvg_ = Kokkos::create_mirror_view(d_thetaAvg_);
+    thetaBarAvg_ = Kokkos::create_mirror_view(d_thetaBarAvg_);
+    thetaUjAvg_ = Kokkos::create_mirror_view(d_thetaUjAvg_);
     thetaSFSBarAvg_ = Kokkos::create_mirror_view(d_thetaSFSBarAvg_);
-    thetaUjBarAvg_  = Kokkos::create_mirror_view(d_thetaUjBarAvg_);
-    thetaVarAvg_    = Kokkos::create_mirror_view(d_thetaVarAvg_);
+    thetaUjBarAvg_ = Kokkos::create_mirror_view(d_thetaUjBarAvg_);
+    thetaVarAvg_ = Kokkos::create_mirror_view(d_thetaVarAvg_);
     thetaBarVarAvg_ = Kokkos::create_mirror_view(d_thetaBarVarAvg_);
   }
 
   // Copy heights into the Kokkos views
-  for (size_t ih=0; ih < nHeights; ++ih)
+  for (size_t ih = 0; ih < nHeights; ++ih)
     heights_[ih] = heights_vec[ih];
   Kokkos::deep_copy(d_heights_, heights_);
 
@@ -254,7 +259,8 @@ BdyLayerStatistics::initialize()
 void
 BdyLayerStatistics::execute()
 {
-  if (doInit_) initialize();
+  if (doInit_)
+    initialize();
 
   impl_compute_velocity_stats();
   output_velocity_averages();
@@ -267,43 +273,36 @@ BdyLayerStatistics::execute()
   write_time_hist_file();
 }
 
-
 void
-BdyLayerStatistics::velocity(
-  double height,
-  double* velVector)
+BdyLayerStatistics::velocity(double height, double* velVector)
 {
   interpolate_variable(
-    realm_.meta_data().spatial_dimension(),
-    velAvg_, height, velVector);
+    realm_.meta_data().spatial_dimension(), velAvg_, height, velVector);
 }
 
 void
-BdyLayerStatistics::time_averaged_velocity(
-  double height,
-  double* velVector)
+BdyLayerStatistics::time_averaged_velocity(double height, double* velVector)
 {
   interpolate_variable(
-    realm_.meta_data().spatial_dimension(),
-    velBarAvg_, height, velVector);
+    realm_.meta_data().spatial_dimension(), velBarAvg_, height, velVector);
 }
 
 void
 BdyLayerStatistics::velocity_magnitude(double height, double* velMag)
 {
-    interpolate_variable(1, velMagAvg_, height, velMag);
+  interpolate_variable(1, velMagAvg_, height, velMag);
 }
 
 void
 BdyLayerStatistics::density(double height, double* rho)
 {
-    interpolate_variable(1, rhoAvg_, height, rho);
+  interpolate_variable(1, rhoAvg_, height, rho);
 }
 
 void
 BdyLayerStatistics::temperature(double height, double* theta)
 {
-    interpolate_variable(1, thetaAvg_, height, theta);
+  interpolate_variable(1, thetaAvg_, height, theta);
 }
 
 int
@@ -316,17 +315,14 @@ BdyLayerStatistics::abl_height_index(const double height) const
 
 void
 BdyLayerStatistics::interpolate_variable(
-  int nComp,
-  HostArrayType& varArray,
-  double height,
-  double* interpVar)
+  int nComp, HostArrayType& varArray, double height, double* interpVar)
 {
   auto idx = find_index(heights_, height);
 
   switch (idx.first) {
   case utils::OutOfBounds::LOWLIM: {
     int offset = idx.second * nComp;
-    for (int d=0; d < nComp; d++) {
+    for (int d = 0; d < nComp; d++) {
       interpVar[d] = varArray[offset + d];
     }
     break;
@@ -334,7 +330,7 @@ BdyLayerStatistics::interpolate_variable(
 
   case utils::OutOfBounds::UPLIM: {
     int offset = (idx.second - 1) * nComp;
-    for (int d=0; d < nComp; d++) {
+    for (int d = 0; d < nComp; d++) {
       interpVar[d] = varArray[offset + d];
     }
     break;
@@ -343,9 +339,10 @@ BdyLayerStatistics::interpolate_variable(
   case utils::OutOfBounds::VALID: {
     int ih = idx.second;
     int offset = idx.second * nComp;
-    double fac = (height - heights_[ih]) / (heights_[ih+1] - heights_[ih]);
-    for (int d=0; d < nComp; d++) {
-      interpVar[d] = (1.0 - fac) * varArray[offset+d] + fac * varArray[offset + nComp + d];
+    double fac = (height - heights_[ih]) / (heights_[ih + 1] - heights_[ih]);
+    for (int d = 0; d < nComp; d++) {
+      interpVar[d] =
+        (1.0 - fac) * varArray[offset + d] + fac * varArray[offset + nComp + d];
     }
     break;
   }
@@ -360,18 +357,20 @@ BdyLayerStatistics::impl_compute_velocity_stats()
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto density = nalu_ngp::get_ngp_field(meshInfo, "density");
   const auto velocity = nalu_ngp::get_ngp_field(meshInfo, "velocity");
-  const auto velTimeAvg = nalu_ngp::get_ngp_field(meshInfo, "velocity_resa_abl");
+  const auto velTimeAvg =
+    nalu_ngp::get_ngp_field(meshInfo, "velocity_resa_abl");
   const auto resStress = nalu_ngp::get_ngp_field(meshInfo, "resolved_stress");
   const auto sfsField = nalu_ngp::get_ngp_field(meshInfo, "sfs_stress");
-  const auto sfsFieldInst = nalu_ngp::get_ngp_field(meshInfo, "sfs_stress_inst");
+  const auto sfsFieldInst =
+    nalu_ngp::get_ngp_field(meshInfo, "sfs_stress_inst");
   const auto dualVol = nalu_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
   const auto heightIndex = realm_.ngp_field_manager().get_field<int>(
     heightIndex_->mesh_meta_data_ordinal());
 
-  stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
-    & stk::mesh::selectUnion(fluidParts_)
-    & !(realm_.get_inactive_selector())
-    & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()));
+  stk::mesh::Selector sel =
+    realm_.meta_data().locally_owned_part() &
+    stk::mesh::selectUnion(fluidParts_) & !(realm_.get_inactive_selector()) &
+    !(stk::mesh::selectUnion(realm_.get_slave_part_vector()));
 
   // Reset arrays before accumulation
   Kokkos::deep_copy(d_velAvg_, 0.0);
@@ -385,115 +384,129 @@ BdyLayerStatistics::impl_compute_velocity_stats()
   Kokkos::deep_copy(d_rhoAvg_, 0.0);
 
   // Bring arrays into local scope for capture on device
-  auto d_velAvg     = d_velAvg_;
-  auto d_velMagAvg  = d_velMagAvg_;
-  auto d_velBarAvg  = d_velBarAvg_;
-  auto d_sfsBarAvg  = d_sfsBarAvg_;
-  auto d_uiujAvg    = d_uiujAvg_;
+  auto d_velAvg = d_velAvg_;
+  auto d_velMagAvg = d_velMagAvg_;
+  auto d_velBarAvg = d_velBarAvg_;
+  auto d_sfsBarAvg = d_sfsBarAvg_;
+  auto d_uiujAvg = d_uiujAvg_;
   auto d_uiujBarAvg = d_uiujBarAvg_;
-  auto d_sumVol     = d_sumVol_;
-  auto d_rhoAvg     = d_rhoAvg_;
-  auto d_sfsAvg     = d_sfsAvg_;
+  auto d_sumVol = d_sumVol_;
+  auto d_rhoAvg = d_rhoAvg_;
+  auto d_sfsAvg = d_sfsAvg_;
 
   const int ndim = nDim_;
   nalu_ngp::run_entity_algorithm(
-    "BLStats::velocity",
-    ngpMesh, stk::topology::NODE_RANK, sel,
+    "BLStats::velocity", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const int ih = heightIndex.get(mi, 0);
 
       // Volume and density calculations
       const double rho = density.get(mi, 0);
-      const double dVol  = dualVol.get(mi, 0);
+      const double dVol = dualVol.get(mi, 0);
       Kokkos::atomic_add(&d_sumVol(ih), (dVol));
       Kokkos::atomic_add(&d_rhoAvg(ih), (rho * dVol));
 
       // Velocity computations
       int offset = ih * ndim;
 
-      // -this is the horizontal velocity magnitude--needs to be generalized to let the user specify if it
-      //  should just be horizontal, what the horizontal plane is, or the full vector magnitude.  This implementation
-      //  assumes horizontal is in Cartesian x and y.
+      // -this is the horizontal velocity magnitude--needs to be generalized to
+      // let the user specify if it
+      //  should just be horizontal, what the horizontal plane is, or the full
+      //  vector magnitude.  This implementation assumes horizontal is in
+      //  Cartesian x and y.
       double velMag = 0.0;
-      for (int d=0; d < ndim-1; ++d) {
+      for (int d = 0; d < ndim - 1; ++d) {
         velMag += velocity.get(mi, d) * velocity.get(mi, d);
       }
       velMag = stk::math::sqrt(velMag);
       Kokkos::atomic_add(&d_velMagAvg(ih), (velMag * rho * dVol));
 
-      for (int d=0; d < ndim; ++d) {
-        Kokkos::atomic_add(&d_velAvg(offset + d), (velocity.get(mi, d) * rho * dVol));
+      for (int d = 0; d < ndim; ++d) {
+        Kokkos::atomic_add(
+          &d_velAvg(offset + d), (velocity.get(mi, d) * rho * dVol));
 
         // velocity_resa_abl is already multiplied by density
-        Kokkos::atomic_add(&d_velBarAvg(offset + d), (velTimeAvg.get(mi, d) * dVol));
+        Kokkos::atomic_add(
+          &d_velBarAvg(offset + d), (velTimeAvg.get(mi, d) * dVol));
       }
 
       // Stress computations
       offset *= 2;
       int idx = 0;
-      for (int i=0; i < ndim; ++i)
-        for (int j=i; j < ndim; ++j) {
+      for (int i = 0; i < ndim; ++i)
+        for (int j = i; j < ndim; ++j) {
           Kokkos::atomic_add(
             &d_uiujAvg(offset + idx),
             (velocity.get(mi, i) * velocity.get(mi, j) * rho * dVol));
           idx++;
         }
 
-      for (int i=0; i < ndim * 2; ++i) {
-        Kokkos::atomic_add(&d_sfsAvg(offset + i), (sfsFieldInst.get(mi, i)*rho* dVol));
-        Kokkos::atomic_add(&d_sfsBarAvg(offset + i), (sfsField.get(mi, i) * dVol));
-        Kokkos::atomic_add(&d_uiujBarAvg(offset + i), (resStress.get(mi, i) * dVol));
+      for (int i = 0; i < ndim * 2; ++i) {
+        Kokkos::atomic_add(
+          &d_sfsAvg(offset + i), (sfsFieldInst.get(mi, i) * rho * dVol));
+        Kokkos::atomic_add(
+          &d_sfsBarAvg(offset + i), (sfsField.get(mi, i) * dVol));
+        Kokkos::atomic_add(
+          &d_uiujBarAvg(offset + i), (resStress.get(mi, i) * dVol));
       }
     });
 
-  Kokkos::deep_copy(velAvg_,     d_velAvg_);
-  Kokkos::deep_copy(velMagAvg_,  d_velMagAvg_);
-  Kokkos::deep_copy(velBarAvg_,  d_velBarAvg_);
-  Kokkos::deep_copy(sfsBarAvg_,  d_sfsBarAvg_);
-  Kokkos::deep_copy(sfsAvg_,     d_sfsAvg_);
-  Kokkos::deep_copy(uiujAvg_,    d_uiujAvg_);
+  Kokkos::deep_copy(velAvg_, d_velAvg_);
+  Kokkos::deep_copy(velMagAvg_, d_velMagAvg_);
+  Kokkos::deep_copy(velBarAvg_, d_velBarAvg_);
+  Kokkos::deep_copy(sfsBarAvg_, d_sfsBarAvg_);
+  Kokkos::deep_copy(sfsAvg_, d_sfsAvg_);
+  Kokkos::deep_copy(uiujAvg_, d_uiujAvg_);
   Kokkos::deep_copy(uiujBarAvg_, d_uiujBarAvg_);
-  Kokkos::deep_copy(sumVol_,     d_sumVol_);
-  Kokkos::deep_copy(rhoAvg_,     d_rhoAvg_);
+  Kokkos::deep_copy(sumVol_, d_sumVol_);
+  Kokkos::deep_copy(rhoAvg_, d_rhoAvg_);
 
   // Global summation
   const size_t nHeights = heights_.extent(0);
   const auto& bulk = realm_.bulk_data();
-  MPI_Allreduce(MPI_IN_PLACE, velAvg_.data(), nHeights * nDim_, MPI_DOUBLE,
-                MPI_SUM, bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, velMagAvg_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
-                bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, velBarAvg_.data(), nHeights * nDim_,
-                MPI_DOUBLE, MPI_SUM, bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, sfsBarAvg_.data(), nHeights * nDim_ * 2,
-                MPI_DOUBLE, MPI_SUM, bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, sfsAvg_.data(), nHeights * nDim_ * 2,
-                MPI_DOUBLE, MPI_SUM, bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, uiujBarAvg_.data(), nHeights * nDim_ * 2,
-                MPI_DOUBLE, MPI_SUM, bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, uiujAvg_.data(), nHeights * nDim_ * 2,
-                MPI_DOUBLE, MPI_SUM, bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, sumVol_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
-                bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, rhoAvg_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
-                bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, velAvg_.data(), nHeights * nDim_, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, velMagAvg_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, velBarAvg_.data(), nHeights * nDim_, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, sfsBarAvg_.data(), nHeights * nDim_ * 2, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, sfsAvg_.data(), nHeights * nDim_ * 2, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, uiujBarAvg_.data(), nHeights * nDim_ * 2, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, uiujAvg_.data(), nHeights * nDim_ * 2, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, sumVol_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, rhoAvg_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
 
   // Compute averages
-  for (size_t ih=0; ih < nHeights; ih++) {
+  for (size_t ih = 0; ih < nHeights; ih++) {
     int offset = ih * nDim_;
 
-    for (int d=0; d < nDim_; d++) {
+    for (int d = 0; d < nDim_; d++) {
       velAvg_(offset + d) /= rhoAvg_(ih);
       velBarAvg_(offset + d) /= rhoAvg_(ih);
     }
 
     velMagAvg_(ih) /= rhoAvg_(ih);
 
-
     offset *= 2;
-    for (int i=0; i < nDim_ * 2; i++) {
+    for (int i = 0; i < nDim_ * 2; i++) {
       sfsBarAvg_(offset + i) /= rhoAvg_(ih);
-      sfsAvg_(offset + i)    /= rhoAvg_(ih);
+      sfsAvg_(offset + i) /= rhoAvg_(ih);
       uiujBarAvg_(offset + i) /= rhoAvg_(ih);
       uiujAvg_(offset + i) /= rhoAvg_(ih);
     }
@@ -503,15 +516,16 @@ BdyLayerStatistics::impl_compute_velocity_stats()
   }
 
   // Compute prime quantities
-  for (size_t ih=0; ih < nHeights; ih++) {
+  for (size_t ih = 0; ih < nHeights; ih++) {
     int offset = ih * nDim_;
     int offset1 = offset * 2;
     int idx = 0;
 
-    for (int i=0; i < nDim_; i++) {
-      for (int j=i; j < nDim_; j++) {
+    for (int i = 0; i < nDim_; i++) {
+      for (int j = i; j < nDim_; j++) {
         uiujAvg_(offset1 + idx) -= velAvg_(offset + i) * velAvg_(offset + j);
-        uiujBarAvg_(offset1 + idx) -= velBarAvg_(offset + i) * velBarAvg_(offset + j);
+        uiujBarAvg_(offset1 + idx) -=
+          velBarAvg_(offset + i) * velBarAvg_(offset + j);
         idx++;
       }
     }
@@ -530,16 +544,19 @@ BdyLayerStatistics::impl_compute_temperature_stats()
   const auto theta = nalu_ngp::get_ngp_field(meshInfo, "temperature");
   const auto thetaA = nalu_ngp::get_ngp_field(meshInfo, "temperature_resa_abl");
   const auto dualVol = nalu_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
-  const auto thetaSFS = nalu_ngp::get_ngp_field(meshInfo, "temperature_sfs_flux");
-  const auto thetaUj = nalu_ngp::get_ngp_field(meshInfo, "temperature_resolved_flux");
-  const auto thetaVar = nalu_ngp::get_ngp_field(meshInfo, "temperature_variance");
+  const auto thetaSFS =
+    nalu_ngp::get_ngp_field(meshInfo, "temperature_sfs_flux");
+  const auto thetaUj =
+    nalu_ngp::get_ngp_field(meshInfo, "temperature_resolved_flux");
+  const auto thetaVar =
+    nalu_ngp::get_ngp_field(meshInfo, "temperature_variance");
   const auto heightIndex = realm_.ngp_field_manager().get_field<int>(
     heightIndex_->mesh_meta_data_ordinal());
 
-  stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
-    & stk::mesh::selectUnion(fluidParts_)
-    & !(realm_.get_inactive_selector())
-    & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()));
+  stk::mesh::Selector sel =
+    realm_.meta_data().locally_owned_part() &
+    stk::mesh::selectUnion(fluidParts_) & !(realm_.get_inactive_selector()) &
+    !(stk::mesh::selectUnion(realm_.get_slave_part_vector()));
 
   // Reset arrays before accumulation
   Kokkos::deep_copy(d_thetaAvg_, 0.0);
@@ -551,18 +568,17 @@ BdyLayerStatistics::impl_compute_temperature_stats()
   Kokkos::deep_copy(d_thetaUjAvg_, 0.0);
 
   // Bring arrays into local scope for capture on device
-  ArrayType d_thetaAvg       = d_thetaAvg_;
-  ArrayType d_thetaBarAvg    = d_thetaBarAvg_;
-  ArrayType d_thetaVarAvg    = d_thetaVarAvg_;
+  ArrayType d_thetaAvg = d_thetaAvg_;
+  ArrayType d_thetaBarAvg = d_thetaBarAvg_;
+  ArrayType d_thetaVarAvg = d_thetaVarAvg_;
   ArrayType d_thetaBarVarAvg = d_thetaBarVarAvg_;
   ArrayType d_thetaSFSBarAvg = d_thetaSFSBarAvg_;
-  ArrayType d_thetaUjBarAvg  = d_thetaUjBarAvg_;
-  ArrayType d_thetaUjAvg     = d_thetaUjAvg_;
+  ArrayType d_thetaUjBarAvg = d_thetaUjBarAvg_;
+  ArrayType d_thetaUjAvg = d_thetaUjAvg_;
 
   const int ndim = nDim_;
   nalu_ngp::run_entity_algorithm(
-    "BLStats::temperature",
-    ngpMesh, stk::topology::NODE_RANK, sel,
+    "BLStats::temperature", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const int ih = heightIndex.get(mi, 0);
 
@@ -576,7 +592,7 @@ BdyLayerStatistics::impl_compute_temperature_stats()
       Kokkos::atomic_add(&d_thetaBarVarAvg(ih), (thetaVar.get(mi, 0) * dVol));
 
       const int offset = ih * ndim;
-      for (int d=0; d < ndim; ++d) {
+      for (int d = 0; d < ndim; ++d) {
         Kokkos::atomic_add(
           &d_thetaSFSBarAvg(offset + d), (thetaSFS.get(mi, d) * dVol));
         Kokkos::atomic_add(
@@ -599,23 +615,30 @@ BdyLayerStatistics::impl_compute_temperature_stats()
   // Global summation
   const size_t nHeights = heights_.extent(0);
   const auto& bulk = realm_.bulk_data();
-  MPI_Allreduce(MPI_IN_PLACE, thetaAvg_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
-                bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, thetaBarAvg_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
-                bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, thetaSFSBarAvg_.data(), nHeights * nDim_,
-                MPI_DOUBLE, MPI_SUM, bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, thetaUjAvg_.data(), nHeights * nDim_, MPI_DOUBLE,
-                MPI_SUM, bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, thetaUjBarAvg_.data(), nHeights * nDim_,
-                MPI_DOUBLE, MPI_SUM, bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, thetaVarAvg_.data(), nHeights, MPI_DOUBLE,
-                MPI_SUM, bulk.parallel());
-  MPI_Allreduce(MPI_IN_PLACE, thetaBarVarAvg_.data(), nHeights, MPI_DOUBLE,
-                MPI_SUM, bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, thetaAvg_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, thetaBarAvg_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, thetaSFSBarAvg_.data(), nHeights * nDim_, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, thetaUjAvg_.data(), nHeights * nDim_, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, thetaUjBarAvg_.data(), nHeights * nDim_, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, thetaVarAvg_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
+  MPI_Allreduce(
+    MPI_IN_PLACE, thetaBarVarAvg_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
+    bulk.parallel());
 
   // Compute averages
-  for (size_t ih=0; ih < nHeights; ih++) {
+  for (size_t ih = 0; ih < nHeights; ih++) {
     double denom = (rhoAvg_(ih) * sumVol_(ih));
     thetaAvg_(ih) /= denom;
     thetaBarAvg_(ih) /= denom;
@@ -623,7 +646,7 @@ BdyLayerStatistics::impl_compute_temperature_stats()
     thetaBarVarAvg_(ih) /= denom;
 
     int offset = ih * nDim_;
-    for (int d=0; d < nDim_; d++) {
+    for (int d = 0; d < nDim_; d++) {
       thetaSFSBarAvg_(offset + d) /= denom;
       thetaUjBarAvg_(offset + d) /= denom;
       thetaUjAvg_(offset + d) /= denom;
@@ -631,11 +654,11 @@ BdyLayerStatistics::impl_compute_temperature_stats()
   }
 
   // Compute primes
-  for (size_t ih=0; ih < nHeights; ih++) {
+  for (size_t ih = 0; ih < nHeights; ih++) {
     int offset = ih * nDim_;
     thetaVarAvg_(ih) -= thetaAvg_(ih) * thetaAvg_(ih);
     thetaBarVarAvg_(ih) -= thetaBarAvg_(ih) * thetaBarAvg_(ih);
-    for (int d=0; d < nDim_; d++) {
+    for (int d = 0; d < nDim_; d++) {
       thetaUjAvg_(offset + d) -= thetaAvg_(ih) * velAvg_(offset + d);
       thetaUjBarAvg_(offset + d) -= thetaBarAvg_(ih) * velBarAvg_(offset + d);
     }
@@ -649,7 +672,8 @@ BdyLayerStatistics::output_velocity_averages()
   const int iproc = realm_.bulk_data().parallel_rank();
 
   // Only output data if at the desired timestep
-  if ((iproc != 0) || (tStep % outputFrequency_ != 0)) return;
+  if ((iproc != 0) || (tStep % outputFrequency_ != 0))
+    return;
 
   std::ofstream velfile;
   std::ofstream uiujfile;
@@ -670,14 +694,14 @@ BdyLayerStatistics::output_velocity_averages()
 
   // TODO: Fix format/precision options for output
   const size_t nHeights = heights_.size();
-  for (size_t ih=0; ih < nHeights; ih++) {
+  for (size_t ih = 0; ih < nHeights; ih++) {
     int offset = ih * nDim_;
 
     // Velocity output
     velfile << heights_[ih];
-    for (int d=0; d < nDim_; d++)
+    for (int d = 0; d < nDim_; d++)
       velfile << " " << velBarAvg_[offset + d];
-    for (int d=0; d < nDim_; d++)
+    for (int d = 0; d < nDim_; d++)
       velfile << " " << velAvg_[offset + d];
     velfile << " " << rhoAvg_[ih] << std::endl;
 
@@ -685,7 +709,7 @@ BdyLayerStatistics::output_velocity_averages()
     offset *= 2;
     sfsfile << heights_[ih];
     uiujfile << heights_[ih];
-    for (int i=0; i < nDim_ * 2; i++) {
+    for (int i = 0; i < nDim_ * 2; i++) {
       sfsfile << " " << sfsBarAvg_[offset + i];
       uiujfile << " " << uiujAvg_[offset + i];
     }
@@ -705,7 +729,8 @@ BdyLayerStatistics::output_temperature_averages()
   const int iproc = realm_.bulk_data().parallel_rank();
 
   // Only output data if at the desired timestep
-  if ((iproc != 0) || (tStep % outputFrequency_ != 0)) return;
+  if ((iproc != 0) || (tStep % outputFrequency_ != 0))
+    return;
 
   std::ofstream tempfile;
   tempfile.open("abl_temperature_stats.dat", std::ofstream::out);
@@ -715,12 +740,10 @@ BdyLayerStatistics::output_temperature_averages()
   tempfile << "# Height, <T>, T, T' sqr" << std::endl;
 
   const size_t nHeights = heights_.size();
-  for (size_t ih=0; ih < nHeights; ih++) {
+  for (size_t ih = 0; ih < nHeights; ih++) {
     // temperature outputs
-    tempfile << heights_[ih] << " "
-             << thetaBarAvg_[ih] << " "
-             << thetaAvg_[ih] << " "
-             << thetaVarAvg_[ih] << std::endl;
+    tempfile << heights_[ih] << " " << thetaBarAvg_[ih] << " " << thetaAvg_[ih]
+             << " " << thetaVarAvg_[ih] << std::endl;
   }
 
   tempfile.close();
@@ -731,7 +754,8 @@ BdyLayerStatistics::prepare_nc_file()
 {
   const int iproc = realm_.bulk_data().parallel_rank();
   // Only process stats in the master MPI rank
-  if (iproc != 0) return;
+  if (iproc != 0)
+    return;
 
   int ncid, recDim, htDim, vDim, stDim, varid;
   int ierr;
@@ -763,31 +787,43 @@ BdyLayerStatistics::prepare_nc_file()
   ncVarIDs_["density"] = varid;
   ierr = nc_def_var(ncid, "velocity", NC_DOUBLE, 3, vecDims.data(), &varid);
   ncVarIDs_["velocity"] = varid;
-  ierr = nc_def_var(ncid, "velocity_tavg", NC_DOUBLE, 3, vecDims.data(), &varid);
+  ierr =
+    nc_def_var(ncid, "velocity_tavg", NC_DOUBLE, 3, vecDims.data(), &varid);
   ncVarIDs_["velocity_tavg"] = varid;
   ierr = nc_def_var(ncid, "sfs_stress", NC_DOUBLE, 3, stDims.data(), &varid);
   ncVarIDs_["sfs_stress"] = varid;
-  ierr = nc_def_var(ncid, "resolved_stress", NC_DOUBLE, 3, stDims.data(), &varid);
+  ierr =
+    nc_def_var(ncid, "resolved_stress", NC_DOUBLE, 3, stDims.data(), &varid);
   ncVarIDs_["resolved_stress"] = varid;
-  ierr = nc_def_var(ncid, "sfs_stress_tavg", NC_DOUBLE, 3, stDims.data(), &varid);
+  ierr =
+    nc_def_var(ncid, "sfs_stress_tavg", NC_DOUBLE, 3, stDims.data(), &varid);
   ncVarIDs_["sfs_stress_tavg"] = varid;
-  ierr = nc_def_var(ncid, "resolved_stress_tavg", NC_DOUBLE, 3, stDims.data(), &varid);
+  ierr = nc_def_var(
+    ncid, "resolved_stress_tavg", NC_DOUBLE, 3, stDims.data(), &varid);
   ncVarIDs_["resolved_stress_tavg"] = varid;
 
   if (calcTemperatureStats_) {
-    ierr = nc_def_var(ncid, "temperature", NC_DOUBLE, 2, twoDims.data(), &varid);
+    ierr =
+      nc_def_var(ncid, "temperature", NC_DOUBLE, 2, twoDims.data(), &varid);
     ncVarIDs_["temperature"] = varid;
-    ierr = nc_def_var(ncid, "temperature_tavg", NC_DOUBLE, 2, twoDims.data(), &varid);
+    ierr = nc_def_var(
+      ncid, "temperature_tavg", NC_DOUBLE, 2, twoDims.data(), &varid);
     ncVarIDs_["temperature_tavg"] = varid;
-    ierr = nc_def_var(ncid, "temperature_sfs_flux_tavg", NC_DOUBLE, 3, vecDims.data(), &varid);
+    ierr = nc_def_var(
+      ncid, "temperature_sfs_flux_tavg", NC_DOUBLE, 3, vecDims.data(), &varid);
     ncVarIDs_["temperature_sfs_flux_tavg"] = varid;
-    ierr = nc_def_var(ncid, "temperature_resolved_flux", NC_DOUBLE, 3, vecDims.data(), &varid);
+    ierr = nc_def_var(
+      ncid, "temperature_resolved_flux", NC_DOUBLE, 3, vecDims.data(), &varid);
     ncVarIDs_["temperature_resolved_flux"] = varid;
-    ierr = nc_def_var(ncid, "temperature_variance", NC_DOUBLE, 2, twoDims.data(), &varid);
+    ierr = nc_def_var(
+      ncid, "temperature_variance", NC_DOUBLE, 2, twoDims.data(), &varid);
     ncVarIDs_["temperature_variance"] = varid;
-    ierr = nc_def_var(ncid, "temperature_resolved_flux_tavg", NC_DOUBLE, 3, vecDims.data(), &varid);
+    ierr = nc_def_var(
+      ncid, "temperature_resolved_flux_tavg", NC_DOUBLE, 3, vecDims.data(),
+      &varid);
     ncVarIDs_["temperature_resolved_flux_tavg"] = varid;
-    ierr = nc_def_var(ncid, "temperature_variance_tavg", NC_DOUBLE, 2, twoDims.data(), &varid);
+    ierr = nc_def_var(
+      ncid, "temperature_variance_tavg", NC_DOUBLE, 2, twoDims.data(), &varid);
     ncVarIDs_["temperature_variance_tavg"] = varid;
   }
 
@@ -816,7 +852,8 @@ BdyLayerStatistics::write_time_hist_file()
   const int iproc = realm_.bulk_data().parallel_rank();
 
   // Only output data if at the desired timestep
-  if ((iproc != 0) || (tStep % timeHistOutFrequency_ != 0)) return;
+  if ((iproc != 0) || (tStep % timeHistOutFrequency_ != 0))
+    return;
 
   int ncid, ierr;
   const size_t nHeights = heights_.size();
@@ -836,7 +873,8 @@ BdyLayerStatistics::write_time_hist_file()
   std::vector<size_t> start3{tCount, 0, 0};
   std::vector<size_t> count3{1, nHeights, nDim * 2};
 
-  ierr = nc_put_vara_double(ncid, ncVarIDs_["time"], &tCount, &count0, &curTime);
+  ierr =
+    nc_put_vara_double(ncid, ncVarIDs_["time"], &tCount, &count0, &curTime);
   ierr = nc_put_vara_double(
     ncid, ncVarIDs_["density"], start1.data(), count1.data(), rhoAvg_.data());
   ierr = nc_put_vara_double(
@@ -871,22 +909,23 @@ BdyLayerStatistics::write_time_hist_file()
       ncid, ncVarIDs_["temperature_tavg"], start1.data(), count1.data(),
       thetaBarAvg_.data());
     ierr = nc_put_vara_double(
-      ncid, ncVarIDs_["temperature_sfs_flux_tavg"], start2.data(), count2.data(),
-      thetaSFSBarAvg_.data());
+      ncid, ncVarIDs_["temperature_sfs_flux_tavg"], start2.data(),
+      count2.data(), thetaSFSBarAvg_.data());
     ierr = nc_put_vara_double(
       ncid, ncVarIDs_["temperature_resolved_flux_tavg"], start2.data(),
       count2.data(), thetaUjBarAvg_.data());
     ierr = nc_put_vara_double(
-      ncid, ncVarIDs_["temperature_variance_tavg"], start1.data(), count1.data(),
-      thetaBarVarAvg_.data());
+      ncid, ncVarIDs_["temperature_variance_tavg"], start1.data(),
+      count1.data(), thetaBarVarAvg_.data());
   }
 
   if (hasUTau_) {
-    ierr = nc_put_vara_double(ncid, ncVarIDs_["utau"], &tCount, &count0, &uTauAvg_);
+    ierr =
+      nc_put_vara_double(ncid, ncVarIDs_["utau"], &tCount, &count0, &uTauAvg_);
   }
 
   ierr = nc_close(ncid);
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

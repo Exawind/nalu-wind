@@ -7,17 +7,15 @@
 // for more details.
 //
 
-
 #ifndef ABLProfileFunction_h
 #define ABLProfileFunction_h
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class ABLProfileFunction
 {
- public:
-
+public:
   ABLProfileFunction();
   virtual ~ABLProfileFunction();
   virtual double velocity(const double znorm) const = 0;
@@ -26,26 +24,26 @@ class ABLProfileFunction
 
 class StableABLProfileFunction : public ABLProfileFunction
 {
- public:
+public:
   StableABLProfileFunction(double gamma_m, double gamma_h);
   virtual ~StableABLProfileFunction();
   double velocity(const double znorm) const;
   double temperature(const double znorm) const;
 
- private:
+private:
   double gamma_m_;
   double gamma_h_;
 };
 
 class UnstableABLProfileFunction : public ABLProfileFunction
 {
- public:
+public:
   UnstableABLProfileFunction(double beta_m, double beta_h);
   virtual ~UnstableABLProfileFunction();
   double velocity(const double znorm) const;
   double temperature(const double znorm) const;
 
- private:
+private:
   double beta_m_;
   double beta_h_;
   double pi_;
@@ -53,7 +51,7 @@ class UnstableABLProfileFunction : public ABLProfileFunction
 
 class NeutralABLProfileFunction : public ABLProfileFunction
 {
- public:
+public:
   NeutralABLProfileFunction();
   virtual ~NeutralABLProfileFunction();
   double velocity(const double znorm) const;
@@ -61,6 +59,6 @@ class NeutralABLProfileFunction : public ABLProfileFunction
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

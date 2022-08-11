@@ -138,19 +138,19 @@ MomentumSymmetryElemKernel<BcAlgTraits>::execute(
       rhs(indexR) -= -penaltyFac * un * areavIp[dj] * inv_amag;
     }
 
-
     NALU_ALIGNED Kokkos::Array<Kokkos::Array<DoubleType, 3>, 3> viscStressIp;
     for (int dj = 0; dj < dim; ++dj) {
       for (int di = 0; di < dim; ++di) {
         viscStressIp[dj][di] = 0;
       }
     }
-    
+
     for (int n = 0; n < BcAlgTraits::nodesPerElement_; ++n) {
       for (int dj = 0; dj < dim; ++dj) {
         for (int di = 0; di < dim; ++di) {
-          viscStressIp[dj][di] += viscIp * (dndx(ip, n, dj) * elem_velocity(n, di) +
-              dndx(ip, n, di) * elem_velocity(n, dj));
+          viscStressIp[dj][di] +=
+            viscIp * (dndx(ip, n, dj) * elem_velocity(n, di) +
+                      dndx(ip, n, di) * elem_velocity(n, dj));
         }
       }
     }
@@ -162,7 +162,7 @@ MomentumSymmetryElemKernel<BcAlgTraits>::execute(
       }
     }
     for (int dj = 0; dj < dim; ++dj) {
-      viscStressIp[dj][dj] -= 2.0/dim * viscIp * divuIp * includeDivU_;
+      viscStressIp[dj][dj] -= 2.0 / dim * viscIp * divuIp * includeDivU_;
     }
 
     DoubleType faceNormalViscFlux = 0;

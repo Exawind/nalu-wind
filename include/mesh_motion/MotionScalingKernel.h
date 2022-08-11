@@ -7,17 +7,15 @@ namespace stk {
 namespace mesh {
 class MetaData;
 }
-}
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class MotionScalingKernel : public NgpMotionKernel<MotionScalingKernel>
 {
 public:
-  MotionScalingKernel(
-    stk::mesh::MetaData&,
-    const YAML::Node&);
+  MotionScalingKernel(stk::mesh::MetaData&, const YAML::Node&);
 
   KOKKOS_FUNCTION
   MotionScalingKernel() = default;
@@ -32,9 +30,8 @@ public:
    * @return Transformation matrix
    */
   KOKKOS_FUNCTION
-  virtual mm::TransMatType build_transformation(
-    const double& time,
-    const mm::ThreeDVecType& xyz);
+  virtual mm::TransMatType
+  build_transformation(const double& time, const mm::ThreeDVecType& xyz);
 
   /** Function to compute motion-specific velocity
    *
@@ -61,8 +58,7 @@ private:
   bool useRate_ = false;
 };
 
-
-} // nalu
-} // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MOTIONSCALING_H */

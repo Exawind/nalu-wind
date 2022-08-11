@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "gtest/gtest.h"
 #include "UnitTestUtils.h"
 #include "master_element/MasterElement.h"
@@ -24,8 +23,9 @@ namespace unit_test_me_ngp {
 
 using namespace sierra::nalu;
 
-template<typename T>
-void test_mescs_create_impl()
+template <typename T>
+void
+test_mescs_create_impl()
 {
 #if 0
   using METype = typename T::masterElementScs_;
@@ -44,20 +44,25 @@ void test_mescs_create_impl()
 }
 
 template <typename T>
-void test_mescv_create_impl()
+void
+test_mescv_create_impl()
 {
   const auto* mescv = MasterElementRepo::get_volume_master_element<T>();
   EXPECT_TRUE(mescv != nullptr);
   MasterElementRepo::clear();
 }
 
-#define MESCS_TEST(METype)                          \
-  TEST(MECreate, NGP_scs_##METype)                  \
-  { test_mescs_create_impl<AlgTraits##METype>(); }
+#define MESCS_TEST(METype)                                                     \
+  TEST(MECreate, NGP_scs_##METype)                                             \
+  {                                                                            \
+    test_mescs_create_impl<AlgTraits##METype>();                               \
+  }
 
-#define MESCV_TEST(METype)                          \
-  TEST(MECreate, NGP_scv_##METype)                  \
-  { test_mescv_create_impl<AlgTraits##METype>(); }
+#define MESCV_TEST(METype)                                                     \
+  TEST(MECreate, NGP_scv_##METype)                                             \
+  {                                                                            \
+    test_mescv_create_impl<AlgTraits##METype>();                               \
+  }
 
 MESCS_TEST(Hex8);
 MESCS_TEST(Tet4);

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef NODEKERNEL_H
 #define NODEKERNEL_H
 
@@ -54,7 +53,7 @@ public:
     const stk::mesh::FastMeshIndex&) = 0;
 };
 
-template<typename T>
+template <typename T>
 class NGPNodeKernel : public NodeKernel
 {
 public:
@@ -85,8 +84,7 @@ private:
   T* deviceCopy_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NODEKERNEL_H */

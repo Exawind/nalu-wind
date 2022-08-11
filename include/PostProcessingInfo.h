@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef PostProcessingInfo_h
 #define PostProcessingInfo_h
 
@@ -17,8 +15,8 @@
 #include <string>
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class PostProcessingData;
 
@@ -26,17 +24,15 @@ class PostProcessingInfo
 {
 
 public:
-  
   PostProcessingInfo();
   ~PostProcessingInfo();
-  
-  void load(const YAML::Node & y_node);
-  
-  std::vector<PostProcessingData *> ppDataVec_;
-  
+
+  void load(const YAML::Node& y_node);
+
+  std::vector<PostProcessingData*> ppDataVec_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

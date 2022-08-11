@@ -14,12 +14,13 @@
 #include <Algorithm.h>
 #include "stk_mesh/base/Types.hpp"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
-class StreletsUpwindEdgeAlg : public Algorithm{
+class StreletsUpwindEdgeAlg : public Algorithm
+{
 public:
   using DblType = double;
   StreletsUpwindEdgeAlg(Realm&, stk::mesh::Part*);
@@ -28,23 +29,22 @@ public:
 
 private:
   const std::string velocityName_;
-  unsigned pecletFactor_ {stk::mesh::InvalidOrdinal};
-  unsigned fOne_ {stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVolume_ {stk::mesh::InvalidOrdinal};
-  unsigned sstMaxLen_ {stk::mesh::InvalidOrdinal};
-  unsigned dudx_ {stk::mesh::InvalidOrdinal};
-  unsigned density_ {stk::mesh::InvalidOrdinal};
-  unsigned viscosity_ {stk::mesh::InvalidOrdinal};
-  unsigned turbViscosity_ {stk::mesh::InvalidOrdinal};
-  unsigned turbKE_ {stk::mesh::InvalidOrdinal};
-  unsigned specDissRate_ {stk::mesh::InvalidOrdinal};
-  unsigned edgeAreaVec_ {stk::mesh::InvalidOrdinal};
-  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
-  unsigned velocity_ {stk::mesh::InvalidOrdinal};
+  unsigned pecletFactor_{stk::mesh::InvalidOrdinal};
+  unsigned fOne_{stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolume_{stk::mesh::InvalidOrdinal};
+  unsigned sstMaxLen_{stk::mesh::InvalidOrdinal};
+  unsigned dudx_{stk::mesh::InvalidOrdinal};
+  unsigned density_{stk::mesh::InvalidOrdinal};
+  unsigned viscosity_{stk::mesh::InvalidOrdinal};
+  unsigned turbViscosity_{stk::mesh::InvalidOrdinal};
+  unsigned turbKE_{stk::mesh::InvalidOrdinal};
+  unsigned specDissRate_{stk::mesh::InvalidOrdinal};
+  unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned velocity_{stk::mesh::InvalidOrdinal};
 };
 
-}
-}
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* STRELETSUPWINDEDGEALG_H_ */

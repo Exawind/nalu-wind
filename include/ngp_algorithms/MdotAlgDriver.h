@@ -62,20 +62,16 @@ public:
   void provide_output();
 
   void register_open_mdot_corrector_alg(
-    AlgorithmType algType,
-    stk::mesh::Part* part,
-    const std::string& algSuffix);
+    AlgorithmType algType, stk::mesh::Part* part, const std::string& algSuffix);
 
-  template<template <typename> class NgpAlg,
-           typename LegacyAlg,
-           class ... Args>
+  template <template <typename> class NgpAlg, typename LegacyAlg, class... Args>
   void register_open_mdot_algorithm(
     AlgorithmType algType,
     stk::mesh::Part* part,
     const stk::topology elemTopo,
     const std::string& algSuffix,
     const bool needCorrection,
-    Args&& ... args)
+    Args&&... args)
   {
     register_face_elem_algorithm<NgpAlg, LegacyAlg>(
       algType, part, elemTopo, algSuffix, std::forward<Args>(args)...);
@@ -85,14 +81,14 @@ public:
     }
   }
 
-  template<template <typename> class NgpAlg, class ... Args>
+  template <template <typename> class NgpAlg, class... Args>
   void register_open_mdot_algorithm(
     AlgorithmType algType,
     stk::mesh::Part* part,
     const stk::topology elemTopo,
     const std::string& algSuffix,
     const bool needCorrection,
-    Args&& ... args)
+    Args&&... args)
   {
     register_face_elem_algorithm<NgpAlg>(
       algType, part, elemTopo, algSuffix, std::forward<Args>(args)...);
@@ -102,13 +98,13 @@ public:
     }
   }
 
-  template<typename LegacyAlg, class ... Args>
+  template <typename LegacyAlg, class... Args>
   void register_open_mdot_algorithm(
     AlgorithmType algType,
     stk::mesh::Part* part,
     const std::string& algSuffix,
     const bool needCorrection,
-    Args&& ... args)
+    Args&&... args)
   {
     register_legacy_algorithm<LegacyAlg>(
       algType, part, algSuffix, std::forward<Args>(args)...);
@@ -133,8 +129,7 @@ private:
   bool isInit_{true};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MDOTALGDRIVER_H */

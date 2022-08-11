@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef EDGEKERNEL_H
 #define EDGEKERNEL_H
 

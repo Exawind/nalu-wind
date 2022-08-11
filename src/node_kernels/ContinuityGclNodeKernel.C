@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "node_kernels/ContinuityGclNodeKernel.h"
 #include "Realm.h"
 
@@ -15,27 +14,31 @@
 #include "stk_mesh/base/Types.hpp"
 #include "utils/StkHelpers.h"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 ContinuityGclNodeKernel::ContinuityGclNodeKernel(
-  const stk::mesh::BulkData& bulk
-) : NGPNodeKernel<ContinuityGclNodeKernel>()
+  const stk::mesh::BulkData& bulk)
+  : NGPNodeKernel<ContinuityGclNodeKernel>()
 {
   const auto& meta = bulk.mesh_meta_data();
 
-  const ScalarFieldType *density = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
+  const ScalarFieldType* density =
+    meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
 
   densityNp1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   divVID_ = get_field_ordinal(meta, "div_mesh_velocity");
-  dualNdVolNID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateN);
+  dualNdVolNID_ =
+    get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateN);
 
   if (density->number_of_states() == 2)
     dualNdVolNm1ID_ = dualNdVolNID_;
   else
-    dualNdVolNm1ID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNM1);
+    dualNdVolNm1ID_ =
+      get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNM1);
 
-  dualNdVolNp1ID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNP1);
+  dualNdVolNp1ID_ =
+    get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNP1);
 }
 
 void
@@ -60,20 +63,23 @@ ContinuityGclNodeKernel::execute(
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
 {
-  const NodeKernelTraits::DblType projTimeScale = dt_/gamma1_;
+  const NodeKernelTraits::DblType projTimeScale = dt_ / gamma1_;
   const NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0);
   const NodeKernelTraits::DblType divV = divV_.get(node, 0);
   const NodeKernelTraits::DblType dualNdVolNm1 = dualNdVolNm1_.get(node, 0);
   const NodeKernelTraits::DblType dualNdVolN = dualNdVolN_.get(node, 0);
   const NodeKernelTraits::DblType dualNdVolNp1 = dualNdVolNp1_.get(node, 0);
 
-  const NodeKernelTraits::DblType volRate = (gamma1_*dualNdVolNp1 + gamma2_*dualNdVolN + gamma3_*dualNdVolNm1) / dt_ / dualNdVolNp1;
+  const NodeKernelTraits::DblType volRate =
+    (gamma1_ * dualNdVolNp1 + gamma2_ * dualNdVolN + gamma3_ * dualNdVolNm1) /
+    dt_ / dualNdVolNp1;
 
-  // the term divV comes from the Reynold's transport theorem for moving bodies with changing volume
-  // the term (volRate-divV) is the GCL law which presents non-zero errors in a discretized setting
-  rhs(0) -= rhoNp1*(divV-(volRate-divV))*dualNdVolNp1/projTimeScale;
-  //lhs(0, 0) += 0.0;
+  // the term divV comes from the Reynold's transport theorem for moving bodies
+  // with changing volume the term (volRate-divV) is the GCL law which presents
+  // non-zero errors in a discretized setting
+  rhs(0) -= rhoNp1 * (divV - (volRate - divV)) * dualNdVolNp1 / projTimeScale;
+  // lhs(0, 0) += 0.0;
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
@@ -19,7 +18,8 @@
 TEST_F(MomentumNodeHex8Mesh, NGP_momentum_body_force)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -33,12 +33,16 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_body_force)
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->hostNumSumIntoCalls_(0), 8u);
 
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, 1.0, 1.0e-12);
-  unit_test_kernel_utils::expect_all_near<24>(helperObjs.linsys->lhs_, 0.0, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->rhs_, 1.0, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near<24>(
+    helperObjs.linsys->lhs_, 0.0, 1.0e-12);
 }

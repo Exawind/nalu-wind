@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef EnthalpyEffDiffFluxCoeffAlg_h
 #define EnthalpyEffDiffFluxCoeffAlg_h
 
@@ -17,8 +15,8 @@
 
 #include "stk_mesh/base/Types.hpp"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
@@ -42,16 +40,16 @@ public:
   virtual void execute() override;
 
 private:
-  ScalarFieldType* specHeatField_ {nullptr};
-  unsigned thermalCond_ {stk::mesh::InvalidOrdinal};
-  unsigned specHeat_ {stk::mesh::InvalidOrdinal};
-  unsigned tvisc_ {stk::mesh::InvalidOrdinal};
-  unsigned evisc_ {stk::mesh::InvalidOrdinal};
-  const DblType invSigmaTurb_;  
-  const bool isTurbulent_;  
+  ScalarFieldType* specHeatField_{nullptr};
+  unsigned thermalCond_{stk::mesh::InvalidOrdinal};
+  unsigned specHeat_{stk::mesh::InvalidOrdinal};
+  unsigned tvisc_{stk::mesh::InvalidOrdinal};
+  unsigned evisc_{stk::mesh::InvalidOrdinal};
+  const DblType invSigmaTurb_;
+  const bool isTurbulent_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

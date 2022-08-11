@@ -36,7 +36,10 @@ class StkMeshFixture : public ::testing::Test
 {
 protected:
   StkMeshFixture()
-    : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD).set_spatial_dimension(3u).set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA).create()),
+    : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD)
+                .set_spatial_dimension(3u)
+                .set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA)
+                .create()),
       bulk(*bulkPtr),
       meta(bulk.mesh_meta_data()),
       gid_field_h(
@@ -155,7 +158,8 @@ TEST_F(MapFixture, owned_map_has_correct_local_size)
   // that ever changes, this will fail
   const auto asserted_local_size = (bulk.parallel_rank() == 0) ? 8u : 4u;
   ASSERT_EQ(
-    make_owned_row_map(mesh, active).getLocalNumElements(), asserted_local_size);
+    make_owned_row_map(mesh, active).getLocalNumElements(),
+    asserted_local_size);
 }
 
 TEST_F(MapFixture, owned_and_shared_is_just_owned_in_serial)

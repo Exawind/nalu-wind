@@ -91,7 +91,8 @@ TEST_F(GradientResidualFixture, residual_executes)
 {
   rhs.putScalar(0.);
   gradient_residual<order>(
-    offsets, area_metric, volume_metric, qp1, dqdx, rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
+    offsets, area_metric, volume_metric, qp1, dqdx,
+    rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 
 TEST_F(GradientResidualFixture, linearized_residual_executes)

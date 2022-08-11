@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef MaterialProperty_h
 #define MaterialProperty_h
 
@@ -18,29 +16,29 @@
 #include <string>
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class MaterialPropertys;
 
-class MaterialProperty {
+class MaterialProperty
+{
 public:
   MaterialProperty(MaterialPropertys& matPropertys);
-  
+
   ~MaterialProperty();
-  
-  void load(const YAML::Node & node);
-  
-  virtual void breadboard(){}
 
-  Simulation *root();
-  EquationSystems *parent();
+  void load(const YAML::Node& node);
 
-  MaterialPropertys &matPropertys_;
+  virtual void breadboard() {}
+
+  Simulation* root();
+  EquationSystems* parent();
+
+  MaterialPropertys& matPropertys_;
 };
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

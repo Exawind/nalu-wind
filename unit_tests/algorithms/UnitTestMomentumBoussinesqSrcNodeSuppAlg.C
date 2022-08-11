@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include <gtest/gtest.h>
 #include <limits>
 #include <random>
@@ -32,10 +31,12 @@ TEST(MomentumBoussinesqSrcNodeSuppAlg, single_value)
   NodeSuppHelper helper;
   auto& meta = helper.realm.meta_data();
 
-  auto& dnv = meta.declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, "dual_nodal_volume");
+  auto& dnv = meta.declare_field<stk::mesh::Field<double>>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
   stk::mesh::put_field_on_mesh(dnv, meta.universal_part(), 1, nullptr);
 
-  auto& temperature = meta.declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, "temperature");
+  auto& temperature = meta.declare_field<stk::mesh::Field<double>>(
+    stk::topology::NODE_RANK, "temperature");
   stk::mesh::put_field_on_mesh(temperature, meta.universal_part(), 1, nullptr);
 
   meta.commit();
@@ -56,17 +57,19 @@ TEST(MomentumBoussinesqSrcNodeSuppAlg, single_value)
   const double rhoRef = 1.0;
   solnOpts.referenceDensity_ = rhoRef;
 
-  const double beta = 1.0/tRef;
+  const double beta = 1.0 / tRef;
   solnOpts.thermalExpansionCoeff_ = beta;
 
-  std::vector<double> gravity = { -5, 6, 7 };
+  std::vector<double> gravity = {-5, 6, 7};
   solnOpts.gravity_ = gravity;
 
   double coeff = -beta * rhoRef * (temperature_value - tRef) * dnv_value;
-  double expected_rhs[3] = { coeff*gravity[0], coeff*gravity[1], coeff*gravity[2] };
+  double expected_rhs[3] = {
+    coeff * gravity[0], coeff * gravity[1], coeff * gravity[2]};
 
-  double rhs[3] = {0,0,0};
-  auto boussinesqAlg = sierra::nalu::MomentumBoussinesqSrcNodeSuppAlg(helper.realm);
+  double rhs[3] = {0, 0, 0};
+  auto boussinesqAlg =
+    sierra::nalu::MomentumBoussinesqSrcNodeSuppAlg(helper.realm);
   boussinesqAlg.node_execute(nullptr, rhs, node);
 
   for (int d = 0; d < 3; ++d) {
@@ -80,15 +83,21 @@ TEST(MomentumBoussinesqRASrcNodeSuppAlg, single_value)
   auto& meta = helper.realm.meta_data();
   auto& bulk = helper.realm.bulk_data();
 
-  auto& dnv = meta.declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, "dual_nodal_volume");
+  auto& dnv = meta.declare_field<stk::mesh::Field<double>>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
   stk::mesh::put_field_on_mesh(dnv, meta.universal_part(), 1, nullptr);
 
-  auto& temperature = meta.declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, "temperature");
+  auto& temperature = meta.declare_field<stk::mesh::Field<double>>(
+    stk::topology::NODE_RANK, "temperature");
   stk::mesh::put_field_on_mesh(temperature, meta.universal_part(), 1, nullptr);
 
-  std::string avgTempFieldName = sierra::nalu::MovingAveragePostProcessor::filtered_field_name("temperature");
-  auto& raTemperature = meta.declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, avgTempFieldName);
-  stk::mesh::put_field_on_mesh(raTemperature, meta.universal_part(), 1, nullptr);
+  std::string avgTempFieldName =
+    sierra::nalu::MovingAveragePostProcessor::filtered_field_name(
+      "temperature");
+  auto& raTemperature = meta.declare_field<stk::mesh::Field<double>>(
+    stk::topology::NODE_RANK, avgTempFieldName);
+  stk::mesh::put_field_on_mesh(
+    raTemperature, meta.universal_part(), 1, nullptr);
 
   meta.commit();
 
@@ -105,10 +114,10 @@ TEST(MomentumBoussinesqRASrcNodeSuppAlg, single_value)
   const double rhoRef = 1;
   solnOpts.referenceDensity_ = rhoRef;
 
-  const double beta = 1.0/300.0;
+  const double beta = 1.0 / 300.0;
   solnOpts.thermalExpansionCoeff_ = beta;
 
-  std::vector<double> gravity = { -5, 6, 7 };
+  std::vector<double> gravity = {-5, 6, 7};
   solnOpts.gravity_ = gravity;
 
   const double timeScale = 2;
@@ -122,8 +131,9 @@ TEST(MomentumBoussinesqRASrcNodeSuppAlg, single_value)
   avgPP.set_time_scale(solnOpts.raBoussinesqTimeScale_);
   avgPP.execute();
 
-  double rhs[3] = {0,0,0};
-  auto boussinesqRaAlg = sierra::nalu::MomentumBoussinesqRASrcNodeSuppAlg(helper.realm);
+  double rhs[3] = {0, 0, 0};
+  auto boussinesqRaAlg =
+    sierra::nalu::MomentumBoussinesqRASrcNodeSuppAlg(helper.realm);
   boussinesqRaAlg.setup();
   boussinesqRaAlg.node_execute(nullptr, rhs, node);
 
@@ -136,19 +146,20 @@ TEST(MomentumBoussinesqRASrcNodeSuppAlg, single_value)
 
   avgPP.execute();
 
-  double alpha = timeIntg.timeStepN_/timeScale ;
-  const double avgTempVal = alpha * temperature_value_new + (1-alpha) * temperature_value;
+  double alpha = timeIntg.timeStepN_ / timeScale;
+  const double avgTempVal =
+    alpha * temperature_value_new + (1 - alpha) * temperature_value;
   EXPECT_DOUBLE_EQ(avgTempVal, 302.5);
 
-  double coeff = -beta * rhoRef * (temperature_value_new  - avgTempVal) * dnv_value;
-  double expected_rhs[3] = { coeff*gravity[0], coeff*gravity[1], coeff*gravity[2] };
+  double coeff =
+    -beta * rhoRef * (temperature_value_new - avgTempVal) * dnv_value;
+  double expected_rhs[3] = {
+    coeff * gravity[0], coeff * gravity[1], coeff * gravity[2]};
 
-  double newRHS[3] = {0,0,0};
+  double newRHS[3] = {0, 0, 0};
   boussinesqRaAlg.node_execute(nullptr, newRHS, node);
 
   for (int d = 0; d < 3; ++d) {
     EXPECT_DOUBLE_EQ(newRHS[d], expected_rhs[d]);
   }
 }
-
-

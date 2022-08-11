@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef AMSAVGMDOTEDGEALG_H
 #define AMSAVGMDOTEDGEALG_H
 

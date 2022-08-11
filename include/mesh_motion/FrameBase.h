@@ -9,40 +9,35 @@
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 
-namespace YAML { class Node; }
+namespace YAML {
+class Node;
+}
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class FrameBase
 {
 public:
-  FrameBase(
-    stk::mesh::BulkData&,
-    const YAML::Node&);
+  FrameBase(stk::mesh::BulkData&, const YAML::Node&);
 
   virtual ~FrameBase();
 
   void setup();
 
-  void compute_centroid_on_parts(
-    mm::ThreeDVecType& centroid);
+  void compute_centroid_on_parts(mm::ThreeDVecType& centroid);
 
   void set_computed_centroid(const mm::ThreeDVecType& centroid)
   {
-    for (size_t i=0; i < motionKernels_.size(); i++)
+    for (size_t i = 0; i < motionKernels_.size(); i++)
       motionKernels_[i]->set_computed_centroid(centroid);
   }
 
-  virtual void post_compute_geometry()
-  {
-  }
+  virtual void post_compute_geometry() {}
 
-  stk::mesh::PartVector get_partvec() {
-    return partVec_;
-  };
+  stk::mesh::PartVector get_partvec() { return partVec_; };
 
-  bool is_deforming(){ return isDeforming_; }
+  bool is_deforming() { return isDeforming_; }
 
 protected:
   //! Reference to the STK Mesh BulkData object
@@ -83,7 +78,7 @@ private:
   void populate_part_vec(const YAML::Node&);
 };
 
-} // nalu
-} // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* FRAMEBASE_H */

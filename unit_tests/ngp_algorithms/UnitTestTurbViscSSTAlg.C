@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestHelperObjects.h"
 
@@ -17,7 +16,8 @@
 TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sst_alg)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   SSTKernelHex8Mesh::fill_mesh_and_init_fields();
 
@@ -46,8 +46,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sst_alg)
       0.58778525229247314,
       0.34549150281252627,
       0.32219673776462515,
-      0.19411612710296283
-    };
+      0.19411612710296283};
 
     const double tol = 1.0e-15;
 
@@ -55,8 +54,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sst_alg)
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* tvisc = stk::mesh::field_data(*tvisc_, node);
         EXPECT_NEAR(tvisc[0], expectedValues[ii++], tol);
       }
@@ -66,7 +65,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sst_alg)
 TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sstlr_alg)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   SSTKernelHex8Mesh::fill_mesh_and_init_fields();
 
@@ -95,8 +95,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sstlr_alg)
       0.58778525229247314,
       0.34549150281252627,
       0.32219673776462515,
-      0.19411612710296283
-    };
+      0.19411612710296283};
 
     const double tol = 1.0e-15;
 
@@ -104,8 +103,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sstlr_alg)
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* tvisc = stk::mesh::field_data(*tvisc_, node);
         EXPECT_NEAR(tvisc[0], expectedValues[ii++], tol);
       }
@@ -115,7 +114,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sstlr_alg)
 TEST_F(AMSKernelHex8Mesh, NGP_turb_visc_sstams_alg)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   AMSKernelHex8Mesh::fill_mesh_and_init_fields();
 
@@ -137,14 +137,8 @@ TEST_F(AMSKernelHex8Mesh, NGP_turb_visc_sstams_alg)
 
   {
     std::vector<double> expectedValues = {
-      1,
-      1,
-      1.4045084971874737,
-      0.62203263379915574,
-      1,
-      1,
-      0.93257499863740057,
-      0.57277822202446083,
+      1, 1, 1.4045084971874737,  0.62203263379915574,
+      1, 1, 0.93257499863740057, 0.57277822202446083,
     };
 
     const double tol = 1.0e-15;
@@ -153,8 +147,8 @@ TEST_F(AMSKernelHex8Mesh, NGP_turb_visc_sstams_alg)
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* tvisc = stk::mesh::field_data(*tvisc_, node);
         EXPECT_NEAR(tvisc[0], expectedValues[ii++], tol);
       }

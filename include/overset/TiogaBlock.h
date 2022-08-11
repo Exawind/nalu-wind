@@ -123,12 +123,13 @@ struct NgpTiogaBlock
 class TiogaBlock
 {
 public:
-  TiogaBlock(stk::mesh::MetaData&,
-             stk::mesh::BulkData&,
-             TiogaOptions&,
-             const YAML::Node&,
-             const std::string,
-             const int);
+  TiogaBlock(
+    stk::mesh::MetaData&,
+    stk::mesh::BulkData&,
+    TiogaOptions&,
+    const YAML::Node&,
+    const std::string,
+    const int);
 
   ~TiogaBlock();
 
@@ -181,7 +182,8 @@ public:
 
   /** Update iblanks after connectivity updates
    */
-  void update_iblanks(std::vector<stk::mesh::Entity>&, std::vector<stk::mesh::Entity>&);
+  void update_iblanks(
+    std::vector<stk::mesh::Entity>&, std::vector<stk::mesh::Entity>&);
 
   /** Update element iblanks after connectivity updates
    */
@@ -204,8 +206,7 @@ public:
 
   void register_solution(TIOGA::tioga&, const sierra::nalu::OversetFieldData&);
 
-  void update_solution(
-    const std::vector<sierra::nalu::OversetFieldData>&);
+  void update_solution(const std::vector<sierra::nalu::OversetFieldData>&);
 
   void update_solution(const sierra::nalu::OversetFieldData&);
 
@@ -222,9 +223,8 @@ private:
 
   /** Convenience function to process part names and populate a PartVector
    */
-  inline void names_to_parts(
-    const std::vector<std::string>&,
-    stk::mesh::PartVector&);
+  inline void
+  names_to_parts(const std::vector<std::string>&, stk::mesh::PartVector&);
 
   /**
    * Extract nodes from all parts to send to TIOGA
@@ -241,7 +241,8 @@ private:
    */
   void process_ovsetbc();
 
-  /** Generate the element data structure and connectivity information to send to TIOGA
+  /** Generate the element data structure and connectivity information to send
+   * to TIOGA
    */
   void process_elements();
 
@@ -332,24 +333,30 @@ private:
   int num_ovsetbc_{0};
 
   //! Flag to check if we are are already initialized
-  bool is_init_ { true };
+  bool is_init_{true};
 
 public:
   // Accessors
 
   //! STK Global ID for all the nodes comprising this mesh block
   inline auto node_id_map() const -> decltype(bdata_.node_gid_.h_view)
-  { return bdata_.node_gid_.h_view; }
+  {
+    return bdata_.node_gid_.h_view;
+  }
 
   //! STK Global ID for all the elements comprising this mesh block
   inline auto elem_id_map() const -> decltype(bdata_.cell_gid_.h_view)
-  { return bdata_.cell_gid_.h_view; }
+  {
+    return bdata_.cell_gid_.h_view;
+  }
 
   //! IBLANK mask indicating whether the element is active or inactive
   inline auto iblank_cell() const -> decltype(bdata_.iblank_cell_.h_view)
-  { return bdata_.iblank_cell_.h_view; }
+  {
+    return bdata_.iblank_cell_.h_view;
+  }
 };
 
-} // namespace tioga
+} // namespace tioga_nalu
 
 #endif /* TIOGABLOCK_H */

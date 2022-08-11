@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernel/EnthalpyTGradBCElemKernel.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
@@ -35,12 +34,13 @@ EnthalpyTGradBCElemKernel<BcAlgTraits>::EnthalpyTGradBCElemKernel(
     bcTGrad_(bcTGrad->mesh_meta_data_ordinal()),
     evisc_(evisc->mesh_meta_data_ordinal()),
     specificHeat_(specificHeat->mesh_meta_data_ordinal()),
-    exposedAreaVec_(
-      get_field_ordinal(
-        bulk.mesh_meta_data(), "exposed_area_vector",
-        bulk.mesh_meta_data().side_rank())),
+    exposedAreaVec_(get_field_ordinal(
+      bulk.mesh_meta_data(),
+      "exposed_area_vector",
+      bulk.mesh_meta_data().side_rank())),
     useShifted_(useShifted),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<BcAlgTraits>())
+    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
+          BcAlgTraits>())
 {
   // Register necessary data for use in execute method
   faceDataPreReqs.add_cvfem_face_me(meFC_);
@@ -57,7 +57,7 @@ EnthalpyTGradBCElemKernel<BcAlgTraits>::EnthalpyTGradBCElemKernel(
     (useShifted_ ? FC_SHIFTED_SHAPE_FCN : FC_SHAPE_FCN), CURRENT_COORDINATES);
 }
 
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 void
 EnthalpyTGradBCElemKernel<BcAlgTraits>::execute(
   SharedMemView<DoubleType**, DeviceShmem>&,
@@ -80,7 +80,7 @@ EnthalpyTGradBCElemKernel<BcAlgTraits>::execute(
 
     // Compute magnitude of area vector at this integration point
     DoubleType aMag = 0.0;
-    for (int d=0; d < BcAlgTraits::nDim_; ++d)
+    for (int d = 0; d < BcAlgTraits::nDim_; ++d)
       aMag += v_areavec(ip, d) * v_areavec(ip, d);
     aMag = stk::math::sqrt(aMag);
 
@@ -103,5 +103,5 @@ EnthalpyTGradBCElemKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE(EnthalpyTGradBCElemKernel)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

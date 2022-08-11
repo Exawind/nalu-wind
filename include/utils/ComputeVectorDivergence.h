@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef COMPUTEVECTORDIVERGENCE_H
 #define COMPUTEVECTORDIVERGENCE_H
 
@@ -15,11 +14,11 @@
 
 namespace stk {
 namespace mesh {
-  class BulkData;
-  class Part;
-  typedef std::vector<Part*> PartVector;
-}
-}
+class BulkData;
+class Part;
+typedef std::vector<Part*> PartVector;
+} // namespace mesh
+} // namespace stk
 
 namespace sierra {
 namespace nalu {
@@ -30,7 +29,7 @@ void compute_vector_divergence(
   stk::mesh::PartVector&,
   stk::mesh::FieldBase*,
   stk::mesh::FieldBase*,
-  const bool hasMeshDeformation = false );
+  const bool hasMeshDeformation = false);
 
 void compute_scalar_divergence(
   stk::mesh::BulkData&,
@@ -46,7 +45,7 @@ void compute_edge_scalar_divergence(
   GenericFieldType*,
   stk::mesh::FieldBase*);
 
-}
-}
+} // namespace nalu
+} // namespace sierra
 
 #endif /* COMPUTEVECTORDIVERGENCE_H */

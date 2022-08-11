@@ -72,8 +72,8 @@ struct ActuatorBulkFAST : public ActuatorBulk
 
 // helper functions to
 // squash calls to std::cout from OpenFAST
-inline
-void squash_fast_output(std::function<void()>func)
+inline void
+squash_fast_output(std::function<void()> func)
 {
   std::stringstream buffer;
   std::streambuf* sHoldCout = std::cout.rdbuf();

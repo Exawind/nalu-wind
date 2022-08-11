@@ -107,11 +107,13 @@ public:
 TEST_F(DiagonalFixture, diagonal_executes)
 {
   node_offset_view dirichlet_offsets("empty_dirichlet", 1);
-  decltype(rhs.getLocalViewDevice(Tpetra::Access::ReadWrite)) shared_rhs("empty_rhs", 1, 1);
+  decltype(rhs.getLocalViewDevice(Tpetra::Access::ReadWrite)) shared_rhs(
+    "empty_rhs", 1, 1);
 
   rhs.putScalar(0.);
   conduction_diagonal<order>(
-    1, offsets, volume_metric, diffusion_metric, rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
+    1, offsets, volume_metric, diffusion_metric,
+    rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 
 } // namespace matrix_free

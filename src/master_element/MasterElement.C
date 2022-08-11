@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFunctions.h>
 #include <master_element/MasterElementUtils.h>
@@ -29,8 +27,8 @@
 #include <map>
 #include <memory>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
@@ -49,32 +47,30 @@ MasterElement::MasterElement(const double scaleToStandardIsoFac)
 //-------- isoparametric_mapping -------------------------------------------
 //--------------------------------------------------------------------------
 double
-MasterElement::isoparametric_mapping( 
-  const double b,
-  const double a,
-  const double xi) const
+MasterElement::isoparametric_mapping(
+  const double b, const double a, const double xi) const
 {
-  return xi*(b-a)/2.0 +(a+b)/2.0;
+  return xi * (b - a) / 2.0 + (a + b) / 2.0;
 }
 
 //--------------------------------------------------------------------------
 //-------- within_tolerance ------------------------------------------------
 //--------------------------------------------------------------------------
-bool 
-MasterElement::within_tolerance( const double & val, const double & tol ) const
+bool
+MasterElement::within_tolerance(const double& val, const double& tol) const
 {
-  return (std::abs(val)<tol);
+  return (std::abs(val) < tol);
 }
 
 //--------------------------------------------------------------------------
 //-------- vector_norm_sq --------------------------------------------------
 //--------------------------------------------------------------------------
-double 
-MasterElement::vector_norm_sq( const double * vect, int len ) const
+double
+MasterElement::vector_norm_sq(const double* vect, int len) const
 {
   double norm_sq = 0.0;
-  for (int i=0; i<len; i++) {
-    norm_sq += vect[i]*vect[i];
+  for (int i = 0; i < len; i++) {
+    norm_sq += vect[i] * vect[i];
   }
   return norm_sq;
 }

@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef MomentumBuoyancySrcNodeSuppAlg_h
 #define MomentumBuoyancySrcNodeSuppAlg_h
 
@@ -17,36 +15,30 @@
 
 #include <stk_mesh/base/Entity.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class MomentumBuoyancySrcNodeSuppAlg : public SupplementalAlgorithm
 {
 public:
-
-  MomentumBuoyancySrcNodeSuppAlg(
-    Realm &realm);
+  MomentumBuoyancySrcNodeSuppAlg(Realm& realm);
 
   virtual ~MomentumBuoyancySrcNodeSuppAlg() {}
 
   virtual void setup();
 
-  virtual void node_execute(
-    double *lhs,
-    double *rhs,
-    stk::mesh::Entity node);
+  virtual void node_execute(double* lhs, double* rhs, stk::mesh::Entity node);
 
-  ScalarFieldType *densityNp1_;
-  ScalarFieldType *dualNodalVolume_;
+  ScalarFieldType* densityNp1_;
+  ScalarFieldType* dualNodalVolume_;
   int nDim_;
   double rhoRef_;
   std::vector<double> gravity_;
-
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

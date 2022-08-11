@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef TKEKSGSNODEKERNEL_H
 #define TKEKSGSNODEKERNEL_H
 
@@ -50,12 +49,12 @@ private:
   stk::mesh::NgpField<double> dudx_;
   stk::mesh::NgpField<double> dualNodalVolume_;
 
-  unsigned tkeID_             {stk::mesh::InvalidOrdinal};
-  //unsigned sdrID_             {stk::mesh::InvalidOrdinal};
-  unsigned densityID_         {stk::mesh::InvalidOrdinal};
-  unsigned tviscID_           {stk::mesh::InvalidOrdinal};
-  unsigned dudxID_            {stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
+  unsigned tkeID_{stk::mesh::InvalidOrdinal};
+  // unsigned sdrID_             {stk::mesh::InvalidOrdinal};
+  unsigned densityID_{stk::mesh::InvalidOrdinal};
+  unsigned tviscID_{stk::mesh::InvalidOrdinal};
+  unsigned dudxID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType cEps_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
@@ -63,8 +62,7 @@ private:
   const int nDim_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* TKEKSGSNODEKERNEL_H */

@@ -128,7 +128,8 @@ MomentumLinearizedResidualOperator<p>::apply(
 
     ThrowRequire(owned_rhs.getLocalLength() == size_t(max_owned_row_id_));
     local_apply(
-      cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite), cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
+      cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite),
+      cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
     {
       stk::mesh::ProfilingBlock pfinner("export from owned-shared to owned");
@@ -137,7 +138,9 @@ MomentumLinearizedResidualOperator<p>::apply(
     }
   } else {
     stk::mesh::ProfilingBlock pfinner("local apply");
-    local_apply(owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly), owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
+    local_apply(
+      owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
 }
 INSTANTIATE_POLYCLASS(MomentumLinearizedResidualOperator);

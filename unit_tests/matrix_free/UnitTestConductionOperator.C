@@ -102,7 +102,6 @@ TEST_F(ConductionOperatorFixture, residual_operator_zero_for_constant_data)
   resid_op.set_fields({{+1, -1, 0}}, fields);
   resid_op.compute(rhs);
 
-
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   for (size_t k = 0u; k < rhs.getLocalLength(); ++k) {
@@ -137,7 +136,6 @@ TEST_F(
   resid_op.set_fields({{+1, -1, 0}}, fields);
   resid_op.compute(rhs);
 
-
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
   double max_error = -1;
   for (size_t k = 0u; k < rhs.getLocalLength(); ++k) {
@@ -160,7 +158,6 @@ TEST_F(
 
   lhs.putScalar(0.);
   cond_op.apply(lhs, rhs);
-
 
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
   for (size_t k = 0u; k < rhs.getLocalLength(); ++k) {
@@ -194,9 +191,8 @@ TEST_F(
   cond_op.set_coefficients(gammas[0], coefficient_fields);
 
   lhs.randomize(-1, +1);
-  
-  cond_op.apply(lhs, rhs);
 
+  cond_op.apply(lhs, rhs);
 
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 

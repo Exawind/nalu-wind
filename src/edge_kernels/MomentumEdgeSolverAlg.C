@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "edge_kernels/MomentumEdgeSolverAlg.h"
 #include "EquationSystem.h"
 #include "PecletFunction.h"
@@ -21,15 +20,14 @@ namespace sierra {
 namespace nalu {
 
 MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
-  Realm& realm,
-  stk::mesh::Part* part,
-  EquationSystem* eqSystem
-) : AssembleEdgeSolverAlgorithm(realm, part, eqSystem)
+  Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
+  : AssembleEdgeSolverAlgorithm(realm, part, eqSystem)
 {
   const auto& meta = realm.meta_data();
 
   coordinates_ = get_field_ordinal(meta, realm.get_coordinates_name());
-  const std::string vrtmName = realm.does_mesh_move()? "velocity_rtm" : "velocity";
+  const std::string vrtmName =
+    realm.does_mesh_move() ? "velocity_rtm" : "velocity";
   velocityRTM_ = get_field_ordinal(meta, vrtmName);
 
   const std::string velName = "velocity";
@@ -40,16 +38,19 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
     (realm.is_turbulent()) &&
     (realm.solutionOptions_->turbulenceModel_ != TurbulenceModel::SST_AMS))
     viscName = "effective_viscosity_u";
-  else 
-       viscName = "viscosity";
+  else
+    viscName = "viscosity";
 
   viscosity_ = get_field_ordinal(meta, viscName);
   dudx_ = get_field_ordinal(meta, "dudx");
-  edgeAreaVec_ = get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
-  massFlowRate_ = get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
+  edgeAreaVec_ =
+    get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
+  massFlowRate_ =
+    get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
   pecletFactor_ =
     get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK);
-  maskNodeField_ = get_field_ordinal(meta, "abl_wall_no_slip_wall_func_node_mask", stk::topology::NODE_RANK);
+  maskNodeField_ = get_field_ordinal(
+    meta, "abl_wall_no_slip_wall_func_node_mask", stk::topology::NODE_RANK);
 }
 
 void
@@ -63,23 +64,24 @@ MomentumEdgeSolverAlg::execute()
   const DblType alpha = realm_.get_alpha_factor(dofName);
   const DblType alphaUpw = realm_.get_alpha_upw_factor(dofName);
   const DblType hoUpwind = realm_.get_upw_factor(dofName);
-  const DblType relaxFacU = realm_.solutionOptions_->get_relaxation_factor(dofName);
+  const DblType relaxFacU =
+    realm_.solutionOptions_->get_relaxation_factor(dofName);
   const bool useLimiter = realm_.primitive_uses_limiter(dofName);
 
-  const DblType om_alpha    = 1.0 - alpha;
+  const DblType om_alpha = 1.0 - alpha;
   const DblType om_alphaUpw = 1.0 - alphaUpw;
 
   // STK stk::mesh::NgpField instances for capture by lambda
-  const auto& fieldMgr    = realm_.ngp_field_manager();
-  const auto coordinates  = fieldMgr.get_field<double>(coordinates_);
-  const auto vrtm         = fieldMgr.get_field<double>(velocityRTM_);
-  const auto vel          = fieldMgr.get_field<double>(velocity_);
-  const auto dudx         = fieldMgr.get_field<double>(dudx_);
-  const auto viscosity    = fieldMgr.get_field<double>(viscosity_);
-  const auto edgeAreaVec  = fieldMgr.get_field<double>(edgeAreaVec_);
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const auto coordinates = fieldMgr.get_field<double>(coordinates_);
+  const auto vrtm = fieldMgr.get_field<double>(velocityRTM_);
+  const auto vel = fieldMgr.get_field<double>(velocity_);
+  const auto dudx = fieldMgr.get_field<double>(dudx_);
+  const auto viscosity = fieldMgr.get_field<double>(viscosity_);
+  const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
   const auto pecletFactor = fieldMgr.get_field<double>(pecletFactor_);
-  const auto maskNodeField    = fieldMgr.get_field<double>(maskNodeField_);
+  const auto maskNodeField = fieldMgr.get_field<double>(maskNodeField_);
 
   run_algorithm(
     realm_.bulk_data(),
@@ -90,7 +92,7 @@ MomentumEdgeSolverAlg::execute()
       // Scratch work array for edgeAreaVector
       NALU_ALIGNED DblType av[NDimMax_];
       // Populate area vector work array
-      for (int d=0; d < ndim; ++d)
+      for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
 
       const DblType mdot = massFlowRate.get(edge, 0);
@@ -103,8 +105,9 @@ MomentumEdgeSolverAlg::execute()
       // Compute area vector related quantities and (U dot areaVec)
       DblType axdx = 0.0;
       DblType asq = 0.0;
-      for (int d=0; d < ndim; ++d) {
-        const DblType dxj = coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
+      for (int d = 0; d < ndim; ++d) {
+        const DblType dxj =
+          coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         asq += av[d] * av[d];
         axdx += av[d] * dxj;
       }
@@ -114,13 +117,14 @@ MomentumEdgeSolverAlg::execute()
       NALU_ALIGNED DblType duL[NDimMax_];
       NALU_ALIGNED DblType duR[NDimMax_];
 
-      for (int i=0; i < ndim; ++i) {
+      for (int i = 0; i < ndim; ++i) {
         const int offset = i * ndim;
         duL[i] = 0.0;
         duR[i] = 0.0;
 
-        for (int j=0; j < ndim; ++j) {
-          const DblType dxj = 0.5 * (coordinates.get(nodeR, j) - coordinates.get(nodeL, j));
+        for (int j = 0; j < ndim; ++j) {
+          const DblType dxj =
+            0.5 * (coordinates.get(nodeR, j) - coordinates.get(nodeL, j));
           duL[i] += dxj * dudx.get(nodeL, offset + j);
           duR[i] += dxj * dudx.get(nodeR, offset + j);
         }
@@ -129,11 +133,11 @@ MomentumEdgeSolverAlg::execute()
       const DblType pecfac = pecletFactor.get(edge, 0);
       const DblType om_pecfac = 1.0 - pecfac;
 
-      NALU_ALIGNED DblType limitL[NDimMax_] = { 1.0, 1.0, 1.0};
-      NALU_ALIGNED DblType limitR[NDimMax_] = { 1.0, 1.0, 1.0};
+      NALU_ALIGNED DblType limitL[NDimMax_] = {1.0, 1.0, 1.0};
+      NALU_ALIGNED DblType limitR[NDimMax_] = {1.0, 1.0, 1.0};
 
       if (useLimiter) {
-        for (int d=0; d < ndim; ++d) {
+        for (int d = 0; d < ndim; ++d) {
           const auto du = vel.get(nodeR, d) - vel.get(nodeL, d);
           const auto duML = 4.0 * duL[d] - du;
           const auto duMR = 4.0 * duR[d] - du;
@@ -145,7 +149,7 @@ MomentumEdgeSolverAlg::execute()
       // Upwind extrapolation with limiter terms
       NALU_ALIGNED DblType uIpL[NDimMax_];
       NALU_ALIGNED DblType uIpR[NDimMax_];
-      for (int d=0; d < ndim; ++d) {
+      for (int d = 0; d < ndim; ++d) {
         uIpL[d] = vel.get(nodeL, d) + duL[d] * hoUpwind * limitL[d];
         uIpR[d] = vel.get(nodeR, d) - duR[d] * hoUpwind * limitR[d];
       }
@@ -159,21 +163,22 @@ MomentumEdgeSolverAlg::execute()
         where Gp is the interpolated pth nodal gradient for ui
       */
       NALU_ALIGNED DblType duidxj[NDimMax_][NDimMax_];
-      for (int i=0; i < ndim; ++i) {
-        const auto dui = vel.get(nodeR , i) - vel.get(nodeL, i);
+      for (int i = 0; i < ndim; ++i) {
+        const auto dui = vel.get(nodeR, i) - vel.get(nodeL, i);
         const auto offset = i * ndim;
 
         // Non-orthogonal correction
         DblType gjuidx = 0.0;
-        for (int j=0; j < ndim; ++j) {
-          const DblType dxj = coordinates.get(nodeR, j) - coordinates.get(nodeL, j);
+        for (int j = 0; j < ndim; ++j) {
+          const DblType dxj =
+            coordinates.get(nodeR, j) - coordinates.get(nodeL, j);
           const DblType gjui =
             0.5 * (dudx.get(nodeR, offset + j) + dudx.get(nodeL, offset + j));
           gjuidx += gjui * dxj;
         }
 
         // final dui/dxj with non-orthogonal correction contributions
-        for (int j=0; j < ndim; ++j) {
+        for (int j = 0; j < ndim; ++j) {
           const DblType gjui =
             0.5 * (dudx.get(nodeR, offset + j) + dudx.get(nodeL, offset + j));
           duidxj[i][j] = gjui + (dui - gjuidx) * av[j] * inv_axdx;
@@ -183,7 +188,7 @@ MomentumEdgeSolverAlg::execute()
       // diffusion LHS term
       const DblType dlhsfac = -viscIp * asq * inv_axdx;
 
-      for (int i=0; i < ndim; ++i) {
+      for (int i = 0; i < ndim; ++i) {
         // Left and right row/col indices
         const int rowL = i;
         const int rowR = i + ndim;
@@ -192,8 +197,8 @@ MomentumEdgeSolverAlg::execute()
 
         // Upwind contribution
         const DblType uiUpw = (mdot > 0.0)
-          ? (alphaUpw * uIpL[i] + om_alphaUpw * uiIp)
-          : (alphaUpw * uIpR[i] + om_alphaUpw * uiIp);
+                                ? (alphaUpw * uIpL[i] + om_alphaUpw * uiIp)
+                                : (alphaUpw * uIpR[i] + om_alphaUpw * uiIp);
 
         const DblType uiHatL = (alpha * uIpL[i] + om_alpha * uiIp);
         const DblType uiHatR = (alpha * uIpR[i] + om_alpha * uiIp);
@@ -204,28 +209,30 @@ MomentumEdgeSolverAlg::execute()
 
         DblType diff_flux = 0.0;
         // div(U) part first
-        for (int j=0; j < ndim; ++j)
+        for (int j = 0; j < ndim; ++j)
           diff_flux += duidxj[j][j];
-        diff_flux *= 2.0/3.0 * viscIp * av[i] * includeDivU;
+        diff_flux *= 2.0 / 3.0 * viscIp * av[i] * includeDivU;
 
-        for (int j=0; j < ndim; ++j)
+        for (int j = 0; j < ndim; ++j)
           diff_flux += -viscIp * (duidxj[i][j] + duidxj[j][i]) * av[j];
 
-        const DblType maskNode = stk::math::min(maskNodeField.get(nodeL, 0), maskNodeField.get(nodeR, 0));
+        const DblType maskNode = stk::math::min(
+          maskNodeField.get(nodeL, 0), maskNodeField.get(nodeR, 0));
         const DblType total_flux = adv_flux + diff_flux * maskNode;
 
         smdata.rhs(rowL) -= total_flux;
         smdata.rhs(rowR) += total_flux;
 
         // Left node contribution; upwind terms
-        DblType alhsfac = 0.5 * (mdot + stk::math::abs(mdot))
-          * pecfac * alphaUpw + 0.5 * alpha * om_pecfac * mdot;
+        DblType alhsfac =
+          0.5 * (mdot + stk::math::abs(mdot)) * pecfac * alphaUpw +
+          0.5 * alpha * om_pecfac * mdot;
         smdata.lhs(rowL, rowL) += alhsfac / relaxFacU;
         smdata.lhs(rowR, rowL) -= alhsfac;
 
         // Right node contribution; upwind terms
-        alhsfac = 0.5 * (mdot - stk::math::abs(mdot))
-          * pecfac * alphaUpw + 0.5 * alpha * om_pecfac * mdot;
+        alhsfac = 0.5 * (mdot - stk::math::abs(mdot)) * pecfac * alphaUpw +
+                  0.5 * alpha * om_pecfac * mdot;
         smdata.lhs(rowR, rowR) -= alhsfac / relaxFacU;
         smdata.lhs(rowL, rowR) += alhsfac;
 
@@ -242,7 +249,7 @@ MomentumEdgeSolverAlg::execute()
         smdata.lhs(rowR, rowL) += dlhsfac;
         smdata.lhs(rowR, rowR) -= dlhsfac / relaxFacU;
 
-        for (int j=0; j < ndim; ++j) {
+        for (int j = 0; j < ndim; ++j) {
           const DblType lhsfacNS = -viscIp * av[i] * av[j] * inv_axdx;
 
           const int colL = j;
@@ -257,5 +264,5 @@ MomentumEdgeSolverAlg::execute()
     });
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

@@ -22,7 +22,7 @@ namespace nalu {
 class Realm;
 class CourantReAlgDriver;
 
-template<typename AlgTraits>
+template <typename AlgTraits>
 class CourantReAlg : public Algorithm
 {
 public:
@@ -47,8 +47,7 @@ private:
   MasterElement* meSCS_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* COURANTREALG_H */

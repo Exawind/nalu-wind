@@ -117,7 +117,6 @@ TEST_F(FluxFixture, bc_residual)
   owned_rhs.putScalar(0.);
   owned_rhs.doExport(owned_and_shared_rhs, exporter, Tpetra::ADD);
 
-  
   auto view_h = owned_rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   double maxval = -1;

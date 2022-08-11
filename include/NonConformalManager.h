@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef NonConformalManager_h
 #define NonConformalManager_h
 
@@ -43,13 +41,13 @@ class NonConformalInfo;
  * -
  */
 //=============================================================================
-class NonConformalManager {
+class NonConformalManager
+{
 
- public:
-
+public:
   // constructor and destructor
   NonConformalManager(
-    Realm & realm,
+    Realm& realm,
     const bool ncAlgDetailedOutput,
     const bool ncAlgCoincidentNodesErrorCheck);
 
@@ -57,24 +55,23 @@ class NonConformalManager {
 
   void initialize();
 
-  Realm &realm_;
+  Realm& realm_;
   const bool ncAlgDetailedOutput_;
   const bool ncAlgCoincidentNodesErrorCheck_;
 
   /* ghosting for all surface:block pair */
-  stk::mesh::Ghosting *nonConformalGhosting_;
+  stk::mesh::Ghosting* nonConformalGhosting_;
 
   stk::mesh::EntityProcVec elemsToGhost_;
-  std::vector<NonConformalInfo *> nonConformalInfoVec_;
+  std::vector<NonConformalInfo*> nonConformalInfoVec_;
 
   std::vector<int> ghostCommProcs_;
 
-  private:
-
+private:
   void manage_ghosting(std::vector<stk::mesh::EntityKey>& recvGhostsToRemove);
 };
 
-} // end nalu namespace
-} // end sierra namespace
+} // namespace nalu
+} // namespace sierra
 
 #endif

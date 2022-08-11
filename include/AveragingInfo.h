@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef AveragingInfo_h
 #define AveragingInfo_h
 
@@ -16,20 +14,19 @@
 #include <vector>
 
 namespace stk {
-  namespace mesh {
-    class FieldBase;
-    class Part;
-    typedef std::vector<Part*> PartVector;
-  }
-}
+namespace mesh {
+class FieldBase;
+class Part;
+typedef std::vector<Part*> PartVector;
+} // namespace mesh
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class AveragingInfo
 {
 public:
-
   AveragingInfo();
   ~AveragingInfo();
 
@@ -51,7 +48,7 @@ public:
   // Temperature stresses
   bool computeTemperatureSFS_{false};
   bool computeTemperatureResolved_{false};
-  
+
   // vector of part names, e.g., block_1, surface_2
   std::vector<std::string> targetNames_;
 
@@ -64,11 +61,13 @@ public:
   std::vector<std::string> resolvedFieldNameVec_;
   std::vector<std::string> movingAvgFieldNameVec_;
 
-
   // vector of pairs of fields
-  std::vector<std::pair<stk::mesh::FieldBase *, stk::mesh::FieldBase *> > favreFieldVecPair_;
-  std::vector<std::pair<stk::mesh::FieldBase *, stk::mesh::FieldBase *> > reynoldsFieldVecPair_;
-  std::vector<std::pair<stk::mesh::FieldBase *, stk::mesh::FieldBase *> > resolvedFieldVecPair_;
+  std::vector<std::pair<stk::mesh::FieldBase*, stk::mesh::FieldBase*>>
+    favreFieldVecPair_;
+  std::vector<std::pair<stk::mesh::FieldBase*, stk::mesh::FieldBase*>>
+    reynoldsFieldVecPair_;
+  std::vector<std::pair<stk::mesh::FieldBase*, stk::mesh::FieldBase*>>
+    resolvedFieldVecPair_;
 
   // sizes for each
   std::vector<unsigned> favreFieldSizeVec_;
@@ -77,6 +76,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

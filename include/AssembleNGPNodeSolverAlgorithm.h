@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef ASSEMBLENGPNODESOLVERALGORITHM_H
 #define ASSEMBLENGPNODESOLVERALGORITHM_H
 
@@ -20,7 +19,7 @@ namespace stk {
 namespace mesh {
 class Part;
 }
-}
+} // namespace stk
 
 namespace sierra {
 namespace nalu {
@@ -34,13 +33,11 @@ public:
   using NodeKernelPtrType = std::unique_ptr<NodeKernel>;
   using NodeKernelVecType = std::vector<NodeKernelPtrType>;
 
-  AssembleNGPNodeSolverAlgorithm(
-    Realm&,
-    stk::mesh::Part*,
-    EquationSystem*);
+  AssembleNGPNodeSolverAlgorithm(Realm&, stk::mesh::Part*, EquationSystem*);
 
   AssembleNGPNodeSolverAlgorithm() = delete;
-  AssembleNGPNodeSolverAlgorithm(const AssembleNGPNodeSolverAlgorithm&) = delete;
+  AssembleNGPNodeSolverAlgorithm(const AssembleNGPNodeSolverAlgorithm&) =
+    delete;
 
   virtual ~AssembleNGPNodeSolverAlgorithm();
 
@@ -48,7 +45,7 @@ public:
 
   virtual void execute() override;
 
-  template<typename T, class... Args>
+  template <typename T, class... Args>
   void add_kernel(Args&&... args)
   {
     nodeKernels_.push_back(std::make_unique<T>(std::forward<Args>(args)...));
@@ -62,9 +59,7 @@ private:
   const int rhsSize_;
 };
 
-}  // nalu
-}  // sierra
-
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ASSEMBLENGPNODESOLVERALGORITHM_H */

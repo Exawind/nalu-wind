@@ -7,16 +7,14 @@
 // for more details.
 //
 
-
-
 #include <SolverAlgorithmDriver.h>
 
 #include <AlgorithmDriver.h>
 #include <Enums.h>
 #include <SolverAlgorithm.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
@@ -28,8 +26,7 @@ class Realm;
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-SolverAlgorithmDriver::SolverAlgorithmDriver(
-  Realm &realm) 
+SolverAlgorithmDriver::SolverAlgorithmDriver(Realm& realm)
   : AlgorithmDriver(realm)
 {
   // does nothing
@@ -40,25 +37,28 @@ SolverAlgorithmDriver::SolverAlgorithmDriver(
 //--------------------------------------------------------------------------
 SolverAlgorithmDriver::~SolverAlgorithmDriver()
 {
-  std::map<std::string, SolverAlgorithm *>::iterator is;
-  for( is=solverAlgorithmMap_.begin(); is != solverAlgorithmMap_.end(); ++is ) {
-    Algorithm *theAlg = is->second;
+  std::map<std::string, SolverAlgorithm*>::iterator is;
+  for (is = solverAlgorithmMap_.begin(); is != solverAlgorithmMap_.end();
+       ++is) {
+    Algorithm* theAlg = is->second;
     delete theAlg;
   }
 
-  std::map<AlgorithmType, SolverAlgorithm *>::iterator ii;
-  for( ii=solverAlgMap_.begin(); ii!=solverAlgMap_.end(); ++ii ) {
-    Algorithm *theAlg = ii->second;
+  std::map<AlgorithmType, SolverAlgorithm*>::iterator ii;
+  for (ii = solverAlgMap_.begin(); ii != solverAlgMap_.end(); ++ii) {
+    Algorithm* theAlg = ii->second;
     delete theAlg;
   }
 
-  for( ii=solverConstraintAlgMap_.begin(); ii!=solverConstraintAlgMap_.end(); ++ii ) {
-    Algorithm *theAlg = ii->second;
+  for (ii = solverConstraintAlgMap_.begin();
+       ii != solverConstraintAlgMap_.end(); ++ii) {
+    Algorithm* theAlg = ii->second;
     delete theAlg;
   }
-  
-  for( ii=solverDirichAlgMap_.begin(); ii!=solverDirichAlgMap_.end(); ++ii ) {
-    Algorithm *theAlg = ii->second;
+
+  for (ii = solverDirichAlgMap_.begin(); ii != solverDirichAlgMap_.end();
+       ++ii) {
+    Algorithm* theAlg = ii->second;
     delete theAlg;
   }
 }
@@ -69,22 +69,24 @@ SolverAlgorithmDriver::~SolverAlgorithmDriver()
 void
 SolverAlgorithmDriver::initialize_connectivity()
 {
-  std::map<std::string, SolverAlgorithm *>::iterator itc;
-  for ( itc = solverAlgorithmMap_.begin(); itc != solverAlgorithmMap_.end(); ++itc ) {
+  std::map<std::string, SolverAlgorithm*>::iterator itc;
+  for (itc = solverAlgorithmMap_.begin(); itc != solverAlgorithmMap_.end();
+       ++itc) {
     itc->second->initialize_connectivity();
   }
-  std::map<AlgorithmType, SolverAlgorithm *>::iterator it;
-  for ( it = solverAlgMap_.begin(); it != solverAlgMap_.end(); ++it ) {
+  std::map<AlgorithmType, SolverAlgorithm*>::iterator it;
+  for (it = solverAlgMap_.begin(); it != solverAlgMap_.end(); ++it) {
     it->second->initialize_connectivity();
   }
-  for ( it = solverConstraintAlgMap_.begin(); it != solverConstraintAlgMap_.end(); ++it ) {
-    it->second->initialize_connectivity();
-  }
-
-  for ( it = solverDirichAlgMap_.begin(); it != solverDirichAlgMap_.end(); ++it ) {
+  for (it = solverConstraintAlgMap_.begin();
+       it != solverConstraintAlgMap_.end(); ++it) {
     it->second->initialize_connectivity();
   }
 
+  for (it = solverDirichAlgMap_.begin(); it != solverDirichAlgMap_.end();
+       ++it) {
+    it->second->initialize_connectivity();
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -95,7 +97,6 @@ SolverAlgorithmDriver::pre_work()
 {
   // might set initial guess
 }
-
 
 //--------------------------------------------------------------------------
 //-------- post_work--------------------------------------------------------
@@ -113,33 +114,35 @@ void
 SolverAlgorithmDriver::execute()
 {
   pre_work();
-  
-  // assemble all interior and boundary contributions; consolidated homogeneous approach
-  std::map<std::string, SolverAlgorithm *>::iterator itc;
-  for ( itc = solverAlgorithmMap_.begin(); itc != solverAlgorithmMap_.end(); ++itc ) {
+
+  // assemble all interior and boundary contributions; consolidated homogeneous
+  // approach
+  std::map<std::string, SolverAlgorithm*>::iterator itc;
+  for (itc = solverAlgorithmMap_.begin(); itc != solverAlgorithmMap_.end();
+       ++itc) {
     itc->second->execute();
   }
 
   // assemble all interior and boundary contributions
-  std::map<AlgorithmType, SolverAlgorithm *>::iterator it;
-  for ( it = solverAlgMap_.begin(); it != solverAlgMap_.end(); ++it ) {
+  std::map<AlgorithmType, SolverAlgorithm*>::iterator it;
+  for (it = solverAlgMap_.begin(); it != solverAlgMap_.end(); ++it) {
     it->second->execute();
   }
-  
+
   // handle constraint (will zero out entire row and process constraint)
-  for ( it = solverConstraintAlgMap_.begin(); it != solverConstraintAlgMap_.end(); ++it ) {
+  for (it = solverConstraintAlgMap_.begin();
+       it != solverConstraintAlgMap_.end(); ++it) {
     it->second->execute();
   }
 
   // handle dirichlet
-  for ( it = solverDirichAlgMap_.begin(); it != solverDirichAlgMap_.end(); ++it ) {
+  for (it = solverDirichAlgMap_.begin(); it != solverDirichAlgMap_.end();
+       ++it) {
     it->second->execute();
   }
 
   post_work();
-  
 }
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

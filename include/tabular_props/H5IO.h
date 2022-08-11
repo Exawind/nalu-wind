@@ -18,7 +18,7 @@ namespace nalu {
  *  for reading.  Once open, the H5IO object allows reading and writing of
  *  both attributes (meta-data) and datasets (large blocks of data) to the
  *  file.  Sub-groups, similar to sub-directories, can be opened inside the
- *  file and written to.  Typical usage involves passing name/value pairs 
+ *  file and written to.  Typical usage involves passing name/value pairs
  *  to the API, and works something like this:
  *
  *      H5IO io;
@@ -54,82 +54,73 @@ namespace nalu {
  *      io.close_file();
  *
  */
-class H5IO {
+class H5IO
+{
 
- public:
+public:
   H5IO();
   ~H5IO();
 
-  void create_file( const std::string & name, int version = 1 ); 
-  void open_file( const std::string & name ); 
+  void create_file(const std::string& name, int version = 1);
+  void open_file(const std::string& name);
   void close_file();
 
-  H5IO create_group( const std::string & name );
-  H5IO open_group( const std::string & name );
+  H5IO create_group(const std::string& name);
+  H5IO open_group(const std::string& name);
 
   unsigned int num_attributes();
   int file_version() const { return fileVersion_; }
 
-  void write_attribute( const std::string & name, int value );
-  void write_attribute( const std::string & name, unsigned int value );
-  void write_attribute( const std::string & name, double value );
-  void write_attribute( const std::string & name, const std::string & value );
+  void write_attribute(const std::string& name, int value);
+  void write_attribute(const std::string& name, unsigned int value);
+  void write_attribute(const std::string& name, double value);
+  void write_attribute(const std::string& name, const std::string& value);
 
-  void write_attribute( const std::string & name,
-                        const std::vector<int> & value );
-  void write_attribute( const std::string & name,
-                        const std::vector<unsigned int> & value );
-  void write_attribute( const std::string & name,
-                        const std::vector<double> & value );
-  void write_attribute( const std::string & name,
-                        const std::vector<std::string> & value );
+  void write_attribute(const std::string& name, const std::vector<int>& value);
+  void write_attribute(
+    const std::string& name, const std::vector<unsigned int>& value);
+  void
+  write_attribute(const std::string& name, const std::vector<double>& value);
+  void write_attribute(
+    const std::string& name, const std::vector<std::string>& value);
 
-  bool has_attribute( const std::string & name );
+  bool has_attribute(const std::string& name);
 
-  void read_attribute( const std::string & name, int & value );
-  void read_attribute( const std::string & name, unsigned int & value );
-  void read_attribute( const std::string & name, double & value );
-  void read_attribute( const std::string & name, std::string & value );
-  void read_attribute( unsigned int index, std::string & name,
-                       std::string & value );
+  void read_attribute(const std::string& name, int& value);
+  void read_attribute(const std::string& name, unsigned int& value);
+  void read_attribute(const std::string& name, double& value);
+  void read_attribute(const std::string& name, std::string& value);
+  void
+  read_attribute(unsigned int index, std::string& name, std::string& value);
 
-  void read_attribute( const std::string & name,
-                       std::vector<int> & value );
-  void read_attribute( const std::string & name,
-                       std::vector<unsigned int> & value );
-  void read_attribute( const std::string & name,
-                       std::vector<double> & value );
-  void read_attribute( const std::string & name,
-                       std::vector<std::string> & value );
+  void read_attribute(const std::string& name, std::vector<int>& value);
+  void
+  read_attribute(const std::string& name, std::vector<unsigned int>& value);
+  void read_attribute(const std::string& name, std::vector<double>& value);
+  void read_attribute(const std::string& name, std::vector<std::string>& value);
 
-  void write_dataset( const std::string & name,
-                      const std::vector<double> & value );
+  void write_dataset(const std::string& name, const std::vector<double>& value);
 
-  void read_dataset( const std::string & name, std::vector<double> & value );
+  void read_dataset(const std::string& name, std::vector<double>& value);
 
- private:
-  void h5io_create_group( const std::string & name ); 
-  void h5io_open_group( const std::string & name ); 
-  void h5io_open_group(); 
-  void h5io_close_group(); 
+private:
+  void h5io_create_group(const std::string& name);
+  void h5io_open_group(const std::string& name);
+  void h5io_open_group();
+  void h5io_close_group();
   hid_t h5io_create_scalar();
-  hid_t h5io_create_1D_array( unsigned int size );
-  hid_t h5io_create_attribute( const std::string & name,
-                               hid_t type,
-                               hid_t space );
-  hid_t h5io_create_dataset( const std::string & name,
-                             hid_t type,
-                             hid_t space );
+  hid_t h5io_create_1D_array(unsigned int size);
+  hid_t h5io_create_attribute(const std::string& name, hid_t type, hid_t space);
+  hid_t h5io_create_dataset(const std::string& name, hid_t type, hid_t space);
 
   std::string fileName_;
   std::string groupName_;
   hid_t file_;
   hid_t group_;
   int fileVersion_;
-
 };
 
-} // end nalu namespace
-} // end sierra namespace
+} // namespace nalu
+} // namespace sierra
 
 #endif

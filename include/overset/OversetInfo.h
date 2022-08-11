@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef OversetInfo_h
 #define OversetInfo_h
 
@@ -17,7 +15,7 @@
 //==============================================================================
 
 #include <stk_mesh/base/Entity.hpp>
-#include <cmath> 
+#include <cmath>
 #include <vector>
 
 namespace sierra {
@@ -30,14 +28,12 @@ class MasterElement;
 //=============================================================================
 // OversetInfo
 //=============================================================================
-class OversetInfo {
+class OversetInfo
+{
 
- public:
-
+public:
   // constructor and destructor
-  OversetInfo(
-    stk::mesh::Entity node,
-    const int nDim );
+  OversetInfo(stk::mesh::Entity node, const int nDim);
 
   ~OversetInfo();
 
@@ -48,14 +44,13 @@ class OversetInfo {
   int elemIsGhosted_;
 
   // master element for background mesh
-  MasterElement *meSCS_;
+  MasterElement* meSCS_;
 
   std::vector<double> isoParCoords_;
   std::vector<double> nodalCoords_;
-
 };
-  
-} // end sierra namespace
-} // end nalu namespace
+
+} // namespace nalu
+} // namespace sierra
 
 #endif

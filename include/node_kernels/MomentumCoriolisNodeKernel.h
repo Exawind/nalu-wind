@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef MOMENTUMCORIOLISSRCNODEKERNEL_H
 #define MOMENTUMCORIOLISSRCNODEKERNEL_H
 
@@ -24,12 +23,12 @@ namespace nalu {
 
 class SolutionOptions;
 
-class MomentumCoriolisNodeKernel : public NGPNodeKernel<MomentumCoriolisNodeKernel>
+class MomentumCoriolisNodeKernel
+  : public NGPNodeKernel<MomentumCoriolisNodeKernel>
 {
 public:
   MomentumCoriolisNodeKernel(
-    const stk::mesh::BulkData&,
-    const SolutionOptions&);
+    const stk::mesh::BulkData&, const SolutionOptions&);
 
   MomentumCoriolisNodeKernel() = delete;
 
@@ -51,13 +50,12 @@ private:
   stk::mesh::NgpField<double> densityNp1_;
   stk::mesh::NgpField<double> velocityNp1_;
 
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
-  unsigned densityNp1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned velocityNp1ID_ {stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
+  unsigned densityNp1ID_{stk::mesh::InvalidOrdinal};
+  unsigned velocityNp1ID_{stk::mesh::InvalidOrdinal};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MOMENTUMCORIOLISSRCNODEKERNEL_H */

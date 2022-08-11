@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <SolutionOptions.h>
 #include <Enums.h>
 #include <NaluEnv.h>
@@ -19,9 +17,8 @@
 #include <stdexcept>
 #include <utility>
 
-namespace sierra{
-namespace nalu{
-
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -98,26 +95,24 @@ SolutionOptions::SolutionOptions()
 //--------------------------------------------------------------------------
 //-------- destructor ------------------------------------------------------
 //--------------------------------------------------------------------------
-SolutionOptions::~SolutionOptions()
-{
-}
+SolutionOptions::~SolutionOptions() {}
 
 //--------------------------------------------------------------------------
 //-------- load ------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-SolutionOptions::load(const YAML::Node & y_node)
+SolutionOptions::load(const YAML::Node& y_node)
 {
-  const bool optional=true;
-  const bool required=!optional;
+  const bool optional = true;
+  const bool required = !optional;
 
-  const YAML::Node y_solution_options = expect_map(y_node,"solution_options", optional);
-  if(y_solution_options)
-  {
+  const YAML::Node y_solution_options =
+    expect_map(y_node, "solution_options", optional);
+  if (y_solution_options) {
     get_required(y_solution_options, "name", name_);
-    get_if_present(y_solution_options,
-                   "nearest_face_entrainment",
-                   nearestFaceEntrain_, nearestFaceEntrain_);
+    get_if_present(
+      y_solution_options, "nearest_face_entrainment", nearestFaceEntrain_,
+      nearestFaceEntrain_);
 
     // penalty factor to apply to weak symmetry bc default to 2.0
     // Strengthening this penalty will better approximate the
@@ -127,62 +122,90 @@ SolutionOptions::load(const YAML::Node & y_node)
       y_node, "symmetry_bc_penalty_factor", symmetryBcPenaltyFactor_);
 
     // divU factor for stress
-    get_if_present(y_solution_options, "divU_stress_scaling", includeDivU_, includeDivU_);
+    get_if_present(
+      y_solution_options, "divU_stress_scaling", includeDivU_, includeDivU_);
 
-    // mdot interpolation procedure 
-    get_if_present(y_solution_options, "interp_rhou_together_for_mdot", mdotInterpRhoUTogether_, mdotInterpRhoUTogether_);
-    
+    // mdot interpolation procedure
+    get_if_present(
+      y_solution_options, "interp_rhou_together_for_mdot",
+      mdotInterpRhoUTogether_, mdotInterpRhoUTogether_);
+
     // external mesh motion expected
-    get_if_present(y_solution_options, "externally_provided_mesh_deformation", externalMeshDeformation_, externalMeshDeformation_);
+    get_if_present(
+      y_solution_options, "externally_provided_mesh_deformation",
+      externalMeshDeformation_, externalMeshDeformation_);
 
     // shift mdot for continuity (CVFEM)
-    get_if_present(y_solution_options, "shift_cvfem_mdot", cvfemShiftMdot_, cvfemShiftMdot_);
+    get_if_present(
+      y_solution_options, "shift_cvfem_mdot", cvfemShiftMdot_, cvfemShiftMdot_);
 
     // DEPRECATED shifted CVFEM pressure poisson;
-    if ( y_solution_options["shift_cvfem_poisson"] ) {
-      throw std::runtime_error("shift_cvfem_poisson line command is deprecated to the generalized solution options block command, shifted_gradient_operator");
+    if (y_solution_options["shift_cvfem_poisson"]) {
+      throw std::runtime_error(
+        "shift_cvfem_poisson line command is deprecated to the generalized "
+        "solution options block command, shifted_gradient_operator");
     }
 
-    // Reduce sensitivities for CVFEM PPE: M delta_p = b - A p; M has quadrature at edge midpoints of the element
-    get_if_present(y_solution_options, "reduced_sens_cvfem_poisson", cvfemReducedSensPoisson_, cvfemReducedSensPoisson_);
+    // Reduce sensitivities for CVFEM PPE: M delta_p = b - A p; M has quadrature
+    // at edge midpoints of the element
+    get_if_present(
+      y_solution_options, "reduced_sens_cvfem_poisson",
+      cvfemReducedSensPoisson_, cvfemReducedSensPoisson_);
 
     // check for consolidated solver alg (AssembleSolver)
-    get_if_present(y_solution_options, "use_consolidated_solver_algorithm", useConsolidatedSolverAlg_, useConsolidatedSolverAlg_);
+    get_if_present(
+      y_solution_options, "use_consolidated_solver_algorithm",
+      useConsolidatedSolverAlg_, useConsolidatedSolverAlg_);
 
     // check for consolidated face-elem bc alg
-    get_if_present(y_solution_options, "use_consolidated_face_elem_bc_algorithm", useConsolidatedBcSolverAlg_, useConsolidatedBcSolverAlg_);
-
+    get_if_present(
+      y_solution_options, "use_consolidated_face_elem_bc_algorithm",
+      useConsolidatedBcSolverAlg_, useConsolidatedBcSolverAlg_);
 
     // eigenvalue purturbation; over all dofs...
-    get_if_present(y_solution_options, "eigenvalue_perturbation", eigenvaluePerturb_);
-    get_if_present(y_solution_options, "eigenvalue_perturbation_delta", eigenvaluePerturbDelta_);
-    get_if_present(y_solution_options, "eigenvalue_perturbation_bias_towards", eigenvaluePerturbBiasTowards_);
-    get_if_present(y_solution_options, "eigenvalue_perturbation_turbulent_ke", eigenvaluePerturbTurbKe_);
-    
+    get_if_present(
+      y_solution_options, "eigenvalue_perturbation", eigenvaluePerturb_);
+    get_if_present(
+      y_solution_options, "eigenvalue_perturbation_delta",
+      eigenvaluePerturbDelta_);
+    get_if_present(
+      y_solution_options, "eigenvalue_perturbation_bias_towards",
+      eigenvaluePerturbBiasTowards_);
+    get_if_present(
+      y_solution_options, "eigenvalue_perturbation_turbulent_ke",
+      eigenvaluePerturbTurbKe_);
+
     std::string projected_timescale_type = "default";
-    get_if_present(y_solution_options, "projected_timescale_type",
-                   projected_timescale_type, projected_timescale_type);
+    get_if_present(
+      y_solution_options, "projected_timescale_type", projected_timescale_type,
+      projected_timescale_type);
     if (projected_timescale_type == "default")
       tscaleType_ = TSCALE_DEFAULT;
     else if (projected_timescale_type == "momentum_diag_inv")
       tscaleType_ = TSCALE_UDIAGINV;
     else
-      throw std::runtime_error("SolutionOptions: Invalid option provided for projected_timescale_type");
+      throw std::runtime_error("SolutionOptions: Invalid option provided for "
+                               "projected_timescale_type");
 
-    // reset running AMS averages to instantaneous quantities during intialization
-    // you would want to do this when restarting from a RANS simulation 
-    get_if_present(y_solution_options, "reset_AMS_averages_on_init", resetAMSAverages_, resetAMSAverages_);
+    // reset running AMS averages to instantaneous quantities during
+    // intialization you would want to do this when restarting from a RANS
+    // simulation
+    get_if_present(
+      y_solution_options, "reset_AMS_averages_on_init", resetAMSAverages_,
+      resetAMSAverages_);
 
     // extract turbulence model; would be nice if we could parse an enum..
     std::string specifiedTurbModel;
     std::string defaultTurbModel = "laminar";
-    get_if_present(y_solution_options,
-        "turbulence_model", specifiedTurbModel, defaultTurbModel);
+    get_if_present(
+      y_solution_options, "turbulence_model", specifiedTurbModel,
+      defaultTurbModel);
 
     bool matchedTurbulenceModel = false;
     for (int k = 0; k < static_cast<int>(TurbulenceModel::TurbulenceModel_END);
          ++k) {
-      if (case_insensitive_compare(specifiedTurbModel, TurbulenceModelNames[k])) {
+      if (case_insensitive_compare(
+            specifiedTurbModel, TurbulenceModelNames[k])) {
         turbulenceModel_ = TurbulenceModel(k);
         matchedTurbulenceModel = true;
         break;
@@ -190,8 +213,9 @@ SolutionOptions::load(const YAML::Node & y_node)
     }
 
     if (!matchedTurbulenceModel) {
-      std::string msg = "Turbulence model `" + specifiedTurbModel +
-          "' not implemented.\n  Available turbulence models are ";
+      std::string msg =
+        "Turbulence model `" + specifiedTurbModel +
+        "' not implemented.\n  Available turbulence models are ";
 
       for (int k = 0;
            k < static_cast<int>(TurbulenceModel::TurbulenceModel_END); ++k) {
@@ -214,128 +238,128 @@ SolutionOptions::load(const YAML::Node & y_node)
       get_if_present(
         y_solution_options, "transition_model", transition_model_,
         transition_model_);
-        if (transition_model_ == true) gammaEqActive_ = true;
+      if (transition_model_ == true)
+        gammaEqActive_ = true;
     }
-    // initialize turbulence constants since some laminar models may need such variables, e.g., kappa
+    // initialize turbulence constants since some laminar models may need such
+    // variables, e.g., kappa
     initialize_turbulence_constants();
 
     // extract possible copy from input fields restoration time
-    get_if_present(y_solution_options, "input_variables_from_file_restoration_time",
+    get_if_present(
+      y_solution_options, "input_variables_from_file_restoration_time",
       inputVariablesRestorationTime_, inputVariablesRestorationTime_);
 
     // choice of interpolation or snapping to closest in the data base
-    get_if_present(y_solution_options, "input_variables_interpolate_in_time",
+    get_if_present(
+      y_solution_options, "input_variables_interpolate_in_time",
       inputVariablesInterpolateInTime_, inputVariablesInterpolateInTime_);
 
     // allow for periodic sampling in time
-    get_if_present(y_solution_options, "input_variables_from_file_periodic_time",
+    get_if_present(
+      y_solution_options, "input_variables_from_file_periodic_time",
       inputVariablesPeriodicTime_, inputVariablesPeriodicTime_);
 
     // check for global correction algorithm
-    get_if_present(y_solution_options, "activate_open_mdot_correction",
+    get_if_present(
+      y_solution_options, "activate_open_mdot_correction",
       activateOpenMdotCorrection_, activateOpenMdotCorrection_);
 
-    get_if_present(y_solution_options, "explicitly_zero_open_pressure_gradient",
+    get_if_present(
+      y_solution_options, "explicitly_zero_open_pressure_gradient",
       explicitlyZeroOpenPressureGradient_, explicitlyZeroOpenPressureGradient_);
 
     // first set of options; hybrid, source, etc.
-    const YAML::Node y_options = expect_sequence(y_solution_options, "options", required);
-    if (y_options)
-    {
-      for (size_t ioption = 0; ioption < y_options.size(); ++ioption)
-      {
-        const YAML::Node y_option = y_options[ioption] ;
+    const YAML::Node y_options =
+      expect_sequence(y_solution_options, "options", required);
+    if (y_options) {
+      for (size_t ioption = 0; ioption < y_options.size(); ++ioption) {
+        const YAML::Node y_option = y_options[ioption];
         if (expect_map(y_option, "hybrid_factor", optional)) {
-          y_option["hybrid_factor"] >> hybridMap_ ;
-        }
-        else if (expect_map(y_option, "alpha", optional)) {
-          y_option["alpha"] >> alphaMap_ ;
-        }
-        else if (expect_map(y_option, "alpha_upw", optional)) {
+          y_option["hybrid_factor"] >> hybridMap_;
+        } else if (expect_map(y_option, "alpha", optional)) {
+          y_option["alpha"] >> alphaMap_;
+        } else if (expect_map(y_option, "alpha_upw", optional)) {
           y_option["alpha_upw"] >> alphaUpwMap_;
-        }
-        else if (expect_map(y_option, "upw_factor", optional)) {
-          y_option["upw_factor"] >> upwMap_ ;
-        }
-        else if (expect_map(y_option, "relaxation_factor", optional)) {
+        } else if (expect_map(y_option, "upw_factor", optional)) {
+          y_option["upw_factor"] >> upwMap_;
+        } else if (expect_map(y_option, "relaxation_factor", optional)) {
           y_option["relaxation_factor"] >> relaxFactorMap_;
-        }
-        else if (expect_map(y_option, "limiter", optional)) {
-          y_option["limiter"] >> limiterMap_ ;
-        }
-        else if (expect_map( y_option, "laminar_schmidt", optional)) {
-          y_option["laminar_schmidt"] >> lamScMap_ ;
-        }
-        else if (expect_map( y_option, "laminar_prandtl", optional)) {
-          y_option["laminar_prandtl"] >> lamPrMap_ ;
-        }
-        else if (expect_map( y_option, "turbulent_schmidt", optional)) {
-          y_option["turbulent_schmidt"] >> turbScMap_ ;
-        }
-        else if (expect_map( y_option, "turbulent_prandtl", optional)) {
-          y_option["turbulent_prandtl"] >> turbPrMap_ ;
-        }
-        else if (expect_map( y_option, "source_terms", optional)) {
+        } else if (expect_map(y_option, "limiter", optional)) {
+          y_option["limiter"] >> limiterMap_;
+        } else if (expect_map(y_option, "laminar_schmidt", optional)) {
+          y_option["laminar_schmidt"] >> lamScMap_;
+        } else if (expect_map(y_option, "laminar_prandtl", optional)) {
+          y_option["laminar_prandtl"] >> lamPrMap_;
+        } else if (expect_map(y_option, "turbulent_schmidt", optional)) {
+          y_option["turbulent_schmidt"] >> turbScMap_;
+        } else if (expect_map(y_option, "turbulent_prandtl", optional)) {
+          y_option["turbulent_prandtl"] >> turbPrMap_;
+        } else if (expect_map(y_option, "source_terms", optional)) {
           const YAML::Node ySrc = y_option["source_terms"];
-          ySrc >> srcTermsMap_ ;
-        }
-        else if (expect_map( y_option, "element_source_terms", optional)) {
+          ySrc >> srcTermsMap_;
+        } else if (expect_map(y_option, "element_source_terms", optional)) {
           const YAML::Node ySrc = y_option["element_source_terms"];
-          ySrc >> elemSrcTermsMap_ ;
-        }
-        else if (expect_map( y_option, "source_term_parameters", optional)) {
-          y_option["source_term_parameters"] >> srcTermParamMap_ ;
-        }
-        else if (expect_map( y_option, "element_source_term_parameters", optional)) {
-          y_option["element_source_term_parameters"] >> elemSrcTermParamMap_ ;
-        }
-        else if (expect_map( y_option, "projected_nodal_gradient", optional)) {
-          y_option["projected_nodal_gradient"] >> nodalGradMap_ ;
-        }
-        else if (expect_map( y_option, "noc_correction", optional)) {
-          y_option["noc_correction"] >> nocMap_ ;
-        }
-        else if (expect_map( y_option, "shifted_gradient_operator", optional)) {
-          y_option["shifted_gradient_operator"] >> shiftedGradOpMap_ ;
-        }
-        else if (expect_map( y_option, "skew_symmetric_advection", optional)) {
+          ySrc >> elemSrcTermsMap_;
+        } else if (expect_map(y_option, "source_term_parameters", optional)) {
+          y_option["source_term_parameters"] >> srcTermParamMap_;
+        } else if (expect_map(
+                     y_option, "element_source_term_parameters", optional)) {
+          y_option["element_source_term_parameters"] >> elemSrcTermParamMap_;
+        } else if (expect_map(y_option, "projected_nodal_gradient", optional)) {
+          y_option["projected_nodal_gradient"] >> nodalGradMap_;
+        } else if (expect_map(y_option, "noc_correction", optional)) {
+          y_option["noc_correction"] >> nocMap_;
+        } else if (expect_map(
+                     y_option, "shifted_gradient_operator", optional)) {
+          y_option["shifted_gradient_operator"] >> shiftedGradOpMap_;
+        } else if (expect_map(y_option, "skew_symmetric_advection", optional)) {
           y_option["skew_symmetric_advection"] >> skewSymmetricMap_;
-        }
-        else if (expect_map( y_option, "input_variables_from_file", optional)) {
-          y_option["input_variables_from_file"] >> inputVarFromFileMap_ ;
-        }
-        else if (expect_map( y_option, "turbulence_model_constants", optional)) {
+        } else if (expect_map(
+                     y_option, "input_variables_from_file", optional)) {
+          y_option["input_variables_from_file"] >> inputVarFromFileMap_;
+        } else if (expect_map(
+                     y_option, "turbulence_model_constants", optional)) {
           std::map<std::string, double> turbConstMap;
-          y_option["turbulence_model_constants"] >> turbConstMap ;
+          y_option["turbulence_model_constants"] >> turbConstMap;
           // iterate the parsed map
           std::map<std::string, double>::iterator it;
-          for ( it = turbConstMap.begin(); it!= turbConstMap.end(); ++it ) {
+          for (it = turbConstMap.begin(); it != turbConstMap.end(); ++it) {
             std::string theConstName = it->first;
             double theConstValue = it->second;
             // find the enum and set the value
             bool foundIt = false;
-            for ( int k=0; k < TM_END; ++k ) {
-              if ( theConstName == TurbulenceModelConstantNames[k] ) {
-                TurbulenceModelConstant theConstEnum = TurbulenceModelConstant(k);
+            for (int k = 0; k < TM_END; ++k) {
+              if (theConstName == TurbulenceModelConstantNames[k]) {
+                TurbulenceModelConstant theConstEnum =
+                  TurbulenceModelConstant(k);
                 turbModelConstantMap_[theConstEnum] = theConstValue;
                 foundIt = true;
                 break;
               }
             }
             // error check..
-            if ( !foundIt ) {
-              NaluEnv::self().naluOutputP0() << "Sorry, turbulence model constant with name " << theConstName << " was not found " << std::endl;
-              NaluEnv::self().naluOutputP0() << "List of turbulence model constant names are as follows:" << std::endl;
-              for ( int k=0; k < TM_END; ++k ) {
-                NaluEnv::self().naluOutputP0() << TurbulenceModelConstantNames[k] << std::endl;
+            if (!foundIt) {
+              NaluEnv::self().naluOutputP0()
+                << "Sorry, turbulence model constant with name " << theConstName
+                << " was not found " << std::endl;
+              NaluEnv::self().naluOutputP0()
+                << "List of turbulence model constant names are as follows:"
+                << std::endl;
+              for (int k = 0; k < TM_END; ++k) {
+                NaluEnv::self().naluOutputP0()
+                  << TurbulenceModelConstantNames[k] << std::endl;
               }
             }
           }
-        }
-        else if (expect_map( y_option, "user_constants", optional)) {
+        } else if (expect_map(y_option, "user_constants", optional)) {
           const YAML::Node y_user_constants = y_option["user_constants"];
-          get_if_present(y_user_constants, "reference_density",  referenceDensity_, referenceDensity_);
-          get_if_present(y_user_constants, "reference_temperature",  referenceTemperature_, referenceTemperature_);
+          get_if_present(
+            y_user_constants, "reference_density", referenceDensity_,
+            referenceDensity_);
+          get_if_present(
+            y_user_constants, "reference_temperature", referenceTemperature_,
+            referenceTemperature_);
 
           const auto thermal_expansion_option = "thermal_expansion_coefficient";
           if (
@@ -347,106 +371,129 @@ SolutionOptions::load(const YAML::Node & y_node)
                  "coefficient of "
               << thermalExpansionCoeff_ << "\n  -- specify "
               << thermal_expansion_option
-              << " in user constants to set a different value"
-              << std::endl;
+              << " in user constants to set a different value" << std::endl;
           }
           get_if_present(
             y_user_constants, thermal_expansion_option, thermalExpansionCoeff_,
             thermalExpansionCoeff_);
-          
-          get_if_present(y_user_constants, "earth_angular_velocity", earthAngularVelocity_, earthAngularVelocity_);
-          get_if_present(y_user_constants, "latitude", latitude_, latitude_);
-          get_if_present(y_user_constants, "boussinesq_time_scale", raBoussinesqTimeScale_, raBoussinesqTimeScale_);
-          get_if_present(y_user_constants, "roughness_height", roughnessHeight_, roughnessHeight_);
-          get_if_present(y_user_constants, "length_scale_limiter", lengthScaleLimiter_, lengthScaleLimiter_);
-          get_if_present(y_user_constants, "reference_velocity", referenceVelocity_, referenceVelocity_);
-          get_if_present(y_user_constants, "rans_below_ks", RANSBelowKs_, RANSBelowKs_);
 
-          if (expect_sequence( y_user_constants, "gravity", optional) ) {
+          get_if_present(
+            y_user_constants, "earth_angular_velocity", earthAngularVelocity_,
+            earthAngularVelocity_);
+          get_if_present(y_user_constants, "latitude", latitude_, latitude_);
+          get_if_present(
+            y_user_constants, "boussinesq_time_scale", raBoussinesqTimeScale_,
+            raBoussinesqTimeScale_);
+          get_if_present(
+            y_user_constants, "roughness_height", roughnessHeight_,
+            roughnessHeight_);
+          get_if_present(
+            y_user_constants, "length_scale_limiter", lengthScaleLimiter_,
+            lengthScaleLimiter_);
+          get_if_present(
+            y_user_constants, "reference_velocity", referenceVelocity_,
+            referenceVelocity_);
+          get_if_present(
+            y_user_constants, "rans_below_ks", RANSBelowKs_, RANSBelowKs_);
+
+          if (expect_sequence(y_user_constants, "gravity", optional)) {
             const int gravSize = y_user_constants["gravity"].size();
             gravity_.resize(gravSize);
-            for (int i = 0; i < gravSize; ++i ) {
-              gravity_[i] = y_user_constants["gravity"][i].as<double>() ;
+            for (int i = 0; i < gravSize; ++i) {
+              gravity_[i] = y_user_constants["gravity"][i].as<double>();
             }
           }
-          if (expect_sequence( y_user_constants, "body_force", optional) ) {
+          if (expect_sequence(y_user_constants, "body_force", optional)) {
             const int bodyForceSize = y_user_constants["body_force"].size();
             bodyForce_.resize(bodyForceSize);
-            for (int i = 0; i < bodyForceSize; ++i ) {
-              bodyForce_[i] = y_user_constants["body_force"][i].as<double>() ;
+            for (int i = 0; i < bodyForceSize; ++i) {
+              bodyForce_[i] = y_user_constants["body_force"][i].as<double>();
             }
           }
-          if (expect_sequence( y_user_constants, "east_vector", optional) ) {
+          if (expect_sequence(y_user_constants, "east_vector", optional)) {
             const int vecSize = y_user_constants["east_vector"].size();
             eastVector_.resize(vecSize);
-            for (int i = 0; i < vecSize; ++i ) {
-	      eastVector_[i] = y_user_constants["east_vector"][i].as<double>() ;
-              //y_user_constants["east_vector"][i] >> eastVector_[i];
+            for (int i = 0; i < vecSize; ++i) {
+              eastVector_[i] = y_user_constants["east_vector"][i].as<double>();
+              // y_user_constants["east_vector"][i] >> eastVector_[i];
             }
           }
-          if (expect_sequence( y_user_constants, "north_vector", optional) ) {
+          if (expect_sequence(y_user_constants, "north_vector", optional)) {
             const int vecSize = y_user_constants["north_vector"].size();
             northVector_.resize(vecSize);
-            for (int i = 0; i < vecSize; ++i ) {
-	      northVector_[i] = y_user_constants["north_vector"][i].as<double>() ;
-              //y_user_constants["north_vector"][i] >> northVector_[i];
+            for (int i = 0; i < vecSize; ++i) {
+              northVector_[i] =
+                y_user_constants["north_vector"][i].as<double>();
+              // y_user_constants["north_vector"][i] >> northVector_[i];
             }
           }
-        }
-        else if (expect_map( y_option, "non_conformal", optional)) {
+        } else if (expect_map(y_option, "non_conformal", optional)) {
           const YAML::Node y_nc = y_option["non_conformal"];
-          get_if_present(y_nc, "gauss_labatto_quadrature",  ncAlgGaussLabatto_, ncAlgGaussLabatto_);
-          get_if_present(y_nc, "upwind_advection",  ncAlgUpwindAdvection_, ncAlgUpwindAdvection_);
-          get_if_present(y_nc, "include_pstab",  ncAlgIncludePstab_, ncAlgIncludePstab_);
-          get_if_present(y_nc, "detailed_output",  ncAlgDetailedOutput_, ncAlgDetailedOutput_);
-          get_if_present(y_nc, "activate_coincident_node_error_check",  ncAlgCoincidentNodesErrorCheck_, ncAlgCoincidentNodesErrorCheck_);
-          get_if_present(y_nc, "current_normal",  ncAlgCurrentNormal_, ncAlgCurrentNormal_);
-          get_if_present(y_nc, "include_png_penalty",  ncAlgPngPenalty_, ncAlgPngPenalty_);
-        }
-        else if (expect_map( y_option, "peclet_function_form", optional)) {
-          y_option["peclet_function_form"] >> tanhFormMap_ ;
-        }
-        else if (expect_map( y_option, "peclet_function_tanh_transition", optional)) {
-          y_option["peclet_function_tanh_transition"] >> tanhTransMap_ ;
-        }
-        else if (expect_map( y_option, "peclet_function_tanh_width", optional)) {
-          y_option["peclet_function_tanh_width"] >> tanhWidthMap_ ;
+          get_if_present(
+            y_nc, "gauss_labatto_quadrature", ncAlgGaussLabatto_,
+            ncAlgGaussLabatto_);
+          get_if_present(
+            y_nc, "upwind_advection", ncAlgUpwindAdvection_,
+            ncAlgUpwindAdvection_);
+          get_if_present(
+            y_nc, "include_pstab", ncAlgIncludePstab_, ncAlgIncludePstab_);
+          get_if_present(
+            y_nc, "detailed_output", ncAlgDetailedOutput_,
+            ncAlgDetailedOutput_);
+          get_if_present(
+            y_nc, "activate_coincident_node_error_check",
+            ncAlgCoincidentNodesErrorCheck_, ncAlgCoincidentNodesErrorCheck_);
+          get_if_present(
+            y_nc, "current_normal", ncAlgCurrentNormal_, ncAlgCurrentNormal_);
+          get_if_present(
+            y_nc, "include_png_penalty", ncAlgPngPenalty_, ncAlgPngPenalty_);
+        } else if (expect_map(y_option, "peclet_function_form", optional)) {
+          y_option["peclet_function_form"] >> tanhFormMap_;
+        } else if (expect_map(
+                     y_option, "peclet_function_tanh_transition", optional)) {
+          y_option["peclet_function_tanh_transition"] >> tanhTransMap_;
+        } else if (expect_map(
+                     y_option, "peclet_function_tanh_width", optional)) {
+          y_option["peclet_function_tanh_width"] >> tanhWidthMap_;
         }
         // overload line command, however, push to the same tanh data structure
-        else if (expect_map( y_option, "blending_function_form", optional)) {
-          y_option["blending_function_form"] >> tanhFormMap_ ;
-        }
-        else if (expect_map( y_option, "tanh_transition", optional)) {
-          y_option["tanh_transition"] >> tanhTransMap_ ;
-        }
-        else if (expect_map( y_option, "tanh_width", optional)) {
-          y_option["tanh_width"] >> tanhWidthMap_ ;
-        }
-        else if (expect_map( y_option, "consistent_mass_matrix_png", optional)) {
-          y_option["consistent_mass_matrix_png"] >> consistentMassMatrixPngMap_ ;
-        }
-        else if (expect_map( y_option, "dynamic_body_force_box_parameters", optional)) {
+        else if (expect_map(y_option, "blending_function_form", optional)) {
+          y_option["blending_function_form"] >> tanhFormMap_;
+        } else if (expect_map(y_option, "tanh_transition", optional)) {
+          y_option["tanh_transition"] >> tanhTransMap_;
+        } else if (expect_map(y_option, "tanh_width", optional)) {
+          y_option["tanh_width"] >> tanhWidthMap_;
+        } else if (expect_map(
+                     y_option, "consistent_mass_matrix_png", optional)) {
+          y_option["consistent_mass_matrix_png"] >> consistentMassMatrixPngMap_;
+        } else if (expect_map(
+                     y_option, "dynamic_body_force_box_parameters", optional)) {
           const YAML::Node yDyn = y_option["dynamic_body_force_box_parameters"];
           get_required(yDyn, "forcing_direction", dynamicBodyForceDir_);
-          get_required(yDyn, "velocity_reference", dynamicBodyForceVelReference_);
-          get_required(yDyn, "density_reference", dynamicBodyForceDenReference_);
-          get_required(yDyn, "velocity_target_name", dynamicBodyForceVelTarget_);
+          get_required(
+            yDyn, "velocity_reference", dynamicBodyForceVelReference_);
+          get_required(
+            yDyn, "density_reference", dynamicBodyForceDenReference_);
+          get_required(
+            yDyn, "velocity_target_name", dynamicBodyForceVelTarget_);
           const int dragTargetSize = yDyn["drag_target_name"].size();
           dynamicBodyForceDragTarget_.resize(dragTargetSize);
-          for (int i = 0; i < dragTargetSize; ++i ) {
-            dynamicBodyForceDragTarget_[i] = yDyn["drag_target_name"][i].as<std::string>();
+          for (int i = 0; i < dragTargetSize; ++i) {
+            dynamicBodyForceDragTarget_[i] =
+              yDyn["drag_target_name"][i].as<std::string>();
           }
           get_required(yDyn, "output_file_name", dynamicBodyForceOutFile_);
           dynamicBodyForceBox_ = true;
-        }
-        else {
-          if (!NaluEnv::self().parallel_rank())
-          {
-            std::cout << "Error: parsing at " << NaluParsingHelper::info(y_option)
+        } else {
+          if (!NaluEnv::self().parallel_rank()) {
+            std::cout
+              << "Error: parsing at "
+              << NaluParsingHelper::info(y_option)
               //<< "... at parent ... " << NaluParsingHelper::info(y_node)
-                      << std::endl;
+              << std::endl;
           }
-          throw std::runtime_error("unknown solution option: "+ NaluParsingHelper::info(y_option));
+          throw std::runtime_error(
+            "unknown solution option: " + NaluParsingHelper::info(y_option));
         }
       }
     }
@@ -454,109 +501,127 @@ SolutionOptions::load(const YAML::Node & y_node)
     // Handle old mesh motion section and throw an error early if the user is
     // attempting to use an old file with the latest branch
     if (y_solution_options["mesh_motion"]) {
-      NaluEnv::self().naluOutput()
-        << "SolutionOptions: Detected mesh motion section within solution_options. "
-        "This is no longer supported. Please update your input file appropriately"
-        << std::endl;
-      throw std::runtime_error("mesh_motion in solution_options is deprecated.");
+      NaluEnv::self().naluOutput() << "SolutionOptions: Detected mesh motion "
+                                      "section within solution_options. "
+                                      "This is no longer supported. Please "
+                                      "update your input file appropriately"
+                                   << std::endl;
+      throw std::runtime_error(
+        "mesh_motion in solution_options is deprecated.");
     }
 
-    const YAML::Node fix_pressure = expect_map(y_solution_options, "fix_pressure_at_node", optional);
+    const YAML::Node fix_pressure =
+      expect_map(y_solution_options, "fix_pressure_at_node", optional);
     if (fix_pressure) {
       needPressureReference_ = true;
       fixPressureInfo_.reset(new FixPressureAtNodeInfo);
 
       fixPressureInfo_->refPressure_ = fix_pressure["value"].as<double>();
-      if (fix_pressure["node_lookup_type"])
-      {
-        std::string lookupTypeName = fix_pressure["node_lookup_type"].as<std::string>();
+      if (fix_pressure["node_lookup_type"]) {
+        std::string lookupTypeName =
+          fix_pressure["node_lookup_type"].as<std::string>();
         if (lookupTypeName == "stk_node_id")
           fixPressureInfo_->lookupType_ = FixPressureAtNodeInfo::STK_NODE_ID;
         else if (lookupTypeName == "spatial_location")
-          fixPressureInfo_->lookupType_ = FixPressureAtNodeInfo::SPATIAL_LOCATION;
+          fixPressureInfo_->lookupType_ =
+            FixPressureAtNodeInfo::SPATIAL_LOCATION;
         else
-          throw std::runtime_error("FixPressureAtNodeInfo: Invalid option specified for "
-                                   "'node_lookup_type' in input file.");
+          throw std::runtime_error(
+            "FixPressureAtNodeInfo: Invalid option specified for "
+            "'node_lookup_type' in input file.");
       }
 
-      if (fixPressureInfo_->lookupType_ == FixPressureAtNodeInfo::SPATIAL_LOCATION) {
-        fixPressureInfo_->location_ = fix_pressure["location"].as<std::vector<double>>();
+      if (
+        fixPressureInfo_->lookupType_ ==
+        FixPressureAtNodeInfo::SPATIAL_LOCATION) {
+        fixPressureInfo_->location_ =
+          fix_pressure["location"].as<std::vector<double>>();
         fixPressureInfo_->searchParts_ =
           fix_pressure["search_target_part"].as<std::vector<std::string>>();
         if (fix_pressure["search_method"]) {
-          std::string searchMethodName = fix_pressure["search_method"].as<std::string>();
+          std::string searchMethodName =
+            fix_pressure["search_method"].as<std::string>();
           if (searchMethodName == "boost_rtree") {
             fixPressureInfo_->searchMethod_ = stk::search::KDTREE;
-            NaluEnv::self().naluOutputP0() << "Warning: search method 'boost_rtree' has been"
-              <<" deprecated. Switching to 'stk_kdtree'." << std::endl;
-          }
-          else if (searchMethodName == "stk_kdtree")
+            NaluEnv::self().naluOutputP0()
+              << "Warning: search method 'boost_rtree' has been"
+              << " deprecated. Switching to 'stk_kdtree'." << std::endl;
+          } else if (searchMethodName == "stk_kdtree")
             fixPressureInfo_->searchMethod_ = stk::search::KDTREE;
           else
-            NaluEnv::self().naluOutputP0() << "ABL Fix Pressure: Search will use stk_kdtree"
-                                           << std::endl;
+            NaluEnv::self().naluOutputP0()
+              << "ABL Fix Pressure: Search will use stk_kdtree" << std::endl;
         }
-      }
-      else {
-        fixPressureInfo_->stkNodeId_ = fix_pressure["node_identifier"].as<unsigned int>();
+      } else {
+        fixPressureInfo_->stkNodeId_ =
+          fix_pressure["node_identifier"].as<unsigned int>();
       }
     }
   }
-  
-   NaluEnv::self().naluOutputP0() << std::endl;
-   NaluEnv::self().naluOutputP0() << "Turbulence Model Review:   " << std::endl;
-   NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
-   NaluEnv::self().naluOutputP0()
-     << "Turbulence Model is: "
-     << TurbulenceModelNames[static_cast<int>(turbulenceModel_)] << " "
-     << isTurbulent_ << std::endl;
-   if (gammaEqActive_ == true)  {
-     NaluEnv::self().naluOutputP0() << "Transition Model is: One Equation Gamma" << std::endl;
-   }
-   else {
-     NaluEnv::self().naluOutputP0() << "No Transition Model" << std::endl;
-   }
 
-   // over view PPE specifications
-   NaluEnv::self().naluOutputP0() << std::endl;
-   NaluEnv::self().naluOutputP0() << "PPE review:   " << std::endl;
-   NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
+  NaluEnv::self().naluOutputP0() << std::endl;
+  NaluEnv::self().naluOutputP0() << "Turbulence Model Review:   " << std::endl;
+  NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "Turbulence Model is: "
+    << TurbulenceModelNames[static_cast<int>(turbulenceModel_)] << " "
+    << isTurbulent_ << std::endl;
+  if (gammaEqActive_ == true) {
+    NaluEnv::self().naluOutputP0()
+      << "Transition Model is: One Equation Gamma" << std::endl;
+  } else {
+    NaluEnv::self().naluOutputP0() << "No Transition Model" << std::endl;
+  }
 
-   if ( cvfemShiftMdot_ )
-     NaluEnv::self().naluOutputP0() << "Shifted CVFEM mass flow rate" << std::endl;
-   if ( cvfemReducedSensPoisson_)
-     NaluEnv::self().naluOutputP0() << "Reduced sensitivities CVFEM Poisson" << std::endl;
+  // over view PPE specifications
+  NaluEnv::self().naluOutputP0() << std::endl;
+  NaluEnv::self().naluOutputP0() << "PPE review:   " << std::endl;
+  NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
 
-   // sanity checks; if user asked for shifted Poisson, then user will have reduced sensitivities
-   if ( get_shifted_grad_op("pressure") ) {
-     if ( !cvfemReducedSensPoisson_) {
-       NaluEnv::self().naluOutputP0() << "Reduced sensitivities CVFEM Poisson will be set since reduced grad_op is requested" << std::endl;
-       cvfemReducedSensPoisson_ = true;
-     }
-   }
-   
-   // overview gradient operator for CVFEM
-   if ( shiftedGradOpMap_.size() > 0 ) {
-     NaluEnv::self().naluOutputP0() << std::endl;
-     NaluEnv::self().naluOutputP0() << "CVFEM gradient operator review:   " << std::endl;
-     NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
-     for ( const auto& shiftIt : shiftedGradOpMap_ ) {
-       NaluEnv::self().naluOutputP0() << " dof: " << shiftIt.first
-                                      << " shifted: " << (shiftIt.second ? "yes" : "no") << std::endl; 
-     }
-   }
+  if (cvfemShiftMdot_)
+    NaluEnv::self().naluOutputP0()
+      << "Shifted CVFEM mass flow rate" << std::endl;
+  if (cvfemReducedSensPoisson_)
+    NaluEnv::self().naluOutputP0()
+      << "Reduced sensitivities CVFEM Poisson" << std::endl;
+
+  // sanity checks; if user asked for shifted Poisson, then user will have
+  // reduced sensitivities
+  if (get_shifted_grad_op("pressure")) {
+    if (!cvfemReducedSensPoisson_) {
+      NaluEnv::self().naluOutputP0()
+        << "Reduced sensitivities CVFEM Poisson will be set since reduced "
+           "grad_op is requested"
+        << std::endl;
+      cvfemReducedSensPoisson_ = true;
+    }
+  }
+
+  // overview gradient operator for CVFEM
+  if (shiftedGradOpMap_.size() > 0) {
+    NaluEnv::self().naluOutputP0() << std::endl;
+    NaluEnv::self().naluOutputP0()
+      << "CVFEM gradient operator review:   " << std::endl;
+    NaluEnv::self().naluOutputP0()
+      << "===========================" << std::endl;
+    for (const auto& shiftIt : shiftedGradOpMap_) {
+      NaluEnv::self().naluOutputP0()
+        << " dof: " << shiftIt.first
+        << " shifted: " << (shiftIt.second ? "yes" : "no") << std::endl;
+    }
+  }
 }
 
 //--------------------------------------------------------------------------
 //-------- initialize_turbulence_constants ---------------------------------
 //--------------------------------------------------------------------------
 void
-SolutionOptions::initialize_turbulence_constants() 
+SolutionOptions::initialize_turbulence_constants()
 {
   // set the default map values; resize to max turbulence model enum
-  turbModelConstantMap_[TM_cMu] = 0.09; 
+  turbModelConstantMap_[TM_cMu] = 0.09;
   turbModelConstantMap_[TM_kappa] = 0.41;
-  turbModelConstantMap_[TM_cDESke] = 0.61; 
+  turbModelConstantMap_[TM_cDESke] = 0.61;
   turbModelConstantMap_[TM_cDESkw] = 0.78;
   turbModelConstantMap_[TM_tkeProdLimitRatio] =
     (turbulenceModel_ == TurbulenceModel::SST ||
@@ -566,13 +631,13 @@ SolutionOptions::initialize_turbulence_constants()
      turbulenceModel_ == TurbulenceModel::SST_IDDES)
       ? 10.0
       : 500.0;
-  turbModelConstantMap_[TM_cmuEps] = 0.0856; 
+  turbModelConstantMap_[TM_cmuEps] = 0.0856;
   turbModelConstantMap_[TM_cEps] = 0.845;
   turbModelConstantMap_[TM_betaStar] = 0.09;
   turbModelConstantMap_[TM_aOne] = 0.31;
   turbModelConstantMap_[TM_betaOne] = 0.075;
   turbModelConstantMap_[TM_betaTwo] = 0.0828;
-  turbModelConstantMap_[TM_gammaOne] = 5.0/9.0;
+  turbModelConstantMap_[TM_gammaOne] = 5.0 / 9.0;
   turbModelConstantMap_[TM_gammaTwo] = 0.44;
   turbModelConstantMap_[TM_sigmaKOne] = 0.85;
   turbModelConstantMap_[TM_sigmaKTwo] = 1.0;
@@ -602,7 +667,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_ch1] = 3.0;
   turbModelConstantMap_[TM_ch2] = 1.0;
   turbModelConstantMap_[TM_ch3] = 0.5;
-  turbModelConstantMap_[TM_tau_des] = 100.0/15.0;
+  turbModelConstantMap_[TM_tau_des] = 100.0 / 15.0;
   turbModelConstantMap_[TM_iddes_Cw] = 0.15;
   turbModelConstantMap_[TM_iddes_Cdt1] = 20.0;
   turbModelConstantMap_[TM_iddes_Cdt2] = 3.0;
@@ -633,7 +698,6 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_ceTwo] = 50.0;
   turbModelConstantMap_[TM_c0t] = 0.03;
 }
-
 
 double
 SolutionOptions::get_alpha_factor(const std::string& dofName) const
@@ -721,8 +785,9 @@ SolutionOptions::get_skew_symmetric(const std::string& dofName) const
 std::vector<double>
 SolutionOptions::get_gravity_vector(const unsigned nDim) const
 {
-  if ( nDim != gravity_.size() )
-    throw std::runtime_error("SolutionOptions::get_gravity_vector():Error Expected size does not equaly nDim");
+  if (nDim != gravity_.size())
+    throw std::runtime_error("SolutionOptions::get_gravity_vector():Error "
+                             "Expected size does not equaly nDim");
   else
     return gravity_;
 }
@@ -732,35 +797,33 @@ SolutionOptions::get_gravity_vector(const unsigned nDim) const
 //--------------------------------------------------------------------------
 double
 SolutionOptions::get_turb_model_constant(
-   TurbulenceModelConstant turbModelEnum) const
+  TurbulenceModelConstant turbModelEnum) const
 {
-  std::map<TurbulenceModelConstant, double>::const_iterator it
-    = turbModelConstantMap_.find(turbModelEnum);
-  if ( it != turbModelConstantMap_.end() ) {
+  std::map<TurbulenceModelConstant, double>::const_iterator it =
+    turbModelConstantMap_.find(turbModelEnum);
+  if (it != turbModelConstantMap_.end()) {
     return it->second;
-  }
-  else {
+  } else {
     throw std::runtime_error("unknown (not found) turbulence model constant");
   }
 }
 
 bool
-SolutionOptions::get_noc_usage(
-  const std::string &dofName ) const
+SolutionOptions::get_noc_usage(const std::string& dofName) const
 {
   bool factor = nocDefault_;
-  std::map<std::string, bool>::const_iterator iter
-    = nocMap_.find(dofName);
+  std::map<std::string, bool>::const_iterator iter = nocMap_.find(dofName);
   if (iter != nocMap_.end()) {
     factor = (*iter).second;
   }
   return factor;
 }
 
-bool SolutionOptions::has_set_boussinesq_time_scale()
+bool
+SolutionOptions::has_set_boussinesq_time_scale()
 {
   return (raBoussinesqTimeScale_ > std::numeric_limits<double>::min());
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

@@ -8,25 +8,27 @@
 #include "NGPInstance.h"
 #include "ngp_utils/NgpTypes.h"
 
-namespace YAML { class Node; }
+namespace YAML {
+class Node;
+}
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-namespace mm{
+namespace mm {
 
-static constexpr int matSize = nalu_ngp::NDimMax+1;
+static constexpr int matSize = nalu_ngp::NDimMax + 1;
 
 struct TransMatType
 {
-  double Mat_[matSize*matSize];
+  double Mat_[matSize * matSize];
 
   // initialize matrix to be an identity matrix
   KOKKOS_FORCEINLINE_FUNCTION
-  constexpr TransMatType() : Mat_{1,0,0,0,
-                                  0,1,0,0,
-                                  0,0,1,0,
-                                  0,0,0,1} {}
+  constexpr TransMatType()
+    : Mat_{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
+  {
+  }
 
   // initialize matrix using all components
   KOKKOS_FORCEINLINE_FUNCTION
@@ -47,32 +49,28 @@ struct TransMatType
     const double& c2,
     const double& c3,
     const double& c4)
-    : Mat_{x1,x2,x3,x4,y1,y2,y3,y4,z1,z2,z3,z4,c1,c2,c3,c4} {}
+    : Mat_{x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4, c1, c2, c3, c4}
+  {
+  }
 
   // bracket access operators
   KOKKOS_FORCEINLINE_FUNCTION
-  double& operator[](int pos) {return Mat_[pos];}
+  double& operator[](int pos) { return Mat_[pos]; }
   KOKKOS_FORCEINLINE_FUNCTION
-  const double& operator[](int pos) const {return Mat_[pos];}
+  const double& operator[](int pos) const { return Mat_[pos]; }
 
   // zeroed out matrix
   KOKKOS_FORCEINLINE_FUNCTION
   static constexpr TransMatType zero()
   {
-    return TransMatType{0,0,0,0,
-                        0,0,0,0,
-                        0,0,0,0,
-                        0,0,0,0};
+    return TransMatType{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   }
 
   // Identity matrix
   KOKKOS_FORCEINLINE_FUNCTION
   static constexpr TransMatType I()
   {
-    return TransMatType{1,0,0,0,
-                        0,1,0,0,
-                        0,0,1,0,
-                        0,0,0,1};
+    return TransMatType{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
   }
 };
 
@@ -82,21 +80,23 @@ struct ThreeDVecType
 
   // initialize empty vector
   KOKKOS_FORCEINLINE_FUNCTION
-  constexpr ThreeDVecType() : Vec_{0,0,0} {}
+  constexpr ThreeDVecType() : Vec_{0, 0, 0} {}
 
   // initialize vector using all components
   KOKKOS_FORCEINLINE_FUNCTION
   ThreeDVecType(const double& x, const double& y, const double& z)
-    : Vec_{x,y,z} {}
+    : Vec_{x, y, z}
+  {
+  }
 
   // bracket access operators
   KOKKOS_FORCEINLINE_FUNCTION
-  double& operator[](int pos) {return Vec_[pos];}
+  double& operator[](int pos) { return Vec_[pos]; }
   KOKKOS_FORCEINLINE_FUNCTION
-  const double& operator[](int pos) const {return Vec_[pos];}
+  const double& operator[](int pos) const { return Vec_[pos]; }
 };
 
-} // mm (mesh motion)
+} // namespace mm
 
 class NgpMotion
 {
@@ -118,9 +118,8 @@ public:
    * @return Transformation matrix
    */
   KOKKOS_FUNCTION
-  virtual mm::TransMatType build_transformation(
-    const double& time,
-    const mm::ThreeDVecType& xyz) = 0;
+  virtual mm::TransMatType
+  build_transformation(const double& time, const mm::ThreeDVecType& xyz) = 0;
 
   /** Function to compute motion-specific velocity
    *
@@ -145,16 +144,15 @@ public:
    * @return    4x4 matrix representing composite addition of motions
    */
   KOKKOS_FORCEINLINE_FUNCTION
-  mm::TransMatType add_motion(
-    const mm::TransMatType& motionL,
-    const mm::TransMatType& motionR)
+  mm::TransMatType
+  add_motion(const mm::TransMatType& motionL, const mm::TransMatType& motionR)
   {
     mm::TransMatType tempMat = mm::TransMatType::zero();
     for (int r = 0; r < mm::matSize; r++) {
       for (int c = 0; c < mm::matSize; c++) {
         for (int k = 0; k < mm::matSize; k++) {
-          tempMat[r*mm::matSize+c] +=
-            motionL[r*mm::matSize+k] * motionR[k*mm::matSize+c];
+          tempMat[r * mm::matSize + c] +=
+            motionL[r * mm::matSize + k] * motionR[k * mm::matSize + c];
         }
       }
     }
@@ -183,7 +181,7 @@ protected:
   bool isDeforming_ = false;
 };
 
-template<typename T>
+template <typename T>
 class NgpMotionKernel : public NgpMotion
 {
 public:
@@ -214,7 +212,7 @@ private:
   T* deviceCopy_{nullptr};
 };
 
-} // nalu
-} // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NGPMOTION_H */

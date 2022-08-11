@@ -7,23 +7,21 @@
 // for more details.
 //
 
-
-
 #include <DirichletBC.h>
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
 #include <LinearSystem.h>
 #include <Realm.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 DirichletBC::DirichletBC(
-  Realm & realm,
-  EquationSystem * eqSystem,
-  stk::mesh::Part * part,
-  stk::mesh::FieldBase * field,
-  stk::mesh::FieldBase * bcValues,
+  Realm& realm,
+  EquationSystem* eqSystem,
+  stk::mesh::Part* part,
+  stk::mesh::FieldBase* field,
+  stk::mesh::FieldBase* bcValues,
   const unsigned beginPos,
   const unsigned endPos)
   : SolverAlgorithm(realm, part, eqSystem),
@@ -31,7 +29,8 @@ DirichletBC::DirichletBC(
     bcValues_(bcValues),
     beginPos_(beginPos),
     endPos_(endPos)
-{}
+{
+}
 
 void
 DirichletBC::initialize_connectivity()
@@ -44,12 +43,8 @@ DirichletBC::execute()
 {
 
   eqSystem_->linsys_->applyDirichletBCs(
-    field_,
-    bcValues_,
-    partVec_,
-    beginPos_,
-    endPos_);
+    field_, bcValues_, partVec_, beginPos_, endPos_);
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

@@ -24,11 +24,13 @@ AssembleOversetDecoupledAlgorithm::AssembleOversetDecoupledAlgorithm(
   Realm& realm,
   stk::mesh::Part* part,
   EquationSystem* eqSystem,
-  stk::mesh::FieldBase* field
-) : OversetConstraintBase(realm, part, eqSystem, field)
-{}
+  stk::mesh::FieldBase* field)
+  : OversetConstraintBase(realm, part, eqSystem, field)
+{
+}
 
-void AssembleOversetDecoupledAlgorithm::execute()
+void
+AssembleOversetDecoupledAlgorithm::execute()
 {
   // Reset LHS/RHS for the overset constraint rows
   prepare_constraints();
@@ -44,5 +46,5 @@ void AssembleOversetDecoupledAlgorithm::execute()
   eqSystem_->linsys_->free_coeff_applier(coeffApplier);
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

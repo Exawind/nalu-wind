@@ -28,7 +28,8 @@ using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
 
 namespace {
 
-double linear_scalar_value(int dim, double a, const double* b, const double* x)
+double
+linear_scalar_value(int dim, double a, const double* b, const double* x)
 {
   if (dim == 2) {
     return (a + b[0] * x[0] + b[1] * x[1]);
@@ -36,7 +37,7 @@ double linear_scalar_value(int dim, double a, const double* b, const double* x)
   return (a + b[0] * x[0] + b[1] * x[1] + b[2] * x[2]);
 }
 
-}
+} // namespace
 
 #ifndef KOKKOS_ENABLE_CUDA
 TEST(MasterElementFunctions, generic_grad_op_3d_hex_27)
@@ -45,10 +46,12 @@ TEST(MasterElementFunctions, generic_grad_op_3d_hex_27)
   meshBuilder.set_spatial_dimension(3);
   auto bulk = meshBuilder.create();
 
-  stk::mesh::Entity elem = unit_test_utils::create_one_reference_element(*bulk, stk::topology::HEXAHEDRON_27);
+  stk::mesh::Entity elem = unit_test_utils::create_one_reference_element(
+    *bulk, stk::topology::HEXAHEDRON_27);
   const auto* node_rels = bulk->begin_nodes(elem);
   sierra::nalu::Hex27SCS me;
-  auto& coordField = *static_cast<const VectorFieldType*>(bulk->mesh_meta_data().coordinate_field());
+  auto& coordField = *static_cast<const VectorFieldType*>(
+    bulk->mesh_meta_data().coordinate_field());
   int dim = me.nDim_;
 
   std::mt19937 rng;
@@ -64,7 +67,7 @@ TEST(MasterElementFunctions, generic_grad_op_3d_hex_27)
   std::vector<double> polyResult(me.num_integration_points() * dim);
   for (int j = 0; j < me.num_integration_points(); ++j) {
     for (int d = 0; d < dim; ++d) {
-      polyResult[j*dim+d] = coeffs[d];
+      polyResult[j * dim + d] = coeffs[d];
     }
   }
 
@@ -78,18 +81,21 @@ TEST(MasterElementFunctions, generic_grad_op_3d_hex_27)
     ws_field[j] = linear_scalar_value(dim, a, coeffs.data(), coords);
   }
 
-  Kokkos::View<double***> meGrad("grad", me.num_integration_points(), me.nodes_per_element(), dim);
+  Kokkos::View<double***> meGrad(
+    "grad", me.num_integration_points(), me.nodes_per_element(), dim);
 
   using AlgTraits = sierra::nalu::AlgTraitsHex27;
-  using GradViewType = Kokkos::View<double[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
+  using GradViewType =
+    Kokkos::View<double[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]
+                       [AlgTraits::nDim_]>;
   GradViewType refGrad = me.copy_deriv_weights_to_view<GradViewType>();
 
   double duration = 0;
 
 #ifndef NDEBUG
-   int nIt = 10000;
+  int nIt = 10000;
 #else
-   int nIt = 1;
+  int nIt = 1;
 #endif
 
   for (int k = 0; k < nIt; ++k) {
@@ -97,22 +103,25 @@ TEST(MasterElementFunctions, generic_grad_op_3d_hex_27)
     auto start_clock = clock_type::now();
     sierra::nalu::generic_grad_op<AlgTraits>(refGrad, ws_coords, meGrad);
     auto end_clock = clock_type::now();
-    duration += 1.0e-9*std::chrono::duration_cast<std::chrono::nanoseconds>(end_clock - start_clock).count();
+    duration += 1.0e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(
+                           end_clock - start_clock)
+                           .count();
   }
-  std::cout << "Time per iteration: " << (duration/nIt)*1000 << "(ms)" <<std::endl;
+  std::cout << "Time per iteration: " << (duration / nIt) * 1000 << "(ms)"
+            << std::endl;
 
   std::vector<double> meResult(me.num_integration_points() * dim, 0.0);
   for (int ip = 0; ip < me.num_integration_points(); ++ip) {
     for (int n = 0; n < me.nodes_per_element(); ++n) {
       for (int d = 0; d < dim; ++d) {
-        meResult[ip*dim+d] += meGrad(ip,n,d) * ws_field[n];
+        meResult[ip * dim + d] += meGrad(ip, n, d) * ws_field[n];
       }
     }
- }
+  }
 
   // derivative should be exact to floating point error
-  for (unsigned j = 0 ; j < meResult.size(); ++j) {
-   EXPECT_NEAR(meResult[j], polyResult[j], tol);
+  for (unsigned j = 0; j < meResult.size(); ++j) {
+    EXPECT_NEAR(meResult[j], polyResult[j], tol);
   }
 }
 #endif
@@ -123,10 +132,12 @@ TEST(MasterElementFunctions, generic_grad_op_2d_tri_6)
   meshBuilder.set_spatial_dimension(2);
   auto bulk = meshBuilder.create();
 
-  stk::mesh::Entity elem = unit_test_utils::create_one_reference_element(*bulk, stk::topology::TRIANGLE_3_2D);
+  stk::mesh::Entity elem = unit_test_utils::create_one_reference_element(
+    *bulk, stk::topology::TRIANGLE_3_2D);
   const auto* node_rels = bulk->begin_nodes(elem);
   sierra::nalu::Tri32DSCS me;
-  auto& coordField = *static_cast<const VectorFieldType*>(bulk->mesh_meta_data().coordinate_field());
+  auto& coordField = *static_cast<const VectorFieldType*>(
+    bulk->mesh_meta_data().coordinate_field());
   int dim = me.ndim();
 
   std::mt19937 rng;
@@ -142,7 +153,7 @@ TEST(MasterElementFunctions, generic_grad_op_2d_tri_6)
   std::vector<double> polyResult(me.num_integration_points() * dim);
   for (int j = 0; j < me.num_integration_points(); ++j) {
     for (int d = 0; d < dim; ++d) {
-      polyResult[j*dim+d] = coeffs[d];
+      polyResult[j * dim + d] = coeffs[d];
     }
   }
 
@@ -156,50 +167,55 @@ TEST(MasterElementFunctions, generic_grad_op_2d_tri_6)
     ws_field[j] = linear_scalar_value(dim, a, coeffs.data(), coords);
   }
 
-  Kokkos::View<double***> meGrad("grad", me.num_integration_points(), me.nodes_per_element(), dim);
+  Kokkos::View<double***> meGrad(
+    "grad", me.num_integration_points(), me.nodes_per_element(), dim);
 
   using AlgTraits = sierra::nalu::AlgTraitsTri3_2D;
 
-  Kokkos::View<double***> refGrad("reference_gradient_weights", me.num_integration_points(), me.nodes_per_element(), dim);
-  for (int j=0; j<me.num_integration_points(); ++j) {
-    refGrad(j,0,0) = -1.0;
-    refGrad(j,1,0) =  1.0;
-    refGrad(j,2,0) =  0.0;
-    refGrad(j,0,1) = -1.0;
-    refGrad(j,1,1) =  0.0;
-    refGrad(j,2,1) =  1.0;
+  Kokkos::View<double***> refGrad(
+    "reference_gradient_weights", me.num_integration_points(),
+    me.nodes_per_element(), dim);
+  for (int j = 0; j < me.num_integration_points(); ++j) {
+    refGrad(j, 0, 0) = -1.0;
+    refGrad(j, 1, 0) = 1.0;
+    refGrad(j, 2, 0) = 0.0;
+    refGrad(j, 0, 1) = -1.0;
+    refGrad(j, 1, 1) = 0.0;
+    refGrad(j, 2, 1) = 1.0;
   }
 
   double duration = 0;
 #ifndef NDEBUG
-   int nIt = 10000;
+  int nIt = 10000;
 #else
-   int nIt = 1;
+  int nIt = 1;
 #endif
   for (int k = 0; k < nIt; ++k) {
     Kokkos::deep_copy(meGrad, 0.0);
     auto start_clock = clock_type::now();
     sierra::nalu::generic_grad_op<AlgTraits>(refGrad, ws_coords, meGrad);
     auto end_clock = clock_type::now();
-    duration += 1.0e-9*std::chrono::duration_cast<std::chrono::nanoseconds>(end_clock - start_clock).count();
+    duration += 1.0e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(
+                           end_clock - start_clock)
+                           .count();
   }
-  std::cout << "Time per iteration: " << (duration/nIt)*1000 << "(ms)" <<std::endl;
+  std::cout << "Time per iteration: " << (duration / nIt) * 1000 << "(ms)"
+            << std::endl;
 
   std::vector<double> meResult(me.num_integration_points() * dim, 0.0);
   for (int ip = 0; ip < me.num_integration_points(); ++ip) {
     for (int n = 0; n < me.nodes_per_element(); ++n) {
       for (int d = 0; d < dim; ++d) {
-        meResult[ip*dim+d] += meGrad(ip,n,d) * ws_field[n];
+        meResult[ip * dim + d] += meGrad(ip, n, d) * ws_field[n];
       }
     }
- }
+  }
 
   // derivative should be exact to floating point error
-  for (unsigned j = 0 ; j < meResult.size(); ++j) {
-   EXPECT_NEAR(meResult[j], polyResult[j], tol);
+  for (unsigned j = 0; j < meResult.size(); ++j) {
+    EXPECT_NEAR(meResult[j], polyResult[j], tol);
   }
 }
-
 
 #ifndef KOKKOS_ENABLE_CUDA
 TEST(Hex27SCV, detj)
@@ -208,11 +224,13 @@ TEST(Hex27SCV, detj)
   meshBuilder.set_spatial_dimension(3);
   auto bulk = meshBuilder.create();
 
-  stk::mesh::Entity elem = unit_test_utils::create_one_reference_element(*bulk, stk::topology::HEXAHEDRON_27);
+  stk::mesh::Entity elem = unit_test_utils::create_one_reference_element(
+    *bulk, stk::topology::HEXAHEDRON_27);
   const auto* node_rels = bulk->begin_nodes(elem);
   sierra::nalu::Hex27SCV me;
 
-  auto& coordField = *static_cast<const VectorFieldType*>(bulk->mesh_meta_data().coordinate_field());
+  auto& coordField = *static_cast<const VectorFieldType*>(
+    bulk->mesh_meta_data().coordinate_field());
 
   int dim = me.nDim_;
 
@@ -228,7 +246,7 @@ TEST(Hex27SCV, detj)
   std::vector<double> polyResult(me.num_integration_points() * dim);
   for (int j = 0; j < me.num_integration_points(); ++j) {
     for (int d = 0; d < dim; ++d) {
-      polyResult[j*dim+d] = coeffs[d];
+      polyResult[j * dim + d] = coeffs[d];
     }
   }
 
@@ -243,37 +261,42 @@ TEST(Hex27SCV, detj)
   Kokkos::View<double*> meDetj("detj", me.num_integration_points());
 
   using AlgTraits = sierra::nalu::AlgTraitsHex27;
-  using GradViewType = Kokkos::View<double[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
+  using GradViewType =
+    Kokkos::View<double[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]
+                       [AlgTraits::nDim_]>;
   GradViewType refGrad = me.copy_deriv_weights_to_view<GradViewType>();
 
   double duration = 0;
 #ifndef NDEBUG
-   int nIt = 10000;
+  int nIt = 10000;
 #else
-   int nIt = 1;
+  int nIt = 1;
 #endif
   for (int k = 0; k < nIt; ++k) {
     Kokkos::deep_copy(meDetj, 0.0);
     auto start_clock = clock_type::now();
     me.weighted_volumes(refGrad, ws_coords, meDetj);
     auto end_clock = clock_type::now();
-    duration += 1.0e-9*std::chrono::duration_cast<std::chrono::nanoseconds>(end_clock - start_clock).count();
+    duration += 1.0e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(
+                           end_clock - start_clock)
+                           .count();
   }
-  std::cout << "Time per iteration: " << (duration/nIt)*1000 << "(ms)" <<std::endl;
- 
+  std::cout << "Time per iteration: " << (duration / nIt) * 1000 << "(ms)"
+            << std::endl;
+
   constexpr int nTypes = 4;
-  int typeCount[nTypes] = {0,0,0,0};
+  int typeCount[nTypes] = {0, 0, 0, 0};
   double exactVolumeType[4];
 
-  double cornerType = 1 - std::sqrt(1.0/3.0);
-  double centerType = 2.0 * std::sqrt(1.0/3.0);
+  double cornerType = 1 - std::sqrt(1.0 / 3.0);
+  double centerType = 2.0 * std::sqrt(1.0 / 3.0);
 
   exactVolumeType[0] = 0.125 * cornerType * cornerType * cornerType;
   exactVolumeType[1] = 0.125 * cornerType * cornerType * centerType;
   exactVolumeType[2] = 0.125 * cornerType * centerType * centerType;
   exactVolumeType[3] = 0.125 * centerType * centerType * centerType;
 
-  for (int ip = 0 ; ip < me.num_integration_points(); ++ip) {
+  for (int ip = 0; ip < me.num_integration_points(); ++ip) {
     EXPECT_GT(meDetj(ip), tol);
     for (int i = 0; i < nTypes; ++i) {
       if (std::abs(exactVolumeType[i] - meDetj(ip)) < tol) {
@@ -282,12 +305,11 @@ TEST(Hex27SCV, detj)
     }
   }
 
-  EXPECT_EQ(typeCount[0], 8*8);
-  EXPECT_EQ(typeCount[1], 8*12);
-  EXPECT_EQ(typeCount[2], 8*6);
-  EXPECT_EQ(typeCount[3], 8*1);
+  EXPECT_EQ(typeCount[0], 8 * 8);
+  EXPECT_EQ(typeCount[1], 8 * 12);
+  EXPECT_EQ(typeCount[2], 8 * 6);
+  EXPECT_EQ(typeCount[3], 8 * 1);
 }
-
 
 TEST(Hex27SCS, area_vec)
 {
@@ -296,10 +318,12 @@ TEST(Hex27SCS, area_vec)
   auto bulk = meshBuilder.create();
   auto& meta = bulk->mesh_meta_data();
 
-  stk::mesh::Entity elem = unit_test_utils::create_one_reference_element(*bulk, stk::topology::HEXAHEDRON_27);
+  stk::mesh::Entity elem = unit_test_utils::create_one_reference_element(
+    *bulk, stk::topology::HEXAHEDRON_27);
   const auto* node_rels = bulk->begin_nodes(elem);
   sierra::nalu::Hex27SCS me;
-  auto& coordField = *static_cast<const VectorFieldType*>(meta.coordinate_field());
+  auto& coordField =
+    *static_cast<const VectorFieldType*>(meta.coordinate_field());
   int dim = me.nDim_;
 
   std::mt19937 rng;
@@ -314,7 +338,7 @@ TEST(Hex27SCS, area_vec)
   std::vector<double> polyResult(me.num_integration_points() * dim);
   for (int j = 0; j < me.num_integration_points(); ++j) {
     for (int d = 0; d < dim; ++d) {
-      polyResult[j*dim+d] = coeffs[d];
+      polyResult[j * dim + d] = coeffs[d];
     }
   }
 
@@ -329,7 +353,9 @@ TEST(Hex27SCS, area_vec)
   Kokkos::View<double**> meAreav("area_vec", me.num_integration_points(), dim);
 
   using AlgTraits = sierra::nalu::AlgTraitsHex27;
-  using GradViewType = Kokkos::View<double[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
+  using GradViewType =
+    Kokkos::View<double[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]
+                       [AlgTraits::nDim_]>;
   GradViewType refGrad = me.copy_deriv_weights_to_view<GradViewType>();
 
   double duration = 0;
@@ -339,21 +365,25 @@ TEST(Hex27SCS, area_vec)
     auto start_clock = clock_type::now();
     me.weighted_area_vectors(refGrad, ws_coords, meAreav);
     auto end_clock = clock_type::now();
-    duration += 1.0e-9*std::chrono::duration_cast<std::chrono::nanoseconds>(end_clock - start_clock).count();
+    duration += 1.0e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(
+                           end_clock - start_clock)
+                           .count();
   }
-  std::cout << "Time per iteration: " << (duration/nIt)*1000 << "(ms)" <<std::endl;
+  std::cout << "Time per iteration: " << (duration / nIt) * 1000 << "(ms)"
+            << std::endl;
 
   constexpr int nTypes = 3;
-  int typeCount[nTypes] = {0,0,0};
+  int typeCount[nTypes] = {0, 0, 0};
   double exactAreaType[nTypes];
 
-  exactAreaType[0] = 0.25 * (1 - std::sqrt(1./3.)) * (1 - std::sqrt(1./3.));
-  exactAreaType[1] = 1.0 / 6.0 * (std::sqrt(3.) -1);
+  exactAreaType[0] = 0.25 * (1 - std::sqrt(1. / 3.)) * (1 - std::sqrt(1. / 3.));
+  exactAreaType[1] = 1.0 / 6.0 * (std::sqrt(3.) - 1);
   exactAreaType[2] = 1.0 / 3.0;
 
-
-  for (int ip = 0 ; ip < me.num_integration_points(); ++ip) {
-    double mag = meAreav(ip, 0) * meAreav(ip, 0) + meAreav(ip, 1) * meAreav(ip, 1) + meAreav(ip, 2) * meAreav(ip, 2);
+  for (int ip = 0; ip < me.num_integration_points(); ++ip) {
+    double mag = meAreav(ip, 0) * meAreav(ip, 0) +
+                 meAreav(ip, 1) * meAreav(ip, 1) +
+                 meAreav(ip, 2) * meAreav(ip, 2);
     EXPECT_GT(mag, tol);
 
     for (int i = 0; i < nTypes; ++i) {

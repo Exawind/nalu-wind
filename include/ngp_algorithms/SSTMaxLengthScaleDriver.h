@@ -30,8 +30,7 @@ public:
   virtual void post_work() override;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* SSTMAXLENGTHSCALEDRIVER_H */

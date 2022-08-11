@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef VariableDensityContinuityMMSHOElemKernel_h
 #define VariableDensityContinuityMMSHOElemKernel_h
 
@@ -22,8 +21,8 @@
 #include <stk_mesh/base/Entity.hpp>
 #include <memory>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 class ElemDataRequests;
@@ -32,7 +31,8 @@ class TimeIntegrator;
 template <class AlgTraits>
 class VariableDensityContinuityMMSHOElemKernel final : public Kernel
 {
-DeclareCVFEMTypeDefs(CVFEMViews<AlgTraits::polyOrder_>);
+  DeclareCVFEMTypeDefs(CVFEMViews<AlgTraits::polyOrder_>);
+
 public:
   VariableDensityContinuityMMSHOElemKernel(
     const stk::mesh::BulkData& bulkData,
@@ -64,11 +64,11 @@ private:
   const double pi_;
   double projTimeScale_;
 
-  VectorFieldType *coordinates_{nullptr};
+  VectorFieldType* coordinates_{nullptr};
   CVFEMOperators<AlgTraits::polyOrder_> ops_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

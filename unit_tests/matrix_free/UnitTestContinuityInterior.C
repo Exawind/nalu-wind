@@ -115,10 +115,12 @@ public:
 
 TEST_F(ContinuityResidualFixture, residual_executes)
 {
-  decltype(rhs.getLocalViewDevice(Tpetra::Access::ReadWrite)) shared_rhs("empty_rhs", 1, 1);
+  decltype(rhs.getLocalViewDevice(Tpetra::Access::ReadWrite)) shared_rhs(
+    "empty_rhs", 1, 1);
 
   rhs.putScalar(0.);
-  continuity_residual<order>(1., offsets, mdot, rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
+  continuity_residual<order>(
+    1., offsets, mdot, rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 
 TEST_F(ContinuityResidualFixture, linearized_residual_executes)
@@ -128,7 +130,8 @@ TEST_F(ContinuityResidualFixture, linearized_residual_executes)
 
   rhs.putScalar(0.);
   continuity_linearized_residual<order>(
-    offsets, metric, delta.getLocalViewDevice(Tpetra::Access::ReadWrite), rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
+    offsets, metric, delta.getLocalViewDevice(Tpetra::Access::ReadWrite),
+    rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 } // namespace matrix_free
 } // namespace nalu

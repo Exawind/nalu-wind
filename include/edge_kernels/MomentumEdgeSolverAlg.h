@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef MOMENTUMEDGESOLVERALG_H
 #define MOMENTUMEDGESOLVERALG_H
 
@@ -20,30 +19,25 @@ namespace nalu {
 class MomentumEdgeSolverAlg : public AssembleEdgeSolverAlgorithm
 {
 public:
-  MomentumEdgeSolverAlg(
-    Realm&,
-    stk::mesh::Part*,
-    EquationSystem*);
+  MomentumEdgeSolverAlg(Realm&, stk::mesh::Part*, EquationSystem*);
 
   virtual ~MomentumEdgeSolverAlg() = default;
 
   virtual void execute();
 
 private:
-  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
-  unsigned velocityRTM_ {stk::mesh::InvalidOrdinal};
-  unsigned velocity_ {stk::mesh::InvalidOrdinal};
-  unsigned dudx_ {stk::mesh::InvalidOrdinal};
-  unsigned edgeAreaVec_ {stk::mesh::InvalidOrdinal};
-  unsigned massFlowRate_ {stk::mesh::InvalidOrdinal};
-  unsigned viscosity_ {stk::mesh::InvalidOrdinal};
-  unsigned pecletFactor_ {stk::mesh::InvalidOrdinal};
-  unsigned maskNodeField_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned velocityRTM_{stk::mesh::InvalidOrdinal};
+  unsigned velocity_{stk::mesh::InvalidOrdinal};
+  unsigned dudx_{stk::mesh::InvalidOrdinal};
+  unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned massFlowRate_{stk::mesh::InvalidOrdinal};
+  unsigned viscosity_{stk::mesh::InvalidOrdinal};
+  unsigned pecletFactor_{stk::mesh::InvalidOrdinal};
+  unsigned maskNodeField_{stk::mesh::InvalidOrdinal};
 };
 
-}  // nalu
-}  // sierra
-
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MOMENTUMEDGESOLVERALG_H */

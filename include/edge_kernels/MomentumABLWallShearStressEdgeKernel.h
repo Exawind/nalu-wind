@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef MOMENTUMABLWALLSHEARSTRESSEDGEKERNEL_H
 #define MOMENTUMABLWALLSHEARSTRESSEDGEKERNEL_H
 
@@ -21,24 +20,22 @@
 namespace sierra {
 namespace nalu {
 
-
 /**
  * This class applies the computed wall shear stress field to the boundary.
  *
  */
-template<typename BcAlgTraits>
-class MomentumABLWallShearStressEdgeKernel: public NGPKernel<MomentumABLWallShearStressEdgeKernel<BcAlgTraits>>
+template <typename BcAlgTraits>
+class MomentumABLWallShearStressEdgeKernel
+  : public NGPKernel<MomentumABLWallShearStressEdgeKernel<BcAlgTraits>>
 {
 public:
   MomentumABLWallShearStressEdgeKernel(
-    bool slip,
-    stk::mesh::MetaData&,
-    ElemDataRequests&,
-    ElemDataRequests&);
+    bool slip, stk::mesh::MetaData&, ElemDataRequests&, ElemDataRequests&);
 
   KOKKOS_DEFAULTED_FUNCTION MomentumABLWallShearStressEdgeKernel() = default;
 
-  KOKKOS_DEFAULTED_FUNCTION virtual ~MomentumABLWallShearStressEdgeKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~MomentumABLWallShearStressEdgeKernel() =
+    default;
 
   using Kernel::execute;
 
@@ -52,15 +49,14 @@ public:
 
 private:
   bool slip_{true};
-  unsigned exposedAreaVec_  {stk::mesh::InvalidOrdinal};
-  unsigned wallShearStress_ {stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned wallShearStress_{stk::mesh::InvalidOrdinal};
 
   MasterElement* meFC_{nullptr};
   MasterElement* meSCS_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MOMENTUMABLWALLFUNCEDGEKERNEL_H */

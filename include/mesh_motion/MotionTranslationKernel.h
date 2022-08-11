@@ -3,8 +3,8 @@
 
 #include "NgpMotion.h"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class MotionTranslationKernel : public NgpMotionKernel<MotionTranslationKernel>
 {
@@ -24,9 +24,8 @@ public:
    * @return Transformation matrix
    */
   KOKKOS_FUNCTION
-  virtual mm::TransMatType build_transformation(
-    const double& time,
-    const mm::ThreeDVecType& xyz);
+  virtual mm::TransMatType
+  build_transformation(const double& time, const mm::ThreeDVecType& xyz);
 
   /** Function to compute motion-specific velocity
    *
@@ -53,7 +52,7 @@ private:
   bool useVelocity_ = false;
 };
 
-} // nalu
-} // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MOTIONTRANSLATIONKERNEL_H */

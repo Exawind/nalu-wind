@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "Enums.h"
 #include "edge_kernels/MomentumOpenEdgeKernel.h"
 #include "master_element/MasterElement.h"
@@ -22,8 +21,8 @@
 #include <stk_math/StkMath.hpp>
 #include <stk_util/util/ReportHandler.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //--------------------------------------------------------------------------
 //-------- Constructor for MomentumOpenEdgeKernel --------------------------
@@ -58,13 +57,16 @@ MomentumOpenEdgeKernel<BcAlgTraits>::MomentumOpenEdgeKernel(
   faceData.add_cvfem_face_me(meFC_);
   elemData.add_cvfem_surface_me(meSCS_);
 
-  faceData.add_gathered_nodal_field(dudx_, BcAlgTraits::nDim_, BcAlgTraits::nDim_);
-  faceData.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  faceData.add_gathered_nodal_field(
+    dudx_, BcAlgTraits::nDim_, BcAlgTraits::nDim_);
+  faceData.add_face_field(
+    exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceData.add_face_field(openMassFlowRate_, BcAlgTraits::numFaceIp_);
   faceData.add_gathered_nodal_field(velocityBc_, BcAlgTraits::nDim_);
   faceData.add_gathered_nodal_field(viscosity_, 1);
 
-  elemData.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  elemData.add_coordinates_field(
+    coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
   elemData.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
 }
 
@@ -80,7 +82,7 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
   ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& elemScratchViews,
   int elemFaceOrdinal)
 {
-    // nearest face entrainment
+  // nearest face entrainment
   const double om_nfEntrain = 1.0 - nfEntrain_;
 
   // Work arrays
@@ -114,7 +116,7 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
     // Compute area vector related quantities
     DoubleType axdx = 0.0;
     DoubleType asq = 0.0;
-    for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+    for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
       const DoubleType dxj = v_coords(nodeR, d) - v_coords(nodeL, d);
       asq += v_areavec(ip, d) * v_areavec(ip, d);
       axdx += v_areavec(ip, d) * dxj;
@@ -127,7 +129,7 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
     DoubleType uxnx = 0.0;
     DoubleType uxnxip = 0.0;
     DoubleType uspecxnx = 0.0;
-    for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+    for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
       nx[d] = v_areavec(ip, d) / amag;
       uxnx += nx[d] * v_uNp1(nodeR, d);
       uxnxip += 0.5 * nx[d] * (v_uNp1(nodeL, d) + v_uNp1(nodeR, d));
@@ -141,54 +143,55 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
       dui/dxj = GjUi +[(uiR - uiL) - GlUi*dxl]*Aj/AxDx
       where Gp is the interpolated pth nodal gradient for ui
     */
-    for (int i=0; i < BcAlgTraits::nDim_; i++) {
+    for (int i = 0; i < BcAlgTraits::nDim_; i++) {
       const auto dui = v_uNp1(nodeR, i) - v_uNp1(nodeL, i);
 
       // Non-orthogonal correction
       DoubleType gjuidx = 0.0;
-      for (int j=0; j < BcAlgTraits::nDim_; j++) {
+      for (int j = 0; j < BcAlgTraits::nDim_; j++) {
         const DoubleType dxj = v_coords(nodeR, j) - v_coords(nodeL, j);
         gjuidx += v_dudx(ip, i, j) * dxj;
       }
 
       // final dui/dxj with non-orthogonal contributions
-      for (int j=0; j < BcAlgTraits::nDim_; j++) {
-        duidxj[i][j] = v_dudx(ip, i, j) + (dui - gjuidx) * v_areavec(ip, j) * inv_axdx;
+      for (int j = 0; j < BcAlgTraits::nDim_; j++) {
+        duidxj[i][j] =
+          v_dudx(ip, i, j) + (dui - gjuidx) * v_areavec(ip, j) * inv_axdx;
       }
     }
 
     // div(U)
     DoubleType divU = 0.0;
-    for (int d=0; d < BcAlgTraits::nDim_; ++d)
+    for (int d = 0; d < BcAlgTraits::nDim_; ++d)
       divU += duidxj[d][d];
 
     // Viscous forces
     DoubleType fxnx = 0.0;
-    for (int i=0; i < BcAlgTraits::nDim_; ++i) {
+    for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
       fx[i] = 2.0 / 3.0 * visc * divU * v_areavec(ip, i) * includeDivU_;
 
-      for (int j=0; j < BcAlgTraits::nDim_; ++j) {
+      for (int j = 0; j < BcAlgTraits::nDim_; ++j) {
         fx[i] += -visc * (duidxj[i][j] + duidxj[j][i]) * v_areavec(ip, j);
       }
       fxnx += nx[i] * fx[i];
     }
 
     // full stress, sigma_ij
-    for (int i=0; i < BcAlgTraits::nDim_; ++i) {
+    for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
       const int rowL = nodeL * BcAlgTraits::nDim_ + i;
       const int rowR = nodeR * BcAlgTraits::nDim_ + i;
 
       const DoubleType axi = v_areavec(ip, i);
 
       // subtract normal component of the flux
-      rhs(rowR) -= (fx[i] - nx[i]*fxnx);
+      rhs(rowR) -= (fx[i] - nx[i] * fxnx);
 
-      const DoubleType om_nxinxi = 1.0 - nx[i]*nx[i];
+      const DoubleType om_nxinxi = 1.0 - nx[i] * nx[i];
       DoubleType lhsFac = -visc * asq * inv_axdx * om_nxinxi;
       lhs(rowR, rowL) -= lhsFac;
       lhs(rowR, rowR) += lhsFac;
 
-      for (int j=0; j < BcAlgTraits::nDim_; ++j) {
+      for (int j = 0; j < BcAlgTraits::nDim_; ++j) {
         const int colL = nodeL * BcAlgTraits::nDim_ + j;
         const int colR = nodeR * BcAlgTraits::nDim_ + j;
 
@@ -197,7 +200,8 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
         lhs(rowR, colL) -= lhsFac;
         lhs(rowR, colR) += lhsFac;
 
-        if ( i == j ) continue;
+        if (i == j)
+          continue;
 
         const DoubleType nxinxj = nx[i] * nx[j];
 
@@ -216,48 +220,55 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
     }
 
     switch (entrain_) {
-      case EntrainmentMethod::SPECIFIED: {
-        const auto tmdot = v_massflow(ip);
-        for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
-          const int rowR = nodeR * BcAlgTraits::nDim_ + i;
-          const auto sigma = visc * asq * inv_axdx;
-          const auto lambda =
-            0.5 * (tmdot - stk::math::sqrt(tmdot * tmdot + 8 * sigma * sigma));
-          rhs(rowR) -= stk::math::if_then_else(tmdot > 0, tmdot * v_uNp1(nodeR, i),
-           tmdot * v_uNp1(nodeR, i) - lambda * (v_uNp1(nodeR, i) - v_uBc(ip, i)));
-          lhs(rowR, rowR) += stk::math::if_then_else(tmdot > 0, tmdot, tmdot - lambda);
-        }
-        break;
+    case EntrainmentMethod::SPECIFIED: {
+      const auto tmdot = v_massflow(ip);
+      for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
+        const int rowR = nodeR * BcAlgTraits::nDim_ + i;
+        const auto sigma = visc * asq * inv_axdx;
+        const auto lambda =
+          0.5 * (tmdot - stk::math::sqrt(tmdot * tmdot + 8 * sigma * sigma));
+        rhs(rowR) -= stk::math::if_then_else(
+          tmdot > 0, tmdot * v_uNp1(nodeR, i),
+          tmdot * v_uNp1(nodeR, i) -
+            lambda * (v_uNp1(nodeR, i) - v_uBc(ip, i)));
+        lhs(rowR, rowR) +=
+          stk::math::if_then_else(tmdot > 0, tmdot, tmdot - lambda);
       }
-      case EntrainmentMethod::COMPUTED: {
-        // advection
-        const DoubleType tmdot = v_massflow(ip);
+      break;
+    }
+    case EntrainmentMethod::COMPUTED: {
+      // advection
+      const DoubleType tmdot = v_massflow(ip);
 
-        for (int i=0; i < BcAlgTraits::nDim_; ++i) {
-          const int rowR = nodeR * BcAlgTraits::nDim_ + i;
+      for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
+        const int rowR = nodeR * BcAlgTraits::nDim_ + i;
 
-          rhs(rowR) -= stk::math::if_then_else((tmdot > 0.0),
-            tmdot * v_uNp1(nodeR, i), // leaving the domain
-            tmdot * ((nfEntrain_ * uxnx + om_nfEntrain * uxnxip) * nx[i] + // constrain to be normal
-                     (v_uBc(ip, i) - uspecxnx * nx[i]))); // user spec entrainment (tangential)
+        rhs(rowR) -= stk::math::if_then_else(
+          (tmdot > 0.0), tmdot * v_uNp1(nodeR, i), // leaving the domain
+          tmdot * ((nfEntrain_ * uxnx + om_nfEntrain * uxnxip) *
+                     nx[i] + // constrain to be normal
+                   (v_uBc(ip, i) -
+                    uspecxnx * nx[i]))); // user spec entrainment (tangential)
 
-          // leaving the domain
-          lhs(rowR, rowR) += stk::math::if_then_else((tmdot > 0.0),tmdot,0.0);
+        // leaving the domain
+        lhs(rowR, rowR) += stk::math::if_then_else((tmdot > 0.0), tmdot, 0.0);
 
-          // entraining; constrain to be normal
-          for (int j=0; j < BcAlgTraits::nDim_; ++j) {
-            const int colL = nodeL * BcAlgTraits::nDim_ + j;
-            const int colR = nodeR * BcAlgTraits::nDim_ + j;
+        // entraining; constrain to be normal
+        for (int j = 0; j < BcAlgTraits::nDim_; ++j) {
+          const int colL = nodeL * BcAlgTraits::nDim_ + j;
+          const int colR = nodeR * BcAlgTraits::nDim_ + j;
 
-            lhs(rowR,colL) += stk::math::if_then_else((tmdot > 0.0),0.0,
-              tmdot * om_nfEntrain * 0.5 * nx[i] * nx[j]);
-            lhs(rowR,colR) += stk::math::if_then_else((tmdot > 0.0),0.0,
-              tmdot * (nfEntrain_ + om_nfEntrain*0.5) * nx[i] * nx[j]);
-          }
+          lhs(rowR, colL) += stk::math::if_then_else(
+            (tmdot > 0.0), 0.0, tmdot * om_nfEntrain * 0.5 * nx[i] * nx[j]);
+          lhs(rowR, colR) += stk::math::if_then_else(
+            (tmdot > 0.0), 0.0,
+            tmdot * (nfEntrain_ + om_nfEntrain * 0.5) * nx[i] * nx[j]);
         }
-        break;
       }
-      default: NGP_ThrowErrorMsg("invalid entrainment method");
+      break;
+    }
+    default:
+      NGP_ThrowErrorMsg("invalid entrainment method");
     }
   }
 }
@@ -265,4 +276,4 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
 INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumOpenEdgeKernel)
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/NodalGradElemAlg.h"
 
 #include "BuildTemplates.h"
@@ -45,7 +44,8 @@ NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::NodalGradElemAlg(
 
   const auto coordID = get_field_ordinal(
     realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());
-  dataNeeded_.add_coordinates_field(coordID, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataNeeded_.add_coordinates_field(
+    coordID, AlgTraits::nDim_, CURRENT_COORDINATES);
   dataNeeded_.add_gathered_nodal_field(phi_, NumComp);
   dataNeeded_.add_gathered_nodal_field(dualNodalVol_, 1);
 
@@ -55,9 +55,11 @@ NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::NodalGradElemAlg(
 }
 
 template <typename AlgTraits, typename PhiType, typename GradPhiType>
-void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
+void
+NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
 {
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdDataType =
+    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
   using ViewHelperType = nalu_ngp::ViewHelper<ElemSimdDataType, PhiType>;
 
   const auto& meshInfo = realm_.mesh_info();
@@ -65,8 +67,8 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto gradPhi = fieldMgr.template get_field<double>(gradPhi_);
-  const auto gradPhiOps = nalu_ngp::simd_elem_nodal_field_updater(
-    ngpMesh, gradPhi);
+  const auto gradPhiOps =
+    nalu_ngp::simd_elem_nodal_field_updater(ngpMesh, gradPhi);
 
   // Bring class members into local scope for device capture
   const bool useShifted = useShifted_;
@@ -76,15 +78,16 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
 
   gradPhi.sync_to_device();
 
-  const stk::mesh::Selector sel = meta.locally_owned_part()
-    & stk::mesh::selectUnion(partVec_)
-    & !(realm_.get_inactive_selector());
+  const stk::mesh::Selector sel = meta.locally_owned_part() &
+                                  stk::mesh::selectUnion(partVec_) &
+                                  !(realm_.get_inactive_selector());
 
   const std::string algName =
-    (meta.get_fields()[gradPhi_]->name() + "_elem_" + std::to_string(AlgTraits::topo_));
+    (meta.get_fields()[gradPhi_]->name() + "_elem_" +
+     std::to_string(AlgTraits::topo_));
   nalu_ngp::run_elem_algorithm(
     algName, meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
-    KOKKOS_LAMBDA(ElemSimdDataType& edata) {
+    KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       const int* lrscv = meSCS->adjacentNodes();
 
       auto& scrView = edata.simdScrView;
@@ -93,12 +96,11 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
 
       const auto& meViews = scrView.get_me_views(CURRENT_COORDINATES);
       const auto& v_areav = meViews.scs_areav;
-      const auto& v_shape_fcn = useShifted
-        ? meViews.scs_shifted_shape_fcn
-        : meViews.scs_shape_fcn;
+      const auto& v_shape_fcn =
+        useShifted ? meViews.scs_shifted_shape_fcn : meViews.scs_shape_fcn;
 
-      for (int di=0; di < NumComp; ++di) {
-        for (int ip =0; ip < AlgTraits::numScsIp_; ++ip) {
+      for (int di = 0; di < NumComp; ++di) {
+        for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
           DoubleType qIp = 0.0;
           for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
             qIp += v_shape_fcn(ip, n) * v_phi(n, di);
@@ -138,4 +140,4 @@ INSTANTIATE_ALG(AlgTraitsQuad4_2D);
 INSTANTIATE_ALG(AlgTraitsQuad9_2D);
 
 } // namespace nalu
-}  // sierra
+} // namespace sierra

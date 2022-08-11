@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef TIOGAOPTIONS_H
 #define TIOGAOPTIONS_H
 
@@ -101,6 +100,6 @@ private:
   bool adjustResolutionsForFringes_{true};
 };
 
-}
+} // namespace tioga_nalu
 
 #endif /* TIOGAOPTIONS_H */

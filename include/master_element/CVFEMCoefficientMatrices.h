@@ -16,7 +16,7 @@
 #include <stk_util/util/ReportHandler.hpp>
 
 namespace sierra {
-namespace nalu{
+namespace nalu {
 
 template <int p, typename Scalar = DoubleType>
 struct CoefficientMatrices
@@ -24,25 +24,33 @@ struct CoefficientMatrices
   using value_type = Scalar;
   constexpr static int poly_order = p;
   CoefficientMatrices(const double* nodeLocs, const double* scsLocs)
-  : scsDeriv(coefficients::scs_derivative_weights<p, Scalar>(nodeLocs, scsLocs)),
-    scsInterp(coefficients::scs_interpolation_weights<p, Scalar>(nodeLocs, scsLocs)),
-    nodalWeights(coefficients::nodal_integration_weights<p, Scalar>(nodeLocs, scsLocs)),
-    nodalDeriv(coefficients::nodal_derivative_weights<p, Scalar>(nodeLocs)),
-    linearNodalInterp(coefficients::linear_nodal_interpolation_weights<p, Scalar>(nodeLocs)),
-    linearScsInterp(coefficients::linear_scs_interpolation_weights<p, Scalar>(scsLocs)),
-    lumpedNodalWeights(coefficients::lumped_nodal_integration_weights<p,Scalar>(nodeLocs,scsLocs))
-  {};
+    : scsDeriv(
+        coefficients::scs_derivative_weights<p, Scalar>(nodeLocs, scsLocs)),
+      scsInterp(
+        coefficients::scs_interpolation_weights<p, Scalar>(nodeLocs, scsLocs)),
+      nodalWeights(
+        coefficients::nodal_integration_weights<p, Scalar>(nodeLocs, scsLocs)),
+      nodalDeriv(coefficients::nodal_derivative_weights<p, Scalar>(nodeLocs)),
+      linearNodalInterp(
+        coefficients::linear_nodal_interpolation_weights<p, Scalar>(nodeLocs)),
+      linearScsInterp(
+        coefficients::linear_scs_interpolation_weights<p, Scalar>(scsLocs)),
+      lumpedNodalWeights(
+        coefficients::lumped_nodal_integration_weights<p, Scalar>(
+          nodeLocs, scsLocs)){};
 
   CoefficientMatrices()
-  : scsDeriv(coefficients::scs_derivative_weights<p, Scalar>()),
-    scsInterp(coefficients::scs_interpolation_weights<p, Scalar>()),
-    nodalWeights(coefficients::nodal_integration_weights<p, Scalar>()),
-    nodalDeriv(coefficients::nodal_derivative_weights<p, Scalar>()),
-    difference(coefficients::difference_matrix<p, Scalar>()),
-    linearNodalInterp(coefficients::linear_nodal_interpolation_weights<p, Scalar>()),
-    linearScsInterp(coefficients::linear_scs_interpolation_weights<p, Scalar>()),
-    lumpedNodalWeights(coefficients::lumped_nodal_integration_weights<p,Scalar>())
-  {};
+    : scsDeriv(coefficients::scs_derivative_weights<p, Scalar>()),
+      scsInterp(coefficients::scs_interpolation_weights<p, Scalar>()),
+      nodalWeights(coefficients::nodal_integration_weights<p, Scalar>()),
+      nodalDeriv(coefficients::nodal_derivative_weights<p, Scalar>()),
+      difference(coefficients::difference_matrix<p, Scalar>()),
+      linearNodalInterp(
+        coefficients::linear_nodal_interpolation_weights<p, Scalar>()),
+      linearScsInterp(
+        coefficients::linear_scs_interpolation_weights<p, Scalar>()),
+      lumpedNodalWeights(
+        coefficients::lumped_nodal_integration_weights<p, Scalar>()){};
 
   const scs_matrix_view<p, Scalar> scsDeriv;
   const scs_matrix_view<p, Scalar> scsInterp;
@@ -54,7 +62,7 @@ struct CoefficientMatrices
   const nodal_matrix_view<p, Scalar> lumpedNodalWeights;
 };
 
-} // namespace naluUnit
-} // namespace Sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif

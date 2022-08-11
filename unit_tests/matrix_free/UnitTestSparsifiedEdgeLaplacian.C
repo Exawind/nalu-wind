@@ -111,7 +111,10 @@ class SparsifiedEdgeLaplacianFixture : public ::ConductionFixture
 protected:
   SparsifiedEdgeLaplacianFixture()
     : ConductionFixture(nx, scale),
-      linsys(stk::mesh::get_updated_ngp_mesh(bulk), meta.universal_part(), gid_field_ngp),
+      linsys(
+        stk::mesh::get_updated_ngp_mesh(bulk),
+        meta.universal_part(),
+        gid_field_ngp),
       offsets(create_offset_map<order>(
         mesh, meta.universal_part(), linsys.stk_lid_to_tpetra_lid)),
       mat(sparsfied_edge_test::create_edge_matrix<order>(linsys, offsets))
@@ -136,9 +139,10 @@ TEST_F(SparsifiedEdgeLaplacianFixture, laplacian_is_an_l_matrix)
 
   Tpetra::beginAssembly(*mat);
   assemble_sparsified_edge_laplacian(
-    order, mesh, meta.universal_part(), coords_ngp, NoAuraDeviceMatrix(
-    mat->getLocalNumRows(), mat->getLocalMatrixDevice(), {}, linsys.stk_lid_to_tpetra_lid,
-    linsys.stk_lid_to_tpetra_lid));
+    order, mesh, meta.universal_part(), coords_ngp,
+    NoAuraDeviceMatrix(
+      mat->getLocalNumRows(), mat->getLocalMatrixDevice(), {},
+      linsys.stk_lid_to_tpetra_lid, linsys.stk_lid_to_tpetra_lid));
   Tpetra::endAssembly(*mat);
 
   for (unsigned i = 0; i < mat->getLocalNumRows(); ++i) {
@@ -165,9 +169,10 @@ TEST_F(SparsifiedEdgeLaplacianFixture, row_and_column_sums_are_zero)
 
   Tpetra::beginAssembly(*mat);
   assemble_sparsified_edge_laplacian(
-    order, mesh, meta.universal_part(), coords_ngp, NoAuraDeviceMatrix(
-    mat->getLocalNumRows(), mat->getLocalMatrixDevice(), {}, linsys.stk_lid_to_tpetra_lid,
-    linsys.stk_lid_to_tpetra_lid));
+    order, mesh, meta.universal_part(), coords_ngp,
+    NoAuraDeviceMatrix(
+      mat->getLocalNumRows(), mat->getLocalMatrixDevice(), {},
+      linsys.stk_lid_to_tpetra_lid, linsys.stk_lid_to_tpetra_lid));
   Tpetra::endAssembly(*mat);
 
   Tpetra::Vector<> ones(Teuchos::rcpFromRef(linsys.owned));
@@ -192,9 +197,10 @@ TEST_F(SparsifiedEdgeLaplacianFixture, sample_for_positive_definiteness)
 
   Tpetra::beginAssembly(*mat);
   assemble_sparsified_edge_laplacian(
-    order, mesh, meta.universal_part(), coords_ngp, NoAuraDeviceMatrix(
-    mat->getLocalNumRows(), mat->getLocalMatrixDevice(), {}, linsys.stk_lid_to_tpetra_lid,
-    linsys.stk_lid_to_tpetra_lid));
+    order, mesh, meta.universal_part(), coords_ngp,
+    NoAuraDeviceMatrix(
+      mat->getLocalNumRows(), mat->getLocalMatrixDevice(), {},
+      linsys.stk_lid_to_tpetra_lid, linsys.stk_lid_to_tpetra_lid));
   Tpetra::endAssembly(*mat);
 
   Tpetra::Vector<> ones(Teuchos::rcpFromRef(linsys.owned));

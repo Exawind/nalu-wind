@@ -19,24 +19,22 @@ namespace nalu {
 
 class Realm;
 
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 class DynamicPressureOpenAlg : public Algorithm
 {
 public:
-  DynamicPressureOpenAlg(
-    Realm&,
-    stk::mesh::Part*);
+  DynamicPressureOpenAlg(Realm&, stk::mesh::Part*);
 
   virtual ~DynamicPressureOpenAlg() = default;
   virtual void execute() override;
 
 private:
   ElemDataRequests faceData_;
-  unsigned density_         {stk::mesh::InvalidOrdinal};
-  unsigned velocity_         {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_   {stk::mesh::InvalidOrdinal};
-  unsigned openMassFlowRate_ {stk::mesh::InvalidOrdinal};
-  unsigned dynPress_         {stk::mesh::InvalidOrdinal};
+  unsigned density_{stk::mesh::InvalidOrdinal};
+  unsigned velocity_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned openMassFlowRate_{stk::mesh::InvalidOrdinal};
+  unsigned dynPress_{stk::mesh::InvalidOrdinal};
 
   bool useShifted_{false};
 
@@ -44,8 +42,7 @@ private:
   MasterElement* meSCS_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif

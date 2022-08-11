@@ -19,8 +19,7 @@
 namespace sierra {
 namespace nalu {
 
-
-class ActuatorLineSimpleNGP: public ActuatorExecutor
+class ActuatorLineSimpleNGP : public ActuatorExecutor
 {
 public:
   ActuatorLineSimpleNGP(

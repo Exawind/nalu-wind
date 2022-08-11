@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef EntityExposedFaceSorter_h
 #define EntityExposedFaceSorter_h
 
@@ -33,22 +31,26 @@ namespace nalu {
  */
 //=============================================================================
 
-class EntityExposedFaceSorter : public stk::mesh::EntitySorterBase {
+class EntityExposedFaceSorter : public stk::mesh::EntitySorterBase
+{
 
-  public:
-    
-  virtual void sort(stk::mesh::BulkData &bulk, stk::mesh::EntityVector& entityVector) const
+public:
+  virtual void
+  sort(stk::mesh::BulkData& bulk, stk::mesh::EntityVector& entityVector) const
   {
-    stk::mesh::EntityRank entityVecRank = bulk.entity_rank(entityVector[0]);    
-    if ( entityVecRank == bulk.mesh_meta_data().side_rank() ) {
-      std::sort(entityVector.begin(), entityVector.end(),
+    stk::mesh::EntityRank entityVecRank = bulk.entity_rank(entityVector[0]);
+    if (entityVecRank == bulk.mesh_meta_data().side_rank()) {
+      std::sort(
+        entityVector.begin(), entityVector.end(),
         [&bulk](stk::mesh::Entity a, stk::mesh::Entity b) {
-        return bulk.begin_element_ordinals(a)[0] > bulk.begin_element_ordinals(b)[0]; });
+          return bulk.begin_element_ordinals(a)[0] >
+                 bulk.begin_element_ordinals(b)[0];
+        });
     }
   }
 };
-  
-} // end sierra namespace
-} // end nalu namespace
+
+} // namespace nalu
+} // namespace sierra
 
 #endif

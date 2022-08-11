@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef SCALARMASSBDFNODEKERNEL_H
 #define SCALARMASSBDFNODEKERNEL_H
 
@@ -19,17 +18,15 @@
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class ScalarMassBDFNodeKernel : public NGPNodeKernel<ScalarMassBDFNodeKernel>
 {
 public:
-  ScalarMassBDFNodeKernel(
-    const stk::mesh::BulkData&,
-    ScalarFieldType*);
+  ScalarMassBDFNodeKernel(const stk::mesh::BulkData&, ScalarFieldType*);
 
   KOKKOS_DEFAULTED_FUNCTION
   ScalarMassBDFNodeKernel() = default;
@@ -38,7 +35,7 @@ public:
   virtual ~ScalarMassBDFNodeKernel() = default;
 
   virtual void setup(Realm&) override;
-  
+
   KOKKOS_FUNCTION
   virtual void execute(
     NodeKernelTraits::LhsType&,
@@ -56,21 +53,21 @@ private:
   stk::mesh::NgpField<double> dnvN_;
   stk::mesh::NgpField<double> dnvNm1_;
 
-  unsigned scalarQNm1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned scalarQNID_ {stk::mesh::InvalidOrdinal};
-  unsigned scalarQNp1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned densityNm1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned densityNID_ {stk::mesh::InvalidOrdinal};
-  unsigned densityNp1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned dnvNp1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned dnvNID_ {stk::mesh::InvalidOrdinal};
-  unsigned dnvNm1ID_ {stk::mesh::InvalidOrdinal};
+  unsigned scalarQNm1ID_{stk::mesh::InvalidOrdinal};
+  unsigned scalarQNID_{stk::mesh::InvalidOrdinal};
+  unsigned scalarQNp1ID_{stk::mesh::InvalidOrdinal};
+  unsigned densityNm1ID_{stk::mesh::InvalidOrdinal};
+  unsigned densityNID_{stk::mesh::InvalidOrdinal};
+  unsigned densityNp1ID_{stk::mesh::InvalidOrdinal};
+  unsigned dnvNp1ID_{stk::mesh::InvalidOrdinal};
+  unsigned dnvNID_{stk::mesh::InvalidOrdinal};
+  unsigned dnvNm1ID_{stk::mesh::InvalidOrdinal};
 
   double dt_;
   double gamma1_, gamma2_, gamma3_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

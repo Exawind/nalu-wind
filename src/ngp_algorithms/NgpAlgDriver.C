@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include <iomanip>
 #include <sstream>
 
@@ -17,24 +16,16 @@
 namespace sierra {
 namespace nalu {
 
-NgpAlgDriver::NgpAlgDriver(
-  Realm& realm
-): realm_(realm)
-{}
+NgpAlgDriver::NgpAlgDriver(Realm& realm) : realm_(realm) {}
 
 std::string
 NgpAlgDriver::unique_name(
-  AlgorithmType algType,
-  std::string entityType,
-  std::string algName)
+  AlgorithmType algType, std::string entityType, std::string algName)
 {
   std::stringstream ss;
 
-  ss << "Alg"
-     << std::setfill('0') << std::setw(4)
-     << static_cast<int>(algType)
-     << "_" << entityType << "_"
-     << algName;
+  ss << "Alg" << std::setfill('0') << std::setw(4) << static_cast<int>(algType)
+     << "_" << entityType << "_" << algName;
 
   return ss.str();
 }
@@ -53,11 +44,13 @@ NgpAlgDriver::execute()
 
 void
 NgpAlgDriver::pre_work()
-{}
+{
+}
 
 void
 NgpAlgDriver::post_work()
-{}
+{
+}
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

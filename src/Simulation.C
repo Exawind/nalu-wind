@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <Simulation.h>
 
 // yaml for parsing..
@@ -24,8 +22,8 @@
 
 #include <Ioss_SerializeIO.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -41,8 +39,8 @@ namespace nalu{
 //--------------------------------------------------------------------------
 bool Simulation::debug_ = false;
 
-Simulation::Simulation(const YAML::Node& root_node) :
-    m_root_node(root_node),
+Simulation::Simulation(const YAML::Node& root_node)
+  : m_root_node(root_node),
     timeIntegrator_(NULL),
     realms_(NULL),
     transfers_(NULL),
@@ -50,24 +48,25 @@ Simulation::Simulation(const YAML::Node& root_node) :
     serializedIOGroupSize_(0)
 {
 #ifdef KOKKOS_ENABLE_CUDA
-  cudaDeviceGetLimit (&default_stack_size, cudaLimitStackSize);
-  cudaDeviceSetLimit (cudaLimitStackSize, nalu_stack_size);
+  cudaDeviceGetLimit(&default_stack_size, cudaLimitStackSize);
+  cudaDeviceSetLimit(cudaLimitStackSize, nalu_stack_size);
 #endif
 }
 
-Simulation::~Simulation() {
+Simulation::~Simulation()
+{
   delete realms_;
   delete transfers_;
   delete timeIntegrator_;
   delete linearSolvers_;
 #ifdef KOKKOS_ENABLE_CUDA
-  cudaDeviceSetLimit (cudaLimitStackSize, default_stack_size);
+  cudaDeviceSetLimit(cudaLimitStackSize, default_stack_size);
 #endif
 }
 
 // Timers
-//static
-stk::diag::TimerSet &
+// static
+stk::diag::TimerSet&
 Simulation::rootTimerSet()
 {
   static stk::diag::TimerSet s_timerSet(sierra::Diag::TIMER_ALL);
@@ -75,23 +74,26 @@ Simulation::rootTimerSet()
   return s_timerSet;
 }
 
-//static
-stk::diag::Timer& Simulation::rootTimer()
+// static
+stk::diag::Timer&
+Simulation::rootTimer()
 {
-  static stk::diag::Timer s_timer = stk::diag::createRootTimer("Nalu", rootTimerSet());
+  static stk::diag::Timer s_timer =
+    stk::diag::createRootTimer("Nalu", rootTimerSet());
 
   return s_timer;
 }
 
-//static
-stk::diag::Timer& Simulation::outputTimer()
+// static
+stk::diag::Timer&
+Simulation::outputTimer()
 {
   static stk::diag::Timer s_timer("Output", rootTimer());
   return s_timer;
 }
 
-
-void Simulation::load(const YAML::Node & node)
+void
+Simulation::load(const YAML::Node& node)
 {
 
   high_level_banner();
@@ -117,33 +119,36 @@ void Simulation::load(const YAML::Node & node)
   NaluEnv::self().naluOutputP0() << "=========================" << std::endl;
   transfers_ = new Transfers(*this);
   transfers_->load(node);
-
 }
 
-void Simulation::setSerializedIOGroupSize(int siogs)
+void
+Simulation::setSerializedIOGroupSize(int siogs)
 {
-  if (siogs)
-    {
-      if (siogs < 0 || siogs > NaluEnv::self().parallel_size() || NaluEnv::self().parallel_size() % siogs != 0)
-        {
-          NaluEnv::self().naluOutputP0() << "Error: Job requested serialized_io_group_size of " << siogs
-                          << " which is incompatible with MPI size= " << NaluEnv::self().parallel_size()
-                          << "... shutting down." << std::endl;
-          throw std::runtime_error("shutdown");
-        }
-      serializedIOGroupSize_ = siogs;
-      Ioss::SerializeIO::setGroupFactor(siogs);
+  if (siogs) {
+    if (
+      siogs < 0 || siogs > NaluEnv::self().parallel_size() ||
+      NaluEnv::self().parallel_size() % siogs != 0) {
+      NaluEnv::self().naluOutputP0()
+        << "Error: Job requested serialized_io_group_size of " << siogs
+        << " which is incompatible with MPI size= "
+        << NaluEnv::self().parallel_size() << "... shutting down." << std::endl;
+      throw std::runtime_error("shutdown");
     }
+    serializedIOGroupSize_ = siogs;
+    Ioss::SerializeIO::setGroupFactor(siogs);
+  }
 }
 
-void Simulation::breadboard()
+void
+Simulation::breadboard()
 {
   realms_->breadboard();
   timeIntegrator_->breadboard();
   transfers_->breadboard();
 }
 
-void Simulation::initialize()
+void
+Simulation::initialize()
 {
   realms_->initialize_prolog();
   timeIntegrator_->initialize();
@@ -151,29 +156,38 @@ void Simulation::initialize()
   realms_->initialize_epilog();
 }
 
-void Simulation::init_prolog()
+void
+Simulation::init_prolog()
 {
   realms_->initialize_prolog();
   timeIntegrator_->overset_->initialize();
 }
 
-void Simulation::init_epilog()
+void
+Simulation::init_epilog()
 {
   realms_->initialize_epilog();
   transfers_->initialize();
 }
 
-void Simulation::run()
+void
+Simulation::run()
 {
   NaluEnv::self().naluOutputP0() << std::endl;
-  NaluEnv::self().naluOutputP0() << "*******************************************************" << std::endl;
-  NaluEnv::self().naluOutputP0() << "Simulation Shall Commence: number of processors = " << NaluEnv::self().parallel_size() << std::endl;
-  NaluEnv::self().naluOutputP0() << "*******************************************************" << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "*******************************************************" << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "Simulation Shall Commence: number of processors = "
+    << NaluEnv::self().parallel_size() << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "*******************************************************" << std::endl;
 
   timeIntegrator_->integrate_realm();
 }
 
-void Simulation::high_level_banner() {
+void
+Simulation::high_level_banner()
+{
 
   std::vector<std::string> additionalTPLs;
 #ifdef NALU_USES_FFTW
@@ -190,45 +204,73 @@ void Simulation::high_level_banner() {
 #endif
 
   NaluEnv::self().naluOutputP0()
-    <<
-    "===============================================================================" << std::endl <<
-    "                                  Nalu-Wind                                    " << std::endl <<
-    "       An incompressible, turbulent computational fluid dynamics solver        " << std::endl <<
-    "                  for wind turbine and wind farm simulations                   " << std::endl <<
-    "==============================================================================="
-    << std::endl << std::endl
+    << "======================================================================="
+       "========"
+    << std::endl
+    << "                                  Nalu-Wind                            "
+       "        "
+    << std::endl
+    << "       An incompressible, turbulent computational fluid dynamics "
+       "solver        "
+    << std::endl
+    << "                  for wind turbine and wind farm simulations           "
+       "        "
+    << std::endl
+    << "======================================================================="
+       "========"
+    << std::endl
+    << std::endl
     << "   Nalu-Wind Version: " << version::NaluVersionTag << std::endl
     << "   Nalu-Wind GIT Commit SHA: " << version::NaluGitCommitSHA
-    << ((version::RepoIsDirty == "DIRTY") ? ("-" + version::RepoIsDirty) : "") << std::endl
-    << "   Trilinos Version: " << version::TrilinosVersionTag << std::endl << std::endl
-    << "   TPLs: Boost, HDF5, netCDF, STK, Trilinos, yaml-cpp and zlib   " << std::endl;
+    << ((version::RepoIsDirty == "DIRTY") ? ("-" + version::RepoIsDirty) : "")
+    << std::endl
+    << "   Trilinos Version: " << version::TrilinosVersionTag << std::endl
+    << std::endl
+    << "   TPLs: Boost, HDF5, netCDF, STK, Trilinos, yaml-cpp and zlib   "
+    << std::endl;
 
   if (additionalTPLs.size() > 0) {
     NaluEnv::self().naluOutputP0() << "   Optional TPLs enabled: ";
     int numTPLs = additionalTPLs.size();
-    for (int i=0; i < (numTPLs - 1); i++)
+    for (int i = 0; i < (numTPLs - 1); i++)
       NaluEnv::self().naluOutputP0() << additionalTPLs[i] << ", ";
-    NaluEnv::self().naluOutputP0() << additionalTPLs[numTPLs -1] << std::endl;
+    NaluEnv::self().naluOutputP0() << additionalTPLs[numTPLs - 1] << std::endl;
   }
 
   NaluEnv::self().naluOutputP0()
-    <<
-    "   Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC   " << std::endl <<
-    "   (NTESS), National Renewable Energy Laboratory, University of Texas Austin,  " << std::endl <<
-    "    Northwest Research Associates. Under the terms of Contract DE-NA0003525    " << std::endl <<
-    "    with NTESS, the U.S. Government retains certain rights in this software.   " << std::endl <<
-    "                                                                               " << std::endl <<
-    "           This software is released under the BSD 3-clause license.           " << std::endl <<
-    "   See LICENSE file at https://github.com/exawind/nalu-wind for more details.  " << std::endl <<
-    "-------------------------------------------------------------------------------"
-    << std::endl << std::endl;
+    << "   Copyright 2017 National Technology & Engineering Solutions of "
+       "Sandia, LLC   "
+    << std::endl
+    << "   (NTESS), National Renewable Energy Laboratory, University of Texas "
+       "Austin,  "
+    << std::endl
+    << "    Northwest Research Associates. Under the terms of Contract "
+       "DE-NA0003525    "
+    << std::endl
+    << "    with NTESS, the U.S. Government retains certain rights in this "
+       "software.   "
+    << std::endl
+    << "                                                                       "
+       "        "
+    << std::endl
+    << "           This software is released under the BSD 3-clause license.   "
+       "        "
+    << std::endl
+    << "   See LICENSE file at https://github.com/exawind/nalu-wind for more "
+       "details.  "
+    << std::endl
+    << "-----------------------------------------------------------------------"
+       "--------"
+    << std::endl
+    << std::endl;
 
   if (!std::is_same<DeviceSpace, Kokkos::Serial>::value) {
     // Save output from the master proc in the log file
-    Kokkos::DefaultExecutionSpace::print_configuration(NaluEnv::self().naluOutputP0());
+    Kokkos::DefaultExecutionSpace::print_configuration(
+      NaluEnv::self().naluOutputP0());
     // But have everyone print out to standard error for debugging purposes
     Kokkos::DefaultExecutionSpace::print_configuration(std::cerr);
   }
 }
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
@@ -16,14 +15,16 @@
 
 TEST_F(EnthalpyABLKernelHex8Mesh, NGP_heat_flux_bc)
 {
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
   fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
   auto* part = meta_->get_part("surface_5");
-  unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::QUAD_4, 1, part);
+  unit_test_utils::HelperObjects helperObjs(
+    bulk_, stk::topology::QUAD_4, 1, part);
 
   const std::string coordsName = "coordinates";
   const bool useShifted = false;
@@ -39,7 +40,6 @@ TEST_F(EnthalpyABLKernelHex8Mesh, NGP_heat_flux_bc)
 
   // Populate LHS and RHS
   helperObjs.execute();
-
 
   // heatflux set to 100.0 and area_mag is 0.25
   const double rhsExact = 25.0;

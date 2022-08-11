@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef ENTHLAPYABLFORCENODEKERNEL_H
 #define ENTHLAPYABLFORCENODEKERNEL_H
 
@@ -24,12 +23,12 @@ namespace nalu {
 
 class SolutionOptions;
 
-class EnthalpyABLForceNodeKernel : public NGPNodeKernel<EnthalpyABLForceNodeKernel>
+class EnthalpyABLForceNodeKernel
+  : public NGPNodeKernel<EnthalpyABLForceNodeKernel>
 {
 public:
   EnthalpyABLForceNodeKernel(
-    const stk::mesh::BulkData&,
-    const SolutionOptions&);
+    const stk::mesh::BulkData&, const SolutionOptions&);
 
   EnthalpyABLForceNodeKernel() = delete;
 
@@ -50,14 +49,13 @@ private:
 
   ABLScalarInterpolator ablSrc_;
 
-  unsigned coordinatesID_ {stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinatesID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
 
   const int nDim_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ENTHLAPYABLFORCENODEKERNEL_H */

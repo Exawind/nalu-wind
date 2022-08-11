@@ -146,7 +146,6 @@ TEST_F(GradientOperatorFixture, residual_operator_zero_for_zero_data)
   resid_op.set_fields(gather_required_fields());
   resid_op.compute(rhs);
 
-
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 
   for (size_t k = 0u; k < rhs.getLocalLength(); ++k) {
@@ -160,7 +159,6 @@ TEST_F(GradientOperatorFixture, residual_operator_not_zero_for_nonconstant_data)
   GradientResidualOperator<order> resid_op(offsets, exporter);
   resid_op.set_fields(gather_required_fields());
   resid_op.compute(rhs);
-
 
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
   double max_error = -1;
@@ -181,7 +179,6 @@ TEST_F(
   lhs.putScalar(0.);
   lin_op.apply(lhs, rhs);
 
-
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
   for (size_t k = 0u; k < rhs.getLocalLength(); ++k) {
     ASSERT_NEAR(view_h(k, 0), 0, 1.e-14);
@@ -198,9 +195,8 @@ TEST_F(
   lin_op.set_volumes(fields.vols);
 
   lhs.randomize(-1, +1);
-  
-  lin_op.apply(lhs, rhs);
 
+  lin_op.apply(lhs, rhs);
 
   auto view_h = rhs.getLocalViewHost(Tpetra::Access::ReadWrite);
 

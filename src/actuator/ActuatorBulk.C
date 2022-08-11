@@ -135,12 +135,12 @@ ActuatorBulk::parallel_sum_source_term(stk::mesh::BulkData& stkBulk)
 }
 
 Kokkos::RangePolicy<ActuatorFixedExecutionSpace>
-ActuatorBulk::local_range_policy(const ActuatorMeta &actMeta)
+ActuatorBulk::local_range_policy(const ActuatorMeta& actMeta)
 {
   auto rank = NaluEnv::self().parallel_rank();
   if (rank < turbIdOffset_.extent_int(0)) {
     const int offset = turbIdOffset_.h_view(rank);
-    const int size   = actMeta.numPointsTurbine_.h_view(rank); 
+    const int size = actMeta.numPointsTurbine_.h_view(rank);
     return Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(
       offset, offset + size);
   } else {

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernel/ScalarFaceFluxBCElemKernel.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
@@ -21,22 +20,23 @@
 namespace sierra {
 namespace nalu {
 
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 ScalarFaceFluxBCElemKernel<BcAlgTraits>::ScalarFaceFluxBCElemKernel(
   const stk::mesh::BulkData& bulk,
   GenericFieldType* scalarQ,
   std::string coordsName,
   bool useShifted,
-  ElemDataRequests& faceDataPreReqs
-) : NGPKernel<ScalarFaceFluxBCElemKernel<BcAlgTraits>>(),
+  ElemDataRequests& faceDataPreReqs)
+  : NGPKernel<ScalarFaceFluxBCElemKernel<BcAlgTraits>>(),
     coordinates_(get_field_ordinal(bulk.mesh_meta_data(), coordsName)),
     bcScalarQ_(scalarQ->mesh_meta_data_ordinal()),
-    exposedAreaVec_(
-      get_field_ordinal(
-        bulk.mesh_meta_data(), "exposed_area_vector",
-        bulk.mesh_meta_data().side_rank())),
+    exposedAreaVec_(get_field_ordinal(
+      bulk.mesh_meta_data(),
+      "exposed_area_vector",
+      bulk.mesh_meta_data().side_rank())),
     useShifted_(useShifted),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<BcAlgTraits>())
+    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
+          BcAlgTraits>())
 {
   // Register necessary data for use in execute method
   faceDataPreReqs.add_cvfem_face_me(meFC_);
@@ -48,7 +48,7 @@ ScalarFaceFluxBCElemKernel<BcAlgTraits>::ScalarFaceFluxBCElemKernel(
     exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
 }
 
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 void
 ScalarFaceFluxBCElemKernel<BcAlgTraits>::execute(
   SharedMemView<DoubleType**, DeviceShmem>&,
@@ -60,12 +60,12 @@ ScalarFaceFluxBCElemKernel<BcAlgTraits>::execute(
 
   const int* ipNodeMap = meFC_->ipNodeMap();
 
-  for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
+  for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
     const int nodeR = ipNodeMap[ip];
 
     // Compute magnitude of area vector at this integration point
     DoubleType aMag = 0.0;
-    for (int d=0; d < BcAlgTraits::nDim_; ++d)
+    for (int d = 0; d < BcAlgTraits::nDim_; ++d)
       aMag += v_areav(ip, d) * v_areav(ip, d);
     aMag = stk::math::sqrt(aMag);
 
@@ -78,5 +78,5 @@ ScalarFaceFluxBCElemKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE(ScalarFaceFluxBCElemKernel)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

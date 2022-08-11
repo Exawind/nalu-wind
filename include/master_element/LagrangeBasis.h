@@ -14,8 +14,8 @@
 
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Lagrange1D
 {
@@ -27,6 +27,7 @@ public:
 
   double interpolation_weight(double x, unsigned nodeNumber) const;
   double derivative_weight(double x, unsigned nodeNumber) const;
+
 private:
   void set_lagrange_weights();
   Kokkos::View<double*> nodeLocs_;
@@ -36,23 +37,33 @@ private:
 class LagrangeBasis
 {
 public:
-  LagrangeBasis(const std::vector<std::vector<int>>& indicesMap, const std::vector<double>& nodeLocs);
+  LagrangeBasis(
+    const std::vector<std::vector<int>>& indicesMap,
+    const std::vector<double>& nodeLocs);
 
   ~LagrangeBasis();
 
-  Kokkos::View<double**> eval_basis_weights(const double* intgLoc, int nInt) const;
-  Kokkos::View<double**> eval_basis_weights(const Kokkos::View<double**>& intgLoc) const;
-  Kokkos::View<double***> eval_deriv_weights(const double* intgLoc, int nInt) const;
-  Kokkos::View<double***> eval_deriv_weights(const Kokkos::View<double**>& intgLoc) const;
-  const Kokkos::View<double*>& point_interpolation_weights(const double* isoParCoords);
-  const Kokkos::View<double**>& point_derivative_weights(const double* isoParCoords);
+  Kokkos::View<double**>
+  eval_basis_weights(const double* intgLoc, int nInt) const;
+  Kokkos::View<double**>
+  eval_basis_weights(const Kokkos::View<double**>& intgLoc) const;
+  Kokkos::View<double***>
+  eval_deriv_weights(const double* intgLoc, int nInt) const;
+  Kokkos::View<double***>
+  eval_deriv_weights(const Kokkos::View<double**>& intgLoc) const;
+  const Kokkos::View<double*>&
+  point_interpolation_weights(const double* isoParCoords);
+  const Kokkos::View<double**>&
+  point_derivative_weights(const double* isoParCoords);
 
   unsigned order() const { return polyOrder_; }
   unsigned num_nodes() const { return numNodes_; }
 
 private:
-  void fill_interpolation_weights(const double* isoParCoord, double* weights) const;
-  void fill_derivative_weights(const double* isoParCoord, double* weights) const;
+  void
+  fill_interpolation_weights(const double* isoParCoord, double* weights) const;
+  void
+  fill_derivative_weights(const double* isoParCoord, double* weights) const;
 
   const unsigned polyOrder_;
   const Lagrange1D basis1D_;
@@ -65,8 +76,7 @@ private:
   Kokkos::View<double**> derivWeightsAtPoint_;
 };
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

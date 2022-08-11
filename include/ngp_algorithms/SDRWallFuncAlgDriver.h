@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef SDRWALLFUNCALGDRIVER_H
 #define SDRWALLFUNCALGDRIVER_H
 
@@ -20,8 +19,8 @@ namespace nalu {
 /** Wrapper class to handle computation of omega wall parameters
  *
  *. The actual kernels are templated on the face/element topology types, so we
- *. need a driver class to handle synchronization after all the topology-specific
- *. algorithms have had a chance to do their work.
+ *. need a driver class to handle synchronization after all the
+ *topology-specific . algorithms have had a chance to do their work.
  *
  *. \sa SDRWallFuncAlg, SDRLowReWallAlg
  */
@@ -37,8 +36,7 @@ public:
   virtual void post_work() override;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* SDRWALLFUNCALGDRIVER_H */

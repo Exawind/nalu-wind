@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpTypes.h"
@@ -29,8 +28,8 @@ EffDiffFluxCoeffAlg::EffDiffFluxCoeffAlg(
   ScalarFieldType* evisc,
   const double sigmaLam,
   const double sigmaTurb,
-  const bool isTurbulent
-) : Algorithm(realm, part),
+  const bool isTurbulent)
+  : Algorithm(realm, part),
     viscField_(visc),
     visc_(visc->mesh_meta_data_ordinal()),
     tvisc_(tvisc->mesh_meta_data_ordinal()),
@@ -38,7 +37,8 @@ EffDiffFluxCoeffAlg::EffDiffFluxCoeffAlg(
     invSigmaLam_(1.0 / sigmaLam),
     invSigmaTurb_(1.0 / sigmaTurb),
     isTurbulent_(isTurbulent)
-{}
+{
+}
 
 void
 EffDiffFluxCoeffAlg::execute()
@@ -47,9 +47,9 @@ EffDiffFluxCoeffAlg::execute()
 
   const auto& meta = realm_.meta_data();
 
-  stk::mesh::Selector sel = (
-    meta.locally_owned_part() | meta.globally_shared_part())
-    & stk::mesh::selectField(*viscField_);
+  stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part()) &
+    stk::mesh::selectField(*viscField_);
 
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
@@ -64,17 +64,15 @@ EffDiffFluxCoeffAlg::execute()
 
   if (isTurbulent_) {
     nalu_ngp::run_entity_algorithm(
-      "EffDiffFluxCoeffAlg_turbulent",
-      ngpMesh, stk::topology::NODE_RANK, sel,
+      "EffDiffFluxCoeffAlg_turbulent", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
-        evisc.get(meshIdx, 0) = (
-          visc.get(meshIdx, 0) * invSigmaLam +
-          tvisc.get(meshIdx, 0) * invSigmaTurb);
+        evisc.get(meshIdx, 0) =
+          (visc.get(meshIdx, 0) * invSigmaLam +
+           tvisc.get(meshIdx, 0) * invSigmaTurb);
       });
   } else {
     nalu_ngp::run_entity_algorithm(
-      "EffDiffFluxCoeffAlg_laminar",
-      ngpMesh, stk::topology::NODE_RANK, sel,
+      "EffDiffFluxCoeffAlg_laminar", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
         evisc.get(meshIdx, 0) = visc.get(meshIdx, 0) * invSigmaLam;
       });
@@ -84,5 +82,5 @@ EffDiffFluxCoeffAlg::execute()
   evisc.modify_on_device();
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef EDGEKERNELUTILS_H
 #define EDGEKERNELUTILS_H
 
@@ -16,16 +15,15 @@
 namespace sierra {
 namespace nalu {
 
-template<typename T>
-KOKKOS_FORCEINLINE_FUNCTION
-T van_leer(const T& dqm, const T& dqp, const T& eps)
+template <typename T>
+KOKKOS_FORCEINLINE_FUNCTION T
+van_leer(const T& dqm, const T& dqp, const T& eps)
 {
   return (2.0 * (dqm * dqp + stk::math::abs(dqm * dqp))) /
          ((dqm + dqp) * (dqm + dqp) + eps);
 }
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* EDGEKERNELUTILS_H */

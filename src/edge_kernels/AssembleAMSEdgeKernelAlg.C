@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "edge_kernels/AssembleAMSEdgeKernelAlg.h"
 #include "edge_kernels/EdgeKernel.h"
 #include "edge_kernels/MomentumSSTAMSDiffEdgeKernel.h"

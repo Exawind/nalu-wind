@@ -14,8 +14,8 @@ namespace stk {
 namespace mesh {
 class Part;
 class FieldBase;
-}
-}
+} // namespace mesh
+} // namespace stk
 
 namespace sierra {
 namespace nalu {
@@ -26,20 +26,17 @@ class AssembleOversetDecoupledAlgorithm : public OversetConstraintBase
 {
 public:
   AssembleOversetDecoupledAlgorithm(
-    Realm&,
-    stk::mesh::Part*,
-    EquationSystem*,
-    stk::mesh::FieldBase*);
+    Realm&, stk::mesh::Part*, EquationSystem*, stk::mesh::FieldBase*);
 
   AssembleOversetDecoupledAlgorithm() = delete;
-  AssembleOversetDecoupledAlgorithm(const AssembleOversetDecoupledAlgorithm&) = delete;
+  AssembleOversetDecoupledAlgorithm(const AssembleOversetDecoupledAlgorithm&) =
+    delete;
   virtual ~AssembleOversetDecoupledAlgorithm() = default;
 
   virtual void execute() override;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ASSEMBLEOVERSETDECOUPLEDALGORITHM_H */

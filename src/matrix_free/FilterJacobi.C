@@ -101,13 +101,16 @@ FilterJacobiOperator<p>::apply(
   const mv_type& x, mv_type& y, Teuchos::ETransp, double, double) const
 {
   element_multiply(
-    owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadOnly), x.getLocalViewDevice(Tpetra::Access::ReadOnly),
+    owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadOnly),
+    x.getLocalViewDevice(Tpetra::Access::ReadOnly),
     y.getLocalViewDevice(Tpetra::Access::ReadWrite));
   for (int n = 1; n < num_sweeps; ++n) {
     op->apply(y, cached_mv);
     update_jacobi_sweep(
-      owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadOnly), cached_mv.getLocalViewDevice(Tpetra::Access::ReadOnly),
-      x.getLocalViewDevice(Tpetra::Access::ReadOnly), y.getLocalViewDevice(Tpetra::Access::ReadWrite));
+      owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      cached_mv.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      x.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      y.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
 }
 
@@ -116,7 +119,9 @@ void
 FilterJacobiOperator<p>::compute_diagonal(const_scalar_view<p> vols)
 {
   shared_diagonal.putScalar(0.);
-  filter_diagonal<p>(elem_offsets, vols, shared_diagonal.getLocalViewDevice(Tpetra::Access::ReadWrite));
+  filter_diagonal<p>(
+    elem_offsets, vols,
+    shared_diagonal.getLocalViewDevice(Tpetra::Access::ReadWrite));
   owned_diagonal.putScalar(0.);
   owned_diagonal.doExport(shared_diagonal, exporter, Tpetra::ADD);
   reciprocal(owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadWrite));

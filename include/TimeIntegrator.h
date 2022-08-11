@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef TimeIntegrator_h
 #define TimeIntegrator_h
 
@@ -17,10 +15,12 @@
 #include <string>
 #include <memory>
 
-namespace YAML { class Node; }
+namespace YAML {
+class Node;
+}
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 class Simulation;
@@ -29,18 +29,17 @@ class ExtOverset;
 class TimeIntegrator
 {
 public:
-
   TimeIntegrator();
   TimeIntegrator(Simulation* sim);
   ~TimeIntegrator();
 
-  void load(const YAML::Node & node) ;
+  void load(const YAML::Node& node);
 
   void breadboard();
 
   void initialize();
-  Simulation *root();
-  Simulation *parent();
+  Simulation* root();
+  Simulation* parent();
 
   void integrate_realm();
   void provide_mean_norm();
@@ -75,8 +74,7 @@ public:
 
   std::vector<Realm*> realmVec_;
 
-  double get_time_step(
-  const NaluState &theState = NALU_STATE_N) const;
+  double get_time_step(const NaluState& theState = NALU_STATE_N) const;
   double get_current_time() const;
   double get_gamma1() const;
   double get_gamma2() const;
@@ -93,6 +91,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

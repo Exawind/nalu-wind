@@ -7,22 +7,21 @@
 // for more details.
 //
 
-
-
 #ifndef PecletFunction_h
 #define PecletFunction_h
 
 #include "KokkosInterface.h"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 /** Non-templated empty base class for storing pointers to templated instances
  */
 class PecletFunctionBase
-{};
+{
+};
 
-template<typename T>
+template <typename T>
 class PecletFunction : public PecletFunctionBase
 {
 public:
@@ -31,7 +30,7 @@ public:
   KOKKOS_FUNCTION virtual T execute(const T pecletNumber) = 0;
 };
 
-template<typename T>
+template <typename T>
 class ClassicPecletFunction : public PecletFunction<T>
 {
 public:
@@ -43,11 +42,11 @@ public:
   T hf_;
 };
 
-template<typename T>
+template <typename T>
 class TanhFunction : public PecletFunction<T>
 {
 public:
-  KOKKOS_FUNCTION TanhFunction( T c1, T c2 );
+  KOKKOS_FUNCTION TanhFunction(T c1, T c2);
   KOKKOS_DEFAULTED_FUNCTION virtual ~TanhFunction() = default;
   KOKKOS_FUNCTION T execute(const T indVar);
 
@@ -56,6 +55,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

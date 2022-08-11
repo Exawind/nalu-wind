@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef NGPREDUCEUTILS_H
 #define NGPREDUCEUTILS_H
 
@@ -25,26 +24,25 @@ namespace nalu_ngp {
  *  Useful when you want to accumulate multiple quantities, e.g., computing an
  *  area-weighted average.
  */
-template<typename ScalarType, int N>
+template <typename ScalarType, int N>
 struct NgpReduceArray
 {
   ScalarType array_[N];
 
   KOKKOS_INLINE_FUNCTION
-  NgpReduceArray()
-  {}
+  NgpReduceArray() {}
 
   KOKKOS_INLINE_FUNCTION
   NgpReduceArray(ScalarType val)
   {
-    for (int i=0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
       array_[i] = val;
   }
 
   KOKKOS_INLINE_FUNCTION
   NgpReduceArray(const NgpReduceArray& rhs)
   {
-    for (int i=0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
       array_[i] = rhs.array_[i];
   }
 
@@ -54,7 +52,7 @@ struct NgpReduceArray
   KOKKOS_INLINE_FUNCTION
   NgpReduceArray& operator=(const NgpReduceArray& rhs)
   {
-    for (int i=0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
       array_[i] = rhs.array_[i];
     return *this;
   }
@@ -62,7 +60,7 @@ struct NgpReduceArray
   KOKKOS_INLINE_FUNCTION
   NgpReduceArray& operator=(const volatile NgpReduceArray& rhs)
   {
-    for (int i=0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
       array_[i] = rhs.array_[i];
     return *this;
   }
@@ -70,15 +68,16 @@ struct NgpReduceArray
   KOKKOS_INLINE_FUNCTION
   volatile NgpReduceArray& operator=(const NgpReduceArray& rhs) volatile
   {
-    for (int i=0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
       array_[i] = rhs.array_[i];
     return *this;
   }
 
   KOKKOS_INLINE_FUNCTION
-  volatile NgpReduceArray& operator=(const volatile NgpReduceArray& rhs) volatile
+  volatile NgpReduceArray&
+  operator=(const volatile NgpReduceArray& rhs) volatile
   {
-    for (int i=0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
       array_[i] = rhs.array_[i];
     return *this;
   }
@@ -86,28 +85,28 @@ struct NgpReduceArray
   KOKKOS_INLINE_FUNCTION
   void operator+=(const NgpReduceArray& rhs)
   {
-    for (int i=0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
       array_[i] += rhs.array_[i];
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator+=(const volatile NgpReduceArray& rhs) volatile
   {
-    for (int i=0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
       array_[i] += rhs.array_[i];
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator*=(const NgpReduceArray& rhs)
   {
-    for (int i=0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
       array_[i] *= rhs.array_[i];
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator*=(const volatile NgpReduceArray& rhs) volatile
   {
-    for (int i=0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
       array_[i] *= rhs.array_[i];
   }
 };
@@ -126,96 +125,113 @@ using ArraySimdDouble3 = NgpReduceArray<DoubleType, 3>;
  *  don't want to accumulate bad data.
  */
 KOKKOS_INLINE_FUNCTION
-void simd_reduce_sum(double& out, const DoubleType& inp, int len)
+void
+simd_reduce_sum(double& out, const DoubleType& inp, int len)
 {
-  for (int i=0; i < len; ++i)
+  for (int i = 0; i < len; ++i)
     out += stk::simd::get_data(inp, i);
 }
 
-}  // nalu_ngp
-}  // nalu
-}  // sierra
+} // namespace nalu_ngp
+} // namespace nalu
+} // namespace sierra
 
 namespace Kokkos {
 
-template<>
+template <>
 struct reduction_identity<sierra::nalu::DoubleType>
 {
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::DoubleType sum()
-  { return DoubleType(0.0); }
+  static sierra::nalu::DoubleType sum() { return DoubleType(0.0); }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::DoubleType prod()
-  { return DoubleType(1.0); }
+  static sierra::nalu::DoubleType prod() { return DoubleType(1.0); }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::DoubleType max()
-  { return DoubleType(-DBL_MAX); }
+  static sierra::nalu::DoubleType max() { return DoubleType(-DBL_MAX); }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::DoubleType min()
-  { return DoubleType(DBL_MAX); }
+  static sierra::nalu::DoubleType min() { return DoubleType(DBL_MAX); }
 };
 
-template<>
+template <>
 struct reduction_identity<sierra::nalu::nalu_ngp::ArrayDbl2>
 {
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::nalu::nalu_ngp::ArrayDbl2 sum()
-  { return sierra::nalu::nalu_ngp::ArrayDbl2(0.0); }
+  {
+    return sierra::nalu::nalu_ngp::ArrayDbl2(0.0);
+  }
 
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::nalu::nalu_ngp::ArrayDbl2 prod()
-  { return sierra::nalu::nalu_ngp::ArrayDbl2(1.0); }
+  {
+    return sierra::nalu::nalu_ngp::ArrayDbl2(1.0);
+  }
 };
 
-template<>
+template <>
 struct reduction_identity<sierra::nalu::nalu_ngp::ArrayDbl3>
 {
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::nalu::nalu_ngp::ArrayDbl3 sum()
-  { return sierra::nalu::nalu_ngp::ArrayDbl3(0.0); }
+  {
+    return sierra::nalu::nalu_ngp::ArrayDbl3(0.0);
+  }
 
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::nalu::nalu_ngp::ArrayDbl3 prod()
-  { return sierra::nalu::nalu_ngp::ArrayDbl3(1.0); }
+  {
+    return sierra::nalu::nalu_ngp::ArrayDbl3(1.0);
+  }
 };
 
-template<>
+template <>
 struct reduction_identity<sierra::nalu::nalu_ngp::ArraySimdDouble2>
 {
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::nalu::nalu_ngp::ArraySimdDouble2 sum()
-  { return sierra::nalu::nalu_ngp::ArraySimdDouble2(DoubleType(0.0)); }
+  {
+    return sierra::nalu::nalu_ngp::ArraySimdDouble2(DoubleType(0.0));
+  }
 
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::nalu::nalu_ngp::ArraySimdDouble2 prod()
-  { return sierra::nalu::nalu_ngp::ArraySimdDouble2(DoubleType(1.0)); }
+  {
+    return sierra::nalu::nalu_ngp::ArraySimdDouble2(DoubleType(1.0));
+  }
 };
 
-template<>
+template <>
 struct reduction_identity<sierra::nalu::nalu_ngp::ArraySimdDouble3>
 {
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::nalu::nalu_ngp::ArraySimdDouble3 sum()
-  { return sierra::nalu::nalu_ngp::ArraySimdDouble3(DoubleType(0.0)); }
+  {
+    return sierra::nalu::nalu_ngp::ArraySimdDouble3(DoubleType(0.0));
+  }
 
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::nalu::nalu_ngp::ArraySimdDouble3 prod()
-  { return sierra::nalu::nalu_ngp::ArraySimdDouble3(DoubleType(1.0)); }
+  {
+    return sierra::nalu::nalu_ngp::ArraySimdDouble3(DoubleType(1.0));
+  }
 };
 
-template<>
+template <>
 struct reduction_identity<sierra::nalu::nalu_ngp::ArrayInt2>
 {
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::nalu::nalu_ngp::ArrayInt2 sum()
-  { return sierra::nalu::nalu_ngp::ArrayInt2(0); }
+  {
+    return sierra::nalu::nalu_ngp::ArrayInt2(0);
+  }
 
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::nalu::nalu_ngp::ArrayInt2 prod()
-  { return sierra::nalu::nalu_ngp::ArrayInt2(1); }
+  {
+    return sierra::nalu::nalu_ngp::ArrayInt2(1);
+  }
 };
 
 } // namespace Kokkos

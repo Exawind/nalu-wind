@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 // nalu
 #include <AssembleFaceElemSolverAlgorithm.h>
 #include <EquationSystem.h>
@@ -40,8 +38,8 @@
 #include <ScratchViews.h>
 #include <CopyAndInterleave.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -52,9 +50,9 @@ namespace nalu{
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 AssembleFaceElemSolverAlgorithm::AssembleFaceElemSolverAlgorithm(
-  Realm &realm,
-  stk::mesh::Part *part,
-  EquationSystem *eqSystem,
+  Realm& realm,
+  stk::mesh::Part* part,
+  EquationSystem* eqSystem,
   unsigned nodesPerFace,
   unsigned nodesPerElem)
   : SolverAlgorithm(realm, part, eqSystem),
@@ -63,11 +61,11 @@ AssembleFaceElemSolverAlgorithm::AssembleFaceElemSolverAlgorithm(
     numDof_(eqSystem->linsys_->numDof()),
     nodesPerFace_(nodesPerFace),
     nodesPerElem_(nodesPerElem),
-    rhsSize_(nodesPerFace*eqSystem->linsys_->numDof())
+    rhsSize_(nodesPerFace * eqSystem->linsys_->numDof())
 {
   if (eqSystem->dofName_ != "pressure") {
-    diagRelaxFactor_ = realm.solutionOptions_->get_relaxation_factor(
-      eqSystem->dofName_);
+    diagRelaxFactor_ =
+      realm.solutionOptions_->get_relaxation_factor(eqSystem->dofName_);
   }
 }
 
@@ -98,37 +96,40 @@ AssembleFaceElemSolverAlgorithm::execute()
   const unsigned numDof = numDof_;
   double diagRelaxFactor = diagRelaxFactor_;
 
-  run_face_elem_algorithm(realm_.bulk_data(),
-    KOKKOS_LAMBDA(sierra::nalu::SharedMemData_FaceElem<DeviceTeamHandleType,DeviceShmem> &smdata)
-    {
-        set_vals(smdata.simdrhs, DoubleType(0.0));
-        set_vals(smdata.simdlhs, DoubleType(0.0));
+  run_face_elem_algorithm(
+    realm_.bulk_data(),
+    KOKKOS_LAMBDA(
+      sierra::nalu::SharedMemData_FaceElem<DeviceTeamHandleType, DeviceShmem> &
+      smdata) {
+      set_vals(smdata.simdrhs, DoubleType(0.0));
+      set_vals(smdata.simdlhs, DoubleType(0.0));
 
-        for (size_t i=0; i<numKernels; ++i) {
-          Kernel* kernel = ngpKernels(i);
-          kernel->execute(
-            smdata.simdlhs, smdata.simdrhs, smdata.simdFaceViews,
-            smdata.simdElemViews, smdata.elemFaceOrdinal);
-        }
+      for (size_t i = 0; i < numKernels; ++i) {
+        Kernel* kernel = ngpKernels(i);
+        kernel->execute(
+          smdata.simdlhs, smdata.simdrhs, smdata.simdFaceViews,
+          smdata.simdElemViews, smdata.elemFaceOrdinal);
+      }
 
 #ifdef KOKKOS_ENABLE_CUDA
-        const int simdIndex = 0;
+      const int simdIndex = 0;
 #else
-        for(int simdIndex=0; simdIndex<smdata.numSimdFaces; ++simdIndex)
+      for (int simdIndex = 0; simdIndex < smdata.numSimdFaces; ++simdIndex)
 #endif
-        {
-          extract_vector_lane(smdata.simdrhs, simdIndex, smdata.rhs);
-          extract_vector_lane(smdata.simdlhs, simdIndex, smdata.lhs);
-          for (unsigned ir=0; ir < nodesPerEntity*numDof; ++ir)
-            smdata.lhs(ir, ir) /= diagRelaxFactor;
+      {
+        extract_vector_lane(smdata.simdrhs, simdIndex, smdata.rhs);
+        extract_vector_lane(smdata.simdlhs, simdIndex, smdata.lhs);
+        for (unsigned ir = 0; ir < nodesPerEntity * numDof; ++ir)
+          smdata.lhs(ir, ir) /= diagRelaxFactor;
 
-          coeffApplier(nodesPerEntity, smdata.ngpConnectedNodes[simdIndex],
-                      smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
-        }
+        coeffApplier(
+          nodesPerEntity, smdata.ngpConnectedNodes[simdIndex],
+          smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs,
+          __FILE__);
+      }
     });
-    coeffApplier.free_coeff_applier();
+  coeffApplier.free_coeff_applier();
 }
 
 } // namespace nalu
-} // namespace Sierra
-
+} // namespace sierra

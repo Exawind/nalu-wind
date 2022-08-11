@@ -104,10 +104,12 @@ public:
 TEST_F(FilterDiagonal, diagonal_executes)
 {
   node_offset_view dirichlet_offsets("empty_dirichlet", 1);
-  decltype(rhs.getLocalViewDevice(Tpetra::Access::ReadWrite)) shared_rhs("empty_rhs", 1, 3);
+  decltype(rhs.getLocalViewDevice(Tpetra::Access::ReadWrite)) shared_rhs(
+    "empty_rhs", 1, 3);
 
   rhs.putScalar(0.);
-  filter_diagonal<order>(offsets, volume_metric, rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
+  filter_diagonal<order>(
+    offsets, volume_metric, rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 
 } // namespace matrix_free

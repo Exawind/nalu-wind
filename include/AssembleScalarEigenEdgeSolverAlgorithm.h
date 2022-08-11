@@ -7,40 +7,38 @@
 // for more details.
 //
 
-
-
 #ifndef AssembleScalarEigenEdgeSolverAlgorithm_h
 #define AssembleScalarEigenEdgeSolverAlgorithm_h
 
-#include<SolverAlgorithm.h>
-#include<FieldTypeDef.h>
-#include<EigenDecomposition.h>
+#include <SolverAlgorithm.h>
+#include <FieldTypeDef.h>
+#include <EigenDecomposition.h>
 
 namespace stk {
 namespace mesh {
 class Part;
 }
-}
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
-template <typename T> class PecletFunction;
+template <typename T>
+class PecletFunction;
 
 class AssembleScalarEigenEdgeSolverAlgorithm : public SolverAlgorithm
 {
 public:
-
   AssembleScalarEigenEdgeSolverAlgorithm(
-    Realm &realm,
-    stk::mesh::Part *part,
-    EquationSystem *eqSystem,
-    ScalarFieldType *scalarQ,
-    VectorFieldType *dqdx,
-    ScalarFieldType *thermalCond,
-    ScalarFieldType *specHeat,
-    ScalarFieldType *turbViscosity,
+    Realm& realm,
+    stk::mesh::Part* part,
+    EquationSystem* eqSystem,
+    ScalarFieldType* scalarQ,
+    VectorFieldType* dqdx,
+    ScalarFieldType* thermalCond,
+    ScalarFieldType* specHeat,
+    ScalarFieldType* turbViscosity,
     const double turbSigma);
 
   virtual ~AssembleScalarEigenEdgeSolverAlgorithm();
@@ -51,30 +49,27 @@ public:
   void perturb(double (&D)[3][3]);
   void sort(const double (&D)[3][3]);
 
-  double van_leer(
-    const double &dqm,
-    const double &dqp,
-    const double &small);
+  double van_leer(const double& dqm, const double& dqp, const double& small);
 
   const bool meshMotion_;
   const double includeDivU_;
   const double turbSigma_;
 
-  ScalarFieldType *scalarQ_;
-  VectorFieldType *dqdx_;
-  ScalarFieldType *thermalCond_;
-  ScalarFieldType *specHeat_;
-  ScalarFieldType *turbViscosity_;
-  VectorFieldType *velocityRTM_;
-  VectorFieldType *coordinates_;
-  ScalarFieldType *density_;
-  ScalarFieldType *massFlowRate_;
-  VectorFieldType *edgeAreaVec_;
+  ScalarFieldType* scalarQ_;
+  VectorFieldType* dqdx_;
+  ScalarFieldType* thermalCond_;
+  ScalarFieldType* specHeat_;
+  ScalarFieldType* turbViscosity_;
+  VectorFieldType* velocityRTM_;
+  VectorFieldType* coordinates_;
+  ScalarFieldType* density_;
+  ScalarFieldType* massFlowRate_;
+  VectorFieldType* edgeAreaVec_;
 
   // extra for GGDH
-  ScalarFieldType *turbKe_;
-  VectorFieldType *velocity_;
-  GenericFieldType *dudx_;
+  ScalarFieldType* turbKe_;
+  VectorFieldType* velocity_;
+  GenericFieldType* dudx_;
 
   // peclect function specifics
   PecletFunction<double>* pecletFunction_;
@@ -96,6 +91,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

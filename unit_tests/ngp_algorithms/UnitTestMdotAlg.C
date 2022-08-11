@@ -245,5 +245,3 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_open_edge)
 
   EXPECT_NEAR(mdotDriver.mdot_open(), 1.0, 1.0e-15);
 }
-
-

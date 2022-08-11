@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "edge_kernels/ContinuityOpenEdgeKernel.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
@@ -38,7 +37,8 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::ContinuityOpenEdgeKernel(
     density_(get_field_ordinal(meta, "density")),
     exposedAreaVec_(
       get_field_ordinal(meta, "exposed_area_vector", meta.side_rank())),
-    pressureBC_(get_field_ordinal(meta,
+    pressureBC_(get_field_ordinal(
+      meta,
       solnOpts->activateOpenMdotCorrection_ ? "pressure" : "pressure_bc")),
     Gpdx_(get_field_ordinal(meta, "dpdx")),
     Udiag_(get_field_ordinal(meta, "momentum_diag")),
@@ -53,7 +53,8 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::ContinuityOpenEdgeKernel(
   faceData.add_cvfem_face_me(meFC_);
   elemData.add_cvfem_surface_me(meSCS_);
 
-  faceData.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  faceData.add_face_field(
+    exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceData.add_face_field(dynPress_, BcAlgTraits::numFaceIp_);
 
   faceData.add_gathered_nodal_field(velocityRTM_, BcAlgTraits::nDim_);
@@ -62,19 +63,24 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::ContinuityOpenEdgeKernel(
   faceData.add_gathered_nodal_field(Udiag_, 1);
   faceData.add_gathered_nodal_field(Gpdx_, BcAlgTraits::nDim_);
 
-  elemData.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  elemData.add_coordinates_field(
+    coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
   elemData.add_gathered_nodal_field(pressure_, 1);
 }
 
 template <typename BcAlgTraits>
-void ContinuityOpenEdgeKernel<BcAlgTraits>::setup(const TimeIntegrator& timeIntegrator)
+void
+ContinuityOpenEdgeKernel<BcAlgTraits>::setup(
+  const TimeIntegrator& timeIntegrator)
 {
   const double dt = timeIntegrator.get_time_step();
   const double gamma1 = timeIntegrator.get_gamma1();
   tauScale_ = dt / gamma1;
 
   // FIXME: Remove dependence on SolutionOptions
-  mdotCorr_ = solnOpts_->activateOpenMdotCorrection_ ? solnOpts_->mdotAlgOpenCorrection_ : 0.0;
+  mdotCorr_ = solnOpts_->activateOpenMdotCorrection_
+                ? solnOpts_->mdotAlgOpenCorrection_
+                : 0.0;
 }
 
 template <typename BcAlgTraits>
@@ -94,21 +100,22 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::execute(
   const auto& v_Gpdx = faceScratchViews.get_scratch_view_2D(Gpdx_);
   const auto& v_dyn_press = faceScratchViews.get_scratch_view_1D(dynPress_);
 
-
   const auto& v_pressure = elemScratchViews.get_scratch_view_1D(pressure_);
   const auto& v_coord = elemScratchViews.get_scratch_view_2D(coordinates_);
 
   for (int ip = 0; ip < BcAlgTraits::nodesPerFace_; ++ip) {
     // Mapping of the nodes to the connected element
-    const int nodeR = meSCS_->side_node_ordinals(elemFaceOrdinal)[ip]; // nearest node
-    const int nodeL = meSCS_->opposingNodes(elemFaceOrdinal, ip); // opposing node
+    const int nodeR =
+      meSCS_->side_node_ordinals(elemFaceOrdinal)[ip]; // nearest node
+    const int nodeL =
+      meSCS_->opposingNodes(elemFaceOrdinal, ip); // opposing node
 
     const DoubleType projTimeScale = 1.0 / v_udiag(ip);
     const DoubleType pressureIp = 0.5 * (v_pressure(nodeR) + v_pressure(nodeL));
 
     DoubleType asq = 0.0;
     DoubleType axdx = 0.0;
-    for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+    for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
       const DoubleType coordIp = 0.5 * (v_coord(nodeR, d) + v_coord(nodeL, d));
       const DoubleType dxj = v_coord(nodeR, d) - coordIp;
       asq += v_area(ip, d) * v_area(ip, d);
@@ -121,18 +128,21 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::execute(
       -projTimeScale * (pbc - pressureIp) * asq * inv_axdx * pstabFac_ -
       mdotCorr_;
 
-    for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+    for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
       const DoubleType coordIp = 0.5 * (v_coord(nodeR, d) + v_coord(nodeL, d));
       const DoubleType axj = v_area(ip, d);
       const DoubleType dxj = v_coord(nodeR, d) - coordIp;
       const DoubleType kxj = axj - asq * inv_axdx * dxj;
       const DoubleType Gjp = v_Gpdx(ip, d);
 
-      tmdot += (v_density(ip) * v_velocity(ip, d) + projTimeScale * Gjp * pstabFac_) * axj
-        - projTimeScale * kxj * Gjp * nocFac_ * pstabFac_;
+      tmdot +=
+        (v_density(ip) * v_velocity(ip, d) + projTimeScale * Gjp * pstabFac_) *
+          axj -
+        projTimeScale * kxj * Gjp * nocFac_ * pstabFac_;
     }
 
-    const DoubleType lhsfac = 0.5 * asq * inv_axdx * pstabFac_ * projTimeScale / tauScale_;
+    const DoubleType lhsfac =
+      0.5 * asq * inv_axdx * pstabFac_ * projTimeScale / tauScale_;
 
     rhs(nodeR) -= tmdot / tauScale_;
     lhs(nodeR, nodeR) += lhsfac;
@@ -142,5 +152,5 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(ContinuityOpenEdgeKernel)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

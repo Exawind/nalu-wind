@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef PolynomialPropertyEvaluator_h
 #define PolynomialPropertyEvaluator_h
 
@@ -19,43 +17,40 @@
 #include <map>
 #include <vector>
 
-namespace stk { 
-namespace mesh { 
-struct Entity; 
-} 
+namespace stk {
+namespace mesh {
+struct Entity;
 }
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class ReferencePropertyData;
 
 class PolynomialPropertyEvaluator : public PropertyEvaluator
 {
 public:
-
   PolynomialPropertyEvaluator(
-      const std::map<std::string, ReferencePropertyData*> &referencePropertyDataMap,
-      const std::map<std::string, std::vector<double> > &lowPolynomialCoeffsMap,
-      const std::map<std::string, std::vector<double> > &highPolynomialCoeffsMap,
-      double universalR);
+    const std::map<std::string, ReferencePropertyData*>&
+      referencePropertyDataMap,
+    const std::map<std::string, std::vector<double>>& lowPolynomialCoeffsMap,
+    const std::map<std::string, std::vector<double>>& highPolynomialCoeffsMap,
+    double universalR);
   virtual ~PolynomialPropertyEvaluator();
-  
-  virtual double execute(
-      double *indVarList,
-      stk::mesh::Entity node) = 0;
-  
+
+  virtual double execute(double* indVarList, stk::mesh::Entity node) = 0;
+
   const double universalR_;
   const size_t ykVecSize_;
   const double TlowHigh_;
 
   std::vector<double> mw_;
-  std::vector<std::vector<double> > lowPolynomialCoeffs_;
-  std::vector<std::vector<double> > highPolynomialCoeffs_;
-
+  std::vector<std::vector<double>> lowPolynomialCoeffs_;
+  std::vector<std::vector<double>> highPolynomialCoeffs_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

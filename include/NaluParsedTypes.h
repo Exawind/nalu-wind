@@ -13,45 +13,42 @@
 #include <string>
 #include <vector>
 
-namespace YAML { class Node; }
+namespace YAML {
+class Node;
+}
 
 namespace sierra {
 namespace nalu {
 
 // our data types
-struct Velocity {
+struct Velocity
+{
   double ux_, uy_, uz_;
-  Velocity()
-    : ux_(0.0), uy_(0.0), uz_(0.0)
-  {}
+  Velocity() : ux_(0.0), uy_(0.0), uz_(0.0) {}
 };
 
-struct Coordinates {
+struct Coordinates
+{
   double x_, y_, z_;
-  Coordinates()
-    : x_(0.0), y_(0.0), z_(0.0)
-  {}
+  Coordinates() : x_(0.0), y_(0.0), z_(0.0) {}
 };
 
-struct Pressure {
+struct Pressure
+{
   double pressure_;
-  Pressure()
-    : pressure_(0.0)
-  {}
+  Pressure() : pressure_(0.0) {}
 };
 
-struct TurbKinEnergy {
+struct TurbKinEnergy
+{
   double turbKinEnergy_;
-  TurbKinEnergy()
-    : turbKinEnergy_(0.0)
-  {}
+  TurbKinEnergy() : turbKinEnergy_(0.0) {}
 };
 
-struct SpecDissRate {
+struct SpecDissRate
+{
   double specDissRate_;
-  SpecDissRate()
-    : specDissRate_(0.0)
-  {}
+  SpecDissRate() : specDissRate_(0.0) {}
 };
 
 struct TotDissRate
@@ -60,69 +57,62 @@ struct TotDissRate
   TotDissRate() : totDissRate_(0.0) {}
 };
 
-struct GammaInf {
+struct GammaInf
+{
   double gamma_;
-  GammaInf()
-    : gamma_(1.0)
-  {}
+  GammaInf() : gamma_(1.0) {}
 };
 
-struct GammaOpen {
+struct GammaOpen
+{
   double gamma_;
-  GammaOpen()
-    : gamma_(1.0)
-  {}
+  GammaOpen() : gamma_(1.0) {}
 };
 
-struct Temperature {
+struct Temperature
+{
   double temperature_;
-  Temperature()
-    : temperature_(0.0)
-  {}
+  Temperature() : temperature_(0.0) {}
 };
 
-struct MixtureFraction {
+struct MixtureFraction
+{
   double mixFrac_;
-  MixtureFraction()
-    : mixFrac_(0.0)
-  {}
+  MixtureFraction() : mixFrac_(0.0) {}
 };
 
-struct MassFraction {
+struct MassFraction
+{
   std::vector<double> massFraction_;
-  MassFraction()
-  {}
+  MassFraction() {}
 };
 
-struct ReferenceTemperature {
+struct ReferenceTemperature
+{
   double referenceTemperature_;
-  ReferenceTemperature()
-    : referenceTemperature_(298.0)
-  {}
+  ReferenceTemperature() : referenceTemperature_(298.0) {}
 };
 
-struct NormalHeatFlux {
+struct NormalHeatFlux
+{
   double qn_;
-  NormalHeatFlux()
-    : qn_(0.0)
-  {}
+  NormalHeatFlux() : qn_(0.0) {}
 };
 
-struct NormalTemperatureGradient {
+struct NormalTemperatureGradient
+{
   double tempGradN_;
-  NormalTemperatureGradient()
-    : tempGradN_(0.0)
-  {}
+  NormalTemperatureGradient() : tempGradN_(0.0) {}
 };
 
-struct RoughnessHeight {
+struct RoughnessHeight
+{
   double z0_;
-  RoughnessHeight()
-    :  z0_(0.1)
-  {}
+  RoughnessHeight() : z0_(0.1) {}
 };
 
-struct MasterSlave {
+struct MasterSlave
+{
   std::string master_;
   std::string slave_;
   MasterSlave() {}
@@ -140,8 +130,7 @@ struct NonConformalBoundaryConditionData;
 class PostProcessingData;
 struct UserFunctionInitialConditionData;
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NALUPARSEDTYPES_H */

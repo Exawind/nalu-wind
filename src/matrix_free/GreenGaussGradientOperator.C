@@ -56,8 +56,8 @@ GradientResidualOperator<p>::compute(mv_type& owned_rhs)
     owned_rhs.putScalar(0.);
     gradient_residual<p>(
       elem_offsets_, residual_fields_.areas, residual_fields_.vols,
-      residual_fields_.q, residual_fields_.dqdx, owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite),
-      false);
+      residual_fields_.q, residual_fields_.dqdx,
+      owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite), false);
 
     if (face_bc_active_) {
       gradient_boundary_closure<p>(
@@ -100,7 +100,8 @@ GradientLinearizedResidualOperator<p>::apply(
     cached_rhs_.putScalar(0.);
 
     filter_linearized_residual<p>(
-      elem_offsets_, volumes_, cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite),
+      elem_offsets_, volumes_,
+      cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite),
       cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
 
     owned_rhs.putScalar(0.);
@@ -111,7 +112,8 @@ GradientLinearizedResidualOperator<p>::apply(
   } else {
     owned_rhs.putScalar(0.);
     filter_linearized_residual<p>(
-      elem_offsets_, volumes_, owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      elem_offsets_, volumes_,
+      owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly),
       owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
 }

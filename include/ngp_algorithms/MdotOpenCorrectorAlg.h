@@ -19,7 +19,7 @@ namespace nalu {
 
 class MdotAlgDriver;
 
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 class MdotOpenCorrectorAlg : public Algorithm
 {
 public:
@@ -32,11 +32,10 @@ public:
 private:
   MdotAlgDriver& mdotDriver_;
 
-  const unsigned openMassFlowRate_ {stk::mesh::InvalidOrdinal};
+  const unsigned openMassFlowRate_{stk::mesh::InvalidOrdinal};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MDOTOPENCORRECTORALG_H */

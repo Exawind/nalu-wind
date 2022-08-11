@@ -24,7 +24,6 @@ namespace nalu {
 class SolutionOptions;
 class TimeIntegrator;
 
-
 template <typename BcAlgTraits>
 class MomentumOpenEdgeKernel
   : public NGPKernel<MomentumOpenEdgeKernel<BcAlgTraits>>
@@ -55,7 +54,6 @@ public:
     int);
 
 private:
-
   const unsigned coordinates_{stk::mesh::InvalidOrdinal};
   const unsigned dudx_{stk::mesh::InvalidOrdinal};
   const unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
@@ -67,7 +65,7 @@ private:
   const double includeDivU_;
   const double nfEntrain_;
   const EntrainmentMethod entrain_;
-  const TurbulenceModel turbModel_; 
+  const TurbulenceModel turbModel_;
 
   MasterElement* meFC_{nullptr};
   MasterElement* meSCS_{nullptr};

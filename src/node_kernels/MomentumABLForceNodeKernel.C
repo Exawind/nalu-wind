@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "node_kernels/MomentumABLForceNodeKernel.h"
 #include "wind_energy/ABLForcingAlgorithm.h"
 #include "Realm.h"
@@ -21,15 +20,18 @@ namespace sierra {
 namespace nalu {
 
 MomentumABLForceNodeKernel::MomentumABLForceNodeKernel(
-  const stk::mesh::BulkData& bulk,
-  const SolutionOptions& solnOpts
-) : NGPNodeKernel<MomentumABLForceNodeKernel>(),
-    coordinatesID_(get_field_ordinal(bulk.mesh_meta_data(), solnOpts.get_coordinates_name())),
-    dualNodalVolumeID_(get_field_ordinal(bulk.mesh_meta_data(), "dual_nodal_volume")),
+  const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts)
+  : NGPNodeKernel<MomentumABLForceNodeKernel>(),
+    coordinatesID_(get_field_ordinal(
+      bulk.mesh_meta_data(), solnOpts.get_coordinates_name())),
+    dualNodalVolumeID_(
+      get_field_ordinal(bulk.mesh_meta_data(), "dual_nodal_volume")),
     nDim_(bulk.mesh_meta_data().spatial_dimension())
-{}
+{
+}
 
-void MomentumABLForceNodeKernel::setup(Realm& realm)
+void
+MomentumABLForceNodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
   coordinates_ = fieldMgr.get_field<double>(coordinatesID_);
@@ -38,7 +40,8 @@ void MomentumABLForceNodeKernel::setup(Realm& realm)
   ablSrc_ = realm.ablForcingAlg_->velocity_source_interpolator();
 }
 
-void MomentumABLForceNodeKernel::execute(
+void
+MomentumABLForceNodeKernel::execute(
   NodeKernelTraits::LhsType&,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
@@ -49,9 +52,9 @@ void MomentumABLForceNodeKernel::execute(
 
   ablSrc_(coordinates_.get(node, nDim_ - 1), momSrc);
 
-  for (int i=0; i < nDim_; ++i)
+  for (int i = 0; i < nDim_; ++i)
     rhs(i) += dualVol * momSrc[i];
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef PeriodicManager_h
 #define PeriodicManager_h
 
@@ -36,18 +34,17 @@ namespace nalu {
 
 class Realm;
 
-typedef stk::search::IdentProc<stk::mesh::EntityKey,int> theEntityKey;
+typedef stk::search::IdentProc<stk::mesh::EntityKey, int> theEntityKey;
 typedef stk::search::Point<double> Point;
 typedef stk::search::Sphere<double> Sphere;
-typedef std::pair<Sphere,theEntityKey> sphereBoundingBox;
+typedef std::pair<Sphere, theEntityKey> sphereBoundingBox;
 
-class PeriodicManager {
+class PeriodicManager
+{
 
- public:
-
+public:
   // constructor and destructor
-  PeriodicManager(
-    Realm & realm);
+  PeriodicManager(Realm& realm);
 
   ~PeriodicManager();
 
@@ -56,37 +53,35 @@ class PeriodicManager {
   void add_periodic_pair(
     stk::mesh::Part* meshPartsMaster,
     stk::mesh::Part* meshPartsSlave,
-    const double &userSearchTolerance,
-    const std::string &searchMethodName);
+    const double& userSearchTolerance,
+    const std::string& searchMethodName);
 
   void build_constraints();
 
   // holder for master += slave; slave = master
   void apply_constraints(
-    stk::mesh::FieldBase *,
-    const unsigned &sizeOfField,
-    const bool &bypassFieldCheck,
-    const bool &addSlaves = true,
-    const bool &setSlaves = true);
+    stk::mesh::FieldBase*,
+    const unsigned& sizeOfField,
+    const bool& bypassFieldCheck,
+    const bool& addSlaves = true,
+    const bool& setSlaves = true);
 
   void ngp_apply_constraints(
-    stk::mesh::FieldBase *,
-    const unsigned &sizeOfField,
-    const bool &bypassFieldCheck,
-    const bool &addSlaves = true,
-    const bool &setSlaves = true,
-    const bool &doCommunication = true) const;
+    stk::mesh::FieldBase*,
+    const unsigned& sizeOfField,
+    const bool& bypassFieldCheck,
+    const bool& addSlaves = true,
+    const bool& setSlaves = true,
+    const bool& doCommunication = true) const;
 
   // find the max
-  void apply_max_field(
-    stk::mesh::FieldBase *,
-    const unsigned &sizeOfField);
+  void apply_max_field(stk::mesh::FieldBase*, const unsigned& sizeOfField);
 
   void manage_ghosting_object();
 
-  stk::mesh::Ghosting * get_ghosting_object();
+  stk::mesh::Ghosting* get_ghosting_object();
 
-  const stk::mesh::PartVector &get_slave_part_vector();
+  const stk::mesh::PartVector& get_slave_part_vector();
 
   const stk::mesh::PartVector& periodic_parts_vector()
   {
@@ -100,10 +95,10 @@ class PeriodicManager {
   void initialize_translation_vector();
 
   void determine_translation(
-     stk::mesh::Selector masterSelector,
-     stk::mesh::Selector slaveSelector,
-     std::vector<double> &translationVector,
-     std::vector<double> &rotationVector);
+    stk::mesh::Selector masterSelector,
+    stk::mesh::Selector slaveSelector,
+    std::vector<double>& translationVector,
+    std::vector<double>& rotationVector);
 
   void remove_redundant_slave_nodes();
 
@@ -112,7 +107,7 @@ class PeriodicManager {
   void populate_search_key_vec(
     stk::mesh::Selector masterSelector,
     stk::mesh::Selector slaveSelector,
-    std::vector<double> &translationVector,
+    std::vector<double>& translationVector,
     const stk::search::SearchMethod searchMethod);
 
   void error_check();
@@ -120,29 +115,22 @@ class PeriodicManager {
   void update_global_id_field();
 
   /* communicate periodicGhosting nodes */
-  void
-  periodic_parallel_communicate_field(
-    stk::mesh::FieldBase *theField);
+  void periodic_parallel_communicate_field(stk::mesh::FieldBase* theField);
 
   void
-  ngp_periodic_parallel_communicate_field(
-    stk::mesh::FieldBase *theField) const;
+  ngp_periodic_parallel_communicate_field(stk::mesh::FieldBase* theField) const;
 
   /* communicate shared nodes and aura nodes */
-  void
-  parallel_communicate_field(
-    stk::mesh::FieldBase *theField);
+  void parallel_communicate_field(stk::mesh::FieldBase* theField);
 
-  void
-  ngp_parallel_communicate_field(
-    stk::mesh::FieldBase *theField) const;
+  void ngp_parallel_communicate_field(stk::mesh::FieldBase* theField) const;
 
-  Realm &realm_;
+  Realm& realm_;
 
   /* manage tolerances; each block specifies a user tolerance */
   double searchTolerance_;
 
-  stk::mesh::Ghosting *periodicGhosting_;
+  stk::mesh::Ghosting* periodicGhosting_;
   const std::string ghostingName_;
   double timerSearch_;
 
@@ -151,30 +139,30 @@ class PeriodicManager {
   int maxErrorCount_;
   const double amplificationFactor_;
 
- public:
+public:
   // the data structures to hold master/slave information
   typedef std::pair<stk::mesh::Entity, stk::mesh::Entity> EntityPair;
   typedef Kokkos::pair<stk::mesh::Entity, stk::mesh::Entity> KokkosEntityPair;
   typedef std::pair<stk::mesh::Selector, stk::mesh::Selector> SelectorPair;
-  typedef std::vector<std::pair<theEntityKey,theEntityKey> > SearchKeyVector;
-  typedef Kokkos::View<KokkosEntityPair*, Kokkos::LayoutRight, MemSpace> KokkosEntityPairView;
+  typedef std::vector<std::pair<theEntityKey, theEntityKey>> SearchKeyVector;
+  typedef Kokkos::View<KokkosEntityPair*, Kokkos::LayoutRight, MemSpace>
+    KokkosEntityPairView;
 
   std::vector<int> ghostCommProcs_;
 
   void ngp_add_slave_to_master(
-    stk::mesh::FieldBase *theField,
-    const unsigned &sizeOfField,
-    const bool &bypassFieldCheck,
-    const bool &doCommunication) const;
+    stk::mesh::FieldBase* theField,
+    const unsigned& sizeOfField,
+    const bool& bypassFieldCheck,
+    const bool& doCommunication) const;
 
   void ngp_set_slave_to_master(
-    stk::mesh::FieldBase *theField,
-    const unsigned &sizeOfField,
-    const bool &bypassFieldCheck,
-    const bool &doCommunication) const;
+    stk::mesh::FieldBase* theField,
+    const unsigned& sizeOfField,
+    const bool& bypassFieldCheck,
+    const bool& doCommunication) const;
 
- private:
-
+private:
   // vector of master:slave selector pairs
   std::vector<SelectorPair> periodicSelectorPairs_;
 
@@ -187,8 +175,8 @@ class PeriodicManager {
   std::vector<stk::search::SearchMethod> searchMethodVec_;
 
   // translation and rotation
-  std::vector<std::vector<double> > translationVector_;
-  std::vector<std::vector<double> > rotationVector_;
+  std::vector<std::vector<double>> translationVector_;
+  std::vector<std::vector<double>> rotationVector_;
 
   // vector of masterEntity:slaveEntity
   std::vector<EntityPair> masterSlaveCommunicator_;
@@ -199,15 +187,14 @@ class PeriodicManager {
   SearchKeyVector searchKeyVector_;
 
   void add_slave_to_master(
-    stk::mesh::FieldBase *theField,
-    const unsigned &sizeOfField,
-    const bool &bypassFieldCheck);
+    stk::mesh::FieldBase* theField,
+    const unsigned& sizeOfField,
+    const bool& bypassFieldCheck);
 
   void set_slave_to_master(
-    stk::mesh::FieldBase *theField,
-    const unsigned &sizeOfField,
-    const bool &bypassFieldCheck);
-
+    stk::mesh::FieldBase* theField,
+    const unsigned& sizeOfField,
+    const bool& bypassFieldCheck);
 };
 
 } // namespace nalu

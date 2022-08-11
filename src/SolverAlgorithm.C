@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <SolverAlgorithm.h>
 #include <Algorithm.h>
 #include <EquationSystem.h>
@@ -24,8 +22,8 @@
 
 namespace {
 
-inline
-void fix_overset_rows(
+inline void
+fix_overset_rows(
   const stk::mesh::MetaData& meta,
   const size_t nDim,
   const std::vector<stk::mesh::Entity>& entities,
@@ -36,26 +34,26 @@ void fix_overset_rows(
   const size_t nobj = entities.size();
   const size_t numRows = nobj * nDim;
 
-  ScalarIntFieldType* iblank = meta.get_field<ScalarIntFieldType>(
-    stk::topology::NODE_RANK, "iblank");
+  ScalarIntFieldType* iblank =
+    meta.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
 
-  for (size_t in=0; in < nobj; in++) {
+  for (size_t in = 0; in < nobj; in++) {
     const int* ibl = stk::mesh::field_data(*iblank, entities[in]);
     double mask = std::max(0.0, static_cast<double>(ibl[0]));
     size_t ix = in * nDim;
 
-    for (size_t d=0; d < nDim; d++) {
+    for (size_t d = 0; d < nDim; d++) {
       size_t ir = ix + d;
       rhs[ir] *= mask;
-      for (size_t c=0; c < numRows; c++)
+      for (size_t c = 0; c < numRows; c++)
         lhs[ir * numRows + c] *= mask;
     }
   }
 }
-}
+} // namespace
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
   : ngpMesh_(eqSystem->realm_.ngp_mesh()),
@@ -72,19 +70,22 @@ NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
   }
 
   if (hasOverset_) {
-    iblankField_ = nalu_ngp::get_ngp_field<int>(eqSystem->realm_.mesh_info(), "iblank");
+    iblankField_ =
+      nalu_ngp::get_ngp_field<int>(eqSystem->realm_.mesh_info(), "iblank");
   }
 }
 
-void NGPApplyCoeff::free_coeff_applier()
+void
+NGPApplyCoeff::free_coeff_applier()
 {
-  if(deviceSumInto_ != nullptr && !linSysOwnsCoeffApplier) {
+  if (deviceSumInto_ != nullptr && !linSysOwnsCoeffApplier) {
     kokkos_free_on_device(deviceSumInto_);
     deviceSumInto_ = nullptr;
   }
 }
 
-void NGPApplyCoeff::extract_diagonal(
+void
+NGPApplyCoeff::extract_diagonal(
   const unsigned int nEntities,
   const stk::mesh::NgpMesh::ConnectedNodes& entities,
   SharedMemView<double**, DeviceShmem>& lhs) const
@@ -92,10 +93,11 @@ void NGPApplyCoeff::extract_diagonal(
   constexpr bool forceAtomic = std::is_same<
     sierra::nalu::DeviceSpace, Kokkos::DefaultExecutionSpace>::value;
 
-  for (unsigned i=0u; i < nEntities; ++i) {
+  for (unsigned i = 0u; i < nEntities; ++i) {
     auto ix = i * nDim_;
     if (forceAtomic)
-      Kokkos::atomic_add(&diagField_.get(ngpMesh_, entities[i], 0), lhs(ix, ix));
+      Kokkos::atomic_add(
+        &diagField_.get(ngpMesh_, entities[i], 0), lhs(ix, ix));
     else
       diagField_.get(ngpMesh_, entities[i], 0) += lhs(ix, ix);
   }
@@ -110,29 +112,30 @@ NGPApplyCoeff::reset_overset_rows(
 {
   const unsigned numRows = nEntities * nDim_;
 
-  for (unsigned in=0u; in < nEntities; ++in) {
+  for (unsigned in = 0u; in < nEntities; ++in) {
     const int ibl = iblankField_.get(ngpMesh_, entities[in], 0);
     const double mask = stk::math::max(0.0, static_cast<double>(ibl));
     const unsigned ix = in * nDim_;
 
-    for (unsigned d=0; d < nDim_; ++d) {
+    for (unsigned d = 0; d < nDim_; ++d) {
       const unsigned ir = ix + d;
 
       rhs(ir) *= mask;
-      for (unsigned ic=0; ic < numRows; ++ic)
+      for (unsigned ic = 0; ic < numRows; ++ic)
         lhs(ir, ic) *= mask;
     }
   }
 }
 
-void NGPApplyCoeff::operator()(
+void
+NGPApplyCoeff::operator()(
   unsigned numMeshobjs,
   const stk::mesh::NgpMesh::ConnectedNodes& symMeshobjs,
-  const SharedMemView<int*,DeviceShmem> & scratchIds,
-  const SharedMemView<int*,DeviceShmem> & sortPermutation,
-  SharedMemView<double*,DeviceShmem> & rhs,
-  SharedMemView<double**,DeviceShmem> & lhs,
-  const char *trace_tag) const
+  const SharedMemView<int*, DeviceShmem>& scratchIds,
+  const SharedMemView<int*, DeviceShmem>& sortPermutation,
+  SharedMemView<double*, DeviceShmem>& rhs,
+  SharedMemView<double**, DeviceShmem>& lhs,
+  const char* trace_tag) const
 {
   if (extractDiagonal_)
     extract_diagonal(numMeshobjs, symMeshobjs, lhs);
@@ -145,11 +148,8 @@ void NGPApplyCoeff::operator()(
 }
 
 SolverAlgorithm::SolverAlgorithm(
-  Realm &realm,
-  stk::mesh::Part *part,
-  EquationSystem *eqSystem)
-  : Algorithm(realm, part),
-    eqSystem_(eqSystem)
+  Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
+  : Algorithm(realm, part), eqSystem_(eqSystem)
 {
   // does nothing
 }
@@ -159,11 +159,12 @@ SolverAlgorithm::SolverAlgorithm(
 //--------------------------------------------------------------------------
 void
 SolverAlgorithm::apply_coeff(
-  const std::vector<stk::mesh::Entity> & sym_meshobj,
-  std::vector<int> &scratchIds,
-  std::vector<double> &scratchVals,
-  std::vector<double> & rhs,
-  std::vector<double> & lhs, const char *trace_tag)
+  const std::vector<stk::mesh::Entity>& sym_meshobj,
+  std::vector<int>& scratchIds,
+  std::vector<double>& scratchVals,
+  std::vector<double>& rhs,
+  std::vector<double>& lhs,
+  const char* trace_tag)
 {
   if (realm_.hasOverset_)
     fix_overset_rows(
@@ -177,4 +178,4 @@ SolverAlgorithm::apply_coeff(
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef ENTHALPYTGRADBCELEMKERNEL_H
 #define ENTHALPYTGRADBCELEMKERNEL_H
 
@@ -60,20 +59,18 @@ public:
     ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
-  unsigned bcTGrad_ {stk::mesh::InvalidOrdinal};
-  unsigned evisc_ {stk::mesh::InvalidOrdinal};
-  unsigned specificHeat_ {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned bcTGrad_{stk::mesh::InvalidOrdinal};
+  unsigned evisc_{stk::mesh::InvalidOrdinal};
+  unsigned specificHeat_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
 
   const bool useShifted_;
 
   MasterElement* meFC_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ENTHALPYTGRADBCELEMKERNEL_H */

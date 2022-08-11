@@ -107,10 +107,10 @@ ActFastSetUpThrustCalc::ActFastSetUpThrustCalc(ActuatorBulkFAST& actBulk)
 void
 ActFastSetUpThrustCalc::operator()(int index) const
 {
-  auto hubLoc = Kokkos::subview(actBulk_.hubLocations_,   index, Kokkos::ALL);
+  auto hubLoc = Kokkos::subview(actBulk_.hubLocations_, index, Kokkos::ALL);
   auto hubOri = Kokkos::subview(actBulk_.hubOrientation_, index, Kokkos::ALL);
-  auto thrust = Kokkos::subview(actBulk_.turbineThrust_,  index, Kokkos::ALL);
-  auto torque = Kokkos::subview(actBulk_.turbineTorque_,  index, Kokkos::ALL);
+  auto thrust = Kokkos::subview(actBulk_.turbineThrust_, index, Kokkos::ALL);
+  auto torque = Kokkos::subview(actBulk_.turbineTorque_, index, Kokkos::ALL);
 
   for (int i = 0; i < 3; i++) {
     thrust(i) = 0.0;
@@ -195,16 +195,16 @@ ActFastStashOrientationVectors::operator()(int index) const
   const int pointId = index - offset_(turbId_);
   auto localOrientation = Kokkos::subview(orientation_, index, Kokkos::ALL);
   // orientations can be obtained for tower and blades
-  if(pointId>0){
+  if (pointId > 0) {
     fast_.getForceNodeOrientation(localOrientation.data(), pointId, turbId_);
 
     // swap columns of matrix since openfast stores data
     // as (thick, chord, span) and we want (chord, thick, span)
     double colSwapTemp;
-    for (int i = 0; i < 9;i+=3) {
+    for (int i = 0; i < 9; i += 3) {
       colSwapTemp = localOrientation(i);
-      localOrientation(i) = localOrientation(i+1);
-      localOrientation(i+1) = colSwapTemp;
+      localOrientation(i) = localOrientation(i + 1);
+      localOrientation(i + 1) = colSwapTemp;
     }
   } else {
     // identity matrix
@@ -213,7 +213,6 @@ ActFastStashOrientationVectors::operator()(int index) const
     localOrientation(4) = 1.0;
     localOrientation(8) = 1.0;
   }
-
 }
 
 void
@@ -243,9 +242,9 @@ ActFastSpreadForceWhProjInnerLoop::operator()(
   auto orientation = Kokkos::subview(
     actBulk_.orientationTensor_.view_host(), pointId, Kokkos::ALL);
 
-  double distance[3]={0, 0, 0};
-  double projectedDistance[3]={0, 0, 0};
-  double projectedForce[3]={0, 0, 0};
+  double distance[3] = {0, 0, 0};
+  double projectedDistance[3] = {0, 0, 0};
+  double projectedForce[3] = {0, 0, 0};
 
   actuator_utils::compute_distance(
     3, nodeCoords, pointCoords.data(), &distance[0]);
@@ -253,7 +252,7 @@ ActFastSpreadForceWhProjInnerLoop::operator()(
   // transform distance from Cartesian to blade coordinate system
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
-      projectedDistance[i] += distance[j] * orientation(i+j*3);
+      projectedDistance[i] += distance[j] * orientation(i + j * 3);
     }
   }
 

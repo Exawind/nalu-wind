@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef MomentumGclSrcNodeKernel_h
 #define MomentumGclSrcNodeKernel_h
 
@@ -19,17 +18,15 @@
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class MomentumGclSrcNodeKernel : public NGPNodeKernel<MomentumGclSrcNodeKernel>
 {
 public:
-
-  MomentumGclSrcNodeKernel(
-    const stk::mesh::BulkData&);
+  MomentumGclSrcNodeKernel(const stk::mesh::BulkData&);
 
   KOKKOS_DEFAULTED_FUNCTION
   MomentumGclSrcNodeKernel() = default;
@@ -53,12 +50,12 @@ private:
   stk::mesh::NgpField<double> dualNdVolN_;
   stk::mesh::NgpField<double> dualNdVolNp1_;
 
-  unsigned velocityNp1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned densityNp1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned divVID_ {stk::mesh::InvalidOrdinal};
-  unsigned dualNdVolNm1ID_ {stk::mesh::InvalidOrdinal};
-  unsigned dualNdVolNID_ {stk::mesh::InvalidOrdinal};
-  unsigned dualNdVolNp1ID_ {stk::mesh::InvalidOrdinal};
+  unsigned velocityNp1ID_{stk::mesh::InvalidOrdinal};
+  unsigned densityNp1ID_{stk::mesh::InvalidOrdinal};
+  unsigned divVID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNdVolNm1ID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNdVolNID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNdVolNp1ID_{stk::mesh::InvalidOrdinal};
 
   int nDim_;
   double dt_;
@@ -66,6 +63,6 @@ private:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

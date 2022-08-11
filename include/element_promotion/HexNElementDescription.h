@@ -30,15 +30,33 @@ public:
 
   HexNElementDescription(int p);
 
-  int node_map(int i, int j, int k) const { return nodeMap[i+nodes1D*(j+nodes1D*k)]; };
+  int node_map(int i, int j, int k) const
+  {
+    return nodeMap[i + nodes1D * (j + nodes1D * k)];
+  };
   int node_map(int i) const { return nodeMap[i]; };
-  int bc_node_map(int i, int j) const {return nodeMapBC[i+nodes1D*j]; }
-  const std::vector<int>& edge_node_connectivities(int i) const { return edgeNodeConnectivities[i]; }
-  const std::vector<int>& face_node_connectivities(int i) const { return faceNodeConnectivities[i]; }
-  int volume_node_connectivities(int i) const { return volumeNodeConnectivities[i]; }
+  int bc_node_map(int i, int j) const { return nodeMapBC[i + nodes1D * j]; }
+  const std::vector<int>& edge_node_connectivities(int i) const
+  {
+    return edgeNodeConnectivities[i];
+  }
+  const std::vector<int>& face_node_connectivities(int i) const
+  {
+    return faceNodeConnectivities[i];
+  }
+  int volume_node_connectivities(int i) const
+  {
+    return volumeNodeConnectivities[i];
+  }
   std::array<int, 3> inverse_node_map(int i) const { return inverseNodeMap[i]; }
-  const std::vector<int>& side_node_ordinals(int i) const { return sideOrdinalMap[i]; }
-  const std::array<int, 8>& sub_element_connectivity(int i) const { return subElementConnectivity[i]; }
+  const std::vector<int>& side_node_ordinals(int i) const
+  {
+    return sideOrdinalMap[i];
+  }
+  const std::array<int, 8>& sub_element_connectivity(int i) const
+  {
+    return subElementConnectivity[i];
+  }
 
   const int polyOrder;
   const int nodes1D;
@@ -48,6 +66,7 @@ public:
   const int newNodesPerFace;
   const int newNodesPerVolume;
   const int subElementsPerElement;
+
 private:
   void set_subelement_connectivity();
   std::vector<int> edge_node_ordinals();
@@ -62,7 +81,10 @@ private:
   void set_base_node_maps();
   void set_tensor_product_node_mappings();
   void set_boundary_node_mappings();
-  int& node_map(int i, int j, int k ) { return nodeMap.at(i+nodes1D*(j+nodes1D*k)); };
+  int& node_map(int i, int j, int k)
+  {
+    return nodeMap.at(i + nodes1D * (j + nodes1D * k));
+  };
 
   std::array<std::vector<int>, numEdges> edgeNodeConnectivities;
   std::array<std::vector<int>, numFaces> faceNodeConnectivities;
@@ -71,11 +93,11 @@ private:
   std::vector<int> nodeMap;
   std::vector<std::array<int, dimension>> inverseNodeMap;
   std::vector<int> nodeMapBC;
-  std::vector<std::array<int, dimension-1>> inverseNodeMapBC;
+  std::vector<std::array<int, dimension - 1>> inverseNodeMapBC;
   std::array<std::vector<int>, numFaces> sideOrdinalMap;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

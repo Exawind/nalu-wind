@@ -235,7 +235,8 @@ LowMachUpdate<p>::update_provisional_velocity(
     gammas[0], field_gather_.get_coefficient_fields());
 
   add_tpetra_solution_vector_to_stk_field(
-    stk::mesh::get_updated_ngp_mesh(bulk_), active_, linsys_.stk_lid_to_tpetra_lid,
+    stk::mesh::get_updated_ngp_mesh(bulk_), active_,
+    linsys_.stk_lid_to_tpetra_lid,
     delta_mv.getLocalViewDevice(Tpetra::Access::ReadOnly), field);
 }
 
@@ -254,7 +255,8 @@ LowMachUpdate<p>::update_pressure(
     field_gather_.get_coefficient_fields().laplacian_metric);
 
   add_tpetra_solution_vector_to_stk_field(
-    stk::mesh::get_updated_ngp_mesh(bulk_), active_, linsys_.stk_lid_to_tpetra_lid,
+    stk::mesh::get_updated_ngp_mesh(bulk_), active_,
+    linsys_.stk_lid_to_tpetra_lid,
     delta_mv.getLocalViewDevice(Tpetra::Access::ReadOnly), field);
 }
 
@@ -282,7 +284,8 @@ LowMachUpdate<p>::update_pressure_gradient(stk::mesh::NgpField<double>& field)
   gradient_update_.compute_residual(fields, bc);
   auto& delta_mv = gradient_update_.compute_delta(fields.vols);
   add_tpetra_solution_vector_to_stk_field(
-    stk::mesh::get_updated_ngp_mesh(bulk_), active_, linsys_.stk_lid_to_tpetra_lid,
+    stk::mesh::get_updated_ngp_mesh(bulk_), active_,
+    linsys_.stk_lid_to_tpetra_lid,
     delta_mv.getLocalViewDevice(Tpetra::Access::ReadOnly), field);
 }
 
@@ -355,8 +358,8 @@ LowMachUpdate<p>::project_velocity(
   gp_star.sync_to_device();
   gp.sync_to_device();
   stk::mesh::for_each_entity_run(
-    stk::mesh::get_updated_ngp_mesh(bulk_), stk::topology::NODE_RANK, active_ - dirichlet_,
-    KOKKOS_LAMBDA(stk::mesh::FastMeshIndex mi) {
+    stk::mesh::get_updated_ngp_mesh(bulk_), stk::topology::NODE_RANK,
+    active_ - dirichlet_, KOKKOS_LAMBDA(stk::mesh::FastMeshIndex mi) {
       const auto fac = proj_time_scale / rho(mi, 0);
       for (int d = 0; d < dim; ++d) {
         u.get(mi, d) -= fac * (gp_star(mi, d) - gp(mi, d));
@@ -402,8 +405,9 @@ LowMachUpdate<p>::create_continuity_preconditioner(
     new Tpetra::MultiVector<>(Teuchos::rcpFromRef(linsys_.owned), 3));
 
   copy_stk_field_to_owned_tpetra_vector(
-    stk::mesh::get_updated_ngp_mesh(bulk_), active_, linsys_.stk_lid_to_tpetra_lid,
-    coords, coord_mv->getLocalViewDevice(Tpetra::Access::ReadWrite));
+    stk::mesh::get_updated_ngp_mesh(bulk_), active_,
+    linsys_.stk_lid_to_tpetra_lid, coords,
+    coord_mv->getLocalViewDevice(Tpetra::Access::ReadWrite));
 
   muelu_params.set("xml parameter file", xmlname);
   muelu_params.sublist("user data").set("Coordinates", coord_mv);

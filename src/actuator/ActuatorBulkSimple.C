@@ -56,45 +56,42 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
   const int intDivision = nTurb / nProcs;
   const int remainder = actMeta.numberOfActuators_ % nProcs;
 
-  if (actMeta.debug_output_) 
-    NaluEnv::self().naluOutputP0() << " nProcs: " << nProcs 
-				   << " nTurb:  " << nTurb
-				   << " intDiv: " << intDivision
-				   << " remain: " << remainder
-				   << std::endl; // LCCOUT
+  if (actMeta.debug_output_)
+    NaluEnv::self().naluOutputP0()
+      << " nProcs: " << nProcs << " nTurb:  " << nTurb
+      << " intDiv: " << intDivision << " remain: " << remainder
+      << std::endl; // LCCOUT
 
-  if (remainder && intDivision)  // this doesn't work for nProcs=1
+  if (remainder && intDivision) // this doesn't work for nProcs=1
     throw std::runtime_error(" ERRORXX: more blades than ranks");
-  if (nTurb > nProcs) 
+  if (nTurb > nProcs)
     throw std::runtime_error(" ERROR: more blades than ranks");
 
-  for (int i=0; i<nTurb; i++) {
+  for (int i = 0; i < nTurb; i++) {
     assignedProc_.h_view(i) = i;
-    NaluEnv::self().naluOutputP0() << " Turbine#: " << i
-				   << " Proc#: " << assignedProc_.h_view(i) <<std::endl;
-
+    NaluEnv::self().naluOutputP0()
+      << " Turbine#: " << i << " Proc#: " << assignedProc_.h_view(i)
+      << std::endl;
   }
 
-
   // Set up num_force_pts_blade_
-  for (int i = 0; i <actMeta.numberOfActuators_; ++i) {
+  for (int i = 0; i < actMeta.numberOfActuators_; ++i) {
     num_force_pts_blade_.h_view(i) = actMeta.num_force_pts_blade_.h_view(i);
   }
   // Double check offsets
-  if (actMeta.debug_output_) 
-    for (int i = 0; i <actMeta.numberOfActuators_; ++i) {
-      NaluEnv::self().naluOutputP0() << "Offset blade: " << i << " "
-				     << turbIdOffset_.h_view(i) 
-				     << " num_force_pts: "
-				     << num_force_pts_blade_.h_view(i)
-				     << std::endl; //LCCOUT
+  if (actMeta.debug_output_)
+    for (int i = 0; i < actMeta.numberOfActuators_; ++i) {
+      NaluEnv::self().naluOutputP0()
+        << "Offset blade: " << i << " " << turbIdOffset_.h_view(i)
+        << " num_force_pts: " << num_force_pts_blade_.h_view(i)
+        << std::endl; // LCCOUT
     }
   init_epsilon(actMeta);
   init_points(actMeta);
   init_orientation(actMeta);
   add_output_headers(actMeta);
-  NaluEnv::self().naluOutputP0() << "Done ActuatorBulkSimple Init "
-				 << std::endl; // LCCOUT
+  NaluEnv::self().naluOutputP0()
+    << "Done ActuatorBulkSimple Init " << std::endl; // LCCOUT
 }
 
 void
@@ -124,11 +121,11 @@ ActuatorBulkSimple::init_epsilon(const ActuatorMetaSimple& actMeta)
   searchRadius_.modify_host();
 
   const int nBlades = actMeta.n_simpleblades_;
-  for (int iBlade = 0; iBlade<nBlades; iBlade++) {
+  for (int iBlade = 0; iBlade < nBlades; iBlade++) {
     // LCC test this for non-isotropic
-    if (NaluEnv::self().parallel_rank()==assignedProc_.h_view(iBlade)) { 
+    if (NaluEnv::self().parallel_rank() == assignedProc_.h_view(iBlade)) {
       const int numForcePts = actMeta.num_force_pts_blade_.h_view(iBlade);
-      const int offset = turbIdOffset_.h_view(iBlade);      
+      const int offset = turbIdOffset_.h_view(iBlade);
       auto epsilonChord =
         Kokkos::subview(actMeta.epsilonChord_.view_host(), iBlade, Kokkos::ALL);
       auto epsilonRef =
@@ -139,12 +136,12 @@ ActuatorBulkSimple::init_epsilon(const ActuatorMetaSimple& actMeta)
         auto epsilonOpt =
           Kokkos::subview(epsilonOpt_.view_host(), np + offset, Kokkos::ALL);
 
-	double chord = actMeta.chord_tableDv_.h_view(iBlade, np); 
-	for (int i = 0; i < 3; i++) {
-	  // Define the optimal epsilon
-	  epsilonOpt(i) = epsilonChord(i) * chord;
-	  epsilonLocal(i) = std::max(epsilonOpt(i), epsilonRef(i));
-	}
+        double chord = actMeta.chord_tableDv_.h_view(iBlade, np);
+        for (int i = 0; i < 3; i++) {
+          // Define the optimal epsilon
+          epsilonOpt(i) = epsilonChord(i) * chord;
+          epsilonLocal(i) = std::max(epsilonOpt(i), epsilonRef(i));
+        }
         // The radius of the searching. This is given in terms of
         //   the maximum of epsilon.x/y/z/.
         //
@@ -174,20 +171,20 @@ ActuatorBulkSimple::init_points(const ActuatorMetaSimple& actMeta)
   pointCentroid_.modify_host();
 
   const int nBlades = actMeta.n_simpleblades_;
-  for (int iBlade = 0; iBlade<nBlades; iBlade++) {
-    if (NaluEnv::self().parallel_rank()==assignedProc_.h_view(iBlade)) { 
+  for (int iBlade = 0; iBlade < nBlades; iBlade++) {
+    if (NaluEnv::self().parallel_rank() == assignedProc_.h_view(iBlade)) {
       const int numForcePts = actMeta.num_force_pts_blade_.h_view(iBlade);
-      const int offset = turbIdOffset_.h_view(iBlade);      
+      const int offset = turbIdOffset_.h_view(iBlade);
       const double denom = (double)numForcePts;
 
       // Get p1 and p2 and dx for blade geometry
       double p1[3];
       double p2[3];
       double dx[3];
-      for (int j=0; j<3; j++) { 
-	p1[j] = actMeta.p1_.h_view(iBlade, j);
-	p2[j] = actMeta.p2_.h_view(iBlade, j);
-	dx[j] = (p2[j] - p1[j])/denom; 
+      for (int j = 0; j < 3; j++) {
+        p1[j] = actMeta.p1_.h_view(iBlade, j);
+        p2[j] = actMeta.p2_.h_view(iBlade, j);
+        dx[j] = (p2[j] - p1[j]) / denom;
       }
 
       // set every pointCentroid
@@ -195,18 +192,18 @@ ActuatorBulkSimple::init_points(const ActuatorMetaSimple& actMeta)
         auto pointLocal =
           Kokkos::subview(pointCentroid_.view_host(), np + offset, Kokkos::ALL);
 
-	for (int i=0; i<3; i++) {
-	  pointLocal(i) = p1[i] + 0.5*dx[i] + dx[i]*(double)np;
-	}
+        for (int i = 0; i < 3; i++) {
+          pointLocal(i) = p1[i] + 0.5 * dx[i] + dx[i] * (double)np;
+        }
 
-  if (actMeta.debug_output_)
-    NaluEnv::self().naluOutput() 
-      << "Blade "<< iBlade  // LCCOUT
-      << " pointId: " << np << std::scientific<< std::setprecision(5)
-      << " point: "<<pointLocal(0)<<" "<<pointLocal(1)<<" "<<pointLocal(2)
-      << std::endl;
+        if (actMeta.debug_output_)
+          NaluEnv::self().naluOutput()
+            << "Blade " << iBlade // LCCOUT
+            << " pointId: " << np << std::scientific << std::setprecision(5)
+            << " point: " << pointLocal(0) << " " << pointLocal(1) << " "
+            << pointLocal(2) << std::endl;
 
-      }// loop over np
+      } // loop over np
     }
   } // loop over iBlade
   actuator_utils::reduce_view_on_host(pointCentroid_.view_host());
@@ -218,29 +215,29 @@ void
 ActuatorBulkSimple::init_orientation(const ActuatorMetaSimple& actMeta)
 {
   // Bail out if this is isotropic
-  if (actMeta.isotropicGaussian_) return;
+  if (actMeta.isotropicGaussian_)
+    return;
 
   orientationTensor_.modify_host();
   const int nBlades = actMeta.n_simpleblades_;
-  for (int iBlade = 0; iBlade<nBlades; iBlade++) {
-    if (NaluEnv::self().parallel_rank()==assignedProc_.h_view(iBlade)) { 
+  for (int iBlade = 0; iBlade < nBlades; iBlade++) {
+    if (NaluEnv::self().parallel_rank() == assignedProc_.h_view(iBlade)) {
       const int numForcePts = actMeta.num_force_pts_blade_.h_view(iBlade);
-      const int offset = turbIdOffset_.h_view(iBlade);      
+      const int offset = turbIdOffset_.h_view(iBlade);
 
       // set every pointCentroid
       for (int np = 0; np < numForcePts; np++) {
-	auto orientation = Kokkos::subview(
-            orientationTensor_.view_host(), np + offset, Kokkos::ALL);
-	// set orientation tensor to identity
-	orientation(0) = 1.0;
-	orientation(1) = 0.0;
-	orientation(2) = 0.0;
-	orientation(3) = 1.0;
-	orientation(4) = 0.0;
-	orientation(5) = 0.0;
-	orientation(6) = 1.0;
+        auto orientation = Kokkos::subview(
+          orientationTensor_.view_host(), np + offset, Kokkos::ALL);
+        // set orientation tensor to identity
+        orientation(0) = 1.0;
+        orientation(1) = 0.0;
+        orientation(2) = 0.0;
+        orientation(3) = 1.0;
+        orientation(4) = 0.0;
+        orientation(5) = 0.0;
+        orientation(6) = 1.0;
       }
-
     }
   } // loop over iBlade
   actuator_utils::reduce_view_on_host(orientationTensor_.view_host());
@@ -253,7 +250,7 @@ ActuatorBulkSimple::local_range_policy()
   auto rank = NaluEnv::self().parallel_rank();
   if (rank < num_blades_) {
     const int offset = turbIdOffset_.h_view(rank);
-    const int size   = num_force_pts_blade_.h_view(rank); 
+    const int size = num_force_pts_blade_.h_view(rank);
     return Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(
       offset, offset + size);
   } else {
@@ -261,22 +258,20 @@ ActuatorBulkSimple::local_range_policy()
   }
 }
 
-
 void
 ActuatorBulkSimple::zero_actuator_views()
 {
   dvHelper_.touch_dual_view(actuatorForce_);
   dvHelper_.touch_dual_view(velocity_);
   dvHelper_.touch_dual_view(density_);
-  Kokkos::deep_copy(dvHelper_.get_local_view(actuatorForce_),0.0);
-  Kokkos::deep_copy(dvHelper_.get_local_view(velocity_),0.0);
-  Kokkos::deep_copy(dvHelper_.get_local_view(density_),0.0);
- 
+  Kokkos::deep_copy(dvHelper_.get_local_view(actuatorForce_), 0.0);
+  Kokkos::deep_copy(dvHelper_.get_local_view(velocity_), 0.0);
+  Kokkos::deep_copy(dvHelper_.get_local_view(density_), 0.0);
+
 #ifdef ENABLE_ACTSIMPLE_PTMOTION
   dvHelper_.touch_dual_view(pointCentroid_);
-  Kokkos::deep_copy(dvHelper_.get_local_view(pointCentroid_),0.0);
+  Kokkos::deep_copy(dvHelper_.get_local_view(pointCentroid_), 0.0);
 #endif
-    
 }
 
 } // namespace nalu

@@ -20,7 +20,8 @@ namespace nalu {
 namespace tensor_assembly {
 
 template <int poly_order, typename Scalar>
-void scalar_dt_lhs(
+void
+scalar_dt_lhs(
   const CVFEMOperators<poly_order, Scalar>& ops,
   const nodal_scalar_view<poly_order, Scalar>& vol,
   double gamma1_div_dt,
@@ -39,7 +40,8 @@ void scalar_dt_lhs(
           for (int j = 0; j < n1D; ++j) {
             auto gammWnkWmj = gammaWnk * weight(m, j);
             for (int i = 0; i < n1D; ++i) {
-              lhs(rowIndex, idx<n1D>(k, j, i)) += gammWnkWmj * weight(l, i) * vol(k, j, i) * rho_p1(k, j, i);
+              lhs(rowIndex, idx<n1D>(k, j, i)) +=
+                gammWnkWmj * weight(l, i) * vol(k, j, i) * rho_p1(k, j, i);
             }
           }
         }
@@ -49,7 +51,8 @@ void scalar_dt_lhs(
 }
 //--------------------------------------------------------------------------
 template <int poly_order, typename Scalar>
-void scalar_dt_rhs(
+void
+scalar_dt_rhs(
   const CVFEMOperators<poly_order, Scalar>& ops,
   const nodal_scalar_view<poly_order, Scalar>& metric,
   double gamma_div_dt[3],
@@ -69,11 +72,11 @@ void scalar_dt_rhs(
   for (int k = 0; k < n1D; ++k) {
     for (int j = 0; j < n1D; ++j) {
       for (int i = 0; i < n1D; ++i) {
-          drhoqdt(k, j, i) = -(
-                gamma_div_dt[0] * rhop1(k, j, i) * phip1(k, j, i)
-              + gamma_div_dt[1] * rhop0(k, j, i) * phip0(k, j, i)
-              + gamma_div_dt[2] * rhom1(k, j, i) * phim1(k, j, i)
-              ) * metric(k, j, i);
+        drhoqdt(k, j, i) =
+          -(gamma_div_dt[0] * rhop1(k, j, i) * phip1(k, j, i) +
+            gamma_div_dt[1] * rhop0(k, j, i) * phip0(k, j, i) +
+            gamma_div_dt[2] * rhom1(k, j, i) * phim1(k, j, i)) *
+          metric(k, j, i);
       }
     }
   }
@@ -81,7 +84,8 @@ void scalar_dt_rhs(
 }
 //--------------------------------------------------------------------------
 template <int poly_order, typename Scalar>
-void density_dt_rhs(
+void
+density_dt_rhs(
   const CVFEMOperators<poly_order, Scalar>& ops,
   const nodal_scalar_view<poly_order, Scalar>& metric,
   double gamma_div_dt[3],
@@ -98,20 +102,18 @@ void density_dt_rhs(
   for (int k = 0; k < n1D; ++k) {
     for (int j = 0; j < n1D; ++j) {
       for (int i = 0; i < n1D; ++i) {
-          drhodt(k, j, i) = -(
-                gamma_div_dt[0] * rhop1(k, j, i)
-              + gamma_div_dt[1] * rhop0(k, j, i)
-              + gamma_div_dt[2] * rhom1(k, j, i)
-              ) * metric(k, j, i);
+        drhodt(k, j, i) = -(gamma_div_dt[0] * rhop1(k, j, i) +
+                            gamma_div_dt[1] * rhop0(k, j, i) +
+                            gamma_div_dt[2] * rhom1(k, j, i)) *
+                          metric(k, j, i);
       }
     }
   }
   ops.volume(drhodt, rhs);
 }
 
-
-}
-}
-}
+} // namespace tensor_assembly
+} // namespace nalu
+} // namespace sierra
 
 #endif

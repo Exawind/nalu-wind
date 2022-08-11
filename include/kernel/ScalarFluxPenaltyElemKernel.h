@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef ScalarFluxPenaltyElemKernel_h
 #define ScalarFluxPenaltyElemKernel_h
 
@@ -28,18 +27,18 @@ class MasterElement;
 
 /** specificed open bc (face/elem) kernel for continuity equation (pressure DOF)
  */
-template<typename BcAlgTraits>
-class ScalarFluxPenaltyElemKernel: public Kernel
+template <typename BcAlgTraits>
+class ScalarFluxPenaltyElemKernel : public Kernel
 {
 public:
   ScalarFluxPenaltyElemKernel(
-    const stk::mesh::MetaData &metaData,
-    const SolutionOptions &solnOpts,
-    ScalarFieldType *scalarQ,
-    ScalarFieldType *bcScalarQ,
-    ScalarFieldType *diffFluxCoeff,
-    ElemDataRequests &faceDataPreReqs,
-    ElemDataRequests &elemDataPreReqs);
+    const stk::mesh::MetaData& metaData,
+    const SolutionOptions& solnOpts,
+    ScalarFieldType* scalarQ,
+    ScalarFieldType* bcScalarQ,
+    ScalarFieldType* diffFluxCoeff,
+    ElemDataRequests& faceDataPreReqs,
+    ElemDataRequests& elemDataPreReqs);
 
   virtual ~ScalarFluxPenaltyElemKernel();
 
@@ -48,30 +47,32 @@ public:
    */
   using Kernel::execute;
   virtual void execute(
-    SharedMemView<DoubleType**> &lhs,
-    SharedMemView<DoubleType*> &rhs,
-    ScratchViews<DoubleType> &faceScratchViews,
-    ScratchViews<DoubleType> &elemScratchViews,
+    SharedMemView<DoubleType**>& lhs,
+    SharedMemView<DoubleType*>& rhs,
+    ScratchViews<DoubleType>& faceScratchViews,
+    ScratchViews<DoubleType>& elemScratchViews,
     int elemFaceOrdinal);
 
 private:
   ScalarFluxPenaltyElemKernel() = delete;
 
-  unsigned scalarQ_ {stk::mesh::InvalidOrdinal};
-  unsigned bcScalarQ_ {stk::mesh::InvalidOrdinal};
-  unsigned diffFluxCoeff_ {stk::mesh::InvalidOrdinal};
-  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
+  unsigned scalarQ_{stk::mesh::InvalidOrdinal};
+  unsigned bcScalarQ_{stk::mesh::InvalidOrdinal};
+  unsigned diffFluxCoeff_{stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
 
   const double penaltyFac_;
   const bool shiftedGradOp_;
-  MasterElement *meSCS_{nullptr};
-  
+  MasterElement* meSCS_{nullptr};
+
   /// Shape functions
-  AlignedViewType<DoubleType[BcAlgTraits::numFaceIp_][BcAlgTraits::nodesPerFace_]> vf_shape_function_ {"view_face_shape_func"};
+  AlignedViewType<
+    DoubleType[BcAlgTraits::numFaceIp_][BcAlgTraits::nodesPerFace_]>
+    vf_shape_function_{"view_face_shape_func"};
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MOMENTUMSYMMETRYELEMKERNEL_H */

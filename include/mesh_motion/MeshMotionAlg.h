@@ -3,19 +3,15 @@
 
 #include "FrameMoving.h"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class MeshMotionAlg
 {
 public:
-  MeshMotionAlg(
-    stk::mesh::BulkData& bulk,
-    const YAML::Node&);
+  MeshMotionAlg(stk::mesh::BulkData& bulk, const YAML::Node&);
 
-  ~MeshMotionAlg()
-  {
-  }
+  ~MeshMotionAlg() {}
 
   void initialize(const double);
 
@@ -27,15 +23,13 @@ public:
 
   stk::mesh::PartVector get_partvec();
 
-  bool is_deforming(){ return isDeforming_; }
+  bool is_deforming() { return isDeforming_; }
 
 private:
   MeshMotionAlg() = delete;
   MeshMotionAlg(const MeshMotionAlg&) = delete;
 
-  void load(
-    stk::mesh::BulkData&,
-    const YAML::Node&);
+  void load(stk::mesh::BulkData&, const YAML::Node&);
 
   void set_deformation_flag();
 
@@ -53,7 +47,7 @@ private:
   bool isDeforming_ = false;
 };
 
-} // nalu
-} // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MESHMOTIONALG_H */

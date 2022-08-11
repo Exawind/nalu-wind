@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef ABLSRCINTERP_H
 #define ABLSRCINTERP_H
 
@@ -22,12 +21,11 @@ namespace nalu {
 namespace abl_impl {
 
 using Array1D = Kokkos::View<double*, MemSpace>;
-using Array2D = Kokkos::View<double*[3], MemSpace>;
+using Array2D = Kokkos::View<double* [3], MemSpace>;
 
 KOKKOS_FORCEINLINE_FUNCTION
-unsigned abl_find_index(
-  const Array1D& xinp,
-  const double& xout)
+unsigned
+abl_find_index(const Array1D& xinp, const double& xout)
 {
   const unsigned npts = xinp.extent(0);
   for (unsigned i = 1; i < npts; ++i) {
@@ -37,7 +35,7 @@ unsigned abl_find_index(
   }
   return (npts - 2);
 }
-}
+} // namespace abl_impl
 
 /** NGP-friendly source interpolation class for use with ABL forcing term
  *
@@ -50,15 +48,14 @@ public:
   KOKKOS_DEFAULTED_FUNCTION ~ABLScalarInterpolator() = default;
 
   ABLScalarInterpolator(
-    const std::vector<double>& xinp,
-    const std::vector<double>& yinp
-  ) : xinp_("ABLScalarX", xinp.size()),
+    const std::vector<double>& xinp, const std::vector<double>& yinp)
+    : xinp_("ABLScalarX", xinp.size()),
       yinp_("ABLScalarY", yinp.size()),
       xinpHost_(Kokkos::create_mirror_view(xinp_)),
       yinpHost_(Kokkos::create_mirror_view(yinp_)),
       numPts_(xinp_.size())
   {
-    for (unsigned i=0; i < numPts_; ++i) {
+    for (unsigned i = 0; i < numPts_; ++i) {
       xinpHost_(i) = xinp[i];
       yinpHost_(i) = yinp[i];
     }
@@ -70,7 +67,7 @@ public:
    */
   void update_view_on_device(const std::vector<double>& yinp)
   {
-    for (unsigned i=0; i < numPts_; ++i) {
+    for (unsigned i = 0; i < numPts_; ++i) {
       yinpHost_(i) = yinp[i];
     }
     Kokkos::deep_copy(yinp_, yinpHost_);
@@ -125,16 +122,16 @@ public:
 
   ABLVectorInterpolator(
     const std::vector<double>& xinp,
-    const std::vector<std::vector<double>>& yinp
-  ) : xinp_("ABLVectorX", xinp.size()),
+    const std::vector<std::vector<double>>& yinp)
+    : xinp_("ABLVectorX", xinp.size()),
       yinp_("ABLVectorY", yinp.size()),
       xinpHost_(Kokkos::create_mirror_view(xinp_)),
       yinpHost_(Kokkos::create_mirror_view(yinp_)),
       numPts_(xinp.size())
   {
-    for (unsigned i=0; i < numPts_; ++i) {
+    for (unsigned i = 0; i < numPts_; ++i) {
       xinpHost_(i) = xinp[i];
-      for (int d=0; d < ndim; ++d)
+      for (int d = 0; d < ndim; ++d)
         yinpHost_(i, d) = yinp[d][i];
     }
     Kokkos::deep_copy(xinp_, xinpHost_);
@@ -145,8 +142,8 @@ public:
    */
   void update_view_on_device(const std::vector<std::vector<double>>& yinp)
   {
-    for (unsigned i=0; i < numPts_; ++i) {
-      for (int d=0; d < ndim; ++d)
+    for (unsigned i = 0; i < numPts_; ++i) {
+      for (int d = 0; d < ndim; ++d)
         yinpHost_(i, d) = yinp[d][i];
     }
     Kokkos::deep_copy(yinp_, yinpHost_);
@@ -157,24 +154,23 @@ public:
   {
     // Forcing only at hub-height
     if (numPts_ == 1)
-      for (int d=0; d < ndim; d++)
+      for (int d = 0; d < ndim; d++)
         yout[d] = yinp_(0, d);
 
     if (xout <= xinp_(0))
       // constant forcing below first specified height
-      for (int d=0; d < ndim; d++)
+      for (int d = 0; d < ndim; d++)
         yout[d] = yinp_(0, d);
     else if (xout >= xinp_(numPts_ - 1)) {
       // constant forcing above last specified height
       const int idx = numPts_ - 1;
-      for (int d=0; d < ndim; d++)
+      for (int d = 0; d < ndim; d++)
         yout[d] = yinp_(idx, d);
-    }
-    else {
+    } else {
       // interpolate within user-provided range of inputs
       auto idx = abl_impl::abl_find_index(xinp_, xout);
       double fac = (xout - xinp_(idx)) / (xinp_(idx + 1) - xinp_(idx));
-      for (int d=0; d < ndim; d++)
+      for (int d = 0; d < ndim; d++)
         yout[d] = (1.0 - fac) * yinp_(idx, d) + fac * yinp_(idx + 1, d);
     }
   }
@@ -194,8 +190,7 @@ private:
   unsigned numPts_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ABLSRCINTERP_H */

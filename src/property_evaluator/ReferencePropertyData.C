@@ -7,14 +7,12 @@
 // for more details.
 //
 
-
-
 #include <property_evaluator/ReferencePropertyData.h>
 
 #include <Enums.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
@@ -39,4 +37,4 @@ ReferencePropertyData::~ReferencePropertyData()
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

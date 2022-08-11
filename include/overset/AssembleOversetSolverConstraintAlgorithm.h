@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef AssembleOversetSolverConstraintAlgorithm_h
 #define AssembleOversetSolverConstraintAlgorithm_h
 
@@ -18,23 +16,22 @@ namespace stk {
 namespace mesh {
 class Part;
 class FieldBase;
-}
-}
+} // namespace mesh
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class AssembleOversetSolverConstraintAlgorithm : public OversetConstraintBase
 {
 public:
-
   AssembleOversetSolverConstraintAlgorithm(
-    Realm &realm,
-    stk::mesh::Part *part,
-    EquationSystem *eqSystem,
-    stk::mesh::FieldBase *fieldQ);
+    Realm& realm,
+    stk::mesh::Part* part,
+    EquationSystem* eqSystem,
+    stk::mesh::FieldBase* fieldQ);
 
   virtual ~AssembleOversetSolverConstraintAlgorithm() = default;
 
@@ -47,6 +44,6 @@ private:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

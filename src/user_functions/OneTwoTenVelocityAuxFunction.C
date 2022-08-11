@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <user_functions/OneTwoTenVelocityAuxFunction.h>
 #include <algorithm>
 
@@ -17,12 +15,11 @@
 #include <vector>
 #include <stdexcept>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 OneTwoTenVelocityAuxFunction::OneTwoTenVelocityAuxFunction(
-  const unsigned beginPos,
-  const unsigned endPos) 
+  const unsigned beginPos, const unsigned endPos)
   : AuxFunction(beginPos, endPos),
     dpdz_(-0.0016),
     mu_(1.0e-4),
@@ -36,26 +33,28 @@ OneTwoTenVelocityAuxFunction::OneTwoTenVelocityAuxFunction(
 
 void
 OneTwoTenVelocityAuxFunction::do_evaluate(
-  const double *coords,
+  const double* coords,
   const double /*time*/,
   const unsigned spatialDimension,
   const unsigned numPoints,
-  double * fieldPtr,
+  double* fieldPtr,
   const unsigned fieldSize,
   const unsigned /*beginPos*/,
   const unsigned /*endPos*/) const
 {
-  for(unsigned p=0; p < numPoints; ++p) {
+  for (unsigned p = 0; p < numPoints; ++p) {
 
     const double x = coords[0];
     const double y = coords[1];
 
     double sum = 0.0;
-    for ( int n = 0; n < maxN_; ++n ) {
-      const double m = (2.0*n+1.0)*pi_/2.0/b_;
-      sum += std::pow(-1,n)*1.0/m/m/m*(std::cos(m*y)*std::cosh(m*x))/std::cosh(m*a_);
+    for (int n = 0; n < maxN_; ++n) {
+      const double m = (2.0 * n + 1.0) * pi_ / 2.0 / b_;
+      sum += std::pow(-1, n) * 1.0 / m / m / m *
+             (std::cos(m * y) * std::cosh(m * x)) / std::cosh(m * a_);
     }
-    const double w = -1.0/2.0/mu_*dpdz_*(b_*b_ - y*y - 4/b_*sum);
+    const double w =
+      -1.0 / 2.0 / mu_ * dpdz_ * (b_ * b_ - y * y - 4 / b_ * sum);
 
     fieldPtr[0] = 0.0;
     fieldPtr[1] = 0.0;
@@ -67,4 +66,4 @@ OneTwoTenVelocityAuxFunction::do_evaluate(
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

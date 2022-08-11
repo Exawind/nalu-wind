@@ -66,7 +66,10 @@ class MomentumSolutionUpdateFixture : public LowMachFixture
 protected:
   MomentumSolutionUpdateFixture()
     : LowMachFixture(nx, scale),
-      linsys(stk::mesh::get_updated_ngp_mesh(bulk), meta.universal_part(), gid_field_ngp),
+      linsys(
+        stk::mesh::get_updated_ngp_mesh(bulk),
+        meta.universal_part(),
+        gid_field_ngp),
       exporter(
         Teuchos::rcpFromRef(linsys.owned_and_shared),
         Teuchos::rcpFromRef(linsys.owned)),

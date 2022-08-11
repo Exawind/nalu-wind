@@ -19,7 +19,8 @@ namespace nalu {
 namespace tensor_assembly {
 
 template <int poly_order, typename Scalar>
-void pressure_poisson_rhs(
+void
+pressure_poisson_rhs(
   const CVFEMOperators<poly_order, Scalar>& ops,
   double projTimeScale,
   const scs_scalar_view<poly_order, Scalar>& mdot,
@@ -45,7 +46,7 @@ void pressure_poisson_rhs(
   for (int k = 0; k < n1D; ++k) {
     for (int j = 0; j < nscs; ++j) {
       for (int i = 0; i < n1D; ++i) {
-        integrand(k,j,i) = -mdot(YH, k, j, i) * inv_projTimeScale;
+        integrand(k, j, i) = -mdot(YH, k, j, i) * inv_projTimeScale;
       }
     }
   }
@@ -54,14 +55,14 @@ void pressure_poisson_rhs(
   for (int k = 0; k < nscs; ++k) {
     for (int j = 0; j < n1D; ++j) {
       for (int i = 0; i < n1D; ++i) {
-        integrand(k,j,i) = -mdot(ZH, k, j, i) * inv_projTimeScale;
+        integrand(k, j, i) = -mdot(ZH, k, j, i) * inv_projTimeScale;
       }
     }
   }
   ops.integrate_and_diff_zhat(integrand, rhs);
 }
 
-}
-}
-}
+} // namespace tensor_assembly
+} // namespace nalu
+} // namespace sierra
 #endif

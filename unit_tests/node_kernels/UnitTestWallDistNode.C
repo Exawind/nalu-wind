@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
@@ -17,7 +16,8 @@
 TEST_F(WallDistKernelHex8Mesh, walldist_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -33,6 +33,8 @@ TEST_F(WallDistKernelHex8Mesh, walldist_node)
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8u);
 
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, 0.125, 1.0e-12);
-  unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, 0.0, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->rhs_, 0.125, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near<8>(
+    helperObjs.linsys->lhs_, 0.0, 1.0e-12);
 }

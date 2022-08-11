@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef BoussinesqNonIsoMomentumSrcNodeSuppAlg_h
 #define BoussinesqNonIsoMomentumSrcNodeSuppAlg_h
 
@@ -17,29 +15,24 @@
 
 #include <stk_mesh/base/Entity.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class BoussinesqNonIsoMomentumSrcNodeSuppAlg : public SupplementalAlgorithm
 {
 public:
-
-  BoussinesqNonIsoMomentumSrcNodeSuppAlg(
-    Realm &realm);
+  BoussinesqNonIsoMomentumSrcNodeSuppAlg(Realm& realm);
 
   virtual ~BoussinesqNonIsoMomentumSrcNodeSuppAlg() {}
 
   virtual void setup();
 
-  virtual void node_execute(
-    double *lhs,
-    double *rhs,
-    stk::mesh::Entity node);
-  
-  VectorFieldType *coordinates_;
-  ScalarFieldType *dualNodalVolume_;
+  virtual void node_execute(double* lhs, double* rhs, stk::mesh::Entity node);
+
+  VectorFieldType* coordinates_;
+  ScalarFieldType* dualNodalVolume_;
 
   const double visc_;
   const double Cp;
@@ -51,6 +44,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

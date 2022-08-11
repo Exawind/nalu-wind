@@ -60,9 +60,11 @@ class SimdGatherFixture : public ::testing::Test
 protected:
   static constexpr int order = 1;
 
-  SimdGatherFixture() 
-    : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD).set_spatial_dimension(3u).create()), 
-      bulk(*bulkPtr), 
+  SimdGatherFixture()
+    : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD)
+                .set_spatial_dimension(3u)
+                .create()),
+      bulk(*bulkPtr),
       meta(bulk.mesh_meta_data())
   {
     stk::topology topo(stk::topology::HEX_8);

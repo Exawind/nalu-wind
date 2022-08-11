@@ -13,14 +13,14 @@
 #include <vector>
 #include <utility>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 struct ActuatorBulk;
 struct ActuatorMeta;
 /**
  * @brief Data structure for caching blade specific info
- * 
+ *
  */
 struct BladeDistributionInfo
 {
@@ -31,13 +31,14 @@ struct BladeDistributionInfo
 
 /**
  * @brief Compute the maximum parallelization of blades to loop over
- * 
- * @param actMeta 
- * @param actBulk 
- * @return std::vector<BladeDistributionInfo> - first item is the offset where the blade can be found and the second
-  is the number of points along the blade
+ *
+ * @param actMeta
+ * @param actBulk
+ * @return std::vector<BladeDistributionInfo> - first item is the offset where
+ the blade can be found and the second is the number of points along the blade
  */
-std::vector<BladeDistributionInfo> compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk);
+std::vector<BladeDistributionInfo>
+compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk);
 /**
  * @brief determine if a blade's lifting line correction should be computed on
  * the reference processor
@@ -52,7 +53,7 @@ std::vector<BladeDistributionInfo> compute_blade_distributions(const ActuatorMet
  */
 bool blade_belongs_on_this_rank(
   int totalNumBlades, int globBladeNum, int numRanks, int ranks);
-}
-}
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ACTUATORBLADEDISTRIBUTOR_H_ */

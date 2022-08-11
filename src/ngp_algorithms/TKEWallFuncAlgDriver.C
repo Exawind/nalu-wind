@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/TKEWallFuncAlgDriver.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldManager.h"
@@ -23,16 +22,17 @@
 namespace sierra {
 namespace nalu {
 
-TKEWallFuncAlgDriver::TKEWallFuncAlgDriver(
-  Realm& realm
-) : NgpAlgDriver(realm)
-{}
+TKEWallFuncAlgDriver::TKEWallFuncAlgDriver(Realm& realm) : NgpAlgDriver(realm)
+{
+}
 
-void TKEWallFuncAlgDriver::pre_work()
+void
+TKEWallFuncAlgDriver::pre_work()
 {
   // Defer getting the field ordinals until after equation systems have done
   // their initialization
-  tke_ = get_field_ordinal(realm_.meta_data(), "turbulent_ke", stk::mesh::StateNP1);
+  tke_ =
+    get_field_ordinal(realm_.meta_data(), "turbulent_ke", stk::mesh::StateNP1);
   bctke_ = get_field_ordinal(realm_.meta_data(), "tke_bc");
   bcNodalTke_ = get_field_ordinal(realm_.meta_data(), "wall_model_tke_bc");
   wallArea_ = get_field_ordinal(realm_.meta_data(), "assembled_wall_area_wf");
@@ -45,7 +45,8 @@ void TKEWallFuncAlgDriver::pre_work()
   ngpBcNodalTke.set_all(ngpMesh, 0.0);
 }
 
-void TKEWallFuncAlgDriver::post_work()
+void
+TKEWallFuncAlgDriver::post_work()
 {
   using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& ngpMesh = realm_.ngp_mesh();
@@ -81,8 +82,7 @@ void TKEWallFuncAlgDriver::post_work()
       stk::topology::NODE_RANK, "wall_model_tke_bc"));
 
   nalu_ngp::run_entity_algorithm(
-    "TKEWallFuncAlgDriver_normalize",
-    ngpMesh, stk::topology::NODE_RANK, sel,
+    "TKEWallFuncAlgDriver_normalize", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double warea = ngpWallArea.get(mi, 0);
       const double tkeVal = ngpBcNodalTke.get(mi, 0) / warea;
@@ -96,5 +96,5 @@ void TKEWallFuncAlgDriver::post_work()
   ngpTke.modify_on_device();
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

@@ -87,13 +87,16 @@ MomentumJacobiOperator<p>::apply(
   const mv_type& x, mv_type& y, Teuchos::ETransp, double, double) const
 {
   element_multiply(
-    owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadOnly), x.getLocalViewDevice(Tpetra::Access::ReadOnly),
+    owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadOnly),
+    x.getLocalViewDevice(Tpetra::Access::ReadOnly),
     y.getLocalViewDevice(Tpetra::Access::ReadWrite));
   for (int n = 1; n < num_sweeps; ++n) {
     op->apply(y, cached_mv);
     update_jacobi_sweep(
-      owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadOnly), cached_mv.getLocalViewDevice(Tpetra::Access::ReadOnly),
-      x.getLocalViewDevice(Tpetra::Access::ReadOnly), y.getLocalViewDevice(Tpetra::Access::ReadWrite));
+      owned_diagonal.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      cached_mv.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      x.getLocalViewDevice(Tpetra::Access::ReadOnly),
+      y.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
 }
 

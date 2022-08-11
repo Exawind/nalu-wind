@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef GenericPropAlgorithm_h
 #define GenericPropAlgorithm_h
 
@@ -18,11 +16,11 @@ namespace stk {
 namespace mesh {
 class FieldBase;
 class Part;
-}
-}
+} // namespace mesh
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 class PropertyEvaluator;
@@ -30,23 +28,21 @@ class PropertyEvaluator;
 class GenericPropAlgorithm : public Algorithm
 {
 public:
-
   GenericPropAlgorithm(
-    Realm & realm,
-    stk::mesh::Part * part,
-    stk::mesh::FieldBase * prop,
-    PropertyEvaluator *propEvaluator);
+    Realm& realm,
+    stk::mesh::Part* part,
+    stk::mesh::FieldBase* prop,
+    PropertyEvaluator* propEvaluator);
 
   virtual ~GenericPropAlgorithm() {}
 
   virtual void execute();
 
-  stk::mesh::FieldBase *prop_;
-  PropertyEvaluator *propEvaluator_;
-  
+  stk::mesh::FieldBase* prop_;
+  PropertyEvaluator* propEvaluator_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

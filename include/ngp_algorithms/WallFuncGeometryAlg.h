@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef WALLFUNCGEOMETRYALG_H
 #define WALLFUNCGEOMETRYALG_H
 
@@ -25,10 +24,7 @@ class WallFuncGeometryAlg : public Algorithm
 public:
   using DblType = double;
 
-  WallFuncGeometryAlg(Realm&, 
-    stk::mesh::Part*,
-    bool = false,
-    double = 0.0);
+  WallFuncGeometryAlg(Realm&, stk::mesh::Part*, bool = false, double = 0.0);
 
   virtual ~WallFuncGeometryAlg() = default;
 
@@ -38,11 +34,11 @@ private:
   ElemDataRequests faceData_;
   ElemDataRequests elemData_;
 
-  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
-  unsigned wallNormDistBip_ {stk::mesh::InvalidOrdinal};
-  unsigned wallArea_ {stk::mesh::InvalidOrdinal};
-  unsigned wallNormDist_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned wallNormDistBip_{stk::mesh::InvalidOrdinal};
+  unsigned wallArea_{stk::mesh::InvalidOrdinal};
+  unsigned wallNormDist_{stk::mesh::InvalidOrdinal};
 
   static constexpr DblType wallNormalHeightFactor{1.0};
 
@@ -53,8 +49,7 @@ private:
   double z0_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* WALLFUNCGEOMETRYALG_H */

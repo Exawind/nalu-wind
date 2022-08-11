@@ -19,7 +19,7 @@ namespace nalu {
 
 class SolutionOptions;
 
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 class ScalarOpenEdgeKernel : public NGPKernel<ScalarOpenEdgeKernel<BcAlgTraits>>
 {
 public:
@@ -45,17 +45,16 @@ public:
     ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  unsigned scalarQ_ { stk::mesh::InvalidOrdinal };
-  unsigned bcScalarQ_ { stk::mesh::InvalidOrdinal };
-  unsigned openMassFlowRate_ {stk::mesh::InvalidOrdinal};
+  unsigned scalarQ_{stk::mesh::InvalidOrdinal};
+  unsigned bcScalarQ_{stk::mesh::InvalidOrdinal};
+  unsigned openMassFlowRate_{stk::mesh::InvalidOrdinal};
 
   const DoubleType relaxFac_;
 
   MasterElement* meFC_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* SCALAROPENEDGEKERNEL_H */

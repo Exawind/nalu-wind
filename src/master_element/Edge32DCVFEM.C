@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <master_element/Edge32DCVFEM.h>
 #include <master_element/MasterElementFunctions.h>
 #include <AlgTraits.h>
@@ -27,28 +25,27 @@
 #include <map>
 #include <memory>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-Edge32DSCS::Edge32DSCS()
-  : MasterElement()
+Edge32DSCS::Edge32DSCS() : MasterElement()
 {
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
 #ifndef KOKKOS_ENABLE_CUDA
-  const int stk1DNodeMap[3] = { 0, 2, 1 };
+  const int stk1DNodeMap[3] = {0, 2, 1};
 
   int scalar_index = 0;
   for (int k = 0; k < nodesPerElement_; ++k) {
     for (int i = 0; i < numQuad_; ++i) {
       ipNodeMap_[scalar_index] = stk1DNodeMap[k];
-      intgLoc_[scalar_index] = gauss_point_location(k,i);
-      ipWeight_[scalar_index] = tensor_product_weight(k,i);
+      intgLoc_[scalar_index] = gauss_point_location(k, i);
+      ipWeight_[scalar_index] = tensor_product_weight(k, i);
       ++scalar_index;
     }
   }
@@ -60,21 +57,22 @@ Edge32DSCS::Edge32DSCS()
 //--------------------------------------------------------------------------
 double
 Edge32DSCS::gauss_point_location(
-  const int nodeOrdinal,
-  const int gaussPointOrdinal) const
+  const int nodeOrdinal, const int gaussPointOrdinal) const
 {
-   return isoparametric_mapping( scsEndLoc_[nodeOrdinal+1],
-     scsEndLoc_[nodeOrdinal],
-     gaussAbscissae_[gaussPointOrdinal] );
+  return isoparametric_mapping(
+    scsEndLoc_[nodeOrdinal + 1], scsEndLoc_[nodeOrdinal],
+    gaussAbscissae_[gaussPointOrdinal]);
 }
 
 //--------------------------------------------------------------------------
 //-------- tensor_product_weight -------------------------------------------
 //--------------------------------------------------------------------------
-double Edge32DSCS::tensor_product_weight(const int s1Node, const int s1Ip) const
+double
+Edge32DSCS::tensor_product_weight(const int s1Node, const int s1Ip) const
 {
-  //line integration
-  const double isoparametricLength = scsEndLoc_[s1Node+1]-scsEndLoc_[s1Node];
+  // line integration
+  const double isoparametricLength =
+    scsEndLoc_[s1Node + 1] - scsEndLoc_[s1Node];
   const double weight = isoparametricLength * gaussWeight_[s1Ip];
   return weight;
 }
@@ -82,50 +80,49 @@ double Edge32DSCS::tensor_product_weight(const int s1Node, const int s1Ip) const
 //--------------------------------------------------------------------------
 //-------- ipNodeMap -------------------------------------------------------
 //--------------------------------------------------------------------------
-const int *
-Edge32DSCS::ipNodeMap(
-  int /*ordinal*/) const
+const int*
+Edge32DSCS::ipNodeMap(int /*ordinal*/) const
 {
-  // define ip->node mappings for each face (single ordinal); 
+  // define ip->node mappings for each face (single ordinal);
   return ipNodeMap_;
 }
 
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void Edge32DSCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem> &coords,
-  SharedMemView<DoubleType**, DeviceShmem> &area) {
+void
+Edge32DSCS::determinant(
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType**, DeviceShmem>& area)
+{
 
   NALU_ALIGNED DoubleType areaVector[2];
-  const DoubleType x0 = coords(0,0); const DoubleType y0 = coords(0,1);
-  const DoubleType x1 = coords(1,0); const DoubleType y1 = coords(1,1);
-  const DoubleType x2 = coords(2,0); const DoubleType y2 = coords(2,1);
+  const DoubleType x0 = coords(0, 0);
+  const DoubleType y0 = coords(0, 1);
+  const DoubleType x1 = coords(1, 0);
+  const DoubleType y1 = coords(1, 1);
+  const DoubleType x2 = coords(2, 0);
+  const DoubleType y2 = coords(2, 1);
 
   for (int ip = 0; ip < numIntPoints_; ++ip) {
     const DoubleType s = intgLoc_[ip];
     const DoubleType dxds = 0.5 * (x1 - x0) + (x1 - 2.0 * x2 + x0) * s;
     const DoubleType dyds = 0.5 * (y1 - y0) + (y1 - 2.0 * y2 + y0) * s;
 
-    areaVector[0] =  dyds;
+    areaVector[0] = dyds;
     areaVector[1] = -dxds;
 
     // weight the area vector with the Gauss-quadrature weight for this IP
-    area(ip,0) = ipWeight_[ip] * areaVector[0];
-    area(ip,1) = ipWeight_[ip] * areaVector[1];
+    area(ip, 0) = ipWeight_[ip] * areaVector[0];
+    area(ip, 1) = ipWeight_[ip] * areaVector[1];
   }
-
 }
 
-
-
-void Edge32DSCS::determinant(
-  const int nelem,
-  const double *coords,
-  double *areav,
-  double *error)
+void
+Edge32DSCS::determinant(
+  const int nelem, const double* coords, double* areav, double* error)
 {
-  std::array<double,2> areaVector;
+  std::array<double, 2> areaVector;
 
   for (int k = 0; k < nelem; ++k) {
     const int coord_elem_offset = nDim_ * nodesPerElement_ * k;
@@ -134,9 +131,7 @@ void Edge32DSCS::determinant(
       const int offset = nDim_ * ip + coord_elem_offset;
 
       // calculate the area vector
-      area_vector( &coords[coord_elem_offset],
-                   intgLoc_[ip],
-                   areaVector.data() );
+      area_vector(&coords[coord_elem_offset], intgLoc_[ip], areaVector.data());
 
       // weight the area vector with the Gauss-quadrature weight for this IP
       areav[offset + 0] = ipWeight_[ip] * areaVector[0];
@@ -151,52 +146,52 @@ void Edge32DSCS::determinant(
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void 
-Edge32DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) 
+void
+Edge32DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for ( int i =0; i< numIntPoints_; ++i ) {
+  for (int i = 0; i < numIntPoints_; ++i) {
     const DoubleType s = intgLoc_[i];
-    shpfc(i,0) = -s*(1.0-s)*0.5;
-    shpfc(i,1) =  s*(1.0+s)*0.5;
-    shpfc(i,2) =    (1.0-s)*(1.0+s);
+    shpfc(i, 0) = -s * (1.0 - s) * 0.5;
+    shpfc(i, 1) = s * (1.0 + s) * 0.5;
+    shpfc(i, 2) = (1.0 - s) * (1.0 + s);
   }
 }
 
 void
-Edge32DSCS::shape_fcn(double *shpfc)
+Edge32DSCS::shape_fcn(double* shpfc)
 {
-  for ( int i =0; i< numIntPoints_; ++i ) {
-    int j = 3*i;
+  for (int i = 0; i < numIntPoints_; ++i) {
+    int j = 3 * i;
     const double s = intgLoc_[i];
-    shpfc[j  ] = -s*(1.0-s)*0.5;
-    shpfc[j+1] = s*(1.0+s)*0.5;
-    shpfc[j+2] = (1.0-s)*(1.0+s);
+    shpfc[j] = -s * (1.0 - s) * 0.5;
+    shpfc[j + 1] = s * (1.0 + s) * 0.5;
+    shpfc[j + 2] = (1.0 - s) * (1.0 + s);
   }
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-void 
-Edge32DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) 
+void
+Edge32DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for ( int i =0; i< numIntPoints_; ++i ) {
+  for (int i = 0; i < numIntPoints_; ++i) {
     const DoubleType s = intgLocShift_[i];
-    shpfc(i,0) = -s*(1.0-s)*0.5;
-    shpfc(i,1) =  s*(1.0+s)*0.5;
-    shpfc(i,2) =    (1.0-s)*(1.0+s);
+    shpfc(i, 0) = -s * (1.0 - s) * 0.5;
+    shpfc(i, 1) = s * (1.0 + s) * 0.5;
+    shpfc(i, 2) = (1.0 - s) * (1.0 + s);
   }
 }
 
 void
-Edge32DSCS::shifted_shape_fcn(double *shpfc)
+Edge32DSCS::shifted_shape_fcn(double* shpfc)
 {
-  for ( int i =0; i< numIntPoints_; ++i ) {
-    int j = 3*i;
+  for (int i = 0; i < numIntPoints_; ++i) {
+    int j = 3 * i;
     const double s = intgLocShift_[i];
-    shpfc[j  ] = -s*(1.0-s)*0.5;
-    shpfc[j+1] = s*(1.0+s)*0.5;
-    shpfc[j+2] = (1.0-s)*(1.0+s);
+    shpfc[j] = -s * (1.0 - s) * 0.5;
+    shpfc[j + 1] = s * (1.0 + s) * 0.5;
+    shpfc[j + 2] = (1.0 - s) * (1.0 + s);
   }
 }
 
@@ -205,18 +200,20 @@ Edge32DSCS::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 Edge32DSCS::interpolatePoint(
-  const int &nComp,
-  const double *isoParCoord,
-  const double *field,
-  double *result)
+  const int& nComp,
+  const double* isoParCoord,
+  const double* field,
+  double* result)
 {
   constexpr int nNodes = 3;
 
   double s = isoParCoord[0];
-  std::array<double, nNodes> shapefct = {{-0.5*s*(1-s), +0.5*s*(1+s), (1-s)*(1+s)}};
+  std::array<double, nNodes> shapefct = {
+    {-0.5 * s * (1 - s), +0.5 * s * (1 + s), (1 - s) * (1 + s)}};
 
-  for ( int i =0; i< nComp; ++i ) {
-    result[i] = shapefct[0] * field[3*i+0] + shapefct[1] * field[3*i+1] + shapefct[2] * field[3*i+2];
+  for (int i = 0; i < nComp; ++i) {
+    result[i] = shapefct[0] * field[3 * i + 0] +
+                shapefct[1] * field[3 * i + 1] + shapefct[2] * field[3 * i + 2];
   }
 }
 
@@ -225,9 +222,9 @@ Edge32DSCS::interpolatePoint(
 //--------------------------------------------------------------------------
 void
 Edge32DSCS::area_vector(
-  const double *POINTER_RESTRICT coords,
+  const double* POINTER_RESTRICT coords,
   const double s,
-  double *POINTER_RESTRICT areaVector) const
+  double* POINTER_RESTRICT areaVector) const
 {
   // returns the normal area vector (dyds,-dxds) evaluated at s
 
@@ -238,14 +235,17 @@ Edge32DSCS::area_vector(
   // could equivalently use the shape function derivatives . . .
 
   // coordinate names
-  const double x0 = coords[0]; const double y0 = coords[1];
-  const double x1 = coords[2]; const double y1 = coords[3];
-  const double x2 = coords[4]; const double y2 = coords[5];
+  const double x0 = coords[0];
+  const double y0 = coords[1];
+  const double x1 = coords[2];
+  const double y1 = coords[3];
+  const double x2 = coords[4];
+  const double y2 = coords[5];
 
   const double dxds = 0.5 * (x1 - x0) + (x1 - 2.0 * x2 + x0) * s;
   const double dyds = 0.5 * (y1 - y0) + (y1 - 2.0 * y2 + y0) * s;
 
-  areaVector[0] =  dyds;
+  areaVector[0] = dyds;
   areaVector[1] = -dxds;
 }
 

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/UnitTestNgpAlgUtils.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "stk_mesh/base/NgpMesh.hpp"
@@ -15,8 +14,7 @@
 #include "stk_mesh/base/FieldBase.hpp"
 #include "stk_mesh/base/Field.hpp"
 
-namespace unit_test_alg_utils
-{
+namespace unit_test_alg_utils {
 
 void
 linear_scalar_field(
@@ -31,12 +29,11 @@ linear_scalar_field(
 
   stk::mesh::EntityVector nodes;
   bulk.get_entities(stk::topology::NODE_RANK, sel, nodes);
-  for (stk::mesh::Entity & node : nodes) {
-    double * fieldData  = stk::mesh::field_data(field, node);
-    double * coordsData = stk::mesh::field_data(coordinates, node);
-    fieldData[0] = coordsData[0] * xCoeff +
-                   coordsData[1] * yCoeff +
-                   coordsData[2] * zCoeff;
+  for (stk::mesh::Entity& node : nodes) {
+    double* fieldData = stk::mesh::field_data(field, node);
+    double* coordsData = stk::mesh::field_data(coordinates, node);
+    fieldData[0] =
+      coordsData[0] * xCoeff + coordsData[1] * yCoeff + coordsData[2] * zCoeff;
   }
 
   field.modify_on_host();
@@ -55,9 +52,9 @@ linear_scalar_field(
 
   stk::mesh::EntityVector nodes;
   bulk.get_entities(stk::topology::NODE_RANK, sel, nodes);
-  for (stk::mesh::Entity & node : nodes) {
-    double * fieldData  = stk::mesh::field_data(field, node);
-    double * coordsData = stk::mesh::field_data(coordinates, node);
+  for (stk::mesh::Entity& node : nodes) {
+    double* fieldData = stk::mesh::field_data(field, node);
+    double* coordsData = stk::mesh::field_data(coordinates, node);
     fieldData[0] = coordsData[0] * xCoeff;
     fieldData[1] = coordsData[1] * yCoeff;
     fieldData[2] = coordsData[2] * zCoeff;
@@ -66,4 +63,4 @@ linear_scalar_field(
   field.modify_on_host();
 }
 
-} // namespace
+} // namespace unit_test_alg_utils

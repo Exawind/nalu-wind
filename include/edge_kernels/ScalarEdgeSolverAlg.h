@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef SCALAREDGESOLVERALG_H
 #define SCALAREDGESOLVERALG_H
 
@@ -34,22 +33,22 @@ public:
   virtual void execute();
 
 private:
-  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
-  unsigned velocityRTM_ {stk::mesh::InvalidOrdinal};
-  unsigned scalarQ_ {stk::mesh::InvalidOrdinal};
-  unsigned density_ {stk::mesh::InvalidOrdinal};
-  unsigned dqdx_ {stk::mesh::InvalidOrdinal};
-  unsigned edgeAreaVec_ {stk::mesh::InvalidOrdinal};
-  unsigned massFlowRate_ {stk::mesh::InvalidOrdinal};
-  unsigned diffFluxCoeff_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned velocityRTM_{stk::mesh::InvalidOrdinal};
+  unsigned scalarQ_{stk::mesh::InvalidOrdinal};
+  unsigned density_{stk::mesh::InvalidOrdinal};
+  unsigned dqdx_{stk::mesh::InvalidOrdinal};
+  unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned massFlowRate_{stk::mesh::InvalidOrdinal};
+  unsigned diffFluxCoeff_{stk::mesh::InvalidOrdinal};
 
-  PecletFunction<AssembleEdgeSolverAlgorithm::DblType>* pecletFunction_{nullptr};
+  PecletFunction<AssembleEdgeSolverAlgorithm::DblType>* pecletFunction_{
+    nullptr};
 
   std::string dofName_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* SCALAREDGESOLVERALG_H */

@@ -33,9 +33,7 @@ private:
   double maxRe_;
 };
 
-}  // nalu
-}  // sierra
-
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* COURANTREALGDRIVER_H */

@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef Algorithm_h
 #define Algorithm_h
 
@@ -18,10 +16,10 @@ namespace stk {
 namespace mesh {
 class Part;
 typedef std::vector<Part*> PartVector;
-}
-}
-namespace sierra{
-namespace nalu{
+} // namespace mesh
+} // namespace stk
+namespace sierra {
+namespace nalu {
 
 class Realm;
 class MasterElement;
@@ -31,16 +29,11 @@ class Kernel;
 class Algorithm
 {
 public:
-
   // provide part
-  Algorithm(
-    Realm &realm,
-    stk::mesh::Part *part);
+  Algorithm(Realm& realm, stk::mesh::Part* part);
 
   // provide part vector
-  Algorithm(
-    Realm &realm,
-    stk::mesh::PartVector &partVec);
+  Algorithm(Realm& realm, stk::mesh::PartVector& partVec);
 
   virtual ~Algorithm();
 
@@ -48,14 +41,14 @@ public:
 
   virtual void pre_work() {}
 
-  Realm &realm_;
+  Realm& realm_;
   stk::mesh::PartVector partVec_;
-  std::vector<SupplementalAlgorithm *> supplementalAlg_;
+  std::vector<SupplementalAlgorithm*> supplementalAlg_;
 
   std::vector<Kernel*> activeKernels_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

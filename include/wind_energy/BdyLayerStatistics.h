@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef BDYLAYERSTATISTICS_H
 #define BDYLAYERSTATISTICS_H
 
@@ -18,7 +17,9 @@
 
 #include <memory>
 
-namespace YAML { class Node; }
+namespace YAML {
+class Node;
+}
 
 namespace sierra {
 namespace nalu {
@@ -44,9 +45,7 @@ public:
   using ArrayType = Kokkos::View<double*, Kokkos::LayoutRight, MemSpace>;
   using HostArrayType = typename ArrayType::HostMirror;
 
-  BdyLayerStatistics(
-    Realm&,
-    const YAML::Node&);
+  BdyLayerStatistics(Realm&, const YAML::Node&);
 
   virtual ~BdyLayerStatistics();
 
@@ -54,7 +53,8 @@ public:
    */
   void setup();
 
-  /** Determine the number of height levels and node association with height levels
+  /** Determine the number of height levels and node association with height
+   * levels
    */
   void initialize();
 
@@ -62,13 +62,15 @@ public:
    */
   void execute();
 
-  /** Return the spatial average of the instantaneous velocity field at a given height
+  /** Return the spatial average of the instantaneous velocity field at a given
+   * height
    *
    *  The method interpolates the spatially averaged velocity from available
    *  heights to return the average velocity at an arbitrary height.
    *
    *  @param[in] height The height where velocity is desired
-   *  @param[out] velArray A pointer to an array of nDim which contains the components of velocity
+   *  @param[out] velArray A pointer to an array of nDim which contains the
+   * components of velocity
    */
   void velocity(double, double*);
 
@@ -78,21 +80,24 @@ public:
    *  heights to return the average velocity at an arbitrary height.
    *
    *  @param[in] height The height where velocity is desired
-   *  @param[out] velArray A pointer to an array of nDim which contains the components of velocity
+   *  @param[out] velArray A pointer to an array of nDim which contains the
+   * components of velocity
    */
   void time_averaged_velocity(double, double*);
 
-  //! Return the spatial average of the magnitude of the horizontal velocity field at a given height
+  //! Return the spatial average of the magnitude of the horizontal velocity
+  //! field at a given height
   void velocity_magnitude(double, double*);
 
-  //! Return the spatial average of the instantaneous density field at a given height
+  //! Return the spatial average of the instantaneous density field at a given
+  //! height
   void density(double, double*);
 
-  //! Return the spatial average of the instantaneous temperature field at a given height
+  //! Return the spatial average of the instantaneous temperature field at a
+  //! given height
   void temperature(double, double*);
 
-  void set_utau_avg(double utau)
-  { uTauAvg_ = utau; }
+  void set_utau_avg(double utau) { uTauAvg_ = utau; }
 
   //! Number of vertical levels on this ABL mesh
   int abl_num_levels() const { return heights_.size(); }
@@ -120,7 +125,8 @@ private:
   //! Process the user inputs and initialize class data
   void load(const YAML::Node&);
 
-  //! Initialize necessary parameters in sierra::nalu::TurbulenceAveragingPostProcessing
+  //! Initialize necessary parameters in
+  //! sierra::nalu::TurbulenceAveragingPostProcessing
   void setup_turbulence_averaging(const double);
 
   //! Output averaged velocity and stress profiles as a function of height
@@ -129,18 +135,18 @@ private:
   //! Output averaged temperature profiles as a function of height
   void output_temperature_averages();
 
-  /** Helper method to perform interpolations across data with multiple components
+  /** Helper method to perform interpolations across data with multiple
+   * components
    *
-   *  @param[in] nComp The number of components: scalar=1, vector=3, tensor=6 and so on
-   *  @param[in] varArray Reference to the array that contains averaged data at all heights
+   *  @param[in] nComp The number of components: scalar=1, vector=3, tensor=6
+   * and so on
+   *  @param[in] varArray Reference to the array that contains averaged data at
+   * all heights
    *  @param[in] height The height where data is to be interpolated
-   *  @param[out] interpArry Pointer to an array of size nComp where interpolated data is populated
+   *  @param[out] interpArry Pointer to an array of size nComp where
+   * interpolated data is populated
    */
-  void interpolate_variable(
-    int,
-    HostArrayType&,
-    double,
-    double*);
+  void interpolate_variable(int, HostArrayType&, double, double*);
 
   /** Prepare the NetCDF statstics file with the necessary metadata
    */
@@ -152,13 +158,16 @@ private:
   //! Reference to Realm object
   Realm& realm_;
 
-  //! Spatially averaged instantaneous velocity at desired heights [nHeights, nDim]
+  //! Spatially averaged instantaneous velocity at desired heights [nHeights,
+  //! nDim]
   ArrayType d_velAvg_;
 
-  //! Spatially averaged instantaneous horizontal velocity magnitude at desired heights [nHeights]
+  //! Spatially averaged instantaneous horizontal velocity magnitude at desired
+  //! heights [nHeights]
   ArrayType d_velMagAvg_;
 
-  //! Spatially and temporally averaged velocity at desired heights [nHeights, nDim]
+  //! Spatially and temporally averaged velocity at desired heights [nHeights,
+  //! nDim]
   ArrayType d_velBarAvg_;
 
   //! Spatially averaged resolved stress [nHeights, nDim]
@@ -167,10 +176,12 @@ private:
   //! Spatially averaged sfs stress [nHeights, nDim]
   ArrayType d_sfsAvg_;
 
-  //! Spatially and temporally averaged resolved stress field at desired heights [nHeights, nDim * 2]
+  //! Spatially and temporally averaged resolved stress field at desired heights
+  //! [nHeights, nDim * 2]
   ArrayType d_uiujBarAvg_;
 
-  //! Spatially and temporally averaged SFS field at desired heights [nHeights, nDim * 2]
+  //! Spatially and temporally averaged SFS field at desired heights [nHeights,
+  //! nDim * 2]
   ArrayType d_sfsBarAvg_;
 
   //! Spatially averaged instantaneous temperature field [nHeights]
@@ -205,13 +216,16 @@ private:
   //! Height from the wall
   ArrayType d_heights_;
 
-  //! Spatially averaged instantaneous velocity at desired heights [nHeights, nDim]
+  //! Spatially averaged instantaneous velocity at desired heights [nHeights,
+  //! nDim]
   HostArrayType velAvg_;
 
-  //! Spatially averaged instantaneous horizontal velocity magnitude at desired heights [nHeights]
+  //! Spatially averaged instantaneous horizontal velocity magnitude at desired
+  //! heights [nHeights]
   HostArrayType velMagAvg_;
 
-  //! Spatially and temporally averaged velocity at desired heights [nHeights, nDim]
+  //! Spatially and temporally averaged velocity at desired heights [nHeights,
+  //! nDim]
   HostArrayType velBarAvg_;
 
   //! Spatially averaged resolved stress [nHeights, nDim]
@@ -220,10 +234,12 @@ private:
   //! Spatially averaged sfs stress [nHeights, nDim]
   HostArrayType sfsAvg_;
 
-  //! Spatially and temporally averaged resolved stress field at desired heights [nHeights, nDim * 2]
+  //! Spatially and temporally averaged resolved stress field at desired heights
+  //! [nHeights, nDim * 2]
   HostArrayType uiujBarAvg_;
 
-  //! Spatially and temporally averaged SFS field at desired heights [nHeights, nDim * 2]
+  //! Spatially and temporally averaged SFS field at desired heights [nHeights,
+  //! nDim * 2]
   HostArrayType sfsBarAvg_;
 
   //! Spatially averaged instantaneous temperature field [nHeights]
@@ -300,8 +316,7 @@ private:
   bool doInit_{true};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* BDYLAYERSTATISTICS_H */

@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef Transfer_h
 #define Transfer_h
 
@@ -20,18 +18,20 @@
 // stk_transfer related
 #include <stk_transfer/TransferBase.hpp>
 
-namespace YAML { class Node; }
+namespace YAML {
+class Node;
+}
 
 // stk
 namespace stk {
 namespace mesh {
 class Part;
 typedef std::vector<Part*> PartVector;
-}
-}
+} // namespace mesh
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 class Transfers;
@@ -40,10 +40,10 @@ class Simulation;
 class Transfer
 {
 public:
-  Transfer( Transfers &transfers);
+  Transfer(Transfers& transfers);
   virtual ~Transfer();
 
-  void load(const YAML::Node & node);
+  void load(const YAML::Node& node);
 
   void breadboard();
   void initialize_begin();
@@ -51,19 +51,18 @@ public:
   void initialize_end();
   void execute();
 
+  Simulation* root();
+  Transfers* parent();
 
-  Simulation *root();
-  Transfers *parent();
-
-  Transfers &transfers_;
+  Transfers& transfers_;
   std::shared_ptr<stk::transfer::TransferBase> transfer_;
 
   bool couplingPhysicsSpecified_;
   bool transferVariablesSpecified_;
   std::string couplingPhysicsName_;
 
-  Realm * fromRealm_;
-  Realm * toRealm_;
+  Realm* fromRealm_;
+  Realm* toRealm_;
 
   // during load
   std::string name_;
@@ -73,7 +72,7 @@ public:
   double searchTolerance_;
   double searchExpansionFactor_;
   std::pair<std::string, std::string> realmPairName_;
-  
+
   // allow the user to provide a vector "from" and "to" parts; names
   std::vector<std::string> fromPartNameVec_;
   std::vector<std::string> toPartNameVec_;
@@ -82,14 +81,13 @@ public:
   stk::mesh::PartVector toPartVec_;
 
   // all of the fields
-  std::vector<std::pair<std::string, std::string> > transferVariablesPairName_;
+  std::vector<std::pair<std::string, std::string>> transferVariablesPairName_;
 
   void allocate_stk_transfer();
   void ghost_from_elements();
 };
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

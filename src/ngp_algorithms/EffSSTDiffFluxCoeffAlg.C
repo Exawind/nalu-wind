@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/EffSSTDiffFluxCoeffAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpTypes.h"
@@ -18,15 +17,15 @@
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 EffSSTDiffFluxCoeffAlg::EffSSTDiffFluxCoeffAlg(
-  Realm &realm,
-  stk::mesh::Part *part,
-  ScalarFieldType *visc,
-  ScalarFieldType *tvisc,
-  ScalarFieldType *evisc,
+  Realm& realm,
+  stk::mesh::Part* part,
+  ScalarFieldType* visc,
+  ScalarFieldType* tvisc,
+  ScalarFieldType* evisc,
   const double sigmaOne,
   const double sigmaTwo)
   : Algorithm(realm, part),
@@ -37,7 +36,8 @@ EffSSTDiffFluxCoeffAlg::EffSSTDiffFluxCoeffAlg(
     fOneBlend_(get_field_ordinal(realm.meta_data(), "sst_f_one_blending")),
     sigmaOne_(sigmaOne),
     sigmaTwo_(sigmaTwo)
-{}
+{
+}
 
 void
 EffSSTDiffFluxCoeffAlg::execute()
@@ -46,9 +46,9 @@ EffSSTDiffFluxCoeffAlg::execute()
 
   const auto& meta = realm_.meta_data();
 
-  stk::mesh::Selector sel
-    = (meta.locally_owned_part() | meta.globally_shared_part())
-    &stk::mesh::selectField(*viscField_);
+  stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part()) &
+    stk::mesh::selectField(*viscField_);
 
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
@@ -62,11 +62,13 @@ EffSSTDiffFluxCoeffAlg::execute()
   const DblType sigmaTwo = sigmaTwo_;
 
   nalu_ngp::run_entity_algorithm(
-    "EffSSTDiffFluxCoeffAlg",
-    ngpMesh, stk::topology::NODE_RANK, sel,
+    "EffSSTDiffFluxCoeffAlg", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
-      const DblType blendedConstant = fOneBlend.get(meshIdx, 0)*sigmaOne + (1.0-fOneBlend.get(meshIdx, 0))*sigmaTwo;
-      evisc.get(meshIdx, 0) = visc.get(meshIdx, 0) + tvisc.get(meshIdx, 0) * blendedConstant;
+      const DblType blendedConstant =
+        fOneBlend.get(meshIdx, 0) * sigmaOne +
+        (1.0 - fOneBlend.get(meshIdx, 0)) * sigmaTwo;
+      evisc.get(meshIdx, 0) =
+        visc.get(meshIdx, 0) + tvisc.get(meshIdx, 0) * blendedConstant;
     });
 
   // Set flag indicating that the field has been modified on device
@@ -74,4 +76,4 @@ EffSSTDiffFluxCoeffAlg::execute()
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

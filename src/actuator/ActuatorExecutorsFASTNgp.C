@@ -59,8 +59,7 @@ ActuatorLineFastNGP::operator()()
     Kokkos::parallel_for(
       "spreadForcesActuatorNgpFAST", localSizeCoarseSearch,
       SpreadActuatorForce(actBulk_, stkBulk_));
-  }
-  else {
+  } else {
     RunActFastStashOrientVecs(actBulk_);
 
     Kokkos::parallel_for(
@@ -71,7 +70,7 @@ ActuatorLineFastNGP::operator()()
   actBulk_.parallel_sum_source_term(stkBulk_);
 
   if (actBulk_.openFast_.isDebug()) {
-;
+    ;
     actBulk_.output_torque_info(stkBulk_);
   }
 }
@@ -111,7 +110,7 @@ ActuatorDiskFastNGP::operator()()
   actBulk_.step_fast();
 
   RunActFastComputeForce(actBulk_);
-  
+
   compute_fllc();
 
   actBulk_.spread_forces_over_disk(actMeta_);

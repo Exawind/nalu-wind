@@ -7,41 +7,35 @@
 // for more details.
 //
 
-
-
 #ifndef AssembleWallHeatTransferAlgorithmDriver_h
 #define AssembleWallHeatTransferAlgorithmDriver_h
 
 #include <AlgorithmDriver.h>
-#include<FieldTypeDef.h>
+#include <FieldTypeDef.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class AssembleWallHeatTransferAlgorithmDriver : public AlgorithmDriver
 {
 public:
-
-  AssembleWallHeatTransferAlgorithmDriver(
-    Realm &realm);
+  AssembleWallHeatTransferAlgorithmDriver(Realm& realm);
   ~AssembleWallHeatTransferAlgorithmDriver();
 
   void pre_work();
   void post_work();
 
-  ScalarFieldType *assembledWallArea_;
-  ScalarFieldType *referenceTemperature_;
-  ScalarFieldType *heatTransferCoefficient_;
-  ScalarFieldType *normalHeatFlux_;
-  ScalarFieldType *robinCouplingParameter_;
-  ScalarFieldType *temperature_;
-
+  ScalarFieldType* assembledWallArea_;
+  ScalarFieldType* referenceTemperature_;
+  ScalarFieldType* heatTransferCoefficient_;
+  ScalarFieldType* normalHeatFlux_;
+  ScalarFieldType* robinCouplingParameter_;
+  ScalarFieldType* temperature_;
 };
-  
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

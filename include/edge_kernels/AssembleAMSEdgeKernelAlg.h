@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef ASSEMBLEAMSEDGEKERNEL_H
 #define ASSEMBLEAMSEDGEKERNEL_H
 
@@ -20,8 +19,8 @@ class Realm;
 
 class AssembleAMSEdgeKernelAlg : public AssembleEdgeKernelAlg
 {
-  public:
-    AssembleAMSEdgeKernelAlg(Realm&, stk::mesh::Part*, EquationSystem*);
+public:
+  AssembleAMSEdgeKernelAlg(Realm&, stk::mesh::Part*, EquationSystem*);
 };
 
 } // namespace nalu

@@ -8,22 +8,18 @@
 #include <cassert>
 #include <float.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class FrameMoving : public FrameBase
 {
 public:
-  FrameMoving(
-    stk::mesh::BulkData& bulk,
-    const YAML::Node& node
-) : FrameBase(bulk,node)
+  FrameMoving(stk::mesh::BulkData& bulk, const YAML::Node& node)
+    : FrameBase(bulk, node)
   {
   }
 
-  virtual ~FrameMoving()
-  {
-  }
+  virtual ~FrameMoving() {}
 
   void update_coordinates_velocity(const double time);
 
@@ -34,7 +30,7 @@ private:
   FrameMoving(const FrameMoving&) = delete;
 };
 
-} // nalu
-} // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* FRAMEMOVING_H */

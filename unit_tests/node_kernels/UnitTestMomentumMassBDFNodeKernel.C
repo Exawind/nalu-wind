@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
@@ -18,24 +17,42 @@ namespace {
 namespace bdf_golds {
 namespace momentum_mass {
 
-static constexpr double rhs[24] =
-{0, 0, 0,
- -0.056021853088904, -1.0112712429687, 0,
- 1.0112712429687, -0.056021853088904, 0,
- 0.53838846959557, -0.65043217577338, 0,
- 0, 0, 0,
- -0.056021853088904, -1.0112712429687, 0,
- 1.0112712429687, -0.056021853088904, 0,
- 0.53838846959557, -0.65043217577338, 0, };
+static constexpr double rhs[24] = {
+  0,
+  0,
+  0,
+  -0.056021853088904,
+  -1.0112712429687,
+  0,
+  1.0112712429687,
+  -0.056021853088904,
+  0,
+  0.53838846959557,
+  -0.65043217577338,
+  0,
+  0,
+  0,
+  0,
+  -0.056021853088904,
+  -1.0112712429687,
+  0,
+  1.0112712429687,
+  -0.056021853088904,
+  0,
+  0.53838846959557,
+  -0.65043217577338,
+  0,
+};
 
-} // momentum_mass
-} // bdf_golds
+} // namespace momentum_mass
+} // namespace bdf_golds
 } // anonymous namespace
 
 TEST_F(MomentumKernelHex8Mesh, NGP_momentum_mass_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -53,11 +70,14 @@ TEST_F(MomentumKernelHex8Mesh, NGP_momentum_mass_node)
 
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumMassBDFNodeKernel>(*bulk_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumMassBDFNodeKernel>(
+    *bulk_);
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
@@ -65,8 +85,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_momentum_mass_node)
 
   // Exact LHS expected
   std::vector<double> lhsExact(576, 0.0);
-  for (int i=0; i<24; i++)
-    lhsExact[i*24+i] = 1.25;
+  for (int i = 0; i < 24; i++)
+    lhsExact[i * 24 + i] = 1.25;
 
   namespace gold_values = bdf_golds::momentum_mass;
   unit_test_kernel_utils::expect_all_near(

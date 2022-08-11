@@ -61,10 +61,12 @@ SDRSSTNodeKernel::setup(Realm& realm)
 
   lengthScaleLimiter_ = realm.solutionOptions_->lengthScaleLimiter_;
   if (lengthScaleLimiter_) {
-    const NodeKernelTraits::DblType earthAngularVelocity = realm.solutionOptions_->earthAngularVelocity_;
+    const NodeKernelTraits::DblType earthAngularVelocity =
+      realm.solutionOptions_->earthAngularVelocity_;
     const NodeKernelTraits::DblType pi = std::acos(-1.0);
-    const NodeKernelTraits::DblType latitude = realm.solutionOptions_->latitude_*pi/180.0;
-    corfac_ = 2.0*earthAngularVelocity*std::sin(latitude);
+    const NodeKernelTraits::DblType latitude =
+      realm.solutionOptions_->latitude_ * pi / 180.0;
+    corfac_ = 2.0 * earthAngularVelocity * std::sin(latitude);
     referenceVelocity_ = realm.solutionOptions_->referenceVelocity_;
   }
 }
@@ -111,29 +113,31 @@ SDRSSTNodeKernel::execute(
   // apply limiter to gamma
   if (lengthScaleLimiter_) {
     // calculate mixing length
-    const DblType l_t = stk::math::sqrt(tke)/(stk::math::pow(betaStar_, .25)*sdr);
+    const DblType l_t =
+      stk::math::sqrt(tke) / (stk::math::pow(betaStar_, .25) * sdr);
 
     // calculate maximum mixing length
-    // the proportionality constant (.00027) was found by fitting to measurements
-    // of atmospheric conditions as described in ref. Kob13
-    const DblType l_e = .00027*referenceVelocity_/corfac_;
+    // the proportionality constant (.00027) was found by fitting to
+    // measurements of atmospheric conditions as described in ref. Kob13
+    const DblType l_e = .00027 * referenceVelocity_ / corfac_;
 
     // apply limiter to cEpsOne -> calculate gammaOne
     const DblType cEpsOne_one = gammaOne_ + 1.;
-    const DblType cEpsTwo_one = betaOne_/betaStar_ + 1.;
-    const DblType cEpsOneStar_one = cEpsOne_one + (cEpsTwo_one - cEpsOne_one) * (l_t/l_e);
-    gammaOne_apply = cEpsOneStar_one - 1.; 
+    const DblType cEpsTwo_one = betaOne_ / betaStar_ + 1.;
+    const DblType cEpsOneStar_one =
+      cEpsOne_one + (cEpsTwo_one - cEpsOne_one) * (l_t / l_e);
+    gammaOne_apply = cEpsOneStar_one - 1.;
 
     // apply limiter to cEpsTwo -> calculate gammaTwo
     const DblType cEpsOne_two = gammaTwo_ + 1.;
-    const DblType cEpsTwo_two = betaTwo_/betaStar_ + 1.;
-    const DblType cEpsOneStar_two = cEpsOne_two + (cEpsTwo_two - cEpsOne_two) * (l_t/l_e);
+    const DblType cEpsTwo_two = betaTwo_ / betaStar_ + 1.;
+    const DblType cEpsOneStar_two =
+      cEpsOne_two + (cEpsTwo_two - cEpsOne_two) * (l_t / l_e);
     gammaTwo_apply = cEpsOneStar_two - 1.;
-  }
-  else{
+  } else {
     gammaOne_apply = gammaOne_;
-    gammaTwo_apply = gammaTwo_; 
-  } 
+    gammaTwo_apply = gammaTwo_;
+  }
   const DblType gamma = fOneBlend * gammaOne_apply + omf1 * gammaTwo_apply;
 
   // Production term with appropriate clipping of tvisc

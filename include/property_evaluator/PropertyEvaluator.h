@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef PropertyEvaluator_h
 #define PropertyEvaluator_h
 
@@ -16,23 +14,20 @@
 
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class PropertyEvaluator
 {
 public:
-
   PropertyEvaluator() {}
   virtual ~PropertyEvaluator() {}
-  
-  virtual double execute(
-    double *indVarList,
-    stk::mesh::Entity node = stk::mesh::Entity()) = 0;
-  
+
+  virtual double
+  execute(double* indVarList, stk::mesh::Entity node = stk::mesh::Entity()) = 0;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

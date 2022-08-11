@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include <xfer/Transfers.h>
 #include <xfer/Transfer.h>
 #include <Simulation.h>
@@ -23,8 +21,8 @@
 // basic c++
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -34,9 +32,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-Transfers::Transfers( 
-  Simulation &sim)
-  : simulation_(sim)
+Transfers::Transfers(Simulation& sim) : simulation_(sim)
 {
   // nothing to do
 }
@@ -50,58 +46,67 @@ Transfers::~Transfers()
     delete transferVector_[ir];
 }
 
-void 
-Transfers::load(const YAML::Node & node) 
+void
+Transfers::load(const YAML::Node& node)
 {
   // xfers are optional...
   const YAML::Node transfers = node["transfers"];
   if (transfers) {
-    for ( size_t itransfer = 0; itransfer < transfers.size(); ++itransfer ) {
+    for (size_t itransfer = 0; itransfer < transfers.size(); ++itransfer) {
       const YAML::Node transferNode = transfers[itransfer];
-      Transfer *transferInfo = new Transfer(*this);
+      Transfer* transferInfo = new Transfer(*this);
       transferInfo->load(transferNode);
       transferVector_.push_back(transferInfo);
     }
   }
 }
-  
-void 
+
+void
 Transfers::breadboard()
 {
-  for ( size_t itransfer = 0; itransfer < transferVector_.size(); ++itransfer ) {
+  for (size_t itransfer = 0; itransfer < transferVector_.size(); ++itransfer) {
     transferVector_[itransfer]->breadboard();
   }
 }
 
-void 
+void
 Transfers::initialize()
 {
-  for ( size_t itransfer = 0; itransfer < transferVector_.size(); ++itransfer ) {
+  for (size_t itransfer = 0; itransfer < transferVector_.size(); ++itransfer) {
     transferVector_[itransfer]->initialize_begin();
   }
 
-  for ( size_t itransfer = 0; itransfer < transferVector_.size(); ++itransfer ) {
-    stk::mesh::BulkData &fromBulkData = transferVector_[itransfer]->fromRealm_->bulk_data();
+  for (size_t itransfer = 0; itransfer < transferVector_.size(); ++itransfer) {
+    stk::mesh::BulkData& fromBulkData =
+      transferVector_[itransfer]->fromRealm_->bulk_data();
     fromBulkData.modification_begin();
-    transferVector_[itransfer]->change_ghosting(); 
+    transferVector_[itransfer]->change_ghosting();
     fromBulkData.modification_end();
   }
 
-  for ( size_t itransfer = 0; itransfer < transferVector_.size(); ++itransfer ) {
+  for (size_t itransfer = 0; itransfer < transferVector_.size(); ++itransfer) {
     transferVector_[itransfer]->initialize_end();
   }
 }
 
-void 
+void
 Transfers::execute()
 {
-  for ( size_t itransfer = 0; itransfer < transferVector_.size(); ++itransfer ) {
+  for (size_t itransfer = 0; itransfer < transferVector_.size(); ++itransfer) {
     transferVector_[itransfer]->execute();
   }
 }
 
-Simulation *Transfers::root() { return parent()->root(); }
-Simulation *Transfers::parent() { return &simulation_; }
+Simulation*
+Transfers::root()
+{
+  return parent()->root();
+}
+Simulation*
+Transfers::parent()
+{
+  return &simulation_;
+}
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

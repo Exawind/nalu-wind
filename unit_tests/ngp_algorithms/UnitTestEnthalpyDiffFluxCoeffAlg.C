@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestHelperObjects.h"
 
@@ -16,7 +15,8 @@
 TEST_F(EnthalpyABLKernelHex8Mesh, NGP_enthalpy_eff_diff_flux_coeff)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -43,8 +43,8 @@ TEST_F(EnthalpyABLKernelHex8Mesh, NGP_enthalpy_eff_diff_flux_coeff)
     stk::mesh::Selector sel = meta_->universal_part();
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* evisc = stk::mesh::field_data(*evisc_, node);
         EXPECT_NEAR(evisc[0], 1.0, tol);
       }

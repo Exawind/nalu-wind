@@ -17,14 +17,16 @@
 
 namespace tioga_nalu {
 
-TiogaRef& TiogaRef::self(TIOGA::tioga* tg)
+TiogaRef&
+TiogaRef::self(TIOGA::tioga* tg)
 {
   static bool initialized{false};
   static std::unique_ptr<TiogaRef> tgref;
 
   if (initialized) {
     if (tg != nullptr)
-      throw std::runtime_error("Multiple registration of TIOGA object encountered");
+      throw std::runtime_error(
+        "Multiple registration of TIOGA object encountered");
   } else {
     if (tg == nullptr) {
       tgref.reset(new TiogaRef());
@@ -37,15 +39,9 @@ TiogaRef& TiogaRef::self(TIOGA::tioga* tg)
   return *tgref;
 }
 
-TiogaRef::TiogaRef()
-  : tg_(new TIOGA::tioga())
-  , owned_(true)
-{}
+TiogaRef::TiogaRef() : tg_(new TIOGA::tioga()), owned_(true) {}
 
-TiogaRef::TiogaRef(TIOGA::tioga* tg)
-  : tg_(tg)
-  , owned_(false)
-{}
+TiogaRef::TiogaRef(TIOGA::tioga* tg) : tg_(tg), owned_(false) {}
 
 TiogaRef::~TiogaRef()
 {
@@ -55,6 +51,6 @@ TiogaRef::~TiogaRef()
   }
 }
 
-}
+} // namespace tioga_nalu
 
 #endif

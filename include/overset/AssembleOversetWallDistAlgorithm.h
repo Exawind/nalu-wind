@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef AssembleOversetWallDistAlgorithm_h
 #define AssembleOversetWallDistAlgorithm_h
 
@@ -18,11 +16,11 @@ namespace stk {
 namespace mesh {
 class Part;
 class FieldBase;
-}
-}
+} // namespace mesh
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
@@ -37,12 +35,11 @@ class Realm;
 class AssembleOversetWallDistAlgorithm : public OversetConstraintBase
 {
 public:
-
   AssembleOversetWallDistAlgorithm(
-    Realm &realm,
-    stk::mesh::Part *part,
-    EquationSystem *eqSystem,
-    stk::mesh::FieldBase *fieldQ);
+    Realm& realm,
+    stk::mesh::Part* part,
+    EquationSystem* eqSystem,
+    stk::mesh::FieldBase* fieldQ);
 
   virtual ~AssembleOversetWallDistAlgorithm() = default;
 
@@ -50,6 +47,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

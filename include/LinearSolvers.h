@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef LinearSolvers_h
 #define LinearSolvers_h
 
@@ -22,8 +20,8 @@ namespace YAML {
 class Node;
 }
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class LinearSolver;
 class TpetraLinearSolverConfig;
@@ -39,21 +37,23 @@ class Simulation;
  *  - Create solvers for specific equation system and update the mapping
  *
  */
-class LinearSolvers {
+class LinearSolvers
+{
 public:
   LinearSolvers(Simulation& sim);
   ~LinearSolvers();
 
   /** Parse the `linear_solvers` section from Nalu input file
    */
-  void load(const YAML::Node & node);
+  void load(const YAML::Node& node);
 
   /** Create a solver for the EquationSystem
    *
-   *  @param[in] solverBlockName The name specified in the input file, e.g., solve_scalar
+   *  @param[in] solverBlockName The name specified in the input file, e.g.,
+   * solve_scalar
    *  @param[in] theEQ The type of equation
    */
-  LinearSolver *create_solver(
+  LinearSolver* create_solver(
     std::string solverBlockName,
     const std::string realmName,
     EquationType theEQ);
@@ -63,13 +63,14 @@ public:
     const std::string& realmName,
     const EquationType theEQ);
 
-  Simulation *root();
-  Simulation *parent();
+  Simulation* root();
+  Simulation* parent();
 
   Teuchos::ParameterList get_solver_configuration(std::string);
 
-  typedef std::map<std::string, LinearSolver *> SolverMap;
-  typedef std::map<std::string, TpetraLinearSolverConfig *> SolverTpetraConfigMap;
+  typedef std::map<std::string, LinearSolver*> SolverMap;
+  typedef std::map<std::string, TpetraLinearSolverConfig*>
+    SolverTpetraConfigMap;
   typedef std::map<std::string, HypreLinearSolverConfig*> HypreSolverConfigMap;
 
   //! Mapping of solver instances to the EquationType
@@ -90,6 +91,6 @@ private:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

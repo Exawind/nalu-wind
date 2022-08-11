@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "HypreUVWSolver.h"
 #include "XSDKHypreInterface.h"
 #include "NaluEnv.h"
@@ -18,25 +17,21 @@ namespace nalu {
 HypreUVWSolver::HypreUVWSolver(
   std::string name,
   HypreLinearSolverConfig* config,
-  LinearSolvers* linearSolvers
-) : HypreDirectSolver(name, config, linearSolvers),
-    parRhsU_(3),
-    parSlnU_(3)
-{}
+  LinearSolvers* linearSolvers)
+  : HypreDirectSolver(name, config, linearSolvers), parRhsU_(3), parSlnU_(3)
+{
+}
 
-HypreUVWSolver::~HypreUVWSolver()
-{}
+HypreUVWSolver::~HypreUVWSolver() {}
 
 int
 HypreUVWSolver::solve(
-  int dim,
-  int& numIterations,
-  double& finalResidualNorm,
-  bool isFinalOuterIter)
+  int dim, int& numIterations, double& finalResidualNorm, bool isFinalOuterIter)
 {
   // Initialize the solver on first entry
   double time = -NaluEnv::self().nalu_time();
-  if (initializeSolver_) initSolver();
+  if (initializeSolver_)
+    initSolver();
   time += NaluEnv::self().nalu_time();
   timerPrecond_ = time;
 
@@ -73,5 +68,5 @@ HypreUVWSolver::setupSolver()
   solverSetupPtr_(solver_, parMat_, parRhsU_[0], parSlnU_[0]);
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

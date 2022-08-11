@@ -75,7 +75,7 @@ ChienKEpsilonEquationSystem::ChienKEpsilonEquationSystem(
   // push back EQ to manager
   realm_.push_equation_to_systems(this);
 
-  tkeEqSys_= new TurbKineticEnergyEquationSystem(eqSystems);
+  tkeEqSys_ = new TurbKineticEnergyEquationSystem(eqSystems);
   tdrEqSys_ = new TotalDissipationRateEquationSystem(eqSystems);
 }
 

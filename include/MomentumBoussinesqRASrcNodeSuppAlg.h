@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef MomentumBoussinesqRASrcNodeSuppAlg_h
 #define MomentumBoussinesqRASrcNodeSuppAlg_h
 
@@ -17,34 +15,29 @@
 
 #include <stk_mesh/base/Entity.hpp>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class MomentumBoussinesqRASrcNodeSuppAlg : public SupplementalAlgorithm
 {
 public:
-
-  MomentumBoussinesqRASrcNodeSuppAlg(
-    Realm &realm);
+  MomentumBoussinesqRASrcNodeSuppAlg(Realm& realm);
 
   virtual ~MomentumBoussinesqRASrcNodeSuppAlg() {}
 
   virtual void setup();
 
-  virtual void node_execute(
-    double *lhs,
-    double *rhs,
-    stk::mesh::Entity node);
+  virtual void node_execute(double* lhs, double* rhs, stk::mesh::Entity node);
 
   double compute_alpha(double delta_t);
   double update_average(double avg, double newVal);
 
-  ScalarFieldType *temperature_;
-  ScalarFieldType *raTemperature_;
+  ScalarFieldType* temperature_;
+  ScalarFieldType* raTemperature_;
   std::string raName_;
-  ScalarFieldType *dualNodalVolume_;
+  ScalarFieldType* dualNodalVolume_;
   double rhoRef_;
   double beta_;
   int nDim_;
@@ -53,6 +46,6 @@ public:
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

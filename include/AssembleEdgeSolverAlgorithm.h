@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef ASSEMBLEEDGESOLVERALGORITHM_H
 #define ASSEMBLEEDGESOLVERALGORITHM_H
 
@@ -24,7 +23,7 @@ namespace stk {
 namespace mesh {
 class Part;
 }
-}
+} // namespace stk
 
 namespace sierra {
 namespace nalu {
@@ -36,9 +35,7 @@ public:
   using ShmemDataType = SharedMemData_Edge<DeviceTeamHandleType, DeviceShmem>;
 
   AssembleEdgeSolverAlgorithm(
-    Realm& realm,
-    stk::mesh::Part* part,
-    EquationSystem* eqSystem);
+    Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem);
 
   AssembleEdgeSolverAlgorithm() = delete;
   AssembleEdgeSolverAlgorithm(const AssembleEdgeSolverAlgorithm&) = delete;
@@ -47,7 +44,7 @@ public:
 
   virtual void initialize_connectivity();
 
-  template<typename LambdaFunction>
+  template <typename LambdaFunction>
   void run_algorithm(stk::mesh::BulkData& bulk, LambdaFunction lambdaFunc)
   {
     const auto& meta = bulk.mesh_meta_data();
@@ -61,7 +58,8 @@ public:
                               !(realm_.get_inactive_selector());
 
     const auto& buckets = stk::mesh::get_bucket_ids(bulk, entityRank_, sel);
-    auto team_exec = get_device_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
+    auto team_exec =
+      get_device_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
 
     // Create local copies of class data for device capture
     const auto entityRank = entityRank_;
@@ -80,8 +78,7 @@ public:
 
         const size_t bktLen = b.size();
         Kokkos::parallel_for(
-          Kokkos::TeamThreadRange(team, bktLen),
-          [&](const size_t& bktIndex) {
+          Kokkos::TeamThreadRange(team, bktLen), [&](const size_t& bktIndex) {
             auto edge = b[bktIndex];
             const auto edgeIndex = ngpMesh.fast_mesh_index(edge);
             smdata.ngpElemNodes = ngpMesh.get_nodes(entityRank, edgeIndex);
@@ -99,7 +96,7 @@ public:
               smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
           });
       });
-      coeffApplier.free_coeff_applier();
+    coeffApplier.free_coeff_applier();
   }
 
 protected:
@@ -111,8 +108,7 @@ protected:
   const int rhsSize_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ASSEMBLEEDGESOLVERALGORITHM_H */

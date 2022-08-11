@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef SDRLOWREWALLFUNCALG_H
 #define SDRLOWREWALLFUNCALG_H
 
@@ -24,14 +23,11 @@ namespace nalu {
  *
  *. \sa SDRWallFuncAlgDriver
  */
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 class SDRLowReWallAlg : public Algorithm
 {
 public:
-  SDRLowReWallAlg(
-    Realm&,
-    stk::mesh::Part*,
-    const bool);
+  SDRLowReWallAlg(Realm&, stk::mesh::Part*, const bool);
 
   virtual ~SDRLowReWallAlg() = default;
 
@@ -41,12 +37,12 @@ private:
   ElemDataRequests faceData_;
   ElemDataRequests elemData_;
 
-  unsigned coordinates_    {stk::mesh::InvalidOrdinal};
-  unsigned density_        {stk::mesh::InvalidOrdinal};
-  unsigned viscosity_      {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
-  unsigned wallArea_       {stk::mesh::InvalidOrdinal};
-  unsigned sdrbc_          {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned density_{stk::mesh::InvalidOrdinal};
+  unsigned viscosity_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned wallArea_{stk::mesh::InvalidOrdinal};
+  unsigned sdrbc_{stk::mesh::InvalidOrdinal};
 
   const DoubleType betaOne_;
   const DoubleType wallFactor_;
@@ -56,8 +52,7 @@ private:
   MasterElement* meSCS_{nullptr};
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* SDRLOWREWALLFUNCALG_H */

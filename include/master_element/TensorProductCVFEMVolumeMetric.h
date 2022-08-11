@@ -22,10 +22,10 @@
 
 namespace sierra {
 namespace nalu {
-namespace high_order_metrics
-{
+namespace high_order_metrics {
 template <int p, typename Scalar>
-void compute_volume_metric_linear(
+void
+compute_volume_metric_linear(
   const CVFEMOperators<p, Scalar>& ops,
   const nodal_vector_view<p, Scalar>& xc,
   nodal_scalar_view<p, Scalar>& vol)
@@ -37,11 +37,14 @@ void compute_volume_metric_linear(
   hex_vertex_coordinates<p, Scalar>(xc, base_box);
 
   for (int k = 0; k < p + 1; ++k) {
-    NALU_ALIGNED const Scalar interpk[2] = { nodalInterp(LEFT, k), nodalInterp(RIGHT, k) };
+    NALU_ALIGNED const Scalar interpk[2] = {
+      nodalInterp(LEFT, k), nodalInterp(RIGHT, k)};
     for (int j = 0; j < p + 1; ++j) {
-      NALU_ALIGNED const Scalar interpj[2] = { nodalInterp(LEFT, j), nodalInterp(RIGHT, j) };
+      NALU_ALIGNED const Scalar interpj[2] = {
+        nodalInterp(LEFT, j), nodalInterp(RIGHT, j)};
       for (int i = 0; i < p + 1; ++i) {
-        NALU_ALIGNED const Scalar interpi[2] = { nodalInterp(LEFT, i), nodalInterp(RIGHT, i) };
+        NALU_ALIGNED const Scalar interpi[2] = {
+          nodalInterp(LEFT, i), nodalInterp(RIGHT, i)};
         NALU_ALIGNED Scalar jac[3][3];
         hex_jacobian(base_box, interpi, interpj, interpk, jac);
         vol(k, j, i) = determinant33(&jac[0][0]);
@@ -49,8 +52,8 @@ void compute_volume_metric_linear(
     }
   }
 }
-} // namespace HighOrderGeometryQuad
-} // namespace naluUnit
-} // namespace Sierra
+} // namespace high_order_metrics
+} // namespace nalu
+} // namespace sierra
 
 #endif

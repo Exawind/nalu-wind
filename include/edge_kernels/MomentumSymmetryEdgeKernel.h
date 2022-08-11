@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef MOMENTUMSYMMETRYEDGEKERNEL_H
 #define MOMENTUMSYMMETRYEDGEKERNEL_H
 
@@ -25,8 +24,9 @@ class SolutionOptions;
 class ElemDataRequests;
 class MasterElement;
 
-template<typename BcAlgTraits>
-class MomentumSymmetryEdgeKernel: public NGPKernel<MomentumSymmetryEdgeKernel<BcAlgTraits>>
+template <typename BcAlgTraits>
+class MomentumSymmetryEdgeKernel
+  : public NGPKernel<MomentumSymmetryEdgeKernel<BcAlgTraits>>
 {
 public:
   MomentumSymmetryEdgeKernel(
@@ -54,11 +54,11 @@ public:
     int);
 
 private:
-  unsigned coordinates_    {stk::mesh::InvalidOrdinal};
-  unsigned velocityNp1_    {stk::mesh::InvalidOrdinal};
-  unsigned viscosity_      {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
-  unsigned dudx_           {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned velocityNp1_{stk::mesh::InvalidOrdinal};
+  unsigned viscosity_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
+  unsigned dudx_{stk::mesh::InvalidOrdinal};
 
   const DoubleType includeDivU_;
 
@@ -67,8 +67,7 @@ private:
   const double penaltyFactor_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MOMENTUMSYMMETRYEDGEKERNEL_H */

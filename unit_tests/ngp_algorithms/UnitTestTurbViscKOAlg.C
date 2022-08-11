@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestHelperObjects.h"
 
@@ -16,7 +15,8 @@
 TEST_F(KOKernelHex8Mesh, NGP_turb_visc_ko_alg)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   KOKernelHex8Mesh::fill_mesh_and_init_fields();
 
@@ -38,14 +38,9 @@ TEST_F(KOKernelHex8Mesh, NGP_turb_visc_ko_alg)
 
   {
     std::vector<double> expectedValues = {
-      0.46763636363636363,
-      0.20271993944117145,
-      0.34820558301166943,
-      0.11992191196521775,
-      0.20271993944117145,
-      0.083672109203660194,
-      0.074293947075371264,
-      0.031038745209797804,
+      0.46763636363636363,  0.20271993944117145,  0.34820558301166943,
+      0.11992191196521775,  0.20271993944117145,  0.083672109203660194,
+      0.074293947075371264, 0.031038745209797804,
     };
 
     const double tol = 1.0e-15;
@@ -54,8 +49,8 @@ TEST_F(KOKernelHex8Mesh, NGP_turb_visc_ko_alg)
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     int ii = 0;
-    for (const auto* b: bkts)
-      for (const auto node: *b) {
+    for (const auto* b : bkts)
+      for (const auto node : *b) {
         const double* tvisc = stk::mesh::field_data(*tvisc_, node);
         EXPECT_NEAR(tvisc[0], expectedValues[ii++], tol);
       }

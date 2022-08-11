@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef SDRSSTNODEKERNEL_H
 #define SDRSSTNODEKERNEL_H
 
@@ -53,15 +52,15 @@ private:
   stk::mesh::NgpField<double> dualNodalVolume_;
   stk::mesh::NgpField<double> fOneBlend_;
 
-  unsigned tkeID_             {stk::mesh::InvalidOrdinal};
-  unsigned sdrID_             {stk::mesh::InvalidOrdinal};
-  unsigned densityID_         {stk::mesh::InvalidOrdinal};
-  unsigned tviscID_           {stk::mesh::InvalidOrdinal};
-  unsigned dudxID_            {stk::mesh::InvalidOrdinal};
-  unsigned dkdxID_            {stk::mesh::InvalidOrdinal};
-  unsigned dwdxID_            {stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
-  unsigned fOneBlendID_       {stk::mesh::InvalidOrdinal};
+  unsigned tkeID_{stk::mesh::InvalidOrdinal};
+  unsigned sdrID_{stk::mesh::InvalidOrdinal};
+  unsigned densityID_{stk::mesh::InvalidOrdinal};
+  unsigned tviscID_{stk::mesh::InvalidOrdinal};
+  unsigned dudxID_{stk::mesh::InvalidOrdinal};
+  unsigned dkdxID_{stk::mesh::InvalidOrdinal};
+  unsigned dwdxID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
+  unsigned fOneBlendID_{stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
@@ -79,8 +78,7 @@ private:
   NodeKernelTraits::DblType referenceVelocity_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* SDRSSTNODEKERNEL_H */

@@ -44,7 +44,7 @@ struct CflRe
   }
 };
 
-template<typename Space=Kokkos::HostSpace>
+template <typename Space = Kokkos::HostSpace>
 struct CflReMax
 {
 public:
@@ -58,48 +58,52 @@ private:
 
 public:
   KOKKOS_INLINE_FUNCTION
-  CflReMax(value_type& value_): value(&value_),references_scalar_v(true) {}
+  CflReMax(value_type& value_) : value(&value_), references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  CflReMax(const result_view_type& value_): value(value_),references_scalar_v(false) {}
+  CflReMax(const result_view_type& value_)
+    : value(value_), references_scalar_v(false)
+  {
+  }
 
-  //Required
+  // Required
   KOKKOS_INLINE_FUNCTION
-  void join(value_type& dest, const value_type& src)  const {
-    if (dest.max_cfl < src.max_cfl) dest.max_cfl = src.max_cfl;
-    if (dest.max_re < src.max_re) dest.max_re = src.max_re;
+  void join(value_type& dest, const value_type& src) const
+  {
+    if (dest.max_cfl < src.max_cfl)
+      dest.max_cfl = src.max_cfl;
+    if (dest.max_re < src.max_re)
+      dest.max_re = src.max_re;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
-    if (dest.max_cfl < src.max_cfl) dest.max_cfl = src.max_cfl;
-    if (dest.max_re < src.max_re) dest.max_re = src.max_re;
+  void join(volatile value_type& dest, const volatile value_type& src) const
+  {
+    if (dest.max_cfl < src.max_cfl)
+      dest.max_cfl = src.max_cfl;
+    if (dest.max_re < src.max_re)
+      dest.max_re = src.max_re;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void init( value_type& val)  const {
-    val.max_cfl = Kokkos::reduction_identity<double>::max();;
+  void init(value_type& val) const
+  {
+    val.max_cfl = Kokkos::reduction_identity<double>::max();
+    ;
     val.max_re = Kokkos::reduction_identity<double>::max();
   }
 
   KOKKOS_INLINE_FUNCTION
-  value_type& reference() const {
-    return *value.data();
-  }
+  value_type& reference() const { return *value.data(); }
 
   KOKKOS_INLINE_FUNCTION
-  result_view_type view() const {
-    return value;
-  }
+  result_view_type view() const { return value; }
 
   KOKKOS_INLINE_FUNCTION
-  bool references_scalar() const {
-    return references_scalar_v;
-  }
+  bool references_scalar() const { return references_scalar_v; }
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* COURANTREREDUCEHELPER_H */

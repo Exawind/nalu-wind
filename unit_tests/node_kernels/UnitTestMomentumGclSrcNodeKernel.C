@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
@@ -21,19 +20,42 @@ namespace {
 namespace gold_values {
 namespace momentum_gcl {
 
-static constexpr double rhs[24] =
-{ 0, 0, 0, 0, 0.75845343222651, 0, -0.75845343222651,
-0, 0, -0.44580774201335, 0.44580774201335, 0, 0, 0, 0,
-0, 0.75845343222651, 0, -0.75845343222651, 0, 0, -0.44580774201335, 0.44580774201335, 0, };
+static constexpr double rhs[24] = {
+  0,
+  0,
+  0,
+  0,
+  0.75845343222651,
+  0,
+  -0.75845343222651,
+  0,
+  0,
+  -0.44580774201335,
+  0.44580774201335,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0.75845343222651,
+  0,
+  -0.75845343222651,
+  0,
+  0,
+  -0.44580774201335,
+  0.44580774201335,
+  0,
+};
 
-} // momentum_gcl
-} // gold_values
+} // namespace momentum_gcl
+} // namespace gold_values
 } // anonymous namespace
 
 TEST_F(MomentumNodeHex8Mesh, NGP_momentum_gcl_node)
 {
   // Only execute for 1 processor runs
-  if (bulk_->parallel_size() > 1) return;
+  if (bulk_->parallel_size() > 1)
+    return;
 
   fill_mesh_and_init_fields();
 
@@ -49,11 +71,14 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_gcl_node)
 
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumGclSrcNodeKernel>(*bulk_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumGclSrcNodeKernel>(
+    *bulk_);
 
   helperObjs.execute();
 
-  Kokkos::deep_copy(helperObjs.linsys->hostNumSumIntoCalls_, helperObjs.linsys->numSumIntoCalls_);
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);

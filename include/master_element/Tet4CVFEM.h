@@ -7,15 +7,13 @@
 // for more details.
 //
 
-
-
 #ifndef Tet4CVFEM_h
 #define Tet4CVFEM_h
 
-#include<master_element/MasterElement.h>
+#include <master_element/MasterElement.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 // Tet 4 subcontrol volume
 class TetSCV : public MasterElement
@@ -30,21 +28,21 @@ public:
   TetSCV();
   KOKKOS_FUNCTION virtual ~TetSCV() {}
 
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
+  KOKKOS_FUNCTION virtual const int* ipNodeMap(int ordinal = 0) const final;
 
   KOKKOS_FUNCTION void determinant(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType*, DeviceShmem>& volume) override;
 
   KOKKOS_FUNCTION void grad_op(
-    SharedMemView<DoubleType**, DeviceShmem>&coords,
-    SharedMemView<DoubleType***, DeviceShmem>&gradop,
-    SharedMemView<DoubleType***, DeviceShmem>&deriv) override;
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
 
   KOKKOS_FUNCTION void shifted_grad_op(
-    SharedMemView<DoubleType**, DeviceShmem>&coords,
-    SharedMemView<DoubleType***, DeviceShmem>&gradop,
-    SharedMemView<DoubleType***, DeviceShmem>&deriv) override;
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
 
   KOKKOS_FUNCTION void Mij(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -53,67 +51,60 @@ public:
 
   void determinant(
     const int nelem,
-    const double *coords,
-    double *areav,
-    double * error ) override;
+    const double* coords,
+    double* areav,
+    double* error) override;
 
-  void Mij(
-    const double *coords,
-    double *metric,
-    double *deriv) override;
+  void Mij(const double* coords, double* metric, double* deriv) override;
 
-  KOKKOS_FUNCTION virtual void shape_fcn(
-     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+  KOKKOS_FUNCTION virtual void
+  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
 
-  void shape_fcn(double *shpfc) override;
+  void shape_fcn(double* shpfc) override;
 
-  KOKKOS_FUNCTION virtual void shifted_shape_fcn(
-    SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+  KOKKOS_FUNCTION virtual void
+  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
 
-  void shifted_shape_fcn(double *shpfc) override;
-  
+  void shifted_shape_fcn(double* shpfc) override;
+
   KOKKOS_FUNCTION
   void tet_shape_fcn(
     const int npts,
-    const double *par_coord, 
-    SharedMemView<DoubleType**, DeviceShmem> &shpfc) const;
+    const double* par_coord,
+    SharedMemView<DoubleType**, DeviceShmem>& shpfc) const;
 
-  void tet_shape_fcn(
-    const int npts,
-    const double *par_coord, 
-    double* shape_fcn);
+  void
+  tet_shape_fcn(const int npts, const double* par_coord, double* shape_fcn);
 
-  virtual const double* integration_locations() const final {
+  virtual const double* integration_locations() const final
+  {
     return &intgLoc_[0][00];
   }
-  virtual const double* integration_location_shift() const final {
+  virtual const double* integration_location_shift() const final
+  {
     return &intgLocShift_[0][0];
   }
 
 private:
   static constexpr int nDim_ = AlgTraits::nDim_;
-  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_; 
-  static constexpr int numIntPoints_ = AlgTraits::numScvIp_; 
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numIntPoints_ = AlgTraits::numScvIp_;
 
   // define ip node mappings
-  const int ipNodeMap_[4] = { 0, 1, 2, 3};
+  const int ipNodeMap_[4] = {0, 1, 2, 3};
 
   // standard integration location
-  const double seventeen96ths = 17.0/96.0;
-  const double fourfive96ths  = 45.0/96.0;
+  const double seventeen96ths = 17.0 / 96.0;
+  const double fourfive96ths = 45.0 / 96.0;
   const double intgLoc_[4][3] = {
-   {seventeen96ths,  seventeen96ths,  seventeen96ths}, // vol 1
-   {fourfive96ths,   seventeen96ths,  seventeen96ths}, // vol 2
-   {seventeen96ths,  fourfive96ths,   seventeen96ths}, // vol 3
-   {seventeen96ths,  seventeen96ths,  fourfive96ths}}; // vol 4
+    {seventeen96ths, seventeen96ths, seventeen96ths}, // vol 1
+    {fourfive96ths, seventeen96ths, seventeen96ths},  // vol 2
+    {seventeen96ths, fourfive96ths, seventeen96ths},  // vol 3
+    {seventeen96ths, seventeen96ths, fourfive96ths}}; // vol 4
 
   // shifted
   const double intgLocShift_[4][3] = {
-   {0.0,  0.0,  0.0}, 
-   {1.0,  0.0,  0.0}, 
-   {0.0,  1.0,  0.0}, 
-   {0.0,  0.0,  1.0}}; 
-
+    {0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}};
 };
 
 // Tet 4 subcontrol surface
@@ -121,58 +112,58 @@ class TetSCS : public MasterElement
 {
 public:
   using AlgTraits = AlgTraitsTet4;
-  using MasterElement::determinant;
   using MasterElement::adjacentNodes;
+  using MasterElement::determinant;
 
   KOKKOS_FUNCTION
   TetSCS();
   KOKKOS_FUNCTION virtual ~TetSCS() {}
 
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
+  KOKKOS_FUNCTION virtual const int* ipNodeMap(int ordinal = 0) const final;
 
   KOKKOS_FUNCTION virtual void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>&coords,
-    SharedMemView<DoubleType**, DeviceShmem>&areav) override;
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
   void determinant(
     const int nelem,
-    const double *coords,
-    double *areav,
-    double * error ) override;
+    const double* coords,
+    double* areav,
+    double* error) override;
 
   KOKKOS_FUNCTION void grad_op(
-    SharedMemView<DoubleType**, DeviceShmem>&coords,
-    SharedMemView<DoubleType***, DeviceShmem>&gradop,
-    SharedMemView<DoubleType***, DeviceShmem>&deriv) override;
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
 
   void grad_op(
     const int nelem,
-    const double *coords,
-    double *gradop,
-    double *deriv,
-    double *det_j,
-    double * error ) override;
+    const double* coords,
+    double* gradop,
+    double* deriv,
+    double* det_j,
+    double* error) override;
 
   KOKKOS_FUNCTION void shifted_grad_op(
-    SharedMemView<DoubleType**, DeviceShmem>&coords,
-    SharedMemView<DoubleType***, DeviceShmem>&gradop,
-    SharedMemView<DoubleType***, DeviceShmem>&deriv) override;
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
 
   void shifted_grad_op(
     const int nelem,
-    const double *coords,
-    double *gradop,
-    double *deriv,
-    double *det_j,
-    double * error ) override;
+    const double* coords,
+    double* gradop,
+    double* deriv,
+    double* det_j,
+    double* error) override;
 
   void face_grad_op(
     const int nelem,
     const int face_ordinal,
-    const double *coords,
-    double *gradop,
-    double *det_j,
-    double * error ) override;
+    const double* coords,
+    double* gradop,
+    double* det_j,
+    double* error) override;
 
   KOKKOS_FUNCTION void face_grad_op(
     int face_ordinal,
@@ -183,10 +174,10 @@ public:
   void shifted_face_grad_op(
     const int nelem,
     const int face_ordinal,
-    const double *coords,
-    double *gradop,
-    double *det_j,
-    double * error ) override;
+    const double* coords,
+    double* gradop,
+    double* det_j,
+    double* error) override;
 
   KOKKOS_FUNCTION void shifted_face_grad_op(
     int face_ordinal,
@@ -200,103 +191,92 @@ public:
     SharedMemView<DoubleType***, DeviceShmem>& glower,
     SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
 
-  void gij(
-    const double *coords,
-    double *gupperij,
-    double *glowerij,
-    double *deriv) override;
+  void
+  gij(const double* coords, double* gupperij, double* glowerij, double* deriv)
+    override;
 
   KOKKOS_FUNCTION void Mij(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
 
-  void Mij(
-    const double *coords,
-    double *metric,
-    double *deriv) override;
+  void Mij(const double* coords, double* metric, double* deriv) override;
 
-  KOKKOS_FUNCTION virtual const int * adjacentNodes() final;
+  KOKKOS_FUNCTION virtual const int* adjacentNodes() final;
 
-  KOKKOS_FUNCTION virtual const int * scsIpEdgeOrd() final;
+  KOKKOS_FUNCTION virtual const int* scsIpEdgeOrd() final;
 
-  KOKKOS_FUNCTION virtual void shape_fcn(
-     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+  KOKKOS_FUNCTION virtual void
+  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
 
-  void shape_fcn(double *shpfc) override;
+  void shape_fcn(double* shpfc) override;
 
-  KOKKOS_FUNCTION virtual void shifted_shape_fcn(
-    SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+  KOKKOS_FUNCTION virtual void
+  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
 
-  void shifted_shape_fcn(double *shpfc) override;
+  void shifted_shape_fcn(double* shpfc) override;
 
   KOKKOS_FUNCTION
   void tet_shape_fcn(
     const int npts,
-    const double *par_coord,
-    SharedMemView<DoubleType**, DeviceShmem> &shpfc) const;
+    const double* par_coord,
+    SharedMemView<DoubleType**, DeviceShmem>& shpfc) const;
 
-  void tet_shape_fcn(
-    const int npts,
-    const double *par_coord,
-    double* shape_fcn);
+  void
+  tet_shape_fcn(const int npts, const double* par_coord, double* shape_fcn);
 
   KOKKOS_FUNCTION int opposingNodes(const int ordinal, const int node) override;
 
-  KOKKOS_FUNCTION int opposingFace(
-    const int ordinal, const int node) override;
+  KOKKOS_FUNCTION int opposingFace(const int ordinal, const int node) override;
 
   double isInElement(
-    const double *elemNodalCoord,
-    const double *pointCoord,
-    double *isoParCoord) override;
+    const double* elemNodalCoord,
+    const double* pointCoord,
+    double* isoParCoord) override;
 
   void interpolatePoint(
-    const int &nComp,
-    const double *isoParCoord,
-    const double *field,
-    double *result) override;
+    const int& nComp,
+    const double* isoParCoord,
+    const double* field,
+    double* result) override;
 
   void general_shape_fcn(
-    const int numIp,
-    const double *isoParCoord,
-    double *shpfc) override;
+    const int numIp, const double* isoParCoord, double* shpfc) override;
 
   void general_face_grad_op(
     const int face_ordinal,
-    const double *isoParCoord,
-    const double *coords,
-    double *gradop,
-    double *det_j,
-    double * error ) override;
+    const double* isoParCoord,
+    const double* coords,
+    double* gradop,
+    double* det_j,
+    double* error) override;
 
   void sidePcoords_to_elemPcoords(
-    const int & side_ordinal,
-    const int & npoints,
-    const double *side_pcoords,
-    double *elem_pcoords) override;
+    const int& side_ordinal,
+    const int& npoints,
+    const double* side_pcoords,
+    double* elem_pcoords) override;
 
   double parametric_distance(const double* x);
 
   KOKKOS_FUNCTION const int* side_node_ordinals(int sideOrdinal) const final;
 
-  virtual const double* integration_locations() const final {
-    return intgLoc_;
-  }
-  virtual const double* integration_location_shift() const final {
+  virtual const double* integration_locations() const final { return intgLoc_; }
+  virtual const double* integration_location_shift() const final
+  {
     return intgLocShift_;
   }
 
 private:
   static constexpr int nDim_ = AlgTraits::nDim_;
-  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_; 
-  static constexpr int numIntPoints_ = AlgTraits::numScsIp_; 
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numIntPoints_ = AlgTraits::numScsIp_;
 
   const int sideNodeOrdinals_[4][3] = {
-     {0, 1, 3}, //ordinal 0
-     {1, 2, 3}, //ordinal 1
-     {0, 3, 2}, //ordinal 2
-     {0, 2, 1}  //ordinal 3
+    {0, 1, 3}, // ordinal 0
+    {1, 2, 3}, // ordinal 1
+    {0, 3, 2}, // ordinal 2
+    {0, 2, 1}  // ordinal 3
   };
 
   // define L/R mappings
@@ -306,38 +286,37 @@ private:
   const int scsIpEdgeOrd_[6] = {0, 1, 2, 3, 4, 5};
 
   // define opposing node
-  const int oppNode_[4][3] {
+  const int oppNode_[4][3]{
     {2, 2, 2},  // face 0
     {0, 0, 0},  // face 1
     {1, 1, 1},  // face 2
     {3, 3, 3}}; // face 3
 
   // define opposing face
-  const int oppFace_[4][3] = {  
-   {2,  1,  5},  // face 0 
-   {0,  2,  3},  // face 1 
-   {0,  4,  1},  // face 2 
-   {3,  5,  4}}; // face 3 
+  const int oppFace_[4][3] = {
+    {2, 1, 5},  // face 0
+    {0, 2, 3},  // face 1
+    {0, 4, 1},  // face 2
+    {3, 5, 4}}; // face 3
 
   // standard integration location
-  const double thirteen36ths = 13.0/36.0;
-  const double five36ths = 5.0/36.0;
+  const double thirteen36ths = 13.0 / 36.0;
+  const double five36ths = 5.0 / 36.0;
   const double intgLoc_[18] = {
-    thirteen36ths,  five36ths,      five36ths, // surf 1    1->2
-    thirteen36ths,  thirteen36ths,  five36ths, // surf 2    2->3
-    five36ths,      thirteen36ths,  five36ths, // surf 3    1->3
-    five36ths ,     five36ths,      thirteen36ths, // surf 4    1->4
-    thirteen36ths,  five36ths,      thirteen36ths, // surf 5    2->4
-    five36ths,      thirteen36ths,  thirteen36ths};// surf 6    3->4
+    thirteen36ths, five36ths,     five36ths,      // surf 1    1->2
+    thirteen36ths, thirteen36ths, five36ths,      // surf 2    2->3
+    five36ths,     thirteen36ths, five36ths,      // surf 3    1->3
+    five36ths,     five36ths,     thirteen36ths,  // surf 4    1->4
+    thirteen36ths, five36ths,     thirteen36ths,  // surf 5    2->4
+    five36ths,     thirteen36ths, thirteen36ths}; // surf 6    3->4
 
   // shifted
-  const double intgLocShift_[18] = {
-    0.50,  0.00,  0.00, // surf 1    1->2
-    0.50,  0.50,  0.00, // surf 2    2->3
-    0.00,  0.50,  0.00, // surf 3    1->3
-    0.00,  0.00,  0.50, // surf 4    1->4
-    0.50,  0.00,  0.50, // surf 5    2->4
-    0.00,  0.50,  0.50};// surf 6    3->4
+  const double intgLocShift_[18] = {0.50, 0.00, 0.00,  // surf 1    1->2
+                                    0.50, 0.50, 0.00,  // surf 2    2->3
+                                    0.00, 0.50, 0.00,  // surf 3    1->3
+                                    0.00, 0.00, 0.50,  // surf 4    1->4
+                                    0.50, 0.00, 0.50,  // surf 5    2->4
+                                    0.00, 0.50, 0.50}; // surf 6    3->4
 
 #if 0
   // exposed face
@@ -362,18 +341,18 @@ private:
    {seven36ths,   eleven18ths,   0.00}}};
 #endif
 
-  // boundary integration point ip node mapping (ip on an ordinal to local node number)
-  const int ipNodeMap_[4][3] = { // 3 ips * 4 faces
-    {0,  1,  3}, // face 0
-    {1,  2,  3}, // face 1
-    {0,  3,  2}, // face 2
-    {0,  2,  1}};// face 3
+  // boundary integration point ip node mapping (ip on an ordinal to local node
+  // number)
+  const int ipNodeMap_[4][3] = {            // 3 ips * 4 faces
+                                {0, 1, 3},  // face 0
+                                {1, 2, 3},  // face 1
+                                {0, 3, 2},  // face 2
+                                {0, 2, 1}}; // face 3
 
   int intgExpFaceShift_[4][3][3];
-
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

@@ -108,7 +108,7 @@ ActuatorBulkFAST::init_openfast(
   } else {
     squash_fast_output(std::bind(&fast::OpenFAST::init, &openFast_));
   }
-  /* TODO update/uncomment this check once openfast adds in a way 
+  /* TODO update/uncomment this check once openfast adds in a way
   to get the actual time step from fast::OpenFAST
   if (!is_tstep_ratio_admissable(openFast_.dtFAST, naluTimeStep)) {
     throw std::runtime_error("OpenFAST is using a different time step than "

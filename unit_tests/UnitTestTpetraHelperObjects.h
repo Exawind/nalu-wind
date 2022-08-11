@@ -14,12 +14,10 @@
 
 namespace unit_test_utils {
 
-inline
-bool find_col(int col,
-               const std::vector<int>& cols,
-               int begin, int end)
+inline bool
+find_col(int col, const std::vector<int>& cols, int begin, int end)
 {
-  for(int i=begin; i<end; ++i) {
+  for (int i = begin; i < end; ++i) {
     if (cols[i] == col) {
       return true;
     }
@@ -27,26 +25,25 @@ bool find_col(int col,
   return false;
 }
 
-struct TpetraHelperObjectsBase {
+struct TpetraHelperObjectsBase
+{
   TpetraHelperObjectsBase(std::shared_ptr<stk::mesh::BulkData> bulk, int numDof)
-  : yamlNode(unit_test_utils::get_default_inputs()),
-    realmDefaultNode(unit_test_utils::get_realm_default_node()),
-    naluObj(new unit_test_utils::NaluTest(yamlNode)),
-    realm(naluObj->create_realm(realmDefaultNode, "multi_physics", false)),
-    eqSystems(realm),
-    eqSystem(eqSystems),
-    linsys(new sierra::nalu::TpetraLinearSystem(realm, numDof, &eqSystem, nullptr))
+    : yamlNode(unit_test_utils::get_default_inputs()),
+      realmDefaultNode(unit_test_utils::get_realm_default_node()),
+      naluObj(new unit_test_utils::NaluTest(yamlNode)),
+      realm(naluObj->create_realm(realmDefaultNode, "multi_physics", false)),
+      eqSystems(realm),
+      eqSystem(eqSystems),
+      linsys(
+        new sierra::nalu::TpetraLinearSystem(realm, numDof, &eqSystem, nullptr))
   {
     realm.bulkData_ = bulk;
     eqSystem.linsys_ = linsys;
   }
 
-  virtual ~TpetraHelperObjectsBase()
-  {
-    delete naluObj;
-  }
+  virtual ~TpetraHelperObjectsBase() { delete naluObj; }
 
-  virtual void execute() { }
+  virtual void execute() {}
 
   void print_lhs_and_rhs() const
   {
@@ -61,109 +58,120 @@ struct TpetraHelperObjectsBase {
 
     int localProc = realm.bulkData_->parallel_rank();
 
-    std::string suffix = std::string("_P")+std::to_string(localProc);
+    std::string suffix = std::string("_P") + std::to_string(localProc);
     std::ostringstream os;
-    os<<"static const std::vector<int> rowOffsets"<<suffix<<" = {";
+    os << "static const std::vector<int> rowOffsets" << suffix << " = {";
     int rowOffset = 0;
-    for(int i=0; i<localMatrix.numRows(); ++i) {
-      KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(i);
-      os<<rowOffset<<", ";
+    for (int i = 0; i < localMatrix.numRows(); ++i) {
+      KokkosSparse::SparseRowViewConst<MatrixType> constRowView =
+        localMatrix.rowConst(i);
+      os << rowOffset << ", ";
       rowOffset += constRowView.length;
     }
-    os<<rowOffset<<"};"<<std::endl;
+    os << rowOffset << "};" << std::endl;
 
-    os<<"\nstatic const std::vector<int> cols"<<suffix<<" = {";
-    for(int i=0; i<localMatrix.numRows(); ++i) {
-      KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(i);
-      for(int j=0; j<constRowView.length; ++j) {
-        os<<constRowView.colidx(j)<<(j<constRowView.length-1 ? ", ":"");
+    os << "\nstatic const std::vector<int> cols" << suffix << " = {";
+    for (int i = 0; i < localMatrix.numRows(); ++i) {
+      KokkosSparse::SparseRowViewConst<MatrixType> constRowView =
+        localMatrix.rowConst(i);
+      for (int j = 0; j < constRowView.length; ++j) {
+        os << constRowView.colidx(j)
+           << (j < constRowView.length - 1 ? ", " : "");
       }
-      os<<(i<localMatrix.numRows()-1?", ":"");
+      os << (i < localMatrix.numRows() - 1 ? ", " : "");
     }
-    os<<"};"<<std::endl;
+    os << "};" << std::endl;
 
-    os<<"\nstatic const std::vector<double> vals"<<suffix<<" = {";
-    for(int i=0; i<localMatrix.numRows(); ++i) {
-      KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(i);
-      for(int j=0; j<constRowView.length; ++j) {
-        os<<constRowView.value(j)<<(j<constRowView.length-1 ? ", ":"");
+    os << "\nstatic const std::vector<double> vals" << suffix << " = {";
+    for (int i = 0; i < localMatrix.numRows(); ++i) {
+      KokkosSparse::SparseRowViewConst<MatrixType> constRowView =
+        localMatrix.rowConst(i);
+      for (int j = 0; j < constRowView.length; ++j) {
+        os << constRowView.value(j)
+           << (j < constRowView.length - 1 ? ", " : "");
       }
-      os<<(i<localMatrix.numRows()-1?", ":"");
+      os << (i < localMatrix.numRows() - 1 ? ", " : "");
     }
-    os<<"};"<<std::endl;
+    os << "};" << std::endl;
 
-    os<<"\nstatic const std::vector<double> rhs"<<suffix<<" = {";
-    for(int i=0; i<localMatrix.numRows(); ++i) {
-      os<<localRhs(i,0)<<(i<localMatrix.numRows()-1 ? ", ":"");
+    os << "\nstatic const std::vector<double> rhs" << suffix << " = {";
+    for (int i = 0; i < localMatrix.numRows(); ++i) {
+      os << localRhs(i, 0) << (i < localMatrix.numRows() - 1 ? ", " : "");
     }
-    os<<"};"<<std::endl;
-    std::cerr<<os.str();
+    os << "};" << std::endl;
+    std::cerr << os.str();
     std::cerr.precision(oldPrec);
   }
 
-  void check_against_sparse_gold_values(const std::vector<int>& rowOffsets,
-                                        const std::vector<int>& cols,
-                                        const std::vector<double>& vals,
-                                        const std::vector<double>& rhs)
+  void check_against_sparse_gold_values(
+    const std::vector<int>& rowOffsets,
+    const std::vector<int>& cols,
+    const std::vector<double>& vals,
+    const std::vector<double>& rhs)
   {
     auto localMatrix = linsys->getOwnedMatrix()->getLocalMatrixHost();
-    auto localRhs = linsys->getOwnedRhs()->getLocalViewHost(Tpetra::Access::ReadWrite);
+    auto localRhs =
+      linsys->getOwnedRhs()->getLocalViewHost(Tpetra::Access::ReadWrite);
 
-    EXPECT_EQ(rowOffsets.size()-1, static_cast<unsigned>(localMatrix.numRows()));
+    EXPECT_EQ(
+      rowOffsets.size() - 1, static_cast<unsigned>(localMatrix.numRows()));
     EXPECT_EQ(rhs.size(), localRhs.size());
     EXPECT_EQ(rhs.size(), static_cast<unsigned>(localMatrix.numRows()));
 
-    for(int i=0; i<localMatrix.numRows(); ++i) {
+    for (int i = 0; i < localMatrix.numRows(); ++i) {
       auto constRowView = localMatrix.rowConst(i);
-      for(int offset=rowOffsets[i]; offset<rowOffsets[i+1]; ++offset) {
+      for (int offset = rowOffsets[i]; offset < rowOffsets[i + 1]; ++offset) {
         int goldCol = cols[offset];
         bool foundGoldCol = false;
-        for(int j=0; j<constRowView.length; ++j) {
+        for (int j = 0; j < constRowView.length; ++j) {
           if (constRowView.colidx(j) == goldCol) {
             foundGoldCol = true;
-            EXPECT_NEAR(vals[offset], constRowView.value(j), 1.e-14)<<"i: "<<i<<", j: "<<j;
-          }
-          else if (!find_col(constRowView.colidx(j),
-                             cols, rowOffsets[i], rowOffsets[i+1]))
-          {
+            EXPECT_NEAR(vals[offset], constRowView.value(j), 1.e-14)
+              << "i: " << i << ", j: " << j;
+          } else if (!find_col(
+                       constRowView.colidx(j), cols, rowOffsets[i],
+                       rowOffsets[i + 1])) {
             EXPECT_NEAR(0.0, constRowView.value(j), 1.e-14);
           }
         }
         EXPECT_TRUE(foundGoldCol);
       }
 
-      EXPECT_NEAR(rhs[i], localRhs(i,0), 1.e-14)<<"i: "<<i;
+      EXPECT_NEAR(rhs[i], localRhs(i, 0), 1.e-14) << "i: " << i;
     }
   }
 
-  template<typename LHSType, typename RHSType>
-  void check_against_dense_gold_values(unsigned rhsSize, const LHSType& lhs, const RHSType& rhs)
+  template <typename LHSType, typename RHSType>
+  void check_against_dense_gold_values(
+    unsigned rhsSize, const LHSType& lhs, const RHSType& rhs)
   {
     auto localMatrix = linsys->getOwnedMatrix()->getLocalMatrixHost();
-    auto localRhs = linsys->getOwnedRhs()->getLocalViewHost(Tpetra::Access::ReadWrite);
+    auto localRhs =
+      linsys->getOwnedRhs()->getLocalViewHost(Tpetra::Access::ReadWrite);
 
     EXPECT_EQ(rhsSize, localMatrix.numRows());
     EXPECT_EQ(rhsSize, localRhs.size());
 
-    stk::mesh::Entity elem = realm.bulkData_->get_entity(stk::topology::ELEM_RANK, 1);
+    stk::mesh::Entity elem =
+      realm.bulkData_->get_entity(stk::topology::ELEM_RANK, 1);
     const stk::mesh::Entity* elemNodes = realm.bulkData_->begin_nodes(elem);
     unsigned numElemNodes = realm.bulkData_->num_nodes(elem);
-    EXPECT_EQ(rhsSize, numElemNodes*linsys->numDof());
+    EXPECT_EQ(rhsSize, numElemNodes * linsys->numDof());
 
-    for(unsigned i=0; i<numElemNodes; ++i) {
+    for (unsigned i = 0; i < numElemNodes; ++i) {
       int rowId = linsys->getRowLID(elemNodes[i]);
-      for(unsigned d=0; d<linsys->numDof(); ++d) {
-        auto constRowView = localMatrix.rowConst(rowId+d);
+      for (unsigned d = 0; d < linsys->numDof(); ++d) {
+        auto constRowView = localMatrix.rowConst(rowId + d);
         EXPECT_EQ(rhsSize, constRowView.length);
 
-        for(unsigned j=0; j<numElemNodes; ++j) {
+        for (unsigned j = 0; j < numElemNodes; ++j) {
           int colId = linsys->getColLID(elemNodes[j]);
-          for(unsigned dd=0; dd<linsys->numDof(); ++dd) {
-            EXPECT_NEAR(lhs[i][j], constRowView.value(colId+dd), 1.e-14);
+          for (unsigned dd = 0; dd < linsys->numDof(); ++dd) {
+            EXPECT_NEAR(lhs[i][j], constRowView.value(colId + dd), 1.e-14);
           }
         }
 
-        EXPECT_NEAR(rhs[i], localRhs(rowId+d,0), 1.e-14);
+        EXPECT_NEAR(rhs[i], localRhs(rowId + d, 0), 1.e-14);
       }
     }
   }
@@ -177,24 +185,27 @@ struct TpetraHelperObjectsBase {
   sierra::nalu::TpetraLinearSystem* linsys;
 };
 
-struct TpetraHelperObjectsElem : public TpetraHelperObjectsBase {
-  TpetraHelperObjectsElem(std::shared_ptr<stk::mesh::BulkData> bulk, stk::topology topo, int numDof, stk::mesh::Part* part)
-  : TpetraHelperObjectsBase(bulk, numDof),
-    assembleElemSolverAlg(new sierra::nalu::AssembleElemSolverAlgorithm(realm, part, &eqSystem, topo.rank(), topo.num_nodes()))
+struct TpetraHelperObjectsElem : public TpetraHelperObjectsBase
+{
+  TpetraHelperObjectsElem(
+    std::shared_ptr<stk::mesh::BulkData> bulk,
+    stk::topology topo,
+    int numDof,
+    stk::mesh::Part* part)
+    : TpetraHelperObjectsBase(bulk, numDof),
+      assembleElemSolverAlg(new sierra::nalu::AssembleElemSolverAlgorithm(
+        realm, part, &eqSystem, topo.rank(), topo.num_nodes()))
   {
   }
 
-  virtual ~TpetraHelperObjectsElem()
-  {
-    delete assembleElemSolverAlg;
-  }
+  virtual ~TpetraHelperObjectsElem() { delete assembleElemSolverAlg; }
 
   virtual void execute()
   {
     linsys->buildElemToNodeGraph({&realm.meta_data().universal_part()});
     linsys->finalizeLinearSystem();
     assembleElemSolverAlg->execute();
-    for (auto kern: assembleElemSolverAlg->activeKernels_)
+    for (auto kern : assembleElemSolverAlg->activeKernels_)
       kern->free_on_device();
     assembleElemSolverAlg->activeKernels_.clear();
   }
@@ -202,44 +213,45 @@ struct TpetraHelperObjectsElem : public TpetraHelperObjectsBase {
   sierra::nalu::AssembleElemSolverAlgorithm* assembleElemSolverAlg;
 };
 
-
-struct TpetraHelperObjectsFaceElem : public TpetraHelperObjectsBase {
-  TpetraHelperObjectsFaceElem(std::shared_ptr<stk::mesh::BulkData> bulk, stk::topology faceTopo, stk::topology elemTopo, int numDof, stk::mesh::Part* part)
-  : TpetraHelperObjectsBase(bulk, numDof),
-    assembleFaceElemSolverAlg(new sierra::nalu::AssembleFaceElemSolverAlgorithm(realm, part, &eqSystem, faceTopo.num_nodes(), elemTopo.num_nodes()))
+struct TpetraHelperObjectsFaceElem : public TpetraHelperObjectsBase
+{
+  TpetraHelperObjectsFaceElem(
+    std::shared_ptr<stk::mesh::BulkData> bulk,
+    stk::topology faceTopo,
+    stk::topology elemTopo,
+    int numDof,
+    stk::mesh::Part* part)
+    : TpetraHelperObjectsBase(bulk, numDof),
+      assembleFaceElemSolverAlg(
+        new sierra::nalu::AssembleFaceElemSolverAlgorithm(
+          realm, part, &eqSystem, faceTopo.num_nodes(), elemTopo.num_nodes()))
   {
   }
 
-  virtual ~TpetraHelperObjectsFaceElem()
-  {
-    delete assembleFaceElemSolverAlg;
-  }
+  virtual ~TpetraHelperObjectsFaceElem() { delete assembleFaceElemSolverAlg; }
 
   virtual void execute() override
   {
     linsys->buildElemToNodeGraph({&realm.meta_data().universal_part()});
     linsys->finalizeLinearSystem();
     assembleFaceElemSolverAlg->execute();
-    for (auto kern: assembleFaceElemSolverAlg->activeKernels_)
+    for (auto kern : assembleFaceElemSolverAlg->activeKernels_)
       kern->free_on_device();
     assembleFaceElemSolverAlg->activeKernels_.clear();
   }
   sierra::nalu::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;
 };
 
-struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase {
+struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase
+{
   TpetraHelperObjectsEdge(std::shared_ptr<stk::mesh::BulkData> bulk, int numDof)
-  : TpetraHelperObjectsBase(bulk, numDof),
-    edgeAlg(nullptr)
+    : TpetraHelperObjectsBase(bulk, numDof), edgeAlg(nullptr)
   {
   }
 
-  virtual ~TpetraHelperObjectsEdge()
-  {
-    delete edgeAlg;
-  }
+  virtual ~TpetraHelperObjectsEdge() { delete edgeAlg; }
 
-  template<typename T, class... Args>
+  template <typename T, class... Args>
   void create(stk::mesh::Part* part, Args&&... args)
   {
     ThrowRequire(edgeAlg == nullptr);
@@ -256,7 +268,7 @@ struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase {
 
     linsys->loadComplete();
 
-    for (auto kern: edgeAlg->activeKernels_)
+    for (auto kern : edgeAlg->activeKernels_)
       kern->free_on_device();
     edgeAlg->activeKernels_.clear();
   }
@@ -264,6 +276,6 @@ struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase {
   sierra::nalu::AssembleEdgeSolverAlgorithm* edgeAlg;
 };
 
-}
+} // namespace unit_test_utils
 
 #endif

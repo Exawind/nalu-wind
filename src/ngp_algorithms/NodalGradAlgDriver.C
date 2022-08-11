@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/NodalGradAlgDriver.h"
 #include "ngp_utils/NgpFieldUtils.h"
 #include "Realm.h"
@@ -21,17 +20,16 @@
 namespace sierra {
 namespace nalu {
 
-template<typename GradPhiType>
+template <typename GradPhiType>
 NodalGradAlgDriver<GradPhiType>::NodalGradAlgDriver(
-  Realm& realm,
-  const std::string& gradPhiName
-) : NgpAlgDriver(realm),
-    gradPhiName_(gradPhiName)
-{}
+  Realm& realm, const std::string& gradPhiName)
+  : NgpAlgDriver(realm), gradPhiName_(gradPhiName)
+{
+}
 
-
-template<typename GradPhiType>
-void NodalGradAlgDriver<GradPhiType>::pre_work()
+template <typename GradPhiType>
+void
+NodalGradAlgDriver<GradPhiType>::pre_work()
 {
   const auto& meta = realm_.meta_data();
 
@@ -50,8 +48,9 @@ void NodalGradAlgDriver<GradPhiType>::pre_work()
   ngpGradPhi.clear_sync_state();
 }
 
-template<typename GradPhiType>
-void NodalGradAlgDriver<GradPhiType>::post_work()
+template <typename GradPhiType>
+void
+NodalGradAlgDriver<GradPhiType>::post_work()
 {
   // TODO: Revisit logic after STK updates to ngp parallel updates
   const auto& meta = realm_.meta_data();
@@ -68,8 +67,7 @@ void NodalGradAlgDriver<GradPhiType>::post_work()
   stk::mesh::parallel_sum(bulk, fVec, doFinalSyncToDevice);
 
   const int dim2 = meta.spatial_dimension();
-  const int dim1 = std::is_same<VectorFieldType, GradPhiType>::value
-    ? 1 : dim2;
+  const int dim1 = std::is_same<VectorFieldType, GradPhiType>::value ? 1 : dim2;
 
   if (realm_.hasPeriodic_) {
     realm_.periodic_field_update(gradPhi, dim2 * dim1);
@@ -86,5 +84,5 @@ void NodalGradAlgDriver<GradPhiType>::post_work()
 template class NodalGradAlgDriver<VectorFieldType>;
 template class NodalGradAlgDriver<GenericFieldType>;
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

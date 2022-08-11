@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef BoundaryConditions_h
 #define BoundaryConditions_h
 
@@ -20,20 +18,21 @@
 #include <memory>
 
 namespace YAML {
-  class Node;
+class Node;
 }
 
-namespace sierra{
+namespace sierra {
 namespace nalu {
 
-class BoundaryCondition {
- public:
-   BoundaryCondition() {}
-   virtual ~BoundaryCondition() {}
+class BoundaryCondition
+{
+public:
+  BoundaryCondition() {}
+  virtual ~BoundaryCondition() {}
 
-   std::string bcName_;
-   std::string targetName_;
-   BoundaryConditionType theBcType_;
+  std::string bcName_;
+  std::string targetName_;
+  BoundaryConditionType theBcType_;
 };
 
 typedef std::vector<std::unique_ptr<BoundaryCondition>> BoundaryConditionVector;
@@ -46,6 +45,6 @@ public:
   load_single_bc_node(const YAML::Node& node);
 };
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

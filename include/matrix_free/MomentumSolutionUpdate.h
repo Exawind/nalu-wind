@@ -52,9 +52,7 @@ public:
     const_node_offset_view = {});
 
   const Tpetra::MultiVector<double>& compute_residual(
-    Kokkos::Array<double, 3>,
-    LowMachResidualFields<p>,
-    LowMachBCFields<p>);
+    Kokkos::Array<double, 3>, LowMachResidualFields<p>, LowMachBCFields<p>);
 
   const Tpetra::MultiVector<double>&
   compute_delta(double, LowMachLinearizedResidualFields<p>);

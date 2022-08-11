@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef BoundaryLayerPerturbationAuxFunction_h
 #define BoundaryLayerPerturbationAuxFunction_h
 
@@ -15,8 +14,8 @@
 
 #include <vector>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 /** Add sinusoidal perturbations to the velocity field.
  *
@@ -27,25 +26,24 @@ namespace nalu{
 class BoundaryLayerPerturbationAuxFunction : public AuxFunction
 {
 public:
-
   BoundaryLayerPerturbationAuxFunction(
     const unsigned beginPos,
     const unsigned endPos,
-    const std::vector<double> &theParams);
+    const std::vector<double>& theParams);
 
   virtual ~BoundaryLayerPerturbationAuxFunction() {}
-  
+
   using AuxFunction::do_evaluate;
   virtual void do_evaluate(
-    const double * coords,
+    const double* coords,
     const double time,
     const unsigned spatialDimension,
     const unsigned numPoints,
-    double * fieldPtr,
+    double* fieldPtr,
     const unsigned fieldSize,
     const unsigned beginPos,
     const unsigned endPos) const;
-  
+
 private:
   /// Amplitude of perturbations
   double amplitude_;
@@ -55,10 +53,9 @@ private:
 
   /// Mean velocity field during initialization
   double uInf_;
-
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

@@ -14,28 +14,27 @@
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_util/parallel/ParallelReduce.hpp"
 
-
 namespace sierra {
 namespace nalu {
 
-CourantReAlgDriver::CourantReAlgDriver(
-  Realm& realm
-) : NgpAlgDriver(realm)
-{}
+CourantReAlgDriver::CourantReAlgDriver(Realm& realm) : NgpAlgDriver(realm) {}
 
-void CourantReAlgDriver::update_max_cfl_rey(const double cfl, const double rey)
+void
+CourantReAlgDriver::update_max_cfl_rey(const double cfl, const double rey)
 {
   maxCFL_ = stk::math::max(maxCFL_, cfl);
   maxRe_ = stk::math::max(maxRe_, rey);
 }
 
-void CourantReAlgDriver::pre_work()
+void
+CourantReAlgDriver::pre_work()
 {
   maxCFL_ = -1.0e6;
   maxRe_ = -1.0e6;
 }
 
-void CourantReAlgDriver::post_work()
+void
+CourantReAlgDriver::post_work()
 {
   double local[2] = {maxCFL_, maxRe_};
   double global[2] = {-1.0e6, -1.0e6};
@@ -46,5 +45,5 @@ void CourantReAlgDriver::post_work()
   realm_.maxReynolds_ = global[1];
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

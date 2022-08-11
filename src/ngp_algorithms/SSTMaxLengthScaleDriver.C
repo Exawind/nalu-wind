@@ -22,35 +22,38 @@
 namespace sierra {
 namespace nalu {
 
-SSTMaxLengthScaleDriver::SSTMaxLengthScaleDriver(
-  Realm& realm
-) : NgpAlgDriver(realm)
-{}
+SSTMaxLengthScaleDriver::SSTMaxLengthScaleDriver(Realm& realm)
+  : NgpAlgDriver(realm)
+{
+}
 
-void SSTMaxLengthScaleDriver::pre_work()
+void
+SSTMaxLengthScaleDriver::pre_work()
 {
 
   auto* maxLengthScale = realm_.meta_data().template get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "sst_max_length_scale");
   stk::mesh::field_fill(0.0, *maxLengthScale);
-  
+
   const auto& meshInfo = realm_.mesh_info();
-  const auto ngpMesh   = meshInfo.ngp_mesh();
+  const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
-  auto ngpMaxLengthScale = 
-    fieldMgr.template get_field<double>(maxLengthScale->mesh_meta_data_ordinal());
+  auto ngpMaxLengthScale = fieldMgr.template get_field<double>(
+    maxLengthScale->mesh_meta_data_ordinal());
   ngpMaxLengthScale.set_all(ngpMesh, 0.0);
 }
 
-void SSTMaxLengthScaleDriver::post_work()
+void
+SSTMaxLengthScaleDriver::post_work()
 {
-  
+
   const auto& meshInfo = realm_.mesh_info();
-  auto& ngpMaxLengthScale = nalu_ngp::get_ngp_field(meshInfo, "sst_max_length_scale");
+  auto& ngpMaxLengthScale =
+    nalu_ngp::get_ngp_field(meshInfo, "sst_max_length_scale");
 
   const auto& meta = realm_.meta_data();
   auto* maxLengthScale = meta.template get_field<ScalarFieldType>(
-     stk::topology::NODE_RANK, "sst_max_length_scale");
+    stk::topology::NODE_RANK, "sst_max_length_scale");
 
   // Algorithms should have marked the fields as modified, but call this here to
   // ensure the next step does a sync to host
@@ -66,5 +69,5 @@ void SSTMaxLengthScaleDriver::post_work()
   ngpMaxLengthScale.modify_on_host();
   ngpMaxLengthScale.sync_to_device();
 }
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

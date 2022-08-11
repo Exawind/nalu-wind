@@ -22,8 +22,11 @@ public:
     meta = &bulk->mesh_meta_data();
     stk::io::StkMeshIoBroker io(bulk->parallel());
 
-    test_field = &meta->declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, "test");
-    test_vector_field = &meta->declare_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(stk::topology::NODE_RANK, "test_vector");
+    test_field = &meta->declare_field<stk::mesh::Field<double>>(
+      stk::topology::NODE_RANK, "test");
+    test_vector_field =
+      &meta->declare_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
+        stk::topology::NODE_RANK, "test_vector");
 
     double minus_one = -1;
     stk::mesh::put_field_on_mesh(

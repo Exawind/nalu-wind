@@ -7,40 +7,34 @@
 // for more details.
 //
 
-
-
 #ifndef TurbViscSmagorinskyAlgorithm_h
 #define TurbViscSmagorinskyAlgorithm_h
 
-#include<Algorithm.h>
+#include <Algorithm.h>
 
-#include<FieldTypeDef.h>
+#include <FieldTypeDef.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
 class TurbViscSmagorinskyAlgorithm : public Algorithm
 {
 public:
-  
-  TurbViscSmagorinskyAlgorithm(
-    Realm &realm,
-    stk::mesh::Part *part);
+  TurbViscSmagorinskyAlgorithm(Realm& realm, stk::mesh::Part* part);
   virtual ~TurbViscSmagorinskyAlgorithm() {}
   virtual void execute();
 
-  GenericFieldType *dudx_;
-  ScalarFieldType *density_;
-  ScalarFieldType *tvisc_;
-  ScalarFieldType *dualNodalVolume_;
+  GenericFieldType* dudx_;
+  ScalarFieldType* density_;
+  ScalarFieldType* tvisc_;
+  ScalarFieldType* dualNodalVolume_;
 
   const double cmuCs_;
-  
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

@@ -3,19 +3,15 @@
 
 #include "FrameReference.h"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class MeshTransformationAlg
 {
 public:
-  MeshTransformationAlg(
-    stk::mesh::BulkData& bulk,
-    const YAML::Node&);
+  MeshTransformationAlg(stk::mesh::BulkData& bulk, const YAML::Node&);
 
-  ~MeshTransformationAlg()
-  {
-  }
+  ~MeshTransformationAlg() {}
 
   void initialize(const double);
 
@@ -27,9 +23,7 @@ private:
   MeshTransformationAlg() = delete;
   MeshTransformationAlg(const MeshTransformationAlg&) = delete;
 
-  void load(
-    stk::mesh::BulkData&,
-    const YAML::Node&);
+  void load(stk::mesh::BulkData&, const YAML::Node&);
 
   /** Reference frame vector
    *
@@ -42,7 +36,7 @@ private:
   bool isInit_ = false;
 };
 
-} // nalu
-} // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* MESHTRANSFORMATIONALG_H */

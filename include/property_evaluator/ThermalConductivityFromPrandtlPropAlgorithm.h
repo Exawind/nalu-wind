@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef ThermalConductivityFromPrandtlPropAlgorithm_h
 #define ThermalConductivityFromPrandtlPropAlgorithm_h
 
@@ -19,11 +17,11 @@ namespace stk {
 namespace mesh {
 class FieldBase;
 class Part;
-}
-}
+} // namespace mesh
+} // namespace stk
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 class PropertyEvaluator;
@@ -31,27 +29,26 @@ class PropertyEvaluator;
 class ThermalConductivityFromPrandtlPropAlgorithm : public Algorithm
 {
 public:
-
   ThermalConductivityFromPrandtlPropAlgorithm(
-    Realm & realm,
-    stk::mesh::Part * part,
-    ScalarFieldType *thermalCond,
-    ScalarFieldType *specificHeat,
-    ScalarFieldType *viscosity,
+    Realm& realm,
+    stk::mesh::Part* part,
+    ScalarFieldType* thermalCond,
+    ScalarFieldType* specificHeat,
+    ScalarFieldType* viscosity,
     const double Pr);
 
   virtual ~ThermalConductivityFromPrandtlPropAlgorithm() {}
 
   virtual void execute();
-  
-  ScalarFieldType *thermalCond_;
-  ScalarFieldType *specHeat_;
-  ScalarFieldType *viscosity_;
+
+  ScalarFieldType* thermalCond_;
+  ScalarFieldType* specHeat_;
+  ScalarFieldType* viscosity_;
 
   const double Pr_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "UnitTestAlgorithm.h"
 #include "UnitTestKokkosUtils.h"
 #include "UnitTestFieldUtils.h"

@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
@@ -21,10 +20,7 @@ namespace nalu {
 
 template <typename PhiType, typename GradPhiType>
 NodalGradEdgeAlg<PhiType, GradPhiType>::NodalGradEdgeAlg(
-  Realm& realm,
-  stk::mesh::Part* part,
-  PhiType* phi,
-  GradPhiType* gradPhi)
+  Realm& realm, stk::mesh::Part* part, PhiType* phi, GradPhiType* gradPhi)
   : Algorithm(realm, part),
     phi_(phi->mesh_meta_data_ordinal()),
     gradPhi_(gradPhi->mesh_meta_data_ordinal()),
@@ -32,13 +28,15 @@ NodalGradEdgeAlg<PhiType, GradPhiType>::NodalGradEdgeAlg(
       realm_.meta_data(), "edge_area_vector", stk::topology::EDGE_RANK)),
     dualNodalVol_(get_field_ordinal(realm_.meta_data(), "dual_nodal_volume")),
     dim1_(
-      std::is_same<PhiType, ScalarFieldType>::value
-      ? 1 : realm_.spatialDimension_),
+      std::is_same<PhiType, ScalarFieldType>::value ? 1
+                                                    : realm_.spatialDimension_),
     dim2_(realm_.meta_data().spatial_dimension())
-{}
+{
+}
 
 template <typename PhiType, typename GradPhiType>
-void NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
+void
+NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
 {
   using EntityInfoType = nalu_ngp::EntityInfo<stk::mesh::NgpMesh>;
   const auto& meshInfo = realm_.mesh_info();
@@ -52,9 +50,9 @@ void NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
   auto gradPhi = fieldMgr.template get_field<double>(gradPhi_);
   const auto gradPhiOps = nalu_ngp::edge_nodal_field_updater(ngpMesh, gradPhi);
 
-  const stk::mesh::Selector sel = meta.locally_owned_part()
-    & stk::mesh::selectUnion(partVec_)
-    & !(realm_.get_inactive_selector());
+  const stk::mesh::Selector sel = meta.locally_owned_part() &
+                                  stk::mesh::selectUnion(partVec_) &
+                                  !(realm_.get_inactive_selector());
 
   // Bring class members into local scope for device capture
   const int dim1 = dim1_;
@@ -64,11 +62,10 @@ void NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
 
   const std::string algName = meta.get_fields()[gradPhi_]->name() + "_edge";
   nalu_ngp::run_edge_algorithm(
-    algName, ngpMesh, sel,
-    KOKKOS_LAMBDA(const EntityInfoType& einfo) {
+    algName, ngpMesh, sel, KOKKOS_LAMBDA(const EntityInfoType& einfo) {
       NALU_ALIGNED DblType av[NDimMax];
 
-      for (int d=0; d < dim2; ++d)
+      for (int d = 0; d < dim2; ++d)
         av[d] = edgeAreaVec.get(einfo.meshIdx, d);
 
       const auto nodeL = ngpMesh.fast_mesh_index(einfo.entityNodes[0]);
@@ -79,10 +76,9 @@ void NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
 
       int counter = 0;
       for (int i = 0; i < dim1; ++i) {
-        const double phiIp = 0.5 * (
-          phi.get(nodeL, i) + phi.get(nodeR, i));
+        const double phiIp = 0.5 * (phi.get(nodeL, i) + phi.get(nodeR, i));
 
-        for (int j=0; j < dim2; ++j) {
+        for (int j = 0; j < dim2; ++j) {
           const DblType ajPhiIp = av[j] * phiIp;
           gradPhiOps(einfo, 0, counter) += ajPhiIp * invVolL;
           gradPhiOps(einfo, 1, counter) -= ajPhiIp * invVolR;
@@ -96,5 +92,5 @@ void NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
 template class NodalGradEdgeAlg<ScalarFieldType, VectorFieldType>;
 template class NodalGradEdgeAlg<VectorFieldType, GenericFieldType>;
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

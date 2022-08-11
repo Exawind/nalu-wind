@@ -7,16 +7,15 @@
 // for more details.
 //
 
-
 #ifndef EffSSTDiffFluxCoeffAlg_h
 #define EffSSTDiffFluxCoeffAlg_h
 
-#include<Algorithm.h>
+#include <Algorithm.h>
 
-#include<FieldTypeDef.h>
+#include <FieldTypeDef.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
@@ -35,21 +34,20 @@ public:
     const double sigmaTwo);
 
   virtual ~EffSSTDiffFluxCoeffAlg() = default;
-  
+
   virtual void execute() override;
 
 private:
-  ScalarFieldType* viscField_ {nullptr};
-  unsigned visc_ {stk::mesh::InvalidOrdinal};
-  unsigned tvisc_ {stk::mesh::InvalidOrdinal};
-  unsigned evisc_ {stk::mesh::InvalidOrdinal};
-  unsigned fOneBlend_ {stk::mesh::InvalidOrdinal};
+  ScalarFieldType* viscField_{nullptr};
+  unsigned visc_{stk::mesh::InvalidOrdinal};
+  unsigned tvisc_{stk::mesh::InvalidOrdinal};
+  unsigned evisc_{stk::mesh::InvalidOrdinal};
+  unsigned fOneBlend_{stk::mesh::InvalidOrdinal};
   const DblType sigmaOne_;
   const DblType sigmaTwo_;
-  
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

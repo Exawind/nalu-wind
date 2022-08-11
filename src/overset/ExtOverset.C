@@ -22,13 +22,12 @@
 namespace sierra {
 namespace nalu {
 
-ExtOverset::ExtOverset(TimeIntegrator& time)
-  : time_(time)
-{}
+ExtOverset::ExtOverset(TimeIntegrator& time) : time_(time) {}
 
 ExtOverset::~ExtOverset() = default;
 
-void ExtOverset::set_communicator()
+void
+ExtOverset::set_communicator()
 {
 #ifdef NALU_USES_TIOGA
   auto& tg = tioga_nalu::TiogaRef::self().get();
@@ -39,15 +38,16 @@ void ExtOverset::set_communicator()
 #endif
 }
 
-void ExtOverset::breadboard()
+void
+ExtOverset::breadboard()
 {
   int noverset = 0;
   for (auto* realm : time_.realmVec_) {
     if (realm->query_for_overset()) {
       ++noverset;
 
-      isDecoupled_ = isDecoupled_ &&
-        realm->equationSystems_.all_systems_decoupled();
+      isDecoupled_ =
+        isDecoupled_ && realm->equationSystems_.all_systems_decoupled();
     }
   }
 
@@ -73,13 +73,16 @@ void ExtOverset::breadboard()
     set_communicator();
 }
 
-void ExtOverset::initialize()
+void
+ExtOverset::initialize()
 {
-  if (!hasOverset_) return;
+  if (!hasOverset_)
+    return;
 
 #ifdef NALU_USES_TIOGA
-  for (auto* realm: time_.realmVec_) {
-    if (!realm->hasOverset_) continue;
+  for (auto* realm : time_.realmVec_) {
+    if (!realm->hasOverset_)
+      continue;
 
     auto* mgr = dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_);
     tgIfaceVec_.push_back(&mgr->tiogaIface_);
@@ -89,113 +92,135 @@ void ExtOverset::initialize()
 #endif
 }
 
-void ExtOverset::update_connectivity()
+void
+ExtOverset::update_connectivity()
 {
-  if (!hasOverset_) return;
+  if (!hasOverset_)
+    return;
 
 #ifdef NALU_USES_TIOGA
   auto& tg = tioga_nalu::TiogaRef::self().get();
 
-  for (auto* tgiface: tgIfaceVec_) {
+  for (auto* tgiface : tgIfaceVec_) {
     tgiface->register_mesh();
   }
 
   tg.profile();
   tg.performConnectivity();
 
-  for (auto* tgiface: tgIfaceVec_) {
+  for (auto* tgiface : tgIfaceVec_) {
     tgiface->post_connectivity_work(isDecoupled_);
   }
 #endif
 }
 
-void ExtOverset::pre_overset_conn_work()
+void
+ExtOverset::pre_overset_conn_work()
 {
-  if (!hasOverset_) return;
+  if (!hasOverset_)
+    return;
 
 #ifdef NALU_USES_TIOGA
-  for (auto* tgiface: tgIfaceVec_) {
+  for (auto* tgiface : tgIfaceVec_) {
     tgiface->register_mesh();
   }
 #endif
 }
 
-void ExtOverset::post_overset_conn_work()
+void
+ExtOverset::post_overset_conn_work()
 {
-  if (!hasOverset_) return;
+  if (!hasOverset_)
+    return;
 
 #ifdef NALU_USES_TIOGA
-  for (auto* tgiface: tgIfaceVec_) {
+  for (auto* tgiface : tgIfaceVec_) {
     tgiface->post_connectivity_work(isDecoupled_);
   }
 #endif
 }
 
-void ExtOverset::exchange_solution()
+void
+ExtOverset::exchange_solution()
 {
-  if (!hasOverset_) return;
+  if (!hasOverset_)
+    return;
 
 #ifdef NALU_USES_TIOGA
   const int row_major = 0;
   auto& tg = tioga_nalu::TiogaRef::self().get();
 
   int ncomp = 0;
-  for (auto* realm: time_.realmVec_) {
-    if (!realm->hasOverset_) continue;
+  for (auto* realm : time_.realmVec_) {
+    if (!realm->hasOverset_)
+      continue;
 
-    auto& mgr = dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_)->tiogaIface_;
-    ncomp = mgr.register_solution(realm->equationSystems_.oversetUpdater_->fields_);
+    auto& mgr =
+      dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_)->tiogaIface_;
+    ncomp =
+      mgr.register_solution(realm->equationSystems_.oversetUpdater_->fields_);
   }
 
   tg.dataUpdate(ncomp, row_major);
 
-  for (auto* realm: time_.realmVec_) {
-    if (!realm->hasOverset_) continue;
+  for (auto* realm : time_.realmVec_) {
+    if (!realm->hasOverset_)
+      continue;
 
-    auto& mgr = dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_)->tiogaIface_;
+    auto& mgr =
+      dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_)->tiogaIface_;
     mgr.update_solution(realm->equationSystems_.oversetUpdater_->fields_);
   }
 #endif
 }
 
-int ExtOverset::register_solution(const std::vector<std::string>& fnames)
+int
+ExtOverset::register_solution(const std::vector<std::string>& fnames)
 {
   int ncomp = 0;
-  if (!hasOverset_) return ncomp;
+  if (!hasOverset_)
+    return ncomp;
 
   ThrowAssert(fnames.size() > 0u);
   // Store field names for update solution phase
   slnFieldNames_ = fnames;
 
 #ifdef NALU_USES_TIOGA
-  for (auto* realm: time_.realmVec_) {
-    if (!realm->hasOverset_) continue;
+  for (auto* realm : time_.realmVec_) {
+    if (!realm->hasOverset_)
+      continue;
 
-    const auto fields = overset_utils::get_overset_field_data(*realm, slnFieldNames_);
-    auto& mgr = dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_)->tiogaIface_;
+    const auto fields =
+      overset_utils::get_overset_field_data(*realm, slnFieldNames_);
+    auto& mgr =
+      dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_)->tiogaIface_;
     ncomp = mgr.register_solution(fields);
   }
 #endif
   return ncomp;
 }
 
-void ExtOverset::update_solution()
+void
+ExtOverset::update_solution()
 {
-  if (!hasOverset_) return;
+  if (!hasOverset_)
+    return;
 
   ThrowAssert(slnFieldNames_.size() > 0u);
 
 #ifdef NALU_USES_TIOGA
-  for (auto* realm: time_.realmVec_) {
-    if (!realm->hasOverset_) continue;
+  for (auto* realm : time_.realmVec_) {
+    if (!realm->hasOverset_)
+      continue;
 
-    const auto fields = overset_utils::get_overset_field_data(*realm, slnFieldNames_);
-    auto& mgr = dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_)->tiogaIface_;
+    const auto fields =
+      overset_utils::get_overset_field_data(*realm, slnFieldNames_);
+    auto& mgr =
+      dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_)->tiogaIface_;
     mgr.update_solution(fields);
   }
 #endif
 }
 
-
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

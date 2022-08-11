@@ -7,16 +7,14 @@
 // for more details.
 //
 
-
-
 #include <AveragingInfo.h>
 #include <NaluParsing.h>
 
 // basic c++
 #include <stdexcept>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 //==========================================================================
 // Class Definition
@@ -26,15 +24,15 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-AveragingInfo::AveragingInfo() 
-: computeReynoldsStress_(false),
-  computeTke_(false),
-  computeFavreStress_(false),
-  computeFavreTke_(false),
-  computeVorticity_(false),
-  computeQcriterion_(false),
-  computeLambdaCI_(false),
-  computeMeanResolvedKe_(false)
+AveragingInfo::AveragingInfo()
+  : computeReynoldsStress_(false),
+    computeTke_(false),
+    computeFavreStress_(false),
+    computeFavreTke_(false),
+    computeVorticity_(false),
+    computeQcriterion_(false),
+    computeLambdaCI_(false),
+    computeMeanResolvedKe_(false)
 {
   // does nothing
 }
@@ -47,6 +45,5 @@ AveragingInfo::~AveragingInfo()
   // nothing to do
 }
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

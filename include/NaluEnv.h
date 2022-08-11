@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef NaluEnv_h
 #define NaluEnv_h
 
@@ -16,37 +14,37 @@
 #include <fstream>
 #include <streambuf>
 
-namespace sierra{
-namespace nalu{
-  
-  class NaluEmptyStreamBuffer : public std::filebuf {
-  public:
-    int overflow(int c) {return c;}
-  };
+namespace sierra {
+namespace nalu {
+
+class NaluEmptyStreamBuffer : public std::filebuf
+{
+public:
+  int overflow(int c) { return c; }
+};
 
 class NaluEnv
 {
- public:
-
+public:
   NaluEnv();
   ~NaluEnv();
 
-  static NaluEnv &self();
+  static NaluEnv& self();
 
   MPI_Comm parallelCommunicator_;
   int pSize_;
   int pRank_;
-  std::streambuf *stdoutStream_;
-  std::ostream *naluLogStream_;
-  std::ostream *naluParallelStream_;
+  std::streambuf* stdoutStream_;
+  std::ostream* naluLogStream_;
+  std::ostream* naluParallelStream_;
   bool parallelLog_;
-  
+
   NaluEmptyStreamBuffer naluEmptyStreamBuffer_;
   std::filebuf naluStreamBuffer_;
   std::filebuf naluParallelStreamBuffer_;
 
-  std::ostream & naluOutputP0();
-  std::ostream & naluOutput();
+  std::ostream& naluOutputP0();
+  std::ostream& naluOutput();
 
   MPI_Comm parallel_comm();
   int parallel_size();
@@ -56,7 +54,8 @@ class NaluEnv
    *
    *  \param naluLogName Name of the file where outputs are redirected
    *
-   *  \param pprint (Parallel print) If true, all MPI ranks output to their own file
+   *  \param pprint (Parallel print) If true, all MPI ranks output to their own
+   * file
    *
    *  \param capture_cout If true, `std::cout` is redirected to log file
    *
@@ -70,6 +69,6 @@ class NaluEnv
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

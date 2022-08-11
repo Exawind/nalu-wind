@@ -13,8 +13,8 @@
 
 namespace sierra {
 namespace nalu {
-//TODO(psakiev) convert disk points to geometric series
-//TODO(psakiev) allow for anisotropic disk
+// TODO(psakiev) convert disk points to geometric series
+// TODO(psakiev) allow for anisotropic disk
 
 ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
   ActuatorMetaFAST& actMeta, double naluTimeStep)
@@ -22,9 +22,7 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
     numSweptCount_(
       "numSweptCount", actMeta.numberOfActuators_, actMeta.maxNumPntsPerBlade_),
     numSweptOffset_(
-      "numSweptOffset",
-      actMeta.numberOfActuators_,
-      actMeta.maxNumPntsPerBlade_)
+      "numSweptOffset", actMeta.numberOfActuators_, actMeta.maxNumPntsPerBlade_)
 {
 
   ThrowErrorIf(!actMeta.is_disk());

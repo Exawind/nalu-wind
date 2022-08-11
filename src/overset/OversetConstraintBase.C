@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "overset/OversetConstraintBase.h"
 #include "overset/OversetManager.h"
 
@@ -29,7 +28,8 @@ OversetConstraintBase::OversetConstraintBase(
     fieldQ_(fieldQ),
     dualNodalVolume_(realm.meta_data().get_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "dual_nodal_volume"))
-{}
+{
+}
 
 void
 OversetConstraintBase::initialize_connectivity()
@@ -52,5 +52,5 @@ OversetConstraintBase::prepare_constraints()
   eqSystem_->linsys_->free_coeff_applier(coeffApplier);
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

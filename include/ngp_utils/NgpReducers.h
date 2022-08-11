@@ -16,9 +16,10 @@ namespace sierra {
 namespace nalu {
 
 namespace nalu_ngp {
-template<class Scalar>
-struct MinMaxSumScalar {
-  Scalar min_val,max_val, total_sum;
+template <class Scalar>
+struct MinMaxSumScalar
+{
+  Scalar min_val, max_val, total_sum;
 
   KOKKOS_DEFAULTED_FUNCTION
   MinMaxSumScalar() = default;
@@ -27,21 +28,23 @@ struct MinMaxSumScalar {
   MinMaxSumScalar(const MinMaxSumScalar&) = default;
 
   KOKKOS_INLINE_FUNCTION
-  void operator = (const MinMaxSumScalar& rhs) {
+  void operator=(const MinMaxSumScalar& rhs)
+  {
     min_val = rhs.min_val;
     max_val = rhs.max_val;
     total_sum = rhs.total_sum;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator = (const volatile MinMaxSumScalar& rhs) volatile {
+  void operator=(const volatile MinMaxSumScalar& rhs) volatile
+  {
     min_val = rhs.min_val;
     max_val = rhs.max_val;
     total_sum = rhs.total_sum;
   }
 };
 
-template<class Scalar, class Space = Kokkos::HostSpace>
+template <class Scalar, class Space = Kokkos::HostSpace>
 struct MinMaxSum
 {
 private:
@@ -58,18 +61,22 @@ private:
 
 public:
   KOKKOS_INLINE_FUNCTION
-  MinMaxSum(value_type& value_): value(&value_),references_scalar_v(true) {}
+  MinMaxSum(value_type& value_) : value(&value_), references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  MinMaxSum(const result_view_type& value_): value(value_),references_scalar_v(false) {}
+  MinMaxSum(const result_view_type& value_)
+    : value(value_), references_scalar_v(false)
+  {
+  }
 
-  //Required
+  // Required
   KOKKOS_INLINE_FUNCTION
-  void join(value_type& dest, const value_type& src)  const {
-    if ( src.min_val < dest.min_val ) {
+  void join(value_type& dest, const value_type& src) const
+  {
+    if (src.min_val < dest.min_val) {
       dest.min_val = src.min_val;
     }
-    if ( src.max_val > dest.max_val ) {
+    if (src.max_val > dest.max_val) {
       dest.max_val = src.max_val;
     }
 
@@ -77,11 +84,12 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
-    if ( src.min_val < dest.min_val ) {
+  void join(volatile value_type& dest, const volatile value_type& src) const
+  {
+    if (src.min_val < dest.min_val) {
       dest.min_val = src.min_val;
     }
-    if ( src.max_val > dest.max_val ) {
+    if (src.max_val > dest.max_val) {
       dest.max_val = src.max_val;
     }
 
@@ -89,33 +97,27 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
-  void init( value_type& val)  const {
-    val.max_val = Kokkos::reduction_identity<scalar_type>::max();;
+  void init(value_type& val) const
+  {
+    val.max_val = Kokkos::reduction_identity<scalar_type>::max();
+    ;
     val.min_val = Kokkos::reduction_identity<scalar_type>::min();
     val.total_sum = Kokkos::reduction_identity<scalar_type>::sum();
   }
 
   KOKKOS_INLINE_FUNCTION
-  value_type& reference() const {
-    return *value.data();
-  }
+  value_type& reference() const { return *value.data(); }
 
   KOKKOS_INLINE_FUNCTION
-  result_view_type view() const {
-    return value;
-  }
+  result_view_type view() const { return value; }
 
   KOKKOS_INLINE_FUNCTION
-  bool references_scalar() const {
-    return references_scalar_v;
-  }
+  bool references_scalar() const { return references_scalar_v; }
 };
 
-}
+} // namespace nalu_ngp
 
-}  // nalu
-}  // sierra
-
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* NGPREDUCERS_H */

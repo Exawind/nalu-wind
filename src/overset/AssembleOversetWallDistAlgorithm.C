@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #include "overset/AssembleOversetWallDistAlgorithm.h"
 #include "EquationSystem.h"
 #include "FieldTypeDef.h"
@@ -30,16 +28,17 @@
 
 #include <cmath>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 AssembleOversetWallDistAlgorithm::AssembleOversetWallDistAlgorithm(
-  Realm &realm,
-  stk::mesh::Part *part,
-  EquationSystem *eqSystem,
-  stk::mesh::FieldBase *fieldQ)
+  Realm& realm,
+  stk::mesh::Part* part,
+  EquationSystem* eqSystem,
+  stk::mesh::FieldBase* fieldQ)
   : OversetConstraintBase(realm, part, eqSystem, fieldQ)
-{}
+{
+}
 
 void
 AssembleOversetWallDistAlgorithm::execute()
@@ -50,9 +49,10 @@ AssembleOversetWallDistAlgorithm::execute()
   // extract the rank
   const int theRank = NaluEnv::self().parallel_rank();
 
-  stk::mesh::BulkData & bulkData = realm_.bulk_data();
+  stk::mesh::BulkData& bulkData = realm_.bulk_data();
 
-  // space for LHS/RHS (nodesPerElem+1)*numDof*(nodesPerElem+1)*numDof; (nodesPerElem+1)*numDof
+  // space for LHS/RHS (nodesPerElem+1)*numDof*(nodesPerElem+1)*numDof;
+  // (nodesPerElem+1)*numDof
   std::vector<double> lhs;
   std::vector<double> rhs;
   std::vector<int> scratchIds;
@@ -60,7 +60,7 @@ AssembleOversetWallDistAlgorithm::execute()
   std::vector<stk::mesh::Entity> connected_nodes;
 
   // master element data
-  std::vector <double > ws_general_shape_function;
+  std::vector<double> ws_general_shape_function;
 
   // interpolate nodal values to point-in-elem
   const int sizeOfDof = eqSystem_->linsys_->numDof();
@@ -72,12 +72,12 @@ AssembleOversetWallDistAlgorithm::execute()
   // EquationSystems::pre_iter_work
 
   // iterate oversetInfoVec_
-  std::vector<OversetInfo *>::iterator ii;
-  for( ii=realm_.oversetManager_->oversetInfoVec_.begin();
-       ii!=realm_.oversetManager_->oversetInfoVec_.end(); ++ii ) {
+  std::vector<OversetInfo*>::iterator ii;
+  for (ii = realm_.oversetManager_->oversetInfoVec_.begin();
+       ii != realm_.oversetManager_->oversetInfoVec_.end(); ++ii) {
 
     // overset info object of interest
-    OversetInfo * infoObject = (*ii);
+    OversetInfo* infoObject = (*ii);
 
     // extract element and node mesh object
     stk::mesh::Entity owningElement = infoObject->owningElement_;
@@ -95,15 +95,15 @@ AssembleOversetWallDistAlgorithm::execute()
     const double multFac = std::cbrt(dVol[0]);
 
     // get master element type for this contactInfo
-    MasterElement *meSCS  = infoObject->meSCS_;
+    MasterElement* meSCS = infoObject->meSCS_;
     const int nodesPerElement = meSCS->nodesPerElement_;
-    std::vector <double > elemNodalQ(nodesPerElement*sizeOfDof);
-    std::vector <double > shpfc(nodesPerElement);
+    std::vector<double> elemNodalQ(nodesPerElement * sizeOfDof);
+    std::vector<double> shpfc(nodesPerElement);
 
     // resize some things; matrix related
-    const int npePlusOne = nodesPerElement+1;
-    const int lhsSize = npePlusOne*sizeOfDof*npePlusOne*sizeOfDof;
-    const int rhsSize = npePlusOne*sizeOfDof;
+    const int npePlusOne = nodesPerElement + 1;
+    const int lhsSize = npePlusOne * sizeOfDof * npePlusOne * sizeOfDof;
+    const int rhsSize = npePlusOne * sizeOfDof;
     lhs.resize(lhsSize);
     rhs.resize(rhsSize);
     scratchIds.resize(rhsSize);
@@ -114,21 +114,23 @@ AssembleOversetWallDistAlgorithm::execute()
     ws_general_shape_function.resize(nodesPerElement);
 
     // pointer to lhs/rhs
-    double *p_lhs = &lhs[0];
-    double *p_rhs = &rhs[0];
+    double* p_lhs = &lhs[0];
+    double* p_rhs = &rhs[0];
 
     // zeroing of lhs/rhs
-    for ( int k = 0; k < lhsSize; ++k ) {
+    for (int k = 0; k < lhsSize; ++k) {
       p_lhs[k] = 0.0;
     }
-    for ( int k = 0; k < rhsSize; ++k ) {
+    for (int k = 0; k < rhsSize; ++k) {
       p_rhs[k] = 0.0;
     }
 
     // extract nodal value for scalarQ
-    const double *qNp1Nodal = (double *)stk::mesh::field_data(*fieldQ_, orphanNode);
+    const double* qNp1Nodal =
+      (double*)stk::mesh::field_data(*fieldQ_, orphanNode);
 
-    stk::mesh::Entity const* elem_node_rels = bulkData.begin_nodes(owningElement);
+    stk::mesh::Entity const* elem_node_rels =
+      bulkData.begin_nodes(owningElement);
     const int num_nodes = bulkData.num_nodes(owningElement);
 
     // now load the elemental values for future interpolation; fill in connected
@@ -172,9 +174,10 @@ AssembleOversetWallDistAlgorithm::execute()
 
     // apply to linear system
     // don't use apply_coeff here as it checks for overset logic
-    eqSystem_->linsys_->sumInto(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);
+    eqSystem_->linsys_->sumInto(
+      connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);
   }
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

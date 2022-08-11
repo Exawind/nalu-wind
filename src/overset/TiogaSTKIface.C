@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifdef NALU_USES_TIOGA
 
 #include "overset/TiogaSTKIface.h"
@@ -42,8 +41,8 @@ namespace tioga_nalu {
 TiogaSTKIface::TiogaSTKIface(
   sierra::nalu::OversetManagerTIOGA& oversetManager,
   const YAML::Node& node,
-  const std::string& coordsName
-) : oversetManager_(oversetManager),
+  const std::string& coordsName)
+  : oversetManager_(oversetManager),
     meta_(*oversetManager.metaData_),
     bulk_(*oversetManager.bulkData_),
     tg_(TiogaRef::self().get()),
@@ -52,8 +51,7 @@ TiogaSTKIface::TiogaSTKIface(
   load(node);
 }
 
-TiogaSTKIface::~TiogaSTKIface()
-{}
+TiogaSTKIface::~TiogaSTKIface() {}
 
 void
 TiogaSTKIface::load(const YAML::Node& node)
@@ -76,41 +74,47 @@ TiogaSTKIface::load(const YAML::Node& node)
   }
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
-      << "TIOGA: Using coordinates field: " << coordsName_ << std::endl;
+    << "TIOGA: Using coordinates field: " << coordsName_ << std::endl;
 
   if (node["tioga_symmetry_direction"])
     sierra::nalu::NaluEnv::self().naluOutputP0()
-      << "WARNING!! TiogaSTKIface: tioga_symmetry_direction is no longer supported. "
+      << "WARNING!! TiogaSTKIface: tioga_symmetry_direction is no longer "
+         "supported. "
       << "Use tioga_options to specify options that control TIOGA behavior"
       << std::endl;
 }
 
-void TiogaSTKIface::setup(stk::mesh::PartVector& bcPartVec)
+void
+TiogaSTKIface::setup(stk::mesh::PartVector& bcPartVec)
 {
-  for (auto& tb: blocks_) {
+  for (auto& tb : blocks_) {
     tb->setup(bcPartVec);
   }
 }
 
-void TiogaSTKIface::initialize()
+void
+TiogaSTKIface::initialize()
 {
   tiogaOpts_.set_options(tg_);
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
     << "TIOGA: Initializing overset mesh blocks: " << std::endl;
-  for (auto& tb: blocks_) {
+  for (auto& tb : blocks_) {
     tb->initialize();
   }
   sierra::nalu::NaluEnv::self().naluOutputP0()
-    << "TIOGA: Initialized " << blocks_.size() << " overset blocks" << std::endl;
+    << "TIOGA: Initialized " << blocks_.size() << " overset blocks"
+    << std::endl;
 }
 
-void TiogaSTKIface::execute(const bool isDecoupled)
+void
+TiogaSTKIface::execute(const bool isDecoupled)
 {
 #ifdef KOKKOS_ENABLE_CUDA
   // Bail out early if this is a GPU build and is using non-decoupled solve
   if (!isDecoupled) {
-    throw std::runtime_error("Non-decoupled overset connectivity not available in NGP build");
+    throw std::runtime_error(
+      "Non-decoupled overset connectivity not available in NGP build");
   }
 #endif
 
@@ -119,20 +123,23 @@ void TiogaSTKIface::execute(const bool isDecoupled)
   // Determine overset connectivity
   tg_.profile();
   tg_.performConnectivity();
-  if (tiogaOpts_.reduce_fringes()) tg_.reduce_fringes();
+  if (tiogaOpts_.reduce_fringes())
+    tg_.reduce_fringes();
 
   post_connectivity_work(isDecoupled);
 }
 
-void TiogaSTKIface::register_mesh()
+void
+TiogaSTKIface::register_mesh()
 {
   reset_data_structures();
 
   // Synchronize fields to host during transition period
   pre_connectivity_sync();
 
-  // Update the coordinates for TIOGA and register updates to the TIOGA mesh block.
-  for (auto& tb: blocks_) {
+  // Update the coordinates for TIOGA and register updates to the TIOGA mesh
+  // block.
+  for (auto& tb : blocks_) {
     tb->update_coords();
     tb->update_element_volumes();
     if (tiogaOpts_.adjust_resolutions())
@@ -140,32 +147,36 @@ void TiogaSTKIface::register_mesh()
   }
 
   if (tiogaOpts_.adjust_resolutions()) {
-    auto* nodeVol = meta_.get_field(stk::topology::NODE_RANK, "tioga_nodal_volume");
+    auto* nodeVol =
+      meta_.get_field(stk::topology::NODE_RANK, "tioga_nodal_volume");
     stk::mesh::parallel_max(bulk_, {nodeVol});
   }
 
-  for (auto& tb: blocks_) {
+  for (auto& tb : blocks_) {
     if (tiogaOpts_.adjust_resolutions())
       tb->adjust_node_resolutions();
     tb->register_block(tg_);
   }
 }
 
-void TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
+void
+TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
 {
-  for (auto& tb: blocks_) {
+  for (auto& tb : blocks_) {
     // Update IBLANK information at nodes and elements
-    tb->update_iblanks(oversetManager_.holeNodes_, oversetManager_.fringeNodes_);
+    tb->update_iblanks(
+      oversetManager_.holeNodes_, oversetManager_.fringeNodes_);
     tb->update_iblank_cell();
 
     // For each block determine donor elements that needs to be ghosted to other
     // MPI ranks
-    if (!isDecoupled) tb->get_donor_info(tg_, elemsToGhost_);
+    if (!isDecoupled)
+      tb->get_donor_info(tg_, elemsToGhost_);
   }
 
   // Synchronize IBLANK data for shared nodes
-  ScalarIntFieldType* ibf = meta_.get_field<ScalarIntFieldType>(
-    stk::topology::NODE_RANK, "iblank");
+  ScalarIntFieldType* ibf =
+    meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
   std::vector<const stk::mesh::FieldBase*> pvec{ibf};
   stk::mesh::copy_owned_to_shared(bulk_, pvec);
 
@@ -174,17 +185,19 @@ void TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
   if (!isDecoupled) {
     get_receptor_info();
 
-    // Collect all elements to be ghosted and update ghosting so that the elements
-    // are available when generating {fringeNode, donorElement} pairs in the next
-    // step.
+    // Collect all elements to be ghosted and update ghosting so that the
+    // elements are available when generating {fringeNode, donorElement} pairs
+    // in the next step.
     update_ghosting();
 
-    // Update overset fringe connectivity information for Constraint based algorithm
+    // Update overset fringe connectivity information for Constraint based
+    // algorithm
     populate_overset_info();
   }
 }
 
-void TiogaSTKIface::reset_data_structures()
+void
+TiogaSTKIface::reset_data_structures()
 {
   oversetManager_.reset_data_structures();
   elemsToGhost_.clear();
@@ -192,7 +205,8 @@ void TiogaSTKIface::reset_data_structures()
   receptorIDs_.clear();
 }
 
-void TiogaSTKIface::update_ghosting()
+void
+TiogaSTKIface::update_ghosting()
 {
   stk::mesh::Ghosting* ovsetGhosting = oversetManager_.oversetGhosting_;
   std::vector<stk::mesh::EntityKey> recvGhostsToRemove;
@@ -220,7 +234,8 @@ void TiogaSTKIface::update_ghosting()
     bulk_.modification_end();
 
     sierra::nalu::populate_ghost_comm_procs(
-      bulk_, *(oversetManager_.oversetGhosting_), oversetManager_.ghostCommProcs_);
+      bulk_, *(oversetManager_.oversetGhosting_),
+      oversetManager_.ghostCommProcs_);
 
 #if 1
     sierra::nalu::NaluEnv::self().naluOutputP0()
@@ -237,8 +252,8 @@ void TiogaSTKIface::update_ghosting()
 
   // Communicate coordinates field when populating oversetInfoVec
   if (oversetManager_.oversetGhosting_ != nullptr) {
-    VectorFieldType* coords = meta_.get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, coordsName_);
+    VectorFieldType* coords =
+      meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, coordsName_);
     std::vector<const stk::mesh::FieldBase*> fVec = {coords};
     stk::mesh::communicate_field_data(*oversetManager_.oversetGhosting_, fVec);
   }
@@ -247,8 +262,8 @@ void TiogaSTKIface::update_ghosting()
 void
 TiogaSTKIface::get_receptor_info()
 {
-  ScalarIntFieldType* ibf = meta_.get_field<ScalarIntFieldType>(
-    stk::topology::NODE_RANK, "iblank");
+  ScalarIntFieldType* ibf =
+    meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
 
   std::vector<unsigned long> nodesToReset;
 
@@ -266,7 +281,7 @@ TiogaSTKIface::get_receptor_info()
   //   - the STK global ID for the donor element (can be 8-byte or 4-byte)
   //
   size_t ncount = receptors.size();
-  stk::mesh::EntityId  donorID = std::numeric_limits<stk::mesh::EntityId>::max();
+  stk::mesh::EntityId donorID = std::numeric_limits<stk::mesh::EntityId>::max();
 #ifdef TIOGA_HAS_UINT64T
   // The donor ID is stored in 2 4-byte integer entries (2 + 2 = 4). See above
   // for description on what is returned for each receptor node.
@@ -275,15 +290,16 @@ TiogaSTKIface::get_receptor_info()
   // The donor ID is stored in a single 4-byte integer entry (2 + 1 = 3)
   const int rec_offset = 3;
 #endif
-  for (size_t i=0; i<ncount; i+=rec_offset) {
-    int nid = receptors[i];                          // TiogaBlock node index
-    int mtag = receptors[i+1] - 1;                   // Block index
+  for (size_t i = 0; i < ncount; i += rec_offset) {
+    int nid = receptors[i];          // TiogaBlock node index
+    int mtag = receptors[i + 1] - 1; // Block index
 #ifdef TIOGA_HAS_UINT64T
-    std::memcpy(&donorID, &receptors[i+2], sizeof(uint64_t));
+    std::memcpy(&donorID, &receptors[i + 2], sizeof(uint64_t));
 #else
-    donorID = receptors[i+2];                    // STK Global ID of the donor element
+    donorID = receptors[i + 2]; // STK Global ID of the donor element
 #endif
-    auto nodeID = blocks_[mtag]->node_id_map()[nid]; // STK Global ID of the fringe node
+    auto nodeID =
+      blocks_[mtag]->node_id_map()[nid]; // STK Global ID of the fringe node
     stk::mesh::Entity node = bulk_.get_entity(stk::topology::NODE_RANK, nodeID);
 
     if (!bulk_.bucket(node).owned()) {
@@ -296,8 +312,9 @@ TiogaSTKIface::get_receptor_info()
         // to owner and other shared procs that it must be a fringe.
         std::vector<int> sprocs;
         bulk_.comm_shared_procs(bulk_.entity_key(node), sprocs);
-        for (auto jproc: sprocs) {
-          if (jproc == bulk_.parallel_rank()) continue;
+        for (auto jproc : sprocs) {
+          if (jproc == bulk_.parallel_rank())
+            continue;
 
           nodesToReset.push_back(jproc);
           nodesToReset.push_back(nodeID);
@@ -315,36 +332,39 @@ TiogaSTKIface::get_receptor_info()
   int iproc = bulk_.parallel_rank();
   int nproc = bulk_.parallel_size();
   std::vector<int> nbPerProc(nproc);
-  MPI_Allgather(&numLocal, 1, MPI_INT, nbPerProc.data(), 1, MPI_INT, bulk_.parallel());
+  MPI_Allgather(
+    &numLocal, 1, MPI_INT, nbPerProc.data(), 1, MPI_INT, bulk_.parallel());
 
   // Total number of entities across all procs
   int nTotalEntities = std::accumulate(nbPerProc.begin(), nbPerProc.end(), 0);
 
   // If no disagreements were detected then we are done here
-  if (nTotalEntities < 1) return;
+  if (nTotalEntities < 1)
+    return;
 
 #if 1
   sierra::nalu::NaluEnv::self().naluOutputP0()
-    << "TIOGA: Detected fringe/field mismatch on " << (nTotalEntities/3)
+    << "TIOGA: Detected fringe/field mismatch on " << (nTotalEntities / 3)
     << " entities" << std::endl;
 #endif
 
   // Prepare data structures for reconciliation
-  std::vector<int> offsets(nproc+1);
+  std::vector<int> offsets(nproc + 1);
   std::vector<unsigned long> allEntities(nTotalEntities);
 
   offsets[0] = 0;
-  for (int i=1; i <= nproc; ++i) {
-    offsets[i] = offsets[i-1] + nbPerProc[i-1];
+  for (int i = 1; i <= nproc; ++i) {
+    offsets[i] = offsets[i - 1] + nbPerProc[i - 1];
   }
 
-  MPI_Allgatherv(nodesToReset.data(), numLocal, MPI_UNSIGNED_LONG, allEntities.data(),
-                 nbPerProc.data(), offsets.data(), MPI_UNSIGNED_LONG, bulk_.parallel());
+  MPI_Allgatherv(
+    nodesToReset.data(), numLocal, MPI_UNSIGNED_LONG, allEntities.data(),
+    nbPerProc.data(), offsets.data(), MPI_UNSIGNED_LONG, bulk_.parallel());
 
-  for (int i=0; i < nTotalEntities; i+=3) {
+  for (int i = 0; i < nTotalEntities; i += 3) {
     int nodeProc = allEntities[i];
-    stk::mesh::EntityId nodeID = allEntities[i+1];
-    stk::mesh::EntityId donorID = allEntities[i+2];
+    stk::mesh::EntityId nodeID = allEntities[i + 1];
+    stk::mesh::EntityId donorID = allEntities[i + 2];
 
     // Add the receptor donor pair to populate OversetInfo
     if (iproc == nodeProc) {
@@ -353,10 +373,11 @@ TiogaSTKIface::get_receptor_info()
     }
 
     // Setup for ghosting
-    stk::mesh::Entity elem = bulk_.get_entity(stk::topology::ELEM_RANK, donorID);
-    if (bulk_.is_valid(elem) &&
-        (bulk_.parallel_owner_rank(elem) == iproc) &&
-        (nodeProc != iproc)) {
+    stk::mesh::Entity elem =
+      bulk_.get_entity(stk::topology::ELEM_RANK, donorID);
+    if (
+      bulk_.is_valid(elem) && (bulk_.parallel_owner_rank(elem) == iproc) &&
+      (nodeProc != iproc)) {
       // Found the owning proc for this donor element. Request ghosting
       stk::mesh::EntityProc elem_proc(elem, nodeProc);
       elemsToGhost_.push_back(elem_proc);
@@ -375,15 +396,16 @@ TiogaSTKIface::populate_overset_info()
   // Ensure that the oversetInfoVec has been cleared out
   ThrowAssert(osetInfo.size() == 0);
 
-  VectorFieldType *coords = meta_.get_field<VectorFieldType>
-    (stk::topology::NODE_RANK, coordsName_);
+  VectorFieldType* coords =
+    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, coordsName_);
 
   size_t numReceptors = receptorIDs_.size();
-  for (size_t i=0; i < numReceptors; i++) {
+  for (size_t i = 0; i < numReceptors; i++) {
     stk::mesh::EntityId nodeID = receptorIDs_[i];
     stk::mesh::EntityId donorID = donorIDs_[i];
     stk::mesh::Entity node = bulk_.get_entity(stk::topology::NODE_RANK, nodeID);
-    stk::mesh::Entity elem = bulk_.get_entity(stk::topology::ELEM_RANK, donorID);
+    stk::mesh::Entity elem =
+      bulk_.get_entity(stk::topology::ELEM_RANK, donorID);
 
     // Track fringe nodes that have already been processed.
     //
@@ -391,7 +413,8 @@ TiogaSTKIface::populate_overset_info()
     // multiple shared procs might indicate that the owner must reset their
     // status. This check ensures the fringe is processed only once.
     auto hasIt = seenIDs.find(nodeID);
-    if (hasIt != seenIDs.end()) continue;
+    if (hasIt != seenIDs.end())
+      continue;
     seenIDs.insert(nodeID);
 
 #if 1
@@ -404,33 +427,34 @@ TiogaSTKIface::populate_overset_info()
 
     // At this point, we have all the necessary information to create an
     // OversetInfo instance for this {receptor node, donor element} pair.
-    sierra::nalu::OversetInfo* oinfo = new sierra::nalu::OversetInfo(node, nDim);
+    sierra::nalu::OversetInfo* oinfo =
+      new sierra::nalu::OversetInfo(node, nDim);
     osetInfo.push_back(oinfo);
 
     // Store away the coordinates for this receptor node for later use
     const double* xyz = stk::mesh::field_data(*coords, node);
-    for (int i=0; i<nDim; i++) {
+    for (int i = 0; i < nDim; i++) {
       oinfo->nodalCoords_[i] = xyz[i];
     }
 
     const stk::topology elemTopo = bulk_.bucket(elem).topology();
     const stk::mesh::Entity* enodes = bulk_.begin_nodes(elem);
-    sierra::nalu::MasterElement* meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(elemTopo);
+    sierra::nalu::MasterElement* meSCS =
+      sierra::nalu::MasterElementRepo::get_surface_master_element(elemTopo);
     int num_nodes = bulk_.num_nodes(elem);
-    elemCoords.resize(nDim*num_nodes);
+    elemCoords.resize(nDim * num_nodes);
 
-    for (int ni=0; ni < num_nodes; ++ni) {
+    for (int ni = 0; ni < num_nodes; ++ni) {
       stk::mesh::Entity enode = enodes[ni];
       const double* xyz = stk::mesh::field_data(*coords, enode);
-      for (int j=0; j < nDim; j++) {
+      for (int j = 0; j < nDim; j++) {
         const int offset = j * num_nodes + ni;
         elemCoords[offset] = xyz[j];
       }
     }
 
     const double nearestDistance = meSCS->isInElement(
-      elemCoords.data(),
-      oinfo->nodalCoords_.data(),
+      elemCoords.data(), oinfo->nodalCoords_.data(),
       oinfo->isoParCoords_.data());
 
 #if 0
@@ -444,7 +468,7 @@ TiogaSTKIface::populate_overset_info()
     oinfo->owningElement_ = elem;
     oinfo->meSCS_ = meSCS;
     oinfo->bestX_ = nearestDistance;
-    oinfo->elemIsGhosted_ = bulk_.bucket(elem).owned()? 0 : 1;
+    oinfo->elemIsGhosted_ = bulk_.bucket(elem).owned() ? 0 : 1;
   }
 
 #if 1
@@ -454,8 +478,7 @@ TiogaSTKIface::populate_overset_info()
   stk::all_reduce_sum(bulk_.parallel(), &numFringeLocal, &numFringeGlobal, 1);
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
-    << "TIOGA: Num. receptor nodes = " << numFringeGlobal
-    << std::endl;
+    << "TIOGA: Num. receptor nodes = " << numFringeGlobal << std::endl;
 #endif
 }
 
@@ -465,66 +488,74 @@ TiogaSTKIface::overset_update_fields(
 {
   constexpr int row_major = 0;
   int nComp = 0;
-  for (auto& f: fields) {
+  for (auto& f : fields) {
     f.field_->sync_to_host();
     nComp += f.sizeRow_ * f.sizeCol_;
   }
 
-  for (auto& tb: blocks_)
+  for (auto& tb : blocks_)
     tb->register_solution(tg_, fields, nComp);
 
   tg_.dataUpdate(nComp, row_major);
 
-  for (auto& tb: blocks_)
+  for (auto& tb : blocks_)
     tb->update_solution(fields);
 
-  for (auto& finfo: fields) {
+  for (auto& finfo : fields) {
     auto* fld = finfo.field_;
     fld->modify_on_host();
     fld->sync_to_device();
   }
 }
 
-int TiogaSTKIface::register_solution(const std::vector<sierra::nalu::OversetFieldData>& fields)
+int
+TiogaSTKIface::register_solution(
+  const std::vector<sierra::nalu::OversetFieldData>& fields)
 {
   int nComp = 0;
-  for (auto& f: fields) {
+  for (auto& f : fields) {
     f.field_->sync_to_host();
     nComp += f.sizeRow_ * f.sizeCol_;
   }
 
-  for (auto& tb: blocks_)
+  for (auto& tb : blocks_)
     tb->register_solution(tg_, fields, nComp);
 
   return nComp;
 }
 
-void TiogaSTKIface::update_solution(const std::vector<sierra::nalu::OversetFieldData>& fields)
+void
+TiogaSTKIface::update_solution(
+  const std::vector<sierra::nalu::OversetFieldData>& fields)
 {
-  for (auto& tb: blocks_)
+  for (auto& tb : blocks_)
     tb->update_solution(fields);
 
-  for (auto& finfo: fields) {
+  for (auto& finfo : fields) {
     auto* fld = finfo.field_;
     fld->modify_on_host();
     fld->sync_to_device();
   }
 }
 
-void TiogaSTKIface::overset_update_field(
-  stk::mesh::FieldBase* field, const int nrows, const int ncols, const bool doFinalSyncToDevice)
+void
+TiogaSTKIface::overset_update_field(
+  stk::mesh::FieldBase* field,
+  const int nrows,
+  const int ncols,
+  const bool doFinalSyncToDevice)
 {
   constexpr int row_major = 0;
   sierra::nalu::OversetFieldData fdata{field, nrows, ncols};
 
   field->sync_to_host();
 
-  for (auto& tb: blocks_)
+  for (auto& tb : blocks_)
     tb->register_solution(tg_, fdata);
 
-  tg_.dataUpdate(nrows*ncols, row_major);
+  tg_.dataUpdate(nrows * ncols, row_major);
 
-  for (auto& tb: blocks_)
+  for (auto& tb : blocks_)
     tb->update_solution(fdata);
 
   field->modify_on_host();
@@ -532,10 +563,11 @@ void TiogaSTKIface::overset_update_field(
     field->sync_to_device();
 }
 
-void TiogaSTKIface::pre_connectivity_sync()
+void
+TiogaSTKIface::pre_connectivity_sync()
 {
-  auto* coords = meta_.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, coordsName_);
+  auto* coords =
+    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, coordsName_);
   auto* dualVol = meta_.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume");
   auto* elemVol = meta_.get_field<ScalarFieldType>(
@@ -546,17 +578,18 @@ void TiogaSTKIface::pre_connectivity_sync()
   elemVol->sync_to_host();
 
   // Needed for adjusting resolutions
-  auto* tgNodalVol = meta_.get_field(
-      stk::topology::NODE_RANK, "tioga_nodal_volume");
+  auto* tgNodalVol =
+    meta_.get_field(stk::topology::NODE_RANK, "tioga_nodal_volume");
   stk::mesh::field_copy(*dualVol, *tgNodalVol);
 }
 
-void TiogaSTKIface::post_connectivity_sync()
+void
+TiogaSTKIface::post_connectivity_sync()
 {
   // Push iblank fields to device
   {
-    auto* ibnode = meta_.get_field<ScalarIntFieldType>(
-      stk::topology::NODE_RANK, "iblank");
+    auto* ibnode =
+      meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
     auto* ibcell = meta_.get_field<ScalarIntFieldType>(
       stk::topology::ELEM_RANK, "iblank_cell");
     ibnode->modify_on_host();
@@ -571,24 +604,24 @@ void TiogaSTKIface::post_connectivity_sync()
   auto& ngpFringes = oversetManager_.ngpFringeNodes_;
   auto& ngpHoles = oversetManager_.ngpHoleNodes_;
 
-  ngpFringes = sierra::nalu::OversetManager::EntityList(
-    "ngp_fringe_list", fringes.size());
-  ngpHoles = sierra::nalu::OversetManager::EntityList(
-    "ngp_hole_list", holes.size());
+  ngpFringes =
+    sierra::nalu::OversetManager::EntityList("ngp_fringe_list", fringes.size());
+  ngpHoles =
+    sierra::nalu::OversetManager::EntityList("ngp_hole_list", holes.size());
 
   auto h_fringes = Kokkos::create_mirror_view(ngpFringes);
   auto h_holes = Kokkos::create_mirror_view(ngpHoles);
 
-  for (size_t i=0; i < fringes.size(); ++i) {
+  for (size_t i = 0; i < fringes.size(); ++i) {
     h_fringes[i] = fringes[i];
   }
-  for (size_t i=0; i < holes.size(); ++i) {
+  for (size_t i = 0; i < holes.size(); ++i) {
     h_holes[i] = holes[i];
   }
   Kokkos::deep_copy(ngpFringes, h_fringes);
   Kokkos::deep_copy(ngpHoles, h_holes);
 }
 
-} // tioga
+} // namespace tioga_nalu
 
 #endif // NALU_USES_TIOGA

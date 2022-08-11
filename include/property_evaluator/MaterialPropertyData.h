@@ -7,8 +7,6 @@
 // for more details.
 //
 
-
-
 #ifndef MaterialPropertyData_h
 #define MaterialPropertyData_h
 
@@ -18,23 +16,24 @@
 #include <vector>
 #include <map>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-class MaterialPropertyData {
+class MaterialPropertyData
+{
 public:
-  
   MaterialPropertyData();
   ~MaterialPropertyData();
-  
+
   MaterialPropertyType type_;
   double constValue_;
-  
+
   // mixture fraction specifics
   double primary_;
   double secondary_;
- 
-  // table specifics, all single in size, all possibly required to be more general
+
+  // table specifics, all single in size, all possibly required to be more
+  // general
   std::vector<std::string> indVarName_;
   std::vector<std::string> indVarTableName_;
   std::string auxVarName_;
@@ -45,14 +44,14 @@ public:
   std::string genericPropertyEvaluatorName_;
 
   // vectors and maps
-  std::map<std::string, std::vector<double> > polynomialCoeffsMap_;
-  std::map<std::string, std::vector<double> > lowPolynomialCoeffsMap_;
-  std::map<std::string, std::vector<double> > highPolynomialCoeffsMap_;
+  std::map<std::string, std::vector<double>> polynomialCoeffsMap_;
+  std::map<std::string, std::vector<double>> lowPolynomialCoeffsMap_;
+  std::map<std::string, std::vector<double>> highPolynomialCoeffsMap_;
   std::map<std::string, double> cpConstMap_;
   std::map<std::string, double> hfConstMap_;
 };
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif
