@@ -299,7 +299,7 @@ reconstruct_matrix_from_decomposition(
 //--------------------------------------------------------------------------
 template <class T>
 KOKKOS_FUNCTION void
-unsym_matrix_force_sym(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
+  unsym_matrix_force_sym(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
 {
 
   // force symmetry force
@@ -319,7 +319,7 @@ unsym_matrix_force_sym(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
 //--------------------------------------------------------------------------
 template <class T>
 KOKKOS_FUNCTION void
-general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
+  general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
 {
 
   const T pi = stk::math::acos(-1.0);
