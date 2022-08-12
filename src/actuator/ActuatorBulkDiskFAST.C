@@ -46,15 +46,14 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
   initialize_swept_points(actMeta);
 }
 
+// update the swept points (points between ALM blades) and then turn the update
+// flag to false indicating an update has already taken place
 void
-ActuatorBulkDiskFAST::initialize_ADM_points(const ActuatorMetaFAST& actMeta)
+ActuatorBulkDiskFAST::update_ADM_points(const ActuatorMetaFAST& actMeta)
 {
-  // LCC NOTE: Currently this is called every iteration -- incurring a
-  // noticeable performance penalty. Need to fix so that it's only
-  // called in the beginning (for fixed yaw), or called when the
-  // turbine yaw changes.
-  initialize_swept_points(actMeta);    
-  //initialized_ADM_points = true;
+  // TODO work out a trigger for if the yaw has changed
+  initialize_swept_points(actMeta);
+  adm_points_need_updating = false;
 }
 
 void

@@ -107,11 +107,14 @@ ActuatorDiskFastNGP::operator()()
 
   actBulk_.interpolate_velocities_to_fast();
 
-  RunActFastUpdatePoints(actBulk_);
- 
-  actBulk_.initialize_ADM_points(actMeta_);
+  if (actBulk_.adm_points_need_updating) {
 
-  actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
+    RunActFastUpdatePoints(actBulk_);
+
+    actBulk_.update_ADM_points(actMeta_);
+
+    actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
+  }
 
   actBulk_.step_fast();
 
