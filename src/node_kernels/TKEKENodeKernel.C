@@ -82,7 +82,8 @@ TKEKENodeKernel::execute(
 
   DblType Dk = density * tdr;
 
-  const DblType lFac = 2.0 * visc / wallDist / wallDist;
+  const DblType lFac =
+    2.0 * visc / stk::math::max(wallDist * wallDist, 1.0e-16);
   DblType Lk = -lFac * tke;
 
   rhs(0) += (Pk - Dk + Lk) * dVol;
