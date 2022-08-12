@@ -1001,13 +1001,19 @@ Realm::setup_interior_algorithms()
   if (has_mesh_deformation()) {
     const AlgorithmType algType = INTERIOR;
     stk::mesh::PartVector mmPartVec = meshMotionAlg_->get_partvec();
-    if (realmUsesEdges_) {
-      for (auto p : mmPartVec) {
+    for (auto p : mmPartVec) {
+      if (p->topology() != stk::topology::HEX_8) {
+        NaluEnv::self().naluOutputP0()
+          << "Skipping registration of MeshVelocityEdgeAlg on part "
+          << p->name()
+          << ". GCL operations are currently only supported on HEX_8 "
+             "elemeents.\n";
+        continue;
+      }
+      if (realmUsesEdges_) {
         geometryAlgDriver_->register_elem_algorithm<MeshVelocityEdgeAlg>(
           algType, p, "mesh_vel");
-      }
-    } else {
-      for (auto p : mmPartVec) {
+      } else {
         geometryAlgDriver_->register_elem_algorithm<MeshVelocityAlg>(
           algType, p, "mesh_vel");
       }
