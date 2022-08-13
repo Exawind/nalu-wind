@@ -7,12 +7,12 @@
 // for more details
 
 #include <gtest/gtest.h>
-#include <actuator/ActuatorTypes.h>
-#include <actuator/ActuatorParsing.h>
-#include <actuator/ActuatorBulkSimple.h>
-#include <actuator/ActuatorParsingSimple.h>
-#include <actuator/ActuatorFunctorsSimple.h>
-#include <actuator/ActuatorFLLC.h>
+#include <aero/actuator/ActuatorTypes.h>
+#include <aero/actuator/ActuatorParsing.h>
+#include <aero/actuator/ActuatorBulkSimple.h>
+#include <aero/actuator/ActuatorParsingSimple.h>
+#include <aero/actuator/ActuatorFunctorsSimple.h>
+#include <aero/actuator/ActuatorFLLC.h>
 #include <yaml-cpp/yaml.h>
 
 namespace sierra {
@@ -29,7 +29,7 @@ const char* actuatorParameters = R"act(actuator:
     num_force_pts_blade: 5
     epsilon_min: [3.0, 3.0, 3.0]
     epsilon_chord: [0.25, 0.25, 0.25]
-    p1: [0, -4, 0] 
+    p1: [0, -4, 0]
     p2: [0,  4, 0]
     p1_zero_alpha_dir: [1, 0, 0]
     chord_table: [1.0]

@@ -7,9 +7,9 @@
 // for more details.
 //
 
-#include <actuator/ActuatorParsingFAST.h>
-#include <actuator/ActuatorBulkFAST.h>
-#include <actuator/ActuatorParsing.h>
+#include <aero/actuator/ActuatorParsingFAST.h>
+#include <aero/actuator/ActuatorBulkFAST.h>
+#include <aero/actuator/ActuatorParsing.h>
 #include <NaluParsing.h>
 #include <gtest/gtest.h>
 

@@ -7,8 +7,8 @@
 // for more details.
 
 #include <gtest/gtest.h>
-#include <actuator/ActuatorBulk.h>
-#include <actuator/ActuatorInfo.h>
+#include <aero/actuator/ActuatorBulk.h>
+#include <aero/actuator/ActuatorInfo.h>
 
 // to allocate need turbine info
 // compute offsets need num procs

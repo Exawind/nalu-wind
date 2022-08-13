@@ -62,7 +62,7 @@
 #include <wind_energy/BdyLayerStatistics.h>
 
 // actuator line
-#include <actuator/ActuatorModel.h>
+#include <aero/actuator/ActuatorModel.h>
 
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <wind_energy/SyntheticLidar.h>

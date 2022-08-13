@@ -10,7 +10,7 @@
 #include <LowMachEquationSystem.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <AlgorithmDriver.h>
-#include <actuator/ActuatorModel.h>
+#include <aero/actuator/ActuatorModel.h>
 #include <AssembleContinuityNonConformalSolverAlgorithm.h>
 #include <AssembleMomentumEdgeWallFunctionSolverAlgorithm.h>
 #ifdef NALU_USES_FFTW

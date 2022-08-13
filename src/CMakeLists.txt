@@ -115,7 +115,7 @@ if(ENABLE_HYPRE)
    )
 endif()
 
-add_subdirectory(actuator)
+add_subdirectory(aero)
 add_subdirectory(element_promotion)
 add_subdirectory(matrix_free)
 add_subdirectory(kernel)
