@@ -66,6 +66,7 @@ private:
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
+  NodeKernelTraits::DblType alphaInf_;
   NodeKernelTraits::DblType sigmaWTwo_;
   NodeKernelTraits::DblType betaOne_;
   NodeKernelTraits::DblType betaTwo_;

@@ -84,8 +84,8 @@ TDRKEAMSNodeKernel::execute(
   const DblType DeFac =
     cEpsTwo_ * fTwo * density * tdr / stk::math::max(tke, 1.0e-16);
   const DblType De = DeFac * tdr;
-  const DblType LeFac =
-    2.0 * visc * stk::math::exp(-0.5 * dplus) / wallDist / wallDist;
+  const DblType LeFac = 2.0 * visc * stk::math::exp(-0.5 * dplus) /
+                        stk::math::max(wallDist * wallDist, 1.0e-16);
   const DblType Le = -LeFac * tdr;
 
   rhs(0) += (Pe - De + Le) * dVol;

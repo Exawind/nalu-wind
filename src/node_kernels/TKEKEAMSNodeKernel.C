@@ -45,9 +45,6 @@ TKEKEAMSNodeKernel::setup(Realm& realm)
   prod_ = fieldMgr.get_field<double>(prodID_);
   wallDist_ = fieldMgr.get_field<double>(wallDistID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
-
-  const std::string dofName = "turbulent_ke";
-  // relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
 }
 
 void
@@ -70,7 +67,8 @@ TKEKEAMSNodeKernel::execute(
 
   DblType Dk = density * tdr;
 
-  const DblType lFac = 2.0 * visc / wallDist / wallDist;
+  const DblType lFac =
+    2.0 * visc / stk::math::max(wallDist * wallDist, 1.0e-16);
   DblType Lk = -lFac * tke;
 
   rhs(0) += (prod - Dk + Lk) * dVol;

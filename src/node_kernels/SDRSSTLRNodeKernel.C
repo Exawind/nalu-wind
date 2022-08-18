@@ -54,6 +54,7 @@ SDRSSTLRNodeKernel::setup(Realm& realm)
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
+  alphaInf_ = realm.get_turb_model_constant(TM_alphaInf);
   sigmaWTwo_ = realm.get_turb_model_constant(TM_sigmaWTwo);
   betaOne_ = realm.get_turb_model_constant(TM_betaOne);
   betaTwo_ = realm.get_turb_model_constant(TM_betaTwo);
@@ -115,7 +116,7 @@ SDRSSTLRNodeKernel::execute(
 
   // JAM: Changes for SWH LowRe
   const DblType alpha0_star = 0.072 / 3.0;
-  const DblType alpha_inf = 0.52;
+  const DblType alpha_inf = alphaInf_;
   const DblType alpha0 = 1.0 / 9.0;
   const DblType Rk = 6.0;
   const DblType Rw = 2.95;
