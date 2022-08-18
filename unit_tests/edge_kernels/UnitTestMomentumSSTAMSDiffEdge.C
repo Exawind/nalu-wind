@@ -14,6 +14,62 @@
 #include "edge_kernels/MomentumSSTAMSDiffEdgeKernel.h"
 
 namespace {
+
+const std::string realmAMSSettings =
+  "- name: unitTestRealm                                                  \n"
+  "  use_edges: yes                                                       \n"
+  "                                                                       \n"
+  "  equation_systems:                                                    \n"
+  "    name: theEqSys                                                     \n"
+  "    max_iterations: 2                                                  \n"
+  "                                                                       \n"
+  "    solver_system_specification:                                       \n"
+  "      velocity: solve_scalar                                           \n"
+  "      turbulent_ke: solve_scalar                                       \n"
+  "      specific_dissipation_rate: solve_scalar                          \n"
+  "      pressure: solve_cont                                             \n"
+  "      ndtw: solve_cont                                                 \n"
+  "                                                                       \n"
+  "    systems:                                                           \n"
+  "      - WallDistance:                                                  \n"
+  "          name: myNDTW                                                 \n"
+  "          max_iterations: 1                                            \n"
+  "          convergence_tolerance: 1e-5                                  \n"
+  "                                                                       \n"
+  "      - LowMachEOM:                                                    \n"
+  "          name: myLowMach                                              \n"
+  "          max_iterations: 1                                            \n"
+  "          convergence_tolerance: 1e-8                                  \n"
+  "                                                                       \n"
+  "      - ShearStressTransport:                                          \n"
+  "          name: mySST                                                  \n"
+  "          max_iterations: 1                                            \n"
+  "          convergence_tolerance: 1e-8                                  \n"
+  "                                                                       \n"
+  "  time_step_control:                                                   \n"
+  "    target_courant: 2.0                                                \n"
+  "    time_step_change_factor: 1.2                                       \n"
+  "                                                                       \n"
+  "  solution_options:                                                    \n"
+  "    name: myOptions                                                    \n"
+  "    turbulence_model: sst_ams                                          \n"
+  "    projected_timescale_type: momentum_diag_inv                        \n"
+  "                                                                       \n"
+  "    options:                                                           \n"
+  "      - hybrid_factor:                                                 \n"
+  "          turbulent_ke: 1.0                                            \n"
+  "          specific_dissipation_rate: 1.0                               \n"
+  "                                                                       \n"
+  "      - alpha_upw:                                                     \n"
+  "          velocity: 1.0                                                \n"
+  "          turbulent_ke: 1.0                                            \n"
+  "          specific_dissipation_rate: 1.0                               \n"
+  "                                                                       \n"
+  "      - upw_factor:                                                    \n"
+  "          velocity: 1.0                                                \n"
+  "          turbulent_ke: 0.0                                            \n"
+  "          specific_dissipation_rate: 0.0                               \n";
+
 namespace hex8_golds {
 namespace ams_diff {
 static constexpr double rhs[24] = {
@@ -525,65 +581,11 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_diff)
   if (bulk_->parallel_size() > 1)
     return;
 
-  const char* realmInput = R"inp(- name: unitTestRealm
-  use_edges: yes
- 
-  equation_systems:
-    name: theEqSys
-    max_iterations: 2
-    
-    solver_system_specification:
-      velocity: solve_scalar
-      turbulent_ke: solve_scalar
-      specific_dissipation_rate: solve_scalar
-      pressure: solve_cont
-      ndtw: solve_cont
-
-    systems:
-      - WallDistance:
-          name: myNDTW
-          max_iterations: 1
-          convergence_tolerance: 1.0e-8
-
-      - LowMachEOM:
-          name: myLowMach
-          max_iterations: 1
-          convergence_tolerance: 1.0e-8
-
-      - ShearStressTransport:
-          name: mySST
-          max_iterations: 1
-          convergence_tolerance: 1.0e-8
-
-  time_step_control:
-    target_courant: 2.0
-    time_step_change_factor: 1.2 
-
-  solution_options:
-    name: myOptions
-    turbulence_model: sst_ams
-    projected_timescale_type: momentum_diag_inv
-
-    options:
-      - hybrid_factor:
-          turbulent_ke: 1.0
-          specific_dissipation_rate: 1.0
-
-      - alpha_upw:
-          velocity: 1.0
-          turbulent_ke: 1.0
-          specific_dissipation_rate: 1.0
-
-      - upw_factor:
-          velocity: 1.0
-          turbulent_ke: 0.0
-          specific_dissipation_rate: 0.0
-
-     )inp";
-
   fill_mesh_and_init_fields();
 
-  YAML::Node realm_node = YAML::Load(realmInput);
+  YAML::Node realm_node = YAML::Load(realmAMSSettings);
+
+  realm_node[0]["solution_options"]["turbulence_model"] = "sst_ams";
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
