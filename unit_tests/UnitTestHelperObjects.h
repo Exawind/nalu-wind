@@ -222,14 +222,16 @@ struct EdgeHelperObjects : public HelperObjectsBase
   sierra::nalu::AssembleEdgeSolverAlgorithm* edgeAlg{nullptr};
 };
 
-struct EdgeKernelHelperObjects : public HelperObjectsBase
+struct AMSEdgeKernelHelperObjects : public HelperObjectsBase
 {
-  EdgeKernelHelperObjects(
+  AMSEdgeKernelHelperObjects(
     std::shared_ptr<stk::mesh::BulkData> bulk,
     stk::topology topo,
     int numDof,
-    stk::mesh::Part* part)
-    : HelperObjectsBase(bulk),
+    stk::mesh::Part* part,
+    YAML::Node yaml_node = unit_test_utils::get_default_inputs(),
+    YAML::Node realm_node = unit_test_utils::get_realm_default_node())
+    : HelperObjectsBase(bulk, yaml_node, realm_node),
       linsys(new TestEdgeLinearSystem(realm, numDof, &eqSystem, topo))
   {
     eqSystem.linsys_ = linsys;

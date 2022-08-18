@@ -525,7 +525,65 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_diff)
   if (bulk_->parallel_size() > 1)
     return;
 
+  const char* realmInput = R"inp(- name: unitTestRealm
+  use_edges: yes
+ 
+  equation_systems:
+    name: theEqSys
+    max_iterations: 2
+    
+    solver_system_specification:
+      velocity: solve_scalar
+      turbulent_ke: solve_scalar
+      specific_dissipation_rate: solve_scalar
+      pressure: solve_cont
+      ndtw: solve_cont
+
+    systems:
+      - WallDistance:
+          name: myNDTW
+          max_iterations: 1
+          convergence_tolerance: 1.0e-8
+
+      - LowMachEOM:
+          name: myLowMach
+          max_iterations: 1
+          convergence_tolerance: 1.0e-8
+
+      - ShearStressTransport:
+          name: mySST
+          max_iterations: 1
+          convergence_tolerance: 1.0e-8
+
+  time_step_control:
+    target_courant: 2.0
+    time_step_change_factor: 1.2 
+
+  solution_options:
+    name: myOptions
+    turbulence_model: sst_ams
+    projected_timescale_type: momentum_diag_inv
+
+    options:
+      - hybrid_factor:
+          turbulent_ke: 1.0
+          specific_dissipation_rate: 1.0
+
+      - alpha_upw:
+          velocity: 1.0
+          turbulent_ke: 1.0
+          specific_dissipation_rate: 1.0
+
+      - upw_factor:
+          velocity: 1.0
+          turbulent_ke: 0.0
+          specific_dissipation_rate: 0.0
+
+     )inp";
+
   fill_mesh_and_init_fields();
+
+  YAML::Node realm_node = YAML::Load(realmInput);
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
@@ -536,8 +594,9 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_diff)
   solnOpts_.upwMap_["velocity"] = 0.0;
   solnOpts_.initialize_turbulence_constants();
 
-  unit_test_utils::EdgeKernelHelperObjects helperObjs(
-    bulk_, stk::topology::HEX_8, 3, partVec_[0]);
+  unit_test_utils::AMSEdgeKernelHelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 3, partVec_[0],
+    unit_test_utils::get_default_inputs(), realm_node[0]);
 
   helperObjs.edgeAlg->add_kernel<sierra::nalu::MomentumSSTAMSDiffEdgeKernel>(
     *bulk_, solnOpts_);
