@@ -46,6 +46,11 @@ AMSAlgDriver::AMSAlgDriver(Realm& realm)
     avgTime_(NULL),
     avgMdot_(NULL),
     forcingComp_(NULL),
+    magPM_(NULL),
+    PMmax_(NULL),
+    PM1_(NULL),
+    PM2_(NULL),
+    PM3_(NULL),
     metricTensorAlgDriver_(realm_, "metric_tensor"),
     avgMdotAlg_(realm_),
     turbulenceModel_(realm_.solutionOptions_->turbulenceModel_),
@@ -53,10 +58,12 @@ AMSAlgDriver::AMSAlgDriver(Realm& realm)
 {
   if (!realm.realmUsesEdges_)
     throw std::runtime_error("AMS not supported on element runs.");
-  if (turbulenceModel_ != TurbulenceModel::SST_AMS) {
+  if (!realm.is_ams_model()) {
     throw std::runtime_error(
       "User has requested AMS, however, turbulence model has not been set "
-      "to sst_ams, the only one supported by this driver currently.");
+      "to sst_ams, sstlr_ams, ko_ams, or ke_ams, the only ones supported by "
+      "this "
+      "driver currently.");
   }
 }
 
@@ -122,7 +129,23 @@ AMSAlgDriver::register_nodal_fields(const stk::mesh::PartVector& part_vec)
 
   forcingComp_ = &(meta.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "forcing_components", numStates));
-  stk::mesh::put_field_on_mesh(*forcingComp_, selector, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*forcingComp_, *part, nDim, nullptr);
+
+  magPM_ =
+    &(meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "PMmag"));
+  PMmax_ =
+    &(meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "maxPM"));
+  PM1_ =
+    &(meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "PM1"));
+  PM2_ =
+    &(meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "PM2"));
+  PM3_ =
+    &(meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "PM3"));
+  stk::mesh::put_field_on_mesh(*magPM_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*PMmax_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*PM1_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*PM2_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*PM3_, *part, nullptr);
 }
 
 void
@@ -150,6 +173,15 @@ AMSAlgDriver::register_interior_algorithm(stk::mesh::Part* part)
     switch (realm_.solutionOptions_->turbulenceModel_) {
     case TurbulenceModel::SST_AMS:
       avgAlg_.reset(new SSTAMSAveragesAlg(realm_, part));
+      break;
+    case TurbulenceModel::SSTLR_AMS:
+      avgAlg_.reset(new SSTLRAMSAveragesAlg(realm_, part));
+      break;
+    case TurbulenceModel::KE_AMS:
+      avgAlg_.reset(new KEAMSAveragesAlg(realm_, part));
+      break;
+    case TurbulenceModel::KO_AMS:
+      avgAlg_.reset(new KOAMSAveragesAlg(realm_, part));
       break;
     default:
       throw std::runtime_error("AMSAlgDriver: non-supported turb model");

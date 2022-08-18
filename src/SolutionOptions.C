@@ -52,6 +52,7 @@ SolutionOptions::SolutionOptions()
     solveIncompressibleContinuity_(false),
     isTurbulent_(false),
     turbulenceModel_(TurbulenceModel::LAMINAR),
+    isAMSModel_(false),
     meshMotion_(false),
     meshTransformation_(false),
     externalMeshDeformation_(false),
@@ -248,6 +249,14 @@ SolutionOptions::load(const YAML::Node& y_node)
       if (transition_model_ == true)
         gammaEqActive_ = true;
     }
+
+    if (((turbulenceModel_ == TurbulenceModel::SST_AMS) ||
+         (turbulenceModel_ == TurbulenceModel::SSTLR_AMS) ||
+         (turbulenceModel_ == TurbulenceModel::KE_AMS) ||
+         (turbulenceModel_ == TurbulenceModel::KO_AMS))) {
+      isAMSModel_ = true;
+    }
+
     // initialize turbulence constants since some laminar models may need such
     // variables, e.g., kappa
     initialize_turbulence_constants();
@@ -635,6 +644,7 @@ SolutionOptions::initialize_turbulence_constants()
      turbulenceModel_ == TurbulenceModel::SSTLR ||
      turbulenceModel_ == TurbulenceModel::SST_DES ||
      turbulenceModel_ == TurbulenceModel::SST_AMS ||
+     turbulenceModel_ == TurbulenceModel::SSTLR_AMS ||
      turbulenceModel_ == TurbulenceModel::SST_IDDES)
       ? 10.0
       : 500.0;
@@ -693,6 +703,9 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_fOne] = 1.0;
   turbModelConstantMap_[TM_sigmaK] = 1.0;
   turbModelConstantMap_[TM_sigmaEps] = 1.3;
+  turbModelConstantMap_[TM_alphaPow] = 1.7;
+  turbModelConstantMap_[TM_alphaScaPow] = 1.0;
+  turbModelConstantMap_[TM_coeffR] = 1.0;
   turbModelConstantMap_[TM_sstLRDestruct] = 1.0;
   turbModelConstantMap_[TM_sstLRProd] = 1.0;
   turbModelConstantMap_[TM_tkeAmb] = 0.0;

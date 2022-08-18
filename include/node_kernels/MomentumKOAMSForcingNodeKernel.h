@@ -7,10 +7,8 @@
 // for more details.
 //
 
-#ifndef MOMENTUMSSTAMSFORCINGNODEKERNEL_H
-#define MOMENTUMSSTAMSFORCINGNODEKERNEL_H
-
-#include "Enums.h"
+#ifndef MOMENTUMKOAMSFORCINGNODEKERNEL_H
+#define MOMENTUMKOAMSFORCINGNODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
 
@@ -19,25 +17,22 @@
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
 
-using DoubleView = Kokkos::View<double*, sierra::nalu::MemSpace>;
-using DoubleViewHost = DoubleView::HostMirror;
-
 namespace sierra {
 namespace nalu {
 
 class SolutionOptions;
 
-class MomentumSSTAMSForcingNodeKernel
-  : public NGPNodeKernel<MomentumSSTAMSForcingNodeKernel>
+class MomentumKOAMSForcingNodeKernel
+  : public NGPNodeKernel<MomentumKOAMSForcingNodeKernel>
 {
 public:
-  MomentumSSTAMSForcingNodeKernel(
+  MomentumKOAMSForcingNodeKernel(
     const stk::mesh::BulkData&, const SolutionOptions&);
 
-  MomentumSSTAMSForcingNodeKernel() = delete;
+  MomentumKOAMSForcingNodeKernel() = delete;
 
   KOKKOS_DEFAULTED_FUNCTION
-  virtual ~MomentumSSTAMSForcingNodeKernel() = default;
+  virtual ~MomentumKOAMSForcingNodeKernel() = default;
 
   virtual void setup(Realm&) override;
 
@@ -64,7 +59,6 @@ private:
   stk::mesh::NgpField<double> avgTime_;
   stk::mesh::NgpField<double> avgResAdeq_;
   stk::mesh::NgpField<double> forcingComp_;
-  stk::mesh::NgpField<double> fOneBlend_;
 
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
   unsigned coordinatesID_{stk::mesh::InvalidOrdinal};
@@ -80,9 +74,7 @@ private:
   unsigned avgVelocityID_{stk::mesh::InvalidOrdinal};
   unsigned avgResAdeqID_{stk::mesh::InvalidOrdinal};
   unsigned forcingCompID_{stk::mesh::InvalidOrdinal};
-  unsigned fOneBlendID_{stk::mesh::InvalidOrdinal};
 
-  const TurbulenceModel turbModel_;
   const double betaStar_;
   const double forceCl_;
   const double Ceta_;
@@ -90,7 +82,7 @@ private:
   const double blT_;
   const double blKol_;
   const double forceFactor_;
-  const double cMu_;
+  const double v2cMu_;
   const double periodicForcingLengthX_;
   const double periodicForcingLengthY_;
   const double periodicForcingLengthZ_;
@@ -98,14 +90,9 @@ private:
 
   double time_;
   double dt_;
-
-  bool RANSBelowKs_;
-  double z0_;
-  DoubleView eastVector_;
-  DoubleView northVector_;
 };
 
 } // namespace nalu
 } // namespace sierra
 
-#endif /* MOMENTUMSSTAMSFORCINGNODEKERNEL_H */
+#endif /* MOMENTUMKOAMSFORCINGNODEKERNEL_H */

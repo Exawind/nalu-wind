@@ -7,105 +7,90 @@
 // for more details.
 //
 
-#ifndef MOMENTUMSSTAMSFORCINGNODEKERNEL_H
-#define MOMENTUMSSTAMSFORCINGNODEKERNEL_H
+#ifndef MOMENTUMSSTLRAMSDIFFEDGEKERNEL_H
+#define MOMENTUMSSTLRAMSDIFFEDGEKERNEL_H
 
-#include "Enums.h"
-
-#include "node_kernels/NodeKernel.h"
+#include "edge_kernels/EdgeKernel.h"
 
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
 
-using DoubleView = Kokkos::View<double*, sierra::nalu::MemSpace>;
-using DoubleViewHost = DoubleView::HostMirror;
-
 namespace sierra {
 namespace nalu {
 
 class SolutionOptions;
 
-class MomentumSSTAMSForcingNodeKernel
-  : public NGPNodeKernel<MomentumSSTAMSForcingNodeKernel>
+class MomentumSSTLRAMSDiffEdgeKernel
+  : public NGPEdgeKernel<MomentumSSTLRAMSDiffEdgeKernel>
 {
 public:
-  MomentumSSTAMSForcingNodeKernel(
+  MomentumSSTLRAMSDiffEdgeKernel(
     const stk::mesh::BulkData&, const SolutionOptions&);
 
-  MomentumSSTAMSForcingNodeKernel() = delete;
+  MomentumSSTLRAMSDiffEdgeKernel() = delete;
 
   KOKKOS_DEFAULTED_FUNCTION
-  virtual ~MomentumSSTAMSForcingNodeKernel() = default;
+  virtual ~MomentumSSTLRAMSDiffEdgeKernel() = default;
 
   virtual void setup(Realm&) override;
 
   KOKKOS_FUNCTION
   virtual void execute(
-    NodeKernelTraits::LhsType&,
-    NodeKernelTraits::RhsType&,
+    EdgeKernelTraits::ShmemDataType&,
+    const stk::mesh::FastMeshIndex&,
+    const stk::mesh::FastMeshIndex&,
     const stk::mesh::FastMeshIndex&) override;
 
 private:
-  stk::mesh::NgpField<double> dualNodalVolume_;
+  stk::mesh::NgpField<double> edgeAreaVec_;
 
   stk::mesh::NgpField<double> coordinates_;
   stk::mesh::NgpField<double> velocity_;
-  stk::mesh::NgpField<double> viscosity_;
   stk::mesh::NgpField<double> tvisc_;
+  stk::mesh::NgpField<double> visc_;
   stk::mesh::NgpField<double> density_;
   stk::mesh::NgpField<double> tke_;
   stk::mesh::NgpField<double> sdr_;
   stk::mesh::NgpField<double> beta_;
-  stk::mesh::NgpField<double> Mij_;
-  stk::mesh::NgpField<double> minDist_;
+  stk::mesh::NgpField<double> nodalMij_;
+  stk::mesh::NgpField<double> dudx_;
   stk::mesh::NgpField<double> avgVelocity_;
-  stk::mesh::NgpField<double> avgTime_;
+  stk::mesh::NgpField<double> avgDudx_;
   stk::mesh::NgpField<double> avgResAdeq_;
-  stk::mesh::NgpField<double> forcingComp_;
   stk::mesh::NgpField<double> fOneBlend_;
 
-  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
+  unsigned edgeAreaVecID_{stk::mesh::InvalidOrdinal};
   unsigned coordinatesID_{stk::mesh::InvalidOrdinal};
   unsigned velocityID_{stk::mesh::InvalidOrdinal};
-  unsigned viscosityID_{stk::mesh::InvalidOrdinal};
   unsigned turbViscID_{stk::mesh::InvalidOrdinal};
+  unsigned viscID_{stk::mesh::InvalidOrdinal};
   unsigned densityNp1ID_{stk::mesh::InvalidOrdinal};
   unsigned tkeNp1ID_{stk::mesh::InvalidOrdinal};
   unsigned sdrNp1ID_{stk::mesh::InvalidOrdinal};
   unsigned betaID_{stk::mesh::InvalidOrdinal};
   unsigned MijID_{stk::mesh::InvalidOrdinal};
-  unsigned minDistID_{stk::mesh::InvalidOrdinal};
+  unsigned dudxID_{stk::mesh::InvalidOrdinal};
   unsigned avgVelocityID_{stk::mesh::InvalidOrdinal};
+  unsigned avgDudxID_{stk::mesh::InvalidOrdinal};
   unsigned avgResAdeqID_{stk::mesh::InvalidOrdinal};
-  unsigned forcingCompID_{stk::mesh::InvalidOrdinal};
   unsigned fOneBlendID_{stk::mesh::InvalidOrdinal};
 
-  const TurbulenceModel turbModel_;
+  const double includeDivU_;
+
   const double betaStar_;
-  const double forceCl_;
-  const double Ceta_;
-  const double Ct_;
-  const double blT_;
-  const double blKol_;
-  const double forceFactor_;
-  const double cMu_;
-  const double periodicForcingLengthX_;
-  const double periodicForcingLengthY_;
-  const double periodicForcingLengthZ_;
+  const double CMdeg_;
+  const double aspectRatioSwitch_;
+  const double alphaPow_;
+  const double alphaScaPow_;
+
   const int nDim_;
 
-  double time_;
-  double dt_;
-
-  bool RANSBelowKs_;
-  double z0_;
-  DoubleView eastVector_;
-  DoubleView northVector_;
+  double relaxFacU_{1.0};
 };
 
 } // namespace nalu
 } // namespace sierra
 
-#endif /* MOMENTUMSSTAMSFORCINGNODEKERNEL_H */
+#endif /* MOMENTUMSSTLRAMSDIFFEDGEKERNEL_H */

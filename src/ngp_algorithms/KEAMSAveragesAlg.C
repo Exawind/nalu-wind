@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include "ngp_algorithms/SSTAMSAveragesAlg.h"
+#include "ngp_algorithms/KEAMSAveragesAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpTypes.h"
 #include "ngp_utils/NgpFieldManager.h"
@@ -17,34 +17,24 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 #include "EigenDecomposition.h"
 #include "utils/AMSUtils.h"
-#include "SolutionOptions.h"
 
 namespace sierra {
 namespace nalu {
 
-SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
+KEAMSAveragesAlg::KEAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
   : AMSAveragesAlg(realm, part),
-    betaStar_(realm.get_turb_model_constant(TM_betaStar)),
     CMdeg_(realm.get_turb_model_constant(TM_CMdeg)),
     v2cMu_(realm.get_turb_model_constant(TM_v2cMu)),
     aspectRatioSwitch_(realm.get_turb_model_constant(TM_aspRatSwitch)),
-    avgTimeCoeff_(realm.get_turb_model_constant(TM_avgTimeCoeff)),
-    alphaPow_(realm.get_turb_model_constant(TM_alphaPow)),
-    alphaScaPow_(realm.get_turb_model_constant(TM_alphaScaPow)),
     meshMotion_(realm.does_mesh_move()),
-    RANSBelowKs_(realm_.solutionOptions_->RANSBelowKs_),
-    z0_(realm_.solutionOptions_->roughnessHeight_),
-    lengthScaleLimiter_(realm_.solutionOptions_->lengthScaleLimiter_),
-    eastVector_(realm_.solutionOptions_->eastVector_),
-    northVector_(realm_.solutionOptions_->northVector_),
     velocity_(get_field_ordinal(realm.meta_data(), "velocity")),
     density_(get_field_ordinal(realm.meta_data(), "density")),
     dudx_(get_field_ordinal(realm.meta_data(), "dudx")),
     resAdeq_(
       get_field_ordinal(realm.meta_data(), "resolution_adequacy_parameter")),
     turbKineticEnergy_(get_field_ordinal(realm.meta_data(), "turbulent_ke")),
-    specDissipationRate_(
-      get_field_ordinal(realm.meta_data(), "specific_dissipation_rate")),
+    totDissipationRate_(
+      get_field_ordinal(realm.meta_data(), "total_dissipation_rate")),
     avgVelocity_(get_field_ordinal(realm.meta_data(), "average_velocity")),
     avgVelocityN_(get_field_ordinal(
       realm.meta_data(), "average_velocity", stk::mesh::StateN)),
@@ -66,20 +56,18 @@ SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     visc_(get_field_ordinal(realm.meta_data(), "viscosity")),
     beta_(get_field_ordinal(realm.meta_data(), "k_ratio")),
     Mij_(get_field_ordinal(realm.meta_data(), "metric_tensor")),
-    wallDist_(get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall")),
-    coordinates_(
-      get_field_ordinal(realm.meta_data(), realm.get_coordinates_name()))
+    wallDist_(get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall"))
 {
 }
 
 void
-SSTAMSAveragesAlg::execute()
+KEAMSAveragesAlg::execute()
 {
   using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   const auto& meta = realm_.meta_data();
   if (meta.spatial_dimension() != 3) {
-    throw std::runtime_error("SSTAMSAveragesAlg only supported in 3D.");
+    throw std::runtime_error("KEAMSAveragesAlg only supported in 3D.");
   }
   const DblType dt = realm_.get_time_step();
 
@@ -95,7 +83,7 @@ SSTAMSAveragesAlg::execute()
   const auto tvisc = fieldMgr.get_field<double>(tvisc_);
   const auto visc = fieldMgr.get_field<double>(visc_);
   const auto tke = fieldMgr.get_field<double>(turbKineticEnergy_);
-  const auto sdr = fieldMgr.get_field<double>(specDissipationRate_);
+  const auto tdr = fieldMgr.get_field<double>(totDissipationRate_);
   const auto density = fieldMgr.get_field<double>(density_);
   auto beta = fieldMgr.get_field<double>(beta_);
   auto avgProd = fieldMgr.get_field<double>(avgProd_);
@@ -114,41 +102,19 @@ SSTAMSAveragesAlg::execute()
   auto avgDudxN = fieldMgr.get_field<double>(avgDudxN_);
   const auto Mij = fieldMgr.get_field<double>(Mij_);
   const auto wallDist = fieldMgr.get_field<double>(wallDist_);
-  const auto coords = fieldMgr.get_field<double>(coordinates_);
 
-  const DblType betaStar = betaStar_;
   const DblType CMdeg = CMdeg_;
   const DblType v2cMu = v2cMu_;
   const DblType beta_kol_local = beta_kol;
   const DblType aspectRatioSwitch = aspectRatioSwitch_;
-  const DblType avgTimeCoeff = avgTimeCoeff_;
-  const auto lengthScaleLimiter = lengthScaleLimiter_;
-  const DblType alphaPow = alphaPow_;
-  const DblType alphaScaPow = alphaScaPow_;
-
-  const bool RANSBelowKs = RANSBelowKs_;
-  DblType k_s = 0;
-  int gravity_i = 0;
-  if (RANSBelowKs) {
-    // relationship b/w sand grain roughness height, k_s, and aerodynamic
-    // roughness, z0, as described in ref. Bau11, Eq. (2.29)
-    k_s = 30. * z0_;
-    for (int i = 0; i < 3; ++i) {
-      if ((eastVector_[i] == 0.0) && (northVector_[i] == 0.0)) {
-        gravity_i = i;
-      }
-    }
-  }
 
   nalu_ngp::run_entity_algorithm(
-    "SSTAMSAveragesAlg_computeAverages", ngpMesh, stk::topology::NODE_RANK, sel,
+    "KEAMSAveragesAlg_computeAverages", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
       // Calculate alpha
       if (tke.get(mi, 0) == 0.0)
         beta.get(mi, 0) = 1.0;
-      else if ((RANSBelowKs) && (coords.get(mi, gravity_i) <= k_s)) {
-        beta.get(mi, 0) = 1.0;
-      } else {
+      else {
         beta.get(mi, 0) =
           (tke.get(mi, 0) - avgTkeRes.get(mi, 0)) / tke.get(mi, 0);
 
@@ -158,17 +124,10 @@ SSTAMSAveragesAlg::execute()
         beta.get(mi, 0) = stk::math::max(beta.get(mi, 0), beta_kol_local);
       }
 
-      const DblType alpha = stk::math::pow(beta.get(mi, 0), alphaPow);
+      const DblType alpha = stk::math::pow(beta.get(mi, 0), 1.7);
 
       // store RANS time scale
-      if (lengthScaleLimiter) {
-        const DblType l_t = stk::math::sqrt(tke.get(mi, 0)) /
-                            (stk::math::pow(betaStar, .25) * sdr.get(mi, 0));
-        avgTime.get(mi, 0) =
-          avgTimeCoeff * l_t / stk::math::sqrt(tke.get(mi, 0));
-      } else {
-        avgTime.get(mi, 0) = avgTimeCoeff / (betaStar * sdr.get(mi, 0));
-      }
+      avgTime.get(mi, 0) = tke.get(mi, 0) / tdr.get(mi, 0);
 
       // causal time average ODE: d<phi>/dt = 1/avgTime * (phi - <phi>)
       const DblType weightAvg =
@@ -202,8 +161,7 @@ SSTAMSAveragesAlg::execute()
           const DblType avgSij =
             0.5 * (avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
                    avgDudx.get(mi, j * nalu_ngp::NDimMax + i));
-          tij[i][j] = 2.0 * stk::math::pow(alpha, alphaScaPow) * (2.0 - alpha) *
-                      tvisc.get(mi, 0) * avgSij;
+          tij[i][j] = 2.0 * alpha * (2.0 - alpha) * tvisc.get(mi, 0) * avgSij;
         }
       }
 
@@ -306,8 +264,7 @@ SSTAMSAveragesAlg::execute()
       const DblType CM43scale = stk::math::max(
         stk::math::min(stk::math::pow(avgResAdeq.get(mi, 0), 2.0), 30.0), 1.0);
 
-      const DblType epsilon13 =
-        stk::math::pow(betaStar * tke.get(mi, 0) * sdr.get(mi, 0), 1.0 / 3.0);
+      const DblType epsilon13 = stk::math::pow(tdr.get(mi, 0), 1.0 / 3.0);
 
       const DblType arScale = stk::math::if_then_else(
         aspectRatio > aspectRatioSwitch,
@@ -321,9 +278,8 @@ SSTAMSAveragesAlg::execute()
           // the SST model and <S_ij> is the strain rate tensor based on the
           // mean quantities... i.e this is (tauSGRS = alpha*tauSST)
           // The 2 in the coeff cancels with the 1/2 in the strain rate tensor
-          const DblType coeffSGRS = stk::math::pow(alpha, alphaScaPow) *
-                                    (2.0 - alpha) * tvisc.get(mi, 0) /
-                                    density.get(mi, 0);
+          const DblType coeffSGRS =
+            alpha * (2.0 - alpha) * tvisc.get(mi, 0) / density.get(mi, 0);
           tauSGRS[i][j] = avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
                           avgDudx.get(mi, j * nalu_ngp::NDimMax + i);
           tauSGRS[i][j] *= coeffSGRS;
@@ -396,9 +352,7 @@ SSTAMSAveragesAlg::execute()
       // Handle case where tke = 0, should only occur at a wall boundary
       if (tke.get(mi, 0) == 0.0)
         resAdeq.get(mi, 0) = 1.0;
-      else if ((RANSBelowKs) && (coords.get(mi, gravity_i) <= k_s)) {
-        resAdeq.get(mi, 0) = 1.0;
-      } else {
+      else {
         for (int i = 0; i < nalu_ngp::NDimMax; ++i)
           for (int j = 0; j < nalu_ngp::NDimMax; ++j)
             PM[i][j] = PM[i][j] * PMscale;

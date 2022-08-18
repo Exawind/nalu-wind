@@ -7,10 +7,8 @@
 // for more details.
 //
 
-#ifndef MOMENTUMSSTAMSFORCINGNODEKERNEL_H
-#define MOMENTUMSSTAMSFORCINGNODEKERNEL_H
-
-#include "Enums.h"
+#ifndef MOMENTUMKEAMSFORCINGNODEKERNEL_H
+#define MOMENTUMKEAMSFORCINGNODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
 
@@ -19,25 +17,22 @@
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
 
-using DoubleView = Kokkos::View<double*, sierra::nalu::MemSpace>;
-using DoubleViewHost = DoubleView::HostMirror;
-
 namespace sierra {
 namespace nalu {
 
 class SolutionOptions;
 
-class MomentumSSTAMSForcingNodeKernel
-  : public NGPNodeKernel<MomentumSSTAMSForcingNodeKernel>
+class MomentumKEAMSForcingNodeKernel
+  : public NGPNodeKernel<MomentumKEAMSForcingNodeKernel>
 {
 public:
-  MomentumSSTAMSForcingNodeKernel(
+  MomentumKEAMSForcingNodeKernel(
     const stk::mesh::BulkData&, const SolutionOptions&);
 
-  MomentumSSTAMSForcingNodeKernel() = delete;
+  MomentumKEAMSForcingNodeKernel() = delete;
 
   KOKKOS_DEFAULTED_FUNCTION
-  virtual ~MomentumSSTAMSForcingNodeKernel() = default;
+  virtual ~MomentumKEAMSForcingNodeKernel() = default;
 
   virtual void setup(Realm&) override;
 
@@ -56,7 +51,7 @@ private:
   stk::mesh::NgpField<double> tvisc_;
   stk::mesh::NgpField<double> density_;
   stk::mesh::NgpField<double> tke_;
-  stk::mesh::NgpField<double> sdr_;
+  stk::mesh::NgpField<double> tdr_;
   stk::mesh::NgpField<double> beta_;
   stk::mesh::NgpField<double> Mij_;
   stk::mesh::NgpField<double> minDist_;
@@ -64,7 +59,6 @@ private:
   stk::mesh::NgpField<double> avgTime_;
   stk::mesh::NgpField<double> avgResAdeq_;
   stk::mesh::NgpField<double> forcingComp_;
-  stk::mesh::NgpField<double> fOneBlend_;
 
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
   unsigned coordinatesID_{stk::mesh::InvalidOrdinal};
@@ -73,16 +67,14 @@ private:
   unsigned turbViscID_{stk::mesh::InvalidOrdinal};
   unsigned densityNp1ID_{stk::mesh::InvalidOrdinal};
   unsigned tkeNp1ID_{stk::mesh::InvalidOrdinal};
-  unsigned sdrNp1ID_{stk::mesh::InvalidOrdinal};
+  unsigned tdrNp1ID_{stk::mesh::InvalidOrdinal};
   unsigned betaID_{stk::mesh::InvalidOrdinal};
   unsigned MijID_{stk::mesh::InvalidOrdinal};
   unsigned minDistID_{stk::mesh::InvalidOrdinal};
   unsigned avgVelocityID_{stk::mesh::InvalidOrdinal};
   unsigned avgResAdeqID_{stk::mesh::InvalidOrdinal};
   unsigned forcingCompID_{stk::mesh::InvalidOrdinal};
-  unsigned fOneBlendID_{stk::mesh::InvalidOrdinal};
 
-  const TurbulenceModel turbModel_;
   const double betaStar_;
   const double forceCl_;
   const double Ceta_;
@@ -98,14 +90,9 @@ private:
 
   double time_;
   double dt_;
-
-  bool RANSBelowKs_;
-  double z0_;
-  DoubleView eastVector_;
-  DoubleView northVector_;
 };
 
 } // namespace nalu
 } // namespace sierra
 
-#endif /* MOMENTUMSSTAMSFORCINGNODEKERNEL_H */
+#endif /* MOMENTUMKEAMSFORCINGNODEKERNEL_H */

@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef SSTAMSAveragesAlg_h
-#define SSTAMSAveragesAlg_h
+#ifndef KEAMSAveragesAlg_h
+#define KEAMSAveragesAlg_h
 
 #include "AMSAveragesAlg.h"
 #include "FieldTypeDef.h"
@@ -20,38 +20,29 @@ namespace nalu {
 
 class Realm;
 
-class SSTAMSAveragesAlg : public AMSAveragesAlg
+class KEAMSAveragesAlg : public AMSAveragesAlg
 {
 public:
   using DblType = double;
 
-  SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part);
+  KEAMSAveragesAlg(Realm& realm, stk::mesh::Part* part);
 
-  virtual ~SSTAMSAveragesAlg() = default;
+  virtual ~KEAMSAveragesAlg() = default;
 
   virtual void execute() override;
 
 private:
-  const DblType betaStar_;
   const DblType CMdeg_;
   const DblType v2cMu_;
   const DblType aspectRatioSwitch_;
-  const DblType avgTimeCoeff_;
-  const DblType alphaPow_;
-  const DblType alphaScaPow_;
   const bool meshMotion_;
-  const bool RANSBelowKs_;
-  const DblType z0_;
-  const bool lengthScaleLimiter_;
-  const std::vector<double> eastVector_;
-  const std::vector<double> northVector_;
 
   unsigned velocity_{stk::mesh::InvalidOrdinal};
   unsigned density_{stk::mesh::InvalidOrdinal};
   unsigned dudx_{stk::mesh::InvalidOrdinal};
   unsigned resAdeq_{stk::mesh::InvalidOrdinal};
   unsigned turbKineticEnergy_{stk::mesh::InvalidOrdinal};
-  unsigned specDissipationRate_{stk::mesh::InvalidOrdinal};
+  unsigned totDissipationRate_{stk::mesh::InvalidOrdinal};
   unsigned avgVelocity_{stk::mesh::InvalidOrdinal};
   unsigned avgVelocityN_{stk::mesh::InvalidOrdinal};
   unsigned avgDudx_{stk::mesh::InvalidOrdinal};
@@ -68,7 +59,6 @@ private:
   unsigned beta_{stk::mesh::InvalidOrdinal};
   unsigned Mij_{stk::mesh::InvalidOrdinal};
   unsigned wallDist_{stk::mesh::InvalidOrdinal};
-  unsigned coordinates_{stk::mesh::InvalidOrdinal};
 
   // Proper definition of beta_kol in SST-AMS doesn't work
   // near walls, so emprically tested floor is used currently

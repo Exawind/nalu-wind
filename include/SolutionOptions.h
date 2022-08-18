@@ -124,6 +124,7 @@ public:
   bool mdotInterpRhoUTogether_;
   bool solveIncompressibleContinuity_;
   bool isTurbulent_;
+  bool isAMSModel_;
   TurbulenceModel turbulenceModel_;
   bool meshMotion_;
   bool meshTransformation_;

@@ -58,6 +58,9 @@
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 #include "utils/StkHelpers.h"
 
+// UT Austin Hybrid AMS kernel
+#include <node_kernels/TDRKEAMSNodeKernel.h>
+
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
 
 // stk_util
@@ -220,8 +223,7 @@ TotalDissipationRateEquationSystem::register_interior_algorithm(
     if (itsi == solverAlgDriver_->solverAlgMap_.end()) {
       SolverAlgorithm* theAlg = NULL;
       if (realm_.realmUsesEdges_) {
-        const bool useAvgMdot =
-          realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS;
+        const bool useAvgMdot = realm_.is_ams_model();
         theAlg = new ScalarEdgeSolverAlg(
           realm_, part, this, tdr_, dedx_, evisc_, useAvgMdot);
       } else {
@@ -258,7 +260,12 @@ TotalDissipationRateEquationSystem::register_interior_algorithm(
 
         if (TurbulenceModel::KE == realm_.solutionOptions_->turbulenceModel_) {
           nodeAlg.add_kernel<TDRKENodeKernel>(realm_.meta_data());
-        } else {
+        } else if (
+          TurbulenceModel::KE_AMS == realm_.solutionOptions_->turbulenceModel_)
+          nodeAlg.add_kernel<TDRKEAMSNodeKernel>(
+            realm_.meta_data(),
+            realm_.solutionOptions_->get_coordinates_name());
+        else {
           nodeAlg.add_kernel<TDRKENodeKernel>(realm_.meta_data());
         }
       },

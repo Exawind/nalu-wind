@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include "node_kernels/MomentumSSTAMSForcingNodeKernel.h"
+#include "node_kernels/MomentumKEAMSForcingNodeKernel.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "stk_mesh/base/MetaData.hpp"
@@ -18,10 +18,9 @@
 namespace sierra {
 namespace nalu {
 
-MomentumSSTAMSForcingNodeKernel::MomentumSSTAMSForcingNodeKernel(
+MomentumKEAMSForcingNodeKernel::MomentumKEAMSForcingNodeKernel(
   const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts)
-  : NGPNodeKernel<MomentumSSTAMSForcingNodeKernel>(),
-    turbModel_(solnOpts.turbulenceModel_),
+  : NGPNodeKernel<MomentumKEAMSForcingNodeKernel>(),
     betaStar_(solnOpts.get_turb_model_constant(TM_betaStar)),
     forceCl_(solnOpts.get_turb_model_constant(TM_forCl)),
     Ceta_(solnOpts.get_turb_model_constant(TM_forCeta)),
@@ -36,9 +35,7 @@ MomentumSSTAMSForcingNodeKernel::MomentumSSTAMSForcingNodeKernel(
       solnOpts.get_turb_model_constant(TM_periodicForcingLengthY)),
     periodicForcingLengthZ_(
       solnOpts.get_turb_model_constant(TM_periodicForcingLengthZ)),
-    nDim_(bulk.mesh_meta_data().spatial_dimension()),
-    eastVector_("eastVector", nDim_),
-    northVector_("northVector", nDim_)
+    nDim_(bulk.mesh_meta_data().spatial_dimension())
 {
   const auto& meta = bulk.mesh_meta_data();
 
@@ -51,12 +48,11 @@ MomentumSSTAMSForcingNodeKernel::MomentumSSTAMSForcingNodeKernel(
   turbViscID_ = get_field_ordinal(meta, "turbulent_viscosity");
   densityNp1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   tkeNp1ID_ = get_field_ordinal(meta, "turbulent_ke", stk::mesh::StateNP1);
-  sdrNp1ID_ =
-    get_field_ordinal(meta, "specific_dissipation_rate", stk::mesh::StateNP1);
+  tdrNp1ID_ =
+    get_field_ordinal(meta, "total_dissipation_rate", stk::mesh::StateNP1);
   betaID_ = get_field_ordinal(meta, "k_ratio");
   MijID_ = get_field_ordinal(meta, "metric_tensor");
   minDistID_ = get_field_ordinal(meta, "minimum_distance_to_wall");
-  fOneBlendID_ = get_field_ordinal(meta, "sst_f_one_blending");
 
   // average quantities
   avgVelocityID_ = get_field_ordinal(meta, "average_velocity");
@@ -64,28 +60,10 @@ MomentumSSTAMSForcingNodeKernel::MomentumSSTAMSForcingNodeKernel(
 
   // output quantities
   forcingCompID_ = get_field_ordinal(meta, "forcing_components");
-
-  // setup vectors
-  if (solnOpts.RANSBelowKs_) {
-    if (!solnOpts.eastVector_.empty() && !solnOpts.northVector_.empty()) {
-      DoubleView::HostMirror eastHost("eastHost", nDim_);
-      DoubleView::HostMirror northHost("northHost", nDim_);
-      for (int i = 0; i < nDim_; i++) {
-        eastHost(i) = solnOpts.eastVector_[i];
-        northHost(i) = solnOpts.northVector_[i];
-      }
-      Kokkos::deep_copy(eastVector_, eastHost);
-      Kokkos::deep_copy(northVector_, northHost);
-    } else {
-      // vectors are required but unallocated
-      throw std::runtime_error(
-        "Using rans_below_ks requires definitions of east and north");
-    }
-  }
 }
 
 void
-MomentumSSTAMSForcingNodeKernel::setup(Realm& realm)
+MomentumKEAMSForcingNodeKernel::setup(Realm& realm)
 {
   // Time information
   dt_ = realm.get_time_step();
@@ -99,21 +77,17 @@ MomentumSSTAMSForcingNodeKernel::setup(Realm& realm)
   tvisc_ = fieldMgr.get_field<double>(turbViscID_);
   density_ = fieldMgr.get_field<double>(densityNp1ID_);
   tke_ = fieldMgr.get_field<double>(tkeNp1ID_);
-  sdr_ = fieldMgr.get_field<double>(sdrNp1ID_);
+  tdr_ = fieldMgr.get_field<double>(tdrNp1ID_);
   beta_ = fieldMgr.get_field<double>(betaID_);
   Mij_ = fieldMgr.get_field<double>(MijID_);
   minDist_ = fieldMgr.get_field<double>(minDistID_);
-  fOneBlend_ = fieldMgr.get_field<double>(fOneBlendID_);
   avgVelocity_ = fieldMgr.get_field<double>(avgVelocityID_);
   avgResAdeq_ = fieldMgr.get_field<double>(avgResAdeqID_);
   forcingComp_ = fieldMgr.get_field<double>(forcingCompID_);
-  RANSBelowKs_ = realm.solutionOptions_->RANSBelowKs_;
-  z0_ = realm.solutionOptions_->roughnessHeight_;
 }
 
-KOKKOS_FUNCTION
 void
-MomentumSSTAMSForcingNodeKernel::execute(
+MomentumKEAMSForcingNodeKernel::execute(
   NodeKernelTraits::LhsType&,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
@@ -133,11 +107,10 @@ MomentumSSTAMSForcingNodeKernel::execute(
   const NodeKernelTraits::DblType rho = density_.get(node, 0);
   const NodeKernelTraits::DblType tke =
     stk::math::max(tke_.get(node, 0), 1.0e-12);
-  const NodeKernelTraits::DblType sdr = sdr_.get(node, 0);
+  const NodeKernelTraits::DblType tdr = tdr_.get(node, 0);
   const NodeKernelTraits::DblType beta = beta_.get(node, 0);
   const NodeKernelTraits::DblType wallDist = minDist_.get(node, 0);
   const NodeKernelTraits::DblType avgResAdeq = avgResAdeq_.get(node, 0);
-  const NodeKernelTraits::DblType fOneBlend = fOneBlend_.get(node, 0);
 
   for (int d = 0; d < nDim_; d++) {
     avgU[d] = avgVelocity_.get(node, d);
@@ -145,18 +118,7 @@ MomentumSSTAMSForcingNodeKernel::execute(
     coords[d] = coordinates_.get(node, d);
   }
 
-  const NodeKernelTraits::DblType ReT = rho * tke / sdr / mu;
-  const NodeKernelTraits::DblType Rbeta = 8.0;
-  const NodeKernelTraits::DblType betaStarLowRe =
-    betaStar_ * (4.0 / 15.0 + stk::math::pow(ReT / Rbeta, 4.0)) /
-    (1.0 + stk::math::pow(ReT / Rbeta, 4.0));
-  const NodeKernelTraits::DblType betaStarBlend =
-    fOneBlend * betaStarLowRe + (1.0 - fOneBlend) * betaStar_;
-
-  const NodeKernelTraits::DblType bStar = stk::math::if_then_else(
-    turbModel_ == TurbulenceModel::SST_AMS, betaStar_, betaStarBlend);
-
-  const NodeKernelTraits::DblType eps = bStar * tke * sdr;
+  const NodeKernelTraits::DblType eps = tdr;
 
   const NodeKernelTraits::DblType smallCl_ = 2.0;
   const NodeKernelTraits::DblType clOffset_ = 0.2;
@@ -200,13 +162,9 @@ MomentumSSTAMSForcingNodeKernel::execute(
   const NodeKernelTraits::DblType az = M_PI / denomZ;
 
   // Then we calculate the arguments for the Taylor-Green Vortex
-  // const NodeKernelTraits::DblType xarg = ax * (coords[0] - avgU[0] * time_);
-  // const NodeKernelTraits::DblType yarg = ay * (coords[1] - avgU[1] * time_);
-  // const NodeKernelTraits::DblType zarg = az * (coords[2] - avgU[2] * time_);
-
-  const NodeKernelTraits::DblType xarg = ax * (coords[0]);
-  const NodeKernelTraits::DblType yarg = ay * (coords[1]);
-  const NodeKernelTraits::DblType zarg = az * (coords[2]);
+  const NodeKernelTraits::DblType xarg = ax * (coords[0] - avgU[0] * time_);
+  const NodeKernelTraits::DblType yarg = ay * (coords[1] - avgU[1] * time_);
+  const NodeKernelTraits::DblType zarg = az * (coords[2] - avgU[2] * time_);
 
   // Now we calculate the initial Taylor-Green field
   NodeKernelTraits::DblType hX = 1. / 3. * stk::math::cos(xarg) *
@@ -217,7 +175,7 @@ MomentumSSTAMSForcingNodeKernel::execute(
                                  stk::math::sin(yarg) * stk::math::cos(zarg);
 
   // Now we calculate the scaling of the initial field
-  const NodeKernelTraits::DblType v2 = tvisc * bStar * sdr / (cMu_ * rho);
+  const NodeKernelTraits::DblType v2 = tvisc * eps / (cMu_ * rho * tke);
   const NodeKernelTraits::DblType F_target =
     forceFactor_ * stk::math::sqrt(beta * v2) / T_beta;
 
@@ -252,23 +210,6 @@ MomentumSSTAMSForcingNodeKernel::execute(
   NodeKernelTraits::DblType gX = C_F * hX;
   NodeKernelTraits::DblType gY = C_F * hY;
   NodeKernelTraits::DblType gZ = C_F * hZ;
-
-  if (RANSBelowKs_) {
-    // relationship b/w sand grain roughness height, k_s, and aerodynamic
-    // roughness, z0, as described in ref. Bau11, Eq. (2.29)
-    const NodeKernelTraits::DblType k_s = 30. * z0_;
-    int gravity_i;
-    for (int i = 0; i < 3; ++i) {
-      if ((eastVector_(i) == 0.0) && (northVector_(i) == 0.0)) {
-        gravity_i = i;
-      }
-    }
-    if (coords[gravity_i] <= k_s) {
-      gX = 0.0;
-      gY = 0.0;
-      gZ = 0.0;
-    }
-  }
 
   forcingComp_.get(node, 0) = gX;
   forcingComp_.get(node, 1) = gY;

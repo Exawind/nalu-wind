@@ -15,7 +15,11 @@
 #include "ngp_algorithms/NgpAlgDriver.h"
 #include "ngp_algorithms/FieldUpdateAlgDriver.h"
 #include "ngp_algorithms/AMSAvgMdotEdgeAlg.h"
+#include "ngp_algorithms/AMSAveragesAlg.h"
 #include "ngp_algorithms/SSTAMSAveragesAlg.h"
+#include "ngp_algorithms/SSTLRAMSAveragesAlg.h"
+#include "ngp_algorithms/KEAMSAveragesAlg.h"
+#include "ngp_algorithms/KOAMSAveragesAlg.h"
 
 namespace stk {
 struct topology;
@@ -62,8 +66,15 @@ private:
   ScalarFieldType* avgMdot_;
   VectorFieldType* forcingComp_;
 
+  ScalarFieldType* magPM_;
+  ScalarFieldType* PMmax_;
+  ScalarFieldType* PM1_;
+  ScalarFieldType* PM2_;
+  ScalarFieldType* PM3_;
+
   FieldUpdateAlgDriver metricTensorAlgDriver_;
-  std::unique_ptr<SSTAMSAveragesAlg> avgAlg_;
+  std::unique_ptr<AMSAveragesAlg> avgAlg_;
+
   NgpAlgDriver avgMdotAlg_;
 
   const TurbulenceModel turbulenceModel_;

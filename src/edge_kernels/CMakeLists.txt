@@ -5,6 +5,9 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityEdgeSolverAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumEdgeSolverAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSSTAMSDiffEdgeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSSTLRAMSDiffEdgeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MomentumKEAMSDiffEdgeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MomentumKOAMSDiffEdgeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarEdgeSolverAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/WallDistEdgeSolverAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumEdgePecletAlg.C
