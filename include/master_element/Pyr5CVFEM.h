@@ -54,8 +54,12 @@ public:
   shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType*, DeviceShmem>& vol);
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType*, DeviceShmem>& vol) override;
+
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double*, DeviceShmem>& vol) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -72,8 +76,6 @@ public:
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
-  void determinant(
-    const int nelem, const double* coords, double* areav, double* error);
 
   void Mij(const double* coords, double* metric, double* deriv);
 
@@ -119,6 +121,13 @@ private:
     -1.0, 1.0,  0.0, // vol 3
     0.0,  0.0,  1.0  // vol 4
   };
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scv(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& cordel,
+    SharedMemView<DBLTYPE*, DeviceShmem>& vol);
+
 };
 
 // Pyramid 5 subcontrol surface
@@ -142,11 +151,12 @@ public:
   shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType**, DeviceShmem>& areav);
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
-  void determinant(
-    const int nelem, const double* coords, double* areav, double* error);
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -427,6 +437,12 @@ private:
                               0, 3, 2, 1};
 
   double intgExpFaceShift_[48] = {0};
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scs(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& cordel,
+    SharedMemView<DBLTYPE**, DeviceShmem>& areav);
 };
 
 } // namespace nalu

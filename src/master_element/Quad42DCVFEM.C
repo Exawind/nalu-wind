@@ -129,10 +129,11 @@ Quad42DSCV::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad42DSCV::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType*, DeviceShmem>& vol)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+Quad42DSCV::determinant_scv(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+  SharedMemView<DBLTYPE*, DeviceShmem>& vol)
 {
 
   const int npe = nodesPerElement_;
@@ -148,16 +149,16 @@ Quad42DSCV::determinant(
   const double zero = 0.0;
   const double one16th = 0.0625;
 
-  DoubleType deriv[2][4];
-  DoubleType shape_fcn[4];
+  DBLTYPE deriv[2][4];
+  DBLTYPE shape_fcn[4];
 
   //   store sub-volume centroids
   const double xi[2][4] = {{cvm, cvp, cvp, cvm}, {cvm, cvm, cvp, cvp}};
   const double xigp[2][4] = {{gpm, gpp, gpp, gpm}, {gpm, gpm, gpp, gpp}};
-  DoubleType dx_ds1 = zero;
-  DoubleType dx_ds2 = zero;
-  DoubleType dy_ds1 = zero;
-  DoubleType dy_ds2 = zero;
+  DBLTYPE dx_ds1 = zero;
+  DBLTYPE dx_ds2 = zero;
+  DBLTYPE dy_ds1 = zero;
+  DBLTYPE dy_ds2 = zero;
   // 2d cartesian, no cross-section area
   for (int ki = 0; ki < nint; ++ki) {
     vol(ki) = zero;
@@ -194,12 +195,29 @@ Quad42DSCV::determinant(
         dy_ds2 += deriv[1][kn] * coords(kn, 1);
       }
       // calculate the determinate of the jacobian at the integration station -
-      const DoubleType det_j = (dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2);
+      const DBLTYPE det_j = (dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2);
 
       vol(ki) += det_j * one16th;
     }
   }
 }
+
+void
+Quad42DSCV::determinant(
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType*, DeviceShmem>& vol)
+{
+  determinant_scv(coords, vol);
+}
+
+void
+Quad42DSCV::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double*, DeviceShmem>& vol)
+{
+  determinant_scv(coords, vol);
+}
+
 
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
@@ -214,17 +232,6 @@ Quad42DSCV::grad_op(
   quad_derivative(intgLoc_, deriv);
   quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
     deriv, coords, gradop);
-}
-
-void
-Quad42DSCV::determinant(
-  const int nelem, const double* coords, double* volume, double* error)
-{
-  int lerr = 0;
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(quad_scv_det)
-  (&nelem, &npe, &nint, coords, volume, error, &lerr);
 }
 
 //--------------------------------------------------------------------------
@@ -378,10 +385,12 @@ Quad42DSCS::side_node_ordinals(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad42DSCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType**, DeviceShmem>& areav)
+namespace {
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+determinant_scs(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav)
 {
   const double zero = 0.0;
   const double one = 1.0;
@@ -394,12 +403,12 @@ Quad42DSCS::determinant(
   const double a2 = zero;
   const double a3 = zero;
 
-  DoubleType coord_mid_face[2][4];
+  DBLTYPE coord_mid_face[2][4];
 
   // calculate element mid-point coordinates
-  const DoubleType x1 =
+  const DBLTYPE x1 =
     (coords(0, kx) + coords(1, kx) + coords(2, kx) + coords(3, kx)) * one4th;
-  const DoubleType y1 =
+  const DBLTYPE y1 =
     (coords(0, ky) + coords(1, ky) + coords(2, ky) + coords(3, ky)) * one4th;
   // calculate element mid-face coordinates
   coord_mid_face[kx][0] = (coords(0, kx) + coords(1, kx)) * half;
@@ -413,51 +422,52 @@ Quad42DSCS::determinant(
   coord_mid_face[ky][3] = (coords(3, ky) + coords(0, ky)) * half;
   // Control surface 1
   {
-    const DoubleType x2 = coord_mid_face[kx][0];
-    const DoubleType y2 = coord_mid_face[ky][0];
-    const DoubleType rr = a1 + a2 * (x1 + x2) + a3 * (y1 + y2);
+    const DBLTYPE x2 = coord_mid_face[kx][0];
+    const DBLTYPE y2 = coord_mid_face[ky][0];
+    const DBLTYPE rr = a1 + a2 * (x1 + x2) + a3 * (y1 + y2);
     areav(0, kx) = -(y2 - y1) * rr;
     areav(0, ky) = (x2 - x1) * rr;
   }
   // Control surface 2
   {
-    const DoubleType x2 = coord_mid_face[kx][1];
-    const DoubleType y2 = coord_mid_face[ky][1];
-    const DoubleType rr = a1 + a2 * (x1 + x2) + a3 * (y1 + y2);
+    const DBLTYPE x2 = coord_mid_face[kx][1];
+    const DBLTYPE y2 = coord_mid_face[ky][1];
+    const DBLTYPE rr = a1 + a2 * (x1 + x2) + a3 * (y1 + y2);
     areav(1, kx) = -(y2 - y1) * rr;
     areav(1, ky) = (x2 - x1) * rr;
   }
   // Control surface 3
   {
-    const DoubleType x2 = coord_mid_face[kx][2];
-    const DoubleType y2 = coord_mid_face[ky][2];
-    const DoubleType rr = a1 + a2 * (x1 + x2) + a3 * (y1 + y2);
+    const DBLTYPE x2 = coord_mid_face[kx][2];
+    const DBLTYPE y2 = coord_mid_face[ky][2];
+    const DBLTYPE rr = a1 + a2 * (x1 + x2) + a3 * (y1 + y2);
     areav(2, kx) = -(y2 - y1) * rr;
     areav(2, ky) = (x2 - x1) * rr;
   }
   // Control surface 4
   {
-    const DoubleType x2 = coord_mid_face[kx][3];
-    const DoubleType y2 = coord_mid_face[ky][3];
-    const DoubleType rr = a1 + a2 * (x1 + x2) + a3 * (y1 + y2);
+    const DBLTYPE x2 = coord_mid_face[kx][3];
+    const DBLTYPE y2 = coord_mid_face[ky][3];
+    const DBLTYPE rr = a1 + a2 * (x1 + x2) + a3 * (y1 + y2);
     areav(3, kx) = (y2 - y1) * rr;
     areav(3, ky) = -(x2 - x1) * rr;
   }
 }
-
+}
 void
 Quad42DSCS::determinant(
-  const int nelem, const double* coords, double* areav, double* error)
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType**, DeviceShmem>& areav)
 {
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(quad_scs_det)
-  (&nelem, &npe, &nint, coords, areav);
-
-  // all is always well; no error checking
-  *error = 0;
+  determinant_scs(coords, areav);
 }
-
+void
+Quad42DSCS::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double**, DeviceShmem>& areav)
+{
+  determinant_scs(coords, areav);
+}
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------

@@ -44,8 +44,12 @@ public:
   KOKKOS_FUNCTION virtual const int* ipNodeMap(int ordinal = 0) const final;
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType*, DeviceShmem>& vol) override;
+
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double*, DeviceShmem>& vol) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -69,12 +73,6 @@ public:
   shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
 
   void Mij(const double* coords, double* metric, double* deriv) override;
-
-  void determinant(
-    const int nelem,
-    const double* coords,
-    double* areav,
-    double* error) override;
 
   void shape_fcn(double* shpfc) override;
 
@@ -105,6 +103,12 @@ private:
                               5.0 / 24.0, 5.0 / 24.0, 7.0 / 12.0};
 
   const double intgLocShift_[6] = {0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scv(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+    SharedMemView<DBLTYPE*, DeviceShmem>& vol) const;
 };
 
 // 2D Tri 3 subcontrol surface
@@ -124,14 +128,12 @@ public:
   KOKKOS_FUNCTION virtual const int* ipNodeMap(int ordinal = 0) const final;
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
-  void determinant(
-    const int nelem,
-    const double* coords,
-    double* areav,
-    double* error) override;
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,

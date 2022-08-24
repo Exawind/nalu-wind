@@ -499,21 +499,22 @@ Quad92DSCV::shifted_shape_fcn(double* shpfc)
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-DoubleType
+template <typename DBLTYPE>
+DBLTYPE
 Quad92DSCV::jacobian_determinant(
-  const SharedMemView<DoubleType**, DeviceShmem>& elemNodalCoords,
+  const SharedMemView<DBLTYPE**, DeviceShmem>& elemNodalCoords,
   const double* POINTER_RESTRICT shapeDerivs) const
 {
-  DoubleType dx_ds1 = 0.0;
-  DoubleType dx_ds2 = 0.0;
-  DoubleType dy_ds1 = 0.0;
-  DoubleType dy_ds2 = 0.0;
+  DBLTYPE dx_ds1 = 0.0;
+  DBLTYPE dx_ds2 = 0.0;
+  DBLTYPE dy_ds1 = 0.0;
+  DBLTYPE dy_ds2 = 0.0;
 
   for (int node = 0; node < AlgTraits::nodesPerElement_; ++node) {
     const int vector_offset = node * AlgTraits::nDim_;
 
-    const DoubleType xCoord = elemNodalCoords(node, 0);
-    const DoubleType yCoord = elemNodalCoords(node, 1);
+    const DBLTYPE xCoord = elemNodalCoords(node, 0);
+    const DBLTYPE yCoord = elemNodalCoords(node, 1);
 
     const double dn_ds1 = shapeDerivs[vector_offset + 0];
     const double dn_ds2 = shapeDerivs[vector_offset + 1];
@@ -525,25 +526,42 @@ Quad92DSCV::jacobian_determinant(
     dy_ds2 += dn_ds2 * yCoord;
   }
 
-  const DoubleType det_j = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
+  const DBLTYPE det_j = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
   return det_j;
 }
 
-void
-Quad92DSCV::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType*, DeviceShmem>& volume)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+Quad92DSCV::determinant_scv(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+  SharedMemView<DBLTYPE*, DeviceShmem>& volume) const
 {
   for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
     const int grad_offset = nDim_ * nodesPerElement_ * ip;
 
     // weighted jacobian determinant
-    const DoubleType det_j =
+    const DBLTYPE det_j =
       jacobian_determinant(coords, &shapeDerivs_[grad_offset]);
 
     // apply weight and store to volume
     volume[ip] = ipWeight_[ip] * det_j;
   }
+}
+
+void
+Quad92DSCV::determinant(
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType*, DeviceShmem>& volume)
+{
+  determinant_scv(coords, volume);
+}
+
+void
+Quad92DSCV::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double*, DeviceShmem>& volume)
+{
+  determinant_scv(coords, volume);
 }
 
 void
@@ -580,48 +598,28 @@ Quad92DSCV::shifted_grad_op(
     coords, gradop, deriv);
 }
 
-void
-Quad92DSCV::determinant(
-  const int /* nelem */, const double* coords, double* volume, double* error)
-{
-  for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
-    const int grad_offset = nDim_ * nodesPerElement_ * ip;
-
-    // weighted jacobian determinant
-    const double det_j =
-      jacobian_determinant(coords, &shapeDerivs_[grad_offset]);
-
-    // apply weight and store to volume
-    volume[ip] = ipWeight_[ip] * det_j;
-
-    // flag error
-    if (det_j < tiny_positive_value()) {
-      *error = 1.0;
-    }
-  }
-}
-
 //--------------------------------------------------------------------------
 //-------- jacobian_determinant --------------------------------------------
 //--------------------------------------------------------------------------
-double
+template <typename DBLTYPE>
+DBLTYPE
 Quad92DSCV::jacobian_determinant(
-  const double* POINTER_RESTRICT elemNodalCoords,
-  const double* POINTER_RESTRICT shapeDerivs) const
+  const DBLTYPE* POINTER_RESTRICT elemNodalCoords,
+  const DBLTYPE* POINTER_RESTRICT shapeDerivs) const
 {
-  double dx_ds1 = 0.0;
-  double dx_ds2 = 0.0;
-  double dy_ds1 = 0.0;
-  double dy_ds2 = 0.0;
+  DBLTYPE dx_ds1 = 0.0;
+  DBLTYPE dx_ds2 = 0.0;
+  DBLTYPE dy_ds1 = 0.0;
+  DBLTYPE dy_ds2 = 0.0;
 
   for (int node = 0; node < AlgTraits::nodesPerElement_; ++node) {
     const int vector_offset = node * nDim_;
 
-    const double xCoord = elemNodalCoords[vector_offset + 0];
-    const double yCoord = elemNodalCoords[vector_offset + 1];
+    const DBLTYPE xCoord = elemNodalCoords[vector_offset + 0];
+    const DBLTYPE yCoord = elemNodalCoords[vector_offset + 1];
 
-    const double dn_ds1 = shapeDerivs[vector_offset + 0];
-    const double dn_ds2 = shapeDerivs[vector_offset + 1];
+    const DBLTYPE dn_ds1 = shapeDerivs[vector_offset + 0];
+    const DBLTYPE dn_ds2 = shapeDerivs[vector_offset + 1];
 
     dx_ds1 += dn_ds1 * xCoord;
     dx_ds2 += dn_ds2 * xCoord;
@@ -630,7 +628,7 @@ Quad92DSCV::jacobian_determinant(
     dy_ds2 += dn_ds2 * yCoord;
   }
 
-  const double det_j = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
+  const DBLTYPE det_j = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
 
   return det_j;
 }
@@ -955,10 +953,11 @@ Quad92DSCS::side_node_ordinals(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad92DSCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType**, DeviceShmem>& areav)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+Quad92DSCS::determinant_scs(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
 {
   // returns the normal vector (dyds,-dxds) for constant t curves
   // returns the normal vector (dydt,-dxdt) for constant s curves
@@ -998,48 +997,18 @@ Quad92DSCS::determinant(
 
 void
 Quad92DSCS::determinant(
-  const int nelem, const double* coords, double* areav, double* error)
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType**, DeviceShmem>& areav)
 {
-  // returns the normal vector (dyds,-dxds) for constant t curves
-  // returns the normal vector (dydt,-dxdt) for constant s curves
-
-  ThrowRequireMsg(nelem == 1, "P2 elements are processed one-at-a-time");
-
-  constexpr int dim = AlgTraits::nDim_;
-  constexpr int ipsPerDirection = AlgTraits::numScsIp_ / dim;
-  static_assert(
-    ipsPerDirection * dim == AlgTraits::numScsIp_, "Number of ips incorrect");
-
-  constexpr int deriv_increment = dim * AlgTraits::nodesPerElement_;
-
-  int index = 0;
-
-  // returns the normal vector x_u x x_s for constant t surfaces
-  for (int ip = 0; ip < ipsPerDirection; ++ip) {
-    ThrowAssert(ipInfo_[index].direction == Jacobian::T_DIRECTION);
-    area_vector<Jacobian::T_DIRECTION>(
-      coords, &shapeDerivs_[deriv_increment * index], &areav[index * dim]);
-    ++index;
-  }
-
-  // returns the normal vector x_t x x_u for constant s curves
-  for (int ip = 0; ip < ipsPerDirection; ++ip) {
-    ThrowAssert(ipInfo_[index].direction == Jacobian::S_DIRECTION);
-    area_vector<Jacobian::S_DIRECTION>(
-      coords, &shapeDerivs_[deriv_increment * index], &areav[index * dim]);
-    ++index;
-  }
-
-  // Multiply with the integration point weighting
-  for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
-    double weight = ipInfo_[ip].weight;
-    areav[ip * dim + 0] *= weight;
-    areav[ip * dim + 1] *= weight;
-  }
-
-  *error = 0; // no error checking available
+  determinant_scs(coords, areav);
 }
-
+void
+Quad92DSCS::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double**, DeviceShmem>& areav)
+{
+  determinant_scs(coords, areav);
+}
 void
 Quad92DSCS::grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -1303,23 +1272,23 @@ Quad92DSCS::opposingFace(const int ordinal, const int node)
 //--------------------------------------------------------------------------
 //-------- area_vector -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <Jacobian::Direction direction>
+template <Jacobian::Direction direction, typename DBLTYPE>
 void
 Quad92DSCS::area_vector(
-  const SharedMemView<DoubleType**, DeviceShmem>& elemNodalCoords,
-  double* POINTER_RESTRICT shapeDeriv,
-  DoubleType* POINTER_RESTRICT normalVec) const
+  const SharedMemView<DBLTYPE**, DeviceShmem>& elemNodalCoords,
+  const double* POINTER_RESTRICT shapeDeriv,
+  DBLTYPE* POINTER_RESTRICT normalVec) const
 {
   constexpr int s1Component = (direction == Jacobian::S_DIRECTION)
                                 ? Jacobian::T_DIRECTION
                                 : Jacobian::S_DIRECTION;
 
-  DoubleType dxdr = 0.0;
-  DoubleType dydr = 0.0;
+  DBLTYPE dxdr = 0.0;
+  DBLTYPE dydr = 0.0;
   for (int node = 0; node < AlgTraits::nodesPerElement_; ++node) {
     const int vector_offset = nDim_ * node;
-    const DoubleType xCoord = elemNodalCoords(node, 0);
-    const DoubleType yCoord = elemNodalCoords(node, 1);
+    const DBLTYPE xCoord = elemNodalCoords(node, 0);
+    const DBLTYPE yCoord = elemNodalCoords(node, 1);
 
     dxdr += shapeDeriv[vector_offset + s1Component] * xCoord;
     dydr += shapeDeriv[vector_offset + s1Component] * yCoord;
@@ -1332,7 +1301,7 @@ template <Jacobian::Direction direction>
 void
 Quad92DSCS::area_vector(
   const double* POINTER_RESTRICT elemNodalCoords,
-  double* POINTER_RESTRICT shapeDeriv,
+  const double* POINTER_RESTRICT shapeDeriv,
   double* POINTER_RESTRICT normalVec) const
 {
   constexpr int s1Component = (direction == Jacobian::S_DIRECTION)

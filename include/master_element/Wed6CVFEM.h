@@ -39,8 +39,12 @@ public:
   shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType*, DeviceShmem>& volume);
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType*, DeviceShmem>& volume) override;
+
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double*, DeviceShmem>& volume) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -56,9 +60,6 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv);
-
-  void determinant(
-    const int nelem, const double* coords, double* areav, double* error);
 
   void Mij(const double* coords, double* metric, double* deriv);
 
@@ -100,6 +101,11 @@ private:
                                     0.0, 0.0, 1.0,  // vol 3
                                     1.0, 0.0, 1.0,  // vol 4
                                     0.0, 1.0, 1.0}; // vol 5
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scv(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coordel,
+    SharedMemView<DBLTYPE*, DeviceShmem>& volume) const;
 };
 
 // Wedge 6 subcontrol surface
@@ -123,11 +129,12 @@ public:
   shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType**, DeviceShmem>& areav);
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
-  void determinant(
-    const int nelem, const double* coords, double* areav, double* error);
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -355,6 +362,12 @@ private:
   const int sideOffset_[5] = {0, 4, 8, 12, 15};
 
   double intgExpFaceShift_[54]; // no blanked entries
+		
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scs(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coordel,
+    SharedMemView<DBLTYPE**, DeviceShmem>& areav) const;
 };
 
 } // namespace nalu

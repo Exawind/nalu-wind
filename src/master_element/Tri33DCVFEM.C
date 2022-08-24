@@ -51,24 +51,23 @@ Tri3DSCS::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-KOKKOS_FUNCTION
-void
-Tri3DSCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType**, DeviceShmem>& areav)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+Tri3DSCS::determinant_scs(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav)
 {
-
   constexpr int dim = nDim_;
   constexpr int nnodes = nodesPerElement_;
   constexpr int nint = numIntPoints_;
 
-  DoubleType dx13, dx24, dy13, dy24, dz13, dz24;
+  DBLTYPE dx13, dx24, dy13, dy24, dz13, dz24;
 
-  DoubleType area[dim][nint];
-  DoubleType p[dim][nnodes], e[dim][nnodes], c[dim];
+  DBLTYPE area[dim][nint];
+  DBLTYPE p[dim][nnodes], e[dim][nnodes], c[dim];
 
-  const DoubleType half = 0.5;
-  const DoubleType one3rd = 1.0 / 3.0;
+  const DBLTYPE half = 0.5;
+  const DBLTYPE one3rd = 1.0 / 3.0;
 
   for (int n = 0; n < nnodes; ++n) {
     for (int d = 0; d < dim; ++d) {
@@ -128,20 +127,21 @@ Tri3DSCS::determinant(
     }
   }
 }
-
+KOKKOS_FUNCTION
 void
 Tri3DSCS::determinant(
-  const int nelem, const double* coords, double* areav, double* error)
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType**, DeviceShmem>& areav)
 {
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(tri3d_scs_det)
-  (&nelem, &npe, &nint, coords, areav);
-
-  // fake check
-  *error = (lerr == 0) ? 0.0 : 1.0;
+  determinant_scs(coords, areav);
+}
+KOKKOS_FUNCTION
+void
+Tri3DSCS::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double**, DeviceShmem>& areav)
+{
+  determinant_scs(coords, areav);
 }
 
 //--------------------------------------------------------------------------

@@ -31,8 +31,12 @@ public:
   KOKKOS_FUNCTION virtual const int* ipNodeMap(int ordinal = 0) const final;
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType*, DeviceShmem>& volume) override;
+
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double*, DeviceShmem>& volume) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -48,12 +52,6 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
-
-  void determinant(
-    const int nelem,
-    const double* coords,
-    double* areav,
-    double* error) override;
 
   void Mij(const double* coords, double* metric, double* deriv) override;
 
@@ -105,6 +103,12 @@ private:
   // shifted
   const double intgLocShift_[4][3] = {
     {0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}};
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scv(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coordel,
+    SharedMemView<DBLTYPE*, DeviceShmem>& volume) const;
 };
 
 // Tet 4 subcontrol surface
@@ -122,14 +126,12 @@ public:
   KOKKOS_FUNCTION virtual const int* ipNodeMap(int ordinal = 0) const final;
 
   KOKKOS_FUNCTION virtual void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
-  void determinant(
-    const int nelem,
-    const double* coords,
-    double* areav,
-    double* error) override;
+  KOKKOS_FUNCTION virtual void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -350,6 +352,12 @@ private:
                                 {0, 2, 1}}; // face 3
 
   int intgExpFaceShift_[4][3][3];
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scs(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coordel,
+    SharedMemView<DBLTYPE**, DeviceShmem>& areav) const;
 };
 
 } // namespace nalu

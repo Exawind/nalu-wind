@@ -80,10 +80,11 @@ TetSCV::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-TetSCV::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coordel,
-  SharedMemView<DoubleType*, DeviceShmem>& volume)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+TetSCV::determinant_scv(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coordel,
+  SharedMemView<DBLTYPE*, DeviceShmem>& volume) const
 {
   const int tetSubcontrolNodeTable[4][8] = {
     {0, 4, 7, 6, 11, 13, 14, 12},
@@ -93,8 +94,8 @@ TetSCV::determinant(
 
   const double half = 0.5;
   const double one3rd = 1.0 / 3.0;
-  DoubleType coords[15][3];
-  DoubleType ehexcoords[8][3];
+  DBLTYPE coords[15][3];
+  DBLTYPE ehexcoords[8][3];
   const int dim[3] = {0, 1, 2};
 
   // element vertices
@@ -182,6 +183,21 @@ TetSCV::determinant(
     // negative volume.");
   }
 }
+void
+TetSCV::determinant(
+  const SharedMemView<DoubleType**, DeviceShmem>& coordel,
+  SharedMemView<DoubleType*, DeviceShmem>& volume)
+{
+  determinant_scv(coordel, volume);
+}
+
+void
+TetSCV::determinant(
+  const SharedMemView<double**, DeviceShmem>& coordel,
+  SharedMemView<double*, DeviceShmem>& volume)
+{
+  determinant_scv(coordel, volume);
+}
 
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
@@ -207,18 +223,6 @@ TetSCV::shifted_grad_op(
 {
   tet_deriv(deriv);
   generic_grad_op<AlgTraitsTet4>(deriv, coords, gradop);
-}
-
-void
-TetSCV::determinant(
-  const int nelem, const double* coords, double* volume, double* error)
-{
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(tet_scv_det)
-  (&nelem, &npe, &nint, coords, volume, error, &lerr);
 }
 
 //--------------------------------------------------------------------------
@@ -358,10 +362,11 @@ TetSCS::side_node_ordinals(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-TetSCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coordel,
-  SharedMemView<DoubleType**, DeviceShmem>& areav)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+TetSCS::determinant_scs(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coordel,
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
 {
   int tetEdgeFacetTable[6][4] = {{4, 7, 14, 13},  {7, 14, 10, 5},
                                  {6, 12, 14, 7},  {11, 13, 14, 12},
@@ -373,8 +378,8 @@ TetSCS::determinant(
   const double one3rd = 1.0 / 3.0;
   const double one4th = 1.0 / 4.0;
   const int dim[] = {0, 1, 2};
-  DoubleType coords[15][3];
-  DoubleType scscoords[4][3];
+  DBLTYPE coords[15][3];
+  DBLTYPE scscoords[4][3];
 
   // element vertices
   for (int j = 0; j < 4; ++j) {
@@ -457,20 +462,20 @@ TetSCS::determinant(
     quad_area_by_triangulation(ics, scscoords, areav);
   }
 }
-
 void
 TetSCS::determinant(
-  const int nelem, const double* coords, double* areav, double* error)
+  const SharedMemView<DoubleType**, DeviceShmem>& coordel,
+  SharedMemView<DoubleType**, DeviceShmem>& areav)
 {
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(tet_scs_det)
-  (&nelem, &npe, &nint, coords, areav);
-
-  // all is always well; no error checking
-  *error = 0;
+  determinant_scs(coordel, areav);
 }
-
+void
+TetSCS::determinant(
+  const SharedMemView<double**, DeviceShmem>& coordel,
+  SharedMemView<double**, DeviceShmem>& areav)
+{
+  determinant_scs(coordel, areav);
+}
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------

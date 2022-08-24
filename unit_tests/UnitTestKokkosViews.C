@@ -113,20 +113,21 @@ public:
 
         const int numScsIp = meSCS.num_integration_points();
         const int nodesPerElem = topo.num_nodes();
+        sierra::nalu::SharedMemView<double**> NodeCoords(p_elemNodeCoords, nodesPerElem, nDim);
+        sierra::nalu::SharedMemView<double*> areav(p_scs_areav, numScsIp * nDim);
         for (int n = 0; n < nodesPerElem; ++n) {
           const double* nodeCoords =
             stk::mesh::field_data(*coordField, elemNodes[n]);
 
-          const int nodeOffset = n * nDim;
           for (int d = 0; d < nDim; ++d) {
-            p_elemNodeCoords[nodeOffset + d] = nodeCoords[d];
+            NodeCoords(n, d) = nodeCoords[d];
           }
           const double* nodePressure =
             stk::mesh::field_data(*nodalPressureField, elemNodes[n]);
           p_elemNodePressures[n] = nodePressure[0];
         }
 
-        meSCS.determinant(1, p_elemNodeCoords, p_scs_areav, &scs_error);
+        meSCS.determinant(NodeCoords, areav);
         meSCS.grad_op(
           1, p_elemNodeCoords, p_dndx, p_deriv, p_det_j, &scs_error);
 
@@ -178,9 +179,11 @@ element_discrete_laplacian_kernel_3d(
   const stk::mesh::Entity* elemNodes = bulkData.begin_nodes(elem);
 
   double p_elemNodeCoords[nodesPerElem * nDim];
+  sierra::nalu::SharedMemView<double**> elemNodeCoords(&p_elemNodeCoords[0], nodesPerElem, nDim);
   double p_elemNodePressures[nodesPerElem];
 
   double p_scs_areav[numScsIp * nDim];
+  sierra::nalu::SharedMemView<double*> scs_areav(&p_scs_areav[0], numScsIp * nDim);
   double p_dndx[nDim * numScsIp * nodesPerElem];
   double p_deriv[nDim * numScsIp * nodesPerElem];
   double p_det_j[numScsIp];
@@ -188,10 +191,8 @@ element_discrete_laplacian_kernel_3d(
 
   for (int n = 0; n < nodesPerElem; ++n) {
     const double* nodeCoords = stk::mesh::field_data(*coordField, elemNodes[n]);
-
-    const int nodeOffset = n * nDim;
     for (int d = 0; d < nDim; ++d) {
-      p_elemNodeCoords[nodeOffset + d] = nodeCoords[d];
+      elemNodeCoords(n, d) = nodeCoords[d];
     }
     const double* nodePressure =
       stk::mesh::field_data(*nodalPressureField, elemNodes[n]);
@@ -199,7 +200,7 @@ element_discrete_laplacian_kernel_3d(
   }
 
   double scs_error = 0;
-  meSCS.determinant(1, p_elemNodeCoords, p_scs_areav, &scs_error);
+  meSCS.determinant(elemNodeCoords, scs_areav);
   meSCS.grad_op(1, p_elemNodeCoords, p_dndx, p_deriv, p_det_j, &scs_error);
 
   for (int ip = 0; ip < numScsIp; ++ip) {
@@ -384,8 +385,7 @@ public:
               elemNodePressures[n] = nodePressure[0];
             }
 
-            meSCS.determinant(
-              1, &elemNodeCoords(0, 0), &scs_areav(0, 0), &scs_error);
+            meSCS.determinant(elemNodeCoords, scs_areav);
             meSCS.grad_op(
               1, &elemNodeCoords(0, 0), &dndx(0, 0), &deriv(0, 0), &det_j(0),
               &scs_error);

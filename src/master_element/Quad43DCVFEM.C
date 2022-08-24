@@ -41,22 +41,6 @@ Quad3DSCS::ipNodeMap(int /*ordinal*/) const
 }
 
 //--------------------------------------------------------------------------
-//-------- determinant -----------------------------------------------------
-//--------------------------------------------------------------------------
-void
-Quad3DSCS::determinant(
-  const int nelem, const double* coords, double* areav, double* error)
-{
-  int lerr = 0;
-
-  SIERRA_FORTRAN(quad3d_scs_det)
-  (&nelem, coords, areav);
-
-  // fake check
-  *error = (lerr == 0) ? 0.0 : 1.0;
-}
-
-//--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
@@ -96,15 +80,17 @@ Quad3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
   quad4_shape_fcn(intgLocShift_, shpfc);
 }
 
-void
-Quad3DSCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType**, DeviceShmem>& areav)
+namespace {
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+determinant_scs(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav)
 {
   constexpr int npf = 4;  // Nodes per face
   constexpr int nscs = 4; // Number of sub-control surfaces per face
   // Coordinates of nodes for SCS
-  DoubleType coordv[9][3];
+  DBLTYPE coordv[9][3];
 
   // Index map of nodes (in coordv) for the nodes
   constexpr int quad_edge_facet_table[4][4] = {
@@ -128,7 +114,7 @@ Quad3DSCS::determinant(
   }
 
   for (int ics = 0; ics < nscs; ++ics) {
-    DoubleType scscoords[4][3];
+    DBLTYPE scscoords[4][3];
     for (int inode = 0; inode < npf; ++inode) {
       const int itrianglenode = quad_edge_facet_table[ics][inode];
       scscoords[inode][0] = coordv[itrianglenode][0];
@@ -138,7 +124,23 @@ Quad3DSCS::determinant(
     quad_area_by_triangulation(ics, scscoords, areav);
   }
 }
+}
 
+void
+Quad3DSCS::determinant(
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType**, DeviceShmem>& areav)
+{
+  determinant_scs(coords, areav);
+}
+
+void
+Quad3DSCS::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double**, DeviceShmem>& areav)
+{
+  determinant_scs(coords, areav);
+}
 //--------------------------------------------------------------------------
 //-------- quad4_shape_fcn --------------------------------------------------
 //--------------------------------------------------------------------------

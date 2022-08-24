@@ -43,21 +43,6 @@ HexSCV::ipNodeMap(int /*ordinal*/) const
   return ipNodeMap_;
 }
 
-//--------------------------------------------------------------------------
-//-------- determinant -----------------------------------------------------
-//--------------------------------------------------------------------------
-void
-HexSCV::determinant(
-  const int nelem, const double* coords, double* volume, double* error)
-{
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(hex_scv_det)
-  (&nelem, &npe, &nint, coords, volume, error, &lerr);
-}
-
 void
 HexSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
@@ -73,10 +58,12 @@ HexSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-HexSCV::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType*, DeviceShmem>& volume)
+namespace {
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+determinant_scv(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+  SharedMemView<DBLTYPE*, DeviceShmem>& volume)
 {
   constexpr int subDivisionTable[8][8] = {
     {0, 8, 12, 11, 19, 20, 26, 25},  {8, 1, 9, 12, 20, 18, 24, 26},
@@ -84,12 +71,12 @@ HexSCV::determinant(
     {19, 20, 26, 25, 4, 13, 17, 16}, {20, 18, 24, 26, 13, 5, 14, 17},
     {26, 24, 22, 23, 17, 14, 6, 15}, {25, 26, 23, 21, 16, 17, 15, 7}};
 
-  DoubleType coordv[27][3];
+  DBLTYPE coordv[27][3];
   subdivide_hex_8(coords, coordv);
 
   constexpr int numSCV = 8;
   for (int ip = 0; ip < numSCV; ++ip) {
-    DoubleType scvHex[8][3];
+    DBLTYPE scvHex[8][3];
     for (int n = 0; n < 8; ++n) {
       const int subIndex = subDivisionTable[ip][n];
       for (int d = 0; d < 3; ++d) {
@@ -98,6 +85,23 @@ HexSCV::determinant(
     }
     volume(ip) = hex_volume_grandy(scvHex);
   }
+}
+}
+
+void
+HexSCV::determinant(
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType*, DeviceShmem>& volume)
+{
+  determinant_scv(coords, volume);
+}
+
+void
+HexSCV::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double*, DeviceShmem>& volume)
+{
+  determinant_scv(coords, volume);
 }
 
 //--------------------------------------------------------------------------
@@ -261,23 +265,25 @@ HexSCS::shifted_grad_op(
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-HexSCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType**, DeviceShmem>& areav)
+namespace {
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+determinant_scs(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav)
 {
   constexpr int hex_edge_facet_table[12][4] = {
     {20, 8, 12, 26},  {24, 9, 12, 26},  {10, 12, 26, 23}, {11, 25, 26, 12},
     {13, 20, 26, 17}, {17, 14, 24, 26}, {17, 15, 23, 26}, {16, 17, 26, 25},
     {19, 20, 26, 25}, {20, 18, 24, 26}, {22, 23, 26, 24}, {21, 25, 26, 23}};
 
-  DoubleType coordv[27][3];
+  DBLTYPE coordv[27][3];
   subdivide_hex_8(coords, coordv);
 
   constexpr int npf = 4;
   constexpr int nscs = 12;
   for (int ics = 0; ics < nscs; ++ics) {
-    DoubleType scscoords[4][3];
+    DBLTYPE scscoords[4][3];
     for (int inode = 0; inode < npf; ++inode) {
       const int itrianglenode = hex_edge_facet_table[ics][inode];
       for (int d = 0; d < 3; ++d) {
@@ -286,6 +292,23 @@ HexSCS::determinant(
     }
     quad_area_by_triangulation(ics, scscoords, areav);
   }
+}
+}
+
+void
+HexSCS::determinant(
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType**, DeviceShmem>& areav)
+{
+  determinant_scs(coords, areav);
+}
+
+void
+HexSCS::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double**, DeviceShmem>& areav)
+{
+  determinant_scs(coords, areav);
 }
 
 //--------------------------------------------------------------------------
@@ -296,22 +319,6 @@ HexSCS::side_node_ordinals(int ordinal) const
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
   return sideNodeOrdinals_[ordinal];
-}
-
-//--------------------------------------------------------------------------
-//-------- determinant -----------------------------------------------------
-//--------------------------------------------------------------------------
-void
-HexSCS::determinant(
-  const int nelem, const double* coords, double* areav, double* error)
-{
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(hex_scs_det)
-  (&nelem, &npe, &nint, coords, areav);
-
-  // all is always well; no error checking
-  *error = 0;
 }
 
 //--------------------------------------------------------------------------

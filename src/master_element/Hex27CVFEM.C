@@ -677,31 +677,29 @@ Hex27SCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 //--------------------------------------------------------------------------
 void
 Hex27SCV::determinant(
-  const int /* nelem */, const double* coords, double* volume, double* error)
-{
-  for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
-    const int grad_offset = nDim_ * nodesPerElement_ * ip;
-
-    // weighted jacobian determinant
-    const double det_j =
-      jacobian_determinant(coords, &shapeDerivs_[grad_offset]);
-
-    // apply weight and store to volume
-    volume[ip] = ipWeight_[ip] * det_j;
-
-    // flag error
-    if (volume[ip] < tiny_positive_value()) {
-      *error = 1.0;
-    }
-  }
-}
-//--------------------------------------------------------------------------
-void
-Hex27SCV::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType*, DeviceShmem>& volume)
 {
   weighted_volumes(referenceGradWeights_, coords, volume);
+}
+
+void
+Hex27SCV::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double*, DeviceShmem>& volume)
+{
+  using Type = AlignedViewType<double[AlgTraits::numScvIp_]
+                                     [AlgTraits::nodesPerElement_]
+				     [AlgTraits::nDim_]>;
+  Type GradWeights;
+  for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
+    for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
+      for (int d = 0; d < AlgTraits::nDim_; ++d) {
+        GradWeights(ip, n, d) = stk::simd::get_data(referenceGradWeights_(ip, n, d),0);
+      }
+    }
+  }
+  weighted_volumes(GradWeights, coords, volume);
 }
 
 //--------------------------------------------------------------------------
@@ -1295,60 +1293,29 @@ Hex27SCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 //--------------------------------------------------------------------------
 void
 Hex27SCS::determinant(
-  const int nelem, const double* coords, double* areav, double* error)
-{
-  ThrowRequireMsg(nelem == 1, "P2 elements are processed one-at-a-time");
-
-  constexpr int dim = AlgTraits::nDim_;
-  constexpr int ipsPerDirection = AlgTraits::numScsIp_ / dim;
-  static_assert(
-    ipsPerDirection * dim == AlgTraits::numScsIp_, "Number of ips incorrect");
-
-  constexpr int deriv_increment = dim * AlgTraits::nodesPerElement_;
-
-  int index = 0;
-
-  // returns the normal vector x_s x x_t for constant u surfaces
-  for (int ip = 0; ip < ipsPerDirection; ++ip) {
-    ThrowAssert(ipInfo_[index].direction == Jacobian::U_DIRECTION);
-    area_vector<Jacobian::U_DIRECTION>(
-      coords, &shapeDerivs_[deriv_increment * index], &areav[index * dim]);
-    ++index;
-  }
-
-  // returns the normal vector x_u x x_s for constant t surfaces
-  for (int ip = 0; ip < ipsPerDirection; ++ip) {
-    ThrowAssert(ipInfo_[index].direction == Jacobian::T_DIRECTION);
-    area_vector<Jacobian::T_DIRECTION>(
-      coords, &shapeDerivs_[deriv_increment * index], &areav[index * dim]);
-    ++index;
-  }
-
-  // returns the normal vector x_t x x_u for constant s curves
-  for (int ip = 0; ip < ipsPerDirection; ++ip) {
-    ThrowAssert(ipInfo_[index].direction == Jacobian::S_DIRECTION);
-    area_vector<Jacobian::S_DIRECTION>(
-      coords, &shapeDerivs_[deriv_increment * index], &areav[index * dim]);
-    ++index;
-  }
-
-  // Multiply with the integration point weighting
-  for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
-    double weight = ipInfo_[ip].weight;
-    areav[ip * dim + 0] *= weight;
-    areav[ip * dim + 1] *= weight;
-    areav[ip * dim + 2] *= weight;
-  }
-
-  *error = 0; // no error checking available
-}
-//--------------------------------------------------------------------------
-void
-Hex27SCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType**, DeviceShmem>& areav)
 {
   weighted_area_vectors(referenceGradWeights_, coords, areav);
+}
+
+void
+Hex27SCS::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double**, DeviceShmem>& areav)
+{
+  using Type = AlignedViewType<double[AlgTraits::numScvIp_]
+                                     [AlgTraits::nodesPerElement_]
+				     [AlgTraits::nDim_]>;
+  Type GradWeights;
+  for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
+    for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
+      for (int d = 0; d < AlgTraits::nDim_; ++d) {
+        GradWeights(ip, n, d) = stk::simd::get_data(referenceGradWeights_(ip, n, d),0);
+      }
+    }
+  }
+  weighted_area_vectors(GradWeights, coords, areav);
 }
 
 //--------------------------------------------------------------------------

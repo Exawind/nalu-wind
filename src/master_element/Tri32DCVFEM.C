@@ -187,17 +187,18 @@ Tri32DSCV::tri_shape_fcn(
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Tri32DSCV::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType*, DeviceShmem>& vol)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+Tri32DSCV::determinant_scv(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+  SharedMemView<DBLTYPE*, DeviceShmem>& vol) const
 {
 
   const int nint = numIntPoints_;
 
-  DoubleType deriv[2][4];
-  DoubleType xyval[2][4][3];
-  DoubleType shape_fcn[4];
+  DBLTYPE deriv[2][4];
+  DBLTYPE xyval[2][4][3];
+  DBLTYPE shape_fcn[4];
 
   // Gaussian quadrature points within an interval [-.5,+.5]
   const double gpp = 0.288675134;
@@ -215,9 +216,9 @@ Tri32DSCV::determinant(
   const int ky = 1;
 
   // 2d cartesian, no cross-section area
-  const DoubleType xc =
+  const DBLTYPE xc =
     one3rd * (coords(0, kx) + coords(1, kx) + coords(2, kx));
-  const DoubleType yc =
+  const DBLTYPE yc =
     one3rd * (coords(0, ky) + coords(1, ky) + coords(2, ky));
 
   // sub-volume 1
@@ -253,7 +254,7 @@ Tri32DSCV::determinant(
   xyval[ky][2][2] = yc;
   xyval[ky][3][2] = half * (coords(1, ky) + coords(2, ky));
 
-  DoubleType dx_ds1, dx_ds2, dy_ds1, dy_ds2;
+  DBLTYPE dx_ds1, dx_ds2, dy_ds1, dy_ds2;
   double etamod, ximod;
   for (int ki = 0; ki < nint; ++ki) {
     vol[ki] = zero;
@@ -292,10 +293,24 @@ Tri32DSCV::determinant(
       }
 
       // calculate the determinate of the jacobian at the integration station -
-      const DoubleType det_j = (dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2);
+      const DBLTYPE det_j = (dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2);
       vol[ki] += det_j * one4th;
     }
   }
+}
+void
+Tri32DSCV::determinant(
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType*, DeviceShmem>& vol)
+{
+  determinant_scv(coords, vol);
+}
+void
+Tri32DSCV::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double*, DeviceShmem>& vol)
+{
+  determinant_scv(coords, vol);
 }
 
 //--------------------------------------------------------------------------
@@ -322,18 +337,6 @@ Tri32DSCV::shifted_grad_op(
 {
   tri_derivative(deriv);
   tri_gradient_operator(coords, gradop, deriv);
-}
-
-void
-Tri32DSCV::determinant(
-  const int nelem, const double* coords, double* volume, double* error)
-{
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(tri_scv_det)
-  (&nelem, &npe, &nint, coords, volume, error, &lerr);
 }
 
 //--------------------------------------------------------------------------
@@ -410,13 +413,15 @@ Tri32DSCS::side_node_ordinals(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Tri32DSCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType**, DeviceShmem>& areav)
+namespace {
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+determinant_scs(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav)
 {
 
-  DoubleType coord_mid_face[2][3];
+  DBLTYPE coord_mid_face[2][3];
 
   const double one = 1.0;
   const double zero = 0.0;
@@ -433,9 +438,9 @@ Tri32DSCS::determinant(
   const double a3 = zero;
 
   // calculate element mid-point coordinates
-  const DoubleType x1 =
+  const DBLTYPE x1 =
     (coords(0, kx) + coords(1, kx) + coords(2, kx)) * one3rd;
-  const DoubleType y1 =
+  const DBLTYPE y1 =
     (coords(0, ky) + coords(1, ky) + coords(2, ky)) * one3rd;
 
   // calculate element mid-face coordinates
@@ -446,7 +451,7 @@ Tri32DSCS::determinant(
   coord_mid_face[ky][1] = (coords(1, ky) + coords(2, ky)) * half;
   coord_mid_face[ky][2] = (coords(2, ky) + coords(0, ky)) * half;
 
-  DoubleType x2, y2, rr;
+  DBLTYPE x2, y2, rr;
   // Control surface 1
   x2 = coord_mid_face[kx][0];
   y2 = coord_mid_face[ky][0];
@@ -474,18 +479,20 @@ Tri32DSCS::determinant(
   areav(2, kx) = (y2 - y1) * rr;
   areav(2, ky) = -(x2 - x1) * rr;
 }
-
+}
 void
 Tri32DSCS::determinant(
-  const int nelem, const double* coords, double* areav, double* error)
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType**, DeviceShmem>& areav)
 {
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(tri_scs_det)
-  (&nelem, &npe, &nint, coords, areav);
-
-  // all is always well; no error checking
-  *error = 0;
+  determinant_scs(coords, areav);
+}
+void
+Tri32DSCS::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double**, DeviceShmem>& areav)
+{
+  determinant_scs(coords, areav);
 }
 
 //--------------------------------------------------------------------------

@@ -56,16 +56,17 @@ Edge2DSCS::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Edge2DSCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType**, DeviceShmem>& area)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+Edge2DSCS::determinant_scs(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+  SharedMemView<DBLTYPE**, DeviceShmem>& area) const
 {
   constexpr int npe = nodesPerElement_;
   constexpr int dim = nDim_;
-  DoubleType p[dim][npe], c[dim];
+  DBLTYPE p[dim][npe], c[dim];
 
-  const DoubleType half = 0.5;
+  const DBLTYPE half = 0.5;
 
   for (int i = 0; i < npe; ++i) {
     for (int idim = 0; idim < dim; ++idim) {
@@ -75,8 +76,8 @@ Edge2DSCS::determinant(
   for (int idim = 0; idim < dim; ++idim)
     c[idim] = (p[idim][0] + p[idim][1]) * half;
 
-  DoubleType dx13 = coords(0, 0) - c[0];
-  DoubleType dy13 = coords(0, 1) - c[1];
+  DBLTYPE dx13 = coords(0, 0) - c[0];
+  DBLTYPE dy13 = coords(0, 1) - c[1];
 
   area(0, 0) = -dy13;
   area(0, 1) = dx13;
@@ -90,18 +91,18 @@ Edge2DSCS::determinant(
 
 void
 Edge2DSCS::determinant(
-  const int nelem, const double* coords, double* areav, double* error)
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType**, DeviceShmem>& area)
 {
-  int lerr = 0;
+  determinant_scs(coords, area);
+}
 
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-
-  SIERRA_FORTRAN(edge2d_scs_det)
-  (&nelem, &npe, &nint, coords, areav);
-
-  // fake check
-  *error = (lerr == 0) ? 0.0 : 1.0;
+void
+Edge2DSCS::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double**, DeviceShmem>& area)
+{
+  determinant_scs(coords, area);
 }
 
 //--------------------------------------------------------------------------

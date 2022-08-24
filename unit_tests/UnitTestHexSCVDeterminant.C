@@ -59,6 +59,8 @@ check_HexSCV_determinant(const stk::mesh::BulkData& bulk)
   const unsigned spatialDim = bulk.mesh_meta_data().spatial_dimension();
   std::vector<double> hex8_node_coords(hex8.num_nodes() * spatialDim, 0.0);
   std::vector<double> hex8_scvolumes(hex8.num_nodes(), 0.0);
+  sierra::nalu::SharedMemView<double**> node_coords(hex8_node_coords.data(), hex8.num_nodes(), spatialDim);
+  sierra::nalu::SharedMemView<double*>  scvolumes(hex8_scvolumes.data(), hex8.num_nodes());
 
   sierra::nalu::HexSCV hexSCV;
   double error[1] = {0};
@@ -67,22 +69,20 @@ check_HexSCV_determinant(const stk::mesh::BulkData& bulk)
 
     const stk::mesh::Entity* nodes = bulk.begin_nodes(elem);
     unsigned numNodes = bulk.num_nodes(elem);
-    unsigned counter = 0;
     for (unsigned i = 0; i < numNodes; ++i) {
       double* nodeCoords = stk::mesh::field_data(*coordField, nodes[i]);
 
       for (unsigned d = 0; d < spatialDim; ++d) {
-        hex8_node_coords[counter++] = nodeCoords[d];
+        node_coords(i,d) = nodeCoords[d];
       }
     }
 
-    hexSCV.determinant(
-      1, hex8_node_coords.data(), hex8_scvolumes.data(), error);
+    hexSCV.determinant(node_coords, scvolumes);
 
     EXPECT_EQ(0, error[0]);
 
     for (unsigned i = 0; i < hex8.num_nodes(); ++i) {
-      EXPECT_NEAR(0.125, hex8_scvolumes[i], tolerance);
+      EXPECT_NEAR(0.125, scvolumes(i), tolerance);
     }
   }
 }

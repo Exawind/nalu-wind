@@ -141,8 +141,12 @@ public:
   void shifted_shape_fcn(double* shpfc) override;
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType*, DeviceShmem>& vol) override;
+
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double*, DeviceShmem>& vol) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -158,12 +162,6 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
-
-  void determinant(
-    const int nelem,
-    const double* coords,
-    double* areav,
-    double* error) override;
 
   void Mij(const double* coords, double* metric, double* deriv) override;
 
@@ -184,15 +182,23 @@ private:
 
   void set_interior_info();
 
-  KOKKOS_FUNCTION
-  DoubleType jacobian_determinant(
-    const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  template <typename DBLTYPE>
+  KOKKOS_FUNCTION DBLTYPE 
+  jacobian_determinant(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
     const double* POINTER_RESTRICT shapeDerivs) const;
 
-  KOKKOS_FUNCTION
-  double jacobian_determinant(
-    const double* POINTER_RESTRICT elemNodalCoords,
-    const double* POINTER_RESTRICT shapeDerivs) const;
+  template <typename DBLTYPE>
+  KOKKOS_FUNCTION DBLTYPE 
+  jacobian_determinant(
+    const DBLTYPE* POINTER_RESTRICT elemNodalCoords,
+    const DBLTYPE* POINTER_RESTRICT shapeDerivs) const;
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scv(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+    SharedMemView<DBLTYPE*, DeviceShmem>& volume) const;
 };
 
 // 3D Hex 27 subcontrol surface
@@ -217,14 +223,12 @@ public:
   void shifted_shape_fcn(double* shpfc) override;
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
-  void determinant(
-    const int nelem,
-    const double* coords,
-    double* areav,
-    double* error) override;
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -320,16 +324,23 @@ private:
   void set_interior_info();
   void set_boundary_info();
 
-  template <Jacobian::Direction direction>
+  template <Jacobian::Direction direction, typename DBLTYPE>
   void KOKKOS_FUNCTION area_vector(
-    const SharedMemView<DoubleType**, DeviceShmem>& elemNodalCoords,
-    double* POINTER_RESTRICT shapeDeriv,
-    DoubleType* POINTER_RESTRICT areaVector) const;
+    const SharedMemView<DBLTYPE**, DeviceShmem>& elemNodalCoords,
+    const double* POINTER_RESTRICT shapeDeriv,
+    DBLTYPE* POINTER_RESTRICT areaVector) const;
+
   template <Jacobian::Direction direction>
   void KOKKOS_FUNCTION area_vector(
     const double* POINTER_RESTRICT elemNodalCoords,
-    double* POINTER_RESTRICT shapeDeriv,
+    const double* POINTER_RESTRICT shapeDeriv,
     double* POINTER_RESTRICT areaVector) const;
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scs(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+    SharedMemView<DBLTYPE**, DeviceShmem>& areav) const;
 };
 
 } // namespace nalu

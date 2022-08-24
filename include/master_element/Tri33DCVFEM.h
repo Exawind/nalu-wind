@@ -43,11 +43,12 @@ public:
   KOKKOS_FUNCTION virtual const int* ipNodeMap(int ordinal = 0) const final;
 
   KOKKOS_FUNCTION virtual void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType**, DeviceShmem>& areav);
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
-  void determinant(
-    const int nelem, const double* coords, double* areav, double* error);
+  KOKKOS_FUNCTION virtual void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION virtual void
   shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
@@ -109,6 +110,13 @@ private:
   const double intgLocShift_[6] = {0.00, 0.00,  // surf 1
                                    1.00, 0.00,  // surf 2
                                    0.00, 1.00}; // surf 3
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scs(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+    SharedMemView<DBLTYPE**, DeviceShmem>& areav);
+
 };
 
 } // namespace nalu
