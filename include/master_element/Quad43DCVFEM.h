@@ -38,17 +38,15 @@ public:
   shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType**, DeviceShmem>& areav) override;
+
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION void quad4_shape_fcn(
     const double* isoParCoord, SharedMemView<DoubleType**, DeviceShmem>& shpfc);
-
-  void determinant(
-    const int nelem,
-    const double* coords,
-    double* areav,
-    double* error) override;
 
   void shape_fcn(double* shpfc) override;
 

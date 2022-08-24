@@ -184,17 +184,17 @@ PyrSCV::ipNodeMap(int /*ordinal*/) const
   return ipNodeMap_;
 }
 
-KOKKOS_FUNCTION
-DoubleType
+template <typename DBLTYPE>
+KOKKOS_FUNCTION DBLTYPE
 polyhedral_volume_by_faces(
   int /* ncoords */,
-  const DoubleType volcoords[][3],
+  const DBLTYPE volcoords[][3],
   int ntriangles,
   const int triangleFaceTable[][3])
 {
-  DoubleType xface[3];
+  DBLTYPE xface[3];
 
-  DoubleType volume = 0.0;
+  DBLTYPE volume = 0.0;
 
   // loop over each triangular facet
   for (int itriangle = 0; itriangle < ntriangles; ++itriangle) {
@@ -229,11 +229,11 @@ polyhedral_volume_by_faces(
   return volume;
 }
 
-KOKKOS_FUNCTION
-DoubleType
-octohedron_volume_by_triangle_facets(const DoubleType volcoords[10][3])
+template <typename DBLTYPE>
+KOKKOS_FUNCTION DBLTYPE
+octohedron_volume_by_triangle_facets(const DBLTYPE volcoords[10][3])
 {
-  DoubleType coords[14][3];
+  DBLTYPE coords[14][3];
   const int triangularFacetTable[24][3] = {
     {1, 3, 10}, {2, 10, 3}, {2, 9, 10}, {10, 9, 1}, {4, 3, 11}, {3, 1, 11},
     {11, 1, 5}, {4, 11, 5}, {1, 12, 5}, {1, 7, 12}, {12, 7, 6}, {5, 12, 6},
@@ -272,16 +272,17 @@ octohedron_volume_by_triangle_facets(const DoubleType volcoords[10][3])
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-PyrSCV::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& cordel,
-  SharedMemView<DoubleType*, DeviceShmem>& vol)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+PyrSCV::determinant_scv(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& cordel,
+  SharedMemView<DBLTYPE*, DeviceShmem>& vol)
 {
-  int npe = nodesPerElement_;
-  int nscv = numIntPoints_;
-  DoubleType coords[19][3];
-  DoubleType ehexcoords[8][3];
-  DoubleType epyrcoords[10][3];
+  constexpr int npe = nodesPerElement_;
+  constexpr int nscv = numIntPoints_;
+  DBLTYPE coords[19][3];
+  DBLTYPE ehexcoords[8][3];
+  DBLTYPE epyrcoords[10][3];
 
   const int pyramidSubcontrolNodeTable[5][10] = {
     {0, 5, 9, 8, 11, 12, 18, 17, -1, -1},
@@ -409,6 +410,22 @@ PyrSCV::determinant(
   vol(icv) = octohedron_volume_by_triangle_facets(epyrcoords);
 }
 
+void
+PyrSCV::determinant(
+  const SharedMemView<DoubleType**, DeviceShmem>& cordel,
+  SharedMemView<DoubleType*, DeviceShmem>& vol)
+{
+  determinant_scv(cordel, vol);
+}
+
+void
+PyrSCV::determinant(
+  const SharedMemView<double**, DeviceShmem>& cordel,
+  SharedMemView<double*, DeviceShmem>& vol)
+{
+  determinant_scv(cordel, vol);
+}
+
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
@@ -434,19 +451,6 @@ PyrSCV::shifted_grad_op(
 {
   shifted_pyr_deriv(numIntPoints_, &intgLocShift_[0], deriv);
   generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
-}
-
-void
-PyrSCV::determinant(
-  const int nelem, const double* coords, double* volume, double* error)
-{
-
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(pyr_scv_det)
-  (&nelem, &npe, &nint, coords, volume, error, &lerr);
 }
 
 KOKKOS_FUNCTION void
@@ -595,10 +599,11 @@ PyrSCS::side_node_ordinals(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-PyrSCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& cordel,
-  SharedMemView<DoubleType**, DeviceShmem>& areav)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+PyrSCS::determinant_scs(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& cordel,
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav)
 {
   const int pyramidEdgeFacetTable[12][4] = {
     {5, 9, 18, 12},   // sc face 1  -- points from 1 -> 2
@@ -614,8 +619,8 @@ PyrSCS::determinant(
     {17, 17, 18, 16}, // sc face 11 -- points from 4 -> 5 I
     {15, 17, 17, 16}  // sc face 12 -- points from 4 -> 5 O
   };
-  DoubleType coords[19][3];
-  DoubleType scscoords[4][3];
+  DBLTYPE coords[19][3];
+  DBLTYPE scscoords[4][3];
   const double half = 0.5;
   const double one3rd = 1.0 / 3.0;
   const double one4th = 1.0 / 4.0;
@@ -728,16 +733,20 @@ PyrSCS::determinant(
 
 void
 PyrSCS::determinant(
-  const int nelem, const double* coords, double* areav, double* error)
+  const SharedMemView<DoubleType**, DeviceShmem>& cordel,
+  SharedMemView<DoubleType**, DeviceShmem>& areav)
 {
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(pyr_scs_det)
-  (&nelem, &npe, &nint, coords, areav);
-
-  // all is always well; no error checking
-  *error = 0;
+  determinant_scs(cordel, areav);
 }
+
+void
+PyrSCS::determinant(
+  const SharedMemView<double**, DeviceShmem>& cordel,
+  SharedMemView<double**, DeviceShmem>& areav)
+{
+  determinant_scs(cordel, areav);
+}
+
 
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------

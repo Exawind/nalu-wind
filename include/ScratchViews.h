@@ -713,7 +713,7 @@ MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new_me(
         "ERROR, meSCS needs to be non-null if SCS_AREAV is requested.");
       ThrowRequireMsg(
         coordsView != nullptr, "ERROR, coords null but SCS_AREAV requested.");
-      meSCS->determinant(1, &((*coordsView)(0, 0)), &scs_areav(0, 0), &error);
+      meSCS->determinant(*coordsView, scs_areav);
       break;
     case SCS_FACE_GRAD_OP:
       ThrowRequireMsg(
@@ -776,7 +776,7 @@ MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new_me(
         "ERROR, meSCV needs to be non-null if SCV_VOLUME is requested.");
       ThrowRequireMsg(
         coordsView != nullptr, "ERROR, coords null but SCV_VOLUME requested.");
-      meSCV->determinant(1, &((*coordsView)(0, 0)), &scv_volume(0), &error);
+      meSCV->determinant(*coordsView, scv_volume);
       break;
     case SCV_GRAD_OP:
       ThrowRequireMsg(

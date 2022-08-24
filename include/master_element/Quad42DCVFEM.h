@@ -42,8 +42,12 @@ public:
   KOKKOS_FUNCTION virtual const int* ipNodeMap(int ordinal = 0) const final;
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType*, DeviceShmem>& vol) override;
+
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double*, DeviceShmem>& vol) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -59,12 +63,6 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
-
-  void determinant(
-    const int nelem,
-    const double* coords,
-    double* areav,
-    double* error) override;
 
   void Mij(const double* coords, double* metric, double* deriv) override;
 
@@ -106,6 +104,12 @@ private:
     SharedMemView<DoubleType**, DeviceShmem>& shape_fcn);
 
   void quad_shape_fcn(const double* par_coord, double* shape_fcn);
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scv(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+    SharedMemView<DBLTYPE*, DeviceShmem>& vol);
 };
 
 // 2D Quad 4 subcontrol surface
@@ -123,14 +127,12 @@ public:
   KOKKOS_FUNCTION virtual const int* ipNodeMap(int ordinal = 0) const final;
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
-  void determinant(
-    const int nelem,
-    const double* coords,
-    double* areav,
-    double* error) override;
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,

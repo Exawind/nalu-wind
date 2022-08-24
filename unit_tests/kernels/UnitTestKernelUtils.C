@@ -837,6 +837,8 @@ calc_edge_area_vec(
   // Scratch arrays
   std::vector<double> w_coords(ndim * npe);
   std::vector<double> w_scs_areav(ndim * numScsIp);
+  sierra::nalu::SharedMemView<double**> coords(w_coords.data(), npe, ndim);
+  sierra::nalu::SharedMemView<double* > scs_areav(w_scs_areav.data(), ndim*numScsIp);
 
   // Reset edge area vector to zero
   stk::mesh::field_fill(0.0, edgeAreaVec);
@@ -855,14 +857,14 @@ calc_edge_area_vec(
 
       for (size_t in = 0; in < num_nodes; ++in) {
         const auto node = elem_nodes[in];
-        const double* coords = stk::mesh::field_data(coordinates, node);
+        const double* coord = stk::mesh::field_data(coordinates, node);
         for (int d = 0; d < ndim; ++d) {
-          w_coords[in * ndim + d] = coords[d];
+          coords(in, d) = coord[d];
         }
       }
 
       double scs_error = 0.0;
-      meSCS->determinant(1, w_coords.data(), w_scs_areav.data(), &scs_error);
+      meSCS->determinant(coords, scs_areav);
 
       const auto* elem_edges = b->begin_edges(ie);
 

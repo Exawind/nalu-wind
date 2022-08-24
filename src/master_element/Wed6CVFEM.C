@@ -97,10 +97,11 @@ WedSCV::ipNodeMap(int /*ordinal*/) const
   return &ipNodeMap_[0];
 }
 
-void
-WedSCV::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coordel,
-  SharedMemView<DoubleType*, DeviceShmem>& volume)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+WedSCV::determinant_scv(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coordel,
+  SharedMemView<DBLTYPE*, DeviceShmem>& volume) const
 {
   const int wedSubControlNodeTable[6][8] = {
     {0, 15, 16, 6, 8, 19, 20, 9},    {9, 6, 1, 7, 20, 16, 14, 18},
@@ -111,8 +112,8 @@ WedSCV::determinant(
   const double half = 0.5;
   const double one3rd = 1.0 / 3.0;
   const double one6th = 1.0 / 6.0;
-  DoubleType coords[21][3];
-  DoubleType ehexcoords[8][3];
+  DBLTYPE coords[21][3];
+  DBLTYPE ehexcoords[8][3];
   const int dim[3] = {0, 1, 2};
 
   // element vertices
@@ -201,7 +202,21 @@ WedSCV::determinant(
     volume(icv) = hex_volume_grandy(ehexcoords);
   }
 }
+void
+WedSCV::determinant(
+  const SharedMemView<DoubleType**, DeviceShmem>& coordel,
+  SharedMemView<DoubleType*, DeviceShmem>& volume)
+{
+  determinant_scv(coordel, volume);
+}
 
+void
+WedSCV::determinant(
+  const SharedMemView<double**, DeviceShmem>& coordel,
+  SharedMemView<double*, DeviceShmem>& volume)
+{
+  determinant_scv(coordel, volume);
+}
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
@@ -226,21 +241,6 @@ WedSCV::shifted_grad_op(
 {
   wed_deriv(numIntPoints_, &intgLocShift_[0], deriv);
   generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
-}
-
-//--------------------------------------------------------------------------
-//-------- determinant -----------------------------------------------------
-//--------------------------------------------------------------------------
-void
-WedSCV::determinant(
-  const int nelem, const double* coords, double* volume, double* error)
-{
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(wed_scv_det)
-  (&nelem, &npe, &nint, coords, volume, error, &lerr);
 }
 
 KOKKOS_FUNCTION void
@@ -364,10 +364,11 @@ WedSCS::side_node_ordinals(int ordinal) const
   return &sideNodeOrdinals_[sideOffset_[ordinal]];
 }
 
-void
-WedSCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coordel,
-  SharedMemView<DoubleType**, DeviceShmem>& areav)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+WedSCS::determinant_scs(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coordel,
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
 {
   const int wedEdgeFacetTable[9][4] = {
     {6, 9, 20, 16},   // sc face 1 -- points from 1 -> 2
@@ -385,8 +386,8 @@ WedSCS::determinant(
   const double one6th = 1.0 / 6.0;
   const double half = 0.5;
   const int dim[3] = {0, 1, 2};
-  DoubleType coords[21][3];
-  DoubleType scscoords[4][3];
+  DBLTYPE coords[21][3];
+  DBLTYPE scscoords[4][3];
 
   // element vertices
   for (int j = 0; j < 6; j++)
@@ -472,23 +473,24 @@ WedSCS::determinant(
     quad_area_by_triangulation(ics, scscoords, areav);
   }
 }
+void
+WedSCS::determinant(
+  const SharedMemView<DoubleType**, DeviceShmem>& coordel,
+  SharedMemView<DoubleType**, DeviceShmem>& areav)
+{
+  determinant_scs(coordel, areav);
+}
 
+void
+WedSCS::determinant(
+  const SharedMemView<double**, DeviceShmem>& coordel,
+  SharedMemView<double**, DeviceShmem>& areav)
+{
+  determinant_scs(coordel, areav);
+}
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-WedSCS::determinant(
-  const int nelem, const double* coords, double* areav, double* error)
-{
-  const int nint = numIntPoints_;
-  const int npe = nodesPerElement_;
-  SIERRA_FORTRAN(wed_scs_det)
-  (&nelem, &npe, &nint, coords, areav);
-
-  // all is always well; no error checking
-  *error = 0;
-}
-
 void
 WedSCS::grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,

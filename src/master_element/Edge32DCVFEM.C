@@ -90,24 +90,25 @@ Edge32DSCS::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Edge32DSCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType**, DeviceShmem>& area)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+Edge32DSCS::determinant_scs(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+  SharedMemView<DBLTYPE**, DeviceShmem>& area) const
 {
 
-  NALU_ALIGNED DoubleType areaVector[2];
-  const DoubleType x0 = coords(0, 0);
-  const DoubleType y0 = coords(0, 1);
-  const DoubleType x1 = coords(1, 0);
-  const DoubleType y1 = coords(1, 1);
-  const DoubleType x2 = coords(2, 0);
-  const DoubleType y2 = coords(2, 1);
+  NALU_ALIGNED DBLTYPE areaVector[2];
+  const DBLTYPE x0 = coords(0, 0);
+  const DBLTYPE y0 = coords(0, 1);
+  const DBLTYPE x1 = coords(1, 0);
+  const DBLTYPE y1 = coords(1, 1);
+  const DBLTYPE x2 = coords(2, 0);
+  const DBLTYPE y2 = coords(2, 1);
 
   for (int ip = 0; ip < numIntPoints_; ++ip) {
-    const DoubleType s = intgLoc_[ip];
-    const DoubleType dxds = 0.5 * (x1 - x0) + (x1 - 2.0 * x2 + x0) * s;
-    const DoubleType dyds = 0.5 * (y1 - y0) + (y1 - 2.0 * y2 + y0) * s;
+    const DBLTYPE s = intgLoc_[ip];
+    const DBLTYPE dxds = 0.5 * (x1 - x0) + (x1 - 2.0 * x2 + x0) * s;
+    const DBLTYPE dyds = 0.5 * (y1 - y0) + (y1 - 2.0 * y2 + y0) * s;
 
     areaVector[0] = dyds;
     areaVector[1] = -dxds;
@@ -120,27 +121,17 @@ Edge32DSCS::determinant(
 
 void
 Edge32DSCS::determinant(
-  const int nelem, const double* coords, double* areav, double* error)
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType**, DeviceShmem>& area)
 {
-  std::array<double, 2> areaVector;
-
-  for (int k = 0; k < nelem; ++k) {
-    const int coord_elem_offset = nDim_ * nodesPerElement_ * k;
-
-    for (int ip = 0; ip < numIntPoints_; ++ip) {
-      const int offset = nDim_ * ip + coord_elem_offset;
-
-      // calculate the area vector
-      area_vector(&coords[coord_elem_offset], intgLoc_[ip], areaVector.data());
-
-      // weight the area vector with the Gauss-quadrature weight for this IP
-      areav[offset + 0] = ipWeight_[ip] * areaVector[0];
-      areav[offset + 1] = ipWeight_[ip] * areaVector[1];
-    }
-  }
-
-  // check
-  *error = 0.0;
+  determinant_scs(coords, area);
+}
+void
+Edge32DSCS::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double**, DeviceShmem>& area)
+{
+  determinant_scs(coords, area);
 }
 
 //--------------------------------------------------------------------------

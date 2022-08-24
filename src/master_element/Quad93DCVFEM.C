@@ -320,18 +320,19 @@ Quad93DSCS::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-KOKKOS_FUNCTION void
-Quad93DSCS::determinant(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType**, DeviceShmem>& areav)
+template <typename DBLTYPE>
+KOKKOS_INLINE_FUNCTION void
+Quad93DSCS::determinant_scs(
+  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
 {
-  NALU_ALIGNED DoubleType areaVector[3];
-  DoubleType dx_ds1 = 0.0;
-  DoubleType dy_ds1 = 0.0;
-  DoubleType dz_ds1 = 0.0;
-  DoubleType dx_ds2 = 0.0;
-  DoubleType dy_ds2 = 0.0;
-  DoubleType dz_ds2 = 0.0;
+  NALU_ALIGNED DBLTYPE areaVector[3];
+  DBLTYPE dx_ds1 = 0.0;
+  DBLTYPE dy_ds1 = 0.0;
+  DBLTYPE dz_ds1 = 0.0;
+  DBLTYPE dx_ds2 = 0.0;
+  DBLTYPE dy_ds2 = 0.0;
+  DBLTYPE dz_ds2 = 0.0;
 
   for (int ip = 0; ip < numIntPoints_; ++ip) {
     const int grad_offset = surfaceDimension_ * nodesPerElement_ * ip;
@@ -347,12 +348,12 @@ Quad93DSCS::determinant(
     for (int node = 0; node < nodesPerElement_; ++node) {
       const int surface_vector_offset = grad_offset + surfaceDimension_ * node;
 
-      const DoubleType xCoord = coords(node, 0);
-      const DoubleType yCoord = coords(node, 1);
-      const DoubleType zCoord = coords(node, 2);
+      const DBLTYPE xCoord = coords(node, 0);
+      const DBLTYPE yCoord = coords(node, 1);
+      const DBLTYPE zCoord = coords(node, 2);
 
-      const DoubleType dn_ds1 = shapeDerivs_[surface_vector_offset + 0];
-      const DoubleType dn_ds2 = shapeDerivs_[surface_vector_offset + 1];
+      const DBLTYPE dn_ds1 = shapeDerivs_[surface_vector_offset + 0];
+      const DBLTYPE dn_ds2 = shapeDerivs_[surface_vector_offset + 1];
 
       dx_ds1 += dn_ds1 * xCoord;
       dx_ds2 += dn_ds2 * xCoord;
@@ -376,31 +377,20 @@ Quad93DSCS::determinant(
   }
 }
 
-void
+KOKKOS_FUNCTION void
 Quad93DSCS::determinant(
-  const int nelem, const double* coords, double* areav, double* /* error */)
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType**, DeviceShmem>& areav)
 {
-  std::array<double, 3> areaVector;
+  determinant_scs(coords, areav);
+}
 
-  for (int k = 0; k < nelem; ++k) {
-    const int coord_elem_offset = nDim_ * nodesPerElement_ * k;
-    const int vector_elem_offset = nDim_ * numIntPoints_ * k;
-
-    for (int ip = 0; ip < numIntPoints_; ++ip) {
-      const int grad_offset = surfaceDimension_ * nodesPerElement_ * ip;
-      const int offset = nDim_ * ip + vector_elem_offset;
-
-      // compute area vector for this ip
-      area_vector(
-        &coords[coord_elem_offset], &shapeDerivs_[grad_offset],
-        areaVector.data());
-
-      // apply quadrature weight and orientation (combined as weight)
-      for (int j = 0; j < nDim_; ++j) {
-        areav[offset + j] = ipWeight_[ip] * areaVector[j];
-      }
-    }
-  }
+KOKKOS_FUNCTION void
+Quad93DSCS::determinant(
+  const SharedMemView<double**, DeviceShmem>& coords,
+  SharedMemView<double**, DeviceShmem>& areav)
+{
+  determinant_scs(coords, areav);
 }
 
 //--------------------------------------------------------------------------

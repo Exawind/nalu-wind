@@ -91,8 +91,11 @@ struct GenericLoopOverCoarseSearchResults
     // just allocate for largest expected size (hex27)
     ThrowAssert(numIp <= 216);
     ThrowAssert(numNodes <= 27);
-    double scvIp[216];
-    double elemCoords[81];
+
+    double scvip[216];
+    double elemcoords[27*3];
+    sierra::nalu::SharedMemView<double*> scvIp(&scvip[0], 216);
+    sierra::nalu::SharedMemView<double**> elemCoords(&elemcoords[0],27,3);
 
     stk::mesh::Entity const* elem_nod_rels = stkBulk_.begin_nodes(elem);
 
@@ -100,12 +103,11 @@ struct GenericLoopOverCoarseSearchResults
       const double* coords =
         (double*)stk::mesh::field_data(*coordinates_, elem_nod_rels[i]);
       for (int j = 0; j < 3; j++) {
-        elemCoords[j + i * 3] = coords[j];
+        elemCoords(i, j) = coords[j];
       }
     }
 
-    double scvError = 0.0;
-    meSCV->determinant(1, &elemCoords[0], &scvIp[0], &scvError);
+    meSCV->determinant(elemCoords, scvIp);
 
     const auto* ipNodeMap = meSCV->ipNodeMap();
 

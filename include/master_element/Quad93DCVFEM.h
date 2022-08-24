@@ -54,11 +54,12 @@ public:
   void shifted_shape_fcn(double* shpfc) final;
 
   KOKKOS_FUNCTION virtual void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
-  void determinant(
-    const int nelem, const double* coords, double* areav, double* error) final;
+  KOKKOS_FUNCTION virtual void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double**, DeviceShmem>& areav) override;
 
   double isInElement(
     const double* elemNodalCoord,
@@ -144,6 +145,12 @@ private:
     double* normalVector);
 
   double parametric_distance(const std::array<double, 3>& x);
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scs(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+    SharedMemView<DBLTYPE**, DeviceShmem>& areav) const;
 };
 
 } // namespace nalu

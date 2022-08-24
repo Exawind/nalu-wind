@@ -200,11 +200,11 @@ AssemblePNGElemSolverAlgorithm::execute()
       }
 
       // compute geometry
-      double scs_error = 0.0;
-      meSCS->determinant(1, &p_coordinates[0], &p_scs_areav[0], &scs_error);
-
-      double scv_error = 0.0;
-      meSCV->determinant(1, &p_coordinates[0], &p_scv_volume[0], &scv_error);
+      sierra::nalu::SharedMemView<double**> elemCoords(p_coordinates, nodesPerElement, nDim);
+      sierra::nalu::SharedMemView<double* > areav(p_scs_areav, numScsIp * nDim);
+      sierra::nalu::SharedMemView<double* > vol(p_scv_volume, numScvIp);
+      meSCS->determinant(elemCoords, areav);
+      meSCV->determinant(elemCoords, vol);
 
       // handle scs first; all RHS as if it is a source term
       for (int ip = 0; ip < numScsIp; ++ip) {

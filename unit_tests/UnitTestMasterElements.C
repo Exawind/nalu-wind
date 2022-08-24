@@ -223,22 +223,24 @@ check_volume_integration(
   int dim = meSV.nDim_;
   std::vector<double> ws_coords_mapped(meSV.nodesPerElement_ * dim, 0.0);
   std::vector<double> ws_coords(meSV.nodesPerElement_ * dim, 0.0);
-
+  sierra::nalu::SharedMemView<double**> coords_mapped(ws_coords_mapped.data(), meSV.nodesPerElement_, dim);
+  sierra::nalu::SharedMemView<double**> coords(ws_coords.data(), meSV.nodesPerElement_, dim);
   std::mt19937 rng;
   rng.seed(0);
 
   auto QR = unit_test_utils::random_linear_transformation(dim, 1.0, rng);
   for (int j = 0; j < meSV.nodesPerElement_; ++j) {
-    const double* coords = stk::mesh::field_data(coordField, node_rels[j]);
-
+    const double* coord = stk::mesh::field_data(coordField, node_rels[j]);
+    std::vector<double> coord_mapped(dim);
     if (dim == 3) {
-      sierra::nalu::matvec33(QR.data(), coords, &ws_coords_mapped[j * dim]);
+      sierra::nalu::matvec33(QR.data(), coord, coord_mapped.data());
     } else {
-      sierra::nalu::matvec22(QR.data(), coords, &ws_coords_mapped[j * dim]);
+      sierra::nalu::matvec22(QR.data(), coord, coord_mapped.data());
     }
 
     for (int k = 0; k < dim; ++k) {
-      ws_coords[j * dim + k] = coords[k];
+      coords(j, k) = coord[k];
+      coords_mapped(j,k) = coord_mapped[k];
     }
   }
   const double detQR = (dim == 3) ? sierra::nalu::determinant33(QR.data())
@@ -247,15 +249,13 @@ check_volume_integration(
 
   double error = 0;
   std::vector<double> volume_integration_weights(meSV.num_integration_points());
-  meSV.determinant(
-    1, ws_coords.data(), volume_integration_weights.data(), &error);
+  sierra::nalu::SharedMemView<double*> integration_weights(volume_integration_weights.data(), meSV.num_integration_points());
+  meSV.determinant(coords, integration_weights);
   ASSERT_DOUBLE_EQ(error, 0);
 
-  std::vector<double> skewed_volume_integration_weights(
-    meSV.num_integration_points());
-  meSV.determinant(
-    1, ws_coords_mapped.data(), skewed_volume_integration_weights.data(),
-    &error);
+  std::vector<double> skewed_volume_integration_weights(meSV.num_integration_points());
+  sierra::nalu::SharedMemView<double*> skewed_integration_weights(skewed_volume_integration_weights.data(), meSV.num_integration_points());
+  meSV.determinant(coords_mapped, skewed_integration_weights);
   ASSERT_DOUBLE_EQ(error, 0);
 
   for (int k = 0; k < meSV.num_integration_points(); ++k) {

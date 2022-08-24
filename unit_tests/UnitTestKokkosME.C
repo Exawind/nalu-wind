@@ -12,43 +12,46 @@
 #include "UnitTestKokkosMEGold.h"
 
 #include <master_element/MasterElementFactory.h>
+template <typename DBLTYPE>
 void
 check_that_values_match(
   const sierra::nalu::SharedMemView<DoubleType*>& values,
-  const double* oldValues)
+  const DBLTYPE* oldValues)
 {
   for (size_t i = 0; i < values.extent(0); ++i) {
-    EXPECT_NEAR(stk::simd::get_data(values(i), 0), oldValues[i], tol)
+    EXPECT_NEAR(stk::simd::get_data(values(i), 0), stk::simd::get_data(oldValues[i],0), tol)
       << "i:" << i;
   }
 }
 
+template <typename DBLTYPE>
 void
 check_that_values_match(
   const sierra::nalu::SharedMemView<DoubleType**>& values,
-  const double* oldValues)
+  const DBLTYPE* oldValues)
 {
   int counter = 0;
   for (size_t i = 0; i < values.extent(0); ++i) {
     for (size_t j = 0; j < values.extent(1); ++j) {
       EXPECT_NEAR(
-        stk::simd::get_data(values(i, j), 0), oldValues[counter++], tol)
+        stk::simd::get_data(values(i, j), 0), stk::simd::get_data(oldValues[counter++],0), tol)
         << "i:" << i << ", j:" << j;
     }
   }
 }
 
+template <typename DBLTYPE>
 void
 check_that_values_match(
   const sierra::nalu::SharedMemView<DoubleType***>& values,
-  const double* oldValues)
+  const DBLTYPE* oldValues)
 {
   int counter = 0;
   for (size_t i = 0; i < values.extent(0); ++i) {
     for (size_t j = 0; j < values.extent(1); ++j) {
       for (size_t k = 0; k < values.extent(2); ++k) {
         EXPECT_NEAR(
-          stk::simd::get_data(values(i, j, k), 0), oldValues[counter++], tol)
+          stk::simd::get_data(values(i, j, k), 0), stk::simd::get_data(oldValues[counter++],0), tol)
           << "i:" << i << ", j:" << j << ", k:" << k;
       }
     }
@@ -75,13 +78,10 @@ compare_old_scv_volume(
   sierra::nalu::MasterElement* meSCV)
 {
   int len = scv_volume.extent(0);
-  std::vector<double> coords;
-  copy_DoubleType0_to_double(v_coords, coords);
-  std::vector<double> volume(len, 0.0);
-  double error = 0;
-  meSCV->determinant(1, coords.data(), volume.data(), &error);
-  EXPECT_NEAR(error, 0.0, tol);
-  check_that_values_match(scv_volume, &volume[0]);
+  std::vector<DoubleType> volume(len, 0.0);
+  sierra::nalu::SharedMemView<DoubleType*> vol(volume.data(), volume.size());
+  meSCV->determinant(v_coords, vol);
+  check_that_values_match(scv_volume, volume.data());
 }
 
 void
@@ -91,13 +91,10 @@ compare_old_scs_areav(
   sierra::nalu::MasterElement* meSCS)
 {
   int len = scs_areav.extent(0) * scs_areav.extent(1);
-  std::vector<double> coords;
-  copy_DoubleType0_to_double(v_coords, coords);
-  std::vector<double> areav(len, 0.0);
-  double error = 0;
-  meSCS->determinant(1, coords.data(), areav.data(), &error);
-  EXPECT_NEAR(error, 0.0, tol);
-  check_that_values_match(scs_areav, &areav[0]);
+  std::vector<DoubleType> areav(len, 0.0);
+  sierra::nalu::SharedMemView<DoubleType*> area(areav.data(), areav.size());
+  meSCS->determinant(v_coords, area);
+  check_that_values_match(scs_areav, areav.data());
 }
 
 void

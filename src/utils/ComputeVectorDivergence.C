@@ -105,8 +105,9 @@ compute_vector_divergence(
       }
 
       // compute geometry
-      double scs_error = 0.0;
-      meSCS->determinant(1, wsCoordinates.data(), wsScsArea.data(), &scs_error);
+      sierra::nalu::SharedMemView<double**> elemCoords(wsCoordinates.data(), nodesPerElement, nDim);
+      sierra::nalu::SharedMemView<double* > areav(wsScsArea.data(), wsScsArea.size());
+      meSCS->determinant(elemCoords, areav);
 
       for (int ip = 0; ip < numScsIp; ++ip) {
 

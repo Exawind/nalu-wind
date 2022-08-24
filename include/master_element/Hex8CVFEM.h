@@ -76,8 +76,12 @@ public:
   shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType*, DeviceShmem>& volume);
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType*, DeviceShmem>& volume) override;
+
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double*, DeviceShmem>& volume) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -93,9 +97,6 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv);
-
-  void determinant(
-    const int nelem, const double* coords, double* volume, double* error);
 
   void grad_op(
     const int nelem,
@@ -203,8 +204,12 @@ public:
     SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
   KOKKOS_FUNCTION void determinant(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType**, DeviceShmem>& areav);
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType**, DeviceShmem>& areav) override;
+
+  KOKKOS_FUNCTION void determinant(
+    const SharedMemView<double**, DeviceShmem>& coords,
+    SharedMemView<double**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION void gij(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -218,9 +223,6 @@ public:
     SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
   // non NGP-ready methods second
-  void determinant(
-    const int nelem, const double* coords, double* areav, double* error);
-
   void grad_op(
     const int nelem,
     const double* coords,
