@@ -80,12 +80,11 @@ Quad3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
   quad4_shape_fcn(intgLocShift_, shpfc);
 }
 
-namespace {
 template <typename DBLTYPE>
 KOKKOS_INLINE_FUNCTION void
-determinant_scs(
+Quad3DSCS::determinant_scs(
   const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE**, DeviceShmem>& areav)
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
 {
   constexpr int npf = 4;  // Nodes per face
   constexpr int nscs = 4; // Number of sub-control surfaces per face
@@ -123,7 +122,6 @@ determinant_scs(
     }
     quad_area_by_triangulation(ics, scscoords, areav);
   }
-}
 }
 
 void

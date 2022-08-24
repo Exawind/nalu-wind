@@ -58,12 +58,11 @@ HexSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-namespace {
 template <typename DBLTYPE>
 KOKKOS_INLINE_FUNCTION void
-determinant_scv(
+HexSCV::determinant_scv(
   const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE*, DeviceShmem>& volume)
+  SharedMemView<DBLTYPE*, DeviceShmem>& volume) const
 {
   constexpr int subDivisionTable[8][8] = {
     {0, 8, 12, 11, 19, 20, 26, 25},  {8, 1, 9, 12, 20, 18, 24, 26},
@@ -85,7 +84,6 @@ determinant_scv(
     }
     volume(ip) = hex_volume_grandy(scvHex);
   }
-}
 }
 
 void
@@ -265,12 +263,11 @@ HexSCS::shifted_grad_op(
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-namespace {
 template <typename DBLTYPE>
 KOKKOS_INLINE_FUNCTION void
-determinant_scs(
+HexSCS::determinant_scs(
   const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE**, DeviceShmem>& areav)
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
 {
   constexpr int hex_edge_facet_table[12][4] = {
     {20, 8, 12, 26},  {24, 9, 12, 26},  {10, 12, 26, 23}, {11, 25, 26, 12},
@@ -292,7 +289,6 @@ determinant_scs(
     }
     quad_area_by_triangulation(ics, scscoords, areav);
   }
-}
 }
 
 void

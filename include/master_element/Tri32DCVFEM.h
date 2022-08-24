@@ -335,6 +335,12 @@ private:
      {2, 0}};                  // face 2
 
   double intgExpFaceShift_[3][2][2];
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scs(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+    SharedMemView<DBLTYPE**, DeviceShmem>& areav) const;
 };
 
 } // namespace nalu

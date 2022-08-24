@@ -385,12 +385,11 @@ Quad42DSCS::side_node_ordinals(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-namespace {
 template <typename DBLTYPE>
 KOKKOS_INLINE_FUNCTION void
-determinant_scs(
+Quad42DSCS::determinant_scs(
   const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE**, DeviceShmem>& areav)
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
 {
   const double zero = 0.0;
   const double one = 1.0;
@@ -452,7 +451,6 @@ determinant_scs(
     areav(3, kx) = (y2 - y1) * rr;
     areav(3, ky) = -(x2 - x1) * rr;
   }
-}
 }
 void
 Quad42DSCS::determinant(

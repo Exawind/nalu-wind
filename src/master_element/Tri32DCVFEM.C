@@ -413,14 +413,12 @@ Tri32DSCS::side_node_ordinals(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-namespace {
 template <typename DBLTYPE>
 KOKKOS_INLINE_FUNCTION void
-determinant_scs(
+Tri32DSCS::determinant_scs(
   const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE**, DeviceShmem>& areav)
+  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
 {
-
   DBLTYPE coord_mid_face[2][3];
 
   const double one = 1.0;
@@ -478,7 +476,6 @@ determinant_scs(
 
   areav(2, kx) = (y2 - y1) * rr;
   areav(2, ky) = -(x2 - x1) * rr;
-}
 }
 void
 Tri32DSCS::determinant(

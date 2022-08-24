@@ -138,6 +138,12 @@ public:
   const double intgLocShift_[24] = {
     -0.5, -0.5, -0.5, +0.5, -0.5, -0.5, +0.5, +0.5, -0.5, -0.5, +0.5, -0.5,
     -0.5, -0.5, +0.5, +0.5, -0.5, +0.5, +0.5, +0.5, +0.5, -0.5, +0.5, +0.5};
+private:
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scv(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+    SharedMemView<DBLTYPE*, DeviceShmem>& volume) const;
 };
 
 // Hex 8 subcontrol surface
@@ -454,6 +460,12 @@ private:
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& gradop,
     SharedMemView<DoubleType***, DeviceShmem>& deriv);
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scs(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+    SharedMemView<DBLTYPE**, DeviceShmem>& areav) const;
 };
 
 //-------- hex8_derivative -------------------------------------------------
