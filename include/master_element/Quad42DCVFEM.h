@@ -326,6 +326,12 @@ private:
     const double* par_coord, SharedMemView<DoubleType**, DeviceShmem>& shape);
 
   void quad_shape_fcn(const double* par_coord, double* shape);
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scs(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+    SharedMemView<DBLTYPE**, DeviceShmem>& areav) const;
 };
 
 } // namespace nalu

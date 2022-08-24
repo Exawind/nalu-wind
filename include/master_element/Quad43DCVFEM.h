@@ -104,6 +104,12 @@ private:
                                    0.50,  -0.50, // surf 2
                                    0.50,  0.50,  // surf 3
                                    -0.50, 0.50}; // surf 4
+
+  template <typename DBLTYPE>
+  KOKKOS_INLINE_FUNCTION void
+  determinant_scs(
+    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
+    SharedMemView<DBLTYPE**, DeviceShmem>& areav) const;
 };
 
 } // namespace nalu
