@@ -335,9 +335,7 @@ local_field_interpolation(
     auto point = points[point_id];
     auto elem = bulk.get_entity(stk::topology::ELEM_RANK, match.second.id());
     const auto& x_dist = compute_local_coordinates(bulk, x_field, elem, point);
-    if (
-      x_dist.second < 1 + std::numeric_limits<double>::epsilon() &&
-      x_dist.second < data.dist[point_id]) {
+    if (x_dist.second < data.dist[point_id]) {
       data.dist.at(point_id) = x_dist.second;
       data.interpolated_values.at(point_id) =
         interpolate_field(bulk, elem, field_prev, field, x_dist.first, dtratio);

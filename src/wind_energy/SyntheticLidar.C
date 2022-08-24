@@ -47,6 +47,7 @@ LidarLineOfSite::load(const YAML::Node& node)
   }
 
   get_required(node, "points_along_line", npoints_);
+
   if (node["name"]) {
     name_ = node["name"].as<std::string>();
   }
@@ -59,6 +60,24 @@ LidarLineOfSite::load(const YAML::Node& node)
     get_required(node, "scan_time", scanTime_);
     get_required(node, "number_of_samples", nsamples_);
     lidar_dt_ = scanTime_ / nsamples_;
+  }
+
+  if (node["predictor"]) {
+    const auto spec = node["predictor"].as<std::string>();
+    std::map<std::string, Predictor> valid = {
+      {"forward_euler", Predictor::FORWARD_EULER},
+      {"nearest", Predictor::NEAREST}};
+    if (valid.find(spec) != valid.end()) {
+      predictor_ = valid.at(spec);
+    } else {
+      std::string valid_keys = "";
+      for (const auto& pair : valid) {
+        valid_keys += pair.first + " ";
+      }
+      valid_keys = valid_keys.substr(0, valid_keys.size() - 1);
+      throw std::runtime_error(
+        "invalid predictor spec: " + spec + ", valid specs are: " + valid_keys);
+    }
   }
 
   const YAML::Node fromTargets = node["from_target_part"];
@@ -95,13 +114,41 @@ check_nc_error(int code)
       "SyntheticLidar NetCDF error: " + std::string(nc_strerror(code)));
   }
 }
+namespace {
+std::string
+determine_filename(const std::string& name, const std::string& suffix)
+{
+  std::string fname = name + suffix;
+
+  Ioss::FileInfo info(fname);
+  if (info.exists()) {
+    // give a large, finite amount of names to check
+    const int max_restarts = 2048;
+    bool found_valid = false;
+    for (int j = 1; j < max_restarts; ++j) {
+      fname = name + "-rst-" + std::to_string(j) + suffix;
+      Ioss::FileInfo info_j(fname);
+      if (!info_j.exists()) {
+        found_valid = true;
+        break;
+      }
+    }
+    if (!found_valid) {
+      throw std::runtime_error("Too many restarts checked");
+    }
+  }
+  return fname;
+}
+} // namespace
 
 void
 LidarLineOfSite::prepare_nc_file()
 {
   int ncid;
-  const auto fname = name_ + ".nc";
-  int ierr = nc_create(fname.c_str(), NC_CLOBBER, &ncid);
+
+  fname_ = determine_filename(name_, ".nc");
+
+  int ierr = nc_create(fname_.c_str(), NC_CLOBBER, &ncid);
   check_nc_error(ierr);
 
   // Define dimensions for the NetCDF file
@@ -156,8 +203,7 @@ LidarLineOfSite::output_nc(
   }
 
   int ncid, ierr;
-  const auto fname = name_ + ".nc";
-  ierr = nc_open(fname.c_str(), NC_WRITE, &ncid);
+  ierr = nc_open(fname_.c_str(), NC_WRITE, &ncid);
   check_nc_error(ierr);
 
   size_t scalar = 1;
@@ -195,18 +241,17 @@ LidarLineOfSite::output_txt(
   const std::vector<std::array<double, 3>>& x,
   const std::vector<std::array<double, 3>>& u)
 {
-  const auto fname = name_ + ".txt";
   if (internal_output_counter_ == 0) {
-    Ioss::FileInfo::create_path(fname);
-    std::ofstream file{fname, std::ios_base::out};
-    file.open(fname);
+    fname_ = determine_filename(name_, ".txt");
+    std::ofstream file{fname_, std::ios_base::out};
+    file.open(fname_);
     file << "t,x,y,z,u,v,w" << std::endl;
     file.close();
   }
 
   std::ofstream file;
   file.exceptions(file.exceptions() | std::ios::failbit);
-  file.open(fname, std::ios::out | std::ios::app);
+  file.open(fname_, std::ios::out | std::ios::app);
   if (file.fail()) {
     throw std::ios_base::failure(std::strerror(errno));
   }
@@ -230,9 +275,11 @@ LidarLineOfSite::output(
   if (output_type_ == Output::DATAPROBE) {
     return;
   }
-
   if (internal_output_counter_ == 0) {
     Ioss::FileInfo::create_path(name_);
+  }
+
+  if (!search_data_) {
     search_data_ =
       std::make_unique<LocalVolumeSearchData>(bulk, active, npoints_);
   }
@@ -259,17 +306,21 @@ LidarLineOfSite::output(
       .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
         stk::topology::NODE_RANK, "velocity")
       ->field_of_state(stk::mesh::StateNP1);
+
   const auto& velocity_prev =
     bulk.mesh_meta_data()
       .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
         stk::topology::NODE_RANK, "velocity")
       ->field_of_state(stk::mesh::StateN);
+
+  const double extrap_dt = predictor_ == Predictor::NEAREST ? 0 : dtratio;
   local_field_interpolation(
-    bulk, active, points, coord_field, velocity_prev, velocity_field, dtratio,
+    bulk, active, points, coord_field, velocity_prev, velocity_field, extrap_dt,
     *search_data_);
 
   const auto lcl_velocity = search_data_->interpolated_values;
   const auto lcl_ownership = search_data_->ownership;
+
   auto comm = bulk.parallel();
   const int root = 0;
 
@@ -286,18 +337,48 @@ LidarLineOfSite::output(
     comm);
 
   if (is_root(comm, root)) {
+    int not_found_count = 0;
+
+    std::array<double, dim> max_unmatched{
+      std::numeric_limits<double>::lowest(),
+      std::numeric_limits<double>::lowest(),
+      std::numeric_limits<double>::lowest()};
+    std::array<double, dim> min_unmatched{
+      std::numeric_limits<double>::max(), std::numeric_limits<double>::max(),
+      std::numeric_limits<double>::max()};
     for (int j = 0; j < npoints_; ++j) {
-      const double inv_deg = (degree.at(j) > 0) ? 1 / degree[j] : 0;
+      const auto degj = degree.at(j);
+      if (degj == 0) {
+        ++not_found_count;
+        for (int d = 0; d < 3; ++d) {
+          max_unmatched[d] = std::max(max_unmatched[d], points.at(j)[d]);
+          min_unmatched[d] = std::min(min_unmatched[d], points.at(j)[d]);
+        }
+      }
+      const double inv_deg =
+        (degj > 0) ? 1 / static_cast<double>(degree[j]) : 0;
       for (int d = 0; d < 3; ++d) {
         velocity.at(j)[d] *= inv_deg;
       }
     }
-  }
-  if (is_root(comm, root) && output_type_ == Output::TEXT) {
-    output_txt(time(), points, velocity);
-  }
-  if (is_root(comm, root) && output_type_ == Output::NETCDF) {
-    output_nc(time(), points, velocity);
+    if (not_found_count > 0) {
+
+      auto lidar_name_start = name_.find_last_of("/");
+      auto lidar_name = name_.substr(lidar_name_start + 1);
+
+      NaluEnv::self().naluOutputP0()
+        << "LIDAR " << lidar_name << " search did not match " << not_found_count
+        << " points, max individually unmatched coords: (" << max_unmatched[0]
+        << ", " << max_unmatched[1] << ", " << max_unmatched[2] << ")"
+        << ", min individually unmatched coords: (" << min_unmatched[0] << ", "
+        << min_unmatched[1] << ", " << min_unmatched[2] << ")" << std::endl;
+    }
+
+    if (output_type_ == Output::TEXT) {
+      output_txt(time(), points, velocity);
+    } else if (output_type_ == Output::NETCDF) {
+      output_nc(time(), points, velocity);
+    }
   }
 }
 
