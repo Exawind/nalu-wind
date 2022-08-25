@@ -687,10 +687,9 @@ void
 Hex27SCV::determinant(
   const SharedMemView<double**>& coords, SharedMemView<double*>& volume)
 {
-  using Type =
-    AlignedViewType<double[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]
-                          [AlgTraits::nDim_]>;
-  Type GradWeights;
+  AlignedViewType<
+    double[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>
+    GradWeights{"GradWeights"};
   for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
       for (int d = 0; d < AlgTraits::nDim_; ++d) {
