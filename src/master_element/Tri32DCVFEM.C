@@ -198,7 +198,6 @@ Tri32DSCV::determinant_scv(
 
   DBLTYPE deriv[2][4];
   DBLTYPE xyval[2][4][3];
-  DBLTYPE shape_fcn[4];
 
   // Gaussian quadrature points within an interval [-.5,+.5]
   const double gpp = 0.288675134;
@@ -278,11 +277,6 @@ Tri32DSCV::determinant_scv(
       deriv[1][2] = (half + ximod);
       deriv[1][3] = (half - ximod);
 
-      shape_fcn[0] = (half - ximod) * (half - etamod);
-      shape_fcn[1] = (half + ximod) * (half - etamod);
-      shape_fcn[2] = (half + ximod) * (half + etamod);
-      shape_fcn[3] = (half - ximod) * (half + etamod);
-
       //  calculate the jacobian at the integration station -
       for (int kn = 0; kn < 4; ++kn) {
         dx_ds1 += deriv[0][kn] * xyval[kx][kn][ki];
@@ -298,7 +292,7 @@ Tri32DSCV::determinant_scv(
     }
   }
 }
-void
+KOKKOS_FUNCTION void
 Tri32DSCV::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType*, DeviceShmem>& vol)
@@ -477,7 +471,7 @@ Tri32DSCS::determinant_scs(
   areav(2, kx) = (y2 - y1) * rr;
   areav(2, ky) = -(x2 - x1) * rr;
 }
-void
+KOKKOS_FUNCTION void
 Tri32DSCS::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType**, DeviceShmem>& areav)

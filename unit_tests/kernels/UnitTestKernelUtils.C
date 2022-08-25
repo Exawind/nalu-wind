@@ -838,7 +838,7 @@ calc_edge_area_vec(
   std::vector<double> w_coords(ndim * npe);
   std::vector<double> w_scs_areav(ndim * numScsIp);
   sierra::nalu::SharedMemView<double**> coords(w_coords.data(), npe, ndim);
-  sierra::nalu::SharedMemView<double* > scs_areav(w_scs_areav.data(), ndim*numScsIp);
+  sierra::nalu::SharedMemView<double**> scs_areav(w_scs_areav.data(), numScsIp, ndim);
 
   // Reset edge area vector to zero
   stk::mesh::field_fill(0.0, edgeAreaVec);

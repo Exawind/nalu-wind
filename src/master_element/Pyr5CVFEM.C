@@ -410,7 +410,7 @@ PyrSCV::determinant_scv(
   vol(icv) = octohedron_volume_by_triangle_facets(epyrcoords);
 }
 
-void
+KOKKOS_FUNCTION void
 PyrSCV::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& cordel,
   SharedMemView<DoubleType*, DeviceShmem>& vol)
@@ -731,7 +731,7 @@ PyrSCS::determinant_scs(
   }
 }
 
-void
+KOKKOS_FUNCTION void
 PyrSCS::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& cordel,
   SharedMemView<DoubleType**, DeviceShmem>& areav)

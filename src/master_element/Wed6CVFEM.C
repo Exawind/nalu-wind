@@ -202,7 +202,7 @@ WedSCV::determinant_scv(
     volume(icv) = hex_volume_grandy(ehexcoords);
   }
 }
-void
+KOKKOS_FUNCTION void
 WedSCV::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coordel,
   SharedMemView<DoubleType*, DeviceShmem>& volume)
@@ -473,7 +473,7 @@ WedSCS::determinant_scs(
     quad_area_by_triangulation(ics, scscoords, areav);
   }
 }
-void
+KOKKOS_FUNCTION void
 WedSCS::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coordel,
   SharedMemView<DoubleType**, DeviceShmem>& areav)

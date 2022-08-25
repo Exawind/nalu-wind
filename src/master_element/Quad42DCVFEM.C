@@ -150,7 +150,6 @@ Quad42DSCV::determinant_scv(
   const double one16th = 0.0625;
 
   DBLTYPE deriv[2][4];
-  DBLTYPE shape_fcn[4];
 
   //   store sub-volume centroids
   const double xi[2][4] = {{cvm, cvp, cvp, cvm}, {cvm, cvm, cvp, cvp}};
@@ -182,11 +181,6 @@ Quad42DSCV::determinant_scv(
       deriv[1][2] = (half + ximod);
       deriv[1][3] = (half - ximod);
 
-      shape_fcn[0] = (half - ximod) * (half - etamod);
-      shape_fcn[1] = (half + ximod) * (half - etamod);
-      shape_fcn[2] = (half + ximod) * (half + etamod);
-      shape_fcn[3] = (half - ximod) * (half + etamod);
-
       // calculate the jacobian at the integration station -
       for (int kn = 0; kn < npe; ++kn) {
         dx_ds1 += deriv[0][kn] * coords(kn, 0);
@@ -202,7 +196,7 @@ Quad42DSCV::determinant_scv(
   }
 }
 
-void
+KOKKOS_FUNCTION void
 Quad42DSCV::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType*, DeviceShmem>& vol)
@@ -452,7 +446,7 @@ Quad42DSCS::determinant_scs(
     areav(3, ky) = -(x2 - x1) * rr;
   }
 }
-void
+KOKKOS_FUNCTION void
 Quad42DSCS::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType**, DeviceShmem>& areav)

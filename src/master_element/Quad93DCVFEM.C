@@ -385,7 +385,7 @@ Quad93DSCS::determinant(
   determinant_scs(coords, areav);
 }
 
-KOKKOS_FUNCTION void
+void
 Quad93DSCS::determinant(
   const SharedMemView<double**>& coords,
   SharedMemView<double**>& areav)

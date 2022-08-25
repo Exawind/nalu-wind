@@ -89,7 +89,7 @@ Edge2DSCS::determinant_scs(
   area(1, 1) = -dx13;
 }
 
-void
+KOKKOS_FUNCTION void
 Edge2DSCS::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType**, DeviceShmem>& area)

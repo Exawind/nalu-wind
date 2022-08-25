@@ -114,7 +114,7 @@ public:
         const int numScsIp = meSCS.num_integration_points();
         const int nodesPerElem = topo.num_nodes();
         sierra::nalu::SharedMemView<double**> NodeCoords(p_elemNodeCoords, nodesPerElem, nDim);
-        sierra::nalu::SharedMemView<double*> areav(p_scs_areav, numScsIp * nDim);
+        sierra::nalu::SharedMemView<double**> areav(p_scs_areav, numScsIp, nDim);
         for (int n = 0; n < nodesPerElem; ++n) {
           const double* nodeCoords =
             stk::mesh::field_data(*coordField, elemNodes[n]);
@@ -183,7 +183,7 @@ element_discrete_laplacian_kernel_3d(
   double p_elemNodePressures[nodesPerElem];
 
   double p_scs_areav[numScsIp * nDim];
-  sierra::nalu::SharedMemView<double*> scs_areav(&p_scs_areav[0], numScsIp * nDim);
+  sierra::nalu::SharedMemView<double**> scs_areav(&p_scs_areav[0], numScsIp, nDim);
   double p_dndx[nDim * numScsIp * nodesPerElem];
   double p_deriv[nDim * numScsIp * nodesPerElem];
   double p_det_j[numScsIp];
