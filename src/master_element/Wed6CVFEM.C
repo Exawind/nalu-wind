@@ -212,8 +212,7 @@ WedSCV::determinant(
 
 void
 WedSCV::determinant(
-  const SharedMemView<double**>& coordel,
-  SharedMemView<double*>& volume)
+  const SharedMemView<double**>& coordel, SharedMemView<double*>& volume)
 {
   determinant_scv(coordel, volume);
 }
@@ -483,8 +482,7 @@ WedSCS::determinant(
 
 void
 WedSCS::determinant(
-  const SharedMemView<double**>& coordel,
-  SharedMemView<double**>& areav)
+  const SharedMemView<double**>& coordel, SharedMemView<double**>& areav)
 {
   determinant_scs(coordel, areav);
 }

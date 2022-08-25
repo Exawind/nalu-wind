@@ -420,8 +420,7 @@ PyrSCV::determinant(
 
 void
 PyrSCV::determinant(
-  const SharedMemView<double**>& cordel,
-  SharedMemView<double*>& vol)
+  const SharedMemView<double**>& cordel, SharedMemView<double*>& vol)
 {
   determinant_scv(cordel, vol);
 }
@@ -741,12 +740,10 @@ PyrSCS::determinant(
 
 void
 PyrSCS::determinant(
-  const SharedMemView<double**>& cordel,
-  SharedMemView<double**>& areav)
+  const SharedMemView<double**>& cordel, SharedMemView<double**>& areav)
 {
   determinant_scs(cordel, areav);
 }
-
 
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------

@@ -215,10 +215,8 @@ Tri32DSCV::determinant_scv(
   const int ky = 1;
 
   // 2d cartesian, no cross-section area
-  const DBLTYPE xc =
-    one3rd * (coords(0, kx) + coords(1, kx) + coords(2, kx));
-  const DBLTYPE yc =
-    one3rd * (coords(0, ky) + coords(1, ky) + coords(2, ky));
+  const DBLTYPE xc = one3rd * (coords(0, kx) + coords(1, kx) + coords(2, kx));
+  const DBLTYPE yc = one3rd * (coords(0, ky) + coords(1, ky) + coords(2, ky));
 
   // sub-volume 1
   xyval[kx][0][0] = coords(0, kx);
@@ -301,8 +299,7 @@ Tri32DSCV::determinant(
 }
 void
 Tri32DSCV::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double*>& vol)
+  const SharedMemView<double**>& coords, SharedMemView<double*>& vol)
 {
   determinant_scv(coords, vol);
 }
@@ -430,10 +427,8 @@ Tri32DSCS::determinant_scs(
   const double a3 = zero;
 
   // calculate element mid-point coordinates
-  const DBLTYPE x1 =
-    (coords(0, kx) + coords(1, kx) + coords(2, kx)) * one3rd;
-  const DBLTYPE y1 =
-    (coords(0, ky) + coords(1, ky) + coords(2, ky)) * one3rd;
+  const DBLTYPE x1 = (coords(0, kx) + coords(1, kx) + coords(2, kx)) * one3rd;
+  const DBLTYPE y1 = (coords(0, ky) + coords(1, ky) + coords(2, ky)) * one3rd;
 
   // calculate element mid-face coordinates
   coord_mid_face[kx][0] = (coords(0, kx) + coords(1, kx)) * half;
@@ -480,8 +475,7 @@ Tri32DSCS::determinant(
 }
 void
 Tri32DSCS::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double**>& areav)
+  const SharedMemView<double**>& coords, SharedMemView<double**>& areav)
 {
   determinant_scs(coords, areav);
 }

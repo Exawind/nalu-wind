@@ -95,8 +95,7 @@ private:
   const double intgLocShift_[2] = {-0.50, 0.50};
 
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scs(
+  KOKKOS_INLINE_FUNCTION void determinant_scs(
     const SharedMemView<DBLTYPE**, SHMEM>& coords,
     SharedMemView<DBLTYPE**, SHMEM>& area) const;
 };

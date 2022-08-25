@@ -200,9 +200,10 @@ AssemblePNGElemSolverAlgorithm::execute()
       }
 
       // compute geometry
-      sierra::nalu::SharedMemView<double**> elemCoords(p_coordinates, nodesPerElement, nDim);
-      sierra::nalu::SharedMemView<double* > areav(p_scs_areav, numScsIp * nDim);
-      sierra::nalu::SharedMemView<double* > vol(p_scv_volume, numScvIp);
+      sierra::nalu::SharedMemView<double**> elemCoords(
+        p_coordinates, nodesPerElement, nDim);
+      sierra::nalu::SharedMemView<double*> areav(p_scs_areav, numScsIp * nDim);
+      sierra::nalu::SharedMemView<double*> vol(p_scv_volume, numScvIp);
       meSCS->determinant(elemCoords, areav);
       meSCV->determinant(elemCoords, vol);
 

@@ -19,7 +19,9 @@ check_that_values_match(
   const DBLTYPE* oldValues)
 {
   for (size_t i = 0; i < values.extent(0); ++i) {
-    EXPECT_NEAR(stk::simd::get_data(values(i), 0), stk::simd::get_data(oldValues[i],0), tol)
+    EXPECT_NEAR(
+      stk::simd::get_data(values(i), 0), stk::simd::get_data(oldValues[i], 0),
+      tol)
       << "i:" << i;
   }
 }
@@ -34,7 +36,8 @@ check_that_values_match(
   for (size_t i = 0; i < values.extent(0); ++i) {
     for (size_t j = 0; j < values.extent(1); ++j) {
       EXPECT_NEAR(
-        stk::simd::get_data(values(i, j), 0), stk::simd::get_data(oldValues[counter++],0), tol)
+        stk::simd::get_data(values(i, j), 0),
+        stk::simd::get_data(oldValues[counter++], 0), tol)
         << "i:" << i << ", j:" << j;
     }
   }
@@ -51,7 +54,8 @@ check_that_values_match(
     for (size_t j = 0; j < values.extent(1); ++j) {
       for (size_t k = 0; k < values.extent(2); ++k) {
         EXPECT_NEAR(
-          stk::simd::get_data(values(i, j, k), 0), stk::simd::get_data(oldValues[counter++],0), tol)
+          stk::simd::get_data(values(i, j, k), 0),
+          stk::simd::get_data(oldValues[counter++], 0), tol)
           << "i:" << i << ", j:" << j << ", k:" << k;
       }
     }
@@ -79,8 +83,10 @@ compare_old_scv_volume(
 {
   int len = scv_volume.extent(0);
   std::vector<DoubleType> volume(len, 0.0);
-  sierra::nalu::SharedMemView<DoubleType*, sierra::nalu::DeviceShmem> vol(volume.data(), volume.size());
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(v_coords.data(), v_coords.extent(0), v_coords.extent(1));
+  sierra::nalu::SharedMemView<DoubleType*, sierra::nalu::DeviceShmem> vol(
+    volume.data(), volume.size());
+  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(
+    v_coords.data(), v_coords.extent(0), v_coords.extent(1));
   meSCV->determinant(coords, vol);
   check_that_values_match(scv_volume, volume.data());
 }
@@ -93,8 +99,10 @@ compare_old_scs_areav(
 {
   int len = scs_areav.extent(0) * scs_areav.extent(1);
   std::vector<DoubleType> areav(len, 0.0);
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> area(areav.data(), scs_areav.extent(0), scs_areav.extent(1));
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(v_coords.data(), v_coords.extent(0), v_coords.extent(1));
+  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> area(
+    areav.data(), scs_areav.extent(0), scs_areav.extent(1));
+  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(
+    v_coords.data(), v_coords.extent(0), v_coords.extent(1));
   meSCS->determinant(coords, area);
   check_that_values_match(scs_areav, areav.data());
 }

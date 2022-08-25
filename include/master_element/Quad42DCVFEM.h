@@ -106,8 +106,7 @@ private:
   void quad_shape_fcn(const double* par_coord, double* shape_fcn);
 
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scv(
+  KOKKOS_INLINE_FUNCTION void determinant_scv(
     const SharedMemView<DBLTYPE**, SHMEM>& coords,
     SharedMemView<DBLTYPE*, SHMEM>& vol);
 };
@@ -328,8 +327,7 @@ private:
   void quad_shape_fcn(const double* par_coord, double* shape);
 
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scs(
+  KOKKOS_INLINE_FUNCTION void determinant_scs(
     const SharedMemView<DBLTYPE**, SHMEM>& coords,
     SharedMemView<DBLTYPE**, SHMEM>& areav) const;
 };

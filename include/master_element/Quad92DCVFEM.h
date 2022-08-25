@@ -183,20 +183,17 @@ private:
   void set_interior_info();
 
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_FUNCTION DBLTYPE 
-  jacobian_determinant(
+  KOKKOS_FUNCTION DBLTYPE jacobian_determinant(
     const SharedMemView<DBLTYPE**, SHMEM>& coords,
     const double* POINTER_RESTRICT shapeDerivs) const;
 
   template <typename DBLTYPE>
-  KOKKOS_FUNCTION DBLTYPE 
-  jacobian_determinant(
+  KOKKOS_FUNCTION DBLTYPE jacobian_determinant(
     const DBLTYPE* POINTER_RESTRICT elemNodalCoords,
     const DBLTYPE* POINTER_RESTRICT shapeDerivs) const;
 
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scv(
+  KOKKOS_INLINE_FUNCTION void determinant_scv(
     const SharedMemView<DBLTYPE**, SHMEM>& coords,
     SharedMemView<DBLTYPE*, SHMEM>& volume) const;
 };
@@ -337,8 +334,7 @@ private:
     double* POINTER_RESTRICT areaVector) const;
 
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scs(
+  KOKKOS_INLINE_FUNCTION void determinant_scs(
     const SharedMemView<DBLTYPE**, SHMEM>& coords,
     SharedMemView<DBLTYPE**, SHMEM>& areav) const;
 };

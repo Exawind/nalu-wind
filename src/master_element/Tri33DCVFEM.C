@@ -136,8 +136,7 @@ Tri3DSCS::determinant(
 }
 void
 Tri3DSCS::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double**>& areav)
+  const SharedMemView<double**>& coords, SharedMemView<double**>& areav)
 {
   determinant_scs(coords, areav);
 }

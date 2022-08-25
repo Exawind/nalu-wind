@@ -128,8 +128,7 @@ Edge32DSCS::determinant(
 }
 void
 Edge32DSCS::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double**>& area)
+  const SharedMemView<double**>& coords, SharedMemView<double**>& area)
 {
   determinant_scs(coords, area);
 }
