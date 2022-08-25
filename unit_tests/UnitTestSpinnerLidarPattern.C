@@ -71,7 +71,7 @@ TEST(SpinnerLidar, volume_interp)
   stk::mesh::MeshBuilder builder(MPI_COMM_WORLD);
   builder.set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA);
   builder.set_spatial_dimension(3U);
-   auto bulk = builder.create();
+  auto bulk = builder.create();
   auto& meta = bulk->mesh_meta_data();
   stk::io::StkMeshIoBroker io(bulk->parallel());
   io.set_bulk_data(*bulk);
