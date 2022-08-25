@@ -96,8 +96,7 @@ HexSCV::determinant(
 
 void
 HexSCV::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double*>& volume)
+  const SharedMemView<double**>& coords, SharedMemView<double*>& volume)
 {
   determinant_scv(coords, volume);
 }
@@ -301,8 +300,7 @@ HexSCS::determinant(
 
 void
 HexSCS::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double**>& areav)
+  const SharedMemView<double**>& coords, SharedMemView<double**>& areav)
 {
   determinant_scs(coords, areav);
 }

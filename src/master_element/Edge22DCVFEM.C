@@ -99,8 +99,7 @@ Edge2DSCS::determinant(
 
 void
 Edge2DSCS::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double**>& area)
+  const SharedMemView<double**>& coords, SharedMemView<double**>& area)
 {
   determinant_scs(coords, area);
 }

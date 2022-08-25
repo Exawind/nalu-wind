@@ -102,8 +102,7 @@ private:
                                     1.0, 0.0, 1.0,  // vol 4
                                     0.0, 1.0, 1.0}; // vol 5
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scv(
+  KOKKOS_INLINE_FUNCTION void determinant_scv(
     const SharedMemView<DBLTYPE**, SHMEM>& coordel,
     SharedMemView<DBLTYPE*, SHMEM>& volume) const;
 };
@@ -362,10 +361,9 @@ private:
   const int sideOffset_[5] = {0, 4, 8, 12, 15};
 
   double intgExpFaceShift_[54]; // no blanked entries
-		
+
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scs(
+  KOKKOS_INLINE_FUNCTION void determinant_scs(
     const SharedMemView<DBLTYPE**, SHMEM>& coordel,
     SharedMemView<DBLTYPE**, SHMEM>& areav) const;
 };

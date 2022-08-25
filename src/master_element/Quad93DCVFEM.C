@@ -387,8 +387,7 @@ Quad93DSCS::determinant(
 
 void
 Quad93DSCS::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double**>& areav)
+  const SharedMemView<double**>& coords, SharedMemView<double**>& areav)
 {
   determinant_scs(coords, areav);
 }

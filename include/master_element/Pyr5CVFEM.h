@@ -76,7 +76,6 @@ public:
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
-
   void Mij(const double* coords, double* metric, double* deriv);
 
   void shape_fcn(double* shpfc);
@@ -123,11 +122,9 @@ private:
   };
 
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scv(
+  KOKKOS_INLINE_FUNCTION void determinant_scv(
     const SharedMemView<DBLTYPE**, SHMEM>& cordel,
     SharedMemView<DBLTYPE*, SHMEM>& vol);
-
 };
 
 // Pyramid 5 subcontrol surface
@@ -439,8 +436,7 @@ private:
   double intgExpFaceShift_[48] = {0};
 
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scs(
+  KOKKOS_INLINE_FUNCTION void determinant_scs(
     const SharedMemView<DBLTYPE**, SHMEM>& cordel,
     SharedMemView<DBLTYPE**, SHMEM>& areav);
 };

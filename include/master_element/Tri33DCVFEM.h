@@ -112,11 +112,9 @@ private:
                                    0.00, 1.00}; // surf 3
 
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scs(
+  KOKKOS_INLINE_FUNCTION void determinant_scs(
     const SharedMemView<DBLTYPE**, SHMEM>& coords,
     SharedMemView<DBLTYPE**, SHMEM>& areav);
-
 };
 
 } // namespace nalu

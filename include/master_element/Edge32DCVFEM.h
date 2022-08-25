@@ -104,8 +104,7 @@ private:
     double* POINTER_RESTRICT areaVector) const;
 
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scs(
+  KOKKOS_INLINE_FUNCTION void determinant_scs(
     const SharedMemView<DBLTYPE**, SHMEM>& coords,
     SharedMemView<DBLTYPE**, SHMEM>& area) const;
 };

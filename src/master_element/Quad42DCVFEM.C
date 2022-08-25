@@ -206,12 +206,10 @@ Quad42DSCV::determinant(
 
 void
 Quad42DSCV::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double*>& vol)
+  const SharedMemView<double**>& coords, SharedMemView<double*>& vol)
 {
   determinant_scv(coords, vol);
 }
-
 
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
@@ -455,8 +453,7 @@ Quad42DSCS::determinant(
 }
 void
 Quad42DSCS::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double**>& areav)
+  const SharedMemView<double**>& coords, SharedMemView<double**>& areav)
 {
   determinant_scs(coords, areav);
 }

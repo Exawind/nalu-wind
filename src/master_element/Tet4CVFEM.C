@@ -193,8 +193,7 @@ TetSCV::determinant(
 
 void
 TetSCV::determinant(
-  const SharedMemView<double**>& coordel,
-  SharedMemView<double*>& volume)
+  const SharedMemView<double**>& coordel, SharedMemView<double*>& volume)
 {
   determinant_scv(coordel, volume);
 }
@@ -471,8 +470,7 @@ TetSCS::determinant(
 }
 void
 TetSCS::determinant(
-  const SharedMemView<double**>& coordel,
-  SharedMemView<double**>& areav)
+  const SharedMemView<double**>& coordel, SharedMemView<double**>& areav)
 {
   determinant_scs(coordel, areav);
 }

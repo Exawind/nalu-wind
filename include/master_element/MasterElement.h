@@ -115,14 +115,16 @@ public:
     const SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
     SharedMemView<DoubleType**, DeviceShmem>& /* areav */)
   {
-    NGP_ThrowErrorMsg("MasterElement::determinant not implemented for element: DoubleType area");
+    NGP_ThrowErrorMsg("MasterElement::determinant not implemented for element: "
+                      "DoubleType area");
   }
 
   virtual void determinant(
     const SharedMemView<double**>& /* coords */,
     SharedMemView<double**>& /* areav */)
   {
-    NGP_ThrowErrorMsg("MasterElement::determinant not implemented for element: double area");
+    NGP_ThrowErrorMsg(
+      "MasterElement::determinant not implemented for element: double area");
   }
 
   KOKKOS_FUNCTION virtual void gij(
@@ -146,14 +148,16 @@ public:
     const SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
     SharedMemView<DoubleType*, DeviceShmem>& /* volume */)
   {
-    NGP_ThrowErrorMsg("MasterElement::determinant not implemented for element: DoubleType volume");
+    NGP_ThrowErrorMsg("MasterElement::determinant not implemented for element: "
+                      "DoubleType volume");
   }
 
   virtual void determinant(
     const SharedMemView<double**>& /* coords */,
     SharedMemView<double*>& /* volume */)
   {
-    NGP_ThrowErrorMsg("MasterElement::determinant not implemented for element: double volume");
+    NGP_ThrowErrorMsg(
+      "MasterElement::determinant not implemented for element: double volume");
   }
 
   virtual void grad_op(

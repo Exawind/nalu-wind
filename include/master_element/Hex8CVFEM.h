@@ -138,10 +138,10 @@ public:
   const double intgLocShift_[24] = {
     -0.5, -0.5, -0.5, +0.5, -0.5, -0.5, +0.5, +0.5, -0.5, -0.5, +0.5, -0.5,
     -0.5, -0.5, +0.5, +0.5, -0.5, +0.5, +0.5, +0.5, +0.5, -0.5, +0.5, +0.5};
+
 private:
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scv(
+  KOKKOS_INLINE_FUNCTION void determinant_scv(
     const SharedMemView<DBLTYPE**, SHMEM>& coords,
     SharedMemView<DBLTYPE*, SHMEM>& volume) const;
 };
@@ -462,8 +462,7 @@ private:
     SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scs(
+  KOKKOS_INLINE_FUNCTION void determinant_scs(
     const SharedMemView<DBLTYPE**, SHMEM>& coords,
     SharedMemView<DBLTYPE**, SHMEM>& areav) const;
 };

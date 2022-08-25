@@ -685,17 +685,17 @@ Hex27SCV::determinant(
 
 void
 Hex27SCV::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double*>& volume)
+  const SharedMemView<double**>& coords, SharedMemView<double*>& volume)
 {
-  using Type = AlignedViewType<double[AlgTraits::numScvIp_]
-                                     [AlgTraits::nodesPerElement_]
-				     [AlgTraits::nDim_]>;
+  using Type =
+    AlignedViewType<double[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]
+                          [AlgTraits::nDim_]>;
   Type GradWeights;
   for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
       for (int d = 0; d < AlgTraits::nDim_; ++d) {
-        GradWeights(ip, n, d) = stk::simd::get_data(referenceGradWeights_(ip, n, d),0);
+        GradWeights(ip, n, d) =
+          stk::simd::get_data(referenceGradWeights_(ip, n, d), 0);
       }
     }
   }
@@ -1301,17 +1301,17 @@ Hex27SCS::determinant(
 
 void
 Hex27SCS::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double**>& areav)
+  const SharedMemView<double**>& coords, SharedMemView<double**>& areav)
 {
-  using Type = AlignedViewType<double[AlgTraits::numScvIp_]
-                                     [AlgTraits::nodesPerElement_]
-				     [AlgTraits::nDim_]>;
+  using Type =
+    AlignedViewType<double[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]
+                          [AlgTraits::nDim_]>;
   Type GradWeights;
   for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
       for (int d = 0; d < AlgTraits::nDim_; ++d) {
-        GradWeights(ip, n, d) = stk::simd::get_data(referenceGradWeights_(ip, n, d),0);
+        GradWeights(ip, n, d) =
+          stk::simd::get_data(referenceGradWeights_(ip, n, d), 0);
       }
     }
   }

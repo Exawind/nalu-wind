@@ -105,8 +105,7 @@ private:
   const double intgLocShift_[6] = {0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
 
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scv(
+  KOKKOS_INLINE_FUNCTION void determinant_scv(
     const SharedMemView<DBLTYPE**, SHMEM>& coords,
     SharedMemView<DBLTYPE*, SHMEM>& vol) const;
 };
@@ -337,8 +336,7 @@ private:
   double intgExpFaceShift_[3][2][2];
 
   template <typename DBLTYPE, typename SHMEM>
-  KOKKOS_INLINE_FUNCTION void
-  determinant_scs(
+  KOKKOS_INLINE_FUNCTION void determinant_scs(
     const SharedMemView<DBLTYPE**, SHMEM>& coords,
     SharedMemView<DBLTYPE**, SHMEM>& areav) const;
 };

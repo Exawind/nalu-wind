@@ -558,8 +558,7 @@ Quad92DSCV::determinant(
 
 void
 Quad92DSCV::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double*>& volume)
+  const SharedMemView<double**>& coords, SharedMemView<double*>& volume)
 {
   determinant_scv(coords, volume);
 }
@@ -1004,8 +1003,7 @@ Quad92DSCS::determinant(
 }
 void
 Quad92DSCS::determinant(
-  const SharedMemView<double**>& coords,
-  SharedMemView<double**>& areav)
+  const SharedMemView<double**>& coords, SharedMemView<double**>& areav)
 {
   determinant_scs(coords, areav);
 }
