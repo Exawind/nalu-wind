@@ -187,11 +187,11 @@ Tri32DSCV::tri_shape_fcn(
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 Tri32DSCV::determinant_scv(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE*, DeviceShmem>& vol) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE*, SHMEM>& vol) const
 {
 
   const int nint = numIntPoints_;
@@ -307,8 +307,8 @@ Tri32DSCV::determinant(
 }
 void
 Tri32DSCV::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double*, DeviceShmem>& vol)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double*>& vol)
 {
   determinant_scv(coords, vol);
 }
@@ -413,11 +413,11 @@ Tri32DSCS::side_node_ordinals(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 Tri32DSCS::determinant_scs(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE**, SHMEM>& areav) const
 {
   DBLTYPE coord_mid_face[2][3];
 
@@ -486,8 +486,8 @@ Tri32DSCS::determinant(
 }
 void
 Tri32DSCS::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double**, DeviceShmem>& areav)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double**>& areav)
 {
   determinant_scs(coords, areav);
 }

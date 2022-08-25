@@ -80,11 +80,11 @@ TetSCV::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 TetSCV::determinant_scv(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coordel,
-  SharedMemView<DBLTYPE*, DeviceShmem>& volume) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coordel,
+  SharedMemView<DBLTYPE*, SHMEM>& volume) const
 {
   const int tetSubcontrolNodeTable[4][8] = {
     {0, 4, 7, 6, 11, 13, 14, 12},
@@ -193,8 +193,8 @@ TetSCV::determinant(
 
 void
 TetSCV::determinant(
-  const SharedMemView<double**, DeviceShmem>& coordel,
-  SharedMemView<double*, DeviceShmem>& volume)
+  const SharedMemView<double**>& coordel,
+  SharedMemView<double*>& volume)
 {
   determinant_scv(coordel, volume);
 }
@@ -362,11 +362,11 @@ TetSCS::side_node_ordinals(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 TetSCS::determinant_scs(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coordel,
-  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coordel,
+  SharedMemView<DBLTYPE**, SHMEM>& areav) const
 {
   int tetEdgeFacetTable[6][4] = {{4, 7, 14, 13},  {7, 14, 10, 5},
                                  {6, 12, 14, 7},  {11, 13, 14, 12},
@@ -471,8 +471,8 @@ TetSCS::determinant(
 }
 void
 TetSCS::determinant(
-  const SharedMemView<double**, DeviceShmem>& coordel,
-  SharedMemView<double**, DeviceShmem>& areav)
+  const SharedMemView<double**>& coordel,
+  SharedMemView<double**>& areav)
 {
   determinant_scs(coordel, areav);
 }

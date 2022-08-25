@@ -46,8 +46,8 @@ public:
     SharedMemView<DoubleType*, DeviceShmem>& vol) override;
 
   KOKKOS_FUNCTION void determinant(
-    const SharedMemView<double**, DeviceShmem>& coords,
-    SharedMemView<double*, DeviceShmem>& vol) override;
+    const SharedMemView<double**>& coords,
+    SharedMemView<double*>& vol) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -105,11 +105,11 @@ private:
 
   void quad_shape_fcn(const double* par_coord, double* shape_fcn);
 
-  template <typename DBLTYPE>
+  template <typename DBLTYPE, typename SHMEM>
   KOKKOS_INLINE_FUNCTION void
   determinant_scv(
-    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-    SharedMemView<DBLTYPE*, DeviceShmem>& vol);
+    const SharedMemView<DBLTYPE**, SHMEM>& coords,
+    SharedMemView<DBLTYPE*, SHMEM>& vol);
 };
 
 // 2D Quad 4 subcontrol surface
@@ -131,8 +131,8 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION void determinant(
-    const SharedMemView<double**, DeviceShmem>& coords,
-    SharedMemView<double**, DeviceShmem>& areav) override;
+    const SharedMemView<double**>& coords,
+    SharedMemView<double**>& areav) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -327,11 +327,11 @@ private:
 
   void quad_shape_fcn(const double* par_coord, double* shape);
 
-  template <typename DBLTYPE>
+  template <typename DBLTYPE, typename SHMEM>
   KOKKOS_INLINE_FUNCTION void
   determinant_scs(
-    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-    SharedMemView<DBLTYPE**, DeviceShmem>& areav) const;
+    const SharedMemView<DBLTYPE**, SHMEM>& coords,
+    SharedMemView<DBLTYPE**, SHMEM>& areav) const;
 };
 
 } // namespace nalu

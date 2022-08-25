@@ -119,8 +119,8 @@ public:
   }
 
   KOKKOS_FUNCTION virtual void determinant(
-    const SharedMemView<double**, DeviceShmem>& /* coords */,
-    SharedMemView<double**, DeviceShmem>& /* areav */)
+    const SharedMemView<double**>& /* coords */,
+    SharedMemView<double**>& /* areav */)
   {
     NGP_ThrowErrorMsg("MasterElement::determinant not implemented for element");
   }
@@ -150,8 +150,8 @@ public:
   }
 
   KOKKOS_FUNCTION virtual void determinant(
-    const SharedMemView<double**, DeviceShmem>& /* coords */,
-    SharedMemView<double*, DeviceShmem>& /* volume */)
+    const SharedMemView<double**>& /* coords */,
+    SharedMemView<double*>& /* volume */)
   {
     NGP_ThrowErrorMsg("MasterElement::determinant not implemented for element");
   }

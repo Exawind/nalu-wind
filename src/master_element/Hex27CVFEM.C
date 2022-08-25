@@ -685,8 +685,8 @@ Hex27SCV::determinant(
 
 void
 Hex27SCV::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double*, DeviceShmem>& volume)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double*>& volume)
 {
   using Type = AlignedViewType<double[AlgTraits::numScvIp_]
                                      [AlgTraits::nodesPerElement_]
@@ -1301,8 +1301,8 @@ Hex27SCS::determinant(
 
 void
 Hex27SCS::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double**, DeviceShmem>& areav)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double**>& areav)
 {
   using Type = AlignedViewType<double[AlgTraits::numScvIp_]
                                      [AlgTraits::nodesPerElement_]

@@ -58,11 +58,11 @@ HexSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 HexSCV::determinant_scv(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE*, DeviceShmem>& volume) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE*, SHMEM>& volume) const
 {
   constexpr int subDivisionTable[8][8] = {
     {0, 8, 12, 11, 19, 20, 26, 25},  {8, 1, 9, 12, 20, 18, 24, 26},
@@ -96,8 +96,8 @@ HexSCV::determinant(
 
 void
 HexSCV::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double*, DeviceShmem>& volume)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double*>& volume)
 {
   determinant_scv(coords, volume);
 }
@@ -263,11 +263,11 @@ HexSCS::shifted_grad_op(
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 HexSCS::determinant_scs(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE**, SHMEM>& areav) const
 {
   constexpr int hex_edge_facet_table[12][4] = {
     {20, 8, 12, 26},  {24, 9, 12, 26},  {10, 12, 26, 23}, {11, 25, 26, 12},
@@ -301,8 +301,8 @@ HexSCS::determinant(
 
 void
 HexSCS::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double**, DeviceShmem>& areav)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double**>& areav)
 {
   determinant_scs(coords, areav);
 }

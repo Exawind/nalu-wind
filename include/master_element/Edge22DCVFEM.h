@@ -46,8 +46,8 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>& area) override;
 
   KOKKOS_FUNCTION virtual void determinant(
-    const SharedMemView<double**, DeviceShmem>& coords,
-    SharedMemView<double**, DeviceShmem>& area) override;
+    const SharedMemView<double**>& coords,
+    SharedMemView<double**>& area) override;
 
   KOKKOS_FUNCTION virtual void
   shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
@@ -94,11 +94,11 @@ private:
   const double intgLoc_[2] = {-0.25, 0.25};
   const double intgLocShift_[2] = {-0.50, 0.50};
 
-  template <typename DBLTYPE>
+  template <typename DBLTYPE, typename SHMEM>
   KOKKOS_INLINE_FUNCTION void
   determinant_scs(
-    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-    SharedMemView<DBLTYPE**, DeviceShmem>& area) const;
+    const SharedMemView<DBLTYPE**, SHMEM>& coords,
+    SharedMemView<DBLTYPE**, SHMEM>& area) const;
 };
 
 } // namespace nalu
