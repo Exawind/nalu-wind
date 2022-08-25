@@ -93,7 +93,7 @@ compare_old_scs_areav(
 {
   int len = scs_areav.extent(0) * scs_areav.extent(1);
   std::vector<DoubleType> areav(len, 0.0);
-  sierra::nalu::SharedMemView<DoubleType*, sierra::nalu::DeviceShmem> area(areav.data(), areav.size());
+  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> area(areav.data(), scs_areav.extent(0), scs_areav.extent(1));
   sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(v_coords.data(), v_coords.extent(0), v_coords.extent(1));
   meSCS->determinant(coords, area);
   check_that_values_match(scs_areav, areav.data());

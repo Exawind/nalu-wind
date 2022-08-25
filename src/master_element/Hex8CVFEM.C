@@ -86,7 +86,7 @@ HexSCV::determinant_scv(
   }
 }
 
-void
+KOKKOS_FUNCTION void
 HexSCV::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType*, DeviceShmem>& volume)
@@ -291,7 +291,7 @@ HexSCS::determinant_scs(
   }
 }
 
-void
+KOKKOS_FUNCTION void
 HexSCS::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType**, DeviceShmem>& areav)

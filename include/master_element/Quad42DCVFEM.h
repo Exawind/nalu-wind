@@ -41,11 +41,11 @@ public:
 
   KOKKOS_FUNCTION virtual const int* ipNodeMap(int ordinal = 0) const final;
 
-  KOKKOS_FUNCTION void determinant(
+  KOKKOS_FUNCTION virtual void determinant(
     const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType*, DeviceShmem>& vol) override;
 
-  KOKKOS_FUNCTION void determinant(
+  virtual void determinant(
     const SharedMemView<double**>& coords,
     SharedMemView<double*>& vol) override;
 
@@ -126,11 +126,11 @@ public:
 
   KOKKOS_FUNCTION virtual const int* ipNodeMap(int ordinal = 0) const final;
 
-  KOKKOS_FUNCTION void determinant(
+  KOKKOS_FUNCTION virtual void determinant(
     const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
-  KOKKOS_FUNCTION void determinant(
+  virtual void determinant(
     const SharedMemView<double**>& coords,
     SharedMemView<double**>& areav) override;
 

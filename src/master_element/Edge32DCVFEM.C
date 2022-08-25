@@ -119,7 +119,7 @@ Edge32DSCS::determinant_scs(
   }
 }
 
-void
+KOKKOS_FUNCTION void
 Edge32DSCS::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType**, DeviceShmem>& area)

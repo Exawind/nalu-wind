@@ -124,7 +124,7 @@ Quad3DSCS::determinant_scs(
   }
 }
 
-void
+KOKKOS_FUNCTION void
 Quad3DSCS::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType**, DeviceShmem>& areav)

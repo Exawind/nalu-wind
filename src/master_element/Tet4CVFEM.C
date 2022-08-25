@@ -183,7 +183,7 @@ TetSCV::determinant_scv(
     // negative volume.");
   }
 }
-void
+KOKKOS_FUNCTION void
 TetSCV::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coordel,
   SharedMemView<DoubleType*, DeviceShmem>& volume)
@@ -462,7 +462,7 @@ TetSCS::determinant_scs(
     quad_area_by_triangulation(ics, scscoords, areav);
   }
 }
-void
+KOKKOS_FUNCTION void
 TetSCS::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coordel,
   SharedMemView<DoubleType**, DeviceShmem>& areav)

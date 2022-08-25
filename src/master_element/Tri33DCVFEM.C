@@ -127,15 +127,13 @@ Tri3DSCS::determinant_scs(
     }
   }
 }
-KOKKOS_FUNCTION
-void
+KOKKOS_FUNCTION void
 Tri3DSCS::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType**, DeviceShmem>& areav)
 {
   determinant_scs(coords, areav);
 }
-KOKKOS_FUNCTION
 void
 Tri3DSCS::determinant(
   const SharedMemView<double**>& coords,

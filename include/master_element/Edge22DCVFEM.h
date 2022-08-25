@@ -45,7 +45,7 @@ public:
     const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType**, DeviceShmem>& area) override;
 
-  KOKKOS_FUNCTION virtual void determinant(
+  virtual void determinant(
     const SharedMemView<double**>& coords,
     SharedMemView<double**>& area) override;
 

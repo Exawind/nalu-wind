@@ -548,7 +548,7 @@ Quad92DSCV::determinant_scv(
   }
 }
 
-void
+KOKKOS_FUNCTION void
 Quad92DSCV::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType*, DeviceShmem>& volume)
@@ -995,7 +995,7 @@ Quad92DSCS::determinant_scs(
   }
 }
 
-void
+KOKKOS_FUNCTION void
 Quad92DSCS::determinant(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType**, DeviceShmem>& areav)

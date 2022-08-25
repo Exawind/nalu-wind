@@ -53,11 +53,11 @@ public:
   KOKKOS_FUNCTION void
   shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
 
-  KOKKOS_FUNCTION void determinant(
+  KOKKOS_FUNCTION virtual void determinant(
     const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType*, DeviceShmem>& vol) override;
 
-  KOKKOS_FUNCTION void determinant(
+  virtual void determinant(
     const SharedMemView<double**>& coords,
     SharedMemView<double*>& vol) override;
 
@@ -150,11 +150,11 @@ public:
   KOKKOS_FUNCTION void
   shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
 
-  KOKKOS_FUNCTION void determinant(
+  KOKKOS_FUNCTION virtual void determinant(
     const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
-  KOKKOS_FUNCTION void determinant(
+  virtual void determinant(
     const SharedMemView<double**>& coords,
     SharedMemView<double**>& areav) override;
 
