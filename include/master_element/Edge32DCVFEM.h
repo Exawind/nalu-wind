@@ -50,8 +50,8 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>& area) override;
 
   KOKKOS_FUNCTION virtual void determinant(
-    const SharedMemView<double**, DeviceShmem>& coords,
-    SharedMemView<double**, DeviceShmem>& area) override;
+    const SharedMemView<double**>& coords,
+    SharedMemView<double**>& area) override;
 
   KOKKOS_FUNCTION virtual void
   shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
@@ -103,11 +103,11 @@ private:
     const double s,
     double* POINTER_RESTRICT areaVector) const;
 
-  template <typename DBLTYPE>
+  template <typename DBLTYPE, typename SHMEM>
   KOKKOS_INLINE_FUNCTION void
   determinant_scs(
-    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-    SharedMemView<DBLTYPE**, DeviceShmem>& area) const;
+    const SharedMemView<DBLTYPE**, SHMEM>& coords,
+    SharedMemView<DBLTYPE**, SHMEM>& area) const;
 };
 
 } // namespace nalu

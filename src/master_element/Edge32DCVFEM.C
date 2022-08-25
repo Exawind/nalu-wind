@@ -90,11 +90,11 @@ Edge32DSCS::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 Edge32DSCS::determinant_scs(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE**, DeviceShmem>& area) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE**, SHMEM>& area) const
 {
 
   NALU_ALIGNED DBLTYPE areaVector[2];
@@ -128,8 +128,8 @@ Edge32DSCS::determinant(
 }
 void
 Edge32DSCS::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double**, DeviceShmem>& area)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double**>& area)
 {
   determinant_scs(coords, area);
 }

@@ -58,8 +58,8 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION virtual void determinant(
-    const SharedMemView<double**, DeviceShmem>& coords,
-    SharedMemView<double**, DeviceShmem>& areav) override;
+    const SharedMemView<double**>& coords,
+    SharedMemView<double**>& areav) override;
 
   double isInElement(
     const double* elemNodalCoord,
@@ -146,11 +146,11 @@ private:
 
   double parametric_distance(const std::array<double, 3>& x);
 
-  template <typename DBLTYPE>
+  template <typename DBLTYPE, typename SHMEM>
   KOKKOS_INLINE_FUNCTION void
   determinant_scs(
-    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-    SharedMemView<DBLTYPE**, DeviceShmem>& areav) const;
+    const SharedMemView<DBLTYPE**, SHMEM>& coords,
+    SharedMemView<DBLTYPE**, SHMEM>& areav) const;
 };
 
 } // namespace nalu

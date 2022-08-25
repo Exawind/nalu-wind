@@ -255,8 +255,8 @@ public:
     SharedMemView<DoubleType*, DeviceShmem>& volume) override;
 
   KOKKOS_FUNCTION void determinant(
-    const SharedMemView<double**, DeviceShmem>& coords,
-    SharedMemView<double*, DeviceShmem>& volume) override;
+    const SharedMemView<double**>& coords,
+    SharedMemView<double*>& volume) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -362,8 +362,8 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION void determinant(
-    const SharedMemView<double**, DeviceShmem>& coords,
-    SharedMemView<double**, DeviceShmem>& areav) override;
+    const SharedMemView<double**>& coords,
+    SharedMemView<double**>& areav) override;
 
   KOKKOS_FUNCTION void gij(
     SharedMemView<DoubleType**, DeviceShmem>& coords,

@@ -129,11 +129,11 @@ Quad42DSCV::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 Quad42DSCV::determinant_scv(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE*, DeviceShmem>& vol)
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE*, SHMEM>& vol)
 {
 
   const int npe = nodesPerElement_;
@@ -212,8 +212,8 @@ Quad42DSCV::determinant(
 
 void
 Quad42DSCV::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double*, DeviceShmem>& vol)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double*>& vol)
 {
   determinant_scv(coords, vol);
 }
@@ -385,11 +385,11 @@ Quad42DSCS::side_node_ordinals(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 Quad42DSCS::determinant_scs(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE**, SHMEM>& areav) const
 {
   const double zero = 0.0;
   const double one = 1.0;
@@ -461,8 +461,8 @@ Quad42DSCS::determinant(
 }
 void
 Quad42DSCS::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double**, DeviceShmem>& areav)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double**>& areav)
 {
   determinant_scs(coords, areav);
 }

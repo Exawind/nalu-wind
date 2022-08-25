@@ -47,8 +47,8 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION virtual void determinant(
-    const SharedMemView<double**, DeviceShmem>& coords,
-    SharedMemView<double**, DeviceShmem>& areav) override;
+    const SharedMemView<double**>& coords,
+    SharedMemView<double**>& areav) override;
 
   KOKKOS_FUNCTION virtual void
   shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
@@ -111,11 +111,11 @@ private:
                                    1.00, 0.00,  // surf 2
                                    0.00, 1.00}; // surf 3
 
-  template <typename DBLTYPE>
+  template <typename DBLTYPE, typename SHMEM>
   KOKKOS_INLINE_FUNCTION void
   determinant_scs(
-    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-    SharedMemView<DBLTYPE**, DeviceShmem>& areav);
+    const SharedMemView<DBLTYPE**, SHMEM>& coords,
+    SharedMemView<DBLTYPE**, SHMEM>& areav);
 
 };
 

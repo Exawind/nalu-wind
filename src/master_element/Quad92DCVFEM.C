@@ -499,10 +499,10 @@ Quad92DSCV::shifted_shape_fcn(double* shpfc)
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 DBLTYPE
 Quad92DSCV::jacobian_determinant(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& elemNodalCoords,
+  const SharedMemView<DBLTYPE**, SHMEM>& elemNodalCoords,
   const double* POINTER_RESTRICT shapeDerivs) const
 {
   DBLTYPE dx_ds1 = 0.0;
@@ -530,11 +530,11 @@ Quad92DSCV::jacobian_determinant(
   return det_j;
 }
 
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 Quad92DSCV::determinant_scv(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE*, DeviceShmem>& volume) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE*, SHMEM>& volume) const
 {
   for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
     const int grad_offset = nDim_ * nodesPerElement_ * ip;
@@ -558,8 +558,8 @@ Quad92DSCV::determinant(
 
 void
 Quad92DSCV::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double*, DeviceShmem>& volume)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double*>& volume)
 {
   determinant_scv(coords, volume);
 }
@@ -953,11 +953,11 @@ Quad92DSCS::side_node_ordinals(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 Quad92DSCS::determinant_scs(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE**, SHMEM>& areav) const
 {
   // returns the normal vector (dyds,-dxds) for constant t curves
   // returns the normal vector (dydt,-dxdt) for constant s curves
@@ -1004,8 +1004,8 @@ Quad92DSCS::determinant(
 }
 void
 Quad92DSCS::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double**, DeviceShmem>& areav)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double**>& areav)
 {
   determinant_scs(coords, areav);
 }
@@ -1272,10 +1272,10 @@ Quad92DSCS::opposingFace(const int ordinal, const int node)
 //--------------------------------------------------------------------------
 //-------- area_vector -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <Jacobian::Direction direction, typename DBLTYPE>
+template <Jacobian::Direction direction, typename DBLTYPE, typename SHMEM>
 void
 Quad92DSCS::area_vector(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& elemNodalCoords,
+  const SharedMemView<DBLTYPE**, SHMEM>& elemNodalCoords,
   const double* POINTER_RESTRICT shapeDeriv,
   DBLTYPE* POINTER_RESTRICT normalVec) const
 {

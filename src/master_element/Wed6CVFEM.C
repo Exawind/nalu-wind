@@ -97,11 +97,11 @@ WedSCV::ipNodeMap(int /*ordinal*/) const
   return &ipNodeMap_[0];
 }
 
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 WedSCV::determinant_scv(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coordel,
-  SharedMemView<DBLTYPE*, DeviceShmem>& volume) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coordel,
+  SharedMemView<DBLTYPE*, SHMEM>& volume) const
 {
   const int wedSubControlNodeTable[6][8] = {
     {0, 15, 16, 6, 8, 19, 20, 9},    {9, 6, 1, 7, 20, 16, 14, 18},
@@ -212,8 +212,8 @@ WedSCV::determinant(
 
 void
 WedSCV::determinant(
-  const SharedMemView<double**, DeviceShmem>& coordel,
-  SharedMemView<double*, DeviceShmem>& volume)
+  const SharedMemView<double**>& coordel,
+  SharedMemView<double*>& volume)
 {
   determinant_scv(coordel, volume);
 }
@@ -364,11 +364,11 @@ WedSCS::side_node_ordinals(int ordinal) const
   return &sideNodeOrdinals_[sideOffset_[ordinal]];
 }
 
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 WedSCS::determinant_scs(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coordel,
-  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coordel,
+  SharedMemView<DBLTYPE**, SHMEM>& areav) const
 {
   const int wedEdgeFacetTable[9][4] = {
     {6, 9, 20, 16},   // sc face 1 -- points from 1 -> 2
@@ -483,8 +483,8 @@ WedSCS::determinant(
 
 void
 WedSCS::determinant(
-  const SharedMemView<double**, DeviceShmem>& coordel,
-  SharedMemView<double**, DeviceShmem>& areav)
+  const SharedMemView<double**>& coordel,
+  SharedMemView<double**>& areav)
 {
   determinant_scs(coordel, areav);
 }

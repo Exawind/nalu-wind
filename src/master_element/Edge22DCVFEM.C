@@ -56,11 +56,11 @@ Edge2DSCS::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 Edge2DSCS::determinant_scs(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE**, DeviceShmem>& area) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE**, SHMEM>& area) const
 {
   constexpr int npe = nodesPerElement_;
   constexpr int dim = nDim_;
@@ -99,8 +99,8 @@ Edge2DSCS::determinant(
 
 void
 Edge2DSCS::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double**, DeviceShmem>& area)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double**>& area)
 {
   determinant_scs(coords, area);
 }

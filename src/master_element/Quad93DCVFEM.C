@@ -320,11 +320,11 @@ Quad93DSCS::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 Quad93DSCS::determinant_scs(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE**, DeviceShmem>& areav) const
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE**, SHMEM>& areav) const
 {
   NALU_ALIGNED DBLTYPE areaVector[3];
   DBLTYPE dx_ds1 = 0.0;
@@ -387,8 +387,8 @@ Quad93DSCS::determinant(
 
 KOKKOS_FUNCTION void
 Quad93DSCS::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double**, DeviceShmem>& areav)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double**>& areav)
 {
   determinant_scs(coords, areav);
 }

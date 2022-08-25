@@ -48,8 +48,8 @@ public:
     SharedMemView<DoubleType*, DeviceShmem>& vol) override;
 
   KOKKOS_FUNCTION void determinant(
-    const SharedMemView<double**, DeviceShmem>& coords,
-    SharedMemView<double*, DeviceShmem>& vol) override;
+    const SharedMemView<double**>& coords,
+    SharedMemView<double*>& vol) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -104,11 +104,11 @@ private:
 
   const double intgLocShift_[6] = {0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
 
-  template <typename DBLTYPE>
+  template <typename DBLTYPE, typename SHMEM>
   KOKKOS_INLINE_FUNCTION void
   determinant_scv(
-    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-    SharedMemView<DBLTYPE*, DeviceShmem>& vol) const;
+    const SharedMemView<DBLTYPE**, SHMEM>& coords,
+    SharedMemView<DBLTYPE*, SHMEM>& vol) const;
 };
 
 // 2D Tri 3 subcontrol surface
@@ -132,8 +132,8 @@ public:
     SharedMemView<DoubleType**, DeviceShmem>& areav) override;
 
   KOKKOS_FUNCTION void determinant(
-    const SharedMemView<double**, DeviceShmem>& coords,
-    SharedMemView<double**, DeviceShmem>& areav) override;
+    const SharedMemView<double**>& coords,
+    SharedMemView<double**>& areav) override;
 
   KOKKOS_FUNCTION void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -336,11 +336,11 @@ private:
 
   double intgExpFaceShift_[3][2][2];
 
-  template <typename DBLTYPE>
+  template <typename DBLTYPE, typename SHMEM>
   KOKKOS_INLINE_FUNCTION void
   determinant_scs(
-    const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-    SharedMemView<DBLTYPE**, DeviceShmem>& areav) const;
+    const SharedMemView<DBLTYPE**, SHMEM>& coords,
+    SharedMemView<DBLTYPE**, SHMEM>& areav) const;
 };
 
 } // namespace nalu

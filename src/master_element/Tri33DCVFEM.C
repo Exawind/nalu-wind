@@ -51,11 +51,11 @@ Tri3DSCS::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 Tri3DSCS::determinant_scs(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& coords,
-  SharedMemView<DBLTYPE**, DeviceShmem>& areav)
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE**, SHMEM>& areav)
 {
   constexpr int dim = nDim_;
   constexpr int nnodes = nodesPerElement_;
@@ -138,8 +138,8 @@ Tri3DSCS::determinant(
 KOKKOS_FUNCTION
 void
 Tri3DSCS::determinant(
-  const SharedMemView<double**, DeviceShmem>& coords,
-  SharedMemView<double**, DeviceShmem>& areav)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double**>& areav)
 {
   determinant_scs(coords, areav);
 }

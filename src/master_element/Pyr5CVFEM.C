@@ -272,11 +272,11 @@ octohedron_volume_by_triangle_facets(const DBLTYPE volcoords[10][3])
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 PyrSCV::determinant_scv(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& cordel,
-  SharedMemView<DBLTYPE*, DeviceShmem>& vol)
+  const SharedMemView<DBLTYPE**, SHMEM>& cordel,
+  SharedMemView<DBLTYPE*, SHMEM>& vol)
 {
   constexpr int npe = nodesPerElement_;
   constexpr int nscv = numIntPoints_;
@@ -420,8 +420,8 @@ PyrSCV::determinant(
 
 void
 PyrSCV::determinant(
-  const SharedMemView<double**, DeviceShmem>& cordel,
-  SharedMemView<double*, DeviceShmem>& vol)
+  const SharedMemView<double**>& cordel,
+  SharedMemView<double*>& vol)
 {
   determinant_scv(cordel, vol);
 }
@@ -599,11 +599,11 @@ PyrSCS::side_node_ordinals(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
 PyrSCS::determinant_scs(
-  const SharedMemView<DBLTYPE**, DeviceShmem>& cordel,
-  SharedMemView<DBLTYPE**, DeviceShmem>& areav)
+  const SharedMemView<DBLTYPE**, SHMEM>& cordel,
+  SharedMemView<DBLTYPE**, SHMEM>& areav)
 {
   const int pyramidEdgeFacetTable[12][4] = {
     {5, 9, 18, 12},   // sc face 1  -- points from 1 -> 2
@@ -741,8 +741,8 @@ PyrSCS::determinant(
 
 void
 PyrSCS::determinant(
-  const SharedMemView<double**, DeviceShmem>& cordel,
-  SharedMemView<double**, DeviceShmem>& areav)
+  const SharedMemView<double**>& cordel,
+  SharedMemView<double**>& areav)
 {
   determinant_scs(cordel, areav);
 }
