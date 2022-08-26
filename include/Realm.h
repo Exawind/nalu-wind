@@ -362,6 +362,8 @@ public:
   const std::vector<std::string>& get_physics_target_names();
   double get_tanh_blending(const std::string dofName);
 
+  void output_lidar();
+
   Realms& realms_;
 
   std::string name_;

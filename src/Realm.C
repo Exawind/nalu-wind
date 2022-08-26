@@ -643,8 +643,20 @@ Realm::look_ahead_create_lidar(const YAML::Node& node)
     if (is_scalar) {
       create_lidar(lidar_spec);
     } else {
+      std::set<std::string> names;
       for (auto spec : lidar_spec) {
+        if (!spec["name"]) {
+          throw std::runtime_error("lidar sequence requires a name");
+        }
+        names.insert(spec["name"].as<std::string>());
         create_lidar(spec);
+      }
+      if (names.size() != lidar_spec.size()) {
+        std::string msg = "Non unique file name for lidar detected: ";
+        for (auto spec : lidar_spec) {
+          msg += spec["name"].as<std::string>() + " ";
+        }
+        throw std::runtime_error(msg);
       }
     }
   }
@@ -2443,7 +2455,7 @@ Realm::initialize_post_processing_algorithms()
     actuatorModel_->init(bulk_data());
 
   for (auto& los : lidarLOS_) {
-    los.set_time(timeIntegrator_->get_current_time());
+    los.set_time(get_current_time());
   }
 }
 
@@ -4503,6 +4515,33 @@ Realm::process_external_data_transfer()
   timerTransferExecute_ += timeXfer;
 }
 
+void
+Realm::output_lidar()
+{
+  NaluEnv::self().naluOutputP0()
+    << "LidarLineOfSite::output begin" << std::endl;
+
+  const auto& velocity_field =
+    *meta_data().get_field(stk::topology::NODE_RANK, "velocity");
+
+  const auto sel = (stk::mesh::selectField(velocity_field) &
+                    meta_data().locally_owned_part()) -
+                   get_inactive_selector();
+  for (auto& los : lidarLOS_) {
+    const double small = 1e-8 * timeIntegrator_->get_time_step();
+    const double next_time =
+      timeIntegrator_->get_current_time() + timeIntegrator_->get_time_step();
+    while (los.time() < next_time - small) {
+      const double dtratio =
+        (los.time() - timeIntegrator_->get_current_time()) /
+        timeIntegrator_->get_time_step();
+      los.output(bulk_data(), sel, get_coordinates_name(), dtratio);
+      los.increment_time();
+    }
+  }
+  NaluEnv::self().naluOutputP0() << "LidarLineOfSite::output end" << std::endl;
+}
+
 //--------------------------------------------------------------------------
 //-------- post_converged_work ---------------------------------------------
 //--------------------------------------------------------------------------
@@ -4522,26 +4561,12 @@ Realm::post_converged_work()
     dataProbePostProcessing_->execute();
   }
 
-  NaluEnv::self().naluOutputP0()
-    << "LidarLineOfSite::output begin" << std::endl;
-  for (auto& los : lidarLOS_) {
-    const double small = 1e-8 * timeIntegrator_->get_time_step();
-    const double next_time =
-      timeIntegrator_->get_current_time() + timeIntegrator_->get_time_step();
-
-    while (los.time() < next_time - small) {
-      const double dtratio =
-        (los.time() - timeIntegrator_->get_current_time()) /
-        timeIntegrator_->get_time_step();
-      los.output(
-        bulk_data(), !get_inactive_selector(), get_coordinates_name(), dtratio);
-      los.increment_time();
-    }
-  }
-  NaluEnv::self().naluOutputP0() << "LidarLineOfSite::output end" << std::endl;
-
   if (nullptr != bdyLayerStats_)
     bdyLayerStats_->execute();
+
+  if (lidarLOS_.size() > 0) {
+    output_lidar();
+  }
 }
 
 //--------------------------------------------------------------------------

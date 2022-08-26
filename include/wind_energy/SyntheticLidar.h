@@ -28,7 +28,8 @@ public:
   std::unique_ptr<DataProbeSpecInfo>
   determine_line_of_site_info(const YAML::Node& node);
 
-  double time() { return lidar_time_; }
+  double time() const { return lidar_time_; }
+
   void set_time(double t) { lidar_time_ = t; }
   void increment_time() { lidar_time_ += lidar_dt_; }
 
@@ -40,6 +41,11 @@ public:
 
 private:
   enum class Output { NETCDF, TEXT, DATAPROBE } output_type_{Output::NETCDF};
+  enum class Predictor {
+    NEAREST,
+    FORWARD_EULER
+  } predictor_{Predictor::FORWARD_EULER};
+
   std::unique_ptr<SegmentGenerator> segGen;
 
   void prepare_nc_file();
@@ -64,6 +70,7 @@ private:
   std::vector<std::string> fromTargetNames_;
 
   std::string name_{"lidar-los"};
+  std::string fname_{"lidar-los.nc"};
 };
 
 } // namespace nalu

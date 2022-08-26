@@ -3,6 +3,7 @@
 #include <wind_energy/SyntheticLidar.h>
 #include "UnitTestUtils.h"
 
+#include <stk_mesh/base/MeshBuilder.hpp>
 #include <yaml-cpp/yaml.h>
 
 #include <ostream>
@@ -67,12 +68,13 @@ velocity_func(const double* x, double time)
 
 TEST(SpinnerLidar, volume_interp)
 {
-  stk::mesh::MetaData meta(3u);
-  stk::mesh::BulkData bulk(
-    meta, MPI_COMM_WORLD, stk::mesh::BulkData::NO_AUTO_AURA);
-  stk::io::StkMeshIoBroker io(bulk.parallel());
-
-  io.set_bulk_data(bulk);
+  stk::mesh::MeshBuilder builder(MPI_COMM_WORLD);
+  builder.set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA);
+  builder.set_spatial_dimension(3U);
+  auto bulk = builder.create();
+  auto& meta = bulk->mesh_meta_data();
+  stk::io::StkMeshIoBroker io(bulk->parallel());
+  io.set_bulk_data(*bulk);
 
   const int n = 16;
   const auto nx = std::to_string(n);
@@ -96,12 +98,11 @@ TEST(SpinnerLidar, volume_interp)
     *dynamic_cast<const vector_field_type*>(meta.coordinate_field());
 
   const auto& node_buckets =
-    bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part());
+    bulk->get_buckets(stk::topology::NODE_RANK, meta.universal_part());
   for (const auto* ib : node_buckets) {
     for (const auto& node : *ib) {
       auto* uptr = stk::mesh::field_data(vel_field, node);
       auto* uptr_old = stk::mesh::field_data(vel_field_old, node);
-
       const auto* xptr = stk::mesh::field_data(coord_field, node);
       const auto vel_at_x = velocity_func(xptr, 0);
       for (int d = 0; d < 3; ++d) {
@@ -115,9 +116,9 @@ TEST(SpinnerLidar, volume_interp)
     LidarLineOfSite los;
     los.load(YAML::Load(lidarSpec)["lidar_specifications"]);
     los.set_time(0);
-    los.output(bulk, meta.universal_part(), "coordinates", 0);
+    los.output(*bulk, meta.universal_part(), "coordinates", 0);
 
-    if (bulk.parallel_rank() == 0) {
+    if (bulk->parallel_rank() == 0) {
       std::string line;
       std::ifstream myfile("lidar-los.txt");
       if (myfile.is_open()) {
@@ -160,7 +161,7 @@ TEST(SpinnerLidar, volume_interp)
       "  number_of_samples: 984                               \n"
       "  points_along_line: 4                                 \n"
       "  center: [500,500,100]                                \n"
-      "  beam_length: 500.                                    \n"
+      "  beam_length: 50.                                     \n"
       "  axis: [1,1,0]                                        \n"
       "  ground_direction: [0,0,1]                            \n"
       "  output: netcdf                                       \n"
@@ -183,10 +184,51 @@ TEST(SpinnerLidar, volume_interp)
           }
         }
       }
-      los.output(bulk, !stk::mesh::Selector{}, "coordinates", 0);
+      los.output(*bulk, !stk::mesh::Selector{}, "coordinates", 0);
       los.increment_time();
     }
   }
 }
+
+TEST(Spinner, invalid_predictor_throws)
+{
+  const std::string lidar_nc =
+    "lidar_specifications:                                  \n"
+    "  from_target_part: [unused]                           \n"
+    "  inner_prism_initial_theta: 90                        \n"
+    "  inner_prism_rotation_rate: 3.5                       \n"
+    "  inner_prism_azimuth: 15.2                            \n"
+    "  outer_prism_initial_theta: 90                        \n"
+    "  outer_prism_rotation_rate: 6.5                       \n"
+    "  outer_prism_azimuth: 15.2                            \n"
+    "  scan_time: 2 #seconds                                \n"
+    "  number_of_samples: 984                               \n"
+    "  points_along_line: 4                                 \n"
+    "  center: [500,500,100]                                \n"
+    "  beam_length: 500.                                    \n"
+    "  axis: [1,1,0]                                        \n"
+    "  ground_direction: [0,0,1]                            \n"
+    "  output: netcdf                                       \n"
+    "  time_step: 0.01                                      \n"
+    "  name: lidar/lidar-1                                  \n";
+
+  const std::string bad_predictor = "  predictor: foo";
+  const std::string good_predictor = "  predictor: nearest";
+
+  const auto bad_spec =
+    YAML::Load(lidar_nc + bad_predictor)["lidar_specifications"];
+  const auto good_spec =
+    YAML::Load(lidar_nc + good_predictor)["lidar_specifications"];
+
+  {
+    LidarLineOfSite los;
+    EXPECT_NO_THROW(los.load(good_spec));
+  }
+  {
+    LidarLineOfSite los;
+    EXPECT_THROW(los.load(bad_spec), std::runtime_error);
+  }
+}
+
 } // namespace nalu
 } // namespace sierra

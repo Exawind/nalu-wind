@@ -297,6 +297,7 @@ realms:
             frequency: 10
             points_along_line: 10
             output: netcdf
+            predictor: forward_euler
             scanning_lidar_specifications:
               center: *lidar_center
               beam_length: 20
@@ -307,14 +308,15 @@ realms:
               reset_time_delta: 0 #s, Time to reset LIDAR after sweep.
               elevation_angles: [0]
 
-          - name: scan-2
+          - name: folder-to-be-created/scan-2
             type: scanning
             frequency: 10 #Hz
             points_along_line: 2
             output: text
+            predictor: nearest
             scanning_lidar_specifications:
               center: *lidar_center
-              beam_length: 20 #m
+              beam_length: 200000 # to check behavior when points aren't found
               axis: [1,0,0] # Zero angle vector for the angular sweep
               stare_time: 1 #s
               sweep_angle: 30 #deg, Extent of angular sweep between sweep_angle/2 to -sweep_angle/2
