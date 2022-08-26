@@ -61,8 +61,8 @@
 #include <DataProbePostProcessing.h>
 #include <wind_energy/BdyLayerStatistics.h>
 
-// actuator line
-#include <aero/actuator/ActuatorModel.h>
+// actuator line/fsi
+#include <aero/AeroContainer.h>
 
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <wind_energy/SyntheticLidar.h>
@@ -598,8 +598,8 @@ Realm::look_ahead_and_creation(const YAML::Node& node)
     if (foundActuator.size() != 1)
       throw std::runtime_error(
         "look_ahead_and_create::error: Too many actuator line blocks");
-    actuatorModel_ = std::make_unique<ActuatorModel>();
-    actuatorModel_->parse(*foundActuator[0]);
+    aeroContainer_ = std::make_unique<AeroContainer>();
+    aeroContainer_->actuators().parse(*foundActuator[0]);
   }
 
   // Boundary Layer Statistics post-processing
@@ -1107,8 +1107,8 @@ Realm::setup_post_processing_algorithms()
     dataProbePostProcessing_->setup();
   }
 
-  if (actuatorModel_)
-    actuatorModel_->setup(get_time_step_from_file(), bulk_data());
+  if (aeroContainer_)
+    aeroContainer_->actuators().setup(get_time_step_from_file(), bulk_data());
 
   // check for norm nodal fields
   if (NULL != solutionNormPostProcessing_)
@@ -1920,9 +1920,9 @@ Realm::advance_time_step()
   compute_vrtm();
 
   // check for  actuator; assemble the source terms for this step
-  if (actuatorModel_) {
+  if (aeroContainer_) {
     const double start_time = NaluEnv::self().nalu_time();
-    actuatorModel_->execute(timerActuator_);
+    aeroContainer_->actuators().execute(timerActuator_);
     const double end_time = NaluEnv::self().nalu_time();
     timerActuator_ += end_time - start_time;
   }
@@ -2452,8 +2452,8 @@ Realm::initialize_post_processing_algorithms()
     ablForcingAlg_->initialize();
   }
 
-  if (actuatorModel_)
-    actuatorModel_->init(bulk_data());
+  if (aeroContainer_)
+    aeroContainer_->actuators().init(bulk_data());
 
   for (auto& los : lidarLOS_) {
     los.set_time(get_current_time());

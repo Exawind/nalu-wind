@@ -25,6 +25,10 @@ namespace nalu {
  */
 class AeroContainer
 {
+  AeroContainer() = default;
+
+  ActuatorModel* actuators() { return actuatorModel_.get(); }
+
 private:
 #ifdef NALU_USES_OPENFAST
   // TODO this should be the only instance of openfast
@@ -33,7 +37,7 @@ private:
   std::shared_ptr<fast::OpenFAST> fast_;
 #endif
   // TODO move calls to actuator model in realm to this container class
-  std::unique_ptr<ActuatorModel> actuatorModel_;
+  ActuatorModel actuatorModel_;
   const int tStepRatio_;
 };
 
