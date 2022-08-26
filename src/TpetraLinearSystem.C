@@ -794,7 +794,8 @@ TpetraLinearSystem::copy_stk_to_tpetra(
         *stk::mesh::field_data(*realm_.tpetGlobalId_, node);
       ThrowRequireMsg(
         nodeTpetGID != 0 &&
-          nodeTpetGID != std::numeric_limits<LinSys::GlobalOrdinal>::max(),
+          nodeTpetGID != static_cast<stk::mesh::EntityId>(
+                           std::numeric_limits<LinSys::GlobalOrdinal>::max()),
         " in copy_stk_to_tpetra ");
       for (int d = 0; d < fieldSize; ++d) {
         const size_t stkIndex = k * fieldSize + d;

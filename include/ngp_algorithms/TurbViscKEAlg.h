@@ -25,11 +25,7 @@ class TurbViscKEAlg : public Algorithm
 public:
   using DblType = double;
 
-  TurbViscKEAlg(
-    Realm& realm,
-    stk::mesh::Part* part,
-    ScalarFieldType* tvisc,
-    const bool = false);
+  TurbViscKEAlg(Realm& realm, stk::mesh::Part* part, ScalarFieldType* tvisc);
 
   virtual ~TurbViscKEAlg() = default;
 

@@ -106,7 +106,6 @@ SDRKONodeKernel::execute(
   const NodeKernelTraits::DblType alpha_inf = 0.52;
   const NodeKernelTraits::DblType alpha0 = 1.0 / 9.0;
   const NodeKernelTraits::DblType Rk = 6.0;
-  const NodeKernelTraits::DblType R_beta = 8.0;
   const NodeKernelTraits::DblType Rw = 2.95;
   const NodeKernelTraits::DblType ReT = density * tke / sdr / visc;
   const DblType Rbeta = 8.0;

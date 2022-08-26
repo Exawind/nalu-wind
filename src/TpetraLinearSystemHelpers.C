@@ -331,7 +331,8 @@ insert_communicated_col_indices(
 
       ThrowRequireMsg(
         rowGid != 0 &&
-          rowGid != std::numeric_limits<LinSys::GlobalOrdinal>::max(),
+          rowGid != static_cast<stk::mesh::EntityId>(
+                      std::numeric_limits<LinSys::GlobalOrdinal>::max()),
         " insert_communicated_col_indices");
 
       unsigned len = 0;

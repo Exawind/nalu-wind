@@ -20,10 +20,7 @@ namespace sierra {
 namespace nalu {
 
 TurbViscKEAlg::TurbViscKEAlg(
-  Realm& realm,
-  stk::mesh::Part* part,
-  ScalarFieldType* tvisc,
-  const bool useAverages)
+  Realm& realm, stk::mesh::Part* part, ScalarFieldType* tvisc)
   : Algorithm(realm, part),
     tviscField_(tvisc),
     density_(get_field_ordinal(realm.meta_data(), "density")),
