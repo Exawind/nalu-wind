@@ -146,8 +146,9 @@ TEST_F(ActuatorFunctorFastTests, NGP_runAssignVelAndComputeForces)
 
 TEST_F(ActuatorFunctorFastTests, NGP_spreadForceWhProjIdentity)
 {
-  // skipping for now.  There is some issue with the openfast files getting created when using
-  // it in the unit tests.  This test passes in isolation but fails when all the tests run.
+  // skipping for now.  There is some issue with the openfast files getting
+  // created when using it in the unit tests.  This test passes in isolation but
+  // fails when all the tests run.
   GTEST_SKIP();
   auto epsLoc = std::find_if(
     fastParseParams_.begin(), fastParseParams_.end(),
