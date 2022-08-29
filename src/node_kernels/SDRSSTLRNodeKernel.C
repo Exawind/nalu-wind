@@ -117,7 +117,6 @@ SDRSSTLRNodeKernel::execute(
   const DblType alpha_inf = 0.52;
   const DblType alpha0 = 1.0 / 9.0;
   const DblType Rk = 6.0;
-  const DblType R_beta = 8.0;
   const DblType Rw = 2.95;
   const DblType ReT = density * tke / sdr / visc;
   const DblType Rbeta = 8.0;

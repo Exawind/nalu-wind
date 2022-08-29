@@ -160,7 +160,6 @@ ChienKEpsilonEquationSystem::register_wall_bc(
 {
   // determine if using RANS for ABL
   WallUserData userData = wallBCData.userData_;
-  bool RANSAblBcApproach = userData.RANSAblBcApproach_;
 
   // push mesh part
   wallBcPart_.push_back(part);

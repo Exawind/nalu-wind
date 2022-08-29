@@ -27,8 +27,8 @@ TKESSTLRNodeKernel::TKESSTLRNodeKernel(const stk::mesh::MetaData& meta)
     tviscID_(get_field_ordinal(meta, "turbulent_viscosity")),
     viscID_(get_field_ordinal(meta, "viscosity")),
     dudxID_(get_field_ordinal(meta, "dudx")),
-    dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     fOneBlendID_(get_field_ordinal(meta, "sst_f_one_blending")),
+    dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     nDim_(meta.spatial_dimension())
 {
 }
