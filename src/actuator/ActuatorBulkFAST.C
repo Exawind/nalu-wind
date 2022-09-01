@@ -231,9 +231,6 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
             epsilonLocal(0), std::max(epsilonLocal(1), epsilonLocal(2))) *
           2.6282608848784661; // sqrt(log(1000))
       }
-    } else {
-      NaluEnv::self().naluOutput() << "Proc " << NaluEnv::self().parallel_rank()
-                                   << " glob iTurb " << iTurb << std::endl;
     }
   }
   actuator_utils::reduce_view_on_host(epsilon_.view_host());

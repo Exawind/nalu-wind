@@ -55,6 +55,8 @@ FilteredLiftingLineCorrection::compute_lift_force_distribution()
 
     const auto offset = info.offset_;
     const auto nPoints = info.nPoints_;
+    // debug size checks
+    ThrowAssert(offset + nPoints < G.size());
 
     auto range_policy =
       Kokkos::RangePolicy<exec_space>(offset, offset + nPoints);
@@ -95,6 +97,8 @@ FilteredLiftingLineCorrection::grad_lift_force_distribution()
 
     const auto offset = info.offset_;
     const auto nPoints = info.nPoints_;
+    ThrowAssert(offset + nPoints < G.size());
+    ThrowAssert(offset + nPoints < deltaG.size());
 
     auto range_policy =
       Kokkos::RangePolicy<exec_space>(offset, offset + nPoints);
@@ -128,7 +132,6 @@ FilteredLiftingLineCorrection::compute_induced_velocities()
   auto epsilon = helper.get_local_view(actBulk_.epsilon_);
   auto epsilonOpt = helper.get_local_view(actBulk_.epsilonOpt_);
   auto point = helper.get_local_view(actBulk_.pointCentroid_);
-  auto relVel = helper.get_local_view(actBulk_.relativeVelocity_);
   auto deltaU = helper.get_local_view(actBulk_.fllc_);
   auto Uinf = helper.get_local_view(actBulk_.relativeVelocityMagnitude_);
 
