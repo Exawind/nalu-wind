@@ -140,7 +140,16 @@ ActuatorBulkDiskFAST::resize_arrays(const ActuatorMetaFAST& actMeta)
   Kokkos::resize(pointIsLocal_, newSize);
   Kokkos::resize(localParallelRedundancy_, newSize);
   Kokkos::resize(elemContainingPoint_, newSize);
+  // resize fflc arrays as well.  This is a memory waste, but the most simple
+  // way to make things consistent
   Kokkos::resize(relativeVelocity_, newSize);
+  if (actMeta.useFLLC_) {
+    Kokkos::resize(relativeVelocityMagnitude_, newSize);
+    Kokkos::resize(liftForceDistribution_, newSize);
+    Kokkos::resize(deltaLiftForceDistribution_, newSize);
+    Kokkos::resize(epsilonOpt_, newSize);
+    Kokkos::resize(fllc_, newSize);
+  }
 }
 
 void
