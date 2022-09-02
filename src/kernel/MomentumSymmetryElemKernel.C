@@ -24,6 +24,22 @@
 
 namespace sierra {
 namespace nalu {
+namespace {
+template <typename BcAlgTraits, typename T>
+void
+get_shape_fcn(T& vf_shape_function, MasterElement* meFC_dev)
+{
+  auto dev_shape_function = Kokkos::create_mirror_view(vf_shape_function);
+  Kokkos::parallel_for(
+    "get_shape_fcn_data", 1, KOKKOS_LAMBDA(int) {
+      SharedMemView<DoubleType**, DeviceShmem> ShmemView(
+        dev_shape_function.data(), BcAlgTraits::numFaceIp_,
+        BcAlgTraits::nodesPerFace_);
+      meFC_dev->shape_fcn<>(ShmemView);
+    });
+  Kokkos::deep_copy(vf_shape_function, dev_shape_function);
+}
+} // namespace
 
 template <typename BcAlgTraits>
 MomentumSymmetryElemKernel<BcAlgTraits>::MomentumSymmetryElemKernel(
@@ -47,6 +63,8 @@ MomentumSymmetryElemKernel<BcAlgTraits>::MomentumSymmetryElemKernel(
 {
   auto* meFC =
     MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_);
+  auto* meFC_dev = MasterElementRepo::get_surface_master_element_on_dev(
+    BcAlgTraits::faceTopo_);
   faceDataPreReqs.add_cvfem_face_me(meFC);
   elemDataPreReqs.add_cvfem_surface_me(meSCS_);
   faceDataPreReqs.add_gathered_nodal_field(viscosity_, 1);
@@ -64,8 +82,7 @@ MomentumSymmetryElemKernel<BcAlgTraits>::MomentumSymmetryElemKernel(
     elemDataPreReqs.add_master_element_call(
       SCS_FACE_GRAD_OP, CURRENT_COORDINATES);
   }
-  get_face_shape_fn_data<BcAlgTraits>(
-    [&](double* ptr) { meFC->shape_fcn(ptr); }, vf_shape_function_);
+  get_shape_fcn<BcAlgTraits>(vf_shape_function_, meFC_dev);
 }
 
 template <typename BcAlgTraits>

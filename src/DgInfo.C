@@ -38,7 +38,9 @@ DgInfo::DgInfo(
   MasterElement* meSCSCurrent,
   stk::topology currentElementTopo,
   const int nDim,
-  const double searchTolerance)
+  const double searchTolerance,
+  MasterElement* meFCDevCurrent,
+  MasterElement* meSCSDevCurrent)
   : parallelRank_(parallelRank),
     globalFaceId_(globalFaceId),
     localGaussPointId_(localGaussPointId),
@@ -48,6 +50,8 @@ DgInfo::DgInfo(
     currentFaceOrdinal_(currentFaceOrdinal),
     meFCCurrent_(meFCCurrent),
     meSCSCurrent_(meSCSCurrent),
+    meFC_dev_Current_(meFCDevCurrent),
+    meSCS_dev_Current_(meSCSDevCurrent),
     currentElementTopo_(currentElementTopo),
     nDim_(nDim),
     bestXRef_(1.0e16),

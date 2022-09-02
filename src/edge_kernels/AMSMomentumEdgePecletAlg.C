@@ -78,7 +78,7 @@ AMSMomentumEdgePecletAlg::execute()
     "compute_peclet_factor", ngpMesh, sel,
     KOKKOS_LAMBDA(const EntityInfoType& eInfo) {
       NALU_ALIGNED DblType av[nalu_ngp::NDimMax];
-      DblType asq{0.0}, axdx{0.0}, udotx{0.0};
+      DblType udotx{0.0};
 
       const auto edge = eInfo.meshIdx;
       for (int d = 0; d < ndim; d++) {
@@ -97,8 +97,6 @@ AMSMomentumEdgePecletAlg::execute()
       for (int d = 0; d < ndim; ++d) {
         const DblType dxj =
           coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
-        asq += av[d] * av[d];
-        axdx += av[d] * dxj;
         udotx += 0.5 * dxj * (vrtm.get(nodeR, d) + vrtm.get(nodeL, d));
       }
 

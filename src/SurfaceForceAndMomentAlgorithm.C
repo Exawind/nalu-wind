@@ -226,13 +226,14 @@ SurfaceForceAndMomentAlgorithm::execute()
     double* p_pressure = &ws_pressure[0];
     double* p_density = &ws_density[0];
     double* p_viscosity = &ws_viscosity[0];
-    double* p_face_shape_function = &ws_face_shape_function[0];
+    SharedMemView<double**, HostShmem> p_face_shape_function(
+      ws_face_shape_function.data(), numScsBip, nodesPerFace);
 
     // shape functions
     if (useShifted_)
-      meFC->shifted_shape_fcn(&p_face_shape_function[0]);
+      meFC->shifted_shape_fcn<>(p_face_shape_function);
     else
-      meFC->shape_fcn(&p_face_shape_function[0]);
+      meFC->shape_fcn<>(p_face_shape_function);
 
     const stk::mesh::Bucket::size_type length = b.size();
 
@@ -274,7 +275,6 @@ SurfaceForceAndMomentAlgorithm::execute()
 
         // offsets
         const int offSetAveraVec = ip * nDim;
-        const int offSetSF_face = ip * nodesPerFace;
         const int localFaceNode = faceIpNodeMap[ip];
         const int opposingNode = meSCS->opposingNodes(face_ordinal, ip);
 
@@ -283,7 +283,7 @@ SurfaceForceAndMomentAlgorithm::execute()
         double rhoBip = 0.0;
         double muBip = 0.0;
         for (int ic = 0; ic < nodesPerFace; ++ic) {
-          const double r = p_face_shape_function[offSetSF_face + ic];
+          const double r = p_face_shape_function(ip, ic);
           pBip += r * p_pressure[ic];
           rhoBip += r * p_density[ic];
           muBip += r * p_viscosity[ic];

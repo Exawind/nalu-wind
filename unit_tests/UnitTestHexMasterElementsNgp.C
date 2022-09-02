@@ -141,7 +141,7 @@ check_interpolation(
                : dynamic_cast<ME*>(
                    sierra::nalu::MasterElementRepo::get_volume_master_element(
                      AlgTraits::topo_));
-  auto* ngpMe =
+  sierra::nalu::MasterElement* ngpMe =
     SCS ? (sierra::nalu::MasterElementRepo::get_surface_master_element<
             AlgTraits>())
         : (sierra::nalu::MasterElementRepo::get_volume_master_element<
@@ -223,7 +223,7 @@ check_interpolation(
               coords[i] = ngpCoordField.get(ngpMesh, nodes[n], i);
             ws_field[n] = poly_val<dim, poly_order>(coeffs, coords.data());
           }
-          ngpMe->shape_fcn(shpfc);
+          ngpMe->shape_fcn<>(shpfc);
           for (int j = 0; j < num_int_pt; ++j) {
             for (int i = 0; i < num_nodes; ++i) {
               ngpResults[j] += shpfc(j, i) * ws_field[i];

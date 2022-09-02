@@ -103,6 +103,7 @@ AssembleNodalGradUNonConformalAlgorithm::execute()
     stk::mesh::communicate_field_data(
       *(realm_.nonConformalManager_->nonConformalGhosting_), ghostFieldVec_);
 
+  dqdx_->clear_sync_state();
   // iterate nonConformalManager's dgInfoVec
   std::vector<NonConformalInfo*>::iterator ii;
   for (ii = realm_.nonConformalManager_->nonConformalInfoVec_.begin();

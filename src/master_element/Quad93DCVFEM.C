@@ -14,9 +14,6 @@
 #include <master_element/MasterElementUtils.h>
 #include <master_element/TensorOps.h>
 
-#include <FORTRAN_Proto.h>
-
-#include <cmath>
 #include <iostream>
 
 namespace sierra {
@@ -130,8 +127,9 @@ Quad93DSCS::eval_shape_derivs_at_shifted_ips()
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad93DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Quad93DSCS::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int i = 0; i < numIntPoints_; ++i) {
     for (int j = 0; j < nodesPerElement_; ++j) {
@@ -140,19 +138,23 @@ Quad93DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
     }
   }
 }
-
-void
-Quad93DSCS::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Quad93DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int ip = 0; ip < numIntPoints_ * nodesPerElement_; ++ip) {
-    shpfc[ip] = shapeFunctions_[ip];
-  }
+  shape_fcn<>(shpfc);
 }
+void
+Quad93DSCS::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad93DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Quad93DSCS::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int i = 0; i < numIntPoints_; ++i) {
     for (int j = 0; j < nodesPerElement_; ++j) {
@@ -161,13 +163,15 @@ Quad93DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
     }
   }
 }
-
-void
-Quad93DSCS::shifted_shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Quad93DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int ip = 0; ip < numIntPoints_ * nodesPerElement_; ++ip) {
-    shpfc[ip] = shapeFunctionsShift_[ip];
-  }
+  shifted_shape_fcn<>(shpfc);
+}
+void
+Quad93DSCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------

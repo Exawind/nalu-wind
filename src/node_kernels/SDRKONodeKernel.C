@@ -75,9 +75,7 @@ SDRKONodeKernel::execute(
   const DblType dVol = dualNodalVolume_.get(node, 0);
 
   DblType Pk = 0.0;
-  DblType crossDiff = 0.0;
   for (int i = 0; i < nDim_; ++i) {
-    crossDiff += dkdx_.get(node, i) * dwdx_.get(node, i);
     const int offset = nDim_ * i;
     for (int j = 0; j < nDim_; ++j) {
       const auto dudxij = dudx_.get(node, offset + j);

@@ -68,9 +68,6 @@ check_elem_to_side_coords(stk::topology topo)
 
     auto* meSide =
       sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
-    std::vector<double> sideInterpWeights(
-      meSide->num_integration_points() * meSide->nodesPerElement_, 0.0);
-    meSide->shape_fcn(sideInterpWeights.data());
 
     for (size_t k = 0; k < b.size(); ++k) {
       auto face = b[k];

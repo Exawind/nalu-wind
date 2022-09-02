@@ -27,23 +27,9 @@ public:
   using MasterElement::face_grad_op;
   using MasterElement::gij;
   using MasterElement::grad_op;
+  using MasterElement::shape_fcn;
   using MasterElement::shifted_grad_op;
-
-  void grad_op(
-    const int nelem,
-    const double* coords,
-    double* gradop,
-    double* deriv,
-    double* det_j,
-    double* error);
-
-  void shifted_grad_op(
-    const int nelem,
-    const double* coords,
-    double* gradop,
-    double* deriv,
-    double* det_j,
-    double* error);
+  using MasterElement::shifted_shape_fcn;
 
   KOKKOS_FUNCTION void grad_op_fem(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -57,29 +43,14 @@ public:
     SharedMemView<DoubleType***, DeviceShmem>& deriv,
     SharedMemView<DoubleType*, DeviceShmem>& det_j) final;
 
-  KOKKOS_FUNCTION void
-  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) final;
+  template <typename SCALAR, typename SHMEM>
+  KOKKOS_FUNCTION void shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc);
 
-  KOKKOS_FUNCTION void
-  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) final;
-
-  void face_grad_op(
-    const int nelem,
-    const int face_ordinal,
-    const double* coords,
-    double* gradop,
-    double* det_j,
-    double* error);
+  template <typename SCALAR, typename SHMEM>
+  KOKKOS_FUNCTION void shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc);
 
   void
   general_shape_fcn(const int numIp, const double* isoParCoord, double* shpfc);
-
-  void shape_fcn(double* shpfc);
-
-  void shifted_shape_fcn(double* shpfc);
-
-  void
-  gij(const double* coords, double* gupperij, double* glowerij, double* deriv);
 
   virtual const double* integration_locations() const final { return intgLoc_; }
   virtual const double* integration_location_shift() const final
@@ -89,6 +60,16 @@ public:
 
   // weights; -1:1
   double weights_[8] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+
+protected:
+  KOKKOS_FUNCTION virtual void
+  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  virtual void shape_fcn(SharedMemView<double**, HostShmem>& shpfc) override;
+
+  KOKKOS_FUNCTION virtual void
+  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  virtual void
+  shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc) override;
 
 private:
   static const int nDim_ = AlgTraits::nDim_;
@@ -108,14 +89,14 @@ private:
     -gIP, -gIP, -gIP, +gIP, -gIP, -gIP, +gIP, +gIP, -gIP, -gIP, +gIP, -gIP,
     -gIP, -gIP, +gIP, +gIP, -gIP, +gIP, +gIP, +gIP, +gIP, -gIP, +gIP, +gIP};
 
-  double intgExpFace_[72];
   void
   hex8_fem_shape_fcn(const int numIp, const double* isoParCoord, double* shpfc);
 
+  template <typename SCALAR, typename SHMEM>
   KOKKOS_FUNCTION void hex8_fem_shape_fcn(
     const int numIp,
     const double* isoParCoord,
-    SharedMemView<DoubleType**, DeviceShmem> shpfc);
+    SharedMemView<SCALAR**, SHMEM> shpfc);
 
   void
   hex8_fem_derivative(const int npt, const double* par_coord, double* deriv);

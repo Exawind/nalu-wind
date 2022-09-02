@@ -28,6 +28,66 @@
 namespace sierra {
 namespace nalu {
 
+namespace {
+template <typename BcAlgTraits, typename T, typename S>
+void
+get_shape_fcn_data(
+  T& vf_shape_function,
+  S& v_shape_function,
+  T& vf_adv_shape_function,
+  S& v_adv_shape_function,
+  MasterElement* meFC_dev,
+  MasterElement* meSCS_dev,
+  const bool skewSymmetric)
+{
+
+  // never shift properties
+  const bool skew = skewSymmetric;
+  auto vf_shape = Kokkos::create_mirror_view(vf_shape_function);
+  Kokkos::parallel_for(
+    "get_shape_fcn_data", 1, KOKKOS_LAMBDA(int) {
+      SharedMemView<DoubleType**, DeviceShmem> ShmemView(
+        vf_shape.data(), BcAlgTraits::numFaceIp_, BcAlgTraits::nodesPerFace_);
+      meFC_dev->shape_fcn<>(ShmemView);
+    });
+  Kokkos::deep_copy(vf_shape_function, vf_shape);
+
+  auto v_shape = Kokkos::create_mirror_view(v_shape_function);
+  Kokkos::parallel_for(
+    "get_shape_fcn_data", 1, KOKKOS_LAMBDA(int) {
+      SharedMemView<DoubleType**, DeviceShmem> ShmemView(
+        v_shape.data(), BcAlgTraits::numFaceIp_, BcAlgTraits::nodesPerFace_);
+      meSCS_dev->shape_fcn<>(ShmemView);
+    });
+  Kokkos::deep_copy(v_shape_function, v_shape);
+
+  auto vf_adv_shape = Kokkos::create_mirror_view(vf_adv_shape_function);
+  Kokkos::parallel_for(
+    "get_shape_fcn_data", 1, KOKKOS_LAMBDA(int) {
+      SharedMemView<DoubleType**, DeviceShmem> ShmemView(
+        vf_adv_shape.data(), BcAlgTraits::numFaceIp_,
+        BcAlgTraits::nodesPerFace_);
+      if (skew)
+        meFC_dev->shifted_shape_fcn<>(ShmemView);
+      else
+        meFC_dev->shape_fcn<>(ShmemView);
+    });
+  Kokkos::deep_copy(vf_adv_shape_function, vf_adv_shape);
+
+  auto v_adv_shape = Kokkos::create_mirror_view(v_adv_shape_function);
+  Kokkos::parallel_for(
+    "get_shape_fcn_data", 1, KOKKOS_LAMBDA(int) {
+      SharedMemView<DoubleType**, DeviceShmem> ShmemView(
+        v_adv_shape.data(), BcAlgTraits::numFaceIp_,
+        BcAlgTraits::nodesPerFace_);
+      if (skew)
+        meSCS_dev->shifted_shape_fcn<>(ShmemView);
+      else
+        meSCS_dev->shape_fcn<>(ShmemView);
+    });
+  Kokkos::deep_copy(v_adv_shape_function, v_adv_shape);
+}
+} // namespace
 template <typename BcAlgTraits>
 MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
   const stk::mesh::MetaData& metaData,
@@ -56,6 +116,9 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
                      ->ipNodeMap()),
     meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element(
       BcAlgTraits::elemTopo_)),
+    meSCS_dev_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+        BcAlgTraits::elemTopo_)),
     pecletFunction_(
       eqSystem->create_peclet_function<DoubleType>(velocity->name()))
 {
@@ -77,6 +140,9 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
   // extract master elements
   MasterElement* meFC =
     sierra::nalu::MasterElementRepo::get_surface_master_element(
+      BcAlgTraits::faceTopo_);
+  MasterElement* meFC_dev =
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
       BcAlgTraits::faceTopo_);
 
   // add master elements
@@ -109,29 +175,10 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
     elemDataPreReqs.add_master_element_call(
       SCS_FACE_GRAD_OP, CURRENT_COORDINATES);
 
-  // never shift properties
-  get_face_shape_fn_data<BcAlgTraits>(
-    [&](double* ptr) { meFC->shape_fcn(ptr); }, vf_shape_function_);
-  get_scs_shape_fn_data<BcAlgTraits>(
-    [&](double* ptr) { meSCS_->shape_fcn(ptr); }, v_shape_function_);
-
   const bool skewSymmetric = solnOpts.get_skew_symmetric(velocity->name());
-  get_face_shape_fn_data<BcAlgTraits>(
-    [&](double* ptr) {
-      if (skewSymmetric)
-        meFC->shifted_shape_fcn(ptr);
-      else
-        meFC->shape_fcn(ptr);
-    },
-    vf_adv_shape_function_);
-  get_scs_shape_fn_data<BcAlgTraits>(
-    [&](double* ptr) {
-      if (skewSymmetric)
-        meSCS_->shifted_shape_fcn(ptr);
-      else
-        meSCS_->shape_fcn(ptr);
-    },
-    v_adv_shape_function_);
+  get_shape_fcn_data<BcAlgTraits>(
+    vf_shape_function_, v_shape_function_, vf_adv_shape_function_,
+    v_adv_shape_function_, meFC_dev, meSCS_dev_, skewSymmetric);
 }
 
 template <typename BcAlgTraits>

@@ -121,14 +121,15 @@ AssemblePNGBoundarySolverAlgorithm::execute()
     double* p_lhs = &lhs[0];
     double* p_rhs = &rhs[0];
     double* p_scalarQ = &ws_scalarQ[0];
-    double* p_face_shape_function = &ws_face_shape_function[0];
+    SharedMemView<double**, HostShmem> p_face_shape_function(
+      ws_face_shape_function.data(), numScsBip, nodesPerFace);
 
     // zero lhs; always zero
     for (int p = 0; p < lhsSize; ++p)
       p_lhs[p] = 0.0;
 
     // shape function
-    meFC->shape_fcn(&p_face_shape_function[0]);
+    meFC->shape_fcn<>(p_face_shape_function);
 
     const stk::mesh::Bucket::size_type length = b.size();
 
@@ -164,12 +165,11 @@ AssemblePNGBoundarySolverAlgorithm::execute()
 
         // save off some offsets for this ip
         const int nnNdim = localFaceNode * nDim;
-        const int offSetSF_face = ip * nodesPerFace;
 
         // interpolate to bip
         double scalarQBip = 0.0;
         for (int ic = 0; ic < nodesPerFace; ++ic) {
-          const double r = p_face_shape_function[offSetSF_face + ic];
+          const double r = p_face_shape_function(ip, ic);
           scalarQBip += r * p_scalarQ[ic];
         }
 

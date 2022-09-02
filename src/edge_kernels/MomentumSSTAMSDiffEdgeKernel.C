@@ -166,11 +166,9 @@ MomentumSSTAMSDiffEdgeKernel::execute(
                                        [EdgeKernelTraits::NDimMax];
 
   EdgeKernelTraits::DblType axdx = 0.0;
-  EdgeKernelTraits::DblType asq = 0.0;
   for (int d = 0; d < ndim; ++d) {
     const EdgeKernelTraits::DblType dxj =
       coordinates_.get(nodeR, d) - coordinates_.get(nodeL, d);
-    asq += av[d] * av[d];
     axdx += av[d] * dxj;
   }
   const EdgeKernelTraits::DblType inv_axdx = 1.0 / axdx;

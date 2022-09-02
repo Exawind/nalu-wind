@@ -41,24 +41,24 @@ public:
   MasterElement(const double scaleToStandardIsoFac = 1.0);
   KOKKOS_FUNCTION virtual ~MasterElement() {}
 
-  // NGP-ready methods first
-  KOKKOS_FUNCTION virtual void
-  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& /* shpfc */)
-  {
-    NGP_ThrowErrorMsg("MasterElement::shape_fcn not implemented for element");
-  }
+  template <typename SCALAR, typename SHMEM>
+  void shape_fcn(SharedMemView<SCALAR**, SHMEM>& /* shpfc */);
 
-  KOKKOS_FUNCTION virtual void
-  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& /* shpfc */)
-  {
-    NGP_ThrowErrorMsg(
-      "MasterElement::shifted_shape_fcn not implemented for element");
-  }
+  template <typename SCALAR, typename SHMEM>
+  void shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& /* shpfc */);
 
   KOKKOS_FUNCTION virtual void grad_op(
-    SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
+    const SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
     SharedMemView<DoubleType***, DeviceShmem>& /* gradop */,
     SharedMemView<DoubleType***, DeviceShmem>& /* deriv */)
+  {
+    NGP_ThrowErrorMsg("MasterElement::grad_op not implemented for element");
+  }
+
+  virtual void grad_op(
+    const SharedMemView<double**>& /* coords */,
+    SharedMemView<double***>& /* gradop */,
+    SharedMemView<double***>& /* deriv */)
   {
     NGP_ThrowErrorMsg("MasterElement::grad_op not implemented for element");
   }
@@ -128,7 +128,7 @@ public:
   }
 
   KOKKOS_FUNCTION virtual void gij(
-    SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
+    const SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
     SharedMemView<DoubleType***, DeviceShmem>& /* gupper */,
     SharedMemView<DoubleType***, DeviceShmem>& /* glower */,
     SharedMemView<DoubleType***, DeviceShmem>& /* deriv */)
@@ -160,37 +160,6 @@ public:
       "MasterElement::determinant not implemented for element: double volume");
   }
 
-  virtual void grad_op(
-    const int /* nelem */,
-    const double* /* coords */,
-    double* /* gradop */,
-    double* /* deriv */,
-    double* /* det_j */,
-    double* /* error  */)
-  {
-    throw std::runtime_error("grad_op not implemented");
-  }
-
-  virtual void shifted_grad_op(
-    const int /* nelem */,
-    const double* /* coords */,
-    double* /* gradop */,
-    double* /* deriv */,
-    double* /* det_j */,
-    double* /* error  */)
-  {
-    throw std::runtime_error("shifted_grad_op not implemented");
-  }
-
-  virtual void gij(
-    const double* /* coords */,
-    double* /* gupperij */,
-    double* /* glowerij */,
-    double* /* deriv */)
-  {
-    throw std::runtime_error("gij not implemented");
-  }
-
   virtual void
   Mij(const double* /* coords */, double* /* metric */, double* /* deriv */)
   {
@@ -201,29 +170,6 @@ public:
   nodal_grad_op(const int /* nelem */, double* /* deriv */, double* /* error */)
   {
     throw std::runtime_error("nodal_grad_op not implemented");
-  }
-
-  virtual void face_grad_op(
-    const int /* nelem */,
-    const int /* face_ordinal */,
-    const double* /* coords */,
-    double* /* gradop */,
-    double* /* det_j */,
-    double* /* error  */)
-  {
-    throw std::runtime_error("face_grad_op not implemented; avoid this element "
-                             "type at open bcs, walls and symms");
-  }
-
-  virtual void shifted_face_grad_op(
-    const int /* nelem */,
-    const int /* face_ordinal */,
-    const double* /* coords */,
-    double* /* gradop */,
-    double* /* det_j */,
-    double* /* error  */)
-  {
-    throw std::runtime_error("shifted_face_grad_op not implemented");
   }
 
   KOKKOS_FUNCTION virtual const int* adjacentNodes()
@@ -242,16 +188,6 @@ public:
   {
     NGP_ThrowErrorMsg("MasterElement::ipNodeMap not implemented");
     return nullptr;
-  }
-
-  virtual void shape_fcn(double* /* shpfc */)
-  {
-    throw std::runtime_error("shape_fcn not implemented");
-  }
-
-  virtual void shifted_shape_fcn(double* /* shpfc */)
-  {
-    throw std::runtime_error("shifted_shape_fcn not implemented");
   }
 
   KOKKOS_FUNCTION virtual int
@@ -361,9 +297,63 @@ public:
 protected:
   int numIntPoints_;
 
+  KOKKOS_FUNCTION virtual void
+  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>&)
+  {
+    NGP_ThrowErrorMsg("MasterElement::shape_fcn not implemented for element");
+  }
+  virtual void shape_fcn(SharedMemView<double**, HostShmem>&)
+  {
+    NGP_ThrowErrorMsg("MasterElement::shape_fcn not implemented for element");
+  }
+
+  KOKKOS_FUNCTION virtual void
+  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>&)
+  {
+    NGP_ThrowErrorMsg(
+      "MasterElement::shifted_shape_fcn not implemented for element");
+  }
+  virtual void shifted_shape_fcn(SharedMemView<double**, HostShmem>&)
+  {
+    NGP_ThrowErrorMsg(
+      "MasterElement::shifted_shape_fcn not implemented for element");
+  }
+
 private:
   const double scaleToStandardIsoFac_;
 };
+
+template <>
+KOKKOS_INLINE_FUNCTION void
+MasterElement::shape_fcn<DoubleType, DeviceShmem>(
+  SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shape_fcn(shpfc);
+}
+
+template <>
+inline void
+MasterElement::shape_fcn<double, HostShmem>(
+  SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn(shpfc);
+}
+
+template <>
+KOKKOS_INLINE_FUNCTION void
+MasterElement::shifted_shape_fcn<DoubleType, DeviceShmem>(
+  SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shifted_shape_fcn(shpfc);
+}
+
+template <>
+inline void
+MasterElement::shifted_shape_fcn<double, HostShmem>(
+  SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn(shpfc);
+}
 
 } // namespace nalu
 } // namespace sierra

@@ -12,7 +12,6 @@
 #include <AlgTraits.h>
 
 #include <NaluEnv.h>
-#include <FORTRAN_Proto.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
@@ -136,53 +135,53 @@ Edge32DSCS::determinant(
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Edge32DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Edge32DSCS::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int i = 0; i < numIntPoints_; ++i) {
-    const DoubleType s = intgLoc_[i];
+    const SCALAR s = intgLoc_[i];
     shpfc(i, 0) = -s * (1.0 - s) * 0.5;
     shpfc(i, 1) = s * (1.0 + s) * 0.5;
     shpfc(i, 2) = (1.0 - s) * (1.0 + s);
   }
 }
 
-void
-Edge32DSCS::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Edge32DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int i = 0; i < numIntPoints_; ++i) {
-    int j = 3 * i;
-    const double s = intgLoc_[i];
-    shpfc[j] = -s * (1.0 - s) * 0.5;
-    shpfc[j + 1] = s * (1.0 + s) * 0.5;
-    shpfc[j + 2] = (1.0 - s) * (1.0 + s);
-  }
+  shape_fcn<>(shpfc);
+}
+void
+Edge32DSCS::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-void
-Edge32DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Edge32DSCS::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int i = 0; i < numIntPoints_; ++i) {
-    const DoubleType s = intgLocShift_[i];
+    const SCALAR s = intgLocShift_[i];
     shpfc(i, 0) = -s * (1.0 - s) * 0.5;
     shpfc(i, 1) = s * (1.0 + s) * 0.5;
     shpfc(i, 2) = (1.0 - s) * (1.0 + s);
   }
 }
 
-void
-Edge32DSCS::shifted_shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Edge32DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int i = 0; i < numIntPoints_; ++i) {
-    int j = 3 * i;
-    const double s = intgLocShift_[i];
-    shpfc[j] = -s * (1.0 - s) * 0.5;
-    shpfc[j + 1] = s * (1.0 + s) * 0.5;
-    shpfc[j + 2] = (1.0 - s) * (1.0 + s);
-  }
+  shifted_shape_fcn<>(shpfc);
+}
+void
+Edge32DSCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------

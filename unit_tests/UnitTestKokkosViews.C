@@ -62,7 +62,6 @@ public:
 
   void execute()
   {
-    double scs_error = 0.0;
     const stk::mesh::MetaData& meta = bulkData_.mesh_meta_data();
 
     const int nDim = meta.spatial_dimension();
@@ -73,7 +72,6 @@ public:
     std::vector<double> scs_areav;
     std::vector<double> dndx;
     std::vector<double> deriv;
-    std::vector<double> det_j;
 
     auto resizer = [&](int nodesPerElem, int numScsIp) {
       elemNodeCoords.resize(nodesPerElem * nDim);
@@ -81,7 +79,6 @@ public:
       scs_areav.resize(numScsIp * nDim);
       dndx.resize(nDim * numScsIp * nodesPerElem);
       deriv.resize(nDim * numScsIp * nodesPerElem);
-      det_j.resize(numScsIp);
     };
 
     const stk::mesh::BucketVector& elemBuckets = bulkData_.get_buckets(
@@ -108,7 +105,6 @@ public:
         double* p_scs_areav = scs_areav.data();
         double* p_dndx = dndx.data();
         double* p_deriv = deriv.data();
-        double* p_det_j = det_j.data();
         const int* lrscv = meSCS.adjacentNodes();
 
         const int numScsIp = meSCS.num_integration_points();
@@ -117,6 +113,10 @@ public:
           p_elemNodeCoords, nodesPerElem, nDim);
         sierra::nalu::SharedMemView<double**> areav(
           p_scs_areav, numScsIp, nDim);
+        sierra::nalu::SharedMemView<double***> dNdX(
+          p_dndx, numScsIp, nodesPerElem, nDim);
+        sierra::nalu::SharedMemView<double***> der(
+          p_deriv, numScsIp, nodesPerElem, nDim);
         for (int n = 0; n < nodesPerElem; ++n) {
           const double* nodeCoords =
             stk::mesh::field_data(*coordField, elemNodes[n]);
@@ -130,17 +130,13 @@ public:
         }
 
         meSCS.determinant(NodeCoords, areav);
-        meSCS.grad_op(
-          1, p_elemNodeCoords, p_dndx, p_deriv, p_det_j, &scs_error);
+        meSCS.grad_op(NodeCoords, dNdX, der);
 
         for (int ip = 0; ip < numScsIp; ++ip) {
-
           double dpdxIp = 0.0;
-          const int ipOffset = nDim * nodesPerElem * ip;
           for (int ic = 0; ic < nodesPerElem; ++ic) {
-            const int offSetDnDx = ipOffset + ic * nDim;
             for (int j = 0; j < nDim; ++j) {
-              dpdxIp += p_dndx[offSetDnDx + j] * p_elemNodePressures[ic] *
+              dpdxIp += dNdX(ip, ic, j) * p_elemNodePressures[ic] *
                         p_scs_areav[ip * nDim + j];
             }
           }
@@ -181,18 +177,15 @@ element_discrete_laplacian_kernel_3d(
   const stk::mesh::Entity* elemNodes = bulkData.begin_nodes(elem);
 
   double p_elemNodeCoords[nodesPerElem * nDim];
-  sierra::nalu::SharedMemView<double**> elemNodeCoords(
-    &p_elemNodeCoords[0], nodesPerElem, nDim);
   double p_elemNodePressures[nodesPerElem];
 
   double p_scs_areav[numScsIp * nDim];
-  sierra::nalu::SharedMemView<double**> scs_areav(
-    &p_scs_areav[0], numScsIp, nDim);
   double p_dndx[nDim * numScsIp * nodesPerElem];
   double p_deriv[nDim * numScsIp * nodesPerElem];
-  double p_det_j[numScsIp];
   const int* lrscv = meSCS.adjacentNodes();
 
+  sierra::nalu::SharedMemView<double**> elemNodeCoords(
+    &p_elemNodeCoords[0], nodesPerElem, nDim);
   for (int n = 0; n < nodesPerElem; ++n) {
     const double* nodeCoords = stk::mesh::field_data(*coordField, elemNodes[n]);
     for (int d = 0; d < nDim; ++d) {
@@ -202,19 +195,21 @@ element_discrete_laplacian_kernel_3d(
       stk::mesh::field_data(*nodalPressureField, elemNodes[n]);
     p_elemNodePressures[n] = nodePressure[0];
   }
+  sierra::nalu::SharedMemView<double**> scs_areav(
+    &p_scs_areav[0], numScsIp, nDim);
+  sierra::nalu::SharedMemView<double***> dNdX(
+    &p_dndx[0], numScsIp, nodesPerElem, nDim);
+  sierra::nalu::SharedMemView<double***> der(
+    &p_deriv[0], numScsIp, nodesPerElem, nDim);
 
-  double scs_error = 0;
   meSCS.determinant(elemNodeCoords, scs_areav);
-  meSCS.grad_op(1, p_elemNodeCoords, p_dndx, p_deriv, p_det_j, &scs_error);
+  meSCS.grad_op(elemNodeCoords, dNdX, der);
 
   for (int ip = 0; ip < numScsIp; ++ip) {
-
     double dpdxIp = 0.0;
-    const int ipOffset = nDim * nodesPerElem * ip;
     for (int ic = 0; ic < nodesPerElem; ++ic) {
-      const int offSetDnDx = ipOffset + ic * nDim;
       for (int j = 0; j < nDim; ++j) {
-        dpdxIp += p_dndx[offSetDnDx + j] * p_elemNodePressures[ic] *
+        dpdxIp += dNdX(ip, ic, j) * p_elemNodePressures[ic] *
                   p_scs_areav[ip * nDim + j];
       }
     }
@@ -322,7 +317,6 @@ public:
 
   void execute()
   {
-    double scs_error = 0.0;
     const stk::mesh::MetaData& meta = bulkData_.mesh_meta_data();
 
     const int nDim = meta.spatial_dimension();
@@ -364,14 +358,12 @@ public:
 
         sierra::nalu::SharedMemView<double**> scs_areav =
           sierra::nalu::get_shmem_view_2D<double>(team, numScsIp, nDim);
-        sierra::nalu::SharedMemView<double**> dndx =
-          sierra::nalu::get_shmem_view_2D<double>(
-            team, numScsIp, nodesPerElem * nDim);
-        sierra::nalu::SharedMemView<double**> deriv =
-          sierra::nalu::get_shmem_view_2D<double>(
-            team, numScsIp, nodesPerElem * nDim);
-        sierra::nalu::SharedMemView<double*> det_j =
-          sierra::nalu::get_shmem_view_1D<double>(team, numScsIp);
+        sierra::nalu::SharedMemView<double***> dndx =
+          sierra::nalu::get_shmem_view_3D<double>(
+            team, numScsIp, nodesPerElem, nDim);
+        sierra::nalu::SharedMemView<double***> deriv =
+          sierra::nalu::get_shmem_view_3D<double>(
+            team, numScsIp, nodesPerElem, nDim);
 
         Kokkos::parallel_for(
           Kokkos::TeamThreadRange(team, bkt.size()), [&](const size_t& jj) {
@@ -390,9 +382,7 @@ public:
             }
 
             meSCS.determinant(elemNodeCoords, scs_areav);
-            meSCS.grad_op(
-              1, &elemNodeCoords(0, 0), &dndx(0, 0), &deriv(0, 0), &det_j(0),
-              &scs_error);
+            meSCS.grad_op(elemNodeCoords, dndx, deriv);
             const int* lrscv = meSCS.adjacentNodes();
 
             for (int ip = 0; ip < numScsIp; ++ip) {
@@ -400,8 +390,8 @@ public:
               double dpdxIp = 0.0;
               for (int ic = 0; ic < nodesPerElem; ++ic) {
                 for (int j = 0; j < nDim; ++j) {
-                  dpdxIp += dndx(ip, ic * nDim + j) * elemNodePressures(ic) *
-                            scs_areav(ip, j);
+                  dpdxIp +=
+                    dndx(ip, ic, j) * elemNodePressures(ic) * scs_areav(ip, j);
                 }
               }
               EXPECT_TRUE(std::abs(dpdxIp) > tol);

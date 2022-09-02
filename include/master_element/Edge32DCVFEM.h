@@ -53,27 +53,33 @@ public:
     const SharedMemView<double**>& coords,
     SharedMemView<double**>& area) override;
 
-  KOKKOS_FUNCTION virtual void
-  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
+  template <typename SCALAR, typename SHMEM>
+  KOKKOS_FUNCTION void shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc);
 
-  KOKKOS_FUNCTION virtual void
-  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
-
-  void shape_fcn(double* shpfc);
-
-  void shifted_shape_fcn(double* shpfc);
+  template <typename SCALAR, typename SHMEM>
+  KOKKOS_FUNCTION void shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc);
 
   void interpolatePoint(
     const int& nComp,
     const double* isoParCoord,
     const double* field,
-    double* result);
+    double* result) override;
 
   virtual const double* integration_locations() const final { return intgLoc_; }
   virtual const double* integration_location_shift() const final
   {
     return intgLocShift_;
   }
+
+protected:
+  KOKKOS_FUNCTION virtual void
+  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  virtual void shape_fcn(SharedMemView<double**, HostShmem>& shpfc) override;
+
+  KOKKOS_FUNCTION virtual void
+  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  virtual void
+  shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc) override;
 
 private:
   static constexpr int nDim_ = AlgTraits::nDim_;

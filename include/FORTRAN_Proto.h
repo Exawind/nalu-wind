@@ -16,15 +16,9 @@
 //---------------------- WORKSET ALGORITHMS ------------------------------------
 //------------------------------------------------------------------------------
 
-extern "C" void SIERRA_FORTRAN(hex_shape_fcn)(
-  const int* npts, const double* par_coords, double* shape_fcn);
-
 extern "C" void SIERRA_FORTRAN(hex_derivative)(
   const int* npts, const double* par_coords, double* deriv);
 extern "C" void SIERRA_FORTRAN(quad_derivative)(
-  const int* npts, const double* par_coords, double* deriv);
-
-extern "C" void SIERRA_FORTRAN(quad92d_derivative)(
   const int* npts, const double* par_coords, double* deriv);
 
 extern "C" void SIERRA_FORTRAN(tet_derivative)(const int* npts, double* deriv);
@@ -52,22 +46,6 @@ extern "C" void SIERRA_FORTRAN(quad_gradient_operator)(
   double* det_j,
   double* error,
   int* lerr);
-
-extern "C" void SIERRA_FORTRAN(twod_gij)(
-  const int* npe,
-  const int* numint,
-  double* deriv,
-  const double* coords,
-  double* gupperij,
-  double* glowerij);
-
-extern "C" void SIERRA_FORTRAN(threed_gij)(
-  const int* npe,
-  const int* numint,
-  double* deriv,
-  const double* coords,
-  double* gupperij,
-  double* glowerij);
 
 extern "C" void SIERRA_FORTRAN(tet_gradient_operator)(
   const int* nelem,
@@ -112,8 +90,5 @@ extern "C" void SIERRA_FORTRAN(wed_gradient_operator)(
   double* det_j,
   double* error,
   int* lerr);
-
-extern "C" void SIERRA_FORTRAN(quad3d_shape_fcn)(
-  const int* npts, const double* par_coords, double* shape_fcn);
 
 #endif // FORTRAN_Proto_h

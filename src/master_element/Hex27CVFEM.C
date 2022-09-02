@@ -14,8 +14,6 @@
 #include <master_element/MasterElementUtils.h>
 #include <master_element/TensorOps.h>
 
-#include <FORTRAN_Proto.h>
-
 #include <cmath>
 #include <iostream>
 
@@ -219,27 +217,6 @@ HexahedralP2Element::tensor_product_weight(
   const double weight =
     isoparametricArea * gaussWeight_[s1Ip] * gaussWeight_[s2Ip];
   return weight;
-}
-
-//--------------------------------------------------------------------------
-//-------- shape_fcn -------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-HexahedralP2Element::shape_fcn(double* shpfc)
-{
-  for (int ip = 0; ip < numIntPoints_ * nodesPerElement_; ++ip) {
-    shpfc[ip] = shapeFunctions_[ip];
-  }
-}
-//--------------------------------------------------------------------------
-//-------- shifted_shape_fcn -----------------------------------------------
-//--------------------------------------------------------------------------
-void
-HexahedralP2Element::shifted_shape_fcn(double* shpfc)
-{
-  for (int ip = 0; ip < numIntPoints_ * nodesPerElement_; ++ip) {
-    shpfc[ip] = shapeFunctionsShift_[ip];
-  }
 }
 
 //--------------------------------------------------------------------------
@@ -653,24 +630,53 @@ Hex27SCV::ipNodeMap(int /*ordinal*/) const
 }
 
 //--------------------------------------------------------------------------
-void
-Hex27SCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Hex27SCV::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
-      shpfc(ip, n) = interpWeights_(ip, n);
+      if constexpr (std::is_floating_point<SCALAR>::value)
+        shpfc(ip, n) = stk::simd::get_data(interpWeights_(ip, n), 0);
+      else
+        shpfc(ip, n) = interpWeights_(ip, n);
     }
   }
 }
-//--------------------------------------------------------------------------
+
+KOKKOS_FUNCTION void
+Hex27SCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
 void
-Hex27SCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+Hex27SCV::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+//--------------------------------------------------------------------------
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Hex27SCV::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
-      shpfc(ip, n) = shiftedInterpWeights_(ip, n);
+      if constexpr (std::is_floating_point<SCALAR>::value)
+        shpfc(ip, n) = stk::simd::get_data(shiftedInterpWeights_(ip, n), 0);
+      else
+        shpfc(ip, n) = shiftedInterpWeights_(ip, n);
     }
   }
+}
+KOKKOS_FUNCTION void
+Hex27SCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
+}
+void
+Hex27SCV::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
@@ -704,7 +710,7 @@ Hex27SCV::determinant(
 //--------------------------------------------------------------------------
 void
 Hex27SCV::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
@@ -1268,24 +1274,53 @@ Hex27SCS::opposingFace(const int ordinal, const int node)
 }
 
 //--------------------------------------------------------------------------
-void
-Hex27SCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Hex27SCS::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
-      shpfc(ip, n) = interpWeights_(ip, n);
+      if constexpr (std::is_floating_point<SCALAR>::value)
+        shpfc(ip, n) = stk::simd::get_data(interpWeights_(ip, n), 0);
+      else
+        shpfc(ip, n) = interpWeights_(ip, n);
     }
   }
 }
-//--------------------------------------------------------------------------
+KOKKOS_FUNCTION void
+Hex27SCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
 void
-Hex27SCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+Hex27SCS::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+
+//--------------------------------------------------------------------------
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Hex27SCS::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
-      shpfc(ip, n) = shiftedInterpWeights_(ip, n);
+      if constexpr (std::is_floating_point<SCALAR>::value)
+        shpfc(ip, n) = stk::simd::get_data(shiftedInterpWeights_(ip, n), 0);
+      else
+        shpfc(ip, n) = shiftedInterpWeights_(ip, n);
     }
   }
+}
+KOKKOS_FUNCTION void
+Hex27SCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
+}
+void
+Hex27SCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
@@ -1374,39 +1409,7 @@ Hex27SCS::area_vector(
 //--------------------------------------------------------------------------
 void
 Hex27SCS::grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
-{
-  ThrowRequireMsg(nelem == 1, "P2 elements are processed one-at-a-time");
-
-  *error = 0.0;
-
-  // shape derivatives are stored: just copy
-  constexpr int deriv_increment =
-    AlgTraits::nDim_ * AlgTraits::nodesPerElement_;
-  constexpr int numShapeDerivs = deriv_increment * AlgTraits::numScsIp_;
-  for (int j = 0; j < numShapeDerivs; ++j) {
-    deriv[j] = shapeDerivs_[j];
-  }
-
-  for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
-    const int grad_offset = deriv_increment * ip;
-    gradient(
-      coords, &shapeDerivs_[grad_offset], &gradop[grad_offset], &det_j[ip]);
-
-    if (det_j[ip] < tiny_positive_value()) {
-      *error = 1.0;
-    }
-  }
-}
-//--------------------------------------------------------------------------
-void
-Hex27SCS::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
@@ -1422,41 +1425,26 @@ Hex27SCS::grad_op(
   }
 }
 
-//--------------------------------------------------------------------------
-//-------- shifted_grad_op -------------------------------------------------
-//--------------------------------------------------------------------------
 void
-Hex27SCS::shifted_grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
+Hex27SCS::grad_op(
+  const SharedMemView<double**>& coords,
+  SharedMemView<double***>& gradop,
+  SharedMemView<double***>& deriv)
 {
-  ThrowRequireMsg(nelem == 1, "P2 elements are processed one-at-a-time");
-
-  *error = 0.0;
-
-  // shape derivatives are stored: just copy
-  constexpr int deriv_increment =
-    AlgTraits::nDim_ * AlgTraits::nodesPerElement_;
-  constexpr int numShapeDerivs = deriv_increment * AlgTraits::numScsIp_;
-  for (int j = 0; j < numShapeDerivs; ++j) {
-    deriv[j] = shapeDerivsShift_[j];
-  }
-
+  // copy derivs as well.  These aren't used, but are part of the interface
   for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
-    const int grad_offset = deriv_increment * ip;
-    gradient(
-      coords, &shapeDerivsShift_[grad_offset], &gradop[grad_offset],
-      &det_j[ip]);
-
-    if (det_j[ip] < tiny_positive_value()) {
-      *error = 1.0;
+    for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
+      for (int d = 0; d < AlgTraits::nDim_; ++d) {
+        deriv(ip, n, d) =
+          stk::simd::get_data(referenceGradWeights_(ip, n, d), 0);
+      }
     }
   }
+  generic_grad_op<AlgTraits>(deriv, coords, gradop);
 }
+
+//--------------------------------------------------------------------------
+//-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
 void
 Hex27SCS::shifted_grad_op(
@@ -1478,32 +1466,6 @@ Hex27SCS::shifted_grad_op(
 //--------------------------------------------------------------------------
 //-------- face_grad_op ----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Hex27SCS::face_grad_op(
-  const int nelem,
-  const int face_ordinal,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  ThrowRequireMsg(nelem == 1, "P2 elements are processed one-at-a-time");
-
-  *error = 0.0;
-  const int face_offset = nDim_ * ipsPerFace_ * nodesPerElement_ * face_ordinal;
-  const double* offsetFaceDerivs = &expFaceShapeDerivs_[face_offset];
-
-  for (int ip = 0; ip < ipsPerFace_; ++ip) {
-    const int grad_offset = nDim_ * nodesPerElement_ * ip;
-    gradient(
-      coords, &offsetFaceDerivs[grad_offset], &gradop[grad_offset], &det_j[ip]);
-
-    if (det_j[ip] < tiny_positive_value()) {
-      *error = 1.0;
-    }
-  }
-}
-
 void
 Hex27SCS::face_grad_op(
   int face_ordinal,
@@ -1609,17 +1571,7 @@ Hex27SCS::gradient(
 //--------------------------------------------------------------------------
 void
 Hex27SCS::gij(
-  const double* coords, double* gupperij, double* glowerij, double* deriv)
-{
-  const int numIntPoints = numIntPoints_;
-  const int nodesPerElement = nodesPerElement_;
-  SIERRA_FORTRAN(threed_gij)
-  (&nodesPerElement, &numIntPoints, deriv, coords, gupperij, glowerij);
-}
-//--------------------------------------------------------------------------
-void
-Hex27SCS::gij(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)

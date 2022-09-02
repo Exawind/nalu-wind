@@ -26,7 +26,26 @@
 
 namespace sierra {
 namespace nalu {
-
+namespace {
+template <typename BcAlgTraits, typename T>
+void
+get_shape_fcn(
+  T& vf_adv_shape_function, MasterElement* meFC_dev, const bool skewSymmetric)
+{
+  auto dev_shape_function = Kokkos::create_mirror_view(vf_adv_shape_function);
+  Kokkos::parallel_for(
+    "get_shape_fcn_data", 1, KOKKOS_LAMBDA(int) {
+      SharedMemView<DoubleType**, DeviceShmem> ShmemView(
+        dev_shape_function.data(), BcAlgTraits::numFaceIp_,
+        BcAlgTraits::nodesPerFace_);
+      if (skewSymmetric)
+        meFC_dev->shifted_shape_fcn<>(ShmemView);
+      else
+        meFC_dev->shape_fcn<>(ShmemView);
+    });
+  Kokkos::deep_copy(vf_adv_shape_function, dev_shape_function);
+}
+} // namespace
 template <typename BcAlgTraits>
 ScalarOpenAdvElemKernel<BcAlgTraits>::ScalarOpenAdvElemKernel(
   const stk::mesh::MetaData& metaData,
@@ -67,6 +86,9 @@ ScalarOpenAdvElemKernel<BcAlgTraits>::ScalarOpenAdvElemKernel(
   MasterElement* meFC =
     sierra::nalu::MasterElementRepo::get_surface_master_element(
       BcAlgTraits::faceTopo_);
+  MasterElement* meFC_dev =
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::faceTopo_);
 
   // add master elements
   faceDataPreReqs.add_cvfem_face_me(meFC);
@@ -88,14 +110,7 @@ ScalarOpenAdvElemKernel<BcAlgTraits>::ScalarOpenAdvElemKernel(
 
   // never shift properties
   const bool skewSymmetric = solnOpts.get_skew_symmetric(scalarQ->name());
-  get_face_shape_fn_data<BcAlgTraits>(
-    [&](double* ptr) {
-      if (skewSymmetric)
-        meFC->shifted_shape_fcn(ptr);
-      else
-        meFC->shape_fcn(ptr);
-    },
-    vf_adv_shape_function_);
+  get_shape_fcn<BcAlgTraits>(vf_adv_shape_function_, meFC_dev, skewSymmetric);
 }
 
 template <typename BcAlgTraits>

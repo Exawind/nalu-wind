@@ -25,6 +25,22 @@
 
 namespace sierra {
 namespace nalu {
+namespace {
+template <typename BcAlgTraits, typename T>
+void
+get_shape_fcn(T& vf_shape_function, MasterElement* meFC_dev)
+{
+  auto dev_shape_function = Kokkos::create_mirror_view(vf_shape_function);
+  Kokkos::parallel_for(
+    "get_shape_fcn_data", 1, KOKKOS_LAMBDA(int) {
+      SharedMemView<DoubleType**, DeviceShmem> ShmemView(
+        dev_shape_function.data(), BcAlgTraits::numFaceIp_,
+        BcAlgTraits::nodesPerFace_);
+      meFC_dev->shape_fcn<>(ShmemView);
+    });
+  Kokkos::deep_copy(vf_shape_function, dev_shape_function);
+}
+} // namespace
 
 template <class BcAlgTraits>
 MomentumWallFunctionElemKernel<BcAlgTraits>::MomentumWallFunctionElemKernel(
@@ -56,10 +72,12 @@ MomentumWallFunctionElemKernel<BcAlgTraits>::MomentumWallFunctionElemKernel(
   MasterElement* meFC =
     sierra::nalu::MasterElementRepo::get_surface_master_element(
       BcAlgTraits::topo_);
+  MasterElement* meFC_dev =
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::topo_);
 
   // compute and save shape function
-  get_face_shape_fn_data<BcAlgTraits>(
-    [&](double* ptr) { meFC->shape_fcn(ptr); }, vf_shape_function_);
+  get_shape_fcn<BcAlgTraits>(vf_shape_function_, meFC_dev);
 
   // add master elements
   dataPreReqs.add_cvfem_face_me(meFC);

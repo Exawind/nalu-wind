@@ -43,41 +43,41 @@ Quad3DSCS::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad3DSCS::shape_fcn(double* shpfc)
-{
-  const int numIntPoints = numIntPoints_;
-  SIERRA_FORTRAN(quad3d_shape_fcn)
-  (&numIntPoints, intgLoc_, shpfc);
-}
-
-//--------------------------------------------------------------------------
-//-------- shifted_shape_fcn -----------------------------------------------
-//--------------------------------------------------------------------------
-void
-Quad3DSCS::shifted_shape_fcn(double* shpfc)
-{
-  const int numIntPoints = numIntPoints_;
-  SIERRA_FORTRAN(quad3d_shape_fcn)
-  (&numIntPoints, intgLocShift_, shpfc);
-}
-
-//--------------------------------------------------------------------------
-//-------- shape_fcn -------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-Quad3DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Quad3DSCS::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   quad4_shape_fcn(intgLoc_, shpfc);
 }
+KOKKOS_FUNCTION void
+Quad3DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+void
+Quad3DSCS::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
 
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Quad3DSCS::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   quad4_shape_fcn(intgLocShift_, shpfc);
+}
+KOKKOS_FUNCTION void
+Quad3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
+}
+void
+Quad3DSCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 template <typename DBLTYPE, typename SHMEM>
@@ -141,18 +141,18 @@ Quad3DSCS::determinant(
 //--------------------------------------------------------------------------
 //-------- quad4_shape_fcn --------------------------------------------------
 //--------------------------------------------------------------------------
-void
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
 Quad3DSCS::quad4_shape_fcn(
-  const double* isoParCoord,
-  SharedMemView<DoubleType**, DeviceShmem>& shape_fcn)
+  const double* isoParCoord, SharedMemView<SCALAR**, SHMEM>& shape_fcn)
 {
   // -1/2:1/2 isoparametric range
-  const DoubleType half = 0.50;
-  const DoubleType one4th = 0.25;
+  const SCALAR half = 0.50;
+  const SCALAR one4th = 0.25;
   for (int j = 0; j < numIntPoints_; ++j) {
 
-    const DoubleType s1 = isoParCoord[j * 2];
-    const DoubleType s2 = isoParCoord[j * 2 + 1];
+    const SCALAR s1 = isoParCoord[j * 2];
+    const SCALAR s2 = isoParCoord[j * 2 + 1];
 
     shape_fcn(j, 0) = one4th + half * (-s1 - s2) + s1 * s2;
     shape_fcn(j, 1) = one4th + half * (s1 - s2) - s1 * s2;

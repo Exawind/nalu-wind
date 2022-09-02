@@ -11,33 +11,37 @@
 #include "UnitTestKokkosMEBC.h"
 
 namespace {
+template <typename SHMEM>
 void
 check_that_values_match(
-  const sierra::nalu::SharedMemView<DoubleType***>& values,
-  const double* oldValues)
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& values,
+  const DoubleType* oldValues)
 {
   int counter = 0;
   for (size_t i = 0; i < values.extent(0); ++i) {
     for (size_t j = 0; j < values.extent(1); ++j) {
       for (size_t k = 0; k < values.extent(2); ++k) {
         EXPECT_NEAR(
-          stk::simd::get_data(values(i, j, k), 0), oldValues[counter++], tol)
+          stk::simd::get_data(values(i, j, k), 0),
+          stk::simd::get_data(oldValues[counter++], 0), tol)
           << "i:" << i << ", j:" << j << ", k:" << k;
       }
     }
   }
 }
 
+template <typename SHMEM>
 void
 check_that_values_match(
-  const sierra::nalu::SharedMemView<DoubleType**>& values,
-  const double* oldValues)
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& values,
+  const DoubleType* oldValues)
 {
   int counter = 0;
   for (size_t i = 0; i < values.extent(0); ++i) {
     for (size_t j = 0; j < values.extent(1); ++j) {
       EXPECT_NEAR(
-        stk::simd::get_data(values(i, j), 0), oldValues[counter++], tol)
+        stk::simd::get_data(values(i, j), 0),
+        stk::simd::get_data(oldValues[counter++], 0), tol)
         << "i:" << i << ", j:" << j;
     }
   }
@@ -60,46 +64,45 @@ copy_DoubleType0_to_double(
 void
 compare_old_face_shape_fcn(
   const bool shifted,
-  const sierra::nalu::SharedMemView<DoubleType**>& fc_shape_fcn,
+  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>&
+    fc_shape_fcn,
   sierra::nalu::MasterElement* meFC)
 {
   int len = fc_shape_fcn.extent(0) * fc_shape_fcn.extent(1);
-  std::vector<double> shape_fcn(len, 0.0);
-
   if (shifted)
-    meFC->shifted_shape_fcn(shape_fcn.data());
+    meFC->shifted_shape_fcn<>(fc_shape_fcn);
   else
-    meFC->shape_fcn(shape_fcn.data());
+    meFC->shape_fcn<>(fc_shape_fcn);
 
-  check_that_values_match(fc_shape_fcn, shape_fcn.data());
+  check_that_values_match(fc_shape_fcn, fc_shape_fcn.data());
 }
 
+template <typename SHMEM>
 void
 compare_old_face_grad_op(
   const int faceOrdinal,
   const bool shifted,
-  const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType***>& scs_fc_dndx,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_dndx,
   sierra::nalu::MasterElement* meSCS)
 {
-  int len =
-    scs_fc_dndx.extent(0) * scs_fc_dndx.extent(1) * scs_fc_dndx.extent(2);
-  std::vector<double> coords;
-  copy_DoubleType0_to_double(v_coords, coords);
-  std::vector<double> grad_op(len, 0.0);
-  std::vector<double> deriv(len, 0.0);
-  std::vector<double> det_j(len, 0.0);
-  double error = 0;
+  int len = scs_dndx.extent(0) * scs_dndx.extent(1) * scs_dndx.extent(2);
+  std::vector<DoubleType> grad_op(len, 0.0);
+  std::vector<DoubleType> det_j(len, 0.0);
+
+  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> grad(
+    grad_op.data(), scs_dndx.extent(0), scs_dndx.extent(1), scs_dndx.extent(2));
+  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> det(
+    det_j.data(), scs_dndx.extent(0), scs_dndx.extent(1), scs_dndx.extent(2));
+  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(
+    v_coords.data(), v_coords.extent(0), v_coords.extent(1));
 
   if (shifted)
-    meSCS->shifted_face_grad_op(
-      1, faceOrdinal, coords.data(), grad_op.data(), det_j.data(), &error);
+    meSCS->shifted_face_grad_op(faceOrdinal, coords, grad, det);
   else
-    meSCS->face_grad_op(
-      1, faceOrdinal, coords.data(), grad_op.data(), det_j.data(), &error);
+    meSCS->face_grad_op(faceOrdinal, coords, grad, det);
 
-  EXPECT_NEAR(error, 0.0, tol);
-  check_that_values_match(scs_fc_dndx, &grad_op[0]);
+  check_that_values_match(scs_dndx, grad_op.data());
 }
 
 template <typename BcAlgTraits>
@@ -130,9 +133,10 @@ test_MEBC_views(
   // Execute the loop and perform all tests
   driver.execute(
     [&](sierra::nalu::SharedMemData_FaceElem<
-        sierra::nalu::TeamHandleType, sierra::nalu::HostShmem>& smdata) {
-      sierra::nalu::SharedMemView<DoubleType**>& v_coords =
-        smdata.simdElemViews.get_scratch_view_2D(*driver.coordinates_);
+        sierra::nalu::TeamHandleType, sierra::nalu::DeviceShmem>& smdata) {
+      sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>&
+        v_coords =
+          smdata.simdElemViews.get_scratch_view_2D(*driver.coordinates_);
       auto& meViews =
         smdata.simdElemViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
       auto& fcViews =

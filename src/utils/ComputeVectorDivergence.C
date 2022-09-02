@@ -84,7 +84,9 @@ compute_vector_divergence(
     wsScsArea.resize(numScsIp * nDim);
 
     ws_shape_function.resize(numScsIp * nodesPerElement);
-    meSCS->shape_fcn(ws_shape_function.data());
+    sierra::nalu::SharedMemView<double**, sierra::nalu::HostShmem> ShmemView(
+      ws_shape_function.data(), numScsIp, nodesPerElement);
+    meSCS->shape_fcn<>(ShmemView);
 
     size_t length = b->size();
     for (size_t k = 0; k < length; ++k) {
@@ -179,7 +181,9 @@ compute_vector_divergence(
 
     wsMeshVector.resize(nodesPerFace * nDim);
     ws_shape_function.resize(numScsIp * nodesPerFace);
-    meFC->shape_fcn(ws_shape_function.data());
+    sierra::nalu::SharedMemView<double**, sierra::nalu::HostShmem> ShmemView(
+      ws_shape_function.data(), numScsIp, nodesPerFace);
+    meFC->shape_fcn<>(ShmemView);
 
     size_t length = b->size();
     for (stk::mesh::Bucket::size_type k = 0; k < length; ++k) {

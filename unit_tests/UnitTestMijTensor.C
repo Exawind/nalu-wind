@@ -33,16 +33,19 @@ namespace {
 
 std::vector<double>
 calculate_mij_tensor(
-  sierra::nalu::MasterElement& me, const std::vector<double>& ws_coords)
+  sierra::nalu::MasterElement& me, std::vector<double>& ws_coords)
 {
-  double scs_error = 0.0;
   int gradSize = me.num_integration_points() * me.nodesPerElement_ * me.nDim_;
   std::vector<double> ws_dndx(gradSize);
   std::vector<double> ws_deriv(gradSize);
-  std::vector<double> ws_det_j(me.num_integration_points());
-  me.grad_op(
-    1, ws_coords.data(), ws_dndx.data(), ws_deriv.data(), ws_det_j.data(),
-    &scs_error);
+  const sierra::nalu::SharedMemView<double**> coords(
+    ws_coords.data(), me.nodesPerElement_, me.nDim_);
+  sierra::nalu::SharedMemView<double***> dndx(
+    ws_dndx.data(), me.num_integration_points(), me.nodesPerElement_, me.nDim_);
+  sierra::nalu::SharedMemView<double***> deriv(
+    ws_deriv.data(), me.num_integration_points(), me.nodesPerElement_,
+    me.nDim_);
+  me.grad_op(coords, dndx, deriv);
 
   int metricSize = me.nDim_ * me.nDim_ * me.num_integration_points();
   std::vector<double> mij_tensor(metricSize);

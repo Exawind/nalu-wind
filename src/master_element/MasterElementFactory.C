@@ -37,6 +37,67 @@
 namespace sierra {
 namespace nalu {
 
+MasterElement*
+MasterElementRepo::get_surface_master_element_on_dev(
+  const stk::topology& theTopo)
+{
+  switch (theTopo.value()) {
+  case stk::topology::HEX_8:
+    return get_surface_master_element<AlgTraitsHex8>();
+  case stk::topology::HEX_27:
+    return get_surface_master_element<AlgTraitsHex27>();
+  case stk::topology::TET_4:
+    return get_surface_master_element<AlgTraitsTet4>();
+  case stk::topology::PYRAMID_5:
+    return get_surface_master_element<AlgTraitsPyr5>();
+  case stk::topology::WEDGE_6:
+    return get_surface_master_element<AlgTraitsWed6>();
+  case stk::topology::QUAD_4:
+    return get_surface_master_element<AlgTraitsQuad4>();
+  case stk::topology::QUAD_9:
+    return get_surface_master_element<AlgTraitsQuad9>();
+  case stk::topology::TRI_3:
+    return get_surface_master_element<AlgTraitsTri3>();
+  case stk::topology::QUAD_4_2D:
+    return get_surface_master_element<AlgTraitsQuad4_2D>();
+  case stk::topology::QUAD_9_2D:
+    return get_surface_master_element<AlgTraitsQuad9_2D>();
+  case stk::topology::TRI_3_2D:
+    return get_surface_master_element<AlgTraitsTri3_2D>();
+  case stk::topology::LINE_2:
+    return get_surface_master_element<AlgTraitsEdge_2D>();
+  case stk::topology::LINE_3:
+    return get_surface_master_element<AlgTraitsEdge3_2D>();
+  case stk::topology::SHELL_QUAD_4:
+    NaluEnv::self().naluOutputP0()
+      << "SHELL_QUAD_4 only supported for io surface transfer applications"
+      << std::endl;
+    return get_surface_master_element<AlgTraitsQuad4>();
+
+  case stk::topology::SHELL_TRI_3:
+    NaluEnv::self().naluOutputP0()
+      << "SHELL_TRI_3 only supported for io surface transfer applications"
+      << std::endl;
+    return get_surface_master_element<AlgTraitsTri3>();
+
+  case stk::topology::BEAM_2:
+    NaluEnv::self().naluOutputP0()
+      << "BEAM_2 is only supported for io surface transfer applications"
+      << std::endl;
+    return get_surface_master_element<AlgTraitsEdge_2D>();
+
+  default:
+    NaluEnv::self().naluOutputP0()
+      << "sorry, we only support hex8, tet4, pyr5, wed6,"
+         " quad42d, quad3d, tri2d, tri3d and edge2d surface elements"
+      << std::endl;
+    NaluEnv::self().naluOutputP0()
+      << "your type is " << theTopo.value() << std::endl;
+    break;
+  }
+  return nullptr;
+}
+
 std::unique_ptr<MasterElement>
 create_surface_master_element(stk::topology topo)
 {

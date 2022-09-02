@@ -146,13 +146,18 @@ check_interpolation(
   }
 
   std::vector<double> meResult(me.num_integration_points(), 0.0);
-  std::vector<double> meShapeFunctions(
+  std::vector<DoubleType> meShapeFunctions(
     me.num_integration_points() * topo.num_nodes());
-  me.shape_fcn(meShapeFunctions.data());
+  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>
+    ShmemView(
+      meShapeFunctions.data(), me.num_integration_points(), topo.num_nodes());
+  me.shape_fcn<>(ShmemView);
 
   for (int j = 0; j < me.num_integration_points(); ++j) {
     for (unsigned i = 0; i < topo.num_nodes(); ++i) {
-      meResult[j] += meShapeFunctions[j * topo.num_nodes() + i] * ws_field[i];
+      meResult[j] +=
+        stk::simd::get_data(meShapeFunctions[j * topo.num_nodes() + i], 0) *
+        ws_field[i];
     }
   }
 
@@ -204,12 +209,14 @@ check_derivatives(
   }
 
   std::vector<double> ws_coords(topo.num_nodes() * dim);
+  sierra::nalu::SharedMemView<double**> elemCoords(
+    ws_coords.data(), topo.num_nodes(), dim);
   const auto* nodes = bulk.begin_nodes(elem);
   for (unsigned j = 0; j < topo.num_nodes(); ++j) {
     const double* coords =
       static_cast<const double*>(stk::mesh::field_data(*coordField, nodes[j]));
     for (unsigned d = 0; d < dim; ++d) {
-      ws_coords[j * dim + d] = coords[d];
+      elemCoords(j, d) = coords[d];
     }
     ws_field[j] = poly_val(coeffs, coords);
   }
@@ -217,14 +224,14 @@ check_derivatives(
   std::vector<double> meResult(me.num_integration_points() * dim, 0.0);
   std::vector<double> meGrad(
     me.num_integration_points() * topo.num_nodes() * dim);
+  sierra::nalu::SharedMemView<double***> gradop(
+    meGrad.data(), me.num_integration_points(), topo.num_nodes(), dim);
   std::vector<double> meDeriv(
     me.num_integration_points() * topo.num_nodes() * dim);
-  std::vector<double> meDetj(me.num_integration_points());
+  sierra::nalu::SharedMemView<double***> deriv(
+    meDeriv.data(), me.num_integration_points(), topo.num_nodes(), dim);
 
-  double error = 0.0;
-  me.grad_op(
-    1, ws_coords.data(), meGrad.data(), meDeriv.data(), meDetj.data(), &error);
-  EXPECT_EQ(error, 0.0);
+  me.grad_op(elemCoords, gradop, deriv);
 
   for (int j = 0; j < me.num_integration_points(); ++j) {
     for (unsigned i = 0; i < topo.num_nodes(); ++i) {
@@ -238,11 +245,6 @@ check_derivatives(
   // shape function derivatives and grad_op should be the same
   for (unsigned j = 0; j < meGrad.size(); ++j) {
     EXPECT_NEAR(meGrad[j], meDeriv[j], 1.0e-12);
-  }
-
-  // detj should be unity
-  for (unsigned j = 0; j < meDetj.size(); ++j) {
-    EXPECT_NEAR(1, meDetj[j], 1.0e-12);
   }
 
   for (unsigned j = 0; j < meResult.size(); ++j) {

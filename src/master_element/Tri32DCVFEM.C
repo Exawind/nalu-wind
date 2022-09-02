@@ -31,9 +31,9 @@ namespace sierra {
 namespace nalu {
 
 //-------- tri_derivative -----------------------------------------------------
-KOKKOS_FUNCTION
-void
-tri_derivative(SharedMemView<DoubleType***, DeviceShmem>& deriv)
+template <typename DBLTYPE, typename SHMEM>
+KOKKOS_FUNCTION void
+tri_derivative(SharedMemView<DBLTYPE***, SHMEM>& deriv)
 {
   const int npts = deriv.extent(0);
   for (int j = 0; j < npts; ++j) {
@@ -48,19 +48,19 @@ tri_derivative(SharedMemView<DoubleType***, DeviceShmem>& deriv)
 
 //-------- tri_gradient_operator
 //-----------------------------------------------------
-KOKKOS_FUNCTION
-void
+template <typename DBLTYPE, typename SHMEM>
+KOKKOS_FUNCTION void
 tri_gradient_operator(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE***, SHMEM>& gradop,
+  SharedMemView<DBLTYPE***, SHMEM>& deriv)
 {
 
   const int nint = deriv.extent(0);
   const int npe = deriv.extent(1);
 
-  DoubleType dx_ds1, dx_ds2;
-  DoubleType dy_ds1, dy_ds2;
+  DBLTYPE dx_ds1, dx_ds2;
+  DBLTYPE dy_ds1, dy_ds2;
 
   for (int ki = 0; ki < nint; ++ki) {
     dx_ds1 = 0.0;
@@ -77,20 +77,20 @@ tri_gradient_operator(
     }
 
     // calculate the determinate of the jacobian at the integration station -
-    const DoubleType det_j = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
+    const DBLTYPE det_j = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
 
     // protect against a negative or small value for the determinate of the
     // jacobian. The value of real_min (set in precision.par) represents
     // the smallest Real value (based upon the precision set for this
     // compilation) which the machine can represent -
-    const DoubleType denom = stk::math::if_then_else(
+    const DBLTYPE denom = stk::math::if_then_else(
       det_j < 1.e6 * MEconstants::realmin, 1.0, 1.0 / det_j);
 
     // compute the gradient operators at the integration station -
-    const DoubleType ds1_dx = denom * dy_ds2;
-    const DoubleType ds2_dx = -denom * dy_ds1;
-    const DoubleType ds1_dy = -denom * dx_ds2;
-    const DoubleType ds2_dy = denom * dx_ds1;
+    const DBLTYPE ds1_dx = denom * dy_ds2;
+    const DBLTYPE ds2_dx = -denom * dy_ds1;
+    const DBLTYPE ds1_dy = -denom * dx_ds2;
+    const DBLTYPE ds2_dy = denom * dx_ds1;
 
     for (int kn = 0; kn < npe; ++kn) {
       gradop(ki, kn, 0) = deriv(ki, kn, 0) * ds1_dx + deriv(ki, kn, 1) * ds2_dx;
@@ -123,40 +123,50 @@ Tri32DSCV::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Tri32DSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Tri32DSCV::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   tri_shape_fcn(intgLoc_, shpfc);
 }
-
-void
-Tri32DSCV::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Tri32DSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  tri_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+  shape_fcn<>(shpfc);
+}
+void
+Tri32DSCV::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-void
-Tri32DSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Tri32DSCV::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   tri_shape_fcn(intgLocShift_, shpfc);
 }
-
-void
-Tri32DSCV::shifted_shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Tri32DSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  tri_shape_fcn(numIntPoints_, intgLocShift_, shpfc);
+  shifted_shape_fcn<>(shpfc);
+}
+void
+Tri32DSCV::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- tri_shape_fcn ---------------------------------------------------
 //--------------------------------------------------------------------------
-void
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
 Tri32DSCV::tri_shape_fcn(
-  const double* isoParCoord,
-  SharedMemView<DoubleType**, DeviceShmem>& shape_fcn)
+  const double* isoParCoord, SharedMemView<SCALAR**, SHMEM>& shape_fcn)
 {
   for (int j = 0; j < numIntPoints_; ++j) {
     const int k = 2 * j;
@@ -165,22 +175,6 @@ Tri32DSCV::tri_shape_fcn(
     shape_fcn(j, 0) = 1.0 - xi - eta;
     shape_fcn(j, 1) = xi;
     shape_fcn(j, 2) = eta;
-  }
-}
-
-//--------------------------------------------------------------------------
-void
-Tri32DSCV::tri_shape_fcn(
-  const int npts, const double* isoParCoord, double* shape_fcn)
-{
-  for (int j = 0; j < npts; ++j) {
-    const int threej = 3 * j;
-    const int k = 2 * j;
-    const double xi = isoParCoord[k];
-    const double eta = isoParCoord[k + 1];
-    shape_fcn[threej] = 1.0 - xi - eta;
-    shape_fcn[1 + threej] = xi;
-    shape_fcn[2 + threej] = eta;
   }
 }
 
@@ -309,7 +303,7 @@ Tri32DSCV::determinant(
 //--------------------------------------------------------------------------
 void
 Tri32DSCV::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
@@ -485,7 +479,7 @@ Tri32DSCS::determinant(
 //--------------------------------------------------------------------------
 void
 Tri32DSCS::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
@@ -495,26 +489,12 @@ Tri32DSCS::grad_op(
 
 void
 Tri32DSCS::grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double***>& gradop,
+  SharedMemView<double***>& deriv)
 {
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(tri_derivative)
-  (&nint, deriv);
-
-  SIERRA_FORTRAN(tri_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "sorry, negative Tri32DSCS volume.." << std::endl;
+  tri_derivative(deriv);
+  tri_gradient_operator(coords, gradop, deriv);
 }
 
 //--------------------------------------------------------------------------
@@ -528,30 +508,6 @@ Tri32DSCS::shifted_grad_op(
 {
   tri_derivative(deriv);
   tri_gradient_operator(coords, gradop, deriv);
-}
-
-void
-Tri32DSCS::shifted_grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(tri_derivative)
-  (&nint, deriv);
-
-  SIERRA_FORTRAN(tri_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "sorry, negative Tri32DSCS volume.." << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -568,46 +524,6 @@ Tri32DSCS::face_grad_op(
   generic_grad_op<AlgTraitsEdge2DTri32D>(deriv, coords, gradop);
 }
 
-void
-Tri32DSCS::face_grad_op(
-  const int nelem,
-  const int /*face_ordinal*/,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-  int npf = 2;
-
-  const int nface = 1;
-  double dpsi[6];
-  double grad[6];
-
-  for (int n = 0; n < nelem; n++) {
-
-    for (int k = 0; k < npf; k++) {
-
-      // derivatives are constant
-      SIERRA_FORTRAN(tri_derivative)
-      (&nface, dpsi);
-
-      const int npe = nodesPerElement_;
-      SIERRA_FORTRAN(tri_gradient_operator)
-      (&nface, &npe, &nface, dpsi, &coords[12 * n], grad, &det_j[npf * n + k],
-       error, &lerr);
-
-      if (lerr)
-        NaluEnv::self().naluOutput()
-          << "sorry, issue with face_grad_op.." << std::endl;
-
-      for (int j = 0; j < 6; j++) {
-        gradop[k * nelem * 6 + n * 6 + j] = grad[j];
-      }
-    }
-  }
-}
-
 //--------------------------------------------------------------------------
 //-------- shifted_face_grad_op --------------------------------------------
 //--------------------------------------------------------------------------
@@ -621,50 +537,12 @@ Tri32DSCS::shifted_face_grad_op(
   // same as regular face_grad_op
   face_grad_op(face_ordinal, coords, gradop, deriv);
 }
-
-void
-Tri32DSCS::shifted_face_grad_op(
-  const int nelem,
-  const int /*face_ordinal*/,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  // same as regular face_grad_op
-
-  int lerr = 0;
-  int npf = 2;
-
-  const int nface = 1;
-  double dpsi[6];
-
-  for (int n = 0; n < nelem; n++) {
-
-    for (int k = 0; k < npf; k++) {
-
-      // derivatives are constant
-      SIERRA_FORTRAN(tri_derivative)
-      (&nface, dpsi);
-
-      const int npe = nodesPerElement_;
-      SIERRA_FORTRAN(tri_gradient_operator)
-      (&nface, &npe, &nface, dpsi, &coords[12 * n],
-       &gradop[k * nelem * 6 + n * 6], &det_j[npf * n + k], error, &lerr);
-
-      if (lerr)
-        NaluEnv::self().naluOutput()
-          << "sorry, issue with face_grad_op.." << std::endl;
-    }
-  }
-}
-
 //--------------------------------------------------------------------------
 //-------- gij -------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
 Tri32DSCS::gij(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
@@ -715,16 +593,6 @@ Tri32DSCS::gij(
   }
 }
 
-void
-Tri32DSCS::gij(
-  const double* coords, double* gupperij, double* glowerij, double* deriv)
-{
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(twod_gij)
-  (&npe, &nint, deriv, coords, gupperij, glowerij);
-}
-
 //--------------------------------------------------------------------------
 //-------- Metric Tensor Mij------------------------------------------------
 //--------------------------------------------------------------------------
@@ -772,40 +640,50 @@ Tri32DSCS::scsIpEdgeOrd()
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Tri32DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Tri32DSCS::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   tri_shape_fcn(intgLoc_, shpfc);
 }
-
-void
-Tri32DSCS::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Tri32DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  tri_shape_fcn(numIntPoints_, intgLoc_, shpfc);
+  shape_fcn<>(shpfc);
+}
+void
+Tri32DSCS::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-void
-Tri32DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Tri32DSCS::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   tri_shape_fcn(intgLocShift_, shpfc);
 }
-
-void
-Tri32DSCS::shifted_shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Tri32DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  tri_shape_fcn(numIntPoints_, intgLocShift_, shpfc);
+  shifted_shape_fcn<>(shpfc);
+}
+void
+Tri32DSCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- tri_shape_fcn ---------------------------------------------------
 //--------------------------------------------------------------------------
-void
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
 Tri32DSCS::tri_shape_fcn(
-  const double* isoParCoord,
-  SharedMemView<DoubleType**, DeviceShmem>& shape_fcn)
+  const double* isoParCoord, SharedMemView<SCALAR**, SHMEM>& shape_fcn)
 {
   for (int j = 0; j < numIntPoints_; ++j) {
     const int k = 2 * j;

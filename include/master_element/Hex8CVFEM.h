@@ -18,38 +18,6 @@
 namespace sierra {
 namespace nalu {
 
-template <typename ViewType>
-KOKKOS_INLINE_FUNCTION void
-hex8_shape_fcn(const int npts, const double* isoParCoord, ViewType& shape_fcn)
-{
-  const DoubleType half = 0.50;
-  const DoubleType one4th = 0.25;
-  const DoubleType one8th = 0.125;
-  for (int j = 0; j < npts; ++j) {
-
-    const DoubleType s1 = isoParCoord[j * 3];
-    const DoubleType s2 = isoParCoord[j * 3 + 1];
-    const DoubleType s3 = isoParCoord[j * 3 + 2];
-
-    shape_fcn(j, 0) = one8th + one4th * (-s1 - s2 - s3) +
-                      half * (s2 * s3 + s3 * s1 + s1 * s2) - s1 * s2 * s3;
-    shape_fcn(j, 1) = one8th + one4th * (s1 - s2 - s3) +
-                      half * (s2 * s3 - s3 * s1 - s1 * s2) + s1 * s2 * s3;
-    shape_fcn(j, 2) = one8th + one4th * (s1 + s2 - s3) +
-                      half * (-s2 * s3 - s3 * s1 + s1 * s2) - s1 * s2 * s3;
-    shape_fcn(j, 3) = one8th + one4th * (-s1 + s2 - s3) +
-                      half * (-s2 * s3 + s3 * s1 - s1 * s2) + s1 * s2 * s3;
-    shape_fcn(j, 4) = one8th + one4th * (-s1 - s2 + s3) +
-                      half * (-s2 * s3 - s3 * s1 + s1 * s2) + s1 * s2 * s3;
-    shape_fcn(j, 5) = one8th + one4th * (s1 - s2 + s3) +
-                      half * (-s2 * s3 + s3 * s1 - s1 * s2) - s1 * s2 * s3;
-    shape_fcn(j, 6) = one8th + one4th * (s1 + s2 + s3) +
-                      half * (s2 * s3 + s3 * s1 + s1 * s2) + s1 * s2 * s3;
-    shape_fcn(j, 7) = one8th + one4th * (-s1 + s2 + s3) +
-                      half * (s2 * s3 - s3 * s1 - s1 * s2) - s1 * s2 * s3;
-  }
-}
-
 // Hex 8 subcontrol volume
 class HexSCV : public MasterElement
 {
@@ -68,12 +36,11 @@ public:
   using MasterElement::shifted_grad_op;
   using MasterElement::shifted_shape_fcn;
 
-  // NGP-ready methods first
-  KOKKOS_FUNCTION void
-  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
+  template <typename SCALAR, typename SHMEM>
+  KOKKOS_FUNCTION void shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc);
 
-  KOKKOS_FUNCTION void
-  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
+  template <typename SCALAR, typename SHMEM>
+  KOKKOS_FUNCTION void shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc);
 
   KOKKOS_FUNCTION virtual void determinant(
     const SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -84,36 +51,29 @@ public:
     SharedMemView<double*>& volume) override;
 
   KOKKOS_FUNCTION void grad_op(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& gradop,
-    SharedMemView<DoubleType***, DeviceShmem>& deriv);
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
+
+  void grad_op(
+    const SharedMemView<double**>& coords,
+    SharedMemView<double***>& gradop,
+    SharedMemView<double***>& deriv) override;
 
   KOKKOS_FUNCTION void shifted_grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& gradop,
-    SharedMemView<DoubleType***, DeviceShmem>& deriv);
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
 
   KOKKOS_FUNCTION void Mij(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& metric,
-    SharedMemView<DoubleType***, DeviceShmem>& deriv);
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
 
-  void grad_op(
-    const int nelem,
-    const double* coords,
-    double* gradop,
-    double* deriv,
-    double* det_j,
-    double* error);
-
-  void Mij(const double* coords, double* metric, double* deriv);
+  void Mij(const double* coords, double* metric, double* deriv) override;
 
   template <typename ViewType>
   KOKKOS_FUNCTION void shape_fcn(ViewType& shpfc);
-
-  void shape_fcn(double* shpfc);
-
-  void shifted_shape_fcn(double* shpfc);
 
   virtual const double* integration_locations() const final { return intgLoc_; }
   virtual const double* integration_location_shift() const final
@@ -139,6 +99,16 @@ public:
     -0.5, -0.5, -0.5, +0.5, -0.5, -0.5, +0.5, +0.5, -0.5, -0.5, +0.5, -0.5,
     -0.5, -0.5, +0.5, +0.5, -0.5, +0.5, +0.5, +0.5, +0.5, -0.5, +0.5, +0.5};
 
+protected:
+  KOKKOS_FUNCTION virtual void
+  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  virtual void shape_fcn(SharedMemView<double**, HostShmem>& shpfc) override;
+
+  KOKKOS_FUNCTION virtual void
+  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  virtual void
+  shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc) override;
+
 private:
   template <typename DBLTYPE, typename SHMEM>
   KOKKOS_INLINE_FUNCTION void determinant_scv(
@@ -163,15 +133,11 @@ public:
 
   using MasterElement::determinant;
 
-  // NGP-ready methods first
-  KOKKOS_FUNCTION void
-  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
+  template <typename SCALAR, typename SHMEM>
+  KOKKOS_FUNCTION void shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc);
 
-  template <typename ViewType>
-  KOKKOS_FUNCTION void shape_fcn(ViewType& shpfc);
-
-  KOKKOS_FUNCTION void
-  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
+  template <typename SCALAR, typename SHMEM>
+  KOKKOS_FUNCTION void shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc);
 
   KOKKOS_FUNCTION void hex8_gradient_operator(
     const int nodesPerElem,
@@ -188,9 +154,14 @@ public:
   grad_op(ViewTypeCoord& coords, ViewTypeGrad& gradop, ViewTypeGrad& deriv);
 
   KOKKOS_FUNCTION void grad_op(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& gradop,
-    SharedMemView<DoubleType***, DeviceShmem>& deriv);
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
+
+  void grad_op(
+    const SharedMemView<double**>& coords,
+    SharedMemView<double***>& gradop,
+    SharedMemView<double***>& deriv) override;
 
   KOKKOS_FUNCTION void face_grad_op(
     int face_ordinal,
@@ -207,7 +178,7 @@ public:
   KOKKOS_FUNCTION void shifted_grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& gradop,
-    SharedMemView<DoubleType***, DeviceShmem>& deriv);
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
 
   KOKKOS_FUNCTION virtual void determinant(
     const SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -218,79 +189,39 @@ public:
     SharedMemView<double**>& areav) override;
 
   KOKKOS_FUNCTION void gij(
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    const SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& gupper,
     SharedMemView<DoubleType***, DeviceShmem>& glower,
-    SharedMemView<DoubleType***, DeviceShmem>& deriv);
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
 
   KOKKOS_FUNCTION void Mij(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& metric,
-    SharedMemView<DoubleType***, DeviceShmem>& deriv);
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
 
-  // non NGP-ready methods second
-  void grad_op(
-    const int nelem,
-    const double* coords,
-    double* gradop,
-    double* deriv,
-    double* det_j,
-    double* error);
-
-  void shifted_grad_op(
-    const int nelem,
-    const double* coords,
-    double* gradop,
-    double* deriv,
-    double* det_j,
-    double* error);
-
-  void face_grad_op(
-    const int nelem,
-    const int face_ordinal,
-    const double* coords,
-    double* gradop,
-    double* det_j,
-    double* error);
-
-  void shifted_face_grad_op(
-    const int nelem,
-    const int face_ordinal,
-    const double* coords,
-    double* gradop,
-    double* det_j,
-    double* error);
-
-  void
-  gij(const double* coords, double* gupperij, double* glowerij, double* deriv);
-
-  void Mij(const double* coords, double* metric, double* deriv);
+  void Mij(const double* coords, double* metric, double* deriv) override;
 
   KOKKOS_FUNCTION virtual const int* adjacentNodes() final;
 
   KOKKOS_FUNCTION virtual const int* scsIpEdgeOrd() final;
 
-  void shape_fcn(double* shpfc);
+  KOKKOS_FUNCTION int opposingNodes(const int ordinal, const int node) override;
 
-  void shifted_shape_fcn(double* shpfc);
-
-  KOKKOS_FUNCTION int opposingNodes(const int ordinal, const int node);
-
-  KOKKOS_FUNCTION int opposingFace(const int ordinal, const int node);
+  KOKKOS_FUNCTION int opposingFace(const int ordinal, const int node) override;
 
   double isInElement(
     const double* elemNodalCoord,
     const double* pointCoord,
-    double* isoParCoord);
+    double* isoParCoord) override;
 
   void interpolatePoint(
     const int& nComp,
     const double* isoParCoord,
     const double* field,
-    double* result);
+    double* result) override;
 
-  void
-  general_shape_fcn(const int numIp, const double* isoParCoord, double* shpfc);
+  void general_shape_fcn(
+    const int numIp, const double* isoParCoord, double* shpfc) override;
 
   void general_face_grad_op(
     const int face_ordinal,
@@ -298,13 +229,13 @@ public:
     const double* coords,
     double* gradop,
     double* det_j,
-    double* error);
+    double* error) override;
 
   void sidePcoords_to_elemPcoords(
     const int& side_ordinal,
     const int& npoints,
     const double* side_pcoords,
-    double* elem_pcoords);
+    double* elem_pcoords) override;
 
   KOKKOS_FUNCTION const int* side_node_ordinals(int sideOrdinal) const final;
   using MasterElement::side_node_ordinals;
@@ -336,6 +267,16 @@ public:
     0.25,  -0.25, 0.00,  // surf 10   2->6
     0.25,  0.25,  0.00,  // surf 11   3->7
     -0.25, 0.25,  0.00}; // surf 12   4->8
+
+protected:
+  KOKKOS_FUNCTION virtual void
+  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  virtual void shape_fcn(SharedMemView<double**, HostShmem>& shpfc) override;
+
+  KOKKOS_FUNCTION virtual void
+  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  virtual void
+  shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc) override;
 
 private:
   // define L/R mappings
@@ -468,19 +409,22 @@ private:
 };
 
 //-------- hex8_derivative -------------------------------------------------
-template <typename DerivType>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_FUNCTION void
-hex8_derivative(const int npts, const double* intgLoc, DerivType& deriv)
+hex8_derivative(
+  const int npts,
+  const double* intgLoc,
+  SharedMemView<DBLTYPE***, SHMEM>& deriv)
 {
-  const DoubleType half = 0.50;
-  const DoubleType one4th = 0.25;
+  const DBLTYPE half = 0.50;
+  const DBLTYPE one4th = 0.25;
   for (int ip = 0; ip < npts; ++ip) {
-    const DoubleType s1 = intgLoc[ip * 3];
-    const DoubleType s2 = intgLoc[ip * 3 + 1];
-    const DoubleType s3 = intgLoc[ip * 3 + 2];
-    const DoubleType s1s2 = s1 * s2;
-    const DoubleType s2s3 = s2 * s3;
-    const DoubleType s1s3 = s1 * s3;
+    const DBLTYPE s1 = intgLoc[ip * 3];
+    const DBLTYPE s2 = intgLoc[ip * 3 + 1];
+    const DBLTYPE s3 = intgLoc[ip * 3 + 2];
+    const DBLTYPE s1s2 = s1 * s2;
+    const DBLTYPE s2s3 = s2 * s3;
+    const DBLTYPE s1s3 = s1 * s3;
 
     // shape function derivative in the s1 direction -
     deriv(ip, 0, 0) = half * (s3 + s2) - s2s3 - one4th;
@@ -514,13 +458,6 @@ hex8_derivative(const int npts, const double* intgLoc, DerivType& deriv)
   }
 }
 
-template <typename ViewType>
-KOKKOS_FUNCTION void
-HexSCV::shape_fcn(ViewType& shpfc)
-{
-  hex8_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
-}
-
 template <typename ViewTypeCoord, typename ViewTypeGrad>
 KOKKOS_FUNCTION void
 HexSCS::grad_op(
@@ -528,13 +465,6 @@ HexSCS::grad_op(
 {
   hex8_derivative(numIntPoints_, &intgLoc_[0], deriv);
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
-}
-
-template <typename ViewType>
-KOKKOS_FUNCTION void
-HexSCS::shape_fcn(ViewType& shpfc)
-{
-  hex8_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
 }
 
 } // namespace nalu

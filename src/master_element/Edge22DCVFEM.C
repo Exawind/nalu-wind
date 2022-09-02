@@ -15,7 +15,6 @@
 #include <AlgTraits.h>
 
 #include <NaluEnv.h>
-#include <FORTRAN_Proto.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
@@ -107,8 +106,9 @@ Edge2DSCS::determinant(
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Edge2DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Edge2DSCS::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int i = 0; i < numIntPoints_; ++i) {
     shpfc(i, 0) = 0.5 - intgLoc_[i];
@@ -116,21 +116,23 @@ Edge2DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
   }
 }
 
-void
-Edge2DSCS::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Edge2DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int i = 0; i < nodesPerElement_; ++i) {
-    int j = 2 * i;
-    shpfc[j] = 0.5 - intgLoc_[i];
-    shpfc[j + 1] = 0.5 + intgLoc_[i];
-  }
+  shape_fcn<>(shpfc);
+}
+void
+Edge2DSCS::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-void
-Edge2DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Edge2DSCS::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int i = 0; i < numIntPoints_; ++i) {
     shpfc(i, 0) = 0.5 - intgLocShift_[i];
@@ -138,14 +140,15 @@ Edge2DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
   }
 }
 
-void
-Edge2DSCS::shifted_shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Edge2DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int i = 0; i < nodesPerElement_; ++i) {
-    int j = 2 * i;
-    shpfc[j] = 0.5 - intgLocShift_[i];
-    shpfc[j + 1] = 0.5 + intgLocShift_[i];
-  }
+  shifted_shape_fcn<>(shpfc);
+}
+void
+Edge2DSCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------

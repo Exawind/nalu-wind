@@ -60,12 +60,6 @@ public:
     sierra::nalu::SharedMemView<DoubleType*, ShmemType>&,
     sierra::nalu::ScratchViews<DoubleType, TeamType, ShmemType>&);
 
-  KOKKOS_FUNCTION
-  virtual void execute(
-    sierra::nalu::SharedMemView<DoubleType**, ShmemType>&,
-    sierra::nalu::SharedMemView<DoubleType*, ShmemType>&,
-    sierra::nalu::ScratchViews<double, TeamType, ShmemType>&);
-
 private:
   unsigned coordinates_{stk::mesh::InvalidOrdinal};
   unsigned velocity_{stk::mesh::InvalidOrdinal};
@@ -97,23 +91,4 @@ TestContinuityKernel<AlgTraits>::execute(
 
   rhs(0) = v_velocity(0, 0) + v_pressure(0) * v_shape_fcn(0, 0);
 }
-
-template <typename AlgTraits>
-void
-TestContinuityKernel<AlgTraits>::execute(
-  sierra::nalu::SharedMemView<DoubleType**, ShmemType>&,
-  sierra::nalu::SharedMemView<DoubleType*, ShmemType>& rhs,
-  sierra::nalu::ScratchViews<double, TeamType, ShmemType>& scratchViews)
-{
-  // Get the integration point to node mapping
-  const int* ipNodeMap = meSCS_->ipNodeMap(3);
-
-  auto& v_velocity = scratchViews.get_scratch_view_2D(velocity_);
-  auto& v_pressure = scratchViews.get_scratch_view_1D(pressure_);
-
-  rhs(0) = v_velocity(0, 0) + v_pressure(0);
-
-  printf("ipNodeMap[2] = %d; expected = 7\n", ipNodeMap[2]);
-}
-
 } // namespace unit_test_ngp_kernels

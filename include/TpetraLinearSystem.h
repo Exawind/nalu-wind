@@ -61,37 +61,35 @@ public:
   ~TpetraLinearSystem();
 
   // Graph/Matrix Construction
-  void
-  buildNodeGraph(const stk::mesh::PartVector&
-                   parts); // for nodal assembly (e.g., lumped mass and source)
+  void buildNodeGraph(const stk::mesh::PartVector& parts)
+    override; // for nodal assembly (e.g., lumped mass and source)
   void buildFaceToNodeGraph(
-    const stk::mesh::PartVector& parts); // face->node assembly
+    const stk::mesh::PartVector& parts) override; // face->node assembly
   void buildEdgeToNodeGraph(
-    const stk::mesh::PartVector& parts); // edge->node assembly
+    const stk::mesh::PartVector& parts) override; // edge->node assembly
   void buildElemToNodeGraph(
-    const stk::mesh::PartVector& parts); // elem->node assembly
-  void buildReducedElemToNodeGraph(
-    const stk::mesh::PartVector&
-      parts); // elem (nearest nodes only)->node assembly
+    const stk::mesh::PartVector& parts) override; // elem->node assembly
+  void buildReducedElemToNodeGraph(const stk::mesh::PartVector& parts)
+    override; // elem (nearest nodes only)->node assembly
   void buildFaceElemToNodeGraph(
-    const stk::mesh::PartVector& parts); // elem:face->node assembly
+    const stk::mesh::PartVector& parts) override; // elem:face->node assembly
   void buildNonConformalNodeGraph(
-    const stk::mesh::PartVector& parts); // nonConformal->node assembly
+    const stk::mesh::PartVector& parts) override; // nonConformal->node assembly
   void buildOversetNodeGraph(
-    const stk::mesh::PartVector& parts); // overset->elem_node assembly
+    const stk::mesh::PartVector& parts) override; // overset->elem_node assembly
   void buildSparsifiedEdgeElemToNodeGraph(
     const stk::mesh::Selector&
       sel); // edge connectivities for a sparsified hexahedral cell
   void storeOwnersForShared();
-  void finalizeLinearSystem();
+  void finalizeLinearSystem() override;
 
-  CoeffApplier* get_coeff_applier();
-  void free_coeff_applier(CoeffApplier* coeffApplier);
+  CoeffApplier* get_coeff_applier() override;
+  void free_coeff_applier(CoeffApplier* coeffApplier) override;
 
   bool owns_coeff_applier() override { return false; }
 
   // Matrix Assembly
-  void zeroSystem();
+  void zeroSystem() override;
 
   void sumInto(
     unsigned numEntities,
@@ -100,7 +98,7 @@ public:
     const SharedMemView<const double**, DeviceShmem>& lhs,
     const SharedMemView<int*, DeviceShmem>& localIds,
     const SharedMemView<int*, DeviceShmem>& sortPermutation,
-    const char* trace_tag);
+    const char* trace_tag) override;
 
   void sumInto(
     const std::vector<stk::mesh::Entity>& entities,
@@ -108,14 +106,14 @@ public:
     std::vector<double>& scratchVals,
     const std::vector<double>& rhs,
     const std::vector<double>& lhs,
-    const char* trace_tag = 0);
+    const char* trace_tag = 0) override;
 
   void applyDirichletBCs(
     stk::mesh::FieldBase* solutionField,
     stk::mesh::FieldBase* bcValuesField,
     const stk::mesh::PartVector& parts,
     const unsigned beginPos,
-    const unsigned endPos);
+    const unsigned endPos) override;
 
   /** Reset LHS and RHS for the given set of nodes to 0
    *
@@ -129,7 +127,7 @@ public:
     const unsigned beginPos,
     const unsigned endPos,
     const double diag_value = 0.0,
-    const double rhs_residual = 0.0);
+    const double rhs_residual = 0.0) override;
 
   virtual void resetRows(
     unsigned numNodes,
@@ -137,14 +135,14 @@ public:
     const unsigned beginPos,
     const unsigned endPos,
     const double diag_value = 0.0,
-    const double rhs_residual = 0.0);
+    const double rhs_residual = 0.0) override;
 
   // Solve
-  int solve(stk::mesh::FieldBase* linearSolutionField);
-  void loadComplete();
-  void writeToFile(const char* filename, bool useOwned = true);
+  int solve(stk::mesh::FieldBase* linearSolutionField) override;
+  void loadComplete() override;
+  void writeToFile(const char* filename, bool useOwned = true) override;
   void printInfo(bool useOwned = true);
-  void writeSolutionToFile(const char* filename, bool useOwned = true);
+  void writeSolutionToFile(const char* filename, bool useOwned = true) override;
   size_t lookup_myLID(
     MyLIDMapType& myLIDs,
     stk::mesh::EntityId entityId,
@@ -271,9 +269,9 @@ public:
   void buildConnectedNodeGraph(
     stk::mesh::EntityRank rank, const stk::mesh::PartVector& parts);
 
-  void beginLinearSystemConstruction();
+  void beginLinearSystemConstruction() override;
 
-  void checkError(const int /* err_code */, const char* /* msg */) {}
+  void checkError(const int /* err_code */, const char* /* msg */) override {}
 
   void compute_send_lengths(
     const std::vector<stk::mesh::Entity>& rowEntities,

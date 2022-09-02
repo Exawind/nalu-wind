@@ -12,7 +12,6 @@
 #include <master_element/MasterElementFunctions.h>
 #include <master_element/TensorOps.h>
 
-#include <FORTRAN_Proto.h>
 #include <NaluEnv.h>
 
 #include <cmath>
@@ -140,29 +139,17 @@ Hex8FEM::Hex8FEM() : MasterElement()
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
+#if 0
 void
 Hex8FEM::grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double***>& gradop,
+  SharedMemView<double***>& deriv)
 {
-  int lerr = 0;
-
-  hex8_fem_derivative(numIntPoints_, intgLoc_, deriv);
-
-  const int numIntPoints = numIntPoints_;
-  const int nodesPerElement = nodesPerElement_;
-  SIERRA_FORTRAN(hex_gradient_operator)
-  (&nelem, &nodesPerElement, &numIntPoints, deriv, coords, gradop, det_j, error,
-   &lerr);
+   generic_grad_op<AlgTraits>(referenceGradWeights_, coords, gradop);
 }
+#endif
 
-//--------------------------------------------------------------------------
-//-------- grad_op ---------------------------------------------------------
-//--------------------------------------------------------------------------
 void
 Hex8FEM::grad_op_fem(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -172,29 +159,6 @@ Hex8FEM::grad_op_fem(
 {
   hex8_fem_derivative(numIntPoints_, intgLoc_, deriv);
   generic_grad_op_3d<AlgTraits>(deriv, coords, gradop, det_j);
-}
-
-//--------------------------------------------------------------------------
-//-------- shifted_grad_op -------------------------------------------------
-//--------------------------------------------------------------------------
-void
-Hex8FEM::shifted_grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-
-  hex8_fem_derivative(numIntPoints_, intgLocShift_, deriv);
-
-  const int numIntPoints = numIntPoints_;
-  const int nodesPerElement = nodesPerElement_;
-  SIERRA_FORTRAN(hex_gradient_operator)
-  (&nelem, &nodesPerElement, &numIntPoints, deriv, coords, gradop, det_j, error,
-   &lerr);
 }
 
 //--------------------------------------------------------------------------
@@ -212,49 +176,6 @@ Hex8FEM::shifted_grad_op_fem(
 }
 
 //--------------------------------------------------------------------------
-//-------- face_grad_op ----------------------------------------------------
-//--------------------------------------------------------------------------
-void
-Hex8FEM::face_grad_op(
-  const int nelem,
-  const int face_ordinal,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-  int npf = 4;
-  int ndim = 3;
-
-  const int nface = 1;
-  double dpsi[24];
-  double grad[24];
-
-  const int nodesPerElement = nodesPerElement_;
-  for (int n = 0; n < nelem; n++) {
-
-    for (int k = 0; k < npf; k++) {
-
-      const int row = 12 * face_ordinal + k * ndim;
-      hex8_fem_derivative(nface, &intgExpFace_[row], dpsi);
-
-      SIERRA_FORTRAN(hex_gradient_operator)
-      (&nface, &nodesPerElement, &nface, dpsi, &coords[24 * n], grad,
-       &det_j[npf * n + k], error, &lerr);
-
-      if (lerr)
-        NaluEnv::self().naluOutput()
-          << "sorry, issue with face_grad_op.." << std::endl;
-
-      for (int j = 0; j < 24; j++) {
-        gradop[k * nelem * 24 + n * 24 + j] = grad[j];
-      }
-    }
-  }
-}
-
-//--------------------------------------------------------------------------
 //-------- general_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
 void
@@ -267,50 +188,41 @@ Hex8FEM::general_shape_fcn(
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Hex8FEM::shape_fcn(double* shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Hex8FEM::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   hex8_fem_shape_fcn(numIntPoints_, intgLoc_, shpfc);
 }
-
-//--------------------------------------------------------------------------
-//-------- shifted_shape_fcn -----------------------------------------------
-//--------------------------------------------------------------------------
-void
-Hex8FEM::shifted_shape_fcn(double* shpfc)
-{
-  hex8_fem_shape_fcn(numIntPoints_, intgLocShift_, shpfc);
-}
-
-//--------------------------------------------------------------------------
-//-------- shape_fcn -------------------------------------------------------
-//--------------------------------------------------------------------------
-void
+KOKKOS_FUNCTION void
 Hex8FEM::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  hex8_fem_shape_fcn(numIntPoints_, intgLoc_, shpfc);
+  shape_fcn<>(shpfc);
+}
+void
+Hex8FEM::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-void
-Hex8FEM::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Hex8FEM::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   hex8_fem_shape_fcn(numIntPoints_, intgLocShift_, shpfc);
 }
-
-//--------------------------------------------------------------------------
-//-------- gij -------------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-Hex8FEM::gij(
-  const double* coords, double* gupperij, double* glowerij, double* deriv)
+KOKKOS_FUNCTION void
+Hex8FEM::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  const int numIntPoints = numIntPoints_;
-  const int nodesPerElement = nodesPerElement_;
-  SIERRA_FORTRAN(threed_gij)
-  (&nodesPerElement, &numIntPoints, deriv, coords, gupperij, glowerij);
+  shifted_shape_fcn<>(shpfc);
+}
+void
+Hex8FEM::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -344,18 +256,19 @@ Hex8FEM::hex8_fem_shape_fcn(
 //--------------------------------------------------------------------------
 //-------- hex8_fem_shape_fcn ----------------------------------------------
 //--------------------------------------------------------------------------
-void
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
 Hex8FEM::hex8_fem_shape_fcn(
   const int numIp,
   const double* isoParCoord,
-  SharedMemView<DoubleType**, DeviceShmem> shpfc)
+  SharedMemView<SCALAR**, SHMEM> shpfc)
 {
   // -1:1 isoparametric range
   for (int ip = 0; ip < numIp; ++ip) {
     const int rowIpc = 3 * ip;
-    const DoubleType s1 = isoParCoord[rowIpc + 0];
-    const DoubleType s2 = isoParCoord[rowIpc + 1];
-    const DoubleType s3 = isoParCoord[rowIpc + 2];
+    const SCALAR s1 = isoParCoord[rowIpc + 0];
+    const SCALAR s2 = isoParCoord[rowIpc + 1];
+    const SCALAR s3 = isoParCoord[rowIpc + 2];
     shpfc(ip, 0) = 0.125 * (1.0 - s1) * (1.0 - s2) * (1.0 - s3);
     shpfc(ip, 1) = 0.125 * (1.0 + s1) * (1.0 - s2) * (1.0 - s3);
     shpfc(ip, 2) = 0.125 * (1.0 + s1) * (1.0 + s2) * (1.0 - s3);

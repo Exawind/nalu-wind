@@ -13,7 +13,6 @@
 #include <AlgTraits.h>
 
 #include <NaluEnv.h>
-#include <FORTRAN_Proto.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
@@ -338,16 +337,16 @@ QuadrilateralP2Element::sidePcoords_to_elemPcoords(
 
 //-------- quad_gradient_operator
 //---------------------------------------------------------
-template <int nint, int npe>
+template <int nint, int npe, typename DBLTYPE, typename SHMEM>
 KOKKOS_FUNCTION void
 quad_gradient_operator(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE***, SHMEM>& gradop,
+  SharedMemView<DBLTYPE***, SHMEM>& deriv)
 {
 
-  DoubleType dx_ds1, dx_ds2;
-  DoubleType dy_ds1, dy_ds2;
+  DBLTYPE dx_ds1, dx_ds2;
+  DBLTYPE dy_ds1, dy_ds2;
 
   for (int ki = 0; ki < nint; ++ki) {
     dx_ds1 = 0.0;
@@ -364,21 +363,21 @@ quad_gradient_operator(
     }
 
     // calculate the determinate of the jacobian at the integration station -
-    const DoubleType det_j = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
+    const DBLTYPE det_j = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
 
     // protect against a negative or small value for the determinate of the
     // jacobian. The value of real_min (set in precision.par) represents
     // the smallest Real value (based upon the precision set for this
     // compilation) which the machine can represent -
-    const DoubleType test =
+    const DBLTYPE test =
       stk::math::if_then_else(det_j > 1.e+6 * MEconstants::realmin, det_j, 1.0);
-    const DoubleType denom = 1.0 / test;
+    const DBLTYPE denom = 1.0 / test;
 
     // compute the gradient operators at the integration station -
-    const DoubleType ds1_dx = denom * dy_ds2;
-    const DoubleType ds2_dx = -denom * dy_ds1;
-    const DoubleType ds1_dy = -denom * dx_ds2;
-    const DoubleType ds2_dy = denom * dx_ds1;
+    const DBLTYPE ds1_dx = denom * dy_ds2;
+    const DBLTYPE ds2_dx = -denom * dy_ds1;
+    const DBLTYPE ds1_dy = -denom * dx_ds2;
+    const DBLTYPE ds2_dy = denom * dx_ds1;
 
     for (int kn = 0; kn < npe; ++kn) {
       gradop(ki, kn, 0) = deriv(ki, kn, 0) * ds1_dx + deriv(ki, kn, 1) * ds2_dx;
@@ -456,8 +455,9 @@ Quad92DSCV::ipNodeMap(int /*ordinal*/) const
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad92DSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Quad92DSCV::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int i = 0; i < numIntPoints_; ++i) {
     for (int j = 0; j < nodesPerElement_; ++j) {
@@ -466,20 +466,23 @@ Quad92DSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
     }
   }
 }
-
-void
-Quad92DSCV::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Quad92DSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int ni = 0; ni < numIntPoints_ * nodesPerElement_; ++ni) {
-    shpfc[ni] = shapeFunctions_[ni];
-  }
+  shape_fcn<>(shpfc);
+}
+void
+Quad92DSCV::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad92DSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Quad92DSCV::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int i = 0; i < numIntPoints_; ++i) {
     for (int j = 0; j < nodesPerElement_; ++j) {
@@ -488,14 +491,17 @@ Quad92DSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
     }
   }
 }
-
-void
-Quad92DSCV::shifted_shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Quad92DSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int ip = 0; ip < numIntPoints_ * nodesPerElement_; ++ip) {
-    shpfc[ip] = shapeFunctionsShift_[ip];
-  }
+  shifted_shape_fcn<>(shpfc);
 }
+void
+Quad92DSCV::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
+}
+
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
@@ -565,7 +571,7 @@ Quad92DSCV::determinant(
 
 void
 Quad92DSCV::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
@@ -899,8 +905,9 @@ Quad92DSCS::ipNodeMap(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad92DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Quad92DSCS::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int i = 0; i < numIntPoints_; ++i) {
     for (int j = 0; j < nodesPerElement_; ++j) {
@@ -909,20 +916,23 @@ Quad92DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
     }
   }
 }
-
-void
-Quad92DSCS::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Quad92DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int ni = 0; ni < numIntPoints_ * nodesPerElement_; ++ni) {
-    shpfc[ni] = shapeFunctions_[ni];
-  }
+  shape_fcn<>(shpfc);
+}
+void
+Quad92DSCS::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad92DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Quad92DSCS::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   for (int i = 0; i < numIntPoints_; ++i) {
     for (int j = 0; j < nodesPerElement_; ++j) {
@@ -931,14 +941,17 @@ Quad92DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
     }
   }
 }
-
-void
-Quad92DSCS::shifted_shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Quad92DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  for (int ip = 0; ip < numIntPoints_ * nodesPerElement_; ++ip) {
-    shpfc[ip] = shapeFunctionsShift_[ip];
-  }
+  shifted_shape_fcn<>(shpfc);
 }
+void
+Quad92DSCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
+}
+
 //--------------------------------------------------------------------------
 //-------- side_node_ordinals ----------------------------------------------
 //--------------------------------------------------------------------------
@@ -1009,7 +1022,7 @@ Quad92DSCS::determinant(
 }
 void
 Quad92DSCS::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
@@ -1026,28 +1039,19 @@ Quad92DSCS::grad_op(
 
 void
 Quad92DSCS::grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double***>& gradop,
+  SharedMemView<double***>& deriv)
 {
-  int lerr = 0;
-
-  constexpr int numShapeDerivs =
-    AlgTraits::numScsIp_ * AlgTraits::nodesPerElement_ * AlgTraits::nDim_;
-  for (int j = 0; j < numShapeDerivs; ++j) {
-    deriv[j] = shapeDerivs_[j];
+  for (int ki = 0, j = 0; ki < AlgTraits::numScsIp_; ++ki) {
+    for (int kn = 0; kn < AlgTraits::nodesPerElement_; ++kn) {
+      for (int n = 0; n < AlgTraits::nDim_; ++n, ++j) {
+        deriv(ki, kn, n) = stk::simd::get_data(shapeDerivs_[j], 0);
+      }
+    }
   }
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(quad_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput() << "sorry, negative area.." << std::endl;
+  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
+    coords, gradop, deriv);
 }
 
 //--------------------------------------------------------------------------
@@ -1068,32 +1072,6 @@ Quad92DSCS::shifted_grad_op(
   }
   quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
     coords, gradop, deriv);
-}
-
-void
-Quad92DSCS::shifted_grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-
-  constexpr int numShapeDerivs =
-    AlgTraits::numScsIp_ * AlgTraits::nodesPerElement_ * AlgTraits::nDim_;
-  for (int j = 0; j < numShapeDerivs; ++j) {
-    deriv[j] = shapeDerivsShift_[j];
-  }
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(quad_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput() << "sorry, negative area.." << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -1118,43 +1096,12 @@ Quad92DSCS::face_grad_op(
   generic_grad_op<traits>(deriv, coords, gradop);
 }
 
-void
-Quad92DSCS::face_grad_op(
-  const int nelem,
-  const int face_ordinal,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  ThrowRequireMsg(nelem == 1, "P2 elements are processed one-at-a-time");
-
-  int lerr = 0;
-
-  const int nface = 1;
-  const int face_offset = nDim_ * ipsPerFace_ * nodesPerElement_ * face_ordinal;
-  double* offsetFaceDerivs = &expFaceShapeDerivs_[face_offset];
-
-  for (int ip = 0; ip < ipsPerFace_; ++ip) {
-    const int grad_offset = nDim_ * nodesPerElement_ * ip;
-
-    const int npe = AlgTraits::nodesPerElement_;
-    SIERRA_FORTRAN(quad_gradient_operator)
-    (&nface, &npe, &nface, &offsetFaceDerivs[grad_offset], coords,
-     &gradop[grad_offset], &det_j[ip], error, &lerr);
-
-    if (det_j[ip] < tiny_positive_value() || lerr != 0) {
-      *error = 1.0;
-    }
-  }
-}
-
 //--------------------------------------------------------------------------
 //-------- gij -------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
 Quad92DSCS::gij(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
@@ -1202,16 +1149,6 @@ Quad92DSCS::gij(
       }
     }
   }
-}
-
-void
-Quad92DSCS::gij(
-  const double* coords, double* gupperij, double* glowerij, double* deriv)
-{
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(twod_gij)
-  (&npe, &nint, deriv, coords, gupperij, glowerij);
 }
 
 //--------------------------------------------------------------------------

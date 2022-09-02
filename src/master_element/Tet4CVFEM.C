@@ -203,7 +203,7 @@ TetSCV::determinant(
 //--------------------------------------------------------------------------
 void
 TetSCV::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
@@ -227,41 +227,52 @@ TetSCV::shifted_grad_op(
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-TetSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+TetSCV::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   tet_shape_fcn(numIntPoints_, intgLoc_[0], shpfc);
 }
-
-void
-TetSCV::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+TetSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  tet_shape_fcn(numIntPoints_, intgLoc_[0], shpfc);
+  shape_fcn<>(shpfc);
+}
+void
+TetSCV::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-void
-TetSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+TetSCV::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   tet_shape_fcn(numIntPoints_, intgLocShift_[0], shpfc);
 }
-
-void
-TetSCV::shifted_shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+TetSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  tet_shape_fcn(numIntPoints_, intgLocShift_[0], shpfc);
+  shifted_shape_fcn<>(shpfc);
+}
+void
+TetSCV::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- tet_shape_fcn ---------------------------------------------------
 //--------------------------------------------------------------------------
-void
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
 TetSCV::tet_shape_fcn(
   const int npts,
   const double* par_coord,
-  SharedMemView<DoubleType**, DeviceShmem>& shpfc) const
+  SharedMemView<SCALAR**, SHMEM>& shpfc) const
 {
   for (int j = 0; j < npts; ++j) {
     const int k = 3 * j;
@@ -272,23 +283,6 @@ TetSCV::tet_shape_fcn(
     shpfc(j, 1) = xi;
     shpfc(j, 2) = eta;
     shpfc(j, 3) = zeta;
-  }
-}
-
-void
-TetSCV::tet_shape_fcn(
-  const int npts, const double* par_coord, double* shape_fcn)
-{
-  for (int j = 0; j < npts; ++j) {
-    const int fourj = 4 * j;
-    const int k = 3 * j;
-    const double xi = par_coord[k];
-    const double eta = par_coord[k + 1];
-    const double zeta = par_coord[k + 2];
-    shape_fcn[fourj] = 1.0 - xi - eta - zeta;
-    shape_fcn[1 + fourj] = xi;
-    shape_fcn[2 + fourj] = eta;
-    shape_fcn[3 + fourj] = zeta;
   }
 }
 
@@ -479,37 +473,22 @@ TetSCS::determinant(
 //--------------------------------------------------------------------------
 void
 TetSCS::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   tet_deriv(deriv);
-
   generic_grad_op<AlgTraitsTet4>(deriv, coords, gradop);
 }
 
 void
 TetSCS::grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double***>& gradop,
+  SharedMemView<double***>& deriv)
 {
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(tet_derivative)
-  (&nint, deriv);
-
-  SIERRA_FORTRAN(tet_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "sorry, negative TetSCS volume.." << std::endl;
+  tet_deriv(deriv);
+  generic_grad_op<AlgTraitsTet4>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -526,67 +505,9 @@ TetSCS::shifted_grad_op(
   generic_grad_op<AlgTraitsTet4>(deriv, coords, gradop);
 }
 
-void
-TetSCS::shifted_grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(tet_derivative)
-  (&nint, deriv);
-
-  SIERRA_FORTRAN(tet_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "sorry, negative TetSCS volume.." << std::endl;
-}
-
 //--------------------------------------------------------------------------
 //-------- face_grad_op ----------------------------------------------------
 //--------------------------------------------------------------------------
-void
-TetSCS::face_grad_op(
-  const int nelem,
-  const int /*face_ordinal*/,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-  int npf = 3;
-
-  const int nface = 1;
-  double dpsi[12];
-
-  for (int n = 0; n < nelem; n++) {
-
-    for (int k = 0; k < npf; k++) {
-
-      // derivatives are constant
-      SIERRA_FORTRAN(tet_derivative)
-      (&nface, dpsi);
-
-      const int npe = nodesPerElement_;
-      SIERRA_FORTRAN(tet_gradient_operator)
-      (&nface, &npe, &nface, dpsi, &coords[12 * n],
-       &gradop[k * nelem * 12 + n * 12], &det_j[npf * n + k], error, &lerr);
-
-      if (lerr)
-        NaluEnv::self().naluOutput()
-          << "sorry, issue with face_grad_op.." << std::endl;
-    }
-  }
-}
 
 void
 TetSCS::face_grad_op(
@@ -612,65 +533,17 @@ TetSCS::shifted_face_grad_op(
   // no difference for regular face_grad_op
   face_grad_op(face_ordinal, coords, gradop, deriv);
 }
-
-void
-TetSCS::shifted_face_grad_op(
-  const int nelem,
-  const int /*face_ordinal*/,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  // no difference for regular face_grad_op
-
-  int lerr = 0;
-  int npf = 3;
-
-  const int nface = 1;
-  double dpsi[12];
-
-  for (int n = 0; n < nelem; n++) {
-
-    for (int k = 0; k < npf; k++) {
-
-      // derivatives are constant
-      SIERRA_FORTRAN(tet_derivative)
-      (&nface, dpsi);
-
-      const int npe = nodesPerElement_;
-      SIERRA_FORTRAN(tet_gradient_operator)
-      (&nface, &npe, &nface, dpsi, &coords[12 * n],
-       &gradop[k * nelem * 12 + n * 12], &det_j[npf * n + k], error, &lerr);
-
-      if (lerr)
-        NaluEnv::self().naluOutput()
-          << "sorry, issue with shifted_face_grad_op.." << std::endl;
-    }
-  }
-}
-
 //--------------------------------------------------------------------------
 //-------- gij ------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
 TetSCS::gij(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   generic_gij_3d<AlgTraitsTet4>(deriv, coords, gupper, glower);
-}
-
-void
-TetSCS::gij(
-  const double* coords, double* gupperij, double* glowerij, double* deriv)
-{
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(threed_gij)
-  (&npe, &nint, deriv, coords, gupperij, glowerij);
 }
 
 //--------------------------------------------------------------------------
@@ -714,41 +587,52 @@ TetSCS::scsIpEdgeOrd()
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-TetSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+TetSCS::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   tet_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
 }
-
-void
-TetSCS::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+TetSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  tet_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+  shape_fcn<>(shpfc);
+}
+void
+TetSCS::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-void
-TetSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+TetSCS::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   tet_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
 }
-
-void
-TetSCS::shifted_shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+TetSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  tet_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  shifted_shape_fcn<>(shpfc);
+}
+void
+TetSCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- tet_shape_fcn ---------------------------------------------------
 //--------------------------------------------------------------------------
-void
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
 TetSCS::tet_shape_fcn(
   const int npts,
   const double* par_coord,
-  SharedMemView<DoubleType**, DeviceShmem>& shpfc) const
+  SharedMemView<SCALAR**, SHMEM>& shpfc) const
 {
   for (int j = 0; j < npts; ++j) {
     const int k = 3 * j;

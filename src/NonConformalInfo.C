@@ -198,6 +198,12 @@ NonConformalInfo::construct_dgInfo()
         currentElemTopo);
     MasterElement* meFC =
       sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
+    MasterElement* meSCS_dev =
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+        currentElemTopo);
+    MasterElement* meFC_dev =
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+        b.topology());
 
     // master element-specific values
     const int numScsBip = meFC->num_integration_points();
@@ -224,7 +230,7 @@ NonConformalInfo::construct_dgInfo()
         DgInfo* dgInfo = new DgInfo(
           NaluEnv::self().parallel_rank(), globalFaceId, localGaussPointId++,
           ip, face, element, currentFaceOrdinal, meFC, meSCS, currentElemTopo,
-          nDim, searchTolerance_);
+          nDim, searchTolerance_, meFC_dev, meSCS_dev);
         faceDgInfoVec[ip] = dgInfo;
       }
 
@@ -303,13 +309,14 @@ NonConformalInfo::construct_bounding_points()
 
     // pointers
     double* p_face_coordinates = &ws_face_coordinates[0];
-    double* p_face_shape_function = &ws_face_shape_function[0];
+    SharedMemView<double**, HostShmem> p_face_shape_function(
+      ws_face_shape_function.data(), numScsBip, nodesPerFace);
 
     // populate shape function
     if (useShifted)
-      meFC->shifted_shape_fcn(&p_face_shape_function[0]);
+      meFC->shifted_shape_fcn<>(p_face_shape_function);
     else
-      meFC->shape_fcn(&p_face_shape_function[0]);
+      meFC->shape_fcn<>(p_face_shape_function);
 
     // gather nodal data off of face
     stk::mesh::Entity const* face_node_rels =
@@ -347,8 +354,7 @@ NonConformalInfo::construct_bounding_points()
 
       // interpolate to gauss point
       for (int ic = 0; ic < nodesPerFace; ++ic) {
-        const double r =
-          p_face_shape_function[currentFaceIp * nodesPerFace + ic];
+        const double r = p_face_shape_function(currentFaceIp, ic);
         for (int j = 0; j < nDim; ++j) {
           currentIpCoords[j] += r * p_face_coordinates[ic * nDim + j];
         }

@@ -32,7 +32,7 @@ public:
   virtual ~SuppAlg() {}
 
   virtual void elem_execute(
-    stk::topology topo, sierra::nalu::ScratchViews<double>& elemData) = 0;
+    stk::topology topo, sierra::nalu::ScratchViews<DoubleType>& elemData) = 0;
 };
 
 class TestSuppAlg : public SuppAlg
@@ -65,23 +65,23 @@ public:
 
   virtual ~TestSuppAlg() {}
 
-  virtual void
-  elem_execute(stk::topology topo, sierra::nalu::ScratchViews<double>& elemData)
+  virtual void elem_execute(
+    stk::topology topo, sierra::nalu::ScratchViews<DoubleType>& elemData)
   {
     unsigned nodesPerElem = topo.num_nodes();
 
-    SharedMemView<double*>& nodalScalarView =
+    SharedMemView<DoubleType*>& nodalScalarView =
       elemData.get_scratch_view_1D(*nodalScalarField);
-    SharedMemView<double**>& nodalVectorView =
+    SharedMemView<DoubleType**>& nodalVectorView =
       elemData.get_scratch_view_2D(*nodalVectorField);
-    SharedMemView<double***>& nodalTensorView =
+    SharedMemView<DoubleType***>& nodalTensorView =
       elemData.get_scratch_view_3D(*nodalTensorField);
 
-    SharedMemView<double*>& elemScalarView =
+    SharedMemView<DoubleType*>& elemScalarView =
       elemData.get_scratch_view_1D(*elemScalarField);
-    SharedMemView<double*>& elemVectorView =
+    SharedMemView<DoubleType*>& elemVectorView =
       elemData.get_scratch_view_1D(*elemVectorField);
-    SharedMemView<double**>& elemTensorView =
+    SharedMemView<DoubleType**>& elemTensorView =
       elemData.get_scratch_view_2D(*elemTensorField);
 
     EXPECT_EQ(nodesPerElem, nodalScalarView.extent(0));
@@ -136,7 +136,7 @@ public:
       fieldMgr, dataNeededByKernels_, meta.get_fields().size());
     const int bytes_per_team = 0;
     const int bytes_per_thread =
-      sierra::nalu::get_num_bytes_pre_req_data<double>(
+      sierra::nalu::get_num_bytes_pre_req_data<DoubleType>(
         dataNeededNGP, meta.spatial_dimension(),
         sierra::nalu::ElemReqType::ELEM);
     auto team_exec = sierra::nalu::get_host_team_policy(
@@ -146,13 +146,13 @@ public:
         const stk::mesh::Bucket& bkt = *elemBuckets[team.league_rank()];
         stk::topology topo = bkt.topology();
 
-        sierra::nalu::ScratchViews<double> prereqData(
+        sierra::nalu::ScratchViews<DoubleType> prereqData(
           team, meta.spatial_dimension(), topo.num_nodes(), dataNeededNGP);
 
         // See get_num_bytes_pre_req_data for padding
         EXPECT_EQ(
           static_cast<unsigned>(bytes_per_thread),
-          prereqData.total_bytes() + 8 * sizeof(double));
+          prereqData.total_bytes() + 8 * sizeof(DoubleType));
 
         Kokkos::parallel_for(
           Kokkos::TeamThreadRange(team, bkt.size()), [&](const size_t& jj) {
