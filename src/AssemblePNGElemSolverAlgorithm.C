@@ -152,12 +152,14 @@ AssemblePNGElemSolverAlgorithm::execute()
     double* p_coordinates = &ws_coordinates[0];
     double* p_scs_areav = &ws_scs_areav[0];
     double* p_scv_volume = &ws_scv_volume[0];
-    double* p_shape_function_scs = &ws_shape_function_scs[0];
-    double* p_shape_function_scv = &ws_shape_function_scv[0];
+    SharedMemView<double**, HostShmem> p_shape_function_scs(
+      ws_shape_function_scs.data(), numScsIp, nodesPerElement);
+    SharedMemView<double**, HostShmem> p_shape_function_scv(
+      ws_shape_function_scv.data(), numScvIp, nodesPerElement);
 
     // extract shape function
-    meSCS->shape_fcn(&p_shape_function_scs[0]);
-    meSCV->shape_fcn(&p_shape_function_scv[0]);
+    meSCS->shape_fcn<>(p_shape_function_scs);
+    meSCV->shape_fcn<>(p_shape_function_scv);
 
     for (stk::mesh::Bucket::size_type k = 0; k < length; ++k) {
 
@@ -212,8 +214,6 @@ AssemblePNGElemSolverAlgorithm::execute()
 
         const int ipNdim = ip * nDim;
 
-        const int offSetSF = ip * nodesPerElement;
-
         // left and right nodes for this ip
         const int il = lrscv[2 * ip];
         const int ir = lrscv[2 * ip + 1];
@@ -225,7 +225,7 @@ AssemblePNGElemSolverAlgorithm::execute()
         // compute scs point values
         double scalarQIp = 0.0;
         for (int ic = 0; ic < nodesPerElement; ++ic) {
-          const double r = p_shape_function_scs[offSetSF + ic];
+          const double r = p_shape_function_scs(ip, ic);
           scalarQIp += r * p_scalarQ[ic];
         }
 
@@ -251,7 +251,6 @@ AssemblePNGElemSolverAlgorithm::execute()
 
         // save off some offsets and sc_volume at this ip
         const int nnNdim = nearestNode * nDim;
-        const int offSetSF = ip * nodesPerElement;
         const double scV = p_scv_volume[ip];
 
         // zero out scv
@@ -259,7 +258,7 @@ AssemblePNGElemSolverAlgorithm::execute()
           p_dqdxScv[j] = 0.0;
 
         for (int ic = 0; ic < nodesPerElement; ++ic) {
-          const double r = p_shape_function_scv[offSetSF + ic];
+          const double r = p_shape_function_scv(ip, ic);
           for (int j = 0; j < nDim; ++j) {
             p_dqdxScv[j] += r * p_dqdx[ic * nDim + j];
           }
@@ -276,7 +275,7 @@ AssemblePNGElemSolverAlgorithm::execute()
           const int icNdim = ic * nDim;
 
           // save off shape function
-          const double r = p_shape_function_scv[offSetSF + ic];
+          const double r = p_shape_function_scv(ip, ic);
 
           const double lhsfac = r * scV;
 

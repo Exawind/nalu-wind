@@ -12,10 +12,10 @@
 #include "UnitTestKokkosMEGold.h"
 
 #include <master_element/MasterElementFactory.h>
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 void
 check_that_values_match(
-  const sierra::nalu::SharedMemView<DoubleType*>& values,
+  const sierra::nalu::SharedMemView<DoubleType*, SHMEM>& values,
   const DBLTYPE* oldValues)
 {
   for (size_t i = 0; i < values.extent(0); ++i) {
@@ -26,10 +26,10 @@ check_that_values_match(
   }
 }
 
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 void
 check_that_values_match(
-  const sierra::nalu::SharedMemView<DoubleType**>& values,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& values,
   const DBLTYPE* oldValues)
 {
   int counter = 0;
@@ -43,10 +43,10 @@ check_that_values_match(
   }
 }
 
-template <typename DBLTYPE>
+template <typename DBLTYPE, typename SHMEM>
 void
 check_that_values_match(
-  const sierra::nalu::SharedMemView<DoubleType***>& values,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& values,
   const DBLTYPE* oldValues)
 {
   int counter = 0;
@@ -62,9 +62,24 @@ check_that_values_match(
   }
 }
 
+template <typename SHMEM>
 void
 copy_DoubleType0_to_double(
-  const sierra::nalu::SharedMemView<DoubleType**>& view,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& view,
+  std::vector<double>& vec)
+{
+  const DoubleType* viewValues = view.data();
+  int len = view.size();
+  vec.resize(len);
+  for (int i = 0; i < len; ++i) {
+    vec[i] = stk::simd::get_data(viewValues[i], 0);
+  }
+}
+
+template <typename SHMEM>
+void
+copy_DoubleType0_to_double(
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& view,
   std::vector<double>& vec)
 {
   const DoubleType* viewValues = view.data();
@@ -115,17 +130,18 @@ compare_old_scs_grad_op(
   sierra::nalu::MasterElement* meSCS)
 {
   int len = scs_dndx.extent(0) * scs_dndx.extent(1) * scs_dndx.extent(2);
-  std::vector<double> coords;
-  copy_DoubleType0_to_double(v_coords, coords);
-  std::vector<double> grad_op(len, 0.0);
-  std::vector<double> deriv(len, 0.0);
-  std::vector<double> det_j(len, 0.0);
-  double error = 0;
-  meSCS->grad_op(
-    1, coords.data(), grad_op.data(), deriv.data(), det_j.data(), &error);
-  EXPECT_NEAR(error, 0.0, tol);
-  check_that_values_match(scs_dndx, &grad_op[0]);
-  check_that_values_match(scs_deriv, &deriv[0]);
+  std::vector<DoubleType> grad_op(len, 0.0);
+  std::vector<DoubleType> deriv(len, 0.0);
+  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> gradop(
+    grad_op.data(), scs_dndx.extent(0), scs_dndx.extent(1), scs_dndx.extent(2));
+  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> der(
+    deriv.data(), scs_deriv.extent(0), scs_deriv.extent(1),
+    scs_deriv.extent(2));
+  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(
+    v_coords.data(), v_coords.extent(0), v_coords.extent(1));
+  meSCS->grad_op(coords, gradop, der);
+  check_that_values_match(scs_dndx, grad_op.data());
+  check_that_values_match(scs_deriv, deriv.data());
 }
 
 void
@@ -136,16 +152,20 @@ compare_old_scs_shifted_grad_op(
   sierra::nalu::MasterElement* meSCS)
 {
   int len = scs_dndx.extent(0) * scs_dndx.extent(1) * scs_dndx.extent(2);
-  std::vector<double> coords;
-  copy_DoubleType0_to_double(v_coords, coords);
-  std::vector<double> grad_op(len, 0.0);
-  std::vector<double> deriv(len, 0.0);
-  std::vector<double> det_j(len, 0.0);
-  double error = 0;
-  meSCS->shifted_grad_op(
-    1, coords.data(), grad_op.data(), deriv.data(), det_j.data(), &error);
-  EXPECT_NEAR(error, 0.0, tol);
-  check_that_values_match(scs_deriv, &deriv[0]);
+  std::vector<DoubleType> grad_op(len, 0.0);
+  std::vector<DoubleType> deriv(len, 0.0);
+
+  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> gradop(
+    grad_op.data(), scs_dndx.extent(0), scs_dndx.extent(1), scs_dndx.extent(2));
+
+  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> der(
+    deriv.data(), scs_deriv.extent(0), scs_deriv.extent(1),
+    scs_deriv.extent(2));
+  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(
+    v_coords.data(), v_coords.extent(0), v_coords.extent(1));
+
+  meSCS->shifted_grad_op(coords, gradop, der);
+  check_that_values_match(scs_deriv, deriv.data());
 }
 
 void
@@ -156,22 +176,36 @@ compare_old_scs_gij(
   const sierra::nalu::SharedMemView<DoubleType***>& /* v_deriv */,
   sierra::nalu::MasterElement* meSCS)
 {
-  int len = v_gijUpper.extent(0) * v_gijUpper.extent(1) * v_gijUpper.extent(2);
-  std::vector<double> coords;
-  copy_DoubleType0_to_double(v_coords, coords);
-  std::vector<double> gijUpper(len, 0.0);
-  std::vector<double> gijLower(len, 0.0);
   int gradOpLen =
     meSCS->nodesPerElement_ * meSCS->num_integration_points() * meSCS->nDim_;
-  std::vector<double> grad_op(gradOpLen, 0.0);
-  std::vector<double> deriv(gradOpLen, 0.0);
-  std::vector<double> det_j(len, 0.0);
-  double error = 0;
-  meSCS->grad_op(
-    1, coords.data(), grad_op.data(), deriv.data(), det_j.data(), &error);
-  meSCS->gij(coords.data(), gijUpper.data(), gijLower.data(), deriv.data());
-  check_that_values_match(v_gijUpper, &gijUpper[0]);
-  check_that_values_match(v_gijLower, &gijLower[0]);
+  std::vector<DoubleType> grad_op(gradOpLen, 0.0);
+  std::vector<DoubleType> v_deriv(gradOpLen, 0.0);
+
+  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> gradop(
+    grad_op.data(), meSCS->num_integration_points(), meSCS->nodesPerElement_,
+    meSCS->nDim_);
+
+  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> deriv(
+    v_deriv.data(), meSCS->num_integration_points(), meSCS->nodesPerElement_,
+    meSCS->nDim_);
+
+  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(
+    v_coords.data(), v_coords.extent(0), v_coords.extent(1));
+
+  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem>
+    gijUpper(
+      v_gijUpper.data(), v_gijUpper.extent(0), v_gijUpper.extent(1),
+      v_gijUpper.extent(2));
+
+  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem>
+    gijLower(
+      v_gijLower.data(), v_gijLower.extent(0), v_gijLower.extent(1),
+      v_gijLower.extent(2));
+
+  meSCS->grad_op(coords, gradop, deriv);
+  meSCS->gij(coords, gijUpper, gijLower, deriv);
+  check_that_values_match(v_gijUpper, gijUpper.data());
+  check_that_values_match(v_gijLower, gijLower.data());
 }
 
 template <typename AlgTraits>

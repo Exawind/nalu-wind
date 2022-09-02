@@ -32,39 +32,14 @@ public:
   void execute(
     sierra::nalu::SharedMemView<double**, ShmemType>& /* lhs */,
     sierra::nalu::SharedMemView<double*, ShmemType>& /* rhs */,
-    sierra::nalu::ScratchViews<
-      sierra::nalu::DoubleType,
-      TeamType,
-      ShmemType>& /* scratchViews */) const
-  {
-  }
-
-  KOKKOS_FUNCTION
-  void execute(
-    sierra::nalu::SharedMemView<double**, ShmemType>& /* lhs */,
-    sierra::nalu::SharedMemView<double*, ShmemType>& /* rhs */,
-    sierra::nalu::ScratchViews<double, TeamType, ShmemType>& /* scratchViews */)
-    const
-  {
-  }
-
-  void execute(
     sierra::nalu::
-      SharedMemView<sierra::nalu::DoubleType**, ShmemType>& /* lhs */,
-    sierra::nalu::SharedMemView<sierra::nalu::DoubleType*, ShmemType>& rhs,
-    sierra::nalu::ScratchViews<double, TeamType, ShmemType>& scratchViews) const
+      ScratchViews<DoubleType, TeamType, ShmemType>& /* scratchViews */) const
   {
-    auto& v_vel = scratchViews.get_scratch_view_2D(velocityOrdinal);
-    auto& v_pres = scratchViews.get_scratch_view_1D(pressureOrdinal);
-
-    rhs(0) += v_vel(0, 0) + v_pres(0);
   }
 
-  KOKKOS_FUNCTION
   void execute(
-    sierra::nalu::
-      SharedMemView<sierra::nalu::DoubleType**, ShmemType>& /* lhs */,
-    sierra::nalu::SharedMemView<sierra::nalu::DoubleType*, ShmemType>& rhs,
+    sierra::nalu::SharedMemView<DoubleType**, ShmemType>& /* lhs */,
+    sierra::nalu::SharedMemView<DoubleType*, ShmemType>& rhs,
     sierra::nalu::ScratchViews<DoubleType, TeamType, ShmemType>& scratchViews)
     const
   {
@@ -149,14 +124,14 @@ do_the_test(
       const stk::mesh::NgpMesh::BucketType& b =
         ngpMesh.get_bucket(stk::topology::ELEM_RANK, team.league_rank());
 
-      sierra::nalu::ScratchViews<double, TeamType, ShmemType> scrviews(
+      sierra::nalu::ScratchViews<DoubleType, TeamType, ShmemType> scrviews(
         team, ngpMesh.get_spatial_dimension(), nodesPerElement, dataNGP);
 
-      sierra::nalu::SharedMemView<double**, ShmemType> simdlhs =
-        sierra::nalu::get_shmem_view_2D<double, TeamType, ShmemType>(
+      sierra::nalu::SharedMemView<DoubleType**, ShmemType> simdlhs =
+        sierra::nalu::get_shmem_view_2D<DoubleType, TeamType, ShmemType>(
           team, rhsSize, rhsSize);
-      sierra::nalu::SharedMemView<double*, ShmemType> simdrhs =
-        sierra::nalu::get_shmem_view_1D<double, TeamType, ShmemType>(
+      sierra::nalu::SharedMemView<DoubleType*, ShmemType> simdrhs =
+        sierra::nalu::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
           team, rhsSize);
 
       NGP_ThrowAssert(scrviews.total_bytes() != 0);
@@ -170,11 +145,16 @@ do_the_test(
           auto& velocityView = scrviews.get_scratch_view_2D(velocityOrdinal);
           auto& pressureView = scrviews.get_scratch_view_1D(pressureOrdinal);
 
-          result.d_view(0) = (pressureView(0) - 1.0) < 1.e-9 ? 1 : 0;
-          result.d_view(1) = (pressureView(7) - 1.0) < 1.e-9 ? 1 : 0;
-          result.d_view(2) = (velocityView(6, 0) - 1.0) < 1.e-9 ? 1 : 0;
-          result.d_view(3) = (velocityView(6, 1) - 0.0) < 1.e-9 ? 1 : 0;
-          result.d_view(4) = (velocityView(6, 2) - 0.0) < 1.e-9 ? 1 : 0;
+          result.d_view(0) =
+            stk::simd::get_data((pressureView(0) - 1.0), 0) < 1.e-9 ? 1 : 0;
+          result.d_view(1) =
+            stk::simd::get_data((pressureView(7) - 1.0), 0) < 1.e-9 ? 1 : 0;
+          result.d_view(2) =
+            stk::simd::get_data((velocityView(6, 0) - 1.0), 0) < 1.e-9 ? 1 : 0;
+          result.d_view(3) =
+            stk::simd::get_data((velocityView(6, 1) - 0.0), 0) < 1.e-9 ? 1 : 0;
+          result.d_view(4) =
+            stk::simd::get_data((velocityView(6, 2) - 0.0), 0) < 1.e-9 ? 1 : 0;
 
           testKernel.execute(simdlhs, simdrhs, scrviews);
         });

@@ -12,7 +12,6 @@
 #include <AlgTraits.h>
 
 #include <NaluEnv.h>
-#include <FORTRAN_Proto.h>
 
 #include <stk_topology/topology.hpp>
 
@@ -144,43 +143,50 @@ Tri3DSCS::determinant(
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-KOKKOS_FUNCTION
-void
-Tri3DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Tri3DSCS::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   tri_shape_fcn(intgLoc_, shpfc);
 }
-
-void
-Tri3DSCS::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Tri3DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  tri_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+  shape_fcn<>(shpfc);
+}
+void
+Tri3DSCS::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-KOKKOS_FUNCTION
-void
-Tri3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Tri3DSCS::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   tri_shape_fcn(intgLocShift_, shpfc);
 }
-
-void
-Tri3DSCS::shifted_shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Tri3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  tri_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  shifted_shape_fcn<>(shpfc);
+}
+void
+Tri3DSCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- tri_shape_fcn ---------------------------------------------------
 //--------------------------------------------------------------------------
-KOKKOS_FUNCTION
-void
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
 Tri3DSCS::tri_shape_fcn(
-  const double* isoParCoord,
-  SharedMemView<DoubleType**, DeviceShmem>& shape_fcn)
+  const double* isoParCoord, SharedMemView<SCALAR**, SHMEM>& shape_fcn)
 {
   for (int j = 0; j < numIntPoints_; ++j) {
     const int k = 2 * j;

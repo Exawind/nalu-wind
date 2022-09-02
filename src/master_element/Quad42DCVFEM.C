@@ -32,17 +32,17 @@ namespace sierra {
 namespace nalu {
 
 //-------- quad_derivative -----------------------------------------------------
-KOKKOS_FUNCTION
-void
+template <typename DBLTYPE, typename SHMEM>
+KOKKOS_FUNCTION void
 quad_derivative(
-  const double* par_coord, SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  const double* par_coord, SharedMemView<DBLTYPE***, SHMEM>& deriv)
 {
   const double half = 0.5;
   const size_t npts = deriv.extent(0);
 
   for (size_t j = 0; j < npts; ++j) {
-    const DoubleType s1 = par_coord[2 * j + 0];
-    const DoubleType s2 = par_coord[2 * j + 1];
+    const DBLTYPE s1 = par_coord[2 * j + 0];
+    const DBLTYPE s2 = par_coord[2 * j + 1];
     // shape function derivative in the s1 direction -
     deriv(j, 0, 0) = -half + s2;
     deriv(j, 1, 0) = half - s2;
@@ -59,19 +59,19 @@ quad_derivative(
 
 //-------- quad_gradient_operator
 //-----------------------------------------------------
-template <int nint, int npe>
+template <int nint, int npe, typename DBLTYPE, typename SHMEM>
 KOKKOS_FUNCTION void
 quad_gradient_operator(
-  const SharedMemView<DoubleType***, DeviceShmem>& deriv,
-  const SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  const SharedMemView<DBLTYPE***, SHMEM>& deriv,
+  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  SharedMemView<DBLTYPE***, SHMEM>& gradop)
 {
 
   for (size_t ki = 0; ki < nint; ++ki) {
-    DoubleType dx_ds1 = 0.0;
-    DoubleType dx_ds2 = 0.0;
-    DoubleType dy_ds1 = 0.0;
-    DoubleType dy_ds2 = 0.0;
+    DBLTYPE dx_ds1 = 0.0;
+    DBLTYPE dx_ds2 = 0.0;
+    DBLTYPE dy_ds1 = 0.0;
+    DBLTYPE dy_ds2 = 0.0;
 
     // calculate the jacobian at the integration station -
     for (size_t kn = 0; kn < npe; ++kn) {
@@ -81,22 +81,22 @@ quad_gradient_operator(
       dy_ds2 += deriv(ki, kn, 1) * coords(kn, 1);
     }
     // calculate the determinate of the jacobian at the integration station -
-    const DoubleType det_j = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
+    const DBLTYPE det_j = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
 
     // protect against a negative or small value for the determinate of the
     // jacobian. The value of real_min (set in precision.par) represents
     // the smallest Real value (based upon the precision set for this
     // compilation) which the machine can represent -
-    const DoubleType test =
+    const DBLTYPE test =
       stk::math::if_then_else(det_j > 1.e+6 * MEconstants::realmin, det_j, 1.0);
-    const DoubleType denom = 1.0 / test;
+    const DBLTYPE denom = 1.0 / test;
 
     // compute the gradient operators at the integration station -
 
-    const DoubleType ds1_dx = denom * dy_ds2;
-    const DoubleType ds2_dx = -denom * dy_ds1;
-    const DoubleType ds1_dy = -denom * dx_ds2;
-    const DoubleType ds2_dy = denom * dx_ds1;
+    const DBLTYPE ds1_dx = denom * dy_ds2;
+    const DBLTYPE ds2_dx = -denom * dy_ds1;
+    const DBLTYPE ds1_dy = -denom * dx_ds2;
+    const DBLTYPE ds2_dy = denom * dx_ds1;
 
     for (size_t kn = 0; kn < npe; ++kn) {
       gradop(ki, kn, 0) = deriv(ki, kn, 0) * ds1_dx + deriv(ki, kn, 1) * ds2_dx;
@@ -216,7 +216,7 @@ Quad42DSCV::determinant(
 //--------------------------------------------------------------------------
 void
 Quad42DSCV::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
@@ -244,63 +244,59 @@ Quad42DSCV::shifted_grad_op(
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad42DSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Quad42DSCV::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   quad_shape_fcn(intgLoc_, shpfc);
 }
-
-void
-Quad42DSCV::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Quad42DSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  quad_shape_fcn(intgLoc_, shpfc);
+  shape_fcn<>(shpfc);
+}
+void
+Quad42DSCV::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad42DSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Quad42DSCV::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   quad_shape_fcn(intgLocShift_, shpfc);
 }
-
-void
-Quad42DSCV::shifted_shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Quad42DSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  quad_shape_fcn(intgLocShift_, shpfc);
+  shifted_shape_fcn<>(shpfc);
+}
+void
+Quad42DSCV::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- quad_shape_fcn ---------------------------------------------------
 //--------------------------------------------------------------------------
-void
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
 Quad42DSCV::quad_shape_fcn(
-  const double* isoParCoord, SharedMemView<DoubleType**, DeviceShmem>& shape)
+  const double* isoParCoord, SharedMemView<SCALAR**, SHMEM>& shape)
 {
   for (int j = 0; j < numIntPoints_; ++j) {
     const int k = 2 * j;
-    const double s1 = isoParCoord[k];
-    const double s2 = isoParCoord[k + 1];
+    const SCALAR s1 = isoParCoord[k];
+    const SCALAR s2 = isoParCoord[k + 1];
     shape(j, 0) = 1.0 / 4.0 + 0.5 * (-s1 - s2) + s1 * s2;
     shape(j, 1) = 1.0 / 4.0 + 0.5 * (s1 - s2) - s1 * s2;
     shape(j, 2) = 1.0 / 4.0 + 0.5 * (s1 + s2) + s1 * s2;
     shape(j, 3) = 1.0 / 4.0 + 0.5 * (-s1 + s2) - s1 * s2;
-  }
-}
-
-void
-Quad42DSCV::quad_shape_fcn(const double* isoParCoord, double* shape)
-{
-  for (int j = 0; j < numIntPoints_; ++j) {
-    const int fourj = 4 * j;
-    const int k = 2 * j;
-    const double s1 = isoParCoord[k];
-    const double s2 = isoParCoord[k + 1];
-    shape[fourj] = 1.0 / 4.0 + 0.5 * (-s1 - s2) + s1 * s2;
-    shape[1 + fourj] = 1.0 / 4.0 + 0.5 * (s1 - s2) - s1 * s2;
-    shape[2 + fourj] = 1.0 / 4.0 + 0.5 * (s1 + s2) + s1 * s2;
-    shape[3 + fourj] = 1.0 / 4.0 + 0.5 * (-s1 + s2) - s1 * s2;
   }
 }
 
@@ -462,7 +458,7 @@ Quad42DSCS::determinant(
 //--------------------------------------------------------------------------
 void
 Quad42DSCS::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
@@ -471,29 +467,16 @@ Quad42DSCS::grad_op(
   quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
     deriv, coords, gradop);
 }
-
 void
 Quad42DSCS::grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double***>& gradop,
+  SharedMemView<double***>& deriv)
 {
-  int lerr = 0;
 
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(quad_derivative)
-  (&nint, intgLoc_, deriv);
-
-  SIERRA_FORTRAN(quad_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "sorry, negative Quad42DSCS volume.." << std::endl;
+  quad_derivative(intgLoc_, deriv);
+  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
+    deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -508,30 +491,6 @@ Quad42DSCS::shifted_grad_op(
   quad_derivative(intgLocShift_, deriv);
   quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
     deriv, coords, gradop);
-}
-
-void
-Quad42DSCS::shifted_grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(quad_derivative)
-  (&nint, intgLocShift_, deriv);
-
-  SIERRA_FORTRAN(quad_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "sorry, negative Quad42DSCS volume.." << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -563,40 +522,6 @@ Quad42DSCS::face_grad_op(
   face_grad_op(face_ordinal, shifted, coords, gradop, deriv);
 }
 
-void
-Quad42DSCS::face_grad_op(
-  const int nelem,
-  const int face_ordinal,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-  int npf = 2;
-
-  const int nface = 1;
-  double dpsi[8];
-
-  for (int n = 0; n < nelem; n++) {
-
-    for (int k = 0; k < npf; k++) {
-
-      SIERRA_FORTRAN(quad_derivative)
-      (&nface, intgExpFace_[face_ordinal][k], dpsi);
-
-      const int npe = nodesPerElement_;
-      SIERRA_FORTRAN(quad_gradient_operator)
-      (&nface, &npe, &nface, dpsi, &coords[8 * n],
-       &gradop[k * nelem * 8 + n * 8], &det_j[npf * n + k], error, &lerr);
-
-      if (lerr)
-        NaluEnv::self().naluOutput()
-          << "sorry, issue with face_grad_op.." << std::endl;
-    }
-  }
-}
-
 //--------------------------------------------------------------------------
 //-------- shifted_face_grad_op --------------------------------------------
 //--------------------------------------------------------------------------
@@ -610,47 +535,12 @@ Quad42DSCS::shifted_face_grad_op(
   constexpr bool shifted = true;
   face_grad_op(face_ordinal, shifted, coords, gradop, deriv);
 }
-
-void
-Quad42DSCS::shifted_face_grad_op(
-  const int nelem,
-  const int face_ordinal,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-  int npf = 2;
-
-  const int nface = 1;
-  double dpsi[8];
-
-  for (int n = 0; n < nelem; n++) {
-
-    for (int k = 0; k < npf; k++) {
-
-      SIERRA_FORTRAN(quad_derivative)
-      (&nface, intgExpFaceShift_[face_ordinal][k], dpsi);
-
-      const int npe = nodesPerElement_;
-      SIERRA_FORTRAN(quad_gradient_operator)
-      (&nface, &npe, &nface, dpsi, &coords[8 * n],
-       &gradop[k * nelem * 8 + n * 8], &det_j[npf * n + k], error, &lerr);
-
-      if (lerr)
-        NaluEnv::self().naluOutput()
-          << "sorry, issue with face_grad_op.." << std::endl;
-    }
-  }
-}
-
 //--------------------------------------------------------------------------
 //-------- gij -------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
 Quad42DSCS::gij(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
@@ -698,16 +588,6 @@ Quad42DSCS::gij(
       }
     }
   }
-}
-
-void
-Quad42DSCS::gij(
-  const double* coords, double* gupperij, double* glowerij, double* deriv)
-{
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(twod_gij)
-  (&npe, &nint, deriv, coords, gupperij, glowerij);
 }
 
 //--------------------------------------------------------------------------
@@ -775,62 +655,59 @@ Quad42DSCS::opposingFace(const int ordinal, const int node)
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad42DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Quad42DSCS::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   quad_shape_fcn(intgLoc_, shpfc);
 }
-
-void
-Quad42DSCS::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Quad42DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  quad_shape_fcn(intgLoc_, shpfc);
+  shape_fcn<>(shpfc);
+}
+void
+Quad42DSCS::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-void
-Quad42DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+Quad42DSCS::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   quad_shape_fcn(intgLocShift_, shpfc);
 }
-
-void
-Quad42DSCS::shifted_shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+Quad42DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  quad_shape_fcn(intgLocShift_, shpfc);
+  shifted_shape_fcn<>(shpfc);
+}
+void
+Quad42DSCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- quad_shape_fcn ---------------------------------------------------
 //--------------------------------------------------------------------------
-void
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
 Quad42DSCS::quad_shape_fcn(
-  const double* isoParCoord, SharedMemView<DoubleType**, DeviceShmem>& shape)
+  const double* isoParCoord, SharedMemView<SCALAR**, SHMEM>& shape)
 {
   for (int j = 0; j < numIntPoints_; ++j) {
     const int k = 2 * j;
-    const double s1 = isoParCoord[k];
-    const double s2 = isoParCoord[k + 1];
+    const SCALAR s1 = isoParCoord[k];
+    const SCALAR s2 = isoParCoord[k + 1];
     shape(j, 0) = 1.0 / 4.0 + 0.5 * (-s1 - s2) + s1 * s2;
     shape(j, 1) = 1.0 / 4.0 + 0.5 * (s1 - s2) - s1 * s2;
     shape(j, 2) = 1.0 / 4.0 + 0.5 * (s1 + s2) + s1 * s2;
     shape(j, 3) = 1.0 / 4.0 + 0.5 * (-s1 + s2) - s1 * s2;
-  }
-}
-void
-Quad42DSCS::quad_shape_fcn(const double* isoParCoord, double* shape)
-{
-  for (int j = 0; j < numIntPoints_; ++j) {
-    const int fourj = 4 * j;
-    const int k = 2 * j;
-    const double s1 = isoParCoord[k];
-    const double s2 = isoParCoord[k + 1];
-    shape[fourj] = 1.0 / 4.0 + 0.5 * (-s1 - s2) + s1 * s2;
-    shape[1 + fourj] = 1.0 / 4.0 + 0.5 * (s1 - s2) - s1 * s2;
-    shape[2 + fourj] = 1.0 / 4.0 + 0.5 * (s1 + s2) + s1 * s2;
-    shape[3 + fourj] = 1.0 / 4.0 + 0.5 * (-s1 + s2) - s1 * s2;
   }
 }
 

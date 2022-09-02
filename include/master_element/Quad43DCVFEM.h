@@ -23,6 +23,8 @@ class Quad3DSCS : public MasterElement
 public:
   using AlgTraits = AlgTraitsQuad4;
   using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
 
   KOKKOS_FUNCTION
   Quad3DSCS();
@@ -30,12 +32,11 @@ public:
 
   KOKKOS_FUNCTION virtual const int* ipNodeMap(int ordinal = 0) const final;
 
-  // NGP-ready methods first
-  KOKKOS_FUNCTION void
-  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  template <typename SCALAR, typename SHMEM>
+  KOKKOS_FUNCTION void shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc);
 
-  KOKKOS_FUNCTION void
-  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  template <typename SCALAR, typename SHMEM>
+  KOKKOS_FUNCTION void shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc);
 
   KOKKOS_FUNCTION virtual void determinant(
     const SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -45,12 +46,9 @@ public:
     const SharedMemView<double**>& coords,
     SharedMemView<double**>& areav) override;
 
+  template <typename SCALAR, typename SHMEM>
   KOKKOS_FUNCTION void quad4_shape_fcn(
-    const double* isoParCoord, SharedMemView<DoubleType**, DeviceShmem>& shpfc);
-
-  void shape_fcn(double* shpfc) override;
-
-  void shifted_shape_fcn(double* shpfc) override;
+    const double* isoParCoord, SharedMemView<SCALAR**, SHMEM>& shpfc);
 
   double isInElement(
     const double* elemNodalCoord,
@@ -83,6 +81,16 @@ public:
   {
     return intgLocShift_;
   }
+
+protected:
+  KOKKOS_FUNCTION virtual void
+  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  virtual void shape_fcn(SharedMemView<double**, HostShmem>& shpfc) override;
+
+  KOKKOS_FUNCTION virtual void
+  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  virtual void
+  shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc) override;
 
 private:
   static const int nDim_ = AlgTraits::nDim_;

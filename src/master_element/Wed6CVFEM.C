@@ -10,17 +10,20 @@
 #include "master_element/Wed6CVFEM.h"
 #include "master_element/MasterElementFunctions.h"
 #include "master_element/Hex8GeometryFunctions.h"
-#include "FORTRAN_Proto.h"
 #include "NaluEnv.h"
 
 #include <array>
+#include <FORTRAN_Proto.h>
 
 namespace sierra {
 namespace nalu {
 
-template <typename ViewType>
+template <typename SCALAR, typename SHMEM>
 KOKKOS_FUNCTION void
-wed_shape_fcn(const int npts, const double* isoParCoord, ViewType& shape_fcn)
+wed_shape_fcn(
+  const int npts,
+  const double* isoParCoord,
+  SharedMemView<SCALAR**, SHMEM>& shape_fcn)
 {
   for (int j = 0; j < npts; ++j) {
     int k = 3 * j;
@@ -38,17 +41,20 @@ wed_shape_fcn(const int npts, const double* isoParCoord, ViewType& shape_fcn)
 }
 
 //-------- wed_deriv -------------------------------------------------------
-template <typename DerivType>
+template <typename DBLTYPE, typename SHMEM>
 KOKKOS_FUNCTION void
-wed_deriv(const int npts, const double* intgLoc, DerivType& deriv)
+wed_deriv(
+  const int npts,
+  const double* intgLoc,
+  SharedMemView<DBLTYPE***, SHMEM>& deriv)
 {
   for (int j = 0; j < npts; ++j) {
     int k = j * 3;
 
-    const DoubleType r = intgLoc[k];
-    const DoubleType s = intgLoc[k + 1];
-    const DoubleType t = 1.0 - r - s;
-    const DoubleType xi = intgLoc[k + 2];
+    const DBLTYPE r = intgLoc[k];
+    const DBLTYPE s = intgLoc[k + 1];
+    const DBLTYPE t = 1.0 - r - s;
+    const DBLTYPE xi = intgLoc[k + 2];
 
     deriv(j, 0, 0) = -0.5 * (1.0 - xi); // d(N_1)/ d(r)  = deriv[0]
     deriv(j, 0, 1) = -0.5 * (1.0 - xi); // d(N_1)/ d(s)  = deriv[1]
@@ -221,7 +227,7 @@ WedSCV::determinant(
 //--------------------------------------------------------------------------
 void
 WedSCV::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
@@ -242,34 +248,38 @@ WedSCV::shifted_grad_op(
   generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
 }
 
+template <typename SCALAR, typename SHMEM>
 KOKKOS_FUNCTION void
-WedSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+WedSCV::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   wed_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
 }
-
 KOKKOS_FUNCTION void
-WedSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+WedSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+void
+WedSCV::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+WedSCV::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   wed_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
 }
-
-//--------------------------------------------------------------------------
-//-------- shape_fcn -------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-WedSCV::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+WedSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  wedge_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+  shifted_shape_fcn<>(shpfc);
 }
-
-//--------------------------------------------------------------------------
-//-------- shifted_shape_fcn -----------------------------------------------
-//--------------------------------------------------------------------------
 void
-WedSCV::shifted_shape_fcn(double* shpfc)
+WedSCV::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
 {
-  wedge_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -491,12 +501,21 @@ WedSCS::determinant(
 //--------------------------------------------------------------------------
 void
 WedSCS::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   wed_deriv(numIntPoints_, &intgLoc_[0], deriv);
+  generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
+}
 
+void
+WedSCS::grad_op(
+  const SharedMemView<double**>& coords,
+  SharedMemView<double***>& gradop,
+  SharedMemView<double***>& deriv)
+{
+  wed_deriv(numIntPoints_, &intgLoc_[0], deriv);
   generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
 }
 
@@ -507,61 +526,7 @@ WedSCS::shifted_grad_op(
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   wed_deriv(numIntPoints_, &intgLocShift_[0], deriv);
-
   generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
-  // wed_grad_op(deriv, coords, gradop);
-}
-
-//--------------------------------------------------------------------------
-//-------- grad_op ---------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-WedSCS::grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-
-  wedge_derivative(numIntPoints_, &intgLoc_[0], deriv);
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(wed_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "sorry, negative WedSCS volume.." << std::endl;
-}
-
-//--------------------------------------------------------------------------
-//-------- shifted_grad_op -------------------------------------------------
-//--------------------------------------------------------------------------
-void
-WedSCS::shifted_grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-
-  wedge_derivative(numIntPoints_, &intgLocShift_[0], deriv);
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(wed_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "sorry, negative WedSCS volume.." << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -613,45 +578,6 @@ WedSCS::wedge_derivative(const int npts, const double* intgLoc, double* deriv)
 //--------------------------------------------------------------------------
 void
 WedSCS::face_grad_op(
-  const int nelem,
-  const int face_ordinal,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-  const int ndim = 3;
-  const int nface = 1;
-  double dpsi[18];
-
-  // nodes per face... ordinal 0, 1, 2 are quad faces, 3 and 4 are tri
-  const int npf = (face_ordinal < 3) ? 4 : 3;
-
-  for (int n = 0; n < nelem; ++n) {
-
-    for (int k = 0; k < npf; ++k) {
-
-      const int row = 12 * face_ordinal + k * ndim;
-      wedge_derivative(nface, &intgExpFace_[row], dpsi);
-
-      const int npe = nodesPerElement_;
-      SIERRA_FORTRAN(wed_gradient_operator)
-      (&nface, &npe, &nface, dpsi, &coords[18 * n],
-       &gradop[k * nelem * 18 + n * 18], &det_j[npf * n + k], error, &lerr);
-
-      if (lerr)
-        NaluEnv::self().naluOutput()
-          << "problem with EwedSCS::face_grad" << std::endl;
-    }
-  }
-}
-
-//--------------------------------------------------------------------------
-//-------- face_grad_op ----------------------------------------------------
-//--------------------------------------------------------------------------
-void
-WedSCS::face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
@@ -685,64 +611,17 @@ WedSCS::shifted_face_grad_op(
   wed_deriv(numFaceIps, &intgExpFaceShift_[dim * offset], deriv);
   generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
 }
-
-void
-WedSCS::shifted_face_grad_op(
-  const int nelem,
-  const int face_ordinal,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-  const int ndim = 3;
-  const int nface = 1;
-  double dpsi[18];
-
-  // nodes per face... ordinal 0, 1, 2 are quad faces, 3 and 4 are tri
-  const int npf = (face_ordinal < 3) ? 4 : 3;
-
-  for (int n = 0; n < nelem; ++n) {
-
-    for (int k = 0; k < npf; ++k) {
-      // no blank entries for shifted_face_grad_op . . . have to use offset
-      const int row = (sideOffset_[face_ordinal] + k) * ndim;
-      wedge_derivative(nface, &intgExpFaceShift_[row], dpsi);
-
-      const int npe = nodesPerElement_;
-      SIERRA_FORTRAN(wed_gradient_operator)
-      (&nface, &npe, &nface, dpsi, &coords[18 * n],
-       &gradop[k * nelem * 18 + n * 18], &det_j[npf * n + k], error, &lerr);
-
-      if (lerr)
-        NaluEnv::self().naluOutput()
-          << "problem with EwedSCS::face_grad" << std::endl;
-    }
-  }
-}
-
-void
-WedSCS::gij(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gupper,
-  SharedMemView<DoubleType***, DeviceShmem>& glower,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
-{
-  generic_gij_3d<AlgTraitsWed6>(deriv, coords, gupper, glower);
-}
-
 //--------------------------------------------------------------------------
 //-------- gij ------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
 WedSCS::gij(
-  const double* coords, double* gupperij, double* glowerij, double* deriv)
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gupper,
+  SharedMemView<DoubleType***, DeviceShmem>& glower,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(threed_gij)
-  (&npe, &nint, deriv, coords, gupperij, glowerij);
+  generic_gij_3d<AlgTraitsWed6>(deriv, coords, gupper, glower);
 }
 
 //--------------------------------------------------------------------------
@@ -801,34 +680,38 @@ WedSCS::opposingFace(const int ordinal, const int node)
   return oppFace_[ordinal * 4 + node];
 }
 
+template <typename SCALAR, typename SHMEM>
 KOKKOS_FUNCTION void
-WedSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+WedSCS::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   wed_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
 }
-
 KOKKOS_FUNCTION void
-WedSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+WedSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+void
+WedSCS::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+WedSCS::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   wed_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
 }
-
-//--------------------------------------------------------------------------
-//-------- shape_fcn -------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-WedSCS::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+WedSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  wedge_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+  shifted_shape_fcn<>(shpfc);
 }
-
-//--------------------------------------------------------------------------
-//-------- shifted_shape_fcn -----------------------------------------------
-//--------------------------------------------------------------------------
 void
-WedSCS::shifted_shape_fcn(double* shpfc)
+WedSCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
 {
-  wedge_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------

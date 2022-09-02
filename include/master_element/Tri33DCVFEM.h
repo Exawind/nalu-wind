@@ -50,18 +50,15 @@ public:
     const SharedMemView<double**>& coords,
     SharedMemView<double**>& areav) override;
 
-  KOKKOS_FUNCTION virtual void
-  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
+  template <typename SCALAR, typename SHMEM>
+  KOKKOS_FUNCTION void shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc);
 
-  void shape_fcn(double* shpfc);
+  template <typename SCALAR, typename SHMEM>
+  KOKKOS_FUNCTION void shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc);
 
-  KOKKOS_FUNCTION virtual void
-  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc);
-
-  void shifted_shape_fcn(double* shpfc);
-
-  KOKKOS_FUNCTION void tri_shape_fcn(
-    const double* par_coord, SharedMemView<DoubleType**, DeviceShmem>& shpfc);
+  template <typename SCALAR, typename SHMEM>
+  KOKKOS_FUNCTION void
+  tri_shape_fcn(const double* par_coord, SharedMemView<SCALAR**, SHMEM>& shpfc);
 
   void
   tri_shape_fcn(const int npts, const double* par_coord, double* shape_fcn);
@@ -69,7 +66,7 @@ public:
   double isInElement(
     const double* elemNodalCoord,
     const double* pointCoord,
-    double* isoParCoord);
+    double* isoParCoord) override;
 
   double parametric_distance(const std::array<double, 3>& x);
 
@@ -77,19 +74,29 @@ public:
     const int& nComp,
     const double* isoParCoord,
     const double* field,
-    double* result);
+    double* result) override;
 
-  void
-  general_shape_fcn(const int numIp, const double* isoParCoord, double* shpfc);
+  void general_shape_fcn(
+    const int numIp, const double* isoParCoord, double* shpfc) override;
 
   void general_normal(
-    const double* isoParCoord, const double* coords, double* normal);
+    const double* isoParCoord, const double* coords, double* normal) override;
 
   virtual const double* integration_locations() const final { return intgLoc_; }
   virtual const double* integration_location_shift() const final
   {
     return intgLocShift_;
   }
+
+protected:
+  KOKKOS_FUNCTION virtual void
+  shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  virtual void shape_fcn(SharedMemView<double**, HostShmem>& shpfc) override;
+
+  KOKKOS_FUNCTION virtual void
+  shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc) override;
+  virtual void
+  shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc) override;
 
 private:
   static constexpr int nDim_ = AlgTraits::nDim_;

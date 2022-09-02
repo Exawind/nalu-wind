@@ -23,8 +23,6 @@
 namespace sierra {
 namespace nalu {
 
-constexpr int dim = 3;
-
 SegmentType
 segment_generator_types(std::string name)
 {

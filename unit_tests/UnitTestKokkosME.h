@@ -83,16 +83,27 @@ public:
     dataNeeded().add_cvfem_volume_me(meSCV_);
 
     // Initialize shape function views
-    double scs_data[AlgTraits::numScsIp_ * AlgTraits::nodesPerElement_];
-    meSCS_->shape_fcn(scs_data);
+    DoubleType scs_data[AlgTraits::numScsIp_ * AlgTraits::nodesPerElement_];
+    {
+      sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>
+        ShmemView(
+          &scs_data[0], AlgTraits::numScsIp_, AlgTraits::nodesPerElement_);
+      meSCS_->shape_fcn<>(ShmemView);
+    }
+
     DoubleType* v_scs_data = &scs_shape_fcn_(0, 0);
     for (int i = 0; i < (AlgTraits::numScsIp_ * AlgTraits::nodesPerElement_);
          ++i) {
       v_scs_data[i] = scs_data[i];
     }
 
-    double scv_data[AlgTraits::numScvIp_ * AlgTraits::nodesPerElement_];
-    meSCV_->shape_fcn(scv_data);
+    DoubleType scv_data[AlgTraits::numScvIp_ * AlgTraits::nodesPerElement_];
+    {
+      sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>
+        ShmemView(
+          &scv_data[0], AlgTraits::numScvIp_, AlgTraits::nodesPerElement_);
+      meSCV_->shape_fcn<>(ShmemView);
+    }
     DoubleType* v_scv_data = &scv_shape_fcn_(0, 0);
     for (int i = 0; i < (AlgTraits::numScvIp_ * AlgTraits::nodesPerElement_);
          ++i) {

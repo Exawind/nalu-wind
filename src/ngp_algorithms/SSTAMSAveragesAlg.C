@@ -122,8 +122,8 @@ SSTAMSAveragesAlg::execute()
   const DblType avgTimeCoeff = avgTimeCoeff_;
 
   const bool RANSBelowKs = RANSBelowKs_;
-  DblType k_s;
-  int gravity_i;
+  DblType k_s = 0;
+  int gravity_i = 0;
   if (RANSBelowKs) {
     // relationship b/w sand grain roughness height, k_s, and aerodynamic
     // roughness, z0, as described in ref. Bau11, Eq. (2.29)

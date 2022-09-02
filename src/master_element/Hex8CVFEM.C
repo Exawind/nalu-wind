@@ -23,6 +23,41 @@
 namespace sierra {
 namespace nalu {
 
+template <typename SCALAR, typename SHMEM>
+KOKKOS_INLINE_FUNCTION void
+hex8_shape_fcn(
+  const int npts,
+  const double* isoParCoord,
+  SharedMemView<SCALAR**, SHMEM>& shape_fcn)
+{
+  const SCALAR half = 0.50;
+  const SCALAR one4th = 0.25;
+  const SCALAR one8th = 0.125;
+  for (int j = 0; j < npts; ++j) {
+
+    const SCALAR s1 = isoParCoord[j * 3];
+    const SCALAR s2 = isoParCoord[j * 3 + 1];
+    const SCALAR s3 = isoParCoord[j * 3 + 2];
+
+    shape_fcn(j, 0) = one8th + one4th * (-s1 - s2 - s3) +
+                      half * (s2 * s3 + s3 * s1 + s1 * s2) - s1 * s2 * s3;
+    shape_fcn(j, 1) = one8th + one4th * (s1 - s2 - s3) +
+                      half * (s2 * s3 - s3 * s1 - s1 * s2) + s1 * s2 * s3;
+    shape_fcn(j, 2) = one8th + one4th * (s1 + s2 - s3) +
+                      half * (-s2 * s3 - s3 * s1 + s1 * s2) - s1 * s2 * s3;
+    shape_fcn(j, 3) = one8th + one4th * (-s1 + s2 - s3) +
+                      half * (-s2 * s3 + s3 * s1 - s1 * s2) + s1 * s2 * s3;
+    shape_fcn(j, 4) = one8th + one4th * (-s1 - s2 + s3) +
+                      half * (-s2 * s3 - s3 * s1 + s1 * s2) + s1 * s2 * s3;
+    shape_fcn(j, 5) = one8th + one4th * (s1 - s2 + s3) +
+                      half * (-s2 * s3 + s3 * s1 - s1 * s2) - s1 * s2 * s3;
+    shape_fcn(j, 6) = one8th + one4th * (s1 + s2 + s3) +
+                      half * (s2 * s3 + s3 * s1 + s1 * s2) + s1 * s2 * s3;
+    shape_fcn(j, 7) = one8th + one4th * (-s1 + s2 + s3) +
+                      half * (s2 * s3 - s3 * s1 - s1 * s2) - s1 * s2 * s3;
+  }
+}
+
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
@@ -43,16 +78,38 @@ HexSCV::ipNodeMap(int /*ordinal*/) const
   return ipNodeMap_;
 }
 
-void
-HexSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+HexSCV::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   hex8_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
 }
-
+KOKKOS_FUNCTION void
+HexSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
 void
-HexSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+HexSCV::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+HexSCV::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   hex8_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+}
+KOKKOS_FUNCTION void
+HexSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
+}
+void
+HexSCV::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -106,7 +163,7 @@ HexSCV::determinant(
 //--------------------------------------------------------------------------
 void
 HexSCV::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
@@ -114,31 +171,14 @@ HexSCV::grad_op(
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
-//--------------------------------------------------------------------------
-//-------- grad_op ---------------------------------------------------------
-//--------------------------------------------------------------------------
 void
 HexSCV::grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double***>& gradop,
+  SharedMemView<double***>& deriv)
 {
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(hex_derivative)
-  (&nint, &intgLoc_[0], deriv);
-
-  SIERRA_FORTRAN(hex_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "sorry, negative HexSCV volume.." << std::endl;
+  hex8_derivative(numIntPoints_, &intgLoc_[0], deriv);
+  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -152,28 +192,6 @@ HexSCV::shifted_grad_op(
 {
   hex8_derivative(numIntPoints_, &intgLocShift_[0], deriv);
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
-}
-
-//--------------------------------------------------------------------------
-//-------- shape_fcn -------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-HexSCV::shape_fcn(double* shpfc)
-{
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(hex_shape_fcn)
-  (&nint, &intgLoc_[0], shpfc);
-}
-
-//--------------------------------------------------------------------------
-//-------- shifted_shape_fcn -----------------------------------------------
-//--------------------------------------------------------------------------
-void
-HexSCV::shifted_shape_fcn(double* shpfc)
-{
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(hex_shape_fcn)
-  (&nint, &intgLocShift_[0], shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -218,19 +236,41 @@ HexSCS::ipNodeMap(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void
-HexSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+HexSCS::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   hex8_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+}
+KOKKOS_FUNCTION void
+HexSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+void
+HexSCS::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
-void
-HexSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+HexSCS::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   hex8_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+}
+KOKKOS_FUNCTION void
+HexSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
+}
+void
+HexSCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -238,9 +278,19 @@ HexSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 //--------------------------------------------------------------------------
 void
 HexSCS::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
+{
+  hex8_derivative(numIntPoints_, &intgLoc_[0], deriv);
+  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
+}
+
+void
+HexSCS::grad_op(
+  const SharedMemView<double**>& coords,
+  SharedMemView<double***>& gradop,
+  SharedMemView<double***>& deriv)
 {
   hex8_derivative(numIntPoints_, &intgLoc_[0], deriv);
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
@@ -316,60 +366,6 @@ HexSCS::side_node_ordinals(int ordinal) const
 }
 
 //--------------------------------------------------------------------------
-//-------- grad_op ---------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-HexSCS::grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(hex_derivative)
-  (&nint, &intgLoc_[0], deriv);
-
-  SIERRA_FORTRAN(hex_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "sorry, negative HexSCS volume.." << std::endl;
-}
-
-//--------------------------------------------------------------------------
-//-------- shifted_grad_op -------------------------------------------------
-//--------------------------------------------------------------------------
-void
-HexSCS::shifted_grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(hex_derivative)
-  (&nint, &intgLocShift_[0], deriv);
-
-  SIERRA_FORTRAN(hex_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "sorry, negative HexSCS volume.." << std::endl;
-}
-
-//--------------------------------------------------------------------------
 //-------- face_grad_op ----------------------------------------------------
 //--------------------------------------------------------------------------
 template <bool shifted>
@@ -398,40 +394,6 @@ HexSCS::face_grad_op(
   face_grad_op_t<false>(face_ordinal, coords, gradop, deriv);
 }
 
-void
-HexSCS::face_grad_op(
-  const int nelem,
-  const int face_ordinal,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-  int npf = 4;
-
-  const int nface = 1;
-  double dpsi[24];
-
-  for (int n = 0; n < nelem; n++) {
-
-    for (int k = 0; k < npf; k++) {
-
-      SIERRA_FORTRAN(hex_derivative)
-      (&nface, intgExpFace_[face_ordinal][k], dpsi);
-
-      const int npe = nodesPerElement_;
-      SIERRA_FORTRAN(hex_gradient_operator)
-      (&nface, &npe, &nface, dpsi, &coords[24 * n],
-       &gradop[k * nelem * 24 + n * 24], &det_j[npf * n + k], error, &lerr);
-
-      if (lerr)
-        NaluEnv::self().naluOutput()
-          << "sorry, issue with face_grad_op.." << std::endl;
-    }
-  }
-}
-
 //--------------------------------------------------------------------------
 //-------- shifted_face_grad_op --------------------------------------------
 //--------------------------------------------------------------------------
@@ -444,60 +406,12 @@ HexSCS::shifted_face_grad_op(
 {
   face_grad_op_t<true>(face_ordinal, coords, gradop, deriv);
 }
-
-void
-HexSCS::shifted_face_grad_op(
-  const int nelem,
-  const int face_ordinal,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-  int npf = 4;
-
-  const int nface = 1;
-  double dpsi[24];
-
-  for (int n = 0; n < nelem; n++) {
-
-    for (int k = 0; k < npf; k++) {
-
-      SIERRA_FORTRAN(hex_derivative)
-      (&nface, intgExpFaceShift_[face_ordinal][k], dpsi);
-
-      const int npe = nodesPerElement_;
-      SIERRA_FORTRAN(hex_gradient_operator)
-      (&nface, &npe, &nface, dpsi, &coords[24 * n],
-       &gradop[k * nelem * 24 + n * 24], &det_j[npf * n + k], error, &lerr);
-
-      if (lerr)
-        NaluEnv::self().naluOutput()
-          << "sorry, issue with face_grad_op.." << std::endl;
-    }
-  }
-}
-
 //--------------------------------------------------------------------------
 //-------- gij -------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
 HexSCS::gij(
-  const double* coords, double* gupperij, double* glowerij, double* deriv)
-{
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(threed_gij)
-  (&npe, &nint, deriv, coords, gupperij, glowerij);
-}
-
-//--------------------------------------------------------------------------
-//-------- gij -------------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-HexSCS::gij(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
@@ -542,28 +456,6 @@ const int*
 HexSCS::scsIpEdgeOrd()
 {
   return &scsIpEdgeOrd_[0];
-}
-
-//--------------------------------------------------------------------------
-//-------- shape_fcn -------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-HexSCS::shape_fcn(double* shpfc)
-{
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(hex_shape_fcn)
-  (&nint, &intgLoc_[0], shpfc);
-}
-
-//--------------------------------------------------------------------------
-//-------- shifted_shape_fcn -----------------------------------------------
-//--------------------------------------------------------------------------
-void
-HexSCS::shifted_shape_fcn(double* shpfc)
-{
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(hex_shape_fcn)
-  (&nint, &intgLocShift_[0], shpfc);
 }
 
 //--------------------------------------------------------------------------

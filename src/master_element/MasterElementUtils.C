@@ -13,7 +13,6 @@
 #include <master_element/TensorOps.h>
 
 #include <NaluEnv.h>
-#include <FORTRAN_Proto.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 

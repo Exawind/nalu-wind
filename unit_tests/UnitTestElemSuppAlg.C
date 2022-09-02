@@ -30,7 +30,7 @@ element_discrete_laplacian_kernel_3d(
   sierra::nalu::MasterElement& meSCS,
   const ScalarFieldType* discreteLaplacianOfPressure,
   const ScalarFieldType* nodalPressureField,
-  sierra::nalu::ScratchViews<double>& elemData)
+  sierra::nalu::ScratchViews<DoubleType>& elemData)
 {
   const int nDim = 3;
   const int nodesPerElem = meSCS.nodesPerElement_;
@@ -38,31 +38,33 @@ element_discrete_laplacian_kernel_3d(
 
   const int* lrscv = meSCS.adjacentNodes();
 
-  sierra::nalu::SharedMemView<double*>& elemNodePressures =
+  sierra::nalu::SharedMemView<DoubleType*>& elemNodePressures =
     elemData.get_scratch_view_1D(*nodalPressureField);
-  sierra::nalu::SharedMemView<double**>& scs_areav =
+  sierra::nalu::SharedMemView<DoubleType**>& scs_areav =
     elemData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
-  sierra::nalu::SharedMemView<double***>& dndx =
+  sierra::nalu::SharedMemView<DoubleType***>& dndx =
     elemData.get_me_views(sierra::nalu::CURRENT_COORDINATES).dndx;
   stk::mesh::NgpMesh::ConnectedNodes elemNodes = elemData.elemNodes;
 
   for (int ip = 0; ip < numScsIp; ++ip) {
 
-    double dpdxIp = 0.0;
+    DoubleType dpdxIp = 0.0;
     for (int ic = 0; ic < nodesPerElem; ++ic) {
       for (int j = 0; j < nDim; ++j) {
         dpdxIp += dndx(ip, ic, j) * elemNodePressures(ic) * scs_areav(ip, j);
       }
     }
-    EXPECT_TRUE(std::abs(dpdxIp) > tol);
+    EXPECT_TRUE(std::abs(stk::simd::get_data(dpdxIp, 0)) > tol);
 
     const stk::mesh::Entity lNode = elemNodes[lrscv[2 * ip + 0]];
     const stk::mesh::Entity rNode = elemNodes[lrscv[2 * ip + 1]];
 
     Kokkos::atomic_add(
-      stk::mesh::field_data(*discreteLaplacianOfPressure, lNode), dpdxIp);
+      stk::mesh::field_data(*discreteLaplacianOfPressure, lNode),
+      stk::simd::get_data(dpdxIp, 0));
     Kokkos::atomic_add(
-      stk::mesh::field_data(*discreteLaplacianOfPressure, rNode), -dpdxIp);
+      stk::mesh::field_data(*discreteLaplacianOfPressure, rNode),
+      -stk::simd::get_data(dpdxIp, 0));
   }
 }
 
@@ -74,7 +76,7 @@ public:
   virtual void elem_execute(
     stk::topology topo,
     sierra::nalu::MasterElement& meSCS,
-    sierra::nalu::ScratchViews<double>& elemData) = 0;
+    sierra::nalu::ScratchViews<DoubleType>& elemData) = 0;
 };
 
 class DiscreteLaplacianSuppAlg : public SuppAlg
@@ -110,7 +112,7 @@ public:
   virtual void elem_execute(
     stk::topology /* topo */,
     sierra::nalu::MasterElement& meSCS,
-    sierra::nalu::ScratchViews<double>& elemData)
+    sierra::nalu::ScratchViews<DoubleType>& elemData)
   {
     element_discrete_laplacian_kernel_3d(
       meSCS, discreteLaplacianOfPressure_, nodalPressureField_, elemData);
@@ -146,7 +148,7 @@ public:
       fieldMgr, dataNeededByKernels_, meta.get_fields().size());
     const int bytes_per_team = 0;
     const int bytes_per_thread =
-      sierra::nalu::get_num_bytes_pre_req_data<double>(
+      sierra::nalu::get_num_bytes_pre_req_data<DoubleType>(
         dataNeededNGP, meta.spatial_dimension(),
         sierra::nalu::ElemReqType::ELEM);
     auto team_exec = sierra::nalu::get_host_team_policy(
@@ -158,7 +160,7 @@ public:
         sierra::nalu::MasterElement* meSCS =
           dataNeededNGP.get_cvfem_surface_me();
 
-        sierra::nalu::ScratchViews<double> prereqData(
+        sierra::nalu::ScratchViews<DoubleType> prereqData(
           team, meta.spatial_dimension(), topo.num_nodes(), dataNeededNGP);
 
         Kokkos::parallel_for(

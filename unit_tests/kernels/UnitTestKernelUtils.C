@@ -864,7 +864,6 @@ calc_edge_area_vec(
         }
       }
 
-      double scs_error = 0.0;
       meSCS->determinant(coords, scs_areav);
 
       const auto* elem_edges = b->begin_edges(ie);
@@ -1184,7 +1183,7 @@ calc_projected_nodal_gradient_interior<VectorFieldType, GenericFieldType>(
 
     EXPECT_EQ(b.topology(), topo);
 
-    sierra::nalu::ScratchViews<double> preReqData(
+    sierra::nalu::ScratchViews<DoubleType> preReqData(
       team, ndim, topo.num_nodes(), dataNeededNGP);
 
     Kokkos::parallel_for(
@@ -1195,7 +1194,7 @@ calc_projected_nodal_gradient_interior<VectorFieldType, GenericFieldType>(
         preReqData);
       sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
-      meSCS->shape_fcn(v_shape_function.data());
+      meSCS->shape_fcn<>(v_shape_function);
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
       auto v_scalar = preReqData.get_scratch_view_1D(scalarField);
       auto v_scs_areav = preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
@@ -1268,7 +1267,7 @@ void calc_projected_nodal_gradient_interior(
 
     EXPECT_EQ(b.topology(), topo);
 
-    sierra::nalu::ScratchViews<double> preReqData(
+    sierra::nalu::ScratchViews<DoubleType> preReqData(
       team, ndim, topo.num_nodes(), dataNeededNGP);
 
     Kokkos::parallel_for(
@@ -1279,7 +1278,7 @@ void calc_projected_nodal_gradient_interior(
         preReqData);
       sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
-      meSCS->shape_fcn(v_shape_function.data());
+      meSCS->shape_fcn<>(v_shape_function);
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
       auto v_vector = preReqData.get_scratch_view_2D(vectorField);
       auto v_scs_areav = preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
@@ -1352,8 +1351,14 @@ calc_projected_nodal_gradient_boundary(
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(
     dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM);
 
-  auto v_shape_function = Kokkos::View<double**>(
+  auto v_shape_function = Kokkos::View<DoubleType**>(
     "shape_function", meBC->num_integration_points(), meBC->nodesPerElement_);
+
+  sierra::nalu::SharedMemView<
+    sierra::nalu::DoubleType**, sierra::nalu::DeviceShmem>
+    shape_function(
+      v_shape_function.data(), meBC->num_integration_points(),
+      meBC->nodesPerElement_);
 
   auto team_exec = sierra::nalu::get_host_team_policy(
     buckets.size(), bytes_per_team, bytes_per_thread);
@@ -1365,7 +1370,7 @@ calc_projected_nodal_gradient_boundary(
 
       EXPECT_EQ(b.topology(), topo);
 
-      sierra::nalu::ScratchViews<double> preReqData(
+      sierra::nalu::ScratchViews<DoubleType> preReqData(
         team, ndim, topo.num_nodes(), dataNeededNGP);
 
       Kokkos::parallel_for(
@@ -1375,7 +1380,7 @@ calc_projected_nodal_gradient_boundary(
             dataNeededNGP, ngpMesh, meta.side_rank(), face, preReqData);
           sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
-          meBC->shape_fcn(v_shape_function.data());
+          meBC->shape_fcn<>(shape_function);
           auto v_dnv = preReqData.get_scratch_view_1D(dnv);
           auto v_scalar = preReqData.get_scratch_view_1D(scalarField);
           auto v_scs_areav =
@@ -1386,7 +1391,7 @@ calc_projected_nodal_gradient_boundary(
           const int* ipNodeMap = meBC->ipNodeMap();
 
           for (int ip = 0; ip < meBC->num_integration_points(); ++ip) {
-            double qIp = 0.0;
+            DoubleType qIp = 0.0;
             for (int n = 0; n < meBC->nodesPerElement_; ++n) {
               qIp += v_shape_function(ip, n) * v_scalar(n);
             }
@@ -1395,7 +1400,8 @@ calc_projected_nodal_gradient_boundary(
             double* dqdxNN = stk::mesh::field_data(gradField, node_rels[nn]);
 
             for (int d = 0; d < ndim; ++d) {
-              double fac = qIp * v_scs_areav(ip, d) / v_dnv(nn);
+              const double fac =
+                stk::simd::get_data(qIp * v_scs_areav(ip, d) / v_dnv(nn), 0);
               Kokkos::atomic_add(dqdxNN + d, fac);
             }
           }
@@ -1440,11 +1446,17 @@ calc_projected_nodal_gradient_boundary(
     fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(
-    dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM);
+  const int bytes_per_thread =
+    sierra::nalu::get_num_bytes_pre_req_data<DoubleType>(
+      dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM);
 
-  auto v_shape_function = Kokkos::View<double**>(
+  auto v_shape_function = Kokkos::View<DoubleType**>(
     "shape_function", meBC->num_integration_points(), meBC->nodesPerElement_);
+  sierra::nalu::SharedMemView<
+    sierra::nalu::DoubleType**, sierra::nalu::DeviceShmem>
+    shape_function(
+      v_shape_function.data(), meBC->num_integration_points(),
+      meBC->nodesPerElement_);
 
   auto team_exec = sierra::nalu::get_host_team_policy(
     buckets.size(), bytes_per_team, bytes_per_thread);
@@ -1456,7 +1468,7 @@ calc_projected_nodal_gradient_boundary(
 
       EXPECT_EQ(b.topology(), topo);
 
-      sierra::nalu::ScratchViews<double> preReqData(
+      sierra::nalu::ScratchViews<DoubleType> preReqData(
         team, ndim, topo.num_nodes(), dataNeededNGP);
 
       Kokkos::parallel_for(
@@ -1466,7 +1478,7 @@ calc_projected_nodal_gradient_boundary(
             dataNeededNGP, ngpMesh, meta.side_rank(), face, preReqData);
           sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
-          meBC->shape_fcn(v_shape_function.data());
+          meBC->shape_fcn<>(shape_function);
           auto v_dnv = preReqData.get_scratch_view_1D(dnv);
           auto v_vector = preReqData.get_scratch_view_2D(vectorField);
           auto v_scs_areav =
@@ -1478,7 +1490,7 @@ calc_projected_nodal_gradient_boundary(
 
           for (int di = 0; di < ndim; ++di) {
             for (int ip = 0; ip < meBC->num_integration_points(); ++ip) {
-              double qIp = 0.0;
+              DoubleType qIp = 0.0;
               for (int n = 0; n < meBC->nodesPerElement_; ++n) {
                 qIp += v_shape_function(ip, n) * v_vector(n, di);
               }
@@ -1487,7 +1499,8 @@ calc_projected_nodal_gradient_boundary(
               double* dqdxNN = stk::mesh::field_data(gradField, node_rels[nn]);
 
               for (int d = 0; d < ndim; ++d) {
-                double fac = qIp * v_scs_areav(ip, d) / v_dnv(nn);
+                const double fac =
+                  stk::simd::get_data(qIp * v_scs_areav(ip, d) / v_dnv(nn), 0);
                 Kokkos::atomic_add(dqdxNN + di * ndim + d, fac);
               }
             }
@@ -1527,10 +1540,11 @@ calc_dual_nodal_volume(
     fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(
-    dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM);
+  const int bytes_per_thread =
+    sierra::nalu::get_num_bytes_pre_req_data<DoubleType>(
+      dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM);
 
-  auto v_shape_function = Kokkos::View<double**>(
+  auto v_shape_function = Kokkos::View<DoubleType**>(
     "shape_function", meSCV->num_integration_points(), meSCV->nodesPerElement_);
 
   auto team_exec = sierra::nalu::get_host_team_policy(
@@ -1543,7 +1557,7 @@ calc_dual_nodal_volume(
 
       EXPECT_EQ(b.topology(), topo);
 
-      sierra::nalu::ScratchViews<double> preReqData(
+      sierra::nalu::ScratchViews<DoubleType> preReqData(
         team, ndim, topo.num_nodes(), dataNeededNGP);
 
       Kokkos::parallel_for(
@@ -1562,9 +1576,10 @@ calc_dual_nodal_volume(
           const int* ipNodeMap = meSCV->ipNodeMap();
 
           for (int ip = 0; ip < meSCV->num_integration_points(); ++ip) {
-            double volIp = v_scv_vol(ip);
+            DoubleType volIp = v_scv_vol(ip);
             Kokkos::atomic_add(
-              stk::mesh::field_data(dnvField, node_rels[ipNodeMap[ip]]), volIp);
+              stk::mesh::field_data(dnvField, node_rels[ipNodeMap[ip]]),
+              stk::simd::get_data(volIp, 0));
           }
         });
     });

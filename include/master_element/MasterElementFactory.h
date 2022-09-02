@@ -39,6 +39,8 @@ public:
 
   template <typename AlgTraits>
   static MasterElement* get_surface_master_element();
+  static MasterElement*
+  get_surface_master_element_on_dev(const stk::topology& theTopo);
 
   static void clear();
 

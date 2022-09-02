@@ -127,11 +127,9 @@ StreletsUpwindEdgeAlg::execute()
 
       // Compute area vector related quantities and (U dot areaVec)
       DblType axdx = 0.0;
-      DblType asq = 0.0;
       for (int d = 0; d < nDim; ++d) {
         const DblType dxj =
           coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
-        asq += av[d] * av[d];
         axdx += av[d] * dxj;
       }
       const DblType inv_axdx = 1.0 / axdx;

@@ -184,13 +184,12 @@ ComputeWallFrictionVelocityAlgorithm::execute()
     double* p_bcVelocity = &ws_bcVelocity[0];
     double* p_density = &ws_density[0];
     double* p_viscosity = &ws_viscosity[0];
-    double* p_face_shape_function = &ws_face_shape_function[0];
-
-    // shape functions
+    SharedMemView<double**, HostShmem> p_face_shape_function(
+      ws_face_shape_function.data(), numScsBip, nodesPerFace);
     if (useShifted_)
-      meFC->shifted_shape_fcn(&p_face_shape_function[0]);
+      meFC->shifted_shape_fcn<>(p_face_shape_function);
     else
-      meFC->shape_fcn(&p_face_shape_function[0]);
+      meFC->shape_fcn<>(p_face_shape_function);
 
     const stk::mesh::Bucket::size_type length = b.size();
 
@@ -271,9 +270,8 @@ ComputeWallFrictionVelocityAlgorithm::execute()
         // interpolate to bip
         double rhoBip = 0.0;
         double muBip = 0.0;
-        const int offSetSF_face = ip * nodesPerFace;
         for (int ic = 0; ic < nodesPerFace; ++ic) {
-          const double r = p_face_shape_function[offSetSF_face + ic];
+          const double r = p_face_shape_function(ip, ic);
           rhoBip += r * p_density[ic];
           muBip += r * p_viscosity[ic];
           const int offSetFN = ic * nDim;

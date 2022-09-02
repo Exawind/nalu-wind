@@ -110,14 +110,19 @@ check_interpolation_at_ips(
 
   std::vector<double> meResult(me.num_integration_points(), 0.0);
 
-  std::vector<double> meShapeFunctions(
+  std::vector<DoubleType> meShapeFunctions(
     me.nodesPerElement_ * me.num_integration_points());
-  me.shape_fcn(meShapeFunctions.data());
+  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>
+    ShmemView(
+      meShapeFunctions.data(), me.num_integration_points(),
+      me.nodesPerElement_);
+  me.shape_fcn<>(ShmemView);
 
   for (int j = 0; j < me.num_integration_points(); ++j) {
     for (int i = 0; i < me.nodesPerElement_; ++i) {
       meResult[j] +=
-        meShapeFunctions[j * me.nodesPerElement_ + i] * ws_field[i];
+        stk::simd::get_data(meShapeFunctions[j * me.nodesPerElement_ + i], 0) *
+        ws_field[i];
     }
   }
 
@@ -148,10 +153,12 @@ check_derivatives_at_ips(
 
   std::vector<double> ws_field(me.nodesPerElement_);
   std::vector<double> ws_coords(me.nodesPerElement_ * dim);
+  sierra::nalu::SharedMemView<double**> elemCoords(
+    ws_coords.data(), me.nodesPerElement_, dim);
   for (int j = 0; j < me.nodesPerElement_; ++j) {
     const double* coords = stk::mesh::field_data(coordField, node_rels[j]);
     for (int d = 0; d < dim; ++d) {
-      ws_coords[j * dim + d] = coords[d];
+      elemCoords(j, d) = coords[d];
     }
     ws_field[j] = linField(coords);
   }
@@ -161,27 +168,20 @@ check_derivatives_at_ips(
     me.num_integration_points() * me.nodesPerElement_ * dim);
   std::vector<double> meDeriv(
     me.num_integration_points() * me.nodesPerElement_ * dim);
-  std::vector<double> meDetj(me.num_integration_points());
 
-  double error = 0.0;
-  me.grad_op(
-    1, ws_coords.data(), meGrad.data(), meDeriv.data(), meDetj.data(), &error);
-  EXPECT_EQ(error, 0.0);
+  sierra::nalu::SharedMemView<double***> gradop(
+    meGrad.data(), me.num_integration_points(), me.nodesPerElement_, dim);
+  sierra::nalu::SharedMemView<double***> deriv(
+    meDeriv.data(), me.num_integration_points(), me.nodesPerElement_, dim);
+  me.grad_op(elemCoords, gradop, deriv);
 
   for (int j = 0; j < me.num_integration_points(); ++j) {
     for (int i = 0; i < me.nodesPerElement_; ++i) {
       for (int d = 0; d < dim; ++d) {
-        meResult[j * dim + d] +=
-          meGrad[j * me.nodesPerElement_ * dim + i * dim + d] * ws_field[i];
+        meResult[j * dim + d] += gradop(j, i, d) * ws_field[i];
       }
     }
   }
-
-  // detj should be unity to floating point error
-  for (unsigned j = 0; j < meDetj.size(); ++j) {
-    EXPECT_NEAR(1, meDetj[j], tol);
-  }
-
   // derivative should be exact to floating point error
   for (unsigned j = 0; j < meResult.size(); ++j) {
     EXPECT_NEAR(meResult[j], polyResult[j], tol);

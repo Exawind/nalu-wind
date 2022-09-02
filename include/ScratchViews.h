@@ -100,15 +100,6 @@ public:
     MasterElement* meSCV,
     MasterElement* meFEM);
 
-  void fill_master_element_views_new_me(
-    const ElemDataRequestsGPU::DataEnumView& dataEnums,
-    SharedMemView<double**, SHMEM>* coordsView,
-    MasterElement* meFC,
-    MasterElement* meSCS,
-    MasterElement* meSCV,
-    MasterElement* meFEM,
-    int faceOrdinal = 0);
-
   KOKKOS_FUNCTION
   void fill_master_element_views_new_me(
     const ElemDataRequestsGPU::DataEnumView& dataEnums,
@@ -683,138 +674,6 @@ MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::create_master_element_views(
 
   return numScalars;
 }
-
-template <typename T, typename TEAMHANDLETYPE, typename SHMEM>
-void
-MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new_me(
-  const ElemDataRequestsGPU::DataEnumView& dataEnums,
-  SharedMemView<double**, SHMEM>* coordsView,
-  MasterElement* /* meFC */,
-  MasterElement* meSCS,
-  MasterElement* meSCV,
-  MasterElement* meFEM,
-  int /* faceOrdinal */)
-{
-  // Guard against calling MasterElement methods on SIMD data structures
-  static_assert(
-    std::is_same<T, double>::value,
-    "Cannot populate MasterElement Views for non-double data types");
-
-  double error = 0.0;
-  for (unsigned i = 0; i < dataEnums.size(); ++i) {
-    switch (dataEnums(i)) {
-    case FC_AREAV:
-      ThrowRequireMsg(
-        false, "ERROR, non-interleaving FC_AREAV is not supported.");
-      break;
-    case SCS_AREAV:
-      ThrowRequireMsg(
-        meSCS != nullptr,
-        "ERROR, meSCS needs to be non-null if SCS_AREAV is requested.");
-      ThrowRequireMsg(
-        coordsView != nullptr, "ERROR, coords null but SCS_AREAV requested.");
-      meSCS->determinant(*coordsView, scs_areav);
-      break;
-    case SCS_FACE_GRAD_OP:
-      ThrowRequireMsg(
-        false, "ERROR, non-interleaving FACE_GRAD_OP is not supported.");
-      break;
-    case SCS_SHIFTED_FACE_GRAD_OP:
-      ThrowRequireMsg(
-        false,
-        "ERROR, non-interleaving SCS_SHIFTED_FACE_GRAD_OP is not supported.");
-      break;
-    case SCS_GRAD_OP:
-      ThrowRequireMsg(
-        meSCS != nullptr,
-        "ERROR, meSCS needs to be non-null if SCS_GRAD_OP is requested.");
-      ThrowRequireMsg(
-        coordsView != nullptr, "ERROR, coords null but SCS_GRAD_OP requested.");
-      meSCS->grad_op(
-        1, &((*coordsView)(0, 0)), &dndx(0, 0, 0), &deriv(0, 0, 0), &det_j(0),
-        &error);
-      break;
-    case SCS_SHIFTED_GRAD_OP:
-      ThrowRequireMsg(
-        meSCS != nullptr,
-        "ERROR, meSCS needs to be non-null if SCS_GRAD_OP is requested.");
-      ThrowRequireMsg(
-        coordsView != nullptr, "ERROR, coords null but SCS_GRAD_OP requested.");
-      meSCS->shifted_grad_op(
-        1, &((*coordsView)(0, 0)), &dndx_shifted(0, 0, 0), &deriv(0, 0, 0),
-        &det_j(0), &error);
-      break;
-    case SCS_GIJ:
-      ThrowRequireMsg(
-        meSCS != nullptr,
-        "ERROR, meSCS needs to be non-null if SCS_GIJ is requested.");
-      ThrowRequireMsg(
-        coordsView != nullptr, "ERROR, coords null but SCS_GIJ requested.");
-      meSCS->gij(
-        &((*coordsView)(0, 0)), &gijUpper(0, 0, 0), &gijLower(0, 0, 0),
-        &deriv(0, 0, 0));
-      break;
-    case SCS_MIJ:
-      ThrowRequireMsg(
-        meSCV != nullptr,
-        "ERROR, meSCS needs to be non-null if SCS_MIJ is requested.");
-      ThrowRequireMsg(
-        coordsView != nullptr, "ERROR, coords null but SCS_MIJ requested.");
-      meSCS->Mij(&((*coordsView)(0, 0)), &metric(0, 0, 0), &deriv(0, 0, 0));
-      break;
-    case SCV_MIJ:
-      ThrowRequireMsg(
-        meSCV != nullptr,
-        "ERROR, meSCV needs to be non-null if SCV_MIJ is requested.");
-      ThrowRequireMsg(
-        coordsView != nullptr, "ERROR, coords null but SCV_MIJ requested.");
-      meSCV->Mij(&((*coordsView)(0, 0)), &metric(0, 0, 0), &deriv_scv(0, 0, 0));
-      break;
-    case SCV_VOLUME:
-      ThrowRequireMsg(
-        meSCV != nullptr,
-        "ERROR, meSCV needs to be non-null if SCV_VOLUME is requested.");
-      ThrowRequireMsg(
-        coordsView != nullptr, "ERROR, coords null but SCV_VOLUME requested.");
-      meSCV->determinant(*coordsView, scv_volume);
-      break;
-    case SCV_GRAD_OP:
-      ThrowRequireMsg(
-        meSCV != nullptr,
-        "ERROR, meSCV needs to be non-null if SCV_GRAD_OP is requested.");
-      ThrowRequireMsg(
-        coordsView != nullptr, "ERROR, coords null but SCV_GRAD_OP requested.");
-      meSCV->grad_op(
-        1, &((*coordsView)(0, 0)), &dndx_scv(0, 0, 0), &deriv_scv(0, 0, 0),
-        &det_j_scv(0), &error);
-      break;
-    case FEM_GRAD_OP:
-      ThrowRequireMsg(
-        meFEM != nullptr,
-        "ERROR, meFEM needs to be non-null if FEM_GRAD_OP is requested.");
-      ThrowRequireMsg(
-        coordsView != nullptr, "ERROR, coords null but FEM_GRAD_OP requested.");
-      meFEM->grad_op(
-        1, &((*coordsView)(0, 0)), &dndx_fem(0, 0, 0), &deriv_fem(0, 0, 0),
-        &det_j_fem(0), &error);
-      break;
-    case FEM_SHIFTED_GRAD_OP:
-      ThrowRequireMsg(
-        meFEM != nullptr, "ERROR, meFEM needs to be non-null if "
-                          "FEM_SHIFTED_GRAD_OP is requested.");
-      ThrowRequireMsg(
-        coordsView != nullptr, "ERROR, coords null but FEM_GRAD_OP requested.");
-      meFEM->shifted_grad_op(
-        1, &((*coordsView)(0, 0)), &dndx_fem(0, 0, 0), &deriv_fem(0, 0, 0),
-        &det_j_fem(0), &error);
-      break;
-
-    default:
-      break;
-    }
-  }
-}
-
 template <typename T, typename TEAMHANDLETYPE, typename SHMEM>
 void
 MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_static_meviews(
@@ -827,35 +686,35 @@ MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_static_meviews(
   for (unsigned i = 0; i < dataEnums.size(); ++i) {
     switch (dataEnums(i)) {
     case FC_SHAPE_FCN:
-      meFC->shape_fcn(fc_shape_fcn);
+      meFC->shape_fcn<>(fc_shape_fcn);
       break;
 
     case FC_SHIFTED_SHAPE_FCN:
-      meFC->shifted_shape_fcn(fc_shifted_shape_fcn);
+      meFC->shifted_shape_fcn<>(fc_shifted_shape_fcn);
       break;
 
     case SCS_SHAPE_FCN:
-      meSCS->shape_fcn(scs_shape_fcn);
+      meSCS->shape_fcn<>(scs_shape_fcn);
       break;
 
     case SCS_SHIFTED_SHAPE_FCN:
-      meSCS->shifted_shape_fcn(scs_shifted_shape_fcn);
+      meSCS->shifted_shape_fcn<>(scs_shifted_shape_fcn);
       break;
 
     case SCV_SHAPE_FCN:
-      meSCV->shape_fcn(scv_shape_fcn);
+      meSCV->shape_fcn<>(scv_shape_fcn);
       break;
 
     case SCV_SHIFTED_SHAPE_FCN:
-      meSCV->shifted_shape_fcn(scv_shifted_shape_fcn);
+      meSCV->shifted_shape_fcn<>(scv_shifted_shape_fcn);
       break;
 
     case FEM_SHAPE_FCN:
-      meFEM->shape_fcn(fem_shape_fcn);
+      meFEM->shape_fcn<>(fem_shape_fcn);
       break;
 
     case FEM_SHIFTED_SHAPE_FCN:
-      meFEM->shifted_shape_fcn(fem_shifted_shape_fcn);
+      meFEM->shifted_shape_fcn<>(fem_shifted_shape_fcn);
       break;
 
     default:

@@ -16,6 +16,10 @@
 #include "AlgTraits.h"
 #include "NGPInstance.h"
 
+#include <Kokkos_CopyViews.hpp>
+#include <Kokkos_Macros.hpp>
+#include <Kokkos_Parallel.hpp>
+
 #include <stk_mesh/base/Entity.hpp>
 
 #include <array>
@@ -27,91 +31,6 @@ namespace nalu {
 
 class TimeIntegrator;
 class SolutionOptions;
-
-template <typename AlgTraits, typename LambdaFunction, typename ViewType>
-void
-get_scv_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_view)
-{
-  static_assert(ViewType::Rank == 2u, "2D View");
-  ThrowRequireMsg(
-    shape_fn_view.extent_int(0) == AlgTraits::numScvIp_,
-    "Inconsistent number of scv ips");
-  ThrowRequireMsg(
-    shape_fn_view.extent_int(1) == AlgTraits::nodesPerElement_,
-    "Inconsistent number of of nodes");
-
-  double tmp_data[AlgTraits::numScvIp_ * AlgTraits::nodesPerElement_];
-  lambdaFunction(tmp_data);
-
-  DoubleType* data = &shape_fn_view(0, 0);
-  for (int i = 0; i < AlgTraits::numScvIp_ * AlgTraits::nodesPerElement_; ++i) {
-    data[i] = tmp_data[i];
-  }
-}
-
-template <typename AlgTraits, typename LambdaFunction, typename ViewType>
-void
-get_scs_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_view)
-{
-  static_assert(ViewType::Rank == 2u, "2D View");
-  ThrowRequireMsg(
-    shape_fn_view.extent_int(0) == AlgTraits::numScsIp_,
-    "Inconsistent number of scs ips");
-  ThrowRequireMsg(
-    shape_fn_view.extent_int(1) == AlgTraits::nodesPerElement_,
-    "Inconsistent number of of nodes");
-
-  double tmp_data[AlgTraits::numScsIp_ * AlgTraits::nodesPerElement_];
-  lambdaFunction(tmp_data);
-
-  DoubleType* data = &shape_fn_view(0, 0);
-  for (int i = 0; i < AlgTraits::numScsIp_ * AlgTraits::nodesPerElement_; ++i) {
-    data[i] = tmp_data[i];
-  }
-}
-
-template <typename AlgTraits, typename LambdaFunction, typename ViewType>
-void
-get_fem_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_view)
-{
-  static_assert(ViewType::Rank == 2u, "2D View");
-  ThrowRequireMsg(
-    shape_fn_view.extent_int(0) == AlgTraits::numGp_,
-    "Inconsistent number of Gauss points");
-  ThrowRequireMsg(
-    shape_fn_view.extent_int(1) == AlgTraits::nodesPerElement_,
-    "Inconsistent number of of nodes");
-
-  double tmp_data[AlgTraits::numGp_ * AlgTraits::nodesPerElement_];
-  lambdaFunction(tmp_data);
-
-  DoubleType* data = &shape_fn_view(0, 0);
-  for (int i = 0; i < AlgTraits::numGp_ * AlgTraits::nodesPerElement_; ++i) {
-    data[i] = tmp_data[i];
-  }
-}
-
-template <typename BcAlgTraits, typename LambdaFunction, typename ViewType>
-void
-get_face_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_view)
-{
-  static_assert(ViewType::Rank == 2u, "2D View");
-  ThrowRequireMsg(
-    shape_fn_view.extent_int(0) == BcAlgTraits::numFaceIp_,
-    "Inconsistent number of face ips");
-  ThrowRequireMsg(
-    shape_fn_view.extent_int(1) == BcAlgTraits::nodesPerFace_,
-    "Inconsistent number of of nodes");
-
-  double tmp_data[BcAlgTraits::numFaceIp_ * BcAlgTraits::nodesPerFace_];
-  lambdaFunction(tmp_data);
-
-  DoubleType* data = &shape_fn_view(0, 0);
-  for (int i = 0; i < BcAlgTraits::numFaceIp_ * BcAlgTraits::nodesPerFace_;
-       ++i) {
-    data[i] = tmp_data[i];
-  }
-}
 
 /** Base class for computational kernels in Nalu
  *

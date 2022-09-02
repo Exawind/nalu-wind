@@ -92,6 +92,7 @@ private:
   // Integration point to node mapping and master element for interior
   const int* faceIpNodeMap_{nullptr};
   MasterElement* meSCS_{nullptr};
+  MasterElement* meSCS_dev_{nullptr};
 
   // Peclet function
   PecletFunction<DoubleType>* pecletFunction_{nullptr};

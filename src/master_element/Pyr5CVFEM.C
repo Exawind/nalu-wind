@@ -43,11 +43,13 @@ regularize_apex(double t_tmp)
   return t;
 }
 
-template <typename ViewType>
+template <typename SCALAR, typename SHMEM>
 KOKKOS_FUNCTION void
-pyramid_shape_fcn(const int npts, const double* par_coord, ViewType& shape_fcn)
+pyramid_shape_fcn(
+  const int npts,
+  const double* par_coord,
+  SharedMemView<SCALAR**, SHMEM>& shape_fcn)
 {
-
   for (int j = 0; j < npts; ++j) {
     const int k = 3 * j;
     const double r = par_coord[k + 0];
@@ -63,10 +65,12 @@ pyramid_shape_fcn(const int npts, const double* par_coord, ViewType& shape_fcn)
   }
 }
 
-template <typename ViewType>
+template <typename SCALAR, typename SHMEM>
 KOKKOS_FUNCTION void
 pyramid_shifted_shape_fcn(
-  const int npts, const double* par_coord, ViewType& shape_fcn)
+  const int npts,
+  const double* par_coord,
+  SharedMemView<SCALAR**, SHMEM>& shape_fcn)
 {
   const double one = 1.0;
   for (int j = 0; j < npts; ++j) {
@@ -430,7 +434,7 @@ PyrSCV::determinant(
 //--------------------------------------------------------------------------
 void
 PyrSCV::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
@@ -452,34 +456,38 @@ PyrSCV::shifted_grad_op(
   generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
+template <typename SCALAR, typename SHMEM>
 KOKKOS_FUNCTION void
-PyrSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+PyrSCV::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   pyramid_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
 }
-
 KOKKOS_FUNCTION void
-PyrSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+PyrSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+void
+PyrSCV::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+PyrSCV::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   pyramid_shifted_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
 }
-
-//--------------------------------------------------------------------------
-//-------- shape_fcn -------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-PyrSCV::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+PyrSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  pyr_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+  shifted_shape_fcn<>(shpfc);
 }
-
-//--------------------------------------------------------------------------
-//-------- shifted_shape_fcn -----------------------------------------------
-//--------------------------------------------------------------------------
 void
-PyrSCV::shifted_shape_fcn(double* shpfc)
+PyrSCV::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
 {
-  shifted_pyr_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -750,7 +758,7 @@ PyrSCS::determinant(
 //--------------------------------------------------------------------------
 void
 PyrSCS::grad_op(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
@@ -760,25 +768,12 @@ PyrSCS::grad_op(
 
 void
 PyrSCS::grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
+  const SharedMemView<double**>& coords,
+  SharedMemView<double***>& gradop,
+  SharedMemView<double***>& deriv)
 {
-  int lerr = 0;
-
-  pyr_derivative(numIntPoints_, &intgLoc_[0], deriv);
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(pyr_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "sorry, negative PyrSCS volume.." << std::endl;
+  pyr_deriv(numIntPoints_, &intgLoc_[0], deriv);
+  generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -792,68 +787,6 @@ PyrSCS::shifted_grad_op(
 {
   shifted_pyr_deriv(numIntPoints_, &intgLocShift_[0], deriv);
   generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
-}
-
-void
-PyrSCS::shifted_grad_op(
-  const int nelem,
-  const double* coords,
-  double* gradop,
-  double* deriv,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-
-  shifted_pyr_derivative(numIntPoints_, &intgLocShift_[0], deriv);
-
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(pyr_gradient_operator)
-  (&nelem, &npe, &nint, deriv, coords, gradop, det_j, error, &lerr);
-
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "sorry, negative PyrSCS volume.." << std::endl;
-}
-
-//--------------------------------------------------------------------------
-//-------- face_grad_op ----------------------------------------------------
-//--------------------------------------------------------------------------
-void
-PyrSCS::face_grad_op(
-  const int nelem,
-  const int face_ordinal,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-  const int ndim = 3;
-  const int nface = 1;
-  double dpsi[15];
-
-  // ordinal four is a quad4
-  const int npf = (face_ordinal < 4) ? 3 : 4;
-
-  for (int n = 0; n < nelem; n++) {
-
-    for (int k = 0; k < npf; k++) {
-
-      const int row = 9 * face_ordinal + k * ndim;
-      pyr_derivative(nface, &intgExpFace_[row], dpsi);
-
-      const int npe = nodesPerElement_;
-      SIERRA_FORTRAN(pyr_gradient_operator)
-      (&nface, &npe, &nface, dpsi, &coords[15 * n],
-       &gradop[k * nelem * 15 + n * 15], &det_j[npf * n + k], error, &lerr);
-
-      if (lerr)
-        NaluEnv::self().naluOutput()
-          << "problem with PyrSCS::face_grad_op." << std::endl;
-    }
-  }
 }
 
 //--------------------------------------------------------------------------
@@ -899,46 +832,6 @@ PyrSCS::shifted_face_grad_op(
   shifted_pyr_deriv(numFaceIps, &intgExpFaceShift_[dim * offset], deriv);
   generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
-
-void
-PyrSCS::shifted_face_grad_op(
-  const int nelem,
-  const int face_ordinal,
-  const double* coords,
-  double* gradop,
-  double* det_j,
-  double* error)
-{
-  int lerr = 0;
-  const int ndim = 3;
-  const int nface = 1;
-  double dpsi[15];
-
-  // ordinal four is a quad4
-  const int npf = (face_ordinal < 4) ? 3 : 4;
-
-  // quad4 is the only face that can be safely shifted
-  const double* p_intgExp =
-    (face_ordinal < 4) ? &intgExpFace_[0] : &intgExpFaceShift_[0];
-  for (int n = 0; n < nelem; n++) {
-
-    for (int k = 0; k < npf; k++) {
-
-      const int row = 9 * face_ordinal + k * ndim;
-      shifted_pyr_derivative(nface, &p_intgExp[row], dpsi);
-
-      const int npe = nodesPerElement_;
-      SIERRA_FORTRAN(pyr_gradient_operator)
-      (&nface, &npe, &nface, dpsi, &coords[15 * n],
-       &gradop[k * nelem * 15 + n * 15], &det_j[npf * n + k], error, &lerr);
-
-      if (lerr)
-        NaluEnv::self().naluOutput()
-          << "problem with PyrSCS::shifted_face_grad_op." << std::endl;
-    }
-  }
-}
-
 double
 PyrSCS::parametric_distance(const std::array<double, 3>& x)
 {
@@ -1198,22 +1091,12 @@ PyrSCS::shifted_pyr_derivative(
 //--------------------------------------------------------------------------
 void
 PyrSCS::gij(
-  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   generic_gij_3d<AlgTraitsPyr5>(deriv, coords, gupper, glower);
-}
-
-void
-PyrSCS::gij(
-  const double* coords, double* gupperij, double* glowerij, double* deriv)
-{
-  const int npe = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(threed_gij)
-  (&npe, &nint, deriv, coords, gupperij, glowerij);
 }
 
 //--------------------------------------------------------------------------
@@ -1254,34 +1137,38 @@ PyrSCS::scsIpEdgeOrd()
   return &scsIpEdgeOrd_[0];
 }
 
+template <typename SCALAR, typename SHMEM>
 KOKKOS_FUNCTION void
-PyrSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+PyrSCS::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   pyramid_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
 }
-
 KOKKOS_FUNCTION void
-PyrSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+PyrSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+void
+PyrSCS::shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
+{
+  shape_fcn<>(shpfc);
+}
+
+template <typename SCALAR, typename SHMEM>
+KOKKOS_FUNCTION void
+PyrSCS::shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   pyramid_shifted_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
 }
-
-//--------------------------------------------------------------------------
-//-------- shape_fcn -------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-PyrSCS::shape_fcn(double* shpfc)
+KOKKOS_FUNCTION void
+PyrSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
-  pyr_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+  shifted_shape_fcn<>(shpfc);
 }
-
-//--------------------------------------------------------------------------
-//-------- shifted_shape_fcn -----------------------------------------------
-//--------------------------------------------------------------------------
 void
-PyrSCS::shifted_shape_fcn(double* shpfc)
+PyrSCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
 {
-  shifted_pyr_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  shifted_shape_fcn<>(shpfc);
 }
 
 //--------------------------------------------------------------------------

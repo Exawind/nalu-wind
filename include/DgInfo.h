@@ -54,7 +54,9 @@ public:
     MasterElement* meSCSurrent,
     stk::topology currentElementTopo,
     const int nDim,
-    double searchTolerance);
+    double searchTolerance,
+    MasterElement* meFCDevCurrent = nullptr,
+    MasterElement* meSCSDevCurrent = nullptr);
 
   ~DgInfo();
 
@@ -70,6 +72,8 @@ public:
   const int currentFaceOrdinal_;
   MasterElement* meFCCurrent_;
   MasterElement* meSCSCurrent_;
+  MasterElement* meFC_dev_Current_;
+  MasterElement* meSCS_dev_Current_;
   stk::topology currentElementTopo_;
 
   int nDim_;
