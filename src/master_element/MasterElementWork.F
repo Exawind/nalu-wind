@@ -181,7 +181,7 @@ c
          deriv(3,4,j) = 1.0
       end do
       
-      return;
+      return
       end
 
       subroutine tri_derivative( npts, deriv )
@@ -220,7 +220,7 @@ c
          
       end do
       
-      return;
+      return
       end
 
       subroutine hex_gradient_operator( nelem, npe, 

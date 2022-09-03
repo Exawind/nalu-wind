@@ -1,10 +1,4 @@
 target_sources(nalu PRIVATE
-   ${CMAKE_CURRENT_SOURCE_DIR}/CalculateBentHexVolume.F
-   ${CMAKE_CURRENT_SOURCE_DIR}/CalculateHexVolume.F
-   ${CMAKE_CURRENT_SOURCE_DIR}/CalculateOctohedronVolume.F
-   ${CMAKE_CURRENT_SOURCE_DIR}/CalculatePolyhedralArea.F
-   ${CMAKE_CURRENT_SOURCE_DIR}/CalculatePolyhedralVolume.F
-   ${CMAKE_CURRENT_SOURCE_DIR}/CalculateQuadArea.F
    ${CMAKE_CURRENT_SOURCE_DIR}/Hex27CVFEM.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Hex8CVFEM.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Hex8FEM.C
