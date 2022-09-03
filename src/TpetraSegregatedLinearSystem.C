@@ -1450,8 +1450,6 @@ TpetraSegregatedLinearSystem::applyDirichletBCs(
 {
   stk::mesh::MetaData& metaData = realm_.meta_data();
 
-  double adbc_time = -NaluEnv::self().nalu_time();
-
   const stk::mesh::Selector selector =
     (metaData.locally_owned_part() | metaData.globally_shared_part()) &
     stk::mesh::selectUnion(parts) & stk::mesh::selectField(*solutionField) &
@@ -1532,7 +1530,6 @@ TpetraSegregatedLinearSystem::applyDirichletBCs(
       }
     }
   }
-  adbc_time += NaluEnv::self().nalu_time();
 }
 
 void
@@ -1606,8 +1603,6 @@ TpetraSegregatedLinearSystem::solve(stk::mesh::FieldBase* linearSolutionField)
     writeToFile(eqSysName_.c_str(), false);
   }
 
-  double solve_time = -NaluEnv::self().nalu_time();
-
   int iters;
   double finalResidNorm;
 
@@ -1621,8 +1616,6 @@ TpetraSegregatedLinearSystem::solve(stk::mesh::FieldBase* linearSolutionField)
 
   const int status =
     linearSolver->solve(sln_, iters, finalResidNorm, realm_.isFinalOuterIter_);
-
-  solve_time += NaluEnv::self().nalu_time();
 
   if (linearSolver->getConfig()->getWriteMatrixFiles()) {
     writeSolutionToFile(eqSysName_.c_str());
