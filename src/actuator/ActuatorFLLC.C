@@ -56,7 +56,7 @@ FilteredLiftingLineCorrection::compute_lift_force_distribution()
     const auto offset = info.offset_;
     const auto nPoints = info.nPoints_;
     // debug size checks
-    ThrowAssert(offset + nPoints < G.size());
+    ThrowAssert(offset + nPoints < static_cast<int>(G.size()));
 
     auto range_policy =
       Kokkos::RangePolicy<exec_space>(offset, offset + nPoints);
@@ -97,8 +97,8 @@ FilteredLiftingLineCorrection::grad_lift_force_distribution()
 
     const auto offset = info.offset_;
     const auto nPoints = info.nPoints_;
-    ThrowAssert(offset + nPoints < G.size());
-    ThrowAssert(offset + nPoints < deltaG.size());
+    ThrowAssert(offset + nPoints < static_cast<int>(G.size()));
+    ThrowAssert(offset + nPoints < static_cast<int>(deltaG.size()));
 
     auto range_policy =
       Kokkos::RangePolicy<exec_space>(offset, offset + nPoints);
