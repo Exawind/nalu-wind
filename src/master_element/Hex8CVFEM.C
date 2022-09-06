@@ -13,15 +13,253 @@
 #include <master_element/TensorOps.h>
 #include <master_element/Hex8GeometryFunctions.h>
 
-#include <FORTRAN_Proto.h>
 #include <NaluEnv.h>
 
 #include <cmath>
 #include <iostream>
 #include <array>
+#include <limits>
 
 namespace sierra {
 namespace nalu {
+
+template <typename DBLTYPE, typename SHMEM>
+KOKKOS_FUNCTION void
+hex8_derivative(
+  const SharedMemView<const double**, SHMEM>& par_coord,
+  SharedMemView<DBLTYPE***, SHMEM>& deriv)
+{
+  // formal parameters - input:
+  //     par_coord     real  parametric coordinates of the points to be
+  //                         evaluated (typically, the gauss pts)
+  //
+  // formal parameters - output:
+  //     deriv         real  shape function derivatives evaluated at
+  //                         evaluation points.
+  //
+  //**********************************************************************
+#ifdef KOKKOS_ENABLE_CUDA
+  if (8 != deriv.extent(1))
+    ThrowErrorMsgDevice("hex8_derivative: Error in derivative array index 1");
+  if (3 != deriv.extent(2))
+    ThrowErrorMsgDevice("hex8_derivative: Error in derivative array index 2");
+  if (3 != par_coord.extent(1))
+    ThrowErrorMsgDevice("hex8_derivative: Error in par_coord array index 1");
+  if (deriv.extent(0) != par_coord.extent(0))
+    ThrowErrorMsgDevice(
+      "hex8_derivative: Error in deriv or par_coord array index 0");
+#else
+  ThrowRequireMsg(
+    8 == deriv.extent(1), "hex8_derivative: Error in derivative array");
+  ThrowRequireMsg(
+    3 == deriv.extent(2), "hex8_derivative: Error in derivative array");
+  ThrowRequireMsg(
+    3 == par_coord.extent(1), "hex8_derivative: Error in derivative array");
+  ThrowRequireMsg(
+    deriv.extent(0) == par_coord.extent(0),
+    "hex8_derivative: Error in derivative array");
+#endif
+
+  const int npts = deriv.extent(0);
+
+  const double half = 1.0 / 2.0;
+  const double one4th = 1.0 / 4.0;
+
+  for (int j = 0; j < npts; ++j) {
+    const double s1 = par_coord(j, 0);
+    const double s2 = par_coord(j, 1);
+    const double s3 = par_coord(j, 2);
+
+    const double s1s2 = s1 * s2;
+    const double s2s3 = s2 * s3;
+    const double s1s3 = s1 * s3;
+
+    deriv(j, 0, 0) = half * (s3 + s2) - s2s3 - one4th;
+    deriv(j, 1, 0) = half * (-s3 - s2) + s2s3 + one4th;
+    deriv(j, 2, 0) = half * (-s3 + s2) - s2s3 + one4th;
+    deriv(j, 3, 0) = half * (+s3 - s2) + s2s3 - one4th;
+    deriv(j, 4, 0) = half * (-s3 + s2) + s2s3 - one4th;
+    deriv(j, 5, 0) = half * (+s3 - s2) - s2s3 + one4th;
+    deriv(j, 6, 0) = half * (+s3 + s2) + s2s3 + one4th;
+    deriv(j, 7, 0) = half * (-s3 - s2) - s2s3 - one4th;
+
+    deriv(j, 0, 1) = half * (s3 + s1) - s1s3 - one4th;
+    deriv(j, 1, 1) = half * (s3 - s1) + s1s3 - one4th;
+    deriv(j, 2, 1) = half * (-s3 + s1) - s1s3 + one4th;
+    deriv(j, 3, 1) = half * (-s3 - s1) + s1s3 + one4th;
+    deriv(j, 4, 1) = half * (-s3 + s1) + s1s3 - one4th;
+    deriv(j, 5, 1) = half * (-s3 - s1) - s1s3 - one4th;
+    deriv(j, 6, 1) = half * (s3 + s1) + s1s3 + one4th;
+    deriv(j, 7, 1) = half * (s3 - s1) - s1s3 + one4th;
+
+    deriv(j, 0, 2) = half * (s2 + s1) - s1s2 - one4th;
+    deriv(j, 1, 2) = half * (s2 - s1) + s1s2 - one4th;
+    deriv(j, 2, 2) = half * (-s2 - s1) - s1s2 - one4th;
+    deriv(j, 3, 2) = half * (-s2 + s1) + s1s2 - one4th;
+    deriv(j, 4, 2) = half * (-s2 - s1) + s1s2 + one4th;
+    deriv(j, 5, 2) = half * (-s2 + s1) - s1s2 + one4th;
+    deriv(j, 6, 2) = half * (s2 + s1) + s1s2 + one4th;
+    deriv(j, 7, 2) = half * (s2 - s1) - s1s2 + one4th;
+  }
+}
+
+int
+hex_gradient_operator(
+  const SharedMemView<const double***, HostShmem>& cordel,
+  const SharedMemView<const double***, HostShmem>& deriv,
+  SharedMemView<double****, HostShmem>& gradop,
+  SharedMemView<double**, HostShmem>& det_j,
+  SharedMemView<double*, HostShmem>& err)
+{
+
+  //**********************************************************************
+  //**********************************************************************
+  //
+  // description:
+  //    This  routine returns the gradient operator, determinate of
+  //    the Jacobian, and error count for an element workset of 3D
+  //    subcontrol surface elements The gradient operator and the
+  //    determinate of the jacobians are computed at the center of
+  //    each control surface (the locations for the integration rule
+  //    are at the center of each control surface).
+  //
+  // formal parameters - input:
+  //    deriv         real  shape function derivatives evaluated at the
+  //                        integration stations
+  //    cordel        real  element local coordinates
+  //
+  // formal parameters - output:
+  //    gradop        real  element gradient operator at each integration
+  //                        station
+  //    det_j         real  determinate of the jacobian at each integration
+  //                        station
+  //    err           real  positive volume check (0 = no error, 1 = error))
+  //**********************************************************************
+  //
+  const unsigned nint = deriv.extent(0);
+  const unsigned npe = deriv.extent(1);
+  ThrowRequireMsg(
+    3 == deriv.extent(2), "hex_gradient_operator: Error in derivative array");
+
+  const unsigned nelem = cordel.extent(0);
+  ThrowRequireMsg(
+    npe == cordel.extent(1),
+    "hex_gradient_operator: Error in coorindate array");
+  ThrowRequireMsg(
+    3 == cordel.extent(2), "hex_gradient_operator: Error in coorindate array");
+
+  ThrowRequireMsg(
+    nint == gradop.extent(0), "hex_gradient_operator: Error in gradient array");
+  ThrowRequireMsg(
+    nelem == gradop.extent(1),
+    "hex_gradient_operator: Error in gradient array");
+  ThrowRequireMsg(
+    npe == gradop.extent(2), "hex_gradient_operator: Error in gradient array");
+  ThrowRequireMsg(
+    3 == gradop.extent(3), "hex_gradient_operator: Error in gradient array");
+
+  ThrowRequireMsg(
+    nint == det_j.extent(0),
+    "hex_gradient_operator: Error in determinent array");
+  ThrowRequireMsg(
+    nelem == det_j.extent(1),
+    "hex_gradient_operator: Error in determinent array");
+
+  ThrowRequireMsg(
+    nelem == err.extent(0), "hex_gradient_operator: Error in error array");
+
+  const double realmin = std::numeric_limits<double>::min();
+
+  for (unsigned ke = 0; ke < nelem; ++ke)
+    err(ke) = 0;
+
+  for (unsigned ki = 0; ki < nint; ++ki) {
+    for (unsigned ke = 0; ke < nelem; ++ke) {
+      double dx_ds0 = 0;
+      double dx_ds1 = 0;
+      double dx_ds2 = 0;
+      double dy_ds0 = 0;
+      double dy_ds1 = 0;
+      double dy_ds2 = 0;
+      double dz_ds0 = 0;
+      double dz_ds1 = 0;
+      double dz_ds2 = 0;
+
+      // calculate the jacobian at the integration station -
+      for (unsigned kn = 0; kn < npe; ++kn) {
+
+        dx_ds0 += deriv(ki, kn, 0) * cordel(ke, kn, 0);
+        dx_ds1 += deriv(ki, kn, 1) * cordel(ke, kn, 0);
+        dx_ds2 += deriv(ki, kn, 2) * cordel(ke, kn, 0);
+
+        dy_ds0 += deriv(ki, kn, 0) * cordel(ke, kn, 1);
+        dy_ds1 += deriv(ki, kn, 1) * cordel(ke, kn, 1);
+        dy_ds2 += deriv(ki, kn, 2) * cordel(ke, kn, 1);
+
+        dz_ds0 += deriv(ki, kn, 0) * cordel(ke, kn, 2);
+        dz_ds1 += deriv(ki, kn, 1) * cordel(ke, kn, 2);
+        dz_ds2 += deriv(ki, kn, 2) * cordel(ke, kn, 2);
+      }
+
+      // calculate the determinate of the jacobian at the integration station -
+      det_j(ki, ke) = dx_ds0 * (dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2) +
+                      dy_ds0 * (dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2) +
+                      dz_ds0 * (dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2);
+
+      // protect against a negative or small value for the determinate of the
+      // jacobian. The value of real_min (set in precision.par) represents
+      // the smallest Real value (based upon the precision set for this
+      // compilation) which the machine can represent -
+      double test = det_j(ke, ki);
+      if (test <= 1.e6 * realmin) {
+        test = 1;
+        err(ke) = 1;
+      }
+      const double denom = 1.0 / test;
+
+      // compute the gradient operators at the integration station -
+
+      const double ds0_dx = denom * (dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2);
+      const double ds1_dx = denom * (dz_ds0 * dy_ds2 - dy_ds0 * dz_ds2);
+      const double ds2_dx = denom * (dy_ds0 * dz_ds1 - dz_ds0 * dy_ds1);
+
+      const double ds0_dy = denom * (dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2);
+      const double ds1_dy = denom * (dx_ds0 * dz_ds2 - dz_ds0 * dx_ds2);
+      const double ds2_dy = denom * (dz_ds0 * dx_ds1 - dx_ds0 * dz_ds1);
+
+      const double ds0_dz = denom * (dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2);
+      const double ds1_dz = denom * (dy_ds0 * dx_ds2 - dx_ds0 * dy_ds2);
+      const double ds2_dz = denom * (dx_ds0 * dy_ds1 - dy_ds0 * dx_ds1);
+
+      for (unsigned kn = 0; kn < npe; ++kn) {
+
+        gradop(ki, ke, kn, 0) = deriv(ki, kn, 0) * ds0_dx +
+                                deriv(ki, kn, 1) * ds1_dx +
+                                deriv(ki, kn, 2) * ds2_dx;
+
+        gradop(ki, ke, kn, 1) = deriv(ki, kn, 0) * ds0_dy +
+                                deriv(ki, kn, 1) * ds1_dy +
+                                deriv(ki, kn, 2) * ds2_dy;
+
+        gradop(ki, ke, kn, 2) = deriv(ki, kn, 0) * ds0_dz +
+                                deriv(ki, kn, 1) * ds1_dz +
+                                deriv(ki, kn, 2) * ds2_dz;
+      }
+    }
+  }
+
+  // summarize volume error checks -
+  double sum = 0;
+  for (unsigned ke = 0; ke < nelem; ++ke)
+    sum += err(ke);
+  int nerr = 0;
+  if (sum)
+    // flag error -
+    for (unsigned ke = 0; ke < nelem; ++ke)
+      if (err(ke))
+        nerr = ke;
+  return nerr;
+}
 
 template <typename SCALAR, typename SHMEM>
 KOKKOS_INLINE_FUNCTION void
@@ -167,7 +405,9 @@ HexSCV::grad_op(
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  hex8_derivative(numIntPoints_, &intgLoc_[0], deriv);
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
@@ -177,7 +417,9 @@ HexSCV::grad_op(
   SharedMemView<double***>& gradop,
   SharedMemView<double***>& deriv)
 {
-  hex8_derivative(numIntPoints_, &intgLoc_[0], deriv);
+  const SharedMemView<const double**, HostShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
@@ -190,7 +432,9 @@ HexSCV::shifted_grad_op(
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  hex8_derivative(numIntPoints_, &intgLocShift_[0], deriv);
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    intgLocShift_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
@@ -209,7 +453,9 @@ HexSCV::Mij(
   SharedMemView<DoubleType***, DeviceShmem>& metric,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  hex8_derivative(numIntPoints_, &intgLoc_[0], deriv);
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
   generic_Mij_3d<AlgTraitsHex8>(deriv, coords, metric);
 }
 
@@ -282,7 +528,9 @@ HexSCS::grad_op(
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  hex8_derivative(numIntPoints_, &intgLoc_[0], deriv);
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
@@ -292,7 +540,9 @@ HexSCS::grad_op(
   SharedMemView<double***>& gradop,
   SharedMemView<double***>& deriv)
 {
-  hex8_derivative(numIntPoints_, &intgLoc_[0], deriv);
+  const SharedMemView<const double**, HostShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
@@ -305,7 +555,9 @@ HexSCS::shifted_grad_op(
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  hex8_derivative(numIntPoints_, &intgLocShift_[0], deriv);
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    intgLocShift_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
@@ -380,7 +632,10 @@ HexSCS::face_grad_op_t(
   const double* exp_face =
     shifted ? &intgExpFaceShift_[0][0][0] : &intgExpFace_[0][0][0];
   const int offset = traits::numFaceIp_ * traits::nDim_ * face_ordinal;
-  hex8_derivative(traits::numFaceIp_, &exp_face[offset], deriv);
+
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    &exp_face[offset], traits::numFaceIp_, nDim_);
+  hex8_derivative(par_coord, deriv);
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
@@ -416,7 +671,9 @@ HexSCS::gij(
   SharedMemView<DoubleType***, DeviceShmem>& glower,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  hex8_derivative(numIntPoints_, &intgLoc_[0], deriv);
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
   generic_gij_3d<AlgTraitsHex8>(deriv, coords, gupper, glower);
 }
 
@@ -435,7 +692,9 @@ HexSCS::Mij(
   SharedMemView<DoubleType***, DeviceShmem>& metric,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  hex8_derivative(numIntPoints_, &intgLoc_[0], deriv);
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
   generic_Mij_3d<AlgTraitsHex8>(deriv, coords, metric);
 }
 
@@ -763,15 +1022,21 @@ HexSCS::general_face_grad_op(
 {
   int lerr = 0;
   const int nface = 1;
+  const int npe = nodesPerElement_;
 
   double dpsi[24];
 
-  SIERRA_FORTRAN(hex_derivative)
-  (&nface, &isoParCoord[0], dpsi);
+  const SharedMemView<const double**, HostShmem> par_coord(
+    isoParCoord, nface, 3);
+  SharedMemView<double***, HostShmem> deriv(&dpsi[0], nface, npe, 3);
 
-  const int npe = nodesPerElement_;
-  SIERRA_FORTRAN(hex_gradient_operator)
-  (&nface, &npe, &nface, dpsi, &coords[0], &gradop[0], &det_j[0], error, &lerr);
+  hex8_derivative(par_coord, deriv);
+
+  const SharedMemView<const double***, HostShmem> cordel(coords, nface, npe, 3);
+  SharedMemView<double****, HostShmem> grad(gradop, nface, nface, npe, 3);
+  SharedMemView<double**, HostShmem> det(det_j, nface, nface);
+  SharedMemView<double*, HostShmem> err(error, nface);
+  lerr = hex_gradient_operator(cordel, deriv, grad, det, err);
 
   if (lerr)
     NaluEnv::self().naluOutput()

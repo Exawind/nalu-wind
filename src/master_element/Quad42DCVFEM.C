@@ -15,7 +15,6 @@
 #include <AlgTraits.h>
 
 #include <NaluEnv.h>
-#include <FORTRAN_Proto.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
@@ -59,11 +58,16 @@ quad_derivative(
 
 //-------- quad_gradient_operator
 //-----------------------------------------------------
-template <int nint, int npe, typename DBLTYPE, typename SHMEM>
+template <
+  int nint,
+  int npe,
+  typename DBLTYPE,
+  typename CONST_DBLTYPE,
+  typename SHMEM>
 KOKKOS_FUNCTION void
 quad_gradient_operator(
   const SharedMemView<DBLTYPE***, SHMEM>& deriv,
-  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  const SharedMemView<CONST_DBLTYPE**, SHMEM>& coords,
   SharedMemView<DBLTYPE***, SHMEM>& gradop)
 {
 
@@ -861,24 +865,22 @@ Quad42DSCS::general_face_grad_op(
   const double* isoParCoord,
   const double* coords,
   double* gradop,
-  double* det_j,
-  double* error)
+  double*,
+  double*)
 {
-  int lerr = 0;
   const int nface = 1;
-
   double dpsi[8];
 
-  SIERRA_FORTRAN(quad_derivative)
-  (&nface, isoParCoord, dpsi);
+  SharedMemView<double***, HostShmem> deriv(
+    dpsi, nface, nodesPerElement_, nDim_);
+  quad_derivative(isoParCoord, deriv);
 
-  const int npe = nodesPerElement_;
-  SIERRA_FORTRAN(quad_gradient_operator)
-  (&nface, &npe, &nface, dpsi, &coords[0], &gradop[0], &det_j[0], error, &lerr);
+  const SharedMemView<const double**, HostShmem> coord(
+    coords, nodesPerElement_, nDim_);
+  SharedMemView<double***, HostShmem> grad(
+    gradop, nface, nodesPerElement_, nDim_);
 
-  if (lerr)
-    NaluEnv::self().naluOutput()
-      << "Quad42DSCS::general_face_grad_op: issue.." << std::endl;
+  quad_gradient_operator<nface, nodesPerElement_>(deriv, coord, grad);
 }
 
 //--------------------------------------------------------------------------

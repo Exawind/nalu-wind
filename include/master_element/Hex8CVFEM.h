@@ -408,62 +408,14 @@ private:
     SharedMemView<DBLTYPE**, SHMEM>& areav) const;
 };
 
-//-------- hex8_derivative -------------------------------------------------
-template <typename DBLTYPE, typename SHMEM>
-KOKKOS_FUNCTION void
-hex8_derivative(
-  const int npts,
-  const double* intgLoc,
-  SharedMemView<DBLTYPE***, SHMEM>& deriv)
-{
-  const DBLTYPE half = 0.50;
-  const DBLTYPE one4th = 0.25;
-  for (int ip = 0; ip < npts; ++ip) {
-    const DBLTYPE s1 = intgLoc[ip * 3];
-    const DBLTYPE s2 = intgLoc[ip * 3 + 1];
-    const DBLTYPE s3 = intgLoc[ip * 3 + 2];
-    const DBLTYPE s1s2 = s1 * s2;
-    const DBLTYPE s2s3 = s2 * s3;
-    const DBLTYPE s1s3 = s1 * s3;
-
-    // shape function derivative in the s1 direction -
-    deriv(ip, 0, 0) = half * (s3 + s2) - s2s3 - one4th;
-    deriv(ip, 1, 0) = half * (-s3 - s2) + s2s3 + one4th;
-    deriv(ip, 2, 0) = half * (-s3 + s2) - s2s3 + one4th;
-    deriv(ip, 3, 0) = half * (s3 - s2) + s2s3 - one4th;
-    deriv(ip, 4, 0) = half * (-s3 + s2) + s2s3 - one4th;
-    deriv(ip, 5, 0) = half * (s3 - s2) - s2s3 + one4th;
-    deriv(ip, 6, 0) = half * (s3 + s2) + s2s3 + one4th;
-    deriv(ip, 7, 0) = half * (-s3 - s2) - s2s3 - one4th;
-
-    // shape function derivative in the s2 direction -
-    deriv(ip, 0, 1) = half * (s3 + s1) - s1s3 - one4th;
-    deriv(ip, 1, 1) = half * (s3 - s1) + s1s3 - one4th;
-    deriv(ip, 2, 1) = half * (-s3 + s1) - s1s3 + one4th;
-    deriv(ip, 3, 1) = half * (-s3 - s1) + s1s3 + one4th;
-    deriv(ip, 4, 1) = half * (-s3 + s1) + s1s3 - one4th;
-    deriv(ip, 5, 1) = half * (-s3 - s1) - s1s3 - one4th;
-    deriv(ip, 6, 1) = half * (s3 + s1) + s1s3 + one4th;
-    deriv(ip, 7, 1) = half * (s3 - s1) - s1s3 + one4th;
-
-    // shape function derivative in the s3 direction -
-    deriv(ip, 0, 2) = half * (s2 + s1) - s1s2 - one4th;
-    deriv(ip, 1, 2) = half * (s2 - s1) + s1s2 - one4th;
-    deriv(ip, 2, 2) = half * (-s2 - s1) - s1s2 - one4th;
-    deriv(ip, 3, 2) = half * (-s2 + s1) + s1s2 - one4th;
-    deriv(ip, 4, 2) = half * (-s2 - s1) + s1s2 + one4th;
-    deriv(ip, 5, 2) = half * (-s2 + s1) - s1s2 + one4th;
-    deriv(ip, 6, 2) = half * (s2 + s1) + s1s2 + one4th;
-    deriv(ip, 7, 2) = half * (s2 - s1) - s1s2 + one4th;
-  }
-}
-
 template <typename ViewTypeCoord, typename ViewTypeGrad>
 KOKKOS_FUNCTION void
 HexSCS::grad_op(
   ViewTypeCoord& coords, ViewTypeGrad& gradop, ViewTypeGrad& deriv)
 {
-  hex8_derivative(numIntPoints_, &intgLoc_[0], deriv);
+  const SharedMemView<const double**, HostShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(intgLoc_, deriv);
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 

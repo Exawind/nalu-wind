@@ -49,8 +49,8 @@ public:
   template <typename SCALAR, typename SHMEM>
   KOKKOS_FUNCTION void shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc);
 
-  void
-  general_shape_fcn(const int numIp, const double* isoParCoord, double* shpfc);
+  void general_shape_fcn(
+    const int numIp, const double* isoParCoord, double* shpfc) override;
 
   virtual const double* integration_locations() const final { return intgLoc_; }
   virtual const double* integration_location_shift() const final
