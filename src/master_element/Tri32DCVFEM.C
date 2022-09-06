@@ -14,7 +14,6 @@
 #include <AlgTraits.h>
 
 #include <NaluEnv.h>
-#include <FORTRAN_Proto.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
@@ -48,14 +47,16 @@ tri_derivative(SharedMemView<DBLTYPE***, SHMEM>& deriv)
 
 //-------- tri_gradient_operator
 //-----------------------------------------------------
-template <typename DBLTYPE, typename SHMEM>
-KOKKOS_FUNCTION void
+template <typename DBLTYPE, typename CONST_DBLTYPE, typename SHMEM>
+KOKKOS_FUNCTION int
 tri_gradient_operator(
-  const SharedMemView<DBLTYPE**, SHMEM>& coords,
+  const SharedMemView<CONST_DBLTYPE**, SHMEM>& coords,
+  const SharedMemView<DBLTYPE***, SHMEM>& deriv,
   SharedMemView<DBLTYPE***, SHMEM>& gradop,
-  SharedMemView<DBLTYPE***, SHMEM>& deriv)
+  SharedMemView<DBLTYPE*, SHMEM>& det_j)
 {
-
+  int nerr = 0;
+  const double realmin = std::numeric_limits<double>::min();
   const int nint = deriv.extent(0);
   const int npe = deriv.extent(1);
 
@@ -77,14 +78,16 @@ tri_gradient_operator(
     }
 
     // calculate the determinate of the jacobian at the integration station -
-    const DBLTYPE det_j = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
+    det_j(ki) = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
 
     // protect against a negative or small value for the determinate of the
     // jacobian. The value of real_min (set in precision.par) represents
     // the smallest Real value (based upon the precision set for this
     // compilation) which the machine can represent -
     const DBLTYPE denom = stk::math::if_then_else(
-      det_j < 1.e6 * MEconstants::realmin, 1.0, 1.0 / det_j);
+      det_j(ki) < 1.e6 * MEconstants::realmin, 1.0, 1.0 / det_j(ki));
+    if (stk::simd::get_data(det_j(ki), 0) <= 1.e6 * realmin)
+      nerr = ki;
 
     // compute the gradient operators at the integration station -
     const DBLTYPE ds1_dx = denom * dy_ds2;
@@ -97,6 +100,7 @@ tri_gradient_operator(
       gradop(ki, kn, 1) = deriv(ki, kn, 0) * ds1_dy + deriv(ki, kn, 1) * ds2_dy;
     }
   }
+  return nerr;
 }
 
 //--------------------------------------------------------------------------
@@ -308,7 +312,9 @@ Tri32DSCV::grad_op(
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   tri_derivative(deriv);
-  tri_gradient_operator(coords, gradop, deriv);
+  DoubleType det[numIntPoints_];
+  SharedMemView<DoubleType*, DeviceShmem> det_j(det, numIntPoints_);
+  tri_gradient_operator(coords, deriv, gradop, det_j);
 }
 
 //--------------------------------------------------------------------------
@@ -321,7 +327,9 @@ Tri32DSCV::shifted_grad_op(
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   tri_derivative(deriv);
-  tri_gradient_operator(coords, gradop, deriv);
+  DoubleType det[numIntPoints_];
+  SharedMemView<DoubleType*, DeviceShmem> det_j(det, numIntPoints_);
+  tri_gradient_operator(coords, deriv, gradop, det_j);
 }
 
 //--------------------------------------------------------------------------
@@ -484,7 +492,9 @@ Tri32DSCS::grad_op(
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   tri_derivative(deriv);
-  tri_gradient_operator(coords, gradop, deriv);
+  DoubleType det[numIntPoints_];
+  SharedMemView<DoubleType*, DeviceShmem> det_j(det, numIntPoints_);
+  tri_gradient_operator(coords, deriv, gradop, det_j);
 }
 
 void
@@ -494,7 +504,9 @@ Tri32DSCS::grad_op(
   SharedMemView<double***>& deriv)
 {
   tri_derivative(deriv);
-  tri_gradient_operator(coords, gradop, deriv);
+  double det[numIntPoints_];
+  SharedMemView<double*> det_j(det, numIntPoints_);
+  tri_gradient_operator(coords, deriv, gradop, det_j);
 }
 
 //--------------------------------------------------------------------------
@@ -507,7 +519,9 @@ Tri32DSCS::shifted_grad_op(
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   tri_derivative(deriv);
-  tri_gradient_operator(coords, gradop, deriv);
+  DoubleType det[numIntPoints_];
+  SharedMemView<DoubleType*, DeviceShmem> det_j(det, numIntPoints_);
+  tri_gradient_operator(coords, deriv, gradop, det_j);
 }
 
 //--------------------------------------------------------------------------
@@ -853,20 +867,22 @@ Tri32DSCS::general_face_grad_op(
   const double* coords,
   double* gradop,
   double* det_j,
-  double* error)
+  double*)
 {
   int lerr = 0;
 
   const int nface = 1;
+  const int npe = nodesPerElement_;
   double dpsi[6];
 
-  // derivatives are constant
-  SIERRA_FORTRAN(tri_derivative)
-  (&nface, dpsi);
+  SharedMemView<double***, HostShmem> deriv(
+    dpsi, nface, nodesPerElement_, nDim_);
+  tri_derivative(deriv);
 
-  const int npe = nodesPerElement_;
-  SIERRA_FORTRAN(tri_gradient_operator)
-  (&nface, &npe, &nface, dpsi, &coords[0], &gradop[0], &det_j[0], error, &lerr);
+  const SharedMemView<const double**, HostShmem> cordel(coords, npe, 3);
+  SharedMemView<double***, HostShmem> grad(gradop, nface, npe, 3);
+  SharedMemView<double*, HostShmem> det(det_j, nface);
+  lerr = tri_gradient_operator(cordel, deriv, grad, det);
 
   if (lerr)
     NaluEnv::self().naluOutput()

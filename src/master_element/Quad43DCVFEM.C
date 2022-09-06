@@ -11,8 +11,6 @@
 #include "master_element/Quad43DCVFEM.h"
 #include "master_element/Hex8GeometryFunctions.h"
 
-#include "FORTRAN_Proto.h"
-
 #include <array>
 
 namespace sierra {
