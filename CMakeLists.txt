@@ -1,6 +1,6 @@
 ############################ BASE ######################################
 cmake_minimum_required (VERSION 3.17.0 FATAL_ERROR)
-project(Nalu-Wind CXX Fortran)
+project(Nalu-Wind CXX)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 ########################## OPTIONS #####################################
@@ -20,15 +20,13 @@ option(ENABLE_PARAVIEW_CATALYST
       "Enable ParaView Catalyst. Requires external installation of Trilinos Catalyst IOSS adapter."
        OFF)
 option(ENABLE_TIOGA "Use TIOGA TPL to perform overset connectivity" OFF)
-option(ENABLE_ALL_WARNINGS "Show most warnings for most compilers" ON)
-option(ENABLE_WERROR "Warnings are errors" OFF)
 option(ENABLE_OPENMP "Enable OpenMP flags" OFF)
 option(ENABLE_BOOST  "Enable Boost libraries" OFF)
 option(NALU_WIND_SAVE_GOLDS  "Save gold files to directory when running tests" OFF)
 
-set(CMAKE_CXX_STANDARD 14)       # Set nalu-wind C++14 standard
-set(CMAKE_CXX_EXTENSIONS OFF)    # Do not enable GNU extensions
-set(CMAKE_CXX_STANDARD_REQUIRED) # Force error if C++14 standard is not supported
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED)
 
 # Create targets
 set(nalu_ex_name "naluX")
@@ -40,7 +38,6 @@ add_executable(${utest_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.C)
 ########################## MPI ####################################
 find_package(MPI REQUIRED)
 target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>)
-target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_Fortran_FOUND}>:MPI::MPI_Fortran>)
 
 if(ENABLE_CUDA)
   enable_language(CUDA)
@@ -111,7 +108,6 @@ target_include_directories(nalu SYSTEM PUBLIC ${YAML_CPP_INCLUDE_DIR})
 if(ENABLE_OPENMP)
   find_package(OpenMP REQUIRED)
   target_link_libraries(nalu PUBLIC $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>)
-  target_link_libraries(nalu PUBLIC $<$<BOOL:${OpenMP_Fortran_FOUND}>:OpenMP::OpenMP_Fortran>)
 endif()
 
 ############################ GPU ######################################
@@ -183,33 +179,22 @@ message(STATUS "CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
 # Add -restrict to Intel CXX compiler
-target_compile_options(nalu PUBLIC $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:Intel>>:-restrict>)
-# Or with CMake >= 3.15
-#target_compile_options(nalu PUBLIC $<$<COMPILE_LANG_AND_ID:CXX,Intel>:-restrict>)
+target_compile_options(nalu PUBLIC $<$<COMPILE_LANG_AND_ID:CXX,Intel>:-restrict>)
 
-# Logic for handling warnings
-if(ENABLE_ALL_WARNINGS)
-  # GCC, Clang, and Intel seem to accept these
-  list(APPEND NALU_CXX_FLAGS "-Wall" "-Wextra" "-pedantic")
-  if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-    # ifort doesn't like -Wall
-    list(APPEND NALU_Fortran_FLAGS "-Wall")
-  else()
-    # Intel always reports some diagnostics we don't necessarily care about
-    list(APPEND NALU_CXX_FLAGS "-diag-disable:11074,11076")
-  endif()
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7.0)
-    # Avoid notes about -faligned-new with GCC > 7
-    list(APPEND NALU_CXX_FLAGS "-faligned-new")
-  endif()
+# GCC, Clang, and Intel seem to accept these
+list(APPEND NALU_CXX_FLAGS "-Wall" "-Wextra" "-pedantic")
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+  # Intel always reports some diagnostics we don't necessarily care about
+  list(APPEND NALU_CXX_FLAGS "-diag-disable:11074,11076")
+endif()
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7.0)
+  # Avoid notes about -faligned-new with GCC > 7
+  list(APPEND NALU_CXX_FLAGS "-faligned-new")
 endif()
 
 # Add our extra flags according to language
 separate_arguments(NALU_CXX_FLAGS)
-separate_arguments(NALU_Fortran_FLAGS)
 target_compile_options(nalu PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${NALU_CXX_FLAGS}>)
-target_compile_options(nalu PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:${NALU_Fortran_FLAGS}>)
-target_compile_options(nalu PRIVATE $<$<BOOL:${ENABLE_WERROR}>:-Werror>)
 
 ########################### TAG VERSIONS #####################################
 include(GetGitRevisionDescription)
