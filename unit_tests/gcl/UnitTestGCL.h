@@ -222,7 +222,7 @@ public:
 
   void compute_absolute_error()
   {
-    const double tol = 1e-14;
+    const double tol = 1e-13;
     const stk::mesh::Selector sel = get_selector();
     const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
     const double dt = realm_.get_time_step();
@@ -242,7 +242,7 @@ public:
   {
     // The value of tolerances are not clear.
     // This needs more investigation for real use cases.
-    const double tol = 1e-12;
+    const double tol = 1e-11;
     const stk::mesh::Selector sel = get_selector();
     const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
 
