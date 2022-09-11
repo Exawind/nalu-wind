@@ -346,19 +346,15 @@ struct MeshInput
 // initial conditions
 struct ConstantInitialConditionData : public InitialCondition
 {
-  ConstantInitialConditionData(InitialConditions& ics) : InitialCondition(ics)
-  {
-  }
+  ConstantInitialConditionData(bool debug) : debug_(debug) {}
   std::vector<std::string> fieldNames_;
   std::vector<std::vector<double>> data_;
+  const bool debug_;
 };
 
 struct UserFunctionInitialConditionData : public InitialCondition
 {
-  UserFunctionInitialConditionData(InitialConditions& ics)
-    : InitialCondition(ics)
-  {
-  }
+  UserFunctionInitialConditionData() {}
   std::map<std::string, std::string> functionNames_;
   std::map<std::string, std::vector<double>> functionParams_;
 };
