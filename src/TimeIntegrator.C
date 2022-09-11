@@ -173,17 +173,6 @@ TimeIntegrator::initialize()
   overset_->update_connectivity();
 }
 
-Simulation*
-TimeIntegrator::root()
-{
-  return parent()->root();
-}
-Simulation*
-TimeIntegrator::parent()
-{
-  return sim_;
-}
-
 void
 TimeIntegrator::prepare_for_time_integration()
 {

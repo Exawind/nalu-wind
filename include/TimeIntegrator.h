@@ -38,8 +38,6 @@ public:
   void breadboard();
 
   void initialize();
-  Simulation* root();
-  Simulation* parent();
 
   void integrate_realm();
   void provide_mean_norm();
