@@ -348,16 +348,5 @@ MaterialPropertys::load(const YAML::Node& node)
   }
 }
 
-Simulation*
-MaterialPropertys::root()
-{
-  return parent()->root();
-}
-Realm*
-MaterialPropertys::parent()
-{
-  return &realm_;
-}
-
 } // namespace nalu
 } // namespace sierra

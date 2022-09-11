@@ -47,9 +47,6 @@ public:
   size_t size() { return materialPropertyVector_.size(); }
   MaterialProperty* operator[](int i) { return materialPropertyVector_[i]; }
 
-  Simulation* root();
-  Realm* parent();
-
   Realm& realm_;
   MaterialPropertyVector materialPropertyVector_;
   std::string propertyTableName_;
