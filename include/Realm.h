@@ -396,7 +396,7 @@ public:
   TimeIntegrator* timeIntegrator_;
 
   BoundaryConditionVector boundaryConditions_;
-  InitialConditions initialConditions_;
+  InitialConditionVector initialConditions_;
   MaterialPropertys materialPropertys_;
 
   EquationSystems equationSystems_;

@@ -15,6 +15,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace YAML {
 class Node;
@@ -24,71 +25,28 @@ namespace sierra {
 namespace nalu {
 
 class Realm;
-class InitialConditions;
 class Simulation;
 
 class InitialCondition
 {
 public:
-  InitialCondition(InitialConditions& ics)
-    : initialConditions_(ics), theIcType_(UserDataType_END)
-  {
-  }
+  InitialCondition() : theIcType_(UserDataType_END) {}
 
   virtual ~InitialCondition() {}
-
-  InitialCondition* load(const YAML::Node& node);
-  Simulation* root();
-  InitialConditions* parent();
-
-  void breadboard()
-  {
-    // nothing
-  }
-
-  InitialConditions& initialConditions_;
 
   std::string icName_;
   std::vector<std::string> targetNames_;
   UserDataType theIcType_;
 };
 
-typedef std::vector<InitialCondition*> InitialConditionVector;
+typedef std::vector<std::unique_ptr<InitialCondition>> InitialConditionVector;
 
-class InitialConditions
+struct InitialConditionCreator
 {
-public:
-  InitialConditions(Realm& realm) : realm_(realm) {}
-
-  ~InitialConditions()
-  {
-    for (size_t j_initial_condition = 0;
-         j_initial_condition < initialConditionVector_.size();
-         ++j_initial_condition) {
-      delete initialConditionVector_[j_initial_condition];
-    }
-  }
-
-  InitialConditions* load(const YAML::Node& node);
-
-  void breadboard()
-  {
-    for (size_t j_initial_condition = 0;
-         j_initial_condition < initialConditionVector_.size();
-         ++j_initial_condition) {
-      initialConditionVector_[j_initial_condition]->breadboard();
-    }
-  }
-
-  Simulation* root();
-  Realm* parent();
-
-  // ease of access methods to particular initial condition
-  size_t size() { return initialConditionVector_.size(); }
-  InitialCondition* operator[](int i) { return initialConditionVector_[i]; }
-
-  Realm& realm_;
-  InitialConditionVector initialConditionVector_;
+  InitialConditionCreator(bool debug) : debug_(debug) {}
+  InitialConditionVector create_ic_vector(const YAML::Node& node);
+  std::unique_ptr<InitialCondition> load_single(const YAML::Node& node);
+  const bool debug_;
 };
 
 } // namespace nalu

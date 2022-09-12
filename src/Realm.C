@@ -190,7 +190,6 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     restartFileIndex_(99),
     numInitialElements_(0),
     timeIntegrator_(0),
-    initialConditions_(*this),
     materialPropertys_(*this),
     equationSystems_(*this),
     maxCourant_(0.0),
@@ -848,7 +847,8 @@ Realm::load(const YAML::Node& node)
       << "Initial Condition Review:  " << std::endl;
     NaluEnv::self().naluOutputP0()
       << "===========================" << std::endl;
-    initialConditions_.load(node);
+    initialConditions_ =
+      InitialConditionCreator(debug()).create_ic_vector(node);
     NaluEnv::self().naluOutputP0() << std::endl;
     NaluEnv::self().naluOutputP0()
       << "Material Prop Review:      " << std::endl;
@@ -1272,11 +1272,10 @@ void
 Realm::setup_initial_conditions()
 {
   // loop over all ics and register
-  for (size_t j_ic = 0; j_ic < initialConditions_.size(); ++j_ic) {
-    InitialCondition& initCond = *initialConditions_[j_ic];
+  for (auto&& initCond : initialConditions_) {
 
     const std::vector<std::string> targetNames =
-      handle_all_element_part_alias(initCond.targetNames_);
+      handle_all_element_part_alias(initCond->targetNames_);
 
     for (size_t itarget = 0; itarget < targetNames.size(); ++itarget) {
       const std::string targetName = physics_part_name(targetNames[itarget]);
@@ -1289,11 +1288,12 @@ Realm::setup_initial_conditions()
           " in the initial_conditions target does not exist.");
       }
 
-      switch (initCond.theIcType_) {
+      switch (initCond->theIcType_) {
 
       case CONSTANT_UD: {
         const ConstantInitialConditionData& genIC =
-          *reinterpret_cast<const ConstantInitialConditionData*>(&initCond);
+          *reinterpret_cast<const ConstantInitialConditionData*>(
+            initCond.get());
         ThrowAssert(genIC.data_.size() == genIC.fieldNames_.size());
         for (size_t ifield = 0; ifield < genIC.fieldNames_.size(); ++ifield) {
 
@@ -1319,7 +1319,8 @@ Realm::setup_initial_conditions()
 
       case FUNCTION_UD: {
         const UserFunctionInitialConditionData& fcnIC =
-          *reinterpret_cast<const UserFunctionInitialConditionData*>(&initCond);
+          *reinterpret_cast<const UserFunctionInitialConditionData*>(
+            initCond.get());
         equationSystems_.register_initial_condition_fcn(targetPart, fcnIC);
       } break;
 
@@ -1333,7 +1334,7 @@ Realm::setup_initial_conditions()
       default:
         NaluEnv::self().naluOutputP0()
           << "Realm::setup_initial_conditions: unknown type: "
-          << initCond.theIcType_ << std::endl;
+          << initCond->theIcType_ << std::endl;
         throw std::runtime_error(
           "Realm::setup_initial_conditions: unknown type:");
       }

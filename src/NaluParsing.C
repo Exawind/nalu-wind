@@ -367,7 +367,7 @@ operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
     constIC.targetNames_.resize(targets.size());
     for (size_t i = 0; i < targets.size(); ++i) {
       constIC.targetNames_[i] = targets[i].as<std::string>();
-      if (constIC.root()->debug())
+      if (constIC.debug_)
         NaluEnv::self().naluOutputP0()
           << "constant IC: name: " << constIC.icName_ << " , target[" << i
           << "] = " << constIC.targetNames_[i] << std::endl;
@@ -377,7 +377,7 @@ operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
   size_t value_size = value_node.size();
   constIC.fieldNames_.resize(value_size);
   constIC.data_.resize(value_size);
-  if (constIC.root()->debug()) {
+  if (constIC.debug_) {
     NaluEnv::self().naluOutputP0()
       << "fieldNames_.size()= " << constIC.fieldNames_.size()
       << " value.size= " << constIC.data_.size() << std::endl;
@@ -393,7 +393,7 @@ operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
       constIC.data_[jv].resize(nvals);
       for (size_t iv = 0; iv < nvals; ++iv) {
         constIC.data_[jv][iv] = value[iv].as<double>();
-        if (constIC.root()->debug()) {
+        if (constIC.debug_) {
           NaluEnv::self().naluOutputP0()
             << "fieldNames_= " << constIC.fieldNames_[jv]
             << " value= " << constIC.data_[jv][iv] << std::endl;
@@ -402,7 +402,7 @@ operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
     } else {
       constIC.data_[jv].resize(1);
       constIC.data_[jv][0] = value.as<double>();
-      if (constIC.root()->debug()) {
+      if (constIC.debug_) {
         NaluEnv::self().naluOutputP0()
           << "fieldNames_= " << constIC.fieldNames_[jv]
           << " value= " << constIC.data_[jv][0] << std::endl;

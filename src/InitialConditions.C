@@ -18,43 +18,24 @@
 namespace sierra {
 namespace nalu {
 
-//==========================================================================
-// Class Definition
-//==========================================================================
-// InitialCondition - do some stuff
-//==========================================================================
-//--------------------------------------------------------------------------
-//-------- constructor -----------------------------------------------------
-//--------------------------------------------------------------------------
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-
-//--------------------------------------------------------------------------
-//-------- load -----------------------------------------------
-//--------------------------------------------------------------------------
-
-/// this is an example of a load() method with polymorphism - the type of
-/// the node is determined from some information, then a particular type
-/// of object is created and returned to the parent.
-
-InitialCondition*
-InitialCondition::load(const YAML::Node& node)
+std::unique_ptr<InitialCondition>
+InitialConditionCreator::load_single(const YAML::Node& node)
 {
   if (node["constant"]) {
     NaluEnv::self().naluOutputP0() << "Initial Is Type constant " << std::endl;
-    ConstantInitialConditionData& constIC =
-      *new ConstantInitialConditionData(*parent());
-    node >> constIC;
-    return &constIC;
+    std::unique_ptr<InitialCondition> ic =
+      std::make_unique<ConstantInitialConditionData>(debug_);
+    auto* constIC = dynamic_cast<ConstantInitialConditionData*>(ic.get());
+    node >> *constIC;
+    return ic;
   } else if (node["user_function"]) {
     NaluEnv::self().naluOutputP0()
       << "Initial Is Type user-function " << std::endl;
-    UserFunctionInitialConditionData& fcnIC =
-      *new UserFunctionInitialConditionData(*parent());
-    node >> fcnIC;
-    return &fcnIC;
+    std::unique_ptr<InitialCondition> ic =
+      std::make_unique<UserFunctionInitialConditionData>();
+    auto* fcnIC = dynamic_cast<UserFunctionInitialConditionData*>(ic.get());
+    node >> *fcnIC;
+    return ic;
   } else
     throw std::runtime_error(
       "parser error InitialConditions::load; unsupported IC type");
@@ -64,32 +45,10 @@ InitialCondition::load(const YAML::Node& node)
 #endif
 }
 
-Simulation*
-InitialCondition::root()
+InitialConditionVector
+InitialConditionCreator::create_ic_vector(const YAML::Node& node)
 {
-  return parent()->root();
-}
-InitialConditions*
-InitialCondition::parent()
-{
-  return &initialConditions_;
-}
-
-Simulation*
-InitialConditions::root()
-{
-  return parent()->root();
-}
-Realm*
-InitialConditions::parent()
-{
-  return &realm_;
-}
-
-InitialConditions*
-InitialConditions::load(const YAML::Node& node)
-{
-  InitialCondition tmp_initial_condition(*this);
+  InitialConditionVector vec;
 
   if (node["initial_conditions"]) {
     const YAML::Node initial_conditions = node["initial_conditions"];
@@ -98,14 +57,13 @@ InitialConditions::load(const YAML::Node& node)
          ++j_initial_condition) {
       const YAML::Node initial_condition_node =
         initial_conditions[j_initial_condition];
-      InitialCondition* ic = tmp_initial_condition.load(initial_condition_node);
-      initialConditionVector_.push_back(ic);
+      vec.push_back(load_single(initial_condition_node));
     }
   } else {
     throw std::runtime_error("parser error InitialConditions::load");
   }
 
-  return this;
+  return vec;
 }
 
 } // namespace nalu
