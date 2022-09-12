@@ -74,13 +74,9 @@ MomentumEdgePecletAlg::execute()
   nalu_ngp::run_edge_algorithm(
     "compute_peclet_factor", ngpMesh, sel,
     KOKKOS_LAMBDA(const EntityInfoType& eInfo) {
-      NALU_ALIGNED DblType av[nalu_ngp::NDimMax];
       DblType udotx{0.0};
 
       const auto edge = eInfo.meshIdx;
-      for (int d = 0; d < ndim; d++) {
-        av[d] = edgeAreaVec.get(edge, d);
-      }
       const auto& nodes = eInfo.entityNodes;
       const auto nodeL = ngpMesh.fast_mesh_index(nodes[0]);
       const auto nodeR = ngpMesh.fast_mesh_index(nodes[1]);

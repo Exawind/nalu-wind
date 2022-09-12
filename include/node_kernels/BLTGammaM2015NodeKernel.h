@@ -36,7 +36,7 @@ public:
   BLTGammaM2015NodeKernel(const stk::mesh::MetaData&);
 
   KOKKOS_FORCEINLINE_FUNCTION
-  BLTGammaM2015NodeKernel() = default;
+  BLTGammaM2015NodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~BLTGammaM2015NodeKernel() = default;
