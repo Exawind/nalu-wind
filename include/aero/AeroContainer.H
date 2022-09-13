@@ -16,6 +16,18 @@
 #endif
 #include "aero/actuator/ActuatorModel.h"
 
+namespace YAML {
+class Node;
+}
+
+namespace stk {
+namespace mesh {
+class BulkData;
+class MetaData;
+class Part;
+} // namespace mesh
+} // namespace stk
+
 namespace sierra {
 namespace nalu {
 
@@ -25,11 +37,23 @@ namespace nalu {
  */
 class AeroContainer
 {
-  AeroContainer() = default;
+  AeroContainer() = delete;
+  AeroContainer operator=(AeroContainer&) = delete;
+  AeroContainer(AeroContainer&) = delete;
 
-  ActuatorModel* actuators() { return actuatorModel_.get(); }
+  AeroContainer(const YAML::Node& node);
+  ~AeroContainer() = default;
+  void setup(double timeStep, stk::mesh::BulkData& stkBulk);
+  void execute(double& timer);
+  void init(stk::mesh::BulkData& stkBulk);
+  void register_nodal_fields_fields(
+    stk::mesh::MetaData& meta, stk::mesh::Part* part);
+
+  // TODO active if actuators or FSI is active
+  bool is_active() { return has_actuators(); }
 
 private:
+  bool has_actuators() { return actuatorModel.is_active(); }
 #ifdef NALU_USES_OPENFAST
   // TODO this should be the only instance of openfast
   // all other instances need to be made into shared_ptrs that share from this
@@ -38,7 +62,6 @@ private:
 #endif
   // TODO move calls to actuator model in realm to this container class
   ActuatorModel actuatorModel_;
-  const int tStepRatio_;
 };
 
 } // namespace nalu

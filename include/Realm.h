@@ -413,7 +413,7 @@ public:
   SolutionNormPostProcessing* solutionNormPostProcessing_;
   TurbulenceAveragingPostProcessing* turbulenceAveragingPostProcessing_;
   DataProbePostProcessing* dataProbePostProcessing_;
-  std::unique_ptr<AeroContainer> aeroContainer_;
+  std::unique_ptr<AeroContainer> aeroModels_;
   ABLForcingAlgorithm* ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
   std::unique_ptr<MeshMotionAlg> meshMotionAlg_;
