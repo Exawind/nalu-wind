@@ -7,10 +7,8 @@
 // for more details.
 //
 #include <aero/AeroContainer.h>
-#include <stk_mesh/base/BulkData.hpp>
-#include <stk_mesh/base/MetaData.hpp>
-#include <stk_mesh/base/Part.hpp>
-#include <yaml-cpp/yaml.h>
+#include <NaluParsingHelper.h>
+#include <FieldTypeDef.h>
 
 namespace sierra {
 namespace nalu {
@@ -29,10 +27,11 @@ AeroContainer::AeroContainer(const YAML::Node& node)
 }
 
 void
-AeroContainer::register_nodal_fields_fields(
+AeroContainer::register_nodal_fields(
   stk::mesh::MetaData& meta, stk::mesh::Part* part)
 {
   if (has_actuators()) {
+    const int nDim = meta.spatial_dimension();
     VectorFieldType* actuatorSource = &(meta.declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "actuator_source"));
     VectorFieldType* actuatorSourceLHS = &(meta.declare_field<VectorFieldType>(
@@ -53,8 +52,8 @@ AeroContainer::setup(double timeStep, stk::mesh::BulkData& bulk)
 void
 AeroContainer::init(stk::mesh::BulkData& bulk)
 {
-  if (has_actuators) {
-    actutatorModel_.init(bulk);
+  if (has_actuators()) {
+    actuatorModel_.init(bulk);
   }
 }
 
