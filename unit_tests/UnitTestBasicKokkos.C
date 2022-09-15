@@ -26,7 +26,7 @@ TEST(BasicKokkos, discover_execution_space)
     std::cout << "Kokkos::Cuda is available." << std::endl;
 #endif
     std::cout << "Default execution space info: ";
-    Kokkos::DefaultExecutionSpace::print_configuration(std::cout);
+    Kokkos::DefaultExecutionSpace{}.print_configuration(std::cout);
 
     std::cout << std::endl;
   }
