@@ -142,7 +142,7 @@ SurfaceForceAndMomentAlgorithm::execute()
     return;
   }
 
-  const bool processMe = (timeStepCount % frequency_) == 0 ? true : false;
+  const bool processMe = (timeStepCount % frequency_) == 0;
 
   // do not waste time here
   if (!processMe)
