@@ -137,7 +137,12 @@ SurfaceForceAndMomentAlgorithm::execute()
 {
   // check to see if this is a valid step to process output file
   const int timeStepCount = realm_.get_time_step_count();
-  const bool processMe = (timeStepCount % frequency_) == 0 ? true : false;
+
+  if (frequency_ < 1) {
+    return;
+  }
+
+  const bool processMe = (timeStepCount % frequency_) == 0;
 
   // do not waste time here
   if (!processMe)
