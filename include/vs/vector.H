@@ -24,7 +24,7 @@ struct VectorT
   using VType = VectorT<T>;
 
   //! Construct a default vector, all components set to zero
-  KOKKOS_FORCEINLINE_FUNCTION VectorT() = default;
+  VectorT() = default;
 
   /** New vector given the three components
    */

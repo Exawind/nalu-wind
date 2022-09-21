@@ -24,7 +24,7 @@ struct TensorT
   using const_iterator = const T*;
   using Traits = DTraits<T>;
 
-  KOKKOS_FORCEINLINE_FUNCTION constexpr TensorT() = default;
+  constexpr TensorT() = default;
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr TensorT(
     const T& xx,
