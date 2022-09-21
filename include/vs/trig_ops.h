@@ -1,7 +1,7 @@
 #ifndef TRIG_OPS_H
 #define TRIG_OPS_H
 
-/** \file trig_ops.H
+/** \file trig_ops.h
  *
  *  Trigonometric utilities
  */

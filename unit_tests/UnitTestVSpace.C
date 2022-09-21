@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "vs/vector_space.H"
-#include "vs/trig_ops.H"
+#include "vs/vector_space.h"
+#include "vs/trig_ops.h"
 #include "KokkosInterface.h"
 #include "Kokkos_DualView.hpp"
 

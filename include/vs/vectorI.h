@@ -3,7 +3,7 @@
 
 #include <ostream>
 #include <cmath>
-#include "vs/vector.H"
+#include "vs/vector.h"
 
 namespace vs {
 

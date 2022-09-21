@@ -2,8 +2,8 @@
 #define VS_TENSOR_H
 
 #include "Kokkos_Core.hpp"
-#include "vs/vstraits.H"
-#include "vs/vector.H"
+#include "vs/vstraits.h"
+#include "vs/vector.h"
 
 namespace vs {
 
@@ -125,6 +125,6 @@ using Tensor = TensorT<double>;
 
 } // namespace vs
 
-#include "vs/tensorI.H"
+#include "vs/tensorI.h"
 
 #endif /* VS_TENSOR_H */

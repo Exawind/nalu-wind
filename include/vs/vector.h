@@ -2,7 +2,7 @@
 #define VS_VECTOR_H
 
 #include "Kokkos_Core.hpp"
-#include "vs/vstraits.H"
+#include "vs/vstraits.h"
 
 namespace vs {
 
@@ -122,6 +122,6 @@ using Vector = VectorT<double>;
 
 } // namespace vs
 
-#include "vs/vectorI.H"
+#include "vs/vectorI.h"
 
 #endif /* VS_VECTOR_H */
