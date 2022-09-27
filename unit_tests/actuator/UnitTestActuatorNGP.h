@@ -10,11 +10,11 @@
 #ifndef UNITTESTACTUATORNGP_H_
 #define UNITTESTACTUATORNGP_H_
 
-#include <actuator/ActuatorBulk.h>
-#include <actuator/ActuatorInfo.h>
-#include <actuator/ActuatorSearch.h>
-#include <actuator/UtilitiesActuator.h>
-#include <actuator/ActuatorFunctors.h>
+#include <aero/actuator/ActuatorBulk.h>
+#include <aero/actuator/ActuatorInfo.h>
+#include <aero/actuator/ActuatorSearch.h>
+#include <aero/actuator/UtilitiesActuator.h>
+#include <aero/actuator/ActuatorFunctors.h>
 
 namespace sierra {
 namespace nalu {

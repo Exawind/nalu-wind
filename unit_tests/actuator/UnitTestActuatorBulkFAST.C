@@ -15,10 +15,10 @@
 // for more details.
 //
 
-#include <actuator/ActuatorParsingFAST.h>
-#include <actuator/ActuatorFunctorsFAST.h>
-#include <actuator/ActuatorBulkFAST.h>
-#include <actuator/UtilitiesActuator.h>
+#include <aero/actuator/ActuatorParsingFAST.h>
+#include <aero/actuator/ActuatorFunctorsFAST.h>
+#include <aero/actuator/ActuatorBulkFAST.h>
+#include <aero/actuator/UtilitiesActuator.h>
 #include "UnitTestActuatorUtil.h"
 #include <gtest/gtest.h>
 

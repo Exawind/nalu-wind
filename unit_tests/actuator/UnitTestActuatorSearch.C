@@ -8,7 +8,7 @@
 //
 #include <gtest/gtest.h>
 #include <UnitTestUtils.h>
-#include <actuator/ActuatorSearch.h>
+#include <aero/actuator/ActuatorSearch.h>
 #include <stk_io/StkMeshIoBroker.hpp>
 #include <NaluEnv.h>
 #include <UnitTestUtils.h>

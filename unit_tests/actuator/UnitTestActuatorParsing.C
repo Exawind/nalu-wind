@@ -9,7 +9,7 @@
 
 #include <gtest/gtest.h>
 #include <yaml-cpp/yaml.h>
-#include <actuator/ActuatorParsing.h>
+#include <aero/actuator/ActuatorParsing.h>
 
 namespace sierra {
 namespace nalu {

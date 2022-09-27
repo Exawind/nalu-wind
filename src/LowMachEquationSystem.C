@@ -10,7 +10,7 @@
 #include <LowMachEquationSystem.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <AlgorithmDriver.h>
-#include <actuator/ActuatorModel.h>
+#include <aero/AeroContainer.h>
 #include <AssembleContinuityNonConformalSolverAlgorithm.h>
 #include <AssembleMomentumEdgeWallFunctionSolverAlgorithm.h>
 #ifdef NALU_USES_FFTW
@@ -1212,16 +1212,11 @@ MomentumEquationSystem::register_nodal_fields(stk::mesh::Part* part)
     stk::mesh::put_field_on_mesh(*duidx, *part, nDim, nullptr);
   }
 
-  // speciality source
-  if (realm_.actuatorModel_) {
-    VectorFieldType* actuatorSource =
-      &(meta_data.declare_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "actuator_source"));
-    VectorFieldType* actuatorSourceLHS =
-      &(meta_data.declare_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "actuator_source_lhs"));
-    stk::mesh::put_field_on_mesh(*actuatorSource, *part, nDim, nullptr);
-    stk::mesh::put_field_on_mesh(*actuatorSourceLHS, *part, nDim, nullptr);
+  // Add actuator and other source terms
+  // put it here because the parts to register are sorted on the equation system
+  // probably should go in Realm::register_nodal_fields at some point
+  if (realm_.aeroModels_->is_active()) {
+    realm_.aeroModels_->register_nodal_fields(meta_data, part);
   }
 
   ScalarFieldType& node_mask =

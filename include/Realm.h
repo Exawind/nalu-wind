@@ -80,7 +80,7 @@ class SideWriterContainer;
 class TurbulenceAveragingPostProcessing;
 class DataProbePostProcessing;
 class LidarLineOfSite;
-struct ActuatorModel;
+class AeroContainer;
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
 
@@ -413,7 +413,7 @@ public:
   SolutionNormPostProcessing* solutionNormPostProcessing_;
   TurbulenceAveragingPostProcessing* turbulenceAveragingPostProcessing_;
   DataProbePostProcessing* dataProbePostProcessing_;
-  std::unique_ptr<ActuatorModel> actuatorModel_;
+  std::unique_ptr<AeroContainer> aeroModels_;
   ABLForcingAlgorithm* ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
   std::unique_ptr<MeshMotionAlg> meshMotionAlg_;

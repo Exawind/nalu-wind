@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include <actuator/ActuatorBladeDistributor.h>
+#include <aero/actuator/ActuatorBladeDistributor.h>
 #include <gtest/gtest.h>
 
 namespace sierra {

@@ -7,10 +7,10 @@
 // for more details.
 //
 
-#include <actuator/ActuatorFunctors.h>
-#include <actuator/ActuatorParsing.h>
-#include <actuator/ActuatorInfo.h>
-#include <actuator/UtilitiesActuator.h>
+#include <aero/actuator/ActuatorFunctors.h>
+#include <aero/actuator/ActuatorParsing.h>
+#include <aero/actuator/ActuatorInfo.h>
+#include <aero/actuator/UtilitiesActuator.h>
 #include <UnitTestUtils.h>
 #include <yaml-cpp/yaml.h>
 #include <gtest/gtest.h>

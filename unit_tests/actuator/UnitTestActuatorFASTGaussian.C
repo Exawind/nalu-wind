@@ -7,8 +7,8 @@
 // for more details.
 
 #include <gtest/gtest.h>
-#include "actuator/UtilitiesActuator.h"
-#include <actuator/ActuatorTypes.h>
+#include "aero/actuator/UtilitiesActuator.h"
+#include <aero/actuator/ActuatorTypes.h>
 #include <cmath>
 #include "NaluParsing.h"
 

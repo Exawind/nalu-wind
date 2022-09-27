@@ -7,10 +7,10 @@
 // for more details.
 //
 
-#include <actuator/ActuatorBulkDiskFAST.h>
-#include <actuator/ActuatorParsingFAST.h>
+#include <aero/actuator/ActuatorBulkDiskFAST.h>
+#include <aero/actuator/ActuatorParsingFAST.h>
 #include "UnitTestActuatorUtil.h"
-#include <actuator/UtilitiesActuator.h>
+#include <aero/actuator/UtilitiesActuator.h>
 #include <memory>
 #include <gtest/gtest.h>
 
