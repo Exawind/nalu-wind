@@ -17,7 +17,7 @@
 #include "aero/actuator/ActuatorModel.h"
 
 #ifdef NALU_USES_OPENFAST
-#include "OpenFAST.h"
+#include "OpenFAST.H"
 // TODO add a blank openfast data structure possibly
 #endif
 
