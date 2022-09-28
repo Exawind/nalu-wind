@@ -1,0 +1,77 @@
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
+#ifndef WIENER_MILENKOVIC_H_
+#define WIENER_MILENKOVIC_H_
+
+#include "vs/vector.h"
+#include <Kokkos_Macros.hpp>
+#include <vs/vector_space.h>
+
+// Wiener-Milenkovic Parameters (WMP)
+namespace wmp {
+
+namespace {
+KOKKOS_FORCEINLINE_FUNCTION
+double
+condition_vector(vs::Vector vec)
+{
+  return 2.0 - 0.125 * (vec & vec);
+}
+
+// Convert a boolean into a 1.0 for false or a -1.0 for true
+KOKKOS_FORCEINLINE_FUNCTION
+double
+bool_sign(const bool condition)
+{
+  return 1.0 - 2.0 * static_cast<double>(condition);
+}
+
+} // namespace
+
+KOKKOS_FORCEINLINE_FUNCTION
+vs::Vector
+compose(
+  const vs::Vector wmP,
+  const vs::Vector wmQ,
+  bool transposeP = false,
+  bool transposeQ = false)
+{
+  const double tP = bool_sign(transposeP);
+  const double tQ = bool_sign(transposeQ);
+
+  const double p0 = condition_vector(wmP);
+  const double q0 = condition_vector(wmQ);
+
+  const double delta1 = (4.0 - p0) * (4.0 - q0);
+  const double delta2 = p0 * q0 - tP * (wmP & wmQ);
+
+  const double sign = bool_sign(delta2 < 0.0);
+  const double preFac = sign * 4.0 / (delta1 + sign * delta2);
+
+  return preFac * (tQ * p0 * wmQ + tP * q0 * wmP + tP * tQ * (wmP ^ wmQ));
+}
+
+KOKKOS_FORCEINLINE_FUNCTION
+vs::Vector
+apply(const vs::Vector wmp, const vs::Vector vec, const bool transpose = false)
+{
+  const double trans = bool_sign(transpose);
+  const double wm0 = condition_vector(wmp);
+  const double nu = 2.0 / (4.0 - wm0);
+  const double cosPhiO2 = 0.5 * wm0 * nu;
+  const vs::Vector crossWmVec = wmp ^ vec;
+
+  return vec + trans * nu * cosPhiO2 * crossWmVec +
+         0.5 * nu * nu * (wmp ^ crossWmVec);
+}
+
+} // namespace wmp
+
+#endif
