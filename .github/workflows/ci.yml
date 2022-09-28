@@ -43,7 +43,7 @@ jobs:
             source ${SPACK_MANAGER}/start.sh && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
             source ${SPACK_MANAGER}/start.sh && \
-            quick-develop -s nalu-wind@master && \
+            quick-develop -s nalu-wind@master+tioga+hypre+openfast && \
             spack install && \
             spack cd -b nalu-wind && \
             spack build-env nalu-wind ctest -j $(nproc) -L unit --output-on-failure \
