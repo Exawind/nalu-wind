@@ -10,8 +10,6 @@
 #ifndef WIENER_MILENKOVIC_H_
 #define WIENER_MILENKOVIC_H_
 
-#include "vs/vector.h"
-#include <Kokkos_Macros.hpp>
 #include <vs/vector_space.h>
 
 // Wiener-Milenkovic Parameters (WMP)
@@ -25,7 +23,7 @@ condition_vector(vs::Vector vec)
   return 2.0 - 0.125 * (vec & vec);
 }
 
-// Convert a boolean into a 1.0 for false or a -1.0 for true
+//! Convert a boolean into a 1.0 for false or a -1.0 for true
 KOKKOS_FORCEINLINE_FUNCTION
 double
 bool_sign(const bool condition)
@@ -34,7 +32,8 @@ bool_sign(const bool condition)
 }
 
 } // namespace
-
+//
+//! Compose Wiener-Milenkovic parameters 'wmP' and 'wmQ'
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compose(
@@ -58,6 +57,7 @@ compose(
   return preFac * (tQ * p0 * wmQ + tP * q0 * wmP + tP * tQ * (wmP ^ wmQ));
 }
 
+//! Apply a Wiener-Milenkovic rotation 'wmp' to a vector 'vec'
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 apply(const vs::Vector wmp, const vs::Vector vec, const bool transpose = false)
