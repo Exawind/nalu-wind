@@ -68,7 +68,7 @@ compose(
 //! Apply a Wiener-Milenkovic rotation 'wmp' to a vector 'vec'
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
-apply(const vs::Vector wmp, const vs::Vector vec, const bool transpose = false)
+rotate(const vs::Vector wmp, const vs::Vector vec, const bool transpose = false)
 {
   const double trans = bool_sign(transpose);
   const double wm0 = compute_coeff_zero(wmp);

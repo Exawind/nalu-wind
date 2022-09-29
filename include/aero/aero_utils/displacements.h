@@ -34,17 +34,17 @@ pitch_displacement_contribution(
   const double rLocation,
   const double rampFactor = 2.0)
 {
-  const auto globZ = wmp::apply(root, vs::Vector::khat());
+  const auto globZ = wmp::rotate(root, vs::Vector::khat());
   auto pitchRotWM = pitch_wm(pitch, globZ);
 
-  const auto pitchRot = wmp::apply(pitchRotWM, distance);
+  const auto pitchRot = wmp::rotate(pitchRotWM, distance);
 
   const double rampPitch = pitch *
                            (1.0 - stk::math::exp(-rampFactor * rLocation)) /
                            (1.0 + stk::math::exp(-rampFactor * rLocation));
 
   pitchRotWM = pitch_wm(rampPitch, globZ);
-  const auto rampPitchRot = wmp::apply(pitchRotWM, distance);
+  const auto rampPitchRot = wmp::rotate(pitchRotWM, distance);
   return rampPitchRot - pitchRot;
 }
 
@@ -60,8 +60,8 @@ compute_translational_displacements(
 {
 
   const vs::Vector distance = cfdPos - totalPosOffset;
-  const vs::Vector pointLocal = wmp::apply(totalPosOffset, distance);
-  const vs::Vector rotation = wmp::apply(totDispNode, pointLocal, true);
+  const vs::Vector pointLocal = wmp::rotate(totalPosOffset, distance);
+  const vs::Vector rotation = wmp::rotate(totDispNode, pointLocal, true);
   return totDispNode + rotation - distance;
 }
 
