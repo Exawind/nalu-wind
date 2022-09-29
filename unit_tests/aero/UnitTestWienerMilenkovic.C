@@ -4,12 +4,13 @@
 #include <vs/trig_ops.h>
 #include "KokkosInterface.h"
 
-namespace wmp {
-
-using KVector = Kokkos::View<vs::Vector*>;
+namespace {
+using KVector =
+  Kokkos::View<vs::Vector*, Kokkos::LayoutRight, sierra::nalu::MemSpace>;
 
 //! compare WM rotation to standard tensor rotation
-TEST(WienerMilenkovic, NGP_rotation)
+void
+impl_test_WM_rotation()
 {
 
   // device memory
@@ -40,4 +41,5 @@ TEST(WienerMilenkovic, NGP_rotation)
   }
 }
 
-} // namespace wmp
+TEST(WienerMilenkovic, NGP_rotation) { impl_test_WM_rotation(); }
+} // namespace
