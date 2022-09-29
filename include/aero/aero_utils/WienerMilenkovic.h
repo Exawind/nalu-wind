@@ -41,6 +41,13 @@ generator(const double phi)
   return 4.0 * stk::math::tan(phi * 0.25);
 }
 
+
+KOKKOS_FORCEINLINE_FUNCTION
+vs::Vector create_wm_param(vs::Vector axis, const double angle){
+  axis.normalize();
+  return generator(angle)*axis;
+}
+
 //! Compose Wiener-Milenkovic parameters 'wmP' and 'wmQ'
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector

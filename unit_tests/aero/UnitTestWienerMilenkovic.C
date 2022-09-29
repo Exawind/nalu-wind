@@ -41,7 +41,8 @@ impl_test_WM_rotation(vs::Vector axis, vs::Vector point, double angle)
       dEndGold(0) = dPoint(0) & vs::quaternion(dAxis(0), dAngle(0));
 
       // WM setup
-      const auto wmAxis = wmp::generator(utils::radians(dAngle(0))) * dAxis(0);
+      const auto wmAxis =
+        wmp::create_wm_param(dAxis(0), utils::radians(dAngle(0)));
       dEnd(0) = wmp::rotate(wmAxis, dPoint(0));
     });
 
