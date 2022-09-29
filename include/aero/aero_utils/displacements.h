@@ -10,7 +10,6 @@
 #ifndef DISPLACEMENTS_H_
 #define DISPLACEMENTS_H_
 
-#include <stk_math/StkMath.hpp>
 #include <aero/aero_utils/WienerMilenkovic.h>
 
 namespace aero {

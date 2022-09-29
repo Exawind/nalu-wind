@@ -10,6 +10,7 @@
 #ifndef WIENER_MILENKOVIC_H_
 #define WIENER_MILENKOVIC_H_
 
+#include <stk_math/StkMath.hpp>
 #include <vs/vector_space.h>
 
 // Wiener-Milenkovic Parameters (WMP)
@@ -18,7 +19,7 @@ namespace wmp {
 namespace {
 KOKKOS_FORCEINLINE_FUNCTION
 double
-condition_vector(vs::Vector vec)
+compute_coeff_zero(vs::Vector vec)
 {
   return 2.0 - 0.125 * (vec & vec);
 }
@@ -32,7 +33,14 @@ bool_sign(const bool condition)
 }
 
 } // namespace
-//
+
+KOKKOS_FORCEINLINE_FUNCTION
+double
+generator(const double phi)
+{
+  return 4.0 * stk::math::tan(phi * 0.25);
+}
+
 //! Compose Wiener-Milenkovic parameters 'wmP' and 'wmQ'
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
@@ -45,8 +53,8 @@ compose(
   const double tP = bool_sign(transposeP);
   const double tQ = bool_sign(transposeQ);
 
-  const double p0 = condition_vector(wmP);
-  const double q0 = condition_vector(wmQ);
+  const double p0 = compute_coeff_zero(wmP);
+  const double q0 = compute_coeff_zero(wmQ);
 
   const double delta1 = (4.0 - p0) * (4.0 - q0);
   const double delta2 = p0 * q0 - tP * (wmP & wmQ);
@@ -63,7 +71,7 @@ vs::Vector
 apply(const vs::Vector wmp, const vs::Vector vec, const bool transpose = false)
 {
   const double trans = bool_sign(transpose);
-  const double wm0 = condition_vector(wmp);
+  const double wm0 = compute_coeff_zero(wmp);
   const double nu = 2.0 / (4.0 - wm0);
   const double cosPhiO2 = 0.5 * wm0 * nu;
   const vs::Vector crossWmVec = wmp ^ vec;
