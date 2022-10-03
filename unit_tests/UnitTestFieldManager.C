@@ -91,4 +91,3 @@ TEST_F(FieldManagerTest, undefinedFieldCantBeRegistered)
 } // namespace
 } // namespace nalu
 } // namespace sierra
-
