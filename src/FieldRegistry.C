@@ -20,6 +20,8 @@ static const DefScalarStated StatedNodalScalar = {stk::topology::NODE_RANK};
 static const DefVectorUnstated UnstatedNodalVector = {stk::topology::NODE_RANK};
 static const DefScalarUnstated UnstatedNodalScalar = {stk::topology::NODE_RANK};
 
+// Registry object is where all the fully quantified field definitions live
+// This is the starting point for adding a new field
 static const std::map<std::string, FieldDefTypes> Registry = {
   {"velocity", StatedNodalVector},
   {"temperature", StatedNodalScalar},

@@ -10,6 +10,7 @@
 #ifndef FIELDREGISTRY_H_
 #define FIELDREGISTRY_H_
 
+#include <stdexcept>
 #include <string>
 #include <map>
 #include "FieldDefinitions.h"
@@ -17,6 +18,9 @@
 namespace sierra {
 namespace nalu {
 
+/* A class that contains definitions for all the available fields that can be
+ * registered in nalu-wind
+ */
 class FieldRegistry
 {
 public:
@@ -24,7 +28,14 @@ public:
   {
     static FieldRegistry instance;
 
-    return instance.database_.at(name);
+    auto fieldDefIter = instance.database_.find(name);
+
+    if (fieldDefIter == instance.database_.end()) {
+      const std::string message =
+        "Attempting to access an undefined field: " + name;
+      throw std::runtime_error(message);
+    }
+    return fieldDefIter->second;
   }
 
   FieldRegistry(const FieldRegistry&) = delete;

@@ -55,7 +55,7 @@ TEST_F(FieldManagerTest, nameIsEnoughInfoToRegisterAField)
 TEST_F(FieldManagerTest, throwsForFieldNotInDatabase)
 {
   FieldManager f(*meta_);
-  EXPECT_THROW(f.field_exists("acrazyqoi"), std::out_of_range);
+  EXPECT_THROW(f.field_exists("acrazyqoi"), std::runtime_error);
 }
 
 TEST_F(FieldManagerTest, canRegisterDifferentFieldTypesThroughOneInterface)
@@ -80,6 +80,15 @@ TEST_F(FieldManagerTest, fieldCanBeRegisteredMultipleTimes)
   EXPECT_NO_THROW(fm.register_field(name, meta_->universal_part()));
   EXPECT_TRUE(fm.field_exists(name));
 }
+
+TEST_F(FieldManagerTest, undefinedFieldCantBeRegistered)
+{
+  const std::string name = "fields_of_gold";
+  FieldManager fm(*meta_);
+  EXPECT_THROW(
+    fm.register_field(name, meta_->universal_part()), std::runtime_error);
+}
 } // namespace
 } // namespace nalu
 } // namespace sierra
+
