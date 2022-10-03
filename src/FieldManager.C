@@ -12,12 +12,15 @@
 namespace sierra {
 namespace nalu {
 
-FieldManager::FieldManager(stk::mesh::MetaData& meta) : meta_(meta) {}
+FieldManager::FieldManager(stk::mesh::MetaData& meta, int numStates)
+  : meta_(meta), numStates_(numStates)
+{
+}
 
 bool
 FieldManager::field_exists(std::string name)
 {
-  auto definition = FieldRegistry::query(name);
+  auto definition = FieldRegistry::query(numStates_, name);
 
   return std::visit(
     [&](auto def) -> bool {
@@ -31,7 +34,7 @@ FieldPointerTypes
 FieldManager::register_field(
   std::string name, const stk::mesh::PartVector& parts)
 {
-  auto definition = FieldRegistry::query(name);
+  auto definition = FieldRegistry::query(numStates_, name);
 
   return std::visit(
     [&](auto def) -> FieldPointerTypes {
@@ -50,7 +53,7 @@ FieldManager::register_field(
 FieldPointerTypes
 FieldManager::register_field(std::string name, const stk::mesh::Part& part)
 {
-  auto definition = FieldRegistry::query(name);
+  auto definition = FieldRegistry::query(numStates_, name);
 
   return std::visit(
     [&](auto def) -> FieldPointerTypes {

@@ -14,23 +14,18 @@
 namespace sierra {
 namespace nalu {
 
-template <typename T, int NSTATES>
+template <typename T>
 struct FieldDefinition
 {
   using FieldType = T;
   const stk::topology::rank_t rank;
-  const int num_states{NSTATES};
+  const int num_states{1};
 };
 
-static constexpr int NUM_STATES = 3;
+using DefScalar = FieldDefinition<ScalarFieldType>;
+using DefVector = FieldDefinition<VectorFieldType>;
 
-using DefScalarUnstated = FieldDefinition<ScalarFieldType, 1>;
-using DefVectorUnstated = FieldDefinition<VectorFieldType, 1>;
-
-using DefScalarStated = FieldDefinition<ScalarFieldType, NUM_STATES>;
-using DefVectorStated = FieldDefinition<VectorFieldType, NUM_STATES>;
-
-using FieldDefTypes = std::variant<DefScalarStated, DefVectorStated>;
+using FieldDefTypes = std::variant<DefScalar, DefVector>;
 using FieldPointerTypes = std::variant<ScalarFieldType*, VectorFieldType*>;
 
 } // namespace nalu

@@ -14,20 +14,30 @@
 namespace sierra {
 namespace nalu {
 
-static const DefVectorStated StatedNodalVector = {stk::topology::NODE_RANK};
-static const DefScalarStated StatedNodalScalar = {stk::topology::NODE_RANK};
-
-static const DefVectorUnstated UnstatedNodalVector = {stk::topology::NODE_RANK};
-static const DefScalarUnstated UnstatedNodalScalar = {stk::topology::NODE_RANK};
-
 // Registry object is where all the fully quantified field definitions live
 // This is the starting point for adding a new field
-static const std::map<std::string, FieldDefTypes> Registry = {
-  {"velocity", StatedNodalVector},
-  {"temperature", StatedNodalScalar},
-};
+template <int NUM_STATES>
+const std::map<std::string, FieldDefTypes>&
+Registry()
+{
 
-FieldRegistry::FieldRegistry() : database_(Registry) {}
+  DefVector StatedNodalVector = {stk::topology::NODE_RANK, NUM_STATES};
+  DefScalar StatedNodalScalar = {stk::topology::NODE_RANK, NUM_STATES};
+
+  DefVector UnstatedNodalVector = {stk::topology::NODE_RANK};
+  DefScalar UnstatedNodalScalar = {stk::topology::NODE_RANK};
+
+  static const std::map<std::string, FieldDefTypes> registry = {
+    {"velocity", StatedNodalVector},
+    {"temperature", StatedNodalScalar},
+  };
+  return registry;
+}
+
+FieldRegistry::FieldRegistry()
+  : database_2_state_(Registry<2>()), database_3_state_(Registry<3>())
+{
+}
 
 } // namespace nalu
 } // namespace sierra

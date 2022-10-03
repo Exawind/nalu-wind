@@ -37,7 +37,7 @@ protected:
 TEST_F(FieldManagerTest, nameIsEnoughInfoToRegisterAField)
 {
   std::string name = "velocity";
-  FieldManager fm(*meta_);
+  FieldManager fm(*meta_, 2);
   EXPECT_FALSE(fm.field_exists(name));
 
   auto ptr = fm.register_field(name, meta_->get_parts());
@@ -54,7 +54,7 @@ TEST_F(FieldManagerTest, nameIsEnoughInfoToRegisterAField)
 
 TEST_F(FieldManagerTest, throwsForFieldNotInDatabase)
 {
-  FieldManager f(*meta_);
+  FieldManager f(*meta_, 2);
   EXPECT_THROW(f.field_exists("acrazyqoi"), std::runtime_error);
 }
 
@@ -62,7 +62,7 @@ TEST_F(FieldManagerTest, canRegisterDifferentFieldTypesThroughOneInterface)
 {
   const std::string vectorName = "velocity";
   const std::string scalarName = "temperature";
-  FieldManager f(*meta_);
+  FieldManager f(*meta_, 2);
   EXPECT_FALSE(f.field_exists(vectorName));
   EXPECT_FALSE(f.field_exists(scalarName));
   EXPECT_NO_THROW(f.register_field(vectorName, meta_->get_parts()));
@@ -74,7 +74,7 @@ TEST_F(FieldManagerTest, canRegisterDifferentFieldTypesThroughOneInterface)
 TEST_F(FieldManagerTest, fieldCanBeRegisteredMultipleTimes)
 {
   const std::string name = "velocity";
-  FieldManager fm(*meta_);
+  FieldManager fm(*meta_, 3);
   EXPECT_FALSE(fm.field_exists(name));
   EXPECT_NO_THROW(fm.register_field(name, meta_->get_parts()));
   EXPECT_NO_THROW(fm.register_field(name, meta_->universal_part()));
@@ -84,7 +84,7 @@ TEST_F(FieldManagerTest, fieldCanBeRegisteredMultipleTimes)
 TEST_F(FieldManagerTest, undefinedFieldCantBeRegistered)
 {
   const std::string name = "fields_of_gold";
-  FieldManager fm(*meta_);
+  FieldManager fm(*meta_, 3);
   EXPECT_THROW(
     fm.register_field(name, meta_->universal_part()), std::runtime_error);
 }
