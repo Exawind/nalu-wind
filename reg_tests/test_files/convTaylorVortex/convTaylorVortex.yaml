@@ -107,6 +107,14 @@ realms:
 
         - consistent_mass_matrix_png:
             pressure: no
+      # Pressure is not fixed anywhere on the boundaries, so set it at
+      # the node closest to the specified location.
+      fix_pressure_at_node:
+        value: 0.0
+        node_lookup_type: spatial_location
+        location: [0.0, 0.0, 0.25]
+        search_target_part: [vol_1-HEX]
+        search_method: stk_kdtree
 
     output:
       output_data_base_name: out/convTaylorVortex.e
