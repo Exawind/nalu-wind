@@ -138,6 +138,7 @@ realms:
 
 - name: realm_1
   mesh: ../../mesh/multiElemTypeCylinder.g
+  automatic_decomposition_type: rcb
   use_edges: yes
 
   equation_systems:
@@ -222,6 +223,7 @@ realms:
     wall_user_data:
       use_wall_function: no
       turbulent_ke: 0.0
+      velocity: [0, 0, 0]
 
   solution_options:
     name: myOptions
@@ -281,7 +283,7 @@ realms:
     specifications:
 
     - name: one
-      target_name: [ all_blocks ]
+      target_name: [ block_1, block_2, block_3, block_4 ]
 
       reynolds_averaged_variables:
       - velocity
