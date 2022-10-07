@@ -308,7 +308,6 @@ realms:
     - specific_dissipation_rate
     - minimum_distance_to_wall
     - turbulent_viscosity
-    - mesh_displacement
     - q_criterion
     - vorticity
 
