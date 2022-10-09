@@ -58,7 +58,7 @@ void
 impl_test_WM_compose(vs::Vector v1, vs::Vector v2)
 {
   // add v1 and v2 togther
-  const auto v3 = wmp::compose(v1, v2);
+  const auto v3 = wmp::compose(v2, v1);
   // suntract v2 from v3
   const auto v4 = wmp::compose(v2, v3, true);
 
