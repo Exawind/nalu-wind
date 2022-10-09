@@ -54,12 +54,30 @@ impl_test_WM_rotation(vs::Vector axis, vs::Vector point, double angle)
   }
 }
 
+void
+impl_test_WM_compose(vs::Vector v1, vs::Vector v2)
+{
+  // add v1 and v2 togther
+  const auto v3 = wmp::compose(v1, v2);
+  // suntract v2 from v3
+  const auto v4 = wmp::compose(v2, v3, true);
+
+  // v1 and v4 should be equal
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_NEAR(v1[i], v4[i], vs::DTraits<double>::eps());
+  }
+}
+} // namespace
+
+namespace test_wmp {
 TEST(WienerMilenkovic, NGP_rotation_major_axis)
 {
   // Test major axis rotations
   impl_test_WM_rotation(vs::Vector::khat(), vs::Vector::ihat(), 90.0);
   impl_test_WM_rotation(vs::Vector::ihat(), vs::Vector::khat(), 90.0);
   impl_test_WM_rotation(vs::Vector::jhat(), vs::Vector::khat(), 90.0);
+  impl_test_WM_rotation(
+    vs::Vector::jhat() * 10.0, vs::Vector::ihat() * 3.0, 90.0);
 }
 
 TEST(WienerMilenkovic, NGP_rotation_arbitrary_axis)
@@ -67,4 +85,12 @@ TEST(WienerMilenkovic, NGP_rotation_arbitrary_axis)
   // test arbitrary axis rotation
   impl_test_WM_rotation(vs::Vector::one(), vs::Vector::khat(), 90.0);
 }
-} // namespace
+
+TEST(WienerMilenkovic, NGP_composee_add_and_subtract)
+{
+  impl_test_WM_compose(
+    wmp::create_wm_param(vs::Vector::khat(), 30.0),
+    wmp::create_wm_param({1.0, 1.0, 1.0}, 25.0));
+}
+
+} // namespace test_wmp

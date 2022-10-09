@@ -73,19 +73,19 @@ compose(
   return preFac * (tQ * p0 * wmQ + tP * q0 * wmP + tP * tQ * (wmP ^ wmQ));
 }
 
-//! Apply a Wiener-Milenkovic rotation 'wmp' to a vector 'vec'
+//! Apply a Wiener-Milenkovic rotation 'wmP' to a vector 'vec'
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
-rotate(const vs::Vector wmp, const vs::Vector vec, const bool transpose = false)
+rotate(const vs::Vector wmP, const vs::Vector vec, const bool transpose = false)
 {
   const double trans = bool_sign(transpose);
-  const double wm0 = compute_coeff_zero(wmp);
+  const double wm0 = compute_coeff_zero(wmP);
   const double nu = 2.0 / (4.0 - wm0);
   const double cosPhiO2 = 0.5 * wm0 * nu;
-  const vs::Vector crossWmVec = wmp ^ vec;
+  const vs::Vector crossWmVec = wmP ^ vec;
 
   return vec + trans * nu * cosPhiO2 * crossWmVec +
-         0.5 * nu * nu * (wmp ^ crossWmVec);
+         0.5 * nu * nu * (wmP ^ crossWmVec);
 }
 
 } // namespace wmp
