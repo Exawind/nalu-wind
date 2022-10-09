@@ -59,7 +59,7 @@ impl_test_WM_compose(vs::Vector v1, vs::Vector v2)
 {
   // add v1 and v2 togther
   const auto v3 = wmp::compose(v2, v1);
-  // suntract v2 from v3
+  // subtract v2 from v3
   const auto v4 = wmp::compose(v2, v3, true);
 
   // v1 and v4 should be equal
@@ -86,7 +86,7 @@ TEST(WienerMilenkovic, NGP_rotation_arbitrary_axis)
   impl_test_WM_rotation(vs::Vector::one(), vs::Vector::khat(), 90.0);
 }
 
-TEST(WienerMilenkovic, NGP_composee_add_and_subtract)
+TEST(WienerMilenkovic, NGP_composee_add_then_subtract)
 {
   impl_test_WM_compose(
     wmp::create_wm_param(vs::Vector::khat(), 30.0),

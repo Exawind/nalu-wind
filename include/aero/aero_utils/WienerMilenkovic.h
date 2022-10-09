@@ -70,7 +70,7 @@ compose(
   const double sign = bool_sign(delta2 < 0.0);
   const double preFac = sign * 4.0 / (delta1 + sign * delta2);
 
-  return preFac * (tQ * p0 * wmQ + tP * q0 * wmP + tP * tQ * (wmP ^ wmQ));
+  return preFac * (tQ * p0 * wmQ + tP * q0 * wmP +((tP*wmP) ^ (tQ*wmQ)));
 }
 
 //! Apply a Wiener-Milenkovic rotation 'wmP' to a vector 'vec'
