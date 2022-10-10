@@ -117,12 +117,22 @@ impl_test_WM_compose_add_sub(vs::Vector v1, vs::Vector v2)
   // add v1 and v2 togther
   const auto v3 = wmp::compose(v2, v1);
   // subtract v2 from v3
-  const auto v4 = wmp::compose(v3, v2, true, false);
+  const auto v4 = wmp::compose(v2, v3, true);
+
+  const vs::Vector point{1.0, 1.0, 1.0};
+
+  const auto gold = wmp::rotate(v1, point);
+  const auto test = wmp::rotate(v4, point);
+
+  for (int i = 0; i < 3; ++i) {
+    ASSERT_NEAR(gold[i], test[i], vs::DTraits<double>::eps())
+      << i << " index failed.";
+  }
 
   // v1 and v4 should be equal
-  for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR(v1[i], v4[i], vs::DTraits<double>::eps());
-  }
+  /* for (int i = 0; i < 3; ++i) { */
+  /*   EXPECT_NEAR(v1[i], v4[i], vs::DTraits<double>::eps()); */
+  /* } */
 }
 } // namespace
 
