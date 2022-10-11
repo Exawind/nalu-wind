@@ -16,6 +16,24 @@
 #include <vs/vector_space.h>
 
 // Wiener-Milenkovic Parameters (WMP)
+//
+/* Wiener-Milenkovic parameters are a way of specifing rotation operations as
+ * three parameters. They can be composed into a single parameter whose net
+ * rotation will be the same as all the individual rotations. The assembled or
+ * 'composed' parameters behave sort of like a stack.  They can be decomposed
+ * following first in last out ordering.
+ *
+ * References:
+ *
+ * Wang, Qi, and Wenbin Yu. "Geometrically nonlinear analysis of composite beams
+ * using Wiener-Milenković parameters." Journal of Renewable and Sustainable
+ * Energy 9.3 (2017): 033306.
+ *
+ * Bauchau, Olivier Andre. Flexible multibody dynamics. Vol. 176. Dordrecht:
+ * Springer, 2011. Section 13.7.4
+ * 
+ */
+
 namespace wmp {
 
 namespace {
@@ -65,12 +83,6 @@ rotate(const vs::Vector wmP, const vs::Vector vec, const bool transpose = false)
   return vec + trans * nu * cosPhiO2 * crossWmVec +
          0.5 * nu * nu * (wmP ^ crossWmVec);
 }
-
-/* Wiener-Milenkovic parameters can be composed into a single parameter whose
- * net rotation will be the same as all the individual rotations. The assembled
- * or 'composed' parameters behave sort of like a stack.  They can be decomposed
- * following first in last out ordering.
- */
 
 //! Compose Wiener-Milenkovic parameters 'wmP' and 'wmQ'
 KOKKOS_FORCEINLINE_FUNCTION
