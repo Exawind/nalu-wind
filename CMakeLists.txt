@@ -24,7 +24,7 @@ option(ENABLE_OPENMP "Enable OpenMP flags" OFF)
 option(ENABLE_BOOST  "Enable Boost libraries" OFF)
 option(NALU_WIND_SAVE_GOLDS  "Save gold files to directory when running tests" OFF)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 
