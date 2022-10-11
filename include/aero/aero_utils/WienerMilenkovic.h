@@ -10,6 +10,8 @@
 #ifndef WIENER_MILENKOVIC_H_
 #define WIENER_MILENKOVIC_H_
 
+#include "vs/vector.h"
+#include <Kokkos_Macros.hpp>
 #include <stk_math/StkMath.hpp>
 #include <vs/vector_space.h>
 
@@ -49,6 +51,27 @@ create_wm_param(vs::Vector axis, const double angle)
   return generator(angle) * axis;
 }
 
+//! Apply a Wiener-Milenkovic rotation 'wmP' to a vector 'vec'
+KOKKOS_FORCEINLINE_FUNCTION
+vs::Vector
+rotate(const vs::Vector wmP, const vs::Vector vec, const bool transpose = false)
+{
+  const double trans = bool_sign(transpose);
+  const double wm0 = compute_coeff_zero(wmP);
+  const double nu = 2.0 / (4.0 - wm0);
+  const double cosPhiO2 = 0.5 * wm0 * nu;
+  const vs::Vector crossWmVec = wmP ^ vec;
+
+  return vec + trans * nu * cosPhiO2 * crossWmVec +
+         0.5 * nu * nu * (wmP ^ crossWmVec);
+}
+
+/* Wiener-Milenkovic parameters can be composed into a single parameter whose
+ * net rotation will be the same as all the individual rotations. The assembled
+ * or 'composed' parameters behave sort of like a stack.  They can be decomposed
+ * following first in last out ordering.
+ */
+
 //! Compose Wiener-Milenkovic parameters 'wmP' and 'wmQ'
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
@@ -70,22 +93,25 @@ compose(
   const double sign = bool_sign(delta2 < 0.0);
   const double preFac = sign * 4.0 / (delta1 + sign * delta2);
 
-  return preFac * (tQ * p0 * wmQ + tP * q0 * wmP +((tP*wmP) ^ (tQ*wmQ)));
+  return preFac * (tQ * p0 * wmQ + tP * q0 * wmP + ((tP * wmP) ^ (tQ * wmQ)));
 }
 
-//! Apply a Wiener-Milenkovic rotation 'wmP' to a vector 'vec'
+//! Convenience function to add a new Wiener-Milenkovic parameter onto a stack
+//! of parameters at the end
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
-rotate(const vs::Vector wmP, const vs::Vector vec, const bool transpose = false)
+push(const vs::Vector param, const vs::Vector stack)
 {
-  const double trans = bool_sign(transpose);
-  const double wm0 = compute_coeff_zero(wmP);
-  const double nu = 2.0 / (4.0 - wm0);
-  const double cosPhiO2 = 0.5 * wm0 * nu;
-  const vs::Vector crossWmVec = wmP ^ vec;
+  return compose(param, stack);
+}
 
-  return vec + trans * nu * cosPhiO2 * crossWmVec +
-         0.5 * nu * nu * (wmP ^ crossWmVec);
+//! Convenience function to remove a Wiener-Milenkovic parameter from a stack of
+//! Parameters
+KOKKOS_FORCEINLINE_FUNCTION
+vs::Vector
+pop(const vs::Vector param, const vs::Vector stack)
+{
+  return compose(param, stack, true);
 }
 
 } // namespace wmp

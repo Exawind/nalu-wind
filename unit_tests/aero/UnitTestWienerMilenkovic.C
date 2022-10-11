@@ -99,7 +99,7 @@ impl_test_WM_compose_two_rot(
         wmp::create_wm_param(dAxis(0), utils::radians(dAngle(0)));
       const auto wmAxis2 =
         wmp::create_wm_param(dAxis(1), utils::radians(dAngle(1)));
-      const auto wmCompose = wmp::compose(wmAxis2, wmAxis1);
+      const auto wmCompose = wmp::push(wmAxis2, wmAxis1);
       dEnd(0) = wmp::rotate(wmCompose, dPoint(0));
     });
 
@@ -112,27 +112,41 @@ impl_test_WM_compose_two_rot(
 }
 
 void
-impl_test_WM_compose_add_sub(vs::Vector v1, vs::Vector v2)
+impl_test_WM_compose_add_sub(vs::Vector v1, vs::Vector v2, vs::Vector point)
 {
-  // add v1 and v2 togther
-  const auto v3 = wmp::compose(v2, v1);
-  // subtract v2 from v3
-  const auto v4 = wmp::compose(v2, v3, true);
+  KVector dEnd("end", 1);
+  KVector dAxis("axis", 2);
+  KVector dPoint("point", 1);
+  // host mirrors
+  auto hEnd = Kokkos::create_mirror_view(dEnd);
+  auto hAxis = Kokkos::create_mirror_view(dAxis);
+  auto hPoint = Kokkos::create_mirror_view(dPoint);
 
-  const vs::Vector point{1.0, 1.0, 1.0};
+  hAxis(0) = v1;
+  hAxis(1) = v2;
+  hPoint(0) = point;
 
   const auto gold = wmp::rotate(v1, point);
-  const auto test = wmp::rotate(v4, point);
+
+  Kokkos::deep_copy(dAxis, hAxis);
+  Kokkos::deep_copy(dPoint, hPoint);
+
+  Kokkos::parallel_for(
+    1, KOKKOS_LAMBDA(int) {
+      // add v1 and v2 togther
+      const auto v3 = wmp::push(dAxis(1), dAxis(0));
+      // subtract v2 from v3
+      const auto v4 = wmp::pop(dAxis(1), v3);
+
+      dEnd(0) = wmp::rotate(v4, point);
+    });
+
+  Kokkos::deep_copy(hEnd, dEnd);
 
   for (int i = 0; i < 3; ++i) {
-    ASSERT_NEAR(gold[i], test[i], vs::DTraits<double>::eps())
+    ASSERT_NEAR(gold[i], hEnd(0)[i], vs::DTraits<double>::eps())
       << i << " index failed.";
   }
-
-  // v1 and v4 should be equal
-  /* for (int i = 0; i < 3; ++i) { */
-  /*   EXPECT_NEAR(v1[i], v4[i], vs::DTraits<double>::eps()); */
-  /* } */
 }
 } // namespace
 
@@ -166,11 +180,12 @@ TEST(WienerMilenkovic, NGP_compose_two_rotations_same_as_two_quaternions)
     vs::Vector::ihat(), vs::Vector::khat(), vs::Vector::jhat(), 90.0, 45.0);
 }
 
-TEST(WienerMilenkovic, NGP_compose_add_then_subtract)
+TEST(WienerMilenkovic, NGP_compose_push_then_pop_param)
 {
   const auto wmp1 = wmp::create_wm_param(vs::Vector::khat(), 30.0);
   const auto wmp2 = wmp::create_wm_param({1.0, 1.0, 1.0}, 25.0);
-  impl_test_WM_compose_add_sub(wmp1, wmp2);
+  const vs::Vector point = {1.0, 1.0, 1.0};
+  impl_test_WM_compose_add_sub(wmp1, wmp2, point);
 }
 
 } // namespace test_wmp
