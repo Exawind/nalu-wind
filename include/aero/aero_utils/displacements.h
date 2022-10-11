@@ -14,15 +14,6 @@
 
 namespace aero {
 
-namespace {
-KOKKOS_FORCEINLINE_FUNCTION
-vs::Vector
-pitch_wm(const double pitch, const vs::Vector globZ)
-{
-  return 4.0 * stk::math::tan(pitch / 0.4 * M_PI / 180.0) * globZ;
-}
-} // namespace
-
 //! Implementation of a pitch deformation strategy that ramps to the true
 //! applied pitch with a hyperbolic tangent
 KOKKOS_FORCEINLINE_FUNCTION
@@ -35,7 +26,7 @@ pitch_displacement_contribution(
   const double rampFactor = 2.0)
 {
   const auto globZ = wmp::rotate(root, vs::Vector::khat());
-  auto pitchRotWM = pitch_wm(pitch, globZ);
+  auto pitchRotWM = wmp::create_wm_param(globZ, pitch);
 
   const auto pitchRot = wmp::rotate(pitchRotWM, distance);
 
