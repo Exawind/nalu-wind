@@ -31,7 +31,6 @@
  *
  * Bauchau, Olivier Andre. Flexible multibody dynamics. Vol. 176. Dordrecht:
  * Springer, 2011. Section 13.7.4
- * 
  */
 
 namespace wmp {
