@@ -281,6 +281,7 @@ void fsiTurbine::initialize() {
     brFSIdata_.bld_def.resize(6*nTotBldPts);
     brFSIdata_.bld_vel.resize(6*nTotBldPts);
     brFSIdata_.bld_ld.resize(6*nTotBldPts);
+    brFSIdata_.bld_root_ref_pos.resize(6*nBlades);    
     brFSIdata_.bld_root_def.resize(6*nBlades);
     brFSIdata_.bld_pitch.resize(nBlades);
     brFSIdata_.hub_ref_pos.resize(6);
@@ -545,11 +546,10 @@ void fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime) {
     }
     
     std::ofstream csvOut;
-    csvOut.open("defloads.csv", std::ofstream::out);
-    csvOut << "rloc, x, y, z, ld_x, ld_y, ld_z, area, chord, dr" << std::endl;
+    csvOut.open("bld_def.csv", std::ofstream::out);
+    csvOut << "rloc, x, y, z, , chord" << std::endl;
     for (auto i=0; i < nTotBldPts; i++) {
-        csvOut << brFSIdata_.bld_rloc[i] << ", " << brFSIdata_.bld_ref_pos[i*6] + brFSIdata_.bld_def[i*6] << ", " << brFSIdata_.bld_ref_pos[i*6+1] + brFSIdata_.bld_def[i*6+1] << ", " << brFSIdata_.bld_ref_pos[i*6+2] + brFSIdata_.bld_def[i*6+2] << ", " ;
-        csvOut << brFSIdata_.bld_ld[i*6] << ", " << brFSIdata_.bld_ld[i*6+1] << ", " << brFSIdata_.bld_ld[i*6+2] << ", " << brFSIdata_.bld_ld[i*6+3] << ", " << brFSIdata_.bld_chord[i] << ", " << brFSIdata_.bld_ld[i*6+4] << std::endl ;
+        csvOut << brFSIdata_.bld_rloc[i] << ", " << brFSIdata_.bld_ref_pos[i*6] + brFSIdata_.bld_def[i*6] << ", " << brFSIdata_.bld_ref_pos[i*6+1] + brFSIdata_.bld_def[i*6+1] << ", " << brFSIdata_.bld_ref_pos[i*6+2] + brFSIdata_.bld_def[i*6+2] << ", " << brFSIdata_.bld_chord[i] << std::endl ;
     }
     csvOut.close();
     
@@ -1209,92 +1209,297 @@ void fsiTurbine::setRotationDisplacement(std::array<double,3> axis, double omega
 //! Set sample displacement on the OpenFAST mesh before mapping to the turbine blade surface mesh
 void fsiTurbine::setSampleDisplacement(double curTime) {
 
-    //Turbine rotates at 12.1 rpm
-    double omega=(12.1/60.0)*2.0*M_PI; //12.1 rpm
-    double theta= omega*curTime;
 
-    double sinOmegaT = std::sin(omega*curTime);
+    /*
+        Step 1: Get hub ref orientation - Apply to [1,0,0] to get hub rotation axis and calculate Wiener-Milenkovic parameter corresponding to hub rotation
+        Step 2: Get Blade root ref position - Apply to [0,0,1] to get pitch axis. Calculate pitch deformation WM parameter. Set blade pitch
+        Step 3: For each blade node - calculate local deformation axis by applying WM corresponding to ref position to [0,0,1]
+        Step 4: Create final deformation WM parameters for each blade node
+    */
 
-    //Rotate the hub first
-    double hubRot = 4.0*tan(0.25*theta);
-    std::vector<double> wmHubRot = {hubRot, 0.0, 0.0};
-    for (size_t i=0; i<3; i++)
-        brFSIdata_.hub_def[3+i] = -wmHubRot[i];
+    std::cerr << std::setprecision(16) << "Hub ref position = " << brFSIdata_.hub_ref_pos[0] << ", " << brFSIdata_.hub_ref_pos[1] << ", " << brFSIdata_.hub_ref_pos[2] << std::endl;
+    std::cerr << "Setting Sample displacements " << std::endl ;
 
-    //For each node on the openfast blade1 mesh - compute distance from the blade root node. Apply a rotation varying as the square of the distance between 0 - 45 degrees about the [0 1 0] axis. Apply a translation displacement that produces a tip displacement of 5m
-    int iStart = 0;
     int nBlades = params_.numBlades;;
+    size_t nTotBldPts = 0;
+    for (size_t i=0; i < nBlades; i++)
+        nTotBldPts += params_.nBRfsiPtsBlade[i];
+    
+    std::vector<double> x_axis = {1.0, 0.0, 0.0};
+    std::vector<double> y_axis = {0.0, 1.0, 0.0};
+    std::vector<double> z_axis = {0.0, 0.0, 1.0};
+
+    // Step 1
+    std::vector<double> hub_ref(3,0.0);
+    std::vector<double> hub_rot_axis(3,0.0);
+    for (int j=0; j < 3;j ++)
+        hub_ref[j] = -brFSIdata_.hub_ref_pos[3+j];
+    applyWMrotation(hub_ref.data(), x_axis.data(), hub_rot_axis.data());
+
+    //Turbine rotates at 12.1 rpm
+    double omega=(9.156/60.0)*2.0*M_PI; //12.1 rpm
+    double theta= omega*curTime;
+    
+    double hub_rot = 4.0*tan(0.25*theta);
+    std::vector<double> wm_hub_rot(3,0.0);
+    for (int j=0; j < 3;j ++) {
+        wm_hub_rot[j] = hub_rot * hub_rot_axis[j];
+        brFSIdata_.hub_def[3+j] = -wm_hub_rot[j];
+    }
+    
+    double sin_omegat = std::sin(omega*curTime);
+    double pitch_rot = 4.0*tan(0.25 * (0.0 * M_PI / 180.0) * sin_omegat );
+
+    int istart = 0;    
     for (int iBlade=0; iBlade < nBlades; iBlade++) {
-        std::vector<double> wmRotBlade_ref = {4.0*tan(0.25 * iBlade * 120.0 * M_PI / 180.0), 0.0, 0.0};
-        std::vector<double> wmRotBlade(3,0.0);
-        composeWM(wmHubRot.data(), wmRotBlade_ref.data(), wmRotBlade.data());
 
-        //Set rotational displacement due to pitch
-        std::vector<double> wmRotPitch = {0.0,0.0,1.0};
-        double rot = 4.0*tan(0.25 * (60.0 * M_PI / 180.0) * sinOmegaT );
-        for(int j= 0; j < 3; j++)
-            wmRotPitch[j] *= rot;
-        std::vector<double> wmRotPitchBlade(3, 0.0);
-        applyWMrotation(wmRotBlade.data(), wmRotPitch.data(), wmRotPitchBlade.data());
-
-        for(int j=0; j < 3; j++)
-            brFSIdata_.bld_root_def[iBlade*6+3+j] = -wmRotBlade[j];
+        brFSIdata_.bld_pitch[iBlade] = 0.0 * sin_omegat;
         
+        // Step 2
+        std::vector<double> pitch_axis_ref(3,0.0);
+        std::vector<double> wm_bld_root_ref(3,0.0);
+        for (int j=0; j < 3; j++) {
+            wm_bld_root_ref[j] = -brFSIdata_.bld_root_ref_pos[iBlade*6+3+j];
+            brFSIdata_.bld_root_def[iBlade*6+3+j] = brFSIdata_.bld_root_ref_pos[iBlade*6+3+j];
+        }
+        
+        applyWMrotation(wm_bld_root_ref.data(), z_axis.data(), pitch_axis_ref.data());
+
+        // std::cerr << "Blade " << iBlade  << " - Pitch axis = " << pitch_axis_ref[0] << ", " << pitch_axis_ref[1] << ", " << pitch_axis_ref[2]
+        //           << " Pitch = " << 45.0 * sin_omegat << std::endl;
+
+        std::vector<double> wm_pitch_rot(3,0.0);
+        for (int j=0; j < 3; j++)
+            wm_pitch_rot[j] = pitch_rot * pitch_axis_ref[j];
+
         int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
         for (int i=0; i < nPtsBlade; i++) {
 
-            double rDistSq = calcDistanceSquared(&(brFSIdata_.bld_ref_pos[(iStart+i)*6]), &(brFSIdata_.bld_ref_pos[(iStart)*6]) )/10000.0;
-            double sinRdistSq = std::sin(rDistSq);
-            double tanRdistSq = std::tan(rDistSq);
-
+            double rloc = brFSIdata_.bld_rloc[istart + i];
+            // double rdist_sq = calcDistanceSquared(&(brFSIdata_.bld_ref_pos[(istart+i)*6]), &(brFSIdata_.bld_ref_pos[(istart)*6]) )/10000.0;
+            double rdist_sq = rloc * rloc ;
+            double sin_rdist_sq;
+            if (rloc > 3.0)                
+                sin_rdist_sq = std::sin(rdist_sq) * 0.5 * (1 + std::tanh( 0.8 * (rloc-5.0) ) );
+            else
+                sin_rdist_sq = 0.0;
+            double tan_rdist_sq = std::tan(rdist_sq);
                 
-            //Set local rotational displacement
-            std::vector<double> wmRot1 = {1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0)};
-            std::vector<double> wmRot(3,0.0);
-            applyWMrotation(wmRotBlade.data(), wmRot1.data(), wmRot.data());
-            rot = 4.0*tan(0.25 * (45.0 * M_PI / 180.0) * sinRdistSq  * sinOmegaT ); // 4.0 * tan(phi/4.0) parameter for Wiener-Milenkovic
-            for(int j= 0; j < 3; j++)
-                wmRot[j] *= rot;
+            // Step 3 - Set local rotational displacement
+            std::vector<double> wm_loc_ref_node(3,0.0);
+            for (int j=0; j < 3; j++)
+                wm_loc_ref_node[j] = -brFSIdata_.bld_ref_pos[(istart+i)*6+3+j];
+                
+            std::vector<double> ref_loc_rot_axis = {1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0)};
+            std::vector<double> loc_rot_axis(3,0.0);
+            applyWMrotation(wm_loc_ref_node.data(), ref_loc_rot_axis.data(), loc_rot_axis.data());
+            
+            double loc_rot = 4.0*tan(0.25 * (0.0 * M_PI / 180.0) * sin_rdist_sq  * sin_omegat );
+            std::vector<double> wm_loc_rot(3,0.0);
+            
+            for (int j=0; j < 3; j++)
+                wm_loc_rot[j] = loc_rot * loc_rot_axis[j];
 
-            std::vector<double> finalRot(3,0.0);
-            composeWM(wmRot.data(), wmRotBlade.data(), finalRot.data()); //Compose with hub orientation to account for rotation of turbine
 
-            std::vector<double> origZaxis = {0.0, 0.0, 1.0};
-            std::vector<double> rotZaxis(3,0.0);
-            applyWMrotation(finalRot.data(), origZaxis.data(), rotZaxis.data());
+            // Step 4 - Compose all rotations
+            // Hub rotation, local deformation, pitch, reference orientation
+            std::vector<double> tmp(3,0.0);
+            std::vector<double> tmp1(3,0.0);
+            composeWM(wm_loc_ref_node.data(), wm_pitch_rot.data(), tmp.data());
+            //composeWM(wm_loc_rot.data(), tmp.data(), tmp1.data());
+            //composeWM(wm_hub_rot.data(), tmp1.data(), tmp.data());
 
-            //Finally transpose the whole thing
+            // std::cerr << "Blade " << iBlade << ", Node " << i << ", r = " << brFSIdata_.bld_rloc[istart + i]
+            //           << ", Blade root position = " << wm_bld_root_ref[0] << ", " << wm_bld_root_ref[1] << ", " << wm_bld_root_ref[2]
+            //           << ", Ref def = " << wm_loc_ref_node[0] << ", " << wm_loc_ref_node[1] << ", " << wm_loc_ref_node[2]
+            //           << ", Pitch def = " << wm_pitch_rot[0] << ", " << wm_pitch_rot[1] << ", " << wm_pitch_rot[2]
+            //           << ", Deformation = " << tmp[0] << ", " << tmp[1] << ", " << tmp[2] << std::endl;
+            
             for(int j=0; j < 3; j++)
-                brFSIdata_.bld_def[(iStart+i)*6+3+j] = -finalRot[j];
+                brFSIdata_.bld_def[(istart+i)*6+3+j] = -tmp[j];
 
+            // std::cerr <<  "Blade " << iBlade  << ", Node "  << istart << " + " << i
+            //           << " - " << wm_pitch_rot[0] << ", " << wm_pitch_rot[1] << ", " << wm_pitch_rot[2] 
+            //           << " - " << wm_loc_ref_node[0] << ", " << wm_loc_ref_node[1] << ", " << wm_loc_ref_node[2]
+            //           << " - " << tmp[0] << ", " << tmp[1] << ", " << tmp[2] << std::endl ;
 
-            //Set translational displacement
-            double xDisp = sinRdistSq * 15.0 * sinOmegaT;
+            // Step 5 - Set translational displacement
+
+            double xDisp = 0.0 ; //sin_rdist_sq * 15.0 * sin_omegat;
 
             std::vector<double> r(3,0.0);
             for(int j=0; j < 3; j++)
-                r[j] = brFSIdata_.bld_ref_pos[(iStart+i)*6+j] - brFSIdata_.hub_ref_pos[j];
+                r[j] = brFSIdata_.bld_ref_pos[(istart+i)*6+j] - brFSIdata_.hub_ref_pos[j];
+            
+            std::vector<double> r_rot(3,0.0);
 
-            std::vector<double> rRot(3,0.0);
+            std::vector<double> trans_disp = {xDisp, xDisp, xDisp};
+            std::vector<double> trans_disp_rot(3,0.0);
 
-            std::vector<double> transDisp = {xDisp, xDisp, xDisp};
-            std::vector<double> transDispRot(3,0.0);
+            applyWMrotation(tmp.data(), trans_disp.data(), trans_disp_rot.data());
 
-            applyWMrotation(wmRotBlade.data(), transDisp.data(), transDispRot.data());
+            applyWMrotation(wm_hub_rot.data(), r.data(), r_rot.data());
 
-            applyWMrotation(wmHubRot.data(), r.data(), rRot.data());
-            brFSIdata_.bld_def[(iStart+i)*6+0] = transDispRot[0] + rRot[0] - r[0];
-            brFSIdata_.bld_def[(iStart+i)*6+1] = transDispRot[1] + rRot[1] - r[1];
-            brFSIdata_.bld_def[(iStart+i)*6+2] = transDispRot[2] + rRot[2] - r[2];
-
-            for (size_t j=0; j < 3; j++) {
-                brFSIdata_.bld_vel[(iStart+i)*6+j] = tanRdistSq * 3.743; // Completely arbitrary values
-                brFSIdata_.bld_vel[(iStart+i)*6+3+j] = sinRdistSq * 6.232; // Completely arbitrary values
-            }
-
+            brFSIdata_.bld_def[(istart+i)*6+0] = trans_disp_rot[0] + r_rot[0] - r[0];
+            brFSIdata_.bld_def[(istart+i)*6+1] = trans_disp_rot[1] + r_rot[1] - r[1];
+            brFSIdata_.bld_def[(istart+i)*6+2] = trans_disp_rot[2] + r_rot[2] - r[2];
+            
+        
         }
-        iStart += nPtsBlade;
+        istart += nPtsBlade;
     }
+
+    if (bulk_.parallel_rank() == 0) {
+        std::ofstream bld_bm_mesh;
+        bld_bm_mesh.open("blade_beam_mesh_setsample.csv", std::ios_base::out) ;
+        for(int k=0; k < params_.nBRfsiPtsBlade[0]*3; k++) {
+            bld_bm_mesh << brFSIdata_.bld_ref_pos[k*6] << ","
+                        << brFSIdata_.bld_ref_pos[k*6+1] << ","
+                        << brFSIdata_.bld_ref_pos[k*6+2] << ","
+                        << brFSIdata_.bld_def[k*6] << ","
+                        << brFSIdata_.bld_def[k*6+1] << ","
+                        << brFSIdata_.bld_def[k*6+2] << ","
+                        << brFSIdata_.bld_def[k*6+3] << ","
+                        << brFSIdata_.bld_def[k*6+4] << ","
+                        << brFSIdata_.bld_def[k*6+5] << ","
+                        << brFSIdata_.bld_vel[k*6] << ","
+                        << brFSIdata_.bld_vel[k*6+1] << ","
+                        << brFSIdata_.bld_vel[k*6+2] << ","
+                        << brFSIdata_.bld_vel[k*6+3] << ","
+                        << brFSIdata_.bld_vel[k*6+4] << ","
+                        << brFSIdata_.bld_vel[k*6+5] << std::endl;
+            
+        }
+        
+        bld_bm_mesh.close();
+    }
+
+    // //Get the rotation axis
+    // double tilt = 5.0 * M_PI / 180.0;
+    // std::vector<double> wmTilt  = {0,4.0*tan(0.25*tilt),0};
+    // std::vector<double> tilt_axis(3,0.0);
+    // applyWMrotation(wmTilt.data(), x_axis.data(), tilt_axis.data());
+    
+    // //Rotate the hub first
+    // std::vector<double> wmHubRot(3,0.0);
+    // for (size_t i=0; i<3; i++) {
+    //     wmHubRot[i] = hubRot*tilt_axis[i];
+    //     brFSIdata_.hub_def[3+i] = -wmHubRot[i];
+    // }
+
+    // //For each node on the openfast blade1 mesh - compute distance from the blade root node. Apply a rotation varying as the square of the distance between 0 - 45 degrees about the [0 1 0] axis. Apply a translation displacement that produces a tip displacement of 5m
+    // int iStart = 0;
+    // int nBlades = params_.numBlades;;
+    // for (int iBlade=0; iBlade < nBlades; iBlade++) {
+
+    //     // std::cerr << "hub_ref_pos = " << std::setprecision(16) << brFSIdata_.hub_ref_pos[0] << ", " << brFSIdata_.hub_ref_pos[1] << ", " << brFSIdata_.hub_ref_pos[2] << std::endl;
+
+    //     std::vector<double> cone_axis(3,0.0);
+
+        
+    //     std::vector<double> wmRotBlade_ref(3,0.0);
+    //     for(size_t i=0; i<3; i++)
+    //         wmRotBlade_ref[i] = 4.0*tan(0.25 * iBlade * 120.0 * M_PI / 180.0)*tilt_axis[i] ;
+
+        
+    //     applyWMrotation(wmRotBlade_ref.data(), y_axis.data(), cone_axis.data());
+    //     std::vector<double> wmCone(3,0.0);
+    //     for(size_t i=0; i<3; i++)
+    //         wmCone[i] = 4.0*tan(-0.25 * iBlade * 2.5 * M_PI / 180.0) * cone_axis[i];
+
+
+    //     std::vector<double> wmRotBlade(3,0.0);
+    //     std::vector<double> tmp1(3,0.0);
+    //     std::vector<double> tmp2(3,0.0);
+    //     std::vector<double> wmRef(3,0.0);
+    //     composeWM(wmCone.data(), wmRotBlade_ref.data(), tmp1.data());
+    //     composeWM(wmTilt.data(), tmp1.data(), wmRef.data());
+    //     composeWM(wmHubRot.data(), wmRef.data(), wmRotBlade.data());
+        
+
+    //     //Set rotational displacement due to pitch
+    //     std::vector<double> wmRotPitch(3, 0.0);
+    //     std::vector<double> wmRotPitchBlade(3, 0.0);
+    //     applyWMrotation(wmRotBlade.data(), z_axis.data(), wmRotPitch.data()); //First rotate the blade pitch axis to the local blade
+    //     double rot = 4.0*tan(0.25 * (0.0 * M_PI / 180.0) * sin_omegat );
+    //     for(int j= 0; j < 3; j++) //Now apply rotation corresponding to pitch about that axis
+    //         wmRotPitch[j] *= rot;
+        
+    //     //Now compose with blade rotation to include pitch
+    //     composeWM(wmRotPitch.data(), wmRotBlade.data(), wmRotPitchBlade.data());
+
+
+
+        
+    //     brFSIdata_.bld_pitch[iBlade] = (0.0 * M_PI / 180.0) * sin_omegat;
+
+    //     for(int j=0; j < 3; j++) //Blade root does not include pitch
+    //         brFSIdata_.bld_root_def[iBlade*6+3+j] = -wmRotBlade[j];
+
+        
+        
+    //     int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
+    //     for (int i=0; i < nPtsBlade; i++) {
+
+    //         double rDistSq = calcDistanceSquared(&(brFSIdata_.bld_ref_pos[(iStart+i)*6]), &(brFSIdata_.bld_ref_pos[(iStart)*6]) )/10000.0;
+    //         double sinRdistSq = std::sin(rDistSq);
+    //         double tanRdistSq = std::tan(rDistSq);
+
+                
+    //         //Set local rotational displacement
+    //         std::vector<double> wmRot1 = {1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0)};
+    //         std::vector<double> wmRot(3,0.0);
+    //         applyWMrotation(wmRotBlade.data(), wmRot1.data(), wmRot.data());
+    //         rot = 4.0*tan(0.25 * (0.0 * M_PI / 180.0) * sinRdistSq  * sin_omegat ); // 4.0 * tan(phi/4.0) parameter for Wiener-Milenkovic
+    //         rot = 0.0;
+    //         for(int j= 0; j < 3; j++)
+    //             wmRot[j] *= rot;
+
+    //         std::vector<double> finalRot(3,0.0);
+    //         composeWM(wmRot.data(), wmRotBlade.data(), finalRot.data()); //Compose with hub orientation to account for rotation of turbine
+
+    //         std::vector<double> origZaxis = {0.0, 0.0, 1.0};
+    //         std::vector<double> rotZaxis(3,0.0);
+    //         applyWMrotation(finalRot.data(), origZaxis.data(), rotZaxis.data());
+
+    //         //Finally transpose the whole thing
+    //         for(int j=0; j < 3; j++)
+    //             brFSIdata_.bld_def[(iStart+i)*6+3+j] = -finalRot[j];
+
+
+    //         //Set translational displacement
+    //         double xDisp = sinRdistSq * 15.0 * sin_omegat;
+
+    //         std::vector<double> r(3,0.0);
+    //         for(int j=0; j < 3; j++)
+    //             r[j] = brFSIdata_.bld_ref_pos[(iStart+i)*6+j] - brFSIdata_.hub_ref_pos[j];
+            
+    //         std::vector<double> rRot(3,0.0);
+
+    //         std::vector<double> transDisp = {xDisp, xDisp, xDisp};
+    //         std::vector<double> transDispRot(3,0.0);
+
+    //         applyWMrotation(wmRotBlade.data(), transDisp.data(), transDispRot.data());
+
+    //         applyWMrotation(wmHubRot.data(), r.data(), rRot.data());
+    //         if (curTime < 1e-6) {
+    //             if ((rRot[0]+rRot[1]+rRot[2]-r[0]-r[1]-r[2]) > 1e-6) {
+    //                 std::cerr << "Ref pos = " << brFSIdata_.bld_ref_pos[(iStart+i)*6+0] << ", " << brFSIdata_.bld_ref_pos[(iStart+i)*6+1] << ", " << brFSIdata_.bld_ref_pos[(iStart+i)*6+2] <<
+    //                     ",  rRot = " << rRot[0] << ", " << rRot[1] << ", " << rRot[2] << std::endl;
+    //             }
+    //         }
+    //         brFSIdata_.bld_def[(iStart+i)*6+0] = transDispRot[0] + rRot[0] - r[0];
+    //         brFSIdata_.bld_def[(iStart+i)*6+1] = transDispRot[1] + rRot[1] - r[1];
+    //         brFSIdata_.bld_def[(iStart+i)*6+2] = transDispRot[2] + rRot[2] - r[2];
+
+    //         for (size_t j=0; j < 3; j++) {
+    //             brFSIdata_.bld_vel[(iStart+i)*6+j] = tanRdistSq * 3.743; // Completely arbitrary values
+    //             brFSIdata_.bld_vel[(iStart+i)*6+3+j] = sinRdistSq * 6.232; // Completely arbitrary values
+    //         }
+
+    //     }
+    //     iStart += nPtsBlade;
+    // }
 }
 
 
@@ -1306,10 +1511,10 @@ void fsiTurbine::setRefDisplacement(double curTime) {
   double theta=omega*curTime;
 
   //Rotate the hub first
-  std::vector<double> hubPos = {0, 0, 130.0};
-  std::vector<double> wmHubRot = {4.0*tan(0.25*theta), 0.0, 0.0};
+  std::vector<double> hubPos = {0, 0, 0.0};
+  std::vector<double> wmHubRot = {4.0*tan(0.25*0.0), 0.0, 0.0};
 
-  double sinOmegaT = std::sin(omega*curTime);
+  double sin_omegat = std::sin(omega*curTime);
 
   // extract the vector field type set by this function
   const int ndim = meta_.spatial_dimension();
@@ -1358,7 +1563,7 @@ void fsiTurbine::setRefDisplacement(double curTime) {
               double tanRdistSq = std::tan(rDistSq);
 
               //Set translational displacement due to deflection
-              double xDisp = sinRdistSq * 15.0 * sinOmegaT;
+              double xDisp = sinRdistSq * 15.0 * sin_omegat;
               std::vector<double> transDisp = {xDisp, xDisp, xDisp};
               std::vector<double> transDispRot(3,0.0);
               applyWMrotation(wmRotBlade.data(), transDisp.data(), transDispRot.data());
@@ -1374,7 +1579,7 @@ void fsiTurbine::setRefDisplacement(double curTime) {
               std::vector<double> pGlob(3,0.0);
               applyWMrotation(wmRotBlade.data(),pLoc.data(),pGlob.data());
 
-              double rot = 4.0*tan(0.25 * (45.0 * M_PI / 180.0) * sinRdistSq * sinOmegaT); // 4.0 * tan(phi/4.0) parameter for Wiener-Milenkovic
+              double rot = 4.0*tan(0.25 * (0.0 * M_PI / 180.0) * sinRdistSq * sin_omegat); // 4.0 * tan(phi/4.0) parameter for Wiener-Milenkovic
               std::vector<double> wmRot1 = {1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0)};
               std::vector<double> wmRot(3,0.0);
               applyWMrotation(wmRotBlade.data(), wmRot1.data(), wmRot.data());
@@ -1457,12 +1662,6 @@ void fsiTurbine::mapDisplacements() {
             //Now transfer the interpolated displacement to the CFD mesh node
             computeDisplacement(totDispNode.data(), tmpNodePos.data(), dx, oldxyz);
 
-            //Now linearly interpolate the velocity to the intermediate location
-            linInterpTotVelocity(&brFSIdata_.twr_vel[(*dispMapNode)*6], &brFSIdata_.twr_vel[(*dispMapNode + 1)*6], *dispMapInterpNode, totVelNode.data());
-
-            //Now transfer the interpolated translational and rotational velocity to an equivalent translational velocity on the CFD mesh node
-            computeMeshVelocity(totVelNode.data(), totDispNode.data(), tmpNodePos.data(), mVel, oldxyz);
-
         }
     }
 
@@ -1474,6 +1673,12 @@ void fsiTurbine::mapDisplacements() {
         int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
         stk::mesh::Selector sel(stk::mesh::selectUnion(bladeParts_[iBlade]));
         const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+
+        // std::cerr << "Blade " << iBlade << " Bld Root Def = " << brFSIdata_.bld_root_def[iBlade*6] << ", " << brFSIdata_.bld_root_def[iBlade*6 + 1] << ", " << brFSIdata_.bld_root_def[iBlade*6 + 2] << ", " <<
+        // 180.0*4.0*std::atan(0.25*brFSIdata_.bld_root_def[iBlade*6 + 3])/M_PI << ", " << brFSIdata_.bld_root_def[iBlade*6 + 4] << ", " << brFSIdata_.bld_root_def[iBlade*6 + 5] << std::endl;
+        // std::cerr << "Bld Pitch = " << brFSIdata_.bld_pitch[iBlade] << std::endl;
+
+        brFSIdata_.bld_pitch[iBlade] = 45.0 ;
 
         for (auto b: bkts) {
             for (size_t in=0; in < b->size(); in++) {
@@ -1490,14 +1695,11 @@ void fsiTurbine::mapDisplacements() {
                 //Now linearly interpolate the deflections to the intermediate location
                 linInterpTotDisplacement(&brFSIdata_.bld_def[(*dispMapNode + iStart)*6], &brFSIdata_.bld_def[(*dispMapNode + iStart + 1)*6], *dispMapInterpNode, totDispNode.data());
 
+                // std::cerr << "Blade " << iBlade << ", Total displacement " << totDispNode[0] << ", " << totDispNode[1] << ", " << totDispNode[2] << ", "
+                // << 180.0*4.0*std::atan(0.25*totDispNode[3])/M_PI << ", " << totDispNode[4] << ", " << totDispNode[5] << std::endl;
+
                 //Now transfer the interpolated displacement to the CFD mesh node
                 computeBladeDisplacement(totDispNode.data(), tmpNodePos.data(), dx, oldxyz, brFSIdata_.bld_pitch[iBlade], &brFSIdata_.bld_root_def[iBlade*6 + 3], brFSIdata_.bld_rloc[*dispMapNode + iStart]);
-
-                //Now linearly interpolate the velocity to the intermediate location
-                linInterpTotVelocity(&brFSIdata_.bld_vel[(*dispMapNode + iStart)*6], &brFSIdata_.bld_vel[(*dispMapNode + iStart + 1)*6], *dispMapInterpNode, totVelNode.data());
-
-                //Now transfer the interpolated translational and rotational velocity to an equivalent translational velocity on the CFD mesh node
-                computeMeshVelocity(totVelNode.data(), totDispNode.data(), tmpNodePos.data(), mVel, oldxyz);
 
             }
         }
@@ -1515,6 +1717,7 @@ void fsiTurbine::mapDisplacements() {
         // if (!bulk_.parallel_rank()) {
         //     std::cout << "Error in velocity for blade " << iBlade << " = " << errorNorm[0] << " " << errorNorm[1] << " " << errorNorm[2] << std::endl ;
         // }
+        
 
         iStart += nPtsBlade;
     }
@@ -1594,10 +1797,11 @@ void fsiTurbine::linInterpVec(double * a, double * b, double interpFac, double *
 void fsiTurbine::linInterpRotation(double * qStart, double * qEnd, double interpFac, double * qInterp) {
 
     std::vector<double> intermedQ(3,0.0);
+    
     composeWM(qStart, qEnd, intermedQ.data(), -1.0); //Remove rigid body rotation of qStart
     for(size_t i=0; i < 3; i++)
         intermedQ[i] = interpFac * intermedQ[i]; // Do the interpolation
-    composeWM(qStart, intermedQ.data(), qInterp); // Add rigid body rotation of qStart back
+    composeWM(intermedQ.data(), qStart, qInterp); // Add rigid body rotation of qStart back
 
 }
 
@@ -1610,7 +1814,7 @@ void fsiTurbine::composeWM(double * p, double * q, double * pPlusq, double trans
     cross(p, q, pCrossq.data());
 
     double delta1 = (4.0-p0)*(4.0-q0);
-    double delta2 = p0*q0 - transposeP*dot(p,q);
+    double delta2 = p0*q0 - transposeP*transposeQ*dot(p,q);
     double premultFac = 0.0;
     if (delta2 < 0)
         premultFac = -4.0/(delta1 - delta2);
@@ -1668,30 +1872,74 @@ void fsiTurbine::computeBladeDisplacement(double *totDispNode, double * totPosOF
     std::vector<double> pLoc(3,0.0);
     applyWMrotation(&(totPosOF[3]), p.data(), pLoc.data());
 
-    std::vector<double> pRot(3,0.0);
-    applyWMrotation(&(totDispNode[3]), pLoc.data(), pRot.data(),-1); // Apply the rotation corresponding to the final orientation to bring back to inertial frame
-
-    // Get `p` due to pitch
+    // Get pitch rotation
     std::vector<double> pitchRotWM(3,0.0);
     std::vector<double> globZ(3,0.0);
     std::vector<double> locZ = {{0.0, 0.0, 1.0}};
-    applyWMrotation(bldRootDef, locZ.data(), globZ.data());
+    applyWMrotation(bldRootDef, locZ.data(), globZ.data(),-1);
     for (size_t i=0; i < 3; i++)
-        pitchRotWM[i] = 4 * std::tan(pitch/4 * M_PI/180.0) * globZ[i];
+        pitchRotWM[i] = 4 * std::tan(-0.25 * pitch * M_PI/180.0) * globZ[i];
 
-    std::vector<double> pPitchRot(3,0.0);
-    applyWMrotation(pitchRotWM.data(), p.data(), pPitchRot.data());
+    std::vector<double> tot_def(3,0.0);
+    tot_def[0] = -totDispNode[3];
+    tot_def[1] = -totDispNode[4];
+    tot_def[2] = -totDispNode[5];
+    std::vector<double> def_m_pitch(3,0.0);
+    composeWM(pitchRotWM.data(), tot_def.data(), def_m_pitch.data(),-1);
 
-    // Get `p` due to ramped pitch
-    double k = 2.0; // controls steepness of the pitch ramp
-    double rampPitch = pitch * (1 - std::exp(-k*rLoc)) / (1 + std::exp(-k*rLoc));
-    std::vector<double> pRampPitchRot(3,0.0);
+    // Get ramped pitch
+    double k = 0.5; // controls steepness of the pitch ramp
+    // double rampPitch = pitch * (1 - std::exp(-k*(rLoc-5.0)  )) / (1 + std::exp(-k*(rLoc-5.0)) );
+    double rampPitch = 0.0; 
+    //if (rLoc > 0.5)
+    rampPitch = pitch * 0.5 * (1 + std::tanh( k * (rLoc-3.0) ) );
+    //else
+    //rampPitch = 0.0;
+
     for (size_t i=0; i < 3; i++)
-        pitchRotWM[i] = 4 * std::tan(rampPitch/4 * M_PI/180.0) * globZ[i];
-    applyWMrotation(pitchRotWM.data(), p.data(), pRampPitchRot.data());
+        pitchRotWM[i] = 4 * std::tan(-0.25 * rampPitch * M_PI/180.0) * globZ[i];
 
+    // std::vector<double> def_m_pitch(3,0.0) ;
+    // composeWM(pitchRotWM.data(), def_m_pitch.data(), def_w_ramp_pitch.data());
+    
+    std::vector<double> pRot(3,0.0);
+    //applyWMrotation(&totDispNode[3], pLoc.data(), pRot.data(), -1); // Apply the rotation corresponding to the final orientation to bring back to inertial frame    
+    applyWMrotation(def_m_pitch.data(), pLoc.data(), pRot.data()); // Apply the rotation corresponding to the final orientation to bring back to inertial frame
+
+
+    // if (rLoc < 5.0) {
+    //     std::cerr << "Pitch Rot = " << pitchRotWM[0] <<  ", " << pitchRotWM[1] <<  ", " << pitchRotWM[2]
+    //               << ", totDispNode = " << totDispNode[3] << ", " << totDispNode[4] << ", " << totDispNode[5]
+    //               << ", rLoc = " << rLoc
+    //               <<  std::endl;
+    // }
+
+    // std::vector<double> pPitchRot(3,0.0);
+    // applyWMrotation(pitchRotWM.data(), p.data(), pPitchRot.data());
+
+
+    // std::vector<double> pRampPitchRot(3,0.0);
+
+    // applyWMrotation(pitchRotWM.data(), p.data(), pRampPitchRot.data());
+
+    // if ( (pitch - rampPitch) > 0.1) {
+    //     std::cerr << "rLoc = " << rLoc << ", pitch = " << pitch << ", rampPitch = " << rampPitch 
+    //               << ", Total deformation = " << tot_def[0] << ", " << tot_def[1] << ", " << tot_def[2] 
+    //               << ", Pitch deformation = " << pitchRotWM[0] << ", " << pitchRotWM[1] << ", " << pitchRotWM[2]
+    //               << ", Deformation minus pitch = " << def_m_pitch[0] << ", " << def_m_pitch[1] << ", " << def_m_pitch[2]
+    //               << ", Ramped deformation = " << def_w_ramp_pitch[0] << ", " << def_w_ramp_pitch[1] << ", " << def_w_ramp_pitch[2] 
+    //               << ", pRot - p = " << pRot[0] - p[0] << ", " << pRot[1] - p[1] << ", " << pRot[2] - p[2] << std::endl ;
+    // }
+
+    if ( (rLoc > 60) && (rLoc < 60.5) ) {
+        std::cerr << "totDef = " << totDispNode[3] << ", " << totDispNode[4] << ", " << totDispNode[5]
+                  << ", pitchRotWM = " << pitchRotWM[0] << ", " << pitchRotWM[1] << ", " << pitchRotWM[2]
+                  << ", bld_root_def = " << bldRootDef[0] << ", " << bldRootDef[1] << ", " << bldRootDef[2]
+                  << ", def_m_pitch = " << def_m_pitch[0] << ", " << def_m_pitch[1] << ", " << def_m_pitch[2] << std::endl;
+    }
+    
     for (size_t i=0; i < 3; i++)
-        transDispNode[i] = totDispNode[i] + pRot[i] - p[i] - pPitchRot[i] + pRampPitchRot[i];
+        transDispNode[i] = totDispNode[i] + pRot[i] - p[i];
 }
 
 //! Convert one array of 6 velocities (transX, transY, transZ, wmX, wmY, wmZ) into one vector of translational velocity at a given node on the turbine surface CFD mesh.
