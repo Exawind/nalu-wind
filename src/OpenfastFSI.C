@@ -262,9 +262,7 @@ void OpenfastFSI::compute_mapping() {
             if (bulk_.parallel_rank() == turbProc) {
                 FAST.getTowerRefPositions(fsiTurbineData_[i]->brFSIdata_.twr_ref_pos, i);
                 FAST.getBladeRefPositions(fsiTurbineData_[i]->brFSIdata_.bld_ref_pos, i);
-                std::cerr << "Finished getting blade ref positions." << std::endl;
                 FAST.getBladeRootRefPositions(fsiTurbineData_[i]->brFSIdata_.bld_root_ref_pos, i);
-                std::cerr << "Finished getting blade root ref positions" << std::endl;
                 FAST.getHubRefPosition(fsiTurbineData_[i]->brFSIdata_.hub_ref_pos, i);
                 FAST.getNacelleRefPosition(fsiTurbineData_[i]->brFSIdata_.nac_ref_pos, i);
                 FAST.getBladeRloc(fsiTurbineData_[i]->brFSIdata_.bld_rloc, i);
@@ -376,11 +374,6 @@ void OpenfastFSI::get_displacements(double current_time) {
                 FAST.getBladePitch(fsiTurbineData_[i]->brFSIdata_.bld_pitch, i);
                 FAST.getHubDisplacement(fsiTurbineData_[i]->brFSIdata_.hub_def, fsiTurbineData_[i]->brFSIdata_.hub_vel, i);
                 FAST.getNacelleDisplacement(fsiTurbineData_[i]->brFSIdata_.nac_def, fsiTurbineData_[i]->brFSIdata_.nac_vel, i);
-                for (int iBlade=0; iBlade < 3; iBlade++) {
-                    std::cerr << "Blade " << iBlade << " Bld Root Def = " << fsiTurbineData_[i]->brFSIdata_.bld_root_def[iBlade*6] << ", " << fsiTurbineData_[i]->brFSIdata_.bld_root_def[iBlade*6 + 1] << ", " << fsiTurbineData_[i]->brFSIdata_.bld_root_def[iBlade*6 + 2] << ", " <<
-                        fsiTurbineData_[i]->brFSIdata_.bld_root_def[iBlade*6 + 3] << ", " << fsiTurbineData_[i]->brFSIdata_.bld_root_def[iBlade*6 + 4] << ", " << fsiTurbineData_[i]->brFSIdata_.bld_root_def[iBlade*6 + 5] << std::endl;
-                    }
-                std::cerr << "Blade Pitch = " << fsiTurbineData_[i]->brFSIdata_.bld_pitch[0] << ", " << fsiTurbineData_[i]->brFSIdata_.bld_pitch[1] << ", " << fsiTurbineData_[i]->brFSIdata_.bld_pitch[2] << std::endl;
             }
 
             int iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.twr_def.data(), (fsiTurbineData_[i]->params_.nBRfsiPtsTwr)*6, MPI_DOUBLE, turbProc, bulk_.parallel());
@@ -486,7 +479,6 @@ void OpenfastFSI::map_loads(const int tStep, const double curTime)
             fsiTurbineData_[i]->mapLoads();
             int nTotBldNodes = fsiTurbineData_[i]->params_.nTotBRfsiPtsBlade;
             if (bulk_.parallel_rank() == turbProc) {
-                std::cerr << "nTotBldNodes = " << nTotBldNodes << std::endl ;
                 int iError = MPI_Reduce(MPI_IN_PLACE, fsiTurbineData_[i]->brFSIdata_.twr_ld.data(), (fsiTurbineData_[i]->params_.nBRfsiPtsTwr)*6, MPI_DOUBLE, MPI_SUM, turbProc, bulk_.parallel());
                 iError = MPI_Reduce(MPI_IN_PLACE, fsiTurbineData_[i]->brFSIdata_.bld_ld.data(), nTotBldNodes*6, MPI_DOUBLE, MPI_SUM, turbProc, bulk_.parallel());
             } else {

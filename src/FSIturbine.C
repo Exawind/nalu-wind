@@ -1217,7 +1217,6 @@ void fsiTurbine::setSampleDisplacement(double curTime) {
         Step 4: Create final deformation WM parameters for each blade node
     */
 
-    std::cerr << std::setprecision(16) << "Hub ref position = " << brFSIdata_.hub_ref_pos[0] << ", " << brFSIdata_.hub_ref_pos[1] << ", " << brFSIdata_.hub_ref_pos[2] << std::endl;
     std::cerr << "Setting Sample displacements " << std::endl ;
 
     int nBlades = params_.numBlades;;
@@ -1888,7 +1887,7 @@ void fsiTurbine::computeBladeDisplacement(double *totDispNode, double * totPosOF
     composeWM(pitchRotWM.data(), tot_def.data(), def_m_pitch.data(),-1);
 
     // Get ramped pitch
-    double k = 0.5; // controls steepness of the pitch ramp
+    double k = 1.0; // controls steepness of the pitch ramp
     // double rampPitch = pitch * (1 - std::exp(-k*(rLoc-5.0)  )) / (1 + std::exp(-k*(rLoc-5.0)) );
     double rampPitch = 0.0; 
     //if (rLoc > 0.5)
@@ -1899,12 +1898,12 @@ void fsiTurbine::computeBladeDisplacement(double *totDispNode, double * totPosOF
     for (size_t i=0; i < 3; i++)
         pitchRotWM[i] = 4 * std::tan(-0.25 * rampPitch * M_PI/180.0) * globZ[i];
 
-    // std::vector<double> def_m_pitch(3,0.0) ;
-    // composeWM(pitchRotWM.data(), def_m_pitch.data(), def_w_ramp_pitch.data());
+    std::vector<double> def_w_ramp_pitch(3,0.0) ;
+    composeWM(pitchRotWM.data(), def_m_pitch.data(), def_w_ramp_pitch.data());
     
     std::vector<double> pRot(3,0.0);
     //applyWMrotation(&totDispNode[3], pLoc.data(), pRot.data(), -1); // Apply the rotation corresponding to the final orientation to bring back to inertial frame    
-    applyWMrotation(def_m_pitch.data(), pLoc.data(), pRot.data()); // Apply the rotation corresponding to the final orientation to bring back to inertial frame
+    applyWMrotation(def_w_ramp_pitch.data(), pLoc.data(), pRot.data()); // Apply the rotation corresponding to the final orientation to bring back to inertial frame
 
 
     // if (rLoc < 5.0) {
@@ -1931,12 +1930,12 @@ void fsiTurbine::computeBladeDisplacement(double *totDispNode, double * totPosOF
     //               << ", pRot - p = " << pRot[0] - p[0] << ", " << pRot[1] - p[1] << ", " << pRot[2] - p[2] << std::endl ;
     // }
 
-    if ( (rLoc > 60) && (rLoc < 60.5) ) {
-        std::cerr << "totDef = " << totDispNode[3] << ", " << totDispNode[4] << ", " << totDispNode[5]
-                  << ", pitchRotWM = " << pitchRotWM[0] << ", " << pitchRotWM[1] << ", " << pitchRotWM[2]
-                  << ", bld_root_def = " << bldRootDef[0] << ", " << bldRootDef[1] << ", " << bldRootDef[2]
-                  << ", def_m_pitch = " << def_m_pitch[0] << ", " << def_m_pitch[1] << ", " << def_m_pitch[2] << std::endl;
-    }
+    // if ( (rLoc > 60) && (rLoc < 60.5) ) {
+    //     std::cerr << "totDef = " << totDispNode[3] << ", " << totDispNode[4] << ", " << totDispNode[5]
+    //               << ", pitchRotWM = " << pitchRotWM[0] << ", " << pitchRotWM[1] << ", " << pitchRotWM[2]
+    //               << ", bld_root_def = " << bldRootDef[0] << ", " << bldRootDef[1] << ", " << bldRootDef[2]
+    //               << ", def_m_pitch = " << def_m_pitch[0] << ", " << def_m_pitch[1] << ", " << def_m_pitch[2] << std::endl;
+    // }
     
     for (size_t i=0; i < 3; i++)
         transDispNode[i] = totDispNode[i] + pRot[i] - p[i];
