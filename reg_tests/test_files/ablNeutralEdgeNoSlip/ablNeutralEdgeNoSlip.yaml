@@ -39,7 +39,7 @@ realms:
     use_edges: yes
     automatic_decomposition_type: rcb
 
-    # This defines the equations to be solved: momentum, pressure, static enthalpy, 
+    # This defines the equations to be solved: momentum, pressure, static enthalpy,
     # and subgrid-scale turbulent kinetic energy.  The equation system will be iterated
     # a maximum of 4 outer iterations.
     equation_systems:
@@ -137,7 +137,7 @@ realms:
     - periodic_boundary_condition: bc_east_west
       target_name: [east, west]
       periodic_user_data:
-        search_tolerance: 0.0001 
+        search_tolerance: 0.0001
 
     - abltop_boundary_condition: bc_upper
       target_name: upper
@@ -147,8 +147,8 @@ realms:
 
     - wall_boundary_condition: bc_lower
       target_name: lower
-      wall_user_data: 
-        no_slip: true     
+      wall_user_data:
+        no_slip: true
         velocity: [0.0,0.0,0.0]
         abl_wall_function:
           surface_heating_table:
@@ -206,7 +206,7 @@ realms:
         # the planar-averaged wind at a certain height to a certain
         # speed.
         - source_terms:
-            momentum: 
+            momentum:
               - buoyancy_boussinesq
               - EarthCoriolis
               - abl_forcing
@@ -225,7 +225,7 @@ realms:
         - limiter:
             pressure: no
             velocity: no
-            enthalpy: yes 
+            enthalpy: yes
 
         - peclet_function_form:
             velocity: classic
@@ -308,22 +308,23 @@ realms:
               reset_time_delta: 0 #s, Time to reset LIDAR after sweep.
               elevation_angles: [0]
 
-          - name: folder-to-be-created/scan-2
-            type: scanning
-            frequency: 10 #Hz
+          - name: radar/radar
+            type: radar
+            frequency: 0.2
             points_along_line: 2
             output: text
-            predictor: nearest
-            scanning_lidar_specifications:
-              center: *lidar_center
-              beam_length: 200000 # to check behavior when points aren't found
-              axis: [1,0,0] # Zero angle vector for the angular sweep
-              stare_time: 1 #s
-              sweep_angle: 30 #deg, Extent of angular sweep between sweep_angle/2 to -sweep_angle/2
-              step_delta_angle: 2 #deg
-              reset_time_delta: 1 #s, Time to reset LIDAR after sweep.
-              elevation_angles: [0]
-
+            radar_cone_grid:
+              cone_angle: 0.5 #half angle of cone, in degrees
+              num_circles: 2 # number of cones inside the half angle to sample
+              lines_per_cone_circle: 6 # number of lines around the cone circle
+            radar_specifications:
+              bbox: [0., 0., 0., 5000., 5000., 1000.] # where to cut the radar line(m)
+              center: [-10000, 2500, 100] #ideally outside of the box
+              angular_speed: 1 #degrees to sweep in a second
+              axis: [1, 0, 0] #main axis, cone grid is set around this
+              sweep_angle: 10 #angle of the sweep
+              reset_time:  0 # time to pause after a sweep
+              elevation_angles: [0,1,2,3] # elevation angles to scan after reset
 
 
     # This defines the ABL forcing to drive the winds to 8 m/s from

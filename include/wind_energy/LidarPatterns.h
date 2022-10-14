@@ -10,6 +10,8 @@
 #ifndef LidarPatterns_H
 #define LidarPatterns_H
 
+#include "vs/vector.h"
+
 #include <array>
 #include <cmath>
 #include <memory>
@@ -36,7 +38,7 @@ public:
   virtual Segment generate(double time) const = 0;
 };
 
-enum class SegmentType { SPINNER, SCANNING };
+enum class SegmentType { SPINNER, SCANNING, RADAR };
 SegmentType segment_generator_types(std::string name);
 std::unique_ptr<SegmentGenerator> make_segment_generator(SegmentType type);
 std::unique_ptr<SegmentGenerator>
@@ -121,6 +123,37 @@ private:
     convert::degrees_to_radians(90), convert::rotations_to_radians(6.5),
     convert::degrees_to_radians(15.2)};
 };
+
+class RadarSegmentGenerator final : public SegmentGenerator
+{
+public:
+  void load(const YAML::Node& node) final;
+  Segment generate(double t) const final;
+  void set_axis(vs::Vector axis);
+
+private:
+  enum class phase { FORWARD, FORWARD_PAUSE, REVERSE, REVERSE_PAUSE };
+  double periodic_time(double time) const;
+  int periodic_count(double time) const;
+  phase determine_operation_phase(double periodic_time) const;
+  double determine_current_angle(double periodic_time) const;
+  double determine_elevation_angle(int sweep_count) const;
+  double total_sweep_time() const;
+  double reset_time_delta_{1.0};
+  double sweep_angle_{convert::degrees_to_radians(20)};
+  double angular_speed_{convert::degrees_to_radians(30)}; // per second
+  double beam_length_{1.0};
+  std::array<double, 3> center_{0, 0, 0};
+  std::array<double, 3> axis_{1, 0, 0};
+  std::array<double, 3> ground_normal_{0, 0, 1};
+  std::array<vs::Vector, 8> box_;
+  std::vector<double> elevation_table_{0};
+};
+
+namespace details {
+std::pair<bool, Segment> line_intersection_with_box(
+  std::array<vs::Vector, 8> box, vs::Vector origin, vs::Vector line);
+}
 
 } // namespace nalu
 } // namespace sierra

@@ -53,7 +53,7 @@ main(int argc, char** argv)
     sierra::nalu::MasterElementRepo::clear();
   }
 
-  Kokkos::finalize_all();
+  Kokkos::finalize();
   MPI_Finalize();
 
   return returnVal;
