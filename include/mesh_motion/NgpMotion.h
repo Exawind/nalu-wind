@@ -101,11 +101,9 @@ struct ThreeDVecType
 class NgpMotion
 {
 public:
-  KOKKOS_FORCEINLINE_FUNCTION
   NgpMotion() = default;
 
-  KOKKOS_FUNCTION
-  virtual ~NgpMotion() {}
+  virtual ~NgpMotion() = default;
 
   virtual NgpMotion* create_on_device() = 0;
 
@@ -185,10 +183,8 @@ template <typename T>
 class NgpMotionKernel : public NgpMotion
 {
 public:
-  KOKKOS_FORCEINLINE_FUNCTION
   NgpMotionKernel() = default;
 
-  KOKKOS_FUNCTION
   virtual ~NgpMotionKernel() = default;
 
   virtual NgpMotion* create_on_device() final

@@ -73,6 +73,7 @@ AMSMomentumEdgePecletAlg::execute()
   auto* pecFunc = pecletFunction_;
   const int ndim = nDim_;
   const auto eps = eps_;
+  const auto pecScale = pecScale_;
 
   nalu_ngp::run_edge_algorithm(
     "compute_peclet_factor", ngpMesh, sel,
@@ -97,7 +98,7 @@ AMSMomentumEdgePecletAlg::execute()
       }
 
       const DblType pecnum =
-        rhoIp * stk::math::abs(udotx) / (muIp + pecScale_ * mutIp + eps);
+        rhoIp * stk::math::abs(udotx) / (muIp + pecScale * mutIp + eps);
       pecletNumber.get(edge, 0) = pecnum;
       pecletFactor.get(edge, 0) = pecFunc->execute(pecnum);
     });

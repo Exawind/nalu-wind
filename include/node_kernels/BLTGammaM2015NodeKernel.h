@@ -35,10 +35,8 @@ class BLTGammaM2015NodeKernel : public NGPNodeKernel<BLTGammaM2015NodeKernel>
 public:
   BLTGammaM2015NodeKernel(const stk::mesh::MetaData&);
 
-  KOKKOS_FORCEINLINE_FUNCTION
   BLTGammaM2015NodeKernel() = delete;
 
-  KOKKOS_FUNCTION
   virtual ~BLTGammaM2015NodeKernel() = default;
 
   virtual void setup(Realm&) override;
@@ -49,6 +47,7 @@ public:
     NodeKernelTraits::RhsType&,
     const stk::mesh::FastMeshIndex&) override;
 
+  KOKKOS_FUNCTION
   double FPG(const double& out);
 
 private:

@@ -56,6 +56,7 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   maxStepCount = realm.get_max_time_step_count();
 }
 
+KOKKOS_FUNCTION
 double
 BLTGammaM2015NodeKernel::FPG(const double& lamda0L)
 {

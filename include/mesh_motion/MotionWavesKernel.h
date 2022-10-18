@@ -18,10 +18,8 @@ class MotionWavesKernel : public NgpMotionKernel<MotionWavesKernel>
 public:
   MotionWavesKernel(stk::mesh::MetaData&, const YAML::Node&);
 
-  KOKKOS_FUNCTION
   MotionWavesKernel() = default;
 
-  KOKKOS_FUNCTION
   virtual ~MotionWavesKernel() = default;
 
   /** Function to compute motion-specific transformation matrix

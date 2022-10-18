@@ -46,19 +46,6 @@ check_that_values_match(
     }
   }
 }
-
-void
-copy_DoubleType0_to_double(
-  const sierra::nalu::SharedMemView<DoubleType**>& view,
-  std::vector<double>& vec)
-{
-  const DoubleType* viewValues = view.data();
-  int len = view.size();
-  vec.resize(len);
-  for (int i = 0; i < len; ++i) {
-    vec[i] = stk::simd::get_data(viewValues[i], 0);
-  }
-}
 } // namespace
 
 void
