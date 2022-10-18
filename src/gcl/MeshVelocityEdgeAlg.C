@@ -94,6 +94,7 @@ MeshVelocityEdgeAlg<AlgTraits>::execute()
   const auto meshDispNID = meshDispN_;
   MasterElement* meSCS = meSCS_;
   const auto isoCoordsShapeFcn = isoCoordsShapeFcn_;
+  const auto scsFaceNodeMap = scsFaceNodeMap_;
 
   const stk::mesh::Selector sel = meta.locally_owned_part() &
                                   stk::mesh::selectUnion(partVec_) &
@@ -133,10 +134,10 @@ MeshVelocityEdgeAlg<AlgTraits>::execute()
 
       for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
 
-        const int na = scsFaceNodeMap_[ip][0];
-        const int nb = scsFaceNodeMap_[ip][1];
-        const int nc = scsFaceNodeMap_[ip][2];
-        const int nd = scsFaceNodeMap_[ip][3];
+        const int na = scsFaceNodeMap[ip][0];
+        const int nb = scsFaceNodeMap[ip][1];
+        const int nc = scsFaceNodeMap[ip][2];
+        const int nd = scsFaceNodeMap[ip][3];
 
         DoubleType scs_vol_coords[8][3];
 
