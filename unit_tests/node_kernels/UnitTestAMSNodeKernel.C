@@ -316,6 +316,8 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_forcing)
   solnOpts_.meshMotion_ = false;
   solnOpts_.externalMeshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
+  solnOpts_.eastVector_ = {1.0, 0.0, 0.0};
+  solnOpts_.northVector_ = {0.0, 1.0, 0.0};
 
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 3, partVec_[0]);

@@ -128,15 +128,16 @@ MomentumBodyForceBoxNodeKernel::setup(Realm& realm)
       const std::string algName = "compute_mdot_area_" + std::to_string(topo);
       const stk::mesh::Selector sel = realm.meta_data().locally_owned_part() &
                                       stk::mesh::Selector(*mdotPart_);
+      const auto ndim = nDim_;
 
       double ma = 0.0;
       nalu_ngp::run_entity_par_reduce(
         algName, ngpMesh, realm.meta_data().side_rank(), sel,
         KOKKOS_LAMBDA(const MeshIndex& mi, double& sum) {
           for (int ip = 0; ip < numScsIp; ++ip) {
-            const int offSetAveraVec = ip * nDim_;
+            const int offSetAveraVec = ip * ndim;
             double aMag = 0.0;
-            for (int j = 0; j < nDim_; ++j) {
+            for (int j = 0; j < ndim; ++j) {
               aMag += areaVec.get(mi, offSetAveraVec + j) *
                       areaVec.get(mi, offSetAveraVec + j);
             }

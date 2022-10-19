@@ -12,10 +12,8 @@ class MotionDeformingInteriorKernel
 public:
   MotionDeformingInteriorKernel(stk::mesh::MetaData&, const YAML::Node&);
 
-  KOKKOS_FUNCTION
   MotionDeformingInteriorKernel() = default;
 
-  KOKKOS_FUNCTION
   virtual ~MotionDeformingInteriorKernel() = default;
 
   /** Function to compute motion-specific transformation matrix

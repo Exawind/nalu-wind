@@ -52,7 +52,8 @@ MeshVelocityAlg<AlgTraits>::MeshVelocityAlg(Realm& realm, stk::mesh::Part* part)
       "swept_face_volume",
       stk::mesh::StateN,
       stk::topology::ELEM_RANK)),
-    meSCS_(MasterElementRepo::get_surface_master_element<AlgTraits>())
+    meSCS_(MasterElementRepo::get_surface_master_element<AlgTraits>()),
+    isoCoordsShapeFcn_("isoCoordShapFcn", 152)
 {
   if (!std::is_same<AlgTraits, AlgTraitsHex8>::value) {
     throw std::runtime_error("MeshVelocityEdgeAlg is only supported for Hex8");
@@ -71,7 +72,11 @@ MeshVelocityAlg<AlgTraits>::MeshVelocityAlg(Realm& realm, stk::mesh::Part* part)
   elemData_.add_gathered_nodal_field(meshDispN_, AlgTraits::nDim_);
 
   elemData_.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
-  meSCS_->general_shape_fcn(NUM_IP, isoParCoords_, isoCoordsShapeFcn_);
+  Kokkos::View<double*, sierra::nalu::MemSpace> isoShapeHost(
+    "isoShapHost", 152);
+  meSCS_->general_shape_fcn(NUM_IP, isoParCoords_, &isoShapeHost(0));
+  Kokkos::deep_copy(isoCoordsShapeFcn_, isoShapeHost);
+
 } // namespace nalu
 
 template <typename AlgTraits>
@@ -97,6 +102,7 @@ MeshVelocityAlg<AlgTraits>::execute()
   const auto meshDispNp1ID = meshDispNp1_;
   const auto meshDispNID = meshDispN_;
   const auto sweptVolNID = sweptVolumeN_;
+  const auto isoCoordsShapeFcn = isoCoordsShapeFcn_;
 
   const stk::mesh::Selector sel = meta.locally_owned_part() &
                                   stk::mesh::selectUnion(partVec_) &
@@ -126,7 +132,7 @@ MeshVelocityAlg<AlgTraits>::execute()
         }
         for (int k = 0; k < AlgTraits::nodesPerElement_; k++) {
           const DoubleType r =
-            isoCoordsShapeFcn_[i * AlgTraits::nodesPerElement_ + k];
+            isoCoordsShapeFcn(i * AlgTraits::nodesPerElement_ + k);
           for (int j = 0; j < AlgTraits::nDim_; j++) {
             dx[i][j] += r * (dispNp1(k, j) - dispN(k, j));
             scs_coords_n[i][j] += r * (mCoords(k, j) + dispN(k, j));

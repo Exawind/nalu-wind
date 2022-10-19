@@ -17,10 +17,8 @@ class MotionScalingKernel : public NgpMotionKernel<MotionScalingKernel>
 public:
   MotionScalingKernel(stk::mesh::MetaData&, const YAML::Node&);
 
-  KOKKOS_FUNCTION
   MotionScalingKernel() = default;
 
-  KOKKOS_FUNCTION
   virtual ~MotionScalingKernel() = default;
 
   /** Function to compute motion-specific transformation matrix

@@ -120,6 +120,7 @@ SSTAMSAveragesAlg::execute()
   const DblType beta_kol_local = beta_kol;
   const DblType aspectRatioSwitch = aspectRatioSwitch_;
   const DblType avgTimeCoeff = avgTimeCoeff_;
+  const auto lengthScaleLimiter = lengthScaleLimiter_;
 
   const bool RANSBelowKs = RANSBelowKs_;
   DblType k_s = 0;
@@ -156,7 +157,7 @@ SSTAMSAveragesAlg::execute()
       const DblType alpha = stk::math::pow(beta.get(mi, 0), 1.7);
 
       // store RANS time scale
-      if (lengthScaleLimiter_) {
+      if (lengthScaleLimiter) {
         const DblType l_t = stk::math::sqrt(tke.get(mi, 0)) /
                             (stk::math::pow(betaStar, .25) * sdr.get(mi, 0));
         avgTime.get(mi, 0) =

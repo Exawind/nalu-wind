@@ -11,10 +11,8 @@ class MotionRotationKernel : public NgpMotionKernel<MotionRotationKernel>
 public:
   MotionRotationKernel(const YAML::Node&);
 
-  KOKKOS_FUNCTION
   MotionRotationKernel() = default;
 
-  KOKKOS_FUNCTION
   virtual ~MotionRotationKernel() = default;
 
   /** Function to compute motion-specific transformation matrix

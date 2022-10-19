@@ -35,7 +35,9 @@ MomentumSSTAMSForcingNodeKernel::MomentumSSTAMSForcingNodeKernel(
       solnOpts.get_turb_model_constant(TM_periodicForcingLengthY)),
     periodicForcingLengthZ_(
       solnOpts.get_turb_model_constant(TM_periodicForcingLengthZ)),
-    nDim_(bulk.mesh_meta_data().spatial_dimension())
+    nDim_(bulk.mesh_meta_data().spatial_dimension()),
+    eastVector_("eastVector", nDim_),
+    northVector_("northVector", nDim_)
 {
   const auto& meta = bulk.mesh_meta_data();
 
@@ -60,6 +62,16 @@ MomentumSSTAMSForcingNodeKernel::MomentumSSTAMSForcingNodeKernel(
 
   // output quantities
   forcingCompID_ = get_field_ordinal(meta, "forcing_components");
+
+  // setup vectors
+  DoubleView::HostMirror eastHost("eastHost", nDim_);
+  DoubleView::HostMirror northHost("northHost", nDim_);
+  for (int i = 0; i < nDim_; i++) {
+    eastHost(i) = solnOpts.eastVector_[i];
+    northHost(i) = solnOpts.northVector_[i];
+  }
+  Kokkos::deep_copy(eastVector_, eastHost);
+  Kokkos::deep_copy(northVector_, northHost);
 }
 
 void
@@ -86,8 +98,6 @@ MomentumSSTAMSForcingNodeKernel::setup(Realm& realm)
   forcingComp_ = fieldMgr.get_field<double>(forcingCompID_);
   RANSBelowKs_ = realm.solutionOptions_->RANSBelowKs_;
   z0_ = realm.solutionOptions_->roughnessHeight_;
-  eastVector_ = realm.solutionOptions_->eastVector_;
-  northVector_ = realm.solutionOptions_->northVector_;
 }
 
 void
@@ -221,7 +231,7 @@ MomentumSSTAMSForcingNodeKernel::execute(
     const NodeKernelTraits::DblType k_s = 30. * z0_;
     int gravity_i;
     for (int i = 0; i < 3; ++i) {
-      if ((eastVector_[i] == 0.0) && (northVector_[i] == 0.0)) {
+      if ((eastVector_(i) == 0.0) && (northVector_(i) == 0.0)) {
         gravity_i = i;
       }
     }

@@ -17,6 +17,9 @@
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
 
+using DoubleView = Kokkos::View<double*, sierra::nalu::MemSpace>;
+using DoubleViewHost = DoubleView::HostMirror;
+
 namespace sierra {
 namespace nalu {
 
@@ -93,8 +96,8 @@ private:
 
   bool RANSBelowKs_;
   double z0_;
-  std::vector<double> eastVector_;
-  std::vector<double> northVector_;
+  DoubleView eastVector_;
+  DoubleView northVector_;
 };
 
 } // namespace nalu
