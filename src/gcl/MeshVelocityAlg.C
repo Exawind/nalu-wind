@@ -75,7 +75,7 @@ MeshVelocityAlg<AlgTraits>::MeshVelocityAlg(Realm& realm, stk::mesh::Part* part)
   Kokkos::View<double*, sierra::nalu::MemSpace> isoShapeHost(
     "isoShapHost", 152);
   meSCS_->general_shape_fcn(NUM_IP, isoParCoords_, &isoShapeHost(0));
-  Kokkos::deep_copy(isoShapeHost, isoCoordsShapeFcn_);
+  Kokkos::deep_copy(isoCoordsShapeFcn_, isoShapeHost);
 
 } // namespace nalu
 

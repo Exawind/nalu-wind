@@ -62,6 +62,16 @@ MomentumSSTAMSForcingNodeKernel::MomentumSSTAMSForcingNodeKernel(
 
   // output quantities
   forcingCompID_ = get_field_ordinal(meta, "forcing_components");
+
+  // setup vectors
+  DoubleView::HostMirror eastHost("eastHost", nDim_);
+  DoubleView::HostMirror northHost("northHost", nDim_);
+  for (int i = 0; i < nDim_; i++) {
+    eastHost(i) = solnOpts.eastVector_[i];
+    northHost(i) = solnOpts.northVector_[i];
+  }
+  Kokkos::deep_copy(eastVector_, eastHost);
+  Kokkos::deep_copy(northVector_, northHost);
 }
 
 void
@@ -88,14 +98,6 @@ MomentumSSTAMSForcingNodeKernel::setup(Realm& realm)
   forcingComp_ = fieldMgr.get_field<double>(forcingCompID_);
   RANSBelowKs_ = realm.solutionOptions_->RANSBelowKs_;
   z0_ = realm.solutionOptions_->roughnessHeight_;
-  DoubleView::HostMirror eastHost("eastHost", nDim_);
-  DoubleView::HostMirror northHost("northHost", nDim_);
-  for (int i = 0; i < nDim_; i++) {
-    eastHost(i) = realm.solutionOptions_->eastVector_[i];
-    northHost(i) = realm.solutionOptions_->northVector_[i];
-  }
-  Kokkos::deep_copy(eastVector_, eastHost);
-  Kokkos::deep_copy(northVector_, northHost);
 }
 
 void

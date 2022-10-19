@@ -66,7 +66,7 @@ MeshVelocityEdgeAlg<AlgTraits>::MeshVelocityEdgeAlg(
   Kokkos::View<double*, sierra::nalu::MemSpace> isoShapeHost(
     "isoShapHost", 152);
   meSCS_->general_shape_fcn(19, isoParCoords_, &isoShapeHost(0));
-  Kokkos::deep_copy(isoShapeHost, isoCoordsShapeFcn_);
+  Kokkos::deep_copy(isoCoordsShapeFcn_, isoShapeHost);
 
   if (!std::is_same<AlgTraits, AlgTraitsHex8>::value) {
     throw std::runtime_error("MeshVelocityEdgeAlg is only supported for Hex8");
