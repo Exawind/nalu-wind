@@ -72,7 +72,7 @@ private:
     {5, 12, 18, 9},   {9, 6, 16, 18},   {9, 7, 15, 18},   {8, 9, 18, 17},
     {11, 12, 18, 17}, {12, 10, 16, 18}, {14, 15, 18, 16}, {13, 17, 18, 15}};
 
-  Kokkos::View<double*, sierra::nalu::MemSpace>isoCoordsShapeFcn_;
+  Kokkos::View<double*, sierra::nalu::MemSpace> isoCoordsShapeFcn_;
 };
 
 } // namespace nalu

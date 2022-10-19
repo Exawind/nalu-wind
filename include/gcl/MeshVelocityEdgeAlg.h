@@ -68,18 +68,18 @@ private:
   };
 
   const Kokkos::Array<Kokkos::Array<int, 4>, 12> scsFaceNodeMap_ = {
-      Kokkos::Array<int,4>{12, 0, 4, 18},
-      Kokkos::Array<int,4>{16, 1, 4, 18},
-      Kokkos::Array<int,4>{2, 4, 18, 15},
-      Kokkos::Array<int,4>{3, 17, 18, 4},
-      Kokkos::Array<int,4>{5, 12, 18, 9},
-      Kokkos::Array<int,4>{9, 6, 16, 18},
-      Kokkos::Array<int,4>{9, 7, 15, 18},
-      Kokkos::Array<int,4>{8, 9, 18, 17},
-      Kokkos::Array<int,4>{11, 12, 18, 17},
-      Kokkos::Array<int,4>{12, 10, 16, 18},
-      Kokkos::Array<int,4>{14, 15, 18, 16},
-      Kokkos::Array<int,4>{13, 17, 18, 15}};
+    Kokkos::Array<int, 4>{12, 0, 4, 18},
+    Kokkos::Array<int, 4>{16, 1, 4, 18},
+    Kokkos::Array<int, 4>{2, 4, 18, 15},
+    Kokkos::Array<int, 4>{3, 17, 18, 4},
+    Kokkos::Array<int, 4>{5, 12, 18, 9},
+    Kokkos::Array<int, 4>{9, 6, 16, 18},
+    Kokkos::Array<int, 4>{9, 7, 15, 18},
+    Kokkos::Array<int, 4>{8, 9, 18, 17},
+    Kokkos::Array<int, 4>{11, 12, 18, 17},
+    Kokkos::Array<int, 4>{12, 10, 16, 18},
+    Kokkos::Array<int, 4>{14, 15, 18, 16},
+    Kokkos::Array<int, 4>{13, 17, 18, 15}};
 
   Kokkos::View<double*, sierra::nalu::MemSpace> isoCoordsShapeFcn_;
 };
