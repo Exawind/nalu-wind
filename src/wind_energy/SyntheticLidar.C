@@ -21,6 +21,7 @@
 #include "vs/tensor.h"
 
 #include <memory>
+#include <filesystem>
 
 namespace sierra {
 namespace nalu {
