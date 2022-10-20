@@ -64,14 +64,21 @@ MomentumSSTAMSForcingNodeKernel::MomentumSSTAMSForcingNodeKernel(
   forcingCompID_ = get_field_ordinal(meta, "forcing_components");
 
   // setup vectors
-  DoubleView::HostMirror eastHost("eastHost", nDim_);
-  DoubleView::HostMirror northHost("northHost", nDim_);
-  for (int i = 0; i < nDim_; i++) {
-    eastHost(i) = solnOpts.eastVector_[i];
-    northHost(i) = solnOpts.northVector_[i];
+  if (!solnOpts.eastVector_.empty() && !solnOpts.northVector_.empty()) {
+    DoubleView::HostMirror eastHost("eastHost", nDim_);
+    DoubleView::HostMirror northHost("northHost", nDim_);
+    for (int i = 0; i < nDim_; i++) {
+      eastHost(i) = solnOpts.eastVector_[i];
+      northHost(i) = solnOpts.northVector_[i];
+    }
+    Kokkos::deep_copy(eastVector_, eastHost);
+    Kokkos::deep_copy(northVector_, northHost);
+  } else if (solnOpts.RANSBelowKs_) {
+    // vectors are required but unallocated
+    throw std::runtime_error(
+      "Using rans_below_ks requires definitions of east and north");
   }
-  Kokkos::deep_copy(eastVector_, eastHost);
-  Kokkos::deep_copy(northVector_, northHost);
+  // else east and north aren't used in the algorithm
 }
 
 void
