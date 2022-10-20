@@ -22,10 +22,10 @@ struct FieldDefinition
   const int num_states{1};
 };
 
-using DefScalar = FieldDefinition<ScalarFieldType>;
-using DefVector = FieldDefinition<VectorFieldType>;
+using FieldDefScalar = FieldDefinition<ScalarFieldType>;
+using FieldDefVector = FieldDefinition<VectorFieldType>;
 
-using FieldDefTypes = std::variant<DefScalar, DefVector>;
+using FieldDefTypes = std::variant<FieldDefScalar, FieldDefVector>;
 using FieldPointerTypes = std::variant<ScalarFieldType*, VectorFieldType*>;
 
 } // namespace nalu

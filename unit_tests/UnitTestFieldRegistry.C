@@ -8,9 +8,7 @@
 //
 
 #include "gtest/gtest.h"
-#include "stk_mesh/base/MetaData.hpp"
-#include "stk_mesh/base/BulkData.hpp"
-#include "stk_io/StkMeshIoBroker.hpp"
+#include "stk_mesh/base/MeshBuilder.hpp"
 #include "FieldRegistry.h"
 #include <memory>
 #include <stdexcept>
@@ -24,44 +22,43 @@ class FieldRegistryTest : public testing::Test
 protected:
   void SetUp()
   {
-    meta_ = std::make_unique<stk::mesh::MetaData>();
-    bulk_ = std::make_unique<stk::mesh::BulkData>(*meta_, MPI_COMM_WORLD);
-    stk::io::StkMeshIoBroker broker;
-    broker.set_bulk_data(*bulk_);
-    broker.add_mesh_database("generated:8x8x8", stk::io::READ_MESH);
+    stk::mesh::MeshBuilder builder(MPI_COMM_WORLD);
+    bulk_ = builder.create();
     key_ = "velocity";
   }
-  std::unique_ptr<stk::mesh::MetaData> meta_;
-  std::unique_ptr<stk::mesh::BulkData> bulk_;
+  stk::mesh::MetaData& meta() { return bulk_->mesh_meta_data(); }
+  std::shared_ptr<stk::mesh::BulkData> bulk_;
   std::string key_;
 };
 
 TEST_F(FieldRegistryTest, allDataNeededToDeclareFieldIsKnownThroughQuery)
 {
-  auto def = FieldRegistry::query(2, key_);
+  const int num_states = 2;
+  auto def = FieldRegistry::query(num_states, key_);
 
   ASSERT_NO_THROW(std::visit(
     [&](auto arg) {
-      meta_->declare_field<typename decltype(arg)::FieldType>(
+      meta().declare_field<typename decltype(arg)::FieldType>(
         arg.rank, key_, arg.num_states);
     },
     def));
 
   const auto findFieldPtr =
-    meta_->get_field<VectorFieldType>(stk::topology::NODE_RANK, key_);
+    meta().get_field<VectorFieldType>(stk::topology::NODE_RANK, key_);
   // pointer to field is valid through stk api
   EXPECT_TRUE(findFieldPtr);
 }
 
 TEST_F(FieldRegistryTest, registeredFieldPointerCanBeStored)
 {
-  auto def = FieldRegistry::query(3, key_);
+  const int num_states = 3;
+  auto def = FieldRegistry::query(num_states, key_);
   std::vector<FieldPointerTypes> field_pointers;
 
   EXPECT_EQ(0, field_pointers.size());
   ASSERT_NO_THROW(std::visit(
     [&](auto arg) {
-      auto* ptr = &(meta_->declare_field<typename decltype(arg)::FieldType>(
+      auto* ptr = &(meta().declare_field<typename decltype(arg)::FieldType>(
         arg.rank, key_, arg.num_states));
       field_pointers.push_back(ptr);
     },
@@ -71,7 +68,7 @@ TEST_F(FieldRegistryTest, registeredFieldPointerCanBeStored)
   EXPECT_EQ(1, field_pointers.size());
 
   const auto findFieldPtr =
-    meta_->get_field<VectorFieldType>(stk::topology::NODE_RANK, key_);
+    meta().get_field<VectorFieldType>(stk::topology::NODE_RANK, key_);
   // stk api and stored pointer are the same
   EXPECT_EQ(findFieldPtr, std::get<VectorFieldType*>(field_pointers[0]));
 }

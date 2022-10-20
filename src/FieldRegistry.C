@@ -21,15 +21,15 @@ const std::map<std::string, FieldDefTypes>&
 Registry()
 {
 
-  DefVector StatedNodalVector = {stk::topology::NODE_RANK, NUM_STATES};
-  DefScalar StatedNodalScalar = {stk::topology::NODE_RANK, NUM_STATES};
+  FieldDefVector MulitStateNodalVector = {stk::topology::NODE_RANK, NUM_STATES};
+  FieldDefScalar MulitStateNodalScalar = {stk::topology::NODE_RANK, NUM_STATES};
 
-  DefVector UnstatedNodalVector = {stk::topology::NODE_RANK};
-  DefScalar UnstatedNodalScalar = {stk::topology::NODE_RANK};
+  FieldDefVector SingleStateNodalVector = {stk::topology::NODE_RANK};
+  FieldDefScalar SingleStateNodalScalar = {stk::topology::NODE_RANK};
 
   static const std::map<std::string, FieldDefTypes> registry = {
-    {"velocity", StatedNodalVector},
-    {"temperature", StatedNodalScalar},
+    {"velocity", MulitStateNodalVector},
+    {"temperature", MulitStateNodalScalar},
   };
   return registry;
 }
