@@ -103,6 +103,7 @@ MeshVelocityAlg<AlgTraits>::execute()
   const auto meshDispNID = meshDispN_;
   const auto sweptVolNID = sweptVolumeN_;
   const auto isoCoordsShapeFcn = isoCoordsShapeFcn_;
+  const auto scsFaceNodeMap = scsFaceNodeMap_;
 
   const stk::mesh::Selector sel = meta.locally_owned_part() &
                                   stk::mesh::selectUnion(partVec_) &
@@ -149,14 +150,14 @@ MeshVelocityAlg<AlgTraits>::execute()
         DoubleType scs_vol_coords[8][3];
 
         for (int j = 0; j < AlgTraits::nDim_; j++) {
-          scs_vol_coords[0][j] = scs_coords_n[scsFaceNodeMap_[ip][0]][j];
-          scs_vol_coords[1][j] = scs_coords_n[scsFaceNodeMap_[ip][1]][j];
-          scs_vol_coords[2][j] = scs_coords_n[scsFaceNodeMap_[ip][2]][j];
-          scs_vol_coords[3][j] = scs_coords_n[scsFaceNodeMap_[ip][3]][j];
-          scs_vol_coords[4][j] = scs_coords_np1[scsFaceNodeMap_[ip][0]][j];
-          scs_vol_coords[5][j] = scs_coords_np1[scsFaceNodeMap_[ip][1]][j];
-          scs_vol_coords[6][j] = scs_coords_np1[scsFaceNodeMap_[ip][2]][j];
-          scs_vol_coords[7][j] = scs_coords_np1[scsFaceNodeMap_[ip][3]][j];
+          scs_vol_coords[0][j] = scs_coords_n[scsFaceNodeMap[ip][0]][j];
+          scs_vol_coords[1][j] = scs_coords_n[scsFaceNodeMap[ip][1]][j];
+          scs_vol_coords[2][j] = scs_coords_n[scsFaceNodeMap[ip][2]][j];
+          scs_vol_coords[3][j] = scs_coords_n[scsFaceNodeMap[ip][3]][j];
+          scs_vol_coords[4][j] = scs_coords_np1[scsFaceNodeMap[ip][0]][j];
+          scs_vol_coords[5][j] = scs_coords_np1[scsFaceNodeMap[ip][1]][j];
+          scs_vol_coords[6][j] = scs_coords_np1[scsFaceNodeMap[ip][2]][j];
+          scs_vol_coords[7][j] = scs_coords_np1[scsFaceNodeMap[ip][3]][j];
         }
         DoubleType tmp = hex_volume_grandy(scs_vol_coords);
 
