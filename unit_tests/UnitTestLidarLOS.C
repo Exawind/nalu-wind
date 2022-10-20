@@ -5,13 +5,13 @@
 #include "UnitTestUtils.h"
 #include "stk_mesh/base/MeshBuilder.hpp"
 #include "stk_mesh/base/FieldBLAS.hpp"
-#include "Ioss_FileInfo.h"
 
 #include <yaml-cpp/yaml.h>
 
 #include <ostream>
 #include <memory>
 #include <array>
+#include <filesystem>
 
 namespace sierra {
 namespace nalu {

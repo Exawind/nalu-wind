@@ -17,8 +17,8 @@
 #include "xfer/Transfer.h"
 #include "xfer/LocalVolumeSearch.h"
 #include "netcdf.h"
-#include "Ioss_FileInfo.h"
 
+#include <filesystem>
 #include <memory>
 
 namespace sierra::nalu {
