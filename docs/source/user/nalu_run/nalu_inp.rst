@@ -1521,7 +1521,7 @@ Data probes
 
 .. inpfile:: data_probes.lidar_specifications.type
 
-   Type of LIDAR scan pattern. `scanning` or `spinner` (default).
+   Type of LIDAR scan pattern. `scanning`, `radar` or `spinner` (default).
 
 
 .. inpfile:: data_probes.lidar_specifications.scanning_lidar_specifications
@@ -1539,8 +1539,37 @@ Data probes
    step_delta_angle           Default 1 degree. Measurement interval of scan angles over the sweep
    reset_time_delta           Default 1 second. Time to reset LIDAR after sweep.
    ground_direction           Default [0,0,1]. Orthogonal orientation vector for the LIDAR
+   elevation_angles           Default none. A list of angles in degrees to change to after each sweep
    ========================== ===================================================================
 
+.. inpfile:: data_probes.lidar_specifications.radar_specifications
+
+   Block specifying parameters for the scanning lidar sampling
+
+   ========================== ===================================================================
+   Parameter                  Description
+   ========================== ===================================================================
+   axis                       Required. Zero angle vector for the angular sweep, e.g. [1,0,0].
+   center                     Required. Location of the scanning LIDAR, e.g. [0,0,0].
+   bbox                       Optional. Six values (m) describing [bottom-left, top-right] of radar clip box
+   box_1                      Optional. Along with other vertex specifications in (m) describes the radar clip box.
+   beam_length                Defaut 50000m. Only affects coordinate reporting if the line does not collide with box.
+   sweep_angle                Default 20 degrees. Extent of angular sweep between sweep_angle/2 to -sweep_angle/2.
+   angular_speed              Default 30 degrees/s. Speed of the angular sweep.
+   reset_time_delta           Default 1 second. Time to reset LIDAR after sweep.
+   ground_direction           Default [0,0,1]. Orthogonal orientation vector for the LIDAR
+   elevation_angles           Default none. A list of angles in degrees to change to after each sweep
+   ========================== ===================================================================
+
+.. inpfile:: dataprobes.lidar_specifications.radar_cone_grid
+
+   ========================== ===================================================================
+   Parameter                  Description
+   ========================== ===================================================================
+   cone_angle                 Required. cone half angle in degrees centered on radar_specifications.axis
+   num_circles                Required. Number of rays along the cone angle
+   lines_per_cone_circle      Required. Number of rays around the cone circumference
+   ========================== ===================================================================
 
 .. inpfile:: dataprobes.lidar_specifications.misc
 
