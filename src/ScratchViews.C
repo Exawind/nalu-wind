@@ -446,14 +446,14 @@ fill_pre_req_data(
   }
 }
 
-template void fill_pre_req_data(
+template KOKKOS_FUNCTION void fill_pre_req_data(
   const ElemDataRequestsGPU& dataNeeded,
   const stk::mesh::NgpMesh& ngpMesh,
   stk::mesh::EntityRank entityRank,
   stk::mesh::Entity entity,
   ScratchViews<double, DeviceTeamHandleType, DeviceShmem>& prereqData);
 
-template void fill_pre_req_data(
+template KOKKOS_FUNCTION void fill_pre_req_data(
   const ElemDataRequestsGPU& dataNeeded,
   const stk::mesh::NgpMesh& ngpMesh,
   stk::mesh::EntityRank entityRank,

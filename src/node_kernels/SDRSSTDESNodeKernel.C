@@ -64,6 +64,7 @@ SDRSSTDESNodeKernel::setup(Realm& realm)
   sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
 }
 
+KOKKOS_FUNCTION
 void
 SDRSSTDESNodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,

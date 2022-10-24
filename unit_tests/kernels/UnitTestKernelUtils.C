@@ -953,7 +953,7 @@ calc_exposed_area_vec(
   areaVec.sync_to_host();
 }
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 
 #if 0
 void calc_projected_nodal_gradient_interior(

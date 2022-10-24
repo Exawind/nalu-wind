@@ -92,6 +92,7 @@ MotionWavesKernel::load(const YAML::Node& node)
   }
 } // namespace nalu
 
+KOKKOS_FUNCTION
 mm::TransMatType
 MotionWavesKernel::build_transformation(
   const double& time, const mm::ThreeDVecType& xyz)
@@ -155,6 +156,7 @@ MotionWavesKernel::build_transformation(
   return transMat;
 } // namespace nalu
 
+KOKKOS_FUNCTION
 mm::ThreeDVecType
 MotionWavesKernel::compute_velocity(
   const double& time,
@@ -341,6 +343,7 @@ MotionWavesKernel::Stokes_parameters()
   return;
 }
 
+KOKKOS_FUNCTION
 double
 MotionWavesKernel::my_cosh_cos(int i, int j, const double& phase)
 {
@@ -368,6 +371,7 @@ MotionWavesKernel::my_cosh_cos(int i, int j, const double& phase)
          stk::math::cosh(j * k_ * waterdepth_) * stk::math::cos(j * phase);
 }
 
+KOKKOS_FUNCTION
 double
 MotionWavesKernel::my_sinh_sin(int i, int j, const double& phase)
 {

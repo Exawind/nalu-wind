@@ -55,6 +55,7 @@ TDRKENodeKernel::setup(Realm& realm)
   fOne_ = realm.get_turb_model_constant(TM_fOne);
 }
 
+KOKKOS_FUNCTION
 void
 TDRKENodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,

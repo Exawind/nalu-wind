@@ -22,13 +22,14 @@ namespace nalu {
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 Quad93DSCS::Quad93DSCS() : MasterElement()
 {
   MasterElement::nDim_ = nDim_;
   MasterElement::numIntPoints_ = numIntPoints_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
   // set up integration rule and relevant maps on scs
   set_interior_info();
 
@@ -314,6 +315,7 @@ Quad93DSCS::quad9_shape_deriv(
 //--------------------------------------------------------------------------
 //-------- ipNodeMap -------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 const int*
 Quad93DSCS::ipNodeMap(int /*ordinal*/) const
 {

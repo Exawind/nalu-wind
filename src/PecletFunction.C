@@ -26,6 +26,7 @@ namespace nalu {
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 template <typename T>
+KOKKOS_FUNCTION
 ClassicPecletFunction<T>::ClassicPecletFunction(const T A, const T hf)
   : A_(A), hf_(hf)
 {
@@ -36,7 +37,7 @@ ClassicPecletFunction<T>::ClassicPecletFunction(const T A, const T hf)
 //-------- execute ---------------------------------------------------------
 //--------------------------------------------------------------------------
 template <typename T>
-T
+KOKKOS_FUNCTION T
 ClassicPecletFunction<T>::execute(const T pecletNumber)
 {
   const T modPeclet = hf_ * pecletNumber;
@@ -52,7 +53,9 @@ ClassicPecletFunction<T>::execute(const T pecletNumber)
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 template <typename T>
-TanhFunction<T>::TanhFunction(T c1, T c2) : c1_(c1), c2_(c2)
+KOKKOS_FUNCTION
+TanhFunction<T>::TanhFunction(T c1, T c2)
+  : c1_(c1), c2_(c2)
 {
   // nothing to do; assume that the functional form varies between 0 and 1
 }
@@ -61,7 +64,7 @@ TanhFunction<T>::TanhFunction(T c1, T c2) : c1_(c1), c2_(c2)
 //-------- execute ---------------------------------------------------------
 //--------------------------------------------------------------------------
 template <typename T>
-T
+KOKKOS_FUNCTION T
 TanhFunction<T>::execute(const T indVar)
 {
   return 0.50 * (1.0 + stk::math::tanh((indVar - c1_) / c2_));

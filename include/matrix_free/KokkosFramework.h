@@ -46,7 +46,7 @@ struct ExecTraits
 };
 #endif
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA)
 template <>
 struct ExecTraits<Kokkos::Cuda>
 {
@@ -54,6 +54,20 @@ struct ExecTraits<Kokkos::Cuda>
   using memory_traits =
     Kokkos::MemoryTraits<Kokkos::Restrict | Kokkos::Aligned>;
   using memory_space = typename Kokkos::Cuda::memory_space;
+  using layout = Kokkos::LayoutLeft;
+  static constexpr int alignment = alignof(data_type);
+  static constexpr int simd_len = 1;
+};
+#endif
+
+#if defined(KOKKOS_ENABLE_HIP)
+template <>
+struct ExecTraits<Kokkos::Experimental::HIP>
+{
+  using data_type = double;
+  using memory_traits =
+    Kokkos::MemoryTraits<Kokkos::Restrict | Kokkos::Aligned>;
+  using memory_space = typename Kokkos::Experimental::HIP::memory_space;
   using layout = Kokkos::LayoutLeft;
   static constexpr int alignment = alignof(data_type);
   static constexpr int simd_len = 1;

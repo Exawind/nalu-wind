@@ -344,7 +344,7 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
   const auto check_one = disc < -machEps;
   const bool exit_now = stk::simd::are_all(check_one);
   if (exit_now) {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     NaluEnv::self().naluOutput()
       << "Error, complex eigenvalues in EigenDecomposition::general_eigenvalues"
       << disc << "([[" << A[0][0] << "," << A[0][1] << "," << A[0][2] << "],["

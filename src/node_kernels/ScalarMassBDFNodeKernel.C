@@ -69,6 +69,7 @@ ScalarMassBDFNodeKernel::setup(Realm& realm)
   gamma3_ = realm.get_gamma3();
 }
 
+KOKKOS_FUNCTION
 void
 ScalarMassBDFNodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,

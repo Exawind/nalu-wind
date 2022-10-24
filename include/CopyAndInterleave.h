@@ -101,7 +101,7 @@ copy_and_interleave(
   }
 }
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 inline void
 copy_and_interleave(
   std::unique_ptr<ScratchViews<double>>* data,

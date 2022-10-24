@@ -68,6 +68,7 @@ MomentumGclSrcNodeKernel::setup(Realm& realm)
   dt_ = realm.get_time_step();
 }
 
+KOKKOS_FUNCTION
 void
 MomentumGclSrcNodeKernel::execute(
   NodeKernelTraits::LhsType& /*lhs*/,

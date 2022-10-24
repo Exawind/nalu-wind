@@ -15,7 +15,7 @@
 #include "SolutionOptions.h"
 #include "TurbKineticEnergyRodiNodeSourceSuppAlg.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 
 TEST_F(TestTurbulenceAlgorithm, turbkineticenergyrodinodesourcesuppalg)
 {

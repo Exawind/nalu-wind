@@ -63,6 +63,7 @@ ScalarGclNodeKernel::setup(Realm& realm)
   dt_ = realm.get_time_step();
 }
 
+KOKKOS_FUNCTION
 void
 ScalarGclNodeKernel::execute(
   NodeKernelTraits::LhsType& /*lhs*/,

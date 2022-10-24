@@ -1747,7 +1747,7 @@ HypreLinearSystem::dumpMatrixStats()
   /* Write to a file from rank 0 */
   if (iproc == 0) {
     char fname[1000];
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_GPU)
     sprintf(fname, "%s_decomp_%dGPUs.txt", name_.c_str(), nprocs);
 #else
     sprintf(fname, "%s_decomp_%dCPUs.txt", name_.c_str(), nprocs);
@@ -2330,7 +2330,7 @@ HypreLinearSystem::HypreLinSysCoeffApplier::resetRows(
 void
 HypreLinearSystem::HypreLinSysCoeffApplier::free_device_pointer()
 {
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_GPU)
   if (this != devicePointer_) {
     sierra::nalu::kokkos_free_on_device(devicePointer_);
     devicePointer_ = nullptr;
@@ -2341,7 +2341,7 @@ HypreLinearSystem::HypreLinSysCoeffApplier::free_device_pointer()
 sierra::nalu::CoeffApplier*
 HypreLinearSystem::HypreLinSysCoeffApplier::device_pointer()
 {
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_GPU)
   if (devicePointer_ != nullptr) {
     sierra::nalu::kokkos_free_on_device(devicePointer_);
     devicePointer_ = nullptr;

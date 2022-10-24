@@ -71,6 +71,7 @@ MotionDeformingInteriorKernel::load(const YAML::Node& node)
   }
 }
 
+KOKKOS_FUNCTION
 mm::TransMatType
 MotionDeformingInteriorKernel::build_transformation(
   const double& time, const mm::ThreeDVecType& xyz)
@@ -127,6 +128,7 @@ MotionDeformingInteriorKernel::build_transformation(
   return add_motion(tempMat, transMat);
 }
 
+KOKKOS_FUNCTION
 mm::ThreeDVecType
 MotionDeformingInteriorKernel::compute_velocity(
   const double& time,

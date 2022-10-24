@@ -110,8 +110,7 @@ AssembleFaceElemSolverAlgorithm::execute()
           smdata.simdlhs, smdata.simdrhs, smdata.simdFaceViews,
           smdata.simdElemViews, smdata.elemFaceOrdinal);
       }
-
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_GPU)
       const int simdIndex = 0;
 #else
       for (int simdIndex = 0; simdIndex < smdata.numSimdFaces; ++simdIndex)
