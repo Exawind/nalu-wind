@@ -79,7 +79,7 @@ class SolutionNormPostProcessing;
 class SideWriterContainer;
 class TurbulenceAveragingPostProcessing;
 class DataProbePostProcessing;
-class LidarLineOfSite;
+class LidarLOS;
 class AeroContainer;
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
@@ -418,7 +418,7 @@ public:
   BdyLayerStatistics* bdyLayerStats_{nullptr};
   std::unique_ptr<MeshMotionAlg> meshMotionAlg_;
   std::unique_ptr<MeshTransformationAlg> meshTransformationAlg_;
-  std::vector<LidarLineOfSite> lidarLOS_;
+  std::unique_ptr<LidarLOS> lidarLOS_;
 
   std::vector<Algorithm*> propertyAlg_;
   std::map<PropertyIdentifier, ScalarFieldType*> propertyMap_;
