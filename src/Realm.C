@@ -2411,7 +2411,9 @@ Realm::initialize_post_processing_algorithms()
   if (aeroModels_->is_active())
     aeroModels_->init(bulk_data());
 
-  lidarLOS_->set_time_for_all(get_current_time());
+  if (lidarLOS_) {
+    lidarLOS_->set_time_for_all(get_current_time());
+  }
 }
 
 //--------------------------------------------------------------------------
