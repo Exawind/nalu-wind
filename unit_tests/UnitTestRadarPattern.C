@@ -398,5 +398,81 @@ TEST_F(RadarScanFixture, cycles)
   ASSERT_NEAR(seg.tip_[2], seg_periodic.tip_[2], tol_);
 }
 
+TEST_F(RadarScanFixture, beam_domain_partially_clips)
+{
+  RadarSegmentGenerator slbeam;
+  std::string radar_beam_str =
+    "  radar_specifications:                                \n"
+    "    angular_speed: 10 # deg/s                          \n"
+    "    sweep_angle: 20 # degrees                          \n"
+    "    center: [-10000,0,90]                              \n"
+    "    beam_length: 10000                                 \n"
+    "    reset_time_delta: 1.0                              \n"
+    "    axis: [1,0,0]                                      \n"
+    "    box_1: [-2500,-2500,0]                             \n"
+    "    box_2: [ 2500,-2500,0]                             \n"
+    "    box_3: [ 2500, 2500,0]                             \n"
+    "    box_4: [-2500, 2500,0]                             \n"
+    "    box_5: [-2500,-2500,3000]                          \n"
+    "    box_6: [2500,-2500,3000]                           \n"
+    "    box_7: [2500,2500,3000]                            \n"
+    "    box_8: [-2500,2500,3000]                           \n";
+  const auto spec = YAML::Load(radar_beam_str)["radar_specifications"];
+  slbeam.load(spec);
+
+  const double time = sweep_time_ / 2;
+  auto seg = slbeam.generate(time);
+  const double beam_length = spec["beam_length"].as<double>();
+  const double center_x = spec["center"].as<std::vector<double>>().at(0);
+  const double box1_x = spec["box_1"].as<std::vector<double>>().at(0);
+  double expected_length = beam_length + (center_x - box1_x);
+
+  double length = 0;
+  for (int d = 0; d < 3; ++d) {
+    const double dx = seg.tip_[d] - seg.tail_[d];
+    length += dx * dx;
+  }
+  length = std::sqrt(length);
+
+  ASSERT_NEAR(length, expected_length, tol_);
+}
+
+TEST_F(RadarScanFixture, beam_does_not_reach_domain)
+{
+  RadarSegmentGenerator slbeam;
+  std::string radar_beam_str =
+    "  radar_specifications:                                \n"
+    "    angular_speed: 10 # deg/s                          \n"
+    "    sweep_angle: 20 # degrees                          \n"
+    "    center: [-10000,0,90]                              \n"
+    "    beam_length: 1000                                 \n"
+    "    reset_time_delta: 1.0                              \n"
+    "    axis: [1,0,0]                                      \n"
+    "    box_1: [-2500,-2500,0]                             \n"
+    "    box_2: [ 2500,-2500,0]                             \n"
+    "    box_3: [ 2500, 2500,0]                             \n"
+    "    box_4: [-2500, 2500,0]                             \n"
+    "    box_5: [-2500,-2500,3000]                          \n"
+    "    box_6: [2500,-2500,3000]                           \n"
+    "    box_7: [2500,2500,3000]                            \n"
+    "    box_8: [-2500,2500,3000]                           \n";
+  const auto spec = YAML::Load(radar_beam_str)["radar_specifications"];
+  slbeam.load(spec);
+
+  const double time = sweep_time_ / 2;
+  auto seg = slbeam.generate(time);
+  const double beam_length = spec["beam_length"].as<double>();
+  double expected_length = beam_length;
+
+  double length = 0;
+  for (int d = 0; d < 3; ++d) {
+    const double dx = seg.tip_[d] - seg.tail_[d];
+    length += dx * dx;
+  }
+  length = std::sqrt(length);
+
+  ASSERT_NEAR(length, expected_length, tol_);
+}
+
 } // namespace nalu
 } // namespace sierra

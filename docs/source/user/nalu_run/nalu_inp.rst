@@ -1544,20 +1544,20 @@ Data probes
 
 .. inpfile:: data_probes.lidar_specifications.radar_specifications
 
-   Block specifying parameters for the scanning lidar sampling
+   Block specifying parameters for the radar sampling
 
    ========================== ===================================================================
    Parameter                  Description
    ========================== ===================================================================
    axis                       Required. Zero angle vector for the angular sweep, e.g. [1,0,0].
-   center                     Required. Location of the scanning LIDAR, e.g. [0,0,0].
+   center                     Required. Location of the radar, e.g. [0,0,0]. Ideally outside of the bounding box.
    bbox                       Optional. Six values (m) describing [bottom-left, top-right] of radar clip box
    box_1                      Optional. Along with other vertex specifications in (m) describes the radar clip box.
-   beam_length                Defaut 50000m. Only affects coordinate reporting if the line does not collide with box.
-   sweep_angle                Default 20 degrees. Extent of angular sweep between sweep_angle/2 to -sweep_angle/2.
+   beam_length                Required. Sets the maximum length of the line sampled. Also used if line does not intersect box. 
+   sweep_angle                Default 20 degrees. Extent of angular sweep between -sweep_angle/2 to sweep_angle/2.
    angular_speed              Default 30 degrees/s. Speed of the angular sweep.
    reset_time_delta           Default 1 second. Time to reset LIDAR after sweep.
-   ground_direction           Default [0,0,1]. Orthogonal orientation vector for the LIDAR
+   ground_direction           Default [0,0,1]. Orthogonal orientation vector for the radar
    elevation_angles           Default none. A list of angles in degrees to change to after each sweep
    ========================== ===================================================================
 
