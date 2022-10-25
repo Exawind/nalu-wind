@@ -62,7 +62,7 @@ public:
 
   inline bool does_mesh_move() const
   {
-    return has_mesh_motion() || has_mesh_deformation();
+    return has_mesh_motion() | has_mesh_deformation();
   }
 
   inline std::string get_coordinates_name() const

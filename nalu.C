@@ -286,7 +286,7 @@ main(int argc, char** argv)
   // Hypre cleanup
   nalu_hypre::hypre_finalize();
 
-  Kokkos::finalize();
+  Kokkos::finalize_all();
 
   MPI_Finalize();
 

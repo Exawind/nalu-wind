@@ -610,11 +610,47 @@ Realm::look_ahead_and_creation(const YAML::Node& node)
 void
 Realm::look_ahead_create_lidar(const YAML::Node& node)
 {
-  if (!lidarLOS_) {
-    lidarLOS_ = std::make_unique<LidarLOS>();
+  auto lidar_spec = node["lidar_specifications"];
+
+  auto create_lidar = [&](const YAML::Node& node) {
+    std::string output_type = "netcdf";
+    get_if_present(node, "output", output_type);
+    if (output_type == "dataprobes") {
+      LidarLineOfSite lidarLOS;
+      auto lidarDBSpec = lidarLOS.determine_line_of_site_info(node);
+      ThrowRequireMsg(
+        dataProbePostProcessing_, "Lidar processing with dataprobe output "
+                                  "requires valid data probe object");
+      dataProbePostProcessing_->add_external_data_probe_spec_info(
+        lidarDBSpec.release());
+    } else {
+      lidarLOS_.emplace_back();
+      lidarLOS_.back().load(node);
+    }
+  };
+
+  if (lidar_spec) {
+    const auto is_scalar = lidar_spec.Type() == YAML::NodeType::Map;
+    if (is_scalar) {
+      create_lidar(lidar_spec);
+    } else {
+      std::set<std::string> names;
+      for (auto spec : lidar_spec) {
+        if (!spec["name"]) {
+          throw std::runtime_error("lidar sequence requires a name");
+        }
+        names.insert(spec["name"].as<std::string>());
+        create_lidar(spec);
+      }
+      if (names.size() != lidar_spec.size()) {
+        std::string msg = "Non unique file name for lidar detected: ";
+        for (auto spec : lidar_spec) {
+          msg += spec["name"].as<std::string>() + " ";
+        }
+        throw std::runtime_error(msg);
+      }
+    }
   }
-  NaluEnv::self().naluOutputP0() << "LidarLineOfSite::load" << std::endl;
-  lidarLOS_->load(node, dataProbePostProcessing_);
 }
 
 //--------------------------------------------------------------------------
@@ -2411,7 +2447,9 @@ Realm::initialize_post_processing_algorithms()
   if (aeroModels_->is_active())
     aeroModels_->init(bulk_data());
 
-  lidarLOS_->set_time_for_all(get_current_time());
+  for (auto& los : lidarLOS_) {
+    los.set_time(get_current_time());
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -2421,8 +2459,7 @@ std::string
 Realm::get_coordinates_name()
 {
   return (
-    (solutionOptions_->meshMotion_ ||
-     solutionOptions_->externalMeshDeformation_)
+    (solutionOptions_->meshMotion_ | solutionOptions_->externalMeshDeformation_)
       ? "current_coordinates"
       : "coordinates");
 }
@@ -2443,7 +2480,7 @@ bool
 Realm::has_mesh_deformation() const
 {
   if (meshMotionAlg_) {
-    return meshMotionAlg_->is_deforming() ||
+    return meshMotionAlg_->is_deforming() |
            solutionOptions_->externalMeshDeformation_;
   } else
     return solutionOptions_->externalMeshDeformation_;
@@ -2455,7 +2492,7 @@ Realm::has_mesh_deformation() const
 bool
 Realm::does_mesh_move() const
 {
-  return has_mesh_motion() || has_mesh_deformation();
+  return has_mesh_motion() | has_mesh_deformation();
 }
 
 //--------------------------------------------------------------------------
@@ -4483,9 +4520,18 @@ Realm::output_lidar()
   const auto sel = (stk::mesh::selectField(velocity_field) &
                     meta_data().locally_owned_part()) -
                    get_inactive_selector();
-  lidarLOS_->output(
-    bulk_data(), sel, get_coordinates_name(), timeIntegrator_->get_time_step(),
-    timeIntegrator_->get_current_time());
+  for (auto& los : lidarLOS_) {
+    const double small = 1e-8 * timeIntegrator_->get_time_step();
+    const double next_time =
+      timeIntegrator_->get_current_time() + timeIntegrator_->get_time_step();
+    while (los.time() < next_time - small) {
+      const double dtratio =
+        (los.time() - timeIntegrator_->get_current_time()) /
+        timeIntegrator_->get_time_step();
+      los.output(bulk_data(), sel, get_coordinates_name(), dtratio);
+      los.increment_time();
+    }
+  }
   NaluEnv::self().naluOutputP0() << "LidarLineOfSite::output end" << std::endl;
 }
 
@@ -4511,7 +4557,7 @@ Realm::post_converged_work()
   if (nullptr != bdyLayerStats_)
     bdyLayerStats_->execute();
 
-  if (lidarLOS_) {
+  if (lidarLOS_.size() > 0) {
     output_lidar();
   }
 }
