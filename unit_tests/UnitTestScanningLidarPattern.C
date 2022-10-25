@@ -125,7 +125,7 @@ public:
     "    step_delta_angle: 1 #degrees                       \n"
     "    sweep_angle: 20 #degrees                           \n"
     "    reset_time_delta: 1 #second                        \n"
-    "    center: [500,500,100]                              \n"
+    "    center: [500.,500.,100.]                           \n"
     "    beam_length: 50.                                   \n"
     "    axis: [1,1,0]                                      \n"
     "    elevation_angles: [30]                             \n"

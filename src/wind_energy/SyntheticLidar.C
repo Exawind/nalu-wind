@@ -17,7 +17,11 @@
 #include "netcdf.h"
 #include "Ioss_FileInfo.h"
 
+#include "vs/vector.h"
+#include "vs/tensor.h"
+
 #include <memory>
+#include <filesystem>
 
 namespace sierra {
 namespace nalu {
@@ -27,8 +31,6 @@ constexpr int dim = 3;
 void
 LidarLineOfSite::load(const YAML::Node& node)
 {
-  NaluEnv::self().naluOutputP0() << "LidarLineOfSite::load" << std::endl;
-
   if (node["type"]) {
     segGen = make_segment_generator(node["type"].as<std::string>());
   } else {
@@ -47,6 +49,7 @@ LidarLineOfSite::load(const YAML::Node& node)
   }
 
   get_required(node, "points_along_line", npoints_);
+  get_if_present(node, "warn_on_missing", warn_on_missing_);
 
   if (node["name"]) {
     name_ = node["name"].as<std::string>();
@@ -93,6 +96,8 @@ LidarLineOfSite::load(const YAML::Node& node)
 
   if (node["scanning_lidar_specifications"]) {
     segGen->load(node["scanning_lidar_specifications"]);
+  } else if (node["radar_specifications"]) {
+    segGen->load(node["radar_specifications"]);
   } else {
     segGen->load(node);
   }
@@ -243,15 +248,16 @@ LidarLineOfSite::output_txt(
 {
   if (internal_output_counter_ == 0) {
     fname_ = determine_filename(name_, ".txt");
-    std::ofstream file{fname_, std::ios_base::out};
-    file.open(fname_);
+    std::ofstream file;
+    file.exceptions(file.exceptions() | std::ios::failbit);
+    file.open(fname_, std::ios::out);
     file << "t,x,y,z,u,v,w" << std::endl;
     file.close();
   }
 
   std::ofstream file;
   file.exceptions(file.exceptions() | std::ios::failbit);
-  file.open(fname_, std::ios::out | std::ios::app);
+  file.open(fname_, std::ios::app);
   if (file.fail()) {
     throw std::ios_base::failure(std::strerror(errno));
   }
@@ -276,7 +282,9 @@ LidarLineOfSite::output(
     return;
   }
   if (internal_output_counter_ == 0) {
-    Ioss::FileInfo::create_path(name_);
+    auto dir_pos = name_.find_last_of("/");
+    auto dir_name = name_.substr(0, dir_pos);
+    std::filesystem::create_directory(dir_name);
   }
 
   if (!search_data_) {
@@ -285,6 +293,8 @@ LidarLineOfSite::output(
   }
 
   const auto seg = segGen->generate(time());
+
+  // segment length can shrink to zero, so mag(dx) isn't bounded from below
   const std::array<double, 3> dx{
     {(seg.tip_[0] - seg.tail_[0]) / (npoints_ > 1 ? (npoints_ - 1) : 1),
      (seg.tip_[1] - seg.tail_[1]) / (npoints_ > 1 ? (npoints_ - 1) : 1),
@@ -361,7 +371,7 @@ LidarLineOfSite::output(
         velocity.at(j)[d] *= inv_deg;
       }
     }
-    if (not_found_count > 0) {
+    if (not_found_count > 0 && warn_on_missing_) {
 
       auto lidar_name_start = name_.find_last_of("/");
       auto lidar_name = name_.substr(lidar_name_start + 1);
@@ -431,6 +441,192 @@ LidarLineOfSite::determine_line_of_site_info(const YAML::Node& node)
   lidarLOSInfo->dataProbeInfo_.push_back(probeInfo.release());
 
   return lidarLOSInfo;
+}
+
+void
+LidarLOS::set_time_for_all(double time)
+{
+  for (auto& los : lidars_) {
+    los.set_time(time);
+  }
+}
+
+vs::Tensor
+skew_cross(vs::Vector a, vs::Vector b)
+{
+  auto cross = b ^ a;
+  return vs::Tensor(
+    0, -cross[2], cross[1], cross[2], 0, -cross[0], -cross[1], cross[0], 0);
+}
+
+vs::Tensor
+scale(vs::Tensor v, double a)
+{
+  vs::Tensor vnew;
+  for (int j = 0; j < 9; ++j) {
+    vnew[j] = a * v[j];
+  }
+  return vnew;
+}
+
+vs::Tensor
+rotation_matrix(vs::Vector dst, vs::Vector src)
+{
+  auto vmat = skew_cross(dst, src);
+  const auto ang = dst & src;
+
+  const double small = 1e-14 * vs::mag(dst);
+  if (std::abs(1 + ang) < small) {
+    return scale(vs::Tensor::I(), -1);
+  }
+  return vs::Tensor::I() + vmat + scale((vmat & vmat), 1. / (1 + ang));
+}
+
+namespace details {
+std::vector<vs::Vector>
+make_radar_grid(double delta_phi, int nphi, int ntheta, vs::Vector axis)
+{
+  // probably a nicer way to do this but we're going to
+  // create set of rays around a circle at different cone "phi" angles
+  // by first creating the canonical case around (0,0,1) and rotating the
+  // coordinate system so that (0,0,1) matches the axis
+
+  axis.normalize();
+  const auto canon_vector = vs::Vector(0, 0, 1);
+
+  std::vector<vs::Vector> rays; // a cone grid oriented around (0,0,1)
+  const auto transform = rotation_matrix(axis, canon_vector);
+  // handle the geometric singularity to avoid putting n rays at zero
+  rays.push_back(transform & canon_vector);
+
+  for (int j = 1; j < nphi; ++j) {
+    const double phi = (delta_phi / (nphi - 1)) * j;
+    const auto zr = std::sin(phi);
+    for (int i = 0; i < ntheta; ++i) {
+      const double theta = (2 * M_PI / ntheta) * i;
+      const auto xr = zr * std::cos(theta);
+      const auto yr = zr * std::sin(theta);
+      auto ray = transform & vs::Vector(xr, yr, 1);
+      ray.normalize();
+      rays.push_back(ray);
+    }
+  }
+  return rays;
+}
+} // namespace details
+void
+LidarLOS::load(const YAML::Node& node, DataProbePostProcessing* probes)
+{
+  auto lidar_spec = node["lidar_specifications"];
+
+  auto create_lidar = [&](const YAML::Node& node) {
+    std::string output_type = "netcdf";
+    get_if_present(node, "output", output_type);
+    if (output_type == "dataprobes") {
+      LidarLineOfSite lidarLOS;
+      auto lidarDBSpec = lidarLOS.determine_line_of_site_info(node);
+      ThrowRequireMsg(
+        probes, "Lidar processing with dataprobe output "
+                "requires valid data probe object");
+      probes->add_external_data_probe_spec_info(lidarDBSpec.release());
+    } else {
+      if (node["radar_cone_grid"]) {
+        const auto cone_grid_spec = node["radar_cone_grid"];
+        if (cone_grid_spec.Type() != YAML::NodeType::Map) {
+          throw std::runtime_error("must specify map for cone grid");
+        }
+
+        double phi = 0;
+        get_required(cone_grid_spec, "cone_angle", phi);
+        phi = convert::degrees_to_radians(phi);
+        ThrowRequire(phi > 0);
+
+        int nphi = 0;
+        get_required(cone_grid_spec, "num_circles", nphi);
+        nphi += 1; // don't count the center as a circle
+
+        int ntheta = 0;
+        get_required(cone_grid_spec, "lines_per_cone_circle", ntheta);
+
+        const auto look_ahead_spec = node["radar_specifications"];
+        if (!look_ahead_spec) {
+          throw std::runtime_error(
+            "Must specifiy radar specification for cone grid");
+        }
+        const auto base_axis = look_ahead_spec["axis"].as<Coordinates>();
+
+        auto rays = details::make_radar_grid(
+          phi, nphi, ntheta,
+          vs::Vector(base_axis.x_, base_axis.y_, base_axis.z_));
+
+        int j = 0;
+        for (const auto& ray : rays) {
+          lidars_.emplace_back();
+          auto mod_node = YAML::Clone(node);
+          mod_node["name"] =
+            node["name"].as<std::string>() + "-grid-" + std::to_string(j++);
+
+          mod_node["radar_specifications"]["axis"] =
+            std::vector<double>{ray[0], ray[1], ray[2]};
+          lidars_.back().load(mod_node);
+        }
+      } else {
+        lidars_.emplace_back();
+        lidars_.back().load(node);
+      }
+    }
+  };
+
+  if (lidar_spec) {
+    const auto is_scalar = lidar_spec.Type() == YAML::NodeType::Map;
+    if (is_scalar) {
+      create_lidar(lidar_spec);
+    } else {
+      std::set<std::string> names;
+      for (auto spec : lidar_spec) {
+        if (!spec["name"]) {
+          throw std::runtime_error("lidar sequence requires a name");
+        }
+        names.insert(spec["name"].as<std::string>());
+        create_lidar(spec);
+      }
+      if (names.size() != lidar_spec.size()) {
+        std::string msg = "Non unique file name for lidar detected: ";
+        for (auto spec : lidar_spec) {
+          msg += spec["name"].as<std::string>() + " ";
+        }
+        throw std::runtime_error(msg);
+      }
+    }
+  }
+}
+
+void
+LidarLOS::output(
+  const stk::mesh::BulkData& bulk,
+  const stk::mesh::Selector& sel,
+  const std::string& coords_name,
+  double dt,
+  double time)
+{
+  constexpr int max_output_per_step = 1000;
+  for (auto& los : lidars_) {
+    const double small = 1e-8 * dt;
+    const double next_time = time + dt;
+    int step_outputs = 0;
+    while (los.time() < next_time - small &&
+           step_outputs < max_output_per_step) {
+      const double dtratio = (los.time() - time) / dt;
+      los.output(bulk, sel, coords_name, dtratio);
+      los.increment_time();
+      ++step_outputs;
+    }
+    if (step_outputs == max_output_per_step) {
+      NaluEnv::self().naluOutputP0()
+        << "Warning: max lidar outputs, " << max_output_per_step
+        << " per step reached";
+    }
+  }
 }
 
 } // namespace nalu
