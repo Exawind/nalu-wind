@@ -43,8 +43,8 @@ public:
   void init(stk::mesh::BulkData& stkBulk);
   void register_nodal_fields(stk::mesh::MetaData& meta, stk::mesh::Part* part);
   void update_displacements(const double /*currentTime*/){};
-  void predict_time_step(const double /*currentTime*/){};
-  void advance_time_step(const double /*currentTime*/){};
+  void predict_model_time_step(const double /*currentTime*/){};
+  void advance_model_time_step(const double /*currentTime*/){};
   void compute_div_mesh_velocity() {}
 
   bool is_active() { return has_actuators() || has_fsi(); }

@@ -4412,7 +4412,7 @@ Realm::process_multi_physics_transfer()
 
   // TODO add logic to skip on the initial call
   if (aeroModels_->is_active()) {
-    aeroModels_->predict_time_step(get_current_time());
+    aeroModels_->predict_model_time_step(get_current_time());
   }
 
   double timeXfer = -NaluEnv::self().nalu_time();
@@ -4512,7 +4512,7 @@ Realm::post_converged_work()
   equationSystems_.post_converged_work();
 
   if (aeroModels_->is_active()) {
-    aeroModels_->advance_time_step(get_current_time());
+    aeroModels_->advance_model_time_step(get_current_time());
   }
 
   // FIXME: Consider a unified collection of post processing work
