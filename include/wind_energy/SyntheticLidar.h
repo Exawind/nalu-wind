@@ -14,7 +14,6 @@
 #include "xfer/LocalVolumeSearch.h"
 
 #include "wind_energy/LidarPatterns.h"
-#include "vs/vector.h"
 
 #include <memory>
 #include <array>
@@ -72,29 +71,6 @@ private:
 
   std::string name_{"lidar-los"};
   std::string fname_{"lidar-los.nc"};
-  bool warn_on_missing_{false};
-};
-
-namespace details {
-std::vector<vs::Vector>
-make_radar_grid(double phi, int nphi, int ntheta, vs::Vector axis);
-}
-
-class LidarLOS
-{
-public:
-  void output(
-    const stk::mesh::BulkData& bulk,
-    const stk::mesh::Selector& sel,
-    const std::string& coords_name,
-    double dt,
-    double time);
-
-  void load(const YAML::Node& node, DataProbePostProcessing* probes);
-  void set_time_for_all(double time);
-
-private:
-  std::vector<LidarLineOfSite> lidars_;
 };
 
 } // namespace nalu
