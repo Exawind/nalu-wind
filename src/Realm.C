@@ -1780,12 +1780,19 @@ Realm::update_geometry_due_to_mesh_motion()
 {
   // check for mesh motion
   if (solutionOptions_->meshMotion_) {
+    if (aeroModels_->is_active()) {
+      aeroModels_->update_displacements(get_current_time());
+    }
 
     meshMotionAlg_->execute(get_current_time());
 
     compute_geometry();
 
     meshMotionAlg_->post_compute_geometry();
+
+    if (aeroModels_->is_active()) {
+      aeroModels_->compute_div_mesh_velocity();
+    }
 
     // and non-conformal algorithm
     if (hasNonConformal_)
@@ -4403,6 +4410,11 @@ Realm::process_multi_physics_transfer()
   if (!hasMultiPhysicsTransfer_)
     return;
 
+  // TODO add logic to skip on the initial call
+  if (aeroModels_->is_active()) {
+    aeroModels_->predict_time_step(get_current_time());
+  }
+
   double timeXfer = -NaluEnv::self().nalu_time();
   std::vector<Transfer*>::iterator ii;
   for (ii = multiPhysicsTransferVec_.begin();
@@ -4498,6 +4510,10 @@ void
 Realm::post_converged_work()
 {
   equationSystems_.post_converged_work();
+
+  if (aeroModels_->is_active()) {
+    aeroModels_->advance_time_step(get_current_time());
+  }
 
   // FIXME: Consider a unified collection of post processing work
   if (NULL != solutionNormPostProcessing_)
