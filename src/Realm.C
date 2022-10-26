@@ -4405,14 +4405,15 @@ Realm::augment_transfer_vector(
 //-------- process_multi_physics_transfer ----------------------------------
 //--------------------------------------------------------------------------
 void
-Realm::process_multi_physics_transfer()
+Realm::process_multi_physics_transfer(bool initCall)
 {
   if (!hasMultiPhysicsTransfer_)
     return;
 
-  // TODO add logic to skip on the initial call
-  if (aeroModels_->is_active()) {
-    aeroModels_->predict_model_time_step(get_current_time());
+  if (!initCall) {
+    if (aeroModels_->is_active()) {
+      aeroModels_->predict_model_time_step(get_current_time());
+    }
   }
 
   double timeXfer = -NaluEnv::self().nalu_time();
