@@ -49,6 +49,7 @@ target_sources(${utest_ex_name} PRIVATE
 
 
 add_subdirectory(actuator)
+add_subdirectory(aero)
 add_subdirectory(algorithms)
 add_subdirectory(kernels)
 add_subdirectory(edge_kernels)
