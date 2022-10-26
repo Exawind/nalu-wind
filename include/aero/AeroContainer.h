@@ -16,11 +16,6 @@
 #include <yaml-cpp/yaml.h>
 #include "aero/actuator/ActuatorModel.h"
 
-#ifdef NALU_USES_OPENFAST
-#include "OpenFAST.H"
-// TODO add a blank openfast data structure possibly
-#endif
-
 namespace sierra {
 namespace nalu {
 
