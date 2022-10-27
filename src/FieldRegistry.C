@@ -21,8 +21,8 @@ const std::map<std::string, FieldDefTypes>&
 Registry()
 {
 
-  FieldDefVector MulitStateNodalVector = {stk::topology::NODE_RANK, NUM_STATES};
-  FieldDefScalar MulitStateNodalScalar = {stk::topology::NODE_RANK, NUM_STATES};
+  FieldDefVector MultiStateNodalVector = {stk::topology::NODE_RANK, NUM_STATES};
+  FieldDefScalar MultiStateNodalScalar = {stk::topology::NODE_RANK, NUM_STATES};
 
   FieldDefVector SingleStateNodalVector = {stk::topology::NODE_RANK};
   FieldDefScalar SingleStateNodalScalar = {stk::topology::NODE_RANK};
