@@ -28,8 +28,8 @@ Registry()
   FieldDefScalar SingleStateNodalScalar = {stk::topology::NODE_RANK};
 
   static const std::map<std::string, FieldDefTypes> registry = {
-    {"velocity", MulitStateNodalVector},
-    {"temperature", MulitStateNodalScalar},
+    {"velocity", MultiStateNodalVector},
+    {"temperature", MultiStateNodalScalar},
   };
   return registry;
 }
