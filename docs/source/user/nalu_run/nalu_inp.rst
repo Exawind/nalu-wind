@@ -1524,6 +1524,16 @@ Data probes
    Type of LIDAR scan pattern. `scanning`, `radar` or `spinner` (default).
 
 
+.. inpfile:: data_probes.lidar_specifications.warn_on_missing
+
+   Warn if points aren't found in the simulation domain. `yes` or `no` (default).
+
+
+.. inpfile:: data_probes.lidar_specifications.reuse_search_data
+
+   Save cached search data per line. `yes` (default) or `no`.
+
+
 .. inpfile:: data_probes.lidar_specifications.scanning_lidar_specifications
 
    Block specifying parameters for the scanning lidar sampling

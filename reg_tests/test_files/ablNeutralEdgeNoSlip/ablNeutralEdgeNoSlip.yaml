@@ -312,6 +312,7 @@ realms:
             type: radar
             frequency: 0.2
             points_along_line: 2
+	    reuse_search_data: no
             output: text
             radar_cone_grid:
               cone_angle: 0.5 #half angle of cone, in degrees
