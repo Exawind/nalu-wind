@@ -324,6 +324,26 @@ realms:
               axis: [1, 0, 0] #main axis, cone grid is set around this
               sweep_angle: 10 #angle of the sweep
               reset_time:  0 # time to pause after a sweep
+              beam_length: 20000 # in m, maximum possible length of beam from the center
+              elevation_angles: [0,1,2,3] # elevation angles to scan after reset
+
+          - name: radar/radar-beam-clip
+            type: radar
+            frequency: 4
+            points_along_line: 5
+            output: text
+            radar_cone_grid:
+              cone_angle: 0.5 #half angle of cone, in degrees
+              num_circles: 2 # number of cones inside the half angle to sample
+              lines_per_cone_circle: 6 # number of lines around the cone circle
+            radar_specifications:
+              bbox: [0., 0., 0., 5000., 5000., 1000.] # where to cut the radar line(m)
+              center: [-10000, 2500, 100] #ideally outside of the box
+              angular_speed: 1 #degrees to sweep in a second
+              axis: [1, 0, 0] #main axis, cone grid is set around this
+              sweep_angle: 10 #angle of the sweep
+              reset_time:  0 # time to pause after a sweep
+              beam_length: 12500 # in m, maximum possible length of beam from the center
               elevation_angles: [0,1,2,3] # elevation angles to scan after reset
 
 

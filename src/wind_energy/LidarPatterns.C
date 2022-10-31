@@ -195,7 +195,7 @@ ScanningLidarSegmentGenerator::load(const YAML::Node& node)
   ThrowRequireMsg(
     reset_time_delta_ >= 0, "reset time delta must be semi-positive");
 
-  get_if_present(node, "beam_length", beam_length_);
+  get_required(node, "beam_length", beam_length_);
 
   if (node["ground_direction"]) {
     ground_normal_ = to_array3(node["ground_direction"].as<Coordinates>());
@@ -548,7 +548,7 @@ RadarSegmentGenerator::load(const YAML::Node& node)
   angular_speed_ = convert::degrees_to_radians(angular_speed);
 
   beam_length_ = 50e3; // m
-  get_if_present(node, "beam_length", beam_length_);
+  get_required(node, "beam_length", beam_length_);
 
   if (node["ground_direction"]) {
     ground_normal_ = to_array3(node["ground_direction"].as<Coordinates>());
@@ -705,6 +705,13 @@ RadarSegmentGenerator::generate(double time) const
     return {tip, tail};
   }
 
+  if (vs::mag(to_vec3(seg.tip_) - to_vec3(center_)) > beam_length_) {
+    seg.tip_ = tip;
+  }
+
+  if (vs::mag(to_vec3(seg.tail_) - to_vec3(center_)) > beam_length_) {
+    seg.tail_ = tail;
+  }
   return seg;
 }
 
