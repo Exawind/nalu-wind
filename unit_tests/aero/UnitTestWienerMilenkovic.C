@@ -10,7 +10,6 @@ using KVector =
   Kokkos::View<vs::Vector*, Kokkos::LayoutRight, sierra::nalu::MemSpace>;
 using KDouble =
   Kokkos::View<double*, Kokkos::LayoutRight, sierra::nalu::MemSpace>;
-  
 const double eps_test = vs::DTraits<double>::eps() * 1.e2;
 
 //! compare WM rotation to standard tensor rotation
