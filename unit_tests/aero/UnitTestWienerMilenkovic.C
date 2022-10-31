@@ -146,8 +146,7 @@ impl_test_WM_compose_add_sub(vs::Vector v1, vs::Vector v2, vs::Vector point)
   Kokkos::deep_copy(hEnd, dEnd);
 
   for (int i = 0; i < 3; ++i) {
-    ASSERT_NEAR(gold[i], hEnd(0)[i], eps_test)
-      << i << " index failed.";
+    ASSERT_NEAR(gold[i], hEnd(0)[i], eps_test) << i << " index failed.";
   }
 }
 } // namespace
