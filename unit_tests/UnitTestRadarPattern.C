@@ -83,7 +83,6 @@ TEST(box_intersect, line_goes_through_corners)
 
 TEST(box_intersect, line_tangent_to_box)
 {
-  vs::Vector corner = box[0];
   const double theta = -M_PI_4;
   vs::Vector origin = {
     box[0][0] + std::cos(theta), box[0][1] + std::sin(theta), box[0][2]};
