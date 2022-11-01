@@ -473,5 +473,35 @@ TEST_F(RadarScanFixture, beam_does_not_reach_domain)
   ASSERT_NEAR(length, expected_length, tol_);
 }
 
+TEST_F(RadarScanFixture, beam_raises_after_phase)
+{
+  RadarSegmentGenerator slbeam;
+  std::string radar_beam_str =
+    "  radar_specifications:                                \n"
+    "    angular_speed: 10 # deg/s                          \n"
+    "    sweep_angle: 20 # degrees                          \n"
+    "    center: [-10000,0,90]                              \n"
+    "    beam_length: 10000                                 \n"
+    "    reset_time_delta: 1.0                              \n"
+    "    axis: [1,0,0]                                      \n"
+    "    elevation_angles: [0, 1.0]                          \n"
+    "    box_1: [-2500,-2500,0]                             \n"
+    "    box_2: [ 2500,-2500,0]                             \n"
+    "    box_3: [ 2500, 2500,0]                             \n"
+    "    box_4: [-2500, 2500,0]                             \n"
+    "    box_5: [-2500,-2500,3000]                          \n"
+    "    box_6: [2500,-2500,3000]                           \n"
+    "    box_7: [2500,2500,3000]                            \n"
+    "    box_8: [-2500,2500,3000]                           \n";
+  const auto spec = YAML::Load(radar_beam_str)["radar_specifications"];
+  slbeam.load(spec);
+
+  const double time = sweep_time_ / 2;
+  auto seg_phase1 = slbeam.generate(time);
+  auto seg_phase2 = slbeam.generate(time + (sweep_time_ + reset_time_));
+
+  ASSERT_GT(seg_phase2.tip_[2], seg_phase1.tip_[2]);
+}
+
 } // namespace nalu
 } // namespace sierra

@@ -134,10 +134,9 @@ public:
 private:
   enum class phase { FORWARD, FORWARD_PAUSE, REVERSE, REVERSE_PAUSE };
   double periodic_time(double time) const;
-  int periodic_count(double time) const;
+  int sweep_count(double time) const;
   phase determine_operation_phase(double periodic_time) const;
   double determine_current_angle(double periodic_time) const;
-  double determine_elevation_angle(int sweep_count) const;
   double total_sweep_time() const;
   double reset_time_delta_{1.0};
   double sweep_angle_{convert::degrees_to_radians(20)};

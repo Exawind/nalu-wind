@@ -627,9 +627,10 @@ RadarSegmentGenerator::periodic_time(double time) const
 }
 
 int
-RadarSegmentGenerator::periodic_count(double time) const
+RadarSegmentGenerator::sweep_count(double time) const
 {
-  return std::floor(time / total_sweep_time());
+  const double sweep_time = sweep_angle_ / angular_speed_ + reset_time_delta_;
+  return std::floor(time / sweep_time);
 }
 
 RadarSegmentGenerator::phase
@@ -683,7 +684,7 @@ RadarSegmentGenerator::generate(double time) const
   */
 
   const auto pitch =
-    elevation_table_.at(periodic_count(time) % elevation_table_.size());
+    elevation_table_.at(sweep_count(time) % elevation_table_.size());
 
   const auto tail = center_;
   const auto yaw_angle = determine_current_angle(periodic_time(time));
