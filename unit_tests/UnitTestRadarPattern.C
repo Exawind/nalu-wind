@@ -496,7 +496,7 @@ TEST_F(RadarScanFixture, beam_raises_after_phase)
   const auto spec = YAML::Load(radar_beam_str)["radar_specifications"];
   slbeam.load(spec);
 
-  const double time = sweep_time_/2;
+  const double time = sweep_time_ / 2;
   auto seg_phase1 = slbeam.generate(time);
   auto seg_phase2 = slbeam.generate(time + (sweep_time_ + reset_time_));
 
