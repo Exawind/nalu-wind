@@ -10,6 +10,7 @@ using KVector =
   Kokkos::View<vs::Vector*, Kokkos::LayoutRight, sierra::nalu::MemSpace>;
 using KDouble =
   Kokkos::View<double*, Kokkos::LayoutRight, sierra::nalu::MemSpace>;
+const double eps_test = vs::DTraits<double>::eps() * 1.e2;
 
 //! compare WM rotation to standard tensor rotation
 void
@@ -57,7 +58,7 @@ impl_test_WM_rotation(
   Kokkos::deep_copy(hEndGold, dEndGold);
 
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR(hEndGold(0)[i], hEnd(0)[i], vs::DTraits<double>::eps());
+    EXPECT_NEAR(hEndGold(0)[i], hEnd(0)[i], eps_test);
   }
 }
 
@@ -107,7 +108,7 @@ impl_test_WM_compose_two_rot(
   Kokkos::deep_copy(hEndGold, dEndGold);
 
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR(hEndGold(0)[i], hEnd(0)[i], vs::DTraits<double>::eps());
+    EXPECT_NEAR(hEndGold(0)[i], hEnd(0)[i], eps_test);
   }
 }
 
@@ -144,8 +145,7 @@ impl_test_WM_compose_add_sub(vs::Vector v1, vs::Vector v2, vs::Vector point)
   Kokkos::deep_copy(hEnd, dEnd);
 
   for (int i = 0; i < 3; ++i) {
-    ASSERT_NEAR(gold[i], hEnd(0)[i], vs::DTraits<double>::eps())
-      << i << " index failed.";
+    ASSERT_NEAR(gold[i], hEnd(0)[i], eps_test) << i << " index failed.";
   }
 }
 } // namespace
