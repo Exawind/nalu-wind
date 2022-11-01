@@ -50,6 +50,7 @@ LidarLineOfSite::load(const YAML::Node& node)
 
   get_required(node, "points_along_line", npoints_);
   get_if_present(node, "warn_on_missing", warn_on_missing_);
+  get_if_present(node, "reuse_search_data", reuse_search_data_);
 
   if (node["name"]) {
     name_ = node["name"].as<std::string>();
@@ -389,6 +390,9 @@ LidarLineOfSite::output(
     } else if (output_type_ == Output::NETCDF) {
       output_nc(time(), points, velocity);
     }
+  }
+  if (!reuse_search_data_) {
+    search_data_.reset();
   }
 }
 

@@ -45,6 +45,7 @@ const std::string radar_spec =
   "        type: radar                                       \n"
   "        frequency: 1                                      \n"
   "        points_along_line: 2                              \n"
+  "        reuse_search_data: no                             \n"
   "        output: text                                      \n"
   "        radar_cone_grid:                                  \n"
   "          cone_angle: 0.5                                 \n"
