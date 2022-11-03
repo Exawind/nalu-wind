@@ -22,7 +22,7 @@
 
 namespace {
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 
 using sierra::nalu::SharedMemView;
 

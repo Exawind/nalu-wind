@@ -90,7 +90,7 @@ public:
 
   template <typename LambdaFunction>
   void execute(LambdaFunction
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
                  func
 #endif
   )
@@ -101,7 +101,7 @@ public:
       !bulk_->get_buckets(meta_->side_rank(), *partVec_[0]).empty(),
       "part does not contain side-ranked elements");
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     sierra::nalu::AssembleFaceElemSolverAlgorithm& alg =
       *(helperObjs_->assembleFaceElemSolverAlg);
     alg.run_face_elem_algorithm(*bulk_, func);

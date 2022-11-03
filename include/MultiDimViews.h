@@ -69,7 +69,7 @@ public:
        numNeededViews.num3DViews <= maxViewsPerDim ||
        numNeededViews.num4DViews <= maxViewsPerDim),
       "Number of requested views exceed maxViewsPerDim");
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     for (unsigned i = 0; i < numNeededViews.num1DViews; ++i) {
       views_1D[i] = nullptr;
     }
@@ -101,7 +101,7 @@ public:
   KOKKOS_FUNCTION
   ~MultiDimViews()
   {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     for (unsigned i = 0; i < get_num_1D_views(); ++i) {
       delete views_1D[i];
     }
@@ -136,7 +136,7 @@ public:
   KOKKOS_FUNCTION
   SharedMemView1D& get_scratch_view_1D(unsigned ordinal)
   {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     return *views_1D[indices[ordinal]];
 #else
     return views_1D[indices[ordinal]];
@@ -146,7 +146,7 @@ public:
   KOKKOS_FUNCTION
   SharedMemView2D& get_scratch_view_2D(unsigned ordinal)
   {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     return *views_2D[indices[ordinal]];
 #else
     return views_2D[indices[ordinal]];
@@ -156,7 +156,7 @@ public:
   KOKKOS_FUNCTION
   SharedMemView3D& get_scratch_view_3D(unsigned ordinal)
   {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     return *views_3D[indices[ordinal]];
 #else
     return views_3D[indices[ordinal]];
@@ -166,7 +166,7 @@ public:
   KOKKOS_FUNCTION
   SharedMemView4D& get_scratch_view_4D(unsigned ordinal)
   {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     return *views_4D[indices[ordinal]];
 #else
     return views_4D[indices[ordinal]];
@@ -177,7 +177,7 @@ public:
   void add_1D_view(unsigned ordinal, const SharedMemView1D& view)
   {
     NGP_ThrowRequire(ordinal < maxFieldOrdinals);
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     views_1D[views_1D_size] = new SharedMemView1D;
     *views_1D[views_1D_size] = view;
 #else
@@ -191,7 +191,7 @@ public:
   void add_2D_view(unsigned ordinal, const SharedMemView2D& view)
   {
     NGP_ThrowRequire(ordinal < maxFieldOrdinals);
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     views_2D[views_2D_size] = new SharedMemView2D;
     *views_2D[views_2D_size] = view;
 #else
@@ -205,7 +205,7 @@ public:
   void add_3D_view(unsigned ordinal, const SharedMemView3D& view)
   {
     NGP_ThrowRequire(ordinal < maxFieldOrdinals);
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     views_3D[views_3D_size] = new SharedMemView3D;
     *views_3D[views_3D_size] = view;
 #else
@@ -219,7 +219,7 @@ public:
   void add_4D_view(unsigned ordinal, const SharedMemView4D& view)
   {
     NGP_ThrowRequire(ordinal < maxFieldOrdinals);
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     views_4D[views_4D_size] = new SharedMemView4D;
     *views_4D[views_4D_size] = view;
 #else
@@ -232,7 +232,7 @@ public:
   KOKKOS_FUNCTION
   const SharedMemView1D& get_1D_view_by_index(unsigned idx) const
   {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     return *views_1D[idx];
 #else
     return views_1D[idx];
@@ -242,7 +242,7 @@ public:
   KOKKOS_FUNCTION
   const SharedMemView2D& get_2D_view_by_index(unsigned idx) const
   {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     return *views_2D[idx];
 #else
     return views_2D[idx];
@@ -252,7 +252,7 @@ public:
   KOKKOS_FUNCTION
   const SharedMemView3D& get_3D_view_by_index(unsigned idx) const
   {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     return *views_3D[idx];
 #else
     return views_3D[idx];
@@ -262,7 +262,7 @@ public:
   KOKKOS_FUNCTION
   const SharedMemView4D& get_4D_view_by_index(unsigned idx) const
   {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     return *views_4D[idx];
 #else
     return views_4D[idx];
@@ -279,7 +279,7 @@ public:
   static const unsigned maxFieldOrdinals = 256;
 
   int indices[maxFieldOrdinals];
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
   SharedMemView1D* views_1D[maxViewsPerDim];
   SharedMemView2D* views_2D[maxViewsPerDim];
   SharedMemView3D* views_3D[maxViewsPerDim];

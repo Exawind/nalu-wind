@@ -52,7 +52,7 @@ ScalarFluxBCElemKernel<BcAlgTraits>::ScalarFluxBCElemKernel(
 }
 
 template <typename BcAlgTraits>
-void
+KOKKOS_FUNCTION void
 ScalarFluxBCElemKernel<BcAlgTraits>::execute(
   SharedMemView<DoubleType**, DeviceShmem>&,
   SharedMemView<DoubleType*, DeviceShmem>& rhs,

@@ -59,6 +59,7 @@ SDRKONodeKernel::setup(Realm& realm)
   gammaTwo_ = realm.get_turb_model_constant(TM_gammaTwo);
 }
 
+KOKKOS_FUNCTION
 void
 SDRKONodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,

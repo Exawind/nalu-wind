@@ -21,7 +21,9 @@
 #include "vs/tensor.h"
 
 #include <memory>
+#if !defined(KOKKOS_ENABLE_HIP)
 #include <filesystem>
+#endif
 
 namespace sierra {
 namespace nalu {
@@ -285,7 +287,12 @@ LidarLineOfSite::output(
   if (internal_output_counter_ == 0) {
     auto dir_pos = name_.find_last_of("/");
     auto dir_name = name_.substr(0, dir_pos);
+#if !defined(KOKKOS_ENABLE_HIP)
     std::filesystem::create_directory(dir_name);
+#else
+    throw std::runtime_error(
+      "LidarLineOfSite::output() filesystem not supported on HIP");
+#endif
   }
 
   if (!search_data_) {

@@ -39,6 +39,7 @@ MotionTranslationKernel::load(const YAML::Node& node)
   useVelocity_ = (node["velocity"] ? true : false);
 }
 
+KOKKOS_FUNCTION
 mm::TransMatType
 MotionTranslationKernel::build_transformation(
   const double& time, const mm::ThreeDVecType& /* mxyz */)
@@ -60,6 +61,7 @@ MotionTranslationKernel::build_transformation(
   return transMat;
 }
 
+KOKKOS_FUNCTION
 mm::ThreeDVecType
 MotionTranslationKernel::compute_velocity(
   const double& time,

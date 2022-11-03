@@ -71,6 +71,7 @@ SDRSSTNodeKernel::setup(Realm& realm)
   }
 }
 
+KOKKOS_FUNCTION
 void
 SDRSSTNodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,

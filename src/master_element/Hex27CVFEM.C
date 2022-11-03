@@ -23,6 +23,7 @@ namespace nalu {
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 HexahedralP2Element::HexahedralP2Element() : MasterElement()
 {
   MasterElement::nDim_ = nDim_;
@@ -261,7 +262,7 @@ HexahedralP2Element::eval_shape_derivs_at_shifted_ips()
 void
 HexahedralP2Element::eval_shape_derivs_at_face_ips()
 {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
   hex27_shape_deriv(numFaceIps_, intgExpFace_, expFaceShapeDerivs_);
 #endif
 }
@@ -545,9 +546,10 @@ HexahedralP2Element::hex27_shape_deriv(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 Hex27SCV::Hex27SCV() : HexahedralP2Element()
 {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
   // set up integration rule and relevant maps for scvs
   set_interior_info();
 
@@ -572,10 +574,11 @@ Hex27SCV::Hex27SCV() : HexahedralP2Element()
 //--------------------------------------------------------------------------
 //-------- set_interior_info -----------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Hex27SCV::set_interior_info()
 {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
   // tensor product nodes (3x3x3) x tensor product quadrature (2 x 2 x 2)
   int vector_index = 0;
   int scalar_index = 0;
@@ -622,7 +625,7 @@ Hex27SCV::set_interior_info()
 //--------------------------------------------------------------------------
 //-------- ipNodeMap -------------------------------------------------------
 //--------------------------------------------------------------------------
-const int*
+KOKKOS_FUNCTION const int*
 Hex27SCV::ipNodeMap(int /*ordinal*/) const
 {
   // define scv->node mappings
@@ -708,6 +711,7 @@ Hex27SCV::determinant(
 }
 
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Hex27SCV::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -727,6 +731,7 @@ Hex27SCV::grad_op(
 }
 
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Hex27SCV::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -801,6 +806,7 @@ Hex27SCV::Mij(const double* coords, double* metric, double* deriv)
   generic_Mij_3d<AlgTraits>(numIntPoints_, deriv, coords, metric);
 }
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Hex27SCV::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -813,9 +819,10 @@ Hex27SCV::Mij(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 Hex27SCS::Hex27SCS() : HexahedralP2Element()
 {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
   // set up integration rule and relevant maps on scs
   set_interior_info();
 
@@ -1228,6 +1235,7 @@ Hex27SCS::set_boundary_info()
 //--------------------------------------------------------------------------
 //-------- adjacentNodes ---------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 const int*
 Hex27SCS::adjacentNodes()
 {
@@ -1238,7 +1246,7 @@ Hex27SCS::adjacentNodes()
 //--------------------------------------------------------------------------
 //-------- ipNodeMap -------------------------------------------------------
 //--------------------------------------------------------------------------
-const int*
+KOKKOS_FUNCTION const int*
 Hex27SCS::ipNodeMap(int ordinal) const
 {
   // define ip->node mappings for each face (ordinal);
@@ -1248,6 +1256,7 @@ Hex27SCS::ipNodeMap(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- side_node_ordinals ----------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 const int*
 Hex27SCS::side_node_ordinals(int ordinal) const
 {
@@ -1258,6 +1267,7 @@ Hex27SCS::side_node_ordinals(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- opposingNodes --------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 int
 Hex27SCS::opposingNodes(const int ordinal, const int node)
 {
@@ -1267,6 +1277,7 @@ Hex27SCS::opposingNodes(const int ordinal, const int node)
 //--------------------------------------------------------------------------
 //-------- opposingFace --------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 int
 Hex27SCS::opposingFace(const int ordinal, const int node)
 {
@@ -1407,6 +1418,7 @@ Hex27SCS::area_vector(
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Hex27SCS::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -1446,6 +1458,7 @@ Hex27SCS::grad_op(
 //--------------------------------------------------------------------------
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Hex27SCS::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -1466,6 +1479,7 @@ Hex27SCS::shifted_grad_op(
 //--------------------------------------------------------------------------
 //-------- face_grad_op ----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Hex27SCS::face_grad_op(
   int face_ordinal,
@@ -1569,6 +1583,7 @@ Hex27SCS::gradient(
 //--------------------------------------------------------------------------
 //-------- gij -------------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Hex27SCS::gij(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -1596,6 +1611,7 @@ Hex27SCS::Mij(const double* coords, double* metric, double* deriv)
   generic_Mij_3d<AlgTraits>(numIntPoints_, deriv, coords, metric);
 }
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Hex27SCS::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,

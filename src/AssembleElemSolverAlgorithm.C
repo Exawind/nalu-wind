@@ -105,7 +105,7 @@ AssembleElemSolverAlgorithm::execute()
         kernel->execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
       }
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_GPU)
       const int simdElemIndex = 0;
 #else
       for (int simdElemIndex = 0; simdElemIndex < smdata.numSimdElems;

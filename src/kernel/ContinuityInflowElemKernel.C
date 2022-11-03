@@ -75,7 +75,7 @@ ContinuityInflowElemKernel<BcAlgTraits>::setup(
 }
 
 template <typename BcAlgTraits>
-void
+KOKKOS_FUNCTION void
 ContinuityInflowElemKernel<BcAlgTraits>::execute(
   SharedMemView<DoubleType**, DeviceShmem>&,
   SharedMemView<DoubleType*, DeviceShmem>& rhs,

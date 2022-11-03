@@ -75,6 +75,7 @@ MomentumMassBDFNodeKernel::setup(Realm& realm)
   gamma3_ = realm.get_gamma3();
 }
 
+KOKKOS_FUNCTION
 void
 MomentumMassBDFNodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,

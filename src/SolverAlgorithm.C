@@ -84,6 +84,7 @@ NGPApplyCoeff::free_coeff_applier()
   }
 }
 
+KOKKOS_FUNCTION
 void
 NGPApplyCoeff::extract_diagonal(
   const unsigned int nEntities,
@@ -103,6 +104,7 @@ NGPApplyCoeff::extract_diagonal(
   }
 }
 
+KOKKOS_FUNCTION
 void
 NGPApplyCoeff::reset_overset_rows(
   const unsigned int nEntities,
@@ -127,6 +129,7 @@ NGPApplyCoeff::reset_overset_rows(
   }
 }
 
+KOKKOS_FUNCTION
 void
 NGPApplyCoeff::operator()(
   unsigned numMeshobjs,

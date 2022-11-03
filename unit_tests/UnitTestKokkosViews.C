@@ -18,7 +18,7 @@
 
 namespace {
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 // following tests can't run on cuda due to variety of reasons, including
 // use of std::vectors, use of MasterElement functions (defined for host), etc.
 

@@ -49,7 +49,7 @@ WallDistElemKernel<AlgTraits>::WallDistElemKernel(
 }
 
 template <typename AlgTraits>
-void
+KOKKOS_FUNCTION void
 WallDistElemKernel<AlgTraits>::execute(
   SharedMemView<DoubleType**, DeviceShmem>& lhs,
   SharedMemView<DoubleType*, DeviceShmem>& rhs,

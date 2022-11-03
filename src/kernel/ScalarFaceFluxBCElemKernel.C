@@ -49,7 +49,7 @@ ScalarFaceFluxBCElemKernel<BcAlgTraits>::ScalarFaceFluxBCElemKernel(
 }
 
 template <typename BcAlgTraits>
-void
+KOKKOS_FUNCTION void
 ScalarFaceFluxBCElemKernel<BcAlgTraits>::execute(
   SharedMemView<DoubleType**, DeviceShmem>&,
   SharedMemView<DoubleType*, DeviceShmem>& rhs,

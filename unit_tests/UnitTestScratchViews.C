@@ -316,7 +316,7 @@ do_the_smdata_test(
             dataNGP, ngpMesh, stk::topology::ELEM_RANK, element,
             *smdata.prereqData[0]);
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
           // no copy-interleave needed on GPU since no simd.
           sierra::nalu::copy_and_interleave(
             smdata.prereqData, 1, smdata.simdPrereqData);
@@ -355,9 +355,12 @@ TEST_F(Hex8MeshWithNSOFields, NGPSharedMemData)
   }
 }
 
+#if defined(KOKKOS_ENABLE_GPU)
 #ifdef KOKKOS_ENABLE_CUDA
-
 using DeviceSpace = Kokkos::Cuda;
+#else
+using DeviceSpace = Kokkos::Experimental::HIP;
+#endif
 using DeviceShmem = DeviceSpace::scratch_memory_space;
 using DynamicScheduleType = Kokkos::Schedule<Kokkos::Dynamic>;
 using DeviceTeamHandleType =

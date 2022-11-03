@@ -63,7 +63,7 @@ MomentumABLWallFuncEdgeKernel<BcAlgTraits>::MomentumABLWallFuncEdgeKernel(
 }
 
 template <typename BcAlgTraits>
-void
+KOKKOS_FUNCTION void
 MomentumABLWallFuncEdgeKernel<BcAlgTraits>::execute(
   SharedMemView<DoubleType**, DeviceShmem>& lhs,
   SharedMemView<DoubleType*, DeviceShmem>& rhs,

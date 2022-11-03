@@ -42,7 +42,7 @@ UpdateOversetFringeAlgorithmDriver::execute()
   const double timeA = NaluEnv::self().nalu_time();
   auto* oversetManager = realm_.oversetManager_;
   if (oversetManager->oversetGhosting_ != nullptr) {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     std::vector<const stk::mesh::FieldBase*> fVec(fields_.size());
     for (size_t i = 0; i < fields_.size(); ++i)
       fVec[i] = fields_[i].field_;

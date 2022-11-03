@@ -38,7 +38,8 @@ hex8_derivative(
   //                         evaluation points.
   //
   //**********************************************************************
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_GPU)
+
   if (8 != deriv.extent(1))
     ThrowErrorMsgDevice("hex8_derivative: Error in derivative array index 1");
   if (3 != deriv.extent(2))
@@ -49,6 +50,7 @@ hex8_derivative(
     ThrowErrorMsgDevice(
       "hex8_derivative: Error in deriv or par_coord array index 0");
 #else
+
   ThrowRequireMsg(
     8 == deriv.extent(1), "hex8_derivative: Error in derivative array");
   ThrowRequireMsg(
@@ -58,6 +60,7 @@ hex8_derivative(
   ThrowRequireMsg(
     deriv.extent(0) == par_coord.extent(0),
     "hex8_derivative: Error in derivative array");
+
 #endif
 
   const int npts = deriv.extent(0);
@@ -299,6 +302,7 @@ hex8_shape_fcn(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 HexSCV::HexSCV() : MasterElement()
 {
   MasterElement::nDim_ = nDim_;
@@ -309,6 +313,7 @@ HexSCV::HexSCV() : MasterElement()
 //--------------------------------------------------------------------------
 //-------- ipNodeMap -------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 const int*
 HexSCV::ipNodeMap(int /*ordinal*/) const
 {
@@ -399,6 +404,7 @@ HexSCV::determinant(
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 HexSCV::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -426,6 +432,7 @@ HexSCV::grad_op(
 //--------------------------------------------------------------------------
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 HexSCV::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -447,6 +454,7 @@ HexSCV::Mij(const double* coords, double* metric, double* deriv)
   generic_Mij_3d<AlgTraitsHex8>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 HexSCV::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -462,6 +470,7 @@ HexSCV::Mij(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 HexSCS::HexSCS() : MasterElement(HexSCS::scaleToStandardIsoFac_)
 {
   MasterElement::nDim_ = nDim_;
@@ -472,6 +481,7 @@ HexSCS::HexSCS() : MasterElement(HexSCS::scaleToStandardIsoFac_)
 //--------------------------------------------------------------------------
 //-------- ipNodeMap -------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 const int*
 HexSCS::ipNodeMap(int ordinal) const
 {
@@ -522,6 +532,7 @@ HexSCS::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 HexSCS::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -549,6 +560,7 @@ HexSCS::grad_op(
 //--------------------------------------------------------------------------
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------c------------------------------------
+KOKKOS_FUNCTION
 void
 HexSCS::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -609,6 +621,7 @@ HexSCS::determinant(
 
 //--------------------------------------------------------------------------
 //-------- side_node_ordinals ----------------------------------------------
+KOKKOS_FUNCTION
 //--------------------------------------------------------------------------
 const int*
 HexSCS::side_node_ordinals(int ordinal) const
@@ -621,7 +634,7 @@ HexSCS::side_node_ordinals(int ordinal) const
 //-------- face_grad_op ----------------------------------------------------
 //--------------------------------------------------------------------------
 template <bool shifted>
-void
+KOKKOS_FUNCTION void
 HexSCS::face_grad_op_t(
   const int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -639,6 +652,7 @@ HexSCS::face_grad_op_t(
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
+KOKKOS_FUNCTION
 void
 HexSCS::face_grad_op(
   int face_ordinal,
@@ -652,6 +666,7 @@ HexSCS::face_grad_op(
 //--------------------------------------------------------------------------
 //-------- shifted_face_grad_op --------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 HexSCS::shifted_face_grad_op(
   int face_ordinal,
@@ -664,6 +679,7 @@ HexSCS::shifted_face_grad_op(
 //--------------------------------------------------------------------------
 //-------- gij -------------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 HexSCS::gij(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -686,6 +702,7 @@ HexSCS::Mij(const double* coords, double* metric, double* deriv)
   generic_Mij_3d<AlgTraitsHex8>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 HexSCS::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -701,6 +718,7 @@ HexSCS::Mij(
 //--------------------------------------------------------------------------
 //-------- adjacentNodes ---------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 const int*
 HexSCS::adjacentNodes()
 {
@@ -711,6 +729,7 @@ HexSCS::adjacentNodes()
 //--------------------------------------------------------------------------
 //-------- scsIpEdgeOrd ----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 const int*
 HexSCS::scsIpEdgeOrd()
 {
@@ -720,6 +739,7 @@ HexSCS::scsIpEdgeOrd()
 //--------------------------------------------------------------------------
 //-------- opposingNodes --------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 int
 HexSCS::opposingNodes(const int ordinal, const int node)
 {
@@ -729,6 +749,7 @@ HexSCS::opposingNodes(const int ordinal, const int node)
 //--------------------------------------------------------------------------
 //-------- opposingFace --------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 int
 HexSCS::opposingFace(const int ordinal, const int node)
 {
