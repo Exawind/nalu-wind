@@ -46,6 +46,7 @@ MomentumBoussinesqNodeKernel::setup(Realm& realm)
   temperature_ = fieldMgr.get_field<double>(temperatureID_);
 }
 
+KOKKOS_FUNCTION
 void
 MomentumBoussinesqNodeKernel::execute(
   NodeKernelTraits::LhsType&,

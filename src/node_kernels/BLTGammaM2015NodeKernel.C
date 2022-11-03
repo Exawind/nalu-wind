@@ -83,6 +83,7 @@ BLTGammaM2015NodeKernel::FPG(const double& lamda0L)
   return out;
 }
 
+KOKKOS_FUNCTION
 void
 BLTGammaM2015NodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,

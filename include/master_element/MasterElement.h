@@ -42,10 +42,12 @@ public:
   KOKKOS_FUNCTION virtual ~MasterElement() {}
 
   template <typename SCALAR, typename SHMEM>
-  void shape_fcn(SharedMemView<SCALAR**, SHMEM>& /* shpfc */);
+  KOKKOS_INLINE_FUNCTION void
+  shape_fcn(SharedMemView<SCALAR**, SHMEM>& /* shpfc */);
 
   template <typename SCALAR, typename SHMEM>
-  void shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& /* shpfc */);
+  KOKKOS_INLINE_FUNCTION void
+  shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& /* shpfc */);
 
   KOKKOS_FUNCTION virtual void grad_op(
     const SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
@@ -267,7 +269,7 @@ public:
 
   KOKKOS_FUNCTION virtual const int* adjacentNodes() const
   {
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     throw std::runtime_error("adjacentNodes not implimented");
 #else
     return nullptr;
@@ -332,7 +334,7 @@ MasterElement::shape_fcn<DoubleType, DeviceShmem>(
 }
 
 template <>
-inline void
+KOKKOS_INLINE_FUNCTION void
 MasterElement::shape_fcn<double, HostShmem>(
   SharedMemView<double**, HostShmem>& shpfc)
 {
@@ -348,7 +350,7 @@ MasterElement::shifted_shape_fcn<DoubleType, DeviceShmem>(
 }
 
 template <>
-inline void
+KOKKOS_INLINE_FUNCTION void
 MasterElement::shifted_shape_fcn<double, HostShmem>(
   SharedMemView<double**, HostShmem>& shpfc)
 {

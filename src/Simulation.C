@@ -51,6 +51,11 @@ Simulation::Simulation(const YAML::Node& root_node)
   cudaDeviceGetLimit(&default_stack_size, cudaLimitStackSize);
   cudaDeviceSetLimit(cudaLimitStackSize, nalu_stack_size);
 #endif
+
+#ifdef KOKKOS_ENABLE_HIP
+  // hipDeviceGetLimit(&default_stack_size, cudaLimitStackSize);
+  // hipDeviceSetLimit(cudaLimitStackSize, nalu_stack_size);
+#endif
 }
 
 Simulation::~Simulation()
@@ -61,6 +66,9 @@ Simulation::~Simulation()
   delete linearSolvers_;
 #ifdef KOKKOS_ENABLE_CUDA
   cudaDeviceSetLimit(cudaLimitStackSize, default_stack_size);
+#endif
+#ifdef KOKKOS_ENABLE_HIP
+  // hipDeviceSetLimit(cudaLimitStackSize, default_stack_size);
 #endif
 }
 

@@ -90,7 +90,7 @@ check_view(const ViewType& v)
   return true;
 }
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 
 void
 do_the_multidimviews_test()

@@ -833,7 +833,7 @@ TurbulenceAveragingPostProcessing::compute_averages(
   const int numResolvedPairs = avInfo->resolvedFieldVecPair_.size();
   const double currentTimeFilter = currentTimeFilter_;
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_GPU)
   FieldInfoView fieldPairs(
     Kokkos::ViewAllocateWithoutInitializing("turbAveragesFields"),
     (numRePairs + numFavrePairs + numResolvedPairs));

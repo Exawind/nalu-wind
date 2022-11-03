@@ -29,6 +29,7 @@ WallDistNodeKernel::setup(Realm& realm)
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
 }
 
+KOKKOS_FUNCTION
 void
 WallDistNodeKernel::execute(
   NodeKernelTraits::LhsType&,

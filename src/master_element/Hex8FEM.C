@@ -150,6 +150,7 @@ Hex8FEM::grad_op(
 }
 #endif
 
+KOKKOS_FUNCTION
 void
 Hex8FEM::grad_op_fem(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -164,6 +165,7 @@ Hex8FEM::grad_op_fem(
 //--------------------------------------------------------------------------
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Hex8FEM::shifted_grad_op_fem(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -341,6 +343,7 @@ Hex8FEM::hex8_fem_derivative(
   }
 }
 
+KOKKOS_FUNCTION
 void
 Hex8FEM::hex8_fem_derivative(
   const int npt,

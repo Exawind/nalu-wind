@@ -232,7 +232,7 @@ TEST(MetricTensor, hex27)
   test_metric_for_topo_3D(stk::topology::HEX_27, 1.0e-10);
 }
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 TEST(MetricTensorNGP, hex27)
 {
   stk::topology topo = stk::topology::HEX_27;

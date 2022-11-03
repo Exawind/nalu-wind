@@ -87,7 +87,7 @@ public:
         auto bktId = elem_buckets.device_get(team.league_rank());
         auto& b = ngpMesh.get_bucket(entityRank, bktId);
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
         ThrowAssertMsg(
           b.topology().num_nodes() == (unsigned)nodesPerEntity_,
           "AssembleElemSolverAlgorithm expected nodesPerEntity_ = "
@@ -119,7 +119,7 @@ public:
                 *smdata.prereqData[simdElemIndex]);
             }
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
             // No need to interleave on GPUs
             copy_and_interleave(
               smdata.prereqData, numSimdElems, smdata.simdPrereqData);

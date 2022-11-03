@@ -13,7 +13,7 @@
 
 #include "kernel/ScalarOpenAdvElemKernel.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 namespace {
 namespace hex8_golds {
 static constexpr double rhs[8] = {
@@ -151,7 +151,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
   // Populate LHS and RHS
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);

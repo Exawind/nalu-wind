@@ -83,7 +83,7 @@ public:
         auto bktId = buckets.device_get(team.league_rank());
         auto& b = ngpMesh.get_bucket(sideRank, bktId);
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
         ThrowAssertMsg(
           b.topology().num_nodes() == (unsigned)nodesPerFace_,
           "AssembleFaceElemSolverAlgorithm expected nodesPerEntity_ = "
@@ -143,7 +143,7 @@ public:
               smdata.numSimdFaces = simdFaceIndex;
               numFacesProcessed += simdFaceIndex;
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
               // No need to interleave on GPUs
               copy_and_interleave(
                 smdata.faceViews, smdata.numSimdFaces, smdata.simdFaceViews);

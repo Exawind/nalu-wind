@@ -46,6 +46,7 @@ TKEKsgsNodeKernel::setup(Realm& realm)
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
 }
 
+KOKKOS_FUNCTION
 void
 TKEKsgsNodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,

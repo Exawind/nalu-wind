@@ -58,7 +58,7 @@ ScalarEdgeOpenSolverAlg<BcAlgTraits>::ScalarEdgeOpenSolverAlg(
 }
 
 template <typename BcAlgTraits>
-void
+KOKKOS_FUNCTION void
 ScalarEdgeOpenSolverAlg<BcAlgTraits>::execute(
   SharedMemView<DoubleType**, DeviceShmem>& lhs,
   SharedMemView<DoubleType*, DeviceShmem>& rhs,

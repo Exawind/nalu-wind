@@ -40,6 +40,7 @@ EnthalpyABLForceNodeKernel::setup(Realm& realm)
   ablSrc_ = realm.ablForcingAlg_->temperature_source_interpolator();
 }
 
+KOKKOS_FUNCTION
 void
 EnthalpyABLForceNodeKernel::execute(
   NodeKernelTraits::LhsType&,

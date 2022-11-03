@@ -13,7 +13,7 @@
 
 #include "edge_kernels/MomentumSSTAMSDiffEdgeKernel.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 namespace {
 namespace hex8_golds {
 namespace ams_diff {
@@ -546,7 +546,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_diff)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);

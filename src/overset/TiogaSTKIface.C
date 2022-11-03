@@ -110,7 +110,7 @@ TiogaSTKIface::initialize()
 void
 TiogaSTKIface::execute(const bool isDecoupled)
 {
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_GPU)
   // Bail out early if this is a GPU build and is using non-decoupled solve
   if (!isDecoupled) {
     throw std::runtime_error(

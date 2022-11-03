@@ -22,6 +22,7 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKokkosMEBC.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKokkosViews.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLagrangeInterpolants.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLidarLOS.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLocalGraphArrays.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMasterElements.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMetricTensor.C
@@ -30,6 +31,7 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNGPMasterElements.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNgpMesh1.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestPecletFunction.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestRadarPattern.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestRealm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScanningLidarPattern.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScratchViews.C
@@ -49,6 +51,7 @@ target_sources(${utest_ex_name} PRIVATE
 
 
 add_subdirectory(actuator)
+add_subdirectory(aero)
 add_subdirectory(algorithms)
 add_subdirectory(kernels)
 add_subdirectory(edge_kernels)
