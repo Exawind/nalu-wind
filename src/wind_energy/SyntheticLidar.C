@@ -51,6 +51,7 @@ LidarLineOfSite::load(const YAML::Node& node)
   get_required(node, "points_along_line", npoints_);
   get_if_present(node, "warn_on_missing", warn_on_missing_);
   get_if_present(node, "reuse_search_data", reuse_search_data_);
+  get_if_present(node, "always_output", always_output_);
 
   if (node["name"]) {
     name_ = node["name"].as<std::string>();
@@ -288,12 +289,15 @@ LidarLineOfSite::output(
     std::filesystem::create_directory(dir_name);
   }
 
+  const auto seg = segGen->generate(time());
+  if (!seg.valid && !always_output_) {
+    return;
+  }
+
   if (!search_data_) {
     search_data_ =
       std::make_unique<LocalVolumeSearchData>(bulk, active, npoints_);
   }
-
-  const auto seg = segGen->generate(time());
 
   // segment length can shrink to zero, so mag(dx) isn't bounded from below
   const std::array<double, 3> dx{
@@ -383,6 +387,10 @@ LidarLineOfSite::output(
         << ", " << max_unmatched[1] << ", " << max_unmatched[2] << ")"
         << ", min individually unmatched coords: (" << min_unmatched[0] << ", "
         << min_unmatched[1] << ", " << min_unmatched[2] << ")" << std::endl;
+    }
+
+    if (not_found_count == npoints_ && !always_output_) {
+      return;
     }
 
     if (output_type_ == Output::TEXT) {

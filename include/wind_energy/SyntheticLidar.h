@@ -74,6 +74,7 @@ private:
   std::string fname_{"lidar-los.nc"};
   bool warn_on_missing_{false};
   bool reuse_search_data_{true};
+  bool always_output_{false};
 };
 
 namespace details {
