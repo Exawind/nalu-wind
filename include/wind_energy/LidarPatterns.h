@@ -28,6 +28,7 @@ struct Segment
 {
   std::array<double, 3> tip_{};
   std::array<double, 3> tail_{};
+  bool valid{true};
 };
 
 class SegmentGenerator

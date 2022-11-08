@@ -1534,6 +1534,11 @@ Data probes
    Save cached search data per line. `yes` (default) or `no`.
 
 
+.. inpfile:: data_probes.lidar_specifications.always_output
+
+   Output even if no points intersect domain. `yes` or `no` (default).
+
+
 .. inpfile:: data_probes.lidar_specifications.scanning_lidar_specifications
 
    Block specifying parameters for the scanning lidar sampling
