@@ -23,7 +23,7 @@
 
 namespace {
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 
 void
 element_discrete_laplacian_kernel_3d(

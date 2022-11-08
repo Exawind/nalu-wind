@@ -66,6 +66,7 @@ TKERodiNodeKernel::setup(Realm& realm)
 //--------------------------------------------------------------------------
 //-------- execute ----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 TKERodiNodeKernel::execute(
   NodeKernelTraits::LhsType& /*lhs*/,

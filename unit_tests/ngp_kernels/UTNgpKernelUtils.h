@@ -69,7 +69,7 @@ private:
 };
 
 template <typename AlgTraits>
-void
+KOKKOS_FUNCTION void
 TestContinuityKernel<AlgTraits>::execute(
   sierra::nalu::SharedMemView<DoubleType**, ShmemType>&,
   sierra::nalu::SharedMemView<DoubleType*, ShmemType>& rhs,

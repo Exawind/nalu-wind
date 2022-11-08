@@ -39,7 +39,7 @@ linear_scalar_value(int dim, double a, const double* b, const double* x)
 
 } // namespace
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 TEST(MasterElementFunctions, generic_grad_op_3d_hex_27)
 {
   stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);
@@ -217,7 +217,7 @@ TEST(MasterElementFunctions, generic_grad_op_2d_tri_6)
   }
 }
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 TEST(Hex27SCV, detj)
 {
   stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);

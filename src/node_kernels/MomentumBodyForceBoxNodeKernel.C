@@ -205,6 +205,7 @@ MomentumBodyForceBoxNodeKernel::setup(Realm& realm)
   }
 }
 
+KOKKOS_FUNCTION
 void
 MomentumBodyForceBoxNodeKernel::execute(
   NodeKernelTraits::LhsType&,

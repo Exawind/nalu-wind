@@ -14,7 +14,7 @@
 #include "HYPRE_config.h"
 #endif
 
-#ifdef HYPRE_USING_CUDA
+#ifdef HYPRE_USING_GPU
 #include "HYPRE_utilities.h"
 #include "krylov.h"
 #include "HYPRE.h"
@@ -27,7 +27,7 @@
 
 namespace nalu_hypre {
 
-#ifdef HYPRE_USING_CUDA
+#ifdef HYPRE_USING_GPU
 
 inline void
 hypre_initialize()

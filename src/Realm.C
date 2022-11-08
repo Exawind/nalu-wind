@@ -3282,7 +3282,7 @@ Realm::swap_states()
 {
   bulkData_->update_field_data_states();
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_GPU)
   if (get_time_step_count() < 2)
     return;
 

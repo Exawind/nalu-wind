@@ -84,7 +84,7 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::setup(
 }
 
 template <typename BcAlgTraits>
-void
+KOKKOS_FUNCTION void
 ContinuityOpenEdgeKernel<BcAlgTraits>::execute(
   SharedMemView<DoubleType**, DeviceShmem>& lhs,
   SharedMemView<DoubleType*, DeviceShmem>& rhs,

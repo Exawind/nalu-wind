@@ -43,7 +43,7 @@ ActuatorModel::parse(const YAML::Node& actuatorNode)
       "look_ahead_and_create::error: Requested actuator type: " + actuatorType +
       ", but was not enabled at compile time");
 #endif
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     break;
 #endif
   }
@@ -57,7 +57,7 @@ ActuatorModel::parse(const YAML::Node& actuatorNode)
       "look_ahead_and_create::error: unrecognized actuator type: " +
       actuatorType);
 // Avoid nvcc unreachable statement warnings
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     break;
 #endif
   }
@@ -77,7 +77,7 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
   case (ActuatorType::ActLineFASTNGP): {
 #ifndef NALU_USES_OPENFAST
     ThrowErrorMsg("Actuator methods require OpenFAST");
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     break;
 #endif
 #else
@@ -95,7 +95,7 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
   case (ActuatorType::ActDiskFASTNGP): {
 #ifndef NALU_USES_OPENFAST
     ThrowErrorMsg("Actuator methods require OpenFAST");
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     break;
 #endif
 #else
@@ -141,7 +141,7 @@ ActuatorModel::init(stk::mesh::BulkData& stkBulk)
   case (ActuatorType::ActDiskFASTNGP): {
 #ifndef NALU_USES_OPENFAST
     ThrowErrorMsg("Actuator methods require OpenFAST");
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
     break;
 #endif
 #else

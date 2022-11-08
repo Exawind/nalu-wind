@@ -183,7 +183,7 @@ TEST_F(Hex8Mesh, NGP_faceElemBasic)
   do_assemble_face_elem_solver_test(*bulk, faceElemAlg, idField);
 }
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 
 void
 move_face_from_surface2_to_surface3(stk::mesh::BulkData& bulk)

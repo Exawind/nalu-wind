@@ -16,7 +16,7 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core.hpp>
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
 #define NALU_ALIGNED alignas(sizeof(double))
 #elif defined(NALU_USE_POWER9_ALIGNMENT)
 #define NALU_ALIGNED alignas(16)
@@ -32,17 +32,21 @@
 #define POINTER_RESTRICT
 #endif
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
 #define NONCONST_LAMBDA [&] __host__
+#define KOKKOS_ENABLE_GPU
 #else
 #define NONCONST_LAMBDA [&]
+#undef KOKKOS_ENABLE_GPU
 #endif
 
 namespace sierra {
 namespace nalu {
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA)
 typedef Kokkos::CudaSpace MemSpace;
+#elif defined(KOKKOS_HAVE_HIP)
+typedef Kokkos::Experimental::HIPSpace MemSpace;
 #elif defined(KOKKOS_HAVE_OPENMP)
 typedef Kokkos::OpenMP MemSpace;
 #else
@@ -144,7 +148,7 @@ get_shmem_view_3D(
     team.team_rank(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
 }
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP)
 template <
   typename T,
   typename TEAMHANDLETYPE,

@@ -117,6 +117,7 @@ Tri32DSCV::Tri32DSCV() : MasterElement()
 //--------------------------------------------------------------------------
 //-------- ipNodeMap -------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 const int*
 Tri32DSCV::ipNodeMap(int /*ordinal*/) const
 {
@@ -305,6 +306,7 @@ Tri32DSCV::determinant(
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Tri32DSCV::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -320,6 +322,7 @@ Tri32DSCV::grad_op(
 //--------------------------------------------------------------------------
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Tri32DSCV::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -349,6 +352,7 @@ Tri32DSCV::Mij(const double* coords, double* metric, double* deriv)
 }
 
 //-------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Tri32DSCV::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -368,7 +372,7 @@ Tri32DSCS::Tri32DSCS() : MasterElement()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
   const std::array<std::array<double, 2>, 3> nodeLocations = {
     {{{0.0, 0.0}}, {{1.0, 0}}, {{0.0, 1.0}}}};
   stk::topology topo = stk::topology::TRIANGLE_3_2D;
@@ -386,6 +390,7 @@ Tri32DSCS::Tri32DSCS() : MasterElement()
 //--------------------------------------------------------------------------
 //-------- ipNodeMap -------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 const int*
 Tri32DSCS::ipNodeMap(int ordinal) const
 {
@@ -396,6 +401,7 @@ Tri32DSCS::ipNodeMap(int ordinal) const
 //--------------------------------------------------------------------------
 //-------- side_node_ordinals ----------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 const int*
 Tri32DSCS::side_node_ordinals(int ordinal) const
 {
@@ -485,6 +491,7 @@ Tri32DSCS::determinant(
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Tri32DSCS::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -512,6 +519,7 @@ Tri32DSCS::grad_op(
 //--------------------------------------------------------------------------
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Tri32DSCS::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -527,6 +535,7 @@ Tri32DSCS::shifted_grad_op(
 //--------------------------------------------------------------------------
 //-------- face_grad_op ----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Tri32DSCS::face_grad_op(
   int /*face_ordinal*/,
@@ -541,6 +550,7 @@ Tri32DSCS::face_grad_op(
 //--------------------------------------------------------------------------
 //-------- shifted_face_grad_op --------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Tri32DSCS::shifted_face_grad_op(
   int face_ordinal,
@@ -554,6 +564,7 @@ Tri32DSCS::shifted_face_grad_op(
 //--------------------------------------------------------------------------
 //-------- gij -------------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Tri32DSCS::gij(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -623,6 +634,7 @@ Tri32DSCS::Mij(const double* coords, double* metric, double* deriv)
   generic_Mij_2d<AlgTraitsTri3_2D>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
+KOKKOS_FUNCTION
 void
 Tri32DSCS::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -635,6 +647,7 @@ Tri32DSCS::Mij(
 //--------------------------------------------------------------------------
 //-------- adjacentNodes ---------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 const int*
 Tri32DSCS::adjacentNodes()
 {
@@ -645,6 +658,7 @@ Tri32DSCS::adjacentNodes()
 //--------------------------------------------------------------------------
 //-------- scsIpEdgeOrd ----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 const int*
 Tri32DSCS::scsIpEdgeOrd()
 {
@@ -727,6 +741,7 @@ Tri32DSCS::tri_shape_fcn(
 //--------------------------------------------------------------------------
 //-------- opposingNodes --------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 int
 Tri32DSCS::opposingNodes(const int ordinal, const int node)
 {
@@ -736,6 +751,7 @@ Tri32DSCS::opposingNodes(const int ordinal, const int node)
 //--------------------------------------------------------------------------
 //-------- opposingFace --------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 int
 Tri32DSCS::opposingFace(const int ordinal, const int node)
 {

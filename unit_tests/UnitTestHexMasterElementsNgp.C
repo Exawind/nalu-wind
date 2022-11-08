@@ -392,7 +392,7 @@ protected:
     unit_test_utils::create_one_reference_element(*bulk, stk::topology::HEX_8);
   }
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
   void setup_poly_order_2_hex_27()
   {
     poly_order = 2;
@@ -439,7 +439,7 @@ TEST_F(MasterElementHexSerialNGP, hex8_scs_derivatives)
   }
 }
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
 
 TEST_F(MasterElementHexSerialNGP, hex27_scs_interpolation)
 {

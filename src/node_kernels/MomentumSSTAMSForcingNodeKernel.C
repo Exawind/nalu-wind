@@ -108,6 +108,7 @@ MomentumSSTAMSForcingNodeKernel::setup(Realm& realm)
   z0_ = realm.solutionOptions_->roughnessHeight_;
 }
 
+KOKKOS_FUNCTION
 void
 MomentumSSTAMSForcingNodeKernel::execute(
   NodeKernelTraits::LhsType&,

@@ -61,7 +61,7 @@ TEST(PecletFunction, NGP_classic_simd)
   auto* pecFunc = sierra::nalu::nalu_ngp::create<
     sierra::nalu::ClassicPecletFunction<DoubleType>>(A, hybridFactor);
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
   for (int i = 0; i < 4; i++) {
     const DoubleType pecFac = exec_on_device(pecFunc, pecletNumbers[i]);
     for (int is = 0; is < stk::simd::ndoubles; is++) {
@@ -102,7 +102,7 @@ TEST(PecletFunction, NGP_tanh_simd)
     sierra::nalu::nalu_ngp::create<sierra::nalu::TanhFunction<DoubleType>>(
       c1, c2);
 
-#ifndef KOKKOS_ENABLE_CUDA
+#if !defined(KOKKOS_ENABLE_GPU)
   for (int i = 0; i < 3; i++) {
     const DoubleType pecFac = exec_on_device(pecFunc, pecletNumbers[i]);
     for (int is = 0; is < stk::simd::ndoubles; is++) {

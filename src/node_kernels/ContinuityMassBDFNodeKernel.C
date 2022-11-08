@@ -58,6 +58,7 @@ ContinuityMassBDFNodeKernel::setup(Realm& realm)
   gamma3_ = realm.get_gamma3();
 }
 
+KOKKOS_FUNCTION
 void
 ContinuityMassBDFNodeKernel::execute(
   NodeKernelTraits::LhsType& /*lhs*/,

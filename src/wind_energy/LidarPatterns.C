@@ -18,7 +18,10 @@
 #include "xfer/LocalVolumeSearch.h"
 #include "netcdf.h"
 
+#if !defined(KOKKOS_ENABLE_HIP)
 #include <filesystem>
+#endif
+
 #include <memory>
 
 namespace sierra::nalu {
