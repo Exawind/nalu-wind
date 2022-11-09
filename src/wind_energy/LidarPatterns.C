@@ -701,12 +701,12 @@ RadarSegmentGenerator::generate(double time) const
     box_, to_vec3(center_), to_vec3(sight_vector));
   if (!found) {
     // return the unclipped line if it doesn't intersect the domain
-    return {tip, tail};
+    return {tip, tail, false};
   }
   const double tol = 100 * std::numeric_limits<double>::epsilon();
   if (found && vs::mag(to_vec3(seg.tail_) - to_vec3(seg.tip_)) < tol) {
     // found one match. consider it unmatched and return the base line
-    return {tip, tail};
+    return {tip, tail, false};
   }
 
   if (vs::mag(to_vec3(seg.tip_) - to_vec3(center_)) > beam_length_) {
@@ -716,7 +716,7 @@ RadarSegmentGenerator::generate(double time) const
   if (vs::mag(to_vec3(seg.tail_) - to_vec3(center_)) > beam_length_) {
     seg.tail_ = tail;
   }
-  return seg;
+  return {seg.tip_, seg.tail_, true};
 }
 
 } // namespace sierra::nalu
