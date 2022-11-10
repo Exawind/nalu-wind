@@ -8,6 +8,8 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestElemSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestElementDescription.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestFieldUtils.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestFieldManager.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestFieldRegistry.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestGetDofStatus.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestHex27FaceNodeOrdering.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestHexElementPromotion.C

@@ -46,6 +46,8 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/EquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/EquationSystems.C
    ${CMAKE_CURRENT_SOURCE_DIR}/FieldFunctions.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/FieldManager.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/FieldRegistry.C
    ${CMAKE_CURRENT_SOURCE_DIR}/FixPressureAtNodeAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/GammaEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InitialConditions.C
