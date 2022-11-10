@@ -11,9 +11,7 @@
 #include <ostream>
 #include <memory>
 #include <array>
-#if !defined(KOKKOS_ENABLE_HIP)
-#include <filesystem>
-#endif
+#include "Ioss_FileInfo.h"
 namespace sierra {
 namespace nalu {
 
@@ -98,15 +96,11 @@ public:
 
     // lidar will write new files if they exist. Delete them here
     // to adding new files ad infinitum`
-#if !defined(KOKKOS_ENABLE_HIP)
-    std::filesystem::remove("lidar/scan.txt");
+    Ioss::FileInfo("lidar/scan.txt").remove_file();
     for (int j = 0; j < 13; ++j) {
-      std::filesystem::remove("lidar/radar-grid-" + std::to_string(j) + ".txt");
+      Ioss::FileInfo("lidar/radar-grid-" + std::to_string(j) + ".txt")
+        .remove_file();
     }
-#else
-    throw std::runtime_error(
-      "LidarLOSFixture() filesystem not supported on HIP");
-#endif
   }
 
 private:
