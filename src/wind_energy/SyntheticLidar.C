@@ -22,7 +22,6 @@
 
 #include <memory>
 
-
 namespace sierra {
 namespace nalu {
 
