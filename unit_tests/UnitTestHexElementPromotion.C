@@ -82,13 +82,9 @@ protected:
 
     setup_promotion();
 
-    const double zeroDouble = 0.0;
-    stk::mesh::put_field_on_mesh(
-      *coordField, meta->universal_part(), nDim, &zeroDouble);
+    stk::mesh::put_field_on_entire_mesh(*coordField, nDim);
+    stk::mesh::put_field_on_entire_mesh(*intField);
 
-    int zeroInt = 0;
-    stk::mesh::put_field_on_mesh(
-      *intField, meta->universal_part(), 1, &zeroInt);
     fixture->m_meta.commit();
     fixture->generate_mesh(stk::mesh::fixtures::FixedCartesianCoordinateMapping(
       nx, ny, nz, nx, ny, nz));
