@@ -548,7 +548,8 @@ RadarSegmentGenerator::load(const YAML::Node& node)
   double sweep_angle_in_degrees = 20;
   get_if_present(
     node, "sweep_angle", sweep_angle_in_degrees, sweep_angle_in_degrees);
-  ThrowRequireMsg(sweep_angle_in_degrees >= 0, "Sweep angle must be semipositive");
+  ThrowRequireMsg(
+    sweep_angle_in_degrees >= 0, "Sweep angle must be semipositive");
   sweep_angle_ = convert::degrees_to_radians(sweep_angle_in_degrees);
 
   double angular_speed = 30; // deg/s
