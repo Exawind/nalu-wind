@@ -1586,6 +1586,22 @@ Data probes
    lines_per_cone_circle      Required. Number of rays around the cone circumference
    ========================== ===================================================================
 
+.. inpfile:: dataprobes.lidar_specifications.radar_cone_filter
+
+   Implements a few options for filtering the spherical cap of a cone. `truncated_normal{n}` rules with `n=1,2,3`
+   weight the filtering based on truncated normal distribution, with with the circle of the cone being 1,2, or 3
+   sigma away. This means that the sampling is more weighted toward the center of the cone with higher `n`. `radau`
+   has weight function = 1.
+
+   ========================== ===================================================================
+   Parameter                  Description
+   ========================== ===================================================================
+   cone_angle                 Required. cone half angle in degrees centered on radar_specifications.axis
+   quadrature_type            Required. Type of quadrature. `radau` or `truncated_normal1`, `truncated_normal2`, `truncated_normal3`.
+   radau_points               Optional. If `radau` quadrature is used, number of integration points
+   lines_per_cone_circle      Required. Number of rays around the cone circumference
+   ========================== ===================================================================
+
 .. inpfile:: dataprobes.lidar_specifications.misc
 
    The user may also set a number of parameters corresponding to the hardware

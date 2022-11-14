@@ -130,7 +130,7 @@ class RadarSegmentGenerator final : public SegmentGenerator
 public:
   void load(const YAML::Node& node) final;
   Segment generate(double t) const final;
-  void set_axis(vs::Vector axis);
+  vs::Vector center() const { return {center_[0], center_[1], center_[2]}; }
 
 private:
   enum class phase { FORWARD, FORWARD_PAUSE, REVERSE, REVERSE_PAUSE };

@@ -36,6 +36,10 @@ LidarLineOfSite::load(const YAML::Node& node)
     segGen = make_segment_generator(SegmentType::SPINNER);
   }
 
+  if (node["radar_cone_filter"]) {
+    radar_data_ = details::parse_radar_filter(node);
+  }
+
   if (node["output"]) {
     const auto type = node["output"].as<std::string>();
     if (type == "text") {
@@ -45,12 +49,18 @@ LidarLineOfSite::load(const YAML::Node& node)
     } else if ("dataprobes") {
       output_type_ = Output::DATAPROBE;
     }
+
+    if (output_type_ != Output::TEXT && node["radar_cone_filter"]) {
+      throw std::runtime_error(
+        "Only text csv output implemented for radar filtering");
+    }
   }
 
   get_required(node, "points_along_line", npoints_);
-  get_if_present(node, "warn_on_missing", warn_on_missing_);
-  get_if_present(node, "reuse_search_data", reuse_search_data_);
-  get_if_present(node, "always_output", always_output_);
+  get_if_present(node, "warn_on_missing", warn_on_missing_, warn_on_missing_);
+  get_if_present(
+    node, "reuse_search_data", reuse_search_data_, reuse_search_data_);
+  get_if_present(node, "always_output", always_output_, always_output_);
 
   if (node["name"]) {
     name_ = node["name"].as<std::string>();
@@ -190,7 +200,7 @@ LidarLineOfSite::prepare_nc_file()
   add_ncvar("coordinates", 3, vec_dim);
   add_ncvar("velocity", 3, vec_dim);
 
-  //! Indicate that we are done defining variables, ready to write data
+  // Indicate that we are done defining variables, ready to write data
   ierr = nc_enddef(ncid);
   check_nc_error(ierr);
 
@@ -273,6 +283,38 @@ LidarLineOfSite::output_txt(
 }
 
 void
+LidarLineOfSite::output_txt_filtered(
+  double time,
+  const std::vector<std::array<double, 3>>& x,
+  const std::vector<double>& u_dot_l,
+  int npoints)
+{
+  if (internal_output_counter_ == 0) {
+    fname_ = determine_filename(name_, ".txt");
+    std::ofstream file;
+    file.exceptions(file.exceptions() | std::ios::failbit);
+    file.open(fname_, std::ios::out);
+    file << "t,x,y,z,u_dot_l" << std::endl;
+    file.close();
+  }
+
+  std::ofstream file;
+  file.exceptions(file.exceptions() | std::ios::failbit);
+  file.open(fname_, std::ios::app);
+  if (file.fail()) {
+    throw std::ios_base::failure(std::strerror(errno));
+  }
+  const int nquad = x.size() / npoints;
+  for (int j = 0; j < npoints; ++j) {
+    file << std::setprecision(15) << time << "," << x.at(nquad * j)[0] << ","
+         << x.at(nquad * j)[1] << "," << x.at(nquad * j)[2] << ","
+         << u_dot_l.at(j) << std::endl;
+  }
+  file.close();
+  ++internal_output_counter_;
+}
+
+void
 LidarLineOfSite::output(
   const stk::mesh::BulkData& bulk,
   const stk::mesh::Selector& active,
@@ -326,8 +368,8 @@ LidarLineOfSite::output(
     bulk, active, points, coord_field, velocity_prev, velocity_field, extrap_dt,
     *search_data_);
 
-  const auto lcl_velocity = search_data_->interpolated_values;
-  const auto lcl_ownership = search_data_->ownership;
+  const auto& lcl_velocity = search_data_->interpolated_values;
+  const auto& lcl_ownership = search_data_->ownership;
 
   auto comm = bulk.parallel();
   const int root = 0;
@@ -401,6 +443,186 @@ LidarLineOfSite::output(
   }
 }
 
+void
+line_average(
+  const std::vector<int>& degree,
+  const std::vector<double>& weights,
+  const std::vector<double>& values,
+  std::vector<double>& reduced)
+{
+  // occasionally points will be missing from the sum, if the point is outside
+  // the simulation box. We could wait until all points are in the domain
+  // to start counting.  Erring on the side of overreporting, we hope the
+  // partial sum is a reasonable estimate of the average value, albeit
+  // biased spatially
+
+  const int nline = static_cast<int>(values.size() / weights.size());
+  const int nquad = static_cast<int>(weights.size());
+  for (int n = 0; n < nline; ++n) {
+    double weight_sum = 0;
+    double average = 0;
+    for (int j = 0; j < nquad; ++j) {
+      const int point_idx = nquad * n + j;
+      const int inv_deg = degree[point_idx] > 0 ? 1. / degree[point_idx] : 0;
+      weight_sum += int(degree[point_idx] > 0) * weights[j];
+      average += weights[j] * values[point_idx] * inv_deg;
+    }
+    if (weight_sum > 0) {
+      reduced[n] = average / weight_sum;
+    } else {
+      reduced[n] = 0;
+    }
+  }
+}
+
+namespace {
+vs::Tensor
+skew_cross(vs::Vector a, vs::Vector b)
+{
+  auto cross = b ^ a;
+  return vs::Tensor(
+    0, -cross[2], cross[1], cross[2], 0, -cross[0], -cross[1], cross[0], 0);
+}
+
+vs::Tensor
+scale(vs::Tensor v, double a)
+{
+  vs::Tensor vnew;
+  for (int j = 0; j < 9; ++j) {
+    vnew[j] = a * v[j];
+  }
+  return vnew;
+}
+
+vs::Tensor
+rotation_matrix(vs::Vector dst, vs::Vector src)
+{
+  auto vmat = skew_cross(dst, src);
+  const auto ang = dst & src;
+
+  const double small = 1e-14 * vs::mag(dst);
+  if (std::abs(1 + ang) < small) {
+    return scale(vs::Tensor::I(), -1);
+  }
+  return vs::Tensor::I() + vmat + scale((vmat & vmat), 1. / (1 + ang));
+}
+} // namespace
+
+void
+LidarLineOfSite::output_cone_filtered(
+  const stk::mesh::BulkData& bulk,
+  const stk::mesh::Selector& active,
+  const std::string& coordinates_name,
+  double dtratio)
+{
+  const auto* radar = dynamic_cast<RadarSegmentGenerator*>(segGen.get());
+  ThrowRequire(radar);
+
+  auto seg = radar->generate(time());
+  if (!(seg.valid || always_output_)) {
+    return;
+  }
+  const auto center = radar->center();
+  auto line_vector = vs::Vector(seg.tip_[0], seg.tip_[1], seg.tip_[2]) - center;
+  line_vector.normalize();
+
+  const auto& weights = radar_data_.weights;
+  const auto& rays = radar_data_.rays;
+
+  const auto dn = (npoints_ - 1);
+  ThrowRequireMsg(dn >= 0, "At least two points required");
+
+  const vs::Vector dx(
+    (seg.tip_[0] - seg.tail_[0]) / dn, (seg.tip_[1] - seg.tail_[1]) / dn,
+    (seg.tip_[2] - seg.tail_[2]) / dn);
+
+  const int nquad = int(radar_data_.rays.size());
+  if (!search_data_) {
+    search_data_ =
+      std::make_unique<LocalVolumeSearchData>(bulk, active, nquad * npoints_);
+  }
+
+  std::vector<std::array<double, 3>> points(nquad * npoints_);
+
+  const auto canon_vector = vs::Vector(0, 0, 1);
+  const auto transform = rotation_matrix(line_vector, canon_vector);
+  for (int n = 0; n < npoints_; ++n) {
+    vs::Vector axis_point(
+      seg.tail_[0] + n * dx[0], seg.tail_[1] + n * dx[1],
+      seg.tail_[2] + n * dx[2]);
+    for (int j = 0; j < nquad; ++j) {
+      const auto radius = vs::mag(axis_point - center);
+      const auto point = radius * (transform & rays[j]) + center;
+      points[nquad * n + j] = {point[0], point[1], point[2]};
+    }
+  }
+
+  const auto& coord_field =
+    *bulk.mesh_meta_data()
+       .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
+         stk::topology::NODE_RANK, coordinates_name);
+
+  const auto& velocity_field =
+    bulk.mesh_meta_data()
+      .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
+        stk::topology::NODE_RANK, "velocity")
+      ->field_of_state(stk::mesh::StateNP1);
+
+  const auto& velocity_prev =
+    bulk.mesh_meta_data()
+      .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
+        stk::topology::NODE_RANK, "velocity")
+      ->field_of_state(stk::mesh::StateN);
+
+  const double extrap_dt = predictor_ == Predictor::NEAREST ? 0 : dtratio;
+  local_field_interpolation(
+    bulk, active, points, coord_field, velocity_prev, velocity_field, extrap_dt,
+    *search_data_);
+
+  auto& lcl_velocity = search_data_->interpolated_values;
+  auto& lcl_ownership = search_data_->ownership;
+
+  auto comm = bulk.parallel();
+  const int root = 0;
+
+  std::vector<double> lcl_line_velocity(nquad * npoints_, 0);
+  for (int j = 0; j < nquad; ++j) {
+    auto ray = transform & rays[j];
+    ray.normalize(); // floating point
+    for (int n = 0; n < npoints_; ++n) {
+      const auto& vel = lcl_velocity[nquad * n + j];
+      lcl_line_velocity[nquad * n + j] =
+        ray[0] * vel[0] + ray[1] * vel[1] + ray[2] * vel[2];
+    }
+  }
+
+  std::vector<double> line_velocity(nquad * npoints_, 0);
+  MPI_Reduce(
+    lcl_line_velocity.data(), line_velocity.data(), line_velocity.size(),
+    MPI_DOUBLE, MPI_SUM, root, comm);
+  std::vector<int> degree(nquad * npoints_, 0);
+  MPI_Reduce(
+    lcl_ownership.data(), degree.data(), degree.size(), MPI_INT, MPI_SUM, root,
+    comm);
+
+  if (is_root(comm, root)) {
+    int not_found_count = 0;
+    for (int n = 0; n < npoints_ * nquad; ++n) {
+      not_found_count += static_cast<int>(degree[n] == 0);
+    }
+    if (not_found_count != npoints_ * nquad) {
+      std::vector<double> avg_line_velocity(npoints_, 0);
+      line_average(degree, weights, line_velocity, avg_line_velocity);
+      if (internal_output_counter_ == 0) {
+        Ioss::FileInfo::create_path(name_);
+      }
+      // only text for now, check at parse
+      ThrowRequire(output_type_ == Output::TEXT);
+      output_txt_filtered(time(), points, avg_line_velocity, npoints_);
+    }
+  }
+}
+
 std::unique_ptr<DataProbeSpecInfo>
 LidarLineOfSite::determine_line_of_site_info(const YAML::Node& node)
 {
@@ -458,40 +680,173 @@ LidarLOS::set_time_for_all(double time)
   for (auto& los : lidars_) {
     los.set_time(time);
   }
-}
-
-vs::Tensor
-skew_cross(vs::Vector a, vs::Vector b)
-{
-  auto cross = b ^ a;
-  return vs::Tensor(
-    0, -cross[2], cross[1], cross[2], 0, -cross[0], -cross[1], cross[0], 0);
-}
-
-vs::Tensor
-scale(vs::Tensor v, double a)
-{
-  vs::Tensor vnew;
-  for (int j = 0; j < 9; ++j) {
-    vnew[j] = a * v[j];
+  for (auto& los : radars_) {
+    los.set_time(time);
   }
-  return vnew;
 }
-
-vs::Tensor
-rotation_matrix(vs::Vector dst, vs::Vector src)
-{
-  auto vmat = skew_cross(dst, src);
-  const auto ang = dst & src;
-
-  const double small = 1e-14 * vs::mag(dst);
-  if (std::abs(1 + ang) < small) {
-    return scale(vs::Tensor::I(), -1);
-  }
-  return vs::Tensor::I() + vmat + scale((vmat & vmat), 1. / (1 + ang));
-}
-
 namespace details {
+std::pair<std::vector<vs::Vector>, std::vector<double>>
+spherical_cap_quadrature(
+  double gammav,
+  int ntheta,
+  std::vector<double> abscissae1D,
+  std::vector<double> weights1D)
+{
+  // tensor-product quadrature. theta is uniform on [0, 2 pi) since it's a
+  // circle and phi is a standard 1D quadrature of choice, mapped to
+  // [cos(gamma), 1] with a variable transformation, following along from
+  // DOI 10.1007/s10444-011-9187-2
+  std::transform(
+    abscissae1D.cbegin(), abscissae1D.cend(), abscissae1D.begin(),
+    [gammav](double s) {
+      return 0.5 * (1 - std::cos(gammav)) * (-s) + 0.5 * (1 + std::cos(gammav));
+    });
+  std::transform(
+    weights1D.cbegin(), weights1D.cend(), weights1D.begin(),
+    [gammav](double w) { return w * 0.5 * (1 - std::cos(gammav)); });
+
+  std::vector<vs::Vector> rays;
+  rays.reserve(abscissae1D.size() * ntheta);
+  std::vector<double> weights;
+  weights.reserve(rays.size());
+
+  const int nphi = int(abscissae1D.size());
+
+  // avoid ntheta multiplicity at the center
+  rays.push_back(vs::Vector(0, 0, 1));
+  weights.push_back(2 * M_PI * weights1D[0]);
+
+  const auto theta_weight = 2 * M_PI / ntheta;
+  for (int j = 1; j < nphi; ++j) {
+    const auto tau = abscissae1D[j];
+    for (int i = 0; i < ntheta; ++i) {
+      const double theta = (2 * M_PI / ntheta) * i;
+      const auto xr = std::sqrt(1 - tau * tau) * std::cos(theta);
+      const auto yr = std::sqrt(1 - tau * tau) * std::sin(theta);
+      const auto zr = tau;
+      auto ray = vs::Vector(xr, yr, zr);
+      ray.normalize();
+      rays.push_back(ray);
+      const auto phi_weight = weights1D[j];
+      weights.push_back(theta_weight * phi_weight);
+    }
+  }
+  return {rays, weights};
+}
+
+std::pair<std::vector<double>, std::vector<double>>
+radau_rule(int n)
+{
+  // only include the positive half of the symmetric quadrature
+  switch (n) {
+  case 1:
+    return {{-1}, {2}};
+  case 2:
+    return {{-1, -1. / 3}, {0.5, 1.5}};
+  case 3:
+    return {
+      {-1, -0.28989794855663562, 0.68989794855663562},
+      {1. / 9, 1.0249716523768432, 0.75280612540093455}};
+  case 4:
+    return {
+      {-1.0000000000000000, -0.57531892352169411, 0.18106627111853058,
+       0.82282408097459211},
+      {0.12500000000000000, 0.65768863996011949, 0.77638693768634376,
+       0.44092442235353675}};
+  case 5:
+    return {
+      {-1.0000000000000000, -0.72048027131243890, -0.16718086473783364,
+       0.44631397272375234, 0.88579160777096464},
+      {0.080000000000000000, 0.44620780216714149, 0.62365304595148251,
+       0.56271203029892412, 0.28742712158245188}};
+  case 6:
+    return {
+      {-1.0000000000000000, -0.80292982840234715, -0.39092854670727219,
+       0.12405037950522771, 0.60397316425278365, 0.92038028589706252},
+      {0.055555555555555556, 0.31964075322051097, 0.48538718846896992,
+       0.52092678318957498, 0.41690133431190774, 0.20158838525348084}};
+  case 7:
+    return {
+      {-1.0000000000000000, -0.85389134263948223, -0.53846772406010900,
+       -0.11734303754310026, 0.32603061943769140, 0.70384280066303142,
+       0.94136714568043022},
+      {0.040816326530612245, 0.23922748922531241, 0.38094987364423115,
+       0.44710982901456647, 0.42470377900595561, 0.31820423146730148,
+       0.14898847111202064}};
+  case 8:
+    return {
+      {-1.0000000000000000, -0.88747487892615571, -0.63951861652621527,
+       -0.29475056577366073, 0.094307252661110766, 0.46842035443082106,
+       0.77064189367819154, 0.95504122712257500},
+      {0.031250000000000000, 0.18535815480297928, 0.30413062064678513,
+       0.37651754538911856, 0.39157216745249359, 0.34701479563450128,
+       0.24964790132986496, 0.11450881474425720}};
+  case 9:
+    return {
+      {-1.0000000000000000, -0.91073208942006030, -0.71126748591570886,
+       -0.42635048571113896, -0.090373369606853298, 0.25613567083345540,
+       0.57138304120873848, 0.81735278420041209, 0.96444016970527310},
+      {0.024691358024691358, 0.14765401904631539, 0.24718937820459305,
+       0.31684377567043798, 0.34827300277296659, 0.33769396697592959,
+       0.28638669635723117, 0.20055329802455196, 0.090714504923282917}};
+  default:
+    throw std::runtime_error(
+      "Only orders up to 9 supported for radau quadrature");
+  }
+  return {};
+}
+
+std::pair<std::vector<double>, std::vector<double>>
+truncated_normal_rule(int nsigma)
+{
+  // from the "truncated normal quadrature" .python code
+  if (nsigma == 1) {
+    return {
+      {0, 0.3436121352489559, 0.6473220334297102, 0.8706217027202311,
+       0.9816974860670653},
+      {0.2046394226558322 / 2, 0.1820146209511494, 0.128027596313765,
+       0.06821017522834351, 0.01942789617882675}};
+  } else if (nsigma == 2) {
+    return {
+      {0, 0.2959590846054073, 0.5735693238435292, 0.8074757570903542,
+       0.9607561326630086},
+      {0.249758577881117 / 2, 0.2035976917174024, 0.1129523637830892,
+       0.04552496709664563, 0.013045688462303995}};
+  } else if (nsigma == 3) {
+    return {
+      {0, 0.2661790968493327, 0.5263305051027921, 0.7664900509748058,
+       0.9477581057921652},
+      {0.3203929665957703 / 2, 0.2307493381206665, 0.08754316928625956,
+       0.01882073900490792, 0.002690270290280566}};
+  } else {
+    throw std::runtime_error("Only implemented 1-3 for truncated normal");
+  }
+}
+
+std::pair<std::vector<vs::Vector>, std::vector<double>>
+spherical_cap_radau(double gammav, int ntheta, int nphi)
+{
+  auto [xlocs, weights] = radau_rule(nphi);
+  return spherical_cap_quadrature(gammav, ntheta, xlocs, weights);
+}
+
+std::pair<std::vector<vs::Vector>, std::vector<double>>
+spherical_cap_truncated_normal(double gammav, int ntheta, int nsigma)
+{
+  auto [xlocs, weights] = truncated_normal_rule(nsigma);
+  // want the center of the truncated normal distribution at the pole of the
+  // cap -> -1 . Weights are already for a [-1,1] range from the generator
+  std::transform(xlocs.cbegin(), xlocs.cend(), xlocs.begin(), [](double x) {
+    return 2 * x - 1;
+  });
+  // half range to start, then mapped back to [-1,1]
+  std::transform(
+    weights.cbegin(), weights.cend(), weights.begin(),
+    [](double w) { return 4 * w; });
+
+  return spherical_cap_quadrature(gammav, ntheta, xlocs, weights);
+}
+
 std::vector<vs::Vector>
 make_radar_grid(double delta_phi, int nphi, int ntheta, vs::Vector axis)
 {
@@ -523,6 +878,7 @@ make_radar_grid(double delta_phi, int nphi, int ntheta, vs::Vector axis)
   return rays;
 }
 } // namespace details
+
 void
 LidarLOS::load(const YAML::Node& node, DataProbePostProcessing* probes)
 {
@@ -530,7 +886,7 @@ LidarLOS::load(const YAML::Node& node, DataProbePostProcessing* probes)
 
   auto create_lidar = [&](const YAML::Node& node) {
     std::string output_type = "netcdf";
-    get_if_present(node, "output", output_type);
+    get_if_present(node, "output", output_type, output_type);
     if (output_type == "dataprobes") {
       LidarLineOfSite lidarLOS;
       auto lidarDBSpec = lidarLOS.determine_line_of_site_info(node);
@@ -579,6 +935,9 @@ LidarLOS::load(const YAML::Node& node, DataProbePostProcessing* probes)
             std::vector<double>{ray[0], ray[1], ray[2]};
           lidars_.back().load(mod_node);
         }
+      } else if (node["radar_cone_filter"]) {
+        radars_.emplace_back();
+        radars_.back().load(node);
       } else {
         lidars_.emplace_back();
         lidars_.back().load(node);
@@ -608,7 +967,7 @@ LidarLOS::load(const YAML::Node& node, DataProbePostProcessing* probes)
       }
     }
   }
-}
+} // namespace details
 
 void
 LidarLOS::output(
@@ -636,7 +995,74 @@ LidarLOS::output(
         << " per step reached";
     }
   }
+
+  for (auto& los : radars_) {
+    const double small = 1e-8 * dt;
+    const double next_time = time + dt;
+    int step_outputs = 0;
+    while (los.time() < next_time - small &&
+           step_outputs < max_output_per_step) {
+      const double dtratio = (los.time() - time) / dt;
+      los.output_cone_filtered(bulk, sel, coords_name, dtratio);
+      los.increment_time();
+      ++step_outputs;
+    }
+    if (step_outputs == max_output_per_step) {
+      NaluEnv::self().naluOutputP0()
+        << "Warning: max lidar outputs, " << max_output_per_step
+        << " per step reached";
+    }
+  }
 }
 
+namespace details {
+RadarFilter
+parse_radar_filter(const YAML::Node& node)
+{
+  const auto filter_node = node["radar_cone_filter"];
+
+  double gammav;
+  get_required(filter_node, "cone_angle", gammav);
+  gammav = convert::degrees_to_radians(gammav);
+
+  std::string quad_type;
+  get_required(filter_node, "quadrature_type", quad_type);
+
+  int ntheta;
+  get_required(filter_node, "lines_per_cone_circle", ntheta);
+
+  const auto look_ahead_radar = node["radar_specifications"];
+  if (!look_ahead_radar) {
+    throw std::runtime_error("radar filtering must be used with radar");
+  }
+
+  if (quad_type == "radau") {
+    int nphi = 9;
+    get_if_present(filter_node, "radau_points", nphi, nphi);
+    if (nphi < 1 || nphi > 9) {
+      throw std::runtime_error("Only points 1 to 9 supported");
+    }
+    auto [rays, weights] = details::spherical_cap_radau(gammav, ntheta, nphi);
+    return {rays, weights};
+  } else if (quad_type == "truncated_normal1") {
+    auto [rays, weights] =
+      details::spherical_cap_truncated_normal(gammav, ntheta, 1);
+    return {rays, weights};
+  } else if (quad_type == "truncated_normal1") {
+    auto [rays, weights] =
+      details::spherical_cap_truncated_normal(gammav, ntheta, 2);
+    return {rays, weights};
+  } else if (quad_type == "truncated_normal3") {
+    auto [rays, weights] =
+      details::spherical_cap_truncated_normal(gammav, ntheta, 3);
+    return {rays, weights};
+  } else {
+    throw std::runtime_error(
+      "invalid quadrature type, radau and truncated_normal{1,2,3} supported.");
+    return {};
+  }
+}
+
+} // namespace details
 } // namespace nalu
 } // namespace sierra
