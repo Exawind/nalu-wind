@@ -75,7 +75,7 @@ const std::string radar_cone_spec =
   "          bbox: [-1000,-1000,0,1000,1000,1000]            \n"
   "          center: [-10000,0,100]                          \n"
   "          beam_length: 10000                              \n"
-  "          angular_speed: 1                                \n"
+  "          angular_speed: 2                                \n"
   "          axis: [1,0,0]                                   \n"
   "          sweep_angle: 10                                 \n"
   "          reset_time: 0                                   \n"
