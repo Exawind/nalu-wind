@@ -5,6 +5,7 @@ target_sources(${utest_ex_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarAdvDiffEdge.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestWallDistEdgeSolver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStreletsUpwindEdgeAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestVOFAdvectionEdge.C
 
   # Face/elem edge BC kernels
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestContinuityOpenEdge.C
