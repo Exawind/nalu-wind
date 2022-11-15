@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef SCALAREDGESOLVERALG_H
-#define SCALAREDGESOLVERALG_H
+#ifndef VOFADVECTIONEDGEALG_H
+#define VOFADVECTIONEDGEALG_H
 
 #include "AssembleEdgeSolverAlgorithm.h"
 #include "PecletFunction.h"
@@ -19,13 +19,13 @@ namespace nalu {
 class VOFAdvectionEdgeAlg : public AssembleEdgeSolverAlgorithm
 {
 public:
+  // TODO: refactor to use FieldManager
   VOFAdvectionEdgeAlg(
     Realm&,
     stk::mesh::Part*,
     EquationSystem*,
     ScalarFieldType*,
     VectorFieldType*,
-    ScalarFieldType*,
     const bool = false);
 
   virtual ~VOFAdvectionEdgeAlg() = default;
@@ -36,19 +36,12 @@ private:
   unsigned coordinates_{stk::mesh::InvalidOrdinal};
   unsigned velocityRTM_{stk::mesh::InvalidOrdinal};
   unsigned scalarQ_{stk::mesh::InvalidOrdinal};
-  unsigned density_{stk::mesh::InvalidOrdinal};
   unsigned dqdx_{stk::mesh::InvalidOrdinal};
   unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
   unsigned massFlowRate_{stk::mesh::InvalidOrdinal};
-  unsigned diffFluxCoeff_{stk::mesh::InvalidOrdinal};
-
-  PecletFunction<AssembleEdgeSolverAlgorithm::DblType>* pecletFunction_{
-    nullptr};
-
-  std::string dofName_;
 };
 
 } // namespace nalu
 } // namespace sierra
 
-#endif /* SCALAREDGESOLVERALG_H */
+#endif /* VOFADVECTIONEDGEALG_H */
