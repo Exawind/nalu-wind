@@ -102,8 +102,11 @@ make_radar_grid(double phi, int nphi, int ntheta, vs::Vector axis);
 
 RadarFilter parse_radar_filter(const YAML::Node& node);
 
-std::pair<std::vector<vs::Vector>, std::vector<double>>
-spherical_cap_radau(double gammav, int ntheta, int nphi);
+std::pair<std::vector<vs::Vector>, std::vector<double>> spherical_cap_radau(
+  double gammav,
+  int ntheta,
+  int nphi,
+  std::function<double(double)> f = nullptr);
 
 enum class NormalRule { SIGMA1, SIGMA2, SIGMA3, HALFPOWER };
 

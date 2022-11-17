@@ -184,6 +184,20 @@ TEST(spherical_cap_quadrature, integrate_constant)
   ASSERT_NEAR(integral, 4 * M_PI * std::pow(std::sin(ang / 2), 2), 1e-12);
 }
 
+TEST(spherical_cap_quadrature, integrate_constant_halfpower)
+{
+  const auto ang = M_PI / 3;
+  auto [rays, weights] = details::spherical_cap_radau(ang, 6, 9, [](double x) {
+    return 1.234529105942581469654 * std::pow(2, -x * x);
+  });
+  auto cart_const = [](vs::Vector x) { return 1; };
+  double integral = 0;
+  for (int j = 0; j < int(weights.size()); ++j) {
+    integral += cart_const(rays[j]) * weights[j];
+  }
+  ASSERT_NEAR(integral, 4 * M_PI * std::pow(std::sin(ang / 2), 2), 1e-12);
+}
+
 TEST(spherical_cap_quadrature, integrate_constant_trunc_normal_1)
 {
   const auto ang = M_PI / 3;

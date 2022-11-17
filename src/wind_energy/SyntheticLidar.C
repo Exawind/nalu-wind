@@ -834,9 +834,15 @@ truncated_normal_rule(NormalRule rule)
 }
 
 std::pair<std::vector<vs::Vector>, std::vector<double>>
-spherical_cap_radau(double gammav, int ntheta, int nphi)
+spherical_cap_radau(
+  double gammav, int ntheta, int nphi, std::function<double(double)> wfunc)
 {
   auto [xlocs, weights] = radau_rule(nphi);
+  if (wfunc) {
+    for (size_t j = 0; j < weights.size(); ++j) {
+      weights[j] *= wfunc(xlocs[j]);
+    }
+  }
   return spherical_cap_quadrature(gammav, ntheta, xlocs, weights);
 }
 
@@ -1052,8 +1058,22 @@ parse_radar_filter(const YAML::Node& node)
     if (nphi < 1 || nphi > 9) {
       throw std::runtime_error("Only points 1 to 9 supported");
     }
-    auto [rays, weights] = details::spherical_cap_radau(gammav, ntheta, nphi);
-    return {rays, weights};
+    std::string weight_func = "unity";
+    get_if_present(filter_node, "radau_weight_type", weight_func, weight_func);
+    std::transform(
+      weight_func.cbegin(), weight_func.cend(), weight_func.begin(), ::tolower);
+    if (weight_func == "unity") {
+      auto [rays, weights] = details::spherical_cap_radau(gammav, ntheta, nphi);
+      return {rays, weights};
+    } else if (weight_func == "gaussian_halfpower") {
+      auto [rays, weights] =
+        details::spherical_cap_radau(gammav, ntheta, nphi, [](double x) {
+          return 1.234529105942581469654 * std::pow(2., -x * x);
+        });
+      return {rays, weights};
+    } else {
+      throw std::runtime_error("unrecognized weight function");
+    }
   } else if (quad_type == "truncated_normal1") {
     auto [rays, weights] = details::spherical_cap_truncated_normal(
       gammav, ntheta, NormalRule::SIGMA1);
