@@ -797,29 +797,39 @@ radau_rule(int n)
 }
 
 std::pair<std::vector<double>, std::vector<double>>
-truncated_normal_rule(int nsigma)
+truncated_normal_rule(NormalRule rule)
 {
   // from the "truncated normal quadrature" .python code
-  if (nsigma == 1) {
+  switch (rule) {
+  case NormalRule::SIGMA1:
     return {
       {0, 0.3436121352489559, 0.6473220334297102, 0.8706217027202311,
        0.9816974860670653},
       {0.2046394226558322 / 2, 0.1820146209511494, 0.128027596313765,
        0.06821017522834351, 0.01942789617882675}};
-  } else if (nsigma == 2) {
+  case NormalRule::SIGMA2:
     return {
       {0, 0.2959590846054073, 0.5735693238435292, 0.8074757570903542,
        0.9607561326630086},
       {0.249758577881117 / 2, 0.2035976917174024, 0.1129523637830892,
        0.04552496709664563, 0.013045688462303995}};
-  } else if (nsigma == 3) {
+  case NormalRule::SIGMA3:
     return {
       {0, 0.2661790968493327, 0.5263305051027921, 0.7664900509748058,
        0.9477581057921652},
       {0.3203929665957703 / 2, 0.2307493381206665, 0.08754316928625956,
        0.01882073900490792, 0.002690270290280566}};
-  } else {
-    throw std::runtime_error("Only implemented 1-3 for truncated normal");
+  case NormalRule::HALFPOWER:
+    return {
+      {0, 0.315493297131259, 0.6016636608468, 0.8282105821126121,
+       0.9662550592631028},
+      {0.197723576944154 / 2, 0.1761766447490471, 0.1255723775152601,
+       0.07163437433902098, 0.02775481492459504}};
+  default: {
+    throw std::runtime_error(
+      "Only implemented 1-3, halfpower for truncated normal");
+    return {};
+  }
   }
 }
 
@@ -831,9 +841,9 @@ spherical_cap_radau(double gammav, int ntheta, int nphi)
 }
 
 std::pair<std::vector<vs::Vector>, std::vector<double>>
-spherical_cap_truncated_normal(double gammav, int ntheta, int nsigma)
+spherical_cap_truncated_normal(double gammav, int ntheta, NormalRule rule)
 {
-  auto [xlocs, weights] = truncated_normal_rule(nsigma);
+  auto [xlocs, weights] = truncated_normal_rule(rule);
   // want the center of the truncated normal distribution at the pole of the
   // cap -> -1 . Weights are already for a [-1,1] range from the generator
   std::transform(xlocs.cbegin(), xlocs.cend(), xlocs.begin(), [](double x) {
@@ -1045,16 +1055,20 @@ parse_radar_filter(const YAML::Node& node)
     auto [rays, weights] = details::spherical_cap_radau(gammav, ntheta, nphi);
     return {rays, weights};
   } else if (quad_type == "truncated_normal1") {
-    auto [rays, weights] =
-      details::spherical_cap_truncated_normal(gammav, ntheta, 1);
+    auto [rays, weights] = details::spherical_cap_truncated_normal(
+      gammav, ntheta, NormalRule::SIGMA1);
     return {rays, weights};
-  } else if (quad_type == "truncated_normal1") {
-    auto [rays, weights] =
-      details::spherical_cap_truncated_normal(gammav, ntheta, 2);
+  } else if (quad_type == "truncated_normal2") {
+    auto [rays, weights] = details::spherical_cap_truncated_normal(
+      gammav, ntheta, NormalRule::SIGMA2);
     return {rays, weights};
   } else if (quad_type == "truncated_normal3") {
-    auto [rays, weights] =
-      details::spherical_cap_truncated_normal(gammav, ntheta, 3);
+    auto [rays, weights] = details::spherical_cap_truncated_normal(
+      gammav, ntheta, NormalRule::SIGMA3);
+    return {rays, weights};
+  } else if (quad_type == "truncated_normal_halfpower") {
+    auto [rays, weights] = details::spherical_cap_truncated_normal(
+      gammav, ntheta, NormalRule::HALFPOWER);
     return {rays, weights};
   } else {
     throw std::runtime_error(

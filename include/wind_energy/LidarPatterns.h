@@ -73,7 +73,7 @@ private:
   double determine_current_angle(double periodic_time) const;
   double determine_end_of_forward_phase() const
   {
-    return (sweep_angle_ / step_delta_angle_) * stare_time_;
+    return std::floor(sweep_angle_ / step_delta_angle_ + 1) * stare_time_;
   }
 
   int periodic_count(double time) const;

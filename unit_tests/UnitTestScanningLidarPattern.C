@@ -115,6 +115,7 @@ public:
   YAML::Node lidar_spec;
   ScanningLidarSegmentGenerator slgen;
   double freq{1};
+  double total_time{22};
 
   const std::string lidar_spec_str =
     "lidar_specifications:                                  \n"
@@ -138,7 +139,7 @@ public:
 TEST_F(ScanningLidarFixture, print_tip_location)
 {
   const double dt = 1.0 / freq;
-  const double time = 21;
+  const double time = total_time;
   const int samples = 1 + std::round(time / dt);
   auto center = scan_spec["center"].as<Coordinates>();
 
@@ -159,18 +160,20 @@ TEST_F(ScanningLidarFixture, check_angles)
 {
   const auto sweep = scan_spec["sweep_angle"].as<double>();
   const auto stare = scan_spec["stare_time"].as<double>();
+  const auto step = scan_spec["step_delta_angle"].as<double>();
   const auto reset = scan_spec["reset_time_delta"].as<double>();
 
   const double start_time = 0;
   ASSERT_NEAR(angle(start_time), sweep / 2, 1e-12);
 
-  const double forward_phase_end = start_time + sweep / stare;
+  const double forward_phase_end =
+    start_time + std::floor(sweep / step) * stare;
   ASSERT_NEAR(angle(forward_phase_end), -sweep / 2, 1e-12);
 
-  const double mid_reset_time = forward_phase_end + reset / 2;
+  const double mid_reset_time = forward_phase_end + stare + reset / 2;
   ASSERT_NEAR(angle(mid_reset_time), 0, 1e-12);
 
-  const double end_time = forward_phase_end + reset;
+  const double end_time = forward_phase_end + stare + reset;
   ASSERT_NEAR(angle(end_time), sweep / 2, 1e-12);
 }
 
@@ -178,13 +181,15 @@ TEST_F(ScanningLidarFixture, check_elevation)
 {
   const auto sweep = scan_spec["sweep_angle"].as<double>();
   const auto stare = scan_spec["stare_time"].as<double>();
+  const auto step = scan_spec["step_delta_angle"].as<double>();
   const auto reset = scan_spec["reset_time_delta"].as<double>();
   const auto ele = scan_spec["elevation_angles"].as<std::vector<double>>();
 
   const double start_time = 0;
   ASSERT_NEAR(elevation_angle(start_time), ele.front(), 1e-12);
 
-  const double forward_phase_end = start_time + sweep / stare;
+  const double forward_phase_end =
+    start_time + std::floor(sweep / step + 1) * stare;
   ASSERT_NEAR(elevation_angle(forward_phase_end), ele.front(), 1e-12);
 }
 
@@ -197,6 +202,18 @@ TEST_F(ScanningLidarFixture, stares)
     ASSERT_DOUBLE_EQ(
       slgen.generate(some_time).tip_.at(d),
       slgen.generate(some_time_frac).tip_.at(d));
+  }
+}
+
+TEST_F(ScanningLidarFixture, stares_at_end)
+{
+  const auto stare = scan_spec["stare_time"].as<double>();
+  const double final_position_time = 20;
+  const double some_time_after = 0.1 * stare + final_position_time;
+  for (int d = 0; d < 3; ++d) {
+    ASSERT_DOUBLE_EQ(
+      slgen.generate(final_position_time).tip_.at(d),
+      slgen.generate(some_time_after).tip_.at(d));
   }
 }
 

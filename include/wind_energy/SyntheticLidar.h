@@ -105,8 +105,10 @@ RadarFilter parse_radar_filter(const YAML::Node& node);
 std::pair<std::vector<vs::Vector>, std::vector<double>>
 spherical_cap_radau(double gammav, int ntheta, int nphi);
 
+enum class NormalRule { SIGMA1, SIGMA2, SIGMA3, HALFPOWER };
+
 std::pair<std::vector<vs::Vector>, std::vector<double>>
-spherical_cap_truncated_normal(double gammav, int ntheta, int nsigma);
+spherical_cap_truncated_normal(double gammav, int ntheta, NormalRule rule);
 
 } // namespace details
 
