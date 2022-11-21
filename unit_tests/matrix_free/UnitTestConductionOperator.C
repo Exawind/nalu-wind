@@ -12,7 +12,7 @@
 #include "StkConductionFixture.h"
 #include "matrix_free/ConductionFields.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/MakeRCP.h"
+
 #include "matrix_free/StkSimdConnectivityMap.h"
 #include "matrix_free/StkToTpetraMap.h"
 #include "matrix_free/StkToTpetraLocalIndices.h"
