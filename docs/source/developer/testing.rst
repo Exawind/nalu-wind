@@ -3,7 +3,7 @@ Testing Nalu-Wind
 
 Nalu-Wind's regression tests and unit tests are run nightly using the GCC and Intel 
 compilers against the Trilinos master and development branches on a machine 
-at NREL. The results can be seen at the `CDash Nalu-Wind website <http://my.cdash.org/index.php?project=Nalu-Wind>`__.
+at NREL. The results can be seen at the `CDash Nalu-Wind website <http://my.cdash.org/index.php?project=Exawind>`__.
 
 
 Running Tests Locally
