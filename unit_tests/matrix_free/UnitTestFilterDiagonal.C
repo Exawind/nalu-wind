@@ -30,10 +30,8 @@
 #include "matrix_free/StkToTpetraMap.h"
 #include "matrix_free/StkSimdGatheredElementData.h"
 
-
 #include "matrix_free/LobattoQuadratureRule.h"
 #include "matrix_free/LinearVolume.h"
-
 
 #include "gtest/gtest.h"
 #include "mpi.h"

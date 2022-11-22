@@ -11,7 +11,6 @@
 
 #include "matrix_free/LobattoQuadratureRule.h"
 
-
 #include "gtest/gtest.h"
 
 namespace sierra {

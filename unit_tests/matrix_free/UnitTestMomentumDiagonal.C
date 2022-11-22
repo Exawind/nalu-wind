@@ -15,7 +15,6 @@
 #include "matrix_free/LinearAdvectionMetric.h"
 #include "matrix_free/KokkosViewTypes.h"
 
-
 #include "Kokkos_Core.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Tpetra_Map.hpp"
