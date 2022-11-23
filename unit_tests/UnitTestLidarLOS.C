@@ -60,7 +60,28 @@ const std::string radar_spec =
   "          reset_time:  0                                  \n"
   "          elevation_angles: [0,1,2,3]                     \n";
 
-const std::string spec_str = db_spec + scan_spec + radar_spec;
+const std::string radar_cone_spec =
+  "      - name: lidar/radar-filtered                        \n"
+  "        type: radar                                       \n"
+  "        frequency: 4                                      \n"
+  "        points_along_line: 10                              \n"
+  "        reuse_search_data: no                             \n"
+  "        output: text                                      \n"
+  "        radar_cone_filter:                                \n"
+  "          cone_angle: 0.25                                \n"
+  "          quadrature_type: radau                          \n"
+  "          lines_per_cone_circle: 20                       \n"
+  "        radar_specifications:                             \n"
+  "          bbox: [-1000,-1000,0,1000,1000,1000]            \n"
+  "          center: [-10000,0,100]                          \n"
+  "          beam_length: 10000                              \n"
+  "          angular_speed: 2                                \n"
+  "          axis: [1,0,0]                                   \n"
+  "          sweep_angle: 10                                 \n"
+  "          reset_time: 0                                   \n"
+  "          elevation_angles: [0]                           \n";
+
+const std::string spec_str = db_spec + scan_spec + radar_spec + radar_cone_spec;
 
 class LidarLOSFixture : public ::testing::Test
 {
@@ -97,6 +118,7 @@ public:
     // lidar will write new files if they exist. Delete them here
     // to adding new files ad infinitum`
     Ioss::FileInfo("lidar/scan.txt").remove_file();
+    Ioss::FileInfo("lidar/radar-filtered.txt").remove_file();
     for (int j = 0; j < 13; ++j) {
       Ioss::FileInfo("lidar/radar-grid-" + std::to_string(j) + ".txt")
         .remove_file();
@@ -148,6 +170,135 @@ TEST(make_radar_grid, check_opposite)
   ASSERT_DOUBLE_EQ(rays[0][0], axis[0]);
   ASSERT_DOUBLE_EQ(rays[0][1], axis[1]);
   ASSERT_DOUBLE_EQ(rays[0][2], axis[2]);
+}
+
+TEST(spherical_cap_quadrature, integrate_constant)
+{
+  const auto ang = M_PI / 3;
+  auto [rays, weights] = details::spherical_cap_radau(ang, 6, 4);
+  auto cart_const = [](vs::Vector x) { return 1; };
+  double integral = 0;
+  for (int j = 0; j < int(weights.size()); ++j) {
+    integral += cart_const(rays[j]) * weights[j];
+  }
+  ASSERT_NEAR(integral, 4 * M_PI * std::pow(std::sin(ang / 2), 2), 1e-12);
+}
+
+TEST(spherical_cap_quadrature, integrate_constant_halfpower)
+{
+  const auto ang = M_PI / 3;
+  auto [rays, weights] = details::spherical_cap_radau(ang, 6, 9, [](double x) {
+    return 1.234529105942581469654 * std::pow(2, -x * x);
+  });
+  auto cart_const = [](vs::Vector x) { return 1; };
+  double integral = 0;
+  for (int j = 0; j < int(weights.size()); ++j) {
+    integral += cart_const(rays[j]) * weights[j];
+  }
+  ASSERT_NEAR(integral, 4 * M_PI * std::pow(std::sin(ang / 2), 2), 1e-12);
+}
+
+TEST(spherical_cap_quadrature, integrate_constant_trunc_normal_1)
+{
+  const auto ang = M_PI / 3;
+  auto [rays, weights] = details::spherical_cap_truncated_normal(
+    ang, 6, details::NormalRule::SIGMA1);
+  auto cart_const = [](vs::Vector x) { return 1; };
+  double integral = 0;
+  for (int j = 0; j < int(weights.size()); ++j) {
+    integral += cart_const(rays[j]) * weights[j];
+  }
+  ASSERT_NEAR(integral, 4 * M_PI * std::pow(std::sin(ang / 2), 2), 1e-12);
+}
+
+TEST(spherical_cap_quadrature, integrate_constant_trunc_normal_2)
+{
+  const auto ang = M_PI / 4;
+  auto [rays, weights] = details::spherical_cap_truncated_normal(
+    ang, 6, details::NormalRule::SIGMA2);
+  auto cart_const = [](vs::Vector x) { return 1; };
+  double integral = 0;
+  for (int j = 0; j < int(weights.size()); ++j) {
+    integral += cart_const(rays[j]) * weights[j];
+  }
+  ASSERT_NEAR(integral, 4 * M_PI * std::pow(std::sin(ang / 2), 2), 1e-12);
+}
+
+TEST(spherical_cap_quadrature, integrate_constant_trunc_normal_3)
+{
+  const auto ang = M_PI / 5;
+  auto [rays, weights] = details::spherical_cap_truncated_normal(
+    ang, 6, details::NormalRule::SIGMA3);
+  auto cart_const = [](vs::Vector x) { return 1; };
+  double integral = 0;
+  for (int j = 0; j < int(weights.size()); ++j) {
+    integral += cart_const(rays[j]) * weights[j];
+  }
+  ASSERT_NEAR(integral, 4 * M_PI * std::pow(std::sin(ang / 2), 2), 1e-12);
+}
+
+TEST(spherical_cap_quadrature, integrate_constant_trunc_normal_halfpower)
+{
+  const auto ang = M_PI / 5;
+  auto [rays, weights] = details::spherical_cap_truncated_normal(
+    ang, 6, details::NormalRule::HALFPOWER);
+  auto cart_const = [](vs::Vector x) { return 1; };
+  double integral = 0;
+  for (int j = 0; j < int(weights.size()); ++j) {
+    integral += cart_const(rays[j]) * weights[j];
+  }
+  ASSERT_NEAR(integral, 4 * M_PI * std::pow(std::sin(ang / 2), 2), 1e-12);
+}
+
+TEST(spherical_cap_quadrature, integrate_linear)
+{
+  const auto ang = M_PI / 4;
+  auto [rays, weights] = details::spherical_cap_radau(ang, 6, 4);
+  auto cart_lin = [](vs::Vector x) { return x[0] + x[1] + x[2]; };
+  double integral = 0;
+  for (int j = 0; j < int(weights.size()); ++j) {
+    integral += cart_lin(rays[j]) * weights[j];
+  }
+  ASSERT_NEAR(integral, M_PI * std::sin(ang) * std::sin(ang), 1e-12);
+}
+
+TEST(spherical_cap_quadrature, integrate_quadratic)
+{
+  const auto ang = 0.2423891; // some number < pi/2
+  auto [rays, weights] = details::spherical_cap_radau(ang, 6, 4);
+  auto cart_quad = [](vs::Vector x) {
+    return (x[0] - 1) * (x[0] - 1) + 2 * x[1] * x[1] + x[2];
+  };
+  double integral = 0;
+  for (int j = 0; j < int(weights.size()); ++j) {
+    integral += cart_quad(rays[j]) * weights[j];
+  }
+  const double ans =
+    -M_PI * (-9 + std::cos(2 * ang)) * std::pow(std::sin(ang / 2), 2);
+  ASSERT_NEAR(integral, ans, 1e-12);
+}
+
+TEST(spherical_cap_quadrature, error_improves_with_points_for_nonpoly)
+{
+  const auto ang = M_PI / 3; // some number < pi/2
+
+  auto ramp = [](double x) { return x > 0 ? x : 0; };
+  auto cart_ramp = [ramp](vs::Vector x) {
+    return ramp(x[0] * x[1]) * ramp(x[0] * x[1]) + x[2];
+  };
+
+  const double actual_integral = 2.3995550177556133;
+  auto error = [&](int ntheta, int nphi) {
+    auto [rays, weights] = details::spherical_cap_radau(ang, ntheta, nphi);
+    double integral = 0;
+    for (int j = 0; j < int(weights.size()); ++j) {
+      integral += cart_ramp(rays[j]) * weights[j];
+    }
+    return std::abs(actual_integral - integral);
+  };
+  ASSERT_LT(
+    error(5, 6), error(3, 3)); // not necessarily the case for all functions
+  ASSERT_NEAR(error(121, 9), 0, 1e-8); // should be small with this many points
 }
 
 } // namespace nalu

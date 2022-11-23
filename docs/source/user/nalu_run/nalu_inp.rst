@@ -1568,7 +1568,7 @@ Data probes
    center                     Required. Location of the radar, e.g. [0,0,0]. Ideally outside of the bounding box.
    bbox                       Optional. Six values (m) describing [bottom-left, top-right] of radar clip box
    box_1                      Optional. Along with other vertex specifications in (m) describes the radar clip box.
-   beam_length                Required. Sets the maximum length of the line sampled. Also used if line does not intersect box. 
+   beam_length                Required. Sets the maximum length of the line sampled. Also used if line does not intersect box.
    sweep_angle                Default 20 degrees. Extent of angular sweep between -sweep_angle/2 to sweep_angle/2.
    angular_speed              Default 30 degrees/s. Speed of the angular sweep.
    reset_time_delta           Default 1 second. Time to reset LIDAR after sweep.
@@ -1583,6 +1583,23 @@ Data probes
    ========================== ===================================================================
    cone_angle                 Required. cone half angle in degrees centered on radar_specifications.axis
    num_circles                Required. Number of rays along the cone angle
+   lines_per_cone_circle      Required. Number of rays around the cone circumference
+   ========================== ===================================================================
+
+.. inpfile:: dataprobes.lidar_specifications.radar_cone_filter
+
+   Implements a few options for filtering the spherical cap of a cone. `truncated_normal{n}` rules with `n=1,2,3`
+   weight the filtering based on truncated normal distribution, with with the circle of the cone being 1,2, or 3
+   sigma away. This means that the sampling is more weighted toward the center of the cone with higher `n`. `radau`
+   has weight function = 1, optionally changeable to a Gaussian reaching half of its peak value at the cone circle.
+
+   ========================== ===================================================================
+   Parameter                  Description
+   ========================== ===================================================================
+   cone_angle                 Required. cone half angle in degrees centered on radar_specifications.axis
+   quadrature_type            Required. Type of quadrature. `radau` or `truncated_normal{n}` (n=1,2,3), or `truncated_normal_halfpower`.
+   radau_points               Optional. If `radau` quadrature is used, number of integration points
+   radau_weight_type          Default `unity`. `gaussian_halfpower` is also supported.
    lines_per_cone_circle      Required. Number of rays around the cone circumference
    ========================== ===================================================================
 

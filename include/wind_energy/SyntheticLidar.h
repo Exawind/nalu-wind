@@ -22,6 +22,12 @@
 namespace sierra {
 namespace nalu {
 
+struct RadarFilter
+{
+  std::vector<vs::Vector> rays;
+  std::vector<double> weights;
+};
+
 class LidarLineOfSite
 {
 public:
@@ -35,6 +41,12 @@ public:
   void increment_time() { lidar_time_ += lidar_dt_; }
 
   void output(
+    const stk::mesh::BulkData& bulk,
+    const stk::mesh::Selector& active,
+    const std::string& coordinates_name,
+    double dtratio);
+
+  void output_cone_filtered(
     const stk::mesh::BulkData& bulk,
     const stk::mesh::Selector& active,
     const std::string& coordinates_name,
@@ -58,6 +70,11 @@ private:
     double time,
     const std::vector<std::array<double, 3>>& x,
     const std::vector<std::array<double, 3>>& u);
+  void output_txt_filtered(
+    double time,
+    const std::vector<std::array<double, 3>>& x,
+    const std::vector<double>& u,
+    int n);
   std::map<std::string, int> ncVarIDs_;
 
   mutable double lidar_time_{0};
@@ -75,12 +92,28 @@ private:
   bool warn_on_missing_{false};
   bool reuse_search_data_{true};
   bool always_output_{false};
+
+  RadarFilter radar_data_;
 };
 
 namespace details {
 std::vector<vs::Vector>
 make_radar_grid(double phi, int nphi, int ntheta, vs::Vector axis);
-}
+
+RadarFilter parse_radar_filter(const YAML::Node& node);
+
+std::pair<std::vector<vs::Vector>, std::vector<double>> spherical_cap_radau(
+  double gammav,
+  int ntheta,
+  int nphi,
+  std::function<double(double)> f = nullptr);
+
+enum class NormalRule { SIGMA1, SIGMA2, SIGMA3, HALFPOWER };
+
+std::pair<std::vector<vs::Vector>, std::vector<double>>
+spherical_cap_truncated_normal(double gammav, int ntheta, NormalRule rule);
+
+} // namespace details
 
 class LidarLOS
 {
@@ -97,6 +130,7 @@ public:
 
 private:
   std::vector<LidarLineOfSite> lidars_;
+  std::vector<LidarLineOfSite> radars_;
 };
 
 } // namespace nalu

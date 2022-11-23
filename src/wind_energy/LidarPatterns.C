@@ -174,12 +174,15 @@ ScanningLidarSegmentGenerator::load(const YAML::Node& node)
   normalize_vec3(axis_.data());
 
   double sweep_angle_in_degrees = 20;
-  get_if_present(node, "sweep_angle", sweep_angle_in_degrees);
+  get_if_present(
+    node, "sweep_angle", sweep_angle_in_degrees, sweep_angle_in_degrees);
   ThrowRequireMsg(sweep_angle_in_degrees > 0, "Sweep angle must be positive");
   sweep_angle_ = convert::degrees_to_radians(sweep_angle_in_degrees);
 
   double step_delta_angle_in_degrees = 1;
-  get_if_present(node, "step_delta_angle", step_delta_angle_in_degrees);
+  get_if_present(
+    node, "step_delta_angle", step_delta_angle_in_degrees,
+    step_delta_angle_in_degrees);
   step_delta_angle_ = convert::degrees_to_radians(step_delta_angle_in_degrees);
 
   ThrowRequireMsg(step_delta_angle_ > 0, "step delta angle must be positive");
@@ -187,10 +190,11 @@ ScanningLidarSegmentGenerator::load(const YAML::Node& node)
     step_delta_angle_ <= sweep_angle_,
     "step delta angle must be less than full sweep");
 
-  get_if_present(node, "stare_time", stare_time_);
+  get_if_present(node, "stare_time", stare_time_, stare_time_);
   ThrowRequireMsg(stare_time_ > 0, "stare time must be positive");
 
-  get_if_present(node, "reset_time_delta", reset_time_delta_);
+  get_if_present(
+    node, "reset_time_delta", reset_time_delta_, reset_time_delta_);
   ThrowRequireMsg(
     reset_time_delta_ >= 0, "reset time delta must be semi-positive");
 
@@ -312,22 +316,26 @@ SpinnerLidarSegmentGenerator::load(const YAML::Node& node)
   normalize_vec3(laserAxis_.data());
 
   double innerPrismTheta0 = 90;
-  get_if_present(node, "inner_prism_initial_theta", innerPrismTheta0);
+  get_if_present(
+    node, "inner_prism_initial_theta", innerPrismTheta0, innerPrismTheta0);
 
   double innerPrismRot = 3.5;
-  get_if_present(node, "inner_prism_rotation_rate", innerPrismRot);
+  get_if_present(
+    node, "inner_prism_rotation_rate", innerPrismRot, innerPrismRot);
 
   double innerPrismAzi = 15.2;
-  get_if_present(node, "inner_prism_azimuth", innerPrismAzi);
+  get_if_present(node, "inner_prism_azimuth", innerPrismAzi, innerPrismAzi);
 
   double outerPrismTheta0 = 90;
-  get_if_present(node, "outer_prism_initial_theta", outerPrismTheta0);
+  get_if_present(
+    node, "outer_prism_initial_theta", outerPrismTheta0, outerPrismTheta0);
 
   double outerPrismRot = 6.5;
-  get_if_present(node, "outer_prism_rotation_rate", outerPrismRot);
+  get_if_present(
+    node, "outer_prism_rotation_rate", outerPrismRot, outerPrismRot);
 
   double outerPrismAzi = 15.2;
-  get_if_present(node, "outer_prism_azimuth", outerPrismAzi);
+  get_if_present(node, "outer_prism_azimuth", outerPrismAzi, outerPrismAzi);
 
   innerPrism_ = {
     convert::degrees_to_radians(innerPrismTheta0),
@@ -538,12 +546,14 @@ RadarSegmentGenerator::load(const YAML::Node& node)
   normalize_vec3(axis_.data());
 
   double sweep_angle_in_degrees = 20;
-  get_if_present(node, "sweep_angle", sweep_angle_in_degrees);
-  ThrowRequireMsg(sweep_angle_in_degrees > 0, "Sweep angle must be positive");
+  get_if_present(
+    node, "sweep_angle", sweep_angle_in_degrees, sweep_angle_in_degrees);
+  ThrowRequireMsg(
+    sweep_angle_in_degrees >= 0, "Sweep angle must be semipositive");
   sweep_angle_ = convert::degrees_to_radians(sweep_angle_in_degrees);
 
   double angular_speed = 30; // deg/s
-  get_if_present(node, "angular_speed", angular_speed);
+  get_if_present(node, "angular_speed", angular_speed, angular_speed);
   angular_speed_ = convert::degrees_to_radians(angular_speed);
 
   beam_length_ = 50e3; // m
@@ -566,7 +576,8 @@ RadarSegmentGenerator::load(const YAML::Node& node)
     }
   }
 
-  get_if_present(node, "reset_time_delta", reset_time_delta_);
+  get_if_present(
+    node, "reset_time_delta", reset_time_delta_, reset_time_delta_);
   ThrowRequireMsg(
     reset_time_delta_ >= 0, "reset time delta must be semi-positive");
 
