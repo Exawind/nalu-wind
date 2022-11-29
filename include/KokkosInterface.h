@@ -45,7 +45,7 @@ namespace nalu {
 
 #if defined(KOKKOS_ENABLE_CUDA)
 typedef Kokkos::CudaSpace MemSpace;
-#elif defined(KOKKOS_HAVE_HIP)
+#elif defined(KOKKOS_ENABLE_HIP)
 typedef Kokkos::Experimental::HIPSpace MemSpace;
 #elif defined(KOKKOS_HAVE_OPENMP)
 typedef Kokkos::OpenMP MemSpace;
