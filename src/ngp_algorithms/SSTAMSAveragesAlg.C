@@ -393,7 +393,8 @@ SSTAMSAveragesAlg::execute()
       const DblType v2 =
         1.0 / v2cMu *
         (tvisc.get(mi, 0) / density.get(mi, 0) / avgTime.get(mi, 0));
-      const DblType PMscale = coeffR * stk::math::pow(1.5 * beta.get(mi, 0) * v2, -1.5);
+      const DblType PMscale =
+        coeffR * stk::math::pow(1.5 * beta.get(mi, 0) * v2, -1.5);
 
       // Handle case where tke = 0, should only occur at a wall boundary
       if (tke.get(mi, 0) == 0.0)

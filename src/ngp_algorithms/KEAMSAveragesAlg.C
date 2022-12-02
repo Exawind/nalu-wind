@@ -286,7 +286,8 @@ KEAMSAveragesAlg::execute()
           // mean quantities... i.e this is (tauSGRS = alpha*tauSST)
           // The 2 in the coeff cancels with the 1/2 in the strain rate tensor
           const DblType coeffSGRS = stk::math::pow(alpha, alphaScaPow) *
-                    (2.0 - alpha) * tvisc.get(mi, 0) / density.get(mi, 0);
+                                    (2.0 - alpha) * tvisc.get(mi, 0) /
+                                    density.get(mi, 0);
           tauSGRS[i][j] = avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
                           avgDudx.get(mi, j * nalu_ngp::NDimMax + i);
           tauSGRS[i][j] *= coeffSGRS;
@@ -354,7 +355,8 @@ KEAMSAveragesAlg::execute()
       const DblType v2 =
         1.0 / v2cMu *
         (tvisc.get(mi, 0) / density.get(mi, 0) / avgTime.get(mi, 0));
-      const DblType PMscale = coeffR * stk::math::pow(1.5 * beta.get(mi, 0) * v2, -1.5);
+      const DblType PMscale =
+        coeffR * stk::math::pow(1.5 * beta.get(mi, 0) * v2, -1.5);
 
       // Handle case where tke = 0, should only occur at a wall boundary
       if (tke.get(mi, 0) == 0.0)
