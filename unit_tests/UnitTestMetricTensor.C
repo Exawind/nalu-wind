@@ -207,7 +207,6 @@ TEST(MetricTensor, quad4)
   test_metric_for_topo_2D(stk::topology::QUADRILATERAL_4_2D, 1.0e-10);
 }
 
-
 TEST(MetricTensor, tet4)
 {
   test_metric_for_topo_3D(stk::topology::TET_4, 1.0e-10);

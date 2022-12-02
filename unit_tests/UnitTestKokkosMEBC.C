@@ -180,7 +180,6 @@ TEST(KokkosMEBC, test_hex8_views)
   }
 }
 
-
 TEST(KokkosMEBC, test_tet4_views)
 {
   for (int k = 0; k < 4; ++k) {

@@ -73,7 +73,8 @@ fill_and_promote_hex_mesh(
   VectorFieldType* coords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
   stk::mesh::PartVector baseParts = {blockPart, surfPart};
-  auto nodes = sierra::nalu::matrix_free::gauss_lobatto_legendre_abscissae(polyOrder);
+  auto nodes =
+    sierra::nalu::matrix_free::gauss_lobatto_legendre_abscissae(polyOrder);
   sierra::nalu::promotion::create_tensor_product_hex_elements(
     nodes, bulk, *coords, baseParts);
 }
