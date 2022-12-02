@@ -1526,11 +1526,8 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
         break;
 
       case TurbulenceModel::KE:
-        tviscAlg_.reset(new TurbViscKEAlg(realm_, part, tvisc_));
-        break;
-
       case TurbulenceModel::KE_AMS:
-        tviscAlg_.reset(new TurbViscKEAlg(realm_, part, tvisc_, true));
+        tviscAlg_.reset(new TurbViscKEAlg(realm_, part, tvisc_));
         break;
 
       case TurbulenceModel::KO:
