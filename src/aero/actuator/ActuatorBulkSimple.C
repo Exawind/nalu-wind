@@ -60,7 +60,7 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
     NaluEnv::self().naluOutputP0()
       << " nProcs: " << nProcs << " nTurb:  " << nTurb
       << " intDiv: " << intDivision << " remain: " << remainder
-      << std::endl;             // LCCOUT
+      << std::endl; // LCCOUT
 
   if (remainder && intDivision) // this doesn't work for nProcs=1
     throw std::runtime_error(" ERRORXX: more blades than ranks");
@@ -154,7 +154,7 @@ ActuatorBulkSimple::init_epsilon(const ActuatorMetaSimple& actMeta)
 
       } // loop over np
     }
-  }     // loop over iBlade
+  } // loop over iBlade
 
   actuator_utils::reduce_view_on_host(epsilon_.view_host());
   actuator_utils::reduce_view_on_host(epsilonOpt_.view_host());
@@ -205,7 +205,7 @@ ActuatorBulkSimple::init_points(const ActuatorMetaSimple& actMeta)
 
       } // loop over np
     }
-  }     // loop over iBlade
+  } // loop over iBlade
   actuator_utils::reduce_view_on_host(pointCentroid_.view_host());
   pointCentroid_.sync_host();
 }

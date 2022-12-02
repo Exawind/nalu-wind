@@ -977,11 +977,11 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowInflow(
   }
   for (i = 1; i < nx; ++i) {
     j0 = i * jmax_;
-    wCoef[j0] = 0.0;      // j=0  (zero mode in y)
+    wCoef[j0] = 0.0; // j=0  (zero mode in y)
     fftw_execute_r2r(planSiny_, &wCoef[j0 + 1], &wCoef[j0 + 1]);
     wCoef[j0 + ny] = 0.0; // j=ny (Nyquist mode in y)
   }
-  wCoef[0] = 0.0;         // i=0, j=0 (zero mode in x and y)
+  wCoef[0] = 0.0; // i=0, j=0 (zero mode in x and y)
 
   // Solve the potential flow problem.  The Nyquist modes in x and y are not
   // considered since they are identically zero.  u0 and v0 are the average

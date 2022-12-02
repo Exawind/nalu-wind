@@ -108,7 +108,7 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::execute(
     const int nodeR =
       meSCS_->side_node_ordinals(elemFaceOrdinal)[ip]; // nearest node
     const int nodeL =
-      meSCS_->opposingNodes(elemFaceOrdinal, ip);      // opposing node
+      meSCS_->opposingNodes(elemFaceOrdinal, ip); // opposing node
 
     const DoubleType projTimeScale = 1.0 / v_udiag(ip);
     const DoubleType pressureIp = 0.5 * (v_pressure(nodeR) + v_pressure(nodeL));

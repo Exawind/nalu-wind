@@ -246,7 +246,7 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
         rhs(rowR) -= stk::math::if_then_else(
           (tmdot > 0.0), tmdot * v_uNp1(nodeR, i), // leaving the domain
           tmdot * ((nfEntrain_ * uxnx + om_nfEntrain * uxnxip) *
-                     nx[i] +                       // constrain to be normal
+                     nx[i] + // constrain to be normal
                    (v_uBc(ip, i) -
                     uspecxnx * nx[i]))); // user spec entrainment (tangential)
 

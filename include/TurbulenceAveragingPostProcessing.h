@@ -165,7 +165,7 @@ public:
   double currentTimeFilter_;  /* provided by restart */
   double timeFilterInterval_; /* user supplied */
 
-  bool forcedReset_;          /* allows forhard reset */
+  bool forcedReset_; /* allows forhard reset */
 
   AveragingType averagingType_{NALU_CLASSIC};
   std::unique_ptr<MovingAveragePostProcessor> movingAvgPP_;

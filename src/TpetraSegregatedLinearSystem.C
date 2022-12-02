@@ -1812,7 +1812,7 @@ TpetraSegregatedLinearSystem::writeToFile(
     std::ostringstream osLhs;
     std::ostringstream osRhs;
     osLhs << base_filename << "-" << (useOwned ? "O-" : "G-") << currentCount
-          << ".mm." << p_size;  // A little hacky but whatever
+          << ".mm." << p_size; // A little hacky but whatever
     osRhs << base_filename << "-" << (useOwned ? "O-" : "G-") << currentCount
           << ".rhs." << p_size; // A little hacky but whatever
 
@@ -1830,7 +1830,7 @@ TpetraSegregatedLinearSystem::writeToFile(
     std::ostringstream osRhs;
 
     osLhs << base_filename << "-" << (useOwned ? "O-" : "G-") << currentCount
-          << ".mm." << p_size << "." << p_rank;  // A little hacky but whatever
+          << ".mm." << p_size << "." << p_rank; // A little hacky but whatever
     osGra << base_filename << "-" << (useOwned ? "O-" : "G-") << currentCount
           << ".gra." << p_size << "." << p_rank; // A little hacky but whatever
     osRhs << base_filename << "-" << (useOwned ? "O-" : "G-") << currentCount

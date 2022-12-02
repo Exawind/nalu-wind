@@ -444,13 +444,13 @@ tensor_edge_index(int p, int i, int j, int edge_ordinal)
   const int nodes1D = p + 1;
   switch (edge_ordinal) {
   case 0:
-    return i + 1;                     // bottom, left-to-right
+    return i + 1; // bottom, left-to-right
   case 1:
-    return p + nodes1D * (j + 1);     // right-side, bottom-to-top.
+    return p + nodes1D * (j + 1); // right-side, bottom-to-top.
   case 2:
     return p - (i + 1) + nodes1D * p; // top, right-to-left
   case 3:
-    return nodes1D * (p - (j + 1));   // left-side, top-to-bottom
+    return nodes1D * (p - (j + 1)); // left-side, top-to-bottom
   default:
     return -1;
   }

@@ -189,9 +189,9 @@ public:
   virtual void buildFaceElemToNodeGraph(
     const stk::mesh::PartVector& parts); // elem:face->node assembly
   virtual void buildNonConformalNodeGraph(
-    const stk::mesh::PartVector&);       // nonConformal->elem_node assembly
+    const stk::mesh::PartVector&); // nonConformal->elem_node assembly
   virtual void buildOversetNodeGraph(
-    const stk::mesh::PartVector&);       // overset->elem_node assembly
+    const stk::mesh::PartVector&); // overset->elem_node assembly
   virtual void finalizeLinearSystem();
   /** Tag rows that must be handled as a Dirichlet BC node
    *
