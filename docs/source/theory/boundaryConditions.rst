@@ -1233,20 +1233,7 @@ within the linear system. As such, for sliding mesh configurations, the
 linear system connectivity graph changes each time step. Recent
 prototyping of the dG-based and the overset scheme has allowed this
 method to be used across both disparate low-order topologies (see
-Figure :numref:`dg-quad4-quad9` and Figure :numref:`dg-hex8-tet4`).
-
-
-.. _dg-quad4-quad9:
-
-.. figure:: images/dgQuad4Quad9MMS.png
-   :width: 500px
-   :align: center
-
-   A low-order and high-order block interface (P=1 quad4 and 
-   P=2 quad9) for a MMS temperature solution. In this image, the 
-   inset image is a close-up of the nodal Ids near the interface that 
-   highlights the quad4 and quad9 interface.
-
+Figure :numref:`dg-hex8-tet4`).
 
 .. _dg-hex8-tet4:
 

@@ -27,6 +27,10 @@ struct topology;
 namespace sierra {
 namespace nalu {
 
+namespace MEconstants {
+static const double realmin = std::numeric_limits<double>::min();
+}
+
 namespace Jacobian {
 enum Direction { S_DIRECTION = 0, T_DIRECTION = 1, U_DIRECTION = 2 };
 }

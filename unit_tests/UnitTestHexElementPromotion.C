@@ -15,7 +15,7 @@
 #include <stk_unit_test_utils/stk_mesh_fixtures/HexFixture.hpp>
 #include <stk_mesh/base/SkinMesh.hpp>
 
-#include <master_element/QuadratureRule.h>
+#include <matrix_free/LobattoQuadratureRule.h>
 #include <element_promotion/HexNElementDescription.h>
 #include <element_promotion/PromotedPartHelper.h>
 #include <element_promotion/PromoteElement.h>
@@ -121,7 +121,7 @@ protected:
   void promote_mesh()
   {
     auto gllNodes =
-      sierra::nalu::gauss_lobatto_legendre_rule(poly_order + 1).first;
+      sierra::nalu::matrix_free::gauss_lobatto_legendre_abscissae(poly_order);
     sierra::nalu::promotion::create_tensor_product_hex_elements(
       gllNodes, *bulk, *coordField, baseParts);
   }

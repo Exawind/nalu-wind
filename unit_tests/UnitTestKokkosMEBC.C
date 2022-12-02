@@ -162,15 +162,6 @@ TEST(KokkosMEBC, test_quad42D_views)
   }
 }
 
-TEST(KokkosMEBC, test_quad92D_views)
-{
-  for (int k = 0; k < 3; ++k) {
-    test_MEBC_views<sierra::nalu::AlgTraitsEdge32DQuad92D>(
-      k, {sierra::nalu::SCS_FACE_GRAD_OP},
-      {sierra::nalu::FC_SHAPE_FCN, sierra::nalu::FC_SHIFTED_SHAPE_FCN});
-  }
-}
-
 TEST(KokkosMEBC, test_tri32D_views)
 {
   for (int k = 0; k < 3; ++k) {
@@ -186,14 +177,6 @@ TEST(KokkosMEBC, test_hex8_views)
     test_MEBC_views<sierra::nalu::AlgTraitsQuad4Hex8>(
       k,
       {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
-  }
-}
-
-TEST(KokkosMEBC, test_hex27_views)
-{
-  for (int k = 0; k < 6; ++k) {
-    test_MEBC_views<sierra::nalu::AlgTraitsQuad9Hex27>(
-      k, {sierra::nalu::SCS_FACE_GRAD_OP});
   }
 }
 

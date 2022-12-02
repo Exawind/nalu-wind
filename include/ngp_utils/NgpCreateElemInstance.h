@@ -73,8 +73,6 @@ create_elem_algorithm(const stk::topology topo, Args&&... args)
   switch (topo.value()) {
   case stk::topology::HEX_8:
     return new T<AlgTraitsHex8>(std::forward<Args>(args)...);
-  case stk::topology::HEX_27:
-    return new T<AlgTraitsHex27>(std::forward<Args>(args)...);
   case stk::topology::TET_4:
     return new T<AlgTraitsTet4>(std::forward<Args>(args)...);
   case stk::topology::PYRAMID_5:
@@ -83,8 +81,6 @@ create_elem_algorithm(const stk::topology topo, Args&&... args)
     return new T<AlgTraitsWed6>(std::forward<Args>(args)...);
   case stk::topology::QUAD_4_2D:
     return new T<AlgTraitsQuad4_2D>(std::forward<Args>(args)...);
-  case stk::topology::QUAD_9_2D:
-    return new T<AlgTraitsQuad9_2D>(std::forward<Args>(args)...);
   case stk::topology::TRI_3_2D:
     return new T<AlgTraitsTri3_2D>(std::forward<Args>(args)...);
   default:
@@ -102,8 +98,6 @@ create_face_algorithm(const stk::topology topo, Args&&... args)
   switch (topo.value()) {
   case stk::topology::QUAD_4:
     return new T<AlgTraitsQuad4>(std::forward<Args>(args)...);
-  case stk::topology::QUAD_9:
-    return new T<AlgTraitsQuad9>(std::forward<Args>(args)...);
   case stk::topology::TRI_3:
     return new T<AlgTraitsTri3>(std::forward<Args>(args)...);
   case stk::topology::LINE_2:
@@ -165,9 +159,6 @@ create_face_elem_algorithm(
         "NGP face_elem algorithm is not implemented for EDGE_2D and " +
         elemTopo.name() + " pair.");
     }
-
-  case stk::topology::QUAD_9:
-    return new T<AlgTraitsQuad9Hex27>(std::forward<Args>(args)...);
 
   default:
     throw std::runtime_error(

@@ -17,8 +17,6 @@ namespace nalu {
 
 class HexSCS;
 class HexSCV;
-class Hex27SCS;
-class Hex27SCV;
 class TetSCS;
 class TetSCV;
 class PyrSCS;
@@ -28,9 +26,6 @@ class WedSCV;
 class Quad42DSCS;
 class Quad42DSCV;
 class Quad3DSCS;
-class Quad92DSCS;
-class Quad92DSCV;
-class Quad93DSCS;
 class Tri32DSCS;
 class Tri32DSCV;
 class Tri3DSCS;
@@ -48,18 +43,6 @@ struct AlgTraitsHex8
   static constexpr stk::topology::topology_t topo_ = stk::topology::HEX_8;
   using masterElementScs_ = HexSCS;
   using masterElementScv_ = HexSCV;
-};
-
-struct AlgTraitsHex27
-{
-  static constexpr int nDim_ = 3;
-  static constexpr int nodesPerElement_ = 27;
-  static constexpr int numScsIp_ = 216;
-  static constexpr int numScvIp_ = 216;
-  static constexpr int numGp_ = 27; // for FEM (not supported)
-  static constexpr stk::topology::topology_t topo_ = stk::topology::HEX_27;
-  using masterElementScs_ = Hex27SCS;
-  using masterElementScv_ = Hex27SCV;
 };
 
 struct AlgTraitsTet4
@@ -110,18 +93,6 @@ struct AlgTraitsQuad4_2D
   using masterElementScv_ = Quad42DSCV;
 };
 
-struct AlgTraitsQuad9_2D
-{
-  static constexpr int nDim_ = 2;
-  static constexpr int nodesPerElement_ = 9;
-  static constexpr int numScsIp_ = 24;
-  static constexpr int numScvIp_ = 36;
-  static constexpr int numGp_ = 9; // for FEM (not supported)
-  static constexpr stk::topology::topology_t topo_ = stk::topology::QUAD_9_2D;
-  using masterElementScv_ = Quad92DSCV;
-  using masterElementScs_ = Quad92DSCS;
-};
-
 struct AlgTraitsTri3_2D
 {
   static constexpr int nDim_ = 2;
@@ -154,17 +125,6 @@ struct AlgTraitsQuad4
   static constexpr int numFaceIp_ = numScsIp_;
   static constexpr stk::topology::topology_t topo_ = stk::topology::QUAD_4;
   using masterElementScs_ = Quad3DSCS;
-};
-
-struct AlgTraitsQuad9
-{
-  static constexpr int nDim_ = 3;
-  static constexpr int nodesPerElement_ = 9;
-  static constexpr int nodesPerFace_ = nodesPerElement_;
-  static constexpr int numScsIp_ = 36;
-  static constexpr int numFaceIp_ = numScsIp_;
-  static constexpr stk::topology::topology_t topo_ = stk::topology::QUAD_9;
-  using masterElementScs_ = Quad93DSCS;
 };
 
 struct AlgTraitsTri3
@@ -236,10 +196,6 @@ using AlgTraitsTri3Wed6 = AlgTraitsFaceElem<AlgTraitsTri3, AlgTraitsWed6>;
 using AlgTraitsQuad4Hex8 = AlgTraitsFaceElem<AlgTraitsQuad4, AlgTraitsHex8>;
 using AlgTraitsQuad4Pyr5 = AlgTraitsFaceElem<AlgTraitsQuad4, AlgTraitsPyr5>;
 using AlgTraitsQuad4Wed6 = AlgTraitsFaceElem<AlgTraitsQuad4, AlgTraitsWed6>;
-
-using AlgTraitsEdge32DQuad92D =
-  AlgTraitsFaceElem<AlgTraitsEdge3_2D, AlgTraitsQuad9_2D>;
-using AlgTraitsQuad9Hex27 = AlgTraitsFaceElem<AlgTraitsQuad9, AlgTraitsHex27>;
 
 } // namespace nalu
 } // namespace sierra

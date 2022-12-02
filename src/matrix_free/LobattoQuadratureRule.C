@@ -11,6 +11,7 @@
 
 #include "Kokkos_Array.hpp"
 #include "matrix_free/PolynomialOrders.h"
+#include <vector>
 
 namespace sierra {
 namespace nalu {
@@ -33,6 +34,16 @@ gauss_lobatto_legendre_abscissae(int p, int n)
   default:
     return GLL<4>::nodes[n];
   }
+}
+
+std::vector<double>
+gauss_lobatto_legendre_abscissae(int p)
+{
+  std::vector<double> xloc(p + 1);
+  for (int n = 0; n < p + 1; ++n) {
+    xloc[n] = gauss_lobatto_legendre_abscissae(p, n);
+  }
+  return xloc;
 }
 
 } // namespace matrix_free
