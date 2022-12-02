@@ -133,7 +133,6 @@ check_side_is_in_element(stk::topology topo)
   TEST(x, quad4##_##y) { y(stk::topology::QUAD_4_2D); }                        \
   TEST(x, tet4##_##y) { y(stk::topology::TET_4); }                             \
   TEST(x, wedge6##_##y) { y(stk::topology::WEDGE_6); }                         \
-  TEST(x, hex8##_##y) { y(stk::topology::HEX_8); }                             \
-  TEST(x, hex27##_##y) { y(stk::topology::HEX_27); }
+  TEST(x, hex8##_##y) { y(stk::topology::HEX_8); }
 
 TEST_ALL_VALID_TOPOS(SideIsInElement, check_side_is_in_element)

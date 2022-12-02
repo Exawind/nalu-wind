@@ -8,7 +8,6 @@
 //
 
 #include <master_element/MasterElement.h>
-#include <master_element/MasterElementUtils.h>
 #include <master_element/Pyr5CVFEM.h>
 #include <master_element/Hex8GeometryFunctions.h>
 #include <master_element/MasterElementFunctions.h>
@@ -1228,29 +1227,29 @@ PyrSCS::shifted_pyr_derivative(
       -0.25 * (1.0 - r) * (1.0 - s); // d(N_1)/ d(t) = deriv[2]
 
     deriv[0 + 3 * 1 + p] =
-      0.25 * (1.0 - s) * (1.0 - t); // d(N_2)/ d(r) = deriv[0+3]
+      0.25 * (1.0 - s) * (1.0 - t);  // d(N_2)/ d(r) = deriv[0+3]
     deriv[1 + 3 * 1 + p] =
       -0.25 * (1.0 + r) * (1.0 - t); // d(N_2)/ d(s) = deriv[1+3]
     deriv[2 + 3 * 1 + p] =
       -0.25 * (1.0 + r) * (1.0 - s); // d(N_2)/ d(t) = deriv[2+3]
 
     deriv[0 + 3 * 2 + p] =
-      0.25 * (1.0 + s) * (1.0 - t); // d(N_3)/ d(r) = deriv[0+6]
+      0.25 * (1.0 + s) * (1.0 - t);  // d(N_3)/ d(r) = deriv[0+6]
     deriv[1 + 3 * 2 + p] =
-      0.25 * (1.0 + r) * (1.0 - t); // d(N_3)/ d(s) = deriv[1+6]
+      0.25 * (1.0 + r) * (1.0 - t);  // d(N_3)/ d(s) = deriv[1+6]
     deriv[2 + 3 * 2 + p] =
       -0.25 * (1.0 + r) * (1.0 + s); // d(N_3)/ d(t) = deriv[2+6]
 
     deriv[0 + 3 * 3 + p] =
       -0.25 * (1.0 + s) * (1.0 - t); // d(N_4)/ d(r) = deriv[0+9]
     deriv[1 + 3 * 3 + p] =
-      0.25 * (1.0 - r) * (1.0 - t); // d(N_4)/ d(s) = deriv[1+9]
+      0.25 * (1.0 - r) * (1.0 - t);  // d(N_4)/ d(s) = deriv[1+9]
     deriv[2 + 3 * 3 + p] =
       -0.25 * (1.0 - r) * (1.0 + s); // d(N_4)/ d(t) = deriv[2+9]
 
-    deriv[0 + 3 * 4 + p] = 0.0; // d(N_5)/ d(r) = deriv[0+12]
-    deriv[1 + 3 * 4 + p] = 0.0; // d(N_5)/ d(s) = deriv[1+12]
-    deriv[2 + 3 * 4 + p] = 1.0; // d(N_5)/ d(t) = deriv[2+12]
+    deriv[0 + 3 * 4 + p] = 0.0;      // d(N_5)/ d(r) = deriv[0+12]
+    deriv[1 + 3 * 4 + p] = 0.0;      // d(N_5)/ d(s) = deriv[1+12]
+    deriv[2 + 3 * 4 + p] = 1.0;      // d(N_5)/ d(t) = deriv[2+12]
   }
 }
 

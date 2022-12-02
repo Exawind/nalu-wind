@@ -301,7 +301,7 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
   if (actMetaSimple.debug_output_) {
     NaluEnv::self().naluOutputP0()
       << " actMetaSimple.numPointsTotal_ = " << actMetaSimple.numPointsTotal_
-      << std::endl; // LCCOUT
+      << std::endl;                                   // LCCOUT
     NaluEnv::self().naluOutputP0()
       << "Done actuator_Simple_parse()" << std::endl; // LCCOUT
   }

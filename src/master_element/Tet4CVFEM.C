@@ -9,7 +9,6 @@
 
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFunctions.h>
-#include <master_element/MasterElementUtils.h>
 #include <master_element/Tet4CVFEM.h>
 #include <master_element/Hex8GeometryFunctions.h>
 

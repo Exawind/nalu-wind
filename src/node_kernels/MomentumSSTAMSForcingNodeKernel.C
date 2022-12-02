@@ -119,7 +119,7 @@ MomentumSSTAMSForcingNodeKernel::execute(
   NALU_ALIGNED NodeKernelTraits::DblType
     coords[NodeKernelTraits::NDimMax]; // coordinates
   NALU_ALIGNED NodeKernelTraits::DblType
-    avgU[NodeKernelTraits::NDimMax]; // averageVelocity
+    avgU[NodeKernelTraits::NDimMax];   // averageVelocity
   NALU_ALIGNED NodeKernelTraits::DblType
     fluctU[NodeKernelTraits::NDimMax]; // fluctuatingVelocity
 

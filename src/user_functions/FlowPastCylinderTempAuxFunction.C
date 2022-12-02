@@ -103,13 +103,13 @@ FlowPastCylinderTempAuxFunction::do_evaluate(
     double theta = 0.0;
     if (x < h_)
       if (y > k_)
-        theta = thetaRaw; // Q1
+        theta = thetaRaw;         // Q1
       else
         theta = 360.0 + thetaRaw; // Q4
     else if (y > k_)
-      theta = 180.0 - thetaRaw; // Q2
+      theta = 180.0 - thetaRaw;   // Q2
     else
-      theta = 180.0 - thetaRaw; // Q3
+      theta = 180.0 - thetaRaw;   // Q3
 
     // find the value via linear interpolation
     const double findT = interpolate_data(theta);

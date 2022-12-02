@@ -117,7 +117,7 @@ MotionWavesKernel::build_transformation(
     disp[1] = 0.;
     disp[2] =
       sealevelz_ +
-      (eps_ * stk::math::cos(phase) // first order term
+      (eps_ * stk::math::cos(phase)   // first order term
        + stk::math::pow(eps_, 2) * b22_ *
            stk::math::cos(2. * phase) // second order term
        + stk::math::pow(eps_, 3) * b31_ *
@@ -238,7 +238,7 @@ MotionWavesKernel::Stokes_coefficients()
   double CTh = (1 + stk::math::exp(-2. * kd)) /
                (1 - stk::math::exp(-2 * kd)); // Hyperbolic cotangent
 
-  a11_ = 1. / stk::math::sinh(kd); // Hyperbolic cosecant
+  a11_ = 1. / stk::math::sinh(kd);            // Hyperbolic cosecant
   c0_ = stk::math::sqrt(Th);
   // Second order coefficients
   a22_ = 3. * stk::math::pow(S, 2) / (2 * stk::math::pow(1 - S, 2));

@@ -47,11 +47,12 @@ InterpActuatorDensity::operator()(int index) const
 
     const int nodesPerElem = stkBulk_.num_nodes(elem);
 
-    // just allocate for largest expected size (hex27)
-    double ws_coordinates[81], ws_density[81];
+    // just allocate for largest expected size (hex8)
+    constexpr int max_size = 27;
+    double ws_coordinates[max_size], ws_density[max_size];
 
     // Check to make sure the size is sufficient
-    ThrowAssert(81 >= 3 * nodesPerElem);
+    ThrowAssert(max_size >= 3 * nodesPerElem);
 
     actuator_utils::gather_field(
       3, &ws_coordinates[0], *coordinates_, stkBulk_.begin_nodes(elem),

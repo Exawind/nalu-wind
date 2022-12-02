@@ -42,7 +42,7 @@
 #include <element_promotion/PromotedElementIO.h>
 #include <element_promotion/PromotedPartHelper.h>
 #include <element_promotion/HexNElementDescription.h>
-#include <master_element/QuadratureRule.h>
+#include <matrix_free/LobattoQuadratureRule.h>
 
 // mesh motion
 #include <mesh_motion/MeshMotionAlg.h>
@@ -4611,8 +4611,8 @@ Realm::promote_mesh()
   auto& coords = *meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "coordinates");
   if (!restarted_simulation()) {
-    const auto gllNodes =
-      gauss_lobatto_legendre_rule(promotionOrder_ + 1).first;
+    std::vector<double> gllNodes =
+      matrix_free::gauss_lobatto_legendre_abscissae(promotionOrder_);
     promotion::create_tensor_product_hex_elements(
       gllNodes, *bulkData_, coords, basePartVector_);
   } else {

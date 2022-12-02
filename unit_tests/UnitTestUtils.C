@@ -197,16 +197,6 @@ create_one_reference_quad4_element(stk::mesh::BulkData& bulk)
 }
 
 stk::mesh::Entity
-create_one_reference_quad9_element(stk::mesh::BulkData& bulk)
-{
-  std::vector<std::vector<double>> nodeLocations = {
-    {-1.0, -1.0}, {+1.0, -1.0}, {+1.0, +1.0}, {-1.0, +1.0}, {0.0, -1.0},
-    {+1.0, 0.0},  {0.0, +1.0},  {-1.0, 0.0},  {0.0, 0.0}};
-  return create_one_element(
-    bulk, stk::topology::QUADRILATERAL_9_2D, nodeLocations);
-}
-
-stk::mesh::Entity
 create_one_reference_tri3_element(stk::mesh::BulkData& bulk)
 {
   std::vector<std::vector<double>> nodeLocations = {
@@ -230,22 +220,6 @@ create_one_reference_hex8_element(stk::mesh::BulkData& bulk)
     {-0.5, +0.5, -0.5}, {-0.5, -0.5, +0.5}, {+0.5, -0.5, +0.5},
     {+0.5, +0.5, +0.5}, {-0.5, +0.5, +0.5}};
   return create_one_element(bulk, stk::topology::HEX_8, nodeLocations);
-}
-
-stk::mesh::Entity
-create_one_reference_hex27_element(stk::mesh::BulkData& bulk)
-{
-  std::vector<std::vector<double>> nodeLocations = {
-    {-1.0, -1.0, -1.0}, {+1.0, -1.0, -1.0}, {+1.0, +1.0, -1.0},
-    {-1.0, +1.0, -1.0}, {-1.0, -1.0, +1.0}, {+1.0, -1.0, +1.0},
-    {+1.0, +1.0, +1.0}, {-1.0, +1.0, +1.0}, {+0.0, -1.0, -1.0},
-    {+1.0, +0.0, -1.0}, {+0.0, +1.0, -1.0}, {-1.0, +0.0, -1.0},
-    {-1.0, -1.0, +0.0}, {+1.0, -1.0, +0.0}, {+1.0, +1.0, 0.0},
-    {-1.0, +1.0, +0.0}, {+0.0, -1.0, +1.0}, {+1.0, +0.0, +1.0},
-    {+0.0, +1.0, +1.0}, {-1.0, +0.0, +1.0}, {+0.0, +0.0, +0.0},
-    {+0.0, +0.0, -1.0}, {+0.0, +0.0, +1.0}, {-1.0, +0.0, +0.0},
-    {+1.0, +0.0, +0.0}, {+0.0, -1.0, +0.0}, {+0.0, +1.0, +0.0}};
-  return create_one_element(bulk, stk::topology::HEX_27, nodeLocations);
 }
 
 stk::mesh::Entity
@@ -279,9 +253,6 @@ create_one_reference_element(stk::mesh::BulkData& bulk, stk::topology topo)
   case stk::topology::QUADRILATERAL_4_2D:
     return create_one_reference_quad4_element(bulk);
 
-  case stk::topology::QUADRILATERAL_9_2D:
-    return create_one_reference_quad9_element(bulk);
-
   case stk::topology::TETRAHEDRON_4:
     return create_one_reference_tet4_element(bulk);
 
@@ -293,9 +264,6 @@ create_one_reference_element(stk::mesh::BulkData& bulk, stk::topology topo)
 
   case stk::topology::HEXAHEDRON_8:
     return create_one_reference_hex8_element(bulk);
-
-  case stk::topology::HEXAHEDRON_27:
-    return create_one_reference_hex27_element(bulk);
 
   default:
     EXPECT_TRUE(false) << " Element type " + topo.name() + " not implemented";
@@ -321,13 +289,6 @@ create_one_perturbed_element(stk::mesh::BulkData& bulk, stk::topology topo)
       {0.678973, -0.326374},
       {0.561782, 0.442191},
       {-0.601233, 0.278356}};
-    break;
-
-  case stk::topology::QUADRILATERAL_9_2D:
-    nodeLocations = {
-      {-0.953578, -0.827867}, {1.17897, -0.826374},  {1.06178, 0.942191},
-      {-1.10123, 0.778356},   {-0.113672, -1.01117}, {1.15608, -0.0100114},
-      {-0.0536076, 1.16804},  {-1.0813, 0.0740859},  {-0.0658792, 0.228578}};
     break;
 
   case stk::topology::TETRAHEDRON_4:
@@ -360,24 +321,6 @@ create_one_perturbed_element(stk::mesh::BulkData& bulk, stk::topology topo)
       {0.398767, 0.278356, -0.613672},   {-0.511167, 0.656084, -0.510011},
       {-0.553608, -0.331961, 0.418698},  {0.574086, -0.565879, 0.728578},
       {0.320175, 0.685044, 0.486804},    {-0.349545, 0.510239, 0.58944}};
-    break;
-
-  case stk::topology::HEXAHEDRON_27:
-    nodeLocations = {
-      {-0.953578, -0.827867, -0.821027},   {1.17363, -0.938218, -1.05781},
-      {0.898767, 0.778356, -1.11367},      {-1.01117, 1.15608, -1.01001},
-      {-1.05361, -0.831961, 0.918698},     {1.07409, -1.06588, 1.22858},
-      {0.820175, 1.18504, 0.986804},       {-0.849545, 1.01024, 1.08944},
-      {0.110316, -0.95899, -0.981313},     {1.12931, -0.197046, -1.0132},
-      {-0.156834, 1.11846, -1.14172},      {-1.18239, -0.0879295, -1.17516},
-      {-1.13884, -1.05676, 0.201299},      {0.974975, -0.943468, 0.201174},
-      {0.79964, 1.2349, 0.07657},          {-1.16455, 0.929076, 0.125343},
-      {0.0539153, -1.08748, 0.769213},     {1.06714, 0.229475, 1.0764},
-      {0.0675294, 1.24765, 1.04093},       {-1.04282, -0.0126512, 1.06176},
-      {-0.0809962, 0.0873762, -0.0913991}, {0.139173, 0.224786, -0.918737},
-      {-0.243214, 0.061423, 1.08683},      {-0.764028, 0.189097, 0.00481219},
-      {0.777857, -0.0244204, -0.240006},   {-0.0291445, -0.760207, -0.0702778},
-      {-0.00955323, 1.09433, 0.190238}};
     break;
 
   default:

@@ -217,25 +217,25 @@ wed_deriv(
     deriv(j, 0, 1) = -0.5 * (1.0 - xi); // d(N_1)/ d(s)  = deriv[1]
     deriv(j, 0, 2) = -0.5 * t;          // d(N_1)/ d(xi) = deriv[2]
 
-    deriv(j, 1, 0) = 0.5 * (1.0 - xi); // d(N_2)/ d(r)  = deriv[0 + 3]
-    deriv(j, 1, 1) = 0.0;              // d(N_2)/ d(s)  = deriv[1 + 3]
-    deriv(j, 1, 2) = -0.5 * r;         // d(N_2)/ d(xi) = deriv[2 + 3]
+    deriv(j, 1, 0) = 0.5 * (1.0 - xi);  // d(N_2)/ d(r)  = deriv[0 + 3]
+    deriv(j, 1, 1) = 0.0;               // d(N_2)/ d(s)  = deriv[1 + 3]
+    deriv(j, 1, 2) = -0.5 * r;          // d(N_2)/ d(xi) = deriv[2 + 3]
 
-    deriv(j, 2, 0) = 0.0;              // d(N_3)/ d(r)  = deriv[0 + 6]
-    deriv(j, 2, 1) = 0.5 * (1.0 - xi); // d(N_3)/ d(s)  = deriv[1 + 6]
-    deriv(j, 2, 2) = -0.5 * s;         // d(N_3)/ d(xi) = deriv[2 + 6]
+    deriv(j, 2, 0) = 0.0;               // d(N_3)/ d(r)  = deriv[0 + 6]
+    deriv(j, 2, 1) = 0.5 * (1.0 - xi);  // d(N_3)/ d(s)  = deriv[1 + 6]
+    deriv(j, 2, 2) = -0.5 * s;          // d(N_3)/ d(xi) = deriv[2 + 6]
 
     deriv(j, 3, 0) = -0.5 * (1.0 + xi); // d(N_4)/ d(r)  = deriv[0 + 9]
     deriv(j, 3, 1) = -0.5 * (1.0 + xi); // d(N_4)/ d(s)  = deriv[1 + 9]
     deriv(j, 3, 2) = 0.5 * t;           // d(N_4)/ d(xi) = deriv[2 + 9]
 
-    deriv(j, 4, 0) = 0.5 * (1.0 + xi); // d(N_5)/ d(r)  = deriv[0 + 12]
-    deriv(j, 4, 1) = 0.0;              // d(N_5)/ d(s)  = deriv[1 + 12]
-    deriv(j, 4, 2) = 0.5 * r;          // d(N_5)/ d(xi) = deriv[2 + 12]
+    deriv(j, 4, 0) = 0.5 * (1.0 + xi);  // d(N_5)/ d(r)  = deriv[0 + 12]
+    deriv(j, 4, 1) = 0.0;               // d(N_5)/ d(s)  = deriv[1 + 12]
+    deriv(j, 4, 2) = 0.5 * r;           // d(N_5)/ d(xi) = deriv[2 + 12]
 
-    deriv(j, 5, 0) = 0.0;              // d(N_6)/ d(r)  = deriv[0 + 15]
-    deriv(j, 5, 1) = 0.5 * (1.0 + xi); // d(N_6)/ d(s)  = deriv[1 + 15]
-    deriv(j, 5, 2) = 0.5 * s;          // d(N_6)/ d(xi) = deriv[2 + 15]
+    deriv(j, 5, 0) = 0.0;               // d(N_6)/ d(r)  = deriv[0 + 15]
+    deriv(j, 5, 1) = 0.5 * (1.0 + xi);  // d(N_6)/ d(s)  = deriv[1 + 15]
+    deriv(j, 5, 2) = 0.5 * s;           // d(N_6)/ d(xi) = deriv[2 + 15]
   }
 }
 
@@ -716,25 +716,25 @@ WedSCS::wedge_derivative(const int npts, const double* intgLoc, double* deriv)
     deriv[1 + 3 * 0 + p] = -0.5 * (1.0 - xi); // d(N_1)/ d(s)  = deriv[1]
     deriv[2 + 3 * 0 + p] = -0.5 * t;          // d(N_1)/ d(xi) = deriv[2]
 
-    deriv[0 + 3 * 1 + p] = 0.5 * (1.0 - xi); // d(N_2)/ d(r)  = deriv[0 + 3]
-    deriv[1 + 3 * 1 + p] = 0.0;              // d(N_2)/ d(s)  = deriv[1 + 3]
-    deriv[2 + 3 * 1 + p] = -0.5 * r;         // d(N_2)/ d(xi) = deriv[2 + 3]
+    deriv[0 + 3 * 1 + p] = 0.5 * (1.0 - xi);  // d(N_2)/ d(r)  = deriv[0 + 3]
+    deriv[1 + 3 * 1 + p] = 0.0;               // d(N_2)/ d(s)  = deriv[1 + 3]
+    deriv[2 + 3 * 1 + p] = -0.5 * r;          // d(N_2)/ d(xi) = deriv[2 + 3]
 
-    deriv[0 + 3 * 2 + p] = 0.0;              // d(N_3)/ d(r)  = deriv[0 + 6]
-    deriv[1 + 3 * 2 + p] = 0.5 * (1.0 - xi); // d(N_3)/ d(s)  = deriv[1 + 6]
-    deriv[2 + 3 * 2 + p] = -0.5 * s;         // d(N_3)/ d(xi) = deriv[2 + 6]
+    deriv[0 + 3 * 2 + p] = 0.0;               // d(N_3)/ d(r)  = deriv[0 + 6]
+    deriv[1 + 3 * 2 + p] = 0.5 * (1.0 - xi);  // d(N_3)/ d(s)  = deriv[1 + 6]
+    deriv[2 + 3 * 2 + p] = -0.5 * s;          // d(N_3)/ d(xi) = deriv[2 + 6]
 
     deriv[0 + 3 * 3 + p] = -0.5 * (1.0 + xi); // d(N_4)/ d(r)  = deriv[0 + 9]
     deriv[1 + 3 * 3 + p] = -0.5 * (1.0 + xi); // d(N_4)/ d(s)  = deriv[1 + 9]
     deriv[2 + 3 * 3 + p] = 0.5 * t;           // d(N_4)/ d(xi) = deriv[2 + 9]
 
-    deriv[0 + 3 * 4 + p] = 0.5 * (1.0 + xi); // d(N_5)/ d(r)  = deriv[0 + 12]
-    deriv[1 + 3 * 4 + p] = 0.0;              // d(N_5)/ d(s)  = deriv[1 + 12]
-    deriv[2 + 3 * 4 + p] = 0.5 * r;          // d(N_5)/ d(xi) = deriv[2 + 12]
+    deriv[0 + 3 * 4 + p] = 0.5 * (1.0 + xi);  // d(N_5)/ d(r)  = deriv[0 + 12]
+    deriv[1 + 3 * 4 + p] = 0.0;               // d(N_5)/ d(s)  = deriv[1 + 12]
+    deriv[2 + 3 * 4 + p] = 0.5 * r;           // d(N_5)/ d(xi) = deriv[2 + 12]
 
-    deriv[0 + 3 * 5 + p] = 0.0;              // d(N_6)/ d(r)  = deriv[0 + 15]
-    deriv[1 + 3 * 5 + p] = 0.5 * (1.0 + xi); // d(N_6)/ d(s)  = deriv[1 + 15]
-    deriv[2 + 3 * 5 + p] = 0.5 * s;          // d(N_6)/ d(xi) = deriv[2 + 15]
+    deriv[0 + 3 * 5 + p] = 0.0;               // d(N_6)/ d(r)  = deriv[0 + 15]
+    deriv[1 + 3 * 5 + p] = 0.5 * (1.0 + xi);  // d(N_6)/ d(s)  = deriv[1 + 15]
+    deriv[2 + 3 * 5 + p] = 0.5 * s;           // d(N_6)/ d(xi) = deriv[2 + 15]
   }
 }
 

@@ -104,8 +104,8 @@ private:
   double k_{
     2. *
     M_PI}; // Angular wavenumber k=2*pi/lambda (lambda being the wavenumber)
-  double sealevelz_{0.0}; // Sea level assumed to be at z=0
-  double c_{1.};          // wave phase velocity c
+  double sealevelz_{0.0};      // Sea level assumed to be at z=0
+  double c_{1.};               // wave phase velocity c
 
   bool do_rampup_{false};      // Logic to allow to ramp up waves
   double rampup_period_{10.0}; // rampup

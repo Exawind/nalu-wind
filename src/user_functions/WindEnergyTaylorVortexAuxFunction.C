@@ -77,7 +77,7 @@ WindEnergyTaylorVortexAuxFunction::do_evaluate(
 {
   const double tHat = (visc_ > 1.0e-30)
                         ? time * beta_ / rVortex_
-                        : 0.0; // zero out viscous terms if mu ~ 0
+                        : 0.0;               // zero out viscous terms if mu ~ 0
   const double Re = (visc_ > 1.0e-30) ? density_ * beta_ * rVortex_ / visc_
                                       : 0.0; // zero out viscous terms if mu ~ 0
   const double tFac = 1.0 + 2.0 * tHat / Re;

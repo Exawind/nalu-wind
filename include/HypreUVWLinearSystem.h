@@ -42,7 +42,7 @@ public:
   virtual void buildFaceElemToNodeGraph(
     const stk::mesh::PartVector& parts); // elem:face->node assembly
   virtual void buildNonConformalNodeGraph(
-    const stk::mesh::PartVector&); // nonConformal->elem_node assembly
+    const stk::mesh::PartVector&);       // nonConformal->elem_node assembly
   // overset->elem_node assembly
   /** Tag rows that must be handled as a Dirichlet BC node
    *
