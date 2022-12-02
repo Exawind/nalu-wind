@@ -92,8 +92,6 @@ SDRSSTLRAMSNodeKernel::execute(
   // Clip negative productions, consistent with TKE
   DblType Pk = stk::math::max(prod_.get(node, 0), 0.0);
 
-  // FIXME: Does this work with just average_dudx, or would this need some sort
-  // of AMS average like Pk?
   DblType chi_numer = 0.0;
   for (int i = 0; i < nDim_; ++i) {
     for (int j = 0; j < nDim_; ++j) {
@@ -114,7 +112,6 @@ SDRSSTLRAMSNodeKernel::execute(
   const DblType beta =
     0.072 * (1.0 + 70.0 * chi_omega) / (1.0 + 80.0 * chi_omega);
 
-  // JAM: Changes for SWH LowRe
   const DblType alpha0_star = 0.072 / 3.0;
   const DblType alpha_inf = alphaInf_;
   const DblType alpha0 = 1.0 / 9.0;
@@ -127,7 +124,6 @@ SDRSSTLRAMSNodeKernel::execute(
     betaStar_ * (4.0 / 15.0 + stk::math::pow(ReT / Rbeta, 4.0)) /
     (1.0 + stk::math::pow(ReT / Rbeta, 4.0));
 
-  // JAM: Added for SWH LowRe
   const DblType alpha_star = (alpha0_star + ReT / Rk) / (1.0 + ReT / Rk);
   const DblType alpha =
     (alpha_inf / alpha_star) * ((alpha0 + ReT / Rw) / (1.0 + ReT / Rw));
@@ -150,7 +146,6 @@ SDRSSTLRAMSNodeKernel::execute(
 
   // Pw includes 1/tvisc scaling; tvisc may be zero at a dirichlet low Re
   // approach (clip)
-  // JAM: Changes for SWH LowRe, check densities...
   const DblType Pw = gamma * Pk * sdr / stk::math::max(tke, 1.e-12);
   const DblType Dw = betaBlend * density * sdr * sdr;
   const DblType Sw = sigmaD * density * crossDiff / sdr;

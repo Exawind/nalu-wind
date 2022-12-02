@@ -82,7 +82,6 @@ SDRKOAMSNodeKernel::execute(
     crossDiff += dkdx_.get(node, i) * dwdx_.get(node, i);
   }
 
-  // FIXME: Is this going to work using average_dudx directly?
   DblType chi_numer = 0.0;
   for (int i = 0; i < nDim_; ++i) {
     for (int j = 0; j < nDim_; ++j) {
@@ -98,7 +97,6 @@ SDRKOAMSNodeKernel::execute(
     }
   }
 
-  // JAM: Changes for SWH LowRe
   const NodeKernelTraits::DblType alpha0_star = 0.072 / 3.0;
   const NodeKernelTraits::DblType alpha_inf = 0.52;
   const NodeKernelTraits::DblType alpha0 = 1.0 / 9.0;
@@ -117,7 +115,6 @@ SDRKOAMSNodeKernel::execute(
   const DblType beta =
     0.072 * (1.0 + 70.0 * chi_omega) / (1.0 + 80.0 * chi_omega);
 
-  // JAM: Added for SWH LowRe
   const NodeKernelTraits::DblType alpha_star =
     (alpha0_star + ReT / Rk) / (1.0 + ReT / Rk);
   const NodeKernelTraits::DblType alpha =
@@ -125,7 +122,6 @@ SDRKOAMSNodeKernel::execute(
 
   // Pw includes 1/tvisc scaling; tvisc may be zero at a dirichlet low Re
   // approach (clip)
-  // JAM: Changes for SWH LowRe, check densities...
   const NodeKernelTraits::DblType Pw =
     alpha * Pk * sdr / stk::math::max(tke, 1.e-12);
   // Production term with appropriate clipping of tvisc

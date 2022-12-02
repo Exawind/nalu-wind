@@ -80,6 +80,8 @@ private:
   const double betaStar_;
   const double CMdeg_;
   const double aspectRatioSwitch_;
+  const double alphaPow_;
+  const double alphaScaPow_;
 
   const int nDim_;
 

@@ -67,7 +67,6 @@ TKEKOAMSNodeKernel::execute(
 
   DblType Pk = prod_.get(node, 0);
 
-  // JAM: Changes for SWH LowRe
   const DblType ReT = density * tke / sdr / visc;
   const DblType Rbeta = 8.0;
   const DblType betaStarLowRe =

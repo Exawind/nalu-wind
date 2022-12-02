@@ -39,6 +39,7 @@ private:
   const DblType avgTimeCoeff_;
   const DblType alphaPow_;
   const DblType alphaScaPow_;
+  const DblType coeffR_;
   const bool meshMotion_;
   const bool RANSBelowKs_;
   const DblType z0_;

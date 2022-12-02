@@ -63,7 +63,6 @@ SSTLRAMSAveragesAlg::SSTLRAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     Mij_(get_field_ordinal(realm.meta_data(), "metric_tensor")),
     wallDist_(get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall")),
 
-    // JAM: Adding storage for debugging
     magPM_(get_field_ordinal(realm.meta_data(), "PMmag")),
     PMmax_(get_field_ordinal(realm.meta_data(), "maxPM")),
     PM1_(get_field_ordinal(realm.meta_data(), "PM1")),
@@ -116,7 +115,6 @@ SSTLRAMSAveragesAlg::execute()
   const auto wallDist = fieldMgr.get_field<double>(wallDist_);
   const auto fOneBlend = fieldMgr.get_field<double>(fOneBlend_);
 
-  // JAM: Adding storage for debugging
   auto magPM = fieldMgr.get_field<double>(magPM_);
   auto PMmax = fieldMgr.get_field<double>(PMmax_);
   auto PM1 = fieldMgr.get_field<double>(PM1_);
@@ -148,7 +146,6 @@ SSTLRAMSAveragesAlg::execute()
         beta.get(mi, 0) = stk::math::max(beta.get(mi, 0), beta_kol_local);
       }
 
-      // JAM: SWH LoRe SST Changes
       const DblType alpha = stk::math::pow(beta.get(mi, 0), alphaPow);
 
       const DblType ReT =
@@ -162,11 +159,6 @@ SSTLRAMSAveragesAlg::execute()
 
       // store RANS time scale
       avgTime.get(mi, 0) = 1.0 / (betaStarBlend * sdr.get(mi, 0));
-
-      // JAM: SWH LoRe SST Changes
-      // const DblType epsilon = betaStar * tke.get(mi, 0) * sdr.get(mi, 0);
-      // avgTime.get(mi, 0) = stk::math::max(avgTime.get(mi,
-      // 0), 6.0*stk::math::sqrt(visc.get(mi, 0) / epsilon));
 
       // causal time average ODE: d<phi>/dt = 1/avgTime * (phi - <phi>)
       const DblType weightAvg =
@@ -218,7 +210,6 @@ SSTLRAMSAveragesAlg::execute()
         }
       }
 
-      // JAM: FIXME: Should this be subtraction?? Compare to nek5000...
       DblType P_res = 0.0;
       for (int i = 0; i < nalu_ngp::NDimMax; ++i) {
         for (int j = 0; j < nalu_ngp::NDimMax; ++j) {
@@ -308,10 +299,6 @@ SSTLRAMSAveragesAlg::execute()
       const DblType epsilon13 = stk::math::pow(
         betaStarBlend * tke.get(mi, 0) * sdr.get(mi, 0), 1.0 / 3.0);
 
-      // JAM: Changes for LowRe
-      // const DblType arScale = stk::math::if_then_else(
-      //  aspectRatio > aspectRatioSwitch,
-      //  1.0 - stk::math::tanh((aspectRatio - aspectRatioSwitch) / 10.0), 1.0);
       const DblType arScale =
         1.0 - stk::math::tanh(stk::math::max(avgResAdeq.get(mi, 0) - 1.0, 0.0));
 
@@ -335,8 +322,6 @@ SSTLRAMSAveragesAlg::execute()
             // M43_jkdkui') where <eps> is the mean dissipation backed out from
             // the SST mean k and mean omega and dkuj' is the fluctuating
             // velocity gradients.
-            // JAM: Changes for LowRe
-            // const DblType coeffSGET = CM43scale * CM43 * epsilon13;
             const DblType coeffSGET = CMdeg * epsilon13;
             const DblType fluctDudx_jl =
               dudx.get(mi, j * nalu_ngp::NDimMax + l) -
@@ -348,7 +333,6 @@ SSTLRAMSAveragesAlg::execute()
               coeffSGET * arScale *
               (M43[i][l] * fluctDudx_jl + M43[j][l] * fluctDudx_il);
           }
-          // JAM: FIXME: I need to check these densities...
           tauSGET[i][j] += arInvScale * tvisc.get(mi, 0) / density.get(mi, 0) *
                            (dudx.get(mi, i * nalu_ngp::NDimMax + j) -
                             avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
@@ -356,14 +340,6 @@ SSTLRAMSAveragesAlg::execute()
                             avgDudx.get(mi, j * nalu_ngp::NDimMax + i));
         }
       }
-
-      // Remove trace of tauSGET
-      // DblType tauSGET_tr = 0.0;
-      // for (int i = 0; i < nalu_ngp::NDimMax; ++i)
-      //  tauSGET_tr += tauSGET[i][i];
-
-      // for (int i = 0; i < nalu_ngp::NDimMax; ++i)
-      //   tauSGET[i][i] -= tauSGET_tr / nalu_ngp::NDimMax;
 
       // Calculate the full subgrid stress including the isotropic portion
       for (int i = 0; i < nalu_ngp::NDimMax; ++i)
@@ -396,9 +372,6 @@ SSTLRAMSAveragesAlg::execute()
       const DblType v2 =
         1.0 / v2cMu *
         (tvisc.get(mi, 0) / density.get(mi, 0) / avgTime.get(mi, 0));
-      // JAM: Changes for SWH LowRe
-      // const DblType PMscale = stk::math::pow(1.5 * beta.get(mi, 0) * v2,
-      // -1.5);
       const DblType PMscale =
         coeffR * stk::math::pow(beta.get(mi, 0) * v2, -1.5);
 
@@ -415,8 +388,6 @@ SSTLRAMSAveragesAlg::execute()
           for (int j = 0; j < nalu_ngp::NDimMax; ++j)
             PMmag += PM[i][j] * PM[i][j];
 
-        // JAM: Changes for SWH LowRe
-        // PMmag = stk::math::sqrt(PMmag);
         PMmag = 0.5 * stk::math::sqrt(PMmag);
 
         EigenDecomposition::general_eigenvalues<DblType>(PM, Q, D);
@@ -425,28 +396,13 @@ SSTLRAMSAveragesAlg::execute()
         DblType maxPM =
           stk::math::max(D[0][0], stk::math::max(D[1][1], D[2][2]));
 
-        // JAM: Debugging
         magPM.get(mi, 0) = PMmag;
         PMmax.get(mi, 0) = maxPM;
         PM1.get(mi, 0) = D[0][0];
         PM2.get(mi, 0) = D[1][1];
         PM3.get(mi, 0) = D[2][2];
 
-        // JAM: Changes for SWH LowRe
-        // Update the instantaneous resAdeq field
-        // resAdeq.get(mi, 0) =
-        //  stk::math::max(stk::math::min(maxPM, PMmag), 0.00000001);
         resAdeq.get(mi, 0) = PMmag;
-
-        // JAM: Changes for SWH LowRe -> no limiters on resAdeq...
-        // resAdeq.get(mi, 0) = stk::math::min(resAdeq.get(mi, 0), 30.0);
-
-        // if (alpha >= 1.0) {
-        //   resAdeq.get(mi, 0) = stk::math::min(resAdeq.get(mi, 0), 1.0);
-        // }
-
-        // if (alpha <= beta_kol_local)
-        //   resAdeq.get(mi, 0) = stk::math::max(resAdeq.get(mi, 0), 1.0);
       }
 
       avgResAdeq.get(mi, 0) =

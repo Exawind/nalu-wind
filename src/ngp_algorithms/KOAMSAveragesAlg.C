@@ -27,6 +27,9 @@ KOAMSAveragesAlg::KOAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     CMdeg_(realm.get_turb_model_constant(TM_CMdeg)),
     v2cMu_(realm.get_turb_model_constant(TM_v2cMu)),
     aspectRatioSwitch_(realm.get_turb_model_constant(TM_aspRatSwitch)),
+    alphaPow_(realm.get_turb_model_constant(TM_alphaPow)),
+    alphaScaPow_(realm.get_turb_model_constant(TM_alphaScaPow)),
+    coeffR_(realm.get_turb_model_constant(TM_coeffR)),
     meshMotion_(realm.does_mesh_move()),
     velocity_(get_field_ordinal(realm.meta_data(), "velocity")),
     density_(get_field_ordinal(realm.meta_data(), "density")),
@@ -109,6 +112,9 @@ KOAMSAveragesAlg::execute()
   const DblType v2cMu = v2cMu_;
   const DblType beta_kol_local = beta_kol;
   const DblType aspectRatioSwitch = aspectRatioSwitch_;
+  const DblType alphaPow = alphaPow_;
+  const DblType alphaScaPow = alphaScaPow_;
+  const DblType coeffR = coeffR_;
 
   nalu_ngp::run_entity_algorithm(
     "KOAMSAveragesAlg_computeAverages", ngpMesh, stk::topology::NODE_RANK, sel,
@@ -126,7 +132,7 @@ KOAMSAveragesAlg::execute()
         beta.get(mi, 0) = stk::math::max(beta.get(mi, 0), beta_kol_local);
       }
 
-      const DblType alpha = stk::math::pow(beta.get(mi, 0), 1.7);
+      const DblType alpha = stk::math::pow(beta.get(mi, 0), alphaPow);
 
       const DblType ReT =
         density.get(mi, 0) * tke.get(mi, 0) / sdr.get(mi, 0) / visc.get(mi, 0);
@@ -170,7 +176,8 @@ KOAMSAveragesAlg::execute()
           const DblType avgSij =
             0.5 * (avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
                    avgDudx.get(mi, j * nalu_ngp::NDimMax + i));
-          tij[i][j] = 2.0 * alpha * (2.0 - alpha) * tvisc.get(mi, 0) * avgSij;
+          tij[i][j] = 2.0 * stk::math::pow(alpha, alphaScaPow) * (2.0 - alpha) *
+                      tvisc.get(mi, 0) * avgSij;
         }
       }
 
@@ -288,8 +295,8 @@ KOAMSAveragesAlg::execute()
           // the SST model and <S_ij> is the strain rate tensor based on the
           // mean quantities... i.e this is (tauSGRS = alpha*tauSST)
           // The 2 in the coeff cancels with the 1/2 in the strain rate tensor
-          const DblType coeffSGRS =
-            alpha * (2.0 - alpha) * tvisc.get(mi, 0) / density.get(mi, 0);
+          const DblType coeffSGRS = stk::math::pow(alpha, alphaScaPow) *
+                   (2.0 - alpha) * tvisc.get(mi, 0) / density.get(mi, 0);
           tauSGRS[i][j] = avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
                           avgDudx.get(mi, j * nalu_ngp::NDimMax + i);
           tauSGRS[i][j] *= coeffSGRS;
@@ -357,7 +364,7 @@ KOAMSAveragesAlg::execute()
       const DblType v2 =
         1.0 / v2cMu *
         (tvisc.get(mi, 0) / density.get(mi, 0) / avgTime.get(mi, 0));
-      const DblType PMscale = stk::math::pow(1.5 * beta.get(mi, 0) * v2, -1.5);
+      const DblType PMscale = coeffR * stk::math::pow(1.5 * beta.get(mi, 0) * v2, -1.5);
 
       // Handle case where tke = 0, should only occur at a wall boundary
       if (tke.get(mi, 0) == 0.0)

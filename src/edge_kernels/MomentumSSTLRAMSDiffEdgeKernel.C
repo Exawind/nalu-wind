@@ -136,9 +136,6 @@ MomentumSSTLRAMSDiffEdgeKernel::execute(
     stk::math::min(D[0][0], stk::math::min(D[1][1], D[2][2]));
   const EdgeKernelTraits::DblType aspectRatio = maxEigM / minEigM;
 
-  //  const EdgeKernelTraits::DblType arScale = stk::math::if_then_else(
-  //    aspectRatio > aspectRatioSwitch_,
-  //    1.0 - stk::math::tanh((aspectRatio - aspectRatioSwitch_) / 10.0), 1.0);
   const EdgeKernelTraits::DblType arScale =
     1.0 - stk::math::tanh(stk::math::max(
             0.5 * (avgResAdeq_.get(nodeL, 0) + avgResAdeq_.get(nodeR, 0)) - 1.0,
@@ -269,11 +266,6 @@ MomentumSSTLRAMSDiffEdgeKernel::execute(
       EdgeKernelTraits::DblType rhsfacDiff_i = 0.0;
       EdgeKernelTraits::DblType lhsfacDiff_i = 0.0;
       for (int k = 0; k < ndim; ++k) {
-        // JAM: Changes for SWH LowRe
-        // lhsfacDiff_i += -rhoIp * CM43scale * CM43 * epsilon13Ip * arScale *
-        //               M43[j][k] * av[k] * av[j] * inv_axdx;
-        // rhsfacDiff_i += -rhoIp * CM43scale * CM43 * epsilon13Ip * arScale *
-        //                M43[j][k] * fluctdUidxj[i][k] * av[j];
         lhsfacDiff_i += -rhoIp * CMdeg_ * epsilon13Ip * arScale * M43[j][k] *
                         av[k] * av[j] * inv_axdx;
         rhsfacDiff_i += -rhoIp * CMdeg_ * epsilon13Ip * arScale * M43[j][k] *
@@ -302,11 +294,6 @@ MomentumSSTLRAMSDiffEdgeKernel::execute(
       EdgeKernelTraits::DblType rhsfacDiff_j = 0.0;
       EdgeKernelTraits::DblType lhsfacDiff_j = 0.0;
       for (int k = 0; k < ndim; ++k) {
-        // JAM: Changes for SWH LowRe
-        // lhsfacDiff_j += -rhoIp * CM43scale * CM43 * epsilon13Ip * arScale *
-        //                M43[i][k] * av[k] * av[j] * inv_axdx;
-        // rhsfacDiff_j += -rhoIp * CM43scale * CM43 * epsilon13Ip * arScale *
-        //                M43[i][k] * fluctdUidxj[j][k] * av[j];
         lhsfacDiff_j += -rhoIp * CMdeg_ * epsilon13Ip * arScale * M43[i][k] *
                         av[k] * av[j] * inv_axdx;
         rhsfacDiff_j += -rhoIp * CMdeg_ * epsilon13Ip * arScale * M43[i][k] *

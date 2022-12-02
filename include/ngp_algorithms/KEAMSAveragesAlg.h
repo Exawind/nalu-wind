@@ -35,6 +35,9 @@ private:
   const DblType CMdeg_;
   const DblType v2cMu_;
   const DblType aspectRatioSwitch_;
+  const DblType alphaPow_;
+  const DblType alphaScaPow_;
+  const DblType coeffR_;
   const bool meshMotion_;
 
   unsigned velocity_{stk::mesh::InvalidOrdinal};

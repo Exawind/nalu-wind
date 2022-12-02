@@ -31,6 +31,7 @@ SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     avgTimeCoeff_(realm.get_turb_model_constant(TM_avgTimeCoeff)),
     alphaPow_(realm.get_turb_model_constant(TM_alphaPow)),
     alphaScaPow_(realm.get_turb_model_constant(TM_alphaScaPow)),
+    coeffR_(realm.get_turb_model_constant(TM_coeffR)),
     meshMotion_(realm.does_mesh_move()),
     RANSBelowKs_(realm_.solutionOptions_->RANSBelowKs_),
     z0_(realm_.solutionOptions_->roughnessHeight_),
@@ -125,6 +126,7 @@ SSTAMSAveragesAlg::execute()
   const auto lengthScaleLimiter = lengthScaleLimiter_;
   const DblType alphaPow = alphaPow_;
   const DblType alphaScaPow = alphaScaPow_;
+  const DblType coeffR = coeffR_;
 
   const bool RANSBelowKs = RANSBelowKs_;
   DblType k_s = 0;
@@ -391,7 +393,7 @@ SSTAMSAveragesAlg::execute()
       const DblType v2 =
         1.0 / v2cMu *
         (tvisc.get(mi, 0) / density.get(mi, 0) / avgTime.get(mi, 0));
-      const DblType PMscale = stk::math::pow(1.5 * beta.get(mi, 0) * v2, -1.5);
+      const DblType PMscale = coeffR * stk::math::pow(1.5 * beta.get(mi, 0) * v2, -1.5);
 
       // Handle case where tke = 0, should only occur at a wall boundary
       if (tke.get(mi, 0) == 0.0)
