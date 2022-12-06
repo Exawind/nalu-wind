@@ -163,7 +163,7 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     } else if (simStartType == "restartDriverInitFAST") {
       fi.simStart = fast::restartDriverInitFAST;
     }
-    get_required(y_actuator, "n_every_checkpoint", fi.nEveryCheckPoint);
+    get_required(y_actuator, "restartFreq", fi.restartFreq);
     get_required(y_actuator, "dt_fast", fi.dtFAST);
 
     get_required(y_actuator, "t_max", fi.tMax);
@@ -174,29 +174,28 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
       // Removed inputs from fast API may want to if/def later
       // get_required(y_actuator, "num_sc_inputs", fi.numScInputs);
       // get_required(y_actuator, "num_sc_outputs", fi.numScOutputs);
-    }
 
-    fi.globTurbineData.resize(fi.nTurbinesGlob);
+      fi.globTurbineData.resize(fi.nTurbinesGlob);
 
-    for (int iTurb = 0; iTurb < fi.nTurbinesGlob; iTurb++) {
-      if (y_actuator["Turbine" + std::to_string(iTurb)]) {
+      for (int iTurb = 0; iTurb < fi.nTurbinesGlob; iTurb++) {
+        if (y_actuator["Turbine" + std::to_string(iTurb)]) {
 
-        const YAML::Node cur_turbine =
-          y_actuator["Turbine" + std::to_string(iTurb)];
+          const YAML::Node cur_turbine =
+            y_actuator["Turbine" + std::to_string(iTurb)];
 
-        readTurbineData(iTurb, actMetaFAST, cur_turbine);
-      } else {
-        throw std::runtime_error(
-          "Node for Turbine" + std::to_string(iTurb) +
-          " not present in input file or I cannot read it");
+          readTurbineData(iTurb, actMetaFAST, cur_turbine);
+        } else {
+          throw std::runtime_error(
+            "Node for Turbine" + std::to_string(iTurb) +
+            " not present in input file or I cannot read it");
+        }
       }
-    }
 
-  } else {
-    throw std::runtime_error("Number of turbines <= 0 ");
+    } else {
+      throw std::runtime_error("Number of turbines <= 0 ");
+    }
+    return actMetaFAST;
   }
-  return actMetaFAST;
-}
 
 } // namespace nalu
 } // namespace sierra

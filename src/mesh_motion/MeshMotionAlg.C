@@ -1,6 +1,8 @@
 #include "mesh_motion/MeshMotionAlg.h"
 
 #include "mesh_motion/FrameMoving.h"
+#include "mesh_motion/FrameOpenFAST.h"
+
 #include "NaluParsing.h"
 
 #include <cassert>

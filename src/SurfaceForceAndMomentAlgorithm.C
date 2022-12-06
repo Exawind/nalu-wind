@@ -108,6 +108,7 @@ SurfaceForceAndMomentAlgorithm::SurfaceForceAndMomentAlgorithm(
     throw std::runtime_error(
       "SurfaceForce: parameter length wrong; expect nDim");
 
+<<<<<<< HEAD
   // deal with file name and banner
   if (NaluEnv::self().parallel_rank() == 0) {
     std::ofstream myfile;
@@ -120,6 +121,9 @@ SurfaceForceAndMomentAlgorithm::SurfaceForceAndMomentAlgorithm(
     myfile.close();
   }
 }
+=======
+}
+>>>>>>> f/br_fsi_4
 
 //--------------------------------------------------------------------------
 //-------- destructor ------------------------------------------------------
@@ -342,6 +346,7 @@ SurfaceForceAndMomentAlgorithm::execute()
           // accumulate viscous force and set tau for component i
           ws_v_force[i] += dflux;
           viscousForce[i] += ws_v_force[i];
+          tauWall[i] += dflux;
           ws_tau[i] = tauijNj;
         }
 

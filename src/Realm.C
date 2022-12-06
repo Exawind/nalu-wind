@@ -29,8 +29,6 @@
 #include <NonConformalManager.h>
 #include <NonConformalInfo.h>
 #include <OutputInfo.h>
-#include <PostProcessingInfo.h>
-#include <PostProcessingData.h>
 #include <PecletFunction.h>
 #include <PeriodicManager.h>
 #include <Realms.h>
@@ -63,6 +61,9 @@
 
 // actuator line/fsi
 #include <aero/AeroContainer.h>
+
+// OpenFAST coupling
+#include <OpenfastFSI.h>
 
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <wind_energy/SyntheticLidar.h>
@@ -199,10 +200,10 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     currentNonlinearIteration_(1),
     solutionOptions_(new SolutionOptions()),
     outputInfo_(new OutputInfo()),
-    postProcessingInfo_(new PostProcessingInfo()),
     solutionNormPostProcessing_(NULL),
     turbulenceAveragingPostProcessing_(NULL),
     dataProbePostProcessing_(NULL),
+    openfast_(NULL),
     ablForcingAlg_(NULL),
     nodeCount_(0),
     estimateMemoryOnly_(false),
@@ -278,7 +279,6 @@ Realm::~Realm()
 
   delete solutionOptions_;
   delete outputInfo_;
-  delete postProcessingInfo_;
 
   // post processing-like objects
   if (NULL != solutionNormPostProcessing_)
@@ -289,6 +289,9 @@ Realm::~Realm()
 
   if (NULL != dataProbePostProcessing_)
     delete dataProbePostProcessing_;
+
+  if (NULL != openfast_)
+    delete openfast_;
 
   // delete non-conformal related things
   if (NULL != nonConformalManager_)
@@ -410,6 +413,11 @@ Realm::initialize_prolog()
   if (doPromotion_) {
     setup_element_promotion();
   }
+
+  // setup OpenFAST FSI stuff
+  if (openfast_ != NULL)
+    openfast_->setup();
+
   // field registration
   setup_nodal_fields();
   setup_edge_fields();
@@ -787,8 +795,15 @@ Realm::load(const YAML::Node& node)
   create_mesh();
   spatialDimension_ = meta_data().spatial_dimension();
 
-  // post processing
-  postProcessingInfo_->load(node);
+  // look for OpenFAST FSI stuff
+  if (node["openfast_fsi"]) {
+
+    const YAML::Node openfastNode = node["openfast_fsi"];
+      openfast_ = new OpenfastFSI(meta_data(), bulk_data(),
+                                  openfastNode));
+      if (openfast_->get_meshmotion())
+        solutionOptions_->meshMotion_ = true;
+  }
 
   // boundary, init, material and equation systems "load"
   if (type_ == "multi_physics") {
@@ -883,7 +898,7 @@ void
 Realm::setup_nodal_fields()
 {
 #ifdef NALU_USES_HYPRE
-  hypreGlobalId_ = &(meta_data().declare_field<HypreIDFieldType>(
+  &(meta_data().declare_field<HypreIDFieldType>(
     stk::topology::NODE_RANK, "hypre_global_id"));
 #endif
   tpetGlobalId_ = &(meta_data().declare_field<TpetIDFieldType>(
@@ -1192,8 +1207,8 @@ Realm::enforce_bc_on_exposed_faces()
             << std::endl;
         }
 
-        // extract the element relations to report to the user and the number of
-        // elements connected
+        // extract the element relations to report to the user and the number
+        // of elements connected
         const stk::mesh::Entity* face_elem_rels =
           bulkData_->begin_elements(face);
         const unsigned numberOfElems = bulkData_->num_elements(face);
@@ -1356,11 +1371,11 @@ Realm::setup_property()
           // check for species-based cp
           if (matData->cpConstMap_.size() > 0.0) {
             if (uniformFlow_) {
-              throw std::runtime_error(
-                "uniform flow cp should simply use the single-valued constant");
+              throw std::runtime_error("uniform flow cp should simply use "
+                                       "the single-valued constant");
             } else {
-              // props computed based on local mass fractions, however, constant
-              // per species k
+              // props computed based on local mass fractions, however,
+              // constant per species k
               theCpPropEval = new SpecificHeatConstCpkPropertyEvaluator(
                 matData->cpConstMap_, meta_data());
               theEnthPropEval = new EnthalpyConstCpkPropertyEvaluator(
@@ -1454,9 +1469,9 @@ Realm::setup_property()
 
             if (uniformFlow_) {
               // props computed based on YkRef and Tref
-              throw std::runtime_error(
-                "Realm::setup_property: Sorry, polynomial visc Ykref and Tref "
-                "is not supported");
+              throw std::runtime_error("Realm::setup_property: Sorry, "
+                                       "polynomial visc Ykref and Tref "
+                                       "is not supported");
             } else {
               // props computed based on Yk and Tref
               viscPropEval = new SutherlandsYkTrefPropertyEvaluator(
@@ -1644,8 +1659,8 @@ Realm::setup_property()
           propertyAlg_.push_back(auxAlg);
 
         } else {
-          throw std::runtime_error(
-            "Realm::setup_property: ideal_gas_yk only supported for density:");
+          throw std::runtime_error("Realm::setup_property: ideal_gas_yk only "
+                                   "supported for density:");
         }
       } break;
 
@@ -1757,8 +1772,9 @@ Realm::augment_property_map(
 void
 Realm::makeSureNodesHaveValidTopology()
 {
-  // To make sure nodes have valid topology, we have to make sure they are in a
-  // part that has NODE topology. So first, let's obtain the node topology part:
+  // To make sure nodes have valid topology, we have to make sure they are in
+  // a part that has NODE topology. So first, let's obtain the node topology
+  // part:
   const stk::mesh::Part& nodePart =
     bulkData_->mesh_meta_data().get_topology_root_part(stk::topology::NODE);
   stk::mesh::Selector nodesNotInNodePart =
@@ -1786,6 +1802,10 @@ Realm::update_geometry_due_to_mesh_motion()
     compute_geometry();
 
     meshMotionAlg_->post_compute_geometry();
+
+    /* if (openfast_ != NULL) { */
+    /*   openfast_->compute_div_mesh_velocity(); */
+    /* } */
 
     // and non-conformal algorithm
     if (hasNonConformal_)
@@ -1863,8 +1883,8 @@ Realm::advance_time_step()
     << "----------" << std::setw(16) << std::right << "-----------"
     << std::setw(14) << std::right << "----------" << std::endl;
 
-  // evaluate new geometry based on latest mesh motion geometry state (provided
-  // that external is active)
+  // evaluate new geometry based on latest mesh motion geometry state
+  // (provided that external is active)
   if (solutionOptions_->externalMeshDeformation_)
     compute_geometry();
 
@@ -2164,8 +2184,8 @@ Realm::input_variables_from_mesh()
         ? stk::io::MeshField::LINEAR_INTERPOLATION
         : stk::io::MeshField::CLOSEST;
 
-    // check for periodic cycling of data based on start time and periodic time;
-    // scale time set to unity
+    // check for periodic cycling of data based on start time and periodic
+    // time; scale time set to unity
     if (solutionOptions_->inputVariablesPeriodicTime_ > 0.0) {
       ioBroker_->get_mesh_database(inputMeshIdx_)
         .set_periodic_time(
@@ -2435,6 +2455,7 @@ Realm::get_coordinates_name()
 bool
 Realm::has_mesh_motion() const
 {
+  return true;
   return solutionOptions_->meshMotion_;
 }
 
@@ -3131,10 +3152,10 @@ Realm::provide_output()
       if (g_elapsedWallTime > outputInfo_->userWallTimeResults_.second) {
         forcedOutput = true;
         outputInfo_->userWallTimeResults_.first = false;
-        NaluEnv::self().naluOutputP0()
-          << "Realm::provide_output()::Forced Result output will be processed "
-             "at current time: "
-          << currentTime << std::endl;
+        NaluEnv::self().naluOutputP0() << "Realm::provide_output()::Forced "
+                                          "Result output will be processed "
+                                          "at current time: "
+                                       << currentTime << std::endl;
         NaluEnv::self().naluOutputP0()
           << " Elapsed (max) WALL time: " << g_elapsedWallTime << " (hours)"
           << std::endl;
@@ -3283,8 +3304,6 @@ Realm::swap_states()
   bulkData_->update_field_data_states();
 
 #if defined(KOKKOS_ENABLE_GPU)
-  if (get_time_step_count() < 2)
-    return;
 
   const auto& fieldMgr = ngp_field_manager();
   for (const auto fld : meta_data().get_fields()) {
@@ -3381,10 +3400,10 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
           << "The user may desire to set the "
              "support_inconsistent_multi_state_restart Realm line command"
           << std::endl;
-        NaluEnv::self().naluOutputP0()
-          << "This is applicable for a BDF2 restart run from a previously run "
-             "Backward Euler simulation"
-          << std::endl;
+        NaluEnv::self().naluOutputP0() << "This is applicable for a BDF2 "
+                                          "restart run from a previously run "
+                                          "Backward Euler simulation"
+                                       << std::endl;
       }
     }
     NaluEnv::self().naluOutputP0()
@@ -3501,12 +3520,12 @@ Realm::set_hypre_global_id()
 #ifdef NALU_USES_HYPRE
   /* Create a mapping of Nalu Global ID (nodes) to Hypre Global ID.
    *
-   * Background: Hypre requires a contiguous mapping of row IDs for its IJMatrix
-   * and IJVector data structure, i.e., the startID(iproc+1) = endID(iproc) + 1.
-   * Therefore, this method first determines the total number of rows in each
-   * paritition and then determines the starting and ending IDs for the Hypre
-   * matrix and finally assigns the hypre ID for all the nodes on this partition
-   * in the hypreGlobalId_ field.
+   * Background: Hypre requires a contiguous mapping of row IDs for its
+   * IJMatrix and IJVector data structure, i.e., the startID(iproc+1) =
+   * endID(iproc) + 1. Therefore, this method first determines the total
+   * number of rows in each paritition and then determines the starting and
+   * ending IDs for the Hypre matrix and finally assigns the hypre ID for all
+   * the nodes on this partition in the hypreGlobalId_ field.
    */
 
   // Fill with an invalid value for future error checking
@@ -3652,7 +3671,8 @@ Realm::check_job(bool get_node_count)
   }
 
   /// estimate memory based on N*bandwidth, N = nodeCount*nDOF,
-  ///   bandwidth = NCon(=27 for Hex mesh)*nDOF - we are very conservative here
+  ///   bandwidth = NCon(=27 for Hex mesh)*nDOF - we are very conservative
+  ///   here
   unsigned BWFactor = 27;
   if (doPromotion_) {
     // Ignore boundary terms and assume a structured mesh
@@ -4394,6 +4414,28 @@ Realm::augment_transfer_vector(
   }
 }
 
+/* //--------------------------------------------------------------------------
+ */
+/* //-------- process_init_multi_physics_transfer -----------------------------
+ */
+/* //--------------------------------------------------------------------------
+ */
+/* void */
+/* Realm::process_init_multi_physics_transfer() */
+/* { */
+/*   double timeXfer = -NaluEnv::self().nalu_time(); */
+
+/*   if (!hasMultiPhysicsTransfer_) */
+/*     return; */
+
+/*   std::vector<Transfer*>::iterator ii; */
+/*   for (ii = multiPhysicsTransferVec_.begin(); */
+/*        ii != multiPhysicsTransferVec_.end(); ++ii) */
+/*     (*ii)->execute(); */
+/*   timeXfer += NaluEnv::self().nalu_time(); */
+/*   timerTransferExecute_ += timeXfer; */
+/* } */
+
 //--------------------------------------------------------------------------
 //-------- process_multi_physics_transfer ----------------------------------
 //--------------------------------------------------------------------------
@@ -4404,6 +4446,10 @@ Realm::process_multi_physics_transfer()
     return;
 
   double timeXfer = -NaluEnv::self().nalu_time();
+
+  /* if (openfast_ != NULL) */
+  /*   openfast_->predict_struct_timestep(get_current_time()); */
+
   std::vector<Transfer*>::iterator ii;
   for (ii = multiPhysicsTransferVec_.begin();
        ii != multiPhysicsTransferVec_.end(); ++ii)
@@ -4432,7 +4478,8 @@ Realm::process_initialization_transfer()
 }
 
 //--------------------------------------------------------------------------
-//-------- process_io_transfer ------------------------------------------------
+//-------- process_io_transfer
+//------------------------------------------------
 //--------------------------------------------------------------------------
 void
 Realm::process_io_transfer()
@@ -4499,6 +4546,9 @@ Realm::post_converged_work()
 {
   equationSystems_.post_converged_work();
 
+  if (openfast_ != NULL)
+    openfast_->advance_struct_timestep(get_current_time());
+
   // FIXME: Consider a unified collection of post processing work
   if (NULL != solutionNormPostProcessing_)
     solutionNormPostProcessing_->execute();
@@ -4551,7 +4601,8 @@ Realm::setup_element_promotion()
           throw std::runtime_error(
             "A part with name " + superName +
             " already exists in the mesh.  "
-            "This can happen if a restart mesh was used but a restart_time was "
+            "This can happen if a restart mesh was used but a restart_time "
+            "was "
             "not specified");
         }
 
@@ -4658,7 +4709,8 @@ Realm::create_promoted_output_mesh()
 }
 
 //--------------------------------------------------------------------------
-//-------- part_name(std::string) ----------------------------------------------
+//-------- part_name(std::string)
+//----------------------------------------------
 //--------------------------------------------------------------------------
 std::string
 Realm::physics_part_name(std::string name) const
@@ -4729,6 +4781,11 @@ Realm::get_max_time_step_count()
   return timeIntegrator_->get_max_time_step_count();
 }
 
+int
+Realm::get_restart_frequency()
+{
+  return outputInfo_->get_restart_frequency();
+}
 //--------------------------------------------------------------------------
 //-------- get_gamma1() ----------------------------------------------------
 //--------------------------------------------------------------------------
@@ -4757,7 +4814,8 @@ Realm::get_gamma3()
 }
 
 //--------------------------------------------------------------------------
-//-------- get_time_step_count() ----------------------------------------------
+//-------- get_time_step_count()
+//----------------------------------------------
 //--------------------------------------------------------------------------
 int
 Realm::get_time_step_count() const

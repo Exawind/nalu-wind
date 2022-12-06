@@ -43,41 +43,46 @@ FrameBase::load(const YAML::Node& node)
   // get any part names associated with current motion group
   populate_part_vec(node);
 
+  return;
+
   // check if centroid needs to be computed
   get_if_present(node, "compute_centroid", computeCentroid_, computeCentroid_);
 
-  // extract the motions in the current group
-  const auto& motions = node["motion"];
+  if (node["motion"]) {
+    // extract the motions in the current group
+    const auto& motions = node["motion"];
 
-  const int num_motions = motions.size();
-  motionKernels_.resize(num_motions);
+    const int num_motions = motions.size();
+    motionKernels_.resize(num_motions);
 
-  // create the classes associated with every motion in current group
-  for (int i = 0; i < num_motions; i++) {
+    // create the classes associated with every motion in current group
+    for (int i = 0; i < num_motions; i++) {
 
-    // get the motion definition for i-th transformation
-    const auto& motion_def = motions[i];
+      // get the motion definition for i-th transformation
+      const auto& motion_def = motions[i];
 
-    // motion type should always be defined by the user
-    std::string type;
-    get_required(motion_def, "type", type);
+      // motion type should always be defined by the user
+      std::string type;
+      get_required(motion_def, "type", type);
 
-    // determine type of mesh motion based on user definition in input file
-    if (type == "deforming_interior")
-      motionKernels_[i].reset(
-        new MotionDeformingInteriorKernel(meta_, motion_def));
-    else if (type == "rotation")
-      motionKernels_[i].reset(new MotionRotationKernel(motion_def));
-    else if (type == "scaling")
-      motionKernels_[i].reset(new MotionScalingKernel(meta_, motion_def));
-    else if (type == "translation")
-      motionKernels_[i].reset(new MotionTranslationKernel(motion_def));
-    else if (type == "waving_boundary")
-      motionKernels_[i].reset(new MotionWavesKernel(meta_, motion_def));
-    else
-      throw std::runtime_error("FrameBase: Invalid mesh motion type: " + type);
+      // determine type of mesh motion based on user definition in input file
+      if (type == "deforming_interior")
+        motionKernels_[i].reset(
+          new MotionDeformingInteriorKernel(meta_, motion_def));
+      else if (type == "rotation")
+        motionKernels_[i].reset(new MotionRotationKernel(motion_def));
+      else if (type == "scaling")
+        motionKernels_[i].reset(new MotionScalingKernel(meta_, motion_def));
+      else if (type == "translation")
+        motionKernels_[i].reset(new MotionTranslationKernel(motion_def));
+      else if (type == "waving_boundary")
+        motionKernels_[i].reset(new MotionWavesKernel(meta_, motion_def));
+      else
+        throw std::runtime_error(
+          "FrameBase: Invalid mesh motion type: " + type);
 
-  } // end for loop - i index
+    } // end for loop - i index
+  }
 }
 
 void
@@ -120,8 +125,9 @@ FrameBase::populate_part_vec(const YAML::Node& node)
     if (nullptr == part)
       throw std::runtime_error(
         "FrameBase: Invalid part name encountered: " + partNamesVec[i]);
-    else
+    else {
       partVec_[i] = part;
+    }
   }
 
   // populate bc parts if any defined
@@ -132,9 +138,9 @@ FrameBase::populate_part_vec(const YAML::Node& node)
 
   const auto& fpartsBc = node["mesh_parts_bc"];
   if (fpartsBc.Type() == YAML::NodeType::Scalar)
-    partNamesVecBc.push_back(fparts.as<std::string>());
+    partNamesVecBc.push_back(fpartsBc.as<std::string>());
   else
-    partNamesVecBc = fparts.as<std::vector<std::string>>();
+    partNamesVecBc = fpartsBc.as<std::vector<std::string>>();
 
   // store all Bc parts associated with current motion frame
   numParts = partNamesVecBc.size();

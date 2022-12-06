@@ -78,9 +78,11 @@ class MeshTransformationAlg;
 class SolutionNormPostProcessing;
 class SideWriterContainer;
 class TurbulenceAveragingPostProcessing;
+class SurfaceFMPostProcessing;
 class DataProbePostProcessing;
 class LidarLOS;
 class AeroContainer;
+struct ActuatorModel;
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
 
@@ -560,6 +562,7 @@ public:
   bool get_is_terminate_based_on_time();
   double get_total_sim_time();
   int get_max_time_step_count();
+  int get_restart_frequency();
 
   // restart
   bool restarted_simulation();
