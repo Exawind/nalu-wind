@@ -1,7 +1,9 @@
 #include "mesh_motion/MeshMotionAlg.h"
 
 #include "mesh_motion/FrameMoving.h"
+#ifdef NALU_USES_OPENFAST
 #include "mesh_motion/FrameOpenFAST.h"
+#endif
 
 #include "NaluParsing.h"
 

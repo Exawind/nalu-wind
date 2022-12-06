@@ -29,6 +29,8 @@
 #include <NonConformalManager.h>
 #include <NonConformalInfo.h>
 #include <OutputInfo.h>
+#include <PostProcessingInfo.h>
+#include <PostProcessingData.h>
 #include <PecletFunction.h>
 #include <PeriodicManager.h>
 #include <Realms.h>
@@ -61,9 +63,6 @@
 
 // actuator line/fsi
 #include <aero/AeroContainer.h>
-
-// OpenFAST coupling
-#include <OpenfastFSI.h>
 
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <wind_energy/SyntheticLidar.h>
@@ -203,7 +202,6 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     solutionNormPostProcessing_(NULL),
     turbulenceAveragingPostProcessing_(NULL),
     dataProbePostProcessing_(NULL),
-    openfast_(NULL),
     ablForcingAlg_(NULL),
     nodeCount_(0),
     estimateMemoryOnly_(false),
@@ -289,9 +287,6 @@ Realm::~Realm()
 
   if (NULL != dataProbePostProcessing_)
     delete dataProbePostProcessing_;
-
-  if (NULL != openfast_)
-    delete openfast_;
 
   // delete non-conformal related things
   if (NULL != nonConformalManager_)
@@ -414,9 +409,9 @@ Realm::initialize_prolog()
     setup_element_promotion();
   }
 
-  // setup OpenFAST FSI stuff
-  if (openfast_ != NULL)
-    openfast_->setup();
+  /* // setup OpenFAST FSI stuff */
+  /* if (openfast_ != NULL) */
+  /*   openfast_->setup(); */
 
   // field registration
   setup_nodal_fields();
@@ -796,14 +791,14 @@ Realm::load(const YAML::Node& node)
   spatialDimension_ = meta_data().spatial_dimension();
 
   // look for OpenFAST FSI stuff
-  if (node["openfast_fsi"]) {
+  /* if (node["openfast_fsi"]) { */
 
-    const YAML::Node openfastNode = node["openfast_fsi"];
-      openfast_ = new OpenfastFSI(meta_data(), bulk_data(),
-                                  openfastNode));
-      if (openfast_->get_meshmotion())
-        solutionOptions_->meshMotion_ = true;
-  }
+  /*   const YAML::Node openfastNode = node["openfast_fsi"]; */
+  /*     openfast_ = new OpenfastFSI(meta_data(), bulk_data(), */
+  /*                                 openfastNode)); */
+  /*     if (openfast_->get_meshmotion()) */
+  /*       solutionOptions_->meshMotion_ = true; */
+  /* } */
 
   // boundary, init, material and equation systems "load"
   if (type_ == "multi_physics") {
@@ -4546,8 +4541,8 @@ Realm::post_converged_work()
 {
   equationSystems_.post_converged_work();
 
-  if (openfast_ != NULL)
-    openfast_->advance_struct_timestep(get_current_time());
+  /* if (openfast_ != NULL) */
+  /* openfast_->advance_struct_timestep(get_current_time()); */
 
   // FIXME: Consider a unified collection of post processing work
   if (NULL != solutionNormPostProcessing_)

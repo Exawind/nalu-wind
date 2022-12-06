@@ -2,7 +2,6 @@
 #define MESHMOTIONALG_H
 
 #include "FrameMoving.h"
-#include "OpenfastFSI.h"
 
 namespace sierra {
 namespace nalu {

@@ -50,7 +50,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/FieldRegistry.C
    ${CMAKE_CURRENT_SOURCE_DIR}/FixPressureAtNodeAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/GammaEquationSystem.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/FSIturbine.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InitialConditions.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InputOutputRealm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearSolver.C
@@ -69,7 +68,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/NaluParsing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/NonConformalInfo.C
    ${CMAKE_CURRENT_SOURCE_DIR}/NonConformalManager.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/OpenfastFSI.C
    ${CMAKE_CURRENT_SOURCE_DIR}/OutputInfo.C
    ${CMAKE_CURRENT_SOURCE_DIR}/PecletFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/PeriodicManager.C
@@ -103,11 +101,18 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/WilcoxKOmegaEquationSystem.C
 )
 
+if(ENABLE_OPENFAST)
+   target_sources(nalu PRIVATE
+     ${CMAKE_CURRENT_SOURCE_DIR}/FSIturbine.C
+     ${CMAKE_CURRENT_SOURCE_DIR}/OpenfastFSI.C
+   )
+endif(ENABLE_OPENFAST)
+
 if(ENABLE_FFTW)
    target_sources(nalu PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumEdgeABLTopBC.C
    )
-endif()
+endif(ENABLE_FFTW)
 
 if(ENABLE_HYPRE)
    target_sources(nalu PRIVATE
@@ -117,7 +122,7 @@ if(ENABLE_HYPRE)
       ${CMAKE_CURRENT_SOURCE_DIR}/HypreLinearSystem.C
       ${CMAKE_CURRENT_SOURCE_DIR}/HypreUVWLinearSystem.C
    )
-endif()
+endif(ENABLE_HYPRE)
 
 add_subdirectory(aero)
 add_subdirectory(element_promotion)

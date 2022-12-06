@@ -108,7 +108,6 @@ SurfaceForceAndMomentAlgorithm::SurfaceForceAndMomentAlgorithm(
     throw std::runtime_error(
       "SurfaceForce: parameter length wrong; expect nDim");
 
-<<<<<<< HEAD
   // deal with file name and banner
   if (NaluEnv::self().parallel_rank() == 0) {
     std::ofstream myfile;
@@ -121,9 +120,6 @@ SurfaceForceAndMomentAlgorithm::SurfaceForceAndMomentAlgorithm(
     myfile.close();
   }
 }
-=======
-}
->>>>>>> f/br_fsi_4
 
 //--------------------------------------------------------------------------
 //-------- destructor ------------------------------------------------------
