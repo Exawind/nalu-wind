@@ -78,11 +78,9 @@ class MeshTransformationAlg;
 class SolutionNormPostProcessing;
 class SideWriterContainer;
 class TurbulenceAveragingPostProcessing;
-class SurfaceFMPostProcessing;
 class DataProbePostProcessing;
 class LidarLOS;
 class AeroContainer;
-struct ActuatorModel;
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
 

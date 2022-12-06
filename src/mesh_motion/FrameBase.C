@@ -43,8 +43,6 @@ FrameBase::load(const YAML::Node& node)
   // get any part names associated with current motion group
   populate_part_vec(node);
 
-  return;
-
   // check if centroid needs to be computed
   get_if_present(node, "compute_centroid", computeCentroid_, computeCentroid_);
 

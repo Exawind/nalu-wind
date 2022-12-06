@@ -199,6 +199,7 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     currentNonlinearIteration_(1),
     solutionOptions_(new SolutionOptions()),
     outputInfo_(new OutputInfo()),
+    postProcessingInfo_(new PostProcessingInfo()),
     solutionNormPostProcessing_(NULL),
     turbulenceAveragingPostProcessing_(NULL),
     dataProbePostProcessing_(NULL),
@@ -277,6 +278,7 @@ Realm::~Realm()
 
   delete solutionOptions_;
   delete outputInfo_;
+  delete postProcessingInfo_;
 
   // post processing-like objects
   if (NULL != solutionNormPostProcessing_)
@@ -790,6 +792,8 @@ Realm::load(const YAML::Node& node)
   create_mesh();
   spatialDimension_ = meta_data().spatial_dimension();
 
+  // post processing
+  postProcessingInfo_->load(node);
   // look for OpenFAST FSI stuff
   /* if (node["openfast_fsi"]) { */
 
@@ -893,7 +897,7 @@ void
 Realm::setup_nodal_fields()
 {
 #ifdef NALU_USES_HYPRE
-  &(meta_data().declare_field<HypreIDFieldType>(
+  hypreGlobalId_ = &(meta_data().declare_field<HypreIDFieldType>(
     stk::topology::NODE_RANK, "hypre_global_id"));
 #endif
   tpetGlobalId_ = &(meta_data().declare_field<TpetIDFieldType>(
@@ -2450,7 +2454,6 @@ Realm::get_coordinates_name()
 bool
 Realm::has_mesh_motion() const
 {
-  return true;
   return solutionOptions_->meshMotion_;
 }
 
@@ -3299,6 +3302,8 @@ Realm::swap_states()
   bulkData_->update_field_data_states();
 
 #if defined(KOKKOS_ENABLE_GPU)
+  if (get_time_step_count() < 2)
+    return;
 
   const auto& fieldMgr = ngp_field_manager();
   for (const auto fld : meta_data().get_fields()) {
@@ -4776,11 +4781,6 @@ Realm::get_max_time_step_count()
   return timeIntegrator_->get_max_time_step_count();
 }
 
-int
-Realm::get_restart_frequency()
-{
-  return outputInfo_->get_restart_frequency();
-}
 //--------------------------------------------------------------------------
 //-------- get_gamma1() ----------------------------------------------------
 //--------------------------------------------------------------------------
