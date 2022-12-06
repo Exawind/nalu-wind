@@ -4,7 +4,6 @@
 #include "FSIturbine.h"
 #include "OpenFAST.H"
 #include "yaml-cpp/yaml.h"
-#include "SurfaceFMPostProcessing.h"
 
 #include <array>
 
@@ -15,84 +14,79 @@ namespace nalu {
 class OpenfastFSI
 {
 public:
-    OpenfastFSI(
-        stk::mesh::MetaData&,
-        stk::mesh::BulkData&,
-        const YAML::Node&,
-        SurfaceFMPostProcessing* = nullptr);
-    
-    virtual ~OpenfastFSI();
+  OpenfastFSI(stk::mesh::MetaData&, stk::mesh::BulkData&, const YAML::Node&);
 
-    void setup();
+  virtual ~OpenfastFSI();
 
-    void initialize(double dtNalu, double restartFreqNalu, double curTime);
+  void setup();
 
-    void get_displacements(double);
+  void initialize(double dtNalu, double restartFreqNalu, double curTime);
 
-    void predict_struct_states();
+  void get_displacements(double);
 
-    void predict_struct_timestep(const double curTime);
+  void predict_struct_states();
 
-    void advance_struct_timestep(const double curTime);
+  void predict_struct_timestep(const double curTime);
 
-    void compute_div_mesh_velocity();
+  void advance_struct_timestep(const double curTime);
 
-    int get_nTurbinesGlob() { return FAST.get_nTurbinesGlob();}
+  void compute_div_mesh_velocity();
 
-    fsiTurbine * get_fsiTurbineData(int iTurb) { return fsiTurbineData_[iTurb];}
+  int get_nTurbinesGlob() { return FAST.get_nTurbinesGlob(); }
 
-    bool get_meshmotion(){ return mesh_motion_; }
+  fsiTurbine* get_fsiTurbineData(int iTurb) { return fsiTurbineData_[iTurb]; }
 
-    void map_loads(const int tStep, const double curTime);
+  bool get_meshmotion() { return mesh_motion_; }
 
-    void set_rotational_displacement(std::array<double,3> axis, double omega, double curTime);
+  void map_loads(const int tStep, const double curTime);
+
+  void set_rotational_displacement(
+    std::array<double, 3> axis, double omega, double curTime);
 
 private:
-    OpenfastFSI() = delete;
-    OpenfastFSI(const OpenfastFSI&) = delete;
+  OpenfastFSI() = delete;
+  OpenfastFSI(const OpenfastFSI&) = delete;
 
-    void load(const YAML::Node&);
+  void load(const YAML::Node&);
 
-    void compute_mapping();
-    
-    void send_loads(const double curTime);
+  void compute_mapping();
 
-    void map_displacements(double); //This is dummy function for now. DO NOT USE
+  void send_loads(const double curTime);
 
-    stk::mesh::MetaData& meta_;
+  void map_displacements(double); // This is dummy function for now. DO NOT USE
 
-    stk::mesh::BulkData& bulk_;
+  stk::mesh::MetaData& meta_;
 
-    std::vector<std::string> partNames_;
+  stk::mesh::BulkData& bulk_;
 
-    //Data for coupling to Openfast
+  std::vector<std::string> partNames_;
 
-    fast::OpenFAST FAST;
+  // Data for coupling to Openfast
 
-    fast::fastInputs fi ;
+  fast::OpenFAST FAST;
 
-    std::vector<fsiTurbine*> fsiTurbineData_;
+  fast::fastInputs fi;
 
-    bool mesh_motion_;
+  std::vector<fsiTurbine*> fsiTurbineData_;
 
-    bool enable_calc_loads_{false};
+  bool mesh_motion_;
 
-    SurfaceFMPostProcessing* sfm_pp_;
+  bool enable_calc_loads_{false};
 
-    int tStep_{0}; // Time step count
+  int tStep_{0}; // Time step count
 
-    int writeFreq_{30}; // Frequency to write line loads and deflections to netcdf file
+  int writeFreq_{
+    30}; // Frequency to write line loads and deflections to netcdf file
 
-    void read_turbine_data(int iTurb, fast::fastInputs & fi, YAML::Node turbNode);
+  void read_turbine_data(int iTurb, fast::fastInputs& fi, YAML::Node turbNode);
 
-    void bcast_turbine_params(int iTurb);
+  void bcast_turbine_params(int iTurb);
 
-    void read_inputs(fast::fastInputs & fi, YAML::Node & ofNode);
-
+  void read_inputs(fast::fastInputs& fi, YAML::Node& ofNode);
 };
 
-} // nalu
+} // namespace nalu
 
-} // sierra
+} // namespace sierra
 
 #endif /* OPENFASTFSI_H */
