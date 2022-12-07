@@ -101,7 +101,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/WilcoxKOmegaEquationSystem.C
 )
 
-if(ENABLE_OPENFAST)
+if(ENABLE_OPENFAST_FSI)
    target_sources(nalu PRIVATE
      ${CMAKE_CURRENT_SOURCE_DIR}/FSIturbine.C
      ${CMAKE_CURRENT_SOURCE_DIR}/OpenfastFSI.C

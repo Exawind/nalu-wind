@@ -58,7 +58,9 @@ TEST_F(ActuatorBulkFastTests, NGP_initializeActuatorBulk)
   ASSERT_EQ(fi.nTurbinesGlob, 1);
   ASSERT_EQ(fi.tStart, 0.0);
   ASSERT_EQ(fi.simStart, fast::init);
+#ifdef NALU_USES_OPENFAST_FSI
   ASSERT_EQ(fi.restartFreq, 1);
+#endif
   ASSERT_EQ(fi.dtFAST, 0.005);
   ASSERT_EQ(fi.tMax, 0.29);
 

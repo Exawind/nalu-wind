@@ -1,6 +1,7 @@
 ############################ BASE ######################################
 cmake_minimum_required (VERSION 3.17.0 FATAL_ERROR)
 project(Nalu-Wind CXX)
+include(CMakeDependentOption)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 ########################## OPTIONS #####################################
@@ -16,6 +17,8 @@ option(ENABLE_FFTW "Use the FFTW library to support ABLTopBC" OFF)
 option(ENABLE_HYPRE "Use HYPRE Solver library" OFF)
 option(ENABLE_OPENFAST
        "Use OPENFAST tpl to get actuator line positions and forces" OFF)
+cmake_dependent_option(ENABLE_OPENFAST_FSI "Temporary option while FSI features are not merged into main OpenFAST"
+  OFF "ENABLE_OPENFAST" OFF)
 option(ENABLE_PARAVIEW_CATALYST
       "Enable ParaView Catalyst. Requires external installation of Trilinos Catalyst IOSS adapter."
        OFF)
@@ -151,6 +154,9 @@ if(ENABLE_HYPRE)
 endif()
 
 ########################## OPENFAST ####################################
+if(ENABLE_OPENFAST_FSI)
+  target_compile_definitions(nalu PUBLIC NALU_USES_OPENFAST_FSI)
+endif()
 if(ENABLE_OPENFAST)
   set(CMAKE_PREFIX_PATH ${OpenFAST_DIR} ${CMAKE_PREFIX_PATH})
   find_package(OpenFAST QUIET REQUIRED)

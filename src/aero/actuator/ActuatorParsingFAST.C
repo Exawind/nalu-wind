@@ -163,7 +163,8 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     } else if (simStartType == "restartDriverInitFAST") {
       fi.simStart = fast::restartDriverInitFAST;
     }
-    get_required(y_actuator, "restartFreq", fi.restartFreq);
+    // TODO Do we need this for anything in FSI?
+    /* get_required(y_actuator, "restartFreq", fi.restartFreq); */
     get_required(y_actuator, "dt_fast", fi.dtFAST);
 
     get_required(y_actuator, "t_max", fi.tMax);
@@ -196,6 +197,7 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     }
     return actMetaFAST;
   }
+}
 
 } // namespace nalu
 } // namespace sierra
