@@ -234,7 +234,8 @@ OutputInfo::load(const YAML::Node& y_node)
 }
 
 int
-OutputInfo::get_restart_frequency() {
+OutputInfo::get_restart_frequency()
+{
   return restartFreq_;
 }
 // compression options

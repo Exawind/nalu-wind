@@ -9,8 +9,8 @@
 #include <cassert>
 #include <float.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class FrameOpenFAST : public FrameMoving
 {
@@ -18,28 +18,25 @@ public:
   FrameOpenFAST(
     stk::mesh::BulkData& bulk,
     const YAML::Node& node,
-    fsiTurbine* fsiturbinedata
-  ) : FrameMoving(bulk,node),
-      fsiTurbineData_(fsiturbinedata)
+    fsiTurbine* fsiturbinedata)
+    : FrameMoving(bulk, node), fsiTurbineData_(fsiturbinedata)
   {
   }
 
-  virtual ~FrameOpenFAST()
-  {
-  }
+  virtual ~FrameOpenFAST() {}
 
   void update_coordinates_velocity(const double time);
 
   void post_compute_geometry(){};
 
 private:
-    FrameOpenFAST() = delete;
-    FrameOpenFAST(const FrameOpenFAST&) = delete;
+  FrameOpenFAST() = delete;
+  FrameOpenFAST(const FrameOpenFAST&) = delete;
 
-    fsiTurbine* fsiTurbineData_;
+  fsiTurbine* fsiTurbineData_;
 };
 
-} // nalu
-} // sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif /* FRAMEOPENFAST_H */

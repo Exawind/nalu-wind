@@ -33,7 +33,7 @@ public:
   void load(const YAML::Node& node);
 
   int get_restart_frequency();
-  
+
   // helper methods for compression options
   int get_output_compression();
   bool get_output_shuffle();
