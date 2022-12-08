@@ -89,19 +89,6 @@ VOFAdvectionEdgeAlg::execute()
       const DblType qNp1L = scalarQ.get(nodeL, 0);
       const DblType qNp1R = scalarQ.get(nodeR, 0);
 
-      // Compute area vector related quantities and (U dot areaVec)
-      DblType axdx = 0.0;
-      DblType asq = 0.0;
-      DblType udotx = 0.0;
-      for (int d = 0; d < ndim; ++d) {
-        const DblType dxj =
-          coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
-        asq += av[d] * av[d];
-        axdx += av[d] * dxj;
-        udotx += 0.5 * dxj * (vrtm.get(nodeR, d) + vrtm.get(nodeL, d));
-      }
-      const DblType inv_axdx = 1.0 / axdx;
-
       // Advective flux
       const DblType qIp = 0.5 * (qNp1R + qNp1L); // 2nd order central term
 
