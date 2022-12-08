@@ -1078,7 +1078,7 @@ Realm::setup_post_processing_algorithms()
   }
 
   if (aeroModels_->is_active())
-    aeroModels_->setup(get_time_step_from_file(), bulk_data());
+    aeroModels_->setup(get_time_step_from_file(), bulkData_);
 
   // check for norm nodal fields
   if (NULL != solutionNormPostProcessing_)
@@ -2431,7 +2431,7 @@ Realm::initialize_post_processing_algorithms()
   }
 
   if (aeroModels_->is_active())
-    aeroModels_->init(bulk_data());
+    aeroModels_->init(get_current_time(), outputInfo_->restartFreq_);
 
   if (lidarLOS_) {
     lidarLOS_->set_time_for_all(get_current_time());

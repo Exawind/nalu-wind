@@ -24,6 +24,14 @@ AeroContainer::AeroContainer(const YAML::Node& node)
         "look_ahead_and_create::error: Too many actuator line blocks");
     actuatorModel_.parse(*foundActuator[0]);
   }
+  std::vector<const YAML::Node*> foundFsi;
+  NaluParsingHelper::find_nodes_given_key("openfast_fsi", node, foundFsi);
+  if (foundFsi.size() > 0) {
+    if (foundFsi.size() != 1)
+      throw std::runtime_error(
+        "look_ahead_and_create::error: Too many openfast_fsi blocks");
+    fsiContainer_ = std::make_unique<OpenfastFSI>(*foundFsi[0]);
+  }
 }
 
 void
@@ -42,18 +50,25 @@ AeroContainer::register_nodal_fields(
 }
 
 void
-AeroContainer::setup(double timeStep, stk::mesh::BulkData& bulk)
+AeroContainer::setup(double timeStep, std::shared_ptr<stk::mesh::BulkData> bulk)
 {
+  bulk_ = bulk;
   if (has_actuators()) {
-    actuatorModel_.setup(timeStep, bulk);
+    actuatorModel_.setup(timeStep, *bulk_);
+  }
+  if (has_fsi()) {
+    fsiContainer_->setup(timeStep, bulk_);
   }
 }
 
 void
-AeroContainer::init(stk::mesh::BulkData& bulk)
+AeroContainer::init(double currentTime, double restartFrequency)
 {
   if (has_actuators()) {
-    actuatorModel_.init(bulk);
+    actuatorModel_.init(*bulk_);
+  }
+  if (has_fsi()) {
+    fsiContainer_->initialize(restartFrequency, currentTime);
   }
 }
 

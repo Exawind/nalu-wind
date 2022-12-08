@@ -2,7 +2,7 @@
 #define FRAMEOPENFAST_H
 
 #include "FrameMoving.h"
-#include "FSIturbine.h"
+#include "aero/fsi/FSIturbine.h"
 
 #include "yaml-cpp/yaml.h"
 

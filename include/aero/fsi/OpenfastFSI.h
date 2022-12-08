@@ -1,11 +1,12 @@
 #ifndef OPENFASTFSI_H
 #define OPENFASTFSI_H
 
-#include "FSIturbine.h"
+#include "aero/fsi/FSIturbine.h"
 #include "OpenFAST.H"
 #include "yaml-cpp/yaml.h"
 
 #include <array>
+#include <memory>
 
 namespace sierra {
 
@@ -14,13 +15,13 @@ namespace nalu {
 class OpenfastFSI
 {
 public:
-  OpenfastFSI(stk::mesh::MetaData&, stk::mesh::BulkData&, const YAML::Node&);
+  OpenfastFSI(const YAML::Node&);
 
   virtual ~OpenfastFSI();
 
-  void setup();
+  void setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk);
 
-  void initialize(double dtNalu, double restartFreqNalu, double curTime);
+  void initialize(int restartFreqNalu, double curTime);
 
   void get_displacements(double);
 
@@ -55,9 +56,7 @@ private:
 
   void map_displacements(double); // This is dummy function for now. DO NOT USE
 
-  stk::mesh::MetaData& meta_;
-
-  stk::mesh::BulkData& bulk_;
+  std::shared_ptr<stk::mesh::MetaData> meta_;
 
   std::vector<std::string> partNames_;
 
