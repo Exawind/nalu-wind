@@ -1795,6 +1795,9 @@ Realm::update_geometry_due_to_mesh_motion()
 {
   // check for mesh motion
   if (solutionOptions_->meshMotion_) {
+    if (aeroModels_->is_active()) {
+      aeroModels_->update_displacements(get_current_time());
+    }
 
     meshMotionAlg_->execute(get_current_time());
 
@@ -1802,9 +1805,9 @@ Realm::update_geometry_due_to_mesh_motion()
 
     meshMotionAlg_->post_compute_geometry();
 
-    /* if (openfast_ != NULL) { */
-    /*   openfast_->compute_div_mesh_velocity(); */
-    /* } */
+    if (aeroModels_->is_active()) {
+      aeroModels_->compute_div_mesh_velocity();
+    }
 
     // and non-conformal algorithm
     if (hasNonConformal_)
@@ -4440,10 +4443,16 @@ Realm::augment_transfer_vector(
 //-------- process_multi_physics_transfer ----------------------------------
 //--------------------------------------------------------------------------
 void
-Realm::process_multi_physics_transfer()
+Realm::process_multi_physics_transfer(bool initCall)
 {
   if (!hasMultiPhysicsTransfer_)
     return;
+
+  if (!initCall) {
+    if (aeroModels_->is_active()) {
+      aeroModels_->predict_model_time_step(get_current_time());
+    }
+  }
 
   double timeXfer = -NaluEnv::self().nalu_time();
 
@@ -4546,8 +4555,9 @@ Realm::post_converged_work()
 {
   equationSystems_.post_converged_work();
 
-  /* if (openfast_ != NULL) */
-  /* openfast_->advance_struct_timestep(get_current_time()); */
+  if (aeroModels_->is_active()) {
+    aeroModels_->advance_model_time_step(get_current_time());
+  }
 
   // FIXME: Consider a unified collection of post processing work
   if (NULL != solutionNormPostProcessing_)

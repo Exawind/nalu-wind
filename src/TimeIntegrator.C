@@ -259,7 +259,7 @@ TimeIntegrator::prepare_for_time_integration()
 
   // provide for initial transfer
   for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
-    (*ii)->process_multi_physics_transfer();
+    (*ii)->process_multi_physics_transfer(true);
   }
 
   if (!overset_->multi_solver_mode()) {

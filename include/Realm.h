@@ -540,7 +540,7 @@ public:
   std::vector<Transfer*> externalDataTransferVec_;
   void augment_transfer_vector(
     Transfer* transfer, const std::string transferObjective, Realm* toRealm);
-  void process_multi_physics_transfer();
+  void process_multi_physics_transfer(bool isInit = false);
   void process_initialization_transfer();
   void process_io_transfer();
   void process_external_data_transfer();

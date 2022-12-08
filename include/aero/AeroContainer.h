@@ -16,11 +16,6 @@
 #include <yaml-cpp/yaml.h>
 #include "aero/actuator/ActuatorModel.h"
 
-#ifdef NALU_USES_OPENFAST
-#include "OpenFAST.H"
-// TODO add a blank openfast data structure possibly
-#endif
-
 namespace sierra {
 namespace nalu {
 
@@ -42,19 +37,16 @@ public:
   void execute(double& timer);
   void init(stk::mesh::BulkData& stkBulk);
   void register_nodal_fields(stk::mesh::MetaData& meta, stk::mesh::Part* part);
+  void update_displacements(const double /*currentTime*/){};
+  void predict_model_time_step(const double /*currentTime*/){};
+  void advance_model_time_step(const double /*currentTime*/){};
+  void compute_div_mesh_velocity() {}
 
-  // TODO active if actuators or FSI is active
-  bool is_active() { return has_actuators(); }
+  bool is_active() { return has_actuators() || has_fsi(); }
 
 private:
   bool has_actuators() { return actuatorModel_.is_active(); }
-#ifdef NALU_USES_OPENFAST
-  // TODO this should be the only instance of openfast
-  // all other instances need to be made into shared_ptrs that share from this
-  // one
-  std::shared_ptr<fast::OpenFAST> fast_;
-#endif
-  // TODO move calls to actuator model in realm to this container class
+  bool has_fsi() { return false; }
   ActuatorModel actuatorModel_;
 };
 
