@@ -1,5 +1,5 @@
-#include "OpenfastFSI.h"
-#include "FSIturbine.h"
+#include "aero/fsi/OpenfastFSI.h"
+#include "aero/fsi/FSIturbine.h"
 #include <NaluParsing.h>
 
 #include <iostream>
@@ -17,7 +17,11 @@ OpenfastFSI::OpenfastFSI(const YAML::Node& node)
   load(node);
 }
 
-OpenfastFSI::~OpenfastFSI() { FAST.end(); }
+void
+OpenfastFSI::end_openfast()
+{
+  FAST.end();
+}
 
 void
 OpenfastFSI::read_turbine_data(
@@ -157,7 +161,7 @@ OpenfastFSI::load(const YAML::Node& node)
 }
 
 void
-OpenfastFSI::setup(double dtNalu, std::shared_ptr<stk::mesh::BulkdData> bulk)
+OpenfastFSI::setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk)
 {
   bulk_ = bulk;
 
@@ -173,7 +177,7 @@ OpenfastFSI::setup(double dtNalu, std::shared_ptr<stk::mesh::BulkdData> bulk)
 }
 
 void
-OpenfastFSI::initialize(double restartFreqNalu, double curTime)
+OpenfastFSI::initialize(int restartFreqNalu, double curTime)
 {
 
   FAST.setDriverCheckpoint(restartFreqNalu);

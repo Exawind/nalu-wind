@@ -8,10 +8,24 @@
 //
 #include <aero/AeroContainer.h>
 #include <NaluParsingHelper.h>
+#include "aero/fsi/OpenfastFSI.h"
 #include <FieldTypeDef.h>
 
 namespace sierra {
 namespace nalu {
+void
+AeroContainer::clean_up()
+{
+  if (has_fsi())
+    fsiContainer_->end_openfast();
+}
+
+AeroContainer::~AeroContainer()
+{
+  if (has_fsi()) {
+    delete fsiContainer_;
+  }
+}
 
 AeroContainer::AeroContainer(const YAML::Node& node)
 {
@@ -30,7 +44,7 @@ AeroContainer::AeroContainer(const YAML::Node& node)
     if (foundFsi.size() != 1)
       throw std::runtime_error(
         "look_ahead_and_create::error: Too many openfast_fsi blocks");
-    fsiContainer_ = std::make_unique<OpenfastFSI>(*foundFsi[0]);
+    fsiContainer_ = new OpenfastFSI(*foundFsi[0]);
   }
 }
 

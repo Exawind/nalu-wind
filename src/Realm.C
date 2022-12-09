@@ -262,6 +262,9 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
 Realm::~Realm()
 {
   meshInfo_.reset();
+  // hacky way of cleaing up openfast for now
+  if (aeroModels_->is_active())
+    aeroModels_->clean_up();
   delete ioBroker_;
 
   // prop algs

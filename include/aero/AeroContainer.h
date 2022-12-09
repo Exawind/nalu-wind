@@ -33,7 +33,7 @@ public:
   AeroContainer(AeroContainer&) = delete;
 
   AeroContainer(const YAML::Node& node);
-  ~AeroContainer() = default;
+  ~AeroContainer();
 
   void setup(double timeStep, std::shared_ptr<stk::mesh::BulkData> stkBulk);
   void execute(double& timer);
@@ -43,6 +43,10 @@ public:
   void predict_model_time_step(const double /*currentTime*/){};
   void advance_model_time_step(const double /*currentTime*/){};
   void compute_div_mesh_velocity() {}
+  // hacky function to make sure openfast is cleaned up
+  // eventually all openfast pointers should be combined and moved out of this
+  // class
+  void clean_up();
 
   bool is_active() { return has_actuators() || has_fsi(); }
 
@@ -50,9 +54,10 @@ private:
   bool has_actuators() { return actuatorModel_.is_active(); }
   bool has_fsi() { return fsiContainer_ != nullptr; }
   ActuatorModel actuatorModel_;
-  std::unique_ptr<OpenfastFSI> fsiContainer_;
+  // TODO make this a unique_ptr
+  OpenfastFSI* fsiContainer_;
   std::shared_ptr<stk::mesh::BulkData> bulk_;
 };
 
-}
+} // namespace sierra::nalu
 #endif

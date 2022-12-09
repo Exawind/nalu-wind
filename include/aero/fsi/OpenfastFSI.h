@@ -16,8 +16,7 @@ class OpenfastFSI
 {
 public:
   OpenfastFSI(const YAML::Node&);
-
-  virtual ~OpenfastFSI();
+  virtual ~OpenfastFSI()=default;
 
   void setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk);
 
@@ -43,6 +42,7 @@ public:
 
   void set_rotational_displacement(
     std::array<double, 3> axis, double omega, double curTime);
+  void end_openfast();
 
 private:
   OpenfastFSI() = delete;
@@ -56,7 +56,7 @@ private:
 
   void map_displacements(double); // This is dummy function for now. DO NOT USE
 
-  std::shared_ptr<stk::mesh::MetaData> meta_;
+  std::shared_ptr<stk::mesh::BulkData> bulk_;
 
   std::vector<std::string> partNames_;
 

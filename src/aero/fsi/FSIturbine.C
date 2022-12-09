@@ -594,8 +594,8 @@ fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime)
   check_nc_error(ierr, "nc_open");
   ierr = nc_enddef(ncid);
 
-  int iStart = 0;
-  for (int iBlade = 0; iBlade < nBlades; iBlade++) {
+  size_t iStart = 0;
+  for (size_t iBlade = 0; iBlade < nBlades; iBlade++) {
     for (size_t i = 1; i < nBldPts - 1; i++) {
       brFSIdata_.bld_ld[(i + iStart) * 6 + 4] =
         (0.5 * (brFSIdata_.bld_rloc[i + iStart + 1] -
@@ -612,7 +612,7 @@ fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime)
   std::ofstream csvOut;
   csvOut.open("bld_def.csv", std::ofstream::out);
   csvOut << "rloc, x, y, z, , chord" << std::endl;
-  for (auto i = 0; i < nTotBldPts; i++) {
+  for (size_t i = 0; i < nTotBldPts; i++) {
     csvOut << brFSIdata_.bld_rloc[i] << ", "
            << brFSIdata_.bld_ref_pos[i * 6] + brFSIdata_.bld_def[i * 6] << ", "
            << brFSIdata_.bld_ref_pos[i * 6 + 1] + brFSIdata_.bld_def[i * 6 + 1]
@@ -892,10 +892,12 @@ fsiTurbine::mapLoads()
 
     // mapping from ip to nodes for this ordinal;
     // face perspective (use with face_node_relations)
-    const int* faceIpNodeMap = meFC->ipNodeMap();
-
     ws_face_shape_function.resize(numScsBip * nodesPerFace);
-    meFC->shape_fcn(ws_face_shape_function.data());
+
+    SharedMemView<double**, HostShmem> p_face_shape_function(
+      ws_face_shape_function.data(), numScsBip, nodesPerFace);
+
+    meFC->shape_fcn<>(p_face_shape_function);
 
     ws_coordinates.resize(ndim * nodesPerFace);
 
@@ -928,7 +930,7 @@ fsiTurbine::mapLoads()
           coord_bip[i] = 0.0;
         }
         for (int ni = 0; ni < nodesPerFace; ni++) {
-          const double r = ws_face_shape_function[ip * nodesPerFace + ni];
+          const double r = p_face_shape_function(ip, ni);
           for (int i = 0; i < ndim; i++) {
             coord_bip[i] += r * ws_coordinates[ni * ndim + i];
           }
@@ -991,7 +993,11 @@ fsiTurbine::mapLoads()
       const int* faceIpNodeMap = meFC->ipNodeMap();
 
       ws_face_shape_function.resize(numScsBip * nodesPerFace);
-      meFC->shape_fcn(ws_face_shape_function.data());
+
+      SharedMemView<double**, HostShmem> p_face_shape_function(
+        ws_face_shape_function.data(), numScsBip, nodesPerFace);
+
+      meFC->shape_fcn<>(p_face_shape_function);
 
       ws_coordinates.resize(ndim * nodesPerFace);
 
@@ -1030,7 +1036,7 @@ fsiTurbine::mapLoads()
           for (auto i = 0; i < ndim; i++)
             coord_bip[i] = 0.0;
           for (int ni = 0; ni < nodesPerFace; ni++) {
-            const double r = ws_face_shape_function[ip * nodesPerFace + ni];
+            const double r = p_face_shape_function(ip, ni);
             for (int i = 0; i < ndim; i++)
               coord_bip[i] += r * ws_coordinates[ni * ndim + i];
           }
@@ -2592,10 +2598,12 @@ fsiTurbine::computeLoadMapping()
 
     // mapping from ip to nodes for this ordinal;
     // face perspective (use with face_node_relations)
-    const int* faceIpNodeMap = meFC->ipNodeMap();
-
     ws_face_shape_function.resize(numScsBip * nodesPerFace);
-    meFC->shape_fcn(ws_face_shape_function.data());
+
+    SharedMemView<double**, HostShmem> p_face_shape_function(
+      ws_face_shape_function.data(), numScsBip, nodesPerFace);
+
+    meFC->shape_fcn<>(p_face_shape_function);
 
     ws_coordinates.resize(ndim * nodesPerFace);
 
@@ -2626,8 +2634,8 @@ fsiTurbine::computeLoadMapping()
           coord_bip[i] = 0.0;
         for (int ni = 0; ni < nodesPerFace; ni++) {
           for (int i = 0; i < ndim; i++)
-            coord_bip[i] += ws_face_shape_function[ip * nodesPerFace + ni] *
-                            ws_coordinates[ni * ndim + i];
+            coord_bip[i] +=
+              p_face_shape_function(ip, ni) * ws_coordinates[ni * ndim + i];
         }
 
         // Create map at this ip
@@ -2757,10 +2765,12 @@ fsiTurbine::computeLoadMapping()
 
       // mapping from ip to nodes for this ordinal;
       // face perspective (use with face_node_relations)
-      const int* faceIpNodeMap = meFC->ipNodeMap();
-
       ws_face_shape_function.resize(numScsBip * nodesPerFace);
-      meFC->shape_fcn(ws_face_shape_function.data());
+
+      SharedMemView<double**, HostShmem> p_face_shape_function(
+        ws_face_shape_function.data(), numScsBip, nodesPerFace);
+
+      meFC->shape_fcn<>(p_face_shape_function);
 
       ws_coordinates.resize(ndim * nodesPerFace);
 
@@ -2790,8 +2800,8 @@ fsiTurbine::computeLoadMapping()
             coord_bip[i] = 0.0;
           for (int ni = 0; ni < nodesPerFace; ni++) {
             for (int i = 0; i < ndim; i++)
-              coord_bip[i] += ws_face_shape_function[ip * nodesPerFace + ni] *
-                              ws_coordinates[ni * ndim + i];
+              coord_bip[i] +=
+                p_face_shape_function(ip, ni) * ws_coordinates[ni * ndim + i];
           }
 
           bool foundProj = false;
