@@ -93,6 +93,37 @@ AeroContainer::execute(double& actTimer)
     actuatorModel_.execute(actTimer);
   }
 }
+void
+AeroContainer::update_displacements(const double currentTime)
+{
+  if (has_fsi()) {
+    fsiContainer_->predict_struct_states();
+    fsiContainer_->get_displacements(currentTime);
+  }
+}
 
+void
+AeroContainer::predict_model_time_step(const double currentTime)
+{
+  if (has_fsi()) {
+    fsiContainer_->predict_struct_timestep(currentTime);
+  }
+}
+
+void
+AeroContainer::advance_model_time_step(const double currentTime)
+{
+  if (has_fsi()) {
+    fsiContainer_->advance_struct_timestep(currentTime);
+  }
+}
+
+void
+AeroContainer::compute_div_mesh_velocity()
+{
+  if (has_fsi()) {
+    fsiContainer_->compute_div_mesh_velocity();
+  }
+}
 } // namespace nalu
 } // namespace sierra

@@ -39,10 +39,10 @@ public:
   void execute(double& timer);
   void init(double currentTime, double restartFrequency);
   void register_nodal_fields(stk::mesh::MetaData& meta, stk::mesh::Part* part);
-  void update_displacements(const double /*currentTime*/){};
-  void predict_model_time_step(const double /*currentTime*/){};
-  void advance_model_time_step(const double /*currentTime*/){};
-  void compute_div_mesh_velocity() {}
+  void update_displacements(const double currentTime);
+  void predict_model_time_step(const double /*currentTime*/);
+  void advance_model_time_step(const double /*currentTime*/);
+  void compute_div_mesh_velocity();
   // hacky function to make sure openfast is cleaned up
   // eventually all openfast pointers should be combined and moved out of this
   // class
