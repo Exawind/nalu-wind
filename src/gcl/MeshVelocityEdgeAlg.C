@@ -64,10 +64,13 @@ MeshVelocityEdgeAlg<AlgTraits>::MeshVelocityEdgeAlg(
   elemData_.add_gathered_nodal_field(meshDispN_, AlgTraits::nDim_);
 
   elemData_.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
-  meSCS_->general_shape_fcn(19, isoParCoords_, isoCoordsShapeFcnHostView_.data());
+  meSCS_->general_shape_fcn(
+    19, isoParCoords_, isoCoordsShapeFcnHostView_.data());
   Kokkos::deep_copy(isoCoordsShapeFcnDeviceView_, isoCoordsShapeFcnHostView_);
 
-  Kokkos::View<const int**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> scsFaceNodeMapHostView(&scsFaceNodeMap_[0][0], 12, 4);
+  Kokkos::View<
+    const int**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+    scsFaceNodeMapHostView(&scsFaceNodeMap_[0][0], 12, 4);
   Kokkos::deep_copy(scsFaceNodeMapDeviceView_, scsFaceNodeMapHostView);
   if (!std::is_same<AlgTraits, AlgTraitsHex8>::value) {
     throw std::runtime_error("MeshVelocityEdgeAlg is only supported for Hex8");
@@ -97,7 +100,6 @@ MeshVelocityEdgeAlg<AlgTraits>::execute()
   const auto isoCoordsShapeFcn = isoCoordsShapeFcnDeviceView_;
   const auto scsFaceNodeMap = scsFaceNodeMapDeviceView_;
 
-
   const stk::mesh::Selector sel = meta.locally_owned_part() &
                                   stk::mesh::selectUnion(partVec_) &
                                   !(realm_.get_inactive_selector());
@@ -119,7 +121,7 @@ MeshVelocityEdgeAlg<AlgTraits>::execute()
       const auto& mCoords = scrView.get_scratch_view_2D(modelCoordsID);
       const auto& dispNp1 = scrView.get_scratch_view_2D(meshDispNp1ID);
       const auto& dispN = scrView.get_scratch_view_2D(meshDispNID);
-  
+
       DoubleType scs_coords_n[19][nDim];
       DoubleType scs_coords_np1[19][nDim];
 
