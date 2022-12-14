@@ -124,6 +124,9 @@ if(ENABLE_CUDA OR ENABLE_ROCM)
     #   target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:--Werror ext-lambda-captures-this>)
     # endif()
   endif()
+  if(ENABLE_ROCM)
+    target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-fgpu-rdc -Wno-deprecated-register>)
+  endif()
 endif()
 
 ############################ FFTW ######################################

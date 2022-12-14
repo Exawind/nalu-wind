@@ -49,7 +49,9 @@ MeshVelocityEdgeAlg<AlgTraits>::MeshVelocityEdgeAlg(
       stk::mesh::StateN,
       stk::topology::EDGE_RANK)),
     meSCS_(MasterElementRepo::get_surface_master_element<AlgTraits>()),
-    isoCoordsShapeFcn_("isoCoordShapFcn", 152)
+    scsFaceNodeMapDeviceView_("scsFaceNodeMap"),
+    isoCoordsShapeFcnDeviceView_("isoCoordShapFcn"),
+    isoCoordsShapeFcnHostView_("isoCoordShapFcnHost")
 {
 
   elemData_.add_cvfem_surface_me(meSCS_);
@@ -62,12 +64,11 @@ MeshVelocityEdgeAlg<AlgTraits>::MeshVelocityEdgeAlg(
   elemData_.add_gathered_nodal_field(meshDispN_, AlgTraits::nDim_);
 
   elemData_.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
+  meSCS_->general_shape_fcn(19, isoParCoords_, isoCoordsShapeFcnHostView_.data());
+  Kokkos::deep_copy(isoCoordsShapeFcnDeviceView_, isoCoordsShapeFcnHostView_);
 
-  Kokkos::View<double*, sierra::nalu::MemSpace> isoShapeHost(
-    "isoShapHost", 152);
-  meSCS_->general_shape_fcn(19, isoParCoords_, &isoShapeHost(0));
-  Kokkos::deep_copy(isoCoordsShapeFcn_, isoShapeHost);
-
+  Kokkos::View<const int**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> scsFaceNodeMapHostView(&scsFaceNodeMap_[0][0], 12, 4);
+  Kokkos::deep_copy(scsFaceNodeMapDeviceView_, scsFaceNodeMapHostView);
   if (!std::is_same<AlgTraits, AlgTraitsHex8>::value) {
     throw std::runtime_error("MeshVelocityEdgeAlg is only supported for Hex8");
   }
@@ -93,12 +94,17 @@ MeshVelocityEdgeAlg<AlgTraits>::execute()
   const auto meshDispNp1ID = meshDispNp1_;
   const auto meshDispNID = meshDispN_;
   MasterElement* meSCS = meSCS_;
-  const auto isoCoordsShapeFcn = isoCoordsShapeFcn_;
-  const auto scsFaceNodeMap = scsFaceNodeMap_;
+  const auto isoCoordsShapeFcn = isoCoordsShapeFcnDeviceView_;
+  const auto scsFaceNodeMap = scsFaceNodeMapDeviceView_;
+
 
   const stk::mesh::Selector sel = meta.locally_owned_part() &
                                   stk::mesh::selectUnion(partVec_) &
                                   !(realm_.get_inactive_selector());
+
+  const auto nodesPerElement = AlgTraits::nodesPerElement_;
+  const auto nDim = AlgTraits::nDim_;
+  const auto numScsIp = AlgTraits::numScsIp_;
 
   const std::string algName =
     "compute_mesh_vel_" + std::to_string(AlgTraits::topo_);
@@ -113,35 +119,33 @@ MeshVelocityEdgeAlg<AlgTraits>::execute()
       const auto& mCoords = scrView.get_scratch_view_2D(modelCoordsID);
       const auto& dispNp1 = scrView.get_scratch_view_2D(meshDispNp1ID);
       const auto& dispN = scrView.get_scratch_view_2D(meshDispNID);
-
-      DoubleType scs_coords_n[19][AlgTraits::nDim_];
-      DoubleType scs_coords_np1[19][AlgTraits::nDim_];
+  
+      DoubleType scs_coords_n[19][nDim];
+      DoubleType scs_coords_np1[19][nDim];
 
       for (int i = 0; i < 19; i++) {
-        for (int j = 0; j < AlgTraits::nDim_; j++) {
+        for (int j = 0; j < nDim; j++) {
           scs_coords_n[i][j] = 0.0;
           scs_coords_np1[i][j] = 0.0;
         }
-        for (int k = 0; k < AlgTraits::nodesPerElement_; k++) {
-          const DoubleType r =
-            isoCoordsShapeFcn(i * AlgTraits::nodesPerElement_ + k);
-          for (int j = 0; j < AlgTraits::nDim_; j++) {
+        for (int k = 0; k < nodesPerElement; k++) {
+          const DoubleType r = isoCoordsShapeFcn(i * nodesPerElement + k);
+          for (int j = 0; j < nDim; j++) {
             scs_coords_n[i][j] += r * (mCoords(k, j) + dispN(k, j));
             scs_coords_np1[i][j] += r * (mCoords(k, j) + dispNp1(k, j));
           }
         }
       }
 
-      for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
-
-        const int na = scsFaceNodeMap[ip][0];
-        const int nb = scsFaceNodeMap[ip][1];
-        const int nc = scsFaceNodeMap[ip][2];
-        const int nd = scsFaceNodeMap[ip][3];
+      for (int ip = 0; ip < numScsIp; ++ip) {
+        const int na = scsFaceNodeMap(ip, 0);
+        const int nb = scsFaceNodeMap(ip, 1);
+        const int nc = scsFaceNodeMap(ip, 2);
+        const int nd = scsFaceNodeMap(ip, 3);
 
         DoubleType scs_vol_coords[8][3];
 
-        for (int j = 0; j < AlgTraits::nDim_; j++) {
+        for (int j = 0; j < nDim; j++) {
           scs_vol_coords[0][j] = scs_coords_n[na][j];
           scs_vol_coords[1][j] = scs_coords_n[nb][j];
           scs_vol_coords[2][j] = scs_coords_n[nc][j];

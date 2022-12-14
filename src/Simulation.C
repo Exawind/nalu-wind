@@ -47,9 +47,12 @@ Simulation::Simulation(const YAML::Node& root_node)
     linearSolvers_(NULL),
     serializedIOGroupSize_(0)
 {
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA)
   cudaDeviceGetLimit(&default_stack_size, cudaLimitStackSize);
   cudaDeviceSetLimit(cudaLimitStackSize, nalu_stack_size);
+#elif defined(KOKKOS_ENABLE_HIP)
+  // hipDeviceGetLimit (&default_stack_size, hipLimitStackSize);
+  // hipDeviceSetLimit (hipLimitStackSize, nalu_stack_size);
 #endif
 
 #ifdef KOKKOS_ENABLE_HIP
@@ -64,8 +67,10 @@ Simulation::~Simulation()
   delete transfers_;
   delete timeIntegrator_;
   delete linearSolvers_;
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA)
   cudaDeviceSetLimit(cudaLimitStackSize, default_stack_size);
+#elif defined(KOKKOS_ENABLE_HIP)
+  // hipDeviceSetLimit (hipLimitStackSize, default_stack_size);
 #endif
 #ifdef KOKKOS_ENABLE_HIP
   // hipDeviceSetLimit(cudaLimitStackSize, default_stack_size);
