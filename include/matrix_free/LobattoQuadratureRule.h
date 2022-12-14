@@ -10,6 +10,7 @@
 #ifndef LOBATTO_QUADRATURE_RULE_H
 #define LOBATTO_QUADRATURE_RULE_H
 
+#include <vector>
 #include "Kokkos_Array.hpp"
 
 namespace sierra {
