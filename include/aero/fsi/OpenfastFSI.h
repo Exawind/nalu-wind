@@ -16,7 +16,7 @@ class OpenfastFSI
 {
 public:
   OpenfastFSI(const YAML::Node&);
-  virtual ~OpenfastFSI()=default;
+  virtual ~OpenfastFSI() = default;
 
   void setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk);
 
