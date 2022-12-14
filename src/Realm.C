@@ -2451,10 +2451,6 @@ Realm::initialize_post_processing_algorithms()
   if (NULL != ablForcingAlg_) {
     ablForcingAlg_->initialize();
   }
-
-  if (lidarLOS_) {
-    lidarLOS_->set_time_for_all(get_current_time());
-  }
 }
 
 //--------------------------------------------------------------------------
@@ -3522,6 +3518,11 @@ Realm::initial_work()
 
   if (bdyLayerStats_ != nullptr) {
     bdyLayerStats_->execute();
+  }
+
+  if (!lidarLOS_->start_time_has_been_set()) {
+    lidarLOS_->set_time_for_all(get_current_time());
+    output_lidar();
   }
 
   equationSystems_.initial_work();

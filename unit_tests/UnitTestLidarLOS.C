@@ -32,7 +32,7 @@ const std::string scan_spec =
   "        scanning_lidar_specifications:                    \n"
   "          center: [500,500,100]                           \n"
   "          beam_length: 20                                 \n"
-  "          axis: [-1,0,0]                                  \n"
+  "          axis: [0,1,0]                                   \n"
   "          stare_time: 1                                   \n"
   "          sweep_angle: 30                                 \n"
   "          step_delta_angle: 2                             \n"
@@ -141,7 +141,7 @@ TEST_F(LidarLOSFixture, write)
 {
   EXPECT_NO_THROW(los.load(spec, nullptr));
   los.set_time_for_all(0);
-  for (int num_steps = 0; num_steps < 10; ++num_steps) {
+  for (int num_steps = 0; num_steps < 20; ++num_steps) {
     los.output(
       bulk, !stk::mesh::Selector{}, "coordinates", 0.5, num_steps * 0.5);
   }

@@ -280,6 +280,24 @@ cross(std::array<double, 3> u, std::array<double, 3> v)
     u[0] * v[1] - u[1] * v[0]};
 }
 
+std::array<double, 3>
+plane_sweep(
+  const std::array<double, 3>& sweep_normal,
+  const std::array<double, 3>& xprime,
+  double yaw,
+  double pitch)
+{
+  // normalize frequently for floating point, but these should all be unitary
+  // operations
+  auto plane_sight_vector = rotate_euler_vec(sweep_normal, yaw, xprime);
+  normalize_vec3(plane_sight_vector.data());
+  const auto yprime = cross(sweep_normal, plane_sight_vector);
+  normalize_vec3(plane_sight_vector.data());
+  auto sight = rotate_euler_vec(yprime, pitch, plane_sight_vector);
+  normalize_vec3(sight.data());
+  return sight;
+}
+
 Segment
 ScanningLidarSegmentGenerator::generate(double time) const
 {
@@ -289,14 +307,9 @@ ScanningLidarSegmentGenerator::generate(double time) const
    starting angle (-sweep angle/2) over some finite period of time.
   */
   const auto tail = center_;
-  const auto yaw_angle = determine_current_angle(periodic_time(time));
-  const auto pitch_angle = determine_elevation_angle(periodic_count(time));
-
-  const auto yaxis = cross(axis_, ground_normal_);
-  const auto xprime = rotate_euler_vec(yaxis, pitch_angle, axis_);
-  const auto zprime = rotate_euler_vec(yaxis, pitch_angle, ground_normal_);
-  const auto sight_vector = rotate_euler_vec(zprime, yaw_angle, xprime);
-
+  const auto yaw = determine_current_angle(periodic_time(time));
+  const auto pitch = determine_elevation_angle(periodic_count(time));
+  const auto sight_vector = plane_sweep(ground_normal_, axis_, yaw, pitch);
   const auto tip = affine(center_, beam_length_, sight_vector);
   return Segment{tip, tail};
 }
@@ -693,15 +706,12 @@ RadarSegmentGenerator::generate(double time) const
    skewed boxes.
   */
 
-  const auto pitch =
-    elevation_table_.at(sweep_count(time) % elevation_table_.size());
-
+  const double clockwise = -1;
+  const auto pitch = clockwise * elevation_table_.at(
+                                   sweep_count(time) % elevation_table_.size());
   const auto tail = center_;
-  const auto yaw_angle = determine_current_angle(periodic_time(time));
-  const auto yaxis = cross(axis_, ground_normal_);
-  const auto xprime = rotate_euler_vec(yaxis, pitch, axis_);
-  const auto zprime = rotate_euler_vec(yaxis, pitch, ground_normal_);
-  const auto sight_vector = rotate_euler_vec(zprime, yaw_angle, xprime);
+  const auto yaw = determine_current_angle(periodic_time(time));
+  const auto sight_vector = plane_sweep(ground_normal_, axis_, yaw, pitch);
   const auto tip = affine(center_, beam_length_, sight_vector);
 
   auto [found, seg] = details::line_intersection_with_box(
