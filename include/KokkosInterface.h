@@ -53,6 +53,12 @@ typedef Kokkos::OpenMP MemSpace;
 typedef Kokkos::HostSpace MemSpace;
 #endif
 
+#if defined(KOKKOS_ENABLE_HIP)
+#define NTHREADS_PER_DEVICE_TEAM 128
+#else
+#define NTHREADS_PER_DEVICE_TEAM Kokkos::AUTO
+#endif
+
 using HostSpace = Kokkos::DefaultHostExecutionSpace;
 using DeviceSpace = Kokkos::DefaultExecutionSpace;
 
@@ -108,7 +114,7 @@ inline DeviceTeamPolicy
 get_device_team_policy(
   const size_t sz, const size_t bytes_per_team, const size_t bytes_per_thread)
 {
-  DeviceTeamPolicy policy(sz, Kokkos::AUTO);
+  DeviceTeamPolicy policy(sz, NTHREADS_PER_DEVICE_TEAM);
   return policy.set_scratch_size(
     1, Kokkos::PerTeam(bytes_per_team), Kokkos::PerThread(bytes_per_thread));
 }
