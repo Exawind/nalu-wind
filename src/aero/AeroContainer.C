@@ -46,17 +46,17 @@ AeroContainer::AeroContainer(const YAML::Node& node)
   }
   std::vector<const YAML::Node*> foundFsi;
   NaluParsingHelper::find_nodes_given_key("openfast_fsi", node, foundFsi);
-#ifdef NALU_USES_OPENFAST_FSI
   if (foundFsi.size() > 0) {
+#ifdef NALU_USES_OPENFAST_FSI
     if (foundFsi.size() != 1)
       throw std::runtime_error(
         "look_ahead_and_create::error: Too many openfast_fsi blocks");
     fsiContainer_ = new OpenfastFSI(*foundFsi[0]);
-  }
 #else
-  throw std::runtime_error(
-    "FSI can not be used without a specialized branch of openfast yet");
+    throw std::runtime_error(
+      "FSI can not be used without a specialized branch of openfast yet");
 #endif
+  }
 }
 
 void
