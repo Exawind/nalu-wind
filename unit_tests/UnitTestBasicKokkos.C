@@ -3,6 +3,7 @@
 
 #include <stk_util/parallel/Parallel.hpp>
 #include <Kokkos_Core.hpp>
+#include "KokkosInterface.h"
 
 TEST(BasicKokkos, discover_execution_space)
 {
@@ -158,7 +159,7 @@ run_nested_parallel_for_thread_teams_test()
   // host_view2D, and the deep_copy is a no-op. That means that the parallel_for
   // which comes next, is updating the values of host_view2D.
   Kokkos::parallel_for(
-    Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>(N, Kokkos::AUTO),
+    Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>(N, NTHREADS_PER_DEVICE_TEAM),
     KOKKOS_LAMBDA(const TeamHandleType& team) {
       size_t i = team.league_rank();
       Kokkos::parallel_for(

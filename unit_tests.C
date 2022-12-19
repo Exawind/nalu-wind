@@ -29,8 +29,19 @@ main(int argc, char** argv)
   const size_t nalu_stack_size = 16384;
   cudaDeviceSetLimit(cudaLimitStackSize, nalu_stack_size);
 #elif defined(KOKKOS_ENABLE_HIP)
-//  const size_t nalu_stack_size = 16384;
-//  hipDeviceSetLimit(hipLimitStackSize, nalu_stack_size);
+  const size_t nalu_stack_size = 16384;
+  hipError_t err = hipDeviceSetLimit(hipLimitMallocHeapSize, nalu_stack_size);
+  if (err!=hipSuccess)
+  {
+	  /*
+		 This might be useful at some point so keeping it and commenting out.
+
+		 sierra::nalu::NaluEnv::self().naluOutputP0()
+		 << __FILE__ << " " << __FUNCTION__ << " " << __LINE__
+		 << " : Failure " << hipGetErrorString(err) << " in hipDeviceSetLimit\n"
+		 << std::endl;
+	  */
+  }
 #endif
   // Create a dummy nested scope to ensure destructors are called before
   // Kokkos::finalize_all. The instances owning threaded Kokkos loops must be
