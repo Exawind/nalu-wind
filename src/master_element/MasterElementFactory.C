@@ -17,7 +17,6 @@
 #include "master_element/Quad43DCVFEM.h"
 #include "master_element/Quad42DCVFEM.h"
 #include "master_element/Tri32DCVFEM.h"
-#include "master_element/Edge32DCVFEM.h"
 #include "master_element/Edge22DCVFEM.h"
 #include "master_element/Tri33DCVFEM.h"
 
@@ -57,8 +56,6 @@ MasterElementRepo::get_surface_master_element_on_dev(
     return get_surface_master_element<AlgTraitsTri3_2D>();
   case stk::topology::LINE_2:
     return get_surface_master_element<AlgTraitsEdge_2D>();
-  case stk::topology::LINE_3:
-    return get_surface_master_element<AlgTraitsEdge3_2D>();
   case stk::topology::SHELL_QUAD_4:
     NaluEnv::self().naluOutputP0()
       << "SHELL_QUAD_4 only supported for io surface transfer applications"
@@ -120,9 +117,6 @@ create_surface_master_element(stk::topology topo)
 
   case stk::topology::LINE_2:
     return std::make_unique<Edge2DSCS>();
-
-  case stk::topology::LINE_3:
-    return std::make_unique<Edge32DSCS>();
 
   case stk::topology::SHELL_QUAD_4:
     NaluEnv::self().naluOutputP0()

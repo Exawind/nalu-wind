@@ -126,8 +126,6 @@ check_side_is_in_element(stk::topology topo)
 
 } // namespace
 
-// Pyramids won't work.  Edge32D SCS has no isInElement implementation yet
-
 #define TEST_ALL_VALID_TOPOS(x, y)                                             \
   TEST(x, tri3##_##y) { y(stk::topology::TRI_3_2D); }                          \
   TEST(x, quad4##_##y) { y(stk::topology::QUAD_4_2D); }                        \
