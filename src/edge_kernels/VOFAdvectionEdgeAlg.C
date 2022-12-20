@@ -29,13 +29,8 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
   : AssembleEdgeSolverAlgorithm(realm, part, eqSystem)
 {
   const auto& meta = realm.meta_data();
-
+  
   coordinates_ = get_field_ordinal(meta, realm.get_coordinates_name());
-  const std::string vrtmName =
-    realm.does_mesh_move() ? "velocity_rtm" : "velocity";
-  const std::string avgVrtmName =
-    realm.does_mesh_move() ? "average_velocity_rtm" : "average_velocity";
-
   scalarQ_ = scalarQ->mesh_meta_data_ordinal();
   dqdx_ = dqdx->mesh_meta_data_ordinal();
   edgeAreaVec_ =
@@ -43,14 +38,16 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
   massFlowRate_ = get_field_ordinal(
     meta, (useAverages) ? "average_mass_flow_rate" : "mass_flow_rate",
     stk::topology::EDGE_RANK);
-  velocityRTM_ =
-    get_field_ordinal(meta, (useAverages) ? avgVrtmName : vrtmName);
 }
 
 void
 VOFAdvectionEdgeAlg::execute()
 {
   const double eps = 1.0e-16;
+  const double gradient_eps = 1.0e-9;
+  // 20.0 is typical value found via adhoc means, can be made user parameter for more control
+  const double compression_magnitude = 20.0;
+  
   const int ndim = realm_.meta_data().spatial_dimension();
 
   const DblType alpha = realm_.get_alpha_factor("volume_of_fluid");
@@ -66,7 +63,6 @@ VOFAdvectionEdgeAlg::execute()
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
-  const auto vrtm = fieldMgr.get_field<double>(velocityRTM_);
   const auto scalarQ = fieldMgr.get_field<double>(scalarQ_);
   const auto dqdx = fieldMgr.get_field<double>(dqdx_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
@@ -89,12 +85,41 @@ VOFAdvectionEdgeAlg::execute()
       const DblType qNp1L = scalarQ.get(nodeL, 0);
       const DblType qNp1R = scalarQ.get(nodeR, 0);
 
+      // Compute extrapolated dq/dx
+      NALU_ALIGNED DblType dqL = 0.0;
+      NALU_ALIGNED DblType dqR = 0.0;
+
+      for (int j = 0; j < ndim; ++j) {
+        const DblType dxj =
+          0.5 * (coordinates.get(nodeR, j) - coordinates.get(nodeL, j));
+        dqL += dxj * dqdx.get(nodeL, j);
+        dqR += dxj * dqdx.get(nodeR, j);
+      }
+
+
+      NALU_ALIGNED DblType limitL = 1.0;
+      NALU_ALIGNED DblType limitR = 1.0;
+
+      if (useLimiter) {
+        const auto dq = scalarQ.get(nodeR, 0) - scalarQ.get(nodeL, 0);
+        const auto dqML = 4.0 * dqL - dq;
+        const auto dqMR = 4.0 * dqR - dq;
+        limitL = van_leer(dqML, dq, eps);
+        limitR = van_leer(dqMR, dq, eps);
+      }
+      
+      // Upwind extrapolation with limiter terms
+      NALU_ALIGNED DblType qIpL;
+      NALU_ALIGNED DblType qIpR;
+      qIpL = scalarQ.get(nodeL, 0) + dqL * hoUpwind * limitL;
+      qIpR = scalarQ.get(nodeR, 0) - dqR * hoUpwind * limitR;
+      
       // Advective flux
       const DblType qIp = 0.5 * (qNp1R + qNp1L); // 2nd order central term
 
       // Upwinded term
-      const DblType qUpw = (mdot > 0) ? (alphaUpw * qNp1L + om_alphaUpw * qIp)
-                                      : (alphaUpw * qNp1R + om_alphaUpw * qIp);
+      const DblType qUpw = (mdot > 0) ? (alphaUpw * qIpL + om_alphaUpw * qIp)
+                                      : (alphaUpw * qIpR + om_alphaUpw * qIp);
 
       const DblType adv_flux = mdot * qUpw;
       smdata.rhs(0) -= adv_flux;
@@ -109,6 +134,51 @@ VOFAdvectionEdgeAlg::execute()
       alhsfac = 0.5 * (mdot - stk::math::abs(mdot)) * alphaUpw;
       smdata.lhs(1, 1) -= alhsfac / relaxFac;
       smdata.lhs(0, 1) += alhsfac;
+
+      // Compression term
+      const DblType velocity_scale = stk::math::abs(mdot);
+
+      DblType dqdxMagL = 0.0;
+      DblType dqdxMagR = 0.0;
+
+      DblType interface_normal[3] = {0.0, 0.0, 0.0};
+
+      for (int j = 0; j < ndim; ++j) {
+        dqdxMagL += dqdx.get(nodeL, j)*dqdx.get(nodeL, j);
+        dqdxMagR += dqdx.get(nodeR, j)*dqdx.get(nodeR, j);
+        interface_normal[j] = 0.5 * dqdx.get(nodeL, j) + 0.5*dqdx.get(nodeR, j);
+      }
+
+      dqdxMagL = stk::math::sqrt(dqdxMagL);
+      dqdxMagR = stk::math::sqrt(dqdxMagR);
+
+      // No gradient == no interface
+      if (stk::math::abs(dqdxMagL) + stk::math::abs(dqdxMagR) < 2.0*gradient_eps)
+        return;
+
+      for (int d = 0; d < ndim; ++d)
+        interface_normal[d] /= 0.5*dqdxMagL + 0.5*dqdxMagR + eps;
+
+      DblType compression = 0.0;
+
+      for (int d = 0; d < ndim; ++d)
+        compression += compression_magnitude*interface_normal[d]*velocity_scale*qIp*(1.0-qIp)*av[d];
+
+      smdata.rhs(0) -= compression;
+      smdata.rhs(1) += compression;
+
+      // Left node contribution; Lag in iterations except for central 0.5*q term
+      DblType slhsfac = 0.0;
+      for (int d = 0; d < ndim; ++d)
+        slhsfac += compression_magnitude*0.5*interface_normal[d]*velocity_scale*(1.0-qIp)*av[d];
+
+      smdata.lhs(0, 0) += slhsfac / relaxFac;
+      smdata.lhs(1, 0) -= slhsfac;
+
+      // Right node contribution;
+      smdata.lhs(1, 1) -= slhsfac / relaxFac;
+      smdata.lhs(0, 1) += slhsfac;
+
     });
 }
 

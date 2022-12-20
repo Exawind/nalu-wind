@@ -7,35 +7,30 @@
 // for more details.
 //
 
-#ifndef VOFADVECTIONEDGEALG_H
-#define VOFADVECTIONEDGEALG_H
+#ifndef ZALESAKDISKMASSFLOWRATEALG_H
+#define ZALESAKDISKMASSFLOWRATEALG_H
 
 #include "AssembleEdgeSolverAlgorithm.h"
-#include "PecletFunction.h"
 
 namespace sierra {
 namespace nalu {
 
-class VOFAdvectionEdgeAlg : public AssembleEdgeSolverAlgorithm
+class ZalesakDiskMassFlowRateEdgeAlg : public AssembleEdgeSolverAlgorithm
 {
 public:
   // TODO: refactor to use FieldManager
-  VOFAdvectionEdgeAlg(
+  ZalesakDiskMassFlowRateEdgeAlg(
     Realm&,
     stk::mesh::Part*,
     EquationSystem*,
-    ScalarFieldType*,
-    VectorFieldType*,
     const bool = false);
 
-  virtual ~VOFAdvectionEdgeAlg() = default;
+  virtual ~ZalesakDiskMassFlowRateEdgeAlg() = default;
 
   virtual void execute();
 
 private:
   unsigned coordinates_{stk::mesh::InvalidOrdinal};
-  unsigned scalarQ_{stk::mesh::InvalidOrdinal};
-  unsigned dqdx_{stk::mesh::InvalidOrdinal};
   unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
   unsigned massFlowRate_{stk::mesh::InvalidOrdinal};
 };
@@ -43,4 +38,4 @@ private:
 } // namespace nalu
 } // namespace sierra
 
-#endif /* VOFADVECTIONEDGEALG_H */
+#endif /* ZALESAKDISKMASSFLOWRATEALG_H */
