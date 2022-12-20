@@ -9,6 +9,7 @@ namespace nalu {
 class MeshMotionAlg
 {
 public:
+  // TODO fsi data needs to be supplied to mesh motion/or triggered
   MeshMotionAlg(stk::mesh::BulkData& bulk, const YAML::Node&);
 
   ~MeshMotionAlg() {}

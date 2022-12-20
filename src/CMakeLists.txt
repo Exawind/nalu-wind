@@ -105,7 +105,7 @@ if(ENABLE_FFTW)
    target_sources(nalu PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumEdgeABLTopBC.C
    )
-endif()
+endif(ENABLE_FFTW)
 
 if(ENABLE_HYPRE)
    target_sources(nalu PRIVATE
@@ -115,7 +115,7 @@ if(ENABLE_HYPRE)
       ${CMAKE_CURRENT_SOURCE_DIR}/HypreLinearSystem.C
       ${CMAKE_CURRENT_SOURCE_DIR}/HypreUVWLinearSystem.C
    )
-endif()
+endif(ENABLE_HYPRE)
 
 add_subdirectory(aero)
 add_subdirectory(element_promotion)

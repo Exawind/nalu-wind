@@ -163,7 +163,15 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     } else if (simStartType == "restartDriverInitFAST") {
       fi.simStart = fast::restartDriverInitFAST;
     }
-    get_required(y_actuator, "n_every_checkpoint", fi.nEveryCheckPoint);
+    // TODO Do we need this for anything in FSI?
+    /* get_required(y_actuator, "restartFreq", fi.restartFreq); */
+    int* restartFreq;
+#ifdef NALU_USES_OPENFAST_FSI
+    restartFreq = &fi.restartFreq;
+#else
+    restartFreq = &fi.nEveryCheckPoint;
+#endif
+    get_required(y_actuator, "n_every_checkpoint", *restartFreq);
     get_required(y_actuator, "dt_fast", fi.dtFAST);
 
     get_required(y_actuator, "t_max", fi.tMax);
@@ -191,7 +199,6 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
           " not present in input file or I cannot read it");
       }
     }
-
   } else {
     throw std::runtime_error("Number of turbines <= 0 ");
   }
