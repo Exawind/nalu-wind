@@ -61,13 +61,15 @@ LinearSolvers::load(const YAML::Node& node)
       YAML::Node linear_solver_node = nodes[inode];
 
       std::string preset_name;
-      get_if_present(linear_solver_node, "solver_preset", preset_name, std::string("none"));
-      std::transform(preset_name.begin(), preset_name.end(), preset_name.begin(), ::tolower);
+      get_if_present(
+        linear_solver_node, "solver_preset", preset_name, std::string("none"));
+      std::transform(
+        preset_name.begin(), preset_name.end(), preset_name.begin(), ::tolower);
 
       Teuchos::ParameterList presetParams;
       Teuchos::ParameterList presetParamsPrecond;
       if (preset_name != "none") {
-        auto * preset_solver = PresetSolverRepo::getSolver(preset_name);
+        auto* preset_solver = PresetSolverRepo::getSolver(preset_name);
         preset_solver->populateParams(linear_solver_node, presetParamsPrecond);
       }
       std::string solver_type = "tpetra";
@@ -156,7 +158,7 @@ LinearSolvers::create_solver(
   return theSolver;
 }
 
- LinearSolver*
+LinearSolver*
 LinearSolvers::reinitialize_solver(
   const std::string& solverBlockName,
   const std::string& realmName,
@@ -173,10 +175,10 @@ LinearSolvers::reinitialize_solver(
   return create_solver(solverBlockName, realmName, theEQ);
 }
 
-void LinearSolvers::register_presets()
+void
+LinearSolvers::register_presets()
 {
-  if (PresetSolverRepo::getSolverMap().empty())
-  {
+  if (PresetSolverRepo::getSolverMap().empty()) {
     PresetSolverRepo::registerPreset(new ScalarTpetraPresetSolver);
     PresetSolverRepo::registerPreset(new EllipticTpetraPresetSolver);
     PresetSolverRepo::registerPreset(new MomentumHyprePresetSolver);
@@ -184,7 +186,9 @@ void LinearSolvers::register_presets()
     PresetSolverRepo::registerPreset(new EllipticHyprePresetSolver);
   }
 }
-void ScalarTpetraPresetSolver::populateParams(YAML::Node & node, Teuchos::ParameterList & /* Unused */) const
+void
+ScalarTpetraPresetSolver::populateParams(
+  YAML::Node& node, Teuchos::ParameterList& /* Unused */) const
 {
   YAML::Node myNode;
   myNode["name"] = node["name"];
@@ -195,19 +199,24 @@ void ScalarTpetraPresetSolver::populateParams(YAML::Node & node, Teuchos::Parame
   myNode["max_iterations"] = "75";
   myNode["kspace"] = "75";
   myNode["output_level"] = "0";
+
   node = myNode;
-  
-  NaluEnv::self().naluOutputP0() << "Scalar Tpetra preset solver selected"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "Equivalent yaml input:"<<std::endl;
-  NaluEnv::self().naluOutputP0() << myNode<<std::endl;
-  NaluEnv::self().naluOutputP0() << "---------------------------"<<std::endl;
+
+  NaluEnv::self().naluOutputP0()
+    << "Scalar Tpetra preset solver selected" << std::endl;
+  NaluEnv::self().naluOutputP0() << "Equivalent yaml input:" << std::endl;
+  NaluEnv::self().naluOutputP0() << myNode << std::endl;
+  NaluEnv::self().naluOutputP0() << "---------------------------" << std::endl;
 }
-std::string ScalarTpetraPresetSolver::getName() const
+std::string
+ScalarTpetraPresetSolver::getName() const
 {
   return "scalar_tpetra";
 }
 
-void EllipticTpetraPresetSolver::populateParams(YAML::Node & node, Teuchos::ParameterList & presetParamsPrecond) const
+void
+EllipticTpetraPresetSolver::populateParams(
+  YAML::Node& node, Teuchos::ParameterList& presetParamsPrecond) const
 {
   YAML::Node myNode;
   myNode["name"] = node["name"];
@@ -224,7 +233,7 @@ void EllipticTpetraPresetSolver::populateParams(YAML::Node & node, Teuchos::Para
   presetParamsPrecond.set("verbosity", "none");
   presetParamsPrecond.set("coarse: max size", 1000);
   presetParamsPrecond.set("smoother: type", "CHEBYSHEV");
-  auto & smoother_pl = presetParamsPrecond.sublist("smoother: params", false);
+  auto& smoother_pl = presetParamsPrecond.sublist("smoother: params", false);
   smoother_pl.set("chebyshev: degree", 2);
   smoother_pl.set("chebyshev: ratio eigenvalue", 20.0);
   smoother_pl.set("chebyshev: min eigenvalue", 1.0);
@@ -238,44 +247,96 @@ void EllipticTpetraPresetSolver::populateParams(YAML::Node & node, Teuchos::Para
   presetParamsPrecond.set("repartition: max imbalance", 1.327);
   presetParamsPrecond.set("repartition: partitioner", "zoltan2");
 
-  NaluEnv::self().naluOutputP0() << "Elliptic Tpetra preset solver selected"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "Equivalent yaml input:"<<std::endl;
-  NaluEnv::self().naluOutputP0() << myNode<<std::endl;
-  NaluEnv::self().naluOutputP0() << "muelu_xml_file_name: elliptic_tpetra.xml"<<std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "Elliptic Tpetra preset solver selected" << std::endl;
+  NaluEnv::self().naluOutputP0() << "Equivalent yaml input:" << std::endl;
+  NaluEnv::self().naluOutputP0() << myNode << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "muelu_xml_file_name: elliptic_tpetra.xml" << std::endl;
   NaluEnv::self().naluOutputP0() << std::endl;
-  NaluEnv::self().naluOutputP0() << "Contents of MueLu xml file:"<<std::endl;
+  NaluEnv::self().naluOutputP0() << "Contents of MueLu xml file:" << std::endl;
 
   // Tried doing this with the xml writer, didn't like the output.
-  NaluEnv::self().naluOutputP0() << "<ParameterList name=\"MueLu\">"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "<Parameter        name=\"verbosity\"                        type=\"string\"   value=\"none\"/>" <<std::endl;
-  NaluEnv::self().naluOutputP0() << "<Parameter        name=\"coarse: max size\"                 type=\"int\"      value=\"1000\"/>"<<std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "<ParameterList name=\"MueLu\">" << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "<Parameter        name=\"verbosity\"                        "
+       "type=\"string\"   value=\"none\"/>"
+    << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "<Parameter        name=\"coarse: max size\"                 "
+       "type=\"int\"      value=\"1000\"/>"
+    << std::endl;
   NaluEnv::self().naluOutputP0() << std::endl;
-  NaluEnv::self().naluOutputP0() << "<Parameter        name=\"smoother: type\"                   type=\"string\"   value=\"CHEBYSHEV\"/>" <<std::endl;
-  NaluEnv::self().naluOutputP0() << "<ParameterList    name=\"smoother: params\">"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "   <Parameter name=\"chebyshev: degree\"                    type=\"int\"      value=\"2\"/>"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "   <Parameter name=\"chebyshev: ratio eigenvalue\"          type=\"double\"   value=\"20\"/>"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "   <Parameter name=\"chebyshev: min eigenvalue\"            type=\"double\"   value=\"1.0\"/>"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "   <Parameter name=\"chebyshev: zero starting solution\"    type=\"bool\"     value=\"true\"/>"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "   <Parameter name=\"chebyshev: eigenvalue max iterations\" type=\"int\"      value=\"15\"/>"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "</ParameterList>"<<std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "<Parameter        name=\"smoother: type\"                   "
+       "type=\"string\"   value=\"CHEBYSHEV\"/>"
+    << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "<ParameterList    name=\"smoother: params\">" << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "   <Parameter name=\"chebyshev: degree\"                    "
+       "type=\"int\"      value=\"2\"/>"
+    << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "   <Parameter name=\"chebyshev: ratio eigenvalue\"          "
+       "type=\"double\"   value=\"20\"/>"
+    << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "   <Parameter name=\"chebyshev: min eigenvalue\"            "
+       "type=\"double\"   value=\"1.0\"/>"
+    << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "   <Parameter name=\"chebyshev: zero starting solution\"    "
+       "type=\"bool\"     value=\"true\"/>"
+    << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "   <Parameter name=\"chebyshev: eigenvalue max iterations\" "
+       "type=\"int\"      value=\"15\"/>"
+    << std::endl;
+  NaluEnv::self().naluOutputP0() << "</ParameterList>" << std::endl;
   NaluEnv::self().naluOutputP0() << std::endl;
-  NaluEnv::self().naluOutputP0() << "<Parameter        name=\"aggregation: type\"                type=\"string\"   value=\"uncoupled\"/>"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "<Parameter        name=\"aggregation: drop tol\"            type=\"double\"   value=\"0.02\"/>"<<std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "<Parameter        name=\"aggregation: type\"                "
+       "type=\"string\"   value=\"uncoupled\"/>"
+    << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "<Parameter        name=\"aggregation: drop tol\"            "
+       "type=\"double\"   value=\"0.02\"/>"
+    << std::endl;
   NaluEnv::self().naluOutputP0() << std::endl;
-  NaluEnv::self().naluOutputP0() << "<Parameter        name=\"repartition: enable\"              type=\"bool\"     value=\"true\"/>"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "<Parameter        name=\"repartition: min rows per proc\"   type=\"int\"      value=\"1000\"/>"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "<Parameter        name=\"repartition: start level\"         type=\"int\"      value=\"2\"/>"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "<Parameter        name=\"repartition: max imbalance\"       type=\"double\"   value=\"1.327\"/>"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "<Parameter        name=\"repartition: partitioner\"         type=\"string\"   value=\"zoltan2\"/>"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "</ParameterList>"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "---------------------------"<<std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "<Parameter        name=\"repartition: enable\"              "
+       "type=\"bool\"     value=\"true\"/>"
+    << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "<Parameter        name=\"repartition: min rows per proc\"   "
+       "type=\"int\"      value=\"1000\"/>"
+    << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "<Parameter        name=\"repartition: start level\"         "
+       "type=\"int\"      value=\"2\"/>"
+    << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "<Parameter        name=\"repartition: max imbalance\"       "
+       "type=\"double\"   value=\"1.327\"/>"
+    << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "<Parameter        name=\"repartition: partitioner\"         "
+       "type=\"string\"   value=\"zoltan2\"/>"
+    << std::endl;
+  NaluEnv::self().naluOutputP0() << "</ParameterList>" << std::endl;
+  NaluEnv::self().naluOutputP0() << "---------------------------" << std::endl;
 }
-std::string EllipticTpetraPresetSolver::getName() const
+std::string
+EllipticTpetraPresetSolver::getName() const
 {
   return "elliptic_tpetra";
 }
 
-void MomentumHyprePresetSolver::populateParams(YAML::Node & node, Teuchos::ParameterList & /* Unused */) const
+void
+MomentumHyprePresetSolver::populateParams(
+  YAML::Node& node, Teuchos::ParameterList& /* Unused */) const
 {
   YAML::Node myNode;
   myNode["name"] = node["name"];
@@ -299,17 +360,21 @@ void MomentumHyprePresetSolver::populateParams(YAML::Node & node, Teuchos::Param
   myNode["bamg_relax_order"] = 0;
   node = myNode;
 
-  NaluEnv::self().naluOutputP0() << "Momentum Hypre preset solver selected"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "Equivalent yaml input:"<<std::endl;
-  NaluEnv::self().naluOutputP0() << myNode<<std::endl;
-  NaluEnv::self().naluOutputP0() << "---------------------------"<<std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "Momentum Hypre preset solver selected" << std::endl;
+  NaluEnv::self().naluOutputP0() << "Equivalent yaml input:" << std::endl;
+  NaluEnv::self().naluOutputP0() << myNode << std::endl;
+  NaluEnv::self().naluOutputP0() << "---------------------------" << std::endl;
 }
-std::string MomentumHyprePresetSolver::getName() const
+std::string
+MomentumHyprePresetSolver::getName() const
 {
   return "momentum_hypre";
 }
 
-void ScalarHyprePresetSolver::populateParams(YAML::Node & node, Teuchos::ParameterList & /* Unused */) const
+void
+ScalarHyprePresetSolver::populateParams(
+  YAML::Node& node, Teuchos::ParameterList& /* Unused */) const
 {
   YAML::Node myNode;
   myNode["name"] = node["name"];
@@ -332,17 +397,21 @@ void ScalarHyprePresetSolver::populateParams(YAML::Node & node, Teuchos::Paramet
   myNode["bamg_relax_order"] = 0;
   node = myNode;
 
-  NaluEnv::self().naluOutputP0() << "Scalar Hypre preset solver selected"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "Equivalent yaml input:"<<std::endl;
-  NaluEnv::self().naluOutputP0() << myNode<<std::endl;
-  NaluEnv::self().naluOutputP0() << "---------------------------"<<std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "Scalar Hypre preset solver selected" << std::endl;
+  NaluEnv::self().naluOutputP0() << "Equivalent yaml input:" << std::endl;
+  NaluEnv::self().naluOutputP0() << myNode << std::endl;
+  NaluEnv::self().naluOutputP0() << "---------------------------" << std::endl;
 }
-std::string ScalarHyprePresetSolver::getName() const
+std::string
+ScalarHyprePresetSolver::getName() const
 {
   return "scalar_hypre";
 }
 
-void EllipticHyprePresetSolver::populateParams(YAML::Node & node, Teuchos::ParameterList & /* Unused */) const
+void
+EllipticHyprePresetSolver::populateParams(
+  YAML::Node& node, Teuchos::ParameterList& /* Unused */) const
 {
   YAML::Node myNode;
   myNode["name"] = node["name"];
@@ -376,39 +445,41 @@ void EllipticHyprePresetSolver::populateParams(YAML::Node & node, Teuchos::Param
   myNode["bamg_strong_threshold"] = 0.25;
   node = myNode;
 
-  NaluEnv::self().naluOutputP0() << "Elliptic Hypre preset solver selected"<<std::endl;
-  NaluEnv::self().naluOutputP0() << "Equivalent yaml input:"<<std::endl;
-  NaluEnv::self().naluOutputP0() << myNode<<std::endl;
-  NaluEnv::self().naluOutputP0() << "---------------------------"<<std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "Elliptic Hypre preset solver selected" << std::endl;
+  NaluEnv::self().naluOutputP0() << "Equivalent yaml input:" << std::endl;
+  NaluEnv::self().naluOutputP0() << myNode << std::endl;
+  NaluEnv::self().naluOutputP0() << "---------------------------" << std::endl;
 }
-std::string EllipticHyprePresetSolver::getName() const
+std::string
+EllipticHyprePresetSolver::getName() const
 {
   return "elliptic_hypre";
 }
 
 PresetSolverRepo::map_type PresetSolverRepo::presets_map_;
 
-void PresetSolverRepo::registerPreset(PresetSolverBase * solver_type)
+void
+PresetSolverRepo::registerPreset(PresetSolverBase* solver_type)
 {
   auto type = solver_type->getName();
-  if (presets_map_.find(type) == presets_map_.end())
-  {
+  if (presets_map_.find(type) == presets_map_.end()) {
     presets_map_[type] = std::unique_ptr<PresetSolverBase>(solver_type);
   }
 }
 
-PresetSolverBase * PresetSolverRepo::getSolver(const std::string & type)
+PresetSolverBase*
+PresetSolverRepo::getSolver(const std::string& type)
 {
   auto iter = presets_map_.find(type);
-  if (iter == presets_map_.end())
-  {
-    throw std::runtime_error(
-          "Desired preset solver not found.");
+  if (iter == presets_map_.end()) {
+    throw std::runtime_error("Desired preset solver not found.");
   }
   return presets_map_[type].get();
 }
 
-const PresetSolverRepo::map_type & PresetSolverRepo::getSolverMap()
+const PresetSolverRepo::map_type&
+PresetSolverRepo::getSolverMap()
 {
   return PresetSolverRepo::presets_map_;
 }
