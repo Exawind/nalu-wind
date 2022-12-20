@@ -16,6 +16,7 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestInitialConditions.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKokkosME.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKokkosMEBC.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKokkosParallelFor.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKokkosViews.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLidarLOS.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLocalGraphArrays.C
