@@ -10,19 +10,16 @@
 #ifndef AEROCONTAINER_H_
 #define AEROCONTAINER_H_
 
+#include <memory>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Part.hpp>
 #include <yaml-cpp/yaml.h>
 #include "aero/actuator/ActuatorModel.h"
 
-#ifdef NALU_USES_OPENFAST
-#include "OpenFAST.H"
-// TODO add a blank openfast data structure possibly
-#endif
+namespace sierra::nalu {
 
-namespace sierra {
-namespace nalu {
+class OpenfastFSI;
 
 /**
  * A container class for holding all the aerodynamic models (actuators,
@@ -36,28 +33,31 @@ public:
   AeroContainer(AeroContainer&) = delete;
 
   AeroContainer(const YAML::Node& node);
-  ~AeroContainer() = default;
+  ~AeroContainer();
 
-  void setup(double timeStep, stk::mesh::BulkData& stkBulk);
+  void setup(double timeStep, std::shared_ptr<stk::mesh::BulkData> stkBulk);
   void execute(double& timer);
-  void init(stk::mesh::BulkData& stkBulk);
+  void init(double currentTime, double restartFrequency);
   void register_nodal_fields(stk::mesh::MetaData& meta, stk::mesh::Part* part);
+  void update_displacements(const double currentTime);
+  void predict_model_time_step(const double /*currentTime*/);
+  void advance_model_time_step(const double /*currentTime*/);
+  void compute_div_mesh_velocity();
+  // hacky function to make sure openfast is cleaned up
+  // eventually all openfast pointers should be combined and moved out of this
+  // class
+  void clean_up();
 
-  // TODO active if actuators or FSI is active
-  bool is_active() { return has_actuators(); }
+  bool is_active() { return has_actuators() || has_fsi(); }
 
 private:
   bool has_actuators() { return actuatorModel_.is_active(); }
-#ifdef NALU_USES_OPENFAST
-  // TODO this should be the only instance of openfast
-  // all other instances need to be made into shared_ptrs that share from this
-  // one
-  std::shared_ptr<fast::OpenFAST> fast_;
-#endif
-  // TODO move calls to actuator model in realm to this container class
+  bool has_fsi() { return fsiContainer_ != nullptr; }
   ActuatorModel actuatorModel_;
+  // TODO make this a unique_ptr
+  OpenfastFSI* fsiContainer_;
+  std::shared_ptr<stk::mesh::BulkData> bulk_;
 };
 
-} // namespace nalu
-} // namespace sierra
+} // namespace sierra::nalu
 #endif

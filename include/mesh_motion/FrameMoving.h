@@ -21,7 +21,7 @@ public:
 
   virtual ~FrameMoving() {}
 
-  void update_coordinates_velocity(const double time);
+  virtual void update_coordinates_velocity(const double time);
 
   void post_compute_geometry();
 
