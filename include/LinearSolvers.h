@@ -15,6 +15,7 @@
 #include <Teuchos_ParameterList.hpp>
 #include <map>
 #include <string>
+#include <yaml-cpp/yaml.h>
 
 namespace YAML {
 class Node;
@@ -87,7 +88,66 @@ public:
   //! Reference to the sierra::nalu::Simulation instance
   Simulation& sim_;
 
+  void register_presets();
+
 private:
+};
+
+class PresetSolverBase
+{
+public:
+  virtual void populateParams(
+    YAML::Node& node, Teuchos::ParameterList& presetParamsPrecond) const = 0;
+  virtual std::string getName() const = 0;
+};
+
+class ScalarTpetraPresetSolver : public PresetSolverBase
+{
+public:
+  void populateParams(
+    YAML::Node& node, Teuchos::ParameterList& /* Unused */) const override;
+  std::string getName() const override;
+};
+class EllipticTpetraPresetSolver : public PresetSolverBase
+{
+public:
+  void populateParams(
+    YAML::Node& node,
+    Teuchos::ParameterList& presetParamsPrecond) const override;
+  std::string getName() const override;
+};
+class MomentumHyprePresetSolver : public PresetSolverBase
+{
+public:
+  void populateParams(
+    YAML::Node& node, Teuchos::ParameterList& /* Unused */) const override;
+  std::string getName() const override;
+};
+class ScalarHyprePresetSolver : public PresetSolverBase
+{
+public:
+  void populateParams(
+    YAML::Node& node, Teuchos::ParameterList& /* Unused */) const override;
+  std::string getName() const override;
+};
+class EllipticHyprePresetSolver : public PresetSolverBase
+{
+public:
+  void populateParams(
+    YAML::Node& node, Teuchos::ParameterList& /* Unused */) const override;
+  std::string getName() const override;
+};
+
+class PresetSolverRepo
+{
+public:
+  using map_type = std::map<std::string, std::unique_ptr<PresetSolverBase>>;
+  static void registerPreset(PresetSolverBase* solver_type);
+  static PresetSolverBase* getSolver(const std::string& type);
+  static const map_type& getSolverMap();
+
+private:
+  static map_type presets_map_;
 };
 
 } // namespace nalu
