@@ -31,7 +31,8 @@ public:
   LinearSolverConfig();
   virtual ~LinearSolverConfig() = default;
 
-  virtual void load(const YAML::Node&) = 0;
+  virtual void
+  load(const YAML::Node&, Teuchos::ParameterList& presetParamsPrecon) = 0;
 
   inline std::string name() const { return name_; }
 
@@ -105,7 +106,8 @@ public:
   TpetraLinearSolverConfig();
   virtual ~TpetraLinearSolverConfig();
 
-  virtual void load(const YAML::Node& node) final;
+  virtual void load(
+    const YAML::Node& node, Teuchos::ParameterList& presetParamsPrecon) final;
   bool getSummarizeMueluTimer() { return summarizeMueluTimer_; }
   std::string& muelu_xml_file() { return muelu_xml_file_; }
   bool use_MueLu() const { return useMueLu_; }
@@ -127,7 +129,8 @@ public:
 
   //! Process and validate the user inputs and register calls to appropriate
   //! Hypre functions to configure the solver and preconditioner.
-  virtual void load(const YAML::Node&);
+  virtual void
+  load(const YAML::Node&, Teuchos::ParameterList& presetParamsPrecon);
 
   bool useSegregatedSolver() const { return useSegregatedSolver_; }
 

@@ -9,26 +9,11 @@ linear_solvers:
 
   # solver for scalar equations
   - name: solve_scalar
-    type: tpetra
-    method: gmres
-    preconditioner: sgs
-    tolerance: 1e-6
-    max_iterations: 75
-    kspace: 75
-    output_level: 0
+    solver_preset: scalar_tpetra
 
   # solver for the pressure Poisson equation
   - name: solve_cont
-    type: tpetra
-    method: gmres
-    preconditioner: muelu
-    tolerance: 1e-6
-    max_iterations: 75
-    kspace: 75
-    output_level: 0
-    recompute_preconditioner: no
-    muelu_xml_file_name: ../../xml/milestone.xml
-
+    solver_preset: elliptic_tpetra
 
 # Specify the differnt physics realms.  Here, we just have one for the fluid.
 realms:

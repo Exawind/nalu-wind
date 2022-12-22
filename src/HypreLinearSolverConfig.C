@@ -28,7 +28,8 @@ namespace nalu {
 HypreLinearSolverConfig::HypreLinearSolverConfig() : LinearSolverConfig() {}
 
 void
-HypreLinearSolverConfig::load(const YAML::Node& node)
+HypreLinearSolverConfig::load(
+  const YAML::Node& node, Teuchos::ParameterList& presetParamsPrecond)
 {
   const std::string hypre_check("hypre_");
   name_ = node["name"].as<std::string>();
