@@ -38,7 +38,7 @@ OpenfastFSI::read_turbine_data(
     if (turbNode["sim_type"].as<std::string>() == "ext-loads") {
       fi.globTurbineData[iTurb].sType = fast::EXTLOADS;
       fsiTurbineData_[iTurb] =
-        new fsiTurbine(iTurb, turbNode, bulk_->mesh_meta_data(), *bulk_);
+          new fsiTurbine(iTurb, turbNode);
       mesh_motion_ = true;
     } else {
       fi.globTurbineData[iTurb].sType = fast::EXTINFLOW;
@@ -169,7 +169,7 @@ OpenfastFSI::setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk)
   for (int i = 0; i < nTurbinesGlob; i++) {
     if (fsiTurbineData_[i] != NULL) // This may not be a turbine intended for
                                     // blade-resolved simulation
-      fsiTurbineData_[i]->setup();
+      fsiTurbineData_[i]->setup(bulk_);
   }
   FAST.allocateTurbinesToProcsSimple();
   FAST.setDriverTimeStep(dtNalu);

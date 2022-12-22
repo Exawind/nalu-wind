@@ -33,13 +33,11 @@ class fsiTurbine
 public:
   fsiTurbine(
     int iTurb,
-    const YAML::Node&,
-    stk::mesh::MetaData& meta,
-    stk::mesh::BulkData& bulk);
+    const YAML::Node&);
 
   virtual ~fsiTurbine();
 
-  void setup();
+  void setup(std::shared_ptr<stk::mesh::BulkData> bulk);
 
   void initialize();
 
@@ -256,8 +254,7 @@ private:
 
   int iTurb_; // Global turbine number
 
-  stk::mesh::MetaData& meta_;
-  stk::mesh::BulkData& bulk_;
+  std::shared_ptr<stk::mesh::BulkData> bulk_;
 
   int turbineProc_;    // The MPI rank containing the OpenFAST instance of the
                        // turbine

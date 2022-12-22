@@ -29,12 +29,8 @@ check_nc_error(int code, std::string msg)
 
 fsiTurbine::fsiTurbine(
   int iTurb,
-  const YAML::Node& node,
-  stk::mesh::MetaData& meta,
-  stk::mesh::BulkData& bulk)
+  const YAML::Node& node)
   : iTurb_(iTurb),
-    meta_(meta),
-    bulk_(bulk),
     turbineProc_(-1),
     turbineInProc_(false),
     loadMap_(NULL),
@@ -44,27 +40,38 @@ fsiTurbine::fsiTurbine(
     tauWallSCS_(NULL)
 {
 
+  std::cerr << "Initializing fsiTurbine " << std::endl;
+  
   if (node["tower_parts"]) {
     const auto& tparts = node["tower_parts"];
     twrPartNames_ = tparts.as<std::vector<std::string>>();
-  } else if (!bulk_.parallel_rank()) {
+  } else if (!bulk_->parallel_rank()) {
     std::cout << "Tower part name(s) not specified for turbine " << iTurb_
               << std::endl;
   }
+
+  std::cerr << "Wrapping up fsi turbine - tower parts  " << std::endl;  
+  
   if (node["nacelle_parts"]) {
     const auto& nparts = node["nacelle_parts"];
     nacellePartNames_ = nparts.as<std::vector<std::string>>();
-  } else if (!bulk_.parallel_rank()) {
+  } else if (!bulk_->parallel_rank()) {
     std::cout << "Nacelle part name(s) not specified for turbine " << iTurb_
               << std::endl;
   }
+
+  std::cerr << "Wrapping up fsi turbine - nacelle parts  " << std::endl;  
+  
   if (node["hub_parts"]) {
     const auto& hparts = node["hub_parts"];
     hubPartNames_ = hparts.as<std::vector<std::string>>();
-  } else if (!bulk_.parallel_rank()) {
+  } else if (!bulk_->parallel_rank()) {
     std::cout << "Hub part name(s) not specified for turbine " << iTurb_
               << std::endl;
   }
+  
+  std::cerr << "Wrapping up fsi turbine - hub parts  " << std::endl;  
+  
   if (node["blade_parts"]) {
     const auto& bparts = node["blade_parts"];
     nBlades_ = bparts.size();
@@ -75,32 +82,41 @@ fsiTurbine::fsiTurbine(
       bladePartNames_[iBlade] = bpart.as<std::vector<std::string>>();
     }
 
-  } else if (!bulk_.parallel_rank()) {
+  } else if (!bulk_->parallel_rank()) {
     std::cout << "Blade part names not specified for turbine " << iTurb_
               << std::endl;
   }
 
+  std::cerr << "Wrapping up fsi turbine - blade boundary parts  " << std::endl;  
+  
   if (node["tower_boundary_parts"]) {
     const auto& tparts = node["tower_boundary_parts"];
     twrBndyPartNames_ = tparts.as<std::vector<std::string>>();
-  } else if (!bulk_.parallel_rank()) {
+  } else if (!bulk_->parallel_rank()) {
     std::cout << "Tower part name(s) not specified for turbine " << iTurb_
               << std::endl;
   }
+
+  std::cerr << "Wrapping up fsi turbine - tower boundary parts  " << std::endl;  
+  
   if (node["nacelle_boundary_parts"]) {
     const auto& nparts = node["nacelle_boundary_parts"];
     nacelleBndyPartNames_ = nparts.as<std::vector<std::string>>();
-  } else if (!bulk_.parallel_rank()) {
+  } else if (!bulk_->parallel_rank()) {
     std::cout << "Nacelle boundary part name(s) not specified for turbine "
               << iTurb_ << std::endl;
   }
+  std::cerr << "Wrapping up fsi turbine - nacelle boundary parts  " << std::endl;  
+  
   if (node["hub_boundary_parts"]) {
     const auto& hparts = node["hub_boundary_parts"];
     hubBndyPartNames_ = hparts.as<std::vector<std::string>>();
-  } else if (!bulk_.parallel_rank()) {
+  } else if (!bulk_->parallel_rank()) {
     std::cout << "Hub boundary part name(s) not specified for turbine "
               << iTurb_ << std::endl;
   }
+
+  std::cerr << "Wrapping up fsi turbine - hub boundary parts  " << std::endl;  
   if (node["blade_boundary_parts"]) {
     const auto& bparts = node["blade_boundary_parts"];
     nBlades_ = bparts.size();
@@ -111,64 +127,13 @@ fsiTurbine::fsiTurbine(
       bladeBndyPartNames_[iBlade] = bpart.as<std::vector<std::string>>();
     }
 
-  } else if (!bulk_.parallel_rank()) {
+  } else if (!bulk_->parallel_rank()) {
     std::cout << "Blade boundary part names not specified for turbine "
               << iTurb_ << std::endl;
   }
 
-  loadMap_ =
-    meta_.get_field<GenericIntFieldType>(meta_.side_rank(), "load_map");
-  if (loadMap_ == NULL)
-    loadMap_ = &(
-      meta_.declare_field<GenericIntFieldType>(meta_.side_rank(), "load_map"));
+  std::cerr << "Wrapping up fsi turbine initialization " << std::endl;
 
-  loadMapInterp_ =
-    meta_.get_field<GenericFieldType>(meta_.side_rank(), "load_map_interp");
-  if (loadMapInterp_ == NULL)
-    loadMapInterp_ = &(meta_.declare_field<GenericFieldType>(
-      meta_.side_rank(), "load_map_interp"));
-
-  dispMap_ =
-    meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "disp_map");
-  if (dispMap_ == NULL)
-    dispMap_ = &(meta_.declare_field<ScalarIntFieldType>(
-      stk::topology::NODE_RANK, "disp_map"));
-
-  dispMapInterp_ = meta_.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "disp_map_interp");
-  if (dispMapInterp_ == NULL)
-    dispMapInterp_ = &(meta_.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "disp_map_interp"));
-
-  ScalarFieldType* div_mesh_vel = meta_.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "div_mesh_velocity");
-  if (div_mesh_vel == NULL)
-    div_mesh_vel = &(meta_.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "div_mesh_velocity"));
-
-  pressureForceSCS_ =
-    meta_.get_field<VectorFieldType>(meta_.side_rank(), "pressure_force_scs");
-  if (pressureForceSCS_ == NULL)
-    pressureForceSCS_ = &(meta_.declare_field<VectorFieldType>(
-      meta_.side_rank(), "pressure_force_scs"));
-
-  tauWallSCS_ =
-    meta_.get_field<VectorFieldType>(meta.side_rank(), "tau_wall_scs");
-  if (tauWallSCS_ == NULL) // Still null, declare your own field
-    tauWallSCS_ = &(
-      meta_.declare_field<VectorFieldType>(meta_.side_rank(), "tau_wall_scs"));
-
-  VectorFieldType* mesh_disp_ref = meta_.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "mesh_displacement_ref");
-  if (mesh_disp_ref == NULL)
-    mesh_disp_ref = &(meta_.declare_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "mesh_displacement_ref"));
-
-  VectorFieldType* mesh_vel_ref = meta_.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "mesh_velocity_ref");
-  if (mesh_vel_ref == NULL)
-    mesh_vel_ref = &(meta_.declare_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "mesh_velocity_ref"));
 }
 
 fsiTurbine::~fsiTurbine()
@@ -185,8 +150,10 @@ fsiTurbine::populateParts(
   const std::string& turbinePart)
 {
 
+  auto& meta = bulk_->mesh_meta_data();
+    
   for (auto pName : partNames) {
-    stk::mesh::Part* part = meta_.get_part(pName);
+    stk::mesh::Part* part = meta.get_part(pName);
     if (nullptr == part) {
       throw std::runtime_error(
         "fsiTurbine:: No part found for " + turbinePart +
@@ -196,7 +163,7 @@ fsiTurbine::populateParts(
       allPartVec.push_back(part);
     }
 
-    if (!bulk_.parallel_rank())
+    if (!bulk_->parallel_rank())
       std::cout << "Adding part " << pName << " to " << turbinePart
                 << std::endl;
 
@@ -213,8 +180,10 @@ fsiTurbine::populateBndyParts(
   const std::string& turbinePart)
 {
 
+  auto& meta = bulk_->mesh_meta_data();
+    
   for (auto pName : partNames) {
-    stk::mesh::Part* part = meta_.get_part(pName);
+    stk::mesh::Part* part = meta.get_part(pName);
     if (nullptr == part) {
       throw std::runtime_error(
         "fsiTurbine:: No part found for " + turbinePart +
@@ -224,7 +193,7 @@ fsiTurbine::populateBndyParts(
       allPartVec.push_back(part);
     }
 
-    if (!bulk_.parallel_rank())
+    if (!bulk_->parallel_rank())
       std::cout << "Adding part " << pName << " to " << turbinePart
                 << std::endl;
 
@@ -234,7 +203,7 @@ fsiTurbine::populateBndyParts(
 }
 
 void
-fsiTurbine::setup()
+fsiTurbine::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
 {
 
   // TODO: Check if any part of the turbine surface is on this processor and set
@@ -244,10 +213,61 @@ fsiTurbine::setup()
   // blades specified in the Nalu input file and the number of blades in the
   // OpenFAST model.
 
-  ScalarFieldType* div_mesh_vel = meta_.get_field<ScalarFieldType>(
+  bulk_ = bulk;
+  auto& meta = bulk_->mesh_meta_data();
+
+  loadMap_ =
+    meta.get_field<GenericIntFieldType>(meta.side_rank(), "load_map");
+  if (loadMap_ == NULL)
+    loadMap_ = &(
+      meta.declare_field<GenericIntFieldType>(meta.side_rank(), "load_map"));
+
+  loadMapInterp_ =
+    meta.get_field<GenericFieldType>(meta.side_rank(), "load_map_interp");
+  if (loadMapInterp_ == NULL)
+    loadMapInterp_ = &(meta.declare_field<GenericFieldType>(
+      meta.side_rank(), "load_map_interp"));
+
+  dispMap_ =
+    meta.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "disp_map");
+  if (dispMap_ == NULL)
+    dispMap_ = &(meta.declare_field<ScalarIntFieldType>(
+      stk::topology::NODE_RANK, "disp_map"));
+
+  dispMapInterp_ = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "disp_map_interp");
+  if (dispMapInterp_ == NULL)
+    dispMapInterp_ = &(meta.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "disp_map_interp"));
+
+  pressureForceSCS_ =
+    meta.get_field<VectorFieldType>(meta.side_rank(), "pressure_force_scs");
+  if (pressureForceSCS_ == NULL)
+    pressureForceSCS_ = &(meta.declare_field<VectorFieldType>(
+      meta.side_rank(), "pressure_force_scs"));
+
+  tauWallSCS_ =
+    meta.get_field<VectorFieldType>(meta.side_rank(), "tau_wall_scs");
+  if (tauWallSCS_ == NULL) // Still null, declare your own field
+    tauWallSCS_ = &(
+      meta.declare_field<VectorFieldType>(meta.side_rank(), "tau_wall_scs"));
+
+  VectorFieldType* mesh_disp_ref = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_displacement_ref");
+  if (mesh_disp_ref == NULL)
+    mesh_disp_ref = &(meta.declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_displacement_ref"));
+
+  VectorFieldType* mesh_vel_ref = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_velocity_ref");
+  if (mesh_vel_ref == NULL)
+    mesh_vel_ref = &(meta.declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_velocity_ref"));
+  
+  ScalarFieldType* div_mesh_vel = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "div_mesh_velocity");
   stk::mesh::put_field_on_mesh(
-    *div_mesh_vel, meta_.universal_part(), 1, nullptr);
+    *div_mesh_vel, meta.universal_part(), 1, nullptr);
 
   populateParts(twrPartNames_, twrParts_, partVec_, "Tower");
   populateParts(nacellePartNames_, nacelleParts_, partVec_, "Nacelle");
@@ -307,7 +327,7 @@ fsiTurbine::prepare_nc_file(
   const int nTwrPts, const int nBlades, const int nTotBldPts)
 {
 
-  const int iproc = bulk_.parallel_rank();
+  const int iproc = bulk_->parallel_rank();
   if (iproc != turbineProc_)
     return;
 
@@ -455,7 +475,7 @@ void
 fsiTurbine::write_nc_ref_pos()
 {
 
-  const int iproc = bulk_.parallel_rank();
+  const int iproc = bulk_->parallel_rank();
   if (iproc != turbineProc_)
     return;
 
@@ -572,7 +592,7 @@ void
 fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime)
 {
 
-  const int iproc = bulk_.parallel_rank();
+  const int iproc = bulk_->parallel_rank();
   if (iproc != turbineProc_)
     return;
 
@@ -856,10 +876,11 @@ fsiTurbine::mapLoads()
   }
 
   // Now map loads
-  const int ndim = meta_.spatial_dimension();
+  auto& meta = bulk_->mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
   VectorFieldType* modelCoords =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* meshDisp = meta_.get_field<VectorFieldType>(
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
   // nodal fields to gather and store at ip's
@@ -881,8 +902,8 @@ fsiTurbine::mapLoads()
 
   // Do the tower first
   stk::mesh::Selector sel(
-    meta_.locally_owned_part() & stk::mesh::selectUnion(twrBndyParts_));
-  const auto& bkts = bulk_.get_buckets(meta_.side_rank(), sel);
+    meta.locally_owned_part() & stk::mesh::selectUnion(twrBndyParts_));
+  const auto& bkts = bulk_->get_buckets(meta.side_rank(), sel);
   for (auto b : bkts) {
     // face master element
     MasterElement* meFC =
@@ -905,7 +926,7 @@ fsiTurbine::mapLoads()
       // get face
       stk::mesh::Entity face = (*b)[in];
       // face node relations
-      stk::mesh::Entity const* face_node_rels = bulk_.begin_nodes(face);
+      stk::mesh::Entity const* face_node_rels = bulk_->begin_nodes(face);
       // gather nodal data off of face
       for (int ni = 0; ni < nodesPerFace; ++ni) {
         stk::mesh::Entity node = face_node_rels[ni];
@@ -978,9 +999,9 @@ fsiTurbine::mapLoads()
   for (int iBlade = 0; iBlade < nBlades; iBlade++) {
     int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
     stk::mesh::Selector sel(
-      meta_.locally_owned_part() &
+      meta.locally_owned_part() &
       stk::mesh::selectUnion(bladeBndyParts_[iBlade]));
-    const auto& bkts = bulk_.get_buckets(meta_.side_rank(), sel);
+    const auto& bkts = bulk_->get_buckets(meta.side_rank(), sel);
     for (auto b : bkts) {
       // face master element
       MasterElement* meFC =
@@ -1005,7 +1026,7 @@ fsiTurbine::mapLoads()
         // get face
         stk::mesh::Entity face = (*b)[in];
         // face node relations
-        stk::mesh::Entity const* face_node_rels = bulk_.begin_nodes(face);
+        stk::mesh::Entity const* face_node_rels = bulk_->begin_nodes(face);
 
         for (auto i = 0; i < ndim; i++)
           face_center[i] = 0.0;
@@ -1224,11 +1245,11 @@ fsiTurbine::mapLoads()
     //             += brFSIdata_.bld_ld[(i+iStart)*6+3+j];
     // }
     // std::vector<double> hubForceMomentMapped(6,0.0);
-    // stk::all_reduce_sum(bulk_.parallel(),
+    // stk::all_reduce_sum(bulk_->parallel(),
     //                     l_hubForceMomentMapped.data(),
     //                     hubForceMomentMapped.data(), 6);
 
-    // if (bulk_.parallel_rank() == turbineProc_) {
+    // if (bulk_->parallel_rank() == turbineProc_) {
 
     //     std::cout << "Total force moment on the hub due to blade " << iBlade
     //     << std::endl; std::cout << "Force = ("; for(size_t j=0; j < ndim;
@@ -1274,21 +1295,22 @@ fsiTurbine::computeHubForceMomentForPart(
   stk::mesh::PartVector partVec)
 {
 
+  auto& meta = bulk_->mesh_meta_data();
   VectorFieldType* modelCoords =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* meshDisp = meta_.get_field<VectorFieldType>(
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
-  VectorFieldType* pressureForce = meta_.get_field<VectorFieldType>(
+  VectorFieldType* pressureForce = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "pressure_force");
   VectorFieldType* tauWall =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, "tau_wall");
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "tau_wall");
   std::vector<double> l_hubForceMoment(6, 0.0);
   std::array<double, 3> tmpMeshPos{
     0.0, 0.0, 0.0}; // Vector to temporarily store mesh node location
 
   stk::mesh::Selector sel(
-    meta_.locally_owned_part() & stk::mesh::selectUnion(partVec));
-  const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    meta.locally_owned_part() & stk::mesh::selectUnion(partVec));
+  const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
   for (auto b : bkts) {
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
@@ -1308,7 +1330,7 @@ fsiTurbine::computeHubForceMomentForPart(
   }
 
   stk::all_reduce_sum(
-    bulk_.parallel(), l_hubForceMoment.data(), hubForceMoment.data(), 6);
+    bulk_->parallel(), l_hubForceMoment.data(), hubForceMoment.data(), 6);
 }
 
 //! Compute the effective force and moment at the OpenFAST mesh node for a given
@@ -1336,7 +1358,7 @@ fsiTurbine::setRotationDisplacement(
   std::array<double, 3> axis, double omega, double curTime)
 {
 
-  const int iproc = bulk_.parallel_rank();
+  const int iproc = bulk_->parallel_rank();
   double theta = omega * curTime;
   double twopi = 2.0 * M_PI;
   theta = std::fmod(theta, twopi);
@@ -1557,7 +1579,7 @@ fsiTurbine::setSampleDisplacement(double curTime)
     istart += nPtsBlade;
   }
 
-  if (bulk_.parallel_rank() == 0) {
+  if (bulk_->parallel_rank() == 0) {
     std::ofstream bld_bm_mesh;
     bld_bm_mesh.open("blade_beam_mesh_setsample.csv", std::ios_base::out);
     for (int k = 0; k < params_.nBRfsiPtsBlade[0] * 3; k++) {
@@ -1737,12 +1759,13 @@ fsiTurbine::setRefDisplacement(double curTime)
   double sin_omegat = std::sin(omega * curTime);
 
   // extract the vector field type set by this function
-  const int ndim = meta_.spatial_dimension();
+  auto& meta = bulk_->mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
   VectorFieldType* modelCoords =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* refDisp = meta_.get_field<VectorFieldType>(
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* refDisp = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement_ref");
-  VectorFieldType* refVel = meta_.get_field<VectorFieldType>(
+  VectorFieldType* refVel = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_velocity_ref");
 
   std::vector<double> zAxis0 = {0.0, 0.0, 1.0};
@@ -1762,7 +1785,7 @@ fsiTurbine::setRefDisplacement(double curTime)
 
     stk::mesh::Selector sel(
       stk::mesh::selectUnion(bladeParts_[iBlade])); // extract blade
-    const auto& bkts = bulk_.get_buckets(
+    const auto& bkts = bulk_->get_buckets(
       stk::topology::NODE_RANK, sel); // extract buckets for the blade
 
     for (auto b : bkts) { // loop over number of buckets
@@ -1877,15 +1900,16 @@ fsiTurbine::mapDisplacements()
   // performed to apply the remaining structural deflection. Figure out how to
   // do this.
 
+  auto& meta = bulk_->mesh_meta_data();
   VectorFieldType* modelCoords =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* displacement = meta_.get_field<VectorFieldType>(
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* displacement = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
-  VectorFieldType* refDisplacement = meta_.get_field<VectorFieldType>(
+  VectorFieldType* refDisplacement = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement_ref");
   VectorFieldType* meshVelocity =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
-  VectorFieldType* refVelocity = meta_.get_field<VectorFieldType>(
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
+  VectorFieldType* refVelocity = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_velocity_ref");
 
   std::vector<double> totDispNode(
@@ -1899,7 +1923,7 @@ fsiTurbine::mapDisplacements()
 
   // Do the tower first
   stk::mesh::Selector sel(stk::mesh::selectUnion(twrParts_));
-  const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+  const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
   for (auto b : bkts) {
     for (size_t in = 0; in < b->size(); in++) {
@@ -1933,7 +1957,7 @@ fsiTurbine::mapDisplacements()
   for (int iBlade = 0; iBlade < nBlades; iBlade++) {
     int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
     stk::mesh::Selector sel(stk::mesh::selectUnion(bladeParts_[iBlade]));
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     // std::cerr << "Blade " << iBlade << " Bld Root Def = " <<
     // brFSIdata_.bld_root_def[iBlade*6] << ", " <<
@@ -1987,7 +2011,7 @@ fsiTurbine::mapDisplacements()
     // compute_error_norm(displacement, refDisplacement, bladeParts_[iBlade],
     // errorNorm);
 
-    // if (!bulk_.parallel_rank()) {
+    // if (!bulk_->parallel_rank()) {
     //     std::cout << "Error in displacement for blade " << iBlade << " = " <<
     //     errorNorm[0] << " " << errorNorm[1] << " " << errorNorm[2] <<
     //     std::endl ;
@@ -1996,7 +2020,7 @@ fsiTurbine::mapDisplacements()
     // compute_error_norm(meshVelocity, refVelocity, bladeParts_[iBlade],
     // errorNorm);
 
-    // if (!bulk_.parallel_rank()) {
+    // if (!bulk_->parallel_rank()) {
     //     std::cout << "Error in velocity for blade " << iBlade << " = " <<
     //     errorNorm[0] << " " << errorNorm[1] << " " << errorNorm[2] <<
     //     std::endl ;
@@ -2007,7 +2031,7 @@ fsiTurbine::mapDisplacements()
 
   // Now the hub
   stk::mesh::Selector hubsel(stk::mesh::selectUnion(hubParts_));
-  const auto& hubbkts = bulk_.get_buckets(stk::topology::NODE_RANK, hubsel);
+  const auto& hubbkts = bulk_->get_buckets(stk::topology::NODE_RANK, hubsel);
   for (auto b : hubbkts) {
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
@@ -2029,7 +2053,7 @@ fsiTurbine::mapDisplacements()
 
   // Now the nacelle
   stk::mesh::Selector nacsel(stk::mesh::selectUnion(nacelleParts_));
-  const auto& nacbkts = bulk_.get_buckets(stk::topology::NODE_RANK, nacsel);
+  const auto& nacbkts = bulk_->get_buckets(stk::topology::NODE_RANK, nacsel);
   for (auto b : nacbkts) {
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
@@ -2326,12 +2350,13 @@ fsiTurbine::compute_error_norm(
   std::vector<double>& err)
 {
 
-  const int ndim = meta_.spatial_dimension();
+  auto& meta = bulk_->mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
   std::vector<double> errorNorm(3, 0);
   int nNodes = 0;
 
   stk::mesh::Selector sel(stk::mesh::selectUnion(partVec));
-  const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+  const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
   for (auto b : bkts) {
     for (size_t in = 0; in < b->size(); in++) {
@@ -2348,10 +2373,10 @@ fsiTurbine::compute_error_norm(
 
   std::vector<double> g_errorNorm(3, 0.0);
   stk::all_reduce_sum(
-    bulk_.parallel(), errorNorm.data(), g_errorNorm.data(), 3);
+    bulk_->parallel(), errorNorm.data(), g_errorNorm.data(), 3);
 
   int g_nNodes = 0;
-  stk::all_reduce_sum(bulk_.parallel(), &nNodes, &g_nNodes, 1);
+  stk::all_reduce_sum(bulk_->parallel(), &nNodes, &g_nNodes, 1);
 
   for (size_t i = 0; i < ndim; i++)
     err[i] = sqrt(g_errorNorm[i] / g_nNodes);
@@ -2382,13 +2407,14 @@ void
 fsiTurbine::computeMapping()
 {
 
-  const int ndim = meta_.spatial_dimension();
+  auto& meta = bulk_->mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
   VectorFieldType* modelCoords =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
 
   // Do the tower first
   stk::mesh::Selector sel(stk::mesh::selectUnion(twrParts_));
-  const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+  const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
   for (auto b : bkts) {
     for (size_t in = 0; in < b->size(); in++) {
@@ -2473,7 +2499,7 @@ fsiTurbine::computeMapping()
   for (int iBlade = 0; iBlade < nBlades; iBlade++) {
     int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
     stk::mesh::Selector sel(stk::mesh::selectUnion(bladeParts_[iBlade]));
-    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
 
     for (auto b : bkts) {
       for (size_t in = 0; in < b->size(); in++) {
@@ -2575,9 +2601,10 @@ void
 fsiTurbine::computeLoadMapping()
 {
 
-  const int ndim = meta_.spatial_dimension();
+  auto& meta = bulk_->mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
   VectorFieldType* modelCoords =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
 
   // nodal fields to gather
   std::vector<double> ws_coordinates;
@@ -2586,8 +2613,8 @@ fsiTurbine::computeLoadMapping()
 
   // Do the tower first
   stk::mesh::Selector sel(
-    meta_.locally_owned_part() & stk::mesh::selectUnion(twrBndyParts_));
-  const auto& bkts = bulk_.get_buckets(meta_.side_rank(), sel);
+    meta.locally_owned_part() & stk::mesh::selectUnion(twrBndyParts_));
+  const auto& bkts = bulk_->get_buckets(meta.side_rank(), sel);
 
   for (auto b : bkts) {
     // face master element
@@ -2612,7 +2639,7 @@ fsiTurbine::computeLoadMapping()
       // get face
       stk::mesh::Entity face = (*b)[in];
       // face node relations
-      stk::mesh::Entity const* face_node_rels = bulk_.begin_nodes(face);
+      stk::mesh::Entity const* face_node_rels = bulk_->begin_nodes(face);
       // gather nodal data off of face
       for (int ni = 0; ni < nodesPerFace; ++ni) {
         stk::mesh::Entity node = face_node_rels[ni];
@@ -2717,7 +2744,7 @@ fsiTurbine::computeLoadMapping()
   //     bld_rmm_[iStart][1] = 0.5*(brFSIdata_.bld_rloc[iStart] +
   //     brFSIdata_.bld_rloc[iStart+1]); bld_dr_[iStart] =
   //     (bld_rmm_[iStart][1]-bld_rmm_[iStart][0]);
-  //     // if (!bulk_.parallel_rank())
+  //     // if (!bulk_->parallel_rank())
   //     //     std::cout << "i = 0, " << bld_rmm_[iStart][0] << " - " <<
   //     bld_rmm_[iStart][1] << ", dr = " << bld_dr_[iStart] << std::endl ; for
   //     (int i=1; i < nPtsBlade-1; i++) {
@@ -2726,7 +2753,7 @@ fsiTurbine::computeLoadMapping()
   //         0.5*(brFSIdata_.bld_rloc[iStart+i] +
   //         brFSIdata_.bld_rloc[iStart+i+1]); bld_dr_[iStart + i] =
   //         (bld_rmm_[iStart + i][1]-bld_rmm_[iStart + i][0]);
-  //         // if (!bulk_.parallel_rank())
+  //         // if (!bulk_->parallel_rank())
   //         //     std::cout << "i = " << i << ", " << bld_rmm_[iStart+i][0] <<
   //         " - " << bld_rmm_[iStart+i][1] << ", dr = " << bld_dr_[iStart+i] <<
   //         std::endl ;
@@ -2736,7 +2763,7 @@ fsiTurbine::computeLoadMapping()
   //     bld_rmm_[iStart+nPtsBlade-1][1] =
   //     brFSIdata_.bld_rloc[iStart+nPtsBlade-1]; bld_dr_[iStart+nPtsBlade-1] =
   //     (bld_rmm_[iStart+nPtsBlade-1][1]-bld_rmm_[iStart+nPtsBlade-1][0]);
-  //     // if (!bulk_.parallel_rank())
+  //     // if (!bulk_->parallel_rank())
   //     //     std::cout << "i = " << nPtsBlade-1 << ", " <<
   //     bld_rmm_[iStart+nPtsBlade-1][0] << " - " <<
   //     bld_rmm_[iStart+nPtsBlade-1][1] << ", dr = " <<
@@ -2752,9 +2779,9 @@ fsiTurbine::computeLoadMapping()
     std::vector<double> cfd_mesh_rloc;
     int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
     stk::mesh::Selector sel(
-      meta_.locally_owned_part() &
+      meta.locally_owned_part() &
       stk::mesh::selectUnion(bladeBndyParts_[iBlade]));
-    const auto& bkts = bulk_.get_buckets(meta_.side_rank(), sel);
+    const auto& bkts = bulk_->get_buckets(meta.side_rank(), sel);
 
     for (auto b : bkts) {
       // face master element
@@ -2779,7 +2806,7 @@ fsiTurbine::computeLoadMapping()
         // get face
         stk::mesh::Entity face = (*b)[in];
         // face node relations
-        stk::mesh::Entity const* face_node_rels = bulk_.begin_nodes(face);
+        stk::mesh::Entity const* face_node_rels = bulk_->begin_nodes(face);
         // gather nodal data off of face
         for (int ni = 0; ni < nodesPerFace; ++ni) {
           stk::mesh::Entity node = face_node_rels[ni];
@@ -2955,14 +2982,16 @@ void
 fsiTurbine::compute_div_mesh_velocity()
 {
 
+  auto& meta = bulk_->mesh_meta_data();
+    
   VectorFieldType* meshVelocity =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
 
-  ScalarFieldType* divMeshVel = meta_.get_field<ScalarFieldType>(
+  ScalarFieldType* divMeshVel = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "div_mesh_velocity");
 
   compute_vector_divergence(
-    bulk_, partVec_, bndyPartVec_, meshVelocity, divMeshVel);
+    *bulk_, partVec_, bndyPartVec_, meshVelocity, divMeshVel);
 }
 
 } // namespace nalu
