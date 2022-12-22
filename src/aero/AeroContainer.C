@@ -51,7 +51,7 @@ AeroContainer::AeroContainer(const YAML::Node& node)
     if (foundFsi.size() != 1)
       throw std::runtime_error(
         "look_ahead_and_create::error: Too many openfast_fsi blocks");
-    fsiContainer_ = new OpenfastFSI(*foundFsi[0]);
+    fsiContainer_ = new OpenfastFSI(node["openfast_fsi"]);
 #else
     throw std::runtime_error(
       "FSI can not be used without a specialized branch of openfast yet");
