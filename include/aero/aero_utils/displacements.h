@@ -38,7 +38,7 @@ linear_interp_total_displacement(
   auto transDisp = wmp::linear_interp_translation(
     start.translation_, end.translation_, interpFactor);
   auto rotDisp = wmp::linear_interp_rotation(
-    start.translation_, end.translation_, interpFactor);
+    start.rotation_, end.rotation_, interpFactor);
   return Displacement(transDisp, rotDisp);
 }
 
