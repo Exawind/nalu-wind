@@ -10,9 +10,49 @@
 #ifndef DISPLACEMENTS_H_
 #define DISPLACEMENTS_H_
 
+#include <Kokkos_Macros.hpp>
 #include <aero/aero_utils/WienerMilenkovic.h>
 
 namespace aero {
+//! A struct to capture displacements with a rotation and translation component
+struct Displacement
+{
+  Displacement(std::vector<double>& vec)
+    : translation_({vec[0], vec[1], vec[2]}),
+      rotation_({vec[3], vec[4], vec[5]})
+  {
+  }
+  Displacement(vs::Vector transDisp, vs::Vector rotDisp)
+    : translation_(transDisp), rotation_(rotDisp)
+  {
+  }
+  vs::Vector translation_;
+  vs::Vector rotation_;
+};
+
+KOKKOS_FORCEINLINE_FUNCTION
+Displacement
+linear_interp_total_displacement(
+  const Displacement start, const Displacement end, const double interpFactor)
+{
+  auto transDisp = wmp::linear_interp_translation(
+    start.translation_, end.translation_, interpFactor);
+  auto rotDisp = wmp::linear_interp_rotation(
+    start.translation_, end.translation_, interpFactor);
+  return Displacement(transDisp, rotDisp);
+}
+
+KOKKOS_FORCEINLINE_FUNCTION
+Displacement
+linear_interp_total_velocity(
+  const Displacement start, const Displacement end, const double interpFactor)
+{
+  auto transDisp = wmp::linear_interp_translation(
+    start.translation_, end.translation_, interpFactor);
+  auto rotDisp = wmp::linear_interp_translation(
+    start.translation_, end.translation_, interpFactor);
+  return Displacement(transDisp, rotDisp);
+}
 
 //! Implementation of a pitch deformation strategy that ramps to the true
 //! applied pitch with a hyperbolic tangent
@@ -34,7 +74,8 @@ pitch_displacement_contribution(
                            (1.0 - stk::math::exp(-rampFactor * rLocation)) /
                            (1.0 + stk::math::exp(-rampFactor * rLocation));
 
-  pitchRotWM = pitch_wm(rampPitch, globZ);
+  // TODO(psakiev) fix this
+  /* pitchRotWM = wmp::create_wm_param(rampPitch, globZ); */
   const auto rampPitchRot = wmp::rotate(pitchRotWM, distance);
   return rampPitchRot - pitchRot;
 }
@@ -49,7 +90,6 @@ compute_translational_displacements(
   const vs::Vector totalPosOffset,
   const vs::Vector totDispNode)
 {
-
   const vs::Vector distance = cfdPos - totalPosOffset;
   const vs::Vector pointLocal = wmp::rotate(totalPosOffset, distance);
   const vs::Vector rotation = wmp::rotate(totDispNode, pointLocal, true);
