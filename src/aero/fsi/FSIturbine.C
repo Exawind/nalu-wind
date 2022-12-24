@@ -1,6 +1,6 @@
 #include "aero/fsi/FSIturbine.h"
-
 #include "utils/ComputeVectorDivergence.h"
+#include <NaluEnv.h>
 
 #include "stk_util/parallel/ParallelReduce.hpp"
 #include "stk_mesh/base/FieldParallel.hpp"
@@ -40,37 +40,26 @@ fsiTurbine::fsiTurbine(
     tauWallSCS_(NULL)
 {
 
-  std::cerr << "Initializing fsiTurbine " << std::endl;
-  
   if (node["tower_parts"]) {
     const auto& tparts = node["tower_parts"];
     twrPartNames_ = tparts.as<std::vector<std::string>>();
-  } else if (!bulk_->parallel_rank()) {
-    std::cout << "Tower part name(s) not specified for turbine " << iTurb_
+  } else 
+     NaluEnv::self().naluOutputP0() << "Tower part name(s) not specified for turbine " << iTurb_
               << std::endl;
-  }
 
-  std::cerr << "Wrapping up fsi turbine - tower parts  " << std::endl;  
-  
   if (node["nacelle_parts"]) {
     const auto& nparts = node["nacelle_parts"];
     nacellePartNames_ = nparts.as<std::vector<std::string>>();
-  } else if (!bulk_->parallel_rank()) {
-    std::cout << "Nacelle part name(s) not specified for turbine " << iTurb_
+  } else
+     NaluEnv::self().naluOutputP0() << "Nacelle part name(s) not specified for turbine " << iTurb_
               << std::endl;
-  }
-
-  std::cerr << "Wrapping up fsi turbine - nacelle parts  " << std::endl;  
   
   if (node["hub_parts"]) {
     const auto& hparts = node["hub_parts"];
     hubPartNames_ = hparts.as<std::vector<std::string>>();
-  } else if (!bulk_->parallel_rank()) {
-    std::cout << "Hub part name(s) not specified for turbine " << iTurb_
+  } else
+     NaluEnv::self().naluOutputP0() << "Hub part name(s) not specified for turbine " << iTurb_
               << std::endl;
-  }
-  
-  std::cerr << "Wrapping up fsi turbine - hub parts  " << std::endl;  
   
   if (node["blade_parts"]) {
     const auto& bparts = node["blade_parts"];
@@ -81,42 +70,32 @@ fsiTurbine::fsiTurbine(
       const auto& bpart = bparts[iBlade];
       bladePartNames_[iBlade] = bpart.as<std::vector<std::string>>();
     }
-
-  } else if (!bulk_->parallel_rank()) {
-    std::cout << "Blade part names not specified for turbine " << iTurb_
+  } else
+     NaluEnv::self().naluOutputP0() << "Blade part names not specified for turbine " << iTurb_
               << std::endl;
-  }
 
-  std::cerr << "Wrapping up fsi turbine - blade boundary parts  " << std::endl;  
   
   if (node["tower_boundary_parts"]) {
     const auto& tparts = node["tower_boundary_parts"];
     twrBndyPartNames_ = tparts.as<std::vector<std::string>>();
-  } else if (!bulk_->parallel_rank()) {
-    std::cout << "Tower part name(s) not specified for turbine " << iTurb_
+  } else
+     NaluEnv::self().naluOutputP0() << "Tower part name(s) not specified for turbine " << iTurb_
               << std::endl;
-  }
 
-  std::cerr << "Wrapping up fsi turbine - tower boundary parts  " << std::endl;  
-  
   if (node["nacelle_boundary_parts"]) {
     const auto& nparts = node["nacelle_boundary_parts"];
     nacelleBndyPartNames_ = nparts.as<std::vector<std::string>>();
-  } else if (!bulk_->parallel_rank()) {
-    std::cout << "Nacelle boundary part name(s) not specified for turbine "
+  } else
+     NaluEnv::self().naluOutputP0() << "Nacelle boundary part name(s) not specified for turbine "
               << iTurb_ << std::endl;
-  }
-  std::cerr << "Wrapping up fsi turbine - nacelle boundary parts  " << std::endl;  
   
   if (node["hub_boundary_parts"]) {
     const auto& hparts = node["hub_boundary_parts"];
     hubBndyPartNames_ = hparts.as<std::vector<std::string>>();
-  } else if (!bulk_->parallel_rank()) {
-    std::cout << "Hub boundary part name(s) not specified for turbine "
+  } else
+     NaluEnv::self().naluOutputP0() << "Hub boundary part name(s) not specified for turbine "
               << iTurb_ << std::endl;
-  }
 
-  std::cerr << "Wrapping up fsi turbine - hub boundary parts  " << std::endl;  
   if (node["blade_boundary_parts"]) {
     const auto& bparts = node["blade_boundary_parts"];
     nBlades_ = bparts.size();
@@ -126,14 +105,9 @@ fsiTurbine::fsiTurbine(
       const auto& bpart = bparts[iBlade];
       bladeBndyPartNames_[iBlade] = bpart.as<std::vector<std::string>>();
     }
-
-  } else if (!bulk_->parallel_rank()) {
-    std::cout << "Blade boundary part names not specified for turbine "
+  } else
+     NaluEnv::self().naluOutputP0() << "Blade boundary part names not specified for turbine "
               << iTurb_ << std::endl;
-  }
-
-  std::cerr << "Wrapping up fsi turbine initialization " << std::endl;
-
 }
 
 fsiTurbine::~fsiTurbine()
@@ -163,8 +137,7 @@ fsiTurbine::populateParts(
       allPartVec.push_back(part);
     }
 
-    if (!bulk_->parallel_rank())
-      std::cout << "Adding part " << pName << " to " << turbinePart
+           NaluEnv::self().naluOutputP0() << "Adding part " << pName << " to " << turbinePart
                 << std::endl;
 
     stk::mesh::put_field_on_mesh(*dispMap_, *part, 1, nullptr);
@@ -193,9 +166,8 @@ fsiTurbine::populateBndyParts(
       allPartVec.push_back(part);
     }
 
-    if (!bulk_->parallel_rank())
-      std::cout << "Adding part " << pName << " to " << turbinePart
-                << std::endl;
+    NaluEnv::self().naluOutputP0() << "Adding part " << pName << " to " << turbinePart
+                                   << std::endl;
 
     stk::mesh::put_field_on_mesh(*loadMap_, *part, 1, nullptr);
     stk::mesh::put_field_on_mesh(*loadMapInterp_, *part, 1, nullptr);
@@ -1251,22 +1223,22 @@ fsiTurbine::mapLoads()
 
     // if (bulk_->parallel_rank() == turbineProc_) {
 
-    //     std::cout << "Total force moment on the hub due to blade " << iBlade
-    //     << std::endl; std::cout << "Force = ("; for(size_t j=0; j < ndim;
+    //      NaluEnv::self().naluOutputP0() << "Total force moment on the hub due to blade " << iBlade
+    //     << std::endl;  NaluEnv::self().naluOutputP0() << "Force = ("; for(size_t j=0; j < ndim;
     //     j++)
-    //         std::cout << hubForceMoment[j] << ", ";
-    //     std::cout << ") Moment = (" ;
+    //          NaluEnv::self().naluOutputP0() << hubForceMoment[j] << ", ";
+    //      NaluEnv::self().naluOutputP0() << ") Moment = (" ;
     //     for(size_t j=0; j < ndim; j++)
-    //         std::cout << hubForceMoment[3+j] << ", ";
-    //     std::cout << ")" << std::endl;
-    //     std::cout << "Total force moment on the hub from mapped load due to
-    //     blade " << iBlade << std::endl; std::cout << "Force = ("; for(size_t
+    //          NaluEnv::self().naluOutputP0() << hubForceMoment[3+j] << ", ";
+    //      NaluEnv::self().naluOutputP0() << ")" << std::endl;
+    //      NaluEnv::self().naluOutputP0() << "Total force moment on the hub from mapped load due to
+    //     blade " << iBlade << std::endl;  NaluEnv::self().naluOutputP0() << "Force = ("; for(size_t
     //     j=0; j < ndim; j++)
-    //         std::cout << hubForceMomentMapped[j] << ", ";
-    //     std::cout << ") Moment = (" ;
+    //          NaluEnv::self().naluOutputP0() << hubForceMomentMapped[j] << ", ";
+    //      NaluEnv::self().naluOutputP0() << ") Moment = (" ;
     //     for(size_t j=0; j < ndim; j++)
-    //         std::cout << hubForceMomentMapped[3+j] << ", ";
-    //     std::cout << ")" << std::endl;
+    //          NaluEnv::self().naluOutputP0() << hubForceMomentMapped[3+j] << ", ";
+    //      NaluEnv::self().naluOutputP0() << ")" << std::endl;
     // }
 
     iStart += nPtsBlade;
@@ -2011,20 +1983,15 @@ fsiTurbine::mapDisplacements()
     // compute_error_norm(displacement, refDisplacement, bladeParts_[iBlade],
     // errorNorm);
 
-    // if (!bulk_->parallel_rank()) {
-    //     std::cout << "Error in displacement for blade " << iBlade << " = " <<
-    //     errorNorm[0] << " " << errorNorm[1] << " " << errorNorm[2] <<
-    //     std::endl ;
-    // }
+    // NaluEnv::self().naluOutputP0() << "Error in displacement for blade " << iBlade << " = " <<
+    //    errorNorm[0] << " " << errorNorm[1] << " " << errorNorm[2] <<
+    //    std::endl ;
 
-    // compute_error_norm(meshVelocity, refVelocity, bladeParts_[iBlade],
-    // errorNorm);
+    // compute_error_norm(meshVelocity, refVelocity, bladeParts_[iBlade], errorNorm);
 
-    // if (!bulk_->parallel_rank()) {
-    //     std::cout << "Error in velocity for blade " << iBlade << " = " <<
-    //     errorNorm[0] << " " << errorNorm[1] << " " << errorNorm[2] <<
-    //     std::endl ;
-    // }
+    // NaluEnv::self().naluOutputP0() << "Error in velocity for blade " << iBlade << " = " <<
+    //    errorNorm[0] << " " << errorNorm[1] << " " << errorNorm[2] <<
+    //    std::endl ;
 
     iStart += nPtsBlade;
   }
@@ -2547,7 +2514,7 @@ fsiTurbine::computeMapping()
             brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6 + 1],
             brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6 + 2]};
 
-          // std::cout << "Can't find a projection for point (" +
+          //  NaluEnv::self().naluOutputP0() << "Can't find a projection for point (" +
           // std::to_string(ptCoords[0]) + "," + std::to_string(ptCoords[1]) +
           // "," + std::to_string(ptCoords[2]) + ") on blade " +
           // std::to_string(iBlade) + " on turbine " +
@@ -2744,31 +2711,28 @@ fsiTurbine::computeLoadMapping()
   //     bld_rmm_[iStart][1] = 0.5*(brFSIdata_.bld_rloc[iStart] +
   //     brFSIdata_.bld_rloc[iStart+1]); bld_dr_[iStart] =
   //     (bld_rmm_[iStart][1]-bld_rmm_[iStart][0]);
-  //     // if (!bulk_->parallel_rank())
-  //     //     std::cout << "i = 0, " << bld_rmm_[iStart][0] << " - " <<
-  //     bld_rmm_[iStart][1] << ", dr = " << bld_dr_[iStart] << std::endl ; for
-  //     (int i=1; i < nPtsBlade-1; i++) {
+  //     NaluEnv::self().naluOutputP0() << "i = 0, " << bld_rmm_[iStart][0] << " - " <<
+  //             bld_rmm_[iStart][1] << ", dr = " << bld_dr_[iStart] << std::endl ; 
+  //     for(int i=1; i < nPtsBlade-1; i++) {
   //         bld_rmm_[iStart + i][0] = 0.5*(brFSIdata_.bld_rloc[iStart+i-1] +
   //         brFSIdata_.bld_rloc[iStart+i]); bld_rmm_[iStart + i][1] =
   //         0.5*(brFSIdata_.bld_rloc[iStart+i] +
   //         brFSIdata_.bld_rloc[iStart+i+1]); bld_dr_[iStart + i] =
   //         (bld_rmm_[iStart + i][1]-bld_rmm_[iStart + i][0]);
-  //         // if (!bulk_->parallel_rank())
-  //         //     std::cout << "i = " << i << ", " << bld_rmm_[iStart+i][0] <<
-  //         " - " << bld_rmm_[iStart+i][1] << ", dr = " << bld_dr_[iStart+i] <<
-  //         std::endl ;
+  //         NaluEnv::self().naluOutputP0() << "i = " << i << ", " << bld_rmm_[iStart+i][0] <<
+  //               " - " << bld_rmm_[iStart+i][1] << ", dr = " << bld_dr_[iStart+i] <<
+  //               std::endl ;
   //     }
   //     bld_rmm_[iStart+nPtsBlade-1][0] =
   //     0.5*(brFSIdata_.bld_rloc[iStart+nPtsBlade-2]+brFSIdata_.bld_rloc[iStart+nPtsBlade-1]);
   //     bld_rmm_[iStart+nPtsBlade-1][1] =
   //     brFSIdata_.bld_rloc[iStart+nPtsBlade-1]; bld_dr_[iStart+nPtsBlade-1] =
   //     (bld_rmm_[iStart+nPtsBlade-1][1]-bld_rmm_[iStart+nPtsBlade-1][0]);
-  //     // if (!bulk_->parallel_rank())
-  //     //     std::cout << "i = " << nPtsBlade-1 << ", " <<
-  //     bld_rmm_[iStart+nPtsBlade-1][0] << " - " <<
-  //     bld_rmm_[iStart+nPtsBlade-1][1] << ", dr = " <<
-  //     bld_dr_[iStart+nPtsBlade-1] << std::endl ;
-
+  //     
+  //     NaluEnv::self().naluOutputP0() << "i = " << nPtsBlade-1 << ", " <<
+  //         bld_rmm_[iStart+nPtsBlade-1][0] << " - " <<
+  //         bld_rmm_[iStart+nPtsBlade-1][1] << ", dr = " <<
+  //         bld_dr_[iStart+nPtsBlade-1] << std::endl ;
   //     iStart += nPtsBlade;
   // }
 
@@ -2866,7 +2830,7 @@ fsiTurbine::computeLoadMapping()
               brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6 + 1],
               brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6 + 2]};
 
-            // std::cout << "Can't find a projection for point (" +
+            //  NaluEnv::self().naluOutputP0() << "Can't find a projection for point (" +
             // std::to_string(coord_bip[0]) + "," + std::to_string(coord_bip[1])
             // + "," + std::to_string(coord_bip[2]) + ") on blade " +
             // std::to_string(iBlade) + " on turbine " +
