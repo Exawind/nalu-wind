@@ -49,10 +49,10 @@ public:
   void clean_up();
 
   bool is_active() { return has_actuators() || has_fsi(); }
+  bool has_fsi() { return fsiContainer_ != nullptr; }
 
 private:
   bool has_actuators() { return actuatorModel_.is_active(); }
-  bool has_fsi() { return fsiContainer_ != nullptr; }
   ActuatorModel actuatorModel_;
   // TODO make this a unique_ptr
   OpenfastFSI* fsiContainer_;

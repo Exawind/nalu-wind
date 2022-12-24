@@ -797,6 +797,10 @@ Realm::load(const YAML::Node& node)
 
   // post processing
   postProcessingInfo_->load(node);
+
+  if (aeroModels_->has_fsi())
+      solutionOptions_->meshMotion_ = true;
+  
   // look for OpenFAST FSI stuff
   /* if (node["openfast_fsi"]) { */
 
