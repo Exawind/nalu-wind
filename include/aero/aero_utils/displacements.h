@@ -17,7 +17,8 @@ namespace aero {
 //! A struct to capture displacements with a rotation and translation component
 struct Displacement
 {
-  Displacement(std::vector<double>& vec)
+  // Kind of dangeraous constructor
+  Displacement(double* vec)
     : translation_({vec[0], vec[1], vec[2]}),
       rotation_({vec[3], vec[4], vec[5]})
   {
@@ -37,8 +38,8 @@ linear_interp_total_displacement(
 {
   auto transDisp = wmp::linear_interp_translation(
     start.translation_, end.translation_, interpFactor);
-  auto rotDisp = wmp::linear_interp_rotation(
-    start.rotation_, end.rotation_, interpFactor);
+  auto rotDisp =
+    wmp::linear_interp_rotation(start.rotation_, end.rotation_, interpFactor);
   return Displacement(transDisp, rotDisp);
 }
 
@@ -86,14 +87,15 @@ pitch_displacement_contribution(
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_translational_displacements(
-  const vs::Vector cfdPos,
-  const vs::Vector totalPosOffset,
-  const vs::Vector totDispNode)
+  const Displacement totDispNode,
+  const Displacement totalPosOffset,
+  const vs::Vector cfdPos)
 {
-  const vs::Vector distance = cfdPos - totalPosOffset;
-  const vs::Vector pointLocal = wmp::rotate(totalPosOffset, distance);
-  const vs::Vector rotation = wmp::rotate(totDispNode, pointLocal, true);
-  return totDispNode + rotation - distance;
+  const vs::Vector distance = cfdPos - totalPosOffset.translation_;
+  const vs::Vector pointLocal = wmp::rotate(totalPosOffset.rotation_, distance);
+  const vs::Vector rotation =
+    wmp::rotate(totDispNode.rotation_, pointLocal, true);
+  return totDispNode.translation_ + rotation - distance;
 }
 
 //! Accounting for pitch, convert one array of 6 deflections (transX, transY,
@@ -102,17 +104,17 @@ compute_translational_displacements(
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_translational_displacements(
+  const Displacement totDispNode,
+  const Displacement totalPosOffset,
   const vs::Vector cfdPos,
-  const vs::Vector totalPosOffset,
-  const vs::Vector totDispNode,
   const vs::Vector root,
   const double pitch,
   const double rLoc)
 {
   auto disp =
-    compute_translational_displacements(cfdPos, totalPosOffset, totDispNode);
+    compute_translational_displacements(totDispNode, totalPosOffset, cfdPos);
   return disp + pitch_displacement_contribution(
-                  cfdPos - totalPosOffset, root, pitch, rLoc);
+                  cfdPos - totalPosOffset.translation_, root, pitch, rLoc);
 }
 
 } // namespace aero

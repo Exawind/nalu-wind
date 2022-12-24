@@ -11,10 +11,10 @@
 #include <aero/aero_utils/displacements.h>
 
 namespace test_displacements {
-TEST(AeroDisplacements, creation_from_std_vector)
+TEST(AeroDisplacements, creation_from_pointer)
 {
   std::vector<double> openfastSurrogate(6, 1.0);
-  aero::Displacement disp(openfastSurrogate);
+  aero::Displacement disp(openfastSurrogate.data());
   for (int i = 0; i < 3; ++i) {
     EXPECT_DOUBLE_EQ(openfastSurrogate[i], disp.translation_[i]);
     EXPECT_DOUBLE_EQ(openfastSurrogate[i + 3], disp.rotation_[i]);
@@ -70,6 +70,6 @@ TEST(AeroDisplacements, linear_interp_total_displacements)
   auto wmpGold = wmp::create_wm_param(axis, goldAngle);
   // TODO(psakiev) figure out why this isn't passing with Ganesh
   // The current diff is O(1e-2).
-  /* test_wiener_milenkovic(wmpGold, interpDisp.rotation_, testPoint, 1e-12); */
+  test_wiener_milenkovic(wmpGold, interpDisp.rotation_, testPoint, 1e-12);
 }
 } // namespace test_displacements

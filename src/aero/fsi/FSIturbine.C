@@ -1932,45 +1932,45 @@ fsiTurbine::mapDisplacements()
     brFSIdata_.bld_pitch[iBlade] = 45.0;
 
     // modeled
-    /* for (auto b : bkts) { */
-    /*   for (size_t in = 0; in < b->size(); in++) { */
-    /*     auto node = (*b)[in]; */
-    /*     auto oldxyz = vector_from_field(*modelCoords, node); */
-    /*     auto dx = vector_from_field(*displacement, node); */
-    /*     auto dispMapNode = vector_from_field(*dispMap_, node); */
-    /*     double dispMapInterpNode = */
-    /*       *stk::mesh::field_data(*dispMapInterp_, node); */
-    /*     auto bldStart = vector_from_std_vec( */
-    /*       brFSIdata_.bld_ref_pos, (*dispMapNode + iStart) * 6); */
-    /*     auto bldEnd = vector_from_std_vec( */
-    /*       brFSIdata_.bld_ref_pos, (*dispMapNode + iStart + 1) * 6); */
+    for (auto b : bkts) {
+      for (size_t in = 0; in < b->size(); in++) {
+        auto node = (*b)[in];
 
-    /*     // Find the interpolated reference position first */
-    /*     auto tmpPos = linInterpTotDisplacement( */
-    /*       bldStart, bldEnd, *dispMapInterpNode, tmpNodePos.data()); */
+        int* dispMapNode = stk::mesh::field_data(*dispMap_, node);
+        const int iN = 6 * (*dispMapNode + iStart);
+        const int iNp1 = 6 * (*dispMapNode + iStart + 1);
 
-    /*     // Now linearly interpolate the deflections to the intermediate
-     * location */
-    /*     linInterpTotDisplacement( */
-    /*       &brFSIdata_.bld_def[(*dispMapNode + iStart) * 6], */
-    /*       &brFSIdata_.bld_def[(*dispMapNode + iStart + 1) * 6], */
-    /*       *dispMapInterpNode, totDispNode.data()); */
+        double* dispMapInterpNode =
+          stk::mesh::field_data(*dispMapInterp_, node);
 
-    /*     // std::cerr << "Blade " << iBlade << ", Total displacement " << */
-    /*     // totDispNode[0] << ", " << totDispNode[1] << ", " << totDispNode[2]
-     * << */
-    /*     // ", " */
-    /*     // << 180.0*4.0*std::atan(0.25*totDispNode[3])/M_PI << ", " << */
-    /*     // totDispNode[4] << ", " << totDispNode[5] << std::endl; */
+        // Find the interpolated reference position first
+        auto bldStartRef = aero::Displacement(&(brFSIdata_.bld_ref_pos[iN]));
+        auto bldEndRef = aero::Displacement(&(brFSIdata_.bld_ref_pos[iNp1]));
+        auto refPos = aero::linear_interp_total_displacement(
+          bldStartRef, bldEndRef, *dispMapInterpNode);
 
-    /*     // Now transfer the interpolated displacement to the CFD mesh node */
-    /*     computeBladeDisplacement( */
-    /*       totDispNode.data(), tmpNodePos.data(), dx, oldxyz, */
-    /*       brFSIdata_.bld_pitch[iBlade], */
-    /*       &brFSIdata_.bld_root_def[iBlade * 6 + 3], */
-    /*       brFSIdata_.bld_rloc[*dispMapNode + iStart]); */
-    /*   } */
-    /* } */
+        // Now linearly interpolate the deflections to the intermediate
+        auto bldStartDisp = aero::Displacement(&(brFSIdata_.bld_def[iN]));
+        auto bldEndDisp = aero::Displacement(&(brFSIdata_.bld_def[iNp1]));
+        auto interpDisp = aero::linear_interp_total_displacement(
+          bldStartDisp, bldEndDisp, *dispMapInterpNode);
+
+        // Now transfer the interpolated displacement to the CFD mesh node */
+        auto oldxyz = vector_from_field(*modelCoords, node);
+        auto dx = vector_from_field(*displacement, node);
+
+        vs::Vector root{
+          brFSIdata_.bld_root_def[iBlade * 6 + 3],
+          brFSIdata_.bld_root_def[iBlade * 6 + 4],
+          brFSIdata_.bld_root_def[iBlade * 6 + 5]};
+
+        // TODO(psakiev) test that the field gets updated when wrapped in a
+        // vs::Vector, test this function for correctness
+        dx = aero::compute_translational_displacements(
+          interpDisp, refPos, oldxyz, root, brFSIdata_.bld_pitch[iBlade],
+          brFSIdata_.bld_rloc[*dispMapNode + iStart]);
+      }
+    }
 
     // std::vector<double> errorNorm(3,0.0);
     // compute_error_norm(displacement, refDisplacement, bladeParts_[iBlade],
@@ -2227,48 +2227,6 @@ fsiTurbine::computeBladeDisplacement(
     def_w_ramp_pitch.data(), pLoc.data(),
     pRot.data()); // Apply the rotation corresponding to the final orientation
                   // to bring back to inertial frame
-
-  // if (rLoc < 5.0) {
-  //     std::cerr << "Pitch Rot = " << pitchRotWM[0] <<  ", " << pitchRotWM[1]
-  //     <<  ", " << pitchRotWM[2]
-  //               << ", totDispNode = " << totDispNode[3] << ", " <<
-  //               totDispNode[4] << ", " << totDispNode[5]
-  //               << ", rLoc = " << rLoc
-  //               <<  std::endl;
-  // }
-
-  // std::vector<double> pPitchRot(3,0.0);
-  // applyWMrotation(pitchRotWM.data(), p.data(), pPitchRot.data());
-
-  // std::vector<double> pRampPitchRot(3,0.0);
-
-  // applyWMrotation(pitchRotWM.data(), p.data(), pRampPitchRot.data());
-
-  // if ( (pitch - rampPitch) > 0.1) {
-  //     std::cerr << "rLoc = " << rLoc << ", pitch = " << pitch << ", rampPitch
-  //     = " << rampPitch
-  //               << ", Total deformation = " << tot_def[0] << ", " <<
-  //               tot_def[1] << ", " << tot_def[2]
-  //               << ", Pitch deformation = " << pitchRotWM[0] << ", " <<
-  //               pitchRotWM[1] << ", " << pitchRotWM[2]
-  //               << ", Deformation minus pitch = " << def_m_pitch[0] << ", "
-  //               << def_m_pitch[1] << ", " << def_m_pitch[2]
-  //               << ", Ramped deformation = " << def_w_ramp_pitch[0] << ", "
-  //               << def_w_ramp_pitch[1] << ", " << def_w_ramp_pitch[2]
-  //               << ", pRot - p = " << pRot[0] - p[0] << ", " << pRot[1] -
-  //               p[1] << ", " << pRot[2] - p[2] << std::endl ;
-  // }
-
-  // if ( (rLoc > 60) && (rLoc < 60.5) ) {
-  //     std::cerr << "totDef = " << totDispNode[3] << ", " << totDispNode[4] <<
-  //     ", " << totDispNode[5]
-  //               << ", pitchRotWM = " << pitchRotWM[0] << ", " <<
-  //               pitchRotWM[1] << ", " << pitchRotWM[2]
-  //               << ", bld_root_def = " << bldRootDef[0] << ", " <<
-  //               bldRootDef[1] << ", " << bldRootDef[2]
-  //               << ", def_m_pitch = " << def_m_pitch[0] << ", " <<
-  //               def_m_pitch[1] << ", " << def_m_pitch[2] << std::endl;
-  // }
 
   for (size_t i = 0; i < 3; i++)
     transDispNode[i] = totDispNode[i] + pRot[i] - p[i];

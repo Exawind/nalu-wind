@@ -23,18 +23,11 @@ namespace nalu {
 
 typedef stk::mesh::Field<int, stk::mesh::SimpleArrayTag> GenericIntFieldType;
 
-// TODO(psakiev) find a better place for these
+// TODO(psakiev) find a better place for this
 // **********************************************************************
-inline vs::Vector
-vector_from_std_vec(const std::vector<double>& vec, const int start_index)
-{
-  assert(vec.size() > start_index + 2);
-  return {vec[start_index], vec[start_index + 1], vec[start_index + 2]};
-}
-
 template <typename T, typename P>
 inline vs::VectorT<T>
-vector_from_field(stk::mesh::Field<T, P> field, const stk::mesh::Entity& node)
+vector_from_field(stk::mesh::Field<T, P>& field, const stk::mesh::Entity& node)
 {
   // debug only check for optimization
   assert(field.entity_rank() == 3);
