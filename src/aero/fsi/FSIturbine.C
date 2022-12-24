@@ -238,6 +238,9 @@ fsiTurbine::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
   
   ScalarFieldType* div_mesh_vel = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "div_mesh_velocity");
+  if (div_mesh_vel == NULL)
+      div_mesh_vel = &(meta.declare_field<ScalarFieldType>(
+                           stk::topology::NODE_RANK, "div_mesh_velocity"));  
   stk::mesh::put_field_on_mesh(
     *div_mesh_vel, meta.universal_part(), 1, nullptr);
 
