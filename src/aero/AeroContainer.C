@@ -116,7 +116,7 @@ AeroContainer::update_displacements(const double currentTime)
 #ifdef NALU_USES_OPENFAST_FSI
   if (has_fsi()) {
     fsiContainer_->predict_struct_states();
-    fsiContainer_->get_displacements(currentTime);
+    fsiContainer_->map_displacements(currentTime);
   }
 #else
   (void)currentTime;
@@ -156,6 +156,23 @@ AeroContainer::compute_div_mesh_velocity()
     fsiContainer_->compute_div_mesh_velocity();
   }
 #endif
+}
+
+const stk::mesh::PartVector
+AeroContainer::fsi_parts()
+{
+    stk::mesh::PartVector part_vec;
+#ifdef NALU_USES_OPENFAST_FSI
+    if (has_fsi()) {
+        auto n_turbines = fsiContainer_->get_nTurbinesGlob() ;
+        for (auto i_turb = 0; i_turb < n_turbines; i_turb++) {
+            auto part_vec = fsiContainer_->get_fsiTurbineData(i_turb)->getPartVec();
+            for(auto* part : part_vec)
+                part_vec.push_back(part);
+        }
+    }
+#endif
+    return part_vec;
 }
 } // namespace nalu
 } // namespace sierra

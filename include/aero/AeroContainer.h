@@ -18,7 +18,6 @@
 #include "aero/actuator/ActuatorModel.h"
 
 namespace sierra::nalu {
-
 class OpenfastFSI;
 
 /**
@@ -50,6 +49,8 @@ public:
 
   bool is_active() { return has_actuators() || has_fsi(); }
   bool has_fsi() { return fsiContainer_ != nullptr; }
+
+  const stk::mesh::PartVector fsi_parts() ;
 
 private:
   bool has_actuators() { return actuatorModel_.is_active(); }

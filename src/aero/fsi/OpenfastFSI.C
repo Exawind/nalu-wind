@@ -551,9 +551,8 @@ void
 OpenfastFSI::map_displacements(double current_time)
 {
 
-  //    get_displacements(current_time); // Get displacements from the OpenFAST
-  //    - C++ API
-
+  get_displacements(current_time); // Get displacements from the OpenFAST
+  
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (int i = 0; i < nTurbinesGlob; i++) {
     if (fsiTurbineData_[i] != NULL) { // This may not be a turbine intended for
