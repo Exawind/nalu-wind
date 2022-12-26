@@ -41,6 +41,13 @@ namespace unit_test_utils {
 
 void fill_mesh_1_elem_per_proc_hex8(stk::mesh::BulkData& bulk);
 void fill_hex8_mesh(const std::string& meshSpec, stk::mesh::BulkData& bulk);
+void fill_hex8_cylinder_mesh(
+  const double innerRadius,
+  const double outerRadius,
+  const int imax,
+  const int jmax,
+  const int kmax,
+  stk::mesh::BulkData& bulk);
 void
 perturb_coord_hex_8(stk::mesh::BulkData& bulk, double perturbationSize = 0.125);
 

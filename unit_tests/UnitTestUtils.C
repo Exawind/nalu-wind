@@ -95,6 +95,44 @@ fill_hex8_mesh(const std::string& meshSpec, stk::mesh::BulkData& bulk)
 }
 
 void
+fill_hex8_cylinder_mesh(
+  const double innerRad,
+  const double outerRad,
+  const int imax,
+  const int jmax,
+  const int kmax,
+  stk::mesh::BulkData& bulk)
+{
+  auto& meta = bulk.mesh_meta_data();
+  const std::string meshSpec = "generated:" + std::to_string(imax) + "x" +
+                               std::to_string(jmax) + "x" +
+                               std::to_string(kmax);
+  unit_test_utils::fill_hex8_mesh(meshSpec, bulk);
+
+  int nDim = meta.spatial_dimension();
+  stk::mesh::Selector sel =
+    stk::mesh::Selector(meta.universal_part()) &
+    (meta.locally_owned_part() | meta.globally_shared_part());
+  const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+  VectorFieldType* modelCoords =
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+
+  const double xfac = (outerRad - innerRad) / imax;
+  const double yfac = 2 * M_PI / jmax;
+
+  for (auto b : bkts) {
+    for (size_t in = 0; in < b->size(); in++) {
+      auto node = (*b)[in];
+      double* nodeCoord = stk::mesh::field_data(*modelCoords, node);
+      const double radius = innerRad + nodeCoord[0] * xfac;
+      const double theta = nodeCoord[1] * yfac;
+      nodeCoord[0] = radius * cos(theta);
+      nodeCoord[1] = radius * sin(theta);
+    }
+  }
+}
+
+void
 dump_mesh(
   stk::mesh::BulkData& bulk,
   std::vector<stk::mesh::FieldBase*> fields,
