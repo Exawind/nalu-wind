@@ -51,6 +51,8 @@ public:
   bool has_fsi() { return fsiContainer_ != nullptr; }
 
   const stk::mesh::PartVector fsi_parts() ;
+  const stk::mesh::PartVector fsi_bndry_parts() ;
+  const std::vector<std::string> fsi_bndry_part_names();
 
 private:
   bool has_actuators() { return actuatorModel_.is_active(); }

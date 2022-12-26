@@ -7,6 +7,8 @@
 #include <cassert>
 #include <cmath>
 
+#include <stk_mesh/base/FieldBLAS.hpp>
+
 namespace sierra {
 
 namespace nalu {
@@ -552,6 +554,11 @@ OpenfastFSI::map_displacements(double current_time)
 {
 
   get_displacements(current_time); // Get displacements from the OpenFAST
+
+  auto& meta = bulk_->mesh_meta_data();
+  VectorFieldType* displacement = meta.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_displacement");
+  stk::mesh::field_fill(0.0, *displacement);
   
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (int i = 0; i < nTurbinesGlob; i++) {
@@ -559,7 +566,7 @@ OpenfastFSI::map_displacements(double current_time)
                                       // blade-resolved simulation {
       // fsiTurbineData_[i]->setSampleDisplacement(current_time);
       // fsiTurbineData_[i]->setRefDisplacement(current_time);
-      fsiTurbineData_[i]->mapDisplacements();
+      // fsiTurbineData_[i]->mapDisplacements();
     }
   }
 }

@@ -3,6 +3,8 @@
 
 #include "OpenFAST.H"
 
+#include <aero/fsi/CalcLoads.h>
+
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/BulkData.hpp"
 
@@ -87,6 +89,12 @@ public:
 
   //! Get the part vector containing all the parts with mesh displacement
   stk::mesh::PartVector& getPartVec() { return partVec_; }
+
+  //! Get the part vector containing all the boundary parts with loads
+  stk::mesh::PartVector& getBndryPartVec() { return bndyPartVec_; }
+    
+  //! Get a list of names of boundary parts that have loads
+  std::vector<std::string> getBndryPartNames() { return bndryPartNames_;}
 
   //! Prepare netcdf file to write deflections and loads
   void
@@ -276,9 +284,11 @@ private:
                                    // in non-dimensional [0,1] co-ordinates.
   int nBlades_;                    // Number of blades in the turbine
 
-  //! Fields containing the FSI force at all nodes on the turbine surface
-  VectorFieldType* pressureForceSCS_;
-  VectorFieldType* tauWallSCS_;
+  //! Fields containing the FSI force at all SCS's on the turbine surface
+  GenericFieldType* tforceSCS_;
+
+  // Pointer to Algorithm that calculates loads on the surfaces of the Turbine
+  std::unique_ptr<CalcLoads> calc_loads_; 
 
   // Volume mesh parts and part names
   //! Part name of the tower
@@ -319,6 +329,9 @@ private:
   std::vector<stk::mesh::PartVector> bladeBndyParts_;
   //! Part vector over all wall boundary parts applying a mesh displacement
   stk::mesh::PartVector bndyPartVec_;
+  //! Names of all boundary parts getting loads
+  std::vector<std::string> bndryPartNames_;
+
 };
 
 } // namespace nalu

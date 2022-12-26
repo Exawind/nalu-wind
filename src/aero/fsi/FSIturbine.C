@@ -36,8 +36,7 @@ fsiTurbine::fsiTurbine(
     loadMap_(NULL),
     dispMap_(NULL),
     dispMapInterp_(NULL),
-    pressureForceSCS_(NULL),
-    tauWallSCS_(NULL)
+    tforceSCS_(NULL)
 {
 
   if (node["tower_parts"]) {
@@ -78,6 +77,9 @@ fsiTurbine::fsiTurbine(
   if (node["tower_boundary_parts"]) {
     const auto& tparts = node["tower_boundary_parts"];
     twrBndyPartNames_ = tparts.as<std::vector<std::string>>();
+    bndryPartNames_.insert(bndryPartNames_.begin(),
+                           twrBndyPartNames_.begin(),
+                           twrBndyPartNames_.end());
   } else
      NaluEnv::self().naluOutputP0() << "Tower part name(s) not specified for turbine " << iTurb_
               << std::endl;
@@ -85,6 +87,9 @@ fsiTurbine::fsiTurbine(
   if (node["nacelle_boundary_parts"]) {
     const auto& nparts = node["nacelle_boundary_parts"];
     nacelleBndyPartNames_ = nparts.as<std::vector<std::string>>();
+    bndryPartNames_.insert(bndryPartNames_.end(),
+                           nacelleBndyPartNames_.begin(),
+                           nacelleBndyPartNames_.end());
   } else
      NaluEnv::self().naluOutputP0() << "Nacelle boundary part name(s) not specified for turbine "
               << iTurb_ << std::endl;
@@ -92,6 +97,9 @@ fsiTurbine::fsiTurbine(
   if (node["hub_boundary_parts"]) {
     const auto& hparts = node["hub_boundary_parts"];
     hubBndyPartNames_ = hparts.as<std::vector<std::string>>();
+    bndryPartNames_.insert(bndryPartNames_.begin(),
+                           hubBndyPartNames_.begin(),
+                           hubBndyPartNames_.end());    
   } else
      NaluEnv::self().naluOutputP0() << "Hub boundary part name(s) not specified for turbine "
               << iTurb_ << std::endl;
@@ -104,6 +112,10 @@ fsiTurbine::fsiTurbine(
     for (int iBlade = 0; iBlade < nBlades_; iBlade++) {
       const auto& bpart = bparts[iBlade];
       bladeBndyPartNames_[iBlade] = bpart.as<std::vector<std::string>>();
+      bndryPartNames_.insert(bndryPartNames_.begin(),
+                             bladeBndyPartNames_[iBlade].begin(),
+                             bladeBndyPartNames_[iBlade].end());
+
     }
   } else
      NaluEnv::self().naluOutputP0() << "Blade boundary part names not specified for turbine "
@@ -169,8 +181,12 @@ fsiTurbine::populateBndyParts(
     NaluEnv::self().naluOutputP0() << "Adding part " << pName << " to " << turbinePart
                                    << std::endl;
 
-    stk::mesh::put_field_on_mesh(*loadMap_, *part, 1, nullptr);
-    stk::mesh::put_field_on_mesh(*loadMapInterp_, *part, 1, nullptr);
+    //TODO: Get number of SCS's per face from stk::topology and MasterElement.
+    // Currently assumes all-quad faces with 4 SCS's per face
+    stk::mesh::put_field_on_mesh(*loadMap_, *part, 4, nullptr);
+    stk::mesh::put_field_on_mesh(*loadMapInterp_, *part, 4, nullptr);
+    stk::mesh::put_field_on_mesh(*tforceSCS_, *part, 4 * 3, nullptr);
+    
   }
 }
 
@@ -188,6 +204,18 @@ fsiTurbine::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
   bulk_ = bulk;
   auto& meta = bulk_->mesh_meta_data();
 
+  dispMap_ =
+      meta.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "disp_map");
+  if (dispMap_ == NULL)
+      dispMap_ = &(meta.declare_field<ScalarIntFieldType>(
+                       stk::topology::NODE_RANK, "disp_map"));
+
+  dispMapInterp_ = meta.get_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "disp_map_interp");
+  if (dispMapInterp_ == NULL)
+      dispMapInterp_ = &(meta.declare_field<ScalarFieldType>(
+                             stk::topology::NODE_RANK, "disp_map_interp"));
+  
   loadMap_ =
     meta.get_field<GenericIntFieldType>(meta.side_rank(), "load_map");
   if (loadMap_ == NULL)
@@ -200,29 +228,11 @@ fsiTurbine::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
     loadMapInterp_ = &(meta.declare_field<GenericFieldType>(
       meta.side_rank(), "load_map_interp"));
 
-  dispMap_ =
-    meta.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "disp_map");
-  if (dispMap_ == NULL)
-    dispMap_ = &(meta.declare_field<ScalarIntFieldType>(
-      stk::topology::NODE_RANK, "disp_map"));
-
-  dispMapInterp_ = meta.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "disp_map_interp");
-  if (dispMapInterp_ == NULL)
-    dispMapInterp_ = &(meta.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "disp_map_interp"));
-
-  pressureForceSCS_ =
-    meta.get_field<VectorFieldType>(meta.side_rank(), "pressure_force_scs");
-  if (pressureForceSCS_ == NULL)
-    pressureForceSCS_ = &(meta.declare_field<VectorFieldType>(
-      meta.side_rank(), "pressure_force_scs"));
-
-  tauWallSCS_ =
-    meta.get_field<VectorFieldType>(meta.side_rank(), "tau_wall_scs");
-  if (tauWallSCS_ == NULL) // Still null, declare your own field
-    tauWallSCS_ = &(
-      meta.declare_field<VectorFieldType>(meta.side_rank(), "tau_wall_scs"));
+  tforceSCS_=
+    meta.get_field<GenericFieldType>(meta.side_rank(), "tforce_scs");
+  if (tforceSCS_ == NULL)
+      tforceSCS_ = &(meta.declare_field<GenericFieldType>(
+                         meta.side_rank(), "tforce_scs"));
 
   VectorFieldType* mesh_disp_ref = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement_ref");
@@ -243,23 +253,28 @@ fsiTurbine::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
                            stk::topology::NODE_RANK, "div_mesh_velocity"));  
   stk::mesh::put_field_on_mesh(
     *div_mesh_vel, meta.universal_part(), 1, nullptr);
+  
 
   populateParts(twrPartNames_, twrParts_, partVec_, "Tower");
   populateParts(nacellePartNames_, nacelleParts_, partVec_, "Nacelle");
   populateParts(hubPartNames_, hubParts_, partVec_, "Hub");
   for (int i = 0; i < nBlades_; i++)
-    populateParts(
-      bladePartNames_[i], bladeParts_[i], partVec_,
-      "Blade " + std::to_string(i));
+      populateParts(
+          bladePartNames_[i], bladeParts_[i], partVec_,
+          "Blade " + std::to_string(i));
 
   populateBndyParts(twrBndyPartNames_, twrBndyParts_, bndyPartVec_, "Tower");
   populateBndyParts(
-    nacelleBndyPartNames_, nacelleBndyParts_, bndyPartVec_, "Nacelle");
+      nacelleBndyPartNames_, nacelleBndyParts_, bndyPartVec_, "Nacelle");
   populateBndyParts(hubBndyPartNames_, hubBndyParts_, bndyPartVec_, "Hub");
   for (int i = 0; i < nBlades_; i++)
-    populateBndyParts(
-      bladeBndyPartNames_[i], bladeBndyParts_[i], bndyPartVec_,
-      "Blade " + std::to_string(i));
+      populateBndyParts(
+          bladeBndyPartNames_[i], bladeBndyParts_[i], bndyPartVec_,
+          "Blade " + std::to_string(i));
+
+  calc_loads_ = std::make_unique<CalcLoads>(bndyPartVec_);
+  calc_loads_->setup(bulk_);
+  
 }
 
 void
@@ -829,10 +844,12 @@ void
 fsiTurbine::mapLoads()
 {
 
+  calc_loads_->execute();
+  
   // To implement this function - assume that 'loadMap_' field contains the node
   // id along the blade or the tower that will accumulate the load corresponding
   // to the node on the CFD surface mesh
-
+    
   // First zero out forces on the OpenFAST mesh
   for (int i = 0; i < params_.nBRfsiPtsTwr; i++) {
     for (int j = 0; j < 6; j++)
@@ -917,8 +934,7 @@ fsiTurbine::mapLoads()
       const int* loadMapFace = stk::mesh::field_data(*loadMap_, face);
       const double* loadMapInterpFace =
         stk::mesh::field_data(*loadMapInterp_, face);
-      const double* pforce = stk::mesh::field_data(*pressureForceSCS_, face);
-      const double* vforce = stk::mesh::field_data(*tauWallSCS_, face);
+      const double* tforce = stk::mesh::field_data(*tforceSCS_, face);
 
       for (int ip = 0; ip < numScsBip; ++ip) {
         // Get coordinates and pressure force at this ip
@@ -936,7 +952,7 @@ fsiTurbine::mapLoads()
         const double loadMapInterp_bip = loadMapInterpFace[ip];
 
         for (auto idim = 0; idim < 3; idim++)
-          tforce_bip[idim] = pforce[ip * 3 + idim] + vforce[ip * 3 + idim];
+          tforce_bip[idim] = tforce[ip * 3 + idim] ;
 
         // Find the interpolated reference position first
         linInterpVec(
@@ -1023,8 +1039,7 @@ fsiTurbine::mapLoads()
         const int* loadMapFace = stk::mesh::field_data(*loadMap_, face);
         const double* loadMapInterpFace =
           stk::mesh::field_data(*loadMapInterp_, face);
-        const double* pforce = stk::mesh::field_data(*pressureForceSCS_, face);
-        const double* vforce = stk::mesh::field_data(*tauWallSCS_, face);
+        const double* tforce = stk::mesh::field_data(*tforceSCS_, face);
 
         for (int ip = 0; ip < numScsBip; ++ip) {
 
@@ -1067,7 +1082,7 @@ fsiTurbine::mapLoads()
             tmpNodePos[idim] += tmpNodeDisp[idim];
 
           for (auto idim = 0; idim < 3; idim++)
-            tforce_bip[idim] = pforce[ip * 3 + idim] + vforce[ip * 3 + idim];
+            tforce_bip[idim] = tforce[ip * 3 + idim];
 
           // Temporarily store total force and moment as (fX, fY, fZ,
           // mX, mY, mZ)
@@ -1275,34 +1290,35 @@ fsiTurbine::computeHubForceMomentForPart(
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
   VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
-  VectorFieldType* pressureForce = meta.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "pressure_force");
-  VectorFieldType* tauWall =
-    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "tau_wall");
+  GenericFieldType* tforce = meta.get_field<GenericFieldType>(
+    meta.side_rank(), "tforce_scs");
   std::vector<double> l_hubForceMoment(6, 0.0);
   std::array<double, 3> tmpMeshPos{
     0.0, 0.0, 0.0}; // Vector to temporarily store mesh node location
 
-  stk::mesh::Selector sel(
-    meta.locally_owned_part() & stk::mesh::selectUnion(partVec));
-  const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
-  for (auto b : bkts) {
-    for (size_t in = 0; in < b->size(); in++) {
-      auto node = (*b)[in];
-      double* xyz = stk::mesh::field_data(*modelCoords, node);
-      double* xyz_disp = stk::mesh::field_data(*meshDisp, node);
-      double* pressureForceNode = stk::mesh::field_data(*pressureForce, node);
-      double* viscForceNode = stk::mesh::field_data(*tauWall, node);
-      std::array<double, 3> fsiForceNode;
-      for (int i = 0; i < 3; i++) {
-        fsiForceNode[i] = pressureForceNode[i] + viscForceNode[i];
-        tmpMeshPos[i] = xyz[i] + xyz_disp[i];
-      }
-      computeEffForceMoment(
-        fsiForceNode.data(), tmpMeshPos.data(), l_hubForceMoment.data(),
-        hubPos.data());
-    }
-  }
+  // TODO: This is looping over the wrong buckets - Nodes instead of faces
+  // Is this even required anymore? Probly can delete
+  
+  // stk::mesh::Selector sel(
+  //   meta.locally_owned_part() & stk::mesh::selectUnion(partVec));
+  // const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
+  // for (auto b : bkts) {
+  //   for (size_t in = 0; in < b->size(); in++) {
+  //     auto node = (*b)[in];
+  //     double* xyz = stk::mesh::field_data(*modelCoords, node);
+  //     double* xyz_disp = stk::mesh::field_data(*meshDisp, node);
+  //     double* pressureForceNode = stk::mesh::field_data(*pressureForce, node);
+  //     double* viscForceNode = stk::mesh::field_data(*tauWall, node);
+  //     std::array<double, 3> fsiForceNode;
+  //     for (int i = 0; i < 3; i++) {
+  //       fsiForceNode[i] = pressureForceNode[i] + viscForceNode[i];
+  //       tmpMeshPos[i] = xyz[i] + xyz_disp[i];
+  //     }
+  //     computeEffForceMoment(
+  //       fsiForceNode.data(), tmpMeshPos.data(), l_hubForceMoment.data(),
+  //       hubPos.data());
+  //   }
+  // }
 
   stk::all_reduce_sum(
     bulk_->parallel(), l_hubForceMoment.data(), hubForceMoment.data(), 6);
@@ -2622,8 +2638,6 @@ fsiTurbine::computeLoadMapping()
       // Get reference to load map and loadMapInterp at all ips on this face
       int* loadMapFace = stk::mesh::field_data(*loadMap_, face);
       double* loadMapInterpFace = stk::mesh::field_data(*loadMapInterp_, face);
-      const double* pforce = stk::mesh::field_data(*pressureForceSCS_, face);
-      const double* vforce = stk::mesh::field_data(*tauWallSCS_, face);
 
       for (int ip = 0; ip < numScsBip; ++ip) {
         // Get coordinates of this ip
