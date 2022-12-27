@@ -530,6 +530,9 @@ Realm::initialize_prolog()
   if (solutionOptions_->meshMotion_)
     meshMotionAlg_->initialize(get_current_time());
 
+  if (aeroModels_->is_active())
+      aeroModels_->init(get_current_time(), outputInfo_->restartFreq_);
+
   compute_geometry();
 
   if (solutionOptions_->meshMotion_)
@@ -2448,9 +2451,6 @@ Realm::initialize_post_processing_algorithms()
   if (NULL != ablForcingAlg_) {
     ablForcingAlg_->initialize();
   }
-
-  if (aeroModels_->is_active())
-    aeroModels_->init(get_current_time(), outputInfo_->restartFreq_);
 
   if (lidarLOS_) {
     lidarLOS_->set_time_for_all(get_current_time());
