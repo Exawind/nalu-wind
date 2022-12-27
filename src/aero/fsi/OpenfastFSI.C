@@ -224,7 +224,7 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
     // send_loads(0.0);
     FAST.solution0();
   }
-  get_displacements(curTime);
+  map_displacements(curTime);
 }
 
 void
