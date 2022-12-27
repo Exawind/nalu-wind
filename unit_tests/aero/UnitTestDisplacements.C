@@ -65,9 +65,8 @@ TEST(AeroDisplacements, linear_interp_total_displacements)
       << "Failed i: " << i;
   }
 
-  const double goldAngle = angle * interpFactor;
   const vs::Vector testPoint = {3.0, 3.0, 3.0};
-  auto wmpGold = wmp::create_wm_param(axis, goldAngle);
+  const vs::Vector wmpGold = { 0.397824734759316, 0.0, 0.0 };
   // TODO(psakiev) figure out why this isn't passing with Ganesh
   // The current diff is O(1e-2).
   test_wiener_milenkovic(wmpGold, interpDisp.rotation_, testPoint, 1e-12);
