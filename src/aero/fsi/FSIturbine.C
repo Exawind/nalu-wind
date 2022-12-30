@@ -1971,26 +1971,6 @@ fsiTurbine::mapDisplacements()
           brFSIdata_.bld_rloc[*dispMapNode + iStart]);
       }
     }
-
-    // std::vector<double> errorNorm(3,0.0);
-    // compute_error_norm(displacement, refDisplacement, bladeParts_[iBlade],
-    // errorNorm);
-
-    // if (!bulk_.parallel_rank()) {
-    //     std::cout << "Error in displacement for blade " << iBlade << " = " <<
-    //     errorNorm[0] << " " << errorNorm[1] << " " << errorNorm[2] <<
-    //     std::endl ;
-    // }
-
-    // compute_error_norm(meshVelocity, refVelocity, bladeParts_[iBlade],
-    // errorNorm);
-
-    // if (!bulk_.parallel_rank()) {
-    //     std::cout << "Error in velocity for blade " << iBlade << " = " <<
-    //     errorNorm[0] << " " << errorNorm[1] << " " << errorNorm[2] <<
-    //     std::endl ;
-    // }
-
     iStart += nPtsBlade;
   }
 

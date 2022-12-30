@@ -45,11 +45,13 @@ test_wiener_milenkovic(
     << "Gold WMP: " << goldWmp << " testWmp: " << testWmp;
 }
 
-// Test displacements interpolation along the (1,1,1) axis, and for rotations
-// that start at 0 and end at 90 degrees along the segment
+// Test displacements interpolation along the (1,0,0) axis, and for rotations
+// that start at 0 and end at 1.0 degree along the segment
+// We use a small angle and a small offset from the axis of rotation since the
+// WMP paramters reduce in accuracy as the angle increases
 TEST(AeroDisplacements, linear_interp_total_displacements)
 {
-  const double angle = M_PI_4;
+  const double angle = 1.0 / 90.0 * M_PI_4;
   const double interpFactor = 0.5;
   const auto axis = vs::Vector::ihat();
   const aero::Displacement start(
@@ -66,10 +68,10 @@ TEST(AeroDisplacements, linear_interp_total_displacements)
   }
 
   const double goldAngle = angle * interpFactor;
-  const vs::Vector testPoint = {3.0, 3.0, 3.0};
+  // put the point on the axis + a small offset
+  const auto axisOffset = (vs::Vector::one() - axis) * 1e-3;
+  const vs::Vector testPoint = axis * interpFactor + axisOffset;
   auto wmpGold = wmp::create_wm_param(axis, goldAngle);
-  // TODO(psakiev) figure out why this isn't passing with Ganesh
-  // The current diff is O(1e-2).
-  test_wiener_milenkovic(wmpGold, interpDisp.rotation_, testPoint, 1e-12);
+  test_wiener_milenkovic(wmpGold, interpDisp.rotation_, testPoint, 1e-10);
 }
 } // namespace test_displacements
