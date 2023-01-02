@@ -1926,12 +1926,8 @@ fsiTurbine::mapDisplacements()
   for (int iBlade = 0; iBlade < nBlades; iBlade++) {
     int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
     stk::mesh::Selector sel(stk::mesh::selectUnion(bladeParts_[iBlade]));
-    // TODO(psakiev) Get the field snatching working after the displacements are
-    /* const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel); */
+    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
 
-    brFSIdata_.bld_pitch[iBlade] = 45.0;
-
-    // modeled
     for (auto b : bkts) {
       for (size_t in = 0; in < b->size(); in++) {
         auto node = (*b)[in];

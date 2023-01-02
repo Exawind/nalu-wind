@@ -87,15 +87,15 @@ pitch_displacement_contribution(
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_translational_displacements(
-  const Displacement totDispNode,
-  const Displacement totalPosOffset,
+  const Displacement deflections,
+  const Displacement referencePos,
   const vs::Vector cfdPos)
 {
-  const vs::Vector distance = cfdPos - totalPosOffset.translation_;
-  const vs::Vector pointLocal = wmp::rotate(totalPosOffset.rotation_, distance);
+  const vs::Vector distance = cfdPos - referencePos.translation_;
+  const vs::Vector pointLocal = wmp::rotate(referencePos.rotation_, distance);
   const vs::Vector rotation =
-    wmp::rotate(totDispNode.rotation_, pointLocal, true);
-  return totDispNode.translation_ + rotation - distance;
+    wmp::rotate(deflections.rotation_, pointLocal, true);
+  return deflections.translation_ + rotation - distance;
 }
 
 //! Accounting for pitch, convert one array of 6 deflections (transX, transY,
@@ -104,17 +104,17 @@ compute_translational_displacements(
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_translational_displacements(
-  const Displacement totDispNode,
-  const Displacement totalPosOffset,
+  const Displacement deflections,
+  const Displacement referencePos,
   const vs::Vector cfdPos,
   const vs::Vector root,
   const double pitch,
   const double rLoc)
 {
   auto disp =
-    compute_translational_displacements(totDispNode, totalPosOffset, cfdPos);
+    compute_translational_displacements(deflections, referencePos, cfdPos);
   return disp + pitch_displacement_contribution(
-                  cfdPos - totalPosOffset.translation_, root, pitch, rLoc);
+                  cfdPos - referencePos.translation_, root, pitch, rLoc);
 }
 
 } // namespace aero
