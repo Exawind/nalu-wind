@@ -85,13 +85,16 @@ TEST(
   const double angleRot = 5.0 / 180.0 * M_PI;
 
   // cfd pos will be based on simple solid body rotation around the x axis
-  const vs::Vector rotX = wmp::create_wm_param(vs::Vector::ihat(), angleRot);
+  const vs::Vector rotX = wmp::create_wm_param(vs::Vector::ihat(), -angleRot);
   // benign reference position on the z axis
   // looks like openfast updates this so assuming solid body rotation is stored
   // in the referencePos
   const aero::Displacement referencePos(vs::Vector::khat(), rotX);
 
-  const vs::Vector cfdPos = wmp::rotate(rotX, referencePos.translation_);
+  // CFD Pos is using "coordinates" field so it is likely fixed in time. Need to
+  // confirm with Ganesh for now we will treat this as an offset from the
+  // referencePos in openfast
+  const vs::Vector cfdPos = referencePos.translation_ + vs::Vector::ihat();
 
   const aero::Displacement deflections(
     vs::Vector::one() * delta, vs::Vector::zero());
@@ -100,7 +103,7 @@ TEST(
     deflections, referencePos, cfdPos);
 
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR(delta, displacements[i], eps);
+    EXPECT_NEAR(delta, displacements[i], eps) << "i: " << i;
   }
 }
 
@@ -113,12 +116,15 @@ TEST(
   const double angleDef = 10.0 / 180.0 * M_PI;
 
   // cfd pos will be based on simple solid body rotation around the x axis
-  const vs::Vector rotX = wmp::create_wm_param(vs::Vector::ihat(), angleRot);
+  const vs::Vector rotX = wmp::create_wm_param(vs::Vector::ihat(), -angleRot);
 
   // benign reference position on the z axis
   const aero::Displacement referencePos(vs::Vector::khat(), rotX);
 
-  const vs::Vector cfdPos = wmp::rotate(rotX, referencePos.translation_);
+  // CFD Pos is using "coordinates" field so it is likely fixed in time. Need to
+  // confirm with Ganesh for now we will treat this as an offset from the
+  // referencePos in openfast
+  const vs::Vector cfdPos = referencePos.translation_ + vs::Vector::ihat();
 
   const aero::Displacement deflections(
     vs::Vector::zero(), wmp::create_wm_param(vs::Vector::jhat(), angleDef));
@@ -126,12 +132,17 @@ TEST(
   const auto displacements = aero::compute_translational_displacements(
     deflections, referencePos, cfdPos);
 
-  // deflections should be based on the delta from y axis rotation
-  const vs::Vector goldDef = {
-    stk::math::sin(angleDef), 0.0, stk::math::cos(angleDef)};
+  // deflections will be based on the rotation of the difference between the cfd
+  // and the referencePos and are applied in the opposite direction of the angle
+  // supplied
+  //
+  // subtration
+  const vs::Vector goldDef =
+    vs::Vector({stk::math::cos(angleDef), 0.0, stk::math::sin(angleDef)}) -
+    vs::Vector::ihat();
 
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR(goldDef[i], displacements[i], eps);
+    EXPECT_NEAR(goldDef[i], displacements[i], eps) << "i: " << i;
   }
 }
 } // namespace test_displacements

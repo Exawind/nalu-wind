@@ -91,11 +91,11 @@ compute_translational_displacements(
   const Displacement referencePos,
   const vs::Vector cfdPos)
 {
-  const vs::Vector distance = cfdPos - referencePos.translation_;
-  const vs::Vector pointLocal = wmp::rotate(referencePos.rotation_, distance);
+  const vs::Vector delta = cfdPos - referencePos.translation_;
+  const vs::Vector pointLocal = wmp::rotate(referencePos.rotation_, delta);
   const vs::Vector rotation =
     wmp::rotate(deflections.rotation_, pointLocal, true);
-  return deflections.translation_ + rotation - distance;
+  return deflections.translation_ + rotation - delta;
 }
 
 //! Accounting for pitch, convert one array of 6 deflections (transX, transY,
