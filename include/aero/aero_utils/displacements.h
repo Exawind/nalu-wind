@@ -10,6 +10,7 @@
 #ifndef DISPLACEMENTS_H_
 #define DISPLACEMENTS_H_
 
+#include "vs/vector.h"
 #include <Kokkos_Macros.hpp>
 #include <aero/aero_utils/WienerMilenkovic.h>
 
@@ -115,6 +116,23 @@ compute_translational_displacements(
     compute_translational_displacements(deflections, referencePos, cfdPos);
   return disp + pitch_displacement_contribution(
                   cfdPos - referencePos.translation_, root, pitch, rLoc);
+}
+
+//! Convert one array of 6 velocities (transX, transY, transZ, wmX, wmY, wmZ)
+//! into one vector of translational velocity at a given node on the turbine
+//! surface CFD mesh.
+KOKKOS_FORCEINLINE_FUNCTION
+vs::Vector
+compute_mesh_velocity(
+  const Displacement totalVel,
+  const Displacement totalDis,
+  const Displacement referencePos,
+  const vs::Vector cfdPos)
+{
+  const auto inertialFrame = cfdPos - referencePos.translation_;
+  const auto pointLocal = wmp::rotate(referencePos.rotation_, inertialFrame);
+  const auto pointRotate = wmp::rotate(totalDis.rotation_, pointLocal);
+  return totalVel.translation_ + (totalVel.rotation_ ^ pointRotate);
 }
 
 } // namespace aero

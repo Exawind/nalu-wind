@@ -1898,25 +1898,28 @@ fsiTurbine::mapDisplacements()
   for (auto b : bkts) {
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
-      double* oldxyz = stk::mesh::field_data(*modelCoords, node);
-      double* dx = stk::mesh::field_data(*displacement, node);
+      auto oldxyz = vector_from_field(*modelCoords, node);
+      auto dx = vector_from_field(*displacement, node);
       int* dispMapNode = stk::mesh::field_data(*dispMap_, node);
+      const int iN = 6 * (*dispMapNode);
+      const int iNp1 = 6 * (*dispMapNode + 1);
       double* dispMapInterpNode = stk::mesh::field_data(*dispMapInterp_, node);
 
       // Find the interpolated reference position first
-      linInterpTotDisplacement(
-        &brFSIdata_.twr_ref_pos[(*dispMapNode) * 6],
-        &brFSIdata_.twr_ref_pos[(*dispMapNode + 1) * 6], *dispMapInterpNode,
-        tmpNodePos.data());
+      const auto twrStartRef = aero::Displacement(&brFSIdata_.twr_ref_pos[iN]);
+      const auto twrEndRef = aero::Displacement(&brFSIdata_.twr_ref_pos[iNp1]);
+      const auto refPos = aero::linear_interp_total_displacement(
+        twrStartRef, twrEndRef, *dispMapInterpNode);
 
       // Now linearly interpolate the deflections to the intermediate location
-      linInterpTotDisplacement(
-        &brFSIdata_.twr_def[(*dispMapNode) * 6],
-        &brFSIdata_.twr_def[(*dispMapNode + 1) * 6], *dispMapInterpNode,
-        totDispNode.data());
+      const auto twrStartDisp = aero::Displacement(&brFSIdata_.twr_def[iN]);
+      const auto twrEndDisp = aero::Displacement(&brFSIdata_.twr_def[iNp1]);
+      const auto interpDisp = aero::linear_interp_total_displacement(
+        twrStartDisp, twrEndDisp, *dispMapInterpNode);
 
       // Now transfer the interpolated displacement to the CFD mesh node
-      computeDisplacement(totDispNode.data(), tmpNodePos.data(), dx, oldxyz);
+      dx =
+        aero::compute_translational_displacements(interpDisp, refPos, oldxyz);
     }
   }
 
@@ -1976,19 +1979,21 @@ fsiTurbine::mapDisplacements()
   for (auto b : hubbkts) {
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
-      double* oldxyz = stk::mesh::field_data(*modelCoords, node);
-      double* dx = stk::mesh::field_data(*displacement, node);
-      double* mVel = stk::mesh::field_data(*meshVelocity, node);
 
+      auto oldxyz = vector_from_field(*modelCoords, node);
+      auto dx = vector_from_field(*displacement, node);
+      const aero::Displacement refPos(brFSIdata_.hub_ref_pos.data());
+      const aero::Displacement deflection(brFSIdata_.hub_def.data());
       // Now transfer the displacement to the CFD mesh node
-      computeDisplacement(
-        brFSIdata_.hub_def.data(), brFSIdata_.hub_ref_pos.data(), dx, oldxyz);
+      dx =
+        aero::compute_translational_displacements(deflection, refPos, oldxyz);
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
-      computeMeshVelocity(
-        brFSIdata_.hub_vel.data(), brFSIdata_.hub_def.data(),
-        brFSIdata_.hub_ref_pos.data(), mVel, oldxyz);
+      auto mVel = vector_from_field(*meshVelocity, node);
+      const aero::Displacement vel(brFSIdata_.hub_vel.data());
+
+      mVel = aero::compute_mesh_velocity(vel, deflection, refPos, oldxyz);
     }
   }
 
@@ -1998,46 +2003,22 @@ fsiTurbine::mapDisplacements()
   for (auto b : nacbkts) {
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
-      double* oldxyz = stk::mesh::field_data(*modelCoords, node);
-      double* dx = stk::mesh::field_data(*displacement, node);
-      double* mVel = stk::mesh::field_data(*meshVelocity, node);
-
+      auto oldxyz = vector_from_field(*modelCoords, node);
+      const aero::Displacement refPos(brFSIdata_.nac_ref_pos.data());
+      const aero::Displacement deflection(brFSIdata_.nac_def.data());
+      auto dx = vector_from_field(*displacement, node);
       // Now transfer the displacement to the CFD mesh node
-      computeDisplacement(
-        brFSIdata_.nac_def.data(), brFSIdata_.nac_ref_pos.data(), dx, oldxyz);
+      dx =
+        aero::compute_translational_displacements(deflection, refPos, oldxyz);
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
-      computeMeshVelocity(
-        brFSIdata_.nac_vel.data(), brFSIdata_.nac_def.data(),
-        brFSIdata_.nac_ref_pos.data(), mVel, oldxyz);
+      auto mVel = vector_from_field(*meshVelocity, node);
+      const aero::Displacement vel(brFSIdata_.nac_vel.data());
+
+      mVel = aero::compute_mesh_velocity(vel, deflection, refPos, oldxyz);
     }
   }
-}
-
-//! Linearly interpolate dispInterp = dispStart + interpFac * (dispEnd -
-//! dispStart). Special considerations for Wiener-Milenkovic parameters
-void
-fsiTurbine::linInterpTotDisplacement(
-  double* dispStart, double* dispEnd, double interpFac, double* dispInterp)
-{
-
-  // Handle the translational displacement first
-  linInterpVec(dispStart, dispEnd, interpFac, dispInterp);
-  // Now deal with the rotational displacement
-  linInterpRotation(&dispStart[3], &dispEnd[3], interpFac, &dispInterp[3]);
-}
-
-//! Linearly interpolate velInterp = velStart + interpFac * (velEnd - velStart).
-void
-fsiTurbine::linInterpTotVelocity(
-  double* velStart, double* velEnd, double interpFac, double* velInterp)
-{
-
-  // Handle the translational velocity first
-  linInterpVec(velStart, velEnd, interpFac, velInterp);
-  // Now deal with the rotational velocity
-  linInterpVec(&velStart[3], &velEnd[3], interpFac, &velInterp[3]);
 }
 
 //! Linearly interpolate between 3-dimensional vectors 'a' and 'b' with
@@ -2049,28 +2030,6 @@ fsiTurbine::linInterpVec(
 
   for (size_t i = 0; i < 3; i++)
     aInterpb[i] = a[i] + interpFac * (b[i] - a[i]);
-}
-
-/* Linearly interpolate the Wiener-Milenkovic parameters between 'qStart' and
-   'qEnd' into 'qInterp' with an interpolating factor 'interpFac' see
-   O.A.Bauchau, 2011, Flexible Multibody Dynamics p. 649, section 17.2,
-   Algorithm 1'
-*/
-void
-fsiTurbine::linInterpRotation(
-  double* qStart, double* qEnd, double interpFac, double* qInterp)
-{
-
-  std::vector<double> intermedQ(3, 0.0);
-
-  composeWM(
-    qStart, qEnd, intermedQ.data(),
-    -1.0); // Remove rigid body rotation of qStart
-  for (size_t i = 0; i < 3; i++)
-    intermedQ[i] = interpFac * intermedQ[i]; // Do the interpolation
-  composeWM(
-    intermedQ.data(), qStart,
-    qInterp); // Add rigid body rotation of qStart back
 }
 
 //! Compose Wiener-Milenkovic parameters 'p' and 'q' into 'pPlusq'. If a
@@ -2113,171 +2072,6 @@ fsiTurbine::cross(double* a, double* b, double* aCrossb)
   aCrossb[0] = a[1] * b[2] - a[2] * b[1];
   aCrossb[1] = a[2] * b[0] - a[0] * b[2];
   aCrossb[2] = a[0] * b[1] - a[1] * b[0];
-}
-
-//! Convert one array of 6 deflections (transX, transY, transZ, wmX, wmY, wmZ)
-//! into one vector of translational displacement at a given node on the turbine
-//! surface CFD mesh.
-void
-fsiTurbine::computeDisplacement(
-  double* totDispNode, double* totPosOF, double* transDispNode, double* xyzCFD)
-{
-
-  // Get the relative distance between totPosOF and xyzCFD in the inertial frame
-  std::vector<double> p(3, 0.0);
-  for (size_t i = 0; i < 3; i++)
-    p[i] = xyzCFD[i] - totPosOF[i];
-  // Convert 'p' vector to the local frame of reference
-  std::vector<double> pLoc(3, 0.0);
-  applyWMrotation(&(totPosOF[3]), p.data(), pLoc.data());
-
-  std::vector<double> pRot(3, 0.0);
-  applyWMrotation(
-    &(totDispNode[3]), pLoc.data(), pRot.data(),
-    -1); // Apply the rotation corresponding to the final orientation to bring
-         // back to inertial frame
-
-  for (size_t i = 0; i < 3; i++)
-    transDispNode[i] = totDispNode[i] + pRot[i] - p[i];
-}
-
-//! Accounting for ptich, convert one array of 6 deflections (transX, transY,
-//! transZ, wmX, wmY, wmZ) into one vector of translational displacement at a
-//! given node on the turbine surface CFD mesh.
-void
-fsiTurbine::computeBladeDisplacement(
-  double* totDispNode,
-  double* totPosOF,
-  double* transDispNode,
-  double* xyzCFD,
-  double pitch,
-  double* bldRootDef,
-  double rLoc)
-{
-
-  // Get the relative distance between totPosOF and xyzCFD in the inertial frame
-  std::vector<double> p(3, 0.0);
-  for (size_t i = 0; i < 3; i++)
-    p[i] = xyzCFD[i] - totPosOF[i];
-
-  // Convert 'p' vector to the local frame of reference
-  std::vector<double> pLoc(3, 0.0);
-  applyWMrotation(&(totPosOF[3]), p.data(), pLoc.data());
-
-  // Get pitch rotation
-  std::vector<double> pitchRotWM(3, 0.0);
-  std::vector<double> globZ(3, 0.0);
-  std::vector<double> locZ = {{0.0, 0.0, 1.0}};
-  applyWMrotation(bldRootDef, locZ.data(), globZ.data(), -1);
-  for (size_t i = 0; i < 3; i++)
-    pitchRotWM[i] = 4 * std::tan(-0.25 * pitch * M_PI / 180.0) * globZ[i];
-
-  std::vector<double> tot_def(3, 0.0);
-  tot_def[0] = -totDispNode[3];
-  tot_def[1] = -totDispNode[4];
-  tot_def[2] = -totDispNode[5];
-  std::vector<double> def_m_pitch(3, 0.0);
-  composeWM(pitchRotWM.data(), tot_def.data(), def_m_pitch.data(), -1);
-
-  // Get ramped pitch
-  double k = 1.0; // controls steepness of the pitch ramp
-  // double rampPitch = pitch * (1 - std::exp(-k*(rLoc-5.0)  )) / (1 +
-  // std::exp(-k*(rLoc-5.0)) );
-  double rampPitch = 0.0;
-  // if (rLoc > 0.5)
-  rampPitch = pitch * 0.5 * (1 + std::tanh(k * (rLoc - 3.0)));
-  // else
-  // rampPitch = 0.0;
-
-  for (size_t i = 0; i < 3; i++)
-    pitchRotWM[i] = 4 * std::tan(-0.25 * rampPitch * M_PI / 180.0) * globZ[i];
-
-  std::vector<double> def_w_ramp_pitch(3, 0.0);
-  composeWM(pitchRotWM.data(), def_m_pitch.data(), def_w_ramp_pitch.data());
-
-  std::vector<double> pRot(3, 0.0);
-  // applyWMrotation(&totDispNode[3], pLoc.data(), pRot.data(), -1); // Apply
-  // the rotation corresponding to the final orientation to bring back to
-  // inertial frame
-  applyWMrotation(
-    def_w_ramp_pitch.data(), pLoc.data(),
-    pRot.data()); // Apply the rotation corresponding to the final orientation
-                  // to bring back to inertial frame
-
-  for (size_t i = 0; i < 3; i++)
-    transDispNode[i] = totDispNode[i] + pRot[i] - p[i];
-}
-
-//! Convert one array of 6 velocities (transX, transY, transZ, wmX, wmY, wmZ)
-//! into one vector of translational velocity at a given node on the turbine
-//! surface CFD mesh.
-void
-fsiTurbine::computeMeshVelocity(
-  double* totVelNode,
-  double* totDispNode,
-  double* totPosOF,
-  double* transVelNode,
-  double* xyzCFD)
-{
-
-  // Get the relative distance between totPosOF and xyzCFD in the inertial frame
-  std::vector<double> p(3, 0.0);
-  for (size_t i = 0; i < 3; i++)
-    p[i] = xyzCFD[i] - totPosOF[i];
-  // Convert 'p' vector to the local frame of reference
-  std::vector<double> pLoc(3, 0.0);
-  applyWMrotation(&(totPosOF[3]), p.data(), pLoc.data());
-
-  std::vector<double> pRot(3, 0.0);
-  applyWMrotation(
-    &(totDispNode[3]), pLoc.data(), pRot.data(),
-    -1.0); // Apply the rotation corresponding to the final orientation to bring
-           // back to inertial frame
-
-  std::vector<double> omegaCrosspRot(3, 0.0);
-  cross(&(totVelNode[3]), pRot.data(), omegaCrosspRot.data());
-
-  for (size_t i = 0; i < 3; i++)
-    transVelNode[i] = totVelNode[i] + omegaCrosspRot[i];
-}
-
-void
-fsiTurbine::compute_error_norm(
-  VectorFieldType* vec,
-  VectorFieldType* vec_ref,
-  stk::mesh::PartVector partVec,
-  std::vector<double>& err)
-{
-
-  const int ndim = meta_.spatial_dimension();
-  std::vector<double> errorNorm(3, 0);
-  int nNodes = 0;
-
-  stk::mesh::Selector sel(stk::mesh::selectUnion(partVec));
-  const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
-
-  for (auto b : bkts) {
-    for (size_t in = 0; in < b->size(); in++) {
-      auto node = (*b)[in];
-      double* vecNode = stk::mesh::field_data(*vec, node);
-      double* vecRefNode = stk::mesh::field_data(*vec_ref, node);
-      for (int i = 0; i < ndim; i++)
-        errorNorm[i] +=
-          (vecNode[i] - vecRefNode[i]) * (vecNode[i] - vecRefNode[i]);
-
-      nNodes++;
-    }
-  }
-
-  std::vector<double> g_errorNorm(3, 0.0);
-  stk::all_reduce_sum(
-    bulk_.parallel(), errorNorm.data(), g_errorNorm.data(), 3);
-
-  int g_nNodes = 0;
-  stk::all_reduce_sum(bulk_.parallel(), &nNodes, &g_nNodes, 1);
-
-  for (int i = 0; i < ndim; i++)
-    err[i] = sqrt(g_errorNorm[i] / g_nNodes);
 }
 
 //! Apply a Wiener-Milenkovic rotation 'wm' to a vector 'r' into 'rRot'. To
