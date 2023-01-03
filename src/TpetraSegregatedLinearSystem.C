@@ -1459,7 +1459,6 @@ TpetraSegregatedLinearSystem::applyDirichletBCs(
     realm_.get_buckets(stk::topology::NODE_RANK, selector);
 
   const bool internalMatrixIsSorted = true;
-  int nbc = 0;
   for (const stk::mesh::Bucket* bptr : buckets) {
     const stk::mesh::Bucket& b = *bptr;
 
@@ -1526,7 +1525,6 @@ TpetraSegregatedLinearSystem::applyDirichletBCs(
           useOwned ? (bcValues[k * fieldSize + d] - solution[k * fieldSize + d])
                    : 0.0;
         rhs->replaceLocalValue(actualLocalId, d, bc_residual);
-        ++nbc;
       }
     }
   }
