@@ -67,9 +67,8 @@ pitch_displacement_contribution(
   const double rLocation,
   const double rampFactor = 2.0)
 {
-  //TODO(psakievi) get a good unit test to test this out with gantech
+  // TODO(psakievi) get a good unit test to test this out with gantech
   const auto globZ = wmp::rotate(root, vs::Vector::khat(), false);
-
 
   const double rampPitch = pitch *
                            (1.0 - stk::math::exp(-rampFactor * rLocation)) /
