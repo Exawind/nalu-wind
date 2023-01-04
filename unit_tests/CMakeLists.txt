@@ -11,24 +11,18 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestFieldManager.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestFieldRegistry.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestGetDofStatus.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestHex27FaceNodeOrdering.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestHexElementPromotion.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestHexMasterElements.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestHexMasterElementsNgp.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestHexSCVDeterminant.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestInitialConditions.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestIntegrationRule.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKokkosME.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKokkosMEBC.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKokkosViews.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLagrangeInterpolants.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLidarLOS.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLocalGraphArrays.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMasterElements.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMetricTensor.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMijTensor.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMovingAverage.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNGPMasterElements.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNgpMesh1.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestPecletFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestRadarPattern.C
@@ -57,7 +51,6 @@ add_subdirectory(kernels)
 add_subdirectory(edge_kernels)
 add_subdirectory(node_kernels)
 add_subdirectory(ngp_algorithms)
-add_subdirectory(ho_kernels)
 add_subdirectory(ngp_kernels)
 add_subdirectory(mesh_motion)
 add_subdirectory(gcl)

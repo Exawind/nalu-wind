@@ -45,12 +45,18 @@ namespace nalu {
 
 #if defined(KOKKOS_ENABLE_CUDA)
 typedef Kokkos::CudaSpace MemSpace;
-#elif defined(KOKKOS_HAVE_HIP)
+#elif defined(KOKKOS_ENABLE_HIP)
 typedef Kokkos::Experimental::HIPSpace MemSpace;
 #elif defined(KOKKOS_HAVE_OPENMP)
 typedef Kokkos::OpenMP MemSpace;
 #else
 typedef Kokkos::HostSpace MemSpace;
+#endif
+
+#if defined(KOKKOS_ENABLE_HIP)
+#define NTHREADS_PER_DEVICE_TEAM 128
+#else
+#define NTHREADS_PER_DEVICE_TEAM Kokkos::AUTO
 #endif
 
 using HostSpace = Kokkos::DefaultHostExecutionSpace;
@@ -70,8 +76,13 @@ template <typename T, typename SHMEM = HostShmem>
 using SharedMemView =
   Kokkos::View<T, Kokkos::LayoutRight, SHMEM, Kokkos::MemoryUnmanaged>;
 
+#if defined(KOKKOS_ENABLE_HIP)
+template <typename T>
+using AlignedViewType = Kokkos::View<T>;
+#else
 template <typename T>
 using AlignedViewType = Kokkos::View<T, Kokkos::MemoryTraits<Kokkos::Aligned>>;
+#endif
 
 using DeviceTeamPolicy = Kokkos::TeamPolicy<DeviceSpace>;
 using HostTeamPolicy = Kokkos::TeamPolicy<HostSpace>;
@@ -103,7 +114,7 @@ inline DeviceTeamPolicy
 get_device_team_policy(
   const size_t sz, const size_t bytes_per_team, const size_t bytes_per_thread)
 {
-  DeviceTeamPolicy policy(sz, Kokkos::AUTO);
+  DeviceTeamPolicy policy(sz, NTHREADS_PER_DEVICE_TEAM);
   return policy.set_scratch_size(
     1, Kokkos::PerTeam(bytes_per_team), Kokkos::PerThread(bytes_per_thread));
 }
@@ -148,7 +159,7 @@ get_shmem_view_3D(
     team.team_rank(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
 }
 
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP)
+#if !defined(KOKKOS_ENABLE_GPU)
 template <
   typename T,
   typename TEAMHANDLETYPE,

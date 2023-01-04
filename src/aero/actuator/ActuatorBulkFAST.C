@@ -264,7 +264,9 @@ ActuatorBulkFAST::interpolate_velocities_to_fast()
     if (openFast_.isDebug()) {
       openFast_.solution0();
     } else {
-      squash_fast_output(std::bind(&fast::OpenFAST::solution0, &openFast_));
+      // TODO(Ganesh)
+      /* squash_fast_output([&]() { openFast_.solution0(false); }); */
+      squash_fast_output([&]() { openFast_.solution0(); });
     }
   }
 }
@@ -278,7 +280,7 @@ ActuatorBulkFAST::step_fast()
     }
   } else {
     for (int j = 0; j < tStepRatio_; j++) {
-      squash_fast_output(std::bind(&fast::OpenFAST::step, &openFast_));
+      squash_fast_output([&]() { openFast_.step(); });
     }
   }
 }

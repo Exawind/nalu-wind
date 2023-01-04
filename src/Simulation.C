@@ -47,14 +47,30 @@ Simulation::Simulation(const YAML::Node& root_node)
     linearSolvers_(NULL),
     serializedIOGroupSize_(0)
 {
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA)
   cudaDeviceGetLimit(&default_stack_size, cudaLimitStackSize);
   cudaDeviceSetLimit(cudaLimitStackSize, nalu_stack_size);
-#endif
+#elif defined(KOKKOS_ENABLE_HIP)
+  hipError_t err =
+    hipDeviceGetLimit(&default_stack_size, hipLimitMallocHeapSize);
+  if (err != hipSuccess) {
+    /*
+     This might be useful at some point so keeping it and commenting out.
 
-#ifdef KOKKOS_ENABLE_HIP
-  // hipDeviceGetLimit(&default_stack_size, cudaLimitStackSize);
-  // hipDeviceSetLimit(cudaLimitStackSize, nalu_stack_size);
+     printf("%s %s %d : Failure %s in hipDeviceSetLimit\n",
+     __FILE__,__FUNCTION__,__LINE__,hipGetErrorString(err));
+    */
+  }
+
+  err = hipDeviceSetLimit(hipLimitMallocHeapSize, nalu_stack_size);
+  if (err != hipSuccess) {
+    /*
+     This might be useful at some point so keeping it and commenting out.
+
+     printf("%s %s %d : Failure %s in hipDeviceSetLimit\n",
+     __FILE__,__FUNCTION__,__LINE__,hipGetErrorString(err));
+    */
+  }
 #endif
 }
 
@@ -64,11 +80,19 @@ Simulation::~Simulation()
   delete transfers_;
   delete timeIntegrator_;
   delete linearSolvers_;
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA)
   cudaDeviceSetLimit(cudaLimitStackSize, default_stack_size);
-#endif
-#ifdef KOKKOS_ENABLE_HIP
-  // hipDeviceSetLimit(cudaLimitStackSize, default_stack_size);
+#elif defined(KOKKOS_ENABLE_HIP)
+  hipError_t err =
+    hipDeviceSetLimit(hipLimitMallocHeapSize, default_stack_size);
+  if (err != hipSuccess) {
+    /*
+     This might be useful at some point so keeping it and commenting out.
+
+     printf("%s %s %d : Failure %s in hipDeviceSetLimit\n",
+     __FILE__,__FUNCTION__,__LINE__,hipGetErrorString(err));
+    */
+  }
 #endif
 }
 

@@ -10,7 +10,6 @@
 #include "matrix_free/MaxCourantReynolds.h"
 
 #include "matrix_free/LobattoQuadratureRule.h"
-#include "matrix_free/MakeRCP.h"
 
 #include "gtest/gtest.h"
 

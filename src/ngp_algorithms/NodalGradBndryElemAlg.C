@@ -132,9 +132,7 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
 
 INSTANTIATE_ALG(AlgTraitsTri3);
 INSTANTIATE_ALG(AlgTraitsQuad4);
-INSTANTIATE_ALG(AlgTraitsQuad9);
 INSTANTIATE_ALG(AlgTraitsEdge_2D);
-INSTANTIATE_ALG(AlgTraitsEdge3_2D);
 
 } // namespace nalu
 } // namespace sierra

@@ -15,7 +15,6 @@
 #include <master_element/MasterElement.h>
 
 #include <master_element/Hex8CVFEM.h>
-#include <master_element/Hex27CVFEM.h>
 
 // NGP-based includes
 #include "SimdInterface.h"
@@ -313,33 +312,6 @@ TEST_F(MasterElementHexSerial, hex8_scs_derivatives)
     setup_poly_order_1_hex_8();
     sierra::nalu::HexSCS hexscs;
     check_derivatives(*bulk, topo, hexscs, poly_order);
-  }
-}
-
-TEST_F(MasterElementHexSerial, hex27_scs_interpolation)
-{
-  if (stk::parallel_machine_size(comm) == 1) {
-    setup_poly_order_2_hex_27();
-    sierra::nalu::Hex27SCS hex27scs;
-    check_interpolation(*bulk, topo, hex27scs, poly_order);
-  }
-}
-
-TEST_F(MasterElementHexSerial, hex27_scv_interpolation)
-{
-  if (stk::parallel_machine_size(comm) == 1) {
-    setup_poly_order_2_hex_27();
-    sierra::nalu::Hex27SCV hex27scv;
-    check_interpolation(*bulk, topo, hex27scv, poly_order);
-  }
-}
-
-TEST_F(MasterElementHexSerial, hex27_scs_derivatives)
-{
-  if (stk::parallel_machine_size(comm) == 1) {
-    setup_poly_order_2_hex_27();
-    sierra::nalu::Hex27SCS hex27scs;
-    check_derivatives(*bulk, topo, hex27scs, poly_order);
   }
 }
 

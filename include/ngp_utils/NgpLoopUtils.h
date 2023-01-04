@@ -42,7 +42,7 @@ inline TeamPolicy
 ngp_mesh_team_policy(
   const size_t sz, const size_t bytes_per_team, const size_t bytes_per_thread)
 {
-  TeamPolicy policy(sz, Kokkos::AUTO);
+  TeamPolicy policy(sz, NTHREADS_PER_DEVICE_TEAM);
   return policy.set_scratch_size(
     1, Kokkos::PerTeam(bytes_per_team), Kokkos::PerThread(bytes_per_thread));
 }
@@ -123,8 +123,7 @@ run_entity_algorithm(
   using MeshIndex = typename Traits::MeshIndex;
 
   const auto& buckets = mesh.get_bucket_ids(rank, sel);
-  auto team_exec = TeamPolicy(buckets.size(), Kokkos::AUTO);
-
+  auto team_exec = TeamPolicy(buckets.size(), NTHREADS_PER_DEVICE_TEAM);
   Kokkos::parallel_for(
     algName, team_exec, KOKKOS_LAMBDA(const TeamHandleType& team) {
       auto bktId = buckets.device_get(team.league_rank());
@@ -170,8 +169,7 @@ run_entity_par_reduce(
   using MeshIndex = typename Traits::MeshIndex;
 
   const auto& buckets = mesh.get_bucket_ids(rank, sel);
-  auto team_exec = TeamPolicy(buckets.size(), Kokkos::AUTO);
-
+  auto team_exec = TeamPolicy(buckets.size(), NTHREADS_PER_DEVICE_TEAM);
   Kokkos::parallel_reduce(
     algName, team_exec,
     KOKKOS_LAMBDA(const TeamHandleType& team, ReducerType& teamVal) {
@@ -212,8 +210,7 @@ run_entity_par_reduce(
   using value_type = typename ReducerType::value_type;
 
   const auto& buckets = mesh.get_bucket_ids(rank, sel);
-  auto team_exec = TeamPolicy(buckets.size(), Kokkos::AUTO);
-
+  auto team_exec = TeamPolicy(buckets.size(), NTHREADS_PER_DEVICE_TEAM);
   Kokkos::parallel_reduce(
     algName, team_exec,
     KOKKOS_LAMBDA(const TeamHandleType& team, value_type& teamVal) {

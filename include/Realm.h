@@ -540,7 +540,7 @@ public:
   std::vector<Transfer*> externalDataTransferVec_;
   void augment_transfer_vector(
     Transfer* transfer, const std::string transferObjective, Realm* toRealm);
-  void process_multi_physics_transfer();
+  void process_multi_physics_transfer(bool isInit = false);
   void process_initialization_transfer();
   void process_io_transfer();
   void process_external_data_transfer();
@@ -560,6 +560,7 @@ public:
   bool get_is_terminate_based_on_time();
   double get_total_sim_time();
   int get_max_time_step_count();
+  int get_restart_frequency();
 
   // restart
   bool restarted_simulation();

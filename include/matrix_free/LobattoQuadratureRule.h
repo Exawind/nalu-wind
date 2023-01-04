@@ -10,6 +10,7 @@
 #ifndef LOBATTO_QUADRATURE_RULE_H
 #define LOBATTO_QUADRATURE_RULE_H
 
+#include <vector>
 #include "Kokkos_Array.hpp"
 
 namespace sierra {
@@ -49,6 +50,7 @@ struct GLL<4>
 };
 
 double gauss_lobatto_legendre_abscissae(int p, int n);
+std::vector<double> gauss_lobatto_legendre_abscissae(int p);
 
 } // namespace matrix_free
 } // namespace nalu

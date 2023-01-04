@@ -333,19 +333,6 @@ TEST(KokkosME, test_quad42D_shifted_grad_op)
     {sierra::nalu::SCS_SHIFTED_GRAD_OP});
 }
 
-TEST(KokkosME, test_quad92D_views)
-{
-  test_ME_views<sierra::nalu::AlgTraitsQuad9_2D>(
-    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP, sierra::nalu::SCS_GIJ,
-     sierra::nalu::SCV_VOLUME});
-}
-
-TEST(KokkosME, test_quad92D_shifted_grad_op)
-{
-  test_ME_views<sierra::nalu::AlgTraitsQuad9_2D>(
-    {sierra::nalu::SCS_SHIFTED_GRAD_OP});
-}
-
 TEST(KokkosME, test_wed6_views)
 {
   test_ME_views<sierra::nalu::AlgTraitsWed6>(

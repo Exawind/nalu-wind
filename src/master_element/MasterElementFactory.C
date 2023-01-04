@@ -11,16 +11,12 @@
 #include "master_element/MasterElement.h"
 
 #include "master_element/Hex8CVFEM.h"
-#include "master_element/Hex27CVFEM.h"
 #include "master_element/Tet4CVFEM.h"
 #include "master_element/Pyr5CVFEM.h"
 #include "master_element/Wed6CVFEM.h"
 #include "master_element/Quad43DCVFEM.h"
 #include "master_element/Quad42DCVFEM.h"
-#include "master_element/Quad92DCVFEM.h"
-#include "master_element/Quad93DCVFEM.h"
 #include "master_element/Tri32DCVFEM.h"
-#include "master_element/Edge32DCVFEM.h"
 #include "master_element/Edge22DCVFEM.h"
 #include "master_element/Tri33DCVFEM.h"
 
@@ -44,8 +40,6 @@ MasterElementRepo::get_surface_master_element_on_dev(
   switch (theTopo.value()) {
   case stk::topology::HEX_8:
     return get_surface_master_element<AlgTraitsHex8>();
-  case stk::topology::HEX_27:
-    return get_surface_master_element<AlgTraitsHex27>();
   case stk::topology::TET_4:
     return get_surface_master_element<AlgTraitsTet4>();
   case stk::topology::PYRAMID_5:
@@ -54,20 +48,14 @@ MasterElementRepo::get_surface_master_element_on_dev(
     return get_surface_master_element<AlgTraitsWed6>();
   case stk::topology::QUAD_4:
     return get_surface_master_element<AlgTraitsQuad4>();
-  case stk::topology::QUAD_9:
-    return get_surface_master_element<AlgTraitsQuad9>();
   case stk::topology::TRI_3:
     return get_surface_master_element<AlgTraitsTri3>();
   case stk::topology::QUAD_4_2D:
     return get_surface_master_element<AlgTraitsQuad4_2D>();
-  case stk::topology::QUAD_9_2D:
-    return get_surface_master_element<AlgTraitsQuad9_2D>();
   case stk::topology::TRI_3_2D:
     return get_surface_master_element<AlgTraitsTri3_2D>();
   case stk::topology::LINE_2:
     return get_surface_master_element<AlgTraitsEdge_2D>();
-  case stk::topology::LINE_3:
-    return get_surface_master_element<AlgTraitsEdge3_2D>();
   case stk::topology::SHELL_QUAD_4:
     NaluEnv::self().naluOutputP0()
       << "SHELL_QUAD_4 only supported for io surface transfer applications"
@@ -106,9 +94,6 @@ create_surface_master_element(stk::topology topo)
   case stk::topology::HEX_8:
     return std::make_unique<HexSCS>();
 
-  case stk::topology::HEX_27:
-    return std::make_unique<Hex27SCS>();
-
   case stk::topology::TET_4:
     return std::make_unique<TetSCS>();
 
@@ -121,26 +106,17 @@ create_surface_master_element(stk::topology topo)
   case stk::topology::QUAD_4:
     return std::make_unique<Quad3DSCS>();
 
-  case stk::topology::QUAD_9:
-    return std::make_unique<Quad93DSCS>();
-
   case stk::topology::TRI_3:
     return std::make_unique<Tri3DSCS>();
 
   case stk::topology::QUAD_4_2D:
     return std::make_unique<Quad42DSCS>();
 
-  case stk::topology::QUAD_9_2D:
-    return std::make_unique<Quad92DSCS>();
-
   case stk::topology::TRI_3_2D:
     return std::make_unique<Tri32DSCS>();
 
   case stk::topology::LINE_2:
     return std::make_unique<Edge2DSCS>();
-
-  case stk::topology::LINE_3:
-    return std::make_unique<Edge32DSCS>();
 
   case stk::topology::SHELL_QUAD_4:
     NaluEnv::self().naluOutputP0()
@@ -180,9 +156,6 @@ create_volume_master_element(stk::topology topo)
   case stk::topology::HEX_8:
     return std::make_unique<HexSCV>();
 
-  case stk::topology::HEX_27:
-    return std::make_unique<Hex27SCV>();
-
   case stk::topology::TET_4:
     return std::make_unique<TetSCV>();
 
@@ -194,9 +167,6 @@ create_volume_master_element(stk::topology topo)
 
   case stk::topology::QUAD_4_2D:
     return std::make_unique<Quad42DSCV>();
-
-  case stk::topology::QUAD_9_2D:
-    return std::make_unique<Quad92DSCV>();
 
   case stk::topology::TRI_3_2D:
     return std::make_unique<Tri32DSCV>();

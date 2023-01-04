@@ -93,8 +93,6 @@ build_topo_kernel(stk::topology topo, Args&&... args)
   switch (topo.value()) {
   case stk::topology::HEX_8:
     return new T<AlgTraitsHex8>(std::forward<Args>(args)...);
-  case stk::topology::HEX_27:
-    return new T<AlgTraitsHex27>(std::forward<Args>(args)...);
   case stk::topology::TET_4:
     return new T<AlgTraitsTet4>(std::forward<Args>(args)...);
   case stk::topology::PYRAMID_5:
@@ -103,8 +101,6 @@ build_topo_kernel(stk::topology topo, Args&&... args)
     return new T<AlgTraitsWed6>(std::forward<Args>(args)...);
   case stk::topology::QUAD_4_2D:
     return new T<AlgTraitsQuad4_2D>(std::forward<Args>(args)...);
-  case stk::topology::QUAD_9_2D:
-    return new T<AlgTraitsQuad9_2D>(std::forward<Args>(args)...);
   case stk::topology::TRI_3_2D:
     return new T<AlgTraitsTri3_2D>(std::forward<Args>(args)...);
   default:
@@ -200,8 +196,6 @@ build_face_elem_topo_kernel(
                "wedge6.");
       return nullptr;
     }
-  case stk::topology::QUAD_9:
-    return new T<AlgTraitsQuad9Hex27>(std::forward<Args>(args)...);
   case stk::topology::TRI_3:
     switch (elemTopo) {
     case stk::topology::TET_4:
@@ -223,8 +217,6 @@ build_face_elem_topo_kernel(
     default:
       return new T<AlgTraitsEdge2DQuad42D>(std::forward<Args>(args)...);
     }
-  case stk::topology::LINE_3:
-    return new T<AlgTraitsEdge32DQuad92D>(std::forward<Args>(args)...);
   default:
     return nullptr;
   }
@@ -237,14 +229,10 @@ build_face_topo_kernel(stk::topology topo, Args&&... args)
   switch (topo.value()) {
   case stk::topology::QUAD_4:
     return new T<AlgTraitsQuad4>(std::forward<Args>(args)...);
-  case stk::topology::QUAD_9:
-    return new T<AlgTraitsQuad9>(std::forward<Args>(args)...);
   case stk::topology::TRI_3:
     return new T<AlgTraitsTri3>(std::forward<Args>(args)...);
   case stk::topology::LINE_2:
     return new T<AlgTraitsEdge_2D>(std::forward<Args>(args)...);
-  case stk::topology::LINE_3:
-    return new T<AlgTraitsEdge3_2D>(std::forward<Args>(args)...);
   default:
     return nullptr;
   }
@@ -346,7 +334,6 @@ build_or_add_part_to_face_elem_solver_alg(
 
   bool isNotNGP =
     !(elemTopo == stk::topology::HEXAHEDRON_8 ||
-      elemTopo == stk::topology::HEXAHEDRON_27 ||
       elemTopo == stk::topology::QUADRILATERAL_4_2D ||
       elemTopo == stk::topology::TRIANGLE_3_2D ||
       elemTopo == stk::topology::WEDGE_6 ||

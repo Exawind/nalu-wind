@@ -12,16 +12,12 @@
 
 #include "AlgTraits.h"
 #include "master_element/Hex8CVFEM.h"
-#include "master_element/Hex27CVFEM.h"
 #include "master_element/Tet4CVFEM.h"
 #include "master_element/Pyr5CVFEM.h"
 #include "master_element/Wed6CVFEM.h"
 #include "master_element/Quad43DCVFEM.h"
 #include "master_element/Quad42DCVFEM.h"
-#include "master_element/Quad92DCVFEM.h"
-#include "master_element/Quad93DCVFEM.h"
 #include "master_element/Tri32DCVFEM.h"
-#include "master_element/Edge32DCVFEM.h"
 #include "master_element/Edge22DCVFEM.h"
 #include "master_element/Tri33DCVFEM.h"
 
@@ -30,24 +26,20 @@ namespace nalu {
 
 #define INSTANTIATE_KERNEL_3D(ClassName)                                       \
   template class ClassName<AlgTraitsHex8>;                                     \
-  template class ClassName<AlgTraitsHex27>;                                    \
   template class ClassName<AlgTraitsTet4>;                                     \
   template class ClassName<AlgTraitsPyr5>;                                     \
   template class ClassName<AlgTraitsWed6>;
 
 #define INSTANTIATE_KERNEL_FACE_3D(ClassName)                                  \
   template class ClassName<AlgTraitsTri3>;                                     \
-  template class ClassName<AlgTraitsQuad4>;                                    \
-  template class ClassName<AlgTraitsQuad9>;
+  template class ClassName<AlgTraitsQuad4>;
 
 #define INSTANTIATE_KERNEL_2D(ClassName)                                       \
   template class ClassName<AlgTraitsQuad4_2D>;                                 \
-  template class ClassName<AlgTraitsQuad9_2D>;                                 \
   template class ClassName<AlgTraitsTri3_2D>;
 
 #define INSTANTIATE_KERNEL_FACE_2D(ClassName)                                  \
-  template class ClassName<AlgTraitsEdge_2D>;                                  \
-  template class ClassName<AlgTraitsEdge3_2D>;
+  template class ClassName<AlgTraitsEdge_2D>;
 
 #define INSTANTIATE_KERNEL_FACE_ELEMENT_3D(ClassName)                          \
   template class ClassName<AlgTraitsTri3Tet4>;                                 \
@@ -55,14 +47,11 @@ namespace nalu {
   template class ClassName<AlgTraitsTri3Wed6>;                                 \
   template class ClassName<AlgTraitsQuad4Pyr5>;                                \
   template class ClassName<AlgTraitsQuad4Wed6>;                                \
-  template class ClassName<AlgTraitsQuad4Hex8>;                                \
-  template class ClassName<AlgTraitsQuad9Hex27>;
+  template class ClassName<AlgTraitsQuad4Hex8>;
 
 #define INSTANTIATE_KERNEL_FACE_ELEMENT_2D(ClassName)                          \
   template class ClassName<AlgTraitsEdge2DTri32D>;                             \
-  template class ClassName<AlgTraitsEdge2DQuad42D>;                            \
-  template class ClassName<AlgTraitsEdge32DQuad92D>;
-
+  template class ClassName<AlgTraitsEdge2DQuad42D>;
 // HO templates: generates 4 instantiations per kernel type
 // 2,3,4 and one that can be set at compile time
 

@@ -31,19 +31,10 @@ CVFEM and FEM Interface
 .. doxygenclass:: sierra::nalu::WedSCS
    :members:
 
-.. doxygenclass:: sierra::nalu::Hex27SCV
-   :members:
-
-.. doxygenclass:: sierra::nalu::Hex27SCS
-   :members:
-
 .. doxygenclass:: sierra::nalu::Hex8FEM
    :members:
 
 .. doxygenclass:: sierra::nalu::Quad3DSCS
-   :members:
-
-.. doxygenclass:: sierra::nalu::Quad93DSCS
    :members:
 
 .. doxygenclass:: sierra::nalu::Tri3DSCS
@@ -64,17 +55,3 @@ CVFEM and FEM Interface
 .. doxygenclass:: sierra::nalu::Tri32DSCS
    :members:
 
-Higher-order Element Topologies
--------------------------------
-
-.. doxygenclass:: sierra::nalu::HigherOrderHexSCV
-   :members:
-
-.. doxygenclass:: sierra::nalu::HigherOrderHexSCS
-   :members:
-
-.. doxygenclass:: sierra::nalu::HigherOrderQuad2DSCV
-   :members:
-
-.. doxygenclass:: sierra::nalu::HigherOrderQuad2DSCS
-   :members:

@@ -356,11 +356,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPSharedMemData)
 }
 
 #if defined(KOKKOS_ENABLE_GPU)
-#ifdef KOKKOS_ENABLE_CUDA
-using DeviceSpace = Kokkos::Cuda;
-#else
-using DeviceSpace = Kokkos::Experimental::HIP;
-#endif
+using DeviceSpace = Kokkos::DefaultExecutionSpace;
 using DeviceShmem = DeviceSpace::scratch_memory_space;
 using DynamicScheduleType = Kokkos::Schedule<Kokkos::Dynamic>;
 using DeviceTeamHandleType =

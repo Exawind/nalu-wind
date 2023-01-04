@@ -131,13 +131,11 @@ NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   template class NodalGradElemAlg<AlgTraits, VectorFieldType, GenericFieldType>
 
 INSTANTIATE_ALG(AlgTraitsHex8);
-INSTANTIATE_ALG(AlgTraitsHex27);
 INSTANTIATE_ALG(AlgTraitsTet4);
 INSTANTIATE_ALG(AlgTraitsPyr5);
 INSTANTIATE_ALG(AlgTraitsWed6);
 INSTANTIATE_ALG(AlgTraitsTri3_2D);
 INSTANTIATE_ALG(AlgTraitsQuad4_2D);
-INSTANTIATE_ALG(AlgTraitsQuad9_2D);
 
 } // namespace nalu
 } // namespace sierra
