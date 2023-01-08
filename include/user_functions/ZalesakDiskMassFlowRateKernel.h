@@ -20,10 +20,7 @@ class ZalesakDiskMassFlowRateEdgeAlg : public AssembleEdgeSolverAlgorithm
 public:
   // TODO: refactor to use FieldManager
   ZalesakDiskMassFlowRateEdgeAlg(
-    Realm&,
-    stk::mesh::Part*,
-    EquationSystem*,
-    const bool = false);
+    Realm&, stk::mesh::Part*, EquationSystem*, const bool = false);
 
   virtual ~ZalesakDiskMassFlowRateEdgeAlg() = default;
 

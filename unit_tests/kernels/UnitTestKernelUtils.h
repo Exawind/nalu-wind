@@ -1468,13 +1468,12 @@ public:
 
     unit_test_kernel_utils::mixture_fraction_test_function(
       *bulk_, *coordinates_, *volumeOfFluid_, amf_, znot_);
-    
+
     unit_test_kernel_utils::velocity_test_function(
       *bulk_, *coordinates_, *velocity_);
 
-    unit_test_kernel_utils::
-      property_from_mixture_fraction_test_function(
-        *bulk_, *volumeOfFluid_, *density_, rhoPrimary_, rhoSecondary_);
+    unit_test_kernel_utils::property_from_mixture_fraction_test_function(
+      *bulk_, *volumeOfFluid_, *density_, rhoPrimary_, rhoSecondary_);
     unit_test_kernel_utils::property_from_mixture_fraction_test_function(
       *bulk_, *volumeOfFluid_, *viscosity_, viscPrimary_, viscSecondary_);
     unit_test_kernel_utils::calc_mass_flow_rate(

@@ -70,12 +70,11 @@ VOFMassBDFNodeKernel::execute(
   const NodeKernelTraits::DblType dnvNp1 = dnvNp1_.get(node, 0);
   const NodeKernelTraits::DblType dnvN = dnvN_.get(node, 0);
   const NodeKernelTraits::DblType dnvNm1 = dnvNm1_.get(node, 0);
-  const NodeKernelTraits::DblType lhsTime = gamma1_  * dnvNp1 / dt_;
-  rhs(0) -= (gamma1_ * qNp1 * dnvNp1 + gamma2_ * qN * dnvN +
-             gamma3_ * qNm1 * dnvNm1) /
-            dt_;
+  const NodeKernelTraits::DblType lhsTime = gamma1_ * dnvNp1 / dt_;
+  rhs(0) -=
+    (gamma1_ * qNp1 * dnvNp1 + gamma2_ * qN * dnvN + gamma3_ * qNm1 * dnvNm1) /
+    dt_;
   lhs(0, 0) += lhsTime;
-
 }
 
 } // namespace nalu

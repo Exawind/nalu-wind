@@ -27,7 +27,7 @@ ZalesakDiskMassFlowRateEdgeAlg::ZalesakDiskMassFlowRateEdgeAlg(
   : AssembleEdgeSolverAlgorithm(realm, part, eqSystem)
 {
   const auto& meta = realm.meta_data();
-  
+
   coordinates_ = get_field_ordinal(meta, realm.get_coordinates_name());
   edgeAreaVec_ =
     get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
@@ -62,10 +62,11 @@ ZalesakDiskMassFlowRateEdgeAlg::execute()
 
       NALU_ALIGNED DblType edge_centroid[NDimMax_];
       for (int d = 0; d < ndim; ++d)
-        edge_centroid[d] = 0.5*coordinates.get(nodeL,d) + 0.5*coordinates.get(nodeR,d);
+        edge_centroid[d] =
+          0.5 * coordinates.get(nodeL, d) + 0.5 * coordinates.get(nodeR, d);
 
-      massFlowRate.get(edge, 0) = -edge_centroid[1]*av[0] + edge_centroid[0]*av[1];
-
+      massFlowRate.get(edge, 0) =
+        -edge_centroid[1] * av[0] + edge_centroid[0] * av[1];
     });
 }
 

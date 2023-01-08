@@ -41,10 +41,8 @@
 #include "stk_topology/topology.hpp"
 #include "user_functions/ZalesakDiskVOFAuxFunction.h"
 
-
 namespace sierra {
 namespace nalu {
-
 
 //==========================================================================
 // Class Definition
@@ -77,8 +75,8 @@ VolumeOfFluidEquationSystem::VolumeOfFluidEquationSystem(
   // determine nodal gradient form
   set_nodal_gradient("volume_of_fluid");
   NaluEnv::self().naluOutputP0()
-    << "Edge projected nodal gradient for volume_of_fluid: " << edgeNodalGradient_
-    << std::endl;
+    << "Edge projected nodal gradient for volume_of_fluid: "
+    << edgeNodalGradient_ << std::endl;
 
   // push back EQ to manager
   realm_.equationSystems_.equationSystemVector_.push_back(this);
@@ -112,24 +110,27 @@ VolumeOfFluidEquationSystem::register_nodal_fields(stk::mesh::Part* part)
   stk::mesh::put_field_on_mesh(*volumeOfFluid_, *part, nullptr);
   realm_.augment_restart_variable_list("volume_of_fluid");
 
-  dvolumeOfFluiddx_ = &(
-    meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dvolume_of_fluiddx"));
+  dvolumeOfFluiddx_ = &(meta_data.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "dvolume_of_fluiddx"));
   stk::mesh::put_field_on_mesh(*dvolumeOfFluiddx_, *part, nDim, nullptr);
-  
+
   // delta solution for linear solver; share delta since this is a split system
-  vofTmp_ =  &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "vofTmp"));
+  vofTmp_ =
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "vofTmp"));
   stk::mesh::put_field_on_mesh(*vofTmp_, *part, nullptr);
 
-  if ( numStates > 2 && (!realm_.restarted_simulation() || realm_.support_inconsistent_restart())) {
+  if (
+    numStates > 2 &&
+    (!realm_.restarted_simulation() || realm_.support_inconsistent_restart())) {
 
     ScalarFieldType& vofN = volumeOfFluid_->field_of_state(stk::mesh::StateN);
-    ScalarFieldType& vofNp1 = volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
+    ScalarFieldType& vofNp1 =
+      volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
 
     CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
       realm_, part, &vofNp1, &vofN, 0, 1, stk::topology::NODE_RANK);
     copyStateAlg_.push_back(theCopyAlg);
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -150,7 +151,7 @@ VolumeOfFluidEquationSystem::register_edge_fields(stk::mesh::Part* part)
 {
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   auto massFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
-  stk::topology::EDGE_RANK, "mass_flow_rate"));
+    stk::topology::EDGE_RANK, "mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*massFlowRate_, *part, nullptr);
 }
 
@@ -165,8 +166,8 @@ VolumeOfFluidEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
   const AlgorithmType algType = INTERIOR;
 
   ScalarFieldType& vofNp1 = volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType& dvofdxNone = dvolumeOfFluiddx_->field_of_state(stk::mesh::StateNone);
-
+  VectorFieldType& dvofdxNone =
+    dvolumeOfFluiddx_->field_of_state(stk::mesh::StateNone);
 
   if (!managePNG_) {
     nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
@@ -187,7 +188,6 @@ VolumeOfFluidEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
         theAlg = new VOFAdvectionEdgeAlg(
           realm_, part, this, volumeOfFluid_, dvolumeOfFluiddx_, useAvgMdot);
 
-
       } else {
         throw std::runtime_error(
           "VOFEQS: Attempt to use non-NGP element solver algorithm");
@@ -204,29 +204,28 @@ VolumeOfFluidEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       "lumped_volume_of_fluid_time_derivative"};
     bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
     if (elementMassAlg) {
-      throw std::runtime_error(
-        "consistent mass integration of volume of fluid time-derivative unavailable");
+      throw std::runtime_error("consistent mass integration of volume of fluid "
+                               "time-derivative unavailable");
     }
     auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
     process_ngp_node_kernels(
       solverAlgMap, realm_, part, this,
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
-        nodeAlg.add_kernel<VOFMassBDFNodeKernel>(realm_.bulk_data(), volumeOfFluid_);
+        nodeAlg.add_kernel<VOFMassBDFNodeKernel>(
+          realm_.bulk_data(), volumeOfFluid_);
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         if (srcName == "gcl") {
-          nodeAlg.add_kernel<VOFGclNodeKernel>(realm_.bulk_data(), volumeOfFluid_);
+          nodeAlg.add_kernel<VOFGclNodeKernel>(
+            realm_.bulk_data(), volumeOfFluid_);
           NaluEnv::self().naluOutputP0() << " - " << srcName << std::endl;
         } else
           throw std::runtime_error("VOFEqSys: Invalid source term: " + srcName);
       });
 
-
-
   } else {
     throw std::runtime_error("VOFEQS: Element terms not supported");
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -241,7 +240,8 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
   // algorithm type
   const AlgorithmType algType = INFLOW;
   ScalarFieldType& vofNp1 = volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType& dvofdxNone = dvolumeOfFluiddx_->field_of_state(stk::mesh::StateNone);
+  VectorFieldType& dvofdxNone =
+    dvolumeOfFluiddx_->field_of_state(stk::mesh::StateNone);
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
@@ -257,8 +257,7 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
 
   AuxFunction* theAuxFunc = NULL;
 
-  if (CONSTANT_UD == theDataType)
-  {
+  if (CONSTANT_UD == theDataType) {
     VolumeOfFluid volumeOfFluid = userData.volumeOfFluid_;
     std::vector<double> userSpec(1);
     userSpec[0] = volumeOfFluid.volumeOfFluid_;
@@ -292,8 +291,7 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
 
   // non-solver; dgamdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "vof_nodal_grad", &vofNp1, &dvofdxNone,
-    edgeNodalGradient_);
+    algType, part, "vof_nodal_grad", &vofNp1, &dvofdxNone, edgeNodalGradient_);
 
   // Dirichlet bc
   std::map<AlgorithmType, SolverAlgorithm*>::iterator itd =
@@ -305,7 +303,6 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
   } else {
     itd->second->partVec_.push_back(part);
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -320,7 +317,8 @@ VolumeOfFluidEquationSystem::register_open_bc(
   const AlgorithmType algType = OPEN;
 
   ScalarFieldType& vofNp1 = volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType& dvofdxNone = dvolumeOfFluiddx_->field_of_state(stk::mesh::StateNone);
+  VectorFieldType& dvofdxNone =
+    dvolumeOfFluiddx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; dvofdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
@@ -341,13 +339,13 @@ VolumeOfFluidEquationSystem::register_wall_bc(
   const AlgorithmType algType = WALL;
 
   ScalarFieldType& vofNp1 = volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType& dvofdxNone = dvolumeOfFluiddx_->field_of_state(stk::mesh::StateNone);
+  VectorFieldType& dvofdxNone =
+    dvolumeOfFluiddx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; dvofdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
     algType, part, "gamma_nodal_grad", &vofNp1, &dvofdxNone,
     edgeNodalGradient_);
-
 }
 
 //--------------------------------------------------------------------------
@@ -363,13 +361,13 @@ VolumeOfFluidEquationSystem::register_symmetry_bc(
   const AlgorithmType algType = SYMMETRY;
 
   ScalarFieldType& vofNp1 = volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType& dvofdxNone = dvolumeOfFluiddx_->field_of_state(stk::mesh::StateNone);
+  VectorFieldType& dvofdxNone =
+    dvolumeOfFluiddx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; dvofdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
     algType, part, "gamma_nodal_grad", &vofNp1, &dvofdxNone,
     edgeNodalGradient_);
-
 }
 
 //--------------------------------------------------------------------------
@@ -461,12 +459,12 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
       // Initialize mass flow rate until momentum connection implemented
       {
         const bool useAvgMdot = (realm_.solutionOptions_->turbulenceModel_ ==
-                           TurbulenceModel::SST_AMS)
-                            ? true
-                            : false;
-        auto VOFSetMassFlowRate = new ZalesakDiskMassFlowRateEdgeAlg(
-          realm_, part, this, useAvgMdot);
-          realm_.initCondAlg_.push_back(VOFSetMassFlowRate);
+                                 TurbulenceModel::SST_AMS)
+                                  ? true
+                                  : false;
+        auto VOFSetMassFlowRate =
+          new ZalesakDiskMassFlowRateEdgeAlg(realm_, part, this, useAvgMdot);
+        realm_.initCondAlg_.push_back(VOFSetMassFlowRate);
       }
     } else {
       throw std::runtime_error("VolumeOfFluidEquationSystem::register_initial_"
@@ -488,7 +486,8 @@ void
 VolumeOfFluidEquationSystem::manage_projected_nodal_gradient(
   EquationSystems& eqSystems)
 {
-  throw std::runtime_error("VolumeOfFluidEquationSystem::manage_projected_nodal_gradient: Not supported");
+  throw std::runtime_error("VolumeOfFluidEquationSystem::manage_projected_"
+                           "nodal_gradient: Not supported");
 }
 
 //--------------------------------------------------------------------------
@@ -512,25 +511,23 @@ void
 VolumeOfFluidEquationSystem::solve_and_update()
 {
 
-    // compute dvof/dx
-  if ( !isInit_ ) {
+  // compute dvof/dx
+  if (!isInit_) {
     compute_projected_nodal_gradient();
     isInit_ = true;
   }
 
-  for ( int k = 0; k < maxIterations_; ++k ) {
+  for (int k = 0; k < maxIterations_; ++k) {
 
-    NaluEnv::self().naluOutputP0() << " " << k+1 << "/" << maxIterations_
-                    << std::setw(15) << std::right << userSuppliedName_ << std::endl;
-                  
+    NaluEnv::self().naluOutputP0()
+      << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
+      << userSuppliedName_ << std::endl;
+
     assemble_and_solve(vofTmp_);
-    solution_update(
-      1.0, *vofTmp_, 1.0, *volumeOfFluid_);
+    solution_update(1.0, *vofTmp_, 1.0, *volumeOfFluid_);
 
     compute_projected_nodal_gradient();
-  
   }
-
 }
 
 } // namespace nalu

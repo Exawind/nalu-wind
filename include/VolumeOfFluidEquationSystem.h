@@ -24,8 +24,6 @@
 
 #include "stk_mesh/base/NgpMesh.hpp"
 
-
-
 namespace stk {
 struct topology;
 }
@@ -43,8 +41,7 @@ class VolumeOfFluidEquationSystem : public EquationSystem
 {
 
 public:
-  VolumeOfFluidEquationSystem(
-    EquationSystems& equationSystems);
+  VolumeOfFluidEquationSystem(EquationSystems& equationSystems);
   virtual ~VolumeOfFluidEquationSystem();
 
   virtual void register_nodal_fields(stk::mesh::Part* part);

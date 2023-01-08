@@ -124,10 +124,12 @@ EquationSystems::load(const YAML::Node& y_node)
           } else {
             eqSys = new LowMachEquationSystem(*this, elemCont);
           }
-        } else if ( expect_map(y_system, "VolumeOfFluid", true) ) {
+        } else if (expect_map(y_system, "VolumeOfFluid", true)) {
 
-	        y_eqsys =  expect_map(y_system, "VolumeOfFluid", true);
-          if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = VolumeOfFluid" << std::endl;
+          y_eqsys = expect_map(y_system, "VolumeOfFluid", true);
+          if (root()->debug())
+            NaluEnv::self().naluOutputP0()
+              << "eqSys = VolumeOfFluid" << std::endl;
           eqSys = new VolumeOfFluidEquationSystem(*this);
 
         } else if (expect_map(y_system, "ShearStressTransport", true)) {

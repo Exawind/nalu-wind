@@ -18,8 +18,7 @@
 namespace sierra {
 namespace nalu {
 
-ZalesakDiskVOFAuxFunction::ZalesakDiskVOFAuxFunction()
-  : AuxFunction(0, 1)
+ZalesakDiskVOFAuxFunction::ZalesakDiskVOFAuxFunction() : AuxFunction(0, 1)
 {
   // does nothing
 }
@@ -41,10 +40,10 @@ ZalesakDiskVOFAuxFunction::do_evaluate(
     const double y = coords[1];
 
     fieldPtr[0] = 0.0;
-    if ( x*x + (y-0.25)*(y-0.25) < 0.15*0.15)
+    if (x * x + (y - 0.25) * (y - 0.25) < 0.15 * 0.15)
       fieldPtr[0] = 1.0;
-    
-    if (x > -0.025 && x < 0.025 && y<0.35)
+
+    if (x > -0.025 && x < 0.025 && y < 0.35)
       fieldPtr[0] = 0.0;
 
     fieldPtr += fieldSize;

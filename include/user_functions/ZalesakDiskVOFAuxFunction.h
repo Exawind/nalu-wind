@@ -34,7 +34,6 @@ public:
     const unsigned fieldSize,
     const unsigned beginPos,
     const unsigned endPos) const;
-
 };
 
 } // namespace nalu

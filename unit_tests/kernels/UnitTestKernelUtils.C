@@ -645,7 +645,6 @@ calc_mass_flow_rate(
         tmdot += 0.5 * (rhoL * velL[d] + rhoR * velR[d]) * av[ie * ndim + d];
 
       mdot[ie] = tmdot;
-      
     }
   }
 }
