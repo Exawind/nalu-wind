@@ -1906,14 +1906,14 @@ fsiTurbine::mapDisplacements()
       double* dispMapInterpNode = stk::mesh::field_data(*dispMapInterp_, node);
 
       // Find the interpolated reference position first
-      const auto twrStartRef = aero::Displacement(&brFSIdata_.twr_ref_pos[iN]);
-      const auto twrEndRef = aero::Displacement(&brFSIdata_.twr_ref_pos[iNp1]);
+      const auto twrStartRef = aero::SixDOF(&brFSIdata_.twr_ref_pos[iN]);
+      const auto twrEndRef = aero::SixDOF(&brFSIdata_.twr_ref_pos[iNp1]);
       const auto refPos = aero::linear_interp_total_displacement(
         twrStartRef, twrEndRef, *dispMapInterpNode);
 
       // Now linearly interpolate the deflections to the intermediate location
-      const auto twrStartDisp = aero::Displacement(&brFSIdata_.twr_def[iN]);
-      const auto twrEndDisp = aero::Displacement(&brFSIdata_.twr_def[iNp1]);
+      const auto twrStartDisp = aero::SixDOF(&brFSIdata_.twr_def[iN]);
+      const auto twrEndDisp = aero::SixDOF(&brFSIdata_.twr_def[iNp1]);
       const auto interpDisp = aero::linear_interp_total_displacement(
         twrStartDisp, twrEndDisp, *dispMapInterpNode);
 
@@ -1943,14 +1943,14 @@ fsiTurbine::mapDisplacements()
           stk::mesh::field_data(*dispMapInterp_, node);
 
         // Find the interpolated reference position first
-        auto bldStartRef = aero::Displacement(&(brFSIdata_.bld_ref_pos[iN]));
-        auto bldEndRef = aero::Displacement(&(brFSIdata_.bld_ref_pos[iNp1]));
+        auto bldStartRef = aero::SixDOF(&(brFSIdata_.bld_ref_pos[iN]));
+        auto bldEndRef = aero::SixDOF(&(brFSIdata_.bld_ref_pos[iNp1]));
         auto refPos = aero::linear_interp_total_displacement(
           bldStartRef, bldEndRef, *dispMapInterpNode);
 
         // Now linearly interpolate the deflections to the intermediate
-        auto bldStartDisp = aero::Displacement(&(brFSIdata_.bld_def[iN]));
-        auto bldEndDisp = aero::Displacement(&(brFSIdata_.bld_def[iNp1]));
+        auto bldStartDisp = aero::SixDOF(&(brFSIdata_.bld_def[iN]));
+        auto bldEndDisp = aero::SixDOF(&(brFSIdata_.bld_def[iNp1]));
         auto interpDisp = aero::linear_interp_total_displacement(
           bldStartDisp, bldEndDisp, *dispMapInterpNode);
 
@@ -1982,8 +1982,8 @@ fsiTurbine::mapDisplacements()
 
       auto oldxyz = vector_from_field(*modelCoords, node);
       auto dx = vector_from_field(*displacement, node);
-      const aero::Displacement refPos(brFSIdata_.hub_ref_pos.data());
-      const aero::Displacement deflection(brFSIdata_.hub_def.data());
+      const aero::SixDOF refPos(brFSIdata_.hub_ref_pos.data());
+      const aero::SixDOF deflection(brFSIdata_.hub_def.data());
       // Now transfer the displacement to the CFD mesh node
       dx =
         aero::compute_translational_displacements(deflection, refPos, oldxyz);
@@ -1991,7 +1991,7 @@ fsiTurbine::mapDisplacements()
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
       auto mVel = vector_from_field(*meshVelocity, node);
-      const aero::Displacement vel(brFSIdata_.hub_vel.data());
+      const aero::SixDOF vel(brFSIdata_.hub_vel.data());
 
       mVel = aero::compute_mesh_velocity(vel, deflection, refPos, oldxyz);
     }
@@ -2004,8 +2004,8 @@ fsiTurbine::mapDisplacements()
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
       auto oldxyz = vector_from_field(*modelCoords, node);
-      const aero::Displacement refPos(brFSIdata_.nac_ref_pos.data());
-      const aero::Displacement deflection(brFSIdata_.nac_def.data());
+      const aero::SixDOF refPos(brFSIdata_.nac_ref_pos.data());
+      const aero::SixDOF deflection(brFSIdata_.nac_def.data());
       auto dx = vector_from_field(*displacement, node);
       // Now transfer the displacement to the CFD mesh node
       dx =
@@ -2014,7 +2014,7 @@ fsiTurbine::mapDisplacements()
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
       auto mVel = vector_from_field(*meshVelocity, node);
-      const aero::Displacement vel(brFSIdata_.nac_vel.data());
+      const aero::SixDOF vel(brFSIdata_.nac_vel.data());
 
       mVel = aero::compute_mesh_velocity(vel, deflection, refPos, oldxyz);
     }

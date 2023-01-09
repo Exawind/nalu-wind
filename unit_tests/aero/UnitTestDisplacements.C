@@ -15,7 +15,7 @@ namespace test_displacements {
 TEST(AeroDisplacements, creation_from_pointer)
 {
   std::vector<double> openfastSurrogate(6, 1.0);
-  aero::Displacement disp(openfastSurrogate.data());
+  aero::SixDOF disp(openfastSurrogate.data());
   for (int i = 0; i < 3; ++i) {
     EXPECT_DOUBLE_EQ(openfastSurrogate[i], disp.translation_[i]);
     EXPECT_DOUBLE_EQ(openfastSurrogate[i + 3], disp.rotation_[i]);
@@ -24,7 +24,7 @@ TEST(AeroDisplacements, creation_from_pointer)
 
 TEST(AeroDisplacements, creation_from_vs_vector)
 {
-  aero::Displacement disp(vs::Vector::one(), 2.0 * vs::Vector::one());
+  aero::SixDOF disp(vs::Vector::one(), 2.0 * vs::Vector::one());
   for (int i = 0; i < 3; ++i) {
     EXPECT_DOUBLE_EQ(1.0, disp.translation_[i]);
     EXPECT_DOUBLE_EQ(2.0, disp.rotation_[i]);
@@ -55,10 +55,8 @@ TEST(AeroDisplacements, linear_interp_total_displacements)
   const double angle = 1.0 / 90.0 * M_PI_4;
   const double interpFactor = 0.5;
   const auto axis = vs::Vector::ihat();
-  const aero::Displacement start(
-    vs::Vector::zero(), wmp::create_wm_param(axis, 0.0));
-  const aero::Displacement end(
-    vs::Vector::one(), wmp::create_wm_param(axis, angle));
+  const aero::SixDOF start(vs::Vector::zero(), wmp::create_wm_param(axis, 0.0));
+  const aero::SixDOF end(vs::Vector::one(), wmp::create_wm_param(axis, angle));
 
   auto interpDisp =
     aero::linear_interp_total_displacement(start, end, interpFactor);
@@ -89,15 +87,14 @@ TEST(
   // benign reference position on the z axis
   // looks like openfast updates this so assuming solid body rotation is stored
   // in the referencePos
-  const aero::Displacement referencePos(vs::Vector::khat(), rotX);
+  const aero::SixDOF referencePos(vs::Vector::khat(), rotX);
 
   // CFD Pos is using "coordinates" field so it is likely fixed in time. Need to
   // confirm with Ganesh for now we will treat this as an offset from the
   // referencePos in openfast
   const vs::Vector cfdPos = referencePos.translation_ + vs::Vector::ihat();
 
-  const aero::Displacement deflections(
-    vs::Vector::one() * delta, vs::Vector::zero());
+  const aero::SixDOF deflections(vs::Vector::one() * delta, vs::Vector::zero());
 
   const auto displacements = aero::compute_translational_displacements(
     deflections, referencePos, cfdPos);
@@ -119,14 +116,14 @@ TEST(
   const vs::Vector rotX = wmp::create_wm_param(vs::Vector::ihat(), -angleRot);
 
   // benign reference position on the z axis
-  const aero::Displacement referencePos(vs::Vector::khat(), rotX);
+  const aero::SixDOF referencePos(vs::Vector::khat(), rotX);
 
   // CFD Pos is using "coordinates" field so it is likely fixed in time. Need to
   // confirm with Ganesh for now we will treat this as an offset from the
   // referencePos in openfast
   const vs::Vector cfdPos = referencePos.translation_ + vs::Vector::ihat();
 
-  const aero::Displacement deflections(
+  const aero::SixDOF deflections(
     vs::Vector::zero(), wmp::create_wm_param(vs::Vector::jhat(), angleDef));
 
   const auto displacements = aero::compute_translational_displacements(

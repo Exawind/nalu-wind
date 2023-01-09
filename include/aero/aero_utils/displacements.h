@@ -15,16 +15,17 @@
 #include <aero/aero_utils/WienerMilenkovic.h>
 
 namespace aero {
-//! A struct to capture displacements with a rotation and translation component
-struct Displacement
+//! A struct to capture six degrees of freedom with a rotation and translation components called out as separate entities
+//! the rotations are expressed as WienerMilenkovic parameter
+struct SixDOF
 {
   // Kind of dangeraous constructor
-  Displacement(double* vec)
+  SixDOF(double* vec)
     : translation_({vec[0], vec[1], vec[2]}),
       rotation_({vec[3], vec[4], vec[5]})
   {
   }
-  Displacement(vs::Vector transDisp, vs::Vector rotDisp)
+  SixDOF(vs::Vector transDisp, vs::Vector rotDisp)
     : translation_(transDisp), rotation_(rotDisp)
   {
   }
@@ -33,27 +34,27 @@ struct Displacement
 };
 
 KOKKOS_FORCEINLINE_FUNCTION
-Displacement
+SixDOF
 linear_interp_total_displacement(
-  const Displacement start, const Displacement end, const double interpFactor)
+  const SixDOF start, const SixDOF end, const double interpFactor)
 {
   auto transDisp = wmp::linear_interp_translation(
     start.translation_, end.translation_, interpFactor);
   auto rotDisp =
     wmp::linear_interp_rotation(start.rotation_, end.rotation_, interpFactor);
-  return Displacement(transDisp, rotDisp);
+  return SixDOF(transDisp, rotDisp);
 }
 
 KOKKOS_FORCEINLINE_FUNCTION
-Displacement
+SixDOF
 linear_interp_total_velocity(
-  const Displacement start, const Displacement end, const double interpFactor)
+  const SixDOF start, const SixDOF end, const double interpFactor)
 {
   auto transDisp = wmp::linear_interp_translation(
     start.translation_, end.translation_, interpFactor);
   auto rotDisp = wmp::linear_interp_translation(
     start.translation_, end.translation_, interpFactor);
-  return Displacement(transDisp, rotDisp);
+  return SixDOF(transDisp, rotDisp);
 }
 
 //! Implementation of a pitch deformation strategy that ramps to the true
@@ -85,8 +86,8 @@ pitch_displacement_contribution(
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_translational_displacements(
-  const Displacement deflections,
-  const Displacement referencePos,
+  const SixDOF deflections,
+  const SixDOF referencePos,
   const vs::Vector cfdPos)
 {
   const vs::Vector delta = cfdPos - referencePos.translation_;
@@ -102,8 +103,8 @@ compute_translational_displacements(
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_translational_displacements(
-  const Displacement deflections,
-  const Displacement referencePos,
+  const SixDOF deflections,
+  const SixDOF referencePos,
   const vs::Vector cfdPos,
   const vs::Vector root,
   const double pitch,
@@ -121,9 +122,9 @@ compute_translational_displacements(
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_mesh_velocity(
-  const Displacement totalVel,
-  const Displacement totalDis,
-  const Displacement referencePos,
+  const SixDOF totalVel,
+  const SixDOF totalDis,
+  const SixDOF referencePos,
   const vs::Vector cfdPos)
 {
   const auto inertialFrame = cfdPos - referencePos.translation_;
