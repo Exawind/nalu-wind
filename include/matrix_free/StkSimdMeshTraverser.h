@@ -10,6 +10,7 @@
 #ifndef STK_SIMD_MESH_TRAVERSER_H
 #define STK_SIMD_MESH_TRAVERSER_H
 
+#include <KokkosInterface.h>
 #include <Kokkos_View.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/Selector.hpp>
@@ -121,10 +122,9 @@ simd_traverse(
   auto buckets = mesh.get_bucket_ids(rank, active);
   const auto bucket_offsets = impl::simd_bucket_offsets(mesh, rank, buckets);
   Kokkos::parallel_for(
-    Kokkos::TeamPolicy<stk::mesh::NgpMesh::MeshExecSpace>(
-      buckets.size(), Kokkos::AUTO),
+    DeviceTeamPolicy(buckets.size(), Kokkos::AUTO),
     KOKKOS_LAMBDA(
-      const typename Kokkos::TeamPolicy<exec_space>::member_type& team) {
+      const typename DeviceTeamPolicy::member_type& team) {
       const auto bucket_id = buckets.device_get(team.league_rank());
       const auto& b = mesh.get_bucket(rank, bucket_id);
       const auto bucket_len = b.size();

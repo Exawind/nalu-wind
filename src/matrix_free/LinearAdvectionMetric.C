@@ -16,6 +16,7 @@
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/ShuffledAccess.h"
 
+#include <KokkosInterface.h>
 #include "Kokkos_Macros.hpp"
 #include "Kokkos_View.hpp"
 
@@ -113,7 +114,7 @@ linear_advection_metric_t<p>::invoke(
 {
   enum { XH = 0, YH = 1, ZH = 2 };
   Kokkos::parallel_for(
-    areas.extent_int(0), KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0,areas.extent_int(0)), KOKKOS_LAMBDA(int index) {
       LocalArray<ftype[p + 1][p + 1][p + 1][3]> rhou_corr;
       for (int k = 0; k < p + 1; ++k) {
         for (int j = 0; j < p + 1; ++j) {
