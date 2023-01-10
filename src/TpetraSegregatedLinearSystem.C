@@ -1309,7 +1309,7 @@ TpetraSegregatedLinearSystem::get_coeff_applier()
   auto newDeviceCoeffApplier =
     kokkos_malloc_on_device<TpetraLinSysCoeffApplier>("deviceCoeffApplier");
   Kokkos::parallel_for(
-    1, KOKKOS_LAMBDA(const int&) {
+    DeviceRangePolicy(0,1), KOKKOS_LAMBDA(const int&) {
       new (newDeviceCoeffApplier) TpetraLinSysCoeffApplier(
         ownedLocalMatrix, sharedNotOwnedLocalMatrix, ownedLocalRhs,
         sharedNotOwnedLocalRhs, entityToLID, entityToColLID, maxOwnedRowId,

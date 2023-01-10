@@ -40,6 +40,7 @@
 #undef KOKKOS_ENABLE_GPU
 #endif
 
+
 namespace sierra {
 namespace nalu {
 
@@ -69,8 +70,18 @@ using HostShmem = HostSpace::scratch_memory_space;
 using DynamicScheduleType = Kokkos::Schedule<Kokkos::Dynamic>;
 using TeamHandleType =
   Kokkos::TeamPolicy<HostSpace, DynamicScheduleType>::member_type;
+
+#if defined(KOKKOS_ENABLE_HIP)
 using DeviceTeamHandleType =
-  Kokkos::TeamPolicy<DeviceSpace, DynamicScheduleType>::member_type;
+  Kokkos::TeamPolicy<DeviceSpace, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM,1>, DynamicScheduleType>::member_type;
+using DeviceRangePolicy = Kokkos::RangePolicy<DeviceSpace,Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM,1>>;
+using DeviceTeamPolicy = Kokkos::TeamPolicy<DeviceSpace,Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM,1>>;
+#else
+using DeviceTeamHandleType = Kokkos::TeamPolicy<DeviceSpace, DynamicScheduleType>::member_type;
+using DeviceRangePolicy = Kokkos::RangePolicy<DeviceSpace>;
+using DeviceTeamPolicy = Kokkos::TeamPolicy<DeviceSpace>;
+#endif
+
 
 template <typename T, typename SHMEM = HostShmem>
 using SharedMemView =
@@ -84,8 +95,8 @@ template <typename T>
 using AlignedViewType = Kokkos::View<T, Kokkos::MemoryTraits<Kokkos::Aligned>>;
 #endif
 
-using DeviceTeamPolicy = Kokkos::TeamPolicy<DeviceSpace>;
 using HostTeamPolicy = Kokkos::TeamPolicy<HostSpace>;
+using HostRangePolicy = Kokkos::RangePolicy<HostSpace>;
 using DeviceTeam = DeviceTeamPolicy::member_type;
 using HostTeam = HostTeamPolicy::member_type;
 

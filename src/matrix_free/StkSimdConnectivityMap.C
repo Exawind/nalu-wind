@@ -19,6 +19,7 @@
 #include "stk_mesh/base/Selector.hpp"
 #include "stk_topology/topology.hpp"
 
+#include <KokkosInterface.h>
 #include "Kokkos_Macros.hpp"
 
 namespace sierra {
