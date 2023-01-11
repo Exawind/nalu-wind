@@ -90,8 +90,10 @@ struct NGPMeshTraits
   using FieldScalarType = double;
 
 #if defined(KOKKOS_ENABLE_HIP)
-  using TeamPolicy =
-    Kokkos::TeamPolicy<typename Mesh::MeshExecSpace, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM,1>, stk::ngp::ScheduleType>;
+  using TeamPolicy = Kokkos::TeamPolicy<
+    typename Mesh::MeshExecSpace,
+    Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    stk::ngp::ScheduleType>;
 #else
   using TeamPolicy =
     Kokkos::TeamPolicy<typename Mesh::MeshExecSpace, stk::ngp::ScheduleType>;

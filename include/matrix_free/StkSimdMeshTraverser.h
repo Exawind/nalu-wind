@@ -123,8 +123,7 @@ simd_traverse(
   const auto bucket_offsets = impl::simd_bucket_offsets(mesh, rank, buckets);
   Kokkos::parallel_for(
     DeviceTeamPolicy(buckets.size(), Kokkos::AUTO),
-    KOKKOS_LAMBDA(
-      const typename DeviceTeamPolicy::member_type& team) {
+    KOKKOS_LAMBDA(const typename DeviceTeamPolicy::member_type& team) {
       const auto bucket_id = buckets.device_get(team.league_rank());
       const auto& b = mesh.get_bucket(rank, bucket_id);
       const auto bucket_len = b.size();
