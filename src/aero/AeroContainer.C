@@ -33,7 +33,7 @@ AeroContainer::~AeroContainer()
 #endif
 }
 
-AeroContainer::AeroContainer(const YAML::Node& node)
+AeroContainer::AeroContainer(const YAML::Node& node) : fsiContainer_(nullptr)  
 {
   // look for Actuator
   std::vector<const YAML::Node*> foundActuator;
@@ -44,19 +44,20 @@ AeroContainer::AeroContainer(const YAML::Node& node)
         "look_ahead_and_create::error: Too many actuator line blocks");
     actuatorModel_.parse(*foundActuator[0]);
   }
-  std::vector<const YAML::Node*> foundFsi;
-  NaluParsingHelper::find_nodes_given_key("openfast_fsi", node, foundFsi);
-  if (foundFsi.size() > 0) {
+  // std::vector<const YAML::Node*> foundFsi;
+  // NaluParsingHelper::find_nodes_given_key("openfast_fsi", node, foundFsi);
+  if (node["openfast_fsi"]) {
 #ifdef NALU_USES_OPENFAST_FSI
-    if (foundFsi.size() != 1)
-      throw std::runtime_error(
-        "look_ahead_and_create::error: Too many openfast_fsi blocks");
+    // if (foundFsi.size() != 1)
+    //   throw std::runtime_error(
+    //     "look_ahead_and_create::error: Too many openfast_fsi blocks");
     fsiContainer_ = new OpenfastFSI(node["openfast_fsi"]);
 #else
     throw std::runtime_error(
       "FSI can not be used without a specialized branch of openfast yet");
 #endif
   }
+  
 }
 
 void
