@@ -63,7 +63,6 @@
 
 // actuator line/fsi
 #include <aero/AeroContainer.h>
-#include <aero/fsi/OpenfastFSI.h>
 
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <wind_energy/SyntheticLidar.h>
