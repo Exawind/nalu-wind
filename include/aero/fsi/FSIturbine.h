@@ -33,9 +33,7 @@ class fsiTurbine
 {
 
 public:
-  fsiTurbine(
-    int iTurb,
-    const YAML::Node&);
+  fsiTurbine(int iTurb, const YAML::Node&);
 
   virtual ~fsiTurbine();
 
@@ -92,9 +90,9 @@ public:
 
   //! Get the part vector containing all the boundary parts with loads
   stk::mesh::PartVector& getBndryPartVec() { return bndyPartVec_; }
-    
+
   //! Get a list of names of boundary parts that have loads
-  std::vector<std::string> getBndryPartNames() { return bndryPartNames_;}
+  std::vector<std::string> getBndryPartNames() { return bndryPartNames_; }
 
   //! Prepare netcdf file to write deflections and loads
   void
@@ -288,7 +286,7 @@ private:
   GenericFieldType* tforceSCS_;
 
   // Pointer to Algorithm that calculates loads on the surfaces of the Turbine
-  std::unique_ptr<CalcLoads> calc_loads_; 
+  std::unique_ptr<CalcLoads> calc_loads_;
 
   // Volume mesh parts and part names
   //! Part name of the tower
@@ -331,7 +329,6 @@ private:
   stk::mesh::PartVector bndyPartVec_;
   //! Names of all boundary parts getting loads
   std::vector<std::string> bndryPartNames_;
-
 };
 
 } // namespace nalu

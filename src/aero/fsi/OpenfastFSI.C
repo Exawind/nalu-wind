@@ -39,8 +39,7 @@ OpenfastFSI::read_turbine_data(
   if (turbNode["sim_type"]) {
     if (turbNode["sim_type"].as<std::string>() == "ext-loads") {
       fi.globTurbineData[iTurb].sType = fast::EXTLOADS;
-      fsiTurbineData_[iTurb] =
-          new fsiTurbine(iTurb, turbNode);
+      fsiTurbineData_[iTurb] = new fsiTurbine(iTurb, turbNode);
       mesh_motion_ = true;
     } else {
       fi.globTurbineData[iTurb].sType = fast::EXTINFLOW;
@@ -220,14 +219,13 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
   }
 
   compute_mapping();
-  
+
   if (FAST.isTimeZero()) {
     send_loads(0.0);
     FAST.solution0();
   }
 
   map_displacements(curTime);
-
 }
 
 void
@@ -287,17 +285,17 @@ OpenfastFSI::compute_mapping()
       int turbProc = fsiTurbineData_[i]->getProc();
       if (bulk_->parallel_rank() == turbProc) {
         FAST.getTowerRefPositions(
-            fsiTurbineData_[i]->brFSIdata_.twr_ref_pos.data(), i);
+          fsiTurbineData_[i]->brFSIdata_.twr_ref_pos.data(), i);
         FAST.getBladeRefPositions(
-            fsiTurbineData_[i]->brFSIdata_.bld_ref_pos.data(), i);
+          fsiTurbineData_[i]->brFSIdata_.bld_ref_pos.data(), i);
         FAST.getBladeRootRefPositions(
-            fsiTurbineData_[i]->brFSIdata_.bld_root_ref_pos.data(), i);
-        FAST.getHubRefPosition(fsiTurbineData_[i]->brFSIdata_.hub_ref_pos.data(), i);
+          fsiTurbineData_[i]->brFSIdata_.bld_root_ref_pos.data(), i);
+        FAST.getHubRefPosition(
+          fsiTurbineData_[i]->brFSIdata_.hub_ref_pos.data(), i);
         FAST.getNacelleRefPosition(
-            fsiTurbineData_[i]->brFSIdata_.nac_ref_pos.data(), i);
+          fsiTurbineData_[i]->brFSIdata_.nac_ref_pos.data(), i);
         FAST.getBladeRloc(fsiTurbineData_[i]->brFSIdata_.bld_rloc.data(), i);
         FAST.getBladeChord(fsiTurbineData_[i]->brFSIdata_.bld_chord.data(), i);
-
       }
 
       int iError = MPI_Bcast(
@@ -387,15 +385,16 @@ OpenfastFSI::send_loads(const double curTime)
           fsiTurbineData_[i]->brFSIdata_.bld_ld[k] =
             fsiTurbineData_[i]->brFSIdata_.bld_ld[k];
         std::cerr << "Blade loads at time " << curTime << std::endl;
-        for(int k=0; k < nTotBldNodes; k++) {
-            std::cerr << fsiTurbineData_[i]->brFSIdata_.bld_ld[k*6+0] << ", "
-                      << fsiTurbineData_[i]->brFSIdata_.bld_ld[k*6+1] << ", "
-                      << fsiTurbineData_[i]->brFSIdata_.bld_ld[k*6+2] << ", "
-                      << fsiTurbineData_[i]->brFSIdata_.bld_ld[k*6+3] << ", "
-                      << fsiTurbineData_[i]->brFSIdata_.bld_ld[k*6+4] << ", "
-                      << fsiTurbineData_[i]->brFSIdata_.bld_ld[k*6+5] << std::endl;
+        for (int k = 0; k < nTotBldNodes; k++) {
+          std::cerr << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 0] << ", "
+                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 1] << ", "
+                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 2] << ", "
+                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 3] << ", "
+                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 4] << ", "
+                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 5]
+                    << std::endl;
         }
-        
+
         FAST.setBladeForces(fsiTurbineData_[i]->brFSIdata_.bld_ld, i);
 
       } else {
@@ -422,20 +421,20 @@ OpenfastFSI::get_displacements(double current_time)
       int turbProc = fsiTurbineData_[i]->getProc();
       if (bulk_->parallel_rank() == turbProc) {
         FAST.getTowerDisplacements(
-            fsiTurbineData_[i]->brFSIdata_.twr_def.data(),
-            fsiTurbineData_[i]->brFSIdata_.twr_vel.data(), i);
+          fsiTurbineData_[i]->brFSIdata_.twr_def.data(),
+          fsiTurbineData_[i]->brFSIdata_.twr_vel.data(), i);
         FAST.getBladeDisplacements(
-            fsiTurbineData_[i]->brFSIdata_.bld_def.data(),
-            fsiTurbineData_[i]->brFSIdata_.bld_vel.data(), i);
+          fsiTurbineData_[i]->brFSIdata_.bld_def.data(),
+          fsiTurbineData_[i]->brFSIdata_.bld_vel.data(), i);
         FAST.getBladeRootDisplacements(
-            fsiTurbineData_[i]->brFSIdata_.bld_root_def.data(), i);
+          fsiTurbineData_[i]->brFSIdata_.bld_root_def.data(), i);
         FAST.getBladePitch(fsiTurbineData_[i]->brFSIdata_.bld_pitch.data(), i);
         FAST.getHubDisplacement(
-            fsiTurbineData_[i]->brFSIdata_.hub_def.data(),
-            fsiTurbineData_[i]->brFSIdata_.hub_vel.data(), i);
+          fsiTurbineData_[i]->brFSIdata_.hub_def.data(),
+          fsiTurbineData_[i]->brFSIdata_.hub_vel.data(), i);
         FAST.getNacelleDisplacement(
-            fsiTurbineData_[i]->brFSIdata_.nac_def.data(),
-            fsiTurbineData_[i]->brFSIdata_.nac_vel.data(), i);
+          fsiTurbineData_[i]->brFSIdata_.nac_def.data(),
+          fsiTurbineData_[i]->brFSIdata_.nac_vel.data(), i);
       }
 
       int iError = MPI_Bcast(

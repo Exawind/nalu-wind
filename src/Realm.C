@@ -530,7 +530,7 @@ Realm::initialize_prolog()
     meshMotionAlg_->initialize(get_current_time());
 
   if (aeroModels_->is_active())
-      aeroModels_->init(get_current_time(), outputInfo_->restartFreq_);
+    aeroModels_->init(get_current_time(), outputInfo_->restartFreq_);
 
   compute_geometry();
 
@@ -989,14 +989,16 @@ Realm::setup_interior_algorithms()
 {
   if (has_mesh_deformation()) {
     const AlgorithmType algType = INTERIOR;
-    stk::mesh::PartVector all_part_vec;    
+    stk::mesh::PartVector all_part_vec;
     if (has_mesh_motion()) {
-        auto mmPartVec = meshMotionAlg_->get_partvec();
-        all_part_vec.insert(all_part_vec.begin(), mmPartVec.begin(), mmPartVec.end());
+      auto mmPartVec = meshMotionAlg_->get_partvec();
+      all_part_vec.insert(
+        all_part_vec.begin(), mmPartVec.begin(), mmPartVec.end());
     }
     if (aeroModels_->has_fsi()) {
-        auto fsi_part_vec = aeroModels_->fsi_parts();
-        all_part_vec.insert(all_part_vec.end(), fsi_part_vec.begin(), fsi_part_vec.end());
+      auto fsi_part_vec = aeroModels_->fsi_parts();
+      all_part_vec.insert(
+        all_part_vec.end(), fsi_part_vec.begin(), fsi_part_vec.end());
     }
 
     for (auto p : all_part_vec) {
@@ -1812,34 +1814,33 @@ Realm::update_geometry_due_to_mesh_motion()
   // check for mesh motion
   if (does_mesh_move()) {
     if (aeroModels_->is_active()) {
-        
+
       aeroModels_->update_displacements(get_current_time());
 
       if (aeroModels_->has_fsi()) {
-          //TODO: Can delete the FrameOpenFAST class if this works out right here
-          auto part_vec = aeroModels_->fsi_parts();
-          for(auto* target_part : part_vec)
-              set_current_coordinates( target_part );
+        // TODO: Can delete the FrameOpenFAST class if this works out right here
+        auto part_vec = aeroModels_->fsi_parts();
+        for (auto* target_part : part_vec)
+          set_current_coordinates(target_part);
       }
-      
     }
-    
+
     if (solutionOptions_->externalMeshDeformation_) {
-        std::vector<std::string> targetNames = get_physics_target_names();
-        for (size_t itarget = 0; itarget < targetNames.size(); ++itarget) {
-            stk::mesh::Part* targetPart =
-                meta_data().get_part(targetNames[itarget]);
-            set_current_coordinates(targetPart);
-        }
+      std::vector<std::string> targetNames = get_physics_target_names();
+      for (size_t itarget = 0; itarget < targetNames.size(); ++itarget) {
+        stk::mesh::Part* targetPart =
+          meta_data().get_part(targetNames[itarget]);
+        set_current_coordinates(targetPart);
+      }
     }
-    
+
     if (meshMotionAlg_)
-        meshMotionAlg_->execute(get_current_time());
+      meshMotionAlg_->execute(get_current_time());
 
     compute_geometry();
 
     if (meshMotionAlg_)
-        meshMotionAlg_->post_compute_geometry();
+      meshMotionAlg_->post_compute_geometry();
 
     if (aeroModels_->has_fsi())
       aeroModels_->compute_div_mesh_velocity();
@@ -2462,10 +2463,7 @@ Realm::initialize_post_processing_algorithms()
 std::string
 Realm::get_coordinates_name()
 {
-  return (
-      does_mesh_move()
-      ? "current_coordinates"
-      : "coordinates");
+  return (does_mesh_move() ? "current_coordinates" : "coordinates");
 }
 
 //--------------------------------------------------------------------------
@@ -2486,9 +2484,10 @@ Realm::has_mesh_deformation() const
   if (meshMotionAlg_) {
     return (meshMotionAlg_->is_deforming() ||
             solutionOptions_->externalMeshDeformation_) ||
-            aeroModels_->has_fsi();
+           aeroModels_->has_fsi();
   } else
-    return (solutionOptions_->externalMeshDeformation_ || aeroModels_->has_fsi());
+    return (
+      solutionOptions_->externalMeshDeformation_ || aeroModels_->has_fsi());
 }
 
 //--------------------------------------------------------------------------
@@ -3445,32 +3444,29 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
 
     if (does_mesh_move()) {
 
-        // Redo all the mesh and motionAlg setup after reading files from the
-        // restart reset the current_coordinate and mesh_velocity fields after
-        // reading them
-        init_current_coordinates();
+      // Redo all the mesh and motionAlg setup after reading files from the
+      // restart reset the current_coordinate and mesh_velocity fields after
+      // reading them
+      init_current_coordinates();
 
-        // reset the current time for the meshMotionAlgs        
-        if (meshMotionAlg_)
-            meshMotionAlg_->restart_reinit(foundRestartTime);
+      // reset the current time for the meshMotionAlgs
+      if (meshMotionAlg_)
+        meshMotionAlg_->restart_reinit(foundRestartTime);
 
-        if (aeroModels_->is_active()) {
-            aeroModels_->update_displacements(get_current_time());
-            if (aeroModels_->has_fsi()) {
-                auto part_vec = aeroModels_->fsi_parts();
-                for(auto* target_part : part_vec)
-                    set_current_coordinates( target_part );
-            }
+      if (aeroModels_->is_active()) {
+        aeroModels_->update_displacements(get_current_time());
+        if (aeroModels_->has_fsi()) {
+          auto part_vec = aeroModels_->fsi_parts();
+          for (auto* target_part : part_vec)
+            set_current_coordinates(target_part);
         }
+      }
 
-        compute_geometry();
+      compute_geometry();
 
-        if (meshMotionAlg_)
-            meshMotionAlg_->post_compute_geometry();
-        
+      if (meshMotionAlg_)
+        meshMotionAlg_->post_compute_geometry();
     }
-    
-   
   }
   return foundRestartTime;
 }
@@ -4484,7 +4480,7 @@ Realm::process_multi_physics_transfer(bool initCall)
 {
 
   double timeXfer = -NaluEnv::self().nalu_time();
-    
+
   if (!initCall) {
     if (aeroModels_->is_active()) {
       aeroModels_->predict_model_time_step(get_current_time());
@@ -4494,17 +4490,15 @@ Realm::process_multi_physics_transfer(bool initCall)
   /* if (openfast_ != NULL) */
   /*   openfast_->predict_struct_timestep(get_current_time()); */
 
-
   if (hasMultiPhysicsTransfer_) {
-      std::vector<Transfer*>::iterator ii;
-      for (ii = multiPhysicsTransferVec_.begin();
-           ii != multiPhysicsTransferVec_.end(); ++ii)
-          (*ii)->execute();
+    std::vector<Transfer*>::iterator ii;
+    for (ii = multiPhysicsTransferVec_.begin();
+         ii != multiPhysicsTransferVec_.end(); ++ii)
+      (*ii)->execute();
   }
 
   timeXfer += NaluEnv::self().nalu_time();
   timerTransferExecute_ += timeXfer;
-  
 }
 
 //--------------------------------------------------------------------------

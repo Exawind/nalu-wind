@@ -23,22 +23,20 @@ class Realm;
 class CalcLoads
 {
 public:
-  CalcLoads(
-    stk::mesh::PartVector& partVec,
-    bool useShifted=true);
+  CalcLoads(stk::mesh::PartVector& partVec, bool useShifted = true);
   ~CalcLoads();
 
   void setup(std::shared_ptr<stk::mesh::BulkData> bulk);
-    
+
   void execute();
 
   //! Part vector over all wall boundary parts applying loads
   stk::mesh::PartVector partVec_;
-    
+
   const bool useShifted_;
 
   std::shared_ptr<stk::mesh::BulkData> bulk_;
-    
+
   VectorFieldType* coordinates_;
   ScalarFieldType* pressure_;
   ScalarFieldType* density_;
@@ -46,7 +44,6 @@ public:
   GenericFieldType* dudx_;
   GenericFieldType* exposedAreaVec_;
   GenericFieldType* tforceSCS_;
-
 };
 
 } // namespace nalu

@@ -23,7 +23,6 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Part.hpp>
 
-
 // basic c++
 #include <fstream>
 #include <iomanip>
@@ -43,10 +42,8 @@ namespace nalu {
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-CalcLoads::CalcLoads(
-  stk::mesh::PartVector& partVec,
-  bool useShifted)
-:   partVec_(partVec),
+CalcLoads::CalcLoads(stk::mesh::PartVector& partVec, bool useShifted)
+  : partVec_(partVec),
     useShifted_(useShifted),
     coordinates_(NULL),
     pressure_(NULL),
@@ -56,12 +53,10 @@ CalcLoads::CalcLoads(
     exposedAreaVec_(NULL),
     tforceSCS_(NULL)
 {
-      
 }
 
 void
-CalcLoads::setup(
-    std::shared_ptr<stk::mesh::BulkData> bulk)    
+CalcLoads::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
 {
   bulk_ = bulk;
   auto& meta = bulk_->mesh_meta_data();
@@ -72,15 +67,12 @@ CalcLoads::setup(
     meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure");
   density_ =
     meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  viscosity_ =
-    meta.get_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "effective_viscosity_u");
-  dudx_ =
-    meta.get_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
-  exposedAreaVec_ = meta.get_field<GenericFieldType>(
-    meta.side_rank(), "exposed_area_vector");
-  tforceSCS_ = meta.get_field<GenericFieldType>(
-      meta.side_rank(), "tforce_scs");
+  viscosity_ = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "effective_viscosity_u");
+  dudx_ = meta.get_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
+  exposedAreaVec_ =
+    meta.get_field<GenericFieldType>(meta.side_rank(), "exposed_area_vector");
+  tforceSCS_ = meta.get_field<GenericFieldType>(meta.side_rank(), "tforce_scs");
 }
 //--------------------------------------------------------------------------
 //-------- destructor ------------------------------------------------------
@@ -115,14 +107,15 @@ CalcLoads::execute()
   // define vector of parent topos; should always be UNITY in size
   std::vector<stk::topology> parentTopo;
 
-  const auto& bkts =  bulk_->get_buckets(meta.side_rank(),
-                                         meta.locally_owned_part() &
-                                         stk::mesh::selectUnion(partVec_));
-  for (auto b: bkts) {
+  const auto& bkts = bulk_->get_buckets(
+    meta.side_rank(),
+    meta.locally_owned_part() & stk::mesh::selectUnion(partVec_));
+  for (auto b : bkts) {
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(b->topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element(
+        b->topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
 
@@ -181,7 +174,7 @@ CalcLoads::execute()
 
       // pointer to face data
       const double* areaVec = stk::mesh::field_data(*exposedAreaVec_, face);
-      double* tforce_scs = stk::mesh::field_data(*tforceSCS_, face);      
+      double* tforce_scs = stk::mesh::field_data(*tforceSCS_, face);
 
       // extract the connected element to this exposed face; should be single in
       // size!
@@ -233,14 +226,12 @@ CalcLoads::execute()
             dflux += -muBip * (duidxj[offSetI + j] + duidxj[offSetTrans]) *
                      areaVec[offSetAveraVec + j];
           }
-          tforce_scs[offSetAveraVec+i] = pBip * ai + dflux
-              + 2.0 / 3.0 * muBip * divU * ai;
+          tforce_scs[offSetAveraVec + i] =
+            pBip * ai + dflux + 2.0 / 3.0 * muBip * divU * ai;
         }
-
       }
     }
   }
-
 }
 
 } // namespace nalu

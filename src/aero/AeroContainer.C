@@ -33,7 +33,7 @@ AeroContainer::~AeroContainer()
 #endif
 }
 
-AeroContainer::AeroContainer(const YAML::Node& node) : fsiContainer_(nullptr)  
+AeroContainer::AeroContainer(const YAML::Node& node) : fsiContainer_(nullptr)
 {
   // look for Actuator
   std::vector<const YAML::Node*> foundActuator;
@@ -57,7 +57,6 @@ AeroContainer::AeroContainer(const YAML::Node& node) : fsiContainer_(nullptr)
       "FSI can not be used without a specialized branch of openfast yet");
 #endif
   }
-  
 }
 
 void
@@ -162,53 +161,54 @@ AeroContainer::compute_div_mesh_velocity()
 const stk::mesh::PartVector
 AeroContainer::fsi_parts()
 {
-    stk::mesh::PartVector all_part_vec;
+  stk::mesh::PartVector all_part_vec;
 #ifdef NALU_USES_OPENFAST_FSI
-    if (has_fsi()) {
-        auto n_turbines = fsiContainer_->get_nTurbinesGlob() ;
-        for (auto i_turb = 0; i_turb < n_turbines; i_turb++) {
-            auto part_vec = fsiContainer_->get_fsiTurbineData(i_turb)->getPartVec();
-            for(auto* part : part_vec)
-                all_part_vec.push_back(part);
-        }
+  if (has_fsi()) {
+    auto n_turbines = fsiContainer_->get_nTurbinesGlob();
+    for (auto i_turb = 0; i_turb < n_turbines; i_turb++) {
+      auto part_vec = fsiContainer_->get_fsiTurbineData(i_turb)->getPartVec();
+      for (auto* part : part_vec)
+        all_part_vec.push_back(part);
     }
+  }
 #endif
-    return all_part_vec;
+  return all_part_vec;
 }
 
 const stk::mesh::PartVector
 AeroContainer::fsi_bndry_parts()
 {
-    stk::mesh::PartVector all_bndry_part_vec;
+  stk::mesh::PartVector all_bndry_part_vec;
 #ifdef NALU_USES_OPENFAST_FSI
-    if (has_fsi()) {
-        auto n_turbines = fsiContainer_->get_nTurbinesGlob() ;
-        for (auto i_turb = 0; i_turb < n_turbines; i_turb++) {
-            auto part_vec = fsiContainer_->get_fsiTurbineData(i_turb)->getBndryPartVec();
-            for(auto* part : part_vec)
-                all_bndry_part_vec.push_back(part);
-        }
+  if (has_fsi()) {
+    auto n_turbines = fsiContainer_->get_nTurbinesGlob();
+    for (auto i_turb = 0; i_turb < n_turbines; i_turb++) {
+      auto part_vec =
+        fsiContainer_->get_fsiTurbineData(i_turb)->getBndryPartVec();
+      for (auto* part : part_vec)
+        all_bndry_part_vec.push_back(part);
     }
+  }
 #endif
-    return all_bndry_part_vec;
+  return all_bndry_part_vec;
 }
 
-    
 const std::vector<std::string>
 AeroContainer::fsi_bndry_part_names()
 {
-    std::vector<std::string> bndry_part_names;
+  std::vector<std::string> bndry_part_names;
 #ifdef NALU_USES_OPENFAST_FSI
-    if (has_fsi()) {
-        auto n_turbines = fsiContainer_->get_nTurbinesGlob() ;
-        for (auto i_turb = 0; i_turb < n_turbines; i_turb++) {
-            auto bp_names = fsiContainer_->get_fsiTurbineData(i_turb)->getBndryPartNames();
-            for(auto bp : bp_names)
-                bndry_part_names.push_back(bp);
-        }
+  if (has_fsi()) {
+    auto n_turbines = fsiContainer_->get_nTurbinesGlob();
+    for (auto i_turb = 0; i_turb < n_turbines; i_turb++) {
+      auto bp_names =
+        fsiContainer_->get_fsiTurbineData(i_turb)->getBndryPartNames();
+      for (auto bp : bp_names)
+        bndry_part_names.push_back(bp);
     }
+  }
 #endif
-    return bndry_part_names;
+  return bndry_part_names;
 }
 
 } // namespace nalu
