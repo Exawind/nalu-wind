@@ -141,7 +141,7 @@ max_local_courant_reynolds_t<p>::invoke(
   Kokkos::pair<double, double> max_cflre;
   PairReduce<Kokkos::Max<double>> reducer(max_cflre);
   Kokkos::parallel_reduce(
-    DeviceRangePolicy(0,xc.extent_int(0)),
+    DeviceRangePolicy(0, xc.extent_int(0)),
     KOKKOS_LAMBDA(int index, Kokkos::pair<double, double>& val) {
       const auto elem_xc = Kokkos::subview(
         xc, index, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());

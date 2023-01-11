@@ -36,7 +36,9 @@ field_gather_t<p>::invoke(
   scalar_view<p> simd_element_field)
 {
 #if defined(KOKKOS_ENABLE_HIP)
-  using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM,1>, Kokkos::Rank<4>, int>;
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<4>, int>;
 #else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<4>, int>;
 #endif
@@ -61,7 +63,9 @@ field_gather_t<p>::invoke(
   vector_view<p> simd_element_field)
 {
 #if defined(KOKKOS_ENABLE_HIP)
-  using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM,1>, Kokkos::Rank<4>, int>;
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<4>, int>;
 #else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<4>, int>;
 #endif
@@ -89,7 +93,9 @@ field_gather_t<p>::invoke(
   face_scalar_view<p> simd_element_field)
 {
 #if defined(KOKKOS_ENABLE_HIP)
-  using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM,1>, Kokkos::Rank<3>, int>;
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<3>, int>;
 #else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<3>, int>;
 #endif
@@ -114,7 +120,9 @@ field_gather_t<p>::invoke(
   face_vector_view<p> simd_element_field)
 {
 #if defined(KOKKOS_ENABLE_HIP)
-  using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM,1>, Kokkos::Rank<3>, int>;
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<3>, int>;
 #else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<3>, int>;
 #endif
@@ -143,8 +151,7 @@ field_gather(
   node_scalar_view simd_node_field)
 {
   Kokkos::parallel_for(
-    DeviceRangePolicy(0, conn.extent_int(0)),
-    KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, conn.extent_int(0)), KOKKOS_LAMBDA(int index) {
       for (int n = 0; n < simd_len; ++n) {
         const auto simd_mesh_index = conn(index, n);
         const auto mesh_index =
@@ -162,8 +169,7 @@ field_gather(
   node_vector_view simd_node_field)
 {
   Kokkos::parallel_for(
-    DeviceRangePolicy(0, conn.extent_int(0)),
-    KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, conn.extent_int(0)), KOKKOS_LAMBDA(int index) {
       for (int n = 0; n < simd_len; ++n) {
         const auto simd_mesh_index = conn(index, n);
         const auto mesh_index =

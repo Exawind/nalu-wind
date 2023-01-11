@@ -126,7 +126,7 @@ transport_coefficients_t<p>::invoke(
   scs_vector_view<p> diff)
 {
   Kokkos::parallel_for(
-    DeviceRangePolicy(0,conn.extent_int(0)), KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, conn.extent_int(0)), KOKKOS_LAMBDA(int index) {
       {
         const auto box = hex_vertex_coordinates<p>(index, xc);
         auto uvec = Kokkos::subview(

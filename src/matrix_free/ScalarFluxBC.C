@@ -89,7 +89,8 @@ scalar_neumann_residual_t<p>::invoke(
   stk::mesh::ProfilingBlock pf("scalar_neumann_residual");
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
   Kokkos::parallel_for(
-    "flux_residual", DeviceRangePolicy(0,offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
+    "flux_residual", DeviceRangePolicy(0, offsets.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
       LocalArray<ftype[p + 1][p + 1]> element_rhs;
       {
         LocalArray<ftype[p + 1][p + 1]> scratch;
