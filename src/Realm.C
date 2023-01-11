@@ -3443,16 +3443,35 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
         turbulenceAveragingPostProcessing_->currentTimeFilter_,
         abortIfNotFound);
     }
-    if (meshMotionAlg_) {
-      // Redo all the mesh and motionAlg setup after reading files from the
-      // restart reset the current_coordinate and mesh_velocity fields after
-      // reading them
-      init_current_coordinates();
-      // reset the current time for the meshMotionAlgs
-      meshMotionAlg_->restart_reinit(foundRestartTime);
-      compute_geometry();
-      meshMotionAlg_->post_compute_geometry();
+
+    if (does_mesh_move()) {
+
+        // Redo all the mesh and motionAlg setup after reading files from the
+        // restart reset the current_coordinate and mesh_velocity fields after
+        // reading them
+        init_current_coordinates();
+
+        // reset the current time for the meshMotionAlgs        
+        if (meshMotionAlg_)
+            meshMotionAlg_->restart_reinit(foundRestartTime);
+
+        if (aeroModels_->is_active()) {
+            aeroModels_->update_displacements(get_current_time());
+            if (aeroModels_->has_fsi()) {
+                auto part_vec = aeroModels_->fsi_parts();
+                for(auto* target_part : part_vec)
+                    set_current_coordinates( target_part );
+            }
+        }
+
+        compute_geometry();
+
+        if (meshMotionAlg_)
+            meshMotionAlg_->post_compute_geometry();
+        
     }
+    
+   
   }
   return foundRestartTime;
 }
@@ -4464,26 +4483,29 @@ Realm::augment_transfer_vector(
 void
 Realm::process_multi_physics_transfer(bool initCall)
 {
-  if (!hasMultiPhysicsTransfer_)
-    return;
 
+  double timeXfer = -NaluEnv::self().nalu_time();
+    
   if (!initCall) {
     if (aeroModels_->is_active()) {
       aeroModels_->predict_model_time_step(get_current_time());
     }
   }
 
-  double timeXfer = -NaluEnv::self().nalu_time();
-
   /* if (openfast_ != NULL) */
   /*   openfast_->predict_struct_timestep(get_current_time()); */
 
-  std::vector<Transfer*>::iterator ii;
-  for (ii = multiPhysicsTransferVec_.begin();
-       ii != multiPhysicsTransferVec_.end(); ++ii)
-    (*ii)->execute();
+
+  if (hasMultiPhysicsTransfer_) {
+      std::vector<Transfer*>::iterator ii;
+      for (ii = multiPhysicsTransferVec_.begin();
+           ii != multiPhysicsTransferVec_.end(); ++ii)
+          (*ii)->execute();
+  }
+
   timeXfer += NaluEnv::self().nalu_time();
   timerTransferExecute_ += timeXfer;
+  
 }
 
 //--------------------------------------------------------------------------
@@ -4574,9 +4596,8 @@ Realm::post_converged_work()
 {
   equationSystems_.post_converged_work();
 
-  if (aeroModels_->is_active()) {
+  if (aeroModels_->is_active())
     aeroModels_->advance_model_time_step(get_current_time());
-  }
 
   // FIXME: Consider a unified collection of post processing work
   if (NULL != solutionNormPostProcessing_)
