@@ -33,7 +33,8 @@ dirichlet_residual(
 {
   stk::mesh::ProfilingBlock pf("scalar_dirichlet_residual");
   Kokkos::parallel_for(
-    "scalar_dirichlet_residual", DeviceRangePolicy(0,dirichlet_bc_offsets.extent_int(0)),
+    "scalar_dirichlet_residual",
+    DeviceRangePolicy(0, dirichlet_bc_offsets.extent_int(0)),
     KOKKOS_LAMBDA(int index) {
       const auto residual = qbc(index) - qp1(index);
       const int valid_length = valid_offset(index, dirichlet_bc_offsets);
@@ -57,7 +58,9 @@ dirichlet_residual(
   ThrowRequireMsg(yout.extent_int(1) == 3, "length is " << yout.extent_int(1));
 
 #if defined(KOKKOS_ENABLE_HIP)
-  using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM,1>, Kokkos::Rank<2>, int>;
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<2>, int>;
 #else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<2>, int>;
 #endif
@@ -86,7 +89,9 @@ dirichlet_linearized(
   ThrowRequire(yout.extent_int(1) == xin.extent_int(1));
 
 #if defined(KOKKOS_ENABLE_HIP)
-  using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM,1>, Kokkos::Rank<2>, int>;
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<2>, int>;
 #else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<2>, int>;
 #endif
@@ -108,7 +113,9 @@ dirichlet_diagonal(
 {
   stk::mesh::ProfilingBlock pf("dirichlet_diagonal");
 #if defined(KOKKOS_ENABLE_HIP)
-  using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM,1>, Kokkos::Rank<2>, int>;
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<2>, int>;
 #else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<2>, int>;
 #endif

@@ -33,7 +33,8 @@ volume_metric_t<p>::invoke(
 {
   scalar_view<p> volume("volumes", coordinates.extent_int(0));
   Kokkos::parallel_for(
-    "volume", DeviceRangePolicy(0,coordinates.extent_int(0)), KOKKOS_LAMBDA(int index) {
+    "volume", DeviceRangePolicy(0, coordinates.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
       const auto box = hex_vertex_coordinates<p>(index, coordinates);
       for (int k = 0; k < p + 1; ++k) {
         for (int j = 0; j < p + 1; ++j) {
@@ -54,7 +55,8 @@ volume_metric_t<p>::invoke(const_vector_view<p> coordinates)
 {
   scalar_view<p> volume("volumes", coordinates.extent_int(0));
   Kokkos::parallel_for(
-    "volume", DeviceRangePolicy(0,coordinates.extent_int(0)), KOKKOS_LAMBDA(int index) {
+    "volume", DeviceRangePolicy(0, coordinates.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
       const auto box = hex_vertex_coordinates<p>(index, coordinates);
       for (int k = 0; k < p + 1; ++k) {
         for (int j = 0; j < p + 1; ++j) {

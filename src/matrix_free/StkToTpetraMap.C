@@ -248,7 +248,7 @@ make_owned_shared_constrained_row_map(
       row_ids(num_owned + index) = gids.get(mi, 0);
     });
   Kokkos::parallel_for(
-    DeviceRangePolicy(0,rgids.extent_int(0)),
+    DeviceRangePolicy(0, rgids.extent_int(0)),
     KOKKOS_LAMBDA(int k) { row_ids(num_owned + num_shared + k) = rgids(k); });
   Kokkos::sort(row_ids, num_owned, row_ids.extent_int(0));
 

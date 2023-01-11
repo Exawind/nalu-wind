@@ -39,7 +39,7 @@ filter_diagonal_t<p>::invoke(
 
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
   Kokkos::parallel_for(
-    DeviceRangePolicy(0,offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
       LocalArray<ftype[p + 1][p + 1][p + 1]> lhs;
       if (lumped) {
         for (int k = 0; k < p + 1; ++k) {

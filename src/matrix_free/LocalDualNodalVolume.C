@@ -87,7 +87,7 @@ local_dual_nodal_volume_t<p>::invoke(
 
   dnv.set_all(mesh, 0.);
   Kokkos::parallel_for(
-    DeviceRangePolicy(0,xc.extent_int(0)), KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, xc.extent_int(0)), KOKKOS_LAMBDA(int index) {
       const auto box = hex_vertex_coordinates<p>(index, xc);
       const auto valid_length = valid_offset<p>(index, conn);
 

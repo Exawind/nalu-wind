@@ -87,7 +87,7 @@ gradient_boundary_closure_t<p>::invoke(
   stk::mesh::ProfilingBlock pf("gradient_boundary_closure");
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
   Kokkos::parallel_for(
-    DeviceRangePolicy(0,offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
       for (int d = 0; d < 3; ++d) {
         LocalArray<ftype[p + 1][p + 1]> rhs;
         vector_component_flux<p>(index, q, areav, rhs, d);

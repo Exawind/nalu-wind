@@ -245,7 +245,7 @@ momentum_residual_t<p>::invoke(
   stk::mesh::ProfilingBlock pf("momentum_residual");
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
   Kokkos::parallel_for(
-    DeviceRangePolicy(0,offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
       LocalArray<ftype[p + 1][p + 1][p + 1][3]> elem_rhs;
       if (p == 1) {
         static constexpr auto lumped = Coeffs<p>::Wl;
@@ -325,7 +325,9 @@ momentum_linearized_residual_t<p>::invoke(
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
 
 #if defined(KOKKOS_ENABLE_HIP)
-  using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM,1>, Kokkos::Rank<2>, int>;
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<2>, int>;
 #else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<2>, int>;
 #endif

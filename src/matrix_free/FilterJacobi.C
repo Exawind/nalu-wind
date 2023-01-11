@@ -39,7 +39,8 @@ reciprocal(tpetra_view_type x)
 {
   // be brave
   Kokkos::parallel_for(
-    "invert", DeviceRangePolicy(0,x.extent_int(0)), KOKKOS_LAMBDA(int k) { x(k, 0) = 1 / x(k, 0); });
+    "invert", DeviceRangePolicy(0, x.extent_int(0)),
+    KOKKOS_LAMBDA(int k) { x(k, 0) = 1 / x(k, 0); });
 }
 } // namespace
 template <int p>
@@ -71,7 +72,8 @@ element_multiply(
 {
   constexpr int dim = FilterJacobiOperator<inst::P1>::num_vectors;
   Kokkos::parallel_for(
-    "element_multiply", DeviceRangePolicy(0,b.extent_int(0)), KOKKOS_LAMBDA(int index) {
+    "element_multiply", DeviceRangePolicy(0, b.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
       const auto inv_d = inv_diag(index, 0);
       for (int d = 0; d < dim; ++d) {
         y(index, d) = inv_d * b(index, d);
@@ -88,7 +90,8 @@ update_jacobi_sweep(
 {
   constexpr int dim = FilterJacobiOperator<inst::P1>::num_vectors;
   Kokkos::parallel_for(
-    "jacobi_sweep", DeviceRangePolicy(0,inv_diag.extent_int(0)), KOKKOS_LAMBDA(int index) {
+    "jacobi_sweep", DeviceRangePolicy(0, inv_diag.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
       const auto inv_d = inv_diag(index, 0);
       for (int d = 0; d < dim; ++d) {
         y(index, d) += inv_d * (b(index, d) - axprev(index, d));
