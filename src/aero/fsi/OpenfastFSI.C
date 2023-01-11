@@ -220,11 +220,14 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
   }
 
   compute_mapping();
+  
   if (FAST.isTimeZero()) {
-    // send_loads(0.0);
+    send_loads(0.0);
     FAST.solution0();
   }
+
   map_displacements(curTime);
+
 }
 
 void
@@ -284,39 +287,17 @@ OpenfastFSI::compute_mapping()
       int turbProc = fsiTurbineData_[i]->getProc();
       if (bulk_->parallel_rank() == turbProc) {
         FAST.getTowerRefPositions(
-          fsiTurbineData_[i]->brFSIdata_.twr_ref_pos, i);
+            fsiTurbineData_[i]->brFSIdata_.twr_ref_pos.data(), i);
         FAST.getBladeRefPositions(
-          fsiTurbineData_[i]->brFSIdata_.bld_ref_pos, i);
+            fsiTurbineData_[i]->brFSIdata_.bld_ref_pos.data(), i);
         FAST.getBladeRootRefPositions(
-          fsiTurbineData_[i]->brFSIdata_.bld_root_ref_pos, i);
-        FAST.getHubRefPosition(fsiTurbineData_[i]->brFSIdata_.hub_ref_pos, i);
+            fsiTurbineData_[i]->brFSIdata_.bld_root_ref_pos.data(), i);
+        FAST.getHubRefPosition(fsiTurbineData_[i]->brFSIdata_.hub_ref_pos.data(), i);
         FAST.getNacelleRefPosition(
-          fsiTurbineData_[i]->brFSIdata_.nac_ref_pos, i);
-        FAST.getBladeRloc(fsiTurbineData_[i]->brFSIdata_.bld_rloc, i);
-        FAST.getBladeChord(fsiTurbineData_[i]->brFSIdata_.bld_chord, i);
+            fsiTurbineData_[i]->brFSIdata_.nac_ref_pos.data(), i);
+        FAST.getBladeRloc(fsiTurbineData_[i]->brFSIdata_.bld_rloc.data(), i);
+        FAST.getBladeChord(fsiTurbineData_[i]->brFSIdata_.bld_chord.data(), i);
 
-        int nBlades = fsiTurbineData_[i]->params_.numBlades;
-        ;
-        size_t nTotBldPts = 0;
-        for (size_t j = 0; j < nBlades; j++)
-          nTotBldPts += fsiTurbineData_[i]->params_.nBRfsiPtsBlade[j];
-
-        std::ofstream csvOut;
-        csvOut.open("defloads.csv", std::ofstream::out);
-        csvOut << "rloc, x, defx, y, defy, z, defz, chord" << std::endl;
-        for (auto j = 0; j < nTotBldPts; j++) {
-          csvOut << fsiTurbineData_[i]->brFSIdata_.bld_rloc[j] << ", "
-                 << fsiTurbineData_[i]->brFSIdata_.bld_ref_pos[j * 6] << ", "
-                 << fsiTurbineData_[i]->brFSIdata_.bld_def[j * 6] << ", "
-                 << fsiTurbineData_[i]->brFSIdata_.bld_ref_pos[j * 6 + 1]
-                 << ", " << fsiTurbineData_[i]->brFSIdata_.bld_def[j * 6 + 1]
-                 << ", "
-                 << fsiTurbineData_[i]->brFSIdata_.bld_ref_pos[j * 6 + 2]
-                 << ", " << fsiTurbineData_[i]->brFSIdata_.bld_def[j * 6 + 2]
-                 << ", " << fsiTurbineData_[i]->brFSIdata_.bld_chord[j]
-                 << std::endl;
-        }
-        csvOut.close();
       }
 
       int iError = MPI_Bcast(
@@ -358,7 +339,7 @@ OpenfastFSI::predict_struct_states()
 void
 OpenfastFSI::predict_struct_timestep(const double curTime)
 {
-  // send_loads(curTime);
+  send_loads(curTime);
   FAST.update_states_driver_time_step();
 }
 
@@ -405,6 +386,16 @@ OpenfastFSI::send_loads(const double curTime)
         for (int k = 0; k < nTotBldNodes * 6; k++)
           fsiTurbineData_[i]->brFSIdata_.bld_ld[k] =
             fsiTurbineData_[i]->brFSIdata_.bld_ld[k];
+        std::cerr << "Blade loads at time " << curTime << std::endl;
+        for(int k=0; k < nTotBldNodes; k++) {
+            std::cerr << fsiTurbineData_[i]->brFSIdata_.bld_ld[k*6+0] << ", "
+                      << fsiTurbineData_[i]->brFSIdata_.bld_ld[k*6+1] << ", "
+                      << fsiTurbineData_[i]->brFSIdata_.bld_ld[k*6+2] << ", "
+                      << fsiTurbineData_[i]->brFSIdata_.bld_ld[k*6+3] << ", "
+                      << fsiTurbineData_[i]->brFSIdata_.bld_ld[k*6+4] << ", "
+                      << fsiTurbineData_[i]->brFSIdata_.bld_ld[k*6+5] << std::endl;
+        }
+        
         FAST.setBladeForces(fsiTurbineData_[i]->brFSIdata_.bld_ld, i);
 
       } else {
@@ -431,20 +422,20 @@ OpenfastFSI::get_displacements(double current_time)
       int turbProc = fsiTurbineData_[i]->getProc();
       if (bulk_->parallel_rank() == turbProc) {
         FAST.getTowerDisplacements(
-          fsiTurbineData_[i]->brFSIdata_.twr_def,
-          fsiTurbineData_[i]->brFSIdata_.twr_vel, i);
+            fsiTurbineData_[i]->brFSIdata_.twr_def.data(),
+            fsiTurbineData_[i]->brFSIdata_.twr_vel.data(), i);
         FAST.getBladeDisplacements(
-          fsiTurbineData_[i]->brFSIdata_.bld_def,
-          fsiTurbineData_[i]->brFSIdata_.bld_vel, i);
+            fsiTurbineData_[i]->brFSIdata_.bld_def.data(),
+            fsiTurbineData_[i]->brFSIdata_.bld_vel.data(), i);
         FAST.getBladeRootDisplacements(
-          fsiTurbineData_[i]->brFSIdata_.bld_root_def, i);
-        FAST.getBladePitch(fsiTurbineData_[i]->brFSIdata_.bld_pitch, i);
+            fsiTurbineData_[i]->brFSIdata_.bld_root_def.data(), i);
+        FAST.getBladePitch(fsiTurbineData_[i]->brFSIdata_.bld_pitch.data(), i);
         FAST.getHubDisplacement(
-          fsiTurbineData_[i]->brFSIdata_.hub_def,
-          fsiTurbineData_[i]->brFSIdata_.hub_vel, i);
+            fsiTurbineData_[i]->brFSIdata_.hub_def.data(),
+            fsiTurbineData_[i]->brFSIdata_.hub_vel.data(), i);
         FAST.getNacelleDisplacement(
-          fsiTurbineData_[i]->brFSIdata_.nac_def,
-          fsiTurbineData_[i]->brFSIdata_.nac_vel, i);
+            fsiTurbineData_[i]->brFSIdata_.nac_def.data(),
+            fsiTurbineData_[i]->brFSIdata_.nac_vel.data(), i);
       }
 
       int iError = MPI_Bcast(
@@ -555,18 +546,13 @@ OpenfastFSI::map_displacements(double current_time)
 
   get_displacements(current_time); // Get displacements from the OpenFAST
 
-  auto& meta = bulk_->mesh_meta_data();
-  VectorFieldType* displacement = meta.get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "mesh_displacement");
-  stk::mesh::field_fill(0.0, *displacement);
-  
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (int i = 0; i < nTurbinesGlob; i++) {
     if (fsiTurbineData_[i] != NULL) { // This may not be a turbine intended for
                                       // blade-resolved simulation {
       // fsiTurbineData_[i]->setSampleDisplacement(current_time);
       // fsiTurbineData_[i]->setRefDisplacement(current_time);
-      // fsiTurbineData_[i]->mapDisplacements();
+      fsiTurbineData_[i]->mapDisplacements();
     }
   }
 }
