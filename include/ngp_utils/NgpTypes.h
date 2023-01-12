@@ -16,6 +16,7 @@
 
 #include "ngp_utils/NgpMeshInfo.h"
 #include "stk_mesh/base/NgpMesh.hpp"
+#include "KokkosInterface.h"
 #include "SimdInterface.h"
 
 #include <memory>
@@ -88,8 +89,15 @@ struct NGPMeshTraits
   //! Default scalar type for field data
   using FieldScalarType = double;
 
+#if defined(KOKKOS_ENABLE_HIP)
+  using TeamPolicy = Kokkos::TeamPolicy<
+    typename Mesh::MeshExecSpace,
+    Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    stk::ngp::ScheduleType>;
+#else
   using TeamPolicy =
     Kokkos::TeamPolicy<typename Mesh::MeshExecSpace, stk::ngp::ScheduleType>;
+#endif
   using TeamHandleType = typename TeamPolicy::member_type;
   using ShmemType = typename Mesh::MeshExecSpace::scratch_memory_space;
   using MeshIndex = typename Mesh::MeshIndex;

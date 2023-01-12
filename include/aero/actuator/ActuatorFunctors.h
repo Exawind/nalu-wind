@@ -13,6 +13,7 @@
 #include <aero/actuator/ActuatorGenericSearchFunctor.h>
 #include <aero/actuator/ActuatorBulk.h>
 #include <FieldTypeDef.h>
+#include <KokkosInterface.h>
 
 namespace stk {
 namespace mesh {
@@ -43,7 +44,7 @@ RunInterpActuatorVel(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk)
   Kokkos::deep_copy(actBulk.velocity_.view_host(), 0.0);
   actBulk.velocity_.modify_host();
   Kokkos::parallel_for(
-    "InterpActVel", actBulk.velocity_.extent(0),
+    "InterpActVel", HostRangePolicy(0, actBulk.velocity_.extent(0)),
     InterpActuatorVel(actBulk, stkBulk));
   actuator_utils::reduce_view_on_host(actBulk.velocity_.view_host());
 }

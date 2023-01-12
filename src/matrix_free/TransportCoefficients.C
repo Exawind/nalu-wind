@@ -22,6 +22,7 @@
 #include "matrix_free/ValidSimdLength.h"
 #include "matrix_free/GeometricFunctions.h"
 
+#include <KokkosInterface.h>
 #include "Kokkos_Macros.hpp"
 
 #include "stk_mesh/base/FieldState.hpp"
@@ -125,7 +126,7 @@ transport_coefficients_t<p>::invoke(
   scs_vector_view<p> diff)
 {
   Kokkos::parallel_for(
-    conn.extent_int(0), KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, conn.extent_int(0)), KOKKOS_LAMBDA(int index) {
       {
         const auto box = hex_vertex_coordinates<p>(index, xc);
         auto uvec = Kokkos::subview(

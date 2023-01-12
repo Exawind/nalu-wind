@@ -29,7 +29,6 @@ class Quad3DSCS;
 class Tri32DSCS;
 class Tri32DSCV;
 class Tri3DSCS;
-class Edge32DSCS;
 class Edge2DSCS;
 
 // limited supported now (P=1 3D elements)
@@ -147,17 +146,6 @@ struct AlgTraitsEdge_2D
   static constexpr int numFaceIp_ = numScsIp_;
   static constexpr stk::topology::topology_t topo_ = stk::topology::LINE_2;
   using masterElementScs_ = Edge2DSCS;
-};
-
-struct AlgTraitsEdge3_2D
-{
-  static constexpr int nDim_ = 2;
-  static constexpr int nodesPerElement_ = 3;
-  static constexpr int nodesPerFace_ = nodesPerElement_;
-  static constexpr int numScsIp_ = 6;
-  static constexpr int numFaceIp_ = numScsIp_;
-  static constexpr stk::topology::topology_t topo_ = stk::topology::LINE_3;
-  using masterElementScs_ = Edge32DSCS;
 };
 
 //-------------------------------------------------------------------------------------------

@@ -39,7 +39,7 @@ AssembleOversetDecoupledAlgorithm::execute()
   const auto& fringeNodes = realm_.oversetManager_->ngpFringeNodes_;
   auto* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
   Kokkos::parallel_for(
-    fringeNodes.size(), KOKKOS_LAMBDA(const size_t& i) {
+    DeviceRangePolicy(0, fringeNodes.size()), KOKKOS_LAMBDA(const size_t& i) {
       coeffApplier->resetRows(1, &fringeNodes(i), 0, numDof, 1.0, 0.0);
     });
 

@@ -18,7 +18,6 @@
 #include "master_element/Quad43DCVFEM.h"
 #include "master_element/Quad42DCVFEM.h"
 #include "master_element/Tri32DCVFEM.h"
-#include "master_element/Edge32DCVFEM.h"
 #include "master_element/Edge22DCVFEM.h"
 #include "master_element/Tri33DCVFEM.h"
 
@@ -40,8 +39,7 @@ namespace nalu {
   template class ClassName<AlgTraitsTri3_2D>;
 
 #define INSTANTIATE_KERNEL_FACE_2D(ClassName)                                  \
-  template class ClassName<AlgTraitsEdge_2D>;                                  \
-  template class ClassName<AlgTraitsEdge3_2D>;
+  template class ClassName<AlgTraitsEdge_2D>;
 
 #define INSTANTIATE_KERNEL_FACE_ELEMENT_3D(ClassName)                          \
   template class ClassName<AlgTraitsTri3Tet4>;                                 \

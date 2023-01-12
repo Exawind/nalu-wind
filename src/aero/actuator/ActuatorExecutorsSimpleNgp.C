@@ -57,12 +57,12 @@ ActuatorLineSimpleNGP::operator()()
   actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
 
   Kokkos::parallel_for(
-    "interpolateVelocitiesActuatorNgpSimple", numActPoints_,
+    "interpolateVelocitiesActuatorNgpSimple", HostRangePolicy(0, numActPoints_),
     InterpActuatorVel(actBulk_, stkBulk_));
   actuator_utils::reduce_view_on_host(velReduce);
 
   Kokkos::parallel_for(
-    "interpolateDensityActuatorNgpSimple", numActPoints_,
+    "interpolateDensityActuatorNgpSimple", HostRangePolicy(0, numActPoints_),
     InterpActuatorDensity(actBulk_, stkBulk_));
   auto rhoReduce = actBulk_.density_.view_host();
   actuator_utils::reduce_view_on_host(rhoReduce);
@@ -89,12 +89,13 @@ ActuatorLineSimpleNGP::operator()()
   // -- for both isotropic and anisotropic Guassians ---
   if (useSpreadActuatorForce_) {
     Kokkos::parallel_for(
-      "spreadForcesActuatorNgpSimple", localSizeCoarseSearch,
+      "spreadForcesActuatorNgpSimple",
+      HostRangePolicy(0, localSizeCoarseSearch),
       SpreadActuatorForce(actBulk_, stkBulk_));
   } else {
     // --  use ActSimpleSpreadForceWhProjection
     Kokkos::parallel_for(
-      "spreadForceUsingProjDistance", localSizeCoarseSearch,
+      "spreadForceUsingProjDistance", HostRangePolicy(0, localSizeCoarseSearch),
       ActSimpleSpreadForceWhProjection(actBulk_, stkBulk_));
   }
 

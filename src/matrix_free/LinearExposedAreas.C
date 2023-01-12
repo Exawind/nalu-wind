@@ -9,6 +9,7 @@
 
 #include "matrix_free/LinearExposedAreas.h"
 
+#include <KokkosInterface.h>
 #include <Kokkos_Macros.hpp>
 
 #include "matrix_free/HexVertexCoordinates.h"
@@ -67,7 +68,8 @@ exposed_areas_t<p>::invoke(const const_face_vector_view<p> coordinates)
   constexpr auto nlin = Coeffs<p>::Nlin;
   face_vector_view<p> areas("exposed_area_vectors", coordinates.extent_int(0));
   Kokkos::parallel_for(
-    "volume", coordinates.extent_int(0), KOKKOS_LAMBDA(int index) {
+    "volume", DeviceRangePolicy(0, coordinates.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
       const auto base_box = face_vertex_coordinates<p>(index, coordinates);
       for (int j = 0; j < p + 1; ++j) {
         for (int i = 0; i < p + 1; ++i) {

@@ -233,8 +233,6 @@ build_face_topo_kernel(stk::topology topo, Args&&... args)
     return new T<AlgTraitsTri3>(std::forward<Args>(args)...);
   case stk::topology::LINE_2:
     return new T<AlgTraitsEdge_2D>(std::forward<Args>(args)...);
-  case stk::topology::LINE_3:
-    return new T<AlgTraitsEdge3_2D>(std::forward<Args>(args)...);
   default:
     return nullptr;
   }

@@ -1085,7 +1085,8 @@ PeriodicManager::ngp_add_slave_to_master(
   if (bypassFieldCheck) {
     // fields are expected to be defined on all master/slave nodes
     Kokkos::parallel_for(
-      "add_slave_to_master", masterSlaveCommunicator_.size(),
+      "add_slave_to_master",
+      DeviceRangePolicy(0, masterSlaveCommunicator_.size()),
       KOKKOS_LAMBDA(const int i) {
         // extract master node and slave node
         const KokkosEntityPair& entPair = deviceMasterSlaves(i);
@@ -1105,7 +1106,8 @@ PeriodicManager::ngp_add_slave_to_master(
   } else {
     // more costly check to see if fields are defined on master/slave nodes
     Kokkos::parallel_for(
-      "add_slave_to_master", masterSlaveCommunicator_.size(),
+      "add_slave_to_master",
+      DeviceRangePolicy(0, masterSlaveCommunicator_.size()),
       KOKKOS_LAMBDA(const int i) {
         // extract master node and slave node
         const KokkosEntityPair& entPair = deviceMasterSlaves(i);
@@ -1215,7 +1217,8 @@ PeriodicManager::ngp_set_slave_to_master(
   if (bypassFieldCheck) {
     // fields are expected to be defined on all master/slave nodes
     Kokkos::parallel_for(
-      "set_slave_to_master", masterSlaveCommunicator_.size(),
+      "set_slave_to_master",
+      DeviceRangePolicy(0, masterSlaveCommunicator_.size()),
       KOKKOS_LAMBDA(const int i) {
         // extract master node and slave node
         const KokkosEntityPair& entPair = deviceMasterSlaves(i);
@@ -1233,7 +1236,8 @@ PeriodicManager::ngp_set_slave_to_master(
   } else {
     // more costly check to see if fields are defined on master/slave nodes
     Kokkos::parallel_for(
-      "set_slave_to_master", masterSlaveCommunicator_.size(),
+      "set_slave_to_master",
+      DeviceRangePolicy(0, masterSlaveCommunicator_.size()),
       KOKKOS_LAMBDA(const int i) {
         // extract master node and slave node
         const KokkosEntityPair& entPair = deviceMasterSlaves(i);

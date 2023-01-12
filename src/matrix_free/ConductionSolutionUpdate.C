@@ -16,6 +16,7 @@
 #include "matrix_free/StkSimdFaceConnectivityMap.h"
 #include "matrix_free/StkSimdNodeConnectivityMap.h"
 
+#include <KokkosInterface.h>
 #include "Kokkos_Array.hpp"
 #include "Kokkos_View.hpp"
 

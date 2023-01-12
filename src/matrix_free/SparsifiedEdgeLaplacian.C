@@ -18,6 +18,7 @@
 
 #include "matrix_free/StkSimdConnectivityMap.h"
 #include "matrix_free/StkSimdGatheredElementData.h"
+#include <KokkosInterface.h>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_UniqueToken.hpp>
 
@@ -156,7 +157,7 @@ assemble_sparsified_edge_laplacian_t<p>::invoke(
   field_gather<p>(conn, coords, xc);
 
   Kokkos::parallel_for(
-    conn.extent_int(0), KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, conn.extent_int(0)), KOKKOS_LAMBDA(int index) {
       auto elem_coords = Kokkos::subview(
         xc, index, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
       const auto length = valid_offset<p>(index, conn);

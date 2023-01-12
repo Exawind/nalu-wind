@@ -25,7 +25,8 @@ exec_on_device(PecFuncType* devptr, ValueType pecNum)
 {
   ValueType pecFac = 0.0;
   Kokkos::parallel_reduce(
-    1, KOKKOS_LAMBDA(int, ValueType& pf) { pf = devptr->execute(pecNum); },
+    sierra::nalu::DeviceRangePolicy(0, 1),
+    KOKKOS_LAMBDA(int, ValueType& pf) { pf = devptr->execute(pecNum); },
     pecFac);
   return pecFac;
 }

@@ -14,12 +14,13 @@
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/StrongDirichletBC.h"
 
-#include <Kokkos_Macros.hpp>
+#include <KokkosInterface.h>
 #include <Kokkos_Parallel.hpp>
 
 #include <Teuchos_RCP.hpp>
 #include <Tpetra_CombineMode.hpp>
 #include "Tpetra_Operator.hpp"
+#include <KokkosInterface.h>
 #include <type_traits>
 
 namespace sierra {
@@ -35,7 +36,8 @@ void
 reciprocal(tpetra_view_type x)
 {
   Kokkos::parallel_for(
-    "invert", x.extent_int(0), KOKKOS_LAMBDA(int k) { x(k, 0) = 1 / x(k, 0); });
+    "invert", DeviceRangePolicy(0, x.extent_int(0)),
+    KOKKOS_LAMBDA(int k) { x(k, 0) = 1 / x(k, 0); });
 }
 } // namespace
 template <int p>
@@ -66,7 +68,8 @@ element_multiply(
   const_tpetra_view_type inv_diag, const_tpetra_view_type b, tpetra_view_type y)
 {
   Kokkos::parallel_for(
-    "element_multiply", b.extent_int(0), KOKKOS_LAMBDA(int index) {
+    "element_multiply", DeviceRangePolicy(0, b.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
       y(index, 0) = inv_diag(index, 0) * b(index, 0);
     });
 }
@@ -79,7 +82,8 @@ update_jacobi_sweep(
   tpetra_view_type y)
 {
   Kokkos::parallel_for(
-    "jacobi_sweep", inv_diag.extent_int(0), KOKKOS_LAMBDA(int index) {
+    "jacobi_sweep", DeviceRangePolicy(0, inv_diag.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
       y(index, 0) += inv_diag(index, 0) * (b(index, 0) - axprev(index, 0));
     });
 }

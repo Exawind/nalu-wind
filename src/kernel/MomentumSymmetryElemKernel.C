@@ -31,7 +31,7 @@ get_shape_fcn(T& vf_shape_function, MasterElement* meFC_dev)
 {
   auto dev_shape_function = Kokkos::create_mirror_view(vf_shape_function);
   Kokkos::parallel_for(
-    "get_shape_fcn_data", 1, KOKKOS_LAMBDA(int) {
+    "get_shape_fcn_data", DeviceRangePolicy(0, 1), KOKKOS_LAMBDA(int) {
       SharedMemView<DoubleType**, DeviceShmem> ShmemView(
         dev_shape_function.data(), BcAlgTraits::numFaceIp_,
         BcAlgTraits::nodesPerFace_);
