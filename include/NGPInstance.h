@@ -27,7 +27,8 @@ create()
   T* obj = kokkos_malloc_on_device<T>(debuggingName);
 
   Kokkos::parallel_for(
-    debuggingName, 1, KOKKOS_LAMBDA(const int) { new (obj) T(); });
+    debuggingName, DeviceRangePolicy(0, 1),
+    KOKKOS_LAMBDA(const int) { new (obj) T(); });
   return obj;
 }
 
@@ -41,7 +42,8 @@ create(const T& hostObj)
   // Create local copy for capture on device
   const T hostCopy(hostObj);
   Kokkos::parallel_for(
-    debuggingName, 1, KOKKOS_LAMBDA(const int) { new (obj) T(hostCopy); });
+    debuggingName, DeviceRangePolicy(0, 1),
+    KOKKOS_LAMBDA(const int) { new (obj) T(hostCopy); });
   return obj;
 }
 
@@ -55,7 +57,8 @@ create(Args&&... args)
   // CUDA lambda cannot capture packed parameter
   const T hostObj(std::forward<Args>(args)...);
   Kokkos::parallel_for(
-    debuggingName, 1, KOKKOS_LAMBDA(const int) { new (obj) T(hostObj); });
+    debuggingName, DeviceRangePolicy(0, 1),
+    KOKKOS_LAMBDA(const int) { new (obj) T(hostObj); });
   return obj;
 }
 
@@ -69,7 +72,8 @@ destroy(T* obj)
 
   const std::string debuggingName(typeid(T).name());
   Kokkos::parallel_for(
-    debuggingName, 1, KOKKOS_LAMBDA(const int) { obj->~T(); });
+    debuggingName, DeviceRangePolicy(0, 1),
+    KOKKOS_LAMBDA(const int) { obj->~T(); });
   kokkos_free_on_device(obj);
 }
 

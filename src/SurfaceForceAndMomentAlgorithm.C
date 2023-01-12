@@ -342,7 +342,6 @@ SurfaceForceAndMomentAlgorithm::execute()
           // accumulate viscous force and set tau for component i
           ws_v_force[i] += dflux;
           viscousForce[i] += ws_v_force[i];
-          tauWall[i] += dflux;
           ws_tau[i] = tauijNj;
         }
 

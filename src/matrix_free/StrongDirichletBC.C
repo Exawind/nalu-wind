@@ -13,6 +13,7 @@
 #include "matrix_free/KokkosViewTypes.h"
 
 #include <Teuchos_RCP.hpp>
+#include <KokkosInterface.h>
 #include <stk_simd/Simd.hpp>
 
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
@@ -32,7 +33,8 @@ dirichlet_residual(
 {
   stk::mesh::ProfilingBlock pf("scalar_dirichlet_residual");
   Kokkos::parallel_for(
-    "scalar_dirichlet_residual", dirichlet_bc_offsets.extent_int(0),
+    "scalar_dirichlet_residual",
+    DeviceRangePolicy(0, dirichlet_bc_offsets.extent_int(0)),
     KOKKOS_LAMBDA(int index) {
       const auto residual = qbc(index) - qp1(index);
       const int valid_length = valid_offset(index, dirichlet_bc_offsets);
@@ -55,7 +57,13 @@ dirichlet_residual(
   stk::mesh::ProfilingBlock pf("vector_dirichlet_residual");
   ThrowRequireMsg(yout.extent_int(1) == 3, "length is " << yout.extent_int(1));
 
+#if defined(KOKKOS_ENABLE_HIP)
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<2>, int>;
+#else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<2>, int>;
+#endif
   auto range = policy_type({0, 0}, {dirichlet_bc_offsets.extent_int(0), 3});
   Kokkos::parallel_for(
     range, KOKKOS_LAMBDA(int index, int d) {
@@ -80,7 +88,13 @@ dirichlet_linearized(
   ThrowRequire(yout.extent_int(0) == xin.extent_int(0));
   ThrowRequire(yout.extent_int(1) == xin.extent_int(1));
 
+#if defined(KOKKOS_ENABLE_HIP)
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<2>, int>;
+#else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<2>, int>;
+#endif
   auto range = policy_type(
     {0, 0}, {dirichlet_bc_offsets.extent_int(0), xin.extent_int(1)});
   Kokkos::parallel_for(
@@ -98,7 +112,13 @@ dirichlet_diagonal(
   const_node_offset_view offsets, int max_owned_lid, tpetra_view_type yout)
 {
   stk::mesh::ProfilingBlock pf("dirichlet_diagonal");
+#if defined(KOKKOS_ENABLE_HIP)
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<2>, int>;
+#else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<2>, int>;
+#endif
   auto range = policy_type({0, 0}, {offsets.extent_int(0), yout.extent_int(1)});
   Kokkos::parallel_for(
     range, KOKKOS_LAMBDA(int index, int d) {

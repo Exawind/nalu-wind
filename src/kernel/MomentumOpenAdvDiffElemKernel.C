@@ -45,7 +45,7 @@ get_shape_fcn_data(
   const bool skew = skewSymmetric;
   auto vf_shape = Kokkos::create_mirror_view(vf_shape_function);
   Kokkos::parallel_for(
-    "get_shape_fcn_data", 1, KOKKOS_LAMBDA(int) {
+    "get_shape_fcn_data", DeviceRangePolicy(0, 1), KOKKOS_LAMBDA(int) {
       SharedMemView<DoubleType**, DeviceShmem> ShmemView(
         vf_shape.data(), BcAlgTraits::numFaceIp_, BcAlgTraits::nodesPerFace_);
       meFC_dev->shape_fcn<>(ShmemView);
@@ -54,7 +54,7 @@ get_shape_fcn_data(
 
   auto v_shape = Kokkos::create_mirror_view(v_shape_function);
   Kokkos::parallel_for(
-    "get_shape_fcn_data", 1, KOKKOS_LAMBDA(int) {
+    "get_shape_fcn_data", DeviceRangePolicy(0, 1), KOKKOS_LAMBDA(int) {
       SharedMemView<DoubleType**, DeviceShmem> ShmemView(
         v_shape.data(), BcAlgTraits::numFaceIp_, BcAlgTraits::nodesPerFace_);
       meSCS_dev->shape_fcn<>(ShmemView);
@@ -63,7 +63,7 @@ get_shape_fcn_data(
 
   auto vf_adv_shape = Kokkos::create_mirror_view(vf_adv_shape_function);
   Kokkos::parallel_for(
-    "get_shape_fcn_data", 1, KOKKOS_LAMBDA(int) {
+    "get_shape_fcn_data", DeviceRangePolicy(0, 1), KOKKOS_LAMBDA(int) {
       SharedMemView<DoubleType**, DeviceShmem> ShmemView(
         vf_adv_shape.data(), BcAlgTraits::numFaceIp_,
         BcAlgTraits::nodesPerFace_);
@@ -76,7 +76,7 @@ get_shape_fcn_data(
 
   auto v_adv_shape = Kokkos::create_mirror_view(v_adv_shape_function);
   Kokkos::parallel_for(
-    "get_shape_fcn_data", 1, KOKKOS_LAMBDA(int) {
+    "get_shape_fcn_data", DeviceRangePolicy(0, 1), KOKKOS_LAMBDA(int) {
       SharedMemView<DoubleType**, DeviceShmem> ShmemView(
         v_adv_shape.data(), BcAlgTraits::numFaceIp_,
         BcAlgTraits::nodesPerFace_);

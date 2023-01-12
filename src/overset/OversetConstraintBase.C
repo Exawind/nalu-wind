@@ -45,7 +45,7 @@ OversetConstraintBase::prepare_constraints()
 
   auto* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
   Kokkos::parallel_for(
-    holeRows.size(), KOKKOS_LAMBDA(const size_t& i) {
+    DeviceRangePolicy(0, holeRows.size()), KOKKOS_LAMBDA(const size_t& i) {
       coeffApplier->resetRows(1, &holeRows(i), 0, numDof, 1.0, 0.0);
     });
 

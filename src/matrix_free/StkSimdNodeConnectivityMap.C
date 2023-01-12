@@ -18,6 +18,7 @@
 #include "stk_mesh/base/Types.hpp"
 #include "stk_topology/topology.hpp"
 
+#include <KokkosInterface.h>
 #include "Kokkos_Macros.hpp"
 #include "Kokkos_Parallel.hpp"
 

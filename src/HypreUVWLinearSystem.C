@@ -640,7 +640,7 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
     double* rhs_data = hypre_VectorData(hypre_ParVectorLocalVector(
       (hypre_ParVector*)hypre_IJVectorObject(rhs_[d])));
     Kokkos::parallel_reduce(
-      "HypreUVWLinearSystem::Reduction", N,
+      "HypreUVWLinearSystem::Reduction", DeviceRangePolicy(0, N),
       KOKKOS_LAMBDA(const int i, double& update) {
         double t = rhs_data[i];
         update += t * t;

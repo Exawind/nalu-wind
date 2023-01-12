@@ -11,6 +11,8 @@
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
 
+#include "KokkosInterface.h"
+#include "NGPInstance.h"
 #include "node_kernels/ContinuityGclNodeKernel.h"
 
 TEST_F(ContinuityKernelHex8Mesh, NGP_continuity_gcl_node)
@@ -43,4 +45,43 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_continuity_gcl_node)
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, 9.375);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, 0.0);
+}
+
+template <class T>
+inline T*
+my_create(const T& hostObj)
+{
+  const std::string debuggingName(typeid(T).name());
+  T* obj = sierra::nalu::kokkos_malloc_on_device<T>(debuggingName);
+
+  // Create local copy for capture on device
+  const T hostCopy(hostObj);
+  Kokkos::parallel_for(
+    debuggingName, 1, KOKKOS_LAMBDA(const int) {
+      printf("before placement new\n");
+      new (obj) T();
+      printf("after placement new\n");
+      *obj = hostCopy;
+      printf("after assignment\n");
+    });
+  return obj;
+}
+
+void
+test_kernel_on_device(const sierra::nalu::ContinuityGclNodeKernel& kernel)
+{
+  sierra::nalu::ContinuityGclNodeKernel* deviceKernel = my_create(kernel);
+}
+
+TEST_F(ContinuityKernelHex8Mesh, NGP_continuity_gcl_node_kernel)
+{
+  // Only execute for 1 processor runs
+  if (bulk_->parallel_size() > 1)
+    return;
+
+  fill_mesh_and_init_fields();
+
+  sierra::nalu::ContinuityGclNodeKernel kernel(*bulk_);
+
+  test_kernel_on_device(kernel);
 }

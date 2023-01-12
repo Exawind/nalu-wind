@@ -517,7 +517,7 @@ Realm::initialize_prolog()
     stk::topology::NODE_RANK, "iblank");
   stk::mesh::field_fill(1, *iblank);
 
-  if (has_mesh_deformation() || solutionOptions_->meshMotion_)
+  if (does_mesh_move())
     init_current_coordinates();
 
   if (hasPeriodic_)
@@ -528,6 +528,9 @@ Realm::initialize_prolog()
 
   if (solutionOptions_->meshMotion_)
     meshMotionAlg_->initialize(get_current_time());
+
+  if (aeroModels_->is_active())
+    aeroModels_->init(get_current_time(), outputInfo_->restartFreq_);
 
   compute_geometry();
 
@@ -797,6 +800,7 @@ Realm::load(const YAML::Node& node)
 
   // post processing
   postProcessingInfo_->load(node);
+
   // look for OpenFAST FSI stuff
   /* if (node["openfast_fsi"]) { */
 
@@ -985,8 +989,19 @@ Realm::setup_interior_algorithms()
 {
   if (has_mesh_deformation()) {
     const AlgorithmType algType = INTERIOR;
-    stk::mesh::PartVector mmPartVec = meshMotionAlg_->get_partvec();
-    for (auto p : mmPartVec) {
+    stk::mesh::PartVector all_part_vec;
+    if (has_mesh_motion()) {
+      auto mmPartVec = meshMotionAlg_->get_partvec();
+      all_part_vec.insert(
+        all_part_vec.begin(), mmPartVec.begin(), mmPartVec.end());
+    }
+    if (aeroModels_->has_fsi()) {
+      auto fsi_part_vec = aeroModels_->fsi_parts();
+      all_part_vec.insert(
+        all_part_vec.end(), fsi_part_vec.begin(), fsi_part_vec.end());
+    }
+
+    for (auto p : all_part_vec) {
       if (p->topology() != stk::topology::HEX_8) {
         NaluEnv::self().naluOutputP0()
           << "Skipping registration of MeshVelocityEdgeAlg on part "
@@ -1797,20 +1812,38 @@ void
 Realm::update_geometry_due_to_mesh_motion()
 {
   // check for mesh motion
-  if (solutionOptions_->meshMotion_) {
+  if (does_mesh_move()) {
     if (aeroModels_->is_active()) {
+
       aeroModels_->update_displacements(get_current_time());
+
+      if (aeroModels_->has_fsi()) {
+        // TODO: Can delete the FrameOpenFAST class if this works out right here
+        auto part_vec = aeroModels_->fsi_parts();
+        for (auto* target_part : part_vec)
+          set_current_coordinates(target_part);
+      }
     }
 
-    meshMotionAlg_->execute(get_current_time());
+    if (solutionOptions_->externalMeshDeformation_) {
+      std::vector<std::string> targetNames = get_physics_target_names();
+      for (size_t itarget = 0; itarget < targetNames.size(); ++itarget) {
+        stk::mesh::Part* targetPart =
+          meta_data().get_part(targetNames[itarget]);
+        set_current_coordinates(targetPart);
+      }
+    }
+
+    if (meshMotionAlg_)
+      meshMotionAlg_->execute(get_current_time());
 
     compute_geometry();
 
-    meshMotionAlg_->post_compute_geometry();
+    if (meshMotionAlg_)
+      meshMotionAlg_->post_compute_geometry();
 
-    if (aeroModels_->is_active()) {
+    if (aeroModels_->has_fsi())
       aeroModels_->compute_div_mesh_velocity();
-    }
 
     // and non-conformal algorithm
     if (hasNonConformal_)
@@ -1821,26 +1854,12 @@ Realm::update_geometry_due_to_mesh_motion()
 void
 Realm::update_graph_connectivity_and_coordinates_due_to_mesh_motion()
 {
-  if (solutionOptions_->meshMotion_) {
+  if (does_mesh_move()) {
     // Reset the stk::mesh::NgpMesh instance
     meshInfo_.reset(new typename Realm::NgpMeshInfo(*bulkData_));
 
     // now re-initialize linear system
     equationSystems_.reinitialize_linear_system();
-  }
-
-  // deal with non-topology changes, however, moving mesh
-  if (has_mesh_deformation()) {
-    // extract target parts for this physics
-    if (solutionOptions_->externalMeshDeformation_) {
-      std::vector<std::string> targetNames = get_physics_target_names();
-      for (size_t itarget = 0; itarget < targetNames.size(); ++itarget) {
-        stk::mesh::Part* targetPart =
-          meta_data().get_part(targetNames[itarget]);
-        set_current_coordinates(targetPart);
-      }
-    }
-    compute_geometry();
   }
 
   // ask the equation system to do some work
@@ -2433,9 +2452,6 @@ Realm::initialize_post_processing_algorithms()
     ablForcingAlg_->initialize();
   }
 
-  if (aeroModels_->is_active())
-    aeroModels_->init(get_current_time(), outputInfo_->restartFreq_);
-
   if (lidarLOS_) {
     lidarLOS_->set_time_for_all(get_current_time());
   }
@@ -2447,11 +2463,7 @@ Realm::initialize_post_processing_algorithms()
 std::string
 Realm::get_coordinates_name()
 {
-  return (
-    (solutionOptions_->meshMotion_ ||
-     solutionOptions_->externalMeshDeformation_)
-      ? "current_coordinates"
-      : "coordinates");
+  return (does_mesh_move() ? "current_coordinates" : "coordinates");
 }
 
 //--------------------------------------------------------------------------
@@ -2470,10 +2482,12 @@ bool
 Realm::has_mesh_deformation() const
 {
   if (meshMotionAlg_) {
-    return meshMotionAlg_->is_deforming() ||
-           solutionOptions_->externalMeshDeformation_;
+    return (meshMotionAlg_->is_deforming() ||
+            solutionOptions_->externalMeshDeformation_) ||
+           aeroModels_->has_fsi();
   } else
-    return solutionOptions_->externalMeshDeformation_;
+    return (
+      solutionOptions_->externalMeshDeformation_ || aeroModels_->has_fsi());
 }
 
 //--------------------------------------------------------------------------
@@ -3427,15 +3441,31 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
         turbulenceAveragingPostProcessing_->currentTimeFilter_,
         abortIfNotFound);
     }
-    if (meshMotionAlg_) {
+
+    if (does_mesh_move()) {
+
       // Redo all the mesh and motionAlg setup after reading files from the
       // restart reset the current_coordinate and mesh_velocity fields after
       // reading them
       init_current_coordinates();
+
       // reset the current time for the meshMotionAlgs
-      meshMotionAlg_->restart_reinit(foundRestartTime);
+      if (has_mesh_motion())
+        meshMotionAlg_->restart_reinit(foundRestartTime);
+
+      if (aeroModels_->is_active()) {
+        aeroModels_->update_displacements(get_current_time());
+        if (aeroModels_->has_fsi()) {
+          auto part_vec = aeroModels_->fsi_parts();
+          for (auto* target_part : part_vec)
+            set_current_coordinates(target_part);
+        }
+      }
+
       compute_geometry();
-      meshMotionAlg_->post_compute_geometry();
+
+      if (has_mesh_motion())
+        meshMotionAlg_->post_compute_geometry();
     }
   }
   return foundRestartTime;
@@ -4448,8 +4478,8 @@ Realm::augment_transfer_vector(
 void
 Realm::process_multi_physics_transfer(bool initCall)
 {
-  if (!hasMultiPhysicsTransfer_)
-    return;
+
+  double timeXfer = -NaluEnv::self().nalu_time();
 
   if (!initCall) {
     if (aeroModels_->is_active()) {
@@ -4457,15 +4487,16 @@ Realm::process_multi_physics_transfer(bool initCall)
     }
   }
 
-  double timeXfer = -NaluEnv::self().nalu_time();
-
   /* if (openfast_ != NULL) */
   /*   openfast_->predict_struct_timestep(get_current_time()); */
 
-  std::vector<Transfer*>::iterator ii;
-  for (ii = multiPhysicsTransferVec_.begin();
-       ii != multiPhysicsTransferVec_.end(); ++ii)
-    (*ii)->execute();
+  if (hasMultiPhysicsTransfer_) {
+    std::vector<Transfer*>::iterator ii;
+    for (ii = multiPhysicsTransferVec_.begin();
+         ii != multiPhysicsTransferVec_.end(); ++ii)
+      (*ii)->execute();
+  }
+
   timeXfer += NaluEnv::self().nalu_time();
   timerTransferExecute_ += timeXfer;
 }
@@ -4558,9 +4589,8 @@ Realm::post_converged_work()
 {
   equationSystems_.post_converged_work();
 
-  if (aeroModels_->is_active()) {
+  if (aeroModels_->is_active())
     aeroModels_->advance_model_time_step(get_current_time());
-  }
 
   // FIXME: Consider a unified collection of post processing work
   if (NULL != solutionNormPostProcessing_)

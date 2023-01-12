@@ -14,6 +14,7 @@
 #include "matrix_free/ValidSimdLength.h"
 #include "matrix_free/KokkosViewTypes.h"
 
+#include <KokkosInterface.h>
 #include "Kokkos_ScatterView.hpp"
 #include "Kokkos_Macros.hpp"
 #include "Teuchos_RCP.hpp"
@@ -88,7 +89,8 @@ scalar_neumann_residual_t<p>::invoke(
   stk::mesh::ProfilingBlock pf("scalar_neumann_residual");
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
   Kokkos::parallel_for(
-    "flux_residual", offsets.extent_int(0), KOKKOS_LAMBDA(int index) {
+    "flux_residual", DeviceRangePolicy(0, offsets.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
       LocalArray<ftype[p + 1][p + 1]> element_rhs;
       {
         LocalArray<ftype[p + 1][p + 1]> scratch;

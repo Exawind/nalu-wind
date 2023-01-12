@@ -10,6 +10,7 @@
 #include "UnitTestUtils.h"
 #include "UnitTestRealm.h"
 
+#include "KokkosInterface.h"
 #include "SimdInterface.h"
 #include "ElemDataRequests.h"
 
@@ -180,4 +181,67 @@ TEST_F(Hex8MeshWithNSOFields, NGPMeshField)
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
   test_ngp_mesh_field_values(*bulk, velocity, massFlowRate);
+}
+
+struct TestKernelWithNgpField
+{
+  KOKKOS_FUNCTION TestKernelWithNgpField() : ngpField(), num(0)
+  {
+    printf("TestKernelWithNgpField def ctor\n");
+  }
+
+  KOKKOS_FUNCTION TestKernelWithNgpField(const TestKernelWithNgpField& src)
+    : ngpField(src.ngpField), num(src.num)
+  {
+    printf("TestKernelWithNgpField copy ctor\n");
+  }
+
+  KOKKOS_FUNCTION ~TestKernelWithNgpField()
+  {
+    printf("TestKernelWithNgpField dtor\n");
+  }
+
+  KOKKOS_FUNCTION unsigned get_num() const /*override*/ { return num; }
+
+  stk::mesh::NgpField<double> ngpField;
+  unsigned num = 0;
+};
+
+void
+test_ngp_field_placement_new()
+{
+  TestKernelWithNgpField hostObj;
+  hostObj.num = 42;
+
+  printf(
+    "sizeof(TestKernelWithNgpField): %lu, sizeof(NgpField): %lu\n",
+    sizeof(TestKernelWithNgpField), sizeof(stk::mesh::NgpField<double>));
+  std::string debugName("TestKernelWithNgpField");
+  TestKernelWithNgpField* devicePtr = static_cast<TestKernelWithNgpField*>(
+    Kokkos::kokkos_malloc<stk::ngp::MemSpace>(
+      debugName, sizeof(TestKernelWithNgpField)));
+
+  int constructionFinished = 0;
+  Kokkos::parallel_reduce(
+    sierra::nalu::DeviceRangePolicy(0, 1),
+    KOKKOS_LAMBDA(const unsigned& i, int& localFinished) {
+      new (devicePtr) TestKernelWithNgpField(hostObj);
+      localFinished = 1;
+    },
+    constructionFinished);
+  EXPECT_EQ(1, constructionFinished);
+
+  int numFromDevice = 0;
+  Kokkos::parallel_reduce(
+    sierra::nalu::DeviceRangePolicy(0, 1),
+    KOKKOS_LAMBDA(const unsigned& i, int& localNum) {
+      localNum = devicePtr->get_num();
+    },
+    numFromDevice);
+  EXPECT_EQ(42, numFromDevice);
+}
+
+TEST(DevicePlacementNew, NGP_structWithNgpField)
+{
+  test_ngp_field_placement_new();
 }
