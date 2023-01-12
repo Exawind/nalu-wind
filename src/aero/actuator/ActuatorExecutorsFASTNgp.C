@@ -58,14 +58,14 @@ ActuatorLineFastNGP::operator()()
   if (actMeta_.isotropicGaussian_) {
     Kokkos::parallel_for(
       "spreadForcesActuatorNgpFAST",
-      DeviceRangePolicy(0, localSizeCoarseSearch),
+      HostRangePolicy(0, localSizeCoarseSearch),
       SpreadActuatorForce(actBulk_, stkBulk_));
   } else {
     RunActFastStashOrientVecs(actBulk_);
 
     Kokkos::parallel_for(
       "spreadForceUsingProjDistance",
-      DeviceRangePolicy(0, localSizeCoarseSearch),
+      HostRangePolicy(0, localSizeCoarseSearch),
       ActFastSpreadForceWhProjection(actBulk_, stkBulk_));
   }
 
@@ -130,7 +130,7 @@ ActuatorDiskFastNGP::operator()()
     actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
   Kokkos::parallel_for(
-    "spreadForcesActuatorNgpFAST", DeviceRangePolicy(0, localSizeCoarseSearch),
+    "spreadForcesActuatorNgpFAST", HostRangePolicy(0, localSizeCoarseSearch),
     SpreadActuatorForce(actBulk_, stkBulk_));
 
   actBulk_.parallel_sum_source_term(stkBulk_);
