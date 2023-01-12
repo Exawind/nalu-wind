@@ -149,9 +149,6 @@ fsiTurbine::populateParts(
       allPartVec.push_back(part);
     }
 
-    NaluEnv::self().naluOutputP0()
-      << "Adding part " << pName << " to " << turbinePart << std::endl;
-
     stk::mesh::put_field_on_mesh(*dispMap_, *part, 1, nullptr);
     stk::mesh::put_field_on_mesh(*dispMapInterp_, *part, 1, nullptr);
   }
@@ -177,9 +174,6 @@ fsiTurbine::populateBndyParts(
       partVec.push_back(part);
       allPartVec.push_back(part);
     }
-
-    NaluEnv::self().naluOutputP0()
-      << "Adding part " << pName << " to " << turbinePart << std::endl;
 
     // TODO: Get number of SCS's per face from stk::topology and MasterElement.
     //  Currently assumes all-quad faces with 4 SCS's per face
