@@ -211,3 +211,21 @@ the dependencies by using ``spack location -i <package>``. For example in the
    make
 
 There are also ``do-config`` scripts available for this according to machine under the configs directory `here <https://github.com/exawind/build-test>`__. These scripts may also provide the capability to access and use pre-built dependencies from a set of modules if they are available on the machine. This should allow you to have a build of Nalu-Wind in which you are able to continuosly modify the source code and rebuild.
+
+Building inside Docker Container
+--------------------------------
+
+It is also possible to build (and run) Nalu-Wind inside a docker container with a prepared environment.
+This has the benefit of requiring less setup and usually being faster and can be useful in some situations (e.g. quickly testing something).
+
+For this, use the container `ecpe4s/exawind-snapshot <https://hub.docker.com/r/ecpe4s/exawind-snapshot>`_:
+
+::
+
+   docker run -it ecpe4s/exawind-snapshot bash
+
+Inside the container you can directly install Nalu-Wind with spack:
+
+::
+
+   spack install nalu-wind
