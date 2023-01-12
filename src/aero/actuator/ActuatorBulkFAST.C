@@ -300,14 +300,14 @@ void
 ActuatorBulkFAST::output_torque_info(stk::mesh::BulkData& stkBulk)
 {
   Kokkos::parallel_for(
-    "setUpTorqueCalc", DeviceRangePolicy(0, hubLocations_.extent(0)),
+    "setUpTorqueCalc", HostRangePolicy(0, hubLocations_.extent(0)),
     ActFastSetUpThrustCalc(*this));
 
   actuator_utils::reduce_view_on_host(hubLocations_);
   actuator_utils::reduce_view_on_host(hubOrientation_);
 
   Kokkos::parallel_for(
-    "computeTorque", DeviceRangePolicy(0, coarseSearchElemIds_.extent(0)),
+    "computeTorque", HostRangePolicy(0, coarseSearchElemIds_.extent(0)),
     ActFastComputeThrust(*this, stkBulk));
   actuator_utils::reduce_view_on_host(turbineThrust_);
   actuator_utils::reduce_view_on_host(turbineTorque_);
