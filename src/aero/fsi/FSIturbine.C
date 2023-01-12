@@ -1418,8 +1418,8 @@ fsiTurbine::setSampleDisplacement(double curTime)
      WM parameters for each blade node
   */
 
-  NaluEnv::self().naluOutputP0() < < < < "Setting Sample displacements "
-                                           << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "Setting Sample displacements " << std::endl;
 
   int nBlades = params_.numBlades;
   ;
