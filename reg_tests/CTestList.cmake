@@ -39,7 +39,12 @@ macro(setup_test testname np)
 endmacro(setup_test)
 
 macro(set_properties testname)
-    set_tests_properties(${testname} PROPERTIES TIMEOUT 20000 PROCESSORS ${np} WORKING_DIRECTORY "${TEST_WORKING_DIR}")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "^(Clang|AppleClang)$")
+      set(TEST_TIMEOUT 20000)
+    else()
+      set(TEST_TIMEOUT 1200)
+    endif()
+    set_tests_properties(${testname} PROPERTIES TIMEOUT ${TEST_TIMEOUT} PROCESSORS ${np} WORKING_DIRECTORY "${TEST_WORKING_DIR}")
 endmacro(set_properties)
 
 # Standard regression test
