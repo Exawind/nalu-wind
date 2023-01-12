@@ -22,7 +22,7 @@ public:
 
   void initialize(int restartFreqNalu, double curTime);
 
-  void get_displacements(double);
+  void map_displacements(double);
 
   void predict_struct_states();
 
@@ -50,11 +50,11 @@ private:
 
   void load(const YAML::Node&);
 
+  void get_displacements(double);
+
   void compute_mapping();
 
   void send_loads(const double curTime);
-
-  void map_displacements(double); // This is dummy function for now. DO NOT USE
 
   std::shared_ptr<stk::mesh::BulkData> bulk_;
 
