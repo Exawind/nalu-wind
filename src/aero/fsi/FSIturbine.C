@@ -1851,7 +1851,7 @@ fsiTurbine::mapDisplacements()
     stk::topology::NODE_RANK, "mesh_displacement");
 
   VectorFieldType* meshVelocity =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
 
   std::vector<double> totDispNode(
     6, 0.0); // Total displacement at any node in (transX, transY, transZ, rotX,
