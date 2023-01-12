@@ -30,7 +30,7 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
   resize_arrays(actMeta);
   Kokkos::parallel_for(
     "ZeroArrays",
-    Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(
+    HostRangePolicy(
       0, actMeta.numPointsTotal_),
     [&](int index) {
       for (int j = 0; j < 3; j++) {
