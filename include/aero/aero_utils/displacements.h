@@ -15,8 +15,9 @@
 #include <aero/aero_utils/WienerMilenkovic.h>
 
 namespace aero {
-//! A struct to capture six degrees of freedom with a rotation and translation components called out as separate entities
-//! the rotations are expressed as WienerMilenkovic parameter
+//! A struct to capture six degrees of freedom with a rotation and translation
+//! components called out as separate entities the rotations are expressed as
+//! WienerMilenkovic parameter
 struct SixDOF
 {
   // Kind of dangeraous constructor
@@ -80,14 +81,16 @@ pitch_displacement_contribution(
   return rampPitchRot;
 }
 
-
-//! Convert a position relative to an aerodynamic point to the intertial coordinate system
+//! Convert a position relative to an aerodynamic point to the intertial
+//! coordinate system
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
-local_aero_coordinates(const vs::Vector inertialPos, const SixDOF aeroRefPosition){
+local_aero_coordinates(
+  const vs::Vector inertialPos, const SixDOF aeroRefPosition)
+{
   const auto shift = inertialPos - aeroRefPosition.translation_;
   return wmp::rotate(aeroRefPosition.rotation_, shift);
-} 
+}
 
 //! Convert one array of 6 deflections (transX, transY, transZ, wmX, wmY,
 //! wmZ) into one vector of translational displacement at a given node on the
@@ -95,12 +98,12 @@ local_aero_coordinates(const vs::Vector inertialPos, const SixDOF aeroRefPositio
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_translational_displacements(
-  const SixDOF deflections,
-  const SixDOF referencePos,
-  const vs::Vector cfdPos)
+  const SixDOF deflections, const SixDOF referencePos, const vs::Vector cfdPos)
 {
-  const localPos = local_aero_coordinates(cfdPos, referencePos);
-  // deflection roations need to be applied from the aerodynamic local frame of reference
+  const auto localPos = local_aero_coordinates(cfdPos, referencePos);
+  const auto delta = cfdPos - referencePos.translation_;
+  // deflection roations need to be applied from the aerodynamic local frame of
+  // reference
   const vs::Vector rotation =
     wmp::rotate(deflections.rotation_, localPos, true);
   return deflections.translation_ + rotation - delta;
