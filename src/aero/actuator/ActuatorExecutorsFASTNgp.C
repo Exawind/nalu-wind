@@ -57,15 +57,13 @@ ActuatorLineFastNGP::operator()()
 
   if (actMeta_.isotropicGaussian_) {
     Kokkos::parallel_for(
-      "spreadForcesActuatorNgpFAST",
-      HostRangePolicy(0, localSizeCoarseSearch),
+      "spreadForcesActuatorNgpFAST", HostRangePolicy(0, localSizeCoarseSearch),
       SpreadActuatorForce(actBulk_, stkBulk_));
   } else {
     RunActFastStashOrientVecs(actBulk_);
 
     Kokkos::parallel_for(
-      "spreadForceUsingProjDistance",
-      HostRangePolicy(0, localSizeCoarseSearch),
+      "spreadForceUsingProjDistance", HostRangePolicy(0, localSizeCoarseSearch),
       ActFastSpreadForceWhProjection(actBulk_, stkBulk_));
   }
 
