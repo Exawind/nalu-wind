@@ -104,6 +104,39 @@ TEST(
   }
 }
 
+TEST(AeroDisplacements, convert_to_local_coordiantes)
+{
+  const double tol = 1e-16;
+  const double eps = 0.1;
+  // refenence rotations to be assembled into one WienerMilenkovic param
+  const auto cone =
+    wmp::create_wm_param(vs::Vector::jhat(), utils::radians(5.0));
+  const auto rotation =
+    wmp::create_wm_param(vs::Vector::ihat(), utils::radians(25.0));
+  const auto yaw =
+    wmp::create_wm_param(vs::Vector::khat(), utils::radians(2.0));
+
+  const auto totalRotations = wmp::push(yaw, wmp::push(rotation, cone));
+
+  const vs::Vector initialPosition = {0.0, 0.0, 1.0};
+
+  const aero::SixDOF refPos(initialPosition, totalRotations);
+
+  // this would be like the position on the surface of an airfoil relative to
+  // it's aerodynamic coodinate system
+  const vs::Vector localPosGold = {eps, eps, eps};
+  // take the initialPosition and add the offset in the inertialFram i.e. undo
+  // rotations for converting from inertial to local
+  const auto inertialPos =
+    initialPosition + wmp::rotate(totalRotations, localPosGold, true);
+
+  const auto localPos = aero::local_aero_coordinates(inertialPos, refPos);
+
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_NEAR(localPosGold[i], localPos[i], tol) << "i: " << i;
+  }
+}
+
 TEST(
   AeroDisplacements,
   compute_translational_displacments_rotation_only_deflections)

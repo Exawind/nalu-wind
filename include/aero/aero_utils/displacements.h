@@ -80,6 +80,15 @@ pitch_displacement_contribution(
   return rampPitchRot;
 }
 
+
+//! Convert a position relative to an aerodynamic point to the intertial coordinate system
+KOKKOS_FORCEINLINE_FUNCTION
+vs::Vector
+local_aero_coordinates(const vs::Vector inertialPos, const SixDOF aeroRefPosition){
+  const auto shift = inertialPos - aeroRefPosition.translation_;
+  return wmp::rotate(aeroRefPosition.rotation_, shift);
+} 
+
 //! Convert one array of 6 deflections (transX, transY, transZ, wmX, wmY,
 //! wmZ) into one vector of translational displacement at a given node on the
 //! turbine surface CFD mesh.
@@ -90,10 +99,10 @@ compute_translational_displacements(
   const SixDOF referencePos,
   const vs::Vector cfdPos)
 {
-  const vs::Vector delta = cfdPos - referencePos.translation_;
-  const vs::Vector pointLocal = wmp::rotate(referencePos.rotation_, delta);
+  const localPos = local_aero_coordinates(cfdPos, referencePos);
+  // deflection roations need to be applied from the aerodynamic local frame of reference
   const vs::Vector rotation =
-    wmp::rotate(deflections.rotation_, pointLocal, true);
+    wmp::rotate(deflections.rotation_, localPos, true);
   return deflections.translation_ + rotation - delta;
 }
 
@@ -127,8 +136,7 @@ compute_mesh_velocity(
   const SixDOF referencePos,
   const vs::Vector cfdPos)
 {
-  const auto inertialFrame = cfdPos - referencePos.translation_;
-  const auto pointLocal = wmp::rotate(referencePos.rotation_, inertialFrame);
+  const auto pointLocal = local_aero_coordinates(cfdPos, referencePos);
   const auto pointRotate = wmp::rotate(totalDis.rotation_, pointLocal);
   return totalVel.translation_ + (totalVel.rotation_ ^ pointRotate);
 }
