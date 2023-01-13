@@ -1870,7 +1870,6 @@ fsiTurbine::mapDisplacements()
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
       auto oldxyz = vector_from_field(*modelCoords, node);
-      auto dx = vector_from_field(*displacement, node);
       int* dispMapNode = stk::mesh::field_data(*dispMap_, node);
       const int iN = 6 * (*dispMapNode);
       const int iNp1 = 6 * (*dispMapNode + 1);
@@ -1885,12 +1884,13 @@ fsiTurbine::mapDisplacements()
       // Now linearly interpolate the deflections to the intermediate location
       const auto twrStartDisp = aero::SixDOF(&brFSIdata_.twr_def[iN]);
       const auto twrEndDisp = aero::SixDOF(&brFSIdata_.twr_def[iNp1]);
-      const auto interpDisp = aero::linear_interp_total_displacement(
+      const auto deflection = aero::linear_interp_total_displacement(
         twrStartDisp, twrEndDisp, *dispMapInterpNode);
 
       // Now transfer the interpolated displacement to the CFD mesh node
-      dx =
-        aero::compute_translational_displacements(interpDisp, refPos, oldxyz);
+      vector_to_field(
+        aero::compute_translational_displacements(deflection, refPos, oldxyz),
+        *displacement, node);
     }
   }
 
@@ -1927,18 +1927,17 @@ fsiTurbine::mapDisplacements()
 
         // Now transfer the interpolated displacement to the CFD mesh node */
         auto oldxyz = vector_from_field(*modelCoords, node);
-        auto dx = vector_from_field(*displacement, node);
 
         vs::Vector root{
           brFSIdata_.bld_root_def[iBlade * 6 + 3],
           brFSIdata_.bld_root_def[iBlade * 6 + 4],
           brFSIdata_.bld_root_def[iBlade * 6 + 5]};
 
-        // TODO(psakiev) test that the field gets updated when wrapped in a
-        // vs::Vector, test this function for correctness
-        dx = aero::compute_translational_displacements(
-          interpDisp, refPos, oldxyz, root, brFSIdata_.bld_pitch[iBlade],
-          brFSIdata_.bld_rloc[*dispMapNode + iStart]);
+        vector_to_field(
+          aero::compute_translational_displacements(
+            interpDisp, refPos, oldxyz, root, brFSIdata_.bld_pitch[iBlade],
+            brFSIdata_.bld_rloc[*dispMapNode + iStart]),
+          *displacement, node);
       }
     }
     iStart += nPtsBlade;
@@ -1952,12 +1951,12 @@ fsiTurbine::mapDisplacements()
       auto node = (*b)[in];
 
       auto oldxyz = vector_from_field(*modelCoords, node);
-      auto dx = vector_from_field(*displacement, node);
       const aero::SixDOF refPos(brFSIdata_.hub_ref_pos.data());
       const aero::SixDOF deflection(brFSIdata_.hub_def.data());
       // Now transfer the displacement to the CFD mesh node
-      dx =
-        aero::compute_translational_displacements(deflection, refPos, oldxyz);
+      vector_to_field(
+        aero::compute_translational_displacements(deflection, refPos, oldxyz),
+        *displacement, node);
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
@@ -1977,10 +1976,10 @@ fsiTurbine::mapDisplacements()
       auto oldxyz = vector_from_field(*modelCoords, node);
       const aero::SixDOF refPos(brFSIdata_.nac_ref_pos.data());
       const aero::SixDOF deflection(brFSIdata_.nac_def.data());
-      auto dx = vector_from_field(*displacement, node);
       // Now transfer the displacement to the CFD mesh node
-      dx =
-        aero::compute_translational_displacements(deflection, refPos, oldxyz);
+      vector_to_field(
+        aero::compute_translational_displacements(deflection, refPos, oldxyz),
+        *displacement, node);
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node

@@ -58,29 +58,6 @@ linear_interp_total_velocity(
   return SixDOF(transDisp, rotDisp);
 }
 
-//! Implementation of a pitch deformation strategy that ramps to the true
-//! applied pitch with a hyperbolic tangent
-KOKKOS_FORCEINLINE_FUNCTION
-vs::Vector
-pitch_displacement_contribution(
-  const vs::Vector distance,
-  const vs::Vector root,
-  const double pitch,
-  const double rLocation,
-  const double rampFactor = 2.0)
-{
-  // TODO(psakievi) get a good unit test to test this out with gantech
-  const auto globZ = wmp::rotate(root, vs::Vector::khat(), false);
-
-  const double rampPitch = pitch *
-                           (1.0 - stk::math::exp(-rampFactor * rLocation)) /
-                           (1.0 + stk::math::exp(-rampFactor * rLocation));
-
-  const auto pitchRotWM = wmp::create_wm_param(globZ, rampPitch);
-  const auto rampPitchRot = wmp::rotate(pitchRotWM, distance);
-  return rampPitchRot;
-}
-
 //! Convert a position relative to an aerodynamic point to the intertial
 //! coordinate system
 KOKKOS_FORCEINLINE_FUNCTION
@@ -109,6 +86,9 @@ compute_translational_displacements(
   return deflections.translation_ + rotation - delta;
 }
 
+// TODO(psakiev) this function is a place holder for when we need to add pitch
+// in the next PR
+//
 //! Accounting for pitch, convert one array of 6 deflections (transX, transY,
 //! transZ, wmX, wmY, wmZ) into one vector of translational displacement at a
 //! given node on the turbine surface CFD mesh.
@@ -118,14 +98,11 @@ compute_translational_displacements(
   const SixDOF deflections,
   const SixDOF referencePos,
   const vs::Vector cfdPos,
-  const vs::Vector root,
-  const double pitch,
-  const double rLoc)
+  const vs::Vector /*root*/,
+  const double /*pitch*/,
+  const double /*rLoc*/)
 {
-  auto disp =
-    compute_translational_displacements(deflections, referencePos, cfdPos);
-  return disp + pitch_displacement_contribution(
-                  cfdPos - referencePos.translation_, root, pitch, rLoc);
+  return compute_translational_displacements(deflections, referencePos, cfdPos);
 }
 
 //! Convert one array of 6 velocities (transX, transY, transZ, wmX, wmY, wmZ)

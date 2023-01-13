@@ -26,6 +26,7 @@ typedef stk::mesh::Field<int, stk::mesh::SimpleArrayTag> GenericIntFieldType;
 
 // TODO(psakiev) find a better place for this
 // **********************************************************************
+//! convenience function for generating a vs::Vector from a stk::field
 template <typename T, typename P>
 inline vs::VectorT<T>
 vector_from_field(stk::mesh::Field<T, P>& field, const stk::mesh::Entity& node)
@@ -35,6 +36,19 @@ vector_from_field(stk::mesh::Field<T, P>& field, const stk::mesh::Entity& node)
   assert(field.type_is<T>());
   T* ptr = stk::mesh::field_data(field, node);
   return {ptr[0], ptr[1], ptr[2]};
+}
+//! convenience function for putting vector computations back onto the stk::fields
+template <typename T, typename P>
+inline void
+vector_to_field(vs::VectorT<T> vec, stk::mesh::Field<T, P>& field, const stk::mesh::Entity& node)
+{
+  // debug only check for optimization
+  assert(field.entity_rank() == 3);
+  assert(field.type_is<T>());
+  T* ptr = stk::mesh::field_data(field, node);
+  for(int i=0; i<3; ++i){
+    ptr[i] = vec[i];
+  }
 }
 // **********************************************************************
 
