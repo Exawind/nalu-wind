@@ -10,33 +10,63 @@
 #ifndef DISPLACEMENTS_H_
 #define DISPLACEMENTS_H_
 
+#include "vs/vector.h"
+#include <Kokkos_Macros.hpp>
 #include <aero/aero_utils/WienerMilenkovic.h>
 
 namespace aero {
+//! A struct to capture six degrees of freedom with a rotation and translation
+//! components called out as separate entities the rotations are expressed as
+//! WienerMilenkovic parameter
+struct SixDOF
+{
+  // Kind of dangeraous constructor
+  SixDOF(double* vec)
+    : translation_({vec[0], vec[1], vec[2]}),
+      rotation_({vec[3], vec[4], vec[5]})
+  {
+  }
+  SixDOF(vs::Vector transDisp, vs::Vector rotDisp)
+    : translation_(transDisp), rotation_(rotDisp)
+  {
+  }
+  vs::Vector translation_;
+  vs::Vector rotation_;
+};
 
-//! Implementation of a pitch deformation strategy that ramps to the true
-//! applied pitch with a hyperbolic tangent
+KOKKOS_FORCEINLINE_FUNCTION
+SixDOF
+linear_interp_total_displacement(
+  const SixDOF start, const SixDOF end, const double interpFactor)
+{
+  auto transDisp = wmp::linear_interp_translation(
+    start.translation_, end.translation_, interpFactor);
+  auto rotDisp =
+    wmp::linear_interp_rotation(start.rotation_, end.rotation_, interpFactor);
+  return SixDOF(transDisp, rotDisp);
+}
+
+KOKKOS_FORCEINLINE_FUNCTION
+SixDOF
+linear_interp_total_velocity(
+  const SixDOF start, const SixDOF end, const double interpFactor)
+{
+  auto transDisp = wmp::linear_interp_translation(
+    start.translation_, end.translation_, interpFactor);
+  auto rotDisp = wmp::linear_interp_translation(
+    start.translation_, end.translation_, interpFactor);
+  return SixDOF(transDisp, rotDisp);
+}
+
+//! Convert a position relative to an aerodynamic point to the intertial
+//! coordinate system
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
-pitch_displacement_contribution(
-  const vs::Vector distance,
-  const vs::Vector root,
-  const double pitch,
-  const double rLocation,
-  const double rampFactor = 2.0)
+local_aero_coordinates(
+  const vs::Vector inertialPos, const SixDOF aeroRefPosition)
 {
-  const auto globZ = wmp::rotate(root, vs::Vector::khat());
-  auto pitchRotWM = wmp::create_wm_param(globZ, pitch);
-
-  const auto pitchRot = wmp::rotate(pitchRotWM, distance);
-
-  const double rampPitch = pitch *
-                           (1.0 - stk::math::exp(-rampFactor * rLocation)) /
-                           (1.0 + stk::math::exp(-rampFactor * rLocation));
-
-  pitchRotWM = pitch_wm(rampPitch, globZ);
-  const auto rampPitchRot = wmp::rotate(pitchRotWM, distance);
-  return rampPitchRot - pitchRot;
+  const auto shift = inertialPos - aeroRefPosition.translation_;
+  return wmp::rotate(aeroRefPosition.rotation_, shift);
 }
 
 //! Convert one array of 6 deflections (transX, transY, transZ, wmX, wmY,
@@ -45,34 +75,50 @@ pitch_displacement_contribution(
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_translational_displacements(
-  const vs::Vector cfdPos,
-  const vs::Vector totalPosOffset,
-  const vs::Vector totDispNode)
+  const SixDOF deflections, const SixDOF referencePos, const vs::Vector cfdPos)
 {
-
-  const vs::Vector distance = cfdPos - totalPosOffset;
-  const vs::Vector pointLocal = wmp::rotate(totalPosOffset, distance);
-  const vs::Vector rotation = wmp::rotate(totDispNode, pointLocal, true);
-  return totDispNode + rotation - distance;
+  const auto localPos = local_aero_coordinates(cfdPos, referencePos);
+  const auto delta = cfdPos - referencePos.translation_;
+  // deflection roations need to be applied from the aerodynamic local frame of
+  // reference
+  const vs::Vector rotation =
+    wmp::rotate(deflections.rotation_, localPos, true);
+  return deflections.translation_ + rotation - delta;
 }
 
+// TODO(psakiev) this function is a place holder for when we need to add pitch
+// in the next PR
+//
 //! Accounting for pitch, convert one array of 6 deflections (transX, transY,
 //! transZ, wmX, wmY, wmZ) into one vector of translational displacement at a
 //! given node on the turbine surface CFD mesh.
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_translational_displacements(
+  const SixDOF deflections,
+  const SixDOF referencePos,
   const vs::Vector cfdPos,
-  const vs::Vector totalPosOffset,
-  const vs::Vector totDispNode,
-  const vs::Vector root,
-  const double pitch,
-  const double rLoc)
+  const vs::Vector /*root*/,
+  const double /*pitch*/,
+  const double /*rLoc*/)
 {
-  auto disp =
-    compute_translational_displacements(cfdPos, totalPosOffset, totDispNode);
-  return disp + pitch_displacement_contribution(
-                  cfdPos - totalPosOffset, root, pitch, rLoc);
+  return compute_translational_displacements(deflections, referencePos, cfdPos);
+}
+
+//! Convert one array of 6 velocities (transX, transY, transZ, wmX, wmY, wmZ)
+//! into one vector of translational velocity at a given node on the turbine
+//! surface CFD mesh.
+KOKKOS_FORCEINLINE_FUNCTION
+vs::Vector
+compute_mesh_velocity(
+  const SixDOF totalVel,
+  const SixDOF totalDis,
+  const SixDOF referencePos,
+  const vs::Vector cfdPos)
+{
+  const auto pointLocal = local_aero_coordinates(cfdPos, referencePos);
+  const auto pointRotate = wmp::rotate(totalDis.rotation_, pointLocal);
+  return totalVel.translation_ + (totalVel.rotation_ ^ pointRotate);
 }
 
 } // namespace aero

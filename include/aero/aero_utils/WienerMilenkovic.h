@@ -125,6 +125,32 @@ pop(const vs::Vector param, const vs::Vector stack)
   return compose(param, stack, true);
 }
 
+/* Linearly interpolate the Wiener-Milenkovic parameters between 'qStart' and
+   'qEnd' with an interpolating factor 'interpFac' see
+   O.A.Bauchau, 2011, Flexible Multibody Dynamics p. 649, section 17.2,
+   Algorithm 1'
+*/
+KOKKOS_FORCEINLINE_FUNCTION
+vs::Vector
+linear_interp_rotation(
+  const vs::Vector qStart, const vs::Vector qEnd, const double interpFac)
+{
+  return compose(interpFac * compose(qStart, qEnd, true), qStart);
+
+  // remove rigid body rotation
+  auto qIntermediate = pop(qStart, qEnd);
+  qIntermediate *= interpFac;
+  return push(qIntermediate, qStart);
+}
+
+KOKKOS_FORCEINLINE_FUNCTION
+vs::Vector
+linear_interp_translation(
+  const vs::Vector qStart, const vs::Vector qEnd, const double interpFac)
+{
+  return qStart + interpFac * (qEnd - qStart);
+}
+
 } // namespace wmp
 
 #endif

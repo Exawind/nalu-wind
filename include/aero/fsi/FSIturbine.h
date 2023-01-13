@@ -1,5 +1,5 @@
-#ifndef FSITURBINEN_H
-#define FSITURBINEN_H
+#ifndef FSITURBINE_H
+#define FSITURBINE_H
 
 #include "OpenFAST.H"
 
@@ -7,27 +7,54 @@
 
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/BulkData.hpp"
-
-#include "stk_mesh/base/MetaData.hpp"
-#include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/Field.hpp"
+#include "FieldTypeDef.h"
 
 #include <vector>
 #include <string>
 #include <array>
 
 #include "yaml-cpp/yaml.h"
+#include "vs/vector_space.h"
 
 namespace sierra {
 
 namespace nalu {
 
-typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
-typedef stk::mesh::Field<double> ScalarFieldType;
-typedef stk::mesh::Field<int> ScalarIntFieldType;
-typedef stk::mesh::Field<double, stk::mesh::SimpleArrayTag> GenericFieldType;
 typedef stk::mesh::Field<int, stk::mesh::SimpleArrayTag> GenericIntFieldType;
+
+// TODO(psakiev) find a better place for this
+// **********************************************************************
+//! convenience function for generating a vs::Vector from a stk::field
+template <typename T, typename P>
+inline vs::VectorT<T>
+vector_from_field(stk::mesh::Field<T, P>& field, const stk::mesh::Entity& node)
+{
+  // debug only check for optimization
+  assert(field.entity_rank() == 3);
+  assert(field.type_is<T>());
+  T* ptr = stk::mesh::field_data(field, node);
+  return {ptr[0], ptr[1], ptr[2]};
+}
+//! convenience function for putting vector computations back onto the
+//! stk::fields
+template <typename T, typename P>
+inline void
+vector_to_field(
+  vs::VectorT<T> vec,
+  stk::mesh::Field<T, P>& field,
+  const stk::mesh::Entity& node)
+{
+  // debug only check for optimization
+  assert(field.entity_rank() == 3);
+  assert(field.type_is<T>());
+  T* ptr = stk::mesh::field_data(field, node);
+  for (int i = 0; i < 3; ++i) {
+    ptr[i] = vec[i];
+  }
+}
+// **********************************************************************
 
 class fsiTurbine
 {
