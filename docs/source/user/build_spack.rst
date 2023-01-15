@@ -229,3 +229,7 @@ Inside the container you can directly install Nalu-Wind with spack:
 ::
 
    spack install nalu-wind
+   
+ `Spack-Manager <https://github.com/sandialabs/spack-manager>`_ is used generate the container and is pre-installed in the container.  Additional development of the code can be done through the Spack-Manager's developer tools.  A quick-start guide for these tools is available `here <https://sandialabs.github.io/spack-manager/user_profiles/developers/developer_workflow.html>`_.  This workflow is how the CI builds are generated in GitHub actions.
+ 
+If you are uncomfortable using spack for development then you can also set up your own build workflow in more of a "roll-your-own" development environment using CMake and just utilize the pre-installed TPL's that are available in the container through spack.  This really comes down to your development preferences and your comfort level with CMake.
