@@ -183,8 +183,6 @@ TEST(AeroDisplacements, convert_to_local_coordiantes)
   }
 }
 
-TEST(AeroDisplacements, compute_blade_specific_displacements) {}
-
 TEST(
   AeroDisplacements,
   compute_translational_displacments_rotation_only_deflections)
