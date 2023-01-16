@@ -26,13 +26,33 @@ struct SixDOF
       rotation_({vec[3], vec[4], vec[5]})
   {
   }
+
   SixDOF(vs::Vector transDisp, vs::Vector rotDisp)
     : translation_(transDisp), rotation_(rotDisp)
   {
   }
+
   vs::Vector translation_;
   vs::Vector rotation_;
 };
+
+KOKKOS_FORCEINLINE_FUNCTION
+SixDOF
+operator+(const SixDOF& a, const SixDOF& b)
+{
+  // adding b to a, so pushing b wmp onto a stack
+  return SixDOF(
+    a.translation_ + b.translation_, wmp::push(b.rotation_, a.rotation_));
+}
+
+KOKKOS_FORCEINLINE_FUNCTION
+SixDOF
+operator-(const SixDOF& a, const SixDOF& b)
+{
+  // subtracting b from a, so poping b from the a stack
+  return SixDOF(
+    a.translation_ - b.translation_, wmp::pop(b.rotation_, a.rotation_));
+}
 
 KOKKOS_FORCEINLINE_FUNCTION
 SixDOF

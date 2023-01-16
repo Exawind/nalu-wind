@@ -12,6 +12,21 @@
 #include <aero/aero_utils/displacements.h>
 
 namespace test_displacements {
+//! Test that two WM Params give the same end location for a point
+void
+test_wiener_milenkovic(
+  vs::Vector goldWmp, vs::Vector testWmp, vs::Vector testPoint, double eps)
+{
+  auto goldPnt = wmp::rotate(goldWmp, testPoint);
+  auto testPnt = wmp::rotate(testWmp, testPoint);
+  EXPECT_NEAR(goldPnt.x(), testPnt.x(), eps)
+    << "Gold WMP: " << goldWmp << " testWmp: " << testWmp;
+  EXPECT_NEAR(goldPnt.y(), testPnt.y(), eps)
+    << "Gold WMP: " << goldWmp << " testWmp: " << testWmp;
+  EXPECT_NEAR(goldPnt.z(), testPnt.z(), eps)
+    << "Gold WMP: " << goldWmp << " testWmp: " << testWmp;
+}
+
 TEST(AeroDisplacements, creation_from_pointer)
 {
   std::vector<double> openfastSurrogate(6, 1.0);
@@ -31,19 +46,50 @@ TEST(AeroDisplacements, creation_from_vs_vector)
   }
 }
 
-//! Test that two WM Params give the same end location for a point
-void
-test_wiener_milenkovic(
-  vs::Vector goldWmp, vs::Vector testWmp, vs::Vector testPoint, double eps)
+TEST(AeroDisplacements, add_six_dof_together)
 {
-  auto goldPnt = wmp::rotate(goldWmp, testPoint);
-  auto testPnt = wmp::rotate(testWmp, testPoint);
-  EXPECT_NEAR(goldPnt.x(), testPnt.x(), eps)
-    << "Gold WMP: " << goldWmp << " testWmp: " << testWmp;
-  EXPECT_NEAR(goldPnt.y(), testPnt.y(), eps)
-    << "Gold WMP: " << goldWmp << " testWmp: " << testWmp;
-  EXPECT_NEAR(goldPnt.z(), testPnt.z(), eps)
-    << "Gold WMP: " << goldWmp << " testWmp: " << testWmp;
+  const auto dispA = vs::Vector::ihat();
+  const auto dispB = vs::Vector::khat();
+
+  const auto orientA =
+    wmp::create_wm_param(vs::Vector::jhat(), utils::radians(15.0));
+  const auto orientB =
+    wmp::create_wm_param(vs::Vector::ihat(), utils::radians(15.0));
+
+  const aero::SixDOF a(dispA, orientA);
+  const aero::SixDOF b(dispB, orientB);
+
+  const auto c = a + b;
+
+  const auto goldTrans = dispA + dispB;
+  // adding b to a, so pushing b wmp onto a stack
+  const auto goldRot = wmp::push(orientB, orientA);
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_DOUBLE_EQ(goldTrans[i], c.translation_[i]) << i;
+  }
+  test_wiener_milenkovic(goldRot, c.rotation_, vs::Vector::one(), 1e-12);
+}
+
+TEST(AeroDisplacements, subtract_six_dof)
+{
+  const auto dispA = vs::Vector::ihat();
+  const auto dispB = vs::Vector::khat();
+
+  const auto orientA =
+    wmp::create_wm_param(vs::Vector::jhat(), utils::radians(15.0));
+  const auto orientB =
+    wmp::create_wm_param(vs::Vector::ihat(), utils::radians(15.0));
+
+  const aero::SixDOF a(dispA, orientA);
+  const aero::SixDOF b(dispB, orientB);
+
+  const auto c = a - b;
+  const auto goldTrans = dispA - dispB;
+  const auto goldRot = wmp::pop(orientB, orientA);
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_DOUBLE_EQ(goldTrans[i], c.translation_[i]) << i;
+  }
+  test_wiener_milenkovic(goldRot, c.rotation_, vs::Vector::one(), 1e-12);
 }
 
 // Test displacements interpolation along the (1,0,0) axis, and for rotations
@@ -136,6 +182,8 @@ TEST(AeroDisplacements, convert_to_local_coordiantes)
     EXPECT_NEAR(localPosGold[i], localPos[i], tol) << "i: " << i;
   }
 }
+
+TEST(AeroDisplacements, compute_blade_specific_displacements) {}
 
 TEST(
   AeroDisplacements,
