@@ -18,7 +18,7 @@ namespace fsi {
 //! compute displacements from the net motions of the hub (including rotations)
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
-translational_displacements_from_hub_motion(
+translation_displacements_from_hub_motion(
   const aero::SixDOF& hubRef,
   const aero::SixDOF& hubDisp,
   const aero::SixDOF& bladeRef)
@@ -42,9 +42,13 @@ orientation_displacments_from_hub_motion(
   const aero::SixDOF& rootDisp,
   const aero::SixDOF& bladeRef)
 {
+  // subtract reference root orientation from the blade reference orientation,
+  // and then rotate the blade orientation so it is in the root frame of
+  // reference
   const auto rootRelativeRefOrientation = wmp::rotate(
     rootRef.orientation_,
     wmp::pop(rootRef.orientation_, bladeRef.orientation_));
+  // add orientation displacements at the root
   const auto rootRelativeTwist =
     wmp::rotate(rootDisp.orientation_, rootRelativeRefOrientation, true);
   // apply twist first and then rotate out of root reference frame
@@ -61,10 +65,9 @@ displacements_from_hub_motion(
   const aero::SixDOF& bladeRef)
 {
   return aero::SixDOF(
-    translational_displacements_from_hub_motion(hubRef, hubDisp, bladeRef),
+    translation_displacements_from_hub_motion(hubRef, hubDisp, bladeRef),
     orientation_displacments_from_hub_motion(rootRef, rootDisp, bladeRef));
 }
 
 } // namespace fsi
-
 #endif

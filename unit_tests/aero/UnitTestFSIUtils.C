@@ -19,7 +19,7 @@ TEST(FSIUtils, translational_component_from_blade_rotation_displacement)
   const SixDOF hubReference(
     vs::Vector::one(), wmp::create_wm_param(vs::Vector::khat(), M_PI));
 
-  // blade point of reference is (1,1, 2), and twisted 45 degrees relative to
+  // blade point of reference is (1,1,2), and twisted 45 degrees relative to
   // hub
   const SixDOF bladeReference(
     vs::Vector(1.0, 1.0, 2.0),
@@ -34,7 +34,7 @@ TEST(FSIUtils, translational_component_from_blade_rotation_displacement)
   const auto goldRotationDisp = newPosition - bladeReference.position_;
 
   const auto bldCurRelativeToHub =
-    fsi::translational_displacements_from_hub_motion(
+    fsi::translation_displacements_from_hub_motion(
       hubReference, hubDisp, bladeReference);
 
   EXPECT_DOUBLE_EQ(goldRotationDisp.x(), bldCurRelativeToHub.x());

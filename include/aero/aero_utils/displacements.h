@@ -20,7 +20,7 @@ namespace aero {
 //! WienerMilenkovic parameter
 struct SixDOF
 {
-  // Kind of dangeraous constructor
+  // Kind of dangerous constructor
   SixDOF(double* vec)
     : position_({vec[0], vec[1], vec[2]}),
       orientation_({vec[3], vec[4], vec[5]})
@@ -49,7 +49,7 @@ KOKKOS_FORCEINLINE_FUNCTION
 SixDOF
 operator-(const SixDOF& a, const SixDOF& b)
 {
-  // subtracting b from a, so poping b from the a stack
+  // subtracting b from a, so popping b from the a stack
   return SixDOF(
     a.position_ - b.position_, wmp::pop(b.orientation_, a.orientation_));
 }
