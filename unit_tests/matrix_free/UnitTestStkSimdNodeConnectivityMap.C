@@ -10,7 +10,7 @@
 #include "matrix_free/StkSimdNodeConnectivityMap.h"
 #include "matrix_free/NodeOrderMap.h"
 
-#include <Kokkos_View.hpp>
+#include <Kokkos_Core.hpp>
 #include <stk_io/IossBridge.hpp>
 #include <string>
 #include <vector>

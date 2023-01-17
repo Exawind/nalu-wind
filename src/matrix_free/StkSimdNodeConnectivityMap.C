@@ -19,8 +19,6 @@
 #include "stk_topology/topology.hpp"
 
 #include <KokkosInterface.h>
-#include "Kokkos_Macros.hpp"
-#include "Kokkos_Parallel.hpp"
 
 namespace sierra {
 namespace nalu {

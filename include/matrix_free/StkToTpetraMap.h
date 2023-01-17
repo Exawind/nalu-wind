@@ -12,7 +12,7 @@
 
 #include "matrix_free/LinSysInfo.h"
 
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Tpetra_Map.hpp"
 #include "Tpetra_MultiVector.hpp"

@@ -15,7 +15,6 @@
 #include <KokkosInterface.h>
 #include <FieldTypeDef.h>
 
-#include <Kokkos_DefaultNode.hpp>
 #include <Tpetra_MultiVector.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 

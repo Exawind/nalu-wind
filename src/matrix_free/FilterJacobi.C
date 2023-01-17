@@ -20,8 +20,6 @@
 #include "Tpetra_MultiVector.hpp"
 
 #include <KokkosInterface.h>
-#include "Kokkos_Macros.hpp"
-#include "Kokkos_Parallel.hpp"
 
 #include <type_traits>
 

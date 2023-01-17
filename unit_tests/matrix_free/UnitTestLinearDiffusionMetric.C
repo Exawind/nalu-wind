@@ -11,9 +11,7 @@
 #include "matrix_free/LobattoQuadratureRule.h"
 #include "StkSimdComparisons.h"
 
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Parallel.hpp>
-#include <Kokkos_View.hpp>
+#include <Kokkos_Core.hpp>
 #include <stk_simd/Simd.hpp>
 
 #include "matrix_free/KokkosViewTypes.h"

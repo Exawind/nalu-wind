@@ -17,8 +17,6 @@
 #include "matrix_free/StkSimdNodeConnectivityMap.h"
 
 #include <KokkosInterface.h>
-#include "Kokkos_Array.hpp"
-#include "Kokkos_View.hpp"
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"

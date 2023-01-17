@@ -17,8 +17,6 @@
 #include "matrix_free/ValidSimdLength.h"
 
 #include <KokkosInterface.h>
-#include "Kokkos_ExecPolicy.hpp"
-#include "Kokkos_Macros.hpp"
 #include "Kokkos_ScatterView.hpp"
 
 #include "stk_mesh/base/NgpProfilingBlock.hpp"

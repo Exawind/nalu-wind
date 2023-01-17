@@ -13,7 +13,7 @@
 #include <LinearSolverTypes.h>
 #include <LinearSolverConfig.h>
 
-#include <Kokkos_DefaultNode.hpp>
+#include <Kokkos_Core.hpp>
 #include <Tpetra_Details_DefaultTypes.hpp>
 #include <Tpetra_Vector.hpp>
 #include <Tpetra_CrsMatrix.hpp>
