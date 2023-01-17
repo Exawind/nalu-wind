@@ -51,7 +51,6 @@
 #include <stk_mesh/base/NgpMesh.hpp>
 
 // For Tpetra support
-#include <Kokkos_Serial.hpp>
 #include <Teuchos_ArrayRCP.hpp>
 #include <Teuchos_DefaultMpiComm.hpp>
 #include <Teuchos_OrdinalTraits.hpp>

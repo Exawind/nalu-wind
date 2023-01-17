@@ -17,8 +17,6 @@
 #include "matrix_free/ShuffledAccess.h"
 
 #include <KokkosInterface.h>
-#include "Kokkos_Macros.hpp"
-#include "Kokkos_View.hpp"
 
 namespace sierra {
 namespace nalu {

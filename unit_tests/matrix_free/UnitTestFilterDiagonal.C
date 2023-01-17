@@ -9,11 +9,7 @@
 
 #include "matrix_free/FilterDiagonal.h"
 
-#include "Kokkos_Array.hpp"
-#include "Kokkos_CopyViews.hpp"
-#include "Kokkos_Macros.hpp"
-#include "Kokkos_Parallel.hpp"
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 #include "Teuchos_ArrayView.hpp"
 #include "Teuchos_DefaultMpiComm.hpp"
 #include "Teuchos_OrdinalTraits.hpp"

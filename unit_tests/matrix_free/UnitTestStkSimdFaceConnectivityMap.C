@@ -12,10 +12,7 @@
 #include "matrix_free/StkSimdFaceConnectivityMap.h"
 #include "matrix_free/ValidSimdLength.h"
 
-#include "Kokkos_CopyViews.hpp"
-#include "Kokkos_HostSpace.hpp"
-#include "Kokkos_Parallel.hpp"
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 
 #include "stk_io/IossBridge.hpp"
 #include "stk_mesh/base/BulkData.hpp"

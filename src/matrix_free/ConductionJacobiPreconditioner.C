@@ -15,12 +15,10 @@
 #include "matrix_free/StrongDirichletBC.h"
 
 #include <KokkosInterface.h>
-#include <Kokkos_Parallel.hpp>
 
 #include <Teuchos_RCP.hpp>
 #include <Tpetra_CombineMode.hpp>
 #include "Tpetra_Operator.hpp"
-#include <KokkosInterface.h>
 #include <type_traits>
 
 namespace sierra {

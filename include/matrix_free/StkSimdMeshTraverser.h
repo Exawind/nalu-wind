@@ -11,7 +11,6 @@
 #define STK_SIMD_MESH_TRAVERSER_H
 
 #include <KokkosInterface.h>
-#include <Kokkos_View.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/Selector.hpp>
 
