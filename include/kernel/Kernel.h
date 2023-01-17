@@ -16,9 +16,7 @@
 #include "AlgTraits.h"
 #include "NGPInstance.h"
 
-#include <Kokkos_CopyViews.hpp>
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Parallel.hpp>
+#include <Kokkos_Core.hpp>
 
 #include <stk_mesh/base/Entity.hpp>
 

@@ -19,7 +19,7 @@
 #include "matrix_free/StkToTpetraMap.h"
 
 #include "stk_mesh/base/MetaData.hpp"
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Tpetra_Export.hpp"
 #include "Tpetra_Map.hpp"

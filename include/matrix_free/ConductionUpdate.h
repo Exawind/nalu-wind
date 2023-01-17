@@ -16,8 +16,7 @@
 #include "matrix_free/LinSysInfo.h"
 #include "matrix_free/StkToTpetraMap.h"
 
-#include "Kokkos_Array.hpp"
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 
 #include "Teuchos_RCP.hpp"
 #include "Tpetra_Export.hpp"

@@ -36,10 +36,7 @@
 #include "user_functions/SinProfileChannelFlowVelocityAuxFunction.h"
 #include "utils/StkHelpers.h"
 
-#include "Kokkos_Array.hpp"
-#include "Kokkos_Macros.hpp"
-#include "Kokkos_Parallel.hpp"
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 #include "Teuchos_RCP.hpp"
 
 #include "stk_mesh/base/Field.hpp"

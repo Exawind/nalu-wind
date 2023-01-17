@@ -12,7 +12,7 @@
 
 #include "matrix_free/PolynomialOrders.h"
 
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 #include "Teuchos_RCP.hpp"
 
 #include "Tpetra_CrsMatrix.hpp"

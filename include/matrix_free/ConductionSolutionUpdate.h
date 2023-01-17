@@ -15,8 +15,7 @@
 #include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/MatrixFreeSolver.h"
 
-#include "Kokkos_Array.hpp"
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 #include "Tpetra_Export.hpp"
 #include "Tpetra_Map.hpp"
 

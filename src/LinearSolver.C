@@ -26,8 +26,7 @@
 #include <BelosTpetraAdapter.hpp>
 
 #include <Ifpack2_Factory.hpp>
-#include <Kokkos_DefaultNode.hpp>
-#include <Kokkos_Serial.hpp>
+#include <Kokkos_Core.hpp>
 #include <Teuchos_ArrayRCP.hpp>
 #include <Teuchos_DefaultMpiComm.hpp>
 #include <Teuchos_OrdinalTraits.hpp>

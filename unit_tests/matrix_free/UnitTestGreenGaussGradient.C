@@ -19,7 +19,7 @@
 #include "matrix_free/StkToTpetraMap.h"
 
 #include "gtest/gtest.h"
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 #include "Teuchos_Array.hpp"
 #include "Teuchos_ArrayView.hpp"
 #include "Teuchos_ParameterList.hpp"

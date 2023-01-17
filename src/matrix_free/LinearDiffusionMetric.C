@@ -18,8 +18,6 @@
 #include "matrix_free/PolynomialOrders.h"
 
 #include <KokkosInterface.h>
-#include "Kokkos_Macros.hpp"
-#include "Kokkos_View.hpp"
 
 namespace sierra {
 namespace nalu {
