@@ -112,5 +112,4 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelExecute)
   EXPECT_EQ(1u, assembleElemSolverAlg->activeKernels_.size());
 
   helperObjs.execute();
-std::cout<<"end of test comm: "<<bulk->parallel()<<std::endl;
 }
