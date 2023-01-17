@@ -91,8 +91,6 @@ protected:
       coordField(nullptr),
       exactLaplacian(0.0)
   {
-std::cout<<"comm: "<<comm<<std::endl;
-std::cout<<"MPI_COMM_WORLD: "<<MPI_COMM_WORLD<<std::endl;
     stk::mesh::MeshBuilder meshBuilder(comm);
     meshBuilder.set_spatial_dimension(spatialDimension);
     bulk = meshBuilder.create();

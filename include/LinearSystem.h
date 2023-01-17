@@ -146,7 +146,7 @@ public:
   {
   }
 
-  virtual void free_coeff_applier(CoeffApplier*) {printf("shouldn't be here!\n");}
+  virtual void free_coeff_applier(CoeffApplier*) {}
 
   // Matrix Assembly
   virtual void zeroSystem() = 0;
