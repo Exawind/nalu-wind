@@ -40,10 +40,6 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
     meta, (useAverages) ? "average_mass_flow_rate" : "mass_flow_rate",
     stk::topology::EDGE_RANK);
   density_ = get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1);
-  velocity_ = (get_field_ordinal(
-      realm.meta_data(),
-      realm.has_mesh_motion() && !realm.has_mesh_deformation() ? "velocity_rtm"
-                                                               : "velocity"));
 }
 
 void
@@ -72,7 +68,6 @@ VOFAdvectionEdgeAlg::execute()
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
   const auto density = fieldMgr.get_field<double>(density_);
-  const auto velocity = fieldMgr.get_field<double>(velocity_);
 
   run_algorithm(
     realm_.bulk_data(),
@@ -84,11 +79,9 @@ VOFAdvectionEdgeAlg::execute()
       // Scratch work array for edgeAreaVector 
       NALU_ALIGNED DblType av[NDimMax_];
 
-      NALU_ALIGNED DblType vn = 0.0;
       // Populate area vector work array
       for (int d = 0; d < ndim; ++d) {
         av[d] = edgeAreaVec.get(edge, d);
-        vn += av[d]*0.5*(velocity.get(nodeL,d) + velocity.get(nodeR,d));
       }
 
       const DblType mdot = massFlowRate.get(edge, 0);
