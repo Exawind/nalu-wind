@@ -12,6 +12,7 @@
 
 #include "AssembleEdgeSolverAlgorithm.h"
 #include "PecletFunction.h"
+#include <stk_mesh/base/Types.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -38,6 +39,8 @@ private:
   unsigned dqdx_{stk::mesh::InvalidOrdinal};
   unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
   unsigned massFlowRate_{stk::mesh::InvalidOrdinal};
+  unsigned density_{stk::mesh::InvalidOrdinal};
+  unsigned velocity_{stk::mesh::InvalidOrdinal};
 };
 
 } // namespace nalu

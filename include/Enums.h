@@ -150,6 +150,7 @@ enum MaterialPropertyType {
   HDF5_TABLE_MAT = 6,
   IDEAL_GAS_YK_MAT = 7,
   GENERIC = 8,
+  VOF_MAT = 9,
   MaterialPropertyType_END
 };
 

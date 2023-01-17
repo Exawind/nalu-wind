@@ -73,6 +73,8 @@ private:
 
   MasterElement* meFC_{nullptr};
   MasterElement* meSCS_{nullptr};
+
+  const DoubleType solveInc_;
 };
 
 } // namespace nalu

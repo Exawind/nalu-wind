@@ -40,6 +40,10 @@
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
 #include "stk_topology/topology.hpp"
 #include "user_functions/ZalesakDiskVOFAuxFunction.h"
+#include "user_functions/DropletVOFAuxFunction.h"
+#include "ngp_utils/NgpFieldBLAS.h"
+#include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpFieldUtils.h"
 
 namespace sierra {
 namespace nalu {
@@ -71,6 +75,9 @@ VolumeOfFluidEquationSystem::VolumeOfFluidEquationSystem(
   LinearSolver* solver = realm_.root()->linearSolvers_->create_solver(
     solverName, realm_.name(), EQ_VOLUME_OF_FLUID);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
+
+  // Require div(u) = 0 instead of div(density*u) = 0
+  realm_.solutionOptions_->solveIncompressibleContinuity_ = true;
 
   // determine nodal gradient form
   set_nodal_gradient("volume_of_fluid");
@@ -105,6 +112,12 @@ VolumeOfFluidEquationSystem::register_nodal_fields(stk::mesh::Part* part)
 
   // register dof; set it as a restart variable
   const int numStates = realm_.number_of_states();
+
+  auto density_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "density", numStates));
+  stk::mesh::put_field_on_mesh(*density_, *part, nullptr);
+  realm_.augment_restart_variable_list("density");
+
   volumeOfFluid_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "volume_of_fluid", numStates));
   stk::mesh::put_field_on_mesh(*volumeOfFluid_, *part, nullptr);
@@ -465,7 +478,10 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
         auto VOFSetMassFlowRate =
           new ZalesakDiskMassFlowRateEdgeAlg(realm_, part, this, useAvgMdot);
         realm_.initCondAlg_.push_back(VOFSetMassFlowRate);
+        
       }
+    } else if (fcnName == "droplet") {
+      theAuxFunc = new DropletVOFAuxFunction();
     } else {
       throw std::runtime_error("VolumeOfFluidEquationSystem::register_initial_"
                                "condition_fcn: limited functions supported");
@@ -496,6 +512,34 @@ VolumeOfFluidEquationSystem::manage_projected_nodal_gradient(
 void
 VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
 {
+
+  using Traits = nalu_ngp::NGPMeshTraits<>;
+
+  stk::mesh::MetaData& meta_data = realm_.meta_data();
+
+  stk::mesh::Selector sel =
+    (meta_data.locally_owned_part() | meta_data.globally_shared_part()) &
+    stk::mesh::selectField(*volumeOfFluid_);
+
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+
+  auto ngpVof = fieldMgr.get_field<double>(volumeOfFluid_->mesh_meta_data_ordinal());
+
+  ngpVof.sync_to_device();
+
+  nalu_ngp::run_entity_algorithm(
+    "vof_update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
+      if (ngpVof.get(mi,0) < 0.0) {
+        ngpVof.get(mi, 0) = 0.0;
+      } 
+      if (ngpVof.get(mi,0) > 1.0) {
+        ngpVof.get(mi,0) = 1.0;
+      }
+    });
+  ngpVof.modify_on_device();
+
   if (!managePNG_) {
     const double timeA = -NaluEnv::self().nalu_time();
     nodalGradAlgDriver_.execute();

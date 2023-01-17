@@ -15,6 +15,7 @@
 #include "edge_kernels/EdgeKernelUtils.h"
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
+#include <stk_math/StkMath.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -38,6 +39,11 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
   massFlowRate_ = get_field_ordinal(
     meta, (useAverages) ? "average_mass_flow_rate" : "mass_flow_rate",
     stk::topology::EDGE_RANK);
+  density_ = get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1);
+  velocity_ = (get_field_ordinal(
+      realm.meta_data(),
+      realm.has_mesh_motion() && !realm.has_mesh_deformation() ? "velocity_rtm"
+                                                               : "velocity"));
 }
 
 void
@@ -45,20 +51,17 @@ VOFAdvectionEdgeAlg::execute()
 {
   const double eps = 1.0e-16;
   const double gradient_eps = 1.0e-9;
-  // 20.0 is typical value found via adhoc means, can be made user parameter for
-  // more control
-  const double compression_magnitude = 20.0;
+  // Could be made into user paramter for more control.
+  const double compression_magnitude = 0.1;
 
   const int ndim = realm_.meta_data().spatial_dimension();
 
-  const DblType alpha = realm_.get_alpha_factor("volume_of_fluid");
   const DblType alphaUpw = realm_.get_alpha_upw_factor("volume_of_fluid");
   const DblType hoUpwind = realm_.get_upw_factor("volume_of_fluid");
   const DblType relaxFac =
     realm_.solutionOptions_->get_relaxation_factor("volume_of_fluid");
   const bool useLimiter = realm_.primitive_uses_limiter("volume_of_fluid");
 
-  const DblType om_alpha = 1.0 - alpha;
   const DblType om_alphaUpw = 1.0 - alphaUpw;
 
   // STK stk::mesh::NgpField instances for capture by lambda
@@ -68,6 +71,8 @@ VOFAdvectionEdgeAlg::execute()
   const auto dqdx = fieldMgr.get_field<double>(dqdx_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
+  const auto density = fieldMgr.get_field<double>(density_);
+  const auto velocity = fieldMgr.get_field<double>(velocity_);
 
   run_algorithm(
     realm_.bulk_data(),
@@ -75,14 +80,25 @@ VOFAdvectionEdgeAlg::execute()
       ShmemDataType & smdata, const stk::mesh::FastMeshIndex& edge,
       const stk::mesh::FastMeshIndex& nodeL,
       const stk::mesh::FastMeshIndex& nodeR) {
-      // Scratch work array for edgeAreaVector
+
+      // Scratch work array for edgeAreaVector 
       NALU_ALIGNED DblType av[NDimMax_];
+
+      NALU_ALIGNED DblType vn = 0.0;
       // Populate area vector work array
-      for (int d = 0; d < ndim; ++d)
+      for (int d = 0; d < ndim; ++d) {
         av[d] = edgeAreaVec.get(edge, d);
+        vn += av[d]*0.5*(velocity.get(nodeL,d) + velocity.get(nodeR,d));
+      }
 
       const DblType mdot = massFlowRate.get(edge, 0);
 
+      NALU_ALIGNED DblType densityL = density.get(nodeL,0);
+      NALU_ALIGNED DblType densityR = density.get(nodeR,0);
+
+      NALU_ALIGNED DblType rhoIp = 0.5*(densityL+densityR);
+
+      const DblType vdot = mdot / rhoIp;
       const DblType qNp1L = scalarQ.get(nodeL, 0);
       const DblType qNp1R = scalarQ.get(nodeR, 0);
 
@@ -118,25 +134,25 @@ VOFAdvectionEdgeAlg::execute()
       const DblType qIp = 0.5 * (qNp1R + qNp1L); // 2nd order central term
 
       // Upwinded term
-      const DblType qUpw = (mdot > 0) ? (alphaUpw * qIpL + om_alphaUpw * qIp)
+      const DblType qUpw = (vdot > 0) ? (alphaUpw * qIpL + om_alphaUpw * qIp)
                                       : (alphaUpw * qIpR + om_alphaUpw * qIp);
 
-      const DblType adv_flux = mdot * qUpw;
+      const DblType adv_flux = vdot * qUpw;
       smdata.rhs(0) -= adv_flux;
       smdata.rhs(1) += adv_flux;
 
       // Left node contribution; upwind terms
-      DblType alhsfac = 0.5 * (mdot + stk::math::abs(mdot)) * alphaUpw;
+      DblType alhsfac = 0.5 * (vdot + stk::math::abs(vdot)) * alphaUpw;
       smdata.lhs(0, 0) += alhsfac / relaxFac;
       smdata.lhs(1, 0) -= alhsfac;
 
       // Right node contribution; upwind terms
-      alhsfac = 0.5 * (mdot - stk::math::abs(mdot)) * alphaUpw;
+      alhsfac = 0.5 * (vdot - stk::math::abs(vdot)) * alphaUpw;
       smdata.lhs(1, 1) -= alhsfac / relaxFac;
       smdata.lhs(0, 1) += alhsfac;
 
       // Compression term
-      const DblType velocity_scale = stk::math::abs(mdot);
+      const DblType velocity_scale = stk::math::abs(vdot / stk::math::sqrt(av[0]*av[0]+av[1]*av[1]+av[2]*av[2]));
 
       DblType dqdxMagL = 0.0;
       DblType dqdxMagR = 0.0;

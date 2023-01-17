@@ -64,13 +64,15 @@ VOFMassBDFNodeKernel::execute(
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
 {
+  
   const NodeKernelTraits::DblType qNm1 = scalarQNm1_.get(node, 0);
   const NodeKernelTraits::DblType qN = scalarQN_.get(node, 0);
-  const NodeKernelTraits::DblType qNp1 = scalarQNp1_.get(node, 0);
+  NodeKernelTraits::DblType qNp1 = scalarQNp1_.get(node, 0);
   const NodeKernelTraits::DblType dnvNp1 = dnvNp1_.get(node, 0);
   const NodeKernelTraits::DblType dnvN = dnvN_.get(node, 0);
   const NodeKernelTraits::DblType dnvNm1 = dnvNm1_.get(node, 0);
   const NodeKernelTraits::DblType lhsTime = gamma1_ * dnvNp1 / dt_;
+
   rhs(0) -=
     (gamma1_ * qNp1 * dnvNp1 + gamma2_ * qN * dnvN + gamma3_ * qNm1 * dnvNm1) /
     dt_;

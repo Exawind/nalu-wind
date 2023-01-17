@@ -119,6 +119,7 @@ public:
   double nearestFaceEntrain_;
   double includeDivU_;
   bool mdotInterpRhoUTogether_;
+  bool solveIncompressibleContinuity_;
   bool isTurbulent_;
   TurbulenceModel turbulenceModel_;
   bool meshMotion_;

@@ -219,6 +219,17 @@ MaterialPropertys::load(const YAML::Node& node)
           NaluEnv::self().naluOutputP0()
             << thePropName << " is a mix frac prop: " << primaryVal << " "
             << secondaryVal << std::endl;
+        } else if (thePropType == "volume_of_fluid") {
+          double primaryVal;
+          double secondaryVal;
+          get_required(y_spec, "primary_value", primaryVal);
+          get_required(y_spec, "secondary_value", secondaryVal);
+          matData->type_ = VOF_MAT;
+          matData->primary_ = primaryVal;
+          matData->secondary_ = secondaryVal;
+          NaluEnv::self().naluOutputP0()
+            << thePropName << " is a vof prop: " << primaryVal << " "
+            << secondaryVal << std::endl;
         } else if (thePropType == "polynomial") {
           matData->type_ = POLYNOMIAL_MAT;
 
