@@ -1,4 +1,14 @@
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 #include "aero/fsi/FSIturbine.h"
+#include "aero/fsi/FSIUtils.h"
 #include "utils/ComputeVectorDivergence.h"
 #include <NaluEnv.h>
 
@@ -7,7 +17,6 @@
 #include "stk_mesh/base/Field.hpp"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
-#include "aero/aero_utils/displacements.h"
 
 #include "netcdf.h"
 
@@ -1968,8 +1977,8 @@ fsiTurbine::mapDisplacements()
   }
 
   // Now the nacelle
-  stk::mesh::Selector nacsel(stk::mesh::selectUnion(nacelleParts_));
-  const auto& nacbkts = bulk_->get_buckets(stk::topology::NODE_RANK, nacsel);
+  stk::mesh::Selector nacelle(stk::mesh::selectUnion(nacelleParts_));
+  const auto& nacbkts = bulk_->get_buckets(stk::topology::NODE_RANK, nacelle);
   for (auto b : nacbkts) {
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];

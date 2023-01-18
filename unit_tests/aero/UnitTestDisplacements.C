@@ -12,25 +12,6 @@
 #include <aero/aero_utils/displacements.h>
 
 namespace test_displacements {
-TEST(AeroDisplacements, creation_from_pointer)
-{
-  std::vector<double> openfastSurrogate(6, 1.0);
-  aero::SixDOF disp(openfastSurrogate.data());
-  for (int i = 0; i < 3; ++i) {
-    EXPECT_DOUBLE_EQ(openfastSurrogate[i], disp.translation_[i]);
-    EXPECT_DOUBLE_EQ(openfastSurrogate[i + 3], disp.rotation_[i]);
-  }
-}
-
-TEST(AeroDisplacements, creation_from_vs_vector)
-{
-  aero::SixDOF disp(vs::Vector::one(), 2.0 * vs::Vector::one());
-  for (int i = 0; i < 3; ++i) {
-    EXPECT_DOUBLE_EQ(1.0, disp.translation_[i]);
-    EXPECT_DOUBLE_EQ(2.0, disp.rotation_[i]);
-  }
-}
-
 //! Test that two WM Params give the same end location for a point
 void
 test_wiener_milenkovic(
@@ -44,6 +25,71 @@ test_wiener_milenkovic(
     << "Gold WMP: " << goldWmp << " testWmp: " << testWmp;
   EXPECT_NEAR(goldPnt.z(), testPnt.z(), eps)
     << "Gold WMP: " << goldWmp << " testWmp: " << testWmp;
+}
+
+TEST(AeroDisplacements, creation_from_pointer)
+{
+  std::vector<double> openfastSurrogate(6, 1.0);
+  aero::SixDOF disp(openfastSurrogate.data());
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_DOUBLE_EQ(openfastSurrogate[i], disp.position_[i]);
+    EXPECT_DOUBLE_EQ(openfastSurrogate[i + 3], disp.orientation_[i]);
+  }
+}
+
+TEST(AeroDisplacements, creation_from_vs_vector)
+{
+  aero::SixDOF disp(vs::Vector::one(), 2.0 * vs::Vector::one());
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_DOUBLE_EQ(1.0, disp.position_[i]);
+    EXPECT_DOUBLE_EQ(2.0, disp.orientation_[i]);
+  }
+}
+
+TEST(AeroDisplacements, add_six_dof_together)
+{
+  const auto dispA = vs::Vector::ihat();
+  const auto dispB = vs::Vector::khat();
+
+  const auto orientA =
+    wmp::create_wm_param(vs::Vector::jhat(), utils::radians(15.0));
+  const auto orientB =
+    wmp::create_wm_param(vs::Vector::ihat(), utils::radians(15.0));
+
+  const aero::SixDOF a(dispA, orientA);
+  const aero::SixDOF b(dispB, orientB);
+
+  const auto c = a + b;
+
+  const auto goldTrans = dispA + dispB;
+  // adding b to a, so pushing b wmp onto a stack
+  const auto goldRot = wmp::push(orientB, orientA);
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_DOUBLE_EQ(goldTrans[i], c.position_[i]) << i;
+  }
+  test_wiener_milenkovic(goldRot, c.orientation_, vs::Vector::one(), 1e-12);
+}
+
+TEST(AeroDisplacements, subtract_six_dof)
+{
+  const auto dispA = vs::Vector::ihat();
+  const auto dispB = vs::Vector::khat();
+
+  const auto orientA =
+    wmp::create_wm_param(vs::Vector::jhat(), utils::radians(15.0));
+  const auto orientB =
+    wmp::create_wm_param(vs::Vector::ihat(), utils::radians(15.0));
+
+  const aero::SixDOF a(dispA, orientA);
+  const aero::SixDOF b(dispB, orientB);
+
+  const auto c = a - b;
+  const auto goldTrans = dispA - dispB;
+  const auto goldRot = wmp::pop(orientB, orientA);
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_DOUBLE_EQ(goldTrans[i], c.position_[i]) << i;
+  }
+  test_wiener_milenkovic(goldRot, c.orientation_, vs::Vector::one(), 1e-12);
 }
 
 // Test displacements interpolation along the (1,0,0) axis, and for rotations
@@ -62,7 +108,7 @@ TEST(AeroDisplacements, linear_interp_total_displacements)
     aero::linear_interp_total_displacement(start, end, interpFactor);
 
   for (int i = 0; i < 3; ++i) {
-    EXPECT_DOUBLE_EQ(interpFactor, interpDisp.translation_[i])
+    EXPECT_DOUBLE_EQ(interpFactor, interpDisp.position_[i])
       << "Failed i: " << i;
   }
 
@@ -71,7 +117,7 @@ TEST(AeroDisplacements, linear_interp_total_displacements)
   const auto axisOffset = (vs::Vector::one() - axis) * 1e-3;
   const vs::Vector testPoint = axis * interpFactor + axisOffset;
   auto wmpGold = wmp::create_wm_param(axis, goldAngle);
-  test_wiener_milenkovic(wmpGold, interpDisp.rotation_, testPoint, 1e-10);
+  test_wiener_milenkovic(wmpGold, interpDisp.orientation_, testPoint, 1e-10);
 }
 
 TEST(
@@ -92,7 +138,7 @@ TEST(
   // CFD Pos is using "coordinates" field so it is likely fixed in time. Need to
   // confirm with Ganesh for now we will treat this as an offset from the
   // referencePos in openfast
-  const vs::Vector cfdPos = referencePos.translation_ + vs::Vector::ihat();
+  const vs::Vector cfdPos = referencePos.position_ + vs::Vector::ihat();
 
   const aero::SixDOF deflections(vs::Vector::one() * delta, vs::Vector::zero());
 
@@ -154,7 +200,7 @@ TEST(
   // CFD Pos is using "coordinates" field so it is likely fixed in time. Need to
   // confirm with Ganesh for now we will treat this as an offset from the
   // referencePos in openfast
-  const vs::Vector cfdPos = referencePos.translation_ + vs::Vector::ihat();
+  const vs::Vector cfdPos = referencePos.position_ + vs::Vector::ihat();
 
   const aero::SixDOF deflections(
     vs::Vector::zero(), wmp::create_wm_param(vs::Vector::jhat(), angleDef));
