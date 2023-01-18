@@ -11,6 +11,13 @@
 #include <gtest/gtest.h>
 #include <aero/aero_utils/displacements.h>
 
+testing::Message&
+operator<<(testing::Message& out, const vs::Vector& vec)
+{
+  out << "(" << vec.x() << " " << vec.y() << " " << vec.z() << ")";
+  return out;
+}
+
 namespace test_displacements {
 TEST(AeroDisplacements, creation_from_pointer)
 {
