@@ -33,7 +33,6 @@ translation_displacements_from_hub_motion(
   return positionDueToRotation - referencePosition + hubDisp.position_;
 }
 
-// TODO(psakiev) write a unit test for this.
 //! assemble the orientation just from changes at the root (no pitch, includes
 //! hub)
 KOKKOS_FORCEINLINE_FUNCTION vs::Vector
@@ -48,11 +47,12 @@ orientation_displacments_from_hub_motion(
   const auto rootRelativeRefOrientation = wmp::rotate(
     rootRef.orientation_,
     wmp::pop(rootRef.orientation_, bladeRef.orientation_));
-  // add orientation displacements at the root
-  const auto rootRelativeTwist =
+  // subtract orientation displacements at the root
+  const auto rootRelativeDisplacement =
     wmp::rotate(rootDisp.orientation_, rootRelativeRefOrientation, true);
-  // apply twist first and then rotate out of root reference frame
-  return wmp::push(rootDisp.orientation_, rootRelativeTwist);
+  // apply displacement in the reference frame first and then rotate out of root
+  // reference frame
+  return wmp::push(rootDisp.orientation_, rootRelativeDisplacement);
 }
 
 KOKKOS_FORCEINLINE_FUNCTION

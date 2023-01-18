@@ -61,8 +61,8 @@ linear_interp_total_displacement(
 {
   auto transDisp = wmp::linear_interp_translation(
     start.position_, end.position_, interpFactor);
-  auto rotDisp =
-    wmp::linear_interp_rotation(start.orientation_, end.orientation_, interpFactor);
+  auto rotDisp = wmp::linear_interp_rotation(
+    start.orientation_, end.orientation_, interpFactor);
   return SixDOF(transDisp, rotDisp);
 }
 

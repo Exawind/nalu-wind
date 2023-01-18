@@ -8,6 +8,7 @@
 //
 
 #include "aero/fsi/FSIturbine.h"
+#include "aero/fsi/FSIUtils.h"
 #include "utils/ComputeVectorDivergence.h"
 #include <NaluEnv.h>
 
@@ -16,7 +17,6 @@
 #include "stk_mesh/base/Field.hpp"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
-#include "aero/aero_utils/FSIUtils.h"
 
 #include "netcdf.h"
 
@@ -1978,7 +1978,7 @@ fsiTurbine::mapDisplacements()
 
   // Now the nacelle
   stk::mesh::Selector nacelle(stk::mesh::selectUnion(nacelleParts_));
-  const auto& nacbkts = bulk_->get_buckets(stk::topology::NODE_RANK, nacsel);
+  const auto& nacbkts = bulk_->get_buckets(stk::topology::NODE_RANK, nacelle);
   for (auto b : nacbkts) {
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
