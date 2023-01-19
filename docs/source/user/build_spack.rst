@@ -224,11 +224,11 @@ For this, use the container `ecpe4s/exawind-snapshot <https://hub.docker.com/r/e
 
    docker run -it ecpe4s/exawind-snapshot bash
 
-Inside the container you can directly install Nalu-Wind with spack:
+Inside the container you can directly load the pre-installed version of Nalu-Wind with spack:
 
 ::
 
-   spack install nalu-wind
+   spack load nalu-wind
    
  `Spack-Manager <https://github.com/sandialabs/spack-manager>`_ is used generate the container and is pre-installed in the container.  Additional development of the code can be done through the Spack-Manager's developer tools.  A quick-start guide for these tools is available `here <https://sandialabs.github.io/spack-manager/user_profiles/developers/developer_workflow.html>`_.  This workflow is how the CI builds are generated in GitHub actions.
  
