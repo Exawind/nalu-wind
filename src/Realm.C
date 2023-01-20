@@ -3520,9 +3520,11 @@ Realm::initial_work()
     bdyLayerStats_->execute();
   }
 
-  if (!lidarLOS_->start_time_has_been_set()) {
-    lidarLOS_->set_time_for_all(get_current_time());
-    output_lidar();
+  if (lidarLOS_) {
+    if (!lidarLOS_->start_time_has_been_set()) {
+      lidarLOS_->set_time_for_all(get_current_time());
+      output_lidar();
+    }
   }
 
   equationSystems_.initial_work();
