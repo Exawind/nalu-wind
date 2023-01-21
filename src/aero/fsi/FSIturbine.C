@@ -255,6 +255,13 @@ fsiTurbine::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
   stk::mesh::put_field_on_mesh(
     *div_mesh_vel, meta.universal_part(), 1, nullptr);
 
+  wall_dist_ = meta.get_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "minimum_distance_to_wall");
+  if (wall_dist_ == NULL) {
+      throw std::runtime_error(
+          "Minimum distance to the wall is not available. Please check that the wall distance equation system is enabled and solved");
+  }
+  
   populateParts(twrPartNames_, twrParts_, partVec_, "Tower");
   populateParts(nacellePartNames_, nacelleParts_, partVec_, "Nacelle");
   populateParts(hubPartNames_, hubParts_, partVec_, "Hub");
@@ -307,6 +314,7 @@ fsiTurbine::initialize()
   brFSIdata_.nac_def.resize(6);
   brFSIdata_.nac_vel.resize(6);
 
+  bld_def_stiff_.resize(nTotBldPts);
   bld_dr_.resize(nTotBldPts);
   bld_rmm_.resize(nTotBldPts);
 }
@@ -829,6 +837,29 @@ fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime)
 
   ierr = nc_close(ncid);
 }
+
+void
+fsiTurbine::compute_stiff_blade_displacements()
+{
+
+    auto nBlades = params_.numBlades;
+    auto itot = 0;
+    for (auto iBlade = 0; iBlade < nBlades; iBlade++) {
+        auto nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
+
+        auto hub_ref_pos = aero::SixDOF(brFSIdata_.hub_ref_pos.data());
+        auto hub_disp = aero::SixDOF(brFSIdata_.hub_def.data());
+        auto root_ref = aero::SixDOF(&(brFSIdata_.bld_root_ref_pos[iBlade*6]));
+        auto root_disp = aero::SixDOF(&(brFSIdata_.bld_root_def[iBlade*6]));
+        auto bld_ref = aero::SixDOF(&(brFSIdata_.bld_ref_pos[itot*6]));
+
+        bld_def_stiff_[itot] = fsi::displacements_from_hub_motion(
+            hub_ref_pos, hub_disp, root_ref, root_disp, bld_ref);
+
+        itot++;
+    }
+}
+
 
 //! Convert pressure and viscous/turbulent stress on the turbine surface CFD
 //! mesh into a "fsiForce" field on the turbine surface CFD mesh
@@ -1934,8 +1965,17 @@ fsiTurbine::mapDisplacements()
         auto interpDisp = aero::linear_interp_total_displacement(
           bldStartDisp, bldEndDisp, *dispMapInterpNode);
 
+        // Now linearly interpolate the displacements for a stiff blade
+        // to the intermediate
+        auto bldStiffStartDisp = bld_def_stiff_[*dispMapNode + iStart];
+        auto bldStiffEndDisp =  bld_def_stiff_[*dispMapNode + iStart + 1];
+        auto interpStiffDisp = aero::linear_interp_total_displacement(
+            bldStiffStartDisp, bldStiffEndDisp, *dispMapInterpNode);
+        
         // Now transfer the interpolated displacement to the CFD mesh node */
         auto oldxyz = vector_from_field(*modelCoords, node);
+        // Get wall distance on the node
+        auto walldist = *(stk::mesh::field_data(*wall_dist_, node));
 
         vs::Vector root{
           brFSIdata_.bld_root_def[iBlade * 6 + 3],
@@ -1944,8 +1984,8 @@ fsiTurbine::mapDisplacements()
 
         vector_to_field(
           aero::compute_translational_displacements(
-            interpDisp, refPos, oldxyz, root, brFSIdata_.bld_pitch[iBlade],
-            brFSIdata_.bld_rloc[*dispMapNode + iStart]),
+            interpDisp, refPos, oldxyz, interpStiffDisp,
+            walldist, brFSIdata_.bld_rloc[*dispMapNode + iStart]),
           *displacement, node);
       }
     }

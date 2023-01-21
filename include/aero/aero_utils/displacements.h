@@ -20,6 +20,13 @@ namespace aero {
 //! WienerMilenkovic parameter
 struct SixDOF
 {
+
+  SixDOF()
+    : position_(0.0, 0.0, 0.0),
+      orientation_(0.0, 0.0, 0.0)
+  {
+  }
+    
   // Kind of dangerous constructor
   SixDOF(double* vec)
     : position_({vec[0], vec[1], vec[2]}),
@@ -130,11 +137,17 @@ compute_translational_displacements(
   const SixDOF deflections,
   const SixDOF referencePos,
   const vs::Vector cfdPos,
-  const vs::Vector /*root*/,
-  const double /*pitch*/,
-  const double /*rLoc*/)
+  const SixDOF disp_stiff,
+  const double wall_dist,
+  const double rLoc)
 {
-  return compute_translational_displacements(deflections, referencePos, cfdPos);
+  auto full_disp = compute_translational_displacements(deflections, referencePos, cfdPos);
+  auto stiff_disp = compute_translational_displacements(disp_stiff, referencePos, cfdPos);
+  
+  auto rloc_ramp = 0.1 + 0.05*std::tanh(2.0*(wall_dist-3.0));
+  auto ramp = (0.5 + 0.5*std::tanh(20.0*(rLoc/61.5 - rloc_ramp)) );
+  
+  return stiff_disp + ramp * (full_disp - stiff_disp);
 }
 
 //! Convert one array of 6 velocities (transX, transY, transZ, wmX, wmY, wmZ)

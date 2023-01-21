@@ -13,6 +13,7 @@
 #include "OpenFAST.H"
 
 #include <aero/fsi/CalcLoads.h>
+#include <aero/aero_utils/displacements.h>
 
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/BulkData.hpp"
@@ -86,6 +87,9 @@ public:
   //! point load array that gets transferred to openfast
   void mapLoads();
 
+  //! Compute blade node displacements for stiff blades
+  void compute_stiff_blade_displacements();
+    
   //! Transfer the deflections from the openfast nodes to the turbine surface
   //! CFD mesh. Will call 'computeDisplacement' for each node on the turbine
   //! surface CFD mesh.
@@ -143,6 +147,9 @@ public:
 
   fast::turbineDataType params_;
   fast::turbBRfsiDataType brFSIdata_;
+  //Blade node displacements for stiff blades
+  std::vector<aero::SixDOF> bld_def_stiff_;
+    
   std::vector<double> bld_dr_;
   std::vector<std::array<double, 2>>
     bld_rmm_; // Min-Max r for each node along blade
@@ -318,6 +325,8 @@ private:
                                    // projected along the OpenFAST mesh element
                                    // in non-dimensional [0,1] co-ordinates.
   int nBlades_;                    // Number of blades in the turbine
+
+  ScalarFieldType* wall_dist_; // Minimum distance to the wall
 
   //! Fields containing the FSI force at all SCS's on the turbine surface
   GenericFieldType* tforceSCS_;
