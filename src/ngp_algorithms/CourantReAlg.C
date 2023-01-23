@@ -97,13 +97,13 @@ CourantReAlg<AlgTraits>::execute()
   Kokkos::Max<double> reReducer(reMax);
 
   const std::string algNameCFL =
-	  "CourantReAlg_CFL_" + std::to_string(AlgTraits::topo_);
+    "CourantReAlg_CFL_" + std::to_string(AlgTraits::topo_);
   const std::string algNameRE =
-	  "CourantReAlg_RE_" + std::to_string(AlgTraits::topo_);
+    "CourantReAlg_RE_" + std::to_string(AlgTraits::topo_);
 
   nalu_ngp::run_elem_par_reduce(
     algNameCFL, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
-    KOKKOS_LAMBDA(ElemSimdDataType & edata, double & cflMax) {
+    KOKKOS_LAMBDA(ElemSimdDataType & edata, double& cflMax) {
       auto& scrViews = edata.simdScrView;
       const auto& v_coords = scrViews.get_scratch_view_2D(coordID);
       const auto& v_vel = scrViews.get_scratch_view_2D(velID);
@@ -134,14 +134,14 @@ CourantReAlg<AlgTraits>::execute()
       cflOps(edata, 0) = elemCFL;
 
       for (int i = 0; i < edata.numSimdElems; ++i) {
-		  cflMax = stk::math::max(cflMax, elemCFL[i]);
+        cflMax = stk::math::max(cflMax, elemCFL[i]);
       }
     },
     cflReducer);
 
   nalu_ngp::run_elem_par_reduce(
     algNameRE, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
-    KOKKOS_LAMBDA(ElemSimdDataType & edata, double & reMax) {
+    KOKKOS_LAMBDA(ElemSimdDataType & edata, double& reMax) {
       auto& scrViews = edata.simdScrView;
       const auto& v_coords = scrViews.get_scratch_view_2D(coordID);
       const auto& v_vel = scrViews.get_scratch_view_2D(velID);
