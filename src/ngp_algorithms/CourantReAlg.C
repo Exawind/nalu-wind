@@ -79,6 +79,9 @@ CourantReAlg<AlgTraits>::execute()
   const DoubleType small = 1.0e-16;
   MasterElement* meSCS = meSCS_;
 
+  auto numScsIp = AlgTraits::numScsIp_;
+  auto nDim = AlgTraits::nDim_;
+
   const auto cflOps = nalu_ngp::simd_elem_field_updater(ngpMesh, ngpCFL);
   const auto reyOps = nalu_ngp::simd_elem_field_updater(ngpMesh, ngpRe);
 
@@ -86,6 +89,100 @@ CourantReAlg<AlgTraits>::execute()
                                   stk::mesh::selectUnion(partVec_) &
                                   !(realm_.get_inactive_selector());
 
+#if defined(KOKKOS_ENABLE_HIP)
+  double cflMax = 0.0;
+  Kokkos::Max<double> cflReducer(cflMax);
+
+  double reMax = 0.0;
+  Kokkos::Max<double> reReducer(reMax);
+
+  const std::string algNameCFL =
+    "CourantReAlg_CFL_" + std::to_string(AlgTraits::topo_);
+  const std::string algNameRE =
+    "CourantReAlg_RE_" + std::to_string(AlgTraits::topo_);
+
+  nalu_ngp::run_elem_par_reduce(
+    algNameCFL, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
+    KOKKOS_LAMBDA(ElemSimdDataType & edata, double& cflMax) {
+      auto& scrViews = edata.simdScrView;
+      const auto& v_coords = scrViews.get_scratch_view_2D(coordID);
+      const auto& v_vel = scrViews.get_scratch_view_2D(velID);
+      const auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
+      const auto& v_visc = scrViews.get_scratch_view_1D(viscID);
+
+      DoubleType elemCFL = -1.0;
+
+      const int* lrscv = meSCS->adjacentNodes();
+      for (int ip = 0; ip < numScsIp; ++ip) {
+        const int il = lrscv[2 * ip];
+        const int ir = lrscv[2 * ip + 1];
+
+        DoubleType udotx = 0.0;
+        DoubleType dxSq = 0.0;
+        for (int d = 0; d < nDim; ++d) {
+          DoubleType uIp = 0.5 * (v_vel(ir, d) + v_vel(il, d));
+          DoubleType dxj = (v_coords(ir, d) - v_coords(il, d));
+          udotx += dxj * uIp;
+          dxSq += dxj * dxj;
+        }
+
+        udotx = stk::math::abs(udotx);
+        const DoubleType cflIp = stk::math::abs(udotx * dt / dxSq);
+
+        elemCFL = stk::math::max(elemCFL, cflIp);
+      }
+      cflOps(edata, 0) = elemCFL;
+
+      for (int i = 0; i < edata.numSimdElems; ++i) {
+        cflMax = stk::math::max(cflMax, elemCFL[i]);
+      }
+    },
+    cflReducer);
+
+  nalu_ngp::run_elem_par_reduce(
+    algNameRE, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
+    KOKKOS_LAMBDA(ElemSimdDataType & edata, double& reMax) {
+      auto& scrViews = edata.simdScrView;
+      const auto& v_coords = scrViews.get_scratch_view_2D(coordID);
+      const auto& v_vel = scrViews.get_scratch_view_2D(velID);
+      const auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
+      const auto& v_visc = scrViews.get_scratch_view_1D(viscID);
+
+      DoubleType elemRe = -1.0;
+
+      const int* lrscv = meSCS->adjacentNodes();
+      for (int ip = 0; ip < numScsIp; ++ip) {
+        const int il = lrscv[2 * ip];
+        const int ir = lrscv[2 * ip + 1];
+
+        DoubleType udotx = 0.0;
+        DoubleType dxSq = 0.0;
+        for (int d = 0; d < nDim; ++d) {
+          DoubleType uIp = 0.5 * (v_vel(ir, d) + v_vel(il, d));
+          DoubleType dxj = (v_coords(ir, d) - v_coords(il, d));
+          udotx += dxj * uIp;
+          dxSq += dxj * dxj;
+        }
+
+        udotx = stk::math::abs(udotx);
+
+        const DoubleType diffIp =
+          0.5 * (v_visc(il) / v_rho(il) + v_visc(ir) / v_rho(ir)) + small;
+        const DoubleType reyIp = udotx / diffIp;
+
+        elemRe = stk::math::max(elemRe, reyIp);
+      }
+      reyOps(edata, 0) = elemRe;
+
+      for (int i = 0; i < edata.numSimdElems; ++i) {
+        reMax = stk::math::max(reMax, elemRe[i]);
+      }
+    },
+    reReducer);
+
+  // Accumulate max values for all topology types
+  algDriver_.update_max_cfl_rey(cflMax, reMax);
+#else
   CflRe cflReMax;
   CflReMax<> reducer(cflReMax);
 
@@ -104,13 +201,13 @@ CourantReAlg<AlgTraits>::execute()
       DoubleType elemCFL = -1.0;
 
       const int* lrscv = meSCS->adjacentNodes();
-      for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
+      for (int ip = 0; ip < numScsIp; ++ip) {
         const int il = lrscv[2 * ip];
         const int ir = lrscv[2 * ip + 1];
 
         DoubleType udotx = 0.0;
         DoubleType dxSq = 0.0;
-        for (int d = 0; d < AlgTraits::nDim_; ++d) {
+        for (int d = 0; d < nDim; ++d) {
           DoubleType uIp = 0.5 * (v_vel(ir, d) + v_vel(il, d));
           DoubleType dxj = (v_coords(ir, d) - v_coords(il, d));
           udotx += dxj * uIp;
@@ -139,6 +236,7 @@ CourantReAlg<AlgTraits>::execute()
 
   // Accumulate max values for all topology types
   algDriver_.update_max_cfl_rey(cflReMax.max_cfl, cflReMax.max_re);
+#endif
 
   ngpCFL.modify_on_device();
   ngpRe.modify_on_device();
