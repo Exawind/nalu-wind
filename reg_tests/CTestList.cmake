@@ -158,7 +158,7 @@ function(add_test_r_cat testname np ncat)
     endif()
 endfunction(add_test_r_cat)
 
-if(NOT ENABLE_CUDA)
+if(NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
 
   #=============================================================================
   # Regression tests
@@ -216,7 +216,7 @@ if(NOT ENABLE_CUDA)
     add_test_r(SSTPeriodicHillEdge 4)
     add_test_r(IDDESPeriodicHillEdge 4)
     add_test_r(multiElemCylinder 4)
-  endif(ENABLE_HYPRE)
+  endif()
 
   if(ENABLE_OPENFAST)
      add_test_r(nrel5MWactuatorLine 4)
@@ -225,14 +225,14 @@ if(NOT ENABLE_CUDA)
      add_test_r(nrel5MWactuatorDisk 4)
      add_test_r(nrel5MWadvActLine 4)
      add_subdirectory(test_files/nrel5MWactuatorLine)
-  endif(ENABLE_OPENFAST)
+  endif()
 
   if(ENABLE_TIOGA)
     add_test_r(oversetSphereTIOGA 8)
     add_test_r(oversetRotCylinder 4)
     add_test_r(oversetCylNGPTrilinos 2)
     add_test_r(oversetRotCylNGPTrilinos 2)
-  endif(ENABLE_TIOGA)
+  endif()
 
   if (ENABLE_TIOGA AND ENABLE_HYPRE)
     add_test_r(oversetRotCylNGPHypre 2)
@@ -246,7 +246,7 @@ if(NOT ENABLE_CUDA)
   #=============================================================================
   if(ENABLE_HYPRE)
     add_test_v_sol_norm(convTaylorVortex 2)
-  endif(ENABLE_HYPRE)
+  endif()
 
   #=============================================================================
   # Convergence tests
@@ -263,7 +263,7 @@ if(NOT ENABLE_CUDA)
   # Performance tests
   #=============================================================================
 
-else(NOT ENABLE_CUDA)
+else()
 
   #=============================================================================
   # Regression tests
@@ -287,7 +287,7 @@ else(NOT ENABLE_CUDA)
     add_test_r(ablNeutralNGPHypre 2)
     add_test_r(ablNeutralNGPHypreSegregated 2)
     add_test_r(multiElemCylinder 2)
-  endif(ENABLE_HYPRE)
+  endif()
 
   if (ENABLE_TIOGA)
     add_test_r(oversetCylNGPTrilinos 2)
@@ -303,11 +303,11 @@ else(NOT ENABLE_CUDA)
   #=============================================================================
   if(ENABLE_HYPRE)
     add_test_v_sol_norm(convTaylorVortex 2)
-  endif(ENABLE_HYPRE)
+  endif()
 
   #=============================================================================
   # GPU unit tests
   #=============================================================================
   add_test_u_gpu(unitTestGPU 1)
 
-endif(NOT ENABLE_CUDA)
+endif()
