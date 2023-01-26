@@ -22,7 +22,7 @@ HypreLinearSystem::HypreLinearSystem(
   LinearSolver* linearSolver)
   : LinearSystem(realm, numDof, eqSys, linearSolver), name_(eqSys->name_)
 {
-  rank_ = realm_.bulk_data().parallel_rank();
+  rank_ = NaluEnv::self().parallel_rank();
   columnsOwned_.clear();
   rowCountOwned_.clear();
   columnsShared_.clear();

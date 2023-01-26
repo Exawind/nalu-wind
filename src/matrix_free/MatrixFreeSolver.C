@@ -9,6 +9,7 @@
 
 #include "matrix_free/MatrixFreeSolver.h"
 
+#ifdef NALU_USES_TRILINOS_SOLVERS
 #include <BelosConfigDefs.hpp>
 #include <BelosLinearProblem.hpp>
 #include <BelosMultiVecTraits.hpp>
@@ -176,3 +177,6 @@ MatrixFreeSolver::rhs() const
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra
+
+#endif // NALU_USES_TRILINOS_SOLVERS
+

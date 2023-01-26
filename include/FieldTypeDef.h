@@ -15,7 +15,9 @@
 #include <stk_mesh/base/Ngp.hpp>
 #include <stk_mesh/base/NgpField.hpp>
 
+#ifdef NALU_USES_TRILINOS_SOLVERS
 #include <Tpetra_Details_DefaultTypes.hpp>
+#endif
 #include <functional>
 
 #ifdef NALU_USES_HYPRE
@@ -50,8 +52,13 @@ typedef HYPRE_Int HypreIntType;
 typedef int HypreIntType;
 #endif
 
+#ifdef NALU_USES_TRILINOS_SOLVERS
 typedef stk::mesh::Field<Tpetra::Details::DefaultTypes::global_ordinal_type>
   TpetIDFieldType;
+#else
+typedef stk::mesh::Field<int64_t> TpetIDFieldType;
+#endif
+
 typedef stk::mesh::Field<HypreIntType> HypreIDFieldType;
 typedef stk::mesh::NgpField<HypreIntType> NGPHypreIDFieldType;
 

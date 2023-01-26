@@ -21,6 +21,7 @@
 #if defined(NALU_USES_PERCEPT)
 #include <Teuchos_RCP.hpp>
 #endif
+#include <Teuchos_ParameterList.hpp>
 
 #include <ngp_utils/NgpFieldManager.h>
 #include "ngp_utils/NgpMeshInfo.h"
