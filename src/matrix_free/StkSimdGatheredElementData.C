@@ -14,8 +14,6 @@
 #include "matrix_free/ValidSimdLength.h"
 
 #include <KokkosInterface.h>
-#include "Kokkos_ExecPolicy.hpp"
-#include "Kokkos_Macros.hpp"
 
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/Types.hpp"

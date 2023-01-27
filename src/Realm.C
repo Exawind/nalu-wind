@@ -42,7 +42,10 @@
 #include <element_promotion/PromotedElementIO.h>
 #include <element_promotion/PromotedPartHelper.h>
 #include <element_promotion/HexNElementDescription.h>
+
+#ifdef NALU_HAS_MATRIXFREE
 #include <matrix_free/LobattoQuadratureRule.h>
+#endif
 
 // mesh motion
 #include <mesh_motion/MeshMotionAlg.h>
@@ -669,7 +672,12 @@ Realm::load(const YAML::Node& node)
 
   get_if_present(node, "polynomial_order", promotionOrder_, promotionOrder_);
   if (promotionOrder_ > 2) {
+#ifdef NALU_HAS_MATRIXFREE
     doPromotion_ = true;
+#else
+    throw std::runtime_error(
+      "Nalu must be compiled with matrix-free support for promotion");
+#endif
   }
 
   if (promotionOrder_ >= 5) {
@@ -4701,6 +4709,7 @@ Realm::setup_element_promotion()
 void
 Realm::promote_mesh()
 {
+
   NaluEnv::self().naluOutputP0()
     << "Realm::promote_elements() Begin " << std::endl;
   auto timeA = stk::wall_time();
@@ -4708,10 +4717,19 @@ Realm::promote_mesh()
   auto& coords = *meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "coordinates");
   if (!restarted_simulation()) {
+#ifdef NALU_HAS_MATRIXFREE
     std::vector<double> gllNodes =
       matrix_free::gauss_lobatto_legendre_abscissae(promotionOrder_);
     promotion::create_tensor_product_hex_elements(
       gllNodes, *bulkData_, coords, basePartVector_);
+#else
+    std::vector<double> xloc(promotionOrder_ + 1);
+    for (size_t j = 0; j < promotionOrder_ + 1; ++j) {
+      xloc[j] = -1 + 2. / promotionOrder_ * j;
+    }
+    promotion::create_tensor_product_hex_elements(
+      xloc, *bulkData_, coords, basePartVector_);
+#endif
   } else {
     promotion::create_promoted_boundary_elements(
       promotionOrder_, *bulkData_, basePartVector_);
@@ -5120,6 +5138,11 @@ Realm::polynomial_order() const
 bool
 Realm::matrix_free() const
 {
+  if (matrixFree_) {
+#ifndef NALU_HAS_MATRIXFREE
+    throw std::runtime_error("Nalu not compiled with matrix-free support");
+#endif
+  }
   return matrixFree_;
 }
 

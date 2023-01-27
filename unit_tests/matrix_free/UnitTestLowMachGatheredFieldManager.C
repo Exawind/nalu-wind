@@ -15,7 +15,6 @@
 
 #include <KokkosInterface.h>
 #include "Kokkos_Macros.hpp"
-#include "Kokkos_Parallel_Reduce.hpp"
 
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/FieldState.hpp"

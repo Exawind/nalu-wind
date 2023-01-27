@@ -19,6 +19,7 @@
 #include "Tpetra_CombineMode.hpp"
 #include "stk_util/util/ReportHandler.hpp"
 
+#include <KokkosBlas1_sum.hpp>
 #include <type_traits>
 
 namespace sierra {
@@ -33,6 +34,34 @@ ContinuityResidualOperator<p>::ContinuityResidualOperator(
     cached_rhs_(exporter_in.getSourceMap(), num_vectors)
 {
 }
+
+namespace {
+
+void
+remove_constant(Kokkos::View<double*> x, double value)
+{
+  Kokkos::parallel_for(
+    x.extent(0), KOKKOS_LAMBDA(int n) { x(n) -= value; });
+}
+
+void
+remove_constant(Tpetra::MultiVector<>& vector)
+{
+  // orthogonalize wrt (1,1,..,1)^T
+
+  auto avg = KokkosBlas::sum(Kokkos::subview(
+    vector.getLocalViewDevice(Tpetra::Access::ReadOnly), Kokkos::ALL, 0));
+
+  auto comm = Teuchos::getRawMpiComm(*vector.getMap()->getComm());
+  MPI_Allreduce(MPI_IN_PLACE, &avg, 1, MPI_DOUBLE, MPI_SUM, comm);
+  avg /= vector.getGlobalLength();
+
+  remove_constant(
+    Kokkos::subview(
+      vector.getLocalViewDevice(Tpetra::Access::ReadWrite), Kokkos::ALL, 0),
+    avg);
+}
+} // namespace
 
 template <int p>
 void
@@ -56,6 +85,7 @@ ContinuityResidualOperator<p>::compute(mv_type& owned_rhs)
       time_scale_, elem_offsets_, mdot_,
       owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
+  remove_constant(owned_rhs);
 }
 INSTANTIATE_POLYCLASS(ContinuityResidualOperator);
 
@@ -68,7 +98,6 @@ ContinuityLinearizedResidualOperator<p>::ContinuityLinearizedResidualOperator(
     cached_rhs_(exporter_in.getSourceMap(), num_vectors)
 {
 }
-
 template <int p>
 void
 ContinuityLinearizedResidualOperator<p>::apply(
@@ -83,6 +112,7 @@ ContinuityLinearizedResidualOperator<p>::apply(
   ThrowRequire(trans == Teuchos::NO_TRANS);
   ThrowRequire(alpha == 1.0);
   ThrowRequire(beta == 0.0);
+
   if (exporter_.getTargetMap()->isDistributed()) {
     {
       stk::mesh::ProfilingBlock pfinner("import into owned-shared from owned");
@@ -104,6 +134,7 @@ ContinuityLinearizedResidualOperator<p>::apply(
       owned_sln.getLocalViewDevice(Tpetra::Access::ReadOnly),
       owned_rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
   }
+  remove_constant(owned_rhs);
 }
 INSTANTIATE_POLYCLASS(ContinuityLinearizedResidualOperator);
 } // namespace matrix_free
