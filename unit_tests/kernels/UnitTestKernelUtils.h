@@ -1126,6 +1126,8 @@ public:
         stk::topology::NODE_RANK, "rans_time_scale")),
       minDist_(&meta_->declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "minimum_distance_to_wall")),
+      dplus_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "dplus_wall_function")),
       Mij_(&meta_->declare_field<GenericFieldType>(
         stk::topology::NODE_RANK, "metric_tensor")),
       fOneBlend_(&meta_->declare_field<ScalarFieldType>(
@@ -1157,6 +1159,7 @@ public:
       *avgTime_, meta_->universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(
       *minDist_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*dplus_, meta_->universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(
       *Mij_, meta_->universal_part(), spatialDim_ * spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
@@ -1188,6 +1191,7 @@ public:
     stk::mesh::field_fill(0.6, *avgProd_);
     stk::mesh::field_fill(1.0, *avgTime_);
     stk::mesh::field_fill(0.7, *minDist_);
+    unit_test_kernel_utils::dplus_test_function(*bulk_, *coordinates_, *dplus_);
     stk::mesh::field_fill(0.2, *Mij_);
     unit_test_kernel_utils::tke_test_function(*bulk_, *coordinates_, *tke_);
     unit_test_kernel_utils::sdr_test_function(*bulk_, *coordinates_, *sdr_);
@@ -1214,6 +1218,7 @@ public:
   ScalarFieldType* avgProd_{nullptr};
   ScalarFieldType* avgTime_{nullptr};
   ScalarFieldType* minDist_{nullptr};
+  ScalarFieldType* dplus_{nullptr};
   GenericFieldType* Mij_{nullptr};
   ScalarFieldType* fOneBlend_{nullptr};
   TensorFieldType* dudx_{nullptr};
