@@ -9,6 +9,7 @@
 
 #include "aero/fsi/FSIturbine.h"
 #include "aero/fsi/FSIUtils.h"
+#include "aero/aero_utils/DeflectionRamping.h"
 #include "utils/ComputeVectorDivergence.h"
 #include <NaluEnv.h>
 
@@ -1973,18 +1974,23 @@ fsiTurbine::mapDisplacements()
         // to save memory on gpus linearly interpolated spanLocation for
         //
         // deflection ramping
+        double deflectionRamp = 1.0;
+
         const double spanLocation =
           spanLocI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
+        // FIXME(psakiev) hard code 3m for test
+        deflectionRamp *= fsi::linear_ramp_span(spanLocation, 3.0);
+
         // things for theta mapping
         const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
         const aero::SixDOF rootPos(brFSIdata_.bld_root_ref_pos.data());
         const auto nodePosition = vector_from_field(*modelCoords, node);
-
-        const double pitchRamp = 1.0;
+        deflectionRamp *= fsi::linear_ramp_theta(
+          hubPos, rootPos.position_, nodePosition, utils::radians(20.0), 120.0);
 
         vector_to_field(
           aero::compute_translational_displacements(
-            interpDisp, refPos, nodePosition, interpStiffDisp, pitchRamp),
+            interpDisp, refPos, nodePosition, interpStiffDisp, deflectionRamp),
           *displacement, node);
       }
     }
