@@ -1963,27 +1963,28 @@ fsiTurbine::mapDisplacements()
         auto interpStiffDisp = aero::linear_interp_total_displacement(
           bldStiffStartDisp, bldStiffEndDisp, *dispMapInterpNode);
 
-        // Now transfer the interpolated displacement to the CFD mesh node */
-        auto oldxyz = vector_from_field(*modelCoords, node);
-
-        vs::Vector root{
-          brFSIdata_.bld_root_def[iBlade * 6 + 3],
-          brFSIdata_.bld_root_def[iBlade * 6 + 4],
-          brFSIdata_.bld_root_def[iBlade * 6 + 5]};
-
+        // Now compute the deflection ramping for the blades
         const double spanLocI = brFSIdata_.bld_rloc[*dispMapNode + iStart];
         const double spanLocIp1 =
           brFSIdata_.bld_rloc[*dispMapNode + iStart + 1];
 
-        // linearly interpolated spanLocation for deflection ramping
+        // ramping can be done entirely with reference coordinates
+        // could cache this and do it once but might be better to do it inline
+        // to save memory on gpus linearly interpolated spanLocation for
+        //
+        // deflection ramping
         const double spanLocation =
-          spanLocaI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
+          spanLocI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
+        // things for theta mapping
+        const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
+        const aero::SixDOF rootPos(brFSIdata_.bld_root_ref_pos.data());
+        const auto nodePosition = vector_from_field(*modelCoords, node);
 
         const double pitchRamp = 1.0;
 
         vector_to_field(
           aero::compute_translational_displacements(
-            interpDisp, refPos, oldxyz, interpStiffDisp, pitchRamp),
+            interpDisp, refPos, nodePosition, interpStiffDisp, pitchRamp),
           *displacement, node);
       }
     }

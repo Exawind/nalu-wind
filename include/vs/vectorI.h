@@ -150,6 +150,12 @@ angle(const VectorT<T>& v1, const VectorT<T>& v2)
   return stk::math::acos((v1 & v2) / denom);
 }
 
+template <typename T>
+KOKKOS_FORCEINLINE_FUNCTION VectorT<T>
+project(const vs::VectorT<T>& original, const vs::VectorT<T>& base)
+{
+  return (original & base) / (base & base) * base;
+}
 
 #if 0
 template <typename T>
