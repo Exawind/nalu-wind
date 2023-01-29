@@ -16,6 +16,7 @@
 
 #include <ostream>
 #include <cmath>
+#include <stk_math/StkMath.hpp>
 #include "vs/vector.h"
 
 namespace vs {
@@ -140,6 +141,15 @@ VectorT<T>::normalize()
   }
   return *this;
 }
+
+template <typename T>
+KOKKOS_FORCEINLINE_FUNCTION double
+angle(const VectorT<T>& v1, const VectorT<T>& v2)
+{
+  const double denom = stk::math::max(mag(v1) * mag(v2), vs::DTraits<T>::eps());
+  return stk::math::acos((v1 & v2) / denom);
+}
+
 
 #if 0
 template <typename T>
