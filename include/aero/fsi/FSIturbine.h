@@ -86,6 +86,9 @@ public:
   //! point load array that gets transferred to openfast
   void mapLoads();
 
+  //! compute blade node displacements for stiff blades
+  void compute_stiff_blade_displacements();
+
   //! Transfer the deflections from the openfast nodes to the turbine surface
   //! CFD mesh. Will call 'computeDisplacement' for each node on the turbine
   //! surface CFD mesh.
@@ -143,6 +146,7 @@ public:
 
   fast::turbineDataType params_;
   fast::turbBRfsiDataType brFSIdata_;
+  std::vector<aero::SixDOF> bldDefStiff_;
   std::vector<double> bld_dr_;
   std::vector<std::array<double, 2>>
     bld_rmm_; // Min-Max r for each node along blade

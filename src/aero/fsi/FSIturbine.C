@@ -837,6 +837,28 @@ fsiTurbine::computeFSIforce()
 {
 }
 
+void
+fsiTurbine::compute_stiff_blade_displacements()
+{
+
+  auto nBlades = params_.numBlades;
+  auto itot = 0;
+  for (auto iBlade = 0; iBlade < nBlades; iBlade++) {
+    auto nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
+
+    auto hub_ref_pos = aero::SixDOF(brFSIdata_.hub_ref_pos.data());
+    auto hub_disp = aero::SixDOF(brFSIdata_.hub_def.data());
+    auto root_ref = aero::SixDOF(&(brFSIdata_.bld_root_ref_pos[iBlade * 6]));
+    auto root_disp = aero::SixDOF(&(brFSIdata_.bld_root_def[iBlade * 6]));
+    auto bld_ref = aero::SixDOF(&(brFSIdata_.bld_ref_pos[itot * 6]));
+
+    bldDefStiff_[itot] = fsi::displacements_from_hub_motion(
+      hub_ref_pos, hub_disp, root_ref, root_disp, bld_ref);
+
+    itot++;
+  }
+}
+
 //! Map loads from the "fsiForce" field on the turbine surface CFD mesh into
 //! point load array that gets transferred to openfast
 void
@@ -1933,6 +1955,13 @@ fsiTurbine::mapDisplacements()
         auto bldEndDisp = aero::SixDOF(&(brFSIdata_.bld_def[iNp1]));
         auto interpDisp = aero::linear_interp_total_displacement(
           bldStartDisp, bldEndDisp, *dispMapInterpNode);
+
+        // Now linearly interpolate the displacements for a stiff blade
+        // to the intermediate
+        auto bldStiffStartDisp = bldDefStiff_[*dispMapNode + iStart];
+        auto bldStiffEndDisp = bldDefStiff_[*dispMapNode + iStart + 1];
+        auto interpStiffDisp = aero::linear_interp_total_displacement(
+          bldStiffStartDisp, bldStiffEndDisp, *dispMapInterpNode);
 
         // Now transfer the interpolated displacement to the CFD mesh node */
         auto oldxyz = vector_from_field(*modelCoords, node);

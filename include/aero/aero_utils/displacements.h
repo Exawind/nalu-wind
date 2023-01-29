@@ -20,6 +20,8 @@ namespace aero {
 //! WienerMilenkovic parameter
 struct SixDOF
 {
+  SixDOF() : position_(vs::Vector::zero()), orientation_(vs::Vector::zero()) {}
+
   // Kind of dangerous constructor
   SixDOF(double* vec)
     : position_({vec[0], vec[1], vec[2]}),
