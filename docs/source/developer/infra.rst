@@ -30,9 +30,9 @@ It does the following things:
 * Style Check of the CPP code using clang-format with clang version 13
 * Run the unit tests
 
-    * Uses the docker container to allow to reuse the third party libraries
-    * Rebuilds nalu-wind with the source from the commit on which the ci is run
-    * Run all test with `unit` in the label using ctest
+  * Uses the docker container to allow to reuse the third party libraries
+  * Rebuilds nalu-wind with the source from the commit on which the ci is run
+  * Run all test with `unit` in the label using ctest
 
 Daily Regression Tests
 ^^^^^^^^^^^^^^^^^^^^^^
