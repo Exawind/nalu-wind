@@ -481,6 +481,8 @@ OpenfastFSI::get_displacements(double current_time)
         fsiTurbineData_[i]->brFSIdata_.nac_vel.data(), 6, MPI_DOUBLE, turbProc,
         bulk_->parallel());
 
+      fsiTurbineData_[i]->compute_stiff_blade_displacements();
+
       if (bulk_->parallel_rank() == turbProc) {
         std::ofstream bld_bm_mesh;
         bld_bm_mesh.open("blade_beam_mesh_naluwind.csv", std::ios_base::out);

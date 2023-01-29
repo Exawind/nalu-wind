@@ -308,6 +308,7 @@ fsiTurbine::initialize()
   brFSIdata_.nac_def.resize(6);
   brFSIdata_.nac_vel.resize(6);
 
+  bldDefStiff_.resize(nTotBldPts);
   bld_dr_.resize(nTotBldPts);
   bld_rmm_.resize(nTotBldPts);
 }
