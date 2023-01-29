@@ -27,6 +27,8 @@
 #include "yaml-cpp/yaml.h"
 #include "vs/vector_space.h"
 
+namespace aero{struct SixDOF;}
+
 namespace sierra {
 
 namespace nalu {

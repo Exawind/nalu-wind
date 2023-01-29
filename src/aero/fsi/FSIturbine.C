@@ -1971,10 +1971,19 @@ fsiTurbine::mapDisplacements()
           brFSIdata_.bld_root_def[iBlade * 6 + 4],
           brFSIdata_.bld_root_def[iBlade * 6 + 5]};
 
+        const double spanLocI = brFSIdata_.bld_rloc[*dispMapNode + iStart];
+        const double spanLocIp1 =
+          brFSIdata_.bld_rloc[*dispMapNode + iStart + 1];
+
+        // linearly interpolated spanLocation for deflection ramping
+        const double spanLocation =
+          spanLocaI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
+
+        const double pitchRamp = 1.0;
+
         vector_to_field(
           aero::compute_translational_displacements(
-            interpDisp, refPos, oldxyz, root, brFSIdata_.bld_pitch[iBlade],
-            brFSIdata_.bld_rloc[*dispMapNode + iStart]),
+            interpDisp, refPos, oldxyz, interpStiffDisp, pitchRamp),
           *displacement, node);
       }
     }

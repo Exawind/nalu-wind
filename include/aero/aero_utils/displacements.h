@@ -129,14 +129,17 @@ compute_translational_displacements(
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_translational_displacements(
-  const SixDOF deflections,
+  const SixDOF fullDeflections,
   const SixDOF referencePos,
   const vs::Vector cfdPos,
-  const vs::Vector /*root*/,
-  const double /*pitch*/,
-  const double /*rLoc*/)
+  const SixDOF stiffDeflections,
+  const double ramp = 1.0)
 {
-  return compute_translational_displacements(deflections, referencePos, cfdPos);
+  const auto fullDisp =
+    compute_translational_displacements(fullDeflections, referencePos, cfdPos);
+  const auto stiffDisp =
+    compute_translational_displacements(stiffDeflections, referencePos, cfdPos);
+  return stiffDisp + ramp * (fullDisp - stiffDisp);
 }
 
 //! Convert one array of 6 velocities (transX, transY, transZ, wmX, wmY, wmZ)
