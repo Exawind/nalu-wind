@@ -44,6 +44,7 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     turbineInProc_(false),
     loadMap_(NULL),
     dispMap_(NULL),
+    deflectionRamp_(NULL),
     dispMapInterp_(NULL),
     tforceSCS_(NULL)
 {
@@ -162,6 +163,7 @@ fsiTurbine::populateParts(
 
     stk::mesh::put_field_on_mesh(*dispMap_, *part, 1, nullptr);
     stk::mesh::put_field_on_mesh(*dispMapInterp_, *part, 1, nullptr);
+    stk::mesh::put_field_on_mesh(*deflectionRamp_, *part, 1, nullptr);
   }
 }
 
@@ -207,6 +209,12 @@ fsiTurbine::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
 
   bulk_ = bulk;
   auto& meta = bulk_->mesh_meta_data();
+
+  deflectionRamp_ = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "deflection_ramp");
+  if (deflectionRamp_ == NULL)
+    deflectionRamp_ = &(meta.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "deflection_ramp"));
 
   dispMap_ =
     meta.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "disp_map");
@@ -1980,7 +1988,7 @@ fsiTurbine::mapDisplacements()
         const double spanLocation =
           spanLocI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
         // FIXME(psakiev) hard code 3m for test
-        deflectionRamp *= fsi::linear_ramp_span(spanLocation, 3.0);
+        deflectionRamp *= fsi::linear_ramp_span(spanLocation, 2.0);
 
         // things for theta mapping
         const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
@@ -1988,6 +1996,8 @@ fsiTurbine::mapDisplacements()
         const auto nodePosition = vector_from_field(*modelCoords, node);
         deflectionRamp *= fsi::linear_ramp_theta(
           hubPos, rootPos.position_, nodePosition, utils::radians(20.0), 120.0);
+
+        *stk::mesh::field_data(*deflectionRamp_, node) = deflectionRamp;
 
         vector_to_field(
           aero::compute_translational_displacements(

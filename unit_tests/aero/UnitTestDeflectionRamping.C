@@ -17,7 +17,7 @@ TEST(DeflectionRamping, linearRampingAlongSpanInsideRamp)
 
   const double spanLocation = 0.3;
   const double zeroRampLocation = 0.4;
-  const double expectedRampFactor = 0.25;
+  const double expectedRampFactor = 0.75;
   const double calcRampFactor =
     fsi::linear_ramp_span(spanLocation, zeroRampLocation);
   EXPECT_DOUBLE_EQ(expectedRampFactor, calcRampFactor);
@@ -28,7 +28,7 @@ TEST(DeflectionRamping, linearRampingAlongSpanOutsideRamp)
 
   const double spanLocation = 0.5;
   const double zeroRampLocation = 0.4;
-  const double expectedRampFactor = 0.00;
+  const double expectedRampFactor = 1.00;
   const double calcRampFactor =
     fsi::linear_ramp_span(spanLocation, zeroRampLocation);
   EXPECT_DOUBLE_EQ(expectedRampFactor, calcRampFactor);

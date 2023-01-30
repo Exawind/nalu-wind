@@ -17,8 +17,8 @@ namespace fsi {
 double KOKKOS_FORCEINLINE_FUNCTION
 linear_ramp_span(const double spanLocation, const double zeroRampDistance)
 {
-  return stk::math::max(
-    (zeroRampDistance - spanLocation) / zeroRampDistance, 0.0);
+  return 1.0 - stk::math::max(
+                 (zeroRampDistance - spanLocation) / zeroRampDistance, 0.0);
 }
 
 double KOKKOS_FORCEINLINE_FUNCTION
@@ -34,8 +34,11 @@ linear_ramp_theta(
 
   // make sure vectors are in the plane of rotation to compute the angle between
   // them
-  // TODO(psakiev) not sure if this is actually the rotation axis, need to make sure
-  const vs::Vector rotationAxis = vs::Vector(hub.orientation_).normalize();
+  // TODO(psakiev) not sure if this is actually the rotation axis, need to make
+  // sure
+  /* const vs::Vector rotationAxis = vs::Vector(hub.orientation_).normalize();
+   */
+  const vs::Vector rotationAxis = vs::Vector::ihat();
   v1 = v1 - vs::project(v1, rotationAxis);
   v2 = v2 - vs::project(v2, rotationAxis);
 
