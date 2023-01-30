@@ -38,9 +38,9 @@ namespace nalu {
 struct DeflectionRampingParams
 {
   double defaultRampValue_{0.0};
-  double spanRampDistance_{0.0};
-  double zeroRampLocTheta_{0.0};
-  double thetaRampSpan_{0.0};
+  double spanRampDistance_{1.0};
+  double zeroRampLocTheta_{1.0};
+  double thetaRampSpan_{1.0};
 };
 
 typedef stk::mesh::Field<int, stk::mesh::SimpleArrayTag> GenericIntFieldType;
