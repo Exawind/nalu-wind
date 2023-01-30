@@ -43,7 +43,6 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestVSpace.C
 )
 
-
 add_subdirectory(actuator)
 add_subdirectory(aero)
 add_subdirectory(algorithms)
@@ -55,4 +54,6 @@ add_subdirectory(ngp_kernels)
 add_subdirectory(mesh_motion)
 add_subdirectory(gcl)
 add_subdirectory(utils)
-add_subdirectory(matrix_free)
+if (ENABLE_MATRIXFREE)
+  add_subdirectory(matrix_free)
+endif()

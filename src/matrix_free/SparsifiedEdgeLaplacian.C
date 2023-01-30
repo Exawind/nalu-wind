@@ -19,8 +19,6 @@
 #include "matrix_free/StkSimdConnectivityMap.h"
 #include "matrix_free/StkSimdGatheredElementData.h"
 #include <KokkosInterface.h>
-#include <Kokkos_ExecPolicy.hpp>
-#include <Kokkos_UniqueToken.hpp>
 
 namespace sierra {
 namespace nalu {

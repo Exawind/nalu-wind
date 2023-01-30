@@ -26,7 +26,9 @@
 #include <ngp_utils/NgpLoopUtils.h>
 #include <ngp_utils/NgpFieldManager.h>
 
+#ifdef NALU_HAS_MATRIXFREE
 #include <matrix_free/NodeOrderMap.h>
+#endif
 
 #include <KokkosInterface.h>
 
@@ -603,8 +605,16 @@ TpetraLinearSystem::buildSparsifiedEdgeElemToNodeGraph(
                 const auto sub_n_index = n + edge_conn[iedge][lr][0];
                 const auto sub_m_index = m + edge_conn[iedge][lr][1];
                 const auto sub_l_index = l + edge_conn[iedge][lr][2];
-                entities[lr] = elem_nodes[matrix_free::node_map(
-                  poly, sub_n_index, sub_m_index, sub_l_index)];
+
+#ifdef NALU_HAS_MATRIXFREE
+                auto node_index = matrix_free::node_map(
+                  poly, sub_n_index, sub_m_index, sub_l_index);
+#else
+                constexpr int nmap[2][2][2] = {
+                  {{0, 1}, {3, 2}}, {{4, 5}, {7, 6}}};
+                auto node_index = nmap[sub_n_index][sub_m_index][sub_l_index];
+#endif
+                entities[lr] = elem_nodes[node_index];
               }
               addConnections(entities.data(), 2u);
             }

@@ -25,7 +25,9 @@ option(ENABLE_PARAVIEW_CATALYST
 option(ENABLE_TIOGA "Use TIOGA TPL to perform overset connectivity" OFF)
 option(ENABLE_OPENMP "Enable OpenMP flags" OFF)
 option(ENABLE_BOOST  "Enable Boost libraries" OFF)
+option(ENABLE_MATRIXFREE "Enable high-order matrix-free computation" ON)
 option(NALU_WIND_SAVE_GOLDS  "Save gold files to directory when running tests" OFF)
+
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -182,6 +184,11 @@ if(ENABLE_TIOGA)
   endif()
 endif()
 
+
+############################ MATRIXREE #####################################
+if(ENABLE_MATRIXFREE)
+    target_compile_definitions(nalu PUBLIC NALU_HAS_MATRIXFREE)
+endif()
 ########################### NALU #####################################
 message(STATUS "CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
 message(STATUS "CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")

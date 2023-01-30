@@ -15,7 +15,9 @@
 #include <stk_mesh/base/SkinMesh.hpp>
 #include <stk_mesh/base/SkinBoundary.hpp>
 
+#ifdef NALU_HAS_MATRIXFREE
 #include <matrix_free/LobattoQuadratureRule.h>
+#endif
 #include <element_promotion/PromotedPartHelper.h>
 #include <element_promotion/PromoteElement.h>
 #include <element_promotion/PromotedElementIO.h>
@@ -73,8 +75,10 @@ fill_and_promote_hex_mesh(
   VectorFieldType* coords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
   stk::mesh::PartVector baseParts = {blockPart, surfPart};
-  auto nodes =
-    sierra::nalu::matrix_free::gauss_lobatto_legendre_abscissae(polyOrder);
+  std::vector<double> nodes(polyOrder + 1);
+  for (size_t j = 0; j < polyOrder + 1; ++j) {
+    nodes[j] = -1 + 2. / (polyOrder)*j;
+  }
   sierra::nalu::promotion::create_tensor_product_hex_elements(
     nodes, bulk, *coords, baseParts);
 }
