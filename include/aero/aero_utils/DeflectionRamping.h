@@ -34,11 +34,10 @@ linear_ramp_theta(
 
   // make sure vectors are in the plane of rotation to compute the angle between
   // them
-  // TODO(psakiev) not sure if this is actually the rotation axis, need to make
-  // sure
-  /* const vs::Vector rotationAxis = vs::Vector(hub.orientation_).normalize();
-   */
-  const vs::Vector rotationAxis = vs::Vector::ihat();
+  // to get the rotation axis from openfast we need to take a reference vector
+  // iHat and apply the reference rotation given by the hub
+  const vs::Vector rotationAxis =
+    wmp::rotate(hub.orientation_, vs::Vector::ihat(), true).normalize();
   v1 = v1 - vs::project(v1, rotationAxis);
   v2 = v2 - vs::project(v2, rotationAxis);
 

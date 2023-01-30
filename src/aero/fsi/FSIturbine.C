@@ -855,17 +855,19 @@ fsiTurbine::compute_stiff_blade_displacements()
   auto itot = 0;
   for (auto iBlade = 0; iBlade < nBlades; iBlade++) {
     auto nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
+    for (int i = 0; i < nPtsBlade; ++i) {
 
-    auto hubRef = aero::SixDOF(brFSIdata_.hub_ref_pos.data());
-    auto hubDisp = aero::SixDOF(brFSIdata_.hub_def.data());
-    auto rootRef = aero::SixDOF(&(brFSIdata_.bld_root_ref_pos[iBlade * 6]));
-    auto rootDisp = aero::SixDOF(&(brFSIdata_.bld_root_def[iBlade * 6]));
-    auto bldRef = aero::SixDOF(&(brFSIdata_.bld_ref_pos[itot * 6]));
+      auto hubRef = aero::SixDOF(brFSIdata_.hub_ref_pos.data());
+      auto hubDisp = aero::SixDOF(brFSIdata_.hub_def.data());
+      auto rootRef = aero::SixDOF(&(brFSIdata_.bld_root_ref_pos[iBlade * 6]));
+      auto rootDisp = aero::SixDOF(&(brFSIdata_.bld_root_def[iBlade * 6]));
+      auto bldRef = aero::SixDOF(&(brFSIdata_.bld_ref_pos[itot * 6]));
 
-    bldDefStiff_[itot] = fsi::displacements_from_hub_motion(
-      hubRef, hubDisp, rootRef, rootDisp, bldRef);
+      bldDefStiff_[itot] = fsi::displacements_from_hub_motion(
+        hubRef, hubDisp, rootRef, rootDisp, bldRef);
 
-    itot++;
+      itot++;
+    }
   }
 }
 
@@ -1987,15 +1989,15 @@ fsiTurbine::mapDisplacements()
 
         const double spanLocation =
           spanLocI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
-        // FIXME(psakiev) hard code 3m for test
-        deflectionRamp *= fsi::linear_ramp_span(spanLocation, 2.0);
+        // FIXME(psakiev) hard code for test
+        deflectionRamp *= fsi::linear_ramp_span(spanLocation, 1.0);
 
         // things for theta mapping
         const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
         const aero::SixDOF rootPos(brFSIdata_.bld_root_ref_pos.data());
         const auto nodePosition = vector_from_field(*modelCoords, node);
         deflectionRamp *= fsi::linear_ramp_theta(
-          hubPos, rootPos.position_, nodePosition, utils::radians(20.0), 120.0);
+          hubPos, rootPos.position_, nodePosition, utils::radians(15.0), 55.0);
 
         *stk::mesh::field_data(*deflectionRamp_, node) = deflectionRamp;
 
