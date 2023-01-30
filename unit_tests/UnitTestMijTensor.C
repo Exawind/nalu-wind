@@ -26,8 +26,6 @@
 
 #include "UnitTestUtils.h"
 
-#if !defined(KOKKOS_ENABLE_GPU)
-
 namespace {
 
 std::vector<double>
@@ -216,4 +214,3 @@ TEST(MijTensor, hex8)
 {
   test_metric_for_topo_3D(stk::topology::HEX_8, 1.0e-10);
 }
-#endif

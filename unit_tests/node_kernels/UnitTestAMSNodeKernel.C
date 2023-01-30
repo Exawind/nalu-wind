@@ -858,7 +858,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_sstams_node)
 
   helperObjs.execute();
 
-#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -868,7 +867,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_sstams_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
 
 TEST_F(AMSKernelHex8Mesh, NGP_tke_sstlrams_node)
@@ -892,7 +890,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_sstlrams_node)
 
   helperObjs.execute();
 
-#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -902,7 +899,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_sstlrams_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
 
 TEST_F(AMSKernelHex8Mesh, NGP_tke_keams_node)
@@ -935,7 +931,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_keams_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
 
 TEST_F(AMSKernelHex8Mesh, NGP_tke_koams_node)
@@ -958,7 +953,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_koams_node)
 
   helperObjs.execute();
 
-#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -1000,8 +994,8 @@ TEST_F(AMSKernelHex8Mesh, NGP_sdr_sstams_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
+
 TEST_F(AMSKernelHex8Mesh, NGP_sdr_sstlrams_node)
 {
   // Only execute for 1 processor runs
@@ -1023,7 +1017,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_sdr_sstlrams_node)
 
   helperObjs.execute();
 
-#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -1033,8 +1026,8 @@ TEST_F(AMSKernelHex8Mesh, NGP_sdr_sstlrams_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
+
 TEST_F(AMSKernelHex8Mesh, NGP_tdr_keams_node)
 {
   // Only execute for 1 processor runs
@@ -1056,7 +1049,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_tdr_keams_node)
 
   helperObjs.execute();
 
-#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -1066,8 +1058,8 @@ TEST_F(AMSKernelHex8Mesh, NGP_tdr_keams_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
+
 TEST_F(AMSKernelHex8Mesh, NGP_sdr_koams_node)
 {
   // Only execute for 1 processor runs
@@ -1088,7 +1080,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_sdr_koams_node)
 
   helperObjs.execute();
 
-#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -1132,7 +1123,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_sstams_forcing)
 
   helperObjs.execute();
 
-#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
@@ -1142,8 +1132,8 @@ TEST_F(AMSKernelHex8Mesh, NGP_sstams_forcing)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   // unit_test_kernel_utils::expect_all_near<24>(
   //   helperObjs.linsys->lhs_, 0.0, 1.0e-12);
-#endif
 }
+
 TEST_F(AMSKernelHex8Mesh, NGP_keams_forcing)
 {
   // Only execute for 1 processor runs
@@ -1176,7 +1166,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_keams_forcing)
 
   helperObjs.execute();
 
-#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
@@ -1186,7 +1175,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_keams_forcing)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   // unit_test_kernel_utils::expect_all_near<24>(
   //   helperObjs.linsys->lhs_, 0.0, 1.0e-12);
-#endif
 }
 
 TEST_F(AMSKernelHex8Mesh, NGP_koams_forcing)
