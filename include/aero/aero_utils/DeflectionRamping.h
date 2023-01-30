@@ -34,11 +34,8 @@ linear_ramp_theta(
 
   // make sure vectors are in the plane of rotation to compute the angle between
   // them
-  // TODO(psakiev) not sure if this is actually the rotation axis, need to make
-  // sure
-  /* const vs::Vector rotationAxis = vs::Vector(hub.orientation_, vs::Vector::ihat(), true).normalize();
-   */
-  const vs::Vector rotationAxis = vs::Vector::ihat();
+  const vs::Vector rotationAxis =
+    wmp::rotate(hub.orientation_, vs::Vector::ihat(), true).normalize();
   v1 = v1 - vs::project(v1, rotationAxis);
   v2 = v2 - vs::project(v2, rotationAxis);
 
