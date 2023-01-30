@@ -27,11 +27,21 @@
 #include "yaml-cpp/yaml.h"
 #include "vs/vector_space.h"
 
-namespace aero{struct SixDOF;}
+namespace aero {
+struct SixDOF;
+}
 
 namespace sierra {
 
 namespace nalu {
+
+struct DeflectionRampingParams
+{
+  double defaultRampValue_{0.0};
+  double spanRampDistance_{0.0};
+  double zeroRampLocTheta_{0.0};
+  double thetaRampSpan_{0.0};
+};
 
 typedef stk::mesh::Field<int, stk::mesh::SimpleArrayTag> GenericIntFieldType;
 
@@ -155,6 +165,8 @@ public:
 
   //! Map of `{variableName : netCDF_ID}` obtained from the NetCDF C interface
   std::unordered_map<std::string, int> ncVarIDs_;
+  //! ramping parameters for blade deflections
+  DeflectionRampingParams deflectionRampParams_;
 
 private:
   fsiTurbine() = delete;

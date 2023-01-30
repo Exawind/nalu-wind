@@ -12,6 +12,7 @@
 #include "aero/aero_utils/DeflectionRamping.h"
 #include "utils/ComputeVectorDivergence.h"
 #include <NaluEnv.h>
+#include <NaluParsing.h>
 
 #include "stk_util/parallel/ParallelReduce.hpp"
 #include "stk_mesh/base/FieldParallel.hpp"
@@ -63,6 +64,21 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     NaluEnv::self().naluOutputP0()
       << "Nacelle part name(s) not specified for turbine " << iTurb_
       << std::endl;
+  if (node["deflection_ramping"]) {
+    const auto& defNode = node["deflection_ramping"];
+    deflectionRampParams_.defaultRampValue_ = 1.0;
+    get_required(
+      defNode, "span_ramp_distance", deflectionRampParams_.spanRampDistance_);
+    get_required(
+      defNode, "zero_theta_ramp_angle",
+      deflectionRampParams_.zeroRampLocTheta_);
+    get_required(
+      defNode, "theta_ramp_span", deflectionRampParams_.thetaRampSpan_);
+    deflectionRampParams_.zeroRampLocTheta_ =
+      utils::radians(deflectionRampParams_.zeroRampLocTheta_);
+    deflectionRampParams_.thetaRampSpan_ =
+      utils::radians(deflectionRampParams_.thetaRampSpan_);
+  }
 
   if (node["hub_parts"]) {
     const auto& hparts = node["hub_parts"];
@@ -1985,19 +2001,21 @@ fsiTurbine::mapDisplacements()
         // to save memory on gpus linearly interpolated spanLocation for
         //
         // deflection ramping
-        double deflectionRamp = 1.0;
+        double deflectionRamp = deflectionRampParams_.defaultRampValue_;
 
         const double spanLocation =
           spanLocI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
-        // FIXME(psakiev) hard code for test
-        deflectionRamp *= fsi::linear_ramp_span(spanLocation, 1.0);
+        deflectionRamp *= fsi::linear_ramp_span(
+          spanLocation, deflectionRampParams_.spanRampDistance_);
 
         // things for theta mapping
         const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
-        const aero::SixDOF rootPos(brFSIdata_.bld_root_ref_pos.data());
+        const aero::SixDOF rootPos(&(brFSIdata_.bld_root_ref_pos[iBlade * 6]));
         const auto nodePosition = vector_from_field(*modelCoords, node);
         deflectionRamp *= fsi::linear_ramp_theta(
-          hubPos, rootPos.position_, nodePosition, utils::radians(15.0), 55.0);
+          hubPos, rootPos.position_, nodePosition,
+          deflectionRampParams_.thetaRampSpan_,
+          deflectionRampParams_.zeroRampLocTheta_);
 
         *stk::mesh::field_data(*deflectionRamp_, node) = deflectionRamp;
 
