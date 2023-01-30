@@ -86,6 +86,7 @@ MomentumKEAMSForcingNodeKernel::setup(Realm& realm)
   forcingComp_ = fieldMgr.get_field<double>(forcingCompID_);
 }
 
+KOKKOS_FUNCTION
 void
 MomentumKEAMSForcingNodeKernel::execute(
   NodeKernelTraits::LhsType&,

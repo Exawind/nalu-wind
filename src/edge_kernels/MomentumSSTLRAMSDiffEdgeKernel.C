@@ -59,6 +59,7 @@ MomentumSSTLRAMSDiffEdgeKernel::MomentumSSTLRAMSDiffEdgeKernel(
   relaxFacU_ = solnOpts.get_relaxation_factor(dofName);
 }
 
+KOKKOS_FUNCTION
 void
 MomentumSSTLRAMSDiffEdgeKernel::setup(Realm& realm)
 {

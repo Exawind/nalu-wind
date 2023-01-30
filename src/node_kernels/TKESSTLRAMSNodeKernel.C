@@ -57,6 +57,7 @@ TKESSTLRAMSNodeKernel::setup(Realm& realm)
   sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
 }
 
+KOKKOS_FUNCTION
 void
 TKESSTLRAMSNodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,

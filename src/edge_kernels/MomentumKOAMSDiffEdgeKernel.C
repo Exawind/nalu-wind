@@ -78,6 +78,7 @@ MomentumKOAMSDiffEdgeKernel::setup(Realm& realm)
   avgResAdeq_ = fieldMgr.get_field<double>(avgResAdeqID_);
 }
 
+KOKKOS_FUNCTION
 void
 MomentumKOAMSDiffEdgeKernel::execute(
   EdgeKernelTraits::ShmemDataType& smdata,
