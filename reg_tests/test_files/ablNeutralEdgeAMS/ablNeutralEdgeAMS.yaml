@@ -68,7 +68,6 @@ realms:
         specific_dissipation_rate: solve_scalar
         pressure: solve_cont
         ndtw: solve_cont
-        time_averaged_model_split: solve_cont
 
       # This defines the equation systems, maximum number of inner iterations,
       # and scaled nonlinear residual tolerance.
@@ -77,14 +76,14 @@ realms:
             name: myNDTW
             max_iterations: 1
             convergence_tolerance: 1e-8
-    
+
         - LowMachEOM:
             name: myLowMach
             max_iterations: 1
             convergence_tolerance: 1e-8
 
         - ShearStressTransport:
-            name: mySST 
+            name: mySST
             max_iterations: 1
             convergence_tolerance: 1e-8
 
@@ -138,7 +137,7 @@ realms:
     - periodic_boundary_condition: bc_east_west
       target_name: [east, west]
       periodic_user_data:
-        search_tolerance: 0.0001 
+        search_tolerance: 0.0001
 
     - abltop_boundary_condition: bc_upper
       target_name: upper
@@ -241,7 +240,7 @@ realms:
 
         - source_terms:
             momentum:
-              - EarthCoriolis 
+              - EarthCoriolis
               - abl_forcing
 
         - user_constants:

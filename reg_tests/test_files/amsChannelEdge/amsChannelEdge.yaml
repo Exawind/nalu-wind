@@ -30,7 +30,7 @@ realms:
 
   - name: realm_1
     mesh: ../../mesh/periodicChannel.g
-    use_edges: yes 
+    use_edges: yes
     check_for_missing_bcs: yes
     automatic_decomposition_type: rcb
 
@@ -48,7 +48,6 @@ realms:
         specific_dissipation_rate: solve_scalar
         pressure: solve_cont
         ndtw: solve_cont
-        time_averaged_model_split: solve_cont
 
       systems:
         - WallDistance:
@@ -73,12 +72,12 @@ realms:
           pressure: 0
           velocity: [22.0,0.0,0.0]
           turbulent_ke: 0.05
-          specific_dissipation_rate: 3528.0 
+          specific_dissipation_rate: 3528.0
           average_velocity: [22.78,0.0,0.0]
           average_tke_resolved: 0.0
           average_dudx: 0.0
           k_ratio: 1.0
-          avg_res_adequacy_parameter: 1.0 
+          avg_res_adequacy_parameter: 1.0
 
     material_properties:
       target_name: Unspecified-2-HEX
@@ -88,7 +87,7 @@ realms:
           value: 1.0
         - name: viscosity
           type: constant
-          value: 9.99488e-4 
+          value: 9.99488e-4
 
     boundary_conditions:
 
@@ -119,7 +118,7 @@ realms:
     solution_options:
       name: myOptions
       turbulence_model: sst_ams
-      reset_AMS_averages_on_init: true 
+      reset_AMS_averages_on_init: true
       projected_timescale_type: momentum_diag_inv
 
       fix_pressure_at_node:
@@ -162,7 +161,7 @@ realms:
             ndtw: element
 
         - relaxation_factor:
-            velocity: 1.0 
+            velocity: 1.0
             pressure: 1.0
             turbulent_ke: 1.0
             specific_dissipation_rate: 1.0

@@ -29,7 +29,7 @@ linear_solvers:
 realms:
 
   - name: realm_1
-    mesh: SSTAMSChannelEdge.rst
+    mesh: KOAMSChannelEdge.rst
     use_edges: yes
     check_for_missing_bcs: yes
     support_inconsistent_multi_state_restart: yes
@@ -60,8 +60,8 @@ realms:
             max_iterations: 1
             convergence_tolerance: 1e-8
 
-        - ShearStressTransport:
-            name: mySST
+        - WilcoxKOmega:
+            name: myKO
             max_iterations: 1
             convergence_tolerance: 1e-8
 
@@ -71,8 +71,8 @@ realms:
         value:
           pressure: 0
           velocity: [22.0,0.0,0.0]
-          turbulent_ke: 0.0005
-          specific_dissipation_rate: 0.0005
+          turbulent_ke: 0.05
+          specific_dissipation_rate: 3528.0
           average_velocity: [22.78,0.0,0.0]
           average_tke_resolved: 0.0
           average_dudx: 0.0
@@ -117,7 +117,7 @@ realms:
 
     solution_options:
       name: myOptions
-      turbulence_model: sst_ams
+      turbulence_model: ko_ams
       reset_AMS_averages_on_init: true
       projected_timescale_type: momentum_diag_inv
 
@@ -177,13 +177,13 @@ realms:
             momentum: [1.00, 0.0, 0.0]
 
     restart:
-      restart_data_base_name: SSTAMSChannelEdge-ams.rst
+      restart_data_base_name: KOAMSChannelEdge-ams.rst
       restart_frequency: 10
       restart_start: 0
       restart_time: 100
 
     output:
-      output_data_base_name: SSTAMSChannelEdge-ams.e
+      output_data_base_name: KOAMSChannelEdge-ams.e
       output_frequency: 10
       output_node_set: no
       output_variables:

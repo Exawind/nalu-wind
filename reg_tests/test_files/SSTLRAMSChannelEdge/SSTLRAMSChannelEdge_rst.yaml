@@ -29,7 +29,7 @@ linear_solvers:
 realms:
 
   - name: realm_1
-    mesh: SSTAMSChannelEdge.rst
+    mesh: SSTLRAMSChannelEdge.rst
     use_edges: yes
     check_for_missing_bcs: yes
     support_inconsistent_multi_state_restart: yes
@@ -117,7 +117,7 @@ realms:
 
     solution_options:
       name: myOptions
-      turbulence_model: sst_ams
+      turbulence_model: sstlr_ams
       reset_AMS_averages_on_init: true
       projected_timescale_type: momentum_diag_inv
 
@@ -169,6 +169,8 @@ realms:
         - turbulence_model_constants:
             SDRWallFactor: 0.625
             forcingFactor: 32.0
+            sigmaKOne: 0.5
+            sigmaWOne: 0.5
 
         - source_terms:
             momentum: body_force
@@ -177,13 +179,13 @@ realms:
             momentum: [1.00, 0.0, 0.0]
 
     restart:
-      restart_data_base_name: SSTAMSChannelEdge-ams.rst
+      restart_data_base_name: SSTLRAMSChannelEdge-ams.rst
       restart_frequency: 10
       restart_start: 0
       restart_time: 100
 
     output:
-      output_data_base_name: SSTAMSChannelEdge-ams.e
+      output_data_base_name: SSTLRAMSChannelEdge-ams.e
       output_frequency: 10
       output_node_set: no
       output_variables:
