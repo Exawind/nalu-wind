@@ -31,7 +31,8 @@ TpetraLinearSolverConfig::TpetraLinearSolverConfig() : LinearSolverConfig() {}
 TpetraLinearSolverConfig::~TpetraLinearSolverConfig() {}
 
 void
-TpetraLinearSolverConfig::load(const YAML::Node& node)
+TpetraLinearSolverConfig::load(
+  const YAML::Node& node, Teuchos::ParameterList& presetParamsPrecond)
 {
   name_ = node["name"].as<std::string>();
   method_ = node["method"].as<std::string>();
@@ -107,10 +108,17 @@ TpetraLinearSolverConfig::load(const YAML::Node& node)
   } else if (precond_ == "riluk") {
     preconditionerType_ = "RILUK";
   } else if (precond_ == "muelu") {
-    muelu_xml_file_ = std::string("milestone.xml");
+    muelu_xml_file_ = std::string(" ");
     get_if_present(
       node, "muelu_xml_file_name", muelu_xml_file_, muelu_xml_file_);
-    paramsPrecond_->set("xml parameter file", muelu_xml_file_);
+    if (presetParamsPrecond.numParams() != 0) {
+      *paramsPrecond_ = presetParamsPrecond;
+    } else if (muelu_xml_file_ != " ") {
+      paramsPrecond_->set("xml parameter file", muelu_xml_file_);
+    } else {
+      throw std::runtime_error("MueLu xml file must be specified for MueLu "
+                               "preconditioner if no preset is used ");
+    }
     useMueLu_ = true;
   } else {
     throw std::runtime_error("invalid linear solver preconditioner specified ");
