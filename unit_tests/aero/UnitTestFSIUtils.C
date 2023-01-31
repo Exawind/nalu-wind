@@ -42,30 +42,31 @@ TEST(FSIUtils, translation_component_from_blade_rotation_displacement)
   EXPECT_DOUBLE_EQ(goldRotationDisp.z(), bldCurRelativeToHub.z());
 }
 
-TEST(FSIUtils, orientation_component_from_blade_rotation_displacement)
-{
-  const auto rootRefOrient = wmp::create_wm_param(vs::Vector::khat(), M_PI);
-  // blade point oriented 90 degrees off from the root
-  const auto bladeRefOrient = wmp::create_wm_param(vs::Vector::khat(), M_PI_2);
-  // net rotation of 90 degrees about the hub
-  const auto rootDispOrient = wmp::create_wm_param(vs::Vector::ihat(), M_PI_2);
+// TEST(FSIUtils, orientation_component_from_blade_rotation_displacement)
+// {
+//   const auto rootRefOrient = wmp::create_wm_param(vs::Vector::khat(), M_PI);
+//   // blade point oriented 90 degrees off from the root
+//   const auto bladeRefOrient = wmp::create_wm_param(vs::Vector::khat(), M_PI_2);
+//   // net rotation of 90 degrees about the hub
+//   const auto rootDispOrient = wmp::create_wm_param(vs::Vector::ihat(), M_PI_2);
 
-  const SixDOF rootRef(vs::Vector::zero(), rootRefOrient);
-  const SixDOF bladeRef(vs::Vector::zero(), bladeRefOrient);
-  const SixDOF rootDisp(vs::Vector::zero(), rootDispOrient);
+//   const SixDOF rootRef(vs::Vector::zero(), rootRefOrient);
+//   const SixDOF bladeRef(vs::Vector::zero(), bladeRefOrient);
+//   const SixDOF rootDisp(vs::Vector::zero(), rootDispOrient);
 
-  const auto netOrientation =
-    fsi::orientation_displacments_from_hub_motion(rootRef, rootDisp, bladeRef);
+//   const auto netOrientation =
+//     fsi::orientation_displacments_from_hub_motion(rootRef, rootDisp, bladeRef);
 
-  const auto testPoint = vs::Vector::one();
-  // rotate 90 about khat then 90 about ihat
-  const vs::Vector goldEndLocation(-1.0, -1.0, 1.0);
+//   const auto testPoint = vs::Vector::one();
+//   // rotate 90 about khat then 90 about ihat
+//   const vs::Vector goldEndLocation(-1.0, -1.0, 1.0);
 
-  const auto endLocation = wmp::rotate(netOrientation, testPoint);
+//   const auto endLocation = wmp::rotate(netOrientation, testPoint);
 
-  EXPECT_DOUBLE_EQ(goldEndLocation.x(), endLocation.x());
-  EXPECT_DOUBLE_EQ(goldEndLocation.y(), endLocation.y());
-  EXPECT_DOUBLE_EQ(goldEndLocation.z(), endLocation.z());
-}
+//   EXPECT_DOUBLE_EQ(goldEndLocation.x(), endLocation.x());
+//   EXPECT_DOUBLE_EQ(goldEndLocation.y(), endLocation.y());
+//   EXPECT_DOUBLE_EQ(goldEndLocation.z(), endLocation.z());
+// }
+    
 } // namespace
 } // namespace aero

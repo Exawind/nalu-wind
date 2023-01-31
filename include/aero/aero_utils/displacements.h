@@ -145,7 +145,8 @@ compute_translational_displacements(
   auto stiff_disp = compute_translational_displacements(disp_stiff, referencePos, cfdPos);
   
   auto rloc_ramp = 0.1 + 0.05*std::tanh(2.0*(wall_dist-3.0));
-  auto ramp = (0.5 + 0.5*std::tanh(20.0*(rLoc/61.5 - rloc_ramp)) );
+  //auto ramp = (0.5 + 0.5*std::tanh(20.0*(rLoc/61.5 - rloc_ramp)) );
+  auto ramp = 0.0;
   
   return stiff_disp + ramp * (full_disp - stiff_disp);
 }
