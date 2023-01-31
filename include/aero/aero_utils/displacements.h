@@ -132,13 +132,11 @@ compute_translational_displacements(
   const SixDOF fullDeflections,
   const SixDOF referencePos,
   const vs::Vector cfdPos,
-  const SixDOF stiffDeflections,
+  const vs::Vector stiffDisp,
   const double ramp = 1.0)
 {
   const auto fullDisp =
     compute_translational_displacements(fullDeflections, referencePos, cfdPos);
-  const auto stiffDisp =
-    compute_translational_displacements(stiffDeflections, referencePos, cfdPos);
   return stiffDisp + ramp * (fullDisp - stiffDisp);
 }
 

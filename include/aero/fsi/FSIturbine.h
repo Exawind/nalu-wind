@@ -98,9 +98,6 @@ public:
   //! point load array that gets transferred to openfast
   void mapLoads();
 
-  //! compute blade node displacements for stiff blades
-  void compute_stiff_blade_displacements();
-
   //! Transfer the deflections from the openfast nodes to the turbine surface
   //! CFD mesh. Will call 'computeDisplacement' for each node on the turbine
   //! surface CFD mesh.

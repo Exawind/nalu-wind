@@ -8,7 +8,6 @@
 //
 
 #include "aero/fsi/FSIturbine.h"
-#include "aero/fsi/FSIUtils.h"
 #include "aero/aero_utils/DeflectionRamping.h"
 #include "utils/ComputeVectorDivergence.h"
 #include <NaluEnv.h>
@@ -861,30 +860,6 @@ fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime)
 void
 fsiTurbine::computeFSIforce()
 {
-}
-
-void
-fsiTurbine::compute_stiff_blade_displacements()
-{
-
-  auto nBlades = params_.numBlades;
-  auto hubRef = aero::SixDOF(brFSIdata_.hub_ref_pos.data());
-  auto hubDisp = aero::SixDOF(brFSIdata_.hub_def.data());
-  auto itot = 0;
-  for (auto iBlade = 0; iBlade < nBlades; iBlade++) {
-    auto nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
-    auto rootRef = aero::SixDOF(&(brFSIdata_.bld_root_ref_pos[iBlade * 6]));
-    auto rootDisp = aero::SixDOF(&(brFSIdata_.bld_root_def[iBlade * 6]));
-    for (int i = 0; i < nPtsBlade; ++i) {
-
-      auto bldRef = aero::SixDOF(&(brFSIdata_.bld_ref_pos[itot * 6]));
-
-      bldDefStiff_[itot] =
-        fsi::displacements_from_hub_motion(hubRef, hubDisp, rootRef, bldRef);
-
-      itot++;
-    }
-  }
 }
 
 //! Map loads from the "fsiForce" field on the turbine surface CFD mesh into
@@ -1984,24 +1959,15 @@ fsiTurbine::mapDisplacements()
         auto interpDisp = aero::linear_interp_total_displacement(
           bldStartDisp, bldEndDisp, *dispMapInterpNode);
 
-        // Now linearly interpolate the displacements for a stiff blade
-        // to the intermediate
-        auto bldStiffStartDisp = bldDefStiff_[*dispMapNode + iStart];
-        auto bldStiffEndDisp = bldDefStiff_[*dispMapNode + iStart + 1];
-        auto interpStiffDisp = aero::linear_interp_total_displacement(
-          bldStiffStartDisp, bldStiffEndDisp, *dispMapInterpNode);
-
-        // Now compute the deflection ramping for the blades
-        const double spanLocI = brFSIdata_.bld_rloc[*dispMapNode + iStart];
-        const double spanLocIp1 =
-          brFSIdata_.bld_rloc[*dispMapNode + iStart + 1];
-
         // ramping can be done entirely with reference coordinates
         // could cache this and do it once but might be better to do it inline
         // to save memory on gpus linearly interpolated spanLocation for
         //
         // deflection ramping
         double deflectionRamp = deflectionRampParams_.defaultRampValue_;
+        const double spanLocI = brFSIdata_.bld_rloc[*dispMapNode + iStart];
+        const double spanLocIp1 =
+          brFSIdata_.bld_rloc[*dispMapNode + iStart + 1];
 
         const double spanLocation =
           spanLocI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
@@ -2012,6 +1978,7 @@ fsiTurbine::mapDisplacements()
         const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
         const aero::SixDOF rootPos(&(brFSIdata_.bld_root_ref_pos[iBlade * 6]));
         const auto nodePosition = vector_from_field(*modelCoords, node);
+
         deflectionRamp *= fsi::linear_ramp_theta(
           hubPos, rootPos.position_, nodePosition,
           deflectionRampParams_.thetaRampSpan_,
@@ -2019,9 +1986,17 @@ fsiTurbine::mapDisplacements()
 
         *stk::mesh::field_data(*deflectionRamp_, node) = deflectionRamp;
 
+        const aero::SixDOF hubDef(brFSIdata_.hub_def.data());
+        // displacements from the hub will match a fully stiff blade's
+        // displacements
+        const auto hubBasedDef = aero::compute_translational_displacements(
+          hubDef, hubPos, nodePosition);
+        /* std::cerr << "hubDef, hubBasedef: " << hubDef.position_ */
+        /* << hubDef.orientation_ << hubBasedDef << std::endl; */
+
         vector_to_field(
           aero::compute_translational_displacements(
-            interpDisp, refPos, nodePosition, interpStiffDisp, deflectionRamp),
+            interpDisp, refPos, nodePosition, hubBasedDef, deflectionRamp),
           *displacement, node);
       }
     }
