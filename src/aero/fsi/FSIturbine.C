@@ -868,19 +868,19 @@ fsiTurbine::compute_stiff_blade_displacements()
 {
 
   auto nBlades = params_.numBlades;
+  auto hubRef = aero::SixDOF(brFSIdata_.hub_ref_pos.data());
+  auto hubDisp = aero::SixDOF(brFSIdata_.hub_def.data());
   auto itot = 0;
   for (auto iBlade = 0; iBlade < nBlades; iBlade++) {
     auto nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
+    auto rootRef = aero::SixDOF(&(brFSIdata_.bld_root_ref_pos[iBlade * 6]));
+    auto rootDisp = aero::SixDOF(&(brFSIdata_.bld_root_def[iBlade * 6]));
     for (int i = 0; i < nPtsBlade; ++i) {
 
-      auto hubRef = aero::SixDOF(brFSIdata_.hub_ref_pos.data());
-      auto hubDisp = aero::SixDOF(brFSIdata_.hub_def.data());
-      auto rootRef = aero::SixDOF(&(brFSIdata_.bld_root_ref_pos[iBlade * 6]));
-      auto rootDisp = aero::SixDOF(&(brFSIdata_.bld_root_def[iBlade * 6]));
       auto bldRef = aero::SixDOF(&(brFSIdata_.bld_ref_pos[itot * 6]));
 
-      bldDefStiff_[itot] = fsi::displacements_from_hub_motion(
-        hubRef, hubDisp, rootRef, rootDisp, bldRef);
+      bldDefStiff_[itot] =
+        fsi::displacements_from_hub_motion(hubRef, hubDisp, rootRef, bldRef);
 
       itot++;
     }

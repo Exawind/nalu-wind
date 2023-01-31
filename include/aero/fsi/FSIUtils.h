@@ -38,7 +38,7 @@ translation_displacements_from_hub_motion(
 KOKKOS_FORCEINLINE_FUNCTION vs::Vector
 orientation_displacments_from_hub_motion(
   const aero::SixDOF& rootRef,
-  const aero::SixDOF& rootDisp,
+  const aero::SixDOF& hubDisp,
   const aero::SixDOF& bladeRef)
 {
   // subtract reference root orientation from the blade reference orientation,
@@ -47,12 +47,16 @@ orientation_displacments_from_hub_motion(
   const auto rootRelativeRefOrientation = wmp::rotate(
     rootRef.orientation_,
     wmp::pop(rootRef.orientation_, bladeRef.orientation_));
+
+  const auto rootHubRotatedOrientation =
+    wmp::rotate(hubDisp.orientation_, rootRef.orientation_);
+
   // subtract orientation displacements at the root
   const auto rootRelativeDisplacement =
-    wmp::rotate(rootDisp.orientation_, rootRelativeRefOrientation, true);
+    wmp::rotate(rootHubRotatedOrientation, rootRelativeRefOrientation, true);
   // apply displacement in the reference frame first and then rotate out of root
   // reference frame
-  return wmp::push(rootDisp.orientation_, rootRelativeDisplacement);
+  return wmp::push(rootHubRotatedOrientation, rootRelativeDisplacement);
 }
 
 KOKKOS_FORCEINLINE_FUNCTION
@@ -61,12 +65,11 @@ displacements_from_hub_motion(
   const aero::SixDOF& hubRef,
   const aero::SixDOF& hubDisp,
   const aero::SixDOF& rootRef,
-  const aero::SixDOF& rootDisp,
   const aero::SixDOF& bladeRef)
 {
   return aero::SixDOF(
     translation_displacements_from_hub_motion(hubRef, hubDisp, bladeRef),
-    orientation_displacments_from_hub_motion(rootRef, rootDisp, bladeRef));
+    orientation_displacments_from_hub_motion(rootRef, hubDisp, bladeRef));
 }
 
 } // namespace fsi
