@@ -39,8 +39,7 @@ KOKKOS_FORCEINLINE_FUNCTION vs::Vector
 orientation_displacments_from_hub_motion(
   const aero::SixDOF& rootRef,
   const aero::SixDOF& hubDisp,
-  const aero::SixDOF& bladeRef,
-  const double pitch)
+  const aero::SixDOF& bladeRef)
 {
   // subtract reference root orientation from the blade reference orientation,
   // and then rotate the blade orientation so it is in the root frame of
@@ -49,13 +48,9 @@ orientation_displacments_from_hub_motion(
     rootRef.orientation_,
     wmp::pop(rootRef.orientation_, bladeRef.orientation_));
 
-  // auto pitch_axis = wmp::rotate(rootDisp.orientation_,
-  //                               vs::Vector(0.0, 0.0, 1.0), true);
-  // auto wm_pitch = wmp::create_wm_param(pitch_axis, pitch);
-  // auto bld_root_orient_m_pitch = wmp::pop(wm_pitch, rootDisp.orientation_);
-  
-  auto bld_root_orient_m_pitch = wmp::rotate(hubDisp.orientation_,
-                                             rootRef.orientation_);
+  auto bld_root_orient_m_pitch = wmp::push(wmp::rotate(hubDisp.orientation_,
+                                                       rootRef.orientation_),
+                                           hubDisp.orientation_);
   
   // subtract orientation displacements at the root
   const auto rootRelativeDisplacement =
@@ -72,12 +67,11 @@ displacements_from_hub_motion(
   const aero::SixDOF& hubDisp,
   const aero::SixDOF& rootRef,
   const aero::SixDOF& rootDisp,
-  const aero::SixDOF& bladeRef,
-  const double pitch)
+  const aero::SixDOF& bladeRef)
 {
   return aero::SixDOF(
     translation_displacements_from_hub_motion(hubRef, hubDisp, bladeRef),
-    orientation_displacments_from_hub_motion(rootRef, hubDisp, bladeRef, pitch));
+    orientation_displacments_from_hub_motion(rootRef, hubDisp, bladeRef));
 }
 
 } // namespace fsi
