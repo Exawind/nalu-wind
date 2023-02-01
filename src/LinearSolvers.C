@@ -62,11 +62,13 @@ LinearSolvers::load(const YAML::Node& node)
   if (nodes) {
     for (size_t inode = 0; inode < nodes.size(); ++inode) {
       const YAML::Node linear_solver_node = nodes[inode];
-#ifdef NALU_USES_HYPRE
-      std::string solver_type = "hypre";
-#endif
 #ifdef NALU_USES_TRILINOS_SOLVERS
       std::string solver_type = "tpetra";
+      //this used to be "tpetra" unconditionally.
+      //now it is ifdef'd, but we are guaranteed that
+      //if TRILINOS_SOLVERS is off, then HYPRE is on.
+#else
+      std::string solver_type = "hypre";
 #endif
       get_if_present_no_default(linear_solver_node, "type", solver_type);
       // proceed with the single supported solver strategy
