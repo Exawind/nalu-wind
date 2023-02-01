@@ -137,16 +137,19 @@ compute_translational_displacements(
   const SixDOF deflections,
   const SixDOF referencePos,
   const vs::Vector cfdPos,
-  const SixDOF disp_stiff,
+  const SixDOF hub_disp,
+  const SixDOF hub_ref,
   const double wall_dist,
   const double rLoc)
 {
   auto full_disp = compute_translational_displacements(deflections, referencePos, cfdPos);
-  auto stiff_disp = compute_translational_displacements(disp_stiff, referencePos, cfdPos);
+
   
-  auto rloc_ramp = 0.1 + 0.05*std::tanh(2.0*(wall_dist-3.0));
-  //auto ramp = (0.5 + 0.5*std::tanh(20.0*(rLoc/61.5 - rloc_ramp)) );
-  auto ramp = 0.0;
+  auto stiff_disp = compute_translational_displacements(hub_disp, hub_ref, cfdPos);
+  
+  auto rloc_ramp = 0.1 + 0.05*std::tanh(2.0*(wall_dist-5.0));
+  auto ramp = (0.5 + 0.5*std::tanh(20.0*(rLoc/61.5 - rloc_ramp)) );
+  //auto ramp = 0.0;
   
   return stiff_disp + ramp * (full_disp - stiff_disp);
 }

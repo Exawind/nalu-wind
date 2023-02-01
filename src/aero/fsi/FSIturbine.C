@@ -1967,12 +1967,15 @@ fsiTurbine::mapDisplacements()
         auto interpDisp = aero::linear_interp_total_displacement(
           bldStartDisp, bldEndDisp, *dispMapInterpNode);
 
-        // Now linearly interpolate the displacements for a stiff blade
-        // to the intermediate
-        auto bldStiffStartDisp = bld_def_stiff_[*dispMapNode + iStart];
-        auto bldStiffEndDisp =  bld_def_stiff_[*dispMapNode + iStart + 1];
-        auto interpStiffDisp = aero::linear_interp_total_displacement(
-            bldStiffStartDisp, bldStiffEndDisp, *dispMapInterpNode);
+        // // Now linearly interpolate the displacements for a stiff blade
+        // // to the intermediate
+        // auto bldStiffStartDisp = bld_def_stiff_[*dispMapNode + iStart];
+        // auto bldStiffEndDisp =  bld_def_stiff_[*dispMapNode + iStart + 1];
+        // auto interpStiffDisp = aero::linear_interp_total_displacement(
+        //     bldStiffStartDisp, bldStiffEndDisp, *dispMapInterpNode);
+
+        const aero::SixDOF hub_ref_pos(brFSIdata_.hub_ref_pos.data());
+        const aero::SixDOF hub_disp(brFSIdata_.hub_def.data());
         
         // Now transfer the interpolated displacement to the CFD mesh node */
         auto oldxyz = vector_from_field(*modelCoords, node);
@@ -1986,7 +1989,7 @@ fsiTurbine::mapDisplacements()
 
         vector_to_field(
           aero::compute_translational_displacements(
-            interpDisp, refPos, oldxyz, interpStiffDisp,
+            interpDisp, refPos, oldxyz, hub_disp, hub_ref_pos,
             walldist, brFSIdata_.bld_rloc[*dispMapNode + iStart]),
           *displacement, node);
       }
