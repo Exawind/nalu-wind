@@ -150,4 +150,3 @@ TEST_F(SolverFixture, solve_harmonic)
 } // namespace sierra
 
 #endif // NALU_USES_TRILINOS_SOLVERS
-

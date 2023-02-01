@@ -264,7 +264,7 @@ TpetraLinearSolver::solve(
   return status;
 }
 
-#endif //NALU_USES_TRILINOS_SOLVERS
+#endif // NALU_USES_TRILINOS_SOLVERS
 
 } // namespace nalu
 } // namespace sierra

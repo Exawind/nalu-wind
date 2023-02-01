@@ -27,7 +27,7 @@ option(ENABLE_PARAVIEW_CATALYST
 option(ENABLE_TIOGA "Use TIOGA TPL to perform overset connectivity" OFF)
 option(ENABLE_OPENMP "Enable OpenMP flags" OFF)
 option(ENABLE_BOOST  "Enable Boost libraries" OFF)
-option(ENABLE_MATRIXFREE "Enable high-order matrix-free computation" OFF)
+option(ENABLE_MATRIXFREE "Enable high-order matrix-free computation" ON)
 
 option(NALU_WIND_SAVE_GOLDS  "Save gold files to directory when running tests" OFF)
 
@@ -40,7 +40,8 @@ if(NOT ENABLE_HYPRE AND NOT ENABLE_TRILINOS_SOLVERS)
 endif()
 
 if(ENABLE_MATRIXFREE AND NOT ENABLE_TRILINOS_SOLVERS)
-  message(FATAL_ERROR "Can not support Matrix-free when trilinos-solvers are not enabled.")
+  message(STATUS "Can not support Matrix-free when trilinos-solvers are not enabled. Turning Matrix-free off.")
+  set(ENABLE_MATRIXFREE OFF)
 endif()
 
 # Create targets

@@ -179,4 +179,3 @@ MatrixFreeSolver::rhs() const
 } // namespace sierra
 
 #endif // NALU_USES_TRILINOS_SOLVERS
-

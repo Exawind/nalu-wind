@@ -132,8 +132,10 @@ LinearSolvers::create_solver(
       solverName, linearSolverConfig, linearSolverConfig->params(),
       linearSolverConfig->paramsPrecond(), this);
 #else
-    throw std::runtime_error(solverBlockName+" found but "
-       "Trilinos solver support not enabled during compile time.");
+    throw std::runtime_error(
+      solverBlockName +
+      " found but "
+      "Trilinos solver support not enabled during compile time.");
 #endif
   }
 #ifdef NALU_USES_HYPRE

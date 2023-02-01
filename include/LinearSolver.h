@@ -43,7 +43,7 @@ using Node = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
 #include <MueLu_TpetraOperator.hpp>
 
 #include <MueLu_UseShortNames.hpp> // => typedef MueLu::FooClass<Scalar, LocalOrdinal, ...> Foo
-#endif // NALU_USES_TRILINOS_SOLVERS
+#endif                             // NALU_USES_TRILINOS_SOLVERS
 
 #include <limits>
 

@@ -110,4 +110,3 @@ TEST(LocalGraphArrays, insertIndicesNumDof3)
 }
 
 #endif // NALU_USES_TRILINOS_SOLVERS
-
