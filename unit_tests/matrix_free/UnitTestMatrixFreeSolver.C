@@ -7,6 +7,8 @@
 // for more details.
 //
 
+#ifdef NALU_USES_TRILINOS_SOLVERS
+
 #include "matrix_free/MatrixFreeSolver.h"
 #include "matrix_free/ConductionFields.h"
 #include "matrix_free/ConductionOperator.h"
@@ -146,3 +148,5 @@ TEST_F(SolverFixture, solve_harmonic)
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra
+
+#endif // NALU_USES_TRILINOS_SOLVERS

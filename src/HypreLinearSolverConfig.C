@@ -15,9 +15,12 @@
 #include <yaml-cpp/yaml.h>
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_RCP.hpp>
-#include <BelosTypes.hpp>
 
+#ifdef NALU_USES_TRILINOS_SOLVERS
+#include <BelosTypes.hpp>
 #include <Ifpack2_Preconditioner.hpp>
+#endif
+
 #include "XSDKHypreInterface.h"
 
 #include <ostream>

@@ -167,7 +167,6 @@ EquationSystems::load(const YAML::Node& y_node)
 #ifdef NALU_HAS_MATRIXFREE
           if (realm_.matrix_free()) {
             eqSys = new MatrixFreeHeatCondEquationSystem(*this);
-
           } else {
             throw std::runtime_error(
               "HeatConduction only supported for matrix-free");

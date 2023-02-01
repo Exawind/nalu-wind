@@ -8,8 +8,6 @@
 //
 
 #include <LinearSystem.h>
-#include <TpetraLinearSystem.h>
-#include <TpetraSegregatedLinearSystem.h>
 #include <EquationSystem.h>
 #include <Realm.h>
 #include <Simulation.h>
@@ -19,6 +17,11 @@
 #ifdef NALU_USES_HYPRE
 #include "HypreLinearSystem.h"
 #include "HypreUVWLinearSystem.h"
+#endif
+
+#ifdef NALU_USES_TRILINOS_SOLVERS
+#include <TpetraLinearSystem.h>
+#include <TpetraSegregatedLinearSystem.h>
 #endif
 
 #include <stk_util/parallel/Parallel.hpp>
@@ -118,6 +121,7 @@ LinearSystem::create(
   LinearSolver* solver)
 {
   switch (solver->getType()) {
+#ifdef NALU_USES_TRILINOS_SOLVERS
   case PT_TPETRA:
     return new TpetraLinearSystem(realm, numDof, eqSys, solver);
 // Avoid nvcc unreachable statement warnings
@@ -131,6 +135,7 @@ LinearSystem::create(
 #ifndef __CUDACC__
     break;
 #endif
+#endif // NALU_USES_TRILINOS_SOLVERS
 
 #ifdef NALU_USES_HYPRE
   case PT_HYPRE:
