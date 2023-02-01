@@ -121,7 +121,7 @@ void
 OpenfastFSI::load(const YAML::Node& node)
 {
 
-  fi.comm = MPI_COMM_WORLD;
+  fi.comm = NaluEnv::self().parallel_comm();
 
   get_required(node, "n_turbines_glob", fi.nTurbinesGlob);
 
