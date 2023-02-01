@@ -1991,8 +1991,6 @@ fsiTurbine::mapDisplacements()
         // displacements
         const auto hubBasedDef = aero::compute_translational_displacements(
           hubDef, hubPos, nodePosition);
-        /* std::cerr << "hubDef, hubBasedef: " << hubDef.position_ */
-        /* << hubDef.orientation_ << hubBasedDef << std::endl; */
 
         vector_to_field(
           aero::compute_translational_displacements(
