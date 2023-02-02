@@ -63,29 +63,6 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     NaluEnv::self().naluOutputP0()
       << "Nacelle part name(s) not specified for turbine " << iTurb_
       << std::endl;
-  const YAML::Node defNode = node["deflection_ramping"];
-  ThrowErrorMsgIf(
-    !defNode, "defleciton_ramping inputs are required for FSI Turbines");
-  // clang-format off
-    get_required(defNode, "temporal_ramp_start", deflectionRampParams_.startTimeTemporalRamp_);
-    get_required(defNode, "temporal_ramp_end",   deflectionRampParams_.endTimeTemporalRamp_);
-    get_required(defNode, "span_ramp_distance",  deflectionRampParams_.spanRampDistance_);
-    get_required(defNode, "zero_theta_ramp_angle", deflectionRampParams_.zeroRampLocTheta_);
-    get_required(defNode, "theta_ramp_span",       deflectionRampParams_.thetaRampSpan_);
-  // clang-format on
-  // ---------- conversionions ----------
-  deflectionRampParams_.zeroRampLocTheta_ =
-    utils::radians(deflectionRampParams_.zeroRampLocTheta_);
-  deflectionRampParams_.thetaRampSpan_ =
-    utils::radians(deflectionRampParams_.thetaRampSpan_);
-  // ---------- checks ----------
-  ThrowErrorMsgIf(
-    deflectionRampParams_.startTimeTemporalRamp_ < 0.0,
-    "temporal_ramp_start must be greater than zero");
-  ThrowErrorMsgIf(
-    deflectionRampParams_.endTimeTemporalRamp_ <
-      deflectionRampParams_.startTimeTemporalRamp_,
-    "temporal_ramp_end must be greater than temporal_ramp_start");
 
   if (node["hub_parts"]) {
     const auto& hparts = node["hub_parts"];
@@ -103,6 +80,34 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
       const auto& bpart = bparts[iBlade];
       bladePartNames_[iBlade] = bpart.as<std::vector<std::string>>();
     }
+    // --------------------------------------------------------------------------
+    // Displacement Ramping
+    // --------------------------------------------------------------------------
+    const YAML::Node defNode = node["deflection_ramping"];
+    ThrowErrorMsgIf(
+      !defNode,
+      "defleciton_ramping inputs are required for FSI Turbines with blades");
+    // clang-format off
+    get_required(defNode, "temporal_ramp_start", deflectionRampParams_.startTimeTemporalRamp_);
+    get_required(defNode, "temporal_ramp_end",   deflectionRampParams_.endTimeTemporalRamp_);
+    get_required(defNode, "span_ramp_distance",  deflectionRampParams_.spanRampDistance_);
+    get_required(defNode, "zero_theta_ramp_angle", deflectionRampParams_.zeroRampLocTheta_);
+    get_required(defNode, "theta_ramp_span",       deflectionRampParams_.thetaRampSpan_);
+    // clang-format on
+    // ---------- conversionions ----------
+    deflectionRampParams_.zeroRampLocTheta_ =
+      utils::radians(deflectionRampParams_.zeroRampLocTheta_);
+    deflectionRampParams_.thetaRampSpan_ =
+      utils::radians(deflectionRampParams_.thetaRampSpan_);
+    // ---------- checks ----------
+    ThrowErrorMsgIf(
+      deflectionRampParams_.startTimeTemporalRamp_ < 0.0,
+      "temporal_ramp_start must be greater than zero");
+    ThrowErrorMsgIf(
+      deflectionRampParams_.endTimeTemporalRamp_ <
+        deflectionRampParams_.startTimeTemporalRamp_,
+      "temporal_ramp_end must be greater than temporal_ramp_start");
+    // --------------------------------------------------------------------------
   } else
     NaluEnv::self().naluOutputP0()
       << "Blade part names not specified for turbine " << iTurb_ << std::endl;
@@ -1090,13 +1095,6 @@ fsiTurbine::mapLoads()
           double r_np1 = brFSIdata_.bld_rloc[iStart + loadMap_bip + 1];
           double rloc_proj = r_n + interpFac * (r_np1 - r_n);
 
-          // if (interpFac < 0.0) {
-          //   std::cerr << "rloc_proj = " << rloc_proj << ", r_n = " << r_n
-          //             << ", r_np1 = " << r_np1 << ", interpFac = " <<
-          //             interpFac
-          //             << ", loadMap_bip = " << loadMap_bip << std::endl;
-          // }
-
           // Find the interpolated reference position first
           linInterpVec(
             &brFSIdata_.bld_ref_pos[(loadMap_bip + iStart) * 6],
@@ -1192,108 +1190,10 @@ fsiTurbine::mapLoads()
                 &(brFSIdata_.bld_ld[(loadMap_bip + iStart) * 6]),
                 &(brFSIdata_.bld_ld[(loadMap_bip + iStart + 1) * 6]));
             }
-
-            // Bin directly to nodes
-            //  double totfrac = 0.0;
-            //  for (auto iNode = loadMap_bip-1 ; iNode < loadMap_bip+2;
-            //  iNode++) {
-            //      double x_lower =
-            //      std::max(bld_rmm_[iStart+iNode][0],rloc_proj-0.5*sl); double
-            //      x_higher =
-            //      std::min(bld_rmm_[iStart+iNode][1],rloc_proj+0.5*sl); if
-            //      (x_higher > x_lower) {
-            //          double locfrac = (x_higher - x_lower)/sl;
-            //          totfrac += locfrac;
-            //          for (auto i=0; i < 6; i++)
-            //              brFSIdata_.bld_ld[(iStart+iNode)*6+i] +=
-            //                  tmpForceMoment[i]*locfrac;
-            //      }
-
-            // }
-
-            // Split to elements and distribute
-            //  std::array<double,6> locTmpForceMoment;
-            //  double totfrac = 0.0;
-            //  for (auto iNode = loadMap_bip-1 ; iNode < loadMap_bip+2;
-            //  iNode++) {
-            //      double x_lower =
-            //      std::max(brFSIdata_.bld_rloc[iStart+iNode],rloc_proj-0.5*sl);
-            //      double x_higher =
-            //      std::min(brFSIdata_.bld_rloc[iStart+iNode+1],rloc_proj+0.5*sl);
-            //      if (x_higher > x_lower) {
-            //          double locfrac = (x_higher - x_lower)/sl;
-            //          totfrac += locfrac;
-            //          double locInterpFac = (0.5*(x_higher + x_lower) -
-            //          brFSIdata_.bld_rloc[iStart+iNode])
-            //              /(brFSIdata_.bld_rloc[iStart+iNode+1]-brFSIdata_.bld_rloc[iStart+iNode]);
-
-            //         for(auto i=0; i<6; i++)
-            //             locTmpForceMoment[i] = locfrac*tmpForceMoment[i];
-
-            //         splitForceMoment(locTmpForceMoment.data(), locInterpFac,
-            //                          &(brFSIdata_.bld_ld[(iNode +
-            //                          iStart)*6]),
-            //                          &(brFSIdata_.bld_ld[(iNode + iStart +
-            //                          1)*6]) );
-
-            //     }
-            // }
-            // if (totfrac < 0.999) {
-            //     std::cerr << "iNode = " << loadMap_bip << ", rloc_proj = " <<
-            //     rloc_proj << ", sl = " << sl << std::endl ;
-            // }
           }
         }
       }
     }
-
-    // //Compute the total force and moment at the hub from this blade
-    // std::vector<double> hubForceMoment(6,0.0);
-    // computeHubForceMomentForPart(hubForceMoment, brFSIdata_.hub_ref_pos,
-    //                              bladeBndyParts_[iBlade]);
-
-    // //Now compute total force and moment at the hub from the loads mapped to
-    // the std::vector<double> l_hubForceMomentMapped(6,0.0);
-    // std::array<double,3> tmpNodePos {0.0,0.0,0.0}; // Vector to temporarily
-    // store a position vector for (size_t i=0 ; i < nPtsBlade; i++) {
-    //     for (int idim = 0; idim < 3; idim++)
-    //         tmpNodePos[idim] = brFSIdata_.bld_ref_pos[(i+iStart)*6 + idim]
-    //             + brFSIdata_.bld_def[(i+iStart)*6 + idim];
-    //     computeEffForceMoment(
-    //         &(brFSIdata_.bld_ld[(i+iStart)*6]), tmpNodePos.data(),
-    //         l_hubForceMomentMapped.data(), brFSIdata_.hub_ref_pos.data() );
-    //     for(size_t j=0; j < ndim; j++) // Add the moment manually
-    //         l_hubForceMomentMapped[3+j]
-    //             += brFSIdata_.bld_ld[(i+iStart)*6+3+j];
-    // }
-    // std::vector<double> hubForceMomentMapped(6,0.0);
-    // stk::all_reduce_sum(bulk_->parallel(),
-    //                     l_hubForceMomentMapped.data(),
-    //                     hubForceMomentMapped.data(), 6);
-
-    // if (bulk_->parallel_rank() == turbineProc_) {
-
-    //      NaluEnv::self().naluOutputP0() << "Total force moment on the hub due
-    //      to blade " << iBlade
-    //     << std::endl;  NaluEnv::self().naluOutputP0() << "Force = (";
-    //     for(size_t j=0; j < ndim; j++)
-    //          NaluEnv::self().naluOutputP0() << hubForceMoment[j] << ", ";
-    //      NaluEnv::self().naluOutputP0() << ") Moment = (" ;
-    //     for(size_t j=0; j < ndim; j++)
-    //          NaluEnv::self().naluOutputP0() << hubForceMoment[3+j] << ", ";
-    //      NaluEnv::self().naluOutputP0() << ")" << std::endl;
-    //      NaluEnv::self().naluOutputP0() << "Total force moment on the hub
-    //      from mapped load due to
-    //     blade " << iBlade << std::endl;  NaluEnv::self().naluOutputP0() <<
-    //     "Force = ("; for(size_t j=0; j < ndim; j++)
-    //          NaluEnv::self().naluOutputP0() << hubForceMomentMapped[j] << ",
-    //          ";
-    //      NaluEnv::self().naluOutputP0() << ") Moment = (" ;
-    //     for(size_t j=0; j < ndim; j++)
-    //          NaluEnv::self().naluOutputP0() << hubForceMomentMapped[3+j] <<
-    //          ", ";
-    //      NaluEnv::self().naluOutputP0() << ")" << std::endl;
-    // }
 
     iStart += nPtsBlade;
   }
@@ -1874,20 +1774,6 @@ fsiTurbine::mapDisplacements(double time)
   // * bld_def[k][(j+1)*6+1] (1-m) * bld_def[k][j*6+2] + m *
   // bld_def[k][(j+1)*6+2]
 
-  // TODO: When the turbine is rotating, displacement of the surface of the
-  // blades and hub (not the nacelle and tower) should be split into a rigid
-  // body motion due to the rotation of the turbine, yawing of the turbine and a
-  // deflection of the structure itself. The yaw rate and rotation rate will
-  // vary over time. OpenFAST always stores the displacements of all nodes with
-  // respect to the reference configuration. When using a sliding mesh interface
-  // (yaw = 0), the mesh blocks inside the rotating part of the sliding
-  // interface should be moved with rigid body motion corresponding to the
-  // rotation rate first and then a second mesh deformation procedure should be
-  // performed to apply the remaining structural deflection. Figure out how to
-  // do this.
-
-  // this ramp is going to be the same for this entire call and we'll copy it
-  // for the blade computations
   const double temporalDeflectionRamp = fsi::temporal_ramp(
     time, deflectionRampParams_.startTimeTemporalRamp_,
     deflectionRampParams_.endTimeTemporalRamp_);
@@ -2444,42 +2330,6 @@ fsiTurbine::computeLoadMapping()
     }
   }
 
-  // int nBlades = params_.numBlades;
-  // int iStart = 0;
-  // for (int iBlade=0; iBlade < nBlades; iBlade++) {
-  //     int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
-  //     bld_rmm_[iStart][0] = brFSIdata_.bld_rloc[iStart];
-  //     bld_rmm_[iStart][1] = 0.5*(brFSIdata_.bld_rloc[iStart] +
-  //     brFSIdata_.bld_rloc[iStart+1]); bld_dr_[iStart] =
-  //     (bld_rmm_[iStart][1]-bld_rmm_[iStart][0]);
-  //     NaluEnv::self().naluOutputP0() << "i = 0, " << bld_rmm_[iStart][0] << "
-  //     - " <<
-  //             bld_rmm_[iStart][1] << ", dr = " << bld_dr_[iStart] <<
-  //             std::endl ;
-  //     for(int i=1; i < nPtsBlade-1; i++) {
-  //         bld_rmm_[iStart + i][0] = 0.5*(brFSIdata_.bld_rloc[iStart+i-1] +
-  //         brFSIdata_.bld_rloc[iStart+i]); bld_rmm_[iStart + i][1] =
-  //         0.5*(brFSIdata_.bld_rloc[iStart+i] +
-  //         brFSIdata_.bld_rloc[iStart+i+1]); bld_dr_[iStart + i] =
-  //         (bld_rmm_[iStart + i][1]-bld_rmm_[iStart + i][0]);
-  //         NaluEnv::self().naluOutputP0() << "i = " << i << ", " <<
-  //         bld_rmm_[iStart+i][0] <<
-  //               " - " << bld_rmm_[iStart+i][1] << ", dr = " <<
-  //               bld_dr_[iStart+i] << std::endl ;
-  //     }
-  //     bld_rmm_[iStart+nPtsBlade-1][0] =
-  //     0.5*(brFSIdata_.bld_rloc[iStart+nPtsBlade-2]+brFSIdata_.bld_rloc[iStart+nPtsBlade-1]);
-  //     bld_rmm_[iStart+nPtsBlade-1][1] =
-  //     brFSIdata_.bld_rloc[iStart+nPtsBlade-1]; bld_dr_[iStart+nPtsBlade-1] =
-  //     (bld_rmm_[iStart+nPtsBlade-1][1]-bld_rmm_[iStart+nPtsBlade-1][0]);
-  //
-  //     NaluEnv::self().naluOutputP0() << "i = " << nPtsBlade-1 << ", " <<
-  //         bld_rmm_[iStart+nPtsBlade-1][0] << " - " <<
-  //         bld_rmm_[iStart+nPtsBlade-1][1] << ", dr = " <<
-  //         bld_dr_[iStart+nPtsBlade-1] << std::endl ;
-  //     iStart += nPtsBlade;
-  // }
-
   // Now the blades
   int nBlades = params_.numBlades;
   int iStart = 0;
@@ -2574,16 +2424,6 @@ fsiTurbine::computeLoadMapping()
               brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6 + 1],
               brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6 + 2]};
 
-            //  NaluEnv::self().naluOutputP0() << "Can't find a projection for
-            //  point (" +
-            // std::to_string(coord_bip[0]) + "," + std::to_string(coord_bip[1])
-            // + "," + std::to_string(coord_bip[2]) + ") on blade " +
-            // std::to_string(iBlade) + " on turbine " +
-            // std::to_string(params_.TurbID) + ". The blade extends from " +
-            // std::to_string(lStart[0]) + "," + std::to_string(lStart[1]) + ","
-            // + std::to_string(lStart[2]) + ") to " + std::to_string(lEnd[0]) +
-            // "," + std::to_string(lEnd[1]) + "," + std::to_string(lEnd[2]) +
-            // ")." << std::endl ;
             double perpDist = perpProjectDist_Pt2Line(coord_bip, lStart, lEnd);
             // Something's wrong if a node on the surface
             // mesh of the blade is more than 20% of the
