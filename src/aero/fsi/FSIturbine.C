@@ -96,18 +96,10 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     get_required(defNode, "span_ramp_distance",  defParams.spanRampDistance_);
     get_if_present(defNode, "zero_theta_ramp_angle", *zeroTheta, *zeroTheta);
     get_if_present(defNode, "theta_ramp_span",       *thetaRamp, *thetaRamp);
-    get_if_present(defNode, "enable_temporal_ramping", defParams.enableTemporalRamping_, defParams.enableTemporalRamping_);
     // clang-format on
     // ---------- conversionions ----------
     defParams.zeroRampLocTheta_ = utils::radians(defParams.zeroRampLocTheta_);
     defParams.thetaRampSpan_ = utils::radians(defParams.thetaRampSpan_);
-    // ---------- checks ----------
-    ThrowErrorMsgIf(
-      defParams.startTimeTemporalRamp_ < 0.0,
-      "temporal_ramp_start must be greater than zero");
-    ThrowErrorMsgIf(
-      defParams.endTimeTemporalRamp_ < defParams.startTimeTemporalRamp_,
-      "temporal_ramp_end must be greater than temporal_ramp_start");
     // --------------------------------------------------------------------------
   } else
     NaluEnv::self().naluOutputP0()
@@ -1652,11 +1644,8 @@ fsiTurbine::mapDisplacements(double time)
   // bld_def[k][(j+1)*6+2]
 
   const DeflectionRampingParams& defParams = deflectionRampParams_;
-  const double temporalDeflectionRamp =
-    defParams.enableTemporalRamping_ ? fsi::temporal_ramp(
-                                         time, defParams.startTimeTemporalRamp_,
-                                         defParams.endTimeTemporalRamp_)
-                                     : 1.0;
+  const double temporalDeflectionRamp = fsi::temporal_ramp(
+    time, defParams.startTimeTemporalRamp_, defParams.endTimeTemporalRamp_);
 
   auto& meta = bulk_->mesh_meta_data();
   VectorFieldType* modelCoords =
