@@ -329,8 +329,6 @@ OpenfastFSI::compute_mapping()
         fsiTurbineData_[i]->brFSIdata_.bld_rloc.data(), nTotBldNodes,
         MPI_DOUBLE, turbProc, bulk_->parallel());
       // No need to bcast chord
-      if (!bulk_->parallel_rank())
-        std::cerr << "Computing mapping " << std::endl;
       fsiTurbineData_[i]->computeMapping();
       fsiTurbineData_[i]->computeLoadMapping();
     }
@@ -393,16 +391,6 @@ OpenfastFSI::send_loads(const double curTime)
         for (int k = 0; k < nTotBldNodes * 6; k++)
           fsiTurbineData_[i]->brFSIdata_.bld_ld[k] =
             fsiTurbineData_[i]->brFSIdata_.bld_ld[k];
-        std::cerr << "Blade loads at time " << curTime << std::endl;
-        for (int k = 0; k < nTotBldNodes; k++) {
-          std::cerr << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 0] << ", "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 1] << ", "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 2] << ", "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 3] << ", "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 4] << ", "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 5]
-                    << std::endl;
-        }
 
         FAST.setBladeForces(fsiTurbineData_[i]->brFSIdata_.bld_ld, i);
 
