@@ -234,7 +234,9 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
     FAST.solution0();
   }
 
+  std::cerr << "Doing displacements" << std::endl;
   map_displacements(curTime);
+  std::cerr << "Finished displacements" << std::endl;
 }
 
 void

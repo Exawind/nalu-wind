@@ -87,27 +87,26 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     ThrowErrorMsgIf(
       !defNode,
       "defleciton_ramping inputs are required for FSI Turbines with blades");
-    double* zeroTheta = &deflectionRampParams_.zeroRampLocTheta_;
-    double* thetaRamp = &deflectionRampParams_.thetaRampSpan_;
+    DeflectionRampingParams& defParams = deflectionRampParams_;
+    double* zeroTheta = &defParams.zeroRampLocTheta_;
+    double* thetaRamp = &defParams.thetaRampSpan_;
     // clang-format off
-    get_required(defNode, "temporal_ramp_start", deflectionRampParams_.startTimeTemporalRamp_);
-    get_required(defNode, "temporal_ramp_end",   deflectionRampParams_.endTimeTemporalRamp_);
-    get_required(defNode, "span_ramp_distance",  deflectionRampParams_.spanRampDistance_);
+    get_required(defNode, "temporal_ramp_start", defParams.startTimeTemporalRamp_);
+    get_required(defNode, "temporal_ramp_end",   defParams.endTimeTemporalRamp_);
+    get_required(defNode, "span_ramp_distance",  defParams.spanRampDistance_);
     get_if_present(defNode, "zero_theta_ramp_angle", *zeroTheta, *zeroTheta);
     get_if_present(defNode, "theta_ramp_span",       *thetaRamp, *thetaRamp);
+    get_if_present(defNode, "enable_temporal_ramping", defParams.enableTemporalRamping_, defParams.enableTemporalRamping_);
     // clang-format on
     // ---------- conversionions ----------
-    deflectionRampParams_.zeroRampLocTheta_ =
-      utils::radians(deflectionRampParams_.zeroRampLocTheta_);
-    deflectionRampParams_.thetaRampSpan_ =
-      utils::radians(deflectionRampParams_.thetaRampSpan_);
+    defParams.zeroRampLocTheta_ = utils::radians(defParams.zeroRampLocTheta_);
+    defParams.thetaRampSpan_ = utils::radians(defParams.thetaRampSpan_);
     // ---------- checks ----------
     ThrowErrorMsgIf(
-      deflectionRampParams_.startTimeTemporalRamp_ < 0.0,
+      defParams.startTimeTemporalRamp_ < 0.0,
       "temporal_ramp_start must be greater than zero");
     ThrowErrorMsgIf(
-      deflectionRampParams_.endTimeTemporalRamp_ <
-        deflectionRampParams_.startTimeTemporalRamp_,
+      defParams.endTimeTemporalRamp_ < defParams.startTimeTemporalRamp_,
       "temporal_ramp_end must be greater than temporal_ramp_start");
     // --------------------------------------------------------------------------
   } else
@@ -1652,9 +1651,12 @@ fsiTurbine::mapDisplacements(double time)
   // * bld_def[k][(j+1)*6+1] (1-m) * bld_def[k][j*6+2] + m *
   // bld_def[k][(j+1)*6+2]
 
-  const double temporalDeflectionRamp = fsi::temporal_ramp(
-    time, deflectionRampParams_.startTimeTemporalRamp_,
-    deflectionRampParams_.endTimeTemporalRamp_);
+  const DeflectionRampingParams& defParams = deflectionRampParams_;
+  const double temporalDeflectionRamp =
+    defParams.enableTemporalRamping_ ? fsi::temporal_ramp(
+                                         time, defParams.startTimeTemporalRamp_,
+                                         defParams.endTimeTemporalRamp_)
+                                     : 1.0;
 
   auto& meta = bulk_->mesh_meta_data();
   VectorFieldType* modelCoords =
@@ -1754,8 +1756,7 @@ fsiTurbine::mapDisplacements(double time)
 
         double deflectionRamp =
           temporalDeflectionRamp *
-          fsi::linear_ramp_span(
-            spanLocation, deflectionRampParams_.spanRampDistance_);
+          fsi::linear_ramp_span(spanLocation, defParams.spanRampDistance_);
 
         // things for theta mapping
         const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
@@ -1763,9 +1764,8 @@ fsiTurbine::mapDisplacements(double time)
         const auto nodePosition = vector_from_field(*modelCoords, node);
 
         deflectionRamp *= fsi::linear_ramp_theta(
-          hubPos, rootPos.position_, nodePosition,
-          deflectionRampParams_.thetaRampSpan_,
-          deflectionRampParams_.zeroRampLocTheta_);
+          hubPos, rootPos.position_, nodePosition, defParams.thetaRampSpan_,
+          defParams.zeroRampLocTheta_);
 
         *stk::mesh::field_data(*deflectionRamp_, node) = deflectionRamp;
 
