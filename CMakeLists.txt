@@ -277,7 +277,7 @@ if(ENABLE_PARAVIEW_CATALYST)
 endif()
 
 if(ENABLE_UNIT_TESTS)
-  install(TARGETS ${utest_ex_name} nalu
+  install(TARGETS ${utest_ex_name}
           EXPORT "${PROJECT_NAME}Targets"
           RUNTIME DESTINATION bin
           ARCHIVE DESTINATION lib
