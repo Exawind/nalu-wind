@@ -10,4 +10,3 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/MotionTranslationKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MotionWavesKernel.C
 )
-endif()
