@@ -87,12 +87,14 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     ThrowErrorMsgIf(
       !defNode,
       "defleciton_ramping inputs are required for FSI Turbines with blades");
+    double* zeroTheta = &deflectionRampParams_.zeroRampLocTheta_;
+    double* thetaRamp = &deflectionRampParams_.thetaRampSpan_;
     // clang-format off
     get_required(defNode, "temporal_ramp_start", deflectionRampParams_.startTimeTemporalRamp_);
     get_required(defNode, "temporal_ramp_end",   deflectionRampParams_.endTimeTemporalRamp_);
     get_required(defNode, "span_ramp_distance",  deflectionRampParams_.spanRampDistance_);
-    get_required(defNode, "zero_theta_ramp_angle", deflectionRampParams_.zeroRampLocTheta_);
-    get_required(defNode, "theta_ramp_span",       deflectionRampParams_.thetaRampSpan_);
+    get_if_present(defNode, "zero_theta_ramp_angle", *zeroTheta, *zeroTheta);
+    get_if_present(defNode, "theta_ramp_span",       *thetaRamp, *thetaRamp);
     // clang-format on
     // ---------- conversionions ----------
     deflectionRampParams_.zeroRampLocTheta_ =
@@ -1503,130 +1505,6 @@ fsiTurbine::setSampleDisplacement(double curTime)
 
     bld_bm_mesh.close();
   }
-
-  // //Get the rotation axis
-  // double tilt = 5.0 * M_PI / 180.0;
-  // std::vector<double> wmTilt  = {0,4.0*tan(0.25*tilt),0};
-  // std::vector<double> tilt_axis(3,0.0);
-  // applyWMrotation(wmTilt.data(), x_axis.data(), tilt_axis.data());
-
-  // //Rotate the hub first
-  // std::vector<double> wmHubRot(3,0.0);
-  // for (size_t i=0; i<3; i++) {
-  //     wmHubRot[i] = hubRot*tilt_axis[i];
-  //     brFSIdata_.hub_def[3+i] = -wmHubRot[i];
-  // }
-
-  // //For each node on the openfast blade1 mesh - compute distance from the
-  // blade root node. Apply a rotation varying as the square of the distance
-  // between 0 - 45 degrees about the [0 1 0] axis. Apply a translation
-  // displacement that produces a tip displacement of 5m int iStart = 0; int
-  // nBlades = params_.numBlades;; for (int iBlade=0; iBlade < nBlades;
-  // iBlade++) {
-
-  //     std::vector<double> cone_axis(3,0.0);
-
-  //     std::vector<double> wmRotBlade_ref(3,0.0);
-  //     for(size_t i=0; i<3; i++)
-  //         wmRotBlade_ref[i] = 4.0*tan(0.25 * iBlade * 120.0 * M_PI /
-  //         180.0)*tilt_axis[i] ;
-
-  //     applyWMrotation(wmRotBlade_ref.data(), y_axis.data(),
-  //     cone_axis.data()); std::vector<double> wmCone(3,0.0); for(size_t i=0;
-  //     i<3; i++)
-  //         wmCone[i] = 4.0*tan(-0.25 * iBlade * 2.5 * M_PI / 180.0) *
-  //         cone_axis[i];
-
-  //     std::vector<double> wmRotBlade(3,0.0);
-  //     std::vector<double> tmp1(3,0.0);
-  //     std::vector<double> tmp2(3,0.0);
-  //     std::vector<double> wmRef(3,0.0);
-  //     composeWM(wmCone.data(), wmRotBlade_ref.data(), tmp1.data());
-  //     composeWM(wmTilt.data(), tmp1.data(), wmRef.data());
-  //     composeWM(wmHubRot.data(), wmRef.data(), wmRotBlade.data());
-
-  //     //Set rotational displacement due to pitch
-  //     std::vector<double> wmRotPitch(3, 0.0);
-  //     std::vector<double> wmRotPitchBlade(3, 0.0);
-  //     applyWMrotation(wmRotBlade.data(), z_axis.data(), wmRotPitch.data());
-  //     //First rotate the blade pitch axis to the local blade double rot
-  //     = 4.0*tan(0.25 * (0.0 * M_PI / 180.0) * sin_omegat ); for(int j= 0; j <
-  //     3; j++) //Now apply rotation corresponding to pitch about that axis
-  //         wmRotPitch[j] *= rot;
-
-  //     //Now compose with blade rotation to include pitch
-  //     composeWM(wmRotPitch.data(), wmRotBlade.data(),
-  //     wmRotPitchBlade.data());
-
-  //     brFSIdata_.bld_pitch[iBlade] = (0.0 * M_PI / 180.0) * sin_omegat;
-
-  //     for(int j=0; j < 3; j++) //Blade root does not include pitch
-  //         brFSIdata_.bld_root_def[iBlade*6+3+j] = -wmRotBlade[j];
-
-  //     int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
-  //     for (int i=0; i < nPtsBlade; i++) {
-
-  //         double rDistSq =
-  //         calcDistanceSquared(&(brFSIdata_.bld_ref_pos[(iStart+i)*6]),
-  //         &(brFSIdata_.bld_ref_pos[(iStart)*6]) )/10000.0; double sinRdistSq
-  //         = std::sin(rDistSq); double tanRdistSq = std::tan(rDistSq);
-
-  //         //Set local rotational displacement
-  //         std::vector<double> wmRot1 =
-  //         {1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0)};
-  //         std::vector<double> wmRot(3,0.0);
-  //         applyWMrotation(wmRotBlade.data(), wmRot1.data(), wmRot.data());
-  //         rot = 4.0*tan(0.25 * (0.0 * M_PI / 180.0) * sinRdistSq  *
-  //         sin_omegat ); // 4.0 * tan(phi/4.0) parameter for Wiener-Milenkovic
-  //         rot = 0.0;
-  //         for(int j= 0; j < 3; j++)
-  //             wmRot[j] *= rot;
-
-  //         std::vector<double> finalRot(3,0.0);
-  //         composeWM(wmRot.data(), wmRotBlade.data(), finalRot.data());
-  //         //Compose with hub orientation to account for rotation of turbine
-
-  //         std::vector<double> origZaxis = {0.0, 0.0, 1.0};
-  //         std::vector<double> rotZaxis(3,0.0);
-  //         applyWMrotation(finalRot.data(), origZaxis.data(),
-  //         rotZaxis.data());
-
-  //         //Finally transpose the whole thing
-  //         for(int j=0; j < 3; j++)
-  //             brFSIdata_.bld_def[(iStart+i)*6+3+j] = -finalRot[j];
-
-  //         //Set translational displacement
-  //         double xDisp = sinRdistSq * 15.0 * sin_omegat;
-
-  //         std::vector<double> r(3,0.0);
-  //         for(int j=0; j < 3; j++)
-  //             r[j] = brFSIdata_.bld_ref_pos[(iStart+i)*6+j] -
-  //             brFSIdata_.hub_ref_pos[j];
-
-  //         std::vector<double> rRot(3,0.0);
-
-  //         std::vector<double> transDisp = {xDisp, xDisp, xDisp};
-  //         std::vector<double> transDispRot(3,0.0);
-
-  //         applyWMrotation(wmRotBlade.data(), transDisp.data(),
-  //         transDispRot.data());
-
-  //         applyWMrotation(wmHubRot.data(), r.data(), rRot.data());
-  //         brFSIdata_.bld_def[(iStart+i)*6+0] = transDispRot[0] + rRot[0] -
-  //         r[0]; brFSIdata_.bld_def[(iStart+i)*6+1] = transDispRot[1] +
-  //         rRot[1] - r[1]; brFSIdata_.bld_def[(iStart+i)*6+2] =
-  //         transDispRot[2] + rRot[2] - r[2];
-
-  //         for (size_t j=0; j < 3; j++) {
-  //             brFSIdata_.bld_vel[(iStart+i)*6+j] = tanRdistSq * 3.743; //
-  //             Completely arbitrary values
-  //             brFSIdata_.bld_vel[(iStart+i)*6+3+j] = sinRdistSq * 6.232; //
-  //             Completely arbitrary values
-  //         }
-
-  //     }
-  //     iStart += nPtsBlade;
-  // }
 }
 
 //! Set reference displacement on the turbine blade surface mesh, for comparison
@@ -1859,9 +1737,12 @@ fsiTurbine::mapDisplacements(double time)
         auto interpDisp = aero::linear_interp_total_displacement(
           bldStartDisp, bldEndDisp, *dispMapInterpNode);
 
-        // ramping can be done entirely with reference coordinates
+        // TODO(psakiev) ramping can be done entirely with reference coordinates
         // could cache this and do it once but might be better to do it inline
-        // to save memory on gpus linearly interpolated spanLocation for
+        // to save memory on gpus
+        //
+        // right now we do both (create field and compute inline) but it will be
+        // easy to delete the field when this is no longer beta
         //
         // deflection ramping
         const double spanLocI = brFSIdata_.bld_rloc[*dispMapNode + iStart];
