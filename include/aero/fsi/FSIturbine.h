@@ -37,10 +37,12 @@ namespace nalu {
 
 struct DeflectionRampingParams
 {
-  double defaultRampValue_{0.0};
-  double spanRampDistance_{1.0};
-  double zeroRampLocTheta_{1.0};
-  double thetaRampSpan_{1.0};
+  // default parameters would give no ramping
+  double spanRampDistance_{1e-5};
+  double zeroRampLocTheta_{180.0};
+  double thetaRampSpan_{10.0};
+  double startTimeTemporalRamp_{0.0};
+  double endTimeTemporalRamp_{0.0};
 };
 
 typedef stk::mesh::Field<int, stk::mesh::SimpleArrayTag> GenericIntFieldType;
@@ -101,7 +103,7 @@ public:
   //! Transfer the deflections from the openfast nodes to the turbine surface
   //! CFD mesh. Will call 'computeDisplacement' for each node on the turbine
   //! surface CFD mesh.
-  void mapDisplacements();
+  void mapDisplacements(double time);
 
   //! Map each node on the turbine surface CFD mesh to blade beam mesh
   void computeMapping();

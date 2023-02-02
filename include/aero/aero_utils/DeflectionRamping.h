@@ -45,6 +45,19 @@ linear_ramp_theta(
     1.0, stk::math::max(0.0, (zeroRampLoc - angle) / rampSpan));
 }
 
+//! ramp from 0 to 1 to allow turbines to only experience rigid body blade
+//! motion until time == startRamp, then linearly ramp to full bladeDeflections
+//! over the time window startRamp to endRamp
+double KOKKOS_FORCEINLINE_FUNCTION
+temporal_ramp(const double time, const double startRamp, const double endRamp)
+{
+  if (time < startRamp) {
+    return 0;
+  } else {
+    return stk::math::max(1.0, (time - startRamp) / (endRamp - startRamp));
+  }
+}
+
 } // namespace fsi
 
 #endif

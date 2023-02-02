@@ -63,21 +63,29 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     NaluEnv::self().naluOutputP0()
       << "Nacelle part name(s) not specified for turbine " << iTurb_
       << std::endl;
-  if (node["deflection_ramping"]) {
-    const auto& defNode = node["deflection_ramping"];
-    deflectionRampParams_.defaultRampValue_ = 1.0;
-    get_required(
-      defNode, "span_ramp_distance", deflectionRampParams_.spanRampDistance_);
-    get_required(
-      defNode, "zero_theta_ramp_angle",
-      deflectionRampParams_.zeroRampLocTheta_);
-    get_required(
-      defNode, "theta_ramp_span", deflectionRampParams_.thetaRampSpan_);
-    deflectionRampParams_.zeroRampLocTheta_ =
-      utils::radians(deflectionRampParams_.zeroRampLocTheta_);
-    deflectionRampParams_.thetaRampSpan_ =
-      utils::radians(deflectionRampParams_.thetaRampSpan_);
-  }
+  const YAML::Node defNode = node["deflection_ramping"];
+  ThrowErrorMsgIf(
+    !defNode, "defleciton_ramping inputs are required for FSI Turbines");
+  // clang-format off
+    get_required(defNode, "temporal_ramp_start", deflectionRampParams_.startTimeTemporalRamp_);
+    get_required(defNode, "temporal_ramp_end",   deflectionRampParams_.endTimeTemporalRamp_);
+    get_required(defNode, "span_ramp_distance",  deflectionRampParams_.spanRampDistance_);
+    get_required(defNode, "zero_theta_ramp_angle", deflectionRampParams_.zeroRampLocTheta_);
+    get_required(defNode, "theta_ramp_span",       deflectionRampParams_.thetaRampSpan_);
+  // clang-format on
+  // ---------- conversionions ----------
+  deflectionRampParams_.zeroRampLocTheta_ =
+    utils::radians(deflectionRampParams_.zeroRampLocTheta_);
+  deflectionRampParams_.thetaRampSpan_ =
+    utils::radians(deflectionRampParams_.thetaRampSpan_);
+  // ---------- checks ----------
+  ThrowErrorMsgIf(
+    deflectionRampParams_.startTimeTemporalRamp_ < 0.0,
+    "temporal_ramp_start must be greater than zero");
+  ThrowErrorMsgIf(
+    deflectionRampParams_.endTimeTemporalRamp_ <
+      deflectionRampParams_.startTimeTemporalRamp_,
+    "temporal_ramp_end must be greater than temporal_ramp_start");
 
   if (node["hub_parts"]) {
     const auto& hparts = node["hub_parts"];
@@ -1851,7 +1859,7 @@ fsiTurbine::calcDistanceSquared(double* a, double* b)
 //! Will call 'computeDisplacement' for each node on the turbine surface CFD
 //! mesh.
 void
-fsiTurbine::mapDisplacements()
+fsiTurbine::mapDisplacements(double time)
 {
 
   // To implement this function - assume that 'dispMap_' field contains the
@@ -1877,6 +1885,12 @@ fsiTurbine::mapDisplacements()
   // rotation rate first and then a second mesh deformation procedure should be
   // performed to apply the remaining structural deflection. Figure out how to
   // do this.
+
+  // this ramp is going to be the same for this entire call and we'll copy it
+  // for the blade computations
+  const double temporalDeflectionRamp = fsi::temporal_ramp(
+    time, deflectionRampParams_.startTimeTemporalRamp_,
+    deflectionRampParams_.endTimeTemporalRamp_);
 
   auto& meta = bulk_->mesh_meta_data();
   VectorFieldType* modelCoords =
@@ -1964,15 +1978,17 @@ fsiTurbine::mapDisplacements()
         // to save memory on gpus linearly interpolated spanLocation for
         //
         // deflection ramping
-        double deflectionRamp = deflectionRampParams_.defaultRampValue_;
         const double spanLocI = brFSIdata_.bld_rloc[*dispMapNode + iStart];
         const double spanLocIp1 =
           brFSIdata_.bld_rloc[*dispMapNode + iStart + 1];
 
         const double spanLocation =
           spanLocI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
-        deflectionRamp *= fsi::linear_ramp_span(
-          spanLocation, deflectionRampParams_.spanRampDistance_);
+
+        double deflectionRamp =
+          temporalDeflectionRamp *
+          fsi::linear_ramp_span(
+            spanLocation, deflectionRampParams_.spanRampDistance_);
 
         // things for theta mapping
         const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());

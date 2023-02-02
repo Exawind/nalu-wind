@@ -14,7 +14,7 @@ FrameOpenFAST::update_coordinates_velocity(const double time)
   const int ndim = meta_.spatial_dimension();
 
   if (fsiTurbineData_ != NULL) {
-    fsiTurbineData_->mapDisplacements();
+    fsiTurbineData_->mapDisplacements(time);
 
     VectorFieldType* modelCoords =
       meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");

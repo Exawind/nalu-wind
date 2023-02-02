@@ -552,15 +552,12 @@ void
 OpenfastFSI::map_displacements(double current_time)
 {
 
-  get_displacements(current_time); // Get displacements from the OpenFAST
+  get_displacements(current_time);
 
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (int i = 0; i < nTurbinesGlob; i++) {
-    if (fsiTurbineData_[i] != NULL) { // This may not be a turbine intended for
-                                      // blade-resolved simulation {
-      // fsiTurbineData_[i]->setSampleDisplacement(current_time);
-      // fsiTurbineData_[i]->setRefDisplacement(current_time);
-      fsiTurbineData_[i]->mapDisplacements();
+    if (fsiTurbineData_[i] != NULL) {
+      fsiTurbineData_[i]->mapDisplacements(current_time);
     }
   }
 }

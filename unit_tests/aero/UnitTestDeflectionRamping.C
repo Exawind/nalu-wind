@@ -96,4 +96,15 @@ TEST(DeflectionRamping, linearRampingAlongThetaPostRamp)
   EXPECT_DOUBLE_EQ(goldRampFactor, rampClockWise);
   EXPECT_DOUBLE_EQ(rampClockWise, rampCClockWise);
 }
+
+TEST(DeflectionRamping, temporalRampingPhases)
+{
+  const double startRamp = 1.0;
+  const double endRamp = 2.0;
+  EXPECT_DOUBLE_EQ(0.0, fsi::temporal_ramp(0.999, startRamp, endRamp));
+  EXPECT_DOUBLE_EQ(0.0, fsi::temporal_ramp(startRamp, startRamp, endRamp));
+  EXPECT_DOUBLE_EQ(0.5, fsi::temporal_ramp(1.5, startRamp, endRamp));
+  EXPECT_DOUBLE_EQ(1.0, fsi::temporal_ramp(endRamp, startRamp, endRamp));
+  EXPECT_DOUBLE_EQ(1.0, fsi::temporal_ramp(5.0, startRamp, endRamp));
+}
 } // namespace
