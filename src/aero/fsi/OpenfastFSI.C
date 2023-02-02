@@ -234,9 +234,7 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
     FAST.solution0();
   }
 
-  std::cerr << "Doing displacements" << std::endl;
   map_displacements(curTime);
-  std::cerr << "Finished displacements" << std::endl;
 }
 
 void
@@ -591,17 +589,6 @@ OpenfastFSI::map_loads(const int tStep, const double curTime)
         iError = MPI_Reduce(
           fsiTurbineData_[i]->brFSIdata_.bld_ld.data(), NULL, (nTotBldNodes)*6,
           MPI_DOUBLE, MPI_SUM, turbProc, bulk_->parallel());
-      }
-      if (bulk_->parallel_rank() == turbProc) {
-        for (int j = 0; j < nTotBldNodes; j++) {
-          std::cerr << fsiTurbineData_[i]->brFSIdata_.bld_ld[j * 6 + 0] << " "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[j * 6 + 1] << " "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[j * 6 + 2] << " "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[j * 6 + 3] << " "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[j * 6 + 4] << " "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[j * 6 + 5]
-                    << std::endl;
-        }
       }
 
       fsiTurbineData_[i]->write_nc_def_loads(tStep, curTime);
