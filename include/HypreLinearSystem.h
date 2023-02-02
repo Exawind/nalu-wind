@@ -20,6 +20,8 @@
 #endif // HYPRE_LINEAR_SYSTEM_DEBUG
 #undef HYPRE_LINEAR_SYSTEM_DEBUG
 
+#include "KokkosInterface.h"
+#include <Kokkos_UnorderedMap.hpp>
 #include "LinearSystem.h"
 #include "HypreDirectSolver.h"
 

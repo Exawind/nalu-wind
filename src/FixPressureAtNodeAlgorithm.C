@@ -12,7 +12,7 @@
 #include "Realm.h"
 #include "EquationSystem.h"
 #include "PeriodicManager.h"
-#include "TpetraLinearSystem.h"
+#include "LinearSystem.h"
 #include "SolutionOptions.h"
 
 #include <stk_mesh/base/BulkData.hpp>
