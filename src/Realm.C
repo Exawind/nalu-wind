@@ -1818,7 +1818,6 @@ Realm::update_geometry_due_to_mesh_motion()
       aeroModels_->update_displacements(get_current_time());
 
       if (aeroModels_->has_fsi()) {
-        // TODO: Can delete the FrameOpenFAST class if this works out right here
         auto part_vec = aeroModels_->fsi_parts();
         for (auto* target_part : part_vec)
           set_current_coordinates(target_part);
