@@ -51,11 +51,8 @@ linear_ramp_theta(
 double KOKKOS_FORCEINLINE_FUNCTION
 temporal_ramp(const double time, const double startRamp, const double endRamp)
 {
-  if (time < startRamp) {
-    return 0;
-  } else {
-    return stk::math::max(1.0, (time - startRamp) / (endRamp - startRamp));
-  }
+  return stk::math::max(
+    0.0, stk::math::min(1.0, (time - startRamp) / (endRamp - startRamp)));
 }
 
 } // namespace fsi
