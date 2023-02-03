@@ -7,7 +7,6 @@
 // for more details.
 //
 
-#include "aero/aero_utils/WienerMilenkovic.h"
 #include <gtest/gtest.h>
 #include <aero/aero_utils/displacements.h>
 

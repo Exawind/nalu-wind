@@ -51,7 +51,9 @@
 #define XSDKHYPREINTERFACE_H
 
 #include "FieldTypeDef.h"
+#ifdef NALU_USES_TRILINOS_SOLVERS
 #include "Ifpack2_ConfigDefs.hpp"
+#endif
 
 #include "HYPRE_IJ_mv.h"
 #include "HYPRE_parcsr_ls.h"
@@ -61,8 +63,10 @@
 #include "HYPRE_parcsr_mv.h"
 #include "HYPRE.h"
 
+#ifdef NALU_USES_TRILINOS_SOLVERS
 #include "Ifpack2_Preconditioner.hpp"
 #include "Ifpack2_Condest.hpp"
+#endif
 
 #include "Teuchos_RCP.hpp"
 

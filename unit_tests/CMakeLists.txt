@@ -10,7 +10,6 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestFieldUtils.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestFieldManager.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestFieldRegistry.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestGetDofStatus.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestHexElementPromotion.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestHexSCVDeterminant.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestInitialConditions.C
@@ -38,12 +37,18 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSingleHexPromotion.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSpinnerLidarPattern.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSuppAlgDataSharing.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTpetra.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestUtils.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestVSpace.C
 )
 
-add_subdirectory(actuator)
+if(ENABLE_TRILINOS_SOLVERS)
+  target_sources(${utest_ex_name} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestGetDofStatus.C
+    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTpetra.C
+  )
+  add_subdirectory(actuator)
+endif()
+
 add_subdirectory(aero)
 add_subdirectory(algorithms)
 add_subdirectory(kernels)

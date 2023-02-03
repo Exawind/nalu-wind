@@ -121,7 +121,7 @@ void
 OpenfastFSI::load(const YAML::Node& node)
 {
 
-  fi.comm = MPI_COMM_WORLD;
+  fi.comm = NaluEnv::self().parallel_comm();
 
   get_required(node, "n_turbines_glob", fi.nTurbinesGlob);
 
@@ -329,8 +329,6 @@ OpenfastFSI::compute_mapping()
         fsiTurbineData_[i]->brFSIdata_.bld_rloc.data(), nTotBldNodes,
         MPI_DOUBLE, turbProc, bulk_->parallel());
       // No need to bcast chord
-      if (!bulk_->parallel_rank())
-        std::cerr << "Computing mapping " << std::endl;
       fsiTurbineData_[i]->computeMapping();
       fsiTurbineData_[i]->computeLoadMapping();
     }
@@ -393,16 +391,6 @@ OpenfastFSI::send_loads(const double curTime)
         for (int k = 0; k < nTotBldNodes * 6; k++)
           fsiTurbineData_[i]->brFSIdata_.bld_ld[k] =
             fsiTurbineData_[i]->brFSIdata_.bld_ld[k];
-        std::cerr << "Blade loads at time " << curTime << std::endl;
-        for (int k = 0; k < nTotBldNodes; k++) {
-          std::cerr << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 0] << ", "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 1] << ", "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 2] << ", "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 3] << ", "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 4] << ", "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[k * 6 + 5]
-                    << std::endl;
-        }
 
         FAST.setBladeForces(fsiTurbineData_[i]->brFSIdata_.bld_ld, i);
 
@@ -552,15 +540,12 @@ void
 OpenfastFSI::map_displacements(double current_time)
 {
 
-  get_displacements(current_time); // Get displacements from the OpenFAST
+  get_displacements(current_time);
 
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (int i = 0; i < nTurbinesGlob; i++) {
-    if (fsiTurbineData_[i] != NULL) { // This may not be a turbine intended for
-                                      // blade-resolved simulation {
-      // fsiTurbineData_[i]->setSampleDisplacement(current_time);
-      // fsiTurbineData_[i]->setRefDisplacement(current_time);
-      fsiTurbineData_[i]->mapDisplacements();
+    if (fsiTurbineData_[i] != NULL) {
+      fsiTurbineData_[i]->mapDisplacements(current_time);
     }
   }
 }
@@ -592,17 +577,6 @@ OpenfastFSI::map_loads(const int tStep, const double curTime)
         iError = MPI_Reduce(
           fsiTurbineData_[i]->brFSIdata_.bld_ld.data(), NULL, (nTotBldNodes)*6,
           MPI_DOUBLE, MPI_SUM, turbProc, bulk_->parallel());
-      }
-      if (bulk_->parallel_rank() == turbProc) {
-        for (int j = 0; j < nTotBldNodes; j++) {
-          std::cerr << fsiTurbineData_[i]->brFSIdata_.bld_ld[j * 6 + 0] << " "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[j * 6 + 1] << " "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[j * 6 + 2] << " "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[j * 6 + 3] << " "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[j * 6 + 4] << " "
-                    << fsiTurbineData_[i]->brFSIdata_.bld_ld[j * 6 + 5]
-                    << std::endl;
-        }
       }
 
       fsiTurbineData_[i]->write_nc_def_loads(tStep, curTime);
