@@ -9,6 +9,7 @@ option(ENABLE_CUDA "Enable build targeting Nvidia GPU" OFF)
 option(ENABLE_ROCM "Enable build targeting AMD GPU" OFF)
 option(ENABLE_UMPIRE "Enable Umpire GPU memory pools" OFF)
 option(ENABLE_TESTS "Enable regression testing." OFF)
+option(ENABLE_UNIT_TESTS "Enable unit testing." ON)
 option(ENABLE_EXAMPLES "Enable examples." OFF)
 option(ENABLE_DOCUMENTATION "Build documentation." OFF)
 option(ENABLE_SPHINX_API_DOCS "Link Doxygen API docs to Sphinx" OFF)
@@ -46,10 +47,14 @@ endif()
 
 # Create targets
 set(nalu_ex_name "naluX")
-set(utest_ex_name "unittestX")
-add_library(nalu "")
 add_executable(${nalu_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/nalu.C)
-add_executable(${utest_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.C)
+
+if(ENABLE_UNIT_TESTS)
+  set(utest_ex_name "unittestX")
+  add_executable(${utest_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.C)
+endif()
+
+add_library(nalu "")
 
 ########################## MPI ####################################
 find_package(MPI REQUIRED)
@@ -268,12 +273,16 @@ target_include_directories(nalu PUBLIC
 
 # Most linking, etc, is set to PUBLIC for libnalu, so we merely link to libnalu for the exes
 target_link_libraries(${nalu_ex_name} PRIVATE nalu)
-target_link_libraries(${utest_ex_name} PRIVATE nalu)
-target_include_directories(${utest_ex_name} PRIVATE "${CMAKE_SOURCE_DIR}/unit_tests")
+if(ENABLE_UNIT_TESTS)
+  target_link_libraries(${utest_ex_name} PRIVATE nalu)
+  target_include_directories(${utest_ex_name} PRIVATE "${CMAKE_SOURCE_DIR}/unit_tests")
+endif()
 
 add_subdirectory(src)
-add_subdirectory(unit_tests)
 add_subdirectory(include)
+if(ENABLE_UNIT_TESTS)
+  add_subdirectory(unit_tests)
+endif()
 
 set(nalu_ex_catalyst_name "naluXCatalyst")
 if(ENABLE_PARAVIEW_CATALYST)
@@ -283,7 +292,14 @@ if(ENABLE_PARAVIEW_CATALYST)
    target_compile_definitions(nalu PUBLIC NALU_USES_CATALYST)
 endif()
 
-install(TARGETS ${utest_ex_name} ${nalu_ex_name} nalu
+if(ENABLE_UNIT_TESTS)
+  install(TARGETS ${utest_ex_name}
+          EXPORT "${PROJECT_NAME}Targets"
+          RUNTIME DESTINATION bin
+          ARCHIVE DESTINATION lib
+          LIBRARY DESTINATION lib)
+endif()
+install(TARGETS ${nalu_ex_name} nalu
         EXPORT "${PROJECT_NAME}Targets"
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
