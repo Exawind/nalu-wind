@@ -17,7 +17,7 @@
 
 #include "gtest/gtest.h"
 
-#include "Kokkos_Core.hpp"
+#include "KokkosInterface.h"
 #include "Teuchos_ParameterList.hpp"
 
 #include "Tpetra_Export.hpp"
@@ -132,6 +132,8 @@ copy_tpetra_solution_vector_to_stk_field(
 
 } // namespace
 
+#ifndef KOKKOS_ENABLE_GPU
+
 TEST_F(ConductionSolutionUpdateFixture, correct_behavior_for_linear_problem)
 {
   const auto conn = stk_connectivity_map<order>(mesh, meta.universal_part());
@@ -169,6 +171,8 @@ TEST_F(ConductionSolutionUpdateFixture, correct_behavior_for_linear_problem)
     }
   }
 }
+
+#endif // KOKKOS_ENABLE_GPU
 
 } // namespace matrix_free
 } // namespace nalu

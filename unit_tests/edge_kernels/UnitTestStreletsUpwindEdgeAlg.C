@@ -17,6 +17,8 @@
 namespace sierra {
 namespace nalu {
 
+#ifndef KOKKOS_ENABLE_GPU
+
 TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
 {
   const char* realmInput = R"inp(- name: unitTestRealm
@@ -196,6 +198,8 @@ TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
     }
   }
 }
+
+#endif // KOKKOS_ENABLE_GPU
 
 } // namespace nalu
 } // namespace sierra

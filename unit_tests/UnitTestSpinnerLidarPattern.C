@@ -66,6 +66,8 @@ velocity_func(const double* x, double time)
     time + 3 - 2.1 * x[0] / 500 + 3.2 * x[1] / 500 - 4.3 * x[2] / 100};
 }
 
+#ifndef KOKKOS_ENABLE_GPU
+
 TEST(SpinnerLidar, volume_interp)
 {
   stk::mesh::MeshBuilder builder(MPI_COMM_WORLD);
@@ -189,6 +191,8 @@ TEST(SpinnerLidar, volume_interp)
     }
   }
 }
+
+#endif // KOKKOS_ENABLE_GPU
 
 TEST(Spinner, invalid_predictor_throws)
 {
