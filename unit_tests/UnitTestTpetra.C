@@ -281,6 +281,8 @@ setup_solver_alg_and_linsys(
   create_and_register_kernel(solverAlg, block_1.topology());
 }
 
+#ifndef KOKKOS_ENABLE_GPU
+
 TEST(Tpetra, basic)
 {
   int numProcs = stk::parallel_machine_size(MPI_COMM_WORLD);
@@ -307,3 +309,6 @@ TEST(Tpetra, basic)
 
   verify_matrix_for_2_hex8_mesh(numProcs, localProc, tpetraLinsys);
 }
+
+#endif // KOKKOS_ENABLE_GPU
+

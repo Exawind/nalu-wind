@@ -105,7 +105,6 @@ static constexpr double lhs[8][8] = {
 };
 } // namespace hex8_golds
 } // namespace
-#endif
 
 TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
 {
@@ -151,7 +150,6 @@ TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
   // Populate LHS and RHS
   helperObjs.execute();
 
-#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -160,5 +158,5 @@ TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
+#endif

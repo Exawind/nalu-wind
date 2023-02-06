@@ -90,10 +90,11 @@ copy_DoubleType0_to_double(
   }
 }
 
+template <typename SHMEM>
 void
 compare_old_scv_volume(
-  const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType*>& scv_volume,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::nalu::SharedMemView<DoubleType*, SHMEM>& scv_volume,
   sierra::nalu::MasterElement* meSCV)
 {
   int len = scv_volume.extent(0);
@@ -106,10 +107,11 @@ compare_old_scv_volume(
   check_that_values_match(scv_volume, volume.data());
 }
 
+template <typename SHMEM>
 void
 compare_old_scs_areav(
-  const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType**>& scs_areav,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& scs_areav,
   sierra::nalu::MasterElement* meSCS)
 {
   int len = scs_areav.extent(0) * scs_areav.extent(1);
@@ -122,11 +124,12 @@ compare_old_scs_areav(
   check_that_values_match(scs_areav, areav.data());
 }
 
+template <typename SHMEM>
 void
 compare_old_scs_grad_op(
-  const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType***>& scs_dndx,
-  const sierra::nalu::SharedMemView<DoubleType***>& scs_deriv,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_dndx,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_deriv,
   sierra::nalu::MasterElement* meSCS)
 {
   int len = scs_dndx.extent(0) * scs_dndx.extent(1) * scs_dndx.extent(2);
@@ -144,11 +147,12 @@ compare_old_scs_grad_op(
   check_that_values_match(scs_deriv, deriv.data());
 }
 
+template <typename SHMEM>
 void
 compare_old_scs_shifted_grad_op(
-  const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType***>& scs_dndx,
-  const sierra::nalu::SharedMemView<DoubleType***>& scs_deriv,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_dndx,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_deriv,
   sierra::nalu::MasterElement* meSCS)
 {
   int len = scs_dndx.extent(0) * scs_dndx.extent(1) * scs_dndx.extent(2);
@@ -168,12 +172,13 @@ compare_old_scs_shifted_grad_op(
   check_that_values_match(scs_deriv, deriv.data());
 }
 
+template <typename SHMEM>
 void
 compare_old_scs_gij(
-  const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType***>& v_gijUpper,
-  const sierra::nalu::SharedMemView<DoubleType***>& v_gijLower,
-  const sierra::nalu::SharedMemView<DoubleType***>& /* v_deriv */,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& v_gijUpper,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& v_gijLower,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& /* v_deriv */,
   sierra::nalu::MasterElement* meSCS)
 {
   int gradOpLen =
@@ -233,9 +238,9 @@ test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
   // Execute the loop and perform all tests
   driver.execute(
     [&](sierra::nalu::SharedMemData<
-        sierra::nalu::TeamHandleType, sierra::nalu::HostShmem>& smdata) {
+        sierra::nalu::DeviceTeamHandleType, sierra::nalu::DeviceShmem>& smdata) {
       // Extract data from scratchViews
-      sierra::nalu::SharedMemView<DoubleType**>& v_coords =
+      sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>& v_coords =
         smdata.simdPrereqData.get_scratch_view_2D(*driver.coordinates_);
       auto& meViews =
         smdata.simdPrereqData.get_me_views(sierra::nalu::CURRENT_COORDINATES);
@@ -289,6 +294,7 @@ test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
     });
 }
 
+#ifndef KOKKOS_ENABLE_GPU
 TEST(KokkosME, test_hex8_views)
 {
   test_ME_views<sierra::nalu::AlgTraitsHex8>(
@@ -367,3 +373,6 @@ TEST(KokkosME, test_pyr5_views_gij)
     sierra::nalu::SCS_GIJ,
   });
 }
+
+#endif // KOKKOS_ENABLE_GPU
+
