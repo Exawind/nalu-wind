@@ -81,10 +81,9 @@ hypre_set_params(YAML::Node nodes)
     mempool_max_cached_bytes);
 #endif
 #if defined(HYPRE_USING_UMPIRE_DEVICE)
-  if (device_pool_size)
-  {
-	  HYPRE_SetUmpireDevicePoolName("HYPRE_DEVICE_POOL");
-	  HYPRE_SetUmpireDevicePoolSize(device_pool_size);
+  if (device_pool_size) {
+    HYPRE_SetUmpireDevicePoolName("HYPRE_DEVICE_POOL");
+    HYPRE_SetUmpireDevicePoolSize(device_pool_size);
   }
 #endif
   HYPRE_SetSpGemmUseVendor(use_vendor_spgemm);
