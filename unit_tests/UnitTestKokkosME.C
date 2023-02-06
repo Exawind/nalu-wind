@@ -236,62 +236,61 @@ test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
       AlgTraits::topo_);
 
   // Execute the loop and perform all tests
-  driver.execute(
-    [&](sierra::nalu::SharedMemData<
-        sierra::nalu::DeviceTeamHandleType, sierra::nalu::DeviceShmem>& smdata) {
-      // Extract data from scratchViews
-      sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>& v_coords =
+  driver.execute([&](sierra::nalu::SharedMemData<
+                     sierra::nalu::DeviceTeamHandleType,
+                     sierra::nalu::DeviceShmem>& smdata) {
+    // Extract data from scratchViews
+    sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>&
+      v_coords =
         smdata.simdPrereqData.get_scratch_view_2D(*driver.coordinates_);
-      auto& meViews =
-        smdata.simdPrereqData.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+    auto& meViews =
+      smdata.simdPrereqData.get_me_views(sierra::nalu::CURRENT_COORDINATES);
 
-      if (meSCS != nullptr) {
-        for (sierra::nalu::ELEM_DATA_NEEDED request : requests) {
-          if (request == sierra::nalu::SCS_AREAV) {
-            compare_old_scs_areav(v_coords, meViews.scs_areav, meSCS);
+    if (meSCS != nullptr) {
+      for (sierra::nalu::ELEM_DATA_NEEDED request : requests) {
+        if (request == sierra::nalu::SCS_AREAV) {
+          compare_old_scs_areav(v_coords, meViews.scs_areav, meSCS);
+        }
+        if (request == sierra::nalu::SCS_GRAD_OP) {
+          compare_old_scs_grad_op(v_coords, meViews.dndx, meViews.deriv, meSCS);
+        }
+        if (request == sierra::nalu::SCS_SHIFTED_GRAD_OP) {
+          compare_old_scs_shifted_grad_op(
+            v_coords, meViews.dndx_shifted, meViews.deriv, meSCS);
+        }
+        if (request == sierra::nalu::SCS_GIJ) {
+          compare_old_scs_gij(
+            v_coords, meViews.gijUpper, meViews.gijLower, meViews.deriv, meSCS);
+        }
+      }
+    }
+    if (meSCV != nullptr) {
+      for (sierra::nalu::ELEM_DATA_NEEDED request : requests) {
+        if (request == sierra::nalu::SCV_VOLUME) {
+          compare_old_scv_volume(v_coords, meViews.scv_volume, meSCV);
+        }
+        if (request == sierra::nalu::SCV_GRAD_OP) {
+          if (AlgTraits::topo_ == stk::topology::HEX_8) {
+            check_that_values_match(
+              meViews.dndx_scv, &kokkos_me_gold::hex8_scv_grad_op[0]);
+          } else if (AlgTraits::topo_ == stk::topology::TET_4) {
+            check_that_values_match(
+              meViews.dndx_scv, &kokkos_me_gold::tet4_scv_grad_op[0]);
           }
-          if (request == sierra::nalu::SCS_GRAD_OP) {
-            compare_old_scs_grad_op(
-              v_coords, meViews.dndx, meViews.deriv, meSCS);
-          }
-          if (request == sierra::nalu::SCS_SHIFTED_GRAD_OP) {
-            compare_old_scs_shifted_grad_op(
-              v_coords, meViews.dndx_shifted, meViews.deriv, meSCS);
-          }
-          if (request == sierra::nalu::SCS_GIJ) {
-            compare_old_scs_gij(
-              v_coords, meViews.gijUpper, meViews.gijLower, meViews.deriv,
-              meSCS);
+        }
+        if (request == sierra::nalu::SCV_SHIFTED_GRAD_OP) {
+          if (AlgTraits::topo_ == stk::topology::HEX_8) {
+            check_that_values_match(
+              meViews.dndx_scv_shifted,
+              &kokkos_me_gold::hex8_scv_shifted_grad_op[0]);
+          } else if (AlgTraits::topo_ == stk::topology::TET_4) {
+            check_that_values_match(
+              meViews.dndx_scv_shifted, &kokkos_me_gold::tet4_scv_grad_op[0]);
           }
         }
       }
-      if (meSCV != nullptr) {
-        for (sierra::nalu::ELEM_DATA_NEEDED request : requests) {
-          if (request == sierra::nalu::SCV_VOLUME) {
-            compare_old_scv_volume(v_coords, meViews.scv_volume, meSCV);
-          }
-          if (request == sierra::nalu::SCV_GRAD_OP) {
-            if (AlgTraits::topo_ == stk::topology::HEX_8) {
-              check_that_values_match(
-                meViews.dndx_scv, &kokkos_me_gold::hex8_scv_grad_op[0]);
-            } else if (AlgTraits::topo_ == stk::topology::TET_4) {
-              check_that_values_match(
-                meViews.dndx_scv, &kokkos_me_gold::tet4_scv_grad_op[0]);
-            }
-          }
-          if (request == sierra::nalu::SCV_SHIFTED_GRAD_OP) {
-            if (AlgTraits::topo_ == stk::topology::HEX_8) {
-              check_that_values_match(
-                meViews.dndx_scv_shifted,
-                &kokkos_me_gold::hex8_scv_shifted_grad_op[0]);
-            } else if (AlgTraits::topo_ == stk::topology::TET_4) {
-              check_that_values_match(
-                meViews.dndx_scv_shifted, &kokkos_me_gold::tet4_scv_grad_op[0]);
-            }
-          }
-        }
-      }
-    });
+    }
+  });
 }
 
 #ifndef KOKKOS_ENABLE_GPU
@@ -375,4 +374,3 @@ TEST(KokkosME, test_pyr5_views_gij)
 }
 
 #endif // KOKKOS_ENABLE_GPU
-

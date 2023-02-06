@@ -343,4 +343,3 @@ TEST_F(GCLTest, mesh_airy_waves)
 }
 
 #endif // KOKKOS_ENABLE_GPU
-

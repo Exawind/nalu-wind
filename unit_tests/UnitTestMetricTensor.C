@@ -225,4 +225,3 @@ TEST(MetricTensor, hex8)
 }
 
 #endif // KOKKOS_ENABLE_GPU
-
