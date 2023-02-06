@@ -60,10 +60,8 @@ hypre_set_params(YAML::Node nodes)
 #endif
 #if defined(HYPRE_USING_UMPIRE_DEVICE)
     int memory_pool_mbs = 4096;
-	 printf("%s %s %d\n",__FILE__,__FUNCTION__,__LINE__);
     sierra::nalu::get_if_present(
       node, "umpire_device_pool_mbs", memory_pool_mbs, memory_pool_mbs);
-	 printf("%s %s %d : umpire_device_pool_mbs=\n",__FILE__,__FUNCTION__,__LINE__,memory_pool_mbs);
     device_pool_size = ((long long)memory_pool_mbs) * 1024 * 1024;
 #endif
 
@@ -85,7 +83,6 @@ hypre_set_params(YAML::Node nodes)
 #if defined(HYPRE_USING_UMPIRE_DEVICE)
   if (device_pool_size)
   {
-	  printf("%s %s %d : umpire_device_pool_size=%lld\n",__FILE__,__FUNCTION__,__LINE__,device_pool_size);
 	  HYPRE_SetUmpireDevicePoolName("HYPRE_DEVICE_POOL");
 	  HYPRE_SetUmpireDevicePoolSize(device_pool_size);
   }
@@ -114,7 +111,6 @@ hypre_set_params()
 #endif
 #if defined(HYPRE_USING_UMPIRE_DEVICE)
   long long device_pool_size = 4096LL * 1024 * 1024;
-  printf("%s %s %d : umpire_device_pool_size=%lld\n",__FILE__,__FUNCTION__,__LINE__,device_pool_size);
   HYPRE_SetUmpireDevicePoolName("HYPRE_DEVICE_POOL");
   HYPRE_SetUmpireDevicePoolSize(device_pool_size);
 #endif
