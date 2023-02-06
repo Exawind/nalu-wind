@@ -43,6 +43,9 @@ hypre_set_params(YAML::Node nodes)
   hypre_uint mempool_bin_growth = 8, mempool_min_bin = 3, mempool_max_bin = 9;
   size_t mempool_max_cached_bytes = 2000LL * 1024 * 1024;
 #endif
+#if defined(HYPRE_USING_UMPIRE_DEVICE)
+  long long device_pool_size = 4096LL * 1024 * 1024;
+#endif
   bool use_vendor_spgemm = false;
   bool use_vendor_spmv = false;
   bool use_vendor_sptrans = false;
@@ -54,6 +57,12 @@ hypre_set_params(YAML::Node nodes)
     sierra::nalu::get_if_present(
       node, "memory_pool_mbs", memory_pool_mbs, memory_pool_mbs);
     mempool_max_cached_bytes = ((size_t)memory_pool_mbs) * 1024 * 1024;
+#endif
+#if defined(HYPRE_USING_UMPIRE_DEVICE)
+    int memory_pool_mbs = 4096;
+    sierra::nalu::get_if_present(
+      node, "umpire_device_pool_mbs", memory_pool_mbs, memory_pool_mbs);
+    device_pool_size = ((long long)memory_pool_mbs) * 1024 * 1024;
 #endif
 
     sierra::nalu::get_if_present(
@@ -71,7 +80,12 @@ hypre_set_params(YAML::Node nodes)
     mempool_bin_growth, mempool_min_bin, mempool_max_bin,
     mempool_max_cached_bytes);
 #endif
-
+#if defined(HYPRE_USING_UMPIRE_DEVICE)
+  if (device_pool_size) {
+    HYPRE_SetUmpireDevicePoolName("HYPRE_DEVICE_POOL");
+    HYPRE_SetUmpireDevicePoolSize(device_pool_size);
+  }
+#endif
   HYPRE_SetSpGemmUseVendor(use_vendor_spgemm);
   HYPRE_SetSpMVUseVendor(use_vendor_spmv);
   HYPRE_SetSpTransUseVendor(use_vendor_sptrans);
@@ -93,6 +107,11 @@ hypre_set_params()
   HYPRE_SetGPUMemoryPoolSize(
     mempool_bin_growth, mempool_min_bin, mempool_max_bin,
     mempool_max_cached_bytes);
+#endif
+#if defined(HYPRE_USING_UMPIRE_DEVICE)
+  long long device_pool_size = 4096LL * 1024 * 1024;
+  HYPRE_SetUmpireDevicePoolName("HYPRE_DEVICE_POOL");
+  HYPRE_SetUmpireDevicePoolSize(device_pool_size);
 #endif
 
   HYPRE_SetSpGemmUseVendor(false);
