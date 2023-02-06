@@ -27,9 +27,23 @@
 #include "yaml-cpp/yaml.h"
 #include "vs/vector_space.h"
 
+namespace aero {
+struct SixDOF;
+}
+
 namespace sierra {
 
 namespace nalu {
+
+struct DeflectionRampingParams
+{
+  // default parameters would give no ramping
+  double spanRampDistance_{1e-5};
+  double zeroRampLocTheta_{180.0};
+  double thetaRampSpan_{10.0};
+  double startTimeTemporalRamp_{0.0};
+  double endTimeTemporalRamp_{0.0};
+};
 
 typedef stk::mesh::Field<int, stk::mesh::SimpleArrayTag> GenericIntFieldType;
 
@@ -89,7 +103,7 @@ public:
   //! Transfer the deflections from the openfast nodes to the turbine surface
   //! CFD mesh. Will call 'computeDisplacement' for each node on the turbine
   //! surface CFD mesh.
-  void mapDisplacements();
+  void mapDisplacements(double time);
 
   //! Map each node on the turbine surface CFD mesh to blade beam mesh
   void computeMapping();
@@ -143,12 +157,15 @@ public:
 
   fast::turbineDataType params_;
   fast::turbBRfsiDataType brFSIdata_;
+  std::vector<aero::SixDOF> bldDefStiff_;
   std::vector<double> bld_dr_;
   std::vector<std::array<double, 2>>
     bld_rmm_; // Min-Max r for each node along blade
 
   //! Map of `{variableName : netCDF_ID}` obtained from the NetCDF C interface
   std::unordered_map<std::string, int> ncVarIDs_;
+  //! ramping parameters for blade deflections
+  DeflectionRampingParams deflectionRampParams_;
 
 private:
   fsiTurbine() = delete;
@@ -314,6 +331,7 @@ private:
     dispMap_; // Maps every node on the tower surface to the lower node of the
               // openfast mesh element containing the projection of the tower
               // surface node on to the openfast mesh tower element
+  ScalarFieldType* deflectionRamp_;
   ScalarFieldType* dispMapInterp_; // The location of the CFD surface mesh node
                                    // projected along the OpenFAST mesh element
                                    // in non-dimensional [0,1] co-ordinates.

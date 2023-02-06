@@ -20,6 +20,8 @@ namespace aero {
 //! WienerMilenkovic parameter
 struct SixDOF
 {
+  SixDOF() : position_(vs::Vector::zero()), orientation_(vs::Vector::zero()) {}
+
   // Kind of dangerous constructor
   SixDOF(double* vec)
     : position_({vec[0], vec[1], vec[2]}),
@@ -127,14 +129,15 @@ compute_translational_displacements(
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_translational_displacements(
-  const SixDOF deflections,
+  const SixDOF fullDeflections,
   const SixDOF referencePos,
   const vs::Vector cfdPos,
-  const vs::Vector /*root*/,
-  const double /*pitch*/,
-  const double /*rLoc*/)
+  const vs::Vector stiffDisp,
+  const double ramp = 1.0)
 {
-  return compute_translational_displacements(deflections, referencePos, cfdPos);
+  const auto fullDisp =
+    compute_translational_displacements(fullDeflections, referencePos, cfdPos);
+  return stiffDisp + ramp * (fullDisp - stiffDisp);
 }
 
 //! Convert one array of 6 velocities (transX, transY, transZ, wmX, wmY, wmZ)
