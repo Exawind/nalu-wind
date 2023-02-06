@@ -682,4 +682,3 @@ TEST_F_ALL_TOPOS(MasterElement, particle_interpolation)
 TEST_F_ALL_P1_TOPOS(MasterElement, general_shape_fcn)
 
 #endif // KOKKOS_ENABLE_GPU
-

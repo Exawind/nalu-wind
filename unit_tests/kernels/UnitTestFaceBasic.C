@@ -79,4 +79,3 @@ TEST_F(Hex8Mesh, faceBasic)
 }
 
 #endif // KOKKOS_ENABLE_GPU
-

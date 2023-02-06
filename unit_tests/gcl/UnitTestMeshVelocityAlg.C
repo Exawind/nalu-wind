@@ -477,4 +477,3 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
 }
 
 #endif // KOKKOS_ENABLE_GPU
-

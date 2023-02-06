@@ -23,8 +23,8 @@ do_the_test()
   unsigned bytes_per_thread = 128;
   unsigned threads_per_team = 1;
 
-  auto team_exec =
-    sierra::nalu::get_device_team_policy(N, bytes_per_team, bytes_per_thread, threads_per_team);
+  auto team_exec = sierra::nalu::get_device_team_policy(
+    N, bytes_per_team, bytes_per_thread, threads_per_team);
 
   Kokkos::parallel_for(
     team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team) {

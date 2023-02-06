@@ -311,4 +311,3 @@ TEST(Tpetra, basic)
 }
 
 #endif // KOKKOS_ENABLE_GPU
-
