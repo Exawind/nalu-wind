@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <array>
+#include <optional>
 
 namespace sierra {
 namespace nalu {
