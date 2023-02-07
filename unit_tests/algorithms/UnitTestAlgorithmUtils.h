@@ -17,8 +17,6 @@
 #include "SupplementalAlgorithm.h"
 #include "UnitTestKokkosUtils.h"
 
-#if !defined(KOKKOS_ENABLE_GPU)
-
 namespace unit_test_algorithm_utils {
 
 /** Driver class that mimics Assemble*SolverAlgorithm
@@ -47,7 +45,9 @@ public:
     rhs_norm_ = 0.0;
     N_ = 0;
 
-    kokkos_thread_team_bucket_loop(buckets, [&](stk::mesh::Entity node) {
+    bucket_loop_serial_only(buckets,
+    [](stk::topology topo, sierra::nalu::MasterElement& meSCS) {},
+    [&](stk::mesh::Entity node, stk::topology topo, sierra::nalu::MasterElement& meSCS) {
       for (size_t i = 0; i < activeSuppAlgs_.size(); ++i) {
         double lhs_value = 0.0;
         double rhs_value = 0.0;
@@ -81,7 +81,5 @@ private:
 };
 
 } // namespace unit_test_algorithm_utils
-
-#endif /* KOKKOS_ENABLE_CUDA */
 
 #endif /* UNITTESTALGORITHMUTILS_H */

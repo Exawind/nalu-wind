@@ -15,8 +15,6 @@
 #include "SolutionOptions.h"
 #include "TurbKineticEnergyRodiNodeSourceSuppAlg.h"
 
-#if !defined(KOKKOS_ENABLE_GPU)
-
 TEST_F(TestTurbulenceAlgorithm, turbkineticenergyrodinodesourcesuppalg)
 {
   sierra::nalu::Realm& realm = this->create_realm();
@@ -53,4 +51,3 @@ TEST_F(TestTurbulenceAlgorithm, turbkineticenergyrodinodesourcesuppalg)
   EXPECT_NEAR(rhs_norm, rhs_gold_norm, tol);
 }
 
-#endif

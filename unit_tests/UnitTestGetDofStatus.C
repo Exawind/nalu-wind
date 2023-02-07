@@ -8,8 +8,6 @@
 #include <TpetraLinearSystem.h>
 #include <TpetraLinearSystemHelpers.h>
 
-#if !defined(KOKKOS_ENABLE_GPU)
-
 class DofStatusHex8Mesh : public Hex8Mesh
 {
 };
@@ -58,4 +56,3 @@ TEST_F(DofStatusHex8Mesh, getDofStatus_shared)
   }
 }
 
-#endif
