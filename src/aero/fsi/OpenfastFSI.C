@@ -48,7 +48,7 @@ OpenfastFSI::read_turbine_data(
   if (turbNode["sim_type"]) {
     if (turbNode["sim_type"].as<std::string>() == "ext-loads") {
       fi.globTurbineData[iTurb].sType = fast::EXTLOADS;
-      fsiTurbineData_[iTurb] = new fsiTurbine(iTurb, turbNode);
+      fsiTurbineData_[iTurb] = std::make_unique<fsiTurbine>(iTurb, turbNode);
       mesh_motion_ = true;
     } else {
       fi.globTurbineData[iTurb].sType = fast::EXTINFLOW;
