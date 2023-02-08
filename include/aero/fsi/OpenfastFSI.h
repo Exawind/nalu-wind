@@ -34,7 +34,10 @@ public:
 
   int get_nTurbinesGlob() { return FAST.get_nTurbinesGlob(); }
 
-  fsiTurbine* get_fsiTurbineData(int iTurb) { return fsiTurbineData_[iTurb].get(); }
+  fsiTurbine* get_fsiTurbineData(int iTurb)
+  {
+    return fsiTurbineData_[iTurb].get();
+  }
 
   bool get_meshmotion() { return mesh_motion_; }
 
