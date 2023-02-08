@@ -218,7 +218,7 @@ separation between the fringe boundaries on the participating meshes.
    TIOGA overset hole cutting for a rotated internal mesh configuration showing
    the field and fringe locations.
 
-Figure :numref:`tioga-overset-cyl` shows the resulting overset assembly for
+Figure :numref:`tioga-cyl-nested` shows the resulting overset assembly for
 cylinder mesh and a background mesh with an intermediate refinement zone. The
 hole points (inside the cylinder) have been removed from the linear system for
 both the intermediate and background mesh. The magenta region shows the overlap

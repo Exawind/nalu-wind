@@ -836,8 +836,8 @@ verified by a simple algebraic calculation.
 
    An example of the fixed wing specification in the Nalu-Wind input
    file is shown below. The actuator type can be
-   :code-block:`ActLineSimpleNGP` for the NGP version and
-   :code-block:`ActLineSimple` for the non-NGP version (soon to be
+   :code:`ActLineSimpleNGP` for the NGP version and
+   :code:`ActLineSimple` for the non-NGP version (soon to be
    deprecated).
 
 .. code-block:: yaml
@@ -865,13 +865,13 @@ verified by a simple algebraic calculation.
 
 The fixed wing is defined between points :math:`\mathbf{p_1}` and
 :math:`\mathbf{p_2}` given the chord length and blade twist defined in
-:code-block:`chord_table` and :code-block:`twist_table`.  The
+:code:`chord_table` and :code:`twist_table`.  The
 direction :math:`\mathbf{p1}_{0\alpha}` corresponding to the zero
-degree angle of attack is given in :code-block:`p1_zero_alpha_dir`.
+degree angle of attack is given in :code:`p1_zero_alpha_dir`.
 The lift coefficients :math:`C_L` and drag coefficients :math:`C_D`
-are tabulated in the :code-block:`cl_table` and :code-block:`cd_table`
+are tabulated in the :code:`cl_table` and :code:`cd_table`
 parameters, respectively, as functions of the angle of attack
-:math:`\alpha` in :code-block:`aoa_table`.
+:math:`\alpha` in :code:`aoa_table`.
 
 The lift :math:`L` and drag :math:`D` on the fixed wing can be
 calculated by infinite 2D airfoil theory using the formulas:
@@ -908,12 +908,12 @@ lift coefficient
 and zero drag
 
 .. math::
-   :label: linear_cl
+   :label: linear_cd
 
    {C_D}=0.
 
 A comparison of total lift force calculated Nalu-Wind against the 2D
-airfoil theory is shown in Figure :numref:`_fw_bladeresults`.  As
+airfoil theory is shown in Figure :numref:`fw_bladeresults`.  As
 expected, the total lift force varies linearly with the angle of
 attack, and the agreement between theory and Nalu-Wind is good.
 Differences between the two methods were seen to be less than 0.1%
@@ -1037,7 +1037,7 @@ mid-span region compared to the wing tips.
 
 .. _ew_cl:
 
-.. figure:: figures/ew_LiftCoeff.pdf
+.. figure:: figures/ew_liftcoeff.pdf
    :width: 500px
    :align: center
 
@@ -1045,7 +1045,7 @@ mid-span region compared to the wing tips.
 
 .. _ew_cd:
 
-.. figure:: figures/ew_DragCoeff.pdf
+.. figure:: figures/ew_dragcoeff.pdf
    :width: 500px
    :align: center
 
@@ -1054,7 +1054,7 @@ mid-span region compared to the wing tips.
 
 .. _ew_lpul:
 
-.. figure:: figures/ew_LiftForcePerUnitLength.pdf
+.. figure:: figures/ew_liftforceperunitlength.pdf
    :width: 500px
    :align: center
 
@@ -1062,7 +1062,7 @@ mid-span region compared to the wing tips.
 
 .. _ew_dpul:
 
-.. figure:: figures/ew_DragForcePerUnitLength.pdf
+.. figure:: figures/ew_dragforceperunitlength.pdf
    :width: 500px
    :align: center
 
@@ -1076,6 +1076,7 @@ mid-span region compared to the wing tips.
    :align: center
 
    Comparison of angle of attack distribution on an elliptic wing simulated using actuator line algorithm to solution using lifting line theory. Results are only shown at 9 different stations along the blade that are output from OpenFAST.
+
 =======
 
 Open Boundary Condition With Outflow Thermal Stratification

@@ -797,8 +797,9 @@ surface as,
                      + \left(1 - \epsilon - \tau \right) K \right].
 
 .. _sst_abl:
+
 SST of the Atmospheric Boundary Layer
-+++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++
 
 The following boundary conditions simulate the Atmospheric Boundary Layer, as described in Bautista, :cite:`Bautista:2011` and :cite:`Bautista:2015`. The Nalu-Wind SST RANS implementation matches the Monin-Obukhov profile when used with the model constants from Table-A I-1 (Boundreault, 2011) in :cite:`Bautista:2011` and the meshing method described  in :cite:`Bautista:2015`. The mesh described in :cite:`Bautista:2015` gives the Monin-Obukhov profile for roughness height 0.1. When the roughness height is decreased, the mesh must be refined near the wall. For example, for the :cite:`Bautista:2015` ABL test case using roughness height 0.001 instead of 0.1, the mesh size needs to be halved near the wall. 
     
@@ -825,7 +826,7 @@ The :math:`k`, :math:`\omega`, and :math:`u` wall boundary conditions are set in
 .. literalinclude:: ransAbl_wallUserData.yaml
    :language: yaml
 
-Rather than specifying a momentum source term, :math:`dp/dx`, the velocity is set to the geostrophic (freestream) value near the top of the domain using the ABL forcing method described in :ref:`ABL Forcing Source Terms`. The ABL forcing term is turned on and the desired wind velocity and height must be speciied in the input file: 
+Rather than specifying a momentum source term, :math:`dp/dx`, the velocity is set to the geostrophic (freestream) value near the top of the domain using the ABL forcing method described in :ref:`abl_forcing_term`. The ABL forcing term is turned on and the desired wind velocity and height must be specified in the input file:
 
 .. literalinclude:: ransAbl_momentum.yaml
     :language: yaml
@@ -953,15 +954,15 @@ There are two implementations of the symmetry boundary condition: strong and wea
 .. _theory_weak_symmetry_bc:
 
 Weak Symmetry Boundary Condition
-+++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++
 
 Continuity, Mixture Fraction, Enthalpy, Species, :math:`k_{sgs}`, k and :math:`\omega`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Weak symmetry applies zero diffusion at the boundary for scalar quantities, which effectively sets the boundary-normal gradients of these quantities to zero. This means that, unlike for strong symmetry, in the weak symmetry implementation, normal velocity can be non-zero. This is possible because the cell averaged quantities in Nalu-Wind's discretization are stored at the nodes and therefore reside on the boundaries. In general, a non-zero normal velocity can cause net inflow or outflow. The Poisson solve prevents this by enforcing mass conservation globally to the order of linear solver convergence. 
 
 Momentum
-~~~~~~~
+~~~~~~~~
 
 A symmetry boundary is one that is described by removal of the tangential stress. For weak symmetry this is done in the momentum equation by applying only the normal component of stress:
 
@@ -1245,6 +1246,3 @@ Figure :numref:`dg-hex8-tet4`).
 
 
 .. rubric:: Footnotes
-
-.. [#f1] Or, at least, that the difference between these quantities
-  is small relative to other terms, see Moeng :cite:`Moeng:84`.
