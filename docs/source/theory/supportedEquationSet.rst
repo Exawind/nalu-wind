@@ -856,7 +856,7 @@ where :math:`\Omega` is the earth's angular velocity and :math:`\lambda` is the 
 .. _eqn_sst_des:
 
 Detached Eddy Simulation (DES) Formulation
-++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++
 
 The DES technique is also supported in the code base when the SST model
 is activated. This model seeks to formally relax the RANS-based approach

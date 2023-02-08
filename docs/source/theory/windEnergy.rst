@@ -348,7 +348,7 @@ Top boundary condition
 
 For problems with minimal streamline curvature near the upper boundary 
 (e.g. nearly flat terrain, negligible turbine blockage), a 
-:ref:`symmetry BC <theory_symmetry_bc>` (slip wall) can be when modeling 
+:ref:`symmetry BC <theory_strong_symmetry_bc>` (slip wall) can be when modeling 
 wind farm problems. By default a zero vertical temperature gradient will
 be imposed for the enthalpy equation when the symmetry boundary condition
 is used.  If a non-zero normal temperature gradient is required to
@@ -535,8 +535,8 @@ radial location (:math:`r_j` where :math:`j \in [1,N_R]`) is computed using
 :eq:`diskTotalForce`.
 
 .. math::
-
    :label: diskTotalForce
+
    \mathbf{F}_{total}(r_j) = \sum_{i=1}^{N_B} \mathbf{F}(r_j, \theta_i)
 
 where :math:`N_B` and :math:`N_R` are the number of blades and number of radial points 
@@ -564,8 +564,8 @@ The force that is spread across all the points at a given radius is then calcula
 :eq:`diskAppliedForce`.
 
 .. math::
-
    :label: diskAppliedForce
+
    \mathbf{f}(r_j) = \frac{\mathbf{F}_{total}(r_j)}{N_B*(N_{S,j}+1)}
 
 where :math:`N_{S,j}` is the number of swept points for a given radius.  The index j is used
