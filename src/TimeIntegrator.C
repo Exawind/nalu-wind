@@ -272,71 +272,78 @@ TimeIntegrator::prepare_for_time_integration()
 }
 
 void
-TimeIntegrator::pre_realm_advance_stage1()
+TimeIntegrator::pre_realm_advance_stage1(size_t inonlin)
 {
   std::vector<Realm*>::iterator ii;
+    
+  if (inonlin < 1) {
 
-  // negotiate time step
-  if (adaptiveTimeStep_) {
-    double theStep = 1.0e8;
-    for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
-      theStep = std::min(theStep, (*ii)->compute_adaptive_time_step());
+    // negotiate time step
+    if (adaptiveTimeStep_) {
+      double theStep = 1.0e8;
+      for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
+        theStep = std::min(theStep, (*ii)->compute_adaptive_time_step());
+      }
+      timeStepN_ = theStep;
     }
-    timeStepN_ = theStep;
-  }
-
-  currentTime_ += timeStepN_;
-  timeStepCount_ += 1;
-
-  // compute gamma's
-  if (secondOrderTimeAccurate_)
-    compute_gamma();
-
-  NaluEnv::self().naluOutputP0()
-    << "*******************************************************" << std::endl
-    << "Time Step Count: " << timeStepCount_
-    << " Current Time: " << currentTime_ << std::endl
-    << " dtN: " << timeStepN_ << " dtNm1: " << timeStepNm1_
-    << " gammas: " << gamma1_ << " " << gamma2_ << " " << gamma3_ << std::endl;
-
-  // state management
-  for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
-    (*ii)->swap_states();
-    (*ii)->predict_state();
+  
+    currentTime_ += timeStepN_;
+    timeStepCount_ += 1;
+  
+    // compute gamma's
+    if (secondOrderTimeAccurate_)
+      compute_gamma();
+  
+    NaluEnv::self().naluOutputP0()
+      << "*******************************************************" << std::endl
+      << "Time Step Count: " << timeStepCount_
+      << " Current Time: " << currentTime_ << std::endl
+      << " dtN: " << timeStepN_ << " dtNm1: " << timeStepNm1_
+      << " gammas: " << gamma1_ << " " << gamma2_ << " " << gamma3_ << std::endl;
+  
+    // state management
+    for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
+      (*ii)->swap_states();
+      (*ii)->predict_state();
+    }
+      
   }
 
   // read any fields from input file that will serve as external fields
   for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
-    (*ii)->populate_external_variables_from_input(currentTime_);
+      (*ii)->populate_external_variables_from_input(currentTime_);
   }
-
+  
   for (auto realm : realmVec_) {
     realm->update_geometry_due_to_mesh_motion();
   }
 }
 
 void
-TimeIntegrator::pre_realm_advance_stage2()
+TimeIntegrator::pre_realm_advance_stage2(size_t inonlin)
 {
-  std::vector<Realm*>::iterator ii;
 
   for (auto realm : realmVec_) {
     realm->update_graph_connectivity_and_coordinates_due_to_mesh_motion();
   }
 
-  // populate boundary data
-  for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
-    (*ii)->populate_boundary_data();
-  }
-
-  // output banner
-  for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
-    (*ii)->output_banner();
-  }
-
-  // for this time, extract all of the proper data
-  for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
-    (*ii)->process_external_data_transfer();
+  if (inonlin < 1) {
+    std::vector<Realm*>::iterator ii;
+    
+    // populate boundary data
+    for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
+      (*ii)->populate_boundary_data();
+    }
+  
+    // output banner
+    for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
+      (*ii)->output_banner();
+    }
+  
+    // for this time, extract all of the proper data
+    for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
+      (*ii)->process_external_data_transfer();
+    }
   }
 }
 
