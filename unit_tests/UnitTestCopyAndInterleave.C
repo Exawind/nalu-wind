@@ -111,7 +111,7 @@ do_the_multidimviews_test()
   std::cout << "simdLen = " << sierra::nalu::simdLen << std::endl;
 
   Kokkos::parallel_for(
-    team_exec, KOKKOS_LAMBDA(const TeamType& team) {
+    team_exec, [=](const TeamType& team) {
       unsigned maxOrdinal = totalNumFields - 1;
       sierra::nalu::MultiDimViews<DoubleType,TeamType,ShmemType> simdMultiDimViews(
         team, maxOrdinal, numNeededViews);

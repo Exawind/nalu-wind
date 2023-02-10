@@ -130,7 +130,8 @@ TEST_F(ScanningLidarFixture, print_tip_location)
   const int samples = std::round(time / dt);
   auto center = scan_spec["center"].as<Coordinates>();
 
-  std::ofstream outputFile("ScanningLidar.pattern.txt");
+  std::string outputFileName("ScanningLidar.pattern.txt");
+  std::ofstream outputFile(outputFileName);
   outputFile << "x,y,z" << std::endl;
 
   const auto start_height = slgen.generate(0).tip_[2];
@@ -145,6 +146,7 @@ TEST_F(ScanningLidarFixture, print_tip_location)
     outputFile << std::setprecision(15) << seg.tip_.at(0) << ", "
                << seg.tip_.at(1) << ", " << seg.tip_.at(2) << "\n";
   }
+  unlink(outputFileName.c_str());
 }
 
 TEST_F(ScanningLidarFixture, check_angles)

@@ -42,7 +42,8 @@ TEST(SpinnerLidar, print_tip_location)
   SpinnerLidarSegmentGenerator slgen;
   slgen.load(lidarSpecNode);
 
-  std::ofstream outputFile("SpinnerLidar.pattern.txt");
+  std::string outputFileName("SpinnerLidar.pattern.txt");
+  std::ofstream outputFile(outputFileName);
   outputFile << "x,y,z" << std::endl;
 
   for (int j = 0; j < nsamp; ++j) {
@@ -55,6 +56,7 @@ TEST(SpinnerLidar, print_tip_location)
     outputFile << seg.tip_.at(0) << ", " << seg.tip_.at(1) << ", "
                << seg.tip_.at(2) << std::endl;
   }
+  unlink(outputFileName.c_str());
 }
 
 std::array<double, 3>
