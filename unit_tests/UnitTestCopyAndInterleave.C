@@ -25,7 +25,8 @@ do_the_interleave_test()
 
   int N = 4;
   int bytes_per_thread = sizeof(double) * N * sierra::nalu::simdLen * 2;
-  auto team_exec = sierra::nalu::get_host_team_policy(1, bytes_per_team, bytes_per_thread);
+  auto team_exec =
+    sierra::nalu::get_host_team_policy(1, bytes_per_team, bytes_per_thread);
 
   Kokkos::parallel_for(
     team_exec, KOKKOS_LAMBDA(const TeamType& team) {
@@ -99,108 +100,109 @@ do_the_multidimviews_test()
   const int bytes_per_team = 0;
   int bytes_per_thread =
     sizeof(double) * 2 * (N + N * N + N * N * N) * sierra::nalu::simdLen * 2 +
-    sierra::nalu::MultiDimViews<double,TeamType,ShmemType>::bytes_needed(
+    sierra::nalu::MultiDimViews<double, TeamType, ShmemType>::bytes_needed(
       totalNumFields, numNeededViews) +
     sierra::nalu::simdLen *
-      sierra::nalu::MultiDimViews<DoubleType,TeamType,ShmemType>::bytes_needed(
-        totalNumFields, numNeededViews);
+      sierra::nalu::MultiDimViews<DoubleType, TeamType, ShmemType>::
+        bytes_needed(totalNumFields, numNeededViews);
   std::cout << "bytes_per_thread = " << bytes_per_thread << std::endl;
 
-  auto team_exec = sierra::nalu::get_host_team_policy(1, bytes_per_team, bytes_per_thread);
+  auto team_exec =
+    sierra::nalu::get_host_team_policy(1, bytes_per_team, bytes_per_thread);
 
   std::cout << "simdLen = " << sierra::nalu::simdLen << std::endl;
 
-  Kokkos::parallel_for(
-    team_exec, [=](const TeamType& team) {
-      unsigned maxOrdinal = totalNumFields - 1;
-      sierra::nalu::MultiDimViews<DoubleType,TeamType,ShmemType> simdMultiDimViews(
-        team, maxOrdinal, numNeededViews);
+  Kokkos::parallel_for(team_exec, [=](const TeamType& team) {
+    unsigned maxOrdinal = totalNumFields - 1;
+    sierra::nalu::MultiDimViews<DoubleType, TeamType, ShmemType>
+      simdMultiDimViews(team, maxOrdinal, numNeededViews);
 
-      simdMultiDimViews.add_1D_view(
-        0, sierra::nalu::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
-             team, N));
-      simdMultiDimViews.add_1D_view(
-        1, sierra::nalu::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
-             team, N));
-      simdMultiDimViews.add_2D_view(
-        2, sierra::nalu::get_shmem_view_2D<DoubleType, TeamType, ShmemType>(
+    simdMultiDimViews.add_1D_view(
+      0, sierra::nalu::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
+           team, N));
+    simdMultiDimViews.add_1D_view(
+      1, sierra::nalu::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
+           team, N));
+    simdMultiDimViews.add_2D_view(
+      2, sierra::nalu::get_shmem_view_2D<DoubleType, TeamType, ShmemType>(
+           team, N, N));
+    simdMultiDimViews.add_2D_view(
+      3, sierra::nalu::get_shmem_view_2D<DoubleType, TeamType, ShmemType>(
+           team, N, N));
+    simdMultiDimViews.add_3D_view(
+      4, sierra::nalu::get_shmem_view_3D<DoubleType, TeamType, ShmemType>(
+           team, N, N, N));
+    simdMultiDimViews.add_3D_view(
+      5, sierra::nalu::get_shmem_view_3D<DoubleType, TeamType, ShmemType>(
+           team, N, N, N));
+
+    std::unique_ptr<sierra::nalu::MultiDimViews<double, TeamType, ShmemType>>
+      multiDimViews[sierra::nalu::simdLen];
+    for (int i = 0; i < sierra::nalu::simdLen; ++i) {
+      multiDimViews[i] = std::unique_ptr<
+        sierra::nalu::MultiDimViews<double, TeamType, ShmemType>>(
+        new sierra::nalu::MultiDimViews<double, TeamType, ShmemType>(
+          team, maxOrdinal, numNeededViews));
+
+      multiDimViews[i]->add_1D_view(
+        0,
+        sierra::nalu::get_shmem_view_1D<double, TeamType, ShmemType>(team, N));
+      multiDimViews[i]->add_1D_view(
+        1,
+        sierra::nalu::get_shmem_view_1D<double, TeamType, ShmemType>(team, N));
+      multiDimViews[i]->add_2D_view(
+        2, sierra::nalu::get_shmem_view_2D<double, TeamType, ShmemType>(
              team, N, N));
-      simdMultiDimViews.add_2D_view(
-        3, sierra::nalu::get_shmem_view_2D<DoubleType, TeamType, ShmemType>(
+      multiDimViews[i]->add_2D_view(
+        3, sierra::nalu::get_shmem_view_2D<double, TeamType, ShmemType>(
              team, N, N));
-      simdMultiDimViews.add_3D_view(
-        4, sierra::nalu::get_shmem_view_3D<DoubleType, TeamType, ShmemType>(
+      multiDimViews[i]->add_3D_view(
+        4, sierra::nalu::get_shmem_view_3D<double, TeamType, ShmemType>(
              team, N, N, N));
-      simdMultiDimViews.add_3D_view(
-        5, sierra::nalu::get_shmem_view_3D<DoubleType, TeamType, ShmemType>(
+      multiDimViews[i]->add_3D_view(
+        5, sierra::nalu::get_shmem_view_3D<double, TeamType, ShmemType>(
              team, N, N, N));
+    }
 
-      std::unique_ptr<sierra::nalu::MultiDimViews<double,TeamType,ShmemType>>
-        multiDimViews[sierra::nalu::simdLen];
-      for (int i = 0; i < sierra::nalu::simdLen; ++i) {
-        multiDimViews[i] = std::unique_ptr<sierra::nalu::MultiDimViews<double,TeamType,ShmemType>>(
-          new sierra::nalu::MultiDimViews<double,TeamType,ShmemType>(
-            team, maxOrdinal, numNeededViews));
+    Kokkos::parallel_for(
+      Kokkos::TeamThreadRange(team, 1), [&](const size_t& /* index */) {
+        for (int i = 0; i < sierra::nalu::simdLen; ++i) {
+          sierra::nalu::set_vals(
+            multiDimViews[i]->get_scratch_view_1D(0), i + 1);
+          sierra::nalu::set_vals(
+            multiDimViews[i]->get_scratch_view_1D(1), i + 1);
+          sierra::nalu::set_vals(
+            multiDimViews[i]->get_scratch_view_2D(2), i + 1);
+          sierra::nalu::set_vals(
+            multiDimViews[i]->get_scratch_view_2D(3), i + 1);
+          sierra::nalu::set_vals(
+            multiDimViews[i]->get_scratch_view_3D(4), i + 1);
+          sierra::nalu::set_vals(
+            multiDimViews[i]->get_scratch_view_3D(5), i + 1);
+        }
 
-        multiDimViews[i]->add_1D_view(
-          0, sierra::nalu::get_shmem_view_1D<double, TeamType, ShmemType>(
-               team, N));
-        multiDimViews[i]->add_1D_view(
-          1, sierra::nalu::get_shmem_view_1D<double, TeamType, ShmemType>(
-               team, N));
-        multiDimViews[i]->add_2D_view(
-          2, sierra::nalu::get_shmem_view_2D<double, TeamType, ShmemType>(
-               team, N, N));
-        multiDimViews[i]->add_2D_view(
-          3, sierra::nalu::get_shmem_view_2D<double, TeamType, ShmemType>(
-               team, N, N));
-        multiDimViews[i]->add_3D_view(
-          4, sierra::nalu::get_shmem_view_3D<double, TeamType, ShmemType>(
-               team, N, N, N));
-        multiDimViews[i]->add_3D_view(
-          5, sierra::nalu::get_shmem_view_3D<double, TeamType, ShmemType>(
-               team, N, N, N));
-      }
+        const sierra::nalu::MultiDimViews<double, TeamType, ShmemType>*
+          multiDimViewPtrs[sierra::nalu::simdLen] = {nullptr};
+        for (int i = 0; i < sierra::nalu::simdLen; ++i) {
+          multiDimViewPtrs[i] = multiDimViews[i].get();
+        }
+        sierra::nalu::copy_and_interleave(
+          multiDimViewPtrs, sierra::nalu::simdLen, simdMultiDimViews);
 
-      Kokkos::parallel_for(
-        Kokkos::TeamThreadRange(team, 1), [&](const size_t& /* index */) {
-          for (int i = 0; i < sierra::nalu::simdLen; ++i) {
-            sierra::nalu::set_vals(
-              multiDimViews[i]->get_scratch_view_1D(0), i + 1);
-            sierra::nalu::set_vals(
-              multiDimViews[i]->get_scratch_view_1D(1), i + 1);
-            sierra::nalu::set_vals(
-              multiDimViews[i]->get_scratch_view_2D(2), i + 1);
-            sierra::nalu::set_vals(
-              multiDimViews[i]->get_scratch_view_2D(3), i + 1);
-            sierra::nalu::set_vals(
-              multiDimViews[i]->get_scratch_view_3D(4), i + 1);
-            sierra::nalu::set_vals(
-              multiDimViews[i]->get_scratch_view_3D(5), i + 1);
-          }
-
-          const sierra::nalu::MultiDimViews<double,TeamType,ShmemType>*
-            multiDimViewPtrs[sierra::nalu::simdLen] = {nullptr};
-          for (int i = 0; i < sierra::nalu::simdLen; ++i) {
-            multiDimViewPtrs[i] = multiDimViews[i].get();
-          }
-          sierra::nalu::copy_and_interleave(
-            multiDimViewPtrs, sierra::nalu::simdLen, simdMultiDimViews);
-
-          result.d_view(0) =
-            check_view(simdMultiDimViews.get_scratch_view_1D(0)) ? 1 : 0;
-          result.d_view(1) =
-            check_view(simdMultiDimViews.get_scratch_view_1D(1)) ? 1 : 0;
-          result.d_view(2) =
-            check_view(simdMultiDimViews.get_scratch_view_2D(2)) ? 1 : 0;
-          result.d_view(3) =
-            check_view(simdMultiDimViews.get_scratch_view_2D(3)) ? 1 : 0;
-          result.d_view(4) =
-            check_view(simdMultiDimViews.get_scratch_view_3D(4)) ? 1 : 0;
-          result.d_view(5) =
-            check_view(simdMultiDimViews.get_scratch_view_3D(5)) ? 1 : 0;
-        });
-    });
+        result.d_view(0) =
+          check_view(simdMultiDimViews.get_scratch_view_1D(0)) ? 1 : 0;
+        result.d_view(1) =
+          check_view(simdMultiDimViews.get_scratch_view_1D(1)) ? 1 : 0;
+        result.d_view(2) =
+          check_view(simdMultiDimViews.get_scratch_view_2D(2)) ? 1 : 0;
+        result.d_view(3) =
+          check_view(simdMultiDimViews.get_scratch_view_2D(3)) ? 1 : 0;
+        result.d_view(4) =
+          check_view(simdMultiDimViews.get_scratch_view_3D(4)) ? 1 : 0;
+        result.d_view(5) =
+          check_view(simdMultiDimViews.get_scratch_view_3D(5)) ? 1 : 0;
+      });
+  });
 
   result.modify<IntViewType::execution_space>();
   result.sync<IntViewType::host_mirror_space>();
@@ -211,4 +213,3 @@ do_the_multidimviews_test()
 }
 
 TEST(CopyAndInterleave, multidimviews) { do_the_multidimviews_test(); }
-

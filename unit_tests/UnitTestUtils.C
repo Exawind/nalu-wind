@@ -545,14 +545,15 @@ Hex8Mesh::check_discrete_laplacian(double exactLaplacian)
     meta->locally_owned_part() & !meta->globally_shared_part();
   const stk::mesh::BucketVector& nodeBuckets =
     bulk->get_buckets(stk::topology::NODE_RANK, selector);
-  bucket_loop_serial_only(nodeBuckets,
-  [](stk::topology topo, sierra::nalu::MasterElement& meSCS) {},
-  [&](stk::mesh::Entity node, stk::topology topo, sierra::nalu::MasterElement& meSCS) {
-    if (bulk->num_elements(node) == 8) {
-      EXPECT_NEAR(
-        *stk::mesh::field_data(*discreteLaplacianOfPressure, node),
-        exactLaplacian, tol);
-    }
-  });
+  bucket_loop_serial_only(
+    nodeBuckets, [](stk::topology topo, sierra::nalu::MasterElement& meSCS) {},
+    [&](
+      stk::mesh::Entity node, stk::topology topo,
+      sierra::nalu::MasterElement& meSCS) {
+      if (bulk->num_elements(node) == 8) {
+        EXPECT_NEAR(
+          *stk::mesh::field_data(*discreteLaplacianOfPressure, node),
+          exactLaplacian, tol);
+      }
+    });
 }
-

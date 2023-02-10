@@ -120,10 +120,7 @@ public:
     remove_files();
   }
 
-  ~LidarLOSFixture()
-  {
-    remove_files();
-  }
+  ~LidarLOSFixture() { remove_files(); }
 
 private:
   std::shared_ptr<stk::mesh::BulkData> bulkptr;

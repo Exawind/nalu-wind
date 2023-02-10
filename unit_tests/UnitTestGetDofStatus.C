@@ -55,4 +55,3 @@ TEST_F(DofStatusHex8Mesh, getDofStatus_shared)
     }
   }
 }
-

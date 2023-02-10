@@ -137,35 +137,34 @@ public:
     : numNodesPerElem(elemTopo.num_nodes()),
       d_elemVals("device-elem-vals", 8, 8)
   {
-    Kokkos::View<double**,sierra::nalu::MemSpace>::HostMirror h_elemVals = Kokkos::create_mirror_view(d_elemVals);
-    for(int i=0; i<8; ++i) {
-      for(int j=0; j<8; ++j) {
-        h_elemVals(i,j) = elemVals[i][j];
+    Kokkos::View<double**, sierra::nalu::MemSpace>::HostMirror h_elemVals =
+      Kokkos::create_mirror_view(d_elemVals);
+    for (int i = 0; i < 8; ++i) {
+      for (int j = 0; j < 8; ++j) {
+        h_elemVals(i, j) = elemVals[i][j];
       }
     }
     Kokkos::deep_copy(d_elemVals, h_elemVals);
   }
 
   KOKKOS_FUNCTION
-  TestKernel()
-   : numNodesPerElem(0),
-     d_elemVals()
-  {
-  }
+  TestKernel() : numNodesPerElem(0), d_elemVals() {}
 
   KOKKOS_FUNCTION
   TestKernel(const TestKernel& src)
-   : numNodesPerElem(src.numNodesPerElem),
-     d_elemVals(src.d_elemVals)
+    : numNodesPerElem(src.numNodesPerElem), d_elemVals(src.d_elemVals)
   {
   }
 
   using sierra::nalu::Kernel::execute;
   KOKKOS_FUNCTION
   virtual void execute(
-    sierra::nalu::SharedMemView<DoubleType**,sierra::nalu::DeviceShmem>& lhs,
-    sierra::nalu::SharedMemView<DoubleType*,sierra::nalu::DeviceShmem>& rhs,
-    sierra::nalu::ScratchViews<DoubleType,sierra::nalu::DeviceTeamHandleType,sierra::nalu::DeviceShmem>& /* scratchViews */)
+    sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>& lhs,
+    sierra::nalu::SharedMemView<DoubleType*, sierra::nalu::DeviceShmem>& rhs,
+    sierra::nalu::ScratchViews<
+      DoubleType,
+      sierra::nalu::DeviceTeamHandleType,
+      sierra::nalu::DeviceShmem>& /* scratchViews */)
   {
     const bool check0 = numNodesPerElem * numNodesPerElem == lhs.size();
     const bool check1 = numNodesPerElem == rhs.size();
@@ -173,7 +172,7 @@ public:
     if (check0 && check1 && check2) {
       for (unsigned i = 0; i < numNodesPerElem; ++i) {
         for (unsigned j = 0; j < numNodesPerElem; ++j) {
-          lhs(i, j) = d_elemVals(i,j);
+          lhs(i, j) = d_elemVals(i, j);
         }
       }
     }
@@ -181,7 +180,7 @@ public:
 
 private:
   unsigned numNodesPerElem;
-  Kokkos::View<double**,sierra::nalu::MemSpace> d_elemVals;
+  Kokkos::View<double**, sierra::nalu::MemSpace> d_elemVals;
 };
 
 std::vector<unsigned>
@@ -306,12 +305,14 @@ setup_solver_alg_and_linsys(
 TEST(Tpetra, basic)
 {
   const int numProcs = stk::parallel_machine_size(MPI_COMM_WORLD);
-  if (numProcs > 2) { GTEST_SKIP(); }
+  if (numProcs > 2) {
+    GTEST_SKIP();
+  }
   int localProc = stk::parallel_machine_rank(MPI_COMM_WORLD);
 
   unit_test_utils::NaluTest naluObj;
   sierra::nalu::Realm& realm =
-     setup_solver_alg_and_linsys(naluObj, "generated:1x1x2");
+    setup_solver_alg_and_linsys(naluObj, "generated:1x1x2");
 
   sierra::nalu::TpetraLinearSystem* tpetraLinsys =
     get_TpetraLinearSystem(naluObj);
@@ -323,15 +324,17 @@ TEST(Tpetra, basic)
 
   verify_graph_for_2_hex8_mesh(numProcs, localProc, tpetraLinsys);
 
-  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<sierra::nalu::AlgTraitsHex8>();
+  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<
+    sierra::nalu::AlgTraitsHex8>();
   auto& dataNeeded = solverAlg->dataNeededByKernels_;
   dataNeeded.add_cvfem_volume_me(meSCV);
   auto* coordsField = realm.meta_data().coordinate_field();
-  dataNeeded.add_coordinates_field(*coordsField, 3, sierra::nalu::CURRENT_COORDINATES);
-  dataNeeded.add_master_element_call(sierra::nalu::SCV_VOLUME, sierra::nalu::CURRENT_COORDINATES);
+  dataNeeded.add_coordinates_field(
+    *coordsField, 3, sierra::nalu::CURRENT_COORDINATES);
+  dataNeeded.add_master_element_call(
+    sierra::nalu::SCV_VOLUME, sierra::nalu::CURRENT_COORDINATES);
 
   solverAlg->execute();
   tpetraLinsys->loadComplete();
   verify_matrix_for_2_hex8_mesh(numProcs, localProc, tpetraLinsys);
 }
-

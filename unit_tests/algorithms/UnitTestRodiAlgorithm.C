@@ -50,4 +50,3 @@ TEST_F(TestTurbulenceAlgorithm, turbkineticenergyrodinodesourcesuppalg)
   EXPECT_NEAR(lhs_norm, lhs_gold_norm, tol);
   EXPECT_NEAR(rhs_norm, rhs_gold_norm, tol);
 }
-

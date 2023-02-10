@@ -142,7 +142,9 @@ get_realm_default_node()
 }
 
 NaluTest::NaluTest(const YAML::Node& doc)
-  : comm_(MPI_COMM_WORLD), spatialDim_(3), sim_(doc),
+  : comm_(MPI_COMM_WORLD),
+    spatialDim_(3),
+    sim_(doc),
     logFileName_("unittestX_naluwrapper.log")
 {
   // NaluEnv log file
@@ -162,10 +164,7 @@ NaluTest::NaluTest(const YAML::Node& doc)
   sim_.timeIntegrator_->load(doc);
 }
 
-NaluTest::~NaluTest()
-{
-  unlink(logFileName_.c_str());
-}
+NaluTest::~NaluTest() { unlink(logFileName_.c_str()); }
 
 sierra::nalu::Realm&
 NaluTest::create_realm(
