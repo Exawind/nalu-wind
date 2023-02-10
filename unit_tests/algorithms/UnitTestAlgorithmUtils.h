@@ -17,8 +17,6 @@
 #include "SupplementalAlgorithm.h"
 #include "UnitTestKokkosUtils.h"
 
-#if !defined(KOKKOS_ENABLE_GPU)
-
 namespace unit_test_algorithm_utils {
 
 /** Driver class that mimics Assemble*SolverAlgorithm
@@ -47,19 +45,23 @@ public:
     rhs_norm_ = 0.0;
     N_ = 0;
 
-    kokkos_thread_team_bucket_loop(buckets, [&](stk::mesh::Entity node) {
-      for (size_t i = 0; i < activeSuppAlgs_.size(); ++i) {
-        double lhs_value = 0.0;
-        double rhs_value = 0.0;
+    bucket_loop_serial_only(
+      buckets, [](stk::topology topo, sierra::nalu::MasterElement& meSCS) {},
+      [&](
+        stk::mesh::Entity node, stk::topology topo,
+        sierra::nalu::MasterElement& meSCS) {
+        for (size_t i = 0; i < activeSuppAlgs_.size(); ++i) {
+          double lhs_value = 0.0;
+          double rhs_value = 0.0;
 
-        activeSuppAlgs_[i]->node_execute(&lhs_value, &rhs_value, node);
+          activeSuppAlgs_[i]->node_execute(&lhs_value, &rhs_value, node);
 
-        Kokkos::atomic_add(&lhs_norm_, (lhs_value * lhs_value));
-        Kokkos::atomic_add(&rhs_norm_, (rhs_value * rhs_value));
-      }
+          Kokkos::atomic_add(&lhs_norm_, (lhs_value * lhs_value));
+          Kokkos::atomic_add(&rhs_norm_, (rhs_value * rhs_value));
+        }
 
-      Kokkos::atomic_add(&N_, (size_t)1);
-    });
+        Kokkos::atomic_add(&N_, (size_t)1);
+      });
   }
 
   inline double get_lhs_norm()
@@ -81,7 +83,5 @@ private:
 };
 
 } // namespace unit_test_algorithm_utils
-
-#endif /* KOKKOS_ENABLE_CUDA */
 
 #endif /* UNITTESTALGORITHMUTILS_H */

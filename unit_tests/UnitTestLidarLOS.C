@@ -24,7 +24,7 @@ const std::string db_spec =
   "  lidar_specifications:                                  \n";
 
 const std::string scan_spec =
-  "      - name: lidar/scan                                  \n"
+  "      - name: lidar_scan                                  \n"
   "        type: scanning                                    \n"
   "        frequency: 5                                      \n"
   "        points_along_line: 10                             \n"
@@ -40,7 +40,7 @@ const std::string scan_spec =
   "          elevation_angles: [-5,0,5]                      \n";
 
 const std::string radar_spec =
-  "      - name: lidar/radar                                 \n"
+  "      - name: lidar_radar                                 \n"
   "        type: radar                                       \n"
   "        frequency: 1                                      \n"
   "        points_along_line: 2                              \n"
@@ -61,7 +61,7 @@ const std::string radar_spec =
   "          elevation_angles: [0,1,2,3]                     \n";
 
 const std::string radar_cone_spec =
-  "      - name: lidar/radar-filtered                        \n"
+  "      - name: lidar_radar-filtered                        \n"
   "        type: radar                                       \n"
   "        frequency: 4                                      \n"
   "        points_along_line: 10                              \n"
@@ -117,16 +117,23 @@ public:
 
     // lidar will write new files if they exist. Delete them here
     // to adding new files ad infinitum`
-    Ioss::FileInfo("lidar/scan.txt").remove_file();
-    Ioss::FileInfo("lidar/radar-filtered.txt").remove_file();
-    for (int j = 0; j < 13; ++j) {
-      Ioss::FileInfo("lidar/radar-grid-" + std::to_string(j) + ".txt")
-        .remove_file();
-    }
+    remove_files();
   }
+
+  ~LidarLOSFixture() { remove_files(); }
 
 private:
   std::shared_ptr<stk::mesh::BulkData> bulkptr;
+
+  void remove_files()
+  {
+    Ioss::FileInfo("lidar_scan.txt").remove_file();
+    Ioss::FileInfo("lidar_radar-filtered.txt").remove_file();
+    for (int j = 0; j < 13; ++j) {
+      Ioss::FileInfo("lidar_radar-grid-" + std::to_string(j) + ".txt")
+        .remove_file();
+    }
+  }
 
 public:
   stk::mesh::BulkData& bulk;

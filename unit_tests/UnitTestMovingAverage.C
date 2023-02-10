@@ -124,7 +124,8 @@ TEST_F(PostProcessor, moving_average_ou)
   avgPP.add_fields({"temperature"});
   avgPP.set_time_scale(timeScale);
 
-  std::ofstream outputFile("PostProcessor.moving_average_ou.txt");
+  std::string outputFileName("PostProcessor.moving_average_ou.txt");
+  std::ofstream outputFile(outputFileName);
   outputFile << "t, temperature, temperature_avg" << std::endl;
   for (int j = 0; j < numSteps; ++j) {
     *stk::mesh::field_data(*temperature_, node) = realization[j];
@@ -134,4 +135,5 @@ TEST_F(PostProcessor, moving_average_ou)
                << ", " << *stk::mesh::field_data(*raTemperature_, node)
                << std::endl;
   }
+  unlink(outputFileName.c_str());
 }

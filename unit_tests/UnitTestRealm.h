@@ -29,6 +29,8 @@ class NaluTest
 public:
   NaluTest(const YAML::Node& doc = get_default_inputs());
 
+  ~NaluTest();
+
   sierra::nalu::Realm& create_realm(
     const YAML::Node& realm_node = get_realm_default_node(),
     const std::string realm_type = "multi_physics",
@@ -43,6 +45,7 @@ public:
 
 private:
   NaluTest(const NaluTest&) = delete;
+  std::string logFileName_;
 };
 
 } // namespace unit_test_utils

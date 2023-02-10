@@ -142,17 +142,19 @@ get_realm_default_node()
 }
 
 NaluTest::NaluTest(const YAML::Node& doc)
-  : comm_(MPI_COMM_WORLD), spatialDim_(3), sim_(doc)
+  : comm_(MPI_COMM_WORLD),
+    spatialDim_(3),
+    sim_(doc),
+    logFileName_("unittestX_naluwrapper.log")
 {
   // NaluEnv log file
-  std::string logFileName = "unittestX_naluwrapper.log";
   auto testInfo = ::testing::UnitTest::GetInstance()->current_test_info();
   if (testInfo) {
     std::string caseName = testInfo->test_case_name();
     std::string caseInstance = testInfo->name();
-    logFileName = caseName + "." + caseInstance + ".log";
+    logFileName_ = caseName + "." + caseInstance + ".log";
   }
-  sierra::nalu::NaluEnv::self().set_log_file_stream(logFileName, false);
+  sierra::nalu::NaluEnv::self().set_log_file_stream(logFileName_, false);
 
   sim_.linearSolvers_ = new sierra::nalu::LinearSolvers(sim_);
   sim_.realms_ = new sierra::nalu::Realms(sim_);
@@ -161,6 +163,8 @@ NaluTest::NaluTest(const YAML::Node& doc)
   sim_.linearSolvers_->load(doc);
   sim_.timeIntegrator_->load(doc);
 }
+
+NaluTest::~NaluTest() { unlink(logFileName_.c_str()); }
 
 sierra::nalu::Realm&
 NaluTest::create_realm(

@@ -538,8 +538,6 @@ random_linear_transformation(int dim, double scale, std::mt19937& rng)
 
 } // namespace unit_test_utils
 
-#if !defined(KOKKOS_ENABLE_GPU)
-
 void
 Hex8Mesh::check_discrete_laplacian(double exactLaplacian)
 {
@@ -547,13 +545,14 @@ Hex8Mesh::check_discrete_laplacian(double exactLaplacian)
     meta->locally_owned_part() & !meta->globally_shared_part();
   const stk::mesh::BucketVector& nodeBuckets =
     bulk->get_buckets(stk::topology::NODE_RANK, selector);
-  kokkos_thread_team_bucket_loop(nodeBuckets, [&](stk::mesh::Entity node) {
-    if (bulk->num_elements(node) == 8) {
-      EXPECT_NEAR(
-        *stk::mesh::field_data(*discreteLaplacianOfPressure, node),
-        exactLaplacian, tol);
-    }
-  });
-}
 
-#endif
+  for (const stk::mesh::Bucket* bptr : nodeBuckets) {
+    for (stk::mesh::Entity node : *bptr) {
+      if (bulk->num_elements(node) == 8) {
+        EXPECT_NEAR(
+          *stk::mesh::field_data(*discreteLaplacianOfPressure, node),
+          exactLaplacian, tol);
+      }
+    }
+  }
+}
