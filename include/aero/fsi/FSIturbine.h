@@ -19,6 +19,7 @@
 #include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "FieldTypeDef.h"
+#include <stk_search/Point.hpp>
 
 #include <vector>
 #include <string>
@@ -78,6 +79,36 @@ vector_to_field(
     ptr[i] = vec[i];
   }
 }
+
+using Point = stk::search::Point<double>;
+
+/** Project a point 'pt' onto a line from 'lStart' to 'lEnd' and return the
+   non-dimensional location of the projected point along the line in [0-1]
+   coordinates \f[ nonDimCoord = \frac{ (\vec{pt} - \vec{lStart}) \cdot (
+   \vec{lEnd} - \vec{lStart} ) }{ (\vec{lEnd} - \vec{lStart}) \cdot
+   (\vec{lEnd} - \vec{lStart}) } \f]
+*/
+KOKKOS_FUNCTION
+double projectPt2Line(
+  const Point& pt,
+  const Point& lStart,
+  const Point& lEnd);
+
+/** Project a point 'pt' onto a line from 'lStart' to 'lEnd' and return the
+   non-dimensional distance of 'pt' from the line w.r.t the distance from
+   'lStart' to 'lEnd' \f[
+    \vec{perp} &= (\vec{pt} - \vec{lStart}) - \frac{ (\vec{pt} - \vec{lStart})
+   \cdot ( \vec{lEnd} - \vec{lStart} ) }{ (\vec{lEnd} - \vec{lStart}) \cdot
+   (\vec{lEnd} - \vec{lStart}) } ( \vec{lEnd} - \vec{lStart} ) \\
+    nonDimPerpDist = \frac{\lvert \vec{perp} \rvert}{ \lvert  (\vec{lEnd} -
+   \vec{lStart}) \rvert } \f]
+*/
+KOKKOS_FUNCTION
+double perpProjectDist_Pt2Line(
+  const Point& pt,
+  const Point& lStart,
+  const Point& lEnd);
+
 // **********************************************************************
 
 class fsiTurbine
@@ -186,31 +217,6 @@ private:
     stk::mesh::PartVector& partVec,
     stk::mesh::PartVector& allPartVec,
     const std::string& turbinePart);
-
-  /** Project a point 'pt' onto a line from 'lStart' to 'lEnd' and return the
-     non-dimensional location of the projected point along the line in [0-1]
-     coordinates \f[ nonDimCoord = \frac{ (\vec{pt} - \vec{lStart}) \cdot (
-     \vec{lEnd} - \vec{lStart} ) }{ (\vec{lEnd} - \vec{lStart}) \cdot
-     (\vec{lEnd} - \vec{lStart}) } \f]
-  */
-  double projectPt2Line(
-    std::vector<double>& pt,
-    std::vector<double>& lStart,
-    std::vector<double>& lEnd);
-
-  /** Project a point 'pt' onto a line from 'lStart' to 'lEnd' and return the
-     non-dimensional distance of 'pt' from the line w.r.t the distance from
-     'lStart' to 'lEnd' \f[
-      \vec{perp} &= (\vec{pt} - \vec{lStart}) - \frac{ (\vec{pt} - \vec{lStart})
-     \cdot ( \vec{lEnd} - \vec{lStart} ) }{ (\vec{lEnd} - \vec{lStart}) \cdot
-     (\vec{lEnd} - \vec{lStart}) } ( \vec{lEnd} - \vec{lStart} ) \\
-      nonDimPerpDist = \frac{\lvert \vec{perp} \rvert}{ \lvert  (\vec{lEnd} -
-     \vec{lStart}) \rvert } \f]
-  */
-  double perpProjectDist_Pt2Line(
-    std::vector<double>& pt,
-    std::vector<double>& lStart,
-    std::vector<double>& lEnd);
 
   //! Compute the effective force and moment at the OpenFAST mesh node for a
   //! given force at the CFD surface mesh node
