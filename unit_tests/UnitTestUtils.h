@@ -5,6 +5,8 @@
 #include <string>
 #include <ostream>
 #include <random>
+#include <cmath>
+#include <math.h>
 
 #include <SimdInterface.h>
 #include <stk_mesh/base/BulkData.hpp>
@@ -341,6 +343,85 @@ protected:
   ScalarFieldType* scalarQ;
   ScalarFieldType* bcScalarQ;
   VectorFieldType* Gjq;
+};
+
+class CylinderMesh : public ::testing::Test
+{
+protected:
+  CylinderMesh()
+    : comm(MPI_COMM_WORLD),
+      spatialDimension(3),
+      xMax(0), yMax(0), zMax(0),
+      topo(stk::topology::HEX_8),
+      coordField(nullptr)
+  {
+    stk::mesh::MeshBuilder meshBuilder(comm);
+    meshBuilder.set_spatial_dimension(spatialDimension);
+    bulk = meshBuilder.create();
+    meta = &bulk->mesh_meta_data();
+
+    testField = &meta->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "testField");
+    const double zeroVecThree[3] = {0.0, 0.0, 0.0};
+    stk::mesh::put_field_on_mesh(*testField, meta->universal_part(), 3, zeroVecThree);
+  }
+
+  void fill_mesh(const std::string& meshSpec = "generated:20x20x20")
+  {
+    unit_test_utils::fill_hex8_mesh(meshSpec, *bulk);
+  }
+
+  void fill_mesh_and_initialize_test_fields(int xDim, int yDim, int zDim,
+                                            double innerRad, double outerRad,
+                                            const bool generateSidesets = false)
+  {
+    std::ostringstream oss;
+    oss<<"generated:"<<xDim<<"x"<<yDim<<"x"<<zDim;
+    std::string meshSpec = oss.str();
+
+    xMax = xDim;
+    yMax = yDim;
+    zMax = zDim;
+
+    if (generateSidesets) {
+      meshSpec += "|sideset:xXyYzZ";
+    }
+
+    fill_mesh(meshSpec);
+    coordField = static_cast<const VectorFieldType*>(meta->coordinate_field());
+    EXPECT_TRUE(coordField != nullptr);
+
+    transform_to_cylinder(innerRad, outerRad);
+
+    stk::mesh::field_fill(0.1, *testField);
+  }
+
+  void transform_to_cylinder(double innerRad, double outerRad)
+  {
+    stk::mesh::Selector sel = (meta->locally_owned_part() | meta->globally_shared_part());
+    const stk::mesh::BucketVector& bkts = bulk->get_buckets(stk::topology::NODE_RANK, sel);
+
+    const double xfac = (outerRad - innerRad) / xMax;
+    const double yfac = 2 * M_PI / yMax;
+
+    for (const stk::mesh::Bucket* bptr : bkts) {
+      for (stk::mesh::Entity node : *bptr) {
+        double* nodeCoord = reinterpret_cast<double*>(stk::mesh::field_data(*coordField, node));
+        const double radius = innerRad + nodeCoord[0] * xfac;
+        const double theta = nodeCoord[1] * yfac;
+        nodeCoord[0] = radius * std::cos(theta);
+        nodeCoord[1] = radius * std::sin(theta);
+      }
+    }
+  }
+
+  stk::ParallelMachine comm;
+  unsigned spatialDimension;
+  int xMax, yMax, zMax;
+  stk::mesh::MetaData* meta;
+  std::shared_ptr<stk::mesh::BulkData> bulk;
+  stk::topology topo;
+  const VectorFieldType* coordField;
+  VectorFieldType* testField;
 };
 
 class ABLWallFunctionHex8ElementWithBCFields : public Hex8ElementWithBCFields
