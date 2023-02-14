@@ -19,7 +19,7 @@
 #include "matrix_free/StkToTpetraMap.h"
 
 #include "gtest/gtest.h"
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 #include "Teuchos_Array.hpp"
 #include "Teuchos_ArrayView.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -282,8 +282,10 @@ TEST_F(ComputeGradientFixture, error_in_gradient_is_smallish_for_harmonic_field)
   auto& gq = stk::mesh::get_updated_ngp_field<double>(dqdx_field);
   g_grad.gradient(q, gq);
   gq.sync_to_host();
-  dump_mesh(bulk, {&q_field, &dqdx_field, &dqdx_exact_field}, "test/data.e");
+  std::string fileName("test_data.e");
+  dump_mesh(bulk, {&q_field, &dqdx_field, &dqdx_exact_field}, fileName);
   ASSERT_LT(error(), 5e-3);
+  unlink(fileName.c_str());
 }
 
 } // namespace matrix_free

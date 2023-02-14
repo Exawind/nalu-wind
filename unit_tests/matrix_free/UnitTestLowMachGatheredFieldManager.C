@@ -13,8 +13,8 @@
 #include "matrix_free/LowMachInfo.h"
 #include "StkLowMachFixture.h"
 
+#include <KokkosInterface.h>
 #include "Kokkos_Macros.hpp"
-#include "Kokkos_Parallel_Reduce.hpp"
 
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/FieldState.hpp"
@@ -91,7 +91,7 @@ sum_field(vector_view<p> qp1)
 {
   double sum_prev = 0;
   Kokkos::parallel_reduce(
-    qp1.extent_int(0),
+    sierra::nalu::DeviceRangePolicy(0, qp1.extent_int(0)),
     KOKKOS_LAMBDA(int index, double& sumval) {
       for (int k = 0; k < p + 1; ++k) {
         for (int j = 0; j < p + 1; ++j) {

@@ -44,6 +44,7 @@ LidarLineOfSite::load(const YAML::Node& node)
     const auto type = node["output"].as<std::string>();
     if (type == "text") {
       output_type_ = Output::TEXT;
+      file_ = std::ofstream{};
     } else if (type == "netcdf") {
       output_type_ = Output::NETCDF;
     } else if ("dataprobes") {
@@ -255,65 +256,61 @@ void
 LidarLineOfSite::output_txt(
   double time,
   const std::vector<std::array<double, 3>>& x,
-  const std::vector<std::array<double, 3>>& u)
+  const std::vector<std::array<double, 3>>& u,
+  std::ofstream& file)
 {
   if (internal_output_counter_ == 0) {
     fname_ = determine_filename(name_, ".txt");
-    std::ofstream file;
     file.exceptions(file.exceptions() | std::ios::failbit);
-    file.open(fname_, std::ios::out);
+    file.open(fname_, std::ios::app);
+    if (file.fail()) {
+      throw std::ios_base::failure(std::strerror(errno));
+    }
     file << "t,x,y,z,u,v,w" << std::endl;
-    file.close();
-  }
-
-  std::ofstream file;
-  file.exceptions(file.exceptions() | std::ios::failbit);
-  file.open(fname_, std::ios::app);
-  if (file.fail()) {
-    throw std::ios_base::failure(std::strerror(errno));
   }
   for (size_t j = 0; j < x.size(); ++j) {
     file << std::setprecision(15) << time << "," << x.at(j)[0] << ","
          << x.at(j)[1] << "," << x.at(j)[2] << "," << u.at(j)[0] << ","
-         << u.at(j)[1] << "," << u.at(j)[2] << std::endl;
+         << u.at(j)[1] << "," << u.at(j)[2] << "\n";
   }
-  file.close();
-
   ++internal_output_counter_;
 }
 
 void
-LidarLineOfSite::output_txt_filtered(
+LidarLineOfSite::output_txt_los(
   double time,
   const std::vector<std::array<double, 3>>& x,
   const std::vector<double>& u_dot_l,
-  int npoints)
+  int npoints,
+  std::ofstream& file)
 {
   if (internal_output_counter_ == 0) {
     fname_ = determine_filename(name_, ".txt");
-    std::ofstream file;
     file.exceptions(file.exceptions() | std::ios::failbit);
-    file.open(fname_, std::ios::out);
+    file.open(fname_, std::ios::app);
+    if (file.fail()) {
+      throw std::ios_base::failure(std::strerror(errno));
+    }
     file << "t,x,y,z,u_dot_l" << std::endl;
-    file.close();
+    file << std::setprecision(15);
   }
 
-  std::ofstream file;
-  file.exceptions(file.exceptions() | std::ios::failbit);
-  file.open(fname_, std::ios::app);
-  if (file.fail()) {
-    throw std::ios_base::failure(std::strerror(errno));
-  }
-  const int nquad = x.size() / npoints;
+  const int stride = x.size() / npoints;
   for (int j = 0; j < npoints; ++j) {
-    file << std::setprecision(15) << time << "," << x.at(nquad * j)[0] << ","
-         << x.at(nquad * j)[1] << "," << x.at(nquad * j)[2] << ","
-         << u_dot_l.at(j) << std::endl;
+    const auto& pos = x[stride * j];
+    file << time << "," << pos[0] << "," << pos[1] << "," << pos[2] << ","
+         << u_dot_l.at(j) << "\n";
   }
-  file.close();
   ++internal_output_counter_;
 }
 
+namespace {
+vs::Vector
+to_vec3(const std::array<double, 3>& x)
+{
+  return {x[0], x[1], x[2]};
+}
+} // namespace
 void
 LidarLineOfSite::output(
   const stk::mesh::BulkData& bulk,
@@ -324,6 +321,7 @@ LidarLineOfSite::output(
   if (output_type_ == Output::DATAPROBE) {
     return;
   }
+
   const auto seg = segGen->generate(time());
   if (!seg.valid && !always_output_) {
     return;
@@ -433,7 +431,13 @@ LidarLineOfSite::output(
     }
 
     if (output_type_ == Output::TEXT) {
-      output_txt(time(), points, velocity);
+      std::vector<double> ulos(velocity.size());
+      vs::Vector ray = to_vec3(dx);
+      ray.normalize();
+      for (size_t j = 0; j < velocity.size(); ++j) {
+        ulos[j] = ray & to_vec3(velocity[j]);
+      }
+      output_txt_los(time(), points, ulos, points.size(), *file_);
     } else if (output_type_ == Output::NETCDF) {
       output_nc(time(), points, velocity);
     }
@@ -506,6 +510,7 @@ rotation_matrix(vs::Vector dst, vs::Vector src)
   }
   return vs::Tensor::I() + vmat + scale((vmat & vmat), 1. / (1 + ang));
 }
+
 } // namespace
 
 void
@@ -575,10 +580,10 @@ LidarLineOfSite::output_cone_filtered(
       ->field_of_state(stk::mesh::StateN);
 
   const double extrap_dt = predictor_ == Predictor::NEAREST ? 0 : dtratio;
+
   local_field_interpolation(
     bulk, active, points, coord_field, velocity_prev, velocity_field, extrap_dt,
     *search_data_);
-
   auto& lcl_velocity = search_data_->interpolated_values;
   auto& lcl_ownership = search_data_->ownership;
 
@@ -588,11 +593,10 @@ LidarLineOfSite::output_cone_filtered(
   std::vector<double> lcl_line_velocity(nquad * npoints_, 0);
   for (int j = 0; j < nquad; ++j) {
     auto ray = transform & rays[j];
-    ray.normalize(); // floating point
+    ray.normalize();
     for (int n = 0; n < npoints_; ++n) {
-      const auto& vel = lcl_velocity[nquad * n + j];
       lcl_line_velocity[nquad * n + j] =
-        ray[0] * vel[0] + ray[1] * vel[1] + ray[2] * vel[2];
+        ray & to_vec3(lcl_velocity[nquad * n + j]);
     }
   }
 
@@ -618,7 +622,7 @@ LidarLineOfSite::output_cone_filtered(
       }
       // only text for now, check at parse
       ThrowRequire(output_type_ == Output::TEXT);
-      output_txt_filtered(time(), points, avg_line_velocity, npoints_);
+      output_txt_los(time(), points, avg_line_velocity, npoints_, *file_);
     }
   }
 }
@@ -683,6 +687,7 @@ LidarLOS::set_time_for_all(double time)
   for (auto& los : radars_) {
     los.set_time(time);
   }
+  start_time_has_been_set_ = true;
 }
 namespace details {
 std::pair<std::vector<vs::Vector>, std::vector<double>>

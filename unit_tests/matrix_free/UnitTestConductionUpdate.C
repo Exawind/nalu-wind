@@ -16,9 +16,7 @@
 
 #include "gtest/gtest.h"
 
-#include "Kokkos_Array.hpp"
-#include "Kokkos_Macros.hpp"
-#include "Kokkos_Parallel.hpp"
+#include "Kokkos_Core.hpp"
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_RCP.hpp"
 

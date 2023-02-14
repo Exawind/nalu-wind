@@ -35,6 +35,11 @@ public:
              ddot(cross.data(), n.data(), 3), ddot(v.data(), u.data(), 3));
   }
 
+  double vector_angle(vs::Vector u, vs::Vector v, vs::Vector n)
+  {
+    return 180 / M_PI * std::atan2((u ^ v) & n, u & v);
+  }
+
   std::array<double, 3> rotate_euler_vec(
     const std::array<double, 3>& axis, double angle, std::array<double, 3> vec)
   {
@@ -59,56 +64,38 @@ public:
     return vecprime;
   }
 
+  vs::Vector to_vec3(std::array<double, 3> x) { return {x[0], x[1], x[2]}; }
+
   double angle(double time)
   {
     const auto axis_coord = scan_spec["axis"].as<Coordinates>();
     const auto center_coord = scan_spec["center"].as<Coordinates>();
 
-    std::array<double, 3> axis{axis_coord.x_, axis_coord.y_, axis_coord.z_};
+    vs::Vector axis{axis_coord.x_, axis_coord.y_, axis_coord.z_};
     normalize_vec3(axis.data());
 
-    std::array<double, 3> center{
-      center_coord.x_, center_coord.y_, center_coord.z_};
+    vs::Vector center{center_coord.x_, center_coord.y_, center_coord.z_};
     const auto length = scan_spec["beam_length"].as<double>();
-    std::array<double, 3> normalized_tip_loc;
 
-    auto ele = scan_spec["elevation_angles"].as<std::vector<double>>();
-    ThrowRequire(!ele.empty());
-    const double pitch = -ele.front() * M_PI / 180;
-    const std::array<double, 3> normal = {0, 0, 1};
-    for (int d = 0; d < 3; ++d) {
-      normalized_tip_loc[d] =
-        (slgen.generate(time).tip_[d] - center[d]) / length;
-    }
+    const auto sight =
+      (to_vec3(slgen.generate(time).tip_) - center).normalize();
+
+    vs::Vector normal = {0, 0, 1};
+    const auto proj_sight = (sight - normal * (sight & normal)).normalize();
 
     std::array<double, 3> yaxis;
     cross3(axis.data(), normal.data(), yaxis.data());
-    return vector_angle(
-      axis, normalized_tip_loc, rotate_euler_vec(yaxis, pitch, normal));
+    return vector_angle(axis, proj_sight, {0, 0, 1});
   }
 
   double elevation_angle(double time)
   {
-    const auto axis_coord = scan_spec["axis"].as<Coordinates>();
     const auto center_coord = scan_spec["center"].as<Coordinates>();
-
-    std::array<double, 3> axis{axis_coord.x_, axis_coord.y_, axis_coord.z_};
-    normalize_vec3(axis.data());
-
-    std::array<double, 3> center{
-      center_coord.x_, center_coord.y_, center_coord.z_};
-    const auto length = scan_spec["beam_length"].as<double>();
-    std::array<double, 3> normalized_tip_loc;
-
-    const std::array<double, 3> normal{0, 0, 1};
-    for (int d = 0; d < 3; ++d) {
-      normalized_tip_loc[d] =
-        (slgen.generate(time).tip_[d] - center[d]) / length;
-    }
-
-    std::array<double, 3> cross;
-    cross3(axis.data(), normal.data(), cross.data());
-    return vector_angle(normalized_tip_loc, axis, cross);
+    vs::Vector center{center_coord.x_, center_coord.y_, center_coord.z_};
+    const vs::Vector normal{0, 0, 1};
+    const auto tip = (to_vec3(slgen.generate(time).tip_) - center).normalize();
+    return 180 / M_PI *
+           std::atan2(tip & normal, vs::mag(tip - normal * (tip & normal)));
   }
 
   YAML::Node scan_spec;
@@ -128,8 +115,8 @@ public:
     "    reset_time_delta: 1 #second                        \n"
     "    center: [500.,500.,100.]                           \n"
     "    beam_length: 50.                                   \n"
-    "    axis: [1,1,0]                                      \n"
-    "    elevation_angles: [30]                             \n"
+    "    axis: [1,0,0]                                      \n"
+    "    elevation_angles: [30,60]                          \n"
     "  frequency: 2  #Hz                                    \n"
     "  points_along_line: 2                                 \n"
     "  output: text                                         \n"
@@ -140,20 +127,26 @@ TEST_F(ScanningLidarFixture, print_tip_location)
 {
   const double dt = 1.0 / freq;
   const double time = total_time;
-  const int samples = 1 + std::round(time / dt);
+  const int samples = std::round(time / dt);
   auto center = scan_spec["center"].as<Coordinates>();
 
-  std::ofstream outputFile("ScanningLidar.pattern.txt");
+  std::string outputFileName("ScanningLidar.pattern.txt");
+  std::ofstream outputFile(outputFileName);
   outputFile << "x,y,z" << std::endl;
+
+  const auto start_height = slgen.generate(0).tip_[2];
   for (int j = 0; j < samples; ++j) {
     const double time = dt * j;
     auto seg = slgen.generate(time);
     ASSERT_DOUBLE_EQ(seg.tail_.at(0), center.x_);
     ASSERT_DOUBLE_EQ(seg.tail_.at(1), center.y_);
     ASSERT_DOUBLE_EQ(seg.tail_.at(2), center.z_);
+    ASSERT_DOUBLE_EQ(
+      seg.tip_.at(2), start_height); // z-coordinate doesn't change in sweep
     outputFile << std::setprecision(15) << seg.tip_.at(0) << ", "
-               << seg.tip_.at(1) << ", " << seg.tip_.at(2) << std::endl;
+               << seg.tip_.at(1) << ", " << seg.tip_.at(2) << "\n";
   }
+  unlink(outputFileName.c_str());
 }
 
 TEST_F(ScanningLidarFixture, check_angles)
@@ -184,13 +177,27 @@ TEST_F(ScanningLidarFixture, check_elevation)
   const auto step = scan_spec["step_delta_angle"].as<double>();
   const auto reset = scan_spec["reset_time_delta"].as<double>();
   const auto ele = scan_spec["elevation_angles"].as<std::vector<double>>();
+  ASSERT_EQ(ele.size(), 2U);
 
   const double start_time = 0;
-  ASSERT_NEAR(elevation_angle(start_time), ele.front(), 1e-12);
+  ASSERT_NEAR(elevation_angle(start_time), ele[0], 1e-12);
 
   const double forward_phase_end =
-    start_time + std::floor(sweep / step + 1) * stare;
-  ASSERT_NEAR(elevation_angle(forward_phase_end), ele.front(), 1e-12);
+    start_time + std::floor(sweep / step) * stare;
+  ASSERT_NEAR(elevation_angle(forward_phase_end), ele[0], 1e-12);
+
+  const double mid_reset_time = forward_phase_end + stare + reset / 2;
+  ASSERT_NEAR(elevation_angle(mid_reset_time), ele[0], 1e-12);
+
+  const double end_time = forward_phase_end + stare;
+  ASSERT_NEAR(elevation_angle(end_time), ele[0], 1e-12);
+
+  const double restart = forward_phase_end + stare;
+  ASSERT_NEAR(elevation_angle(end_time), ele[0], 1e-12);
+
+  const double end_time_plus_a_bit =
+    forward_phase_end + stare + reset + forward_phase_end / 2;
+  ASSERT_NEAR(elevation_angle(end_time_plus_a_bit), ele[1], 1e-12);
 }
 
 TEST_F(ScanningLidarFixture, stares)

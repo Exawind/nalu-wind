@@ -18,9 +18,7 @@
 
 #include "gtest/gtest.h"
 
-#include "Kokkos_Array.hpp"
-#include "Kokkos_Macros.hpp"
-#include "Kokkos_Parallel.hpp"
+#include "Kokkos_Core.hpp"
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_RCP.hpp"
 #include "matrix_free/StkToTpetraMap.h"
@@ -129,7 +127,10 @@ TEST_F(LowMachSimulationFixture, reduce_peak_velocity)
 
   vel.sync_to_host();
 
-  unit_test_utils::dump_mesh(bulk, {&velocity_field});
+  const bool doOutput = false;
+  if (doOutput) {
+    unit_test_utils::dump_mesh(bulk, {&velocity_field});
+  }
   auto max_val_post = max_value();
   ASSERT_GT(max_val_pre, max_val_post);
 }

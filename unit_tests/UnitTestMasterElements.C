@@ -645,6 +645,8 @@ protected:
   sierra::nalu::MasterElement* meSV;
 };
 
+#ifndef KOKKOS_ENABLE_GPU
+
 #define TEST_F_ALL_TOPOS(x, y)                                                 \
   TEST_F(x, tri##_##y) { y(stk::topology::TRI_3_2D); }                         \
   TEST_F(x, quad4##_##y) { y(stk::topology::QUAD_4_2D); }                      \
@@ -678,3 +680,5 @@ TEST_F_ALL_TOPOS(MasterElement, is_not_in_element)
 TEST_F_ALL_TOPOS(MasterElement, particle_interpolation)
 
 TEST_F_ALL_P1_TOPOS(MasterElement, general_shape_fcn)
+
+#endif // KOKKOS_ENABLE_GPU

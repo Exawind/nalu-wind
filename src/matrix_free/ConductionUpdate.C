@@ -12,8 +12,7 @@
 #include "matrix_free/ConductionInfo.h"
 #include "matrix_free/PolynomialOrders.h"
 
-#include "Kokkos_Macros.hpp"
-#include "Kokkos_Parallel.hpp"
+#include <KokkosInterface.h>
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
 

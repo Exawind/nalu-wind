@@ -15,6 +15,7 @@
 #include "matrix_free/ElementVolumeIntegral.h"
 #include "matrix_free/ElementSCSInterpolate.h"
 #include "matrix_free/LocalArray.h"
+#include <KokkosInterface.h>
 #include <Kokkos_NumericTraits.hpp>
 #include <stk_simd/Simd.hpp>
 
@@ -140,7 +141,7 @@ max_local_courant_reynolds_t<p>::invoke(
   Kokkos::pair<double, double> max_cflre;
   PairReduce<Kokkos::Max<double>> reducer(max_cflre);
   Kokkos::parallel_reduce(
-    xc.extent_int(0),
+    DeviceRangePolicy(0, xc.extent_int(0)),
     KOKKOS_LAMBDA(int index, Kokkos::pair<double, double>& val) {
       const auto elem_xc = Kokkos::subview(
         xc, index, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());

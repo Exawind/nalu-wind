@@ -15,6 +15,14 @@
 
 #include <stk_util/util/ReportHandler.hpp>
 
+#include <Teuchos_ArrayRCP.hpp>
+#include <Teuchos_DefaultMpiComm.hpp>
+#include <Teuchos_OrdinalTraits.hpp>
+#include <Teuchos_ParameterXMLFileReader.hpp>
+#include <Kokkos_Core.hpp>
+
+#ifdef NALU_USES_TRILINOS_SOLVERS
+
 // Tpetra support
 #include <BelosLinearProblem.hpp>
 #include <BelosMultiVecTraits.hpp>
@@ -26,11 +34,6 @@
 #include <BelosTpetraAdapter.hpp>
 
 #include <Ifpack2_Factory.hpp>
-#include <Kokkos_DefaultNode.hpp>
-#include <Kokkos_Serial.hpp>
-#include <Teuchos_ArrayRCP.hpp>
-#include <Teuchos_DefaultMpiComm.hpp>
-#include <Teuchos_OrdinalTraits.hpp>
 #include <Tpetra_CrsGraph.hpp>
 #include <Tpetra_Export.hpp>
 #include <Tpetra_Operator.hpp>
@@ -38,8 +41,9 @@
 #include <Tpetra_MultiVector.hpp>
 #include <Tpetra_Vector.hpp>
 
-#include <Teuchos_ParameterXMLFileReader.hpp>
 #include <MueLu_CreateTpetraPreconditioner.hpp>
+
+#endif // NALU_USES_TRILINOS_SOLVERS
 
 #include <iostream>
 
@@ -56,6 +60,8 @@ LinearSolver::parent()
 {
   return linearSolvers_;
 }
+
+#ifdef NALU_USES_TRILINOS_SOLVERS
 
 TpetraLinearSolver::TpetraLinearSolver(
   std::string solverName,
@@ -257,6 +263,8 @@ TpetraLinearSolver::solve(
 
   return status;
 }
+
+#endif // NALU_USES_TRILINOS_SOLVERS
 
 } // namespace nalu
 } // namespace sierra

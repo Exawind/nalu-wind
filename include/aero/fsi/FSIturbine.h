@@ -1,45 +1,94 @@
-#ifndef FSITURBINEN_H
-#define FSITURBINEN_H
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
+#ifndef FSITURBINE_H
+#define FSITURBINE_H
 
 #include "OpenFAST.H"
 
-#include "stk_mesh/base/MetaData.hpp"
-#include "stk_mesh/base/BulkData.hpp"
+#include <aero/fsi/CalcLoads.h>
 
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/Field.hpp"
+#include "FieldTypeDef.h"
 
 #include <vector>
 #include <string>
 #include <array>
 
 #include "yaml-cpp/yaml.h"
+#include "vs/vector_space.h"
+
+namespace aero {
+struct SixDOF;
+}
 
 namespace sierra {
 
 namespace nalu {
 
-typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
-typedef stk::mesh::Field<double> ScalarFieldType;
-typedef stk::mesh::Field<int> ScalarIntFieldType;
-typedef stk::mesh::Field<double, stk::mesh::SimpleArrayTag> GenericFieldType;
+struct DeflectionRampingParams
+{
+  // default parameters would give no ramping
+  double spanRampDistance_{1e-5};
+  double zeroRampLocTheta_{180.0};
+  double thetaRampSpan_{10.0};
+  double startTimeTemporalRamp_{0.0};
+  double endTimeTemporalRamp_{0.0};
+};
+
 typedef stk::mesh::Field<int, stk::mesh::SimpleArrayTag> GenericIntFieldType;
+
+// TODO(psakiev) find a better place for this
+// **********************************************************************
+//! convenience function for generating a vs::Vector from a stk::field
+template <typename T, typename P>
+inline vs::VectorT<T>
+vector_from_field(stk::mesh::Field<T, P>& field, const stk::mesh::Entity& node)
+{
+  // debug only check for optimization
+  assert(field.max_size(stk::topology::NODE_RANK) == 3);
+  assert(field.template type_is<T>());
+  T* ptr = stk::mesh::field_data(field, node);
+  return {ptr[0], ptr[1], ptr[2]};
+}
+
+//! convenience function for putting vector computations back onto the
+//! stk::fields
+template <typename T, typename P>
+inline void
+vector_to_field(
+  vs::VectorT<T> vec,
+  stk::mesh::Field<T, P>& field,
+  const stk::mesh::Entity& node)
+{
+  // debug only check for optimization
+  assert(field.max_size(stk::topology::NODE_RANK) == 3);
+  assert(field.template type_is<T>());
+  T* ptr = stk::mesh::field_data(field, node);
+  for (int i = 0; i < 3; ++i) {
+    ptr[i] = vec[i];
+  }
+}
+// **********************************************************************
 
 class fsiTurbine
 {
 
 public:
-  fsiTurbine(
-    int iTurb,
-    const YAML::Node&,
-    stk::mesh::MetaData& meta,
-    stk::mesh::BulkData& bulk);
+  fsiTurbine(int iTurb, const YAML::Node&);
 
   virtual ~fsiTurbine();
 
-  void setup();
+  void setup(std::shared_ptr<stk::mesh::BulkData> bulk);
 
   void initialize();
 
@@ -54,7 +103,7 @@ public:
   //! Transfer the deflections from the openfast nodes to the turbine surface
   //! CFD mesh. Will call 'computeDisplacement' for each node on the turbine
   //! surface CFD mesh.
-  void mapDisplacements();
+  void mapDisplacements(double time);
 
   //! Map each node on the turbine surface CFD mesh to blade beam mesh
   void computeMapping();
@@ -90,6 +139,12 @@ public:
   //! Get the part vector containing all the parts with mesh displacement
   stk::mesh::PartVector& getPartVec() { return partVec_; }
 
+  //! Get the part vector containing all the boundary parts with loads
+  stk::mesh::PartVector& getBndryPartVec() { return bndyPartVec_; }
+
+  //! Get a list of names of boundary parts that have loads
+  std::vector<std::string> getBndryPartNames() { return bndryPartNames_; }
+
   //! Prepare netcdf file to write deflections and loads
   void
   prepare_nc_file(const int nTwrPts, const int nBlades, const int nTotBldPts);
@@ -102,12 +157,15 @@ public:
 
   fast::turbineDataType params_;
   fast::turbBRfsiDataType brFSIdata_;
+  std::vector<aero::SixDOF> bldDefStiff_;
   std::vector<double> bld_dr_;
   std::vector<std::array<double, 2>>
     bld_rmm_; // Min-Max r for each node along blade
 
   //! Map of `{variableName : netCDF_ID}` obtained from the NetCDF C interface
   std::unordered_map<std::string, int> ncVarIDs_;
+  //! ramping parameters for blade deflections
+  DeflectionRampingParams deflectionRampParams_;
 
 private:
   fsiTurbine() = delete;
@@ -256,8 +314,7 @@ private:
 
   int iTurb_; // Global turbine number
 
-  stk::mesh::MetaData& meta_;
-  stk::mesh::BulkData& bulk_;
+  std::shared_ptr<stk::mesh::BulkData> bulk_;
 
   int turbineProc_;    // The MPI rank containing the OpenFAST instance of the
                        // turbine
@@ -274,14 +331,17 @@ private:
     dispMap_; // Maps every node on the tower surface to the lower node of the
               // openfast mesh element containing the projection of the tower
               // surface node on to the openfast mesh tower element
+  ScalarFieldType* deflectionRamp_;
   ScalarFieldType* dispMapInterp_; // The location of the CFD surface mesh node
                                    // projected along the OpenFAST mesh element
                                    // in non-dimensional [0,1] co-ordinates.
   int nBlades_;                    // Number of blades in the turbine
 
-  //! Fields containing the FSI force at all nodes on the turbine surface
-  VectorFieldType* pressureForceSCS_;
-  VectorFieldType* tauWallSCS_;
+  //! Fields containing the FSI force at all SCS's on the turbine surface
+  GenericFieldType* tforceSCS_;
+
+  // Pointer to Algorithm that calculates loads on the surfaces of the Turbine
+  std::unique_ptr<CalcLoads> calc_loads_;
 
   // Volume mesh parts and part names
   //! Part name of the tower
@@ -322,6 +382,8 @@ private:
   std::vector<stk::mesh::PartVector> bladeBndyParts_;
   //! Part vector over all wall boundary parts applying a mesh displacement
   stk::mesh::PartVector bndyPartVec_;
+  //! Names of all boundary parts getting loads
+  std::vector<std::string> bndryPartNames_;
 };
 
 } // namespace nalu

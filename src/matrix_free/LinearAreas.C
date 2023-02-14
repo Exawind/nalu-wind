@@ -14,6 +14,7 @@
 #include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/PolynomialOrders.h"
 
+#include <KokkosInterface.h>
 #include "Kokkos_Macros.hpp"
 
 namespace sierra {
@@ -29,7 +30,7 @@ linear_areas_t<p>::invoke(const_vector_view<p> coordinates)
   enum { XH = 0, YH = 1, ZH = 2 };
   scs_vector_view<p> area("area", coordinates.extent_int(0));
   Kokkos::parallel_for(
-    coordinates.extent_int(0), KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, coordinates.extent_int(0)), KOKKOS_LAMBDA(int index) {
       const auto box = hex_vertex_coordinates<p>(index, coordinates);
       for (int l = 0; l < p; ++l) {
         for (int s = 0; s < p + 1; ++s) {

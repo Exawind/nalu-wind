@@ -16,6 +16,7 @@
 #include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 
+#include <KokkosInterface.h>
 #include "Kokkos_ScatterView.hpp"
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
 

@@ -10,33 +10,97 @@
 #ifndef DISPLACEMENTS_H_
 #define DISPLACEMENTS_H_
 
+#include "vs/vector.h"
+#include <Kokkos_Macros.hpp>
 #include <aero/aero_utils/WienerMilenkovic.h>
 
 namespace aero {
+//! A struct to capture six degrees of freedom with a rotation and translation
+//! components called out as separate entities the rotations are expressed as
+//! WienerMilenkovic parameter
+struct SixDOF
+{
+  SixDOF() : position_(vs::Vector::zero()), orientation_(vs::Vector::zero()) {}
 
-//! Implementation of a pitch deformation strategy that ramps to the true
-//! applied pitch with a hyperbolic tangent
+  // Kind of dangerous constructor
+  SixDOF(double* vec)
+    : position_({vec[0], vec[1], vec[2]}),
+      orientation_({vec[3], vec[4], vec[5]})
+  {
+  }
+
+  SixDOF(vs::Vector transDisp, vs::Vector rotDisp)
+    : position_(transDisp), orientation_(rotDisp)
+  {
+  }
+
+  vs::Vector position_;
+  vs::Vector orientation_;
+};
+
+KOKKOS_FORCEINLINE_FUNCTION
+SixDOF
+operator+(const SixDOF& a, const SixDOF& b)
+{
+  // adding b to a, so pushing b wmp onto a stack
+  return SixDOF(
+    a.position_ + b.position_, wmp::push(b.orientation_, a.orientation_));
+}
+
+KOKKOS_FORCEINLINE_FUNCTION
+SixDOF
+operator-(const SixDOF& a, const SixDOF& b)
+{
+  // subtracting b from a, so popping b from the a stack
+  return SixDOF(
+    a.position_ - b.position_, wmp::pop(b.orientation_, a.orientation_));
+}
+
+KOKKOS_FORCEINLINE_FUNCTION
+SixDOF
+linear_interp_total_displacement(
+  const SixDOF start, const SixDOF end, const double interpFactor)
+{
+  auto transDisp = wmp::linear_interp_translation(
+    start.position_, end.position_, interpFactor);
+  auto rotDisp = wmp::linear_interp_rotation(
+    start.orientation_, end.orientation_, interpFactor);
+  return SixDOF(transDisp, rotDisp);
+}
+
+KOKKOS_FORCEINLINE_FUNCTION
+SixDOF
+linear_interp_total_velocity(
+  const SixDOF start, const SixDOF end, const double interpFactor)
+{
+  auto transDisp = wmp::linear_interp_translation(
+    start.position_, end.position_, interpFactor);
+  auto rotDisp = wmp::linear_interp_translation(
+    start.position_, end.position_, interpFactor);
+  return SixDOF(transDisp, rotDisp);
+}
+
+//! Convert a position relative to an aerodynamic point to the intertial
+//! coordinate system
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
-pitch_displacement_contribution(
-  const vs::Vector distance,
-  const vs::Vector root,
-  const double pitch,
-  const double rLocation,
-  const double rampFactor = 2.0)
+local_aero_coordinates(
+  const vs::Vector inertialPos, const SixDOF aeroRefPosition)
 {
-  const auto globZ = wmp::rotate(root, vs::Vector::khat());
-  auto pitchRotWM = wmp::create_wm_param(globZ, pitch);
+  const auto shift = inertialPos - aeroRefPosition.position_;
+  return wmp::rotate(aeroRefPosition.orientation_, shift);
+}
 
-  const auto pitchRot = wmp::rotate(pitchRotWM, distance);
-
-  const double rampPitch = pitch *
-                           (1.0 - stk::math::exp(-rampFactor * rLocation)) /
-                           (1.0 + stk::math::exp(-rampFactor * rLocation));
-
-  pitchRotWM = pitch_wm(rampPitch, globZ);
-  const auto rampPitchRot = wmp::rotate(pitchRotWM, distance);
-  return rampPitchRot - pitchRot;
+// TODO(psakiev) test this
+//! Translate coordinate system for SixDOF variable from inertial to a reference
+//! coordinate system
+KOKKOS_FORCEINLINE_FUNCTION
+SixDOF
+local_aero_transformation(const SixDOF& inertialPos, const SixDOF& refPos)
+{
+  return SixDOF(
+    local_aero_coordinates(inertialPos.position_, refPos),
+    wmp::push(refPos.orientation_, inertialPos.orientation_));
 }
 
 //! Convert one array of 6 deflections (transX, transY, transZ, wmX, wmY,
@@ -45,34 +109,51 @@ pitch_displacement_contribution(
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_translational_displacements(
-  const vs::Vector cfdPos,
-  const vs::Vector totalPosOffset,
-  const vs::Vector totDispNode)
+  const SixDOF deflections, const SixDOF referencePos, const vs::Vector cfdPos)
 {
-
-  const vs::Vector distance = cfdPos - totalPosOffset;
-  const vs::Vector pointLocal = wmp::rotate(totalPosOffset, distance);
-  const vs::Vector rotation = wmp::rotate(totDispNode, pointLocal, true);
-  return totDispNode + rotation - distance;
+  const auto localPos = local_aero_coordinates(cfdPos, referencePos);
+  const auto delta = cfdPos - referencePos.position_;
+  // deflection roations need to be applied from the aerodynamic local frame of
+  // reference
+  const vs::Vector rotation =
+    wmp::rotate(deflections.orientation_, localPos, true);
+  return deflections.position_ + rotation - delta;
 }
 
+// TODO(psakiev) this function is a place holder for when we need to add pitch
+// in the next PR
+//
 //! Accounting for pitch, convert one array of 6 deflections (transX, transY,
 //! transZ, wmX, wmY, wmZ) into one vector of translational displacement at a
 //! given node on the turbine surface CFD mesh.
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Vector
 compute_translational_displacements(
+  const SixDOF fullDeflections,
+  const SixDOF referencePos,
   const vs::Vector cfdPos,
-  const vs::Vector totalPosOffset,
-  const vs::Vector totDispNode,
-  const vs::Vector root,
-  const double pitch,
-  const double rLoc)
+  const vs::Vector stiffDisp,
+  const double ramp = 1.0)
 {
-  auto disp =
-    compute_translational_displacements(cfdPos, totalPosOffset, totDispNode);
-  return disp + pitch_displacement_contribution(
-                  cfdPos - totalPosOffset, root, pitch, rLoc);
+  const auto fullDisp =
+    compute_translational_displacements(fullDeflections, referencePos, cfdPos);
+  return stiffDisp + ramp * (fullDisp - stiffDisp);
+}
+
+//! Convert one array of 6 velocities (transX, transY, transZ, wmX, wmY, wmZ)
+//! into one vector of translational velocity at a given node on the turbine
+//! surface CFD mesh.
+KOKKOS_FORCEINLINE_FUNCTION
+vs::Vector
+compute_mesh_velocity(
+  const SixDOF totalVel,
+  const SixDOF totalDis,
+  const SixDOF referencePos,
+  const vs::Vector cfdPos)
+{
+  const auto pointLocal = local_aero_coordinates(cfdPos, referencePos);
+  const auto pointRotate = wmp::rotate(totalDis.orientation_, pointLocal);
+  return totalVel.position_ + (totalVel.orientation_ ^ pointRotate);
 }
 
 } // namespace aero

@@ -12,6 +12,7 @@
 #include "matrix_free/StkToTpetraComm.h"
 #include "matrix_free/StkToTpetraLocalIndices.h"
 
+#include <KokkosInterface.h>
 #include "Kokkos_Macros.hpp"
 #include "Kokkos_Sort.hpp"
 
@@ -101,8 +102,8 @@ enumerated_for_each_entity(
   auto buckets = mesh.get_bucket_ids(stk::topology::NODE_RANK, active);
   auto offsets = bucket_offsets(mesh, buckets);
   Kokkos::parallel_for(
-    Kokkos::TeamPolicy<>(buckets.size(), Kokkos::AUTO),
-    KOKKOS_LAMBDA(const typename Kokkos::TeamPolicy<>::member_type& team) {
+    DeviceTeamPolicy(buckets.size(), Kokkos::AUTO),
+    KOKKOS_LAMBDA(const typename DeviceTeamPolicy::member_type& team) {
       const auto league_index = team.league_rank();
       const auto bucket_id = buckets.device_get(league_index);
       const auto& b = mesh.get_bucket(stk::topology::NODE_RANK, bucket_id);
@@ -247,7 +248,7 @@ make_owned_shared_constrained_row_map(
       row_ids(num_owned + index) = gids.get(mi, 0);
     });
   Kokkos::parallel_for(
-    rgids.extent_int(0),
+    DeviceRangePolicy(0, rgids.extent_int(0)),
     KOKKOS_LAMBDA(int k) { row_ids(num_owned + num_shared + k) = rgids(k); });
   Kokkos::sort(row_ids, num_owned, row_ids.extent_int(0));
 

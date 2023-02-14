@@ -22,7 +22,7 @@ HypreLinearSystem::HypreLinearSystem(
   LinearSolver* linearSolver)
   : LinearSystem(realm, numDof, eqSys, linearSolver), name_(eqSys->name_)
 {
-  rank_ = realm_.bulk_data().parallel_rank();
+  rank_ = NaluEnv::self().parallel_rank();
   columnsOwned_.clear();
   rowCountOwned_.clear();
   columnsShared_.clear();
@@ -1231,7 +1231,7 @@ HypreLinearSystem::buildCoeffApplierDeviceSharedDataStructures()
   auto ms = hcApplier->map_shared_;
   auto ris = row_indices_shared;
   Kokkos::parallel_for(
-    "init_shared_map", hcApplier->num_rows_shared_,
+    "init_shared_map", DeviceRangePolicy(0, hcApplier->num_rows_shared_),
     KOKKOS_LAMBDA(const HypreIntType i) { ms.insert(ris(i), i); });
 }
 
@@ -1418,8 +1418,8 @@ HypreLinearSystem::resetCoeffApplierData()
 
     auto iLower = iLower_;
     Kokkos::parallel_for(
-      "HypreLinearSystem::resetCoeffApplierData::periodic_bcs", N,
-      KOKKOS_LAMBDA(const unsigned& i) {
+      "HypreLinearSystem::resetCoeffApplierData::periodic_bcs",
+      DeviceRangePolicy(0, N), KOKKOS_LAMBDA(const unsigned& i) {
         HypreIntType hid = periodic_bc_rows(i);
         unsigned matIndex = mat_row_start_owned(hid - iLower);
         vals(matIndex) = 1.0;
@@ -1456,7 +1456,8 @@ HypreLinearSystem::finishCoupledOversetAssembly()
     auto vals = hcApplier->values_dev_;
     /* write to the matrix */
     Kokkos::parallel_for(
-      "fillOversetMatrixRows", N, KOKKOS_LAMBDA(const unsigned& i) {
+      "fillOversetMatrixRows", DeviceRangePolicy(0, N),
+      KOKKOS_LAMBDA(const unsigned& i) {
         HypreIntType row = orows(i);
         HypreIntType col = ocols(i);
         /* binary search subrange rather than a map.find */
@@ -1483,7 +1484,8 @@ HypreLinearSystem::finishCoupledOversetAssembly()
     auto rhs_vals = hcApplier->rhs_dev_;
     /* write to the rhs */
     Kokkos::parallel_for(
-      "fillOversetRhsVector", N, KOKKOS_LAMBDA(const unsigned& i) {
+      "fillOversetRhsVector", DeviceRangePolicy(0, N),
+      KOKKOS_LAMBDA(const unsigned& i) {
         HypreIntType row = orow_indices(i);
         rhs_vals(row - iLower, 0) = orvals(i);
       });
@@ -2616,7 +2618,7 @@ HypreLinearSystem::copy_hypre_to_stk(stk::mesh::FieldBase* stkField)
   double* rhs_data = hypre_VectorData(
     hypre_ParVectorLocalVector((hypre_ParVector*)hypre_IJVectorObject(rhs_)));
   Kokkos::parallel_reduce(
-    "HypreLinearSystem::Reduction", N,
+    "HypreLinearSystem::Reduction", DeviceRangePolicy(0, N),
     KOKKOS_LAMBDA(const int i, double& update) {
       double t = rhs_data[i];
       update += t * t;

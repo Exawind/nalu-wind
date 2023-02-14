@@ -16,8 +16,7 @@
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/ValidSimdLength.h"
 
-#include "Kokkos_ExecPolicy.hpp"
-#include "Kokkos_Macros.hpp"
+#include <KokkosInterface.h>
 #include "Kokkos_ScatterView.hpp"
 
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
@@ -41,8 +40,7 @@ continuity_residual_t<p>::invoke(
   const auto inv_scaling = 1.0 / scaling;
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
   Kokkos::parallel_for(
-    Kokkos::RangePolicy<exec_space, int>(0, offsets.extent_int(0)),
-    KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
       LocalArray<ftype[p + 1][p + 1][p + 1]> elem_rhs;
       for (int k = 0; k < p + 1; ++k) {
         for (int j = 0; j < p + 1; ++j) {
@@ -85,7 +83,7 @@ continuity_linearized_residual_t<p>::invoke(
 
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
   Kokkos::parallel_for(
-    offsets.extent_int(0), KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
       narray delta;
       LocalArray<int[p + 1][p + 1][p + 1][simd_len]> idx;
       const auto valid_length = valid_offset<p>(index, offsets);

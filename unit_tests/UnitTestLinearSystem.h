@@ -262,6 +262,8 @@ public:
     return newDeviceCoeffApplier;
   }
 
+  bool owns_coeff_applier() override { return false; }
+
   virtual void sumInto(
     unsigned numEntities,
     const stk::mesh::NgpMesh::ConnectedNodes& entities,

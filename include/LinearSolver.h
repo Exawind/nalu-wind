@@ -13,22 +13,28 @@
 #include <LinearSolverTypes.h>
 #include <LinearSolverConfig.h>
 
-#include <Kokkos_DefaultNode.hpp>
+#include <Kokkos_Core.hpp>
+
+#ifdef NALU_USES_TRILINOS_SOLVERS
 #include <Tpetra_Details_DefaultTypes.hpp>
 #include <Tpetra_Vector.hpp>
 #include <Tpetra_CrsMatrix.hpp>
+#endif
+
 #include <Teuchos_GlobalMPISession.hpp>
 #include <Teuchos_oblackholestream.hpp>
-
-#include <Ifpack2_Factory.hpp>
 
 // Header files defining default types for template parameters.
 // These headers must be included after other MueLu/Xpetra headers.
 using Scalar = sierra::nalu::LinSys::Scalar;
 using GlobalOrdinal = sierra::nalu::LinSys::GlobalOrdinal;
 using LocalOrdinal = sierra::nalu::LinSys::LocalOrdinal;
-using Node = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
 using STS = Teuchos::ScalarTraits<Scalar>;
+
+#ifdef NALU_USES_TRILINOS_SOLVERS
+#include <Ifpack2_Factory.hpp>
+
+using Node = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
 
 // MueLu main header: include most common header files in one line
 #include <MueLu.hpp>
@@ -37,6 +43,8 @@ using STS = Teuchos::ScalarTraits<Scalar>;
 #include <MueLu_TpetraOperator.hpp>
 
 #include <MueLu_UseShortNames.hpp> // => typedef MueLu::FooClass<Scalar, LocalOrdinal, ...> Foo
+#endif                             // NALU_USES_TRILINOS_SOLVERS
+
 #include <limits>
 
 namespace sierra {
@@ -53,6 +61,8 @@ enum PetraType {
 
 class LinearSolvers;
 class Simulation;
+
+#ifdef NALU_USES_TRILINOS_SOLVERS
 
 const LocalOrdinal INVALID = std::numeric_limits<LocalOrdinal>::max();
 
@@ -139,6 +149,7 @@ private:
     }
   }
 };
+#endif // NALU_USES_TRILINOS_SOLVERS
 
 /** An abstract representation of a linear solver in Nalu
  *
@@ -201,6 +212,8 @@ public:
   //! Get the solver configuration specified in the input file
   LinearSolverConfig* getConfig() { return config_; }
 };
+
+#ifdef NALU_USES_TRILINOS_SOLVERS
 
 class TpetraLinearSolver : public LinearSolver
 {
@@ -275,6 +288,7 @@ private:
 
   std::string preconditionerType_;
 };
+#endif // NALU_USES_TRILINOS_SOLVERS
 
 } // namespace nalu
 } // namespace sierra

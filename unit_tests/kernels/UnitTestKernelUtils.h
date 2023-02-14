@@ -12,8 +12,7 @@
 
 #include "UnitTestUtils.h"
 
-#include "Tpetra_Details_DefaultTypes.hpp"
-
+#include "FieldTypeDef.h"
 #include "SolutionOptions.h"
 #include "kernel/Kernel.h"
 #include "ElemDataRequests.h"
@@ -342,7 +341,11 @@ public:
   stk::mesh::PartVector partVec_;
 
   sierra::nalu::SolutionOptions solnOpts_;
+#ifdef NALU_USES_TRILINOS_SOLVERS
   using GlobalOrdinal = Tpetra::Details::DefaultTypes::global_ordinal_type;
+#else
+  using GlobalOrdinal = int64_t;
+#endif
   using TpetIDFieldType = stk::mesh::Field<GlobalOrdinal>;
 
   const VectorFieldType* coordinates_{nullptr};

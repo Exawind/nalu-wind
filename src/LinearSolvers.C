@@ -31,9 +31,11 @@ LinearSolvers::~LinearSolvers()
   for (SolverMap::const_iterator pos = solvers_.begin(); pos != solvers_.end();
        ++pos)
     delete pos->second;
+#ifdef NALU_USES_TRILINOS_SOLVERS
   for (SolverTpetraConfigMap::const_iterator pos = solverTpetraConfig_.begin();
        pos != solverTpetraConfig_.end(); ++pos)
     delete pos->second;
+#endif
 
 #ifdef NALU_USES_HYPRE
   for (auto item : solverHypreConfig_) {
@@ -60,14 +62,26 @@ LinearSolvers::load(const YAML::Node& node)
   if (nodes) {
     for (size_t inode = 0; inode < nodes.size(); ++inode) {
       const YAML::Node linear_solver_node = nodes[inode];
+#ifdef NALU_USES_TRILINOS_SOLVERS
       std::string solver_type = "tpetra";
+      // this used to be "tpetra" unconditionally.
+      // now it is ifdef'd, but we are guaranteed that
+      // if TRILINOS_SOLVERS is off, then HYPRE is on.
+#else
+      std::string solver_type = "hypre";
+#endif
       get_if_present_no_default(linear_solver_node, "type", solver_type);
       // proceed with the single supported solver strategy
       if (solver_type == "tpetra") {
+#ifdef NALU_USES_TRILINOS_SOLVERS
         TpetraLinearSolverConfig* linearSolverConfig =
           new TpetraLinearSolverConfig();
         linearSolverConfig->load(linear_solver_node);
         solverTpetraConfig_[linearSolverConfig->name()] = linearSolverConfig;
+#else
+        throw std::runtime_error(
+          "Trilinos solver support must be enabled during compile time.");
+#endif
       } else if (solver_type == "hypre") {
 #ifdef NALU_USES_HYPRE
         HypreLinearSolverConfig* linSolverCfg = new HypreLinearSolverConfig();
@@ -113,11 +127,18 @@ LinearSolvers::create_solver(
   SolverTpetraConfigMap::const_iterator iterT =
     solverTpetraConfig_.find(solverBlockName);
   if (iterT != solverTpetraConfig_.end()) {
+#ifdef NALU_USES_TRILINOS_SOLVERS
     TpetraLinearSolverConfig* linearSolverConfig = (*iterT).second;
     foundT = true;
     theSolver = new TpetraLinearSolver(
       solverName, linearSolverConfig, linearSolverConfig->params(),
       linearSolverConfig->paramsPrecond(), this);
+#else
+    throw std::runtime_error(
+      solverBlockName +
+      " found but "
+      "Trilinos solver support not enabled during compile time.");
+#endif
   }
 #ifdef NALU_USES_HYPRE
   else {

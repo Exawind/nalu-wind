@@ -15,10 +15,7 @@
 #include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 
-#include <Kokkos_Array.hpp>
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Parallel.hpp>
-#include <Kokkos_View.hpp>
+#include <Kokkos_Core.hpp>
 #include <stk_simd/Simd.hpp>
 
 namespace sierra {

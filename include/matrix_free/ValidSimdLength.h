@@ -12,7 +12,7 @@
 
 #include "matrix_free/KokkosViewTypes.h"
 
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 #include "stk_simd/Simd.hpp"
 #include "stk_mesh/base/Types.hpp"
 

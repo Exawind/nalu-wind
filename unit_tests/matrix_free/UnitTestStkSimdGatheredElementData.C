@@ -15,9 +15,7 @@
 
 #include "gtest/gtest.h"
 
-#include "Kokkos_Array.hpp"
-#include "Kokkos_Parallel.hpp"
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 
 #include "stk_io/IossBridge.hpp"
 #include "stk_mesh/base/Bucket.hpp"

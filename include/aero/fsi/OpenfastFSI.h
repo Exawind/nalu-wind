@@ -22,7 +22,7 @@ public:
 
   void initialize(int restartFreqNalu, double curTime);
 
-  void get_displacements(double);
+  void map_displacements(double);
 
   void predict_struct_states();
 
@@ -34,7 +34,10 @@ public:
 
   int get_nTurbinesGlob() { return FAST.get_nTurbinesGlob(); }
 
-  fsiTurbine* get_fsiTurbineData(int iTurb) { return fsiTurbineData_[iTurb]; }
+  fsiTurbine* get_fsiTurbineData(int iTurb)
+  {
+    return fsiTurbineData_[iTurb].get();
+  }
 
   bool get_meshmotion() { return mesh_motion_; }
 
@@ -50,11 +53,11 @@ private:
 
   void load(const YAML::Node&);
 
+  void get_displacements(double);
+
   void compute_mapping();
 
   void send_loads(const double curTime);
-
-  void map_displacements(double); // This is dummy function for now. DO NOT USE
 
   std::shared_ptr<stk::mesh::BulkData> bulk_;
 
@@ -66,7 +69,7 @@ private:
 
   fast::fastInputs fi;
 
-  std::vector<fsiTurbine*> fsiTurbineData_;
+  std::vector<std::unique_ptr<fsiTurbine>> fsiTurbineData_;
 
   bool mesh_motion_;
 

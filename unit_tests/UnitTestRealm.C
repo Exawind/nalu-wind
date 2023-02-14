@@ -32,6 +32,7 @@ const std::string naluDefaultInputs =
   "                                                                        \n"
   "linear_solvers:                                                         \n"
   "                                                                        \n"
+#ifdef NALU_USES_TRILINOS_SOLVERS
   "  - name: solve_scalar                                                  \n"
   "    type: tpetra                                                        \n"
   "    method: gmres                                                       \n"
@@ -51,6 +52,26 @@ const std::string naluDefaultInputs =
   "    output_level: 0                                                     \n"
   "    recompute_preconditioner: no                                        \n"
   "    muelu_xml_file_name: milestone.xml                                  \n"
+#else // NALU_USES_HYPRE
+  "  - name: solve_scalar                                                  \n"
+  "    type: hypre                                                         \n"
+  "    method: hypre_gmres                                                 \n"
+  "    preconditioner: boomerAMG                                           \n"
+  "    tolerance: 1e-5                                                     \n"
+  "    max_iterations: 50                                                  \n"
+  "    kspace: 50                                                          \n"
+  "    output_level: 0                                                     \n"
+  "                                                                        \n"
+  "  - name: solve_cont                                                    \n"
+  "    type: hypre                                                         \n"
+  "    method: hypre_gmres                                                 \n"
+  "    preconditioner: boomerAMG                                           \n"
+  "    tolerance: 1e-5                                                     \n"
+  "    max_iterations: 50                                                  \n"
+  "    kspace: 50                                                          \n"
+  "    output_level: 0                                                     \n"
+  "    recompute_preconditioner: no                                        \n"
+#endif
   "                                                                        \n"
   "Time_Integrators:                                                       \n"
   "  - StandardTimeIntegrator:                                             \n"
@@ -121,17 +142,19 @@ get_realm_default_node()
 }
 
 NaluTest::NaluTest(const YAML::Node& doc)
-  : comm_(MPI_COMM_WORLD), spatialDim_(3), sim_(doc)
+  : comm_(MPI_COMM_WORLD),
+    spatialDim_(3),
+    sim_(doc),
+    logFileName_("unittestX_naluwrapper.log")
 {
   // NaluEnv log file
-  std::string logFileName = "unittestX_naluwrapper.log";
   auto testInfo = ::testing::UnitTest::GetInstance()->current_test_info();
   if (testInfo) {
     std::string caseName = testInfo->test_case_name();
     std::string caseInstance = testInfo->name();
-    logFileName = caseName + "." + caseInstance + ".log";
+    logFileName_ = caseName + "." + caseInstance + ".log";
   }
-  sierra::nalu::NaluEnv::self().set_log_file_stream(logFileName, false);
+  sierra::nalu::NaluEnv::self().set_log_file_stream(logFileName_, false);
 
   sim_.linearSolvers_ = new sierra::nalu::LinearSolvers(sim_);
   sim_.realms_ = new sierra::nalu::Realms(sim_);
@@ -140,6 +163,8 @@ NaluTest::NaluTest(const YAML::Node& doc)
   sim_.linearSolvers_->load(doc);
   sim_.timeIntegrator_->load(doc);
 }
+
+NaluTest::~NaluTest() { unlink(logFileName_.c_str()); }
 
 sierra::nalu::Realm&
 NaluTest::create_realm(

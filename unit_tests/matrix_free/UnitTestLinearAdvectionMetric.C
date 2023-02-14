@@ -18,10 +18,7 @@
 #include "matrix_free/StkSimdComparisons.h"
 #include "matrix_free/TensorOperations.h"
 
-#include "Kokkos_Array.hpp"
-#include "Kokkos_CopyViews.hpp"
-#include "Kokkos_Macros.hpp"
-#include "Kokkos_Parallel.hpp"
+#include "Kokkos_Core.hpp"
 #include "stk_simd/Simd.hpp"
 
 namespace sierra {

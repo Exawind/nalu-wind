@@ -42,7 +42,8 @@ TEST(SpinnerLidar, print_tip_location)
   SpinnerLidarSegmentGenerator slgen;
   slgen.load(lidarSpecNode);
 
-  std::ofstream outputFile("SpinnerLidar.pattern.txt");
+  std::string outputFileName("SpinnerLidar.pattern.txt");
+  std::ofstream outputFile(outputFileName);
   outputFile << "x,y,z" << std::endl;
 
   for (int j = 0; j < nsamp; ++j) {
@@ -55,6 +56,7 @@ TEST(SpinnerLidar, print_tip_location)
     outputFile << seg.tip_.at(0) << ", " << seg.tip_.at(1) << ", "
                << seg.tip_.at(2) << std::endl;
   }
+  unlink(outputFileName.c_str());
 }
 
 std::array<double, 3>
@@ -65,6 +67,8 @@ velocity_func(const double* x, double time)
     time - 2 + 1.2 * x[0] / 500 + 2.3 * x[1] / 500 + 3.4 * x[2] / 100,
     time + 3 - 2.1 * x[0] / 500 + 3.2 * x[1] / 500 - 4.3 * x[2] / 100};
 }
+
+#ifndef KOKKOS_ENABLE_GPU
 
 TEST(SpinnerLidar, volume_interp)
 {
@@ -189,6 +193,8 @@ TEST(SpinnerLidar, volume_interp)
     }
   }
 }
+
+#endif // KOKKOS_ENABLE_GPU
 
 TEST(Spinner, invalid_predictor_throws)
 {

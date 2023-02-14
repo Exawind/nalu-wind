@@ -8,7 +8,6 @@
 //
 
 #include "Kokkos_Core.hpp"
-#include <Kokkos_CopyViews.hpp>
 #include <Teuchos_ArrayView.hpp>
 #include <Teuchos_DefaultMpiComm.hpp>
 #include <Teuchos_OrdinalTraits.hpp>

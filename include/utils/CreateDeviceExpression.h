@@ -17,7 +17,8 @@ create_device_expression(const T& rhs)
   // Bring rhs into local scope for capture to device.
   const T RHS(rhs);
   Kokkos::parallel_for(
-    debuggingName, 1, KOKKOS_LAMBDA(const int /* i */) { new (t) T(RHS); });
+    debuggingName, DeviceRangePolicy(0, 1),
+    KOKKOS_LAMBDA(const int /* i */) { new (t) T(RHS); });
   return t;
 }
 
@@ -28,7 +29,8 @@ create_device_expression()
   const std::string debuggingName(typeid(T).name());
   T* t = kokkos_malloc_on_device<T>(debuggingName);
   Kokkos::parallel_for(
-    debuggingName, 1, KOKKOS_LAMBDA(const int /* i */) { new (t) T(); });
+    debuggingName, DeviceRangePolicy(0, 1),
+    KOKKOS_LAMBDA(const int /* i */) { new (t) T(); });
   return t;
 }
 } // namespace nalu

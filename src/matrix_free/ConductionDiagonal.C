@@ -16,9 +16,8 @@
 #include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 
-#include <Kokkos_Macros.hpp>
+#include <KokkosInterface.h>
 #include <Kokkos_ScatterView.hpp>
-#include <Kokkos_Parallel.hpp>
 #include <stk_simd/Simd.hpp>
 
 namespace sierra {
@@ -75,7 +74,8 @@ conduction_diagonal_t<p>::invoke(
 {
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
   Kokkos::parallel_for(
-    "diagonal", offsets.extent_int(0), KOKKOS_LAMBDA(int index) {
+    "diagonal", DeviceRangePolicy(0, offsets.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
       constexpr auto flux_point_interpolant = Coeffs<p>::Nt;
       constexpr auto flux_point_derivative = Coeffs<p>::Dt;
       constexpr auto nodal_derivative = Coeffs<p>::D;

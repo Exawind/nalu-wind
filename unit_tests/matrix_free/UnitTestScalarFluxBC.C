@@ -19,7 +19,7 @@
 
 #include "stk_mesh/base/BulkData.hpp"
 
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Tpetra_CombineMode.hpp"
 #include "Tpetra_Export.hpp"

@@ -90,10 +90,11 @@ copy_DoubleType0_to_double(
   }
 }
 
+template <typename SHMEM>
 void
 compare_old_scv_volume(
-  const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType*>& scv_volume,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::nalu::SharedMemView<DoubleType*, SHMEM>& scv_volume,
   sierra::nalu::MasterElement* meSCV)
 {
   int len = scv_volume.extent(0);
@@ -106,10 +107,11 @@ compare_old_scv_volume(
   check_that_values_match(scv_volume, volume.data());
 }
 
+template <typename SHMEM>
 void
 compare_old_scs_areav(
-  const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType**>& scs_areav,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& scs_areav,
   sierra::nalu::MasterElement* meSCS)
 {
   int len = scs_areav.extent(0) * scs_areav.extent(1);
@@ -122,11 +124,12 @@ compare_old_scs_areav(
   check_that_values_match(scs_areav, areav.data());
 }
 
+template <typename SHMEM>
 void
 compare_old_scs_grad_op(
-  const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType***>& scs_dndx,
-  const sierra::nalu::SharedMemView<DoubleType***>& scs_deriv,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_dndx,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_deriv,
   sierra::nalu::MasterElement* meSCS)
 {
   int len = scs_dndx.extent(0) * scs_dndx.extent(1) * scs_dndx.extent(2);
@@ -144,11 +147,12 @@ compare_old_scs_grad_op(
   check_that_values_match(scs_deriv, deriv.data());
 }
 
+template <typename SHMEM>
 void
 compare_old_scs_shifted_grad_op(
-  const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType***>& scs_dndx,
-  const sierra::nalu::SharedMemView<DoubleType***>& scs_deriv,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_dndx,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_deriv,
   sierra::nalu::MasterElement* meSCS)
 {
   int len = scs_dndx.extent(0) * scs_dndx.extent(1) * scs_dndx.extent(2);
@@ -168,12 +172,13 @@ compare_old_scs_shifted_grad_op(
   check_that_values_match(scs_deriv, deriv.data());
 }
 
+template <typename SHMEM>
 void
 compare_old_scs_gij(
-  const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType***>& v_gijUpper,
-  const sierra::nalu::SharedMemView<DoubleType***>& v_gijLower,
-  const sierra::nalu::SharedMemView<DoubleType***>& /* v_deriv */,
+  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& v_gijUpper,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& v_gijLower,
+  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& /* v_deriv */,
   sierra::nalu::MasterElement* meSCS)
 {
   int gradOpLen =
@@ -231,64 +236,64 @@ test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
       AlgTraits::topo_);
 
   // Execute the loop and perform all tests
-  driver.execute(
-    [&](sierra::nalu::SharedMemData<
-        sierra::nalu::TeamHandleType, sierra::nalu::HostShmem>& smdata) {
-      // Extract data from scratchViews
-      sierra::nalu::SharedMemView<DoubleType**>& v_coords =
+  driver.execute([&](sierra::nalu::SharedMemData<
+                     sierra::nalu::DeviceTeamHandleType,
+                     sierra::nalu::DeviceShmem>& smdata) {
+    // Extract data from scratchViews
+    sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>&
+      v_coords =
         smdata.simdPrereqData.get_scratch_view_2D(*driver.coordinates_);
-      auto& meViews =
-        smdata.simdPrereqData.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+    auto& meViews =
+      smdata.simdPrereqData.get_me_views(sierra::nalu::CURRENT_COORDINATES);
 
-      if (meSCS != nullptr) {
-        for (sierra::nalu::ELEM_DATA_NEEDED request : requests) {
-          if (request == sierra::nalu::SCS_AREAV) {
-            compare_old_scs_areav(v_coords, meViews.scs_areav, meSCS);
+    if (meSCS != nullptr) {
+      for (sierra::nalu::ELEM_DATA_NEEDED request : requests) {
+        if (request == sierra::nalu::SCS_AREAV) {
+          compare_old_scs_areav(v_coords, meViews.scs_areav, meSCS);
+        }
+        if (request == sierra::nalu::SCS_GRAD_OP) {
+          compare_old_scs_grad_op(v_coords, meViews.dndx, meViews.deriv, meSCS);
+        }
+        if (request == sierra::nalu::SCS_SHIFTED_GRAD_OP) {
+          compare_old_scs_shifted_grad_op(
+            v_coords, meViews.dndx_shifted, meViews.deriv, meSCS);
+        }
+        if (request == sierra::nalu::SCS_GIJ) {
+          compare_old_scs_gij(
+            v_coords, meViews.gijUpper, meViews.gijLower, meViews.deriv, meSCS);
+        }
+      }
+    }
+    if (meSCV != nullptr) {
+      for (sierra::nalu::ELEM_DATA_NEEDED request : requests) {
+        if (request == sierra::nalu::SCV_VOLUME) {
+          compare_old_scv_volume(v_coords, meViews.scv_volume, meSCV);
+        }
+        if (request == sierra::nalu::SCV_GRAD_OP) {
+          if (AlgTraits::topo_ == stk::topology::HEX_8) {
+            check_that_values_match(
+              meViews.dndx_scv, &kokkos_me_gold::hex8_scv_grad_op[0]);
+          } else if (AlgTraits::topo_ == stk::topology::TET_4) {
+            check_that_values_match(
+              meViews.dndx_scv, &kokkos_me_gold::tet4_scv_grad_op[0]);
           }
-          if (request == sierra::nalu::SCS_GRAD_OP) {
-            compare_old_scs_grad_op(
-              v_coords, meViews.dndx, meViews.deriv, meSCS);
-          }
-          if (request == sierra::nalu::SCS_SHIFTED_GRAD_OP) {
-            compare_old_scs_shifted_grad_op(
-              v_coords, meViews.dndx_shifted, meViews.deriv, meSCS);
-          }
-          if (request == sierra::nalu::SCS_GIJ) {
-            compare_old_scs_gij(
-              v_coords, meViews.gijUpper, meViews.gijLower, meViews.deriv,
-              meSCS);
+        }
+        if (request == sierra::nalu::SCV_SHIFTED_GRAD_OP) {
+          if (AlgTraits::topo_ == stk::topology::HEX_8) {
+            check_that_values_match(
+              meViews.dndx_scv_shifted,
+              &kokkos_me_gold::hex8_scv_shifted_grad_op[0]);
+          } else if (AlgTraits::topo_ == stk::topology::TET_4) {
+            check_that_values_match(
+              meViews.dndx_scv_shifted, &kokkos_me_gold::tet4_scv_grad_op[0]);
           }
         }
       }
-      if (meSCV != nullptr) {
-        for (sierra::nalu::ELEM_DATA_NEEDED request : requests) {
-          if (request == sierra::nalu::SCV_VOLUME) {
-            compare_old_scv_volume(v_coords, meViews.scv_volume, meSCV);
-          }
-          if (request == sierra::nalu::SCV_GRAD_OP) {
-            if (AlgTraits::topo_ == stk::topology::HEX_8) {
-              check_that_values_match(
-                meViews.dndx_scv, &kokkos_me_gold::hex8_scv_grad_op[0]);
-            } else if (AlgTraits::topo_ == stk::topology::TET_4) {
-              check_that_values_match(
-                meViews.dndx_scv, &kokkos_me_gold::tet4_scv_grad_op[0]);
-            }
-          }
-          if (request == sierra::nalu::SCV_SHIFTED_GRAD_OP) {
-            if (AlgTraits::topo_ == stk::topology::HEX_8) {
-              check_that_values_match(
-                meViews.dndx_scv_shifted,
-                &kokkos_me_gold::hex8_scv_shifted_grad_op[0]);
-            } else if (AlgTraits::topo_ == stk::topology::TET_4) {
-              check_that_values_match(
-                meViews.dndx_scv_shifted, &kokkos_me_gold::tet4_scv_grad_op[0]);
-            }
-          }
-        }
-      }
-    });
+    }
+  });
 }
 
+#ifndef KOKKOS_ENABLE_GPU
 TEST(KokkosME, test_hex8_views)
 {
   test_ME_views<sierra::nalu::AlgTraitsHex8>(
@@ -367,3 +372,5 @@ TEST(KokkosME, test_pyr5_views_gij)
     sierra::nalu::SCS_GIJ,
   });
 }
+
+#endif // KOKKOS_ENABLE_GPU

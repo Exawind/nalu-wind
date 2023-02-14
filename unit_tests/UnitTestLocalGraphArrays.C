@@ -6,6 +6,8 @@
 #include <limits>
 #include <vector>
 
+#ifdef NALU_USES_TRILINOS_SOLVERS
+
 TEST(LocalGraphArrays, compute_row_pointers)
 {
   unsigned N = 5;
@@ -25,7 +27,7 @@ Teuchos::RCP<sierra::nalu::LocalGraphArrays>
 create_graph(const std::vector<size_t>& rowLens)
 {
   unsigned N = rowLens.size();
-  Kokkos::View<size_t*, sierra::nalu::MemSpace> rowLengths("rowLengths", N);
+  Kokkos::View<size_t*, sierra::nalu::HostSpace> rowLengths("rowLengths", N);
   for (unsigned i = 0; i < N; ++i) {
     rowLengths(i) = rowLens[i];
   }
@@ -106,3 +108,5 @@ TEST(LocalGraphArrays, insertIndicesNumDof3)
     EXPECT_EQ((int)i, csg->colIndices[i]);
   }
 }
+
+#endif // NALU_USES_TRILINOS_SOLVERS

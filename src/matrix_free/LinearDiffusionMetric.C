@@ -17,8 +17,7 @@
 #include "matrix_free/LocalArray.h"
 #include "matrix_free/PolynomialOrders.h"
 
-#include "Kokkos_Macros.hpp"
-#include "Kokkos_View.hpp"
+#include <KokkosInterface.h>
 
 namespace sierra {
 namespace nalu {
@@ -35,7 +34,8 @@ diffusion_metric_t<p>::invoke(
 
   scs_vector_view<p> metric("diffusion", coordinates.extent_int(0));
   Kokkos::parallel_for(
-    "diffusion_metric", coordinates.extent_int(0), KOKKOS_LAMBDA(int index) {
+    "diffusion_metric", DeviceRangePolicy(0, coordinates.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
       static constexpr auto ntilde = Coeffs<p>::Nt;
 
       LocalArray<ftype[3][p + 1][p + 1][p + 1]> interp;
@@ -77,7 +77,8 @@ diffusion_metric_t<p>::invoke(const_vector_view<p> coordinates)
   enum { XH = 0, YH = 1, ZH = 2 };
   scs_vector_view<p> metric("diffusion", coordinates.extent_int(0));
   Kokkos::parallel_for(
-    "diffusion_metric", coordinates.extent_int(0), KOKKOS_LAMBDA(int index) {
+    "diffusion_metric", DeviceRangePolicy(0, coordinates.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
       const auto box = hex_vertex_coordinates<p>(index, coordinates);
       for (int l = 0; l < p; ++l) {
         for (int s = 0; s < p + 1; ++s) {

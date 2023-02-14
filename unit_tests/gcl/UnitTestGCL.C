@@ -9,6 +9,8 @@
 
 #include "gcl/UnitTestGCL.h"
 
+#ifndef KOKKOS_ENABLE_GPU
+
 namespace {
 
 namespace hex8_golds_x_rot {
@@ -339,3 +341,5 @@ TEST_F(GCLTest, mesh_airy_waves)
   compute_dvoldt();
   compute_absolute_error();
 }
+
+#endif // KOKKOS_ENABLE_GPU

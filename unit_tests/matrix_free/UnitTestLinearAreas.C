@@ -16,10 +16,7 @@
 #include "StkSimdComparisons.h"
 #include "gtest/gtest.h"
 
-#include <Kokkos_Array.hpp>
-#include <Kokkos_CopyViews.hpp>
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Parallel.hpp>
+#include <Kokkos_Core.hpp>
 #include <stk_simd/Simd.hpp>
 
 #include <math.h>

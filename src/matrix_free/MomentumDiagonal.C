@@ -15,10 +15,9 @@
 #include "matrix_free/ShuffledAccess.h"
 #include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
-
-#include <Kokkos_Macros.hpp>
+#include <KokkosInterface.h>
 #include <Kokkos_ScatterView.hpp>
-#include <Kokkos_Parallel.hpp>
+
 #include <stk_simd/Simd.hpp>
 
 namespace sierra {
@@ -81,7 +80,7 @@ advdiff_diagonal_t<p>::invoke(
 {
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
   Kokkos::parallel_for(
-    offsets.extent_int(0), KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
       LocalArray<ftype[p + 1][p + 1][p + 1]> lhs;
       // generally works better to lump the mass term to the diagonal here
       for (int k = 0; k < p + 1; ++k) {

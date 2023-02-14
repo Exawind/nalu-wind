@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <array>
+#include <optional>
 
 namespace sierra {
 namespace nalu {
@@ -69,13 +70,24 @@ private:
   void output_txt(
     double time,
     const std::vector<std::array<double, 3>>& x,
-    const std::vector<std::array<double, 3>>& u);
-  void output_txt_filtered(
+    const std::vector<std::array<double, 3>>& u,
+    std::ofstream& file);
+  void output_txt_los(
+    double time,
+    const std::vector<std::array<double, 3>>& x,
+    const std::vector<double>& u,
+    int n,
+    std::ofstream& file);
+
+  void output_nc_filtered(
     double time,
     const std::vector<std::array<double, 3>>& x,
     const std::vector<double>& u,
     int n);
+
   std::map<std::string, int> ncVarIDs_;
+
+  std::optional<std::ofstream> file_ = {};
 
   mutable double lidar_time_{0};
   mutable size_t internal_output_counter_{0};
@@ -92,7 +104,6 @@ private:
   bool warn_on_missing_{false};
   bool reuse_search_data_{true};
   bool always_output_{false};
-
   RadarFilter radar_data_;
 };
 
@@ -127,8 +138,10 @@ public:
 
   void load(const YAML::Node& node, DataProbePostProcessing* probes);
   void set_time_for_all(double time);
+  bool start_time_has_been_set() { return start_time_has_been_set_; };
 
 private:
+  bool start_time_has_been_set_{false};
   std::vector<LidarLineOfSite> lidars_;
   std::vector<LidarLineOfSite> radars_;
 };

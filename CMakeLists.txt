@@ -9,12 +9,15 @@ option(ENABLE_CUDA "Enable build targeting Nvidia GPU" OFF)
 option(ENABLE_ROCM "Enable build targeting AMD GPU" OFF)
 option(ENABLE_UMPIRE "Enable Umpire GPU memory pools" OFF)
 option(ENABLE_TESTS "Enable regression testing." OFF)
+option(ENABLE_UNIT_TESTS "Enable unit testing." ON)
 option(ENABLE_EXAMPLES "Enable examples." OFF)
 option(ENABLE_DOCUMENTATION "Build documentation." OFF)
 option(ENABLE_SPHINX_API_DOCS "Link Doxygen API docs to Sphinx" OFF)
 option(ENABLE_WIND_UTILS "Build wind utils along with Nalu-Wind" OFF)
 option(ENABLE_FFTW "Use the FFTW library to support ABLTopBC" OFF)
-option(ENABLE_HYPRE "Use HYPRE Solver library" OFF)
+option(ENABLE_HYPRE "Use HYPRE Solver library" ON)
+option(ENABLE_TRILINOS_SOLVERS "Use Trilinos Solvers" ON)
+
 option(ENABLE_OPENFAST
        "Use OPENFAST tpl to get actuator line positions and forces" OFF)
 cmake_dependent_option(ENABLE_OPENFAST_FSI "Temporary option while FSI features are not merged into main OpenFAST"
@@ -25,18 +28,33 @@ option(ENABLE_PARAVIEW_CATALYST
 option(ENABLE_TIOGA "Use TIOGA TPL to perform overset connectivity" OFF)
 option(ENABLE_OPENMP "Enable OpenMP flags" OFF)
 option(ENABLE_BOOST  "Enable Boost libraries" OFF)
+option(ENABLE_MATRIXFREE "Enable high-order matrix-free computation" ON)
+
 option(NALU_WIND_SAVE_GOLDS  "Save gold files to directory when running tests" OFF)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 
+if(NOT ENABLE_HYPRE AND NOT ENABLE_TRILINOS_SOLVERS)
+  message(FATAL_ERROR "Hypre and Trilinos-solvers both disabled, must enable at least one or the other.")
+endif()
+
+if(ENABLE_MATRIXFREE AND NOT ENABLE_TRILINOS_SOLVERS)
+  message(STATUS "Can not support Matrix-free when trilinos-solvers are not enabled. Turning Matrix-free off.")
+  set(ENABLE_MATRIXFREE OFF)
+endif()
+
 # Create targets
 set(nalu_ex_name "naluX")
-set(utest_ex_name "unittestX")
-add_library(nalu "")
 add_executable(${nalu_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/nalu.C)
-add_executable(${utest_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.C)
+
+if(ENABLE_UNIT_TESTS)
+  set(utest_ex_name "unittestX")
+  add_executable(${utest_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.C)
+endif()
+
+add_library(nalu "")
 
 ########################## MPI ####################################
 find_package(MPI REQUIRED)
@@ -156,6 +174,11 @@ if(ENABLE_HYPRE)
   endif()
 endif()
 
+##################### Trilinos Solvers: tpetra,belos,muelu ##########################
+if(ENABLE_TRILINOS_SOLVERS)
+  target_compile_definitions(nalu PUBLIC NALU_USES_TRILINOS_SOLVERS)
+endif()
+
 ########################## OPENFAST ####################################
 if(ENABLE_OPENFAST_FSI)
   target_compile_definitions(nalu PUBLIC NALU_USES_OPENFAST_FSI)
@@ -182,6 +205,11 @@ if(ENABLE_TIOGA)
   endif()
 endif()
 
+
+############################ MATRIXREE #####################################
+if(ENABLE_MATRIXFREE)
+    target_compile_definitions(nalu PUBLIC NALU_HAS_MATRIXFREE)
+endif()
 ########################### NALU #####################################
 message(STATUS "CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
 message(STATUS "CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
@@ -245,12 +273,16 @@ target_include_directories(nalu PUBLIC
 
 # Most linking, etc, is set to PUBLIC for libnalu, so we merely link to libnalu for the exes
 target_link_libraries(${nalu_ex_name} PRIVATE nalu)
-target_link_libraries(${utest_ex_name} PRIVATE nalu)
-target_include_directories(${utest_ex_name} PRIVATE "${CMAKE_SOURCE_DIR}/unit_tests")
+if(ENABLE_UNIT_TESTS)
+  target_link_libraries(${utest_ex_name} PRIVATE nalu)
+  target_include_directories(${utest_ex_name} PRIVATE "${CMAKE_SOURCE_DIR}/unit_tests")
+endif()
 
 add_subdirectory(src)
-add_subdirectory(unit_tests)
 add_subdirectory(include)
+if(ENABLE_UNIT_TESTS)
+  add_subdirectory(unit_tests)
+endif()
 
 set(nalu_ex_catalyst_name "naluXCatalyst")
 if(ENABLE_PARAVIEW_CATALYST)
@@ -260,7 +292,14 @@ if(ENABLE_PARAVIEW_CATALYST)
    target_compile_definitions(nalu PUBLIC NALU_USES_CATALYST)
 endif()
 
-install(TARGETS ${utest_ex_name} ${nalu_ex_name} nalu
+if(ENABLE_UNIT_TESTS)
+  install(TARGETS ${utest_ex_name}
+          EXPORT "${PROJECT_NAME}Targets"
+          RUNTIME DESTINATION bin
+          ARCHIVE DESTINATION lib
+          LIBRARY DESTINATION lib)
+endif()
+install(TARGETS ${nalu_ex_name} nalu
         EXPORT "${PROJECT_NAME}Targets"
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib

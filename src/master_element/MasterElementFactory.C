@@ -235,7 +235,8 @@ MasterElementRepo::clear()
     const std::string debuggingName("MEDestroy: " + a.first.name());
     auto* meobj = a.second;
     Kokkos::parallel_for(
-      debuggingName, 1, KOKKOS_LAMBDA(int) { meobj->~MasterElement(); });
+      debuggingName, DeviceRangePolicy(0, 1),
+      KOKKOS_LAMBDA(int) { meobj->~MasterElement(); });
     sierra::nalu::kokkos_free_on_device(a.second);
   }
   volumeMeMapDev().clear();
@@ -243,7 +244,8 @@ MasterElementRepo::clear()
     const std::string debuggingName("MEDestroy: " + a.first.name());
     auto* meobj = a.second;
     Kokkos::parallel_for(
-      debuggingName, 1, KOKKOS_LAMBDA(int) { meobj->~MasterElement(); });
+      debuggingName, DeviceRangePolicy(0, 1),
+      KOKKOS_LAMBDA(int) { meobj->~MasterElement(); });
     sierra::nalu::kokkos_free_on_device(a.second);
   }
   surfaceMeMapDev().clear();

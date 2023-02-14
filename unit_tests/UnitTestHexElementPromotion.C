@@ -15,7 +15,9 @@
 #include <stk_unit_test_utils/stk_mesh_fixtures/HexFixture.hpp>
 #include <stk_mesh/base/SkinMesh.hpp>
 
+#ifdef NALU_HAS_MATRIXFREE
 #include <matrix_free/LobattoQuadratureRule.h>
+#endif
 #include <element_promotion/HexNElementDescription.h>
 #include <element_promotion/PromotedPartHelper.h>
 #include <element_promotion/PromoteElement.h>
@@ -120,10 +122,12 @@ protected:
 
   void promote_mesh()
   {
-    auto gllNodes =
-      sierra::nalu::matrix_free::gauss_lobatto_legendre_abscissae(poly_order);
+    std::vector<double> xloc(poly_order + 1);
+    for (size_t j = 0; j < poly_order + 1; ++j) {
+      xloc[j] = -1 + 2. / poly_order * j;
+    }
     sierra::nalu::promotion::create_tensor_product_hex_elements(
-      gllNodes, *bulk, *coordField, baseParts);
+      xloc, *bulk, *coordField, baseParts);
   }
 
   void output_mesh()

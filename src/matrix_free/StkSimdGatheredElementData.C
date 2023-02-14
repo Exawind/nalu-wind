@@ -13,8 +13,7 @@
 #include "matrix_free/StkSimdConnectivityMap.h"
 #include "matrix_free/ValidSimdLength.h"
 
-#include "Kokkos_ExecPolicy.hpp"
-#include "Kokkos_Macros.hpp"
+#include <KokkosInterface.h>
 
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/Types.hpp"
@@ -34,7 +33,13 @@ field_gather_t<p>::invoke(
   const stk::mesh::NgpField<double>& field,
   scalar_view<p> simd_element_field)
 {
+#if defined(KOKKOS_ENABLE_HIP)
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<4>, int>;
+#else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<4>, int>;
+#endif
   const auto range =
     policy_type({0, 0, 0, 0}, {conn.extent_int(0), p + 1, p + 1, p + 1});
   Kokkos::parallel_for(
@@ -55,7 +60,13 @@ field_gather_t<p>::invoke(
   const stk::mesh::NgpField<double>& field,
   vector_view<p> simd_element_field)
 {
+#if defined(KOKKOS_ENABLE_HIP)
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<4>, int>;
+#else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<4>, int>;
+#endif
   const auto range =
     policy_type({0, 0, 0, 0}, {conn.extent_int(0), p + 1, p + 1, p + 1});
   Kokkos::parallel_for(
@@ -79,7 +90,13 @@ field_gather_t<p>::invoke(
   const stk::mesh::NgpField<double>& field,
   face_scalar_view<p> simd_element_field)
 {
+#if defined(KOKKOS_ENABLE_HIP)
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<3>, int>;
+#else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<3>, int>;
+#endif
   const auto range = policy_type({0, 0, 0}, {conn.extent_int(0), p + 1, p + 1});
   Kokkos::parallel_for(
     range, KOKKOS_LAMBDA(int index, int j, int i) {
@@ -100,7 +117,13 @@ field_gather_t<p>::invoke(
   const stk::mesh::NgpField<double>& field,
   face_vector_view<p> simd_element_field)
 {
+#if defined(KOKKOS_ENABLE_HIP)
+  using policy_type = Kokkos::MDRangePolicy<
+    exec_space, Kokkos::LaunchBounds<NTHREADS_PER_DEVICE_TEAM, 1>,
+    Kokkos::Rank<3>, int>;
+#else
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<3>, int>;
+#endif
   const auto range = policy_type({0, 0, 0}, {conn.extent_int(0), p + 1, p + 1});
   Kokkos::parallel_for(
     range, KOKKOS_LAMBDA(int index, int j, int i) {
@@ -126,8 +149,7 @@ field_gather(
   node_scalar_view simd_node_field)
 {
   Kokkos::parallel_for(
-    Kokkos::RangePolicy<exec_space, int>(0, conn.extent_int(0)),
-    KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, conn.extent_int(0)), KOKKOS_LAMBDA(int index) {
       for (int n = 0; n < simd_len; ++n) {
         const auto simd_mesh_index = conn(index, n);
         const auto mesh_index =
@@ -145,8 +167,7 @@ field_gather(
   node_vector_view simd_node_field)
 {
   Kokkos::parallel_for(
-    Kokkos::RangePolicy<exec_space, int>(0, conn.extent_int(0)),
-    KOKKOS_LAMBDA(int index) {
+    DeviceRangePolicy(0, conn.extent_int(0)), KOKKOS_LAMBDA(int index) {
       for (int n = 0; n < simd_len; ++n) {
         const auto simd_mesh_index = conn(index, n);
         const auto mesh_index =

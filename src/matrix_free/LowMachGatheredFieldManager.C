@@ -24,6 +24,7 @@
 #include "matrix_free/ValidSimdLength.h"
 #include "matrix_free/ElementSCSInterpolate.h"
 
+#include <KokkosInterface.h>
 #include "Kokkos_Macros.hpp"
 
 #include "stk_mesh/base/FieldState.hpp"

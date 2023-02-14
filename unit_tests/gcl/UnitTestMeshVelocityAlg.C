@@ -23,6 +23,8 @@
 #include "UnitTestRealm.h"
 #include "UnitTestUtils.h"
 
+#ifndef KOKKOS_ENABLE_GPU
+
 namespace {
 
 std::vector<double>
@@ -473,3 +475,5 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
     EXPECT_EQ(counter, 12);
   } // namespace =::hex8_golds_y_rot::mesh_velocity;
 }
+
+#endif // KOKKOS_ENABLE_GPU

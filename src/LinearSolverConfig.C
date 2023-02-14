@@ -13,7 +13,9 @@
 #include <yaml-cpp/yaml.h>
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_RCP.hpp>
+#ifdef NALU_USES_TRILINOS_SOLVERS
 #include <BelosTypes.hpp>
+#endif
 
 #include <ostream>
 
@@ -25,6 +27,8 @@ LinearSolverConfig::LinearSolverConfig()
     paramsPrecond_(Teuchos::rcp(new Teuchos::ParameterList))
 {
 }
+
+#ifdef NALU_USES_TRILINOS_SOLVERS
 
 TpetraLinearSolverConfig::TpetraLinearSolverConfig() : LinearSolverConfig() {}
 
@@ -134,6 +138,8 @@ TpetraLinearSolverConfig::load(const YAML::Node& node)
     node, "reuse_linear_system", reuseLinSysIfPossible_,
     reuseLinSysIfPossible_);
 }
+
+#endif // NALU_USES_TRILINOS_SOLVERS
 
 } // namespace nalu
 } // namespace sierra

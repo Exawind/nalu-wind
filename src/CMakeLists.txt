@@ -1,4 +1,6 @@
-target_sources(nalu PRIVATE
+target_sources(
+  nalu
+  PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ABLProfileFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AlgorithmDriver.C
@@ -59,8 +61,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/LowMachEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MaterialProperty.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MaterialPropertys.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MatrixFreeHeatCondEquationSystem.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MatrixFreeLowMachEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBoussinesqRASrcNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBuoyancySrcNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MovingAveragePostProcessor.C
@@ -90,9 +90,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentWallFunctionAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TimeIntegrator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TotalDissipationRateEquationSystem.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystem.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystemHelpers.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/TpetraSegregatedLinearSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbKineticEnergyEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscSmagorinskyAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscWaleAlgorithm.C
@@ -103,26 +100,39 @@ target_sources(nalu PRIVATE
 )
 
 if(ENABLE_FFTW)
-   target_sources(nalu PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumEdgeABLTopBC.C
-   )
+  target_sources(
+    nalu PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumEdgeABLTopBC.C)
 endif(ENABLE_FFTW)
 
 if(ENABLE_HYPRE)
-   target_sources(nalu PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}/HypreDirectSolver.C
-      ${CMAKE_CURRENT_SOURCE_DIR}/HypreUVWSolver.C
-      ${CMAKE_CURRENT_SOURCE_DIR}/HypreLinearSolverConfig.C
-      ${CMAKE_CURRENT_SOURCE_DIR}/HypreLinearSystem.C
-      ${CMAKE_CURRENT_SOURCE_DIR}/HypreUVWLinearSystem.C
-   )
+  target_sources(
+    nalu
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/HypreDirectSolver.C
+            ${CMAKE_CURRENT_SOURCE_DIR}/HypreUVWSolver.C
+            ${CMAKE_CURRENT_SOURCE_DIR}/HypreLinearSolverConfig.C
+            ${CMAKE_CURRENT_SOURCE_DIR}/HypreLinearSystem.C
+            ${CMAKE_CURRENT_SOURCE_DIR}/HypreUVWLinearSystem.C)
 endif(ENABLE_HYPRE)
 
+if(ENABLE_MATRIXFREE)
+  target_sources(
+    nalu PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/MatrixFreeHeatCondEquationSystem.C
+                 ${CMAKE_CURRENT_SOURCE_DIR}/MatrixFreeLowMachEquationSystem.C)
+  add_subdirectory(matrix_free)
+endif(ENABLE_MATRIXFREE)
+
+if(ENABLE_TRILINOS_SOLVERS)
+   target_sources(nalu PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystem.C
+      ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystemHelpers.C
+      ${CMAKE_CURRENT_SOURCE_DIR}/TpetraSegregatedLinearSystem.C
+   )
+endif()
+
 add_subdirectory(aero)
-add_subdirectory(element_promotion)
-add_subdirectory(matrix_free)
 add_subdirectory(kernel)
 add_subdirectory(edge_kernels)
+add_subdirectory(element_promotion)
 add_subdirectory(node_kernels)
 add_subdirectory(master_element)
 add_subdirectory(mesh_motion)

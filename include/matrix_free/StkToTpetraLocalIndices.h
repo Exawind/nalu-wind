@@ -12,7 +12,7 @@
 
 #include "Tpetra_Map.hpp"
 
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 
 #include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_mesh/base/Types.hpp"

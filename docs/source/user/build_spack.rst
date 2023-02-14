@@ -211,3 +211,25 @@ the dependencies by using ``spack location -i <package>``. For example in the
    make
 
 There are also ``do-config`` scripts available for this according to machine under the configs directory `here <https://github.com/exawind/build-test>`__. These scripts may also provide the capability to access and use pre-built dependencies from a set of modules if they are available on the machine. This should allow you to have a build of Nalu-Wind in which you are able to continuosly modify the source code and rebuild.
+
+Building inside Docker Container
+--------------------------------
+
+It is also possible to build (and run) Nalu-Wind inside a docker container with a prepared environment.
+This has the benefit of requiring less setup and usually being faster and can be useful in some situations (e.g. quickly testing something).
+
+For this, use the container `ecpe4s/exawind-snapshot <https://hub.docker.com/r/ecpe4s/exawind-snapshot>`_:
+
+::
+
+   docker run -it ecpe4s/exawind-snapshot bash
+
+Inside the container you can directly load the pre-installed version of Nalu-Wind with spack:
+
+::
+
+   spack load nalu-wind
+   
+`Spack-Manager <https://github.com/sandialabs/spack-manager>`_ is used generate the container and is pre-installed in the container.  Additional development of the code can be done through the Spack-Manager's developer tools.  A quick-start guide for these tools is available `here <https://sandialabs.github.io/spack-manager/user_profiles/developers/developer_workflow.html>`_.  This workflow is how the CI builds are generated in GitHub actions.
+ 
+If you are uncomfortable using spack for development then you can also set up your own build workflow in more of a "roll-your-own" development environment using CMake and just utilize the pre-installed TPL's that are available in the container through spack.  This really comes down to your development preferences and your comfort level with CMake.

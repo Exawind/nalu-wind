@@ -197,6 +197,8 @@ test_metric_for_topo_3D(stk::topology topo, double tol)
 
 } // namespace
 
+#ifndef KOKKOS_ENABLE_GPU
+
 TEST(MetricTensor, tri3)
 {
   test_metric_for_topo_2D(stk::topology::TRIANGLE_3_2D, 1.0e-10);
@@ -221,3 +223,5 @@ TEST(MetricTensor, hex8)
 {
   test_metric_for_topo_3D(stk::topology::HEX_8, 1.0e-10);
 }
+
+#endif // KOKKOS_ENABLE_GPU

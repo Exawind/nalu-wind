@@ -56,7 +56,8 @@ do_shape_test(Shape* s)
     sierra::nalu::create_device_expression<T>(*dynamic_cast<T*>(s));
   double area = 0.0;
   Kokkos::parallel_reduce(
-    1, KOKKOS_LAMBDA(int, double& a) { a = s_dev->area(); }, area);
+    sierra::nalu::DeviceRangePolicy(0, 1),
+    KOKKOS_LAMBDA(int, double& a) { a = s_dev->area(); }, area);
 
   sierra::nalu::kokkos_free_on_device(s_dev);
   return area;

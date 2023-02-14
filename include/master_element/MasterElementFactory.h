@@ -71,7 +71,8 @@ MasterElementRepo::get_master_element(
     ME* MEinstance = kokkos_malloc_on_device<ME>(allocname);
     ThrowRequire(MEinstance != nullptr);
     Kokkos::parallel_for(
-      placementname, 1, KOKKOS_LAMBDA(const int) { new (MEinstance) ME(); });
+      placementname, DeviceRangePolicy(0, 1),
+      KOKKOS_LAMBDA(const int) { new (MEinstance) ME(); });
     meMap[theTopo] = MEinstance;
   }
   return meMap.at(theTopo);

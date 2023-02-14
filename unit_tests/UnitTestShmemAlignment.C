@@ -21,9 +21,10 @@ do_the_test()
 
   unsigned bytes_per_team = 16;
   unsigned bytes_per_thread = 128;
+  unsigned threads_per_team = 1;
 
-  auto team_exec =
-    sierra::nalu::get_device_team_policy(N, bytes_per_team, bytes_per_thread);
+  auto team_exec = sierra::nalu::get_device_team_policy(
+    N, bytes_per_team, bytes_per_thread, threads_per_team);
 
   Kokkos::parallel_for(
     team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team) {
@@ -55,15 +56,7 @@ do_the_test()
 
   Kokkos::deep_copy(hostResults, ngpResults);
 
-#if defined(KOKKOS_ENABLE_GPU)
-  // We're expecting the result to be 3.
-  // On GPU the result is 96... Is it 96 because there are 32 threads
-  // per warp and you never have less than 1 warp ???
-  // Not sure I understand or like this...
-  EXPECT_EQ(96u, hostResults(0));
-#else
   EXPECT_EQ(3u, hostResults(0));
-#endif
 }
 
 TEST(Shmem, align) { do_the_test(); }

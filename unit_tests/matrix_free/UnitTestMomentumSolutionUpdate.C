@@ -18,11 +18,7 @@
 
 #include "gtest/gtest.h"
 
-#include "Kokkos_Array.hpp"
-#include "Kokkos_DualView.hpp"
-#include "Kokkos_Macros.hpp"
-#include "Kokkos_Parallel.hpp"
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 #include "Teuchos_ParameterList.hpp"
 
 #include "Tpetra_Export.hpp"
