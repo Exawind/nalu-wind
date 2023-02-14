@@ -1456,7 +1456,7 @@ Realm::setup_property()
       } break;
 
       case VOF_MAT: {
-        // extract the volume of fluid field 
+        // extract the volume of fluid field
         ScalarFieldType* VOF = meta_data().get_field<ScalarFieldType>(
           stk::topology::NODE_RANK, "volume_of_fluid");
 
@@ -1467,7 +1467,7 @@ Realm::setup_property()
         LinearPropAlgorithm* auxAlg = new LinearPropAlgorithm(
           *this, targetPart, thePropField, VOF, propPrim, propSec);
         propertyAlg_.push_back(auxAlg);
-        
+
       } break;
 
       case POLYNOMIAL_MAT: {
@@ -4287,7 +4287,6 @@ Realm::get_incompressible_solve()
 {
   return solutionOptions_->solveIncompressibleContinuity_ ? 1.0 : 0.0;
 }
-
 
 //--------------------------------------------------------------------------
 //-------- get_cvfem_shifted_mdot ------------------------------------------

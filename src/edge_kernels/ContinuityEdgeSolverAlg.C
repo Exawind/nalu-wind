@@ -88,11 +88,19 @@ ContinuityEdgeSolverAlg::execute()
       const DblType pressureL = pressure.get(nodeL, 0);
       const DblType pressureR = pressure.get(nodeR, 0);
 
-      const DblType densityL = om_solveIncompressibleEqn*density.get(nodeL, 0) + solveIncompressibleEqn;
-      const DblType densityR = om_solveIncompressibleEqn*density.get(nodeR, 0) + solveIncompressibleEqn;
+      const DblType densityL =
+        om_solveIncompressibleEqn * density.get(nodeL, 0) +
+        solveIncompressibleEqn;
+      const DblType densityR =
+        om_solveIncompressibleEqn * density.get(nodeR, 0) +
+        solveIncompressibleEqn;
 
-      const DblType udiagL = udiag.get(nodeL, 0)*(om_solveIncompressibleEqn+solveIncompressibleEqn*density.get(nodeL,0));
-      const DblType udiagR = udiag.get(nodeR, 0)*(om_solveIncompressibleEqn+solveIncompressibleEqn*density.get(nodeR,0));
+      const DblType udiagL =
+        udiag.get(nodeL, 0) * (om_solveIncompressibleEqn +
+                               solveIncompressibleEqn * density.get(nodeL, 0));
+      const DblType udiagR =
+        udiag.get(nodeR, 0) * (om_solveIncompressibleEqn +
+                               solveIncompressibleEqn * density.get(nodeR, 0));
 
       const DblType projTimeScale = 0.5 * (1.0 / udiagL + 1.0 / udiagR);
       const DblType rhoIp = 0.5 * (densityL + densityR);

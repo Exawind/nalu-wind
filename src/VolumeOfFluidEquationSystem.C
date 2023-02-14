@@ -478,7 +478,6 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
         auto VOFSetMassFlowRate =
           new ZalesakDiskMassFlowRateEdgeAlg(realm_, part, this, useAvgMdot);
         realm_.initCondAlg_.push_back(VOFSetMassFlowRate);
-        
       }
     } else if (fcnName == "droplet") {
       theAuxFunc = new DropletVOFAuxFunction();
@@ -524,18 +523,19 @@ VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
 
-  auto ngpVof = fieldMgr.get_field<double>(volumeOfFluid_->mesh_meta_data_ordinal());
+  auto ngpVof =
+    fieldMgr.get_field<double>(volumeOfFluid_->mesh_meta_data_ordinal());
 
   ngpVof.sync_to_device();
 
   nalu_ngp::run_entity_algorithm(
     "vof_update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
-      if (ngpVof.get(mi,0) < 0.0) {
+      if (ngpVof.get(mi, 0) < 0.0) {
         ngpVof.get(mi, 0) = 0.0;
-      } 
-      if (ngpVof.get(mi,0) > 1.0) {
-        ngpVof.get(mi,0) = 1.0;
+      }
+      if (ngpVof.get(mi, 0) > 1.0) {
+        ngpVof.get(mi, 0) = 1.0;
       }
     });
   ngpVof.modify_on_device();

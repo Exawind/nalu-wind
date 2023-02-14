@@ -64,7 +64,7 @@ VOFMassBDFNodeKernel::execute(
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
 {
-  
+
   const NodeKernelTraits::DblType qNm1 = scalarQNm1_.get(node, 0);
   const NodeKernelTraits::DblType qN = scalarQN_.get(node, 0);
   NodeKernelTraits::DblType qNp1 = scalarQNp1_.get(node, 0);

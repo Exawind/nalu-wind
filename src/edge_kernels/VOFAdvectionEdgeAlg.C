@@ -39,7 +39,8 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
   massFlowRate_ = get_field_ordinal(
     meta, (useAverages) ? "average_mass_flow_rate" : "mass_flow_rate",
     stk::topology::EDGE_RANK);
-  density_ = get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1);
+  density_ =
+    get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1);
 }
 
 void
@@ -75,8 +76,7 @@ VOFAdvectionEdgeAlg::execute()
       ShmemDataType & smdata, const stk::mesh::FastMeshIndex& edge,
       const stk::mesh::FastMeshIndex& nodeL,
       const stk::mesh::FastMeshIndex& nodeR) {
-
-      // Scratch work array for edgeAreaVector 
+      // Scratch work array for edgeAreaVector
       NALU_ALIGNED DblType av[NDimMax_];
 
       // Populate area vector work array
@@ -86,10 +86,10 @@ VOFAdvectionEdgeAlg::execute()
 
       const DblType mdot = massFlowRate.get(edge, 0);
 
-      NALU_ALIGNED DblType densityL = density.get(nodeL,0);
-      NALU_ALIGNED DblType densityR = density.get(nodeR,0);
+      NALU_ALIGNED DblType densityL = density.get(nodeL, 0);
+      NALU_ALIGNED DblType densityR = density.get(nodeR, 0);
 
-      NALU_ALIGNED DblType rhoIp = 0.5*(densityL+densityR);
+      NALU_ALIGNED DblType rhoIp = 0.5 * (densityL + densityR);
 
       const DblType vdot = mdot / rhoIp;
       const DblType qNp1L = scalarQ.get(nodeL, 0);
@@ -145,7 +145,8 @@ VOFAdvectionEdgeAlg::execute()
       smdata.lhs(0, 1) += alhsfac;
 
       // Compression term
-      const DblType velocity_scale = stk::math::abs(vdot / stk::math::sqrt(av[0]*av[0]+av[1]*av[1]+av[2]*av[2]));
+      const DblType velocity_scale = stk::math::abs(
+        vdot / stk::math::sqrt(av[0] * av[0] + av[1] * av[1] + av[2] * av[2]));
 
       DblType dqdxMagL = 0.0;
       DblType dqdxMagR = 0.0;

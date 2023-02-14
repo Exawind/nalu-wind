@@ -134,7 +134,7 @@ SolutionOptions::load(const YAML::Node& y_node)
     // Solve for incompressible continuity
     get_if_present(
       y_solution_options, "solve_incompressible_continuity",
-      solveIncompressibleContinuity_, solveIncompressibleContinuity_);    
+      solveIncompressibleContinuity_, solveIncompressibleContinuity_);
 
     // external mesh motion expected
     get_if_present(

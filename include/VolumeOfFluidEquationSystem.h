@@ -104,7 +104,6 @@ public:
   ScalarNodalGradAlgDriver nodalGradAlgDriver_;
   ProjectedNodalGradientEquationSystem* projectedNodalGradEqs_;
   bool isInit_;
-
 };
 
 } // namespace nalu
