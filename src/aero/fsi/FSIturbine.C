@@ -9,6 +9,7 @@
 
 #include "aero/fsi/FSIturbine.h"
 #include "aero/aero_utils/DeflectionRamping.h"
+#include "aero/aero_utils/Pt2Line.h"
 #include "utils/ComputeVectorDivergence.h"
 #include <NaluEnv.h>
 #include <NaluParsing.h>
@@ -31,68 +32,6 @@
 namespace sierra {
 
 namespace nalu {
-
-/** Project a point 'pt' onto a line from 'lStart' to 'lEnd' and return the
-   non-dimensional location of the projected point along the line in [0-1]
-   coordinates \f[ nonDimCoord = \frac{ (\vec{pt} - \vec{lStart}) \cdot (
-   \vec{lEnd} - \vec{lStart} ) }{ (\vec{lEnd} - \vec{lStart}) \cdot (\vec{lEnd}
-   - \vec{lStart}) } \f]
-*/
-KOKKOS_FUNCTION
-double projectPt2Line(
-  const Point& pt,
-  const Point& lStart,
-  const Point& lEnd)
-{
-
-  double nonDimCoord = 0.0;
-
-  double num = 0.0;
-  double denom = 0.0;
-
-  for (int i = 0; i < 3; i++) {
-    num += (pt[i] - lStart[i]) * (lEnd[i] - lStart[i]);
-    denom += (lEnd[i] - lStart[i]) * (lEnd[i] - lStart[i]);
-  }
-
-  nonDimCoord = num / denom;
-  return nonDimCoord;
-}
-
-/** Project a point 'pt' onto a line from 'lStart' to 'lEnd' and return the
-   non-dimensional distance of 'pt' from the line w.r.t the distance from
-   'lStart' to 'lEnd' \f[
-    \vec{perp} &= (\vec{pt} - \vec{lStart}) - \frac{ (\vec{pt} - \vec{lStart})
-   \cdot ( \vec{lEnd} - \vec{lStart} ) }{ (\vec{lEnd} - \vec{lStart}) \cdot
-   (\vec{lEnd} - \vec{lStart}) } ( \vec{lEnd} - \vec{lStart} ) \ \
-    nonDimPerpDist = \frac{\lvert \vec{perp} \rvert}{ \lvert  (\vec{lEnd} -
-   \vec{lStart}) \rvert } \f]
-*/
-KOKKOS_FUNCTION
-double perpProjectDist_Pt2Line(
-  const Point& pt,
-  const Point& lStart,
-  const Point& lEnd)
-{
-
-  double nonDimCoord = 0.0;
-  double num = 0.0;
-  double denom = 0.0;
-  for (int i = 0; i < 3; i++) {
-    num += (pt[i] - lStart[i]) * (lEnd[i] - lStart[i]);
-    denom += (lEnd[i] - lStart[i]) * (lEnd[i] - lStart[i]);
-  }
-  nonDimCoord = num / denom;
-
-  double nonDimPerpDist = 0.0;
-  for (int i = 0; i < 3; i++) {
-    double tmp = (pt[i] - lStart[i]) - nonDimCoord * (lEnd[i] - lStart[i]);
-    nonDimPerpDist += tmp * tmp;
-  }
-  nonDimPerpDist = stk::math::sqrt(nonDimPerpDist / denom);
-
-  return nonDimPerpDist;
-}
 
 inline void
 check_nc_error(int code, std::string msg)
@@ -1964,6 +1903,7 @@ fsiTurbine::computeMapping()
 
   auto& meta = bulk_->mesh_meta_data();
   const int ndim = meta.spatial_dimension();
+  ThrowRequireMsg(ndim == 3, "fsiTurbine: spatial dim is required to be 3.");
   VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
 
@@ -1977,22 +1917,20 @@ fsiTurbine::computeMapping()
       double* xyz = stk::mesh::field_data(*modelCoords, node);
       int* dispMapNode = stk::mesh::field_data(*dispMap_, node);
       double* dispMapInterpNode = stk::mesh::field_data(*dispMapInterp_, node);
-      Point ptCoords(ndim, 0.0);
-      for (int i = 0; i < ndim; i++)
-        ptCoords[i] = xyz[i];
+      vs::Vector ptCoords(xyz[0], xyz[1], xyz[2]);
       bool foundProj = false;
       double nDimCoord = -1.0;
       int nPtsTwr = params_.nBRfsiPtsTwr;
       if (nPtsTwr > 0) {
         for (int i = 0; i < nPtsTwr - 1; i++) {
-          Point lStart = {
+          vs::Vector lStart = {
             brFSIdata_.twr_ref_pos[i * 6], brFSIdata_.twr_ref_pos[i * 6 + 1],
             brFSIdata_.twr_ref_pos[i * 6 + 2]};
-          Point lEnd = {
+          vs::Vector lEnd = {
             brFSIdata_.twr_ref_pos[(i + 1) * 6],
             brFSIdata_.twr_ref_pos[(i + 1) * 6 + 1],
             brFSIdata_.twr_ref_pos[(i + 1) * 6 + 2]};
-          nDimCoord = projectPt2Line(ptCoords, lStart, lEnd);
+          nDimCoord = fsi::projectPt2Line(ptCoords, lStart, lEnd);
 
           if ((nDimCoord >= 0) && (nDimCoord <= 1.0)) {
             *dispMapInterpNode = nDimCoord;
@@ -2007,14 +1945,14 @@ fsiTurbine::computeMapping()
         // check on the perpendicular distance between the surface mesh node and
         // the line joining the ends of the tower
         if (!foundProj) {
-          Point lStart = {
+          vs::Vector lStart = {
             brFSIdata_.twr_ref_pos[0], brFSIdata_.twr_ref_pos[1],
             brFSIdata_.twr_ref_pos[2]};
-          Point lEnd = {
+          vs::Vector lEnd = {
             brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6],
             brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 1],
             brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 2]};
-          double perpDist = perpProjectDist_Pt2Line(ptCoords, lStart, lEnd);
+          double perpDist = fsi::perpProjectDist_Pt2Line(ptCoords, lStart, lEnd);
           if (perpDist > 1.0) { // Something's wrong if a node on the surface
                                 // mesh of the tower is more than 20% of the
                                 // tower length away from the tower axis.
@@ -2063,21 +2001,19 @@ fsiTurbine::computeMapping()
         int* dispMapNode = stk::mesh::field_data(*dispMap_, node);
         double* dispMapInterpNode =
           stk::mesh::field_data(*dispMapInterp_, node);
-        Point ptCoords(ndim, 0.0);
-        for (int i = 0; i < ndim; i++)
-          ptCoords[i] = xyz[i];
+        vs::Vector ptCoords(xyz[0], xyz[1], xyz[2]);
         bool foundProj = false;
         double nDimCoord = -1.0;
         for (int i = 0; i < nPtsBlade - 1; i++) {
-          Point lStart = {
+          vs::Vector lStart = {
             brFSIdata_.bld_ref_pos[(iStart + i) * 6],
             brFSIdata_.bld_ref_pos[(iStart + i) * 6 + 1],
             brFSIdata_.bld_ref_pos[(iStart + i) * 6 + 2]};
-          Point lEnd = {
+          vs::Vector lEnd = {
             brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6],
             brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6 + 1],
             brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6 + 2]};
-          nDimCoord = projectPt2Line(ptCoords, lStart, lEnd);
+          nDimCoord = fsi::projectPt2Line(ptCoords, lStart, lEnd);
 
           if ((nDimCoord >= 0) && (nDimCoord <= 1.0)) {
             foundProj = true;
@@ -2137,7 +2073,7 @@ fsiTurbine::computeLoadMapping()
 
   // nodal fields to gather
   std::vector<double> ws_coordinates;
-  Point coord_bip(0.0, 0.0, 0.0);
+  vs::Vector coord_bip(0.0, 0.0, 0.0);
   std::vector<double> ws_face_shape_function;
 
   // Do the tower first
@@ -2198,14 +2134,14 @@ fsiTurbine::computeLoadMapping()
         int nPtsTwr = params_.nBRfsiPtsTwr;
         if (nPtsTwr > 0) {
           for (int i = 0; i < nPtsTwr - 1; i++) {
-            Point lStart = {
+            vs::Vector lStart = {
               brFSIdata_.twr_ref_pos[i * 6], brFSIdata_.twr_ref_pos[i * 6 + 1],
               brFSIdata_.twr_ref_pos[i * 6 + 2]};
-            Point lEnd = {
+            vs::Vector lEnd = {
               brFSIdata_.twr_ref_pos[(i + 1) * 6],
               brFSIdata_.twr_ref_pos[(i + 1) * 6 + 1],
               brFSIdata_.twr_ref_pos[(i + 1) * 6 + 2]};
-            nDimCoord = projectPt2Line(coord_bip, lStart, lEnd);
+            nDimCoord = fsi::projectPt2Line(coord_bip, lStart, lEnd);
 
             if ((nDimCoord >= 0) && (nDimCoord <= 1.0)) {
               loadMapInterpFace[ip] = nDimCoord;
@@ -2220,14 +2156,14 @@ fsiTurbine::computeLoadMapping()
           // the surface mesh node and the line joining the ends of the
           // tower
           if (!foundProj) {
-            Point lStart = {
+            vs::Vector lStart = {
               brFSIdata_.twr_ref_pos[0], brFSIdata_.twr_ref_pos[1],
               brFSIdata_.twr_ref_pos[2]};
-            Point lEnd = {
+            vs::Vector lEnd = {
               brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6],
               brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 1],
               brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 2]};
-            double perpDist = perpProjectDist_Pt2Line(coord_bip, lStart, lEnd);
+            double perpDist = fsi::perpProjectDist_Pt2Line(coord_bip, lStart, lEnd);
             // Something's wrong if a node on the surface mesh of
             // the tower is more than 20% of the tower length away
             // from the tower axis.
@@ -2325,15 +2261,15 @@ fsiTurbine::computeLoadMapping()
           bool foundProj = false;
           double nDimCoord = -1.0;
           for (int i = 0; i < nPtsBlade - 1; i++) {
-            Point lStart = {
+            vs::Vector lStart = {
               brFSIdata_.bld_ref_pos[(iStart + i) * 6],
               brFSIdata_.bld_ref_pos[(iStart + i) * 6 + 1],
               brFSIdata_.bld_ref_pos[(iStart + i) * 6 + 2]};
-            Point lEnd = {
+            vs::Vector lEnd = {
               brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6],
               brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6 + 1],
               brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6 + 2]};
-            nDimCoord = projectPt2Line(coord_bip, lStart, lEnd);
+            nDimCoord = fsi::projectPt2Line(coord_bip, lStart, lEnd);
             if ((nDimCoord >= 0) && (nDimCoord <= 1.0)) {
               foundProj = true;
               loadMapInterpFace[ip] = nDimCoord;
@@ -2348,16 +2284,16 @@ fsiTurbine::computeLoadMapping()
           // joining the ends of the blade
           if (!foundProj) {
 
-            Point lStart = {
+            vs::Vector lStart = {
               brFSIdata_.bld_ref_pos[iStart * 6],
               brFSIdata_.bld_ref_pos[iStart * 6 + 1],
               brFSIdata_.bld_ref_pos[iStart * 6 + 2]};
-            Point lEnd = {
+            vs::Vector lEnd = {
               brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6],
               brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6 + 1],
               brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6 + 2]};
 
-            double perpDist = perpProjectDist_Pt2Line(coord_bip, lStart, lEnd);
+            double perpDist = fsi::perpProjectDist_Pt2Line(coord_bip, lStart, lEnd);
             // Something's wrong if a node on the surface
             // mesh of the blade is more than 20% of the
             // blade length away from the blade axis.

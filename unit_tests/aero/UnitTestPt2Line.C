@@ -9,21 +9,19 @@
 
 #include <gtest/gtest.h>
 #include <KokkosInterface.h>
-#include <aero/fsi/FSIturbine.h>
+#include <aero/aero_utils/Pt2Line.h>
 
 namespace {
 
 double
 call_projectPt2Line_on_device(
-  const sierra::nalu::Point& pt,
-  const sierra::nalu::Point& lStart,
-  const sierra::nalu::Point& lEnd)
+  const vs::Vector& pt, const vs::Vector& lStart, const vs::Vector& lEnd)
 {
   double result = 0;
   Kokkos::parallel_reduce(
     sierra::nalu::DeviceRangePolicy(0, 1),
     KOKKOS_LAMBDA(const unsigned& i, double& localResult) {
-      localResult = sierra::nalu::projectPt2Line(pt, lStart, lEnd);
+      localResult = fsi::projectPt2Line(pt, lStart, lEnd);
     },
     result);
 
@@ -33,9 +31,9 @@ call_projectPt2Line_on_device(
 void
 test_projectPt2Line()
 {
-  sierra::nalu::Point pt(0.5, 0.5, 0.5);
-  sierra::nalu::Point lStart(0.0, 0.0, 0.0);
-  sierra::nalu::Point lEnd(1.0, 1.0, 1.0);
+  vs::Vector pt(0.5, 0.5, 0.5);
+  vs::Vector lStart(0.0, 0.0, 0.0);
+  vs::Vector lEnd(1.0, 1.0, 1.0);
 
   {
     double result = call_projectPt2Line_on_device(pt, lStart, lEnd);
@@ -44,7 +42,7 @@ test_projectPt2Line()
     EXPECT_NEAR(expectedResult, result, 1.e-12);
   }
 
-  pt = sierra::nalu::Point(0.0, 0.0, 0.5);
+  pt = vs::Vector(0.0, 0.0, 0.5);
   {
     double result = call_projectPt2Line_on_device(pt, lStart, lEnd);
 
@@ -53,19 +51,17 @@ test_projectPt2Line()
   }
 }
 
-TEST(FSI, projectPt2Line) { test_projectPt2Line(); }
+TEST(aero_utils, projectPt2Line) { test_projectPt2Line(); }
 
 double
 call_perpProjectDist_Pt2Line_on_device(
-  const sierra::nalu::Point& pt,
-  const sierra::nalu::Point& lStart,
-  const sierra::nalu::Point& lEnd)
+  const vs::Vector& pt, const vs::Vector& lStart, const vs::Vector& lEnd)
 {
   double result = 0;
   Kokkos::parallel_reduce(
     sierra::nalu::DeviceRangePolicy(0, 1),
     KOKKOS_LAMBDA(const unsigned& i, double& localResult) {
-      localResult = sierra::nalu::perpProjectDist_Pt2Line(pt, lStart, lEnd);
+      localResult = fsi::perpProjectDist_Pt2Line(pt, lStart, lEnd);
     },
     result);
 
@@ -75,9 +71,9 @@ call_perpProjectDist_Pt2Line_on_device(
 void
 test_perpProjectDist_Pt2Line()
 {
-  sierra::nalu::Point pt(0.5, 0.5, 0.5);
-  sierra::nalu::Point lStart(0.0, 0.0, 0.0);
-  sierra::nalu::Point lEnd(1.0, 1.0, 1.0);
+  vs::Vector pt(0.5, 0.5, 0.5);
+  vs::Vector lStart(0.0, 0.0, 0.0);
+  vs::Vector lEnd(1.0, 1.0, 1.0);
 
   {
     double result = call_perpProjectDist_Pt2Line_on_device(pt, lStart, lEnd);
@@ -86,7 +82,7 @@ test_perpProjectDist_Pt2Line()
     EXPECT_NEAR(expectedResult, result, 1.e-12);
   }
 
-  pt = sierra::nalu::Point(0.0, 0.0, 0.5);
+  pt = vs::Vector(0.0, 0.0, 0.5);
 
   {
     double result = call_perpProjectDist_Pt2Line_on_device(pt, lStart, lEnd);
@@ -96,6 +92,6 @@ test_perpProjectDist_Pt2Line()
   }
 }
 
-TEST(FSI, perpProjectDist_Pt2Line) { test_perpProjectDist_Pt2Line(); }
+TEST(aero_utils, perpProjectDist_Pt2Line) { test_perpProjectDist_Pt2Line(); }
 
 } // namespace
