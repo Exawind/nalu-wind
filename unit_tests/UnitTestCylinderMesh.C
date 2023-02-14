@@ -6,6 +6,7 @@
 #include "stk_mesh/base/GetEntities.hpp"
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/GetNgpField.hpp"
 
@@ -22,12 +23,11 @@ test_cylinder_mesh_field_values(
   const stk::mesh::FieldBase* testField)
 {
   const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
-  stk::mesh::Selector all_local =
-    meta.universal_part() & meta.locally_owned_part();
+  stk::mesh::Selector all_local = meta.locally_owned_part();
   const stk::mesh::BucketVector& nodeBuckets =
     bulk.get_buckets(stk::topology::NODE_RANK, all_local);
 
-  stk::mesh::NgpMesh ngpMesh(bulk);
+  stk::mesh::NgpMesh& ngpMesh = stk::mesh::get_updated_ngp_mesh(bulk);
   stk::mesh::NgpField<double>& ngpCoordField =
     stk::mesh::get_updated_ngp_field<double>(*coordField);
   stk::mesh::NgpField<double>& ngpTestField =
@@ -38,16 +38,21 @@ test_cylinder_mesh_field_values(
   auto team_exec = sierra::nalu::get_device_team_policy(
     nodeBuckets.size(), bytes_per_team, bytes_per_thread);
 
+  const auto& bucketIDs =
+    stk::mesh::get_bucket_ids(bulk, stk::topology::NODE_RANK, all_local);
+
   const double xDelta = 0.1;
   const double yDelta = 0.2;
   const double zDelta = 0.3;
 
   ngpCoordField.sync_to_device();
+  ngpTestField.sync_to_device();
 
   Kokkos::parallel_for(
     team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team) {
+      auto bktId = bucketIDs.device_get(team.league_rank());
       const stk::mesh::NgpMesh::BucketType& bkt =
-        ngpMesh.get_bucket(stk::topology::NODE_RANK, team.league_rank());
+        ngpMesh.get_bucket(stk::topology::NODE_RANK, bktId);
 
       const size_t bucketLen = bkt.size();
 
@@ -73,7 +78,10 @@ test_cylinder_mesh_field_values(
       const double* testFieldData = reinterpret_cast<const double*>(
         stk::mesh::field_data(*testField, node));
       EXPECT_NEAR(testFieldData[0], (coordFieldData[0] + xDelta), tol);
-      EXPECT_NEAR(testFieldData[1], (coordFieldData[1] + yDelta), tol);
+      EXPECT_NEAR(testFieldData[1], (coordFieldData[1] + yDelta), tol)
+        << "node " << bulk.identifier(node)
+        << " s=" << bulk.bucket(node).shared()
+        << " a=" << bulk.bucket(node).in_aura();
       EXPECT_NEAR(testFieldData[2], (coordFieldData[2] + zDelta), tol);
     }
   }
