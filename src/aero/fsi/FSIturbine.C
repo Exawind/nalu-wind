@@ -115,7 +115,7 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
       twrBndyPartNames_.end());
   } else
     NaluEnv::self().naluOutputP0()
-      << "Tower part name(s) not specified for turbine " << iTurb_ << std::endl;
+      << "Tower boundary part name(s) not specified for turbine " << iTurb_ << std::endl;
 
   if (node["nacelle_boundary_parts"]) {
     const auto& nparts = node["nacelle_boundary_parts"];
