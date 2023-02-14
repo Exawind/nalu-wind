@@ -14,6 +14,7 @@
 #include <stk_topology/topology.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
 #include <stk_mesh/base/Field.hpp>
+#include <stk_mesh/base/FieldParallel.hpp>
 #include <stk_mesh/base/CoordinateSystems.hpp>
 
 #include <Kokkos_Core.hpp>
@@ -358,6 +359,7 @@ protected:
       coordField(nullptr)
   {
     stk::mesh::MeshBuilder meshBuilder(comm);
+    meshBuilder.set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA);
     meshBuilder.set_spatial_dimension(spatialDimension);
     bulk = meshBuilder.create();
     meta = &bulk->mesh_meta_data();
@@ -401,6 +403,10 @@ protected:
     transform_to_cylinder(innerRad, outerRad);
 
     stk::mesh::field_fill(0.1, *testField);
+
+    coordField->modify_on_host();
+    testField->modify_on_host();
+    stk::mesh::communicate_field_data(*bulk, {coordField, testField});
   }
 
   void transform_to_cylinder(double innerRad, double outerRad)
