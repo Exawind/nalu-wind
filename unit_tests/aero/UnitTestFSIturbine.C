@@ -17,24 +17,27 @@
 
 namespace {
 
+// using block_1 and surface_1 for everything is no doubt silly...
+// as we ramp up the FSI testing we will no doubt need to use
+// more sophisticated input. But this gets us off the
+// ground, so to speak.
 const std::string fsiInputs = "tower_parts: [block_1] \n"
-                              "hub_parts: [block_2]\n"
-                              "nacelle_parts: [block_3,block_4] \n"
+                              "hub_parts: [block_1]\n"
+                              "nacelle_parts: [block_1] \n"
                               "blade_parts:\n"
-                              "  - [block_3]\n"
-                              "  - [block_4]\n"
+                              "  - [block_1]\n"
+                              "  - [block_1]\n"
                               "deflection_ramping:\n"
                               "  span_ramp_distance: 10.0\n"
                               "  zero_theta_ramp_angle: 180.0\n"
                               "  theta_ramp_span: 15.0\n"
                               "  temporal_ramp_start: 0\n"
                               "  temporal_ramp_end: 10\n"
-                              "tower_boundary_parts: [block_1] \n"
-                              "hub_boundary_parts: [block_2]\n"
-                              "nacelle_boundary_parts: [block_3,block_4] \n"
+                              "tower_boundary_parts: [surface_1] \n"
+                              "hub_boundary_parts: [surface_1]\n"
+                              "nacelle_boundary_parts: [surface_1] \n"
                               "blade_boundary_parts:\n"
-                              "  - [block_3]\n"
-                              "  - [block_4]\n";
+                              "  - [surface_1]\n";
 
 YAML::Node
 create_fsi_yaml_node()
@@ -50,7 +53,8 @@ TEST_F(CylinderMesh, construct_FSIturbine)
   fill_mesh_and_initialize_test_fields(20, 20, 20, innerRadius, outerRadius);
 
   YAML::Node yamlNode = create_fsi_yaml_node();
-  EXPECT_NO_THROW(sierra::nalu::fsiTurbine(0, yamlNode));
+  sierra::nalu::fsiTurbine fsiTurb(0, yamlNode);
+  EXPECT_NO_THROW(fsiTurb.setup(bulk));
 }
 
 } // namespace

@@ -41,6 +41,8 @@ typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
 // define generic
 typedef stk::mesh::Field<double, stk::mesh::SimpleArrayTag> GenericFieldType;
 
+typedef stk::mesh::Field<int, stk::mesh::SimpleArrayTag> GenericIntFieldType;
+
 // field type for local ids
 typedef unsigned LocalId;
 typedef stk::mesh::Field<LocalId> LocalIdFieldType;

@@ -47,8 +47,6 @@ struct DeflectionRampingParams
   double endTimeTemporalRamp_{0.0};
 };
 
-typedef stk::mesh::Field<int, stk::mesh::SimpleArrayTag> GenericIntFieldType;
-
 // TODO(psakiev) find a better place for this
 // **********************************************************************
 //! convenience function for generating a vs::Vector from a stk::field
