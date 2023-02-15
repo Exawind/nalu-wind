@@ -22,10 +22,9 @@ namespace fsi {
    (\vec{lEnd} - \vec{lStart}) } \f]
 */
 KOKKOS_INLINE_FUNCTION
-double projectPt2Line(
-  const vs::Vector& pt,
-  const vs::Vector& lStart,
-  const vs::Vector& lEnd)
+double
+projectPt2Line(
+  const vs::Vector& pt, const vs::Vector& lStart, const vs::Vector& lEnd)
 {
   double nonDimCoord = 0.0;
 
@@ -51,10 +50,9 @@ double projectPt2Line(
    \vec{lStart}) \rvert } \f]
 */
 KOKKOS_INLINE_FUNCTION
-double perpProjectDist_Pt2Line(
-  const vs::Vector& pt,
-  const vs::Vector& lStart,
-  const vs::Vector& lEnd)
+double
+perpProjectDist_Pt2Line(
+  const vs::Vector& pt, const vs::Vector& lStart, const vs::Vector& lEnd)
 {
   double nonDimCoord = 0.0;
   double num = 0.0;

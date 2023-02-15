@@ -1952,7 +1952,8 @@ fsiTurbine::computeMapping()
             brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6],
             brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 1],
             brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 2]};
-          double perpDist = fsi::perpProjectDist_Pt2Line(ptCoords, lStart, lEnd);
+          double perpDist =
+            fsi::perpProjectDist_Pt2Line(ptCoords, lStart, lEnd);
           if (perpDist > 1.0) { // Something's wrong if a node on the surface
                                 // mesh of the tower is more than 20% of the
                                 // tower length away from the tower axis.
@@ -2163,7 +2164,8 @@ fsiTurbine::computeLoadMapping()
               brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6],
               brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 1],
               brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 2]};
-            double perpDist = fsi::perpProjectDist_Pt2Line(coord_bip, lStart, lEnd);
+            double perpDist =
+              fsi::perpProjectDist_Pt2Line(coord_bip, lStart, lEnd);
             // Something's wrong if a node on the surface mesh of
             // the tower is more than 20% of the tower length away
             // from the tower axis.
@@ -2293,7 +2295,8 @@ fsiTurbine::computeLoadMapping()
               brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6 + 1],
               brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6 + 2]};
 
-            double perpDist = fsi::perpProjectDist_Pt2Line(coord_bip, lStart, lEnd);
+            double perpDist =
+              fsi::perpProjectDist_Pt2Line(coord_bip, lStart, lEnd);
             // Something's wrong if a node on the surface
             // mesh of the blade is more than 20% of the
             // blade length away from the blade axis.
