@@ -31,6 +31,8 @@ protected:
   std::unique_ptr<ActuatorMeta> actMeta_;
 };
 
+#ifndef KOKKOS_ENABLE_GPU
+
 // TODO(psakeiv) move this to a more appropriate location
 TEST_F(ActuatorBulkDiskFastTest, NGP_fastPointIndexLocator)
 {
@@ -153,6 +155,8 @@ TEST_F(ActuatorBulkDiskFastTest, NGP_sweptPointsPopulatedVaried)
       << "Index failed at: " << i;
   }
 }
+
+#endif
 
 } // namespace
 
