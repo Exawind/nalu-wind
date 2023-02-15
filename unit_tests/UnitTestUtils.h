@@ -23,22 +23,19 @@
 #include <master_element/MasterElement.h>
 #include "master_element/MasterElementFactory.h"
 
+#include <FieldTypeDef.h>
+
 #include <gtest/gtest.h>
 
-typedef stk::mesh::Field<stk::mesh::EntityId> GlobalIdFieldType;
-typedef stk::mesh::Field<double> IdFieldType;
-typedef stk::mesh::Field<double> ScalarFieldType;
-typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
+using sierra::nalu::GlobalIdFieldType;
+using sierra::nalu::ScalarFieldType;
+using IdFieldType = ScalarFieldType;
+using sierra::nalu::GenericFieldType;
+using sierra::nalu::GenericIntFieldType;
+using sierra::nalu::ScalarIntFieldType;
+using sierra::nalu::VectorFieldType;
 typedef stk::mesh::Field<double, stk::mesh::Cartesian, stk::mesh::Cartesian>
   TensorFieldType;
-typedef stk::mesh::Field<double, stk::mesh::SimpleArrayTag> GenericFieldType;
-typedef sierra::nalu::DoubleType DoubleType;
-
-namespace stk {
-namespace mesh {
-class FieldBase;
-}
-} // namespace stk
 
 namespace unit_test_utils {
 
@@ -366,9 +363,48 @@ protected:
 
     testField = &meta->declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "testField");
+
+    deflectionRamp_ = &meta->declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "deflection_ramp");
+    dispMap_ = &meta->declare_field<ScalarIntFieldType>(
+      stk::topology::NODE_RANK, "disp_map");
+    dispMapInterp_ = &meta->declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "disp_map_interp");
+    loadMap_ = &meta->declare_field<GenericIntFieldType>(
+      stk::topology::NODE_RANK, "load_map");
+    loadMapInterp_ = &meta->declare_field<GenericFieldType>(
+      stk::topology::NODE_RANK, "load_map_interp");
+    tforceSCS_ = &meta->declare_field<GenericFieldType>(
+      stk::topology::NODE_RANK, "tforce_scs");
+    mesh_displacement_ref_ = &meta->declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_displacement_ref");
+    mesh_velocity_ref_ = &meta->declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_velocity_ref");
+    div_mesh_velocity_ = &meta->declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "div_mesh_velocity");
+
     const double zeroVecThree[3] = {0.0, 0.0, 0.0};
     stk::mesh::put_field_on_mesh(
       *testField, meta->universal_part(), 3, zeroVecThree);
+
+    stk::mesh::put_field_on_mesh(
+      *deflectionRamp_, meta->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*dispMap_, meta->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *dispMapInterp_, meta->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*loadMap_, meta->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *loadMapInterp_, meta->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *tforceSCS_, meta->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *mesh_displacement_ref_, meta->universal_part(), 3, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *mesh_velocity_ref_, meta->universal_part(), 3, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *div_mesh_velocity_, meta->universal_part(), 1, nullptr);
+
+    meta->enable_late_fields();
   }
 
   void fill_mesh(const std::string& meshSpec = "generated:20x20x20")
@@ -382,7 +418,7 @@ protected:
     int zDim,
     double innerRad,
     double outerRad,
-    const bool generateSidesets = false)
+    const bool generateSidesets = true)
   {
     std::ostringstream oss;
     oss << "generated:" << xDim << "x" << yDim << "x" << zDim;
@@ -439,6 +475,16 @@ protected:
   stk::topology topo;
   const VectorFieldType* coordField;
   VectorFieldType* testField;
+
+  ScalarFieldType* deflectionRamp_;
+  ScalarIntFieldType* dispMap_;
+  ScalarFieldType* dispMapInterp_;
+  GenericIntFieldType* loadMap_;
+  GenericFieldType* loadMapInterp_;
+  GenericFieldType* tforceSCS_;
+  VectorFieldType* mesh_displacement_ref_;
+  VectorFieldType* mesh_velocity_ref_;
+  ScalarFieldType* div_mesh_velocity_;
 };
 
 class ABLWallFunctionHex8ElementWithBCFields : public Hex8ElementWithBCFields
