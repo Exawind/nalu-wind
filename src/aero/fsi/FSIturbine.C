@@ -47,6 +47,7 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     loadMap_(NULL),
     dispMap_(NULL),
     deflectionRamp_(NULL),
+    distanceToRoot_(NULL),
     dispMapInterp_(NULL),
     tforceSCS_(NULL)
 {
@@ -188,6 +189,7 @@ fsiTurbine::populateParts(
     stk::mesh::put_field_on_mesh(*dispMap_, *part, 1, nullptr);
     stk::mesh::put_field_on_mesh(*dispMapInterp_, *part, 1, nullptr);
     stk::mesh::put_field_on_mesh(*deflectionRamp_, *part, 1, nullptr);
+    stk::mesh::put_field_on_mesh(*distanceToRoot_, *part, 1, nullptr);
   }
 }
 
@@ -239,6 +241,12 @@ fsiTurbine::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
   if (deflectionRamp_ == NULL)
     deflectionRamp_ = &(meta.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "deflection_ramp"));
+
+  distanceToRoot_ = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "distance_to_root");
+  if (distanceToRoot_ == NULL)
+    distanceToRoot_ = &(meta.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "distance_to_root"));
 
   dispMap_ =
     meta.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "disp_map");
@@ -1760,6 +1768,8 @@ fsiTurbine::mapDisplacements(double time)
           defParams.zeroRampLocTheta_);
 
         *stk::mesh::field_data(*deflectionRamp_, node) = deflectionRamp;
+        *stk::mesh::field_data(*distanceToRoot_, node) =
+          vs::mag(rootPos.position_ - nodePosition);
 
         const aero::SixDOF hubDef(brFSIdata_.hub_def.data());
         // displacements from the hub will match a fully stiff blade's
