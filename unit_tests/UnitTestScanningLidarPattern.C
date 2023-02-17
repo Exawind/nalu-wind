@@ -109,7 +109,7 @@ public:
     "  from_target_part: [unused]                           \n"
     "  type: scanning                                       \n"
     "  scanning_lidar_specifications:                       \n"
-    "    stare_time: 1 #seconds                             \n"
+    "    stare_time: 1.3 #seconds                           \n"
     "    step_delta_angle: 1 #degrees                       \n"
     "    sweep_angle: 20 #degrees                           \n"
     "    reset_time_delta: 1 #second                        \n"
@@ -215,7 +215,7 @@ TEST_F(ScanningLidarFixture, stares)
 TEST_F(ScanningLidarFixture, stares_at_end)
 {
   const auto stare = scan_spec["stare_time"].as<double>();
-  const double final_position_time = 20;
+  const double final_position_time = 20 * stare;
   const double some_time_after = 0.1 * stare + final_position_time;
   for (int d = 0; d < 3; ++d) {
     ASSERT_DOUBLE_EQ(
