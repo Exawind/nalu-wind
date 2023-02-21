@@ -46,12 +46,10 @@ public:
   KOKKOS_FUNCTION virtual ~MasterElement() {}
 
   template <typename SCALAR, typename SHMEM>
-  inline void
-  shape_fcn(SharedMemView<SCALAR**, SHMEM>& /* shpfc */);
+  inline void shape_fcn(SharedMemView<SCALAR**, SHMEM>& /* shpfc */);
 
   template <typename SCALAR, typename SHMEM>
-  inline void
-  shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& /* shpfc */);
+  inline void shifted_shape_fcn(SharedMemView<SCALAR**, SHMEM>& /* shpfc */);
 
   KOKKOS_FUNCTION virtual void grad_op(
     const SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
