@@ -62,7 +62,6 @@ calculate_metric_tensor(
 
 using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
 
-#ifndef KOKKOS_ENABLE_GPU
 void
 test_metric_for_topo_2D(stk::topology topo, double tol)
 {
@@ -195,7 +194,7 @@ test_metric_for_topo_3D(stk::topology topo, double tol)
     }
   }
 }
-#endif // KOKKOS_ENABLE_GPU
+
 } // namespace
 
 #ifndef KOKKOS_ENABLE_GPU
