@@ -20,6 +20,7 @@
 #include <EquationSystem.h>
 #include <EquationSystems.h>
 #include <FieldTypeDef.h>
+#include <FieldManager.h>
 #include <LinearSystem.h>
 #include <LinearSolvers.h>
 #include <master_element/MasterElement.h>
@@ -315,6 +316,14 @@ Realm::~Realm()
     delete oversetManager_;
 
   MasterElementRepo::clear();
+}
+
+void
+Realm::setup_field_manager()
+{
+  assert(timeIntegrator_ != NULL);
+  fieldManager_ =
+    std::make_unique<FieldManager>(meta_data(), number_of_states());
 }
 
 void
