@@ -128,11 +128,10 @@ copy_tpetra_solution_vector_to_stk_field(
         field(mi, d) = delta_view(tpetra_lid, d);
       }
     });
+  field.modify_on_device();
 }
 
 } // namespace
-
-#ifndef KOKKOS_ENABLE_GPU
 
 TEST_F(ConductionSolutionUpdateFixture, correct_behavior_for_linear_problem)
 {
@@ -171,8 +170,6 @@ TEST_F(ConductionSolutionUpdateFixture, correct_behavior_for_linear_problem)
     }
   }
 }
-
-#endif // KOKKOS_ENABLE_GPU
 
 } // namespace matrix_free
 } // namespace nalu
