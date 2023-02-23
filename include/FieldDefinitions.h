@@ -29,6 +29,7 @@ using FieldDefGenericInt = FieldDefinition<GenericIntFieldType>;
 using FieldDefTpetraId = FieldDefinition<TpetIDFieldType>;
 using FieldDefLocalId = FieldDefinition<LocalIdFieldType>;
 using FieldDefGlobalId = FieldDefinition<GlobalIdFieldType>;
+using FieldDefHypreId = FieldDefinition<HypreIDFieldType>;
 
 using FieldDefTypes = std::variant<
   FieldDefScalar,
@@ -37,7 +38,9 @@ using FieldDefTypes = std::variant<
   FieldDefGenericInt,
   FieldDefTpetraId,
   FieldDefLocalId,
-  FieldDefGlobalId>;
+  FieldDefGlobalId,
+  FieldDefHypreId>;
+
 using FieldPointerTypes = std::variant<
   ScalarFieldType*,
   VectorFieldType*,
@@ -45,7 +48,8 @@ using FieldPointerTypes = std::variant<
   GenericIntFieldType*,
   TpetIDFieldType*,
   LocalIdFieldType*,
-  GlobalIdFieldType*>;
+  GlobalIdFieldType*,
+  HypreIDFieldType*>;
 
 } // namespace nalu
 } // namespace sierra
