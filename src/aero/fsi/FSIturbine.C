@@ -2344,5 +2344,3 @@ fsiTurbine::compute_div_mesh_velocity()
 } // namespace nalu
 
 } // namespace sierra
-
-
