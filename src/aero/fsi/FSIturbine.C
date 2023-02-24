@@ -91,18 +91,11 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
       !defNode,
       "defleciton_ramping inputs are required for FSI Turbines with blades");
     DeflectionRampingParams& defParams = deflectionRampParams_;
-    double* zeroTheta = &defParams.zeroRampLocTheta_;
-    double* thetaRamp = &defParams.thetaRampSpan_;
     // clang-format off
     get_required(defNode, "temporal_ramp_start", defParams.startTimeTemporalRamp_);
     get_required(defNode, "temporal_ramp_end",   defParams.endTimeTemporalRamp_);
     get_required(defNode, "span_ramp_distance",  defParams.spanRampDistance_);
-    get_if_present(defNode, "zero_theta_ramp_angle", *zeroTheta, *zeroTheta);
-    get_if_present(defNode, "theta_ramp_span",       *thetaRamp, *thetaRamp);
     // clang-format on
-    // ---------- conversionions ----------
-    defParams.zeroRampLocTheta_ = utils::radians(defParams.zeroRampLocTheta_);
-    defParams.thetaRampSpan_ = utils::radians(defParams.thetaRampSpan_);
     // --------------------------------------------------------------------------
   } else
     NaluEnv::self().naluOutputP0()
@@ -1657,6 +1650,7 @@ fsiTurbine::mapDisplacements(double time)
   const DeflectionRampingParams& defParams = deflectionRampParams_;
   const double temporalDeflectionRamp = fsi::temporal_ramp(
     time, defParams.startTimeTemporalRamp_, defParams.endTimeTemporalRamp_);
+  assert(!std::isnan(temporalDeflectionRamp));
 
   auto& meta = bulk_->mesh_meta_data();
   VectorFieldType* modelCoords =
@@ -1754,26 +1748,17 @@ fsiTurbine::mapDisplacements(double time)
         const double spanLocation =
           spanLocI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
 
-        double deflectionRamp =
+        const double deflectionRamp =
           temporalDeflectionRamp *
           fsi::linear_ramp_span(spanLocation, defParams.spanRampDistance_);
 
-        // things for theta mapping
-        const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
-        const aero::SixDOF rootPos(&(brFSIdata_.bld_root_ref_pos[iBlade * 6]));
-        const auto nodePosition = vector_from_field(*modelCoords, node);
-
-        deflectionRamp *= fsi::linear_ramp_theta(
-          hubPos, rootPos.position_, nodePosition, defParams.thetaRampSpan_,
-          defParams.zeroRampLocTheta_);
-
         *stk::mesh::field_data(*deflectionRamp_, node) = deflectionRamp;
-        *stk::mesh::field_data(*distanceToRoot_, node) =
-          vs::mag(rootPos.position_ - nodePosition);
 
         const aero::SixDOF hubDef(brFSIdata_.hub_def.data());
         // displacements from the hub will match a fully stiff blade's
         // displacements
+        const auto nodePosition = vector_from_field(*modelCoords, node);
+        const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
         const auto hubBasedDef = aero::compute_translational_displacements(
           hubDef, hubPos, nodePosition);
 
