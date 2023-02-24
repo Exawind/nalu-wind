@@ -27,10 +27,19 @@ Registry()
   FieldDefVector SingleStateNodalVector = {stk::topology::NODE_RANK};
   FieldDefScalar SingleStateNodalScalar = {stk::topology::NODE_RANK};
 
+  FieldDefTpetraId TpetraId = {stk::topology::NODE_RANK};
+  FieldDefGlobalId GlobalId = {stk::topology::NODE_RANK};
+  FieldDefHypreId HypreId = {stk::topology::NODE_RANK};
+
+  // clang-format off
   static const std::map<std::string, FieldDefTypes> registry = {
     {"velocity", MultiStateNodalVector},
     {"temperature", MultiStateNodalScalar},
+    {"hypre_global_id", HypreId},
+    {"tpet_global_id", TpetraId},
+    {"nalu_global_id", GlobalId},
   };
+  // clang-format on
   return registry;
 }
 

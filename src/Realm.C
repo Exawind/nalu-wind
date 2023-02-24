@@ -20,6 +20,7 @@
 #include <EquationSystem.h>
 #include <EquationSystems.h>
 #include <FieldTypeDef.h>
+#include <FieldManager.h>
 #include <LinearSystem.h>
 #include <LinearSolvers.h>
 #include <master_element/MasterElement.h>
@@ -315,6 +316,14 @@ Realm::~Realm()
     delete oversetManager_;
 
   MasterElementRepo::clear();
+}
+
+void
+Realm::setup_field_manager()
+{
+  assert(timeIntegrator_ != NULL);
+  fieldManager_ =
+    std::make_unique<FieldManager>(meta_data(), number_of_states());
 }
 
 void
@@ -912,26 +921,22 @@ void
 Realm::setup_nodal_fields()
 {
 #ifdef NALU_USES_HYPRE
-  hypreGlobalId_ = &(meta_data().declare_field<HypreIDFieldType>(
-    stk::topology::NODE_RANK, "hypre_global_id"));
+  fieldManager_->register_field("hypre_global_id", meta_data().get_parts());
+  hypreGlobalId_ = std::get<HypreIDFieldType*>(
+    fieldManager_->get_field_ptr("hypre_global_id"));
 #endif
-  tpetGlobalId_ = &(meta_data().declare_field<TpetIDFieldType>(
-    stk::topology::NODE_RANK, "tpet_global_id"));
-
-  // register global id and rank fields on all parts
-  const stk::mesh::PartVector parts = meta_data().get_parts();
-  for (size_t ipart = 0; ipart < parts.size(); ++ipart) {
-    naluGlobalId_ = &(meta_data().declare_field<GlobalIdFieldType>(
-      stk::topology::NODE_RANK, "nalu_global_id"));
-    stk::mesh::put_field_on_mesh(*naluGlobalId_, *parts[ipart], nullptr);
-
-#ifdef NALU_USES_HYPRE
-    stk::mesh::put_field_on_mesh(*hypreGlobalId_, *parts[ipart], nullptr);
+#ifdef NALU_USES_TRILINOS_SOLVERS
+  fieldManager_->register_field("tpet_global_id", meta_data().get_parts());
+  // TODO work on removing this variable from realm by accessing fields through
+  // the manager instead
+  tpetGlobalId_ =
+    std::get<TpetIDFieldType*>(fieldManager_->get_field_ptr("tpet_global_id"));
+  stk::mesh::field_fill(
+    std::numeric_limits<LinSys::GlobalOrdinal>::max(), *tpetGlobalId_);
 #endif
-    stk::mesh::put_field_on_mesh(*tpetGlobalId_, *parts[ipart], nullptr);
-    stk::mesh::field_fill(
-      std::numeric_limits<LinSys::GlobalOrdinal>::max(), *tpetGlobalId_);
-  }
+  fieldManager_->register_field("nalu_global_id", meta_data().get_parts());
+  naluGlobalId_ = std::get<GlobalIdFieldType*>(
+    fieldManager_->get_field_ptr("nalu_global_id"));
 
   // loop over all material props targets and register nodal fields
   std::vector<std::string> targetNames = get_physics_target_names();
