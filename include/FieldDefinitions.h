@@ -24,9 +24,32 @@ struct FieldDefinition
 
 using FieldDefScalar = FieldDefinition<ScalarFieldType>;
 using FieldDefVector = FieldDefinition<VectorFieldType>;
+using FieldDefGeneric = FieldDefinition<GenericFieldType>;
+using FieldDefGenericInt = FieldDefinition<GenericIntFieldType>;
+using FieldDefTpetraId = FieldDefinition<TpetIDFieldType>;
+using FieldDefLocalId = FieldDefinition<LocalIdFieldType>;
+using FieldDefGlobalId = FieldDefinition<GlobalIdFieldType>;
+using FieldDefHypreId = FieldDefinition<HypreIDFieldType>;
 
-using FieldDefTypes = std::variant<FieldDefScalar, FieldDefVector>;
-using FieldPointerTypes = std::variant<ScalarFieldType*, VectorFieldType*>;
+using FieldDefTypes = std::variant<
+  FieldDefScalar,
+  FieldDefVector,
+  FieldDefGeneric,
+  FieldDefGenericInt,
+  FieldDefTpetraId,
+  FieldDefLocalId,
+  FieldDefGlobalId,
+  FieldDefHypreId>;
+
+using FieldPointerTypes = std::variant<
+  ScalarFieldType*,
+  VectorFieldType*,
+  GenericFieldType*,
+  GenericIntFieldType*,
+  TpetIDFieldType*,
+  LocalIdFieldType*,
+  GlobalIdFieldType*,
+  HypreIDFieldType*>;
 
 } // namespace nalu
 } // namespace sierra
