@@ -922,14 +922,16 @@ Realm::setup_nodal_fields()
 {
 #ifdef NALU_USES_HYPRE
   fieldManager_->register_field("hypre_global_id", meta_data().get_parts());
+  hypreGlobalId_ = std::get<HypreIDFieldType*>(fieldManager_->get_field_ptr("hypre_global_id"));
 #endif
+#ifdef NALU_USES_TRILINOS_SOLVERS
   fieldManager_->register_field("tpet_global_id", meta_data().get_parts());
+  // TODO work on removing this variable from realm by accessing fields through the manager instead
+  tpetGlobalId_ = std::get<TpetIDFieldType*>(fieldManager_->get_field_ptr("tpet_global_id"));
+  stk::mesh::field_fill(std::numeric_limits<LinSys::GlobalOrdinal>::min(), *tpetGlobalId_);
+#endif
   fieldManager_->register_field("nalu_global_id", meta_data().get_parts());
-
-  auto globId = fieldManager_->get_field_ptr("nalu_global_id");
-  stk::mesh::field_fill(
-    std::numeric_limits<LinSys::GlobalOrdinal>::max(),
-    *std::get<GlobalIdFieldType*>(globId));
+  naluGlobalId_ = std::get<GlobalIdFieldType*>(fieldManager_->get_field_ptr("nalu_global_id"));
 
   // loop over all material props targets and register nodal fields
   std::vector<std::string> targetNames = get_physics_target_names();
