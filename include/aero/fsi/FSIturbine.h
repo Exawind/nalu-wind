@@ -306,7 +306,6 @@ private:
               // openfast mesh element containing the projection of the tower
               // surface node on to the openfast mesh tower element
   ScalarFieldType* deflectionRamp_;
-  ScalarFieldType* distanceToRoot_;
   ScalarFieldType* dispMapInterp_; // The location of the CFD surface mesh node
                                    // projected along the OpenFAST mesh element
                                    // in non-dimensional [0,1] co-ordinates.
