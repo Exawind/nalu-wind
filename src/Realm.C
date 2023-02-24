@@ -932,7 +932,7 @@ Realm::setup_nodal_fields()
   tpetGlobalId_ =
     std::get<TpetIDFieldType*>(fieldManager_->get_field_ptr("tpet_global_id"));
   stk::mesh::field_fill(
-    std::numeric_limits<LinSys::GlobalOrdinal>::min(), *tpetGlobalId_);
+    std::numeric_limits<LinSys::GlobalOrdinal>::max(), *tpetGlobalId_);
 #endif
   fieldManager_->register_field("nalu_global_id", meta_data().get_parts());
   naluGlobalId_ = std::get<GlobalIdFieldType*>(
