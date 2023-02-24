@@ -13,6 +13,7 @@
 #include "vs/vector.h"
 #include <Kokkos_Macros.hpp>
 #include <aero/aero_utils/WienerMilenkovic.h>
+#include <stk_util/util/ReportHandler.hpp>
 
 namespace aero {
 //! A struct to capture six degrees of freedom with a rotation and translation
@@ -137,6 +138,7 @@ compute_translational_displacements(
 {
   const auto fullDisp =
     compute_translational_displacements(fullDeflections, referencePos, cfdPos);
+
   return stiffDisp + ramp * (fullDisp - stiffDisp);
 }
 

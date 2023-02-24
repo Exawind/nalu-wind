@@ -41,8 +41,6 @@ struct DeflectionRampingParams
 {
   // default parameters would give no ramping
   double spanRampDistance_{1e-5};
-  double zeroRampLocTheta_{180.0};
-  double thetaRampSpan_{10.0};
   double startTimeTemporalRamp_{0.0};
   double endTimeTemporalRamp_{0.0};
 };
