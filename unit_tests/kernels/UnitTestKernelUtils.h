@@ -1454,6 +1454,8 @@ public:
     stk::mesh::put_field_on_mesh(
       *volumeOfFluid_, meta_->universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(
+      *dvolumeOfFluidDx_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
       *velocity_, meta_->universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
       *density_, meta_->universal_part(), 1, nullptr);
