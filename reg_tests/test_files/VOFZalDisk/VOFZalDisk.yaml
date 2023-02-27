@@ -17,7 +17,7 @@ linear_solvers:
 realms:
 
   - name: realm_1
-    mesh: ../../mesh/unit_grid_150.e 
+    mesh: "generated:150x150x4|bbox:-0.5,-0.5,-0.5,0.5,0.5,0.5|sideset:xXyYzZ|show" 
     use_edges: yes
     automatic_decomposition_type: rcb
 
@@ -37,12 +37,12 @@ realms:
     initial_conditions:
 
       - user_function: ic_1
-        target_name: [fluid]
+        target_name: block_1
         user_function_name:
           volume_of_fluid: zalesak_disk
 
     material_properties:
-      target_name: [fluid]
+      target_name: block_1
       specifications:
         - name: density
           type: constant
@@ -54,8 +54,29 @@ realms:
 
     boundary_conditions:
       - wall_boundary_condition: walls
-        target_name: wall
+        target_name: surface_1
         wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_2
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_3
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_4
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_5
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_6
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
 
     solution_options:
       name: myOptions

@@ -29,7 +29,7 @@ linear_solvers:
 realms:
 
   - name: realm_1
-    mesh: ../../mesh/unit_grid_droplet.e 
+    mesh: "generated:150x150x4|bbox:-0.5,-0.5,-0.5,0.5,0.5,0.5|sideset:xXyYzZ|show" 
     use_edges: yes
     automatic_decomposition_type: rcb
 
@@ -55,17 +55,17 @@ realms:
     initial_conditions:
 
       - user_function: ic_1
-        target_name: [fluid]
+        target_name: block_1
         user_function_name:
           volume_of_fluid: droplet
       - constant: ic_2
-        target_name: [fluid]
+        target_name: block_1
         value:
           pressure: 0.0
           velocity: [0.0, 0.0] 
 
     material_properties:
-      target_name: [fluid]
+      target_name: block_1
       specifications:
         - name: density
           type: volume_of_fluid
@@ -78,9 +78,30 @@ realms:
 
     boundary_conditions:
       - wall_boundary_condition: walls
-        target_name: walls
+        target_name: surface_1
         wall_user_data:
-          velocity: [0.0,0.0]
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_2
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_3
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_4
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_5
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_6
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+
     solution_options:
       name: myOptions
 
@@ -103,16 +124,7 @@ realms:
 
         - user_constants:
             reference_density: 0.00
-            gravity: [0.0, -9.81]
-
-      # Pressure is not fixed anywhere on the boundaries, so set it at
-      # the node closest to the specified location.
-      #fix_pressure_at_node:
-      #  value: 0.0
-      #  node_lookup_type: spatial_location
-      #  location: [0.0, -0.5]
-      #  search_target_part: [fluid]
-      #  search_method: stk_kdtree
+            gravity: [0.0, -9.81, 0.0]
 
     output:
       output_data_base_name: out/dropLets.e
