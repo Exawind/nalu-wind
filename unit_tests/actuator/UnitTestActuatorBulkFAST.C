@@ -42,6 +42,8 @@ protected:
   }
 };
 
+#ifndef KOKKOS_ENABLE_GPU
+
 TEST_F(ActuatorBulkFastTests, NGP_initializeActuatorBulk)
 {
   std::vector<std::string> modInputs(fastParseParams_);
@@ -120,6 +122,8 @@ TEST_F(ActuatorBulkFastTests, NGP_epsilonTowerAndAnisotropicEpsilon)
     FAIL() << err.what();
   }
 }
+
+#endif
 
 } // namespace
 

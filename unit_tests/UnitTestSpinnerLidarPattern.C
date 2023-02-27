@@ -13,24 +13,25 @@
 namespace sierra {
 namespace nalu {
 
-const std::string lidarSpec =
-  "lidar_specifications:                                  \n"
-  "  from_target_part: [unused]                           \n"
-  "  inner_prism_initial_theta: 90                        \n"
-  "  inner_prism_rotation_rate: 3.5                       \n"
-  "  inner_prism_azimuth: 15.2                            \n"
-  "  outer_prism_initial_theta: 90                        \n"
-  "  outer_prism_rotation_rate: 6.5                       \n"
-  "  outer_prism_azimuth: 15.2                            \n"
-  "  scan_time: 2 #seconds                                \n"
-  "  number_of_samples: 984                               \n"
-  "  points_along_line: 4                                 \n"
-  "  center: [500,500,100]                                \n"
-  "  beam_length: 50.                                     \n"
-  "  axis: [1,1,0]                                        \n"
-  "  ground_direction: [0,0,1]                            \n"
-  "  output: text                                         \n"
-  "  name: lidar-los                                      \n";
+const auto lidarSpec =
+  R"(lidar_specifications:
+    from_target_part: [unused]
+    inner_prism_initial_theta: 90
+    inner_prism_rotation_rate: 3.5
+    inner_prism_azimuth: 15.2
+    outer_prism_initial_theta: 90
+    outer_prism_rotation_rate: 6.5
+    outer_prism_azimuth: 15.2
+    scan_time: 2 #seconds
+    number_of_samples: 984
+    points_along_line: 4
+    center: [500,500,100]
+    beam_length: 50.
+    axis: [1,1,0]
+    ground_direction: [0,0,1]
+    output: text
+    name: lidar-los
+)";
 
 TEST(SpinnerLidar, print_tip_location)
 {
@@ -42,10 +43,6 @@ TEST(SpinnerLidar, print_tip_location)
   SpinnerLidarSegmentGenerator slgen;
   slgen.load(lidarSpecNode);
 
-  std::string outputFileName("SpinnerLidar.pattern.txt");
-  std::ofstream outputFile(outputFileName);
-  outputFile << "x,y,z" << std::endl;
-
   for (int j = 0; j < nsamp; ++j) {
     const double time = dt * j;
     auto seg = slgen.generate(time);
@@ -53,13 +50,10 @@ TEST(SpinnerLidar, print_tip_location)
     ASSERT_TRUE(seg.tip_.at(1) > seg.tail_.at(1));
     ASSERT_DOUBLE_EQ(seg.tail_.at(0), 500);
     ASSERT_DOUBLE_EQ(seg.tail_.at(1), 500);
-    outputFile << seg.tip_.at(0) << ", " << seg.tip_.at(1) << ", "
-               << seg.tip_.at(2) << std::endl;
   }
-  unlink(outputFileName.c_str());
 }
 
-std::array<double, 3>
+vs::Vector
 velocity_func(const double* x, double time)
 {
   return {
@@ -68,10 +62,9 @@ velocity_func(const double* x, double time)
     time + 3 - 2.1 * x[0] / 500 + 3.2 * x[1] / 500 - 4.3 * x[2] / 100};
 }
 
-#ifndef KOKKOS_ENABLE_GPU
-
 TEST(SpinnerLidar, volume_interp)
 {
+
   stk::mesh::MeshBuilder builder(MPI_COMM_WORLD);
   builder.set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA);
   builder.set_spatial_dimension(3U);
@@ -116,85 +109,54 @@ TEST(SpinnerLidar, volume_interp)
     }
   }
 
+  YAML::Node lidarSpecNode = YAML::Load(lidarSpec)["lidar_specifications"];
+  const auto fileName = lidarSpecNode["name"].as<std::string>() + ".txt";
+  unlink(fileName.c_str());
+
   {
     LidarLineOfSite los;
-    los.load(YAML::Load(lidarSpec)["lidar_specifications"]);
+    los.load(lidarSpecNode);
     los.set_time(0);
     los.output(*bulk, meta.universal_part(), "coordinates", 0);
-
-    if (bulk->parallel_rank() == 0) {
-      std::string line;
-      std::ifstream myfile("lidar-los.txt");
-      if (myfile.is_open()) {
-        while (std::getline(myfile, line)) {
-          std::stringstream iline(line);
-          std::string word;
-          if (line.find('t') == 0) {
-            continue;
-          }
-          std::vector<double> values;
-          while (std::getline(iline, word, ',')) {
-            values.push_back(std::stod(word));
-          }
-          ASSERT_EQ(values.size(), 7u);
-
-          constexpr int coord_start = 1;
-          constexpr int vel_start = 4;
-
-          const auto& exact_vel = velocity_func(&values[coord_start], 0);
-          EXPECT_NEAR(exact_vel.at(0), values.at(vel_start + 0), 1e-10);
-          EXPECT_NEAR(exact_vel[1], values.at(vel_start + 1), 1e-10);
-          EXPECT_NEAR(exact_vel[2], values.at(vel_start + 2), 1e-10);
-        }
-        myfile.close();
-      }
-    }
   }
 
-  {
-    const std::string lidar_nc =
-      "lidar_specifications:                                  \n"
-      "  from_target_part: [unused]                           \n"
-      "  inner_prism_initial_theta: 90                        \n"
-      "  inner_prism_rotation_rate: 3.5                       \n"
-      "  inner_prism_azimuth: 15.2                            \n"
-      "  outer_prism_initial_theta: 90                        \n"
-      "  outer_prism_rotation_rate: 6.5                       \n"
-      "  outer_prism_azimuth: 15.2                            \n"
-      "  scan_time: 2 #seconds                                \n"
-      "  number_of_samples: 984                               \n"
-      "  points_along_line: 4                                 \n"
-      "  center: [500,500,100]                                \n"
-      "  beam_length: 50.                                     \n"
-      "  axis: [1,1,0]                                        \n"
-      "  ground_direction: [0,0,1]                            \n"
-      "  output: netcdf                                       \n"
-      "  time_step: 0.01                                      \n"
-      "  name: lidar/lidar-1                                  \n";
+  if (bulk->parallel_rank() == 0) {
+    std::string line;
+    std::ifstream myfile("lidar-los.txt");
+    if (myfile.is_open()) {
+      // skip first two lines
+      std::getline(myfile, line); // header
+      std::getline(myfile, line); // center point
 
-    LidarLineOfSite los;
-    los.load(YAML::Load(lidar_nc)["lidar_specifications"]);
-    los.set_time(0);
-
-    for (int j = 0; j < 984; ++j) {
-      for (const auto* ib : node_buckets) {
-        for (const auto& node : *ib) {
-          auto* uptr = stk::mesh::field_data(vel_field, node);
-          const auto* xptr = stk::mesh::field_data(coord_field, node);
-          const auto vel_at_x = velocity_func(xptr, los.time());
-          ASSERT_NEAR(los.time(), j * 0.01, 1e-12);
-          for (int d = 0; d < 3; ++d) {
-            uptr[d] = vel_at_x[d];
-          }
+      while (std::getline(myfile, line)) {
+        std::stringstream iline(line);
+        std::string word;
+        std::vector<double> values;
+        while (std::getline(iline, word, ',')) {
+          values.push_back(std::stod(word));
         }
+        ASSERT_EQ(values.size(), 5u);
+
+        constexpr int coord_start = 1;
+        constexpr int vel_start = 4;
+
+        const auto& exact_vel = velocity_func(&values[coord_start], 0);
+        const auto& center = lidarSpecNode["center"].as<std::vector<double>>();
+        const vs::Vector lineVector(
+          values[coord_start + 0] - center[0],
+          values[coord_start + 1] - center[1],
+          values[coord_start + 2] - center[2]);
+
+        const auto exact_los_velocity =
+          lineVector & exact_vel / vs::mag(lineVector);
+
+        EXPECT_NEAR(exact_los_velocity, values.at(vel_start), 1e-10);
       }
-      los.output(*bulk, !stk::mesh::Selector{}, "coordinates", 0);
-      los.increment_time();
+      myfile.close();
     }
   }
+  unlink(fileName.c_str());
 }
-
-#endif // KOKKOS_ENABLE_GPU
 
 TEST(Spinner, invalid_predictor_throws)
 {

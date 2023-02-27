@@ -3,6 +3,7 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestBasicKokkos.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestCopyAndInterleave.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestCreateOnDevice.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestCylinderMesh.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestEigenDecomposition.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestElemDataRequests.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestElemSuppAlg.C
