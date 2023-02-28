@@ -46,7 +46,7 @@ TEST_F(FieldManagerTest, nameIsEnoughInfoToRegisterAField)
   EXPECT_EQ(findFieldPtr, std::get<VectorFieldType*>(ptr));
   EXPECT_TRUE(fm.field_exists(name));
 
-  auto ptr2 = std::get<VectorFieldType*>(fm.get_field_ptr(name));
+  auto ptr2 = fm.get_field_ptr<VectorFieldType*>(name);
   EXPECT_EQ(findFieldPtr, ptr2);
 }
 
