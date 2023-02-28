@@ -37,7 +37,7 @@ public:
   FieldPointerTypes
   register_field(std::string name, const stk::mesh::Part& part);
 
-  template<typename T>
+  template <typename T>
   T get_field_ptr(std::string name)
   {
     auto fieldDef = FieldRegistry::query(numStates_, name);
@@ -47,7 +47,7 @@ public:
           def.rank, name);
       },
       fieldDef);
-      return std::get<T>(pointerSet);
+    return std::get<T>(pointerSet);
   }
 
   bool field_exists(std::string name);
