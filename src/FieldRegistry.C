@@ -25,11 +25,14 @@ Registry()
   FieldDefScalar MultiStateNodalScalar = {stk::topology::NODE_RANK, NUM_STATES};
 
   FieldDefVector SingleStateNodalVector = {stk::topology::NODE_RANK};
+  FieldDefVector SingleStateEdgeVector = {stk::topology::EDGE_RANK};
   FieldDefScalar SingleStateNodalScalar = {stk::topology::NODE_RANK};
+  FieldDefScalar SingleStateElemScalar = {stk::topology::ELEM_RANK};
 
   FieldDefTpetraId TpetraId = {stk::topology::NODE_RANK};
   FieldDefGlobalId GlobalId = {stk::topology::NODE_RANK};
   FieldDefHypreId HypreId = {stk::topology::NODE_RANK};
+  FieldDefScalarInt NodalScalarInt = {stk::topology::NODE_RANK};
 
   // clang-format off
   static const std::map<std::string, FieldDefTypes> registry = {
@@ -38,6 +41,15 @@ Registry()
     {"hypre_global_id", HypreId},
     {"tpet_global_id", TpetraId},
     {"nalu_global_id", GlobalId},
+    {"dual_nodal_volume", MultiStateNodalScalar},
+    {"element_volume", SingleStateElemScalar},
+    {"edge_area_vector", SingleStateEdgeVector},
+    {"mesh_displacement", MultiStateNodalVector},
+    {"current_coordinates", SingleStateNodalVector},
+    {"mesh_velocity", SingleStateNodalVector},
+    {"velocity_rtm", SingleStateNodalVector},
+    {"div_mesh_velocity", SingleStateNodalScalar},
+    {"iblank", NodalScalarInt}
   };
   // clang-format on
   return registry;
