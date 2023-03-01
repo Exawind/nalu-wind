@@ -530,28 +530,30 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
   const auto& meta = meshInfo.meta();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
 
-  auto& ndtw =
-    fieldMgr.get_field<double>(minDistanceToWall_->mesh_meta_data_ordinal());
-  const auto& wallNormDist =
-    nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
+  if (!wallBcPart_.is_empty()) {
+    auto& ndtw =
+      fieldMgr.get_field<double>(minDistanceToWall_->mesh_meta_data_ordinal());
+    const auto& wallNormDist =
+      nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
 
-  const stk::mesh::Selector sel =
-    (meta.locally_owned_part() | meta.globally_shared_part()) &
-    stk::mesh::selectUnion(wallBcPart_);
+    const stk::mesh::Selector sel =
+      (meta.locally_owned_part() | meta.globally_shared_part()) &
+      stk::mesh::selectUnion(wallBcPart_);
 
-  ndtw.sync_to_device();
-  nalu_ngp::run_entity_algorithm(
-    "SST::clip_ndtw", ngpMesh, stk::topology::NODE_RANK, sel,
-    KOKKOS_LAMBDA(const MeshIndex& mi) {
-      const double minD = ndtw.get(mi, 0);
+    ndtw.sync_to_device();
+    nalu_ngp::run_entity_algorithm(
+      "SST::clip_ndtw", ngpMesh, stk::topology::NODE_RANK, sel,
+      KOKKOS_LAMBDA(const MeshIndex& mi) {
+        const double minD = ndtw.get(mi, 0);
 
-      ndtw.get(mi, 0) = stk::math::max(minD, wallNormDist.get(mi, 0));
-    });
-  ndtw.modify_on_device();
+        ndtw.get(mi, 0) = stk::math::max(minD, wallNormDist.get(mi, 0));
+      });
+    ndtw.modify_on_device();
 
-  stk::mesh::parallel_max(realm_.bulk_data(), {minDistanceToWall_});
-  if (realm_.hasPeriodic_) {
-    realm_.periodic_field_max(minDistanceToWall_, 1);
+    stk::mesh::parallel_max(realm_.bulk_data(), {minDistanceToWall_});
+    if (realm_.hasPeriodic_) {
+      realm_.periodic_field_max(minDistanceToWall_, 1);
+    }
   }
 }
 
