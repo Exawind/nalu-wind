@@ -21,6 +21,7 @@ struct FieldDefinition
   using FieldType = T;
   const stk::topology::rank_t rank;
   const int num_states{1};
+  const int num_components{1};
 };
 
 using FieldDefScalar = FieldDefinition<ScalarFieldType>;

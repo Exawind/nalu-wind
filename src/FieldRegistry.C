@@ -16,16 +16,16 @@ namespace nalu {
 
 // Registry object is where all the fully quantified field definitions live
 // This is the starting point for adding a new field
-template <int NUM_STATES>
+template <int NUM_DIM, int NUM_STATES>
 const std::map<std::string, FieldDefTypes>&
 Registry()
 {
-
-  FieldDefVector MultiStateNodalVector = {stk::topology::NODE_RANK, NUM_STATES};
+  // clang-format off
+  FieldDefVector MultiStateNodalVector = {stk::topology::NODE_RANK, NUM_STATES, NUM_DIM};
   FieldDefScalar MultiStateNodalScalar = {stk::topology::NODE_RANK, NUM_STATES};
 
-  FieldDefVector SingleStateNodalVector = {stk::topology::NODE_RANK};
-  FieldDefVector SingleStateEdgeVector = {stk::topology::EDGE_RANK};
+  FieldDefVector SingleStateNodalVector = {stk::topology::NODE_RANK, 1, NUM_DIM};
+  FieldDefVector SingleStateEdgeVector = {stk::topology::EDGE_RANK, 1, NUM_DIM};
   FieldDefScalar SingleStateNodalScalar = {stk::topology::NODE_RANK};
   FieldDefScalar SingleStateElemScalar = {stk::topology::ELEM_RANK};
 
@@ -34,7 +34,6 @@ Registry()
   FieldDefHypreId HypreId = {stk::topology::NODE_RANK};
   FieldDefScalarInt NodalScalarInt = {stk::topology::NODE_RANK};
 
-  // clang-format off
   static const std::map<std::string, FieldDefTypes> registry = {
     {"velocity", MultiStateNodalVector},
     {"temperature", MultiStateNodalScalar},
@@ -56,7 +55,10 @@ Registry()
 }
 
 FieldRegistry::FieldRegistry()
-  : database_2_state_(Registry<2>()), database_3_state_(Registry<3>())
+  : database_2D_2_state_(Registry<2, 2>()),
+    database_2D_3_state_(Registry<2, 3>()),
+    database_3D_2_state_(Registry<3, 2>()),
+    database_3D_3_state_(Registry<3, 3>())
 {
 }
 

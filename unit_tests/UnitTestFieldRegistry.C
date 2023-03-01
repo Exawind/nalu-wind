@@ -33,7 +33,8 @@ protected:
 TEST_F(FieldRegistryTest, allDataNeededToDeclareFieldIsKnownThroughQuery)
 {
   const int num_states = 2;
-  auto def = FieldRegistry::query(num_states, key_);
+  const int num_dims = 3;
+  auto def = FieldRegistry::query(num_dims, num_states, key_);
 
   ASSERT_NO_THROW(std::visit(
     [&](auto arg) {
@@ -51,7 +52,8 @@ TEST_F(FieldRegistryTest, allDataNeededToDeclareFieldIsKnownThroughQuery)
 TEST_F(FieldRegistryTest, registeredFieldPointerCanBeStored)
 {
   const int num_states = 3;
-  auto def = FieldRegistry::query(num_states, key_);
+  const int num_dims = 3;
+  auto def = FieldRegistry::query(num_dims, num_states, key_);
   std::vector<FieldPointerTypes> field_pointers;
 
   EXPECT_EQ(0, field_pointers.size());
