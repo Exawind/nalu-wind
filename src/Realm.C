@@ -920,6 +920,9 @@ Realm::parent() const
 void
 Realm::setup_nodal_fields()
 {
+  if (!fieldManager_) {
+    setup_field_manager();
+  }
 #ifdef NALU_USES_HYPRE
   fieldManager_->register_field("hypre_global_id", meta_data().get_parts());
   hypreGlobalId_ =
@@ -2707,51 +2710,42 @@ Realm::compute_l2_scaling()
 void
 Realm::register_nodal_fields(stk::mesh::Part* part)
 {
+  if (!fieldManager_) {
+    setup_field_manager();
+  }
   // register high level common fields
-  const int nDim = meta_data().spatial_dimension();
-
   // Declare volume/area_vector fields
   const int numVolStates = does_mesh_move() ? number_of_states() : 1;
   auto& dualNodalVol = meta_data().declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates);
   stk::mesh::put_field_on_mesh(dualNodalVol, *part, 1, nullptr);
-  if (numVolStates > 1)
-    augment_restart_variable_list("dual_nodal_volume");
-  auto& elemVol = meta_data().declare_field<ScalarFieldType>(
-    stk::topology::ELEM_RANK, "element_volume");
-  stk::mesh::put_field_on_mesh(elemVol, *part, 1, nullptr);
+  // TODO(psakiev)           ^
+  //               Turn this | into this |
+  //                                     v
+  // fieldManager_->register_field("dual_nodal_volume", *part);
+  fieldManager_->register_field("element_volume", *part);
 
   if (realmUsesEdges_) {
-    auto& edgeAreaVec = meta_data().declare_field<VectorFieldType>(
-      stk::topology::EDGE_RANK, "edge_area_vector");
-    stk::mesh::put_field_on_mesh(
-      edgeAreaVec, *part, meta_data().spatial_dimension(), nullptr);
+    fieldManager_->register_field("edge_area_vector", *part);
   }
 
   // mesh motion/deformation is high level
-  // clang-format off
-  if ( does_mesh_move()) {
-    VectorFieldType *displacement = &(meta_data().declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement",numVolStates));
-    stk::mesh::put_field_on_mesh(*displacement, *part, nDim, nullptr);
-    augment_restart_variable_list("mesh_displacement");
-    VectorFieldType *currentCoords = &(meta_data().declare_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates"));
-    stk::mesh::put_field_on_mesh(*currentCoords, *part, nDim, nullptr);
-    augment_restart_variable_list("current_coordinates");
-    VectorFieldType *meshVelocity = &(meta_data().declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity"));
-    stk::mesh::put_field_on_mesh(*meshVelocity, *part, nDim, nullptr);
-    augment_restart_variable_list("mesh_velocity");
-    VectorFieldType *velocityRTM = &(meta_data().declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_rtm"));
-    stk::mesh::put_field_on_mesh(*velocityRTM, *part, nDim, nullptr);
-    if(has_mesh_deformation()){
-      ScalarFieldType *divV = &(meta_data().declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity"));
-      stk::mesh::put_field_on_mesh(*divV, *part, nullptr);
+  if (does_mesh_move()) {
+    fieldManager_->register_field("mesh_displacement", *part);
+    fieldManager_->register_field("current_coordinates", *part);
+    fieldManager_->register_field("mesh_velocity", *part);
+    fieldManager_->register_field("velocity_rtm", *part);
+    fieldManager_->register_field("div_mesh_velocity", *part);
+    if (has_mesh_deformation()) {
+      fieldManager_->register_field("div_mesh_velocity", *part);
     }
+    augment_restart_variable_list("dual_nodal_volume");
+    augment_restart_variable_list("mesh_displacement");
+    augment_restart_variable_list("current_coordinates");
+    augment_restart_variable_list("mesh_velocity");
   }
-  // clang-format on
 
-  ScalarIntFieldType& iblank = meta_data().declare_field<ScalarIntFieldType>(
-    stk::topology::NODE_RANK, "iblank");
-  stk::mesh::put_field_on_mesh(iblank, *part, nullptr);
+  fieldManager_->register_field("iblank", *part);
 }
 
 //--------------------------------------------------------------------------

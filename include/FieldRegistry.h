@@ -24,22 +24,46 @@ namespace nalu {
 class FieldRegistry
 {
 public:
-  static FieldDefTypes query(int numStates, std::string name)
+  static FieldDefTypes query(int numDim, int numStates, std::string name)
   {
     static FieldRegistry instance;
     const std::map<std::string, FieldDefTypes>* db;
 
-    switch (numStates) {
+    switch (numDim) {
     case 2: {
-      db = &(instance.database_2_state_);
+      switch (numStates) {
+      case 2: {
+        db = &(instance.database_2D_2_state_);
+        break;
+      }
+      case 3: {
+        db = &(instance.database_2D_3_state_);
+        break;
+      }
+      default:
+        throw std::runtime_error("Unsupported number of reference states");
+      }
       break;
     }
     case 3: {
-      db = &(instance.database_3_state_);
+      switch (numStates) {
+      case 2: {
+        db = &(instance.database_3D_2_state_);
+        break;
+      }
+      case 3: {
+        db = &(instance.database_3D_3_state_);
+        break;
+      }
+      default:
+        throw std::runtime_error("Unsupported number of reference states");
+      }
       break;
     }
     default:
-      throw std::runtime_error("Unsupported number of reference states");
+      throw std::runtime_error(
+        "Only 2 and 3 spatial dimensions are supported. Dim Given was " +
+        std::to_string(numDim));
     }
 
     auto fieldDefIter = db->find(name);
@@ -57,13 +81,14 @@ public:
 
 private:
   FieldRegistry();
-  // Inorder to accomodate and embed the state information we ended up creating
-  // two separate databases that are templated on the number of states required
-  // by the time integration scheme
-  // This was done to preserve the singelton/refernce lookup only behavior of
-  // the FieldRegistry
-  const std::map<std::string, FieldDefTypes>& database_2_state_;
-  const std::map<std::string, FieldDefTypes>& database_3_state_;
+  // Inorder to accomodate and embed the state and dimenstion information we
+  // ended up creating four separate databases that are templated on the number
+  // of states required by the time integration scheme This was done to preserve
+  // the singelton/refernce lookup only behavior of the FieldRegistry
+  const std::map<std::string, FieldDefTypes>& database_2D_2_state_;
+  const std::map<std::string, FieldDefTypes>& database_2D_3_state_;
+  const std::map<std::string, FieldDefTypes>& database_3D_2_state_;
+  const std::map<std::string, FieldDefTypes>& database_3D_3_state_;
 };
 
 } // namespace nalu

@@ -23,6 +23,7 @@ protected:
   void SetUp()
   {
     stk::mesh::MeshBuilder builder(MPI_COMM_WORLD);
+    builder.set_spatial_dimension(3);
     meta_ = builder.create_meta_data();
     key_ = "velocity";
   }
