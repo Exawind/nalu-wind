@@ -920,6 +920,9 @@ Realm::parent() const
 void
 Realm::setup_nodal_fields()
 {
+  if (!fieldManager_) {
+    setup_field_manager();
+  }
 #ifdef NALU_USES_HYPRE
   fieldManager_->register_field("hypre_global_id", meta_data().get_parts());
   hypreGlobalId_ =
@@ -2707,12 +2710,13 @@ Realm::compute_l2_scaling()
 void
 Realm::register_nodal_fields(stk::mesh::Part* part)
 {
+  if (!fieldManager_) {
+    setup_field_manager();
+  }
   // register high level common fields
   // Declare volume/area_vector fields
   fieldManager_->register_field("dual_nodal_volume", *part);
   fieldManager_->register_field("element_volume", *part);
-  if (does_mesh_move())
-    augment_restart_variable_list("dual_nodal_volume");
 
   if (realmUsesEdges_) {
     fieldManager_->register_field("edge_area_vector", *part);
@@ -2720,6 +2724,7 @@ Realm::register_nodal_fields(stk::mesh::Part* part)
 
   // mesh motion/deformation is high level
   if (does_mesh_move()) {
+    augment_restart_variable_list("dual_nodal_volume");
     fieldManager_->register_field("mesh_displacement", *part);
     fieldManager_->register_field("current_coordinates", *part);
     fieldManager_->register_field("mesh_velocity", *part);
