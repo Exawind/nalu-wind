@@ -2715,7 +2715,14 @@ Realm::register_nodal_fields(stk::mesh::Part* part)
   }
   // register high level common fields
   // Declare volume/area_vector fields
-  fieldManager_->register_field("dual_nodal_volume", *part);
+  const int numVolStates = does_mesh_move() ? number_of_states() : 1;
+  auto& dualNodalVol = meta_data().declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates);
+  stk::mesh::put_field_on_mesh(dualNodalVol, *part, 1, nullptr);
+  // TODO(psakiev)           ^
+  //               Turn this | into this |
+  //                                     v
+  // fieldManager_->register_field("dual_nodal_volume", *part);
   fieldManager_->register_field("element_volume", *part);
 
   if (realmUsesEdges_) {
