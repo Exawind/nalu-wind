@@ -2724,7 +2724,6 @@ Realm::register_nodal_fields(stk::mesh::Part* part)
 
   // mesh motion/deformation is high level
   if (does_mesh_move()) {
-    augment_restart_variable_list("dual_nodal_volume");
     fieldManager_->register_field("mesh_displacement", *part);
     fieldManager_->register_field("current_coordinates", *part);
     fieldManager_->register_field("mesh_velocity", *part);
@@ -2733,6 +2732,10 @@ Realm::register_nodal_fields(stk::mesh::Part* part)
     if (has_mesh_deformation()) {
       fieldManager_->register_field("div_mesh_velocity", *part);
     }
+    augment_restart_variable_list("dual_nodal_volume");
+    augment_restart_variable_list("mesh_displacement");
+    augment_restart_variable_list("current_coordinates");
+    augment_restart_variable_list("mesh_velocity");
   }
 
   fieldManager_->register_field("iblank", *part);
