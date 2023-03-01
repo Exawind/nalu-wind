@@ -61,7 +61,9 @@ public:
       break;
     }
     default:
-      throw std::runtime_error("Only 2 and 3 spatial dimensions are supported. Dim Given was "+std::to_string(numDim));
+      throw std::runtime_error(
+        "Only 2 and 3 spatial dimensions are supported. Dim Given was " +
+        std::to_string(numDim));
     }
 
     auto fieldDefIter = db->find(name);
