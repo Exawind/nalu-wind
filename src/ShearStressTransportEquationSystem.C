@@ -531,7 +531,7 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
   const auto& fieldMgr = meshInfo.ngp_field_manager();
 
   if (wallBcPart_.empty())
-      return;
+    return;
 
   auto& ndtw =
     fieldMgr.get_field<double>(minDistanceToWall_->mesh_meta_data_ordinal());
@@ -555,7 +555,6 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
   stk::mesh::parallel_max(realm_.bulk_data(), {minDistanceToWall_});
   if (realm_.hasPeriodic_)
     realm_.periodic_field_max(minDistanceToWall_, 1);
-
 }
 
 /** Compute f1 field with parameters appropriate for 2003 SST implementation
