@@ -104,21 +104,22 @@ TEST_F(FieldManagerTest, fieldStateCanBeSelected)
   const auto nm1 = fm.get_field_ptr<VectorFieldType*>(name, stk::mesh::StateNM1);
   // clang-format on
   EXPECT_TRUE(np1 != nullptr);
-  EXPECT_TRUE(n!= nullptr);
+  EXPECT_TRUE(n != nullptr);
   EXPECT_TRUE(nm1 != nullptr);
   EXPECT_TRUE(np1 != n);
   EXPECT_TRUE(np1 != nm1);
 }
 
-TEST_F(FieldManagerTest, numStatesCanBeChangedAtRegistration){
-const std::string name = "dual_nodal_volume";
-const int numStates = 3;
+TEST_F(FieldManagerTest, numStatesCanBeChangedAtRegistration)
+{
+  const std::string name = "dual_nodal_volume";
+  const int numStates = 3;
 
-FieldManager fm(meta(), numStates);
-fm.register_field(name, meta().universal_part(), numStates);
-auto field = fm.get_field_ptr<ScalarFieldType*>(name);
-ASSERT_TRUE(field != nullptr);
-EXPECT_EQ(numStates, field->number_of_states());
+  FieldManager fm(meta(), numStates);
+  fm.register_field(name, meta().universal_part(), numStates);
+  auto field = fm.get_field_ptr<ScalarFieldType*>(name);
+  ASSERT_TRUE(field != nullptr);
+  EXPECT_EQ(numStates, field->number_of_states());
 }
 } // namespace
 } // namespace nalu

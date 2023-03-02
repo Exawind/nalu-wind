@@ -51,7 +51,8 @@ FieldManager::register_field(
 }
 
 FieldPointerTypes
-FieldManager::register_field(std::string name, const stk::mesh::Part& part, int numStates)
+FieldManager::register_field(
+  std::string name, const stk::mesh::Part& part, int numStates)
 {
   auto definition = FieldRegistry::query(numDimensions_, numStates_, name);
 
