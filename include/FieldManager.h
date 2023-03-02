@@ -33,11 +33,11 @@ private:
 public:
   FieldManager(stk::mesh::MetaData& meta, int numStates);
 
-  FieldPointerTypes
-  register_field(std::string name, const stk::mesh::PartVector& parts);
+  FieldPointerTypes register_field(
+    std::string name, const stk::mesh::PartVector& parts, int numStates = 0);
 
-  FieldPointerTypes
-  register_field(std::string name, const stk::mesh::Part& part);
+  FieldPointerTypes register_field(
+    std::string name, const stk::mesh::Part& part, int numStates = 0);
 
   template <typename T>
   T get_field_ptr(
@@ -48,8 +48,8 @@ public:
     auto pointerSet = std::visit(
       [&](auto def) -> FieldPointerTypes {
         return &meta_
-          .get_field<typename decltype(def)::FieldType>(def.rank, name)
-          ->field_of_state(state);
+                  .get_field<typename decltype(def)::FieldType>(def.rank, name)
+                  ->field_of_state(state);
       },
       fieldDef);
     return std::get<T>(pointerSet);
