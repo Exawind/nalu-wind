@@ -20,6 +20,7 @@
 #include <EquationSystem.h>
 #include <EquationSystems.h>
 #include <FieldTypeDef.h>
+#include <FieldManager.h>
 #include <LinearSystem.h>
 #include <LinearSolvers.h>
 #include <master_element/MasterElement.h>
@@ -315,6 +316,14 @@ Realm::~Realm()
     delete oversetManager_;
 
   MasterElementRepo::clear();
+}
+
+void
+Realm::setup_field_manager()
+{
+  assert(timeIntegrator_ != NULL);
+  fieldManager_ =
+    std::make_unique<FieldManager>(meta_data(), number_of_states());
 }
 
 void
@@ -911,27 +920,26 @@ Realm::parent() const
 void
 Realm::setup_nodal_fields()
 {
-#ifdef NALU_USES_HYPRE
-  hypreGlobalId_ = &(meta_data().declare_field<HypreIDFieldType>(
-    stk::topology::NODE_RANK, "hypre_global_id"));
-#endif
-  tpetGlobalId_ = &(meta_data().declare_field<TpetIDFieldType>(
-    stk::topology::NODE_RANK, "tpet_global_id"));
-
-  // register global id and rank fields on all parts
-  const stk::mesh::PartVector parts = meta_data().get_parts();
-  for (size_t ipart = 0; ipart < parts.size(); ++ipart) {
-    naluGlobalId_ = &(meta_data().declare_field<GlobalIdFieldType>(
-      stk::topology::NODE_RANK, "nalu_global_id"));
-    stk::mesh::put_field_on_mesh(*naluGlobalId_, *parts[ipart], nullptr);
-
-#ifdef NALU_USES_HYPRE
-    stk::mesh::put_field_on_mesh(*hypreGlobalId_, *parts[ipart], nullptr);
-#endif
-    stk::mesh::put_field_on_mesh(*tpetGlobalId_, *parts[ipart], nullptr);
-    stk::mesh::field_fill(
-      std::numeric_limits<LinSys::GlobalOrdinal>::max(), *tpetGlobalId_);
+  if (!fieldManager_) {
+    setup_field_manager();
   }
+#ifdef NALU_USES_HYPRE
+  fieldManager_->register_field("hypre_global_id", meta_data().get_parts());
+  hypreGlobalId_ =
+    fieldManager_->get_field_ptr<HypreIDFieldType*>("hypre_global_id");
+#endif
+#ifdef NALU_USES_TRILINOS_SOLVERS
+  fieldManager_->register_field("tpet_global_id", meta_data().get_parts());
+  // TODO work on removing this variable from realm by accessing fields through
+  // the manager instead
+  tpetGlobalId_ =
+    fieldManager_->get_field_ptr<TpetIDFieldType*>("tpet_global_id");
+  stk::mesh::field_fill(
+    std::numeric_limits<LinSys::GlobalOrdinal>::max(), *tpetGlobalId_);
+#endif
+  fieldManager_->register_field("nalu_global_id", meta_data().get_parts());
+  naluGlobalId_ =
+    fieldManager_->get_field_ptr<GlobalIdFieldType*>("nalu_global_id");
 
   // loop over all material props targets and register nodal fields
   std::vector<std::string> targetNames = get_physics_target_names();
@@ -2702,51 +2710,42 @@ Realm::compute_l2_scaling()
 void
 Realm::register_nodal_fields(stk::mesh::Part* part)
 {
+  if (!fieldManager_) {
+    setup_field_manager();
+  }
   // register high level common fields
-  const int nDim = meta_data().spatial_dimension();
-
   // Declare volume/area_vector fields
   const int numVolStates = does_mesh_move() ? number_of_states() : 1;
   auto& dualNodalVol = meta_data().declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates);
   stk::mesh::put_field_on_mesh(dualNodalVol, *part, 1, nullptr);
-  if (numVolStates > 1)
-    augment_restart_variable_list("dual_nodal_volume");
-  auto& elemVol = meta_data().declare_field<ScalarFieldType>(
-    stk::topology::ELEM_RANK, "element_volume");
-  stk::mesh::put_field_on_mesh(elemVol, *part, 1, nullptr);
+  // TODO(psakiev)           ^
+  //               Turn this | into this |
+  //                                     v
+  // fieldManager_->register_field("dual_nodal_volume", *part);
+  fieldManager_->register_field("element_volume", *part);
 
   if (realmUsesEdges_) {
-    auto& edgeAreaVec = meta_data().declare_field<VectorFieldType>(
-      stk::topology::EDGE_RANK, "edge_area_vector");
-    stk::mesh::put_field_on_mesh(
-      edgeAreaVec, *part, meta_data().spatial_dimension(), nullptr);
+    fieldManager_->register_field("edge_area_vector", *part);
   }
 
   // mesh motion/deformation is high level
-  // clang-format off
-  if ( does_mesh_move()) {
-    VectorFieldType *displacement = &(meta_data().declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement",numVolStates));
-    stk::mesh::put_field_on_mesh(*displacement, *part, nDim, nullptr);
-    augment_restart_variable_list("mesh_displacement");
-    VectorFieldType *currentCoords = &(meta_data().declare_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates"));
-    stk::mesh::put_field_on_mesh(*currentCoords, *part, nDim, nullptr);
-    augment_restart_variable_list("current_coordinates");
-    VectorFieldType *meshVelocity = &(meta_data().declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity"));
-    stk::mesh::put_field_on_mesh(*meshVelocity, *part, nDim, nullptr);
-    augment_restart_variable_list("mesh_velocity");
-    VectorFieldType *velocityRTM = &(meta_data().declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_rtm"));
-    stk::mesh::put_field_on_mesh(*velocityRTM, *part, nDim, nullptr);
-    if(has_mesh_deformation()){
-      ScalarFieldType *divV = &(meta_data().declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity"));
-      stk::mesh::put_field_on_mesh(*divV, *part, nullptr);
+  if (does_mesh_move()) {
+    fieldManager_->register_field("mesh_displacement", *part);
+    fieldManager_->register_field("current_coordinates", *part);
+    fieldManager_->register_field("mesh_velocity", *part);
+    fieldManager_->register_field("velocity_rtm", *part);
+    fieldManager_->register_field("div_mesh_velocity", *part);
+    if (has_mesh_deformation()) {
+      fieldManager_->register_field("div_mesh_velocity", *part);
     }
+    augment_restart_variable_list("dual_nodal_volume");
+    augment_restart_variable_list("mesh_displacement");
+    augment_restart_variable_list("current_coordinates");
+    augment_restart_variable_list("mesh_velocity");
   }
-  // clang-format on
 
-  ScalarIntFieldType& iblank = meta_data().declare_field<ScalarIntFieldType>(
-    stk::topology::NODE_RANK, "iblank");
-  stk::mesh::put_field_on_mesh(iblank, *part, nullptr);
+  fieldManager_->register_field("iblank", *part);
 }
 
 //--------------------------------------------------------------------------

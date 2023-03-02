@@ -27,6 +27,7 @@ class FieldManager
 private:
   stk::mesh::MetaData& meta_;
   const int numStates_;
+  const int numDimensions_;
 
 public:
   FieldManager(stk::mesh::MetaData& meta, int numStates);
@@ -37,15 +38,17 @@ public:
   FieldPointerTypes
   register_field(std::string name, const stk::mesh::Part& part);
 
-  FieldPointerTypes get_field_ptr(std::string name)
+  template <typename T>
+  T get_field_ptr(std::string name)
   {
-    auto fieldDef = FieldRegistry::query(numStates_, name);
-    return std::visit(
+    auto fieldDef = FieldRegistry::query(numDimensions_, numStates_, name);
+    auto pointerSet = std::visit(
       [&](auto def) -> FieldPointerTypes {
         return meta_.get_field<typename decltype(def)::FieldType>(
           def.rank, name);
       },
       fieldDef);
+    return std::get<T>(pointerSet);
   }
 
   bool field_exists(std::string name);

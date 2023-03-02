@@ -9,6 +9,7 @@
 #ifndef FIELDDEFINITIONS_H_
 #define FIELDDEFINITIONS_H_
 #include "FieldTypeDef.h"
+#include <type_traits>
 #include <variant>
 
 namespace sierra {
@@ -20,13 +21,64 @@ struct FieldDefinition
   using FieldType = T;
   const stk::topology::rank_t rank;
   const int num_states{1};
+  const int num_components{1};
 };
 
 using FieldDefScalar = FieldDefinition<ScalarFieldType>;
 using FieldDefVector = FieldDefinition<VectorFieldType>;
+using FieldDefGeneric = FieldDefinition<GenericFieldType>;
+using FieldDefGenericInt = FieldDefinition<GenericIntFieldType>;
+using FieldDefTpetraId = FieldDefinition<TpetIDFieldType>;
+using FieldDefLocalId = FieldDefinition<LocalIdFieldType>;
+using FieldDefGlobalId = FieldDefinition<GlobalIdFieldType>;
+using FieldDefHypreId = FieldDefinition<HypreIDFieldType>;
+using FieldDefScalarInt = FieldDefinition<ScalarIntFieldType>;
 
-using FieldDefTypes = std::variant<FieldDefScalar, FieldDefVector>;
-using FieldPointerTypes = std::variant<ScalarFieldType*, VectorFieldType*>;
+// Type redundancy can occur between HypreId and ScalarInt
+// which will break std::variant
+using FieldDefTypes = std::conditional<
+  std::is_same_v<ScalarIntFieldType, HypreIDFieldType>,
+  std::variant<
+    FieldDefScalar,
+    FieldDefVector,
+    FieldDefGeneric,
+    FieldDefGenericInt,
+    FieldDefTpetraId,
+    FieldDefLocalId,
+    FieldDefGlobalId,
+    FieldDefScalarInt>,
+  std::variant<
+    FieldDefScalar,
+    FieldDefVector,
+    FieldDefGeneric,
+    FieldDefGenericInt,
+    FieldDefTpetraId,
+    FieldDefLocalId,
+    FieldDefGlobalId,
+    FieldDefScalarInt,
+    FieldDefHypreId>>::type;
+
+using FieldPointerTypes = std::conditional<
+  std::is_same_v<ScalarIntFieldType, HypreIDFieldType>,
+  std::variant<
+    ScalarFieldType*,
+    VectorFieldType*,
+    GenericFieldType*,
+    GenericIntFieldType*,
+    TpetIDFieldType*,
+    LocalIdFieldType*,
+    GlobalIdFieldType*,
+    ScalarIntFieldType*>,
+  std::variant<
+    ScalarFieldType*,
+    VectorFieldType*,
+    GenericFieldType*,
+    GenericIntFieldType*,
+    TpetIDFieldType*,
+    LocalIdFieldType*,
+    GlobalIdFieldType*,
+    ScalarIntFieldType*,
+    HypreIDFieldType*>>::type;
 
 } // namespace nalu
 } // namespace sierra

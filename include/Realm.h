@@ -17,6 +17,7 @@
 #include <InitialConditions.h>
 #include <MaterialPropertys.h>
 #include <EquationSystems.h>
+#include <FieldManager.h>
 
 #if defined(NALU_USES_PERCEPT)
 #include <Teuchos_RCP.hpp>
@@ -62,6 +63,7 @@ class GeometryAlgDriver;
 class NonConformalManager;
 class ErrorIndicatorAlgorithmDriver;
 class EquationSystems;
+class FieldManager;
 class OutputInfo;
 class OversetManager;
 class PostProcessingInfo;
@@ -365,6 +367,11 @@ public:
 
   void output_lidar();
 
+  // kind of annoying we have to do this, but the time ingetrator isn't
+  // populated when the Realm is constructured, so we have to wait until it is
+  // to be able to initialize the FieldManager
+  void setup_field_manager();
+
   Realms& realms_;
 
   std::string name_;
@@ -417,6 +424,7 @@ public:
   std::unique_ptr<AeroContainer> aeroModels_;
   ABLForcingAlgorithm* ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
+  std::unique_ptr<FieldManager> fieldManager_;
   std::unique_ptr<MeshMotionAlg> meshMotionAlg_;
   std::unique_ptr<MeshTransformationAlg> meshTransformationAlg_;
   std::unique_ptr<LidarLOS> lidarLOS_;
