@@ -91,6 +91,24 @@ TEST_F(FieldManagerTest, undefinedFieldCantBeRegistered)
   EXPECT_THROW(
     fm.register_field(name, meta().universal_part()), std::runtime_error);
 }
+
+TEST_F(FieldManagerTest, fieldStateCanBeSelected)
+{
+  const std::string name = "velocity";
+  const int numStates = 3;
+  FieldManager fm(meta(), numStates);
+  fm.register_field(name, meta().universal_part());
+  // clang-format off
+  const auto np1 = fm.get_field_ptr<VectorFieldType*>(name, stk::mesh::StateNP1);
+  const auto n =   fm.get_field_ptr<VectorFieldType*>(name, stk::mesh::StateN);
+  const auto nm1 = fm.get_field_ptr<VectorFieldType*>(name, stk::mesh::StateNM1);
+  // clang-format on
+  EXPECT_TRUE(np1 != nullptr);
+  EXPECT_TRUE(n!= nullptr);
+  EXPECT_TRUE(nm1 != nullptr);
+  EXPECT_TRUE(np1 != n);
+  EXPECT_TRUE(np1 != nm1);
+}
 } // namespace
 } // namespace nalu
 } // namespace sierra
