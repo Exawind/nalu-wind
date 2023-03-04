@@ -40,7 +40,7 @@ Registry()
     {"hypre_global_id", HypreId},
     {"tpet_global_id", TpetraId},
     {"nalu_global_id", GlobalId},
-    {"dual_nodal_volume", MultiStateNodalScalar},
+    {"dual_nodal_volume", SingleStateNodalScalar},
     {"element_volume", SingleStateElemScalar},
     {"edge_area_vector", SingleStateEdgeVector},
     {"mesh_displacement", MultiStateNodalVector},
