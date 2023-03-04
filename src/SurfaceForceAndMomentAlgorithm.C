@@ -157,6 +157,20 @@ SurfaceForceAndMomentAlgorithm::execute()
   double yplusMin = 1.0e8;
   double yplusMax = -1.0e8;
 
+  // sync fields to host
+  coordinates_->sync_to_host();
+  pressure_->sync_to_host();
+  pressureForce_->sync_to_host();
+  viscousForce_->sync_to_host();
+  tauWallVector_->sync_to_host();
+  tauWall_->sync_to_host();
+  yplus_->sync_to_host();
+  density_->sync_to_host();
+  viscosity_->sync_to_host();
+  dudx_->sync_to_host();
+  exposedAreaVec_->sync_to_host();
+  assembledArea_->sync_to_host();
+
   // nodal fields to gather
   std::vector<double> ws_pressure;
   std::vector<double> ws_density;
