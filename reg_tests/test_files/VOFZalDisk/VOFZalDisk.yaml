@@ -90,8 +90,6 @@ realms:
             pressure: no
             velocity: no
 
-        - consistent_mass_matrix_png:
-            pressure: no
       # Pressure is not fixed anywhere on the boundaries, so set it at
       # the node closest to the specified location.
       fix_pressure_at_node:
