@@ -11,6 +11,7 @@
 #define FIELDMANAGER_H_
 
 #include "FieldRegistry.h"
+#include <stk_mesh/base/FieldState.hpp>
 #include <string>
 
 namespace stk {
@@ -27,25 +28,31 @@ class FieldManager
 private:
   stk::mesh::MetaData& meta_;
   const int numStates_;
+  const int numDimensions_;
 
 public:
   FieldManager(stk::mesh::MetaData& meta, int numStates);
 
-  FieldPointerTypes
-  register_field(std::string name, const stk::mesh::PartVector& parts);
+  FieldPointerTypes register_field(
+    std::string name, const stk::mesh::PartVector& parts, int numStates = 0);
 
-  FieldPointerTypes
-  register_field(std::string name, const stk::mesh::Part& part);
+  FieldPointerTypes register_field(
+    std::string name, const stk::mesh::Part& part, int numStates = 0);
 
-  FieldPointerTypes get_field_ptr(std::string name)
+  template <typename T>
+  T get_field_ptr(
+    std::string name,
+    stk::mesh::FieldState state = stk::mesh::FieldState::StateNone)
   {
-    auto fieldDef = FieldRegistry::query(numStates_, name);
-    return std::visit(
+    auto fieldDef = FieldRegistry::query(numDimensions_, numStates_, name);
+    auto pointerSet = std::visit(
       [&](auto def) -> FieldPointerTypes {
-        return meta_.get_field<typename decltype(def)::FieldType>(
-          def.rank, name);
+        return &meta_
+                  .get_field<typename decltype(def)::FieldType>(def.rank, name)
+                  ->field_of_state(state);
       },
       fieldDef);
+    return std::get<T>(pointerSet);
   }
 
   bool field_exists(std::string name);

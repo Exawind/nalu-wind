@@ -17,6 +17,7 @@
 #include <InitialConditions.h>
 #include <MaterialPropertys.h>
 #include <EquationSystems.h>
+#include <FieldManager.h>
 
 #if defined(NALU_USES_PERCEPT)
 #include <Teuchos_RCP.hpp>
