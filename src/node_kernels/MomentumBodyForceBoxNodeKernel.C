@@ -62,7 +62,7 @@ MomentumBodyForceBoxNodeKernel::MomentumBodyForceBoxNodeKernel(
     const auto& subParts = mdotPart_->subsets();
     for (auto* part : subParts) {
       const auto topo = part->topology();
-      MasterElement* meFC = MasterElementRepo::get_surface_master_element(topo);
+      MasterElement* meFC = MasterElementRepo::get_surface_master_element_on_host(topo);
       const int numScsIp = meFC->num_integration_points();
       GenericFieldType* exposedAreaVec_ =
         &(realm.meta_data().declare_field<GenericFieldType>(
@@ -123,7 +123,7 @@ MomentumBodyForceBoxNodeKernel::setup(Realm& realm)
     double l_mdotArea = 0.0;
     for (auto* part : subParts) {
       const auto topo = part->topology();
-      MasterElement* meFC = MasterElementRepo::get_surface_master_element(topo);
+      MasterElement* meFC = MasterElementRepo::get_surface_master_element_on_host(topo);
       const int numScsIp = meFC->num_integration_points();
       const std::string algName = "compute_mdot_area_" + std::to_string(topo);
       const stk::mesh::Selector sel = realm.meta_data().locally_owned_part() &

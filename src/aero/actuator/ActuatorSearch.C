@@ -194,7 +194,7 @@ ExecuteFineSearch(
     const stk::mesh::Bucket& theBucket = stkBulk.bucket(elem);
     const stk::topology& elemTopo = theBucket.topology();
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(elemTopo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(elemTopo);
     const int nodesPerElement = meSCS->nodesPerElement_;
 
     // gather elemental coords

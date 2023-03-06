@@ -51,7 +51,7 @@ MomentumWallFunctionElemKernel<BcAlgTraits>::MomentumWallFunctionElemKernel(
     elog_(solnOpts.get_turb_model_constant(TM_elog)),
     kappa_(solnOpts.get_turb_model_constant(TM_kappa)),
     yplusCrit_(solnOpts.get_turb_model_constant(TM_yplus_crit)),
-    ipNodeMap_(sierra::nalu::MasterElementRepo::get_surface_master_element(
+    ipNodeMap_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
                  BcAlgTraits::topo_)
                  ->ipNodeMap())
 {
@@ -70,7 +70,7 @@ MomentumWallFunctionElemKernel<BcAlgTraits>::MomentumWallFunctionElemKernel(
     get_field_ordinal(metaData, solnOpts.get_coordinates_name());
 
   MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element(
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       BcAlgTraits::topo_);
   MasterElement* meFC_dev =
     sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(

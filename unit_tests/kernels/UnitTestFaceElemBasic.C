@@ -159,14 +159,11 @@ TEST_F(Hex8Mesh, NGP_faceElemBasic)
   stk::topology faceTopo = stk::topology::QUAD_4;
   stk::topology elemTopo = stk::topology::HEX_8;
   sierra::nalu::MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element<
-      sierra::nalu::AlgTraitsQuad4>();
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev( sierra::nalu::AlgTraitsQuad4::topo_);
   sierra::nalu::MasterElement* meSCS =
-    sierra::nalu::MasterElementRepo::get_surface_master_element<
-      sierra::nalu::AlgTraitsHex8>();
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev( sierra::nalu::AlgTraitsHex8::topo_);
   sierra::nalu::MasterElement* meSCV =
-    sierra::nalu::MasterElementRepo::get_volume_master_element<
-      sierra::nalu::AlgTraitsHex8>();
+    sierra::nalu::MasterElementRepo::get_volume_master_element_on_dev( sierra::nalu::AlgTraitsHex8::topo_);
 
   stk::mesh::Part* surface1 = meta->get_part("surface_1");
   unsigned numDof = 3;
@@ -182,8 +179,6 @@ TEST_F(Hex8Mesh, NGP_faceElemBasic)
 
   do_assemble_face_elem_solver_test(*bulk, faceElemAlg, idField);
 }
-
-#if !defined(KOKKOS_ENABLE_GPU)
 
 void
 move_face_from_surface2_to_surface3(stk::mesh::BulkData& bulk)
@@ -313,5 +308,3 @@ TEST_F(Hex8ElementWithBCFields, faceElemScalarOpen)
 
   faceElemAlg.execute();
 }
-
-#endif

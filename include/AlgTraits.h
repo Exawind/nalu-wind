@@ -126,6 +126,11 @@ struct AlgTraitsQuad4
   using masterElementScs_ = Quad3DSCS;
 };
 
+struct AlgTraitsShellQuad4 : public AlgTraitsQuad4
+{
+  static constexpr stk::topology::topology_t topo_ = stk::topology::SHELL_QUAD_4;
+};
+
 struct AlgTraitsTri3
 {
   static constexpr int nDim_ = 3;
@@ -135,6 +140,11 @@ struct AlgTraitsTri3
   static constexpr int numFaceIp_ = numScsIp_;
   static constexpr stk::topology::topology_t topo_ = stk::topology::TRI_3;
   using masterElementScs_ = Tri3DSCS;
+};
+
+struct AlgTraitsShellTri3 : public AlgTraitsTri3
+{
+  static constexpr stk::topology::topology_t topo_ = stk::topology::SHELL_TRI_3;
 };
 
 struct AlgTraitsEdge_2D
@@ -148,6 +158,10 @@ struct AlgTraitsEdge_2D
   using masterElementScs_ = Edge2DSCS;
 };
 
+struct AlgTraitsBeam_2D : public AlgTraitsEdge_2D
+{
+  static constexpr stk::topology::topology_t topo_ = stk::topology::BEAM_2;
+};
 //-------------------------------------------------------------------------------------------
 
 template <typename AlgTraitsFace, typename AlgTraitsElem>

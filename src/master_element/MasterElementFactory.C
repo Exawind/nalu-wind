@@ -33,223 +33,228 @@
 namespace sierra {
 namespace nalu {
 
+namespace {
+
+template <typename AlgTraits, typename ME> 
+std::pair<stk::topology, MasterElement*> pair_dev() {
+  return {AlgTraits::topo_, create_device_expression<ME>()};
+}
+
+template <typename AlgTraits, typename ME> 
+std::pair<stk::topology, MasterElement*> pair_host() {
+  return {AlgTraits::topo_, new ME()};
+}
+
+template <typename AlgTraits>
+std::pair<stk::topology, MasterElement*> surface_pair_dev() {
+  return pair_dev<AlgTraits,  typename AlgTraits::masterElementScs_>();
+}
+
+template <typename AlgTraits>
+std::pair<stk::topology, MasterElement*> surface_pair_host() {
+  return pair_host<AlgTraits,  typename AlgTraits::masterElementScs_>();
+}
+
+template <typename AlgTraits>
+std::pair<stk::topology, MasterElement*> volume_pair_dev() {
+  return pair_dev<AlgTraits,  typename AlgTraits::masterElementScv_>();
+}
+
+template <typename AlgTraits>
+std::pair<stk::topology, MasterElement*> volume_pair_host() {
+  return pair_host<AlgTraits,  typename AlgTraits::masterElementScv_>();
+}
+
+const std::map<stk::topology, MasterElement*> & surface_topo_to_me_dev() {
+  static const std::map<stk::topology, MasterElement*> 
+    surface_me_map = {
+      surface_pair_dev<AlgTraitsHex8>(),
+      surface_pair_dev<AlgTraitsTet4>(),
+      surface_pair_dev<AlgTraitsPyr5>(),
+      surface_pair_dev<AlgTraitsWed6>(),
+      surface_pair_dev<AlgTraitsQuad4>(),
+      surface_pair_dev<AlgTraitsTri3>(),
+      surface_pair_dev<AlgTraitsQuad4_2D>(),
+      surface_pair_dev<AlgTraitsTri3_2D>(),
+      surface_pair_dev<AlgTraitsEdge_2D>(),
+      surface_pair_dev<AlgTraitsShellQuad4>(),
+      surface_pair_dev<AlgTraitsShellTri3>(),
+      surface_pair_dev<AlgTraitsBeam_2D>()
+    };
+  return surface_me_map;
+}
+const std::map<stk::topology, MasterElement*> & surface_topo_to_me_host() {
+  static const std::map<stk::topology, MasterElement*> 
+    surface_me_map = {
+      surface_pair_host<AlgTraitsHex8>(),
+      surface_pair_host<AlgTraitsTet4>(),
+      surface_pair_host<AlgTraitsPyr5>(),
+      surface_pair_host<AlgTraitsWed6>(),
+      surface_pair_host<AlgTraitsQuad4>(),
+      surface_pair_host<AlgTraitsTri3>(),
+      surface_pair_host<AlgTraitsQuad4_2D>(),
+      surface_pair_host<AlgTraitsTri3_2D>(),
+      surface_pair_host<AlgTraitsEdge_2D>(),
+      surface_pair_host<AlgTraitsShellQuad4>(),
+      surface_pair_host<AlgTraitsShellTri3>(),
+      surface_pair_host<AlgTraitsBeam_2D>()
+    };
+  return surface_me_map;
+}
+
+const std::map<stk::topology, MasterElement*> & volume_topo_to_me_dev() {
+  static const std::map<stk::topology, MasterElement*> 
+    volume_me_map = {
+      volume_pair_dev<AlgTraitsHex8>(),
+      volume_pair_dev<AlgTraitsTet4>(),
+      volume_pair_dev<AlgTraitsPyr5>(),
+      volume_pair_dev<AlgTraitsWed6>(),
+      volume_pair_dev<AlgTraitsQuad4_2D>(),
+      volume_pair_dev<AlgTraitsTri3_2D>(),
+    };
+  return volume_me_map;
+}
+
+const std::map<stk::topology, MasterElement*> & volume_topo_to_me_host() {
+  static const std::map<stk::topology, MasterElement*> 
+    volume_me_map = {
+      volume_pair_host<AlgTraitsHex8>(),
+      volume_pair_host<AlgTraitsTet4>(),
+      volume_pair_host<AlgTraitsPyr5>(),
+      volume_pair_host<AlgTraitsWed6>(),
+      volume_pair_host<AlgTraitsQuad4_2D>(),
+      volume_pair_host<AlgTraitsTri3_2D>(),
+    };
+  return volume_me_map;
+}
+
+std::map<MasterElement*, stk::topology> map_inverse(std::map<stk::topology, MasterElement*> M) {
+  std::map<MasterElement*, stk::topology> I;
+  for (auto P : M) I[P.second] = P.first;
+  return I;
+}
+
+const std::map<MasterElement*, stk::topology> & surface_me_to_topo_dev() {
+  static const std::map<MasterElement*, stk::topology> 
+    surface_topo_map(map_inverse(surface_topo_to_me_dev()));
+  return surface_topo_map;
+}
+
+const std::map<MasterElement*, stk::topology> & surface_me_to_topo_host() {
+  static const std::map<MasterElement*, stk::topology> 
+    surface_topo_map(map_inverse(surface_topo_to_me_host()));
+  return surface_topo_map;
+}
+
+const std::map<MasterElement*, stk::topology> & volume_me_to_topo_dev() {
+  static const std::map<MasterElement*, stk::topology> 
+    volume_topo_map(map_inverse(volume_topo_to_me_dev()));
+  return volume_topo_map;
+}
+
+const std::map<MasterElement*, stk::topology> & volume_me_to_topo_host() {
+  static const std::map<MasterElement*, stk::topology> 
+    volume_topo_map(map_inverse(volume_topo_to_me_host()));
+  return volume_topo_map;
+}
+
+
+stk::topology find_topo(
+  MasterElement* host_ptr,
+  const std::map<MasterElement*, stk::topology> &host_map,
+  const std::map<MasterElement*, stk::topology> &dev_map)
+{
+  stk::topology theTopo;
+  if (const auto it = host_map.find(host_ptr); it != host_map.end()) {
+    theTopo = it->second;
+  } else if (const auto it = dev_map.find(host_ptr); it != dev_map.end()) {
+    theTopo = it->second;
+  } else {
+    NaluEnv::self().naluOutputP0()
+      <<" Host Master Element pointer could not be converted to device pointer."
+      <<" The pointer was not found in the master element database:"<<host_ptr<<std::endl;
+    ThrowRequire(host_map.find(host_ptr) != dev_map.end());
+  }
+  return theTopo;
+}
+
+MasterElement* find_me(
+  const stk::topology& theTopo,
+  const std::map<stk::topology, MasterElement*> & me_map)
+{
+  auto it = me_map.find(theTopo);
+  if (it == me_map.end()) {
+    NaluEnv::self().naluOutputP0()
+      <<" Topology not supported: The topology, "<<theTopo.name()
+      <<", was not found in the map of supported topologies."<<std::endl 
+      <<" There are "<<me_map.size()<<" supported topologies:"<<std::endl;
+    for (const auto &v : me_map)
+      NaluEnv::self().naluOutputP0()<<v.first.name()<<std::endl;
+    NaluEnv::self().naluOutputP0()
+      <<" Add topology to MasterElementRepo::find_me()"<<std::endl;
+    ThrowRequire(it != me_map.end());
+  }
+  MasterElement* theElem = it->second;
+  return theElem;
+}
+
+}
+
 MasterElement*
 MasterElementRepo::get_surface_master_element_on_dev(
   const stk::topology& theTopo)
 {
-  switch (theTopo.value()) {
-  case stk::topology::HEX_8:
-    return get_surface_master_element<AlgTraitsHex8>();
-  case stk::topology::TET_4:
-    return get_surface_master_element<AlgTraitsTet4>();
-  case stk::topology::PYRAMID_5:
-    return get_surface_master_element<AlgTraitsPyr5>();
-  case stk::topology::WEDGE_6:
-    return get_surface_master_element<AlgTraitsWed6>();
-  case stk::topology::QUAD_4:
-    return get_surface_master_element<AlgTraitsQuad4>();
-  case stk::topology::TRI_3:
-    return get_surface_master_element<AlgTraitsTri3>();
-  case stk::topology::QUAD_4_2D:
-    return get_surface_master_element<AlgTraitsQuad4_2D>();
-  case stk::topology::TRI_3_2D:
-    return get_surface_master_element<AlgTraitsTri3_2D>();
-  case stk::topology::LINE_2:
-    return get_surface_master_element<AlgTraitsEdge_2D>();
-  case stk::topology::SHELL_QUAD_4:
-    NaluEnv::self().naluOutputP0()
-      << "SHELL_QUAD_4 only supported for io surface transfer applications"
-      << std::endl;
-    return get_surface_master_element<AlgTraitsQuad4>();
-
-  case stk::topology::SHELL_TRI_3:
-    NaluEnv::self().naluOutputP0()
-      << "SHELL_TRI_3 only supported for io surface transfer applications"
-      << std::endl;
-    return get_surface_master_element<AlgTraitsTri3>();
-
-  case stk::topology::BEAM_2:
-    NaluEnv::self().naluOutputP0()
-      << "BEAM_2 is only supported for io surface transfer applications"
-      << std::endl;
-    return get_surface_master_element<AlgTraitsEdge_2D>();
-
-  default:
-    NaluEnv::self().naluOutputP0()
-      << "sorry, we only support hex8, tet4, pyr5, wed6,"
-         " quad42d, quad3d, tri2d, tri3d and edge2d surface elements"
-      << std::endl;
-    NaluEnv::self().naluOutputP0()
-      << "your type is " << theTopo.value() << std::endl;
-    break;
-  }
-  return nullptr;
-}
-
-std::unique_ptr<MasterElement>
-create_surface_master_element(stk::topology topo)
-{
-  switch (topo.value()) {
-
-  case stk::topology::HEX_8:
-    return std::make_unique<HexSCS>();
-
-  case stk::topology::TET_4:
-    return std::make_unique<TetSCS>();
-
-  case stk::topology::PYRAMID_5:
-    return std::make_unique<PyrSCS>();
-
-  case stk::topology::WEDGE_6:
-    return std::make_unique<WedSCS>();
-
-  case stk::topology::QUAD_4:
-    return std::make_unique<Quad3DSCS>();
-
-  case stk::topology::TRI_3:
-    return std::make_unique<Tri3DSCS>();
-
-  case stk::topology::QUAD_4_2D:
-    return std::make_unique<Quad42DSCS>();
-
-  case stk::topology::TRI_3_2D:
-    return std::make_unique<Tri32DSCS>();
-
-  case stk::topology::LINE_2:
-    return std::make_unique<Edge2DSCS>();
-
-  case stk::topology::SHELL_QUAD_4:
-    NaluEnv::self().naluOutputP0()
-      << "SHELL_QUAD_4 only supported for io surface transfer applications"
-      << std::endl;
-    return std::make_unique<Quad3DSCS>();
-
-  case stk::topology::SHELL_TRI_3:
-    NaluEnv::self().naluOutputP0()
-      << "SHELL_TRI_3 only supported for io surface transfer applications"
-      << std::endl;
-    return std::make_unique<Tri3DSCS>();
-
-  case stk::topology::BEAM_2:
-    NaluEnv::self().naluOutputP0()
-      << "BEAM_2 is only supported for io surface transfer applications"
-      << std::endl;
-    return std::make_unique<Edge2DSCS>();
-
-  default:
-    NaluEnv::self().naluOutputP0()
-      << "sorry, we only support hex8, tet4, pyr5, wed6,"
-         " quad42d, quad3d, tri2d, tri3d and edge2d surface elements"
-      << std::endl;
-    NaluEnv::self().naluOutputP0()
-      << "your type is " << topo.value() << std::endl;
-    break;
-  }
-  return nullptr;
-}
-//--------------------------------------------------------------------------
-std::unique_ptr<MasterElement>
-create_volume_master_element(stk::topology topo)
-{
-  switch (topo.value()) {
-
-  case stk::topology::HEX_8:
-    return std::make_unique<HexSCV>();
-
-  case stk::topology::TET_4:
-    return std::make_unique<TetSCV>();
-
-  case stk::topology::PYRAMID_5:
-    return std::make_unique<PyrSCV>();
-
-  case stk::topology::WEDGE_6:
-    return std::make_unique<WedSCV>();
-
-  case stk::topology::QUAD_4_2D:
-    return std::make_unique<Quad42DSCV>();
-
-  case stk::topology::TRI_3_2D:
-    return std::make_unique<Tri32DSCV>();
-
-  default:
-    NaluEnv::self().naluOutputP0()
-      << "sorry, we only support hex8, tet4, wed6, "
-         " pyr5, quad4, and tri3 volume elements"
-      << std::endl;
-    NaluEnv::self().naluOutputP0()
-      << "your type is " << topo.value() << std::endl;
-    break;
-  }
-  return nullptr;
-}
-
-std::map<stk::topology, std::unique_ptr<MasterElement>>
-  MasterElementRepo::surfaceMeMap_;
-
-MasterElement*
-MasterElementRepo::get_surface_master_element(const stk::topology& theTopo)
-{
-  auto it = surfaceMeMap_.find(theTopo);
-  if (it == surfaceMeMap_.end()) {
-    surfaceMeMap_[theTopo] = create_surface_master_element(theTopo);
-  }
-  MasterElement* theElem = surfaceMeMap_.at(theTopo).get();
-  ThrowRequire(theElem != nullptr);
+  MasterElement* theElem = find_me(theTopo, surface_topo_to_me_dev());
   return theElem;
 }
 
-std::map<stk::topology, std::unique_ptr<MasterElement>>
-  MasterElementRepo::volumeMeMap_;
-
 MasterElement*
-MasterElementRepo::get_volume_master_element(const stk::topology& theTopo)
+MasterElementRepo::get_surface_master_element_on_host(const stk::topology& theTopo)
 {
-  auto it = volumeMeMap_.find(theTopo);
-  if (it == volumeMeMap_.end()) {
-    volumeMeMap_[theTopo] = create_volume_master_element(theTopo);
-  }
-  MasterElement* theElem = volumeMeMap_.at(theTopo).get();
-  ThrowRequire(theElem != nullptr);
+  MasterElement* theElem = find_me(theTopo, surface_topo_to_me_host());
   return theElem;
 }
 
-std::map<stk::topology, MasterElement*>&
-MasterElementRepo::volumeMeMapDev()
+MasterElement*
+MasterElementRepo::get_volume_master_element_on_dev(const stk::topology& theTopo)
 {
-  static std::map<stk::topology, MasterElement*> M;
-  return M;
-}
-std::map<stk::topology, MasterElement*>&
-MasterElementRepo::surfaceMeMapDev()
-{
-  static std::map<stk::topology, MasterElement*> M;
-  return M;
+  MasterElement* theElem = find_me(theTopo, volume_topo_to_me_dev());
+  return theElem;
 }
 
-void
-MasterElementRepo::clear()
+MasterElement*
+MasterElementRepo::get_volume_master_element_on_host(const stk::topology& theTopo)
 {
-  surfaceMeMap_.clear();
-  volumeMeMap_.clear();
-  for (std::pair<stk::topology, MasterElement*> a : volumeMeMapDev()) {
-    const std::string debuggingName("MEDestroy: " + a.first.name());
-    auto* meobj = a.second;
-    Kokkos::parallel_for(
-      debuggingName, DeviceRangePolicy(0, 1),
-      KOKKOS_LAMBDA(int) { meobj->~MasterElement(); });
-    sierra::nalu::kokkos_free_on_device(a.second);
-  }
-  volumeMeMapDev().clear();
-  for (std::pair<stk::topology, MasterElement*> a : surfaceMeMapDev()) {
-    const std::string debuggingName("MEDestroy: " + a.first.name());
-    auto* meobj = a.second;
-    Kokkos::parallel_for(
-      debuggingName, DeviceRangePolicy(0, 1),
-      KOKKOS_LAMBDA(int) { meobj->~MasterElement(); });
-    sierra::nalu::kokkos_free_on_device(a.second);
-  }
-  surfaceMeMapDev().clear();
+  MasterElement* theElem = find_me(theTopo, volume_topo_to_me_host());
+  return theElem;
 }
 
+MasterElement* 
+MasterElementRepo::get_surface_dev_ptr_from_host_ptr(MasterElement* host_ptr)
+{
+  if (!host_ptr) return nullptr;
+  const stk::topology theTopo = find_topo(host_ptr,
+      surface_me_to_topo_host(),
+      surface_me_to_topo_dev());
+  return get_surface_master_element_on_dev(theTopo);
+}
+
+MasterElement* 
+MasterElementRepo::get_volume_dev_ptr_from_host_ptr(MasterElement* host_ptr)
+{
+  if (!host_ptr) return nullptr;
+  const stk::topology theTopo = find_topo(host_ptr,
+       volume_me_to_topo_host(),
+       volume_me_to_topo_dev());
+  return get_volume_master_element_on_dev(theTopo);
+}
+
+void 
+MasterElementRepo::clear() {
+  for (auto val : surface_topo_to_me_host()) delete val.second;
+  for (auto val : surface_topo_to_me_dev()) kokkos_free_on_device(val.second);
+  for (auto val : volume_topo_to_me_host()) delete val.second;
+  for (auto val : volume_topo_to_me_dev()) kokkos_free_on_device(val.second);
+}
 } // namespace nalu
 } // namespace sierra

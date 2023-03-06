@@ -160,10 +160,8 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
       "wall_normal_distance_bip",
       realm.meta_data().side_rank())),
     useShifted_(useShifted),
-    meFC_(MasterElementRepo::get_surface_master_element<
-          typename BcAlgTraits::FaceTraits>()),
-    meSCS_(MasterElementRepo::get_surface_master_element<
-           typename BcAlgTraits::ElemTraits>())
+    meFC_(MasterElementRepo::get_surface_master_element_on_dev( BcAlgTraits::FaceTraits::topo_)),
+    meSCS_(MasterElementRepo::get_surface_master_element_on_dev( BcAlgTraits::ElemTraits::topo_))
 {
   faceData_.add_cvfem_face_me(meFC_);
   elemData_.add_cvfem_surface_me(meSCS_);

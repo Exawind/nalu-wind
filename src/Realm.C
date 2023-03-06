@@ -314,8 +314,6 @@ Realm::~Realm()
 
   if (nullptr != oversetManager_)
     delete oversetManager_;
-
-  MasterElementRepo::clear();
 }
 
 void
@@ -985,7 +983,7 @@ Realm::setup_element_fields()
       auto fieldSize = 1;
       if (!realmUsesEdges_) {
         auto* meSCS =
-          sierra::nalu::MasterElementRepo::get_surface_master_element(
+          sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
             targetPart->topology());
         fieldSize = meSCS->num_integration_points();
       }
@@ -2780,7 +2778,7 @@ Realm::register_wall_bc(stk::mesh::Part* part, const stk::topology& theTopo)
   const int nDim = meta_data().spatial_dimension();
 
   // register fields
-  MasterElement* meFC = MasterElementRepo::get_surface_master_element(theTopo);
+  MasterElement* meFC = MasterElementRepo::get_surface_master_element_on_host(theTopo);
   const int numScsIp = meFC->num_integration_points();
 
   GenericFieldType* exposedAreaVec_ =
@@ -2815,7 +2813,7 @@ Realm::register_inflow_bc(stk::mesh::Part* part, const stk::topology& theTopo)
   const int nDim = meta_data().spatial_dimension();
 
   // register fields
-  MasterElement* meFC = MasterElementRepo::get_surface_master_element(theTopo);
+  MasterElement* meFC = MasterElementRepo::get_surface_master_element_on_host(theTopo);
   const int numScsIp = meFC->num_integration_points();
 
   GenericFieldType* exposedAreaVec_ =
@@ -2850,7 +2848,7 @@ Realm::register_open_bc(stk::mesh::Part* part, const stk::topology& theTopo)
   const int nDim = meta_data().spatial_dimension();
 
   // register fields
-  MasterElement* meFC = MasterElementRepo::get_surface_master_element(theTopo);
+  MasterElement* meFC = MasterElementRepo::get_surface_master_element_on_host(theTopo);
   const int numScsIp = meFC->num_integration_points();
 
   GenericFieldType* exposedAreaVec_ =
@@ -2884,7 +2882,7 @@ Realm::register_symmetry_bc(stk::mesh::Part* part, const stk::topology& theTopo)
   const int nDim = meta_data().spatial_dimension();
 
   // register fields
-  MasterElement* meFC = MasterElementRepo::get_surface_master_element(theTopo);
+  MasterElement* meFC = MasterElementRepo::get_surface_master_element_on_host(theTopo);
   const int numScsIp = meFC->num_integration_points();
 
   GenericFieldType* exposedAreaVec_ =
@@ -2975,7 +2973,7 @@ Realm::register_non_conformal_bc(
 
   const int nDim = meta_data().spatial_dimension();
   // register fields
-  MasterElement* meFC = MasterElementRepo::get_surface_master_element(theTopo);
+  MasterElement* meFC = MasterElementRepo::get_surface_master_element_on_host(theTopo);
   const int numScsIp = meFC->num_integration_points();
 
   // exposed area vector
@@ -2999,7 +2997,7 @@ Realm::register_overset_bc()
       const auto topo = part->topology();
       const int nDim = meta_data().spatial_dimension();
       // register fields
-      MasterElement* meFC = MasterElementRepo::get_surface_master_element(topo);
+      MasterElement* meFC = MasterElementRepo::get_surface_master_element_on_host(topo);
       const int numScsIp = meFC->num_integration_points();
 
       // exposed area vector

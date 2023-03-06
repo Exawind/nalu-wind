@@ -38,7 +38,7 @@ public:
     pressure_ = sierra::nalu::get_field_ordinal(meta, "pressure");
 
     meSCS_ =
-      sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>();
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_);
 
     dataReq.add_cvfem_surface_me(meSCS_);
 

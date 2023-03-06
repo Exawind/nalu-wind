@@ -35,7 +35,7 @@ find_max_nodes_and_ips(
     stk::topology topo = bptr->topology();
     maxNodesPerElement = std::max(maxNodesPerElement, (int)topo.num_nodes());
     sierra::nalu::MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
     maxScsIp = std::max(maxScsIp, meSCS->num_integration_points());
     numEntities += bptr->size();
   }
@@ -346,7 +346,7 @@ public:
         const stk::mesh::Bucket& bkt = *elemBuckets[team.league_rank()];
         stk::topology topo = bkt.topology();
         sierra::nalu::MasterElement& meSCS =
-          *sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+          *sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
 
         const int nodesPerElem = topo.num_nodes();
         const int numScsIp = meSCS.num_integration_points();

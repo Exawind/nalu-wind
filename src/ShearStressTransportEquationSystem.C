@@ -227,7 +227,7 @@ ShearStressTransportEquationSystem::register_wall_bc(
   stk::mesh::put_field_on_mesh(assembledWallNormDist, *part, nullptr);
   auto& wallNormDistBip = meta.declare_field<GenericFieldType>(
     meta.side_rank(), "wall_normal_distance_bip");
-  auto* meFC = MasterElementRepo::get_surface_master_element(partTopo);
+  auto* meFC = MasterElementRepo::get_surface_master_element_on_host(partTopo);
   const int numScsBip = meFC->num_integration_points();
   stk::mesh::put_field_on_mesh(wallNormDistBip, *part, numScsBip, nullptr);
 

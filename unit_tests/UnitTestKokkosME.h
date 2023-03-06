@@ -73,9 +73,9 @@ public:
   void init_me_data()
   {
     // Initialize both surface and volume elements
-    meSCS_ = sierra::nalu::MasterElementRepo::get_surface_master_element(
+    meSCS_ = sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       AlgTraits::topo_);
-    meSCV_ = sierra::nalu::MasterElementRepo::get_volume_master_element(
+    meSCV_ = sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(
       AlgTraits::topo_);
 
     // Register them to ElemDataRequests

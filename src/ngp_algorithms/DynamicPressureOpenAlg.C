@@ -45,7 +45,7 @@ DynamicPressureOpenAlg<BcAlgTraits>::DynamicPressureOpenAlg(
       realm_.meta_data().side_rank())),
     dynPress_(get_field_ordinal(
       realm_.meta_data(), "dynamic_pressure", realm_.meta_data().side_rank())),
-    meFC_(MasterElementRepo::get_surface_master_element<BcAlgTraits>())
+    meFC_(MasterElementRepo::get_surface_master_element_on_dev(BcAlgTraits::topo_))
 {
   faceData_.add_cvfem_face_me(meFC_);
   faceData_.add_coordinates_field(

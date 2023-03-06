@@ -114,7 +114,7 @@ CalcLoads::execute()
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         b->topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
@@ -130,7 +130,7 @@ CalcLoads::execute()
 
     // extract master element for this element topo
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(theElemTopo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(theElemTopo);
 
     // algorithm related; element
     ws_pressure.resize(nodesPerFace);

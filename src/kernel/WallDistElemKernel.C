@@ -34,8 +34,8 @@ WallDistElemKernel<AlgTraits>::WallDistElemKernel(
 
   coordinates_ = get_field_ordinal(meta, solnOpts.get_coordinates_name());
 
-  meSCS_ = MasterElementRepo::get_surface_master_element<AlgTraits>();
-  meSCV_ = MasterElementRepo::get_volume_master_element<AlgTraits>();
+  meSCS_ = MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_);
+  meSCV_ = MasterElementRepo::get_volume_master_element_on_dev(AlgTraits::topo_);
 
   dataPreReqs.add_cvfem_surface_me(meSCS_);
   dataPreReqs.add_cvfem_volume_me(meSCV_);

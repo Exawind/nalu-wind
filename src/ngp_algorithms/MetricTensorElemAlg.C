@@ -32,7 +32,7 @@ MetricTensorElemAlg<AlgTraits>::MetricTensorElemAlg(
     dataNeeded_(realm.meta_data()),
     nodalMij_(get_field_ordinal(realm.meta_data(), "metric_tensor")),
     dualNodalVol_(get_field_ordinal(realm.meta_data(), "dual_nodal_volume")),
-    meSCV_(MasterElementRepo::get_volume_master_element<AlgTraits>())
+    meSCV_(MasterElementRepo::get_volume_master_element_on_dev(AlgTraits::topo_))
 {
   dataNeeded_.add_cvfem_volume_me(meSCV_);
 

@@ -218,7 +218,7 @@ SurfaceForceAndMomentAlgorithm::execute()
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
 
@@ -233,7 +233,7 @@ SurfaceForceAndMomentAlgorithm::execute()
 
     // extract master element for this element topo
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(theElemTopo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(theElemTopo);
 
     // algorithm related; element
     ws_pressure.resize(nodesPerFace);
@@ -480,7 +480,7 @@ SurfaceForceAndMomentAlgorithm::pre_work()
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(b.topology());
     const int numScsBip = meFC->num_integration_points();
 
     // mapping from ip to nodes for this ordinal; face perspective (use with

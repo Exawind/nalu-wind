@@ -493,7 +493,7 @@ public:
         stk::topology::NODE_RANK, "open_velocity_bc"))
   {
     const auto& meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::HEX_8);
     stk::mesh::put_field_on_mesh(
       *massFlowRate_, meta_->universal_part(), meSCS->num_integration_points(),
@@ -1346,7 +1346,7 @@ public:
       viscSecondary_(1.85e-5)
   {
     const auto& meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::HEX_8);
     stk::mesh::put_field_on_mesh(
       *mixFraction_, meta_->universal_part(), 1, nullptr);

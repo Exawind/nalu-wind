@@ -42,7 +42,7 @@ MdotDensityAccumAlg<AlgTraits>::MdotDensityAccumAlg(
       "density",
       realm_.number_of_states() == 2 ? stk::mesh::StateN
                                      : stk::mesh::StateNM1)),
-    meSCV_(MasterElementRepo::get_volume_master_element<AlgTraits>()),
+    meSCV_(MasterElementRepo::get_volume_master_element_on_dev(AlgTraits::topo_)),
     lumpedMass_(lumpedMass)
 {
   elemData_.add_cvfem_volume_me(meSCV_);

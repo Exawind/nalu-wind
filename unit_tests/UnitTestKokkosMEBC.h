@@ -79,9 +79,9 @@ public:
 
   void init_me_data()
   {
-    meFC_ = sierra::nalu::MasterElementRepo::get_surface_master_element(
+    meFC_ = sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       BcAlgTraits::faceTopo_);
-    meSCS_ = sierra::nalu::MasterElementRepo::get_surface_master_element(
+    meSCS_ = sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       BcAlgTraits::elemTopo_);
     // Register them to ElemDataRequests
     faceDataNeeded().add_cvfem_face_me(meFC_);

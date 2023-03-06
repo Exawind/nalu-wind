@@ -99,7 +99,7 @@ AssemblePNGBoundarySolverAlgorithm::execute()
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
     const int* faceIpNodeMap = meFC->ipNodeMap();

@@ -229,10 +229,10 @@ test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
   }
 
   sierra::nalu::MasterElement* meSCS =
-    sierra::nalu::MasterElementRepo::get_surface_master_element(
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       AlgTraits::topo_);
   sierra::nalu::MasterElement* meSCV =
-    sierra::nalu::MasterElementRepo::get_volume_master_element(
+    sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(
       AlgTraits::topo_);
 
   // Execute the loop and perform all tests

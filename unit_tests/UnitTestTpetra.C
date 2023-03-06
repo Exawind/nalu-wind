@@ -266,7 +266,7 @@ create_and_register_kernel(
 {
   TestKernel* testKernel = new TestKernel(elemTopo);
   solverAlg->dataNeededByKernels_.add_cvfem_volume_me(
-    sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo));
+    sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(elemTopo));
   solverAlg->activeKernels_.push_back(testKernel);
   return testKernel;
 }
@@ -325,8 +325,7 @@ TEST(Tpetra, basic)
 
   verify_graph_for_2_hex8_mesh(numProcs, localProc, tpetraLinsys);
 
-  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<
-    sierra::nalu::AlgTraitsHex8>();
+  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element_on_dev( sierra::nalu::AlgTraitsHex8::topo_);
   auto& dataNeeded = solverAlg->dataNeededByKernels_;
   dataNeeded.add_cvfem_volume_me(meSCV);
   auto* coordsField = realm.meta_data().coordinate_field();

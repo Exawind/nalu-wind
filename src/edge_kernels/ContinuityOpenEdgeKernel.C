@@ -45,10 +45,8 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::ContinuityOpenEdgeKernel(
     dynPress_(get_field_ordinal(meta, "dynamic_pressure", meta.side_rank())),
     pstabFac_(solnOpts->activateOpenMdotCorrection_ ? 0.0 : 1.0),
     nocFac_(solnOpts_->get_noc_usage("pressure")),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-          typename BcAlgTraits::FaceTraits>()),
-    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-           typename BcAlgTraits::ElemTraits>())
+    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev( BcAlgTraits::FaceTraits::topo_)),
+    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev( BcAlgTraits::ElemTraits::topo_))
 {
   faceData.add_cvfem_face_me(meFC_);
   elemData.add_cvfem_surface_me(meSCS_);

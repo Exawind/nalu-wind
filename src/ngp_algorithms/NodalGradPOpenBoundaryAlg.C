@@ -53,10 +53,8 @@ NodalGradPOpenBoundary<AlgTraits>::NodalGradPOpenBoundary(
       get_field_ordinal(realm_.meta_data(), realm.get_coordinates_name())),
     dynPress_(get_field_ordinal(
       realm_.meta_data(), "dynamic_pressure", realm.meta_data().side_rank())),
-    meFC_(MasterElementRepo::get_surface_master_element<
-          typename AlgTraits::FaceTraits>()),
-    meSCS_(MasterElementRepo::get_surface_master_element<
-           typename AlgTraits::ElemTraits>()),
+    meFC_(MasterElementRepo::get_surface_master_element_on_dev( AlgTraits::FaceTraits::topo_)),
+    meSCS_(MasterElementRepo::get_surface_master_element_on_dev( AlgTraits::ElemTraits::topo_)),
     faceData_(realm.meta_data()),
     elemData_(realm.meta_data())
 {
