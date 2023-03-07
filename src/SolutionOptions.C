@@ -49,6 +49,7 @@ SolutionOptions::SolutionOptions()
     nearestFaceEntrain_(0.0),
     includeDivU_(0.0),
     mdotInterpRhoUTogether_(true),
+    solveIncompressibleContinuity_(false),
     isTurbulent_(false),
     turbulenceModel_(TurbulenceModel::LAMINAR),
     meshMotion_(false),
@@ -129,6 +130,11 @@ SolutionOptions::load(const YAML::Node& y_node)
     get_if_present(
       y_solution_options, "interp_rhou_together_for_mdot",
       mdotInterpRhoUTogether_, mdotInterpRhoUTogether_);
+
+    // Solve for incompressible continuity
+    get_if_present(
+      y_solution_options, "solve_incompressible_continuity",
+      solveIncompressibleContinuity_, solveIncompressibleContinuity_);
 
     // external mesh motion expected
     get_if_present(

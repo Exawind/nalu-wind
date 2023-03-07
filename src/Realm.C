@@ -1486,6 +1486,21 @@ Realm::setup_property()
         }
       } break;
 
+      case VOF_MAT: {
+        // extract the volume of fluid field
+        ScalarFieldType* VOF = meta_data().get_field<ScalarFieldType>(
+          stk::topology::NODE_RANK, "volume_of_fluid");
+
+        // primary and secondary
+        const double propPrim = matData->primary_;
+        const double propSec = matData->secondary_;
+
+        LinearPropAlgorithm* auxAlg = new LinearPropAlgorithm(
+          *this, targetPart, thePropField, VOF, propPrim, propSec);
+        propertyAlg_.push_back(auxAlg);
+
+      } break;
+
       case POLYNOMIAL_MAT: {
 
         // switch on property id
@@ -4298,6 +4313,12 @@ double
 Realm::get_mdot_interp()
 {
   return solutionOptions_->mdotInterpRhoUTogether_ ? 1.0 : 0.0;
+}
+
+double
+Realm::get_incompressible_solve()
+{
+  return solutionOptions_->solveIncompressibleContinuity_ ? 1.0 : 0.0;
 }
 
 //--------------------------------------------------------------------------
