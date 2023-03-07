@@ -160,11 +160,13 @@ ComputeWallFrictionVelocityAlgorithm::execute()
 
     // extract master element
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(theElemTopo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        theElemTopo);
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(b.topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        b.topology());
     const int nodesPerFace = b.topology().num_nodes();
     const int numScsBip = meFC->num_integration_points();
 

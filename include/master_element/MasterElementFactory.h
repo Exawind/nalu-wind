@@ -29,18 +29,24 @@ class MasterElement;
 struct MasterElementRepo
 {
   MasterElementRepo() = delete;
-  static MasterElement* get_surface_master_element_on_host(const stk::topology& theTopo);
-  static MasterElement* get_surface_master_element_on_dev(const stk::topology& theTopo);
-  static MasterElement* get_volume_master_element_on_host(const stk::topology& theTopo);
-  static MasterElement* get_volume_master_element_on_dev(const stk::topology& theTopo);
+  static MasterElement*
+  get_surface_master_element_on_host(const stk::topology& theTopo);
+  static MasterElement*
+  get_surface_master_element_on_dev(const stk::topology& theTopo);
+  static MasterElement*
+  get_volume_master_element_on_host(const stk::topology& theTopo);
+  static MasterElement*
+  get_volume_master_element_on_dev(const stk::topology& theTopo);
 
   // Given a host pointer to a master element as returned from the above calls,
-  // find the equivalent device pointer to the master element. 
-  // NOTE: 
+  // find the equivalent device pointer to the master element.
+  // NOTE:
   // 1. If given a device pointer, return the same device pointer.
   // 2. If given a null pointer, return a null pointer.
-  static MasterElement* get_surface_dev_ptr_from_host_ptr(MasterElement* host_ptr);
-  static MasterElement* get_volume_dev_ptr_from_host_ptr(MasterElement* host_ptr);
+  static MasterElement*
+  get_surface_dev_ptr_from_host_ptr(MasterElement* host_ptr);
+  static MasterElement*
+  get_volume_dev_ptr_from_host_ptr(MasterElement* host_ptr);
 
   static void clear();
 };

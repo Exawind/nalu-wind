@@ -32,8 +32,10 @@ GeometryInteriorAlg<AlgTraits>::GeometryInteriorAlg(
     dualNodalVol_(get_field_ordinal(realm_.meta_data(), "dual_nodal_volume")),
     elemVol_(get_field_ordinal(
       realm_.meta_data(), "element_volume", stk::topology::ELEM_RANK)),
-    meSCV_(MasterElementRepo::get_volume_master_element_on_dev(AlgTraits::topo_)),
-    meSCS_(MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_))
+    meSCV_(
+      MasterElementRepo::get_volume_master_element_on_dev(AlgTraits::topo_)),
+    meSCS_(
+      MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_))
 {
   dataNeeded_.add_cvfem_volume_me(meSCV_);
   dataNeeded_.add_cvfem_surface_me(meSCS_);

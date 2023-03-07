@@ -71,7 +71,8 @@ TEST_F(Hex8MeshWithNSOFields, NGPElemDataRequests)
 
   sierra::nalu::ElemDataRequests dataReq(bulk->mesh_meta_data());
   auto meSCV =
-    sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(elemTopo);
+    sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(
+      elemTopo);
   dataReq.add_cvfem_volume_me(meSCV);
 
   dataReq.add_gathered_nodal_field(*velocity, 3);

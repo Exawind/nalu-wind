@@ -111,9 +111,10 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
     nocFac_(solnOpts.get_noc_usage("velocity") ? 1.0 : 0.0),
     shiftedGradOp_(solnOpts.get_shifted_grad_op(velocity->name())),
     entrain_(method),
-    faceIpNodeMap_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
-                     BcAlgTraits::faceTopo_)
-                     ->ipNodeMap()),
+    faceIpNodeMap_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        BcAlgTraits::faceTopo_)
+        ->ipNodeMap()),
     meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       BcAlgTraits::elemTopo_)),
     meSCS_dev_(

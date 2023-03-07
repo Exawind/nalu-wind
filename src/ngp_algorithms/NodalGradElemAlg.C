@@ -38,7 +38,8 @@ NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::NodalGradElemAlg(
     gradPhi_(gradPhi->mesh_meta_data_ordinal()),
     dualNodalVol_(get_field_ordinal(realm_.meta_data(), "dual_nodal_volume")),
     useShifted_(useShifted),
-    meSCS_(MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_))
+    meSCS_(
+      MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_))
 {
   dataNeeded_.add_cvfem_surface_me(meSCS_);
 

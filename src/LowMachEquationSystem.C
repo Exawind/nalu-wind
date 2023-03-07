@@ -360,7 +360,8 @@ LowMachEquationSystem::register_element_fields(
   if (elementContinuityEqs_) {
     // extract master element and get scs points
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(theTopo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        theTopo);
     const int numScsIp = meSCS->num_integration_points();
     GenericFieldType* massFlowRate =
       &(meta_data.declare_field<GenericFieldType>(
@@ -467,7 +468,8 @@ LowMachEquationSystem::register_open_bc(
 
   // mdot at open bc; register field
   MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(theTopo);
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      theTopo);
   const int numScsBip = meFC->num_integration_points();
   GenericFieldType* mdotBip = &(metaData.declare_field<GenericFieldType>(
     static_cast<stk::topology::rank_t>(metaData.side_rank()),
@@ -1873,7 +1875,8 @@ MomentumEquationSystem::register_wall_bc(
 
     // integration point; size it based on number of boundary integration points
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(partTopo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        partTopo);
     const int numScsBip = meFC->num_integration_points();
 
     stk::topology::rank_t sideRank =
@@ -2312,7 +2315,8 @@ MomentumEquationSystem::register_non_conformal_bc(
 
   // mdot at nc bc; register field; require topo and num ips
   MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(theTopo);
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      theTopo);
   const int numScsBip = meFC->num_integration_points();
 
   stk::topology::rank_t sideRank =
@@ -3314,7 +3318,8 @@ ContinuityEquationSystem::register_non_conformal_bc(
 
   // mdot at nc bc; register field; require topo and num ips
   MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(theTopo);
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      theTopo);
   const int numScsBip = meFC->num_integration_points();
 
   stk::topology::rank_t sideRank =

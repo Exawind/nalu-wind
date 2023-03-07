@@ -26,10 +26,14 @@ ElemDataRequestsGPU::ElemDataRequestsGPU(
     totalNumFields(totalFields),
     fields(),
     hostFields(),
-    meFC_(MasterElementRepo::get_surface_dev_ptr_from_host_ptr(dataReq.get_cvfem_face_me())),
-    meSCS_(MasterElementRepo::get_surface_dev_ptr_from_host_ptr(dataReq.get_cvfem_surface_me())),
-    meSCV_(MasterElementRepo::get_volume_dev_ptr_from_host_ptr(dataReq.get_cvfem_volume_me())),
-    meFEM_(MasterElementRepo::get_volume_dev_ptr_from_host_ptr(dataReq.get_fem_volume_me()))
+    meFC_(MasterElementRepo::get_surface_dev_ptr_from_host_ptr(
+      dataReq.get_cvfem_face_me())),
+    meSCS_(MasterElementRepo::get_surface_dev_ptr_from_host_ptr(
+      dataReq.get_cvfem_surface_me())),
+    meSCV_(MasterElementRepo::get_volume_dev_ptr_from_host_ptr(
+      dataReq.get_cvfem_volume_me())),
+    meFEM_(MasterElementRepo::get_volume_dev_ptr_from_host_ptr(
+      dataReq.get_fem_volume_me()))
 {
   fill_host_data_enums(dataReq, CURRENT_COORDINATES);
   fill_host_data_enums(dataReq, MODEL_COORDINATES);

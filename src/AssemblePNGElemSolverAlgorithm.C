@@ -113,9 +113,11 @@ AssemblePNGElemSolverAlgorithm::execute()
 
     // extract master element
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(b.topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        b.topology());
     MasterElement* meSCV =
-      sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(b.topology());
+      sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(
+        b.topology());
 
     // extract master element specifics
     const int nodesPerElement = meSCS->nodesPerElement_;

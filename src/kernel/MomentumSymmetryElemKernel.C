@@ -57,12 +57,12 @@ MomentumSymmetryElemKernel<BcAlgTraits>::MomentumSymmetryElemKernel(
     exposedAreaVec_(
       get_field_ordinal(metaData, "exposed_area_vector", metaData.side_rank())),
     includeDivU_(solnOpts.includeDivU_),
-    meSCS_(
-      MasterElementRepo::get_surface_master_element_on_host(BcAlgTraits::elemTopo_)),
+    meSCS_(MasterElementRepo::get_surface_master_element_on_host(
+      BcAlgTraits::elemTopo_)),
     penaltyFactor_(solnOpts.symmetryBcPenaltyFactor_)
 {
-  auto* meFC =
-    MasterElementRepo::get_surface_master_element_on_host(BcAlgTraits::faceTopo_);
+  auto* meFC = MasterElementRepo::get_surface_master_element_on_host(
+    BcAlgTraits::faceTopo_);
   auto* meFC_dev = MasterElementRepo::get_surface_master_element_on_dev(
     BcAlgTraits::faceTopo_);
   faceDataPreReqs.add_cvfem_face_me(meFC);

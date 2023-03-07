@@ -46,7 +46,8 @@ MomentumABLWallFuncEdgeKernel<BcAlgTraits>::MomentumABLWallFuncEdgeKernel(
     z0_(z0),
     Tref_(Tref),
     kappa_(kappa),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev( BcAlgTraits::topo_))
+    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::topo_))
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);
 

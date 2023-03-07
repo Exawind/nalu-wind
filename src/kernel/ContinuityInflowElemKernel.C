@@ -37,7 +37,8 @@ ContinuityInflowElemKernel<BcAlgTraits>::ContinuityInflowElemKernel(
     projTimeScale_(1.0),
     interpTogether_(solnOpts.get_mdot_interp()),
     om_interpTogether_(1.0 - interpTogether_),
-    meFC_(MasterElementRepo::get_surface_master_element_on_dev(BcAlgTraits::topo_))
+    meFC_(
+      MasterElementRepo::get_surface_master_element_on_dev(BcAlgTraits::topo_))
 {
   // save off fields
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();

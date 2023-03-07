@@ -65,9 +65,10 @@ ScalarOpenAdvElemKernel<BcAlgTraits>::ScalarOpenAdvElemKernel(
     alphaUpw_(solnOpts.get_alpha_upw_factor(scalarQ->name())),
     om_alphaUpw_(1.0 - alphaUpw_),
     hoUpwind_(solnOpts.get_upw_factor(scalarQ->name())),
-    faceIpNodeMap_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
-                     BcAlgTraits::faceTopo_)
-                     ->ipNodeMap()),
+    faceIpNodeMap_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        BcAlgTraits::faceTopo_)
+        ->ipNodeMap()),
     meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       BcAlgTraits::elemTopo_)),
     pecletFunction_(

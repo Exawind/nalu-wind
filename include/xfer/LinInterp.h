@@ -190,7 +190,8 @@ LinInterp<FROM, TO>::apply(
     const stk::mesh::Bucket& theBucket = fromBulkData.bucket(theElem);
     const stk::topology& theElemTopo = theBucket.topology();
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(theElemTopo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        theElemTopo);
 
     stk::mesh::Entity const* elem_node_rels = fromBulkData.begin_nodes(theElem);
     const int num_nodes = fromBulkData.num_nodes(theElem);

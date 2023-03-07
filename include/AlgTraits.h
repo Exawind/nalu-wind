@@ -128,7 +128,8 @@ struct AlgTraitsQuad4
 
 struct AlgTraitsShellQuad4 : public AlgTraitsQuad4
 {
-  static constexpr stk::topology::topology_t topo_ = stk::topology::SHELL_QUAD_4;
+  static constexpr stk::topology::topology_t topo_ =
+    stk::topology::SHELL_QUAD_4;
 };
 
 struct AlgTraitsTri3

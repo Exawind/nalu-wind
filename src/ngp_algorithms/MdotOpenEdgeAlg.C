@@ -52,8 +52,10 @@ MdotOpenEdgeAlg<BcAlgTraits>::MdotOpenEdgeAlg(
     Udiag_(get_field_ordinal(realm.meta_data(), "momentum_diag")),
     dynPress_(get_field_ordinal(
       realm_.meta_data(), "dynamic_pressure", realm_.meta_data().side_rank())),
-    meFC_(MasterElementRepo::get_surface_master_element_on_dev( BcAlgTraits::FaceTraits::topo_)),
-    meSCS_(MasterElementRepo::get_surface_master_element_on_dev( BcAlgTraits::ElemTraits::topo_))
+    meFC_(MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::FaceTraits::topo_)),
+    meSCS_(MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::ElemTraits::topo_))
 {
   faceData_.add_cvfem_face_me(meFC_);
   elemData_.add_cvfem_surface_me(meSCS_);

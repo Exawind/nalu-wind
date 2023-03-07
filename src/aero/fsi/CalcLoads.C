@@ -130,7 +130,8 @@ CalcLoads::execute()
 
     // extract master element for this element topo
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(theElemTopo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        theElemTopo);
 
     // algorithm related; element
     ws_pressure.resize(nodesPerFace);

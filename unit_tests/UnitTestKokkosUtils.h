@@ -55,7 +55,8 @@ kokkos_thread_team_bucket_loop_with_topo(
       const stk::mesh::Bucket& bkt = *buckets[team.league_rank()];
       stk::topology topo = bkt.topology();
       sierra::nalu::MasterElement* meSCS =
-        sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
+        sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+          topo);
       Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, bkt.size()),
         [&](const size_t& j) { inner_loop_body(bkt[j], topo, *meSCS); });
