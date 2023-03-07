@@ -1449,7 +1449,7 @@ public:
       viscSecondary_(1.e-5)
   {
     const auto& meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::HEX_8);
     stk::mesh::put_field_on_mesh(
       *volumeOfFluid_, meta_->universal_part(), 1, nullptr);
