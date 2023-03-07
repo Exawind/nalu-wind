@@ -48,7 +48,8 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::ContinuityOpenEdgeKernel(
     meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
       BcAlgTraits::FaceTraits::topo_)),
     meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
-      BcAlgTraits::ElemTraits::topo_))
+      BcAlgTraits::ElemTraits::topo_)),
+    solveInc_(solnOpts_->solveIncompressibleContinuity_ ? 1.0 : 0.0)
 {
   faceData.add_cvfem_face_me(meFC_);
   elemData.add_cvfem_surface_me(meSCS_);
@@ -136,7 +137,8 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::execute(
       const DoubleType Gjp = v_Gpdx(ip, d);
 
       tmdot +=
-        (v_density(ip) * v_velocity(ip, d) + projTimeScale * Gjp * pstabFac_) *
+        ((solveInc_ + v_density(ip) * (1.0 - solveInc_)) * v_velocity(ip, d) +
+         projTimeScale * Gjp * pstabFac_) *
           axj -
         projTimeScale * kxj * Gjp * nocFac_ * pstabFac_;
     }

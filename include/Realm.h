@@ -306,6 +306,7 @@ public:
 
   // pressure poisson nuance
   double get_mdot_interp();
+  double get_incompressible_solve();
   bool get_cvfem_shifted_mdot();
   bool get_cvfem_reduced_sens_poisson();
 

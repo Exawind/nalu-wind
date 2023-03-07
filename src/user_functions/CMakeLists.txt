@@ -35,4 +35,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/WindEnergyPowerLawAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/WindEnergyTaylorVortexAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/WindEnergyTaylorVortexPressureAuxFunction.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ZalesakDiskVOFAuxFunction.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ZalesakDiskMassFlowRateKernel.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/DropletVOFAuxFunction.C
 )

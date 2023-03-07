@@ -51,6 +51,9 @@ ContinuityEdgeSolverAlg::execute()
   const DblType interpTogether = realm_.get_mdot_interp();
   const DblType om_interpTogether = (1.0 - interpTogether);
 
+  const DblType solveIncompressibleEqn = realm_.get_incompressible_solve();
+  const DblType om_solveIncompressibleEqn = 1.0 - solveIncompressibleEqn;
+
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
@@ -85,11 +88,19 @@ ContinuityEdgeSolverAlg::execute()
       const DblType pressureL = pressure.get(nodeL, 0);
       const DblType pressureR = pressure.get(nodeR, 0);
 
-      const DblType densityL = density.get(nodeL, 0);
-      const DblType densityR = density.get(nodeR, 0);
+      const DblType densityL =
+        om_solveIncompressibleEqn * density.get(nodeL, 0) +
+        solveIncompressibleEqn;
+      const DblType densityR =
+        om_solveIncompressibleEqn * density.get(nodeR, 0) +
+        solveIncompressibleEqn;
 
-      const DblType udiagL = udiag.get(nodeL, 0);
-      const DblType udiagR = udiag.get(nodeR, 0);
+      const DblType udiagL =
+        udiag.get(nodeL, 0) * (om_solveIncompressibleEqn +
+                               solveIncompressibleEqn * density.get(nodeL, 0));
+      const DblType udiagR =
+        udiag.get(nodeR, 0) * (om_solveIncompressibleEqn +
+                               solveIncompressibleEqn * density.get(nodeR, 0));
 
       const DblType projTimeScale = 0.5 * (1.0 / udiagL + 1.0 / udiagR);
       const DblType rhoIp = 0.5 * (densityL + densityR);

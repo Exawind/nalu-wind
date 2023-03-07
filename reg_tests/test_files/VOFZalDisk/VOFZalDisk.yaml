@@ -1,0 +1,121 @@
+Simulations:
+  - name: sim1
+    time_integrator: ti_1
+    optimizer: opt1
+
+linear_solvers:
+
+  - name: solve_scalar
+    type: tpetra
+    method: gmres
+    preconditioner: sgs
+    tolerance: 1e-12
+    max_iterations: 50
+    kspace: 50
+    output_level: 0
+
+realms:
+
+  - name: realm_1
+    mesh: "generated:150x150x4|bbox:-0.5,-0.5,-0.5,0.5,0.5,0.5|sideset:xXyYzZ|show" 
+    use_edges: yes
+    automatic_decomposition_type: rcb
+
+    equation_systems:
+      name: theEqSys
+      max_iterations: 3
+
+      solver_system_specification:
+        volume_of_fluid: solve_scalar
+
+      systems:
+        - VolumeOfFluid:
+            name: myVOF
+            max_iterations: 1
+            convergence_tolerance: 1e-8
+
+    initial_conditions:
+
+      - user_function: ic_1
+        target_name: block_1
+        user_function_name:
+          volume_of_fluid: zalesak_disk
+
+    material_properties:
+      target_name: block_1
+      specifications:
+        - name: density
+          type: constant
+          value: 1.0
+
+        - name: viscosity
+          type: constant
+          value: 0.001
+
+    boundary_conditions:
+      - wall_boundary_condition: walls
+        target_name: surface_1
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_2
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_3
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_4
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_5
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+      - wall_boundary_condition: walls
+        target_name: surface_6
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+
+    solution_options:
+      name: myOptions
+
+      options:
+        - hybrid_factor:
+            velocity: 0.0
+
+        - limiter:
+            volume_of_fluid: yes
+            pressure: no
+            velocity: no
+
+      # Pressure is not fixed anywhere on the boundaries, so set it at
+      # the node closest to the specified location.
+      fix_pressure_at_node:
+        value: 0.0
+        node_lookup_type: spatial_location
+        location: [0.0, 0.0, 0.25]
+        search_target_part: [fluid]
+        search_method: stk_kdtree
+
+    output:
+      output_data_base_name: out/zalDisc.e
+      output_frequency: 1000
+      output_node_set: yes
+      output_variables:
+       - volume_of_fluid
+       - dvolume_of_fluiddx
+Time_Integrators:
+  - StandardTimeIntegrator:
+      name: ti_1
+      start_time: 0
+      termination_time: 0.006
+      time_step: 0.002
+      time_stepping_type: fixed
+      time_step_count: 0
+      second_order_accuracy: yes
+
+
+      realms:
+        - realm_1

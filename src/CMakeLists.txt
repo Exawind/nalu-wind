@@ -96,6 +96,7 @@ target_sources(
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbulenceAveragingPostProcessing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/WallDistEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/WilcoxKOmegaEquationSystem.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/VolumeOfFluidEquationSystem.C
 )
 
 if(ENABLE_FFTW)
