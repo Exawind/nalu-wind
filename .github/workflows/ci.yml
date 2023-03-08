@@ -19,7 +19,7 @@ jobs:
         exclude: './docs'
         extensions: 'H,h,cpp,C'
         clangFormatVersion: 13
-  CPU:
+  CPU-Trilinos:
     needs: Formatting
     runs-on: ubuntu-latest
     container:
@@ -44,6 +44,35 @@ jobs:
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
             source ${SPACK_MANAGER}/start.sh && \
             quick-develop -s nalu-wind@master+tioga+hypre && \
+            spack install && \
+            spack cd -b nalu-wind && \
+            spack build-env nalu-wind ctest -j $(nproc) -L unit --output-on-failure \
+          "
+  CPU-Hypre-Only:
+    needs: Formatting
+    runs-on: ubuntu-latest
+    container:
+      image: ecpe4s/exawind-snapshot
+      env:
+          SPACK_MANAGER: /spack-manager
+          E4S_MACHINE: true
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          access_token: ${{github.token}}
+      - name: Clone
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Tests
+        working-directory: /spack-manager/environments/exawind
+        run: |
+          /bin/bash -c " \
+            source ${SPACK_MANAGER}/start.sh && \
+            ln -s ${GITHUB_WORKSPACE} nalu-wind && \
+            source ${SPACK_MANAGER}/start.sh && \
+            quick-develop -s nalu-wind@master+tioga+hypre~trilinos-solvers && \
             spack install && \
             spack cd -b nalu-wind && \
             spack build-env nalu-wind ctest -j $(nproc) -L unit --output-on-failure \
