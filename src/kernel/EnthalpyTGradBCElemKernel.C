@@ -39,8 +39,8 @@ EnthalpyTGradBCElemKernel<BcAlgTraits>::EnthalpyTGradBCElemKernel(
       "exposed_area_vector",
       bulk.mesh_meta_data().side_rank())),
     useShifted_(useShifted),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-          BcAlgTraits>())
+    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::topo_))
 {
   // Register necessary data for use in execute method
   faceDataPreReqs.add_cvfem_face_me(meFC_);

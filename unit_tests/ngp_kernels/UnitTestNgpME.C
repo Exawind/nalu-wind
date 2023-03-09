@@ -37,9 +37,9 @@ test_mescs_create_impl()
     });
   kokkos_free_on_device(mescs);
 #else
-  const auto* mescs = MasterElementRepo::get_surface_master_element<T>();
+  const auto* mescs =
+    MasterElementRepo::get_surface_master_element_on_dev(T::topo_);
   EXPECT_TRUE(mescs != nullptr);
-  MasterElementRepo::clear();
 #endif
 }
 
@@ -47,9 +47,9 @@ template <typename T>
 void
 test_mescv_create_impl()
 {
-  const auto* mescv = MasterElementRepo::get_volume_master_element<T>();
+  const auto* mescv =
+    MasterElementRepo::get_volume_master_element_on_dev(T::topo_);
   EXPECT_TRUE(mescv != nullptr);
-  MasterElementRepo::clear();
 }
 
 #define MESCS_TEST(METype)                                                     \

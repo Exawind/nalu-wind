@@ -39,7 +39,8 @@ MdotInflowAlg<BcAlgTraits>::MdotInflowAlg(
     exposedAreaVec_(get_field_ordinal(
       realm.meta_data(), "exposed_area_vector", realm.meta_data().side_rank())),
     useShifted_(useShifted),
-    meFC_(MasterElementRepo::get_surface_master_element<BcAlgTraits>())
+    meFC_(
+      MasterElementRepo::get_surface_master_element_on_dev(BcAlgTraits::topo_))
 {
   faceData_.add_cvfem_surface_me(meFC_);
 

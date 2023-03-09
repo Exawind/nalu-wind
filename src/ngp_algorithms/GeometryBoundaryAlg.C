@@ -31,7 +31,8 @@ GeometryBoundaryAlg<AlgTraits>::GeometryBoundaryAlg(
     dataNeeded_(realm_.meta_data()),
     exposedAreaVec_(get_field_ordinal(
       realm.meta_data(), "exposed_area_vector", realm.meta_data().side_rank())),
-    meSCS_(MasterElementRepo::get_surface_master_element<AlgTraits>())
+    meSCS_(
+      MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_))
 {
   dataNeeded_.add_cvfem_surface_me(meSCS_);
   const auto coordID = get_field_ordinal(

@@ -264,7 +264,8 @@ resize_std_vector(
 {
   const stk::topology& elemTopo = bulkData.bucket(elem).topology();
   MasterElement* meSCS =
-    sierra::nalu::MasterElementRepo::get_surface_master_element(elemTopo);
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      elemTopo);
   const int nodesPerElement = meSCS->nodesPerElement_;
   theVector.resize(nodesPerElement * sizeOfField);
 }
@@ -326,7 +327,8 @@ interpolate_field(
   // extract master element from the bucket in which the element resides
   const stk::topology& elemTopo = bulkData.bucket(elem).topology();
   MasterElement* meSCS =
-    sierra::nalu::MasterElementRepo::get_surface_master_element(elemTopo);
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      elemTopo);
 
   // interpolate velocity to this best point
   meSCS->interpolatePoint(sizeOfField, isoParCoords, fieldAtNodes, pointField);

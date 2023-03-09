@@ -38,10 +38,10 @@ WallFuncGeometryAlg<BcAlgTraits>::WallFuncGeometryAlg(
     wallArea_(get_field_ordinal(realm.meta_data(), "assembled_wall_area_wf")),
     wallNormDist_(
       get_field_ordinal(realm.meta_data(), "assembled_wall_normal_distance")),
-    meFC_(MasterElementRepo::get_surface_master_element<
-          typename BcAlgTraits::FaceTraits>()),
-    meSCS_(MasterElementRepo::get_surface_master_element<
-           typename BcAlgTraits::ElemTraits>()),
+    meFC_(MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::FaceTraits::topo_)),
+    meSCS_(MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::ElemTraits::topo_)),
     RANSAblBcApproach_(RANSAblBcApproach),
     z0_(z0)
 {

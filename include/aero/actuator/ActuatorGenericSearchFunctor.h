@@ -83,7 +83,7 @@ struct GenericLoopOverCoarseSearchResults
       stkBulk_.get_entity(stk::topology::ELEMENT_RANK, elemId);
     const stk::topology& elemTopo = stkBulk_.bucket(elem).topology();
     MasterElement* meSCV =
-      MasterElementRepo::get_volume_master_element(elemTopo);
+      MasterElementRepo::get_volume_master_element_on_host(elemTopo);
 
     const unsigned numNodes = stkBulk_.num_nodes(elem);
     const int numIp = meSCV->num_integration_points();

@@ -563,8 +563,10 @@ protected:
     bulk = meshBuilder.create();
     meta = &bulk->mesh_meta_data();
     elem = unit_test_utils::create_one_reference_element(*bulk, topo);
-    meSS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
-    meSV = sierra::nalu::MasterElementRepo::get_volume_master_element(topo);
+    meSS =
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
+    meSV =
+      sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(topo);
   }
 
   void scs_interpolation(stk::topology topo)

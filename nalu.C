@@ -42,6 +42,8 @@
 
 #include "HypreNGP.h"
 
+#include "master_element/MasterElementFactory.h"
+
 static std::string
 human_bytes_double(double bytes)
 {
@@ -281,6 +283,9 @@ main(int argc, char** argv)
     // Write out Trilinos timers
     Teuchos::TimeMonitor::summarize(
       naluEnv.naluOutputP0(), false, true, false, Teuchos::Union);
+
+    // Master element cleanup
+    sierra::nalu::MasterElementRepo::clear();
   }
 
   // Hypre cleanup

@@ -127,7 +127,7 @@ local_coarse_search(
 MasterElement&
 master_element(const stk::mesh::BulkData& bulk, stk::mesh::Entity elem)
 {
-  return *MasterElementRepo::get_surface_master_element(
+  return *MasterElementRepo::get_surface_master_element_on_host(
     bulk.bucket(elem).topology());
 }
 
