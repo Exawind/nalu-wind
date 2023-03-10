@@ -154,7 +154,7 @@ compute_mesh_velocity(
   const vs::Vector cfdPos)
 {
   const auto pointLocal = local_aero_coordinates(cfdPos, referencePos);
-  const auto pointRotate = wmp::rotate(totalDis.orientation_, pointLocal);
+  const auto pointRotate = wmp::rotate(totalDis.orientation_, pointLocal, true);
   return totalVel.position_ + (totalVel.orientation_ ^ pointRotate);
 }
 
