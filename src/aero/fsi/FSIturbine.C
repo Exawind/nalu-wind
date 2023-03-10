@@ -336,6 +336,8 @@ fsiTurbine::initialize()
   bldDefStiff_.resize(nTotBldPts);
   bld_dr_.resize(nTotBldPts);
   bld_rmm_.resize(nTotBldPts);
+
+  calc_loads_->initialize();
 }
 
 void
@@ -1754,10 +1756,21 @@ fsiTurbine::mapDisplacements(double time)
         const auto hubBasedDef = aero::compute_translational_displacements(
           hubDef, hubPos, nodePosition);
 
+        auto ramp_disp = aero::compute_translational_displacements(
+            interpDisp, refPos, nodePosition, hubBasedDef, 0.0);
+        vector_to_field( ramp_disp, *displacement, node);
+
+        auto bldStartVel = aero::SixDOF(&(brFSIdata_.bld_vel[iN]));
+        auto bldEndVel = aero::SixDOF(&(brFSIdata_.bld_vel[iNp1]));
+        auto interpVel = aero::linear_interp_total_velocity(
+            bldStartVel, bldEndVel, *dispMapInterpNode);
+        
+        // Now transfer the translational and rotational velocity to an equivalent
+        // translational velocity on the CFD mesh node
         vector_to_field(
-          aero::compute_translational_displacements(
-            interpDisp, refPos, nodePosition, hubBasedDef, deflectionRamp),
-          *displacement, node);
+            aero::compute_mesh_velocity(interpVel, interpDisp, refPos, nodePosition),
+            *meshVelocity, node);
+        
       }
     }
     iStart += nPtsBlade;
@@ -2331,14 +2344,15 @@ fsiTurbine::compute_div_mesh_velocity()
 
   auto& meta = bulk_->mesh_meta_data();
 
-  VectorFieldType* meshVelocity =
-    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
-
   ScalarFieldType* divMeshVel = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "div_mesh_velocity");
 
-  compute_vector_divergence(
-    *bulk_, partVec_, bndyPartVec_, meshVelocity, divMeshVel);
+  GenericFieldType* faceVelMag = meta.get_field<GenericFieldType>(
+      stk::topology::EDGE_RANK, "edge_face_velocity_mag");
+  
+  compute_edge_scalar_divergence(
+      *bulk_, partVec_, bndyPartVec_, faceVelMag, divMeshVel);
+  
 }
 
 } // namespace nalu

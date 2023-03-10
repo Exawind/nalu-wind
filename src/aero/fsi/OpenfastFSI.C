@@ -174,6 +174,7 @@ void
 OpenfastFSI::setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk)
 {
   bulk_ = bulk;
+  dt_ = dtNalu;
 
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (int i = 0; i < nTurbinesGlob; i++) {
@@ -235,7 +236,45 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
   }
 
   map_displacements(curTime);
+
+  if (curTime < 1e-10) {
+
+      NaluEnv::self().naluOutputP0() <<
+          "Setting displacements at time steps n and n-1" << std::endl;
+      
+      auto& meta = bulk_->mesh_meta_data();
+      
+      VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
+          stk::topology::NODE_RANK, "mesh_displacement");
+      VectorFieldType* meshVel = meta.get_field<VectorFieldType>(
+          stk::topology::NODE_RANK, "mesh_velocity");
+      
+      VectorFieldType* meshDispNp1 =
+          &(meshDisp->field_of_state(stk::mesh::StateNP1));
+      VectorFieldType* meshDispN =
+          &(meshDisp->field_of_state(stk::mesh::StateN));
+      VectorFieldType* meshDispNm1 =
+          &(meshDisp->field_of_state(stk::mesh::StateNM1));
+      VectorFieldType* meshVelNp1 =
+          &(meshVel->field_of_state(stk::mesh::StateNP1));
+      
+      stk::mesh::Selector sel = meta.universal_part();
+      const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
+      for (const auto* b : bkts) {
+          for (const auto node : *b) {
+              double* velNp1 = stk::mesh::field_data(*meshVelNp1, node);
+              double* dispNp1 = stk::mesh::field_data(*meshDispNp1, node);
+              double* dispN = stk::mesh::field_data(*meshDispN, node);
+              double* dispNm1 = stk::mesh::field_data(*meshDispNm1, node);
+              for (size_t i=0; i < 3; i++) {
+                  dispN[i] = dispNp1[i] - dt_ * velNp1[i];
+                  dispNm1[i] = dispNp1[i] - 2.0 * dt_ * velNp1[i];
+              }
+          }
+      }
+  }
 }
+
 
 void
 OpenfastFSI::bcast_turbine_params(int iTurb)

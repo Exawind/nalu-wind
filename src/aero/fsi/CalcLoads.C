@@ -59,8 +59,12 @@ void
 CalcLoads::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
 {
   bulk_ = bulk;
-  auto& meta = bulk_->mesh_meta_data();
+}
 
+void
+CalcLoads::initialize() {
+    
+  auto& meta = bulk_->mesh_meta_data();
   coordinates_ = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "current_coordinates");
   pressure_ =

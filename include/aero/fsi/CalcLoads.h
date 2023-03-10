@@ -28,6 +28,8 @@ public:
 
   void setup(std::shared_ptr<stk::mesh::BulkData> bulk);
 
+  void initialize();
+
   void execute();
 
   //! Part vector over all wall boundary parts applying loads

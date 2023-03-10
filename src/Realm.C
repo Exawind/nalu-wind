@@ -436,12 +436,16 @@ Realm::initialize_prolog()
   // property maps and evaluation algorithms
   setup_property();
 
+  if (aeroModels_->is_active())
+      aeroModels_->setup(get_time_step_from_file(), bulkData_);
+  
   // interior algorithm creation
   setup_interior_algorithms();
 
   // create boundary conditions
   setup_bc();
 
+  
   // post processing algorithm creation
   setup_post_processing_algorithms();
 
@@ -1111,10 +1115,6 @@ Realm::setup_post_processing_algorithms()
     dataProbePostProcessing_->setup();
   }
       
-  NaluEnv::self().naluOutputP0() <<  "Setup aero models" << std::endl ;
-  if (aeroModels_->is_active())
-    aeroModels_->setup(get_time_step_from_file(), bulkData_);
-
   // check for norm nodal fields
   if (NULL != solutionNormPostProcessing_)
     solutionNormPostProcessing_->setup();
@@ -2607,10 +2607,10 @@ Realm::compute_geometry()
 void
 Realm::compute_vrtm(const std::string& velName)
 {
-  if (
-    !solutionOptions_->meshMotion_ &&
-    !solutionOptions_->externalMeshDeformation_)
-    return;
+  // if (
+  //   !solutionOptions_->meshMotion_ &&
+  //   !solutionOptions_->externalMeshDeformation_)
+  //   return;
 
   using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using MeshIndex = Traits::MeshIndex;
