@@ -997,7 +997,10 @@ get_num_bytes_pre_req_data(
          get_num_scalars_pre_req_data(dataNeededBySuppAlgs, nDim, reqType);
 }
 
-template <typename ELEMDATAREQUESTSTYPE>
+template <
+  typename ELEMDATAREQUESTSTYPE,
+  typename TEAMTYPE = sierra::nalu::DeviceTeamHandleType,
+  typename SHMEM = sierra::nalu::DeviceShmem>
 inline int
 calculate_shared_mem_bytes_per_thread(
   int lhsSize,
@@ -1010,7 +1013,7 @@ calculate_shared_mem_bytes_per_thread(
   int bytes_per_thread =
     (rhsSize + lhsSize) * sizeof(double) + (2 * scratchIdsSize) * sizeof(int) +
     get_num_bytes_pre_req_data<double>(dataNeededByKernels, nDim, reqType) +
-    MultiDimViews<double>::bytes_needed(
+    MultiDimViews<double, TEAMTYPE, SHMEM>::bytes_needed(
       dataNeededByKernels.get_total_num_fields(),
       count_needed_field_views(dataNeededByKernels.get_host_fields()));
 
@@ -1029,7 +1032,10 @@ calc_shmem_bytes_per_thread_edge(int rhsSize)
   return (matSize + idSize);
 }
 
-template <typename ELEMDATAREQUESTSTYPE>
+template <
+  typename ELEMDATAREQUESTSTYPE,
+  typename TEAMTYPE = sierra::nalu::DeviceTeamHandleType,
+  typename SHMEM = sierra::nalu::DeviceShmem>
 inline int
 calculate_shared_mem_bytes_per_thread(
   int lhsSize,
@@ -1045,10 +1051,10 @@ calculate_shared_mem_bytes_per_thread(
       faceDataNeeded, nDim, ElemReqType::FACE) +
     sierra::nalu::get_num_bytes_pre_req_data<double>(
       elemDataNeeded, nDim, ElemReqType::FACE_ELEM) +
-    MultiDimViews<double>::bytes_needed(
+    MultiDimViews<double, TEAMTYPE, SHMEM>::bytes_needed(
       faceDataNeeded.get_total_num_fields(),
       count_needed_field_views(faceDataNeeded.get_host_fields())) +
-    MultiDimViews<double>::bytes_needed(
+    MultiDimViews<double, TEAMTYPE, SHMEM>::bytes_needed(
       elemDataNeeded.get_total_num_fields(),
       count_needed_field_views(elemDataNeeded.get_host_fields()));
 

@@ -208,10 +208,10 @@ TEST(meshMotion, NGP_initialize)
   meshMotionAlg->initialize(currTime);
 
   // get fields to be tested
-  VectorFieldType* currCoords = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "current_coordinates");
-  VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "mesh_velocity");
+  auto* currCoords =
+    realm.fieldManager_->get_field_ptr<VectorFieldType*>("current_coordinates");
+  auto* meshVelocity =
+    realm.fieldManager_->get_field_ptr<VectorFieldType*>("mesh_velocity");
 
   // sync coordinates to host
   currCoords->sync_to_host();

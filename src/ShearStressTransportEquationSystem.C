@@ -227,7 +227,7 @@ ShearStressTransportEquationSystem::register_wall_bc(
   stk::mesh::put_field_on_mesh(assembledWallNormDist, *part, nullptr);
   auto& wallNormDistBip = meta.declare_field<GenericFieldType>(
     meta.side_rank(), "wall_normal_distance_bip");
-  auto* meFC = MasterElementRepo::get_surface_master_element(partTopo);
+  auto* meFC = MasterElementRepo::get_surface_master_element_on_host(partTopo);
   const int numScsBip = meFC->num_integration_points();
   stk::mesh::put_field_on_mesh(wallNormDistBip, *part, numScsBip, nullptr);
 
@@ -530,6 +530,9 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
   const auto& meta = meshInfo.meta();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
 
+  if (wallBcPart_.empty())
+    return;
+
   auto& ndtw =
     fieldMgr.get_field<double>(minDistanceToWall_->mesh_meta_data_ordinal());
   const auto& wallNormDist =
@@ -550,9 +553,8 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
   ndtw.modify_on_device();
 
   stk::mesh::parallel_max(realm_.bulk_data(), {minDistanceToWall_});
-  if (realm_.hasPeriodic_) {
+  if (realm_.hasPeriodic_)
     realm_.periodic_field_max(minDistanceToWall_, 1);
-  }
 }
 
 /** Compute f1 field with parameters appropriate for 2003 SST implementation

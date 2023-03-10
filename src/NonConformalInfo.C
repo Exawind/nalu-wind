@@ -194,10 +194,11 @@ NonConformalInfo::construct_dgInfo()
 
     // volume and surface master element
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         currentElemTopo);
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        b.topology());
     MasterElement* meSCS_dev =
       sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
         currentElemTopo);
@@ -617,9 +618,8 @@ NonConformalInfo::complete_search()
             // extract the topo from this face element...
             const stk::topology theFaceTopo =
               bulk_data.bucket(opposingFace).topology();
-            MasterElement* meFC =
-              sierra::nalu::MasterElementRepo::get_surface_master_element(
-                theFaceTopo);
+            MasterElement* meFC = sierra::nalu::MasterElementRepo::
+              get_surface_master_element_on_host(theFaceTopo);
 
             // extract the connected element to the opposing face
             const stk::mesh::Entity* face_elem_rels =
@@ -630,9 +630,8 @@ NonConformalInfo::complete_search()
             // extract the opposing element topo and associated master element
             const stk::topology theOpposingElementTopo =
               bulk_data.bucket(opposingElement).topology();
-            MasterElement* meSCS =
-              sierra::nalu::MasterElementRepo::get_surface_master_element(
-                theOpposingElementTopo);
+            MasterElement* meSCS = sierra::nalu::MasterElementRepo::
+              get_surface_master_element_on_host(theOpposingElementTopo);
 
             // possible reuse
             dgInfo->allOpposingFaceIds_.push_back(

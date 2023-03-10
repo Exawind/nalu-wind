@@ -14,6 +14,7 @@
 #include "UnitTestUtils.h"
 
 #include "LinearSolvers.h"
+#include "kernel/Kernel.h"
 #include "kernel/KernelBuilder.h"
 #include "SolverAlgorithmDriver.h"
 #include "AssembleElemSolverAlgorithm.h"
@@ -129,38 +130,57 @@ static const double lhsVals[12][12] = {
   {0.0, 0.0, 0.0, 0.0, -0.2, -0.3, -0.5, -0.4, -0.6, -0.7, 2.0, -0.8},
   {0.0, 0.0, 0.0, 0.0, -0.3, -0.4, -0.6, -0.5, -0.7, -0.8, -0.8, 2.0}};
 
-class TestKernel : public sierra::nalu::Kernel
+class TestKernel : public sierra::nalu::NGPKernel<TestKernel>
 {
 public:
   TestKernel(stk::topology elemTopo)
-    : numCallsToExecute(0), numNodesPerElem(elemTopo.num_nodes())
+    : numNodesPerElem(elemTopo.num_nodes()),
+      d_elemVals("device-elem-vals", 8, 8)
+  {
+    Kokkos::View<double**, sierra::nalu::MemSpace>::HostMirror h_elemVals =
+      Kokkos::create_mirror_view(d_elemVals);
+    for (int i = 0; i < 8; ++i) {
+      for (int j = 0; j < 8; ++j) {
+        h_elemVals(i, j) = elemVals[i][j];
+      }
+    }
+    Kokkos::deep_copy(d_elemVals, h_elemVals);
+  }
+
+  KOKKOS_FUNCTION
+  TestKernel() : numNodesPerElem(0), d_elemVals() {}
+
+  KOKKOS_FUNCTION
+  TestKernel(const TestKernel& src)
+    : numNodesPerElem(src.numNodesPerElem), d_elemVals(src.d_elemVals)
   {
   }
 
   using sierra::nalu::Kernel::execute;
+  KOKKOS_FUNCTION
   virtual void execute(
-    sierra::nalu::SharedMemView<DoubleType**>& lhs,
-    sierra::nalu::SharedMemView<DoubleType*>& rhs,
-    sierra::nalu::ScratchViews<DoubleType>& /* scratchViews */)
+    sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>& lhs,
+    sierra::nalu::SharedMemView<DoubleType*, sierra::nalu::DeviceShmem>& rhs,
+    sierra::nalu::ScratchViews<
+      DoubleType,
+      sierra::nalu::DeviceTeamHandleType,
+      sierra::nalu::DeviceShmem>& /* scratchViews */)
   {
-    EXPECT_EQ(numNodesPerElem * numNodesPerElem, lhs.size());
-    EXPECT_EQ(numNodesPerElem, rhs.size());
-    ThrowRequireMsg(
-      numNodesPerElem == 8, "For now, this is hard-wired for hex-8.");
-
-    for (unsigned i = 0; i < numNodesPerElem; ++i) {
-      for (unsigned j = 0; j < numNodesPerElem; ++j) {
-        lhs(i, j) = elemVals[i][j];
+    const bool check0 = numNodesPerElem * numNodesPerElem == lhs.size();
+    const bool check1 = numNodesPerElem == rhs.size();
+    const bool check2 = numNodesPerElem == 8;
+    if (check0 && check1 && check2) {
+      for (unsigned i = 0; i < numNodesPerElem; ++i) {
+        for (unsigned j = 0; j < numNodesPerElem; ++j) {
+          lhs(i, j) = d_elemVals(i, j);
+        }
       }
     }
-
-    ++numCallsToExecute;
   }
-
-  unsigned numCallsToExecute;
 
 private:
   unsigned numNodesPerElem;
+  Kokkos::View<double**, sierra::nalu::MemSpace> d_elemVals;
 };
 
 std::vector<unsigned>
@@ -246,7 +266,8 @@ create_and_register_kernel(
 {
   TestKernel* testKernel = new TestKernel(elemTopo);
   solverAlg->dataNeededByKernels_.add_cvfem_volume_me(
-    sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo));
+    sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(
+      elemTopo));
   solverAlg->activeKernels_.push_back(testKernel);
   return testKernel;
 }
@@ -255,11 +276,12 @@ sierra::nalu::Realm&
 setup_realm(unit_test_utils::NaluTest& naluObj, const std::string& meshSpec)
 {
   sierra::nalu::Realm& realm = naluObj.create_realm();
-  realm.setup_nodal_fields();
 
   sierra::nalu::TimeIntegrator timeIntegrator;
   timeIntegrator.secondOrderTimeAccurate_ = false;
   realm.timeIntegrator_ = &timeIntegrator;
+  realm.setup_field_manager();
+  realm.setup_nodal_fields();
   auto& part = realm.meta_data().declare_part("block_1");
   realm.register_nodal_fields(&part);
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
@@ -270,7 +292,7 @@ setup_realm(unit_test_utils::NaluTest& naluObj, const std::string& meshSpec)
   return realm;
 }
 
-void
+sierra::nalu::Realm&
 setup_solver_alg_and_linsys(
   unit_test_utils::NaluTest& naluObj, const std::string& meshSpec)
 {
@@ -279,20 +301,20 @@ setup_solver_alg_and_linsys(
   sierra::nalu::AssembleElemSolverAlgorithm* solverAlg =
     create_algorithm(realm, block_1);
   create_and_register_kernel(solverAlg, block_1.topology());
+  return realm;
 }
-
-#ifndef KOKKOS_ENABLE_GPU
 
 TEST(Tpetra, basic)
 {
-  int numProcs = stk::parallel_machine_size(MPI_COMM_WORLD);
+  const int numProcs = stk::parallel_machine_size(MPI_COMM_WORLD);
   if (numProcs > 2) {
-    return;
+    GTEST_SKIP();
   }
   int localProc = stk::parallel_machine_rank(MPI_COMM_WORLD);
 
   unit_test_utils::NaluTest naluObj;
-  setup_solver_alg_and_linsys(naluObj, "generated:1x1x2");
+  sierra::nalu::Realm& realm =
+    setup_solver_alg_and_linsys(naluObj, "generated:1x1x2");
 
   sierra::nalu::TpetraLinearSystem* tpetraLinsys =
     get_TpetraLinearSystem(naluObj);
@@ -304,10 +326,18 @@ TEST(Tpetra, basic)
 
   verify_graph_for_2_hex8_mesh(numProcs, localProc, tpetraLinsys);
 
+  auto meSCV =
+    sierra::nalu::MasterElementRepo::get_volume_master_element_on_dev(
+      sierra::nalu::AlgTraitsHex8::topo_);
+  auto& dataNeeded = solverAlg->dataNeededByKernels_;
+  dataNeeded.add_cvfem_volume_me(meSCV);
+  auto* coordsField = realm.meta_data().coordinate_field();
+  dataNeeded.add_coordinates_field(
+    *coordsField, 3, sierra::nalu::CURRENT_COORDINATES);
+  dataNeeded.add_master_element_call(
+    sierra::nalu::SCV_VOLUME, sierra::nalu::CURRENT_COORDINATES);
+
   solverAlg->execute();
   tpetraLinsys->loadComplete();
-
   verify_matrix_for_2_hex8_mesh(numProcs, localProc, tpetraLinsys);
 }
-
-#endif // KOKKOS_ENABLE_GPU

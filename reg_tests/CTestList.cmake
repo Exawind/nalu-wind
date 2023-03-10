@@ -192,6 +192,8 @@ if(NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
     add_test_r_np(periodic3dEdge 8)
     add_test_r(taylorGreenVortex_p3 4)
     add_test_r(vortexOpen 4)
+    add_test_r(VOFDroplet 4)
+    add_test_r(VOFZalDisk 4)
 
     if (ENABLE_FFTW)
       add_test_r(ablHill3d_pp 4)

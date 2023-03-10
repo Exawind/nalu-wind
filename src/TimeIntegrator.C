@@ -160,6 +160,7 @@ TimeIntegrator::breadboard()
   for (size_t irealm = 0; irealm < realmNamesVec_.size(); ++irealm) {
     Realm* realm = sim_->realms_->find_realm(realmNamesVec_[irealm]);
     realm->timeIntegrator_ = this;
+    realm->setup_field_manager();
     realmVec_.push_back(realm);
   }
 

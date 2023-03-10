@@ -32,6 +32,7 @@
 #include <WilcoxKOmegaEquationSystem.h>
 #include <TurbKineticEnergyEquationSystem.h>
 #include <WallDistEquationSystem.h>
+#include <VolumeOfFluidEquationSystem.h>
 
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
 
@@ -111,6 +112,7 @@ EquationSystems::load(const YAML::Node& y_node)
         const YAML::Node y_system = y_systems[isystem];
         EquationSystem* eqSys = 0;
         YAML::Node y_eqsys;
+
         if (expect_map(y_system, "LowMachEOM", true)) {
           y_eqsys = expect_map(y_system, "LowMachEOM", true);
           if (root()->debug())
@@ -127,6 +129,14 @@ EquationSystems::load(const YAML::Node& y_node)
           } else {
             eqSys = new LowMachEquationSystem(*this, elemCont);
           }
+        } else if (expect_map(y_system, "VolumeOfFluid", true)) {
+
+          y_eqsys = expect_map(y_system, "VolumeOfFluid", true);
+          if (root()->debug())
+            NaluEnv::self().naluOutputP0()
+              << "eqSys = VolumeOfFluid" << std::endl;
+          eqSys = new VolumeOfFluidEquationSystem(*this);
+
         } else if (expect_map(y_system, "ShearStressTransport", true)) {
           y_eqsys = expect_map(y_system, "ShearStressTransport", true);
           if (root()->debug())
@@ -192,7 +202,7 @@ EquationSystems::load(const YAML::Node& y_node)
         eqSys->decoupledOverset_ = decoupledOversetGlobalFlag_;
         eqSys->numOversetIters_ = numOversetItersDefault_;
 
-        // load; particular equation system push back to vector is controled by
+        // load; particular equation system push back to vector is controlled by
         // the constructor
         eqSys->load(y_eqsys);
       }

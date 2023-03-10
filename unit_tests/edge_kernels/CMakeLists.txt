@@ -17,5 +17,6 @@ target_sources(${utest_ex_name} PRIVATE
 if(ENABLE_TRILINOS_SOLVERS)
   target_sources(${utest_ex_name} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarAdvDiffEdge.C
+    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestVOFAdvectionEdge.C
   )
 endif()

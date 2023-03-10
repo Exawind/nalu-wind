@@ -23,6 +23,7 @@ protected:
   void SetUp()
   {
     stk::mesh::MeshBuilder builder(MPI_COMM_WORLD);
+    builder.set_spatial_dimension(3);
     meta_ = builder.create_meta_data();
     key_ = "velocity";
   }
@@ -46,7 +47,7 @@ TEST_F(FieldManagerTest, nameIsEnoughInfoToRegisterAField)
   EXPECT_EQ(findFieldPtr, std::get<VectorFieldType*>(ptr));
   EXPECT_TRUE(fm.field_exists(name));
 
-  auto ptr2 = std::get<VectorFieldType*>(fm.get_field_ptr(name));
+  auto ptr2 = fm.get_field_ptr<VectorFieldType*>(name);
   EXPECT_EQ(findFieldPtr, ptr2);
 }
 
@@ -89,6 +90,36 @@ TEST_F(FieldManagerTest, undefinedFieldCantBeRegistered)
   FieldManager fm(meta(), num_states);
   EXPECT_THROW(
     fm.register_field(name, meta().universal_part()), std::runtime_error);
+}
+
+TEST_F(FieldManagerTest, fieldStateCanBeSelected)
+{
+  const std::string name = "velocity";
+  const int numStates = 3;
+  FieldManager fm(meta(), numStates);
+  fm.register_field(name, meta().universal_part());
+  // clang-format off
+  const auto np1 = fm.get_field_ptr<VectorFieldType*>(name, stk::mesh::StateNP1);
+  const auto n =   fm.get_field_ptr<VectorFieldType*>(name, stk::mesh::StateN);
+  const auto nm1 = fm.get_field_ptr<VectorFieldType*>(name, stk::mesh::StateNM1);
+  // clang-format on
+  EXPECT_TRUE(np1 != nullptr);
+  EXPECT_TRUE(n != nullptr);
+  EXPECT_TRUE(nm1 != nullptr);
+  EXPECT_TRUE(np1 != n);
+  EXPECT_TRUE(np1 != nm1);
+}
+
+TEST_F(FieldManagerTest, numStatesCanBeChangedAtRegistration)
+{
+  const std::string name = "dual_nodal_volume";
+  const int numStates = 3;
+
+  FieldManager fm(meta(), numStates);
+  fm.register_field(name, meta().universal_part(), numStates);
+  auto field = fm.get_field_ptr<ScalarFieldType*>(name);
+  ASSERT_TRUE(field != nullptr);
+  EXPECT_EQ(numStates, field->number_of_states());
 }
 } // namespace
 } // namespace nalu

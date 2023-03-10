@@ -13,14 +13,14 @@ namespace sierra {
 namespace nalu {
 
 FieldManager::FieldManager(stk::mesh::MetaData& meta, int numStates)
-  : meta_(meta), numStates_(numStates)
+  : meta_(meta), numStates_(numStates), numDimensions_(meta.spatial_dimension())
 {
 }
 
 bool
 FieldManager::field_exists(std::string name)
 {
-  auto definition = FieldRegistry::query(numStates_, name);
+  auto definition = FieldRegistry::query(numDimensions_, numStates_, name);
 
   return std::visit(
     [&](auto def) -> bool {
@@ -32,17 +32,17 @@ FieldManager::field_exists(std::string name)
 
 FieldPointerTypes
 FieldManager::register_field(
-  std::string name, const stk::mesh::PartVector& parts)
+  std::string name, const stk::mesh::PartVector& parts, int numStates)
 {
-  auto definition = FieldRegistry::query(numStates_, name);
+  auto definition = FieldRegistry::query(numDimensions_, numStates_, name);
 
   return std::visit(
     [&](auto def) -> FieldPointerTypes {
       auto* id = &(meta_.declare_field<typename decltype(def)::FieldType>(
-        def.rank, name, def.num_states));
+        def.rank, name, numStates ? numStates : def.num_states));
 
       for (auto&& part : parts) {
-        stk::mesh::put_field_on_mesh(*id, *part, def.num_states, nullptr);
+        stk::mesh::put_field_on_mesh(*id, *part, def.num_components, nullptr);
       }
 
       return id;
@@ -51,16 +51,17 @@ FieldManager::register_field(
 }
 
 FieldPointerTypes
-FieldManager::register_field(std::string name, const stk::mesh::Part& part)
+FieldManager::register_field(
+  std::string name, const stk::mesh::Part& part, int numStates)
 {
-  auto definition = FieldRegistry::query(numStates_, name);
+  auto definition = FieldRegistry::query(numDimensions_, numStates_, name);
 
   return std::visit(
     [&](auto def) -> FieldPointerTypes {
       auto* id = &(meta_.declare_field<typename decltype(def)::FieldType>(
-        def.rank, name, def.num_states));
+        def.rank, name, numStates ? numStates : def.num_states));
 
-      stk::mesh::put_field_on_mesh(*id, part, def.num_states, nullptr);
+      stk::mesh::put_field_on_mesh(*id, part, def.num_components, nullptr);
 
       return id;
     },

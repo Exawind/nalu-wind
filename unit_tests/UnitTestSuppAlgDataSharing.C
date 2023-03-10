@@ -126,7 +126,7 @@ public:
     // In this unit-test we know we're working on a hex8 mesh. In real
     // algorithms, a topology would be available.
     dataNeededByKernels_.add_cvfem_surface_me(
-      sierra::nalu::MasterElementRepo::get_surface_master_element(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::HEX_8));
 
     stk::mesh::NgpMesh ngpMesh(bulkData_);

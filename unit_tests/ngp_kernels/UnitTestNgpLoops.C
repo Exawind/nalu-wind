@@ -425,8 +425,9 @@ elem_loop_scratch_views(
 
   const auto& meta = bulk.mesh_meta_data();
   sierra::nalu::ElemDataRequests dataReq(meta);
-  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<
-    sierra::nalu::AlgTraitsHex8>();
+  auto meSCV =
+    sierra::nalu::MasterElementRepo::get_volume_master_element_on_dev(
+      sierra::nalu::AlgTraitsHex8::topo_);
   dataReq.add_cvfem_volume_me(meSCV);
 
   auto* coordsField = bulk.mesh_meta_data().coordinate_field();
@@ -527,7 +528,8 @@ calc_mdot_elem_loop(
   const auto& meta = bulk.mesh_meta_data();
   sierra::nalu::ElemDataRequests dataReq(meta);
   auto meSCS =
-    sierra::nalu::MasterElementRepo::get_surface_master_element<Hex8Traits>();
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      Hex8Traits::topo_);
   dataReq.add_cvfem_surface_me(meSCS);
 
   auto* coordsField = bulk.mesh_meta_data().coordinate_field();
@@ -617,10 +619,12 @@ basic_face_elem_loop(
 
   sierra::nalu::ElemDataRequests faceData(meta);
   sierra::nalu::ElemDataRequests elemData(meta);
-  auto meFC = sierra::nalu::MasterElementRepo::get_surface_master_element<
-    FaceTraits::FaceTraits>();
-  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element<
-    FaceTraits::ElemTraits>();
+  auto meFC =
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      FaceTraits::FaceTraits::topo_);
+  auto meSCS =
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      FaceTraits::ElemTraits::topo_);
 
   faceData.add_cvfem_face_me(meFC);
   elemData.add_cvfem_surface_me(meSCS);
@@ -726,7 +730,8 @@ elem_loop_par_reduce(const stk::mesh::BulkData& bulk, ScalarFieldType& pressure)
 
   sierra::nalu::ElemDataRequests dataReq(meta);
   auto meSCV =
-    sierra::nalu::MasterElementRepo::get_volume_master_element<Hex8Traits>();
+    sierra::nalu::MasterElementRepo::get_volume_master_element_on_dev(
+      Hex8Traits::topo_);
   dataReq.add_cvfem_volume_me(meSCV);
 
   auto* coordsField = bulk.mesh_meta_data().coordinate_field();
@@ -784,10 +789,12 @@ basic_face_elem_reduce(
 
   sierra::nalu::ElemDataRequests faceData(meta);
   sierra::nalu::ElemDataRequests elemData(meta);
-  auto meFC = sierra::nalu::MasterElementRepo::get_surface_master_element<
-    FaceTraits::FaceTraits>();
-  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element<
-    FaceTraits::ElemTraits>();
+  auto meFC =
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      FaceTraits::FaceTraits::topo_);
+  auto meSCS =
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      FaceTraits::ElemTraits::topo_);
 
   faceData.add_cvfem_face_me(meFC);
   elemData.add_cvfem_surface_me(meSCS);

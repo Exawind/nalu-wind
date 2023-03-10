@@ -73,7 +73,7 @@ compute_vector_divergence(
 
   for (auto b : bkts) {
     MasterElement* meSCS =
-      MasterElementRepo::get_surface_master_element(b->topology());
+      MasterElementRepo::get_surface_master_element_on_host(b->topology());
 
     const int nodesPerElement = meSCS->nodesPerElement_;
     const int numScsIp = meSCS->num_integration_points();
@@ -173,7 +173,7 @@ compute_vector_divergence(
   for (auto b : face_bkts) {
     // extract master element
     MasterElement* meFC =
-      MasterElementRepo::get_surface_master_element(b->topology());
+      MasterElementRepo::get_surface_master_element_on_host(b->topology());
 
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsIp = meFC->num_integration_points();
@@ -261,7 +261,7 @@ compute_scalar_divergence(
   stk::mesh::field_fill(0.0, *scalarField);
   for (auto b : bkts) {
     MasterElement* meSCS =
-      MasterElementRepo::get_surface_master_element(b->topology());
+      MasterElementRepo::get_surface_master_element_on_host(b->topology());
     const int numScsIp = meSCS->num_integration_points();
     const int* lrscv = meSCS->adjacentNodes();
     size_t length = b->size();

@@ -26,9 +26,6 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   const auto& meta = realm.meta_data();
 
   coordinates_ = get_field_ordinal(meta, realm.get_coordinates_name());
-  const std::string vrtmName =
-    realm.does_mesh_move() ? "velocity_rtm" : "velocity";
-  velocityRTM_ = get_field_ordinal(meta, vrtmName);
 
   const std::string velName = "velocity";
   velocity_ = get_field_ordinal(meta, velName, stk::mesh::StateNP1);
@@ -74,7 +71,6 @@ MomentumEdgeSolverAlg::execute()
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
-  const auto vrtm = fieldMgr.get_field<double>(velocityRTM_);
   const auto vel = fieldMgr.get_field<double>(velocity_);
   const auto dudx = fieldMgr.get_field<double>(dudx_);
   const auto viscosity = fieldMgr.get_field<double>(viscosity_);

@@ -53,6 +53,7 @@ struct WallUserData : public UserData
   TurbKinEnergy tke_;
   TotDissRate tdr_;
   MixtureFraction mixFrac_;
+  VolumeOfFluid volumeOfFluid_;
   MassFraction massFraction_;
   NormalHeatFlux q_;
   ReferenceTemperature referenceTemperature_;
@@ -100,6 +101,7 @@ struct InflowUserData : public UserData
   SpecDissRate sdr_;
   TotDissRate tdr_;
   MixtureFraction mixFrac_;
+  VolumeOfFluid volumeOfFluid_;
   MassFraction massFraction_;
   GammaInf gamma_;
 
@@ -131,6 +133,7 @@ struct OpenUserData : public UserData
   SpecDissRate sdr_;
   TotDissRate tdr_;
   MixtureFraction mixFrac_;
+  VolumeOfFluid volumeOfFluid_;
   MassFraction massFraction_;
   GammaOpen gamma_;
 
@@ -544,6 +547,12 @@ template <>
 struct convert<sierra::nalu::MixtureFraction>
 {
   static bool decode(const Node& node, sierra::nalu::MixtureFraction& rhs);
+};
+
+template <>
+struct convert<sierra::nalu::VolumeOfFluid>
+{
+  static bool decode(const Node& node, sierra::nalu::VolumeOfFluid& rhs);
 };
 
 template <>

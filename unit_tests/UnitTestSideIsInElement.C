@@ -90,7 +90,7 @@ check_side_is_in_element(stk::topology topo)
       const auto& b = *ib;
 
       auto* meSide =
-        sierra::nalu::MasterElementRepo::get_surface_master_element(
+        sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
           b.topology());
 
       for (size_t k = 0; k < b.size(); ++k) {

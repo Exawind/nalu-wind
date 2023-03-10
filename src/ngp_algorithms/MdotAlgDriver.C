@@ -114,7 +114,7 @@ MdotAlgDriver::pre_work()
     if (elemContinuityEqs_) {
       for (const auto* b : bkts) {
         auto* meFC =
-          MasterElementRepo::get_surface_master_element(b->topology());
+          MasterElementRepo::get_surface_master_element_on_host(b->topology());
         numIp += (b->size() * meFC->num_integration_points());
       }
     } else {
