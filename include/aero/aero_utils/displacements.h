@@ -74,11 +74,11 @@ SixDOF
 linear_interp_total_velocity(
   const SixDOF start, const SixDOF end, const double interpFactor)
 {
-  auto transDisp = wmp::linear_interp_translation(
+  auto transVel = wmp::linear_interp_translation(
     start.position_, end.position_, interpFactor);
-  auto rotDisp = wmp::linear_interp_translation(
-    start.position_, end.position_, interpFactor);
-  return SixDOF(transDisp, rotDisp);
+  auto rotVel = wmp::linear_interp_translation(
+    start.orientation_, end.orientation_, interpFactor);
+  return SixDOF(transVel, rotVel);
 }
 
 //! Convert a position relative to an aerodynamic point to the intertial
@@ -155,7 +155,9 @@ compute_mesh_velocity(
 {
   const auto pointLocal = local_aero_coordinates(cfdPos, referencePos);
   const auto pointRotate = wmp::rotate(totalDis.orientation_, pointLocal, true);
+  //std::cerr << "Trans vel = " << totalVel.position_ << ", rot vel = " << totalVel.orientation_ << ", Total vel = " << totalVel.position_ + (totalVel.orientation_ ^ pointRotate) << std::endl;
   return totalVel.position_ + (totalVel.orientation_ ^ pointRotate);
+
 }
 
 } // namespace aero
