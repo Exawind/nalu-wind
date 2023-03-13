@@ -10,7 +10,7 @@
 #include "ngp_algorithms/MdotOpenEdgeAlg.h"
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "ngp_algorithms/MdotAlgDriver.h"
 #include "ngp_utils/NgpFieldOps.h"
 #include "ngp_utils/NgpLoopUtils.h"

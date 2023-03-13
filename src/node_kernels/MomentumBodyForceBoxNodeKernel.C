@@ -12,7 +12,7 @@
 #include "SolutionOptions.h"
 #include "LowMachEquationSystem.h"
 #include "NaluEnv.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "TimeIntegrator.h"
 
 #include "stk_mesh/base/MetaData.hpp"

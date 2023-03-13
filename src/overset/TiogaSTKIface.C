@@ -21,7 +21,7 @@
 #include "NaluEnv.h"
 #include "Realm.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "stk_util/parallel/ParallelReduce.hpp"
 #include "stk_mesh/base/FieldParallel.hpp"
 #include "stk_mesh/base/FieldBLAS.hpp"

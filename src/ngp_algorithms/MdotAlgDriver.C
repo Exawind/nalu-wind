@@ -15,7 +15,7 @@
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "utils/StkHelpers.h"
 
 #include "stk_mesh/base/Field.hpp"

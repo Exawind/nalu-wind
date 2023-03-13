@@ -12,7 +12,7 @@
 #include <stk_mesh/base/GetEntities.hpp>
 
 #include <master_element/MasterElement.h>
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 #include <master_element/Quad42DCVFEM.h>
 #include <master_element/Pyr5CVFEM.h>
 #include <master_element/TensorOps.h>

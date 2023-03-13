@@ -9,7 +9,7 @@
 
 #include "kernel/EnthalpyTGradBCElemKernel.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
