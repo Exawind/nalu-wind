@@ -2,7 +2,7 @@
 #include <stk_topology/topology.hpp>
 #include "UnitTestUtils.h"
 
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 namespace {
 
 void

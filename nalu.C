@@ -42,7 +42,7 @@
 
 #include "HypreNGP.h"
 
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 
 static std::string
 human_bytes_double(double bytes)

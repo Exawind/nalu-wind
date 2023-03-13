@@ -8,7 +8,7 @@
 //
 
 #include "AMSAlgDriver.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "utils/StkHelpers.h"

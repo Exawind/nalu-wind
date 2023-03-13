@@ -1,6 +1,6 @@
 #include "xfer/LocalVolumeSearch.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "AlgTraits.h"
 
 #include "stk_mesh/base/BulkData.hpp"

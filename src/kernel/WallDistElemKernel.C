@@ -10,7 +10,7 @@
 #include "kernel/WallDistElemKernel.h"
 #include "AlgTraits.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "TimeIntegrator.h"
 #include "SolutionOptions.h"
 

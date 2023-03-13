@@ -18,7 +18,7 @@
 #include <Simulation.h>
 #include <LinearSolver.h>
 #include <master_element/MasterElement.h>
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 #include <EquationSystem.h>
 #include <NaluEnv.h>
 #include <utils/StkHelpers.h>

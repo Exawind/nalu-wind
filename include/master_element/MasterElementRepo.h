@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef MasterElementFactory_h
-#define MasterElementFactory_h
+#ifndef MasterElementRepo_h
+#define MasterElementRepo_h
 
 #include <string>
 #include <map>

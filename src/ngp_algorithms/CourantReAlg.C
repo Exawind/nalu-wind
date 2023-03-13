@@ -12,7 +12,7 @@
 #include "ngp_algorithms/CourantReAlg.h"
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "ngp_algorithms/ViewHelper.h"
 #include "ngp_algorithms/CourantReAlgDriver.h"
 #include "ngp_algorithms/CourantReReduceHelper.h"
