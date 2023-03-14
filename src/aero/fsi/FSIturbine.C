@@ -1772,7 +1772,7 @@ fsiTurbine::mapDisplacements(double time)
         // Now transfer the translational and rotational velocity to an
         // equivalent translational velocity on the CFD mesh node
         const auto stiffVel = aero::compute_mesh_velocity(
-          hubVel, hubDeflection, refPos, nodePosition);
+          hubVel, hubDeflection, hubPos, nodePosition);
 
         vector_to_field(
           aero::compute_mesh_velocity(
@@ -1800,9 +1800,9 @@ fsiTurbine::mapDisplacements(double time)
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
-      auto mVel = vector_from_field(*meshVelocity, node);
-
-      mVel = aero::compute_mesh_velocity(hubVel, hubDeflection, hubPos, oldxyz);
+      vector_to_field(
+        aero::compute_mesh_velocity(hubVel, hubDeflection, hubPos, oldxyz),
+        *meshVelocity, node);
     }
   }
 
