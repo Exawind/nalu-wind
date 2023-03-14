@@ -1696,6 +1696,10 @@ fsiTurbine::mapDisplacements(double time)
     }
   }
 
+  const aero::SixDOF hubVel(brFSIdata_.hub_vel.data());
+  const aero::SixDOF hubDeflection(brFSIdata_.hub_def.data());
+  const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
+  
   // Now the blades
   int nBlades = params_.numBlades;
   int iStart = 0;
@@ -1770,7 +1774,21 @@ fsiTurbine::mapDisplacements(double time)
         vector_to_field(
             aero::compute_mesh_velocity(interpVel, interpDisp, refPos, nodePosition),
             *meshVelocity, node);
-        
+            
+        auto bldStartVel = aero::SixDOF(&(brFSIdata_.bld_vel[iN]));
+        auto bldEndVel = aero::SixDOF(&(brFSIdata_.bld_vel[iNp1]));
+        auto interpVel = aero::linear_interp_total_velocity(
+          bldStartVel, bldEndVel, *dispMapInterpNode);
+
+        // Now transfer the translational and rotational velocity to an
+        // equivalent translational velocity on the CFD mesh node
+        const auto stiffVel = aero::compute_mesh_velocity(
+          hubVel, hubDeflection, refPos, nodePosition);
+        vector_to_field(
+          aero::compute_mesh_velocity(
+            interpVel, interpDisp, hubPos, nodePosition, stiffVel,
+            deflectionRamp),
+          *meshVelocity, node);       
       }
     }
     iStart += nPtsBlade;
@@ -1784,19 +1802,16 @@ fsiTurbine::mapDisplacements(double time)
       auto node = (*b)[in];
 
       auto oldxyz = vector_from_field(*modelCoords, node);
-      const aero::SixDOF refPos(brFSIdata_.hub_ref_pos.data());
-      const aero::SixDOF deflection(brFSIdata_.hub_def.data());
       // Now transfer the displacement to the CFD mesh node
       vector_to_field(
-        aero::compute_translational_displacements(deflection, refPos, oldxyz),
+        aero::compute_translational_displacements(hubDeflection, hubPos, oldxyz),
         *displacement, node);
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
       auto mVel = vector_from_field(*meshVelocity, node);
-      const aero::SixDOF vel(brFSIdata_.hub_vel.data());
 
-      mVel = aero::compute_mesh_velocity(vel, deflection, refPos, oldxyz);
+      mVel = aero::compute_mesh_velocity(hubVel, hubDeflection, hubPos, oldxyz);
     }
   }
 
