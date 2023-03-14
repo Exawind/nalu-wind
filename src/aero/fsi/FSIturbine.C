@@ -1752,16 +1752,15 @@ fsiTurbine::mapDisplacements(double time)
 
         *stk::mesh::field_data(*deflectionRamp_, node) = deflectionRamp;
 
-        const aero::SixDOF hubDef(brFSIdata_.hub_def.data());
         // displacements from the hub will match a fully stiff blade's
         // displacements
         const auto nodePosition = vector_from_field(*modelCoords, node);
         const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
         const auto hubBasedDef = aero::compute_translational_displacements(
-          hubDef, hubPos, nodePosition);
+          hubDeflection, hubPos, nodePosition);
 
         auto ramp_disp = aero::compute_translational_displacements(
-          interpDisp, refPos, nodePosition, hubBasedDef, 0.0);
+          interpDisp, refPos, nodePosition, hubBasedDef, deflectionRamp);
         vector_to_field(ramp_disp, *displacement, node);
 
         auto bldStartVel = aero::SixDOF(&(brFSIdata_.bld_vel[iN]));
@@ -1776,7 +1775,7 @@ fsiTurbine::mapDisplacements(double time)
 
         vector_to_field(
           aero::compute_mesh_velocity(
-            interpVel, interpDisp, hubPos, nodePosition, stiffVel,
+            interpVel, interpDisp, refPos, nodePosition, stiffVel,
             deflectionRamp),
           *meshVelocity, node);
       }
