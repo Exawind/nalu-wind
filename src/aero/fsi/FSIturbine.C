@@ -1699,7 +1699,7 @@ fsiTurbine::mapDisplacements(double time)
   const aero::SixDOF hubVel(brFSIdata_.hub_vel.data());
   const aero::SixDOF hubDeflection(brFSIdata_.hub_def.data());
   const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
-  
+
   // Now the blades
   int nBlades = params_.numBlades;
   int iStart = 0;
@@ -1761,20 +1761,9 @@ fsiTurbine::mapDisplacements(double time)
           hubDef, hubPos, nodePosition);
 
         auto ramp_disp = aero::compute_translational_displacements(
-            interpDisp, refPos, nodePosition, hubBasedDef, 0.0);
-        vector_to_field( ramp_disp, *displacement, node);
+          interpDisp, refPos, nodePosition, hubBasedDef, 0.0);
+        vector_to_field(ramp_disp, *displacement, node);
 
-        auto bldStartVel = aero::SixDOF(&(brFSIdata_.bld_vel[iN]));
-        auto bldEndVel = aero::SixDOF(&(brFSIdata_.bld_vel[iNp1]));
-        auto interpVel = aero::linear_interp_total_velocity(
-            bldStartVel, bldEndVel, *dispMapInterpNode);
-        
-        // Now transfer the translational and rotational velocity to an equivalent
-        // translational velocity on the CFD mesh node
-        vector_to_field(
-            aero::compute_mesh_velocity(interpVel, interpDisp, refPos, nodePosition),
-            *meshVelocity, node);
-            
         auto bldStartVel = aero::SixDOF(&(brFSIdata_.bld_vel[iN]));
         auto bldEndVel = aero::SixDOF(&(brFSIdata_.bld_vel[iNp1]));
         auto interpVel = aero::linear_interp_total_velocity(
@@ -1784,11 +1773,12 @@ fsiTurbine::mapDisplacements(double time)
         // equivalent translational velocity on the CFD mesh node
         const auto stiffVel = aero::compute_mesh_velocity(
           hubVel, hubDeflection, refPos, nodePosition);
+
         vector_to_field(
           aero::compute_mesh_velocity(
             interpVel, interpDisp, hubPos, nodePosition, stiffVel,
             deflectionRamp),
-          *meshVelocity, node);       
+          *meshVelocity, node);
       }
     }
     iStart += nPtsBlade;
@@ -1804,7 +1794,8 @@ fsiTurbine::mapDisplacements(double time)
       auto oldxyz = vector_from_field(*modelCoords, node);
       // Now transfer the displacement to the CFD mesh node
       vector_to_field(
-        aero::compute_translational_displacements(hubDeflection, hubPos, oldxyz),
+        aero::compute_translational_displacements(
+          hubDeflection, hubPos, oldxyz),
         *displacement, node);
 
       // Now transfer the translational and rotational velocity to an equivalent
@@ -2363,11 +2354,10 @@ fsiTurbine::compute_div_mesh_velocity()
     stk::topology::NODE_RANK, "div_mesh_velocity");
 
   GenericFieldType* faceVelMag = meta.get_field<GenericFieldType>(
-      stk::topology::EDGE_RANK, "edge_face_velocity_mag");
-  
+    stk::topology::EDGE_RANK, "edge_face_velocity_mag");
+
   compute_edge_scalar_divergence(
-      *bulk_, partVec_, bndyPartVec_, faceVelMag, divMeshVel);
-  
+    *bulk_, partVec_, bndyPartVec_, faceVelMag, divMeshVel);
 }
 
 } // namespace nalu
