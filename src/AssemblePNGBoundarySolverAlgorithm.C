@@ -16,7 +16,7 @@
 #include <SolutionOptions.h>
 #include <TimeIntegrator.h>
 #include <master_element/MasterElement.h>
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -99,7 +99,8 @@ AssemblePNGBoundarySolverAlgorithm::execute()
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
     const int* faceIpNodeMap = meFC->ipNodeMap();

@@ -21,7 +21,7 @@
 #include "NaluEnv.h"
 #include "Realm.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "stk_util/parallel/ParallelReduce.hpp"
 #include "stk_mesh/base/FieldParallel.hpp"
 #include "stk_mesh/base/FieldBLAS.hpp"
@@ -440,7 +440,8 @@ TiogaSTKIface::populate_overset_info()
     const stk::topology elemTopo = bulk_.bucket(elem).topology();
     const stk::mesh::Entity* enodes = bulk_.begin_nodes(elem);
     sierra::nalu::MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(elemTopo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        elemTopo);
     int num_nodes = bulk_.num_nodes(elem);
     elemCoords.resize(nDim * num_nodes);
 

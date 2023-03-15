@@ -10,7 +10,7 @@
 #include "ngp_algorithms/SSTMaxLengthScaleAlg.h"
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "ngp_algorithms/ViewHelper.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
@@ -32,7 +32,8 @@ SSTMaxLengthScaleAlg<AlgTraits>::SSTMaxLengthScaleAlg(
       get_field_ordinal(realm_.meta_data(), "sst_max_length_scale")),
     coordinates_(
       get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
-    meSCS_(MasterElementRepo::get_surface_master_element<AlgTraits>())
+    meSCS_(
+      MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_))
 {
 }
 

@@ -10,7 +10,7 @@
 #include "SimdInterface.h"
 #include "edge_kernels/MomentumSymmetryEdgeKernel.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "SolutionOptions.h"
 
 #include "BuildTemplates.h"
@@ -39,10 +39,10 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::MomentumSymmetryEdgeKernel(
       get_field_ordinal(meta, "exposed_area_vector", meta.side_rank())),
     dudx_(get_field_ordinal(meta, "dudx")),
     includeDivU_(solnOpts.includeDivU_),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-          typename BcAlgTraits::FaceTraits>()),
-    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-           typename BcAlgTraits::ElemTraits>()),
+    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::FaceTraits::topo_)),
+    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::ElemTraits::topo_)),
     penaltyFactor_(solnOpts.symmetryBcPenaltyFactor_)
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);

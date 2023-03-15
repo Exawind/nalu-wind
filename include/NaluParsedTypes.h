@@ -81,6 +81,12 @@ struct MixtureFraction
   MixtureFraction() : mixFrac_(0.0) {}
 };
 
+struct VolumeOfFluid
+{
+  double volumeOfFluid_;
+  VolumeOfFluid() : volumeOfFluid_(0.0) {}
+};
+
 struct MassFraction
 {
   std::vector<double> massFraction_;

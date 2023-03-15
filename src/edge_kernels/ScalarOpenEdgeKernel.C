@@ -9,7 +9,7 @@
 
 #include "edge_kernels/ScalarOpenEdgeKernel.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "SolutionOptions.h"
 
 #include "BuildTemplates.h"
@@ -33,8 +33,8 @@ ScalarOpenEdgeKernel<BcAlgTraits>::ScalarOpenEdgeKernel(
     openMassFlowRate_(
       get_field_ordinal(meta, "open_mass_flow_rate", meta.side_rank())),
     relaxFac_(solnOpts.get_relaxation_factor(scalarQ->name())),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-          BcAlgTraits>())
+    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::topo_))
 {
   faceData.add_cvfem_face_me(meFC_);
 

@@ -9,7 +9,7 @@
 
 #include "edge_kernels/MomentumABLWallShearStressEdgeKernel.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "SolutionOptions.h"
 
 #include "BuildTemplates.h"
@@ -35,10 +35,10 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::
       get_field_ordinal(meta, "exposed_area_vector", meta.side_rank())),
     wallShearStress_(
       get_field_ordinal(meta, "wall_shear_stress_bip", meta.side_rank())),
-    meFC_(MasterElementRepo::get_surface_master_element<
-          typename BcAlgTraits::FaceTraits>()),
-    meSCS_(MasterElementRepo::get_surface_master_element<
-           typename BcAlgTraits::ElemTraits>())
+    meFC_(MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::FaceTraits::topo_)),
+    meSCS_(MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::ElemTraits::topo_))
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);
   elemData.add_cvfem_surface_me(meSCS_);

@@ -60,7 +60,8 @@ TEST_F(Hex8Mesh, faceBasic)
 
   stk::topology faceTopo = stk::topology::QUAD_4;
   sierra::nalu::MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element(faceTopo);
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      faceTopo);
 
   stk::mesh::Part* surface1 = meta->get_part("surface_1");
   int numDof = 1;

@@ -1,6 +1,6 @@
 #include "xfer/LocalVolumeSearch.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "AlgTraits.h"
 
 #include "stk_mesh/base/BulkData.hpp"
@@ -127,7 +127,7 @@ local_coarse_search(
 MasterElement&
 master_element(const stk::mesh::BulkData& bulk, stk::mesh::Entity elem)
 {
-  return *MasterElementRepo::get_surface_master_element(
+  return *MasterElementRepo::get_surface_master_element_on_host(
     bulk.bucket(elem).topology());
 }
 

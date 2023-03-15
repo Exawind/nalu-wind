@@ -10,7 +10,7 @@
 #include "Enums.h"
 #include "edge_kernels/MomentumOpenEdgeKernel.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "SolutionOptions.h"
 
 #include "BuildTemplates.h"
@@ -49,10 +49,10 @@ MomentumOpenEdgeKernel<BcAlgTraits>::MomentumOpenEdgeKernel(
     nfEntrain_(solnOpts->nearestFaceEntrain_),
     entrain_(method),
     turbModel_(solnOpts->turbulenceModel_),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-          typename BcAlgTraits::FaceTraits>()),
-    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-           typename BcAlgTraits::ElemTraits>())
+    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::FaceTraits::topo_)),
+    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::ElemTraits::topo_))
 {
   faceData.add_cvfem_face_me(meFC_);
   elemData.add_cvfem_surface_me(meSCS_);

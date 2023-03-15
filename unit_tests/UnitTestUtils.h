@@ -21,7 +21,7 @@
 
 #include <master_element/Hex8CVFEM.h>
 #include <master_element/MasterElement.h>
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 
 #include <FieldTypeDef.h>
 
@@ -211,7 +211,7 @@ protected:
       *velocity, meta->universal_part(), 3, oneVecThree);
     stk::mesh::put_field_on_mesh(*dpdx, meta->universal_part(), 3, oneVecThree);
     const sierra::nalu::MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::QUAD_4);
     stk::mesh::put_field_on_mesh(
       *exposedAreaVec, meta->universal_part(),
@@ -295,7 +295,7 @@ protected:
       *specificHeat, meta->universal_part(), 1, nullptr);
 
     const sierra::nalu::MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::QUAD_4);
     stk::mesh::put_field_on_mesh(
       *exposedAreaVec, meta->universal_part(),
@@ -532,7 +532,7 @@ public:
 
     // Assign some values to the boundary integration point fields
     const sierra::nalu::MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::QUAD_4);
     const int numScsBip = meFC->num_integration_points();
     stk::mesh::BucketVector const& face_buckets =

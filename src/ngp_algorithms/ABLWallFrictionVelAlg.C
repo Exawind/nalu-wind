@@ -11,7 +11,7 @@
 
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
 #include "ngp_utils/NgpReduceUtils.h"
@@ -138,8 +138,8 @@ ABLWallFrictionVelAlg<BcAlgTraits>::ABLWallFrictionVelAlg(
     Tref_(Tref),
     kappa_(kappa),
     useShifted_(useShifted),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-          BcAlgTraits>())
+    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::topo_))
 {
   faceData_.add_cvfem_face_me(meFC_);
 

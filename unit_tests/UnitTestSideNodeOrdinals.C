@@ -2,13 +2,14 @@
 #include <stk_topology/topology.hpp>
 #include "UnitTestUtils.h"
 
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 namespace {
 
 void
 side_node_ordinals_are_same_as_stk(stk::topology topo)
 {
-  auto* me = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+  auto* me =
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
 
   for (unsigned side_ordinal = 0; side_ordinal < topo.num_sides();
        ++side_ordinal) {

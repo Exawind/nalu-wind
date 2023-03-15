@@ -7,7 +7,7 @@
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
 
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 
 #include <SimdInterface.h>
 #include <ElemDataRequests.h>
@@ -71,7 +71,8 @@ TEST_F(Hex8MeshWithNSOFields, NGPElemDataRequests)
 
   sierra::nalu::ElemDataRequests dataReq(bulk->mesh_meta_data());
   auto meSCV =
-    sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo);
+    sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(
+      elemTopo);
   dataReq.add_cvfem_volume_me(meSCV);
 
   dataReq.add_gathered_nodal_field(*velocity, 3);

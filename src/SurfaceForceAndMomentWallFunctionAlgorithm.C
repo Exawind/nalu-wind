@@ -13,7 +13,7 @@
 #include <FieldTypeDef.h>
 #include <Realm.h>
 #include <master_element/MasterElement.h>
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 #include <NaluEnv.h>
 
 // stk_mesh/base/fem
@@ -226,7 +226,8 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
 
@@ -472,7 +473,8 @@ SurfaceForceAndMomentWallFunctionAlgorithm::pre_work()
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        b.topology());
     const int numScsBip = meFC->num_integration_points();
 
     // mapping from ip to nodes for this ordinal

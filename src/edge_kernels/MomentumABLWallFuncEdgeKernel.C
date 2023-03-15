@@ -9,7 +9,7 @@
 
 #include "edge_kernels/MomentumABLWallFuncEdgeKernel.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "SolutionOptions.h"
 
 #include "BuildTemplates.h"
@@ -46,8 +46,8 @@ MomentumABLWallFuncEdgeKernel<BcAlgTraits>::MomentumABLWallFuncEdgeKernel(
     z0_(z0),
     Tref_(Tref),
     kappa_(kappa),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-          BcAlgTraits>())
+    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      BcAlgTraits::topo_))
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);
 

@@ -639,6 +639,19 @@ convert<sierra::nalu::MixtureFraction>::decode(
 }
 
 bool
+convert<sierra::nalu::VolumeOfFluid>::decode(
+  const Node& node, sierra::nalu::VolumeOfFluid& vof)
+{
+  if (!node.IsScalar()) {
+    return false;
+  }
+
+  vof.volumeOfFluid_ = node.as<double>();
+
+  return true;
+}
+
+bool
 convert<sierra::nalu::MassFraction>::decode(
   const Node& node, sierra::nalu::MassFraction& yk)
 {
@@ -756,6 +769,14 @@ convert<sierra::nalu::WallUserData>::decode(
     wallData.bcDataSpecifiedMap_["mass_fraction"] = true;
     wallData.bcDataTypeMap_["mass_fraction"] = sierra::nalu::CONSTANT_UD;
   }
+
+  if (node["volume_of_fluid"]) {
+    wallData.volumeOfFluid_ =
+      node["volume_of_fluid"].as<sierra::nalu::VolumeOfFluid>();
+    wallData.bcDataSpecifiedMap_["volume_of_fluid"] = true;
+    wallData.bcDataTypeMap_["mass_fraction"] = sierra::nalu::CONSTANT_UD;
+  }
+
   if (node["adiabatic"]) {
     wallData.isAdiabatic_ = node["adiabatic"].as<bool>();
   }
@@ -900,6 +921,13 @@ convert<sierra::nalu::InflowUserData>::decode(
       node["mixture_fraction"].as<sierra::nalu::MixtureFraction>();
     inflowData.mixFracSpec_ = true;
   }
+
+  if (node["volume_of_fluid"]) {
+    inflowData.volumeOfFluid_ =
+      node["volume_of_fluid"].as<sierra::nalu::VolumeOfFluid>();
+    inflowData.bcDataSpecifiedMap_["volume_of_fluid"] = true;
+  }
+
   if (node["mass_fraction"]) {
     inflowData.massFraction_ =
       node["mass_fraction"].as<sierra::nalu::MassFraction>();
@@ -976,6 +1004,11 @@ convert<sierra::nalu::OpenUserData>::decode(
     openData.mixFrac_ =
       node["mixture_fraction"].as<sierra::nalu::MixtureFraction>();
     openData.mixFracSpec_ = true;
+  }
+  if (node["volume_of_fluid"]) {
+    openData.volumeOfFluid_ =
+      node["volume_of_fluid"].as<sierra::nalu::VolumeOfFluid>();
+    openData.bcDataSpecifiedMap_["volume_of_fluid"] = true;
   }
   if (node["mass_fraction"]) {
     openData.massFraction_ =
