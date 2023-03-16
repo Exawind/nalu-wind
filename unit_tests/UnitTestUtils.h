@@ -394,8 +394,8 @@ protected:
       stk::topology::NODE_RANK, "effective_viscosity_u");
     exposedAreaVec_ = &meta->declare_field<GenericFieldType>(
       meta->side_rank(), "exposed_area_vector");
-    dudx_ = &meta->declare_field<GenericFieldType>(
-      stk::topology::NODE_RANK, "dudx");
+    dudx_ =
+      &meta->declare_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
 
     const double zeroVecThree[3] = {0.0, 0.0, 0.0};
     stk::mesh::put_field_on_mesh(
@@ -422,19 +422,15 @@ protected:
     stk::mesh::put_field_on_mesh(
       *div_mesh_velocity_, meta->universal_part(), 1, nullptr);
     constexpr double one = 1.0;
-    stk::mesh::put_field_on_mesh(
-      *density_, meta->universal_part(), 1, &one);
-    stk::mesh::put_field_on_mesh(
-      *pressure_, meta->universal_part(), 1, &one);
-    stk::mesh::put_field_on_mesh(
-      *viscosity_, meta->universal_part(), 1, &one);
+    stk::mesh::put_field_on_mesh(*density_, meta->universal_part(), 1, &one);
+    stk::mesh::put_field_on_mesh(*pressure_, meta->universal_part(), 1, &one);
+    stk::mesh::put_field_on_mesh(*viscosity_, meta->universal_part(), 1, &one);
     const sierra::nalu::MasterElement* meFC =
       sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::QUAD_4);
     const double oneVecTwelve[12] = {one, one, one, one, one, one,
                                      one, one, one, one, one, one};
-    const double oneVecNine[9] = {one, one, one, one, one, one,
-                                  one, one, one};
+    const double oneVecNine[9] = {one, one, one, one, one, one, one, one, one};
     stk::mesh::put_field_on_mesh(
       *exposedAreaVec_, meta->universal_part(),
       3 * meFC->num_integration_points(), oneVecTwelve);

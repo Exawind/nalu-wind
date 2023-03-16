@@ -901,9 +901,9 @@ fsiTurbine::mapLoads()
   VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
-  fsi::mapTowerLoad(*bulk_, twrBndyParts_, *modelCoords, *meshDisp,
-    *loadMap_, *loadMapInterp_, *tforceSCS_,
-    brFSIdata_.twr_ref_pos, brFSIdata_.twr_def, brFSIdata_.twr_ld);
+  fsi::mapTowerLoad(
+    *bulk_, twrBndyParts_, *modelCoords, *meshDisp, *loadMap_, *loadMapInterp_,
+    *tforceSCS_, brFSIdata_.twr_ref_pos, brFSIdata_.twr_def, brFSIdata_.twr_ld);
 
   // Now the blades
   int iStart = 0;
