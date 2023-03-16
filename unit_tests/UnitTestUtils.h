@@ -363,6 +363,10 @@ protected:
 
     testField = &meta->declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "testField");
+    curCoords_ = &meta->declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "current_coordinates");
+    meshDisp_ = &meta->declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_displacement");
 
     deflectionRamp_ = &meta->declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "deflection_ramp");
@@ -382,10 +386,24 @@ protected:
       stk::topology::NODE_RANK, "mesh_velocity_ref");
     div_mesh_velocity_ = &meta->declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "div_mesh_velocity");
+    density_ = &meta->declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "density", 3 /*num-states*/);
+    pressure_ = &meta->declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "pressure");
+    viscosity_ = &meta->declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "effective_viscosity_u");
+    exposedAreaVec_ = &meta->declare_field<GenericFieldType>(
+      meta->side_rank(), "exposed_area_vector");
+    dudx_ = &meta->declare_field<GenericFieldType>(
+      stk::topology::NODE_RANK, "dudx");
 
     const double zeroVecThree[3] = {0.0, 0.0, 0.0};
     stk::mesh::put_field_on_mesh(
       *testField, meta->universal_part(), 3, zeroVecThree);
+    stk::mesh::put_field_on_mesh(
+      *curCoords_, meta->universal_part(), 3, zeroVecThree);
+    stk::mesh::put_field_on_mesh(
+      *meshDisp_, meta->universal_part(), 3, zeroVecThree);
 
     stk::mesh::put_field_on_mesh(
       *deflectionRamp_, meta->universal_part(), 1, nullptr);
@@ -403,6 +421,25 @@ protected:
       *mesh_velocity_ref_, meta->universal_part(), 3, nullptr);
     stk::mesh::put_field_on_mesh(
       *div_mesh_velocity_, meta->universal_part(), 1, nullptr);
+    constexpr double one = 1.0;
+    stk::mesh::put_field_on_mesh(
+      *density_, meta->universal_part(), 1, &one);
+    stk::mesh::put_field_on_mesh(
+      *pressure_, meta->universal_part(), 1, &one);
+    stk::mesh::put_field_on_mesh(
+      *viscosity_, meta->universal_part(), 1, &one);
+    const sierra::nalu::MasterElement* meFC =
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        stk::topology::QUAD_4);
+    const double oneVecTwelve[12] = {one, one, one, one, one, one,
+                                     one, one, one, one, one, one};
+    const double oneVecNine[9] = {one, one, one, one, one, one,
+                                  one, one, one};
+    stk::mesh::put_field_on_mesh(
+      *exposedAreaVec_, meta->universal_part(),
+      3 * meFC->num_integration_points(), oneVecTwelve);
+    stk::mesh::put_field_on_mesh(
+      *dudx_, meta->universal_part(), 3 * 3, oneVecNine);
 
     meta->enable_late_fields();
   }
@@ -476,6 +513,8 @@ protected:
   const VectorFieldType* coordField;
   VectorFieldType* testField;
 
+  VectorFieldType* curCoords_;
+  VectorFieldType* meshDisp_;
   ScalarFieldType* deflectionRamp_;
   ScalarIntFieldType* dispMap_;
   ScalarFieldType* dispMapInterp_;
@@ -485,6 +524,11 @@ protected:
   VectorFieldType* mesh_displacement_ref_;
   VectorFieldType* mesh_velocity_ref_;
   ScalarFieldType* div_mesh_velocity_;
+  ScalarFieldType* density_;
+  ScalarFieldType* pressure_;
+  ScalarFieldType* viscosity_;
+  GenericFieldType* exposedAreaVec_;
+  GenericFieldType* dudx_;
 };
 
 class ABLWallFunctionHex8ElementWithBCFields : public Hex8ElementWithBCFields
