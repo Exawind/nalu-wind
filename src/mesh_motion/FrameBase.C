@@ -5,6 +5,7 @@
 #include "mesh_motion/MotionScalingKernel.h"
 #include "mesh_motion/MotionRotationKernel.h"
 #include "mesh_motion/MotionTranslationKernel.h"
+#include "mesh_motion/TurbineSurrogateKernel.h"
 #include "mesh_motion/MotionWavesKernel.h"
 #include "NaluParsing.h"
 #include "ngp_utils/NgpLoopUtils.h"
@@ -75,6 +76,8 @@ FrameBase::load(const YAML::Node& node)
         motionKernels_[i].reset(new MotionTranslationKernel(motion_def));
       else if (type == "waving_boundary")
         motionKernels_[i].reset(new MotionWavesKernel(meta_, motion_def));
+      else if (type == "turbine_surrogate")
+        motionKernels_[i].reset(new TurbineSurrogateKernel(meta_, motion_def));
       else
         throw std::runtime_error(
           "FrameBase: Invalid mesh motion type: " + type);

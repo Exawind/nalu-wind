@@ -62,8 +62,9 @@ CalcLoads::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
 }
 
 void
-CalcLoads::initialize() {
-    
+CalcLoads::initialize()
+{
+
   auto& meta = bulk_->mesh_meta_data();
   coordinates_ = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "current_coordinates");
@@ -73,6 +74,10 @@ CalcLoads::initialize() {
     meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
   viscosity_ = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "effective_viscosity_u");
+  if (viscosity_ == nullptr) {
+    viscosity_ =
+      meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
+  }
   dudx_ = meta.get_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
   exposedAreaVec_ =
     meta.get_field<GenericFieldType>(meta.side_rank(), "exposed_area_vector");
