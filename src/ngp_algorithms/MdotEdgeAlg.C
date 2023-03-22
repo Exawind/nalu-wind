@@ -26,7 +26,7 @@ MdotEdgeAlg::MdotEdgeAlg(Realm& realm, stk::mesh::Part* part)
     velocity_(get_field_ordinal(
       realm.meta_data(),
       realm.does_mesh_move() && !realm.has_mesh_deformation() ? "velocity_rtm"
-                                                               : "velocity")),
+                                                              : "velocity")),
     pressure_(get_field_ordinal(realm.meta_data(), "pressure")),
     densityNp1_(
       get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1)),

@@ -275,7 +275,7 @@ void
 TimeIntegrator::pre_realm_advance_stage1(size_t inonlin)
 {
   std::vector<Realm*>::iterator ii;
-    
+
   if (inonlin < 1) {
 
     // negotiate time step
@@ -286,34 +286,34 @@ TimeIntegrator::pre_realm_advance_stage1(size_t inonlin)
       }
       timeStepN_ = theStep;
     }
-  
+
     currentTime_ += timeStepN_;
     timeStepCount_ += 1;
-  
+
     // compute gamma's
     if (secondOrderTimeAccurate_)
       compute_gamma();
-  
+
     NaluEnv::self().naluOutputP0()
       << "*******************************************************" << std::endl
       << "Time Step Count: " << timeStepCount_
       << " Current Time: " << currentTime_ << std::endl
       << " dtN: " << timeStepN_ << " dtNm1: " << timeStepNm1_
-      << " gammas: " << gamma1_ << " " << gamma2_ << " " << gamma3_ << std::endl;
-  
+      << " gammas: " << gamma1_ << " " << gamma2_ << " " << gamma3_
+      << std::endl;
+
     // state management
     for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
       (*ii)->swap_states();
       (*ii)->predict_state();
     }
-      
   }
 
   // read any fields from input file that will serve as external fields
   for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
-      (*ii)->populate_external_variables_from_input(currentTime_);
+    (*ii)->populate_external_variables_from_input(currentTime_);
   }
-  
+
   for (auto realm : realmVec_) {
     realm->update_geometry_due_to_mesh_motion();
   }
@@ -329,17 +329,17 @@ TimeIntegrator::pre_realm_advance_stage2(size_t inonlin)
 
   if (inonlin < 1) {
     std::vector<Realm*>::iterator ii;
-    
+
     // populate boundary data
     for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
       (*ii)->populate_boundary_data();
     }
-  
+
     // output banner
     for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
       (*ii)->output_banner();
     }
-  
+
     // for this time, extract all of the proper data
     for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
       (*ii)->process_external_data_transfer();

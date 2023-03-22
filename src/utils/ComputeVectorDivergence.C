@@ -339,8 +339,6 @@ compute_edge_scalar_divergence(
   // sum up interior divergence values and return if boundary part not specified
   stk::mesh::parallel_sum(bulk, {scalarField});
   return;
-
-
 }
 
 } // namespace nalu

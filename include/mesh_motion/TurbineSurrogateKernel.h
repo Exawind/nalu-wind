@@ -9,7 +9,7 @@ namespace nalu {
 class TurbineSurrogateKernel : public NgpMotionKernel<TurbineSurrogateKernel>
 {
 public:
-  TurbineSurrogateKernel(  stk::mesh::MetaData& meta, const YAML::Node& node);
+  TurbineSurrogateKernel(stk::mesh::MetaData& meta, const YAML::Node& node);
 
   TurbineSurrogateKernel() = default;
 

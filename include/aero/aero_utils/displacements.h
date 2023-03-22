@@ -156,7 +156,6 @@ compute_mesh_velocity(
   const auto pointLocal = local_aero_coordinates(cfdPos, referencePos);
   const auto pointRotate = wmp::rotate(totalDis.orientation_, pointLocal, true);
   return totalVel.position_ + (totalVel.orientation_ ^ pointRotate);
-
 }
 
 KOKKOS_FORCEINLINE_FUNCTION
@@ -174,7 +173,7 @@ compute_mesh_velocity(
   const auto totalMeshVel =
     totalVel.position_ + (totalVel.orientation_ ^ pointRotate);
   return stiffVel + ramp * (totalMeshVel - stiffVel);
- }
+}
 
 } // namespace aero
 
