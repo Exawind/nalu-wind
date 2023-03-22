@@ -619,6 +619,8 @@ Realm::look_ahead_and_creation(const YAML::Node& node)
 
   // Contains actuators and FSI data structures
   aeroModels_ = std::make_unique<AeroContainer>(node);
+  if (aeroModels_-> has_fsi())
+      solutionOptions_->openfastFSI_ = true;
 
   // Boundary Layer Statistics post-processing
   if (node["boundary_layer_statistics"]) {
@@ -2510,12 +2512,12 @@ Realm::has_mesh_motion() const
 //-------- has_mesh_deformation --------------------------------------------
 //--------------------------------------------------------------------------
 bool
-Realm::has_mesh_deformation() const
+Realm::has_mesh_deformation()
 {
+  n_calls_ += 1;
+  NaluEnv::self().naluOutputP0() << "Deformation active " <<  n_calls_ << std::endl;
   if (meshMotionAlg_) {
-    return (meshMotionAlg_->is_deforming() ||
-            solutionOptions_->externalMeshDeformation_) ||
-           aeroModels_->has_fsi();
+    return meshMotionAlg_->is_deforming();
   } else
     return (
       solutionOptions_->externalMeshDeformation_ || aeroModels_->has_fsi());
@@ -2525,9 +2527,9 @@ Realm::has_mesh_deformation() const
 //-------- does_mesh_move --------------------------------------------------
 //--------------------------------------------------------------------------
 bool
-Realm::does_mesh_move() const
+Realm::does_mesh_move()
 {
-  return has_mesh_motion() || has_mesh_deformation();
+  return has_mesh_deformation();
 }
 
 //--------------------------------------------------------------------------

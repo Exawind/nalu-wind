@@ -22,7 +22,7 @@ ContinuityEdgeSolverAlg::ContinuityEdgeSolverAlg(
   const auto& meta = realm.meta_data();
 
   coordinates_ = get_field_ordinal(meta, realm.get_coordinates_name());
-  velocity_ = realm.has_mesh_motion() && !realm.has_mesh_deformation()
+  velocity_ = realm.does_mesh_move() && !realm.has_mesh_deformation()
                 ? get_field_ordinal(meta, "velocity_rtm")
                 : get_field_ordinal(meta, "velocity");
   densityNp1_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
