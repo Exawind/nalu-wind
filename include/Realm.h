@@ -104,7 +104,6 @@ public:
   Realm(Realms&, const YAML::Node& node);
   virtual ~Realm();
 
-  int n_calls_{0};
   typedef size_t SizeType;
 
   virtual void load(const YAML::Node& node);
@@ -168,8 +167,8 @@ public:
 
   std::string get_coordinates_name();
   bool has_mesh_motion() const;
-  bool has_mesh_deformation();
-  bool does_mesh_move();
+  bool has_mesh_deformation() const;
+  bool does_mesh_move() const;
   bool has_non_matching_boundary_face_alg() const;
 
   // overset boundary condition requires elemental field registration
