@@ -23,12 +23,14 @@ template <typename PecFuncType, typename ValueType>
 ValueType
 exec_on_device(PecFuncType* devptr, ValueType pecNum)
 {
-  ValueType pecFac = 0.0;
-  Kokkos::parallel_reduce(
+  Kokkos::View<ValueType*, sierra::nalu::MemSpace> pecFacDev("pecFac", 1);
+  Kokkos::parallel_for(
     sierra::nalu::DeviceRangePolicy(0, 1),
-    KOKKOS_LAMBDA(int, ValueType& pf) { pf = devptr->execute(pecNum); },
-    pecFac);
-  return pecFac;
+    KOKKOS_LAMBDA(int) {
+      pecFacDev(0) = devptr->execute(pecNum);
+    });
+  auto pecFacHost = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), pecFacDev);
+  return pecFacHost(0);
 }
 
 } // namespace
@@ -56,20 +58,18 @@ TEST(PecletFunction, NGP_classic_simd)
 {
   const DoubleType A = 5.0;
   const DoubleType hybridFactor = 1.0;
-  NALU_ALIGNED DoubleType pecletNumbers[] = {0.0, 1.0, std::sqrt(5.0), 1e5};
+  std::vector<DoubleType> pecletNumbers = {0.0, 1.0, std::sqrt(5.0), 1e5};
   std::vector<double> pecletFactors = {0.0, 1.0 / 6.0, 0.5, 1.0};
 
   auto* pecFunc = sierra::nalu::nalu_ngp::create<
     sierra::nalu::ClassicPecletFunction<DoubleType>>(A, hybridFactor);
 
-#if !defined(KOKKOS_ENABLE_GPU)
   for (int i = 0; i < 4; i++) {
     const DoubleType pecFac = exec_on_device(pecFunc, pecletNumbers[i]);
     for (int is = 0; is < stk::simd::ndoubles; is++) {
       EXPECT_NEAR(stk::simd::get_data(pecFac, is), pecletFactors[i], tolerance);
     }
   }
-#endif
 
   sierra::nalu::nalu_ngp::destroy(pecFunc);
 }
@@ -96,21 +96,20 @@ TEST(PecletFunction, NGP_tanh_simd)
 {
   const DoubleType c1 = 5000.0;
   const DoubleType c2 = 200.0;
-  NALU_ALIGNED DoubleType pecletNumbers[] = {-10.0 * c2, c1, c1 + 10.0 * c2};
+  std::vector<DoubleType> pecletNumbers = {-10.0 * c2, c1, c1 + 10.0 * c2};
   std::vector<double> pecletFactors = {0.0, 0.5, 1.0};
 
   auto* pecFunc =
     sierra::nalu::nalu_ngp::create<sierra::nalu::TanhFunction<DoubleType>>(
       c1, c2);
 
-#if !defined(KOKKOS_ENABLE_GPU)
+  std::cout << "stk::simd::ndoubles " << stk::simd::ndoubles << std::endl;
   for (int i = 0; i < 3; i++) {
     const DoubleType pecFac = exec_on_device(pecFunc, pecletNumbers[i]);
     for (int is = 0; is < stk::simd::ndoubles; is++) {
       EXPECT_NEAR(stk::simd::get_data(pecFac, is), pecletFactors[i], tolerance);
     }
   }
-#endif
 
   sierra::nalu::nalu_ngp::destroy(pecFunc);
 }
