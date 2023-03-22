@@ -2509,7 +2509,7 @@ Realm::has_mesh_motion() const
 //-------- has_mesh_deformation --------------------------------------------
 //--------------------------------------------------------------------------
 bool
-Realm::has_mesh_deformation()
+Realm::has_mesh_deformation() const
 {
   // TODO embed this logic in solution options? it would be good if both were
   // always consistent
@@ -2523,7 +2523,7 @@ Realm::has_mesh_deformation()
 //-------- does_mesh_move --------------------------------------------------
 //--------------------------------------------------------------------------
 bool
-Realm::does_mesh_move()
+Realm::does_mesh_move() const
 {
   return has_mesh_deformation();
 }
