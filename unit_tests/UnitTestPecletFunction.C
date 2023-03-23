@@ -26,10 +26,9 @@ exec_on_device(PecFuncType* devptr, ValueType pecNum)
   Kokkos::View<ValueType*, sierra::nalu::MemSpace> pecFacDev("pecFac", 1);
   Kokkos::parallel_for(
     sierra::nalu::DeviceRangePolicy(0, 1),
-    KOKKOS_LAMBDA(int) {
-      pecFacDev(0) = devptr->execute(pecNum);
-    });
-  auto pecFacHost = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), pecFacDev);
+    KOKKOS_LAMBDA(int) { pecFacDev(0) = devptr->execute(pecNum); });
+  auto pecFacHost =
+    Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), pecFacDev);
   return pecFacHost(0);
 }
 
