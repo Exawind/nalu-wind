@@ -14,7 +14,7 @@
 #include <Realm.h>
 #include <TimeIntegrator.h>
 #include <master_element/MasterElement.h>
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -114,7 +114,8 @@ ComputeHeatTransferEdgeWallAlgorithm::execute()
     ThrowAssert(parentTopo.size() == 1);
     stk::topology theElemTopo = parentTopo[0];
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(theElemTopo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        theElemTopo);
 
     // size some things that are useful
     const int num_face_nodes = b.topology().num_nodes();

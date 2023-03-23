@@ -10,7 +10,7 @@
 #include "gcl/MeshVelocityAlg.h"
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "master_element/Hex8GeometryFunctions.h"
 #include "ngp_algorithms/ViewHelper.h"
 #include "ngp_utils/NgpLoopUtils.h"
@@ -52,7 +52,8 @@ MeshVelocityAlg<AlgTraits>::MeshVelocityAlg(Realm& realm, stk::mesh::Part* part)
       "swept_face_volume",
       stk::mesh::StateN,
       stk::topology::ELEM_RANK)),
-    meSCS_(MasterElementRepo::get_surface_master_element<AlgTraits>()),
+    meSCS_(
+      MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_)),
     scsFaceNodeMapDeviceView_("scsFaceNodeMap"),
     isoCoordsShapeFcnDeviceView_("isoCoordShapFcn"),
     isoCoordsShapeFcnHostView_("isoCoordShapFcnHost")

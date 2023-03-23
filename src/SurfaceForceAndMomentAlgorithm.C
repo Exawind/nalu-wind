@@ -13,7 +13,7 @@
 #include <FieldTypeDef.h>
 #include <Realm.h>
 #include <master_element/MasterElement.h>
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 #include <NaluEnv.h>
 
 // stk_mesh/base/fem
@@ -157,6 +157,20 @@ SurfaceForceAndMomentAlgorithm::execute()
   double yplusMin = 1.0e8;
   double yplusMax = -1.0e8;
 
+  // sync fields to host
+  coordinates_->sync_to_host();
+  pressure_->sync_to_host();
+  pressureForce_->sync_to_host();
+  viscousForce_->sync_to_host();
+  tauWallVector_->sync_to_host();
+  tauWall_->sync_to_host();
+  yplus_->sync_to_host();
+  density_->sync_to_host();
+  viscosity_->sync_to_host();
+  dudx_->sync_to_host();
+  exposedAreaVec_->sync_to_host();
+  assembledArea_->sync_to_host();
+
   // nodal fields to gather
   std::vector<double> ws_pressure;
   std::vector<double> ws_density;
@@ -204,7 +218,8 @@ SurfaceForceAndMomentAlgorithm::execute()
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
 
@@ -219,7 +234,8 @@ SurfaceForceAndMomentAlgorithm::execute()
 
     // extract master element for this element topo
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(theElemTopo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        theElemTopo);
 
     // algorithm related; element
     ws_pressure.resize(nodesPerFace);
@@ -466,7 +482,8 @@ SurfaceForceAndMomentAlgorithm::pre_work()
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        b.topology());
     const int numScsBip = meFC->num_integration_points();
 
     // mapping from ip to nodes for this ordinal; face perspective (use with

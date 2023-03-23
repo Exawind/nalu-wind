@@ -63,7 +63,7 @@ TEST(utils, compute_vector_divergence)
     *meshVec, realm.meta_data().universal_part(), nDim, nullptr);
 
   const sierra::nalu::MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element(
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       stk::topology::QUAD_4);
   const int numScsIp = meFC->num_integration_points();
   GenericFieldType* exposedAreaVec =

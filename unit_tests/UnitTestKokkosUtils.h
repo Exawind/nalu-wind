@@ -2,7 +2,7 @@
 #define _UnitTestKokkosUtils_h_
 
 #include <master_element/MasterElement.h>
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include <stk_mesh/base/Types.hpp>
 #include <stk_mesh/base/Bucket.hpp>
 #include <Kokkos_Core.hpp>
@@ -21,7 +21,7 @@ bucket_loop_serial_only(
     const stk::mesh::Bucket& bkt = *bptr;
     stk::topology topo = bkt.topology();
     sierra::nalu::MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
 
     outer_loop_body(topo, *meSCS);
 
@@ -55,7 +55,8 @@ kokkos_thread_team_bucket_loop_with_topo(
       const stk::mesh::Bucket& bkt = *buckets[team.league_rank()];
       stk::topology topo = bkt.topology();
       sierra::nalu::MasterElement* meSCS =
-        sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+        sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+          topo);
       Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, bkt.size()),
         [&](const size_t& j) { inner_loop_body(bkt[j], topo, *meSCS); });

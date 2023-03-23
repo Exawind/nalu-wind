@@ -493,7 +493,7 @@ public:
         stk::topology::NODE_RANK, "open_velocity_bc"))
   {
     const auto& meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::HEX_8);
     stk::mesh::put_field_on_mesh(
       *massFlowRate_, meta_->universal_part(), meSCS->num_integration_points(),
@@ -1346,7 +1346,7 @@ public:
       viscSecondary_(1.85e-5)
   {
     const auto& meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::HEX_8);
     stk::mesh::put_field_on_mesh(
       *mixFraction_, meta_->universal_part(), 1, nullptr);
@@ -1410,6 +1410,89 @@ public:
   const double amf_;
   const double lamSc_;
   const double trbSc_;
+  const double rhoPrimary_;
+  const double rhoSecondary_;
+  const double viscPrimary_;
+  const double viscSecondary_;
+};
+
+/** Text fixture for volume of fluid equation kernels
+ *
+ *  This test fixture performs the following actions:
+ *    - Create a HEX8 mesh with one element
+ *    - Declare all of the set of fields required (autonomous from
+ * LowMach/Mom/Cont)
+ *    - Initialize the fields with 3-D solution; properties of water/air
+ */
+class VOFKernelHex8Mesh : public TestKernelHex8Mesh
+{
+public:
+  VOFKernelHex8Mesh()
+    : TestKernelHex8Mesh(),
+      volumeOfFluid_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "volume_of_fluid", 2)),
+      dvolumeOfFluidDx_(&meta_->declare_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "volume_of_fluid_gradient")),
+      velocity_(&meta_->declare_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "velocity")),
+      density_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "density", 2)),
+      viscosity_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "viscosity")),
+      massFlowRateEdge_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::EDGE_RANK, "mass_flow_rate")),
+      znot_(1.0),
+      amf_(2.0),
+      rhoPrimary_(1000.0),
+      rhoSecondary_(1.0),
+      viscPrimary_(1.e-6),
+      viscSecondary_(1.e-5)
+  {
+    const auto& meSCS =
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        stk::topology::HEX_8);
+    stk::mesh::put_field_on_mesh(
+      *volumeOfFluid_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *dvolumeOfFluidDx_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *velocity_, meta_->universal_part(), spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *density_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *viscosity_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *massFlowRateEdge_, meta_->universal_part(), 1, nullptr);
+  }
+  virtual ~VOFKernelHex8Mesh() {}
+
+  virtual void fill_mesh_and_init_fields(
+    const bool doPerturb = false, const bool generateSidesets = false) override
+  {
+    TestKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+
+    unit_test_kernel_utils::mixture_fraction_test_function(
+      *bulk_, *coordinates_, *volumeOfFluid_, amf_, znot_);
+
+    unit_test_kernel_utils::velocity_test_function(
+      *bulk_, *coordinates_, *velocity_);
+
+    unit_test_kernel_utils::property_from_mixture_fraction_test_function(
+      *bulk_, *volumeOfFluid_, *density_, rhoPrimary_, rhoSecondary_);
+    unit_test_kernel_utils::property_from_mixture_fraction_test_function(
+      *bulk_, *volumeOfFluid_, *viscosity_, viscPrimary_, viscSecondary_);
+    unit_test_kernel_utils::calc_mass_flow_rate(
+      *bulk_, *velocity_, *density_, *edgeAreaVec_, *massFlowRateEdge_);
+  }
+
+  ScalarFieldType* volumeOfFluid_{nullptr};
+  VectorFieldType* dvolumeOfFluidDx_{nullptr};
+  VectorFieldType* velocity_{nullptr};
+  ScalarFieldType* density_{nullptr};
+  ScalarFieldType* viscosity_{nullptr};
+  ScalarFieldType* massFlowRateEdge_{nullptr};
+  const double znot_;
+  const double amf_;
   const double rhoPrimary_;
   const double rhoSecondary_;
   const double viscPrimary_;

@@ -10,7 +10,7 @@
 #include "kernel/ScalarOpenAdvElemKernel.h"
 #include "EquationSystem.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "PecletFunction.h"
 #include "SolutionOptions.h"
 #include "BuildTemplates.h"
@@ -65,10 +65,11 @@ ScalarOpenAdvElemKernel<BcAlgTraits>::ScalarOpenAdvElemKernel(
     alphaUpw_(solnOpts.get_alpha_upw_factor(scalarQ->name())),
     om_alphaUpw_(1.0 - alphaUpw_),
     hoUpwind_(solnOpts.get_upw_factor(scalarQ->name())),
-    faceIpNodeMap_(sierra::nalu::MasterElementRepo::get_surface_master_element(
-                     BcAlgTraits::faceTopo_)
-                     ->ipNodeMap()),
-    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element(
+    faceIpNodeMap_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        BcAlgTraits::faceTopo_)
+        ->ipNodeMap()),
+    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       BcAlgTraits::elemTopo_)),
     pecletFunction_(
       eqSystem->create_peclet_function<DoubleType>(scalarQ->name()))
@@ -84,7 +85,7 @@ ScalarOpenAdvElemKernel<BcAlgTraits>::ScalarOpenAdvElemKernel(
 
   // extract master elements
   MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element(
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       BcAlgTraits::faceTopo_);
   MasterElement* meFC_dev =
     sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(

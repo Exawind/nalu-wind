@@ -11,7 +11,7 @@
 #include <stk_mesh/base/FieldBLAS.hpp>
 #include <stk_mesh/base/NgpMesh.hpp>
 
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 #include <stk_util/parallel/Parallel.hpp>
 #include <Kokkos_Core.hpp>
 
@@ -93,7 +93,7 @@ public:
   {
     // add the master element
     sierra::nalu::MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
     dataNeeded.add_cvfem_surface_me(meSCS);
 
     // here are the element-data pre-requisites we want computed before

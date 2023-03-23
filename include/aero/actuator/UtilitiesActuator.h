@@ -10,7 +10,7 @@
 #define UTILITIESACTUATOR_H_
 
 #include <master_element/MasterElement.h>
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 #include <NaluEnv.h>
 
 // stk_mesh/base/fem

@@ -9,7 +9,7 @@
 
 #include "kernel/MomentumWallFunctionElemKernel.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "SolutionOptions.h"
 
 // template and scratch space
@@ -51,9 +51,10 @@ MomentumWallFunctionElemKernel<BcAlgTraits>::MomentumWallFunctionElemKernel(
     elog_(solnOpts.get_turb_model_constant(TM_elog)),
     kappa_(solnOpts.get_turb_model_constant(TM_kappa)),
     yplusCrit_(solnOpts.get_turb_model_constant(TM_yplus_crit)),
-    ipNodeMap_(sierra::nalu::MasterElementRepo::get_surface_master_element(
-                 BcAlgTraits::topo_)
-                 ->ipNodeMap())
+    ipNodeMap_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        BcAlgTraits::topo_)
+        ->ipNodeMap())
 {
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
   velocityNp1_ = get_field_ordinal(metaData, "velocity", stk::mesh::StateNP1);
@@ -70,7 +71,7 @@ MomentumWallFunctionElemKernel<BcAlgTraits>::MomentumWallFunctionElemKernel(
     get_field_ordinal(metaData, solnOpts.get_coordinates_name());
 
   MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element(
+    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       BcAlgTraits::topo_);
   MasterElement* meFC_dev =
     sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(

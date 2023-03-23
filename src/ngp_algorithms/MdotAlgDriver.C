@@ -15,7 +15,7 @@
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "utils/StkHelpers.h"
 
 #include "stk_mesh/base/Field.hpp"
@@ -114,7 +114,7 @@ MdotAlgDriver::pre_work()
     if (elemContinuityEqs_) {
       for (const auto* b : bkts) {
         auto* meFC =
-          MasterElementRepo::get_surface_master_element(b->topology());
+          MasterElementRepo::get_surface_master_element_on_host(b->topology());
         numIp += (b->size() * meFC->num_integration_points());
       }
     } else {

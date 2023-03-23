@@ -12,7 +12,7 @@
 #include "ngp_algorithms/CourantReAlg.h"
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "ngp_algorithms/ViewHelper.h"
 #include "ngp_algorithms/CourantReAlgDriver.h"
 #include "ngp_algorithms/CourantReReduceHelper.h"
@@ -48,7 +48,8 @@ CourantReAlg<AlgTraits>::CourantReAlg(
       realm_.meta_data(), "element_courant", stk::topology::ELEM_RANK)),
     elemRe_(get_field_ordinal(
       realm_.meta_data(), "element_reynolds", stk::topology::ELEM_RANK)),
-    meSCS_(MasterElementRepo::get_surface_master_element<AlgTraits>())
+    meSCS_(
+      MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_))
 {
   elemData_.add_cvfem_surface_me(meSCS_);
 

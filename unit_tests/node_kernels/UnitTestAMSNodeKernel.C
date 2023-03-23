@@ -15,7 +15,6 @@
 #include "node_kernels/TKESSTAMSNodeKernel.h"
 #include "node_kernels/MomentumSSTAMSForcingNodeKernel.h"
 
-#if !defined(KOKKOS_ENABLE_GPU)
 namespace {
 namespace hex8_golds {
 namespace tke_ams {
@@ -234,8 +233,6 @@ static constexpr double rhs[24] = {
 } // namespace hex8_golds
 } // namespace
 
-#endif
-
 TEST_F(AMSKernelHex8Mesh, NGP_tke_ams_node)
 {
   // Only execute for 1 processor runs
@@ -257,7 +254,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_ams_node)
 
   helperObjs.execute();
 
-#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -267,7 +263,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_ams_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
 
 TEST_F(AMSKernelHex8Mesh, NGP_sdr_ams_node)
@@ -291,7 +286,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_sdr_ams_node)
 
   helperObjs.execute();
 
-#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -301,7 +295,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_sdr_ams_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
 
 TEST_F(AMSKernelHex8Mesh, NGP_ams_forcing)
@@ -336,7 +329,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_forcing)
 
   helperObjs.execute();
 
-#if !defined(KOKKOS_ENABLE_GPU)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
@@ -346,5 +338,4 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_forcing)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   // unit_test_kernel_utils::expect_all_near<24>(
   //   helperObjs.linsys->lhs_, 0.0, 1.0e-12);
-#endif
 }

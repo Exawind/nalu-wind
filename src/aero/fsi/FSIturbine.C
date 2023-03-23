@@ -19,7 +19,7 @@
 #include "stk_mesh/base/Field.hpp"
 #include "stk_math/StkMath.hpp"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 
 #include "netcdf.h"
 
@@ -924,7 +924,7 @@ fsiTurbine::mapLoads()
   for (auto b : bkts) {
     // face master element
     MasterElement* meFC =
-      MasterElementRepo::get_surface_master_element(b->topology());
+      MasterElementRepo::get_surface_master_element_on_host(b->topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
 
@@ -1021,7 +1021,7 @@ fsiTurbine::mapLoads()
     for (auto b : bkts) {
       // face master element
       MasterElement* meFC =
-        MasterElementRepo::get_surface_master_element(b->topology());
+        MasterElementRepo::get_surface_master_element_on_host(b->topology());
       const int nodesPerFace = meFC->nodesPerElement_;
       const int numScsBip = meFC->num_integration_points();
 
@@ -2073,7 +2073,7 @@ fsiTurbine::computeLoadMapping()
   for (auto b : bkts) {
     // face master element
     MasterElement* meFC =
-      MasterElementRepo::get_surface_master_element(b->topology());
+      MasterElementRepo::get_surface_master_element_on_host(b->topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
 
@@ -2203,7 +2203,7 @@ fsiTurbine::computeLoadMapping()
     for (auto b : bkts) {
       // face master element
       MasterElement* meFC =
-        MasterElementRepo::get_surface_master_element(b->topology());
+        MasterElementRepo::get_surface_master_element_on_host(b->topology());
       const int nodesPerFace = meFC->nodesPerElement_;
       const int numScsBip = meFC->num_integration_points();
 

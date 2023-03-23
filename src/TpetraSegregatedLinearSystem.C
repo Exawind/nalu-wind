@@ -18,7 +18,7 @@
 #include <Simulation.h>
 #include <LinearSolver.h>
 #include <master_element/MasterElement.h>
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 #include <EquationSystem.h>
 #include <NaluEnv.h>
 #include <utils/StkHelpers.h>
@@ -475,7 +475,8 @@ TpetraSegregatedLinearSystem::buildReducedElemToNodeGraph(
 
     // extract master element
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        b.topology());
     // extract master element specifics
     const int numScsIp = meSCS->num_integration_points();
     const int* lrscv = meSCS->adjacentNodes();

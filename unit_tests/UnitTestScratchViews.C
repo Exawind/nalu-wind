@@ -7,7 +7,7 @@
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
 
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 #include <SimdInterface.h>
 #include <ElemDataRequestsGPU.h>
 #include <ScratchViews.h>
@@ -70,8 +70,9 @@ do_the_test(
   stk::topology elemTopo = stk::topology::HEX_8;
   sierra::nalu::ElemDataRequests dataReq(bulk.mesh_meta_data());
   const int nodesPerElement = sierra::nalu::AlgTraitsHex8::nodesPerElement_;
-  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<
-    sierra::nalu::AlgTraitsHex8>();
+  auto meSCV =
+    sierra::nalu::MasterElementRepo::get_volume_master_element_on_dev(
+      sierra::nalu::AlgTraitsHex8::topo_);
   dataReq.add_cvfem_volume_me(meSCV);
 
   auto* coordsField = bulk.mesh_meta_data().coordinate_field();
@@ -222,8 +223,9 @@ TEST_F(Hex8MeshWithNSOFields, NGPAssembleElemSolver)
   auto* assembleElemSolverAlg = helperObjs.assembleElemSolverAlg;
   auto& dataNeeded = assembleElemSolverAlg->dataNeededByKernels_;
 
-  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<
-    sierra::nalu::AlgTraitsHex8>();
+  auto meSCV =
+    sierra::nalu::MasterElementRepo::get_volume_master_element_on_dev(
+      sierra::nalu::AlgTraitsHex8::topo_);
   dataNeeded.add_cvfem_volume_me(meSCV);
   auto* coordsField = bulk->mesh_meta_data().coordinate_field();
 
@@ -249,8 +251,9 @@ do_the_smdata_test(
 {
   stk::topology elemTopo = stk::topology::HEX_8;
   sierra::nalu::ElemDataRequests dataReq(bulk.mesh_meta_data());
-  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<
-    sierra::nalu::AlgTraitsHex8>();
+  auto meSCV =
+    sierra::nalu::MasterElementRepo::get_volume_master_element_on_dev(
+      sierra::nalu::AlgTraitsHex8::topo_);
   dataReq.add_cvfem_volume_me(meSCV);
 
   auto* coordsField = bulk.mesh_meta_data().coordinate_field();

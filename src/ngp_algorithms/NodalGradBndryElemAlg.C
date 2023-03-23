@@ -11,7 +11,7 @@
 
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "ngp_algorithms/ViewHelper.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
@@ -42,7 +42,8 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::NodalGradBndryElemAlg(
       "exposed_area_vector",
       realm_.meta_data().side_rank())),
     useShifted_(useShifted),
-    meFC_(MasterElementRepo::get_surface_master_element<AlgTraits>())
+    meFC_(
+      MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_))
 {
   dataNeeded_.add_cvfem_face_me(meFC_);
 

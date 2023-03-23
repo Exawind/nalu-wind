@@ -14,7 +14,7 @@
 #include <FieldTypeDef.h>
 #include <Realm.h>
 #include <master_element/MasterElement.h>
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 #include <NaluEnv.h>
 #include <NaluParsing.h>
 
@@ -160,11 +160,13 @@ ComputeWallFrictionVelocityAlgorithm::execute()
 
     // extract master element
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(theElemTopo);
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        theElemTopo);
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        b.topology());
     const int nodesPerFace = b.topology().num_nodes();
     const int numScsBip = meFC->num_integration_points();
 

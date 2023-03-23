@@ -10,7 +10,7 @@
 #include "ngp_algorithms/GeometryInteriorAlg.h"
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "ngp_algorithms/ViewHelper.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
@@ -32,8 +32,10 @@ GeometryInteriorAlg<AlgTraits>::GeometryInteriorAlg(
     dualNodalVol_(get_field_ordinal(realm_.meta_data(), "dual_nodal_volume")),
     elemVol_(get_field_ordinal(
       realm_.meta_data(), "element_volume", stk::topology::ELEM_RANK)),
-    meSCV_(MasterElementRepo::get_volume_master_element<AlgTraits>()),
-    meSCS_(MasterElementRepo::get_surface_master_element<AlgTraits>())
+    meSCV_(
+      MasterElementRepo::get_volume_master_element_on_dev(AlgTraits::topo_)),
+    meSCS_(
+      MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_))
 {
   dataNeeded_.add_cvfem_volume_me(meSCV_);
   dataNeeded_.add_cvfem_surface_me(meSCS_);
