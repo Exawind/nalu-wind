@@ -102,7 +102,6 @@ TEST(PecletFunction, NGP_tanh_simd)
     sierra::nalu::nalu_ngp::create<sierra::nalu::TanhFunction<DoubleType>>(
       c1, c2);
 
-  std::cout << "stk::simd::ndoubles " << stk::simd::ndoubles << std::endl;
   for (int i = 0; i < 3; i++) {
     const DoubleType pecFac = exec_on_device(pecFunc, pecletNumbers[i]);
     for (int is = 0; is < stk::simd::ndoubles; is++) {
