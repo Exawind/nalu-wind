@@ -135,7 +135,7 @@ vs::Vector
 linear_interp_rotation(
   const vs::Vector qStart, const vs::Vector qEnd, const double interpFac)
 {
-  return compose(interpFac * compose(qStart, qEnd, true), qStart);
+  return compose(interpFac * compose(qEnd, qStart, false, true), qStart);
 
   // remove rigid body rotation
   auto qIntermediate = pop(qStart, qEnd);
