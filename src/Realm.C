@@ -2525,7 +2525,7 @@ Realm::has_mesh_deformation() const
 bool
 Realm::does_mesh_move() const
 {
-  return has_mesh_deformation();
+  return has_mesh_motion() || has_mesh_deformation();
 }
 
 //--------------------------------------------------------------------------
