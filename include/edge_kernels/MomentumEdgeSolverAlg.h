@@ -27,6 +27,7 @@ public:
 
 private:
   unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned velocityRTM_{stk::mesh::InvalidOrdinal};
   unsigned velocity_{stk::mesh::InvalidOrdinal};
   unsigned dudx_{stk::mesh::InvalidOrdinal};
   unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
