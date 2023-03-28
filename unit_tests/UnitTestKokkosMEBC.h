@@ -20,7 +20,7 @@
 #include "KokkosInterface.h"
 #include "SimdInterface.h"
 
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 
 #include "UnitTestHelperObjects.h"
 

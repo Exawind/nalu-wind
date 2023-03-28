@@ -11,7 +11,7 @@
 #include "UnitTestKokkosME.h"
 #include "UnitTestKokkosMEGold.h"
 
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 template <typename DBLTYPE, typename SHMEM>
 void
 check_that_values_match(

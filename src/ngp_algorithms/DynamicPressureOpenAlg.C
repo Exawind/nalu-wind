@@ -11,7 +11,7 @@
 #include "ngp_algorithms/DynamicPressureOpenAlg.h"
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 #include "ngp_algorithms/MdotAlgDriver.h"
 #include "ngp_algorithms/NgpAlgDriver.h"
 #include "ngp_utils/NgpFieldOps.h"

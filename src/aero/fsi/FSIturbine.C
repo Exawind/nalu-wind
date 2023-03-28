@@ -19,7 +19,7 @@
 #include "stk_mesh/base/Field.hpp"
 #include "stk_math/StkMath.hpp"
 #include "master_element/MasterElement.h"
-#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementRepo.h"
 
 #include "netcdf.h"
 

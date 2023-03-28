@@ -10,7 +10,7 @@
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
 
-#include <master_element/MasterElementFactory.h>
+#include <master_element/MasterElementRepo.h>
 #include <stk_util/parallel/Parallel.hpp>
 #include <Kokkos_Core.hpp>
 
