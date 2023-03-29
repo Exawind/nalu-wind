@@ -61,6 +61,7 @@ typedef Kokkos::HostSpace MemSpace;
 
 using HostSpace = Kokkos::DefaultHostExecutionSpace;
 using DeviceSpace = Kokkos::DefaultExecutionSpace;
+static constexpr bool isHostBuild = std::is_same_v<HostSpace, DeviceSpace>;
 
 using LinSysMemSpace = DeviceSpace::memory_space;
 
