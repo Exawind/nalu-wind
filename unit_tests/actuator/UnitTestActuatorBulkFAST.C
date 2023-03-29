@@ -42,9 +42,7 @@ protected:
   }
 };
 
-#ifndef KOKKOS_ENABLE_GPU
-
-TEST_F(ActuatorBulkFastTests, NGP_initializeActuatorBulk)
+TEST_F(ActuatorBulkFastTests, initializeActuatorBulk)
 {
   std::vector<std::string> modInputs(fastParseParams_);
   modInputs[4] = "  dt_fast: 0.005\n";
@@ -84,7 +82,7 @@ TEST_F(ActuatorBulkFastTests, NGP_initializeActuatorBulk)
   }
 }
 
-TEST_F(ActuatorBulkFastTests, NGP_epsilonTowerAndAnisotropicEpsilon)
+TEST_F(ActuatorBulkFastTests, epsilonTowerAndAnisotropicEpsilon)
 {
 
   auto epsLoc = std::find_if(
@@ -122,8 +120,6 @@ TEST_F(ActuatorBulkFastTests, NGP_epsilonTowerAndAnisotropicEpsilon)
     FAIL() << err.what();
   }
 }
-
-#endif
 
 } // namespace
 
