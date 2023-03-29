@@ -25,9 +25,11 @@ Registry()
   FieldDefScalar MultiStateNodalScalar = {stk::topology::NODE_RANK, NUM_STATES};
 
   FieldDefVector SingleStateNodalVector = {stk::topology::NODE_RANK, 1, NUM_DIM};
+  FieldDefTensor SingleStateNodalTensor = {stk::topology::NODE_RANK, 1, NUM_DIM*NUM_DIM};
   FieldDefVector SingleStateEdgeVector = {stk::topology::EDGE_RANK, 1, NUM_DIM};
   FieldDefScalar SingleStateNodalScalar = {stk::topology::NODE_RANK};
   FieldDefScalar SingleStateElemScalar = {stk::topology::ELEM_RANK};
+  FieldDefGeneric SingleStateEdgeGeneric = {stk::topology::EDGE_RANK};
 
   FieldDefTpetraId TpetraId = {stk::topology::NODE_RANK};
   FieldDefGlobalId GlobalId = {stk::topology::NODE_RANK};
@@ -48,6 +50,24 @@ Registry()
     {"mesh_velocity", SingleStateNodalVector},
     {"velocity_rtm", SingleStateNodalVector},
     {"div_mesh_velocity", SingleStateNodalScalar},
+    {"density", SingleStateNodalScalar},
+    {"viscosity", SingleStateNodalScalar}, 
+    {"turbulent_ke", SingleStateNodalScalar}, 
+    {"specific_dissipation_rate", SingleStateNodalScalar}, 
+    {"minimum_distance_to_wall", SingleStateNodalScalar}, 
+    {"turbulent_viscosity" ,       SingleStateNodalScalar}, 
+    {"sst_max_length_scale",       SingleStateNodalScalar}, 
+    {"sst_f_one_blending"  ,       SingleStateNodalScalar}, 
+    {"effective_viscosity" ,       SingleStateNodalScalar}, 
+    {"specific_heat" ,       SingleStateNodalScalar}, 
+    {"rans_time_scale" ,       SingleStateNodalScalar}, 
+    {"open_tke_bc", SingleStateNodalScalar},
+    {"dkdx", SingleStateNodalVector},
+    {"dwdx", SingleStateNodalVector},
+    {"dhdx", SingleStateNodalVector},
+    {"dudx", SingleStateNodalTensor},
+    {"average_dudx" ,       SingleStateNodalTensor}, 
+    {"open_mass_flow_rate" ,       SingleStateEdgeGeneric}, 
     {"iblank", NodalScalarInt}
   };
   // clang-format on

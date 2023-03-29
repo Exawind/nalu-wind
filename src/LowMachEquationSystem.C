@@ -1140,7 +1140,7 @@ MomentumEquationSystem::register_nodal_fields(stk::mesh::Part* part)
   stk::mesh::put_field_on_mesh(*velocity_, *part, nDim, nullptr);
   realm_.augment_restart_variable_list("velocity");
 
-  dudx_ = &(meta_data.declare_field<GenericFieldType>(
+  dudx_ = &(meta_data.declare_field<TensorFieldType>(
     stk::topology::NODE_RANK, "dudx"));
   stk::mesh::put_field_on_mesh(*dudx_, *part, nDim * nDim, nullptr);
 
@@ -1270,15 +1270,15 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
     algType, part, "courant_reynolds", cflReAlgDriver_);
 
   VectorFieldType& velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
-  GenericFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
+  TensorFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; contribution to Gjui; allow for element-based shifted
   if (!managePNG_) {
     if (edgeNodalGradient_ && realm_.realmUsesEdges_)
-      nodalGradAlgDriver_.register_edge_algorithm<VectorNodalGradEdgeAlg>(
+      nodalGradAlgDriver_.register_edge_algorithm<TensorNodalGradEdgeAlg>(
         algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone);
     else
-      nodalGradAlgDriver_.register_elem_algorithm<VectorNodalGradElemAlg>(
+      nodalGradAlgDriver_.register_elem_algorithm<TensorNodalGradElemAlg>(
         algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
         edgeNodalGradient_);
   }
@@ -1547,7 +1547,7 @@ MomentumEquationSystem::register_inflow_bc(
 
   // velocity np1
   VectorFieldType& velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
-  GenericFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
+  TensorFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   const unsigned nDim = meta_data.spatial_dimension();
@@ -1630,7 +1630,7 @@ MomentumEquationSystem::register_inflow_bc(
 
   // non-solver; contribution to Gjui; allow for element-based shifted
   if (!managePNG_) {
-    nodalGradAlgDriver_.register_face_algorithm<VectorNodalGradBndryElemAlg>(
+    nodalGradAlgDriver_.register_face_algorithm<TensorNodalGradBndryElemAlg>(
       algType, part, "momentum_nodal_grad", theBcField, &dudxNone,
       edgeNodalGradient_);
   }
@@ -1687,11 +1687,11 @@ MomentumEquationSystem::register_open_bc(
   bcDataAlg_.push_back(auxAlg);
 
   VectorFieldType& velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
-  GenericFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
+  TensorFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; contribution to Gjui; allow for element-based shifted
   if (!managePNG_) {
-    nodalGradAlgDriver_.register_face_algorithm<VectorNodalGradBndryElemAlg>(
+    nodalGradAlgDriver_.register_face_algorithm<TensorNodalGradBndryElemAlg>(
       algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
       edgeNodalGradient_);
   }
@@ -1756,7 +1756,7 @@ MomentumEquationSystem::register_wall_bc(
 
   // np1 velocity
   VectorFieldType& velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
-  GenericFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
+  TensorFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   const unsigned nDim = meta_data.spatial_dimension();
@@ -1857,7 +1857,7 @@ MomentumEquationSystem::register_wall_bc(
   // non-solver; contribution to Gjui; allow for element-based shifted
   if (!managePNG_) {
     const AlgorithmType algTypePNG = anyWallFunctionActivated ? WALL_FCN : WALL;
-    nodalGradAlgDriver_.register_face_algorithm<VectorNodalGradBndryElemAlg>(
+    nodalGradAlgDriver_.register_face_algorithm<TensorNodalGradBndryElemAlg>(
       algTypePNG, part, "momentum_nodal_grad", theBcField, &dudxNone,
       edgeNodalGradient_);
   }
@@ -2074,7 +2074,7 @@ MomentumEquationSystem::register_symmetry_bc(
   const AlgorithmType algType = SYMMETRY;
 
   VectorFieldType& velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
-  GenericFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
+  TensorFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
   using SYMMTYPES = SymmetryUserData::SymmetryTypes;
   const SYMMTYPES symmType = symmBCData.userData_.symmType_;
   unsigned beginPos{0}, endPos{1};
@@ -2083,7 +2083,7 @@ MomentumEquationSystem::register_symmetry_bc(
   AlgorithmType pickTheType = algType;
   // non-solver; contribution to Gjui; allow for element-based shifted
   if (!managePNG_) {
-    nodalGradAlgDriver_.register_face_algorithm<VectorNodalGradBndryElemAlg>(
+    nodalGradAlgDriver_.register_face_algorithm<TensorNodalGradBndryElemAlg>(
       algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
       edgeNodalGradient_);
   }
@@ -2228,14 +2228,14 @@ MomentumEquationSystem::register_abltop_bc(
   auto user_data = abltopBCData.userData_;
 
   VectorFieldType& velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
-  GenericFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
+  TensorFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
 
   // push mesh part
   notProjectedPart_.push_back(part);
 
   // non-solver; contribution to Gjui; allow for element-based shifted
   if (!managePNG_) {
-    nodalGradAlgDriver_.register_face_algorithm<VectorNodalGradBndryElemAlg>(
+    nodalGradAlgDriver_.register_face_algorithm<TensorNodalGradBndryElemAlg>(
       algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
       edgeNodalGradient_);
   }
@@ -2309,7 +2309,7 @@ MomentumEquationSystem::register_non_conformal_bc(
   const AlgorithmType algType = NON_CONFORMAL;
 
   VectorFieldType& velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
-  GenericFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
+  TensorFieldType& dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
@@ -2329,7 +2329,7 @@ MomentumEquationSystem::register_non_conformal_bc(
   // integration points
   if (!managePNG_) {
     if (edgeNodalGradient_) {
-      nodalGradAlgDriver_.register_face_algorithm<VectorNodalGradBndryElemAlg>(
+      nodalGradAlgDriver_.register_face_algorithm<TensorNodalGradBndryElemAlg>(
         algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
         edgeNodalGradient_);
     } else {

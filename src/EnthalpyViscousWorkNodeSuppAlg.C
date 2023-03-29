@@ -41,7 +41,7 @@ EnthalpyViscousWorkNodeSuppAlg::EnthalpyViscousWorkNodeSuppAlg(Realm& realm)
   // save off fields
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   dudx_ =
-    meta_data.get_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
+    meta_data.get_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx");
   const std::string viscName =
     realm.is_turbulent() ? "effective_viscosity_u" : "viscosity";
   viscosity_ =

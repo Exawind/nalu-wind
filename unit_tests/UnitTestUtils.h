@@ -34,8 +34,7 @@ using sierra::nalu::GenericFieldType;
 using sierra::nalu::GenericIntFieldType;
 using sierra::nalu::ScalarIntFieldType;
 using sierra::nalu::VectorFieldType;
-typedef stk::mesh::Field<double, stk::mesh::Cartesian, stk::mesh::Cartesian>
-  TensorFieldType;
+using sierra::nalu::TensorFieldType;
 
 namespace unit_test_utils {
 
@@ -275,7 +274,7 @@ protected:
     openMdot = &meta->declare_field<GenericFieldType>(
       meta->side_rank(), "open_mass_flow_rate");
     Gjui =
-      &meta->declare_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
+      &meta->declare_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx");
     scalarQ = &meta->declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "scalar_q");
     bcScalarQ = &meta->declare_field<ScalarFieldType>(
@@ -337,7 +336,7 @@ protected:
   GenericFieldType* wallNormalDistanceBip;
   VectorFieldType* bcVelocityOpen;
   GenericFieldType* openMdot;
-  GenericFieldType* Gjui;
+  TensorFieldType* Gjui;
   ScalarFieldType* scalarQ;
   ScalarFieldType* bcScalarQ;
   VectorFieldType* Gjq;

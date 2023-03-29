@@ -93,7 +93,7 @@ AssembleScalarEigenEdgeSolverAlgorithm::AssembleScalarEigenEdgeSolverAlgorithm(
   velocity_ =
     meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
   dudx_ =
-    meta_data.get_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
+    meta_data.get_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx");
 
   // create the peclet blending function
   pecletFunction_ = eqSystem->create_peclet_function<double>(scalarQ_->name());

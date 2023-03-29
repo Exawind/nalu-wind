@@ -1433,8 +1433,8 @@ TurbulenceAveragingPostProcessing::compute_lambda_ci(
   // extract fields
   stk::mesh::FieldBase* Lambda =
     metaData.get_field(stk::topology::NODE_RANK, lambdaName);
-  GenericFieldType* dudx_ =
-    metaData.get_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
+  TensorFieldType* dudx_ =
+    metaData.get_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx");
 
   stk::mesh::BucketVector const& node_buckets_vort =
     realm_.get_buckets(stk::topology::NODE_RANK, s_all_nodes);
