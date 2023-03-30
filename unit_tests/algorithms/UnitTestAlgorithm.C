@@ -39,8 +39,6 @@ TestAlgorithm::field_norm(
   return unit_test_utils::field_norm(field, bulk, sel);
 }
 
-
-
 void
 TestTurbulenceAlgorithm::declare_fields()
 {
@@ -55,8 +53,10 @@ TestTurbulenceAlgorithm::declare_fields()
   }
   const int numStates = 1;
 
-  using FieldDef = std::variant<ScalarFieldType**, VectorFieldType**, TensorFieldType**, GenericFieldType**>;
-// clang-format off
+  using FieldDef = std::variant<
+    ScalarFieldType**, VectorFieldType**, TensorFieldType**,
+    GenericFieldType**>;
+  // clang-format off
   const std::vector<std::pair<std::string, FieldDef>> Fields = {
     {"density",                   &density_          }, 
     {"viscosity",                 &viscosity_        }, 
@@ -78,17 +78,25 @@ TestTurbulenceAlgorithm::declare_fields()
     {"average_dudx",              &avgDudx_          }, 
     {"open_mass_flow_rate",       &openMassFlowRate_ }  
   };
-// clang-format on
-  for (auto& Field: Fields) {
-    const std::string &name = Field.first;
-    std::visit([&](auto member_field) {
-      using to_field = typename std::remove_pointer<decltype(member_field)>::type;
-      sierra::nalu::FieldPointerTypes new_field = realm_->fieldManager_->register_field(name, meta.universal_part(), numStates);
-      std::visit([&](auto fld) {
-        using from_field = decltype(fld);
-	if constexpr (std::is_same_v<to_field, from_field>) *member_field = fld;
-      }, new_field);
-    }, Field.second);
+  // clang-format on
+  for (auto& Field : Fields) {
+    const std::string& name = Field.first;
+    std::visit(
+      [&](auto member_field) {
+        using to_field =
+          typename std::remove_pointer<decltype(member_field)>::type;
+        sierra::nalu::FieldPointerTypes new_field =
+          realm_->fieldManager_->register_field(
+            name, meta.universal_part(), numStates);
+        std::visit(
+          [&](auto fld) {
+            using from_field = decltype(fld);
+            if constexpr (std::is_same_v<to_field, from_field>)
+              *member_field = fld;
+          },
+          new_field);
+      },
+      Field.second);
   }
 }
 

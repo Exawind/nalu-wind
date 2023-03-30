@@ -1140,8 +1140,8 @@ MomentumEquationSystem::register_nodal_fields(stk::mesh::Part* part)
   stk::mesh::put_field_on_mesh(*velocity_, *part, nDim, nullptr);
   realm_.augment_restart_variable_list("velocity");
 
-  dudx_ = &(meta_data.declare_field<TensorFieldType>(
-    stk::topology::NODE_RANK, "dudx"));
+  dudx_ = &(
+    meta_data.declare_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx"));
   stk::mesh::put_field_on_mesh(*dudx_, *part, nDim * nDim, nullptr);
 
   // delta solution for linear solver

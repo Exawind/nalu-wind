@@ -33,8 +33,8 @@ using IdFieldType = ScalarFieldType;
 using sierra::nalu::GenericFieldType;
 using sierra::nalu::GenericIntFieldType;
 using sierra::nalu::ScalarIntFieldType;
-using sierra::nalu::VectorFieldType;
 using sierra::nalu::TensorFieldType;
+using sierra::nalu::VectorFieldType;
 
 namespace unit_test_utils {
 
