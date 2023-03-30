@@ -3,7 +3,9 @@
 #include "stk_util/environment/WallTime.hpp"
 #include "stk_mesh/base/Types.hpp"
 #include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/ForEachEntity.hpp"
 #include "stk_mesh/base/GetEntities.hpp"
+#include "stk_mesh/base/FieldBase.hpp"
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_mesh/base/GetNgpMesh.hpp"
@@ -123,7 +125,7 @@ get_mesh_bounding_box(
   }
 }
 
-void
+unsigned
 set_tower_ref_pos(
   const stk::mesh::BulkData& mesh, sierra::nalu::fsiTurbine& fsiTurb)
 {
@@ -142,10 +144,15 @@ set_tower_ref_pos(
   params.nBRfsiPtsTwr = numNodes;
   params.numBlades = 0;
 
-  fsiTurb.initialize();
   fast::turbBRfsiDataType& brFSIdata = fsiTurb.brFSIdata_;
-  std::cout << "brFSIdata.twr_ref_pos.size(): " << brFSIdata.twr_ref_pos.size()
-            << std::endl;
+
+  const unsigned expectedSizePreInitialize = 0;
+  EXPECT_EQ(expectedSizePreInitialize, brFSIdata.twr_ref_pos.size());
+
+  fsiTurb.initialize();
+
+  const unsigned expectedSize = numNodes * 6;
+  EXPECT_EQ(expectedSize, brFSIdata.twr_ref_pos.size());
 
   const double deltaZ = (maxCoords.z() - minCoords.z()) / numIntervals;
   double z = minCoords.z();
@@ -159,36 +166,49 @@ set_tower_ref_pos(
 
     z += deltaZ;
   }
+
+  return numNodes;
 }
 
+template <typename FieldType>
 void
-set_x_mesh_disp(const stk::mesh::BulkData& mesh, double val)
+verify_all_zeros(const stk::mesh::BulkData& mesh, FieldType& field)
 {
-  const stk::mesh::FieldBase* meshDispField = mesh.mesh_meta_data().get_field(
-    stk::topology::NODE_RANK, "mesh_displacement");
-  EXPECT_TRUE(meshDispField != nullptr);
-  const unsigned spatialDim = mesh.mesh_meta_data().spatial_dimension();
-
-  stk::mesh::Selector meshDispSelector(*meshDispField);
-  const stk::mesh::BucketVector& nodeBuckets =
-    mesh.get_buckets(stk::topology::NODE_RANK, meshDispSelector);
-  for (const stk::mesh::Bucket* bptr : nodeBuckets) {
-    double* meshDispData =
-      reinterpret_cast<double*>(stk::mesh::field_data(*meshDispField, *bptr));
-    for (unsigned n = 0; n < bptr->size(); ++n) {
-      meshDispData[n * spatialDim] = val;
-    }
-  }
+  using DataType = typename stk::mesh::FieldTraits<FieldType>::data_type;
+  const DataType zero = 0;
+  stk::mesh::Selector selector(field);
+  stk::mesh::for_each_entity_run(
+    mesh, field.entity_rank(), selector,
+    [&](const stk::mesh::BulkData&, stk::mesh::Entity entity) {
+      const unsigned numScalars =
+        stk::mesh::field_scalars_per_entity(field, entity);
+      const DataType* data = stk::mesh::field_data(field, entity);
+      for (unsigned i = 0; i < numScalars; ++i) {
+        EXPECT_NEAR(zero, data[i], 1.e-6);
+      }
+    });
 }
 
+template <typename FieldType>
 void
-set_x_values(std::vector<double>& vec, double val)
+verify_all_less_equal(
+  const stk::mesh::BulkData& mesh,
+  FieldType& field,
+  typename stk::mesh::FieldTraits<FieldType>::data_type scalar)
 {
-  constexpr unsigned dofsPerNode = 6;
-  size_t offset = 0;
-  for (unsigned i = 0; i < vec.size(); i += dofsPerNode) {
-    vec[i] = val;
-  }
+  using DataType = typename stk::mesh::FieldTraits<FieldType>::data_type;
+  const DataType zero = 0;
+  stk::mesh::Selector selector(field);
+  stk::mesh::for_each_entity_run(
+    mesh, field.entity_rank(), selector,
+    [&](const stk::mesh::BulkData&, stk::mesh::Entity entity) {
+      const unsigned numScalars =
+        stk::mesh::field_scalars_per_entity(field, entity);
+      const DataType* data = stk::mesh::field_data(field, entity);
+      for (unsigned i = 0; i < numScalars; ++i) {
+        EXPECT_TRUE(data[i] <= scalar);
+      }
+    });
 }
 
 TEST_F(CylinderMesh, construct_FSIturbine)
@@ -249,13 +269,15 @@ TEST_F(CylinderMesh, call_fsiTurbine_mapLoads)
   EXPECT_EQ(0, params.nBRfsiPtsTwr);
   EXPECT_EQ(0, params.numBlades);
 
-  set_tower_ref_pos(*bulk, *fsiTurb);
+  const unsigned numNodes = set_tower_ref_pos(*bulk, *fsiTurb);
+
+  verify_all_zeros(*bulk, *loadMap_);
+  verify_all_zeros(*bulk, *loadMapInterp_);
 
   fsiTurb->computeLoadMapping();
 
-  // stk::mesh::field_fill(0.1, *tforceSCS_);
-  set_x_mesh_disp(*bulk, 0.1);
-  set_x_values(fsiTurb->brFSIdata_.twr_def, 0.1);
+  verify_all_less_equal(*bulk, *loadMap_, numNodes);
+  verify_all_less_equal(*bulk, *loadMapInterp_, 1.0);
 
   fsiTurb->mapLoads();
 
