@@ -13,6 +13,8 @@
 #include "kernels/UnitTestKernelUtils.h"
 
 #include "Realm.h"
+#include <variant>
+#include <type_traits>
 
 void
 TestAlgorithm::fill_mesh(const std::string mesh_spec)
@@ -37,6 +39,8 @@ TestAlgorithm::field_norm(
   return unit_test_utils::field_norm(field, bulk, sel);
 }
 
+
+
 void
 TestTurbulenceAlgorithm::declare_fields()
 {
@@ -50,50 +54,42 @@ TestTurbulenceAlgorithm::declare_fields()
     realm_->timeIntegrator_ = nullptr;
   }
   const int numStates = 1;
-  realm_->fieldManager_->register_field("density", meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("viscosity", meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("turbulent_ke", meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("specific_dissipation_rate", meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("minimum_distance_to_wall", meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("turbulent_viscosity" ,       meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("sst_max_length_scale",       meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("sst_f_one_blending"  ,       meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("effective_viscosity" ,       meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("dual_nodal_volume"   ,       meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("specific_heat"   ,       meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("rans_time_scale"   ,       meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("open_tke_bc"   ,       meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("dkdx"   ,       meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("dwdx"   ,       meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("dhdx"   ,       meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("dudx"   ,       meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("average_dudx"   ,       meta.universal_part(), numStates);
-  realm_->fieldManager_->register_field("open_mass_flow_rate"   ,       meta.universal_part(), numStates);
 
-  density_     = realm_->fieldManager_->get_field_ptr<ScalarFieldType*>("density");
-  viscosity_   = realm_->fieldManager_->get_field_ptr<ScalarFieldType*>("viscosity");
-  tke_         = realm_->fieldManager_->get_field_ptr<ScalarFieldType*>("turbulent_ke");
-  sdr_         = realm_->fieldManager_->get_field_ptr<ScalarFieldType*>("specific_dissipation_rate");
-  minDistance_ = realm_->fieldManager_->get_field_ptr<ScalarFieldType*>("minimum_distance_to_wall");
-  tvisc_          = realm_->fieldManager_->get_field_ptr<ScalarFieldType*>("turbulent_viscosity" );
-  maxLengthScale_ = realm_->fieldManager_->get_field_ptr<ScalarFieldType*>("sst_max_length_scale");
-  fOneBlend_      = realm_->fieldManager_->get_field_ptr<ScalarFieldType*>("sst_f_one_blending"  );
-  evisc_          = realm_->fieldManager_->get_field_ptr<ScalarFieldType*>("effective_viscosity" );
-  dualNodalVolume_= realm_->fieldManager_->get_field_ptr<ScalarFieldType*>("dual_nodal_volume"   );
-  specificHeat_= realm_->fieldManager_->get_field_ptr<ScalarFieldType*>("specific_heat"   );
-  avgTime_= realm_->fieldManager_->get_field_ptr<ScalarFieldType*>("rans_time_scale"   );
-  tkebc_= realm_->fieldManager_->get_field_ptr<ScalarFieldType*>("open_tke_bc"   );
-  dkdx_= realm_->fieldManager_->get_field_ptr<VectorFieldType*>("dkdx");
-  dwdx_= realm_->fieldManager_->get_field_ptr<VectorFieldType*>("dwdx");
-  dhdx_= realm_->fieldManager_->get_field_ptr<VectorFieldType*>("dhdx");
-  dudx_= realm_->fieldManager_->get_field_ptr<TensorFieldType*>("dudx");
-  avgDudx_= realm_->fieldManager_->get_field_ptr<TensorFieldType*>("average_dudx"   );
-  openMassFlowRate_ = realm_->fieldManager_->get_field_ptr<GenericFieldType*>("open_mass_flow_rate");
-
-
-  stk::mesh::put_field_on_mesh(
-    *openMassFlowRate_, meta.universal_part(),
-    sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+  using FieldDef = std::variant<ScalarFieldType**, VectorFieldType**, TensorFieldType**, GenericFieldType**>;
+// clang-format off
+  const std::vector<std::pair<std::string, FieldDef>> Fields = {
+    {"density",                   &density_          }, 
+    {"viscosity",                 &viscosity_        }, 
+    {"turbulent_ke",              &tke_              }, 
+    {"specific_dissipation_rate", &sdr_              }, 
+    {"minimum_distance_to_wall",  &minDistance_      }, 
+    {"turbulent_viscosity",       &tvisc_            }, 
+    {"sst_max_length_scale",      &maxLengthScale_   }, 
+    {"sst_f_one_blending",        &fOneBlend_        }, 
+    {"effective_viscosity",       &evisc_            }, 
+    {"dual_nodal_volume",         &dualNodalVolume_  }, 
+    {"specific_heat",             &specificHeat_     }, 
+    {"rans_time_scale",           &avgTime_          }, 
+    {"open_tke_bc",               &tkebc_            }, 
+    {"dkdx",                      &dkdx_             }, 
+    {"dwdx",                      &dwdx_             }, 
+    {"dhdx",                      &dhdx_             }, 
+    {"dudx",                      &dudx_             }, 
+    {"average_dudx",              &avgDudx_          }, 
+    {"open_mass_flow_rate",       &openMassFlowRate_ }  
+  };
+// clang-format on
+  for (auto& Field: Fields) {
+    const std::string &name = Field.first;
+    std::visit([&](auto member_field) {
+      using to_field = typename std::remove_pointer<decltype(member_field)>::type;
+      sierra::nalu::FieldPointerTypes new_field = realm_->fieldManager_->register_field(name, meta.universal_part(), numStates);
+      std::visit([&](auto fld) {
+        using from_field = decltype(fld);
+	if constexpr (std::is_same_v<to_field, from_field>) *member_field = fld;
+      }, new_field);
+    }, Field.second);
+  }
 }
 
 void
