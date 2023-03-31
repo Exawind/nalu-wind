@@ -94,8 +94,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
   //   helperObjs.realm, partVec_[0], velocity_, dudx_);
   // edgeAlg.execute();
 
-  sierra::nalu::VectorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
-  algDriver.register_edge_algorithm<sierra::nalu::VectorNodalGradEdgeAlg>(
+  sierra::nalu::TensorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
+  algDriver.register_edge_algorithm<sierra::nalu::TensorNodalGradEdgeAlg>(
     sierra::nalu::INTERIOR, partVec_[0], "nodal_grad", velocity_, dudx_);
   algDriver.execute();
 
@@ -246,8 +246,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
   //   helperObjs.realm, partVec_[0], velocity_, dudx_, useShifted);
   // elemAlg.execute();
 
-  sierra::nalu::VectorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
-  algDriver.register_elem_algorithm<sierra::nalu::VectorNodalGradElemAlg>(
+  sierra::nalu::TensorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
+  algDriver.register_elem_algorithm<sierra::nalu::TensorNodalGradElemAlg>(
     sierra::nalu::INTERIOR, partVec_[0], "nodal_grad", velocity_, dudx_,
     useShifted);
   algDriver.execute();
@@ -301,8 +301,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
   //   helperObjs.realm, partVec_[0], velocity_, dudx_);
   // edgeAlg.execute();
 
-  sierra::nalu::VectorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
-  algDriver.register_elem_algorithm<sierra::nalu::VectorNodalGradElemAlg>(
+  sierra::nalu::TensorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
+  algDriver.register_elem_algorithm<sierra::nalu::TensorNodalGradElemAlg>(
     sierra::nalu::INTERIOR, partVec_[0], "nodal_grad", velocity_, dudx_,
     useShifted);
   algDriver.execute();
@@ -462,8 +462,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_bndry_elem_vec)
   // elemAlg.execute();
 
   auto* surfPart = part->subsets()[0];
-  sierra::nalu::VectorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
-  algDriver.register_face_algorithm<sierra::nalu::VectorNodalGradBndryElemAlg>(
+  sierra::nalu::TensorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
+  algDriver.register_face_algorithm<sierra::nalu::TensorNodalGradBndryElemAlg>(
     sierra::nalu::WALL, surfPart, "nodal_grad", velocity_, dudx_, useShifted);
   algDriver.execute();
 

@@ -21,7 +21,8 @@ class NodalGradAlgDriver : public NgpAlgDriver
 {
   static_assert(
     std::is_same<GradPhiType, VectorFieldType>::value ||
-      std::is_same<GradPhiType, GenericFieldType>::value,
+      std::is_same<GradPhiType, GenericFieldType>::value ||
+      std::is_same<GradPhiType, TensorFieldType>::value,
     "Invalid field type provided to NodalGradAlgDriver");
 
 public:
@@ -42,6 +43,7 @@ private:
 
 using ScalarNodalGradAlgDriver = NodalGradAlgDriver<VectorFieldType>;
 using VectorNodalGradAlgDriver = NodalGradAlgDriver<GenericFieldType>;
+using TensorNodalGradAlgDriver = NodalGradAlgDriver<TensorFieldType>;
 
 } // namespace nalu
 } // namespace sierra

@@ -54,7 +54,7 @@ public:
   ScalarFieldType* yplus_;
   ScalarFieldType* density_;
   ScalarFieldType* viscosity_;
-  GenericFieldType* dudx_;
+  TensorFieldType* dudx_;
   GenericFieldType* exposedAreaVec_;
   ScalarFieldType* assembledArea_;
 

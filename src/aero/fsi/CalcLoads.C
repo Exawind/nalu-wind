@@ -69,7 +69,7 @@ CalcLoads::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
     meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
   viscosity_ = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "effective_viscosity_u");
-  dudx_ = meta.get_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
+  dudx_ = meta.get_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx");
   exposedAreaVec_ =
     meta.get_field<GenericFieldType>(meta.side_rank(), "exposed_area_vector");
   tforceSCS_ = meta.get_field<GenericFieldType>(meta.side_rank(), "tforce_scs");

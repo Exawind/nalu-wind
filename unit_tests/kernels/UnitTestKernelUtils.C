@@ -405,7 +405,7 @@ void
 dudx_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
-  GenericFieldType& dudx)
+  TensorFieldType& dudx)
 {
   // Add additional test functions in future?
   init_trigonometric_field(bulk, coordinates, dudx);

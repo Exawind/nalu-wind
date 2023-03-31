@@ -26,6 +26,7 @@ struct FieldDefinition
 
 using FieldDefScalar = FieldDefinition<ScalarFieldType>;
 using FieldDefVector = FieldDefinition<VectorFieldType>;
+using FieldDefTensor = FieldDefinition<TensorFieldType>;
 using FieldDefGeneric = FieldDefinition<GenericFieldType>;
 using FieldDefGenericInt = FieldDefinition<GenericIntFieldType>;
 using FieldDefTpetraId = FieldDefinition<TpetIDFieldType>;
@@ -41,6 +42,7 @@ using FieldDefTypes = std::conditional<
   std::variant<
     FieldDefScalar,
     FieldDefVector,
+    FieldDefTensor,
     FieldDefGeneric,
     FieldDefGenericInt,
     FieldDefTpetraId,
@@ -50,6 +52,7 @@ using FieldDefTypes = std::conditional<
   std::variant<
     FieldDefScalar,
     FieldDefVector,
+    FieldDefTensor,
     FieldDefGeneric,
     FieldDefGenericInt,
     FieldDefTpetraId,
@@ -63,6 +66,7 @@ using FieldPointerTypes = std::conditional<
   std::variant<
     ScalarFieldType*,
     VectorFieldType*,
+    TensorFieldType*,
     GenericFieldType*,
     GenericIntFieldType*,
     TpetIDFieldType*,
@@ -72,6 +76,7 @@ using FieldPointerTypes = std::conditional<
   std::variant<
     ScalarFieldType*,
     VectorFieldType*,
+    TensorFieldType*,
     GenericFieldType*,
     GenericIntFieldType*,
     TpetIDFieldType*,
