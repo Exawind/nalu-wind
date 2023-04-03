@@ -31,7 +31,7 @@ public:
 
   virtual void node_execute(double* lhs, double* rhs, stk::mesh::Entity node);
 
-  GenericFieldType* dudx_;
+  TensorFieldType* dudx_;
   ScalarFieldType* viscosity_;
   ScalarFieldType* dualNodalVolume_;
   const double includeDivU_;

@@ -97,7 +97,7 @@ SurfaceForceAndMomentAlgorithm::SurfaceForceAndMomentAlgorithm(
   viscosity_ =
     meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, viscName);
   dudx_ =
-    meta_data.get_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
+    meta_data.get_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx");
   exposedAreaVec_ = meta_data.get_field<GenericFieldType>(
     meta_data.side_rank(), "exposed_area_vector");
   assembledArea_ = meta_data.get_field<ScalarFieldType>(

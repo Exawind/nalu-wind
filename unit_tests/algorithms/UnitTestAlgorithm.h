@@ -90,7 +90,7 @@ public:
   ScalarFieldType* tke_{nullptr};
   ScalarFieldType* sdr_{nullptr};
   ScalarFieldType* minDistance_{nullptr};
-  GenericFieldType* dudx_{nullptr};
+  TensorFieldType* dudx_{nullptr};
   GenericFieldType* openMassFlowRate_{nullptr};
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* maxLengthScale_{nullptr};
@@ -102,7 +102,7 @@ public:
   VectorFieldType* dhdx_{nullptr};
   ScalarFieldType* specificHeat_{nullptr};
   ScalarFieldType* tkebc_{nullptr};
-  GenericFieldType* avgDudx_{nullptr};
+  TensorFieldType* avgDudx_{nullptr};
   ScalarFieldType* avgTime_{nullptr};
 };
 

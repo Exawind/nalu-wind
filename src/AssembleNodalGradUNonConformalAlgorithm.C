@@ -43,7 +43,7 @@ AssembleNodalGradUNonConformalAlgorithm::
     Realm& realm,
     stk::mesh::Part* part,
     VectorFieldType* vectorQ,
-    GenericFieldType* dqdx)
+    TensorFieldType* dqdx)
   : Algorithm(realm, part),
     vectorQ_(vectorQ),
     dqdx_(dqdx),
