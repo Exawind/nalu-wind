@@ -95,7 +95,7 @@ TEST_F(CylinderMesh, basic_setup)
 
   test_cylinder_mesh_field_values(*bulk, coordField, testField);
 
-  const bool dumpTheMesh = false;
+  const bool dumpTheMesh = true;
   if (dumpTheMesh) {
     unit_test_utils::dump_mesh(*bulk, {});
   }
