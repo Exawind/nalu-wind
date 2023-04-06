@@ -197,6 +197,7 @@ StreletsUpwindEdgeAlg::execute()
       pecFactor.get(edge, 0) =
         sigmaMax * stk::math::tanh(stk::math::pow(A, ch1));
     });
+  pecFactor.modify_on_device();
 }
 
 } // namespace nalu

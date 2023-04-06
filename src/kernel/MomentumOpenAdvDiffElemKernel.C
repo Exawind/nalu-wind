@@ -94,7 +94,7 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
   const SolutionOptions& solnOpts,
   EquationSystem* eqSystem,
   VectorFieldType* velocity,
-  GenericFieldType* Gjui,
+  TensorFieldType* Gjui,
   ScalarFieldType* viscosity,
   ElemDataRequests& faceDataPreReqs,
   ElemDataRequests& elemDataPreReqs,

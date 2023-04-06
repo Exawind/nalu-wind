@@ -83,6 +83,7 @@ NodalGradAlgDriver<GradPhiType>::post_work()
 
 template class NodalGradAlgDriver<VectorFieldType>;
 template class NodalGradAlgDriver<GenericFieldType>;
+template class NodalGradAlgDriver<TensorFieldType>;
 
 } // namespace nalu
 } // namespace sierra

@@ -74,11 +74,13 @@ CalcLoads::initialize()
     meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
   viscosity_ = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "effective_viscosity_u");
+
   if (viscosity_ == nullptr) {
     viscosity_ =
       meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
   }
-  dudx_ = meta.get_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
+  dudx_ = meta.get_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx");
+
   exposedAreaVec_ =
     meta.get_field<GenericFieldType>(meta.side_rank(), "exposed_area_vector");
   tforceSCS_ = meta.get_field<GenericFieldType>(meta.side_rank(), "tforce_scs");

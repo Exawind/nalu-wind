@@ -188,11 +188,6 @@ private:
     stk::mesh::PartVector& allPartVec,
     const std::string& turbinePart);
 
-  //! Compute the effective force and moment at the OpenFAST mesh node for a
-  //! given force at the CFD surface mesh node
-  void computeEffForceMoment(
-    double* forceCFD, double* xyzCFD, double* forceMomOF, double* xyzOF);
-
   //! Compute the effective force and moment at the hub (can be any point) from
   //! a given mesh part vector
   void computeHubForceMomentForPart(
@@ -209,9 +204,6 @@ private:
   //! velStart).
   void linInterpTotVelocity(
     double* velStart, double* velEnd, double interpFac, double* velInterp);
-  //! Linearly interpolate between 3-dimensional vectors 'a' and 'b' with
-  //! interpolating factor 'interpFac'
-  void linInterpVec(double* a, double* b, double interpFac, double* aInterpb);
 
   /* Linearly interpolate the Wiener-Milenkovic parameters between 'qStart' and
      'qEnd' into 'qInterp' with an interpolating factor 'interpFac' see
@@ -258,14 +250,6 @@ private:
     double* totPosOF,
     double* transVelNode,
     double* xyzCFD);
-
-  //! Split a force and moment into the surrounding 'left' and 'right' nodes in
-  //! a variationally consistent manner using interpFac
-  void splitForceMoment(
-    double* totForceMoment,
-    double interpFac,
-    double* leftForceMoment,
-    double* rightForceMoment);
 
   //! Apply a Wiener-Milenkovic rotation 'wm' to a vector 'r' into 'rRot'
   void

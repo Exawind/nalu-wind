@@ -25,7 +25,9 @@ class NodalGradEdgeAlg : public Algorithm
     ((std::is_same<PhiType, ScalarFieldType>::value &&
       std::is_same<GradPhiType, VectorFieldType>::value) ||
      (std::is_same<PhiType, VectorFieldType>::value &&
-      std::is_same<GradPhiType, GenericFieldType>::value)),
+      std::is_same<GradPhiType, GenericFieldType>::value) ||
+     (std::is_same<PhiType, VectorFieldType>::value &&
+      std::is_same<GradPhiType, TensorFieldType>::value)),
     "Improper field types passed to nodal gradient calculator");
 
 public:
@@ -58,6 +60,8 @@ using ScalarNodalGradEdgeAlg =
   NodalGradEdgeAlg<ScalarFieldType, VectorFieldType>;
 using VectorNodalGradEdgeAlg =
   NodalGradEdgeAlg<VectorFieldType, GenericFieldType>;
+using TensorNodalGradEdgeAlg =
+  NodalGradEdgeAlg<VectorFieldType, TensorFieldType>;
 
 } // namespace nalu
 } // namespace sierra

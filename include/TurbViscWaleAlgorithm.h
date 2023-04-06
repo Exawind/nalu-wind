@@ -26,7 +26,7 @@ public:
   virtual ~TurbViscWaleAlgorithm() {}
   virtual void execute();
 
-  GenericFieldType* dudx_;
+  TensorFieldType* dudx_;
   ScalarFieldType* density_;
   ScalarFieldType* tvisc_;
   ScalarFieldType* dualNodalVolume_;

@@ -191,7 +191,7 @@ public:
   const bool managePNG_;
 
   VectorFieldType* velocity_;
-  GenericFieldType* dudx_;
+  TensorFieldType* dudx_;
 
   VectorFieldType* coordinates_;
   VectorFieldType* uTmp_;
@@ -201,7 +201,7 @@ public:
   ScalarFieldType* evisc_;
   ScalarFieldType* iddesRansIndicator_;
 
-  VectorNodalGradAlgDriver nodalGradAlgDriver_;
+  TensorNodalGradAlgDriver nodalGradAlgDriver_;
   WallFricVelAlgDriver wallFuncAlgDriver_;
   NgpAlgDriver dynPressAlgDriver_;
   std::unique_ptr<EffDiffFluxCoeffAlg> diffFluxCoeffAlg_{nullptr};

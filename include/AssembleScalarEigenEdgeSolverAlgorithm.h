@@ -69,7 +69,7 @@ public:
   // extra for GGDH
   ScalarFieldType* turbKe_;
   VectorFieldType* velocity_;
-  GenericFieldType* dudx_;
+  TensorFieldType* dudx_;
 
   // peclect function specifics
   PecletFunction<double>* pecletFunction_;

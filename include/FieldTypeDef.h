@@ -37,6 +37,7 @@ typedef stk::mesh::NgpField<int> NGPScalarIntFieldType;
 
 // define vector field typedef; however, what is the value of Cartesian?
 typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
+typedef stk::mesh::Field<double, stk::mesh::FullTensor> TensorFieldType;
 
 // define generic
 typedef stk::mesh::Field<double, stk::mesh::SimpleArrayTag> GenericFieldType;

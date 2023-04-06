@@ -31,10 +31,8 @@ protected:
   std::unique_ptr<ActuatorMeta> actMeta_;
 };
 
-#ifndef KOKKOS_ENABLE_GPU
-
 // TODO(psakeiv) move this to a more appropriate location
-TEST_F(ActuatorBulkDiskFastTest, NGP_fastPointIndexLocator)
+TEST_F(ActuatorBulkDiskFastTest, fastPointIndexLocator)
 {
   auto y_node = actuator_unit::create_yaml_node(inputs_);
   auto myMeta = actuator_FAST_parse(y_node, *actMeta_);
@@ -62,7 +60,7 @@ TEST_F(ActuatorBulkDiskFastTest, NGP_fastPointIndexLocator)
   }
 }
 
-TEST_F(ActuatorBulkDiskFastTest, NGP_computeSweptPointCountUniform)
+TEST_F(ActuatorBulkDiskFastTest, computeSweptPointCountUniform)
 {
   inputs_.push_back("    num_swept_pts: 2\n");
   auto y_node = actuator_unit::create_yaml_node(inputs_);
@@ -75,7 +73,7 @@ TEST_F(ActuatorBulkDiskFastTest, NGP_computeSweptPointCountUniform)
   EXPECT_EQ(101, myMeta.numPointsTurbine_.h_view(0));
 }
 
-TEST_F(ActuatorBulkDiskFastTest, NGP_computeSweptPointCountVaried)
+TEST_F(ActuatorBulkDiskFastTest, computeSweptPointCountVaried)
 {
   auto y_node = actuator_unit::create_yaml_node(inputs_);
   auto myMeta = actuator_FAST_parse(y_node, *actMeta_);
@@ -87,7 +85,7 @@ TEST_F(ActuatorBulkDiskFastTest, NGP_computeSweptPointCountVaried)
   EXPECT_EQ(296, myMeta.numPointsTurbine_.h_view(0));
 }
 
-TEST_F(ActuatorBulkDiskFastTest, NGP_sweptPointsPopulatedUniform)
+TEST_F(ActuatorBulkDiskFastTest, sweptPointsPopulatedUniform)
 {
   inputs_.push_back("    num_swept_pts: 2\n");
   auto y_node = actuator_unit::create_yaml_node(inputs_);
@@ -122,7 +120,7 @@ TEST_F(ActuatorBulkDiskFastTest, NGP_sweptPointsPopulatedUniform)
   }
 }
 
-TEST_F(ActuatorBulkDiskFastTest, NGP_sweptPointsPopulatedVaried)
+TEST_F(ActuatorBulkDiskFastTest, sweptPointsPopulatedVaried)
 {
   auto y_node = actuator_unit::create_yaml_node(inputs_);
   auto myMeta = actuator_FAST_parse(y_node, *actMeta_);
@@ -155,8 +153,6 @@ TEST_F(ActuatorBulkDiskFastTest, NGP_sweptPointsPopulatedVaried)
       << "Index failed at: " << i;
   }
 }
-
-#endif
 
 } // namespace
 

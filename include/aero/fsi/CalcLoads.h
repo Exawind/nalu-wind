@@ -43,7 +43,7 @@ public:
   ScalarFieldType* pressure_;
   ScalarFieldType* density_;
   ScalarFieldType* viscosity_;
-  GenericFieldType* dudx_;
+  TensorFieldType* dudx_;
   GenericFieldType* exposedAreaVec_;
   GenericFieldType* tforceSCS_;
 };
