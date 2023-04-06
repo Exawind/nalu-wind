@@ -436,6 +436,9 @@ Realm::initialize_prolog()
   // property maps and evaluation algorithms
   setup_property();
 
+  if (aeroModels_->is_active())
+    aeroModels_->setup(get_time_step_from_file(), bulkData_);
+
   // interior algorithm creation
   setup_interior_algorithms();
 
@@ -539,8 +542,10 @@ Realm::initialize_prolog()
   if (solutionOptions_->meshMotion_)
     meshMotionAlg_->initialize(get_current_time());
 
-  if (aeroModels_->is_active())
+  if (aeroModels_->is_active()) {
+    NaluEnv::self().naluOutputP0() << "Initializing aero models" << std::endl;
     aeroModels_->init(get_current_time(), outputInfo_->restartFreq_);
+  }
 
   compute_geometry();
 
@@ -614,6 +619,8 @@ Realm::look_ahead_and_creation(const YAML::Node& node)
 
   // Contains actuators and FSI data structures
   aeroModels_ = std::make_unique<AeroContainer>(node);
+  if (aeroModels_->has_fsi())
+    solutionOptions_->openfastFSI_ = true;
 
   // Boundary Layer Statistics post-processing
   if (node["boundary_layer_statistics"]) {
@@ -1010,6 +1017,8 @@ Realm::setup_interior_algorithms()
         all_part_vec.begin(), mmPartVec.begin(), mmPartVec.end());
     }
     if (aeroModels_->has_fsi()) {
+      NaluEnv::self().naluOutputP0()
+        << "Inserting part vector for MeshVelocity algorithm" << std::endl;
       auto fsi_part_vec = aeroModels_->fsi_parts();
       all_part_vec.insert(
         all_part_vec.end(), fsi_part_vec.begin(), fsi_part_vec.end());
@@ -1108,9 +1117,6 @@ Realm::setup_post_processing_algorithms()
   if (NULL != dataProbePostProcessing_) {
     dataProbePostProcessing_->setup();
   }
-
-  if (aeroModels_->is_active())
-    aeroModels_->setup(get_time_step_from_file(), bulkData_);
 
   // check for norm nodal fields
   if (NULL != solutionNormPostProcessing_)
@@ -1843,7 +1849,6 @@ Realm::update_geometry_due_to_mesh_motion()
   // check for mesh motion
   if (does_mesh_move()) {
     if (aeroModels_->is_active()) {
-
       aeroModels_->update_displacements(get_current_time());
 
       if (aeroModels_->has_fsi()) {
@@ -1949,6 +1954,7 @@ Realm::advance_time_step()
 
   // check for  actuator; assemble the source terms for this step
   if (aeroModels_->is_active()) {
+    NaluEnv::self().naluOutputP0() << "Aero models - Execute" << std::endl;
     const double start_time = NaluEnv::self().nalu_time();
     aeroModels_->execute(timerActuator_);
     const double end_time = NaluEnv::self().nalu_time();
@@ -2496,7 +2502,7 @@ Realm::get_coordinates_name()
 bool
 Realm::has_mesh_motion() const
 {
-  return solutionOptions_->meshMotion_;
+  return solutionOptions_->has_mesh_motion();
 }
 
 //--------------------------------------------------------------------------
@@ -2505,13 +2511,12 @@ Realm::has_mesh_motion() const
 bool
 Realm::has_mesh_deformation() const
 {
+  // TODO embed this logic in solution options? it would be good if both were
+  // always consistent
   if (meshMotionAlg_) {
-    return (meshMotionAlg_->is_deforming() ||
-            solutionOptions_->externalMeshDeformation_) ||
-           aeroModels_->has_fsi();
+    return meshMotionAlg_->is_deforming();
   } else
-    return (
-      solutionOptions_->externalMeshDeformation_ || aeroModels_->has_fsi());
+    return solutionOptions_->has_mesh_deformation();
 }
 
 //--------------------------------------------------------------------------
@@ -2600,9 +2605,7 @@ Realm::compute_geometry()
 void
 Realm::compute_vrtm(const std::string& velName)
 {
-  if (
-    !solutionOptions_->meshMotion_ &&
-    !solutionOptions_->externalMeshDeformation_)
+  if (!does_mesh_move())
     return;
 
   using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
@@ -3468,12 +3471,17 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
       if (has_mesh_motion())
         meshMotionAlg_->restart_reinit(foundRestartTime);
 
-      if (aeroModels_->is_active()) {
+      if (aeroModels_->has_fsi()) {
+        // TODO(psakiev) we should move this inside the function and compute
+        // current coordinates there
+        NaluEnv::self().naluOutputP0()
+          << "Aero models - Update displacements and set current coordinates"
+          << std::endl;
         aeroModels_->update_displacements(get_current_time());
-        if (aeroModels_->has_fsi()) {
-          auto part_vec = aeroModels_->fsi_parts();
-          for (auto* target_part : part_vec)
-            set_current_coordinates(target_part);
+
+        auto part_vec = aeroModels_->fsi_parts();
+        for (auto* target_part : part_vec) {
+          set_current_coordinates(target_part);
         }
       }
 
@@ -4511,6 +4519,8 @@ Realm::process_multi_physics_transfer(bool initCall)
 
   if (!initCall) {
     if (aeroModels_->is_active()) {
+      NaluEnv::self().naluOutputP0()
+        << "Aero models - Predict model time step" << std::endl;
       aeroModels_->predict_model_time_step(get_current_time());
     }
   }
@@ -4617,8 +4627,11 @@ Realm::post_converged_work()
 {
   equationSystems_.post_converged_work();
 
-  if (aeroModels_->is_active())
+  if (aeroModels_->is_active()) {
+    NaluEnv::self().naluOutputP0()
+      << "Aero models - advance model timestep" << std::endl;
     aeroModels_->advance_model_time_step(get_current_time());
+  }
 
   // FIXME: Consider a unified collection of post processing work
   if (NULL != solutionNormPostProcessing_)

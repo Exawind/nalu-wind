@@ -92,11 +92,18 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
       !defNode,
       "defleciton_ramping inputs are required for FSI Turbines with blades");
     DeflectionRampingParams& defParams = deflectionRampParams_;
+    double* zeroTheta = &defParams.zeroRampLocTheta_;
+    double* thetaRamp = &defParams.thetaRampSpan_;
     // clang-format off
     get_required(defNode, "temporal_ramp_start", defParams.startTimeTemporalRamp_);
     get_required(defNode, "temporal_ramp_end",   defParams.endTimeTemporalRamp_);
     get_required(defNode, "span_ramp_distance",  defParams.spanRampDistance_);
+    get_if_present(defNode, "zero_theta_ramp_angle", *zeroTheta, *zeroTheta);
+    get_if_present(defNode, "theta_ramp_span",       *thetaRamp, *thetaRamp);
     // clang-format on
+    // ---------- conversionions ----------
+    defParams.zeroRampLocTheta_ = utils::radians(defParams.zeroRampLocTheta_);
+    defParams.thetaRampSpan_ = utils::radians(defParams.thetaRampSpan_);
     // --------------------------------------------------------------------------
   } else
     NaluEnv::self().naluOutputP0()
@@ -338,6 +345,8 @@ fsiTurbine::initialize()
   bldDefStiff_.resize(nTotBldPts);
   bld_dr_.resize(nTotBldPts);
   bld_rmm_.resize(nTotBldPts);
+
+  calc_loads_->initialize();
 }
 
 void
@@ -1339,7 +1348,6 @@ fsiTurbine::mapDisplacements(double time)
   const DeflectionRampingParams& defParams = deflectionRampParams_;
   const double temporalDeflectionRamp = fsi::temporal_ramp(
     time, defParams.startTimeTemporalRamp_, defParams.endTimeTemporalRamp_);
-  assert(!std::isnan(temporalDeflectionRamp));
 
   auto& meta = bulk_->mesh_meta_data();
   VectorFieldType* modelCoords =
@@ -1391,6 +1399,10 @@ fsiTurbine::mapDisplacements(double time)
     }
   }
 
+  const aero::SixDOF hubVel(brFSIdata_.hub_vel.data());
+  const aero::SixDOF hubDeflection(brFSIdata_.hub_def.data());
+  const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
+
   // Now the blades
   int nBlades = params_.numBlades;
   int iStart = 0;
@@ -1437,24 +1449,45 @@ fsiTurbine::mapDisplacements(double time)
         const double spanLocation =
           spanLocI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
 
-        const double deflectionRamp =
+        double deflectionRamp =
           temporalDeflectionRamp *
           fsi::linear_ramp_span(spanLocation, defParams.spanRampDistance_);
 
+        // things for theta mapping
+        const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
+        const aero::SixDOF rootPos(&(brFSIdata_.bld_root_ref_pos[iBlade * 6]));
+        const auto nodePosition = vector_from_field(*modelCoords, node);
+
+        deflectionRamp *= fsi::linear_ramp_theta(
+          hubPos, rootPos.position_, nodePosition, defParams.thetaRampSpan_,
+          defParams.zeroRampLocTheta_);
+
         *stk::mesh::field_data(*deflectionRamp_, node) = deflectionRamp;
 
-        const aero::SixDOF hubDef(brFSIdata_.hub_def.data());
         // displacements from the hub will match a fully stiff blade's
         // displacements
-        const auto nodePosition = vector_from_field(*modelCoords, node);
-        const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
         const auto hubBasedDef = aero::compute_translational_displacements(
-          hubDef, hubPos, nodePosition);
+          hubDeflection, hubPos, nodePosition);
+
+        auto ramp_disp = aero::compute_translational_displacements(
+          interpDisp, refPos, nodePosition, hubBasedDef, deflectionRamp);
+        vector_to_field(ramp_disp, *displacement, node);
+
+        auto bldStartVel = aero::SixDOF(&(brFSIdata_.bld_vel[iN]));
+        auto bldEndVel = aero::SixDOF(&(brFSIdata_.bld_vel[iNp1]));
+        auto interpVel = aero::linear_interp_total_velocity(
+          bldStartVel, bldEndVel, *dispMapInterpNode);
+
+        // Now transfer the translational and rotational velocity to an
+        // equivalent translational velocity on the CFD mesh node
+        const auto stiffVel = aero::compute_mesh_velocity(
+          hubVel, hubDeflection, hubPos, nodePosition);
 
         vector_to_field(
-          aero::compute_translational_displacements(
-            interpDisp, refPos, nodePosition, hubBasedDef, deflectionRamp),
-          *displacement, node);
+          aero::compute_mesh_velocity(
+            interpVel, interpDisp, refPos, nodePosition, stiffVel,
+            deflectionRamp),
+          *meshVelocity, node);
       }
     }
     iStart += nPtsBlade;
@@ -1468,19 +1501,17 @@ fsiTurbine::mapDisplacements(double time)
       auto node = (*b)[in];
 
       auto oldxyz = vector_from_field(*modelCoords, node);
-      const aero::SixDOF refPos(brFSIdata_.hub_ref_pos.data());
-      const aero::SixDOF deflection(brFSIdata_.hub_def.data());
       // Now transfer the displacement to the CFD mesh node
       vector_to_field(
-        aero::compute_translational_displacements(deflection, refPos, oldxyz),
+        aero::compute_translational_displacements(
+          hubDeflection, hubPos, oldxyz),
         *displacement, node);
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
-      auto mVel = vector_from_field(*meshVelocity, node);
-      const aero::SixDOF vel(brFSIdata_.hub_vel.data());
-
-      mVel = aero::compute_mesh_velocity(vel, deflection, refPos, oldxyz);
+      vector_to_field(
+        aero::compute_mesh_velocity(hubVel, hubDeflection, hubPos, oldxyz),
+        *meshVelocity, node);
     }
   }
 
@@ -2017,14 +2048,14 @@ fsiTurbine::compute_div_mesh_velocity()
 
   auto& meta = bulk_->mesh_meta_data();
 
-  VectorFieldType* meshVelocity =
-    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
-
   ScalarFieldType* divMeshVel = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "div_mesh_velocity");
 
-  compute_vector_divergence(
-    *bulk_, partVec_, bndyPartVec_, meshVelocity, divMeshVel);
+  GenericFieldType* faceVelMag = meta.get_field<GenericFieldType>(
+    stk::topology::EDGE_RANK, "edge_face_velocity_mag");
+
+  compute_edge_scalar_divergence(
+    *bulk_, partVec_, bndyPartVec_, faceVelMag, divMeshVel);
 }
 
 } // namespace nalu

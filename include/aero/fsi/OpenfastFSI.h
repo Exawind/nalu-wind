@@ -77,6 +77,8 @@ private:
 
   int tStep_{0}; // Time step count
 
+  double dt_{-1.0}; // Store nalu-wind step
+
   int writeFreq_{
     30}; // Frequency to write line loads and deflections to netcdf file
 

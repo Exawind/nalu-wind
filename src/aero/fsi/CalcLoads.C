@@ -59,8 +59,13 @@ void
 CalcLoads::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
 {
   bulk_ = bulk;
-  auto& meta = bulk_->mesh_meta_data();
+}
 
+void
+CalcLoads::initialize()
+{
+
+  auto& meta = bulk_->mesh_meta_data();
   coordinates_ = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "current_coordinates");
   pressure_ =
@@ -69,7 +74,13 @@ CalcLoads::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
     meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
   viscosity_ = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "effective_viscosity_u");
+
+  if (viscosity_ == nullptr) {
+    viscosity_ =
+      meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
+  }
   dudx_ = meta.get_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx");
+
   exposedAreaVec_ =
     meta.get_field<GenericFieldType>(meta.side_rank(), "exposed_area_vector");
   tforceSCS_ = meta.get_field<GenericFieldType>(meta.side_rank(), "tforce_scs");
