@@ -58,10 +58,7 @@ public:
 
   inline bool has_mesh_motion() const { return meshMotion_; }
 
-  inline bool has_mesh_deformation() const
-  {
-    return (externalMeshDeformation_ || openfastFSI_);
-  }
+  inline bool has_mesh_deformation() const { return meshDeformation_; }
 
   inline bool does_mesh_move() const
   {
@@ -127,8 +124,7 @@ public:
   TurbulenceModel turbulenceModel_;
   bool meshMotion_;
   bool meshTransformation_;
-  bool externalMeshDeformation_;
-  bool openfastFSI_;
+  bool meshDeformation_;
   bool ncAlgGaussLabatto_;
   bool ncAlgUpwindAdvection_;
   bool ncAlgIncludePstab_;

@@ -26,7 +26,7 @@ TEST_F(MomentumABLKernelHex8Mesh, NGP_abl_wall_func)
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
 
   auto* part = meta_->get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(

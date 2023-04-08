@@ -120,7 +120,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_tke_ksgs_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(

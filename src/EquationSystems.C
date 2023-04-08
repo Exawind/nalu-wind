@@ -22,6 +22,7 @@
 // all concrete EquationSystem's
 #include <EnthalpyEquationSystem.h>
 #include <LowMachEquationSystem.h>
+#include <mesh_motion/MeshDisplacementEquationSystem.h>
 
 #ifdef NALU_HAS_MATRIXFREE
 #include <MatrixFreeHeatCondEquationSystem.h>

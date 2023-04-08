@@ -32,7 +32,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_coriolis)
 
   // Setup solution options for default kernel
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
 
   // Setup Coriolis specific options.  Mimics the Ekman spiral test
   solnOpts_.earthAngularVelocity_ = 7.2921159e-5;

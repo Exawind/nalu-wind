@@ -1118,7 +1118,7 @@ MomentumEquationSystem::pre_timestep_work()
   if (
     (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS) &&
     (realm_.solutionOptions_->meshMotion_ ||
-     realm_.solutionOptions_->externalMeshDeformation_)) {
+     realm_.solutionOptions_->meshDeformation_)) {
     AMSAlgDriver_->compute_metric_tensor();
   }
 }

@@ -215,7 +215,7 @@ TEST_F(KEKernelHex8Mesh, NGP_tke_ke_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
@@ -250,7 +250,7 @@ TEST_F(KEKernelHex8Mesh, NGP_tdr_ke_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(

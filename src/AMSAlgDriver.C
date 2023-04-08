@@ -81,7 +81,7 @@ AMSAlgDriver::register_nodal_fields(stk::mesh::Part* part)
 
   if (
     realm_.solutionOptions_->meshMotion_ ||
-    realm_.solutionOptions_->externalMeshDeformation_) {
+    realm_.solutionOptions_->meshDeformation_) {
     avgVelocityRTM_ = &(meta.declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "average_velocity_rtm"));
     stk::mesh::put_field_on_mesh(*avgVelocityRTM_, *part, nDim, nullptr);
@@ -297,7 +297,7 @@ AMSAlgDriver::execute()
 
   if (
     realm_.solutionOptions_->meshMotion_ ||
-    realm_.solutionOptions_->externalMeshDeformation_) {
+    realm_.solutionOptions_->meshDeformation_) {
     realm_.compute_vrtm("average_velocity");
   }
   avgMdotAlg_.execute();

@@ -128,7 +128,7 @@ TEST_F(VOFKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
   fill_mesh_and_init_fields();
 
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.alphaMap_["volume_of_fluid"] = 0.0;
   solnOpts_.alphaUpwMap_["volume_of_fluid"] = 0.0;
   solnOpts_.upwMap_["volume_of_fluid"] = 0.0;

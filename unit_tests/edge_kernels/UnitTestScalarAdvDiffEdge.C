@@ -168,7 +168,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.alphaMap_["mixture_fraction"] = 0.0;
   solnOpts_.alphaUpwMap_["mixture_fraction"] = 0.0;
   solnOpts_.upwMap_["mixture_fraction"] = 0.0;
@@ -246,7 +246,7 @@ TEST_F(
 
   // Setup solution options for default advection kernel
   solnOpts->meshMotion_ = false;
-  solnOpts->externalMeshDeformation_ = false;
+  solnOpts->meshDeformation_ = false;
   solnOpts->alphaMap_["mixture_fraction"] = 0.0;
   solnOpts->alphaUpwMap_["mixture_fraction"] = 0.0;
   solnOpts->upwMap_["mixture_fraction"] = 0.0;
@@ -309,7 +309,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra_dirichlet)
 
   // Setup solution options for default advection kernel
   solnOpts->meshMotion_ = false;
-  solnOpts->externalMeshDeformation_ = false;
+  solnOpts->meshDeformation_ = false;
   solnOpts->alphaMap_["mixture_fraction"] = 0.0;
   solnOpts->alphaUpwMap_["mixture_fraction"] = 0.0;
   solnOpts->upwMap_["mixture_fraction"] = 0.0;

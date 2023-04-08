@@ -230,7 +230,7 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_open_edge)
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
 
   auto* part = meta_->get_part("surface_2");
   bool isEdge = true;

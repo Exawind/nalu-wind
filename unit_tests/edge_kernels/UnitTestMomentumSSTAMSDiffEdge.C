@@ -529,7 +529,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_diff)
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.includeDivU_ = false;
   solnOpts_.alphaMap_["velocity"] = 0.0;
   solnOpts_.alphaUpwMap_["velocity"] = 0.0;

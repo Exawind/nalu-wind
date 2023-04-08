@@ -118,7 +118,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.cvfemShiftMdot_ = true;
   solnOpts_.cvfemReducedSensPoisson_ = true;
   solnOpts_.activateOpenMdotCorrection_ = true;

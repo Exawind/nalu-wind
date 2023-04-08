@@ -238,7 +238,7 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_advection_diffusion)
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.alphaMap_["velocity"] = 0.0;
   solnOpts_.alphaUpwMap_["velocity"] = 0.0;
   solnOpts_.upwMap_["velocity"] = 0.0;

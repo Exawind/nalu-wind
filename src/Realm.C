@@ -620,7 +620,7 @@ Realm::look_ahead_and_creation(const YAML::Node& node)
   // Contains actuators and FSI data structures
   aeroModels_ = std::make_unique<AeroContainer>(node);
   if (aeroModels_->has_fsi())
-    solutionOptions_->openfastFSI_ = true;
+    solutionOptions_->meshDeformation_ = true;
 
   // Boundary Layer Statistics post-processing
   if (node["boundary_layer_statistics"]) {
@@ -880,7 +880,7 @@ Realm::load(const YAML::Node& node)
   const YAML::Node meshMotionNode = expect_sequence(node, "mesh_motion", true);
   if (meshMotionNode) {
     // has a user stated that mesh motion is external?
-    if (solutionOptions_->externalMeshDeformation_) {
+    if (solutionOptions_->meshDeformation_) {
       NaluEnv::self().naluOutputP0()
         << "mesh motion set to external (will prevail over mesh motion "
            "specification)!"
@@ -1858,7 +1858,7 @@ Realm::update_geometry_due_to_mesh_motion()
       }
     }
 
-    if (solutionOptions_->externalMeshDeformation_) {
+    if (solutionOptions_->meshDeformation_) {
       std::vector<std::string> targetNames = get_physics_target_names();
       for (size_t itarget = 0; itarget < targetNames.size(); ++itarget) {
         stk::mesh::Part* targetPart =
@@ -1942,7 +1942,7 @@ Realm::advance_time_step()
 
   // evaluate new geometry based on latest mesh motion geometry state
   // (provided that external is active)
-  if (solutionOptions_->externalMeshDeformation_)
+  if (solutionOptions_->meshDeformation_)
     compute_geometry();
 
   // evaluate properties based on latest state including boundary and and

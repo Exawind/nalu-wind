@@ -54,8 +54,7 @@ SolutionOptions::SolutionOptions()
     turbulenceModel_(TurbulenceModel::LAMINAR),
     meshMotion_(false),
     meshTransformation_(false),
-    externalMeshDeformation_(false),
-    openfastFSI_(false),
+    meshDeformation_(false),
     ncAlgGaussLabatto_(true),
     ncAlgUpwindAdvection_(true),
     ncAlgIncludePstab_(true),
@@ -140,7 +139,7 @@ SolutionOptions::load(const YAML::Node& y_node)
     // external mesh motion expected
     get_if_present(
       y_solution_options, "externally_provided_mesh_deformation",
-      externalMeshDeformation_, externalMeshDeformation_);
+      meshDeformation_, meshDeformation_);
 
     // shift mdot for continuity (CVFEM)
     get_if_present(

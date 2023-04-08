@@ -640,7 +640,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
@@ -675,7 +675,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_sust_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
@@ -713,7 +713,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sstlr_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
@@ -748,7 +748,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
@@ -783,7 +783,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_sust_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
@@ -821,7 +821,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
@@ -856,7 +856,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_sust_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
@@ -894,7 +894,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sstlr_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
@@ -929,7 +929,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(
@@ -965,7 +965,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_sust_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
   unit_test_utils::NodeHelperObjects helperObjs(

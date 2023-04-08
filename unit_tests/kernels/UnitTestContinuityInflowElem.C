@@ -29,7 +29,7 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_inflow)
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
-  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.meshDeformation_ = false;
   solnOpts_.cvfemShiftMdot_ = true;
   solnOpts_.shiftedGradOpMap_["pressure"] = true;
   solnOpts_.cvfemReducedSensPoisson_ = true;
