@@ -13,6 +13,9 @@ target_sources(
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumNonConformalSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradNonConformalAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradUNonConformalAlgorithm.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradUElemAlgorithm.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradUAlgorithmDriver.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradUBoundaryAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodeSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNGPNodeSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssemblePNGBoundarySolverAlgorithm.C

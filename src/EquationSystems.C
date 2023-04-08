@@ -158,6 +158,17 @@ EquationSystems::load(const YAML::Node& y_node)
           if (root()->debug())
             NaluEnv::self().naluOutputP0() << "eqSys = tke " << std::endl;
           eqSys = new TurbKineticEnergyEquationSystem(*this);
+        } else if (expect_map(y_system, "MeshDisplacement", true)) {
+          y_eqsys = expect_map(y_system, "MeshDisplacement", true);
+          bool activateMass = false;
+          bool deformWrtModelCoords = false;
+          get_if_present_no_default(y_eqsys, "activate_mass", activateMass);
+          get_if_present_no_default(
+            y_eqsys, "deform_wrt_model_coordinates", deformWrtModelCoords);
+          if (root()->debug())
+            NaluEnv::self().naluOutputP0()
+              << "eqSys = MeshDisplacement " << std::endl;
+          eqSys = new MeshDisplacementEquationSystem(*this, activateMass, deformWrtModelCoords);
         } else if (expect_map(y_system, "Enthalpy", true)) {
           y_eqsys = expect_map(y_system, "Enthalpy", true);
           if (root()->debug())
