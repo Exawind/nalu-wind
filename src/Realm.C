@@ -1308,7 +1308,7 @@ Realm::setup_initial_conditions()
           std::vector<double> genSpec = genIC.data_[ifield];
           stk::mesh::FieldBase* field = stk::mesh::get_field_by_name(
             genIC.fieldNames_[ifield], meta_data());
-          ThrowAssert(field);
+          ThrowAssertMsg(field,"Field not registered: " + genIC.fieldNames_[ifield]);
 
           stk::mesh::FieldBase* fieldWithState =
             (field->number_of_states() > 1)
