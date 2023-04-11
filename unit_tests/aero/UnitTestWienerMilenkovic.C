@@ -7,14 +7,12 @@
 // for more details.
 //
 
-#include "vs/vector.h"
-#include "vs/vstraits.h"
-#include <gtest/gtest.h>
-#include <aero/aero_utils/WienerMilenkovic.h>
 #include <vs/trig_ops.h>
 #include "KokkosInterface.h"
+#include "WmpTestUtils.h"
 
 namespace {
+
 using KVector =
   Kokkos::View<vs::Vector*, Kokkos::LayoutRight, sierra::nalu::MemSpace>;
 using KDouble =
@@ -191,10 +189,20 @@ TEST(WienerMilenkovic, NGP_compose_two_rotations_same_as_two_quaternions)
 
 TEST(WienerMilenkovic, NGP_compose_push_then_pop_param)
 {
-  const auto wmp1 = wmp::create_wm_param(vs::Vector::khat(), 30.0);
-  const auto wmp2 = wmp::create_wm_param({1.0, 1.0, 1.0}, 25.0);
+  const auto wmp1 = wmp::create_wm_param(vs::Vector::khat(), utils::radians(30.0));
+  const auto wmp2 = wmp::create_wm_param({1.0, 1.0, 1.0}, utils::radians(25.0));
   const vs::Vector point = {1.0, 1.0, 1.0};
   impl_test_WM_compose_add_sub(wmp1, wmp2, point);
+}
+
+TEST(WienerMilenkovic, interpolate_rotation){
+const auto wmp1 = wmp::create_wm_param(vs::Vector::khat(), utils::radians(45.0));
+const auto wmp2 = wmp::create_wm_param(vs::Vector::khat(), utils::radians(55.0));
+const auto gold_wmp = wmp::create_wm_param(vs::Vector::khat(), utils::radians(50.0));
+const double fac = 0.5;
+const auto interp = wmp::linear_interp_rotation(wmp1, wmp2, fac);
+
+test_wiener_milenkovic(gold_wmp, interp, vs::Vector::ihat(), 1e-12);
 }
 
 } // namespace test_wmp

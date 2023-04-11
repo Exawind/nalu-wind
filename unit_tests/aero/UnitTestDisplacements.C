@@ -9,29 +9,9 @@
 
 #include <gtest/gtest.h>
 #include <aero/aero_utils/displacements.h>
-
-testing::Message&
-operator<<(testing::Message& out, const vs::Vector& vec)
-{
-  out << "(" << vec.x() << " " << vec.y() << " " << vec.z() << ")";
-  return out;
-}
+#include "WmpTestUtils.h"
 
 namespace test_displacements {
-//! Test that two WM Params give the same end location for a point
-void
-test_wiener_milenkovic(
-  vs::Vector goldWmp, vs::Vector testWmp, vs::Vector testPoint, double eps)
-{
-  auto goldPnt = wmp::rotate(goldWmp, testPoint);
-  auto testPnt = wmp::rotate(testWmp, testPoint);
-  EXPECT_NEAR(goldPnt.x(), testPnt.x(), eps)
-    << "Gold WMP: " << goldWmp << " testWmp: " << testWmp;
-  EXPECT_NEAR(goldPnt.y(), testPnt.y(), eps)
-    << "Gold WMP: " << goldWmp << " testWmp: " << testWmp;
-  EXPECT_NEAR(goldPnt.z(), testPnt.z(), eps)
-    << "Gold WMP: " << goldWmp << " testWmp: " << testWmp;
-}
 
 TEST(AeroDisplacements, creation_from_pointer)
 {
