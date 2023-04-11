@@ -135,12 +135,10 @@ vs::Vector
 linear_interp_rotation(
   const vs::Vector qStart, const vs::Vector qEnd, const double interpFac)
 {
-  return compose(interpFac * compose(qEnd, qStart, false, true), qStart);
-
   // remove rigid body rotation
   auto qIntermediate = pop(qStart, qEnd);
   qIntermediate *= interpFac;
-  return push(qIntermediate, qStart);
+  return push(qStart, qIntermediate);
 }
 
 KOKKOS_FORCEINLINE_FUNCTION

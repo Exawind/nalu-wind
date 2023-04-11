@@ -197,4 +197,16 @@ TEST(WienerMilenkovic, NGP_compose_push_then_pop_param)
   impl_test_WM_compose_add_sub(wmp1, wmp2, point);
 }
 
+TEST(WienerMilenkovic, rotation_interpolation)
+{
+  const double angleStart{30.0}, angleEnd{40.0}, factor{0.5};
+  const auto qStart =
+    wmp::create_wm_param(vs::Vector::khat(), utils::radians(angleStart));
+  const auto qEnd =
+    wmp::create_wm_param(vs::Vector::khat(), utils::radians(angleEnd));
+  const auto interp = wmp::linear_interp_rotation(qStart, qEnd, factor);
+  const auto goldAngle = utils::radians(factor * (angleStart + angleEnd));
+  const double interpAngle = 4.0 * stk::math::atan(0.25 * vs::mag(interp));
+  EXPECT_NEAR(goldAngle, interpAngle, 1e-4);
+}
 } // namespace test_wmp
