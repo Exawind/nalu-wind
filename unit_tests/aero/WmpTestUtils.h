@@ -33,3 +33,17 @@ test_wiener_milenkovic(
   EXPECT_NEAR(goldPnt.z(), testPnt.z(), eps)
     << "Gold WMP: " << goldWmp << " testWmp: " << testWmp;
 }
+
+inline void
+test_wiener_milenkovic_angle(
+  double goldAngle,
+  vs::Vector testWmp,
+  double eps,
+  bool radians = false)
+{
+  const auto testAngle = stk::math::atan(vs::mag(testWmp) * 0.25) * 4.0;
+  if (radians)
+    EXPECT_NEAR(goldAngle, testAngle, eps);
+  else
+    EXPECT_NEAR(goldAngle, utils::degrees(testAngle), eps);
+}

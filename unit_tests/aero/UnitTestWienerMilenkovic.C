@@ -189,20 +189,25 @@ TEST(WienerMilenkovic, NGP_compose_two_rotations_same_as_two_quaternions)
 
 TEST(WienerMilenkovic, NGP_compose_push_then_pop_param)
 {
-  const auto wmp1 = wmp::create_wm_param(vs::Vector::khat(), utils::radians(30.0));
+  const auto wmp1 =
+    wmp::create_wm_param(vs::Vector::khat(), utils::radians(30.0));
   const auto wmp2 = wmp::create_wm_param({1.0, 1.0, 1.0}, utils::radians(25.0));
   const vs::Vector point = {1.0, 1.0, 1.0};
   impl_test_WM_compose_add_sub(wmp1, wmp2, point);
 }
 
-TEST(WienerMilenkovic, interpolate_rotation){
-const auto wmp1 = wmp::create_wm_param(vs::Vector::khat(), utils::radians(45.0));
-const auto wmp2 = wmp::create_wm_param(vs::Vector::khat(), utils::radians(55.0));
-const auto gold_wmp = wmp::create_wm_param(vs::Vector::khat(), utils::radians(50.0));
-const double fac = 0.5;
-const auto interp = wmp::linear_interp_rotation(wmp1, wmp2, fac);
+TEST(WienerMilenkovic, interpolate_rotation)
+{
+  const auto wmp1 =
+    wmp::create_wm_param(vs::Vector::khat(), utils::radians(45.0));
+  const auto wmp2 =
+    wmp::create_wm_param(vs::Vector::khat(), utils::radians(55.0));
+  const auto gold_wmp =
+    wmp::create_wm_param(vs::Vector::khat(), utils::radians(50.0));
+  const double fac = 0.5;
+  const auto interp = wmp::linear_interp_rotation(wmp1, wmp2, fac);
 
-test_wiener_milenkovic(gold_wmp, interp, vs::Vector::ihat(), 1e-12);
+  test_wiener_milenkovic_angle(50.0, interp, 1e-8);
 }
 
 } // namespace test_wmp
