@@ -202,8 +202,6 @@ TEST(WienerMilenkovic, interpolate_rotation)
     wmp::create_wm_param(vs::Vector::khat(), utils::radians(45.0));
   const auto wmp2 =
     wmp::create_wm_param(vs::Vector::khat(), utils::radians(55.0));
-  const auto gold_wmp =
-    wmp::create_wm_param(vs::Vector::khat(), utils::radians(50.0));
   const double fac = 0.5;
   const auto interp = wmp::linear_interp_rotation(wmp1, wmp2, fac);
 
