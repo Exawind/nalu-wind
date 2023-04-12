@@ -202,29 +202,41 @@ public:
   virtual ~TestLinearSystem() {}
 
   // Graph/Matrix Construction
-  virtual void buildNodeGraph(const stk::mesh::PartVector& /* parts */) {}
-  virtual void buildFaceToNodeGraph(const stk::mesh::PartVector& /* parts */) {}
-  virtual void buildEdgeToNodeGraph(const stk::mesh::PartVector& /* parts */) {}
-  virtual void buildElemToNodeGraph(const stk::mesh::PartVector& /* parts */) {}
-  virtual void
-  buildReducedElemToNodeGraph(const stk::mesh::PartVector& /* parts */)
+  virtual void buildNodeGraph(const stk::mesh::PartVector& /* parts */) override
   {
   }
   virtual void
-  buildFaceElemToNodeGraph(const stk::mesh::PartVector& /* parts */)
+  buildFaceToNodeGraph(const stk::mesh::PartVector& /* parts */) override
   {
   }
   virtual void
-  buildNonConformalNodeGraph(const stk::mesh::PartVector& /* parts */)
+  buildEdgeToNodeGraph(const stk::mesh::PartVector& /* parts */) override
   {
   }
-  virtual void buildOversetNodeGraph(const stk::mesh::PartVector& /* parts */)
+  virtual void
+  buildElemToNodeGraph(const stk::mesh::PartVector& /* parts */) override
   {
   }
-  virtual void finalizeLinearSystem() {}
+  virtual void
+  buildReducedElemToNodeGraph(const stk::mesh::PartVector& /* parts */) override
+  {
+  }
+  virtual void
+  buildFaceElemToNodeGraph(const stk::mesh::PartVector& /* parts */) override
+  {
+  }
+  virtual void
+  buildNonConformalNodeGraph(const stk::mesh::PartVector& /* parts */) override
+  {
+  }
+  virtual void
+  buildOversetNodeGraph(const stk::mesh::PartVector& /* parts */) override
+  {
+  }
+  virtual void finalizeLinearSystem() override {}
 
   // Matrix Assembly
-  virtual void zeroSystem() {}
+  virtual void zeroSystem() override {}
 
   virtual void sumInto(
     unsigned /* numEntities */,
@@ -242,7 +254,7 @@ public:
     Kokkos::atomic_add(&numSumIntoCalls_(0), 1u);
   }
 
-  sierra::nalu::CoeffApplier* get_coeff_applier()
+  virtual sierra::nalu::CoeffApplier* get_coeff_applier() override
   {
     auto lhs = lhs_;
     auto rhs = rhs_;
@@ -276,7 +288,7 @@ public:
     const sierra::nalu::
       SharedMemView<int*, sierra::nalu::DeviceShmem>& /* sortPermutation */,
     const char* /* trace_tag */
-  )
+    ) override
   {
     if (isEdge_) {
       edgeSumInto(numEntities, entities, rhs, lhs, numDof_, rhs_, lhs_);
@@ -294,7 +306,7 @@ public:
     std::vector<double>& /* scratchVals */,
     const std::vector<double>& rhs,
     const std::vector<double>& lhs,
-    const char* /* trace_tag */ = 0)
+    const char* /* trace_tag */ = 0) override
   {
     if (numSumIntoCalls_(0) == 0) {
       for (size_t i = 0; i < rhs.size(); ++i) {
@@ -316,23 +328,23 @@ public:
     stk::mesh::FieldBase* /* bcValuesField */,
     const stk::mesh::PartVector& /* parts */,
     const unsigned /* beginPos */,
-    const unsigned /* endPos */)
+    const unsigned /* endPos */) override
   {
   }
 
   // Solve
-  virtual int solve(stk::mesh::FieldBase* /* linearSolutionField */)
+  virtual int solve(stk::mesh::FieldBase* /* linearSolutionField */) override
   {
     return -1;
   }
-  virtual void loadComplete() {}
+  virtual void loadComplete() override {}
 
   virtual void
-  writeToFile(const char* /* filename */, bool /* useOwned */ = true)
+  writeToFile(const char* /* filename */, bool /* useOwned */ = true) override
   {
   }
-  virtual void
-  writeSolutionToFile(const char* /* filename */, bool /* useOwned */ = true)
+  virtual void writeSolutionToFile(
+    const char* /* filename */, bool /* useOwned */ = true) override
   {
   }
 
@@ -341,7 +353,7 @@ public:
     const unsigned /* beginPos */,
     const unsigned /* endPos */,
     const double,
-    const double)
+    const double) override
   {
   }
 
@@ -351,7 +363,7 @@ public:
     const unsigned /* beginPos */,
     const unsigned /* endPos */,
     const double,
-    const double)
+    const double) override
   {
   }
 
@@ -365,8 +377,11 @@ public:
   bool isEdge_;
 
 protected:
-  virtual void beginLinearSystemConstruction() {}
-  virtual void checkError(const int /* err_code */, const char* /* msg */) {}
+  virtual void beginLinearSystemConstruction() override {}
+  virtual void
+  checkError(const int /* err_code */, const char* /* msg */) override
+  {
+  }
 };
 
 class TestEdgeLinearSystem : public TestLinearSystem

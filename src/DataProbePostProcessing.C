@@ -1221,14 +1221,14 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
             if (!printcoords)
               coordfilestring = "CoordinateFile: " + coordFileName;
 
-            sprintf(
-              buffer, "#Time: %18.12e %s\n#", currentTime,
+            snprintf(
+              buffer, 1000, "#Time: %18.12e %s\n#", currentTime,
               coordfilestring.c_str());
             filestring.append(buffer);
             if (printcoords) {
               filestring += "Plane_Number Index_j Index_i";
               for (int jj = 0; jj < nDim; ++jj) {
-                sprintf(buffer, " coordinates[%i]", jj);
+                snprintf(buffer, 1000, " coordinates[%i]", jj);
                 filestring.append(buffer);
               }
             }
@@ -1239,7 +1239,7 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
                 (probeInfo->onlyOutputField_[inp] == fieldName)) {
                 const int fieldSize = probeSpec->fieldInfo_[ifi].second;
                 for (int jj = 0; jj < fieldSize; ++jj) {
-                  sprintf(buffer, " %s[%i]", fieldName.c_str(), jj);
+                  snprintf(buffer, 1000, " %s[%i]", fieldName.c_str(), jj);
                   filestring.append(buffer);
                 }
               }
@@ -1276,12 +1276,13 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
                 const int indexj = localn / N1;
                 const int indexi = localn - indexj * N1;
 
-                sprintf(buffer, "%18i %18i %18i", planei, indexj, indexi);
+                snprintf(
+                  buffer, 1000, "%18i %18i %18i", planei, indexj, indexi);
                 filestring.append(buffer);
 
                 // Output coordinates
                 for (int jj = 0; jj < nDim; ++jj) {
-                  sprintf(buffer, " %12.5e", theCoord[jj]);
+                  snprintf(buffer, 1000, " %12.5e", theCoord[jj]);
                   filestring.append(buffer);
                 }
               }
@@ -1294,7 +1295,7 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
                   double* theF =
                     (double*)stk::mesh::field_data(*(allFields[ifi]), node);
                   for (size_t jj = 0; jj < fieldSize[ifi]; ++jj) {
-                    sprintf(buffer, " %12.6e", theF[jj]);
+                    snprintf(buffer, 1000, " %12.6e", theF[jj]);
                     filestring.append(buffer);
                   }
                 }

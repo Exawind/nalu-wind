@@ -81,13 +81,13 @@ TestTurbulenceAlgorithm::declare_fields()
   // clang-format on
   for (auto& Field : Fields) {
     const std::string& name = Field.first;
+    const stk::mesh::PartVector universal(1, &meta.universal_part());
     std::visit(
       [&](auto member_field) {
         using to_field =
           typename std::remove_pointer<decltype(member_field)>::type;
         sierra::nalu::FieldPointerTypes new_field =
-          realm_->fieldManager_->register_field(
-            name, meta.universal_part(), numStates);
+          realm_->fieldManager_->register_field(name, universal, numStates);
         std::visit(
           [&](auto fld) {
             using from_field = decltype(fld);

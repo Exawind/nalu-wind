@@ -556,3 +556,56 @@ Hex8Mesh::check_discrete_laplacian(double exactLaplacian)
     }
   }
 }
+
+Hex8MeshWithNSOFields::Hex8MeshWithNSOFields() : Hex8Mesh()
+{
+  sierra::nalu::HexSCS hex8SCS;
+  const unsigned hex_int_pts = hex8SCS.num_integration_points();
+  const unsigned quad_vec_len =
+    3 * sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+          stk::topology::QUAD_4)
+          ->num_integration_points();
+  const unsigned Gju_len = 3;
+  const double one = 1.0;
+  const double two = 2.0;
+  const double oneVecThree[3] = {one, one, one};
+  const std::vector<double> oneVecTwelve(quad_vec_len, one);
+  const std::vector<double> oneVecNInt(hex_int_pts, one);
+
+  const stk::mesh::PartVector universal(1, &meta->universal_part());
+  const unsigned num_states = 1;
+  const unsigned vec_len = 3;
+  const unsigned scalar_len = 1;
+
+  massFlowRate = fieldManager->register_generic_field(
+    "mass_flow_rate_scs", universal, num_states, hex_int_pts,
+    oneVecNInt.data());
+
+  Gju = fieldManager->register_generic_field(
+    "Gju", universal, num_states, Gju_len, oneVecThree);
+
+  exposedAreaVec = fieldManager->register_generic_field(
+    "exposed_area_vector", universal, num_states, quad_vec_len,
+    oneVecTwelve.data());
+
+  velocity = fieldManager->register_field<VectorFieldType>(
+    "velocity", universal, oneVecThree);
+
+  dpdx = fieldManager->register_field<VectorFieldType>(
+    "dpdx", universal, oneVecThree);
+
+  density =
+    fieldManager->register_field<ScalarFieldType>("density", universal, &one);
+
+  viscosity =
+    fieldManager->register_field<ScalarFieldType>("viscosity", universal, &one);
+
+  pressure =
+    fieldManager->register_field<ScalarFieldType>("pressure", universal, &one);
+
+  udiag = fieldManager->register_field<ScalarFieldType>(
+    "momentum_diag", universal, &one);
+
+  dnvField = fieldManager->register_field<ScalarFieldType>(
+    "dual_nodal_volume", universal, &one);
+}

@@ -929,22 +929,19 @@ Realm::setup_nodal_fields()
     setup_field_manager();
   }
 #ifdef NALU_USES_HYPRE
-  fieldManager_->register_field("hypre_global_id", meta_data().get_parts());
-  hypreGlobalId_ =
-    fieldManager_->get_field_ptr<HypreIDFieldType*>("hypre_global_id");
+  hypreGlobalId_ = fieldManager_->register_field<HypreIDFieldType>(
+    "hypre_global_id", meta_data().get_parts());
 #endif
 #ifdef NALU_USES_TRILINOS_SOLVERS
-  fieldManager_->register_field("tpet_global_id", meta_data().get_parts());
   // TODO work on removing this variable from realm by accessing fields through
   // the manager instead
-  tpetGlobalId_ =
-    fieldManager_->get_field_ptr<TpetIDFieldType*>("tpet_global_id");
-  stk::mesh::field_fill(
-    std::numeric_limits<LinSys::GlobalOrdinal>::max(), *tpetGlobalId_);
+  const LinSys::GlobalOrdinal init_val =
+    std::numeric_limits<LinSys::GlobalOrdinal>::max();
+  tpetGlobalId_ = fieldManager_->register_field<TpetIDFieldType>(
+    "tpet_global_id", meta_data().get_parts(), &init_val);
 #endif
-  fieldManager_->register_field("nalu_global_id", meta_data().get_parts());
-  naluGlobalId_ =
-    fieldManager_->get_field_ptr<GlobalIdFieldType*>("nalu_global_id");
+  naluGlobalId_ = fieldManager_->register_field<GlobalIdFieldType>(
+    "nalu_global_id", meta_data().get_parts());
 
   // loop over all material props targets and register nodal fields
   std::vector<std::string> targetNames = get_physics_target_names();
@@ -2731,23 +2728,24 @@ Realm::register_nodal_fields(stk::mesh::Part* part)
   }
   // register high level common fields
   // Declare volume/area_vector fields
+  const stk::mesh::PartVector parts(1, part);
   const int numVolStates = does_mesh_move() ? number_of_states() : 1;
-  fieldManager_->register_field("dual_nodal_volume", *part, numVolStates);
-  fieldManager_->register_field("element_volume", *part);
+  fieldManager_->register_field("dual_nodal_volume", parts, numVolStates);
+  fieldManager_->register_field("element_volume", parts);
 
   if (realmUsesEdges_) {
-    fieldManager_->register_field("edge_area_vector", *part);
+    fieldManager_->register_field("edge_area_vector", parts);
   }
 
   // mesh motion/deformation is high level
   if (does_mesh_move()) {
-    fieldManager_->register_field("mesh_displacement", *part);
-    fieldManager_->register_field("current_coordinates", *part);
-    fieldManager_->register_field("mesh_velocity", *part);
-    fieldManager_->register_field("velocity_rtm", *part);
-    fieldManager_->register_field("div_mesh_velocity", *part);
+    fieldManager_->register_field("mesh_displacement", parts);
+    fieldManager_->register_field("current_coordinates", parts);
+    fieldManager_->register_field("mesh_velocity", parts);
+    fieldManager_->register_field("velocity_rtm", parts);
+    fieldManager_->register_field("div_mesh_velocity", parts);
     if (has_mesh_deformation()) {
-      fieldManager_->register_field("div_mesh_velocity", *part);
+      fieldManager_->register_field("div_mesh_velocity", parts);
     }
     augment_restart_variable_list("dual_nodal_volume");
     augment_restart_variable_list("mesh_displacement");
@@ -2755,7 +2753,7 @@ Realm::register_nodal_fields(stk::mesh::Part* part)
     augment_restart_variable_list("mesh_velocity");
   }
 
-  fieldManager_->register_field("iblank", *part);
+  fieldManager_->register_field("iblank", parts);
 }
 
 //--------------------------------------------------------------------------
@@ -3602,7 +3600,7 @@ Realm::set_hypre_global_id()
     meta_data().locally_owned_part() & !get_inactive_selector();
   const auto& bkts = bulkData_->get_buckets(stk::topology::NODE_RANK, s_local);
 
-  size_t num_nodes = 0;
+  int num_nodes = 0;
   int nprocs = bulkData_->parallel_size();
   int iproc = bulkData_->parallel_rank();
   std::vector<int> nodesPerProc(nprocs);

@@ -17,6 +17,8 @@
 #include <stk_mesh/base/Ngp.hpp>
 #include <stk_mesh/base/GetNgpField.hpp>
 #include <ngp_utils/NgpFieldManager.h>
+#include <FieldManager.h>
+#include "master_element/MasterElementRepo.h"
 
 namespace sierra {
 namespace nalu {
@@ -119,10 +121,9 @@ public:
   typedef Kokkos::View<FieldInfoType*, Kokkos::LayoutRight, MemSpace>
     FieldInfoView;
 
+  template <typename T>
   ElemDataRequestsGPU(
-    const nalu_ngp::FieldManager& fieldMgr,
-    const ElemDataRequests& dataReq,
-    unsigned totalFields);
+    const T& fieldMgr, const ElemDataRequests& dataReq, unsigned totalFields);
 
   KOKKOS_FUNCTION ~ElemDataRequestsGPU() {}
 
@@ -191,11 +192,19 @@ private:
   void
   fill_host_data_enums(const ElemDataRequests& dataReq, COORDS_TYPES ctype);
 
-  void fill_host_fields(
-    const ElemDataRequests& dataReq, const nalu_ngp::FieldManager& fieldMgr);
+  template <typename T>
+  void fill_host_fields(const ElemDataRequests& dataReq, const T& fieldMgr);
 
-  void fill_host_coords_fields(
-    const ElemDataRequests& dataReq, const nalu_ngp::FieldManager& fieldMgr);
+  template <typename T, typename U>
+  auto& get_coord_ptr(const T& fieldMgr, const U& iter) const;
+
+  template <typename T>
+  stk::mesh::NgpField<double>&
+  get_field_ptr(const T& fieldMgr, const FieldInfo& finfo) const;
+
+  template <typename T>
+  void
+  fill_host_coords_fields(const ElemDataRequests& dataReq, const T& fieldMgr);
 
   DataEnumView dataEnums[MAX_COORDS_TYPES];
   DataEnumView::HostMirror hostDataEnums[MAX_COORDS_TYPES];
@@ -215,6 +224,106 @@ private:
   MasterElement* meFEM_;
 };
 
+template <typename T>
+inline ElemDataRequestsGPU::ElemDataRequestsGPU(
+  const T& fieldMgr, const ElemDataRequests& dataReq, unsigned totalFields)
+  : dataEnums(),
+    hostDataEnums(),
+    coordsFields_(),
+    hostCoordsFields_(),
+    coordsFieldsTypes_(),
+    hostCoordsFieldsTypes_(),
+    totalNumFields(totalFields),
+    fields(),
+    hostFields(),
+    meFC_(MasterElementRepo::get_surface_dev_ptr_from_host_ptr(
+      dataReq.get_cvfem_face_me())),
+    meSCS_(MasterElementRepo::get_surface_dev_ptr_from_host_ptr(
+      dataReq.get_cvfem_surface_me())),
+    meSCV_(MasterElementRepo::get_volume_dev_ptr_from_host_ptr(
+      dataReq.get_cvfem_volume_me())),
+    meFEM_(MasterElementRepo::get_volume_dev_ptr_from_host_ptr(
+      dataReq.get_fem_volume_me()))
+{
+  fill_host_data_enums(dataReq, CURRENT_COORDINATES);
+  fill_host_data_enums(dataReq, MODEL_COORDINATES);
+
+  fill_host_fields(dataReq, fieldMgr);
+  fill_host_coords_fields(dataReq, fieldMgr);
+
+  copy_to_device();
+}
+
+template <typename T, typename U>
+auto&
+ElemDataRequestsGPU::get_coord_ptr(const T& fieldMgr, const U& iter) const
+{
+  if constexpr (std::is_same_v<T, nalu::FieldManager>)
+    return fieldMgr.get_ngp_field_ptr(iter.second->name());
+  else
+    return fieldMgr.template get_field<double>(
+      iter.second->mesh_meta_data_ordinal());
+}
+
+template <typename T>
+void
+ElemDataRequestsGPU::fill_host_coords_fields(
+  const ElemDataRequests& dataReq, const T& fieldMgr)
+{
+#if defined(KOKKOS_ENABLE_GPU)
+  coordsFields_ = FieldView(
+    Kokkos::ViewAllocateWithoutInitializing("CoordsFields"),
+    dataReq.get_coordinates_map().size());
+#else
+  coordsFields_ =
+    FieldView("CoordsFields", dataReq.get_coordinates_map().size());
+#endif
+  coordsFieldsTypes_ =
+    CoordsTypesView("CoordsFieldsTypes", dataReq.get_coordinates_map().size());
+
+  hostCoordsFields_ = Kokkos::create_mirror_view(coordsFields_);
+  hostCoordsFieldsTypes_ = Kokkos::create_mirror_view(coordsFieldsTypes_);
+
+  unsigned i = 0;
+  for (auto iter : dataReq.get_coordinates_map()) {
+    hostCoordsFields_(i) = CoordFieldInfo(get_coord_ptr(fieldMgr, iter));
+    hostCoordsFieldsTypes_(i) = iter.first;
+    ++i;
+  }
+}
+
+template <typename T>
+stk::mesh::NgpField<double>&
+ElemDataRequestsGPU::get_field_ptr(
+  const T& fieldMgr, const FieldInfo& finfo) const
+{
+  if constexpr (std::is_same_v<T, nalu::FieldManager>)
+    return fieldMgr.get_ngp_field_ptr(finfo.field->name());
+  else
+    return fieldMgr.template get_field<double>(
+      finfo.field->mesh_meta_data_ordinal());
+}
+
+template <typename T>
+void
+ElemDataRequestsGPU::fill_host_fields(
+  const ElemDataRequests& dataReq, const T& fieldMgr)
+{
+#if defined(KOKKOS_ENABLE_GPU)
+  fields = FieldInfoView(
+    Kokkos::ViewAllocateWithoutInitializing("Fields"),
+    dataReq.get_fields().size());
+#else
+  fields = FieldInfoView("Fields", dataReq.get_fields().size());
+#endif
+  hostFields = Kokkos::create_mirror_view(fields);
+  unsigned i = 0;
+  for (const FieldInfo& finfo : dataReq.get_fields()) {
+    stk::mesh::NgpField<double>& fld_ptr = get_field_ptr(fieldMgr, finfo);
+    hostFields(i++) =
+      FieldInfoType(fld_ptr, finfo.scalarsDim1, finfo.scalarsDim2);
+  }
+}
 } // namespace nalu
 } // namespace sierra
 

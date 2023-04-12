@@ -250,7 +250,7 @@ VolumeOfFluidEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 void
 VolumeOfFluidEquationSystem::register_inflow_bc(
   stk::mesh::Part* part,
-  const stk::topology& partTopo,
+  const stk::topology& /* partTopo */,
   const InflowBoundaryConditionData& inflowBCData)
 {
   // algorithm type
@@ -327,7 +327,7 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
 void
 VolumeOfFluidEquationSystem::register_open_bc(
   stk::mesh::Part* part,
-  const stk::topology& partTopo,
+  const stk::topology& /* partTopo */,
   const OpenBoundaryConditionData&)
 {
   const AlgorithmType algType = OPEN;
@@ -391,9 +391,9 @@ VolumeOfFluidEquationSystem::register_symmetry_bc(
 //--------------------------------------------------------------------------
 void
 VolumeOfFluidEquationSystem::register_abltop_bc(
-  stk::mesh::Part* part,
-  const stk::topology& partTopo,
-  const ABLTopBoundaryConditionData& abltopBCData)
+  stk::mesh::Part* /* part */,
+  const stk::topology& /* partTopo */,
+  const ABLTopBoundaryConditionData& /* abltopBCData */)
 {
   // Nothing to do
 }
@@ -403,7 +403,7 @@ VolumeOfFluidEquationSystem::register_abltop_bc(
 //--------------------------------------------------------------------------
 void
 VolumeOfFluidEquationSystem::register_non_conformal_bc(
-  stk::mesh::Part* part, const stk::topology& theTopo)
+  stk::mesh::Part* /* part */, const stk::topology& /* theTopo */)
 {
   // Nothing to do
 }
@@ -460,7 +460,7 @@ void
 VolumeOfFluidEquationSystem::register_initial_condition_fcn(
   stk::mesh::Part* part,
   const std::map<std::string, std::string>& theNames,
-  const std::map<std::string, std::vector<double>>& theParams)
+  const std::map<std::string, std::vector<double>>& /* theParams */)
 {
   // iterate map and check for name
   const std::string dofName = "volume_of_fluid";
@@ -511,7 +511,7 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
 //--------------------------------------------------------------------------
 void
 VolumeOfFluidEquationSystem::manage_projected_nodal_gradient(
-  EquationSystems& eqSystems)
+  EquationSystems& /* eqSystems */)
 {
   throw std::runtime_error("VolumeOfFluidEquationSystem::manage_projected_"
                            "nodal_gradient: Not supported");
