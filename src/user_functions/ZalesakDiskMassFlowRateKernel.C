@@ -39,7 +39,6 @@ ZalesakDiskMassFlowRateEdgeAlg::ZalesakDiskMassFlowRateEdgeAlg(
 void
 ZalesakDiskMassFlowRateEdgeAlg::execute()
 {
-  const double eps = 1.0e-16;
   const int ndim = realm_.meta_data().spatial_dimension();
 
   // STK stk::mesh::NgpField instances for capture by lambda
@@ -49,11 +48,10 @@ ZalesakDiskMassFlowRateEdgeAlg::execute()
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
 
   run_algorithm(
-    realm_.bulk_data(),
-    KOKKOS_LAMBDA(
-      ShmemDataType & smdata, const stk::mesh::FastMeshIndex& edge,
-      const stk::mesh::FastMeshIndex& nodeL,
-      const stk::mesh::FastMeshIndex& nodeR) {
+    realm_.bulk_data(), KOKKOS_LAMBDA(
+                          ShmemDataType&, const stk::mesh::FastMeshIndex& edge,
+                          const stk::mesh::FastMeshIndex& nodeL,
+                          const stk::mesh::FastMeshIndex& nodeR) {
       // Scratch work array for edgeAreaVector
       NALU_ALIGNED DblType av[NDimMax_];
       // Populate area vector work array

@@ -209,9 +209,9 @@ TEST(meshMotion, NGP_initialize)
 
   // get fields to be tested
   auto* currCoords =
-    realm.fieldManager_->get_field_ptr<VectorFieldType*>("current_coordinates");
+    realm.fieldManager_->get_field_ptr<VectorFieldType>("current_coordinates");
   auto* meshVelocity =
-    realm.fieldManager_->get_field_ptr<VectorFieldType*>("mesh_velocity");
+    realm.fieldManager_->get_field_ptr<VectorFieldType>("mesh_velocity");
 
   // sync coordinates to host
   currCoords->sync_to_host();

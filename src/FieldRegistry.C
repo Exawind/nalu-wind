@@ -21,15 +21,19 @@ const std::map<std::string, FieldDefTypes>&
 Registry()
 {
   // clang-format off
-  FieldDefVector  MultiStateNodalVector  = {stk::topology::NODE_RANK, NUM_STATES, NUM_DIM};
+  FieldDefGeneric SingleStateElemGeneric = {stk::topology::ELEM_RANK};
+  FieldDefGeneric SingleStateEdgeGeneric = {stk::topology::EDGE_RANK};
+  FieldDefGeneric SingleStateNodeGeneric = {stk::topology::NODE_RANK};
+
+  FieldDefScalar  SingleStateNodalScalar = {stk::topology::NODE_RANK};
+  FieldDefScalar  SingleStateElemScalar  = {stk::topology::ELEM_RANK};
   FieldDefScalar  MultiStateNodalScalar  = {stk::topology::NODE_RANK, NUM_STATES};
 
   FieldDefVector  SingleStateNodalVector = {stk::topology::NODE_RANK, 1, NUM_DIM};
-  FieldDefTensor  SingleStateNodalTensor = {stk::topology::NODE_RANK, 1, NUM_DIM*NUM_DIM};
   FieldDefVector  SingleStateEdgeVector  = {stk::topology::EDGE_RANK, 1, NUM_DIM};
-  FieldDefScalar  SingleStateNodalScalar = {stk::topology::NODE_RANK};
-  FieldDefScalar  SingleStateElemScalar  = {stk::topology::ELEM_RANK};
-  FieldDefGeneric SingleStateEdgeGeneric = {stk::topology::EDGE_RANK};
+  FieldDefVector  MultiStateNodalVector  = {stk::topology::NODE_RANK, NUM_STATES, NUM_DIM};
+
+  FieldDefTensor  SingleStateNodalTensor = {stk::topology::NODE_RANK, 1, NUM_DIM*NUM_DIM};
 
   FieldDefTpetraId  TpetraId             = {stk::topology::NODE_RANK};
   FieldDefGlobalId  GlobalId             = {stk::topology::NODE_RANK};
@@ -38,25 +42,32 @@ Registry()
 
   static const std::map<std::string, FieldDefTypes> registry = {
     {"average_dudx" ,             SingleStateNodalTensor},
+    {"coordinates",               SingleStateNodalVector},
     {"current_coordinates",       SingleStateNodalVector},
     {"density",                   SingleStateNodalScalar},
     {"dhdx",                      SingleStateNodalVector},
     {"div_mesh_velocity",         SingleStateNodalScalar},
     {"dkdx",                      SingleStateNodalVector},
+    {"dpdx",                      SingleStateNodalVector},
     {"dual_nodal_volume",         SingleStateNodalScalar},
     {"dudx",                      SingleStateNodalTensor},
     {"dwdx",                      SingleStateNodalVector},
     {"edge_area_vector",          SingleStateEdgeVector},
     {"effective_viscosity" ,      SingleStateNodalScalar},
     {"element_volume",            SingleStateElemScalar},
+    {"exposed_area_vector",       SingleStateEdgeGeneric},
+    {"Gju",                       SingleStateNodeGeneric},
     {"hypre_global_id",           HypreId},
     {"iblank",                    NodalScalarInt},
+    {"mass_flow_rate_scs",        SingleStateElemGeneric},
     {"mesh_displacement",         MultiStateNodalVector},
     {"mesh_velocity",             SingleStateNodalVector},
     {"minimum_distance_to_wall",  SingleStateNodalScalar},
+    {"momentum_diag",             SingleStateNodalScalar},
     {"nalu_global_id",            GlobalId},
     {"open_mass_flow_rate" ,      SingleStateEdgeGeneric},
     {"open_tke_bc",               SingleStateNodalScalar},
+    {"pressure",                  SingleStateNodalScalar},
     {"rans_time_scale" ,          SingleStateNodalScalar},
     {"specific_dissipation_rate", SingleStateNodalScalar},
     {"specific_heat" ,            SingleStateNodalScalar},

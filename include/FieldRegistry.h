@@ -82,7 +82,7 @@ public:
 
 private:
   FieldRegistry();
-  // Inorder to accomodate and embed the state and dimenstion information we
+  // In order to accomodate and embed the state and dimenstion information we
   // ended up creating four separate databases that are templated on the number
   // of states required by the time integration scheme This was done to preserve
   // the singelton/refernce lookup only behavior of the FieldRegistry
