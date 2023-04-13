@@ -10,7 +10,7 @@
 #include <Realm.h>
 #include <Simulation.h>
 #include <NaluEnv.h>
-#include <stk_mesh/base/GetNgpField.hpp>l
+#include <stk_mesh/base/GetNgpField.hpp>
 
 #include <AuxFunction.h>
 #include <AuxFunctionAlgorithm.h>
