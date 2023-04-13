@@ -10,7 +10,7 @@
 #include <Realm.h>
 #include <Simulation.h>
 #include <NaluEnv.h>
-#include <stk_mesh/base/GetNgpField.hpp>
+#include <stk_mesh/base/GetNgpField.hpp>l
 
 #include <AuxFunction.h>
 #include <AuxFunctionAlgorithm.h>
@@ -3477,7 +3477,7 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
         NaluEnv::self().naluOutputP0()
           << "Aero models - Update displacements and set current coordinates"
           << std::endl;
-        aeroModels_->update_displacements(get_current_time());
+        aeroModels_->update_displacements(restartTime);
 
         auto part_vec = aeroModels_->fsi_parts();
         for (auto* target_part : part_vec) {
