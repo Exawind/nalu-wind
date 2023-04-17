@@ -65,7 +65,8 @@ MeshVelocityEdgeAlg<AlgTraits>::MeshVelocityEdgeAlg(
   elemData_.add_gathered_nodal_field(meshDispN_, AlgTraits::nDim_);
 
   elemData_.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
-  auto* hostMeSCS = MasterElementRepo::get_surface_master_element_on_host(AlgTraits::topo_);
+  auto* hostMeSCS =
+    MasterElementRepo::get_surface_master_element_on_host(AlgTraits::topo_);
   hostMeSCS->general_shape_fcn(
     19, &isoParCoords_[0], isoCoordsShapeFcnHostView_.data());
   Kokkos::deep_copy(isoCoordsShapeFcnDeviceView_, isoCoordsShapeFcnHostView_);
