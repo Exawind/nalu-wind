@@ -20,6 +20,8 @@ namespace aero {
 //! WienerMilenkovic parameter
 struct SixDOF
 {
+  using size_type = int;
+
   SixDOF() : position_(vs::Vector::zero()), orientation_(vs::Vector::zero()) {}
 
   // Kind of dangerous constructor
@@ -32,6 +34,18 @@ struct SixDOF
   SixDOF(vs::Vector transDisp, vs::Vector rotDisp)
     : position_(transDisp), orientation_(rotDisp)
   {
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION double& operator[](size_type pos)
+  {
+    return pos < 3 ? position_[pos]
+                   : orientation_[pos - 3]; // todo: debug-mode bounds check?
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION const double& operator[](size_type pos) const
+  {
+    return pos < 3 ? position_[pos]
+                   : orientation_[pos - 3]; // todo: debug-mode bounds check?
   }
 
   vs::Vector position_;
