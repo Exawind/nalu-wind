@@ -73,9 +73,9 @@ public:
 
     for (size_t pt = 0; pt < numPoints; ++pt) {
       for (int d = 0; d < 6; ++d) {
-        refPos[pt * 6 + d] = m_refPos(pt)[d];
-        def[pt * 6 + d] = m_def(pt)[d];
-        load[pt * 6 + d] = m_load(pt)[d];
+        refPos[pt * 6 + d] = m_refPos(pt).position_[d];
+        def[pt * 6 + d] = m_def(pt).position_[d];
+        load[pt * 6 + d] = m_load(pt).position_[d];
       }
     }
   }
