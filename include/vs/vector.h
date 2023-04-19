@@ -115,8 +115,8 @@ struct VectorT
 
   KOKKOS_FORCEINLINE_FUNCTION VectorT<T> operator/=(const T val);
 
-  KOKKOS_FORCEINLINE_FUNCTION T& operator[](size_type pos) { return vv[pos]; }
-  KOKKOS_FORCEINLINE_FUNCTION const T& operator[](size_type pos) const
+  KOKKOS_FORCEINLINE_FUNCTION T& operator[](size_type pos) & { return vv[pos]; }
+  KOKKOS_FORCEINLINE_FUNCTION const T& operator[](size_type pos) const&
   {
     return vv[pos];
   }
