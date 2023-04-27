@@ -165,7 +165,7 @@ PromotedElementIO::put_data_on_node_block(
   const stk::mesh::BucketVector& buckets) const
 {
   ThrowRequire(field.type_is<T>());
-  int fieldLength = field.max_size(stk::topology::NODE_RANK);
+  int fieldLength = field.max_size();
   std::vector<T> flatArray(count_entities(buckets) * fieldLength);
 
   size_t index = 0;
@@ -345,7 +345,7 @@ std::string
 PromotedElementIO::storage_name(const stk::mesh::FieldBase& field) const
 {
   std::string storageType;
-  switch (field.max_size(stk::topology::NODE_RANK)) {
+  switch (field.max_size()) {
   case 1: {
     storageType = "scalar";
     break;

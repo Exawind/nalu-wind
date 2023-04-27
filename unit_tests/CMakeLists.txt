@@ -37,7 +37,10 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSimdBasic.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSingleHexPromotion.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSpinnerLidarPattern.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStringTimeCoordFunction.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStringTimeCoordTemperatureAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSuppAlgDataSharing.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTabulatedTemperatureAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestUtils.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestVSpace.C
 )

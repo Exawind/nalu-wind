@@ -83,7 +83,8 @@
 #include <user_functions/BoussinesqNonIsoTemperatureAuxFunction.h>
 #include <user_functions/BoussinesqNonIsoEnthalpySrcNodeSuppAlg.h>
 
-#include <user_functions/CappingInversionTemperatureAuxFunction.h>
+#include <user_functions/TabulatedTemperatureAuxFunction.h>
+#include <user_functions/StringTimeCoordTemperatureAuxFunction.h>
 
 // overset
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
@@ -635,7 +636,7 @@ EnthalpyEquationSystem::register_open_bc(
     auto& activeKernels = elemSolverAlg->activeKernels_;
 
     build_face_topo_kernel_automatic<ScalarOpenEdgeKernel>(
-      partTopo, *this, activeKernels, "turbulent_ke_open", realm_.meta_data(),
+      partTopo, *this, activeKernels, "temperature_open", realm_.meta_data(),
       *realm_.solutionOptions_, enthalpy_, enthalpyBc, dataPreReqs);
   } else {
     throw std::runtime_error(
@@ -1042,11 +1043,12 @@ EnthalpyEquationSystem::register_initial_condition_fcn(
     } else if (fcnName == "BoussinesqNonIso") {
       theAuxFunc = new BoussinesqNonIsoTemperatureAuxFunction();
     } else if (fcnName == "capping_inversion") {
-      theAuxFunc = new CappingInversionTemperatureAuxFunction();
+      theAuxFunc = new TabulatedTemperatureAuxFunction(
+        {0, 650.0, 750.0, 1000.0}, {300.0, 300.0, 308.0, 308.75});
     } else {
-      throw std::runtime_error(
-        "EnthalpyEquationSystem::register_initial_condition_fcn: limited user "
-        "functions supported");
+      throw std::runtime_error("EnthalpyEquationSystem::register_initial_"
+                               "condition_fcn: limited user "
+                               "functions supported");
     }
 
     // create the algorithm
@@ -1056,6 +1058,17 @@ EnthalpyEquationSystem::register_initial_condition_fcn(
     // push to ic
     realm_.initCondAlg_.push_back(auxAlg);
   }
+}
+
+void
+EnthalpyEquationSystem::register_initial_condition_string_function(
+  stk::mesh::Part* part, const std::map<std::string, std::string>& fcns)
+{
+  auto func = std::make_unique<StringTimeCoordTemperatureAuxFunction>(
+    fcns.at("temperature"));
+  auto auxAlg = std::make_unique<AuxFunctionAlgorithm>(
+    realm_, part, temperature_, func.release(), stk::topology::NODE_RANK);
+  realm_.initCondAlg_.push_back(auxAlg.release());
 }
 
 //--------------------------------------------------------------------------
@@ -1406,15 +1419,19 @@ EnthalpyEquationSystem::temperature_bc_setup(
     } else if (fcnName == "BoussinesqNonIso") {
       theAuxFunc = new BoussinesqNonIsoTemperatureAuxFunction();
     } else if (fcnName == "capping_inversion") {
-      theAuxFunc = new CappingInversionTemperatureAuxFunction();
+      theAuxFunc = new TabulatedTemperatureAuxFunction(
+        {0, 650.0, 750.0, 1000.0}, {300.0, 300.0, 308.0, 308.75});
     } else {
       throw std::runtime_error("EnthalpyEquationSystem::temperature_bc_setup; "
                                "limited user functions supported");
     }
+  } else if (STRING_FUNCTION_UD == theDataType) {
+    theAuxFunc = new StringTimeCoordTemperatureAuxFunction(
+      userData.functions.at("temperature"));
   } else {
     throw std::runtime_error(
-      "EnthalpyEquationSystem::temperature_bc_setup: only function and "
-      "constants supported (and none specified)");
+      "EnthalpyEquationSystem::temperature_bc_setup: only function, "
+      "constants, and string functions supported (and none specified)");
   }
 
   AuxFunctionAlgorithm* auxTempAlg = new AuxFunctionAlgorithm(

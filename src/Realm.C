@@ -1323,6 +1323,15 @@ Realm::setup_initial_conditions()
         equationSystems_.register_initial_condition_fcn(targetPart, fcnIC);
       } break;
 
+      case STRING_FUNCTION_UD: {
+        const StringFunctionInitialConditionData* fcnIC =
+          dynamic_cast<const StringFunctionInitialConditionData*>(
+            initCond.get());
+        assert(fcnIC);
+        equationSystems_.register_initial_condition_string_function(
+          targetPart, fcnIC->functions_);
+      } break;
+
       case USER_SUB_UD:
         throw std::runtime_error(
           "Realm::setup_initial_conditions: USER_SUB not supported: ");
@@ -2211,7 +2220,7 @@ Realm::create_restart_mesh()
     }
 
     // set max size for restart data base
-    ioBroker_->get_output_io_region(restartFileIndex_)
+    ioBroker_->get_output_ioss_region(restartFileIndex_)
       ->get_database()
       ->set_cycle_count(outputInfo_->restartMaxDataBaseStepSize_);
   }
@@ -3707,7 +3716,7 @@ Realm::check_job(bool get_node_count)
   // set number of nodes, check job run size
   if (get_node_count) {
     size_t localNodeCount =
-      ioBroker_->get_input_io_region()->get_property("node_count").get_int();
+      ioBroker_->get_input_ioss_region()->get_property("node_count").get_int();
     stk::all_reduce_sum(
       NaluEnv::self().parallel_comm(), &localNodeCount, &nodeCount_, 1);
     NaluEnv::self().naluOutputP0()
@@ -3791,10 +3800,10 @@ Realm::check_job(bool get_node_count)
     unsigned nfields = fields.size();
     for (unsigned ifld = 0; ifld < nfields; ++ifld) {
       stk::mesh::FieldBase* field = fields[ifld];
-      unsigned fszNode = field->max_size(stk::topology::NODE_RANK);
-      unsigned fszEdge = field->max_size(stk::topology::EDGE_RANK);
-      unsigned fszFace = field->max_size(stk::topology::FACE_RANK);
-      unsigned fszElem = field->max_size(stk::topology::ELEM_RANK);
+      unsigned fszNode = field->max_size();
+      unsigned fszEdge = field->max_size();
+      unsigned fszFace = field->max_size();
+      unsigned fszElem = field->max_size();
 
       memoryEstimateFields += (nodeCount * fszNode + edgeCount * fszEdge +
                                faceCount * fszFace + elemCount * fszElem) *
@@ -5126,7 +5135,8 @@ std::vector<std::string>
 Realm::handle_all_element_part_alias(
   const std::vector<std::string>& names) const
 {
-  if (names.size() == 1u && names.front() == allElementPartAlias) {
+  STK_ThrowRequire(!names.empty());
+  if (names.size() == 1u && names.at(0) == allElementPartAlias) {
     std::vector<std::string> new_names;
     for (const auto* part : meta_data().get_mesh_parts()) {
       ThrowRequire(part);

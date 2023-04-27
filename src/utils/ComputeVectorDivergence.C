@@ -303,7 +303,7 @@ void
 compute_edge_scalar_divergence(
   stk::mesh::BulkData& bulk,
   stk::mesh::PartVector& partVec,
-  stk::mesh::PartVector& bndyPartVec,
+  stk::mesh::PartVector& /*bndyPartVec*/,
   GenericFieldType* faceField,
   stk::mesh::FieldBase* scalarField)
 {

@@ -36,6 +36,12 @@ InitialConditionCreator::load_single(const YAML::Node& node)
     auto* fcnIC = dynamic_cast<UserFunctionInitialConditionData*>(ic.get());
     node >> *fcnIC;
     return ic;
+  } else if (node["string_function"]) {
+    NaluEnv::self().naluOutputP0()
+      << "Initial Is Type string-function " << std::endl;
+    auto string_func = std::make_unique<StringFunctionInitialConditionData>();
+    node >> *string_func;
+    return string_func;
   } else
     throw std::runtime_error(
       "parser error InitialConditions::load; unsupported IC type");

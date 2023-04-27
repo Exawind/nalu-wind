@@ -209,7 +209,7 @@ put_data_on_node_block(
   const stk::mesh::FieldBase& field)
 {
   ThrowRequire(field.type_is<T>());
-  const int max_size = field.max_size(stk::topology::NODE_RANK);
+  const int max_size = field.max_size();
   std::vector<T> flat_array(ids.size() * max_size, 0);
   for (decltype(ids.size()) k = 0; k < ids.size(); ++k) {
     const auto node = bulk.get_entity(stk::topology::NODE_RANK, ids[k]);
@@ -312,7 +312,7 @@ SideWriter::add_fields(std::vector<const stk::mesh::FieldBase*> fields)
     for (const auto* field : fields_) {
       ThrowRequireMsg(field->type_is<double>(), "only double fields supported");
       const size_t nb_size = block->get_property("entity_count").get_int();
-      switch (field->max_size(stk::topology::NODE_RANK)) {
+      switch (field->max_size()) {
       case 1: {
         Ioss::Field ioss_field(
           field->name(), Ioss::Field::DOUBLE, "scalar", Ioss::Field::TRANSIENT,
