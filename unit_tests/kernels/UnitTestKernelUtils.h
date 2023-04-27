@@ -180,22 +180,6 @@ void calc_open_mass_flow_rate(
   const GenericFieldType& exposedAreaVec,
   const GenericFieldType& massFlowRate);
 
-void calc_projected_nodal_gradient(
-  stk::mesh::BulkData& bulk,
-  const stk::topology& topo,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& dualNodalVolume,
-  const ScalarFieldType& scalarField,
-  VectorFieldType& vectorField);
-
-void calc_projected_nodal_gradient(
-  stk::mesh::BulkData& bulk,
-  const stk::topology& topo,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& dualNodalVolume,
-  const VectorFieldType& vectorField,
-  GenericFieldType& tensorField);
-
 void expect_all_near(
   const Kokkos::View<double*>& calcValue,
   const double* exactValue,

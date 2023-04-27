@@ -39,20 +39,28 @@ class TestSuppAlg : public SuppAlg
 {
 public:
   TestSuppAlg(
+    const stk::mesh::PartVector& parts,
     sierra::nalu::ElemDataRequests& dataNeeded,
-    const ScalarFieldType* ndScalarField,
-    const VectorFieldType* ndVectorField,
-    const TensorFieldType* ndTensorField,
-    const ScalarFieldType* elScalarField,
-    const VectorFieldType* elVectorField,
-    const TensorFieldType* elTensorField)
-    : nodalScalarField(ndScalarField),
-      nodalVectorField(ndVectorField),
-      nodalTensorField(ndTensorField),
-      elemScalarField(elScalarField),
-      elemVectorField(elVectorField),
-      elemTensorField(elTensorField)
+    sierra::nalu::FieldManager& fldMgr)
+    : nodalScalarField(nullptr),
+      nodalVectorField(nullptr),
+      nodalTensorField(nullptr),
+      elemScalarField(nullptr),
+      elemVectorField(nullptr),
+      elemTensorField(nullptr)
   {
+    nodalScalarField =
+      fldMgr.register_field<ScalarFieldType>("nodalScalarField", parts);
+    nodalVectorField =
+      fldMgr.register_generic_field("nodalGenericField", parts, 0, 4);
+    nodalTensorField =
+      fldMgr.register_field<TensorFieldType>("nodalTensorField", parts);
+    elemScalarField =
+      fldMgr.register_field<ScalarFieldType>("elemScalarField", parts);
+    elemVectorField =
+      fldMgr.register_generic_field("elemVectorField", parts, 0, 8);
+    elemTensorField =
+      fldMgr.register_generic_field("elemTensorField", parts, 0, 4);
     // here are the element-data pre-requisites we want computed before
     // our elem_execute method is called.
     dataNeeded.add_gathered_nodal_field(*nodalScalarField, 1);
@@ -99,11 +107,11 @@ public:
 
 private:
   const ScalarFieldType* nodalScalarField;
-  const VectorFieldType* nodalVectorField;
+  const GenericFieldType* nodalVectorField;
   const TensorFieldType* nodalTensorField;
   const ScalarFieldType* elemScalarField;
-  const VectorFieldType* elemVectorField;
-  const TensorFieldType* elemTensorField;
+  const GenericFieldType* elemVectorField;
+  const GenericFieldType* elemTensorField;
 };
 
 //=========== Test class that mimics an alg with supplemental algs ========
@@ -111,9 +119,18 @@ private:
 class TestAlgorithm
 {
 public:
-  TestAlgorithm(stk::mesh::BulkData& bulk)
-    : suppAlgs_(), dataNeededByKernels_(bulk.mesh_meta_data()), bulkData_(bulk)
+  TestAlgorithm(
+    sierra::nalu::FieldManager& fldManager, stk::mesh::BulkData& bulk)
+    : suppAlgs_(),
+      dataNeededByKernels_(bulk.mesh_meta_data()),
+      bulkData_(bulk),
+      fieldManager(fldManager)
   {
+    // In this unit-test we know we're working on a hex8 mesh. In real
+    // algorithms, a topology would be available.
+    dataNeededByKernels_.add_cvfem_surface_me(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        stk::topology::HEX_8));
   }
 
   void execute()
@@ -123,17 +140,9 @@ public:
     const stk::mesh::BucketVector& elemBuckets = bulkData_.get_buckets(
       stk::topology::ELEM_RANK, meta.locally_owned_part());
 
-    // In this unit-test we know we're working on a hex8 mesh. In real
-    // algorithms, a topology would be available.
-    dataNeededByKernels_.add_cvfem_surface_me(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
-        stk::topology::HEX_8));
-
     stk::mesh::NgpMesh ngpMesh(bulkData_);
-    sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulkData_);
-
     sierra::nalu::ElemDataRequestsGPU dataNeededNGP(
-      fieldMgr, dataNeededByKernels_, meta.get_fields().size());
+      fieldManager, dataNeededByKernels_);
     const int bytes_per_team = 0;
     const int bytes_per_thread =
       sierra::nalu::get_num_bytes_pre_req_data<DoubleType>(
@@ -169,6 +178,7 @@ public:
 
   std::vector<SuppAlg*> suppAlgs_;
   sierra::nalu::ElemDataRequests dataNeededByKernels_;
+  sierra::nalu::FieldManager& fieldManager;
 
 private:
   stk::mesh::BulkData& bulkData_;
@@ -176,42 +186,19 @@ private:
 
 TEST_F(Hex8Mesh, supp_alg_data_sharing)
 {
-  ScalarFieldType& nodalScalarField = meta->declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "nodalScalarField");
-  VectorFieldType& nodalVectorField = meta->declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "nodalVectorField");
-  TensorFieldType& nodalTensorField = meta->declare_field<TensorFieldType>(
-    stk::topology::NODE_RANK, "nodalTensorField");
-  ScalarFieldType& elemScalarField = meta->declare_field<ScalarFieldType>(
-    stk::topology::ELEM_RANK, "elemScalarField");
-  VectorFieldType& elemVectorField = meta->declare_field<VectorFieldType>(
-    stk::topology::ELEM_RANK, "elemVectorField");
-  TensorFieldType& elemTensorField = meta->declare_field<TensorFieldType>(
-    stk::topology::ELEM_RANK, "elemTensorField");
-
   const stk::mesh::Part& wholemesh = meta->universal_part();
-
-  stk::mesh::put_field_on_mesh(nodalScalarField, wholemesh, nullptr);
-  stk::mesh::put_field_on_mesh(nodalVectorField, wholemesh, 4, nullptr);
-  stk::mesh::put_field_on_mesh(nodalTensorField, wholemesh, 3, 3, nullptr);
-
-  stk::mesh::put_field_on_mesh(elemScalarField, wholemesh, nullptr);
-  stk::mesh::put_field_on_mesh(elemVectorField, wholemesh, 8, nullptr);
-  stk::mesh::put_field_on_mesh(elemTensorField, wholemesh, 2, 2, nullptr);
-
-  fill_mesh("generated:10x10x10");
-
-  TestAlgorithm testAlgorithm(*bulk);
+  const stk::mesh::PartVector parts(1, &meta->universal_part());
+  sierra::nalu::FieldManager fieldManager(bulk->mesh_meta_data(), 2);
+  TestAlgorithm testAlgorithm(fieldManager, *bulk);
 
   // TestSuppAlg constructor says which data it needs, by inserting
   // things into the 'dataNeededByKernels_' container.
-
-  SuppAlg* suppAlg = new TestSuppAlg(
-    testAlgorithm.dataNeededByKernels_, &nodalScalarField, &nodalVectorField,
-    &nodalTensorField, &elemScalarField, &elemVectorField, &elemTensorField);
+  SuppAlg* suppAlg =
+    new TestSuppAlg(parts, testAlgorithm.dataNeededByKernels_, fieldManager);
 
   testAlgorithm.suppAlgs_.push_back(suppAlg);
 
+  fill_mesh("generated:10x10x10");
   testAlgorithm.execute();
 
   delete suppAlg;

@@ -56,8 +56,7 @@ public:
 
     const stk::mesh::NgpMesh& ngpMesh = realm_.ngp_mesh();
     const nalu_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
-    ElemDataRequestsGPU dataNeededNGP(
-      fieldMgr, dataNeededByKernels_, meta_data.get_fields().size());
+    ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeededByKernels_);
 
     const auto reqType = (entityRank_ == stk::topology::ELEM_RANK)
                            ? ElemReqType::ELEM

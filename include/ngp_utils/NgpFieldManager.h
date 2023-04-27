@@ -42,6 +42,8 @@ public:
   FieldManager(const FieldManager& rhs) = delete;
   FieldManager(FieldManager&& rhs) = delete;
 
+  unsigned size() const { return m_meta.get_fields().size(); }
+
   template <typename T>
   stk::mesh::NgpField<T>& get_field(unsigned fieldOrdinal) const
   {

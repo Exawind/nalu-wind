@@ -14,6 +14,7 @@
 #include <stk_mesh/base/FieldState.hpp>
 #include "stk_mesh/base/GetNgpField.hpp"
 #include <string>
+#include <type_traits>
 
 namespace stk {
 namespace mesh {
@@ -73,6 +74,7 @@ public:
   /// Check to see if the field has been registered.
   bool field_exists(const std::string& name);
 
+  unsigned size() const { return meta_.get_fields().size(); }
   /// Register a Generic field.
   /// A Generic field is of type: SingleStateElemGeneric,
   /// SingleStateEdgeGeneric, SingleStateNodeGeneric,... For a generic field the

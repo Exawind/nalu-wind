@@ -99,32 +99,21 @@ protected:
     fieldManager =
       std::make_shared<sierra::nalu::FieldManager>(*meta, numStates);
 
-    elemCentroidField = &meta->declare_field<VectorFieldType>(
-      stk::topology::ELEM_RANK, "elemCentroid");
-    nodalPressureField = &meta->declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "nodalPressure");
-    discreteLaplacianOfPressure = &meta->declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "discreteLaplacian");
-    scalarQ = &meta->declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "scalarQ");
-    diffFluxCoeff = &meta->declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "diffFluxCoeff");
-    idField =
-      &meta->declare_field<IdFieldType>(stk::topology::NODE_RANK, "idField");
-
-    stk::mesh::put_field_on_mesh(
-      *elemCentroidField, meta->universal_part(), spatialDimension,
-      (double*)nullptr);
     double one = 1.0;
     double zero = 0.0;
-    stk::mesh::put_field_on_mesh(
-      *nodalPressureField, meta->universal_part(), 1, &one);
-    stk::mesh::put_field_on_mesh(
-      *discreteLaplacianOfPressure, meta->universal_part(), 1, &zero);
-    stk::mesh::put_field_on_mesh(*scalarQ, meta->universal_part(), 1, &zero);
-    stk::mesh::put_field_on_mesh(
-      *diffFluxCoeff, meta->universal_part(), 1, &zero);
-    stk::mesh::put_field_on_mesh(*idField, meta->universal_part(), 1, nullptr);
+    const stk::mesh::PartVector parts(1, &meta->universal_part());
+    elemCentroidField = fieldManager->register_field<VectorFieldType>(
+      "elemCentroid", parts, &zero);
+    nodalPressureField = fieldManager->register_field<ScalarFieldType>(
+      "nodalPressure", parts, &one);
+    discreteLaplacianOfPressure = fieldManager->register_field<ScalarFieldType>(
+      "discreteLaplacian", parts, &zero);
+    scalarQ =
+      fieldManager->register_field<ScalarFieldType>("scalarQ", parts, &zero);
+    diffFluxCoeff = fieldManager->register_field<ScalarFieldType>(
+      "diffFluxCoeff", parts, &zero);
+    idField =
+      fieldManager->register_field<IdFieldType>("idField", parts, &zero);
   }
 
   ~Hex8Mesh() {}
