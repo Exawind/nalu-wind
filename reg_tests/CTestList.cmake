@@ -256,6 +256,7 @@ if(NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
       add_test_r(oversetRotCylinderHypre 2)
       add_test_r(oversetRotCylMultiRealm 2)
       add_test_r_rst(oversetMovingCylinder 4)
+      add_test_r(oversetTransformedTwoRotCylinder 1)
     endif()
   endif()
 
