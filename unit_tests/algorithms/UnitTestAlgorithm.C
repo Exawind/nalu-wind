@@ -66,6 +66,7 @@ TestTurbulenceAlgorithm::declare_fields()
     {"turbulent_viscosity",       &tvisc_            }, 
     {"sst_max_length_scale",      &maxLengthScale_   }, 
     {"sst_f_one_blending",        &fOneBlend_        }, 
+    {"iddes_rans_indicator",      &iddes_rans_indicator_},
     {"effective_viscosity",       &evisc_            }, 
     {"dual_nodal_volume",         &dualNodalVolume_  }, 
     {"specific_heat",             &specificHeat_     }, 
