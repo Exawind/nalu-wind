@@ -99,7 +99,7 @@ SDRSSTDESNodeKernel::execute(
   const DblType sigmaD = 2.0 * omf1 * sigmaWTwo_;
 
   const DblType small = 1.0e-16;
- 
+
   // Clip production term
   Pk = stk::math::min(tkeProdLimitRatio_ * betaStar_ * density * sdr * tke, Pk);
 
