@@ -95,6 +95,7 @@ public:
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* maxLengthScale_{nullptr};
   ScalarFieldType* fOneBlend_{nullptr};
+  ScalarFieldType* iddes_rans_indicator_{nullptr};
   ScalarFieldType* evisc_{nullptr};
   ScalarFieldType* dualNodalVolume_{nullptr};
   VectorFieldType* dkdx_{nullptr};

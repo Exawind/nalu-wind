@@ -119,6 +119,8 @@ TestTurbulenceAlgorithm::fill_mesh_and_init_fields(const std::string mesh_spec)
   stk::mesh::field_fill(0.5, *maxLengthScale_);
   unit_test_kernel_utils::sst_f_one_blending_test_function(
     bulk, *coordinates_, *fOneBlend_);
+  unit_test_kernel_utils::iddes_rans_indicator_test_function(
+    bulk, *coordinates_, *iddes_rans_indicator_);
   stk::mesh::field_fill(0.0, *evisc_);
   stk::mesh::field_fill(0.2, *dualNodalVolume_);
   unit_test_kernel_utils::dkdx_test_function(bulk, *coordinates_, *dkdx_);

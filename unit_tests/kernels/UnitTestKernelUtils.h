@@ -108,6 +108,11 @@ void sst_f_one_blending_test_function(
   const VectorFieldType& coordinates,
   ScalarFieldType& sst_f_one_blending);
 
+void iddes_rans_indicator_test_function(
+  const stk::mesh::BulkData& bulk,
+  const VectorFieldType& coordinates,
+  ScalarFieldType& iddes_rans_indicator);
+
 void minimum_distance_to_wall_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
@@ -742,6 +747,8 @@ public:
         stk::topology::NODE_RANK, "minimum_distance_to_wall")),
       fOneBlend_(&meta_->declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "sst_f_one_blending")),
+      iddes_rans_indicator_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "iddes_rans_indicator")),
       dudx_(&meta_->declare_field<TensorFieldType>(
         stk::topology::NODE_RANK, "dudx")),
       dkdx_(&meta_->declare_field<VectorFieldType>(
@@ -771,6 +778,8 @@ public:
       *minDistance_, meta_->universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(
       *fOneBlend_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *iddes_rans_indicator_, meta_->universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(
       *dudx_, meta_->universal_part(), spatialDim_ * spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
@@ -813,6 +822,8 @@ public:
       *bulk_, *coordinates_, *minDistance_);
     unit_test_kernel_utils::sst_f_one_blending_test_function(
       *bulk_, *coordinates_, *fOneBlend_);
+    unit_test_kernel_utils::iddes_rans_indicator_test_function(
+      *bulk_, *coordinates_, *iddes_rans_indicator_);
     unit_test_kernel_utils::dudx_test_function(*bulk_, *coordinates_, *dudx_);
     stk::mesh::field_fill(0.0, *dkdx_);
     stk::mesh::field_fill(0.0, *dwdx_);
@@ -828,6 +839,7 @@ public:
   ScalarFieldType* maxLengthScale_{nullptr};
   ScalarFieldType* minDistance_{nullptr};
   ScalarFieldType* fOneBlend_{nullptr};
+  ScalarFieldType* iddes_rans_indicator_{nullptr};
   TensorFieldType* dudx_{nullptr};
   VectorFieldType* dkdx_{nullptr};
   VectorFieldType* dwdx_{nullptr};
