@@ -142,7 +142,7 @@ TKESSTIDDESNodeKernel::execute(
   DblType Dk = density * tke * sqrtTke / lIDDES;
 
   // Clip production term
-  Pk = stk::math::min(tkeProdLimitRatio_ * betaStar_ * density * sdr * tke, Pk);
+  Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk);
 
   // SUST source term
   const DblType sqrtTkeAmb = stk::math::sqrt(tkeAmb_);

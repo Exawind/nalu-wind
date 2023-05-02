@@ -97,11 +97,19 @@ SDRSSTDESNodeKernel::execute(
   const DblType beta = fOneBlend * betaOne_ + omf1 * betaTwo_;
   const DblType gamma = fOneBlend * gammaOne_ + omf1 * gammaTwo_;
   const DblType sigmaD = 2.0 * omf1 * sigmaWTwo_;
+  const DblType cDES = omf1 * cDESke_ + fOneBlend * cDESkw_;
 
   const DblType small = 1.0e-16;
+  const DblType eddyLengthRANS =
+    stk::math::sqrt(tke) / stk::math::max(betaStar_ * sdr, small);
+  const DblType eddyLengthLES = cDES * cellLengthScale_.get(node, 0);
+  const DblType eddyLengthDES = stk::math::min(eddyLengthRANS, eddyLengthLES);
+
+  const DblType Dk =
+    density * stk::math::sqrt(tke) * tke / stk::math::max(eddyLengthDES, small);
 
   // Clip production term
-  Pk = stk::math::min(tkeProdLimitRatio_ * betaStar_ * density * sdr * tke, Pk);
+  Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk);
 
   // Production term with appropriate clipping of tvisc
   const DblType Pw = gamma * density * Pk / stk::math::max(tvisc, small);
