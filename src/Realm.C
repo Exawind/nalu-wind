@@ -532,7 +532,7 @@ Realm::initialize_prolog()
 
   if (solutionOptions_->meshTransformation_)
     meshTransformationAlg_->initialize(get_current_time());
-  
+
   if (does_mesh_move())
     init_current_coordinates();
 
