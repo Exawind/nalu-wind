@@ -66,7 +66,6 @@ TestTurbulenceAlgorithm::declare_fields()
     {"turbulent_viscosity",       &tvisc_            }, 
     {"sst_max_length_scale",      &maxLengthScale_   }, 
     {"sst_f_one_blending",        &fOneBlend_        }, 
-    {"iddes_rans_indicator",      &iddes_rans_indicator_},
     {"effective_viscosity",       &evisc_            }, 
     {"dual_nodal_volume",         &dualNodalVolume_  }, 
     {"specific_heat",             &specificHeat_     }, 
@@ -120,8 +119,6 @@ TestTurbulenceAlgorithm::fill_mesh_and_init_fields(const std::string mesh_spec)
   stk::mesh::field_fill(0.5, *maxLengthScale_);
   unit_test_kernel_utils::sst_f_one_blending_test_function(
     bulk, *coordinates_, *fOneBlend_);
-  unit_test_kernel_utils::iddes_rans_indicator_test_function(
-    bulk, *coordinates_, *iddes_rans_indicator_);
   stk::mesh::field_fill(0.0, *evisc_);
   stk::mesh::field_fill(0.2, *dualNodalVolume_);
   unit_test_kernel_utils::dkdx_test_function(bulk, *coordinates_, *dkdx_);
