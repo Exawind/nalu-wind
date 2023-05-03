@@ -19,29 +19,31 @@
 namespace sierra {
 namespace nalu {
 
-TKESSTNodeKernel::TKESSTNodeKernel(const stk::mesh::MetaData& meta)
-  : NGPNodeKernel<TKESSTNodeKernel>(),
-    tkeID_(get_field_ordinal(meta, "turbulent_ke")),
-    sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
-    densityID_(get_field_ordinal(meta, "density")),
-    tviscID_(get_field_ordinal(meta, "turbulent_viscosity")),
-    dudxID_(get_field_ordinal(meta, "dudx")),
-    dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
-    nDim_(meta.spatial_dimension())
+TKESSTNodeKernel::TKESSTNodeKernel(
+  const stk::mesh::MetaData& meta,
+  const FieldManager& manager,
+  stk::mesh::Part* part)
+  : NGPNodeKernel<TKESSTNodeKernel>(), nDim_(meta.spatial_dimension())
 {
+  manager.register_field("turbulent_ke", part);
+  manager.register_field("specific_dissipation_rate", part);
+  manager.register_field("density", part);
+  manager.register_field("turbulent_viscosity", part);
+  manager.register_field("dudx", part);
+  manager.register_field("dual_nodal_volume", part);
 }
 
 void
 TKESSTNodeKernel::setup(Realm& realm)
 {
-  const auto& fieldMgr = realm.ngp_field_manager();
+  const auto& fieldMgr = *(realm.fieldManager_.get());
 
-  tke_ = fieldMgr.get_field<double>(tkeID_);
-  sdr_ = fieldMgr.get_field<double>(sdrID_);
-  density_ = fieldMgr.get_field<double>(densityID_);
-  tvisc_ = fieldMgr.get_field<double>(tviscID_);
-  dudx_ = fieldMgr.get_field<double>(dudxID_);
-  dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
+  tke_ = fieldMgr.get_ngp_field_ptr("turbulent_ke");
+  sdr_ = fieldMgr.get_ngp_field_ptr("specific_dissipation_rate");
+  density_ = fieldMgr.get_ngp_field_ptr("density");
+  tvisc_ = fieldMgr.get_ngp_field_ptr("turbulent_viscosity");
+  dudx_ = fieldMgr.get_ngp_field_ptr("dudx");
+  dualNodalVolume_ = fieldMgr.get_ngp_field_ptr("dual_nodal_volume");
 
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);

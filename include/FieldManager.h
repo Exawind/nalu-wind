@@ -14,7 +14,6 @@
 #include <stk_mesh/base/FieldState.hpp>
 #include "stk_mesh/base/GetNgpField.hpp"
 #include <string>
-#include <type_traits>
 
 namespace stk {
 namespace mesh {
@@ -62,12 +61,12 @@ public:
   T* register_field(
     const std::string& name,
     const stk::mesh::PartVector& parts,
-    const void* init_val = nullptr,
+    const void* initVal = nullptr,
     stk::mesh::FieldState state = stk::mesh::FieldState::StateNone)
   {
     const int numStates = 0;
     const int numComponents = 0;
-    register_field(name, parts, numStates, numComponents, init_val);
+    register_field(name, parts, numStates, numComponents, initVal);
     return get_field_ptr<T>(name, state);
   }
 
@@ -84,10 +83,10 @@ public:
     const stk::mesh::PartVector& parts,
     const int numStates,
     const int numComponents,
-    const void* init_val = nullptr,
+    const void* initVal = nullptr,
     stk::mesh::FieldState state = stk::mesh::FieldState::StateNone)
   {
-    register_field(name, parts, numStates, numComponents, init_val);
+    register_field(name, parts, numStates, numComponents, initVal);
     return get_field_ptr<GenericFieldType>(name, state);
   }
 
@@ -116,7 +115,7 @@ public:
   /// would otherwise be defined in the field Registry class.
   ///
   /// If numStates = 0 then the number of states comes from the
-  /// field Registry.  Same for numComponents = 0 and init_val = nullptr.
+  /// field Registry.  Same for numComponents = 0 and initVal = nullptr.
   ///
   /// This is useful for dynamic fields that depend on the input
   /// options to define the number of states or number of components since the
@@ -128,7 +127,19 @@ public:
     const stk::mesh::PartVector& parts,
     const int numStates = 0,
     const int numComponents = 0,
-    const void* init_val = nullptr);
+    const void* initVal = nullptr) const;
+
+  FieldPointerTypes register_field(
+    const std::string& name,
+    stk::mesh::Part* part,
+    const int numStates = 0,
+    const int numComponents = 0,
+    const void* initVal = nullptr) const
+  {
+    stk::mesh::PartVector parts;
+    parts.push_back(part);
+    register_field(name, parts, numStates, numComponents, initVal);
+  }
 
   /// Given the named field that has already been registered on the CPU
   /// return the GPU version of the same field.
