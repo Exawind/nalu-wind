@@ -48,7 +48,6 @@ public:
   run_face_elem_algorithm(stk::mesh::BulkData& bulk, LambdaFunction lamdbaFunc)
   {
     int nDim = bulk.mesh_meta_data().spatial_dimension();
-    int totalNumFields = bulk.mesh_meta_data().get_fields().size();
 
     // Register face ME instance in elemdata also to obtain face integration
     // points
@@ -60,8 +59,8 @@ public:
 
     const stk::mesh::NgpMesh& ngpMesh = realm_.ngp_mesh();
     const nalu_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
-    ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataNeeded_, totalNumFields);
-    ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataNeeded_, totalNumFields);
+    ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataNeeded_);
+    ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataNeeded_);
 
     const int bytes_per_team = 0;
     const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(

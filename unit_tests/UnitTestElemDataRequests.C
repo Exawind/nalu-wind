@@ -21,9 +21,7 @@ do_the_test_gpu(
   stk::mesh::BulkData& bulk,
   std::shared_ptr<sierra::nalu::FieldManager> fieldMgr)
 {
-  unsigned totalNumFields_guess = 10;
-  sierra::nalu::ElemDataRequestsGPU ngpDataReq(
-    *fieldMgr, dataReq, totalNumFields_guess);
+  sierra::nalu::ElemDataRequestsGPU ngpDataReq(*fieldMgr, dataReq);
 
   unsigned numCorrectTests = 0;
   int threadsPerTeam = 1;
