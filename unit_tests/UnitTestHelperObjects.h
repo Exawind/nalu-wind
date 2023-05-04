@@ -16,6 +16,7 @@
 #include <stk_topology/topology.hpp>
 
 #include <memory>
+#include <FieldManager.h>
 
 namespace unit_test_utils {
 
@@ -33,6 +34,10 @@ struct HelperObjectsBase
       eqSystem(eqSystems)
   {
     realm.bulkData_ = bulk;
+    // hack
+    // realm.setup_field_manager();
+    const int numStates = 3;
+    realm.fieldManager_ = std::make_unique<sierra::nalu::FieldManager>(realm.meta_data(), numStates);
   }
 
   virtual ~HelperObjectsBase() { delete naluObj; }
