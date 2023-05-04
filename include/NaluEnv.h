@@ -30,7 +30,6 @@ public:
   ~NaluEnv();
 
   static NaluEnv& self();
-
   MPI_Comm parallelCommunicator_;
   int pSize_;
   int pRank_;
@@ -42,6 +41,7 @@ public:
   NaluEmptyStreamBuffer naluEmptyStreamBuffer_;
   std::filebuf naluStreamBuffer_;
   std::filebuf naluParallelStreamBuffer_;
+  bool debug_;
 
   std::ostream& naluOutputP0();
   std::ostream& naluOutput();
@@ -49,6 +49,7 @@ public:
   MPI_Comm parallel_comm();
   int parallel_size();
   int parallel_rank();
+  bool debug() { return debug_; }
 
   /** Redirect output to a log file
    *

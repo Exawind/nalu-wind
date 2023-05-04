@@ -115,7 +115,7 @@ EquationSystems::load(const YAML::Node& y_node)
 
         if (expect_map(y_system, "LowMachEOM", true)) {
           y_eqsys = expect_map(y_system, "LowMachEOM", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0()
               << "eqSys = LowMachEOM " << std::endl;
           bool elemCont = (realm_.realmUsesEdges_) ? false : true;
@@ -132,34 +132,34 @@ EquationSystems::load(const YAML::Node& y_node)
         } else if (expect_map(y_system, "VolumeOfFluid", true)) {
 
           y_eqsys = expect_map(y_system, "VolumeOfFluid", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0()
               << "eqSys = VolumeOfFluid" << std::endl;
           eqSys = new VolumeOfFluidEquationSystem(*this);
 
         } else if (expect_map(y_system, "ShearStressTransport", true)) {
           y_eqsys = expect_map(y_system, "ShearStressTransport", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0() << "eqSys = tke/sdr " << std::endl;
           eqSys = new ShearStressTransportEquationSystem(*this);
         } else if (expect_map(y_system, "ChienKEpsilon", true)) {
           y_eqsys = expect_map(y_system, "ChienKEpsilon", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0() << "eqSys = tke/tdr " << std::endl;
           eqSys = new ChienKEpsilonEquationSystem(*this);
         } else if (expect_map(y_system, "WilcoxKOmega", true)) {
           y_eqsys = expect_map(y_system, "WilcoxKOmega", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0() << "eqSys = tke/sdr " << std::endl;
           eqSys = new WilcoxKOmegaEquationSystem(*this);
         } else if (expect_map(y_system, "TurbKineticEnergy", true)) {
           y_eqsys = expect_map(y_system, "TurbKineticEnergy", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0() << "eqSys = tke " << std::endl;
           eqSys = new TurbKineticEnergyEquationSystem(*this);
         } else if (expect_map(y_system, "Enthalpy", true)) {
           y_eqsys = expect_map(y_system, "Enthalpy", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0() << "eqSys = enthalpy " << std::endl;
           double minT = 250.0;
           double maxT = 3000.0;
@@ -171,7 +171,7 @@ EquationSystems::load(const YAML::Node& y_node)
           eqSys = new EnthalpyEquationSystem(*this, minT, maxT, ouputClipDiag);
         } else if (expect_map(y_system, "HeatConduction", true)) {
           y_eqsys = expect_map(y_system, "HeatConduction", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0()
               << "eqSys = HeatConduction " << std::endl;
 #ifdef NALU_HAS_MATRIXFREE

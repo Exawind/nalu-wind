@@ -93,7 +93,7 @@ LinearSystem::get_timer_precond()
 bool
 LinearSystem::debug()
 {
-  if (linearSolver_ && linearSolver_->root() && linearSolver_->root()->debug())
+  if (NaluEnv::self().debug())
     return true;
   return false;
 }
