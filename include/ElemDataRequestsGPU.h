@@ -122,8 +122,7 @@ public:
     FieldInfoView;
 
   template <typename T>
-  ElemDataRequestsGPU(
-    const T& fieldMgr, const ElemDataRequests& dataReq, unsigned totalFields);
+  ElemDataRequestsGPU(const T& fieldMgr, const ElemDataRequests& dataReq);
 
   KOKKOS_FUNCTION ~ElemDataRequestsGPU() {}
 
@@ -226,14 +225,14 @@ private:
 
 template <typename T>
 inline ElemDataRequestsGPU::ElemDataRequestsGPU(
-  const T& fieldMgr, const ElemDataRequests& dataReq, unsigned totalFields)
+  const T& fieldMgr, const ElemDataRequests& dataReq)
   : dataEnums(),
     hostDataEnums(),
     coordsFields_(),
     hostCoordsFields_(),
     coordsFieldsTypes_(),
     hostCoordsFieldsTypes_(),
-    totalNumFields(totalFields),
+    totalNumFields(fieldMgr.size()),
     fields(),
     hostFields(),
     meFC_(MasterElementRepo::get_surface_dev_ptr_from_host_ptr(

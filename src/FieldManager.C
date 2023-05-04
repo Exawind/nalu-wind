@@ -53,7 +53,15 @@ FieldManager::register_field(
       for (auto&& part : parts) {
         stk::mesh::put_field_on_mesh(*id, *part, num_components, init);
       }
-
+#if 0
+      std::cout << "Registring field '" << name << "' on parts:";
+      for (const auto& part : parts)
+        std::cout << " '" << part->name() << "'";
+      std::cout << " with number of states " << num_states;
+      std::cout << " and spatial dimension " << numDimensions_;
+      std::cout << " with number of components " << num_components;
+      std::cout << std::endl;
+#endif
       return id;
     },
     definition);

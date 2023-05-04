@@ -69,9 +69,10 @@ public:
     auto fieldDefIter = db->find(name);
 
     if (fieldDefIter == db->end()) {
-      std::string message = "Attempting to access an undefined field: " + name +
-                            " with spatial dimension " + to_string(numDim) +
-                            " and number of states " + to_string(numStates);
+      std::string message = "Attempting to access an undefined field: '" +
+                            name + "' with spatial dimension " +
+                            to_string(numDim) + " and number of states " +
+                            to_string(numStates);
       throw std::runtime_error(message);
     }
     return fieldDefIter->second;

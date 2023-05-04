@@ -530,14 +530,14 @@ Realm::initialize_prolog()
     stk::topology::NODE_RANK, "iblank");
   stk::mesh::field_fill(1, *iblank);
 
+  if (solutionOptions_->meshTransformation_)
+    meshTransformationAlg_->initialize(get_current_time());
+
   if (does_mesh_move())
     init_current_coordinates();
 
   if (hasPeriodic_)
     periodicManager_->build_constraints();
-
-  if (solutionOptions_->meshTransformation_)
-    meshTransformationAlg_->initialize(get_current_time());
 
   if (solutionOptions_->meshMotion_)
     meshMotionAlg_->initialize(get_current_time());

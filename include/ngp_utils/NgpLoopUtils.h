@@ -337,7 +337,7 @@ run_elem_algorithm(
   const auto& ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
 
-  ElemDataRequestsGPU dataReqNGP(fieldMgr, dataReqs, meshInfo.num_fields());
+  ElemDataRequestsGPU dataReqNGP(fieldMgr, dataReqs);
 
   const int nodesPerElement = nodes_per_entity(dataReqNGP);
   NGP_ThrowRequire(nodesPerElement != 0);
@@ -433,7 +433,7 @@ run_elem_par_reduce(
   const auto& ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
 
-  ElemDataRequestsGPU dataReqNGP(fieldMgr, dataReqs, meshInfo.num_fields());
+  ElemDataRequestsGPU dataReqNGP(fieldMgr, dataReqs);
 
   const int nodesPerElement = nodes_per_entity(dataReqNGP);
   NGP_ThrowRequire(nodesPerElement != 0);
@@ -518,10 +518,9 @@ run_face_elem_algorithm(
   const auto& ndim = meshInfo.ndim();
   const auto& ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
-  const auto& numFields = meshInfo.num_fields();
 
-  ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataReqs, numFields);
-  ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataReqs, numFields);
+  ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataReqs);
+  ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataReqs);
 
   const int nodesPerElement = nodes_per_entity(elemDataNGP);
   const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);
@@ -643,10 +642,9 @@ run_face_elem_par_reduce(
   const auto& ndim = meshInfo.ndim();
   const auto& ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
-  const auto& numFields = meshInfo.num_fields();
 
-  ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataReqs, numFields);
-  ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataReqs, numFields);
+  ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataReqs);
+  ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataReqs);
 
   const int nodesPerElement = nodes_per_entity(elemDataNGP);
   const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);
@@ -772,10 +770,9 @@ run_face_elem_algorithm_nosimd(
   const auto& ndim = meshInfo.ndim();
   const auto& ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
-  const auto& numFields = meshInfo.num_fields();
 
-  ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataReqs, numFields);
-  ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataReqs, numFields);
+  ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataReqs);
+  ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataReqs);
 
   const int nodesPerElement = nodes_per_entity(elemDataNGP);
   const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);

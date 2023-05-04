@@ -27,6 +27,7 @@ Registry()
 
   FieldDefScalar  SingleStateNodalScalar = {stk::topology::NODE_RANK};
   FieldDefScalar  SingleStateElemScalar  = {stk::topology::ELEM_RANK};
+  FieldDefVector  SingleStateElemVector  = {stk::topology::ELEM_RANK, 1, NUM_DIM};
   FieldDefScalar  MultiStateNodalScalar  = {stk::topology::NODE_RANK, NUM_STATES};
 
   FieldDefVector  SingleStateNodalVector = {stk::topology::NODE_RANK, 1, NUM_DIM};
@@ -46,6 +47,8 @@ Registry()
     {"current_coordinates",       SingleStateNodalVector},
     {"density",                   SingleStateNodalScalar},
     {"dhdx",                      SingleStateNodalVector},
+    {"diffFluxCoeff",             SingleStateNodalScalar},
+    {"discreteLaplacian",         SingleStateNodalScalar},
     {"div_mesh_velocity",         SingleStateNodalScalar},
     {"dkdx",                      SingleStateNodalVector},
     {"dpdx",                      SingleStateNodalVector},
@@ -54,21 +57,31 @@ Registry()
     {"dwdx",                      SingleStateNodalVector},
     {"edge_area_vector",          SingleStateEdgeVector},
     {"effective_viscosity" ,      SingleStateNodalScalar},
+    {"elemCentroid",              SingleStateElemVector},                          
     {"element_volume",            SingleStateElemScalar},
+    {"elemScalarField",           SingleStateElemScalar},  // Used in testing
+    {"elemTensorField",           SingleStateElemGeneric}, // Used in testing
+    {"elemVectorField",           SingleStateElemGeneric}, // Used in testing
     {"exposed_area_vector",       SingleStateEdgeGeneric},
     {"Gju",                       SingleStateNodeGeneric},
     {"hypre_global_id",           HypreId},
     {"iblank",                    NodalScalarInt},
+    {"idField",                   SingleStateNodalScalar},                         
     {"mass_flow_rate_scs",        SingleStateElemGeneric},
     {"mesh_displacement",         MultiStateNodalVector},
     {"mesh_velocity",             SingleStateNodalVector},
     {"minimum_distance_to_wall",  SingleStateNodalScalar},
     {"momentum_diag",             SingleStateNodalScalar},
     {"nalu_global_id",            GlobalId},
+    {"nodalScalarField",          SingleStateNodalScalar}, // Used in testing
+    {"nodalGenericField",         SingleStateNodeGeneric}, // Used in testing
+    {"nodalPressure",             SingleStateNodalScalar},
+    {"nodalTensorField",          SingleStateNodalTensor}, // Used in testing
     {"open_mass_flow_rate" ,      SingleStateEdgeGeneric},
     {"open_tke_bc",               SingleStateNodalScalar},
     {"pressure",                  SingleStateNodalScalar},
     {"rans_time_scale" ,          SingleStateNodalScalar},
+    {"scalarQ",                   SingleStateNodalScalar},
     {"specific_dissipation_rate", SingleStateNodalScalar},
     {"specific_heat" ,            SingleStateNodalScalar},
     {"sst_f_one_blending"  ,      SingleStateNodalScalar},
