@@ -636,10 +636,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
   if (bulk_->parallel_size() > 1)
     return;
 
-  // TDODO we can eliminate all the excess fields if we decide to do our field
-  // init after we add the kernels
-  fill_mesh_and_init_fields();
-
   // Setup solution options
   solnOpts_.meshMotion_ = false;
   solnOpts_.externalMeshDeformation_ = false;
@@ -650,6 +646,10 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTNodeKernel>(
     *meta_, *(helperObjs.realm.fieldManager_.get()), partVec_[0]);
+
+  // TDODO we can eliminate all the excess fields if we decide to do our field
+  // init after we add the kernels
+  fill_mesh_and_init_fields();
 
   helperObjs.execute();
 
