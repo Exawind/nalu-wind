@@ -54,7 +54,6 @@ public:
   Transfers* transfers_;
   LinearSolvers* linearSolvers_;
 
-  static bool debug_;
   int serializedIOGroupSize_;
 
 private:
