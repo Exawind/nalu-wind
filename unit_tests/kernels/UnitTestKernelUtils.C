@@ -229,6 +229,17 @@ struct TrigFieldFunction
       (std::sin(a * pi * x) * std::cos(a * pi * y) * std::sin(a * pi * z));
   }
 
+  void iddes_rans_indicator(const double* coords, double* qField) const
+  {
+    double x = coords[0];
+    double y = coords[1];
+    double z = coords[2];
+
+    qField[0] =
+      iddes_rans_indicatornot *
+      (std::sin(a * pi * x) * std::cos(a * pi * y) * std::sin(a * pi * z));
+  }
+
   void minimum_distance_to_wall(const double* coords, double* qField) const
   {
     double x = coords[0];
@@ -288,6 +299,9 @@ private:
   /// Factor for fOneBlend field
   static constexpr double sst_f_one_blendingnot{1.0};
 
+  /// Factor for rans_indicator field
+  static constexpr double iddes_rans_indicatornot{1.0};
+
   const double pi;
 };
 
@@ -341,6 +355,8 @@ init_trigonometric_field(
     funcPtr = &TrigFieldFunction::tensor_turbulent_viscosity;
   else if (fieldName == "sst_f_one_blending")
     funcPtr = &TrigFieldFunction::sst_f_one_blending;
+  else if (fieldName == "iddes_rans_indicator")
+    funcPtr = &TrigFieldFunction::iddes_rans_indicator;
   else if (fieldName == "minimum_distance_to_wall")
     funcPtr = &TrigFieldFunction::minimum_distance_to_wall;
   else if (fieldName == "dplus_wall_function")
@@ -517,6 +533,7 @@ tensor_turbulent_viscosity_test_function(
 {
   init_trigonometric_field(bulk, coordinates, mutij);
 }
+
 void
 sst_f_one_blending_test_function(
   const stk::mesh::BulkData& bulk,
@@ -524,6 +541,15 @@ sst_f_one_blending_test_function(
   ScalarFieldType& sst_f_one_blending)
 {
   init_trigonometric_field(bulk, coordinates, sst_f_one_blending);
+}
+
+void
+iddes_rans_indicator_test_function(
+  const stk::mesh::BulkData& bulk,
+  const VectorFieldType& coordinates,
+  ScalarFieldType& iddes_rans_indicator)
+{
+  init_trigonometric_field(bulk, coordinates, iddes_rans_indicator);
 }
 
 void
