@@ -182,7 +182,6 @@ public:
    */
   virtual void destroyLinearSolver() = 0;
 
-  Simulation* root();
   LinearSolvers* parent();
   LinearSolvers* linearSolvers_;
 

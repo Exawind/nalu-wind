@@ -1589,7 +1589,7 @@ TpetraSegregatedLinearSystem::solve(stk::mesh::FieldBase* linearSolutionField)
   TpetraLinearSolver* linearSolver =
     reinterpret_cast<TpetraLinearSolver*>(linearSolver_);
 
-  if (realm_.debug()) {
+  if (NaluEnv::self().debug()) {
     checkForNaN(true);
     if (checkForZeroRow(true, false, true)) {
       throw std::runtime_error("ERROR checkForZeroRow in solve()");

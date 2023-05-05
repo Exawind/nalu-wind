@@ -919,7 +919,7 @@ TurbKineticEnergyEquationSystem::update_and_clip()
   ngpTke.modify_on_device();
 
   // parallel assemble clipped value
-  if (realm_.debug()) {
+  if (NaluEnv::self().debug()) {
     size_t g_numClip = 0;
     stk::ParallelMachine comm = NaluEnv::self().parallel_comm();
     stk::all_reduce_sum(comm, &numClip, &g_numClip, 1);

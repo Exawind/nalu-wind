@@ -44,17 +44,6 @@ LinearSolvers::~LinearSolvers()
 #endif
 }
 
-Simulation*
-LinearSolvers::root()
-{
-  return &sim_;
-}
-Simulation*
-LinearSolvers::parent()
-{
-  return root();
-}
-
 void
 LinearSolvers::load(const YAML::Node& node)
 {

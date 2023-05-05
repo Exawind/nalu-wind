@@ -37,7 +37,8 @@ NaluEnv::NaluEnv()
     stdoutStream_(std::cout.rdbuf()),
     naluLogStream_(new std::ostream(std::cout.rdbuf())),
     naluParallelStream_(new std::ostream(&naluParallelStreamBuffer_)),
-    parallelLog_(false)
+    parallelLog_(false),
+    debug_(false)
 {
   // initialize
   MPI_Comm_size(parallelCommunicator_, &pSize_);

@@ -120,7 +120,6 @@ public:
   Realms* parent() const;
   Realms* parent();
 
-  bool debug() const;
   bool get_activate_memory_diagnostic();
   void provide_memory_summary();
   std::string convert_bytes(double bytes);

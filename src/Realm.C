@@ -331,12 +331,6 @@ Realm::breadboard()
   equationSystems_.breadboard();
 }
 
-bool
-Realm::debug() const
-{
-  return root()->debug_;
-}
-
 //--------------------------------------------------------------------------
 //-------- get_activate_memory_diagnostic ----------------------------------
 //--------------------------------------------------------------------------
@@ -847,7 +841,7 @@ Realm::load(const YAML::Node& node)
     NaluEnv::self().naluOutputP0()
       << "===========================" << std::endl;
     initialConditions_ =
-      InitialConditionCreator(debug()).create_ic_vector(node);
+      InitialConditionCreator(NaluEnv::self().debug()).create_ic_vector(node);
     NaluEnv::self().naluOutputP0() << std::endl;
     NaluEnv::self().naluOutputP0()
       << "Material Prop Review:      " << std::endl;
@@ -2345,7 +2339,7 @@ Realm::provide_entity_count()
 void
 Realm::delete_edges()
 {
-  if (debug()) {
+  if (NaluEnv::self().debug()) {
     std::vector<size_t> counts;
     stk::mesh::comm_mesh_counts(*bulkData_, counts);
 
@@ -2360,7 +2354,7 @@ Realm::delete_edges()
   std::vector<stk::mesh::Entity> edges;
   stk::mesh::get_selected_entities(*edgesPart_, edge_buckets, edges);
 
-  if (debug()) {
+  if (NaluEnv::self().debug()) {
     size_t sz = edges.size(), g_sz = 0;
     stk::all_reduce_sum(NaluEnv::self().parallel_comm(), &sz, &g_sz, 1);
     NaluEnv::self().naluOutputP0()
@@ -2448,7 +2442,7 @@ Realm::delete_edges()
   }
   bulkData_->modification_end();
 
-  if (debug()) {
+  if (NaluEnv::self().debug()) {
     std::vector<size_t> counts;
     stk::mesh::comm_mesh_counts(*bulkData_, counts);
 
