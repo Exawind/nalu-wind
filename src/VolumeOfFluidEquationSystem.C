@@ -103,19 +103,21 @@ VolumeOfFluidEquationSystem::~VolumeOfFluidEquationSystem() {}
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-VolumeOfFluidEquationSystem::register_nodal_fields(stk::mesh::Part* part)
+VolumeOfFluidEquationSystem::register_nodal_fields(
+  const stk::mesh::PartVector& part_vec)
 {
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   const int nDim = meta_data.spatial_dimension();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   // register dof; set it as a restart variable
   const int numStates = realm_.number_of_states();
 
   auto density_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density", numStates));
-  stk::mesh::put_field_on_mesh(*density_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*density_, selector, nullptr);
   realm_.augment_restart_variable_list("density");
 
   // push to property list
@@ -123,17 +125,17 @@ VolumeOfFluidEquationSystem::register_nodal_fields(stk::mesh::Part* part)
 
   volumeOfFluid_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "volume_of_fluid", numStates));
-  stk::mesh::put_field_on_mesh(*volumeOfFluid_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*volumeOfFluid_, selector, nullptr);
   realm_.augment_restart_variable_list("volume_of_fluid");
 
   dvolumeOfFluiddx_ = &(meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "dvolume_of_fluiddx"));
-  stk::mesh::put_field_on_mesh(*dvolumeOfFluiddx_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*dvolumeOfFluiddx_, selector, nDim, nullptr);
 
   // delta solution for linear solver; share delta since this is a split system
   vofTmp_ =
     &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "vofTmp"));
-  stk::mesh::put_field_on_mesh(*vofTmp_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*vofTmp_, selector, nullptr);
 
   if (
     numStates > 2 &&
@@ -144,7 +146,7 @@ VolumeOfFluidEquationSystem::register_nodal_fields(stk::mesh::Part* part)
       volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
 
     CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
-      realm_, part, &vofNp1, &vofN, 0, 1, stk::topology::NODE_RANK);
+      realm_, part_vec, &vofNp1, &vofN, 0, 1, stk::topology::NODE_RANK);
     copyStateAlg_.push_back(theCopyAlg);
   }
 }

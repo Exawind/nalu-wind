@@ -33,7 +33,7 @@ public:
 
   void initial_work();
 
-  void register_nodal_fields(stk::mesh::Part*);
+  virtual void register_nodal_fields(const stk::mesh::PartVector& part_vec);
 
   void register_edge_fields(stk::mesh::Part*);
 

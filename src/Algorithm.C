@@ -22,14 +22,14 @@ namespace nalu {
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-Algorithm::Algorithm(Realm& realm, stk::mesh::Part* part) : realm_(realm)
+Algorithm::Algorithm(Realm& realm, stk::mesh::Part* part) : 
+  realm_(realm), partVec_(1,part)
 {
-  // push back on partVec
-  partVec_.push_back(part);
+  // nothing to do
 }
 
 // alternative; provide full partVec
-Algorithm::Algorithm(Realm& realm, stk::mesh::PartVector& partVec)
+Algorithm::Algorithm(Realm& realm, const stk::mesh::PartVector& partVec)
   : realm_(realm), partVec_(partVec)
 {
   // nothing to do

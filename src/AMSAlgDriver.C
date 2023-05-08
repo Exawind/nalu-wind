@@ -61,10 +61,11 @@ AMSAlgDriver::AMSAlgDriver(Realm& realm)
 }
 
 void
-AMSAlgDriver::register_nodal_fields(stk::mesh::Part* part)
+AMSAlgDriver::register_nodal_fields(const stk::mesh::PartVector& part_vec)
 {
   stk::mesh::MetaData& meta = realm_.meta_data();
   const int nDim = meta.spatial_dimension();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   // Set numStates as 2, so avg quantities can be updated through Picard iters
   const int numStates = 2;
@@ -72,11 +73,11 @@ AMSAlgDriver::register_nodal_fields(stk::mesh::Part* part)
   // Nodal fields
   beta_ =
     &(meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "k_ratio"));
-  stk::mesh::put_field_on_mesh(*beta_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*beta_, selector, nullptr);
 
   avgVelocity_ = &(meta.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "average_velocity", numStates));
-  stk::mesh::put_field_on_mesh(*avgVelocity_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*avgVelocity_, selector, nDim, nullptr);
   realm_.augment_restart_variable_list("average_velocity");
 
   if (
@@ -84,44 +85,44 @@ AMSAlgDriver::register_nodal_fields(stk::mesh::Part* part)
     realm_.solutionOptions_->externalMeshDeformation_) {
     avgVelocityRTM_ = &(meta.declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "average_velocity_rtm"));
-    stk::mesh::put_field_on_mesh(*avgVelocityRTM_, *part, nDim, nullptr);
+    stk::mesh::put_field_on_mesh(*avgVelocityRTM_, selector, nDim, nullptr);
   }
 
   avgProduction_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "average_production", numStates));
-  stk::mesh::put_field_on_mesh(*avgProduction_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*avgProduction_, selector, nullptr);
   realm_.augment_restart_variable_list("average_production");
 
   avgDudx_ = &(meta.declare_field<GenericFieldType>(
     stk::topology::NODE_RANK, "average_dudx", numStates));
-  stk::mesh::put_field_on_mesh(*avgDudx_, *part, nDim * nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*avgDudx_, selector, nDim * nDim, nullptr);
   realm_.augment_restart_variable_list("average_dudx");
 
   avgTkeResolved_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "average_tke_resolved", numStates));
-  stk::mesh::put_field_on_mesh(*avgTkeResolved_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*avgTkeResolved_, selector, nullptr);
   realm_.augment_restart_variable_list("average_tke_resolved");
 
   avgTime_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "rans_time_scale"));
-  stk::mesh::put_field_on_mesh(*avgTime_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*avgTime_, selector, nullptr);
 
   metric_ = &(meta.declare_field<GenericFieldType>(
     stk::topology::NODE_RANK, "metric_tensor"));
-  stk::mesh::put_field_on_mesh(*metric_, *part, nDim * nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*metric_, selector, nDim * nDim, nullptr);
 
   resAdequacy_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "resolution_adequacy_parameter"));
-  stk::mesh::put_field_on_mesh(*resAdequacy_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*resAdequacy_, selector, nullptr);
 
   avgResAdequacy_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "avg_res_adequacy_parameter", numStates));
-  stk::mesh::put_field_on_mesh(*avgResAdequacy_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*avgResAdequacy_, selector, nullptr);
   realm_.augment_restart_variable_list("avg_res_adequacy_parameter");
 
   forcingComp_ = &(meta.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "forcing_components", numStates));
-  stk::mesh::put_field_on_mesh(*forcingComp_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*forcingComp_, selector, nDim, nullptr);
 }
 
 void
