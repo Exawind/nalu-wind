@@ -188,7 +188,7 @@ public:
 
   void register_interior_algorithm(stk::mesh::Part* part);
 
-  void register_nodal_fields(stk::mesh::Part* part);
+  void register_nodal_fields(const stk::mesh::PartVector& part_vec);
 
   void register_wall_bc(stk::mesh::Part* part, const stk::topology& theTopo);
 

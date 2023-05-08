@@ -130,20 +130,21 @@ ProjectedNodalGradientEquationSystem::get_name_given_bc(
 //--------------------------------------------------------------------------
 void
 ProjectedNodalGradientEquationSystem::register_nodal_fields(
-  stk::mesh::Part* part)
+  const stk::mesh::PartVector& part_vec)
 {
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   const int nDim = meta_data.spatial_dimension();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   dqdx_ = &(meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, dofName_));
-  stk::mesh::put_field_on_mesh(*dqdx_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*dqdx_, selector, nDim, nullptr);
 
   // delta solution for linear solver
   qTmp_ = &(meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, deltaName_));
-  stk::mesh::put_field_on_mesh(*qTmp_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*qTmp_, selector, nDim, nullptr);
 }
 
 //--------------------------------------------------------------------------

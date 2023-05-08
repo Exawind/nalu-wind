@@ -34,6 +34,22 @@ namespace nalu {
 //==========================================================================
 CopyFieldAlgorithm::CopyFieldAlgorithm(
   Realm& realm,
+  const stk::mesh::PartVector &part_vec,
+  stk::mesh::FieldBase* fromField,
+  stk::mesh::FieldBase* toField,
+  const unsigned beginPos,
+  const unsigned endPos,
+  const stk::mesh::EntityRank entityRank)
+  : Algorithm(realm, part_vec),
+    fromField_(fromField),
+    toField_(toField),
+    beginPos_(beginPos),
+    endPos_(endPos),
+    entityRank_(entityRank)
+{
+}
+CopyFieldAlgorithm::CopyFieldAlgorithm(
+  Realm& realm,
   stk::mesh::Part* part,
   stk::mesh::FieldBase* fromField,
   stk::mesh::FieldBase* toField,

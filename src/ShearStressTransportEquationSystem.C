@@ -130,32 +130,34 @@ ShearStressTransportEquationSystem::initialize()
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-ShearStressTransportEquationSystem::register_nodal_fields(stk::mesh::Part* part)
+ShearStressTransportEquationSystem::register_nodal_fields(
+  const stk::mesh::PartVector& part_vec)
 {
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   const int numStates = realm_.number_of_states();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   // re-register tke and sdr for convenience
   tke_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "turbulent_ke", numStates));
-  stk::mesh::put_field_on_mesh(*tke_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*tke_, selector, nullptr);
   sdr_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "specific_dissipation_rate", numStates));
-  stk::mesh::put_field_on_mesh(*sdr_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*sdr_, selector, nullptr);
   if (realm_.solutionOptions_->gammaEqActive_) {
     gamma_ = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "gamma_transition", numStates));
-    stk::mesh::put_field_on_mesh(*gamma_, *part, nullptr);
+    stk::mesh::put_field_on_mesh(*gamma_, selector, nullptr);
   }
 
   // SST parameters that everyone needs
   minDistanceToWall_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "minimum_distance_to_wall"));
-  stk::mesh::put_field_on_mesh(*minDistanceToWall_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*minDistanceToWall_, selector, nullptr);
   fOneBlending_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "sst_f_one_blending"));
-  stk::mesh::put_field_on_mesh(*fOneBlending_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*fOneBlending_, selector, nullptr);
 
   // DES model
   if (
@@ -163,7 +165,7 @@ ShearStressTransportEquationSystem::register_nodal_fields(stk::mesh::Part* part)
     (TurbulenceModel::SST_IDDES == realm_.solutionOptions_->turbulenceModel_)) {
     maxLengthScale_ = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "sst_max_length_scale"));
-    stk::mesh::put_field_on_mesh(*maxLengthScale_, *part, nullptr);
+    stk::mesh::put_field_on_mesh(*maxLengthScale_, selector, nullptr);
   }
 
   // add to restart field

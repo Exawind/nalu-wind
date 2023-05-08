@@ -294,20 +294,21 @@ LowMachEquationSystem::initialize()
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-LowMachEquationSystem::register_nodal_fields(stk::mesh::Part* part)
+LowMachEquationSystem::register_nodal_fields(const stk::mesh::PartVector &part_vec)
 {
   stk::mesh::MetaData& meta_data = realm_.meta_data();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   // add properties; denisty needs to be a restart field
   const int numStates = realm_.number_of_states();
   density_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density", numStates));
-  stk::mesh::put_field_on_mesh(*density_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*density_, selector, nullptr);
   realm_.augment_restart_variable_list("density");
 
   viscosity_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "viscosity"));
-  stk::mesh::put_field_on_mesh(*viscosity_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*viscosity_, selector, nullptr);
 
   // push to property list
   realm_.augment_property_map(DENSITY_ID, density_);
@@ -318,7 +319,7 @@ LowMachEquationSystem::register_nodal_fields(stk::mesh::Part* part)
     realm_.does_mesh_move() ? realm_.number_of_states() : 1;
   dualNodalVolume_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates));
-  stk::mesh::put_field_on_mesh(*dualNodalVolume_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*dualNodalVolume_, selector, nullptr);
   if (numVolStates > 1)
     realm_.augment_restart_variable_list("dual_nodal_volume");
 
@@ -330,7 +331,7 @@ LowMachEquationSystem::register_nodal_fields(stk::mesh::Part* part)
     ScalarFieldType& densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
 
     CopyFieldAlgorithm* theCopyAlgDens = new CopyFieldAlgorithm(
-      realm_, part, &densityNp1, &densityN, 0, 1, stk::topology::NODE_RANK);
+      realm_, part_vec, &densityNp1, &densityN, 0, 1, stk::topology::NODE_RANK);
     copyStateAlg_.push_back(theCopyAlgDens);
 
     if (numVolStates <= 2)
@@ -342,7 +343,7 @@ LowMachEquationSystem::register_nodal_fields(stk::mesh::Part* part)
       dualNodalVolume_->field_of_state(stk::mesh::StateNP1);
 
     CopyFieldAlgorithm* theCopyAlgDlNdVol = new CopyFieldAlgorithm(
-      realm_, part, &dualNdVolNp1, &dualNdVolN, 0, 1, stk::topology::NODE_RANK);
+      realm_, part_vec, &dualNdVolNp1, &dualNdVolN, 0, 1, stk::topology::NODE_RANK);
     copyStateAlg_.push_back(theCopyAlgDlNdVol);
   }
 }
@@ -1127,9 +1128,10 @@ MomentumEquationSystem::pre_timestep_work()
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-MomentumEquationSystem::register_nodal_fields(stk::mesh::Part* part)
+MomentumEquationSystem::register_nodal_fields(const stk::mesh::PartVector &part_vec)
 {
   stk::mesh::MetaData& meta_data = realm_.meta_data();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   const int nDim = meta_data.spatial_dimension();
   const int numStates = realm_.number_of_states();
@@ -1137,42 +1139,42 @@ MomentumEquationSystem::register_nodal_fields(stk::mesh::Part* part)
   // register dof; set it as a restart variable
   velocity_ = &(meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "velocity", numStates));
-  stk::mesh::put_field_on_mesh(*velocity_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*velocity_, selector, nDim, nullptr);
   realm_.augment_restart_variable_list("velocity");
 
   dudx_ = &(
     meta_data.declare_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx"));
-  stk::mesh::put_field_on_mesh(*dudx_, *part, nDim * nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*dudx_, selector, nDim * nDim, nullptr);
 
   // delta solution for linear solver
   uTmp_ = &(
     meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "uTmp"));
-  stk::mesh::put_field_on_mesh(*uTmp_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*uTmp_, selector, nDim, nullptr);
 
   coordinates_ = &(meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "coordinates"));
-  stk::mesh::put_field_on_mesh(*coordinates_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*coordinates_, selector, nDim, nullptr);
 
   visc_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "viscosity"));
-  stk::mesh::put_field_on_mesh(*visc_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*visc_, selector, nullptr);
 
   if (realm_.is_turbulent()) {
     tvisc_ = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "turbulent_viscosity"));
-    stk::mesh::put_field_on_mesh(*tvisc_, *part, nullptr);
+    stk::mesh::put_field_on_mesh(*tvisc_, selector, nullptr);
     evisc_ = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "effective_viscosity_u"));
-    stk::mesh::put_field_on_mesh(*evisc_, *part, nullptr);
+    stk::mesh::put_field_on_mesh(*evisc_, selector, nullptr);
 
     if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
-      AMSAlgDriver_->register_nodal_fields(part);
+      AMSAlgDriver_->register_nodal_fields(part_vec);
 
     if (
       realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_IDDES) {
       iddesRansIndicator_ = &(meta_data.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "iddes_rans_indicator"));
-      stk::mesh::put_field_on_mesh(*iddesRansIndicator_, *part, nullptr);
+      stk::mesh::put_field_on_mesh(*iddesRansIndicator_, selector, nullptr);
     }
   }
 
@@ -1180,16 +1182,16 @@ MomentumEquationSystem::register_nodal_fields(stk::mesh::Part* part)
     ScalarFieldType* pecletAtNodes =
       &(realm_.meta_data().declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "max_peclet_factor"));
-    stk::mesh::put_field_on_mesh(*pecletAtNodes, *part, nullptr);
+    stk::mesh::put_field_on_mesh(*pecletAtNodes, selector, nullptr);
     ScalarFieldType* pecletNumAtNodes =
       &(realm_.meta_data().declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "max_peclet_number"));
-    stk::mesh::put_field_on_mesh(*pecletNumAtNodes, *part, nullptr);
+    stk::mesh::put_field_on_mesh(*pecletNumAtNodes, selector, nullptr);
   }
 
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "momentum_diag"));
-  stk::mesh::put_field_on_mesh(*Udiag_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*Udiag_, selector, nullptr);
   realm_.augment_restart_variable_list("momentum_diag");
 
   // make sure all states are properly populated (restart can handle this)
@@ -1201,7 +1203,7 @@ MomentumEquationSystem::register_nodal_fields(stk::mesh::Part* part)
       velocity_->field_of_state(stk::mesh::StateNP1);
 
     CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
-      realm_, part, &velocityNp1, &velocityN, 0, nDim,
+      realm_, part_vec, &velocityNp1, &velocityN, 0, nDim,
       stk::topology::NODE_RANK);
     copyStateAlg_.push_back(theCopyAlg);
   }
@@ -1211,21 +1213,21 @@ MomentumEquationSystem::register_nodal_fields(stk::mesh::Part* part)
     // create temp vector field for duidx that will hold the active dudx
     VectorFieldType* duidx = &(meta_data.declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "duidx"));
-    stk::mesh::put_field_on_mesh(*duidx, *part, nDim, nullptr);
+    stk::mesh::put_field_on_mesh(*duidx, selector, nDim, nullptr);
   }
 
   // Add actuator and other source terms
   // put it here because the parts to register are sorted on the equation system
   // probably should go in Realm::register_nodal_fields at some point
   if (realm_.aeroModels_->is_active()) {
-    realm_.aeroModels_->register_nodal_fields(meta_data, part);
+    realm_.aeroModels_->register_nodal_fields(meta_data, part_vec);
   }
 
   ScalarFieldType& node_mask =
     realm_.meta_data().declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_node_mask");
   double one = 1;
-  stk::mesh::put_field_on_mesh(node_mask, *part, 1, &one);
+  stk::mesh::put_field_on_mesh(node_mask, selector, 1, &one);
 }
 
 //--------------------------------------------------------------------------
@@ -2817,10 +2819,11 @@ ContinuityEquationSystem::~ContinuityEquationSystem() {}
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-ContinuityEquationSystem::register_nodal_fields(stk::mesh::Part* part)
+ContinuityEquationSystem::register_nodal_fields(const stk::mesh::PartVector &part_vec)
 {
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   const int nDim = meta_data.spatial_dimension();
 
@@ -2828,21 +2831,21 @@ ContinuityEquationSystem::register_nodal_fields(stk::mesh::Part* part)
   const int numStates = 2;
   pressure_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "pressure", numStates));
-  stk::mesh::put_field_on_mesh(*pressure_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*pressure_, selector, nullptr);
   realm_.augment_restart_variable_list("pressure");
 
   dpdx_ = &(
     meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dpdx"));
-  stk::mesh::put_field_on_mesh(*dpdx_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*dpdx_, selector, nDim, nullptr);
 
   // delta solution for linear solver; share delta with other split systems
   pTmp_ = &(
     meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pTmp"));
-  stk::mesh::put_field_on_mesh(*pTmp_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*pTmp_, selector, nullptr);
 
   coordinates_ = &(meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "coordinates"));
-  stk::mesh::put_field_on_mesh(*coordinates_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*coordinates_, selector, nDim, nullptr);
 }
 
 //--------------------------------------------------------------------------

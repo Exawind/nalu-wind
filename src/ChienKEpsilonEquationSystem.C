@@ -112,27 +112,29 @@ ChienKEpsilonEquationSystem::initialize()
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-ChienKEpsilonEquationSystem::register_nodal_fields(stk::mesh::Part* part)
+ChienKEpsilonEquationSystem::register_nodal_fields(
+  const stk::mesh::PartVector& part_vec)
 {
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   const int numStates = realm_.number_of_states();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   // re-register tke and tdr for convenience
   tke_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "turbulent_ke", numStates));
-  stk::mesh::put_field_on_mesh(*tke_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*tke_, selector, nullptr);
   tdr_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "total_dissipation_rate", numStates));
-  stk::mesh::put_field_on_mesh(*tdr_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*tdr_, selector, nullptr);
 
   // SST parameters that everyone needs
   minDistanceToWall_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "minimum_distance_to_wall"));
-  stk::mesh::put_field_on_mesh(*minDistanceToWall_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*minDistanceToWall_, selector, nullptr);
   dplus_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dplus_wall_function"));
-  stk::mesh::put_field_on_mesh(*dplus_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*dplus_, selector, nullptr);
 
   // add to restart field
   realm_.augment_restart_variable_list("minimum_distance_to_wall");

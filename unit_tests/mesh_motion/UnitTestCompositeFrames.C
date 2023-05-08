@@ -150,7 +150,8 @@ TEST(meshMotion, NGP_initialize)
   realm.timeIntegrator_ = &timeIntegrator;
 
   // register mesh motion fields and initialize coordinate fields
-  realm.register_nodal_fields(&(realm.meta_data().universal_part()));
+  realm.register_nodal_fields(
+    stk::mesh::PartVector(1, &(realm.meta_data().universal_part())));
 
   // create field to copy coordinates
   // NOTE: This is done to allow computation of gold values later on
@@ -256,7 +257,8 @@ TEST(meshMotion, NGP_execute)
   realm.timeIntegrator_ = &timeIntegrator;
 
   // register mesh motion fields and initialize coordinate fields
-  realm.register_nodal_fields(&(realm.meta_data().universal_part()));
+  realm.register_nodal_fields(
+    stk::mesh::PartVector(1, &(realm.meta_data().universal_part())));
 
   // create field to copy coordinates
   // NOTE: This is done to allow computation of gold values later on

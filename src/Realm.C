@@ -2715,31 +2715,30 @@ Realm::compute_l2_scaling()
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-Realm::register_nodal_fields(stk::mesh::Part* part)
+Realm::register_nodal_fields(const stk::mesh::PartVector& part_vec)
 {
   if (!fieldManager_) {
     setup_field_manager();
   }
   // register high level common fields
   // Declare volume/area_vector fields
-  const stk::mesh::PartVector parts(1, part);
   const int numVolStates = does_mesh_move() ? number_of_states() : 1;
-  fieldManager_->register_field("dual_nodal_volume", parts, numVolStates);
-  fieldManager_->register_field("element_volume", parts);
+  fieldManager_->register_field("dual_nodal_volume", part_vec, numVolStates);
+  fieldManager_->register_field("element_volume", part_vec);
 
   if (realmUsesEdges_) {
-    fieldManager_->register_field("edge_area_vector", parts);
+    fieldManager_->register_field("edge_area_vector", part_vec);
   }
 
   // mesh motion/deformation is high level
   if (does_mesh_move()) {
-    fieldManager_->register_field("mesh_displacement", parts);
-    fieldManager_->register_field("current_coordinates", parts);
-    fieldManager_->register_field("mesh_velocity", parts);
-    fieldManager_->register_field("velocity_rtm", parts);
-    fieldManager_->register_field("div_mesh_velocity", parts);
+    fieldManager_->register_field("mesh_displacement", part_vec);
+    fieldManager_->register_field("current_coordinates", part_vec);
+    fieldManager_->register_field("mesh_velocity", part_vec);
+    fieldManager_->register_field("velocity_rtm", part_vec);
+    fieldManager_->register_field("div_mesh_velocity", part_vec);
     if (has_mesh_deformation()) {
-      fieldManager_->register_field("div_mesh_velocity", parts);
+      fieldManager_->register_field("div_mesh_velocity", part_vec);
     }
     augment_restart_variable_list("dual_nodal_volume");
     augment_restart_variable_list("mesh_displacement");
@@ -2747,7 +2746,7 @@ Realm::register_nodal_fields(stk::mesh::Part* part)
     augment_restart_variable_list("mesh_velocity");
   }
 
-  fieldManager_->register_field("iblank", parts);
+  fieldManager_->register_field("iblank", part_vec);
 }
 
 //--------------------------------------------------------------------------

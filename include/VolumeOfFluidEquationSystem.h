@@ -44,7 +44,7 @@ public:
   VolumeOfFluidEquationSystem(EquationSystems& equationSystems);
   virtual ~VolumeOfFluidEquationSystem();
 
-  virtual void register_nodal_fields(stk::mesh::Part* part);
+  virtual void register_nodal_fields(const stk::mesh::PartVector& part_vec);
 
   virtual void register_edge_fields(stk::mesh::Part* part);
 

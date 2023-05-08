@@ -246,38 +246,40 @@ EnthalpyEquationSystem::initial_work()
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-EnthalpyEquationSystem::register_nodal_fields(stk::mesh::Part* part)
+EnthalpyEquationSystem::register_nodal_fields(
+  const stk::mesh::PartVector& part_vec)
 {
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   const int nDim = meta_data.spatial_dimension();
   const int numStates = realm_.number_of_states();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   // register dof; set it as a restart variable
   enthalpy_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "enthalpy", numStates));
-  stk::mesh::put_field_on_mesh(*enthalpy_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*enthalpy_, selector, nullptr);
   realm_.augment_restart_variable_list("enthalpy");
 
   // temperature required in restart
   temperature_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "temperature"));
-  stk::mesh::put_field_on_mesh(*temperature_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*temperature_, selector, nullptr);
   realm_.augment_restart_variable_list("temperature");
 
   dhdx_ = &(
     meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dhdx"));
-  stk::mesh::put_field_on_mesh(*dhdx_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*dhdx_, selector, nDim, nullptr);
 
   // props
   specHeat_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "specific_heat"));
-  stk::mesh::put_field_on_mesh(*specHeat_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*specHeat_, selector, nullptr);
 
   visc_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "viscosity"));
-  stk::mesh::put_field_on_mesh(*visc_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*visc_, selector, nullptr);
 
   // push standard props to property list; enthalpy managed along with Cp
   realm_.augment_property_map(SPEC_HEAT_ID, specHeat_);
@@ -286,7 +288,7 @@ EnthalpyEquationSystem::register_nodal_fields(stk::mesh::Part* part)
   // special thermal conductivity
   thermalCond_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "thermal_conductivity"));
-  stk::mesh::put_field_on_mesh(*thermalCond_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*thermalCond_, selector, nullptr);
 
   // check to see if Prandtl number was provided
   bool prProvided = false;
@@ -298,7 +300,7 @@ EnthalpyEquationSystem::register_nodal_fields(stk::mesh::Part* part)
          "this constant value"
       << std::endl;
     Algorithm* propAlg = new ThermalConductivityFromPrandtlPropAlgorithm(
-      realm_, part, thermalCond_, specHeat_, visc_, providedPr);
+      realm_, part_vec, thermalCond_, specHeat_, visc_, providedPr);
     propertyAlg_.push_back(propAlg);
   } else {
     // no Pr provided, simply augment property map and expect lambda to be
@@ -309,25 +311,25 @@ EnthalpyEquationSystem::register_nodal_fields(stk::mesh::Part* part)
   // delta solution for linear solver; share delta since this is a split system
   hTmp_ = &(
     meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pTmp"));
-  stk::mesh::put_field_on_mesh(*hTmp_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*hTmp_, selector, nullptr);
 
   // turbulent viscosity and effective viscosity
   if (realm_.is_turbulent()) {
     tvisc_ = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "turbulent_viscosity"));
-    stk::mesh::put_field_on_mesh(*tvisc_, *part, nullptr);
+    stk::mesh::put_field_on_mesh(*tvisc_, selector, nullptr);
   }
 
   evisc_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "effective_viscosity_h"));
-  stk::mesh::put_field_on_mesh(*evisc_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*evisc_, selector, nullptr);
 
   // register divergence of radiative heat flux; for now this is an explicit
   // coupling
   if (pmrCouplingActive_) {
     divQ_ = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "div_radiative_heat_flux"));
-    stk::mesh::put_field_on_mesh(*divQ_, *part, nullptr);
+    stk::mesh::put_field_on_mesh(*divQ_, selector, nullptr);
   }
 
   // need to save off old pressure for pressure time derivative (avoid state for
@@ -335,7 +337,7 @@ EnthalpyEquationSystem::register_nodal_fields(stk::mesh::Part* part)
   if (lowSpeedCompressActive_) {
     pOld_ = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "pressure_old"));
-    stk::mesh::put_field_on_mesh(*pOld_, *part, nullptr);
+    stk::mesh::put_field_on_mesh(*pOld_, selector, nullptr);
   }
 
   // make sure all states are properly populated (restart can handle this)
@@ -347,7 +349,8 @@ EnthalpyEquationSystem::register_nodal_fields(stk::mesh::Part* part)
       enthalpy_->field_of_state(stk::mesh::StateNP1);
 
     CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
-      realm_, part, &enthalpyNp1, &enthalpyN, 0, 1, stk::topology::NODE_RANK);
+      realm_, part_vec, &enthalpyNp1, &enthalpyN, 0, 1,
+      stk::topology::NODE_RANK);
     // personally manage enthalpy
     bdf2CopyStateAlg_.push_back(theCopyAlg);
   }
