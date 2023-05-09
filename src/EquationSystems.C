@@ -258,19 +258,19 @@ EquationSystems::register_nodal_fields(
 
   stk::mesh::PartVector part_vec;
   part_vec.reserve(targetNames.size());
-  for (const auto &part_name : targetNames) {
+  for (const auto& part_name : targetNames) {
     part_vec.push_back(meta_data.get_part(part_name));
     if (nullptr == part_vec.back()) {
       NaluEnv::self().naluOutputP0()
         << "Trouble with part " << part_name << std::endl;
       throw std::runtime_error(
         "Sorry, no part name found by the name " + part_name);
-    } 
+    }
   }
   realm_.register_nodal_fields(part_vec);
   EquationSystemVector::iterator ii;
-  for (ii = equationSystemVector_.begin();
-       ii != equationSystemVector_.end(); ++ii)
+  for (ii = equationSystemVector_.begin(); ii != equationSystemVector_.end();
+       ++ii)
     (*ii)->register_nodal_fields(part_vec);
 }
 

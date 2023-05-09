@@ -22,8 +22,8 @@ namespace nalu {
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-Algorithm::Algorithm(Realm& realm, stk::mesh::Part* part) : 
-  realm_(realm), partVec_(1,part)
+Algorithm::Algorithm(Realm& realm, stk::mesh::Part* part)
+  : realm_(realm), partVec_(1, part)
 {
   // nothing to do
 }
