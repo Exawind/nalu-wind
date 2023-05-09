@@ -294,7 +294,8 @@ LowMachEquationSystem::initialize()
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-LowMachEquationSystem::register_nodal_fields(const stk::mesh::PartVector &part_vec)
+LowMachEquationSystem::register_nodal_fields(
+  const stk::mesh::PartVector& part_vec)
 {
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
@@ -343,7 +344,8 @@ LowMachEquationSystem::register_nodal_fields(const stk::mesh::PartVector &part_v
       dualNodalVolume_->field_of_state(stk::mesh::StateNP1);
 
     CopyFieldAlgorithm* theCopyAlgDlNdVol = new CopyFieldAlgorithm(
-      realm_, part_vec, &dualNdVolNp1, &dualNdVolN, 0, 1, stk::topology::NODE_RANK);
+      realm_, part_vec, &dualNdVolNp1, &dualNdVolN, 0, 1,
+      stk::topology::NODE_RANK);
     copyStateAlg_.push_back(theCopyAlgDlNdVol);
   }
 }
@@ -1128,7 +1130,8 @@ MomentumEquationSystem::pre_timestep_work()
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-MomentumEquationSystem::register_nodal_fields(const stk::mesh::PartVector &part_vec)
+MomentumEquationSystem::register_nodal_fields(
+  const stk::mesh::PartVector& part_vec)
 {
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
@@ -2819,7 +2822,8 @@ ContinuityEquationSystem::~ContinuityEquationSystem() {}
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-ContinuityEquationSystem::register_nodal_fields(const stk::mesh::PartVector &part_vec)
+ContinuityEquationSystem::register_nodal_fields(
+  const stk::mesh::PartVector& part_vec)
 {
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
