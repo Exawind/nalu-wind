@@ -126,7 +126,7 @@ AMSAlgDriver::register_nodal_fields(const stk::mesh::PartVector& part_vec)
 }
 
 void
-AMSAlgDriver::register_edge_fields(const stk::mesh::PartVector &part_vec)
+AMSAlgDriver::register_edge_fields(const stk::mesh::PartVector& part_vec)
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   stk::mesh::MetaData& meta = realm_.meta_data();

@@ -143,7 +143,8 @@ WallDistEquationSystem::register_nodal_fields(
 }
 
 void
-WallDistEquationSystem::register_edge_fields(const stk::mesh::PartVector &part_vec)
+WallDistEquationSystem::register_edge_fields(
+  const stk::mesh::PartVector& part_vec)
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   auto& meta = realm_.meta_data();
@@ -158,7 +159,7 @@ WallDistEquationSystem::register_edge_fields(const stk::mesh::PartVector &part_v
 
 void
 WallDistEquationSystem::register_element_fields(
-  const stk::mesh::PartVector &part_vec, const stk::topology&)
+  const stk::mesh::PartVector& part_vec, const stk::topology&)
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   if (realm_.query_for_overset()) {

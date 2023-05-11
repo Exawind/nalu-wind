@@ -46,7 +46,8 @@ public:
 
   virtual void register_nodal_fields(const stk::mesh::PartVector& part_vec);
   virtual void register_edge_fields(const stk::mesh::PartVector& part_vec);
-  virtual void register_element_fields(const stk::mesh::PartVector &part_vec, const stk::topology& theTopo);
+  virtual void register_element_fields(
+    const stk::mesh::PartVector& part_vec, const stk::topology& theTopo);
 
   virtual void register_interior_algorithm(stk::mesh::Part* part);
 

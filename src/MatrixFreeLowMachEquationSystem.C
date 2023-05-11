@@ -227,8 +227,7 @@ MatrixFreeLowMachEquationSystem::register_wall_bc(
 
   {
     constexpr int one_state = 1;
-    const std::array<double, 3> 
-      x{{data.u_.ux_, data.u_.uy_, data.u_.uz_}};
+    const std::array<double, 3> x{{data.u_.ux_, data.u_.uy_, data.u_.uz_}};
     auto& field = meta_.declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, names::velocity_bc, one_state);
     stk::mesh::put_field_on_mesh(field, *part, dim, x.data());

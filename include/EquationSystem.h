@@ -69,10 +69,16 @@ public:
   virtual void populate_derived_quantities() {}
 
   // base class with desired default no-op
-  virtual void register_nodal_fields(const stk::mesh::PartVector& /* part_vec */) {}
-  virtual void register_edge_fields(const stk::mesh::PartVector & /* part_vec */) {}
+  virtual void
+  register_nodal_fields(const stk::mesh::PartVector& /* part_vec */)
+  {
+  }
+  virtual void register_edge_fields(const stk::mesh::PartVector& /* part_vec */)
+  {
+  }
   virtual void register_element_fields(
-    const stk::mesh::PartVector& /* part_vec */, const stk::topology& /* theTopo */)
+    const stk::mesh::PartVector& /* part_vec */,
+    const stk::topology& /* theTopo */)
   {
   }
 

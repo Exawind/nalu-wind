@@ -248,11 +248,11 @@ EquationSystems::parent()
 }
 
 namespace {
-stk::mesh::PartVector 
+stk::mesh::PartVector
 create_part_vec(
-    stk::mesh::MetaData& meta_data,
-    const std::vector<std::string> &targetNames,
-    const bool element_rank = false) 
+  stk::mesh::MetaData& meta_data,
+  const std::vector<std::string>& targetNames,
+  const bool element_rank = false)
 {
   stk::mesh::PartVector part_vec;
   part_vec.reserve(targetNames.size());
@@ -264,25 +264,26 @@ create_part_vec(
       throw std::runtime_error(
         "Sorry, no part name found by the name " + part_name);
     }
-    if (element_rank) { 
-      if (stk::topology::ELEMENT_RANK != part_vec.back()->primary_entity_rank()) 
+    if (element_rank) {
+      if (stk::topology::ELEMENT_RANK != part_vec.back()->primary_entity_rank())
         throw std::runtime_error(
           "Sorry, parts need to be elements.. " + part_name);
     }
   }
-  
+
   return part_vec;
 }
-}
+} // namespace
 //--------------------------------------------------------------------------
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
 EquationSystems::register_nodal_fields(
-  const std::vector<std::string> &targetNames)
+  const std::vector<std::string>& targetNames)
 {
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  const stk::mesh::PartVector part_vec = create_part_vec(meta_data, targetNames);
+  const stk::mesh::PartVector part_vec =
+    create_part_vec(meta_data, targetNames);
   realm_.register_nodal_fields(part_vec);
   EquationSystemVector::iterator ii;
   for (ii = equationSystemVector_.begin(); ii != equationSystemVector_.end();
@@ -295,13 +296,14 @@ EquationSystems::register_nodal_fields(
 //--------------------------------------------------------------------------
 void
 EquationSystems::register_edge_fields(
-  const std::vector<std::string> &targetNames)
+  const std::vector<std::string>& targetNames)
 {
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  const stk::mesh::PartVector part_vec = create_part_vec(meta_data, targetNames);
+  const stk::mesh::PartVector part_vec =
+    create_part_vec(meta_data, targetNames);
   EquationSystemVector::iterator ii;
-  for (ii = equationSystemVector_.begin();
-       ii != equationSystemVector_.end(); ++ii)
+  for (ii = equationSystemVector_.begin(); ii != equationSystemVector_.end();
+       ++ii)
     (*ii)->register_edge_fields(part_vec);
 }
 
@@ -310,19 +312,20 @@ EquationSystems::register_edge_fields(
 //--------------------------------------------------------------------------
 void
 EquationSystems::register_element_fields(
-  const std::vector<std::string> &targetNames)
+  const std::vector<std::string>& targetNames)
 {
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   ScalarFieldType& elemVolume = meta_data.declare_field<ScalarFieldType>(
     stk::topology::ELEMENT_RANK, "element_volume");
 
-  const stk::mesh::PartVector part_vec = create_part_vec(meta_data, targetNames, true);
+  const stk::mesh::PartVector part_vec =
+    create_part_vec(meta_data, targetNames, true);
   for (auto targetPart : part_vec) {
-    const stk::mesh::PartVector part(1,targetPart);
+    const stk::mesh::PartVector part(1, targetPart);
     const stk::topology the_topo = targetPart->topology();
     EquationSystemVector::iterator ii;
-    for (ii = equationSystemVector_.begin();
-         ii != equationSystemVector_.end(); ++ii)
+    for (ii = equationSystemVector_.begin(); ii != equationSystemVector_.end();
+         ++ii)
       (*ii)->register_element_fields(part, the_topo);
   }
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);

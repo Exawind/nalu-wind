@@ -156,7 +156,7 @@ VolumeOfFluidEquationSystem::register_nodal_fields(
 //--------------------------------------------------------------------------
 void
 VolumeOfFluidEquationSystem::register_element_fields(
-  const stk::mesh::PartVector &/*part_vec*/, const stk::topology& /* theTopo */)
+  const stk::mesh::PartVector& /*part_vec*/, const stk::topology& /* theTopo */)
 {
   // nothing as of yet
 }
@@ -165,7 +165,8 @@ VolumeOfFluidEquationSystem::register_element_fields(
 //-------- register_edge_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-VolumeOfFluidEquationSystem::register_edge_fields(const stk::mesh::PartVector &part_vec)
+VolumeOfFluidEquationSystem::register_edge_fields(
+  const stk::mesh::PartVector& part_vec)
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   stk::mesh::MetaData& meta_data = realm_.meta_data();

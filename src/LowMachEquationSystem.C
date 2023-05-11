@@ -355,7 +355,7 @@ LowMachEquationSystem::register_nodal_fields(
 //--------------------------------------------------------------------------
 void
 LowMachEquationSystem::register_element_fields(
-  const stk::mesh::PartVector &part_vec, const stk::topology& theTopo)
+  const stk::mesh::PartVector& part_vec, const stk::topology& theTopo)
 {
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
@@ -395,7 +395,8 @@ LowMachEquationSystem::register_element_fields(
 //-------- register_edge_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-LowMachEquationSystem::register_edge_fields(const stk::mesh::PartVector &part_vec)
+LowMachEquationSystem::register_edge_fields(
+  const stk::mesh::PartVector& part_vec)
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   if (realm_.realmUsesEdges_) {
@@ -1239,7 +1240,8 @@ MomentumEquationSystem::register_nodal_fields(
 //--------------------------------------------------------------------------
 void
 MomentumEquationSystem::register_element_fields(
-  const stk::mesh::PartVector & /* part_vec */, const stk::topology& /* theTopo */)
+  const stk::mesh::PartVector& /* part_vec */,
+  const stk::topology& /* theTopo */)
 {
 }
 
@@ -1247,7 +1249,8 @@ MomentumEquationSystem::register_element_fields(
 //-------- register_edge_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-MomentumEquationSystem::register_edge_fields(const stk::mesh::PartVector &part_vec)
+MomentumEquationSystem::register_edge_fields(
+  const stk::mesh::PartVector& part_vec)
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   ScalarFieldType* pecletFactor =
@@ -2859,7 +2862,8 @@ ContinuityEquationSystem::register_nodal_fields(
 //--------------------------------------------------------------------------
 void
 ContinuityEquationSystem::register_element_fields(
-  const stk::mesh::PartVector & /* part_vec */, const stk::topology& /* theTopo */)
+  const stk::mesh::PartVector& /* part_vec */,
+  const stk::topology& /* theTopo */)
 {
   // nothing as of yet
 }
@@ -2868,7 +2872,8 @@ ContinuityEquationSystem::register_element_fields(
 //-------- register_edge_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-ContinuityEquationSystem::register_edge_fields(const stk::mesh::PartVector &part_vec)
+ContinuityEquationSystem::register_edge_fields(
+  const stk::mesh::PartVector& part_vec)
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   stk::mesh::MetaData& meta_data = realm_.meta_data();

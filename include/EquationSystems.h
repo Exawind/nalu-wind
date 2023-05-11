@@ -72,9 +72,9 @@ public:
   size_t size() { return equationSystemVector_.size(); }
   EquationSystem* operator[](int i) { return equationSystemVector_[i]; }
 
-  void register_nodal_fields(const std::vector<std::string> &targetNames);
-  void register_edge_fields(const std::vector<std::string> &targetNames);
-  void register_element_fields(const std::vector<std::string> &targetNames);
+  void register_nodal_fields(const std::vector<std::string>& targetNames);
+  void register_edge_fields(const std::vector<std::string>& targetNames);
+  void register_element_fields(const std::vector<std::string>& targetNames);
 
   void register_interior_algorithm(const std::vector<std::string> targetNames);
 
