@@ -60,13 +60,9 @@ public:
 
   virtual void initialize() override;
 
-  virtual void
-  register_nodal_fields(const stk::mesh::PartVector& part_vec) override;
-
-  virtual void register_edge_fields(stk::mesh::Part* part) override;
-
-  virtual void register_element_fields(
-    stk::mesh::Part* part, const stk::topology& theTopo) override;
+  virtual void register_nodal_fields(const stk::mesh::PartVector& part_vec) override;
+  virtual void register_edge_fields(const stk::mesh::PartVector& part_vec) override;
+  virtual void register_element_fields(const stk::mesh::PartVector &part_vec, const stk::topology& theTopo) override;
 
   virtual void register_open_bc(
     stk::mesh::Part* part,
@@ -122,13 +118,9 @@ public:
   virtual void initial_work() override;
   virtual void pre_timestep_work() override;
 
-  virtual void
-  register_nodal_fields(const stk::mesh::PartVector& part_vec) override;
-
-  virtual void register_edge_fields(stk::mesh::Part* part) override;
-
-  virtual void register_element_fields(
-    stk::mesh::Part* part, const stk::topology& theTopo) override;
+  virtual void register_nodal_fields(const stk::mesh::PartVector& part_vec) override;
+  virtual void register_edge_fields(const stk::mesh::PartVector &part_vec) override;
+  virtual void register_element_fields(const stk::mesh::PartVector &part_vec, const stk::topology& theTopo) override;
 
   virtual void register_interior_algorithm(stk::mesh::Part* part) override;
 
@@ -239,13 +231,9 @@ public:
     EquationSystems& equationSystems, const bool elementContinuityEqs);
   virtual ~ContinuityEquationSystem();
 
-  virtual void
-  register_nodal_fields(const stk::mesh::PartVector& part_vec) override;
-
-  virtual void register_edge_fields(stk::mesh::Part* part) override;
-
-  virtual void register_element_fields(
-    stk::mesh::Part* part, const stk::topology& theTopo) override;
+  virtual void register_nodal_fields(const stk::mesh::PartVector& part_vec) override;
+  virtual void register_edge_fields(const stk::mesh::PartVector &part_vec) override;
+  virtual void register_element_fields(const stk::mesh::PartVector &part_vec, const stk::topology& theTopo) override;
 
   virtual void register_interior_algorithm(stk::mesh::Part* part) override;
 

@@ -355,9 +355,10 @@ LowMachEquationSystem::register_nodal_fields(
 //--------------------------------------------------------------------------
 void
 LowMachEquationSystem::register_element_fields(
-  stk::mesh::Part* part, const stk::topology& theTopo)
+  const stk::mesh::PartVector &part_vec, const stk::topology& theTopo)
 {
   stk::mesh::MetaData& meta_data = realm_.meta_data();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   // register mdot for element-based scheme...
   if (elementContinuityEqs_) {
@@ -369,7 +370,7 @@ LowMachEquationSystem::register_element_fields(
     GenericFieldType* massFlowRate =
       &(meta_data.declare_field<GenericFieldType>(
         stk::topology::ELEMENT_RANK, "mass_flow_rate_scs"));
-    stk::mesh::put_field_on_mesh(*massFlowRate, *part, numScsIp, nullptr);
+    stk::mesh::put_field_on_mesh(*massFlowRate, selector, numScsIp, nullptr);
   }
   // register the intersected elemental field
   if (realm_.query_for_overset()) {
@@ -378,31 +379,31 @@ LowMachEquationSystem::register_element_fields(
       &(meta_data.declare_field<GenericFieldType>(
         stk::topology::ELEMENT_RANK, "intersected_element"));
     stk::mesh::put_field_on_mesh(
-      *intersectedElement, *part, sizeOfElemField, nullptr);
+      *intersectedElement, selector, sizeOfElemField, nullptr);
   }
 
   // provide mean element Peclet and Courant fields; always...
   GenericFieldType* elemReynolds = &(meta_data.declare_field<GenericFieldType>(
     stk::topology::ELEMENT_RANK, "element_reynolds"));
-  stk::mesh::put_field_on_mesh(*elemReynolds, *part, 1, nullptr);
+  stk::mesh::put_field_on_mesh(*elemReynolds, selector, 1, nullptr);
   GenericFieldType* elemCourant = &(meta_data.declare_field<GenericFieldType>(
     stk::topology::ELEMENT_RANK, "element_courant"));
-  stk::mesh::put_field_on_mesh(*elemCourant, *part, 1, nullptr);
+  stk::mesh::put_field_on_mesh(*elemCourant, selector, 1, nullptr);
 }
 
 //--------------------------------------------------------------------------
 //-------- register_edge_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-LowMachEquationSystem::register_edge_fields(stk::mesh::Part* part)
+LowMachEquationSystem::register_edge_fields(const stk::mesh::PartVector &part_vec)
 {
-
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   if (realm_.realmUsesEdges_) {
     stk::mesh::MetaData& meta_data = realm_.meta_data();
     const int nDim = meta_data.spatial_dimension();
     edgeAreaVec_ = &(meta_data.declare_field<VectorFieldType>(
       stk::topology::EDGE_RANK, "edge_area_vector"));
-    stk::mesh::put_field_on_mesh(*edgeAreaVec_, *part, nDim, nullptr);
+    stk::mesh::put_field_on_mesh(*edgeAreaVec_, selector, nDim, nullptr);
   }
 }
 
@@ -1238,7 +1239,7 @@ MomentumEquationSystem::register_nodal_fields(
 //--------------------------------------------------------------------------
 void
 MomentumEquationSystem::register_element_fields(
-  stk::mesh::Part* /* part */, const stk::topology& /* theTopo */)
+  const stk::mesh::PartVector & /* part_vec */, const stk::topology& /* theTopo */)
 {
 }
 
@@ -1246,18 +1247,19 @@ MomentumEquationSystem::register_element_fields(
 //-------- register_edge_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-MomentumEquationSystem::register_edge_fields(stk::mesh::Part* part)
+MomentumEquationSystem::register_edge_fields(const stk::mesh::PartVector &part_vec)
 {
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   ScalarFieldType* pecletFactor =
     &(realm_.meta_data().declare_field<ScalarFieldType>(
       stk::topology::EDGE_RANK, "peclet_factor"));
-  stk::mesh::put_field_on_mesh(*pecletFactor, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*pecletFactor, selector, nullptr);
   ScalarFieldType* pecletNumber =
     &(realm_.meta_data().declare_field<ScalarFieldType>(
       stk::topology::EDGE_RANK, "peclet_number"));
-  stk::mesh::put_field_on_mesh(*pecletNumber, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*pecletNumber, selector, nullptr);
   if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
-    AMSAlgDriver_->register_edge_fields(part);
+    AMSAlgDriver_->register_edge_fields(part_vec);
 }
 
 //--------------------------------------------------------------------------
@@ -2857,7 +2859,7 @@ ContinuityEquationSystem::register_nodal_fields(
 //--------------------------------------------------------------------------
 void
 ContinuityEquationSystem::register_element_fields(
-  stk::mesh::Part* /* part */, const stk::topology& /* theTopo */)
+  const stk::mesh::PartVector & /* part_vec */, const stk::topology& /* theTopo */)
 {
   // nothing as of yet
 }
@@ -2866,12 +2868,13 @@ ContinuityEquationSystem::register_element_fields(
 //-------- register_edge_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-ContinuityEquationSystem::register_edge_fields(stk::mesh::Part* part)
+ContinuityEquationSystem::register_edge_fields(const stk::mesh::PartVector &part_vec)
 {
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   massFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::EDGE_RANK, "mass_flow_rate"));
-  stk::mesh::put_field_on_mesh(*massFlowRate_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*massFlowRate_, selector, nullptr);
 }
 
 //--------------------------------------------------------------------------

@@ -143,27 +143,29 @@ WallDistEquationSystem::register_nodal_fields(
 }
 
 void
-WallDistEquationSystem::register_edge_fields(stk::mesh::Part* part)
+WallDistEquationSystem::register_edge_fields(const stk::mesh::PartVector &part_vec)
 {
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   auto& meta = realm_.meta_data();
 
   if (realm_.realmUsesEdges_) {
     const int nDim = meta.spatial_dimension();
     edgeAreaVec_ = &(meta.declare_field<VectorFieldType>(
       stk::topology::EDGE_RANK, "edge_area_vector"));
-    stk::mesh::put_field_on_mesh(*edgeAreaVec_, *part, nDim, nullptr);
+    stk::mesh::put_field_on_mesh(*edgeAreaVec_, selector, nDim, nullptr);
   }
 }
 
 void
 WallDistEquationSystem::register_element_fields(
-  stk::mesh::Part* part, const stk::topology&)
+  const stk::mesh::PartVector &part_vec, const stk::topology&)
 {
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   if (realm_.query_for_overset()) {
     auto& meta = realm_.meta_data();
     GenericFieldType& intersectedElement = meta.declare_field<GenericFieldType>(
       stk::topology::ELEMENT_RANK, "intersected_element");
-    stk::mesh::put_field_on_mesh(intersectedElement, *part, 1, nullptr);
+    stk::mesh::put_field_on_mesh(intersectedElement, selector, 1, nullptr);
   }
 }
 
