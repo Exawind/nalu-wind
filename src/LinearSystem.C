@@ -13,6 +13,7 @@
 #include <Simulation.h>
 #include <LinearSolver.h>
 #include <master_element/MasterElement.h>
+#include <NaluEnv.h>
 
 #ifdef NALU_USES_HYPRE
 #include "HypreLinearSystem.h"
