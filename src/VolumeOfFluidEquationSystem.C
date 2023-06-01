@@ -29,6 +29,7 @@
 // edge kernels
 #include "edge_kernels/VOFAdvectionEdgeAlg.h"
 #include "user_functions/ZalesakDiskMassFlowRateKernel.h"
+#include "user_functions/ZalesakSphereMassFlowRateKernel.h"
 
 // node kernels
 #include "node_kernels/NodeKernelUtils.h"
@@ -40,6 +41,7 @@
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
 #include "stk_topology/topology.hpp"
 #include "user_functions/ZalesakDiskVOFAuxFunction.h"
+#include "user_functions/ZalesakSphereVOFAuxFunction.h"
 #include "user_functions/DropletVOFAuxFunction.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpLoopUtils.h"
@@ -489,6 +491,27 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
         realm_.initCondAlg_.push_back(constantAuxAlg);
         auto VOFSetMassFlowRate =
           new ZalesakDiskMassFlowRateEdgeAlg(realm_, part, this, useAvgMdot);
+        realm_.initCondAlg_.push_back(VOFSetMassFlowRate);
+      }
+    } else if (fcnName == "zalesak_sphere") {
+      theAuxFunc = new ZalesakSphereVOFAuxFunction();
+      // Initialize mass flow rate until momentum connection implemented
+      {
+        const bool useAvgMdot = (realm_.solutionOptions_->turbulenceModel_ ==
+                                 TurbulenceModel::SST_AMS)
+                                  ? true
+                                  : false;
+        ScalarFieldType* density_ =
+          realm_.meta_data().get_field<ScalarFieldType>(
+            stk::topology::NODE_RANK, "density");
+        std::vector<double> userSpec(1);
+        userSpec[0] = 1.0;
+        AuxFunction* constantAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
+        AuxFunctionAlgorithm* constantAuxAlg = new AuxFunctionAlgorithm(
+          realm_, part, density_, constantAuxFunc, stk::topology::NODE_RANK);
+        realm_.initCondAlg_.push_back(constantAuxAlg);
+        auto VOFSetMassFlowRate =
+          new ZalesakSphereMassFlowRateEdgeAlg(realm_, part, this, useAvgMdot);
         realm_.initCondAlg_.push_back(VOFSetMassFlowRate);
       }
     } else if (fcnName == "droplet") {
