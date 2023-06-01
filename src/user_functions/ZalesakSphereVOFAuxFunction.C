@@ -50,11 +50,14 @@ ZalesakSphereVOFAuxFunction::do_evaluate(
 
     fieldPtr[0] = 0.0;
     // Put VOF in sphere
-    if ((x - xc) * (x - xc) + (y - yc) * (y - yc) + (z - zc) * (z - zc) < radius * radius)
+    if (
+      (x - xc) * (x - xc) + (y - yc) * (y - yc) + (z - zc) * (z - zc) <
+      radius * radius)
       fieldPtr[0] = 1.0;
 
     // Remove slot
-    if (x - xc > -0.5 * width && x - xc < 0.5 * width && y - yc > radius - depth)
+    if (
+      x - xc > -0.5 * width && x - xc < 0.5 * width && y - yc > radius - depth)
       fieldPtr[0] = 0.0;
 
     fieldPtr += fieldSize;

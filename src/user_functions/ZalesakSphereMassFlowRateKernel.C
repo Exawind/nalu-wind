@@ -70,7 +70,8 @@ ZalesakSphereMassFlowRateEdgeAlg::execute()
         edge_centroid[d] =
           0.5 * coordinates.get(nodeL, d) + 0.5 * coordinates.get(nodeR, d);
 
-      massFlowRate.get(edge, 0) = 2.0 * M_PI / period *
+      massFlowRate.get(edge, 0) =
+        2.0 * M_PI / period *
         ((yrot - edge_centroid[1]) * av[0] + (edge_centroid[0] - xrot) * av[1]);
     });
 }
