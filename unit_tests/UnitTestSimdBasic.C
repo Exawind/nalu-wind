@@ -70,7 +70,8 @@ TEST(Simd, stkMath)
 TEST(Simd, Views)
 {
   const int N = 3;
-  Kokkos::View<stk::simd::Double**> DoubleView("DoubleView", N, N);
+  auto DoubleView =
+    Kokkos::View<stk::simd::Double**, Kokkos::HostSpace>("DoubleView", N, N);
 
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < N; ++j) {
