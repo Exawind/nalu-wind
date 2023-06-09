@@ -183,10 +183,12 @@ TurbKineticEnergyEquationSystem::check_for_valid_turblence_model(
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-TurbKineticEnergyEquationSystem::register_nodal_fields(stk::mesh::Part* part)
+TurbKineticEnergyEquationSystem::register_nodal_fields(
+  const stk::mesh::PartVector& part_vec)
 {
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   const int nDim = meta_data.spatial_dimension();
   const int numStates = realm_.number_of_states();
@@ -194,29 +196,29 @@ TurbKineticEnergyEquationSystem::register_nodal_fields(stk::mesh::Part* part)
   // register dof; set it as a restart variable
   tke_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "turbulent_ke", numStates));
-  stk::mesh::put_field_on_mesh(*tke_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*tke_, selector, nullptr);
   realm_.augment_restart_variable_list("turbulent_ke");
 
   dkdx_ = &(
     meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dkdx"));
-  stk::mesh::put_field_on_mesh(*dkdx_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*dkdx_, selector, nDim, nullptr);
 
   // delta solution for linear solver; share delta since this is a split system
   kTmp_ = &(
     meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pTmp"));
-  stk::mesh::put_field_on_mesh(*kTmp_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*kTmp_, selector, nullptr);
 
   visc_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "viscosity"));
-  stk::mesh::put_field_on_mesh(*visc_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*visc_, selector, nullptr);
 
   tvisc_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "turbulent_viscosity"));
-  stk::mesh::put_field_on_mesh(*tvisc_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*tvisc_, selector, nullptr);
 
   evisc_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "effective_viscosity_tke"));
-  stk::mesh::put_field_on_mesh(*evisc_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*evisc_, selector, nullptr);
 
   // make sure all states are properly populated (restart can handle this)
   if (
@@ -226,7 +228,7 @@ TurbKineticEnergyEquationSystem::register_nodal_fields(stk::mesh::Part* part)
     ScalarFieldType& tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
 
     CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
-      realm_, part, &tkeNp1, &tkeN, 0, 1, stk::topology::NODE_RANK);
+      realm_, part_vec, &tkeNp1, &tkeN, 0, 1, stk::topology::NODE_RANK);
     copyStateAlg_.push_back(theCopyAlg);
   }
 }
@@ -920,7 +922,7 @@ TurbKineticEnergyEquationSystem::update_and_clip()
   ngpTke.modify_on_device();
 
   // parallel assemble clipped value
-  if (realm_.debug()) {
+  if (NaluEnv::self().debug()) {
     size_t g_numClip = 0;
     stk::ParallelMachine comm = NaluEnv::self().parallel_comm();
     stk::all_reduce_sum(comm, &numClip, &g_numClip, 1);

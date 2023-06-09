@@ -188,7 +188,7 @@ main(int argc, char** argv)
         << std::endl;
       sim.setSerializedIOGroupSize(serializedIOGroupSize);
     }
-    sim.debug_ = debug;
+    naluEnv.debug_ = debug;
     sim.load(doc);
     sim.breadboard();
     sim.initialize();

@@ -33,7 +33,7 @@ public:
   Algorithm(Realm& realm, stk::mesh::Part* part);
 
   // provide part vector
-  Algorithm(Realm& realm, stk::mesh::PartVector& partVec);
+  Algorithm(Realm& realm, const stk::mesh::PartVector& partVec);
 
   virtual ~Algorithm();
 

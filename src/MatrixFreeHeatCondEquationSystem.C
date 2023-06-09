@@ -89,21 +89,24 @@ register_vector_nodal_field_on_part(
 } // namespace
 
 void
-MatrixFreeHeatCondEquationSystem::register_nodal_fields(stk::mesh::Part* part)
+MatrixFreeHeatCondEquationSystem::register_nodal_fields(
+  const stk::mesh::PartVector& part_vec)
 {
   constexpr int three_states = 3;
   constexpr int one_state = 1;
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   register_scalar_nodal_field_on_part(
-    meta_, names::temperature, *part, three_states);
-  register_scalar_nodal_field_on_part(meta_, names::delta, *part, one_state);
+    meta_, names::temperature, selector, three_states);
+  register_scalar_nodal_field_on_part(meta_, names::delta, selector, one_state);
   register_scalar_nodal_field_on_part(
-    meta_, names::volume_weight, *part, one_state);
-  register_scalar_nodal_field_on_part(meta_, names::density, *part, one_state);
+    meta_, names::volume_weight, selector, one_state);
   register_scalar_nodal_field_on_part(
-    meta_, names::specific_heat, *part, one_state);
+    meta_, names::density, selector, one_state);
   register_scalar_nodal_field_on_part(
-    meta_, names::thermal_conductivity, *part, one_state);
-  register_vector_nodal_field_on_part(meta_, names::dtdx, *part, one_state);
+    meta_, names::specific_heat, selector, one_state);
+  register_scalar_nodal_field_on_part(
+    meta_, names::thermal_conductivity, selector, one_state);
+  register_vector_nodal_field_on_part(meta_, names::dtdx, selector, one_state);
 
   realm_.augment_restart_variable_list(names::temperature);
   realm_.augment_property_map(

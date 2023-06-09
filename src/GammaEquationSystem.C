@@ -137,40 +137,42 @@ GammaEquationSystem::~GammaEquationSystem() = default;
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-GammaEquationSystem::register_nodal_fields(stk::mesh::Part* part)
+GammaEquationSystem::register_nodal_fields(
+  const stk::mesh::PartVector& part_vec)
 {
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   const int nDim = meta_data.spatial_dimension();
   const int numStates = realm_.number_of_states();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   // register dof; set it as a restart variable
   gamma_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "gamma_transition", numStates));
-  stk::mesh::put_field_on_mesh(*gamma_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*gamma_, selector, nullptr);
   realm_.augment_restart_variable_list("gamma_transition");
 
   dgamdx_ = &(meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "dgamdx"));
-  stk::mesh::put_field_on_mesh(*dgamdx_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*dgamdx_, selector, nDim, nullptr);
 
   // delta solution for linear solver; share delta since this is a split system
   gamTmp_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "gamTmp"));
-  stk::mesh::put_field_on_mesh(*gamTmp_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*gamTmp_, selector, nullptr);
 
   visc_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "viscosity"));
-  stk::mesh::put_field_on_mesh(*visc_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*visc_, selector, nullptr);
 
   tvisc_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "turbulent_viscosity"));
-  stk::mesh::put_field_on_mesh(*tvisc_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*tvisc_, selector, nullptr);
 
   evisc_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "effective_viscosity_gamma"));
-  stk::mesh::put_field_on_mesh(*evisc_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*evisc_, selector, nullptr);
 
   // make sure all states are properly populated (restart can handle this)
   if (
@@ -180,7 +182,7 @@ GammaEquationSystem::register_nodal_fields(stk::mesh::Part* part)
     ScalarFieldType& gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
 
     CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
-      realm_, part, &gammaNp1, &gammaN, 0, 1, stk::topology::NODE_RANK);
+      realm_, part_vec, &gammaNp1, &gammaN, 0, 1, stk::topology::NODE_RANK);
     copyStateAlg_.push_back(theCopyAlg);
   }
 }

@@ -40,7 +40,7 @@ public:
 
   virtual void initialize();
 
-  virtual void register_nodal_fields(stk::mesh::Part* part);
+  virtual void register_nodal_fields(const stk::mesh::PartVector& part_vec);
 
   virtual void register_wall_bc(
     stk::mesh::Part* part,

@@ -50,17 +50,6 @@
 namespace sierra {
 namespace nalu {
 
-Simulation*
-LinearSolver::root()
-{
-  return linearSolvers_->root();
-}
-LinearSolvers*
-LinearSolver::parent()
-{
-  return linearSolvers_;
-}
-
 #ifdef NALU_USES_TRILINOS_SOLVERS
 
 TpetraLinearSolver::TpetraLinearSolver(

@@ -34,7 +34,7 @@ public:
   GammaEquationSystem(EquationSystems& equationSystems);
   virtual ~GammaEquationSystem();
 
-  virtual void register_nodal_fields(stk::mesh::Part* part);
+  virtual void register_nodal_fields(const stk::mesh::PartVector& part_vec);
 
   void register_interior_algorithm(stk::mesh::Part* part);
 

@@ -47,7 +47,7 @@ public:
   MatrixFreeLowMachEquationSystem(EquationSystems&);
   virtual ~MatrixFreeLowMachEquationSystem();
   void initialize() final;
-  void register_nodal_fields(stk::mesh::Part*) final;
+  virtual void register_nodal_fields(const stk::mesh::PartVector& part_vec);
   void register_interior_algorithm(stk::mesh::Part*) final;
   double provide_norm() const final;
   double provide_scaled_norm() const final;
@@ -143,9 +143,9 @@ private:
   void sync_field_on_periodic_nodes(std::string name, int len) const;
   void setup_and_compute_continuity_preconditioner();
   void compute_courant_reynolds();
-  void check_part_is_valid(const stk::mesh::Part*);
-  void
-  register_copy_state_algorithm(std::string, int dim, stk::mesh::Part& part);
+  void check_part_is_valid(const stk::mesh::PartVector&);
+  void register_copy_state_algorithm(
+    std::string, int dim, const stk::mesh::PartVector&);
 
   std::string get_muelu_xml_file_name();
 

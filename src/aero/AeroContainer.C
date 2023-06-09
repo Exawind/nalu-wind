@@ -61,16 +61,17 @@ AeroContainer::AeroContainer(const YAML::Node& node) : fsiContainer_(nullptr)
 
 void
 AeroContainer::register_nodal_fields(
-  stk::mesh::MetaData& meta, stk::mesh::Part* part)
+  stk::mesh::MetaData& meta, const stk::mesh::PartVector& part_vec)
 {
   if (has_actuators()) {
+    stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
     const int nDim = meta.spatial_dimension();
     VectorFieldType* actuatorSource = &(meta.declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "actuator_source"));
     VectorFieldType* actuatorSourceLHS = &(meta.declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "actuator_source_lhs"));
-    stk::mesh::put_field_on_mesh(*actuatorSource, *part, nDim, nullptr);
-    stk::mesh::put_field_on_mesh(*actuatorSourceLHS, *part, nDim, nullptr);
+    stk::mesh::put_field_on_mesh(*actuatorSource, selector, nDim, nullptr);
+    stk::mesh::put_field_on_mesh(*actuatorSourceLHS, selector, nDim, nullptr);
   }
 }
 
@@ -99,6 +100,7 @@ AeroContainer::init(double currentTime, double restartFrequency)
     fsiContainer_->initialize(restartFrequency, currentTime);
   }
 #else
+  (void)currentTime;
   (void)restartFrequency;
 #endif
 }

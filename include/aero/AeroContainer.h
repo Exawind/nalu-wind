@@ -37,7 +37,8 @@ public:
   void setup(double timeStep, std::shared_ptr<stk::mesh::BulkData> stkBulk);
   void execute(double& timer);
   void init(double currentTime, double restartFrequency);
-  void register_nodal_fields(stk::mesh::MetaData& meta, stk::mesh::Part* part);
+  void register_nodal_fields(
+    stk::mesh::MetaData& meta, const stk::mesh::PartVector& part_vec);
   void update_displacements(const double currentTime);
   void predict_model_time_step(const double /*currentTime*/);
   void advance_model_time_step(const double /*currentTime*/);

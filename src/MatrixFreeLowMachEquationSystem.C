@@ -112,23 +112,25 @@ MatrixFreeLowMachEquationSystem::validate_matrix_free_linear_solver_config()
 
 void
 MatrixFreeLowMachEquationSystem::check_part_is_valid(
-  const stk::mesh::Part* part)
+  const stk::mesh::PartVector& part_vec)
 {
-  ThrowRequire(part);
-  ThrowRequireMsg(
-    matrix_free::part_is_valid_for_matrix_free(polynomial_order_, *part),
-    "part " + part->name() + " has invalid topology " +
-      part->topology().name() + ". Only hex8/hex27 supported");
+  for (auto part : part_vec) {
+    ThrowRequire(part);
+    ThrowRequireMsg(
+      matrix_free::part_is_valid_for_matrix_free(polynomial_order_, *part),
+      "part " + part->name() + " has invalid topology " +
+        part->topology().name() + ". Only hex8/hex27 supported");
+  }
 }
 
 void
 MatrixFreeLowMachEquationSystem::register_copy_state_algorithm(
-  std::string name, int length, stk::mesh::Part& part)
+  std::string name, int length, const stk::mesh::PartVector& part_vec)
 {
   if (!realm_.restarted_simulation()) {
     auto* field = meta_.get_field(stk::topology::NODE_RANK, name);
     auto copy = new CopyFieldAlgorithm(
-      realm_, &part, field->field_state(stk::mesh::StateNP1),
+      realm_, part_vec, field->field_state(stk::mesh::StateNP1),
       field->field_state(stk::mesh::StateN), 0, length,
       stk::topology::NODE_RANK);
     copyStateAlg_.push_back(copy);
@@ -136,51 +138,53 @@ MatrixFreeLowMachEquationSystem::register_copy_state_algorithm(
 }
 
 void
-MatrixFreeLowMachEquationSystem::register_nodal_fields(stk::mesh::Part* part)
+MatrixFreeLowMachEquationSystem::register_nodal_fields(
+  const stk::mesh::PartVector& part_vec)
 {
-  check_part_is_valid(part);
+  check_part_is_valid(part_vec);
   ThrowRequire(realm_.number_of_states() == 3);
   constexpr int one_state = 1;
   constexpr int three_states = 3;
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   register_scalar_nodal_field_on_part(
-    meta_, names::density, *part, three_states);
+    meta_, names::density, selector, three_states);
   realm_.augment_restart_variable_list(names::density);
   realm_.augment_property_map(
     DENSITY_ID,
     meta_.get_field<ScalarFieldType>(stk::topology::NODE_RANK, names::density));
-  register_copy_state_algorithm(names::density, 1, *part);
+  register_copy_state_algorithm(names::density, 1, part_vec);
 
   register_vector_nodal_field_on_part(
-    meta_, names::velocity, *part, three_states, {{0, 0, 0}});
+    meta_, names::velocity, selector, three_states, {{0, 0, 0}});
   realm_.augment_restart_variable_list(names::velocity);
-  register_copy_state_algorithm(names::velocity, dim, *part);
+  register_copy_state_algorithm(names::velocity, dim, part_vec);
 
   register_scalar_nodal_field_on_part(
-    meta_, names::viscosity, *part, one_state);
+    meta_, names::viscosity, selector, one_state);
   realm_.augment_property_map(
     VISCOSITY_ID, meta_.get_field<ScalarFieldType>(
                     stk::topology::NODE_RANK, names::viscosity));
 
   register_scalar_nodal_field_on_part(
-    meta_, names::pressure, *part, one_state, 0);
+    meta_, names::pressure, selector, one_state, 0);
   realm_.augment_restart_variable_list(names::pressure);
 
   register_scalar_nodal_field_on_part(
-    meta_, names::scaled_filter_length, *part, one_state, 0);
+    meta_, names::scaled_filter_length, selector, one_state, 0);
   register_vector_nodal_field_on_part(
-    meta_, names::dpdx_tmp, *part, one_state, {{0, 0, 0}});
+    meta_, names::dpdx_tmp, selector, one_state, {{0, 0, 0}});
   register_vector_nodal_field_on_part(
-    meta_, names::dpdx, *part, one_state, {{0, 0, 0}});
+    meta_, names::dpdx, selector, one_state, {{0, 0, 0}});
   register_vector_nodal_field_on_part(
-    meta_, names::body_force, *part, one_state, {{0, 0, 0}});
+    meta_, names::body_force, selector, one_state, {{0, 0, 0}});
 }
 
 void
 MatrixFreeLowMachEquationSystem::register_interior_algorithm(
   stk::mesh::Part* part)
 {
-  check_part_is_valid(part);
+  check_part_is_valid(stk::mesh::PartVector(1, part));
   interior_selector_ |= *part;
 }
 
@@ -190,7 +194,7 @@ MatrixFreeLowMachEquationSystem::register_wall_bc(
   const stk::topology&,
   const WallBoundaryConditionData& bc)
 {
-  check_part_is_valid(part);
+  check_part_is_valid(stk::mesh::PartVector(1, part));
 
   auto data = bc.userData_;
   ThrowRequireMsg(
@@ -283,7 +287,7 @@ MatrixFreeLowMachEquationSystem::register_initial_condition_fcn(
   const std::map<std::string, std::string>& names,
   const std::map<std::string, std::vector<double>>&)
 {
-  check_part_is_valid(part);
+  check_part_is_valid(stk::mesh::PartVector(1, part));
 
   auto it = names.find(names::velocity);
   if (it != names.end()) {
