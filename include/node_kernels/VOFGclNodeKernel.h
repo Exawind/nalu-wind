@@ -50,7 +50,6 @@ private:
   stk::mesh::NgpField<double> dualNdVolNp1_;
 
   unsigned scalarQNp1ID_{stk::mesh::InvalidOrdinal};
-  unsigned densityNp1ID_{stk::mesh::InvalidOrdinal};
   unsigned divVID_{stk::mesh::InvalidOrdinal};
   unsigned dualNdVolNm1ID_{stk::mesh::InvalidOrdinal};
   unsigned dualNdVolNID_{stk::mesh::InvalidOrdinal};

@@ -13,7 +13,6 @@
 
 #include "kernel/ScalarOpenAdvElemKernel.h"
 
-#if !defined(KOKKOS_ENABLE_GPU)
 namespace {
 namespace hex8_golds {
 static constexpr double rhs[8] = {
@@ -108,8 +107,10 @@ static constexpr double lhs[8][8] = {
 
 TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
 {
+  if constexpr (!sierra::nalu::isHostBuild)
+    GTEST_SKIP();
   if (bulk_->parallel_size() > 1)
-    return;
+    GTEST_SKIP();
 
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -159,4 +160,3 @@ TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
 }
-#endif

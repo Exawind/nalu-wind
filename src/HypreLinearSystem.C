@@ -1518,7 +1518,7 @@ HypreLinearSystem::hypreIJMatrixSetAddToValues()
     MPI_Barrier(realm_.bulk_data().parallel());
 
     char rank_str[8];
-    sprintf(rank_str, "%05d", rank_);
+    snprintf(rank_str, 8, "%05d", rank_);
     std::string writeCounter = std::to_string(eqSys_->linsysWriteCounter_);
     const std::string matFileRows = eqSysName_ + ".IJM." + writeCounter +
                                     ".mat." + std::string(rank_str) +
@@ -1626,7 +1626,7 @@ HypreLinearSystem::hypreIJVectorSetAddToValues()
     MPI_Barrier(realm_.bulk_data().parallel());
 
     char rank_str[8];
-    sprintf(rank_str, "%05d", rank_);
+    snprintf(rank_str, 8, "%05d", rank_);
     std::string writeCounter = std::to_string(eqSys_->linsysWriteCounter_);
     const std::string rhsFileRows = eqSysName_ + ".IJV." + writeCounter +
                                     ".rhs." + std::string(rank_str) +
@@ -1750,9 +1750,9 @@ HypreLinearSystem::dumpMatrixStats()
   if (iproc == 0) {
     char fname[1000];
 #if defined(KOKKOS_ENABLE_GPU)
-    sprintf(fname, "%s_decomp_%dGPUs.txt", name_.c_str(), nprocs);
+    snprintf(fname, 1000, "%s_decomp_%dGPUs.txt", name_.c_str(), nprocs);
 #else
-    sprintf(fname, "%s_decomp_%dCPUs.txt", name_.c_str(), nprocs);
+    snprintf(fname, 1000, "%s_decomp_%dCPUs.txt", name_.c_str(), nprocs);
 #endif
 
     std::ofstream myfile;

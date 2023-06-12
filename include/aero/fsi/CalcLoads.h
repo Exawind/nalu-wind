@@ -28,6 +28,8 @@ public:
 
   void setup(std::shared_ptr<stk::mesh::BulkData> bulk);
 
+  void initialize();
+
   void execute();
 
   //! Part vector over all wall boundary parts applying loads
@@ -41,7 +43,7 @@ public:
   ScalarFieldType* pressure_;
   ScalarFieldType* density_;
   ScalarFieldType* viscosity_;
-  GenericFieldType* dudx_;
+  TensorFieldType* dudx_;
   GenericFieldType* exposedAreaVec_;
   GenericFieldType* tforceSCS_;
 };

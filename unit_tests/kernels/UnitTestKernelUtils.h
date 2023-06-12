@@ -41,7 +41,7 @@ void velocity_test_function(
 void dudx_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
-  GenericFieldType& dudx);
+  TensorFieldType& dudx);
 
 void pressure_test_function(
   const stk::mesh::BulkData&,
@@ -107,6 +107,11 @@ void sst_f_one_blending_test_function(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordinates,
   ScalarFieldType& sst_f_one_blending);
+
+void iddes_rans_indicator_test_function(
+  const stk::mesh::BulkData& bulk,
+  const VectorFieldType& coordinates,
+  ScalarFieldType& iddes_rans_indicator);
 
 void minimum_distance_to_wall_test_function(
   const stk::mesh::BulkData& bulk,
@@ -179,22 +184,6 @@ void calc_open_mass_flow_rate(
   const VectorFieldType& velocity,
   const GenericFieldType& exposedAreaVec,
   const GenericFieldType& massFlowRate);
-
-void calc_projected_nodal_gradient(
-  stk::mesh::BulkData& bulk,
-  const stk::topology& topo,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& dualNodalVolume,
-  const ScalarFieldType& scalarField,
-  VectorFieldType& vectorField);
-
-void calc_projected_nodal_gradient(
-  stk::mesh::BulkData& bulk,
-  const stk::topology& topo,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& dualNodalVolume,
-  const VectorFieldType& vectorField,
-  GenericFieldType& tensorField);
 
 void expect_all_near(
   const Kokkos::View<double*>& calcValue,
@@ -481,7 +470,7 @@ public:
         stk::topology::ELEM_RANK, "mass_flow_rate_scs")),
       viscosity_(&meta_->declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "viscosity")),
-      dudx_(&meta_->declare_field<GenericFieldType>(
+      dudx_(&meta_->declare_field<TensorFieldType>(
         stk::topology::NODE_RANK, "dudx")),
       temperature_(&meta_->declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "temperature")),
@@ -535,7 +524,7 @@ public:
 
   GenericFieldType* massFlowRate_{nullptr};
   ScalarFieldType* viscosity_{nullptr};
-  GenericFieldType* dudx_{nullptr};
+  TensorFieldType* dudx_{nullptr};
   ScalarFieldType* temperature_{nullptr};
   GenericFieldType* openMassFlowRate_{nullptr};
   GenericFieldType* dynP_{nullptr};
@@ -742,7 +731,9 @@ public:
         stk::topology::NODE_RANK, "minimum_distance_to_wall")),
       fOneBlend_(&meta_->declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "sst_f_one_blending")),
-      dudx_(&meta_->declare_field<GenericFieldType>(
+      iddes_rans_indicator_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "iddes_rans_indicator")),
+      dudx_(&meta_->declare_field<TensorFieldType>(
         stk::topology::NODE_RANK, "dudx")),
       dkdx_(&meta_->declare_field<VectorFieldType>(
         stk::topology::NODE_RANK, "dkdx")),
@@ -771,6 +762,8 @@ public:
       *minDistance_, meta_->universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(
       *fOneBlend_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *iddes_rans_indicator_, meta_->universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(
       *dudx_, meta_->universal_part(), spatialDim_ * spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
@@ -813,6 +806,8 @@ public:
       *bulk_, *coordinates_, *minDistance_);
     unit_test_kernel_utils::sst_f_one_blending_test_function(
       *bulk_, *coordinates_, *fOneBlend_);
+    unit_test_kernel_utils::iddes_rans_indicator_test_function(
+      *bulk_, *coordinates_, *iddes_rans_indicator_);
     unit_test_kernel_utils::dudx_test_function(*bulk_, *coordinates_, *dudx_);
     stk::mesh::field_fill(0.0, *dkdx_);
     stk::mesh::field_fill(0.0, *dwdx_);
@@ -828,7 +823,8 @@ public:
   ScalarFieldType* maxLengthScale_{nullptr};
   ScalarFieldType* minDistance_{nullptr};
   ScalarFieldType* fOneBlend_{nullptr};
-  GenericFieldType* dudx_{nullptr};
+  ScalarFieldType* iddes_rans_indicator_{nullptr};
+  TensorFieldType* dudx_{nullptr};
   VectorFieldType* dkdx_{nullptr};
   VectorFieldType* dwdx_{nullptr};
   GenericFieldType* openMassFlowRate_{nullptr};
@@ -859,7 +855,7 @@ public:
         stk::topology::NODE_RANK, "minimum_distance_to_wall")),
       dplus_(&meta_->declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "dplus_wall_function")),
-      dudx_(&meta_->declare_field<GenericFieldType>(
+      dudx_(&meta_->declare_field<TensorFieldType>(
         stk::topology::NODE_RANK, "dudx"))
   {
     stk::mesh::put_field_on_mesh(*tke_, meta_->universal_part(), 1, nullptr);
@@ -898,7 +894,7 @@ public:
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* minDistance_{nullptr};
   ScalarFieldType* dplus_{nullptr};
-  GenericFieldType* dudx_{nullptr};
+  TensorFieldType* dudx_{nullptr};
 };
 
 /** Test Fixture for the KO Kernels
@@ -919,7 +915,7 @@ public:
         stk::topology::NODE_RANK, "turbulent_viscosity")),
       minDistance_(&meta_->declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "minimum_distance_to_wall")),
-      dudx_(&meta_->declare_field<GenericFieldType>(
+      dudx_(&meta_->declare_field<TensorFieldType>(
         stk::topology::NODE_RANK, "dudx")),
       dkdx_(&meta_->declare_field<VectorFieldType>(
         stk::topology::NODE_RANK, "dkdx")),
@@ -965,7 +961,7 @@ public:
   ScalarFieldType* visc_{nullptr};
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* minDistance_{nullptr};
-  GenericFieldType* dudx_{nullptr};
+  TensorFieldType* dudx_{nullptr};
   VectorFieldType* dkdx_{nullptr};
   VectorFieldType* dwdx_{nullptr};
 };
@@ -986,7 +982,7 @@ public:
         stk::topology::NODE_RANK, "specific_dissipation_rate")),
       minDistance_(&meta_->declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "minimum_distance_to_wall")),
-      dudx_(&meta_->declare_field<GenericFieldType>(
+      dudx_(&meta_->declare_field<TensorFieldType>(
         stk::topology::NODE_RANK, "dudx")),
       tvisc_(&meta_->declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "turbulent_viscosity")),
@@ -1085,7 +1081,7 @@ public:
   ScalarFieldType* tke_{nullptr};
   ScalarFieldType* sdr_{nullptr};
   ScalarFieldType* minDistance_{nullptr};
-  GenericFieldType* dudx_{nullptr};
+  TensorFieldType* dudx_{nullptr};
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* maxLengthScale_{nullptr};
   ScalarFieldType* fOneBlend_{nullptr};
@@ -1132,9 +1128,9 @@ public:
         stk::topology::NODE_RANK, "metric_tensor")),
       fOneBlend_(&meta_->declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "sst_f_one_blending")),
-      dudx_(&meta_->declare_field<GenericFieldType>(
+      dudx_(&meta_->declare_field<TensorFieldType>(
         stk::topology::NODE_RANK, "dudx")),
-      avgDudx_(&meta_->declare_field<GenericFieldType>(
+      avgDudx_(&meta_->declare_field<TensorFieldType>(
         stk::topology::NODE_RANK, "average_dudx")),
       dkdx_(&meta_->declare_field<VectorFieldType>(
         stk::topology::NODE_RANK, "dkdx")),
@@ -1215,8 +1211,8 @@ public:
   ScalarFieldType* minDist_{nullptr};
   GenericFieldType* Mij_{nullptr};
   ScalarFieldType* fOneBlend_{nullptr};
-  GenericFieldType* dudx_{nullptr};
-  GenericFieldType* avgDudx_{nullptr};
+  TensorFieldType* dudx_{nullptr};
+  TensorFieldType* avgDudx_{nullptr};
   VectorFieldType* dkdx_{nullptr};
   VectorFieldType* dwdx_{nullptr};
   VectorFieldType* forcingComp_{nullptr};

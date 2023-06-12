@@ -91,6 +91,7 @@ NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
 
 template class NodalGradEdgeAlg<ScalarFieldType, VectorFieldType>;
 template class NodalGradEdgeAlg<VectorFieldType, GenericFieldType>;
+template class NodalGradEdgeAlg<VectorFieldType, TensorFieldType>;
 
 } // namespace nalu
 } // namespace sierra

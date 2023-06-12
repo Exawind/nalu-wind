@@ -129,23 +129,28 @@ private:
 class TestElemAlgorithmWithSuppAlgViews
 {
 public:
-  TestElemAlgorithmWithSuppAlgViews(stk::mesh::BulkData& bulk)
-    : suppAlgs_(), dataNeededByKernels_(bulk.mesh_meta_data()), bulkData_(bulk)
+  TestElemAlgorithmWithSuppAlgViews(
+    stk::mesh::BulkData& bulk,
+    std::shared_ptr<sierra::nalu::FieldManager> fieldMgr)
+    : suppAlgs_(),
+      dataNeededByKernels_(bulk.mesh_meta_data()),
+      fieldManager(fieldMgr),
+      bulkData_(bulk)
   {
   }
 
   void execute()
   {
-    const stk::mesh::MetaData& meta = bulkData_.mesh_meta_data();
+    stk::mesh::MetaData& meta = bulkData_.mesh_meta_data();
 
     const stk::mesh::BucketVector& elemBuckets = bulkData_.get_buckets(
       stk::topology::ELEM_RANK, meta.locally_owned_part());
 
     stk::mesh::NgpMesh ngpMesh(bulkData_);
-    sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulkData_);
+    const int num_states = 2;
 
     sierra::nalu::ElemDataRequestsGPU dataNeededNGP(
-      fieldMgr, dataNeededByKernels_, meta.get_fields().size());
+      *fieldManager, dataNeededByKernels_);
     const int bytes_per_team = 0;
     const int bytes_per_thread =
       sierra::nalu::get_num_bytes_pre_req_data<DoubleType>(
@@ -179,6 +184,7 @@ public:
 
   std::vector<SuppAlg*> suppAlgs_;
   sierra::nalu::ElemDataRequests dataNeededByKernels_;
+  std::shared_ptr<sierra::nalu::FieldManager> fieldManager;
 
 private:
   stk::mesh::BulkData& bulkData_;
@@ -188,7 +194,7 @@ TEST_F(Hex8Mesh, elem_supp_alg_views)
 {
   fill_mesh_and_initialize_test_fields("generated:20x20x20");
 
-  TestElemAlgorithmWithSuppAlgViews testAlgorithm(*bulk);
+  TestElemAlgorithmWithSuppAlgViews testAlgorithm(*bulk, fieldManager);
 
   // DiscreteLapacianSuppAlg constructor says which data it needs, by inserting
   // things into the 'dataNeededByKernels_' container.

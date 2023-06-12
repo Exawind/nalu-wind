@@ -69,8 +69,10 @@ public:
     auto fieldDefIter = db->find(name);
 
     if (fieldDefIter == db->end()) {
-      const std::string message =
-        "Attempting to access an undefined field: " + name;
+      std::string message = "Attempting to access an undefined field: '" +
+                            name + "' with spatial dimension " +
+                            to_string(numDim) + " and number of states " +
+                            to_string(numStates);
       throw std::runtime_error(message);
     }
     return fieldDefIter->second;
@@ -81,7 +83,7 @@ public:
 
 private:
   FieldRegistry();
-  // Inorder to accomodate and embed the state and dimenstion information we
+  // In order to accomodate and embed the state and dimenstion information we
   // ended up creating four separate databases that are templated on the number
   // of states required by the time integration scheme This was done to preserve
   // the singelton/refernce lookup only behavior of the FieldRegistry

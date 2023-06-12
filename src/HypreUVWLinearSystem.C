@@ -136,7 +136,7 @@ HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
       MPI_Barrier(realm_.bulk_data().parallel());
 
       char rank_str[8];
-      sprintf(rank_str, "%05d", rank_);
+      snprintf(rank_str, 8, "%05d", rank_);
       std::string writeCounter = std::to_string(eqSys_->linsysWriteCounter_);
       const std::string rhsFileRows = eqSysName_ + std::to_string(i) + ".IJV." +
                                       writeCounter + ".rhs." +
@@ -336,7 +336,7 @@ HypreUVWLinearSystem::zeroSystem()
 
   if (hypreMatrixVectorsCreated_) {
 #ifdef HYPRE_LINEAR_SYSTEM_DEBUG
-    sprintf(oname_, "debug_out_%d.txt", rank_);
+    snprintf(oname_, 50, "debug_out_%d.txt", rank_);
     output_ = fopen(oname_, "wt");
     fprintf(
       output_, "rank_=%d EqnName=%s : %s %s %d\n", rank_, name_.c_str(),

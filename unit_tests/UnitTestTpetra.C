@@ -283,7 +283,7 @@ setup_realm(unit_test_utils::NaluTest& naluObj, const std::string& meshSpec)
   realm.setup_field_manager();
   realm.setup_nodal_fields();
   auto& part = realm.meta_data().declare_part("block_1");
-  realm.register_nodal_fields(&part);
+  realm.register_nodal_fields(stk::mesh::PartVector(1, &part));
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
   realm.set_global_id();
 

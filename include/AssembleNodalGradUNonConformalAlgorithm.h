@@ -28,14 +28,14 @@ public:
     Realm& realm,
     stk::mesh::Part* part,
     VectorFieldType* vectorQ,
-    GenericFieldType* dqdx);
+    TensorFieldType* dqdx);
 
   ~AssembleNodalGradUNonConformalAlgorithm();
 
   void execute();
 
   VectorFieldType* vectorQ_;
-  GenericFieldType* dqdx_;
+  TensorFieldType* dqdx_;
 
   ScalarFieldType* dualNodalVolume_;
   GenericFieldType* exposedAreaVec_;

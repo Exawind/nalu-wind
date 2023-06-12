@@ -47,7 +47,7 @@ TEST_F(FieldManagerTest, nameIsEnoughInfoToRegisterAField)
   EXPECT_EQ(findFieldPtr, std::get<VectorFieldType*>(ptr));
   EXPECT_TRUE(fm.field_exists(name));
 
-  auto ptr2 = fm.get_field_ptr<VectorFieldType*>(name);
+  auto ptr2 = fm.get_field_ptr<VectorFieldType>(name);
   EXPECT_EQ(findFieldPtr, ptr2);
 }
 
@@ -63,11 +63,12 @@ TEST_F(FieldManagerTest, canRegisterDifferentFieldTypesThroughOneInterface)
   const std::string vectorName = "velocity";
   const std::string scalarName = "temperature";
   const int num_states = 2;
+  const stk::mesh::PartVector universal(1, &meta().universal_part());
   FieldManager f(meta(), num_states);
   EXPECT_FALSE(f.field_exists(vectorName));
   EXPECT_FALSE(f.field_exists(scalarName));
   EXPECT_NO_THROW(f.register_field(vectorName, meta().get_parts()));
-  EXPECT_NO_THROW(f.register_field(scalarName, meta().universal_part()));
+  EXPECT_NO_THROW(f.register_field(scalarName, universal));
   EXPECT_TRUE(f.field_exists(vectorName));
   EXPECT_TRUE(f.field_exists(scalarName));
 }
@@ -76,10 +77,11 @@ TEST_F(FieldManagerTest, fieldCanBeRegisteredMultipleTimes)
 {
   const std::string name = "velocity";
   const int num_states = 3;
+  const stk::mesh::PartVector universal(1, &meta().universal_part());
   FieldManager fm(meta(), num_states);
   EXPECT_FALSE(fm.field_exists(name));
   EXPECT_NO_THROW(fm.register_field(name, meta().get_parts()));
-  EXPECT_NO_THROW(fm.register_field(name, meta().universal_part()));
+  EXPECT_NO_THROW(fm.register_field(name, universal));
   EXPECT_TRUE(fm.field_exists(name));
 }
 
@@ -87,21 +89,22 @@ TEST_F(FieldManagerTest, undefinedFieldCantBeRegistered)
 {
   const std::string name = "fields_of_gold";
   const int num_states = 3;
+  const stk::mesh::PartVector universal(1, &meta().universal_part());
   FieldManager fm(meta(), num_states);
-  EXPECT_THROW(
-    fm.register_field(name, meta().universal_part()), std::runtime_error);
+  EXPECT_THROW(fm.register_field(name, universal), std::runtime_error);
 }
 
 TEST_F(FieldManagerTest, fieldStateCanBeSelected)
 {
   const std::string name = "velocity";
   const int numStates = 3;
+  const stk::mesh::PartVector universal(1, &meta().universal_part());
   FieldManager fm(meta(), numStates);
-  fm.register_field(name, meta().universal_part());
+  fm.register_field(name, universal);
   // clang-format off
-  const auto np1 = fm.get_field_ptr<VectorFieldType*>(name, stk::mesh::StateNP1);
-  const auto n =   fm.get_field_ptr<VectorFieldType*>(name, stk::mesh::StateN);
-  const auto nm1 = fm.get_field_ptr<VectorFieldType*>(name, stk::mesh::StateNM1);
+  const auto np1 = fm.get_field_ptr<VectorFieldType>(name, stk::mesh::StateNP1);
+  const auto n =   fm.get_field_ptr<VectorFieldType>(name, stk::mesh::StateN);
+  const auto nm1 = fm.get_field_ptr<VectorFieldType>(name, stk::mesh::StateNM1);
   // clang-format on
   EXPECT_TRUE(np1 != nullptr);
   EXPECT_TRUE(n != nullptr);
@@ -114,10 +117,10 @@ TEST_F(FieldManagerTest, numStatesCanBeChangedAtRegistration)
 {
   const std::string name = "dual_nodal_volume";
   const int numStates = 3;
-
+  const stk::mesh::PartVector universal(1, &meta().universal_part());
   FieldManager fm(meta(), numStates);
-  fm.register_field(name, meta().universal_part(), numStates);
-  auto field = fm.get_field_ptr<ScalarFieldType*>(name);
+  fm.register_field(name, universal, numStates);
+  auto field = fm.get_field_ptr<ScalarFieldType>(name);
   ASSERT_TRUE(field != nullptr);
   EXPECT_EQ(numStates, field->number_of_states());
 }

@@ -219,20 +219,20 @@ void
 register_scalar_nodal_field_on_part(
   stk::mesh::MetaData& meta,
   std::string name,
-  const stk::mesh::Part& part,
+  const stk::mesh::Selector& selector,
   int num_states,
   double ic)
 {
   auto& field = meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, name, num_states);
-  stk::mesh::put_field_on_mesh(field, part, &ic);
+  stk::mesh::put_field_on_mesh(field, selector, &ic);
 }
 
 void
 register_vector_nodal_field_on_part(
   stk::mesh::MetaData& meta,
   std::string name,
-  const stk::mesh::Part& selector,
+  const stk::mesh::Selector& selector,
   int num_states,
   std::array<double, 3> x)
 {

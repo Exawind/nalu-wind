@@ -112,32 +112,34 @@ WallDistEquationSystem::initial_work()
 }
 
 void
-WallDistEquationSystem::register_nodal_fields(stk::mesh::Part* part)
+WallDistEquationSystem::register_nodal_fields(
+  const stk::mesh::PartVector& part_vec)
 {
   auto& meta = realm_.meta_data();
   const int nDim = meta.spatial_dimension();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   wallDistPhi_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "wall_distance_phi"));
-  stk::mesh::put_field_on_mesh(*wallDistPhi_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*wallDistPhi_, selector, nullptr);
 
   dphidx_ = &(meta.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "dwalldistdx"));
-  stk::mesh::put_field_on_mesh(*dphidx_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*dphidx_, selector, nDim, nullptr);
 
   wallDistance_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "minimum_distance_to_wall"));
-  stk::mesh::put_field_on_mesh(*wallDistance_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*wallDistance_, selector, nullptr);
 
   coordinates_ = &(meta.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name()));
-  stk::mesh::put_field_on_mesh(*coordinates_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*coordinates_, selector, nDim, nullptr);
 
   const int numVolStates =
     realm_.does_mesh_move() ? realm_.number_of_states() : 1;
   dualNodalVolume_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates));
-  stk::mesh::put_field_on_mesh(*dualNodalVolume_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*dualNodalVolume_, selector, nullptr);
 }
 
 void

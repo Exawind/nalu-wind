@@ -13,6 +13,8 @@
 #include "kernels/UnitTestKernelUtils.h"
 
 #include "Realm.h"
+#include <variant>
+#include <type_traits>
 
 void
 TestAlgorithm::fill_mesh(const std::string mesh_spec)
@@ -43,80 +45,59 @@ TestTurbulenceAlgorithm::declare_fields()
   auto& meta = this->meta();
   auto spatialDim = meta.spatial_dimension();
 
-  density_ =
-    (&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "density"));
-  viscosity_ = (&meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "viscosity"));
-  tke_ = (&meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "turbulent_ke"));
-  sdr_ = (&meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "specific_dissipation_rate"));
-  minDistance_ = (&meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "minimum_distance_to_wall"));
-  dudx_ =
-    (&meta.declare_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx"));
-  openMassFlowRate_ = (&meta.declare_field<GenericFieldType>(
-    meta.side_rank(), "open_mass_flow_rate"));
-  tvisc_ = (&meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "turbulent_viscosity"));
-  maxLengthScale_ = (&meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "sst_max_length_scale"));
-  fOneBlend_ = (&meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "sst_f_one_blending"));
-  evisc_ = (&meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "effective_viscosity"));
-  evisc_ = (&meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "effective_viscosity"));
-  dualNodalVolume_ = (&meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "dual_nodal_volume"));
-  dkdx_ =
-    (&meta.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dkdx"));
-  dwdx_ =
-    (&meta.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dwdx"));
-  dhdx_ =
-    (&meta.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dhdx"));
+  if (!realm_->fieldManager_) {
+    sierra::nalu::TimeIntegrator timeIntegrator;
+    realm_->timeIntegrator_ = &timeIntegrator;
+    realm_->setup_field_manager();
+    realm_->timeIntegrator_ = nullptr;
+  }
+  const int numStates = 1;
 
-  specificHeat_ = (&meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "specific_heat"));
-
-  tkebc_ = &(meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "open_tke_bc"));
-
-  avgDudx_ = (&meta.declare_field<GenericFieldType>(
-    stk::topology::NODE_RANK, "average_dudx"));
-  avgTime_ = (&meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "rans_time_scale"));
-
-  stk::mesh::put_field_on_mesh(*density_, meta.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(*viscosity_, meta.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(*tke_, meta.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(*sdr_, meta.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(
-    *minDistance_, meta.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(
-    *dudx_, meta.universal_part(), spatialDim * spatialDim, nullptr);
-  stk::mesh::put_field_on_mesh(
-    *openMassFlowRate_, meta.universal_part(),
-    sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
-  stk::mesh::put_field_on_mesh(*tvisc_, meta.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(
-    *maxLengthScale_, meta.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(*fOneBlend_, meta.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(*evisc_, meta.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(
-    *dualNodalVolume_, meta.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(
-    *dkdx_, meta.universal_part(), spatialDim, nullptr);
-  stk::mesh::put_field_on_mesh(
-    *dwdx_, meta.universal_part(), spatialDim, nullptr);
-  stk::mesh::put_field_on_mesh(
-    *dhdx_, meta.universal_part(), spatialDim, nullptr);
-  stk::mesh::put_field_on_mesh(
-    *specificHeat_, meta.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(*tkebc_, meta.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(
-    *avgDudx_, meta.universal_part(), spatialDim * spatialDim, nullptr);
-  stk::mesh::put_field_on_mesh(*avgTime_, meta.universal_part(), 1, nullptr);
+  using FieldDef = std::variant<
+    ScalarFieldType**, VectorFieldType**, TensorFieldType**,
+    GenericFieldType**>;
+  // clang-format off
+  const std::vector<std::pair<std::string, FieldDef>> Fields = {
+    {"density",                   &density_          }, 
+    {"viscosity",                 &viscosity_        }, 
+    {"turbulent_ke",              &tke_              }, 
+    {"specific_dissipation_rate", &sdr_              }, 
+    {"minimum_distance_to_wall",  &minDistance_      }, 
+    {"turbulent_viscosity",       &tvisc_            }, 
+    {"sst_max_length_scale",      &maxLengthScale_   }, 
+    {"sst_f_one_blending",        &fOneBlend_        }, 
+    {"effective_viscosity",       &evisc_            }, 
+    {"dual_nodal_volume",         &dualNodalVolume_  }, 
+    {"specific_heat",             &specificHeat_     }, 
+    {"rans_time_scale",           &avgTime_          }, 
+    {"open_tke_bc",               &tkebc_            }, 
+    {"dkdx",                      &dkdx_             }, 
+    {"dwdx",                      &dwdx_             }, 
+    {"dhdx",                      &dhdx_             }, 
+    {"dudx",                      &dudx_             }, 
+    {"average_dudx",              &avgDudx_          }, 
+    {"open_mass_flow_rate",       &openMassFlowRate_ }  
+  };
+  // clang-format on
+  for (auto& Field : Fields) {
+    const std::string& name = Field.first;
+    const stk::mesh::PartVector universal(1, &meta.universal_part());
+    std::visit(
+      [&](auto member_field) {
+        using to_field =
+          typename std::remove_pointer<decltype(member_field)>::type;
+        sierra::nalu::FieldPointerTypes new_field =
+          realm_->fieldManager_->register_field(name, universal, numStates);
+        std::visit(
+          [&](auto fld) {
+            using from_field = decltype(fld);
+            if constexpr (std::is_same_v<to_field, from_field>)
+              *member_field = fld;
+          },
+          new_field);
+      },
+      Field.second);
+  }
 }
 
 void

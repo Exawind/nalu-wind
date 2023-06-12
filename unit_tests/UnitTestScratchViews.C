@@ -64,6 +64,7 @@ typedef Kokkos::
 void
 do_the_test(
   stk::mesh::BulkData& bulk,
+  const sierra::nalu::FieldManager& fieldManager,
   sierra::nalu::ScalarFieldType* pressure,
   sierra::nalu::VectorFieldType* velocity)
 {
@@ -87,10 +88,8 @@ do_the_test(
   EXPECT_EQ(3u, dataReq.get_fields().size());
 
   const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
-  sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulk);
 
-  sierra::nalu::ElemDataRequestsGPU dataNGP(
-    fieldMgr, dataReq, meta.get_fields().size());
+  sierra::nalu::ElemDataRequestsGPU dataNGP(fieldManager, dataReq);
 
   const int numNodes = elemTopo.num_nodes();
   const int rhsSize = numNodes;
@@ -98,7 +97,6 @@ do_the_test(
 
   const unsigned velocityOrdinal = velocity->mesh_meta_data_ordinal();
   const unsigned pressureOrdinal = pressure->mesh_meta_data_ordinal();
-
   const int bytes_per_team = 0;
   const int bytes_per_thread =
     (sierra::nalu::calculate_shared_mem_bytes_per_thread(
@@ -146,7 +144,6 @@ do_the_test(
             dataNGP, ngpMesh, stk::topology::ELEM_RANK, element, scrviews);
           auto& velocityView = scrviews.get_scratch_view_2D(velocityOrdinal);
           auto& pressureView = scrviews.get_scratch_view_1D(pressureOrdinal);
-
           result.d_view(0) =
             stk::simd::get_data((pressureView(0) - 1.0), 0) < 1.e-9 ? 1 : 0;
           result.d_view(1) =
@@ -177,6 +174,10 @@ TEST_F(Hex8MeshWithNSOFields, NGPScratchViews)
   const int nDim = 3;
   const double velVec[nDim] = {1.0, 0.0, 0.0};
 
+  const int numStates = 2;
+  stk::mesh::MetaData& meta = bulk->mesh_meta_data();
+  const sierra::nalu::FieldManager fieldManager(meta, numStates);
+
   stk::mesh::EntityVector nodes;
   stk::mesh::get_entities(*bulk, stk::topology::NODE_RANK, nodes);
 
@@ -188,7 +189,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPScratchViews)
     }
   }
 
-  do_the_test(*bulk, pressure, velocity);
+  do_the_test(*bulk, fieldManager, pressure, velocity);
 }
 
 void
@@ -246,6 +247,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPAssembleElemSolver)
 void
 do_the_smdata_test(
   stk::mesh::BulkData& bulk,
+  const std::shared_ptr<sierra::nalu::FieldManager> fieldManager,
   sierra::nalu::ScalarFieldType* pressure,
   sierra::nalu::VectorFieldType* velocity)
 {
@@ -268,10 +270,8 @@ do_the_smdata_test(
   EXPECT_EQ(3u, dataReq.get_fields().size());
 
   const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
-  sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulk);
 
-  sierra::nalu::ElemDataRequestsGPU dataNGP(
-    fieldMgr, dataReq, meta.get_fields().size());
+  sierra::nalu::ElemDataRequestsGPU dataNGP(*fieldManager, dataReq);
 
   const int numNodes = elemTopo.num_nodes();
   const int rhsSize = numNodes;
@@ -354,7 +354,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPSharedMemData)
   if (stk::parallel_machine_size(comm) == 1) {
     fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
-    do_the_smdata_test(*bulk, pressure, velocity);
+    do_the_smdata_test(*bulk, fieldManager, pressure, velocity);
   }
 }
 

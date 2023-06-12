@@ -32,12 +32,12 @@ namespace nalu {
 ThermalConductivityFromPrandtlPropAlgorithm::
   ThermalConductivityFromPrandtlPropAlgorithm(
     Realm& realm,
-    stk::mesh::Part* part,
+    const stk::mesh::PartVector& part_vec,
     ScalarFieldType* thermalCond,
     ScalarFieldType* specHeat,
     ScalarFieldType* viscosity,
     const double Pr)
-  : Algorithm(realm, part),
+  : Algorithm(realm, part_vec),
     thermalCond_(thermalCond),
     specHeat_(specHeat),
     viscosity_(viscosity),

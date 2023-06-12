@@ -74,7 +74,7 @@ RectilinearMeshHeightAlg::calc_height_levels(
 
   // Gather All height levels on all MPI ranks
   const int nprocs = bulk.parallel_size();
-  const int numLevelsLocal = hLevels.size();
+  int numLevelsLocal = hLevels.size();
   // Convert set to vector for MPI Send/Recv
   std::vector<uint64_t> hLevelsVec(numLevelsLocal);
 

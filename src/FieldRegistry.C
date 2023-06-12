@@ -21,34 +21,78 @@ const std::map<std::string, FieldDefTypes>&
 Registry()
 {
   // clang-format off
-  FieldDefVector MultiStateNodalVector = {stk::topology::NODE_RANK, NUM_STATES, NUM_DIM};
-  FieldDefScalar MultiStateNodalScalar = {stk::topology::NODE_RANK, NUM_STATES};
+  FieldDefGeneric SingleStateElemGeneric = {stk::topology::ELEM_RANK};
+  FieldDefGeneric SingleStateEdgeGeneric = {stk::topology::EDGE_RANK};
+  FieldDefGeneric SingleStateNodeGeneric = {stk::topology::NODE_RANK};
 
-  FieldDefVector SingleStateNodalVector = {stk::topology::NODE_RANK, 1, NUM_DIM};
-  FieldDefVector SingleStateEdgeVector = {stk::topology::EDGE_RANK, 1, NUM_DIM};
-  FieldDefScalar SingleStateNodalScalar = {stk::topology::NODE_RANK};
-  FieldDefScalar SingleStateElemScalar = {stk::topology::ELEM_RANK};
+  FieldDefScalar  SingleStateNodalScalar = {stk::topology::NODE_RANK};
+  FieldDefScalar  SingleStateElemScalar  = {stk::topology::ELEM_RANK};
+  FieldDefVector  SingleStateElemVector  = {stk::topology::ELEM_RANK, 1, NUM_DIM};
+  FieldDefScalar  MultiStateNodalScalar  = {stk::topology::NODE_RANK, NUM_STATES};
 
-  FieldDefTpetraId TpetraId = {stk::topology::NODE_RANK};
-  FieldDefGlobalId GlobalId = {stk::topology::NODE_RANK};
-  FieldDefHypreId HypreId = {stk::topology::NODE_RANK};
-  FieldDefScalarInt NodalScalarInt = {stk::topology::NODE_RANK};
+  FieldDefVector  SingleStateNodalVector = {stk::topology::NODE_RANK, 1, NUM_DIM};
+  FieldDefVector  SingleStateEdgeVector  = {stk::topology::EDGE_RANK, 1, NUM_DIM};
+  FieldDefVector  MultiStateNodalVector  = {stk::topology::NODE_RANK, NUM_STATES, NUM_DIM};
+
+  FieldDefTensor  SingleStateNodalTensor = {stk::topology::NODE_RANK, 1, NUM_DIM*NUM_DIM};
+
+  FieldDefTpetraId  TpetraId             = {stk::topology::NODE_RANK};
+  FieldDefGlobalId  GlobalId             = {stk::topology::NODE_RANK};
+  FieldDefHypreId   HypreId              = {stk::topology::NODE_RANK};
+  FieldDefScalarInt NodalScalarInt       = {stk::topology::NODE_RANK};
 
   static const std::map<std::string, FieldDefTypes> registry = {
-    {"velocity", MultiStateNodalVector},
-    {"temperature", MultiStateNodalScalar},
-    {"hypre_global_id", HypreId},
-    {"tpet_global_id", TpetraId},
-    {"nalu_global_id", GlobalId},
-    {"dual_nodal_volume", SingleStateNodalScalar},
-    {"element_volume", SingleStateElemScalar},
-    {"edge_area_vector", SingleStateEdgeVector},
-    {"mesh_displacement", MultiStateNodalVector},
-    {"current_coordinates", SingleStateNodalVector},
-    {"mesh_velocity", SingleStateNodalVector},
-    {"velocity_rtm", SingleStateNodalVector},
-    {"div_mesh_velocity", SingleStateNodalScalar},
-    {"iblank", NodalScalarInt}
+    {"average_dudx" ,             SingleStateNodalTensor},
+    {"coordinates",               SingleStateNodalVector},
+    {"current_coordinates",       SingleStateNodalVector},
+    {"density",                   SingleStateNodalScalar},
+    {"dhdx",                      SingleStateNodalVector},
+    {"diffFluxCoeff",             SingleStateNodalScalar},
+    {"discreteLaplacian",         SingleStateNodalScalar},
+    {"div_mesh_velocity",         SingleStateNodalScalar},
+    {"dkdx",                      SingleStateNodalVector},
+    {"dpdx",                      SingleStateNodalVector},
+    {"dual_nodal_volume",         SingleStateNodalScalar},
+    {"dudx",                      SingleStateNodalTensor},
+    {"dwdx",                      SingleStateNodalVector},
+    {"edge_area_vector",          SingleStateEdgeVector},
+    {"effective_viscosity" ,      SingleStateNodalScalar},
+    {"elemCentroid",              SingleStateElemVector},                          
+    {"element_volume",            SingleStateElemScalar},
+    {"elemScalarField",           SingleStateElemScalar},  // Used in testing
+    {"elemTensorField",           SingleStateElemGeneric}, // Used in testing
+    {"elemVectorField",           SingleStateElemGeneric}, // Used in testing
+    {"exposed_area_vector",       SingleStateEdgeGeneric},
+    {"Gju",                       SingleStateNodeGeneric},
+    {"hypre_global_id",           HypreId},
+    {"iblank",                    NodalScalarInt},
+    {"idField",                   SingleStateNodalScalar},                         
+    {"mass_flow_rate_scs",        SingleStateElemGeneric},
+    {"mesh_displacement",         MultiStateNodalVector},
+    {"mesh_velocity",             SingleStateNodalVector},
+    {"minimum_distance_to_wall",  SingleStateNodalScalar},
+    {"momentum_diag",             SingleStateNodalScalar},
+    {"nalu_global_id",            GlobalId},
+    {"nodalScalarField",          SingleStateNodalScalar}, // Used in testing
+    {"nodalGenericField",         SingleStateNodeGeneric}, // Used in testing
+    {"nodalPressure",             SingleStateNodalScalar},
+    {"nodalTensorField",          SingleStateNodalTensor}, // Used in testing
+    {"open_mass_flow_rate" ,      SingleStateEdgeGeneric},
+    {"open_tke_bc",               SingleStateNodalScalar},
+    {"pressure",                  SingleStateNodalScalar},
+    {"rans_time_scale" ,          SingleStateNodalScalar},
+    {"scalarQ",                   SingleStateNodalScalar},
+    {"specific_dissipation_rate", SingleStateNodalScalar},
+    {"specific_heat" ,            SingleStateNodalScalar},
+    {"sst_f_one_blending"  ,      SingleStateNodalScalar},
+    {"sst_max_length_scale",      SingleStateNodalScalar},
+    {"temperature",               MultiStateNodalScalar},
+    {"tpet_global_id",            TpetraId},
+    {"turbulent_ke",              SingleStateNodalScalar},
+    {"turbulent_viscosity" ,      SingleStateNodalScalar},
+    {"velocity",                  MultiStateNodalVector},
+    {"velocity_rtm",              SingleStateNodalVector},
+    {"viscosity",                 SingleStateNodalScalar}
   };
   // clang-format on
   return registry;

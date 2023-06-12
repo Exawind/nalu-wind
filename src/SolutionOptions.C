@@ -55,6 +55,7 @@ SolutionOptions::SolutionOptions()
     meshMotion_(false),
     meshTransformation_(false),
     externalMeshDeformation_(false),
+    openfastFSI_(false),
     ncAlgGaussLabatto_(true),
     ncAlgUpwindAdvection_(true),
     ncAlgIncludePstab_(true),

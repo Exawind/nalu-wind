@@ -331,12 +331,6 @@ Realm::breadboard()
   equationSystems_.breadboard();
 }
 
-bool
-Realm::debug() const
-{
-  return root()->debug_;
-}
-
 //--------------------------------------------------------------------------
 //-------- get_activate_memory_diagnostic ----------------------------------
 //--------------------------------------------------------------------------
@@ -436,6 +430,9 @@ Realm::initialize_prolog()
   // property maps and evaluation algorithms
   setup_property();
 
+  if (aeroModels_->is_active())
+    aeroModels_->setup(get_time_step_from_file(), bulkData_);
+
   // interior algorithm creation
   setup_interior_algorithms();
 
@@ -527,20 +524,22 @@ Realm::initialize_prolog()
     stk::topology::NODE_RANK, "iblank");
   stk::mesh::field_fill(1, *iblank);
 
+  if (solutionOptions_->meshTransformation_)
+    meshTransformationAlg_->initialize(get_current_time());
+
   if (does_mesh_move())
     init_current_coordinates();
 
   if (hasPeriodic_)
     periodicManager_->build_constraints();
 
-  if (solutionOptions_->meshTransformation_)
-    meshTransformationAlg_->initialize(get_current_time());
-
   if (solutionOptions_->meshMotion_)
     meshMotionAlg_->initialize(get_current_time());
 
-  if (aeroModels_->is_active())
+  if (aeroModels_->is_active()) {
+    NaluEnv::self().naluOutputP0() << "Initializing aero models" << std::endl;
     aeroModels_->init(get_current_time(), outputInfo_->restartFreq_);
+  }
 
   compute_geometry();
 
@@ -614,6 +613,8 @@ Realm::look_ahead_and_creation(const YAML::Node& node)
 
   // Contains actuators and FSI data structures
   aeroModels_ = std::make_unique<AeroContainer>(node);
+  if (aeroModels_->has_fsi())
+    solutionOptions_->openfastFSI_ = true;
 
   // Boundary Layer Statistics post-processing
   if (node["boundary_layer_statistics"]) {
@@ -840,7 +841,7 @@ Realm::load(const YAML::Node& node)
     NaluEnv::self().naluOutputP0()
       << "===========================" << std::endl;
     initialConditions_ =
-      InitialConditionCreator(debug()).create_ic_vector(node);
+      InitialConditionCreator(NaluEnv::self().debug()).create_ic_vector(node);
     NaluEnv::self().naluOutputP0() << std::endl;
     NaluEnv::self().naluOutputP0()
       << "Material Prop Review:      " << std::endl;
@@ -922,22 +923,19 @@ Realm::setup_nodal_fields()
     setup_field_manager();
   }
 #ifdef NALU_USES_HYPRE
-  fieldManager_->register_field("hypre_global_id", meta_data().get_parts());
-  hypreGlobalId_ =
-    fieldManager_->get_field_ptr<HypreIDFieldType*>("hypre_global_id");
+  hypreGlobalId_ = fieldManager_->register_field<HypreIDFieldType>(
+    "hypre_global_id", meta_data().get_parts());
 #endif
 #ifdef NALU_USES_TRILINOS_SOLVERS
-  fieldManager_->register_field("tpet_global_id", meta_data().get_parts());
   // TODO work on removing this variable from realm by accessing fields through
   // the manager instead
-  tpetGlobalId_ =
-    fieldManager_->get_field_ptr<TpetIDFieldType*>("tpet_global_id");
-  stk::mesh::field_fill(
-    std::numeric_limits<LinSys::GlobalOrdinal>::max(), *tpetGlobalId_);
+  const LinSys::GlobalOrdinal init_val =
+    std::numeric_limits<LinSys::GlobalOrdinal>::max();
+  tpetGlobalId_ = fieldManager_->register_field<TpetIDFieldType>(
+    "tpet_global_id", meta_data().get_parts(), &init_val);
 #endif
-  fieldManager_->register_field("nalu_global_id", meta_data().get_parts());
-  naluGlobalId_ =
-    fieldManager_->get_field_ptr<GlobalIdFieldType*>("nalu_global_id");
+  naluGlobalId_ = fieldManager_->register_field<GlobalIdFieldType>(
+    "nalu_global_id", meta_data().get_parts());
 
   // loop over all material props targets and register nodal fields
   std::vector<std::string> targetNames = get_physics_target_names();
@@ -1010,6 +1008,8 @@ Realm::setup_interior_algorithms()
         all_part_vec.begin(), mmPartVec.begin(), mmPartVec.end());
     }
     if (aeroModels_->has_fsi()) {
+      NaluEnv::self().naluOutputP0()
+        << "Inserting part vector for MeshVelocity algorithm" << std::endl;
       auto fsi_part_vec = aeroModels_->fsi_parts();
       all_part_vec.insert(
         all_part_vec.end(), fsi_part_vec.begin(), fsi_part_vec.end());
@@ -1108,9 +1108,6 @@ Realm::setup_post_processing_algorithms()
   if (NULL != dataProbePostProcessing_) {
     dataProbePostProcessing_->setup();
   }
-
-  if (aeroModels_->is_active())
-    aeroModels_->setup(get_time_step_from_file(), bulkData_);
 
   // check for norm nodal fields
   if (NULL != solutionNormPostProcessing_)
@@ -1843,7 +1840,6 @@ Realm::update_geometry_due_to_mesh_motion()
   // check for mesh motion
   if (does_mesh_move()) {
     if (aeroModels_->is_active()) {
-
       aeroModels_->update_displacements(get_current_time());
 
       if (aeroModels_->has_fsi()) {
@@ -1949,6 +1945,7 @@ Realm::advance_time_step()
 
   // check for  actuator; assemble the source terms for this step
   if (aeroModels_->is_active()) {
+    NaluEnv::self().naluOutputP0() << "Aero models - Execute" << std::endl;
     const double start_time = NaluEnv::self().nalu_time();
     aeroModels_->execute(timerActuator_);
     const double end_time = NaluEnv::self().nalu_time();
@@ -2342,7 +2339,7 @@ Realm::provide_entity_count()
 void
 Realm::delete_edges()
 {
-  if (debug()) {
+  if (NaluEnv::self().debug()) {
     std::vector<size_t> counts;
     stk::mesh::comm_mesh_counts(*bulkData_, counts);
 
@@ -2357,7 +2354,7 @@ Realm::delete_edges()
   std::vector<stk::mesh::Entity> edges;
   stk::mesh::get_selected_entities(*edgesPart_, edge_buckets, edges);
 
-  if (debug()) {
+  if (NaluEnv::self().debug()) {
     size_t sz = edges.size(), g_sz = 0;
     stk::all_reduce_sum(NaluEnv::self().parallel_comm(), &sz, &g_sz, 1);
     NaluEnv::self().naluOutputP0()
@@ -2445,7 +2442,7 @@ Realm::delete_edges()
   }
   bulkData_->modification_end();
 
-  if (debug()) {
+  if (NaluEnv::self().debug()) {
     std::vector<size_t> counts;
     stk::mesh::comm_mesh_counts(*bulkData_, counts);
 
@@ -2496,7 +2493,7 @@ Realm::get_coordinates_name()
 bool
 Realm::has_mesh_motion() const
 {
-  return solutionOptions_->meshMotion_;
+  return solutionOptions_->has_mesh_motion();
 }
 
 //--------------------------------------------------------------------------
@@ -2505,13 +2502,12 @@ Realm::has_mesh_motion() const
 bool
 Realm::has_mesh_deformation() const
 {
+  // TODO embed this logic in solution options? it would be good if both were
+  // always consistent
   if (meshMotionAlg_) {
-    return (meshMotionAlg_->is_deforming() ||
-            solutionOptions_->externalMeshDeformation_) ||
-           aeroModels_->has_fsi();
+    return meshMotionAlg_->is_deforming();
   } else
-    return (
-      solutionOptions_->externalMeshDeformation_ || aeroModels_->has_fsi());
+    return solutionOptions_->has_mesh_deformation();
 }
 
 //--------------------------------------------------------------------------
@@ -2600,9 +2596,7 @@ Realm::compute_geometry()
 void
 Realm::compute_vrtm(const std::string& velName)
 {
-  if (
-    !solutionOptions_->meshMotion_ &&
-    !solutionOptions_->externalMeshDeformation_)
+  if (!does_mesh_move())
     return;
 
   using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
@@ -2721,7 +2715,7 @@ Realm::compute_l2_scaling()
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-Realm::register_nodal_fields(stk::mesh::Part* part)
+Realm::register_nodal_fields(const stk::mesh::PartVector& part_vec)
 {
   if (!fieldManager_) {
     setup_field_manager();
@@ -2729,22 +2723,22 @@ Realm::register_nodal_fields(stk::mesh::Part* part)
   // register high level common fields
   // Declare volume/area_vector fields
   const int numVolStates = does_mesh_move() ? number_of_states() : 1;
-  fieldManager_->register_field("dual_nodal_volume", *part, numVolStates);
-  fieldManager_->register_field("element_volume", *part);
+  fieldManager_->register_field("dual_nodal_volume", part_vec, numVolStates);
+  fieldManager_->register_field("element_volume", part_vec);
 
   if (realmUsesEdges_) {
-    fieldManager_->register_field("edge_area_vector", *part);
+    fieldManager_->register_field("edge_area_vector", part_vec);
   }
 
   // mesh motion/deformation is high level
   if (does_mesh_move()) {
-    fieldManager_->register_field("mesh_displacement", *part);
-    fieldManager_->register_field("current_coordinates", *part);
-    fieldManager_->register_field("mesh_velocity", *part);
-    fieldManager_->register_field("velocity_rtm", *part);
-    fieldManager_->register_field("div_mesh_velocity", *part);
+    fieldManager_->register_field("mesh_displacement", part_vec);
+    fieldManager_->register_field("current_coordinates", part_vec);
+    fieldManager_->register_field("mesh_velocity", part_vec);
+    fieldManager_->register_field("velocity_rtm", part_vec);
+    fieldManager_->register_field("div_mesh_velocity", part_vec);
     if (has_mesh_deformation()) {
-      fieldManager_->register_field("div_mesh_velocity", *part);
+      fieldManager_->register_field("div_mesh_velocity", part_vec);
     }
     augment_restart_variable_list("dual_nodal_volume");
     augment_restart_variable_list("mesh_displacement");
@@ -2752,7 +2746,7 @@ Realm::register_nodal_fields(stk::mesh::Part* part)
     augment_restart_variable_list("mesh_velocity");
   }
 
-  fieldManager_->register_field("iblank", *part);
+  fieldManager_->register_field("iblank", part_vec);
 }
 
 //--------------------------------------------------------------------------
@@ -3468,12 +3462,17 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
       if (has_mesh_motion())
         meshMotionAlg_->restart_reinit(foundRestartTime);
 
-      if (aeroModels_->is_active()) {
-        aeroModels_->update_displacements(get_current_time());
-        if (aeroModels_->has_fsi()) {
-          auto part_vec = aeroModels_->fsi_parts();
-          for (auto* target_part : part_vec)
-            set_current_coordinates(target_part);
+      if (aeroModels_->has_fsi()) {
+        // TODO(psakiev) we should move this inside the function and compute
+        // current coordinates there
+        NaluEnv::self().naluOutputP0()
+          << "Aero models - Update displacements and set current coordinates"
+          << std::endl;
+        aeroModels_->update_displacements(restartTime);
+
+        auto part_vec = aeroModels_->fsi_parts();
+        for (auto* target_part : part_vec) {
+          set_current_coordinates(target_part);
         }
       }
 
@@ -3594,7 +3593,7 @@ Realm::set_hypre_global_id()
     meta_data().locally_owned_part() & !get_inactive_selector();
   const auto& bkts = bulkData_->get_buckets(stk::topology::NODE_RANK, s_local);
 
-  size_t num_nodes = 0;
+  int num_nodes = 0;
   int nprocs = bulkData_->parallel_size();
   int iproc = bulkData_->parallel_rank();
   std::vector<int> nodesPerProc(nprocs);
@@ -4511,6 +4510,8 @@ Realm::process_multi_physics_transfer(bool initCall)
 
   if (!initCall) {
     if (aeroModels_->is_active()) {
+      NaluEnv::self().naluOutputP0()
+        << "Aero models - Predict model time step" << std::endl;
       aeroModels_->predict_model_time_step(get_current_time());
     }
   }
@@ -4617,8 +4618,11 @@ Realm::post_converged_work()
 {
   equationSystems_.post_converged_work();
 
-  if (aeroModels_->is_active())
+  if (aeroModels_->is_active()) {
+    NaluEnv::self().naluOutputP0()
+      << "Aero models - advance model timestep" << std::endl;
     aeroModels_->advance_model_time_step(get_current_time());
+  }
 
   // FIXME: Consider a unified collection of post processing work
   if (NULL != solutionNormPostProcessing_)

@@ -1,0 +1,498 @@
+Simulations:
+  - name: sim1
+    time_integrator: ti_1
+    optimizer: opt1
+
+linear_solvers:
+  # solver for the momentum
+  - name: solve_mom
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-5
+    max_iterations: 100
+    kspace: 20
+    segregated_solver: yes
+    write_matrix_files: no
+    recompute_preconditioner_frequency: 1
+    reuse_linear_system: yes
+    simple_hypre_matrix_assemble: yes
+    dump_hypre_matrix_stats: no
+
+    bamg_max_levels: 1
+    bamg_relax_type: 12
+    bamg_num_sweeps: 2
+    bamg_cycle_type: 1
+    bamg_relax_order: 0
+
+    bamg_output_level: 0
+    bamg_debug: 0
+    output_level: 0
+
+  # solver for the scalars TKE, SDR
+  - name: solve_scalar
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-5
+    max_iterations: 100
+    kspace: 20
+    write_matrix_files: no
+    recompute_preconditioner_frequency: 1
+    reuse_linear_system: yes
+    simple_hypre_matrix_assemble: yes
+    dump_hypre_matrix_stats: no
+
+    bamg_max_levels: 1
+    bamg_relax_type: 12
+    bamg_num_sweeps: 2
+    bamg_cycle_type: 1
+    bamg_relax_order: 0
+
+    bamg_output_level: 0
+    bamg_debug: 0
+    output_level: 0
+
+  # solver for the pressure
+  - name: solve_elliptic
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-5
+    max_iterations: 100
+    kspace: 40
+    write_matrix_files:  no
+    #write_preassembly_matrix_files: yes
+    recompute_preconditioner_frequency: 1
+    reuse_linear_system: yes
+    simple_hypre_matrix_assemble: yes
+    dump_hypre_matrix_stats: no
+
+    #bamg_max_levels: 7
+    bamg_coarsen_type: 8
+    bamg_interp_type: 6
+    bamg_relax_type: 11
+    bamg_cycle_type: 1
+    bamg_relax_order: 0
+    bamg_keep_transpose: 1
+
+    bamg_num_sweeps: 2
+
+    bamg_strong_threshold: 0.3243198904981685
+    bamg_trunc_factor: 0.4227143073461007
+    bamg_pmax_elmts: 3
+
+    bamg_agg_num_levels: 1
+    bamg_agg_interp_type: 7
+    bamg_agg_pmax_elmts: 3
+
+    bamg_output_level: 0
+    bamg_debug: 0
+    output_level: 0
+
+  # solver for the wall
+  - name: solve_wall
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-5
+    max_iterations: 100
+    kspace: 40
+    write_matrix_files:  no
+    recompute_preconditioner_frequency: 1
+    reuse_linear_system: yes
+    simple_hypre_matrix_assemble: yes
+    dump_hypre_matrix_stats: no
+
+    bamg_max_levels: 7
+    bamg_coarsen_type: 8
+    bamg_interp_type: 6
+    bamg_relax_type: 11
+    bamg_num_sweeps: 2
+    bamg_cycle_type: 1
+    bamg_relax_order: 0
+    bamg_trunc_factor: 0.1
+    bamg_agg_num_levels: 2
+    bamg_agg_interp_type: 5
+    bamg_agg_pmax_elmts: 3
+    bamg_pmax_elmts: 3
+    bamg_strong_threshold: 0.25
+
+    bamg_output_level: 0
+    bamg_debug: 0
+    output_level: 0
+
+realms:
+# use the fsi path way. commented out since we need to setup more openfast
+# infrastructure, but this should run and produce the same results as the 
+# mesh motion path to about single precision accuracy
+#  - name: fsi_path
+#    mesh: ../../mesh/cylinder_turbine.g
+#    automatic_decomposition_type: rcb
+#    use_edges: yes
+#
+#    time_step_control:
+#     target_courant: 1000.0
+#     time_step_change_factor: 1.05
+#
+#    equation_systems:
+#      name: theEqSys
+#      max_iterations: 1
+#      decoupled_overset_solve: yes
+#
+#      solver_system_specification:
+#        velocity: solve_mom
+#        pressure: solve_elliptic
+#
+#      systems:
+#        - LowMachEOM:
+#            name: myLowMach
+#            max_iterations: 4
+#            decoupled_pressure_solve: yes
+#            num_pressure_correctors: 3
+#            convergence_tolerance: 1e-8
+#
+#    initial_conditions:
+#      - constant: ic_1
+#        target_name:
+#          - blade1-HEX
+#          - blade2-HEX
+#          - blade3-HEX
+#          - hub-HEX
+#        value:
+#          pressure: 0
+#          velocity: [0.0,0.0,0.0]
+#
+#    material_properties:
+#      target_name:
+#        - blade1-HEX
+#        - blade2-HEX
+#        - blade3-HEX
+#        - hub-HEX
+#      specifications:
+#        - name: density
+#          type: constant
+#          value: 1.225
+#        - name: viscosity
+#          type: constant
+#          value: 1.8e-0
+#
+#    boundary_conditions:
+#
+#    - wall_boundary_condition: blade1
+#      target_name: blade1
+#      wall_user_data:
+#        use_wall_function: no
+#        velocity : [0.0, 0.0, 0.0]
+#
+#    - wall_boundary_condition: blade2
+#      target_name: blade2
+#      wall_user_data:
+#        use_wall_function: no
+#        velocity : [0.0, 0.0, 0.0]        
+#
+#    - wall_boundary_condition: blade3
+#      target_name: blade3
+#      wall_user_data:
+#        use_wall_function: no
+#        velocity : [0.0, 0.0, 0.0]        
+#
+#    - wall_boundary_condition: hub
+#      target_name: hub
+#      wall_user_data:
+#        use_wall_function: no
+#        velocity : [0.0, 0.0, 0.0]        
+#        turbulent_ke: 0.0
+#
+#    - open_boundary_condition: bc_outer
+#      target_name: outerBC
+#      open_user_data:
+#        velocity : [0.0, 0.0, 0.0]        
+#        pressure: 0.0
+#
+#    openfast_fsi:
+#      n_turbines_glob: 1
+#      dry_run:  False
+#      debug:    False
+#      # need to run for 50 to 100 timesteps to converge from init
+#      # due to different initial conditions
+#      # sim_start: init
+#      # t_start: 0.0
+#      sim_start: trueRestart # init/trueRestart/restartDriverInitFAST
+#      t_start: 6.553079947575359
+#      t_max:   13.106159895150718
+#      n_checkpoint: 144
+#
+#      Turbine0:
+#        turbine_base_pos: [5.0191, 0., -89.56256]
+#        turbine_hub_pos: [5.0191, 0.0, 0.0 ]
+#        restart_filename: "nrel5mw.5760"
+#        FAST_input_filename: "nrel5mw.fst"
+#        sim_type: "ext-loads"
+#        blade_parts:
+#          - ["blade1-HEX"]
+#          - ["blade3-HEX"]
+#          - ["blade2-HEX"]          
+#        blade_boundary_parts:
+#          - ["blade1"]
+#          - ["blade3"]
+#          - ["blade2"]          
+#        hub_parts: ["hub-HEX"]
+#        hub_boundary_parts: ["hub"]
+#        az_blend_mean: 1e6
+#        az_blend_delta: 18.84955592153876
+#        vel_mean: 8.0
+#        wind_dir: 270.0
+#        z_ref: 90.0
+#        shear_exp: 0.0          
+#        deflection_ramping:
+#          span_ramp_distance: 10.0
+#          temporal_ramp_start: 5000 
+#          temporal_ramp_end: 1e6
+#          
+#
+#    solution_options:
+#      name: myOptions
+#      turbulence_model: laminar
+#      projected_timescale_type: momentum_diag_inv
+#
+#      options:
+#        - source_terms:
+#            continuity: density_time_derivative
+#        - hybrid_factor:
+#            velocity: 1.0
+#
+#        - alpha_upw:
+#            velocity: 1.0
+#
+#        - upw_factor:
+#            velocity: 0.0
+#
+#        - noc_correction:
+#            pressure: yes
+#            velocity: yes
+#
+#        - limiter:
+#            pressure: no
+#            velocity: yes
+#
+#        - projected_nodal_gradient:
+#            velocity: element
+#            pressure: element
+#
+#        - relaxation_factor:
+#            velocity: 0.7
+#            pressure: 0.3
+#
+#    restart:
+#      restart_data_base_name: rst/hub.rst
+#      restart_frequency: 360
+#      restart_start: 360
+#
+#    output:
+#      output_data_base_name: out/hub.e
+#      output_frequency: 1
+#      output_node_set: no
+#      output_variables:
+#       - velocity
+#       - pressure
+#       - element_courant
+#       - iblank
+#       - iblank_cell
+#       - current_coordinates
+#       - mesh_displacement
+#       - dual_nodal_volume
+#       - div_mesh_velocity
+#       - mesh_velocity
+#       - disp_map
+#       - disp_map_interp
+#       - deflection_ramp
+#
+#    post_processing:
+#
+#    - type: surface
+#      physics: surface_force_and_moment
+#      output_file_name: forces/hub.dat
+#      frequency: 1
+#      parameters: [0,0,0]
+#      target_name: [blade1, blade2, blade3, hub]
+
+  - name: mesh_motion_path
+    mesh: ../../mesh/cylinder_turbine.g
+    automatic_decomposition_type: rcb
+    use_edges: yes
+
+    time_step_control:
+     target_courant: 1000.0
+     time_step_change_factor: 1.05
+
+    equation_systems:
+      name: theEqSys
+      max_iterations: 1
+      decoupled_overset_solve: yes
+
+      solver_system_specification:
+        velocity: solve_mom
+        pressure: solve_elliptic
+
+      systems:
+        - LowMachEOM:
+            name: myLowMach
+            max_iterations: 4
+            decoupled_pressure_solve: yes
+            num_pressure_correctors: 3
+            convergence_tolerance: 1e-8
+
+    initial_conditions:
+      - constant: ic_1
+        target_name:
+          - blade1-HEX
+          - blade2-HEX
+          - blade3-HEX
+          - hub-HEX
+        value:
+          pressure: 0
+          velocity: [0.0,0.0,0.0]
+
+    material_properties:
+      target_name:
+        - blade1-HEX
+        - blade2-HEX
+        - blade3-HEX
+        - hub-HEX
+      specifications:
+        - name: density
+          type: constant
+          value: 1.225
+        - name: viscosity
+          type: constant
+          value: 1.8e-0
+
+    boundary_conditions:
+
+    - wall_boundary_condition: blade1
+      target_name: blade1
+      wall_user_data:
+        use_wall_function: no
+        velocity : [0.0, 0.0, 0.0]
+
+    - wall_boundary_condition: blade2
+      target_name: blade2
+      wall_user_data:
+        use_wall_function: no
+        velocity : [0.0, 0.0, 0.0]        
+
+    - wall_boundary_condition: blade3
+      target_name: blade3
+      wall_user_data:
+        use_wall_function: no
+        velocity : [0.0, 0.0, 0.0]        
+
+    - wall_boundary_condition: hub
+      target_name: hub
+      wall_user_data:
+        use_wall_function: no
+        velocity : [0.0, 0.0, 0.0]        
+        turbulent_ke: 0.0
+
+    - open_boundary_condition: bc_outer
+      target_name: outerBC
+      open_user_data:
+        velocity : [0.0, 0.0, 0.0]        
+        pressure: 0.0
+
+    mesh_motion:
+      - name: blade_rotation
+        mesh_parts:
+          - blade1-HEX
+          - blade2-HEX
+          - blade3-HEX
+          - hub-HEX
+        frame: non_inertial
+        motion:
+          - type: turbine_surrogate
+            omega: 0.95881407787605
+            # ALERT!! the CAD model is rotating counter-clockwise
+            #axis: [0.9961946980917455, 0.0, -0.08715574274765817]
+            axis: [1.0, 0.0, 0.0]
+
+    solution_options:
+      name: myOptions
+      turbulence_model: laminar
+      projected_timescale_type: momentum_diag_inv
+
+      options:
+        - source_terms:
+            continuity: density_time_derivative
+        - hybrid_factor:
+            velocity: 1.0
+
+        - alpha_upw:
+            velocity: 1.0
+
+        - upw_factor:
+            velocity: 0.0
+
+        - noc_correction:
+            pressure: yes
+            velocity: yes
+
+        - limiter:
+            pressure: no
+            velocity: yes
+
+        - projected_nodal_gradient:
+            velocity: element
+            pressure: element
+
+        - relaxation_factor:
+            velocity: 0.7
+            pressure: 0.3
+
+    restart:
+      restart_data_base_name: rst/rigid.rst
+      restart_frequency: 360
+      restart_start: 360
+
+    output:
+      output_data_base_name: out/rigid.e
+      output_frequency: 1
+      output_node_set: no
+      output_variables:
+       - velocity
+       - pressure
+       - element_courant
+       - iblank
+       - iblank_cell
+       - current_coordinates
+       - mesh_displacement
+       - dual_nodal_volume
+       - div_mesh_velocity
+       - mesh_velocity
+       - disp_map
+       - disp_map_interp
+       - deflection_ramp
+
+    post_processing:
+
+    - type: surface
+      physics: surface_force_and_moment
+      output_file_name: forces/rigid.dat
+      frequency: 1
+      parameters: [0,0,0]
+      target_name: [blade1, blade2, blade3, hub]
+
+Time_Integrators:
+  - StandardTimeIntegrator:
+      name: ti_1
+      start_time: 0
+      time_step: 0.0045507499635939995
+      termination_step_count: 10
+      time_stepping_type: fixed
+      time_step_count: 0
+      second_order_accuracy: yes
+      nonlinear_iterations: 1
+
+      realms:
+        - mesh_motion_path
+        # - fsi_path

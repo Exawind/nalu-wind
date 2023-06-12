@@ -105,19 +105,21 @@ VolumeOfFluidEquationSystem::~VolumeOfFluidEquationSystem() {}
 //-------- register_nodal_fields -------------------------------------------
 //--------------------------------------------------------------------------
 void
-VolumeOfFluidEquationSystem::register_nodal_fields(stk::mesh::Part* part)
+VolumeOfFluidEquationSystem::register_nodal_fields(
+  const stk::mesh::PartVector& part_vec)
 {
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   const int nDim = meta_data.spatial_dimension();
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   // register dof; set it as a restart variable
   const int numStates = realm_.number_of_states();
 
   auto density_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density", numStates));
-  stk::mesh::put_field_on_mesh(*density_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*density_, selector, nullptr);
   realm_.augment_restart_variable_list("density");
 
   // push to property list
@@ -125,17 +127,17 @@ VolumeOfFluidEquationSystem::register_nodal_fields(stk::mesh::Part* part)
 
   volumeOfFluid_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "volume_of_fluid", numStates));
-  stk::mesh::put_field_on_mesh(*volumeOfFluid_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*volumeOfFluid_, selector, nullptr);
   realm_.augment_restart_variable_list("volume_of_fluid");
 
   dvolumeOfFluiddx_ = &(meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "dvolume_of_fluiddx"));
-  stk::mesh::put_field_on_mesh(*dvolumeOfFluiddx_, *part, nDim, nullptr);
+  stk::mesh::put_field_on_mesh(*dvolumeOfFluiddx_, selector, nDim, nullptr);
 
   // delta solution for linear solver; share delta since this is a split system
   vofTmp_ =
     &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "vofTmp"));
-  stk::mesh::put_field_on_mesh(*vofTmp_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*vofTmp_, selector, nullptr);
 
   if (
     numStates > 2 &&
@@ -146,7 +148,7 @@ VolumeOfFluidEquationSystem::register_nodal_fields(stk::mesh::Part* part)
       volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
 
     CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
-      realm_, part, &vofNp1, &vofN, 0, 1, stk::topology::NODE_RANK);
+      realm_, part_vec, &vofNp1, &vofN, 0, 1, stk::topology::NODE_RANK);
     copyStateAlg_.push_back(theCopyAlg);
   }
 }
@@ -252,7 +254,7 @@ VolumeOfFluidEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 void
 VolumeOfFluidEquationSystem::register_inflow_bc(
   stk::mesh::Part* part,
-  const stk::topology& partTopo,
+  const stk::topology& /* partTopo */,
   const InflowBoundaryConditionData& inflowBCData)
 {
   // algorithm type
@@ -329,7 +331,7 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
 void
 VolumeOfFluidEquationSystem::register_open_bc(
   stk::mesh::Part* part,
-  const stk::topology& partTopo,
+  const stk::topology& /* partTopo */,
   const OpenBoundaryConditionData&)
 {
   const AlgorithmType algType = OPEN;
@@ -393,9 +395,9 @@ VolumeOfFluidEquationSystem::register_symmetry_bc(
 //--------------------------------------------------------------------------
 void
 VolumeOfFluidEquationSystem::register_abltop_bc(
-  stk::mesh::Part* part,
-  const stk::topology& partTopo,
-  const ABLTopBoundaryConditionData& abltopBCData)
+  stk::mesh::Part* /* part */,
+  const stk::topology& /* partTopo */,
+  const ABLTopBoundaryConditionData& /* abltopBCData */)
 {
   // Nothing to do
 }
@@ -405,7 +407,7 @@ VolumeOfFluidEquationSystem::register_abltop_bc(
 //--------------------------------------------------------------------------
 void
 VolumeOfFluidEquationSystem::register_non_conformal_bc(
-  stk::mesh::Part* part, const stk::topology& theTopo)
+  stk::mesh::Part* /* part */, const stk::topology& /* theTopo */)
 {
   // Nothing to do
 }
@@ -462,7 +464,7 @@ void
 VolumeOfFluidEquationSystem::register_initial_condition_fcn(
   stk::mesh::Part* part,
   const std::map<std::string, std::string>& theNames,
-  const std::map<std::string, std::vector<double>>& theParams)
+  const std::map<std::string, std::vector<double>>& /* theParams */)
 {
   // iterate map and check for name
   const std::string dofName = "volume_of_fluid";
@@ -534,7 +536,7 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
 //--------------------------------------------------------------------------
 void
 VolumeOfFluidEquationSystem::manage_projected_nodal_gradient(
-  EquationSystems& eqSystems)
+  EquationSystems& /* eqSystems */)
 {
   throw std::runtime_error("VolumeOfFluidEquationSystem::manage_projected_"
                            "nodal_gradient: Not supported");

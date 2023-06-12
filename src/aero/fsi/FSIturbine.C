@@ -9,6 +9,8 @@
 
 #include "aero/fsi/FSIturbine.h"
 #include "aero/aero_utils/DeflectionRamping.h"
+#include "aero/aero_utils/ForceMoment.h"
+#include "aero/fsi/MapLoad.h"
 #include "aero/aero_utils/Pt2Line.h"
 #include "utils/ComputeVectorDivergence.h"
 #include <NaluEnv.h>
@@ -90,11 +92,18 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
       !defNode,
       "defleciton_ramping inputs are required for FSI Turbines with blades");
     DeflectionRampingParams& defParams = deflectionRampParams_;
+    double* zeroTheta = &defParams.zeroRampLocTheta_;
+    double* thetaRamp = &defParams.thetaRampSpan_;
     // clang-format off
     get_required(defNode, "temporal_ramp_start", defParams.startTimeTemporalRamp_);
     get_required(defNode, "temporal_ramp_end",   defParams.endTimeTemporalRamp_);
     get_required(defNode, "span_ramp_distance",  defParams.spanRampDistance_);
+    get_if_present(defNode, "zero_theta_ramp_angle", *zeroTheta, *zeroTheta);
+    get_if_present(defNode, "theta_ramp_span",       *thetaRamp, *thetaRamp);
     // clang-format on
+    // ---------- conversionions ----------
+    defParams.zeroRampLocTheta_ = utils::radians(defParams.zeroRampLocTheta_);
+    defParams.thetaRampSpan_ = utils::radians(defParams.thetaRampSpan_);
     // --------------------------------------------------------------------------
   } else
     NaluEnv::self().naluOutputP0()
@@ -336,6 +345,8 @@ fsiTurbine::initialize()
   bldDefStiff_.resize(nTotBldPts);
   bld_dr_.resize(nTotBldPts);
   bld_rmm_.resize(nTotBldPts);
+
+  calc_loads_->initialize();
 }
 
 void
@@ -893,313 +904,27 @@ fsiTurbine::mapLoads()
     }
   }
 
-  // Now map loads
   auto& meta = bulk_->mesh_meta_data();
-  const int ndim = meta.spatial_dimension();
   VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
   VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
-  // nodal fields to gather and store at ip's
-  std::vector<double> ws_face_shape_function;
-
-  std::vector<double> ws_coordinates;
-  std::vector<double> coord_bip(3, 0.0);
-  std::vector<double> coordref_bip(3, 0.0);
-
-  std::array<double, 3> face_center;
-
-  std::array<double, 3> tforce_bip;
-
-  std::vector<double> tmpNodePos(
-    3, 0.0); // Vector to temporarily store a position vector
-  std::vector<double> tmpNodeDisp(
-    3, 0.0); // Vector to temporarily store a displacement vector
-
-  // Do the tower first
-  stk::mesh::Selector sel(
-    meta.locally_owned_part() & stk::mesh::selectUnion(twrBndyParts_));
-  const auto& bkts = bulk_->get_buckets(meta.side_rank(), sel);
-  for (auto b : bkts) {
-    // face master element
-    MasterElement* meFC =
-      MasterElementRepo::get_surface_master_element_on_host(b->topology());
-    const int nodesPerFace = meFC->nodesPerElement_;
-    const int numScsBip = meFC->num_integration_points();
-
-    // mapping from ip to nodes for this ordinal;
-    // face perspective (use with face_node_relations)
-    ws_face_shape_function.resize(numScsBip * nodesPerFace);
-
-    SharedMemView<double**, HostShmem> p_face_shape_function(
-      ws_face_shape_function.data(), numScsBip, nodesPerFace);
-
-    meFC->shape_fcn<>(p_face_shape_function);
-
-    ws_coordinates.resize(ndim * nodesPerFace);
-
-    for (size_t in = 0; in < b->size(); in++) {
-      // get face
-      stk::mesh::Entity face = (*b)[in];
-      // face node relations
-      stk::mesh::Entity const* face_node_rels = bulk_->begin_nodes(face);
-      // gather nodal data off of face
-      for (int ni = 0; ni < nodesPerFace; ++ni) {
-        stk::mesh::Entity node = face_node_rels[ni];
-        // gather coordinates
-        const double* xyz = stk::mesh::field_data(*modelCoords, node);
-        const double* xyz_disp = stk::mesh::field_data(*meshDisp, node);
-        for (auto i = 0; i < ndim; i++) {
-          ws_coordinates[ni * ndim + i] = xyz[i] + xyz_disp[i];
-        }
-      }
-
-      // Get reference to load map and loadMapInterp at all ips on this face
-      const int* loadMapFace = stk::mesh::field_data(*loadMap_, face);
-      const double* loadMapInterpFace =
-        stk::mesh::field_data(*loadMapInterp_, face);
-      const double* tforce = stk::mesh::field_data(*tforceSCS_, face);
-
-      for (int ip = 0; ip < numScsBip; ++ip) {
-        // Get coordinates and pressure force at this ip
-        for (auto i = 0; i < ndim; i++) {
-          coord_bip[i] = 0.0;
-        }
-        for (int ni = 0; ni < nodesPerFace; ni++) {
-          const double r = p_face_shape_function(ip, ni);
-          for (int i = 0; i < ndim; i++) {
-            coord_bip[i] += r * ws_coordinates[ni * ndim + i];
-          }
-        }
-
-        const int loadMap_bip = loadMapFace[ip];
-        const double loadMapInterp_bip = loadMapInterpFace[ip];
-
-        for (auto idim = 0; idim < 3; idim++)
-          tforce_bip[idim] = tforce[ip * 3 + idim];
-
-        // Find the interpolated reference position first
-        linInterpVec(
-          &brFSIdata_.twr_ref_pos[(loadMap_bip)*6],
-          &brFSIdata_.twr_ref_pos[(loadMap_bip + 1) * 6], loadMapInterp_bip,
-          tmpNodePos.data());
-        // Find the interpolated linear displacement
-        linInterpVec(
-          &brFSIdata_.twr_def[(loadMap_bip)*6],
-          &brFSIdata_.twr_def[(loadMap_bip + 1) * 6], loadMapInterp_bip,
-          tmpNodeDisp.data());
-        // Add displacement to find actual position
-        for (auto idim = 0; idim < 3; idim++)
-          tmpNodePos[idim] += tmpNodeDisp[idim];
-
-        // Temporarily store total force and moment as (fX, fY, fZ, mX, mY, mZ)
-        std::vector<double> tmpForceMoment(6, 0.0);
-        // Now compute the force and moment on the interpolated reference
-        // position
-        computeEffForceMoment(
-          tforce_bip.data(), coord_bip.data(), tmpForceMoment.data(),
-          tmpNodePos.data());
-        // Split the force and moment into the two surrounding nodes in a
-        // variationally consistent manner using the interpolation factor
-        splitForceMoment(
-          tmpForceMoment.data(), loadMapInterp_bip,
-          &(brFSIdata_.twr_ld[(loadMap_bip)*6]),
-          &(brFSIdata_.twr_ld[(loadMap_bip + 1) * 6]));
-      }
-    }
-  }
+  fsi::mapTowerLoad(
+    *bulk_, twrBndyParts_, *modelCoords, *meshDisp, *loadMap_, *loadMapInterp_,
+    *tforceSCS_, brFSIdata_.twr_ref_pos, brFSIdata_.twr_def, brFSIdata_.twr_ld);
 
   // Now the blades
   int iStart = 0;
   for (int iBlade = 0; iBlade < nBlades; iBlade++) {
     int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
-    stk::mesh::Selector sel(
-      meta.locally_owned_part() &
-      stk::mesh::selectUnion(bladeBndyParts_[iBlade]));
-    const auto& bkts = bulk_->get_buckets(meta.side_rank(), sel);
-    for (auto b : bkts) {
-      // face master element
-      MasterElement* meFC =
-        MasterElementRepo::get_surface_master_element_on_host(b->topology());
-      const int nodesPerFace = meFC->nodesPerElement_;
-      const int numScsBip = meFC->num_integration_points();
 
-      // mapping from ip to nodes for this ordinal;
-      // face perspective (use with face_node_relations)
-      const int* faceIpNodeMap = meFC->ipNodeMap();
-
-      ws_face_shape_function.resize(numScsBip * nodesPerFace);
-
-      SharedMemView<double**, HostShmem> p_face_shape_function(
-        ws_face_shape_function.data(), numScsBip, nodesPerFace);
-
-      meFC->shape_fcn<>(p_face_shape_function);
-
-      ws_coordinates.resize(ndim * nodesPerFace);
-
-      for (size_t in = 0; in < b->size(); in++) {
-        // get face
-        stk::mesh::Entity face = (*b)[in];
-        // face node relations
-        stk::mesh::Entity const* face_node_rels = bulk_->begin_nodes(face);
-
-        for (auto i = 0; i < ndim; i++)
-          face_center[i] = 0.0;
-        // gather nodal data off of face
-        for (int ni = 0; ni < nodesPerFace; ++ni) {
-          stk::mesh::Entity node = face_node_rels[ni];
-          // gather coordinates
-          const double* xyz = stk::mesh::field_data(*modelCoords, node);
-          const double* xyz_disp = stk::mesh::field_data(*meshDisp, node);
-          for (auto i = 0; i < ndim; i++) {
-            ws_coordinates[ni * ndim + i] = xyz[i] + xyz_disp[i];
-            face_center[i] += xyz[i];
-          }
-        }
-        for (auto i = 0; i < ndim; i++)
-          face_center[i] /= nodesPerFace;
-
-        // Get reference to load map and loadMapInterp at all ips on this face
-        const int* loadMapFace = stk::mesh::field_data(*loadMap_, face);
-        const double* loadMapInterpFace =
-          stk::mesh::field_data(*loadMapInterp_, face);
-        const double* tforce = stk::mesh::field_data(*tforceSCS_, face);
-
-        for (int ip = 0; ip < numScsBip; ++ip) {
-
-          // Get coordinates and pressure force at this ip
-          for (auto i = 0; i < ndim; i++)
-            coord_bip[i] = 0.0;
-          for (int ni = 0; ni < nodesPerFace; ni++) {
-            const double r = p_face_shape_function(ip, ni);
-            for (int i = 0; i < ndim; i++)
-              coord_bip[i] += r * ws_coordinates[ni * ndim + i];
-          }
-
-          int loadMap_bip = loadMapFace[ip];
-          // Radial location of scs center projected onto blade beam mesh
-          double interpFac = loadMapInterpFace[ip];
-          double r_n = brFSIdata_.bld_rloc[iStart + loadMap_bip];
-          double r_np1 = brFSIdata_.bld_rloc[iStart + loadMap_bip + 1];
-          double rloc_proj = r_n + interpFac * (r_np1 - r_n);
-
-          // Find the interpolated reference position first
-          linInterpVec(
-            &brFSIdata_.bld_ref_pos[(loadMap_bip + iStart) * 6],
-            &brFSIdata_.bld_ref_pos[(loadMap_bip + iStart + 1) * 6], interpFac,
-            tmpNodePos.data());
-
-          // Find the interpolated linear displacement
-          linInterpVec(
-            &brFSIdata_.bld_def[(loadMap_bip + iStart) * 6],
-            &brFSIdata_.bld_def[(loadMap_bip + iStart + 1) * 6], interpFac,
-            tmpNodeDisp.data());
-
-          // Add displacement to find actual position
-          for (auto idim = 0; idim < 3; idim++)
-            tmpNodePos[idim] += tmpNodeDisp[idim];
-
-          for (auto idim = 0; idim < 3; idim++)
-            tforce_bip[idim] = tforce[ip * 3 + idim];
-
-          // Temporarily store total force and moment as (fX, fY, fZ,
-          // mX, mY, mZ)
-          std::vector<double> tmpForceMoment(6, 0.0);
-          // Now compute the force and moment on the interpolated
-          // reference position
-          computeEffForceMoment(
-            tforce_bip.data(), coord_bip.data(), tmpForceMoment.data(),
-            tmpNodePos.data());
-
-          // Calculate suport length for this scs along local blade direction
-          const int nfNode = faceIpNodeMap[ip];
-          stk::mesh::Entity nnode = face_node_rels[nfNode];
-          const double* xyz = stk::mesh::field_data(*modelCoords, nnode);
-          double sl = 0.0;
-          for (auto i = 0; i < ndim; i++) {
-            sl += (xyz[i] - face_center[i]) *
-                  (brFSIdata_.bld_ref_pos[(loadMap_bip + iStart + 1) * 6 + i] -
-                   brFSIdata_.bld_ref_pos[(loadMap_bip + iStart) * 6 + i]);
-          }
-          sl = std::abs(sl / (r_np1 - r_n));
-          double sl_ratio = sl / (r_np1 - r_n);
-
-          if ((loadMap_bip < 1) || (loadMap_bip > (nPtsBlade - 3))) {
-            // if (true) {
-            // Now split the force and moment on the interpolated
-            // reference position into the 'left' and 'right' nodes
-            splitForceMoment(
-              tmpForceMoment.data(), interpFac,
-              &(brFSIdata_.bld_ld[(loadMap_bip + iStart) * 6]),
-              &(brFSIdata_.bld_ld[(loadMap_bip + iStart + 1) * 6]));
-          } else {
-
-            // Split into 2 and distribute to nearest element
-            for (auto i = 0; i < 6; i++)
-              tmpForceMoment[i] *= 0.5;
-
-            splitForceMoment(
-              tmpForceMoment.data(), interpFac,
-              &(brFSIdata_.bld_ld[(loadMap_bip + iStart) * 6]),
-              &(brFSIdata_.bld_ld[(loadMap_bip + iStart + 1) * 6]));
-
-            for (auto i = 0; i < 6; i++)
-              tmpForceMoment[i] *= 0.5;
-
-            if ((interpFac - 0.5 * sl_ratio) < 0.0) {
-              double r_nm1 = brFSIdata_.bld_rloc[iStart + loadMap_bip - 1];
-              double l_interpFac =
-                (rloc_proj - 0.5 * sl - r_nm1) / (r_n - r_nm1);
-              splitForceMoment(
-                tmpForceMoment.data(), l_interpFac,
-                &(brFSIdata_.bld_ld[(loadMap_bip - 1 + iStart) * 6]),
-                &(brFSIdata_.bld_ld[(loadMap_bip + iStart) * 6]));
-
-            } else {
-              double l_interpFac = interpFac - 0.5 * sl_ratio;
-              splitForceMoment(
-                tmpForceMoment.data(), l_interpFac,
-                &(brFSIdata_.bld_ld[(loadMap_bip + iStart) * 6]),
-                &(brFSIdata_.bld_ld[(loadMap_bip + iStart + 1) * 6]));
-            }
-
-            if ((interpFac + 0.5 * sl_ratio) > 1.0) {
-              double r_np2 = brFSIdata_.bld_rloc[iStart + loadMap_bip + 2];
-              double r_interpFac =
-                (rloc_proj + 0.5 * sl - r_np1) / (r_np2 - r_np1);
-              splitForceMoment(
-                tmpForceMoment.data(), r_interpFac,
-                &(brFSIdata_.bld_ld[(loadMap_bip + iStart + 1) * 6]),
-                &(brFSIdata_.bld_ld[(loadMap_bip + iStart + 2) * 6]));
-            } else {
-              double r_interpFac = interpFac + 0.5 * sl_ratio;
-              splitForceMoment(
-                tmpForceMoment.data(), r_interpFac,
-                &(brFSIdata_.bld_ld[(loadMap_bip + iStart) * 6]),
-                &(brFSIdata_.bld_ld[(loadMap_bip + iStart + 1) * 6]));
-            }
-          }
-        }
-      }
-    }
+    fsi::mapBladeLoad(
+      *bulk_, bladeBndyParts_[iBlade], *modelCoords, *meshDisp, *loadMap_,
+      *loadMapInterp_, *tforceSCS_, nPtsBlade, iStart, brFSIdata_.bld_rloc,
+      brFSIdata_.bld_ref_pos, brFSIdata_.bld_def, brFSIdata_.bld_ld);
 
     iStart += nPtsBlade;
-  }
-}
-
-//! Split a force and moment into the surrounding 'left' and 'right' nodes in a
-//! variationally consistent manner using
-void
-fsiTurbine::splitForceMoment(
-  double* totForceMoment,
-  double interpFac,
-  double* leftForceMoment,
-  double* rightForceMoment)
-{
-  for (int i = 0; i < 6; i++) {
-    leftForceMoment[i] += (1.0 - interpFac) * totForceMoment[i];
-    rightForceMoment[i] += interpFac * totForceMoment[i];
   }
 }
 
@@ -1239,7 +964,7 @@ fsiTurbine::computeHubForceMomentForPart(
   //       fsiForceNode[i] = pressureForceNode[i] + viscForceNode[i];
   //       tmpMeshPos[i] = xyz[i] + xyz_disp[i];
   //     }
-  //     computeEffForceMoment(
+  //     fsi::computeEffForceMoment(
   //       fsiForceNode.data(), tmpMeshPos.data(), l_hubForceMoment.data(),
   //       hubPos.data());
   //   }
@@ -1249,24 +974,6 @@ fsiTurbine::computeHubForceMomentForPart(
     bulk_->parallel(), l_hubForceMoment.data(), hubForceMoment.data(), 6);
 }
 
-//! Compute the effective force and moment at the OpenFAST mesh node for a given
-//! force at the CFD surface mesh node
-void
-fsiTurbine::computeEffForceMoment(
-  double* forceCFD, double* xyzCFD, double* forceMomOF, double* xyzOF)
-{
-
-  const int ndim = 3; // I don't see this ever being used in other situations
-  for (int j = 0; j < ndim; j++)
-    forceMomOF[j] += forceCFD[j];
-  forceMomOF[3] +=
-    (xyzCFD[1] - xyzOF[1]) * forceCFD[2] - (xyzCFD[2] - xyzOF[2]) * forceCFD[1];
-  forceMomOF[4] +=
-    (xyzCFD[2] - xyzOF[2]) * forceCFD[0] - (xyzCFD[0] - xyzOF[0]) * forceCFD[2];
-  forceMomOF[5] +=
-    (xyzCFD[0] - xyzOF[0]) * forceCFD[1] - (xyzCFD[1] - xyzOF[1]) * forceCFD[0];
-}
-
 //! Set displacement corresponding to rotation at a constant rpm on the OpenFAST
 //! mesh before mapping to the turbine blade surface mesh
 void
@@ -1274,7 +981,6 @@ fsiTurbine::setRotationDisplacement(
   std::array<double, 3> axis, double omega, double curTime)
 {
 
-  const int iproc = bulk_->parallel_rank();
   double theta = omega * curTime;
   double twopi = 2.0 * M_PI;
   theta = std::fmod(theta, twopi);
@@ -1642,7 +1348,6 @@ fsiTurbine::mapDisplacements(double time)
   const DeflectionRampingParams& defParams = deflectionRampParams_;
   const double temporalDeflectionRamp = fsi::temporal_ramp(
     time, defParams.startTimeTemporalRamp_, defParams.endTimeTemporalRamp_);
-  assert(!std::isnan(temporalDeflectionRamp));
 
   auto& meta = bulk_->mesh_meta_data();
   VectorFieldType* modelCoords =
@@ -1694,6 +1399,10 @@ fsiTurbine::mapDisplacements(double time)
     }
   }
 
+  const aero::SixDOF hubVel(brFSIdata_.hub_vel.data());
+  const aero::SixDOF hubDeflection(brFSIdata_.hub_def.data());
+  const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
+
   // Now the blades
   int nBlades = params_.numBlades;
   int iStart = 0;
@@ -1740,24 +1449,45 @@ fsiTurbine::mapDisplacements(double time)
         const double spanLocation =
           spanLocI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
 
-        const double deflectionRamp =
+        double deflectionRamp =
           temporalDeflectionRamp *
           fsi::linear_ramp_span(spanLocation, defParams.spanRampDistance_);
 
+        // things for theta mapping
+        const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
+        const aero::SixDOF rootPos(&(brFSIdata_.bld_root_ref_pos[iBlade * 6]));
+        const auto nodePosition = vector_from_field(*modelCoords, node);
+
+        deflectionRamp *= fsi::linear_ramp_theta(
+          hubPos, rootPos.position_, nodePosition, defParams.thetaRampSpan_,
+          defParams.zeroRampLocTheta_);
+
         *stk::mesh::field_data(*deflectionRamp_, node) = deflectionRamp;
 
-        const aero::SixDOF hubDef(brFSIdata_.hub_def.data());
         // displacements from the hub will match a fully stiff blade's
         // displacements
-        const auto nodePosition = vector_from_field(*modelCoords, node);
-        const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
         const auto hubBasedDef = aero::compute_translational_displacements(
-          hubDef, hubPos, nodePosition);
+          hubDeflection, hubPos, nodePosition);
+
+        auto ramp_disp = aero::compute_translational_displacements(
+          interpDisp, refPos, nodePosition, hubBasedDef, deflectionRamp);
+        vector_to_field(ramp_disp, *displacement, node);
+
+        auto bldStartVel = aero::SixDOF(&(brFSIdata_.bld_vel[iN]));
+        auto bldEndVel = aero::SixDOF(&(brFSIdata_.bld_vel[iNp1]));
+        auto interpVel = aero::linear_interp_total_velocity(
+          bldStartVel, bldEndVel, *dispMapInterpNode);
+
+        // Now transfer the translational and rotational velocity to an
+        // equivalent translational velocity on the CFD mesh node
+        const auto stiffVel = aero::compute_mesh_velocity(
+          hubVel, hubDeflection, hubPos, nodePosition);
 
         vector_to_field(
-          aero::compute_translational_displacements(
-            interpDisp, refPos, nodePosition, hubBasedDef, deflectionRamp),
-          *displacement, node);
+          aero::compute_mesh_velocity(
+            interpVel, interpDisp, refPos, nodePosition, stiffVel,
+            deflectionRamp),
+          *meshVelocity, node);
       }
     }
     iStart += nPtsBlade;
@@ -1771,19 +1501,17 @@ fsiTurbine::mapDisplacements(double time)
       auto node = (*b)[in];
 
       auto oldxyz = vector_from_field(*modelCoords, node);
-      const aero::SixDOF refPos(brFSIdata_.hub_ref_pos.data());
-      const aero::SixDOF deflection(brFSIdata_.hub_def.data());
       // Now transfer the displacement to the CFD mesh node
       vector_to_field(
-        aero::compute_translational_displacements(deflection, refPos, oldxyz),
+        aero::compute_translational_displacements(
+          hubDeflection, hubPos, oldxyz),
         *displacement, node);
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
-      auto mVel = vector_from_field(*meshVelocity, node);
-      const aero::SixDOF vel(brFSIdata_.hub_vel.data());
-
-      mVel = aero::compute_mesh_velocity(vel, deflection, refPos, oldxyz);
+      vector_to_field(
+        aero::compute_mesh_velocity(hubVel, hubDeflection, hubPos, oldxyz),
+        *meshVelocity, node);
     }
   }
 
@@ -1809,17 +1537,6 @@ fsiTurbine::mapDisplacements(double time)
       mVel = aero::compute_mesh_velocity(vel, deflection, refPos, oldxyz);
     }
   }
-}
-
-//! Linearly interpolate between 3-dimensional vectors 'a' and 'b' with
-//! interpolating factor 'interpFac'
-void
-fsiTurbine::linInterpVec(
-  double* a, double* b, double interpFac, double* aInterpb)
-{
-
-  for (size_t i = 0; i < 3; i++)
-    aInterpb[i] = a[i] + interpFac * (b[i] - a[i]);
 }
 
 //! Compose Wiener-Milenkovic parameters 'p' and 'q' into 'pPlusq'. If a
@@ -2331,14 +2048,14 @@ fsiTurbine::compute_div_mesh_velocity()
 
   auto& meta = bulk_->mesh_meta_data();
 
-  VectorFieldType* meshVelocity =
-    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
-
   ScalarFieldType* divMeshVel = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "div_mesh_velocity");
 
-  compute_vector_divergence(
-    *bulk_, partVec_, bndyPartVec_, meshVelocity, divMeshVel);
+  GenericFieldType* faceVelMag = meta.get_field<GenericFieldType>(
+    stk::topology::EDGE_RANK, "edge_face_velocity_mag");
+
+  compute_edge_scalar_divergence(
+    *bulk_, partVec_, bndyPartVec_, faceVelMag, divMeshVel);
 }
 
 } // namespace nalu

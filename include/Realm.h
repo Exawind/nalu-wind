@@ -120,7 +120,6 @@ public:
   Realms* parent() const;
   Realms* parent();
 
-  bool debug() const;
   bool get_activate_memory_diagnostic();
   void provide_memory_summary();
   std::string convert_bytes(double bytes);
@@ -189,7 +188,7 @@ public:
 
   void register_interior_algorithm(stk::mesh::Part* part);
 
-  void register_nodal_fields(stk::mesh::Part* part);
+  void register_nodal_fields(const stk::mesh::PartVector& part_vec);
 
   void register_wall_bc(stk::mesh::Part* part, const stk::topology& theTopo);
 

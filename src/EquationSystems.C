@@ -115,7 +115,7 @@ EquationSystems::load(const YAML::Node& y_node)
 
         if (expect_map(y_system, "LowMachEOM", true)) {
           y_eqsys = expect_map(y_system, "LowMachEOM", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0()
               << "eqSys = LowMachEOM " << std::endl;
           bool elemCont = (realm_.realmUsesEdges_) ? false : true;
@@ -132,34 +132,34 @@ EquationSystems::load(const YAML::Node& y_node)
         } else if (expect_map(y_system, "VolumeOfFluid", true)) {
 
           y_eqsys = expect_map(y_system, "VolumeOfFluid", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0()
               << "eqSys = VolumeOfFluid" << std::endl;
           eqSys = new VolumeOfFluidEquationSystem(*this);
 
         } else if (expect_map(y_system, "ShearStressTransport", true)) {
           y_eqsys = expect_map(y_system, "ShearStressTransport", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0() << "eqSys = tke/sdr " << std::endl;
           eqSys = new ShearStressTransportEquationSystem(*this);
         } else if (expect_map(y_system, "ChienKEpsilon", true)) {
           y_eqsys = expect_map(y_system, "ChienKEpsilon", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0() << "eqSys = tke/tdr " << std::endl;
           eqSys = new ChienKEpsilonEquationSystem(*this);
         } else if (expect_map(y_system, "WilcoxKOmega", true)) {
           y_eqsys = expect_map(y_system, "WilcoxKOmega", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0() << "eqSys = tke/sdr " << std::endl;
           eqSys = new WilcoxKOmegaEquationSystem(*this);
         } else if (expect_map(y_system, "TurbKineticEnergy", true)) {
           y_eqsys = expect_map(y_system, "TurbKineticEnergy", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0() << "eqSys = tke " << std::endl;
           eqSys = new TurbKineticEnergyEquationSystem(*this);
         } else if (expect_map(y_system, "Enthalpy", true)) {
           y_eqsys = expect_map(y_system, "Enthalpy", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0() << "eqSys = enthalpy " << std::endl;
           double minT = 250.0;
           double maxT = 3000.0;
@@ -171,7 +171,7 @@ EquationSystems::load(const YAML::Node& y_node)
           eqSys = new EnthalpyEquationSystem(*this, minT, maxT, ouputClipDiag);
         } else if (expect_map(y_system, "HeatConduction", true)) {
           y_eqsys = expect_map(y_system, "HeatConduction", true);
-          if (root()->debug())
+          if (NaluEnv::self().debug())
             NaluEnv::self().naluOutputP0()
               << "eqSys = HeatConduction " << std::endl;
 #ifdef NALU_HAS_MATRIXFREE
@@ -256,21 +256,22 @@ EquationSystems::register_nodal_fields(
 {
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-  for (size_t itarget = 0; itarget < targetNames.size(); ++itarget) {
-    stk::mesh::Part* targetPart = meta_data.get_part(targetNames[itarget]);
-    if (NULL == targetPart) {
+  stk::mesh::PartVector part_vec;
+  part_vec.reserve(targetNames.size());
+  for (const auto& part_name : targetNames) {
+    part_vec.push_back(meta_data.get_part(part_name));
+    if (nullptr == part_vec.back()) {
       NaluEnv::self().naluOutputP0()
-        << "Trouble with part " << targetNames[itarget] << std::endl;
+        << "Trouble with part " << part_name << std::endl;
       throw std::runtime_error(
-        "Sorry, no part name found by the name " + targetNames[itarget]);
-    } else {
-      realm_.register_nodal_fields(targetPart);
-      EquationSystemVector::iterator ii;
-      for (ii = equationSystemVector_.begin();
-           ii != equationSystemVector_.end(); ++ii)
-        (*ii)->register_nodal_fields(targetPart);
+        "Sorry, no part name found by the name " + part_name);
     }
   }
+  realm_.register_nodal_fields(part_vec);
+  EquationSystemVector::iterator ii;
+  for (ii = equationSystemVector_.begin(); ii != equationSystemVector_.end();
+       ++ii)
+    (*ii)->register_nodal_fields(part_vec);
 }
 
 //--------------------------------------------------------------------------

@@ -37,7 +37,7 @@ public:
   virtual ~MatrixFreeHeatCondEquationSystem();
 
   void initialize() final;
-  void register_nodal_fields(stk::mesh::Part* part) final;
+  virtual void register_nodal_fields(const stk::mesh::PartVector& part_vec);
   void register_interior_algorithm(stk::mesh::Part* part) final;
   void register_wall_bc(
     stk::mesh::Part* part,
