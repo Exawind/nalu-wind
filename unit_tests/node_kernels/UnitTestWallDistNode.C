@@ -31,7 +31,10 @@ TEST_F(WallDistKernelHex8Mesh, walldist_node)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8u);
+
+  auto numSumIntoCallsMirror = Kokkos::create_mirror_view_and_copy(
+    Kokkos::HostSpace(), helperObjs.linsys->numSumIntoCalls_);
+  EXPECT_EQ(numSumIntoCallsMirror(0), 8u);
 
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, 0.125, 1.0e-12);
