@@ -37,10 +37,11 @@ jobs:
         with:
           submodules: true
       - name: Tests
-        working-directory: /spack-manager/environments/exawind
         run: |
           /bin/bash -c " \
             source ${SPACK_MANAGER}/start.sh && \
+            mkdir -p ${SPACK_MANAGER}/environments/exawind && \
+            cd ${SPACK_MANAGER}/environments/exawind && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
             source ${SPACK_MANAGER}/start.sh && \
             quick-develop -s nalu-wind@master+tioga+hypre && \
@@ -66,10 +67,11 @@ jobs:
         with:
           submodules: true
       - name: Tests
-        working-directory: /spack-manager/environments/exawind
         run: |
           /bin/bash -c " \
             source ${SPACK_MANAGER}/start.sh && \
+            mkdir -p ${SPACK_MANAGER}/environments/exawind && \
+            cd ${SPACK_MANAGER}/environments/exawind && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
             source ${SPACK_MANAGER}/start.sh && \
             quick-develop -s nalu-wind@master+tioga+hypre~trilinos-solvers && \
