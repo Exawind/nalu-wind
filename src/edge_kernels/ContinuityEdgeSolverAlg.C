@@ -91,13 +91,12 @@ ContinuityEdgeSolverAlg::execute()
       const DblType densityL = density.get(nodeL, 0);
       const DblType densityR = density.get(nodeR, 0);
 
-      const DblType udiagL =
-        udiag.get(nodeL, 0);
-      const DblType udiagR =
-        udiag.get(nodeR, 0); 
+      const DblType udiagL = udiag.get(nodeL, 0);
+      const DblType udiagR = udiag.get(nodeR, 0);
       const DblType projTimeScale = 0.5 * (1.0 / udiagL + 1.0 / udiagR);
       const DblType rhoIp = 0.5 * (densityL + densityR);
-      const DblType denScale = (1.0/rhoIp)*solveIncompressibleEqn + om_solveIncompressibleEqn;
+      const DblType denScale =
+        (1.0 / rhoIp) * solveIncompressibleEqn + om_solveIncompressibleEqn;
 
       DblType axdx = 0.0;
       DblType asq = 0.0;
@@ -132,7 +131,8 @@ ContinuityEdgeSolverAlg::execute()
       }
       tmdot /= tauScale;
       tmdot *= denScale;
-      const DblType lhsfac = -asq * inv_axdx * projTimeScale * denScale / tauScale;
+      const DblType lhsfac =
+        -asq * inv_axdx * projTimeScale * denScale / tauScale;
 
       // Left node entries
       smdata.lhs(0, 0) = -lhsfac;
