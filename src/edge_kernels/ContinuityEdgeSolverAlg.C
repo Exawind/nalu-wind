@@ -132,7 +132,7 @@ ContinuityEdgeSolverAlg::execute()
       }
       tmdot /= tauScale;
       tmdot *= denScale;
-      const DblType lhsfac = -asq * inv_axdx * projTimeScale / tauScale;
+      const DblType lhsfac = -asq * inv_axdx * projTimeScale * denScale / tauScale;
 
       // Left node entries
       smdata.lhs(0, 0) = -lhsfac;
