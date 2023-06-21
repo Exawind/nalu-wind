@@ -126,14 +126,15 @@ AMSAlgDriver::register_nodal_fields(const stk::mesh::PartVector& part_vec)
 }
 
 void
-AMSAlgDriver::register_edge_fields(stk::mesh::Part* part)
+AMSAlgDriver::register_edge_fields(const stk::mesh::PartVector& part_vec)
 {
+  stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   stk::mesh::MetaData& meta = realm_.meta_data();
   NaluEnv::self().naluOutputP0()
     << "Edge Mdot average added in AMS " << std::endl;
   avgMdot_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::EDGE_RANK, "average_mass_flow_rate"));
-  stk::mesh::put_field_on_mesh(*avgMdot_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*avgMdot_, selector, nullptr);
   realm_.augment_restart_variable_list("average_mass_flow_rate");
 }
 
