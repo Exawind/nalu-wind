@@ -59,33 +59,6 @@ get_node_field(
     *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
 }
 
-void
-register_scalar_nodal_field_on_part(
-  stk::mesh::MetaData& meta,
-  std::string name,
-  const stk::mesh::Selector& selector,
-  int num_states,
-  double ic = 0)
-{
-  auto& field = meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, name, num_states);
-  stk::mesh::put_field_on_mesh(field, selector, &ic);
-}
-
-void
-register_vector_nodal_field_on_part(
-  stk::mesh::MetaData& meta,
-  std::string name,
-  const stk::mesh::Selector& selector,
-  int num_states,
-  double ic = 0)
-{
-  constexpr int dim = MatrixFreeHeatCondEquationSystem::dim;
-  std::array<double, dim> x{{ic, ic, ic}};
-  auto& field = meta.declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, name, num_states);
-  stk::mesh::put_field_on_mesh(field, selector, dim, x.data());
-}
 } // namespace
 
 void
@@ -94,19 +67,46 @@ MatrixFreeHeatCondEquationSystem::register_nodal_fields(
 {
   constexpr int three_states = 3;
   constexpr int one_state = 1;
+  const double zero = 0;
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
-  register_scalar_nodal_field_on_part(
-    meta_, names::temperature, selector, three_states);
-  register_scalar_nodal_field_on_part(meta_, names::delta, selector, one_state);
-  register_scalar_nodal_field_on_part(
-    meta_, names::volume_weight, selector, one_state);
-  register_scalar_nodal_field_on_part(
-    meta_, names::density, selector, one_state);
-  register_scalar_nodal_field_on_part(
-    meta_, names::specific_heat, selector, one_state);
-  register_scalar_nodal_field_on_part(
-    meta_, names::thermal_conductivity, selector, one_state);
-  register_vector_nodal_field_on_part(meta_, names::dtdx, selector, one_state);
+  {
+    auto& field = meta_.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, names::temperature, three_states);
+    stk::mesh::put_field_on_mesh(field, selector, &zero);
+  }
+  {
+    auto& field = meta_.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, names::delta, one_state);
+    stk::mesh::put_field_on_mesh(field, selector, &zero);
+  }
+  {
+    auto& field = meta_.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, names::volume_weight, one_state);
+    stk::mesh::put_field_on_mesh(field, selector, &zero);
+  }
+  {
+    auto& field = meta_.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, names::density, one_state);
+    stk::mesh::put_field_on_mesh(field, selector, &zero);
+  }
+  {
+    auto& field = meta_.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, names::specific_heat, one_state);
+    stk::mesh::put_field_on_mesh(field, selector, &zero);
+  }
+  {
+    auto& field = meta_.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, names::thermal_conductivity, one_state);
+    stk::mesh::put_field_on_mesh(field, selector, &zero);
+  }
+  {
+    const double zero = 0;
+    constexpr int dim = MatrixFreeHeatCondEquationSystem::dim;
+    const std::array<double, dim> x{{zero, zero, zero}};
+    auto& field = meta_.declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, names::dtdx, one_state);
+    stk::mesh::put_field_on_mesh(field, selector, dim, x.data());
+  }
 
   realm_.augment_restart_variable_list(names::temperature);
   realm_.augment_property_map(
@@ -141,18 +141,19 @@ MatrixFreeHeatCondEquationSystem::register_wall_bc(
     matrix_free::part_is_valid_for_matrix_free(polynomial_order_, *part),
     "part " + part->name() + " has invalid topology " +
       part->topology().name() + ". Only Quad4 and Quad9 supported");
-
   WallUserData userData = wallBCData.userData_;
   constexpr int one_state = 1;
   if (userData.tempSpec_) {
     const auto temperature_data = wallBCData.userData_.temperature_;
-    register_scalar_nodal_field_on_part(
-      meta_, names::qbc, *part, one_state, temperature_data.temperature_);
+    auto& field = meta_.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, names::qbc, one_state);
+    stk::mesh::put_field_on_mesh(field, *part, &temperature_data.temperature_);
     dirichlet_selector_ |= *part;
   } else if (userData.heatFluxSpec_) {
     const auto flux_data = wallBCData.userData_.q_;
-    register_scalar_nodal_field_on_part(
-      meta_, names::flux, *part, one_state, flux_data.qn_);
+    auto& field = meta_.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, names::flux, one_state);
+    stk::mesh::put_field_on_mesh(field, *part, &flux_data.qn_);
     flux_selector_ |= *part;
   }
 }
