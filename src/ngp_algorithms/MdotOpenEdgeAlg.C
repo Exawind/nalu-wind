@@ -111,6 +111,8 @@ MdotOpenEdgeAlg<BcAlgTraits>::execute()
   const unsigned udiagID = Udiag_;
   const unsigned areavecID = exposedAreaVec_;
   const unsigned dynPressID = dynPress_;
+  const DoubleType solveIncompressibleEqn = realm_.get_incompressible_solve();
+  const DoubleType om_solveIncompressibleEqn = 1.0 - solveIncompressibleEqn;
 
   MasterElement* meSCS = meSCS_;
 
@@ -151,6 +153,7 @@ MdotOpenEdgeAlg<BcAlgTraits>::execute()
         const DoubleType inv_axdx = 1.0 / axdx;
 
         DoubleType pbc = v_pbc(ip) - v_dyn_press(ip);
+        DoubleType rhoIp = v_rho(ip)*solveIncompressibleEqn + om_solveIncompressibleEqn;
         DoubleType pressureIp = 0.5 * (v_pressure(nodeL) + v_pressure(nodeR));
         DoubleType tmdot = -projTimeScale * (pbc - pressureIp) * asq * inv_axdx;
 
@@ -162,8 +165,8 @@ MdotOpenEdgeAlg<BcAlgTraits>::execute()
           const DoubleType kxj = axj - asq * inv_axdx * dxj;
           const DoubleType Gjp = v_Gpdx(ip, d);
 
-          tmdot += (v_rho(ip) * v_vel(ip, d) + projTimeScale * Gjp) * axj -
-                   projTimeScale * kxj * Gjp * nocFac;
+          tmdot += ((v_rho(ip) * v_vel(ip, d) + projTimeScale * Gjp) * axj -
+                   projTimeScale * kxj * Gjp * nocFac) / rhoIp;
         }
 
         mdotOps(fdata, ip) = tmdot;

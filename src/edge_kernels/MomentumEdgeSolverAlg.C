@@ -41,6 +41,7 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   else
     viscName = "viscosity";
 
+  density_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   viscosity_ = get_field_ordinal(meta, viscName);
   dudx_ = get_field_ordinal(meta, "dudx");
   edgeAreaVec_ =
@@ -71,6 +72,9 @@ MomentumEdgeSolverAlg::execute()
   const DblType om_alpha = 1.0 - alpha;
   const DblType om_alphaUpw = 1.0 - alphaUpw;
 
+  const DblType solveIncompressibleEqn = realm_.get_incompressible_solve();
+  const DblType om_solveIncompressibleEqn = 1.0 - solveIncompressibleEqn;
+
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
@@ -78,6 +82,7 @@ MomentumEdgeSolverAlg::execute()
   const auto vel = fieldMgr.get_field<double>(velocity_);
   const auto dudx = fieldMgr.get_field<double>(dudx_);
   const auto viscosity = fieldMgr.get_field<double>(viscosity_);
+  const auto density = fieldMgr.get_field<double>(density_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
   const auto pecletFactor = fieldMgr.get_field<double>(pecletFactor_);
@@ -95,12 +100,16 @@ MomentumEdgeSolverAlg::execute()
       for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
 
+
       const DblType mdot = massFlowRate.get(edge, 0);
+
+      const DblType densityL = density.get(nodeL, 0);
+      const DblType densityR = density.get(nodeR, 0);
+      const DblType rhoIp = 0.5 * ( densityL + densityR ) * solveIncompressibleEqn + om_solveIncompressibleEqn;
 
       const DblType viscosityL = viscosity.get(nodeL, 0);
       const DblType viscosityR = viscosity.get(nodeR, 0);
-
-      const DblType viscIp = 0.5 * (viscosityL + viscosityR);
+      const DblType viscIp = 0.5 * (viscosityL + viscosityR) / rhoIp;
 
       // Compute area vector related quantities and (U dot areaVec)
       DblType axdx = 0.0;
