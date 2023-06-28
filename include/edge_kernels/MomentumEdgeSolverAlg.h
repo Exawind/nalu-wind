@@ -33,6 +33,7 @@ private:
   unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
   unsigned massFlowRate_{stk::mesh::InvalidOrdinal};
   unsigned viscosity_{stk::mesh::InvalidOrdinal};
+  unsigned density_{stk::mesh::InvalidOrdinal};
   unsigned pecletFactor_{stk::mesh::InvalidOrdinal};
   unsigned maskNodeField_{stk::mesh::InvalidOrdinal};
 };

@@ -36,6 +36,7 @@ MomentumBoussinesqNodeKernel::MomentumBoussinesqNodeKernel(
     solnOpts.get_gravity_vector(nDim_);
   for (int i = 0; i < nDim_; i++)
     gravity_[i] = solnOptsGravity[i];
+
 }
 
 void

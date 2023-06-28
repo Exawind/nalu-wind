@@ -73,6 +73,9 @@ MomentumMassBDFNodeKernel::setup(Realm& realm)
   gamma1_ = realm.get_gamma1();
   gamma2_ = realm.get_gamma2();
   gamma3_ = realm.get_gamma3();
+  solveIncompressibleEqn = realm.get_incompressible_solve();
+  om_solveIncompressibleEqn = 1.0 - solveIncompressibleEqn;
+
 }
 
 KOKKOS_FUNCTION
@@ -84,9 +87,9 @@ MomentumMassBDFNodeKernel::execute(
 {
   const int nDim = nDim_;
 
-  const NodeKernelTraits::DblType rhoNm1 = densityNm1_.get(node, 0);
-  const NodeKernelTraits::DblType rhoN = densityN_.get(node, 0);
-  const NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0);
+  const NodeKernelTraits::DblType rhoNm1 = densityNm1_.get(node, 0) * om_solveIncompressibleEqn + solveIncompressibleEqn;
+  const NodeKernelTraits::DblType rhoN = densityN_.get(node, 0) * om_solveIncompressibleEqn + solveIncompressibleEqn;
+  const NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0) * om_solveIncompressibleEqn + solveIncompressibleEqn;
   const NodeKernelTraits::DblType dnvNp1 = dnvNp1_.get(node, 0);
   const NodeKernelTraits::DblType dnvN = dnvN_.get(node, 0);
   const NodeKernelTraits::DblType dnvNm1 = dnvNm1_.get(node, 0);
