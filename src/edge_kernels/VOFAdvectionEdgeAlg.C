@@ -89,9 +89,6 @@ VOFAdvectionEdgeAlg::execute()
       NALU_ALIGNED DblType densityL = density.get(nodeL, 0);
       NALU_ALIGNED DblType densityR = density.get(nodeR, 0);
 
-      NALU_ALIGNED DblType rhoIp = 0.5 * (densityL + densityR);
-
-      const DblType vdot = mdot / rhoIp;
       const DblType qNp1L = scalarQ.get(nodeL, 0);
       const DblType qNp1R = scalarQ.get(nodeR, 0);
 
@@ -127,26 +124,26 @@ VOFAdvectionEdgeAlg::execute()
       const DblType qIp = 0.5 * (qNp1R + qNp1L); // 2nd order central term
 
       // Upwinded term
-      const DblType qUpw = (vdot > 0) ? (alphaUpw * qIpL + om_alphaUpw * qIp)
+      const DblType qUpw = (mdot > 0) ? (alphaUpw * qIpL + om_alphaUpw * qIp)
                                       : (alphaUpw * qIpR + om_alphaUpw * qIp);
 
-      const DblType adv_flux = vdot * qUpw;
+      const DblType adv_flux = mdot * qUpw;
       smdata.rhs(0) -= adv_flux;
       smdata.rhs(1) += adv_flux;
 
       // Left node contribution; upwind terms
-      DblType alhsfac = 0.5 * (vdot + stk::math::abs(vdot)) * alphaUpw;
+      DblType alhsfac = 0.5 * (mdot + stk::math::abs(mdot)) * alphaUpw;
       smdata.lhs(0, 0) += alhsfac / relaxFac;
       smdata.lhs(1, 0) -= alhsfac;
 
       // Right node contribution; upwind terms
-      alhsfac = 0.5 * (vdot - stk::math::abs(vdot)) * alphaUpw;
+      alhsfac = 0.5 * (mdot - stk::math::abs(mdot)) * alphaUpw;
       smdata.lhs(1, 1) -= alhsfac / relaxFac;
       smdata.lhs(0, 1) += alhsfac;
 
       // Compression term
       const DblType velocity_scale = stk::math::abs(
-        vdot / stk::math::sqrt(av[0] * av[0] + av[1] * av[1] + av[2] * av[2]));
+        mdot / stk::math::sqrt(av[0] * av[0] + av[1] * av[1] + av[2] * av[2]));
 
       DblType dqdxMagL = 0.0;
       DblType dqdxMagR = 0.0;
