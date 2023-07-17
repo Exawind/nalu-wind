@@ -94,6 +94,9 @@ MomentumMassBDFNodeKernel::execute(
   const NodeKernelTraits::DblType dnvN = dnvN_.get(node, 0);
   const NodeKernelTraits::DblType dnvNm1 = dnvNm1_.get(node, 0);
   const NodeKernelTraits::DblType lhsfac = gamma1_ * rhoNp1 * dnvNp1 / dt_;
+
+  const NodeKernelTraits::DblType denNorm = solveIncompressibleEqn/densityNp1_.get(node,0) + om_solveIncompressibleEqn;
+
   // deal with lumped mass matrix (diagonal matrix)
   for (int i = 0; i < nDim; ++i) {
     const NodeKernelTraits::DblType uNm1 = velocityNm1_.get(node, i);
@@ -104,7 +107,7 @@ MomentumMassBDFNodeKernel::execute(
     rhs(i) += -(gamma1_ * rhoNp1 * uNp1 * dnvNp1 + gamma2_ * rhoN * uN * dnvN +
                 gamma3_ * rhoNm1 * uNm1 * dnvNm1) /
                 dt_ -
-              dpdx * dnvNp1;
+              dpdx * dnvNp1 * denNorm;
     lhs(i, i) += lhsfac;
   }
 }
