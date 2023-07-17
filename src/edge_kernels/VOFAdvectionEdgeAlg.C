@@ -49,7 +49,7 @@ VOFAdvectionEdgeAlg::execute()
   const double eps = 1.0e-16;
   const double gradient_eps = 1.0e-9;
   // Could be made into user paramter for more control.
-  const double compression_magnitude = 0.1;
+  const double compression_magnitude = 0.25;
 
   const int ndim = realm_.meta_data().spatial_dimension();
 
