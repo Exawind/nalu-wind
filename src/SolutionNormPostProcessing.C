@@ -181,7 +181,7 @@ SolutionNormPostProcessing::setup()
 
     // find the size; is there a better wat to determine a field size on a given
     // part?
-    const int dofSize = dofField->max_size();
+    const int dofSize = dofField->max_size(stk::topology::NODE_RANK);
 
     // increment total dof component size
     totalDofCompSize_ += dofSize;
