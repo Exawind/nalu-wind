@@ -175,6 +175,8 @@
 #include <user_functions/PerturbedShearLayerAuxFunctions.h>
 #include <user_functions/GaussJetVelocityAuxFunction.h>
 
+#include <user_functions/DropletVelocityAuxFunction.h>
+
 // deprecated
 
 // stk_util
