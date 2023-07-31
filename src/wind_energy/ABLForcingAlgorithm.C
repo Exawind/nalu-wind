@@ -165,7 +165,7 @@ ABLForcingAlgorithm::create_interp_arrays(
 
   // Check that all timesteps contain values for all the heights
   for (auto vx : inpArr) {
-    ThrowAssert((vx.size() == (nHeights + 1)));
+    STK_ThrowAssert((vx.size() == (nHeights + 1)));
   }
 
   auto nTimes = inpArr.size();

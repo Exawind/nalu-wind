@@ -363,7 +363,7 @@ copy_kokkos_unordered_map(
       fail_count += insert_result.failed() ? 1 : 0;
     }
   }
-  ThrowRequire(fail_count == 0);
+  STK_ThrowRequire(fail_count == 0);
 }
 
 int getDofStatus_impl(stk::mesh::Entity node, const Realm& realm);

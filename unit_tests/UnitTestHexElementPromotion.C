@@ -65,7 +65,7 @@ protected:
     surfSubPart = nullptr;
     topo = stk::topology::HEX_8;
     hexPart = fixture->m_elem_parts[0];
-    ThrowRequire(hexPart != nullptr);
+    STK_ThrowRequire(hexPart != nullptr);
     coordField =
       &meta->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "coords");
     intField = &meta->declare_field<ScalarIntFieldType>(
@@ -204,7 +204,7 @@ TEST_F(PromoteElementHexTest, node_sharing)
   init(2, 1, 1, polyOrder);
 
   promote_mesh();
-  ThrowRequire(!bulk->in_modifiable_state());
+  STK_ThrowRequire(!bulk->in_modifiable_state());
 
   stk::mesh::EntityIdVector sharedNodeIds = {2, 5, 8, 11, 21, 22, 23, 24, 33};
 

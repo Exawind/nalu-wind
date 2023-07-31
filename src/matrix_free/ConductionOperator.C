@@ -103,9 +103,9 @@ ConductionLinearizedResidualOperator<p>::apply(
   double beta) const
 {
   stk::mesh::ProfilingBlock pf("LinearizedResidualOperator<p>::apply");
-  ThrowRequire(trans == Teuchos::NO_TRANS);
-  ThrowRequire(alpha == 1.0);
-  ThrowRequire(beta == 0.0);
+  STK_ThrowRequire(trans == Teuchos::NO_TRANS);
+  STK_ThrowRequire(alpha == 1.0);
+  STK_ThrowRequire(beta == 0.0);
   if (exporter_.getTargetMap()->isDistributed()) {
     cached_sln_.doImport(owned_sln, exporter_, Tpetra::INSERT);
     cached_rhs_.putScalar(0.);

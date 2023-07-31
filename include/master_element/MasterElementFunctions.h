@@ -82,10 +82,10 @@ generic_grad_op(
     CoordViewType::Rank == 2, "Coordinate view assumed to be rank 2");
   static_assert(OutputViewType::Rank == 3, "Weight view assumed to be rank 3");
 
-  ThrowAssert(AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
-  ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
+  STK_ThrowAssert(AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
+  STK_ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
   for (int i = 0; i < dim; ++i)
-    ThrowAssert(weights.extent(i) == referenceGradWeights.extent(i));
+    STK_ThrowAssert(weights.extent(i) == referenceGradWeights.extent(i));
 
   for (unsigned ip = 0; ip < referenceGradWeights.extent(0); ++ip) {
     NALU_ALIGNED ftype jact[dim][dim];
@@ -111,7 +111,7 @@ generic_grad_op(
     NALU_ALIGNED ftype det = ftype(0.0);
     for (int i = 0; i < dim; ++i)
       det += jact[i][0] * adjJac[i][0];
-    ThrowAssertMsg(
+    STK_ThrowAssertMsg(
       stk::simd::are_any(det > tiny_positive_value()),
       "Problem with Jacobian determinant");
 
@@ -598,10 +598,10 @@ generic_determinant_3d(
   static_assert(OutputViewType::Rank == 1, "Weight view assumed to be 1D");
   static_assert(AlgTraits::nDim_ == 3, "3D method");
 
-  ThrowAssert(AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
-  ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
+  STK_ThrowAssert(AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
+  STK_ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
 
-  ThrowAssert(detj.extent(0) == referenceGradWeights.extent(0));
+  STK_ThrowAssert(detj.extent(0) == referenceGradWeights.extent(0));
 
   for (unsigned ip = 0; ip < referenceGradWeights.extent(0); ++ip) {
     NALU_ALIGNED ftype jac[3][3] = {

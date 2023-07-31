@@ -443,7 +443,7 @@ EnthalpyEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         bool added = true;
         if (srcName == "abl_forcing") {
-          ThrowRequireMsg(
+          STK_ThrowRequireMsg(
             ((NULL != realm_.ablForcingAlg_) &&
              (realm_.ablForcingAlg_->temperatureForcingOn())),
             "ERROR! ABL Forcing parameters not "

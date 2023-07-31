@@ -370,7 +370,7 @@ ShearStressTransportEquationSystem::post_external_data_transfer_work()
     meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "tke_bc");
 
   if (sdrBCField != nullptr) {
-    ThrowRequire(tkeBCField);
+    STK_ThrowRequire(tkeBCField);
     auto bc_sel = owned_and_shared & stk::mesh::selectField(*sdrBCField);
     auto ngpTkeBC =
       fieldMgr.get_field<double>(tkeBCField->mesh_meta_data_ordinal());

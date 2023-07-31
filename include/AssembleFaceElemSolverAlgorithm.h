@@ -83,7 +83,7 @@ public:
         auto& b = ngpMesh.get_bucket(sideRank, bktId);
 
 #if !defined(KOKKOS_ENABLE_GPU)
-        ThrowAssertMsg(
+        STK_ThrowAssertMsg(
           b.topology().num_nodes() == (unsigned)nodesPerFace_,
           "AssembleFaceElemSolverAlgorithm expected nodesPerEntity_ = "
             << nodesPerFace_

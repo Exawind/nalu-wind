@@ -85,7 +85,7 @@ get_fast_point_index(
     break;
   }
   default: {
-    ThrowErrorMsg("Invalid fast type");
+    STK_ThrowErrorMsg("Invalid fast type");
     return -1;
     break;
   }

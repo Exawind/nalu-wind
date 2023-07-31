@@ -61,14 +61,14 @@ get_elem_topo(const Realm& realm, const stk::mesh::Part& surfacePart)
   std::vector<const stk::mesh::Part*> blockParts =
     realm.meta_data().get_blocks_touching_surface(&surfacePart);
 
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     blockParts.size() >= 1,
     "Error, expected at least 1 block for surface " << surfacePart.name());
 
   stk::topology elemTopo = blockParts[0]->topology();
   if (blockParts.size() > 1) {
     for (size_t i = 1; i < blockParts.size(); ++i) {
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         blockParts[i]->topology() == elemTopo,
         "Error, found blocks of different topology connected to surface '"
           << surfacePart.name() << "', " << elemTopo << " and "
@@ -76,7 +76,7 @@ get_elem_topo(const Realm& realm, const stk::mesh::Part& surfacePart)
     }
   }
 
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     elemTopo != stk::topology::INVALID_TOPOLOGY,
     "Error, didn't find valid topology block for surface "
       << surfacePart.name());

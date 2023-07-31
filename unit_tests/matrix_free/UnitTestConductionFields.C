@@ -101,7 +101,7 @@ protected:
     stk::mesh::get_selected_entities(
       surfaceSelector, bulk->get_buckets(meta->side_rank(), surfaceSelector),
       all_faces);
-    ThrowRequire(all_faces.size() == topo.num_sides());
+    STK_ThrowRequire(all_faces.size() == topo.num_sides());
 
     bulk->modification_begin();
     for (unsigned k = 0u; k < all_faces.size(); ++k) {

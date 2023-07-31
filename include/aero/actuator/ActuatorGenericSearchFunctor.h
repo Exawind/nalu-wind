@@ -89,8 +89,8 @@ struct GenericLoopOverCoarseSearchResults
     const int numIp = meSCV->num_integration_points();
 
     // just allocate for largest expected size (hex27)
-    ThrowAssert(numIp <= 216);
-    ThrowAssert(numNodes <= 27);
+    STK_ThrowAssert(numIp <= 216);
+    STK_ThrowAssert(numNodes <= 27);
 
     double scvip[216];
     double elemcoords[27 * 3];

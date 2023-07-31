@@ -63,11 +63,11 @@ bool
 check_parts_for_promotion(const stk::mesh::PartVector& parts)
 {
   for (const auto* ip : parts) {
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       ip != nullptr, "An invalid part was designated for promotion.");
 
     if (ip->topology().rank() == stk::topology::ELEM_RANK) {
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         super_elem_part(*ip) != nullptr,
         "No super element mirror for part requesting promotion");
     }
@@ -78,10 +78,10 @@ check_parts_for_promotion(const stk::mesh::PartVector& parts)
       }
     } else {
       for (const auto* is : part.subsets()) {
-        ThrowRequireMsg(
+        STK_ThrowRequireMsg(
           is != nullptr,
           "An invalid subset part was designated for promotion.");
-        ThrowRequireMsg(
+        STK_ThrowRequireMsg(
           super_subset_part(*is) != nullptr,
           "A subset part lacks its super side mirror.");
         const stk::mesh::Part& subsetPart = *is;
@@ -103,7 +103,7 @@ super_element_suffix()
 std::string
 super_element_part_name(std::string base_name)
 {
-  ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem part");
+  STK_ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem part");
   return (base_name + super_element_suffix());
 }
 //--------------------------------------------------------------------------
@@ -116,7 +116,7 @@ super_subset_part_name(std::string base_name)
   // Note: there's a 32 character limit on the maximum length of the
   // part name (Ioss throws a warning message), so economy on characters is good
 
-  ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem part");
+  STK_ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem part");
   auto first_token = base_name.substr(0, base_name.find_first_of('_'));
   auto last_token =
     base_name.substr(base_name.find_last_of("_"), base_name.length());
@@ -144,7 +144,7 @@ super_subset_part_name(
   //        + "_superside" + std::to_string(numSideNodes)
   //        + last_token;
 
-  ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem part");
+  STK_ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem part");
   auto first_token = base_name.substr(0, base_name.find_first_of('_'));
   auto last_token =
     base_name.substr(base_name.find_last_of("_"), base_name.length());
@@ -157,7 +157,7 @@ super_subset_part_name(
 std::string
 base_element_part_name(std::string super_name)
 {
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     super_name.find(super_element_suffix()) != std::string::npos,
     "Not a super-element part name!");
   return (super_name.erase(
@@ -194,7 +194,7 @@ base_elem_part_from_super_elem_part(const stk::mesh::Part& super_elem_part)
 stk::mesh::Part*
 super_elem_part(const stk::mesh::Part* part)
 {
-  ThrowAssert(part != nullptr);
+  STK_ThrowAssert(part != nullptr);
   return (
     part->mesh_meta_data().get_part(super_element_part_name(part->name())));
 }
@@ -202,7 +202,7 @@ super_elem_part(const stk::mesh::Part* part)
 void
 transform_to_super_elem_part_vector(stk::mesh::PartVector& parts)
 {
-  ThrowAssert(part_vector_is_valid_and_nonempty(parts));
+  STK_ThrowAssert(part_vector_is_valid_and_nonempty(parts));
   std::transform(
     parts.begin(), parts.end(), parts.begin(),
     [](stk::mesh::Part* part) { return super_elem_part(part); });
@@ -234,7 +234,7 @@ base_ranked_parts(
   stk::topology::rank_t rank,
   bool with_subsets)
 {
-  ThrowAssert(part_vector_is_valid_and_nonempty(parts));
+  STK_ThrowAssert(part_vector_is_valid_and_nonempty(parts));
 
   stk::mesh::PartVector elemParts;
   std::copy_if(
@@ -276,7 +276,7 @@ base_face_parts(const stk::mesh::PartVector& parts)
 stk::mesh::PartVector
 only_super_parts(const stk::mesh::PartVector& parts)
 {
-  ThrowAssert(part_vector_is_valid_and_nonempty(parts));
+  STK_ThrowAssert(part_vector_is_valid_and_nonempty(parts));
 
   stk::mesh::PartVector elemParts;
   std::copy_if(
@@ -298,7 +298,7 @@ only_super_parts(const stk::mesh::PartVector& parts)
 stk::mesh::PartVector
 only_super_elem_parts(const stk::mesh::PartVector& parts)
 {
-  ThrowAssert(part_vector_is_valid_and_nonempty(parts));
+  STK_ThrowAssert(part_vector_is_valid_and_nonempty(parts));
 
   stk::mesh::PartVector elemParts;
   std::copy_if(
@@ -310,7 +310,7 @@ only_super_elem_parts(const stk::mesh::PartVector& parts)
 stk::mesh::PartVector
 only_super_side_parts(const stk::mesh::PartVector& parts)
 {
-  ThrowAssert(part_vector_is_valid_and_nonempty(parts));
+  STK_ThrowAssert(part_vector_is_valid_and_nonempty(parts));
 
   stk::mesh::PartVector faceParts;
   std::copy_if(

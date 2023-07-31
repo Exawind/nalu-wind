@@ -470,7 +470,7 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
         break;
       }
       default:
-        NGP_ThrowErrorMsg("invalid entrainment method");
+        STK_NGP_ThrowErrorMsg("invalid entrainment method");
       }
     }
 

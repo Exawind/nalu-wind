@@ -189,7 +189,7 @@ NonConformalInfo::construct_dgInfo()
 
     // extract connected element topology
     b.parent_topology(stk::topology::ELEMENT_RANK, parentTopo);
-    ThrowAssert(parentTopo.size() == 1);
+    STK_ThrowAssert(parentTopo.size() == 1);
     stk::topology currentElemTopo = parentTopo[0];
 
     // volume and surface master element
@@ -218,7 +218,7 @@ NonConformalInfo::construct_dgInfo()
       // extract the connected element to this exposed face; should be single in
       // size!
       const stk::mesh::Entity* face_elem_rels = bulk_data.begin_elements(face);
-      ThrowAssert(bulk_data.num_elements(face) == 1);
+      STK_ThrowAssert(bulk_data.num_elements(face) == 1);
 
       // get element; its face ordinal number
       stk::mesh::Entity element = face_elem_rels[0];
@@ -325,7 +325,7 @@ NonConformalInfo::construct_bounding_points()
     const int num_face_nodes = bulk_data.num_nodes(firstDgInfo->currentFace_);
 
     // sanity check on num nodes
-    ThrowAssert(num_face_nodes == nodesPerFace);
+    STK_ThrowAssert(num_face_nodes == nodesPerFace);
     for (int ni = 0; ni < num_face_nodes; ++ni) {
       stk::mesh::Entity node = face_node_rels[ni];
       double* coords = stk::mesh::field_data(*coordinates, node);
@@ -516,7 +516,7 @@ NonConformalInfo::determine_elems_to_ghost()
 
       // extract the connected element
       const stk::mesh::Entity* face_elem_rels = bulk_data.begin_elements(face);
-      ThrowAssert(bulk_data.num_elements(face) == 1);
+      STK_ThrowAssert(bulk_data.num_elements(face) == 1);
       stk::mesh::Entity element = face_elem_rels[0];
 
       // deal with elements to push back to be ghosted; downward relations come
@@ -624,7 +624,7 @@ NonConformalInfo::complete_search()
             // extract the connected element to the opposing face
             const stk::mesh::Entity* face_elem_rels =
               bulk_data.begin_elements(opposingFace);
-            ThrowAssert(bulk_data.num_elements(opposingFace) == 1);
+            STK_ThrowAssert(bulk_data.num_elements(opposingFace) == 1);
             stk::mesh::Entity opposingElement = face_elem_rels[0];
 
             // extract the opposing element topo and associated master element

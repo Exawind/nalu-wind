@@ -90,7 +90,7 @@ GradientLinearizedResidualOperator<p>::apply(
 {
   stk::mesh::ProfilingBlock pf("GradientLinearizedResidualOperator<p>::apply");
 
-  ThrowRequire(owned_sln.getNumVectors() == 3);
+  STK_ThrowRequire(owned_sln.getNumVectors() == 3);
 
   if (exporter_.getTargetMap()->isDistributed()) {
     {

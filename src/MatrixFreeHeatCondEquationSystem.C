@@ -36,10 +36,10 @@ MatrixFreeHeatCondEquationSystem::MatrixFreeHeatCondEquationSystem(
     meta_(realm_.meta_data())
 {
   realm_.push_equation_to_systems(this);
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     realm_.spatialDimension_ == dim,
     "Only 3D supported for matrix free heat conduction");
-  ThrowRequireMsg(realm_.matrixFree_, "Only matrix free supported");
+  STK_ThrowRequireMsg(realm_.matrixFree_, "Only matrix free supported");
 }
 
 MatrixFreeHeatCondEquationSystem::~MatrixFreeHeatCondEquationSystem() = default;
@@ -52,8 +52,8 @@ get_node_field(
   std::string name,
   stk::mesh::FieldState state = stk::mesh::StateNP1)
 {
-  ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
-  ThrowAssert(
+  STK_ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
+  STK_ThrowAssert(
     meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
   return stk::mesh::get_updated_ngp_field<T>(
     *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
@@ -124,7 +124,7 @@ void
 MatrixFreeHeatCondEquationSystem::register_interior_algorithm(
   stk::mesh::Part* part)
 {
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     matrix_free::part_is_valid_for_matrix_free(polynomial_order_, *part),
     "part " + part->name() + " has invalid topology " +
       part->topology().name() + ". Only hex8/hex27 supported");
@@ -137,7 +137,7 @@ MatrixFreeHeatCondEquationSystem::register_wall_bc(
   const stk::topology&,
   const WallBoundaryConditionData& wallBCData)
 {
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     matrix_free::part_is_valid_for_matrix_free(polynomial_order_, *part),
     "part " + part->name() + " has invalid topology " +
       part->topology().name() + ". Only Quad4 and Quad9 supported");

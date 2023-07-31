@@ -194,7 +194,7 @@ find_topo(
          "pointer."
       << " The pointer was not found in the master element database:"
       << host_ptr << std::endl;
-    ThrowRequire(host_map.find(host_ptr) != dev_map.end());
+    STK_ThrowRequire(host_map.find(host_ptr) != dev_map.end());
   }
   return theTopo;
 }
@@ -215,7 +215,7 @@ find_me(
       NaluEnv::self().naluOutputP0() << v.first.name() << std::endl;
     NaluEnv::self().naluOutputP0()
       << " Add topology to MasterElementRepo::find_me()" << std::endl;
-    ThrowRequire(it != me_map.end());
+    STK_ThrowRequire(it != me_map.end());
   }
   MasterElement* theElem = it->second;
   return theElem;

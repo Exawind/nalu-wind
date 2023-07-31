@@ -180,7 +180,7 @@ TpetraLinearSystem::beginLinearSystemConstruction()
   if (inConstruction_)
     return;
   inConstruction_ = true;
-  ThrowRequire(ownedGraph_.is_null());
+  STK_ThrowRequire(ownedGraph_.is_null());
   stk::mesh::BulkData& bulkData = realm_.bulk_data();
   stk::mesh::MetaData& metaData = realm_.meta_data();
 
@@ -293,7 +293,7 @@ TpetraLinearSystem::beginLinearSystemConstruction()
       ownedGids.push_back(basegid + idof);
     gstart++;
   }
-  ThrowRequire(localId == numOwnedNodes);
+  STK_ThrowRequire(localId == numOwnedNodes);
   // communicate the newly stored GID's.
 
   std::vector<const stk::mesh::FieldBase*> fVec{realm_.tpetGlobalId_};
@@ -391,7 +391,7 @@ TpetraLinearSystem::insert_connection(stk::mesh::Entity a, stk::mesh::Entity b)
 {
   size_t idx = entityToLIDHost_[a.local_offset()] / numDof_;
 
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     idx < ownedAndSharedNodes_.size(),
     "Error, insert_connection got index out of range.");
 
@@ -406,7 +406,7 @@ TpetraLinearSystem::insert_connection(stk::mesh::Entity a, stk::mesh::Entity b)
     correctEntity =
       ownedAndSharedNodes_[idx] == master || naluid_a == naluid_master;
   }
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     correctEntity,
     "Error, indexing of rowEntities to connections isn't right.");
 
@@ -589,11 +589,11 @@ TpetraLinearSystem::buildSparsifiedEdgeElemToNodeGraph(
   for (const auto* ib : buckets) {
     const auto& b = *ib;
     if (poly == 1) {
-      ThrowRequire(b.topology() == stk::topology::HEX_8);
+      STK_ThrowRequire(b.topology() == stk::topology::HEX_8);
     } else if (poly == 2) {
-      ThrowRequire(b.topology() == stk::topology::HEX_27);
+      STK_ThrowRequire(b.topology() == stk::topology::HEX_27);
     } else {
-      ThrowRequire(b.topology().is_superelement());
+      STK_ThrowRequire(b.topology().is_superelement());
     }
     for (size_t k = 0u; k < b.size(); ++k) {
       stk::mesh::Entity const* elem_nodes = b.begin_nodes(k);
@@ -649,7 +649,7 @@ TpetraLinearSystem::buildFaceElemToNodeGraph(const stk::mesh::PartVector& parts)
       // extract the connected element to this exposed face; should be single in
       // size!
       const stk::mesh::Entity* face_elem_rels = bulkData.begin_elements(face);
-      ThrowAssert(bulkData.num_elements(face) == 1);
+      STK_ThrowAssert(bulkData.num_elements(face) == 1);
 
       // get connected element and nodal relations
       stk::mesh::Entity element = face_elem_rels[0];
@@ -765,8 +765,8 @@ TpetraLinearSystem::copy_stk_to_tpetra(
   const stk::mesh::FieldBase* stkField,
   const Teuchos::RCP<LinSys::MultiVector> tpetraField)
 {
-  ThrowAssert(!tpetraField.is_null());
-  ThrowAssert(stkField);
+  STK_ThrowAssert(!tpetraField.is_null());
+  STK_ThrowAssert(stkField);
   const int numVectors = tpetraField->getNumVectors();
 
   stk::mesh::BulkData& bulkData = realm_.bulk_data();
@@ -786,7 +786,7 @@ TpetraLinearSystem::copy_stk_to_tpetra(
     const int fieldSize =
       field_bytes_per_entity(*stkField, b) / (sizeof(double));
 
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       numVectors == fieldSize, "TpetraLinearSystem::copy_stk_to_tpetra");
 
     const stk::mesh::Bucket::size_type length = b.size();
@@ -802,7 +802,7 @@ TpetraLinearSystem::copy_stk_to_tpetra(
 
       const stk::mesh::EntityId nodeTpetGID =
         *stk::mesh::field_data(*realm_.tpetGlobalId_, node);
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         nodeTpetGID != 0 &&
           nodeTpetGID != static_cast<stk::mesh::EntityId>(
                            std::numeric_limits<LinSys::GlobalOrdinal>::max()),
@@ -979,7 +979,7 @@ TpetraLinearSystem::insert_graph_connections(
 
     const stk::mesh::Entity entity_a = rowEntities[i];
     int dofStatus_a = getDofStatus(entity_a);
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       entityToColLIDHost_[entity_a.local_offset()] != -1,
       "insert_graph_connections bad lid ");
     localDofs_a[0] = entityToColLIDHost_[entity_a.local_offset()];
@@ -987,7 +987,7 @@ TpetraLinearSystem::insert_graph_connections(
       const stk::mesh::Entity entity_b = entities_b[j];
       dofStatus[j] = getDofStatus(entity_b);
 
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         entityToColLIDHost_[entity_b.local_offset()] != -1,
         "insert_graph_connections bad lid #2 ");
 
@@ -1123,7 +1123,7 @@ TpetraLinearSystem::storeOwnersForShared()
         stk::mesh::Entity master = get_entity_master(bulkData, node, naluId);
         GlobalOrdinal gidbase =
           *stk::mesh::field_data(*realm_.tpetGlobalId_, master);
-        ThrowRequire(gidbase != 0);
+        STK_ThrowRequire(gidbase != 0);
         for (unsigned idof = 0; idof < numDof_; ++idof) {
           GlobalOrdinal gid = gidbase + idof;
           ownersAndGids_.insert(
@@ -1137,7 +1137,7 @@ TpetraLinearSystem::storeOwnersForShared()
 void
 TpetraLinearSystem::finalizeLinearSystem()
 {
-  ThrowRequire(inConstruction_);
+  STK_ThrowRequire(inConstruction_);
   inConstruction_ = false;
 
   stk::mesh::BulkData& bulkData = realm_.bulk_data();
@@ -1274,10 +1274,10 @@ TpetraLinearSystem::finalizeLinearSystem()
 void
 TpetraLinearSystem::zeroSystem()
 {
-  ThrowRequire(!ownedMatrix_.is_null());
-  ThrowRequire(!sharedNotOwnedMatrix_.is_null());
-  ThrowRequire(!sharedNotOwnedRhs_.is_null());
-  ThrowRequire(!ownedRhs_.is_null());
+  STK_ThrowRequire(!ownedMatrix_.is_null());
+  STK_ThrowRequire(!sharedNotOwnedMatrix_.is_null());
+  STK_ThrowRequire(!sharedNotOwnedRhs_.is_null());
+  STK_ThrowRequire(!ownedRhs_.is_null());
 
   sharedNotOwnedMatrix_->resumeFill();
   ownedMatrix_->resumeFill();
@@ -1367,7 +1367,7 @@ sum_into_row(
     }
 
     if (offset < length) {
-      ThrowAssertMsg(std::isfinite(input_values[perm_index]), "Inf or NAN lhs");
+      STK_ThrowAssertMsg(std::isfinite(input_values[perm_index]), "Inf or NAN lhs");
       if (forceAtomic) {
         Kokkos::atomic_add(&(row_view.value(offset)), input_values[perm_index]);
       } else {
@@ -1507,7 +1507,7 @@ reset_rows(
       const LocalOrdinal actualLocalId =
         useOwned ? localId : (localId - maxOwnedRowId);
 
-      NGP_ThrowRequire(localId <= maxSharedNotOwnedRowId);
+      STK_NGP_ThrowRequire(localId <= maxSharedNotOwnedRowId);
 
       // Adjust the LHS; zero out all entries (including diagonal)
       reset_row(localMatrix.row(actualLocalId), actualLocalId, diag_value);
@@ -1595,10 +1595,10 @@ TpetraLinearSystem::sumInto(
   const SharedMemView<int*, DeviceShmem>& sortPermutation,
   const char* /* trace_tag */)
 {
-  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
-  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
-  ThrowAssertMsg(localIds.span_is_contiguous(), "localIds assumed contiguous");
-  ThrowAssertMsg(
+  STK_ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
+  STK_ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
+  STK_ThrowAssertMsg(localIds.span_is_contiguous(), "localIds assumed contiguous");
+  STK_ThrowAssertMsg(
     sortPermutation.span_is_contiguous(), "sortPermutation assumed contiguous");
 
   sum_into(
@@ -1620,15 +1620,15 @@ TpetraLinearSystem::sumInto(
   const size_t n_obj = entities.size();
   const unsigned numRows = n_obj * numDof_;
 
-  ThrowAssert(numRows == rhs.size());
-  ThrowAssert(numRows * numRows == lhs.size());
+  STK_ThrowAssert(numRows == rhs.size());
+  STK_ThrowAssert(numRows * numRows == lhs.size());
 
   scratchIds.resize(numRows);
   sortPermutation_.resize(numRows);
   for (size_t i = 0; i < n_obj; i++) {
     const stk::mesh::Entity entity = entities[i];
     const LocalOrdinal localOffset = entityToColLIDHost_[entity.local_offset()];
-    ThrowRequireMsg(localOffset != -1, "sumInto bad lid #2 ");
+    STK_ThrowRequireMsg(localOffset != -1, "sumInto bad lid #2 ");
     for (size_t d = 0; d < numDof_; ++d) {
       size_t lid = i * numDof_ + d;
       scratchIds[lid] = localOffset + d;
@@ -1648,7 +1648,7 @@ TpetraLinearSystem::sumInto(
     const LocalOrdinal cur_perm_index = sortPermutation_[r];
     const double* const cur_lhs = &lhs[cur_perm_index * numRows];
     const double cur_rhs = rhs[cur_perm_index];
-    ThrowAssertMsg(std::isfinite(cur_rhs), "Invalid rhs");
+    STK_ThrowAssertMsg(std::isfinite(cur_rhs), "Invalid rhs");
 
     if (rowLid < maxOwnedRowId_) {
       sum_into_row(
@@ -1738,7 +1738,7 @@ TpetraLinearSystem::applyDirichletBCs(
         const LocalOrdinal actualLocalId =
           useOwned ? localId : localId - maxOwnedRowId;
 
-        NGP_ThrowAssert(localId <= maxSharedNotOwnedRowId);
+        STK_NGP_ThrowAssert(localId <= maxSharedNotOwnedRowId);
 
         adjust_lhs_row(
           local_matrix.row(actualLocalId), actualLocalId, diagonalValue);
@@ -2186,8 +2186,8 @@ TpetraLinearSystem::copy_tpetra_to_stk(
 
   const stk::mesh::MetaData& metaData = realm_.meta_data();
 
-  ThrowAssert(!tpetraField.is_null());
-  ThrowAssert(stkField);
+  STK_ThrowAssert(!tpetraField.is_null());
+  STK_ThrowAssert(stkField);
   const auto deviceVector =
     tpetraField->getLocalViewDevice(Tpetra::Access::ReadWrite);
 
@@ -2212,7 +2212,7 @@ TpetraLinearSystem::copy_tpetra_to_stk(
       const LocalOrdinal localIdOffset = entityToLID[node.local_offset()];
       for (unsigned d = 0; d < numDof; ++d) {
         const LocalOrdinal localId = localIdOffset + d;
-        NGP_ThrowRequire(localId < maxOwnedRowId);
+        STK_NGP_ThrowRequire(localId < maxOwnedRowId);
 
         ngpField.get(meshIdx, d) = deviceVector(localId, 0);
       }

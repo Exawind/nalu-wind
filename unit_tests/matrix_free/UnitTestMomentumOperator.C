@@ -151,7 +151,7 @@ TEST_F(
 {
   {
     auto host_lhs = lhs.getLocalViewHost(Tpetra::Access::ReadWrite);
-    ThrowRequire(host_lhs.extent(1) == 3u);
+    STK_ThrowRequire(host_lhs.extent(1) == 3u);
     for (const auto* ib :
          bulk.get_buckets(stk::topology::NODE_RANK, active())) {
       for (auto node : *ib) {

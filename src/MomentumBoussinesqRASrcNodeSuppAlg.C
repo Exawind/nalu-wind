@@ -51,11 +51,11 @@ MomentumBoussinesqRASrcNodeSuppAlg::MomentumBoussinesqRASrcNodeSuppAlg(
 
   temperature_ = meta_data.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "temperature");
-  ThrowRequire(temperature_ != nullptr);
+  STK_ThrowRequire(temperature_ != nullptr);
 
   dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume");
-  ThrowRequire(dualNodalVolume_ != nullptr);
+  STK_ThrowRequire(dualNodalVolume_ != nullptr);
 
   rhoRef_ = realm_.solutionOptions_->referenceDensity_;
   beta_ = realm_.solutionOptions_->thermalExpansionCoeff_;
@@ -73,7 +73,7 @@ MomentumBoussinesqRASrcNodeSuppAlg::setup()
   raTemperature_ = realm_.meta_data().get_field<ScalarFieldType>(
     stk::topology::NODE_RANK,
     MovingAveragePostProcessor::filtered_field_name("temperature"));
-  ThrowRequire(raTemperature_ != nullptr);
+  STK_ThrowRequire(raTemperature_ != nullptr);
 }
 
 //--------------------------------------------------------------------------

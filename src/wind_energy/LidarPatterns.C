@@ -176,7 +176,7 @@ ScanningLidarSegmentGenerator::load(const YAML::Node& node)
   double sweep_angle_in_degrees = 20;
   get_if_present(
     node, "sweep_angle", sweep_angle_in_degrees, sweep_angle_in_degrees);
-  ThrowRequireMsg(sweep_angle_in_degrees > 0, "Sweep angle must be positive");
+  STK_ThrowRequireMsg(sweep_angle_in_degrees > 0, "Sweep angle must be positive");
   sweep_angle_ = convert::degrees_to_radians(sweep_angle_in_degrees);
 
   double step_delta_angle_in_degrees = 1;
@@ -185,17 +185,17 @@ ScanningLidarSegmentGenerator::load(const YAML::Node& node)
     step_delta_angle_in_degrees);
   step_delta_angle_ = convert::degrees_to_radians(step_delta_angle_in_degrees);
 
-  ThrowRequireMsg(step_delta_angle_ > 0, "step delta angle must be positive");
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(step_delta_angle_ > 0, "step delta angle must be positive");
+  STK_ThrowRequireMsg(
     step_delta_angle_ <= sweep_angle_,
     "step delta angle must be less than full sweep");
 
   get_if_present(node, "stare_time", stare_time_, stare_time_);
-  ThrowRequireMsg(stare_time_ > 0, "stare time must be positive");
+  STK_ThrowRequireMsg(stare_time_ > 0, "stare time must be positive");
 
   get_if_present(
     node, "reset_time_delta", reset_time_delta_, reset_time_delta_);
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     reset_time_delta_ >= 0, "reset time delta must be semi-positive");
 
   get_required(node, "beam_length", beam_length_);
@@ -320,8 +320,8 @@ SpinnerLidarSegmentGenerator::load(const YAML::Node& node)
   NaluEnv::self().naluOutputP0()
     << "LidarLineOfSite::SpinnerLidarSegmentGenerator::load" << std::endl;
 
-  ThrowRequireMsg(node["center"], "Lidar center must be provided");
-  ThrowRequireMsg(node["axis"], "Lidar axis must be provided");
+  STK_ThrowRequireMsg(node["center"], "Lidar center must be provided");
+  STK_ThrowRequireMsg(node["axis"], "Lidar axis must be provided");
 
   lidarCenter_ = to_array3(node["center"].as<Coordinates>());
 
@@ -365,7 +365,7 @@ SpinnerLidarSegmentGenerator::load(const YAML::Node& node)
     normalize_vec3(groundNormal_.data());
   }
 
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     std::abs(ddot(groundNormal_.data(), laserAxis_.data(), 3)) <
       small_positive_value(),
     "Ground and laser axes must be orthogonal");
@@ -561,7 +561,7 @@ RadarSegmentGenerator::load(const YAML::Node& node)
   double sweep_angle_in_degrees = 20;
   get_if_present(
     node, "sweep_angle", sweep_angle_in_degrees, sweep_angle_in_degrees);
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     sweep_angle_in_degrees >= 0, "Sweep angle must be semipositive");
   sweep_angle_ = convert::degrees_to_radians(sweep_angle_in_degrees);
 
@@ -591,7 +591,7 @@ RadarSegmentGenerator::load(const YAML::Node& node)
 
   get_if_present(
     node, "reset_time_delta", reset_time_delta_, reset_time_delta_);
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     reset_time_delta_ >= 0, "reset time delta must be semi-positive");
 
   if (specified_count > 0 && specified_count != 8) {

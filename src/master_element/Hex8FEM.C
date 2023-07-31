@@ -60,11 +60,11 @@ generic_grad_op_3d(
   static_assert(OutputViewType::Rank == 3, "Weight view assumed to be 3D");
   static_assert(AlgTraits::nDim_ == 3, "3D method");
 
-  ThrowAssert(AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
-  ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
-  ThrowAssert(weights.extent(0) == referenceGradWeights.extent(0));
-  ThrowAssert(weights.extent(1) == referenceGradWeights.extent(1));
-  ThrowAssert(weights.extent(2) == referenceGradWeights.extent(2));
+  STK_ThrowAssert(AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
+  STK_ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
+  STK_ThrowAssert(weights.extent(0) == referenceGradWeights.extent(0));
+  STK_ThrowAssert(weights.extent(1) == referenceGradWeights.extent(1));
+  STK_ThrowAssert(weights.extent(2) == referenceGradWeights.extent(2));
 
   for (unsigned ip = 0; ip < AlgTraits::numGp_; ++ip) {
     ftype jact[3][3] = {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
@@ -95,7 +95,7 @@ generic_grad_op_3d(
 
     detj(ip) = jact[0][0] * invJac[0][0] + jact[1][0] * invJac[1][0] +
                jact[2][0] * invJac[2][0];
-    ThrowAssertMsg(
+    STK_ThrowAssertMsg(
       stk::simd::are_any(detj(ip) > +tiny_positive_value()),
       "Problem with determinant");
 

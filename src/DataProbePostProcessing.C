@@ -807,7 +807,7 @@ DataProbePostProcessing::create_exodus()
   for (const auto* probeSpec : dataProbeSpecInfo_) {
     for (const auto& fieldInfo : probeSpec->fieldInfo_) {
       const auto& meta = realm_.meta_data();
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         meta.get_field(stk::topology::NODE_RANK, fieldInfo.first) != nullptr,
         "No field named `" + fieldInfo.first + "' of node rank");
       io->add_field(

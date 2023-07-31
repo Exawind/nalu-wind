@@ -96,9 +96,9 @@ public:
 #endif
   )
   {
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       partVec_.size() == 1, "KokkosMEViews unit-test assumes partVec_.size==1");
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       !bulk_->get_buckets(meta_->side_rank(), *partVec_[0]).empty(),
       "part does not contain side-ranked elements");
 

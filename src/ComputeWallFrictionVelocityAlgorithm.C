@@ -155,7 +155,7 @@ ComputeWallFrictionVelocityAlgorithm::execute()
 
     // extract connected element topology
     b.parent_topology(stk::topology::ELEMENT_RANK, parentTopo);
-    ThrowAssert(parentTopo.size() == 1);
+    STK_ThrowAssert(parentTopo.size() == 1);
     stk::topology theElemTopo = parentTopo[0];
 
     // extract master element
@@ -206,7 +206,7 @@ ComputeWallFrictionVelocityAlgorithm::execute()
       stk::mesh::Entity const* face_node_rels = bulk_data.begin_nodes(face);
       int num_face_nodes = bulk_data.num_nodes(face);
       // sanity check on num nodes
-      ThrowAssert(num_face_nodes == nodesPerFace);
+      STK_ThrowAssert(num_face_nodes == nodesPerFace);
       for (int ni = 0; ni < num_face_nodes; ++ni) {
         stk::mesh::Entity node = face_node_rels[ni];
 
@@ -234,7 +234,7 @@ ComputeWallFrictionVelocityAlgorithm::execute()
       // extract the connected element to this exposed face; should be single in
       // size!
       const stk::mesh::Entity* face_elem_rels = bulk_data.begin_elements(face);
-      ThrowAssert(bulk_data.num_elements(face) == 1);
+      STK_ThrowAssert(bulk_data.num_elements(face) == 1);
 
       // get element; its face ordinal number
       stk::mesh::Entity element = face_elem_rels[0];
