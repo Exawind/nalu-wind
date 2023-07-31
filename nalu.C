@@ -172,9 +172,10 @@ main(int argc, char** argv)
 
     // proceed with reading input file "document" from YAML
     YAML::Node doc = YAML::LoadFile(inputFileName.c_str());
-    if (debug) {
-      if (!naluEnv.parallel_rank())
-        sierra::nalu::NaluParsingHelper::emit(std::cout, doc);
+    if (!naluEnv.parallel_rank())
+      std::cout << std::string(20, "#")<< " INPUT FILE START " << std::string(20, "#") <<std::endl;
+      sierra::nalu::NaluParsingHelper::emit(std::cout, doc);
+      std::cout << std::string(20, "#")<< " INPUT FILE END   " << std::string(20, "#") <<std::endl;
     }
 
     // Hypre general parameter setting
