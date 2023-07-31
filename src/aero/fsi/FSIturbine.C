@@ -1390,7 +1390,7 @@ fsiTurbine::mapDisplacements(double time)
       const auto twrStartDisp = aero::SixDOF(&brFSIdata_.twr_def[iN]);
       const auto twrEndDisp = aero::SixDOF(&brFSIdata_.twr_def[iNp1]);
       const auto deflection = aero::linear_interp_total_displacement(
-        twrStartDisp, twrEndDisp, *dispMapInterpNode);
+        twrStartDisp, twrEndDisp, *dispMapInterpNode) * temporalDeflectionRamp;
 
       // Now transfer the interpolated displacement to the CFD mesh node
       vector_to_field(
