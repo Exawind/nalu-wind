@@ -172,124 +172,132 @@ main(int argc, char** argv)
 
     // proceed with reading input file "document" from YAML
     YAML::Node doc = YAML::LoadFile(inputFileName.c_str());
+    if (!naluEnv.parallel_rank()) {
+      std::cout << std::string(20, '#') << " INPUT FILE START "
+                << std::string(20, '#') << std::endl;
+      sierra::nalu::NaluParsingHelper::emit(std::cout, doc);
+      std::cout << std::string(20, '#') << " INPUT FILE END   "
+                << std::string(20, '#') << std::endl;
+    }
+
+    // Hypre general parameter setting
+    nalu_hypre::hypre_set_params(doc);
+
+    sierra::nalu::Simulation sim(doc);
+    if (serializedIOGroupSize) {
+      naluEnv.naluOutputP0()
+        << "Info: found non-zero serialized_io_group_size on command-line= "
+        << serializedIOGroupSize << " (takes precedence over input file value)."
+        << std::endl;
+      sim.setSerializedIOGroupSize(serializedIOGroupSize);
+    }
+    naluEnv.debug_ = debug;
+    sim.load(doc);
+    sim.breadboard();
+    sim.initialize();
+    sim.run();
+
+    // stop timer
+    const double stop_time = naluEnv.nalu_time();
+    const double total_time = stop_time - start_time;
+    const char* timer_name = "Total Time";
+
+    // parallel reduce overall times
+    double g_sum, g_min, g_max;
+    stk::all_reduce_min(naluEnv.parallel_comm(), &total_time, &g_min, 1);
+    stk::all_reduce_max(naluEnv.parallel_comm(), &total_time, &g_max, 1);
+    stk::all_reduce_sum(naluEnv.parallel_comm(), &total_time, &g_sum, 1);
+    const int nprocs = naluEnv.parallel_size();
+
+    // output total time
+    naluEnv.naluOutputP0() << "Timing for Simulation: nprocs= " << nprocs
+                           << std::endl;
+    naluEnv.naluOutputP0() << "           main() --  "
+                           << " \tavg: " << g_sum / double(nprocs)
+                           << " \tmin: " << g_min << " \tmax: " << g_max
+                           << std::endl;
+
+    // output memory usage
+    {
+      size_t now, hwm;
+      stk::get_memory_usage(now, hwm);
+      // min, max, sum
+      size_t global_now[3] = {now, now, now};
+      size_t global_hwm[3] = {hwm, hwm, hwm};
+
+      stk::all_reduce(
+        naluEnv.parallel_comm(), stk::ReduceSum<1>(&global_now[2]));
+      stk::all_reduce(
+        naluEnv.parallel_comm(), stk::ReduceMin<1>(&global_now[0]));
+      stk::all_reduce(
+        naluEnv.parallel_comm(), stk::ReduceMax<1>(&global_now[1]));
+
+      stk::all_reduce(
+        naluEnv.parallel_comm(), stk::ReduceSum<1>(&global_hwm[2]));
+      stk::all_reduce(
+        naluEnv.parallel_comm(), stk::ReduceMin<1>(&global_hwm[0]));
+      stk::all_reduce(
+        naluEnv.parallel_comm(), stk::ReduceMax<1>(&global_hwm[1]));
+
+      naluEnv.naluOutputP0() << "Memory Overview: " << std::endl;
+
+      naluEnv.naluOutputP0()
+        << "nalu memory: total (over all cores) current/high-water mark= "
+        << std::setw(15) << human_bytes_double(global_now[2]) << std::setw(15)
+        << human_bytes_double(global_hwm[2]) << std::endl;
+
+      naluEnv.naluOutputP0()
+        << "nalu memory:   min (over all cores) current/high-water mark= "
+        << std::setw(15) << human_bytes_double(global_now[0]) << std::setw(15)
+        << human_bytes_double(global_hwm[0]) << std::endl;
+
+      naluEnv.naluOutputP0()
+        << "nalu memory:   max (over all cores) current/high-water mark= "
+        << std::setw(15) << human_bytes_double(global_now[1]) << std::setw(15)
+        << human_bytes_double(global_hwm[1]) << std::endl;
+    }
+
+    sierra::nalu::Simulation::rootTimer().stop();
+
+    // output timings consistent w/ rest of Sierra
+    stk::diag::Timer& sierra_timer = sierra::nalu::Simulation::rootTimer();
+    const double elapsed_time =
+      sierra_timer.getMetric<stk::diag::WallTime>().getAccumulatedLap(false);
+    stk::diag::Timer& mesh_output_timer =
+      sierra::nalu::Simulation::outputTimer();
+    double mesh_output_time =
+      mesh_output_timer.getMetric<stk::diag::WallTime>().getAccumulatedLap(
+        false);
+    double time_without_output = elapsed_time - mesh_output_time;
+
+    stk::parallel_print_time_without_output_and_hwm(
+      naluEnv.parallel_comm(), time_without_output, naluEnv.naluOutputP0());
+
     if (!naluEnv.parallel_rank())
-      std::cout << std::string(20, "#") << " INPUT FILE START "
-                << std::string(20, "#") << std::endl;
-    sierra::nalu::NaluParsingHelper::emit(std::cout, doc);
-    std::cout << std::string(20, "#") << " INPUT FILE END   "
-              << std::string(20, "#") << std::endl;
+      stk::print_timers_and_memory(&timer_name, &total_time, 1 /*num timers*/);
+
+    stk::diag::printTimersTable(
+      naluEnv.naluOutputP0(), sierra::nalu::Simulation::rootTimer(),
+      stk::diag::METRICS_CPU_TIME | stk::diag::METRICS_WALL_TIME, false,
+      naluEnv.parallel_comm());
+
+    stk::diag::deleteRootTimer(sierra::nalu::Simulation::rootTimer());
+
+    // Write out Trilinos timers
+    Teuchos::TimeMonitor::summarize(
+      naluEnv.naluOutputP0(), false, true, false, Teuchos::Union);
+
+    // Master element cleanup
+    sierra::nalu::MasterElementRepo::clear();
   }
 
-  // Hypre general parameter setting
-  nalu_hypre::hypre_set_params(doc);
+  // Hypre cleanup
+  nalu_hypre::hypre_finalize();
 
-  sierra::nalu::Simulation sim(doc);
-  if (serializedIOGroupSize) {
-    naluEnv.naluOutputP0()
-      << "Info: found non-zero serialized_io_group_size on command-line= "
-      << serializedIOGroupSize << " (takes precedence over input file value)."
-      << std::endl;
-    sim.setSerializedIOGroupSize(serializedIOGroupSize);
-  }
-  naluEnv.debug_ = debug;
-  sim.load(doc);
-  sim.breadboard();
-  sim.initialize();
-  sim.run();
+  Kokkos::finalize();
 
-  // stop timer
-  const double stop_time = naluEnv.nalu_time();
-  const double total_time = stop_time - start_time;
-  const char* timer_name = "Total Time";
+  MPI_Finalize();
 
-  // parallel reduce overall times
-  double g_sum, g_min, g_max;
-  stk::all_reduce_min(naluEnv.parallel_comm(), &total_time, &g_min, 1);
-  stk::all_reduce_max(naluEnv.parallel_comm(), &total_time, &g_max, 1);
-  stk::all_reduce_sum(naluEnv.parallel_comm(), &total_time, &g_sum, 1);
-  const int nprocs = naluEnv.parallel_size();
-
-  // output total time
-  naluEnv.naluOutputP0() << "Timing for Simulation: nprocs= " << nprocs
-                         << std::endl;
-  naluEnv.naluOutputP0() << "           main() --  "
-                         << " \tavg: " << g_sum / double(nprocs)
-                         << " \tmin: " << g_min << " \tmax: " << g_max
-                         << std::endl;
-
-  // output memory usage
-  {
-    size_t now, hwm;
-    stk::get_memory_usage(now, hwm);
-    // min, max, sum
-    size_t global_now[3] = {now, now, now};
-    size_t global_hwm[3] = {hwm, hwm, hwm};
-
-    stk::all_reduce(naluEnv.parallel_comm(), stk::ReduceSum<1>(&global_now[2]));
-    stk::all_reduce(naluEnv.parallel_comm(), stk::ReduceMin<1>(&global_now[0]));
-    stk::all_reduce(naluEnv.parallel_comm(), stk::ReduceMax<1>(&global_now[1]));
-
-    stk::all_reduce(naluEnv.parallel_comm(), stk::ReduceSum<1>(&global_hwm[2]));
-    stk::all_reduce(naluEnv.parallel_comm(), stk::ReduceMin<1>(&global_hwm[0]));
-    stk::all_reduce(naluEnv.parallel_comm(), stk::ReduceMax<1>(&global_hwm[1]));
-
-    naluEnv.naluOutputP0() << "Memory Overview: " << std::endl;
-
-    naluEnv.naluOutputP0()
-      << "nalu memory: total (over all cores) current/high-water mark= "
-      << std::setw(15) << human_bytes_double(global_now[2]) << std::setw(15)
-      << human_bytes_double(global_hwm[2]) << std::endl;
-
-    naluEnv.naluOutputP0()
-      << "nalu memory:   min (over all cores) current/high-water mark= "
-      << std::setw(15) << human_bytes_double(global_now[0]) << std::setw(15)
-      << human_bytes_double(global_hwm[0]) << std::endl;
-
-    naluEnv.naluOutputP0()
-      << "nalu memory:   max (over all cores) current/high-water mark= "
-      << std::setw(15) << human_bytes_double(global_now[1]) << std::setw(15)
-      << human_bytes_double(global_hwm[1]) << std::endl;
-  }
-
-  sierra::nalu::Simulation::rootTimer().stop();
-
-  // output timings consistent w/ rest of Sierra
-  stk::diag::Timer& sierra_timer = sierra::nalu::Simulation::rootTimer();
-  const double elapsed_time =
-    sierra_timer.getMetric<stk::diag::WallTime>().getAccumulatedLap(false);
-  stk::diag::Timer& mesh_output_timer = sierra::nalu::Simulation::outputTimer();
-  double mesh_output_time =
-    mesh_output_timer.getMetric<stk::diag::WallTime>().getAccumulatedLap(false);
-  double time_without_output = elapsed_time - mesh_output_time;
-
-  stk::parallel_print_time_without_output_and_hwm(
-    naluEnv.parallel_comm(), time_without_output, naluEnv.naluOutputP0());
-
-  if (!naluEnv.parallel_rank())
-    stk::print_timers_and_memory(&timer_name, &total_time, 1 /*num timers*/);
-
-  stk::diag::printTimersTable(
-    naluEnv.naluOutputP0(), sierra::nalu::Simulation::rootTimer(),
-    stk::diag::METRICS_CPU_TIME | stk::diag::METRICS_WALL_TIME, false,
-    naluEnv.parallel_comm());
-
-  stk::diag::deleteRootTimer(sierra::nalu::Simulation::rootTimer());
-
-  // Write out Trilinos timers
-  Teuchos::TimeMonitor::summarize(
-    naluEnv.naluOutputP0(), false, true, false, Teuchos::Union);
-
-  // Master element cleanup
-  sierra::nalu::MasterElementRepo::clear();
-}
-
-// Hypre cleanup
-nalu_hypre::hypre_finalize();
-
-Kokkos::finalize();
-
-MPI_Finalize();
-
-// all done
-return 0;
+  // all done
+  return 0;
 }
