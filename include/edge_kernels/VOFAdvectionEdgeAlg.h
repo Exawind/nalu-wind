@@ -40,6 +40,7 @@ private:
   unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
   unsigned massFlowRate_{stk::mesh::InvalidOrdinal};
   unsigned density_{stk::mesh::InvalidOrdinal};
+  unsigned velocity_{stk::mesh::InvalidOrdinal};
 };
 
 } // namespace nalu

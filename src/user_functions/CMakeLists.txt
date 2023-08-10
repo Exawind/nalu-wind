@@ -40,4 +40,5 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ZalesakSphereVOFAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ZalesakSphereMassFlowRateKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/DropletVOFAuxFunction.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/DropletVelocityAuxFunction.C
 )

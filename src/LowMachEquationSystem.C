@@ -165,6 +165,8 @@
 #include <user_functions/KovasznayVelocityAuxFunction.h>
 #include <user_functions/KovasznayPressureAuxFunction.h>
 
+#include <user_functions/DropletVelocityAuxFunction.h>
+
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
 #include <overset/AssembleOversetPressureAlgorithm.h>
 
@@ -654,6 +656,8 @@ LowMachEquationSystem::register_initial_condition_fcn(
       theAuxFunc = new SinProfileChannelFlowVelocityAuxFunction(0, nDim);
     } else if (fcnName == "PerturbedShearLayer") {
       theAuxFunc = new PerturbedShearLayerVelocityAuxFunction(0, nDim);
+    } else if (fcnName == "droplet") {
+      theAuxFunc = new DropletVelocityAuxFunction(0, nDim);
     } else {
       throw std::runtime_error(
         "InitialCondFunction::non-supported velocity IC");
