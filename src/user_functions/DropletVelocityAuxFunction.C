@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include <user_functions/DropletVOFAuxFunction.h>
+#include <user_functions/DropletVelocityAuxFunction.h>
 #include <algorithm>
 
 // basic c++
@@ -18,13 +18,15 @@
 namespace sierra {
 namespace nalu {
 
-DropletVOFAuxFunction::DropletVOFAuxFunction() : AuxFunction(0, 1)
+DropletVelocityAuxFunction::DropletVelocityAuxFunction(
+  const unsigned beginPos, const unsigned endPos)
+  : AuxFunction(beginPos, endPos)
 {
   // does nothing
 }
 
 void
-DropletVOFAuxFunction::do_evaluate(
+DropletVelocityAuxFunction::do_evaluate(
   const double* coords,
   const double /*time*/,
   const unsigned spatialDimension,
@@ -41,11 +43,14 @@ DropletVOFAuxFunction::do_evaluate(
     const double z = coords[2];
     const double interface_thickness = 0.025;
 
-    fieldPtr[0] = 0.0;
-    //fieldPtr[0] += -0.5 * (std::erf(y / interface_thickness) + 1.0) + 1.0;
+    auto radius = std::sqrt(x * x + y * y + z * z) - 0.075;
+    auto vof = -0.5 * (std::erf(radius / interface_thickness) + 1.0) + 1.0;
+    // assuming density ratio of 1000
+    auto dens = 1000.0 * vof + 1.0 * (1.0 - vof);
 
-    auto radius = std::sqrt(x * x + (y) * (y) + z * z) - 0.075;
-    fieldPtr[0] += -0.5 * (std::erf(radius / interface_thickness) + 1.0) + 1.0;
+    fieldPtr[0] = vof * 1000. * 1. / dens;
+    fieldPtr[1] = vof * 1000. * 1. / dens;
+    fieldPtr[2] = vof * 1000. * 1. / dens;
 
     fieldPtr += fieldSize;
     coords += spatialDimension;

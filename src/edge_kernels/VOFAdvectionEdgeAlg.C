@@ -41,6 +41,8 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
     stk::topology::EDGE_RANK);
   density_ =
     get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1);
+  velocity_ =
+    get_field_ordinal(realm.meta_data(), "velocity", stk::mesh::StateNP1);
 }
 
 void
@@ -49,7 +51,7 @@ VOFAdvectionEdgeAlg::execute()
   const double eps = 1.0e-16;
   const double gradient_eps = 1.0e-9;
   // Could be made into user paramter for more control.
-  const double compression_magnitude = 0.25;
+  const double compression_magnitude = 1.0;
 
   const int ndim = realm_.meta_data().spatial_dimension();
 
@@ -69,6 +71,7 @@ VOFAdvectionEdgeAlg::execute()
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
   const auto density = fieldMgr.get_field<double>(density_);
+  const auto velocity = fieldMgr.get_field<double>(velocity_);
 
   run_algorithm(
     realm_.bulk_data(),
@@ -141,9 +144,42 @@ VOFAdvectionEdgeAlg::execute()
       smdata.lhs(1, 1) -= alhsfac / relaxFac;
       smdata.lhs(0, 1) += alhsfac;
 
-      // Compression term
-      const DblType velocity_scale = stk::math::abs(
-        mdot / stk::math::sqrt(av[0] * av[0] + av[1] * av[1] + av[2] * av[2]));
+      // Compression + Diffusion term
+      DblType velocity_scale = 0.0;
+      for (int d = 0; d < ndim; ++d)
+        velocity_scale += 0.25*(velocity.get(nodeL, d) +
+                                velocity.get(nodeR, d)) *
+                               (velocity.get(nodeL, d) +
+                                velocity.get(nodeR, d));
+
+      velocity_scale = stk::math::sqrt(velocity_scale);
+
+      DblType axdx = 0.0;
+      DblType asq = 0.0;
+      DblType diffusion_coef = 0.0;
+
+      for (int d = 0; d < ndim; ++d) {
+        const DblType dxj =
+          coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
+        diffusion_coef += dxj*dxj;
+        asq += av[d] * av[d];
+        axdx += av[d] * dxj;
+      }
+
+      diffusion_coef = stk::math::sqrt(diffusion_coef)*0.5;
+      
+      const DblType inv_axdx = 1.0 / axdx;
+
+      const DblType dlhsfac = velocity_scale * diffusion_coef * asq * inv_axdx;
+
+      smdata.rhs(0) -= dlhsfac * qNp1L - dlhsfac * qNp1R;
+      smdata.rhs(1) += dlhsfac * qNp1L - dlhsfac * qNp1R;
+
+      smdata.lhs(0, 0) -= dlhsfac;
+      smdata.lhs(0, 1) += dlhsfac;
+
+      smdata.lhs(1, 0) += dlhsfac;
+      smdata.lhs(1, 1) -= dlhsfac;
 
       DblType dqdxMagL = 0.0;
       DblType dqdxMagR = 0.0;
