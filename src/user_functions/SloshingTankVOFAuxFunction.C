@@ -7,24 +7,41 @@
 // for more details.
 //
 
-#include <user_functions/DropletVOFAuxFunction.h>
+#include <user_functions/SloshingTankVOFAuxFunction.h>
 #include <algorithm>
 
 // basic c++
 #include <cmath>
 #include <vector>
 #include <stdexcept>
+#include <iostream>
 
 namespace sierra {
 namespace nalu {
 
-DropletVOFAuxFunction::DropletVOFAuxFunction() : AuxFunction(0, 1)
+SloshingTankVOFAuxFunction::SloshingTankVOFAuxFunction(
+  const std::vector<double>& params)
+  : AuxFunction(0, 1),
+    water_level_(0.),
+    amplitude_(0.1),
+    kappa_(0.25),
+    interface_thickness_(0.1)
 {
-  // does nothing
+  // check size and populate
+  if (params.size() != 4 && !params.empty())
+    throw std::runtime_error("Realm::setup_initial_conditions: "
+                             "sloshing_tank requires 4 params: water level, "
+                             "amplitude, kappa, and interface thickness");
+  if (!params.empty()) {
+    water_level_ = params[0];
+    amplitude_ = params[1];
+    kappa_ = params[2];
+    interface_thickness_ = params[3];
+  }
 }
 
 void
-DropletVOFAuxFunction::do_evaluate(
+SloshingTankVOFAuxFunction::do_evaluate(
   const double* coords,
   const double /*time*/,
   const unsigned spatialDimension,
@@ -39,13 +56,11 @@ DropletVOFAuxFunction::do_evaluate(
     const double x = coords[0];
     const double y = coords[1];
     const double z = coords[2];
-    const double interface_thickness = 0.025;
 
-    fieldPtr[0] = 0.0;
-    //fieldPtr[0] += -0.5 * (std::erf(y / interface_thickness) + 1.0) + 1.0;
-
-    auto radius = std::sqrt(x * x + y * y + z * z) - 0.075;
-    fieldPtr[0] += -0.5 * (std::erf(radius / interface_thickness) + 1.0) + 1.0;
+    const double z0 =
+      water_level_ + amplitude_ * std::exp(-kappa_ * (x * x + y * y));
+    fieldPtr[0] =
+      -0.5 * (std::erf((z - z0) / interface_thickness_) + 1.0) + 1.0;
 
     fieldPtr += fieldSize;
     coords += spatialDimension;

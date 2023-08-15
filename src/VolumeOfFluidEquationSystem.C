@@ -43,6 +43,7 @@
 #include "user_functions/ZalesakDiskVOFAuxFunction.h"
 #include "user_functions/ZalesakSphereVOFAuxFunction.h"
 #include "user_functions/DropletVOFAuxFunction.h"
+#include "user_functions/SloshingTankVOFAuxFunction.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldUtils.h"
@@ -466,7 +467,7 @@ void
 VolumeOfFluidEquationSystem::register_initial_condition_fcn(
   stk::mesh::Part* part,
   const std::map<std::string, std::string>& theNames,
-  const std::map<std::string, std::vector<double>>& /* theParams */)
+  const std::map<std::string, std::vector<double>>& theParams)
 {
   // iterate map and check for name
   const std::string dofName = "volume_of_fluid";
@@ -520,6 +521,13 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
       }
     } else if (fcnName == "droplet") {
       theAuxFunc = new DropletVOFAuxFunction();
+    } else if (fcnName == "sloshing_tank") {
+      std::map<std::string, std::vector<double>>::const_iterator iterParams =
+        theParams.find(dofName);
+      std::vector<double> fcnParams = (iterParams != theParams.end())
+                                        ? (*iterParams).second
+                                        : std::vector<double>();
+      theAuxFunc = new SloshingTankVOFAuxFunction(fcnParams);
     } else {
       throw std::runtime_error("VolumeOfFluidEquationSystem::register_initial_"
                                "condition_fcn: limited functions supported");
