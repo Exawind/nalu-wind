@@ -20,7 +20,7 @@ namespace nalu {
 class SloshingTankVOFAuxFunction : public AuxFunction
 {
 public:
-  SloshingTankVOFAuxFunction();
+  SloshingTankVOFAuxFunction(const std::vector<double>& params);
 
   virtual ~SloshingTankVOFAuxFunction() {}
 
@@ -34,6 +34,11 @@ public:
     const unsigned fieldSize,
     const unsigned beginPos,
     const unsigned endPos) const;
+
+  double water_level_;
+  double amplitude_;
+  double kappa_;
+  double interface_thickness_;
 };
 
 } // namespace nalu
