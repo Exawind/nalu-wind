@@ -168,9 +168,7 @@ VOFAdvectionEdgeAlg::execute()
       smdata.lhs(0, 1) += alhsfac;
 
       // Compression + Diffusion term
-      DblType velocity_scale = 0.0;
-
-      velocity_scale = global_max_velocity * 1.0;
+      const DblType velocity_scale = global_max_velocity * 5.0;
 
       DblType axdx = 0.0;
       DblType asq = 0.0;
@@ -184,7 +182,7 @@ VOFAdvectionEdgeAlg::execute()
         axdx += av[d] * dxj;
       }
 
-      diffusion_coef = stk::math::sqrt(diffusion_coef) * 0.35;
+      diffusion_coef = stk::math::sqrt(diffusion_coef) * 0.6;
       
       const DblType inv_axdx = 1.0 / axdx;
 
