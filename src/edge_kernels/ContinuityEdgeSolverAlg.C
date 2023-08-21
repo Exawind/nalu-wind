@@ -31,7 +31,6 @@ ContinuityEdgeSolverAlg::ContinuityEdgeSolverAlg(
   edgeAreaVec_ =
     get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   Udiag_ = get_field_ordinal(meta, "momentum_diag");
-  massForcedFlowRate_ = get_field_ordinal(meta, "mass_forced_flow_rate", stk::topology::EDGE_RANK);
 }
 
 void
@@ -63,7 +62,6 @@ ContinuityEdgeSolverAlg::execute()
   const auto density = fieldMgr.get_field<double>(densityNp1_);
   const auto pressure = fieldMgr.get_field<double>(pressure_);
   const auto udiag = fieldMgr.get_field<double>(Udiag_);
-  const auto mdotforced = fieldMgr.get_field<double>(massForcedFlowRate_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
 
   stk::mesh::NgpField<double> edgeFaceVelMag;
@@ -131,7 +129,6 @@ ContinuityEdgeSolverAlg::execute()
             av[d] -
           kxj * GjIp * nocFac;
       }
-      tmdot += mdotforced.get(edge,0)*0.0;
       tmdot *= denScale;
       tmdot /= tauScale;
       const DblType lhsfac =
