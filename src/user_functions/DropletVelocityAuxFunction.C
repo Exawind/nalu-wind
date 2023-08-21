@@ -41,7 +41,7 @@ DropletVelocityAuxFunction::do_evaluate(
     const double x = coords[0];
     const double y = coords[1];
     const double z = coords[2];
-    const double interface_thickness = 0.025;
+    const double interface_thickness = 0.015;
 
     auto radius = std::sqrt(x * x + y * y + z * z) - 0.075;
     auto vof = -0.5 * (std::erf(radius / interface_thickness) + 1.0) + 1.0;

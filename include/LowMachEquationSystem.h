@@ -297,6 +297,7 @@ public:
   ScalarFieldType* pressure_;
   VectorFieldType* dpdx_;
   ScalarFieldType* massFlowRate_;
+  ScalarFieldType* massForcedFlowRate_;
   VectorFieldType* coordinates_;
 
   ScalarFieldType* pTmp_;

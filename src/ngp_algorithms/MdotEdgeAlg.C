@@ -50,9 +50,6 @@ MdotEdgeAlg::execute()
   const std::string dofName = "pressure";
   const DblType nocFac = (realm_.get_noc_usage(dofName)) ? 1.0 : 0.0;
 
-  const DblType solveIncompressibleEqn = realm_.get_incompressible_solve();
-  const DblType om_solveIncompressibleEqn = 1.0 - solveIncompressibleEqn;
-
   // Interpolation option for rho*U
   const DblType interpTogether = realm_.get_mdot_interp();
   const DblType om_interpTogether = (1.0 - interpTogether);
@@ -105,7 +102,6 @@ MdotEdgeAlg::execute()
 
       const DblType projTimeScale = 0.5 * (1.0 / udiagL + 1.0 / udiagR);
       const DblType rhoIp = 0.5 * (densityL + densityR);
-      const DblType rhoNormIp = solveIncompressibleEqn/rhoIp + om_solveIncompressibleEqn;
 
       DblType axdx = 0.0;
       DblType asq = 0.0;
@@ -139,7 +135,7 @@ MdotEdgeAlg::execute()
       }
 
       // Update edge field
-      mdot.get(einfo.meshIdx, 0) = tmdot * rhoNormIp;
+      mdot.get(einfo.meshIdx, 0) = tmdot;
     });
 
   // Flag that the field has been modified on device for future sync
