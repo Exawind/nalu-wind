@@ -48,6 +48,8 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
     get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   massFlowRate_ =
     get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
+  massForcedFlowRate_ = 
+    get_field_ordinal(meta, "mass_forced_flow_rate", stk::topology::EDGE_RANK);
   pecletFactor_ =
     get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK);
   maskNodeField_ = get_field_ordinal(
@@ -72,9 +74,6 @@ MomentumEdgeSolverAlg::execute()
   const DblType om_alpha = 1.0 - alpha;
   const DblType om_alphaUpw = 1.0 - alphaUpw;
 
-  const DblType solveIncompressibleEqn = realm_.get_incompressible_solve();
-  const DblType om_solveIncompressibleEqn = 1.0 - solveIncompressibleEqn;
-
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
@@ -85,6 +84,7 @@ MomentumEdgeSolverAlg::execute()
   const auto density = fieldMgr.get_field<double>(density_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
+  const auto massForcedFlowRate = fieldMgr.get_field<double>(massForcedFlowRate_);
   const auto pecletFactor = fieldMgr.get_field<double>(pecletFactor_);
   const auto maskNodeField = fieldMgr.get_field<double>(maskNodeField_);
 
@@ -101,15 +101,14 @@ MomentumEdgeSolverAlg::execute()
         av[d] = edgeAreaVec.get(edge, d);
 
 
-      const DblType mdot = massFlowRate.get(edge, 0);
+      const DblType mdot = massFlowRate.get(edge, 0) + massForcedFlowRate.get(edge,0);
 
       const DblType densityL = density.get(nodeL, 0);
       const DblType densityR = density.get(nodeR, 0);
-      const DblType rhoIp = 0.5 * ( densityL + densityR ) * solveIncompressibleEqn + om_solveIncompressibleEqn;
 
       const DblType viscosityL = viscosity.get(nodeL, 0);
       const DblType viscosityR = viscosity.get(nodeR, 0);
-      const DblType viscIp = 0.5 * (viscosityL + viscosityR) / rhoIp;
+      const DblType viscIp = 0.5 * (viscosityL + viscosityR);
 
       // Compute area vector related quantities and (U dot areaVec)
       DblType axdx = 0.0;

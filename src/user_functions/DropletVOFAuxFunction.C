@@ -39,7 +39,7 @@ DropletVOFAuxFunction::do_evaluate(
     const double x = coords[0];
     const double y = coords[1];
     const double z = coords[2];
-    const double interface_thickness = 0.025;
+    const double interface_thickness = 0.015;
 
     fieldPtr[0] = 0.0;
     //fieldPtr[0] += -0.5 * (std::erf(y / interface_thickness) + 1.0) + 1.0;

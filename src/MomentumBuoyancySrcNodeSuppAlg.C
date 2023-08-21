@@ -51,9 +51,6 @@ MomentumBuoyancySrcNodeSuppAlg::MomentumBuoyancySrcNodeSuppAlg(Realm& realm)
   gravity_ = realm_.solutionOptions_->gravity_;
   rhoRef_ = realm_.solutionOptions_->referenceDensity_;
 
-  solveIncompressibleEqn = realm_.get_incompressible_solve();
-  om_solveIncompressibleEqn = 1.0 - solveIncompressibleEqn;
-
 }
 
 //--------------------------------------------------------------------------
@@ -76,8 +73,7 @@ MomentumBuoyancySrcNodeSuppAlg::node_execute(
   // later, may choose to assemble buoyancy to scv ips: Nip_k*rho_k
   const double rhoNp1 = *stk::mesh::field_data(*densityNp1_, node);
   const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node);
-  const double densityNorm = solveIncompressibleEqn / rhoNp1 + om_solveIncompressibleEqn;
-  const double fac = (rhoNp1 - rhoRef_) * dualVolume * densityNorm;
+  const double fac = (rhoNp1 - rhoRef_) * dualVolume;
   const int nDim = nDim_;
   for (int i = 0; i < nDim; ++i) {
     rhs[i] += fac * gravity_[i];

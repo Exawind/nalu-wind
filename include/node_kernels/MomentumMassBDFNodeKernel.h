@@ -69,7 +69,6 @@ private:
   double dt_;
   int nDim_;
   double gamma1_, gamma2_, gamma3_;
-  double solveIncompressibleEqn, om_solveIncompressibleEqn;
 };
 
 } // namespace nalu

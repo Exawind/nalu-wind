@@ -35,8 +35,6 @@ public:
   ScalarFieldType* dualNodalVolume_;
   int nDim_;
   double rhoRef_;
-  double solveIncompressibleEqn;
-  double om_solveIncompressibleEqn;
 
   std::vector<double> gravity_;
 };

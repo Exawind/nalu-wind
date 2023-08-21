@@ -2886,6 +2886,9 @@ ContinuityEquationSystem::register_edge_fields(
   massFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::EDGE_RANK, "mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*massFlowRate_, selector, nullptr);
+  auto massForcedFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::EDGE_RANK, "mass_forced_flow_rate"));
+  stk::mesh::put_field_on_mesh(*massForcedFlowRate_, selector, nullptr);
 }
 
 //--------------------------------------------------------------------------

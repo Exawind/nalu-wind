@@ -73,8 +73,6 @@ MomentumMassBDFNodeKernel::setup(Realm& realm)
   gamma1_ = realm.get_gamma1();
   gamma2_ = realm.get_gamma2();
   gamma3_ = realm.get_gamma3();
-  solveIncompressibleEqn = realm.get_incompressible_solve();
-  om_solveIncompressibleEqn = 1.0 - solveIncompressibleEqn;
 
 }
 
@@ -87,15 +85,13 @@ MomentumMassBDFNodeKernel::execute(
 {
   const int nDim = nDim_;
 
-  const NodeKernelTraits::DblType rhoNm1 = densityNm1_.get(node, 0) * om_solveIncompressibleEqn + solveIncompressibleEqn;
-  const NodeKernelTraits::DblType rhoN = densityN_.get(node, 0) * om_solveIncompressibleEqn + solveIncompressibleEqn;
-  const NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0) * om_solveIncompressibleEqn + solveIncompressibleEqn;
+  const NodeKernelTraits::DblType rhoNm1 = densityNm1_.get(node, 0);
+  const NodeKernelTraits::DblType rhoN = densityN_.get(node, 0);
+  const NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0);
   const NodeKernelTraits::DblType dnvNp1 = dnvNp1_.get(node, 0);
   const NodeKernelTraits::DblType dnvN = dnvN_.get(node, 0);
   const NodeKernelTraits::DblType dnvNm1 = dnvNm1_.get(node, 0);
   const NodeKernelTraits::DblType lhsfac = gamma1_ * rhoNp1 * dnvNp1 / dt_;
-
-  const NodeKernelTraits::DblType denNorm = solveIncompressibleEqn/densityNp1_.get(node,0) + om_solveIncompressibleEqn;
 
   // deal with lumped mass matrix (diagonal matrix)
   for (int i = 0; i < nDim; ++i) {
@@ -107,7 +103,7 @@ MomentumMassBDFNodeKernel::execute(
     rhs(i) += -(gamma1_ * rhoNp1 * uNp1 * dnvNp1 + gamma2_ * rhoN * uN * dnvN +
                 gamma3_ * rhoNm1 * uNm1 * dnvNm1) /
                 dt_ -
-              dpdx * dnvNp1 * denNorm;
+              dpdx * dnvNp1;
     lhs(i, i) += lhsfac;
   }
 }
