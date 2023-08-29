@@ -35,7 +35,7 @@ public:
   AMSAlgDriver(Realm& realm);
   virtual ~AMSAlgDriver() = default;
   virtual void register_nodal_fields(const stk::mesh::PartVector& part_vec);
-  virtual void register_edge_fields(const stk::mesh::PartVector& part_vec);
+  virtual void register_edge_fields(stk::mesh::Part* part);
   void register_interior_algorithm(stk::mesh::Part* part);
   void execute();
   void initial_work();

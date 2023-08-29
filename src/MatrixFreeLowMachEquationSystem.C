@@ -141,67 +141,43 @@ void
 MatrixFreeLowMachEquationSystem::register_nodal_fields(
   const stk::mesh::PartVector& part_vec)
 {
-  const double zero = 0;
-  const std::array<double, 3> x{{0, 0, 0}};
-  const int dim = meta_.spatial_dimension();
   check_part_is_valid(part_vec);
   ThrowRequire(realm_.number_of_states() == 3);
   constexpr int one_state = 1;
   constexpr int three_states = 3;
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
-  {
-    auto& field = meta_.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, names::density, three_states);
-    stk::mesh::put_field_on_mesh(field, selector, &zero);
-  }
+  register_scalar_nodal_field_on_part(
+    meta_, names::density, selector, three_states);
   realm_.augment_restart_variable_list(names::density);
   realm_.augment_property_map(
     DENSITY_ID,
     meta_.get_field<ScalarFieldType>(stk::topology::NODE_RANK, names::density));
   register_copy_state_algorithm(names::density, 1, part_vec);
 
-  {
-    auto& field = meta_.declare_field<VectorFieldType>(
-      stk::topology::NODE_RANK, names::velocity, three_states);
-    stk::mesh::put_field_on_mesh(field, selector, dim, x.data());
-  }
+  register_vector_nodal_field_on_part(
+    meta_, names::velocity, selector, three_states, {{0, 0, 0}});
   realm_.augment_restart_variable_list(names::velocity);
   register_copy_state_algorithm(names::velocity, dim, part_vec);
-  {
-    auto& field = meta_.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, names::viscosity, one_state);
-    stk::mesh::put_field_on_mesh(field, selector, &zero);
-  }
+
+  register_scalar_nodal_field_on_part(
+    meta_, names::viscosity, selector, one_state);
   realm_.augment_property_map(
     VISCOSITY_ID, meta_.get_field<ScalarFieldType>(
                     stk::topology::NODE_RANK, names::viscosity));
-  {
-    auto& field = meta_.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, names::pressure, one_state);
-    stk::mesh::put_field_on_mesh(field, selector, &zero);
-  }
+
+  register_scalar_nodal_field_on_part(
+    meta_, names::pressure, selector, one_state, 0);
   realm_.augment_restart_variable_list(names::pressure);
-  {
-    auto& field = meta_.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, names::scaled_filter_length, one_state);
-    stk::mesh::put_field_on_mesh(field, selector, &zero);
-  }
-  {
-    auto& field = meta_.declare_field<VectorFieldType>(
-      stk::topology::NODE_RANK, names::dpdx_tmp, one_state);
-    stk::mesh::put_field_on_mesh(field, selector, dim, x.data());
-  }
-  {
-    auto& field = meta_.declare_field<VectorFieldType>(
-      stk::topology::NODE_RANK, names::dpdx, one_state);
-    stk::mesh::put_field_on_mesh(field, selector, dim, x.data());
-  }
-  {
-    auto& field = meta_.declare_field<VectorFieldType>(
-      stk::topology::NODE_RANK, names::body_force, one_state);
-    stk::mesh::put_field_on_mesh(field, selector, dim, x.data());
-  }
+
+  register_scalar_nodal_field_on_part(
+    meta_, names::scaled_filter_length, selector, one_state, 0);
+  register_vector_nodal_field_on_part(
+    meta_, names::dpdx_tmp, selector, one_state, {{0, 0, 0}});
+  register_vector_nodal_field_on_part(
+    meta_, names::dpdx, selector, one_state, {{0, 0, 0}});
+  register_vector_nodal_field_on_part(
+    meta_, names::body_force, selector, one_state, {{0, 0, 0}});
 }
 
 void
@@ -225,13 +201,10 @@ MatrixFreeLowMachEquationSystem::register_wall_bc(
     !(data.wallFunctionApproach_ || data.ablWallFunctionApproach_),
     "Wall function not implemented");
 
-  {
-    constexpr int one_state = 1;
-    const std::array<double, 3> x{{data.u_.ux_, data.u_.uy_, data.u_.uz_}};
-    auto& field = meta_.declare_field<VectorFieldType>(
-      stk::topology::NODE_RANK, names::velocity_bc, one_state);
-    stk::mesh::put_field_on_mesh(field, *part, dim, x.data());
-  }
+  constexpr int one_state = 1;
+  register_vector_nodal_field_on_part(
+    meta_, names::velocity_bc, *part, one_state,
+    {{data.u_.ux_, data.u_.uy_, data.u_.uz_}});
 
   auto velocity_name = std::string(names::velocity);
   auto bc_data_type = get_bc_data_type(data, velocity_name);
