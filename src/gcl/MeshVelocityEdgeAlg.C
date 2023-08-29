@@ -71,8 +71,7 @@ MeshVelocityEdgeAlg<AlgTraits>::MeshVelocityEdgeAlg(
     19, &isoParCoords_[0], isoCoordsShapeFcnHostView_.data());
   Kokkos::deep_copy(isoCoordsShapeFcnDeviceView_, isoCoordsShapeFcnHostView_);
 
-  auto scsFaceNodeMapHostView =
-    Kokkos::create_mirror(scsFaceNodeMapDeviceView_);
+  Kokkos::View<int[12][4], Kokkos::HostSpace>scsFaceNodeMapHostView;
   for (int i = 0; i < 12; ++i) {
     for (int j = 0; j < 4; ++j) {
       scsFaceNodeMapHostView(i, j) = scsFaceNodeMap_[i][j];
