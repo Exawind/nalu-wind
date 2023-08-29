@@ -99,20 +99,6 @@ get_node_field(
     *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
 }
 
-void register_scalar_nodal_field_on_part(
-  stk::mesh::MetaData& meta,
-  std::string name,
-  const stk::mesh::Selector& selector,
-  int num_states,
-  double ic = 0);
-
-void register_vector_nodal_field_on_part(
-  stk::mesh::MetaData& meta,
-  std::string name,
-  const stk::mesh::Selector& selector,
-  int num_states,
-  std::array<double, 3> x = {{0, 0, 0}});
-
 } // namespace nalu
 } // namespace sierra
 
