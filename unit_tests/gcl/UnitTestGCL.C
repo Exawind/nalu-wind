@@ -9,7 +9,7 @@
 
 #include "gcl/UnitTestGCL.h"
 
-#ifndef KOKKOS_ENABLE_GPU
+//#ifndef KOKKOS_ENABLE_GPU
 
 namespace {
 
@@ -342,4 +342,4 @@ TEST_F(GCLTest, mesh_airy_waves)
   compute_absolute_error();
 }
 
-#endif // KOKKOS_ENABLE_GPU
+//#endif // KOKKOS_ENABLE_GPU
