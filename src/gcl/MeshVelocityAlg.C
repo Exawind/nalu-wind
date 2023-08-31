@@ -129,6 +129,9 @@ MeshVelocityAlg<AlgTraits>::execute()
   constexpr int Hex8numScsIp = AlgTraitsHex8::numScsIp_;
   const int nip = std::min(Hex8numScsIp, AlgTraits::numScsIp_);
 
+  ngpSweptVol.sync_to_device();
+  faceVel.clear_sync_state();
+
   nalu_ngp::run_elem_algorithm(
     algName, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata) {
@@ -172,12 +175,8 @@ MeshVelocityAlg<AlgTraits>::execute()
           scs_vol_coords[5][j] = scs_coords_np1[scsFaceNodeMap(ip, 1)][j];
           scs_vol_coords[6][j] = scs_coords_np1[scsFaceNodeMap(ip, 2)][j];
           scs_vol_coords[7][j] = scs_coords_np1[scsFaceNodeMap(ip, 3)][j];
-          printf("ip: %d ids: %d %d %d %d \n", ip, scsFaceNodeMap(ip, 0),scsFaceNodeMap(ip, 1),scsFaceNodeMap(ip, 2),scsFaceNodeMap(ip, 3));
-          printf("ip: %d pos n: %f %f %f %f \n", ip, scs_vol_coords[0][j],scs_vol_coords[1][j],scs_vol_coords[2][j],scs_vol_coords[3][j]);
-          printf("ip: %d pos np1: %f %f %f %f \n", ip, scs_vol_coords[4][j],scs_vol_coords[5][j],scs_vol_coords[6][j],scs_vol_coords[7][j]);
         }
         DoubleType tmp = hex_volume_grandy(scs_vol_coords);
-        printf("Swept Vol: %f \n", tmp);
 
         sweptVolOps(edata, ip) = tmp;
 
