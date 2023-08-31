@@ -142,17 +142,24 @@ GeometryAlgDriver::mesh_motion_prework()
                                                  : stk::topology::ELEM_RANK;
   const std::string fvmFieldName =
     realm_.realmUsesEdges_ ? "edge_face_velocity_mag" : "face_velocity_mag";
+
   auto ngpFaceVelMag =
     nalu_ngp::get_ngp_field(realm_.mesh_info(), fvmFieldName, entityRank);
-  ngpFaceVelMag.clear_sync_state();  ngpFaceVelMag.set_all(ngpMesh, 0.0);
+
+  ngpFaceVelMag.clear_sync_state();
+  ngpFaceVelMag.set_all(ngpMesh, 0.0);
+
   auto* faceVelMag = meta.get_field<GenericFieldType>(entityRank, fvmFieldName);
   stk::mesh::field_fill(0.0, *faceVelMag);
   const std::string svFieldName =
     realm_.realmUsesEdges_ ? "edge_swept_face_volume" : "swept_face_volume";
+
   auto ngpSweptVol =
     nalu_ngp::get_ngp_field(realm_.mesh_info(), svFieldName, entityRank);
+
   ngpSweptVol.clear_sync_state();
   ngpSweptVol.set_all(ngpMesh, 0.0);
+
   auto* sweptVol = meta.get_field<GenericFieldType>(entityRank, svFieldName);
   stk::mesh::field_fill(0.0, *sweptVol);
   ngpSweptVol.sync_to_device();
