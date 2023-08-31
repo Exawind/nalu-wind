@@ -172,8 +172,12 @@ MeshVelocityAlg<AlgTraits>::execute()
           scs_vol_coords[5][j] = scs_coords_np1[scsFaceNodeMap(ip, 1)][j];
           scs_vol_coords[6][j] = scs_coords_np1[scsFaceNodeMap(ip, 2)][j];
           scs_vol_coords[7][j] = scs_coords_np1[scsFaceNodeMap(ip, 3)][j];
+          printf("ip: %d ids: %d %d %d %d \n", ip, scsFaceNodeMap(ip, 0),scsFaceNodeMap(ip, 1),scsFaceNodeMap(ip, 2),scsFaceNodeMap(ip, 3));
+          printf("ip: %d pos n: %f %f %f %f \n", ip, scs_vol_coords[0][j],scs_vol_coords[1][j],scs_vol_coords[2][j],scs_vol_coords[3][j]);
+          printf("ip: %d pos np1: %f %f %f %f \n", ip, scs_vol_coords[4][j],scs_vol_coords[5][j],scs_vol_coords[6][j],scs_vol_coords[7][j]);
         }
         DoubleType tmp = hex_volume_grandy(scs_vol_coords);
+        printf("Swept Vol: %f \n", tmp);
 
         sweptVolOps(edata, ip) = tmp;
 
@@ -181,6 +185,11 @@ MeshVelocityAlg<AlgTraits>::execute()
           (gamma1 * tmp + (gamma1 + gamma2) * sweptVolN(ip)) / dt;
       }
     });
+
+  ngpSweptVol.modify_on_device();
+  faceVel.modify_on_device();
+  ngpSweptVol.sync_to_host();
+  faceVel.sync_to_host();
 }
 
 INSTANTIATE_KERNEL(MeshVelocityAlg)

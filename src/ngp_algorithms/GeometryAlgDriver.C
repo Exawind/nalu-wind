@@ -100,6 +100,7 @@ GeometryAlgDriver::pre_work()
   auto ngpDualVol =
     fieldMgr.template get_field<double>(dualVol->mesh_meta_data_ordinal());
 
+  ngpDualVol.clear_sync_state();
   ngpDualVol.set_all(ngpMesh, 0.0);
 
   if (realm_.has_mesh_deformation())
@@ -112,6 +113,7 @@ GeometryAlgDriver::pre_work()
 
     auto ngpEdgeArea = fieldMgr.template get_field<double>(
       edgeAreaVec->mesh_meta_data_ordinal());
+    ngpEdgeArea.clear_sync_state();
     ngpEdgeArea.set_all(ngpMesh, 0.0);
   }
 
@@ -122,6 +124,8 @@ GeometryAlgDriver::pre_work()
     auto wdist = fieldMgr.template get_field<double>(wallNormDist);
     auto warea = fieldMgr.template get_field<double>(wallArea);
 
+    wdist.clear_sync_state();
+    warea.clear_sync_state();
     wdist.set_all(ngpMesh, 0.0);
     warea.set_all(ngpMesh, 0.0);
   }
@@ -140,13 +144,14 @@ GeometryAlgDriver::mesh_motion_prework()
     realm_.realmUsesEdges_ ? "edge_face_velocity_mag" : "face_velocity_mag";
   auto ngpFaceVelMag =
     nalu_ngp::get_ngp_field(realm_.mesh_info(), fvmFieldName, entityRank);
-  ngpFaceVelMag.set_all(ngpMesh, 0.0);
+  ngpFaceVelMag.clear_sync_state();  ngpFaceVelMag.set_all(ngpMesh, 0.0);
   auto* faceVelMag = meta.get_field<GenericFieldType>(entityRank, fvmFieldName);
   stk::mesh::field_fill(0.0, *faceVelMag);
   const std::string svFieldName =
     realm_.realmUsesEdges_ ? "edge_swept_face_volume" : "swept_face_volume";
   auto ngpSweptVol =
     nalu_ngp::get_ngp_field(realm_.mesh_info(), svFieldName, entityRank);
+  ngpSweptVol.clear_sync_state();
   ngpSweptVol.set_all(ngpMesh, 0.0);
   auto* sweptVol = meta.get_field<GenericFieldType>(entityRank, svFieldName);
   stk::mesh::field_fill(0.0, *sweptVol);
@@ -213,6 +218,7 @@ GeometryAlgDriver::post_work()
   // ensure the next step does a sync to host
   for (auto* fld : fields) {
     fld->modify_on_device();
+    fld->sync_to_host();
   }
 
   bool doFinalSyncToDevice = false;
