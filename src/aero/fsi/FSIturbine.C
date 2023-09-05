@@ -905,10 +905,13 @@ fsiTurbine::mapLoads()
   }
 
   auto& meta = bulk_->mesh_meta_data();
-  VectorFieldType* modelCoords =
+  const VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
+  const VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
+
+  modelCoords->sync_to_host();
+  meshDisp->sync_to_host();
 
   fsi::mapTowerLoad(
     *bulk_, twrBndyParts_, *modelCoords, *meshDisp, *loadMap_, *loadMapInterp_,
@@ -1218,12 +1221,16 @@ fsiTurbine::setRefDisplacement(double curTime)
   // extract the vector field type set by this function
   auto& meta = bulk_->mesh_meta_data();
   const int ndim = meta.spatial_dimension();
-  VectorFieldType* modelCoords =
+  const VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
   VectorFieldType* refDisp = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement_ref");
   VectorFieldType* refVel = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_velocity_ref");
+
+  modelCoords->sync_to_host();
+  refDisp->sync_to_host();
+  refVel->sync_to_host();
 
   std::vector<double> zAxis0 = {0.0, 0.0, 1.0};
 
@@ -1313,6 +1320,8 @@ fsiTurbine::setRefDisplacement(double curTime)
       }
     }
   }
+  refDisp->modify_on_host();
+  refVel->modify_on_host();
 }
 
 //! Calculate the distance between 3-dimensional vectors 'a' and 'b'
@@ -1350,13 +1359,20 @@ fsiTurbine::mapDisplacements(double time)
     time, defParams.startTimeTemporalRamp_, defParams.endTimeTemporalRamp_);
 
   auto& meta = bulk_->mesh_meta_data();
-  VectorFieldType* modelCoords =
+  const VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
   VectorFieldType* displacement = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
   VectorFieldType* meshVelocity =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
+
+  modelCoords->sync_to_host();
+  displacement->sync_to_host();
+  meshVelocity->sync_to_host();
+  dispMap_->sync_to_host();
+  dispMapInterp_->sync_to_host();
+  deflectionRamp_->sync_to_host();
 
   std::vector<double> totDispNode(
     6, 0.0); // Total displacement at any node in (transX, transY, transZ, rotX,
@@ -1537,6 +1553,9 @@ fsiTurbine::mapDisplacements(double time)
       mVel = aero::compute_mesh_velocity(vel, deflection, refPos, oldxyz);
     }
   }
+  displacement->modify_on_host();
+  meshVelocity->modify_on_host();
+  deflectionRamp_->modify_on_host();
 }
 
 //! Compose Wiener-Milenkovic parameters 'p' and 'q' into 'pPlusq'. If a
@@ -1609,8 +1628,11 @@ fsiTurbine::computeMapping()
   auto& meta = bulk_->mesh_meta_data();
   const int ndim = meta.spatial_dimension();
   ThrowRequireMsg(ndim == 3, "fsiTurbine: spatial dim is required to be 3.");
-  VectorFieldType* modelCoords =
+  const VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  modelCoords->sync_to_host();
+  dispMap_->sync_to_host();
+  dispMapInterp_->sync_to_host();
 
   // Do the tower first
   stk::mesh::Selector sel(stk::mesh::selectUnion(twrParts_));
@@ -1761,6 +1783,8 @@ fsiTurbine::computeMapping()
     }
     iStart += nPtsBlade;
   }
+  dispMap_->modify_on_host();
+  dispMapInterp_->modify_on_host();
 
   // Write reference positions to netcdf file
   // write_nc_ref_pos();
@@ -1774,8 +1798,12 @@ fsiTurbine::computeLoadMapping()
 
   auto& meta = bulk_->mesh_meta_data();
   const int ndim = meta.spatial_dimension();
-  VectorFieldType* modelCoords =
+  const VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+
+  modelCoords->sync_to_host();
+  loadMap_->sync_to_host();
+  loadMapInterp_->sync_to_host();
 
   // nodal fields to gather
   std::vector<double> ws_coordinates;
@@ -2040,6 +2068,8 @@ fsiTurbine::computeLoadMapping()
 
     iStart += nPtsBlade;
   }
+  loadMap_->modify_on_host();
+  loadMapInterp_->modify_on_host();
 }
 
 void
@@ -2054,8 +2084,14 @@ fsiTurbine::compute_div_mesh_velocity()
   GenericFieldType* faceVelMag = meta.get_field<GenericFieldType>(
     stk::topology::EDGE_RANK, "edge_face_velocity_mag");
 
+  divMeshVel->sync_to_host();
+  faceVelMag->sync_to_host();
+
   compute_edge_scalar_divergence(
     *bulk_, partVec_, bndyPartVec_, faceVelMag, divMeshVel);
+
+  divMeshVel->modify_on_host();
+  faceVelMag->modify_on_host();
 }
 
 } // namespace nalu

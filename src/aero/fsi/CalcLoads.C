@@ -115,6 +115,14 @@ CalcLoads::execute()
   // deal with state
   ScalarFieldType& densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
 
+  pressure_->sync_to_host();
+  densityNp1.sync_to_host();
+  viscosity_->sync_to_host();
+  exposedAreaVec_->sync_to_host();
+  tforceSCS_->sync_to_host();
+  coordinates_->sync_to_host();
+  dudx_->sync_to_host();
+
   // define vector of parent topos; should always be UNITY in size
   std::vector<stk::topology> parentTopo;
 
@@ -244,6 +252,7 @@ CalcLoads::execute()
       }
     }
   }
+  tforceSCS_->modify_on_host();
 }
 
 } // namespace nalu

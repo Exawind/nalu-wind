@@ -244,18 +244,25 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
 
     auto& meta = bulk_->mesh_meta_data();
 
-    VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
+    const VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
       stk::topology::NODE_RANK, "mesh_displacement");
-    VectorFieldType* meshVel = meta.get_field<VectorFieldType>(
+    const VectorFieldType* meshVel = meta.get_field<VectorFieldType>(
       stk::topology::NODE_RANK, "mesh_velocity");
 
-    VectorFieldType* meshDispNp1 =
+    const VectorFieldType* meshDispNp1 =
       &(meshDisp->field_of_state(stk::mesh::StateNP1));
     VectorFieldType* meshDispN = &(meshDisp->field_of_state(stk::mesh::StateN));
     VectorFieldType* meshDispNm1 =
       &(meshDisp->field_of_state(stk::mesh::StateNM1));
-    VectorFieldType* meshVelNp1 =
+    const VectorFieldType* meshVelNp1 =
       &(meshVel->field_of_state(stk::mesh::StateNP1));
+
+	 meshDisp->sync_to_host();
+	 meshVel->sync_to_host();
+	 meshDispNp1->sync_to_host();
+	 meshDispN->sync_to_host();
+	 meshDispNm1->sync_to_host();
+	 meshVelNp1->sync_to_host();
 
     stk::mesh::Selector sel = meta.universal_part();
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
@@ -271,6 +278,8 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
         }
       }
     }
+	 meshDispN->modify_on_host();
+	 meshDispNm1->modify_on_host();
   }
 }
 
