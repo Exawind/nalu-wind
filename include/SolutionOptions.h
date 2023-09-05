@@ -100,6 +100,8 @@ public:
 
   bool has_set_boussinesq_time_scale();
 
+  bool rho_ref_to_initial_rho_{false};
+
   double hybridDefault_;
   double alphaDefault_;
   double alphaUpwDefault_;

@@ -41,7 +41,13 @@ MomentumBuoyancySrcNodeSuppAlg::MomentumBuoyancySrcNodeSuppAlg(Realm& realm)
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   ScalarFieldType* density =
     meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
+
+  ScalarFieldType* initDensity =
+    meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "initial_density");
+
   densityNp1_ = &(density->field_of_state(stk::mesh::StateNP1));
+  initDensityNp1_ = &(initDensity->field_of_state(stk::mesh::StateNP1));
+
   dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume");
   nDim_ = meta_data.spatial_dimension();
@@ -51,6 +57,7 @@ MomentumBuoyancySrcNodeSuppAlg::MomentumBuoyancySrcNodeSuppAlg(Realm& realm)
   gravity_ = realm_.solutionOptions_->gravity_;
   rhoRef_ = realm_.solutionOptions_->referenceDensity_;
 
+  rhoRefIsInitDens_ = realm_.solutionOptions_->rho_ref_to_initial_rho_;
 }
 
 //--------------------------------------------------------------------------
@@ -72,8 +79,10 @@ MomentumBuoyancySrcNodeSuppAlg::node_execute(
   // rhs+=(rho-rhoRef)*gi
   // later, may choose to assemble buoyancy to scv ips: Nip_k*rho_k
   const double rhoNp1 = *stk::mesh::field_data(*densityNp1_, node);
+  const double initRhoNp1 = *stk::mesh::field_data(*initDensityNp1_, node);
   const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node);
-  const double fac = (rhoNp1 - rhoRef_) * dualVolume;
+  const double fac = !rhoRefIsInitDens_ ? (rhoNp1 - rhoRef_) * dualVolume :
+    (rhoNp1 - initRhoNp1) * dualVolume;
   const int nDim = nDim_;
   for (int i = 0; i < nDim; ++i) {
     rhs[i] += fac * gravity_[i];
