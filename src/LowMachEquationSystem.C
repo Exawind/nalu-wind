@@ -178,6 +178,8 @@
 
 #include <user_functions/DropletVelocityAuxFunction.h>
 
+#include <user_functions/SloshingTankPressureAuxFunction.h>
+
 // deprecated
 
 // stk_util
@@ -3547,6 +3549,13 @@ ContinuityEquationSystem::register_initial_condition_fcn(
       theAuxFunc = new TaylorGreenPressureAuxFunction();
     } else if (fcnName == "kovasznay") {
       theAuxFunc = new KovasznayPressureAuxFunction();
+    } else if (fcnName == "sloshing_tank") {
+      std::map<std::string, std::vector<double>>::const_iterator iterParams =
+        theParams.find(dofName);
+      std::vector<double> fcnParams = (iterParams != theParams.end())
+                                        ? (*iterParams).second
+                                        : std::vector<double>();
+      theAuxFunc = new SloshingTankPressureAuxFunction(fcnParams);
     } else {
       throw std::runtime_error("ContinuityEquationSystem::register_initial_"
                                "condition_fcn: limited functions supported");
