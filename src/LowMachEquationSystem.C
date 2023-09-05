@@ -308,6 +308,12 @@ LowMachEquationSystem::register_nodal_fields(
   const int numStates = realm_.number_of_states();
   density_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density", numStates));
+  initial_density_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "initial_density", numStates));
+
+  stk::mesh::put_field_on_mesh(*initial_density_, selector, nullptr);
+  realm_.augment_restart_variable_list("initial_density");
+
   stk::mesh::put_field_on_mesh(*density_, selector, nullptr);
   realm_.augment_restart_variable_list("density");
 
@@ -329,6 +335,18 @@ LowMachEquationSystem::register_nodal_fields(
     realm_.augment_restart_variable_list("dual_nodal_volume");
 
   // make sure all states are properly populated (restart can handle this)
+  
+  if (!realm_.restarted_simulation() || realm_.support_inconsistent_restart()) {
+
+    ScalarFieldType& densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
+    ScalarFieldType& initDensityNp1 = initial_density_->field_of_state(stk::mesh::StateNP1);
+    
+    CopyFieldAlgorithm* theCopyAlgDens = new CopyFieldAlgorithm(
+      realm_, part_vec, &densityNp1, &initDensityNp1, 0, 1, stk::topology::NODE_RANK);
+    copyStateAlg_.push_back(theCopyAlgDens);
+
+  }
+
   if (
     numStates > 2 &&
     (!realm_.restarted_simulation() || realm_.support_inconsistent_restart())) {
