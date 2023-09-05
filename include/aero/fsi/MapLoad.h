@@ -29,8 +29,8 @@ linInterpVec(double* a, double* b, double interpFac, double* aInterpb)
 void mapTowerLoad(
   const stk::mesh::BulkData& bulk,
   const stk::mesh::PartVector& twrBndyParts,
-  sierra::nalu::VectorFieldType& modelCoords,
-  sierra::nalu::VectorFieldType& meshDisp,
+  const sierra::nalu::VectorFieldType& modelCoords,
+  const sierra::nalu::VectorFieldType& meshDisp,
   sierra::nalu::GenericIntFieldType& loadMap,
   sierra::nalu::GenericFieldType& loadMapInterp,
   sierra::nalu::GenericFieldType& tforceSCS,
@@ -41,8 +41,8 @@ void mapTowerLoad(
 void mapBladeLoad(
   const stk::mesh::BulkData& bulk,
   const stk::mesh::PartVector& twrBndyParts,
-  sierra::nalu::VectorFieldType& modelCoords,
-  sierra::nalu::VectorFieldType& meshDisp,
+  const sierra::nalu::VectorFieldType& modelCoords,
+  const sierra::nalu::VectorFieldType& meshDisp,
   sierra::nalu::GenericIntFieldType& loadMap,
   sierra::nalu::GenericFieldType& loadMapInterp,
   sierra::nalu::GenericFieldType& tforceSCS,
