@@ -929,6 +929,10 @@ fsiTurbine::mapLoads()
 
     iStart += nPtsBlade;
   }
+  meshDisp->modify_on_host();
+  loadMap_->modify_on_host();
+  loadMapInterp_->modify_on_host();
+  tforceSCS_->modify_on_host();
 }
 
 void
