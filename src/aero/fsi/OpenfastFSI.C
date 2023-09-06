@@ -257,12 +257,12 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
     const VectorFieldType* meshVelNp1 =
       &(meshVel->field_of_state(stk::mesh::StateNP1));
 
-	 meshDisp->sync_to_host();
-	 meshVel->sync_to_host();
-	 meshDispNp1->sync_to_host();
-	 meshDispN->sync_to_host();
-	 meshDispNm1->sync_to_host();
-	 meshVelNp1->sync_to_host();
+    meshDisp->sync_to_host();
+    meshVel->sync_to_host();
+    meshDispNp1->sync_to_host();
+    meshDispN->sync_to_host();
+    meshDispNm1->sync_to_host();
+    meshVelNp1->sync_to_host();
 
     stk::mesh::Selector sel = meta.universal_part();
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
@@ -278,8 +278,8 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
         }
       }
     }
-	 meshDispN->modify_on_host();
-	 meshDispNm1->modify_on_host();
+    meshDispN->modify_on_host();
+    meshDispNm1->modify_on_host();
   }
 }
 

@@ -52,7 +52,8 @@ struct DeflectionRampingParams
 //! convenience function for generating a vs::Vector from a stk::field
 template <typename T, typename P>
 inline vs::VectorT<T>
-vector_from_field(const stk::mesh::Field<T, P>& field, const stk::mesh::Entity& node)
+vector_from_field(
+  const stk::mesh::Field<T, P>& field, const stk::mesh::Entity& node)
 {
   // debug only check for optimization
   assert(field.max_size(stk::topology::NODE_RANK) == 3);
