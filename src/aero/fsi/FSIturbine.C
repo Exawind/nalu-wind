@@ -912,6 +912,10 @@ fsiTurbine::mapLoads()
 
   modelCoords->sync_to_host();
   meshDisp->sync_to_host();
+  meshDisp->sync_to_host();
+  loadMap_->sync_to_host();
+  loadMapInterp_->sync_to_host();
+  tforceSCS_->sync_to_host();
 
   fsi::mapTowerLoad(
     *bulk_, twrBndyParts_, *modelCoords, *meshDisp, *loadMap_, *loadMapInterp_,
@@ -929,10 +933,6 @@ fsiTurbine::mapLoads()
 
     iStart += nPtsBlade;
   }
-  meshDisp->modify_on_host();
-  loadMap_->modify_on_host();
-  loadMapInterp_->modify_on_host();
-  tforceSCS_->modify_on_host();
 }
 
 void
@@ -1260,7 +1260,7 @@ fsiTurbine::setRefDisplacement(double curTime)
       for (size_t in = 0; in < b->size();
            in++) { // loop over all nodes in the bucket
         auto node = (*b)[in];
-        double* xyz = stk::mesh::field_data(*modelCoords, node);
+        const double* xyz = stk::mesh::field_data(*modelCoords, node);
         double* vecRefNode = stk::mesh::field_data(*refDisp, node);
         double* velRefNode = stk::mesh::field_data(*refVel, node);
 
@@ -1645,7 +1645,7 @@ fsiTurbine::computeMapping()
   for (auto b : bkts) {
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
-      double* xyz = stk::mesh::field_data(*modelCoords, node);
+      const double* xyz = stk::mesh::field_data(*modelCoords, node);
       int* dispMapNode = stk::mesh::field_data(*dispMap_, node);
       double* dispMapInterpNode = stk::mesh::field_data(*dispMapInterp_, node);
       vs::Vector ptCoords(xyz[0], xyz[1], xyz[2]);
@@ -1729,7 +1729,7 @@ fsiTurbine::computeMapping()
     for (auto b : bkts) {
       for (size_t in = 0; in < b->size(); in++) {
         auto node = (*b)[in];
-        double* xyz = stk::mesh::field_data(*modelCoords, node);
+        const double* xyz = stk::mesh::field_data(*modelCoords, node);
         int* dispMapNode = stk::mesh::field_data(*dispMap_, node);
         double* dispMapInterpNode =
           stk::mesh::field_data(*dispMapInterp_, node);

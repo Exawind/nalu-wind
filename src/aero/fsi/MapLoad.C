@@ -21,9 +21,9 @@ mapTowerLoad(
   const stk::mesh::PartVector& twrBndyParts,
   const sierra::nalu::VectorFieldType& modelCoords,
   const sierra::nalu::VectorFieldType& meshDisp,
-  sierra::nalu::GenericIntFieldType& loadMap,
-  sierra::nalu::GenericFieldType& loadMapInterp,
-  sierra::nalu::GenericFieldType& tforceSCS,
+  const sierra::nalu::GenericIntFieldType& loadMap,
+  const sierra::nalu::GenericFieldType& loadMapInterp,
+  const sierra::nalu::GenericFieldType& tforceSCS,
   std::vector<double>& twrRefPos,
   std::vector<double>& twrDef,
   std::vector<double>& twrLoad)
@@ -86,8 +86,7 @@ mapTowerLoad(
 
       // Get reference to load map and loadMapInterp at all ips on this face
       const int* loadMapFace = stk::mesh::field_data(loadMap, face);
-      const double* loadMapInterpFace =
-        stk::mesh::field_data(loadMapInterp, face);
+      const double* loadMapInterpFace = stk::mesh::field_data(loadMapInterp, face);
       const double* tforce = stk::mesh::field_data(tforceSCS, face);
 
       for (int ip = 0; ip < numScsBip; ++ip) {
@@ -143,9 +142,9 @@ mapBladeLoad(
   const stk::mesh::PartVector& bldBndyParts,
   const sierra::nalu::VectorFieldType& modelCoords,
   const sierra::nalu::VectorFieldType& meshDisp,
-  sierra::nalu::GenericIntFieldType& loadMap,
-  sierra::nalu::GenericFieldType& loadMapInterp,
-  sierra::nalu::GenericFieldType& tforceSCS,
+  const sierra::nalu::GenericIntFieldType& loadMap,
+  const sierra::nalu::GenericFieldType& loadMapInterp,
+  const sierra::nalu::GenericFieldType& tforceSCS,
   int nPtsBlade,
   int iStart,
   std::vector<double>& bldRloc,
@@ -217,8 +216,7 @@ mapBladeLoad(
 
       // Get reference to load map and loadMapInterp at all ips on this face
       const int* loadMapFace = stk::mesh::field_data(loadMap, face);
-      const double* loadMapInterpFace =
-        stk::mesh::field_data(loadMapInterp, face);
+      const double* loadMapInterpFace = stk::mesh::field_data(loadMapInterp, face);
       const double* tforce = stk::mesh::field_data(tforceSCS, face);
 
       for (int ip = 0; ip < numScsBip; ++ip) {
