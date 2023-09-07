@@ -307,6 +307,9 @@ compute_edge_scalar_divergence(
   GenericFieldType* faceField,
   stk::mesh::FieldBase* scalarField)
 {
+  scalarField->clear_sync_state();
+  faceField->sync_to_host();
+
   stk::mesh::MetaData& meta = bulk.mesh_meta_data();
   stk::mesh::Selector sel =
     (meta.locally_owned_part()) & stk::mesh::selectUnion(partVec);
@@ -338,7 +341,6 @@ compute_edge_scalar_divergence(
 
   // Synchronize fields to device
   scalarField->modify_on_host();
-  scalarField->sync_to_device();
   return;
 }
 

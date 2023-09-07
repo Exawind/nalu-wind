@@ -94,6 +94,10 @@ public:
 
   void initialize();
 
+  void sync_all_fields();
+
+  void modify_all_fields();
+
   //! Convert pressure and viscous/turbulent stress on the turbine surface CFD
   //! mesh into a "fsiForce" field on the turbine surface CFD mesh
   void computeFSIforce();

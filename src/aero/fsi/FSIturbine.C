@@ -910,13 +910,7 @@ fsiTurbine::mapLoads()
   const VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
-  modelCoords->sync_to_host();
-  meshDisp->sync_to_host();
-  meshDisp->sync_to_host();
-  loadMap_->sync_to_host();
-  loadMapInterp_->sync_to_host();
-  tforceSCS_->sync_to_host();
-
+  // syncs done inside functions
   fsi::mapTowerLoad(
     *bulk_, twrBndyParts_, *modelCoords, *meshDisp, *loadMap_, *loadMapInterp_,
     *tforceSCS_, brFSIdata_.twr_ref_pos, brFSIdata_.twr_def, brFSIdata_.twr_ld);
@@ -943,12 +937,19 @@ fsiTurbine::computeHubForceMomentForPart(
 {
 
   auto& meta = bulk_->mesh_meta_data();
+
   VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  modelCoords->sync_to_host();
+
   VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
+  meshDisp->sync_to_host();
+
   GenericFieldType* tforce =
     meta.get_field<GenericFieldType>(meta.side_rank(), "tforce_scs");
+  tforce->sync_to_host();
+
   std::vector<double> l_hubForceMoment(6, 0.0);
   std::array<double, 3> tmpMeshPos{
     0.0, 0.0, 0.0}; // Vector to temporarily store mesh node location
@@ -1635,8 +1636,8 @@ fsiTurbine::computeMapping()
   const VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
   modelCoords->sync_to_host();
-  dispMap_->sync_to_host();
-  dispMapInterp_->sync_to_host();
+  dispMap_->clear_sync_state();
+  dispMapInterp_->clear_sync_state();
 
   // Do the tower first
   stk::mesh::Selector sel(stk::mesh::selectUnion(twrParts_));
@@ -1806,8 +1807,8 @@ fsiTurbine::computeLoadMapping()
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
 
   modelCoords->sync_to_host();
-  loadMap_->sync_to_host();
-  loadMapInterp_->sync_to_host();
+  loadMap_->clear_sync_state();
+  loadMapInterp_->clear_sync_state();
 
   // nodal fields to gather
   std::vector<double> ws_coordinates;
@@ -2088,14 +2089,10 @@ fsiTurbine::compute_div_mesh_velocity()
   GenericFieldType* faceVelMag = meta.get_field<GenericFieldType>(
     stk::topology::EDGE_RANK, "edge_face_velocity_mag");
 
-  divMeshVel->sync_to_host();
-  faceVelMag->sync_to_host();
-
+  // syncs are done inside this function
   compute_edge_scalar_divergence(
     *bulk_, partVec_, bndyPartVec_, faceVelMag, divMeshVel);
 
-  divMeshVel->modify_on_host();
-  faceVelMag->modify_on_host();
 }
 
 } // namespace nalu

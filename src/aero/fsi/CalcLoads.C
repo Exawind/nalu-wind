@@ -116,6 +116,7 @@ CalcLoads::execute()
   ScalarFieldType& densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
 
   pressure_->sync_to_host();
+  density_->sync_to_host();
   densityNp1.sync_to_host();
   viscosity_->sync_to_host();
   exposedAreaVec_->sync_to_host();
