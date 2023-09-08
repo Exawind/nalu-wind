@@ -1905,7 +1905,6 @@ Realm::evaluate_properties()
 void
 Realm::advance_time_step()
 {
-  printf("-----------------\n");
   // leave if we do not need to solve
   const int timeStepCount = get_time_step_count();
   const bool advanceMe = (timeStepCount % solveFrequency_) == 0 ? true : false;
