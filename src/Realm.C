@@ -2562,7 +2562,7 @@ Realm::set_current_coordinates(stk::mesh::Part* targetPart)
   VectorFieldType* displacement = meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
-  currentCoords->clear_sync_state();
+  currentCoords->sync_to_host();
   displacement->sync_to_host();
   modelCoords->sync_to_host();
 
@@ -2584,6 +2584,7 @@ Realm::set_current_coordinates(stk::mesh::Part* targetPart)
     }
   }
   currentCoords->modify_on_host();
+  currentCoords->sync_to_device();
 }
 
 //--------------------------------------------------------------------------
