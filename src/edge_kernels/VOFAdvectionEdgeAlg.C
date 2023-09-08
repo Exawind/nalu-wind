@@ -77,7 +77,7 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
 void
 VOFAdvectionEdgeAlg::execute()
 {
-  const double eps = 1.0e-16;
+  const double eps = 1.0e-11;
   const double gradient_eps = 1.0e-9;
 
   const int ndim = realm_.meta_data().spatial_dimension();
@@ -144,7 +144,6 @@ VOFAdvectionEdgeAlg::execute()
 
       NALU_ALIGNED DblType densityL = density.get(nodeL, 0);
       NALU_ALIGNED DblType densityR = density.get(nodeR, 0);
-
       const DblType rhoIp = 2.0 / ( 1.0 / densityL + 1.0 / densityR);
 
       const DblType mdot = massFlowRate.get(edge, 0) / rhoIp;
