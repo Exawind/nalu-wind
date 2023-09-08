@@ -221,8 +221,10 @@ MomentumEdgeSolverAlg::execute()
           diff_flux += duidxj[j][j];
         diff_flux *= 2.0 / 3.0 * viscIp * av[i] * includeDivU;
 
-        for (int j = 0; j < ndim; ++j)
+        for (int j = 0; j < ndim; ++j) {
           diff_flux += -viscIp * (duidxj[i][j] + duidxj[j][i]) * av[j];
+        }
+
 
         const DblType maskNode = stk::math::min(
           maskNodeField.get(nodeL, 0), maskNodeField.get(nodeR, 0));
