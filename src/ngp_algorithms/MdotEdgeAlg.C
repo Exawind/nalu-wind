@@ -79,7 +79,7 @@ MdotEdgeAlg::execute()
 
   mdot.clear_sync_state();
   printf("Mdot: Coord state ModHost: %d NumSyncs: %d ModDevice: %d NumSyncs: %d \n", coordinates.need_sync_to_host(), coordinates.num_syncs_to_host(), coordinates.need_sync_to_device(),coordinates.num_syncs_to_device());
-  // coordinates.sync_to_device();
+  coordinates.sync_to_device();
   velocity.sync_to_device();
   Gpdx.sync_to_device();
   density.sync_to_device();
