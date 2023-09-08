@@ -1366,8 +1366,8 @@ fsiTurbine::mapDisplacements(double time)
   auto& meta = bulk_->mesh_meta_data();
   const VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* curCoords =
-    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates");
+  VectorFieldType* curCoords = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "current_coordinates");
   VectorFieldType* displacement = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
@@ -1417,7 +1417,8 @@ fsiTurbine::mapDisplacements(double time)
         twrStartDisp, twrEndDisp, *dispMapInterpNode);
 
       // Now transfer the interpolated displacement to the CFD mesh node
-      auto dispVec = aero::compute_translational_displacements(deflection, refPos, nodePosition);
+      auto dispVec = aero::compute_translational_displacements(
+        deflection, refPos, nodePosition);
       vector_to_field(dispVec, *displacement, node);
       vector_to_field(dispVec + nodePosition, *curCoords, node);
     }
@@ -1527,14 +1528,16 @@ fsiTurbine::mapDisplacements(double time)
 
       auto nodePosition = vector_from_field(*modelCoords, node);
       // Now transfer the displacement to the CFD mesh node
-      auto dispVec = aero::compute_translational_displacements(hubDeflection, hubPos, nodePosition);
+      auto dispVec = aero::compute_translational_displacements(
+        hubDeflection, hubPos, nodePosition);
       vector_to_field(dispVec, *displacement, node);
       vector_to_field(dispVec + nodePosition, *curCoords, node);
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
       vector_to_field(
-        aero::compute_mesh_velocity(hubVel, hubDeflection, hubPos, nodePosition),
+        aero::compute_mesh_velocity(
+          hubVel, hubDeflection, hubPos, nodePosition),
         *meshVelocity, node);
     }
   }
@@ -1550,9 +1553,10 @@ fsiTurbine::mapDisplacements(double time)
       const aero::SixDOF deflection(brFSIdata_.nac_def.data());
 
       // Now transfer the displacement to the CFD mesh node
-      auto dispVec =aero::compute_translational_displacements(deflection, refPos, nodePosition);
-      vector_to_field(dispVec,*displacement, node);
-      vector_to_field(dispVec+nodePosition,*curCoords, node);
+      auto dispVec = aero::compute_translational_displacements(
+        deflection, refPos, nodePosition);
+      vector_to_field(dispVec, *displacement, node);
+      vector_to_field(dispVec + nodePosition, *curCoords, node);
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
@@ -1567,7 +1571,8 @@ fsiTurbine::mapDisplacements(double time)
   meshVelocity->modify_on_host();
   deflectionRamp_->modify_on_host();
   // ideally these should occur on device so lets copy them there for now
-  // mesh motion computes these on device so we can remove some unnecessary syncs
+  // mesh motion computes these on device so we can remove some unnecessary
+  // syncs
   curCoords->sync_to_device();
   displacement->sync_to_device();
   meshVelocity->sync_to_device();
@@ -2102,7 +2107,6 @@ fsiTurbine::compute_div_mesh_velocity()
   // syncs are done inside this function
   compute_edge_scalar_divergence(
     *bulk_, partVec_, bndyPartVec_, faceVelMag, divMeshVel);
-
 }
 
 } // namespace nalu

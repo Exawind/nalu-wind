@@ -268,7 +268,7 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
     for (const auto* b : bkts) {
       for (const auto node : *b) {
-		  const double* velNp1 = stk::mesh::field_data(*meshVelNp1, node);
+        const double* velNp1 = stk::mesh::field_data(*meshVelNp1, node);
         const double* dispNp1 = stk::mesh::field_data(*meshDispNp1, node);
         double* dispN = stk::mesh::field_data(*meshDispN, node);
         double* dispNm1 = stk::mesh::field_data(*meshDispNm1, node);

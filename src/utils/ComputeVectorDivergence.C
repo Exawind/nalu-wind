@@ -286,7 +286,6 @@ compute_scalar_divergence(
     }
   }
 
-
   // sum up interior divergence values and return if boundary part not specified
   if (bndyPartVec.size() == 0) {
     stk::mesh::parallel_sum(bulk, {scalarField});
@@ -334,7 +333,6 @@ compute_edge_scalar_divergence(
       *divMVR -= ff[k];
     }
   }
-
 
   // sum up interior divergence values and return if boundary part not specified
   stk::mesh::parallel_sum(bulk, {scalarField});

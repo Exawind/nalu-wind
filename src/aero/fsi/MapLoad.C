@@ -86,7 +86,8 @@ mapTowerLoad(
 
       // Get reference to load map and loadMapInterp at all ips on this face
       const int* loadMapFace = stk::mesh::field_data(loadMap, face);
-      const double* loadMapInterpFace = stk::mesh::field_data(loadMapInterp, face);
+      const double* loadMapInterpFace =
+        stk::mesh::field_data(loadMapInterp, face);
       const double* tforce = stk::mesh::field_data(tforceSCS, face);
 
       for (int ip = 0; ip < numScsBip; ++ip) {
@@ -216,7 +217,8 @@ mapBladeLoad(
 
       // Get reference to load map and loadMapInterp at all ips on this face
       const int* loadMapFace = stk::mesh::field_data(loadMap, face);
-      const double* loadMapInterpFace = stk::mesh::field_data(loadMapInterp, face);
+      const double* loadMapInterpFace =
+        stk::mesh::field_data(loadMapInterp, face);
       const double* tforce = stk::mesh::field_data(tforceSCS, face);
 
       for (int ip = 0; ip < numScsBip; ++ip) {
