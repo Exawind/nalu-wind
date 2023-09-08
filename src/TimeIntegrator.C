@@ -294,6 +294,7 @@ TimeIntegrator::pre_realm_advance_stage1(size_t inonlin)
     if (secondOrderTimeAccurate_)
       compute_gamma();
 
+    printf("######\n");
     NaluEnv::self().naluOutputP0()
       << "*******************************************************" << std::endl
       << "Time Step Count: " << timeStepCount_
@@ -386,6 +387,7 @@ TimeIntegrator::integrate_realm()
       interstep_updates(k);
 
       for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
+    printf("Realm %s\n", (*ii)->name_.c_str());
         (*ii)->advance_time_step();
         (*ii)->process_multi_physics_transfer();
       }

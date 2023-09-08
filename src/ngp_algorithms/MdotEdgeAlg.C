@@ -78,7 +78,8 @@ MdotEdgeAlg::execute()
   auto mdot = fieldMgr.get_field<double>(massFlowRate_);
 
   mdot.clear_sync_state();
-  coordinates.sync_to_device();
+  printf("Mdot: Coord state ModHost: %d NumSyncs: %d ModDevice: %d NumSyncs: %d \n", coordinates.need_sync_to_host(), coordinates.num_syncs_to_host(), coordinates.need_sync_to_device(),coordinates.num_syncs_to_device());
+  // coordinates.sync_to_device();
   velocity.sync_to_device();
   Gpdx.sync_to_device();
   density.sync_to_device();
