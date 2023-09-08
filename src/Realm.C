@@ -1841,12 +1841,6 @@ Realm::update_geometry_due_to_mesh_motion()
   if (does_mesh_move()) {
     if (aeroModels_->is_active()) {
       aeroModels_->update_displacements(get_current_time());
-
-      if (aeroModels_->has_fsi()) {
-        auto part_vec = aeroModels_->fsi_parts();
-        for (auto* target_part : part_vec)
-          set_current_coordinates(target_part);
-      }
     }
 
     if (solutionOptions_->externalMeshDeformation_) {
@@ -2562,7 +2556,7 @@ Realm::set_current_coordinates(stk::mesh::Part* targetPart)
   VectorFieldType* displacement = meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
-  currentCoords->sync_to_host();
+  currentCoords->clear_sync_state();
   displacement->sync_to_host();
   modelCoords->sync_to_host();
 
@@ -3474,17 +3468,10 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
         meshMotionAlg_->restart_reinit(foundRestartTime);
 
       if (aeroModels_->has_fsi()) {
-        // TODO(psakiev) we should move this inside the function and compute
-        // current coordinates there
         NaluEnv::self().naluOutputP0()
           << "Aero models - Update displacements and set current coordinates"
           << std::endl;
         aeroModels_->update_displacements(restartTime);
-
-        auto part_vec = aeroModels_->fsi_parts();
-        for (auto* target_part : part_vec) {
-          set_current_coordinates(target_part);
-        }
       }
 
       compute_geometry();
