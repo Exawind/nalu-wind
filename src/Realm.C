@@ -1841,7 +1841,12 @@ Realm::update_geometry_due_to_mesh_motion()
   if (does_mesh_move()) {
     if (aeroModels_->is_active()) {
       aeroModels_->update_displacements(get_current_time());
-    }
+
+		auto part_vec = aeroModels_->fsi_parts();
+		for (auto* target_part : part_vec) {
+			set_current_coordinates(target_part);
+		}
+	 }
 
     if (solutionOptions_->externalMeshDeformation_) {
       std::vector<std::string> targetNames = get_physics_target_names();
