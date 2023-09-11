@@ -16,8 +16,6 @@
 #include <cassert>
 #include <cmath>
 
-#include <stk_mesh/base/FieldBLAS.hpp>
-
 namespace sierra {
 
 namespace nalu {
@@ -235,7 +233,7 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
     FAST.solution0();
   }
 
-  map_displacements(curTime);
+  map_displacements(curTime, false);
 
   if (curTime < 1e-10) {
 
@@ -583,16 +581,51 @@ OpenfastFSI::set_rotational_displacement(
   }
 }
 void
-OpenfastFSI::map_displacements(double current_time)
+OpenfastFSI::map_displacements(double current_time, bool updateCurCoor)
 {
 
   get_displacements(current_time);
 
+  stk::mesh::Selector sel;
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (int i = 0; i < nTurbinesGlob; i++) {
     if (fsiTurbineData_[i] != NULL) {
       fsiTurbineData_[i]->mapDisplacements(current_time);
+      sel &= stk::mesh::selectUnion(fsiTurbineData_[i]->getPartVec());
     }
+  }
+
+  if(updateCurCoor){
+    auto& meta = bulk_->mesh_meta_data();
+    const VectorFieldType* modelCoords =
+      meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+    VectorFieldType* curCoords = meta.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "current_coordinates");
+    VectorFieldType* displacement = meta.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_displacement");
+
+    modelCoords->sync_to_host();
+    curCoords->sync_to_host();
+    displacement->sync_to_host();
+
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
+    for (const auto* b : bkts) {
+      for (const auto node : *b){
+        for (size_t in = 0; in < b->size(); in++) {
+
+          double* cc = stk::mesh::field_data(*curCoords, node);
+          double* mc = stk::mesh::field_data(*modelCoords, node);
+          double* cd = stk::mesh::field_data(*displacement, node);
+
+          for(int j = 0; j<3; ++j){
+            cc[j] = mc[j] + cd[j];
+          }
+        }
+      }
+    }
+
+    curCoords->modify_on_host();
+    curCoords->sync_to_device();
   }
 }
 
