@@ -178,6 +178,9 @@
 
 #include <user_functions/DropletVelocityAuxFunction.h>
 
+#include <user_functions/SloshingTankPressureAuxFunction.h>
+#include <user_functions/WaterLevelDensityAuxFunction.h>
+
 // deprecated
 
 // stk_util
@@ -708,6 +711,13 @@ LowMachEquationSystem::register_initial_condition_fcn(
     AuxFunctionAlgorithm* auxAlg = NULL;
     if (fcnName == "flat_interface") {
       theAuxFunc = new FlatDensityAuxFunction();
+    } else if (fcnName == "water_level") {
+      std::map<std::string, std::vector<double>>::const_iterator iterParams =
+        theParams.find(dofName_init_dens);
+      std::vector<double> fcnParams = (iterParams != theParams.end())
+                                        ? (*iterParams).second
+                                        : std::vector<double>();
+      theAuxFunc = new WaterLevelDensityAuxFunction(fcnParams);
     } else {
       throw std::runtime_error(
         "InitialCondFunction::non-supported initial_density IC");
@@ -3547,6 +3557,13 @@ ContinuityEquationSystem::register_initial_condition_fcn(
       theAuxFunc = new TaylorGreenPressureAuxFunction();
     } else if (fcnName == "kovasznay") {
       theAuxFunc = new KovasznayPressureAuxFunction();
+    } else if (fcnName == "sloshing_tank") {
+      std::map<std::string, std::vector<double>>::const_iterator iterParams =
+        theParams.find(dofName);
+      std::vector<double> fcnParams = (iterParams != theParams.end())
+                                        ? (*iterParams).second
+                                        : std::vector<double>();
+      theAuxFunc = new SloshingTankPressureAuxFunction(fcnParams);
     } else {
       throw std::runtime_error("ContinuityEquationSystem::register_initial_"
                                "condition_fcn: limited functions supported");
