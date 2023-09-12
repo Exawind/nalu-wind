@@ -22,7 +22,9 @@ public:
   }
 
   KOKKOS_FUNCTION
-  unsigned get_ordinal(){return fieldPtr_.get_ordinal();}
+  unsigned get_ordinal() const{
+    return fieldPtr_.get_ordinal();
+  }
 
   ~SmartFieldPtr(){
       fieldPtr_.modify_on_device();
@@ -35,7 +37,7 @@ template<typename T>
 void lambda_impl(SmartFieldPtr<T>& ptr){
   Kokkos::parallel_for(1,
                        KOKKOS_LAMBDA(int){
-                           ptr.fieldPtr_.get_ordinal();
+                           ptr.get_ordinal();
                        });
 }
 
