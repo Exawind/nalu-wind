@@ -27,6 +27,7 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestPecletFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestRadarPattern.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestRealm.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSmartFieldPtr.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScanningLidarPattern.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScratchViews.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestShmemAlignment.C
