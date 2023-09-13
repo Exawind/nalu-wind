@@ -11,11 +11,12 @@
 #include <gtest/gtest.h>
 #include "UnitTestUtils.h"
 #include <stk_mesh/base/GetNgpField.hpp>
+#include "ngp_utils/SmartFieldRef.h"
 
 template <typename T>
 class SmartFieldPtr{
 public:
-  SmartFieldPtr(stk::mesh::DeviceField<T>& fieldRef):fieldPtr_(fieldRef){}
+  SmartFieldPtr(stk::mesh::NgpField<T>& fieldRef):fieldPtr_(fieldRef){}
 
   SmartFieldPtr(const SmartFieldPtr& src): fieldPtr_(src.fieldPtr_){
     fieldPtr_.sync_to_device();
@@ -29,18 +30,19 @@ public:
   ~SmartFieldPtr(){
       fieldPtr_.modify_on_device();
   }
-  stk::mesh::DeviceField<T>& fieldPtr_;
+  stk::mesh::NgpField<T>& fieldPtr_;
 };
 
 
 template<typename T>
-void lambda_impl(SmartFieldPtr<T>& ptr){
+void lambda_impl(T& ptr){
   Kokkos::parallel_for(1,
                        KOKKOS_LAMBDA(int){
                            ptr.get_ordinal();
                        });
 }
 
+namespace sierra::nalu{
 TEST_F(Hex8Mesh, SmartFieldPtr){
   fill_mesh_and_initialize_test_fields();
 
@@ -59,4 +61,25 @@ TEST_F(Hex8Mesh, SmartFieldPtr){
   EXPECT_FALSE(ngpField.need_sync_to_device());
   EXPECT_TRUE(ngpField.need_sync_to_host());
 
+}
+
+TEST_F(Hex8Mesh, SmartFieldRef){
+  fill_mesh_and_initialize_test_fields();
+
+  auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
+
+  stk::mesh::NgpField<double>& ngpField =
+    stk::mesh::get_updated_ngp_field<double>(*field);
+
+  ngpField.modify_on_host();
+
+  ASSERT_TRUE(ngpField.need_sync_to_device());
+
+  auto sPtr = nalu_ngp::DeviceSmartFieldRef(ngpField, nalu_ngp::Scope::READWRITE);
+  lambda_impl(sPtr);
+
+  EXPECT_FALSE(ngpField.need_sync_to_device());
+  EXPECT_TRUE(ngpField.need_sync_to_host());
+
+}
 }
