@@ -9,44 +9,38 @@
 
 #ifndef SMARTFIELDREF_H
 #define SMARTFIELDREF_H
+#include <Kokkos_Macros.hpp>
 #include <stk_mesh/base/Ngp.hpp>
 #include <stk_mesh/base/NgpField.hpp>
 
-namespace sierra::nalu::nalu_ngp{
+namespace sierra::nalu::SmartFieldRef{
+
 struct READ{};
+struct WRITE{};
+struct READ_WRITE{};
 
-enum class Scope{
-  READ,
-  WRITE,
-  READWRITE
-};
-
-template <typename T>
-using DeviceField = stk::mesh::NgpField<T>;
-
-template <typename T>
-using HostField = stk::mesh::HostField<T>;
-
-template <typename T, template<typename> typename FieldType>
-class SmartFieldRef{
+template <typename T, typename SCOPE>
+class DeviceRef{
 public:
-  SmartFieldRef(FieldType<T>& ngpField, Scope scope):
-    fieldRef_(ngpField),
-    scope_(scope){}
+  DeviceRef(stk::mesh::NgpField<T>& ngpField):
+    fieldRef_(ngpField){}
 
-  SmartFieldRef(const SmartFieldRef& src):
+  DeviceRef(const DeviceRef& src):
     fieldRef_(src.fieldRef_),
-    scope_(src.scope_),
     is_copy_constructed_(true)
   {
-    if(scope_ == Scope::WRITE)
-      fieldRef_.clear_sync_state();
-    else
+    if(is_read())
       fieldRef_.sync_to_device();
+    else
+      fieldRef_.clear_sync_state();
   }
 
-  ~SmartFieldRef(){
-    if(is_copy_constructed_ && !scope_is(Scope::READ)){
+  // device implementations should only ever execute inside a kokkos::paralle_for
+  // and hence be captured by a lambda.
+  // Therefore we only ever need to sync copies that will have been snatched up
+  // through lambda capture.
+  ~DeviceRef(){
+    if(is_copy_constructed_ && is_write()){
       fieldRef_.modify_on_device();
     }
   }
@@ -56,18 +50,38 @@ public:
     return fieldRef_.get_ordinal();
   }
 
-private:
-  bool scope_is(Scope test){
-    return scope_ == test;
+  KOKKOS_FUNCTION
+  T& get(stk::mesh::FastMeshIndex index, int component){
+    return fieldRef_.get(index, component);
   }
 
-  FieldType<T>& fieldRef_;
-  const Scope scope_;
+  template<typename MeshIndex> KOKKOS_FUNCTION
+  T& get(MeshIndex index, int component){
+    return fieldRef_.get(index, component);
+  }
+
+  KOKKOS_FUNCTION
+  T& operator()(stk::mesh::FastMeshIndex index, int component){
+    return fieldRef_.get(index, component);
+  }
+
+  template<typename MeshIndex> KOKKOS_FUNCTION
+  T& operator()(MeshIndex index, int component){
+    return fieldRef_.operator()(index, component);
+  }
+
+private:
+  bool is_read(){
+    return std::is_same<SCOPE, READ>::value || std::is_same<SCOPE, READ_WRITE>::value;
+  }
+
+  bool is_write(){
+    return std::is_same<SCOPE, WRITE>::value || std::is_same<SCOPE, READ_WRITE>::value;
+  }
+
+  stk::mesh::NgpField<T>& fieldRef_;
   const bool is_copy_constructed_{false};
 };
-
-template <typename T>
-using DeviceSmartFieldRef = SmartFieldRef<T, DeviceField>;
 
 }
 
