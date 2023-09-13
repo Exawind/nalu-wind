@@ -13,6 +13,20 @@
 #include <stk_mesh/base/GetNgpField.hpp>
 #include "ngp_utils/SmartFieldRef.h"
 
+class TestSmartFieldRef : public Hex8Mesh{
+protected:
+  void SetUp(){
+  fill_mesh_and_initialize_test_fields();
+
+  auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
+
+  ngpField_ =
+    &stk::mesh::get_updated_ngp_field<double>(*field);
+
+  }
+  stk::mesh::NgpField<double>* ngpField_;
+};
+
 template <typename T>
 class SmartFieldPtr{
 public:
@@ -43,43 +57,28 @@ void lambda_impl(T& ptr){
 }
 
 namespace sierra::nalu{
-TEST_F(Hex8Mesh, SmartFieldPtr){
-  fill_mesh_and_initialize_test_fields();
+TEST_F(TestSmartFieldRef, SmartFieldPtr){
 
-  auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
+  ngpField_->modify_on_host();
 
-  stk::mesh::NgpField<double>& ngpField =
-    stk::mesh::get_updated_ngp_field<double>(*field);
+  ASSERT_TRUE(ngpField_->need_sync_to_device());
 
-  ngpField.modify_on_host();
-
-  ASSERT_TRUE(ngpField.need_sync_to_device());
-
-  auto sPtr = SmartFieldPtr(ngpField);
+  auto sPtr = SmartFieldPtr(*ngpField_);
   lambda_impl(sPtr);
 
-  EXPECT_FALSE(ngpField.need_sync_to_device());
-  EXPECT_TRUE(ngpField.need_sync_to_host());
-
+  EXPECT_FALSE(ngpField_->need_sync_to_device());
+  EXPECT_TRUE(ngpField_->need_sync_to_host());
 }
 
-TEST_F(Hex8Mesh, SmartFieldRef){
-  fill_mesh_and_initialize_test_fields();
+TEST_F(TestSmartFieldRef, SmartFieldRef){
+  ngpField_->modify_on_host();
 
-  auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
+  ASSERT_TRUE(ngpField_->need_sync_to_device());
 
-  stk::mesh::NgpField<double>& ngpField =
-    stk::mesh::get_updated_ngp_field<double>(*field);
-
-  ngpField.modify_on_host();
-
-  ASSERT_TRUE(ngpField.need_sync_to_device());
-
-  auto sPtr = nalu_ngp::DeviceSmartFieldRef(ngpField, nalu_ngp::Scope::READWRITE);
+  auto sPtr = nalu_ngp::DeviceSmartFieldRef(*ngpField_, nalu_ngp::Scope::READWRITE);
   lambda_impl(sPtr);
 
-  EXPECT_FALSE(ngpField.need_sync_to_device());
-  EXPECT_TRUE(ngpField.need_sync_to_host());
-
+  EXPECT_FALSE(ngpField_->need_sync_to_device());
+  EXPECT_TRUE(ngpField_->need_sync_to_host());
 }
 }
