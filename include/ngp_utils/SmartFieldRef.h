@@ -21,13 +21,23 @@ enum class Scope{
   READWRITE
 };
 
+template <typename T>
+using DeviceField = stk::mesh::NgpField<T>;
 
 template <typename T>
-class DeviceSmartFieldRef{
-public:
-  DeviceSmartFieldRef(stk::mesh::NgpField<T>& ngpField, Scope scope):fieldRef_(ngpField),scope_(scope){}
+using HostField = stk::mesh::HostField<T>;
 
-  DeviceSmartFieldRef(const DeviceSmartFieldRef& src):fieldRef_(src.fieldRef_), scope_(src.scope_), is_copy_constructed_(true)
+template <typename T, template<typename> typename FieldType>
+class SmartFieldRef{
+public:
+  SmartFieldRef(FieldType<T>& ngpField, Scope scope):
+    fieldRef_(ngpField),
+    scope_(scope){}
+
+  SmartFieldRef(const SmartFieldRef& src):
+    fieldRef_(src.fieldRef_),
+    scope_(src.scope_),
+    is_copy_constructed_(true)
   {
     if(scope_ == Scope::WRITE)
       fieldRef_.clear_sync_state();
@@ -35,7 +45,7 @@ public:
       fieldRef_.sync_to_device();
   }
 
-  ~DeviceSmartFieldRef(){
+  ~SmartFieldRef(){
     if(is_copy_constructed_ && !scope_is(Scope::READ)){
       fieldRef_.modify_on_device();
     }
@@ -51,11 +61,13 @@ private:
     return scope_ == test;
   }
 
-  stk::mesh::NgpField<T>& fieldRef_;
+  FieldType<T>& fieldRef_;
   const Scope scope_;
   const bool is_copy_constructed_{false};
 };
 
+template <typename T>
+using DeviceSmartFieldRef = SmartFieldRef<T, DeviceField>;
 
 }
 

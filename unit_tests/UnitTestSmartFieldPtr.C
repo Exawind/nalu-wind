@@ -75,7 +75,7 @@ TEST_F(TestSmartFieldRef, SmartFieldRef){
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
-  auto sPtr = nalu_ngp::DeviceSmartFieldRef(*ngpField_, nalu_ngp::Scope::READWRITE);
+  auto sPtr = nalu_ngp::DeviceSmartFieldRef<double>(*ngpField_, nalu_ngp::Scope::READWRITE);
   lambda_impl(sPtr);
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
