@@ -27,27 +27,6 @@ protected:
   stk::mesh::NgpField<double>* ngpField_;
 };
 
-template <typename T>
-class SmartFieldPtr{
-public:
-  SmartFieldPtr(stk::mesh::NgpField<T>& fieldRef):fieldPtr_(fieldRef){}
-
-  SmartFieldPtr(const SmartFieldPtr& src): fieldPtr_(src.fieldPtr_){
-    fieldPtr_.sync_to_device();
-  }
-
-  KOKKOS_FUNCTION
-  unsigned get_ordinal() const{
-    return fieldPtr_.get_ordinal();
-  }
-
-  ~SmartFieldPtr(){
-      fieldPtr_.modify_on_device();
-  }
-  stk::mesh::NgpField<T>& fieldPtr_;
-};
-
-
 template<typename T>
 void lambda_impl(T& ptr){
   Kokkos::parallel_for(1,
@@ -57,20 +36,7 @@ void lambda_impl(T& ptr){
 }
 
 namespace sierra::nalu{
-TEST_F(TestSmartFieldRef, SmartFieldPtr){
-
-  ngpField_->modify_on_host();
-
-  ASSERT_TRUE(ngpField_->need_sync_to_device());
-
-  auto sPtr = SmartFieldPtr(*ngpField_);
-  lambda_impl(sPtr);
-
-  EXPECT_FALSE(ngpField_->need_sync_to_device());
-  EXPECT_TRUE(ngpField_->need_sync_to_host());
-}
-
-TEST_F(TestSmartFieldRef, SmartFieldRef){
+TEST_F(TestSmartFieldRef, device_read_write_mod_sync_with_lambda){
   ngpField_->modify_on_host();
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
@@ -82,4 +48,29 @@ TEST_F(TestSmartFieldRef, SmartFieldRef){
   EXPECT_FALSE(ngpField_->need_sync_to_device());
   EXPECT_TRUE(ngpField_->need_sync_to_host());
 }
+
+TEST_F(TestSmartFieldRef, device_write_clear_mod_with_lambda){
+  ngpField_->modify_on_host();
+
+  ASSERT_TRUE(ngpField_->need_sync_to_device());
+
+  auto sPtr = SmartFieldRef<DEVICE, WRITE, double>(*ngpField_);
+  lambda_impl(sPtr);
+
+  EXPECT_FALSE(ngpField_->need_sync_to_device());
+  EXPECT_TRUE(ngpField_->need_sync_to_host());
+}
+
+TEST_F(TestSmartFieldRef, device_read_mod_no_sync_with_lambda){
+  ngpField_->modify_on_host();
+
+  ASSERT_TRUE(ngpField_->need_sync_to_device());
+
+  auto sPtr = SmartFieldRef<DEVICE, READ, double>(*ngpField_);
+  lambda_impl(sPtr);
+
+  EXPECT_FALSE(ngpField_->need_sync_to_device());
+  EXPECT_FALSE(ngpField_->need_sync_to_host());
+}
+
 }
