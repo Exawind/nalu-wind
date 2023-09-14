@@ -103,18 +103,21 @@ public:
     is_copy_constructed_(true)
   {
     if(is_read())
-      fieldRef_.sync_to_device();
+      fieldRef_.sync_to_host();
     else
       fieldRef_.clear_sync_state();
   }
 
-  // device implementations should only ever execute inside a kokkos::paralle_for
-  // and hence be captured by a lambda.
-  // Therefore we only ever need to sync copies that will have been snatched up
-  // through lambda capture.
+  // TODO is a copy construction appropriate for host instances?
+  // ideally we will still be using parallel_for's but there are lots of
+  // places where we don't yet.  It would be nice to make this work with
+  // the old model as well
+  //
+  // maybe something like SPACE=OldHost, change the ctor to take a FieldBase ptr
+  // AND then remove the copy construction check?
   ~SmartFieldRef(){
     if(is_copy_constructed_ && is_write()){
-      fieldRef_.modify_on_device();
+      fieldRef_.modify_on_host();
     }
   }
 
