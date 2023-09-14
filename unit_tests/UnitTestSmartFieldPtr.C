@@ -23,8 +23,13 @@ protected:
   ngpField_ =
     &stk::mesh::get_updated_ngp_field<double>(*field);
 
+  initSyncsHost_ = ngpField_->num_syncs_to_host();
+  initSyncsDevice_ = ngpField_->num_syncs_to_device();
   }
+
   stk::mesh::NgpField<double>* ngpField_;
+  int initSyncsHost_{0};
+  int initSyncsDevice_{0};
 };
 
 template<typename T>
@@ -47,6 +52,8 @@ TEST_F(TestSmartFieldRef, device_read_write_mod_sync_with_lambda){
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
   EXPECT_TRUE(ngpField_->need_sync_to_host());
+  EXPECT_EQ(initSyncsDevice_+1, ngpField_->num_syncs_to_device());
+  EXPECT_EQ(initSyncsHost_+0, ngpField_->num_syncs_to_host());
 }
 
 TEST_F(TestSmartFieldRef, device_write_clear_mod_with_lambda){
@@ -59,6 +66,8 @@ TEST_F(TestSmartFieldRef, device_write_clear_mod_with_lambda){
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
   EXPECT_TRUE(ngpField_->need_sync_to_host());
+  EXPECT_EQ(initSyncsDevice_+0, ngpField_->num_syncs_to_device());
+  EXPECT_EQ(initSyncsHost_+0, ngpField_->num_syncs_to_host());
 }
 
 TEST_F(TestSmartFieldRef, device_read_mod_no_sync_with_lambda){
@@ -71,6 +80,8 @@ TEST_F(TestSmartFieldRef, device_read_mod_no_sync_with_lambda){
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
   EXPECT_FALSE(ngpField_->need_sync_to_host());
+  EXPECT_EQ(initSyncsDevice_+1, ngpField_->num_syncs_to_device());
+  EXPECT_EQ(initSyncsHost_+0, ngpField_->num_syncs_to_host());
 }
 
 }
