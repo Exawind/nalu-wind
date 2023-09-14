@@ -13,18 +13,19 @@
 #include <stk_mesh/base/GetNgpField.hpp>
 #include "ngp_utils/SmartFieldRef.h"
 
-class TestSmartFieldRef : public Hex8Mesh{
+class TestSmartFieldRef : public Hex8Mesh
+{
 protected:
-  void SetUp(){
-  fill_mesh_and_initialize_test_fields();
+  void SetUp()
+  {
+    fill_mesh_and_initialize_test_fields();
 
-  auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
+    auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
 
-  ngpField_ =
-    &stk::mesh::get_updated_ngp_field<double>(*field);
+    ngpField_ = &stk::mesh::get_updated_ngp_field<double>(*field);
 
-  initSyncsHost_ = ngpField_->num_syncs_to_host();
-  initSyncsDevice_ = ngpField_->num_syncs_to_device();
+    initSyncsHost_ = ngpField_->num_syncs_to_host();
+    initSyncsDevice_ = ngpField_->num_syncs_to_device();
   }
 
   stk::mesh::NgpField<double>* ngpField_;
@@ -32,31 +33,33 @@ protected:
   int initSyncsDevice_{0};
 };
 
-template<typename T>
-void lambda_impl(T& ptr){
-  Kokkos::parallel_for(1,
-                       KOKKOS_LAMBDA(int){
-                           ptr.get_ordinal();
-                       });
+template <typename T>
+void
+lambda_impl(T& ptr)
+{
+  Kokkos::parallel_for(
+    1, KOKKOS_LAMBDA(int) { ptr.get_ordinal(); });
 }
 
-namespace sierra::nalu{
-TEST_F(TestSmartFieldRef, device_read_write_mod_sync_with_lambda){
+namespace sierra::nalu {
+TEST_F(TestSmartFieldRef, device_read_write_mod_sync_with_lambda)
+{
   ngpField_->modify_on_host();
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
-  //TODO can we get rid of the double template param some how?
+  // TODO can we get rid of the double template param some how?
   auto sPtr = SmartFieldRef<DEVICE, READ_WRITE, double>(*ngpField_);
   lambda_impl(sPtr);
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
   EXPECT_TRUE(ngpField_->need_sync_to_host());
-  EXPECT_EQ(initSyncsDevice_+1, ngpField_->num_syncs_to_device());
-  EXPECT_EQ(initSyncsHost_+0, ngpField_->num_syncs_to_host());
+  EXPECT_EQ(initSyncsDevice_ + 1, ngpField_->num_syncs_to_device());
+  EXPECT_EQ(initSyncsHost_ + 0, ngpField_->num_syncs_to_host());
 }
 
-TEST_F(TestSmartFieldRef, device_write_clear_mod_with_lambda){
+TEST_F(TestSmartFieldRef, device_write_clear_mod_with_lambda)
+{
   ngpField_->modify_on_host();
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
@@ -66,11 +69,12 @@ TEST_F(TestSmartFieldRef, device_write_clear_mod_with_lambda){
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
   EXPECT_TRUE(ngpField_->need_sync_to_host());
-  EXPECT_EQ(initSyncsDevice_+0, ngpField_->num_syncs_to_device());
-  EXPECT_EQ(initSyncsHost_+0, ngpField_->num_syncs_to_host());
+  EXPECT_EQ(initSyncsDevice_ + 0, ngpField_->num_syncs_to_device());
+  EXPECT_EQ(initSyncsHost_ + 0, ngpField_->num_syncs_to_host());
 }
 
-TEST_F(TestSmartFieldRef, device_read_mod_no_sync_with_lambda){
+TEST_F(TestSmartFieldRef, device_read_mod_no_sync_with_lambda)
+{
   ngpField_->modify_on_host();
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
@@ -80,8 +84,8 @@ TEST_F(TestSmartFieldRef, device_read_mod_no_sync_with_lambda){
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
   EXPECT_FALSE(ngpField_->need_sync_to_host());
-  EXPECT_EQ(initSyncsDevice_+1, ngpField_->num_syncs_to_device());
-  EXPECT_EQ(initSyncsHost_+0, ngpField_->num_syncs_to_host());
+  EXPECT_EQ(initSyncsDevice_ + 1, ngpField_->num_syncs_to_device());
+  EXPECT_EQ(initSyncsHost_ + 0, ngpField_->num_syncs_to_host());
 }
 
-}
+} // namespace sierra::nalu
