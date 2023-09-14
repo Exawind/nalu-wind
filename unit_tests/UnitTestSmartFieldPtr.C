@@ -57,7 +57,6 @@ void lambda_impl(T& ptr){
 }
 
 namespace sierra::nalu{
-namespace sfr = SmartFieldRef;
 TEST_F(TestSmartFieldRef, SmartFieldPtr){
 
   ngpField_->modify_on_host();
@@ -76,7 +75,8 @@ TEST_F(TestSmartFieldRef, SmartFieldRef){
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
-  auto sPtr = sfr::DeviceRef<double, sfr::READ_WRITE>(*ngpField_);
+  //TODO can we get rid of the double template param some how?
+  auto sPtr = SmartFieldRef<DEVICE, READ_WRITE, double>(*ngpField_);
   lambda_impl(sPtr);
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
