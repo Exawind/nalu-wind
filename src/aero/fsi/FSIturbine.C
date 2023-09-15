@@ -1358,7 +1358,8 @@ fsiTurbine::mapDisplacements(double time)
 
   const DeflectionRampingParams& defParams = deflectionRampParams_;
   const double temporalDeflectionRamp = fsi::temporal_ramp(
-    time, defParams.startTimeTemporalRamp_, defParams.endTimeTemporalRamp_, defParams.endTimeTemporalRamp_);
+    time, defParams.startTimeTemporalRamp_, defParams.endTimeTemporalRamp_,
+    defParams.endTimeTemporalRamp_);
 
   auto& meta = bulk_->mesh_meta_data();
   VectorFieldType* modelCoords =
@@ -1461,8 +1462,9 @@ fsiTurbine::mapDisplacements(double time)
           spanLocI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
 
         double deflectionRamp =
-          temporalDeflectionRamp *
-          fsi::linear_ramp_span(spanLocation, defParams.spanRampDistance_, defParams.enableSpanRamping_);
+          temporalDeflectionRamp * fsi::linear_ramp_span(
+                                     spanLocation, defParams.spanRampDistance_,
+                                     defParams.enableSpanRamping_);
 
         // things for theta mapping
         const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());

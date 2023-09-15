@@ -128,15 +128,21 @@ TEST(DeflectionRamping, booleanDisablesTheta)
   const auto rotation = wmp::create_wm_param(vs::Vector::ihat(), theta);
 
   const auto pClockWise = wmp::rotate(rotation, root);
-  EXPECT_DOUBLE_EQ(0.0, fsi::linear_ramp_theta(hub, root, pClockWise, rampSpan, thetaZero, true));
-  EXPECT_DOUBLE_EQ(1.0, fsi::linear_ramp_theta(hub, root, pClockWise, rampSpan, thetaZero, false));
+  EXPECT_DOUBLE_EQ(
+    0.0,
+    fsi::linear_ramp_theta(hub, root, pClockWise, rampSpan, thetaZero, true));
+  EXPECT_DOUBLE_EQ(
+    1.0,
+    fsi::linear_ramp_theta(hub, root, pClockWise, rampSpan, thetaZero, false));
 }
 
 TEST(DeflectionRamping, booleanDisablesSpan)
 {
   const double spanLocation = 0.3;
   const double zeroRampLocation = 0.4;
-  EXPECT_DOUBLE_EQ(0.75, fsi::linear_ramp_span(spanLocation, zeroRampLocation, true));
-  EXPECT_DOUBLE_EQ(1.0, fsi::linear_ramp_span(spanLocation, zeroRampLocation, false));
+  EXPECT_DOUBLE_EQ(
+    0.75, fsi::linear_ramp_span(spanLocation, zeroRampLocation, true));
+  EXPECT_DOUBLE_EQ(
+    1.0, fsi::linear_ramp_span(spanLocation, zeroRampLocation, false));
 }
 } // namespace
