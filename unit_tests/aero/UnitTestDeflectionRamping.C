@@ -107,4 +107,36 @@ TEST(DeflectionRamping, temporalRampingPhases)
   EXPECT_DOUBLE_EQ(1.0, fsi::temporal_ramp(endRamp, startRamp, endRamp));
   EXPECT_DOUBLE_EQ(1.0, fsi::temporal_ramp(5.0, startRamp, endRamp));
 }
+
+TEST(DeflectionRamping, booleanDisablesTemporal)
+{
+  const double startRamp = 1.0;
+  const double endRamp = 2.0;
+  const double time = 0.0;
+  EXPECT_DOUBLE_EQ(1.0, fsi::temporal_ramp(time, startRamp, endRamp, false));
+  EXPECT_DOUBLE_EQ(0.0, fsi::temporal_ramp(time, startRamp, endRamp, true));
+}
+
+TEST(DeflectionRamping, booleanDisablesTheta)
+{
+  const double theta = utils::radians(90.0);
+  const double rampSpan = utils::radians(20.0);
+  const double thetaZero = utils::radians(60.0);
+
+  const aero::SixDOF hub(vs::Vector::zero(), vs::Vector::ihat());
+  const vs::Vector root(vs::Vector::one());
+  const auto rotation = wmp::create_wm_param(vs::Vector::ihat(), theta);
+
+  const auto pClockWise = wmp::rotate(rotation, root);
+  EXPECT_DOUBLE_EQ(0.0, fsi::linear_ramp_theta(hub, root, pClockWise, rampSpan, thetaZero, true));
+  EXPECT_DOUBLE_EQ(1.0, fsi::linear_ramp_theta(hub, root, pClockWise, rampSpan, thetaZero, false));
+}
+
+TEST(DeflectionRamping, booleanDisablesSpan)
+{
+  const double spanLocation = 0.3;
+  const double zeroRampLocation = 0.4;
+  EXPECT_DOUBLE_EQ(0.75, fsi::linear_ramp_span(spanLocation, zeroRampLocation, true));
+  EXPECT_DOUBLE_EQ(1.0, fsi::linear_ramp_span(spanLocation, zeroRampLocation, false));
+}
 } // namespace
