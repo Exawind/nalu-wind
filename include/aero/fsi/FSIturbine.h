@@ -45,6 +45,9 @@ struct DeflectionRampingParams
   double thetaRampSpan_{10.0};
   double startTimeTemporalRamp_{0.0};
   double endTimeTemporalRamp_{0.0};
+  bool enableSpanRamping_{true};
+  bool enableThetaRamping_{true};
+  bool enableTemporalRamping_{true};
 };
 
 // TODO(psakiev) find a better place for this
