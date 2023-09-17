@@ -49,7 +49,7 @@ TEST_F(TestSmartFieldRef, device_read_write_mod_sync_with_lambda)
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
   // TODO can we get rid of the double template param some how?
-  auto sPtr = SmartFieldRef<DEVICE, READ_WRITE, double>(*ngpField_);
+  auto sPtr = MakeFieldRef<DEVICE, READ_WRITE>()(*ngpField_);
   lambda_impl(sPtr);
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
@@ -64,7 +64,7 @@ TEST_F(TestSmartFieldRef, device_write_clear_mod_with_lambda)
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
-  auto sPtr = SmartFieldRef<DEVICE, WRITE, double>(*ngpField_);
+  auto sPtr = MakeFieldRef<DEVICE, WRITE>()(*ngpField_);
   lambda_impl(sPtr);
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
@@ -79,7 +79,7 @@ TEST_F(TestSmartFieldRef, device_read_mod_no_sync_with_lambda)
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
-  auto sPtr = SmartFieldRef<DEVICE, READ, double>(*ngpField_);
+  auto sPtr = MakeFieldRef<DEVICE, READ>()(*ngpField_);
   lambda_impl(sPtr);
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
