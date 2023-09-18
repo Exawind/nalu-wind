@@ -1841,12 +1841,7 @@ Realm::update_geometry_due_to_mesh_motion()
   if (does_mesh_move()) {
     if (aeroModels_->is_active()) {
       aeroModels_->update_displacements(get_current_time());
-
-		auto part_vec = aeroModels_->fsi_parts();
-		for (auto* target_part : part_vec) {
-			set_current_coordinates(target_part);
-		}
-	 }
+    }
 
     if (solutionOptions_->externalMeshDeformation_) {
       std::vector<std::string> targetNames = get_physics_target_names();
@@ -3473,9 +3468,10 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
 
       if (aeroModels_->has_fsi()) {
         NaluEnv::self().naluOutputP0()
+          // are we really updating current coordinates? historically and currently not...
           << "Aero models - Update displacements and set current coordinates"
           << std::endl;
-        aeroModels_->update_displacements(restartTime);
+        aeroModels_->update_displacements(restartTime, false);
       }
 
       compute_geometry();

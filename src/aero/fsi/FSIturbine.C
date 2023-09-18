@@ -95,11 +95,22 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     double* zeroTheta = &defParams.zeroRampLocTheta_;
     double* thetaRamp = &defParams.thetaRampSpan_;
     // clang-format off
-    get_required(defNode, "temporal_ramp_start", defParams.startTimeTemporalRamp_);
-    get_required(defNode, "temporal_ramp_end",   defParams.endTimeTemporalRamp_);
-    get_required(defNode, "span_ramp_distance",  defParams.spanRampDistance_);
-    get_if_present(defNode, "zero_theta_ramp_angle", *zeroTheta, *zeroTheta);
-    get_if_present(defNode, "theta_ramp_span",       *thetaRamp, *thetaRamp);
+    // defaults of all are true from struct defintion
+    get_if_present(defNode, "enable_theta_ramping", defParams.enableThetaRamping_);
+    get_if_present(defNode, "enable_span_ramping", defParams.enableSpanRamping_);
+    get_if_present(defNode, "enable_temporal_ramping", defParams.enableTemporalRamping_);
+
+    if(defParams.enableTemporalRamping_){
+      get_required(defNode, "temporal_ramp_start", defParams.startTimeTemporalRamp_);
+      get_required(defNode, "temporal_ramp_end",   defParams.endTimeTemporalRamp_);
+    }
+    if(defParams.enableSpanRamping_){
+      get_required(defNode, "span_ramp_distance",  defParams.spanRampDistance_);
+    }
+    if(defParams.enableThetaRamping_){
+      get_if_present(defNode, "zero_theta_ramp_angle", *zeroTheta, *zeroTheta);
+      get_if_present(defNode, "theta_ramp_span",       *thetaRamp, *thetaRamp);
+    }
     // clang-format on
     // ---------- conversionions ----------
     defParams.zeroRampLocTheta_ = utils::radians(defParams.zeroRampLocTheta_);
@@ -1361,13 +1372,14 @@ fsiTurbine::mapDisplacements(double time)
 
   const DeflectionRampingParams& defParams = deflectionRampParams_;
   const double temporalDeflectionRamp = fsi::temporal_ramp(
-    time, defParams.startTimeTemporalRamp_, defParams.endTimeTemporalRamp_);
+    time, defParams.startTimeTemporalRamp_, defParams.endTimeTemporalRamp_,
+    defParams.endTimeTemporalRamp_);
 
   auto& meta = bulk_->mesh_meta_data();
   const VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-  //VectorFieldType* curCoords = meta.get_field<VectorFieldType>(
-  //  stk::topology::NODE_RANK, "current_coordinates");
+  VectorFieldType* curCoords = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "current_coordinates");
   VectorFieldType* displacement = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
@@ -1375,7 +1387,7 @@ fsiTurbine::mapDisplacements(double time)
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
 
   modelCoords->sync_to_host();
-  //curCoords->sync_to_host();
+  curCoords->sync_to_host();
   displacement->sync_to_host();
   meshVelocity->sync_to_host();
   dispMap_->sync_to_host();
@@ -1420,7 +1432,7 @@ fsiTurbine::mapDisplacements(double time)
       auto dispVec = aero::compute_translational_displacements(
         deflection, refPos, nodePosition);
       vector_to_field(dispVec, *displacement, node);
-      //vector_to_field(dispVec + nodePosition, *curCoords, node);
+      vector_to_field(dispVec + nodePosition, *curCoords, node);
     }
   }
 
@@ -1475,8 +1487,9 @@ fsiTurbine::mapDisplacements(double time)
           spanLocI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
 
         double deflectionRamp =
-          temporalDeflectionRamp *
-          fsi::linear_ramp_span(spanLocation, defParams.spanRampDistance_);
+          temporalDeflectionRamp * fsi::linear_ramp_span(
+                                     spanLocation, defParams.spanRampDistance_,
+                                     defParams.enableSpanRamping_);
 
         // things for theta mapping
         const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
@@ -1485,7 +1498,7 @@ fsiTurbine::mapDisplacements(double time)
 
         deflectionRamp *= fsi::linear_ramp_theta(
           hubPos, rootPos.position_, nodePosition, defParams.thetaRampSpan_,
-          defParams.zeroRampLocTheta_);
+          defParams.zeroRampLocTheta_, defParams.enableThetaRamping_);
 
         *stk::mesh::field_data(*deflectionRamp_, node) = deflectionRamp;
 
@@ -1497,7 +1510,7 @@ fsiTurbine::mapDisplacements(double time)
         auto ramp_disp = aero::compute_translational_displacements(
           interpDisp, refPos, nodePosition, hubBasedDef, deflectionRamp);
         vector_to_field(ramp_disp, *displacement, node);
-        //vector_to_field(ramp_disp + nodePosition, *curCoords, node);
+        vector_to_field(ramp_disp + nodePosition, *curCoords, node);
 
         auto bldStartVel = aero::SixDOF(&(brFSIdata_.bld_vel[iN]));
         auto bldEndVel = aero::SixDOF(&(brFSIdata_.bld_vel[iNp1]));
@@ -1531,7 +1544,7 @@ fsiTurbine::mapDisplacements(double time)
       auto dispVec = aero::compute_translational_displacements(
         hubDeflection, hubPos, nodePosition);
       vector_to_field(dispVec, *displacement, node);
-      //vector_to_field(dispVec + nodePosition, *curCoords, node);
+      vector_to_field(dispVec + nodePosition, *curCoords, node);
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
@@ -1556,7 +1569,7 @@ fsiTurbine::mapDisplacements(double time)
       auto dispVec = aero::compute_translational_displacements(
         deflection, refPos, nodePosition);
       vector_to_field(dispVec, *displacement, node);
-      //vector_to_field(dispVec + nodePosition, *curCoords, node);
+      vector_to_field(dispVec + nodePosition, *curCoords, node);
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
@@ -1566,14 +1579,14 @@ fsiTurbine::mapDisplacements(double time)
       mVel = aero::compute_mesh_velocity(vel, deflection, refPos, nodePosition);
     }
   }
-  //curCoords->modify_on_host();
+  curCoords->modify_on_host();
   displacement->modify_on_host();
   meshVelocity->modify_on_host();
   deflectionRamp_->modify_on_host();
   // ideally these should occur on device so lets copy them there for now
   // mesh motion computes these on device so we can remove some unnecessary
   // syncs
-  //curCoords->sync_to_device();
+  curCoords->sync_to_device();
   displacement->sync_to_device();
   meshVelocity->sync_to_device();
 }
