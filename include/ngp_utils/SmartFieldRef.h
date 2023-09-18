@@ -14,193 +14,307 @@
 #include <stk_mesh/base/NgpField.hpp>
 
 namespace tags {
-//clang-format off
-struct READ
-{
-};
-struct WRITE
-{
-};
-struct READ_WRITE
-{
-};
+// clang-format off
 
-struct HOST
-{
-};
-struct DEVICE
-{
-};
-//clang-format on
+//ACCESS TYPES
+struct READ{};
+struct WRITE{};
+struct READ_WRITE{};
+
+// MEMSPACE
+struct HOST{};
+struct DEVICE{};
+struct LEGACY{};
+
+// clang-format on
 } // namespace tags
 
 namespace sierra::nalu {
 
 using namespace tags;
 
-template <typename MEMSPACE, typename ACCESS, typename T>
+template <typename FieldType, typename MEMSPACE, typename ACCESS, typename Enable = void>
 class SmartFieldRef
-{
-};
+{};
 
-template <typename ACCESS, typename T>
-class SmartFieldRef<DEVICE, ACCESS, T>
+template <typename FieldType, typename ACCESS>
+class SmartFieldRef<FieldType, LEGACY ,ACCESS,typename std::enable_if_t<std::is_base_of<stk::mesh::FieldBase, FieldType>::value>>
 {
 public:
-  SmartFieldRef(stk::mesh::NgpField<T>& ngpField) : fieldRef_(ngpField) {}
+  using T = typename FieldType::value_type;
+
+  SmartFieldRef(FieldType& fieldRef) : fieldRef_(fieldRef) {}
+  SmartFieldRef(const SmartFieldRef& src)
+    : fieldRef_(src.fieldRef_)
+  {
+    if (is_read_){
+      fieldRef_.sync_to_host();
+    }
+    else{
+      fieldRef_.clear_sync_state();
+    }
+  }
+  // --- Default Accessors
+  template <typename A = ACCESS>
+  typename std::enable_if_t<!std::is_same<A, READ>::value, T>&
+  get(const stk::mesh::Entity& entity) const
+  {
+    return *stk::mesh::field_data(fieldRef_, entity);
+  }
+
+  template <typename A = ACCESS>
+  typename std::enable_if_t<!std::is_same<A, READ>::value, T>&
+  operator()(const stk::mesh::Entity& entity) const
+  {
+    return *stk::mesh::field_data(fieldRef_, entity);
+  }
+
+  // --- Const Accessors
+  template <typename A = ACCESS>
+  const typename std::enable_if_t<std::is_same<A, READ>::value, T>&
+  get(const stk::mesh::Entity& entity) const
+  {
+    return *stk::mesh::field_data(fieldRef_, entity);
+  }
+
+  template <typename A = ACCESS>
+  const typename std::enable_if_t<std::is_same<A, READ>::value, T>&
+  operator()(const stk::mesh::Entity& entity) const
+  {
+    return *stk::mesh::field_data(fieldRef_, entity);
+  }
+
+
+  ~SmartFieldRef()
+  {
+    if (is_write_) {
+      fieldRef_.modify_on_host();
+    }
+  }
+private:
+  static constexpr bool is_read_
+  {
+     std::is_same<ACCESS, READ>::value ||
+           std::is_same<ACCESS, READ_WRITE>::value
+  };
+
+  static constexpr bool is_write_
+  {
+     std::is_same<ACCESS, WRITE>::value ||
+           std::is_same<ACCESS, READ_WRITE>::value
+  };
+
+  FieldType& fieldRef_;
+};
+
+template <typename FieldType, typename MEMSPACE, typename ACCESS>
+class SmartFieldRef<FieldType, MEMSPACE,ACCESS,typename std::enable_if_t<std::is_base_of<stk::mesh::NgpFieldBase, FieldType>::value>>
+{
+public:
+  using T = typename FieldType::value_type;
+
+  SmartFieldRef(FieldType fieldRef) : fieldRef_(fieldRef) {}
 
   SmartFieldRef(const SmartFieldRef& src)
     : fieldRef_(src.fieldRef_), is_copy_constructed_(true)
   {
-    if (is_read())
-      fieldRef_.sync_to_device();
-    else
+    if (is_read_){
+      if(is_device_space){
+        fieldRef_.sync_to_device();
+      }
+      else{
+        fieldRef_.sync_to_host();
+      }
+    }
+    else{
       fieldRef_.clear_sync_state();
-  }
-
-  // device implementations should only ever execute inside a
-  // kokkos::paralle_for and hence be captured by a lambda. Therefore we only
-  // ever need to sync copies that will have been snatched up through lambda
-  // capture.
-  ~SmartFieldRef()
-  {
-    if (is_copy_constructed_ && is_write()) {
-      fieldRef_.modify_on_device();
     }
   }
 
-  KOKKOS_INLINE_FUNCTION
-  unsigned get_ordinal() const { return fieldRef_.get_ordinal(); }
+  ~SmartFieldRef()
+  {
+    if (is_write_) {
+      if(is_copy_constructed_){
+        // device implementations should only ever execute inside a
+        // kokkos::paralle_for and hence be captured by a lambda. Therefore we only
+        // ever need to sync copies that will have been snatched up through lambda
+        // capture.
+        fieldRef_.modify_on_device();
+      }
+      else{
+        // try not requiring copy mechanism for host
+        fieldRef_.modify_on_host();
+      }
+    }
+  }
 
-  // TODO make it so these accessors are read only for read type i.e. const
-  // correct and give clear compile or runtime error for programming mistakes
-  KOKKOS_INLINE_FUNCTION
-  T& get(stk::mesh::FastMeshIndex& index, int component) const
+  //************************************************************
+  // Host functions (Remove KOKKOS_FUNCTION decorators)
+  //************************************************************
+  template<typename M=MEMSPACE>
+  std::enable_if_t<std::is_same<M, HOST>::value, unsigned>
+  get_ordinal() const { return fieldRef_.get_ordinal(); }
+
+  // --- Default Accessors
+  template<typename A=ACCESS, typename M=MEMSPACE>
+  std::enable_if_t<std::is_same<M, HOST>::value && !std::is_same<A,READ>::value, T>&
+  get(stk::mesh::FastMeshIndex& index, int component) const
   {
     return fieldRef_.get(index, component);
   }
 
-  template <typename MeshIndex>
-  KOKKOS_INLINE_FUNCTION T& get(MeshIndex index, int component) const
+  template<typename MeshIndex, typename A=ACCESS, typename M=MEMSPACE>
+  std::enable_if_t<std::is_same<M, HOST>::value && !std::is_same<A,READ>::value, T>&
+  get(MeshIndex index, int component) const
   {
     return fieldRef_.get(index, component);
   }
 
-  KOKKOS_INLINE_FUNCTION
-  T& operator()(const stk::mesh::FastMeshIndex& index, int component) const
+  template<typename A=ACCESS, typename M=MEMSPACE>
+  std::enable_if_t<std::is_same<M, HOST>::value && !std::is_same<A,READ>::value, T>&
+  operator()(const stk::mesh::FastMeshIndex& index, int component) const
   {
     return fieldRef_.get(index, component);
   }
 
-  template <typename MeshIndex>
-  KOKKOS_INLINE_FUNCTION T&
+  template<typename MeshIndex, typename A=ACCESS, typename M=MEMSPACE>
+  std::enable_if_t<std::is_same<M, HOST>::value && !std::is_same<A,READ>::value, T>&
+  operator()(const MeshIndex index, int component) const
+  {
+    return fieldRef_.operator()(index, component);
+  }
+
+  // --- Const Accessors
+  template<typename A=ACCESS, typename M=MEMSPACE>
+  const std::enable_if_t<std::is_same<M, HOST>::value && std::is_same<A,READ>::value, T>&
+  get(stk::mesh::FastMeshIndex& index, int component) const
+  {
+    return fieldRef_.get(index, component);
+  }
+
+  template<typename MeshIndex, typename A=ACCESS, typename M=MEMSPACE>
+  const std::enable_if_t<std::is_same<M, HOST>::value && std::is_same<A,READ>::value, T>&
+  get(MeshIndex index, int component) const
+  {
+    return fieldRef_.get(index, component);
+  }
+
+  template<typename A=ACCESS, typename M=MEMSPACE>
+  const std::enable_if_t<std::is_same<M, HOST>::value && std::is_same<A,READ>::value, T>&
+  operator()(const stk::mesh::FastMeshIndex& index, int component) const
+  {
+    return fieldRef_.get(index, component);
+  }
+
+  template<typename MeshIndex, typename A=ACCESS, typename M=MEMSPACE>
+  const std::enable_if_t<std::is_same<M, HOST>::value && std::is_same<A,READ>::value, T>&
+  operator()(const MeshIndex index, int component) const
+  {
+    return fieldRef_.operator()(index, component);
+  }
+  //************************************************************
+  // Device functions
+  //************************************************************
+  KOKKOS_FUNCTION
+  template<typename M=MEMSPACE>
+  std::enable_if_t<std::is_same<M, DEVICE>::value, unsigned>
+  get_ordinal() const { return fieldRef_.get_ordinal(); }
+
+  // --- Default Accessors
+  KOKKOS_FUNCTION
+  template<typename A=ACCESS, typename M=MEMSPACE>
+  std::enable_if_t<std::is_same<M, DEVICE>::value && !std::is_same<A,READ>::value, T>&
+  get(stk::mesh::FastMeshIndex& index, int component) const
+  {
+    return fieldRef_.get(index, component);
+  }
+
+  KOKKOS_FUNCTION
+  template<typename MeshIndex, typename A=ACCESS, typename M=MEMSPACE>
+  std::enable_if_t<std::is_same<M, DEVICE>::value && !std::is_same<A,READ>::value, T>&
+  get(MeshIndex index, int component) const
+  {
+    return fieldRef_.get(index, component);
+  }
+
+  KOKKOS_FUNCTION
+  template<typename A=ACCESS, typename M=MEMSPACE>
+  std::enable_if_t<std::is_same<M, DEVICE>::value && !std::is_same<A,READ>::value, T>&
+  operator()(const stk::mesh::FastMeshIndex& index, int component) const
+  {
+    return fieldRef_.get(index, component);
+  }
+
+  KOKKOS_FUNCTION
+  template<typename MeshIndex, typename A=ACCESS, typename M=MEMSPACE>
+  std::enable_if_t<std::is_same<M, DEVICE>::value && !std::is_same<A,READ>::value, T>&
+  operator()(const MeshIndex index, int component) const
+  {
+    return fieldRef_.operator()(index, component);
+  }
+
+  // --- Const Accessors
+  KOKKOS_FUNCTION
+  template<typename A=ACCESS, typename M=MEMSPACE>
+  const std::enable_if_t<std::is_same<M, DEVICE>::value && std::is_same<A,READ>::value, T>&
+  get(stk::mesh::FastMeshIndex& index, int component) const
+  {
+    return fieldRef_.get(index, component);
+  }
+
+  KOKKOS_FUNCTION
+  template<typename MeshIndex, typename A=ACCESS, typename M=MEMSPACE>
+  const std::enable_if_t<std::is_same<M, DEVICE>::value && std::is_same<A,READ>::value, T>&
+  get(MeshIndex index, int component) const
+  {
+    return fieldRef_.get(index, component);
+  }
+
+  KOKKOS_FUNCTION
+  template<typename A=ACCESS, typename M=MEMSPACE>
+  const std::enable_if_t<std::is_same<M, DEVICE>::value && std::is_same<A,READ>::value, T>&
+  operator()(const stk::mesh::FastMeshIndex& index, int component) const
+  {
+    return fieldRef_.get(index, component);
+  }
+
+  KOKKOS_FUNCTION
+  template<typename MeshIndex, typename A=ACCESS, typename M=MEMSPACE>
+  const std::enable_if_t<std::is_same<M, DEVICE>::value && std::is_same<A,READ>::value, T>&
   operator()(const MeshIndex index, int component) const
   {
     return fieldRef_.operator()(index, component);
   }
 
 private:
-  bool is_read()
+  static constexpr bool is_device_space
   {
-    return std::is_same<ACCESS, READ>::value ||
-           std::is_same<ACCESS, READ_WRITE>::value;
-  }
+     std::is_same<MEMSPACE, DEVICE>::value
+  };
 
-  bool is_write()
+  static constexpr bool is_read_
   {
-    return std::is_same<ACCESS, WRITE>::value ||
-           std::is_same<ACCESS, READ_WRITE>::value;
-  }
+     std::is_same<ACCESS, READ>::value ||
+           std::is_same<ACCESS, READ_WRITE>::value
+  };
 
-  stk::mesh::NgpField<T>& fieldRef_;
-  const bool is_copy_constructed_{false};
-};
-
-// HOST specialization using legacy bucket loops
-// TODO would we ever/can we use stk::mesh::HostField's inside a device enabled
-// build?
-// If so I think we should change this to LEGACY instead of HOST
-template <typename ACCESS, typename T>
-class SmartFieldRef<HOST, ACCESS, T>
-{
-public:
-  SmartFieldRef(stk::mesh::Field<T>& field) : fieldRef_(field)
+  static constexpr bool is_write_
   {
-    if (is_read())
-      fieldRef_.sync_to_host();
-    else
-      fieldRef_.clear_sync_state();
-  }
+     std::is_same<ACCESS, WRITE>::value ||
+           std::is_same<ACCESS, READ_WRITE>::value
+  };
 
-  SmartFieldRef(const SmartFieldRef& src)
-    : fieldRef_(src.fieldRef_), is_copy_constructed_(true)
-  {
-    if (is_read())
-      fieldRef_.sync_to_host();
-    else
-      fieldRef_.clear_sync_state();
-  }
-
-  // try removing the copy constructor requirement for host fields
-  ~SmartFieldRef()
-  {
-    if (is_write()) {
-      fieldRef_.modify_on_host();
-    }
-  }
-
-  template <typename A = ACCESS>
-  const typename std::enable_if_t<std::is_same<A, READ>::value, T>&
-  get(const stk::mesh::Entity& entity) const
-  {
-    return *stk::mesh::field_data(fieldRef_, entity);
-  }
-
-  template <typename A = ACCESS>
-  const typename std::enable_if_t<std::is_same<A, READ>::value, T>&
-  operator()(const stk::mesh::Entity& entity) const
-  {
-    return *stk::mesh::field_data(fieldRef_, entity);
-  }
-
-  template <typename A = ACCESS>
-  typename std::enable_if_t<!std::is_same<A, READ>::value, T>&
-  get(const stk::mesh::Entity& entity) const
-  {
-    return *stk::mesh::field_data(fieldRef_, entity);
-  }
-
-  template <typename A = ACCESS>
-  typename std::enable_if_t<!std::is_same<A, READ>::value, T>&
-  operator()(const stk::mesh::Entity& entity) const
-  {
-    return *stk::mesh::field_data(fieldRef_, entity);
-  }
-
-private:
-  bool is_read()
-  {
-    return std::is_same<ACCESS, READ>::value ||
-           std::is_same<ACCESS, READ_WRITE>::value;
-  }
-
-  bool is_write()
-  {
-    return std::is_same<ACCESS, WRITE>::value ||
-           std::is_same<ACCESS, READ_WRITE>::value;
-  }
-
-  stk::mesh::Field<T>& fieldRef_;
+  FieldType fieldRef_;
   const bool is_copy_constructed_{false};
 };
 
 template <typename MEMSPACE, typename ACCESS = READ_WRITE>
 struct MakeFieldRef
 {
-  template <typename T>
-  SmartFieldRef<MEMSPACE, ACCESS, typename T::value_type> operator()(T& field)
+  template <typename FieldType>
+  SmartFieldRef<FieldType, MEMSPACE, ACCESS> operator()(FieldType& field)
   {
-    return SmartFieldRef<MEMSPACE, ACCESS, typename T::value_type>(field);
+    return SmartFieldRef<FieldType, MEMSPACE, ACCESS>(field);
   }
 };
 

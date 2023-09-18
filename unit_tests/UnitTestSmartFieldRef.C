@@ -73,7 +73,6 @@ TEST_F(TestSmartFieldRef, device_read_write_mod_sync_with_lambda)
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
-  // TODO can we get rid of the double template param some how?
   auto sPtr = MakeFieldRef<DEVICE, READ_WRITE>()(*ngpField_);
   lambda_ordinal(sPtr);
 
@@ -131,7 +130,7 @@ TEST_F(TestSmartFieldRef, update_field_on_device_check_on_host)
     int counter = 0;
     auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
     auto fieldRef =
-      sierra::nalu::MakeFieldRef<tags::HOST, tags::READ>()(*field);
+      sierra::nalu::MakeFieldRef<tags::LEGACY, tags::READ>()(*field);
     stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);
     const auto& buckets = bulk->get_buckets(stk::topology::NODE_RANK, sel);
     for (auto b : buckets) {
