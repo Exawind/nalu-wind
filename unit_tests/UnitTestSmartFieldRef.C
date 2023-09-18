@@ -15,6 +15,7 @@
 
 class TestSmartFieldRef : public Hex8Mesh
 {
+public:
 protected:
   void SetUp()
   {
@@ -32,16 +33,39 @@ protected:
   int initSyncsHost_{0};
   int initSyncsDevice_{0};
 };
-
+//*****************************************************************************
+// Free functions for execution on device
+//*****************************************************************************
 template <typename T>
 void
-lambda_impl(T& ptr)
+lambda_ordinal(T& ptr)
 {
   Kokkos::parallel_for(
     1, KOKKOS_LAMBDA(int) { ptr.get_ordinal(); });
 }
 
+template <typename T>
+void lambda_loop_assign(stk::mesh::BulkData& bulk, stk::mesh::PartVector partVec, T& ptr, double val = 300.0)
+{
+  stk::mesh::NgpMesh& ngpMesh = stk::mesh::get_updated_ngp_mesh(bulk);
+  stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);
+  stk::mesh::for_each_entity_run(
+    ngpMesh,
+    stk::topology::NODE_RANK,
+    sel,
+    KOKKOS_LAMBDA(const stk::mesh::FastMeshIndex& entity){
+      ptr(entity, 0) = val;
+    }
+  );
+
+}
+
+//*****************************************************************************
+// Tests
+//*****************************************************************************
 namespace sierra::nalu {
+using namespace tags;
+
 TEST_F(TestSmartFieldRef, device_read_write_mod_sync_with_lambda)
 {
   ngpField_->modify_on_host();
@@ -50,7 +74,7 @@ TEST_F(TestSmartFieldRef, device_read_write_mod_sync_with_lambda)
 
   // TODO can we get rid of the double template param some how?
   auto sPtr = MakeFieldRef<DEVICE, READ_WRITE>()(*ngpField_);
-  lambda_impl(sPtr);
+  lambda_ordinal(sPtr);
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
   EXPECT_TRUE(ngpField_->need_sync_to_host());
@@ -65,7 +89,7 @@ TEST_F(TestSmartFieldRef, device_write_clear_mod_with_lambda)
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
   auto sPtr = MakeFieldRef<DEVICE, WRITE>()(*ngpField_);
-  lambda_impl(sPtr);
+  lambda_ordinal(sPtr);
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
   EXPECT_TRUE(ngpField_->need_sync_to_host());
@@ -80,12 +104,48 @@ TEST_F(TestSmartFieldRef, device_read_mod_no_sync_with_lambda)
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
   auto sPtr = MakeFieldRef<DEVICE, READ>()(*ngpField_);
-  lambda_impl(sPtr);
+  lambda_ordinal(sPtr);
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
   EXPECT_FALSE(ngpField_->need_sync_to_host());
   EXPECT_EQ(initSyncsDevice_ + 1, ngpField_->num_syncs_to_device());
   EXPECT_EQ(initSyncsHost_ + 0, ngpField_->num_syncs_to_host());
+}
+
+TEST_F(TestSmartFieldRef, update_field_on_device_check_on_host)
+{
+  ngpField_->modify_on_host();
+
+  ASSERT_TRUE(ngpField_->need_sync_to_device());
+
+  auto sPtr = MakeFieldRef<DEVICE, READ_WRITE>()(*ngpField_);
+
+  double assignmentValue = 300.0;
+  lambda_loop_assign(*bulk, partVec, sPtr, assignmentValue);
+
+  // Check field values on host using standard bucket loop
+  // Do it inside brackets so fieldRef will destruct
+  {
+    double sum = 0.0;
+    int counter = 0;
+    auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
+    auto fieldRef = sierra::nalu::MakeFieldRef<tags::HOST, tags::READ>()(*field);
+    stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);
+    const auto& buckets = bulk->get_buckets(stk::topology::NODE_RANK, sel);
+    for (auto b : buckets){
+        for( size_t in = 0; in< b->size(); in++){
+          auto node = (*b)[in];
+          sum += fieldRef(node);
+          counter++;
+        }
+    }
+    EXPECT_NEAR(assignmentValue*counter, sum, 1e-12);
+  }
+
+  EXPECT_FALSE(ngpField_->need_sync_to_device());
+  EXPECT_FALSE(ngpField_->need_sync_to_host());
+  EXPECT_EQ(initSyncsDevice_ + 1, ngpField_->num_syncs_to_device());
+  EXPECT_EQ(initSyncsHost_ + 1, ngpField_->num_syncs_to_host());
 }
 
 } // namespace sierra::nalu

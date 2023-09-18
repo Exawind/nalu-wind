@@ -13,7 +13,7 @@
 #include <stk_mesh/base/Ngp.hpp>
 #include <stk_mesh/base/NgpField.hpp>
 
-namespace sierra::nalu {
+namespace tags{
 //clang-format off
 struct READ{};
 struct WRITE{};
@@ -22,6 +22,11 @@ struct READ_WRITE{};
 struct HOST{};
 struct DEVICE{};
 //clang-format on
+}
+
+namespace sierra::nalu {
+
+using namespace tags;
 
 template <typename MEMSPACE, typename ACCESS, typename T>
 class SmartFieldRef
@@ -60,25 +65,25 @@ public:
   // TODO make it so these accessors are read only for read type i.e. const
   // correct and give clear compile or runtime error for programming mistakes
   KOKKOS_INLINE_FUNCTION
-  T& get(stk::mesh::FastMeshIndex index, int component)
+  T& get(stk::mesh::FastMeshIndex& index, int component) const
   {
     return fieldRef_.get(index, component);
   }
 
   template <typename MeshIndex>
-  KOKKOS_INLINE_FUNCTION T& get(MeshIndex index, int component)
+  KOKKOS_INLINE_FUNCTION T& get(MeshIndex index, int component) const
   {
     return fieldRef_.get(index, component);
   }
 
   KOKKOS_INLINE_FUNCTION
-  T& operator()(stk::mesh::FastMeshIndex index, int component)
+  T& operator()(const stk::mesh::FastMeshIndex& index, int component) const
   {
     return fieldRef_.get(index, component);
   }
 
   template <typename MeshIndex>
-  KOKKOS_INLINE_FUNCTION T& operator()(MeshIndex index, int component)
+  KOKKOS_INLINE_FUNCTION T& operator()(const MeshIndex index, int component) const
   {
     return fieldRef_.operator()(index, component);
   }
@@ -100,9 +105,81 @@ private:
   const bool is_copy_constructed_{false};
 };
 
+// HOST specialization using legacy bucket loops
+// TODO would we ever/can we use stk::mesh::HostField's inside a device enabled
+// build?
+// If so I think we should change this to LEGACY instead of HOST
+template <typename ACCESS, typename T>
+class SmartFieldRef<HOST, ACCESS, T>
+{
+public:
+  SmartFieldRef(stk::mesh::Field<T>& field) : fieldRef_(field)
+  {
+    if (is_read())
+      fieldRef_.sync_to_host();
+    else
+      fieldRef_.clear_sync_state();
+  }
+
+  SmartFieldRef(const SmartFieldRef& src)
+    : fieldRef_(src.fieldRef_), is_copy_constructed_(true)
+  {
+    if (is_read())
+      fieldRef_.sync_to_host();
+    else
+      fieldRef_.clear_sync_state();
+  }
+
+  // try removing the copy constructor requirement for host fields
+  ~SmartFieldRef()
+  {
+    if (is_write()) {
+      fieldRef_.modify_on_host();
+    }
+  }
+
+  // TODO make it so these accessors are read only for read type i.e. const
+  // correct and give clear compile or runtime error for programming mistakes
+  inline
+  T& get(const stk::mesh::Entity& entity) const
+  {
+    return *stk::mesh::field_data(fieldRef_, entity);
+  }
+
+  inline
+  T& operator()(const stk::mesh::Entity& entity) const
+  {
+    return *stk::mesh::field_data(fieldRef_, entity);
+  }
+
+private:
+  bool is_read()
+  {
+    return std::is_same<ACCESS, READ>::value ||
+           std::is_same<ACCESS, READ_WRITE>::value;
+  }
+
+  bool is_write()
+  {
+    return std::is_same<ACCESS, WRITE>::value ||
+           std::is_same<ACCESS, READ_WRITE>::value;
+  }
+
+  stk::mesh::Field<T>& fieldRef_;
+  const bool is_copy_constructed_{false};
+};
 
 template<typename MEMSPACE, typename ACCESS=READ_WRITE>
 struct MakeFieldRef{};
+
+template<typename ACCESS>
+struct MakeFieldRef<HOST, ACCESS>
+{
+  template<typename T>
+  SmartFieldRef<HOST, ACCESS, T>  operator()(stk::mesh::Field<T>& field){
+    return SmartFieldRef<HOST, ACCESS, T>(field);
+  }
+};
 
 template<typename ACCESS>
 struct MakeFieldRef<DEVICE, ACCESS>
