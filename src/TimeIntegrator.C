@@ -302,11 +302,6 @@ TimeIntegrator::pre_realm_advance_stage1(size_t inonlin)
       << " gammas: " << gamma1_ << " " << gamma2_ << " " << gamma3_
       << std::endl;
 
-    // state management
-    for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
-      (*ii)->swap_states();
-      (*ii)->predict_state();
-    }
   }
 
   // read any fields from input file that will serve as external fields
@@ -329,6 +324,12 @@ TimeIntegrator::pre_realm_advance_stage2(size_t inonlin)
 
   if (inonlin < 1) {
     std::vector<Realm*>::iterator ii;
+
+    // state management
+    for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
+      (*ii)->swap_states();
+      (*ii)->predict_state();
+    }
 
     // populate boundary data
     for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
