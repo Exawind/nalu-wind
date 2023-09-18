@@ -88,6 +88,10 @@ public:
   ~SmartFieldRef()
   {
     if (is_write_) {
+      // LEGACY implementation needs to be used in a limited scope.
+      // Redundant usage is fine since sync's and mod's will be no-ops
+      // but long lived cases like alg class members will negate the
+      // purpose of this abstraction
       fieldRef_.modify_on_host();
     }
   }
@@ -135,7 +139,7 @@ public:
   {
     if (is_write_) {
       if(is_copy_constructed_){
-        // device implementations should only ever execute inside a
+        // NgpFieldBase implementations should only ever execute inside a
         // kokkos::paralle_for and hence be captured by a lambda. Therefore we only
         // ever need to sync copies that will have been snatched up through lambda
         // capture.
