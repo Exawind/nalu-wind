@@ -135,7 +135,7 @@ TEST_F(TestSmartFieldRef, update_field_on_device_check_on_host)
     for (auto b : buckets){
         for( size_t in = 0; in< b->size(); in++){
           auto node = (*b)[in];
-          sum += fieldRef(node);
+          sum += fieldRef.get(node);
           counter++;
         }
     }

@@ -138,16 +138,30 @@ public:
     }
   }
 
-  // TODO make it so these accessors are read only for read type i.e. const
-  // correct and give clear compile or runtime error for programming mistakes
-  inline
-  T& get(const stk::mesh::Entity& entity) const
+  template<typename A=ACCESS>
+  const typename std::enable_if_t<std::is_same<A, READ>::value, T>&
+    get(const stk::mesh::Entity& entity) const
   {
     return *stk::mesh::field_data(fieldRef_, entity);
   }
 
-  inline
-  T& operator()(const stk::mesh::Entity& entity) const
+  template<typename A=ACCESS>
+  const typename std::enable_if_t<std::is_same<A, READ>::value, T>&
+    operator()(const stk::mesh::Entity& entity) const
+  {
+    return *stk::mesh::field_data(fieldRef_, entity);
+  }
+
+  template<typename A=ACCESS>
+  typename std::enable_if_t<!std::is_same<A, READ>::value, T>&
+    get(const stk::mesh::Entity& entity) const
+  {
+    return *stk::mesh::field_data(fieldRef_, entity);
+  }
+
+  template<typename A=ACCESS>
+  typename std::enable_if_t<!std::is_same<A, READ>::value, T>&
+    operator()(const stk::mesh::Entity& entity) const
   {
     return *stk::mesh::field_data(fieldRef_, entity);
   }
@@ -170,25 +184,13 @@ private:
 };
 
 template<typename MEMSPACE, typename ACCESS=READ_WRITE>
-struct MakeFieldRef{};
-
-template<typename ACCESS>
-struct MakeFieldRef<HOST, ACCESS>
-{
+struct MakeFieldRef{
   template<typename T>
-  SmartFieldRef<HOST, ACCESS, T>  operator()(stk::mesh::Field<T>& field){
-    return SmartFieldRef<HOST, ACCESS, T>(field);
+  SmartFieldRef<MEMSPACE, ACCESS, typename T::value_type>  operator()(T& field){
+    return SmartFieldRef<MEMSPACE, ACCESS, typename T::value_type>(field);
   }
 };
 
-template<typename ACCESS>
-struct MakeFieldRef<DEVICE, ACCESS>
-{
-  template<typename T>
-  SmartFieldRef<DEVICE, ACCESS, T>  operator()(stk::mesh::NgpField<T>& field){
-    return SmartFieldRef<DEVICE, ACCESS, T>(field);
-  }
-};
 } // namespace sierra::nalu
 
 #endif
