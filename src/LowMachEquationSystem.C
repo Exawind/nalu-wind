@@ -165,6 +165,9 @@
 #include <user_functions/KovasznayVelocityAuxFunction.h>
 #include <user_functions/KovasznayPressureAuxFunction.h>
 
+#include <user_functions/DropletVelocityAuxFunction.h>
+#include <user_functions/FlatDensityAuxFunction.h>
+
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
 #include <overset/AssembleOversetPressureAlgorithm.h>
 
@@ -172,6 +175,11 @@
 
 #include <user_functions/PerturbedShearLayerAuxFunctions.h>
 #include <user_functions/GaussJetVelocityAuxFunction.h>
+
+#include <user_functions/DropletVelocityAuxFunction.h>
+
+#include <user_functions/SloshingTankPressureAuxFunction.h>
+#include <user_functions/WaterLevelDensityAuxFunction.h>
 
 // deprecated
 
@@ -304,6 +312,12 @@ LowMachEquationSystem::register_nodal_fields(
   const int numStates = realm_.number_of_states();
   density_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density", numStates));
+  initial_density_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "initial_density"));
+
+  stk::mesh::put_field_on_mesh(*initial_density_, selector, nullptr);
+  realm_.augment_restart_variable_list("initial_density");
+
   stk::mesh::put_field_on_mesh(*density_, selector, nullptr);
   realm_.augment_restart_variable_list("density");
 
@@ -324,7 +338,19 @@ LowMachEquationSystem::register_nodal_fields(
   if (numVolStates > 1)
     realm_.augment_restart_variable_list("dual_nodal_volume");
 
-  // make sure all states are properly populated (restart can handle this)
+ /*if (
+    numStates > 2 &&
+    (!realm_.restarted_simulation() || realm_.support_inconsistent_restart())) {
+    ScalarFieldType& densityN = initial_density_->field_of_state(stk::mesh::StateN);
+    ScalarFieldType& densityNp1 = initial_density_->field_of_state(stk::mesh::StateNP1);
+
+    CopyFieldAlgorithm* theCopyAlgDens = new CopyFieldAlgorithm(
+      realm_, part_vec, &densityNp1, &densityN, 0, 1, stk::topology::NODE_RANK);
+    copyStateAlg_.push_back(theCopyAlgDens);
+
+
+  }*/
+
   if (
     numStates > 2 &&
     (!realm_.restarted_simulation() || realm_.support_inconsistent_restart())) {
@@ -654,6 +680,8 @@ LowMachEquationSystem::register_initial_condition_fcn(
       theAuxFunc = new SinProfileChannelFlowVelocityAuxFunction(0, nDim);
     } else if (fcnName == "PerturbedShearLayer") {
       theAuxFunc = new PerturbedShearLayerVelocityAuxFunction(0, nDim);
+    } else if (fcnName == "droplet") {
+      theAuxFunc = new DropletVelocityAuxFunction(0, nDim);
     } else {
       throw std::runtime_error(
         "InitialCondFunction::non-supported velocity IC");
@@ -666,6 +694,42 @@ LowMachEquationSystem::register_initial_condition_fcn(
     // push to ic
     realm_.initCondAlg_.push_back(auxAlg);
   }
+
+  // iterate map and check for name
+  const std::string dofName_init_dens = "initial_density";
+  std::map<std::string, std::string>::const_iterator iterName_init_dens =
+    theNames.find(dofName_init_dens);
+  if (iterName_init_dens != theNames.end()) {
+    std::string fcnName = (*iterName_init_dens).second;
+    // save off the field (np1 state)
+    ScalarFieldType* initDensNp1 = meta_data.get_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "initial_density");
+
+
+    // create a few Aux things
+    AuxFunction* theAuxFunc = NULL;
+    AuxFunctionAlgorithm* auxAlg = NULL;
+    if (fcnName == "flat_interface") {
+      theAuxFunc = new FlatDensityAuxFunction();
+    } else if (fcnName == "water_level") {
+      std::map<std::string, std::vector<double>>::const_iterator iterParams =
+        theParams.find(dofName_init_dens);
+      std::vector<double> fcnParams = (iterParams != theParams.end())
+                                        ? (*iterParams).second
+                                        : std::vector<double>();
+      theAuxFunc = new WaterLevelDensityAuxFunction(fcnParams);
+    } else {
+      throw std::runtime_error(
+        "InitialCondFunction::non-supported initial_density IC");
+    }
+    // create the algorithm
+    auxAlg = new AuxFunctionAlgorithm(
+      realm_, part, initDensNp1, theAuxFunc, stk::topology::NODE_RANK);
+
+    // push to ic
+    realm_.initCondAlg_.push_back(auxAlg);
+  }
+
 }
 
 void
@@ -2880,6 +2944,9 @@ ContinuityEquationSystem::register_edge_fields(
   massFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::EDGE_RANK, "mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*massFlowRate_, selector, nullptr);
+  auto massForcedFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::EDGE_RANK, "mass_forced_flow_rate"));
+  stk::mesh::put_field_on_mesh(*massForcedFlowRate_, selector, nullptr);
 }
 
 //--------------------------------------------------------------------------
@@ -3490,6 +3557,13 @@ ContinuityEquationSystem::register_initial_condition_fcn(
       theAuxFunc = new TaylorGreenPressureAuxFunction();
     } else if (fcnName == "kovasznay") {
       theAuxFunc = new KovasznayPressureAuxFunction();
+    } else if (fcnName == "sloshing_tank") {
+      std::map<std::string, std::vector<double>>::const_iterator iterParams =
+        theParams.find(dofName);
+      std::vector<double> fcnParams = (iterParams != theParams.end())
+                                        ? (*iterParams).second
+                                        : std::vector<double>();
+      theAuxFunc = new SloshingTankPressureAuxFunction(fcnParams);
     } else {
       throw std::runtime_error("ContinuityEquationSystem::register_initial_"
                                "condition_fcn: limited functions supported");

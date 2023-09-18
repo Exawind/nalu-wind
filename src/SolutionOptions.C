@@ -132,6 +132,12 @@ SolutionOptions::load(const YAML::Node& y_node)
       y_solution_options, "interp_rhou_together_for_mdot",
       mdotInterpRhoUTogether_, mdotInterpRhoUTogether_);
 
+    // use initial density for rho_ref in buoyancy term
+    get_if_present(
+      y_solution_options, "set_rho_ref_to_init_density",
+      rho_ref_to_initial_rho_, rho_ref_to_initial_rho_);
+      
+
     // Solve for incompressible continuity
     get_if_present(
       y_solution_options, "solve_incompressible_continuity",

@@ -97,12 +97,11 @@ MdotEdgeAlg::execute()
 
       const DblType densityL = density.get(nodeL, 0);
       const DblType densityR = density.get(nodeR, 0);
-
       const DblType udiagL = udiag.get(nodeL, 0);
       const DblType udiagR = udiag.get(nodeR, 0);
 
       const DblType projTimeScale = 0.5 * (1.0 / udiagL + 1.0 / udiagR);
-      const DblType rhoIp = 0.5 * (densityL + densityR);
+      const DblType rhoIp = 2.0 / ( 1.0 / densityL + 1.0 / densityR );
 
       DblType axdx = 0.0;
       DblType asq = 0.0;

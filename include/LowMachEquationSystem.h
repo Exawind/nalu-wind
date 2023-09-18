@@ -99,6 +99,7 @@ public:
   ContinuityEquationSystem* continuityEqSys_;
 
   ScalarFieldType* density_;
+  ScalarFieldType* initial_density_;
   ScalarFieldType* viscosity_;
   ScalarFieldType* dualNodalVolume_;
   VectorFieldType* edgeAreaVec_;
@@ -297,6 +298,7 @@ public:
   ScalarFieldType* pressure_;
   VectorFieldType* dpdx_;
   ScalarFieldType* massFlowRate_;
+  ScalarFieldType* massForcedFlowRate_;
   VectorFieldType* coordinates_;
 
   ScalarFieldType* pTmp_;
