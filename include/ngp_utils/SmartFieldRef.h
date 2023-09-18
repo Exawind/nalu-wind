@@ -65,7 +65,8 @@ private:
 public:
   using T = typename FieldType::value_type;
 
-  SmartFieldRef(FieldType& fieldRef) : fieldRef_(fieldRef) {
+  SmartFieldRef(FieldType& fieldRef) : fieldRef_(fieldRef)
+  {
     if (is_read_)
       fieldRef_.sync_to_host();
     else
@@ -79,6 +80,7 @@ public:
     else
       fieldRef_.clear_sync_state();
   }
+
   // --- Default Accessors
   template <typename A = ACCESS>
   typename std::enable_if_t<!std::is_same<A, READ>::value, T>&
