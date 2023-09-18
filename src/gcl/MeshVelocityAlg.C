@@ -75,7 +75,9 @@ MeshVelocityAlg<AlgTraits>::MeshVelocityAlg(Realm& realm, stk::mesh::Part* part)
   elemData_.add_gathered_nodal_field(meshDispN_, AlgTraits::nDim_);
 
   elemData_.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
-  meSCS_->general_shape_fcn(
+  auto* hostMeSCS =
+    MasterElementRepo::get_surface_master_element_on_host(AlgTraits::topo_);
+  hostMeSCS->general_shape_fcn(
     NUM_IP, isoParCoords_, isoCoordsShapeFcnHostView_.data());
   Kokkos::deep_copy(isoCoordsShapeFcnDeviceView_, isoCoordsShapeFcnHostView_);
 
@@ -126,6 +128,9 @@ MeshVelocityAlg<AlgTraits>::execute()
   const auto nDim = AlgTraits::nDim_;
   constexpr int Hex8numScsIp = AlgTraitsHex8::numScsIp_;
   const int nip = std::min(Hex8numScsIp, AlgTraits::numScsIp_);
+
+  ngpSweptVol.sync_to_device();
+  faceVel.clear_sync_state();
 
   nalu_ngp::run_elem_algorithm(
     algName, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
@@ -179,6 +184,11 @@ MeshVelocityAlg<AlgTraits>::execute()
           (gamma1 * tmp + (gamma1 + gamma2) * sweptVolN(ip)) / dt;
       }
     });
+
+  ngpSweptVol.modify_on_device();
+  faceVel.modify_on_device();
+  ngpSweptVol.sync_to_host();
+  faceVel.sync_to_host();
 }
 
 INSTANTIATE_KERNEL(MeshVelocityAlg)
