@@ -45,19 +45,20 @@ lambda_ordinal(T& ptr)
 }
 
 template <typename T>
-void lambda_loop_assign(stk::mesh::BulkData& bulk, stk::mesh::PartVector partVec, T& ptr, double val = 300.0)
+void
+lambda_loop_assign(
+  stk::mesh::BulkData& bulk,
+  stk::mesh::PartVector partVec,
+  T& ptr,
+  double val = 300.0)
 {
   stk::mesh::NgpMesh& ngpMesh = stk::mesh::get_updated_ngp_mesh(bulk);
   stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);
   stk::mesh::for_each_entity_run(
-    ngpMesh,
-    stk::topology::NODE_RANK,
-    sel,
-    KOKKOS_LAMBDA(const stk::mesh::FastMeshIndex& entity){
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const stk::mesh::FastMeshIndex& entity) {
       ptr(entity, 0) = val;
-    }
-  );
-
+    });
 }
 
 //*****************************************************************************
@@ -129,17 +130,18 @@ TEST_F(TestSmartFieldRef, update_field_on_device_check_on_host)
     double sum = 0.0;
     int counter = 0;
     auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
-    auto fieldRef = sierra::nalu::MakeFieldRef<tags::HOST, tags::READ>()(*field);
+    auto fieldRef =
+      sierra::nalu::MakeFieldRef<tags::HOST, tags::READ>()(*field);
     stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);
     const auto& buckets = bulk->get_buckets(stk::topology::NODE_RANK, sel);
-    for (auto b : buckets){
-        for( size_t in = 0; in< b->size(); in++){
-          auto node = (*b)[in];
-          sum += fieldRef.get(node);
-          counter++;
-        }
+    for (auto b : buckets) {
+      for (size_t in = 0; in < b->size(); in++) {
+        auto node = (*b)[in];
+        sum += fieldRef.get(node);
+        counter++;
+      }
     }
-    EXPECT_NEAR(assignmentValue*counter, sum, 1e-12);
+    EXPECT_NEAR(assignmentValue * counter, sum, 1e-12);
   }
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());

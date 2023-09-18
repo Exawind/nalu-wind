@@ -13,16 +13,26 @@
 #include <stk_mesh/base/Ngp.hpp>
 #include <stk_mesh/base/NgpField.hpp>
 
-namespace tags{
+namespace tags {
 //clang-format off
-struct READ{};
-struct WRITE{};
-struct READ_WRITE{};
+struct READ
+{
+};
+struct WRITE
+{
+};
+struct READ_WRITE
+{
+};
 
-struct HOST{};
-struct DEVICE{};
+struct HOST
+{
+};
+struct DEVICE
+{
+};
 //clang-format on
-}
+} // namespace tags
 
 namespace sierra::nalu {
 
@@ -83,7 +93,8 @@ public:
   }
 
   template <typename MeshIndex>
-  KOKKOS_INLINE_FUNCTION T& operator()(const MeshIndex index, int component) const
+  KOKKOS_INLINE_FUNCTION T&
+  operator()(const MeshIndex index, int component) const
   {
     return fieldRef_.operator()(index, component);
   }
@@ -138,30 +149,30 @@ public:
     }
   }
 
-  template<typename A=ACCESS>
+  template <typename A = ACCESS>
   const typename std::enable_if_t<std::is_same<A, READ>::value, T>&
-    get(const stk::mesh::Entity& entity) const
+  get(const stk::mesh::Entity& entity) const
   {
     return *stk::mesh::field_data(fieldRef_, entity);
   }
 
-  template<typename A=ACCESS>
+  template <typename A = ACCESS>
   const typename std::enable_if_t<std::is_same<A, READ>::value, T>&
-    operator()(const stk::mesh::Entity& entity) const
+  operator()(const stk::mesh::Entity& entity) const
   {
     return *stk::mesh::field_data(fieldRef_, entity);
   }
 
-  template<typename A=ACCESS>
+  template <typename A = ACCESS>
   typename std::enable_if_t<!std::is_same<A, READ>::value, T>&
-    get(const stk::mesh::Entity& entity) const
+  get(const stk::mesh::Entity& entity) const
   {
     return *stk::mesh::field_data(fieldRef_, entity);
   }
 
-  template<typename A=ACCESS>
+  template <typename A = ACCESS>
   typename std::enable_if_t<!std::is_same<A, READ>::value, T>&
-    operator()(const stk::mesh::Entity& entity) const
+  operator()(const stk::mesh::Entity& entity) const
   {
     return *stk::mesh::field_data(fieldRef_, entity);
   }
@@ -183,10 +194,12 @@ private:
   const bool is_copy_constructed_{false};
 };
 
-template<typename MEMSPACE, typename ACCESS=READ_WRITE>
-struct MakeFieldRef{
-  template<typename T>
-  SmartFieldRef<MEMSPACE, ACCESS, typename T::value_type>  operator()(T& field){
+template <typename MEMSPACE, typename ACCESS = READ_WRITE>
+struct MakeFieldRef
+{
+  template <typename T>
+  SmartFieldRef<MEMSPACE, ACCESS, typename T::value_type> operator()(T& field)
+  {
     return SmartFieldRef<MEMSPACE, ACCESS, typename T::value_type>(field);
   }
 };
