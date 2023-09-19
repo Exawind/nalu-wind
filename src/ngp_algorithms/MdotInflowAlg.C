@@ -79,8 +79,6 @@ MdotInflowAlg<BcAlgTraits>::execute()
   const auto useShifted = useShifted_;
   const DoubleType interpTogether = realm_.solutionOptions_->get_mdot_interp();
   const DoubleType om_interpTogether = (1.0 - interpTogether);
-  const DoubleType solveIncompressibleEqn = realm_.get_incompressible_solve();
-  const DoubleType om_solveIncompressibleEqn = 1.0 - solveIncompressibleEqn;
 
   stk::mesh::NgpField<double> edgeFaceVelMag;
 
@@ -118,7 +116,7 @@ MdotInflowAlg<BcAlgTraits>::execute()
 
         for (int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic) {
           const DoubleType r = v_shape_fcn(ip, ic);
-          rhoBip += r * v_rho(ic) * om_solveIncompressibleEqn + solveIncompressibleEqn;
+          rhoBip += r * v_rho(ic);
           for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
             uBip[d] += r * v_vel(ic, d);
             rhoUBip[d] += r * v_rho(ic) * v_vel(ic, d);

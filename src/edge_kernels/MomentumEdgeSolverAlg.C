@@ -48,7 +48,7 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
     get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   massFlowRate_ =
     get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
-  massForcedFlowRate_ = 
+  massForcedFlowRate_ =
     get_field_ordinal(meta, "mass_forced_flow_rate", stk::topology::EDGE_RANK);
   pecletFactor_ =
     get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK);
@@ -84,7 +84,8 @@ MomentumEdgeSolverAlg::execute()
   const auto density = fieldMgr.get_field<double>(density_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
-  const auto massForcedFlowRate = fieldMgr.get_field<double>(massForcedFlowRate_);
+  const auto massForcedFlowRate =
+    fieldMgr.get_field<double>(massForcedFlowRate_);
   const auto pecletFactor = fieldMgr.get_field<double>(pecletFactor_);
   const auto maskNodeField = fieldMgr.get_field<double>(maskNodeField_);
 
@@ -100,8 +101,8 @@ MomentumEdgeSolverAlg::execute()
       for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
 
-
-      const DblType mdot = massFlowRate.get(edge, 0) + massForcedFlowRate.get(edge,0);
+      const DblType mdot =
+        massFlowRate.get(edge, 0) + massForcedFlowRate.get(edge, 0);
 
       const DblType densityL = density.get(nodeL, 0);
       const DblType densityR = density.get(nodeR, 0);
@@ -224,7 +225,6 @@ MomentumEdgeSolverAlg::execute()
         for (int j = 0; j < ndim; ++j) {
           diff_flux += -viscIp * (duidxj[i][j] + duidxj[j][i]) * av[j];
         }
-
 
         const DblType maskNode = stk::math::min(
           maskNodeField.get(nodeL, 0), maskNodeField.get(nodeR, 0));

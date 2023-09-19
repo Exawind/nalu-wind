@@ -134,9 +134,8 @@ SolutionOptions::load(const YAML::Node& y_node)
 
     // use initial density for rho_ref in buoyancy term
     get_if_present(
-      y_solution_options, "set_rho_ref_to_init_density",
-      rho_ref_to_initial_rho_, rho_ref_to_initial_rho_);
-      
+      y_solution_options, "set_rho_ref_to_hydrostatic_density",
+      rho_ref_to_hydrostatic_rho_, rho_ref_to_hydrostatic_rho_);
 
     // Solve for incompressible continuity
     get_if_present(

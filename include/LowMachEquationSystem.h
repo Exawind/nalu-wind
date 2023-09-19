@@ -99,7 +99,7 @@ public:
   ContinuityEquationSystem* continuityEqSys_;
 
   ScalarFieldType* density_;
-  ScalarFieldType* initial_density_;
+  ScalarFieldType* hydrostatic_density_;
   ScalarFieldType* viscosity_;
   ScalarFieldType* dualNodalVolume_;
   VectorFieldType* edgeAreaVec_;

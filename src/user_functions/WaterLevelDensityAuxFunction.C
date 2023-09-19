@@ -58,7 +58,8 @@ WaterLevelDensityAuxFunction::do_evaluate(
 
     const double local_vof =
       -0.5 * (std::erf((z - z0) / interface_thickness_) + 1.0) + 1.0;
-    fieldPtr[0] = liquid_density_ * local_vof + gas_density_ * (1.0 - local_vof);
+    fieldPtr[0] =
+      liquid_density_ * local_vof + gas_density_ * (1.0 - local_vof);
 
     fieldPtr += fieldSize;
     coords += spatialDimension;

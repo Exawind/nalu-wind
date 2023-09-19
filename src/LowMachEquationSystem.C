@@ -312,11 +312,14 @@ LowMachEquationSystem::register_nodal_fields(
   const int numStates = realm_.number_of_states();
   density_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density", numStates));
-  initial_density_ = &(meta_data.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "initial_density"));
 
-  stk::mesh::put_field_on_mesh(*initial_density_, selector, nullptr);
-  realm_.augment_restart_variable_list("initial_density");
+  if (realm_.solutionOptions_->rho_ref_to_hydrostatic_rho_) {
+    hydrostatic_density_ = &(meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "hydrostatic_density"));
+
+    stk::mesh::put_field_on_mesh(*hydrostatic_density_, selector, nullptr);
+    realm_.augment_restart_variable_list("hydrostatic_density");
+  }
 
   stk::mesh::put_field_on_mesh(*density_, selector, nullptr);
   realm_.augment_restart_variable_list("density");
@@ -337,19 +340,6 @@ LowMachEquationSystem::register_nodal_fields(
   stk::mesh::put_field_on_mesh(*dualNodalVolume_, selector, nullptr);
   if (numVolStates > 1)
     realm_.augment_restart_variable_list("dual_nodal_volume");
-
- /*if (
-    numStates > 2 &&
-    (!realm_.restarted_simulation() || realm_.support_inconsistent_restart())) {
-    ScalarFieldType& densityN = initial_density_->field_of_state(stk::mesh::StateN);
-    ScalarFieldType& densityNp1 = initial_density_->field_of_state(stk::mesh::StateNP1);
-
-    CopyFieldAlgorithm* theCopyAlgDens = new CopyFieldAlgorithm(
-      realm_, part_vec, &densityNp1, &densityN, 0, 1, stk::topology::NODE_RANK);
-    copyStateAlg_.push_back(theCopyAlgDens);
-
-
-  }*/
 
   if (
     numStates > 2 &&
@@ -695,41 +685,41 @@ LowMachEquationSystem::register_initial_condition_fcn(
     realm_.initCondAlg_.push_back(auxAlg);
   }
 
-  // iterate map and check for name
-  const std::string dofName_init_dens = "initial_density";
-  std::map<std::string, std::string>::const_iterator iterName_init_dens =
-    theNames.find(dofName_init_dens);
-  if (iterName_init_dens != theNames.end()) {
-    std::string fcnName = (*iterName_init_dens).second;
-    // save off the field (np1 state)
-    ScalarFieldType* initDensNp1 = meta_data.get_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "initial_density");
+  // iterate map and check for hydrostatic dens
+  if (realm_.solutionOptions_->rho_ref_to_hydrostatic_rho_) {
+    const std::string dofName_hydrostatic_dens = "hydrostatic_density";
+    std::map<std::string, std::string>::const_iterator
+      iterName_hydrostatic_dens = theNames.find(dofName_hydrostatic_dens);
+    if (iterName_hydrostatic_dens != theNames.end()) {
+      std::string fcnName = (*iterName_hydrostatic_dens).second;
+      // save off the field (np1 state)
+      ScalarFieldType* initDensNp1 = meta_data.get_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "hydrostatic_density");
 
+      // create a few Aux things
+      AuxFunction* theAuxFunc = NULL;
+      AuxFunctionAlgorithm* auxAlg = NULL;
+      if (fcnName == "flat_interface") {
+        theAuxFunc = new FlatDensityAuxFunction();
+      } else if (fcnName == "water_level") {
+        std::map<std::string, std::vector<double>>::const_iterator iterParams =
+          theParams.find(dofName_hydrostatic_dens);
+        std::vector<double> fcnParams = (iterParams != theParams.end())
+                                          ? (*iterParams).second
+                                          : std::vector<double>();
+        theAuxFunc = new WaterLevelDensityAuxFunction(fcnParams);
+      } else {
+        throw std::runtime_error(
+          "InitialCondFunction::non-supported hydrostatic_density IC");
+      }
+      // create the algorithm
+      auxAlg = new AuxFunctionAlgorithm(
+        realm_, part, initDensNp1, theAuxFunc, stk::topology::NODE_RANK);
 
-    // create a few Aux things
-    AuxFunction* theAuxFunc = NULL;
-    AuxFunctionAlgorithm* auxAlg = NULL;
-    if (fcnName == "flat_interface") {
-      theAuxFunc = new FlatDensityAuxFunction();
-    } else if (fcnName == "water_level") {
-      std::map<std::string, std::vector<double>>::const_iterator iterParams =
-        theParams.find(dofName_init_dens);
-      std::vector<double> fcnParams = (iterParams != theParams.end())
-                                        ? (*iterParams).second
-                                        : std::vector<double>();
-      theAuxFunc = new WaterLevelDensityAuxFunction(fcnParams);
-    } else {
-      throw std::runtime_error(
-        "InitialCondFunction::non-supported initial_density IC");
+      // push to ic
+      realm_.initCondAlg_.push_back(auxAlg);
     }
-    // create the algorithm
-    auxAlg = new AuxFunctionAlgorithm(
-      realm_, part, initDensNp1, theAuxFunc, stk::topology::NODE_RANK);
-
-    // push to ic
-    realm_.initCondAlg_.push_back(auxAlg);
   }
-
 }
 
 void

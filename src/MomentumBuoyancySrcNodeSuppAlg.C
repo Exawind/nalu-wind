@@ -42,11 +42,14 @@ MomentumBuoyancySrcNodeSuppAlg::MomentumBuoyancySrcNodeSuppAlg(Realm& realm)
   ScalarFieldType* density =
     meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
 
-  ScalarFieldType* initDensity =
-    meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "initial_density");
+  rhoRefIsHydroDens_ = realm_.solutionOptions_->rho_ref_to_hydrostatic_rho_;
 
-  densityNp1_ = &(density->field_of_state(stk::mesh::StateN));
-  initDensityNp1_ = &(initDensity->field_of_state(stk::mesh::StateNone));
+  if (rhoRefIsHydroDens_) {
+    ScalarFieldType* hydroDensity = meta_data.get_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "hydrostatic_density");
+    hydroDensityNp1_ = &(hydroDensity->field_of_state(stk::mesh::StateNone));
+  }
+  densityNp1_ = &(density->field_of_state(stk::mesh::StateNP1));
 
   dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume");
@@ -56,9 +59,6 @@ MomentumBuoyancySrcNodeSuppAlg::MomentumBuoyancySrcNodeSuppAlg(Realm& realm)
   // extract user parameters from solution options
   gravity_ = realm_.solutionOptions_->gravity_;
   rhoRef_ = realm_.solutionOptions_->referenceDensity_;
-
-  rhoRefIsInitDens_ = realm_.solutionOptions_->rho_ref_to_initial_rho_;
-
 }
 
 //--------------------------------------------------------------------------
@@ -80,11 +80,13 @@ MomentumBuoyancySrcNodeSuppAlg::node_execute(
   // rhs+=(rho-rhoRef)*gi
   // later, may choose to assemble buoyancy to scv ips: Nip_k*rho_k
   const double rhoNp1 = *stk::mesh::field_data(*densityNp1_, node);
-  const double initRhoNp1 = *stk::mesh::field_data(*initDensityNp1_, node);
+  const double hydroRhoNp1 = rhoRefIsHydroDens_
+                               ? *stk::mesh::field_data(*hydroDensityNp1_, node)
+                               : rhoNp1;
   const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node);
-  
-  const double fac = !rhoRefIsInitDens_ ? (rhoNp1 - rhoRef_) * dualVolume :
-    (rhoNp1 - initRhoNp1) * dualVolume;
+
+  const double fac = !rhoRefIsHydroDens_ ? (rhoNp1 - rhoRef_) * dualVolume
+                                         : (rhoNp1 - hydroRhoNp1) * dualVolume;
   const int nDim = nDim_;
   for (int i = 0; i < nDim; ++i) {
     rhs[i] += fac * gravity_[i];

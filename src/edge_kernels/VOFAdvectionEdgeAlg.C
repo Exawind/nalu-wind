@@ -42,36 +42,34 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
   massFlowRate_ = get_field_ordinal(
     meta, (useAverages) ? "average_mass_flow_rate" : "mass_flow_rate",
     stk::topology::EDGE_RANK);
-  massForcedFlowRate_ = get_field_ordinal(meta, "mass_forced_flow_rate", stk::topology::EDGE_RANK);
-  density_ =
-    get_field_ordinal(meta, "density", stk::mesh::StateNP1);
-  velocity_ =
-    get_field_ordinal(meta, "velocity", stk::mesh::StateNP1);
-  velocity_n_ =
-    get_field_ordinal(meta, "velocity", stk::mesh::StateN);
+  massForcedFlowRate_ =
+    get_field_ordinal(meta, "mass_forced_flow_rate", stk::topology::EDGE_RANK);
+  density_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
+  velocity_n_ = get_field_ordinal(meta, "velocity", stk::mesh::StateN);
 
-  std::map<PropertyIdentifier, MaterialPropertyData*>::iterator itf = 
+  std::map<PropertyIdentifier, MaterialPropertyData*>::iterator itf =
     realm_.materialPropertys_.propertyDataMap_.find(DENSITY_ID);
 
   auto mdata = (*itf).second;
 
   switch (mdata->type_) {
-    case CONSTANT_MAT: {
-      density_liquid_ = mdata->constValue_;
-      density_gas_ = mdata->constValue_;   
-      break;
-    }
-    case VOF_MAT: {
-      density_liquid_ = mdata->primary_;
-      density_gas_ = mdata->secondary_;
-      break;
-    }
-    default: {
-      throw std::runtime_error("Incorrect density property set for VOF calculations. Use a constant or VOF property for density.");
-      break;
-    }
+  case CONSTANT_MAT: {
+    density_liquid_ = mdata->constValue_;
+    density_gas_ = mdata->constValue_;
+    break;
   }
-
+  case VOF_MAT: {
+    density_liquid_ = mdata->primary_;
+    density_gas_ = mdata->secondary_;
+    break;
+  }
+  default: {
+    throw std::runtime_error(
+      "Incorrect density property set for VOF calculations. Use a constant or "
+      "VOF property for density.");
+    break;
+  }
+  }
 }
 
 void
@@ -92,14 +90,15 @@ VOFAdvectionEdgeAlg::execute()
   const auto dqdx = fieldMgr.get_field<double>(dqdx_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
-  const auto massForcedFlowRate = fieldMgr.get_field<double>(massForcedFlowRate_);
+  const auto massForcedFlowRate =
+    fieldMgr.get_field<double>(massForcedFlowRate_);
   const auto density = fieldMgr.get_field<double>(density_);
-  const auto velocity = fieldMgr.get_field<double>(velocity_);
   const auto velocity_n = fieldMgr.get_field<double>(velocity_n_);
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-  auto velocity_field_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
+  auto velocity_field_ =
+    meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
 
   const stk::mesh::Selector sel =
     (meta_data.locally_owned_part() | meta_data.globally_shared_part()) &
@@ -108,9 +107,8 @@ VOFAdvectionEdgeAlg::execute()
   double local_max_velocity = 0.0;
   double global_max_velocity = 0.0;
 
-  const std::string algName =
-    "calc_velocity_scale_vof";
-  
+  const std::string algName = "calc_velocity_scale_vof";
+
   const auto& ngpMesh = realm_.ngp_mesh();
 
   using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
@@ -119,14 +117,16 @@ VOFAdvectionEdgeAlg::execute()
   nalu_ngp::run_entity_par_reduce(
     algName, ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi, double& pSum) {
-
       double vel_squared = 0.0;
       for (int idim = 0; idim < ndim; ++idim)
-        vel_squared += velocity_n.get(mi,idim)*velocity_n.get(mi,idim);
-      pSum = stk::math::max(stk::math::sqrt(vel_squared),pSum);
-    }, max_velocity_reducer);
+        vel_squared += velocity_n.get(mi, idim) * velocity_n.get(mi, idim);
+      pSum = stk::math::max(stk::math::sqrt(vel_squared), pSum);
+    },
+    max_velocity_reducer);
 
-  stk::all_reduce_max(NaluEnv::self().parallel_comm(), &local_max_velocity, &global_max_velocity, 1);
+  stk::all_reduce_max(
+    NaluEnv::self().parallel_comm(), &local_max_velocity, &global_max_velocity,
+    1);
 
   run_algorithm(
     realm_.bulk_data(),
@@ -144,25 +144,25 @@ VOFAdvectionEdgeAlg::execute()
 
       NALU_ALIGNED DblType densityL = density.get(nodeL, 0);
       NALU_ALIGNED DblType densityR = density.get(nodeR, 0);
-      const DblType rhoIp = 2.0 / ( 1.0 / densityL + 1.0 / densityR);
+      const DblType rhoIp = 2.0 / (1.0 / densityL + 1.0 / densityR);
 
-      const DblType mdot = massFlowRate.get(edge, 0) / rhoIp;
-  
+      const DblType vdot = massFlowRate.get(edge, 0) / rhoIp;
+
       const DblType qNp1L = scalarQ.get(nodeL, 0);
       const DblType qNp1R = scalarQ.get(nodeR, 0);
 
       // Advective flux
       const DblType qIp = 0.5 * (qNp1R + qNp1L);
 
-      const DblType adv_flux = mdot * qIp;
+      const DblType adv_flux = vdot * qIp;
       smdata.rhs(0) -= adv_flux;
       smdata.rhs(1) += adv_flux;
 
-      DblType alhsfac = 0.5 * mdot;
+      DblType alhsfac = 0.5 * vdot;
       smdata.lhs(0, 0) += alhsfac / relaxFac;
       smdata.lhs(1, 0) -= alhsfac;
 
-      alhsfac = 0.5 * mdot;
+      alhsfac = 0.5 * vdot;
       smdata.lhs(1, 1) -= alhsfac / relaxFac;
       smdata.lhs(0, 1) += alhsfac;
 
@@ -176,21 +176,22 @@ VOFAdvectionEdgeAlg::execute()
       for (int d = 0; d < ndim; ++d) {
         const DblType dxj =
           coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
-        diffusion_coef += dxj*dxj;
+        diffusion_coef += dxj * dxj;
         asq += av[d] * av[d];
         axdx += av[d] * dxj;
       }
 
       diffusion_coef = stk::math::sqrt(diffusion_coef) * 0.6;
-      
+
       const DblType inv_axdx = 1.0 / axdx;
 
       const DblType dlhsfac = -velocity_scale * diffusion_coef * asq * inv_axdx;
 
-      smdata.rhs(0) -= dlhsfac * ( qNp1R - qNp1L);
-      smdata.rhs(1) += dlhsfac * ( qNp1R - qNp1L);
-      
-      massForcedFlowRate.get(edge, 0) = dlhsfac * ( qNp1R - qNp1L ) * (density_liquid_ - density_gas_);
+      smdata.rhs(0) -= dlhsfac * (qNp1R - qNp1L);
+      smdata.rhs(1) += dlhsfac * (qNp1R - qNp1L);
+
+      massForcedFlowRate.get(edge, 0) =
+        dlhsfac * (qNp1R - qNp1L) * (density_liquid_ - density_gas_);
 
       smdata.lhs(0, 0) -= dlhsfac;
       smdata.lhs(0, 1) += dlhsfac;
@@ -200,19 +201,22 @@ VOFAdvectionEdgeAlg::execute()
 
       DblType dOmegadxMag = 0.0;
 
-      const DblType omegaL = diffusion_coef * stk::math::log((qNp1L + eps) / (1.0 - qNp1L + eps));
-      const DblType omegaR = diffusion_coef * stk::math::log((qNp1R + eps) / (1.0 - qNp1R + eps));
+      const DblType omegaL =
+        diffusion_coef * stk::math::log((qNp1L + eps) / (1.0 - qNp1L + eps));
+      const DblType omegaR =
+        diffusion_coef * stk::math::log((qNp1R + eps) / (1.0 - qNp1R + eps));
       const DblType omegaIp = 0.5 * (omegaL + omegaR);
       DblType interface_gradient[3] = {0.0, 0.0, 0.0};
 
       for (int j = 0; j < ndim; ++j) {
-        interface_gradient[j] = 0.5 * ( dqdx.get(nodeL,j) + dqdx.get(nodeR,j) );
-        interface_gradient[j] *= (2.0 * diffusion_coef*eps + diffusion_coef) / ( eps*eps + eps - qIp*qIp + qIp );
-      } 
+        interface_gradient[j] = 0.5 * (dqdx.get(nodeL, j) + dqdx.get(nodeR, j));
+        interface_gradient[j] *= (2.0 * diffusion_coef * eps + diffusion_coef) /
+                                 (eps * eps + eps - qIp * qIp + qIp);
+      }
 
       DblType interface_normal[3] = {0.0, 0.0, 0.0};
 
-      for (int j = 0; j < ndim; ++j) 
+      for (int j = 0; j < ndim; ++j)
         dOmegadxMag += interface_gradient[j] * interface_gradient[j];
 
       dOmegadxMag = stk::math::sqrt(dOmegadxMag);
@@ -225,23 +229,25 @@ VOFAdvectionEdgeAlg::execute()
         interface_normal[d] = interface_gradient[d] / dOmegadxMag;
 
       DblType compression = 0.0;
-      
-      for (int d = 0; d < ndim; ++d)
-        compression += velocity_scale * 0.25 * (1.0 - 
-          stk::math::tanh(0.5*omegaIp/diffusion_coef) * 
-          stk::math::tanh(0.5*omegaIp/diffusion_coef))*interface_normal[d]*av[d];
 
+      for (int d = 0; d < ndim; ++d)
+        compression +=
+          velocity_scale * 0.25 *
+          (1.0 - stk::math::tanh(0.5 * omegaIp / diffusion_coef) *
+                   stk::math::tanh(0.5 * omegaIp / diffusion_coef)) *
+          interface_normal[d] * av[d];
 
       smdata.rhs(0) -= compression;
       smdata.rhs(1) += compression;
 
-      massForcedFlowRate.get(edge,0) += compression * (density_liquid_ - density_gas_);
+      massForcedFlowRate.get(edge, 0) +=
+        compression * (density_liquid_ - density_gas_);
 
       // Left node contribution; Lag in iterations except for central 0.5*q term
       DblType slhsfac = 0.0;
       for (int d = 0; d < ndim; ++d)
-        slhsfac += 0.5 * interface_normal[d] *
-                   1.5 * velocity_scale * (1.0 - qIp) * av[d];
+        slhsfac += 0.5 * interface_normal[d] * 1.5 * velocity_scale *
+                   (1.0 - qIp) * av[d];
 
       smdata.lhs(0, 0) += slhsfac / relaxFac;
       smdata.lhs(1, 0) -= slhsfac;
