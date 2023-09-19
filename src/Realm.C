@@ -3468,7 +3468,8 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
 
       if (aeroModels_->has_fsi()) {
         NaluEnv::self().naluOutputP0()
-          // are we really updating current coordinates? historically and currently not...
+          // are we really updating current coordinates? historically and
+          // currently not...
           << "Aero models - Update displacements and set current coordinates"
           << std::endl;
         aeroModels_->update_displacements(restartTime, false);
