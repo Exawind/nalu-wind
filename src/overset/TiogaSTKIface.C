@@ -208,16 +208,7 @@ TiogaSTKIface::reset_data_structures()
 void
 TiogaSTKIface::update_ghosting()
 {
-  stk::mesh::Ghosting* ovsetGhosting = oversetManager_.oversetGhosting_;
   std::vector<stk::mesh::EntityKey> recvGhostsToRemove;
-
-  if (ovsetGhosting != nullptr) {
-    stk::mesh::EntityProcVec currentSendGhosts;
-    ovsetGhosting->send_list(currentSendGhosts);
-
-    sierra::nalu::compute_precise_ghosting_lists(
-      bulk_, elemsToGhost_, currentSendGhosts, recvGhostsToRemove);
-  }
 
   size_t local[2] = {elemsToGhost_.size(), recvGhostsToRemove.size()};
   size_t global[2] = {0, 0};
@@ -225,10 +216,11 @@ TiogaSTKIface::update_ghosting()
 
   if ((global[0] > 0) || (global[1] > 0)) {
     bulk_.modification_begin();
-    if (ovsetGhosting == nullptr) {
-      const std::string ghostName = "nalu_overset_ghosting";
-      oversetManager_.oversetGhosting_ = &(bulk_.create_ghosting(ghostName));
+    if (oversetManager_.oversetGhosting_ != nullptr) {
+      bulk_.destroy_ghosting(*oversetManager_.oversetGhosting_);
     }
+    const std::string ghostName = "nalu_overset_ghosting";
+    oversetManager_.oversetGhosting_ = &(bulk_.create_ghosting(ghostName));
     bulk_.change_ghosting(
       *(oversetManager_.oversetGhosting_), elemsToGhost_, recvGhostsToRemove);
     bulk_.modification_end();
