@@ -84,7 +84,8 @@ SloshingTankPressureAuxFunction::do_evaluate(
     const double int_vof1 = 0.5 * z1 - 0.5 * int_erf1;
     const double int_rho0 = 1000.0 * int_vof0 + 1.0 * (z0 - int_vof0);
     const double int_rho1 = 1000.0 * int_vof1 + 1.0 * (z1 - int_vof1);
-    // vof_local = -0.5 * (std::erf((z - z_init) / interface_thickness_) + 1.0) + 1.0;
+    // vof_local = -0.5 * (std::erf((z - z_init) / interface_thickness_) + 1.0)
+    // + 1.0;
 
     // g * integral(rho)dz
     fieldPtr[0] = g * (int_rho1 - int_rho0);

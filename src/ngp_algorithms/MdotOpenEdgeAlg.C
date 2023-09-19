@@ -162,8 +162,9 @@ MdotOpenEdgeAlg<BcAlgTraits>::execute()
           const DoubleType kxj = axj - asq * inv_axdx * dxj;
           const DoubleType Gjp = v_Gpdx(ip, d);
 
-          tmdot += ((v_rho(ip) * v_vel(ip, d) + projTimeScale * Gjp) * axj -
-                   projTimeScale * kxj * Gjp * nocFac);
+          tmdot +=
+            ((v_rho(ip) * v_vel(ip, d) + projTimeScale * Gjp) * axj -
+             projTimeScale * kxj * Gjp * nocFac);
         }
 
         mdotOps(fdata, ip) = tmdot;

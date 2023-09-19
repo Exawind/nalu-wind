@@ -179,7 +179,6 @@ VolumeOfFluidEquationSystem::register_edge_fields(
   auto massForcedFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::EDGE_RANK, "mass_forced_flow_rate"));
   stk::mesh::put_field_on_mesh(*massForcedFlowRate_, selector, nullptr);
-
 }
 
 //--------------------------------------------------------------------------
@@ -277,7 +276,7 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
     stk::topology::NODE_RANK, "vof_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
-  // extract the value for user specified tke and save off the AuxFunction
+  // extract the value for user specified vof and save off the AuxFunction
   InflowUserData userData = inflowBCData.userData_;
   std::string vofName = "volume_of_fluid";
   UserDataType theDataType = get_bc_data_type(userData, vofName);
@@ -349,8 +348,7 @@ VolumeOfFluidEquationSystem::register_open_bc(
 
   // non-solver; dvofdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "vof_nodal_grad", &vofNp1, &dvofdxNone,
-    edgeNodalGradient_);
+    algType, part, "vof_nodal_grad", &vofNp1, &dvofdxNone, edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -360,7 +358,7 @@ void
 VolumeOfFluidEquationSystem::register_wall_bc(
   stk::mesh::Part* part,
   const stk::topology& /*theTopo*/,
-  const WallBoundaryConditionData& wallBCData )
+  const WallBoundaryConditionData& wallBCData)
 {
   // algorithm type
   const AlgorithmType algType = WALL;
@@ -429,7 +427,6 @@ VolumeOfFluidEquationSystem::register_wall_bc(
   } else {
     itd->second->partVec_.push_back(part);
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -455,8 +452,7 @@ VolumeOfFluidEquationSystem::register_symmetry_bc(
 
   // non-solver; dvofdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "vof_nodal_grad", &vofNp1, &dvofdxNone,
-    edgeNodalGradient_);
+    algType, part, "vof_nodal_grad", &vofNp1, &dvofdxNone, edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
