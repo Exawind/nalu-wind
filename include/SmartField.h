@@ -62,10 +62,10 @@ class SmartField
 {
 };
 
-// LEGACY implementation, HOST only, data type has to be a reference b/c the 
+// LEGACY implementation, HOST only, data type has to be a reference b/c the
 // stk::mesh::field ctor is not public
 //
-// This Type should be used as close to a bucket loop as possible, and not 
+// This Type should be used as close to a bucket loop as possible, and not
 // stored as a class member since sync/modify are marked in the ctor/dtor
 template <typename FieldType, typename ACCESS>
 class SmartField<
@@ -108,6 +108,7 @@ public:
 
   // --- Default Accessors
   template <typename A = ACCESS>
+  inline
   typename std::enable_if_t<!std::is_same<A, READ>::value, T>&
   get(const stk::mesh::Entity& entity) const
   {
@@ -115,6 +116,7 @@ public:
   }
 
   template <typename A = ACCESS>
+  inline
   typename std::enable_if_t<!std::is_same<A, READ>::value, T>&
   operator()(const stk::mesh::Entity& entity) const
   {
@@ -123,6 +125,7 @@ public:
 
   // --- Const Accessors
   template <typename A = ACCESS>
+  inline
   const typename std::enable_if_t<std::is_same<A, READ>::value, T>&
   get(const stk::mesh::Entity& entity) const
   {
@@ -130,6 +133,7 @@ public:
   }
 
   template <typename A = ACCESS>
+  inline
   const typename std::enable_if_t<std::is_same<A, READ>::value, T>&
   operator()(const stk::mesh::Entity& entity) const
   {
@@ -153,7 +157,7 @@ public:
 // These should always be used as part of lambda/functor captures
 // using copy by value.
 //
-// SFINAE is used to remove KOKKOS_FUNCTION type decorators for HOST MEMSPACE
+// SFINAE is used to remove KOKKOS_INLINE_FUNCTION type decorators for HOST MEMSPACE
 template <typename FieldType, typename MEMSPACE, typename ACCESS>
 class SmartField<
   FieldType,
@@ -212,9 +216,10 @@ public:
   }
 
   //************************************************************
-  // Host functions (Remove KOKKOS_FUNCTION decorators)
+  // Host functions (Remove KOKKOS_INLINE_FUNCTION decorators)
   //************************************************************
   template <typename M = MEMSPACE>
+  inline
   std::enable_if_t<std::is_same<M, HOST>::value, unsigned> get_ordinal() const
   {
     return stkField_.get_ordinal();
@@ -222,6 +227,7 @@ public:
 
   // --- Default Accessors
   template <typename A = ACCESS, typename M = MEMSPACE>
+  inline
   std::enable_if_t<
     std::is_same<M, HOST>::value && !std::is_same<A, READ>::value,
     T>&
@@ -231,6 +237,7 @@ public:
   }
 
   template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
+  inline
   std::enable_if_t<
     std::is_same<M, HOST>::value && !std::is_same<A, READ>::value,
     T>&
@@ -240,6 +247,7 @@ public:
   }
 
   template <typename A = ACCESS, typename M = MEMSPACE>
+  inline
   std::enable_if_t<
     std::is_same<M, HOST>::value && !std::is_same<A, READ>::value,
     T>&
@@ -249,6 +257,7 @@ public:
   }
 
   template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
+  inline
   std::enable_if_t<
     std::is_same<M, HOST>::value && !std::is_same<A, READ>::value,
     T>&
@@ -259,6 +268,7 @@ public:
 
   // --- Const Accessors
   template <typename A = ACCESS, typename M = MEMSPACE>
+  inline
   const std::enable_if_t<
     std::is_same<M, HOST>::value && std::is_same<A, READ>::value,
     T>&
@@ -268,6 +278,7 @@ public:
   }
 
   template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
+  inline
   const std::enable_if_t<
     std::is_same<M, HOST>::value && std::is_same<A, READ>::value,
     T>&
@@ -277,6 +288,7 @@ public:
   }
 
   template <typename A = ACCESS, typename M = MEMSPACE>
+  inline
   const std::enable_if_t<
     std::is_same<M, HOST>::value && std::is_same<A, READ>::value,
     T>&
@@ -286,6 +298,7 @@ public:
   }
 
   template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
+  inline
   const std::enable_if_t<
     std::is_same<M, HOST>::value && std::is_same<A, READ>::value,
     T>&
@@ -298,7 +311,7 @@ public:
   // Device functions
   //************************************************************
   template <typename M = MEMSPACE>
-  KOKKOS_FUNCTION std::enable_if_t<std::is_same<M, DEVICE>::value, unsigned>
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<M, DEVICE>::value, unsigned>
   get_ordinal() const
   {
     return stkField_.get_ordinal();
@@ -306,7 +319,7 @@ public:
 
   // --- Default Accessors
   template <typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_FUNCTION std::enable_if_t<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
     std::is_same<M, DEVICE>::value && !std::is_same<A, READ>::value,
     T>&
   get(stk::mesh::FastMeshIndex& index, int component) const
@@ -315,7 +328,7 @@ public:
   }
 
   template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_FUNCTION std::enable_if_t<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
     std::is_same<M, DEVICE>::value && !std::is_same<A, READ>::value,
     T>&
   get(MeshIndex index, int component) const
@@ -324,7 +337,7 @@ public:
   }
 
   template <typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_FUNCTION std::enable_if_t<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
     std::is_same<M, DEVICE>::value && !std::is_same<A, READ>::value,
     T>&
   operator()(const stk::mesh::FastMeshIndex& index, int component) const
@@ -333,7 +346,7 @@ public:
   }
 
   template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_FUNCTION std::enable_if_t<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
     std::is_same<M, DEVICE>::value && !std::is_same<A, READ>::value,
     T>&
   operator()(const MeshIndex index, int component) const
@@ -343,7 +356,7 @@ public:
 
   // --- Const Accessors
   template <typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_FUNCTION const std::enable_if_t<
+  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
     std::is_same<M, DEVICE>::value && std::is_same<A, READ>::value,
     T>&
   get(stk::mesh::FastMeshIndex& index, int component) const
@@ -352,7 +365,7 @@ public:
   }
 
   template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_FUNCTION const std::enable_if_t<
+  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
     std::is_same<M, DEVICE>::value && std::is_same<A, READ>::value,
     T>&
   get(MeshIndex index, int component) const
@@ -361,7 +374,7 @@ public:
   }
 
   template <typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_FUNCTION const std::enable_if_t<
+  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
     std::is_same<M, DEVICE>::value && std::is_same<A, READ>::value,
     T>&
   operator()(const stk::mesh::FastMeshIndex& index, int component) const
@@ -370,7 +383,7 @@ public:
   }
 
   template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_FUNCTION const std::enable_if_t<
+  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
     std::is_same<M, DEVICE>::value && std::is_same<A, READ>::value,
     T>&
   operator()(const MeshIndex index, int component) const

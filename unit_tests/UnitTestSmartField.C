@@ -88,7 +88,7 @@ TEST_F(TestSmartField, device_write_clear_mod_with_lambda)
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
-  auto sPtr = MakeSmartField<DEVICE, WRITE>()(*ngpField_);
+  auto sPtr = MakeSmartField<DEVICE, WRITE_ALL>()(*ngpField_);
   lambda_ordinal(sPtr);
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());

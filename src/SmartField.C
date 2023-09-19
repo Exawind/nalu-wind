@@ -26,10 +26,17 @@ using namespace tags;
   template class SmartField<stk::mesh::Field<T>, HOST, WRITE_ALL>;             \
   template class SmartField<stk::mesh::Field<T>, HOST, READ_WRITE>
 
-EXPLICIT_TYPE_INSTANTIATOR_NGP(double);
 EXPLICIT_TYPE_INSTANTIATOR_NGP(int);
+EXPLICIT_TYPE_INSTANTIATOR_NGP(double);
 EXPLICIT_TYPE_INSTANTIATOR_NGP(stk::mesh::EntityId);
-EXPLICIT_TYPE_INSTANTIATOR_NGP(HypreIntType);
+
+// Hypre Integer types
+// What to do about HYPRE int vs long vs long long here?
+/* #ifdef NALU_USES_HYPRE */
+/* typedef HYPRE_Int HypreIntType; */
+/* EXPLICIT_TYPE_INSTANTIATOR_NGP(HypreIntType); */
+/* EXPLICIT_TYPE_INSTANTIATOR_LEGACY(HypreIDFieldType); */
+/* #endif */
 
 EXPLICIT_TYPE_INSTANTIATOR_LEGACY(ScalarFieldType);
 EXPLICIT_TYPE_INSTANTIATOR_LEGACY(VectorFieldType);
@@ -39,7 +46,6 @@ EXPLICIT_TYPE_INSTANTIATOR_LEGACY(GenericIntFieldType);
 EXPLICIT_TYPE_INSTANTIATOR_LEGACY(TpetIDFieldType);
 EXPLICIT_TYPE_INSTANTIATOR_LEGACY(LocalIdFieldType);
 EXPLICIT_TYPE_INSTANTIATOR_LEGACY(GlobalIdFieldType);
-EXPLICIT_TYPE_INSTANTIATOR_LEGACY(HypreIDFieldType);
 EXPLICIT_TYPE_INSTANTIATOR_LEGACY(ScalarIntFieldType);
 
 } // namespace sierra::nalu
