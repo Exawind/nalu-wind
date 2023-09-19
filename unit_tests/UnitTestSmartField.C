@@ -11,9 +11,9 @@
 #include <gtest/gtest.h>
 #include "UnitTestUtils.h"
 #include <stk_mesh/base/GetNgpField.hpp>
-#include "ngp_utils/SmartFieldRef.h"
+#include "SmartField.h"
 
-class TestSmartFieldRef : public Hex8Mesh
+class TestSmartField : public Hex8Mesh
 {
 public:
 protected:
@@ -67,13 +67,13 @@ lambda_loop_assign(
 namespace sierra::nalu {
 using namespace tags;
 
-TEST_F(TestSmartFieldRef, device_read_write_mod_sync_with_lambda)
+TEST_F(TestSmartField, device_read_write_mod_sync_with_lambda)
 {
   ngpField_->modify_on_host();
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
-  auto sPtr = MakeFieldRef<DEVICE, READ_WRITE>()(*ngpField_);
+  auto sPtr = MakeSmartField<DEVICE, READ_WRITE>()(*ngpField_);
   lambda_ordinal(sPtr);
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
@@ -82,13 +82,13 @@ TEST_F(TestSmartFieldRef, device_read_write_mod_sync_with_lambda)
   EXPECT_EQ(initSyncsHost_ + 0, ngpField_->num_syncs_to_host());
 }
 
-TEST_F(TestSmartFieldRef, device_write_clear_mod_with_lambda)
+TEST_F(TestSmartField, device_write_clear_mod_with_lambda)
 {
   ngpField_->modify_on_host();
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
-  auto sPtr = MakeFieldRef<DEVICE, WRITE>()(*ngpField_);
+  auto sPtr = MakeSmartField<DEVICE, WRITE>()(*ngpField_);
   lambda_ordinal(sPtr);
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
@@ -97,13 +97,13 @@ TEST_F(TestSmartFieldRef, device_write_clear_mod_with_lambda)
   EXPECT_EQ(initSyncsHost_ + 0, ngpField_->num_syncs_to_host());
 }
 
-TEST_F(TestSmartFieldRef, device_read_mod_no_sync_with_lambda)
+TEST_F(TestSmartField, device_read_mod_no_sync_with_lambda)
 {
   ngpField_->modify_on_host();
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
-  auto sPtr = MakeFieldRef<DEVICE, READ>()(*ngpField_);
+  auto sPtr = MakeSmartField<DEVICE, READ>()(*ngpField_);
   lambda_ordinal(sPtr);
 
   EXPECT_FALSE(ngpField_->need_sync_to_device());
@@ -112,13 +112,13 @@ TEST_F(TestSmartFieldRef, device_read_mod_no_sync_with_lambda)
   EXPECT_EQ(initSyncsHost_ + 0, ngpField_->num_syncs_to_host());
 }
 
-TEST_F(TestSmartFieldRef, update_field_on_device_check_on_host)
+TEST_F(TestSmartField, update_field_on_device_check_on_host)
 {
   ngpField_->modify_on_host();
 
   ASSERT_TRUE(ngpField_->need_sync_to_device());
 
-  auto sPtr = MakeFieldRef<DEVICE, READ_WRITE>()(*ngpField_);
+  auto sPtr = MakeSmartField<DEVICE, READ_WRITE>()(*ngpField_);
 
   double assignmentValue = 300.0;
   lambda_loop_assign(*bulk, partVec, sPtr, assignmentValue);
@@ -130,7 +130,7 @@ TEST_F(TestSmartFieldRef, update_field_on_device_check_on_host)
     int counter = 0;
     auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
     auto fieldRef =
-      sierra::nalu::MakeFieldRef<tags::LEGACY, tags::READ>()(*field);
+      sierra::nalu::MakeSmartField<tags::LEGACY, tags::READ>()(*field);
     stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);
     const auto& buckets = bulk->get_buckets(stk::topology::NODE_RANK, sel);
     for (auto b : buckets) {
