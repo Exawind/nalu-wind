@@ -18,7 +18,7 @@ namespace tags {
 
 //ACCESS TYPES
 struct READ{};
-struct WRITE{};
+struct WRITE_ALL{};
 struct READ_WRITE{};
 
 // MEMSPACE
@@ -32,7 +32,27 @@ struct LEGACY{};
 namespace sierra::nalu {
 
 using namespace tags;
-
+/* SmartField is a type that is designed to automatically handle field syncs
+ * and modifies
+ * It adheres to the pattern of sync before you use, and modify after
+ *
+ * There are 3 Template params:
+ * - FieldType: Data type for the underlying stk field
+ *
+ * - MEMSPACE: where the field is valid
+ *     - DEVICE: is self explanatory
+ *     - HOST:   is using the same modern stk syntax based on
+ *               kokkos::parallel_for but for host data
+ *     - LEGACY: for the stk::mesh::field_data type access (bucket loops)
+ *
+ * - ACCESS: how the data can/should be used
+ *     - READ:        read only/const data accessors (only syncs data)
+ *     - READ_WRITE:  read and write data to field (syncs then marks modified)
+ *     - WRITE_ALL:   should only be used when overwritting all the field_data
+ *                    (clears sync state)
+ *
+ * NOTE: this implementation makes heavy use of SFINAE
+ */
 template <
   typename FieldType,
   typename MEMSPACE,
@@ -42,6 +62,11 @@ class SmartField
 {
 };
 
+// LEGACY implementation, HOST only, data type has to be a reference b/c the 
+// stk::mesh::field ctor is not public
+//
+// This Type should be used as close to a bucket loop as possible, and not 
+// stored as a class member since sync/modify are marked in the ctor/dtor
 template <typename FieldType, typename ACCESS>
 class SmartField<
   FieldType,
@@ -57,7 +82,7 @@ private:
     std::is_same<ACCESS, READ_WRITE>::value};
 
   static constexpr bool is_write_{
-    std::is_same<ACCESS, WRITE>::value ||
+    std::is_same<ACCESS, WRITE_ALL>::value ||
     std::is_same<ACCESS, READ_WRITE>::value};
 
   FieldType& stkField_;
@@ -123,6 +148,12 @@ public:
   }
 };
 
+// DEVICE and HOST implementations
+//
+// These should always be used as part of lambda/functor captures
+// using copy by value.
+//
+// SFINAE is used to remove KOKKOS_FUNCTION type decorators for HOST MEMSPACE
 template <typename FieldType, typename MEMSPACE, typename ACCESS>
 class SmartField<
   FieldType,
@@ -139,7 +170,7 @@ private:
     std::is_same<ACCESS, READ_WRITE>::value};
 
   static constexpr bool is_write_{
-    std::is_same<ACCESS, WRITE>::value ||
+    std::is_same<ACCESS, WRITE_ALL>::value ||
     std::is_same<ACCESS, READ_WRITE>::value};
 
   FieldType stkField_;

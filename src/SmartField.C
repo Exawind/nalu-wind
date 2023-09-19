@@ -7,20 +7,39 @@
 // for more details.
 //
 
-#include<SmartField.h>
+#include <SmartField.h>
+#include <FieldTypeDef.h>
 
-namespace sierra::nalu{
+namespace sierra::nalu {
 using namespace tags;
 
-#define TYPE_INSTANTIATOR_NGP(T) \
-  template class SmartField<stk::mesh::NgpField<T>, DEVICE, READ>; \
-  template class SmartField<stk::mesh::NgpField<T>, DEVICE, WRITE>; \
-  template class SmartField<stk::mesh::NgpField<T>, DEVICE, READ_WRITE>; \
-  template class SmartField<stk::mesh::HostField<T>, HOST, READ>; \
-  template class SmartField<stk::mesh::HostField<T>, HOST, WRITE>; \
+#define EXPLICIT_TYPE_INSTANTIATOR_NGP(T)                                      \
+  template class SmartField<stk::mesh::NgpField<T>, DEVICE, READ>;             \
+  template class SmartField<stk::mesh::NgpField<T>, DEVICE, WRITE_ALL>;        \
+  template class SmartField<stk::mesh::NgpField<T>, DEVICE, READ_WRITE>;       \
+  template class SmartField<stk::mesh::HostField<T>, HOST, READ>;              \
+  template class SmartField<stk::mesh::HostField<T>, HOST, WRITE_ALL>;         \
   template class SmartField<stk::mesh::HostField<T>, HOST, READ_WRITE>
 
-TYPE_INSTANTIATOR_NGP(double);
-TYPE_INSTANTIATOR_NGP(int);
-TYPE_INSTANTIATOR_NGP(unsigned);
-}
+#define EXPLICIT_TYPE_INSTANTIATOR_LEGACY(T)                                   \
+  template class SmartField<stk::mesh::Field<T>, HOST, READ>;                  \
+  template class SmartField<stk::mesh::Field<T>, HOST, WRITE_ALL>;             \
+  template class SmartField<stk::mesh::Field<T>, HOST, READ_WRITE>
+
+EXPLICIT_TYPE_INSTANTIATOR_NGP(double);
+EXPLICIT_TYPE_INSTANTIATOR_NGP(int);
+EXPLICIT_TYPE_INSTANTIATOR_NGP(stk::mesh::EntityId);
+EXPLICIT_TYPE_INSTANTIATOR_NGP(HypreIntType);
+
+EXPLICIT_TYPE_INSTANTIATOR_LEGACY(ScalarFieldType);
+EXPLICIT_TYPE_INSTANTIATOR_LEGACY(VectorFieldType);
+EXPLICIT_TYPE_INSTANTIATOR_LEGACY(TensorFieldType);
+EXPLICIT_TYPE_INSTANTIATOR_LEGACY(GenericFieldType);
+EXPLICIT_TYPE_INSTANTIATOR_LEGACY(GenericIntFieldType);
+EXPLICIT_TYPE_INSTANTIATOR_LEGACY(TpetIDFieldType);
+EXPLICIT_TYPE_INSTANTIATOR_LEGACY(LocalIdFieldType);
+EXPLICIT_TYPE_INSTANTIATOR_LEGACY(GlobalIdFieldType);
+EXPLICIT_TYPE_INSTANTIATOR_LEGACY(HypreIDFieldType);
+EXPLICIT_TYPE_INSTANTIATOR_LEGACY(ScalarIntFieldType);
+
+} // namespace sierra::nalu
