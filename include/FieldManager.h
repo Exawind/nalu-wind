@@ -132,7 +132,8 @@ public:
 
   /// Given the named field that has already been registered on the CPU
   /// return the GPU version of the same field.
-  stk::mesh::NgpField<double>& get_ngp_field_ptr(std::string name) const
+  template<typename T>
+  stk::mesh::NgpField<T>& get_ngp_field_ptr(std::string name) const
   {
     FieldDefTypes fieldDef =
       FieldRegistry::query(numDimensions_, numStates_, name);
@@ -143,8 +144,8 @@ public:
           ->field_of_state(stk::mesh::FieldState::StateNone);
       },
       fieldDef);
-    stk::mesh::NgpField<double>& tmp =
-      stk::mesh::get_updated_ngp_field<double>(stkField);
+    stk::mesh::NgpField<T>& tmp =
+      stk::mesh::get_updated_ngp_field<T>(stkField);
     return tmp;
   }
 };
