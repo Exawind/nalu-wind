@@ -113,12 +113,12 @@ AeroContainer::execute(double& actTimer)
   }
 }
 void
-AeroContainer::update_displacements(const double currentTime)
+AeroContainer::update_displacements(const double currentTime, bool updateCC)
 {
 #ifdef NALU_USES_OPENFAST_FSI
   if (has_fsi()) {
     fsiContainer_->predict_struct_states();
-    fsiContainer_->map_displacements(currentTime);
+    fsiContainer_->map_displacements(currentTime, updateCC);
   }
 #else
   (void)currentTime;
