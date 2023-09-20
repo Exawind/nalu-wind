@@ -116,7 +116,7 @@ MeshVelocityEdgeAlg<AlgTraits>::execute()
   const auto numScsIp = AlgTraits::numScsIp_;
 
   edgeSweptVol.sync_to_device();
-  edgeFaceVelMag.clear_sync_state();
+  edgeFaceVelMag.sync_to_device();
 
   const std::string algName =
     "compute_mesh_vel_" + std::to_string(AlgTraits::topo_);
