@@ -402,6 +402,26 @@ struct MakeSmartField
   }
 };
 
+template <typename ACCESS>
+struct MakeSmartField<LEGACY, ACCESS>
+{
+  template <typename T>
+  SmartField<stk::mesh::Field<T>, LEGACY, ACCESS> operator()(stk::mesh::Field<T>& field)
+  {
+    return SmartField<stk::mesh::Field<T>, LEGACY, ACCESS>(field);
+  }
+};
+
+template <typename ACCESS>
+struct MakeSmartField<DEVICE, ACCESS>
+{
+  template <typename T>
+  SmartField<stk::mesh::NgpField<T>, DEVICE, ACCESS> operator()(stk::mesh::NgpField<T>& field)
+  {
+    return SmartField<stk::mesh::NgpField<T>, DEVICE, ACCESS>(field);
+  }
+};
+
 } // namespace sierra::nalu
 
 #endif

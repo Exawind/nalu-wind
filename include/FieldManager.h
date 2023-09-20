@@ -16,14 +16,11 @@
 #include <string>
 #include <type_traits>
 
-namespace stk {
-namespace mesh {
+namespace stk::mesh {
 class MetaData;
-}
 } // namespace stk
 
-namespace sierra {
-namespace nalu {
+namespace sierra::nalu{
 
 class FieldManager
 {
@@ -149,7 +146,6 @@ public:
     return tmp;
   }
 };
-} // namespace nalu
 } // namespace sierra
 
 #endif /* FIELDMANAGER_H_ */
