@@ -22,7 +22,7 @@ public:
 
   void initialize(int restartFreqNalu, double curTime);
 
-  void map_displacements(double);
+  void map_displacements(double, bool);
 
   void predict_struct_states();
 
