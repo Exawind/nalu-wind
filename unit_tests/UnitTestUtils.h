@@ -433,7 +433,9 @@ protected:
 
     const double xfac = (outerRad - innerRad) / xMax;
     const double yfac = 2 * M_PI / yMax;
-    auto nodeCoord = sierra::nalu::MakeSmartField<tags::LEGACY, tags::READ_WRITE>()(coordField);
+    auto nodeCoord =
+      sierra::nalu::MakeSmartField<tags::LEGACY, tags::READ_WRITE>()(
+        coordField);
 
     for (const stk::mesh::Bucket* bptr : bkts) {
       for (stk::mesh::Entity node : *bptr) {
@@ -493,7 +495,6 @@ public:
     utauSpec_ = utau;
     upSpec_ = up;
     ypSpec_ = yp;
-
 
     // create an object for creating SmartField's
     sierra::nalu::MakeSmartField<tags::LEGACY, tags::READ_WRITE> smartener;

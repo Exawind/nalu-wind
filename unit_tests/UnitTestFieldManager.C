@@ -137,8 +137,9 @@ TEST_F(TestFieldManagerWithElems, minimalSmartFieldCreation)
 {
   const std::string name = "elemCentroid";
 
-  SmartField<stk::mesh::NgpField<double>, tags::DEVICE, tags::READ_WRITE> managerNgpField =
-    fieldManager->get_device_smart_field<double, tags::READ_WRITE>(name);
+  SmartField<stk::mesh::NgpField<double>, tags::DEVICE, tags::READ_WRITE>
+    managerNgpField =
+      fieldManager->get_device_smart_field<double, tags::READ_WRITE>(name);
   SmartField<VectorFieldType, tags::LEGACY, tags::READ> managerLegacyField =
     fieldManager->get_legacy_smart_field<VectorFieldType, tags::READ>(name);
 }
