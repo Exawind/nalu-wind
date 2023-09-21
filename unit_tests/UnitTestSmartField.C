@@ -130,7 +130,7 @@ TEST_F(TestSmartField, update_field_on_device_check_on_host)
     int counter = 0;
     auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
     auto fieldRef =
-      sierra::nalu::MakeSmartField<tags::LEGACY, tags::READ>()(*field);
+      sierra::nalu::MakeSmartField<tags::LEGACY, tags::READ>()(field);
     stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);
     const auto& buckets = bulk->get_buckets(stk::topology::NODE_RANK, sel);
     for (auto b : buckets) {

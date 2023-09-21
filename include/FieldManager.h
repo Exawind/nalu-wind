@@ -11,6 +11,7 @@
 #define FIELDMANAGER_H_
 
 #include "FieldRegistry.h"
+#include "SmartField.h"
 #include <stk_mesh/base/FieldState.hpp>
 #include "stk_mesh/base/GetNgpField.hpp"
 #include <string>
@@ -130,7 +131,7 @@ public:
   /// Given the named field that has already been registered on the CPU
   /// return the GPU version of the same field.
   template<typename T>
-  stk::mesh::NgpField<T>& get_ngp_field_ptr(std::string name) const
+  stk::mesh::NgpField<T>& get_ngp_field_ptr(std::string name, stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const
   {
     FieldDefTypes fieldDef =
       FieldRegistry::query(numDimensions_, numStates_, name);
@@ -138,13 +139,26 @@ public:
       [&](auto def) -> stk::mesh::FieldBase& {
         return meta_
           .get_field<typename decltype(def)::FieldType>(def.rank, name)
-          ->field_of_state(stk::mesh::FieldState::StateNone);
+          ->field_of_state(state);
       },
       fieldDef);
     stk::mesh::NgpField<T>& tmp =
       stk::mesh::get_updated_ngp_field<T>(stkField);
     return tmp;
   }
+
+  template<typename T, typename ACCESS>
+  SmartField<stk::mesh::NgpField<T>, tags::DEVICE, ACCESS>
+    get_device_smart_field(std::string name, stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const{
+      return MakeSmartField<tags::DEVICE, ACCESS>().template operator()<T>(get_ngp_field_ptr<T>(name, state));
+    }
+
+  template<typename T, typename ACCESS>
+  SmartField<T, tags::LEGACY, ACCESS>
+    get_legacy_smart_field(std::string name, stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const{
+      return MakeSmartField<tags::LEGACY, ACCESS>().template operator()<T>(get_field_ptr<T>(name, state));
+    }
+
 };
 } // namespace sierra
 

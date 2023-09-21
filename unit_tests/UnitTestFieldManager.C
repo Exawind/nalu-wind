@@ -124,6 +124,19 @@ TEST_F(FieldManagerTest, numStatesCanBeChangedAtRegistration)
   ASSERT_TRUE(field != nullptr);
   EXPECT_EQ(numStates, field->number_of_states());
 }
+
+
+TEST_F(FieldManagerTest, minimalSmartFieldCreation)
+{
+  const std::string name = "velocity";
+  const int numStates = 3;
+  const stk::mesh::PartVector universal(1, &meta().universal_part());
+  FieldManager fm(meta(), numStates);
+  fm.register_field(name, universal, numStates);
+
+  auto managerNgpField = fm.get_device_smart_field<double, tags::READ_WRITE>(name);
+  auto managerLegacyField = fm.get_legacy_smart_field<VectorFieldType, tags::READ>(name);
+}
 } // namespace
 } // namespace nalu
 } // namespace sierra
