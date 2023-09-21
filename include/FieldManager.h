@@ -19,9 +19,9 @@
 
 namespace stk::mesh {
 class MetaData;
-} // namespace stk
+} // namespace stk::mesh
 
-namespace sierra::nalu{
+namespace sierra::nalu {
 
 class FieldManager
 {
@@ -130,8 +130,10 @@ public:
 
   /// Given the named field that has already been registered on the CPU
   /// return the GPU version of the same field.
-  template<typename T>
-  stk::mesh::NgpField<T>& get_ngp_field_ptr(std::string name, stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const
+  template <typename T>
+  stk::mesh::NgpField<T>& get_ngp_field_ptr(
+    std::string name,
+    stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const
   {
     FieldDefTypes fieldDef =
       FieldRegistry::query(numDimensions_, numStates_, name);
@@ -142,24 +144,29 @@ public:
           ->field_of_state(state);
       },
       fieldDef);
-    stk::mesh::NgpField<T>& tmp =
-      stk::mesh::get_updated_ngp_field<T>(stkField);
+    stk::mesh::NgpField<T>& tmp = stk::mesh::get_updated_ngp_field<T>(stkField);
     return tmp;
   }
 
-  template<typename T, typename ACCESS>
+  template <typename T, typename ACCESS>
   SmartField<stk::mesh::NgpField<T>, tags::DEVICE, ACCESS>
-    get_device_smart_field(std::string name, stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const{
-      return MakeSmartField<tags::DEVICE, ACCESS>().template operator()<T>(get_ngp_field_ptr<T>(name, state));
-    }
+  get_device_smart_field(
+    std::string name,
+    stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const
+  {
+    return MakeSmartField<tags::DEVICE, ACCESS>().template operator()<T>(
+      get_ngp_field_ptr<T>(name, state));
+  }
 
-  template<typename T, typename ACCESS>
-  SmartField<T, tags::LEGACY, ACCESS>
-    get_legacy_smart_field(std::string name, stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const{
-      return MakeSmartField<tags::LEGACY, ACCESS>().template operator()<T>(get_field_ptr<T>(name, state));
-    }
-
+  template <typename T, typename ACCESS>
+  SmartField<T, tags::LEGACY, ACCESS> get_legacy_smart_field(
+    std::string name,
+    stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const
+  {
+    return MakeSmartField<tags::LEGACY, ACCESS>().template operator()<T>(
+      get_field_ptr<T>(name, state));
+  }
 };
-} // namespace sierra
+} // namespace sierra::nalu
 
 #endif /* FIELDMANAGER_H_ */
