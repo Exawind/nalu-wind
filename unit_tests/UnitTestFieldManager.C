@@ -9,6 +9,7 @@
 
 #include "gtest/gtest.h"
 #include "stk_mesh/base/MeshBuilder.hpp"
+#include "UnitTestUtils.h"
 #include "FieldManager.h"
 #include <memory>
 #include <stdexcept>
@@ -126,16 +127,22 @@ TEST_F(FieldManagerTest, numStatesCanBeChangedAtRegistration)
 }
 
 
-TEST_F(FieldManagerTest, minimalSmartFieldCreation)
+class TestFieldManagerWithElems : public Hex8Mesh
 {
-  const std::string name = "velocity";
-  const int numStates = 3;
-  const stk::mesh::PartVector universal(1, &meta().universal_part());
-  FieldManager fm(meta(), numStates);
-  fm.register_field(name, universal, numStates);
+public:
+protected:
+  void SetUp()
+  {
+    fill_mesh_and_initialize_test_fields();
+  }
+};
 
-  auto managerNgpField = fm.get_device_smart_field<double, tags::READ_WRITE>(name);
-  auto managerLegacyField = fm.get_legacy_smart_field<VectorFieldType, tags::READ>(name);
+TEST_F(TestFieldManagerWithElems, minimalSmartFieldCreation)
+{
+  const std::string name = "elemCentroid";
+
+  auto managerNgpField = fieldManager->get_device_smart_field<double, tags::READ_WRITE>(name);
+  auto managerLegacyField = fieldManager->get_legacy_smart_field<VectorFieldType, tags::READ>(name);
 }
 } // namespace
 } // namespace nalu
