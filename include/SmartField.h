@@ -108,32 +108,32 @@ public:
 
   // --- Default Accessors
   template <typename A = ACCESS>
-  inline typename std::enable_if_t<!std::is_same<A, READ>::value, T>&
+  inline typename std::enable_if_t<!std::is_same<A, READ>::value, T>*
   get(const stk::mesh::Entity& entity) const
   {
-    return *stk::mesh::field_data(stkField_, entity);
+    return stk::mesh::field_data(stkField_, entity);
   }
 
   template <typename A = ACCESS>
-  inline typename std::enable_if_t<!std::is_same<A, READ>::value, T>&
+  inline typename std::enable_if_t<!std::is_same<A, READ>::value, T>*
   operator()(const stk::mesh::Entity& entity) const
   {
-    return *stk::mesh::field_data(stkField_, entity);
+    return stk::mesh::field_data(stkField_, entity);
   }
 
   // --- Const Accessors
   template <typename A = ACCESS>
-  inline const typename std::enable_if_t<std::is_same<A, READ>::value, T>&
+  inline const typename std::enable_if_t<std::is_same<A, READ>::value, T>*
   get(const stk::mesh::Entity& entity) const
   {
-    return *stk::mesh::field_data(stkField_, entity);
+    return stk::mesh::field_data(stkField_, entity);
   }
 
   template <typename A = ACCESS>
-  inline const typename std::enable_if_t<std::is_same<A, READ>::value, T>&
+  inline const typename std::enable_if_t<std::is_same<A, READ>::value, T>*
   operator()(const stk::mesh::Entity& entity) const
   {
-    return *stk::mesh::field_data(stkField_, entity);
+    return stk::mesh::field_data(stkField_, entity);
   }
 
   ~SmartField()
@@ -402,7 +402,7 @@ template <typename ACCESS>
 struct MakeSmartField<HOST, ACCESS>
 {
   template <typename T>
-  SmartField<stk::mesh::Field<T>, HOST, ACCESS>
+  SmartField<stk::mesh::HostField<T>, HOST, ACCESS>
   operator()(stk::mesh::HostField<T>& field)
   {
     return SmartField<stk::mesh::HostField<T>, HOST, ACCESS>(field);
@@ -419,7 +419,6 @@ struct MakeSmartField<DEVICE, ACCESS>
     return SmartField<stk::mesh::NgpField<T>, DEVICE, ACCESS>(field);
   }
 };
-
 } // namespace sierra::nalu
 
 #endif

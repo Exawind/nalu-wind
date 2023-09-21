@@ -21,8 +21,9 @@
 
 #include <master_element/Hex8CVFEM.h>
 #include <master_element/MasterElement.h>
-#include "master_element/MasterElementRepo.h"
-#include "FieldManager.h"
+#include <master_element/MasterElementRepo.h>
+#include <FieldManager.h>
+#include <SmartField.h>
 
 #include <FieldTypeDef.h>
 
@@ -432,15 +433,14 @@ protected:
 
     const double xfac = (outerRad - innerRad) / xMax;
     const double yfac = 2 * M_PI / yMax;
+    auto nodeCoord = sierra::nalu::MakeSmartField<tags::LEGACY, tags::READ_WRITE>()(coordField);
 
     for (const stk::mesh::Bucket* bptr : bkts) {
       for (stk::mesh::Entity node : *bptr) {
-        double* nodeCoord =
-          reinterpret_cast<double*>(stk::mesh::field_data(*coordField, node));
-        const double radius = innerRad + nodeCoord[0] * xfac;
-        const double theta = nodeCoord[1] * yfac;
-        nodeCoord[0] = radius * std::cos(theta);
-        nodeCoord[1] = radius * std::sin(theta);
+        const double radius = innerRad + nodeCoord(node)[0] * xfac;
+        const double theta = nodeCoord(node)[1] * yfac;
+        nodeCoord(node)[0] = radius * std::cos(theta);
+        nodeCoord(node)[1] = radius * std::sin(theta);
       }
     }
   }
@@ -494,28 +494,42 @@ public:
     upSpec_ = up;
     ypSpec_ = yp;
 
+
+    // create an object for creating SmartField's
+    sierra::nalu::MakeSmartField<tags::LEGACY, tags::READ_WRITE> smartener;
+
     // Assign some values to the nodal fields
+    // all these fields will sync_to_host here and call modified_on_host when
+    // they go out of scope
+    auto smrtDensity = smartener(density);
+    auto smrtVelocity = smartener(velocity);
+    auto smrtBcVelocity = smartener(bcVelocity);
+    auto smrtBcHeatFlux = smartener(bcHeatFlux);
+    auto smrtSpecificHeat = smartener(specificHeat);
     for (const auto* ib :
          bulk->get_buckets(stk::topology::NODE_RANK, meta->universal_part())) {
       const auto& b = *ib;
       const size_t length = b.size();
       for (size_t k = 0; k < length; ++k) {
         stk::mesh::Entity node = b[k];
-        *stk::mesh::field_data(*density, node) = rhoSpec_;
-        double* vel = stk::mesh::field_data(*velocity, node);
+        *smrtDensity(node) = rhoSpec_;
+        double* vel = smrtVelocity(node);
         vel[0] = upSpec_;
         vel[1] = 0.0;
         vel[2] = 0.0;
-        double* bcVel = stk::mesh::field_data(*bcVelocity, node);
+        double* bcVel = smrtBcVelocity(node);
         bcVel[0] = 0.0;
         bcVel[1] = 0.0;
         bcVel[3] = 0.0;
-        *stk::mesh::field_data(*bcHeatFlux, node) = 0.0;
-        *stk::mesh::field_data(*specificHeat, node) = 1000.0;
+        *smrtBcHeatFlux(node) = 0.0;
+        *smrtSpecificHeat(node) = 1000.0;
       }
     }
 
     // Assign some values to the boundary integration point fields
+    auto utauIp = smartener(wallFrictionVelocityBip);
+    auto ypIp = smartener(wallNormalDistanceBip);
+
     const sierra::nalu::MasterElement* meFC =
       sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::QUAD_4);
@@ -528,11 +542,9 @@ public:
       const size_t length = b.size();
       for (size_t k = 0; k < length; ++k) {
         stk::mesh::Entity face = b[k];
-        double* utauIp = stk::mesh::field_data(*wallFrictionVelocityBip, face);
-        double* ypIp = stk::mesh::field_data(*wallNormalDistanceBip, face);
         for (int ip = 0; ip < numScsBip; ++ip) {
-          utauIp[ip] = utauSpec_;
-          ypIp[ip] = ypSpec_;
+          utauIp(face)[ip] = utauSpec_;
+          ypIp(face)[ip] = ypSpec_;
         }
       }
     }
