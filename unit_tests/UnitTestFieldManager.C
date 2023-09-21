@@ -126,23 +126,21 @@ TEST_F(FieldManagerTest, numStatesCanBeChangedAtRegistration)
   EXPECT_EQ(numStates, field->number_of_states());
 }
 
-
 class TestFieldManagerWithElems : public Hex8Mesh
 {
 public:
 protected:
-  void SetUp()
-  {
-    fill_mesh_and_initialize_test_fields();
-  }
+  void SetUp() { fill_mesh_and_initialize_test_fields(); }
 };
 
 TEST_F(TestFieldManagerWithElems, minimalSmartFieldCreation)
 {
   const std::string name = "elemCentroid";
 
-  auto managerNgpField = fieldManager->get_device_smart_field<double, tags::READ_WRITE>(name);
-  auto managerLegacyField = fieldManager->get_legacy_smart_field<VectorFieldType, tags::READ>(name);
+  auto managerNgpField =
+    fieldManager->get_device_smart_field<double, tags::READ_WRITE>(name);
+  auto managerLegacyField =
+    fieldManager->get_legacy_smart_field<VectorFieldType, tags::READ>(name);
 }
 } // namespace
 } // namespace nalu
