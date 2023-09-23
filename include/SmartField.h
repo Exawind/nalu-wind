@@ -223,6 +223,15 @@ public:
   }
 
   // --- Default Accessors
+  template <typename Mesh, typename A = ACCESS, typename M = MEMSPACE>
+  inline std::enable_if_t<
+    std::is_same<M, HOST>::value && !std::is_same<A, READ>::value,
+    T>&
+  get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
+  {
+    return stkField_.get(ngpMesh, entity, component);
+  }
+
   template <typename A = ACCESS, typename M = MEMSPACE>
   inline std::enable_if_t<
     std::is_same<M, HOST>::value && !std::is_same<A, READ>::value,
@@ -260,6 +269,15 @@ public:
   }
 
   // --- Const Accessors
+  template <typename Mesh, typename A = ACCESS, typename M = MEMSPACE>
+  inline const std::enable_if_t<
+    std::is_same<M, HOST>::value && std::is_same<A, READ>::value,
+    T>&
+  get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
+  {
+    return stkField_.get(ngpMesh, entity, component);
+  }
+
   template <typename A = ACCESS, typename M = MEMSPACE>
   inline const std::enable_if_t<
     std::is_same<M, HOST>::value && std::is_same<A, READ>::value,
@@ -308,6 +326,15 @@ public:
   }
 
   // --- Default Accessors
+  template <typename Mesh, typename A = ACCESS, typename M = MEMSPACE>
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+    std::is_same<M, DEVICE>::value && !std::is_same<A, READ>::value,
+    T>&
+  get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
+  {
+    return stkField_.get(ngpMesh, entity, component);
+  }
+
   template <typename A = ACCESS, typename M = MEMSPACE>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<
     std::is_same<M, DEVICE>::value && !std::is_same<A, READ>::value,
@@ -345,6 +372,15 @@ public:
   }
 
   // --- Const Accessors
+  template <typename Mesh, typename A = ACCESS, typename M = MEMSPACE>
+  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
+    std::is_same<M, DEVICE>::value && std::is_same<A, READ>::value,
+    T>&
+  get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
+  {
+    return stkField_.get(ngpMesh, entity, component);
+  }
+
   template <typename A = ACCESS, typename M = MEMSPACE>
   KOKKOS_INLINE_FUNCTION const std::enable_if_t<
     std::is_same<M, DEVICE>::value && std::is_same<A, READ>::value,
