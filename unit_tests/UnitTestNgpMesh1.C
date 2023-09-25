@@ -106,10 +106,11 @@ test_ngp_mesh_field_values(
   const stk::mesh::BucketVector& elemBuckets =
     bulk.get_buckets(stk::topology::ELEM_RANK, all_local);
 
-  auto ngpVelocity = fieldManager.get_device_smart_field
-    <double, tags::READ_WRITE>("velocity");
-  auto ngpMassFlowRate = fieldManager.get_device_smart_field
-    <double, tags::READ_WRITE>("mass_flow_rate");
+  auto ngpVelocity =
+    fieldManager.get_device_smart_field<double, tags::READ_WRITE>("velocity");
+  auto ngpMassFlowRate =
+    fieldManager.get_device_smart_field<double, tags::READ_WRITE>(
+      "mass_flow_rate_scs");
   stk::mesh::NgpMesh ngpMesh(bulk);
 
   const int bytes_per_team = 0;
@@ -155,11 +156,14 @@ test_ngp_mesh_field_values(
         });
     });
 
-
-  auto flowRateData = fieldManager.get_legacy_smart_field
-    <sierra::nalu::ScalarFieldType, tags::READ>("mass_flow_rate");
-  auto velocityData = fieldManager.get_legacy_smart_field
-    <sierra::nalu::VectorFieldType, tags::READ>("velocity");
+  auto flowRateData =
+    fieldManager
+      .get_legacy_smart_field<sierra::nalu::GenericFieldType, tags::READ>(
+        "mass_flow_rate_scs");
+  auto velocityData =
+    fieldManager
+      .get_legacy_smart_field<sierra::nalu::VectorFieldType, tags::READ>(
+        "velocity");
   const double tol = 1.0e-16;
   for (const stk::mesh::Bucket* b : elemBuckets) {
     for (stk::mesh::Entity elem : *b) {
