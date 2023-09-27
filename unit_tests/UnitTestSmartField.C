@@ -61,6 +61,24 @@ lambda_loop_assign(
     });
 }
 
+template <typename T>
+void
+lambda_loop_performance(
+  stk::mesh::BulkData& bulk,
+  stk::mesh::PartVector partVec,
+  T& ptr,
+  double val = 300.0)
+{
+  stk::mesh::NgpMesh& ngpMesh = stk::mesh::get_updated_ngp_mesh(bulk);
+  stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);
+  stk::mesh::for_each_entity_run(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const stk::mesh::FastMeshIndex& entity) {
+      for (int i = 0; i < 1e6; ++i)
+        ptr(entity, 0) = val;
+    });
+}
+
 //*****************************************************************************
 // Tests
 //*****************************************************************************
@@ -110,6 +128,29 @@ TEST_F(TestSmartField, device_read_mod_no_sync_with_lambda)
   EXPECT_FALSE(ngpField_->need_sync_to_host());
   EXPECT_EQ(initSyncsDevice_ + 1, ngpField_->num_syncs_to_device());
   EXPECT_EQ(initSyncsHost_ + 0, ngpField_->num_syncs_to_host());
+}
+
+TEST_F(TestSmartField, device_performance_smart_field)
+{
+  ngpField_->modify_on_host();
+
+  ASSERT_TRUE(ngpField_->need_sync_to_device());
+
+  auto sPtr = MakeSmartField<DEVICE, READ_WRITE>()(*ngpField_);
+
+  double assignmentValue = 300.0;
+  lambda_loop_performance(*bulk, partVec, sPtr, assignmentValue);
+}
+
+TEST_F(TestSmartField, device_performance_ngp_field)
+{
+  ngpField_->modify_on_host();
+
+  ASSERT_TRUE(ngpField_->need_sync_to_device());
+  ngpField_->sync_to_device();
+
+  double assignmentValue = 300.0;
+  lambda_loop_performance(*bulk, partVec, *ngpField_, assignmentValue);
 }
 
 TEST_F(TestSmartField, update_field_on_device_check_on_host)
