@@ -149,4 +149,99 @@ TEST_F(TestSmartField, update_field_on_device_check_on_host)
   EXPECT_EQ(initSyncsHost_ + 1, ngpField_->num_syncs_to_host());
 }
 
+TEST_F(TestSmartField, check_get_performance_on_host)
+{
+  const int num_iterations = 10000000;
+  ngpField_->modify_on_host();
+
+  ASSERT_TRUE(ngpField_->need_sync_to_device());
+
+  auto sPtr = MakeSmartField<DEVICE, READ_WRITE>()(*ngpField_);
+  double assignmentValue = 300.0;
+  lambda_loop_assign(*bulk, partVec, sPtr, assignmentValue);
+
+  {
+    auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
+    auto fieldRef =
+      sierra::nalu::MakeSmartField<tags::LEGACY, tags::READ>()(field);
+    for (int i = 0; i < num_iterations; ++i) {
+      double sum = 0.0;
+      int counter = 0;
+      stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);
+      const auto& buckets = bulk->get_buckets(stk::topology::NODE_RANK, sel);
+      for (auto b : buckets) {
+        for (size_t in = 0; in < b->size(); in++) {
+          auto node = (*b)[in];
+          sum += *fieldRef.get(node);
+          counter++;
+        }
+      }
+    }
+  }
+  {
+    auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
+    for (int i = 0; i < num_iterations; ++i) {
+      double sum = 0.0;
+      int counter = 0;
+      stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);
+      const auto& buckets = bulk->get_buckets(stk::topology::NODE_RANK, sel);
+      for (auto b : buckets) {
+        for (size_t in = 0; in < b->size(); in++) {
+          stk::mesh::Entity node = (*b)[in];
+          sum += *stk::mesh::field_data(*field, node);
+          counter++;
+        }
+      }
+    }
+  }
+  // Now that all memory allocation and system paging and such
+  // is done, do a timing tests of the two access methods.
+  const double prev_start_time = NaluEnv::self().nalu_time();
+  {
+    auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
+    for (int i = 0; i < num_iterations; ++i) {
+      double sum = 0.0;
+      int counter = 0;
+      stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);
+      const auto& buckets = bulk->get_buckets(stk::topology::NODE_RANK, sel);
+      for (auto b : buckets) {
+        for (size_t in = 0; in < b->size(); in++) {
+          const stk::mesh::Entity& node = (*b)[in];
+          sum += *stk::mesh::field_data(*field, node);
+          counter++;
+        }
+      }
+    }
+  }
+  const double prev_end_time = NaluEnv::self().nalu_time();
+
+  const double smart_start_time = NaluEnv::self().nalu_time();
+  {
+    auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
+    auto fieldRef =
+      sierra::nalu::MakeSmartField<tags::LEGACY, tags::READ>()(field);
+    for (int i = 0; i < num_iterations; ++i) {
+      double sum = 0.0;
+      int counter = 0;
+      stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);
+      const auto& buckets = bulk->get_buckets(stk::topology::NODE_RANK, sel);
+      for (auto b : buckets) {
+        for (size_t in = 0; in < b->size(); in++) {
+          const stk::mesh::Entity& node = (*b)[in];
+          sum += *fieldRef.get(node);
+          counter++;
+        }
+      }
+    }
+  }
+  const double smart_end_time = NaluEnv::self().nalu_time();
+
+  const double smart_time = smart_end_time - smart_start_time;
+  const double prev_time = prev_end_time - prev_start_time;
+//std::cout << " Checking: Prev Time in ms:" << prev_time
+//          << " Smart Time in ms:" << smart_time
+//          << " Ratio:" << smart_time / prev_time << std::endl;
+  EXPECT_NEAR(smart_time / prev_time, 1.0, 0.1);
+}
+
 } // namespace sierra::nalu
