@@ -434,6 +434,13 @@ struct MakeSmartField<DEVICE, ACCESS>
     return SmartField<stk::mesh::NgpField<T>, DEVICE, ACCESS>(field);
   }
 };
+
+template <typename T, typename ACCESS>
+using SmartDeviceField = SmartField<T, DEVICE, ACCESS>;
+template <typename T, typename ACCESS>
+using SmartHostField = SmartField<T, HOST, ACCESS>;
+template <typename T, typename ACCESS>
+using SmartLegacyField = SmartField<T, LEGACY, ACCESS>;
 } // namespace sierra::nalu
 
 #endif
