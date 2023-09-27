@@ -96,9 +96,9 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     double* thetaRamp = &defParams.thetaRampSpan_;
     // clang-format off
     // defaults of all are true from struct defintion
-    get_if_present(defNode, "enable_theta_ramping", defParams.enableThetaRamping_);
-    get_if_present(defNode, "enable_span_ramping", defParams.enableSpanRamping_);
-    get_if_present(defNode, "enable_temporal_ramping", defParams.enableTemporalRamping_);
+    get_if_present(defNode, "enable_theta_ramping", defParams.enableThetaRamping_, true);
+    get_if_present(defNode, "enable_span_ramping", defParams.enableSpanRamping_, true);
+    get_if_present(defNode, "enable_temporal_ramping", defParams.enableTemporalRamping_, true);
 
     if(defParams.enableTemporalRamping_){
       get_required(defNode, "temporal_ramp_start", defParams.startTimeTemporalRamp_);
