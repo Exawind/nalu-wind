@@ -258,7 +258,7 @@ auto&
 ElemDataRequestsGPU::get_coord_ptr(const T& fieldMgr, const U& iter) const
 {
   if constexpr (std::is_same_v<T, nalu::FieldManager>)
-    return fieldMgr.get_ngp_field_ptr(iter.second->name());
+    return fieldMgr.template get_ngp_field_ptr<double>(iter.second->name());
   else
     return fieldMgr.template get_field<double>(
       iter.second->mesh_meta_data_ordinal());
@@ -297,7 +297,7 @@ ElemDataRequestsGPU::get_field_ptr(
   const T& fieldMgr, const FieldInfo& finfo) const
 {
   if constexpr (std::is_same_v<T, nalu::FieldManager>)
-    return fieldMgr.get_ngp_field_ptr(finfo.field->name());
+    return fieldMgr.template get_ngp_field_ptr<double>(finfo.field->name());
   else
     return fieldMgr.template get_field<double>(
       finfo.field->mesh_meta_data_ordinal());
