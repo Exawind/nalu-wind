@@ -148,24 +148,172 @@ public:
   }
 };
 
-// DEVICE and HOST implementations
+// DEVICE
 //
 // These should always be used as part of lambda/functor captures
 // using copy by value.
 //
-// SFINAE is used to remove KOKKOS_INLINE_FUNCTION type decorators for HOST
-// MEMSPACE
-template <typename FieldType, typename MEMSPACE, typename ACCESS>
+template <typename FieldType, typename ACCESS>
 class SmartField<
   FieldType,
-  MEMSPACE,
-  ACCESS,
-  typename std::enable_if_t<
-    std::is_base_of<stk::mesh::NgpFieldBase, FieldType>::value>>
+  tags::DEVICE,
+  ACCESS>
 {
 private:
-  static constexpr bool is_device_space_{std::is_same<MEMSPACE, DEVICE>::value};
+  static constexpr bool is_read_{
+    std::is_same<ACCESS, READ>::value ||
+    std::is_same<ACCESS, READ_WRITE>::value};
 
+  static constexpr bool is_write_{
+    std::is_same<ACCESS, WRITE_ALL>::value ||
+    std::is_same<ACCESS, READ_WRITE>::value};
+
+  FieldType stkField_;
+  const bool is_copy_constructed_{false};
+
+public:
+  using T = typename FieldType::value_type;
+
+  KOKKOS_FUNCTION
+  SmartField(FieldType fieldRef) : stkField_(fieldRef) {}
+
+  SmartField(const SmartField& src)
+    : stkField_(src.stkField_), is_copy_constructed_(true)
+  {
+    KOKKOS_IF_ON_HOST(
+    if (is_read_) {
+      stkField_.sync_to_device();
+    } else {
+      stkField_.clear_sync_state();
+    });
+  }
+
+  KOKKOS_FUNCTION
+  ~SmartField()
+  {
+    KOKKOS_IF_ON_HOST(
+      if (is_write_ && is_copy_constructed_) {
+        // NgpFieldBase implementations should only ever execute inside a
+        // kokkos::paralle_for and hence be captured by a lambda. Therefore we
+        // only ever need to sync copies that will have been snatched up through
+        // lambda capture.
+        stkField_.modify_on_device();
+    });
+  }
+
+  //************************************************************
+  // Device functions
+  //************************************************************
+  KOKKOS_INLINE_FUNCTION
+  unsigned get_ordinal() const
+  {
+    return stkField_.get_ordinal();
+  }
+
+  // --- Default Accessors
+  template <typename Mesh, typename A = ACCESS>
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<!std::is_same<A, READ>::value,
+    T>&
+  get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
+  {
+    return stkField_.get(ngpMesh, entity, component);
+  }
+
+  template <typename A = ACCESS>
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+    !std::is_same<A, READ>::value,
+    T>&
+  get(stk::mesh::FastMeshIndex& index, int component) const
+  {
+    return stkField_.get(index, component);
+  }
+
+  template <typename MeshIndex, typename A = ACCESS>
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+    !std::is_same<A, READ>::value,
+    T>&
+  get(MeshIndex index, int component) const
+  {
+    return stkField_.get(index, component);
+  }
+
+  template <typename A = ACCESS>
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+    !std::is_same<A, READ>::value,
+    T>&
+  operator()(const stk::mesh::FastMeshIndex& index, int component) const
+  {
+    return stkField_(index, component);
+  }
+
+  template <typename MeshIndex, typename A = ACCESS>
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+    !std::is_same<A, READ>::value,
+    T>&
+  operator()(const MeshIndex index, int component) const
+  {
+    return stkField_(index, component);
+  }
+
+  // --- Const Accessors
+  template <typename Mesh, typename A = ACCESS>
+  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
+    std::is_same<A, READ>::value,
+    T>&
+  get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
+  {
+    return stkField_.get(ngpMesh, entity, component);
+  }
+
+  template <typename A = ACCESS>
+  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
+    std::is_same<A, READ>::value,
+    T>&
+  get(stk::mesh::FastMeshIndex& index, int component) const
+  {
+    return stkField_.get(index, component);
+  }
+
+  template <typename MeshIndex, typename A = ACCESS>
+  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
+    std::is_same<A, READ>::value,
+    T>&
+  get(MeshIndex index, int component) const
+  {
+    return stkField_.get(index, component);
+  }
+
+  template <typename A = ACCESS>
+  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
+    std::is_same<A, READ>::value,
+    T>&
+  operator()(const stk::mesh::FastMeshIndex& index, int component) const
+  {
+    return stkField_(index, component);
+  }
+
+  template <typename MeshIndex, typename A = ACCESS>
+  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
+    std::is_same<A, READ>::value,
+    T>&
+  operator()(const MeshIndex index, int component) const
+  {
+    return stkField_(index, component);
+  }
+};
+
+// HOST implementations
+//
+// These should always be used as part of lambda/functor captures
+// using copy by value.
+//
+template <typename FieldType, typename ACCESS>
+class SmartField<
+  FieldType,
+  tags::HOST,
+  ACCESS>
+{
+private:
   static constexpr bool is_read_{
     std::is_same<ACCESS, READ>::value ||
     std::is_same<ACCESS, READ_WRITE>::value};
@@ -186,11 +334,7 @@ public:
     : stkField_(src.stkField_), is_copy_constructed_(true)
   {
     if (is_read_) {
-      if (is_device_space_) {
-        stkField_.sync_to_device();
-      } else {
-        stkField_.sync_to_host();
-      }
+      stkField_.sync_to_host();
     } else {
       stkField_.clear_sync_state();
     }
@@ -204,10 +348,7 @@ public:
         // kokkos::paralle_for and hence be captured by a lambda. Therefore we
         // only ever need to sync copies that will have been snatched up through
         // lambda capture.
-        if (is_device_space_)
-          stkField_.modify_on_device();
-        else
-          stkField_.modify_on_host();
+        stkField_.modify_on_host();
       }
     }
   }
@@ -215,53 +356,52 @@ public:
   //************************************************************
   // Host functions (Remove KOKKOS_INLINE_FUNCTION decorators)
   //************************************************************
-  template <typename M = MEMSPACE>
-  inline std::enable_if_t<std::is_same<M, HOST>::value, unsigned>
+  inline unsigned
   get_ordinal() const
   {
     return stkField_.get_ordinal();
   }
 
   // --- Default Accessors
-  template <typename Mesh, typename A = ACCESS, typename M = MEMSPACE>
+  template <typename Mesh, typename A = ACCESS>
   inline std::enable_if_t<
-    std::is_same<M, HOST>::value && !std::is_same<A, READ>::value,
+    !std::is_same<A, READ>::value,
     T>&
   get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
   {
     return stkField_.get(ngpMesh, entity, component);
   }
 
-  template <typename A = ACCESS, typename M = MEMSPACE>
+  template <typename A = ACCESS>
   inline std::enable_if_t<
-    std::is_same<M, HOST>::value && !std::is_same<A, READ>::value,
+    !std::is_same<A, READ>::value,
     T>&
   get(stk::mesh::FastMeshIndex& index, int component) const
   {
     return stkField_.get(index, component);
   }
 
-  template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
+  template <typename MeshIndex, typename A = ACCESS>
   inline std::enable_if_t<
-    std::is_same<M, HOST>::value && !std::is_same<A, READ>::value,
+    !std::is_same<A, READ>::value,
     T>&
   get(MeshIndex index, int component) const
   {
     return stkField_.get(index, component);
   }
 
-  template <typename A = ACCESS, typename M = MEMSPACE>
+  template <typename A = ACCESS>
   inline std::enable_if_t<
-    std::is_same<M, HOST>::value && !std::is_same<A, READ>::value,
+    !std::is_same<A, READ>::value,
     T>&
   operator()(const stk::mesh::FastMeshIndex& index, int component) const
   {
     return stkField_(index, component);
   }
 
-  template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
+  template <typename MeshIndex, typename A = ACCESS>
   inline std::enable_if_t<
-    std::is_same<M, HOST>::value && !std::is_same<A, READ>::value,
+    !std::is_same<A, READ>::value,
     T>&
   operator()(const MeshIndex index, int component) const
   {
@@ -269,148 +409,45 @@ public:
   }
 
   // --- Const Accessors
-  template <typename Mesh, typename A = ACCESS, typename M = MEMSPACE>
+  template <typename Mesh, typename A = ACCESS>
   inline const std::enable_if_t<
-    std::is_same<M, HOST>::value && std::is_same<A, READ>::value,
+    std::is_same<A, READ>::value,
     T>&
   get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
   {
     return stkField_.get(ngpMesh, entity, component);
   }
 
-  template <typename A = ACCESS, typename M = MEMSPACE>
+  template <typename A = ACCESS>
   inline const std::enable_if_t<
-    std::is_same<M, HOST>::value && std::is_same<A, READ>::value,
+    std::is_same<A, READ>::value,
     T>&
   get(stk::mesh::FastMeshIndex& index, int component) const
   {
     return stkField_.get(index, component);
   }
 
-  template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
+  template <typename MeshIndex, typename A = ACCESS>
   inline const std::enable_if_t<
-    std::is_same<M, HOST>::value && std::is_same<A, READ>::value,
+    std::is_same<A, READ>::value,
     T>&
   get(MeshIndex index, int component) const
   {
     return stkField_.get(index, component);
   }
 
-  template <typename A = ACCESS, typename M = MEMSPACE>
+  template <typename A = ACCESS>
   inline const std::enable_if_t<
-    std::is_same<M, HOST>::value && std::is_same<A, READ>::value,
+    std::is_same<A, READ>::value,
     T>&
   operator()(const stk::mesh::FastMeshIndex& index, int component) const
   {
     return stkField_(index, component);
   }
 
-  template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
+  template <typename MeshIndex, typename A = ACCESS>
   inline const std::enable_if_t<
-    std::is_same<M, HOST>::value && std::is_same<A, READ>::value,
-    T>&
-  operator()(const MeshIndex index, int component) const
-  {
-    return stkField_(index, component);
-  }
-
-  //************************************************************
-  // Device functions
-  //************************************************************
-  template <typename M = MEMSPACE>
-  KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_same<M, DEVICE>::value, unsigned>
-    get_ordinal() const
-  {
-    return stkField_.get_ordinal();
-  }
-
-  // --- Default Accessors
-  template <typename Mesh, typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_INLINE_FUNCTION std::enable_if_t<
-    std::is_same<M, DEVICE>::value && !std::is_same<A, READ>::value,
-    T>&
-  get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
-  {
-    return stkField_.get(ngpMesh, entity, component);
-  }
-
-  template <typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_INLINE_FUNCTION std::enable_if_t<
-    std::is_same<M, DEVICE>::value && !std::is_same<A, READ>::value,
-    T>&
-  get(stk::mesh::FastMeshIndex& index, int component) const
-  {
-    return stkField_.get(index, component);
-  }
-
-  template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_INLINE_FUNCTION std::enable_if_t<
-    std::is_same<M, DEVICE>::value && !std::is_same<A, READ>::value,
-    T>&
-  get(MeshIndex index, int component) const
-  {
-    return stkField_.get(index, component);
-  }
-
-  template <typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_INLINE_FUNCTION std::enable_if_t<
-    std::is_same<M, DEVICE>::value && !std::is_same<A, READ>::value,
-    T>&
-  operator()(const stk::mesh::FastMeshIndex& index, int component) const
-  {
-    return stkField_(index, component);
-  }
-
-  template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_INLINE_FUNCTION std::enable_if_t<
-    std::is_same<M, DEVICE>::value && !std::is_same<A, READ>::value,
-    T>&
-  operator()(const MeshIndex index, int component) const
-  {
-    return stkField_(index, component);
-  }
-
-  // --- Const Accessors
-  template <typename Mesh, typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
-    std::is_same<M, DEVICE>::value && std::is_same<A, READ>::value,
-    T>&
-  get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
-  {
-    return stkField_.get(ngpMesh, entity, component);
-  }
-
-  template <typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
-    std::is_same<M, DEVICE>::value && std::is_same<A, READ>::value,
-    T>&
-  get(stk::mesh::FastMeshIndex& index, int component) const
-  {
-    return stkField_.get(index, component);
-  }
-
-  template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
-    std::is_same<M, DEVICE>::value && std::is_same<A, READ>::value,
-    T>&
-  get(MeshIndex index, int component) const
-  {
-    return stkField_.get(index, component);
-  }
-
-  template <typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
-    std::is_same<M, DEVICE>::value && std::is_same<A, READ>::value,
-    T>&
-  operator()(const stk::mesh::FastMeshIndex& index, int component) const
-  {
-    return stkField_(index, component);
-  }
-
-  template <typename MeshIndex, typename A = ACCESS, typename M = MEMSPACE>
-  KOKKOS_INLINE_FUNCTION const std::enable_if_t<
-    std::is_same<M, DEVICE>::value && std::is_same<A, READ>::value,
+    std::is_same<A, READ>::value,
     T>&
   operator()(const MeshIndex index, int component) const
   {
