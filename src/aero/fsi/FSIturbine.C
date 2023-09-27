@@ -1371,12 +1371,6 @@ fsiTurbine::mapDisplacements(double time)
   // bld_def[k][(j+1)*6+2]
 
   const DeflectionRampingParams& defParams = deflectionRampParams_;
-  if(!defParams.enableThetaRamping_)
-    throw std::runtime_error("thetaRampIsOff\n");
-  if(!defParams.enableSpanRamping_)
-    throw std::runtime_error("spanRampIsOff\n");
-  if(!defParams.enableTemporalRamping_)
-    throw std::runtime_error("temporalRampIsOff\n");
   const double temporalDeflectionRamp = fsi::temporal_ramp(
     time, defParams.startTimeTemporalRamp_, defParams.endTimeTemporalRamp_,
     defParams.endTimeTemporalRamp_);
