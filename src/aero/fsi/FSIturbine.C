@@ -96,9 +96,9 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     double* thetaRamp = &defParams.thetaRampSpan_;
     // clang-format off
     // defaults of all are true from struct defintion
-    get_if_present(defNode, "enable_theta_ramping", defParams.enableThetaRamping_);
-    get_if_present(defNode, "enable_span_ramping", defParams.enableSpanRamping_);
-    get_if_present(defNode, "enable_temporal_ramping", defParams.enableTemporalRamping_);
+    get_if_present(defNode, "enable_theta_ramping", defParams.enableThetaRamping_, true);
+    get_if_present(defNode, "enable_span_ramping", defParams.enableSpanRamping_, true);
+    get_if_present(defNode, "enable_temporal_ramping", defParams.enableTemporalRamping_, true);
 
     if(defParams.enableTemporalRamping_){
       get_required(defNode, "temporal_ramp_start", defParams.startTimeTemporalRamp_);
@@ -1371,6 +1371,12 @@ fsiTurbine::mapDisplacements(double time)
   // bld_def[k][(j+1)*6+2]
 
   const DeflectionRampingParams& defParams = deflectionRampParams_;
+  if(!defParams.enableThetaRamping_)
+    throw std::runtime_error("thetaRampIsOff\n");
+  if(!defParams.enableSpanRamping_)
+    throw std::runtime_error("spanRampIsOff\n");
+  if(!defParams.enableTemporalRamping_)
+    throw std::runtime_error("temporalRampIsOff\n");
   const double temporalDeflectionRamp = fsi::temporal_ramp(
     time, defParams.startTimeTemporalRamp_, defParams.endTimeTemporalRamp_,
     defParams.endTimeTemporalRamp_);
