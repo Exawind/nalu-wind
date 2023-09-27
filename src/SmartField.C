@@ -22,8 +22,8 @@ using namespace tags;
   template class SmartField<stk::mesh::HostField<T>, HOST, READ_WRITE>
 
 #define EXPLICIT_TYPE_INSTANTIATOR_LEGACY(T)                                   \
-  template class SmartField<stk::mesh::Field<T>, LEGACY, READ>;                  \
-  template class SmartField<stk::mesh::Field<T>, LEGACY, WRITE_ALL>;             \
+  template class SmartField<stk::mesh::Field<T>, LEGACY, READ>;                \
+  template class SmartField<stk::mesh::Field<T>, LEGACY, WRITE_ALL>;           \
   template class SmartField<stk::mesh::Field<T>, LEGACY, READ_WRITE>
 
 EXPLICIT_TYPE_INSTANTIATOR_NGP(int);
