@@ -50,6 +50,9 @@ MomentumBuoyancySrcNodeSuppAlg::MomentumBuoyancySrcNodeSuppAlg(Realm& realm)
     hydroDensityNp1_ = &(hydroDensity->field_of_state(stk::mesh::StateNone));
   }
   densityNp1_ = &(density->field_of_state(stk::mesh::StateNP1));
+  VectorFieldType* buoyancySource = meta_data.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "buoyancy_source");
+  buoyancySource_ = &(buoyancySource->field_of_state(stk::mesh::StateNone));
 
   dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume");
@@ -59,6 +62,7 @@ MomentumBuoyancySrcNodeSuppAlg::MomentumBuoyancySrcNodeSuppAlg(Realm& realm)
   // extract user parameters from solution options
   gravity_ = realm_.solutionOptions_->gravity_;
   rhoRef_ = realm_.solutionOptions_->referenceDensity_;
+  useBalancedSource_ = realm_.solutionOptions_->use_balanced_buoyancy_force_;
 }
 
 //--------------------------------------------------------------------------
@@ -77,20 +81,44 @@ void
 MomentumBuoyancySrcNodeSuppAlg::node_execute(
   double* /*lhs*/, double* rhs, stk::mesh::Entity node)
 {
-  // rhs+=(rho-rhoRef)*gi
-  // later, may choose to assemble buoyancy to scv ips: Nip_k*rho_k
-  const double rhoNp1 = *stk::mesh::field_data(*densityNp1_, node);
-  const double hydroRhoNp1 = rhoRefIsHydroDens_
-                               ? *stk::mesh::field_data(*hydroDensityNp1_, node)
-                               : rhoNp1;
-  const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node);
 
-  const double fac = !rhoRefIsHydroDens_ ? (rhoNp1 - rhoRef_) * dualVolume
+  if ( useBalancedSource_ ) {
+    const int nDim = nDim_;
+    double * source = stk::mesh::field_data(*buoyancySource_, node);
+    const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node);
+    for (int i = 0; i < nDim; ++i) {
+      rhs[i] += source[i] * dualVolume; 
+    }
+
+    const double rhoNp1 = *stk::mesh::field_data(*densityNp1_, node);
+    const double hydroRhoNp1 = rhoRefIsHydroDens_
+                                 ? *stk::mesh::field_data(*hydroDensityNp1_, node)
+                                 : rhoNp1;
+
+    // Note that hydroRhoNp1 is at the node center while the source was calculated
+    // using face values. There will likely not be an exact error free match if you
+    // set hydro_rho = rho.
+    const double fac = !rhoRefIsHydroDens_ ? (- rhoRef_) * dualVolume
+                                           : (- hydroRhoNp1) * dualVolume;
+    for (int i = 0; i < nDim; ++i) {
+      rhs[i] += fac * gravity_[i];
+    }
+  } else {
+    const double rhoNp1 = *stk::mesh::field_data(*densityNp1_, node);
+    const double hydroRhoNp1 = rhoRefIsHydroDens_
+                                 ? *stk::mesh::field_data(*hydroDensityNp1_, node)
+                                 : rhoNp1;
+    const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node);
+
+    const double fac = !rhoRefIsHydroDens_ ? (rhoNp1 - rhoRef_) * dualVolume
                                          : (rhoNp1 - hydroRhoNp1) * dualVolume;
-  const int nDim = nDim_;
-  for (int i = 0; i < nDim; ++i) {
-    rhs[i] += fac * gravity_[i];
+    const int nDim = nDim_;
+    for (int i = 0; i < nDim; ++i) {
+      rhs[i] += fac * gravity_[i];
+    }
+
   }
+
 }
 
 } // namespace nalu

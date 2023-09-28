@@ -144,7 +144,7 @@ VOFAdvectionEdgeAlg::execute()
 
       NALU_ALIGNED DblType densityL = density.get(nodeL, 0);
       NALU_ALIGNED DblType densityR = density.get(nodeR, 0);
-      const DblType rhoIp = 2.0 / (1.0 / densityL + 1.0 / densityR);
+      const DblType rhoIp = 0.5 * densityL + 0.5 * densityR;
 
       const DblType vdot = massFlowRate.get(edge, 0) / rhoIp;
 
