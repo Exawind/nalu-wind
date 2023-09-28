@@ -137,6 +137,11 @@ SolutionOptions::load(const YAML::Node& y_node)
       y_solution_options, "set_rho_ref_to_hydrostatic_density",
       rho_ref_to_hydrostatic_rho_, rho_ref_to_hydrostatic_rho_);
 
+    // Removes unbalanced buoyancy forces in pressure
+    get_if_present(
+      y_solution_options, "use_balanced_buoyancy_force",
+      use_balanced_buoyancy_force_, use_balanced_buoyancy_force_);
+
     // Solve for incompressible continuity
     get_if_present(
       y_solution_options, "solve_incompressible_continuity",

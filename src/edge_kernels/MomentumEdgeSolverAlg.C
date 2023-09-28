@@ -59,6 +59,7 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
 void
 MomentumEdgeSolverAlg::execute()
 {
+
   const double eps = 1.0e-16;
   const int ndim = realm_.meta_data().spatial_dimension();
 

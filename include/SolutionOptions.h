@@ -101,6 +101,7 @@ public:
   bool has_set_boussinesq_time_scale();
 
   bool rho_ref_to_hydrostatic_rho_{false};
+  bool use_balanced_buoyancy_force_{false};
 
   double hybridDefault_;
   double alphaDefault_;

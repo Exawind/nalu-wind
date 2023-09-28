@@ -32,6 +32,7 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradPOpenBoundaryAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/SSTMaxLengthScaleAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumABLWallFuncMaskUtil.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/BuoyancySourceAlg.C
   # Algorithm Drivers
   ${CMAKE_CURRENT_SOURCE_DIR}/CourantReAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/FieldUpdateAlgDriver.C

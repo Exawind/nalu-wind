@@ -7,6 +7,7 @@
 // for more details.
 //
 
+#include <property_evaluator/MaterialPropertyData.h>
 #include <VolumeOfFluidEquationSystem.h>
 #include <ProjectedNodalGradientEquationSystem.h>
 #include <NaluParsing.h>
@@ -625,6 +626,7 @@ VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
+
   stk::mesh::Selector sel =
     (meta_data.locally_owned_part() | meta_data.globally_shared_part()) &
     stk::mesh::selectField(*volumeOfFluid_);
@@ -632,13 +634,47 @@ VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
 
+  std::map<PropertyIdentifier, MaterialPropertyData*>::iterator itf =
+    realm_.materialPropertys_.propertyDataMap_.find(DENSITY_ID);
+
+  // Need to set density due to mismatch in timing of evaluate_properties and momentum solve at the Realm level.
+  ScalarFieldType* density_ =
+    realm_.meta_data().get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "density");
+
+  auto mdata = (*itf).second;
+  double density_liquid_ = 0.0;
+  double density_gas_ = 0.0;
+
+  switch (mdata->type_) {
+  case CONSTANT_MAT: {
+    density_liquid_ = mdata->constValue_;
+    density_gas_ = mdata->constValue_;
+    break;
+  }
+  case VOF_MAT: {
+    density_liquid_ = mdata->primary_;
+    density_gas_ = mdata->secondary_;
+    break;
+  }
+  default: {
+    throw std::runtime_error(
+      "Incorrect density property set for VOF calculations. Use a constant or "
+      "VOF property for density.");
+    break;
+  }
+  }
+
   auto ngpVof =
     fieldMgr.get_field<double>(volumeOfFluid_->mesh_meta_data_ordinal());
+
+  auto ngpDen = 
+    fieldMgr.get_field<double>(density_->mesh_meta_data_ordinal());
 
   ngpVof.sync_to_device();
 
   nalu_ngp::run_entity_algorithm(
-    "vof_update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
+    "vof_update_and_clip_set_density", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
       if (ngpVof.get(mi, 0) < 0.0) {
         ngpVof.get(mi, 0) = 0.0;
@@ -646,8 +682,10 @@ VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
       if (ngpVof.get(mi, 0) > 1.0) {
         ngpVof.get(mi, 0) = 1.0;
       }
+      //ngpDen.get(mi, 0) = density_liquid_ * ngpVof.get(mi, 0) + (1.0 - ngpVof.get(mi,0)) * density_gas_;
     });
   ngpVof.modify_on_device();
+  ngpDen.modify_on_device();
 
   if (!managePNG_) {
     const double timeA = -NaluEnv::self().nalu_time();

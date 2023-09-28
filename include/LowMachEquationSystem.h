@@ -204,8 +204,11 @@ public:
   ScalarFieldType* tvisc_;
   ScalarFieldType* evisc_;
   ScalarFieldType* iddesRansIndicator_;
+  
+  VectorFieldType* buoyancy_source_;
 
   TensorNodalGradAlgDriver nodalGradAlgDriver_;
+  ScalarNodalGradAlgDriver nodalBuoyancyAlgDriver_;
   WallFricVelAlgDriver wallFuncAlgDriver_;
   NgpAlgDriver dynPressAlgDriver_;
   std::unique_ptr<EffDiffFluxCoeffAlg> diffFluxCoeffAlg_{nullptr};
@@ -217,6 +220,7 @@ public:
   std::unique_ptr<AMSAlgDriver> AMSAlgDriver_{nullptr};
 
   ProjectedNodalGradientEquationSystem* projectedNodalGradEqs_;
+
 
   double firstPNGResidual_;
 

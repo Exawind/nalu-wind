@@ -11,6 +11,7 @@
 #include "utils/StkHelpers.h"
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
+#include "SolutionOptions.h"
 
 namespace sierra {
 namespace nalu {
@@ -31,6 +32,8 @@ ContinuityEdgeSolverAlg::ContinuityEdgeSolverAlg(
   edgeAreaVec_ =
     get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   Udiag_ = get_field_ordinal(meta, "momentum_diag");
+
+  source_ = get_field_ordinal(meta, "buoyancy_source");
 }
 
 void
@@ -54,6 +57,14 @@ ContinuityEdgeSolverAlg::execute()
   const DblType solveIncompressibleEqn = realm_.get_incompressible_solve();
   const DblType om_solveIncompressibleEqn = 1.0 - solveIncompressibleEqn;
 
+  const double add_buoyancy_balance = (double)(realm_.solutionOptions_->use_balanced_buoyancy_force_);
+  double gravity_vector[3] = {0.0, 0.0, 0.0};
+
+  if (realm_.solutionOptions_->use_balanced_buoyancy_force_ && 
+      realm_.solutionOptions_->gravity_.size() >= ndim)
+    for (int idim = 0; idim < ndim; ++idim)
+      gravity_vector[idim] = realm_.solutionOptions_->gravity_[idim];
+
   // STK stk::mesh::NgpField instances for capture by lambda
   auto& fieldMgr = realm_.ngp_field_manager();
   auto coordinates = fieldMgr.get_field<double>(coordinates_);
@@ -63,6 +74,7 @@ ContinuityEdgeSolverAlg::execute()
   auto pressure = fieldMgr.get_field<double>(pressure_);
   auto udiag = fieldMgr.get_field<double>(Udiag_);
   auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
+  auto source = fieldMgr.get_field<double>(source_);
 
   stk::mesh::NgpField<double> edgeFaceVelMag;
   bool needs_gcl = false;
@@ -102,7 +114,7 @@ ContinuityEdgeSolverAlg::execute()
       const DblType udiagL = udiag.get(nodeL, 0);
       const DblType udiagR = udiag.get(nodeR, 0);
       const DblType projTimeScale = 0.5 * (1.0 / udiagL + 1.0 / udiagR);
-      const DblType rhoIp = 2.0 / (1.0 / densityL + 1.0 / densityR);
+      const DblType rhoIp = 0.5 * densityL + 0.5 * densityR;
       const DblType denScale =
         (1.0 / rhoIp) * solveIncompressibleEqn + om_solveIncompressibleEqn;
 
@@ -117,6 +129,8 @@ ContinuityEdgeSolverAlg::execute()
       const DblType inv_axdx = 1.0 / axdx;
 
       DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx;
+      for (int d = 0; d < ndim; ++d) 
+        tmdot += projTimeScale * av[d] * gravity_vector[d] * add_buoyancy_balance * rhoIp;
       if (needs_gcl) {
         tmdot -= rhoIp * edgeFaceVelMag.get(edge, 0);
       }
@@ -131,7 +145,7 @@ ContinuityEdgeSolverAlg::execute()
         const DblType ujIp =
           0.5 * (velocity.get(nodeR, d) + velocity.get(nodeL, d));
         const DblType GjIp =
-          0.5 * (Gpdx.get(nodeR, d) / udiagR + Gpdx.get(nodeL, d) / udiagL);
+          0.5 * ((Gpdx.get(nodeR, d) - source.get(nodeR, d) * add_buoyancy_balance ) / (udiagR) + (Gpdx.get(nodeL, d) - source.get(nodeL, d) * add_buoyancy_balance ) / (udiagL));
         tmdot +=
           (interpTogether * rhoUjIp + om_interpTogether * rhoIp * ujIp + GjIp) *
             av[d] -
