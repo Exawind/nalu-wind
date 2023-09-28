@@ -69,12 +69,10 @@ class SmartField<FieldType, tags::LEGACY, ACCESS>
 
 private:
   static constexpr bool is_read_{
-    std::is_same<ACCESS, READ>::value ||
-    std::is_same<ACCESS, READ_WRITE>::value};
+    std::is_same_v<ACCESS, READ> || std::is_same_v<ACCESS, READ_WRITE>};
 
   static constexpr bool is_write_{
-    std::is_same<ACCESS, WRITE_ALL>::value ||
-    std::is_same<ACCESS, READ_WRITE>::value};
+    std::is_same_v<ACCESS, WRITE_ALL> || std::is_same_v<ACCESS, READ_WRITE>};
 
   FieldType& stkField_;
 
@@ -99,14 +97,14 @@ public:
 
   // --- Default Accessors
   template <typename A = ACCESS>
-  inline typename std::enable_if_t<!std::is_same<A, READ>::value, T>*
+  inline typename std::enable_if_t<!std::is_same_v<A, READ>, T>*
   get(const stk::mesh::Entity& entity) const
   {
     return stk::mesh::field_data(stkField_, entity);
   }
 
   template <typename A = ACCESS>
-  inline typename std::enable_if_t<!std::is_same<A, READ>::value, T>*
+  inline typename std::enable_if_t<!std::is_same_v<A, READ>, T>*
   operator()(const stk::mesh::Entity& entity) const
   {
     return stk::mesh::field_data(stkField_, entity);
@@ -114,14 +112,14 @@ public:
 
   // --- Const Accessors
   template <typename A = ACCESS>
-  inline const typename std::enable_if_t<std::is_same<A, READ>::value, T>*
+  inline const typename std::enable_if_t<std::is_same_v<A, READ>, T>*
   get(const stk::mesh::Entity& entity) const
   {
     return stk::mesh::field_data(stkField_, entity);
   }
 
   template <typename A = ACCESS>
-  inline const typename std::enable_if_t<std::is_same<A, READ>::value, T>*
+  inline const typename std::enable_if_t<std::is_same_v<A, READ>, T>*
   operator()(const stk::mesh::Entity& entity) const
   {
     return stk::mesh::field_data(stkField_, entity);
@@ -149,12 +147,10 @@ class SmartField<FieldType, tags::DEVICE, ACCESS>
 {
 private:
   static constexpr bool is_read_{
-    std::is_same<ACCESS, READ>::value ||
-    std::is_same<ACCESS, READ_WRITE>::value};
+    std::is_same_v<ACCESS, READ> || std::is_same_v<ACCESS, READ_WRITE>};
 
   static constexpr bool is_write_{
-    std::is_same<ACCESS, WRITE_ALL>::value ||
-    std::is_same<ACCESS, READ_WRITE>::value};
+    std::is_same_v<ACCESS, WRITE_ALL> || std::is_same_v<ACCESS, READ_WRITE>};
 
   FieldType stkField_;
   const bool is_copy_constructed_{false};
@@ -195,41 +191,36 @@ public:
 
   // --- Default Accessors
   template <typename Mesh, typename A = ACCESS>
-  KOKKOS_FORCEINLINE_FUNCTION
-    std::enable_if_t<!std::is_same<A, READ>::value, T>&
-    get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<!std::is_same_v<A, READ>, T>&
+  get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
   {
     return stkField_.get(ngpMesh, entity, component);
   }
 
   template <typename A = ACCESS>
-  KOKKOS_FORCEINLINE_FUNCTION
-    std::enable_if_t<!std::is_same<A, READ>::value, T>&
-    get(stk::mesh::FastMeshIndex& index, int component) const
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<!std::is_same_v<A, READ>, T>&
+  get(stk::mesh::FastMeshIndex& index, int component) const
   {
     return stkField_.get(index, component);
   }
 
   template <typename MeshIndex, typename A = ACCESS>
-  KOKKOS_FORCEINLINE_FUNCTION
-    std::enable_if_t<!std::is_same<A, READ>::value, T>&
-    get(MeshIndex index, int component) const
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<!std::is_same_v<A, READ>, T>&
+  get(MeshIndex index, int component) const
   {
     return stkField_.get(index, component);
   }
 
   template <typename A = ACCESS>
-  KOKKOS_FORCEINLINE_FUNCTION
-    std::enable_if_t<!std::is_same<A, READ>::value, T>&
-    operator()(const stk::mesh::FastMeshIndex& index, int component) const
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<!std::is_same_v<A, READ>, T>&
+  operator()(const stk::mesh::FastMeshIndex& index, int component) const
   {
     return stkField_(index, component);
   }
 
   template <typename MeshIndex, typename A = ACCESS>
-  KOKKOS_FORCEINLINE_FUNCTION
-    std::enable_if_t<!std::is_same<A, READ>::value, T>&
-    operator()(const MeshIndex index, int component) const
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<!std::is_same_v<A, READ>, T>&
+  operator()(const MeshIndex index, int component) const
   {
     return stkField_(index, component);
   }
@@ -237,7 +228,7 @@ public:
   // --- Const Accessors
   template <typename Mesh, typename A = ACCESS>
   KOKKOS_FORCEINLINE_FUNCTION const
-    std::enable_if_t<std::is_same<A, READ>::value, T>&
+    std::enable_if_t<std::is_same_v<A, READ>, T>&
     get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
   {
     return stkField_.get(ngpMesh, entity, component);
@@ -245,7 +236,7 @@ public:
 
   template <typename A = ACCESS>
   KOKKOS_FORCEINLINE_FUNCTION const
-    std::enable_if_t<std::is_same<A, READ>::value, T>&
+    std::enable_if_t<std::is_same_v<A, READ>, T>&
     get(stk::mesh::FastMeshIndex& index, int component) const
   {
     return stkField_.get(index, component);
@@ -253,7 +244,7 @@ public:
 
   template <typename MeshIndex, typename A = ACCESS>
   KOKKOS_FORCEINLINE_FUNCTION const
-    std::enable_if_t<std::is_same<A, READ>::value, T>&
+    std::enable_if_t<std::is_same_v<A, READ>, T>&
     get(MeshIndex index, int component) const
   {
     return stkField_.get(index, component);
@@ -261,7 +252,7 @@ public:
 
   template <typename A = ACCESS>
   KOKKOS_FORCEINLINE_FUNCTION const
-    std::enable_if_t<std::is_same<A, READ>::value, T>&
+    std::enable_if_t<std::is_same_v<A, READ>, T>&
     operator()(const stk::mesh::FastMeshIndex& index, int component) const
   {
     return stkField_(index, component);
@@ -269,7 +260,7 @@ public:
 
   template <typename MeshIndex, typename A = ACCESS>
   KOKKOS_FORCEINLINE_FUNCTION const
-    std::enable_if_t<std::is_same<A, READ>::value, T>&
+    std::enable_if_t<std::is_same_v<A, READ>, T>&
     operator()(const MeshIndex index, int component) const
   {
     return stkField_(index, component);
@@ -286,12 +277,10 @@ class SmartField<FieldType, tags::HOST, ACCESS>
 {
 private:
   static constexpr bool is_read_{
-    std::is_same<ACCESS, READ>::value ||
-    std::is_same<ACCESS, READ_WRITE>::value};
+    std::is_same_v<ACCESS, READ> || std::is_same_v<ACCESS, READ_WRITE>};
 
   static constexpr bool is_write_{
-    std::is_same<ACCESS, WRITE_ALL>::value ||
-    std::is_same<ACCESS, READ_WRITE>::value};
+    std::is_same_v<ACCESS, WRITE_ALL> || std::is_same_v<ACCESS, READ_WRITE>};
 
   FieldType stkField_;
   const bool is_copy_constructed_{false};
@@ -331,35 +320,35 @@ public:
 
   // --- Default Accessors
   template <typename Mesh, typename A = ACCESS>
-  inline std::enable_if_t<!std::is_same<A, READ>::value, T>&
+  inline std::enable_if_t<!std::is_same_v<A, READ>, T>&
   get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
   {
     return stkField_.get(ngpMesh, entity, component);
   }
 
   template <typename A = ACCESS>
-  inline std::enable_if_t<!std::is_same<A, READ>::value, T>&
+  inline std::enable_if_t<!std::is_same_v<A, READ>, T>&
   get(stk::mesh::FastMeshIndex& index, int component) const
   {
     return stkField_.get(index, component);
   }
 
   template <typename MeshIndex, typename A = ACCESS>
-  inline std::enable_if_t<!std::is_same<A, READ>::value, T>&
+  inline std::enable_if_t<!std::is_same_v<A, READ>, T>&
   get(MeshIndex index, int component) const
   {
     return stkField_.get(index, component);
   }
 
   template <typename A = ACCESS>
-  inline std::enable_if_t<!std::is_same<A, READ>::value, T>&
+  inline std::enable_if_t<!std::is_same_v<A, READ>, T>&
   operator()(const stk::mesh::FastMeshIndex& index, int component) const
   {
     return stkField_(index, component);
   }
 
   template <typename MeshIndex, typename A = ACCESS>
-  inline std::enable_if_t<!std::is_same<A, READ>::value, T>&
+  inline std::enable_if_t<!std::is_same_v<A, READ>, T>&
   operator()(const MeshIndex index, int component) const
   {
     return stkField_(index, component);
@@ -367,35 +356,35 @@ public:
 
   // --- Const Accessors
   template <typename Mesh, typename A = ACCESS>
-  inline const std::enable_if_t<std::is_same<A, READ>::value, T>&
+  inline const std::enable_if_t<std::is_same_v<A, READ>, T>&
   get(const Mesh& ngpMesh, stk::mesh::Entity entity, int component) const
   {
     return stkField_.get(ngpMesh, entity, component);
   }
 
   template <typename A = ACCESS>
-  inline const std::enable_if_t<std::is_same<A, READ>::value, T>&
+  inline const std::enable_if_t<std::is_same_v<A, READ>, T>&
   get(stk::mesh::FastMeshIndex& index, int component) const
   {
     return stkField_.get(index, component);
   }
 
   template <typename MeshIndex, typename A = ACCESS>
-  inline const std::enable_if_t<std::is_same<A, READ>::value, T>&
+  inline const std::enable_if_t<std::is_same_v<A, READ>, T>&
   get(MeshIndex index, int component) const
   {
     return stkField_.get(index, component);
   }
 
   template <typename A = ACCESS>
-  inline const std::enable_if_t<std::is_same<A, READ>::value, T>&
+  inline const std::enable_if_t<std::is_same_v<A, READ>, T>&
   operator()(const stk::mesh::FastMeshIndex& index, int component) const
   {
     return stkField_(index, component);
   }
 
   template <typename MeshIndex, typename A = ACCESS>
-  inline const std::enable_if_t<std::is_same<A, READ>::value, T>&
+  inline const std::enable_if_t<std::is_same_v<A, READ>, T>&
   operator()(const MeshIndex index, int component) const
   {
     return stkField_(index, component);
