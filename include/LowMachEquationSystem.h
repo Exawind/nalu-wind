@@ -301,6 +301,7 @@ public:
   const bool managePNG_;
   ScalarFieldType* pressure_;
   VectorFieldType* dpdx_;
+  VectorFieldType* dpdx_sharp_;
   ScalarFieldType* massFlowRate_;
   ScalarFieldType* massForcedFlowRate_;
   VectorFieldType* coordinates_;
