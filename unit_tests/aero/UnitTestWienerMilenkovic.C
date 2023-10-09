@@ -50,18 +50,17 @@ impl_test_WM_rotation(
 
   bool tp = transpose;
 
-  Kokkos::parallel_for(
-    1, KOKKOS_LAMBDA(int) {
-      if (tp)
-        dEndGold(0) = dPoint(0) & vs::quaternion(dAxis(0), -dAngle(0));
-      else
-        dEndGold(0) = dPoint(0) & vs::quaternion(dAxis(0), dAngle(0));
+  Kokkos::parallel_for(1, KOKKOS_LAMBDA(int) {
+    if (tp)
+      dEndGold(0) = dPoint(0) & vs::quaternion(dAxis(0), -dAngle(0));
+    else
+      dEndGold(0) = dPoint(0) & vs::quaternion(dAxis(0), dAngle(0));
 
-      // WM setup
-      const auto wmAxis =
-        wmp::create_wm_param(dAxis(0), utils::radians(dAngle(0)));
-      dEnd(0) = wmp::rotate(wmAxis, dPoint(0), transpose);
-    });
+    // WM setup
+    const auto wmAxis =
+      wmp::create_wm_param(dAxis(0), utils::radians(dAngle(0)));
+    dEnd(0) = wmp::rotate(wmAxis, dPoint(0), transpose);
+  });
 
   Kokkos::deep_copy(hEnd, dEnd);
   Kokkos::deep_copy(hEndGold, dEndGold);
@@ -99,19 +98,18 @@ impl_test_WM_compose_two_rot(
   Kokkos::deep_copy(dPoint, hPoint);
   Kokkos::deep_copy(dAngle, hAngle);
 
-  Kokkos::parallel_for(
-    1, KOKKOS_LAMBDA(int) {
-      dEndGold(0) = (dPoint(0) & vs::quaternion(dAxis(0), dAngle(0))) &
-                    vs::quaternion(dAxis(1), dAngle(1));
+  Kokkos::parallel_for(1, KOKKOS_LAMBDA(int) {
+    dEndGold(0) = (dPoint(0) & vs::quaternion(dAxis(0), dAngle(0))) &
+                  vs::quaternion(dAxis(1), dAngle(1));
 
-      // WM setup
-      const auto wmAxis1 =
-        wmp::create_wm_param(dAxis(0), utils::radians(dAngle(0)));
-      const auto wmAxis2 =
-        wmp::create_wm_param(dAxis(1), utils::radians(dAngle(1)));
-      const auto wmCompose = wmp::push(wmAxis2, wmAxis1);
-      dEnd(0) = wmp::rotate(wmCompose, dPoint(0));
-    });
+    // WM setup
+    const auto wmAxis1 =
+      wmp::create_wm_param(dAxis(0), utils::radians(dAngle(0)));
+    const auto wmAxis2 =
+      wmp::create_wm_param(dAxis(1), utils::radians(dAngle(1)));
+    const auto wmCompose = wmp::push(wmAxis2, wmAxis1);
+    dEnd(0) = wmp::rotate(wmCompose, dPoint(0));
+  });
 
   Kokkos::deep_copy(hEnd, dEnd);
   Kokkos::deep_copy(hEndGold, dEndGold);
@@ -141,15 +139,14 @@ impl_test_WM_compose_add_sub(vs::Vector v1, vs::Vector v2, vs::Vector point)
   Kokkos::deep_copy(dAxis, hAxis);
   Kokkos::deep_copy(dPoint, hPoint);
 
-  Kokkos::parallel_for(
-    1, KOKKOS_LAMBDA(int) {
-      // add v1 and v2 togther
-      const auto v3 = wmp::push(dAxis(1), dAxis(0));
-      // subtract v2 from v3
-      const auto v4 = wmp::pop(dAxis(1), v3);
+  Kokkos::parallel_for(1, KOKKOS_LAMBDA(int) {
+    // add v1 and v2 togther
+    const auto v3 = wmp::push(dAxis(1), dAxis(0));
+    // subtract v2 from v3
+    const auto v4 = wmp::pop(dAxis(1), v3);
 
-      dEnd(0) = wmp::rotate(v4, point);
-    });
+    dEnd(0) = wmp::rotate(v4, point);
+  });
 
   Kokkos::deep_copy(hEnd, dEnd);
 

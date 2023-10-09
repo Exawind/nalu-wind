@@ -904,27 +904,24 @@ WedSCS::isInElement(
 
   // Translate element so that (x,y,z) coordinates of first node are (0,0,0)
 
-  double x[] = {
-    0.0,
-    elemNodalCoord[1] - elemNodalCoord[0],
-    elemNodalCoord[2] - elemNodalCoord[0],
-    elemNodalCoord[3] - elemNodalCoord[0],
-    elemNodalCoord[4] - elemNodalCoord[0],
-    elemNodalCoord[5] - elemNodalCoord[0]};
-  double y[] = {
-    0.0,
-    elemNodalCoord[7] - elemNodalCoord[6],
-    elemNodalCoord[8] - elemNodalCoord[6],
-    elemNodalCoord[9] - elemNodalCoord[6],
-    elemNodalCoord[10] - elemNodalCoord[6],
-    elemNodalCoord[11] - elemNodalCoord[6]};
-  double z[] = {
-    0.0,
-    elemNodalCoord[13] - elemNodalCoord[12],
-    elemNodalCoord[14] - elemNodalCoord[12],
-    elemNodalCoord[15] - elemNodalCoord[12],
-    elemNodalCoord[16] - elemNodalCoord[12],
-    elemNodalCoord[17] - elemNodalCoord[12]};
+  double x[] = {0.0,
+                elemNodalCoord[1] - elemNodalCoord[0],
+                elemNodalCoord[2] - elemNodalCoord[0],
+                elemNodalCoord[3] - elemNodalCoord[0],
+                elemNodalCoord[4] - elemNodalCoord[0],
+                elemNodalCoord[5] - elemNodalCoord[0]};
+  double y[] = {0.0,
+                elemNodalCoord[7] - elemNodalCoord[6],
+                elemNodalCoord[8] - elemNodalCoord[6],
+                elemNodalCoord[9] - elemNodalCoord[6],
+                elemNodalCoord[10] - elemNodalCoord[6],
+                elemNodalCoord[11] - elemNodalCoord[6]};
+  double z[] = {0.0,
+                elemNodalCoord[13] - elemNodalCoord[12],
+                elemNodalCoord[14] - elemNodalCoord[12],
+                elemNodalCoord[15] - elemNodalCoord[12],
+                elemNodalCoord[16] - elemNodalCoord[12],
+                elemNodalCoord[17] - elemNodalCoord[12]};
 
   // (xp,yp,zp) is the point to be mapped into (r,s,xi) coordinate system.
   // This point must also be translated as above.

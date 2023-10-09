@@ -164,8 +164,8 @@ HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
       fclose(fid);
 
       fid = fopen(rhsFileMeta.c_str(), "wb");
-      HypreIntType meta[3] = {
-        num_rows_owned, num_rows_shared, (HypreIntType)rhs_rows_dev_.extent(0)};
+      HypreIntType meta[3] = {num_rows_owned, num_rows_shared,
+                              (HypreIntType)rhs_rows_dev_.extent(0)};
       fwrite(meta, sizeof(HypreIntType), 3, fid);
       fclose(fid);
 

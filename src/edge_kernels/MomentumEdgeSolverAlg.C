@@ -49,7 +49,10 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   massFlowRate_ =
     get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
   massForcedFlowRate_ =
-    get_field_ordinal(meta, "mass_forced_flow_rate", stk::topology::EDGE_RANK);
+    realm.solutionOptions_->realm_has_vof_
+      ? get_field_ordinal(
+          meta, "mass_forced_flow_rate", stk::topology::EDGE_RANK)
+      : get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
   pecletFactor_ =
     get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK);
   maskNodeField_ = get_field_ordinal(
@@ -74,6 +77,8 @@ MomentumEdgeSolverAlg::execute()
 
   const DblType om_alpha = 1.0 - alpha;
   const DblType om_alphaUpw = 1.0 - alphaUpw;
+
+  const DblType has_vof = (double)realm_.solutionOptions_->realm_has_vof_;
 
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
@@ -103,7 +108,7 @@ MomentumEdgeSolverAlg::execute()
         av[d] = edgeAreaVec.get(edge, d);
 
       const DblType mdot =
-        massFlowRate.get(edge, 0) + massForcedFlowRate.get(edge, 0);
+        massFlowRate.get(edge, 0) + massForcedFlowRate.get(edge, 0) * has_vof;
 
       const DblType densityL = density.get(nodeL, 0);
       const DblType densityR = density.get(nodeR, 0);

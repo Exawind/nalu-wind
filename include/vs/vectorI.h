@@ -102,9 +102,9 @@ template <typename T>
 KOKKOS_FORCEINLINE_FUNCTION VectorT<T>
 operator^(const VectorT<T>& v1, const VectorT<T>& v2)
 {
-  return VectorT<T>{
-    (v1.y() * v2.z() - v1.z() * v2.y()), (v1.z() * v2.x() - v1.x() * v2.z()),
-    (v1.x() * v2.y() - v1.y() * v2.x())};
+  return VectorT<T>{(v1.y() * v2.z() - v1.z() * v2.y()),
+                    (v1.z() * v2.x() - v1.x() * v2.z()),
+                    (v1.x() * v2.y() - v1.y() * v2.x())};
 }
 
 template <typename T>

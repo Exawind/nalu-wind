@@ -83,6 +83,9 @@ VolumeOfFluidEquationSystem::VolumeOfFluidEquationSystem(
   // Require div(u) = 0 instead of div(density*u) = 0
   realm_.solutionOptions_->solveIncompressibleContinuity_ = true;
 
+  // Turn on VOF linked Momentum terms
+  realm_.solutionOptions_->realm_has_vof_ = true;
+
   // determine nodal gradient form
   set_nodal_gradient("volume_of_fluid");
   NaluEnv::self().naluOutputP0()
@@ -126,6 +129,11 @@ VolumeOfFluidEquationSystem::register_nodal_fields(
 
   // push to property list
   realm_.augment_property_map(DENSITY_ID, density_);
+
+  auto velocity_ = &(meta_data.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "velocity", numStates));
+  stk::mesh::put_field_on_mesh(*velocity_, selector, nullptr);
+  realm_.augment_restart_variable_list("velocity");
 
   volumeOfFluid_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "volume_of_fluid", numStates));
@@ -548,15 +556,28 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
                                  TurbulenceModel::SST_AMS)
                                   ? true
                                   : false;
+
+        VectorFieldType* velocity_ =
+          realm_.meta_data().get_field<VectorFieldType>(
+            stk::topology::NODE_RANK, "velocity");
+
         ScalarFieldType* density_ =
           realm_.meta_data().get_field<ScalarFieldType>(
             stk::topology::NODE_RANK, "density");
-        std::vector<double> userSpec(1);
+        std::vector<double> userSpec(3);
         userSpec[0] = 1.0;
+        userSpec[1] = 0.0;
+        userSpec[2] = 0.0;
         AuxFunction* constantAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
         AuxFunctionAlgorithm* constantAuxAlg = new AuxFunctionAlgorithm(
           realm_, part, density_, constantAuxFunc, stk::topology::NODE_RANK);
         realm_.initCondAlg_.push_back(constantAuxAlg);
+
+        AuxFunction* constantVelFunc = new ConstantAuxFunction(0, 3, userSpec);
+        AuxFunctionAlgorithm* constantVelAlg = new AuxFunctionAlgorithm(
+          realm_, part, velocity_, constantVelFunc, stk::topology::NODE_RANK);
+        realm_.initCondAlg_.push_back(constantVelAlg);
+
         auto VOFSetMassFlowRate =
           new ZalesakDiskMassFlowRateEdgeAlg(realm_, part, this, useAvgMdot);
         realm_.initCondAlg_.push_back(VOFSetMassFlowRate);
@@ -626,7 +647,6 @@ VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-
   stk::mesh::Selector sel =
     (meta_data.locally_owned_part() | meta_data.globally_shared_part()) &
     stk::mesh::selectField(*volumeOfFluid_);
@@ -634,47 +654,13 @@ VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
 
-  std::map<PropertyIdentifier, MaterialPropertyData*>::iterator itf =
-    realm_.materialPropertys_.propertyDataMap_.find(DENSITY_ID);
-
-  // Need to set density due to mismatch in timing of evaluate_properties and momentum solve at the Realm level.
-  ScalarFieldType* density_ =
-    realm_.meta_data().get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "density");
-
-  auto mdata = (*itf).second;
-  double density_liquid_ = 0.0;
-  double density_gas_ = 0.0;
-
-  switch (mdata->type_) {
-  case CONSTANT_MAT: {
-    density_liquid_ = mdata->constValue_;
-    density_gas_ = mdata->constValue_;
-    break;
-  }
-  case VOF_MAT: {
-    density_liquid_ = mdata->primary_;
-    density_gas_ = mdata->secondary_;
-    break;
-  }
-  default: {
-    throw std::runtime_error(
-      "Incorrect density property set for VOF calculations. Use a constant or "
-      "VOF property for density.");
-    break;
-  }
-  }
-
   auto ngpVof =
     fieldMgr.get_field<double>(volumeOfFluid_->mesh_meta_data_ordinal());
-
-  auto ngpDen = 
-    fieldMgr.get_field<double>(density_->mesh_meta_data_ordinal());
 
   ngpVof.sync_to_device();
 
   nalu_ngp::run_entity_algorithm(
-    "vof_update_and_clip_set_density", ngpMesh, stk::topology::NODE_RANK, sel,
+    "vof_update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
       if (ngpVof.get(mi, 0) < 0.0) {
         ngpVof.get(mi, 0) = 0.0;
@@ -682,10 +668,8 @@ VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
       if (ngpVof.get(mi, 0) > 1.0) {
         ngpVof.get(mi, 0) = 1.0;
       }
-      //ngpDen.get(mi, 0) = density_liquid_ * ngpVof.get(mi, 0) + (1.0 - ngpVof.get(mi,0)) * density_gas_;
     });
   ngpVof.modify_on_device();
-  ngpDen.modify_on_device();
 
   if (!managePNG_) {
     const double timeA = -NaluEnv::self().nalu_time();
@@ -731,8 +715,9 @@ VolumeOfFluidEquationSystem::predict_state()
   auto& vofN = fieldMgr.get_field<double>(
     volumeOfFluid_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
   auto& vofNp1 = fieldMgr.get_field<double>(
-    volumeOfFluid_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
-  
+    volumeOfFluid_->field_of_state(stk::mesh::StateNP1)
+      .mesh_meta_data_ordinal());
+
   vofN.sync_to_device();
 
   const auto& meta = realm_.meta_data();

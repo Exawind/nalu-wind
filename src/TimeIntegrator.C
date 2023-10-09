@@ -301,7 +301,6 @@ TimeIntegrator::pre_realm_advance_stage1(size_t inonlin)
       << " dtN: " << timeStepN_ << " dtNm1: " << timeStepNm1_
       << " gammas: " << gamma1_ << " " << gamma2_ << " " << gamma3_
       << std::endl;
-
   }
 
   // read any fields from input file that will serve as external fields

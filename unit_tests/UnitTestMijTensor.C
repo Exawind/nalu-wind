@@ -77,9 +77,8 @@ test_metric_for_topo_2D(stk::topology topo, double tol)
   rng.seed(0); // fixed seed
   std::uniform_real_distribution<double> coeff(-1.0, 1.0);
 
-  double Q[4] = {
-    1.0 + std::abs(coeff(rng)), coeff(rng), coeff(rng),
-    1.0 + std::abs(coeff(rng))};
+  double Q[4] = {1.0 + std::abs(coeff(rng)), coeff(rng), coeff(rng),
+                 1.0 + std::abs(coeff(rng))};
 
   double Qt[4];
   sierra::nalu::transpose22(Q, Qt);

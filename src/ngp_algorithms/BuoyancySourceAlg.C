@@ -26,8 +26,10 @@ BuoyancySourceAlg::BuoyancySourceAlg(
     edgeAreaVec_(get_field_ordinal(
       realm_.meta_data(), "edge_area_vector", stk::topology::EDGE_RANK)),
     dualNodalVol_(get_field_ordinal(realm_.meta_data(), "dual_nodal_volume")),
-    coordinates_(get_field_ordinal(realm_.meta_data(), realm.get_coordinates_name())),
-    density_(get_field_ordinal(realm_.meta_data(), "density", stk::mesh::StateNP1))
+    coordinates_(
+      get_field_ordinal(realm_.meta_data(), realm.get_coordinates_name())),
+    density_(
+      get_field_ordinal(realm_.meta_data(), "density", stk::mesh::StateNP1))
 {
 }
 
@@ -51,7 +53,7 @@ BuoyancySourceAlg::execute()
                                   stk::mesh::selectUnion(partVec_) &
                                   !(realm_.get_inactive_selector());
 
-  double gravity [3] = {0.0, 0.0, 0.0};
+  double gravity[3] = {0.0, 0.0, 0.0};
 
   if (realm_.solutionOptions_->gravity_.size() >= ndim)
     for (int idim = 0; idim < ndim; ++idim)
@@ -73,33 +75,34 @@ BuoyancySourceAlg::execute()
       const DblType invVolL = 1.0 / dualVol.get(nodeL, 0);
       const DblType invVolR = 1.0 / dualVol.get(nodeR, 0);
 
-      const DblType rhoIp = 0.5 * (density.get(nodeL, 0) + density.get(nodeR, 0));
+      const DblType rhoIp =
+        0.5 * (density.get(nodeL, 0) + density.get(nodeR, 0));
 
-      DblType cc_face[3] = { 0.0, 0.0, 0.0 };
-      for (int i = 0; i < ndim; ++i) 
-        cc_face[i] = 0.5 * (coordinates.get(nodeL, i) + coordinates.get(nodeR, i));
+      DblType cc_face[3] = {0.0, 0.0, 0.0};
+      for (int i = 0; i < ndim; ++i)
+        cc_face[i] =
+          0.5 * (coordinates.get(nodeL, i) + coordinates.get(nodeR, i));
 
       DblType gravity_left = 0.0;
       DblType gravity_right = 0.0;
 
-      // There is a better form of this that should work better for general 
-      // meshes which will involve calculating an effective length to conserve volume. 
-      // This one was used by Denner & van Wechem, 2014 successfully and is simpler.
+      // There is a better form of this that should work better for general
+      // meshes which will involve calculating an effective length to conserve
+      // volume. This one was used by Denner & van Wechem, 2014 successfully and
+      // is simpler.
       for (int i = 0; i < ndim; ++i) {
-        gravity_left += gravity[i] * (cc_face[i] - coordinates.get(nodeL, i)) ;
-        gravity_right += gravity[i] * (cc_face[i] - coordinates.get(nodeR, i)) ;
+        gravity_left += gravity[i] * (cc_face[i] - coordinates.get(nodeL, i));
+        gravity_right += gravity[i] * (cc_face[i] - coordinates.get(nodeR, i));
       }
 
       for (int i = 0; i < 3; ++i) {
         sourceOps(einfo, 0, i) += av[i] * rhoIp * gravity_left * invVolL;
         sourceOps(einfo, 1, i) -= av[i] * rhoIp * gravity_right * invVolR;
       }
-        
 
     });
   source.modify_on_device();
 }
-
 
 } // namespace nalu
 } // namespace sierra

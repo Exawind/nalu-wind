@@ -43,9 +43,9 @@ using ActScalarU64Dv =
 using ActScalarDblDv =
   Kokkos::DualView<double*, ActuatorMemLayout, ActuatorMemSpace>;
 using ActVectorDblDv =
-  Kokkos::DualView<double* [3], ActuatorMemLayout, ActuatorMemSpace>;
+  Kokkos::DualView<double * [3], ActuatorMemLayout, ActuatorMemSpace>;
 using ActTensorDblDv =
-  Kokkos::DualView<double* [9], ActuatorMemLayout, ActuatorMemSpace>;
+  Kokkos::DualView<double * [9], ActuatorMemLayout, ActuatorMemSpace>;
 using Act2DArrayDblDv =
   Kokkos::DualView<double**, ActuatorMemLayout, ActuatorMemSpace>;
 
@@ -55,9 +55,9 @@ using ActScalarU64 =
   Kokkos::View<uint64_t*, ActuatorMemLayout, ActuatorMemSpace>;
 using ActScalarDbl = Kokkos::View<double*, ActuatorMemLayout, ActuatorMemSpace>;
 using ActVectorDbl =
-  Kokkos::View<double* [3], ActuatorMemLayout, ActuatorMemSpace>;
+  Kokkos::View<double * [3], ActuatorMemLayout, ActuatorMemSpace>;
 using ActTensorDbl =
-  Kokkos::View<double* [9], ActuatorMemLayout, ActuatorMemSpace>;
+  Kokkos::View<double * [9], ActuatorMemLayout, ActuatorMemSpace>;
 using Act2DArrayDbl =
   Kokkos::View<double**, ActuatorMemLayout, ActuatorMemSpace>;
 
@@ -68,7 +68,7 @@ using ActFixScalarInt =
 using ActFixScalarDbl =
   Kokkos::View<double*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 using ActFixVectorDbl =
-  Kokkos::View<double* [3], ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
+  Kokkos::View<double * [3], ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 using ActFixElemIds =
   Kokkos::View<uint64_t*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 using ActFixScalarBool =
@@ -76,7 +76,7 @@ using ActFixScalarBool =
 using ActFixArrayInt =
   Kokkos::View<int**, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 using ActFixTensorDbl =
-  Kokkos::View<double* [9], ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
+  Kokkos::View<double * [9], ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 
 template <typename memory_space>
 struct ActDualViewHelper

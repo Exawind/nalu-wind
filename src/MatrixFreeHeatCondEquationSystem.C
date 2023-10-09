@@ -281,9 +281,9 @@ namespace {
 Kokkos::Array<double, 3>
 compute_scaled_gammas(const TimeIntegrator& ti)
 {
-  return Kokkos::Array<double, 3>{
-    {ti.get_gamma1() / ti.get_time_step(), ti.get_gamma2() / ti.get_time_step(),
-     ti.get_gamma3() / ti.get_time_step()}};
+  return Kokkos::Array<double, 3>{{ti.get_gamma1() / ti.get_time_step(),
+                                   ti.get_gamma2() / ti.get_time_step(),
+                                   ti.get_gamma3() / ti.get_time_step()}};
 }
 
 void

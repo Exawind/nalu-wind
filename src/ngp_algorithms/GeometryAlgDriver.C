@@ -67,8 +67,8 @@ compute_volume_stats(Realm& realm, double* gVolStats)
     },
     volReducer);
 
-  double lVolStats[3] = {
-    volStats.min_val, volStats.max_val, volStats.total_sum};
+  double lVolStats[3] = {volStats.min_val, volStats.max_val,
+                         volStats.total_sum};
   stk::all_reduce_min(
     meshInfo.bulk().parallel(), &lVolStats[0], &gVolStats[0], 1);
   stk::all_reduce_max(

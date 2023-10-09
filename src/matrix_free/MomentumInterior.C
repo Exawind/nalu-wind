@@ -332,44 +332,43 @@ momentum_linearized_residual_t<p>::invoke(
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<2>, int>;
 #endif
   const auto range = policy_type({0, 0}, {offsets.extent_int(0), 3});
-  Kokkos::parallel_for(
-    range, KOKKOS_LAMBDA(int index, int d) {
-      const auto length = valid_offset<p>(index, offsets);
-      LocalArray<int[p + 1][p + 1][p + 1][simd_len]> idx;
-      narray delta;
-      for (int k = 0; k < p + 1; ++k) {
-        for (int j = 0; j < p + 1; ++j) {
-          for (int i = 0; i < p + 1; ++i) {
-            for (int n = 0; n < length; ++n) {
-              idx(k, j, i, n) = offsets(index, k, j, i, n);
-              stk::simd::set_data(delta(k, j, i), n, xin(idx(k, j, i, n), d));
-            }
+  Kokkos::parallel_for(range, KOKKOS_LAMBDA(int index, int d) {
+    const auto length = valid_offset<p>(index, offsets);
+    LocalArray<int[p + 1][p + 1][p + 1][simd_len]> idx;
+    narray delta;
+    for (int k = 0; k < p + 1; ++k) {
+      for (int j = 0; j < p + 1; ++j) {
+        for (int i = 0; i < p + 1; ++i) {
+          for (int n = 0; n < length; ++n) {
+            idx(k, j, i, n) = offsets(index, k, j, i, n);
+            stk::simd::set_data(delta(k, j, i), n, xin(idx(k, j, i, n), d));
           }
         }
       }
+    }
 
-      narray elem_rhs;
-      if (p == 1) {
-        lumped_mass_term<p>(index, gamma_0, vp1, delta, elem_rhs);
-      } else {
-        apply_mass<p>(index, gamma_0, vp1, delta, elem_rhs);
-      }
-      advdiff_flux<p, 0>(index, mdot, diff, delta, elem_rhs);
-      advdiff_flux<p, 1>(index, mdot, diff, delta, elem_rhs);
-      advdiff_flux<p, 2>(index, mdot, diff, delta, elem_rhs);
+    narray elem_rhs;
+    if (p == 1) {
+      lumped_mass_term<p>(index, gamma_0, vp1, delta, elem_rhs);
+    } else {
+      apply_mass<p>(index, gamma_0, vp1, delta, elem_rhs);
+    }
+    advdiff_flux<p, 0>(index, mdot, diff, delta, elem_rhs);
+    advdiff_flux<p, 1>(index, mdot, diff, delta, elem_rhs);
+    advdiff_flux<p, 2>(index, mdot, diff, delta, elem_rhs);
 
-      auto accessor = yout_scatter.access();
-      for (int k = 0; k < p + 1; ++k) {
-        for (int j = 0; j < p + 1; ++j) {
-          for (int i = 0; i < p + 1; ++i) {
-            for (int n = 0; n < length; ++n) {
-              accessor(idx(k, j, i, n), d) -=
-                stk::simd::get_data(elem_rhs(k, j, i), n);
-            }
+    auto accessor = yout_scatter.access();
+    for (int k = 0; k < p + 1; ++k) {
+      for (int j = 0; j < p + 1; ++j) {
+        for (int i = 0; i < p + 1; ++i) {
+          for (int n = 0; n < length; ++n) {
+            accessor(idx(k, j, i, n), d) -=
+              stk::simd::get_data(elem_rhs(k, j, i), n);
           }
         }
       }
-    });
+    }
+  });
   Kokkos::Experimental::contribute(yout, yout_scatter);
 }
 INSTANTIATE_POLYSTRUCT(momentum_linearized_residual_t);

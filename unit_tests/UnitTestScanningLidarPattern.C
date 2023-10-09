@@ -45,9 +45,8 @@ public:
   {
     enum { XH = 0, YH = 1, ZH = 2 };
     normalize_vec3(vec.data());
-    std::array<double, 9> nX = {
-      {0, -axis[ZH], +axis[YH], +axis[ZH], 0, -axis[XH], -axis[YH], +axis[XH],
-       0}};
+    std::array<double, 9> nX = {{0, -axis[ZH], +axis[YH], +axis[ZH], 0,
+                                 -axis[XH], -axis[YH], +axis[XH], 0}};
     const double cosTheta = std::cos(angle);
     std::array<double, 9> rot = {
       {cosTheta, 0, 0, 0, cosTheta, 0, 0, 0, cosTheta}};

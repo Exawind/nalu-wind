@@ -267,16 +267,14 @@ private:
   const int scsIpEdgeOrd_[AlgTraits::numScsIp_] = {0, 1, 2};
 
   // define opposing node
-  const int oppNode_[3][2] = {
-    {2, 2},  // face 0; nodes 0,1
-    {0, 0},  // face 1; nodes 1,2
-    {1, 1}}; // face 2; nodes 2,0
+  const int oppNode_[3][2] = {{2, 2},  // face 0; nodes 0,1
+                              {0, 0},  // face 1; nodes 1,2
+                              {1, 1}}; // face 2; nodes 2,0
 
   // define opposing face
-  const int oppFace_[3][2] = {
-    {2, 1},  // face 0
-    {0, 2},  // face 1
-    {1, 0}}; // face 2
+  const int oppFace_[3][2] = {{2, 1},  // face 0
+                              {0, 2},  // face 1
+                              {1, 0}}; // face 2
 
   // standard integration location
   const double five12ths = 5.0 / 12.0;

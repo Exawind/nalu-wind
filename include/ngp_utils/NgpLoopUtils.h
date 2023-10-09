@@ -258,9 +258,8 @@ run_edge_algorithm(
 
   run_entity_algorithm(
     algName, mesh, rank, sel, KOKKOS_LAMBDA(MeshIndex & meshIdx) {
-      algorithm(EntityInfo<Mesh>{
-        meshIdx, (*meshIdx.bucket)[meshIdx.bucketOrd],
-        mesh.get_nodes(meshIdx)});
+      algorithm(EntityInfo<Mesh>{meshIdx, (*meshIdx.bucket)[meshIdx.bucketOrd],
+                                 mesh.get_nodes(meshIdx)});
     });
 }
 
@@ -292,9 +291,8 @@ run_elem_algorithm(
 
   run_entity_algorithm(
     algName, mesh, rank, sel, KOKKOS_LAMBDA(MeshIndex & meshIdx) {
-      algorithm(EntityInfo<Mesh>{
-        meshIdx, (*meshIdx.bucket)[meshIdx.bucketOrd],
-        mesh.get_nodes(meshIdx)});
+      algorithm(EntityInfo<Mesh>{meshIdx, (*meshIdx.bucket)[meshIdx.bucketOrd],
+                                 mesh.get_nodes(meshIdx)});
     });
 }
 
@@ -574,13 +572,13 @@ run_face_elem_algorithm(
               MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktOrd)};
               const auto elem = elems[0];
               const auto elemIdx = ngpMesh.fast_mesh_index(elem);
-              faceElemData.faceInfo[simdFaceIdx] = BcFaceElemInfo<Mesh>{
-                meshIdx,
-                face,
-                elem,
-                ngpMesh.get_nodes(sideRank, faceIdx),
-                ngpMesh.get_nodes(elemRank, elemIdx),
-                faceOrd};
+              faceElemData.faceInfo[simdFaceIdx] =
+                BcFaceElemInfo<Mesh>{meshIdx,
+                                     face,
+                                     elem,
+                                     ngpMesh.get_nodes(sideRank, faceIdx),
+                                     ngpMesh.get_nodes(elemRank, elemIdx),
+                                     faceOrd};
 
               fill_pre_req_data(
                 faceDataNGP, ngpMesh, sideRank, face,
@@ -701,13 +699,13 @@ run_face_elem_par_reduce(
               MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktOrd)};
               const auto elem = elems[0];
               const auto elemIdx = ngpMesh.fast_mesh_index(elem);
-              faceElemData.faceInfo[simdFaceIdx] = BcFaceElemInfo<Mesh>{
-                meshIdx,
-                face,
-                elem,
-                ngpMesh.get_nodes(sideRank, faceIdx),
-                ngpMesh.get_nodes(elemRank, elemIdx),
-                faceOrd};
+              faceElemData.faceInfo[simdFaceIdx] =
+                BcFaceElemInfo<Mesh>{meshIdx,
+                                     face,
+                                     elem,
+                                     ngpMesh.get_nodes(sideRank, faceIdx),
+                                     ngpMesh.get_nodes(elemRank, elemIdx),
+                                     faceOrd};
 
               fill_pre_req_data(
                 faceDataNGP, ngpMesh, sideRank, face,
@@ -787,45 +785,43 @@ run_face_elem_algorithm_nosimd(
   auto team_exec = impl::ngp_mesh_team_policy<TeamPolicy>(
     buckets.size(), bytes_per_team, bytes_per_thread);
 
-  Kokkos::parallel_for(
-    team_exec, KOKKOS_LAMBDA(const TeamHandleType& team) {
-      auto bktId = buckets.device_get(team.league_rank());
-      auto& bkt = ngpMesh.get_bucket(sideRank, bktId);
+  Kokkos::parallel_for(team_exec, KOKKOS_LAMBDA(const TeamHandleType& team) {
+    auto bktId = buckets.device_get(team.league_rank());
+    auto& bkt = ngpMesh.get_bucket(sideRank, bktId);
 
-      typename Traits::ScratchViewsType faceViews(
-        team, ndim, nodesPerFace, faceDataNGP);
-      typename Traits::ScratchViewsType elemViews(
-        team, ndim, nodesPerElement, elemDataNGP);
-      faceViews.fill_static_meviews(faceDataNGP);
-      elemViews.fill_static_meviews(elemDataNGP);
+    typename Traits::ScratchViewsType faceViews(
+      team, ndim, nodesPerFace, faceDataNGP);
+    typename Traits::ScratchViewsType elemViews(
+      team, ndim, nodesPerElement, elemDataNGP);
+    faceViews.fill_static_meviews(faceDataNGP);
+    elemViews.fill_static_meviews(elemDataNGP);
 
-      const size_t bktLen = bkt.size();
-      Kokkos::parallel_for(
-        Kokkos::TeamThreadRange(team, bktLen), [&](const size_t& bktIndex) {
-          MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktIndex)};
-          const auto face = bkt[bktIndex];
-          const auto faceIdx = ngpMesh.fast_mesh_index(face);
-          const auto elements = ngpMesh.get_elements(sideRank, faceIdx);
+    const size_t bktLen = bkt.size();
+    Kokkos::parallel_for(
+      Kokkos::TeamThreadRange(team, bktLen), [&](const size_t& bktIndex) {
+        MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktIndex)};
+        const auto face = bkt[bktIndex];
+        const auto faceIdx = ngpMesh.fast_mesh_index(face);
+        const auto elements = ngpMesh.get_elements(sideRank, faceIdx);
 
-          NGP_ThrowAssert(elements.size() == 1);
-          const auto faceOrd =
-            ngpMesh.get_element_ordinals(sideRank, faceIdx)[0];
-          const auto elem = elements[0];
-          const auto elemIdx = ngpMesh.fast_mesh_index(elem);
+        NGP_ThrowAssert(elements.size() == 1);
+        const auto faceOrd = ngpMesh.get_element_ordinals(sideRank, faceIdx)[0];
+        const auto elem = elements[0];
+        const auto elemIdx = ngpMesh.fast_mesh_index(elem);
 
-          // Fill up face data
-          fill_pre_req_data(faceDataNGP, ngpMesh, sideRank, face, faceViews);
-          fill_master_element_views(faceDataNGP, faceViews);
-          // Fill up element data
-          fill_pre_req_data(elemDataNGP, ngpMesh, elemRank, elem, elemViews);
-          fill_master_element_views(elemDataNGP, elemViews);
+        // Fill up face data
+        fill_pre_req_data(faceDataNGP, ngpMesh, sideRank, face, faceViews);
+        fill_master_element_views(faceDataNGP, faceViews);
+        // Fill up element data
+        fill_pre_req_data(elemDataNGP, ngpMesh, elemRank, elem, elemViews);
+        fill_master_element_views(elemDataNGP, elemViews);
 
-          const BcFaceElemInfo<Mesh> faceinfo{
-            meshIdx, face, elem, ngpMesh.get_nodes(elemRank, elemIdx), faceOrd};
+        const BcFaceElemInfo<Mesh> faceinfo{
+          meshIdx, face, elem, ngpMesh.get_nodes(elemRank, elemIdx), faceOrd};
 
-          algorithm(faceinfo, elemViews, faceViews);
-        });
-    });
+        algorithm(faceinfo, elemViews, faceViews);
+      });
+  });
 }
 
 } // namespace nalu_ngp

@@ -24,8 +24,7 @@ class BuoyancySourceAlg : public Algorithm
 public:
   using DblType = double;
 
-  BuoyancySourceAlg(
-    Realm&, stk::mesh::Part*, VectorFieldType* source);
+  BuoyancySourceAlg(Realm&, stk::mesh::Part*, VectorFieldType* source);
 
   virtual ~BuoyancySourceAlg() = default;
 
@@ -37,7 +36,6 @@ private:
   unsigned dualNodalVol_{stk::mesh::InvalidOrdinal};
   unsigned coordinates_{stk::mesh::InvalidOrdinal};
   unsigned density_{stk::mesh::InvalidOrdinal};
-
 
   //! Maximum size for static arrays used within device loops
   static constexpr int NDimMax = 3;

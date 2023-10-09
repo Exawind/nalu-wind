@@ -106,20 +106,20 @@ struct TensorT
   KOKKOS_FORCEINLINE_FUNCTION T& zy() & noexcept { return vv[7]; }
   KOKKOS_FORCEINLINE_FUNCTION T& zz() & noexcept { return vv[8]; }
 
-  KOKKOS_FORCEINLINE_FUNCTION const T& xx() const& noexcept { return vv[0]; }
-  KOKKOS_FORCEINLINE_FUNCTION const T& xy() const& noexcept { return vv[1]; }
-  KOKKOS_FORCEINLINE_FUNCTION const T& xz() const& noexcept { return vv[2]; }
+  KOKKOS_FORCEINLINE_FUNCTION const T& xx() const & noexcept { return vv[0]; }
+  KOKKOS_FORCEINLINE_FUNCTION const T& xy() const & noexcept { return vv[1]; }
+  KOKKOS_FORCEINLINE_FUNCTION const T& xz() const & noexcept { return vv[2]; }
 
-  KOKKOS_FORCEINLINE_FUNCTION const T& yx() const& noexcept { return vv[3]; }
-  KOKKOS_FORCEINLINE_FUNCTION const T& yy() const& noexcept { return vv[4]; }
-  KOKKOS_FORCEINLINE_FUNCTION const T& yz() const& noexcept { return vv[5]; }
+  KOKKOS_FORCEINLINE_FUNCTION const T& yx() const & noexcept { return vv[3]; }
+  KOKKOS_FORCEINLINE_FUNCTION const T& yy() const & noexcept { return vv[4]; }
+  KOKKOS_FORCEINLINE_FUNCTION const T& yz() const & noexcept { return vv[5]; }
 
-  KOKKOS_FORCEINLINE_FUNCTION const T& zx() const& noexcept { return vv[6]; }
-  KOKKOS_FORCEINLINE_FUNCTION const T& zy() const& noexcept { return vv[7]; }
-  KOKKOS_FORCEINLINE_FUNCTION const T& zz() const& noexcept { return vv[8]; }
+  KOKKOS_FORCEINLINE_FUNCTION const T& zx() const & noexcept { return vv[6]; }
+  KOKKOS_FORCEINLINE_FUNCTION const T& zy() const & noexcept { return vv[7]; }
+  KOKKOS_FORCEINLINE_FUNCTION const T& zz() const & noexcept { return vv[8]; }
 
   KOKKOS_FORCEINLINE_FUNCTION T& operator[](size_type pos) & { return vv[pos]; }
-  KOKKOS_FORCEINLINE_FUNCTION const T& operator[](size_type pos) const&
+  KOKKOS_FORCEINLINE_FUNCTION const T& operator[](size_type pos) const &
   {
     return vv[pos];
   }

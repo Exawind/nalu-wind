@@ -65,16 +65,15 @@ dirichlet_residual(
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<2>, int>;
 #endif
   auto range = policy_type({0, 0}, {dirichlet_bc_offsets.extent_int(0), 3});
-  Kokkos::parallel_for(
-    range, KOKKOS_LAMBDA(int index, int d) {
-      const auto residual = qbc(index, d) - qp1(index, d);
-      const int valid_length = valid_offset(index, dirichlet_bc_offsets);
-      for (int n = 0; n < valid_length; ++n) {
-        const auto row_lid = dirichlet_bc_offsets(index, n);
-        yout(row_lid, d) =
-          (row_lid < max_owned_row_lid) * stk::simd::get_data(residual, n);
-      }
-    });
+  Kokkos::parallel_for(range, KOKKOS_LAMBDA(int index, int d) {
+    const auto residual = qbc(index, d) - qp1(index, d);
+    const int valid_length = valid_offset(index, dirichlet_bc_offsets);
+    for (int n = 0; n < valid_length; ++n) {
+      const auto row_lid = dirichlet_bc_offsets(index, n);
+      yout(row_lid, d) =
+        (row_lid < max_owned_row_lid) * stk::simd::get_data(residual, n);
+    }
+  });
 }
 
 void
@@ -97,14 +96,13 @@ dirichlet_linearized(
 #endif
   auto range = policy_type(
     {0, 0}, {dirichlet_bc_offsets.extent_int(0), xin.extent_int(1)});
-  Kokkos::parallel_for(
-    range, KOKKOS_LAMBDA(int index, int d) {
-      const int valid_length = valid_offset(index, dirichlet_bc_offsets);
-      for (int n = 0; n < valid_length; ++n) {
-        const auto row_lid = dirichlet_bc_offsets(index, n);
-        yout(row_lid, d) = (row_lid < max_owned_row_lid) * xin(row_lid, d);
-      }
-    });
+  Kokkos::parallel_for(range, KOKKOS_LAMBDA(int index, int d) {
+    const int valid_length = valid_offset(index, dirichlet_bc_offsets);
+    for (int n = 0; n < valid_length; ++n) {
+      const auto row_lid = dirichlet_bc_offsets(index, n);
+      yout(row_lid, d) = (row_lid < max_owned_row_lid) * xin(row_lid, d);
+    }
+  });
 }
 
 void
@@ -120,14 +118,13 @@ dirichlet_diagonal(
   using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<2>, int>;
 #endif
   auto range = policy_type({0, 0}, {offsets.extent_int(0), yout.extent_int(1)});
-  Kokkos::parallel_for(
-    range, KOKKOS_LAMBDA(int index, int d) {
-      const int valid_simd_len = valid_offset(index, offsets);
-      for (int n = 0; n < valid_simd_len; ++n) {
-        const auto row_lid = offsets(index, n);
-        yout(row_lid, d) = int(row_lid < max_owned_lid);
-      }
-    });
+  Kokkos::parallel_for(range, KOKKOS_LAMBDA(int index, int d) {
+    const int valid_simd_len = valid_offset(index, offsets);
+    for (int n = 0; n < valid_simd_len; ++n) {
+      const auto row_lid = offsets(index, n);
+      yout(row_lid, d) = int(row_lid < max_owned_lid);
+    }
+  });
 }
 
 } // namespace matrix_free

@@ -64,8 +64,8 @@ enum COORDS_TYPES {
   MAX_COORDS_TYPES,
 };
 
-static const std::string CoordinatesTypeNames[] = {
-  "current_coordinates", "model_coordinates"};
+static const std::string CoordinatesTypeNames[] = {"current_coordinates",
+                                                   "model_coordinates"};
 
 struct FieldInfo
 {

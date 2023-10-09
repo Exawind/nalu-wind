@@ -57,11 +57,13 @@ ContinuityEdgeSolverAlg::execute()
   const DblType solveIncompressibleEqn = realm_.get_incompressible_solve();
   const DblType om_solveIncompressibleEqn = 1.0 - solveIncompressibleEqn;
 
-  const double add_buoyancy_balance = (double)(realm_.solutionOptions_->use_balanced_buoyancy_force_);
+  const double add_buoyancy_balance =
+    (double)(realm_.solutionOptions_->use_balanced_buoyancy_force_);
   double gravity_vector[3] = {0.0, 0.0, 0.0};
 
-  if (realm_.solutionOptions_->use_balanced_buoyancy_force_ && 
-      realm_.solutionOptions_->gravity_.size() >= ndim)
+  if (
+    realm_.solutionOptions_->use_balanced_buoyancy_force_ &&
+    realm_.solutionOptions_->gravity_.size() >= ndim)
     for (int idim = 0; idim < ndim; ++idim)
       gravity_vector[idim] = realm_.solutionOptions_->gravity_[idim];
 
@@ -129,8 +131,9 @@ ContinuityEdgeSolverAlg::execute()
       const DblType inv_axdx = 1.0 / axdx;
 
       DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx;
-      for (int d = 0; d < ndim; ++d) 
-        tmdot += projTimeScale * av[d] * gravity_vector[d] * add_buoyancy_balance * rhoIp;
+      for (int d = 0; d < ndim; ++d)
+        tmdot += projTimeScale * av[d] * gravity_vector[d] *
+                 add_buoyancy_balance * rhoIp;
       if (needs_gcl) {
         tmdot -= rhoIp * edgeFaceVelMag.get(edge, 0);
       }
@@ -145,7 +148,11 @@ ContinuityEdgeSolverAlg::execute()
         const DblType ujIp =
           0.5 * (velocity.get(nodeR, d) + velocity.get(nodeL, d));
         const DblType GjIp =
-          0.5 * ((Gpdx.get(nodeR, d) - source.get(nodeR, d) * add_buoyancy_balance ) / (udiagR) + (Gpdx.get(nodeL, d) - source.get(nodeL, d) * add_buoyancy_balance ) / (udiagL));
+          0.5 *
+          ((Gpdx.get(nodeR, d) - source.get(nodeR, d) * add_buoyancy_balance) /
+             (udiagR) +
+           (Gpdx.get(nodeL, d) - source.get(nodeL, d) * add_buoyancy_balance) /
+             (udiagL));
         tmdot +=
           (interpTogether * rhoUjIp + om_interpTogether * rhoIp * ujIp + GjIp) *
             av[d] -

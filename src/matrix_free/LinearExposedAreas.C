@@ -55,9 +55,9 @@ face_area(
   const auto dy_ds2 = jacobian_component<YH, DS2>(base_box, nlin, j, i);
   const auto dz_ds1 = jacobian_component<ZH, DS1>(base_box, nlin, j, i);
   const auto dz_ds2 = jacobian_component<ZH, DS2>(base_box, nlin, j, i);
-  return LocalArray<ftype[3]>{
-    {dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2, dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2,
-     dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2}};
+  return LocalArray<ftype[3]>{{dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2,
+                               dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2,
+                               dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2}};
 }
 } // namespace
 

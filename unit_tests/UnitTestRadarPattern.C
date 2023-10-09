@@ -30,7 +30,7 @@ TEST(box_intersect, line_goes_straight_through)
   vs::Vector origin = {-10, 0, 0};
   vs::Vector line = {1, 0, 0};
 
-  auto [found, seg] = details::line_intersection_with_box(box, origin, line);
+  auto[found, seg] = details::line_intersection_with_box(box, origin, line);
   ASSERT_TRUE(found);
 
   ASSERT_DOUBLE_EQ(seg.tail_[0], -1);
@@ -55,8 +55,7 @@ TEST(box_intersect, line_goes_straight_through_abl_box)
     abl_box[n] = vs::Vector(new_x, new_y, new_z);
   }
 
-  auto [found, seg] =
-    details::line_intersection_with_box(abl_box, origin, line);
+  auto[found, seg] = details::line_intersection_with_box(abl_box, origin, line);
   ASSERT_TRUE(found);
   ASSERT_NEAR(seg.tail_[0], 0, 1e-10);
   ASSERT_NEAR(seg.tail_[2], 100, 1e-10);
@@ -69,7 +68,7 @@ TEST(box_intersect, line_goes_through_corners)
   vs::Vector origin = {-2, -2, -2};
   vs::Vector line = {1, 1, 1};
 
-  auto [found, seg] = details::line_intersection_with_box(box, origin, line);
+  auto[found, seg] = details::line_intersection_with_box(box, origin, line);
   ASSERT_TRUE(found);
 
   ASSERT_DOUBLE_EQ(seg.tail_[0], -1);
@@ -84,11 +83,11 @@ TEST(box_intersect, line_goes_through_corners)
 TEST(box_intersect, line_tangent_to_box)
 {
   const double theta = -M_PI_4;
-  vs::Vector origin = {
-    box[0][0] + std::cos(theta), box[0][1] + std::sin(theta), box[0][2]};
+  vs::Vector origin = {box[0][0] + std::cos(theta), box[0][1] + std::sin(theta),
+                       box[0][2]};
   vs::Vector line = {-std::cos(theta), -std::sin(theta), 0};
 
-  auto [found, seg] = details::line_intersection_with_box(box, origin, line);
+  auto[found, seg] = details::line_intersection_with_box(box, origin, line);
   ASSERT_TRUE(found);
 
   ASSERT_DOUBLE_EQ(seg.tail_[0], -1);
@@ -107,7 +106,7 @@ TEST(box_intersect, line_goes_along_face)
   vs::Vector origin = {-2, 0, -1};
   vs::Vector line = {1, 0, 0};
 
-  auto [found, seg] = details::line_intersection_with_box(box, origin, line);
+  auto[found, seg] = details::line_intersection_with_box(box, origin, line);
   ASSERT_TRUE(found);
 
   ASSERT_DOUBLE_EQ(seg.tail_[0], -1);
@@ -127,7 +126,7 @@ TEST(box_intersect, line_goes_along_edge)
   vs::Vector origin = vs::Vector(-2, 0, 0) + (box[1] - box[0]);
   vs::Vector line = {1, 0, 0};
 
-  auto [found, seg] = details::line_intersection_with_box(box, origin, line);
+  auto[found, seg] = details::line_intersection_with_box(box, origin, line);
   ASSERT_TRUE(found);
 
   ASSERT_DOUBLE_EQ(seg.tail_[0], 1);
@@ -145,7 +144,7 @@ TEST(box_intersect, line_does_not_intersect)
   vs::Vector origin = vs::Vector(-100, 0, 0);
   vs::Vector line = {0, 1, 0};
 
-  auto [found, seg] = details::line_intersection_with_box(box, origin, line);
+  auto[found, seg] = details::line_intersection_with_box(box, origin, line);
   ASSERT_FALSE(found);
 }
 

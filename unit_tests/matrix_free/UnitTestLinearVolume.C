@@ -40,24 +40,23 @@ single_affine_hex_p(bool cube)
   vector_view<poly> coords("coordinates", num_elems_3D);
   scalar_view<poly> alpha("alpha", num_elems_3D);
 
-  Kokkos::parallel_for(
-    num_elems_3D, KOKKOS_LAMBDA(int index) {
-      constexpr auto nodes = GLL<poly>::nodes;
-      for (int k = 0; k < poly + 1; ++k) {
-        for (int j = 0; j < poly + 1; ++j) {
-          for (int i = 0; i < poly + 1; ++i) {
-            alpha(index, k, j, i) = 1.0;
-            const Kokkos::Array<ftype, 3> old_coords = {
-              {nodes[i], nodes[j], nodes[k]}};
-            Kokkos::Array<ftype, 3> new_coords;
-            transform(jac, old_coords, new_coords);
-            for (int d = 0; d < 3; ++d) {
-              coords(index, k, j, i, d) = new_coords[d] + 2;
-            }
+  Kokkos::parallel_for(num_elems_3D, KOKKOS_LAMBDA(int index) {
+    constexpr auto nodes = GLL<poly>::nodes;
+    for (int k = 0; k < poly + 1; ++k) {
+      for (int j = 0; j < poly + 1; ++j) {
+        for (int i = 0; i < poly + 1; ++i) {
+          alpha(index, k, j, i) = 1.0;
+          const Kokkos::Array<ftype, 3> old_coords = {
+            {nodes[i], nodes[j], nodes[k]}};
+          Kokkos::Array<ftype, 3> new_coords;
+          transform(jac, old_coords, new_coords);
+          for (int d = 0; d < 3; ++d) {
+            coords(index, k, j, i, d) = new_coords[d] + 2;
           }
         }
       }
-    });
+    }
+  });
   exec_space().fence();
 
   const auto volumes_d = geom::volume_metric<poly>(alpha, coords);

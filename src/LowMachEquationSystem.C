@@ -314,15 +314,6 @@ LowMachEquationSystem::register_nodal_fields(
   density_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density", numStates));
 
-  if (realm_.solutionOptions_->rho_ref_to_hydrostatic_rho_) {
-    hydrostatic_density_ = &(meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "hydrostatic_density"));
-
-    stk::mesh::put_field_on_mesh(*hydrostatic_density_, selector, nullptr);
-    realm_.augment_restart_variable_list("hydrostatic_density");
-  }
-
-
   stk::mesh::put_field_on_mesh(*density_, selector, nullptr);
   realm_.augment_restart_variable_list("density");
 
@@ -685,42 +676,6 @@ LowMachEquationSystem::register_initial_condition_fcn(
 
     // push to ic
     realm_.initCondAlg_.push_back(auxAlg);
-  }
-
-  // iterate map and check for hydrostatic dens
-  if (realm_.solutionOptions_->rho_ref_to_hydrostatic_rho_) {
-    const std::string dofName_hydrostatic_dens = "hydrostatic_density";
-    std::map<std::string, std::string>::const_iterator
-      iterName_hydrostatic_dens = theNames.find(dofName_hydrostatic_dens);
-    if (iterName_hydrostatic_dens != theNames.end()) {
-      std::string fcnName = (*iterName_hydrostatic_dens).second;
-      // save off the field (np1 state)
-      ScalarFieldType* initDensNp1 = meta_data.get_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "hydrostatic_density");
-
-      // create a few Aux things
-      AuxFunction* theAuxFunc = NULL;
-      AuxFunctionAlgorithm* auxAlg = NULL;
-      if (fcnName == "flat_interface") {
-        theAuxFunc = new FlatDensityAuxFunction();
-      } else if (fcnName == "water_level") {
-        std::map<std::string, std::vector<double>>::const_iterator iterParams =
-          theParams.find(dofName_hydrostatic_dens);
-        std::vector<double> fcnParams = (iterParams != theParams.end())
-                                          ? (*iterParams).second
-                                          : std::vector<double>();
-        theAuxFunc = new WaterLevelDensityAuxFunction(fcnParams);
-      } else {
-        throw std::runtime_error(
-          "InitialCondFunction::non-supported hydrostatic_density IC");
-      }
-      // create the algorithm
-      auxAlg = new AuxFunctionAlgorithm(
-        realm_, part, initDensNp1, theAuxFunc, stk::topology::NODE_RANK);
-
-      // push to ic
-      realm_.initCondAlg_.push_back(auxAlg);
-    }
   }
 }
 
@@ -1243,10 +1198,11 @@ MomentumEquationSystem::register_nodal_fields(
     stk::topology::NODE_RANK, "viscosity"));
   stk::mesh::put_field_on_mesh(*visc_, selector, nullptr);
 
-  buoyancy_source_ = &(meta_data.declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "buoyancy_source"));
-  stk::mesh::put_field_on_mesh(*buoyancy_source_, selector, nullptr);
-
+  if (realm_.solutionOptions_->use_balanced_buoyancy_force_) {
+    buoyancy_source_ = &(meta_data.declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "buoyancy_source"));
+    stk::mesh::put_field_on_mesh(*buoyancy_source_, selector, nullptr);
+  }
 
   if (realm_.is_turbulent()) {
     tvisc_ = &(meta_data.declare_field<ScalarFieldType>(
@@ -1377,7 +1333,7 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
         edgeNodalGradient_);
   }
 
-  // WJH buoyancy 
+  // WJH buoyancy
   if (realm_.solutionOptions_->use_balanced_buoyancy_force_)
     nodalBuoyancyAlgDriver_.register_edge_algorithm<BuoyancySourceAlg>(
       algType, part, "momentum_buoyancy_source", buoyancy_source_);
@@ -1440,8 +1396,8 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 
   // Check if the user has requested CMM or LMM algorithms; if so, do not
   // include Nodal Mass algorithms
-  std::vector<std::string> checkAlgNames = {
-    "momentum_time_derivative", "lumped_momentum_time_derivative"};
+  std::vector<std::string> checkAlgNames = {"momentum_time_derivative",
+                                            "lumped_momentum_time_derivative"};
   bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
   // solver; time contribution (lumped mass matrix)
   if (!elementMassAlg || nodal_src_is_requested()) {
@@ -2583,7 +2539,8 @@ MomentumEquationSystem::compute_projected_nodal_gradient()
   if (!managePNG_) {
     const double timeA = -NaluEnv::self().nalu_time();
     nodalGradAlgDriver_.execute();
-    nodalBuoyancyAlgDriver_.execute();
+    if (realm_.solutionOptions_->use_balanced_buoyancy_force_)
+      nodalBuoyancyAlgDriver_.execute();
     timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
   } else {
     // this option is more complex... Rather than solving a nDim*nDim system, we
@@ -2975,9 +2932,12 @@ ContinuityEquationSystem::register_edge_fields(
   massFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::EDGE_RANK, "mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*massFlowRate_, selector, nullptr);
-  auto massForcedFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
-    stk::topology::EDGE_RANK, "mass_forced_flow_rate"));
-  stk::mesh::put_field_on_mesh(*massForcedFlowRate_, selector, nullptr);
+
+  if (realm_.solutionOptions_->realm_has_vof_) {
+    auto massForcedFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
+      stk::topology::EDGE_RANK, "mass_forced_flow_rate"));
+    stk::mesh::put_field_on_mesh(*massForcedFlowRate_, selector, nullptr);
+  }
 }
 
 //--------------------------------------------------------------------------

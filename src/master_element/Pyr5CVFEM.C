@@ -717,12 +717,11 @@ PyrSCS::Mij(
 void
 fill_intg_exp_face_shift(double* intgExpFaceShift, const int* sideNodeOrdinals)
 {
-  const double nodeLocations[5][3] = {
-    {-1.0, -1.0, +0.0},
-    {+1.0, -1.0, +0.0},
-    {+1.0, +1.0, +0.0},
-    {-1.0, +1.0, +0.0},
-    {0.0, 0.0, +1.0}};
+  const double nodeLocations[5][3] = {{-1.0, -1.0, +0.0},
+                                      {+1.0, -1.0, +0.0},
+                                      {+1.0, +1.0, +0.0},
+                                      {-1.0, +1.0, +0.0},
+                                      {0.0, 0.0, +1.0}};
 
   int index = 0;
   stk::topology topo = stk::topology::PYRAMID_5;

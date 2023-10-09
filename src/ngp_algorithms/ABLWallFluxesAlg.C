@@ -193,11 +193,11 @@ ABLWallFluxesAlg<BcAlgTraits>::load(const YAML::Node& node)
 {
   // Read in the table of surface heat flux or surface temperature versus time
   // and split out into vectors for each input quantity.
-  ListArray<DblType> tableData{
-    {tableTimes_[0], tableFluxes_[0], tableSurfaceTemperatures_[0],
-     tableWeights_[0]},
-    {tableTimes_[1], tableFluxes_[1], tableSurfaceTemperatures_[1],
-     tableWeights_[1]}};
+  ListArray<DblType> tableData{{tableTimes_[0], tableFluxes_[0],
+                                tableSurfaceTemperatures_[0], tableWeights_[0]},
+                               {tableTimes_[1], tableFluxes_[1],
+                                tableSurfaceTemperatures_[1],
+                                tableWeights_[1]}};
   get_if_present<ListArray<DblType>>(
     node, "surface_heating_table", tableData, tableData);
   auto nTimes = tableData.size();

@@ -204,7 +204,7 @@ public:
   ScalarFieldType* tvisc_;
   ScalarFieldType* evisc_;
   ScalarFieldType* iddesRansIndicator_;
-  
+
   VectorFieldType* buoyancy_source_;
 
   TensorNodalGradAlgDriver nodalGradAlgDriver_;
@@ -220,7 +220,6 @@ public:
   std::unique_ptr<AMSAlgDriver> AMSAlgDriver_{nullptr};
 
   ProjectedNodalGradientEquationSystem* projectedNodalGradEqs_;
-
 
   double firstPNGResidual_;
 

@@ -3947,8 +3947,8 @@ Realm::dump_simulation_time()
   }
 
   if (hasOverset_) {
-    double connTime[2] = {
-      oversetManager_->timerConnectivity_, oversetManager_->timerFieldUpdate_};
+    double connTime[2] = {oversetManager_->timerConnectivity_,
+                          oversetManager_->timerFieldUpdate_};
     double totTime[2], minTime[2], maxTime[2];
     stk::all_reduce_sum(NaluEnv::self().parallel_comm(), connTime, totTime, 2);
     stk::all_reduce_min(NaluEnv::self().parallel_comm(), connTime, minTime, 2);

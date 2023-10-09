@@ -105,9 +105,9 @@ struct VectorT
   KOKKOS_FORCEINLINE_FUNCTION T& x() & noexcept { return vv[0]; }
   KOKKOS_FORCEINLINE_FUNCTION T& y() & noexcept { return vv[1]; }
   KOKKOS_FORCEINLINE_FUNCTION T& z() & noexcept { return vv[2]; }
-  KOKKOS_FORCEINLINE_FUNCTION const T& x() const& noexcept { return vv[0]; }
-  KOKKOS_FORCEINLINE_FUNCTION const T& y() const& noexcept { return vv[1]; }
-  KOKKOS_FORCEINLINE_FUNCTION const T& z() const& noexcept { return vv[2]; }
+  KOKKOS_FORCEINLINE_FUNCTION const T& x() const & noexcept { return vv[0]; }
+  KOKKOS_FORCEINLINE_FUNCTION const T& y() const & noexcept { return vv[1]; }
+  KOKKOS_FORCEINLINE_FUNCTION const T& z() const & noexcept { return vv[2]; }
 
   KOKKOS_FORCEINLINE_FUNCTION VectorT<T> operator-() const;
 
@@ -116,7 +116,7 @@ struct VectorT
   KOKKOS_FORCEINLINE_FUNCTION VectorT<T> operator/=(const T val);
 
   KOKKOS_FORCEINLINE_FUNCTION T& operator[](size_type pos) & { return vv[pos]; }
-  KOKKOS_FORCEINLINE_FUNCTION const T& operator[](size_type pos) const&
+  KOKKOS_FORCEINLINE_FUNCTION const T& operator[](size_type pos) const &
   {
     return vv[pos];
   }

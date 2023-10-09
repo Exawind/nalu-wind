@@ -33,20 +33,19 @@ diffusion_single_cube_hex_p()
 
   vector_view<p> coords("coordinates", num_elems_3D);
   scalar_view<p> alpha("alpha", num_elems_3D);
-  Kokkos::parallel_for(
-    num_elems_3D, KOKKOS_LAMBDA(int index) {
-      for (int k = 0; k < p + 1; ++k) {
-        for (int j = 0; j < p + 1; ++j) {
-          for (int i = 0; i < p + 1; ++i) {
-            constexpr auto nodes = GLL<p>::nodes;
-            alpha(index, k, j, i) = 1.0;
-            coords(index, k, j, i, 0) = nodes[i];
-            coords(index, k, j, i, 1) = nodes[j];
-            coords(index, k, j, i, 2) = nodes[k];
-          }
+  Kokkos::parallel_for(num_elems_3D, KOKKOS_LAMBDA(int index) {
+    for (int k = 0; k < p + 1; ++k) {
+      for (int j = 0; j < p + 1; ++j) {
+        for (int i = 0; i < p + 1; ++i) {
+          constexpr auto nodes = GLL<p>::nodes;
+          alpha(index, k, j, i) = 1.0;
+          coords(index, k, j, i, 0) = nodes[i];
+          coords(index, k, j, i, 1) = nodes[j];
+          coords(index, k, j, i, 2) = nodes[k];
         }
       }
-    });
+    }
+  });
 
   const auto diffusion_d = geom::diffusion_metric<p>(alpha, coords);
   auto diffusion_h = Kokkos::create_mirror_view(diffusion_d);

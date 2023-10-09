@@ -64,8 +64,8 @@ TEST(MomentumBoussinesqSrcNodeSuppAlg, single_value)
   solnOpts.gravity_ = gravity;
 
   double coeff = -beta * rhoRef * (temperature_value - tRef) * dnv_value;
-  double expected_rhs[3] = {
-    coeff * gravity[0], coeff * gravity[1], coeff * gravity[2]};
+  double expected_rhs[3] = {coeff * gravity[0], coeff * gravity[1],
+                            coeff * gravity[2]};
 
   double rhs[3] = {0, 0, 0};
   auto boussinesqAlg =
@@ -153,8 +153,8 @@ TEST(MomentumBoussinesqRASrcNodeSuppAlg, single_value)
 
   double coeff =
     -beta * rhoRef * (temperature_value_new - avgTempVal) * dnv_value;
-  double expected_rhs[3] = {
-    coeff * gravity[0], coeff * gravity[1], coeff * gravity[2]};
+  double expected_rhs[3] = {coeff * gravity[0], coeff * gravity[1],
+                            coeff * gravity[2]};
 
   double newRHS[3] = {0, 0, 0};
   boussinesqRaAlg.node_execute(nullptr, newRHS, node);

@@ -26,10 +26,9 @@ SegmentType
 segment_generator_types(std::string name)
 {
   std::transform(name.cbegin(), name.cend(), name.begin(), ::tolower);
-  return std::map<std::string, SegmentType>{
-    {"spinner", SegmentType::SPINNER},
-    {"scanning", SegmentType::SCANNING},
-    {"radar", SegmentType::RADAR}}
+  return std::map<std::string, SegmentType>{{"spinner", SegmentType::SPINNER},
+                                            {"scanning", SegmentType::SCANNING},
+                                            {"radar", SegmentType::RADAR}}
     .at(name);
 }
 
@@ -81,9 +80,8 @@ rotate_euler_vec(
 {
   enum { XH = 0, YH = 1, ZH = 2 };
   normalize_vec3(vec.data());
-  std::array<double, 9> nX = {
-    {0, -axis[ZH], +axis[YH], +axis[ZH], 0, -axis[XH], -axis[YH], +axis[XH],
-     0}};
+  std::array<double, 9> nX = {{0, -axis[ZH], +axis[YH], +axis[ZH], 0, -axis[XH],
+                               -axis[YH], +axis[XH], 0}};
   const double cosTheta = std::cos(angle);
   std::array<double, 9> rot = {
     {cosTheta, 0, 0, 0, cosTheta, 0, 0, 0, cosTheta}};
@@ -275,9 +273,8 @@ ScanningLidarSegmentGenerator::determine_current_angle(
 std::array<double, 3>
 cross(std::array<double, 3> u, std::array<double, 3> v)
 {
-  return {
-    u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2],
-    u[0] * v[1] - u[1] * v[0]};
+  return {u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2],
+          u[0] * v[1] - u[1] * v[0]};
 }
 
 std::array<double, 3>
@@ -350,14 +347,12 @@ SpinnerLidarSegmentGenerator::load(const YAML::Node& node)
   double outerPrismAzi = 15.2;
   get_if_present(node, "outer_prism_azimuth", outerPrismAzi, outerPrismAzi);
 
-  innerPrism_ = {
-    convert::degrees_to_radians(innerPrismTheta0),
-    convert::rotations_to_radians(innerPrismRot),
-    convert::degrees_to_radians(innerPrismAzi)};
-  outerPrism_ = {
-    convert::degrees_to_radians(outerPrismTheta0),
-    convert::rotations_to_radians(outerPrismRot),
-    convert::degrees_to_radians(outerPrismAzi)};
+  innerPrism_ = {convert::degrees_to_radians(innerPrismTheta0),
+                 convert::rotations_to_radians(innerPrismRot),
+                 convert::degrees_to_radians(innerPrismAzi)};
+  outerPrism_ = {convert::degrees_to_radians(outerPrismTheta0),
+                 convert::rotations_to_radians(outerPrismRot),
+                 convert::degrees_to_radians(outerPrismAzi)};
   get_required(node, "beam_length", beamLength_);
 
   if (node["ground_direction"]) {
@@ -401,8 +396,7 @@ struct Triangle
   vs::Vector v2;
 };
 
-std::array<Triangle, 4>
-subdivide_face(std::array<vs::Vector, 4> face)
+std::array<Triangle, 4> subdivide_face(std::array<vs::Vector, 4> face)
 {
   std::array<Triangle, 4> tris;
 
@@ -418,7 +412,7 @@ subdivide_face(std::array<vs::Vector, 4> face)
 }
 
 std::array<vs::Vector, 4>
-face_coordinates(std::array<vs::Vector, 8> box, int index)
+  face_coordinates(std::array<vs::Vector, 8> box, int index)
 {
   constexpr int vertex_face_table[6][4] = {{0, 1, 2, 3}, {1, 2, 6, 5},
                                            {4, 5, 6, 7}, {3, 2, 6, 7},
@@ -469,8 +463,7 @@ to_array3(vs::Vector x)
 } // namespace
 
 namespace details {
-std::pair<bool, Segment>
-line_intersection_with_box(
+std::pair<bool, Segment> line_intersection_with_box(
   std::array<vs::Vector, 8> box, vs::Vector origin, vs::Vector line)
 {
   // do one subdivision of the box into triangular sections
@@ -496,7 +489,7 @@ line_intersection_with_box(
     auto triangles = subdivide_face(face_coordinates(box, f));
     for (int t = 0; t < tri_per_face; ++t) {
       const int id = tri_per_face * f + t;
-      auto [found, intersect] =
+      auto[found, intersect] =
         triangle_line_intersection(triangles[t], origin, line, tol);
       intersected[id] = found;
       if (found) {
@@ -714,7 +707,7 @@ RadarSegmentGenerator::generate(double time) const
   const auto sight_vector = plane_sweep(ground_normal_, axis_, yaw, pitch);
   const auto tip = affine(center_, beam_length_, sight_vector);
 
-  auto [found, seg] = details::line_intersection_with_box(
+  auto[found, seg] = details::line_intersection_with_box(
     box_, to_vec3(center_), to_vec3(sight_vector));
   if (!found) {
     // return the unclipped line if it doesn't intersect the domain

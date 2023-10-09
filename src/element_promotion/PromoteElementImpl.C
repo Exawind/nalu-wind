@@ -497,8 +497,8 @@ destroy_entity(stk::mesh::BulkData& bulk, stk::mesh::Entity entity)
     bulk.mesh_meta_data().entity_rank_count() - 1);
 
   for (auto irank = highestEntityRank; irank != entityRank; --irank) {
-    auto relatives = stk::mesh::EntityVector{
-      bulk.begin(entity, irank), bulk.end(entity, irank)};
+    auto relatives = stk::mesh::EntityVector{bulk.begin(entity, irank),
+                                             bulk.end(entity, irank)};
     auto relative_ordinals = std::vector<stk::mesh::ConnectivityOrdinal>{
       bulk.begin_ordinals(entity, irank), bulk.end_ordinals(entity, irank)};
 
@@ -597,9 +597,9 @@ set_coordinates_hex(
 
     for (int ord = 8; ord < desc.nodesPerElement; ++ord) {
       const auto& indices = desc.inverse_node_map(ord);
-      std::array<double, 3> isoParCoords = {
-        {nodeLocs1D[indices[0]], nodeLocs1D[indices[1]],
-         nodeLocs1D[indices[2]]}};
+      std::array<double, 3> isoParCoords = {{nodeLocs1D[indices[0]],
+                                             nodeLocs1D[indices[1]],
+                                             nodeLocs1D[indices[2]]}};
       interpolate_coordinate(baseCoords, isoParCoords, physCoords);
       double* coords = stk::mesh::field_data(coordField, node_rels[ord]);
       for (int d = 0; d < desc.dimension; ++d) {

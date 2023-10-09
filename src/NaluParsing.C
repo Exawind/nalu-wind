@@ -34,8 +34,8 @@ expect_type(
   YAML::NodeType::value type,
   bool optional)
 {
-  static std::string types[] = {
-    "Undefined", "Null", "Scalar", "Sequence", "Map"};
+  static std::string types[] = {"Undefined", "Null", "Scalar", "Sequence",
+                                "Map"};
   std::ostringstream err_msg;
 
   if (node[key]) {

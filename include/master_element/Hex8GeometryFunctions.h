@@ -50,22 +50,20 @@ quad_area_by_triangulation(
   area(ics, 1) = 0.0;
   area(ics, 2) = 0.0;
 
-  const ftype xmid[3] = {
-    0.25 * (areacoords[0][0] + areacoords[1][0] + areacoords[2][0] +
-            areacoords[3][0]),
-    0.25 * (areacoords[0][1] + areacoords[1][1] + areacoords[2][1] +
-            areacoords[3][1]),
-    0.25 * (areacoords[0][2] + areacoords[1][2] + areacoords[2][2] +
-            areacoords[3][2])};
+  const ftype xmid[3] = {0.25 * (areacoords[0][0] + areacoords[1][0] +
+                                 areacoords[2][0] + areacoords[3][0]),
+                         0.25 * (areacoords[0][1] + areacoords[1][1] +
+                                 areacoords[2][1] + areacoords[3][1]),
+                         0.25 * (areacoords[0][2] + areacoords[1][2] +
+                                 areacoords[2][2] + areacoords[3][2])};
 
-  ftype r1[3] = {
-    areacoords[0][0] - xmid[0], areacoords[0][1] - xmid[1],
-    areacoords[0][2] - xmid[2]};
+  ftype r1[3] = {areacoords[0][0] - xmid[0], areacoords[0][1] - xmid[1],
+                 areacoords[0][2] - xmid[2]};
   for (int itriangle = 0; itriangle < 4; ++itriangle) {
     const int t_index = (itriangle + 1) % 4;
-    const ftype r2[3] = {
-      areacoords[t_index][0] - xmid[0], areacoords[t_index][1] - xmid[1],
-      areacoords[t_index][2] - xmid[2]};
+    const ftype r2[3] = {areacoords[t_index][0] - xmid[0],
+                         areacoords[t_index][1] - xmid[1],
+                         areacoords[t_index][2] - xmid[2]};
 
     area(ics, 0) += r1[1] * r2[2] - r2[1] * r1[2];
     area(ics, 1) += r1[2] * r2[0] - r2[2] * r1[0];
@@ -134,10 +132,9 @@ hex_volume_grandy(RealType scvcoords[8][3])
     const int q = triangular_facets[k][1];
     const int r = triangular_facets[k][2];
 
-    const RealType triFaceMid[3] = {
-      coordv[p][0] + coordv[q][0] + coordv[r][0],
-      coordv[p][1] + coordv[q][1] + coordv[r][1],
-      coordv[p][2] + coordv[q][2] + coordv[r][2]};
+    const RealType triFaceMid[3] = {coordv[p][0] + coordv[q][0] + coordv[r][0],
+                                    coordv[p][1] + coordv[q][1] + coordv[r][1],
+                                    coordv[p][2] + coordv[q][2] + coordv[r][2]};
 
     enum { XC = 0, YC = 1, ZC = 2 };
     RealType dxv[3];
@@ -229,10 +226,9 @@ bhex_volume_grandy(RealType scvcoords[8][3])
     const int q = triangular_facets[k][1];
     const int r = triangular_facets[k][2];
 
-    const RealType triFaceMid[3] = {
-      coordv[p][0] + coordv[q][0] + coordv[r][0],
-      coordv[p][1] + coordv[q][1] + coordv[r][1],
-      coordv[p][2] + coordv[q][2] + coordv[r][2]};
+    const RealType triFaceMid[3] = {coordv[p][0] + coordv[q][0] + coordv[r][0],
+                                    coordv[p][1] + coordv[q][1] + coordv[r][1],
+                                    coordv[p][2] + coordv[q][2] + coordv[r][2]};
 
     enum { XC = 0, YC = 1, ZC = 2 };
     RealType dxv[3];
@@ -398,24 +394,24 @@ hex_jacobian_component(
                        interpi[1] * interpk[1] * base_box[di][6] +
                        interpi[0] * interpk[1] * base_box[di][7]) *
                         0.5
-         : (dj == YH) ? (-interpi[0] * interpk[0] * base_box[di][0] -
-                         interpi[1] * interpk[0] * base_box[di][1] +
-                         interpi[1] * interpk[0] * base_box[di][2] +
-                         interpi[0] * interpk[0] * base_box[di][3] -
-                         interpi[0] * interpk[1] * base_box[di][4] -
-                         interpi[1] * interpk[1] * base_box[di][5] +
-                         interpi[1] * interpk[1] * base_box[di][6] +
-                         interpi[0] * interpk[1] * base_box[di][7]) *
-                          0.5
-                      : (-interpi[0] * interpj[0] * base_box[di][0] -
-                         interpi[1] * interpj[0] * base_box[di][1] -
-                         interpi[1] * interpj[1] * base_box[di][2] -
-                         interpi[0] * interpj[1] * base_box[di][3] +
-                         interpi[0] * interpj[0] * base_box[di][4] +
-                         interpi[1] * interpj[0] * base_box[di][5] +
-                         interpi[1] * interpj[1] * base_box[di][6] +
-                         interpi[0] * interpj[1] * base_box[di][7]) *
-                          0.5;
+                    : (dj == YH) ? (-interpi[0] * interpk[0] * base_box[di][0] -
+                                    interpi[1] * interpk[0] * base_box[di][1] +
+                                    interpi[1] * interpk[0] * base_box[di][2] +
+                                    interpi[0] * interpk[0] * base_box[di][3] -
+                                    interpi[0] * interpk[1] * base_box[di][4] -
+                                    interpi[1] * interpk[1] * base_box[di][5] +
+                                    interpi[1] * interpk[1] * base_box[di][6] +
+                                    interpi[0] * interpk[1] * base_box[di][7]) *
+                                     0.5
+                                 : (-interpi[0] * interpj[0] * base_box[di][0] -
+                                    interpi[1] * interpj[0] * base_box[di][1] -
+                                    interpi[1] * interpj[1] * base_box[di][2] -
+                                    interpi[0] * interpj[1] * base_box[di][3] +
+                                    interpi[0] * interpj[0] * base_box[di][4] +
+                                    interpi[1] * interpj[0] * base_box[di][5] +
+                                    interpi[1] * interpj[1] * base_box[di][6] +
+                                    interpi[0] * interpj[1] * base_box[di][7]) *
+                                     0.5;
 }
 
 template <typename Scalar>

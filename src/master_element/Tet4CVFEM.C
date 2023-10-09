@@ -243,11 +243,10 @@ TetSCV::determinant_scv(
   const SharedMemView<DBLTYPE**, SHMEM>& coordel,
   SharedMemView<DBLTYPE*, SHMEM>& volume) const
 {
-  const int tetSubcontrolNodeTable[4][8] = {
-    {0, 4, 7, 6, 11, 13, 14, 12},
-    {1, 5, 7, 4, 9, 10, 14, 13},
-    {2, 6, 7, 5, 8, 12, 14, 10},
-    {3, 9, 13, 11, 8, 10, 14, 12}};
+  const int tetSubcontrolNodeTable[4][8] = {{0, 4, 7, 6, 11, 13, 14, 12},
+                                            {1, 5, 7, 4, 9, 10, 14, 13},
+                                            {2, 6, 7, 5, 8, 12, 14, 10},
+                                            {3, 9, 13, 11, 8, 10, 14, 12}};
 
   const double half = 0.5;
   const double one3rd = 1.0 / 3.0;
@@ -924,8 +923,7 @@ TetSCS::isInElement(
 //--------------------------------------------------------------------------
 //-------- interpolatePoint ------------------------------------------------
 //--------------------------------------------------------------------------
-void
-TetSCS::interpolatePoint(
+void TetSCS::interpolatePoint(
   const int& ncomp_field,
   const double* par_coord, // (3)
   const double* field,     // (4,ncomp_field)

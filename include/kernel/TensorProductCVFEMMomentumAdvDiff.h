@@ -417,14 +417,14 @@ area_weighted_face_normal_shear_stress(
   ops.scs_xhat_grad(vel, gradu_scs);
   ops.scs_xhat_interp(visc, visc_scs);
   for (int k = 0; k < p + 1; ++k) {
-    NALU_ALIGNED const Scalar interpk[2] = {
-      nodalInterp(0, k), nodalInterp(1, k)};
+    NALU_ALIGNED const Scalar interpk[2] = {nodalInterp(0, k),
+                                            nodalInterp(1, k)};
     for (int j = 0; j < p + 1; ++j) {
-      NALU_ALIGNED const Scalar interpj[2] = {
-        nodalInterp(0, j), nodalInterp(1, j)};
+      NALU_ALIGNED const Scalar interpj[2] = {nodalInterp(0, j),
+                                              nodalInterp(1, j)};
       for (int i = 0; i < p; ++i) {
-        NALU_ALIGNED const Scalar interpi[2] = {
-          scsInterp(0, i), scsInterp(1, i)};
+        NALU_ALIGNED const Scalar interpi[2] = {scsInterp(0, i),
+                                                scsInterp(1, i)};
 
         NALU_ALIGNED Scalar jact[3][3];
         hex_jacobian_t(base_box, interpi, interpj, interpk, jact);
@@ -482,13 +482,13 @@ area_weighted_face_normal_shear_stress(
   ops.scs_yhat_grad(vel, gradu_scs);
   ops.scs_yhat_interp(visc, visc_scs);
   for (int k = 0; k < p + 1; ++k) {
-    NALU_ALIGNED const Scalar interpk[2] = {
-      nodalInterp(0, k), nodalInterp(1, k)};
+    NALU_ALIGNED const Scalar interpk[2] = {nodalInterp(0, k),
+                                            nodalInterp(1, k)};
     for (int j = 0; j < p; ++j) {
       NALU_ALIGNED const Scalar interpj[2] = {scsInterp(0, j), scsInterp(1, j)};
       for (int i = 0; i < p + 1; ++i) {
-        NALU_ALIGNED const Scalar interpi[2] = {
-          nodalInterp(0, i), nodalInterp(1, i)};
+        NALU_ALIGNED const Scalar interpi[2] = {nodalInterp(0, i),
+                                                nodalInterp(1, i)};
 
         NALU_ALIGNED Scalar jact[3][3];
         hex_jacobian_t(base_box, interpi, interpj, interpk, jact);
@@ -548,11 +548,11 @@ area_weighted_face_normal_shear_stress(
   for (int k = 0; k < p; ++k) {
     NALU_ALIGNED const Scalar interpk[2] = {scsInterp(0, k), scsInterp(1, k)};
     for (int j = 0; j < p + 1; ++j) {
-      NALU_ALIGNED const Scalar interpj[2] = {
-        nodalInterp(0, j), nodalInterp(1, j)};
+      NALU_ALIGNED const Scalar interpj[2] = {nodalInterp(0, j),
+                                              nodalInterp(1, j)};
       for (int i = 0; i < p + 1; ++i) {
-        NALU_ALIGNED const Scalar interpi[2] = {
-          nodalInterp(0, i), nodalInterp(1, i)};
+        NALU_ALIGNED const Scalar interpi[2] = {nodalInterp(0, i),
+                                                nodalInterp(1, i)};
 
         NALU_ALIGNED Scalar jact[3][3];
         hex_jacobian_t(base_box, interpi, interpj, interpk, jact);

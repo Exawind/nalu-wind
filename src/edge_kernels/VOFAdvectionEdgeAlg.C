@@ -50,25 +50,30 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
   std::map<PropertyIdentifier, MaterialPropertyData*>::iterator itf =
     realm_.materialPropertys_.propertyDataMap_.find(DENSITY_ID);
 
-  auto mdata = (*itf).second;
+  if (itf == realm_.materialPropertys_.propertyDataMap_.end()) {
+    density_liquid_ = 1000.0;
+    density_gas_ = 1.0;
+  } else {
+    auto mdata = (*itf).second;
 
-  switch (mdata->type_) {
-  case CONSTANT_MAT: {
-    density_liquid_ = mdata->constValue_;
-    density_gas_ = mdata->constValue_;
-    break;
-  }
-  case VOF_MAT: {
-    density_liquid_ = mdata->primary_;
-    density_gas_ = mdata->secondary_;
-    break;
-  }
-  default: {
-    throw std::runtime_error(
-      "Incorrect density property set for VOF calculations. Use a constant or "
-      "VOF property for density.");
-    break;
-  }
+    switch (mdata->type_) {
+    case CONSTANT_MAT: {
+      density_liquid_ = mdata->constValue_;
+      density_gas_ = mdata->constValue_;
+      break;
+    }
+    case VOF_MAT: {
+      density_liquid_ = mdata->primary_;
+      density_gas_ = mdata->secondary_;
+      break;
+    }
+    default: {
+      throw std::runtime_error("Incorrect density property set for VOF "
+                               "calculations. Use a constant or "
+                               "VOF property for density.");
+      break;
+    }
+    }
   }
 }
 
@@ -112,7 +117,6 @@ VOFAdvectionEdgeAlg::execute()
   const auto& ngpMesh = realm_.ngp_mesh();
 
   using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
-
   Kokkos::Max<double> max_velocity_reducer(local_max_velocity);
   nalu_ngp::run_entity_par_reduce(
     algName, ngpMesh, stk::topology::NODE_RANK, sel,
@@ -123,11 +127,9 @@ VOFAdvectionEdgeAlg::execute()
       pSum = stk::math::max(stk::math::sqrt(vel_squared), pSum);
     },
     max_velocity_reducer);
-
   stk::all_reduce_max(
     NaluEnv::self().parallel_comm(), &local_max_velocity, &global_max_velocity,
     1);
-
   run_algorithm(
     realm_.bulk_data(),
     KOKKOS_LAMBDA(

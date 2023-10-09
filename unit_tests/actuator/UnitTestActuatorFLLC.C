@@ -71,13 +71,12 @@ TEST_F(ActuatorFLLC, NGP_ComputeLiftForceDistribution_G_Eq_5_3)
   auto spanDir = helper_.get_local_view(actMeta_.spanDir_);
 
   auto range_policy = actBulk_.local_range_policy();
-  Kokkos::parallel_for(
-    "init velocities", range_policy, ACTUATOR_LAMBDA(int i) {
-      for (int j = 0; j < 3; ++j) {
-        vel(i, j) = 1.0;
-      }
-      density(i) = 2.0;
-    });
+  Kokkos::parallel_for("init velocities", range_policy, ACTUATOR_LAMBDA(int i) {
+    for (int j = 0; j < 3; ++j) {
+      vel(i, j) = 1.0;
+    }
+    density(i) = 2.0;
+  });
 
   ActSimpleComputeRelativeVelocity(actBulk_, actMeta_);
   ActSimpleComputeForce(actBulk_, actMeta_);
@@ -110,15 +109,14 @@ TEST_F(ActuatorFLLC, NGP_ComputeLiftForceDistribution_G_Eq_5_3)
   auto fllc_lift_force =
     helper_.get_local_view(actBulk_.liftForceDistribution_);
   // assert that the two lift forces are equal
-  Kokkos::parallel_for(
-    "check values", range_policy, ACTUATOR_LAMBDA(int i) {
-      double gmag = 0.0;
-      for (int j = 0; j < 3; ++j) {
-        gmag += fllc_lift_force(i, j) * fllc_lift_force(i, j);
-      }
-      gmag = std::sqrt(gmag);
-      EXPECT_DOUBLE_EQ(G(i), gmag);
-    });
+  Kokkos::parallel_for("check values", range_policy, ACTUATOR_LAMBDA(int i) {
+    double gmag = 0.0;
+    for (int j = 0; j < 3; ++j) {
+      gmag += fllc_lift_force(i, j) * fllc_lift_force(i, j);
+    }
+    gmag = std::sqrt(gmag);
+    EXPECT_DOUBLE_EQ(G(i), gmag);
+  });
 }
 
 TEST_F(ActuatorFLLC, NGP_ComputeGradG_Eq_5_4_and_5_5)
@@ -133,13 +131,12 @@ TEST_F(ActuatorFLLC, NGP_ComputeGradG_Eq_5_4_and_5_5)
   auto range_policy = actBulk_.local_range_policy();
   ActFixVectorDbl r("radius", G.extent_int(0));
   // create a parabola from the point locations then compute deltaG and dG/dr
-  Kokkos::parallel_for(
-    "init G as r^2", range_policy, ACTUATOR_LAMBDA(int i) {
-      for (int j = 0; j < 3; ++j) {
-        r(i, j) = i * fixedDR[j];
-        G(i, j) = r(i, j) * r(i, j);
-      }
-    });
+  Kokkos::parallel_for("init G as r^2", range_policy, ACTUATOR_LAMBDA(int i) {
+    for (int j = 0; j < 3; ++j) {
+      r(i, j) = i * fixedDR[j];
+      G(i, j) = r(i, j) * r(i, j);
+    }
+  });
   actuator_utils::reduce_view_on_host(G);
   actuator_utils::reduce_view_on_host(r);
 
@@ -229,12 +226,11 @@ TEST_F(ActuatorFLLC, NGP_ComputeInducedVelocity_Eq_5_7)
   Kokkos::deep_copy(dG, 4.0 * M_PI);
   Kokkos::deep_copy(Uinf, 1.0);
 
-  Kokkos::parallel_for(
-    "init values", range_policy, ACTUATOR_LAMBDA(int index) {
-      points(index, 0) = index;
-      points(index, 1) = 0.0;
-      points(index, 2) = 0.0;
-    });
+  Kokkos::parallel_for("init values", range_policy, ACTUATOR_LAMBDA(int index) {
+    points(index, 0) = index;
+    points(index, 1) = 0.0;
+    points(index, 2) = 0.0;
+  });
 
   actuator_utils::reduce_view_on_host(points);
 

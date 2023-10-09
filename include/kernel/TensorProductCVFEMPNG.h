@@ -32,8 +32,8 @@ green_gauss_lhs(
   for (int n = 0; n < n1D; ++n) {
     for (int m = 0; m < n1D; ++m) {
       for (int l = 0; l < n1D; ++l) {
-        const int rowIndices[3] = {
-          idx<n1D>(XH, n, m, l), idx<n1D>(YH, n, m, l), idx<n1D>(ZH, n, m, l)};
+        const int rowIndices[3] = {idx<n1D>(XH, n, m, l), idx<n1D>(YH, n, m, l),
+                                   idx<n1D>(ZH, n, m, l)};
 
         for (int k = 0; k < n1D; ++k) {
           const Scalar Wnk = weight(n, k);
@@ -68,8 +68,8 @@ green_gauss_lhs_lumped(
       const Scalar WnWm = Wn * weight(m, m);
       for (int l = 0; l < n1D; ++l) {
         const auto lhsfac = WnWm * weight(l, l) * vol(n, m, l);
-        const int rowIndices[3] = {
-          idx<n1D>(XH, n, m, l), idx<n1D>(YH, n, m, l), idx<n1D>(ZH, n, m, l)};
+        const int rowIndices[3] = {idx<n1D>(XH, n, m, l), idx<n1D>(YH, n, m, l),
+                                   idx<n1D>(ZH, n, m, l)};
 
         lhs(rowIndices[XH], rowIndices[XH]) += lhsfac;
         lhs(rowIndices[YH], rowIndices[YH]) += lhsfac;

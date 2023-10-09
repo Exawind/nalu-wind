@@ -62,21 +62,22 @@ enum {
   }
 
 // can't return a value dependent on template parameter
-#define SWITCH_INVOKEABLE(func)                                                   \
-  template <typename... Args>                                                     \
-  auto func(int p, Args&&... args)                                                \
-    ->decltype(IMPLNAME(func) < inst::P1 > ::invoke(std::forward<Args>(args)...)) \
-  {                                                                               \
-    switch (p) {                                                                  \
-    case inst::P2:                                                                \
-      return IMPLNAME(func)<inst::P2>::invoke(std::forward<Args>(args)...);       \
-    case inst::P3:                                                                \
-      return IMPLNAME(func)<inst::P3>::invoke(std::forward<Args>(args)...);       \
-    case inst::P4:                                                                \
-      return IMPLNAME(func)<inst::P4>::invoke(std::forward<Args>(args)...);       \
-    default:                                                                      \
-      return IMPLNAME(func)<inst::P1>::invoke(std::forward<Args>(args)...);       \
-    }                                                                             \
+#define SWITCH_INVOKEABLE(func)                                                \
+  template <typename... Args>                                                  \
+  auto func(int p, Args&&... args)                                             \
+    ->decltype(                                                                \
+      IMPLNAME(func) < inst::P1 > ::invoke(std::forward<Args>(args)...))       \
+  {                                                                            \
+    switch (p) {                                                               \
+    case inst::P2:                                                             \
+      return IMPLNAME(func)<inst::P2>::invoke(std::forward<Args>(args)...);    \
+    case inst::P3:                                                             \
+      return IMPLNAME(func)<inst::P3>::invoke(std::forward<Args>(args)...);    \
+    case inst::P4:                                                             \
+      return IMPLNAME(func)<inst::P4>::invoke(std::forward<Args>(args)...);    \
+    default:                                                                   \
+      return IMPLNAME(func)<inst::P1>::invoke(std::forward<Args>(args)...);    \
+    }                                                                          \
   }
 
 } // namespace matrix_free

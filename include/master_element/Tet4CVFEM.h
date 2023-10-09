@@ -269,18 +269,16 @@ private:
   const int scsIpEdgeOrd_[6] = {0, 1, 2, 3, 4, 5};
 
   // define opposing node
-  const int oppNode_[4][3]{
-    {2, 2, 2},  // face 0
-    {0, 0, 0},  // face 1
-    {1, 1, 1},  // face 2
-    {3, 3, 3}}; // face 3
+  const int oppNode_[4][3]{{2, 2, 2},  // face 0
+                           {0, 0, 0},  // face 1
+                           {1, 1, 1},  // face 2
+                           {3, 3, 3}}; // face 3
 
   // define opposing face
-  const int oppFace_[4][3] = {
-    {2, 1, 5},  // face 0
-    {0, 2, 3},  // face 1
-    {0, 4, 1},  // face 2
-    {3, 5, 4}}; // face 3
+  const int oppFace_[4][3] = {{2, 1, 5},  // face 0
+                              {0, 2, 3},  // face 1
+                              {0, 4, 1},  // face 2
+                              {3, 5, 4}}; // face 3
 
   // standard integration location
   const double thirteen36ths = 13.0 / 36.0;

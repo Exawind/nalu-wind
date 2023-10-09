@@ -353,9 +353,9 @@ TEST(KokkosME, test_wed6_shifted_grad_op)
 
 TEST(KokkosME, test_pyr5_views)
 {
-  test_ME_views<sierra::nalu::AlgTraitsPyr5>(
-    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP,
-     sierra::nalu::SCV_VOLUME});
+  test_ME_views<sierra::nalu::AlgTraitsPyr5>({sierra::nalu::SCS_AREAV,
+                                              sierra::nalu::SCS_GRAD_OP,
+                                              sierra::nalu::SCV_VOLUME});
 }
 
 TEST(KokkosME, test_pyr5_views_shifted_grad_op)

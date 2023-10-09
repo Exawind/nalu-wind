@@ -225,15 +225,12 @@ Tri3DSCS::isInElement(
   const int npar_coord = 3;
   // Translate element so that (x,y,z) coordinates of the
   // first node
-  double x[2] = {
-    elem_nodal_coor[1] - elem_nodal_coor[0],
-    elem_nodal_coor[2] - elem_nodal_coor[0]};
-  double y[2] = {
-    elem_nodal_coor[4] - elem_nodal_coor[3],
-    elem_nodal_coor[5] - elem_nodal_coor[3]};
-  double z[2] = {
-    elem_nodal_coor[7] - elem_nodal_coor[6],
-    elem_nodal_coor[8] - elem_nodal_coor[6]};
+  double x[2] = {elem_nodal_coor[1] - elem_nodal_coor[0],
+                 elem_nodal_coor[2] - elem_nodal_coor[0]};
+  double y[2] = {elem_nodal_coor[4] - elem_nodal_coor[3],
+                 elem_nodal_coor[5] - elem_nodal_coor[3]};
+  double z[2] = {elem_nodal_coor[7] - elem_nodal_coor[6],
+                 elem_nodal_coor[8] - elem_nodal_coor[6]};
 
   // Translate position of point in same manner
 

@@ -182,7 +182,7 @@ TEST(make_radar_grid, check_opposite)
 TEST(spherical_cap_quadrature, integrate_constant)
 {
   const auto ang = M_PI / 3;
-  auto [rays, weights] = details::spherical_cap_radau(ang, 6, 4);
+  auto[rays, weights] = details::spherical_cap_radau(ang, 6, 4);
   auto cart_const = [](vs::Vector x) { return 1; };
   double integral = 0;
   for (int j = 0; j < int(weights.size()); ++j) {
@@ -194,7 +194,7 @@ TEST(spherical_cap_quadrature, integrate_constant)
 TEST(spherical_cap_quadrature, integrate_constant_halfpower)
 {
   const auto ang = M_PI / 3;
-  auto [rays, weights] = details::spherical_cap_radau(ang, 6, 9, [](double x) {
+  auto[rays, weights] = details::spherical_cap_radau(ang, 6, 9, [](double x) {
     return 1.234529105942581469654 * std::pow(2, -x * x);
   });
   auto cart_const = [](vs::Vector x) { return 1; };
@@ -208,7 +208,7 @@ TEST(spherical_cap_quadrature, integrate_constant_halfpower)
 TEST(spherical_cap_quadrature, integrate_constant_trunc_normal_1)
 {
   const auto ang = M_PI / 3;
-  auto [rays, weights] = details::spherical_cap_truncated_normal(
+  auto[rays, weights] = details::spherical_cap_truncated_normal(
     ang, 6, details::NormalRule::SIGMA1);
   auto cart_const = [](vs::Vector x) { return 1; };
   double integral = 0;
@@ -221,7 +221,7 @@ TEST(spherical_cap_quadrature, integrate_constant_trunc_normal_1)
 TEST(spherical_cap_quadrature, integrate_constant_trunc_normal_2)
 {
   const auto ang = M_PI / 4;
-  auto [rays, weights] = details::spherical_cap_truncated_normal(
+  auto[rays, weights] = details::spherical_cap_truncated_normal(
     ang, 6, details::NormalRule::SIGMA2);
   auto cart_const = [](vs::Vector x) { return 1; };
   double integral = 0;
@@ -234,7 +234,7 @@ TEST(spherical_cap_quadrature, integrate_constant_trunc_normal_2)
 TEST(spherical_cap_quadrature, integrate_constant_trunc_normal_3)
 {
   const auto ang = M_PI / 5;
-  auto [rays, weights] = details::spherical_cap_truncated_normal(
+  auto[rays, weights] = details::spherical_cap_truncated_normal(
     ang, 6, details::NormalRule::SIGMA3);
   auto cart_const = [](vs::Vector x) { return 1; };
   double integral = 0;
@@ -247,7 +247,7 @@ TEST(spherical_cap_quadrature, integrate_constant_trunc_normal_3)
 TEST(spherical_cap_quadrature, integrate_constant_trunc_normal_halfpower)
 {
   const auto ang = M_PI / 5;
-  auto [rays, weights] = details::spherical_cap_truncated_normal(
+  auto[rays, weights] = details::spherical_cap_truncated_normal(
     ang, 6, details::NormalRule::HALFPOWER);
   auto cart_const = [](vs::Vector x) { return 1; };
   double integral = 0;
@@ -260,7 +260,7 @@ TEST(spherical_cap_quadrature, integrate_constant_trunc_normal_halfpower)
 TEST(spherical_cap_quadrature, integrate_linear)
 {
   const auto ang = M_PI / 4;
-  auto [rays, weights] = details::spherical_cap_radau(ang, 6, 4);
+  auto[rays, weights] = details::spherical_cap_radau(ang, 6, 4);
   auto cart_lin = [](vs::Vector x) { return x[0] + x[1] + x[2]; };
   double integral = 0;
   for (int j = 0; j < int(weights.size()); ++j) {
@@ -272,7 +272,7 @@ TEST(spherical_cap_quadrature, integrate_linear)
 TEST(spherical_cap_quadrature, integrate_quadratic)
 {
   const auto ang = 0.2423891; // some number < pi/2
-  auto [rays, weights] = details::spherical_cap_radau(ang, 6, 4);
+  auto[rays, weights] = details::spherical_cap_radau(ang, 6, 4);
   auto cart_quad = [](vs::Vector x) {
     return (x[0] - 1) * (x[0] - 1) + 2 * x[1] * x[1] + x[2];
   };
@@ -296,7 +296,7 @@ TEST(spherical_cap_quadrature, error_improves_with_points_for_nonpoly)
 
   const double actual_integral = 2.3995550177556133;
   auto error = [&](int ntheta, int nphi) {
-    auto [rays, weights] = details::spherical_cap_radau(ang, ntheta, nphi);
+    auto[rays, weights] = details::spherical_cap_radau(ang, ntheta, nphi);
     double integral = 0;
     for (int j = 0; j < int(weights.size()); ++j) {
       integral += cart_ramp(rays[j]) * weights[j];

@@ -44,8 +44,8 @@ DropletVOFAuxFunction::do_evaluate(
     fieldPtr[0] = 0.0;
     fieldPtr[0] += -0.5 * (std::erf(y / interface_thickness) + 1.0) + 1.0;
 
-    auto radius = std::sqrt(x * x + y * y + z * z) - 0.075;
-    //fieldPtr[0] += -0.5 * (std::erf(radius / interface_thickness) + 1.0) + 1.0;
+    auto radius = std::sqrt(x * x + (y - 0.25) * (y - 0.25) + z * z) - 0.025;
+    fieldPtr[0] += -0.5 * (std::erf(radius / interface_thickness) + 1.0) + 1.0;
 
     fieldPtr += fieldSize;
     coords += spatialDimension;

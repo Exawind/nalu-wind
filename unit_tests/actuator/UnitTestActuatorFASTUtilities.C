@@ -33,9 +33,8 @@ F_distance(T& p1, T& p2)
 Point
 F_center(Point& A, Point& B, Point& C)
 {
-  Point center = {
-    (A[0] + B[0] + C[0]) / 3.0, (A[1] + B[1] + C[1]) / 3.0,
-    (A[2] + B[2] + C[2]) / 3.0};
+  Point center = {(A[0] + B[0] + C[0]) / 3.0, (A[1] + B[1] + C[1]) / 3.0,
+                  (A[2] + B[2] + C[2]) / 3.0};
   return center;
 }
 
