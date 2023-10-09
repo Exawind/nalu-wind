@@ -37,7 +37,10 @@ MdotEdgeAlg::MdotEdgeAlg(Realm& realm, stk::mesh::Part* part)
     Udiag_(get_field_ordinal(realm.meta_data(), "momentum_diag")),
     massFlowRate_(get_field_ordinal(
       realm.meta_data(), "mass_flow_rate", stk::topology::EDGE_RANK)),
-    source_(get_field_ordinal(realm.meta_data(), "buoyancy_source"))
+    source_(
+      realm.solutionOptions_->use_balanced_buoyancy_force_
+        ? get_field_ordinal(realm.meta_data(), "buoyancy_source")
+        : get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1))
 {
 }
 

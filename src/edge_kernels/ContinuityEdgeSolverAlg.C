@@ -33,7 +33,9 @@ ContinuityEdgeSolverAlg::ContinuityEdgeSolverAlg(
     get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   Udiag_ = get_field_ordinal(meta, "momentum_diag");
 
-  source_ = get_field_ordinal(meta, "buoyancy_source");
+  source_ = realm.solutionOptions_->use_balanced_buoyancy_force_
+              ? get_field_ordinal(meta, "buoyancy_source")
+              : stk::mesh::InvalidOrdinal;
 }
 
 void
@@ -68,7 +70,7 @@ ContinuityEdgeSolverAlg::execute()
       gravity_vector[idim] = realm_.solutionOptions_->gravity_[idim];
 
   // STK stk::mesh::NgpField instances for capture by lambda
-  auto& fieldMgr = realm_.ngp_field_manager();
+  const auto& fieldMgr = realm_.ngp_field_manager();
   auto coordinates = fieldMgr.get_field<double>(coordinates_);
   auto velocity = fieldMgr.get_field<double>(velocity_);
   auto Gpdx = fieldMgr.get_field<double>(Gpdx_);
@@ -76,7 +78,9 @@ ContinuityEdgeSolverAlg::execute()
   auto pressure = fieldMgr.get_field<double>(pressure_);
   auto udiag = fieldMgr.get_field<double>(Udiag_);
   auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
-  auto source = fieldMgr.get_field<double>(source_);
+  auto source = realm_.solutionOptions_->use_balanced_buoyancy_force_
+                        ? fieldMgr.get_field<double>(source_)
+                        : fieldMgr.get_field<double>(densityNp1_);
 
   stk::mesh::NgpField<double> edgeFaceVelMag;
   bool needs_gcl = false;
