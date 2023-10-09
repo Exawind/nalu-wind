@@ -877,11 +877,10 @@ ScratchViews<T, TEAMHANDLETYPE, SHMEM>::ScratchViews(
   MasterElement* meFEM = dataNeeded.get_fem_volume_me();
 
   int nodesPerFace = meFC != nullptr ? meFC->nodesPerElement_ : 0;
-  int nodesPerElem = meSCS != nullptr
-                       ? meSCS->nodesPerElement_
-                       : meSCV != nullptr
-                           ? meSCV->nodesPerElement_
-                           : meFEM != nullptr ? meFEM->nodesPerElement_ : 0;
+  int nodesPerElem = meSCS != nullptr   ? meSCS->nodesPerElement_
+                     : meSCV != nullptr ? meSCV->nodesPerElement_
+                     : meFEM != nullptr ? meFEM->nodesPerElement_
+                                        : 0;
   int numFaceIp = meFC != nullptr ? meFC->num_integration_points() : 0;
   int numScsIp = meSCS != nullptr ? meSCS->num_integration_points() : 0;
   int numScvIp = meSCV != nullptr ? meSCV->num_integration_points() : 0;

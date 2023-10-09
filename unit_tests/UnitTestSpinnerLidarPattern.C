@@ -56,9 +56,10 @@ TEST(SpinnerLidar, print_tip_location)
 vs::Vector
 velocity_func(const double* x, double time)
 {
-  return {time + 1 + 2.1 * x[0] / 500 + 3.2 * x[1] / 500 + 4.3 * x[2] / 100,
-          time - 2 + 1.2 * x[0] / 500 + 2.3 * x[1] / 500 + 3.4 * x[2] / 100,
-          time + 3 - 2.1 * x[0] / 500 + 3.2 * x[1] / 500 - 4.3 * x[2] / 100};
+  return {
+    time + 1 + 2.1 * x[0] / 500 + 3.2 * x[1] / 500 + 4.3 * x[2] / 100,
+    time - 2 + 1.2 * x[0] / 500 + 2.3 * x[1] / 500 + 3.4 * x[2] / 100,
+    time + 3 - 2.1 * x[0] / 500 + 3.2 * x[1] / 500 - 4.3 * x[2] / 100};
 }
 
 TEST(SpinnerLidar, volume_interp)

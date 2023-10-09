@@ -106,14 +106,11 @@ nodes_per_entity(const DataReqType& dataReq)
   auto* meSCV = dataReq.get_cvfem_volume_me();
   auto* meFEM = dataReq.get_fem_volume_me();
 
-  int npe =
-    (meSCS != nullptr)
-      ? nodes_per_entity(dataReq, METype::SCS)
-      : (meSCV != nullptr)
-          ? nodes_per_entity(dataReq, METype::SCV)
-          : (meFEM != nullptr)
-              ? nodes_per_entity(dataReq, METype::FEM)
-              : (meFC != nullptr) ? nodes_per_entity(dataReq, METype::FACE) : 0;
+  int npe = (meSCS != nullptr)   ? nodes_per_entity(dataReq, METype::SCS)
+            : (meSCV != nullptr) ? nodes_per_entity(dataReq, METype::SCV)
+            : (meFEM != nullptr) ? nodes_per_entity(dataReq, METype::FEM)
+            : (meFC != nullptr)  ? nodes_per_entity(dataReq, METype::FACE)
+                                 : 0;
 
   return npe;
 }

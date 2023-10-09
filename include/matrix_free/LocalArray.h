@@ -33,13 +33,13 @@ struct alignas(alignment) LocalArray<
   static constexpr int extent_0 = std::extent<ArrayType>::value;
   value_type internal_data_[extent_0];
 
-  KOKKOS_FORCEINLINE_FUNCTION constexpr value_type operator()(int i) const
-    noexcept
+  KOKKOS_FORCEINLINE_FUNCTION constexpr value_type
+  operator()(int i) const noexcept
   {
     return internal_data_[i];
   }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr value_type operator[](int i) const
-    noexcept
+  KOKKOS_FORCEINLINE_FUNCTION constexpr value_type
+  operator[](int i) const noexcept
   {
     return internal_data_[i];
   }

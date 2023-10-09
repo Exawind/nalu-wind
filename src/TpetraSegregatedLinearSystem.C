@@ -1308,12 +1308,13 @@ TpetraSegregatedLinearSystem::get_coeff_applier()
   auto numDof = numDof_;
   auto newDeviceCoeffApplier =
     kokkos_malloc_on_device<TpetraLinSysCoeffApplier>("deviceCoeffApplier");
-  Kokkos::parallel_for(DeviceRangePolicy(0, 1), KOKKOS_LAMBDA(const int&) {
-    new (newDeviceCoeffApplier) TpetraLinSysCoeffApplier(
-      ownedLocalMatrix, sharedNotOwnedLocalMatrix, ownedLocalRhs,
-      sharedNotOwnedLocalRhs, entityToLID, entityToColLID, maxOwnedRowId,
-      maxSharedNotOwnedRowId, numDof);
-  });
+  Kokkos::parallel_for(
+    DeviceRangePolicy(0, 1), KOKKOS_LAMBDA(const int&) {
+      new (newDeviceCoeffApplier) TpetraLinSysCoeffApplier(
+        ownedLocalMatrix, sharedNotOwnedLocalMatrix, ownedLocalRhs,
+        sharedNotOwnedLocalRhs, entityToLID, entityToColLID, maxOwnedRowId,
+        maxSharedNotOwnedRowId, numDof);
+    });
 
   return newDeviceCoeffApplier;
 }

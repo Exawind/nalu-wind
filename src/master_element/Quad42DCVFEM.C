@@ -745,12 +745,14 @@ Quad42DSCS::isInElement(
   // -1:1 isoparametric range
 
   // Translate element so that (x,y) coordinates of the first node are (0,0)
-  double x[4] = {0., elemNodalCoord[1] - elemNodalCoord[0],
-                 elemNodalCoord[2] - elemNodalCoord[0],
-                 elemNodalCoord[3] - elemNodalCoord[0]};
-  double y[4] = {0., elemNodalCoord[5] - elemNodalCoord[4],
-                 elemNodalCoord[6] - elemNodalCoord[4],
-                 elemNodalCoord[7] - elemNodalCoord[4]};
+  double x[4] = {
+    0., elemNodalCoord[1] - elemNodalCoord[0],
+    elemNodalCoord[2] - elemNodalCoord[0],
+    elemNodalCoord[3] - elemNodalCoord[0]};
+  double y[4] = {
+    0., elemNodalCoord[5] - elemNodalCoord[4],
+    elemNodalCoord[6] - elemNodalCoord[4],
+    elemNodalCoord[7] - elemNodalCoord[4]};
 
   // (xp,yp) is the point at which we're searching for (xi,eta)
   // (must translate this also)

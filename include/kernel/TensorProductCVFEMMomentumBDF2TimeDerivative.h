@@ -34,8 +34,8 @@ momentum_dt_lhs(
   for (int n = 0; n < n1D; ++n) {
     for (int m = 0; m < n1D; ++m) {
       for (int l = 0; l < n1D; ++l) {
-        const int rowIndices[3] = {idx<n1D>(XH, n, m, l), idx<n1D>(YH, n, m, l),
-                                   idx<n1D>(ZH, n, m, l)};
+        const int rowIndices[3] = {
+          idx<n1D>(XH, n, m, l), idx<n1D>(YH, n, m, l), idx<n1D>(ZH, n, m, l)};
 
         for (int k = 0; k < n1D; ++k) {
           const Scalar gammaWnk = gamma1_div_dt * weight(n, k);
@@ -74,8 +74,8 @@ momentum_dt_lhs_lumped(
       for (int l = 0; l < n1D; ++l) {
         const auto lhsfac =
           WnWm * weight(l, l) * metric(n, m, l) * rho_p1(n, m, l);
-        const int rowIndices[3] = {idx<n1D>(XH, n, m, l), idx<n1D>(YH, n, m, l),
-                                   idx<n1D>(ZH, n, m, l)};
+        const int rowIndices[3] = {
+          idx<n1D>(XH, n, m, l), idx<n1D>(YH, n, m, l), idx<n1D>(ZH, n, m, l)};
 
         lhs(rowIndices[XH], rowIndices[XH]) += lhsfac;
         lhs(rowIndices[YH], rowIndices[YH]) += lhsfac;

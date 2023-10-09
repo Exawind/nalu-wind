@@ -53,8 +53,8 @@ public:
 TEST_F(SideWriterFixture, side)
 {
 
-  std::vector<const stk::mesh::Part*> sides{meta->get_part("surface_1"),
-                                            meta->get_part("surface_2")};
+  std::vector<const stk::mesh::Part*> sides{
+    meta->get_part("surface_1"), meta->get_part("surface_2")};
   SideWriter side_io(
     *bulk, sides, {test_field, test_vector_field}, "test_output/file.e");
 

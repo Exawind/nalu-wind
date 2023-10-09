@@ -372,22 +372,24 @@ private:
     {{-0.5, -0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}}};
 
   // nodes for collocation calculations
-  const double nodeLoc_[8][3] = {/* node 0 */ {-0.5, -0.5, -0.5},
-                                 /* node 1 */ {0.5, -0.5, -0.5},
-                                 /* node 2 */ {0.5, 0.5, -0.5},
-                                 /* node 3 */ {-0.5, 0.5, -0.5},
-                                 /* node 4 */ {-0.5, -0.5, 0.5},
-                                 /* node 5 */ {0.5, -0.5, 0.5},
-                                 /* node 6 */ {0.5, 0.5, 0.5},
-                                 /* node 7 */ {-0.5, 0.5, 0.5}};
+  const double nodeLoc_[8][3] = {
+    /* node 0 */ {-0.5, -0.5, -0.5},
+    /* node 1 */ {0.5, -0.5, -0.5},
+    /* node 2 */ {0.5, 0.5, -0.5},
+    /* node 3 */ {-0.5, 0.5, -0.5},
+    /* node 4 */ {-0.5, -0.5, 0.5},
+    /* node 5 */ {0.5, -0.5, 0.5},
+    /* node 6 */ {0.5, 0.5, 0.5},
+    /* node 7 */ {-0.5, 0.5, 0.5}};
 
   // mapping from a side ordinal to the node ordinals on that side
-  const int sideNodeOrdinals_[6][4] = {{0, 1, 5, 4},  // ordinal 0
-                                       {1, 2, 6, 5},  // ordinal 1
-                                       {2, 3, 7, 6},  // ordinal 2
-                                       {0, 4, 7, 3},  // ordinal 3
-                                       {0, 3, 2, 1},  // ordinal 4
-                                       {4, 5, 6, 7}}; // ordinal 5
+  const int sideNodeOrdinals_[6][4] = {
+    {0, 1, 5, 4},  // ordinal 0
+    {1, 2, 6, 5},  // ordinal 1
+    {2, 3, 7, 6},  // ordinal 2
+    {0, 4, 7, 3},  // ordinal 3
+    {0, 3, 2, 1},  // ordinal 4
+    {4, 5, 6, 7}}; // ordinal 5
 
   // elem-edge mapping from ip
   const int scsIpEdgeOrd_[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};

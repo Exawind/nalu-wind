@@ -34,14 +34,15 @@ test_vector_create_impl()
   ds.modify<DeviceScalar::host_mirror_space>();
   ds.sync<sierra::nalu::MemSpace>();
   auto ddata = ds.template view<sierra::nalu::MemSpace>();
-  Kokkos::parallel_for(1, KOKKOS_LAMBDA(int) {
-    auto gv1 = vs::Vector::ihat();
-    auto gv2 = vs::Vector::jhat();
-    auto gv3 = vs::Vector::khat();
-    auto gv4 = (gv1 ^ gv2);
+  Kokkos::parallel_for(
+    1, KOKKOS_LAMBDA(int) {
+      auto gv1 = vs::Vector::ihat();
+      auto gv2 = vs::Vector::jhat();
+      auto gv3 = vs::Vector::khat();
+      auto gv4 = (gv1 ^ gv2);
 
-    ddata(0) = vs::mag((gv3 - gv4));
-  });
+      ddata(0) = vs::mag((gv3 - gv4));
+    });
 
   ds.modify<sierra::nalu::MemSpace>();
   ds.sync<DeviceScalar::host_mirror_space>();
@@ -58,14 +59,15 @@ test_tensor_create_impl()
   ds.sync<sierra::nalu::MemSpace>();
   auto ddata = ds.template view<sierra::nalu::MemSpace>();
 
-  Kokkos::parallel_for(1, KOKKOS_LAMBDA(int) {
-    auto t1 = vs::yrot(90.0);
-    auto t2 = vs::zrot(90.0);
-    auto t3 = t2 & t1;
-    auto qrot = vs::quaternion(vs::Vector::one(), 120.0);
+  Kokkos::parallel_for(
+    1, KOKKOS_LAMBDA(int) {
+      auto t1 = vs::yrot(90.0);
+      auto t2 = vs::zrot(90.0);
+      auto t3 = t2 & t1;
+      auto qrot = vs::quaternion(vs::Vector::one(), 120.0);
 
-    ddata(0) = vs::mag((t3 - qrot));
-  });
+      ddata(0) = vs::mag((t3 - qrot));
+    });
 
   ds.modify<sierra::nalu::MemSpace>();
   ds.sync<DeviceScalar::host_mirror_space>();
@@ -97,11 +99,12 @@ test_rotations_impl()
     ds.sync<sierra::nalu::MemSpace>();                                         \
     auto dv = ds.template view<sierra::nalu::MemSpace>();                      \
                                                                                \
-    Kokkos::parallel_for(1, KOKKOS_LAMBDA(int) {                               \
-      auto v1 = expr1;                                                         \
-      auto v2 = expr2;                                                         \
-      dv(0) = vs::mag((v1 - v2));                                              \
-    });                                                                        \
+    Kokkos::parallel_for(                                                      \
+      1, KOKKOS_LAMBDA(int) {                                                  \
+        auto v1 = expr1;                                                       \
+        auto v2 = expr2;                                                       \
+        dv(0) = vs::mag((v1 - v2));                                            \
+      });                                                                      \
     ds.modify<sierra::nalu::MemSpace>();                                       \
     ds.sync<DeviceScalar::host_mirror_space>();                                \
     EXPECT_NEAR(ds.h_view(0), 0.0, tol)                                        \
@@ -138,12 +141,13 @@ test_device_capture_impl()
   ds.sync<sierra::nalu::MemSpace>();
   auto dv = ds.template view<sierra::nalu::MemSpace>();
 
-  Kokkos::parallel_for(1, KOKKOS_LAMBDA(int) {
-    auto v2 = vs::Vector::jhat();
-    auto vout = v1 ^ v2;
+  Kokkos::parallel_for(
+    1, KOKKOS_LAMBDA(int) {
+      auto v2 = vs::Vector::jhat();
+      auto vout = v1 ^ v2;
 
-    dv[0] = vs::mag((vout - vexpected));
-  });
+      dv[0] = vs::mag((vout - vexpected));
+    });
 
   ds.modify<sierra::nalu::MemSpace>();
   ds.sync<DeviceScalar::host_mirror_space>();
@@ -157,20 +161,21 @@ test_device_lists_impl()
   DeviceVector dvec("vec_test", 3);
   auto dv = dvec.template view<sierra::nalu::MemSpace>();
 
-  Kokkos::parallel_for(1, KOKKOS_LAMBDA(int) {
-    auto v1 = vs::Vector::ihat();
-    auto v2 = vs::Vector::jhat();
-    auto v3 = vs::Vector::khat();
+  Kokkos::parallel_for(
+    1, KOKKOS_LAMBDA(int) {
+      auto v1 = vs::Vector::ihat();
+      auto v2 = vs::Vector::jhat();
+      auto v3 = vs::Vector::khat();
 
-    dv[0] = v2 ^ v3;
-    dv[1] = v3 ^ v1;
-    dv[2] = v1 ^ v2;
-  });
+      dv[0] = v2 ^ v3;
+      dv[1] = v3 ^ v1;
+      dv[2] = v1 ^ v2;
+    });
   dvec.modify<sierra::nalu::MemSpace>();
   dvec.sync<DeviceVector::host_mirror_space>();
 
-  std::vector<vs::Vector> htrue{vs::Vector::ihat(), vs::Vector::jhat(),
-                                vs::Vector::khat()};
+  std::vector<vs::Vector> htrue{
+    vs::Vector::ihat(), vs::Vector::jhat(), vs::Vector::khat()};
 
   for (int i = 0; i < 3; ++i) {
     EXPECT_NEAR(vs::mag(htrue[i] - dvec.h_view(i)), 0.0, tol);

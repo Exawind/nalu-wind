@@ -23,8 +23,8 @@ namespace matrix_free {
 static constexpr int invalid_offset = -1;
 
 constexpr stk::mesh::FastMeshIndex invalid_mesh_index =
-  stk::mesh::FastMeshIndex{stk::mesh::InvalidOrdinal,
-                           stk::mesh::InvalidOrdinal};
+  stk::mesh::FastMeshIndex{
+    stk::mesh::InvalidOrdinal, stk::mesh::InvalidOrdinal};
 KOKKOS_FORCEINLINE_FUNCTION bool
 valid_mesh_index(stk::mesh::FastMeshIndex index)
 {

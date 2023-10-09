@@ -225,11 +225,12 @@ create_one_reference_hex8_element(stk::mesh::BulkData& bulk)
 stk::mesh::Entity
 create_one_reference_pyramid5_element(stk::mesh::BulkData& bulk)
 {
-  std::vector<std::vector<double>> nodeLocations = {{-1.0, -1.0, +0.0},
-                                                    {+1.0, -1.0, +0.0},
-                                                    {+1.0, +1.0, +0.0},
-                                                    {-1.0, +1.0, +0.0},
-                                                    {0.0, 0.0, +1.0}};
+  std::vector<std::vector<double>> nodeLocations = {
+    {-1.0, -1.0, +0.0},
+    {+1.0, -1.0, +0.0},
+    {+1.0, +1.0, +0.0},
+    {-1.0, +1.0, +0.0},
+    {0.0, 0.0, +1.0}};
   return create_one_element(bulk, stk::topology::PYRAMID_5, nodeLocations);
 }
 
@@ -283,25 +284,28 @@ create_one_perturbed_element(stk::mesh::BulkData& bulk, stk::topology topo)
     break;
 
   case stk::topology::QUADRILATERAL_4_2D:
-    nodeLocations = {{-0.453578, -0.327867},
-                     {0.678973, -0.326374},
-                     {0.561782, 0.442191},
-                     {-0.601233, 0.278356}};
+    nodeLocations = {
+      {-0.453578, -0.327867},
+      {0.678973, -0.326374},
+      {0.561782, 0.442191},
+      {-0.601233, 0.278356}};
     break;
 
   case stk::topology::TETRAHEDRON_4:
-    nodeLocations = {{0.0464223, 0.172133, 0.178973},
-                     {1.17363, 0.0617818, -0.0578091},
-                     {-0.101233, 0.778356, -0.113672},
-                     {-0.0111674, 0.156084, 0.989989}};
+    nodeLocations = {
+      {0.0464223, 0.172133, 0.178973},
+      {1.17363, 0.0617818, -0.0578091},
+      {-0.101233, 0.778356, -0.113672},
+      {-0.0111674, 0.156084, 0.989989}};
     break;
 
   case stk::topology::PYRAMID_5:
-    nodeLocations = {{-0.953578, -0.827867, 0.178973},
-                     {1.17363, -0.938218, -0.0578091},
-                     {0.898767, 0.778356, -0.113672},
-                     {-1.01117, 1.15608, -0.0100114},
-                     {-0.0536076, 0.168039, 0.918698}};
+    nodeLocations = {
+      {-0.953578, -0.827867, 0.178973},
+      {1.17363, -0.938218, -0.0578091},
+      {0.898767, 0.778356, -0.113672},
+      {-1.01117, 1.15608, -0.0100114},
+      {-0.0536076, 0.168039, 0.918698}};
     break;
 
   case stk::topology::WEDGE_6:
@@ -464,9 +468,9 @@ random_rotation_matrix(int dim, std::mt19937& rng)
   const double theta = angle(rng);
   const double cosTheta = std::cos(theta);
   const double sinTheta = std::sin(theta);
-  std::array<double, 3> n = {{(dim == 3) ? axis(rng) : 0,
-                              (dim == 3) ? axis(rng) : 0,
-                              (dim == 3) ? axis(rng) : 1}};
+  std::array<double, 3> n = {
+    {(dim == 3) ? axis(rng) : 0, (dim == 3) ? axis(rng) : 0,
+     (dim == 3) ? axis(rng) : 1}};
 
   if (dim == 3) {
     double nMag = 0.0;

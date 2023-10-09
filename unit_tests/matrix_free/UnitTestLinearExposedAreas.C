@@ -29,16 +29,17 @@ single_cube_hex_p()
   const int num_elems_2D = num_elems_1D * num_elems_1D;
 
   face_vector_view<p> coords("coordinates", num_elems_2D);
-  Kokkos::parallel_for(num_elems_2D, KOKKOS_LAMBDA(int index) {
-    for (int j = 0; j < p + 1; ++j) {
-      for (int i = 0; i < p + 1; ++i) {
-        constexpr auto nodes = GLL<p>::nodes;
-        coords(index, j, i, 0) = nodes[i];
-        coords(index, j, i, 1) = nodes[j];
-        coords(index, j, i, 2) = 0;
+  Kokkos::parallel_for(
+    num_elems_2D, KOKKOS_LAMBDA(int index) {
+      for (int j = 0; j < p + 1; ++j) {
+        for (int i = 0; i < p + 1; ++i) {
+          constexpr auto nodes = GLL<p>::nodes;
+          coords(index, j, i, 0) = nodes[i];
+          coords(index, j, i, 1) = nodes[j];
+          coords(index, j, i, 2) = 0;
+        }
       }
-    }
-  });
+    });
 
   const auto areas_d = geom::exposed_areas<p>(coords);
   auto areas_h = Kokkos::create_mirror_view(areas_d);

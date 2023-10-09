@@ -769,30 +769,33 @@ HexSCS::isInElement(
   const double isInElemConverged = 1.0e-16;
   // Translate element so that (x,y,z) coordinates of the first node are (0,0,0)
 
-  double x[] = {0.,
-                0.125 * (elem_nodal_coor[1] - elem_nodal_coor[0]),
-                0.125 * (elem_nodal_coor[2] - elem_nodal_coor[0]),
-                0.125 * (elem_nodal_coor[3] - elem_nodal_coor[0]),
-                0.125 * (elem_nodal_coor[4] - elem_nodal_coor[0]),
-                0.125 * (elem_nodal_coor[5] - elem_nodal_coor[0]),
-                0.125 * (elem_nodal_coor[6] - elem_nodal_coor[0]),
-                0.125 * (elem_nodal_coor[7] - elem_nodal_coor[0])};
-  double y[] = {0.,
-                0.125 * (elem_nodal_coor[9] - elem_nodal_coor[8]),
-                0.125 * (elem_nodal_coor[10] - elem_nodal_coor[8]),
-                0.125 * (elem_nodal_coor[11] - elem_nodal_coor[8]),
-                0.125 * (elem_nodal_coor[12] - elem_nodal_coor[8]),
-                0.125 * (elem_nodal_coor[13] - elem_nodal_coor[8]),
-                0.125 * (elem_nodal_coor[14] - elem_nodal_coor[8]),
-                0.125 * (elem_nodal_coor[15] - elem_nodal_coor[8])};
-  double z[] = {0.,
-                0.125 * (elem_nodal_coor[17] - elem_nodal_coor[16]),
-                0.125 * (elem_nodal_coor[18] - elem_nodal_coor[16]),
-                0.125 * (elem_nodal_coor[19] - elem_nodal_coor[16]),
-                0.125 * (elem_nodal_coor[20] - elem_nodal_coor[16]),
-                0.125 * (elem_nodal_coor[21] - elem_nodal_coor[16]),
-                0.125 * (elem_nodal_coor[22] - elem_nodal_coor[16]),
-                0.125 * (elem_nodal_coor[23] - elem_nodal_coor[16])};
+  double x[] = {
+    0.,
+    0.125 * (elem_nodal_coor[1] - elem_nodal_coor[0]),
+    0.125 * (elem_nodal_coor[2] - elem_nodal_coor[0]),
+    0.125 * (elem_nodal_coor[3] - elem_nodal_coor[0]),
+    0.125 * (elem_nodal_coor[4] - elem_nodal_coor[0]),
+    0.125 * (elem_nodal_coor[5] - elem_nodal_coor[0]),
+    0.125 * (elem_nodal_coor[6] - elem_nodal_coor[0]),
+    0.125 * (elem_nodal_coor[7] - elem_nodal_coor[0])};
+  double y[] = {
+    0.,
+    0.125 * (elem_nodal_coor[9] - elem_nodal_coor[8]),
+    0.125 * (elem_nodal_coor[10] - elem_nodal_coor[8]),
+    0.125 * (elem_nodal_coor[11] - elem_nodal_coor[8]),
+    0.125 * (elem_nodal_coor[12] - elem_nodal_coor[8]),
+    0.125 * (elem_nodal_coor[13] - elem_nodal_coor[8]),
+    0.125 * (elem_nodal_coor[14] - elem_nodal_coor[8]),
+    0.125 * (elem_nodal_coor[15] - elem_nodal_coor[8])};
+  double z[] = {
+    0.,
+    0.125 * (elem_nodal_coor[17] - elem_nodal_coor[16]),
+    0.125 * (elem_nodal_coor[18] - elem_nodal_coor[16]),
+    0.125 * (elem_nodal_coor[19] - elem_nodal_coor[16]),
+    0.125 * (elem_nodal_coor[20] - elem_nodal_coor[16]),
+    0.125 * (elem_nodal_coor[21] - elem_nodal_coor[16]),
+    0.125 * (elem_nodal_coor[22] - elem_nodal_coor[16]),
+    0.125 * (elem_nodal_coor[23] - elem_nodal_coor[16])};
 
   // (xp,yp,zp) is the point at which we're searching for (xi,eta,zeta)
   // (must translate this also)
@@ -968,7 +971,8 @@ HexSCS::isInElement(
 //--------------------------------------------------------------------------
 //-------- interpolatePoint ------------------------------------------------
 //--------------------------------------------------------------------------
-void HexSCS::interpolatePoint(
+void
+HexSCS::interpolatePoint(
   const int& ncomp_field,
   const double* par_coord, // (3)
   const double* field,     // (8,ncomp_field)

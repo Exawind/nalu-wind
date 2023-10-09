@@ -21,7 +21,7 @@ namespace nalu {
 namespace abl_impl {
 
 using Array1D = Kokkos::View<double*, MemSpace>;
-using Array2D = Kokkos::View<double * [3], MemSpace>;
+using Array2D = Kokkos::View<double* [3], MemSpace>;
 
 KOKKOS_FORCEINLINE_FUNCTION
 unsigned

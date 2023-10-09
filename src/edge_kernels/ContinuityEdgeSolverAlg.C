@@ -79,8 +79,8 @@ ContinuityEdgeSolverAlg::execute()
   auto udiag = fieldMgr.get_field<double>(Udiag_);
   auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   auto source = realm_.solutionOptions_->use_balanced_buoyancy_force_
-                        ? fieldMgr.get_field<double>(source_)
-                        : fieldMgr.get_field<double>(densityNp1_);
+                  ? fieldMgr.get_field<double>(source_)
+                  : fieldMgr.get_field<double>(densityNp1_);
 
   stk::mesh::NgpField<double> edgeFaceVelMag;
   bool needs_gcl = false;

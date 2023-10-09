@@ -99,7 +99,6 @@ BuoyancySourceAlg::execute()
         sourceOps(einfo, 0, i) += av[i] * rhoIp * gravity_left * invVolL;
         sourceOps(einfo, 1, i) -= av[i] * rhoIp * gravity_right * invVolR;
       }
-
     });
   source.modify_on_device();
 }

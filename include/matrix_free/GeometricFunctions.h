@@ -32,10 +32,12 @@ hex_jacobian_component_scs(const BoxArray& box, int l, int s, int r)
   typename BoxArray::value_type jac(0);
   switch (dj) {
   case XH: {
-    const double lj =
-      (dk == YH) ? ntlin(LN, l) : (dk == XH) ? nlin(LN, r) : nlin(LN, s);
-    const double rj =
-      (dk == YH) ? ntlin(RN, l) : (dk == XH) ? nlin(RN, r) : nlin(RN, s);
+    const double lj = (dk == YH)   ? ntlin(LN, l)
+                      : (dk == XH) ? nlin(LN, r)
+                                   : nlin(LN, s);
+    const double rj = (dk == YH)   ? ntlin(RN, l)
+                      : (dk == XH) ? nlin(RN, r)
+                                   : nlin(RN, s);
 
     const double lk = (dk == ZH) ? ntlin(LN, l) : nlin(LN, s);
     const double rk = (dk == ZH) ? ntlin(RN, l) : nlin(RN, s);
@@ -61,10 +63,12 @@ hex_jacobian_component_scs(const BoxArray& box, int l, int s, int r)
     const double li = (dk == XH) ? ntlin(LN, l) : nlin(LN, r);
     const double ri = (dk == XH) ? ntlin(RN, l) : nlin(RN, r);
 
-    const double lj =
-      (dk == YH) ? ntlin(LN, l) : (dk == XH) ? nlin(LN, r) : nlin(LN, s);
-    const double rj =
-      (dk == YH) ? ntlin(RN, l) : (dk == XH) ? nlin(RN, r) : nlin(RN, s);
+    const double lj = (dk == YH)   ? ntlin(LN, l)
+                      : (dk == XH) ? nlin(LN, r)
+                                   : nlin(LN, s);
+    const double rj = (dk == YH)   ? ntlin(RN, l)
+                      : (dk == XH) ? nlin(RN, r)
+                                   : nlin(RN, s);
 
     jac = -li * lj * box(di, 0) - ri * lj * box(di, 1) - ri * rj * box(di, 2) -
           li * rj * box(di, 3) + li * lj * box(di, 4) + ri * lj * box(di, 5) +
@@ -82,19 +86,20 @@ linear_hex_jacobian_scs(const BoxArray& box, int k, int j, int i)
 {
   enum { XH = 0, YH = 1, ZH = 2 };
 
-  return {{{hex_jacobian_component_scs<p, dk, XH, XH>(box, k, j, i),
-            hex_jacobian_component_scs<p, dk, XH, YH>(box, k, j, i),
-            hex_jacobian_component_scs<p, dk, XH, ZH>(box, k, j, i)},
-           {
-             hex_jacobian_component_scs<p, dk, YH, XH>(box, k, j, i),
-             hex_jacobian_component_scs<p, dk, YH, YH>(box, k, j, i),
-             hex_jacobian_component_scs<p, dk, YH, ZH>(box, k, j, i),
-           },
-           {
-             hex_jacobian_component_scs<p, dk, ZH, XH>(box, k, j, i),
-             hex_jacobian_component_scs<p, dk, ZH, YH>(box, k, j, i),
-             hex_jacobian_component_scs<p, dk, ZH, ZH>(box, k, j, i),
-           }}};
+  return {
+    {{hex_jacobian_component_scs<p, dk, XH, XH>(box, k, j, i),
+      hex_jacobian_component_scs<p, dk, XH, YH>(box, k, j, i),
+      hex_jacobian_component_scs<p, dk, XH, ZH>(box, k, j, i)},
+     {
+       hex_jacobian_component_scs<p, dk, YH, XH>(box, k, j, i),
+       hex_jacobian_component_scs<p, dk, YH, YH>(box, k, j, i),
+       hex_jacobian_component_scs<p, dk, YH, ZH>(box, k, j, i),
+     },
+     {
+       hex_jacobian_component_scs<p, dk, ZH, XH>(box, k, j, i),
+       hex_jacobian_component_scs<p, dk, ZH, YH>(box, k, j, i),
+       hex_jacobian_component_scs<p, dk, ZH, ZH>(box, k, j, i),
+     }}};
 }
 
 template <int p, int dk, typename BoxArray>
@@ -117,9 +122,9 @@ linear_area(const BoxArrayType& box, int k, int j, int i)
   const auto dy_ds2 = hex_jacobian_component_scs<p, dk, ds2, YH>(box, k, j, i);
   const auto dz_ds1 = hex_jacobian_component_scs<p, dk, ds1, ZH>(box, k, j, i);
   const auto dz_ds2 = hex_jacobian_component_scs<p, dk, ds2, ZH>(box, k, j, i);
-  return LocalArray<ftype[3]>{{dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2,
-                               dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2,
-                               dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2}};
+  return LocalArray<ftype[3]>{
+    {dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2, dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2,
+     dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2}};
 }
 
 template <int p, int dk, typename BoxArray>

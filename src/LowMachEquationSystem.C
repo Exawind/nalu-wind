@@ -1396,8 +1396,8 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 
   // Check if the user has requested CMM or LMM algorithms; if so, do not
   // include Nodal Mass algorithms
-  std::vector<std::string> checkAlgNames = {"momentum_time_derivative",
-                                            "lumped_momentum_time_derivative"};
+  std::vector<std::string> checkAlgNames = {
+    "momentum_time_derivative", "lumped_momentum_time_derivative"};
   bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
   // solver; time contribution (lumped mass matrix)
   if (!elementMassAlg || nodal_src_is_requested()) {

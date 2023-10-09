@@ -40,21 +40,22 @@ area_single_cube_hex_p()
   const int num_elems_3D = num_elems_1D * num_elems_1D * num_elems_1D;
   vector_view<poly> coords("coordinates", num_elems_3D);
 
-  Kokkos::parallel_for(num_elems_3D, KOKKOS_LAMBDA(int index) {
-    for (int k = 0; k < poly + 1; ++k) {
-      for (int j = 0; j < poly + 1; ++j) {
-        for (int i = 0; i < poly + 1; ++i) {
-          const auto old_coords =
-            Kokkos::Array<ftype, 3>{{nodes[i], nodes[j], nodes[k]}};
-          Kokkos::Array<ftype, 3> new_coords;
-          transform(jac, old_coords, new_coords);
-          for (int d = 0; d < 3; ++d) {
-            coords(index, k, j, i, d) = new_coords[d] + 2;
+  Kokkos::parallel_for(
+    num_elems_3D, KOKKOS_LAMBDA(int index) {
+      for (int k = 0; k < poly + 1; ++k) {
+        for (int j = 0; j < poly + 1; ++j) {
+          for (int i = 0; i < poly + 1; ++i) {
+            const auto old_coords =
+              Kokkos::Array<ftype, 3>{{nodes[i], nodes[j], nodes[k]}};
+            Kokkos::Array<ftype, 3> new_coords;
+            transform(jac, old_coords, new_coords);
+            for (int d = 0; d < 3; ++d) {
+              coords(index, k, j, i, d) = new_coords[d] + 2;
+            }
           }
         }
       }
-    }
-  });
+    });
 
   auto areas = geom::linear_areas<p>(coords);
   auto areas_h = Kokkos::create_mirror_view(areas);

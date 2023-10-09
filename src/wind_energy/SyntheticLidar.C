@@ -340,8 +340,9 @@ LidarLineOfSite::output(
 
   std::vector<std::array<double, 3>> points(npoints_);
   for (int j = 0; j < npoints_; ++j) {
-    points[j] = {{seg.tail_[0] + j * dx[0], seg.tail_[1] + j * dx[1],
-                  seg.tail_[2] + j * dx[2]}};
+    points[j] = {
+      {seg.tail_[0] + j * dx[0], seg.tail_[1] + j * dx[1],
+       seg.tail_[2] + j * dx[2]}};
   }
   const auto& coord_field =
     *bulk.mesh_meta_data()
@@ -390,9 +391,9 @@ LidarLineOfSite::output(
       std::numeric_limits<double>::lowest(),
       std::numeric_limits<double>::lowest(),
       std::numeric_limits<double>::lowest()};
-    std::array<double, dim> min_unmatched{std::numeric_limits<double>::max(),
-                                          std::numeric_limits<double>::max(),
-                                          std::numeric_limits<double>::max()};
+    std::array<double, dim> min_unmatched{
+      std::numeric_limits<double>::max(), std::numeric_limits<double>::max(),
+      std::numeric_limits<double>::max()};
     for (int j = 0; j < npoints_; ++j) {
       const auto degj = degree.at(j);
       if (degj == 0) {
@@ -748,44 +749,51 @@ radau_rule(int n)
   case 2:
     return {{-1, -1. / 3}, {0.5, 1.5}};
   case 3:
-    return {{-1, -0.28989794855663562, 0.68989794855663562},
-            {1. / 9, 1.0249716523768432, 0.75280612540093455}};
+    return {
+      {-1, -0.28989794855663562, 0.68989794855663562},
+      {1. / 9, 1.0249716523768432, 0.75280612540093455}};
   case 4:
-    return {{-1.0000000000000000, -0.57531892352169411, 0.18106627111853058,
-             0.82282408097459211},
-            {0.12500000000000000, 0.65768863996011949, 0.77638693768634376,
-             0.44092442235353675}};
+    return {
+      {-1.0000000000000000, -0.57531892352169411, 0.18106627111853058,
+       0.82282408097459211},
+      {0.12500000000000000, 0.65768863996011949, 0.77638693768634376,
+       0.44092442235353675}};
   case 5:
-    return {{-1.0000000000000000, -0.72048027131243890, -0.16718086473783364,
-             0.44631397272375234, 0.88579160777096464},
-            {0.080000000000000000, 0.44620780216714149, 0.62365304595148251,
-             0.56271203029892412, 0.28742712158245188}};
+    return {
+      {-1.0000000000000000, -0.72048027131243890, -0.16718086473783364,
+       0.44631397272375234, 0.88579160777096464},
+      {0.080000000000000000, 0.44620780216714149, 0.62365304595148251,
+       0.56271203029892412, 0.28742712158245188}};
   case 6:
-    return {{-1.0000000000000000, -0.80292982840234715, -0.39092854670727219,
-             0.12405037950522771, 0.60397316425278365, 0.92038028589706252},
-            {0.055555555555555556, 0.31964075322051097, 0.48538718846896992,
-             0.52092678318957498, 0.41690133431190774, 0.20158838525348084}};
+    return {
+      {-1.0000000000000000, -0.80292982840234715, -0.39092854670727219,
+       0.12405037950522771, 0.60397316425278365, 0.92038028589706252},
+      {0.055555555555555556, 0.31964075322051097, 0.48538718846896992,
+       0.52092678318957498, 0.41690133431190774, 0.20158838525348084}};
   case 7:
-    return {{-1.0000000000000000, -0.85389134263948223, -0.53846772406010900,
-             -0.11734303754310026, 0.32603061943769140, 0.70384280066303142,
-             0.94136714568043022},
-            {0.040816326530612245, 0.23922748922531241, 0.38094987364423115,
-             0.44710982901456647, 0.42470377900595561, 0.31820423146730148,
-             0.14898847111202064}};
+    return {
+      {-1.0000000000000000, -0.85389134263948223, -0.53846772406010900,
+       -0.11734303754310026, 0.32603061943769140, 0.70384280066303142,
+       0.94136714568043022},
+      {0.040816326530612245, 0.23922748922531241, 0.38094987364423115,
+       0.44710982901456647, 0.42470377900595561, 0.31820423146730148,
+       0.14898847111202064}};
   case 8:
-    return {{-1.0000000000000000, -0.88747487892615571, -0.63951861652621527,
-             -0.29475056577366073, 0.094307252661110766, 0.46842035443082106,
-             0.77064189367819154, 0.95504122712257500},
-            {0.031250000000000000, 0.18535815480297928, 0.30413062064678513,
-             0.37651754538911856, 0.39157216745249359, 0.34701479563450128,
-             0.24964790132986496, 0.11450881474425720}};
+    return {
+      {-1.0000000000000000, -0.88747487892615571, -0.63951861652621527,
+       -0.29475056577366073, 0.094307252661110766, 0.46842035443082106,
+       0.77064189367819154, 0.95504122712257500},
+      {0.031250000000000000, 0.18535815480297928, 0.30413062064678513,
+       0.37651754538911856, 0.39157216745249359, 0.34701479563450128,
+       0.24964790132986496, 0.11450881474425720}};
   case 9:
-    return {{-1.0000000000000000, -0.91073208942006030, -0.71126748591570886,
-             -0.42635048571113896, -0.090373369606853298, 0.25613567083345540,
-             0.57138304120873848, 0.81735278420041209, 0.96444016970527310},
-            {0.024691358024691358, 0.14765401904631539, 0.24718937820459305,
-             0.31684377567043798, 0.34827300277296659, 0.33769396697592959,
-             0.28638669635723117, 0.20055329802455196, 0.090714504923282917}};
+    return {
+      {-1.0000000000000000, -0.91073208942006030, -0.71126748591570886,
+       -0.42635048571113896, -0.090373369606853298, 0.25613567083345540,
+       0.57138304120873848, 0.81735278420041209, 0.96444016970527310},
+      {0.024691358024691358, 0.14765401904631539, 0.24718937820459305,
+       0.31684377567043798, 0.34827300277296659, 0.33769396697592959,
+       0.28638669635723117, 0.20055329802455196, 0.090714504923282917}};
   default:
     throw std::runtime_error(
       "Only orders up to 9 supported for radau quadrature");
@@ -799,25 +807,29 @@ truncated_normal_rule(NormalRule rule)
   // from the "truncated normal quadrature" .python code
   switch (rule) {
   case NormalRule::SIGMA1:
-    return {{0, 0.3436121352489559, 0.6473220334297102, 0.8706217027202311,
-             0.9816974860670653},
-            {0.2046394226558322 / 2, 0.1820146209511494, 0.128027596313765,
-             0.06821017522834351, 0.01942789617882675}};
+    return {
+      {0, 0.3436121352489559, 0.6473220334297102, 0.8706217027202311,
+       0.9816974860670653},
+      {0.2046394226558322 / 2, 0.1820146209511494, 0.128027596313765,
+       0.06821017522834351, 0.01942789617882675}};
   case NormalRule::SIGMA2:
-    return {{0, 0.2959590846054073, 0.5735693238435292, 0.8074757570903542,
-             0.9607561326630086},
-            {0.249758577881117 / 2, 0.2035976917174024, 0.1129523637830892,
-             0.04552496709664563, 0.013045688462303995}};
+    return {
+      {0, 0.2959590846054073, 0.5735693238435292, 0.8074757570903542,
+       0.9607561326630086},
+      {0.249758577881117 / 2, 0.2035976917174024, 0.1129523637830892,
+       0.04552496709664563, 0.013045688462303995}};
   case NormalRule::SIGMA3:
-    return {{0, 0.2661790968493327, 0.5263305051027921, 0.7664900509748058,
-             0.9477581057921652},
-            {0.3203929665957703 / 2, 0.2307493381206665, 0.08754316928625956,
-             0.01882073900490792, 0.002690270290280566}};
+    return {
+      {0, 0.2661790968493327, 0.5263305051027921, 0.7664900509748058,
+       0.9477581057921652},
+      {0.3203929665957703 / 2, 0.2307493381206665, 0.08754316928625956,
+       0.01882073900490792, 0.002690270290280566}};
   case NormalRule::HALFPOWER:
-    return {{0, 0.315493297131259, 0.6016636608468, 0.8282105821126121,
-             0.9662550592631028},
-            {0.197723576944154 / 2, 0.1761766447490471, 0.1255723775152601,
-             0.07163437433902098, 0.02775481492459504}};
+    return {
+      {0, 0.315493297131259, 0.6016636608468, 0.8282105821126121,
+       0.9662550592631028},
+      {0.197723576944154 / 2, 0.1761766447490471, 0.1255723775152601,
+       0.07163437433902098, 0.02775481492459504}};
   default: {
     throw std::runtime_error(
       "Only implemented 1-3, halfpower for truncated normal");
@@ -830,7 +842,7 @@ std::pair<std::vector<vs::Vector>, std::vector<double>>
 spherical_cap_radau(
   double gammav, int ntheta, int nphi, std::function<double(double)> wfunc)
 {
-  auto[xlocs, weights] = radau_rule(nphi);
+  auto [xlocs, weights] = radau_rule(nphi);
   if (wfunc) {
     for (size_t j = 0; j < weights.size(); ++j) {
       weights[j] *= wfunc(xlocs[j]);
@@ -842,7 +854,7 @@ spherical_cap_radau(
 std::pair<std::vector<vs::Vector>, std::vector<double>>
 spherical_cap_truncated_normal(double gammav, int ntheta, NormalRule rule)
 {
-  auto[xlocs, weights] = truncated_normal_rule(rule);
+  auto [xlocs, weights] = truncated_normal_rule(rule);
   // want the center of the truncated normal distribution at the pole of the
   // cap -> -1 . Weights are already for a [-1,1] range from the generator
   std::transform(xlocs.cbegin(), xlocs.cend(), xlocs.begin(), [](double x) {
@@ -1056,10 +1068,10 @@ parse_radar_filter(const YAML::Node& node)
     std::transform(
       weight_func.cbegin(), weight_func.cend(), weight_func.begin(), ::tolower);
     if (weight_func == "unity") {
-      auto[rays, weights] = details::spherical_cap_radau(gammav, ntheta, nphi);
+      auto [rays, weights] = details::spherical_cap_radau(gammav, ntheta, nphi);
       return {rays, weights};
     } else if (weight_func == "gaussian_halfpower") {
-      auto[rays, weights] =
+      auto [rays, weights] =
         details::spherical_cap_radau(gammav, ntheta, nphi, [](double x) {
           return 1.234529105942581469654 * std::pow(2., -x * x);
         });
@@ -1068,19 +1080,19 @@ parse_radar_filter(const YAML::Node& node)
       throw std::runtime_error("unrecognized weight function");
     }
   } else if (quad_type == "truncated_normal1") {
-    auto[rays, weights] = details::spherical_cap_truncated_normal(
+    auto [rays, weights] = details::spherical_cap_truncated_normal(
       gammav, ntheta, NormalRule::SIGMA1);
     return {rays, weights};
   } else if (quad_type == "truncated_normal2") {
-    auto[rays, weights] = details::spherical_cap_truncated_normal(
+    auto [rays, weights] = details::spherical_cap_truncated_normal(
       gammav, ntheta, NormalRule::SIGMA2);
     return {rays, weights};
   } else if (quad_type == "truncated_normal3") {
-    auto[rays, weights] = details::spherical_cap_truncated_normal(
+    auto [rays, weights] = details::spherical_cap_truncated_normal(
       gammav, ntheta, NormalRule::SIGMA3);
     return {rays, weights};
   } else if (quad_type == "truncated_normal_halfpower") {
-    auto[rays, weights] = details::spherical_cap_truncated_normal(
+    auto [rays, weights] = details::spherical_cap_truncated_normal(
       gammav, ntheta, NormalRule::HALFPOWER);
     return {rays, weights};
   } else {

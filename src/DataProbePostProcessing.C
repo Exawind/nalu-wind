@@ -1005,8 +1005,8 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
           std::ofstream myfile;
           if (processorId == NaluEnv::self().parallel_rank()) {
 
-          // Get the path to the file name, and create any directories
-          // necessary
+            // Get the path to the file name, and create any directories
+            // necessary
 #ifdef NALU_USES_BOOST
             boost::filesystem::path pathdir{fileName};
             if (pathdir.has_parent_path()) {
@@ -1123,8 +1123,8 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
             }
 #endif
 
-              // Get the path to the file name, and create any directories
-              // necessary
+            // Get the path to the file name, and create any directories
+            // necessary
 #ifdef NALU_USES_BOOST
             boost::filesystem::path pathdir{fileName};
             if (pathdir.has_parent_path()) {
@@ -1153,7 +1153,7 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
               const bool addCoordFile =
                 std::ifstream(coordFileName.c_str()) ? false : true;
               if (addCoordFile) {
-              // -- Add the coordinate file
+                // -- Add the coordinate file
 #ifdef NALU_USES_BOOST
                 boost::iostreams::filtering_streambuf<boost::iostreams::output>
                   outstream;

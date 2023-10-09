@@ -44,25 +44,26 @@ advection_single_cube_hex_p()
   vector_view<p> velocity("velocity", num_elems_3D);
   vector_view<p> gp("gp", num_elems_3D);
 
-  Kokkos::parallel_for(num_elems_3D, KOKKOS_LAMBDA(int index) {
-    for (int k = 0; k < poly + 1; ++k) {
-      for (int j = 0; j < poly + 1; ++j) {
-        for (int i = 0; i < poly + 1; ++i) {
-          const auto old_coords =
-            Kokkos::Array<ftype, 3>{{nodes[i], nodes[j], nodes[k]}};
-          Kokkos::Array<ftype, 3> new_coords;
-          transform(jac, old_coords, new_coords);
-          for (int d = 0; d < 3; ++d) {
-            coords(index, k, j, i, d) = new_coords[d] + 2;
-            velocity(index, k, j, i, d) = (d == 0) ? 1 : 0;
-            gp(index, k, j, i, d) = 0;
+  Kokkos::parallel_for(
+    num_elems_3D, KOKKOS_LAMBDA(int index) {
+      for (int k = 0; k < poly + 1; ++k) {
+        for (int j = 0; j < poly + 1; ++j) {
+          for (int i = 0; i < poly + 1; ++i) {
+            const auto old_coords =
+              Kokkos::Array<ftype, 3>{{nodes[i], nodes[j], nodes[k]}};
+            Kokkos::Array<ftype, 3> new_coords;
+            transform(jac, old_coords, new_coords);
+            for (int d = 0; d < 3; ++d) {
+              coords(index, k, j, i, d) = new_coords[d] + 2;
+              velocity(index, k, j, i, d) = (d == 0) ? 1 : 0;
+              gp(index, k, j, i, d) = 0;
+            }
+            pressure(index, k, j, i) = 0;
+            density(index, k, j, i) = 1;
           }
-          pressure(index, k, j, i) = 0;
-          density(index, k, j, i) = 1;
         }
       }
-    }
-  });
+    });
 
   auto areas = geom::linear_areas<p>(coords);
   auto metric = geom::diffusion_metric<p>(coords);

@@ -79,8 +79,8 @@ TEST(TestEigen, testeigendecomp3d)
 
   // Perform tests -- lambda evaluated in Mathematica
   const double tol = 5.e-14;
-  const double lambda_gold[3] = {0.056736539229635605, 0.46782517604126655,
-                                 -0.45581171527090225};
+  const double lambda_gold[3] = {
+    0.056736539229635605, 0.46782517604126655, -0.45581171527090225};
 
   for (unsigned j = 0; j < 3; ++j) {
     EXPECT_NEAR(D_[j][j], lambda_gold[j], tol);
@@ -168,8 +168,8 @@ TEST(TestEigen, testeigendecomp3d_simd)
 
   // Perform tests -- lambda evaluated in Mathematica
   const double tol = 5.e-14;
-  const double lambda_gold[3] = {0.056736539229635605, 0.46782517604126655,
-                                 -0.45581171527090225};
+  const double lambda_gold[3] = {
+    0.056736539229635605, 0.46782517604126655, -0.45581171527090225};
 
   for (unsigned j = 0; j < 3; ++j) {
     for (unsigned is = 0; is < stk::simd::ndoubles; is++) {

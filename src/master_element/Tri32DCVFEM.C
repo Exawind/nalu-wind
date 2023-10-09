@@ -767,10 +767,12 @@ Tri32DSCS::isInElement(
   // Translate element so that (x,y) coordinates of the
   // first node
 
-  double x[2] = {elemNodalCoord[1] - elemNodalCoord[0],
-                 elemNodalCoord[2] - elemNodalCoord[0]};
-  double y[2] = {elemNodalCoord[4] - elemNodalCoord[3],
-                 elemNodalCoord[5] - elemNodalCoord[3]};
+  double x[2] = {
+    elemNodalCoord[1] - elemNodalCoord[0],
+    elemNodalCoord[2] - elemNodalCoord[0]};
+  double y[2] = {
+    elemNodalCoord[4] - elemNodalCoord[3],
+    elemNodalCoord[5] - elemNodalCoord[3]};
 
   // Translate position of point in same manner
 

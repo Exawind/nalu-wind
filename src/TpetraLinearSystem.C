@@ -611,8 +611,8 @@ TpetraLinearSystem::buildSparsifiedEdgeElemToNodeGraph(
                 auto node_index = matrix_free::node_map(
                   poly, sub_n_index, sub_m_index, sub_l_index);
 #else
-                constexpr int nmap[2][2][2] = {{{0, 1}, {3, 2}},
-                                               {{4, 5}, {7, 6}}};
+                constexpr int nmap[2][2][2] = {
+                  {{0, 1}, {3, 2}}, {{4, 5}, {7, 6}}};
                 auto node_index = nmap[sub_n_index][sub_m_index][sub_l_index];
 #endif
                 entities[lr] = elem_nodes[node_index];
@@ -1532,12 +1532,13 @@ TpetraLinearSystem::get_coeff_applier()
   auto numDof = numDof_;
   auto newDeviceCoeffApplier =
     kokkos_malloc_on_device<TpetraLinSysCoeffApplier>("deviceCoeffApplier");
-  Kokkos::parallel_for(DeviceRangePolicy(0, 1), KOKKOS_LAMBDA(const int&) {
-    new (newDeviceCoeffApplier) TpetraLinSysCoeffApplier(
-      ownedLocalMatrix, sharedNotOwnedLocalMatrix, ownedLocalRhs,
-      sharedNotOwnedLocalRhs, entityToLID, entityToColLID, maxOwnedRowId,
-      maxSharedNotOwnedRowId, numDof);
-  });
+  Kokkos::parallel_for(
+    DeviceRangePolicy(0, 1), KOKKOS_LAMBDA(const int&) {
+      new (newDeviceCoeffApplier) TpetraLinSysCoeffApplier(
+        ownedLocalMatrix, sharedNotOwnedLocalMatrix, ownedLocalRhs,
+        sharedNotOwnedLocalRhs, entityToLID, entityToColLID, maxOwnedRowId,
+        maxSharedNotOwnedRowId, numDof);
+    });
 
   return newDeviceCoeffApplier;
 }

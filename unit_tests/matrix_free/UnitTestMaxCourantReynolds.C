@@ -32,20 +32,21 @@ max_cflre()
 
   vector_view<p> xc{"coords", num_elems};
   constexpr auto nodes = GLL<p>::nodes;
-  Kokkos::parallel_for(num_elems, KOKKOS_LAMBDA(int index) {
-    for (int k = 0; k < p + 1; ++k) {
-      const auto cz = nodes[k];
-      for (int j = 0; j < p + 1; ++j) {
-        const auto cy = nodes[j];
-        for (int i = 0; i < p + 1; ++i) {
-          const auto cx = nodes[i];
-          xc(index, k, j, i, 0) = 0.5 * cx;
-          xc(index, k, j, i, 1) = 0.5 * cy;
-          xc(index, k, j, i, 2) = 0.5 * cz;
+  Kokkos::parallel_for(
+    num_elems, KOKKOS_LAMBDA(int index) {
+      for (int k = 0; k < p + 1; ++k) {
+        const auto cz = nodes[k];
+        for (int j = 0; j < p + 1; ++j) {
+          const auto cy = nodes[j];
+          for (int i = 0; i < p + 1; ++i) {
+            const auto cx = nodes[i];
+            xc(index, k, j, i, 0) = 0.5 * cx;
+            xc(index, k, j, i, 1) = 0.5 * cy;
+            xc(index, k, j, i, 2) = 0.5 * cz;
+          }
         }
       }
-    }
-  });
+    });
 
   double dt = 1;
 

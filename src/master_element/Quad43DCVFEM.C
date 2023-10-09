@@ -173,17 +173,20 @@ Quad3DSCS::isInElement(
 
   // Translate element so that (x,y,z) coordinates of the first node are (0,0,0)
 
-  double x[3] = {elemNodalCoord[1] - elemNodalCoord[0],
-                 elemNodalCoord[2] - elemNodalCoord[0],
-                 elemNodalCoord[3] - elemNodalCoord[0]};
+  double x[3] = {
+    elemNodalCoord[1] - elemNodalCoord[0],
+    elemNodalCoord[2] - elemNodalCoord[0],
+    elemNodalCoord[3] - elemNodalCoord[0]};
 
-  double y[3] = {elemNodalCoord[5] - elemNodalCoord[4],
-                 elemNodalCoord[6] - elemNodalCoord[4],
-                 elemNodalCoord[7] - elemNodalCoord[4]};
+  double y[3] = {
+    elemNodalCoord[5] - elemNodalCoord[4],
+    elemNodalCoord[6] - elemNodalCoord[4],
+    elemNodalCoord[7] - elemNodalCoord[4]};
 
-  double z[3] = {elemNodalCoord[9] - elemNodalCoord[8],
-                 elemNodalCoord[10] - elemNodalCoord[8],
-                 elemNodalCoord[11] - elemNodalCoord[8]};
+  double z[3] = {
+    elemNodalCoord[9] - elemNodalCoord[8],
+    elemNodalCoord[10] - elemNodalCoord[8],
+    elemNodalCoord[11] - elemNodalCoord[8]};
 
   // (xp,yp,zp) is the point at which we're searching for (xi,eta,d)
   // (must translate this also)
@@ -323,7 +326,8 @@ Quad3DSCS::isInElement(
   return dist;
 }
 
-void Quad3DSCS::non_unit_face_normal(
+void
+Quad3DSCS::non_unit_face_normal(
   const double* isoParCoord,     // (2)
   const double* elem_nodal_coor, // (4,3)
   double* normal_vector)         // (3)
@@ -333,17 +337,20 @@ void Quad3DSCS::non_unit_face_normal(
 
   // Translate element so that node 0 is at (x,y,z) = (0,0,0)
 
-  double x[3] = {elem_nodal_coor[1] - elem_nodal_coor[0],
-                 elem_nodal_coor[2] - elem_nodal_coor[0],
-                 elem_nodal_coor[3] - elem_nodal_coor[0]};
+  double x[3] = {
+    elem_nodal_coor[1] - elem_nodal_coor[0],
+    elem_nodal_coor[2] - elem_nodal_coor[0],
+    elem_nodal_coor[3] - elem_nodal_coor[0]};
 
-  double y[3] = {elem_nodal_coor[5] - elem_nodal_coor[4],
-                 elem_nodal_coor[6] - elem_nodal_coor[4],
-                 elem_nodal_coor[7] - elem_nodal_coor[4]};
+  double y[3] = {
+    elem_nodal_coor[5] - elem_nodal_coor[4],
+    elem_nodal_coor[6] - elem_nodal_coor[4],
+    elem_nodal_coor[7] - elem_nodal_coor[4]};
 
-  double z[3] = {elem_nodal_coor[9] - elem_nodal_coor[8],
-                 elem_nodal_coor[10] - elem_nodal_coor[8],
-                 elem_nodal_coor[11] - elem_nodal_coor[8]};
+  double z[3] = {
+    elem_nodal_coor[9] - elem_nodal_coor[8],
+    elem_nodal_coor[10] - elem_nodal_coor[8],
+    elem_nodal_coor[11] - elem_nodal_coor[8]};
 
   // Mathematica-generated and simplified code for the normal vector
 

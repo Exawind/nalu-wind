@@ -119,12 +119,12 @@ private:
     double rot_{0};     // rad / s
     double azimuth_{0}; // rad
   };
-  PrismParameters innerPrism_{convert::degrees_to_radians(90),
-                              convert::rotations_to_radians(3.5),
-                              convert::degrees_to_radians(15.2)};
-  PrismParameters outerPrism_{convert::degrees_to_radians(90),
-                              convert::rotations_to_radians(6.5),
-                              convert::degrees_to_radians(15.2)};
+  PrismParameters innerPrism_{
+    convert::degrees_to_radians(90), convert::rotations_to_radians(3.5),
+    convert::degrees_to_radians(15.2)};
+  PrismParameters outerPrism_{
+    convert::degrees_to_radians(90), convert::rotations_to_radians(6.5),
+    convert::degrees_to_radians(15.2)};
 };
 
 class RadarSegmentGenerator final : public SegmentGenerator

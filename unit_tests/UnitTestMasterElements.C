@@ -26,8 +26,9 @@ namespace {
 
 TEST(pyramid, is_in_element)
 {
-  std::array<double, 15> coords = {{4.2, 4.2, 4.2, 4.2, 3.5, 5.6, 7.0, 7.0, 5.6,
-                                    6.3, 2.8, 2.8, 1.4, 1.4, 2.1}};
+  std::array<double, 15> coords = {
+    {4.2, 4.2, 4.2, 4.2, 3.5, 5.6, 7.0, 7.0, 5.6, 6.3, 2.8, 2.8, 1.4, 1.4,
+     2.1}};
   std::array<double, 3> point = {{3.5, 6.5, 1.5}};
   std::array<double, 3> mePt;
   auto dist = sierra::nalu::PyrSCS().isInElement(

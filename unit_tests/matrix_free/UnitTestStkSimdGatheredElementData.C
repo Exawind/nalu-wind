@@ -183,9 +183,9 @@ TEST_F(SimdGatherFixture, gathered_q_field_is_consistent)
   for (int k = 0; k < order + 1; ++k) {
     for (int j = 0; j < order + 1; ++j) {
       for (int i = 0; i < order + 1; ++i) {
-        Kokkos::Array<ftype, 3> coord = {{coord_view_h(0, k, j, i, 0),
-                                          coord_view_h(0, k, j, i, 1),
-                                          coord_view_h(0, k, j, i, 2)}};
+        Kokkos::Array<ftype, 3> coord = {
+          {coord_view_h(0, k, j, i, 0), coord_view_h(0, k, j, i, 1),
+           coord_view_h(0, k, j, i, 2)}};
         ASSERT_DOUBLE_EQ(
           stk::simd::get_data(q_view_h(0, k, j, i), 0),
           stk::simd::get_data(qfunc(coord.data()), 0));
@@ -232,9 +232,9 @@ TEST_F(SimdGatherFixture, gathered_face_q_is_consistent)
 
   for (int j = 0; j < order + 1; ++j) {
     for (int i = 0; i < order + 1; ++i) {
-      Kokkos::Array<ftype, 3> coord = {{coord_view_h(0, j, i, 0),
-                                        coord_view_h(0, j, i, 1),
-                                        coord_view_h(0, j, i, 2)}};
+      Kokkos::Array<ftype, 3> coord = {
+        {coord_view_h(0, j, i, 0), coord_view_h(0, j, i, 1),
+         coord_view_h(0, j, i, 2)}};
       ASSERT_DOUBLE_EQ(
         stk::simd::get_data(q_view_h(0, j, i), 0),
         stk::simd::get_data(qfunc(coord.data()), 0));

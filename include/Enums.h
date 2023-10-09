@@ -86,25 +86,26 @@ enum EquationType {
   EquationSystemType_END
 };
 
-static const std::string EquationTypeMap[] = {"Momentum",
-                                              "Continuity",
-                                              "Mixture_Fraction",
-                                              "Turbulent_KE",
-                                              "Temperature",
-                                              "Intensity",
-                                              "Enthalpy",
-                                              "MeshVelocity",
-                                              "Specific_Dissipation_Rate",
-                                              "Total_Dissipation_Rate",
-                                              "Mass_Fraction",
-                                              "PNG",
-                                              "PNG_P",
-                                              "PNG_Z",
-                                              "PNG_H",
-                                              "PNG_U",
-                                              "PNG_TKE",
-                                              "Wall_Distance",
-                                              "Volume_of_Fluid"};
+static const std::string EquationTypeMap[] = {
+  "Momentum",
+  "Continuity",
+  "Mixture_Fraction",
+  "Turbulent_KE",
+  "Temperature",
+  "Intensity",
+  "Enthalpy",
+  "MeshVelocity",
+  "Specific_Dissipation_Rate",
+  "Total_Dissipation_Rate",
+  "Mass_Fraction",
+  "PNG",
+  "PNG_P",
+  "PNG_Z",
+  "PNG_H",
+  "PNG_U",
+  "PNG_TKE",
+  "Wall_Distance",
+  "Volume_of_Fluid"};
 
 enum UserDataType {
   CONSTANT_UD = 0,
@@ -127,15 +128,16 @@ enum PropertyIdentifier {
   PropertyIdentifier_END
 };
 
-static const std::string PropertyIdentifierNames[] = {"density",
-                                                      "viscosity",
-                                                      "specific_heat",
-                                                      "thermal_conductivity",
-                                                      "absorption_coefficient",
-                                                      "enthalpy",
-                                                      "lame_mu",
-                                                      "lame_lambda",
-                                                      "scattering_coefficient"};
+static const std::string PropertyIdentifierNames[] = {
+  "density",
+  "viscosity",
+  "specific_heat",
+  "thermal_conductivity",
+  "absorption_coefficient",
+  "enthalpy",
+  "lame_mu",
+  "lame_lambda",
+  "scattering_coefficient"};
 
 // prop enum and name below
 enum MaterialPropertyType {

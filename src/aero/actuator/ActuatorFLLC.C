@@ -62,18 +62,19 @@ FilteredLiftingLineCorrection::compute_lift_force_distribution()
       Kokkos::RangePolicy<exec_space>(offset, offset + nPoints);
 
     // surrogate for equation 5.3
-    Kokkos::parallel_for("extract lift", range_policy, ACTUATOR_LAMBDA(int i) {
-      auto v = Kokkos::subview(vel, i, Kokkos::ALL);
-      auto f = Kokkos::subview(force, i, Kokkos::ALL);
+    Kokkos::parallel_for(
+      "extract lift", range_policy, ACTUATOR_LAMBDA(int i) {
+        auto v = Kokkos::subview(vel, i, Kokkos::ALL);
+        auto f = Kokkos::subview(force, i, Kokkos::ALL);
 
-      const double fv = dot(f.data(), v.data());
-      const double vmag2 = dot(v.data(), v.data());
-      Uinf(i) = std::sqrt(vmag2);
+        const double fv = dot(f.data(), v.data());
+        const double vmag2 = dot(v.data(), v.data());
+        Uinf(i) = std::sqrt(vmag2);
 
-      for (int j = 0; j < 3; ++j) {
-        G(i, j) = force(i, j) - vel(i, j) * fv / vmag2;
-      }
-    });
+        for (int j = 0; j < 3; ++j) {
+          G(i, j) = force(i, j) - vel(i, j) * fv / vmag2;
+        }
+      });
     FLLC::scale_lift_force(
       actBulk_, actMeta_, range_policy, helper, offset, nPoints);
   }
@@ -103,18 +104,19 @@ FilteredLiftingLineCorrection::grad_lift_force_distribution()
       Kokkos::RangePolicy<exec_space>(offset, offset + nPoints);
 
     // equations 5.4 and 5.5 a/b
-    Kokkos::parallel_for("compute dG", range_policy, ACTUATOR_LAMBDA(int i) {
-      const int index = i - offset;
-      for (int j = 0; j < 3; ++j) {
-        if (index == 0) {
-          deltaG(i, j) = G(i, j);
-        } else if (index == nPoints - 1) {
-          deltaG(i, j) = -1.0 * G(i, j);
-        } else {
-          deltaG(i, j) = 0.5 * (G(i + 1, j) - G(i - 1, j));
+    Kokkos::parallel_for(
+      "compute dG", range_policy, ACTUATOR_LAMBDA(int i) {
+        const int index = i - offset;
+        for (int j = 0; j < 3; ++j) {
+          if (index == 0) {
+            deltaG(i, j) = G(i, j);
+          } else if (index == nPoints - 1) {
+            deltaG(i, j) = -1.0 * G(i, j);
+          } else {
+            deltaG(i, j) = 0.5 * (G(i + 1, j) - G(i - 1, j));
+          }
         }
-      }
-    });
+      });
   }
 
   actuator_utils::reduce_view_on_host(deltaG);
@@ -136,7 +138,7 @@ FilteredLiftingLineCorrection::compute_induced_velocities()
   const double relaxationFactor = 0.1;
 
   // copy deltaU so we can zero it for our data reduction strategy
-  Kokkos::View<double * [3], mem_layout, mem_space> deltaU_stash(
+  Kokkos::View<double* [3], mem_layout, mem_space> deltaU_stash(
     "temp copy", deltaU.extent_int(0));
   Kokkos::deep_copy(deltaU_stash, deltaU);
   Kokkos::deep_copy(deltaU, 0.0);
@@ -148,9 +150,10 @@ FilteredLiftingLineCorrection::compute_induced_velocities()
     const auto nNeighbors = info.nNeighbors_;
 
     auto pointHost = actBulk_.pointCentroid_.view_host();
-    const double dx[3] = {pointHost(offset, 0) - pointHost(offset + 1, 0),
-                          pointHost(offset, 1) - pointHost(offset + 1, 1),
-                          pointHost(offset, 2) - pointHost(offset + 1, 2)};
+    const double dx[3] = {
+      pointHost(offset, 0) - pointHost(offset + 1, 0),
+      pointHost(offset, 1) - pointHost(offset + 1, 1),
+      pointHost(offset, 2) - pointHost(offset + 1, 2)};
 
     const double dR = std::sqrt(dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2]);
 

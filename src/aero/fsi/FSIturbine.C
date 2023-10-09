@@ -1009,8 +1009,8 @@ fsiTurbine::setRotationDisplacement(
 
   // Rotate the hub first
   double hubRot = 4.0 * tan(0.25 * theta);
-  std::vector<double> wmHubRot = {hubRot * axis[0], hubRot * axis[1],
-                                  hubRot * axis[2]};
+  std::vector<double> wmHubRot = {
+    hubRot * axis[0], hubRot * axis[1], hubRot * axis[2]};
   for (size_t i = 0; i < 3; i++)
     brFSIdata_.hub_def[3 + i] = -wmHubRot[i];
 
@@ -1327,8 +1327,8 @@ fsiTurbine::setRefDisplacement(double curTime)
           vecRefNode[j] =
             xyzMhubRot[j] - xyzMhub[j] + transDispRot[j] + r_rot[j] - pGlob[j];
 
-        std::vector<double> omega = {sinRdistSq * 6.232, sinRdistSq * 6.232,
-                                     sinRdistSq * 6.232};
+        std::vector<double> omega = {
+          sinRdistSq * 6.232, sinRdistSq * 6.232, sinRdistSq * 6.232};
         std::vector<double> omegaCrossRrot(3, 0.0);
         cross(omega.data(), r_rot.data(), omegaCrossRrot.data());
         for (int j = 0; j < ndim; j++)
@@ -1683,12 +1683,13 @@ fsiTurbine::computeMapping()
       int nPtsTwr = params_.nBRfsiPtsTwr;
       if (nPtsTwr > 0) {
         for (int i = 0; i < nPtsTwr - 1; i++) {
-          vs::Vector lStart = {brFSIdata_.twr_ref_pos[i * 6],
-                               brFSIdata_.twr_ref_pos[i * 6 + 1],
-                               brFSIdata_.twr_ref_pos[i * 6 + 2]};
-          vs::Vector lEnd = {brFSIdata_.twr_ref_pos[(i + 1) * 6],
-                             brFSIdata_.twr_ref_pos[(i + 1) * 6 + 1],
-                             brFSIdata_.twr_ref_pos[(i + 1) * 6 + 2]};
+          vs::Vector lStart = {
+            brFSIdata_.twr_ref_pos[i * 6], brFSIdata_.twr_ref_pos[i * 6 + 1],
+            brFSIdata_.twr_ref_pos[i * 6 + 2]};
+          vs::Vector lEnd = {
+            brFSIdata_.twr_ref_pos[(i + 1) * 6],
+            brFSIdata_.twr_ref_pos[(i + 1) * 6 + 1],
+            brFSIdata_.twr_ref_pos[(i + 1) * 6 + 2]};
           nDimCoord = fsi::projectPt2Line(ptCoords, lStart, lEnd);
 
           if ((nDimCoord >= 0) && (nDimCoord <= 1.0)) {
@@ -1704,12 +1705,13 @@ fsiTurbine::computeMapping()
         // check on the perpendicular distance between the surface mesh node and
         // the line joining the ends of the tower
         if (!foundProj) {
-          vs::Vector lStart = {brFSIdata_.twr_ref_pos[0],
-                               brFSIdata_.twr_ref_pos[1],
-                               brFSIdata_.twr_ref_pos[2]};
-          vs::Vector lEnd = {brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6],
-                             brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 1],
-                             brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 2]};
+          vs::Vector lStart = {
+            brFSIdata_.twr_ref_pos[0], brFSIdata_.twr_ref_pos[1],
+            brFSIdata_.twr_ref_pos[2]};
+          vs::Vector lEnd = {
+            brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6],
+            brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 1],
+            brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 2]};
           double perpDist =
             fsi::perpProjectDist_Pt2Line(ptCoords, lStart, lEnd);
           if (perpDist > 1.0) { // Something's wrong if a node on the surface
@@ -1764,12 +1766,14 @@ fsiTurbine::computeMapping()
         bool foundProj = false;
         double nDimCoord = -1.0;
         for (int i = 0; i < nPtsBlade - 1; i++) {
-          vs::Vector lStart = {brFSIdata_.bld_ref_pos[(iStart + i) * 6],
-                               brFSIdata_.bld_ref_pos[(iStart + i) * 6 + 1],
-                               brFSIdata_.bld_ref_pos[(iStart + i) * 6 + 2]};
-          vs::Vector lEnd = {brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6],
-                             brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6 + 1],
-                             brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6 + 2]};
+          vs::Vector lStart = {
+            brFSIdata_.bld_ref_pos[(iStart + i) * 6],
+            brFSIdata_.bld_ref_pos[(iStart + i) * 6 + 1],
+            brFSIdata_.bld_ref_pos[(iStart + i) * 6 + 2]};
+          vs::Vector lEnd = {
+            brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6],
+            brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6 + 1],
+            brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6 + 2]};
           nDimCoord = fsi::projectPt2Line(ptCoords, lStart, lEnd);
 
           if ((nDimCoord >= 0) && (nDimCoord <= 1.0)) {
@@ -1786,9 +1790,10 @@ fsiTurbine::computeMapping()
         // the line joining the ends of the blade
         if (!foundProj) {
 
-          std::vector<double> lStart = {brFSIdata_.bld_ref_pos[iStart * 6],
-                                        brFSIdata_.bld_ref_pos[iStart * 6 + 1],
-                                        brFSIdata_.bld_ref_pos[iStart * 6 + 2]};
+          std::vector<double> lStart = {
+            brFSIdata_.bld_ref_pos[iStart * 6],
+            brFSIdata_.bld_ref_pos[iStart * 6 + 1],
+            brFSIdata_.bld_ref_pos[iStart * 6 + 2]};
           std::vector<double> lEnd = {
             brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6],
             brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6 + 1],
@@ -1896,12 +1901,13 @@ fsiTurbine::computeLoadMapping()
         int nPtsTwr = params_.nBRfsiPtsTwr;
         if (nPtsTwr > 0) {
           for (int i = 0; i < nPtsTwr - 1; i++) {
-            vs::Vector lStart = {brFSIdata_.twr_ref_pos[i * 6],
-                                 brFSIdata_.twr_ref_pos[i * 6 + 1],
-                                 brFSIdata_.twr_ref_pos[i * 6 + 2]};
-            vs::Vector lEnd = {brFSIdata_.twr_ref_pos[(i + 1) * 6],
-                               brFSIdata_.twr_ref_pos[(i + 1) * 6 + 1],
-                               brFSIdata_.twr_ref_pos[(i + 1) * 6 + 2]};
+            vs::Vector lStart = {
+              brFSIdata_.twr_ref_pos[i * 6], brFSIdata_.twr_ref_pos[i * 6 + 1],
+              brFSIdata_.twr_ref_pos[i * 6 + 2]};
+            vs::Vector lEnd = {
+              brFSIdata_.twr_ref_pos[(i + 1) * 6],
+              brFSIdata_.twr_ref_pos[(i + 1) * 6 + 1],
+              brFSIdata_.twr_ref_pos[(i + 1) * 6 + 2]};
             nDimCoord = fsi::projectPt2Line(coord_bip, lStart, lEnd);
 
             if ((nDimCoord >= 0) && (nDimCoord <= 1.0)) {
@@ -1917,12 +1923,13 @@ fsiTurbine::computeLoadMapping()
           // the surface mesh node and the line joining the ends of the
           // tower
           if (!foundProj) {
-            vs::Vector lStart = {brFSIdata_.twr_ref_pos[0],
-                                 brFSIdata_.twr_ref_pos[1],
-                                 brFSIdata_.twr_ref_pos[2]};
-            vs::Vector lEnd = {brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6],
-                               brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 1],
-                               brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 2]};
+            vs::Vector lStart = {
+              brFSIdata_.twr_ref_pos[0], brFSIdata_.twr_ref_pos[1],
+              brFSIdata_.twr_ref_pos[2]};
+            vs::Vector lEnd = {
+              brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6],
+              brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 1],
+              brFSIdata_.twr_ref_pos[(nPtsTwr - 1) * 6 + 2]};
             double perpDist =
               fsi::perpProjectDist_Pt2Line(coord_bip, lStart, lEnd);
             // Something's wrong if a node on the surface mesh of
@@ -2022,9 +2029,10 @@ fsiTurbine::computeLoadMapping()
           bool foundProj = false;
           double nDimCoord = -1.0;
           for (int i = 0; i < nPtsBlade - 1; i++) {
-            vs::Vector lStart = {brFSIdata_.bld_ref_pos[(iStart + i) * 6],
-                                 brFSIdata_.bld_ref_pos[(iStart + i) * 6 + 1],
-                                 brFSIdata_.bld_ref_pos[(iStart + i) * 6 + 2]};
+            vs::Vector lStart = {
+              brFSIdata_.bld_ref_pos[(iStart + i) * 6],
+              brFSIdata_.bld_ref_pos[(iStart + i) * 6 + 1],
+              brFSIdata_.bld_ref_pos[(iStart + i) * 6 + 2]};
             vs::Vector lEnd = {
               brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6],
               brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6 + 1],
@@ -2044,9 +2052,10 @@ fsiTurbine::computeLoadMapping()
           // joining the ends of the blade
           if (!foundProj) {
 
-            vs::Vector lStart = {brFSIdata_.bld_ref_pos[iStart * 6],
-                                 brFSIdata_.bld_ref_pos[iStart * 6 + 1],
-                                 brFSIdata_.bld_ref_pos[iStart * 6 + 2]};
+            vs::Vector lStart = {
+              brFSIdata_.bld_ref_pos[iStart * 6],
+              brFSIdata_.bld_ref_pos[iStart * 6 + 1],
+              brFSIdata_.bld_ref_pos[iStart * 6 + 2]};
             vs::Vector lEnd = {
               brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6],
               brFSIdata_.bld_ref_pos[(iStart + nPtsBlade - 1) * 6 + 1],
