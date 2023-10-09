@@ -721,5 +721,28 @@ VolumeOfFluidEquationSystem::solve_and_update()
   }
 }
 
+void
+VolumeOfFluidEquationSystem::predict_state()
+{
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+
+  auto& vofN = fieldMgr.get_field<double>(
+    volumeOfFluid_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& vofNp1 = fieldMgr.get_field<double>(
+    volumeOfFluid_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+  
+  vofN.sync_to_device();
+
+  const auto& meta = realm_.meta_data();
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part() |
+     meta.aura_part()) &
+    stk::mesh::selectField(*volumeOfFluid_);
+  nalu_ngp::field_copy(ngpMesh, sel, vofNp1, vofN, 1);
+  vofNp1.modify_on_device();
+}
+
 } // namespace nalu
 } // namespace sierra

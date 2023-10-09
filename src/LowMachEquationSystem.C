@@ -1057,6 +1057,28 @@ LowMachEquationSystem::post_converged_work()
     determine_max_peclet_number(realm_.bulk_data(), realm_.meta_data());
     determine_max_peclet_factor(realm_.bulk_data(), realm_.meta_data());
   }
+
+  // Copy pressure gradient to dpdx_sharp
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+
+  auto& dpdx_sh = fieldMgr.get_field<double>(
+    continuityEqSys_->dpdx_sharp_->field_of_state(stk::mesh::StateNP1)
+      .mesh_meta_data_ordinal());
+  auto& dpdx = fieldMgr.get_field<double>(
+    continuityEqSys_->dpdx_->field_of_state(stk::mesh::StateNP1)
+      .mesh_meta_data_ordinal());
+
+  dpdx.sync_to_device();
+
+  const auto& meta = realm_.meta_data();
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part() |
+     meta.aura_part()) &
+    stk::mesh::selectField(*(continuityEqSys_->dpdx_));
+  nalu_ngp::field_copy(ngpMesh, sel, dpdx_sh, dpdx, meta.spatial_dimension());
+  dpdx_sh.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -2844,6 +2866,7 @@ ContinuityEquationSystem::ContinuityEquationSystem(
     managePNG_(realm_.get_consistent_mass_matrix_png("pressure")),
     pressure_(NULL),
     dpdx_(NULL),
+    dpdx_sharp_(NULL),
     massFlowRate_(NULL),
     coordinates_(NULL),
     pTmp_(NULL),
@@ -2914,6 +2937,10 @@ ContinuityEquationSystem::register_nodal_fields(
   dpdx_ = &(
     meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dpdx"));
   stk::mesh::put_field_on_mesh(*dpdx_, selector, nDim, nullptr);
+
+  dpdx_sharp_ = &(meta_data.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "dpdx_sharp"));
+  stk::mesh::put_field_on_mesh(*dpdx_sharp_, selector, nDim, nullptr);
 
   // delta solution for linear solver; share delta with other split systems
   pTmp_ = &(
