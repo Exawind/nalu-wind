@@ -382,21 +382,27 @@ OpenfastFSI::compute_mapping()
 void
 OpenfastFSI::predict_struct_states()
 {
+  timer_start(openFastTimer_);
   FAST.predict_states();
+  timer_stop(openFastTimer_);
 }
 
 void
 OpenfastFSI::predict_struct_timestep(const double curTime)
 {
   send_loads(curTime);
+  timer_start(openFastTimer_);
   FAST.update_states_driver_time_step();
+  timer_stop(openFastTimer_);
 }
 
 void
 OpenfastFSI::advance_struct_timestep(const double curTime)
 {
 
+  timer_start(openFastTimer_);
   FAST.advance_to_next_driver_time_step();
+  timer_stop(openFastTimer_);
 
   tStep_ += 1;
 
@@ -561,11 +567,13 @@ OpenfastFSI::compute_div_mesh_velocity()
 {
 
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
+  timer_start(naluTimer_);
   for (int i = 0; i < nTurbinesGlob; i++) {
     if (fsiTurbineData_[i] != NULL) // This may not be a turbine intended for
                                     // blade-resolved simulation
       fsiTurbineData_[i]->compute_div_mesh_velocity();
   }
+  timer_stop(naluTimer_);
 }
 
 void
@@ -584,6 +592,8 @@ void
 OpenfastFSI::map_displacements(double current_time, bool updateCurCoor)
 {
 
+
+  timer_start(naluTimer_);
   get_displacements(current_time);
 
   stk::mesh::Selector sel;
@@ -627,12 +637,13 @@ OpenfastFSI::map_displacements(double current_time, bool updateCurCoor)
     curCoords->modify_on_host();
     curCoords->sync_to_device();
   }
+  timer_stop(naluTimer_);
 }
 
 void
 OpenfastFSI::map_loads(const int tStep, const double curTime)
 {
-
+  timer_start(naluTimer_);
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (int i = 0; i < nTurbinesGlob; i++) {
     if (fsiTurbineData_[i] != nullptr) { // This may not be a turbine intended
@@ -661,6 +672,16 @@ OpenfastFSI::map_loads(const int tStep, const double curTime)
       fsiTurbineData_[i]->write_nc_def_loads(tStep, curTime);
     }
   }
+  timer_stop(naluTimer_);
+}
+
+void OpenfastFSI::timer_start(std::pair<double, double>& timer){
+  timer.first = NaluEnv::self().nalu_time();
+}
+
+void OpenfastFSI::timer_stop(std::pair<double, double>& timer){
+  timer.first = NaluEnv::self().nalu_time() - timer.first;
+  timer.second += timer.first;
 }
 
 } // namespace nalu
