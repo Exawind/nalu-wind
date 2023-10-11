@@ -55,6 +55,8 @@ public:
   const stk::mesh::PartVector fsi_parts();
   const stk::mesh::PartVector fsi_bndry_parts();
   const std::vector<std::string> fsi_bndry_part_names();
+  double openfast_accumulated_time();
+  double nalu_fsi_accumulated_time();
 
 private:
   bool has_actuators() { return actuatorModel_.is_active(); }

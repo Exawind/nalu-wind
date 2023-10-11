@@ -47,6 +47,9 @@ public:
     std::array<double, 3> axis, double omega, double curTime);
   void end_openfast();
 
+  double total_openfastfsi_execution_time() { return openFastTimer_.second; }
+  double total_nalu_fsi_execution_time() { return naluTimer_.second; }
+
 private:
   OpenfastFSI() = delete;
   OpenfastFSI(const OpenfastFSI&) = delete;
@@ -58,6 +61,8 @@ private:
   void compute_mapping();
 
   void send_loads(const double curTime);
+  void timer_start(std::pair<double, double>& timer);
+  void timer_stop(std::pair<double, double>& timer);
 
   std::shared_ptr<stk::mesh::BulkData> bulk_;
 
@@ -78,6 +83,11 @@ private:
   int tStep_{0}; // Time step count
 
   double dt_{-1.0}; // Store nalu-wind step
+
+  std::pair<double, double> openFastTimer_{
+    0.0, 0.0}; // store time taken in openfast calls
+  std::pair<double, double> naluTimer_{
+    0.0, 0.0}; // store time taken in openfast calls
 
   int writeFreq_{
     30}; // Frequency to write line loads and deflections to netcdf file
