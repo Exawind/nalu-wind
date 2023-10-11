@@ -99,6 +99,7 @@ public:
   ContinuityEquationSystem* continuityEqSys_;
 
   ScalarFieldType* density_;
+  ScalarFieldType* hydrostatic_density_;
   ScalarFieldType* viscosity_;
   ScalarFieldType* dualNodalVolume_;
   VectorFieldType* edgeAreaVec_;
@@ -204,7 +205,10 @@ public:
   ScalarFieldType* evisc_;
   ScalarFieldType* iddesRansIndicator_;
 
+  VectorFieldType* buoyancy_source_;
+
   TensorNodalGradAlgDriver nodalGradAlgDriver_;
+  ScalarNodalGradAlgDriver nodalBuoyancyAlgDriver_;
   WallFricVelAlgDriver wallFuncAlgDriver_;
   NgpAlgDriver dynPressAlgDriver_;
   std::unique_ptr<EffDiffFluxCoeffAlg> diffFluxCoeffAlg_{nullptr};
@@ -296,7 +300,9 @@ public:
   const bool managePNG_;
   ScalarFieldType* pressure_;
   VectorFieldType* dpdx_;
+  VectorFieldType* dpdx_sharp_;
   ScalarFieldType* massFlowRate_;
+  ScalarFieldType* massForcedFlowRate_;
   VectorFieldType* coordinates_;
 
   ScalarFieldType* pTmp_;

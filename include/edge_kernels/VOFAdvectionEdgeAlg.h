@@ -39,7 +39,12 @@ private:
   unsigned dqdx_{stk::mesh::InvalidOrdinal};
   unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
   unsigned massFlowRate_{stk::mesh::InvalidOrdinal};
+  unsigned massForcedFlowRate_{stk::mesh::InvalidOrdinal};
   unsigned density_{stk::mesh::InvalidOrdinal};
+  unsigned velocity_n_{stk::mesh::InvalidOrdinal};
+
+  double density_liquid_;
+  double density_gas_;
 };
 
 } // namespace nalu

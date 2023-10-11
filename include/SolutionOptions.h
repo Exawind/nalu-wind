@@ -100,6 +100,9 @@ public:
 
   bool has_set_boussinesq_time_scale();
 
+  bool use_balanced_buoyancy_force_{false};
+  bool realm_has_vof_{false};
+
   double hybridDefault_;
   double alphaDefault_;
   double alphaUpwDefault_;

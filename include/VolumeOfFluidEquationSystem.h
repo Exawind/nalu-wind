@@ -94,6 +94,8 @@ public:
 
   virtual void solve_and_update();
 
+  virtual void predict_state();
+
   const bool managePNG_;
   ScalarFieldType* volumeOfFluid_;
   VectorFieldType* dvolumeOfFluiddx_;

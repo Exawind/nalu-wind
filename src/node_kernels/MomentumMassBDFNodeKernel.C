@@ -91,6 +91,7 @@ MomentumMassBDFNodeKernel::execute(
   const NodeKernelTraits::DblType dnvN = dnvN_.get(node, 0);
   const NodeKernelTraits::DblType dnvNm1 = dnvNm1_.get(node, 0);
   const NodeKernelTraits::DblType lhsfac = gamma1_ * rhoNp1 * dnvNp1 / dt_;
+
   // deal with lumped mass matrix (diagonal matrix)
   for (int i = 0; i < nDim; ++i) {
     const NodeKernelTraits::DblType uNm1 = velocityNm1_.get(node, i);

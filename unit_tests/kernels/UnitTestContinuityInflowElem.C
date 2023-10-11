@@ -17,7 +17,6 @@ namespace {
 namespace hex8_golds {
 
 static constexpr double rhs[4] = {0, 0.11888206453689, 0.11888206453689, 0};
-
 }
 } // anonymous namespace
 

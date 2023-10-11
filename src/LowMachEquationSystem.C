@@ -120,6 +120,7 @@
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
 #include "ngp_algorithms/DynamicPressureOpenAlg.h"
 #include "ngp_algorithms/MomentumABLWallFuncMaskUtil.h"
+#include "ngp_algorithms/BuoyancySourceAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpFieldUtils.h"
@@ -165,6 +166,9 @@
 #include <user_functions/KovasznayVelocityAuxFunction.h>
 #include <user_functions/KovasznayPressureAuxFunction.h>
 
+#include <user_functions/DropletVelocityAuxFunction.h>
+#include <user_functions/FlatDensityAuxFunction.h>
+
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
 #include <overset/AssembleOversetPressureAlgorithm.h>
 
@@ -172,6 +176,11 @@
 
 #include <user_functions/PerturbedShearLayerAuxFunctions.h>
 #include <user_functions/GaussJetVelocityAuxFunction.h>
+
+#include <user_functions/DropletVelocityAuxFunction.h>
+
+#include <user_functions/SloshingTankPressureAuxFunction.h>
+#include <user_functions/WaterLevelDensityAuxFunction.h>
 
 // deprecated
 
@@ -304,6 +313,7 @@ LowMachEquationSystem::register_nodal_fields(
   const int numStates = realm_.number_of_states();
   density_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density", numStates));
+
   stk::mesh::put_field_on_mesh(*density_, selector, nullptr);
   realm_.augment_restart_variable_list("density");
 
@@ -324,7 +334,6 @@ LowMachEquationSystem::register_nodal_fields(
   if (numVolStates > 1)
     realm_.augment_restart_variable_list("dual_nodal_volume");
 
-  // make sure all states are properly populated (restart can handle this)
   if (
     numStates > 2 &&
     (!realm_.restarted_simulation() || realm_.support_inconsistent_restart())) {
@@ -654,6 +663,8 @@ LowMachEquationSystem::register_initial_condition_fcn(
       theAuxFunc = new SinProfileChannelFlowVelocityAuxFunction(0, nDim);
     } else if (fcnName == "PerturbedShearLayer") {
       theAuxFunc = new PerturbedShearLayerVelocityAuxFunction(0, nDim);
+    } else if (fcnName == "droplet") {
+      theAuxFunc = new DropletVelocityAuxFunction(0, nDim);
     } else {
       throw std::runtime_error(
         "InitialCondFunction::non-supported velocity IC");
@@ -1001,6 +1012,28 @@ LowMachEquationSystem::post_converged_work()
     determine_max_peclet_number(realm_.bulk_data(), realm_.meta_data());
     determine_max_peclet_factor(realm_.bulk_data(), realm_.meta_data());
   }
+
+  // Copy pressure gradient to dpdx_sharp
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+
+  auto& dpdx_sh = fieldMgr.get_field<double>(
+    continuityEqSys_->dpdx_sharp_->field_of_state(stk::mesh::StateNP1)
+      .mesh_meta_data_ordinal());
+  auto& dpdx = fieldMgr.get_field<double>(
+    continuityEqSys_->dpdx_->field_of_state(stk::mesh::StateNP1)
+      .mesh_meta_data_ordinal());
+
+  dpdx.sync_to_device();
+
+  const auto& meta = realm_.meta_data();
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part() |
+     meta.aura_part()) &
+    stk::mesh::selectField(*(continuityEqSys_->dpdx_));
+  nalu_ngp::field_copy(ngpMesh, sel, dpdx_sh, dpdx, meta.spatial_dimension());
+  dpdx_sh.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -1032,6 +1065,7 @@ MomentumEquationSystem::MomentumEquationSystem(EquationSystems& eqSystems)
     tvisc_(NULL),
     evisc_(NULL),
     nodalGradAlgDriver_(realm_, "dudx"),
+    nodalBuoyancyAlgDriver_(realm_, "buoyancy_source"),
     wallFuncAlgDriver_(realm_),
     dynPressAlgDriver_(realm_),
     cflReAlgDriver_(realm_),
@@ -1164,6 +1198,12 @@ MomentumEquationSystem::register_nodal_fields(
     stk::topology::NODE_RANK, "viscosity"));
   stk::mesh::put_field_on_mesh(*visc_, selector, nullptr);
 
+  if (realm_.solutionOptions_->use_balanced_buoyancy_force_) {
+    buoyancy_source_ = &(meta_data.declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "buoyancy_source"));
+    stk::mesh::put_field_on_mesh(*buoyancy_source_, selector, nullptr);
+  }
+
   if (realm_.is_turbulent()) {
     tvisc_ = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "turbulent_viscosity"));
@@ -1292,6 +1332,11 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
         algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
         edgeNodalGradient_);
   }
+
+  // WJH buoyancy
+  if (realm_.solutionOptions_->use_balanced_buoyancy_force_)
+    nodalBuoyancyAlgDriver_.register_edge_algorithm<BuoyancySourceAlg>(
+      algType, part, "momentum_buoyancy_source", buoyancy_source_);
 
   const auto theTurbModel = realm_.solutionOptions_->turbulenceModel_;
 
@@ -2494,6 +2539,8 @@ MomentumEquationSystem::compute_projected_nodal_gradient()
   if (!managePNG_) {
     const double timeA = -NaluEnv::self().nalu_time();
     nodalGradAlgDriver_.execute();
+    if (realm_.solutionOptions_->use_balanced_buoyancy_force_)
+      nodalBuoyancyAlgDriver_.execute();
     timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
   } else {
     // this option is more complex... Rather than solving a nDim*nDim system, we
@@ -2776,6 +2823,7 @@ ContinuityEquationSystem::ContinuityEquationSystem(
     managePNG_(realm_.get_consistent_mass_matrix_png("pressure")),
     pressure_(NULL),
     dpdx_(NULL),
+    dpdx_sharp_(NULL),
     massFlowRate_(NULL),
     coordinates_(NULL),
     pTmp_(NULL),
@@ -2847,6 +2895,10 @@ ContinuityEquationSystem::register_nodal_fields(
     meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dpdx"));
   stk::mesh::put_field_on_mesh(*dpdx_, selector, nDim, nullptr);
 
+  dpdx_sharp_ = &(meta_data.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "dpdx_sharp"));
+  stk::mesh::put_field_on_mesh(*dpdx_sharp_, selector, nDim, nullptr);
+
   // delta solution for linear solver; share delta with other split systems
   pTmp_ = &(
     meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pTmp"));
@@ -2880,6 +2932,12 @@ ContinuityEquationSystem::register_edge_fields(
   massFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::EDGE_RANK, "mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*massFlowRate_, selector, nullptr);
+
+  if (realm_.solutionOptions_->realm_has_vof_) {
+    auto massForcedFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
+      stk::topology::EDGE_RANK, "mass_forced_flow_rate"));
+    stk::mesh::put_field_on_mesh(*massForcedFlowRate_, selector, nullptr);
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -3490,6 +3548,13 @@ ContinuityEquationSystem::register_initial_condition_fcn(
       theAuxFunc = new TaylorGreenPressureAuxFunction();
     } else if (fcnName == "kovasznay") {
       theAuxFunc = new KovasznayPressureAuxFunction();
+    } else if (fcnName == "sloshing_tank") {
+      std::map<std::string, std::vector<double>>::const_iterator iterParams =
+        theParams.find(dofName);
+      std::vector<double> fcnParams = (iterParams != theParams.end())
+                                        ? (*iterParams).second
+                                        : std::vector<double>();
+      theAuxFunc = new SloshingTankPressureAuxFunction(fcnParams);
     } else {
       throw std::runtime_error("ContinuityEquationSystem::register_initial_"
                                "condition_fcn: limited functions supported");
