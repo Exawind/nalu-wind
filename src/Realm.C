@@ -4038,7 +4038,7 @@ Realm::dump_simulation_time()
       << std::endl;
   }
 
-  if(aeroModels_->has_fsi()){
+  if (aeroModels_->has_fsi()) {
     double naluFsiTimer = aeroModels_->nalu_fsi_accumulated_time();
     double openFastFsiTimer = aeroModels_->openfast_accumulated_time();
     // nalu fsi calculations
@@ -4050,12 +4050,12 @@ Realm::dump_simulation_time()
     stk::all_reduce_sum(
       NaluEnv::self().parallel_comm(), &naluFsiTimer, &g_totalNalu, 1);
 
-    NaluEnv::self().naluOutputP0() << "Timing for FSI Computations :    " << std::endl;
+    NaluEnv::self().naluOutputP0()
+      << "Timing for FSI Computations :    " << std::endl;
     NaluEnv::self().naluOutputP0()
       << "        Nalu-Wind::computations --  "
-      << " \tavg: " << g_totalNalu / double(nprocs)
-      << " \tmin: " << g_minNalu << " \tmax: " << g_maxNalu
-      << std::endl;
+      << " \tavg: " << g_totalNalu / double(nprocs) << " \tmin: " << g_minNalu
+      << " \tmax: " << g_maxNalu << std::endl;
 
     // openfast calculations (excluding data fetch operations)
     double g_totalFast = 0.0, g_minFast = 0.0, g_maxFast = 0.0;
@@ -4068,9 +4068,8 @@ Realm::dump_simulation_time()
 
     NaluEnv::self().naluOutputP0()
       << "        OpenFAST::computations --  "
-      << " \tavg: " << g_totalFast / double(nprocs)
-      << " \tmin: " << g_minFast << " \tmax: " << g_maxFast
-      << std::endl;
+      << " \tavg: " << g_totalFast / double(nprocs) << " \tmin: " << g_minFast
+      << " \tmax: " << g_maxFast << std::endl;
   }
 
   // consolidated sort

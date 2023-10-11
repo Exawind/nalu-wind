@@ -592,7 +592,6 @@ void
 OpenfastFSI::map_displacements(double current_time, bool updateCurCoor)
 {
 
-
   timer_start(naluTimer_);
   get_displacements(current_time);
 
@@ -675,11 +674,15 @@ OpenfastFSI::map_loads(const int tStep, const double curTime)
   timer_stop(naluTimer_);
 }
 
-void OpenfastFSI::timer_start(std::pair<double, double>& timer){
+void
+OpenfastFSI::timer_start(std::pair<double, double>& timer)
+{
   timer.first = NaluEnv::self().nalu_time();
 }
 
-void OpenfastFSI::timer_stop(std::pair<double, double>& timer){
+void
+OpenfastFSI::timer_stop(std::pair<double, double>& timer)
+{
   timer.first = NaluEnv::self().nalu_time() - timer.first;
   timer.second += timer.first;
 }
