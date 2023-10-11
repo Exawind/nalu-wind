@@ -32,9 +32,14 @@ public:
   virtual void node_execute(double* lhs, double* rhs, stk::mesh::Entity node);
 
   ScalarFieldType* densityNp1_;
+  ScalarFieldType* hydroDensityNp1_;
   ScalarFieldType* dualNodalVolume_;
+  VectorFieldType* buoyancySource_;
   int nDim_;
   double rhoRef_;
+  bool rhoRefIsHydroDens_;
+  bool useBalancedSource_;
+
   std::vector<double> gravity_;
 };
 

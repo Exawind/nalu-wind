@@ -41,7 +41,9 @@ MomentumBuoyancySrcNodeSuppAlg::MomentumBuoyancySrcNodeSuppAlg(Realm& realm)
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   ScalarFieldType* density =
     meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
+
   densityNp1_ = &(density->field_of_state(stk::mesh::StateNP1));
+
   dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume");
   nDim_ = meta_data.spatial_dimension();
@@ -50,6 +52,13 @@ MomentumBuoyancySrcNodeSuppAlg::MomentumBuoyancySrcNodeSuppAlg(Realm& realm)
   // extract user parameters from solution options
   gravity_ = realm_.solutionOptions_->gravity_;
   rhoRef_ = realm_.solutionOptions_->referenceDensity_;
+  useBalancedSource_ = realm_.solutionOptions_->use_balanced_buoyancy_force_;
+
+  if (useBalancedSource_) {
+    VectorFieldType* buoyancySource = meta_data.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "buoyancy_source");
+    buoyancySource_ = &(buoyancySource->field_of_state(stk::mesh::StateNone));
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -68,14 +77,29 @@ void
 MomentumBuoyancySrcNodeSuppAlg::node_execute(
   double* /*lhs*/, double* rhs, stk::mesh::Entity node)
 {
-  // rhs+=(rho-rhoRef)*gi
-  // later, may choose to assemble buoyancy to scv ips: Nip_k*rho_k
-  const double rhoNp1 = *stk::mesh::field_data(*densityNp1_, node);
-  const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node);
-  const double fac = (rhoNp1 - rhoRef_) * dualVolume;
-  const int nDim = nDim_;
-  for (int i = 0; i < nDim; ++i) {
-    rhs[i] += fac * gravity_[i];
+
+  if (useBalancedSource_) {
+    const int nDim = nDim_;
+    double* source = stk::mesh::field_data(*buoyancySource_, node);
+    const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node);
+    for (int i = 0; i < nDim; ++i) {
+      rhs[i] += source[i] * dualVolume;
+    }
+
+    const double rhoNp1 = *stk::mesh::field_data(*densityNp1_, node);
+    const double fac = -rhoRef_ * dualVolume;
+    for (int i = 0; i < nDim; ++i) {
+      rhs[i] += fac * gravity_[i];
+    }
+  } else {
+    const double rhoNp1 = *stk::mesh::field_data(*densityNp1_, node);
+    const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node);
+
+    const double fac = (rhoNp1 - rhoRef_) * dualVolume;
+    const int nDim = nDim_;
+    for (int i = 0; i < nDim; ++i) {
+      rhs[i] += fac * gravity_[i];
+    }
   }
 }
 

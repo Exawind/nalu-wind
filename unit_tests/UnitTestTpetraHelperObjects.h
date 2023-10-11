@@ -127,7 +127,7 @@ struct TpetraHelperObjectsBase
           if (constRowView.colidx(j) == goldCol) {
             foundGoldCol = true;
             EXPECT_NEAR(vals[offset], constRowView.value(j), 1.e-14)
-              << "i: " << i << ", j: " << j;
+              << "i: " << i << ", j: " << j << " " << offset;
           } else if (!find_col(
                        constRowView.colidx(j), cols, rowOffsets[i],
                        rowOffsets[i + 1])) {

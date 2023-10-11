@@ -41,12 +41,18 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   else
     viscName = "viscosity";
 
+  density_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   viscosity_ = get_field_ordinal(meta, viscName);
   dudx_ = get_field_ordinal(meta, "dudx");
   edgeAreaVec_ =
     get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   massFlowRate_ =
     get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
+  massForcedFlowRate_ =
+    realm.solutionOptions_->realm_has_vof_
+      ? get_field_ordinal(
+          meta, "mass_forced_flow_rate", stk::topology::EDGE_RANK)
+      : get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
   pecletFactor_ =
     get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK);
   maskNodeField_ = get_field_ordinal(
@@ -56,6 +62,7 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
 void
 MomentumEdgeSolverAlg::execute()
 {
+
   const double eps = 1.0e-16;
   const int ndim = realm_.meta_data().spatial_dimension();
 
@@ -71,6 +78,8 @@ MomentumEdgeSolverAlg::execute()
   const DblType om_alpha = 1.0 - alpha;
   const DblType om_alphaUpw = 1.0 - alphaUpw;
 
+  const DblType has_vof = (double)realm_.solutionOptions_->realm_has_vof_;
+
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
@@ -78,8 +87,11 @@ MomentumEdgeSolverAlg::execute()
   const auto vel = fieldMgr.get_field<double>(velocity_);
   const auto dudx = fieldMgr.get_field<double>(dudx_);
   const auto viscosity = fieldMgr.get_field<double>(viscosity_);
+  const auto density = fieldMgr.get_field<double>(density_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
+  const auto massForcedFlowRate =
+    fieldMgr.get_field<double>(massForcedFlowRate_);
   const auto pecletFactor = fieldMgr.get_field<double>(pecletFactor_);
   const auto maskNodeField = fieldMgr.get_field<double>(maskNodeField_);
 
@@ -95,11 +107,14 @@ MomentumEdgeSolverAlg::execute()
       for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
 
-      const DblType mdot = massFlowRate.get(edge, 0);
+      const DblType mdot =
+        massFlowRate.get(edge, 0) + massForcedFlowRate.get(edge, 0) * has_vof;
+
+      const DblType densityL = density.get(nodeL, 0);
+      const DblType densityR = density.get(nodeR, 0);
 
       const DblType viscosityL = viscosity.get(nodeL, 0);
       const DblType viscosityR = viscosity.get(nodeR, 0);
-
       const DblType viscIp = 0.5 * (viscosityL + viscosityR);
 
       // Compute area vector related quantities and (U dot areaVec)
@@ -213,8 +228,9 @@ MomentumEdgeSolverAlg::execute()
           diff_flux += duidxj[j][j];
         diff_flux *= 2.0 / 3.0 * viscIp * av[i] * includeDivU;
 
-        for (int j = 0; j < ndim; ++j)
+        for (int j = 0; j < ndim; ++j) {
           diff_flux += -viscIp * (duidxj[i][j] + duidxj[j][i]) * av[j];
+        }
 
         const DblType maskNode = stk::math::min(
           maskNodeField.get(nodeL, 0), maskNodeField.get(nodeR, 0));

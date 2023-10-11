@@ -29,15 +29,15 @@ hex8_derivative(
   const SharedMemView<const double**, SHMEM>& par_coord,
   SharedMemView<DBLTYPE***, SHMEM>& deriv)
 {
-  // formal parameters - input:
-  //     par_coord     real  parametric coordinates of the points to be
-  //                         evaluated (typically, the gauss pts)
-  //
-  // formal parameters - output:
-  //     deriv         real  shape function derivatives evaluated at
-  //                         evaluation points.
-  //
-  //**********************************************************************
+// formal parameters - input:
+//     par_coord     real  parametric coordinates of the points to be
+//                         evaluated (typically, the gauss pts)
+//
+// formal parameters - output:
+//     deriv         real  shape function derivatives evaluated at
+//                         evaluation points.
+//
+//**********************************************************************
 #if defined(KOKKOS_ENABLE_GPU)
 
   if (8 != deriv.extent(1))
