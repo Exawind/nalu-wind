@@ -1257,7 +1257,7 @@ Fluid-Structure Interaction
 
 .. inpfile:: turbine_name.restart_filename
 
-   String (in double quotes) indicating the OpenFAST checkpoint file
+   String indicating the OpenFAST checkpoint file
    that the FSI simulation will start from.  Do not include the
    extension (.chkp).  This variable will have the format
    ``"name.integer"``, where the ``integer`` is the number of steps taken
@@ -1266,50 +1266,47 @@ Fluid-Structure Interaction
 
 .. inpfile:: turbine_name.sim_type
 
-   String (in double quotes) indicating the type of OpenFAST simulation.
+   String indicating the type of OpenFAST simulation.
    For FSI simulations, this should always be set to ``"ext-loads"``.
 
 .. inpfile:: turbine_name.blade_parts
 
-   List of strings (in double quotes) indicating the mesh element blocks
+   List of strings indicating the mesh element blocks
    corresponding to each of the blades.
 
 .. inpfile:: turbine_name.tower_parts
 
-   List of strings (in double quotes) indicating the mesh element blocks
+   List of strings indicating the mesh element blocks
    corresponding to the tower.
 
 .. inpfile:: turbine_name.blade_boundary_parts
 
-   List of strings (in double quotes) indicating the mesh sidesets
+   List of strings indicating the mesh sidesets
    corresponding to the wall boundaries of each of the blades.
 
 .. inpfile:: turbine_name.tower_boundary_parts
 
-   List of strings (in double quotes) indicating the mesh sidesets
+   List of strings indicating the mesh sidesets
    corresponding to the wall boundaries of the tower.
 
 .. inpfile:: turbine_name.az_blend_mean
 
    Real variable (in radians) indicating the mean angular position for the load blending.
    The loads provided to BeamDyn are a weighted average of the loads
-   provided by AeroDyn and the true CFD loads provided by Nalu-Wind.
+   provided by AeroDyn and the true CFD loads provided by Nalu-Wind
+   during startup to help with stability while the CFD flow field develops around
+   the turbine structure.
    The weight of the Nalu-Wind contribution takes the form
    :math:`\frac{1}{2} \left[1+\text{tanh}\left(\left(\phi-\phi_\text{mean}\right)/\phi_\text{delta}\right)\right]`,
-   where :math:`\phi` is the angle that the turbine has rotated through,
+   where :math:`\phi` is the angle that the turbine has rotated through
+   (including any initial OpenFAST runs),
    :math:`\phi_\text{mean}` is the value of ``az_blend_mean``, and
    :math:`\phi_\text{delta}` is the value of ``az_blend_delta``.
 
 .. inpfile:: turbine_name.az_blend_delta
 
    Real variable (in radians) indicating the width for load blending.
-   The loads provided to BeamDyn are a weighted average of the loads
-   provided by AeroDyn and the true CFD loads provided by Nalu-Wind.
-   The weight of the Nalu-Wind contribution takes the form
-   :math:`\frac{1}{2} \left[1+\text{tanh}\left(\left(\phi-\phi_\text{mean}\right)/\phi_\text{delta}\right)\right]`,
-   where :math:`\phi` is the angle that the turbine has rotated through,
-   :math:`\phi_\text{mean}` is the value of ``az_blend_mean``, and
-   :math:`\phi_\text{delta}` is the value of ``az_blend_delta``.
+   See the entry for ``az_blend_mean`` above for a complete definition.
 
 .. inpfile:: turbine_name.vel_mean
 
@@ -1343,9 +1340,10 @@ Fluid-Structure Interaction
 .. inpfile:: turbine_name.deflection_ramping
 
    The ``deflection_ramping`` sub-subsection controls the temporal and spatial
-   ramping of blade deflections applied in Nalu.  The temporal ramping enables a smooth
-   transition from the reference configuration to the full deflections, and
-   improves the stability of the simulation.  The span ramping enables the root section
+   ramping of blade deflections applied in Nalu-Wind.  The temporal ramping enables a smooth
+   transition for the blades from a rigid body motion based on the hub motion to the
+   full blade deflections, and improves the stability of the simulation
+   during startup.  The span ramping enables the root section
    of the blades (which are typically circular) to remain undeformed.  The theta ramping
    improves the quality of the elements near the mesh interface between blades.
    Note that the total deflection ramping factor will be the product of the temporal,
@@ -1374,7 +1372,7 @@ Fluid-Structure Interaction
 .. inpfile:: deflection_ramping.temporal_ramp_start
 
    Real variable indicating the time at which temporal ramping should begin.
-   Prior to this time, zero deflections will be provided.  Note that this
+   Prior to this time, zero blade deflections will be provided.  Note that this
    should correspond to time as recorded by Nalu-Wind and described in the
    ``Time_Integrators`` section, not as recorded by OpenFAST.  Hence, this will
    not correspond to ``t_start`` above.
@@ -1382,7 +1380,7 @@ Fluid-Structure Interaction
 .. inpfile:: deflection_ramping.temporal_ramp_end
 
    Real variable indicating the time at which temporal ramping should end.
-   After this time, full deflections will be provided.  Note that this
+   After this time, full blade deflections will be provided.  Note that this
    should correspond to time as recorded by Nalu-Wind and described in the
    ``Time_Integrators`` section, not as recorded by OpenFAST.
 
