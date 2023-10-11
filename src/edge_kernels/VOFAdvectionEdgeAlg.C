@@ -50,6 +50,7 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
   std::map<PropertyIdentifier, MaterialPropertyData*>::iterator itf =
     realm_.materialPropertys_.propertyDataMap_.find(DENSITY_ID);
 
+  // Hard set value here for unit testing without property map.
   if (itf == realm_.materialPropertys_.propertyDataMap_.end()) {
     density_liquid_ = 1000.0;
     density_gas_ = 1.0;
@@ -76,7 +77,15 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
     }
   }
 }
-
+// The following scheme is a modified form of Jain, 2022 VOF paper.
+// The sharpening term is taken directly from the paper.
+// The forcing terms used in the momentum equation from the paper are
+// calculated as a new mass flux that moves fluids according to the
+// sharpening/diffusion of the VOF function.
+// qIp and rhoIp are based on the resulting drho/dt of the scheme
+// to ensure exact consistency with momentum and continuity.
+// Note that upwinding of VOF is not necessary because there is
+// a diffusion term for VOF that provides sufficient dissipation.
 void
 VOFAdvectionEdgeAlg::execute()
 {
@@ -169,6 +178,9 @@ VOFAdvectionEdgeAlg::execute()
       smdata.lhs(0, 1) += alhsfac;
 
       // Compression + Diffusion term
+      // Hard coded 5.0 value comes from Jain, 2022 based on
+      // enforcing bounds of VOF function to [0,1] while maintaining
+      // interface that is approx ~2 cells thick.
       const DblType velocity_scale = global_max_velocity * 5.0;
 
       DblType axdx = 0.0;
@@ -183,6 +195,9 @@ VOFAdvectionEdgeAlg::execute()
         axdx += av[d] * dxj;
       }
 
+      // Hard-coded 0.6 value comes from Jain, 2022 to enforce
+      // VOF function bounds of [0,1] while maintaining interface
+      // thickness that is ~2 cells
       diffusion_coef = stk::math::sqrt(diffusion_coef) * 0.6;
 
       const DblType inv_axdx = 1.0 / axdx;
