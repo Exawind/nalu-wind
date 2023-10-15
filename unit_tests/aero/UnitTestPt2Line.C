@@ -7,6 +7,7 @@
 // for more details.
 //
 
+#include "vs/trig_ops.h"
 #include <gtest/gtest.h>
 #include <KokkosInterface.h>
 #include <aero/aero_utils/Pt2Line.h>
@@ -93,5 +94,40 @@ test_perpProjectDist_Pt2Line()
 }
 
 TEST(aero_utils, perpProjectDist_Pt2Line) { test_perpProjectDist_Pt2Line(); }
+
+
+void test_projectPt2Line_relative(
+  const vs::Vector& lStart,
+  const vs::Vector& lEnd,
+  const vs::Vector& pt,
+  std::function<bool(double)> checker)
+{
+  double result = call_projectPt2Line_on_device(lStart, lEnd, pt);
+  auto w1 = lEnd - lStart;
+  auto w2 = pt - lStart;
+  auto angle = utils::degrees(vs::angle(w1, w2));
+  std::cerr << "ANGLE: " << angle << std::endl;
+  EXPECT_TRUE(checker(result));
+}
+
+TEST(aero_utils, projectPt2Line_corner_cases){
+  // case 1
+  {
+    vs::Vector pt(-5.82431, 4.75596, 69.9067);
+    vs::Vector lStart(-2.94954, 0.177514, 69.7348);
+    vs::Vector lEnd(-2.87053, 0.189687, 70.7317);
+    auto checker = [&](double nDimCoord){return nDimCoord > 0.0;};
+    test_projectPt2Line_relative(lStart, lEnd, pt, checker);
+  }
+
+  // case 2
+  {
+    vs::Vector pt(-0.570796, -4.73676, 80.6121);
+    vs::Vector lStart(-2.23001, 0.20372, 80.7139);
+    vs::Vector lEnd(-2.18333, 0.199448, 81.7136);
+    auto checker = [&](double nDimCoord){return nDimCoord > 0.0;};
+    test_projectPt2Line_relative(lStart, lEnd, pt, checker);
+  }
+}
 
 } // namespace

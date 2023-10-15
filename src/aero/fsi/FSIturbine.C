@@ -1778,7 +1778,7 @@ fsiTurbine::computeMapping()
             brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6 + 2]};
           nDimCoord = fsi::projectPt2Line(ptCoords, lStart, lEnd);
 
-          if(std::abs(nDimCoord) < minDispMapInterp){
+          if (std::abs(nDimCoord) < minDispMapInterp) {
             minDispMapInterp = std::abs(nDimCoord);
             minDispMap = i;
           }
@@ -1794,7 +1794,7 @@ fsiTurbine::computeMapping()
 
         // if we are very very close to a point then we need to use it
         // curvature issues can break the projection
-        if(!foundProj && minDispMapInterp < 0.50){
+        if (!foundProj && minDispMapInterp < 0.50) {
           *dispMapInterpNode = 0.0;
           *dispMapNode = minDispMap;
           foundProj = true;
