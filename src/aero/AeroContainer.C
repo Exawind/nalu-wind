@@ -213,5 +213,29 @@ AeroContainer::fsi_bndry_part_names()
   return bndry_part_names;
 }
 
+double
+AeroContainer::openfast_accumulated_time()
+{
+#ifdef NALU_USES_OPENFAST_FSI
+  if (has_fsi())
+    return fsiContainer_->total_openfastfsi_execution_time();
+  else
+    return -1.0;
+#endif
+  return -1.0;
+}
+
+double
+AeroContainer::nalu_fsi_accumulated_time()
+{
+#ifdef NALU_USES_OPENFAST_FSI
+  if (has_fsi())
+    return fsiContainer_->total_nalu_fsi_execution_time();
+  else
+    return -1.0;
+#endif
+  return -1.0;
+}
+
 } // namespace nalu
 } // namespace sierra
