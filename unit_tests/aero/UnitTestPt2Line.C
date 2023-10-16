@@ -95,8 +95,8 @@ test_perpProjectDist_Pt2Line()
 
 TEST(aero_utils, perpProjectDist_Pt2Line) { test_perpProjectDist_Pt2Line(); }
 
-
-void test_projectPt2Line_relative(
+void
+test_projectPt2Line_relative(
   const vs::Vector& lStart,
   const vs::Vector& lEnd,
   const vs::Vector& pt,
@@ -110,13 +110,14 @@ void test_projectPt2Line_relative(
   EXPECT_TRUE(checker(result));
 }
 
-TEST(aero_utils, projectPt2Line_corner_cases){
+TEST(aero_utils, projectPt2Line_corner_cases)
+{
   // case 1
   {
     vs::Vector pt(-5.82431, 4.75596, 69.9067);
     vs::Vector lStart(-2.94954, 0.177514, 69.7348);
     vs::Vector lEnd(-2.87053, 0.189687, 70.7317);
-    auto checker = [&](double nDimCoord){return nDimCoord > 0.0;};
+    auto checker = [&](double nDimCoord) { return nDimCoord > 0.0; };
     test_projectPt2Line_relative(lStart, lEnd, pt, checker);
   }
 
@@ -125,7 +126,7 @@ TEST(aero_utils, projectPt2Line_corner_cases){
     vs::Vector pt(-0.570796, -4.73676, 80.6121);
     vs::Vector lStart(-2.23001, 0.20372, 80.7139);
     vs::Vector lEnd(-2.18333, 0.199448, 81.7136);
-    auto checker = [&](double nDimCoord){return nDimCoord > 0.0;};
+    auto checker = [&](double nDimCoord) { return nDimCoord > 0.0; };
     test_projectPt2Line_relative(lStart, lEnd, pt, checker);
   }
 }
