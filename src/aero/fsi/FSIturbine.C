@@ -1765,6 +1765,8 @@ fsiTurbine::computeMapping()
         vs::Vector ptCoords(xyz[0], xyz[1], xyz[2]);
         bool foundProj = false;
         double nDimCoord = -1.0;
+        double minDispMapInterp = 1.0e6;
+        int minDispMap = 1e6;
         for (int i = 0; i < nPtsBlade - 1; i++) {
           vs::Vector lStart = {
             brFSIdata_.bld_ref_pos[(iStart + i) * 6],
@@ -1776,6 +1778,11 @@ fsiTurbine::computeMapping()
             brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6 + 2]};
           nDimCoord = fsi::projectPt2Line(ptCoords, lStart, lEnd);
 
+          if (std::abs(nDimCoord) < minDispMapInterp) {
+            minDispMapInterp = std::abs(nDimCoord);
+            minDispMap = i;
+          }
+
           if ((nDimCoord >= 0) && (nDimCoord <= 1.0)) {
             foundProj = true;
             *dispMapInterpNode = nDimCoord;
@@ -1783,6 +1790,14 @@ fsiTurbine::computeMapping()
             //                        *loadMapNode = i + std::round(nDimCoord);
             break;
           }
+        }
+
+        // if we are very very close to a point then we need to use it
+        // curvature issues can break the projection
+        if (!foundProj && minDispMapInterp < 0.50) {
+          *dispMapInterpNode = 0.0;
+          *dispMapNode = minDispMap;
+          foundProj = true;
         }
 
         // If no element in the OpenFAST mesh contains this node do some sanity
