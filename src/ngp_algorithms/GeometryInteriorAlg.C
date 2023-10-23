@@ -58,13 +58,7 @@ void
 GeometryInteriorAlg<AlgTraits>::execute()
 {
   if (realm_.checkJacobians_) {
-    try {
-      impl_negative_jacobian_check();
-    } catch (const std::exception& e) {
-      // dump exodus file if the user enabled this feature then rethrow
-      realm_.provide_output(realm_.outputFailedJacobians_);
-      throw e;
-    }
+    impl_negative_jacobian_check(realm_.outputFailedJacobians_);
   }
 
   impl_compute_dual_nodal_volume();
@@ -153,6 +147,7 @@ GeometryInteriorAlg<AlgTraits>::impl_negative_jacobian_check()
     reducer);
 
   if (numNegVol > 0) {
+    realm_.provide_output(realm_.outputFailedJacobians_);
     const stk::topology topology(AlgTraits::topo_);
     throw std::runtime_error(
       "GeometryInteriorAlg encountered " + std::to_string(numNegVol) +
