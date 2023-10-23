@@ -671,7 +671,9 @@ Realm::load(const YAML::Node& node)
 
   // check for bad Jacobians in the mesh
   get_if_present(node, "check_jacobians", checkJacobians_, checkJacobians_);
-  get_if_present(node, "output_on_failed_jacobian_check", outputFailedJacobians_, outputFailedJacobians_);
+  get_if_present(
+    node, "output_on_failed_jacobian_check", outputFailedJacobians_,
+    outputFailedJacobians_);
 
   // entity count
   get_if_present(
@@ -3180,7 +3182,9 @@ Realm::provide_output(bool forcedOutput)
         1);
       // convert to hours
       g_elapsedWallTime /= 3600.0;
-      if (g_elapsedWallTime > outputInfo_->userWallTimeResults_.second || forcedOutput) {
+      if (
+        g_elapsedWallTime > outputInfo_->userWallTimeResults_.second ||
+        forcedOutput) {
         forcedOutput = true;
         outputInfo_->userWallTimeResults_.first = false;
         NaluEnv::self().naluOutputP0() << "Realm::provide_output()::Forced "
@@ -3233,7 +3237,6 @@ Realm::provide_output(bool forcedOutput)
     timerOutputFields_ += (stop_time - start_time);
   }
 }
-
 
 //--------------------------------------------------------------------------
 //-------- provide_restart_output ------------------------------------------

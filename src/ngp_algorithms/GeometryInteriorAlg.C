@@ -57,11 +57,10 @@ template <typename AlgTraits>
 void
 GeometryInteriorAlg<AlgTraits>::execute()
 {
-  if (realm_.checkJacobians_){
-    try{
+  if (realm_.checkJacobians_) {
+    try {
       impl_negative_jacobian_check();
-    }
-    catch (const std::exception& e){
+    } catch (const std::exception& e) {
       // dump exodus file if the user enabled this feature then rethrow
       realm_.provide_output(realm_.outputFailedJacobians_);
       throw e;

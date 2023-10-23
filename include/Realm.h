@@ -183,7 +183,7 @@ public:
   void compute_vrtm(const std::string& = "velocity");
   void compute_l2_scaling();
   void output_converged_results();
-  void provide_output(bool forcedOutput=false);
+  void provide_output(bool forcedOutput = false);
   void provide_restart_output();
 
   void register_interior_algorithm(stk::mesh::Part* part);
