@@ -148,7 +148,8 @@ GeometryInteriorAlg<AlgTraits>::impl_negative_jacobian_check()
     reducer);
 
   size_t globalNegVol = 0;
-  stk::all_reduce_sum(NaluEnv::self().parallel_comm(), &numNegVol, &globalNegVol, 1);
+  stk::all_reduce_sum(
+    NaluEnv::self().parallel_comm(), &numNegVol, &globalNegVol, 1);
 
   if (globalNegVol > 0) {
     realm_.provide_output(realm_.outputFailedJacobians_);
