@@ -20,6 +20,7 @@
 #include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
 #include "stk_mesh/base/NgpMesh.hpp"
+#include <stk_util/parallel/ParallelReduce.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -146,7 +147,10 @@ GeometryInteriorAlg<AlgTraits>::impl_negative_jacobian_check()
     },
     reducer);
 
-  if (numNegVol > 0) {
+  size_t globalNegVol = 0;
+  stk::all_reduce_sum(NaluEnv::self().parallel_comm(), &numNegVol, &globalNegVol, 1);
+
+  if (globalNegVol > 0) {
     realm_.provide_output(realm_.outputFailedJacobians_);
     const stk::topology topology(AlgTraits::topo_);
     throw std::runtime_error(
