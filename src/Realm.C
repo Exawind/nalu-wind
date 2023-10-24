@@ -3474,7 +3474,7 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
         NaluEnv::self().naluOutputP0()
           << "Aero models - Update displacements and set current coordinates"
           << std::endl;
-        aeroModels_->update_displacements(restartTime, true);
+        aeroModels_->update_displacements(restartTime, true, false);
       }
 
       compute_geometry();
