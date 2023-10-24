@@ -59,7 +59,7 @@ void
 GeometryInteriorAlg<AlgTraits>::execute()
 {
   if (realm_.checkJacobians_) {
-    impl_negative_jacobian_check(realm_.outputFailedJacobians_);
+    impl_negative_jacobian_check();
   }
 
   impl_compute_dual_nodal_volume();
