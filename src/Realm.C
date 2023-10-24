@@ -240,6 +240,7 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     edgesPart_(0),
     checkForMissingBcs_(false),
     checkJacobians_(false),
+    outputFailedJacobians_(false),
     isothermalFlow_(true),
     uniformFlow_(true),
     provideEntityCount_(false),
@@ -670,6 +671,9 @@ Realm::load(const YAML::Node& node)
 
   // check for bad Jacobians in the mesh
   get_if_present(node, "check_jacobians", checkJacobians_, checkJacobians_);
+  get_if_present(
+    node, "output_on_failed_jacobian_check", outputFailedJacobians_,
+    outputFailedJacobians_);
 
   // entity count
   get_if_present(
@@ -3152,7 +3156,7 @@ Realm::overset_field_update(
 //-------- provide_output --------------------------------------------------
 //--------------------------------------------------------------------------
 void
-Realm::provide_output()
+Realm::provide_output(bool forcedOutput)
 {
   stk::diag::TimeBlock mesh_output_timeblock(Simulation::outputTimer());
   const double start_time = NaluEnv::self().nalu_time();
@@ -3169,7 +3173,6 @@ Realm::provide_output()
     const int modStep = timeStepCount - outputInfo_->outputStart_;
 
     // check for elapsed WALL time threshold
-    bool forcedOutput = false;
     if (outputInfo_->userWallTimeResults_.first) {
       const double elapsedWallTime = stk::wall_time() - wallTimeStart_;
       // find the max over all core
@@ -3179,8 +3182,9 @@ Realm::provide_output()
         1);
       // convert to hours
       g_elapsedWallTime /= 3600.0;
-      // only force output the first time the timer is exceeded
-      if (g_elapsedWallTime > outputInfo_->userWallTimeResults_.second) {
+      if (
+        g_elapsedWallTime > outputInfo_->userWallTimeResults_.second ||
+        forcedOutput) {
         forcedOutput = true;
         outputInfo_->userWallTimeResults_.first = false;
         NaluEnv::self().naluOutputP0() << "Realm::provide_output()::Forced "
