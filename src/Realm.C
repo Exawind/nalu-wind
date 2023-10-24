@@ -3470,13 +3470,6 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
       if (has_mesh_motion())
         meshMotionAlg_->restart_reinit(foundRestartTime);
 
-      if (aeroModels_->has_fsi()) {
-        NaluEnv::self().naluOutputP0()
-          << "Aero models - Update displacements and set current coordinates"
-          << std::endl;
-        aeroModels_->update_displacements(restartTime, true);
-      }
-
       compute_geometry();
 
       if (has_mesh_motion())
