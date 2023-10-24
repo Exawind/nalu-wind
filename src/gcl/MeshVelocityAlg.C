@@ -130,7 +130,7 @@ MeshVelocityAlg<AlgTraits>::execute()
   const int nip = std::min(Hex8numScsIp, AlgTraits::numScsIp_);
 
   ngpSweptVol.sync_to_device();
-  faceVel.clear_sync_state();
+  faceVel.sync_to_device();
 
   nalu_ngp::run_elem_algorithm(
     algName, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,

@@ -9,6 +9,7 @@
 
 #include "gtest/gtest.h"
 #include "stk_mesh/base/MeshBuilder.hpp"
+#include "UnitTestUtils.h"
 #include "FieldManager.h"
 #include <memory>
 #include <stdexcept>
@@ -123,6 +124,24 @@ TEST_F(FieldManagerTest, numStatesCanBeChangedAtRegistration)
   auto field = fm.get_field_ptr<ScalarFieldType>(name);
   ASSERT_TRUE(field != nullptr);
   EXPECT_EQ(numStates, field->number_of_states());
+}
+
+class TestFieldManagerWithElems : public Hex8Mesh
+{
+public:
+protected:
+  void SetUp() { fill_mesh_and_initialize_test_fields(); }
+};
+
+TEST_F(TestFieldManagerWithElems, minimalSmartFieldCreation)
+{
+  const std::string name = "elemCentroid";
+
+  SmartField<stk::mesh::NgpField<double>, tags::DEVICE, tags::READ_WRITE>
+    managerNgpField =
+      fieldManager->get_device_smart_field<double, tags::READ_WRITE>(name);
+  SmartField<VectorFieldType, tags::LEGACY, tags::READ> managerLegacyField =
+    fieldManager->get_legacy_smart_field<VectorFieldType, tags::READ>(name);
 }
 } // namespace
 } // namespace nalu

@@ -79,6 +79,7 @@ target_sources(
    ${CMAKE_CURRENT_SOURCE_DIR}/ShearStressTransportEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SideWriter.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Simulation.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/SmartField.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SolutionNormPostProcessing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SolutionOptions.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SolverAlgorithm.C
