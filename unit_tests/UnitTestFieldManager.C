@@ -26,6 +26,7 @@ protected:
     stk::mesh::MeshBuilder builder(MPI_COMM_WORLD);
     builder.set_spatial_dimension(3);
     meta_ = builder.create_meta_data();
+    meta_->use_simple_fields();
     key_ = "velocity";
   }
   stk::mesh::MetaData& meta() { return *(meta_.get()); }
@@ -44,11 +45,11 @@ TEST_F(FieldManagerTest, nameIsEnoughInfoToRegisterAField)
 
   // check that field is on the mesh
   const auto findFieldPtr =
-    meta().get_field<VectorFieldType>(stk::topology::NODE_RANK, name);
+    meta().get_field<double>(stk::topology::NODE_RANK, name);
   EXPECT_EQ(findFieldPtr, std::get<VectorFieldType*>(ptr));
   EXPECT_TRUE(fm.field_exists(name));
 
-  auto ptr2 = fm.get_field_ptr<VectorFieldType>(name);
+  auto ptr2 = fm.get_field_ptr<double>(name);
   EXPECT_EQ(findFieldPtr, ptr2);
 }
 
@@ -103,9 +104,9 @@ TEST_F(FieldManagerTest, fieldStateCanBeSelected)
   FieldManager fm(meta(), numStates);
   fm.register_field(name, universal);
   // clang-format off
-  const auto np1 = fm.get_field_ptr<VectorFieldType>(name, stk::mesh::StateNP1);
-  const auto n =   fm.get_field_ptr<VectorFieldType>(name, stk::mesh::StateN);
-  const auto nm1 = fm.get_field_ptr<VectorFieldType>(name, stk::mesh::StateNM1);
+  const auto np1 = fm.get_field_ptr<double>(name, stk::mesh::StateNP1);
+  const auto n =   fm.get_field_ptr<double>(name, stk::mesh::StateN);
+  const auto nm1 = fm.get_field_ptr<double>(name, stk::mesh::StateNM1);
   // clang-format on
   EXPECT_TRUE(np1 != nullptr);
   EXPECT_TRUE(n != nullptr);
@@ -121,7 +122,7 @@ TEST_F(FieldManagerTest, numStatesCanBeChangedAtRegistration)
   const stk::mesh::PartVector universal(1, &meta().universal_part());
   FieldManager fm(meta(), numStates);
   fm.register_field(name, universal, numStates);
-  auto field = fm.get_field_ptr<ScalarFieldType>(name);
+  auto field = fm.get_field_ptr<double>(name);
   ASSERT_TRUE(field != nullptr);
   EXPECT_EQ(numStates, field->number_of_states());
 }
@@ -141,7 +142,7 @@ TEST_F(TestFieldManagerWithElems, minimalSmartFieldCreation)
     managerNgpField =
       fieldManager->get_device_smart_field<double, tags::READ_WRITE>(name);
   SmartField<VectorFieldType, tags::LEGACY, tags::READ> managerLegacyField =
-    fieldManager->get_legacy_smart_field<VectorFieldType, tags::READ>(name);
+    fieldManager->get_legacy_smart_field<double, tags::READ>(name);
 }
 } // namespace
 } // namespace nalu

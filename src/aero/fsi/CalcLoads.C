@@ -66,24 +66,21 @@ CalcLoads::initialize()
 {
 
   auto& meta = bulk_->mesh_meta_data();
-  coordinates_ = meta.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "current_coordinates");
-  pressure_ =
-    meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure");
-  density_ =
-    meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  viscosity_ = meta.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "effective_viscosity_u");
+  coordinates_ =
+    meta.get_field<double>(stk::topology::NODE_RANK, "current_coordinates");
+  pressure_ = meta.get_field<double>(stk::topology::NODE_RANK, "pressure");
+  density_ = meta.get_field<double>(stk::topology::NODE_RANK, "density");
+  viscosity_ =
+    meta.get_field<double>(stk::topology::NODE_RANK, "effective_viscosity_u");
 
   if (viscosity_ == nullptr) {
-    viscosity_ =
-      meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
+    viscosity_ = meta.get_field<double>(stk::topology::NODE_RANK, "viscosity");
   }
-  dudx_ = meta.get_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx");
+  dudx_ = meta.get_field<double>(stk::topology::NODE_RANK, "dudx");
 
   exposedAreaVec_ =
-    meta.get_field<GenericFieldType>(meta.side_rank(), "exposed_area_vector");
-  tforceSCS_ = meta.get_field<GenericFieldType>(meta.side_rank(), "tforce_scs");
+    meta.get_field<double>(meta.side_rank(), "exposed_area_vector");
+  tforceSCS_ = meta.get_field<double>(meta.side_rank(), "tforce_scs");
 }
 //--------------------------------------------------------------------------
 //-------- destructor ------------------------------------------------------

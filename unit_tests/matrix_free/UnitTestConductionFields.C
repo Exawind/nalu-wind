@@ -16,7 +16,6 @@
 #include "mpi.h"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/MeshBuilder.hpp"
-#include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/FEMHelpers.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
@@ -44,12 +43,13 @@ protected:
     meshBuilder.set_spatial_dimension(3u);
     bulk = meshBuilder.create();
     meta = &bulk->mesh_meta_data();
+    meta->use_simple_fields();
 
-    q_field = &meta->declare_field<stk::mesh::Field<double>>(
+    q_field = &meta->declare_field<double>(
       stk::topology::NODE_RANK, conduction_info::q_name, 3);
-    alpha_field = &meta->declare_field<stk::mesh::Field<double>>(
+    alpha_field = &meta->declare_field<double>(
       stk::topology::NODE_RANK, conduction_info::volume_weight_name);
-    lambda_field = &meta->declare_field<stk::mesh::Field<double>>(
+    lambda_field = &meta->declare_field<double>(
       stk::topology::NODE_RANK, conduction_info::diffusion_weight_name);
 
     stk::topology topo(stk::topology::HEX_8);
@@ -69,15 +69,14 @@ protected:
     }
 
     // set a coordinate field
-    using vector_field_type = stk::mesh::Field<double, stk::mesh::Cartesian3d>;
-    auto& coordField = meta->declare_field<vector_field_type>(
-      stk::topology::NODE_RANK, "coordinates");
-    stk::mesh::put_field_on_mesh(coordField, block_1, nullptr);
-    stk::mesh::put_field_on_mesh(*q_field, block_1, 1, nullptr);
-    stk::mesh::put_field_on_mesh(*lambda_field, block_1, 1, nullptr);
-    stk::mesh::put_field_on_mesh(*alpha_field, block_1, 1, nullptr);
+    auto& coordField =
+      meta->declare_field<double>(stk::topology::NODE_RANK, "coordinates");
+    stk::mesh::put_field_on_mesh(coordField, block_1, 3, nullptr);
+    stk::mesh::put_field_on_mesh(*q_field, block_1, nullptr);
+    stk::mesh::put_field_on_mesh(*lambda_field, block_1, nullptr);
+    stk::mesh::put_field_on_mesh(*alpha_field, block_1, nullptr);
     stk::mesh::put_field_on_mesh(
-      coordField, stk::mesh::selectUnion(allSurfaces), nullptr);
+      coordField, stk::mesh::selectUnion(allSurfaces), 3, nullptr);
     meta->set_coordinate_field(&coordField);
     meta->commit();
 

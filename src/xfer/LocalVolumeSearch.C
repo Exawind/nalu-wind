@@ -20,7 +20,7 @@ namespace nalu {
 namespace {
 
 constexpr int dim = 3;
-using vector_field_type = stk::mesh::Field<double, stk::mesh::Cartesian3d>;
+using vector_field_type = stk::mesh::Field<double>;
 using sphere_t = LocalVolumeSearchData::sphere_t;
 using box_t = LocalVolumeSearchData::box_t;
 using ident_t = LocalVolumeSearchData::ident_t;
@@ -310,9 +310,9 @@ local_field_interpolation(
   const stk::mesh::BulkData& bulk,
   const stk::mesh::Selector& active,
   const std::vector<std::array<double, 3>>& points,
-  const stk::mesh::Field<double, stk::mesh::Cartesian3d>& x_field,
-  const stk::mesh::Field<double, stk::mesh::Cartesian3d>& field_prev,
-  const stk::mesh::Field<double, stk::mesh::Cartesian3d>& field,
+  const stk::mesh::Field<double>& x_field,
+  const stk::mesh::Field<double>& field_prev,
+  const stk::mesh::Field<double>& field,
   double dtratio,
   LocalVolumeSearchData& data)
 {

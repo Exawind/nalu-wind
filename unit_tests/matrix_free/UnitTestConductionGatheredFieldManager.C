@@ -38,8 +38,7 @@ protected:
       field_gather(bulk, meta.universal_part(), {})
   {
     auto& coordField =
-      *meta.get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-        stk::topology::NODE_RANK, "coordinates");
+      *meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
     for (auto ib :
          bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {
       for (auto node : *ib) {

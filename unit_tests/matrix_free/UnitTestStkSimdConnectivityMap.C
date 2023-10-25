@@ -17,12 +17,10 @@
 #include "stk_io/IossBridge.hpp"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/MeshBuilder.hpp"
-#include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/Entity.hpp"
 #include "stk_mesh/base/FEMHelpers.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
-#include "stk_mesh/base/FieldTraits.hpp"
 #include "stk_mesh/base/GetEntities.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Ngp.hpp"
@@ -51,6 +49,7 @@ protected:
       bulk(*bulkPtr),
       meta(bulk.mesh_meta_data())
   {
+    meta.use_simple_fields();
     stk::topology topo(stk::topology::HEX_8);
 
     stk::mesh::Part& block_1 = meta.declare_part_with_topology("block_1", topo);
@@ -67,12 +66,13 @@ protected:
     }
 
     // set a coordinate field
-    using vector_field_type = stk::mesh::Field<double, stk::mesh::Cartesian3d>;
-    auto& coordField = meta.declare_field<vector_field_type>(
-      stk::topology::NODE_RANK, "coordinates");
-    stk::mesh::put_field_on_mesh(coordField, block_1, nullptr);
+    auto& coordField =
+      meta.declare_field<double>(stk::topology::NODE_RANK, "coordinates");
     stk::mesh::put_field_on_mesh(
-      coordField, stk::mesh::selectUnion(allSurfaces), nullptr);
+      coordField, block_1, meta.spatial_dimension(), nullptr);
+    stk::mesh::put_field_on_mesh(
+      coordField, stk::mesh::selectUnion(allSurfaces), meta.spatial_dimension(),
+      nullptr);
     meta.set_coordinate_field(&coordField);
     meta.commit();
 
@@ -163,8 +163,7 @@ TEST_F(SimdConnectivityFixture, map_has_invalid_entries_for_nonexisting_element)
 TEST_F(SimdConnectivityFixture, map_is_in_tensor_product_form)
 {
   const auto& coord_field =
-    *static_cast<const stk::mesh::Field<double, stk::mesh::Cartesian>*>(
-      meta.coordinate_field());
+    *static_cast<const stk::mesh::Field<double>*>(meta.coordinate_field());
   constexpr int order = 1;
   const auto map = stk_connectivity_map<order>(mesh, meta.universal_part());
   auto map_h = Kokkos::create_mirror_view(map);

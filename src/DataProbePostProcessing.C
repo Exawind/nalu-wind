@@ -576,10 +576,11 @@ DataProbePostProcessing::setup()
         // extract the part
         stk::mesh::Part* probePart = probeInfo->part_[p];
         // everyone needs coordinates to be registered
-        VectorFieldType* coordinates =
-          &(metaData.declare_field<VectorFieldType>(
-            stk::topology::NODE_RANK, "coordinates"));
+        VectorFieldType* coordinates = &(metaData.declare_field<double>(
+          stk::topology::NODE_RANK, "coordinates"));
         stk::mesh::put_field_on_mesh(*coordinates, *probePart, nDim, nullptr);
+        stk::io::set_field_output_type(
+          *coordinates, stk::io::FieldOutputType::VECTOR_3D);
         // now the general set of fields for this probe
         for (size_t j = 0; j < probeSpec->fieldInfo_.size(); ++j) {
 
@@ -689,8 +690,8 @@ DataProbePostProcessing::initialize()
 
   // populate values for coord; probe stays the same place
   // FIXME: worry about mesh motion (if the probe moves around?)
-  VectorFieldType* coordinates = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* coordinates =
+    metaData.get_field<double>(stk::topology::NODE_RANK, "coordinates");
 
   const int nDim = metaData.spatial_dimension();
   for (size_t idps = 0; idps < dataProbeSpecInfo_.size(); ++idps) {
@@ -827,9 +828,8 @@ DataProbePostProcessing::register_field(
   stk::mesh::MetaData& metaData,
   stk::mesh::Part* part)
 {
-  stk::mesh::FieldBase* toField = &(
-    metaData.declare_field<stk::mesh::Field<double, stk::mesh::SimpleArrayTag>>(
-      stk::topology::NODE_RANK, fieldName));
+  stk::mesh::FieldBase* toField =
+    &(metaData.declare_field<double>(stk::topology::NODE_RANK, fieldName));
   stk::mesh::put_field_on_mesh(*toField, *part, fieldSize, nullptr);
 }
 
@@ -979,8 +979,8 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
     << "DataProbePostProcessing::Writing dataprobes..." << std::endl;
 
   stk::mesh::MetaData& metaData = realm_.meta_data();
-  VectorFieldType* coordinates = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* coordinates =
+    metaData.get_field<double>(stk::topology::NODE_RANK, "coordinates");
 
   const int nDim = metaData.spatial_dimension();
 
@@ -1060,8 +1060,7 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
             // output in a single row
             for (size_t inv = 0; inv < nodeVec.size(); ++inv) {
               stk::mesh::Entity node = nodeVec[inv];
-              double* theCoord =
-                (double*)stk::mesh::field_data(*coordinates, node);
+              double* theCoord = stk::mesh::field_data(*coordinates, node);
 
               // always output time and coordinates
               myfile << std::left << std::setw(w_)
@@ -1268,8 +1267,7 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
               stk::mesh::Entity node = nodeVec[inv];
               // only output coordinates if required
               if (printcoords) {
-                double* theCoord =
-                  (double*)stk::mesh::field_data(*coordinates, node);
+                double* theCoord = stk::mesh::field_data(*coordinates, node);
                 // Output plane indices
                 const int planei = inv / pointsPerPlane;
                 const int localn = inv - planei * pointsPerPlane;

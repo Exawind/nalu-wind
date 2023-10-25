@@ -16,7 +16,6 @@
 #include <NaluParsedTypes.h>
 
 #include <stk_mesh/base/FieldBase.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 
 namespace stk {
 struct topology;

@@ -19,7 +19,6 @@
 #include "stk_io/StkMeshIoBroker.hpp"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/MeshBuilder.hpp"
-#include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/FEMHelpers.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
@@ -47,24 +46,29 @@ GradientFixture::GradientFixture(int nx, double scale)
     meta(bulkPtr->mesh_meta_data()),
     bulk(*bulkPtr),
     io(bulk.parallel()),
-    q_field(meta.declare_field<stk::mesh::Field<double>>(
-      stk::topology::NODE_RANK, "q")),
-    dqdx_field(meta.declare_field<stk::mesh::Field<double>>(
-      stk::topology::NODE_RANK, "dqdx")),
-    dqdx_tmp_field(meta.declare_field<stk::mesh::Field<double>>(
-      stk::topology::NODE_RANK, "dqdx_tmp")),
-    dqdx_exact_field(meta.declare_field<stk::mesh::Field<double>>(
-      stk::topology::NODE_RANK, "dqdx_exact")),
-    gid_field(meta.declare_field<stk::mesh::Field<gid_type>>(
+    q_field(meta.declare_field<double>(stk::topology::NODE_RANK, "q")),
+    dqdx_field(meta.declare_field<double>(stk::topology::NODE_RANK, "dqdx")),
+    dqdx_tmp_field(
+      meta.declare_field<double>(stk::topology::NODE_RANK, "dqdx_tmp")),
+    dqdx_exact_field(
+      meta.declare_field<double>(stk::topology::NODE_RANK, "dqdx_exact")),
+    gid_field(meta.declare_field<gid_type>(
       stk::topology::NODE_RANK, linsys_info::gid_name))
 {
-  stk::mesh::put_field_on_mesh(gid_field, meta.universal_part(), 1, nullptr);
-  stk::mesh::put_field_on_mesh(q_field, meta.universal_part(), 1, nullptr);
+  meta.use_simple_fields();
+  stk::mesh::put_field_on_mesh(gid_field, meta.universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(q_field, meta.universal_part(), nullptr);
   stk::mesh::put_field_on_mesh(dqdx_field, meta.universal_part(), 3, nullptr);
+  stk::io::set_field_output_type(
+    dqdx_field, stk::io::FieldOutputType::VECTOR_3D);
   stk::mesh::put_field_on_mesh(
     dqdx_tmp_field, meta.universal_part(), 3, nullptr);
+  stk::io::set_field_output_type(
+    dqdx_tmp_field, stk::io::FieldOutputType::VECTOR_3D);
   stk::mesh::put_field_on_mesh(
     dqdx_exact_field, meta.universal_part(), 3, nullptr);
+  stk::io::set_field_output_type(
+    dqdx_exact_field, stk::io::FieldOutputType::VECTOR_3D);
 
   const std::string nx_s = std::to_string(nx);
   const std::string name =

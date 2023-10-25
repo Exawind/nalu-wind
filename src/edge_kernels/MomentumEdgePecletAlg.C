@@ -105,10 +105,10 @@ void
 determine_max_peclet_factor(
   stk::mesh::BulkData& bulk, const stk::mesh::MetaData& meta)
 {
-  ScalarFieldType* maxPecFac = meta.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "max_peclet_factor");
+  ScalarFieldType* maxPecFac =
+    meta.get_field<double>(stk::topology::NODE_RANK, "max_peclet_factor");
   ScalarFieldType* pecletFactor =
-    meta.get_field<ScalarFieldType>(stk::topology::EDGE_RANK, "peclet_factor");
+    meta.get_field<double>(stk::topology::EDGE_RANK, "peclet_factor");
 
   stk::mesh::field_fill(0.0, *maxPecFac);
 
@@ -135,10 +135,10 @@ void
 determine_max_peclet_number(
   stk::mesh::BulkData& bulk, const stk::mesh::MetaData& meta)
 {
-  ScalarFieldType* maxPecNum = meta.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "max_peclet_number");
+  ScalarFieldType* maxPecNum =
+    meta.get_field<double>(stk::topology::NODE_RANK, "max_peclet_number");
   ScalarFieldType* pecletNumber =
-    meta.get_field<ScalarFieldType>(stk::topology::EDGE_RANK, "peclet_number");
+    meta.get_field<double>(stk::topology::EDGE_RANK, "peclet_number");
 
   stk::mesh::field_fill(0.0, *maxPecNum);
 

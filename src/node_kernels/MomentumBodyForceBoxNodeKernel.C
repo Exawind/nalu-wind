@@ -66,7 +66,7 @@ MomentumBodyForceBoxNodeKernel::MomentumBodyForceBoxNodeKernel(
         MasterElementRepo::get_surface_master_element_on_host(topo);
       const int numScsIp = meFC->num_integration_points();
       GenericFieldType* exposedAreaVec_ =
-        &(realm.meta_data().declare_field<GenericFieldType>(
+        &(realm.meta_data().declare_field<double>(
           static_cast<stk::topology::rank_t>(realm.meta_data().side_rank()),
           "exposed_area_vector"));
       stk::mesh::put_field_on_mesh(

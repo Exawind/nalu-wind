@@ -52,10 +52,10 @@ AssembleNodalGradUNonConformalAlgorithm::
 {
   // save off fields
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "dual_nodal_volume");
-  exposedAreaVec_ = meta_data.get_field<GenericFieldType>(
-    meta_data.side_rank(), "exposed_area_vector");
+  dualNodalVolume_ =
+    meta_data.get_field<double>(stk::topology::NODE_RANK, "dual_nodal_volume");
+  exposedAreaVec_ =
+    meta_data.get_field<double>(meta_data.side_rank(), "exposed_area_vector");
 
   // what do we need ghosted for this alg to work?
   ghostFieldVec_.push_back(vectorQ_);
