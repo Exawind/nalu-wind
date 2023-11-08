@@ -40,7 +40,9 @@ public:
   void register_nodal_fields(
     stk::mesh::MetaData& meta, const stk::mesh::PartVector& part_vec);
   void update_displacements(
-    const double currentTime, const bool updateCurCoords = true);
+    const double currentTime,
+    const bool updateCurCoords = true,
+    const bool predict = true);
   void predict_model_time_step(const double /*currentTime*/);
   void advance_model_time_step(const double /*currentTime*/);
   void compute_div_mesh_velocity();
@@ -55,6 +57,8 @@ public:
   const stk::mesh::PartVector fsi_parts();
   const stk::mesh::PartVector fsi_bndry_parts();
   const std::vector<std::string> fsi_bndry_part_names();
+  double openfast_accumulated_time();
+  double nalu_fsi_accumulated_time();
 
 private:
   bool has_actuators() { return actuatorModel_.is_active(); }

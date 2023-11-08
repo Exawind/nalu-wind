@@ -96,9 +96,9 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     double* thetaRamp = &defParams.thetaRampSpan_;
     // clang-format off
     // defaults of all are true from struct defintion
-    get_if_present(defNode, "enable_theta_ramping", defParams.enableThetaRamping_);
-    get_if_present(defNode, "enable_span_ramping", defParams.enableSpanRamping_);
-    get_if_present(defNode, "enable_temporal_ramping", defParams.enableTemporalRamping_);
+    get_if_present(defNode, "enable_theta_ramping", defParams.enableThetaRamping_, true);
+    get_if_present(defNode, "enable_span_ramping", defParams.enableSpanRamping_, true);
+    get_if_present(defNode, "enable_temporal_ramping", defParams.enableTemporalRamping_, true);
 
     if(defParams.enableTemporalRamping_){
       get_required(defNode, "temporal_ramp_start", defParams.startTimeTemporalRamp_);
@@ -1765,6 +1765,8 @@ fsiTurbine::computeMapping()
         vs::Vector ptCoords(xyz[0], xyz[1], xyz[2]);
         bool foundProj = false;
         double nDimCoord = -1.0;
+        double minDispMapInterp = 1.0e6;
+        int minDispMap = 1e6;
         for (int i = 0; i < nPtsBlade - 1; i++) {
           vs::Vector lStart = {
             brFSIdata_.bld_ref_pos[(iStart + i) * 6],
@@ -1776,6 +1778,11 @@ fsiTurbine::computeMapping()
             brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6 + 2]};
           nDimCoord = fsi::projectPt2Line(ptCoords, lStart, lEnd);
 
+          if (std::abs(nDimCoord) < minDispMapInterp) {
+            minDispMapInterp = std::abs(nDimCoord);
+            minDispMap = i;
+          }
+
           if ((nDimCoord >= 0) && (nDimCoord <= 1.0)) {
             foundProj = true;
             *dispMapInterpNode = nDimCoord;
@@ -1783,6 +1790,14 @@ fsiTurbine::computeMapping()
             //                        *loadMapNode = i + std::round(nDimCoord);
             break;
           }
+        }
+
+        // if we are very very close to a point then we need to use it
+        // curvature issues can break the projection
+        if (!foundProj && minDispMapInterp < 0.50) {
+          *dispMapInterpNode = 0.0;
+          *dispMapNode = minDispMap;
+          foundProj = true;
         }
 
         // If no element in the OpenFAST mesh contains this node do some sanity

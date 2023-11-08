@@ -240,6 +240,7 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     edgesPart_(0),
     checkForMissingBcs_(false),
     checkJacobians_(false),
+    outputFailedJacobians_(false),
     isothermalFlow_(true),
     uniformFlow_(true),
     provideEntityCount_(false),
@@ -670,6 +671,9 @@ Realm::load(const YAML::Node& node)
 
   // check for bad Jacobians in the mesh
   get_if_present(node, "check_jacobians", checkJacobians_, checkJacobians_);
+  get_if_present(
+    node, "output_on_failed_jacobian_check", outputFailedJacobians_,
+    outputFailedJacobians_);
 
   // entity count
   get_if_present(
@@ -3152,7 +3156,7 @@ Realm::overset_field_update(
 //-------- provide_output --------------------------------------------------
 //--------------------------------------------------------------------------
 void
-Realm::provide_output()
+Realm::provide_output(bool forcedOutput)
 {
   stk::diag::TimeBlock mesh_output_timeblock(Simulation::outputTimer());
   const double start_time = NaluEnv::self().nalu_time();
@@ -3169,7 +3173,6 @@ Realm::provide_output()
     const int modStep = timeStepCount - outputInfo_->outputStart_;
 
     // check for elapsed WALL time threshold
-    bool forcedOutput = false;
     if (outputInfo_->userWallTimeResults_.first) {
       const double elapsedWallTime = stk::wall_time() - wallTimeStart_;
       // find the max over all core
@@ -3179,8 +3182,9 @@ Realm::provide_output()
         1);
       // convert to hours
       g_elapsedWallTime /= 3600.0;
-      // only force output the first time the timer is exceeded
-      if (g_elapsedWallTime > outputInfo_->userWallTimeResults_.second) {
+      if (
+        g_elapsedWallTime > outputInfo_->userWallTimeResults_.second ||
+        forcedOutput) {
         forcedOutput = true;
         outputInfo_->userWallTimeResults_.first = false;
         NaluEnv::self().naluOutputP0() << "Realm::provide_output()::Forced "
@@ -3468,11 +3472,9 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
 
       if (aeroModels_->has_fsi()) {
         NaluEnv::self().naluOutputP0()
-          // are we really updating current coordinates? historically and
-          // currently not...
           << "Aero models - Update displacements and set current coordinates"
           << std::endl;
-        aeroModels_->update_displacements(restartTime, false);
+        aeroModels_->update_displacements(restartTime, true, false);
       }
 
       compute_geometry();
@@ -4036,6 +4038,40 @@ Realm::dump_simulation_time()
       << " \tavg: " << g_totalActuator / double(nprocs)
       << " \tmin: " << g_minActuator << " \tmax: " << g_maxActuator
       << std::endl;
+  }
+
+  if (aeroModels_->has_fsi()) {
+    double naluFsiTimer = aeroModels_->nalu_fsi_accumulated_time();
+    double openFastFsiTimer = aeroModels_->openfast_accumulated_time();
+    // nalu fsi calculations
+    double g_totalNalu = 0.0, g_minNalu = 0.0, g_maxNalu = 0.0;
+    stk::all_reduce_min(
+      NaluEnv::self().parallel_comm(), &naluFsiTimer, &g_minNalu, 1);
+    stk::all_reduce_max(
+      NaluEnv::self().parallel_comm(), &naluFsiTimer, &g_maxNalu, 1);
+    stk::all_reduce_sum(
+      NaluEnv::self().parallel_comm(), &naluFsiTimer, &g_totalNalu, 1);
+
+    NaluEnv::self().naluOutputP0()
+      << "Timing for FSI Computations :    " << std::endl;
+    NaluEnv::self().naluOutputP0()
+      << "        Nalu-Wind::computations --  "
+      << " \tavg: " << g_totalNalu / double(nprocs) << " \tmin: " << g_minNalu
+      << " \tmax: " << g_maxNalu << std::endl;
+
+    // openfast calculations (excluding data fetch operations)
+    double g_totalFast = 0.0, g_minFast = 0.0, g_maxFast = 0.0;
+    stk::all_reduce_min(
+      NaluEnv::self().parallel_comm(), &openFastFsiTimer, &g_minFast, 1);
+    stk::all_reduce_max(
+      NaluEnv::self().parallel_comm(), &openFastFsiTimer, &g_maxFast, 1);
+    stk::all_reduce_sum(
+      NaluEnv::self().parallel_comm(), &openFastFsiTimer, &g_totalFast, 1);
+
+    NaluEnv::self().naluOutputP0()
+      << "        OpenFAST::computations --  "
+      << " \tavg: " << g_totalFast / double(nprocs) << " \tmin: " << g_minFast
+      << " \tmax: " << g_maxFast << std::endl;
   }
 
   // consolidated sort
