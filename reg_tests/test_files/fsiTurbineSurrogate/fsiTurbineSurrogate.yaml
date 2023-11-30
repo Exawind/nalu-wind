@@ -246,6 +246,9 @@ realms:
 #        z_ref: 90.0
 #        shear_exp: 0.0          
 #        deflection_ramping:
+#          enable_temporal_ramping: true
+#          enable_span_ramping: true
+#          enable_theta_ramping: true
 #          span_ramp_distance: 10.0
 #          temporal_ramp_start: 5000 
 #          temporal_ramp_end: 1e6
