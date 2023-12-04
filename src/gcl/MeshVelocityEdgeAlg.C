@@ -115,6 +115,9 @@ MeshVelocityEdgeAlg<AlgTraits>::execute()
   const auto nDim = AlgTraits::nDim_;
   const auto numScsIp = AlgTraits::numScsIp_;
 
+  edgeSweptVol.sync_to_device();
+  edgeFaceVelMag.sync_to_device();
+
   const std::string algName =
     "compute_mesh_vel_" + std::to_string(AlgTraits::topo_);
   nalu_ngp::run_elem_algorithm(
@@ -197,6 +200,10 @@ MeshVelocityEdgeAlg<AlgTraits>::execute()
         }
       }
     });
+  edgeSweptVol.modify_on_device();
+  edgeFaceVelMag.modify_on_device();
+  edgeSweptVol.sync_to_host();
+  edgeFaceVelMag.sync_to_host();
 }
 
 INSTANTIATE_KERNEL(MeshVelocityEdgeAlg)

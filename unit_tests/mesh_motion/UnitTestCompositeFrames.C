@@ -7,6 +7,7 @@
 #include "mesh_motion/MotionScalingKernel.h"
 #include "mesh_motion/MotionTranslationKernel.h"
 #include "Realm.h"
+#include "SmartField.h"
 #include "SolutionOptions.h"
 #include "TimeIntegrator.h"
 
@@ -180,18 +181,24 @@ TEST(meshMotion, NGP_initialize)
   const auto& bkts =
     realm.bulk_data().get_buckets(stk::topology::NODE_RANK, sel);
 
-  for (auto b : bkts) {
-    for (size_t in = 0; in < b->size(); in++) {
+  { // limit scope for SmartFields so sync/modify is called right after use
+    // we should time this call. it might be fine to just stick in the outer
+    // bucket loop
+    auto mxyz =
+      sierra::nalu::MakeSmartField<tags::LEGACY, tags::READ>()(modelCoords);
+    auto cxyz = sierra::nalu::MakeSmartField<tags::LEGACY, tags::WRITE_ALL>()(
+      modelCoordsCopy);
+    for (auto b : bkts) {
+      for (size_t in = 0; in < b->size(); in++) {
 
-      auto node = (*b)[in]; // mesh node and NOT YAML node
-      double* mxyz = stk::mesh::field_data(*modelCoords, node);
-      double* cxyz = stk::mesh::field_data(*modelCoordsCopy, node);
+        auto node = (*b)[in]; // mesh node and NOT YAML node
 
-      for (int d = 0; d < nDim; ++d) {
-        cxyz[d] = mxyz[d];
-      }
-    } // end for loop - in index
-  }   // end for loop - bkts
+        for (int d = 0; d < nDim; ++d) {
+          cxyz(node)[d] = mxyz(node)[d];
+        }
+      } // end for loop - in index
+    }   // end for loop - bkts
+  }
 
   // create mesh transformation algorithm class
   std::unique_ptr<sierra::nalu::MeshTransformationAlg> meshTransformationAlg;
@@ -209,39 +216,39 @@ TEST(meshMotion, NGP_initialize)
   meshMotionAlg->initialize(currTime);
 
   // get fields to be tested
-  auto* currCoords =
-    realm.fieldManager_->get_field_ptr<VectorFieldType>("current_coordinates");
-  auto* meshVelocity =
-    realm.fieldManager_->get_field_ptr<VectorFieldType>("mesh_velocity");
+  { // Scope limiting braces again...
+    auto oxyz =
+      realm.fieldManager_->get_legacy_smart_field<VectorFieldType, tags::READ>(
+        "coordinates_copy");
+    auto xyz =
+      realm.fieldManager_->get_legacy_smart_field<VectorFieldType, tags::READ>(
+        "current_coordinates");
+    auto vel =
+      realm.fieldManager_->get_legacy_smart_field<VectorFieldType, tags::READ>(
+        "mesh_velocity");
 
-  // sync coordinates to host
-  currCoords->sync_to_host();
-  meshVelocity->sync_to_host();
+    for (auto b : bkts) {
+      for (size_t in = 0; in < b->size(); in++) {
 
-  for (auto b : bkts) {
-    for (size_t in = 0; in < b->size(); in++) {
+        auto node = (*b)[in]; // mesh node and NOT YAML node
 
-      auto node = (*b)[in]; // mesh node and NOT YAML node
-      double* oxyz = stk::mesh::field_data(*modelCoordsCopy, node);
-      double* xyz = stk::mesh::field_data(*currCoords, node);
-      double* vel = stk::mesh::field_data(*meshVelocity, node);
+        sierra::nalu::mm::TransMatType transMat =
+          eval_transformation(realm, currTime, oxyz(node));
 
-      sierra::nalu::mm::TransMatType transMat =
-        eval_transformation(realm, currTime, oxyz);
+        std::vector<double> gold_norm_xyz = eval_coords(transMat, oxyz(node));
+        std::vector<double> gold_norm_vel =
+          eval_vel(currTime, transMat, oxyz(node), &gold_norm_xyz[0]);
 
-      std::vector<double> gold_norm_xyz = eval_coords(transMat, oxyz);
-      std::vector<double> gold_norm_vel =
-        eval_vel(currTime, transMat, oxyz, &gold_norm_xyz[0]);
+        EXPECT_NEAR(xyz(node)[0], gold_norm_xyz[0], testTol);
+        EXPECT_NEAR(xyz(node)[1], gold_norm_xyz[1], testTol);
+        EXPECT_NEAR(xyz(node)[2], gold_norm_xyz[2], testTol);
 
-      EXPECT_NEAR(xyz[0], gold_norm_xyz[0], testTol);
-      EXPECT_NEAR(xyz[1], gold_norm_xyz[1], testTol);
-      EXPECT_NEAR(xyz[2], gold_norm_xyz[2], testTol);
-
-      EXPECT_NEAR(vel[0], gold_norm_vel[0], testTol);
-      EXPECT_NEAR(vel[1], gold_norm_vel[1], testTol);
-      EXPECT_NEAR(vel[2], gold_norm_vel[2], testTol);
-    } // end for loop - in index
-  }   // end for loop - bkts
+        EXPECT_NEAR(vel(node)[0], gold_norm_vel[0], testTol);
+        EXPECT_NEAR(vel(node)[1], gold_norm_vel[1], testTol);
+        EXPECT_NEAR(vel(node)[2], gold_norm_vel[2], testTol);
+      } // end for loop - in index
+    }   // end for loop - bkts
+  }
 }
 
 TEST(meshMotion, NGP_execute)

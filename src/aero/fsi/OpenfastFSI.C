@@ -16,8 +16,6 @@
 #include <cassert>
 #include <cmath>
 
-#include <stk_mesh/base/FieldBLAS.hpp>
-
 namespace sierra {
 
 namespace nalu {
@@ -235,7 +233,7 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
     FAST.solution0();
   }
 
-  map_displacements(curTime);
+  map_displacements(curTime, false);
 
   if (curTime < 1e-10) {
 
@@ -244,25 +242,32 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
 
     auto& meta = bulk_->mesh_meta_data();
 
-    VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
+    const VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
       stk::topology::NODE_RANK, "mesh_displacement");
-    VectorFieldType* meshVel = meta.get_field<VectorFieldType>(
+    const VectorFieldType* meshVel = meta.get_field<VectorFieldType>(
       stk::topology::NODE_RANK, "mesh_velocity");
 
-    VectorFieldType* meshDispNp1 =
+    const VectorFieldType* meshDispNp1 =
       &(meshDisp->field_of_state(stk::mesh::StateNP1));
     VectorFieldType* meshDispN = &(meshDisp->field_of_state(stk::mesh::StateN));
     VectorFieldType* meshDispNm1 =
       &(meshDisp->field_of_state(stk::mesh::StateNM1));
-    VectorFieldType* meshVelNp1 =
+    const VectorFieldType* meshVelNp1 =
       &(meshVel->field_of_state(stk::mesh::StateNP1));
+
+    meshDisp->sync_to_host();
+    meshVel->sync_to_host();
+    meshDispNp1->sync_to_host();
+    meshDispN->sync_to_host();
+    meshDispNm1->sync_to_host();
+    meshVelNp1->sync_to_host();
 
     stk::mesh::Selector sel = meta.universal_part();
     const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
     for (const auto* b : bkts) {
       for (const auto node : *b) {
-        double* velNp1 = stk::mesh::field_data(*meshVelNp1, node);
-        double* dispNp1 = stk::mesh::field_data(*meshDispNp1, node);
+        const double* velNp1 = stk::mesh::field_data(*meshVelNp1, node);
+        const double* dispNp1 = stk::mesh::field_data(*meshDispNp1, node);
         double* dispN = stk::mesh::field_data(*meshDispN, node);
         double* dispNm1 = stk::mesh::field_data(*meshDispNm1, node);
         for (size_t i = 0; i < 3; i++) {
@@ -271,6 +276,8 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
         }
       }
     }
+    meshDispN->modify_on_host();
+    meshDispNm1->modify_on_host();
   }
 }
 
@@ -375,21 +382,27 @@ OpenfastFSI::compute_mapping()
 void
 OpenfastFSI::predict_struct_states()
 {
+  timer_start(openFastTimer_);
   FAST.predict_states();
+  timer_stop(openFastTimer_);
 }
 
 void
 OpenfastFSI::predict_struct_timestep(const double curTime)
 {
   send_loads(curTime);
+  timer_start(openFastTimer_);
   FAST.update_states_driver_time_step();
+  timer_stop(openFastTimer_);
 }
 
 void
 OpenfastFSI::advance_struct_timestep(const double curTime)
 {
 
+  timer_start(openFastTimer_);
   FAST.advance_to_next_driver_time_step();
+  timer_stop(openFastTimer_);
 
   tStep_ += 1;
 
@@ -554,11 +567,13 @@ OpenfastFSI::compute_div_mesh_velocity()
 {
 
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
+  timer_start(naluTimer_);
   for (int i = 0; i < nTurbinesGlob; i++) {
     if (fsiTurbineData_[i] != NULL) // This may not be a turbine intended for
                                     // blade-resolved simulation
       fsiTurbineData_[i]->compute_div_mesh_velocity();
   }
+  timer_stop(naluTimer_);
 }
 
 void
@@ -574,23 +589,60 @@ OpenfastFSI::set_rotational_displacement(
   }
 }
 void
-OpenfastFSI::map_displacements(double current_time)
+OpenfastFSI::map_displacements(double current_time, bool updateCurCoor)
 {
 
+  timer_start(naluTimer_);
   get_displacements(current_time);
 
+  stk::mesh::Selector sel;
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (int i = 0; i < nTurbinesGlob; i++) {
     if (fsiTurbineData_[i] != NULL) {
       fsiTurbineData_[i]->mapDisplacements(current_time);
+      sel &= stk::mesh::selectUnion(fsiTurbineData_[i]->getPartVec());
     }
   }
+
+  if (updateCurCoor) {
+    auto& meta = bulk_->mesh_meta_data();
+    const VectorFieldType* modelCoords =
+      meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+    VectorFieldType* curCoords = meta.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "current_coordinates");
+    VectorFieldType* displacement = meta.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_displacement");
+
+    modelCoords->sync_to_host();
+    curCoords->sync_to_host();
+    displacement->sync_to_host();
+
+    const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
+    for (const auto* b : bkts) {
+      for (const auto node : *b) {
+        for (size_t in = 0; in < b->size(); in++) {
+
+          double* cc = stk::mesh::field_data(*curCoords, node);
+          double* mc = stk::mesh::field_data(*modelCoords, node);
+          double* cd = stk::mesh::field_data(*displacement, node);
+
+          for (int j = 0; j < 3; ++j) {
+            cc[j] = mc[j] + cd[j];
+          }
+        }
+      }
+    }
+
+    curCoords->modify_on_host();
+    curCoords->sync_to_device();
+  }
+  timer_stop(naluTimer_);
 }
 
 void
 OpenfastFSI::map_loads(const int tStep, const double curTime)
 {
-
+  timer_start(naluTimer_);
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (int i = 0; i < nTurbinesGlob; i++) {
     if (fsiTurbineData_[i] != nullptr) { // This may not be a turbine intended
@@ -619,6 +671,20 @@ OpenfastFSI::map_loads(const int tStep, const double curTime)
       fsiTurbineData_[i]->write_nc_def_loads(tStep, curTime);
     }
   }
+  timer_stop(naluTimer_);
+}
+
+void
+OpenfastFSI::timer_start(std::pair<double, double>& timer)
+{
+  timer.first = NaluEnv::self().nalu_time();
+}
+
+void
+OpenfastFSI::timer_stop(std::pair<double, double>& timer)
+{
+  timer.first = NaluEnv::self().nalu_time() - timer.first;
+  timer.second += timer.first;
 }
 
 } // namespace nalu

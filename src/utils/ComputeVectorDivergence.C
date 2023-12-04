@@ -286,27 +286,29 @@ compute_scalar_divergence(
     }
   }
 
+  // sum up interior divergence values and return if boundary part not specified
+  if (bndyPartVec.size() == 0) {
+    stk::mesh::parallel_sum(bulk, {scalarField});
+  }
   // Synchronize fields to device
   scalarField->modify_on_host();
   scalarField->sync_to_device();
 
-  // sum up interior divergence values and return if boundary part not specified
-  if (bndyPartVec.size() == 0) {
-    stk::mesh::parallel_sum(bulk, {scalarField});
-    return;
-  }
-
   // FIXME: Should we have contributions from cells at the boundary ?
+  return;
 }
 
 void
 compute_edge_scalar_divergence(
   stk::mesh::BulkData& bulk,
   stk::mesh::PartVector& partVec,
-  stk::mesh::PartVector& bndyPartVec,
+  stk::mesh::PartVector& /*bndyPartVec*/,
   GenericFieldType* faceField,
   stk::mesh::FieldBase* scalarField)
 {
+  scalarField->clear_sync_state();
+  faceField->sync_to_host();
+
   stk::mesh::MetaData& meta = bulk.mesh_meta_data();
   stk::mesh::Selector sel =
     (meta.locally_owned_part()) & stk::mesh::selectUnion(partVec);
@@ -332,12 +334,11 @@ compute_edge_scalar_divergence(
     }
   }
 
-  // Synchronize fields to device
-  scalarField->modify_on_host();
-  scalarField->sync_to_device();
-
   // sum up interior divergence values and return if boundary part not specified
   stk::mesh::parallel_sum(bulk, {scalarField});
+
+  // Synchronize fields to device
+  scalarField->modify_on_host();
   return;
 }
 

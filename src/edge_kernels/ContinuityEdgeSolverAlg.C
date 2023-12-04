@@ -56,13 +56,13 @@ ContinuityEdgeSolverAlg::execute()
 
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
-  const auto coordinates = fieldMgr.get_field<double>(coordinates_);
-  const auto velocity = fieldMgr.get_field<double>(velocity_);
-  const auto Gpdx = fieldMgr.get_field<double>(Gpdx_);
-  const auto density = fieldMgr.get_field<double>(densityNp1_);
-  const auto pressure = fieldMgr.get_field<double>(pressure_);
-  const auto udiag = fieldMgr.get_field<double>(Udiag_);
-  const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
+  auto coordinates = fieldMgr.get_field<double>(coordinates_);
+  auto velocity = fieldMgr.get_field<double>(velocity_);
+  auto Gpdx = fieldMgr.get_field<double>(Gpdx_);
+  auto density = fieldMgr.get_field<double>(densityNp1_);
+  auto pressure = fieldMgr.get_field<double>(pressure_);
+  auto udiag = fieldMgr.get_field<double>(Udiag_);
+  auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
 
   stk::mesh::NgpField<double> edgeFaceVelMag;
   bool needs_gcl = false;
@@ -71,7 +71,15 @@ ContinuityEdgeSolverAlg::execute()
     edgeFaceVelMag_ = get_field_ordinal(
       realm_.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK);
     edgeFaceVelMag = fieldMgr.get_field<double>(edgeFaceVelMag_);
+    edgeFaceVelMag.sync_to_device();
   }
+  coordinates.sync_to_device();
+  velocity.sync_to_device();
+  Gpdx.sync_to_device();
+  density.sync_to_device();
+  pressure.sync_to_device();
+  udiag.sync_to_device();
+  edgeAreaVec.sync_to_device();
 
   run_algorithm(
     realm_.bulk_data(),
@@ -88,22 +96,15 @@ ContinuityEdgeSolverAlg::execute()
       const DblType pressureL = pressure.get(nodeL, 0);
       const DblType pressureR = pressure.get(nodeR, 0);
 
-      const DblType densityL =
-        om_solveIncompressibleEqn * density.get(nodeL, 0) +
-        solveIncompressibleEqn;
-      const DblType densityR =
-        om_solveIncompressibleEqn * density.get(nodeR, 0) +
-        solveIncompressibleEqn;
+      const DblType densityL = density.get(nodeL, 0);
+      const DblType densityR = density.get(nodeR, 0);
 
-      const DblType udiagL =
-        udiag.get(nodeL, 0) * (om_solveIncompressibleEqn +
-                               solveIncompressibleEqn * density.get(nodeL, 0));
-      const DblType udiagR =
-        udiag.get(nodeR, 0) * (om_solveIncompressibleEqn +
-                               solveIncompressibleEqn * density.get(nodeR, 0));
-
+      const DblType udiagL = udiag.get(nodeL, 0);
+      const DblType udiagR = udiag.get(nodeR, 0);
       const DblType projTimeScale = 0.5 * (1.0 / udiagL + 1.0 / udiagR);
       const DblType rhoIp = 0.5 * (densityL + densityR);
+      const DblType denScale =
+        (1.0 / rhoIp) * solveIncompressibleEqn + om_solveIncompressibleEqn;
 
       DblType axdx = 0.0;
       DblType asq = 0.0;
@@ -137,7 +138,9 @@ ContinuityEdgeSolverAlg::execute()
           kxj * GjIp * nocFac;
       }
       tmdot /= tauScale;
-      const DblType lhsfac = -asq * inv_axdx * projTimeScale / tauScale;
+      tmdot *= denScale;
+      const DblType lhsfac =
+        -asq * inv_axdx * projTimeScale * denScale / tauScale;
 
       // Left node entries
       smdata.lhs(0, 0) = -lhsfac;

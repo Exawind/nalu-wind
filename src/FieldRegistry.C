@@ -44,6 +44,7 @@ Registry()
   static const std::map<std::string, FieldDefTypes> registry = {
     {"average_dudx" ,             SingleStateNodalTensor},
     {"coordinates",               SingleStateNodalVector},
+    {"coordinates_copy",          SingleStateNodalVector}, // Used in testing
     {"current_coordinates",       SingleStateNodalVector},
     {"density",                   SingleStateNodalScalar},
     {"dhdx",                      SingleStateNodalVector},
@@ -57,7 +58,7 @@ Registry()
     {"dwdx",                      SingleStateNodalVector},
     {"edge_area_vector",          SingleStateEdgeVector},
     {"effective_viscosity" ,      SingleStateNodalScalar},
-    {"elemCentroid",              SingleStateElemVector},                          
+    {"elemCentroid",              SingleStateElemVector},
     {"element_volume",            SingleStateElemScalar},
     {"elemScalarField",           SingleStateElemScalar},  // Used in testing
     {"elemTensorField",           SingleStateElemGeneric}, // Used in testing
@@ -66,7 +67,7 @@ Registry()
     {"Gju",                       SingleStateNodeGeneric},
     {"hypre_global_id",           HypreId},
     {"iblank",                    NodalScalarInt},
-    {"idField",                   SingleStateNodalScalar},                         
+    {"idField",                   SingleStateNodalScalar},
     {"mass_flow_rate_scs",        SingleStateElemGeneric},
     {"mesh_displacement",         MultiStateNodalVector},
     {"mesh_velocity",             SingleStateNodalVector},
