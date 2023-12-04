@@ -95,11 +95,22 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     double* zeroTheta = &defParams.zeroRampLocTheta_;
     double* thetaRamp = &defParams.thetaRampSpan_;
     // clang-format off
-    get_required(defNode, "temporal_ramp_start", defParams.startTimeTemporalRamp_);
-    get_required(defNode, "temporal_ramp_end",   defParams.endTimeTemporalRamp_);
-    get_required(defNode, "span_ramp_distance",  defParams.spanRampDistance_);
-    get_if_present(defNode, "zero_theta_ramp_angle", *zeroTheta, *zeroTheta);
-    get_if_present(defNode, "theta_ramp_span",       *thetaRamp, *thetaRamp);
+    // defaults of all are true from struct defintion
+    get_if_present(defNode, "enable_theta_ramping", defParams.enableThetaRamping_, false);
+    get_if_present(defNode, "enable_span_ramping", defParams.enableSpanRamping_, false);
+    get_if_present(defNode, "enable_temporal_ramping", defParams.enableTemporalRamping_, false);
+
+    if(defParams.enableTemporalRamping_){
+      get_required(defNode, "temporal_ramp_start", defParams.startTimeTemporalRamp_);
+      get_required(defNode, "temporal_ramp_end",   defParams.endTimeTemporalRamp_);
+    }
+    if(defParams.enableSpanRamping_){
+      get_required(defNode, "span_ramp_distance",  defParams.spanRampDistance_);
+    }
+    if(defParams.enableThetaRamping_){
+      get_if_present(defNode, "zero_theta_ramp_angle", *zeroTheta, *zeroTheta);
+      get_if_present(defNode, "theta_ramp_span",       *thetaRamp, *thetaRamp);
+    }
     // clang-format on
     // ---------- conversionions ----------
     defParams.zeroRampLocTheta_ = utils::radians(defParams.zeroRampLocTheta_);
@@ -905,11 +916,12 @@ fsiTurbine::mapLoads()
   }
 
   auto& meta = bulk_->mesh_meta_data();
-  VectorFieldType* modelCoords =
+  const VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
+  const VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
+  // syncs done inside functions
   fsi::mapTowerLoad(
     *bulk_, twrBndyParts_, *modelCoords, *meshDisp, *loadMap_, *loadMapInterp_,
     *tforceSCS_, brFSIdata_.twr_ref_pos, brFSIdata_.twr_def, brFSIdata_.twr_ld);
@@ -936,12 +948,19 @@ fsiTurbine::computeHubForceMomentForPart(
 {
 
   auto& meta = bulk_->mesh_meta_data();
+
   VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  modelCoords->sync_to_host();
+
   VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
+  meshDisp->sync_to_host();
+
   GenericFieldType* tforce =
     meta.get_field<GenericFieldType>(meta.side_rank(), "tforce_scs");
+  tforce->sync_to_host();
+
   std::vector<double> l_hubForceMoment(6, 0.0);
   std::array<double, 3> tmpMeshPos{
     0.0, 0.0, 0.0}; // Vector to temporarily store mesh node location
@@ -1218,12 +1237,16 @@ fsiTurbine::setRefDisplacement(double curTime)
   // extract the vector field type set by this function
   auto& meta = bulk_->mesh_meta_data();
   const int ndim = meta.spatial_dimension();
-  VectorFieldType* modelCoords =
+  const VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
   VectorFieldType* refDisp = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement_ref");
   VectorFieldType* refVel = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_velocity_ref");
+
+  modelCoords->sync_to_host();
+  refDisp->sync_to_host();
+  refVel->sync_to_host();
 
   std::vector<double> zAxis0 = {0.0, 0.0, 1.0};
 
@@ -1249,7 +1272,7 @@ fsiTurbine::setRefDisplacement(double curTime)
       for (size_t in = 0; in < b->size();
            in++) { // loop over all nodes in the bucket
         auto node = (*b)[in];
-        double* xyz = stk::mesh::field_data(*modelCoords, node);
+        const double* xyz = stk::mesh::field_data(*modelCoords, node);
         double* vecRefNode = stk::mesh::field_data(*refDisp, node);
         double* velRefNode = stk::mesh::field_data(*refVel, node);
 
@@ -1313,6 +1336,8 @@ fsiTurbine::setRefDisplacement(double curTime)
       }
     }
   }
+  refDisp->modify_on_host();
+  refVel->modify_on_host();
 }
 
 //! Calculate the distance between 3-dimensional vectors 'a' and 'b'
@@ -1347,16 +1372,27 @@ fsiTurbine::mapDisplacements(double time)
 
   const DeflectionRampingParams& defParams = deflectionRampParams_;
   const double temporalDeflectionRamp = fsi::temporal_ramp(
-    time, defParams.startTimeTemporalRamp_, defParams.endTimeTemporalRamp_);
+    time, defParams.startTimeTemporalRamp_, defParams.endTimeTemporalRamp_,
+    defParams.endTimeTemporalRamp_);
 
   auto& meta = bulk_->mesh_meta_data();
-  VectorFieldType* modelCoords =
+  const VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* curCoords = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "current_coordinates");
   VectorFieldType* displacement = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
   VectorFieldType* meshVelocity =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
+
+  modelCoords->sync_to_host();
+  curCoords->sync_to_host();
+  displacement->sync_to_host();
+  meshVelocity->sync_to_host();
+  dispMap_->sync_to_host();
+  dispMapInterp_->sync_to_host();
+  deflectionRamp_->sync_to_host();
 
   std::vector<double> totDispNode(
     6, 0.0); // Total displacement at any node in (transX, transY, transZ, rotX,
@@ -1374,7 +1410,7 @@ fsiTurbine::mapDisplacements(double time)
   for (auto b : bkts) {
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
-      auto oldxyz = vector_from_field(*modelCoords, node);
+      auto nodePosition = vector_from_field(*modelCoords, node);
       int* dispMapNode = stk::mesh::field_data(*dispMap_, node);
       const int iN = 6 * (*dispMapNode);
       const int iNp1 = 6 * (*dispMapNode + 1);
@@ -1393,9 +1429,10 @@ fsiTurbine::mapDisplacements(double time)
         twrStartDisp, twrEndDisp, *dispMapInterpNode);
 
       // Now transfer the interpolated displacement to the CFD mesh node
-      vector_to_field(
-        aero::compute_translational_displacements(deflection, refPos, oldxyz),
-        *displacement, node);
+      auto dispVec = aero::compute_translational_displacements(
+        deflection, refPos, nodePosition);
+      vector_to_field(dispVec, *displacement, node);
+      vector_to_field(dispVec + nodePosition, *curCoords, node);
     }
   }
 
@@ -1450,8 +1487,9 @@ fsiTurbine::mapDisplacements(double time)
           spanLocI + *dispMapInterpNode * (spanLocIp1 - spanLocI);
 
         double deflectionRamp =
-          temporalDeflectionRamp *
-          fsi::linear_ramp_span(spanLocation, defParams.spanRampDistance_);
+          temporalDeflectionRamp * fsi::linear_ramp_span(
+                                     spanLocation, defParams.spanRampDistance_,
+                                     defParams.enableSpanRamping_);
 
         // things for theta mapping
         const aero::SixDOF hubPos(brFSIdata_.hub_ref_pos.data());
@@ -1460,7 +1498,7 @@ fsiTurbine::mapDisplacements(double time)
 
         deflectionRamp *= fsi::linear_ramp_theta(
           hubPos, rootPos.position_, nodePosition, defParams.thetaRampSpan_,
-          defParams.zeroRampLocTheta_);
+          defParams.zeroRampLocTheta_, defParams.enableThetaRamping_);
 
         *stk::mesh::field_data(*deflectionRamp_, node) = deflectionRamp;
 
@@ -1472,6 +1510,7 @@ fsiTurbine::mapDisplacements(double time)
         auto ramp_disp = aero::compute_translational_displacements(
           interpDisp, refPos, nodePosition, hubBasedDef, deflectionRamp);
         vector_to_field(ramp_disp, *displacement, node);
+        vector_to_field(ramp_disp + nodePosition, *curCoords, node);
 
         auto bldStartVel = aero::SixDOF(&(brFSIdata_.bld_vel[iN]));
         auto bldEndVel = aero::SixDOF(&(brFSIdata_.bld_vel[iNp1]));
@@ -1500,17 +1539,18 @@ fsiTurbine::mapDisplacements(double time)
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
 
-      auto oldxyz = vector_from_field(*modelCoords, node);
+      auto nodePosition = vector_from_field(*modelCoords, node);
       // Now transfer the displacement to the CFD mesh node
-      vector_to_field(
-        aero::compute_translational_displacements(
-          hubDeflection, hubPos, oldxyz),
-        *displacement, node);
+      auto dispVec = aero::compute_translational_displacements(
+        hubDeflection, hubPos, nodePosition);
+      vector_to_field(dispVec, *displacement, node);
+      vector_to_field(dispVec + nodePosition, *curCoords, node);
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
       vector_to_field(
-        aero::compute_mesh_velocity(hubVel, hubDeflection, hubPos, oldxyz),
+        aero::compute_mesh_velocity(
+          hubVel, hubDeflection, hubPos, nodePosition),
         *meshVelocity, node);
     }
   }
@@ -1521,22 +1561,34 @@ fsiTurbine::mapDisplacements(double time)
   for (auto b : nacbkts) {
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
-      auto oldxyz = vector_from_field(*modelCoords, node);
+      auto nodePosition = vector_from_field(*modelCoords, node);
       const aero::SixDOF refPos(brFSIdata_.nac_ref_pos.data());
       const aero::SixDOF deflection(brFSIdata_.nac_def.data());
+
       // Now transfer the displacement to the CFD mesh node
-      vector_to_field(
-        aero::compute_translational_displacements(deflection, refPos, oldxyz),
-        *displacement, node);
+      auto dispVec = aero::compute_translational_displacements(
+        deflection, refPos, nodePosition);
+      vector_to_field(dispVec, *displacement, node);
+      vector_to_field(dispVec + nodePosition, *curCoords, node);
 
       // Now transfer the translational and rotational velocity to an equivalent
       // translational velocity on the CFD mesh node
       auto mVel = vector_from_field(*meshVelocity, node);
       const aero::SixDOF vel(brFSIdata_.nac_vel.data());
 
-      mVel = aero::compute_mesh_velocity(vel, deflection, refPos, oldxyz);
+      mVel = aero::compute_mesh_velocity(vel, deflection, refPos, nodePosition);
     }
   }
+  curCoords->modify_on_host();
+  displacement->modify_on_host();
+  meshVelocity->modify_on_host();
+  deflectionRamp_->modify_on_host();
+  // ideally these should occur on device so lets copy them there for now
+  // mesh motion computes these on device so we can remove some unnecessary
+  // syncs
+  curCoords->sync_to_device();
+  displacement->sync_to_device();
+  meshVelocity->sync_to_device();
 }
 
 //! Compose Wiener-Milenkovic parameters 'p' and 'q' into 'pPlusq'. If a
@@ -1609,8 +1661,11 @@ fsiTurbine::computeMapping()
   auto& meta = bulk_->mesh_meta_data();
   const int ndim = meta.spatial_dimension();
   ThrowRequireMsg(ndim == 3, "fsiTurbine: spatial dim is required to be 3.");
-  VectorFieldType* modelCoords =
+  const VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  modelCoords->sync_to_host();
+  dispMap_->clear_sync_state();
+  dispMapInterp_->clear_sync_state();
 
   // Do the tower first
   stk::mesh::Selector sel(stk::mesh::selectUnion(twrParts_));
@@ -1619,7 +1674,7 @@ fsiTurbine::computeMapping()
   for (auto b : bkts) {
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
-      double* xyz = stk::mesh::field_data(*modelCoords, node);
+      const double* xyz = stk::mesh::field_data(*modelCoords, node);
       int* dispMapNode = stk::mesh::field_data(*dispMap_, node);
       double* dispMapInterpNode = stk::mesh::field_data(*dispMapInterp_, node);
       vs::Vector ptCoords(xyz[0], xyz[1], xyz[2]);
@@ -1703,13 +1758,15 @@ fsiTurbine::computeMapping()
     for (auto b : bkts) {
       for (size_t in = 0; in < b->size(); in++) {
         auto node = (*b)[in];
-        double* xyz = stk::mesh::field_data(*modelCoords, node);
+        const double* xyz = stk::mesh::field_data(*modelCoords, node);
         int* dispMapNode = stk::mesh::field_data(*dispMap_, node);
         double* dispMapInterpNode =
           stk::mesh::field_data(*dispMapInterp_, node);
         vs::Vector ptCoords(xyz[0], xyz[1], xyz[2]);
         bool foundProj = false;
         double nDimCoord = -1.0;
+        double minDispMapInterp = 1.0e6;
+        int minDispMap = 1e6;
         for (int i = 0; i < nPtsBlade - 1; i++) {
           vs::Vector lStart = {
             brFSIdata_.bld_ref_pos[(iStart + i) * 6],
@@ -1721,6 +1778,11 @@ fsiTurbine::computeMapping()
             brFSIdata_.bld_ref_pos[(iStart + i + 1) * 6 + 2]};
           nDimCoord = fsi::projectPt2Line(ptCoords, lStart, lEnd);
 
+          if (std::abs(nDimCoord) < minDispMapInterp) {
+            minDispMapInterp = std::abs(nDimCoord);
+            minDispMap = i;
+          }
+
           if ((nDimCoord >= 0) && (nDimCoord <= 1.0)) {
             foundProj = true;
             *dispMapInterpNode = nDimCoord;
@@ -1728,6 +1790,14 @@ fsiTurbine::computeMapping()
             //                        *loadMapNode = i + std::round(nDimCoord);
             break;
           }
+        }
+
+        // if we are very very close to a point then we need to use it
+        // curvature issues can break the projection
+        if (!foundProj && minDispMapInterp < 0.50) {
+          *dispMapInterpNode = 0.0;
+          *dispMapNode = minDispMap;
+          foundProj = true;
         }
 
         // If no element in the OpenFAST mesh contains this node do some sanity
@@ -1761,6 +1831,8 @@ fsiTurbine::computeMapping()
     }
     iStart += nPtsBlade;
   }
+  dispMap_->modify_on_host();
+  dispMapInterp_->modify_on_host();
 
   // Write reference positions to netcdf file
   // write_nc_ref_pos();
@@ -1774,8 +1846,12 @@ fsiTurbine::computeLoadMapping()
 
   auto& meta = bulk_->mesh_meta_data();
   const int ndim = meta.spatial_dimension();
-  VectorFieldType* modelCoords =
+  const VectorFieldType* modelCoords =
     meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+
+  modelCoords->sync_to_host();
+  loadMap_->clear_sync_state();
+  loadMapInterp_->clear_sync_state();
 
   // nodal fields to gather
   std::vector<double> ws_coordinates;
@@ -2040,6 +2116,8 @@ fsiTurbine::computeLoadMapping()
 
     iStart += nPtsBlade;
   }
+  loadMap_->modify_on_host();
+  loadMapInterp_->modify_on_host();
 }
 
 void
@@ -2054,6 +2132,7 @@ fsiTurbine::compute_div_mesh_velocity()
   GenericFieldType* faceVelMag = meta.get_field<GenericFieldType>(
     stk::topology::EDGE_RANK, "edge_face_velocity_mag");
 
+  // syncs are done inside this function
   compute_edge_scalar_divergence(
     *bulk_, partVec_, bndyPartVec_, faceVelMag, divMeshVel);
 }

@@ -240,6 +240,7 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     edgesPart_(0),
     checkForMissingBcs_(false),
     checkJacobians_(false),
+    outputFailedJacobians_(false),
     isothermalFlow_(true),
     uniformFlow_(true),
     provideEntityCount_(false),
@@ -670,6 +671,9 @@ Realm::load(const YAML::Node& node)
 
   // check for bad Jacobians in the mesh
   get_if_present(node, "check_jacobians", checkJacobians_, checkJacobians_);
+  get_if_present(
+    node, "output_on_failed_jacobian_check", outputFailedJacobians_,
+    outputFailedJacobians_);
 
   // entity count
   get_if_present(
@@ -1850,12 +1854,6 @@ Realm::update_geometry_due_to_mesh_motion()
   if (does_mesh_move()) {
     if (aeroModels_->is_active()) {
       aeroModels_->update_displacements(get_current_time());
-
-      if (aeroModels_->has_fsi()) {
-        auto part_vec = aeroModels_->fsi_parts();
-        for (auto* target_part : part_vec)
-          set_current_coordinates(target_part);
-      }
     }
 
     if (solutionOptions_->externalMeshDeformation_) {
@@ -2570,6 +2568,10 @@ Realm::set_current_coordinates(stk::mesh::Part* targetPart)
   VectorFieldType* displacement = meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
+  currentCoords->clear_sync_state();
+  displacement->sync_to_host();
+  modelCoords->sync_to_host();
+
   stk::mesh::Selector s_all_nodes = stk::mesh::Selector(*targetPart);
 
   stk::mesh::BucketVector const& node_buckets =
@@ -2587,6 +2589,8 @@ Realm::set_current_coordinates(stk::mesh::Part* targetPart)
         cCoords[offSet + j] = mCoords[offSet + j] + dx[offSet + j];
     }
   }
+  currentCoords->modify_on_host();
+  currentCoords->sync_to_device();
 }
 
 //--------------------------------------------------------------------------
@@ -2651,6 +2655,8 @@ Realm::init_current_coordinates()
   VectorFieldType* displacement = meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
+  currentCoords->clear_sync_state();
+  displacement->clear_sync_state();
   modelCoords->sync_to_host();
 
   stk::mesh::Selector s_all_nodes =
@@ -3159,7 +3165,7 @@ Realm::overset_field_update(
 //-------- provide_output --------------------------------------------------
 //--------------------------------------------------------------------------
 void
-Realm::provide_output()
+Realm::provide_output(bool forcedOutput)
 {
   stk::diag::TimeBlock mesh_output_timeblock(Simulation::outputTimer());
   const double start_time = NaluEnv::self().nalu_time();
@@ -3176,7 +3182,6 @@ Realm::provide_output()
     const int modStep = timeStepCount - outputInfo_->outputStart_;
 
     // check for elapsed WALL time threshold
-    bool forcedOutput = false;
     if (outputInfo_->userWallTimeResults_.first) {
       const double elapsedWallTime = stk::wall_time() - wallTimeStart_;
       // find the max over all core
@@ -3186,8 +3191,9 @@ Realm::provide_output()
         1);
       // convert to hours
       g_elapsedWallTime /= 3600.0;
-      // only force output the first time the timer is exceeded
-      if (g_elapsedWallTime > outputInfo_->userWallTimeResults_.second) {
+      if (
+        g_elapsedWallTime > outputInfo_->userWallTimeResults_.second ||
+        forcedOutput) {
         forcedOutput = true;
         outputInfo_->userWallTimeResults_.first = false;
         NaluEnv::self().naluOutputP0() << "Realm::provide_output()::Forced "
@@ -3474,17 +3480,10 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
         meshMotionAlg_->restart_reinit(foundRestartTime);
 
       if (aeroModels_->has_fsi()) {
-        // TODO(psakiev) we should move this inside the function and compute
-        // current coordinates there
         NaluEnv::self().naluOutputP0()
           << "Aero models - Update displacements and set current coordinates"
           << std::endl;
-        aeroModels_->update_displacements(restartTime);
-
-        auto part_vec = aeroModels_->fsi_parts();
-        for (auto* target_part : part_vec) {
-          set_current_coordinates(target_part);
-        }
+        aeroModels_->update_displacements(restartTime, true, false);
       }
 
       compute_geometry();
@@ -4048,6 +4047,40 @@ Realm::dump_simulation_time()
       << " \tavg: " << g_totalActuator / double(nprocs)
       << " \tmin: " << g_minActuator << " \tmax: " << g_maxActuator
       << std::endl;
+  }
+
+  if (aeroModels_->has_fsi()) {
+    double naluFsiTimer = aeroModels_->nalu_fsi_accumulated_time();
+    double openFastFsiTimer = aeroModels_->openfast_accumulated_time();
+    // nalu fsi calculations
+    double g_totalNalu = 0.0, g_minNalu = 0.0, g_maxNalu = 0.0;
+    stk::all_reduce_min(
+      NaluEnv::self().parallel_comm(), &naluFsiTimer, &g_minNalu, 1);
+    stk::all_reduce_max(
+      NaluEnv::self().parallel_comm(), &naluFsiTimer, &g_maxNalu, 1);
+    stk::all_reduce_sum(
+      NaluEnv::self().parallel_comm(), &naluFsiTimer, &g_totalNalu, 1);
+
+    NaluEnv::self().naluOutputP0()
+      << "Timing for FSI Computations :    " << std::endl;
+    NaluEnv::self().naluOutputP0()
+      << "        Nalu-Wind::computations --  "
+      << " \tavg: " << g_totalNalu / double(nprocs) << " \tmin: " << g_minNalu
+      << " \tmax: " << g_maxNalu << std::endl;
+
+    // openfast calculations (excluding data fetch operations)
+    double g_totalFast = 0.0, g_minFast = 0.0, g_maxFast = 0.0;
+    stk::all_reduce_min(
+      NaluEnv::self().parallel_comm(), &openFastFsiTimer, &g_minFast, 1);
+    stk::all_reduce_max(
+      NaluEnv::self().parallel_comm(), &openFastFsiTimer, &g_maxFast, 1);
+    stk::all_reduce_sum(
+      NaluEnv::self().parallel_comm(), &openFastFsiTimer, &g_totalFast, 1);
+
+    NaluEnv::self().naluOutputP0()
+      << "        OpenFAST::computations --  "
+      << " \tavg: " << g_totalFast / double(nprocs) << " \tmin: " << g_minFast
+      << " \tmax: " << g_maxFast << std::endl;
   }
 
   // consolidated sort
