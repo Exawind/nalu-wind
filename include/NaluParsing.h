@@ -37,6 +37,7 @@ struct UserData
   std::map<std::string, std::string> userFunctionMap_;
   std::map<std::string, std::vector<double>> functionParams_;
   std::map<std::string, std::vector<std::string>> functionStringParams_;
+  std::map<std::string, std::string> functions;
 
   // FIXME: must elevate temperature due to the temperature_bc_setup method
   Temperature temperature_;
@@ -112,6 +113,7 @@ struct InflowUserData : public UserData
   bool mixFracSpec_;
   bool massFractionSpec_;
   bool gammaSpec_;
+
   InflowUserData()
     : UserData(),
       uSpec_(false),
@@ -362,6 +364,11 @@ struct UserFunctionInitialConditionData : public InitialCondition
   std::map<std::string, std::vector<double>> functionParams_;
 };
 
+struct StringFunctionInitialConditionData : public InitialCondition
+{
+  std::map<std::string, std::string> functions_;
+};
+
 inline bool
 string_represents_positive_integer(std::string v)
 {
@@ -477,6 +484,8 @@ void operator>>(const YAML::Node& node, NonConformalBoundaryConditionData& rhs);
 void operator>>(const YAML::Node& node, ConstantInitialConditionData& rhs);
 
 void operator>>(const YAML::Node& node, UserFunctionInitialConditionData& rhs);
+void
+operator>>(const YAML::Node& node, StringFunctionInitialConditionData& rhs);
 
 void operator>>(const YAML::Node& node, std::map<std::string, bool>& mapName);
 void operator>>(const YAML::Node& node, std::map<std::string, double>& mapName);

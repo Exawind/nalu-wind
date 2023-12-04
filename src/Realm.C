@@ -1327,6 +1327,15 @@ Realm::setup_initial_conditions()
         equationSystems_.register_initial_condition_fcn(targetPart, fcnIC);
       } break;
 
+      case STRING_FUNCTION_UD: {
+        const StringFunctionInitialConditionData* fcnIC =
+          dynamic_cast<const StringFunctionInitialConditionData*>(
+            initCond.get());
+        assert(fcnIC);
+        equationSystems_.register_initial_condition_string_function(
+          targetPart, fcnIC->functions_);
+      } break;
+
       case USER_SUB_UD:
         throw std::runtime_error(
           "Realm::setup_initial_conditions: USER_SUB not supported: ");
@@ -5159,7 +5168,7 @@ std::vector<std::string>
 Realm::handle_all_element_part_alias(
   const std::vector<std::string>& names) const
 {
-  if (names.size() == 1u && names.front() == allElementPartAlias) {
+  if (names.size() == 1u && names.at(0) == allElementPartAlias) {
     std::vector<std::string> new_names;
     for (const auto* part : meta_data().get_mesh_parts()) {
       ThrowRequire(part);

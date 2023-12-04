@@ -77,10 +77,10 @@ generic_grad_op(
   static_assert(
     std::is_same<ftype, typename OutputViewType::value_type>::value,
     "Incompatiable value type for views");
-  static_assert(GradViewType::Rank == 3, "grad view assumed to be rank 3");
+  static_assert(GradViewType::rank == 3, "grad view assumed to be rank 3");
   static_assert(
-    CoordViewType::Rank == 2, "Coordinate view assumed to be rank 2");
-  static_assert(OutputViewType::Rank == 3, "Weight view assumed to be rank 3");
+    CoordViewType::rank == 2, "Coordinate view assumed to be rank 2");
+  static_assert(OutputViewType::rank == 3, "Weight view assumed to be rank 3");
 
   ThrowAssert(AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
   ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
@@ -148,9 +148,9 @@ generic_gij_3d(
   static_assert(
     std::is_same<ftype, typename OutputViewType::value_type>::value,
     "Incompatiable value type for views");
-  static_assert(GradViewType::Rank == 3, "grad view assumed to be 3D");
-  static_assert(CoordViewType::Rank == 2, "Coordinate view assumed to be 2D");
-  static_assert(OutputViewType::Rank == 3, "gij view assumed to be 3D");
+  static_assert(GradViewType::rank == 3, "grad view assumed to be 3D");
+  static_assert(CoordViewType::rank == 2, "Coordinate view assumed to be 2D");
+  static_assert(OutputViewType::rank == 3, "gij view assumed to be 3D");
   static_assert(AlgTraits::nDim_ == 3, "3D method");
 
   for (unsigned ip = 0; ip < referenceGradWeights.extent(0); ++ip) {
@@ -331,9 +331,9 @@ generic_Mij_2d(
   static_assert(
     std::is_same<ftype, typename OutputViewType::value_type>::value,
     "Incompatiable value type for views");
-  static_assert(GradViewType::Rank == 3, "grad view assumed to be 3D");
-  static_assert(CoordViewType::Rank == 2, "Coordinate view assumed to be 2D");
-  static_assert(OutputViewType::Rank == 3, "Mij view assumed to be 3D");
+  static_assert(GradViewType::rank == 3, "grad view assumed to be 3D");
+  static_assert(CoordViewType::rank == 2, "Coordinate view assumed to be 2D");
+  static_assert(OutputViewType::rank == 3, "Mij view assumed to be 3D");
   static_assert(AlgTraits::nDim_ == 2, "2D method");
 
   const int npe = AlgTraits::nodesPerElement_;
@@ -514,9 +514,9 @@ generic_Mij_3d(
   static_assert(
     std::is_same<ftype, typename OutputViewType::value_type>::value,
     "Incompatiable value type for views");
-  static_assert(GradViewType::Rank == 3, "grad view assumed to be 3D");
-  static_assert(CoordViewType::Rank == 2, "Coordinate view assumed to be 2D");
-  static_assert(OutputViewType::Rank == 3, "Mij view assumed to be 3D");
+  static_assert(GradViewType::rank == 3, "grad view assumed to be 3D");
+  static_assert(CoordViewType::rank == 2, "Coordinate view assumed to be 2D");
+  static_assert(OutputViewType::rank == 3, "Mij view assumed to be 3D");
   static_assert(AlgTraits::nDim_ == 3, "3D method");
 
   for (unsigned ip = 0; ip < referenceGradWeights.extent(0); ++ip) {
@@ -593,9 +593,9 @@ generic_determinant_3d(
   static_assert(
     std::is_same<ftype, typename OutputViewType::value_type>::value,
     "Incompatiable value type for views");
-  static_assert(GradViewType::Rank == 3, "grad view assumed to be 3D");
-  static_assert(CoordViewType::Rank == 2, "Coordinate view assumed to be 2D");
-  static_assert(OutputViewType::Rank == 1, "Weight view assumed to be 1D");
+  static_assert(GradViewType::rank == 3, "grad view assumed to be 3D");
+  static_assert(CoordViewType::rank == 2, "Coordinate view assumed to be 2D");
+  static_assert(OutputViewType::rank == 1, "Weight view assumed to be 1D");
   static_assert(AlgTraits::nDim_ == 3, "3D method");
 
   ThrowAssert(AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
