@@ -233,6 +233,12 @@ public:
   {
   }
 
+  virtual void register_initial_condition_string_function(
+    stk::mesh::Part* /*part*/,
+    const std::map<std::string, std::string>& /*func*/)
+  {
+  }
+
   // rip through the propertyAlg_
   virtual void evaluate_properties();
 

@@ -7,6 +7,7 @@
 // for more details.
 //
 #include <aero/AeroContainer.h>
+#include <NaluEnv.h>
 #include <NaluParsingHelper.h>
 #ifdef NALU_USES_OPENFAST_FSI
 #include "aero/fsi/OpenfastFSI.h"
@@ -113,11 +114,15 @@ AeroContainer::execute(double& actTimer)
   }
 }
 void
-AeroContainer::update_displacements(const double currentTime, bool updateCC)
+AeroContainer::update_displacements(
+  const double currentTime, bool updateCC, bool predict)
 {
 #ifdef NALU_USES_OPENFAST_FSI
   if (has_fsi()) {
-    fsiContainer_->predict_struct_states();
+    NaluEnv::self().naluOutputP0()
+      << "Calling update displacements inside AeroContainer" << std::endl;
+    if (predict)
+      fsiContainer_->predict_struct_states();
     fsiContainer_->map_displacements(currentTime, updateCC);
   }
 #else

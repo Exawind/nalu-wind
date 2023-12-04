@@ -39,7 +39,6 @@ ZalesakSphereMassFlowRateEdgeAlg::ZalesakSphereMassFlowRateEdgeAlg(
 void
 ZalesakSphereMassFlowRateEdgeAlg::execute()
 {
-  const double eps = 1.0e-16;
   const int ndim = realm_.meta_data().spatial_dimension();
 
   // Defaults from AMR-Wind
@@ -56,7 +55,7 @@ ZalesakSphereMassFlowRateEdgeAlg::execute()
   run_algorithm(
     realm_.bulk_data(),
     KOKKOS_LAMBDA(
-      ShmemDataType & smdata, const stk::mesh::FastMeshIndex& edge,
+      ShmemDataType& /*smdata*/, const stk::mesh::FastMeshIndex& edge,
       const stk::mesh::FastMeshIndex& nodeL,
       const stk::mesh::FastMeshIndex& nodeR) {
       // Scratch work array for edgeAreaVector

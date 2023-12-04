@@ -55,9 +55,9 @@ generic_grad_op_3d(
   static_assert(
     std::is_same<ftype, typename OutputViewType::value_type>::value,
     "Incompatiable value type for views");
-  static_assert(GradViewType::Rank == 3, "grad view assumed to be 3D");
-  static_assert(CoordViewType::Rank == 2, "Coordinate view assumed to be 2D");
-  static_assert(OutputViewType::Rank == 3, "Weight view assumed to be 3D");
+  static_assert(GradViewType::rank == 3, "grad view assumed to be 3D");
+  static_assert(CoordViewType::rank == 2, "Coordinate view assumed to be 2D");
+  static_assert(OutputViewType::rank == 3, "Weight view assumed to be 3D");
   static_assert(AlgTraits::nDim_ == 3, "3D method");
 
   ThrowAssert(AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));

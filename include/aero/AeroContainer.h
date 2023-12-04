@@ -40,7 +40,9 @@ public:
   void register_nodal_fields(
     stk::mesh::MetaData& meta, const stk::mesh::PartVector& part_vec);
   void update_displacements(
-    const double currentTime, const bool updateCurCoords = true);
+    const double currentTime,
+    const bool updateCurCoords = true,
+    const bool predict = true);
   void predict_model_time_step(const double /*currentTime*/);
   void advance_model_time_step(const double /*currentTime*/);
   void compute_div_mesh_velocity();
