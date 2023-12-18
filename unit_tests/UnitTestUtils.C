@@ -3,7 +3,6 @@
 
 #include <stk_io/StkMeshIoBroker.hpp>
 #include <stk_mesh/base/BulkData.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/FEMHelpers.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
@@ -58,8 +57,8 @@ perturb_coord_hex_8(stk::mesh::BulkData& bulk, double perturbSize)
   Lcg lcg(bulk.parallel_rank() + 1);
 
   const auto& meta = bulk.mesh_meta_data();
-  const VectorFieldType* coordField =
-    dynamic_cast<const VectorFieldType*>(meta.coordinate_field());
+  const sierra::nalu::VectorFieldType* coordField =
+    dynamic_cast<const sierra::nalu::VectorFieldType*>(meta.coordinate_field());
   ThrowRequire(coordField != nullptr);
 
   for (const auto* ib :
@@ -138,12 +137,13 @@ create_one_element(
   }
 
   // set a coordinate field
-  using vector_field_type = stk::mesh::Field<double, stk::mesh::Cartesian3d>;
-  auto& coordField = meta.declare_field<vector_field_type>(
-    stk::topology::NODE_RANK, "coordinates");
-  stk::mesh::put_field_on_mesh(coordField, block_1, nullptr);
+  auto& coordField =
+    meta.declare_field<double>(stk::topology::NODE_RANK, "coordinates");
   stk::mesh::put_field_on_mesh(
-    coordField, stk::mesh::selectUnion(allSurfaces), nullptr);
+    coordField, block_1, meta.spatial_dimension(), nullptr);
+  stk::mesh::put_field_on_mesh(
+    coordField, stk::mesh::selectUnion(allSurfaces), meta.spatial_dimension(),
+    nullptr);
   meta.set_coordinate_field(&coordField);
   meta.commit();
 
@@ -382,8 +382,8 @@ global_norm(
 double
 initialize_linear_scalar_field(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordField,
-  const ScalarFieldType& qField)
+  const sierra::nalu::VectorFieldType& coordField,
+  const sierra::nalu::ScalarFieldType& qField)
 {
   // q = a + b^T x
   std::mt19937 rng;
@@ -416,8 +416,8 @@ initialize_linear_scalar_field(
 double
 initialize_quadratic_scalar_field(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordField,
-  const ScalarFieldType& qField)
+  const sierra::nalu::VectorFieldType& coordField,
+  const sierra::nalu::ScalarFieldType& qField)
 {
   // q = a + b^T x + 1/2 x^T H x
   std::mt19937 rng;
@@ -588,24 +588,21 @@ Hex8MeshWithNSOFields::Hex8MeshWithNSOFields() : Hex8Mesh()
     "exposed_area_vector", universal, num_states, quad_vec_len,
     oneVecTwelve.data());
 
-  velocity = fieldManager->register_field<VectorFieldType>(
-    "velocity", universal, oneVecThree);
+  velocity =
+    fieldManager->register_field<double>("velocity", universal, oneVecThree);
 
-  dpdx = fieldManager->register_field<VectorFieldType>(
-    "dpdx", universal, oneVecThree);
+  dpdx = fieldManager->register_field<double>("dpdx", universal, oneVecThree);
 
-  density =
-    fieldManager->register_field<ScalarFieldType>("density", universal, &one);
+  density = fieldManager->register_field<double>("density", universal, &one);
 
   viscosity =
-    fieldManager->register_field<ScalarFieldType>("viscosity", universal, &one);
+    fieldManager->register_field<double>("viscosity", universal, &one);
 
-  pressure =
-    fieldManager->register_field<ScalarFieldType>("pressure", universal, &one);
+  pressure = fieldManager->register_field<double>("pressure", universal, &one);
 
-  udiag = fieldManager->register_field<ScalarFieldType>(
-    "momentum_diag", universal, &one);
+  udiag =
+    fieldManager->register_field<double>("momentum_diag", universal, &one);
 
-  dnvField = fieldManager->register_field<ScalarFieldType>(
-    "dual_nodal_volume", universal, &one);
+  dnvField =
+    fieldManager->register_field<double>("dual_nodal_volume", universal, &one);
 }

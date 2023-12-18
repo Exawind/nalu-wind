@@ -56,29 +56,27 @@ ComputeHeatTransferEdgeWallAlgorithm::ComputeHeatTransferEdgeWallAlgorithm(
 {
   // save off fields
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  temperature_ = meta_data.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "temperature");
-  dhdx_ =
-    meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "dhdx");
-  coordinates_ = meta_data.get_field<VectorFieldType>(
+  temperature_ =
+    meta_data.get_field<double>(stk::topology::NODE_RANK, "temperature");
+  dhdx_ = meta_data.get_field<double>(stk::topology::NODE_RANK, "dhdx");
+  coordinates_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name());
-  density_ =
-    meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  thermalCond_ = meta_data.get_field<ScalarFieldType>(
+  density_ = meta_data.get_field<double>(stk::topology::NODE_RANK, "density");
+  thermalCond_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK, "thermal_conductivity");
-  specificHeat_ = meta_data.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "specific_heat");
-  exposedAreaVec_ = meta_data.get_field<GenericFieldType>(
-    meta_data.side_rank(), "exposed_area_vector");
-  assembledWallArea_ = meta_data.get_field<ScalarFieldType>(
+  specificHeat_ =
+    meta_data.get_field<double>(stk::topology::NODE_RANK, "specific_heat");
+  exposedAreaVec_ =
+    meta_data.get_field<double>(meta_data.side_rank(), "exposed_area_vector");
+  assembledWallArea_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK, "assembled_wall_area_ht");
-  referenceTemperature_ = meta_data.get_field<ScalarFieldType>(
+  referenceTemperature_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK, "reference_temperature");
-  heatTransferCoefficient_ = meta_data.get_field<ScalarFieldType>(
+  heatTransferCoefficient_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK, "heat_transfer_coefficient");
-  normalHeatFlux_ = meta_data.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "normal_heat_flux");
-  robinCouplingParameter_ = meta_data.get_field<ScalarFieldType>(
+  normalHeatFlux_ =
+    meta_data.get_field<double>(stk::topology::NODE_RANK, "normal_heat_flux");
+  robinCouplingParameter_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK, "robin_coupling_parameter");
 }
 

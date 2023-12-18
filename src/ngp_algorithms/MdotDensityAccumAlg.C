@@ -11,7 +11,6 @@
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementRepo.h"
-#include "ngp_algorithms/ViewHelper.h"
 #include "ngp_algorithms/MdotAlgDriver.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
@@ -86,9 +85,8 @@ MdotDensityAccumAlg<AlgTraits>::execute()
   Kokkos::Sum<DoubleType> mdotReducer(rhoAcc);
 
   const stk::mesh::Selector sel =
-    stk::mesh::selectField(
-      *realm_.meta_data().template get_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "density")) &
+    stk::mesh::selectField(*realm_.meta_data().template get_field<double>(
+      stk::topology::NODE_RANK, "density")) &
     !(realm_.get_inactive_selector());
 
   nalu_ngp::run_elem_par_reduce(

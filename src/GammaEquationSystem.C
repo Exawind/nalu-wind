@@ -69,7 +69,6 @@
 #include <stk_mesh/base/FieldParallel.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 
 // stk_io
@@ -102,7 +101,7 @@ GammaEquationSystem::GammaEquationSystem(EquationSystems& eqSystems)
     visc_(NULL),
     tvisc_(NULL),
     evisc_(NULL),
-    nodalGradAlgDriver_(realm_, "dgamdx")
+    nodalGradAlgDriver_(realm_, "gamma_transition", "dgamdx")
 {
   dofName_ = "gamma_transition";
 
@@ -148,29 +147,30 @@ GammaEquationSystem::register_nodal_fields(
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   // register dof; set it as a restart variable
-  gamma_ = &(meta_data.declare_field<ScalarFieldType>(
+  gamma_ = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "gamma_transition", numStates));
   stk::mesh::put_field_on_mesh(*gamma_, selector, nullptr);
   realm_.augment_restart_variable_list("gamma_transition");
 
-  dgamdx_ = &(meta_data.declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "dgamdx"));
+  dgamdx_ =
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "dgamdx"));
   stk::mesh::put_field_on_mesh(*dgamdx_, selector, nDim, nullptr);
+  stk::io::set_field_output_type(*dgamdx_, stk::io::FieldOutputType::VECTOR_3D);
 
   // delta solution for linear solver; share delta since this is a split system
-  gamTmp_ = &(meta_data.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "gamTmp"));
+  gamTmp_ =
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "gamTmp"));
   stk::mesh::put_field_on_mesh(*gamTmp_, selector, nullptr);
 
-  visc_ = &(meta_data.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "viscosity"));
+  visc_ =
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "viscosity"));
   stk::mesh::put_field_on_mesh(*visc_, selector, nullptr);
 
-  tvisc_ = &(meta_data.declare_field<ScalarFieldType>(
+  tvisc_ = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "turbulent_viscosity"));
   stk::mesh::put_field_on_mesh(*tvisc_, selector, nullptr);
 
-  evisc_ = &(meta_data.declare_field<ScalarFieldType>(
+  evisc_ = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "effective_viscosity_gamma"));
   stk::mesh::put_field_on_mesh(*evisc_, selector, nullptr);
 
@@ -304,8 +304,8 @@ GammaEquationSystem::register_inflow_bc(
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   // register boundary data; gamma_bc
-  ScalarFieldType* theBcField = &(meta_data.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "gamma_bc"));
+  ScalarFieldType* theBcField =
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "gamma_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specified tke and save off the AuxFunction

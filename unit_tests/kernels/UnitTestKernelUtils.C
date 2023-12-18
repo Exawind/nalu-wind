@@ -314,7 +314,7 @@ template <typename T>
 void
 init_trigonometric_field(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
+  const sierra::nalu::VectorFieldType& coordinates,
   T& qField)
 {
   using FieldInitFunction =
@@ -409,8 +409,8 @@ namespace unit_test_kernel_utils {
 void
 velocity_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  VectorFieldType& velocity)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::VectorFieldType& velocity)
 {
   // Add additional test functions in future?
   init_trigonometric_field(bulk, coordinates, velocity);
@@ -419,8 +419,8 @@ velocity_test_function(
 void
 dudx_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  TensorFieldType& dudx)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::TensorFieldType& dudx)
 {
   // Add additional test functions in future?
   init_trigonometric_field(bulk, coordinates, dudx);
@@ -429,8 +429,8 @@ dudx_test_function(
 void
 pressure_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& pressure)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& pressure)
 {
   init_trigonometric_field(bulk, coordinates, pressure);
 }
@@ -438,8 +438,8 @@ pressure_test_function(
 void
 dpdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  VectorFieldType& dpdx)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::VectorFieldType& dpdx)
 {
   init_trigonometric_field(bulk, coordinates, dpdx);
 }
@@ -447,8 +447,8 @@ dpdx_test_function(
 void
 temperature_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& temperature)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& temperature)
 {
   init_trigonometric_field(bulk, coordinates, temperature);
 }
@@ -456,8 +456,8 @@ temperature_test_function(
 void
 density_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& density)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& density)
 {
   init_trigonometric_field(bulk, coordinates, density);
 }
@@ -465,8 +465,8 @@ density_test_function(
 void
 tke_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& tke)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& tke)
 {
   init_trigonometric_field(bulk, coordinates, tke);
 }
@@ -474,8 +474,8 @@ tke_test_function(
 void
 alpha_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& alpha)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& alpha)
 {
   init_trigonometric_field(bulk, coordinates, alpha);
 }
@@ -483,8 +483,8 @@ alpha_test_function(
 void
 dkdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  VectorFieldType& dkdx)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::VectorFieldType& dkdx)
 {
   init_trigonometric_field(bulk, coordinates, dkdx);
 }
@@ -492,8 +492,8 @@ dkdx_test_function(
 void
 sdr_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& sdr)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& sdr)
 {
   init_trigonometric_field(bulk, coordinates, sdr);
 }
@@ -501,8 +501,8 @@ sdr_test_function(
 void
 tdr_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& tdr)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& tdr)
 {
   init_trigonometric_field(bulk, coordinates, tdr);
 }
@@ -510,8 +510,8 @@ tdr_test_function(
 void
 dwdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  VectorFieldType& dwdx)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::VectorFieldType& dwdx)
 {
   init_trigonometric_field(bulk, coordinates, dwdx);
 }
@@ -519,8 +519,8 @@ dwdx_test_function(
 void
 turbulent_viscosity_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& turbulent_viscosity)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& turbulent_viscosity)
 {
   init_trigonometric_field(bulk, coordinates, turbulent_viscosity);
 }
@@ -528,8 +528,8 @@ turbulent_viscosity_test_function(
 void
 tensor_turbulent_viscosity_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  GenericFieldType& mutij)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::GenericFieldType& mutij)
 {
   init_trigonometric_field(bulk, coordinates, mutij);
 }
@@ -537,8 +537,8 @@ tensor_turbulent_viscosity_test_function(
 void
 sst_f_one_blending_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& sst_f_one_blending)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& sst_f_one_blending)
 {
   init_trigonometric_field(bulk, coordinates, sst_f_one_blending);
 }
@@ -546,8 +546,8 @@ sst_f_one_blending_test_function(
 void
 iddes_rans_indicator_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& iddes_rans_indicator)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& iddes_rans_indicator)
 {
   init_trigonometric_field(bulk, coordinates, iddes_rans_indicator);
 }
@@ -555,8 +555,8 @@ iddes_rans_indicator_test_function(
 void
 minimum_distance_to_wall_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& minimum_distance_to_wall)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& minimum_distance_to_wall)
 {
   init_trigonometric_field(bulk, coordinates, minimum_distance_to_wall);
 }
@@ -564,8 +564,8 @@ minimum_distance_to_wall_test_function(
 void
 dplus_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  ScalarFieldType& dplus)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& dplus)
 {
   init_trigonometric_field(bulk, coordinates, dplus);
 }
@@ -573,8 +573,8 @@ dplus_test_function(
 void
 property_from_mixture_fraction_test_function(
   const stk::mesh::BulkData& bulk,
-  const ScalarFieldType& mixFraction,
-  ScalarFieldType& property,
+  const sierra::nalu::ScalarFieldType& mixFraction,
+  sierra::nalu::ScalarFieldType& property,
   const double primary,
   const double secondary)
 {
@@ -588,8 +588,8 @@ property_from_mixture_fraction_test_function(
 void
 inverse_property_from_mixture_fraction_test_function(
   const stk::mesh::BulkData& bulk,
-  const ScalarFieldType& mixFraction,
-  ScalarFieldType& property,
+  const sierra::nalu::ScalarFieldType& mixFraction,
+  sierra::nalu::ScalarFieldType& property,
   const double primary,
   const double secondary)
 {
@@ -603,8 +603,8 @@ inverse_property_from_mixture_fraction_test_function(
 void
 mixture_fraction_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  const ScalarFieldType& mixtureFrac,
+  const sierra::nalu::VectorFieldType& coordinates,
+  const sierra::nalu::ScalarFieldType& mixtureFrac,
   const double znot,
   const double amf)
 {
@@ -622,8 +622,8 @@ mixture_fraction_test_function(
 void
 dhdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& coordinates,
-  VectorFieldType& dhdx)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::VectorFieldType& dhdx)
 {
   init_trigonometric_field(bulk, coordinates, dhdx);
 }
@@ -631,18 +631,18 @@ dhdx_test_function(
 void
 calc_mass_flow_rate(
   const stk::mesh::BulkData& bulk,
-  const VectorFieldType& velocity,
-  const ScalarFieldType& density,
-  const VectorFieldType& edgeAreaVec,
-  ScalarFieldType& massFlowRate)
+  const sierra::nalu::VectorFieldType& velocity,
+  const sierra::nalu::ScalarFieldType& density,
+  const sierra::nalu::VectorFieldType& edgeAreaVec,
+  sierra::nalu::ScalarFieldType& massFlowRate)
 {
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
   EXPECT_EQ(ndim, 3);
 
-  const ScalarFieldType& densityNp1 =
+  const sierra::nalu::ScalarFieldType& densityNp1 =
     density.field_of_state(stk::mesh::StateNP1);
-  const VectorFieldType& velocityNp1 =
+  const sierra::nalu::VectorFieldType& velocityNp1 =
     velocity.field_of_state(stk::mesh::StateNP1);
 
   const stk::mesh::Selector selector =
@@ -678,10 +678,10 @@ void
 calc_mass_flow_rate_scs(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
-  const VectorFieldType& coordinates,
-  const ScalarFieldType& density,
-  const VectorFieldType& velocity,
-  const GenericFieldType& massFlowRate)
+  const sierra::nalu::VectorFieldType& coordinates,
+  const sierra::nalu::ScalarFieldType& density,
+  const sierra::nalu::VectorFieldType& velocity,
+  const sierra::nalu::GenericFieldType& massFlowRate)
 {
   using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Hex8Traits = sierra::nalu::AlgTraitsHex8;
@@ -761,11 +761,11 @@ void
 calc_open_mass_flow_rate(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
-  const VectorFieldType& coordinates,
-  const ScalarFieldType& density,
-  const VectorFieldType& velocity,
-  const GenericFieldType& exposedAreaVec,
-  const GenericFieldType& massFlowRate)
+  const sierra::nalu::VectorFieldType& coordinates,
+  const sierra::nalu::ScalarFieldType& density,
+  const sierra::nalu::VectorFieldType& velocity,
+  const sierra::nalu::GenericFieldType& exposedAreaVec,
+  const sierra::nalu::GenericFieldType& massFlowRate)
 {
   using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Quad4Traits = sierra::nalu::AlgTraitsQuad4;
@@ -847,8 +847,8 @@ void
 calc_edge_area_vec(
   const stk::mesh::BulkData& bulk,
   const stk::topology& topo,
-  const VectorFieldType& coordinates,
-  const VectorFieldType& edgeAreaVec)
+  const sierra::nalu::VectorFieldType& coordinates,
+  const sierra::nalu::VectorFieldType& edgeAreaVec)
 {
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
@@ -927,8 +927,8 @@ void
 calc_exposed_area_vec(
   const stk::mesh::BulkData& bulk,
   const stk::topology& topo,
-  const VectorFieldType& coordinates,
-  GenericFieldType& exposedAreaVec)
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::GenericFieldType& exposedAreaVec)
 {
   using Quad4Traits = sierra::nalu::AlgTraitsQuad4;
   using ElemSimdDataType =

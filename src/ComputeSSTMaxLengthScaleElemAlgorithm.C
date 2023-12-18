@@ -45,9 +45,9 @@ ComputeSSTMaxLengthScaleElemAlgorithm::ComputeSSTMaxLengthScaleElemAlgorithm(
 {
   // save off data
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  coordinates_ = meta_data.get_field<VectorFieldType>(
+  coordinates_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name());
-  maxLengthScale_ = meta_data.get_field<ScalarFieldType>(
+  maxLengthScale_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK, "sst_max_length_scale");
 }
 
