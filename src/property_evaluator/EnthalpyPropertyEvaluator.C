@@ -121,8 +121,8 @@ EnthalpyTYkPropertyEvaluator::EnthalpyTYkPropertyEvaluator(
     massFraction_(NULL)
 {
   // save off mass fraction field
-  massFraction_ = metaData.get_field<GenericFieldType>(
-    stk::topology::NODE_RANK, "mass_fraction");
+  massFraction_ =
+    metaData.get_field<double>(stk::topology::NODE_RANK, "mass_fraction");
 }
 
 //--------------------------------------------------------------------------
@@ -226,8 +226,8 @@ EnthalpyConstCpkPropertyEvaluator::EnthalpyConstCpkPropertyEvaluator(
     massFraction_(NULL)
 {
   // save off mass fraction field
-  massFraction_ = metaData.get_field<GenericFieldType>(
-    stk::topology::NODE_RANK, "mass_fraction");
+  massFraction_ =
+    metaData.get_field<double>(stk::topology::NODE_RANK, "mass_fraction");
 
   // save off Cp_k as vector
   cpVec_.resize(cpVecSize_);

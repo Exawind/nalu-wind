@@ -28,7 +28,7 @@ FrameReference::update_coordinates(const double time)
   // get the field from the NGP mesh
   stk::mesh::NgpField<double> modelCoords =
     stk::mesh::get_updated_ngp_field<double>(
-      *meta_.get_field<VectorFieldType>(entityRank, "coordinates"));
+      *meta_.get_field<double>(entityRank, "coordinates"));
 
   // sync fields to device
   modelCoords.sync_to_device();

@@ -36,6 +36,7 @@ public:
     meshBuilder.set_spatial_dimension(AlgTraits::nDim_);
     bulk_ = meshBuilder.create();
     meta_ = &bulk_->mesh_meta_data();
+    meta_->use_simple_fields();
     if (doInit)
       fill_mesh_and_init_data(doPerturb);
   }
@@ -58,8 +59,8 @@ public:
       unit_test_utils::create_one_reference_element(*bulk_, AlgTraits::topo_);
 
     partVec_ = {meta_->get_part("block_1")};
-    coordinates_ =
-      static_cast<const VectorFieldType*>(meta_->coordinate_field());
+    coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
+      meta_->coordinate_field());
 
     EXPECT_TRUE(coordinates_ != nullptr);
 
@@ -136,7 +137,7 @@ public:
   stk::mesh::MetaData* meta_;
   std::shared_ptr<stk::mesh::BulkData> bulk_;
   stk::mesh::PartVector partVec_;
-  const VectorFieldType* coordinates_{nullptr};
+  const sierra::nalu::VectorFieldType* coordinates_{nullptr};
 
   std::unique_ptr<HelperObjects> helperObjs_{nullptr};
 
