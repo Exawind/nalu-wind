@@ -158,11 +158,13 @@ TEST(meshMotion, NGP_initialize)
   // NOTE: This is done to allow computation of gold values later on
   // because mesh_transformation changes the field - coordinates
   int nDim = realm.meta_data().spatial_dimension();
-  VectorFieldType* modelCoordsCopy =
-    &(realm.meta_data().declare_field<VectorFieldType>(
+  sierra::nalu::VectorFieldType* modelCoordsCopy =
+    &(realm.meta_data().declare_field<double>(
       stk::topology::NODE_RANK, "coordinates_copy"));
   stk::mesh::put_field_on_mesh(
     *modelCoordsCopy, realm.meta_data().universal_part(), nDim, nullptr);
+  stk::io::set_field_output_type(
+    *modelCoordsCopy, stk::io::FieldOutputType::VECTOR_3D);
 
   // create mesh
   const std::string meshSpec("generated:2x2x2");
@@ -170,8 +172,9 @@ TEST(meshMotion, NGP_initialize)
   realm.init_current_coordinates();
 
   // copy coordinates to copy coordinates
-  VectorFieldType* modelCoords = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
+  sierra::nalu::VectorFieldType* modelCoords =
+    realm.meta_data().get_field<double>(
+      stk::topology::NODE_RANK, "coordinates");
 
   // get the parts in the current motion frame
   stk::mesh::Selector sel =
@@ -217,15 +220,12 @@ TEST(meshMotion, NGP_initialize)
 
   // get fields to be tested
   { // Scope limiting braces again...
-    auto oxyz =
-      realm.fieldManager_->get_legacy_smart_field<VectorFieldType, tags::READ>(
-        "coordinates_copy");
-    auto xyz =
-      realm.fieldManager_->get_legacy_smart_field<VectorFieldType, tags::READ>(
-        "current_coordinates");
-    auto vel =
-      realm.fieldManager_->get_legacy_smart_field<VectorFieldType, tags::READ>(
-        "mesh_velocity");
+    auto oxyz = realm.fieldManager_->get_legacy_smart_field<double, tags::READ>(
+      "coordinates_copy");
+    auto xyz = realm.fieldManager_->get_legacy_smart_field<double, tags::READ>(
+      "current_coordinates");
+    auto vel = realm.fieldManager_->get_legacy_smart_field<double, tags::READ>(
+      "mesh_velocity");
 
     for (auto b : bkts) {
       for (size_t in = 0; in < b->size(); in++) {
@@ -271,11 +271,13 @@ TEST(meshMotion, NGP_execute)
   // NOTE: This is done to allow computation of gold values later on
   // because mesh_transformation changes the field - coordinates
   int nDim = realm.meta_data().spatial_dimension();
-  VectorFieldType* modelCoordsCopy =
-    &(realm.meta_data().declare_field<VectorFieldType>(
+  sierra::nalu::VectorFieldType* modelCoordsCopy =
+    &(realm.meta_data().declare_field<double>(
       stk::topology::NODE_RANK, "coordinates_copy"));
   stk::mesh::put_field_on_mesh(
     *modelCoordsCopy, realm.meta_data().universal_part(), nDim, nullptr);
+  stk::io::set_field_output_type(
+    *modelCoordsCopy, stk::io::FieldOutputType::VECTOR_3D);
 
   // create mesh
   const std::string meshSpec("generated:2x2x2");
@@ -283,8 +285,9 @@ TEST(meshMotion, NGP_execute)
   realm.init_current_coordinates();
 
   // copy coordinates to copy coordinates
-  VectorFieldType* modelCoords = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
+  sierra::nalu::VectorFieldType* modelCoords =
+    realm.meta_data().get_field<double>(
+      stk::topology::NODE_RANK, "coordinates");
 
   // get the parts in the current motion frame
   stk::mesh::Selector sel =
@@ -327,10 +330,12 @@ TEST(meshMotion, NGP_execute)
   meshMotionAlg->execute(currTime);
 
   // get fields to be tested
-  VectorFieldType* currCoords = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "current_coordinates");
-  VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "mesh_velocity");
+  sierra::nalu::VectorFieldType* currCoords =
+    realm.meta_data().get_field<double>(
+      stk::topology::NODE_RANK, "current_coordinates");
+  sierra::nalu::VectorFieldType* meshVelocity =
+    realm.meta_data().get_field<double>(
+      stk::topology::NODE_RANK, "mesh_velocity");
 
   // sync modified coordinates and velocity to host
   currCoords->sync_to_host();

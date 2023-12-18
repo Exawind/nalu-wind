@@ -259,12 +259,11 @@ elemental, nodal, face and edge of desired size.
       const int numStates = realm_.number_of_states();
 
       // declare it
-      density_ 
-        =  &(metaData_.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, 
-                                                     "density", numStates));
+      density_  = &(metaData_.declare_field<double>(stk::topology::NODE_RANK,
+                                                    "density", numStates));
 
       // put it on this part
-      stk::mesh::put_field(*density_, *part);
+      stk::mesh::put_field_on_mesh(*density_, *part, nullptr);
     }
 
 :math:`\bullet` edge field registration:
@@ -277,9 +276,11 @@ elemental, nodal, face and edge of desired size.
     {
       const int nDim = metaData_.spatial_dimension();
       edgeAreaVec_ 
-        = &(metaData_.declare_field<VectorFieldType>(stk::topology::EDGE_RANK, 
-                                                    "edge_area_vector"));
-      stk::mesh::put_field(*edgeAreaVec_, *part, nDim);
+        = &(metaData_.declare_field<double>(stk::topology::EDGE_RANK,
+                                            "edge_area_vector"));
+      stk::mesh::put_field_on_mesh(*edgeAreaVec_, *part, nDim, nullptr);
+      stk::io::set_field_output_type(*edgeAreaVec_,
+                                     stk::io::FieldOutputType::VECTOR_3D);
     }
 
 :math:`\bullet` side/face field registration:
@@ -297,9 +298,10 @@ elemental, nodal, face and edge of desired size.
         stk::topology::rank_t sideRank 
           = static_cast<stk::topology::rank_t>(metaData_.side_rank());
         GenericFieldType *wallFrictionVelocityBip 
-          =  &(metaData_.declare_field<GenericFieldType>
+          =  &(metaData_.declare_field<double>
               (sideRank, "wall_friction_velocity_bip"));
-        stk::mesh::put_field(*wallFrictionVelocityBip, *part, numIp);
+        stk::mesh::put_field_on_mesh(*wallFrictionVelocityBip, *part, numIp,
+                                     nullptr);
       }
     }
 
@@ -317,23 +319,21 @@ addition to the field template type,
 .. code-block:: c++
 
     VectorFieldType *velocityRTM 
-      = metaData_.get_field<VectorFieldType>(stk::topology::NODE_RANK, 
-                                            "velocity");
+      = metaData_.get_field<double>(stk::topology::NODE_RANK, "velocity");
     ScalarFieldType *density 
-      = metaData_.get_field<ScalarFieldType>(stk::topology::NODE_RANK, 
-                                            "density");}
+      = metaData_.get_field<double>(stk::topology::NODE_RANK, "density");}
 
     VectorFieldType *edgeAreaVec 
-      = metaData_.get_field<VectorFieldType>(stk::topology::EDGE_RANK, 
-                                            "edge_area_vector");
+      = metaData_.get_field<double>(stk::topology::EDGE_RANK,
+                                    "edge_area_vector");
 
-    GenericFieldType  *massFlowRate
-      = metaData_.get_field<GenericFieldType>(stk::topology::ELEMENT_RANK, 
-                                             "mass_flow_rate_scs");
+    GenericFieldType *massFlowRate
+      = metaData_.get_field<double>(stk::topology::ELEMENT_RANK,
+                                    "mass_flow_rate_scs");
 
     GenericFieldType *wallFrictionVelocityBip_ 
-      = metaData_.get_field<GenericFieldType>(metaData_.side_rank(), 
-                                             "wall_friction_velocity_bip");
+      = metaData_.get_field<double>(metaData_.side_rank(),
+                                    "wall_friction_velocity_bip");
 
 State
 ~~~~~
@@ -346,8 +346,7 @@ extracted,
 .. code-block:: c++
 
     ScalarFieldType *density 
-      = metaData_.get_field<ScalarFieldType>(stk::topology::NODE_RANK, 
-                                            "density");
+      = metaData_.get_field<double>(stk::topology::NODE_RANK, "density");
     densityNm1_ = &(density->field_of_state(stk::mesh::StateNM1));
     densityN_ = &(density->field_of_state(stk::mesh::StateN));
     densityNp1_ = &(density->field_of_state(stk::mesh::StateNP1));

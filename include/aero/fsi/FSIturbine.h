@@ -16,7 +16,6 @@
 
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/BulkData.hpp"
-#include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "FieldTypeDef.h"
 #include <stk_search/Point.hpp>
@@ -53,10 +52,10 @@ struct DeflectionRampingParams
 // TODO(psakiev) find a better place for this
 // **********************************************************************
 //! convenience function for generating a vs::Vector from a stk::field
-template <typename T, typename P>
+template <typename T>
 inline vs::VectorT<T>
 vector_from_field(
-  const stk::mesh::Field<T, P>& field, const stk::mesh::Entity& node)
+  const stk::mesh::Field<T>& field, const stk::mesh::Entity& node)
 {
   // debug only check for optimization
   assert(field.max_size(stk::topology::NODE_RANK) == 3);
@@ -67,12 +66,10 @@ vector_from_field(
 
 //! convenience function for putting vector computations back onto the
 //! stk::fields
-template <typename T, typename P>
+template <typename T>
 inline void
 vector_to_field(
-  vs::VectorT<T> vec,
-  stk::mesh::Field<T, P>& field,
-  const stk::mesh::Entity& node)
+  vs::VectorT<T> vec, stk::mesh::Field<T>& field, const stk::mesh::Entity& node)
 {
   // debug only check for optimization
   assert(field.max_size(stk::topology::NODE_RANK) == 3);

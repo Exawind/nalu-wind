@@ -14,7 +14,6 @@
 #include <stk_mesh/base/GetEntities.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFunctions.h>
@@ -60,7 +59,7 @@ calculate_metric_tensor(
   return {ws_contravariant_metric_tensor, ws_covariant_metric_tensor};
 }
 
-using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
+using VectorFieldType = stk::mesh::Field<double>;
 
 void
 test_metric_for_topo_2D(stk::topology topo, double tol)
@@ -71,6 +70,7 @@ test_metric_for_topo_2D(stk::topology topo, double tol)
   stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);
   meshBuilder.set_spatial_dimension(dim);
   auto bulk = meshBuilder.create();
+  bulk->mesh_meta_data().use_simple_fields();
   stk::mesh::Entity elem =
     unit_test_utils::create_one_reference_element(*bulk, topo);
 
@@ -136,6 +136,7 @@ test_metric_for_topo_3D(stk::topology topo, double tol)
   stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);
   meshBuilder.set_spatial_dimension(dim);
   auto bulk = meshBuilder.create();
+  bulk->mesh_meta_data().use_simple_fields();
   stk::mesh::Entity elem =
     unit_test_utils::create_one_reference_element(*bulk, topo);
 

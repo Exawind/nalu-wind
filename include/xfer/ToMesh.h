@@ -125,7 +125,7 @@ public:
     : toMetaData_(toMetaData),
       toBulkData_(toBulkData),
       toRealm_(toRealm),
-      tocoordinates_(toMetaData.get_field<VectorFieldType>(
+      tocoordinates_(toMetaData.get_field<double>(
         stk::topology::NODE_RANK, coordinates_name)),
       toPartVec_(toPartVec),
       toFieldVec_(get_fields(toMetaData, VarPairName)),

@@ -59,12 +59,12 @@ AssembleScalarNonConformalSolverAlgorithm::
 {
   // save off fields
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  coordinates_ = meta_data.get_field<VectorFieldType>(
+  coordinates_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name());
-  exposedAreaVec_ = meta_data.get_field<GenericFieldType>(
-    meta_data.side_rank(), "exposed_area_vector");
-  ncMassFlowRate_ = meta_data.get_field<GenericFieldType>(
-    meta_data.side_rank(), "nc_mass_flow_rate");
+  exposedAreaVec_ =
+    meta_data.get_field<double>(meta_data.side_rank(), "exposed_area_vector");
+  ncMassFlowRate_ =
+    meta_data.get_field<double>(meta_data.side_rank(), "nc_mass_flow_rate");
 
   // what do we need ghosted for this alg to work?
   ghostFieldVec_.push_back(&(scalarQ_->field_of_state(stk::mesh::StateNP1)));

@@ -12,7 +12,6 @@
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementRepo.h"
 #include "master_element/Hex8GeometryFunctions.h"
-#include "ngp_algorithms/ViewHelper.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
 #include "Realm.h"

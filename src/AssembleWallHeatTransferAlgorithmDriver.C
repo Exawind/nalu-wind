@@ -47,18 +47,18 @@ AssembleWallHeatTransferAlgorithmDriver::
 {
   // register the fields
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  assembledWallArea_ = meta_data.get_field<ScalarFieldType>(
+  assembledWallArea_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK, "assembled_wall_area_ht");
-  referenceTemperature_ = meta_data.get_field<ScalarFieldType>(
+  referenceTemperature_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK, "reference_temperature");
-  heatTransferCoefficient_ = meta_data.get_field<ScalarFieldType>(
+  heatTransferCoefficient_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK, "heat_transfer_coefficient");
-  normalHeatFlux_ = meta_data.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "normal_heat_flux");
-  robinCouplingParameter_ = meta_data.get_field<ScalarFieldType>(
+  normalHeatFlux_ =
+    meta_data.get_field<double>(stk::topology::NODE_RANK, "normal_heat_flux");
+  robinCouplingParameter_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK, "robin_coupling_parameter");
-  temperature_ = meta_data.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "temperature");
+  temperature_ =
+    meta_data.get_field<double>(stk::topology::NODE_RANK, "temperature");
 }
 
 //--------------------------------------------------------------------------
