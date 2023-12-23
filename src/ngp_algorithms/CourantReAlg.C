@@ -13,7 +13,6 @@
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementRepo.h"
-#include "ngp_algorithms/ViewHelper.h"
 #include "ngp_algorithms/CourantReAlgDriver.h"
 #include "ngp_algorithms/CourantReReduceHelper.h"
 #include "ngp_utils/NgpLoopUtils.h"

@@ -11,7 +11,6 @@
 #define LOCAL_VOLUME_SEARCH_H
 
 #include "stk_mesh/base/Field.hpp"
-#include "stk_mesh/base/CoordinateSystems.hpp"
 
 #include "stk_search/BoundingBox.hpp"
 #include "stk_search/IdentProc.hpp"
@@ -56,9 +55,9 @@ void local_field_interpolation(
   const stk::mesh::BulkData& bulk,
   const stk::mesh::Selector& active,
   const std::vector<std::array<double, 3>>& points,
-  const stk::mesh::Field<double, stk::mesh::Cartesian3d>& coord_field,
-  const stk::mesh::Field<double, stk::mesh::Cartesian3d>& field_nm1,
-  const stk::mesh::Field<double, stk::mesh::Cartesian3d>& field,
+  const stk::mesh::Field<double>& coord_field,
+  const stk::mesh::Field<double>& field_nm1,
+  const stk::mesh::Field<double>& field,
   double dtratio,
   LocalVolumeSearchData& data);
 

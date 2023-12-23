@@ -39,7 +39,6 @@
 #include "stk_math/StkMath.hpp"
 #include "stk_mesh/base/Bucket.hpp"
 #include "stk_mesh/base/Entity.hpp"
-#include "stk_mesh/base/FieldTraits.hpp"
 #include "stk_mesh/base/GetNgpField.hpp"
 #include "stk_mesh/base/Selector.hpp"
 #include "stk_mesh/base/Types.hpp"

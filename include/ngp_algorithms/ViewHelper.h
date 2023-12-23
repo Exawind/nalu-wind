@@ -20,12 +20,10 @@ namespace nalu {
 
 namespace nalu_ngp {
 
-template <typename ElemSimdDataType, typename FieldType>
-struct ViewHelper;
-
-template <typename ElemSimdDataType>
-struct ViewHelper<ElemSimdDataType, ScalarFieldType>
+template <typename ElemSimdDataType, typename ScalarFieldType>
+struct ScalarViewHelper
 {
+  using SimdDataType = ElemSimdDataType;
   using ViewDataType =
     SharedMemView<DoubleType*, typename ElemSimdDataType::ShmemType>;
   using ScratchViewsType = ScratchViews<
@@ -34,13 +32,13 @@ struct ViewHelper<ElemSimdDataType, ScalarFieldType>
     typename ElemSimdDataType::ShmemType>;
 
   KOKKOS_INLINE_FUNCTION
-  ViewHelper(ScratchViewsType& scrView, unsigned phiID)
+  ScalarViewHelper(ScratchViewsType& scrView, unsigned phiID)
     : v_phi_(scrView.get_scratch_view_1D(phiID))
   {
   }
 
   KOKKOS_DEFAULTED_FUNCTION
-  ~ViewHelper() = default;
+  ~ScalarViewHelper() = default;
 
   KOKKOS_INLINE_FUNCTION
   DoubleType operator()(int ni, int) const { return v_phi_(ni); }
@@ -48,9 +46,10 @@ struct ViewHelper<ElemSimdDataType, ScalarFieldType>
   const ViewDataType& v_phi_;
 };
 
-template <typename ElemSimdDataType>
-struct ViewHelper<ElemSimdDataType, VectorFieldType>
+template <typename ElemSimdDataType, typename VectorFieldType>
+struct VectorViewHelper
 {
+  using SimdDataType = ElemSimdDataType;
   using ViewDataType =
     SharedMemView<DoubleType**, typename ElemSimdDataType::ShmemType>;
   using ScratchViewsType = ScratchViews<
@@ -59,13 +58,13 @@ struct ViewHelper<ElemSimdDataType, VectorFieldType>
     typename ElemSimdDataType::ShmemType>;
 
   KOKKOS_INLINE_FUNCTION
-  ViewHelper(ScratchViewsType& scrView, unsigned phiID)
+  VectorViewHelper(ScratchViewsType& scrView, unsigned phiID)
     : v_phi_(scrView.get_scratch_view_2D(phiID))
   {
   }
 
   KOKKOS_DEFAULTED_FUNCTION
-  ~ViewHelper() = default;
+  ~VectorViewHelper() = default;
 
   KOKKOS_INLINE_FUNCTION
   DoubleType operator()(int ni, int ic) const { return v_phi_(ni, ic); }

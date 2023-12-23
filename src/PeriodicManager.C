@@ -268,7 +268,7 @@ PeriodicManager::determine_translation(
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   // fields
-  VectorFieldType* coordinates = meta_data.get_field<VectorFieldType>(
+  VectorFieldType* coordinates = meta_data.get_field<double>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name());
   const int nDim = meta_data.spatial_dimension();
 
@@ -455,7 +455,7 @@ PeriodicManager::populate_search_key_vec(
   std::vector<sphereBoundingBox> sphereBoundingBoxSlaveVec;
 
   // fields
-  VectorFieldType* coordinates = meta_data.get_field<VectorFieldType>(
+  VectorFieldType* coordinates = meta_data.get_field<double>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name());
   const int nDim = meta_data.spatial_dimension();
 

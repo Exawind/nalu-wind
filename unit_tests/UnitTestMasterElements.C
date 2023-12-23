@@ -6,7 +6,6 @@
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/MeshBuilder.hpp>
 #include <stk_mesh/base/Bucket.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
@@ -36,7 +35,7 @@ TEST(pyramid, is_in_element)
   ASSERT_TRUE(std::isfinite(dist));
 }
 
-using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
+using VectorFieldType = stk::mesh::Field<double>;
 //-------------------------------------------------------------------------
 double
 linear_scalar_value(int dim, double a, const double* b, const double* x)
@@ -562,6 +561,7 @@ protected:
     meshBuilder.set_spatial_dimension(topo.dimension());
     bulk = meshBuilder.create();
     meta = &bulk->mesh_meta_data();
+    meta->use_simple_fields();
     elem = unit_test_utils::create_one_reference_element(*bulk, topo);
     meSS =
       sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);

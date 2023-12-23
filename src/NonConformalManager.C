@@ -119,7 +119,7 @@ NonConformalManager::initialize()
   // search) are up-to-date
   if (nonConformalGhosting_ != NULL) {
     VectorFieldType* coordinates =
-      realm_.bulk_data().mesh_meta_data().get_field<VectorFieldType>(
+      realm_.bulk_data().mesh_meta_data().get_field<double>(
         stk::topology::NODE_RANK, realm_.get_coordinates_name());
     std::vector<const stk::mesh::FieldBase*> fieldVec = {coordinates};
     stk::mesh::communicate_field_data(*nonConformalGhosting_, fieldVec);

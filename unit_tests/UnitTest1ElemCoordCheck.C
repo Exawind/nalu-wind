@@ -5,7 +5,6 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Bucket.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
@@ -25,8 +24,8 @@ count_locally_owned_elems(const stk::mesh::BulkData& bulk)
 void
 verify_elems_are_unit_cubes(const stk::mesh::BulkData& bulk)
 {
-  typedef stk::mesh::Field<double, stk::mesh::Cartesian> CoordFieldType;
-  CoordFieldType* coordField = bulk.mesh_meta_data().get_field<CoordFieldType>(
+  typedef stk::mesh::Field<double> CoordFieldType;
+  CoordFieldType* coordField = bulk.mesh_meta_data().get_field<double>(
     stk::topology::NODE_RANK, "coordinates");
   EXPECT_TRUE(coordField != nullptr);
 
@@ -66,6 +65,7 @@ TEST(Basic, CheckCoords1Elem)
   stk::mesh::MeshBuilder meshBuilder(comm);
   meshBuilder.set_spatial_dimension(spatialDimension);
   auto bulk = meshBuilder.create();
+  bulk->mesh_meta_data().use_simple_fields();
 
   unit_test_utils::fill_mesh_1_elem_per_proc_hex8(*bulk);
 
