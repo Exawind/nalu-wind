@@ -726,8 +726,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
   if (bulk_->parallel_size() > 1)
     return;
 
-  fill_mesh_and_init_fields();
-
   // Setup solution options
   solnOpts_.meshMotion_ = false;
   solnOpts_.externalMeshDeformation_ = false;
@@ -736,7 +734,12 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTNodeKernel>(
+    *meta_, *(helperObjs.realm.fieldManager_.get()), partVec_[0]);
+
+  // TDODO we can eliminate all the excess fields if we decide to do our field
+  // init after we add the kernels
+  fill_mesh_and_init_fields();
 
   helperObjs.execute();
 
@@ -775,7 +778,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_sust_node)
   realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_tkeAmb] = 5.0;
   realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_sdrAmb] = 50.0;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTNodeKernel>(
+    *meta_, *(realm.fieldManager_.get()), partVec_[0]);
 
   helperObjs.execute();
 

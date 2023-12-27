@@ -10,12 +10,14 @@
 #ifndef TKESSTNODEKERNEL_H
 #define TKESSTNODEKERNEL_H
 
+#include "LinearSystem.h"
 #include "node_kernels/NodeKernel.h"
 #include "FieldTypeDef.h"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
+#include <FieldManager.h>
 
 namespace sierra {
 namespace nalu {
@@ -25,7 +27,8 @@ class Realm;
 class TKESSTNodeKernel : public NGPNodeKernel<TKESSTNodeKernel>
 {
 public:
-  TKESSTNodeKernel(const stk::mesh::MetaData&);
+  TKESSTNodeKernel(
+    const stk::mesh::MetaData&, const FieldManager&, stk::mesh::Part* part);
 
   TKESSTNodeKernel() = delete;
 
@@ -47,13 +50,6 @@ private:
   stk::mesh::NgpField<double> tvisc_;
   stk::mesh::NgpField<double> dudx_;
   stk::mesh::NgpField<double> dualNodalVolume_;
-
-  unsigned tkeID_{stk::mesh::InvalidOrdinal};
-  unsigned sdrID_{stk::mesh::InvalidOrdinal};
-  unsigned densityID_{stk::mesh::InvalidOrdinal};
-  unsigned tviscID_{stk::mesh::InvalidOrdinal};
-  unsigned dudxID_{stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
