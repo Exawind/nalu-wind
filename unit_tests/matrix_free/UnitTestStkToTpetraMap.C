@@ -43,12 +43,12 @@ protected:
       bulk(*bulkPtr),
       meta(bulk.mesh_meta_data()),
       gid_field_h(
-        meta.declare_field<typename Tpetra::Map<>::global_ordinal_type>(
+        meta.declare_field<
+          stk::mesh::Field<typename Tpetra::Map<>::global_ordinal_type>>(
           stk::topology::NODE_RANK, "global_ids"))
   {
-    meta.use_simple_fields();
     active = meta.locally_owned_part() | meta.globally_shared_part();
-    stk::mesh::put_field_on_mesh(gid_field_h, active, nullptr);
+    stk::mesh::put_field_on_mesh(gid_field_h, active, 1, nullptr);
     stk::io::StkMeshIoBroker io(bulk.parallel());
     const auto num_procs = std::to_string(bulk.parallel_size());
     const auto name = "generated:1x1x" + num_procs;

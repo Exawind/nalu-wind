@@ -31,7 +31,7 @@ void
 SSTMaxLengthScaleDriver::pre_work()
 {
 
-  auto* maxLengthScale = realm_.meta_data().template get_field<double>(
+  auto* maxLengthScale = realm_.meta_data().template get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "sst_max_length_scale");
   stk::mesh::field_fill(0.0, *maxLengthScale);
 
@@ -52,7 +52,7 @@ SSTMaxLengthScaleDriver::post_work()
     nalu_ngp::get_ngp_field(meshInfo, "sst_max_length_scale");
 
   const auto& meta = realm_.meta_data();
-  auto* maxLengthScale = meta.template get_field<double>(
+  auto* maxLengthScale = meta.template get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "sst_max_length_scale");
 
   // Algorithms should have marked the fields as modified, but call this here to

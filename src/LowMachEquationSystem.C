@@ -188,11 +188,11 @@
 #include <stk_mesh/base/FieldBLAS.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
+#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/SkinMesh.hpp>
 #include <stk_mesh/base/Comm.hpp>
 #include "stk_mesh/base/NgpMesh.hpp"
-#include "stk_io/IossBridge.hpp"
 
 // stk_topo
 #include <stk_topology/topology.hpp>
@@ -302,13 +302,13 @@ LowMachEquationSystem::register_nodal_fields(
 
   // add properties; denisty needs to be a restart field
   const int numStates = realm_.number_of_states();
-  density_ = &(meta_data.declare_field<double>(
+  density_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density", numStates));
   stk::mesh::put_field_on_mesh(*density_, selector, nullptr);
   realm_.augment_restart_variable_list("density");
 
-  viscosity_ =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "viscosity"));
+  viscosity_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "viscosity"));
   stk::mesh::put_field_on_mesh(*viscosity_, selector, nullptr);
 
   // push to property list
@@ -318,7 +318,7 @@ LowMachEquationSystem::register_nodal_fields(
   // dual nodal volume (should push up...)
   const int numVolStates =
     realm_.does_mesh_move() ? realm_.number_of_states() : 1;
-  dualNodalVolume_ = &(meta_data.declare_field<double>(
+  dualNodalVolume_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates));
   stk::mesh::put_field_on_mesh(*dualNodalVolume_, selector, nullptr);
   if (numVolStates > 1)
@@ -367,26 +367,28 @@ LowMachEquationSystem::register_element_fields(
       sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         theTopo);
     const int numScsIp = meSCS->num_integration_points();
-    GenericFieldType* massFlowRate = &(meta_data.declare_field<double>(
-      stk::topology::ELEMENT_RANK, "mass_flow_rate_scs"));
+    GenericFieldType* massFlowRate =
+      &(meta_data.declare_field<GenericFieldType>(
+        stk::topology::ELEMENT_RANK, "mass_flow_rate_scs"));
     stk::mesh::put_field_on_mesh(*massFlowRate, selector, numScsIp, nullptr);
   }
   // register the intersected elemental field
   if (realm_.query_for_overset()) {
     const int sizeOfElemField = 1;
-    GenericFieldType* intersectedElement = &(meta_data.declare_field<double>(
-      stk::topology::ELEMENT_RANK, "intersected_element"));
+    GenericFieldType* intersectedElement =
+      &(meta_data.declare_field<GenericFieldType>(
+        stk::topology::ELEMENT_RANK, "intersected_element"));
     stk::mesh::put_field_on_mesh(
       *intersectedElement, selector, sizeOfElemField, nullptr);
   }
 
   // provide mean element Peclet and Courant fields; always...
-  GenericFieldType* elemReynolds = &(meta_data.declare_field<double>(
+  GenericFieldType* elemReynolds = &(meta_data.declare_field<GenericFieldType>(
     stk::topology::ELEMENT_RANK, "element_reynolds"));
-  stk::mesh::put_field_on_mesh(*elemReynolds, selector, nullptr);
-  GenericFieldType* elemCourant = &(meta_data.declare_field<double>(
+  stk::mesh::put_field_on_mesh(*elemReynolds, selector, 1, nullptr);
+  GenericFieldType* elemCourant = &(meta_data.declare_field<GenericFieldType>(
     stk::topology::ELEMENT_RANK, "element_courant"));
-  stk::mesh::put_field_on_mesh(*elemCourant, selector, nullptr);
+  stk::mesh::put_field_on_mesh(*elemCourant, selector, 1, nullptr);
 }
 
 //--------------------------------------------------------------------------
@@ -400,11 +402,9 @@ LowMachEquationSystem::register_edge_fields(
   if (realm_.realmUsesEdges_) {
     stk::mesh::MetaData& meta_data = realm_.meta_data();
     const int nDim = meta_data.spatial_dimension();
-    edgeAreaVec_ = &(meta_data.declare_field<double>(
+    edgeAreaVec_ = &(meta_data.declare_field<VectorFieldType>(
       stk::topology::EDGE_RANK, "edge_area_vector"));
     stk::mesh::put_field_on_mesh(*edgeAreaVec_, selector, nDim, nullptr);
-    stk::io::set_field_output_type(
-      *edgeAreaVec_, stk::io::FieldOutputType::VECTOR_3D);
   }
 }
 
@@ -423,11 +423,9 @@ LowMachEquationSystem::register_open_bc(
 
   const int nDim = metaData.spatial_dimension();
 
-  VectorFieldType* velocityBC = &(metaData.declare_field<double>(
+  VectorFieldType* velocityBC = &(metaData.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "open_velocity_bc"));
   stk::mesh::put_field_on_mesh(*velocityBC, *part, nDim, nullptr);
-  stk::io::set_field_output_type(
-    *velocityBC, stk::io::FieldOutputType::VECTOR_3D);
 
   // extract the value for user specified velocity and save off the AuxFunction
   OpenUserData userData = openBCData.userData_;
@@ -449,8 +447,8 @@ LowMachEquationSystem::register_open_bc(
 
   // extract the value for user specified pressure and save off the AuxFunction
   if (!realm_.solutionOptions_->activateOpenMdotCorrection_) {
-    ScalarFieldType* pressureBC = &(
-      metaData.declare_field<double>(stk::topology::NODE_RANK, "pressure_bc"));
+    ScalarFieldType* pressureBC = &(metaData.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "pressure_bc"));
     stk::mesh::put_field_on_mesh(*pressureBC, *part, nullptr);
 
     Pressure pSpec = userData.p_;
@@ -478,12 +476,12 @@ LowMachEquationSystem::register_open_bc(
     sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       theTopo);
   const int numScsBip = meFC->num_integration_points();
-  GenericFieldType* mdotBip = &(metaData.declare_field<double>(
+  GenericFieldType* mdotBip = &(metaData.declare_field<GenericFieldType>(
     static_cast<stk::topology::rank_t>(metaData.side_rank()),
     "open_mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*mdotBip, *part, numScsBip, nullptr);
 
-  auto& dynPress = metaData.declare_field<double>(
+  auto& dynPress = metaData.declare_field<GenericFieldType>(
     static_cast<stk::topology::rank_t>(metaData.side_rank()),
     "dynamic_pressure");
   std::vector<double> ic(numScsBip, 0);
@@ -501,33 +499,27 @@ LowMachEquationSystem::register_surface_pp_algorithm(
 
   // register nodal fields in common
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  VectorFieldType* pressureForce = &(meta_data.declare_field<double>(
+  VectorFieldType* pressureForce = &(meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "pressure_force"));
   stk::mesh::put_field_on_mesh(
     *pressureForce, stk::mesh::selectUnion(partVector),
     meta_data.spatial_dimension(), nullptr);
-  stk::io::set_field_output_type(
-    *pressureForce, stk::io::FieldOutputType::VECTOR_3D);
-  VectorFieldType* viscousForce = &(
-    meta_data.declare_field<double>(stk::topology::NODE_RANK, "viscous_force"));
+  VectorFieldType* viscousForce = &(meta_data.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "viscous_force"));
   stk::mesh::put_field_on_mesh(
     *viscousForce, stk::mesh::selectUnion(partVector),
     meta_data.spatial_dimension(), nullptr);
-  stk::io::set_field_output_type(
-    *viscousForce, stk::io::FieldOutputType::VECTOR_3D);
-  VectorFieldType* tauWallVector = &(meta_data.declare_field<double>(
+  VectorFieldType* tauWallVector = &(meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "tau_wall_vector"));
   stk::mesh::put_field_on_mesh(
     *tauWallVector, stk::mesh::selectUnion(partVector),
     meta_data.spatial_dimension(), nullptr);
-  stk::io::set_field_output_type(
-    *tauWallVector, stk::io::FieldOutputType::VECTOR_3D);
-  ScalarFieldType* tauWall =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "tau_wall"));
+  ScalarFieldType* tauWall = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "tau_wall"));
   stk::mesh::put_field_on_mesh(
     *tauWall, stk::mesh::selectUnion(partVector), nullptr);
-  ScalarFieldType* yplus =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "yplus"));
+  ScalarFieldType* yplus = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "yplus"));
   stk::mesh::put_field_on_mesh(
     *yplus, stk::mesh::selectUnion(partVector), nullptr);
 
@@ -545,7 +537,7 @@ LowMachEquationSystem::register_surface_pp_algorithm(
                 << std::endl;
     }
 
-    ScalarFieldType* assembledArea = &(meta_data.declare_field<double>(
+    ScalarFieldType* assembledArea = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "assembled_area_force_moment"));
     stk::mesh::put_field_on_mesh(
       *assembledArea, stk::mesh::selectUnion(partVector), nullptr);
@@ -563,7 +555,7 @@ LowMachEquationSystem::register_surface_pp_algorithm(
                 << std::endl;
     }
 
-    ScalarFieldType* assembledArea = &(meta_data.declare_field<double>(
+    ScalarFieldType* assembledArea = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "assembled_area_force_moment_wf"));
     stk::mesh::put_field_on_mesh(
       *assembledArea, stk::mesh::selectUnion(partVector), nullptr);
@@ -599,8 +591,8 @@ LowMachEquationSystem::register_initial_condition_fcn(
     std::string fcnName = (*iterName).second;
 
     // save off the field (np1 state)
-    VectorFieldType* velocityNp1 =
-      meta_data.get_field<double>(stk::topology::NODE_RANK, "velocity");
+    VectorFieldType* velocityNp1 = meta_data.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "velocity");
 
     // create a few Aux things
     AuxFunction* theAuxFunc = NULL;
@@ -1039,7 +1031,7 @@ MomentumEquationSystem::MomentumEquationSystem(EquationSystems& eqSystems)
     visc_(NULL),
     tvisc_(NULL),
     evisc_(NULL),
-    nodalGradAlgDriver_(realm_, "velocity", "dudx"),
+    nodalGradAlgDriver_(realm_, "dudx"),
     wallFuncAlgDriver_(realm_),
     dynPressAlgDriver_(realm_),
     cflReAlgDriver_(realm_),
@@ -1150,38 +1142,33 @@ MomentumEquationSystem::register_nodal_fields(
   const int numStates = realm_.number_of_states();
 
   // register dof; set it as a restart variable
-  velocity_ = &(meta_data.declare_field<double>(
+  velocity_ = &(meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "velocity", numStates));
   stk::mesh::put_field_on_mesh(*velocity_, selector, nDim, nullptr);
-  stk::io::set_field_output_type(
-    *velocity_, stk::io::FieldOutputType::VECTOR_3D);
   realm_.augment_restart_variable_list("velocity");
 
-  dudx_ = &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "dudx"));
+  dudx_ = &(
+    meta_data.declare_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx"));
   stk::mesh::put_field_on_mesh(*dudx_, selector, nDim * nDim, nullptr);
-  stk::io::set_field_output_type(
-    *dudx_, stk::io::FieldOutputType::FULL_TENSOR_36);
 
   // delta solution for linear solver
-  uTmp_ = &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "uTmp"));
+  uTmp_ = &(
+    meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "uTmp"));
   stk::mesh::put_field_on_mesh(*uTmp_, selector, nDim, nullptr);
-  stk::io::set_field_output_type(*uTmp_, stk::io::FieldOutputType::VECTOR_3D);
 
-  coordinates_ =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "coordinates"));
+  coordinates_ = &(meta_data.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "coordinates"));
   stk::mesh::put_field_on_mesh(*coordinates_, selector, nDim, nullptr);
-  stk::io::set_field_output_type(
-    *coordinates_, stk::io::FieldOutputType::VECTOR_3D);
 
-  visc_ =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "viscosity"));
+  visc_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "viscosity"));
   stk::mesh::put_field_on_mesh(*visc_, selector, nullptr);
 
   if (realm_.is_turbulent()) {
-    tvisc_ = &(meta_data.declare_field<double>(
+    tvisc_ = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "turbulent_viscosity"));
     stk::mesh::put_field_on_mesh(*tvisc_, selector, nullptr);
-    evisc_ = &(meta_data.declare_field<double>(
+    evisc_ = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "effective_viscosity_u"));
     stk::mesh::put_field_on_mesh(*evisc_, selector, nullptr);
 
@@ -1190,24 +1177,25 @@ MomentumEquationSystem::register_nodal_fields(
 
     if (
       realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_IDDES) {
-      iddesRansIndicator_ = &(meta_data.declare_field<double>(
+      iddesRansIndicator_ = &(meta_data.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "iddes_rans_indicator"));
       stk::mesh::put_field_on_mesh(*iddesRansIndicator_, selector, nullptr);
     }
   }
 
   if (realm_.realmUsesEdges_) {
-    ScalarFieldType* pecletAtNodes = &(realm_.meta_data().declare_field<double>(
-      stk::topology::NODE_RANK, "max_peclet_factor"));
+    ScalarFieldType* pecletAtNodes =
+      &(realm_.meta_data().declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "max_peclet_factor"));
     stk::mesh::put_field_on_mesh(*pecletAtNodes, selector, nullptr);
     ScalarFieldType* pecletNumAtNodes =
-      &(realm_.meta_data().declare_field<double>(
+      &(realm_.meta_data().declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "max_peclet_number"));
     stk::mesh::put_field_on_mesh(*pecletNumAtNodes, selector, nullptr);
   }
 
-  Udiag_ = &(
-    meta_data.declare_field<double>(stk::topology::NODE_RANK, "momentum_diag"));
+  Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "momentum_diag"));
   stk::mesh::put_field_on_mesh(*Udiag_, selector, nullptr);
   realm_.augment_restart_variable_list("momentum_diag");
 
@@ -1228,10 +1216,9 @@ MomentumEquationSystem::register_nodal_fields(
   // register specialty fields for PNG
   if (managePNG_) {
     // create temp vector field for duidx that will hold the active dudx
-    VectorFieldType* duidx =
-      &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "duidx"));
+    VectorFieldType* duidx = &(meta_data.declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "duidx"));
     stk::mesh::put_field_on_mesh(*duidx, selector, nDim, nullptr);
-    stk::io::set_field_output_type(*duidx, stk::io::FieldOutputType::VECTOR_3D);
   }
 
   // Add actuator and other source terms
@@ -1241,10 +1228,11 @@ MomentumEquationSystem::register_nodal_fields(
     realm_.aeroModels_->register_nodal_fields(meta_data, part_vec);
   }
 
-  ScalarFieldType& node_mask = realm_.meta_data().declare_field<double>(
-    stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_node_mask");
+  ScalarFieldType& node_mask =
+    realm_.meta_data().declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_node_mask");
   double one = 1;
-  stk::mesh::put_field_on_mesh(node_mask, selector, &one);
+  stk::mesh::put_field_on_mesh(node_mask, selector, 1, &one);
 }
 
 //--------------------------------------------------------------------------
@@ -1265,11 +1253,13 @@ MomentumEquationSystem::register_edge_fields(
   const stk::mesh::PartVector& part_vec)
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
-  ScalarFieldType* pecletFactor = &(realm_.meta_data().declare_field<double>(
-    stk::topology::EDGE_RANK, "peclet_factor"));
+  ScalarFieldType* pecletFactor =
+    &(realm_.meta_data().declare_field<ScalarFieldType>(
+      stk::topology::EDGE_RANK, "peclet_factor"));
   stk::mesh::put_field_on_mesh(*pecletFactor, selector, nullptr);
-  ScalarFieldType* pecletNumber = &(realm_.meta_data().declare_field<double>(
-    stk::topology::EDGE_RANK, "peclet_number"));
+  ScalarFieldType* pecletNumber =
+    &(realm_.meta_data().declare_field<ScalarFieldType>(
+      stk::topology::EDGE_RANK, "peclet_number"));
   stk::mesh::put_field_on_mesh(*pecletNumber, selector, nullptr);
   if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
     AMSAlgDriver_->register_edge_fields(part_vec);
@@ -1573,11 +1563,9 @@ MomentumEquationSystem::register_inflow_bc(
   const unsigned nDim = meta_data.spatial_dimension();
 
   // register boundary data; velocity_bc
-  VectorFieldType* theBcField =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "velocity_bc"));
+  VectorFieldType* theBcField = &(meta_data.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "velocity_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nDim, nullptr);
-  stk::io::set_field_output_type(
-    *theBcField, stk::io::FieldOutputType::VECTOR_3D);
 
   // extract the value for user specified velocity and save off the AuxFunction
   InflowUserData userData = inflowBCData.userData_;
@@ -1687,11 +1675,9 @@ MomentumEquationSystem::register_open_bc(
 
   const int nDim = meta_data.spatial_dimension();
 
-  VectorFieldType* theBcField = &(meta_data.declare_field<double>(
+  VectorFieldType* theBcField = &(meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "open_velocity_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nDim, nullptr);
-  stk::io::set_field_output_type(
-    *theBcField, stk::io::FieldOutputType::VECTOR_3D);
 
   // extract the value for user specified velocity and save off the AuxFunction
   OpenUserData userData = openBCData.userData_;
@@ -1789,11 +1775,9 @@ MomentumEquationSystem::register_wall_bc(
     anyWallFunctionActivated ? "wall_velocity_bc" : "velocity_bc";
 
   // register boundary data; velocity_bc
-  VectorFieldType* theBcField =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, bcFieldName));
+  VectorFieldType* theBcField = &(meta_data.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, bcFieldName));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nDim, nullptr);
-  stk::io::set_field_output_type(
-    *theBcField, stk::io::FieldOutputType::VECTOR_3D);
 
   // if mesh motion is enabled ...
   if (realm_.does_mesh_move()) {
@@ -1803,8 +1787,8 @@ MomentumEquationSystem::register_wall_bc(
       << std::endl;
 
     // get the mesh velocity field
-    VectorFieldType* meshVelocity =
-      meta_data.get_field<double>(stk::topology::NODE_RANK, "mesh_velocity");
+    VectorFieldType* meshVelocity = meta_data.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_velocity");
 
     // create algorithm to copy mesh velocity to wall velocity
     CopyFieldAlgorithm* wallVelCopyAlg = new CopyFieldAlgorithm(
@@ -1889,12 +1873,13 @@ MomentumEquationSystem::register_wall_bc(
   }
 
   if (anyWallFunctionActivated || RANSAblBcApproach_) {
-    ScalarFieldType* assembledWallArea = &(meta_data.declare_field<double>(
-      stk::topology::NODE_RANK, "assembled_wall_area_wf"));
+    ScalarFieldType* assembledWallArea =
+      &(meta_data.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "assembled_wall_area_wf"));
     stk::mesh::put_field_on_mesh(*assembledWallArea, *part, nullptr);
 
     ScalarFieldType* assembledWallNormalDistance =
-      &(meta_data.declare_field<double>(
+      &(meta_data.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "assembled_wall_normal_distance"));
     stk::mesh::put_field_on_mesh(*assembledWallNormalDistance, *part, nullptr);
 
@@ -1907,13 +1892,15 @@ MomentumEquationSystem::register_wall_bc(
     stk::topology::rank_t sideRank =
       static_cast<stk::topology::rank_t>(meta_data.side_rank());
 
-    GenericFieldType* wallFrictionVelocityBip = &(
-      meta_data.declare_field<double>(sideRank, "wall_friction_velocity_bip"));
+    GenericFieldType* wallFrictionVelocityBip =
+      &(meta_data.declare_field<GenericFieldType>(
+        sideRank, "wall_friction_velocity_bip"));
     stk::mesh::put_field_on_mesh(
       *wallFrictionVelocityBip, *part, numScsBip, nullptr);
 
     GenericFieldType* wallNormalDistanceBip =
-      &(meta_data.declare_field<double>(sideRank, "wall_normal_distance_bip"));
+      &(meta_data.declare_field<GenericFieldType>(
+        sideRank, "wall_normal_distance_bip"));
     stk::mesh::put_field_on_mesh(
       *wallNormalDistanceBip, *part, numScsBip, nullptr);
 
@@ -1929,7 +1916,8 @@ MomentumEquationSystem::register_wall_bc(
     // Wall models.
     if (anyWallFunctionActivated) {
       GenericFieldType* wallShearStressBip =
-        &(meta_data.declare_field<double>(sideRank, "wall_shear_stress_bip"));
+        &(meta_data.declare_field<GenericFieldType>(
+          sideRank, "wall_shear_stress_bip"));
       stk::mesh::put_field_on_mesh(
         *wallShearStressBip, *part, nDim * numScsBip, nullptr);
 
@@ -1940,8 +1928,9 @@ MomentumEquationSystem::register_wall_bc(
       userSpec[0] = heatFlux.qn_;
       ConstantAuxFunction* theHeatFluxAuxFunc =
         new ConstantAuxFunction(0, 1, userSpec);
-      ScalarFieldType* theHeatFluxBcField = &(meta_data.declare_field<double>(
-        stk::topology::NODE_RANK, "heat_flux_bc"));
+      ScalarFieldType* theHeatFluxBcField =
+        &(meta_data.declare_field<ScalarFieldType>(
+          stk::topology::NODE_RANK, "heat_flux_bc"));
       stk::mesh::put_field_on_mesh(*theHeatFluxBcField, *part, nullptr);
       bcDataAlg_.push_back(new AuxFunctionAlgorithm(
         realm_, part, theHeatFluxBcField, theHeatFluxAuxFunc,
@@ -1955,7 +1944,8 @@ MomentumEquationSystem::register_wall_bc(
         // register boundary data: wall_heat_flux_bip.  This is the ABL
         // integration-point-based heat flux field.
         GenericFieldType* wallHeatFluxBip =
-          &(meta_data.declare_field<double>(sideRank, "wall_heat_flux_bip"));
+          &(meta_data.declare_field<GenericFieldType>(
+            sideRank, "wall_heat_flux_bip"));
         stk::mesh::put_field_on_mesh(
           *wallHeatFluxBip, *part, numScsBip, nullptr);
 
@@ -2137,8 +2127,10 @@ MomentumEquationSystem::register_symmetry_bc(
         build_face_elem_topo_kernel_automatic<MomentumSymmetryEdgeKernel>(
           partTopo, elemTopo, *this, activeKernels, "momentum_symmetry_edge",
           metaData, *realm_.solutionOptions_,
-          metaData.get_field<double>(stk::topology::NODE_RANK, "velocity"),
-          metaData.get_field<double>(stk::topology::NODE_RANK, viscName),
+          metaData.get_field<VectorFieldType>(
+            stk::topology::NODE_RANK, "velocity"),
+          metaData.get_field<ScalarFieldType>(
+            stk::topology::NODE_RANK, viscName),
           faceElemSolverAlg->faceDataNeeded_,
           faceElemSolverAlg->elemDataNeeded_);
       }
@@ -2189,11 +2181,9 @@ MomentumEquationSystem::register_symmetry_bc(
 
   // register boundary data; velocity_bc
   const std::string bcFieldName = "strong_sym_velocity";
-  VectorFieldType* theBcField =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, bcFieldName));
+  VectorFieldType* theBcField = &(meta_data.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, bcFieldName));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nDim, nullptr);
-  stk::io::set_field_output_type(
-    *theBcField, stk::io::FieldOutputType::VECTOR_3D);
 
   std::vector<double> userSpec(nDim, 0.0);
   AuxFunction* theAuxFunc = NULL;
@@ -2265,11 +2255,9 @@ MomentumEquationSystem::register_abltop_bc(
     std::string bcFieldName =
       realm_.solutionOptions_->activateOpenMdotCorrection_ ? "velocity_bc"
                                                            : "cont_velocity_bc";
-    VectorFieldType* theBcField =
-      &(meta_data.declare_field<double>(stk::topology::NODE_RANK, bcFieldName));
+    VectorFieldType* theBcField = &(meta_data.declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, bcFieldName));
     stk::mesh::put_field_on_mesh(*theBcField, *part, 3, nullptr);
-    stk::io::set_field_output_type(
-      *theBcField, stk::io::FieldOutputType::VECTOR_3D);
 
     auto it = solverAlgDriver_->solverDirichAlgMap_.find(algType);
     if (it == solverAlgDriver_->solverDirichAlgMap_.end()) {
@@ -2303,8 +2291,10 @@ MomentumEquationSystem::register_abltop_bc(
     //   build_face_elem_topo_kernel_automatic<MomentumSymmetryElemKernel>(
     //       partTopo, elemTopo, *this, activeKernels, "momentum_symmetry",
     //       metaData, *realm_.solutionOptions_,
-    //       metaData.get_field<double>(stk::topology::NODE_RANK, "velocity"),
-    //       metaData.get_field<double>(stk::topology::NODE_RANK, viscName),
+    //       metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK,
+    //                                           "velocity"),
+    //       metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK,
+    //                                           viscName),
     //       faceElemSolverAlg->faceDataNeeded_,
     //       faceElemSolverAlg->elemDataNeeded_);
     // }
@@ -2342,7 +2332,7 @@ MomentumEquationSystem::register_non_conformal_bc(
   stk::topology::rank_t sideRank =
     static_cast<stk::topology::rank_t>(meta_data.side_rank());
   GenericFieldType* mdotBip =
-    &(meta_data.declare_field<double>(sideRank, "nc_mass_flow_rate"));
+    &(meta_data.declare_field<GenericFieldType>(sideRank, "nc_mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*mdotBip, *part, numScsBip, nullptr);
 
   // non-solver; contribution to Gjui; DG algorithm decides on locations for
@@ -2511,10 +2501,10 @@ MomentumEquationSystem::compute_projected_nodal_gradient()
     // pTmp
 
     // extract fields
-    ScalarFieldType* pTmp =
-      realm_.meta_data().get_field<double>(stk::topology::NODE_RANK, "pTmp");
-    VectorFieldType* duidx =
-      realm_.meta_data().get_field<double>(stk::topology::NODE_RANK, "duidx");
+    ScalarFieldType* pTmp = realm_.meta_data().get_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "pTmp");
+    VectorFieldType* duidx = realm_.meta_data().get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "duidx");
 
     const int nDim = realm_.meta_data().spatial_dimension();
 
@@ -2603,7 +2593,7 @@ MomentumEquationSystem::save_diagonal_term(
       *stk::mesh::field_data(*realm_.naluGlobalId_, entities[in]);
     const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, naluID);
     int ix = in * nDim * (offset + 1);
-    double* diagVal = stk::mesh::field_data(*Udiag_, mnode);
+    double* diagVal = (double*)stk::mesh::field_data(*Udiag_, mnode);
     diagVal[0] += lhs[ix];
   }
 }
@@ -2624,7 +2614,7 @@ MomentumEquationSystem::save_diagonal_term(
       *stk::mesh::field_data(*realm_.naluGlobalId_, entities[in]);
     const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, naluID);
     int ix = in * nDim;
-    double* diagVal = stk::mesh::field_data(*Udiag_, mnode);
+    double* diagVal = (double*)stk::mesh::field_data(*Udiag_, mnode);
     if (forceAtomic)
       Kokkos::atomic_add(diagVal, lhs(ix, ix));
     else
@@ -2649,7 +2639,7 @@ MomentumEquationSystem::save_diagonal_term(
       *stk::mesh::field_data(*realm_.naluGlobalId_, entities[in]);
     const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, naluID);
     int ix = in * nDim;
-    double* diagVal = stk::mesh::field_data(*Udiag_, mnode);
+    double* diagVal = (double*)stk::mesh::field_data(*Udiag_, mnode);
     if (forceAtomic)
       Kokkos::atomic_add(diagVal, lhs(ix, ix));
     else
@@ -2693,10 +2683,10 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
   EquationSystem::assemble_and_solve(deltaSolution);
 
   // Post-process the Udiag term
-  ScalarFieldType* dualVol =
-    meta.get_field<double>(stk::topology::NODE_RANK, "dual_nodal_volume");
+  ScalarFieldType* dualVol = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
   ScalarFieldType* density =
-    meta.get_field<double>(stk::topology::NODE_RANK, "density");
+    meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
 
   if (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV) {
     const std::string dofName = "velocity";
@@ -2789,7 +2779,7 @@ ContinuityEquationSystem::ContinuityEquationSystem(
     massFlowRate_(NULL),
     coordinates_(NULL),
     pTmp_(NULL),
-    nodalGradAlgDriver_(realm_, "pressure", "dpdx"),
+    nodalGradAlgDriver_(realm_, "dpdx"),
     mdotAlgDriver_(new MdotAlgDriver(realm_, elementContinuityEqs)),
     projectedNodalGradEqs_(NULL)
 {
@@ -2848,24 +2838,23 @@ ContinuityEquationSystem::register_nodal_fields(
 
   // register dof; set it as a restart variable
   const int numStates = 2;
-  pressure_ = &(meta_data.declare_field<double>(
+  pressure_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "pressure", numStates));
   stk::mesh::put_field_on_mesh(*pressure_, selector, nullptr);
   realm_.augment_restart_variable_list("pressure");
 
-  dpdx_ = &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "dpdx"));
+  dpdx_ = &(
+    meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dpdx"));
   stk::mesh::put_field_on_mesh(*dpdx_, selector, nDim, nullptr);
-  stk::io::set_field_output_type(*dpdx_, stk::io::FieldOutputType::VECTOR_3D);
 
   // delta solution for linear solver; share delta with other split systems
-  pTmp_ = &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "pTmp"));
+  pTmp_ = &(
+    meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pTmp"));
   stk::mesh::put_field_on_mesh(*pTmp_, selector, nullptr);
 
-  coordinates_ =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "coordinates"));
+  coordinates_ = &(meta_data.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "coordinates"));
   stk::mesh::put_field_on_mesh(*coordinates_, selector, nDim, nullptr);
-  stk::io::set_field_output_type(
-    *coordinates_, stk::io::FieldOutputType::VECTOR_3D);
 }
 
 //--------------------------------------------------------------------------
@@ -2888,7 +2877,7 @@ ContinuityEquationSystem::register_edge_fields(
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  massFlowRate_ = &(meta_data.declare_field<double>(
+  massFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::EDGE_RANK, "mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*massFlowRate_, selector, nullptr);
 }
@@ -3038,11 +3027,9 @@ ContinuityEquationSystem::register_inflow_bc(
 
   // register boundary data; cont_velocity_bc
   if (!realm_.solutionOptions_->activateOpenMdotCorrection_) {
-    VectorFieldType* theBcField = &(meta_data.declare_field<double>(
+    VectorFieldType* theBcField = &(meta_data.declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "cont_velocity_bc"));
     stk::mesh::put_field_on_mesh(*theBcField, *part, nDim, nullptr);
-    stk::io::set_field_output_type(
-      *theBcField, stk::io::FieldOutputType::VECTOR_3D);
 
     // extract the value for user specified velocity and save off the
     // AuxFunction
@@ -3169,8 +3156,8 @@ ContinuityEquationSystem::register_open_bc(
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   ScalarFieldType* pressureBC = NULL;
   if (!realm_.solutionOptions_->activateOpenMdotCorrection_) {
-    pressureBC = &(
-      meta_data.declare_field<double>(stk::topology::NODE_RANK, "pressure_bc"));
+    pressureBC = &(meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "pressure_bc"));
     stk::mesh::put_field_on_mesh(*pressureBC, *part, nullptr);
   }
 
@@ -3353,7 +3340,7 @@ ContinuityEquationSystem::register_non_conformal_bc(
   stk::topology::rank_t sideRank =
     static_cast<stk::topology::rank_t>(meta_data.side_rank());
   GenericFieldType* mdotBip =
-    &(meta_data.declare_field<double>(sideRank, "nc_mass_flow_rate"));
+    &(meta_data.declare_field<GenericFieldType>(sideRank, "nc_mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*mdotBip, *part, numScsBip, nullptr);
 
   // non-solver; contribution to Gjp; DG algorithm decides on locations for

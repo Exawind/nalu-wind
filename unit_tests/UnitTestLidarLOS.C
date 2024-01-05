@@ -94,7 +94,6 @@ public:
       bulk(*bulkptr),
       meta(bulk.mesh_meta_data())
   {
-    meta.use_simple_fields();
     stk::io::StkMeshIoBroker io(bulk.parallel());
     io.set_bulk_data(bulk);
 
@@ -107,12 +106,11 @@ public:
     io.add_mesh_database(mesh_name, stk::io::READ_MESH);
     io.create_input_mesh();
 
-    using vector_field_type = stk::mesh::Field<double>;
+    using vector_field_type = stk::mesh::Field<double, stk::mesh::Cartesian3d>;
     auto node_rank = stk::topology::NODE_RANK;
-    auto& vel_field = meta.declare_field<double>(node_rank, "velocity", 2);
-    stk::mesh::put_field_on_entire_mesh(vel_field, meta.spatial_dimension());
-    stk::io::set_field_output_type(
-      vel_field, stk::io::FieldOutputType::VECTOR_3D);
+    auto& vel_field =
+      meta.declare_field<vector_field_type>(node_rank, "velocity", 2);
+    stk::mesh::put_field_on_entire_mesh(vel_field);
     io.populate_bulk_data();
     stk::mesh::field_fill(1., vel_field.field_of_state(stk::mesh::StateNP1));
     stk::mesh::field_fill(1., vel_field.field_of_state(stk::mesh::StateN));

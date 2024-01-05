@@ -46,7 +46,6 @@
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldUtils.h"
-#include "stk_io/IossBridge.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -66,7 +65,7 @@ VolumeOfFluidEquationSystem::VolumeOfFluidEquationSystem(
     volumeOfFluid_(NULL),
     dvolumeOfFluiddx_(NULL),
     vofTmp_(NULL),
-    nodalGradAlgDriver_(realm_, "volume_of_fluid", "dvolume_of_fluiddx"),
+    nodalGradAlgDriver_(realm_, "dvolume_of_fluiddx"),
     projectedNodalGradEqs_(NULL),
     isInit_(false)
 {
@@ -118,7 +117,7 @@ VolumeOfFluidEquationSystem::register_nodal_fields(
   // register dof; set it as a restart variable
   const int numStates = realm_.number_of_states();
 
-  auto density_ = &(meta_data.declare_field<double>(
+  auto density_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density", numStates));
   stk::mesh::put_field_on_mesh(*density_, selector, nullptr);
   realm_.augment_restart_variable_list("density");
@@ -126,16 +125,14 @@ VolumeOfFluidEquationSystem::register_nodal_fields(
   // push to property list
   realm_.augment_property_map(DENSITY_ID, density_);
 
-  volumeOfFluid_ = &(meta_data.declare_field<double>(
+  volumeOfFluid_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "volume_of_fluid", numStates));
   stk::mesh::put_field_on_mesh(*volumeOfFluid_, selector, nullptr);
   realm_.augment_restart_variable_list("volume_of_fluid");
 
-  dvolumeOfFluiddx_ = &(meta_data.declare_field<double>(
+  dvolumeOfFluiddx_ = &(meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "dvolume_of_fluiddx"));
   stk::mesh::put_field_on_mesh(*dvolumeOfFluiddx_, selector, nDim, nullptr);
-  stk::io::set_field_output_type(
-    *dvolumeOfFluiddx_, stk::io::FieldOutputType::VECTOR_3D);
 
   // delta solution for linear solver; share delta since this is a split system
   vofTmp_ =
@@ -175,7 +172,7 @@ VolumeOfFluidEquationSystem::register_edge_fields(
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  auto massFlowRate_ = &(meta_data.declare_field<double>(
+  auto massFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::EDGE_RANK, "mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*massFlowRate_, selector, nullptr);
 }
@@ -271,8 +268,8 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   // register boundary data; gamma_bc
-  ScalarFieldType* theBcField =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "vof_bc"));
+  ScalarFieldType* theBcField = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "vof_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specified tke and save off the AuxFunction
@@ -487,8 +484,9 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
                                  TurbulenceModel::SST_AMS)
                                   ? true
                                   : false;
-        ScalarFieldType* density_ = realm_.meta_data().get_field<double>(
-          stk::topology::NODE_RANK, "density");
+        ScalarFieldType* density_ =
+          realm_.meta_data().get_field<ScalarFieldType>(
+            stk::topology::NODE_RANK, "density");
         std::vector<double> userSpec(1);
         userSpec[0] = 1.0;
         AuxFunction* constantAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
@@ -507,8 +505,9 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
                                  TurbulenceModel::SST_AMS)
                                   ? true
                                   : false;
-        ScalarFieldType* density_ = realm_.meta_data().get_field<double>(
-          stk::topology::NODE_RANK, "density");
+        ScalarFieldType* density_ =
+          realm_.meta_data().get_field<ScalarFieldType>(
+            stk::topology::NODE_RANK, "density");
         std::vector<double> userSpec(1);
         userSpec[0] = 1.0;
         AuxFunction* constantAuxFunc = new ConstantAuxFunction(0, 1, userSpec);

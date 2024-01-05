@@ -111,10 +111,10 @@ ActuatorBulk::zero_source_terms(stk::mesh::BulkData& stkBulk)
 
   const stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
 
-  VectorFieldType* actuatorSource =
-    stkMeta.get_field<double>(stk::topology::NODE_RANK, "actuator_source");
-  ScalarFieldType* actuatorSourceLhs =
-    stkMeta.get_field<double>(stk::topology::NODE_RANK, "actuator_source_lhs");
+  VectorFieldType* actuatorSource = stkMeta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "actuator_source");
+  ScalarFieldType* actuatorSourceLhs = stkMeta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "actuator_source_lhs");
 
   const double zero[3] = {0.0, 0.0, 0.0};
 
@@ -127,8 +127,8 @@ ActuatorBulk::parallel_sum_source_term(stk::mesh::BulkData& stkBulk)
 {
 
   const stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
-  VectorFieldType* actuatorSource =
-    stkMeta.get_field<double>(stk::topology::NODE_RANK, "actuator_source");
+  VectorFieldType* actuatorSource = stkMeta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "actuator_source");
 
   stk::mesh::parallel_sum(stkBulk, {actuatorSource});
   actuatorSource->modify_on_host();

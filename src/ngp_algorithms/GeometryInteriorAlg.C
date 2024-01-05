@@ -11,6 +11,7 @@
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementRepo.h"
+#include "ngp_algorithms/ViewHelper.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
 #include "ngp_utils/NgpFieldManager.h"

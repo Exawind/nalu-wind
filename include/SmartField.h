@@ -401,10 +401,9 @@ struct MakeSmartField<LEGACY, ACCESS>
 {
   // use pointer since that is the common access type for stk::mesh::Field<T>
   template <typename T>
-  SmartField<stk::mesh::Field<T>, LEGACY, ACCESS>
-  operator()(stk::mesh::Field<T>* field)
+  SmartField<T, LEGACY, ACCESS> operator()(T* field)
   {
-    return SmartField<stk::mesh::Field<T>, LEGACY, ACCESS>(*field);
+    return SmartField<T, LEGACY, ACCESS>(*field);
   }
 };
 

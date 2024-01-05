@@ -37,7 +37,6 @@ public:
     meshBuilder.set_spatial_dimension(BcAlgTraits::nDim_);
     bulk_ = meshBuilder.create();
     meta_ = &bulk_->mesh_meta_data();
-    meta_->use_simple_fields();
     if (doInit)
       fill_mesh_and_init_data(doPerturb);
   }
@@ -62,8 +61,8 @@ public:
         *bulk_, BcAlgTraits::elemTopo_);
 
     partVec_ = {meta_->get_part("surface_" + std::to_string(faceOrdinal_))};
-    coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
-      meta_->coordinate_field());
+    coordinates_ =
+      static_cast<const VectorFieldType*>(meta_->coordinate_field());
 
     EXPECT_TRUE(coordinates_ != nullptr);
 
@@ -125,7 +124,7 @@ public:
   std::shared_ptr<stk::mesh::BulkData> bulk_;
   int faceOrdinal_;
   stk::mesh::PartVector partVec_;
-  const sierra::nalu::VectorFieldType* coordinates_{nullptr};
+  const VectorFieldType* coordinates_{nullptr};
 
   std::unique_ptr<FaceElemHelperObjects> helperObjs_;
 

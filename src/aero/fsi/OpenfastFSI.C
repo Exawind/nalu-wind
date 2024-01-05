@@ -242,10 +242,10 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
 
     auto& meta = bulk_->mesh_meta_data();
 
-    const VectorFieldType* meshDisp =
-      meta.get_field<double>(stk::topology::NODE_RANK, "mesh_displacement");
-    const VectorFieldType* meshVel =
-      meta.get_field<double>(stk::topology::NODE_RANK, "mesh_velocity");
+    const VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_displacement");
+    const VectorFieldType* meshVel = meta.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_velocity");
 
     const VectorFieldType* meshDispNp1 =
       &(meshDisp->field_of_state(stk::mesh::StateNP1));
@@ -607,11 +607,11 @@ OpenfastFSI::map_displacements(double current_time, bool updateCurCoor)
   if (updateCurCoor) {
     auto& meta = bulk_->mesh_meta_data();
     const VectorFieldType* modelCoords =
-      meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
-    VectorFieldType* curCoords =
-      meta.get_field<double>(stk::topology::NODE_RANK, "current_coordinates");
-    VectorFieldType* displacement =
-      meta.get_field<double>(stk::topology::NODE_RANK, "mesh_displacement");
+      meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+    VectorFieldType* curCoords = meta.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "current_coordinates");
+    VectorFieldType* displacement = meta.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_displacement");
 
     modelCoords->sync_to_host();
     curCoords->sync_to_host();

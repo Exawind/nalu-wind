@@ -9,6 +9,7 @@
 #include <stk_mesh/base/Bucket.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/MeshBuilder.hpp>
+#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
@@ -52,7 +53,7 @@ calculate_mij_tensor(
   return mij_tensor;
 }
 
-using VectorFieldType = stk::mesh::Field<double>;
+using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
 
 void
 test_metric_for_topo_2D(stk::topology topo, double tol)
@@ -64,7 +65,6 @@ test_metric_for_topo_2D(stk::topology topo, double tol)
   meshBuilder.set_spatial_dimension(dim);
   auto bulk = meshBuilder.create();
   auto& meta = bulk->mesh_meta_data();
-  meta.use_simple_fields();
 
   stk::mesh::Entity elem =
     unit_test_utils::create_one_reference_element(*bulk, topo);
@@ -132,7 +132,6 @@ test_metric_for_topo_3D(stk::topology topo, double tol)
   meshBuilder.set_spatial_dimension(dim);
   auto bulk = meshBuilder.create();
   auto& meta = bulk->mesh_meta_data();
-  meta.use_simple_fields();
 
   stk::mesh::Entity elem =
     unit_test_utils::create_one_reference_element(*bulk, topo);

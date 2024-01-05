@@ -17,8 +17,8 @@ MotionWavesKernel::MotionWavesKernel(
 
   // declare divergence of mesh velocity for this motion
   isDeforming_ = true;
-  ScalarFieldType* divV = &(
-    meta.declare_field<double>(stk::topology::NODE_RANK, "div_mesh_velocity"));
+  ScalarFieldType* divV = &(meta.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "div_mesh_velocity"));
   stk::mesh::put_field_on_mesh(*divV, meta.universal_part(), nullptr);
 }
 

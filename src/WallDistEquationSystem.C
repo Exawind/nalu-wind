@@ -59,7 +59,6 @@
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldParallel.hpp"
 #include "stk_topology/topology.hpp"
-#include "stk_io/IossBridge.hpp"
 
 #include <cmath>
 
@@ -68,7 +67,7 @@ namespace nalu {
 
 WallDistEquationSystem::WallDistEquationSystem(EquationSystems& eqSystems)
   : EquationSystem(eqSystems, "WallDistEQS", "ndtw"),
-    nodalGradAlgDriver_(realm_, "ndtw", "dwalldistdx"),
+    nodalGradAlgDriver_(realm_, "dwalldistdx"),
     managePNG_(realm_.get_consistent_mass_matrix_png("ndtw"))
 {
   if (managePNG_)
@@ -120,28 +119,25 @@ WallDistEquationSystem::register_nodal_fields(
   const int nDim = meta.spatial_dimension();
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
-  wallDistPhi_ = &(
-    meta.declare_field<double>(stk::topology::NODE_RANK, "wall_distance_phi"));
+  wallDistPhi_ = &(meta.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "wall_distance_phi"));
   stk::mesh::put_field_on_mesh(*wallDistPhi_, selector, nullptr);
 
-  dphidx_ =
-    &(meta.declare_field<double>(stk::topology::NODE_RANK, "dwalldistdx"));
+  dphidx_ = &(meta.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "dwalldistdx"));
   stk::mesh::put_field_on_mesh(*dphidx_, selector, nDim, nullptr);
-  stk::io::set_field_output_type(*dphidx_, stk::io::FieldOutputType::VECTOR_3D);
 
-  wallDistance_ = &(meta.declare_field<double>(
+  wallDistance_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "minimum_distance_to_wall"));
   stk::mesh::put_field_on_mesh(*wallDistance_, selector, nullptr);
 
-  coordinates_ = &(meta.declare_field<double>(
+  coordinates_ = &(meta.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name()));
   stk::mesh::put_field_on_mesh(*coordinates_, selector, nDim, nullptr);
-  stk::io::set_field_output_type(
-    *coordinates_, stk::io::FieldOutputType::VECTOR_3D);
 
   const int numVolStates =
     realm_.does_mesh_move() ? realm_.number_of_states() : 1;
-  dualNodalVolume_ = &(meta.declare_field<double>(
+  dualNodalVolume_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates));
   stk::mesh::put_field_on_mesh(*dualNodalVolume_, selector, nullptr);
 }
@@ -155,11 +151,9 @@ WallDistEquationSystem::register_edge_fields(
 
   if (realm_.realmUsesEdges_) {
     const int nDim = meta.spatial_dimension();
-    edgeAreaVec_ = &(
-      meta.declare_field<double>(stk::topology::EDGE_RANK, "edge_area_vector"));
+    edgeAreaVec_ = &(meta.declare_field<VectorFieldType>(
+      stk::topology::EDGE_RANK, "edge_area_vector"));
     stk::mesh::put_field_on_mesh(*edgeAreaVec_, selector, nDim, nullptr);
-    stk::io::set_field_output_type(
-      *edgeAreaVec_, stk::io::FieldOutputType::VECTOR_3D);
   }
 }
 
@@ -170,9 +164,9 @@ WallDistEquationSystem::register_element_fields(
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   if (realm_.query_for_overset()) {
     auto& meta = realm_.meta_data();
-    GenericFieldType& intersectedElement = meta.declare_field<double>(
+    GenericFieldType& intersectedElement = meta.declare_field<GenericFieldType>(
       stk::topology::ELEMENT_RANK, "intersected_element");
-    stk::mesh::put_field_on_mesh(intersectedElement, selector, nullptr);
+    stk::mesh::put_field_on_mesh(intersectedElement, selector, 1, nullptr);
   }
 }
 
@@ -278,7 +272,7 @@ WallDistEquationSystem::register_wall_bc(
     algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
 
   auto& meta = realm_.meta_data();
-  ScalarFieldType& theBCField = meta.declare_field<double>(
+  ScalarFieldType& theBCField = meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "wall_distance_phi_bc");
   stk::mesh::put_field_on_mesh(theBCField, *part, nullptr);
   std::vector<double> userSpec(1, 0.0);

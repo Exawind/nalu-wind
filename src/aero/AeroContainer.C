@@ -13,7 +13,6 @@
 #include "aero/fsi/OpenfastFSI.h"
 #endif
 #include <FieldTypeDef.h>
-#include <stk_io/IossBridge.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -68,16 +67,12 @@ AeroContainer::register_nodal_fields(
   if (has_actuators()) {
     stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
     const int nDim = meta.spatial_dimension();
-    VectorFieldType* actuatorSource = &(
-      meta.declare_field<double>(stk::topology::NODE_RANK, "actuator_source"));
-    VectorFieldType* actuatorSourceLHS = &(meta.declare_field<double>(
+    VectorFieldType* actuatorSource = &(meta.declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "actuator_source"));
+    VectorFieldType* actuatorSourceLHS = &(meta.declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "actuator_source_lhs"));
     stk::mesh::put_field_on_mesh(*actuatorSource, selector, nDim, nullptr);
     stk::mesh::put_field_on_mesh(*actuatorSourceLHS, selector, nDim, nullptr);
-    stk::io::set_field_output_type(
-      *actuatorSource, stk::io::FieldOutputType::VECTOR_3D);
-    stk::io::set_field_output_type(
-      *actuatorSourceLHS, stk::io::FieldOutputType::VECTOR_3D);
   }
 }
 

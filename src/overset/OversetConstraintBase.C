@@ -26,7 +26,7 @@ OversetConstraintBase::OversetConstraintBase(
   stk::mesh::FieldBase* fieldQ)
   : SolverAlgorithm(realm, part, eqSystem),
     fieldQ_(fieldQ),
-    dualNodalVolume_(realm.meta_data().get_field<double>(
+    dualNodalVolume_(realm.meta_data().get_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "dual_nodal_volume"))
 {
 }
