@@ -215,33 +215,5 @@ compute_precise_ghosting_lists(
     bulk, sendGhostsToRemove, recvGhostsToRemove);
 }
 
-unsigned
-max_extent(const stk::mesh::FieldBase& field, unsigned dimension)
-{
-  if (dimension == 0) {
-    stk::mesh::FieldRestriction::size_type max = 0;
-    for (const stk::mesh::FieldRestriction& res : field.restrictions()) {
-      max = std::max(max, res.dimension());
-    }
-    return max;
-  } else if (dimension == 1) {
-    stk::mesh::FieldRestriction::size_type max = 0;
-    for (const stk::mesh::FieldRestriction& res : field.restrictions()) {
-      if (res.dimension() != 0) {
-        max = std::max(max, res.num_scalars_per_entity() / res.dimension());
-      }
-    }
-    return max;
-
-  } else {
-    for (const stk::mesh::FieldRestriction& res : field.restrictions()) {
-      if (res.num_scalars_per_entity() > 0) {
-        return 1;
-      }
-    }
-    return 0;
-  }
-}
-
 } // namespace nalu
 } // namespace sierra

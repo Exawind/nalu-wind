@@ -4,6 +4,7 @@
 
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
+#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
 #include <stk_mesh/base/NgpMesh.hpp>
@@ -48,11 +49,14 @@ public:
       elemVectorField(nullptr),
       elemTensorField(nullptr)
   {
-    nodalScalarField = fldMgr.register_field<double>("nodalScalarField", parts);
+    nodalScalarField =
+      fldMgr.register_field<ScalarFieldType>("nodalScalarField", parts);
     nodalVectorField =
       fldMgr.register_generic_field("nodalGenericField", parts, 0, 4);
-    nodalTensorField = fldMgr.register_field<double>("nodalTensorField", parts);
-    elemScalarField = fldMgr.register_field<double>("elemScalarField", parts);
+    nodalTensorField =
+      fldMgr.register_field<TensorFieldType>("nodalTensorField", parts);
+    elemScalarField =
+      fldMgr.register_field<ScalarFieldType>("elemScalarField", parts);
     elemVectorField =
       fldMgr.register_generic_field("elemVectorField", parts, 0, 8);
     elemTensorField =
@@ -102,12 +106,12 @@ public:
   }
 
 private:
-  const sierra::nalu::ScalarFieldType* nodalScalarField;
-  const sierra::nalu::GenericFieldType* nodalVectorField;
-  const sierra::nalu::TensorFieldType* nodalTensorField;
-  const sierra::nalu::ScalarFieldType* elemScalarField;
-  const sierra::nalu::GenericFieldType* elemVectorField;
-  const sierra::nalu::GenericFieldType* elemTensorField;
+  const ScalarFieldType* nodalScalarField;
+  const GenericFieldType* nodalVectorField;
+  const TensorFieldType* nodalTensorField;
+  const ScalarFieldType* elemScalarField;
+  const GenericFieldType* elemVectorField;
+  const GenericFieldType* elemTensorField;
 };
 
 //=========== Test class that mimics an alg with supplemental algs ========
@@ -202,14 +206,14 @@ TEST_F(Hex8Mesh, supp_alg_data_sharing)
 
 TEST_F(Hex8Mesh, inconsistent_field_requests)
 {
-  sierra::nalu::ScalarFieldType& nodalScalarField =
-    meta->declare_field<double>(stk::topology::NODE_RANK, "nodalScalarField");
-  sierra::nalu::TensorFieldType& nodalTensorField =
-    meta->declare_field<double>(stk::topology::NODE_RANK, "nodalTensorField");
-  sierra::nalu::ScalarFieldType& elemScalarField =
-    meta->declare_field<double>(stk::topology::ELEM_RANK, "elemScalarField");
-  sierra::nalu::TensorFieldType& elemTensorField =
-    meta->declare_field<double>(stk::topology::ELEM_RANK, "elemTensorField");
+  ScalarFieldType& nodalScalarField = meta->declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "nodalScalarField");
+  TensorFieldType& nodalTensorField = meta->declare_field<TensorFieldType>(
+    stk::topology::NODE_RANK, "nodalTensorField");
+  ScalarFieldType& elemScalarField = meta->declare_field<ScalarFieldType>(
+    stk::topology::ELEM_RANK, "elemScalarField");
+  TensorFieldType& elemTensorField = meta->declare_field<TensorFieldType>(
+    stk::topology::ELEM_RANK, "elemTensorField");
 
   const stk::mesh::Part& wholemesh = meta->universal_part();
 

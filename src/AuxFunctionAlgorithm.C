@@ -53,7 +53,7 @@ AuxFunctionAlgorithm::execute()
 
   const unsigned nDim = meta_data.spatial_dimension();
   const double time = realm_.get_current_time();
-  VectorFieldType* coordinates = meta_data.get_field<double>(
+  VectorFieldType* coordinates = meta_data.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name());
 
   auxFunction_->setup(time);

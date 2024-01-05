@@ -19,6 +19,7 @@
 #include "stk_io/StkMeshIoBroker.hpp"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/MeshBuilder.hpp"
+#include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/FEMHelpers.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
@@ -46,46 +47,44 @@ LowMachFixture::LowMachFixture(int nx, double scale)
     meta(bulkPtr->mesh_meta_data()),
     bulk(*bulkPtr),
     io(bulk.parallel()),
-    density_field(
-      meta.declare_field<double>(stk::topology::NODE_RANK, "density", 3)),
+    density_field(meta.declare_field<stk::mesh::Field<double>>(
+      stk::topology::NODE_RANK, "density", 3)),
     velocity_field(
-      meta.declare_field<double>(stk::topology::NODE_RANK, "velocity", 3)),
-    viscosity_field(
-      meta.declare_field<double>(stk::topology::NODE_RANK, "viscosity")),
-    filter_scale_field(meta.declare_field<double>(
+      meta.declare_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
+        stk::topology::NODE_RANK, "velocity", 3)),
+    viscosity_field(meta.declare_field<stk::mesh::Field<double>>(
+      stk::topology::NODE_RANK, "viscosity")),
+    filter_scale_field(meta.declare_field<stk::mesh::Field<double>>(
       stk::topology::NODE_RANK, "scaled_filter_length")),
-    pressure_field(
-      meta.declare_field<double>(stk::topology::NODE_RANK, "pressure")),
-    dpdx_field(meta.declare_field<double>(stk::topology::NODE_RANK, "dpdx")),
+    pressure_field(meta.declare_field<stk::mesh::Field<double>>(
+      stk::topology::NODE_RANK, "pressure")),
+    dpdx_field(
+      meta.declare_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
+        stk::topology::NODE_RANK, "dpdx")),
     dpdx_tmp_field(
-      meta.declare_field<double>(stk::topology::NODE_RANK, "dpdx_tmp")),
+      meta.declare_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
+        stk::topology::NODE_RANK, "dpdx_tmp")),
     body_force_field(
-      meta.declare_field<double>(stk::topology::NODE_RANK, "body_force")),
-    gid_field(meta.declare_field<gid_type>(
+      meta.declare_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
+        stk::topology::NODE_RANK, "body_force")),
+    gid_field(meta.declare_field<stk::mesh::Field<gid_type>>(
       stk::topology::NODE_RANK, linsys_info::gid_name))
 {
-  meta.use_simple_fields();
   double one = 1;
-  stk::mesh::put_field_on_mesh(gid_field, meta.universal_part(), nullptr);
-  stk::mesh::put_field_on_mesh(density_field, meta.universal_part(), &one);
+  stk::mesh::put_field_on_mesh(gid_field, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(density_field, meta.universal_part(), 1, &one);
   stk::mesh::put_field_on_mesh(
     velocity_field, meta.universal_part(), 3, nullptr);
-  stk::io::set_field_output_type(
-    velocity_field, stk::io::FieldOutputType::VECTOR_3D);
-  stk::mesh::put_field_on_mesh(viscosity_field, meta.universal_part(), &one);
-  stk::mesh::put_field_on_mesh(filter_scale_field, meta.universal_part(), &one);
-  stk::mesh::put_field_on_mesh(pressure_field, meta.universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(viscosity_field, meta.universal_part(), 1, &one);
+  stk::mesh::put_field_on_mesh(
+    filter_scale_field, meta.universal_part(), 1, &one);
+  stk::mesh::put_field_on_mesh(
+    pressure_field, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(dpdx_field, meta.universal_part(), 3, nullptr);
-  stk::io::set_field_output_type(
-    dpdx_field, stk::io::FieldOutputType::VECTOR_3D);
   stk::mesh::put_field_on_mesh(
     dpdx_tmp_field, meta.universal_part(), 3, nullptr);
-  stk::io::set_field_output_type(
-    dpdx_tmp_field, stk::io::FieldOutputType::VECTOR_3D);
   stk::mesh::put_field_on_mesh(
     body_force_field, meta.universal_part(), 3, nullptr);
-  stk::io::set_field_output_type(
-    body_force_field, stk::io::FieldOutputType::VECTOR_3D);
 
   const std::string nx_s = std::to_string(nx);
   const std::string name =

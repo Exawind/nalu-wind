@@ -264,7 +264,6 @@ protected:
     meshBuilder.set_spatial_dimension(spatialDimension);
     bulk = meshBuilder.create();
     meta = &bulk->mesh_meta_data();
-    meta->use_simple_fields();
   }
 
   void setup_poly_order_1_hex_8()

@@ -11,6 +11,7 @@
 #define FieldTypeDef_h
 
 #include <stk_mesh/base/FieldBase.hpp>
+#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/Ngp.hpp>
 #include <stk_mesh/base/NgpField.hpp>
 
@@ -26,38 +27,43 @@
 namespace sierra {
 namespace nalu {
 
-using ScalarFieldType = stk::mesh::Field<double>;
-using GlobalIdFieldType = stk::mesh::Field<stk::mesh::EntityId>;
-using ScalarIntFieldType = stk::mesh::Field<int>;
-using NGPDoubleFieldType = stk::mesh::NgpField<double>;
-using NGPGlobalIdFieldType = stk::mesh::NgpField<stk::mesh::EntityId>;
-using NGPScalarIntFieldType = stk::mesh::NgpField<int>;
+// define scalar field typedef
+typedef stk::mesh::Field<double> ScalarFieldType;
+typedef stk::mesh::Field<stk::mesh::EntityId> GlobalIdFieldType;
+typedef stk::mesh::Field<int> ScalarIntFieldType;
+typedef stk::mesh::NgpField<double> NGPDoubleFieldType;
+typedef stk::mesh::NgpField<stk::mesh::EntityId> NGPGlobalIdFieldType;
+typedef stk::mesh::NgpField<int> NGPScalarIntFieldType;
 
-using VectorFieldType = stk::mesh::Field<double>;
-using TensorFieldType = stk::mesh::Field<double>;
+// define vector field typedef; however, what is the value of Cartesian?
+typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
+typedef stk::mesh::Field<double, stk::mesh::FullTensor> TensorFieldType;
 
-using GenericFieldType = stk::mesh::Field<double>;
+// define generic
+typedef stk::mesh::Field<double, stk::mesh::SimpleArrayTag> GenericFieldType;
 
-using GenericIntFieldType = stk::mesh::Field<int>;
+typedef stk::mesh::Field<int, stk::mesh::SimpleArrayTag> GenericIntFieldType;
 
-using LocalId = unsigned;
-using LocalIdFieldType = stk::mesh::Field<LocalId>;
+// field type for local ids
+typedef unsigned LocalId;
+typedef stk::mesh::Field<LocalId> LocalIdFieldType;
 
+// Hypre Integer types
 #ifdef NALU_USES_HYPRE
-using HypreIntType = HYPRE_Int;
+typedef HYPRE_Int HypreIntType;
 #else
-using HypreIntType = int;
+typedef int HypreIntType;
 #endif
 
 #ifdef NALU_USES_TRILINOS_SOLVERS
-using TpetIdType = Tpetra::Details::DefaultTypes::global_ordinal_type;
+typedef stk::mesh::Field<Tpetra::Details::DefaultTypes::global_ordinal_type>
+  TpetIDFieldType;
 #else
-using TpetIdType = int64_t;
+typedef stk::mesh::Field<int64_t> TpetIDFieldType;
 #endif
 
-using TpetIDFieldType = stk::mesh::Field<TpetIdType>;
-using HypreIDFieldType = stk::mesh::Field<HypreIntType>;
-using NGPHypreIDFieldType = stk::mesh::NgpField<HypreIntType>;
+typedef stk::mesh::Field<HypreIntType> HypreIDFieldType;
+typedef stk::mesh::NgpField<HypreIntType> NGPHypreIDFieldType;
 
 } // namespace nalu
 } // namespace sierra

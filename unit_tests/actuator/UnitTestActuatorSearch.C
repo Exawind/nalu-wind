@@ -38,7 +38,6 @@ public:
       nx("nx"),
       slabSize(4)
   {
-    ioBroker.use_simple_fields();
   }
 
   void SetUp()
@@ -100,9 +99,10 @@ TEST_F(ActuatorSearchTest, NGP_createBoundingSpheres)
 TEST_F(ActuatorSearchTest, NGP_createElementBoxes)
 {
   stk::mesh::BulkData& stkBulk = ioBroker.bulk_data();
-  typedef stk::mesh::Field<double> CoordFieldType;
-  CoordFieldType* coordField = stkBulk.mesh_meta_data().get_field<double>(
-    stk::topology::NODE_RANK, "coordinates");
+  typedef stk::mesh::Field<double, stk::mesh::Cartesian> CoordFieldType;
+  CoordFieldType* coordField =
+    stkBulk.mesh_meta_data().get_field<CoordFieldType>(
+      stk::topology::NODE_RANK, "coordinates");
   EXPECT_TRUE(coordField != nullptr);
   try {
     auto elemVec = CreateElementBoxes(stkBulk, partNames);

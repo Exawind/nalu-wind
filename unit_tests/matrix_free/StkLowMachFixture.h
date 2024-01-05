@@ -16,6 +16,7 @@
 
 #include "stk_io/StkMeshIoBroker.hpp"
 #include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/FEMHelpers.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
@@ -43,9 +44,10 @@ protected:
   using gid_type = typename Tpetra::Map<>::global_ordinal_type;
   static constexpr int order = 1;
   LowMachFixture(int nx, double scale);
-  stk::mesh::Field<double>& coordinate_field()
+  stk::mesh::Field<double, stk::mesh::Cartesian3d>& coordinate_field()
   {
-    return *meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
+    return *meta.get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
+      stk::topology::NODE_RANK, "coordinates");
   }
   stk::mesh::NgpMesh& mesh() { return stk::mesh::get_updated_ngp_mesh(bulk); }
 
@@ -61,15 +63,15 @@ protected:
   stk::io::StkMeshIoBroker io;
 
   stk::mesh::Field<double>& density_field;
-  stk::mesh::Field<double>& velocity_field;
+  stk::mesh::Field<double, stk::mesh::Cartesian3d>& velocity_field;
   stk::mesh::Field<double>& viscosity_field;
   stk::mesh::Field<double>& filter_scale_field;
 
   stk::mesh::Field<double>& pressure_field;
-  stk::mesh::Field<double>& dpdx_field;
-  stk::mesh::Field<double>& dpdx_tmp_field;
+  stk::mesh::Field<double, stk::mesh::Cartesian3d>& dpdx_field;
+  stk::mesh::Field<double, stk::mesh::Cartesian3d>& dpdx_tmp_field;
 
-  stk::mesh::Field<double>& body_force_field;
+  stk::mesh::Field<double, stk::mesh::Cartesian3d>& body_force_field;
 
   stk::mesh::Field<gid_type>& gid_field;
   stk::mesh::NgpField<gid_type> gid_field_ngp;

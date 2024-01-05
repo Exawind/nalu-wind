@@ -15,33 +15,30 @@
 namespace sierra {
 namespace nalu {
 
-enum class FieldLayout { SCALAR, VECTOR, TENSOR, ARRAY };
-
-template <typename T, FieldLayout Layout = FieldLayout::SCALAR>
+template <typename T>
 struct FieldDefinition
 {
-  using DataType = T;
+  using FieldType = T;
   const stk::topology::rank_t rank;
   const int num_states{1};
   const int num_components{1};
-  const FieldLayout layout{Layout};
 };
 
-using FieldDefScalar = FieldDefinition<double>;
-using FieldDefVector = FieldDefinition<double, FieldLayout::VECTOR>;
-using FieldDefTensor = FieldDefinition<double, FieldLayout::TENSOR>;
-using FieldDefGeneric = FieldDefinition<double, FieldLayout::ARRAY>;
-using FieldDefGenericInt = FieldDefinition<int, FieldLayout::ARRAY>;
-using FieldDefTpetraId = FieldDefinition<TpetIdType>;
-using FieldDefLocalId = FieldDefinition<LocalId>;
-using FieldDefGlobalId = FieldDefinition<stk::mesh::EntityId>;
-using FieldDefHypreId = FieldDefinition<HypreIntType>;
-using FieldDefScalarInt = FieldDefinition<int>;
+using FieldDefScalar = FieldDefinition<ScalarFieldType>;
+using FieldDefVector = FieldDefinition<VectorFieldType>;
+using FieldDefTensor = FieldDefinition<TensorFieldType>;
+using FieldDefGeneric = FieldDefinition<GenericFieldType>;
+using FieldDefGenericInt = FieldDefinition<GenericIntFieldType>;
+using FieldDefTpetraId = FieldDefinition<TpetIDFieldType>;
+using FieldDefLocalId = FieldDefinition<LocalIdFieldType>;
+using FieldDefGlobalId = FieldDefinition<GlobalIdFieldType>;
+using FieldDefHypreId = FieldDefinition<HypreIDFieldType>;
+using FieldDefScalarInt = FieldDefinition<ScalarIntFieldType>;
 
 // Type redundancy can occur between HypreId and ScalarInt
 // which will break std::variant
 using FieldDefTypes = std::conditional<
-  std::is_same_v<int, HypreIntType>,
+  std::is_same_v<ScalarIntFieldType, HypreIDFieldType>,
   std::variant<
     FieldDefScalar,
     FieldDefVector,
@@ -64,22 +61,29 @@ using FieldDefTypes = std::conditional<
     FieldDefScalarInt,
     FieldDefHypreId>>::type;
 
-// Trouble!
 using FieldPointerTypes = std::conditional<
-  std::is_same_v<int, HypreIntType>,
+  std::is_same_v<ScalarIntFieldType, HypreIDFieldType>,
   std::variant<
-    stk::mesh::Field<double>*,
-    stk::mesh::Field<int>*,
-    stk::mesh::Field<LocalId>*,
-    stk::mesh::Field<stk::mesh::EntityId>*,
-    stk::mesh::Field<TpetIdType>*>,
+    ScalarFieldType*,
+    VectorFieldType*,
+    TensorFieldType*,
+    GenericFieldType*,
+    GenericIntFieldType*,
+    TpetIDFieldType*,
+    LocalIdFieldType*,
+    GlobalIdFieldType*,
+    ScalarIntFieldType*>,
   std::variant<
-    stk::mesh::Field<double>*,
-    stk::mesh::Field<int>*,
-    stk::mesh::Field<LocalId>*,
-    stk::mesh::Field<stk::mesh::EntityId>*,
-    stk::mesh::Field<TpetIdType>*,
-    stk::mesh::Field<HypreIntType>*>>::type;
+    ScalarFieldType*,
+    VectorFieldType*,
+    TensorFieldType*,
+    GenericFieldType*,
+    GenericIntFieldType*,
+    TpetIDFieldType*,
+    LocalIdFieldType*,
+    GlobalIdFieldType*,
+    ScalarIntFieldType*,
+    HypreIDFieldType*>>::type;
 
 } // namespace nalu
 } // namespace sierra

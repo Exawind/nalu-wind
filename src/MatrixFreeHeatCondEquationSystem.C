@@ -25,7 +25,6 @@
 #include <stk_mesh/base/NgpForEachEntity.hpp>
 #include <stk_mesh/base/Types.hpp>
 #include <stk_topology/topology.hpp>
-#include <stk_io/IossBridge.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -71,32 +70,32 @@ MatrixFreeHeatCondEquationSystem::register_nodal_fields(
   const double zero = 0;
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   {
-    auto& field = meta_.declare_field<double>(
+    auto& field = meta_.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, names::temperature, three_states);
     stk::mesh::put_field_on_mesh(field, selector, &zero);
   }
   {
-    auto& field = meta_.declare_field<double>(
+    auto& field = meta_.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, names::delta, one_state);
     stk::mesh::put_field_on_mesh(field, selector, &zero);
   }
   {
-    auto& field = meta_.declare_field<double>(
+    auto& field = meta_.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, names::volume_weight, one_state);
     stk::mesh::put_field_on_mesh(field, selector, &zero);
   }
   {
-    auto& field = meta_.declare_field<double>(
+    auto& field = meta_.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, names::density, one_state);
     stk::mesh::put_field_on_mesh(field, selector, &zero);
   }
   {
-    auto& field = meta_.declare_field<double>(
+    auto& field = meta_.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, names::specific_heat, one_state);
     stk::mesh::put_field_on_mesh(field, selector, &zero);
   }
   {
-    auto& field = meta_.declare_field<double>(
+    auto& field = meta_.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, names::thermal_conductivity, one_state);
     stk::mesh::put_field_on_mesh(field, selector, &zero);
   }
@@ -104,21 +103,20 @@ MatrixFreeHeatCondEquationSystem::register_nodal_fields(
     const double zero = 0;
     constexpr int dim = MatrixFreeHeatCondEquationSystem::dim;
     const std::array<double, dim> x{{zero, zero, zero}};
-    auto& field = meta_.declare_field<double>(
+    auto& field = meta_.declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, names::dtdx, one_state);
     stk::mesh::put_field_on_mesh(field, selector, dim, x.data());
-    stk::io::set_field_output_type(field, stk::io::FieldOutputType::VECTOR_3D);
   }
 
   realm_.augment_restart_variable_list(names::temperature);
   realm_.augment_property_map(
-    DENSITY_ID,
-    meta_.get_field<double>(stk::topology::NODE_RANK, names::density));
+    DENSITY_ID, meta_.get_field<stk::mesh::Field<double>>(
+                  stk::topology::NODE_RANK, names::density));
   realm_.augment_property_map(
-    SPEC_HEAT_ID,
-    meta_.get_field<double>(stk::topology::NODE_RANK, names::specific_heat));
+    SPEC_HEAT_ID, meta_.get_field<stk::mesh::Field<double>>(
+                    stk::topology::NODE_RANK, names::specific_heat));
   realm_.augment_property_map(
-    THERMAL_COND_ID, meta_.get_field<double>(
+    THERMAL_COND_ID, meta_.get_field<stk::mesh::Field<double>>(
                        stk::topology::NODE_RANK, names::thermal_conductivity));
 }
 
@@ -147,13 +145,13 @@ MatrixFreeHeatCondEquationSystem::register_wall_bc(
   constexpr int one_state = 1;
   if (userData.tempSpec_) {
     const auto temperature_data = wallBCData.userData_.temperature_;
-    auto& field = meta_.declare_field<double>(
+    auto& field = meta_.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, names::qbc, one_state);
     stk::mesh::put_field_on_mesh(field, *part, &temperature_data.temperature_);
     dirichlet_selector_ |= *part;
   } else if (userData.heatFluxSpec_) {
     const auto flux_data = wallBCData.userData_.q_;
-    auto& field = meta_.declare_field<double>(
+    auto& field = meta_.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, names::flux, one_state);
     stk::mesh::put_field_on_mesh(field, *part, &flux_data.qn_);
     flux_selector_ |= *part;
@@ -348,9 +346,12 @@ MatrixFreeHeatCondEquationSystem::solve_and_update()
     sync_field_on_periodic_nodes(names::delta, 1);
 
     solution_update(
-      1.0, *meta_.get_field<double>(stk::topology::NODE_RANK, names::delta),
       1.0,
-      meta_.get_field<double>(stk::topology::NODE_RANK, names::temperature)
+      *meta_.get_field<ScalarFieldType>(stk::topology::NODE_RANK, names::delta),
+      1.0,
+      meta_
+        .get_field<ScalarFieldType>(
+          stk::topology::NODE_RANK, names::temperature)
         ->field_of_state(stk::mesh::StateNP1));
 
     update_->update_solution_fields();

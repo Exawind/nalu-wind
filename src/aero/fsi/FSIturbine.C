@@ -198,9 +198,9 @@ fsiTurbine::populateParts(
       allPartVec.push_back(part);
     }
 
-    stk::mesh::put_field_on_mesh(*dispMap_, *part, nullptr);
-    stk::mesh::put_field_on_mesh(*dispMapInterp_, *part, nullptr);
-    stk::mesh::put_field_on_mesh(*deflectionRamp_, *part, nullptr);
+    stk::mesh::put_field_on_mesh(*dispMap_, *part, 1, nullptr);
+    stk::mesh::put_field_on_mesh(*dispMapInterp_, *part, 1, nullptr);
+    stk::mesh::put_field_on_mesh(*deflectionRamp_, *part, 1, nullptr);
   }
 }
 
@@ -247,53 +247,59 @@ fsiTurbine::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
   bulk_ = bulk;
   auto& meta = bulk_->mesh_meta_data();
 
-  deflectionRamp_ =
-    meta.get_field<double>(stk::topology::NODE_RANK, "deflection_ramp");
+  deflectionRamp_ = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "deflection_ramp");
   if (deflectionRamp_ == NULL)
-    deflectionRamp_ = &(
-      meta.declare_field<double>(stk::topology::NODE_RANK, "deflection_ramp"));
+    deflectionRamp_ = &(meta.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "deflection_ramp"));
 
-  dispMap_ = meta.get_field<int>(stk::topology::NODE_RANK, "disp_map");
+  dispMap_ =
+    meta.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "disp_map");
   if (dispMap_ == NULL)
-    dispMap_ = &(meta.declare_field<int>(stk::topology::NODE_RANK, "disp_map"));
+    dispMap_ = &(meta.declare_field<ScalarIntFieldType>(
+      stk::topology::NODE_RANK, "disp_map"));
 
-  dispMapInterp_ =
-    meta.get_field<double>(stk::topology::NODE_RANK, "disp_map_interp");
+  dispMapInterp_ = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "disp_map_interp");
   if (dispMapInterp_ == NULL)
-    dispMapInterp_ = &(
-      meta.declare_field<double>(stk::topology::NODE_RANK, "disp_map_interp"));
+    dispMapInterp_ = &(meta.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "disp_map_interp"));
 
-  loadMap_ = meta.get_field<int>(meta.side_rank(), "load_map");
+  loadMap_ = meta.get_field<GenericIntFieldType>(meta.side_rank(), "load_map");
   if (loadMap_ == NULL)
-    loadMap_ = &(meta.declare_field<int>(meta.side_rank(), "load_map"));
+    loadMap_ =
+      &(meta.declare_field<GenericIntFieldType>(meta.side_rank(), "load_map"));
 
-  loadMapInterp_ = meta.get_field<double>(meta.side_rank(), "load_map_interp");
+  loadMapInterp_ =
+    meta.get_field<GenericFieldType>(meta.side_rank(), "load_map_interp");
   if (loadMapInterp_ == NULL)
-    loadMapInterp_ =
-      &(meta.declare_field<double>(meta.side_rank(), "load_map_interp"));
+    loadMapInterp_ = &(meta.declare_field<GenericFieldType>(
+      meta.side_rank(), "load_map_interp"));
 
-  tforceSCS_ = meta.get_field<double>(meta.side_rank(), "tforce_scs");
+  tforceSCS_ = meta.get_field<GenericFieldType>(meta.side_rank(), "tforce_scs");
   if (tforceSCS_ == NULL)
-    tforceSCS_ = &(meta.declare_field<double>(meta.side_rank(), "tforce_scs"));
+    tforceSCS_ =
+      &(meta.declare_field<GenericFieldType>(meta.side_rank(), "tforce_scs"));
 
-  VectorFieldType* mesh_disp_ref =
-    meta.get_field<double>(stk::topology::NODE_RANK, "mesh_displacement_ref");
+  VectorFieldType* mesh_disp_ref = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_displacement_ref");
   if (mesh_disp_ref == NULL)
-    mesh_disp_ref = &(meta.declare_field<double>(
+    mesh_disp_ref = &(meta.declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "mesh_displacement_ref"));
 
-  VectorFieldType* mesh_vel_ref =
-    meta.get_field<double>(stk::topology::NODE_RANK, "mesh_velocity_ref");
+  VectorFieldType* mesh_vel_ref = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_velocity_ref");
   if (mesh_vel_ref == NULL)
-    mesh_vel_ref = &(meta.declare_field<double>(
+    mesh_vel_ref = &(meta.declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "mesh_velocity_ref"));
 
-  ScalarFieldType* div_mesh_vel =
-    meta.get_field<double>(stk::topology::NODE_RANK, "div_mesh_velocity");
+  ScalarFieldType* div_mesh_vel = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "div_mesh_velocity");
   if (div_mesh_vel == NULL)
-    div_mesh_vel = &(meta.declare_field<double>(
+    div_mesh_vel = &(meta.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "div_mesh_velocity"));
-  stk::mesh::put_field_on_mesh(*div_mesh_vel, meta.universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(
+    *div_mesh_vel, meta.universal_part(), 1, nullptr);
 
   populateParts(twrPartNames_, twrParts_, partVec_, "Tower");
   populateParts(nacellePartNames_, nacelleParts_, partVec_, "Nacelle");
@@ -911,9 +917,9 @@ fsiTurbine::mapLoads()
 
   auto& meta = bulk_->mesh_meta_data();
   const VectorFieldType* modelCoords =
-    meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
-  const VectorFieldType* meshDisp =
-    meta.get_field<double>(stk::topology::NODE_RANK, "mesh_displacement");
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  const VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_displacement");
 
   // syncs done inside functions
   fsi::mapTowerLoad(
@@ -944,15 +950,15 @@ fsiTurbine::computeHubForceMomentForPart(
   auto& meta = bulk_->mesh_meta_data();
 
   VectorFieldType* modelCoords =
-    meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
   modelCoords->sync_to_host();
 
-  VectorFieldType* meshDisp =
-    meta.get_field<double>(stk::topology::NODE_RANK, "mesh_displacement");
+  VectorFieldType* meshDisp = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_displacement");
   meshDisp->sync_to_host();
 
   GenericFieldType* tforce =
-    meta.get_field<double>(meta.side_rank(), "tforce_scs");
+    meta.get_field<GenericFieldType>(meta.side_rank(), "tforce_scs");
   tforce->sync_to_host();
 
   std::vector<double> l_hubForceMoment(6, 0.0);
@@ -1232,11 +1238,11 @@ fsiTurbine::setRefDisplacement(double curTime)
   auto& meta = bulk_->mesh_meta_data();
   const int ndim = meta.spatial_dimension();
   const VectorFieldType* modelCoords =
-    meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* refDisp =
-    meta.get_field<double>(stk::topology::NODE_RANK, "mesh_displacement_ref");
-  VectorFieldType* refVel =
-    meta.get_field<double>(stk::topology::NODE_RANK, "mesh_velocity_ref");
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* refDisp = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_displacement_ref");
+  VectorFieldType* refVel = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_velocity_ref");
 
   modelCoords->sync_to_host();
   refDisp->sync_to_host();
@@ -1371,14 +1377,14 @@ fsiTurbine::mapDisplacements(double time)
 
   auto& meta = bulk_->mesh_meta_data();
   const VectorFieldType* modelCoords =
-    meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* curCoords =
-    meta.get_field<double>(stk::topology::NODE_RANK, "current_coordinates");
-  VectorFieldType* displacement =
-    meta.get_field<double>(stk::topology::NODE_RANK, "mesh_displacement");
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* curCoords = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "current_coordinates");
+  VectorFieldType* displacement = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_displacement");
 
   VectorFieldType* meshVelocity =
-    meta.get_field<double>(stk::topology::NODE_RANK, "mesh_velocity");
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
 
   modelCoords->sync_to_host();
   curCoords->sync_to_host();
@@ -1656,7 +1662,7 @@ fsiTurbine::computeMapping()
   const int ndim = meta.spatial_dimension();
   ThrowRequireMsg(ndim == 3, "fsiTurbine: spatial dim is required to be 3.");
   const VectorFieldType* modelCoords =
-    meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
   modelCoords->sync_to_host();
   dispMap_->clear_sync_state();
   dispMapInterp_->clear_sync_state();
@@ -1841,7 +1847,7 @@ fsiTurbine::computeLoadMapping()
   auto& meta = bulk_->mesh_meta_data();
   const int ndim = meta.spatial_dimension();
   const VectorFieldType* modelCoords =
-    meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
+    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
 
   modelCoords->sync_to_host();
   loadMap_->clear_sync_state();
@@ -2120,11 +2126,11 @@ fsiTurbine::compute_div_mesh_velocity()
 
   auto& meta = bulk_->mesh_meta_data();
 
-  ScalarFieldType* divMeshVel =
-    meta.get_field<double>(stk::topology::NODE_RANK, "div_mesh_velocity");
+  ScalarFieldType* divMeshVel = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "div_mesh_velocity");
 
-  GenericFieldType* faceVelMag =
-    meta.get_field<double>(stk::topology::EDGE_RANK, "edge_face_velocity_mag");
+  GenericFieldType* faceVelMag = meta.get_field<GenericFieldType>(
+    stk::topology::EDGE_RANK, "edge_face_velocity_mag");
 
   // syncs are done inside this function
   compute_edge_scalar_divergence(

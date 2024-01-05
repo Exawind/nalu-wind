@@ -19,9 +19,9 @@ InterpActuatorVel::InterpActuatorVel(
   ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk)
   : actBulk_(actBulk),
     stkBulk_(stkBulk),
-    coordinates_(stkBulk_.mesh_meta_data().get_field<double>(
+    coordinates_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
       stk::topology::NODE_RANK, "coordinates")),
-    velocity_(stkBulk_.mesh_meta_data().get_field<double>(
+    velocity_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
       stk::topology::NODE_RANK, "velocity"))
 {
   velocity_->sync_to_host();

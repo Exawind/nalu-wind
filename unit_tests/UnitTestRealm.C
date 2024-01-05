@@ -187,7 +187,6 @@ NaluTest::create_realm(
     stk::mesh::MeshBuilder meshBuilder(comm_);
     meshBuilder.set_spatial_dimension(spatialDim_);
     realm->bulkData_ = meshBuilder.create();
-    realm->bulkData_->mesh_meta_data().use_simple_fields();
   }
   sim_.realms_->realmVector_.push_back(realm);
 
@@ -197,7 +196,7 @@ NaluTest::create_realm(
 void
 verify_field_values(
   double expectedValue,
-  sierra::nalu::ScalarFieldType* maxLengthScaleField,
+  ScalarFieldType* maxLengthScaleField,
   const stk::mesh::BulkData& mesh)
 {
   const stk::mesh::BucketVector& nodeBuckets =
@@ -230,8 +229,8 @@ TEST(NaluMock, test_nalu_mock)
   sierra::nalu::Realm& realm = naluObj.create_realm(realm_node);
 
   // 4. Create necessary fields...
-  sierra::nalu::ScalarFieldType& maxLengthScaleField =
-    realm.meta_data().declare_field<double>(
+  ScalarFieldType& maxLengthScaleField =
+    realm.meta_data().declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "sst_max_length_scale");
   double zero = 0.0;
   stk::mesh::put_field_on_mesh(

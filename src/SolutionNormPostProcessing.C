@@ -193,7 +193,9 @@ SolutionNormPostProcessing::setup()
     const std::string dofNameExact = dofName + "_exact";
 
     stk::mesh::FieldBase* exactDofField =
-      &(metaData.declare_field<double>(stk::topology::NODE_RANK, dofNameExact));
+      &(metaData
+          .declare_field<stk::mesh::Field<double, stk::mesh::SimpleArrayTag>>(
+            stk::topology::NODE_RANK, dofNameExact));
 
     // push back to vector of pairs; unique list
     fieldPairVec_.push_back(std::make_pair(dofField, exactDofField));

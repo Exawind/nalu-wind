@@ -129,7 +129,7 @@ public:
     : fromMetaData_(fromMetaData),
       fromBulkData_(fromBulkData),
       fromRealm_(fromRealm),
-      fromcoordinates_(fromMetaData.get_field<double>(
+      fromcoordinates_(fromMetaData.get_field<VectorFieldType>(
         stk::topology::NODE_RANK, coordinates_name)),
       fromPartVec_(fromPartVec),
       fromFieldVec_(get_fields(fromMetaData, VarPairName)),

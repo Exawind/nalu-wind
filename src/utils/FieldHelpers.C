@@ -22,8 +22,8 @@ populate_dnv_states(
   unsigned& np1ID)
 {
   np1ID = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNP1);
-  const auto* dnv =
-    meta.get_field<double>(stk::topology::NODE_RANK, "dual_nodal_volume");
+  const auto* dnv = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
   switch (dnv->number_of_states()) {
   case 1:
     nID = np1ID;

@@ -17,6 +17,7 @@
 
 namespace sierra {
 namespace nalu {
+using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
 
 //-----------------------------------------------------------------
 
@@ -156,10 +157,10 @@ protected:
   stk::mesh::MetaData* stkMeta_;
   std::shared_ptr<stk::mesh::BulkData> stkBulk_;
   const double tol_;
-  const sierra::nalu::VectorFieldType* coordinates_{nullptr};
-  sierra::nalu::VectorFieldType* velocity_{nullptr};
-  sierra::nalu::VectorFieldType* actuatorForce_{nullptr};
-  sierra::nalu::ScalarFieldType* dualNodalVolume_{nullptr};
+  const VectorFieldType* coordinates_{nullptr};
+  VectorFieldType* velocity_{nullptr};
+  VectorFieldType* actuatorForce_{nullptr};
+  ScalarFieldType* dualNodalVolume_{nullptr};
 
   ActuatorFunctorTests() : tol_(1e-8), coordinates_(nullptr)
   {
@@ -167,25 +168,20 @@ protected:
     meshBuilder.set_spatial_dimension(3);
     stkBulk_ = meshBuilder.create();
     stkMeta_ = &stkBulk_->mesh_meta_data();
-    stkMeta_->use_simple_fields();
 
-    velocity_ =
-      &stkMeta_->declare_field<double>(stk::topology::NODE_RANK, "velocity");
-    actuatorForce_ = &stkMeta_->declare_field<double>(
+    velocity_ = &stkMeta_->declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "velocity");
+    actuatorForce_ = &stkMeta_->declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "actuator_source");
-    dualNodalVolume_ = &stkMeta_->declare_field<double>(
+    dualNodalVolume_ = &stkMeta_->declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "dual_nodal_volume");
 
     stk::mesh::put_field_on_mesh(
       *velocity_, stkMeta_->universal_part(), 3, nullptr);
-    stk::io::set_field_output_type(
-      *velocity_, stk::io::FieldOutputType::VECTOR_3D);
     stk::mesh::put_field_on_mesh(
       *actuatorForce_, stkMeta_->universal_part(), 3, nullptr);
-    stk::io::set_field_output_type(
-      *actuatorForce_, stk::io::FieldOutputType::VECTOR_3D);
     stk::mesh::put_field_on_mesh(
-      *dualNodalVolume_, stkMeta_->universal_part(), nullptr);
+      *dualNodalVolume_, stkMeta_->universal_part(), 1, nullptr);
     stk::mesh::field_fill(1.0, *dualNodalVolume_);
   }
 
@@ -193,8 +189,8 @@ protected:
   {
     const std::string meshSpec = "generated:5x5x5";
     unit_test_utils::fill_hex8_mesh(meshSpec, *stkBulk_);
-    coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
-      stkMeta_->coordinate_field());
+    coordinates_ =
+      static_cast<const VectorFieldType*>(stkMeta_->coordinate_field());
     const stk::mesh::Selector selector =
       stkMeta_->locally_owned_part() | stkMeta_->globally_shared_part();
     const auto& buckets =
@@ -283,7 +279,7 @@ TEST_F(ActuatorFunctorTests, NGP_testSpreadForces)
     for (unsigned j = 0; j < numNodes; ++j) {
       stk::mesh::Entity node = elem_node_rels[j];
       nodesMatch.push_back(node);
-      double* actSource = stk::mesh::field_data(*actuatorForce_, node);
+      double* actSource = (double*)stk::mesh::field_data(*actuatorForce_, node);
       for (int k = 0; k < 3; ++k) {
         EXPECT_TRUE(actSource[k] > 0.0)
           << "Value is: " << actSource[k] << std::endl

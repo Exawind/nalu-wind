@@ -23,14 +23,13 @@ TestAlgorithm::fill_mesh(const std::string mesh_spec)
 
   unit_test_utils::fill_hex8_mesh(mesh_spec, bulk());
   meshPart_ = meta().get_part("block_1");
-  coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
-    meta().coordinate_field());
+  coordinates_ = static_cast<const VectorFieldType*>(meta().coordinate_field());
   EXPECT_TRUE(coordinates_ != nullptr);
 }
 
 double
 TestAlgorithm::field_norm(
-  const sierra::nalu::ScalarFieldType& field, stk::mesh::Selector* selector)
+  const ScalarFieldType& field, stk::mesh::Selector* selector)
 {
 
   auto& meta = this->meta();
@@ -54,8 +53,11 @@ TestTurbulenceAlgorithm::declare_fields()
   }
   const int numStates = 1;
 
+  using FieldDef = std::variant<
+    ScalarFieldType**, VectorFieldType**, TensorFieldType**,
+    GenericFieldType**>;
   // clang-format off
-  const std::vector<std::pair<std::string, stk::mesh::Field<double>**>> Fields = {
+  const std::vector<std::pair<std::string, FieldDef>> Fields = {
     {"density",                   &density_          }, 
     {"viscosity",                 &viscosity_        }, 
     {"turbulent_ke",              &tke_              }, 
@@ -80,17 +82,21 @@ TestTurbulenceAlgorithm::declare_fields()
   for (auto& Field : Fields) {
     const std::string& name = Field.first;
     const stk::mesh::PartVector universal(1, &meta.universal_part());
-    using to_field = typename std::remove_pointer<decltype(Field.second)>::type;
-    sierra::nalu::FieldPointerTypes new_field =
-      realm_->fieldManager_->register_field(name, universal, numStates);
     std::visit(
-      [&](auto fld) {
-        using from_field = decltype(fld);
-        if constexpr (std::is_same_v<to_field, from_field>) {
-          *Field.second = fld;
-        }
+      [&](auto member_field) {
+        using to_field =
+          typename std::remove_pointer<decltype(member_field)>::type;
+        sierra::nalu::FieldPointerTypes new_field =
+          realm_->fieldManager_->register_field(name, universal, numStates);
+        std::visit(
+          [&](auto fld) {
+            using from_field = decltype(fld);
+            if constexpr (std::is_same_v<to_field, from_field>)
+              *member_field = fld;
+          },
+          new_field);
       },
-      new_field);
+      Field.second);
   }
 }
 

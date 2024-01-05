@@ -6,6 +6,7 @@
 
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
+#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
 
@@ -49,9 +50,9 @@ class TestElemAlgorithmWithVectors
 public:
   TestElemAlgorithmWithVectors(
     stk::mesh::BulkData& bulk,
-    const sierra::nalu::VectorFieldType* coord,
-    sierra::nalu::ScalarFieldType* discreteLaplacian,
-    sierra::nalu::ScalarFieldType* nodalPressure)
+    const VectorFieldType* coord,
+    ScalarFieldType* discreteLaplacian,
+    ScalarFieldType* nodalPressure)
     : bulkData_(bulk),
       discreteLaplacianOfPressure(discreteLaplacian),
       nodalPressureField(nodalPressure),
@@ -155,9 +156,9 @@ public:
 
 private:
   stk::mesh::BulkData& bulkData_;
-  sierra::nalu::ScalarFieldType* discreteLaplacianOfPressure;
-  sierra::nalu::ScalarFieldType* nodalPressureField;
-  const sierra::nalu::VectorFieldType* coordField;
+  ScalarFieldType* discreteLaplacianOfPressure;
+  ScalarFieldType* nodalPressureField;
+  const VectorFieldType* coordField;
 };
 
 //======= templated element kernel function ==================
@@ -168,9 +169,9 @@ element_discrete_laplacian_kernel_3d(
   stk::mesh::BulkData& bulkData,
   stk::mesh::Entity elem,
   sierra::nalu::MasterElement& meSCS,
-  sierra::nalu::ScalarFieldType* discreteLaplacianOfPressure,
-  sierra::nalu::ScalarFieldType* nodalPressureField,
-  const sierra::nalu::VectorFieldType* coordField)
+  ScalarFieldType* discreteLaplacianOfPressure,
+  ScalarFieldType* nodalPressureField,
+  const VectorFieldType* coordField)
 {
   const int nDim = 3;
   const stk::mesh::Entity* elemNodes = bulkData.begin_nodes(elem);
@@ -233,9 +234,9 @@ class TestElemAlgorithmWithTemplate
 public:
   TestElemAlgorithmWithTemplate(
     stk::mesh::BulkData& bulk,
-    const sierra::nalu::VectorFieldType* coord,
-    sierra::nalu::ScalarFieldType* discreteLaplacian,
-    sierra::nalu::ScalarFieldType* nodalPressure)
+    const VectorFieldType* coord,
+    ScalarFieldType* discreteLaplacian,
+    ScalarFieldType* nodalPressure)
     : bulkData_(bulk),
       discreteLaplacianOfPressure(discreteLaplacian),
       nodalPressureField(nodalPressure),
@@ -291,9 +292,9 @@ public:
 
 private:
   stk::mesh::BulkData& bulkData_;
-  sierra::nalu::ScalarFieldType* discreteLaplacianOfPressure;
-  sierra::nalu::ScalarFieldType* nodalPressureField;
-  const sierra::nalu::VectorFieldType* coordField;
+  ScalarFieldType* discreteLaplacianOfPressure;
+  ScalarFieldType* nodalPressureField;
+  const VectorFieldType* coordField;
 };
 
 //=========== Test class that mimics an element algorithm ==============
@@ -304,9 +305,9 @@ class TestElemAlgorithmWithViews
 public:
   TestElemAlgorithmWithViews(
     stk::mesh::BulkData& bulk,
-    const sierra::nalu::VectorFieldType* coord,
-    sierra::nalu::ScalarFieldType* discreteLaplacian,
-    sierra::nalu::ScalarFieldType* nodalPressure)
+    const VectorFieldType* coord,
+    ScalarFieldType* discreteLaplacian,
+    ScalarFieldType* nodalPressure)
     : bulkData_(bulk),
       discreteLaplacianOfPressure(discreteLaplacian),
       nodalPressureField(nodalPressure),
@@ -412,9 +413,9 @@ public:
 
 private:
   stk::mesh::BulkData& bulkData_;
-  sierra::nalu::ScalarFieldType* discreteLaplacianOfPressure;
-  sierra::nalu::ScalarFieldType* nodalPressureField;
-  const sierra::nalu::VectorFieldType* coordField;
+  ScalarFieldType* discreteLaplacianOfPressure;
+  ScalarFieldType* nodalPressureField;
+  const VectorFieldType* coordField;
 };
 
 //========= below are the test 'main's... ===============

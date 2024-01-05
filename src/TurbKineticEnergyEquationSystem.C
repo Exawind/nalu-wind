@@ -87,6 +87,7 @@
 #include <stk_mesh/base/FieldParallel.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
+#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/NgpMesh.hpp>
 
@@ -123,7 +124,7 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
     visc_(NULL),
     tvisc_(NULL),
     evisc_(NULL),
-    nodalGradAlgDriver_(realm_, "turbulent_ke", "dkdx"),
+    nodalGradAlgDriver_(realm_, "dkdx"),
     turbulenceModel_(realm_.solutionOptions_->turbulenceModel_),
     projectedNodalGradEqs_(NULL),
     isInit_(true)
@@ -193,28 +194,29 @@ TurbKineticEnergyEquationSystem::register_nodal_fields(
   const int numStates = realm_.number_of_states();
 
   // register dof; set it as a restart variable
-  tke_ = &(meta_data.declare_field<double>(
+  tke_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "turbulent_ke", numStates));
   stk::mesh::put_field_on_mesh(*tke_, selector, nullptr);
   realm_.augment_restart_variable_list("turbulent_ke");
 
-  dkdx_ = &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "dkdx"));
+  dkdx_ = &(
+    meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dkdx"));
   stk::mesh::put_field_on_mesh(*dkdx_, selector, nDim, nullptr);
-  stk::io::set_field_output_type(*dkdx_, stk::io::FieldOutputType::VECTOR_3D);
 
   // delta solution for linear solver; share delta since this is a split system
-  kTmp_ = &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "pTmp"));
+  kTmp_ = &(
+    meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pTmp"));
   stk::mesh::put_field_on_mesh(*kTmp_, selector, nullptr);
 
-  visc_ =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "viscosity"));
+  visc_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "viscosity"));
   stk::mesh::put_field_on_mesh(*visc_, selector, nullptr);
 
-  tvisc_ = &(meta_data.declare_field<double>(
+  tvisc_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "turbulent_viscosity"));
   stk::mesh::put_field_on_mesh(*tvisc_, selector, nullptr);
 
-  evisc_ = &(meta_data.declare_field<double>(
+  evisc_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "effective_viscosity_tke"));
   stk::mesh::put_field_on_mesh(*evisc_, selector, nullptr);
 
@@ -407,8 +409,8 @@ TurbKineticEnergyEquationSystem::register_inflow_bc(
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   // register boundary data; tke_bc
-  ScalarFieldType* theBcField =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "tke_bc"));
+  ScalarFieldType* theBcField = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "tke_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specified tke and save off the AuxFunction
@@ -475,8 +477,8 @@ TurbKineticEnergyEquationSystem::register_open_bc(
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   // register boundary data; tke_bc
-  ScalarFieldType* theBcField =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "open_tke_bc"));
+  ScalarFieldType* theBcField = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "open_tke_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specified tke and save off the AuxFunction
@@ -540,8 +542,8 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   // register boundary data; tke_bc
-  ScalarFieldType* theBcField =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "tke_bc"));
+  ScalarFieldType* theBcField = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "tke_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specified tke and save off the AuxFunction
@@ -563,8 +565,9 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
   if (wallFunctionApproach || RANSAblBcApproach) {
     // need to register the assembles wall value for tke; can not share with
     // tke_bc
-    ScalarFieldType* theAssembledField = &(meta_data.declare_field<double>(
-      stk::topology::NODE_RANK, "wall_model_tke_bc"));
+    ScalarFieldType* theAssembledField =
+      &(meta_data.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "wall_model_tke_bc"));
     stk::mesh::put_field_on_mesh(*theAssembledField, *part, nullptr);
 
     if (!wallFuncAlgDriver_)
@@ -838,7 +841,8 @@ TurbKineticEnergyEquationSystem::post_external_data_transfer_work()
     });
   ngpTke.modify_on_device();
 
-  auto* tkeBCField = meta.get_field<double>(stk::topology::NODE_RANK, "tke_bc");
+  auto* tkeBCField =
+    meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "tke_bc");
   if (tkeBCField != nullptr) {
     const stk::mesh::Selector bc_sel =
       (meta.locally_owned_part() | meta.globally_shared_part()) &

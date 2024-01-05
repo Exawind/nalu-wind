@@ -137,13 +137,13 @@ field_axpby(
 
 template <typename MeshInfoType>
 inline void
-scalar_field_axpby(
+field_axpby(
   const MeshInfoType& meshInfo,
   const stk::mesh::Selector& sel,
   const double alpha,
-  const stk::mesh::FieldBase& xField,
+  const ScalarFieldType& xField,
   const double beta,
-  stk::mesh::FieldBase& yField,
+  ScalarFieldType& yField,
   const stk::topology::rank_t rank = stk::topology::NODE_RANK)
 {
   constexpr unsigned nComp = 1;
@@ -152,7 +152,7 @@ scalar_field_axpby(
 
 template <typename MeshInfoType>
 inline void
-vector_field_axpby(
+field_axpby(
   const MeshInfoType& meshInfo,
   const stk::mesh::Selector& sel,
   const double alpha,

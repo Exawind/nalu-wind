@@ -14,7 +14,7 @@ class TestFaceKernel : public sierra::nalu::Kernel
 public:
   TestFaceKernel(
     stk::topology topo,
-    sierra::nalu::ScalarFieldType* scalarQ,
+    ScalarFieldType* scalarQ,
     sierra::nalu::ElemDataRequests& dataNeeded)
     : numTimesExecuted_(0), topo_(topo), scalarQ_(scalarQ)
   {
@@ -37,7 +37,7 @@ public:
 
 private:
   stk::topology topo_;
-  sierra::nalu::ScalarFieldType* scalarQ_;
+  ScalarFieldType* scalarQ_;
 };
 
 #ifndef KOKKOS_ENABLE_GPU

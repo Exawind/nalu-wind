@@ -50,17 +50,19 @@ AssembleMomentumEdgeWallFunctionSolverAlgorithm::
 {
   // save off fields
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  velocity_ = meta_data.get_field<double>(stk::topology::NODE_RANK, "velocity");
-  bcVelocity_ =
-    meta_data.get_field<double>(stk::topology::NODE_RANK, "wall_velocity_bc");
-  density_ = meta_data.get_field<double>(stk::topology::NODE_RANK, "density");
+  velocity_ =
+    meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
+  bcVelocity_ = meta_data.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "wall_velocity_bc");
+  density_ =
+    meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
   viscosity_ =
-    meta_data.get_field<double>(stk::topology::NODE_RANK, "viscosity");
-  exposedAreaVec_ =
-    meta_data.get_field<double>(meta_data.side_rank(), "exposed_area_vector");
-  wallFrictionVelocityBip_ = meta_data.get_field<double>(
+    meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
+  exposedAreaVec_ = meta_data.get_field<GenericFieldType>(
+    meta_data.side_rank(), "exposed_area_vector");
+  wallFrictionVelocityBip_ = meta_data.get_field<GenericFieldType>(
     meta_data.side_rank(), "wall_friction_velocity_bip");
-  wallNormalDistanceBip_ = meta_data.get_field<double>(
+  wallNormalDistanceBip_ = meta_data.get_field<GenericFieldType>(
     meta_data.side_rank(), "wall_normal_distance_bip");
 }
 
