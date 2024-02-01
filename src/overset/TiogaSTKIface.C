@@ -178,7 +178,7 @@ TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
   ScalarIntFieldType* ibf =
     meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
   std::vector<const stk::mesh::FieldBase*> pvec{ibf};
-  stk::mesh::copy_owned_to_shared(bulk_, pvec);
+  stk::mesh::parallel_max(bulk_, {ibf});
 
   post_connectivity_sync();
 
