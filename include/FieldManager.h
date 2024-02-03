@@ -61,7 +61,7 @@ public:
     const std::string& name,
     const stk::mesh::PartVector& parts,
     const void* init_val = nullptr,
-    stk::mesh::FieldState state = stk::mesh::FieldState::StateNone)
+    stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const
   {
     const int numStates = 0;
     const int numComponents = 0;
@@ -70,7 +70,7 @@ public:
   }
 
   /// Check to see if the field has been registered.
-  bool field_exists(const std::string& name);
+  bool field_exists(const std::string& name) const;
 
   unsigned size() const { return meta_.get_fields().size(); }
   /// Register a Generic field.
@@ -83,7 +83,7 @@ public:
     const int numStates,
     const int numComponents,
     const void* init_val = nullptr,
-    stk::mesh::FieldState state = stk::mesh::FieldState::StateNone)
+    stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const
   {
     register_field(name, parts, numStates, numComponents, init_val);
     return get_field_ptr<GenericFieldType>(name, state);
@@ -121,12 +121,12 @@ public:
   /// field Registry is a static compile-time definition. Care must be taken
   /// not to re-register the same field on the same parts with a conflicting
   /// number of states or components.
-  FieldPointerTypes register_field(
+  FieldPointerTypes register_field (
     const std::string& name,
     const stk::mesh::PartVector& parts,
     const int numStates = 0,
     const int numComponents = 0,
-    const void* init_val = nullptr);
+    const void* init_val = nullptr) const;
 
   /// Given the named field that has already been registered on the CPU
   /// return the GPU version of the same field.
