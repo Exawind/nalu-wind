@@ -164,8 +164,7 @@ TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
 {
   for (auto& tb : blocks_) {
     // Update IBLANK information at nodes and elements
-    tb->update_iblanks(
-      oversetManager_.holeNodes_, oversetManager_.fringeNodes_);
+    tb->update_iblanks();
     tb->update_iblank_cell();
 
     // For each block determine donor elements that needs to be ghosted to other
@@ -179,6 +178,16 @@ TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
     meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
   std::vector<const stk::mesh::FieldBase*> pvec{ibf};
   stk::mesh::copy_owned_to_shared(bulk_, pvec);
+
+  for (auto& tb : blocks_) {
+    // Call update_iblanks again to assign holeNodes and fringeNodes vectors
+    // after iblanks on shared nodes are corrected
+    tb->update_fringe_and_hole_nodes(
+      oversetManager_.holeNodes_, oversetManager_.fringeNodes_);
+    // Return the corrected iblank field to Tioga prior to donor-to-receptor
+    // interpolation
+    tb->update_tioga_iblanks();
+  }
 
   post_connectivity_sync();
 
