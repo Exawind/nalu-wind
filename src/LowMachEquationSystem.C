@@ -3603,6 +3603,93 @@ ContinuityEquationSystem::compute_projected_nodal_gradient()
   } else {
     projectedNodalGradEqs_->solve_and_update_external();
   }
+  // Adjust pressure gradient at VOF interfaces near 
+  // overset boundaries 
+  if (realm_.solutionOptions_->realm_has_vof_ &&
+      realm_.query_for_overset()) {
+ 
+    const int ndim = realm_.meta_data().spatial_dimension();
+    stk::mesh::MetaData& meta_data = realm_.meta_data();
+    stk::mesh::Selector sel =
+      (meta_data.locally_owned_part() | meta_data.globally_shared_part()) &
+      stk::mesh::selectField(*pressure_);
+    const auto& ngpMesh = realm_.ngp_mesh();
+    const auto& fieldMgr = realm_.ngp_field_manager();
+    auto dpdx = fieldMgr.get_field<double>(get_field_ordinal(meta_data, "dpdx")); 
+    auto dvofdx = fieldMgr.get_field<double>(get_field_ordinal(meta_data, "dvolume_of_fluiddx"));
+    auto iblank = fieldMgr.get_field<int>(get_field_ordinal(meta_data, "iblank"));
+
+    double gravity[3] = {0.0, 0.0, 0.0};
+
+    for (int d = 0; d < ndim; ++d)
+      gravity[d] = realm_.solutionOptions_->gravity_[d];
+
+
+    using EntityInfoType = nalu_ngp::EntityInfo<stk::mesh::NgpMesh>;
+
+    nalu_ngp::run_edge_algorithm("fix_pressure_gradients_at_overset_bcs", ngpMesh, sel,
+        KOKKOS_LAMBDA(const EntityInfoType& einfo){
+
+        const auto& nodes = einfo.entityNodes;
+        const auto nodeL = ngpMesh.fast_mesh_index(nodes[0]);
+        const auto nodeR = ngpMesh.fast_mesh_index(nodes[1]);
+
+        const int iblankL = iblank.get(nodeL, 0);
+        const int iblankR = iblank.get(nodeR, 0);
+
+        if (iblankL == iblankR)
+          return;
+
+        const auto node_to_fix = iblankL < 0 ? nodeR : nodeL;
+        const auto node_to_use = iblankL < 0 ? nodeL : nodeR; 
+
+        double interface_gradient[3] = {0.0, 0.0, 0.0};
+        double gradient_magnitude = 0.0;
+
+        for (int i = 0; i < ndim; ++i) {
+          interface_gradient[i] = 0.5 * (dvofdx.get(nodeL, i) + dvofdx.get(nodeR, i));
+          gradient_magnitude += interface_gradient[i] * interface_gradient[i];
+        }
+        gradient_magnitude = stk::math::sqrt(gradient_magnitude);
+
+        // No gradient == no interface
+        if (gradient_magnitude < 1e-12)
+          return;
+
+        gradient_magnitude = 0.0;
+        for (int i = 0; i < ndim; ++i)
+          gradient_magnitude += gravity[i] * gravity[i];
+
+        gradient_magnitude = stk::math::sqrt(gradient_magnitude);
+
+        // No gravity == no buoyancy errors
+        if (gradient_magnitude < 1e-12)
+          return;
+
+        // Interface normal cannot be trusted at overset interface due
+        // to interpolation errors 
+        for (int i = 0; i < ndim; ++i)
+          interface_gradient[i] = gravity[i] / gradient_magnitude;
+
+        double normal_magnitude_to_fix = 0.0;
+        double normal_magnitude_to_use = 0.0;
+        for (int i = 0; i < ndim; ++i) {
+          normal_magnitude_to_fix += dpdx.get(node_to_fix, i) * interface_gradient[i];
+          normal_magnitude_to_use += dpdx.get(node_to_use, i) * interface_gradient[i];
+        }
+
+        // Remove tangential components and replace
+        for (int i = 0; i < 3; ++i) {
+          double tangential_comp_to_fix = dpdx.get(node_to_fix, i) - 
+            interface_gradient[i] * normal_magnitude_to_fix;
+          double tangential_comp_to_use = dpdx.get(node_to_use, i) -
+            interface_gradient[i] * normal_magnitude_to_use;
+          dpdx.get(node_to_fix,i) = dpdx.get(node_to_fix,i) - tangential_comp_to_fix + tangential_comp_to_use;
+        }
+
+        });
+  }
+
 }
 
 void
