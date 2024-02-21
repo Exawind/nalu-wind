@@ -10,6 +10,8 @@
 #ifndef MOMENTUMSSTAMSFORCINGNODEKERNEL_H
 #define MOMENTUMSSTAMSFORCINGNODEKERNEL_H
 
+#include "Enums.h"
+
 #include "node_kernels/NodeKernel.h"
 
 #include "stk_mesh/base/BulkData.hpp"
@@ -62,6 +64,7 @@ private:
   stk::mesh::NgpField<double> avgTime_;
   stk::mesh::NgpField<double> avgResAdeq_;
   stk::mesh::NgpField<double> forcingComp_;
+  stk::mesh::NgpField<double> fOneBlend_;
 
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
   unsigned coordinatesID_{stk::mesh::InvalidOrdinal};
@@ -77,7 +80,9 @@ private:
   unsigned avgVelocityID_{stk::mesh::InvalidOrdinal};
   unsigned avgResAdeqID_{stk::mesh::InvalidOrdinal};
   unsigned forcingCompID_{stk::mesh::InvalidOrdinal};
+  unsigned fOneBlendID_{stk::mesh::InvalidOrdinal};
 
+  const TurbulenceModel turbModel_;
   const double betaStar_;
   const double forceCl_;
   const double Ceta_;

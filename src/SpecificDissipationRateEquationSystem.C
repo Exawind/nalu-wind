@@ -52,6 +52,7 @@
 #include <node_kernels/SDRSSTDESNodeKernel.h>
 #include <node_kernels/ScalarGclNodeKernel.h>
 #include <node_kernels/SDRKONodeKernel.h>
+#include <node_kernels/SDRKOAMSNodeKernel.h>
 
 // ngp
 #include "ngp_utils/NgpFieldBLAS.h"
@@ -67,6 +68,7 @@
 
 // UT Austin Hybrid AMS kernel
 #include <node_kernels/SDRSSTAMSNodeKernel.h>
+#include <node_kernels/SDRSSTLRAMSNodeKernel.h>
 
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
 
@@ -231,10 +233,7 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
     if (itsi == solverAlgDriver_->solverAlgMap_.end()) {
       SolverAlgorithm* theAlg = NULL;
       if (realm_.realmUsesEdges_) {
-        const bool useAvgMdot = (realm_.solutionOptions_->turbulenceModel_ ==
-                                 TurbulenceModel::SST_AMS)
-                                  ? true
-                                  : false;
+        const bool useAvgMdot = realm_.is_ams_model();
         theAlg = new ScalarEdgeSolverAlg(
           realm_, part, this, sdr_, dwdx_, evisc_, useAvgMdot);
       } else {
@@ -289,8 +288,18 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
             realm_.meta_data(),
             realm_.solutionOptions_->get_coordinates_name());
         } else if (
+          TurbulenceModel::SSTLR_AMS ==
+          realm_.solutionOptions_->turbulenceModel_) {
+          nodeAlg.add_kernel<SDRSSTLRAMSNodeKernel>(
+            realm_.meta_data(),
+            realm_.solutionOptions_->get_coordinates_name());
+        } else if (
           TurbulenceModel::KO == realm_.solutionOptions_->turbulenceModel_) {
           nodeAlg.add_kernel<SDRKONodeKernel>(realm_.meta_data());
+        } else if (
+          TurbulenceModel::KO_AMS ==
+          realm_.solutionOptions_->turbulenceModel_) {
+          nodeAlg.add_kernel<SDRKOAMSNodeKernel>(realm_.meta_data());
         } else {
           throw std::runtime_error(
             "Invalid turbulence model in SDR equation system: " +
@@ -312,6 +321,10 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
   // effective diffusive flux coefficient alg for SST
   if (!effDiffFluxAlg_) {
     if (TurbulenceModel::KO == realm_.solutionOptions_->turbulenceModel_) {
+      effDiffFluxAlg_.reset(new EffDiffFluxCoeffAlg(
+        realm_, part, visc_, tvisc_, evisc_, 1.0, 2.0, realm_.is_turbulent()));
+    } else if (
+      TurbulenceModel::KO_AMS == realm_.solutionOptions_->turbulenceModel_) {
       effDiffFluxAlg_.reset(new EffDiffFluxCoeffAlg(
         realm_, part, visc_, tvisc_, evisc_, 1.0, 2.0, realm_.is_turbulent()));
     } else {

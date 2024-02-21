@@ -216,12 +216,9 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
     if (itsi == solverAlgDriver_->solverAlgMap_.end()) {
       SolverAlgorithm* theAlg = NULL;
       if (realm_.realmUsesEdges_) {
-        const bool useAvgMdot = (realm_.solutionOptions_->turbulenceModel_ ==
-                                 TurbulenceModel::SST_AMS)
-                                  ? true
-                                  : false;
+        // Currently not compatible with AMS, setting averaging to False
         theAlg = new ScalarEdgeSolverAlg(
-          realm_, part, this, gamma_, dgamdx_, evisc_, useAvgMdot);
+          realm_, part, this, gamma_, dgamdx_, evisc_, false);
       } else {
         throw std::runtime_error(
           "GAMMAEQS: Attempt to use non-NGP element solver algorithm");

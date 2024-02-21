@@ -62,6 +62,7 @@ SDRSSTAMSNodeKernel::setup(Realm& realm)
   gammaOne_ = realm.get_turb_model_constant(TM_gammaOne);
   gammaTwo_ = realm.get_turb_model_constant(TM_gammaTwo);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
+  sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
 
   lengthScaleLimiter_ = realm.solutionOptions_->lengthScaleLimiter_;
   if (lengthScaleLimiter_) {
@@ -146,7 +147,10 @@ SDRSSTAMSNodeKernel::execute(
 
   const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);
 
-  rhs(0) += (Pw - Dw + Sw) * dualVolume;
+  // SUST source term
+  const NodeKernelTraits::DblType Dwamb = beta * rho * sdrAmb_ * sdrAmb_;
+
+  rhs(0) += (Pw - Dw + Dwamb + Sw) * dualVolume;
 
   lhs(0, 0) +=
     (2.0 * beta * rho * sdr + stk::math::max(Sw / sdr, 0.0)) * dualVolume;

@@ -51,6 +51,8 @@ TKESSTAMSNodeKernel::setup(Realm& realm)
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
+  tkeAmb_ = realm.get_turb_model_constant(TM_tkeAmb);
+  sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
 }
 
 KOKKOS_FUNCTION
@@ -71,7 +73,11 @@ TKESSTAMSNodeKernel::execute(
 
   const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);
 
-  rhs(0) += (Pk - Dk) * dualVolume;
+  // SUST source term
+  const NodeKernelTraits::DblType Dkamb =
+    betaStar_ * rho_.get(node, 0) * sdrAmb_ * tkeAmb_;
+
+  rhs(0) += (Pk - Dk + Dkamb) * dualVolume;
 
   lhs(0, 0) += tkeFac * dualVolume;
 }

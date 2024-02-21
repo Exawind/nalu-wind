@@ -10,7 +10,7 @@
 #ifndef SSTAMSAveragesAlg_h
 #define SSTAMSAveragesAlg_h
 
-#include "Algorithm.h"
+#include "AMSAveragesAlg.h"
 #include "FieldTypeDef.h"
 
 #include "stk_mesh/base/Types.hpp"
@@ -20,7 +20,7 @@ namespace nalu {
 
 class Realm;
 
-class SSTAMSAveragesAlg : public Algorithm
+class SSTAMSAveragesAlg : public AMSAveragesAlg
 {
 public:
   using DblType = double;
@@ -37,6 +37,9 @@ private:
   const DblType v2cMu_;
   const DblType aspectRatioSwitch_;
   const DblType avgTimeCoeff_;
+  const DblType alphaPow_;
+  const DblType alphaScaPow_;
+  const DblType coeffR_;
   const bool meshMotion_;
   const bool RANSBelowKs_;
   const DblType z0_;

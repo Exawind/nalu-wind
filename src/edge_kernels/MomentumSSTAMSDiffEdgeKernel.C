@@ -28,6 +28,8 @@ MomentumSSTAMSDiffEdgeKernel::MomentumSSTAMSDiffEdgeKernel(
     betaStar_(solnOpts.get_turb_model_constant(TM_betaStar)),
     CMdeg_(solnOpts.get_turb_model_constant(TM_CMdeg)),
     aspectRatioSwitch_(solnOpts.get_turb_model_constant(TM_aspRatSwitch)),
+    alphaPow_(solnOpts.get_turb_model_constant(TM_alphaPow)),
+    alphaScaPow_(solnOpts.get_turb_model_constant(TM_alphaScaPow)),
     nDim_(bulk.mesh_meta_data().spatial_dimension())
 {
   const auto& meta = bulk.mesh_meta_data();
@@ -158,8 +160,8 @@ MomentumSSTAMSDiffEdgeKernel::execute(
     0.5 * (stk::math::max(sdr_.get(nodeL, 0), 1.0e-12) +
            stk::math::max(sdr_.get(nodeR, 0), 1.0e-12));
   const EdgeKernelTraits::DblType alphaIp =
-    0.5 * (stk::math::pow(beta_.get(nodeL, 0), 1.7) +
-           stk::math::pow(beta_.get(nodeR, 0), 1.7));
+    0.5 * (stk::math::pow(beta_.get(nodeL, 0), alphaPow_) +
+           stk::math::pow(beta_.get(nodeR, 0), alphaPow_));
 
   EdgeKernelTraits::DblType avgdUidxj[EdgeKernelTraits::NDimMax]
                                      [EdgeKernelTraits::NDimMax];
@@ -232,8 +234,8 @@ MomentumSSTAMSDiffEdgeKernel::execute(
     // tau_ij^SGRS Since we are letting SST calculate it's normal mu_t, we
     // need to scale by alpha here
     const EdgeKernelTraits::DblType avgDivUstress =
-      2.0 / 3.0 * alphaIp * (2.0 - alphaIp) * muIp * avgDivU * av[i] *
-      includeDivU_;
+      2.0 / 3.0 * stk::math::pow(alphaIp, alphaScaPow_) * (2.0 - alphaIp) *
+      muIp * avgDivU * av[i] * includeDivU_;
     smdata.rhs(rowL) -= avgDivUstress;
     smdata.rhs(rowR) += avgDivUstress;
 
@@ -259,11 +261,12 @@ MomentumSSTAMSDiffEdgeKernel::execute(
 
       // SGRS (average) term, scaled by alpha
       const EdgeKernelTraits::DblType rhsSGRSfacDiff_i =
-        -alphaIp * (2.0 - alphaIp) * muIp * avgdUidxj[i][j] * av[j];
+        -stk::math::pow(alphaIp, alphaScaPow_) * (2.0 - alphaIp) * muIp *
+        avgdUidxj[i][j] * av[j];
 
       // Implicit treatment of SGRS (average) term
-      lhs_riC_SGRS_i +=
-        -alphaIp * (2.0 - alphaIp) * muIp * av[j] * av[j] * inv_axdx;
+      lhs_riC_SGRS_i += -stk::math::pow(alphaIp, alphaScaPow_) *
+                        (2.0 - alphaIp) * muIp * av[j] * av[j] * inv_axdx;
 
       smdata.rhs(rowL) -= rhsfacDiff_i + rhsSGRSfacDiff_i;
       smdata.rhs(rowR) += rhsfacDiff_i + rhsSGRSfacDiff_i;
@@ -283,11 +286,13 @@ MomentumSSTAMSDiffEdgeKernel::execute(
 
       // SGRS (average) term, scaled by alpha
       const EdgeKernelTraits::DblType rhsSGRSfacDiff_j =
-        -alphaIp * (2.0 - alphaIp) * muIp * avgdUidxj[j][i] * av[j];
+        -stk::math::pow(alphaIp, alphaScaPow_) * (2.0 - alphaIp) * muIp *
+        avgdUidxj[j][i] * av[j];
 
       // Implicit treatment of SGRS (average) term
       const EdgeKernelTraits::DblType lhsSGRSfacDiff_j =
-        -alphaIp * (2.0 - alphaIp) * muIp * av[i] * av[j] * inv_axdx;
+        -stk::math::pow(alphaIp, alphaScaPow_) * (2.0 - alphaIp) * muIp *
+        av[i] * av[j] * inv_axdx;
 
       smdata.rhs(rowL) -= rhsfacDiff_j + rhsSGRSfacDiff_j;
       smdata.rhs(rowR) += rhsfacDiff_j + rhsSGRSfacDiff_j;

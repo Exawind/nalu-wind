@@ -40,7 +40,6 @@ realms:
         specific_dissipation_rate: solve_scalar
         pressure: solve_cont
         ndtw: solve_cont
-        time_averaged_model_split: solve_cont
 
       systems:
         - WallDistance:

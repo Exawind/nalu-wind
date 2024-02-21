@@ -1108,6 +1108,8 @@ public:
         stk::topology::NODE_RANK, "turbulent_ke")),
       sdr_(&meta_->declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "specific_dissipation_rate")),
+      tdr_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "total_dissipation_rate")),
       visc_(&meta_->declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "viscosity")),
       tvisc_(&meta_->declare_field<ScalarFieldType>(
@@ -1124,6 +1126,8 @@ public:
         stk::topology::NODE_RANK, "rans_time_scale")),
       minDist_(&meta_->declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "minimum_distance_to_wall")),
+      dplus_(&meta_->declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "dplus_wall_function")),
       Mij_(&meta_->declare_field<GenericFieldType>(
         stk::topology::NODE_RANK, "metric_tensor")),
       fOneBlend_(&meta_->declare_field<ScalarFieldType>(
@@ -1141,6 +1145,7 @@ public:
   {
     stk::mesh::put_field_on_mesh(*tke_, meta_->universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*sdr_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*tdr_, meta_->universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*visc_, meta_->universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tvisc_, meta_->universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*alpha_, meta_->universal_part(), 1, nullptr);
@@ -1154,6 +1159,7 @@ public:
       *avgTime_, meta_->universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(
       *minDist_, meta_->universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*dplus_, meta_->universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(
       *Mij_, meta_->universal_part(), spatialDim_ * spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
@@ -1185,9 +1191,11 @@ public:
     stk::mesh::field_fill(0.6, *avgProd_);
     stk::mesh::field_fill(1.0, *avgTime_);
     stk::mesh::field_fill(0.7, *minDist_);
+    unit_test_kernel_utils::dplus_test_function(*bulk_, *coordinates_, *dplus_);
     stk::mesh::field_fill(0.2, *Mij_);
     unit_test_kernel_utils::tke_test_function(*bulk_, *coordinates_, *tke_);
     unit_test_kernel_utils::sdr_test_function(*bulk_, *coordinates_, *sdr_);
+    unit_test_kernel_utils::tdr_test_function(*bulk_, *coordinates_, *tdr_);
     unit_test_kernel_utils::alpha_test_function(*bulk_, *coordinates_, *alpha_);
     unit_test_kernel_utils::sst_f_one_blending_test_function(
       *bulk_, *coordinates_, *fOneBlend_);
@@ -1201,6 +1209,7 @@ public:
 
   ScalarFieldType* tke_{nullptr};
   ScalarFieldType* sdr_{nullptr};
+  ScalarFieldType* tdr_{nullptr};
   ScalarFieldType* visc_{nullptr};
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* alpha_{nullptr};
@@ -1209,6 +1218,7 @@ public:
   ScalarFieldType* avgProd_{nullptr};
   ScalarFieldType* avgTime_{nullptr};
   ScalarFieldType* minDist_{nullptr};
+  ScalarFieldType* dplus_{nullptr};
   GenericFieldType* Mij_{nullptr};
   ScalarFieldType* fOneBlend_{nullptr};
   TensorFieldType* dudx_{nullptr};

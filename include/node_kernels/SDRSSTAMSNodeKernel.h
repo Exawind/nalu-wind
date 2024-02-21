@@ -79,6 +79,7 @@ private:
   NodeKernelTraits::DblType referenceVelocity_;
   NodeKernelTraits::DblType gammaOne_;
   NodeKernelTraits::DblType gammaTwo_;
+  NodeKernelTraits::DblType sdrAmb_;
 };
 
 } // namespace nalu
