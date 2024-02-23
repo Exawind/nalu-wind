@@ -111,6 +111,7 @@ enum UserDataType {
   CONSTANT_UD = 0,
   FUNCTION_UD = 1,
   USER_SUB_UD = 2,
+  STRING_FUNCTION_UD = 3,
   UserDataType_END
 };
 

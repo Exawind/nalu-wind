@@ -50,6 +50,7 @@ realms:
       solver_system_specification:
         velocity: solve_scalar
         pressure: solve_cont
+        enthalpy: solve_scalar
 
       # This defines the equation systems, maximum number of inner iterations,
       # and scaled nonlinear residual tolerance.
@@ -57,6 +58,11 @@ realms:
 
         - LowMachEOM:
             name: myLowMach
+            max_iterations: 1
+            convergence_tolerance: 1.0e-5
+
+        - Enthalpy:
+            name: myEnth
             max_iterations: 1
             convergence_tolerance: 1.0e-5
 
@@ -96,8 +102,13 @@ realms:
         target_name: [fluid]
         value:
           pressure: 0.0
-#          velocity: [0.707, 0.707, 0.0]
           velocity: [0.500, 0.866, 0.0]
+
+      - string_function: ic_2
+        target_name: [fluid]
+        function:
+          temperature: &tfun '(z <= .650) * 300.0 + (z >= .650 && z < .750) * (300 + .08 * (z*1000-650)) + (z >= .750) * (308 + 0.003 * (z*1000-750))'
+
 
 
     # Boundary conditions are inflow on the west, open (outflow) on the east,
@@ -110,23 +121,27 @@ realms:
       target_name: west
       inflow_user_data:
         velocity: [0.500, 0.866, 0.0]
+        temperature: *tfun
 
     - open_boundary_condition: bc_east
       target_name: east
       open_user_data:
         velocity: [0.500, 0.866, 0.0]
         pressure: 0.0
+        temperature: 300
 
     - inflow_boundary_condition: bc_south
       target_name: south
       inflow_user_data:
         velocity: [0.500, 0.866, 0.0]
+        temperature: *tfun
 
     - open_boundary_condition: bc_north
       target_name: north
       open_user_data:
         velocity: [0.500, 0.866, 0.0]
         pressure: 0.0
+        temperature: 300.
 
     - symmetry_boundary_condition: bc_upper
       target_name: top
@@ -146,6 +161,9 @@ realms:
             pressure: no
             velocity: no
             enthalpy: yes 
+
+        - laminar_prandtl:
+            enthalpy: 0.7
 
         - peclet_function_form:
             velocity: classic
@@ -169,6 +187,7 @@ realms:
       output_variables:
        - velocity
        - pressure
+       - temperature
 
     restart:
       restart_data_base_name: ablHill3dSymPenalty.rst

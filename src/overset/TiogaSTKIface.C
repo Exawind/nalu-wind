@@ -164,8 +164,7 @@ TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
 {
   for (auto& tb : blocks_) {
     // Update IBLANK information at nodes and elements
-    tb->update_iblanks(
-      oversetManager_.holeNodes_, oversetManager_.fringeNodes_);
+    tb->update_iblanks();
     tb->update_iblank_cell();
 
     // For each block determine donor elements that needs to be ghosted to other
@@ -179,6 +178,16 @@ TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
     meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
   std::vector<const stk::mesh::FieldBase*> pvec{ibf};
   stk::mesh::copy_owned_to_shared(bulk_, pvec);
+
+  for (auto& tb : blocks_) {
+    // Call update_iblanks again to assign holeNodes and fringeNodes vectors
+    // after iblanks on shared nodes are corrected
+    tb->update_fringe_and_hole_nodes(
+      oversetManager_.holeNodes_, oversetManager_.fringeNodes_);
+    // Return the corrected iblank field to Tioga prior to donor-to-receptor
+    // interpolation
+    tb->update_tioga_iblanks();
+  }
 
   post_connectivity_sync();
 
@@ -208,16 +217,7 @@ TiogaSTKIface::reset_data_structures()
 void
 TiogaSTKIface::update_ghosting()
 {
-  stk::mesh::Ghosting* ovsetGhosting = oversetManager_.oversetGhosting_;
   std::vector<stk::mesh::EntityKey> recvGhostsToRemove;
-
-  if (ovsetGhosting != nullptr) {
-    stk::mesh::EntityProcVec currentSendGhosts;
-    ovsetGhosting->send_list(currentSendGhosts);
-
-    sierra::nalu::compute_precise_ghosting_lists(
-      bulk_, elemsToGhost_, currentSendGhosts, recvGhostsToRemove);
-  }
 
   size_t local[2] = {elemsToGhost_.size(), recvGhostsToRemove.size()};
   size_t global[2] = {0, 0};
@@ -225,10 +225,11 @@ TiogaSTKIface::update_ghosting()
 
   if ((global[0] > 0) || (global[1] > 0)) {
     bulk_.modification_begin();
-    if (ovsetGhosting == nullptr) {
-      const std::string ghostName = "nalu_overset_ghosting";
-      oversetManager_.oversetGhosting_ = &(bulk_.create_ghosting(ghostName));
+    if (oversetManager_.oversetGhosting_ != nullptr) {
+      bulk_.destroy_ghosting(*oversetManager_.oversetGhosting_);
     }
+    const std::string ghostName = "nalu_overset_ghosting";
+    oversetManager_.oversetGhosting_ = &(bulk_.create_ghosting(ghostName));
     bulk_.change_ghosting(
       *(oversetManager_.oversetGhosting_), elemsToGhost_, recvGhostsToRemove);
     bulk_.modification_end();

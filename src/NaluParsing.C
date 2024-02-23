@@ -316,9 +316,9 @@ operator>>(
 void
 operator>>(const YAML::Node& node, UserFunctionInitialConditionData& fcnIC)
 {
-
   fcnIC.theIcType_ = sierra::nalu::FUNCTION_UD;
   fcnIC.icName_ = node["user_function"].as<std::string>();
+
   const YAML::Node& targets = node["target_name"];
   if (targets.Type() == YAML::NodeType::Scalar) {
     fcnIC.targetNames_.resize(1);
@@ -343,9 +343,41 @@ operator>>(const YAML::Node& node, UserFunctionInitialConditionData& fcnIC)
 }
 
 void
+operator>>(const YAML::Node& node, StringFunctionInitialConditionData& fcnIC)
+{
+  fcnIC.theIcType_ = sierra::nalu::STRING_FUNCTION_UD;
+  fcnIC.icName_ = node["string_function"].as<std::string>();
+  const YAML::Node& targets = node["target_name"];
+
+  if (targets.Type() == YAML::NodeType::Scalar) {
+    fcnIC.targetNames_.resize(1);
+    fcnIC.targetNames_[0] = targets.as<std::string>();
+    NaluEnv::self().naluOutputP0()
+      << "constant IC: name: " << fcnIC.icName_ << " , target[" << 0
+      << "] = " << fcnIC.targetNames_[0] << std::endl;
+    if (fcnIC.targetNames_[0].find(',') != std::string::npos) {
+      throw std::runtime_error(
+        "In " + fcnIC.icName_ +
+        " found ',' in target name - you must enclose in '[...]' for multiple "
+        "targets");
+    }
+
+  } else {
+    fcnIC.targetNames_.resize(targets.size());
+    for (size_t i = 0; i < targets.size(); ++i) {
+      fcnIC.targetNames_[i] = targets[i].as<std::string>();
+    }
+  }
+
+  if (expect_map(node, "function", true)) {
+    fcnIC.functions_ =
+      node["function"].as<std::map<std::string, std::string>>();
+  }
+}
+
+void
 operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
 {
-
   constIC.theIcType_ = sierra::nalu::CONSTANT_UD;
   constIC.icName_ = node["constant"].as<std::string>();
   const YAML::Node& targets = node["target_name"];
@@ -750,9 +782,16 @@ convert<sierra::nalu::WallUserData>::decode(
       sierra::nalu::CONSTANT_UD;
   }
   if (node["temperature"]) {
-    wallData.temperature_ = node["temperature"].as<sierra::nalu::Temperature>();
+    try {
+      wallData.temperature_ =
+        node["temperature"].as<sierra::nalu::Temperature>();
+      wallData.bcDataTypeMap_["temperature"] = sierra::nalu::CONSTANT_UD;
+    } catch (const YAML::BadConversion&) {
+      wallData.functions.emplace(
+        "temperature", node["temperature"].as<std::string>());
+      wallData.bcDataTypeMap_["temperature"] = sierra::nalu::STRING_FUNCTION_UD;
+    }
     wallData.bcDataSpecifiedMap_["temperature"] = true;
-    wallData.bcDataTypeMap_["temperature"] = sierra::nalu::CONSTANT_UD;
     wallData.tempSpec_ = true;
   }
 
@@ -829,6 +868,7 @@ convert<sierra::nalu::WallUserData>::decode(
     wallData.bcDataSpecifiedMap_["pressure"] = true;
     wallData.bcDataTypeMap_["pressure"] = sierra::nalu::CONSTANT_UD;
   }
+
   if (node["fsi_interface"]) {
     wallData.isFsiInterface_ = node["fsi_interface"].as<bool>();
   }
@@ -934,8 +974,16 @@ convert<sierra::nalu::InflowUserData>::decode(
     inflowData.massFractionSpec_ = true;
   }
   if (node["temperature"]) {
-    inflowData.temperature_ =
-      node["temperature"].as<sierra::nalu::Temperature>();
+    try {
+      inflowData.temperature_ =
+        node["temperature"].as<sierra::nalu::Temperature>();
+      inflowData.bcDataTypeMap_["temperature"] = sierra::nalu::CONSTANT_UD;
+    } catch (const YAML::BadConversion&) {
+      inflowData.functions.emplace(
+        "temperature", node["temperature"].as<std::string>());
+      inflowData.bcDataTypeMap_["temperature"] =
+        sierra::nalu::STRING_FUNCTION_UD;
+    }
     inflowData.tempSpec_ = true;
   }
 
@@ -1016,7 +1064,15 @@ convert<sierra::nalu::OpenUserData>::decode(
     openData.massFractionSpec_ = true;
   }
   if (node["temperature"]) {
-    openData.temperature_ = node["temperature"].as<sierra::nalu::Temperature>();
+    try {
+      openData.temperature_ =
+        node["temperature"].as<sierra::nalu::Temperature>();
+      openData.bcDataTypeMap_["temperature"] = sierra::nalu::CONSTANT_UD;
+    } catch (const YAML::BadConversion&) {
+      openData.functions.emplace(
+        "temperature", node["temperature"].as<std::string>());
+      openData.bcDataTypeMap_["temperature"] = sierra::nalu::STRING_FUNCTION_UD;
+    }
     openData.tempSpec_ = true;
   }
 

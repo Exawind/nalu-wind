@@ -4,7 +4,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/BoussinesqNonIsoMomentumSrcNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/BoussinesqNonIsoTemperatureAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/BoussinesqNonIsoVelocityAuxFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/CappingInversionTemperatureAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ConvectingTaylorVortexPressureAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ConvectingTaylorVortexVelocityAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/FlowPastCylinderTempAuxFunction.C
@@ -19,6 +18,9 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyTaylorVortexMomentumSrcNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyTaylorVortexPressureAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyTaylorVortexVelocityAuxFunction.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/StringTimeCoordFunction.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/StringTimeCoordTemperatureAuxFunction.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/TabulatedTemperatureAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TaylorGreenPressureAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TaylorGreenVelocityAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TornadoAuxFunction.C

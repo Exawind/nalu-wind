@@ -715,6 +715,15 @@ EquationSystems::register_initial_condition_fcn(
       part, fcnIC.functionNames_, fcnIC.functionParams_);
 }
 
+void
+EquationSystems::register_initial_condition_string_function(
+  stk::mesh::Part* part, const std::map<std::string, std::string>& func)
+{
+  // call through to equation systems
+  for (EquationSystem* eqSys : equationSystemVector_)
+    eqSys->register_initial_condition_string_function(part, func);
+}
+
 //--------------------------------------------------------------------------
 //-------- initialize() ----------------------------------------------------
 //--------------------------------------------------------------------------

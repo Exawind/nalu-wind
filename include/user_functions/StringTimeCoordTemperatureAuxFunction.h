@@ -7,25 +7,22 @@
 // for more details.
 //
 
-#ifndef CappingInversionTemperatureAuxFunction_h
-#define CappingInversionTemperatureAuxFunction_h
+#ifndef StringTimeCoordTemperatureAuxFunction_h
+#define StringTimeCoordTemperatureAuxFunction_h
 
-#include <AuxFunction.h>
+#include "AuxFunction.h"
+#include "StringTimeCoordFunction.h"
 
 #include <vector>
 
-namespace sierra {
-namespace nalu {
+namespace sierra::nalu {
 
-class CappingInversionTemperatureAuxFunction : public AuxFunction
+class StringTimeCoordTemperatureAuxFunction final : public AuxFunction
 {
 public:
-  CappingInversionTemperatureAuxFunction();
+  StringTimeCoordTemperatureAuxFunction(std::string fcn);
 
-  virtual ~CappingInversionTemperatureAuxFunction() {}
-
-  using AuxFunction::do_evaluate;
-  virtual void do_evaluate(
+  void do_evaluate(
     const double* coords,
     const double time,
     const unsigned spatialDimension,
@@ -33,10 +30,12 @@ public:
     double* fieldPtr,
     const unsigned fieldSize,
     const unsigned beginPos,
-    const unsigned endPos) const;
+    const unsigned endPos) const final;
+
+private:
+  const StringTimeCoordFunction f_;
 };
 
-} // namespace nalu
-} // namespace sierra
+} // namespace sierra::nalu
 
 #endif
