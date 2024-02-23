@@ -91,6 +91,7 @@ public:
 
   virtual void manage_projected_nodal_gradient(EquationSystems& eqSystems);
   virtual void compute_projected_nodal_gradient();
+  void calculate_smooth_vof();
 
   virtual void solve_and_update();
 
@@ -98,6 +99,8 @@ public:
 
   const bool managePNG_;
   ScalarFieldType* volumeOfFluid_;
+  ScalarFieldType* levelSet_;
+  ScalarFieldType* hFunction_;
   VectorFieldType* dvolumeOfFluiddx_;
   ScalarFieldType* vofTmp_;
 

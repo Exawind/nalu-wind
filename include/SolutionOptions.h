@@ -102,6 +102,7 @@ public:
 
   bool use_balanced_buoyancy_force_{false};
   bool realm_has_vof_{false};
+  double interface_width_{-1.0};
 
   double hybridDefault_;
   double alphaDefault_;

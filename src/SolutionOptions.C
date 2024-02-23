@@ -137,6 +137,11 @@ SolutionOptions::load(const YAML::Node& y_node)
       y_solution_options, "use_balanced_buoyancy_force",
       use_balanced_buoyancy_force_, use_balanced_buoyancy_force_);
 
+    // User specificed VOF interface width independent of mesh spacing
+    get_if_present(
+    	y_solution_options, "interface_width",
+      interface_width_, interface_width_);
+
     // Solve for incompressible continuity
     get_if_present(
       y_solution_options, "solve_incompressible_continuity",

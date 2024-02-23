@@ -3604,9 +3604,10 @@ ContinuityEquationSystem::compute_projected_nodal_gradient()
     projectedNodalGradEqs_->solve_and_update_external();
   }
   // Adjust pressure gradient at VOF interfaces near 
-  // overset boundaries 
+  // overset boundaries. Disabled temporarily to
+  // address dp/dx at overset bcs
   if (realm_.solutionOptions_->realm_has_vof_ &&
-      realm_.query_for_overset()) {
+      realm_.query_for_overset() && false) {
  
     const int ndim = realm_.meta_data().spatial_dimension();
     stk::mesh::MetaData& meta_data = realm_.meta_data();
