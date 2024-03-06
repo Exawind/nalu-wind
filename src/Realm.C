@@ -3423,7 +3423,7 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
         auto* field = stk::mesh::get_field_by_name(fname, meta_data());
         if (field == nullptr)
           continue;
-
+        fld->clear_sync_state();
         const unsigned numStates = field->number_of_states();
         for (unsigned i = 0; i < numStates; ++i) {
           auto* fld = field->field_state(static_cast<stk::mesh::FieldState>(i));
