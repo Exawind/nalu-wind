@@ -53,6 +53,9 @@
 #include <node_kernels/ScalarGclNodeKernel.h>
 #include <node_kernels/SDRKONodeKernel.h>
 
+// Transition model
+#include <node_kernels/SDRSSTBLTM2015NodeKernel.h>
+
 // ngp
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
@@ -271,8 +274,12 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
 
-        if (TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_) {
+        if ( TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_ && 
+             !realm_.solutionOptions_->gammaEqActive_) {
           nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
+        } else if (TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_ && 
+                  realm_.solutionOptions_->gammaEqActive_) {
+          nodeAlg.add_kernel<SDRSSTBLTM2015NodeKernel>(realm_.meta_data());
         } else if (
           TurbulenceModel::SSTLR == realm_.solutionOptions_->turbulenceModel_) {
           nodeAlg.add_kernel<SDRSSTLRNodeKernel>(realm_.meta_data());

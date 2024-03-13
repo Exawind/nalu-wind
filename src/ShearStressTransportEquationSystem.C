@@ -623,6 +623,17 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
 
       fOneBlend.get(mi, 0) =
         stk::math::tanh(fArgOne * fArgOne * fArgOne * fArgOne);
+
+      // Modifications of f1 blending function for the transition model
+      if (realm_.solutionOptions_->gammaEqActive_) {
+        const double f1Orig = fOneBlend.get(mi, 0);
+        const double ry = rho * minD * stk::math::sqrt(tke)/mu;
+        const double arg = ry / 120.0;
+        const double f3 = stk::math::exp(-arg*arg*arg*arg*arg*arg*arg*arg); // original
+        //const double f3 = std::exp(-std::pow(arg,8)); // new
+        fOneBlend.get(mi, 0) = stk::math::max(f1Orig, f3);
+      }
+
     });
 
   fOneBlend.modify_on_device();
