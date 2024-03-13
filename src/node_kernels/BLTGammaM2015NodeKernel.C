@@ -27,6 +27,8 @@ BLTGammaM2015NodeKernel::BLTGammaM2015NodeKernel(
     viscID_(get_field_ordinal(meta, "viscosity")),
     dudxID_(get_field_ordinal(meta, "dudx")),
     minDID_(get_field_ordinal(meta, "minimum_distance_to_wall")),
+    dwalldistdxID_(get_field_ordinal(meta, "dwalldistdx")),
+    dnDotVdxID_(get_field_ordinal(meta, "dnDotVdx")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     gamintID_(get_field_ordinal(meta, "gamma_transition")),
     nDim_(meta.spatial_dimension())
@@ -44,6 +46,8 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   visc_ = fieldMgr.get_field<double>(viscID_);
   dudx_ = fieldMgr.get_field<double>(dudxID_);
   minD_ = fieldMgr.get_field<double>(minDID_);
+  dwalldistdx_ = fieldMgr.get_field<double>(dwalldistdxID_);
+  dnDotVdx_ = fieldMgr.get_field<double>(dnDotVdxID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   gamint_ = fieldMgr.get_field<double>(gamintID_);
 
@@ -130,6 +134,7 @@ BLTGammaM2015NodeKernel::execute(
   const DblType Ctu3 = 1.0;
 
   for (int i = 0; i < nDim_; ++i) {
+    dvnn += dwalldistdx_.get(node,i) * dnDotVdx_.get(node,i);
     for (int j = 0; j < nDim_; ++j) {
       const double duidxj = dudx_.get(node, nDim_ * i + j);
       const double dujdxi = dudx_.get(node, nDim_ * j + i);
