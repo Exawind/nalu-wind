@@ -71,11 +71,13 @@ private:
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
   unsigned gamintID_{stk::mesh::InvalidOrdinal};
 
+// Need to delete later?
   NodeKernelTraits::DblType caOne_;
   NodeKernelTraits::DblType caTwo_;
   NodeKernelTraits::DblType ceOne_;
   NodeKernelTraits::DblType ceTwo_;
 
+// Need to delete later?
   int timeStepCount;
   int maxStepCount;
 

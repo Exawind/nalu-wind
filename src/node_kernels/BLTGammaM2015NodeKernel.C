@@ -48,12 +48,13 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   gamint_ = fieldMgr.get_field<double>(gamintID_);
 
   // Update transition model constants
-  caOne_ = realm.get_turb_model_constant(TM_caOne);
-  caTwo_ = realm.get_turb_model_constant(TM_caTwo);
-  ceOne_ = realm.get_turb_model_constant(TM_ceOne);
-  ceTwo_ = realm.get_turb_model_constant(TM_ceTwo);
-  timeStepCount = realm.get_time_step_count();
-  maxStepCount = realm.get_max_time_step_count();
+  // Remove caOne, caTwo, ceOne, ceTwo from src/SolutionOptions.C and include/Enums.h later
+//  caOne_ = realm.get_turb_model_constant(TM_caOne); // Unexisting constant in Menter's model
+//  caTwo_ = realm.get_turb_model_constant(TM_caTwo);
+//  ceOne_ = realm.get_turb_model_constant(TM_ceOne); // Unexisting constant in Menter's model
+//  ceTwo_ = realm.get_turb_model_constant(TM_ceTwo);
+//  timeStepCount = realm.get_time_step_count();  //Below two variabes from Head but never used
+//  maxStepCount = realm.get_max_time_step_count();
 }
 
 KOKKOS_FUNCTION
@@ -104,7 +105,6 @@ BLTGammaM2015NodeKernel::execute(
   // define the wall normal vector (for now, hardwire to NASA TM case: z = wall
   // norm direction)
   DblType Re0c = 0.0;
-  DblType flength = 100.0;
   DblType Rev = 0.0;
   DblType rt = 0.0;
   DblType dvnn = 0.0;
@@ -120,9 +120,14 @@ BLTGammaM2015NodeKernel::execute(
   DblType sijMag = 0.0;
   DblType vortMag = 0.0;
 
-  DblType Ctu1 = 100.;
-  DblType Ctu2 = 1000.;
-  DblType Ctu3 = 1.0;
+  // constants for the source terms
+  const DblType flength = 100.0;
+  const DblType caTwo = 0.06;
+  const DblType ceTwo = 50.0;
+
+  const DblType Ctu1 = 100.;
+  const DblType Ctu2 = 1000.;
+  const DblType Ctu3 = 1.0;
 
   for (int i = 0; i < nDim_; ++i) {
     for (int j = 0; j < nDim_; ++j) {
@@ -140,7 +145,7 @@ BLTGammaM2015NodeKernel::execute(
   vortMag = stk::math::sqrt(2.0 * vortMag);
 
   TuL = stk::math::min(
-    81.6496580927726 * stk::math::sqrt(tke) / sdr / (minD + 1.0e-10), 100.0);
+    100.0 * stk::math::sqrt(2.0/3.0*tke) / sdr / (minD + 1.0e-10), 100.0);
   lamda0L = -7.57e-3 * dvnn * minD * minD * density / visc + 0.0128;
   lamda0L = stk::math::min(stk::math::max(lamda0L, -1.0), 1.0);
   Re0c = Ctu1 + Ctu2 * stk::math::exp(-Ctu3 * TuL * FPG(lamda0L));
@@ -148,22 +153,40 @@ BLTGammaM2015NodeKernel::execute(
   fonset1 = Rev / 2.2 / Re0c;
   fonset2 = stk::math::min(fonset1, 2.0);
   rt = density * tke / sdr / visc;
-  fonset3 = stk::math::max(1.0 - 0.0233236151603499 * rt * rt * rt, 0.0);
+  fonset3 = stk::math::max(1.0 - stk::math::pow(rt/3.5, 3) , 0.0);
   fonset = stk::math::max(fonset2 - fonset3, 0.0);
   fturb = stk::math::exp(-rt * rt * rt * rt / 16.0);
 
   DblType Pgamma =
     flength * density * sijMag * fonset * gamint * (1.0 - gamint);
   DblType Dgamma =
-    -caTwo_ * density * vortMag * fturb * gamint * (ceTwo_ * gamint - 1.0);
+    caTwo * density * vortMag * fturb * gamint * (ceTwo * gamint - 1.0);
 
+//========================== Exact Jacobian ================================//
   DblType PgammaDir =
     flength * density * sijMag * fonset * (1.0 - 2.0 * gamint);
   DblType DgammaDir =
-    -caTwo_ * density * vortMag * fturb * (2.0 * ceTwo_ * gamint - 1.0);
+    caTwo * density * vortMag * fturb * (2.0 * ceTwo * gamint - 1.0);
 
-  rhs(0) += (Pgamma + Dgamma) * dVol;
-  lhs(0, 0) -= (PgammaDir + DgammaDir) * dVol;
+  rhs(0) += (Pgamma - Dgamma) * dVol;
+  lhs(0, 0) += (DgammaDir - PgammaDir) * dVol;
+
+////======================== Jacobian with Positivity ========================//
+//  DblType PgammaDir =
+//    flength * density * sijMag * fonset * (1.0 - gamint);
+//  DblType PgammaDirP =
+//    -flength * density * sijMag * fonset;
+//
+//  DblType DgammaDir =
+//    caTwo * density * vortMag * fturb * (ceTwo * gamint - 1.0);
+//  DblType DgammaDirP =
+//    caTwo * density * vortMag * fturb * ceTwo;
+//
+//  DblType gamma_pos1 = stk::math::max( DgammaDir  - PgammaDir  , 0.0);
+//  DblType gamma_pos2 = stk::math::max( DgammaDirP - PgammaDirP , 0.0);
+//
+//  rhs(0) += (Pgamma + Dgamma) * dVol;
+//  lhs(0, 0) += (gamma_pos1 + gamma_pos2) * dVol;
 }
 
 } // namespace nalu
