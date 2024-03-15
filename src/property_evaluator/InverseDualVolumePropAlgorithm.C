@@ -27,8 +27,8 @@ InverseDualVolumePropAlgorithm::InverseDualVolumePropAlgorithm(
 {
   // extract dual volume
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "dual_nodal_volume");
+  dualNodalVolume_ =
+    meta_data.get_field<double>(stk::topology::NODE_RANK, "dual_nodal_volume");
 }
 
 InverseDualVolumePropAlgorithm::~InverseDualVolumePropAlgorithm() {}

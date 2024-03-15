@@ -344,21 +344,17 @@ LidarLineOfSite::output(
       {seg.tail_[0] + j * dx[0], seg.tail_[1] + j * dx[1],
        seg.tail_[2] + j * dx[2]}};
   }
-  const auto& coord_field =
-    *bulk.mesh_meta_data()
-       .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-         stk::topology::NODE_RANK, coordinates_name);
+  const auto& coord_field = *bulk.mesh_meta_data().get_field<double>(
+    stk::topology::NODE_RANK, coordinates_name);
 
   const auto& velocity_field =
     bulk.mesh_meta_data()
-      .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-        stk::topology::NODE_RANK, "velocity")
+      .get_field<double>(stk::topology::NODE_RANK, "velocity")
       ->field_of_state(stk::mesh::StateNP1);
 
   const auto& velocity_prev =
     bulk.mesh_meta_data()
-      .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-        stk::topology::NODE_RANK, "velocity")
+      .get_field<double>(stk::topology::NODE_RANK, "velocity")
       ->field_of_state(stk::mesh::StateN);
 
   const double extrap_dt = predictor_ == Predictor::NEAREST ? 0 : dtratio;
@@ -562,21 +558,17 @@ LidarLineOfSite::output_cone_filtered(
     }
   }
 
-  const auto& coord_field =
-    *bulk.mesh_meta_data()
-       .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-         stk::topology::NODE_RANK, coordinates_name);
+  const auto& coord_field = *bulk.mesh_meta_data().get_field<double>(
+    stk::topology::NODE_RANK, coordinates_name);
 
   const auto& velocity_field =
     bulk.mesh_meta_data()
-      .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-        stk::topology::NODE_RANK, "velocity")
+      .get_field<double>(stk::topology::NODE_RANK, "velocity")
       ->field_of_state(stk::mesh::StateNP1);
 
   const auto& velocity_prev =
     bulk.mesh_meta_data()
-      .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-        stk::topology::NODE_RANK, "velocity")
+      .get_field<double>(stk::topology::NODE_RANK, "velocity")
       ->field_of_state(stk::mesh::StateN);
 
   const double extrap_dt = predictor_ == Predictor::NEAREST ? 0 : dtratio;

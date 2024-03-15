@@ -6,7 +6,6 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Bucket.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
@@ -41,13 +40,14 @@ check_elem_to_side_coords(stk::topology topo)
   meshBuilder.set_spatial_dimension(dim);
   auto bulk = meshBuilder.create();
   auto& meta = bulk->mesh_meta_data();
+  meta.use_simple_fields();
 
   auto elem = unit_test_utils::create_one_reference_element(*bulk, topo);
   const stk::mesh::Entity* elem_node_rels = bulk->begin_nodes(elem);
   auto* meSCS =
     sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
 
-  using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
+  using VectorFieldType = stk::mesh::Field<double>;
   const VectorFieldType& coordField =
     *static_cast<const VectorFieldType*>(meta.coordinate_field());
 

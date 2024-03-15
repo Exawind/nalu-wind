@@ -26,7 +26,6 @@
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
 #include "stk_mesh/base/FieldState.hpp"
-#include "stk_mesh/base/FieldTraits.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpField.hpp"

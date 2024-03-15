@@ -21,7 +21,6 @@
 #include "stk_mesh/base/FEMHelpers.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
-#include "stk_mesh/base/FieldTraits.hpp"
 #include "stk_mesh/base/GetEntities.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Ngp.hpp"
@@ -61,6 +60,7 @@ protected:
       bulk(*bulkPtr),
       meta(bulk.mesh_meta_data())
   {
+    meta.use_simple_fields();
     stk::topology topo(stk::topology::HEX_8);
 
     stk::mesh::Part& block_1 = meta.declare_part_with_topology("block_1", topo);
@@ -77,12 +77,13 @@ protected:
     }
 
     // set a coordinate field
-    using vector_field_type = stk::mesh::Field<double, stk::mesh::Cartesian3d>;
-    auto& coordField = meta.declare_field<vector_field_type>(
-      stk::topology::NODE_RANK, "coordinates");
-    stk::mesh::put_field_on_mesh(coordField, block_1, nullptr);
+    auto& coordField =
+      meta.declare_field<double>(stk::topology::NODE_RANK, "coordinates");
     stk::mesh::put_field_on_mesh(
-      coordField, stk::mesh::selectUnion(allSurfaces), nullptr);
+      coordField, block_1, meta.spatial_dimension(), nullptr);
+    stk::mesh::put_field_on_mesh(
+      coordField, stk::mesh::selectUnion(allSurfaces), meta.spatial_dimension(),
+      nullptr);
     meta.set_coordinate_field(&coordField);
     meta.commit();
 

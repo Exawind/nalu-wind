@@ -10,13 +10,13 @@
 #ifndef PromotedElementIO_h
 #define PromotedElementIO_h
 
-#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
 #include <Ioss_Region.h>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/Types.hpp>
 
 #include <element_promotion/HexNElementDescription.h>
+#include <FieldTypeDef.h>
 
 #include <stddef.h>
 #include <iosfwd>
@@ -38,11 +38,6 @@ class PromoteElement;
 struct ElementDescription;
 } // namespace nalu
 } // namespace sierra
-
-// field types
-typedef stk::mesh::Field<double> ScalarFieldType;
-typedef stk::mesh::Field<double, stk::mesh::SimpleArrayTag> GenericFieldType;
-typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
 
 namespace stk {
 namespace mesh {

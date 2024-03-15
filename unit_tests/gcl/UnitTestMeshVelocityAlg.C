@@ -76,28 +76,34 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
     return;
 
   // declare relevant fields
-  dnvField_ = &(meta_->declare_field<ScalarFieldType>(
+  dnvField_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "dual_nodal_volume", 3));
   stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
 
-  VectorFieldType* meshDisp_ = &(meta_->declare_field<VectorFieldType>(
+  sierra::nalu::VectorFieldType* meshDisp_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "mesh_displacement", 3));
-  stk::mesh::put_field_on_mesh(*meshDisp_, meta_->universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(
+    *meshDisp_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
+  stk::io::set_field_output_type(
+    *meshDisp_, stk::io::FieldOutputType::VECTOR_3D);
 
-  VectorFieldType* cCoords_ = &(meta_->declare_field<VectorFieldType>(
+  sierra::nalu::VectorFieldType* cCoords_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "current_coordinates"));
-  stk::mesh::put_field_on_mesh(*cCoords_, meta_->universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(
+    *cCoords_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
+  stk::io::set_field_output_type(
+    *cCoords_, stk::io::FieldOutputType::VECTOR_3D);
 
   const auto& meSCS =
     sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       stk::topology::HEX_8);
-  GenericFieldType* sweptVolume_ = &(meta_->declare_field<GenericFieldType>(
+  sierra::nalu::GenericFieldType* sweptVolume_ = &(meta_->declare_field<double>(
     stk::topology::ELEM_RANK, "swept_face_volume", 3));
   stk::mesh::put_field_on_mesh(
     *sweptVolume_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
-  GenericFieldType* faceVelMag_ = &(meta_->declare_field<GenericFieldType>(
+  sierra::nalu::GenericFieldType* faceVelMag_ = &(meta_->declare_field<double>(
     stk::topology::ELEM_RANK, "face_velocity_mag", 2));
   stk::mesh::put_field_on_mesh(
     *faceVelMag_, meta_->universal_part(), meSCS->num_integration_points(),
@@ -134,10 +140,11 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
   YAML::Node rotNode = YAML::Load(rotInfo);
   sierra::nalu::MotionRotationKernel rotClass(rotNode);
 
-  VectorFieldType* meshDispNp1 =
+  sierra::nalu::VectorFieldType* meshDispNp1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNP1));
-  VectorFieldType* meshDispN = &(meshDisp_->field_of_state(stk::mesh::StateN));
-  VectorFieldType* meshDispNm1 =
+  sierra::nalu::VectorFieldType* meshDispN =
+    &(meshDisp_->field_of_state(stk::mesh::StateN));
+  sierra::nalu::VectorFieldType* meshDispNm1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNM1));
 
   {
@@ -209,28 +216,34 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
     return;
 
   // declare relevant fields
-  dnvField_ = &(meta_->declare_field<ScalarFieldType>(
+  dnvField_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "dual_nodal_volume", 3));
   stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
 
-  VectorFieldType* meshDisp_ = &(meta_->declare_field<VectorFieldType>(
+  sierra::nalu::VectorFieldType* meshDisp_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "mesh_displacement", 3));
-  stk::mesh::put_field_on_mesh(*meshDisp_, meta_->universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(
+    *meshDisp_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
+  stk::io::set_field_output_type(
+    *meshDisp_, stk::io::FieldOutputType::VECTOR_3D);
 
-  VectorFieldType* cCoords_ = &(meta_->declare_field<VectorFieldType>(
+  sierra::nalu::VectorFieldType* cCoords_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "current_coordinates"));
-  stk::mesh::put_field_on_mesh(*cCoords_, meta_->universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(
+    *cCoords_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
+  stk::io::set_field_output_type(
+    *cCoords_, stk::io::FieldOutputType::VECTOR_3D);
 
   const auto& meSCS =
     sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       stk::topology::HEX_8);
-  GenericFieldType* sweptVolume_ = &(meta_->declare_field<GenericFieldType>(
+  sierra::nalu::GenericFieldType* sweptVolume_ = &(meta_->declare_field<double>(
     stk::topology::ELEM_RANK, "swept_face_volume", 3));
   stk::mesh::put_field_on_mesh(
     *sweptVolume_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
-  GenericFieldType* faceVelMag_ = &(meta_->declare_field<GenericFieldType>(
+  sierra::nalu::GenericFieldType* faceVelMag_ = &(meta_->declare_field<double>(
     stk::topology::ELEM_RANK, "face_velocity_mag", 2));
   stk::mesh::put_field_on_mesh(
     *faceVelMag_, meta_->universal_part(), meSCS->num_integration_points(),
@@ -267,10 +280,11 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
   YAML::Node rotNode = YAML::Load(rotInfo);
   sierra::nalu::MotionRotationKernel rotClass(rotNode);
 
-  VectorFieldType* meshDispNp1 =
+  sierra::nalu::VectorFieldType* meshDispNp1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNP1));
-  VectorFieldType* meshDispN = &(meshDisp_->field_of_state(stk::mesh::StateN));
-  VectorFieldType* meshDispNm1 =
+  sierra::nalu::VectorFieldType* meshDispN =
+    &(meshDisp_->field_of_state(stk::mesh::StateN));
+  sierra::nalu::VectorFieldType* meshDispNm1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNM1));
 
   {
@@ -342,28 +356,34 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
     return;
 
   // declare relevant fields
-  dnvField_ = &(meta_->declare_field<ScalarFieldType>(
+  dnvField_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "dual_nodal_volume", 3));
   stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
 
-  VectorFieldType* meshDisp_ = &(meta_->declare_field<VectorFieldType>(
+  sierra::nalu::VectorFieldType* meshDisp_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "mesh_displacement", 3));
-  stk::mesh::put_field_on_mesh(*meshDisp_, meta_->universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(
+    *meshDisp_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
+  stk::io::set_field_output_type(
+    *meshDisp_, stk::io::FieldOutputType::VECTOR_3D);
 
-  VectorFieldType* cCoords_ = &(meta_->declare_field<VectorFieldType>(
+  sierra::nalu::VectorFieldType* cCoords_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "current_coordinates"));
-  stk::mesh::put_field_on_mesh(*cCoords_, meta_->universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(
+    *cCoords_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
+  stk::io::set_field_output_type(
+    *cCoords_, stk::io::FieldOutputType::VECTOR_3D);
 
   const auto& meSCS =
     sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
       stk::topology::HEX_8);
-  GenericFieldType* sweptVolume_ = &(meta_->declare_field<GenericFieldType>(
+  sierra::nalu::GenericFieldType* sweptVolume_ = &(meta_->declare_field<double>(
     stk::topology::ELEM_RANK, "swept_face_volume", 3));
   stk::mesh::put_field_on_mesh(
     *sweptVolume_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
-  GenericFieldType* faceVelMag_ = &(meta_->declare_field<GenericFieldType>(
+  sierra::nalu::GenericFieldType* faceVelMag_ = &(meta_->declare_field<double>(
     stk::topology::ELEM_RANK, "face_velocity_mag", 2));
   stk::mesh::put_field_on_mesh(
     *faceVelMag_, meta_->universal_part(), meSCS->num_integration_points(),
@@ -400,10 +420,11 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
   YAML::Node rotNode = YAML::Load(rotInfo);
   sierra::nalu::MotionRotationKernel rotClass(rotNode);
 
-  VectorFieldType* meshDispNp1 =
+  sierra::nalu::VectorFieldType* meshDispNp1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNP1));
-  VectorFieldType* meshDispN = &(meshDisp_->field_of_state(stk::mesh::StateN));
-  VectorFieldType* meshDispNm1 =
+  sierra::nalu::VectorFieldType* meshDispN =
+    &(meshDisp_->field_of_state(stk::mesh::StateN));
+  sierra::nalu::VectorFieldType* meshDispNm1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNM1));
 
   {

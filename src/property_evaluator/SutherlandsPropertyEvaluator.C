@@ -130,8 +130,8 @@ SutherlandsYkPropertyEvaluator::SutherlandsYkPropertyEvaluator(
   polynomialCoeffs_.resize(ykVecSize_);
 
   // save off mass fraction field
-  massFraction_ = metaData.get_field<GenericFieldType>(
-    stk::topology::NODE_RANK, "mass_fraction");
+  massFraction_ =
+    metaData.get_field<double>(stk::topology::NODE_RANK, "mass_fraction");
 
   // save off polynomial coeffs
   size_t k = 0;
