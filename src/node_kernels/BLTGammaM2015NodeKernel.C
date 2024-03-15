@@ -167,31 +167,31 @@ BLTGammaM2015NodeKernel::execute(
   DblType Dgamma =
     caTwo * density * vortMag * fturb * gamint * (ceTwo * gamint - 1.0);
 
-//========================== Exact Jacobian ================================//
+////========================== Exact Jacobian ================================//
+//  DblType PgammaDir =
+//    flength * density * sijMag * fonset * (1.0 - 2.0 * gamint);
+//  DblType DgammaDir =
+//    caTwo * density * vortMag * fturb * (2.0 * ceTwo * gamint - 1.0);
+//
+//  rhs(0) += (Pgamma - Dgamma) * dVol;
+//  lhs(0, 0) += (DgammaDir - PgammaDir) * dVol;
+
+//======================== Jacobian with Positivity ========================//
   DblType PgammaDir =
-    flength * density * sijMag * fonset * (1.0 - 2.0 * gamint);
+    flength * density * sijMag * fonset * (1.0 - gamint);
+  DblType PgammaDirP =
+    -flength * density * sijMag * fonset;
+
   DblType DgammaDir =
-    caTwo * density * vortMag * fturb * (2.0 * ceTwo * gamint - 1.0);
+    caTwo * density * vortMag * fturb * (ceTwo * gamint - 1.0);
+  DblType DgammaDirP =
+    caTwo * density * vortMag * fturb * ceTwo;
+
+  DblType gamma_pos1 = stk::math::max( DgammaDir  - PgammaDir  , 0.0);
+  DblType gamma_pos2 = stk::math::max( DgammaDirP - PgammaDirP , 0.0);
 
   rhs(0) += (Pgamma - Dgamma) * dVol;
-  lhs(0, 0) += (DgammaDir - PgammaDir) * dVol;
-
-////======================== Jacobian with Positivity ========================//
-//  DblType PgammaDir =
-//    flength * density * sijMag * fonset * (1.0 - gamint);
-//  DblType PgammaDirP =
-//    -flength * density * sijMag * fonset;
-//
-//  DblType DgammaDir =
-//    caTwo * density * vortMag * fturb * (ceTwo * gamint - 1.0);
-//  DblType DgammaDirP =
-//    caTwo * density * vortMag * fturb * ceTwo;
-//
-//  DblType gamma_pos1 = stk::math::max( DgammaDir  - PgammaDir  , 0.0);
-//  DblType gamma_pos2 = stk::math::max( DgammaDirP - PgammaDirP , 0.0);
-//
-//  rhs(0) += (Pgamma + Dgamma) * dVol;
-//  lhs(0, 0) += (gamma_pos1 + gamma_pos2) * dVol;
+  lhs(0, 0) += (gamma_pos1 + gamma_pos2*gamint) * dVol;
 }
 
 } // namespace nalu
