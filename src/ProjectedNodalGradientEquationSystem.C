@@ -34,7 +34,6 @@
 #include <stk_mesh/base/FieldParallel.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/SkinMesh.hpp>
 #include <stk_mesh/base/Comm.hpp>
@@ -137,14 +136,16 @@ ProjectedNodalGradientEquationSystem::register_nodal_fields(
   const int nDim = meta_data.spatial_dimension();
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
-  dqdx_ = &(meta_data.declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, dofName_));
+  dqdx_ =
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, dofName_));
   stk::mesh::put_field_on_mesh(*dqdx_, selector, nDim, nullptr);
+  stk::io::set_field_output_type(*dqdx_, stk::io::FieldOutputType::VECTOR_3D);
 
   // delta solution for linear solver
-  qTmp_ = &(meta_data.declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, deltaName_));
+  qTmp_ =
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, deltaName_));
   stk::mesh::put_field_on_mesh(*qTmp_, selector, nDim, nullptr);
+  stk::io::set_field_output_type(*qTmp_, stk::io::FieldOutputType::VECTOR_3D);
 }
 
 //--------------------------------------------------------------------------

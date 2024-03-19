@@ -21,15 +21,6 @@ namespace nalu {
 template <typename PhiType, typename GradPhiType>
 class NodalGradEdgeAlg : public Algorithm
 {
-  static_assert(
-    ((std::is_same<PhiType, ScalarFieldType>::value &&
-      std::is_same<GradPhiType, VectorFieldType>::value) ||
-     (std::is_same<PhiType, VectorFieldType>::value &&
-      std::is_same<GradPhiType, GenericFieldType>::value) ||
-     (std::is_same<PhiType, VectorFieldType>::value &&
-      std::is_same<GradPhiType, TensorFieldType>::value)),
-    "Improper field types passed to nodal gradient calculator");
-
 public:
   using DblType = double;
 

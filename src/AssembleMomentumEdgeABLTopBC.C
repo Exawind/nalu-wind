@@ -71,10 +71,9 @@ AssembleMomentumEdgeABLTopBC::AssembleMomentumEdgeABLTopBC(
 {
   // save off fields
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  velocity_ =
-    meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-  bcVelocity_ = meta_data.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "cont_velocity_bc");
+  velocity_ = meta_data.get_field<double>(stk::topology::NODE_RANK, "velocity");
+  bcVelocity_ =
+    meta_data.get_field<double>(stk::topology::NODE_RANK, "cont_velocity_bc");
 }
 
 AssembleMomentumEdgeABLTopBC::~AssembleMomentumEdgeABLTopBC()
@@ -241,8 +240,8 @@ AssembleMomentumEdgeABLTopBC::initialize()
   const int nprocs = bulk_data.parallel_size();
   const int myrank = bulk_data.parallel_rank();
 
-  VectorFieldType* coordinates = meta_data.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* coordinates =
+    meta_data.get_field<double>(stk::topology::NODE_RANK, "coordinates");
 
   nx = imax_ - 1;
   ny = jmax_ - 1;
