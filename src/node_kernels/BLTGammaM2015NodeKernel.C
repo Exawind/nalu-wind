@@ -52,14 +52,6 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   gamint_ = fieldMgr.get_field<double>(gamintID_);
 
   fsti_ = realm.get_turb_model_constant(TM_fsti); 
-  // Update transition model constants
-  // Remove caOne, caTwo, ceOne, ceTwo from src/SolutionOptions.C and include/Enums.h later
-//  caOne_ = realm.get_turb_model_constant(TM_caOne); // Unexisting constant in Menter's model
-//  caTwo_ = realm.get_turb_model_constant(TM_caTwo);
-//  ceOne_ = realm.get_turb_model_constant(TM_ceOne); // Unexisting constant in Menter's model
-//  ceTwo_ = realm.get_turb_model_constant(TM_ceTwo);
-//  timeStepCount = realm.get_time_step_count();  //Below two variabes from Head but never used
-//  maxStepCount = realm.get_max_time_step_count();
 }
 
 KOKKOS_FUNCTION
