@@ -80,6 +80,7 @@ private:
   NodeKernelTraits::DblType caTwo_;
   NodeKernelTraits::DblType ceOne_;
   NodeKernelTraits::DblType ceTwo_;
+  NodeKernelTraits::DblType fsti_;
 
 // Need to delete later?
   int timeStepCount;

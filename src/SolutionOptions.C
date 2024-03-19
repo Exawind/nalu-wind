@@ -715,7 +715,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_caTwo] = 0.06;
   turbModelConstantMap_[TM_ceOne] = 1.0;
   turbModelConstantMap_[TM_ceTwo] = 50.0;
-  turbModelConstantMap_[TM_c0t] = 0.03;
+  turbModelConstantMap_[TM_fsti] = 0.1;
 }
 
 double

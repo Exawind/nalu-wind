@@ -51,6 +51,7 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   gamint_ = fieldMgr.get_field<double>(gamintID_);
 
+  fsti_ = realm.get_turb_model_constant(TM_fsti); 
   // Update transition model constants
   // Remove caOne, caTwo, ceOne, ceTwo from src/SolutionOptions.C and include/Enums.h later
 //  caOne_ = realm.get_turb_model_constant(TM_caOne); // Unexisting constant in Menter's model
@@ -149,8 +150,12 @@ BLTGammaM2015NodeKernel::execute(
   sijMag = stk::math::sqrt(2.0 * sijMag);
   vortMag = stk::math::sqrt(2.0 * vortMag);
 
-  TuL = stk::math::min(
-    100.0 * stk::math::sqrt(2.0/3.0*tke) / sdr / (minD + 1.0e-10), 100.0);
+  //========= local turbulence intensity: original formualtion ========
+  //TuL = stk::math::min(100.0 * stk::math::sqrt(2.0/3.0*tke) / sdr / (minD + 1.0e-10), 100.0);
+  //=========== freestream turbulence intensity  =======================
+  TuL = fsti_;
+  //====================================================================
+
   lamda0L = -7.57e-3 * dvnn * minD * minD * density / visc + 0.0128;
   lamda0L = stk::math::min(stk::math::max(lamda0L, -1.0), 1.0);
   Re0c = Ctu1 + Ctu2 * stk::math::exp(-Ctu3 * TuL * FPG(lamda0L));
@@ -176,7 +181,7 @@ BLTGammaM2015NodeKernel::execute(
 //  rhs(0) += (Pgamma - Dgamma) * dVol;
 //  lhs(0, 0) += (DgammaDir - PgammaDir) * dVol;
 
-//======================== Jacobian with Positivity ========================//
+//============= Jacobian with Positivity suggested by Lee (2021) =============//
   DblType PgammaDir =
     flength * density * sijMag * fonset * (1.0 - gamint);
   DblType PgammaDirP =
@@ -192,6 +197,8 @@ BLTGammaM2015NodeKernel::execute(
 
   rhs(0) += (Pgamma - Dgamma) * dVol;
   lhs(0, 0) += (gamma_pos1 + gamma_pos2*gamint) * dVol;
+//==============================================================--=============//
+
 }
 
 } // namespace nalu
