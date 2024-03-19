@@ -245,12 +245,8 @@ enum TurbulenceModelConstant {
   TM_sdrAmb = 63,
   TM_avgTimeCoeff = 64,
   TM_alphaInf = 65,
-  TM_caOne = 66,
-  TM_caTwo = 67,
-  TM_ceOne = 68,
-  TM_ceTwo = 69,
-  TM_fsti = 70,
-  TM_END = 71
+  TM_fsti = 66,
+  TM_END = 67
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
@@ -320,10 +316,6 @@ static const std::string TurbulenceModelConstantNames[] = {
   "sdr_amb",
   "avgTimeCoeff",
   "alphaInf",
-  "caOne",
-  "caTwo",
-  "ceOne",
-  "ceTwo",
   "fsti",
   "END"};
 
