@@ -95,7 +95,7 @@ MdotAlgDriver::pre_work()
 
   // Assume that the presence of "open_mass_flow_rate" means there is at least
   // one open BC sideset
-  auto* openMassFlowRate = realm_.meta_data().get_field<GenericFieldType>(
+  auto* openMassFlowRate = realm_.meta_data().get_field<double>(
     realm_.meta_data().side_rank(), "open_mass_flow_rate");
   hasOpenBC_ = !(openMassFlowRate == nullptr);
 

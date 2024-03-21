@@ -52,7 +52,7 @@ RectilinearMeshHeightAlg::calc_height_levels(
   auto& bulk = realm_.bulk_data();
 
   const auto bkts = bulk.get_buckets(stk::topology::NODE_RANK, nodeSel);
-  const VectorFieldType* coords = meta.get_field<VectorFieldType>(
+  const VectorFieldType* coords = meta.get_field<double>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name());
 
   // Index of the wall normal coordinate

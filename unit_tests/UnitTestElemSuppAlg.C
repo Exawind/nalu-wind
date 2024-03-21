@@ -6,7 +6,6 @@
 
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
 #include <stk_mesh/base/NgpMesh.hpp>
@@ -28,8 +27,8 @@ namespace {
 void
 element_discrete_laplacian_kernel_3d(
   sierra::nalu::MasterElement& meSCS,
-  const ScalarFieldType* discreteLaplacianOfPressure,
-  const ScalarFieldType* nodalPressureField,
+  const sierra::nalu::ScalarFieldType* discreteLaplacianOfPressure,
+  const sierra::nalu::ScalarFieldType* nodalPressureField,
   sierra::nalu::ScratchViews<DoubleType>& elemData)
 {
   const int nDim = 3;
@@ -84,9 +83,9 @@ class DiscreteLaplacianSuppAlg : public SuppAlg
 public:
   DiscreteLaplacianSuppAlg(
     sierra::nalu::ElemDataRequests& dataNeeded,
-    const VectorFieldType* coordField,
-    const ScalarFieldType* discreteLaplacianOfPressure,
-    const ScalarFieldType* nodalPressureField,
+    const sierra::nalu::VectorFieldType* coordField,
+    const sierra::nalu::ScalarFieldType* discreteLaplacianOfPressure,
+    const sierra::nalu::ScalarFieldType* nodalPressureField,
     const stk::topology& topo)
     : discreteLaplacianOfPressure_(discreteLaplacianOfPressure),
       nodalPressureField_(nodalPressureField)
@@ -119,8 +118,8 @@ public:
   }
 
 private:
-  const ScalarFieldType* discreteLaplacianOfPressure_;
-  const ScalarFieldType* nodalPressureField_;
+  const sierra::nalu::ScalarFieldType* discreteLaplacianOfPressure_;
+  const sierra::nalu::ScalarFieldType* nodalPressureField_;
 };
 
 //=========== Test class that mimics an element alg with supplemental alg and

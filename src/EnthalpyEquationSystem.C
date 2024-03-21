@@ -98,7 +98,6 @@
 #include <stk_mesh/base/FieldParallel.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 
 // stk_io
@@ -145,7 +144,7 @@ EnthalpyEquationSystem::EnthalpyEquationSystem(
     specHeat_(NULL),
     divQ_(NULL),
     pOld_(NULL),
-    nodalGradAlgDriver_(realm_, "dhdx"),
+    nodalGradAlgDriver_(realm_, "enthalpy", "dhdx"),
     assembleWallHeatTransferAlgDriver_(NULL),
     pmrCouplingActive_(false),
     lowSpeedCompressActive_(false),
@@ -258,28 +257,28 @@ EnthalpyEquationSystem::register_nodal_fields(
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   // register dof; set it as a restart variable
-  enthalpy_ = &(meta_data.declare_field<ScalarFieldType>(
+  enthalpy_ = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "enthalpy", numStates));
   stk::mesh::put_field_on_mesh(*enthalpy_, selector, nullptr);
   realm_.augment_restart_variable_list("enthalpy");
 
   // temperature required in restart
-  temperature_ = &(meta_data.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "temperature"));
+  temperature_ =
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "temperature"));
   stk::mesh::put_field_on_mesh(*temperature_, selector, nullptr);
   realm_.augment_restart_variable_list("temperature");
 
-  dhdx_ = &(
-    meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dhdx"));
+  dhdx_ = &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "dhdx"));
   stk::mesh::put_field_on_mesh(*dhdx_, selector, nDim, nullptr);
+  stk::io::set_field_output_type(*dhdx_, stk::io::FieldOutputType::VECTOR_3D);
 
   // props
-  specHeat_ = &(meta_data.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "specific_heat"));
+  specHeat_ = &(
+    meta_data.declare_field<double>(stk::topology::NODE_RANK, "specific_heat"));
   stk::mesh::put_field_on_mesh(*specHeat_, selector, nullptr);
 
-  visc_ = &(meta_data.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "viscosity"));
+  visc_ =
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "viscosity"));
   stk::mesh::put_field_on_mesh(*visc_, selector, nullptr);
 
   // push standard props to property list; enthalpy managed along with Cp
@@ -287,7 +286,7 @@ EnthalpyEquationSystem::register_nodal_fields(
   realm_.augment_property_map(VISCOSITY_ID, visc_);
 
   // special thermal conductivity
-  thermalCond_ = &(meta_data.declare_field<ScalarFieldType>(
+  thermalCond_ = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "thermal_conductivity"));
   stk::mesh::put_field_on_mesh(*thermalCond_, selector, nullptr);
 
@@ -310,25 +309,24 @@ EnthalpyEquationSystem::register_nodal_fields(
   }
 
   // delta solution for linear solver; share delta since this is a split system
-  hTmp_ = &(
-    meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pTmp"));
+  hTmp_ = &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "pTmp"));
   stk::mesh::put_field_on_mesh(*hTmp_, selector, nullptr);
 
   // turbulent viscosity and effective viscosity
   if (realm_.is_turbulent()) {
-    tvisc_ = &(meta_data.declare_field<ScalarFieldType>(
+    tvisc_ = &(meta_data.declare_field<double>(
       stk::topology::NODE_RANK, "turbulent_viscosity"));
     stk::mesh::put_field_on_mesh(*tvisc_, selector, nullptr);
   }
 
-  evisc_ = &(meta_data.declare_field<ScalarFieldType>(
+  evisc_ = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "effective_viscosity_h"));
   stk::mesh::put_field_on_mesh(*evisc_, selector, nullptr);
 
   // register divergence of radiative heat flux; for now this is an explicit
   // coupling
   if (pmrCouplingActive_) {
-    divQ_ = &(meta_data.declare_field<ScalarFieldType>(
+    divQ_ = &(meta_data.declare_field<double>(
       stk::topology::NODE_RANK, "div_radiative_heat_flux"));
     stk::mesh::put_field_on_mesh(*divQ_, selector, nullptr);
   }
@@ -336,7 +334,7 @@ EnthalpyEquationSystem::register_nodal_fields(
   // need to save off old pressure for pressure time derivative (avoid state for
   // now)
   if (lowSpeedCompressActive_) {
-    pOld_ = &(meta_data.declare_field<ScalarFieldType>(
+    pOld_ = &(meta_data.declare_field<double>(
       stk::topology::NODE_RANK, "pressure_old"));
     stk::mesh::put_field_on_mesh(*pOld_, selector, nullptr);
   }
@@ -552,11 +550,11 @@ EnthalpyEquationSystem::register_inflow_bc(
   InflowUserData userData = inflowBCData.userData_;
 
   // bc data work (copy, enthalpy evaluation, etc.)
-  ScalarFieldType* temperatureBc = &(meta_data.declare_field<ScalarFieldType>(
+  ScalarFieldType* temperatureBc = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "temperature_bc"));
   stk::mesh::put_field_on_mesh(*temperatureBc, *part, nullptr);
-  ScalarFieldType* enthalpyBc = &(meta_data.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "enthalpy_bc"));
+  ScalarFieldType* enthalpyBc =
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "enthalpy_bc"));
   stk::mesh::put_field_on_mesh(*enthalpyBc, *part, nullptr);
   temperature_bc_setup(userData, part, temperatureBc, enthalpyBc);
 
@@ -607,10 +605,10 @@ EnthalpyEquationSystem::register_open_bc(
   // bc data work (copy, enthalpy evaluation, etc.)
   const bool copyBcVal = false;
   const bool isInterface = false;
-  ScalarFieldType* temperatureBc = &(meta_data.declare_field<ScalarFieldType>(
+  ScalarFieldType* temperatureBc = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "open_temperature_bc"));
   stk::mesh::put_field_on_mesh(*temperatureBc, *part, nullptr);
-  ScalarFieldType* enthalpyBc = &(meta_data.declare_field<ScalarFieldType>(
+  ScalarFieldType* enthalpyBc = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "open_enthalpy_bc"));
   stk::mesh::put_field_on_mesh(*enthalpyBc, *part, nullptr);
   temperature_bc_setup(
@@ -686,11 +684,11 @@ EnthalpyEquationSystem::register_wall_bc(
   if (bc_data_specified(userData, temperatureName)) {
 
     // bc data work (copy, enthalpy evaluation, etc.)
-    ScalarFieldType* temperatureBc = &(meta_data.declare_field<ScalarFieldType>(
+    ScalarFieldType* temperatureBc = &(meta_data.declare_field<double>(
       stk::topology::NODE_RANK, "temperature_bc"));
     stk::mesh::put_field_on_mesh(*temperatureBc, *part, nullptr);
-    ScalarFieldType* enthalpyBc = &(meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "enthalpy_bc"));
+    ScalarFieldType* enthalpyBc = &(
+      meta_data.declare_field<double>(stk::topology::NODE_RANK, "enthalpy_bc"));
     stk::mesh::put_field_on_mesh(*enthalpyBc, *part, nullptr);
     temperature_bc_setup(
       userData, part, temperatureBc, enthalpyBc, isInterface);
@@ -709,25 +707,20 @@ EnthalpyEquationSystem::register_wall_bc(
     // interface bc fields
 
     // register the fields
-    ScalarFieldType* assembledWallArea =
-      &(meta_data.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "assembled_wall_area_ht"));
+    ScalarFieldType* assembledWallArea = &(meta_data.declare_field<double>(
+      stk::topology::NODE_RANK, "assembled_wall_area_ht"));
     stk::mesh::put_field_on_mesh(*assembledWallArea, *part, nullptr);
-    ScalarFieldType* referenceTemperature =
-      &(meta_data.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "reference_temperature"));
+    ScalarFieldType* referenceTemperature = &(meta_data.declare_field<double>(
+      stk::topology::NODE_RANK, "reference_temperature"));
     stk::mesh::put_field_on_mesh(*referenceTemperature, *part, nullptr);
-    ScalarFieldType* heatTransferCoeff =
-      &(meta_data.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "heat_transfer_coefficient"));
+    ScalarFieldType* heatTransferCoeff = &(meta_data.declare_field<double>(
+      stk::topology::NODE_RANK, "heat_transfer_coefficient"));
     stk::mesh::put_field_on_mesh(*heatTransferCoeff, *part, nullptr);
-    ScalarFieldType* normalHeatFlux =
-      &(meta_data.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "normal_heat_flux"));
+    ScalarFieldType* normalHeatFlux = &(meta_data.declare_field<double>(
+      stk::topology::NODE_RANK, "normal_heat_flux"));
     stk::mesh::put_field_on_mesh(*normalHeatFlux, *part, nullptr);
-    ScalarFieldType* robinCouplingParameter =
-      &(meta_data.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "robin_coupling_parameter"));
+    ScalarFieldType* robinCouplingParameter = &(meta_data.declare_field<double>(
+      stk::topology::NODE_RANK, "robin_coupling_parameter"));
     stk::mesh::put_field_on_mesh(*robinCouplingParameter, *part, nullptr);
 
     // create the driver
@@ -759,7 +752,7 @@ EnthalpyEquationSystem::register_wall_bc(
   // because it has its own):
   else if (userData.heatFluxSpec_ && !ablWallFunctionApproach) {
 
-    ScalarFieldType* theBcField = &(meta_data.declare_field<ScalarFieldType>(
+    ScalarFieldType* theBcField = &(meta_data.declare_field<double>(
       stk::topology::NODE_RANK, "heat_flux_bc"));
     stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
@@ -802,7 +795,7 @@ EnthalpyEquationSystem::register_wall_bc(
   else if (ablWallFunctionApproach) {
 
     GenericFieldType* theBcField =
-      meta_data.get_field<GenericFieldType>(sideRank, "wall_heat_flux_bip");
+      meta_data.get_field<double>(sideRank, "wall_heat_flux_bip");
 
     {
       auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
@@ -887,7 +880,7 @@ EnthalpyEquationSystem::register_abltop_bc(
 
   // If specifying the normal temperature gradient.
   if (userData.normalTemperatureGradientSpec_) {
-    ScalarFieldType* theBcField = &(meta_data.declare_field<ScalarFieldType>(
+    ScalarFieldType* theBcField = &(meta_data.declare_field<double>(
       stk::topology::NODE_RANK, "temperature_gradient_bc"));
     stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
@@ -1090,7 +1083,7 @@ EnthalpyEquationSystem::solve_and_update()
 
   {
     // Enthalpy BC field might not exist depending on boundary conditions
-    auto* enthalpyBC = realm_.meta_data().get_field<ScalarFieldType>(
+    auto* enthalpyBC = realm_.meta_data().get_field<double>(
       stk::topology::NODE_RANK, "enthalpy_bc");
     if (enthalpyBC != nullptr) {
       enthalpyBC->modify_on_host();
@@ -1160,7 +1153,7 @@ EnthalpyEquationSystem::post_iter_work_dep()
 
   {
     // enthalpy BC field might not exist depending on boundary conditions
-    auto* enthalpyBC = realm_.meta_data().get_field<ScalarFieldType>(
+    auto* enthalpyBC = realm_.meta_data().get_field<double>(
       stk::topology::NODE_RANK, "enthalpy_bc");
     if (enthalpyBC != nullptr) {
       enthalpyBC->modify_on_host();
@@ -1351,8 +1344,8 @@ EnthalpyEquationSystem::post_converged_work()
   if (lowSpeedCompressActive_) {
     stk::mesh::MetaData& meta_data = realm_.meta_data();
     // copy pressure to pOld
-    ScalarFieldType* pressure = meta_data.get_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "pressure");
+    ScalarFieldType* pressure =
+      meta_data.get_field<double>(stk::topology::NODE_RANK, "pressure");
     field_copy(
       meta_data, realm_.bulk_data(), *pressure, *pOld_,
       realm_.get_activate_aura());

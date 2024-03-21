@@ -164,8 +164,7 @@ TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
 {
   for (auto& tb : blocks_) {
     // Update IBLANK information at nodes and elements
-    tb->update_iblanks(
-      oversetManager_.holeNodes_, oversetManager_.fringeNodes_);
+    tb->update_iblanks();
     tb->update_iblank_cell();
 
     // For each block determine donor elements that needs to be ghosted to other
@@ -175,10 +174,20 @@ TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
   }
 
   // Synchronize IBLANK data for shared nodes
-  ScalarIntFieldType* ibf =
-    meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
+  sierra::nalu::ScalarIntFieldType* ibf =
+    meta_.get_field<int>(stk::topology::NODE_RANK, "iblank");
   std::vector<const stk::mesh::FieldBase*> pvec{ibf};
-  stk::mesh::copy_owned_to_shared(bulk_, pvec);
+  stk::mesh::parallel_min(bulk_, {ibf});
+
+  for (auto& tb : blocks_) {
+    // Call update_iblanks again to assign holeNodes and fringeNodes vectors
+    // after iblanks on shared nodes are corrected
+    tb->update_fringe_and_hole_nodes(
+      oversetManager_.holeNodes_, oversetManager_.fringeNodes_);
+    // Return the corrected iblank field to Tioga prior to donor-to-receptor
+    // interpolation
+    tb->update_tioga_iblanks();
+  }
 
   post_connectivity_sync();
 
@@ -244,8 +253,8 @@ TiogaSTKIface::update_ghosting()
 
   // Communicate coordinates field when populating oversetInfoVec
   if (oversetManager_.oversetGhosting_ != nullptr) {
-    VectorFieldType* coords =
-      meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, coordsName_);
+    sierra::nalu::VectorFieldType* coords =
+      meta_.get_field<double>(stk::topology::NODE_RANK, coordsName_);
     std::vector<const stk::mesh::FieldBase*> fVec = {coords};
     stk::mesh::communicate_field_data(*oversetManager_.oversetGhosting_, fVec);
   }
@@ -254,8 +263,8 @@ TiogaSTKIface::update_ghosting()
 void
 TiogaSTKIface::get_receptor_info()
 {
-  ScalarIntFieldType* ibf =
-    meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
+  sierra::nalu::ScalarIntFieldType* ibf =
+    meta_.get_field<int>(stk::topology::NODE_RANK, "iblank");
 
   std::vector<unsigned long> nodesToReset;
 
@@ -388,8 +397,8 @@ TiogaSTKIface::populate_overset_info()
   // Ensure that the oversetInfoVec has been cleared out
   ThrowAssert(osetInfo.size() == 0);
 
-  VectorFieldType* coords =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, coordsName_);
+  sierra::nalu::VectorFieldType* coords =
+    meta_.get_field<double>(stk::topology::NODE_RANK, coordsName_);
 
   size_t numReceptors = receptorIDs_.size();
   for (size_t i = 0; i < numReceptors; i++) {
@@ -559,12 +568,11 @@ TiogaSTKIface::overset_update_field(
 void
 TiogaSTKIface::pre_connectivity_sync()
 {
-  auto* coords =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, coordsName_);
-  auto* dualVol = meta_.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "dual_nodal_volume");
-  auto* elemVol = meta_.get_field<ScalarFieldType>(
-    stk::topology::ELEMENT_RANK, "element_volume");
+  auto* coords = meta_.get_field<double>(stk::topology::NODE_RANK, coordsName_);
+  auto* dualVol =
+    meta_.get_field<double>(stk::topology::NODE_RANK, "dual_nodal_volume");
+  auto* elemVol =
+    meta_.get_field<double>(stk::topology::ELEMENT_RANK, "element_volume");
 
   coords->sync_to_host();
   dualVol->sync_to_host();
@@ -581,10 +589,9 @@ TiogaSTKIface::post_connectivity_sync()
 {
   // Push iblank fields to device
   {
-    auto* ibnode =
-      meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
-    auto* ibcell = meta_.get_field<ScalarIntFieldType>(
-      stk::topology::ELEM_RANK, "iblank_cell");
+    auto* ibnode = meta_.get_field<int>(stk::topology::NODE_RANK, "iblank");
+    auto* ibcell =
+      meta_.get_field<int>(stk::topology::ELEM_RANK, "iblank_cell");
     ibnode->modify_on_host();
     ibnode->sync_to_device();
     ibcell->modify_on_host();

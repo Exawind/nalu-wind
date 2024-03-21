@@ -108,11 +108,13 @@ TEST(meshMotion, NGP_compute_centroid)
   // NOTE: This is done to allow computation of gold values later on
   // because mesh_transformation changes the field - coordinates
   int nDim = realm.meta_data().spatial_dimension();
-  VectorFieldType* modelCoordsGold =
-    &(realm.meta_data().declare_field<VectorFieldType>(
+  sierra::nalu::VectorFieldType* modelCoordsGold =
+    &(realm.meta_data().declare_field<double>(
       stk::topology::NODE_RANK, "coordinates_gold"));
   stk::mesh::put_field_on_mesh(
     *modelCoordsGold, realm.meta_data().universal_part(), nDim, nullptr);
+  stk::io::set_field_output_type(
+    *modelCoordsGold, stk::io::FieldOutputType::VECTOR_3D);
 
   // create mesh and get dimensions
   const std::string meshSpec("generated:5x9x11");
@@ -127,8 +129,9 @@ TEST(meshMotion, NGP_compute_centroid)
     realm.bulk_data().get_buckets(stk::topology::NODE_RANK, sel);
 
   // get model coordinate fields
-  VectorFieldType* modelCoords = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
+  sierra::nalu::VectorFieldType* modelCoords =
+    realm.meta_data().get_field<double>(
+      stk::topology::NODE_RANK, "coordinates");
 
   // copy over coordinates
   for (auto b : bkts) {

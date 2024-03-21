@@ -5,7 +5,6 @@
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Entity.hpp>
 #include <stk_mesh/base/Field.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 
 #include "overset/TiogaOptions.h"
 #include "overset/OversetFieldData.h"
