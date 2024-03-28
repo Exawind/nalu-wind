@@ -56,10 +56,6 @@ endif()
 
 add_library(nalu "")
 
-########################## MPI ####################################
-find_package(MPI REQUIRED)
-target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>)
-
 if(ENABLE_CUDA)
   enable_language(CUDA)
   find_package(CUDAToolkit REQUIRED)
@@ -206,6 +202,10 @@ if(ENABLE_TIOGA)
   endif()
 endif()
 
+########################## MPI ####################################
+find_package(MPI REQUIRED)
+target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>)
+target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_Fortran_FOUND}>:MPI::MPI_Fortran>)
 
 ############################ MATRIXREE #####################################
 if(ENABLE_MATRIXFREE)
