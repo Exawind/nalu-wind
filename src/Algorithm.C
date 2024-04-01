@@ -24,14 +24,18 @@ namespace nalu {
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 Algorithm::Algorithm(Realm& realm, stk::mesh::Part* part)
-  : realm_(realm), partVec_(1, part), fieldManager_(*(realm.fieldManager_.get()))
+  : realm_(realm),
+    partVec_(1, part),
+    fieldManager_(*(realm.fieldManager_.get()))
 {
   // nothing to do
 }
 
 // alternative; provide full partVec
 Algorithm::Algorithm(Realm& realm, const stk::mesh::PartVector& partVec)
-  : realm_(realm), partVec_(partVec), fieldManager_(*(realm.fieldManager_.get()))
+  : realm_(realm),
+    partVec_(partVec),
+    fieldManager_(*(realm.fieldManager_.get()))
 {
   // nothing to do
 }

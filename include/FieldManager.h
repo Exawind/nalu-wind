@@ -119,7 +119,7 @@ public:
   /// field Registry is a static compile-time definition. Care must be taken
   /// not to re-register the same field on the same parts with a conflicting
   /// number of states or components.
-  FieldPointerTypes register_field (
+  FieldPointerTypes register_field(
     const std::string& name,
     const stk::mesh::PartVector& parts,
     const int numStates = 0,

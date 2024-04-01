@@ -300,7 +300,7 @@ EnthalpyEquationSystem::register_nodal_fields(
          "this constant value"
       << std::endl;
     Algorithm* propAlg = new ThermalConductivityFromPrandtlPropAlgorithm(
-      realm_, part_vec,  providedPr);
+      realm_, part_vec, providedPr);
     propertyAlg_.push_back(propAlg);
   } else {
     // no Pr provided, simply augment property map and expect lambda to be

@@ -32,13 +32,11 @@ namespace nalu {
 //--------------------------------------------------------------------------
 ThermalConductivityFromPrandtlPropAlgorithm::
   ThermalConductivityFromPrandtlPropAlgorithm(
-    Realm& realm,
-    const stk::mesh::PartVector& part_vec,
-    const double Pr)
-  : Algorithm(realm, part_vec),
-    Pr_(Pr)
+    Realm& realm, const stk::mesh::PartVector& part_vec, const double Pr)
+  : Algorithm(realm, part_vec), Pr_(Pr)
 {
-  fieldManager_.register_field<ScalarFieldType>("thermal_conductivity", part_vec);
+  fieldManager_.register_field<ScalarFieldType>(
+    "thermal_conductivity", part_vec);
   fieldManager_.register_field<ScalarFieldType>("specific_heat", part_vec);
   fieldManager_.register_field<ScalarFieldType>("viscosity", part_vec);
 }
@@ -57,9 +55,18 @@ ThermalConductivityFromPrandtlPropAlgorithm::execute()
   stk::mesh::BucketVector const& node_buckets =
     realm_.get_buckets(stk::topology::NODE_RANK, selector);
 
-  auto thermalCond = fieldManager_.get_legacy_smart_field<sierra::nalu::ScalarFieldType, tags::READ_WRITE>("thermal_conductivity");
-  const auto specHeat = fieldManager_.get_legacy_smart_field<sierra::nalu::ScalarFieldType, tags::READ>("specific_heat");
-  const auto viscosity = fieldManager_.get_legacy_smart_field<sierra::nalu::ScalarFieldType, tags::READ>("viscosity");
+  auto thermalCond =
+    fieldManager_
+      .get_legacy_smart_field<sierra::nalu::ScalarFieldType, tags::READ_WRITE>(
+        "thermal_conductivity");
+  const auto specHeat =
+    fieldManager_
+      .get_legacy_smart_field<sierra::nalu::ScalarFieldType, tags::READ>(
+        "specific_heat");
+  const auto viscosity =
+    fieldManager_
+      .get_legacy_smart_field<sierra::nalu::ScalarFieldType, tags::READ>(
+        "viscosity");
 
   for (stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
        ib != node_buckets.end(); ++ib) {
