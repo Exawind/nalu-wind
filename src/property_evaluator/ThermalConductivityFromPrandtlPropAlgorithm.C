@@ -35,10 +35,9 @@ ThermalConductivityFromPrandtlPropAlgorithm::
     Realm& realm, const stk::mesh::PartVector& part_vec, const double Pr)
   : Algorithm(realm, part_vec), Pr_(Pr)
 {
-  fieldManager_.register_field<ScalarFieldType>(
-    "thermal_conductivity", part_vec);
-  fieldManager_.register_field<ScalarFieldType>("specific_heat", part_vec);
-  fieldManager_.register_field<ScalarFieldType>("viscosity", part_vec);
+  fieldManager_.register_field<double>("thermal_conductivity", part_vec);
+  fieldManager_.register_field<double>("specific_heat", part_vec);
+  fieldManager_.register_field<double>("viscosity", part_vec);
 }
 
 //--------------------------------------------------------------------------
@@ -57,15 +56,15 @@ ThermalConductivityFromPrandtlPropAlgorithm::execute()
 
   auto thermalCond =
     fieldManager_
-      .get_legacy_smart_field<sierra::nalu::ScalarFieldType, tags::READ_WRITE>(
+      .get_legacy_smart_field<double, tags::READ_WRITE>(
         "thermal_conductivity");
   const auto specHeat =
     fieldManager_
-      .get_legacy_smart_field<sierra::nalu::ScalarFieldType, tags::READ>(
+      .get_legacy_smart_field<double, tags::READ>(
         "specific_heat");
   const auto viscosity =
     fieldManager_
-      .get_legacy_smart_field<sierra::nalu::ScalarFieldType, tags::READ>(
+      .get_legacy_smart_field<double, tags::READ>(
         "viscosity");
 
   for (stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
