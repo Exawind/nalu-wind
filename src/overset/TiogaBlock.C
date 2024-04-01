@@ -224,9 +224,7 @@ TiogaBlock::update_connectivity()
 }
 
 void
-TiogaBlock::update_iblanks(
-  std::vector<stk::mesh::Entity>& holeNodes,
-  std::vector<stk::mesh::Entity>& fringeNodes)
+TiogaBlock::update_iblanks()
 {
   sierra::nalu::ScalarIntFieldType* ibf =
     meta_.get_field<int>(stk::topology::NODE_RANK, "iblank");
@@ -241,12 +239,50 @@ TiogaBlock::update_iblanks(
     int* ib = stk::mesh::field_data(*ibf, *b);
     for (size_t in = 0; in < b->size(); in++) {
       ib[in] = ibnode(ip++);
+    }
+  }
+}
 
+void
+TiogaBlock::update_fringe_and_hole_nodes(
+  std::vector<stk::mesh::Entity>& holeNodes,
+  std::vector<stk::mesh::Entity>& fringeNodes)
+{
+  sierra::nalu::ScalarIntFieldType* ibf =
+    meta_.get_field<int>(stk::topology::NODE_RANK, "iblank");
+
+  stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
+  const stk::mesh::BucketVector& mbkts =
+    bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
+
+  for (auto b : mbkts) {
+    int* ib = stk::mesh::field_data(*ibf, *b);
+    for (size_t in = 0; in < b->size(); in++) {
       if (ib[in] == 0) {
         holeNodes.push_back((*b)[in]);
       } else if (ib[in] == -1) {
         fringeNodes.push_back((*b)[in]);
       }
+    }
+  }
+}
+
+void
+TiogaBlock::update_tioga_iblanks()
+{
+  sierra::nalu::ScalarIntFieldType* ibf =
+    meta_.get_field<int>(stk::topology::NODE_RANK, "iblank");
+
+  stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
+  const stk::mesh::BucketVector& mbkts =
+    bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
+
+  auto& ibnode = bdata_.iblank_.h_view;
+  int ip = 0;
+  for (auto b : mbkts) {
+    int* ib = stk::mesh::field_data(*ibf, *b);
+    for (size_t in = 0; in < b->size(); in++) {
+      ibnode(ip++) = ib[in];
     }
   }
 }

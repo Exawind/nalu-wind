@@ -68,7 +68,7 @@ namespace nalu {
 
 WallDistEquationSystem::WallDistEquationSystem(EquationSystems& eqSystems)
   : EquationSystem(eqSystems, "WallDistEQS", "ndtw"),
-    nodalGradAlgDriver_(realm_, "ndtw", "dwalldistdx"),
+    nodalGradAlgDriver_(realm_, "wall_distance_phi", "dwalldistdx"),
     managePNG_(realm_.get_consistent_mass_matrix_png("ndtw"))
 {
   if (managePNG_)
