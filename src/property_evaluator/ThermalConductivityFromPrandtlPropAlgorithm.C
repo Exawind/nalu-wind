@@ -55,17 +55,12 @@ ThermalConductivityFromPrandtlPropAlgorithm::execute()
     realm_.get_buckets(stk::topology::NODE_RANK, selector);
 
   auto thermalCond =
-    fieldManager_
-      .get_legacy_smart_field<double, tags::READ_WRITE>(
-        "thermal_conductivity");
+    fieldManager_.get_legacy_smart_field<double, tags::READ_WRITE>(
+      "thermal_conductivity");
   const auto specHeat =
-    fieldManager_
-      .get_legacy_smart_field<double, tags::READ>(
-        "specific_heat");
+    fieldManager_.get_legacy_smart_field<double, tags::READ>("specific_heat");
   const auto viscosity =
-    fieldManager_
-      .get_legacy_smart_field<double, tags::READ>(
-        "viscosity");
+    fieldManager_.get_legacy_smart_field<double, tags::READ>("viscosity");
 
   for (stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
        ib != node_buckets.end(); ++ib) {
