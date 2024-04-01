@@ -56,10 +56,6 @@ endif()
 
 add_library(nalu "")
 
-########################## MPI ####################################
-find_package(MPI REQUIRED)
-target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>)
-
 if(ENABLE_CUDA)
   enable_language(CUDA)
   find_package(CUDAToolkit REQUIRED)
@@ -185,6 +181,7 @@ if(ENABLE_OPENFAST_FSI)
 endif()
 if(ENABLE_OPENFAST)
   set(CMAKE_PREFIX_PATH ${OpenFAST_DIR} ${CMAKE_PREFIX_PATH})
+  enable_language(Fortran)
   find_package(OpenFAST QUIET REQUIRED)
   message(STATUS "Found OpenFAST = ${OpenFAST_LIBRARY_DIRS}")
   target_link_libraries(nalu PUBLIC ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
@@ -205,6 +202,10 @@ if(ENABLE_TIOGA)
   endif()
 endif()
 
+########################## MPI ####################################
+find_package(MPI REQUIRED)
+target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>)
+target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_Fortran_FOUND}>:MPI::MPI_Fortran>)
 
 ############################ MATRIXREE #####################################
 if(ENABLE_MATRIXFREE)
