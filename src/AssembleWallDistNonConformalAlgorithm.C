@@ -31,10 +31,10 @@ AssembleWallDistNonConformalAlgorithm::AssembleWallDistNonConformalAlgorithm(
 {
   auto& meta = realm.meta_data();
 
-  coordinates_ = meta.get_field<double>(
+  coordinates_ = meta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, realm.get_coordinates_name());
   exposedAreaVec_ =
-    meta.get_field<double>(meta.side_rank(), "exposed_area_vector");
+    meta.get_field<GenericFieldType>(meta.side_rank(), "exposed_area_vector");
 
   ghostFieldVec_.push_back(coordinates_);
 }

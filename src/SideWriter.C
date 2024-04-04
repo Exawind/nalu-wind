@@ -71,11 +71,12 @@ get_dimension(const stk::mesh::BulkData& bulk)
   return int(bulk.mesh_meta_data().spatial_dimension());
 }
 
-const stk::mesh::Field<double>&
+const stk::mesh::Field<double, stk::mesh::Cartesian>&
 get_coordinate_field(const stk::mesh::BulkData& bulk)
 {
-  auto* coord = dynamic_cast<const stk::mesh::Field<double>*>(
-    bulk.mesh_meta_data().coordinate_field());
+  auto* coord =
+    dynamic_cast<const stk::mesh::Field<double, stk::mesh::Cartesian>*>(
+      bulk.mesh_meta_data().coordinate_field());
   ThrowRequireMsg(coord, "Model coordinates must be a double-valued vector");
   return *coord;
 }

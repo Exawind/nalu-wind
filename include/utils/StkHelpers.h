@@ -99,11 +99,6 @@ get_node_field(
     *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
 }
 
-// Can replace this function with field.max_extent(0) when
-// using new-enough Trilinos.
-//
-unsigned max_extent(const stk::mesh::FieldBase& field, unsigned dimension);
-
 } // namespace nalu
 } // namespace sierra
 

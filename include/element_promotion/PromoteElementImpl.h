@@ -12,13 +12,13 @@
 
 #include <stk_mesh/base/Types.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
+#include <stk_mesh/base/CoordinateSystems.hpp>
 
 #include <vector>
 #include <tuple>
 #include <unordered_map>
 
 #include <stk_topology/topology.hpp>
-#include <FieldTypeDef.h>
 
 namespace stk {
 namespace mesh {
@@ -60,6 +60,7 @@ namespace nalu {
 struct ElementDescription;
 }
 } // namespace sierra
+typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
 
 namespace sierra {
 namespace nalu {

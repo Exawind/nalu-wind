@@ -32,31 +32,29 @@ public:
     meshBuilder.set_spatial_dimension(3);
     bulk = meshBuilder.create();
     meta = &bulk->mesh_meta_data();
-    meta->use_simple_fields();
 
-    density = &meta->declare_field<double>(stk::topology::NODE_RANK, "density");
-    pressure =
-      &meta->declare_field<double>(stk::topology::NODE_RANK, "pressure");
-    velocity =
-      &meta->declare_field<double>(stk::topology::NODE_RANK, "velocity");
-    mdotEdge =
-      &meta->declare_field<double>(stk::topology::EDGE_RANK, "mass_flow_rate");
-    massFlowRate = &meta->declare_field<double>(
+    density = &meta->declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "density");
+    pressure = &meta->declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "pressure");
+    velocity = &meta->declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "velocity");
+    mdotEdge = &meta->declare_field<ScalarFieldType>(
+      stk::topology::EDGE_RANK, "mass_flow_rate");
+    massFlowRate = &meta->declare_field<GenericFieldType>(
       stk::topology::ELEM_RANK, "mass_flow_rate_scs");
 
     const double ten = 10.0;
     const double zero = 0.0;
     const double oneVec[3] = {1.0, 1.0, 1.0};
     sierra::nalu::HexSCS hex8SCS;
-    stk::mesh::put_field_on_mesh(*density, meta->universal_part(), &ten);
-    stk::mesh::put_field_on_mesh(*pressure, meta->universal_part(), &zero);
+    stk::mesh::put_field_on_mesh(*density, meta->universal_part(), 1, &ten);
+    stk::mesh::put_field_on_mesh(*pressure, meta->universal_part(), 1, &zero);
     stk::mesh::put_field_on_mesh(*velocity, meta->universal_part(), 3, oneVec);
-    stk::io::set_field_output_type(
-      *velocity, stk::io::FieldOutputType::VECTOR_3D);
     stk::mesh::put_field_on_mesh(
       *massFlowRate, meta->universal_part(), hex8SCS.num_integration_points(),
       &zero);
-    stk::mesh::put_field_on_mesh(*mdotEdge, meta->universal_part(), &zero);
+    stk::mesh::put_field_on_mesh(*mdotEdge, meta->universal_part(), 1, &zero);
   }
 
   ~NgpLoopTest() = default;
@@ -67,25 +65,23 @@ public:
     unit_test_utils::fill_hex8_mesh(meshSpec, *bulk);
     partVec = {meta->get_part("block_1")};
 
-    coordField = static_cast<const sierra::nalu::VectorFieldType*>(
-      meta->coordinate_field());
+    coordField = static_cast<const VectorFieldType*>(meta->coordinate_field());
     EXPECT_TRUE(coordField != nullptr);
   }
 
   stk::mesh::MetaData* meta;
   std::shared_ptr<stk::mesh::BulkData> bulk;
   stk::mesh::PartVector partVec;
-  const sierra::nalu::VectorFieldType* coordField{nullptr};
-  sierra::nalu::ScalarFieldType* density{nullptr};
-  sierra::nalu::ScalarFieldType* pressure{nullptr};
-  sierra::nalu::VectorFieldType* velocity{nullptr};
-  sierra::nalu::ScalarFieldType* mdotEdge{nullptr};
-  sierra::nalu::GenericFieldType* massFlowRate{nullptr};
+  const VectorFieldType* coordField{nullptr};
+  ScalarFieldType* density{nullptr};
+  ScalarFieldType* pressure{nullptr};
+  VectorFieldType* velocity{nullptr};
+  ScalarFieldType* mdotEdge{nullptr};
+  GenericFieldType* massFlowRate{nullptr};
 };
 
 void
-basic_node_loop(
-  const stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType& pressure)
+basic_node_loop(const stk::mesh::BulkData& bulk, ScalarFieldType& pressure)
 {
   using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   const double presSet = 4.0;
@@ -119,8 +115,7 @@ basic_node_loop(
 }
 
 void
-basic_node_reduce(
-  const stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType& pressure)
+basic_node_reduce(const stk::mesh::BulkData& bulk, ScalarFieldType& pressure)
 {
   using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   const double presSet = 4.0;
@@ -275,9 +270,7 @@ basic_node_reduce_minmaxsum(
 
 void
 basic_node_reduce_array(
-  const stk::mesh::BulkData& bulk,
-  sierra::nalu::ScalarFieldType& pressure,
-  int num_nodes)
+  const stk::mesh::BulkData& bulk, ScalarFieldType& pressure, int num_nodes)
 {
   using MeshIndex =
     sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
@@ -311,8 +304,8 @@ basic_node_reduce_array(
 void
 basic_elem_loop(
   const stk::mesh::BulkData& bulk,
-  sierra::nalu::ScalarFieldType& pressure,
-  sierra::nalu::GenericFieldType& massFlowRate)
+  ScalarFieldType& pressure,
+  GenericFieldType& massFlowRate)
 {
   const double flowRate = 4.0;
   const double presSet = 10.0;
@@ -365,8 +358,8 @@ basic_elem_loop(
 void
 basic_edge_loop(
   const stk::mesh::BulkData& bulk,
-  sierra::nalu::ScalarFieldType& pressure,
-  sierra::nalu::ScalarFieldType& mdotEdge)
+  ScalarFieldType& pressure,
+  ScalarFieldType& mdotEdge)
 {
   const double flowRate = 4.0;
   const double presSet = 10.0;
@@ -419,8 +412,8 @@ basic_edge_loop(
 void
 elem_loop_scratch_views(
   const stk::mesh::BulkData& bulk,
-  sierra::nalu::ScalarFieldType& pressure,
-  sierra::nalu::VectorFieldType& velocity)
+  ScalarFieldType& pressure,
+  VectorFieldType& velocity)
 {
   using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Hex8Traits = sierra::nalu::AlgTraitsHex8;
@@ -523,9 +516,9 @@ elem_loop_scratch_views(
 void
 calc_mdot_elem_loop(
   const stk::mesh::BulkData& bulk,
-  sierra::nalu::ScalarFieldType& density,
-  sierra::nalu::VectorFieldType& velocity,
-  sierra::nalu::GenericFieldType& massFlowRate)
+  ScalarFieldType& density,
+  VectorFieldType& velocity,
+  GenericFieldType& massFlowRate)
 {
   using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Hex8Traits = sierra::nalu::AlgTraitsHex8;
@@ -610,10 +603,10 @@ calc_mdot_elem_loop(
 void
 basic_face_elem_loop(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordField,
-  const sierra::nalu::GenericFieldType& exposedArea,
-  sierra::nalu::ScalarFieldType& wallArea,
-  sierra::nalu::ScalarFieldType& wallNormDist)
+  const VectorFieldType& coordField,
+  const GenericFieldType& exposedArea,
+  ScalarFieldType& wallArea,
+  ScalarFieldType& wallNormDist)
 {
   using MeshIndex =
     sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
@@ -723,8 +716,7 @@ basic_face_elem_loop(
 }
 
 void
-elem_loop_par_reduce(
-  const stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType& pressure)
+elem_loop_par_reduce(const stk::mesh::BulkData& bulk, ScalarFieldType& pressure)
 {
   using Hex8Traits = sierra::nalu::AlgTraitsHex8;
   using ElemSimdData = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
@@ -785,8 +777,8 @@ elem_loop_par_reduce(
 void
 basic_face_elem_reduce(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordField,
-  const sierra::nalu::GenericFieldType& exposedArea)
+  const VectorFieldType& coordField,
+  const GenericFieldType& exposedArea)
 {
   using FaceTraits = sierra::nalu::AlgTraitsQuad4Hex8;
   using FaceSimdData =
@@ -937,19 +929,20 @@ TEST_F(NgpLoopTest, NGP_basic_face_elem_loop)
   if (bulk->parallel_size() > 1)
     return;
 
-  auto& exposedAreaVec =
-    meta->declare_field<double>(meta->side_rank(), "exposed_area_vector");
+  auto& exposedAreaVec = meta->declare_field<GenericFieldType>(
+    meta->side_rank(), "exposed_area_vector");
   auto& wallArea =
-    meta->declare_field<double>(stk::topology::NODE_RANK, "wall_area");
-  auto& wallNormDist =
-    meta->declare_field<double>(stk::topology::NODE_RANK, "wall_normal_dist");
+    meta->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "wall_area");
+  auto& wallNormDist = meta->declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "wall_normal_dist");
 
   stk::mesh::put_field_on_mesh(
     exposedAreaVec, meta->universal_part(),
     meta->spatial_dimension() * sierra::nalu::AlgTraitsQuad4::numScsIp_,
     nullptr);
-  stk::mesh::put_field_on_mesh(wallArea, meta->universal_part(), nullptr);
-  stk::mesh::put_field_on_mesh(wallNormDist, meta->universal_part(), nullptr);
+  stk::mesh::put_field_on_mesh(wallArea, meta->universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(
+    wallNormDist, meta->universal_part(), 1, nullptr);
 
   fill_mesh_and_init_fields("generated:4x4x1|sideset:xXyYzZ");
   unit_test_kernel_utils::calc_exposed_area_vec(
@@ -964,8 +957,8 @@ TEST_F(NgpLoopTest, NGP_basic_face_elem_reduce)
   if (bulk->parallel_size() > 1)
     return;
 
-  auto& exposedAreaVec =
-    meta->declare_field<double>(meta->side_rank(), "exposed_area_vector");
+  auto& exposedAreaVec = meta->declare_field<GenericFieldType>(
+    meta->side_rank(), "exposed_area_vector");
   stk::mesh::put_field_on_mesh(
     exposedAreaVec, meta->universal_part(),
     meta->spatial_dimension() * sierra::nalu::AlgTraitsQuad4::numScsIp_,

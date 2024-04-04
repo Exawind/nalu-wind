@@ -37,7 +37,7 @@ compute_volume_stats(Realm& realm, double* gVolStats)
 
   const auto& meshInfo = realm.mesh_info();
   const auto& meta = meshInfo.meta();
-  auto* dualVol = meta.template get_field<double>(
+  auto* dualVol = meta.template get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume");
   const auto& ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
@@ -89,7 +89,7 @@ void
 GeometryAlgDriver::pre_work()
 {
   const auto& meta = realm_.meta_data();
-  auto* dualVol = meta.template get_field<double>(
+  auto* dualVol = meta.template get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume");
 
   stk::mesh::field_fill(0.0, *dualVol);
@@ -107,7 +107,7 @@ GeometryAlgDriver::pre_work()
     mesh_motion_prework();
 
   if (realm_.realmUsesEdges_) {
-    auto* edgeAreaVec = meta.template get_field<double>(
+    auto* edgeAreaVec = meta.template get_field<VectorFieldType>(
       stk::topology::EDGE_RANK, "edge_area_vector");
     stk::mesh::field_fill(0.0, *edgeAreaVec);
 
@@ -149,7 +149,7 @@ GeometryAlgDriver::mesh_motion_prework()
   ngpFaceVelMag.clear_sync_state();
   ngpFaceVelMag.set_all(ngpMesh, 0.0);
 
-  auto* faceVelMag = meta.get_field<double>(entityRank, fvmFieldName);
+  auto* faceVelMag = meta.get_field<GenericFieldType>(entityRank, fvmFieldName);
   stk::mesh::field_fill(0.0, *faceVelMag);
   const std::string svFieldName =
     realm_.realmUsesEdges_ ? "edge_swept_face_volume" : "swept_face_volume";
@@ -160,7 +160,7 @@ GeometryAlgDriver::mesh_motion_prework()
   ngpSweptVol.clear_sync_state();
   ngpSweptVol.set_all(ngpMesh, 0.0);
 
-  auto* sweptVol = meta.get_field<double>(entityRank, svFieldName);
+  auto* sweptVol = meta.get_field<GenericFieldType>(entityRank, svFieldName);
   stk::mesh::field_fill(0.0, *sweptVol);
   ngpSweptVol.sync_to_device();
 
@@ -172,7 +172,7 @@ GeometryAlgDriver::mesh_motion_prework()
       realm_.mesh_info(), "edge_swept_face_volume", stk::mesh::StateN,
       stk::topology::EDGE_RANK);
 
-    auto* sweptVolEdge = meta.template get_field<double>(
+    auto* sweptVolEdge = meta.template get_field<GenericFieldType>(
       stk::topology::EDGE_RANK, "edge_swept_face_volume");
     const stk::mesh::Selector sel =
       stk::mesh::selectField(*sweptVolEdge) & meta.locally_owned_part();
@@ -234,7 +234,7 @@ GeometryAlgDriver::post_work()
   if (realm_.hasPeriodic_) {
     const auto& meta = realm_.meta_data();
     const unsigned nComponents = 1;
-    auto* dualVol = meta.template get_field<double>(
+    auto* dualVol = meta.template get_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "dual_nodal_volume");
     realm_.periodic_field_update(dualVol, nComponents);
 

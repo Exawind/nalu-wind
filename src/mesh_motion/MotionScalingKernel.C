@@ -20,7 +20,7 @@ MotionScalingKernel::MotionScalingKernel(
   if (useRate_) {
     // declare divergence of mesh velocity for this motion
     isDeforming_ = true;
-    ScalarFieldType* divV = &(meta.declare_field<double>(
+    ScalarFieldType* divV = &(meta.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "div_mesh_velocity"));
     stk::mesh::put_field_on_mesh(*divV, meta.universal_part(), nullptr);
     stk::mesh::field_fill(0.0, *divV);

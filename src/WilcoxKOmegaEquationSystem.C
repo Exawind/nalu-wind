@@ -120,15 +120,15 @@ WilcoxKOmegaEquationSystem::register_nodal_fields(
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   // re-register tke and sdr for convenience
-  tke_ = &(meta_data.declare_field<double>(
+  tke_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "turbulent_ke", numStates));
   stk::mesh::put_field_on_mesh(*tke_, selector, nullptr);
-  sdr_ = &(meta_data.declare_field<double>(
+  sdr_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "specific_dissipation_rate", numStates));
   stk::mesh::put_field_on_mesh(*sdr_, selector, nullptr);
 
   // SST parameters that everyone needs
-  minDistanceToWall_ = &(meta_data.declare_field<double>(
+  minDistanceToWall_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "minimum_distance_to_wall"));
   stk::mesh::put_field_on_mesh(*minDistanceToWall_, selector, nullptr);
 
@@ -162,14 +162,14 @@ WilcoxKOmegaEquationSystem::register_wall_bc(
   wallBcPart_.push_back(part);
 
   auto& meta = realm_.meta_data();
-  auto& assembledWallArea = meta.declare_field<double>(
+  auto& assembledWallArea = meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "assembled_wall_area_wf");
   stk::mesh::put_field_on_mesh(assembledWallArea, *part, nullptr);
-  auto& assembledWallNormDist = meta.declare_field<double>(
+  auto& assembledWallNormDist = meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "assembled_wall_normal_distance");
   stk::mesh::put_field_on_mesh(assembledWallNormDist, *part, nullptr);
-  auto& wallNormDistBip =
-    meta.declare_field<double>(meta.side_rank(), "wall_normal_distance_bip");
+  auto& wallNormDistBip = meta.declare_field<ScalarFieldType>(
+    meta.side_rank(), "wall_normal_distance_bip");
   auto* meFC = MasterElementRepo::get_surface_master_element_on_host(partTopo);
   const int numScsBip = meFC->num_integration_points();
   stk::mesh::put_field_on_mesh(wallNormDistBip, *part, numScsBip, nullptr);
@@ -261,8 +261,10 @@ WilcoxKOmegaEquationSystem::post_external_data_transfer_work()
   auto interior_sel = owned_and_shared & stk::mesh::selectField(*sdr_);
   clip_ko(ngpMesh, interior_sel, tkeNp1, sdrNp1);
 
-  auto sdrBCField = meta.get_field<double>(stk::topology::NODE_RANK, "sdr_bc");
-  auto tkeBCField = meta.get_field<double>(stk::topology::NODE_RANK, "tke_bc");
+  auto sdrBCField =
+    meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "sdr_bc");
+  auto tkeBCField =
+    meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "tke_bc");
   if (sdrBCField != nullptr) {
     ThrowRequire(tkeBCField);
     auto bc_sel = owned_and_shared & stk::mesh::selectField(*sdrBCField);
@@ -293,8 +295,8 @@ WilcoxKOmegaEquationSystem::update_and_clip()
   const auto& wTmp =
     fieldMgr.get_field<double>(sdrEqSys_->wTmp_->mesh_meta_data_ordinal());
 
-  auto* turbViscosity =
-    meta.get_field<double>(stk::topology::NODE_RANK, "turbulent_viscosity");
+  auto* turbViscosity = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "turbulent_viscosity");
 
   const stk::mesh::Selector sel =
     (meta.locally_owned_part() | meta.globally_shared_part()) &

@@ -111,8 +111,8 @@ get_mesh_bounding_box(
   const unsigned spatialDim = mesh.mesh_meta_data().spatial_dimension();
 
   for (const stk::mesh::Bucket* bptr : nodeBuckets) {
-    const double* nodeCoords =
-      static_cast<const double*>(stk::mesh::field_data(*nodeCoordField, *bptr));
+    const double* nodeCoords = reinterpret_cast<const double*>(
+      stk::mesh::field_data(*nodeCoordField, *bptr));
     for (unsigned i = 0; i < bptr->size(); ++i) {
       minCoords.x() = std::min(minCoords.x(), nodeCoords[i * spatialDim]);
       minCoords.y() = std::min(minCoords.y(), nodeCoords[i * spatialDim + 1]);
@@ -174,7 +174,7 @@ template <typename FieldType>
 void
 verify_all_zeros(const stk::mesh::BulkData& mesh, FieldType& field)
 {
-  using DataType = typename FieldType::value_type;
+  using DataType = typename stk::mesh::FieldTraits<FieldType>::data_type;
   const DataType zero = 0;
   stk::mesh::Selector selector(field);
   stk::mesh::for_each_entity_run(
@@ -194,9 +194,9 @@ void
 verify_all_less_equal(
   const stk::mesh::BulkData& mesh,
   FieldType& field,
-  typename FieldType::value_type scalar)
+  typename stk::mesh::FieldTraits<FieldType>::data_type scalar)
 {
-  using DataType = typename FieldType::value_type;
+  using DataType = typename stk::mesh::FieldTraits<FieldType>::data_type;
   const DataType zero = 0;
   stk::mesh::Selector selector(field);
   stk::mesh::for_each_entity_run(

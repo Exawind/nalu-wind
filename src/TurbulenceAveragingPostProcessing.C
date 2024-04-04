@@ -34,7 +34,6 @@
 #include <stk_mesh/base/Part.hpp>
 #include <stk_mesh/base/NgpMesh.hpp>
 #include <stk_mesh/base/NgpField.hpp>
-#include <stk_io/IossBridge.hpp>
 
 // basic c++
 #include <stdexcept>
@@ -294,8 +293,8 @@ TurbulenceAveragingPostProcessing::setup()
     ThrowRequireMsg(
       tempField != nullptr, "Temperature field must be registered");
 
-    auto& field =
-      metaData.declare_field<double>(stk::topology::NODE_RANK, fTempName);
+    auto& field = metaData.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, fTempName);
     stk::mesh::put_field_on_mesh(
       field, stk::mesh::selectField(*tempField), nullptr);
     realm_.augment_restart_variable_list(fTempName);
@@ -348,12 +347,10 @@ TurbulenceAveragingPostProcessing::setup()
       if (avInfo->computeVorticity_) {
         const int vortSize = realm_.spatialDimension_;
         const std::string vorticityName = "vorticity";
-        VectorFieldType* vortField = &(metaData.declare_field<double>(
+        VectorFieldType* vortField = &(metaData.declare_field<VectorFieldType>(
           stk::topology::NODE_RANK, vorticityName));
         stk::mesh::put_field_on_mesh(
           *vortField, *targetPart, vortSize, nullptr);
-        stk::io::set_field_output_type(
-          *vortField, stk::io::FieldOutputType::VECTOR_3D);
       }
 
       if (avInfo->computeQcriterion_) {
@@ -411,8 +408,9 @@ TurbulenceAveragingPostProcessing::setup()
 
       // deal with density; always need Reynolds averaged quantity
       const std::string densityReynoldsName = "density_ra_" + averageBlockName;
-      ScalarFieldType* densityReynolds = &(metaData.declare_field<double>(
-        stk::topology::NODE_RANK, densityReynoldsName));
+      ScalarFieldType* densityReynolds =
+        &(metaData.declare_field<ScalarFieldType>(
+          stk::topology::NODE_RANK, densityReynoldsName));
       stk::mesh::put_field_on_mesh(*densityReynolds, *targetPart, nullptr);
 
       // Reynolds
@@ -528,15 +526,15 @@ TurbulenceAveragingPostProcessing::register_field_from_primitive(
   // register the averaged field with this size; treat velocity as a special
   // case to retain the vector aspect
   if (primitiveName == "velocity") {
-    VectorFieldType* averagedField =
-      &(metaData.declare_field<double>(stk::topology::NODE_RANK, averagedName));
+    VectorFieldType* averagedField = &(metaData.declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, averagedName));
     stk::mesh::put_field_on_mesh(
       *averagedField, *part, fieldSizePrimitive, nullptr);
-    stk::io::set_field_output_type(
-      *averagedField, stk::io::FieldOutputType::VECTOR_3D);
   } else {
     stk::mesh::FieldBase* averagedField =
-      &(metaData.declare_field<double>(stk::topology::NODE_RANK, averagedName));
+      &(metaData
+          .declare_field<stk::mesh::Field<double, stk::mesh::SimpleArrayTag>>(
+            stk::topology::NODE_RANK, averagedName));
     stk::mesh::put_field_on_mesh(
       *averagedField, *part, fieldSizePrimitive, nullptr);
   }
@@ -583,8 +581,9 @@ TurbulenceAveragingPostProcessing::register_field(
   stk::mesh::Part* targetPart)
 {
   // register and put the field
-  stk::mesh::FieldBase* theField =
-    &(metaData.declare_field<double>(stk::topology::NODE_RANK, fieldName));
+  stk::mesh::FieldBase* theField = &(
+    metaData.declare_field<stk::mesh::Field<double, stk::mesh::SimpleArrayTag>>(
+      stk::topology::NODE_RANK, fieldName));
   stk::mesh::put_field_on_mesh(*theField, *targetPart, fieldSize, nullptr);
   // augment the restart list
   realm_.augment_restart_variable_list(fieldName);
@@ -1435,7 +1434,7 @@ TurbulenceAveragingPostProcessing::compute_lambda_ci(
   stk::mesh::FieldBase* Lambda =
     metaData.get_field(stk::topology::NODE_RANK, lambdaName);
   TensorFieldType* dudx_ =
-    metaData.get_field<double>(stk::topology::NODE_RANK, "dudx");
+    metaData.get_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx");
 
   stk::mesh::BucketVector const& node_buckets_vort =
     realm_.get_buckets(stk::topology::NODE_RANK, s_all_nodes);

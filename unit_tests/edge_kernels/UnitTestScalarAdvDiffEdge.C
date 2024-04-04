@@ -219,8 +219,10 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
     stk::topology::NODE_RANK, bulk_->mesh_meta_data().locally_owned_part());
   for (const stk::mesh::Bucket* bptr : buckets) {
     for (stk::mesh::Entity node : *bptr) {
-      const double* data1 = stk::mesh::field_data(*viscosity_, node);
-      const double* data2 = stk::mesh::field_data(*mixFraction_, node);
+      const double* data1 =
+        static_cast<double*>(stk::mesh::field_data(*viscosity_, node));
+      const double* data2 =
+        static_cast<double*>(stk::mesh::field_data(*mixFraction_, node));
       EXPECT_NEAR(*data1, *data2, 1.e-12);
     }
   }

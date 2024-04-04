@@ -40,12 +40,12 @@ EnthalpyLowSpeedCompressibleNodeSuppAlg::
 {
   // save off fields
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  pressureN_ =
-    meta_data.get_field<double>(stk::topology::NODE_RANK, "pressure_old");
+  pressureN_ = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "pressure_old");
   pressureNp1_ =
-    meta_data.get_field<double>(stk::topology::NODE_RANK, "pressure");
-  dualNodalVolume_ =
-    meta_data.get_field<double>(stk::topology::NODE_RANK, "dual_nodal_volume");
+    meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure");
+  dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
 }
 
 //--------------------------------------------------------------------------

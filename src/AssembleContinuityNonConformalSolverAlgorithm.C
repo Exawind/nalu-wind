@@ -63,22 +63,24 @@ AssembleContinuityNonConformalSolverAlgorithm::
   // save off fields
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-  velocity_ = meta_data.get_field<double>(stk::topology::NODE_RANK, "velocity");
+  velocity_ =
+    meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
   if (meshMotion_) {
     meshMotionFac_ = 1.0;
-    meshVelocity_ =
-      meta_data.get_field<double>(stk::topology::NODE_RANK, "mesh_velocity");
+    meshVelocity_ = meta_data.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_velocity");
   } else {
     meshMotionFac_ = 0.0;
-    meshVelocity_ =
-      meta_data.get_field<double>(stk::topology::NODE_RANK, "velocity");
+    meshVelocity_ = meta_data.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "velocity");
   }
 
-  coordinates_ = meta_data.get_field<double>(
+  coordinates_ = meta_data.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name());
-  density_ = meta_data.get_field<double>(stk::topology::NODE_RANK, "density");
-  exposedAreaVec_ =
-    meta_data.get_field<double>(meta_data.side_rank(), "exposed_area_vector");
+  density_ =
+    meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
+  exposedAreaVec_ = meta_data.get_field<GenericFieldType>(
+    meta_data.side_rank(), "exposed_area_vector");
 
   // what do we need ghosted for this alg to work?
   ghostFieldVec_.push_back(pressure_);
@@ -195,8 +197,8 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
 
   // deal with state
   ScalarFieldType& pressureNp1 = pressure_->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType* Udiag =
-    meta_data.get_field<double>(stk::topology::NODE_RANK, "momentum_diag");
+  ScalarFieldType* Udiag = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "momentum_diag");
 
   // parallel communicate ghosted entities
   if (NULL != realm_.nonConformalManager_->nonConformalGhosting_)

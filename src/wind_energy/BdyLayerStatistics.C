@@ -188,7 +188,7 @@ BdyLayerStatistics::setup()
       fluidParts_[i] = part;
   }
 
-  heightIndex_ = &meta.declare_field<int>(
+  heightIndex_ = &meta.declare_field<ScalarIntFieldType>(
     stk::topology::NODE_RANK, "bdy_layer_height_index_field");
   for (auto* part : fluidParts_)
     stk::mesh::put_field_on_mesh(*heightIndex_, *part, nullptr);

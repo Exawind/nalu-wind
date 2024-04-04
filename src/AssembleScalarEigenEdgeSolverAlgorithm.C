@@ -73,24 +73,27 @@ AssembleScalarEigenEdgeSolverAlgorithm::AssembleScalarEigenEdgeSolverAlgorithm(
   // save off fields
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   if (meshMotion_)
-    velocityRTM_ =
-      meta_data.get_field<double>(stk::topology::NODE_RANK, "velocity_rtm");
+    velocityRTM_ = meta_data.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "velocity_rtm");
   else
-    velocityRTM_ =
-      meta_data.get_field<double>(stk::topology::NODE_RANK, "velocity");
-  coordinates_ = meta_data.get_field<double>(
+    velocityRTM_ = meta_data.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "velocity");
+  coordinates_ = meta_data.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name());
-  density_ = meta_data.get_field<double>(stk::topology::NODE_RANK, "density");
-  massFlowRate_ =
-    meta_data.get_field<double>(stk::topology::EDGE_RANK, "mass_flow_rate");
-  edgeAreaVec_ =
-    meta_data.get_field<double>(stk::topology::EDGE_RANK, "edge_area_vector");
+  density_ =
+    meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
+  massFlowRate_ = meta_data.get_field<ScalarFieldType>(
+    stk::topology::EDGE_RANK, "mass_flow_rate");
+  edgeAreaVec_ = meta_data.get_field<VectorFieldType>(
+    stk::topology::EDGE_RANK, "edge_area_vector");
 
   // EXTRA GGDH
-  turbKe_ =
-    meta_data.get_field<double>(stk::topology::NODE_RANK, "turbulent_ke");
-  velocity_ = meta_data.get_field<double>(stk::topology::NODE_RANK, "velocity");
-  dudx_ = meta_data.get_field<double>(stk::topology::NODE_RANK, "dudx");
+  turbKe_ = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "turbulent_ke");
+  velocity_ =
+    meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
+  dudx_ =
+    meta_data.get_field<TensorFieldType>(stk::topology::NODE_RANK, "dudx");
 
   // create the peclet blending function
   pecletFunction_ = eqSystem->create_peclet_function<double>(scalarQ_->name());

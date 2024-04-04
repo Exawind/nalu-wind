@@ -60,8 +60,7 @@ public:
   inline stk::mesh::BulkData& bulk() const { return realm().bulk_data(); }
 
   double field_norm(
-    const sierra::nalu::ScalarFieldType& field,
-    stk::mesh::Selector* selector = nullptr);
+    const ScalarFieldType& field, stk::mesh::Selector* selector = nullptr);
 
   //! Reference to test Nalu instance used to hold Simulation and Realm
   std::unique_ptr<unit_test_utils::NaluTest> naluObj_;
@@ -70,7 +69,7 @@ public:
   sierra::nalu::Realm* realm_{nullptr};
 
   stk::mesh::Part* meshPart_{nullptr};
-  const sierra::nalu::VectorFieldType* coordinates_{nullptr};
+  const VectorFieldType* coordinates_{nullptr};
   stk::ParallelMachine comm_;
 };
 
@@ -86,25 +85,25 @@ public:
   virtual void
   fill_mesh_and_init_fields(const std::string mesh_spec = "generated:10x10x10");
 
-  sierra::nalu::ScalarFieldType* density_{nullptr};
-  sierra::nalu::ScalarFieldType* viscosity_{nullptr};
-  sierra::nalu::ScalarFieldType* tke_{nullptr};
-  sierra::nalu::ScalarFieldType* sdr_{nullptr};
-  sierra::nalu::ScalarFieldType* minDistance_{nullptr};
-  sierra::nalu::TensorFieldType* dudx_{nullptr};
-  sierra::nalu::GenericFieldType* openMassFlowRate_{nullptr};
-  sierra::nalu::ScalarFieldType* tvisc_{nullptr};
-  sierra::nalu::ScalarFieldType* maxLengthScale_{nullptr};
-  sierra::nalu::ScalarFieldType* fOneBlend_{nullptr};
-  sierra::nalu::ScalarFieldType* evisc_{nullptr};
-  sierra::nalu::ScalarFieldType* dualNodalVolume_{nullptr};
-  sierra::nalu::VectorFieldType* dkdx_{nullptr};
-  sierra::nalu::VectorFieldType* dwdx_{nullptr};
-  sierra::nalu::VectorFieldType* dhdx_{nullptr};
-  sierra::nalu::ScalarFieldType* specificHeat_{nullptr};
-  sierra::nalu::ScalarFieldType* tkebc_{nullptr};
-  sierra::nalu::TensorFieldType* avgDudx_{nullptr};
-  sierra::nalu::ScalarFieldType* avgTime_{nullptr};
+  ScalarFieldType* density_{nullptr};
+  ScalarFieldType* viscosity_{nullptr};
+  ScalarFieldType* tke_{nullptr};
+  ScalarFieldType* sdr_{nullptr};
+  ScalarFieldType* minDistance_{nullptr};
+  TensorFieldType* dudx_{nullptr};
+  GenericFieldType* openMassFlowRate_{nullptr};
+  ScalarFieldType* tvisc_{nullptr};
+  ScalarFieldType* maxLengthScale_{nullptr};
+  ScalarFieldType* fOneBlend_{nullptr};
+  ScalarFieldType* evisc_{nullptr};
+  ScalarFieldType* dualNodalVolume_{nullptr};
+  VectorFieldType* dkdx_{nullptr};
+  VectorFieldType* dwdx_{nullptr};
+  VectorFieldType* dhdx_{nullptr};
+  ScalarFieldType* specificHeat_{nullptr};
+  ScalarFieldType* tkebc_{nullptr};
+  TensorFieldType* avgDudx_{nullptr};
+  ScalarFieldType* avgTime_{nullptr};
 };
 
 struct NodeSuppHelper

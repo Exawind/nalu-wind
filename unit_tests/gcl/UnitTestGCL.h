@@ -34,54 +34,47 @@ public:
       meta_(realm_.meta_data()),
       bulk_(realm_.bulk_data()),
       geomAlgDriver_(realm_),
-      currCoords_(&meta_.declare_field<double>(
+      currCoords_(&meta_.declare_field<VectorFieldType>(
         stk::topology::NODE_RANK, "current_coordinates", numStates_)),
-      dualVol_(&meta_.declare_field<double>(
+      dualVol_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "dual_nodal_volume", numStates_)),
-      elemVol_(&meta_.declare_field<double>(
+      elemVol_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::ELEM_RANK, "element_volume")),
-      edgeAreaVec_(&meta_.declare_field<double>(
+      edgeAreaVec_(&meta_.declare_field<VectorFieldType>(
         stk::topology::EDGE_RANK, "edge_area_vector")),
-      exposedAreaVec_(
-        &meta_.declare_field<double>(meta_.side_rank(), "exposed_area_vector")),
-      meshDisp_(&meta_.declare_field<double>(
+      exposedAreaVec_(&meta_.declare_field<GenericFieldType>(
+        meta_.side_rank(), "exposed_area_vector")),
+      meshDisp_(&meta_.declare_field<VectorFieldType>(
         stk::topology::NODE_RANK, "mesh_displacement", numStates_)),
-      meshVel_(&meta_.declare_field<double>(
+      meshVel_(&meta_.declare_field<VectorFieldType>(
         stk::topology::NODE_RANK, "mesh_velocity", numStates_)),
-      sweptVol_(&(meta_.declare_field<double>(
+      sweptVol_(&(meta_.declare_field<GenericFieldType>(
         stk::topology::ELEM_RANK, "swept_face_volume", numStates_))),
-      faceVelMag_(&(meta_.declare_field<double>(
+      faceVelMag_(&(meta_.declare_field<GenericFieldType>(
         stk::topology::ELEM_RANK, "face_velocity_mag", numStates_))),
-      edgeSweptVol_(&(meta_.declare_field<double>(
+      edgeSweptVol_(&(meta_.declare_field<GenericFieldType>(
         stk::topology::EDGE_RANK, "edge_swept_face_volume", numStates_))),
-      edgeFaceVelMag_(&(meta_.declare_field<double>(
+      edgeFaceVelMag_(&(meta_.declare_field<GenericFieldType>(
         stk::topology::EDGE_RANK, "edge_face_velocity_mag", numStates_))),
-      divMeshVel_(&meta_.declare_field<double>(
+      divMeshVel_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "div_mesh_velocity")),
-      dVoldt_(&meta_.declare_field<double>(stk::topology::NODE_RANK, "dvol_dt"))
+      dVoldt_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "dvol_dt"))
   {
     realm_.timeIntegrator_ = naluObj_.sim_.timeIntegrator_;
     stk::mesh::put_field_on_mesh(
       *currCoords_, meta_.universal_part(), spatialDim_, nullptr);
-    stk::io::set_field_output_type(
-      *currCoords_, stk::io::FieldOutputType::VECTOR_3D);
-    stk::mesh::put_field_on_mesh(*dualVol_, meta_.universal_part(), nullptr);
-    stk::mesh::put_field_on_mesh(*elemVol_, meta_.universal_part(), nullptr);
+    stk::mesh::put_field_on_mesh(*dualVol_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*elemVol_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(
       *edgeAreaVec_, meta_.universal_part(), spatialDim_, nullptr);
-    stk::io::set_field_output_type(
-      *edgeAreaVec_, stk::io::FieldOutputType::VECTOR_3D);
     stk::mesh::put_field_on_mesh(
       *exposedAreaVec_, meta_.universal_part(),
       spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(
       *meshDisp_, meta_.universal_part(), spatialDim_, nullptr);
-    stk::io::set_field_output_type(
-      *meshDisp_, stk::io::FieldOutputType::VECTOR_3D);
     stk::mesh::put_field_on_mesh(
       *meshVel_, meta_.universal_part(), spatialDim_, nullptr);
-    stk::io::set_field_output_type(
-      *meshVel_, stk::io::FieldOutputType::VECTOR_3D);
     stk::mesh::put_field_on_mesh(
       *sweptVol_, meta_.universal_part(),
       sierra::nalu::AlgTraitsHex8::numScsIp_, nullptr);
@@ -89,11 +82,12 @@ public:
       *faceVelMag_, meta_.universal_part(),
       sierra::nalu::AlgTraitsHex8::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(
-      *edgeSweptVol_, meta_.universal_part(), nullptr);
+      *edgeSweptVol_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(
-      *edgeFaceVelMag_, meta_.universal_part(), nullptr);
-    stk::mesh::put_field_on_mesh(*divMeshVel_, meta_.universal_part(), nullptr);
-    stk::mesh::put_field_on_mesh(*dVoldt_, meta_.universal_part(), nullptr);
+      *edgeFaceVelMag_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *divMeshVel_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*dVoldt_, meta_.universal_part(), 1, nullptr);
   }
 
   virtual ~GCLTest() = default;
@@ -111,8 +105,8 @@ public:
       unit_test_utils::perturb_coord_hex_8(bulk_);
 
     partVec_ = {meta_.get_part("block_1")};
-    coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
-      meta_.coordinate_field());
+    coordinates_ =
+      static_cast<const VectorFieldType*>(meta_.coordinate_field());
     EXPECT_TRUE(coordinates_ != nullptr);
 
     stk::mesh::create_edges(bulk_, meta_.universal_part());
@@ -295,20 +289,20 @@ public:
   stk::mesh::PartVector partVec_;
   stk::mesh::PartVector bndyPartVec_;
 
-  const sierra::nalu::VectorFieldType* coordinates_{nullptr};
-  sierra::nalu::VectorFieldType* currCoords_{nullptr};
-  sierra::nalu::ScalarFieldType* dualVol_{nullptr};
-  sierra::nalu::ScalarFieldType* elemVol_{nullptr};
-  sierra::nalu::VectorFieldType* edgeAreaVec_{nullptr};
-  sierra::nalu::GenericFieldType* exposedAreaVec_{nullptr};
-  sierra::nalu::VectorFieldType* meshDisp_{nullptr};
-  sierra::nalu::VectorFieldType* meshVel_{nullptr};
-  sierra::nalu::GenericFieldType* sweptVol_{nullptr};
-  sierra::nalu::GenericFieldType* faceVelMag_{nullptr};
-  sierra::nalu::GenericFieldType* edgeSweptVol_{nullptr};
-  sierra::nalu::GenericFieldType* edgeFaceVelMag_{nullptr};
-  sierra::nalu::ScalarFieldType* divMeshVel_{nullptr};
-  sierra::nalu::ScalarFieldType* dVoldt_{nullptr};
+  const VectorFieldType* coordinates_{nullptr};
+  VectorFieldType* currCoords_{nullptr};
+  ScalarFieldType* dualVol_{nullptr};
+  ScalarFieldType* elemVol_{nullptr};
+  VectorFieldType* edgeAreaVec_{nullptr};
+  GenericFieldType* exposedAreaVec_{nullptr};
+  VectorFieldType* meshDisp_{nullptr};
+  VectorFieldType* meshVel_{nullptr};
+  GenericFieldType* sweptVol_{nullptr};
+  GenericFieldType* faceVelMag_{nullptr};
+  GenericFieldType* edgeSweptVol_{nullptr};
+  GenericFieldType* edgeFaceVelMag_{nullptr};
+  ScalarFieldType* divMeshVel_{nullptr};
+  ScalarFieldType* dVoldt_{nullptr};
 };
 
 } // namespace

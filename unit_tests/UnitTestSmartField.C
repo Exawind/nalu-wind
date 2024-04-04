@@ -21,7 +21,7 @@ protected:
   {
     fill_mesh_and_initialize_test_fields();
 
-    auto* field = fieldManager->get_field_ptr<double>("scalarQ");
+    auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
 
     ngpField_ = &stk::mesh::get_updated_ngp_field<double>(*field);
 
@@ -169,7 +169,7 @@ TEST_F(TestSmartField, update_field_on_device_check_on_host)
   {
     double sum = 0.0;
     int counter = 0;
-    auto* field = fieldManager->get_field_ptr<double>("scalarQ");
+    auto* field = fieldManager->get_field_ptr<ScalarFieldType>("scalarQ");
     auto fieldRef =
       sierra::nalu::MakeSmartField<tags::LEGACY, tags::READ>()(field);
     stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);

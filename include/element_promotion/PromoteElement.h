@@ -10,8 +10,8 @@
 #define PromoteElement_h
 
 #include <stk_mesh/base/FieldBase.hpp>
+#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_topology/topology.hpp>
-#include <FieldTypeDef.h>
 
 #include <vector>
 
@@ -30,6 +30,7 @@ namespace mesh {
 class BulkData;
 }
 } // namespace stk
+typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
 
 namespace sierra {
 namespace nalu {

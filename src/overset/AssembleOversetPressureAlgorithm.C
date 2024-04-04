@@ -39,7 +39,8 @@ AssembleOversetPressureAlgorithm::AssembleOversetPressureAlgorithm(
   : OversetConstraintBase(realm, part, eqSystem, fieldQ)
 {
   auto& meta = realm.meta_data();
-  Udiag_ = meta.get_field<double>(stk::topology::NODE_RANK, "momentum_diag");
+  Udiag_ =
+    meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "momentum_diag");
 }
 
 void

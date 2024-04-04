@@ -1262,7 +1262,7 @@ TpetraLinearSystem::finalizeLinearSystem()
     reinterpret_cast<TpetraLinearSolver*>(linearSolver_);
 
   if (linearSolver != nullptr) {
-    VectorFieldType* coordinates = metaData.get_field<double>(
+    VectorFieldType* coordinates = metaData.get_field<VectorFieldType>(
       stk::topology::NODE_RANK, realm_.get_coordinates_name());
     if (linearSolver->activeMueLu())
       copy_stk_to_tpetra(coordinates, coords);

@@ -6,6 +6,7 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Bucket.hpp>
+#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
@@ -23,7 +24,7 @@
 #include "UnitTestUtils.h"
 
 namespace {
-using VectorFieldType = stk::mesh::Field<double>;
+using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
 
 void
 randomly_perturb_element_coords(
@@ -76,7 +77,6 @@ check_side_is_in_element(stk::topology topo)
     meshBuilder.set_spatial_dimension(dim);
     auto bulk = meshBuilder.create();
     auto& meta = bulk->mesh_meta_data();
-    meta.use_simple_fields();
 
     auto elem = unit_test_utils::create_one_reference_element(*bulk, topo);
     const VectorFieldType& coordField =

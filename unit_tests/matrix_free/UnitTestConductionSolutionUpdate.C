@@ -26,10 +26,12 @@
 
 #include "stk_mesh/base/Bucket.hpp"
 #include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/Entity.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
 #include "stk_mesh/base/FieldState.hpp"
+#include "stk_mesh/base/FieldTraits.hpp"
 #include "stk_mesh/base/GetNgpField.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Ngp.hpp"
@@ -73,7 +75,8 @@ protected:
       field_update(Teuchos::ParameterList{}, linsys, exporter, offset_views)
   {
     auto& coordField =
-      *meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
+      *meta.get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
+        stk::topology::NODE_RANK, "coordinates");
     for (auto ib :
          bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {
       for (auto node : *ib) {
@@ -156,7 +159,8 @@ TEST_F(ConductionSolutionUpdateFixture, correct_behavior_for_linear_problem)
   delta.sync_to_host();
 
   auto& coord_field =
-    *meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
+    *meta.get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
+      stk::topology::NODE_RANK, "coordinates");
   for (auto ib :
        bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {
     for (auto node : *ib) {
