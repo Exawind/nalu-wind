@@ -25,6 +25,7 @@ class Realm;
 class MasterElement;
 class SupplementalAlgorithm;
 class Kernel;
+class FieldManager;
 
 class Algorithm
 {
@@ -43,6 +44,7 @@ public:
 
   Realm& realm_;
   stk::mesh::PartVector partVec_;
+  const FieldManager& fieldManager_;
   std::vector<SupplementalAlgorithm*> supplementalAlg_;
 
   std::vector<Kernel*> activeKernels_;
