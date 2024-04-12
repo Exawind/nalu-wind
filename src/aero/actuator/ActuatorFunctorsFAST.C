@@ -54,7 +54,7 @@ void
 ActFastUpdatePoints::operator()(int index) const
 {
 
-  ThrowAssert(turbId_ >= 0);
+  STK_ThrowAssert(turbId_ >= 0);
   const int pointId = index - offsets_(turbId_);
   auto point = Kokkos::subview(points_, index, Kokkos::ALL);
 

@@ -340,7 +340,7 @@ run_elem_algorithm(
   ElemDataRequestsGPU dataReqNGP(fieldMgr, dataReqs);
 
   const int nodesPerElement = nodes_per_entity(dataReqNGP);
-  NGP_ThrowRequire(nodesPerElement != 0);
+  STK_NGP_ThrowRequire(nodesPerElement != 0);
 
   const auto reqType =
     (rank == stk::topology::ELEM_RANK) ? ElemReqType::ELEM : ElemReqType::FACE;
@@ -436,7 +436,7 @@ run_elem_par_reduce(
   ElemDataRequestsGPU dataReqNGP(fieldMgr, dataReqs);
 
   const int nodesPerElement = nodes_per_entity(dataReqNGP);
-  NGP_ThrowRequire(nodesPerElement != 0);
+  STK_NGP_ThrowRequire(nodesPerElement != 0);
 
   const auto reqType =
     (rank == stk::topology::ELEM_RANK) ? ElemReqType::ELEM : ElemReqType::FACE;
@@ -524,8 +524,8 @@ run_face_elem_algorithm(
 
   const int nodesPerElement = nodes_per_entity(elemDataNGP);
   const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);
-  NGP_ThrowRequire(nodesPerElement != 0);
-  NGP_ThrowRequire(nodesPerFace != 0);
+  STK_NGP_ThrowRequire(nodesPerElement != 0);
+  STK_NGP_ThrowRequire(nodesPerFace != 0);
 
   const int bytes_per_team = 0;
   const int bytes_per_thread =
@@ -648,8 +648,8 @@ run_face_elem_par_reduce(
 
   const int nodesPerElement = nodes_per_entity(elemDataNGP);
   const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);
-  NGP_ThrowRequire(nodesPerElement != 0);
-  NGP_ThrowRequire(nodesPerFace != 0);
+  STK_NGP_ThrowRequire(nodesPerElement != 0);
+  STK_NGP_ThrowRequire(nodesPerFace != 0);
 
   const int bytes_per_team = 0;
   const int bytes_per_thread =
@@ -776,8 +776,8 @@ run_face_elem_algorithm_nosimd(
 
   const int nodesPerElement = nodes_per_entity(elemDataNGP);
   const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);
-  NGP_ThrowRequire(nodesPerElement != 0);
-  NGP_ThrowRequire(nodesPerFace != 0);
+  STK_NGP_ThrowRequire(nodesPerElement != 0);
+  STK_NGP_ThrowRequire(nodesPerFace != 0);
 
   const int bytes_per_team = 0;
   const int bytes_per_thread =
@@ -807,7 +807,7 @@ run_face_elem_algorithm_nosimd(
           const auto faceIdx = ngpMesh.fast_mesh_index(face);
           const auto elements = ngpMesh.get_elements(sideRank, faceIdx);
 
-          NGP_ThrowAssert(elements.size() == 1);
+          STK_NGP_ThrowAssert(elements.size() == 1);
           const auto faceOrd =
             ngpMesh.get_element_ordinals(sideRank, faceIdx)[0];
           const auto elem = elements[0];

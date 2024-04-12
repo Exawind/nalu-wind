@@ -291,7 +291,7 @@ TurbulenceAveragingPostProcessing::setup()
 
     auto* tempField =
       metaData.get_field(stk::topology::NODE_RANK, "temperature");
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       tempField != nullptr, "Temperature field must be registered");
 
     auto& field =

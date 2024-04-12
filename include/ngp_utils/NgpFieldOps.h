@@ -361,7 +361,7 @@ template <typename Mesh, typename Field>
 KOKKOS_INLINE_FUNCTION impl::NodeFieldOp<Mesh, Field, ElemSimdData<Mesh>>
 simd_elem_nodal_field_updater(const Mesh& mesh, const Field& fld)
 {
-  NGP_ThrowAssert(fld.get_rank() == stk::topology::NODE_RANK);
+  STK_NGP_ThrowAssert(fld.get_rank() == stk::topology::NODE_RANK);
   return impl::NodeFieldOp<Mesh, Field, ElemSimdData<Mesh>>{mesh, fld};
 }
 
@@ -369,7 +369,7 @@ template <typename Mesh, typename Field>
 KOKKOS_INLINE_FUNCTION impl::NodeFieldOp<Mesh, Field, FaceElemSimdData<Mesh>>
 simd_face_elem_nodal_field_updater(const Mesh& mesh, const Field& fld)
 {
-  NGP_ThrowAssert(fld.get_rank() == stk::topology::NODE_RANK);
+  STK_NGP_ThrowAssert(fld.get_rank() == stk::topology::NODE_RANK);
   return impl::NodeFieldOp<Mesh, Field, FaceElemSimdData<Mesh>>{mesh, fld};
 }
 
@@ -379,7 +379,7 @@ template <typename Mesh, typename Field>
 KOKKOS_INLINE_FUNCTION impl::ElemFieldOp<Mesh, Field, ElemSimdData<Mesh>>
 simd_elem_field_updater(const Mesh&, const Field& fld)
 {
-  NGP_ThrowAssert(
+  STK_NGP_ThrowAssert(
     (fld.get_rank() == stk::topology::ELEM_RANK) ||
     (fld.get_rank() == stk::topology::FACE_RANK) ||
     (fld.get_rank() == stk::topology::EDGE_RANK));
@@ -392,7 +392,7 @@ template <typename Mesh, typename Field>
 KOKKOS_INLINE_FUNCTION impl::ElemFieldOp<Mesh, Field, FaceElemSimdData<Mesh>>
 simd_face_elem_field_updater(const Mesh&, const Field& fld)
 {
-  NGP_ThrowAssert(
+  STK_NGP_ThrowAssert(
     (fld.get_rank() == stk::topology::FACE_RANK) ||
     (fld.get_rank() == stk::topology::EDGE_RANK));
   return impl::ElemFieldOp<Mesh, Field, FaceElemSimdData<Mesh>>{fld};
@@ -402,7 +402,7 @@ template <typename Mesh, typename Field>
 KOKKOS_INLINE_FUNCTION impl::SimpleNodeFieldOp<Mesh, Field>
 edge_nodal_field_updater(const Mesh& mesh, const Field& fld)
 {
-  NGP_ThrowAssert(fld.get_rank() == stk::topology::NODE_RANK);
+  STK_NGP_ThrowAssert(fld.get_rank() == stk::topology::NODE_RANK);
   return impl::SimpleNodeFieldOp<Mesh, Field>{mesh, fld};
 }
 

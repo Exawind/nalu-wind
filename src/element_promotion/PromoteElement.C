@@ -50,7 +50,7 @@ create_tensor_product_hex_elements(
   const VectorFieldType& coordField,
   const stk::mesh::PartVector& partsToBePromoted)
 {
-  ThrowRequire(check_parts_for_promotion(partsToBePromoted));
+  STK_ThrowRequire(check_parts_for_promotion(partsToBePromoted));
   return impl::promote_elements_hex(
     nodeLocs1D, bulk, coordField, partsToBePromoted);
 }

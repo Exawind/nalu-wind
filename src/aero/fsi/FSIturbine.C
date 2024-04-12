@@ -653,7 +653,7 @@ fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime)
         (0.5 * (brFSIdata_.bld_rloc[i + iStart + 1] -
                 brFSIdata_.bld_rloc[i + iStart - 1]));
     }
-    brFSIdata_.bld_ld[(iStart)*6 + 4] =
+    brFSIdata_.bld_ld[(iStart) * 6 + 4] =
       (0.5 * (brFSIdata_.bld_rloc[iStart + 1] - brFSIdata_.bld_rloc[iStart]));
     brFSIdata_.bld_ld[(iStart + nBldPts - 1) * 6 + 4] =
       (0.5 * (brFSIdata_.bld_rloc[iStart + nBldPts - 1] -
@@ -1654,7 +1654,8 @@ fsiTurbine::computeMapping()
 
   auto& meta = bulk_->mesh_meta_data();
   const int ndim = meta.spatial_dimension();
-  ThrowRequireMsg(ndim == 3, "fsiTurbine: spatial dim is required to be 3.");
+  STK_ThrowRequireMsg(
+    ndim == 3, "fsiTurbine: spatial dim is required to be 3.");
   const VectorFieldType* modelCoords =
     meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
   modelCoords->sync_to_host();

@@ -41,7 +41,7 @@ gather_elem_node_tensor_field(
   const stk::mesh::NgpMesh::ConnectedNodes& elemNodes,
   ViewType& shmemView)
 {
-  NGP_ThrowRequireMsg(
+  STK_NGP_ThrowRequireMsg(
     numNodes == (int)elemNodes.size(),
     "gather_elem_node_tensor_field, numNodes = mismatch with elemNodes.size()");
   for (int i = 0; i < numNodes; ++i) {
@@ -218,20 +218,20 @@ get_num_scalars_pre_req_data(
 
   switch (reqType) {
   case ElemReqType::ELEM:
-    NGP_ThrowRequireMsg(
+    STK_NGP_ThrowRequireMsg(
       hasElemME, "Requesting ELEM data, but no ELEM_RANK master element has "
                  "been registered");
     break;
 
   case ElemReqType::FACE:
-    NGP_ThrowRequireMsg(
+    STK_NGP_ThrowRequireMsg(
       hasFaceME || hasSCS, "Request SIDE_RANK data, but no SIDE_RANK master "
                            "element has been registered");
     break;
 
   case ElemReqType::FACE_ELEM:
     // In case of FACE_ELEM register meFC so that numFaceIp can be queried
-    NGP_ThrowRequireMsg(
+    STK_NGP_ThrowRequireMsg(
       (hasSCS && hasFaceME),
       "Requesting FACE_ELEM data but does not have necessary MasterElements");
     break;
@@ -440,7 +440,7 @@ fill_pre_req_data(
         }
       }
     } else {
-      NGP_ThrowRequireMsg(
+      STK_NGP_ThrowRequireMsg(
         false, "Unknown stk-rank in ScratchViewsNGP.C::fill_pre_req_data");
     }
   }

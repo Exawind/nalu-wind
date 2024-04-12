@@ -450,8 +450,8 @@ OpenfastFSI::send_loads(const double curTime)
           (fsiTurbineData_[i]->params_.nBRfsiPtsTwr) * 6, MPI_DOUBLE, MPI_SUM,
           turbProc, bulk_->parallel());
         iError = MPI_Reduce(
-          fsiTurbineData_[i]->brFSIdata_.bld_ld.data(), NULL, (nTotBldNodes)*6,
-          MPI_DOUBLE, MPI_SUM, turbProc, bulk_->parallel());
+          fsiTurbineData_[i]->brFSIdata_.bld_ld.data(), NULL,
+          (nTotBldNodes) * 6, MPI_DOUBLE, MPI_SUM, turbProc, bulk_->parallel());
       }
     }
   }
@@ -664,8 +664,8 @@ OpenfastFSI::map_loads(const int tStep, const double curTime)
           (fsiTurbineData_[i]->params_.nBRfsiPtsTwr) * 6, MPI_DOUBLE, MPI_SUM,
           turbProc, bulk_->parallel());
         iError = MPI_Reduce(
-          fsiTurbineData_[i]->brFSIdata_.bld_ld.data(), NULL, (nTotBldNodes)*6,
-          MPI_DOUBLE, MPI_SUM, turbProc, bulk_->parallel());
+          fsiTurbineData_[i]->brFSIdata_.bld_ld.data(), NULL,
+          (nTotBldNodes) * 6, MPI_DOUBLE, MPI_SUM, turbProc, bulk_->parallel());
       }
 
       fsiTurbineData_[i]->write_nc_def_loads(tStep, curTime);

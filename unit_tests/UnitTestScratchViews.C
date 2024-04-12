@@ -134,7 +134,7 @@ do_the_test(
         sierra::nalu::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
           team, rhsSize);
 
-      NGP_ThrowAssert(scrviews.total_bytes() != 0);
+      STK_NGP_ThrowAssert(scrviews.total_bytes() != 0);
       const size_t bucketLen = b.size();
 
       Kokkos::parallel_for(
@@ -309,7 +309,7 @@ do_the_smdata_test(
       sierra::nalu::SharedMemData<TeamType, ShmemType> smdata(
         team, ngpMesh.get_spatial_dimension(), dataNGP, numNodes, rhsSize);
 
-      NGP_ThrowAssert(smdata.simdPrereqData.total_bytes() != 0);
+      STK_NGP_ThrowAssert(smdata.simdPrereqData.total_bytes() != 0);
       const size_t bucketLen = b.size();
 
       Kokkos::parallel_for(
