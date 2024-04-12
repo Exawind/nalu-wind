@@ -13,11 +13,11 @@ jobs:
     - name: Clone
       uses: actions/checkout@v4
     - name: Check formatting
-      uses: DoozyX/clang-format-lint-action@v0.16.2
+      uses: DoozyX/clang-format-lint-action@v0.17
       with:
         source: 'nalu.C unit_tests.C ./include ./src ./unit_tests'
         extensions: 'H,h,cpp,C'
-        clangFormatVersion: 16
+        clangFormatVersion: 17
   CPU-Trilinos:
     needs: Formatting
     runs-on: ubuntu-latest
