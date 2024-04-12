@@ -104,7 +104,8 @@ public:
     SharedMemView<DoubleType***, DeviceShmem>& /* deriv */,
     SharedMemView<DoubleType*, DeviceShmem>& /*det_j*/)
   {
-    STK_NGP_ThrowErrorMsg("MasterElement::grad_op_fem not implemented for element");
+    STK_NGP_ThrowErrorMsg(
+      "MasterElement::grad_op_fem not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void shifted_grad_op_fem(
@@ -121,8 +122,9 @@ public:
     const SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
     SharedMemView<DoubleType**, DeviceShmem>& /* areav */)
   {
-    STK_NGP_ThrowErrorMsg("MasterElement::determinant not implemented for element: "
-                      "DoubleType area");
+    STK_NGP_ThrowErrorMsg(
+      "MasterElement::determinant not implemented for element: "
+      "DoubleType area");
   }
 
   virtual void determinant(
@@ -154,8 +156,9 @@ public:
     const SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
     SharedMemView<DoubleType*, DeviceShmem>& /* volume */)
   {
-    STK_NGP_ThrowErrorMsg("MasterElement::determinant not implemented for element: "
-                      "DoubleType volume");
+    STK_NGP_ThrowErrorMsg(
+      "MasterElement::determinant not implemented for element: "
+      "DoubleType volume");
   }
 
   virtual void determinant(
@@ -306,11 +309,13 @@ protected:
   KOKKOS_FUNCTION virtual void
   shape_fcn(SharedMemView<DoubleType**, DeviceShmem>&)
   {
-    STK_NGP_ThrowErrorMsg("MasterElement::shape_fcn not implemented for element");
+    STK_NGP_ThrowErrorMsg(
+      "MasterElement::shape_fcn not implemented for element");
   }
   virtual void shape_fcn(SharedMemView<double**, HostShmem>&)
   {
-    STK_NGP_ThrowErrorMsg("MasterElement::shape_fcn not implemented for element");
+    STK_NGP_ThrowErrorMsg(
+      "MasterElement::shape_fcn not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void

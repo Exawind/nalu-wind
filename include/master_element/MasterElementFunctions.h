@@ -82,7 +82,8 @@ generic_grad_op(
     CoordViewType::rank == 2, "Coordinate view assumed to be rank 2");
   static_assert(OutputViewType::rank == 3, "Weight view assumed to be rank 3");
 
-  STK_ThrowAssert(AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
+  STK_ThrowAssert(
+    AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
   STK_ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
   for (int i = 0; i < dim; ++i)
     STK_ThrowAssert(weights.extent(i) == referenceGradWeights.extent(i));
@@ -598,7 +599,8 @@ generic_determinant_3d(
   static_assert(OutputViewType::rank == 1, "Weight view assumed to be 1D");
   static_assert(AlgTraits::nDim_ == 3, "3D method");
 
-  STK_ThrowAssert(AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
+  STK_ThrowAssert(
+    AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
   STK_ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
 
   STK_ThrowAssert(detj.extent(0) == referenceGradWeights.extent(0));
