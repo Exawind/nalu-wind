@@ -103,7 +103,7 @@ super_element_suffix()
 std::string
 super_element_part_name(std::string base_name)
 {
-  ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem part");
+  STK_ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem part");
   return (base_name + super_element_suffix());
 }
 //--------------------------------------------------------------------------
@@ -116,7 +116,7 @@ super_subset_part_name(std::string base_name)
   // Note: there's a 32 character limit on the maximum length of the
   // part name (Ioss throws a warning message), so economy on characters is good
 
-  ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem part");
+  STK_ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem part");
   auto first_token = base_name.substr(0, base_name.find_first_of('_'));
   auto last_token =
     base_name.substr(base_name.find_last_of("_"), base_name.length());
@@ -135,7 +135,7 @@ super_subset_part_name(
   // Note: there's a 32 character limit on the maximum length of the
   // part name (Ioss throws a warning message), so economy on characters is good
 
-  //    ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem
+  //    STK_ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem
   //    part"); auto first_token = base_name.substr(0,
   //    base_name.find_first_of('_')); auto last_token =
   //    base_name.substr(base_name.find_last_of("_"),base_name.length());
@@ -144,7 +144,7 @@ super_subset_part_name(
   //        + "_superside" + std::to_string(numSideNodes)
   //        + last_token;
 
-  ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem part");
+  STK_ThrowAssertMsg(!base_name.empty(), "Empty base name for super elem part");
   auto first_token = base_name.substr(0, base_name.find_first_of('_'));
   auto last_token =
     base_name.substr(base_name.find_last_of("_"), base_name.length());

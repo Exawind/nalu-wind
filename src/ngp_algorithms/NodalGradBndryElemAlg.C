@@ -67,7 +67,7 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::
         << gradPhi->name() << "' of length " << gradPhiSize_ << " (should be "
         << AlgTraits::nDim_ * AlgTraits::nDim_ << ")");
   } else {
-    ThrowErrorMsg(
+    STK_ThrowErrorMsg(
       "NodalGradBndryElemAlg called with an input field '"
       << phi->name()
       << "' that is not a scalar or a vector.  "

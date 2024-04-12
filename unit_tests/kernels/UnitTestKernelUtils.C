@@ -876,7 +876,7 @@ calc_edge_area_vec(
   const auto& buckets = bulk.get_buckets(stk::topology::ELEMENT_RANK, sel);
 
   for (auto b : buckets) {
-    ThrowRequire(b->topology() == topo);
+    STK_ThrowRequire(b->topology() == topo);
 
     const auto bktlen = b->size();
     for (size_t ie = 0; ie < bktlen; ++ie) {

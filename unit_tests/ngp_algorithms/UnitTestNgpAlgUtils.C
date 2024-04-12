@@ -48,7 +48,7 @@ linear_scalar_field(
       fieldData[2] = coordsData[2] * zCoeff;
     }
   } else {
-    ThrowErrorMsg(
+    STK_ThrowErrorMsg(
       "linear_scalar_field(): Field has unhandled length " << fieldLength);
   }
 

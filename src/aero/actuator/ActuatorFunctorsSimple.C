@@ -118,7 +118,7 @@ ActSimpleWriteToFile(
 
   if (actBulk.localTurbineId_ == NaluEnv::self().parallel_rank()) {
     std::ofstream outFile;
-    // ThrowErrorIf(NaluEnv::self().parallel_rank()!=0);
+    // STK_ThrowErrorIf(NaluEnv::self().parallel_rank()!=0);
 
     outFile.open(filename, std::ios_base::app);
     const int stop =

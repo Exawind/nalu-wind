@@ -1144,7 +1144,7 @@ segregated_sum_into_row(
     }
 
     if (offset < length) {
-      ThrowAssertMsg(
+      STK_ThrowAssertMsg(
         std::isfinite(input_values[perm_index * numDof]), "Inf or NAN lhs");
       if (forceAtomic) {
         Kokkos::atomic_add(
@@ -1371,10 +1371,11 @@ TpetraSegregatedLinearSystem::sumInto(
   const SharedMemView<int*, DeviceShmem>& sortPermutation,
   const char* /* trace_tag */)
 {
-  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
-  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
-  ThrowAssertMsg(localIds.span_is_contiguous(), "localIds assumed contiguous");
-  ThrowAssertMsg(
+  STK_ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
+  STK_ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
+  STK_ThrowAssertMsg(
+    localIds.span_is_contiguous(), "localIds assumed contiguous");
+  STK_ThrowAssertMsg(
     sortPermutation.span_is_contiguous(), "sortPermutation assumed contiguous");
 
   segregated_sum_into(
@@ -1422,7 +1423,7 @@ TpetraSegregatedLinearSystem::sumInto(
 
       for (unsigned dofIdx = 0; dofIdx < numDof_; ++dofIdx) {
         const double cur_rhs = rhs[cur_perm_index * numDof_ + dofIdx];
-        ThrowAssertMsg(std::isfinite(cur_rhs), "Invalid rhs");
+        STK_ThrowAssertMsg(std::isfinite(cur_rhs), "Invalid rhs");
         getOwnedLocalRhs()(rowLid, dofIdx) += cur_rhs;
       }
     } else if (rowLid < maxSharedNotOwnedRowId_) {
@@ -1433,7 +1434,7 @@ TpetraSegregatedLinearSystem::sumInto(
 
       for (unsigned dofIdx = 0; dofIdx < numDof_; ++dofIdx) {
         const double cur_rhs = rhs[cur_perm_index * numDof_ + dofIdx];
-        ThrowAssertMsg(std::isfinite(cur_rhs), "Invalid rhs");
+        STK_ThrowAssertMsg(std::isfinite(cur_rhs), "Invalid rhs");
         getSharedNotOwnedLocalRhs()(actualLocalId, dofIdx) += cur_rhs;
       }
     }

@@ -110,7 +110,7 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
   int* numBlades = &(actMetaFAST.nBlades_(iTurb));
   *numBlades = 3;
   get_if_present_no_default(turbNode, "num_blades", *numBlades);
-  ThrowErrorMsgIf(
+  STK_ThrowErrorMsgIf(
     *numBlades != 3 && *numBlades != 2,
     "ERROR::ActuatorParsingFAST::Currently only 2 and 3 bladed turbines are "
     "supported.");
@@ -120,7 +120,7 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
       turbNode, "num_swept_pts", actMetaFAST.nPointsSwept_(iTurb));
     actMetaFAST.useUniformAziSampling_(iTurb) =
       actMetaFAST.nPointsSwept_(iTurb) != 0;
-    ThrowErrorMsgIf(
+    STK_ThrowErrorMsgIf(
       *numBlades != 3, "The ActuatorDisk model requires a base 3 bladed "
                        "turbine, but a 2 bladed turbine was supplied.");
   }
@@ -142,7 +142,7 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
   fi.nTurbinesGlob = actMetaFAST.numberOfActuators_;
 
   const YAML::Node y_actuator = y_node["actuator"];
-  ThrowErrorMsgIf(
+  STK_ThrowErrorMsgIf(
     !y_actuator, "actuator argument is "
                  "missing from yaml node passed to actuator_FAST_parse");
   if (fi.nTurbinesGlob > 0) {

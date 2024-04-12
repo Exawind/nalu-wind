@@ -96,7 +96,7 @@ generic_grad_op_3d(
 
     detj(ip) = jact[0][0] * invJac[0][0] + jact[1][0] * invJac[1][0] +
                jact[2][0] * invJac[2][0];
-    ThrowAssertMsg(
+    STK_ThrowAssertMsg(
       stk::simd::are_any(detj(ip) > +tiny_positive_value()),
       "Problem with determinant");
 

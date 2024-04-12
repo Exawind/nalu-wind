@@ -3792,10 +3792,10 @@ Realm::check_job(bool get_node_count)
     unsigned nfields = fields.size();
     for (unsigned ifld = 0; ifld < nfields; ++ifld) {
       stk::mesh::FieldBase* field = fields[ifld];
-      unsigned fszNode = field->max_size(stk::topology::NODE_RANK);
-      unsigned fszEdge = field->max_size(stk::topology::EDGE_RANK);
-      unsigned fszFace = field->max_size(stk::topology::FACE_RANK);
-      unsigned fszElem = field->max_size(stk::topology::ELEM_RANK);
+      unsigned fszNode = field->max_size();
+      unsigned fszEdge = field->max_size();
+      unsigned fszFace = field->max_size();
+      unsigned fszElem = field->max_size();
 
       memoryEstimateFields += (nodeCount * fszNode + edgeCount * fszEdge +
                                faceCount * fszFace + elemCount * fszElem) *

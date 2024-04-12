@@ -254,13 +254,13 @@ struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase
   template <typename T, class... Args>
   void create(stk::mesh::Part* part, Args&&... args)
   {
-    ThrowRequire(edgeAlg == nullptr);
+    STK_ThrowRequire(edgeAlg == nullptr);
     edgeAlg = new T(realm, part, &eqSystem, std::forward<Args>(args)...);
   }
 
   virtual void execute() override
   {
-    ThrowRequire(edgeAlg != nullptr);
+    STK_ThrowRequire(edgeAlg != nullptr);
     linsys->buildEdgeToNodeGraph({&realm.meta_data().universal_part()});
     linsys->finalizeLinearSystem();
 

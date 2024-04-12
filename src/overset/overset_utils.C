@@ -25,7 +25,7 @@ get_overset_field_data(Realm& realm, std::vector<std::string> fnames)
     auto* fld = meta.get_field(stk::topology::NODE_RANK, ff);
     STK_ThrowAssert(fld != nullptr);
 
-    const int col = fld->max_size(fld->entity_rank());
+    const int col = fld->max_size();
     fields.emplace_back(fld, row, col);
   }
 

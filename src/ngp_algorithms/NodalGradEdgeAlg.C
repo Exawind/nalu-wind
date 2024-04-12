@@ -46,7 +46,7 @@ NodalGradEdgeAlg<PhiType, GradPhiType>::NodalGradEdgeAlg(
         << gradPhi->name() << "' of length " << gradPhiSize << " (should be "
         << dim2_ * dim2_ << ")");
   } else {
-    ThrowErrorMsg(
+    STK_ThrowErrorMsg(
       "NodalGradBndryElemAlg called with an input field '"
       << phi->name()
       << "' that is not a scalar or a vector.  "

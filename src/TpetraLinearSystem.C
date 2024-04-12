@@ -1367,7 +1367,8 @@ sum_into_row(
     }
 
     if (offset < length) {
-      ThrowAssertMsg(std::isfinite(input_values[perm_index]), "Inf or NAN lhs");
+      STK_ThrowAssertMsg(
+        std::isfinite(input_values[perm_index]), "Inf or NAN lhs");
       if (forceAtomic) {
         Kokkos::atomic_add(&(row_view.value(offset)), input_values[perm_index]);
       } else {
@@ -1431,7 +1432,7 @@ sum_into(
     const LocalOrdinal cur_perm_index = sortPermutation[r];
     const double* const cur_lhs = &lhs(cur_perm_index, 0);
     const double cur_rhs = rhs[cur_perm_index];
-    //    ThrowAssertMsg(std::isfinite(cur_rhs), "Inf or NAN rhs");
+    //    STK_ThrowAssertMsg(std::isfinite(cur_rhs), "Inf or NAN rhs");
 
     if (rowLid < maxOwnedRowId) {
       sum_into_row(
@@ -1595,10 +1596,11 @@ TpetraLinearSystem::sumInto(
   const SharedMemView<int*, DeviceShmem>& sortPermutation,
   const char* /* trace_tag */)
 {
-  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
-  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
-  ThrowAssertMsg(localIds.span_is_contiguous(), "localIds assumed contiguous");
-  ThrowAssertMsg(
+  STK_ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
+  STK_ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
+  STK_ThrowAssertMsg(
+    localIds.span_is_contiguous(), "localIds assumed contiguous");
+  STK_ThrowAssertMsg(
     sortPermutation.span_is_contiguous(), "sortPermutation assumed contiguous");
 
   sum_into(
@@ -1648,7 +1650,7 @@ TpetraLinearSystem::sumInto(
     const LocalOrdinal cur_perm_index = sortPermutation_[r];
     const double* const cur_lhs = &lhs[cur_perm_index * numRows];
     const double cur_rhs = rhs[cur_perm_index];
-    ThrowAssertMsg(std::isfinite(cur_rhs), "Invalid rhs");
+    STK_ThrowAssertMsg(std::isfinite(cur_rhs), "Invalid rhs");
 
     if (rowLid < maxOwnedRowId_) {
       sum_into_row(

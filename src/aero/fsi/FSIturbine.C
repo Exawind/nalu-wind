@@ -88,7 +88,7 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     // Displacement Ramping
     // --------------------------------------------------------------------------
     const YAML::Node defNode = node["deflection_ramping"];
-    ThrowErrorMsgIf(
+    STK_ThrowErrorMsgIf(
       !defNode,
       "defleciton_ramping inputs are required for FSI Turbines with blades");
     DeflectionRampingParams& defParams = deflectionRampParams_;

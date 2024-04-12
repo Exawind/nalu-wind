@@ -336,7 +336,7 @@ TetSCV::determinant_scv(
     // compute volume using an equivalent polyhedron
     volume(icv) = hex_volume_grandy(ehexcoords);
     // check for negative volume
-    // ThrowAssertMsg( volume(icv) < 0.0, "ERROR in TetSCV::determinant,
+    // STK_ThrowAssertMsg( volume(icv) < 0.0, "ERROR in TetSCV::determinant,
     // negative volume.");
   }
 }
