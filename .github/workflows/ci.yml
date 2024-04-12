@@ -17,7 +17,7 @@ jobs:
       with:
         source: 'nalu.C unit_tests.C ./include ./src ./unit_tests'
         extensions: 'H,h,cpp,C'
-        clangFormatVersion: 13
+        clangFormatVersion: 16
   CPU-Trilinos:
     needs: Formatting
     runs-on: ubuntu-latest
