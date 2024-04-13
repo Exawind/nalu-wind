@@ -96,9 +96,10 @@ protected:
 
     double one = 1.0;
     double zero = 0.0;
+    double zeroVec[3] = {0.0, 0.0, 0.0};
     const stk::mesh::PartVector parts(1, &meta->universal_part());
     elemCentroidField =
-      fieldManager->register_field<double>("elemCentroid", parts, &zero);
+      fieldManager->register_field<double>("elemCentroid", parts, zeroVec);
     nodalPressureField =
       fieldManager->register_field<double>("nodalPressure", parts, &one);
     discreteLaplacianOfPressure =
