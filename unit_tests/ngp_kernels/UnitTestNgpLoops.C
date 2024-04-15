@@ -55,7 +55,7 @@ public:
       *velocity, stk::io::FieldOutputType::VECTOR_3D);
     stk::mesh::put_field_on_mesh(
       *massFlowRate, meta->universal_part(), hex8SCS.num_integration_points(),
-      &zero);
+      nullptr);
     stk::mesh::put_field_on_mesh(*mdotEdge, meta->universal_part(), &zero);
   }
 

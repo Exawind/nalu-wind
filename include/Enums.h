@@ -105,6 +105,7 @@ static const std::string EquationTypeMap[] = {
   "PNG_U",
   "PNG_TKE",
   "Wall_Distance",
+  "Gamma_Transition",
   "Volume_of_Fluid"};
 
 enum UserDataType {

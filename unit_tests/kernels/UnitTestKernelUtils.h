@@ -1454,7 +1454,7 @@ public:
     stk::mesh::put_field_on_mesh(
       *volumeOfFluid_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
-      *dvolumeOfFluidDx_, meta_->universal_part(), nullptr);
+      *dvolumeOfFluidDx_, meta_->universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
       *velocity_, meta_->universal_part(), spatialDim_, nullptr);
     stk::io::set_field_output_type(
@@ -1486,7 +1486,7 @@ public:
   }
 
   sierra::nalu::ScalarFieldType* volumeOfFluid_{nullptr};
-  sierra::nalu::ScalarFieldType* dvolumeOfFluidDx_{nullptr};
+  sierra::nalu::VectorFieldType* dvolumeOfFluidDx_{nullptr};
   sierra::nalu::VectorFieldType* velocity_{nullptr};
   sierra::nalu::ScalarFieldType* density_{nullptr};
   sierra::nalu::ScalarFieldType* viscosity_{nullptr};
