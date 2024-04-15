@@ -83,7 +83,7 @@ Registry()
     {"pressure",                  SingleStateNodalScalar},
     {"rans_time_scale" ,          SingleStateNodalScalar},
     {"scalarQ",                   SingleStateNodalScalar},
-    {"specific_dissipation_rate", SingleStateNodalScalar},
+    {"specific_dissipation_rate", MultiStateNodalScalar},
     {"specific_heat" ,            SingleStateNodalScalar},
     {"sst_f_one_blending"  ,      SingleStateNodalScalar},
     {"sst_max_length_scale",      SingleStateNodalScalar},

@@ -31,8 +31,9 @@ public:
     stk::mesh::put_field_on_mesh(
       *test_field, meta->universal_part(), 1, &minus_one);
 
+    double minus_one_vec[3] = {-1.0, -1.0, -1.0};
     stk::mesh::put_field_on_mesh(
-      *test_vector_field, meta->universal_part(), 3, &minus_one);
+      *test_vector_field, meta->universal_part(), 3, minus_one_vec);
     stk::io::set_field_output_type(
       *test_vector_field, stk::io::FieldOutputType::VECTOR_3D);
 
