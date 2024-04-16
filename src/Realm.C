@@ -1153,7 +1153,7 @@ Realm::setup_bc()
         name, *reinterpret_cast<const ABLTopBoundaryConditionData*>(bc.get()));
       break;
     case PERIODIC_BC: {
-      ThrowAssert(
+      STK_ThrowAssert(
         reinterpret_cast<const PeriodicBoundaryConditionData*>(bc.get()) !=
         nullptr);
       const auto& pbc =
@@ -1295,13 +1295,13 @@ Realm::setup_initial_conditions()
         const ConstantInitialConditionData& genIC =
           *reinterpret_cast<const ConstantInitialConditionData*>(
             initCond.get());
-        ThrowAssert(genIC.data_.size() == genIC.fieldNames_.size());
+        STK_ThrowAssert(genIC.data_.size() == genIC.fieldNames_.size());
         for (size_t ifield = 0; ifield < genIC.fieldNames_.size(); ++ifield) {
 
           std::vector<double> genSpec = genIC.data_[ifield];
           stk::mesh::FieldBase* field = stk::mesh::get_field_by_name(
             genIC.fieldNames_[ifield], meta_data());
-          ThrowAssert(field);
+          STK_ThrowAssert(field);
 
           stk::mesh::FieldBase* fieldWithState =
             (field->number_of_states() > 1)
@@ -1842,7 +1842,7 @@ Realm::makeSureNodesHaveValidTopology()
   // now we require all nodes are in proper node part
   if (nodes_vector.size())
     std::cout << "nodes_vector= " << nodes_vector.size() << std::endl;
-  ThrowRequire(0 == nodes_vector.size());
+  STK_ThrowRequire(0 == nodes_vector.size());
 }
 
 void
@@ -2217,7 +2217,7 @@ Realm::create_restart_mesh()
     }
 
     // set max size for restart data base
-    ioBroker_->get_output_io_region(restartFileIndex_)
+    ioBroker_->get_output_ioss_region(restartFileIndex_)
       ->get_database()
       ->set_cycle_count(outputInfo_->restartMaxDataBaseStepSize_);
   }
@@ -2991,7 +2991,7 @@ void
 Realm::register_non_conformal_bc(
   stk::mesh::Part* part, const stk::topology& theTopo)
 {
-  ThrowRequire(!matrixFree_);
+  STK_ThrowRequire(!matrixFree_);
 
   // push back the part for book keeping and, later, skin mesh
   bcPartVec_.push_back(part);
@@ -3708,7 +3708,7 @@ Realm::check_job(bool get_node_count)
   // set number of nodes, check job run size
   if (get_node_count) {
     size_t localNodeCount =
-      ioBroker_->get_input_io_region()->get_property("node_count").get_int();
+      ioBroker_->get_input_ioss_region()->get_property("node_count").get_int();
     stk::all_reduce_sum(
       NaluEnv::self().parallel_comm(), &localNodeCount, &nodeCount_, 1);
     NaluEnv::self().naluOutputP0()
@@ -3782,7 +3782,7 @@ Realm::check_job(bool get_node_count)
   if (meta_data().is_commit()) {
     std::vector<size_t> counts;
     stk::mesh::comm_mesh_counts(*bulkData_, counts);
-    ThrowRequire(counts.size() >= 4);
+    STK_ThrowRequire(counts.size() >= 4);
     size_t nodeCount = counts[stk::topology::NODE_RANK];
     size_t edgeCount = counts[stk::topology::EDGE_RANK];
     size_t faceCount = counts[stk::topology::FACE_RANK];
@@ -3792,10 +3792,10 @@ Realm::check_job(bool get_node_count)
     unsigned nfields = fields.size();
     for (unsigned ifld = 0; ifld < nfields; ++ifld) {
       stk::mesh::FieldBase* field = fields[ifld];
-      unsigned fszNode = field->max_size(stk::topology::NODE_RANK);
-      unsigned fszEdge = field->max_size(stk::topology::EDGE_RANK);
-      unsigned fszFace = field->max_size(stk::topology::FACE_RANK);
-      unsigned fszElem = field->max_size(stk::topology::ELEM_RANK);
+      unsigned fszNode = field->max_size();
+      unsigned fszEdge = field->max_size();
+      unsigned fszFace = field->max_size();
+      unsigned fszElem = field->max_size();
 
       memoryEstimateFields += (nodeCount * fszNode + edgeCount * fszEdge +
                                faceCount * fszFace + elemCount * fszElem) *
@@ -5164,7 +5164,7 @@ Realm::handle_all_element_part_alias(
   if (names.size() == 1u && names.at(0) == allElementPartAlias) {
     std::vector<std::string> new_names;
     for (const auto* part : meta_data().get_mesh_parts()) {
-      ThrowRequire(part);
+      STK_ThrowRequire(part);
       if (part->topology().rank() == stk::topology::ELEMENT_RANK) {
         new_names.push_back(part->name());
       }

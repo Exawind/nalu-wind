@@ -53,21 +53,21 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::
       MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_))
 {
   if (phiSize_ == 1u) {
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       gradPhiSize_ == AlgTraits::nDim_,
       "NodalGradBndryElemAlg called with scalar input field '"
         << phi->name() << "' but with non-vector output field '"
         << gradPhi->name() << "' of length " << gradPhiSize_ << " (should be "
         << AlgTraits::nDim_ << ")");
   } else if (phiSize_ == AlgTraits::nDim_) {
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       gradPhiSize_ == AlgTraits::nDim_ * AlgTraits::nDim_,
       "NodalGradBndryElemAlg called with vector input field '"
         << phi->name() << "' but with non-tensor output field '"
         << gradPhi->name() << "' of length " << gradPhiSize_ << " (should be "
         << AlgTraits::nDim_ * AlgTraits::nDim_ << ")");
   } else {
-    ThrowErrorMsg(
+    STK_ThrowErrorMsg(
       "NodalGradBndryElemAlg called with an input field '"
       << phi->name()
       << "' that is not a scalar or a vector.  "

@@ -55,7 +55,7 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     << "In actuator_Simple_parse() " << std::endl; // LCCOUT
 
   const YAML::Node y_actuator = y_node["actuator"];
-  ThrowErrorMsgIf(
+  STK_ThrowErrorMsgIf(
     !y_actuator, "actuator argument is "
                  "missing from yaml node passed to actuator_Simple_parse");
 

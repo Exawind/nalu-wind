@@ -57,7 +57,7 @@ scale_lift_force(
   case (ActuatorType::ActLineFASTNGP):
   case (ActuatorType::ActDiskFASTNGP): {
 #ifndef NALU_USES_OPENFAST
-    ThrowErrorMsg("Actuator methods require OpenFAST");
+    STK_ThrowErrorMsg("Actuator methods require OpenFAST");
 #if !defined(KOKKOS_ENABLE_GPU)
     break;
 #endif

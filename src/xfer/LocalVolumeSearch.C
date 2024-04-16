@@ -206,7 +206,7 @@ compute_local_coordinates(
     return compute_local_coordinates_t<AlgTraitsHex8>(
       bulk, coord_field, elem, point);
   default: {
-    ThrowRequire(topo == stk::topology::PYRAMID_5);
+    STK_ThrowRequire(topo == stk::topology::PYRAMID_5);
     return compute_local_coordinates_t<AlgTraitsPyr5>(
       bulk, coord_field, elem, point);
   }
@@ -271,7 +271,7 @@ interpolate_field(
     return interpolate_field_t<AlgTraitsHex8>(
       bulk, elem, field_prev, field, x, dtratio);
   default: {
-    ThrowRequire(topo == stk::topology::PYRAMID_5);
+    STK_ThrowRequire(topo == stk::topology::PYRAMID_5);
     return interpolate_field_t<AlgTraitsPyr5>(
       bulk, elem, field_prev, field, x, dtratio);
   }

@@ -110,7 +110,7 @@ FrameBase::populate_part_vec(const YAML::Node& node)
     partNamesVec.end()) {
     partNamesVec.clear();
     for (const auto* part : meta_.get_mesh_parts()) {
-      ThrowRequire(part);
+      STK_ThrowRequire(part);
       if (part->topology().rank() == stk::topology::ELEMENT_RANK) {
         partNamesVec.push_back(part->name());
       }

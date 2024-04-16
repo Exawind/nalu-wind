@@ -98,7 +98,7 @@ ActuatorMeta
 actuator_parse(const YAML::Node& y_node)
 {
   const YAML::Node y_actuator = y_node["actuator"];
-  ThrowErrorMsgIf(
+  STK_ThrowErrorMsgIf(
     !y_actuator, "actuator argument is "
                  "missing from yaml node passed to actuator_parse");
   int nTurbines = 0;

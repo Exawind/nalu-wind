@@ -176,7 +176,7 @@ TpetraSegregatedLinearSystem::beginLinearSystemConstruction()
   if (inConstruction_)
     return;
   inConstruction_ = true;
-  ThrowRequire(ownedGraph_.is_null());
+  STK_ThrowRequire(ownedGraph_.is_null());
   stk::mesh::BulkData& bulkData = realm_.bulk_data();
   stk::mesh::MetaData& metaData = realm_.meta_data();
 
@@ -275,7 +275,7 @@ TpetraSegregatedLinearSystem::beginLinearSystemConstruction()
     myLIDs_[entityId] = localId++;
     ownedGids.push_back(static_cast<GlobalOrdinal>(entityId));
   }
-  ThrowRequire(localId == numOwnedNodes);
+  STK_ThrowRequire(localId == numOwnedNodes);
 
   // now sharedNotOwned:
   for (const stk::mesh::Bucket* bptr : buckets) {
@@ -336,7 +336,7 @@ TpetraSegregatedLinearSystem::insert_connection(
 {
   const size_t idx = entityToLIDHost_[a.local_offset()];
 
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     idx < ownedAndSharedNodes_.size(),
     "Error, insert_connection got index out of range.");
 
@@ -351,7 +351,7 @@ TpetraSegregatedLinearSystem::insert_connection(
     correctEntity =
       ownedAndSharedNodes_[idx] == master || naluid_a == naluid_master;
   }
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     correctEntity,
     "Error, indexing of rowEntities to connections isn't right.");
 
@@ -524,7 +524,7 @@ TpetraSegregatedLinearSystem::buildFaceElemToNodeGraph(
       // extract the connected element to this exposed face; should be single in
       // size!
       const stk::mesh::Entity* face_elem_rels = bulkData.begin_elements(face);
-      ThrowAssert(bulkData.num_elements(face) == 1);
+      STK_ThrowAssert(bulkData.num_elements(face) == 1);
 
       // get connected element and nodal relations
       stk::mesh::Entity element = face_elem_rels[0];
@@ -642,8 +642,8 @@ TpetraSegregatedLinearSystem::copy_stk_to_tpetra(
   stk::mesh::FieldBase* stkField,
   const Teuchos::RCP<LinSys::MultiVector> tpetraField)
 {
-  ThrowAssert(!tpetraField.is_null());
-  ThrowAssert(stkField);
+  STK_ThrowAssert(!tpetraField.is_null());
+  STK_ThrowAssert(stkField);
   const int numVectors = tpetraField->getNumVectors();
 
   stk::mesh::BulkData& bulkData = realm_.bulk_data();
@@ -663,7 +663,7 @@ TpetraSegregatedLinearSystem::copy_stk_to_tpetra(
     const int fieldSize =
       field_bytes_per_entity(*stkField, b) / (sizeof(double));
 
-    ThrowRequire(numVectors == fieldSize);
+    STK_ThrowRequire(numVectors == fieldSize);
 
     const stk::mesh::Bucket::size_type length = b.size();
 
@@ -966,7 +966,7 @@ TpetraSegregatedLinearSystem::storeOwnersForShared()
 void
 TpetraSegregatedLinearSystem::finalizeLinearSystem()
 {
-  ThrowRequire(inConstruction_);
+  STK_ThrowRequire(inConstruction_);
   inConstruction_ = false;
 
   stk::mesh::BulkData& bulkData = realm_.bulk_data();
@@ -1100,10 +1100,10 @@ TpetraSegregatedLinearSystem::finalizeLinearSystem()
 void
 TpetraSegregatedLinearSystem::zeroSystem()
 {
-  ThrowRequire(!ownedMatrix_.is_null());
-  ThrowRequire(!sharedNotOwnedMatrix_.is_null());
-  ThrowRequire(!sharedNotOwnedRhs_.is_null());
-  ThrowRequire(!ownedRhs_.is_null());
+  STK_ThrowRequire(!ownedMatrix_.is_null());
+  STK_ThrowRequire(!sharedNotOwnedMatrix_.is_null());
+  STK_ThrowRequire(!sharedNotOwnedRhs_.is_null());
+  STK_ThrowRequire(!ownedRhs_.is_null());
 
   sharedNotOwnedMatrix_->resumeFill();
   ownedMatrix_->resumeFill();
@@ -1144,7 +1144,7 @@ segregated_sum_into_row(
     }
 
     if (offset < length) {
-      ThrowAssertMsg(
+      STK_ThrowAssertMsg(
         std::isfinite(input_values[perm_index * numDof]), "Inf or NAN lhs");
       if (forceAtomic) {
         Kokkos::atomic_add(
@@ -1283,7 +1283,7 @@ reset_rows(
       const LocalOrdinal actualLocalId =
         useOwned ? localId : (localId - maxOwnedRowId);
 
-      NGP_ThrowRequire(localId <= maxSharedNotOwnedRowId);
+      STK_NGP_ThrowRequireMsg(localId <= maxSharedNotOwnedRowId);
 
       // Adjust the LHS; zero out all entries (including diagonal)
       reset_row(localMatrix.row(actualLocalId), actualLocalId, diag_value);
@@ -1371,10 +1371,11 @@ TpetraSegregatedLinearSystem::sumInto(
   const SharedMemView<int*, DeviceShmem>& sortPermutation,
   const char* /* trace_tag */)
 {
-  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
-  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
-  ThrowAssertMsg(localIds.span_is_contiguous(), "localIds assumed contiguous");
-  ThrowAssertMsg(
+  STK_ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
+  STK_ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
+  STK_ThrowAssertMsg(
+    localIds.span_is_contiguous(), "localIds assumed contiguous");
+  STK_ThrowAssertMsg(
     sortPermutation.span_is_contiguous(), "sortPermutation assumed contiguous");
 
   segregated_sum_into(
@@ -1396,8 +1397,8 @@ TpetraSegregatedLinearSystem::sumInto(
   const size_t n_obj = entities.size();
   const unsigned numRows = n_obj;
 
-  ThrowAssert(numRows * numDof_ == rhs.size());
-  ThrowAssert(numRows * numDof_ * numRows * numDof_ == lhs.size());
+  STK_ThrowAssert(numRows * numDof_ == rhs.size());
+  STK_ThrowAssert(numRows * numDof_ * numRows * numDof_ == lhs.size());
 
   scratchIds.resize(numRows);
   sortPermutation_.resize(numRows);
@@ -1422,7 +1423,7 @@ TpetraSegregatedLinearSystem::sumInto(
 
       for (unsigned dofIdx = 0; dofIdx < numDof_; ++dofIdx) {
         const double cur_rhs = rhs[cur_perm_index * numDof_ + dofIdx];
-        ThrowAssertMsg(std::isfinite(cur_rhs), "Invalid rhs");
+        STK_ThrowAssertMsg(std::isfinite(cur_rhs), "Invalid rhs");
         getOwnedLocalRhs()(rowLid, dofIdx) += cur_rhs;
       }
     } else if (rowLid < maxSharedNotOwnedRowId_) {
@@ -1433,7 +1434,7 @@ TpetraSegregatedLinearSystem::sumInto(
 
       for (unsigned dofIdx = 0; dofIdx < numDof_; ++dofIdx) {
         const double cur_rhs = rhs[cur_perm_index * numDof_ + dofIdx];
-        ThrowAssertMsg(std::isfinite(cur_rhs), "Invalid rhs");
+        STK_ThrowAssertMsg(std::isfinite(cur_rhs), "Invalid rhs");
         getSharedNotOwnedLocalRhs()(actualLocalId, dofIdx) += cur_rhs;
       }
     }
@@ -1464,7 +1465,7 @@ TpetraSegregatedLinearSystem::applyDirichletBCs(
 
     const unsigned fieldSize =
       field_bytes_per_entity(*solutionField, b) / sizeof(double);
-    ThrowRequire(fieldSize == numDof_);
+    STK_ThrowRequire(fieldSize == numDof_);
 
     const stk::mesh::Bucket::size_type length = b.size();
     const double* solution =
@@ -1966,8 +1967,8 @@ TpetraSegregatedLinearSystem::copy_tpetra_to_stk(
   stk::mesh::BulkData& bulkData = realm_.bulk_data();
   stk::mesh::MetaData& metaData = realm_.meta_data();
 
-  ThrowAssert(!tpetraField.is_null());
-  ThrowAssert(stkField);
+  STK_ThrowAssert(!tpetraField.is_null());
+  STK_ThrowAssert(stkField);
   const LinSys::ConstOneDVector& tpetraVector = tpetraField->get1dView();
   const size_t numNodes = tpetraField->getLocalLength();
 
@@ -1986,7 +1987,7 @@ TpetraSegregatedLinearSystem::copy_tpetra_to_stk(
 
     const unsigned fieldSize =
       field_bytes_per_entity(*stkField, b) / sizeof(double);
-    ThrowRequire(fieldSize == numDof_);
+    STK_ThrowRequire(fieldSize == numDof_);
 
     const stk::mesh::Bucket::size_type length = b.size();
     double* stkFieldPtr = (double*)stk::mesh::field_data(*stkField, *b.begin());
@@ -2015,7 +2016,7 @@ TpetraSegregatedLinearSystem::copy_tpetra_to_stk(
                     << " stkId= " << stkId << " naluId= " << naluId
                     << std::endl;
         }
-        ThrowRequire(useOwned);
+        STK_ThrowRequire(useOwned);
 
         const size_t stkIndex = k * numDof_ + dofIdx;
         if (useOwned) {

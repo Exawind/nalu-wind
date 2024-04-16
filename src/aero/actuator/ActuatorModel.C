@@ -71,12 +71,12 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
     return;
 
   // hack to surpress Wunused-parameter on non-openfast builds
-  ThrowErrorIf(timeStep <= 0.0);
+  STK_ThrowErrorIf(timeStep <= 0.0);
 
   switch (actMeta_->actuatorType_) {
   case (ActuatorType::ActLineFASTNGP): {
 #ifndef NALU_USES_OPENFAST
-    ThrowErrorMsg("Actuator methods require OpenFAST");
+    STK_ThrowErrorMsg("Actuator methods require OpenFAST");
 #if !defined(KOKKOS_ENABLE_GPU)
     break;
 #endif
@@ -94,7 +94,7 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
   }
   case (ActuatorType::ActDiskFASTNGP): {
 #ifndef NALU_USES_OPENFAST
-    ThrowErrorMsg("Actuator methods require OpenFAST");
+    STK_ThrowErrorMsg("Actuator methods require OpenFAST");
 #if !defined(KOKKOS_ENABLE_GPU)
     break;
 #endif
@@ -122,7 +122,7 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
     break;
   }
   default: {
-    ThrowErrorMsg("Unsupported actuator type");
+    STK_ThrowErrorMsg("Unsupported actuator type");
   }
   }
 }
@@ -140,7 +140,7 @@ ActuatorModel::init(stk::mesh::BulkData& stkBulk)
   case (ActuatorType::ActLineFASTNGP):
   case (ActuatorType::ActDiskFASTNGP): {
 #ifndef NALU_USES_OPENFAST
-    ThrowErrorMsg("Actuator methods require OpenFAST");
+    STK_ThrowErrorMsg("Actuator methods require OpenFAST");
 #if !defined(KOKKOS_ENABLE_GPU)
     break;
 #endif
@@ -154,7 +154,7 @@ ActuatorModel::init(stk::mesh::BulkData& stkBulk)
     break;
   }
   default: {
-    ThrowErrorMsg("Unsupported actuator type");
+    STK_ThrowErrorMsg("Unsupported actuator type");
   }
   }
 }

@@ -268,7 +268,7 @@ ChienKEpsilonEquationSystem::post_external_data_transfer_work()
   auto tdrBCField = meta.get_field<double>(stk::topology::NODE_RANK, "tdr_bc");
   auto tkeBCField = meta.get_field<double>(stk::topology::NODE_RANK, "tke_bc");
   if (tdrBCField != nullptr) {
-    ThrowRequire(tkeBCField);
+    STK_ThrowRequire(tkeBCField);
     auto bc_sel = owned_and_shared & stk::mesh::selectField(*tdrBCField);
     auto ngpTkeBC =
       fieldMgr.get_field<double>(tkeBCField->mesh_meta_data_ordinal());

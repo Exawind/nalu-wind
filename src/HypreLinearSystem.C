@@ -574,7 +574,7 @@ HypreLinearSystem::buildFaceElemToNodeGraph(const stk::mesh::PartVector& parts)
         // extract the connected element to this exposed face; should be single
         // in size!
         const stk::mesh::Entity* face_elem_rels = bulkData.begin_elements(face);
-        ThrowAssert(bulkData.num_elements(face) == 1);
+        STK_ThrowAssert(bulkData.num_elements(face) == 1);
 
         // get connected element and nodal relations
         stk::mesh::Entity element = face_elem_rels[0];
@@ -603,7 +603,7 @@ HypreLinearSystem::buildFaceElemToNodeGraph(const stk::mesh::PartVector& parts)
         // extract the connected element to this exposed face; should be single
         // in size!
         const stk::mesh::Entity* face_elem_rels = bulkData.begin_elements(face);
-        ThrowAssert(bulkData.num_elements(face) == 1);
+        STK_ThrowAssert(bulkData.num_elements(face) == 1);
 
         // get connected element and nodal relations
         stk::mesh::Entity element = face_elem_rels[0];
@@ -823,7 +823,7 @@ HypreLinearSystem::finalizeLinearSystem()
   gettimeofday(&_start, NULL);
 #endif
 
-  ThrowRequire(inConstruction_);
+  STK_ThrowRequire(inConstruction_);
   inConstruction_ = false;
 
 #ifdef HYPRE_LINEAR_SYSTEM_DEBUG

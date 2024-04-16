@@ -86,7 +86,7 @@ fill_owned_and_shared_then_nonowned_ordered_by_proc(
   for (unsigned i = 0; i < sharedIndices.size(); ++i) {
     totalGids.push_back(sharedIndices[i]);
     srcPids.push_back(sharedPids[i]);
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       sharedPids[i] != localProc && sharedPids[i] >= 0,
       "Error, bad sharedPid = " << sharedPids[i] << ", localProc = "
                                 << localProc << ", gid = " << sharedIndices[i]);
@@ -101,13 +101,13 @@ fill_owned_and_shared_then_nonowned_ordered_by_proc(
       !sharedNotOwnedRowsMap->isNodeGlobalElement(gid)) {
       totalGids.push_back(gid);
       srcPids.push_back(procAndGid.first);
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         procAndGid.first != localProc && procAndGid.first >= 0,
         "Error, bad remote proc = " << procAndGid.first);
     }
   }
 
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     srcPids.size() == (totalGids.size() - ownedIndices.size()),
     "Error, bad srcPids.size() = " << srcPids.size());
 }
@@ -134,7 +134,7 @@ get_entity_master(
          << bulk.bucket(elems[i]).topology()
          << ",owned=" << bulk.bucket(elems[i]).owned() << "}";
     }
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       bulk.is_valid(master),
       "get_entity_master, P"
         << bulk.parallel_rank() << " failed to get entity for naluId=" << naluId
@@ -150,7 +150,7 @@ get_neighbor_index(const std::vector<int>& neighborProcs, int proc)
 {
   std::vector<int>::const_iterator neighbor =
     std::find(neighborProcs.begin(), neighborProcs.end(), proc);
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     neighbor != neighborProcs.end(),
     "Error, failed to find p=" << proc << " in neighborProcs.");
 
@@ -224,7 +224,7 @@ add_lengths_to_comm_tpet(
   stk::CommBufferV& sbuf = commNeighbors.send_buffer(owner);
   const auto node = bulk.get_entity(stk::topology::NODE_RANK, entityId_a);
   LinSys::GlobalOrdinal rowGid = *stk::mesh::field_data(*tpetGID_label, node);
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     rowGid != 0 && rowGid != std::numeric_limits<LinSys::GlobalOrdinal>::max(),
     "add_lengths_to_comm_tpet");
   sbuf.pack(rowGid);
@@ -234,7 +234,7 @@ add_lengths_to_comm_tpet(
       bulk.get_entity(stk::topology::NODE_RANK, colEntityIds[c]);
     LinSys::GlobalOrdinal colGid0 =
       *stk::mesh::field_data(*tpetGID_label, centity);
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       colGid0 != 0 &&
         colGid0 != std::numeric_limits<LinSys::GlobalOrdinal>::max(),
       "add_lengths_to_comm_tpet");
@@ -261,7 +261,7 @@ communicate_remote_columns(
       LinSys::GlobalOrdinal rowGid = 0;
       rbuf.unpack(rowGid);
 
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         rowGid != 0 &&
           rowGid != std::numeric_limits<LinSys::GlobalOrdinal>::max(),
         "communicate_remote_columns");
@@ -282,7 +282,7 @@ communicate_remote_columns(
         LinSys::GlobalOrdinal colGid = 0;
         rbuf.unpack(colGid);
 
-        ThrowRequireMsg(
+        STK_ThrowRequireMsg(
           colGid != 0 &&
             colGid != std::numeric_limits<LinSys::GlobalOrdinal>::max(),
           "communicate_remote_columns");
@@ -329,7 +329,7 @@ insert_communicated_col_indices(
       stk::mesh::EntityId rowGid = 0;
       rbuf.unpack(rowGid);
 
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         rowGid != 0 &&
           rowGid != static_cast<stk::mesh::EntityId>(
                       std::numeric_limits<LinSys::GlobalOrdinal>::max()),
@@ -344,7 +344,7 @@ insert_communicated_col_indices(
         GlobalOrdinal colGid = 0;
         rbuf.unpack(colGid);
 
-        ThrowRequireMsg(
+        STK_ThrowRequireMsg(
           colGid != 0 &&
             colGid != std::numeric_limits<LinSys::GlobalOrdinal>::max(),
           " insert_communicated_col_indices");

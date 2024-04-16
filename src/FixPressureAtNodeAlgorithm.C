@@ -58,7 +58,7 @@ FixPressureAtNodeAlgorithm::execute()
 {
 
   int numNodes = refNodeList_.size();
-  ThrowAssertMsg(
+  STK_ThrowAssertMsg(
     numNodes <= 1,
     "Invalid number of nodes encountered in FixPressureAtNodeAlgorithm");
 

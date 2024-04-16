@@ -52,34 +52,34 @@ wed_gradient_operator(
   //
   const unsigned nint = deriv.extent(0);
   const unsigned npe = deriv.extent(1);
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     3 == deriv.extent(2), "wed_gradient_operator: Error in derivative array");
 
   const unsigned nelem = cordel.extent(0);
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     npe == cordel.extent(1),
     "wed_gradient_operator: Error in coorindate array");
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     3 == cordel.extent(2), "wed_gradient_operator: Error in coorindate array");
 
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     nint == gradop.extent(0), "wed_gradient_operator: Error in gradient array");
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     nelem == gradop.extent(1),
     "wed_gradient_operator: Error in gradient array");
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     npe == gradop.extent(2), "wed_gradient_operator: Error in gradient array");
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     3 == gradop.extent(3), "wed_gradient_operator: Error in gradient array");
 
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     nint == det_j.extent(0),
     "wed_gradient_operator: Error in determinent array");
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     nelem == det_j.extent(1),
     "wed_gradient_operator: Error in determinent array");
 
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     nelem == err.extent(0), "wed_gradient_operator: Error in error array");
 
   const double realmin = std::numeric_limits<double>::min();

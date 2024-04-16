@@ -120,7 +120,7 @@ public:
 #endif
   )
   {
-    ThrowAssertMsg(
+    STK_ThrowAssertMsg(
       partVec_.size() == 1, "KokkosMEViews unit-test assumes partVec_.size==1");
 
 #if !defined(KOKKOS_ENABLE_GPU)

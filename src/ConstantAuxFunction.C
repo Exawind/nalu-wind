@@ -20,7 +20,7 @@ ConstantAuxFunction::ConstantAuxFunction(
   const std::vector<double>& values)
   : AuxFunction(beginPos, endPos), values_(values)
 {
-  ThrowRequire(endPos_ <= values_.size());
+  STK_ThrowRequire(endPos_ <= values_.size());
 }
 
 void
