@@ -1283,7 +1283,7 @@ reset_rows(
       const LocalOrdinal actualLocalId =
         useOwned ? localId : (localId - maxOwnedRowId);
 
-      STK_NGP_ThrowRequireMsg(localId <= maxSharedNotOwnedRowId);
+      STK_NGP_ThrowRequireMsg(localId <= maxSharedNotOwnedRowId, "Error");
 
       // Adjust the LHS; zero out all entries (including diagonal)
       reset_row(localMatrix.row(actualLocalId), actualLocalId, diag_value);
