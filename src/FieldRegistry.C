@@ -53,9 +53,10 @@ Registry()
     {"div_mesh_velocity",         SingleStateNodalScalar},
     {"dkdx",                      SingleStateNodalVector},
     {"dpdx",                      SingleStateNodalVector},
-    {"dual_nodal_volume",         SingleStateNodalScalar},
+    {"dual_nodal_volume",         MultiStateNodalScalar},
     {"dudx",                      SingleStateNodalTensor},
     {"dwdx",                      SingleStateNodalVector},
+    {"dynamic_pressure",          SingleStateNodalScalar}, // Used in testing
     {"edge_area_vector",          SingleStateEdgeVector},
     {"effective_viscosity" ,      SingleStateNodalScalar},
     {"elemCentroid",              SingleStateElemVector},
@@ -83,7 +84,7 @@ Registry()
     {"pressure",                  SingleStateNodalScalar},
     {"rans_time_scale" ,          SingleStateNodalScalar},
     {"scalarQ",                   SingleStateNodalScalar},
-    {"specific_dissipation_rate", MultiStateNodalScalar},
+    {"specific_dissipation_rate", SingleStateNodalScalar},
     {"thermal_conductivity",      SingleStateNodalScalar},
     {"specific_heat" ,            SingleStateNodalScalar},
     {"sst_f_one_blending"  ,      SingleStateNodalScalar},
@@ -94,6 +95,7 @@ Registry()
     {"turbulent_viscosity" ,      SingleStateNodalScalar},
     {"velocity",                  MultiStateNodalVector},
     {"velocity_rtm",              SingleStateNodalVector},
+    {"velocity_bc",               MultiStateNodalVector},  // Used in testing
     {"viscosity",                 SingleStateNodalScalar}
   };
   // clang-format on

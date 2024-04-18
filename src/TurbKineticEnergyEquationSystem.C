@@ -306,6 +306,8 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<TKEKsgsNodeKernel>(realm_.meta_data());
           break;
         case TurbulenceModel::SST:
+          // should be able to keep creating actually since stk fields can be registered over and over as no-ops
+          // registration should still happen
           nodeAlg.add_kernel<TKESSTNodeKernel>(
             realm_.meta_data(), *(realm_.fieldManager_.get()), tempVec);
           break;

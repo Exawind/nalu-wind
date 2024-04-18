@@ -173,9 +173,12 @@ Simulation::setSerializedIOGroupSize(int siogs)
 void
 Simulation::breadboard()
 {
-  realms_->breadboard();
-  timeIntegrator_->breadboard();
-  transfers_->breadboard();
+  if (realms_)
+    realms_->breadboard();
+  if (timeIntegrator_)
+    timeIntegrator_->breadboard();
+  if (transfers_)
+    transfers_->breadboard();
 }
 
 void

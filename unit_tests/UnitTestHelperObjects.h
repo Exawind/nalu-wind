@@ -34,10 +34,12 @@ struct HelperObjectsBase
       eqSystem(eqSystems)
   {
     realm.bulkData_ = bulk;
+    // TODO fix this! realm should not be getting time integrator this way!!
+    naluObj->sim_.breadboard();
+    assert(naluObj->sim_.timeIntegrator_ != NULL);
+    // bread board didn't work so set integrator manually
+    realm.timeIntegrator_ = naluObj->sim_.timeIntegrator_;
     realm.setup_field_manager();
-    // const int numStates = 3;
-    // realm.fieldManager_ = std::make_unique<sierra::nalu::FieldManager>(
-    //   realm.meta_data(), numStates);
   }
 
   virtual ~HelperObjectsBase() { delete naluObj; }
