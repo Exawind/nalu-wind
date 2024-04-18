@@ -46,7 +46,7 @@ Registry()
     {"coordinates",               SingleStateNodalVector},
     {"coordinates_copy",          SingleStateNodalVector}, // Used in testing
     {"current_coordinates",       SingleStateNodalVector},
-    {"density",                   SingleStateNodalScalar},
+    {"density",                   MultiStateNodalScalar},
     {"dhdx",                      SingleStateNodalVector},
     {"diffFluxCoeff",             SingleStateNodalScalar},
     {"discreteLaplacian",         SingleStateNodalScalar},
