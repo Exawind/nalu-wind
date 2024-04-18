@@ -59,7 +59,7 @@ MomentumResidualOperator<p>::compute(mv_type& owned_rhs)
 {
   stk::mesh::ProfilingBlock pf("MomentumResidualOperator<p>::apply");
   if (exporter_.getTargetMap()->isDistributed()) {
-    ThrowRequire(owned_rhs.getLocalLength() == size_t(max_owned_row_id_));
+    STK_ThrowRequire(owned_rhs.getLocalLength() == size_t(max_owned_row_id_));
     local_compute(cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));
     {
       stk::mesh::ProfilingBlock pfinner("export from owned-shared to owned");
@@ -117,16 +117,16 @@ MomentumLinearizedResidualOperator<p>::apply(
   double beta) const
 {
   stk::mesh::ProfilingBlock pf("MomentumLinearizedResidualOperator<p>::apply");
-  ThrowRequire(trans == Teuchos::NO_TRANS);
-  ThrowRequire(alpha == 1.0);
-  ThrowRequire(beta == 0.0);
+  STK_ThrowRequire(trans == Teuchos::NO_TRANS);
+  STK_ThrowRequire(alpha == 1.0);
+  STK_ThrowRequire(beta == 0.0);
   if (exporter_.getTargetMap()->isDistributed()) {
     {
       stk::mesh::ProfilingBlock pfinner("import into owned-shared from owned");
       cached_sln_.doImport(owned_sln, exporter_, Tpetra::INSERT);
     }
 
-    ThrowRequire(owned_rhs.getLocalLength() == size_t(max_owned_row_id_));
+    STK_ThrowRequire(owned_rhs.getLocalLength() == size_t(max_owned_row_id_));
     local_apply(
       cached_sln_.getLocalViewDevice(Tpetra::Access::ReadWrite),
       cached_rhs_.getLocalViewDevice(Tpetra::Access::ReadWrite));

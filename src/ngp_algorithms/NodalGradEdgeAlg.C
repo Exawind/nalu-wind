@@ -32,21 +32,21 @@ NodalGradEdgeAlg<PhiType, GradPhiType>::NodalGradEdgeAlg(
 {
   const int gradPhiSize = max_extent(*gradPhi, 0);
   if (dim1_ == 1) {
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       gradPhiSize == dim2_, "NodalGradEdgeAlg called with scalar input field '"
                               << phi->name()
                               << "' but with non-vector output field '"
                               << gradPhi->name() << "' of length "
                               << gradPhiSize << " (should be " << dim2_ << ")");
   } else if (dim1_ == dim2_) {
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       gradPhiSize == dim2_ * dim2_,
       "NodalGradBndryElemAlg called with vector input field '"
         << phi->name() << "' but with non-tensor output field '"
         << gradPhi->name() << "' of length " << gradPhiSize << " (should be "
         << dim2_ * dim2_ << ")");
   } else {
-    ThrowErrorMsg(
+    STK_ThrowErrorMsg(
       "NodalGradBndryElemAlg called with an input field '"
       << phi->name()
       << "' that is not a scalar or a vector.  "

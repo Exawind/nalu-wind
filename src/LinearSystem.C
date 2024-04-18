@@ -109,7 +109,7 @@ LinearSystem::useSegregatedSolver() const
 const LinearSolverConfig&
 LinearSystem::config() const
 {
-  ThrowAssert(linearSolver_ != nullptr);
+  STK_ThrowAssert(linearSolver_ != nullptr);
   return *(linearSolver_->getConfig());
 }
 

@@ -181,7 +181,7 @@ create_boundary_elements(
         subset->topology().rank() == side_rank &&
         !subset->topology().is_super_topology()) {
         soloFacePart[0] = super_subset_part(*subset);
-        ThrowRequire(soloFacePart[0] != nullptr);
+        STK_ThrowRequire(soloFacePart[0] != nullptr);
 
         const auto& buckets = bulk.get_buckets(side_rank, *subset);
         bucket_loop(buckets, [&](const stk::mesh::Entity side) {
@@ -189,7 +189,7 @@ create_boundary_elements(
             bulk.declare_solo_side(availableFaceIds[faceIdIndex], soloFacePart);
           stk::mesh::Entity superElem = sideToSuperElemMap.at(side);
 
-          ThrowRequireMsg(
+          STK_ThrowRequireMsg(
             bulk.num_elements(side) == 1u,
             "Multiple elements attached to boundary side");
           const auto sideOrdinal = bulk.begin_element_ordinals(side)[0];
@@ -245,7 +245,7 @@ perform_parallel_consolidation_of_node_ids(
     for (const auto& pair : connectivityMap) {
       auto entKey = bulk.entity_key(pair.first);
       const auto& nodeIds = pair.second;
-      ThrowRequire(entKey.rank() == domainTopoRank);
+      STK_ThrowRequire(entKey.rank() == domainTopoRank);
 
       std::vector<int> procs;
       bulk.comm_shared_procs(entKey, procs);
@@ -407,7 +407,7 @@ index_face_nodes(int i, int j, int len1D, stk::mesh::Permutation perm)
     break;
   }
   default: {
-    ThrowRequireMsg(false, "Invalid permutation of quad face");
+    STK_ThrowRequireMsg(false, "Invalid permutation of quad face");
   }
   }
 
@@ -433,8 +433,8 @@ add_edge_nodes_to_elem_connectivity(
       edgeConnectivity.at(edge_rels[edge_ord]);
     const std::vector<int>& ords = desc.edge_node_connectivities(edge_ord);
 
-    ThrowAssert(nodeIds.size() == ords.size());
-    ThrowAssert(static_cast<int>(ords.size()) == newNodesPerEdge);
+    STK_ThrowAssert(nodeIds.size() == ords.size());
+    STK_ThrowAssert(static_cast<int>(ords.size()) == newNodesPerEdge);
     for (int i = 0; i < newNodesPerEdge; ++i) {
       allNodes.at(ords.at(i)) =
         nodeIds.at(index_edge_nodes(i, newNodesPerEdge, perm[edge_ord]));
@@ -461,9 +461,9 @@ add_face_nodes_to_elem_connectivity(
       faceConnectivity.at(face_rels[face_ord]);
     const std::vector<int>& ords = desc.face_node_connectivities(face_index);
 
-    ThrowAssert(nodeIds.size() == ords.size());
-    ThrowAssert(desc.newNodesPerFace == static_cast<int>(ords.size()));
-    ThrowAssert(desc.newNodesPerFace == newNodesPerEdge * newNodesPerEdge);
+    STK_ThrowAssert(nodeIds.size() == ords.size());
+    STK_ThrowAssert(desc.newNodesPerFace == static_cast<int>(ords.size()));
+    STK_ThrowAssert(desc.newNodesPerFace == newNodesPerEdge * newNodesPerEdge);
 
     for (int j = 0; j < newNodesPerEdge; ++j) {
       for (int i = 0; i < newNodesPerEdge; ++i) {
@@ -505,7 +505,7 @@ destroy_entity(stk::mesh::BulkData& bulk, stk::mesh::Entity entity)
     for (unsigned irel = 0; irel < relatives.size(); ++irel) {
       bool del =
         bulk.destroy_relation(relatives[irel], entity, relative_ordinals[irel]);
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         del, "Failed to disconnect entity: " +
                std::to_string(bulk.identifier(entity)));
     }
@@ -524,10 +524,10 @@ destroy_entities(
     selector, bulk.get_buckets(rank, selector), entities);
 
   for (stk::mesh::Entity entity : entities) {
-    ThrowRequire(bulk.is_valid(entity));
+    STK_ThrowRequire(bulk.is_valid(entity));
     if (bulk.bucket(entity).owned()) {
       bool destroyed = destroy_entity(bulk, entity);
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         destroyed,
         "Failed to destroy entity: " + std::to_string(bulk.identifier(entity)));
     }
@@ -585,7 +585,8 @@ set_coordinates_hex(
   std::array<double, 3> physCoords;
 
   bucket_loop(elem_buckets, [&](const stk::mesh::Entity elem) {
-    ThrowAssert(desc.nodesPerElement == static_cast<int>(bulk.num_nodes(elem)));
+    STK_ThrowAssert(
+      desc.nodesPerElement == static_cast<int>(bulk.num_nodes(elem)));
     const stk::mesh::Entity* node_rels = bulk.begin_nodes(elem);
 
     for (int ord = 0; ord < 8; ++ord) {
@@ -626,13 +627,13 @@ make_base_nodes_to_elem_map_at_boundary(
   NodesElemMap nodesToElemMap;
   stk::mesh::EntityIdVector parents(baseNumNodes);
   bucket_loop(baseElemSideBuckets, [&](stk::mesh::Entity side) {
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       mesh.num_elements(side) == 1u,
       "Multiple elements attached to boundary side");
     const stk::mesh::Entity parent_elem = mesh.begin_elements(side)[0];
 
     const auto* node_rels = mesh.begin_nodes(parent_elem);
-    ThrowAssert(mesh.num_nodes(parent_elem) == parents.size());
+    STK_ThrowAssert(mesh.num_nodes(parent_elem) == parents.size());
 
     for (int j = 0; j < desc.nodesInBaseElement; ++j) {
       parents.at(j) = mesh.identifier(node_rels[j]);
@@ -653,7 +654,7 @@ exposed_side_to_super_elem_map(
    * Generates a map between each exposed face and the super-element
    * notionally attached to that exposed face.
    */
-  ThrowRequire(part_vector_is_valid_and_nonempty(
+  STK_ThrowRequire(part_vector_is_valid_and_nonempty(
     super_elem_part_vector(base_elem_mesh_parts)));
 
   const auto& superElemBuckets = bulk.get_buckets(
@@ -670,7 +671,7 @@ exposed_side_to_super_elem_map(
 
   bucket_loop(superElemBuckets, [&](stk::mesh::Entity superElem) {
     const auto* node_rels = bulk.begin_nodes(superElem);
-    ThrowAssert(
+    STK_ThrowAssert(
       static_cast<int>(bulk.num_nodes(superElem)) > baseNumNodes ||
       desc.polyOrder == 1);
 
@@ -685,7 +686,7 @@ exposed_side_to_super_elem_map(
     if (it != nodesToElemMap.end()) {
       const stk::mesh::Entity baseElem = it->second;
       auto result = elemToSuperElemMap.insert({baseElem, superElem});
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         result.second, "Multiple superElems with same parent nodes as the base "
                        "elements found");
     }
@@ -702,11 +703,11 @@ exposed_side_to_super_elem_map(
 
   bucket_loop(boundary_buckets, [&](stk::mesh::Entity side) {
     ;
-    ThrowAssert(bulk.num_elements(side) == 1u);
+    STK_ThrowAssert(bulk.num_elements(side) == 1u);
     const stk::mesh::Entity baseElem = bulk.begin_elements(side)[0];
     const stk::mesh::Entity superElem = elemToSuperElemMap.at(baseElem);
     auto result = exposedSideToSuperElemMap.insert({side, superElem});
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       result.second, "Multiple super elements associated with the same face");
   });
 

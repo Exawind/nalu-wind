@@ -1417,7 +1417,7 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
               "MomentumEQS::body_force_box: No force vector found");
           }
         } else if (srcName == "abl_forcing") {
-          ThrowRequireMsg(
+          STK_ThrowRequireMsg(
             ((NULL != realm_.ablForcingAlg_) &&
              (realm_.ablForcingAlg_->momentumForcingOn())),
             "ERROR! ABL Forcing parameters not "

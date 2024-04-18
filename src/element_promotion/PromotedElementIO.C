@@ -49,7 +49,7 @@ size_t
 num_sub_elements(
   const int dim, const stk::mesh::BucketVector& buckets, unsigned polyOrder)
 {
-  ThrowRequire(dim == 2 || dim == 3);
+  STK_ThrowRequire(dim == 2 || dim == 3);
   int faceSize = std::pow(polyOrder, dim - 1);
   int elemSize = std::pow(polyOrder, dim);
   auto side_rank =
@@ -90,11 +90,11 @@ PromotedElementIO::PromotedElementIO(
 
   databaseIO = Ioss::IOFactory::create(
     "exodus", fileName_, Ioss::WRITE_RESULTS, bulkData_.parallel(), properties);
-  ThrowRequire(databaseIO != nullptr && databaseIO->ok(true));
+  STK_ThrowRequire(databaseIO != nullptr && databaseIO->ok(true));
 
   output_ = std::make_unique<Ioss::Region>(
     databaseIO, "HighOrderOutput"); // sink for databaseIO
-  ThrowRequire(output_ != nullptr);
+  STK_ThrowRequire(output_ != nullptr);
 
   const stk::mesh::BucketVector& elem_buckets = bulkData_.get_buckets(
     stk::topology::ELEM_RANK, stk::mesh::selectUnion(baseParts));
@@ -103,10 +103,10 @@ PromotedElementIO::PromotedElementIO(
   std::vector<stk::mesh::EntityId> subElemIds;
 
   bulkData.generate_new_ids(stk::topology::ELEM_RANK, numSubElems, subElemIds);
-  ThrowRequire(subElemIds.size() == numSubElems);
+  STK_ThrowRequire(subElemIds.size() == numSubElems);
 
   superElemParts_ = super_elem_part_vector(baseParts);
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     part_vector_is_valid_and_nonempty(superElemParts_),
     "Not all element parts have a super-element mirror");
 
@@ -135,7 +135,7 @@ PromotedElementIO::write_database_data(double currentTime)
   nodeBlock_->get_field_data("ids", ids);
 
   for (const auto& pair : fields_) {
-    ThrowRequire(pair.second != nullptr);
+    STK_ThrowRequire(pair.second != nullptr);
     const stk::mesh::FieldBase& field = *pair.second;
     if (field.type_is<int>()) {
       put_data_on_node_block<int32_t>(*nodeBlock_, ids, field, nodeBuckets);
@@ -148,7 +148,7 @@ PromotedElementIO::write_database_data(double currentTime)
     } else if (field.type_is<double>()) {
       put_data_on_node_block<double>(*nodeBlock_, ids, field, nodeBuckets);
     } else {
-      ThrowRequireMsg(false, "Unsupported type for output");
+      STK_ThrowRequireMsg(false, "Unsupported type for output");
     }
   }
 
@@ -164,8 +164,8 @@ PromotedElementIO::put_data_on_node_block(
   const stk::mesh::FieldBase& field,
   const stk::mesh::BucketVector& buckets) const
 {
-  ThrowRequire(field.type_is<T>());
-  int fieldLength = field.max_size(stk::topology::NODE_RANK);
+  STK_ThrowRequire(field.type_is<T>());
+  int fieldLength = field.max_size();
   std::vector<T> flatArray(count_entities(buckets) * fieldLength);
 
   size_t index = 0;
@@ -198,10 +198,10 @@ PromotedElementIO::write_elem_block_definitions(
       auto block = std::make_unique<Ioss::ElementBlock>(
         databaseIO, baseElemPart->name(), baseElemPart->topology().name(),
         numSubElems);
-      ThrowRequireMsg(block != nullptr, "Element block creation failed");
+      STK_ThrowRequireMsg(block != nullptr, "Element block creation failed");
 
       auto result = elementBlockPointers_.insert({ip, block.get()});
-      ThrowRequireMsg(result.second, "Attempted to add redundant part");
+      STK_ThrowRequireMsg(result.second, "Attempted to add redundant part");
 
       output_->add(block.release());
     }
@@ -217,7 +217,7 @@ PromotedElementIO::write_node_block_definitions(
   auto nodeCount = count_entities(nodeBuckets);
   auto nodeBlock = std::make_unique<Ioss::NodeBlock>(
     databaseIO, "nodeblock", nodeCount, nDim_);
-  ThrowRequireMsg(nodeBlock != nullptr, "Node block creation failed");
+  STK_ThrowRequireMsg(nodeBlock != nullptr, "Node block creation failed");
   nodeBlock_ = nodeBlock.get();
   output_->add(nodeBlock.release());
 }
@@ -328,7 +328,7 @@ PromotedElementIO::add_fields(const std::vector<stk::mesh::FieldBase*>& fields)
       } else if (field.type_is<uint64_t>() || field.type_is<int64_t>()) {
         iossType = Ioss::Field::INT64;
       } else {
-        ThrowRequireMsg(
+        STK_ThrowRequireMsg(
           field.type_is<double>(),
           "Only (u)int32, (u)int64, and double fields supported");
       }
@@ -345,7 +345,7 @@ std::string
 PromotedElementIO::storage_name(const stk::mesh::FieldBase& field) const
 {
   std::string storageType;
-  switch (field.max_size(stk::topology::NODE_RANK)) {
+  switch (field.max_size()) {
   case 1: {
     storageType = "scalar";
     break;

@@ -76,7 +76,8 @@ get_coordinate_field(const stk::mesh::BulkData& bulk)
 {
   auto* coord = dynamic_cast<const stk::mesh::Field<double>*>(
     bulk.mesh_meta_data().coordinate_field());
-  ThrowRequireMsg(coord, "Model coordinates must be a double-valued vector");
+  STK_ThrowRequireMsg(
+    coord, "Model coordinates must be a double-valued vector");
   return *coord;
 }
 
@@ -92,7 +93,7 @@ write_element_block_definition(
       auto block = std::make_unique<Ioss::ElementBlock>(
         &io, subset->name(), subset->topology().name(),
         count_faces(bulk, *subset));
-      ThrowRequire(block);
+      STK_ThrowRequire(block);
       region.add(block.release());
     }
   }
@@ -111,7 +112,7 @@ write_node_block_definition(
   const auto nnodes = count_ent(buckets);
   const int dim = get_dimension(bulk);
   auto block = std::make_unique<Ioss::NodeBlock>(&io, block_name, nnodes, dim);
-  ThrowRequire(block);
+  STK_ThrowRequire(block);
   region.add(block.release());
 }
 
@@ -192,7 +193,7 @@ write_element_connectivity(
         }
       }
       auto block = region.get_element_block(subset->name());
-      ThrowRequire(block);
+      STK_ThrowRequire(block);
       block->put_field_data("ids", ids);
       block->put_field_data("connectivity", connectivity);
     }
@@ -207,14 +208,14 @@ put_data_on_node_block(
   const std::vector<int64_t>& ids,
   const stk::mesh::FieldBase& field)
 {
-  ThrowRequire(field.type_is<T>());
-  const int max_size = field.max_size(stk::topology::NODE_RANK);
+  STK_ThrowRequire(field.type_is<T>());
+  const int max_size = field.max_size();
   std::vector<T> flat_array(ids.size() * max_size, 0);
   for (decltype(ids.size()) k = 0; k < ids.size(); ++k) {
     const auto node = bulk.get_entity(stk::topology::NODE_RANK, ids[k]);
     const T* field_data = static_cast<T*>(stk::mesh::field_data(field, node));
     if (field_data) {
-      ThrowRequire(
+      STK_ThrowRequire(
         stk::mesh::field_scalars_per_entity(field, node) ==
         static_cast<unsigned>(max_size));
       for (int j = 0; j < max_size; ++j) {
@@ -250,7 +251,7 @@ SideWriter::SideWriter(
 
   auto database = Ioss::IOFactory::create(
     "exodus", fname, Ioss::WRITE_RESULTS, bulk.parallel(), prop);
-  ThrowRequire(database != nullptr && database->ok(true));
+  STK_ThrowRequire(database != nullptr && database->ok(true));
   output_ = std::make_unique<Ioss::Region>(database, "SideOutput");
 
   const std::string node_block_name("side_nodes");
@@ -287,7 +288,7 @@ SideWriter::write_database_data(double time)
     output_->begin_state(current_output_step);
     {
       for (auto* block : output_->get_node_blocks()) {
-        ThrowRequire(block);
+        STK_ThrowRequire(block);
         std::vector<int64_t> ids;
         block->get_field_data("ids", ids);
         for (const auto* field : fields_) {
@@ -309,9 +310,10 @@ SideWriter::add_fields(std::vector<const stk::mesh::FieldBase*> fields)
 
   for (auto* block : output_->get_node_blocks()) {
     for (const auto* field : fields_) {
-      ThrowRequireMsg(field->type_is<double>(), "only double fields supported");
+      STK_ThrowRequireMsg(
+        field->type_is<double>(), "only double fields supported");
       const size_t nb_size = block->get_property("entity_count").get_int();
-      switch (field->max_size(stk::topology::NODE_RANK)) {
+      switch (field->max_size()) {
       case 1: {
         Ioss::Field ioss_field(
           field->name(), Ioss::Field::DOUBLE, "scalar", Ioss::Field::TRANSIENT,

@@ -52,7 +52,7 @@ InterpActuatorDensity::operator()(int index) const
     double ws_coordinates[max_size], ws_density[max_size];
 
     // Check to make sure the size is sufficient
-    ThrowAssert(max_size >= 3 * nodesPerElem);
+    STK_ThrowAssert(max_size >= 3 * nodesPerElem);
 
     actuator_utils::gather_field(
       3, &ws_coordinates[0], *coordinates_, stkBulk_.begin_nodes(elem),
@@ -87,7 +87,7 @@ void
 ActSimpleUpdatePoints::operator()(int index) const
 {
 
-  ThrowAssert(turbId_ >= 0);
+  STK_ThrowAssert(turbId_ >= 0);
   const int pointId = index - offsets_(turbId_);
   auto point = Kokkos::subview(points_, index, Kokkos::ALL);
 
@@ -118,7 +118,7 @@ ActSimpleWriteToFile(
 
   if (actBulk.localTurbineId_ == NaluEnv::self().parallel_rank()) {
     std::ofstream outFile;
-    // ThrowErrorIf(NaluEnv::self().parallel_rank()!=0);
+    // STK_ThrowErrorIf(NaluEnv::self().parallel_rank()!=0);
 
     outFile.open(filename, std::ios_base::app);
     const int stop =

@@ -395,7 +395,7 @@ TiogaSTKIface::populate_overset_info()
   std::unordered_set<stk::mesh::EntityId> seenIDs;
 
   // Ensure that the oversetInfoVec has been cleared out
-  ThrowAssert(osetInfo.size() == 0);
+  STK_ThrowAssert(osetInfo.size() == 0);
 
   sierra::nalu::VectorFieldType* coords =
     meta_.get_field<double>(stk::topology::NODE_RANK, coordsName_);

@@ -48,7 +48,7 @@ field_axpby(
     stk::mesh::Bucket& b = *buckets[i];
     const stk::mesh::Bucket::size_type length = b.size();
     const size_t fieldSize = field_bytes_per_entity(xField, b) / sizeof(double);
-    ThrowAssert(
+    STK_ThrowAssert(
       fieldSize == field_bytes_per_entity(yField, b) / sizeof(double));
     const unsigned kmax = length * fieldSize;
     const double* x = (double*)stk::mesh::field_data(xField, b);
@@ -145,7 +145,7 @@ field_copy(
     stk::mesh::Bucket& b = *buckets[i];
     const stk::mesh::Bucket::size_type length = b.size();
     const size_t fieldSize = field_bytes_per_entity(xField, b) / sizeof(double);
-    ThrowAssert(
+    STK_ThrowAssert(
       fieldSize == field_bytes_per_entity(yField, b) / sizeof(double));
     const unsigned kmax = length * fieldSize;
     const double* x = (double*)stk::mesh::field_data(xField, b);

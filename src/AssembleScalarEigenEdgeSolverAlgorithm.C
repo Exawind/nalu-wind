@@ -214,7 +214,7 @@ AssembleScalarEigenEdgeSolverAlgorithm::execute()
       stk::mesh::Entity const* edge_node_rels = bulk_data.begin_nodes(edge);
 
       // sanity check on number or nodes
-      ThrowAssert(bulk_data.num_nodes(edge) == 2);
+      STK_ThrowAssert(bulk_data.num_nodes(edge) == 2);
 
       // pointer to edge area vector
       for (int j = 0; j < nDim; ++j)

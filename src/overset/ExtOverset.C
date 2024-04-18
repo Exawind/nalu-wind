@@ -181,7 +181,7 @@ ExtOverset::register_solution(const std::vector<std::string>& fnames)
   if (!hasOverset_)
     return ncomp;
 
-  ThrowAssert(fnames.size() > 0u);
+  STK_ThrowAssert(fnames.size() > 0u);
   // Store field names for update solution phase
   slnFieldNames_ = fnames;
 
@@ -206,7 +206,7 @@ ExtOverset::update_solution()
   if (!hasOverset_)
     return;
 
-  ThrowAssert(slnFieldNames_.size() > 0u);
+  STK_ThrowAssert(slnFieldNames_.size() > 0u);
 
 #ifdef NALU_USES_TIOGA
   for (auto* realm : time_.realmVec_) {

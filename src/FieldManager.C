@@ -19,7 +19,7 @@ FieldManager::FieldManager(stk::mesh::MetaData& meta, const int numStates)
 }
 
 bool
-FieldManager::field_exists(const std::string& name)
+FieldManager::field_exists(const std::string& name) const
 {
   auto definition = FieldRegistry::query(numDimensions_, numStates_, name);
 
