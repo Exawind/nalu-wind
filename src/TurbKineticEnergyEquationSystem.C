@@ -298,12 +298,18 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), tke_);
 
+        // hacky solution since updating everything to part vecs at once would be painful and error prone
+        stk::mesh::PartVector tempVec({part});
+
         switch (turbulenceModel_) {
         case TurbulenceModel::KSGS:
           nodeAlg.add_kernel<TKEKsgsNodeKernel>(realm_.meta_data());
           break;
         case TurbulenceModel::SST:
-          nodeAlg.add_kernel<TKESSTNodeKernel>(realm_.meta_data());
+          // should be able to keep creating actually since stk fields can be registered over and over as no-ops
+          // registration should still happen
+          nodeAlg.add_kernel<TKESSTNodeKernel>(
+            realm_.meta_data(), *(realm_.fieldManager_.get()), tempVec);
           break;
         case TurbulenceModel::SSTLR:
           nodeAlg.add_kernel<TKESSTLRNodeKernel>(realm_.meta_data());

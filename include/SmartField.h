@@ -445,11 +445,11 @@ struct MakeSmartField<DEVICE, ACCESS>
 };
 
 template <typename T, typename ACCESS>
-using SmartDeviceField = SmartField<T, DEVICE, ACCESS>;
+using SmartDeviceField = SmartField<stk::mesh::NgpField<T>, DEVICE, ACCESS>;
 template <typename T, typename ACCESS>
-using SmartHostField = SmartField<T, HOST, ACCESS>;
+using SmartHostField = SmartField<stk::mesh::HostField<T>, HOST, ACCESS>;
 template <typename T, typename ACCESS>
-using SmartLegacyField = SmartField<T, LEGACY, ACCESS>;
+using SmartLegacyField = SmartField<stk::mesh::Field<T>, LEGACY, ACCESS>;
 } // namespace sierra::nalu
 
 #endif

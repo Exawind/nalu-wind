@@ -256,40 +256,26 @@ public:
   TestKernelHex8Mesh()
     : comm_(MPI_COMM_WORLD), spatialDim_(3), solnOpts_(), coordinates_(nullptr)
   {
+    const int numStates = 3;
     stk::mesh::MeshBuilder meshBuilder(MPI_COMM_WORLD);
     meshBuilder.set_spatial_dimension(spatialDim_);
     bulk_ = meshBuilder.create();
     meta_ = &bulk_->mesh_meta_data();
     meta_->use_simple_fields();
+    fieldManager =
+      std::make_shared<sierra::nalu::FieldManager>(*meta_, numStates);
 
-    naluGlobalId_ = &meta_->declare_field<stk::mesh::EntityId>(
-      stk::topology::NODE_RANK, "nalu_global_id", 1);
-    tpetGlobalId_ = &meta_->declare_field<sierra::nalu::TpetIdType>(
-      stk::topology::NODE_RANK, "tpet_global_id", 1);
-    dnvField_ = &meta_->declare_field<double>(
-      stk::topology::NODE_RANK, "dual_nodal_volume", 3);
-    divMeshVelField_ = &meta_->declare_field<double>(
-      stk::topology::NODE_RANK, "div_mesh_velocity");
-    edgeAreaVec_ = &meta_->declare_field<double>(
-      stk::topology::EDGE_RANK, "edge_area_vector");
-    elementVolume_ =
-      &meta_->declare_field<double>(stk::topology::ELEM_RANK, "element_volume");
+    const stk::mesh::PartVector parts(1, &meta_->universal_part());
+
+    naluGlobalId_ = fieldManager->register_field<stk::mesh::EntityId>("nalu_global_id", parts);
+    tpetGlobalId_ = fieldManager->register_field<sierra::nalu::TpetIdType>("tpet_global_id", parts);
+    dnvField_ = fieldManager->register_field<double>("dual_nodal_volume", parts);
+    divMeshVelField_ = fieldManager->register_field<double>("div_mesh_velocity", parts);
+    edgeAreaVec_ = fieldManager->register_field<double>("edge_area_vector", parts);
+    elementVolume_ = fieldManager->register_field<double>("element_volume", parts);
+    // currently don't handle side ranks
     exposedAreaVec_ =
       &meta_->declare_field<double>(meta_->side_rank(), "exposed_area_vector");
-
-    stk::mesh::put_field_on_mesh(
-      *naluGlobalId_, meta_->universal_part(), nullptr);
-    stk::mesh::put_field_on_mesh(
-      *tpetGlobalId_, meta_->universal_part(), nullptr);
-    stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
-    stk::mesh::put_field_on_mesh(
-      *divMeshVelField_, meta_->universal_part(), nullptr);
-    stk::mesh::put_field_on_mesh(
-      *edgeAreaVec_, meta_->universal_part(), spatialDim_, nullptr);
-    stk::io::set_field_output_type(
-      *edgeAreaVec_, stk::io::FieldOutputType::VECTOR_3D);
-    stk::mesh::put_field_on_mesh(
-      *elementVolume_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
       *exposedAreaVec_, meta_->universal_part(),
       spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
@@ -329,6 +315,7 @@ public:
   unsigned spatialDim_;
   stk::mesh::MetaData* meta_;
   std::shared_ptr<stk::mesh::BulkData> bulk_;
+  std::shared_ptr<sierra::nalu::FieldManager> fieldManager;
   stk::mesh::PartVector partVec_;
 
   sierra::nalu::SolutionOptions solnOpts_;
@@ -361,38 +348,21 @@ class LowMachKernelHex8Mesh : public TestKernelHex8Mesh
 {
 public:
   LowMachKernelHex8Mesh()
-    : TestKernelHex8Mesh(),
-      velocity_(
-        &meta_->declare_field<double>(stk::topology::NODE_RANK, "velocity", 2)),
-      dpdx_(&meta_->declare_field<double>(stk::topology::NODE_RANK, "dpdx", 2)),
-      density_(
-        &meta_->declare_field<double>(stk::topology::NODE_RANK, "density", 2)),
-      pressure_(
-        &meta_->declare_field<double>(stk::topology::NODE_RANK, "pressure", 2)),
-      Udiag_(&meta_->declare_field<double>(
-        stk::topology::NODE_RANK, "momentum_diag", 2)),
-      velocityBC_(
-        &meta_->declare_field<double>(stk::topology::NODE_RANK, "velocity_bc")),
-      dynP_(
-        &meta_->declare_field<double>(meta_->side_rank(), "dynamic_pressure"))
+    : TestKernelHex8Mesh()
   {
-    stk::mesh::put_field_on_mesh(
-      *velocity_, meta_->universal_part(), spatialDim_, nullptr);
-    stk::io::set_field_output_type(
-      *velocity_, stk::io::FieldOutputType::VECTOR_3D);
-    stk::mesh::put_field_on_mesh(
-      *dpdx_, meta_->universal_part(), spatialDim_, nullptr);
-    stk::io::set_field_output_type(*dpdx_, stk::io::FieldOutputType::VECTOR_3D);
-    stk::mesh::put_field_on_mesh(*density_, meta_->universal_part(), nullptr);
-    stk::mesh::put_field_on_mesh(*pressure_, meta_->universal_part(), nullptr);
-    stk::mesh::put_field_on_mesh(*Udiag_, meta_->universal_part(), nullptr);
-    stk::mesh::put_field_on_mesh(
-      *velocityBC_, meta_->universal_part(), spatialDim_, nullptr);
-    stk::io::set_field_output_type(
-      *velocityBC_, stk::io::FieldOutputType::VECTOR_3D);
-    stk::mesh::put_field_on_mesh(
-      *dynP_, meta_->universal_part(), sierra::nalu::AlgTraitsQuad4::numScsIp_,
-      nullptr);
+      const stk::mesh::PartVector parts(1, &meta_->universal_part());
+      velocity_ = fieldManager->register_field<double>("velocity", parts);
+      dpdx_ = fieldManager->register_field<double>("dpdx", parts);
+      density_ = fieldManager->register_field<double>("density", parts);
+      pressure_ = fieldManager->register_field<double>("pressure", parts);
+      Udiag_ = fieldManager->register_field<double>("momentum_diag", parts);
+      velocityBC_ = fieldManager->register_field<double>("velocity_bc", parts);
+
+      // currently don't handle side ranks
+      dynP_ =
+        &meta_->declare_field<double>(meta_->side_rank(), "dynamic_pressure");
+      stk::mesh::put_field_on_mesh(
+        *dynP_, meta_->universal_part(), sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
   }
 
   virtual ~LowMachKernelHex8Mesh() {}

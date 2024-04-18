@@ -37,7 +37,7 @@ FieldManager::register_field(
   const stk::mesh::PartVector& parts,
   const int numStates,
   const int numComponents,
-  const void* init_val) const
+  const void* initVal) const
 {
   auto definition = FieldRegistry::query(numDimensions_, numStates_, name);
 
@@ -49,8 +49,9 @@ FieldManager::register_field(
         numComponents ? numComponents : def.num_components;
       const FieldLayout layout = def.layout;
 
-      const val_type* init = static_cast<const val_type*>(init_val);
+      const val_type* init = static_cast<const val_type*>(initVal);
       auto* id = &(meta_.declare_field<val_type>(def.rank, name, num_states));
+
       for (auto&& part : parts) {
         stk::mesh::put_field_on_mesh(*id, *part, num_components, init);
 
