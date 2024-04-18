@@ -12,6 +12,7 @@
 #include "matrix_free/LinearAreas.h"
 #include "matrix_free/LinearVolume.h"
 #include "matrix_free/KokkosViewTypes.h"
+#include "SetOffsetsAndCoordinates.h"
 
 #include "gtest/gtest.h"
 #include "mpi.h"
@@ -34,31 +35,6 @@ make_map()
     Teuchos::make_rcp<Teuchos::MpiComm<int>>(MPI_COMM_WORLD));
 }
 
-template <int p>
-void
-set_aux_fields(elem_offset_view<p> offsets, vector_view<p> coordinates)
-{
-  constexpr auto nodes = GLL<p>::nodes;
-  Kokkos::parallel_for(
-    num_elems, KOKKOS_LAMBDA(int index) {
-      for (int k = 0; k < p + 1; ++k) {
-        const auto cz = nodes[k];
-        for (int j = 0; j < p + 1; ++j) {
-          const auto cy = nodes[j];
-          for (int i = 0; i < p + 1; ++i) {
-            const auto cx = nodes[i];
-            coordinates(index, k, j, i, 0) = cx;
-            coordinates(index, k, j, i, 1) = cy;
-            coordinates(index, k, j, i, 2) = cz;
-            offsets(index, 0, k, j, i) = 1 + index * simd_len * nodes_per_elem +
-                                         k * (order + 1) * (order + 1) +
-                                         j * (order + 1) + i;
-          }
-        }
-      }
-    });
-}
-
 } // namespace test_gradient
 class GradientResidualFixture : public ::testing::Test
 {
@@ -69,7 +45,7 @@ public:
     Kokkos::deep_copy(dqdx, 0.0);
 
     vector_view<order> coordinates{"coordinates", num_elems};
-    test_gradient::set_aux_fields<order>(offsets, coordinates);
+    set_offsets_and_coordinates<order>(offsets, coordinates, num_elems);
 
     volume_metric = geom::volume_metric<order>(coordinates);
     area_metric = geom::linear_areas<order>(coordinates);
