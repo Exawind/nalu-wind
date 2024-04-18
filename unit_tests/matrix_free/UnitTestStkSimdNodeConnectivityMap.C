@@ -82,9 +82,10 @@ protected:
         stk::topology::NODE_RANK, id, stk::mesh::PartVector{});
     }
     auto elem = stk::mesh::declare_element(bulk, block_1, 1, nodeIds);
-    stk::mesh::create_all_sides(bulk, block_1, allSurfaces, false);
 
     bulk.modification_end();
+
+    stk::mesh::create_all_sides(bulk, block_1, allSurfaces, false);
 
     auto surfaceSelector = stk::mesh::selectUnion(allSurfaces);
     stk::mesh::EntityVector all_faces;

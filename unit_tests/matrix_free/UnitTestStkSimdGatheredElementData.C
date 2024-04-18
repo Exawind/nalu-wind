@@ -105,9 +105,10 @@ protected:
     }
     auto elem = stk::mesh::declare_element(
       bulk, block_1, bulk.parallel_rank() + 1, nodeIds);
-    stk::mesh::create_all_sides(bulk, block_1, allSurfaces, false);
 
     bulk.modification_end();
+
+    stk::mesh::create_all_sides(bulk, block_1, allSurfaces, false);
 
     std::vector<std::vector<double>> nodeLocations = {
       {-1, -1, -1}, {+1, -1, -1}, {+1, +1, -1}, {-1, +1, -1},
