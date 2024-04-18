@@ -14,6 +14,7 @@
 #include "matrix_free/LinearDiffusionMetric.h"
 #include "matrix_free/LinearAdvectionMetric.h"
 #include "matrix_free/KokkosViewTypes.h"
+#include "SetOffsetsAndCoordinates.h"
 
 #include "Kokkos_Core.hpp"
 #include "Teuchos_RCP.hpp"
@@ -44,38 +45,13 @@ make_map()
     Teuchos::make_rcp<Teuchos::MpiComm<int>>(MPI_COMM_WORLD));
 }
 
-template <int p>
-void
-set_aux_fields(elem_offset_view<p> offsets, vector_view<p> coordinates)
-{
-  constexpr auto nodes = GLL<p>::nodes;
-  Kokkos::parallel_for(
-    num_elems, KOKKOS_LAMBDA(int index) {
-      for (int k = 0; k < p + 1; ++k) {
-        const auto cz = nodes[k];
-        for (int j = 0; j < p + 1; ++j) {
-          const auto cy = nodes[j];
-          for (int i = 0; i < p + 1; ++i) {
-            const auto cx = nodes[i];
-            coordinates(index, k, j, i, 0) = cx;
-            coordinates(index, k, j, i, 1) = cy;
-            coordinates(index, k, j, i, 2) = cz;
-            offsets(index, 0, k, j, i) = 1 + index * simd_len * nodes_per_elem +
-                                         k * (order + 1) * (order + 1) +
-                                         j * (order + 1) + i;
-          }
-        }
-      }
-    });
-}
-
 } // namespace test_momentum
 class MomentumResidualFixture : public ::testing::Test
 {
 public:
   MomentumResidualFixture()
   {
-    test_momentum::set_aux_fields<order>(offsets, xc);
+    set_offsets_and_coordinates<order>(offsets, xc, num_elems);
 
     scalar_view<order> pressure{"pressure", num_elems};
     Kokkos::deep_copy(pressure, 0);
