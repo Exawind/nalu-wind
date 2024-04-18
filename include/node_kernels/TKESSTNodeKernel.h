@@ -28,7 +28,7 @@ class TKESSTNodeKernel : public NGPNodeKernel<TKESSTNodeKernel>
 {
 public:
   TKESSTNodeKernel(
-    const stk::mesh::MetaData&, const FieldManager&, stk::mesh::Part* part);
+    const stk::mesh::MetaData&, const FieldManager&, stk::mesh::PartVector& parts);
 
   TKESSTNodeKernel() = delete;
 
@@ -44,6 +44,7 @@ public:
     const stk::mesh::FastMeshIndex&) override;
 
 private:
+  // TODO can we make these SmartFields? Do we need to? review how kernels manage syncs
   stk::mesh::NgpField<double> tke_;
   stk::mesh::NgpField<double> sdr_;
   stk::mesh::NgpField<double> density_;

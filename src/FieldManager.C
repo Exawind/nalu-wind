@@ -49,7 +49,7 @@ FieldManager::register_field(
         numComponents ? numComponents : def.num_components;
       const FieldLayout layout = def.layout;
 
-      const val_type* init = static_cast<const val_type*>(init_val);
+      const val_type* init = static_cast<const val_type*>(initVal);
       auto* id = &(meta_.declare_field<val_type>(def.rank, name, num_states));
 
       for (auto&& part : parts) {

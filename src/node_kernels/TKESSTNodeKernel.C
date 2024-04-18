@@ -22,15 +22,15 @@ namespace nalu {
 TKESSTNodeKernel::TKESSTNodeKernel(
   const stk::mesh::MetaData& meta,
   const FieldManager& manager,
-  stk::mesh::Part* part)
+  stk::mesh::PartVector& parts)
   : NGPNodeKernel<TKESSTNodeKernel>(), nDim_(meta.spatial_dimension())
 {
-  manager.register_field("turbulent_ke", part);
-  manager.register_field("specific_dissipation_rate", part);
-  manager.register_field("density", part);
-  manager.register_field("turbulent_viscosity", part);
-  manager.register_field("dudx", part);
-  manager.register_field("dual_nodal_volume", part);
+  manager.register_field("turbulent_ke", parts);
+  manager.register_field("specific_dissipation_rate", parts);
+  manager.register_field("density", parts);
+  manager.register_field("turbulent_viscosity", parts);
+  manager.register_field("dudx", parts);
+  manager.register_field("dual_nodal_volume", parts);
 }
 
 void
@@ -38,12 +38,12 @@ TKESSTNodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = *(realm.fieldManager_.get());
 
-  tke_ = fieldMgr.get_ngp_field_ptr("turbulent_ke");
-  sdr_ = fieldMgr.get_ngp_field_ptr("specific_dissipation_rate");
-  density_ = fieldMgr.get_ngp_field_ptr("density");
-  tvisc_ = fieldMgr.get_ngp_field_ptr("turbulent_viscosity");
-  dudx_ = fieldMgr.get_ngp_field_ptr("dudx");
-  dualNodalVolume_ = fieldMgr.get_ngp_field_ptr("dual_nodal_volume");
+  tke_ = fieldMgr.get_ngp_field_ptr<double>("turbulent_ke");
+  sdr_ = fieldMgr.get_ngp_field_ptr<double>("specific_dissipation_rate");
+  density_ = fieldMgr.get_ngp_field_ptr<double>("density");
+  tvisc_ = fieldMgr.get_ngp_field_ptr<double>("turbulent_viscosity");
+  dudx_ = fieldMgr.get_ngp_field_ptr<double>("dudx");
+  dualNodalVolume_ = fieldMgr.get_ngp_field_ptr<double>("dual_nodal_volume");
 
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);

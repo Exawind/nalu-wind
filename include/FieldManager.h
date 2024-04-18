@@ -123,12 +123,7 @@ public:
     const stk::mesh::PartVector& parts,
     const int numStates = 0,
     const int numComponents = 0,
-    const void* initVal = nullptr) const
-  {
-    stk::mesh::PartVector parts;
-    parts.push_back(part);
-    register_field(name, parts, numStates, numComponents, initVal);
-  }
+    const void* initVal = nullptr) const;
     
 
   /// Given the named field that has already been registered on the CPU
