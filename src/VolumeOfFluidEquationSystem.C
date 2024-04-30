@@ -377,73 +377,21 @@ VolumeOfFluidEquationSystem::register_wall_bc(
   const stk::topology& /*theTopo*/,
   const WallBoundaryConditionData& wallBCData)
 {
-  // algorithm type
-  const AlgorithmType algType = WALL;
+  // Allow slip of VOF at walls 
+  const AlgorithmType algType = SYMMETRY;
 
   ScalarFieldType& vofNp1 = volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType& dvofdxNone =
     dvolumeOfFluiddx_->field_of_state(stk::mesh::StateNone);
 
-  stk::mesh::MetaData& meta_data = realm_.meta_data();
-
-  // register boundary data; vof_bc
-  ScalarFieldType* theBcField = &(meta_data.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "vof_bc"));
-  stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
-
-  // extract the value for user specified tke and save off the AuxFunction
-  WallUserData userData = wallBCData.userData_;
-  std::string vofName = "volume_of_fluid";
-  UserDataType theDataType = get_bc_data_type(userData, vofName);
-
+  // extract the value for user specified volume_of_fluid and save off the
+  // AuxFunction
   AuxFunction* theAuxFunc = NULL;
-
-  if (CONSTANT_UD == theDataType) {
-    VolumeOfFluid volumeOfFluid = userData.volumeOfFluid_;
-    std::vector<double> userSpec(1);
-    userSpec[0] = volumeOfFluid.volumeOfFluid_;
-    theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
-
-  } else if (FUNCTION_UD == theDataType) {
-    throw std::runtime_error("VolumeOfFluidEquationSystem::register_wall_bc: "
-                             "limited functions supported");
-  } else {
-    throw std::runtime_error("VolumeOfFluidEquationSystem::register_wall_bc: "
-                             "only constant functions supported");
-  }
-
-  // bc data alg
-  AuxFunctionAlgorithm* auxAlg = new AuxFunctionAlgorithm(
-    realm_, part, theBcField, theAuxFunc, stk::topology::NODE_RANK);
-
-  // how to populate the field?
-  if (userData.externalData_) {
-    // xfer will handle population; only need to populate the initial value
-    realm_.initCondAlg_.push_back(auxAlg);
-  } else {
-    // put it on bcData
-    bcDataAlg_.push_back(auxAlg);
-  }
-
-  // copy vof_bc to vof_transition np1...
-  CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
-    realm_, part, theBcField, &vofNp1, 0, 1, stk::topology::NODE_RANK);
-  bcDataMapAlg_.push_back(theCopyAlg);
+  Algorithm* auxAlg = NULL;
 
   // non-solver; dvofdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
     algType, part, "vof_nodal_grad", &vofNp1, &dvofdxNone, edgeNodalGradient_);
-
-  // Dirichlet bc
-  std::map<AlgorithmType, SolverAlgorithm*>::iterator itd =
-    solverAlgDriver_->solverDirichAlgMap_.find(algType);
-  if (itd == solverAlgDriver_->solverDirichAlgMap_.end()) {
-    DirichletBC* theAlg =
-      new DirichletBC(realm_, this, part, &vofNp1, theBcField, 0, 1);
-    solverAlgDriver_->solverDirichAlgMap_[algType] = theAlg;
-  } else {
-    itd->second->partVec_.push_back(part);
-  }
 }
 
 //--------------------------------------------------------------------------
