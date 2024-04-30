@@ -1139,6 +1139,273 @@ Time-step Control Options
 
 .. include:: ./turbine_modeling.rst
 
+Fluid-Structure Interaction
+```````````````````````````
+
+.. inpfile:: openfast_fsi
+
+   The ``openfast_fsi`` subsection defines parameters used when
+   coupling with openfast for FSI simulations.  A sample section
+   is shown below.
+
+   .. code-block:: yaml
+
+    openfast_fsi:
+      n_turbines_glob: 1
+      debug:    False
+      sim_start: trueRestart
+      t_start: 4.958677685950414
+      t_max: 600.55
+      n_checkpoint: 1440
+      dt_FAST: 0.0008608815426997245
+      Turbine0:
+        turbine_base_pos: [1800, 1800, 0]
+        turbine_hub_pos: [1795, 1800, 90]
+        restart_filename: "nrel5mw.5760"
+        sim_type: "ext-loads"
+        blade_parts:
+          - ["blade1-HEX"]
+          - ["blade2-HEX"]
+          - ["blade3-HEX"]
+        blade_boundary_parts:
+          - ["blade1"]
+          - ["blade2"]
+          - ["blade3"]
+        az_blend_mean: 18.84955592  # radians
+        az_blend_delta: 1.570796327 # radians
+        vel_mean: 11.4
+        wind_dir: 240.0 # degrees
+        z_ref: 90.0
+        shear_exp: 0.0
+
+        deflection_ramping:
+          enable_temporal_ramping: true
+          enable_theta_ramping: false
+          enable_span_ramping: false
+          span_ramp_distance: 4.0
+          temporal_ramp_start: 0.0
+          temporal_ramp_end: 0.5
+          theta_ramp_span: 30.0 # degrees
+          zero_theta_ramp_angle: 58.0 # degrees
+
+
+.. inpfile:: n_turbines_glob
+
+   An integer indicating the total number of turbines to be used with FSI.
+
+.. inpfile:: debug
+
+   A boolean flag that controls additional checks and printing of
+   additional information, which is helpful when troubleshooting a
+   simulation.
+
+.. inpfile:: sim_start
+
+   String indicating how OpenFAST should start.  For FSI
+   simulations, we suggest that the user set this to
+   ``trueRestart`` (no quotes).
+
+.. inpfile:: t_start
+
+   The start time of the FSI simulation.  This should be an
+   integer multiple of ``dt_FAST``, and should match ``t_end``
+   in the OpenFAST driver file.  Note that OpenFAST and
+   Nalu-Wind record time differently, so this variable will
+   not necessarily fit with the parameters in the
+   ``Time_Integrators`` section.
+
+.. inpfile:: t_max
+
+   The FSI simulation will end if the simulation time exceeds
+   this value.
+
+.. inpfile:: n_checkpoint
+
+   An integer indicating the frequency with which checkpoint files
+   will be written.  That is, a checkpoint will be written every
+   ``n_checkpoint`` timesteps.  Commonly this is set to correspond
+   to the number of steps in one rotor revolution.
+
+.. inpfile:: dt_FAST
+
+   The timestep used by OpenFAST for the FSI simulation.  This should
+   match ``DT`` in the OpenFAST input file (with extension .fst).
+   Commonly, this is 1/4 of the driver/Nalu/AMR-Wind timestep.
+
+.. inpfile:: turbine_name
+
+   This subsection includes parameters for a particular turbine.  Any
+   name may be provided by the user.  In the above example, the name
+   ``Turbine0`` was provided.  In the following, any variable appearing
+   in this subsection will be denoted ``turbine_name.variable_name`` for
+   clarity, but only the variable name should be included in the input
+   file.
+
+.. inpfile:: turbine_name.turbine_base_pos
+
+   Real vector indicating the location of the base of the tower.
+   This should match the variable with the same name in the OpenFAST
+   driver input file (with extension .yaml).
+
+.. inpfile:: turbine_name.turbine_hub_pos
+
+   Real vector indicating the location of the hub.
+   This should match the variable with the same name in the OpenFAST
+   driver input file (with extension .yaml).  Note that any height
+   change due to rotor tilt should be included in this variable, but
+   the effect of yaw should not be included.
+
+.. inpfile:: turbine_name.restart_filename
+
+   String indicating the OpenFAST checkpoint file
+   that the FSI simulation will start from.  Do not include the
+   extension (.chkp).  This variable will have the format
+   ``"name.integer"``, where the ``integer`` is the number of steps taken
+   in the OpenFAST standalone simulation.  This should be equal to
+   ``t_end`` divided by ``dt_FAST`` from the OpenFAST standalone run.
+
+.. inpfile:: turbine_name.sim_type
+
+   String indicating the type of OpenFAST simulation.
+   For FSI simulations, this should always be set to ``"ext-loads"``.
+
+.. inpfile:: turbine_name.blade_parts
+
+   List of strings indicating the mesh element blocks
+   corresponding to each of the blades.
+
+.. inpfile:: turbine_name.tower_parts
+
+   List of strings indicating the mesh element blocks
+   corresponding to the tower.
+
+.. inpfile:: turbine_name.blade_boundary_parts
+
+   List of strings indicating the mesh sidesets
+   corresponding to the wall boundaries of each of the blades.
+
+.. inpfile:: turbine_name.tower_boundary_parts
+
+   List of strings indicating the mesh sidesets
+   corresponding to the wall boundaries of the tower.
+
+.. inpfile:: turbine_name.az_blend_mean
+
+   Real variable (in radians) indicating the mean angular position for the load blending.
+   The loads provided to BeamDyn are a weighted average of the loads
+   provided by AeroDyn and the true CFD loads provided by Nalu-Wind
+   during startup to help with stability while the CFD flow field develops around
+   the turbine structure.
+   The weight of the Nalu-Wind contribution takes the form
+   :math:`\frac{1}{2} \left[1+\text{tanh}\left(\left(\phi-\phi_\text{mean}\right)/\phi_\text{delta}\right)\right]`,
+   where :math:`\phi` is the angle that the turbine has rotated through
+   (including any initial OpenFAST runs),
+   :math:`\phi_\text{mean}` is the value of ``az_blend_mean``, and
+   :math:`\phi_\text{delta}` is the value of ``az_blend_delta``.
+
+.. inpfile:: turbine_name.az_blend_delta
+
+   Real variable (in radians) indicating the width for load blending.
+   See the entry for ``az_blend_mean`` above for a complete definition.
+
+.. inpfile:: turbine_name.vel_mean
+
+   Real variable indicating the mean wind speed at height ``z_ref``.  This
+   should correspond to the variable with the same name in the OpenFAST
+   driver input file (with extension .yaml).
+
+.. inpfile:: turbine_name.wind_dir
+
+   Real variable indicating the angle of the incoming wind in degrees.  The direction
+   the wind is heading is measured clockwise from South.  For example, wind
+   heading South is 0 degrees, and wind heading East is 270 degrees.  By convention,
+   the x-axis points East, and the y-axis points North.
+   This should match the variable with the same name in the OpenFAST driver input
+   file (with extension .yaml).  If the turbine is intended to be aligned with
+   the flow, the ``NacYaw`` variable found in the OpenFAST Elastodyn file
+   should be 270 degrees minus ``wind_dir``.  For example, if the wind is heading East,
+   ``NacYaw`` will be 0 degrees.
+
+.. inpfile:: turbine_name.z_ref
+
+   Real variable indicating the reference height at which ``vel_mean`` and
+   ``wind_dir`` apply.  Often corresponds to the hub height of the turbine.
+
+.. inpfile:: turbine_name.shear_exp
+
+   Real variable indicating the exponent used in a power-law approximation
+   of the incoming ABL.  This variable should match the variable with the same
+   name in the OpenFAST driver input file (with extension .yaml).
+
+.. inpfile:: turbine_name.deflection_ramping
+
+   The ``deflection_ramping`` sub-subsection controls the temporal and spatial
+   ramping of blade deflections applied in Nalu-Wind.  The temporal ramping enables a smooth
+   transition for the blades from a rigid body motion based on the hub motion to the
+   full blade deflections, and improves the stability of the simulation
+   during startup.  The span ramping enables the root section
+   of the blades (which are typically circular) to remain undeformed.  The theta ramping
+   improves the quality of the elements near the mesh interface between blades.
+   Note that the total deflection ramping factor will be the product of the temporal,
+   theta, and span ramping factors.  This sub-subsection should be provided for each turbine.
+
+.. inpfile:: deflection_ramping.enable_temporal_ramping
+
+   Boolean variable indicating whether temporal deflection ramping should be used.
+
+.. inpfile:: deflection_ramping.enable_theta_ramping
+
+   Boolean variable indicating whether spatial deflection ramping with respect to
+   the circumferential direction should be used.
+
+.. inpfile:: deflection_ramping.enable_span_ramping
+
+   Boolean variable indicating whether spatial deflection ramping with respect to
+   the spanwise direction should be used.
+
+.. inpfile:: deflection_ramping.span_ramp_distance
+
+   Real variable indicating the distance from the root over which to ramp deflections
+   if ``enable_span_ramping`` is set to true.  Distance is measured in the same units
+   as the mesh (meters in most cases).
+
+.. inpfile:: deflection_ramping.temporal_ramp_start
+
+   Real variable indicating the time at which temporal ramping should begin.
+   Prior to this time, zero blade deflections will be provided.  Note that this
+   should correspond to time as recorded by Nalu-Wind and described in the
+   ``Time_Integrators`` section, not as recorded by OpenFAST.  Hence, this will
+   not correspond to ``t_start`` above.
+
+.. inpfile:: deflection_ramping.temporal_ramp_end
+
+   Real variable indicating the time at which temporal ramping should end.
+   After this time, full blade deflections will be provided.  Note that this
+   should correspond to time as recorded by Nalu-Wind and described in the
+   ``Time_Integrators`` section, not as recorded by OpenFAST.
+
+.. inpfile:: deflection_ramping.theta_ramp_span
+
+   Real variable (in degrees) indicating the span of the circumferenial sector over which
+   theta ramping is applied.  See Figure 1 for an explanation of the theta
+   ramping parameters, where :math:`\alpha` is the weight coefficient for the theta
+   ramping.  The total deflection ramping is the product of the theta, span,
+   and temporal ramping.
+
+   .. figure:: figures/ramp.png
+      :align: center
+
+      Explanation of the theta ramping parameters.
+
+.. inpfile:: deflection_ramping.zero_theta_ramp_angle
+
+   Real variable (in degrees) indicating the location of the beginning of the
+   circumferential sector over which no deflections are applied,
+   and the end of the sector over which deflections are ramped.
+   See Figure 1 for an explanation of the theta ramping parameters,
+   where :math:`\alpha` is the weight coefficient for the theta ramping.
+   The total deflection ramping is the product of the theta, span,
+   and temporal ramping.
 
 Turbulence averaging
 ````````````````````

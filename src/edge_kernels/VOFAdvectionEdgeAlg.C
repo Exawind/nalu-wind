@@ -92,10 +92,15 @@ VOFAdvectionEdgeAlg::execute()
   const double eps = 1.0e-11;
   const double gradient_eps = 1.0e-9;
 
+  const double dt = realm_.get_time_step();
+
   const int ndim = realm_.meta_data().spatial_dimension();
 
   const DblType relaxFac =
     realm_.solutionOptions_->get_relaxation_factor("volume_of_fluid");
+
+  const DblType desired_width = 
+    realm_.solutionOptions_->interface_width_;
 
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
@@ -111,8 +116,11 @@ VOFAdvectionEdgeAlg::execute()
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
+
   auto velocity_field_ =
     meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
+
+  auto smoothVof = fieldMgr.get_field<double>(get_field_ordinal(meta_data, "level_set"));
 
   const stk::mesh::Selector sel =
     (meta_data.locally_owned_part() | meta_data.globally_shared_part()) &
@@ -139,6 +147,7 @@ VOFAdvectionEdgeAlg::execute()
   stk::all_reduce_max(
     NaluEnv::self().parallel_comm(), &local_max_velocity, &global_max_velocity,
     1);
+
   run_algorithm(
     realm_.bulk_data(),
     KOKKOS_LAMBDA(
@@ -164,6 +173,7 @@ VOFAdvectionEdgeAlg::execute()
 
       // Advective flux
       const DblType qIp = 0.5 * (qNp1R + qNp1L);
+      const DblType qIp_smooth = 0.5 * (smoothVof.get(nodeL,0) + smoothVof.get(nodeR,0));
 
       const DblType adv_flux = vdot * qIp;
       smdata.rhs(0) -= adv_flux;
@@ -177,11 +187,28 @@ VOFAdvectionEdgeAlg::execute()
       smdata.lhs(1, 1) -= alhsfac / relaxFac;
       smdata.lhs(0, 1) += alhsfac;
 
-      // Compression + Diffusion term
-      // Hard coded 5.0 value comes from Jain, 2022 based on
-      // enforcing bounds of VOF function to [0,1] while maintaining
-      // interface that is approx ~2 cells thick.
-      const DblType velocity_scale = global_max_velocity * 5.0;
+      // Compression + Diffusion terms
+      //
+      DblType dOmegadxMag = 0.0;
+      DblType interface_gradient[3] = {0.0, 0.0, 0.0};
+
+      for (int j = 0; j < ndim; ++j) {
+        interface_gradient[j] = 0.5 * (dqdx.get(nodeL, j) + dqdx.get(nodeR, j));
+      }
+
+      DblType interface_normal[3] = {0.0, 0.0, 0.0};
+
+      for (int j = 0; j < ndim; ++j)
+        dOmegadxMag += interface_gradient[j] * interface_gradient[j];
+
+      dOmegadxMag = stk::math::sqrt(dOmegadxMag);
+
+      // No gradient == no interface
+      if (dOmegadxMag < gradient_eps)
+        return;
+
+      for (int d = 0; d < ndim; ++d)
+        interface_normal[d] = interface_gradient[d] / dOmegadxMag;
 
       DblType axdx = 0.0;
       DblType asq = 0.0;
@@ -194,6 +221,66 @@ VOFAdvectionEdgeAlg::execute()
         asq += av[d] * av[d];
         axdx += av[d] * dxj;
       }
+
+
+
+      if (desired_width > 0.0) {
+
+        DblType penalty_force = 0.0;
+        DblType velocity_scale = desired_width;
+
+        const DblType dq = stk::math::abs(qIp - 0.5) - stk::math::abs(qIp_smooth-0.5);
+
+
+        for (int d = 0; d < ndim; ++d)
+          penalty_force = qIp * ( 1.0 - qIp) *
+            interface_normal[d] * av[d] * velocity_scale;
+
+        massForcedFlowRate.get(edge,0) = penalty_force *
+          (density_liquid_ - density_gas_);
+
+        smdata.rhs(0) -= penalty_force;
+        smdata.rhs(1) += penalty_force;
+
+        // Lag terms here to approximate matrix 
+        DblType slhsfac = 0.0;
+        for (int d = 0; d < ndim; ++d)
+          slhsfac += 0.5 * interface_normal[d] *
+                 (1.0 - qIp) * av[d] * velocity_scale;
+
+
+        smdata.lhs(0, 0) += slhsfac / relaxFac;
+        smdata.lhs(1, 0) -= slhsfac;
+
+        // Right node contribution;
+        smdata.lhs(1, 1) -= slhsfac / relaxFac;
+        smdata.lhs(0, 1) += slhsfac;
+
+        if (dq > 0.0) {
+
+          const DblType inv_axdx_v = 1.0 / axdx;
+
+          const DblType dlhsfac_v = - stk::math::sqrt(diffusion_coef) * asq * inv_axdx_v;
+
+          smdata.rhs(0) -= dlhsfac_v * (qNp1R - qNp1L);
+          smdata.rhs(1) += dlhsfac_v * (qNp1R - qNp1L);
+
+          massForcedFlowRate.get(edge, 0) =
+            dlhsfac_v * (qNp1R - qNp1L) * (density_liquid_ - density_gas_);
+
+          smdata.lhs(0, 0) -= dlhsfac_v;
+          smdata.lhs(0, 1) += dlhsfac_v;
+
+          smdata.lhs(1, 0) += dlhsfac_v;
+          smdata.lhs(1, 1) -= dlhsfac_v;
+
+        }
+
+        return;
+      }
+
+
+      const DblType velocity_scale = global_max_velocity;
 
       // Hard-coded 0.6 value comes from Jain, 2022 to enforce
       // VOF function bounds of [0,1] while maintaining interface
@@ -216,14 +303,19 @@ VOFAdvectionEdgeAlg::execute()
       smdata.lhs(1, 0) += dlhsfac;
       smdata.lhs(1, 1) -= dlhsfac;
 
-      DblType dOmegadxMag = 0.0;
 
       const DblType omegaL =
         diffusion_coef * stk::math::log((qNp1L + eps) / (1.0 - qNp1L + eps));
       const DblType omegaR =
         diffusion_coef * stk::math::log((qNp1R + eps) / (1.0 - qNp1R + eps));
       const DblType omegaIp = 0.5 * (omegaL + omegaR);
-      DblType interface_gradient[3] = {0.0, 0.0, 0.0};
+
+      dOmegadxMag = 0.0;
+
+      for (int d = 0; d < 3; ++d) {
+        interface_gradient[d] = 0.0;
+        interface_normal[d] = 0.0;
+      }
 
       for (int j = 0; j < ndim; ++j) {
         interface_gradient[j] = 0.5 * (dqdx.get(nodeL, j) + dqdx.get(nodeR, j));
@@ -231,7 +323,6 @@ VOFAdvectionEdgeAlg::execute()
                                  (eps * eps + eps - qIp * qIp + qIp);
       }
 
-      DblType interface_normal[3] = {0.0, 0.0, 0.0};
 
       for (int j = 0; j < ndim; ++j)
         dOmegadxMag += interface_gradient[j] * interface_gradient[j];

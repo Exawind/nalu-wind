@@ -111,6 +111,9 @@ public:
   void register_initial_condition_fcn(
     stk::mesh::Part* part, const UserFunctionInitialConditionData& fcnIC);
 
+  void register_initial_condition_string_function(
+    stk::mesh::Part* part, const std::map<std::string, std::string>& func);
+
   void initialize();
   void reinitialize_linear_system();
   void populate_derived_quantities();
