@@ -137,6 +137,16 @@ SolutionOptions::load(const YAML::Node& y_node)
       y_solution_options, "solve_incompressible_continuity",
       solveIncompressibleContinuity_, solveIncompressibleContinuity_);
 
+    // Removes unbalanced buoyancy forces in pressure
+    get_if_present(
+      y_solution_options, "use_balanced_buoyancy_force",
+      use_balanced_buoyancy_force_, use_balanced_buoyancy_force_);
+
+    // User specificed VOF interface width independent of mesh spacing
+    get_if_present(
+      y_solution_options, "interface_width", interface_width_,
+      interface_width_);
+
     // external mesh motion expected
     get_if_present(
       y_solution_options, "externally_provided_mesh_deformation",
