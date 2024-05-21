@@ -41,12 +41,18 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   else
     viscName = "viscosity";
 
+  density_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   viscosity_ = get_field_ordinal(meta, viscName);
   dudx_ = get_field_ordinal(meta, "dudx");
   edgeAreaVec_ =
     get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   massFlowRate_ =
     get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
+  massVofBalancedFlowRate_ =
+    realm.solutionOptions_->realm_has_vof_
+      ? get_field_ordinal(
+          meta, "mass_vof_balanced_flow_rate", stk::topology::EDGE_RANK)
+      : massFlowRate;
   pecletFactor_ =
     get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK);
   maskNodeField_ = get_field_ordinal(
@@ -62,14 +68,16 @@ MomentumEdgeSolverAlg::execute()
   const std::string dofName = "velocity";
   const DblType includeDivU = realm_.get_divU();
   const DblType alpha = realm_.get_alpha_factor(dofName);
-  const DblType alphaUpw = realm_.get_alpha_upw_factor(dofName);
+  DblType alphaUpw = realm_.get_alpha_upw_factor(dofName);
   const DblType hoUpwind = realm_.get_upw_factor(dofName);
   const DblType relaxFacU =
     realm_.solutionOptions_->get_relaxation_factor(dofName);
   const bool useLimiter = realm_.primitive_uses_limiter(dofName);
 
-  const DblType om_alpha = 1.0 - alpha;
+  DblType om_alpha = 1.0 - alpha;
   const DblType om_alphaUpw = 1.0 - alphaUpw;
+
+  const DblType has_vof = (double)realm_.solutionOptions_->realm_has_vof_;
 
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
@@ -78,8 +86,11 @@ MomentumEdgeSolverAlg::execute()
   const auto vel = fieldMgr.get_field<double>(velocity_);
   const auto dudx = fieldMgr.get_field<double>(dudx_);
   const auto viscosity = fieldMgr.get_field<double>(viscosity_);
+  const auto density = fieldMgr.get_field<double>(density_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
+  const auto massVofBalancedFlowRate =
+    fieldMgr.get_field<double>(massVofBalancedFlowRate_);
   const auto pecletFactor = fieldMgr.get_field<double>(pecletFactor_);
   const auto maskNodeField = fieldMgr.get_field<double>(maskNodeField_);
 
@@ -95,8 +106,11 @@ MomentumEdgeSolverAlg::execute()
       for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
 
-      const DblType mdot = massFlowRate.get(edge, 0);
+      const DblType mdot =
+        massFlowRate.get(edge, 0) + has_vof * massVofBalancedFlowRate(edge, 0);
 
+      const DblType densityL = density.get(nodeL, 0);
+      const DblType densityR = density.get(nodeR, 0);
       const DblType viscosityL = viscosity.get(nodeL, 0);
       const DblType viscosityR = viscosity.get(nodeR, 0);
 
@@ -146,12 +160,27 @@ MomentumEdgeSolverAlg::execute()
         }
       }
 
+      DblType density_upwinding_factor = 1.0;
+      if (has_vof > 0.5) {
+        const DblType min_density = densityL < densityR ? densityL : densityR;
+        const DblType density_differential =
+          stk::math::abs(densityL - densityR) / min_density;
+        density_upwinding_factor =
+          1.0 - stk::math : erf(2.0 * density_differential);
+
+        alphaUpw = density_upwinding_factor * alphaUpw +
+                   (1.0 - density_upwinding_factor);
+        om_alphaUpw = 1.0 - alphaUpw;
+      }
+
       // Upwind extrapolation with limiter terms
       NALU_ALIGNED DblType uIpL[NDimMax_];
       NALU_ALIGNED DblType uIpR[NDimMax_];
       for (int d = 0; d < ndim; ++d) {
-        uIpL[d] = vel.get(nodeL, d) + duL[d] * hoUpwind * limitL[d];
-        uIpR[d] = vel.get(nodeR, d) - duR[d] * hoUpwind * limitR[d];
+        uIpL[d] = vel.get(nodeL, d) +
+                  duL[d] * hoUpwind * limitL[d] * density_upwinding_factor;
+        uIpR[d] = vel.get(nodeR, d) -
+                  duR[d] * hoUpwind * limitR[d] * density_upwinding_factor;
       }
 
       // TODO(psakiev) extract this a funciton into EdgeKernelUtils.h

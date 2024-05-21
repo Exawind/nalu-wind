@@ -30,6 +30,7 @@ private:
   unsigned pressure_{stk::mesh::InvalidOrdinal};
   unsigned densityNp1_{stk::mesh::InvalidOrdinal};
   unsigned Gpdx_{stk::mesh::InvalidOrdinal};
+  unsigned source_{stk::mesh::InvalidOrdinal};
   unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
   unsigned edgeFaceVelMag_{stk::mesh::InvalidOrdinal};
   unsigned Udiag_{stk::mesh::InvalidOrdinal};
