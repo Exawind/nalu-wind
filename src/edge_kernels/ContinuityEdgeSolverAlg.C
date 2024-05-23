@@ -33,7 +33,7 @@ ContinuityEdgeSolverAlg::ContinuityEdgeSolverAlg(
     get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   Udiag_ = get_field_ordinal(meta, "momentum_diag");
 
-  source_ = realm.SolutionOptions_->use_balanced_buoyancy_force_
+  source_ = realm.solutionOptions_->use_balanced_buoyancy_force_
               ? get_field_ordinal(meta, "buoyancy_source")
               : stk::mesh::InvalidOrdinal;
 }
@@ -59,15 +59,9 @@ ContinuityEdgeSolverAlg::execute()
   const DblType solveIncompressibleEqn = realm_.get_incompressible_solve();
   const DblType om_solveIncompressibleEqn = 1.0 - solveIncompressibleEqn;
 
-  const double add_buoyancy_force =
-    (double)(realm_solutionOptions_->use_balanced_buoyancy_force_);
+  const double add_buoyancy_balance =
+    (double)(realm_.solutionOptions_->use_balanced_buoyancy_force_);
   double gravity_vector[3] = {0.0, 0.0, 0.0};
-
-  if (
-    realm_.solutionOptions_->use_balanced_buoyancy_force_ &&
-    realm_.solutionOptions_->gravity_.size() >= ndim)
-    for (int idim = 0; idim < ndim; ++idim)
-      gravity_vector[idim] = realm_.solutionOptions_->gravity_[idim];
 
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
@@ -80,7 +74,7 @@ ContinuityEdgeSolverAlg::execute()
   auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   auto source = realm_.solutionOptions_->use_balanced_buoyancy_force_
                   ? fieldMgr.get_field<double>(source_)
-                  : fieldMgr.get_field<double>(densityNp1_);
+                  : fieldMgr.get_field<double>(Gpdx_);
 
   stk::mesh::NgpField<double> edgeFaceVelMag;
   bool needs_gcl = false;
@@ -107,6 +101,7 @@ ContinuityEdgeSolverAlg::execute()
       const stk::mesh::FastMeshIndex& nodeR) {
       // Scratch work array for edgeAreaVector
       NALU_ALIGNED DblType av[NDimMax_];
+
       // Populate area vector work array
       for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
@@ -138,6 +133,7 @@ ContinuityEdgeSolverAlg::execute()
       for (int d = 0; d < ndim; ++d)
         tmdot += projTimeScale * av[d] * gravity_vector[d] *
                  add_buoyancy_balance * rhoIp;
+
       if (needs_gcl) {
         tmdot -= rhoIp * edgeFaceVelMag.get(edge, 0);
       }

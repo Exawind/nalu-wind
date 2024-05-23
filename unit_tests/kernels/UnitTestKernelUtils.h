@@ -1441,7 +1441,7 @@ public:
         &meta_->declare_field<double>(stk::topology::NODE_RANK, "viscosity")),
       massFlowRateEdge_(&meta_->declare_field<double>(
         stk::topology::EDGE_RANK, "mass_flow_rate")),
-      vofBalancedMassFlowRateEdge_(&meta_->declare_field<ScalarFieldType>(
+      vofBalancedMassFlowRateEdge_(&meta_->declare_field<double>(
         stk::topology::EDGE_RANK, "mass_vof_balanced_flow_rate")),
       znot_(1.0),
       amf_(2.0),

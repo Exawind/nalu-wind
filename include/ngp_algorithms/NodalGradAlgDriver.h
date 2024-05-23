@@ -26,7 +26,11 @@ class NodalGradAlgDriver : public NgpAlgDriver
     "Invalid field type provided to NodalGradAlgDriver");
 
 public:
-  NodalGradAlgDriver(Realm&, const std::string&, const std::string&);
+  NodalGradAlgDriver(
+    Realm&,
+    const std::string&,
+    const std::string&,
+    const bool update_overset_boundaries = true);
 
   virtual ~NodalGradAlgDriver() = default;
 
@@ -40,6 +44,7 @@ private:
   //! Field that is synchronized pre/post updates
   const std::string phiName_;
   const std::string gradPhiName_;
+  const bool update_overset_boundaries_;
 };
 
 using ScalarNodalGradAlgDriver = NodalGradAlgDriver<VectorFieldType>;

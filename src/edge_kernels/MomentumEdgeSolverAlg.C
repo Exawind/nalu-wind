@@ -52,7 +52,7 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
     realm.solutionOptions_->realm_has_vof_
       ? get_field_ordinal(
           meta, "mass_vof_balanced_flow_rate", stk::topology::EDGE_RANK)
-      : massFlowRate;
+      : massFlowRate_;
   pecletFactor_ =
     get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK);
   maskNodeField_ = get_field_ordinal(
@@ -68,13 +68,13 @@ MomentumEdgeSolverAlg::execute()
   const std::string dofName = "velocity";
   const DblType includeDivU = realm_.get_divU();
   const DblType alpha = realm_.get_alpha_factor(dofName);
-  DblType alphaUpw = realm_.get_alpha_upw_factor(dofName);
+  const DblType alphaUpw = realm_.get_alpha_upw_factor(dofName);
   const DblType hoUpwind = realm_.get_upw_factor(dofName);
   const DblType relaxFacU =
     realm_.solutionOptions_->get_relaxation_factor(dofName);
   const bool useLimiter = realm_.primitive_uses_limiter(dofName);
 
-  DblType om_alpha = 1.0 - alpha;
+  const DblType om_alpha = 1.0 - alpha;
   const DblType om_alphaUpw = 1.0 - alphaUpw;
 
   const DblType has_vof = (double)realm_.solutionOptions_->realm_has_vof_;
@@ -144,8 +144,8 @@ MomentumEdgeSolverAlg::execute()
         }
       }
 
-      const DblType pecfac = pecletFactor.get(edge, 0);
-      const DblType om_pecfac = 1.0 - pecfac;
+      DblType pecfac = pecletFactor.get(edge, 0);
+      DblType om_pecfac = 1.0 - pecfac;
 
       NALU_ALIGNED DblType limitL[NDimMax_] = {1.0, 1.0, 1.0};
       NALU_ALIGNED DblType limitR[NDimMax_] = {1.0, 1.0, 1.0};
@@ -161,16 +161,21 @@ MomentumEdgeSolverAlg::execute()
       }
 
       DblType density_upwinding_factor = 1.0;
+      DblType alphaUpw_w_vof = alphaUpw;
+      DblType om_alphaUpw_w_vof = 1.0 - alphaUpw_w_vof;
       if (has_vof > 0.5) {
         const DblType min_density = densityL < densityR ? densityL : densityR;
         const DblType density_differential =
           stk::math::abs(densityL - densityR) / min_density;
         density_upwinding_factor =
-          1.0 - stk::math : erf(2.0 * density_differential);
+          1.0 - stk::math::erf(6.0 * density_differential);
 
-        alphaUpw = density_upwinding_factor * alphaUpw +
-                   (1.0 - density_upwinding_factor);
-        om_alphaUpw = 1.0 - alphaUpw;
+        alphaUpw_w_vof = density_upwinding_factor * alphaUpw_w_vof +
+                         (1.0 - density_upwinding_factor);
+        om_alphaUpw_w_vof = 1.0 - alphaUpw_w_vof;
+        pecfac =
+          1.0 - density_upwinding_factor + density_upwinding_factor * pecfac;
+        om_pecfac = 1.0 - pecfac;
       }
 
       // Upwind extrapolation with limiter terms
@@ -225,9 +230,9 @@ MomentumEdgeSolverAlg::execute()
         const DblType uiIp = 0.5 * (vel.get(nodeR, i) + vel.get(nodeL, i));
 
         // Upwind contribution
-        const DblType uiUpw = (mdot > 0.0)
-                                ? (alphaUpw * uIpL[i] + om_alphaUpw * uiIp)
-                                : (alphaUpw * uIpR[i] + om_alphaUpw * uiIp);
+        const DblType uiUpw =
+          (mdot > 0.0) ? (alphaUpw_w_vof * uIpL[i] + om_alphaUpw_w_vof * uiIp)
+                       : (alphaUpw_w_vof * uIpR[i] + om_alphaUpw_w_vof * uiIp);
 
         const DblType uiHatL = (alpha * uIpL[i] + om_alpha * uiIp);
         const DblType uiHatR = (alpha * uIpR[i] + om_alpha * uiIp);

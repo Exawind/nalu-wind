@@ -40,7 +40,7 @@ MdotEdgeAlg::MdotEdgeAlg(Realm& realm, stk::mesh::Part* part)
     source_(
       realm.solutionOptions_->use_balanced_buoyancy_force_
         ? get_field_ordinal(realm.meta_data(), "buoyancy_source")
-        : get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1))
+        : get_field_ordinal(realm.meta_data(), "dpdx", stk::mesh::StateNP1))
 {
 }
 
@@ -79,7 +79,9 @@ MdotEdgeAlg::execute()
   auto pressure = fieldMgr.get_field<double>(pressure_);
   auto udiag = fieldMgr.get_field<double>(Udiag_);
   auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
-  auto source = fieldMgr.get_field<double>(source_);
+  auto source = realm_.solutionOptions_->use_balanced_buoyancy_force_
+                  ? fieldMgr.get_field<double>(source_)
+                  : fieldMgr.get_field<double>(Gpdx_);
 
   stk::mesh::NgpField<double> edgeFaceVelMag;
 

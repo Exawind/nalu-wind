@@ -52,8 +52,8 @@ MomentumBuoyancySrcNodeSuppAlg::MomentumBuoyancySrcNodeSuppAlg(Realm& realm)
   rhoRef_ = realm_.solutionOptions_->referenceDensity_;
   useBalancedSource_ = realm.solutionOptions_->use_balanced_buoyancy_force_;
   if (useBalancedSource_) {
-    VectorFieldType* buoyancySource = meta_data.get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "buoyancy_source");
+    VectorFieldType* buoyancySource =
+      meta_data.get_field<double>(stk::topology::NODE_RANK, "buoyancy_source");
     buoyancySource_ = &(buoyancySource->field_of_state(stk::mesh::StateNone));
   }
 }
@@ -76,10 +76,16 @@ MomentumBuoyancySrcNodeSuppAlg::node_execute(
 {
   if (useBalancedSource_) {
     const int nDim = nDim_;
+    const double rhoNp1 = *stk::mesh::field_data(*densityNp1_, node);
     double* source = stk::mesh::field_data(*buoyancySource_, node);
     const double dualVolume = *stk::mesh::field_data(*dualNodalVolume_, node);
+
     for (int i = 0; i < nDim; ++i) {
       rhs[i] += source[i] * dualVolume;
+    }
+    const double fac = -rhoRef_ * dualVolume;
+    for (int i = 0; i < nDim; ++i) {
+      rhs[i] += fac * gravity_[i];
     }
 
   } else {
