@@ -204,7 +204,7 @@ public:
   ScalarFieldType* evisc_;
   ScalarFieldType* iddesRansIndicator_;
 
-  VectorFieldType* buoyance_source_;
+  VectorFieldType* buoyancy_source_;
 
   TensorNodalGradAlgDriver nodalGradAlgDriver_;
   ScalarNodalGradAlgDriver nodalBuoyancyAlgDriver_;

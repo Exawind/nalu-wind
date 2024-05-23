@@ -1051,7 +1051,7 @@ MomentumEquationSystem::MomentumEquationSystem(EquationSystems& eqSystems)
     tvisc_(NULL),
     evisc_(NULL),
     nodalGradAlgDriver_(realm_, "velocity", "dudx"),
-    nodalBuoyancyAlgDriver_(realm_, "buoyancy_source"),
+    nodalBuoyancyAlgDriver_(realm_, "density", "buoyancy_source", false),
     wallFuncAlgDriver_(realm_),
     dynPressAlgDriver_(realm_),
     cflReAlgDriver_(realm_),
@@ -1189,10 +1189,10 @@ MomentumEquationSystem::register_nodal_fields(
     &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "viscosity"));
   stk::mesh::put_field_on_mesh(*visc_, selector, nullptr);
 
-  if (realm.SolutionOptions->use_balanced_buoyancy_force_) {
+  if (realm_.solutionOptions_->use_balanced_buoyancy_force_) {
     buoyancy_source_ = &(meta_data.declare_field<double>(
       stk::topology::NODE_RANK, "buoyancy_source"));
-    stk::mesh::put_field_on_mesh(*buoyancy_source_, selector, nullptr);
+    stk::mesh::put_field_on_mesh(*buoyancy_source_, selector, nDim, nullptr);
   }
 
   if (realm_.is_turbulent()) {
@@ -1320,6 +1320,10 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
         algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
         edgeNodalGradient_);
   }
+
+  if (realm_.solutionOptions_->use_balanced_buoyancy_force_)
+    nodalBuoyancyAlgDriver_.register_edge_algorithm<BuoyancySourceAlg>(
+      algType, part, "momentum_buoyancy_source", buoyancy_source_);
 
   const auto theTurbModel = realm_.solutionOptions_->turbulenceModel_;
 
@@ -2522,7 +2526,7 @@ MomentumEquationSystem::compute_projected_nodal_gradient()
   if (!managePNG_) {
     const double timeA = -NaluEnv::self().nalu_time();
     nodalGradAlgDriver_.execute();
-    if (realm_.SolutionOptions_->use_balanced_buoyancy_force_) {
+    if (realm_.solutionOptions_->use_balanced_buoyancy_force_) {
       nodalBuoyancyAlgDriver_.execute();
     }
     timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
@@ -2914,7 +2918,7 @@ ContinuityEquationSystem::register_edge_fields(
   stk::mesh::put_field_on_mesh(*massFlowRate_, selector, nullptr);
 
   if (realm_.solutionOptions_->realm_has_vof_) {
-    auto massVofBalancedFlowRate_ = &(meta_data.declare_field<ScalarFieldType>(
+    auto massVofBalancedFlowRate_ = &(meta_data.declare_field<double>(
       stk::topology::EDGE_RANK, "mass_vof_balanced_flow_rate"));
     stk::mesh::put_field_on_mesh(*massVofBalancedFlowRate_, selector, nullptr);
   }
@@ -3530,7 +3534,7 @@ ContinuityEquationSystem::register_initial_condition_fcn(
       theAuxFunc = new TaylorGreenPressureAuxFunction();
     } else if (fcnName == "kovasznay") {
       theAuxFunc = new KovasznayPressureAuxFunction();
-    } else if (fncName == "sloshing_tank") {
+    } else if (fcnName == "sloshing_tank") {
       std::map<std::string, std::vector<double>>::const_iterator iterParams =
         theParams.find(dofName);
       std::vector<double> fcnParams = (iterParams != theParams.end())

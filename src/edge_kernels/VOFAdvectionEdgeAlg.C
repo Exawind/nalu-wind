@@ -47,6 +47,9 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
   density_ =
     get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1);
 
+  std::map<PropertyIdentifier, MaterialPropertyData*>::iterator itf =
+    realm_.materialPropertys_.propertyDataMap_.find(DENSITY_ID);
+
   // Hard set value here for unit testing without property map.
   if (itf == realm_.materialPropertys_.propertyDataMap_.end()) {
     density_liquid_ = 1000.0;
@@ -84,6 +87,7 @@ VOFAdvectionEdgeAlg::execute()
   const double dt = realm_.get_time_step();
 
   const int ndim = realm_.meta_data().spatial_dimension();
+  const auto& meta = realm_.meta_data();
 
   const DblType alphaUpw = realm_.get_alpha_upw_factor("volume_of_fluid");
   const DblType hoUpwind = realm_.get_upw_factor("volume_of_fluid");
@@ -231,7 +235,7 @@ VOFAdvectionEdgeAlg::execute()
           penalty_force =
             qIp * (1.0 - qIp) * interface_normal[d] * av[d] * velocity_scale;
 
-        massForcedFlowRate.get(edge, 0) =
+        massVofBalancedFlowRate.get(edge, 0) =
           penalty_force * (density_liquid_ - density_gas_);
 
         smdata.rhs(0) -= penalty_force;
@@ -260,7 +264,7 @@ VOFAdvectionEdgeAlg::execute()
           smdata.rhs(0) -= dlhsfac_v * (qNp1R - qNp1L);
           smdata.rhs(1) += dlhsfac_v * (qNp1R - qNp1L);
 
-          massForcedFlowRate.get(edge, 0) =
+          massVofBalancedFlowRate.get(edge, 0) =
             dlhsfac_v * (qNp1R - qNp1L) * (density_liquid_ - density_gas_);
 
           smdata.lhs(0, 0) -= dlhsfac_v;
@@ -291,7 +295,7 @@ VOFAdvectionEdgeAlg::execute()
       smdata.rhs(0) -= dlhsfac * (qNp1R - qNp1L);
       smdata.rhs(1) += dlhsfac * (qNp1R - qNp1L);
 
-      massForcedFlowRate.get(edge, 0) =
+      massVofBalancedFlowRate.get(edge, 0) =
         dlhsfac * (qNp1R - qNp1L) * (density_liquid_ - density_gas_);
 
       smdata.lhs(0, 0) -= dlhsfac;
@@ -343,7 +347,7 @@ VOFAdvectionEdgeAlg::execute()
       smdata.rhs(0) -= compression;
       smdata.rhs(1) += compression;
 
-      massForcedFlowRate.get(edge, 0) +=
+      massVofBalancedFlowRate.get(edge, 0) +=
         compression * (density_liquid_ - density_gas_);
 
       // Left node contribution; Lag in iterations except for central 0.5*q term
