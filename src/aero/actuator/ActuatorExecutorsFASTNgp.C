@@ -25,33 +25,49 @@ ActuatorLineFastNGP::ActuatorLineFastNGP(
 void
 ActuatorLineFastNGP::operator()()
 {
-  actBulk_.zero_source_terms(stkBulk_);
+  //Zero the (body-force) actuator source term 
+  actBulk_.zero_source_terms(stkBulk_); 
 
-  // set range policy to only operating over points owned by local fast turbine
+  //Range for Kokkos parallel-for -- set range policy to only operating over points owned by local fast turbine
   auto fastRangePolicy = actBulk_.local_range_policy();
 
+  //Interpolate velocity to actuator points. This happens before fine search? Is this from previous timestep
   RunInterpActuatorVel(actBulk_, stkBulk_);
 
+  // Add FLLC correction to velocity field. Is this term treated explicitly? Also seems like it’s from previous step
   apply_fllc(actBulk_);
 
+  //assign velocity data to a point and turbine ID from openfast?
   Kokkos::parallel_for(
     "assignFastVelActuatorNgpFAST", fastRangePolicy,
     ActFastAssignVel(actBulk_));
 
+  // get relative velocity from openFAST
   ActFastCacheRelativeVelocities(actBulk_);
 
+  // Compute filtered lifting line correction and store in fllc(I,j)
   compute_fllc();
 
+  // Send interpolated velocities at actuator points to openFAST
   actBulk_.interpolate_velocities_to_fast();
 
+  // Get actuator point centroids (from openfast or from basis-functions?). Again, this after the interpolation step?
   RunActFastUpdatePoints(actBulk_);
 
-  actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
+  // Execute fine and coarse search given point centroids (see next slides)
+  // Do not need to update fine and coarse search when performing turbine level search 
+  if !(actMeta_->turbineLevelSearch_) { 
+    actBulk_.stk_search_act_pnts(actMeta_, stkBulk_); // this is the fine and coarse searching. 
+  }
 
+  // call openfast and step
   actBulk_.step_fast();
 
+  // compute the force from openfast at actuator points
   RunActFastComputeForce(actBulk_);
 
+  // Loop over all coarse points, the spread the force to. 
+  // Does this perform the loop over coarse search for each point centroid?
   const int localSizeCoarseSearch =
     actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
@@ -67,6 +83,7 @@ ActuatorLineFastNGP::operator()()
       ActFastSpreadForceWhProjection(actBulk_, stkBulk_));
   }
 
+  // sum up force contributions
   actBulk_.parallel_sum_source_term(stkBulk_);
 
   if (actBulk_.openFast_.isDebug()) {

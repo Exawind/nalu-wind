@@ -105,6 +105,7 @@ ActuatorBulk::stk_search_act_pnts(
   actuator_utils::reduce_view_on_host(localParallelRedundancy_);
 }
 
+
 void
 ActuatorBulk::zero_source_terms(stk::mesh::BulkData& stkBulk)
 {

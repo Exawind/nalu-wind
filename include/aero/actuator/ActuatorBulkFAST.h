@@ -55,6 +55,10 @@ struct ActuatorBulkFAST : public ActuatorBulk
   void init_epsilon(const ActuatorMetaFAST& actMeta);
   bool is_tstep_ratio_admissable(
     const double fastTimeStep, const double naluTimeStep);
+  
+  // This is placed in ActuatorBulkFAST instead of ActuatorBulk because hublocations are needed
+  void stk_turbine_search(
+    const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk); 
 
   virtual ~ActuatorBulkFAST();
 
@@ -62,6 +66,7 @@ struct ActuatorBulkFAST : public ActuatorBulk
   ActFixVectorDbl turbineTorque_;
   ActFixVectorDbl hubLocations_;
   ActFixVectorDbl hubOrientation_;
+  ActFixVectorDbl turbineSearchRadius_; //need vector for turbine search...this will be a different size than searchRadius_ in Actuatorbulk.h
 
   ActTensorDblDv orientationTensor_;
 
@@ -70,7 +75,7 @@ struct ActuatorBulkFAST : public ActuatorBulk
   ActDualViewHelper<ActuatorMemSpace> dvHelper_;
 };
 
-// helper functions to
+// helper function to
 // squash calls to std::cout from OpenFAST
 inline void
 squash_fast_output(std::function<void()> func)

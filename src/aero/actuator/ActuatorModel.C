@@ -145,8 +145,16 @@ ActuatorModel::init(stk::mesh::BulkData& stkBulk)
     break;
 #endif
 #else
-    // perform search for actline and actdisk
-    actBulk_->stk_search_act_pnts(*actMeta_.get(), stkBulk);
+
+    if (actMeta_->turbineLevelSearch_){
+      // perform turbine level search and cache to the bulk data
+      actBulk_->stk_turbine_search(*actMeta_.get(), stkBulk);
+    }
+    else{
+      // perform search for actline and actdisk
+      actBulk_->stk_search_act_pnts(*actMeta_.get(), stkBulk);
+    }
+
     break;
 #endif
   }

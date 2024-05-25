@@ -25,14 +25,17 @@
 namespace sierra {
 namespace nalu {
 
+
+//TODO: Should this be inherited somehow from GenericLoopOverCoarseSearchResults functor?
+//TODO: the actuator meta is needed below. Do we have access to it?
 template <typename ActuatorBulk, typename functor>
   //coarse search actuatorbulk.c L96
-struct GenericLoopOverCoarseSearchResults
+struct GenericLoopOverCoarseTurbineSearchResults
 {
   using execution_space = ActuatorFixedExecutionSpace;
 
   // ctor if functor only requires actBulk for constructor
-  GenericLoopOverCoarseSearchResults(
+  GenericLoopOverCoarseTurbineSearchResults(
     ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk)
     : actBulk_(actBulk),
       stkBulk_(stkBulk),
@@ -50,7 +53,7 @@ struct GenericLoopOverCoarseSearchResults
   }
 
   // ctor for functor constructor taking multiple args
-  GenericLoopOverCoarseSearchResults(
+  GenericLoopOverCoarseTurbineSearchResults(
     ActuatorBulk& actBulk,
     stk::mesh::BulkData& stkBulk,
     functor innerLoopFunctor)
@@ -70,13 +73,13 @@ struct GenericLoopOverCoarseSearchResults
   }
 
   // see ActuatorExecutorFASTSngp.C line 58
+  // TODO: should the index be loop over actuator points or loop over turbine points. I think it would be
+  // more efficient to loop over all turbine points and then over each actuator point so index should be 
+  // turbine points. 
+  //
+  // might be able to replace operator with individual cases
   void operator()(int index) const
   {
-    // TODO (GOPAL): Index gives us actuator id and element id from coarse search 
-    // coarse search associates actuator points with elements 
-    //
-    // element associates a group of points
-    // properties of elements are controlled by master element
     auto pointId = actBulk_.coarseSearchPointIds_.h_view(index);
     auto elemId = actBulk_.coarseSearchElemIds_.h_view(index);
 
@@ -124,12 +127,20 @@ struct GenericLoopOverCoarseSearchResults
       const double dual_vol = *stk::mesh::field_data(*dualNodalVolume_, node);
       double* sourceTerm = stk::mesh::field_data(*actuatorSource_, node);
 
-      // anything else that is required should be stashed on the functor
-      // during functor construction i.e. ActuatorBulk, flags, ActuatorMeta,
-      // etc.
+      //TODO: Need to get access to actMeta for this to work
+      //This loop should also be parallelize I would think.. 
+      //Option 1:
+      //use kokkoss size function to get numPointsTotal from the size of pointCentroids. Cannot use meta here
+      for (int actPtInd = 0; actPtInd < actBulk_.pointCentroids_.size(); actPtInd ++){
+        //auto pointCoords = Kokkos::subview(actBulk_.pointCentroid_.view_host(), actPtInd, Kokkos::ALL);
+      //Option 2:
+      //Kokkos::parallel_for("GenericActPtLoop", HostRangePolicy(0, actMeta.numPointsTotal_), [&](int actPtInd) {
+      //auto point = pointCentroid_.h_view(actPtInd)  don't need point just index
+      //TODO: Is actPtInd the right index?
+      //TODO: How can we avoid all the zero integration values if actPtId is not associated with element box? 
+      //      Or is this OK because we spread the force to the entire disk
+      innerLoopFunctor_(actPtInd, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
       //
-      // pointID helps look up data from openfast
-      innerLoopFunctor_(pointId, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
     }
   }
 
