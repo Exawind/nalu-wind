@@ -404,8 +404,8 @@ GammaEquationSystem::register_inflow_bc(
 void
 GammaEquationSystem::register_open_bc(
   stk::mesh::Part* part,
-  const stk::topology& /* partTopo */,
-  const OpenBoundaryConditionData& /* openBCData */)
+  const stk::topology& partTopo,
+  const OpenBoundaryConditionData& openBCData)
 {
 
   // algorithm type
@@ -413,6 +413,27 @@ GammaEquationSystem::register_open_bc(
 
   ScalarFieldType& gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType& dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
+
+  stk::mesh::MetaData& meta_data = realm_.meta_data();
+
+  // register boundary data; gamma_bc
+  ScalarFieldType* theBcField = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "open_gamma_bc"));
+  stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
+
+  // extract the value for user specified tke and save off the AuxFunction
+  OpenUserData userData = openBCData.userData_;
+  GammaInf gamma = userData.gamma_;
+  std::vector<double> userSpec(1);
+  userSpec[0] = gamma.gamma_;
+
+  // new it
+  ConstantAuxFunction* theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
+
+  // bc data alg
+  AuxFunctionAlgorithm* auxAlg = new AuxFunctionAlgorithm(
+    realm_, part, theBcField, theAuxFunc, stk::topology::NODE_RANK);
+  bcDataAlg_.push_back(auxAlg);
 
   // non-solver; dgamdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
@@ -429,6 +450,25 @@ GammaEquationSystem::register_open_bc(
     algType, part, "ndotv_nodal_grad", nDotV_,  dnDotVdx_,
     edgeNodalGradient_);
 
+  if (realm_.realmUsesEdges_) {
+    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+    AssembleElemSolverAlgorithm* elemSolverAlg = nullptr;
+    bool solverAlgWasBuilt = false;
+
+    std::tie(elemSolverAlg, solverAlgWasBuilt) =
+      build_or_add_part_to_face_bc_solver_alg(
+        *this, *part, solverAlgMap, "open");
+
+    auto& dataPreReqs = elemSolverAlg->dataNeededByKernels_;
+    auto& activeKernels = elemSolverAlg->activeKernels_;
+
+    build_face_topo_kernel_automatic<ScalarOpenEdgeKernel>(
+      partTopo, *this, activeKernels, "Gamma_open", realm_.meta_data(),
+      *realm_.solutionOptions_, gamma_, theBcField, dataPreReqs);
+  } else {
+    throw std::runtime_error(
+      "GAMMAEQS: Attempt to use non-NGP element open algorithm");
+  }
 }
 
 //--------------------------------------------------------------------------

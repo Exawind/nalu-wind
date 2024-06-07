@@ -137,7 +137,7 @@ struct OpenUserData : public UserData
   MixtureFraction mixFrac_;
   VolumeOfFluid volumeOfFluid_;
   MassFraction massFraction_;
-  GammaOpen gamma_;
+  GammaInf gamma_;
 
   bool uSpec_;
   bool pSpec_;
