@@ -48,9 +48,9 @@ DropletVelocityAuxFunction::do_evaluate(
     // assuming density ratio of 1000
     auto dens = 1000.0 * vof + 1.0 * (1.0 - vof);
 
-    fieldPtr[0] = 0.0;//vof * 1000. * 1. / dens;
-    fieldPtr[1] = 0.0;//vof * 1000. * 1. / dens;
-    fieldPtr[2] = 0.0;//vof * 1000. * 1. / dens;
+    fieldPtr[0] = 0.0; // vof * 1000. * 1. / dens;
+    fieldPtr[1] = 0.0; // vof * 1000. * 1. / dens;
+    fieldPtr[2] = 0.0; // vof * 1000. * 1. / dens;
 
     fieldPtr += fieldSize;
     coords += spatialDimension;

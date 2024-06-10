@@ -91,7 +91,6 @@ public:
 
   virtual void manage_projected_nodal_gradient(EquationSystems& eqSystems);
   virtual void compute_projected_nodal_gradient();
-  void calculate_smooth_vof();
 
   virtual void solve_and_update();
 

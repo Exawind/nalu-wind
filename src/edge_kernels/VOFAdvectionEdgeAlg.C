@@ -83,8 +83,6 @@ VOFAdvectionEdgeAlg::execute()
 {
   const double eps = 1.0e-11;
   const double gradient_eps = 1.0e-9;
-  // Could be made into user paramter for more control.
-  const double dt = realm_.get_time_step();
 
   const int ndim = realm_.meta_data().spatial_dimension();
   const auto& meta = realm_.meta_data();
@@ -96,7 +94,6 @@ VOFAdvectionEdgeAlg::execute()
   const bool useLimiter = realm_.primitive_uses_limiter("volume_of_fluid");
 
   const DblType om_alphaUpw = 1.0 - alphaUpw;
-  const DblType desired_width = realm_.solutionOptions_->interface_width_;
 
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
@@ -108,9 +105,6 @@ VOFAdvectionEdgeAlg::execute()
   const auto massVofBalancedFlowRate =
     fieldMgr.get_field<double>(massVofBalancedFlowRate_);
   const auto density = fieldMgr.get_field<double>(density_);
-
-  auto smoothVof =
-    fieldMgr.get_field<double>(get_field_ordinal(meta, "level_set"));
 
   run_algorithm(
     realm_.bulk_data(),
@@ -167,9 +161,6 @@ VOFAdvectionEdgeAlg::execute()
 
       // Advective flux
       const DblType qIp = 0.5 * (qNp1R + qNp1L); // 2nd order central term
-      const DblType qIp_smooth =
-        0.5 * (smoothVof.get(nodeL, 0) + smoothVof.get(nodeR, 0));
-
       // Upwinded term
       const DblType qUpw = (vdot > 0) ? (alphaUpw * qIpL + om_alphaUpw * qIp)
                                       : (alphaUpw * qIpR + om_alphaUpw * qIp);
@@ -223,60 +214,6 @@ VOFAdvectionEdgeAlg::execute()
         axdx += av[d] * dxj;
       }
 
-      if (desired_width > 0.0) {
-
-        DblType penalty_force = 0.0;
-        DblType velocity_scale = desired_width;
-
-        const DblType dq =
-          stk::math::abs(qIp - 0.5) - stk::math::abs(qIp_smooth - 0.5);
-
-        for (int d = 0; d < ndim; ++d)
-          penalty_force =
-            qIp * (1.0 - qIp) * interface_normal[d] * av[d] * velocity_scale;
-
-        massVofBalancedFlowRate.get(edge, 0) =
-          penalty_force * (density_liquid_ - density_gas_);
-
-        smdata.rhs(0) -= penalty_force;
-        smdata.rhs(1) += penalty_force;
-
-        // Lag terms here to approximate matrix
-        DblType slhsfac = 0.0;
-        for (int d = 0; d < ndim; ++d)
-          slhsfac +=
-            0.5 * interface_normal[d] * (1.0 - qIp) * av[d] * velocity_scale;
-
-        smdata.lhs(0, 0) += slhsfac / relaxFac;
-        smdata.lhs(1, 0) -= slhsfac;
-
-        // Right node contribution;
-        smdata.lhs(1, 1) -= slhsfac / relaxFac;
-        smdata.lhs(0, 1) += slhsfac;
-
-        if (dq > 0.0) {
-
-          const DblType inv_axdx_v = 1.0 / axdx;
-
-          const DblType dlhsfac_v =
-            -stk::math::sqrt(diffusion_coef) * asq * inv_axdx_v;
-
-          smdata.rhs(0) -= dlhsfac_v * (qNp1R - qNp1L);
-          smdata.rhs(1) += dlhsfac_v * (qNp1R - qNp1L);
-
-          massVofBalancedFlowRate.get(edge, 0) =
-            dlhsfac_v * (qNp1R - qNp1L) * (density_liquid_ - density_gas_);
-
-          smdata.lhs(0, 0) -= dlhsfac_v;
-          smdata.lhs(0, 1) += dlhsfac_v;
-
-          smdata.lhs(1, 0) += dlhsfac_v;
-          smdata.lhs(1, 1) -= dlhsfac_v;
-        }
-
-        return;
-      }
-
       // Hard-coded values comes from Jain, 2022 to enforce
       // VOF function bounds of [0,1] while maintaining interface
       // thickness that is ~2 cells
@@ -286,7 +223,7 @@ VOFAdvectionEdgeAlg::execute()
                 vdot /
                 stk::math::sqrt(av[0] * av[0] + av[1] * av[1] + av[2] * av[2]));
 
-      diffusion_coef = stk::math::sqrt(diffusion_coef) * 0.6;
+      diffusion_coef = stk::math::sqrt(diffusion_coef) * 0.3;
 
       const DblType inv_axdx = 1.0 / axdx;
 
