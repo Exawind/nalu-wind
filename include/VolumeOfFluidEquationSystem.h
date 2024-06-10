@@ -98,8 +98,6 @@ public:
 
   const bool managePNG_;
   ScalarFieldType* volumeOfFluid_;
-  ScalarFieldType* levelSet_;
-  ScalarFieldType* hFunction_;
   VectorFieldType* dvolumeOfFluiddx_;
   ScalarFieldType* vofTmp_;
 
