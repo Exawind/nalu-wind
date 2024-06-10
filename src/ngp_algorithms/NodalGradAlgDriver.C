@@ -22,14 +22,8 @@ namespace nalu {
 
 template <typename GradPhiType>
 NodalGradAlgDriver<GradPhiType>::NodalGradAlgDriver(
-  Realm& realm,
-  const std::string& phiName,
-  const std::string& gradPhiName,
-  const bool update_overset_boundaries)
-  : NgpAlgDriver(realm),
-    phiName_(phiName),
-    gradPhiName_(gradPhiName),
-    update_overset_boundaries_(update_overset_boundaries)
+  Realm& realm, const std::string& phiName, const std::string& gradPhiName)
+  : NgpAlgDriver(realm), phiName_(phiName), gradPhiName_(gradPhiName)
 {
 }
 
@@ -82,7 +76,7 @@ NodalGradAlgDriver<GradPhiType>::post_work()
     realm_.periodic_field_update(gradPhi, dim2 * dim1);
   }
 
-  if (realm_.hasOverset_ && update_overset_boundaries_) {
+  if (realm_.hasOverset_) {
     realm_.overset_field_update(gradPhi, dim1, dim2, doFinalSyncToDevice);
   }
 

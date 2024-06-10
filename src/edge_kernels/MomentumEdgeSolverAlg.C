@@ -160,11 +160,15 @@ MomentumEdgeSolverAlg::execute()
         }
       }
 
+      // Upwinding switch for multiphase cases.
+      // Factors determined by ensuring full upwinding
+      // at interfaces with interface
+      // widths that are ~2 cells thick
       DblType density_upwinding_factor = 1.0;
       DblType alphaUpw_w_vof = alphaUpw;
       DblType om_alphaUpw_w_vof = 1.0 - alphaUpw_w_vof;
       if (has_vof > 0.5) {
-        const DblType min_density = densityL < densityR ? densityL : densityR;
+        const DblType min_density = stk::math::min(densityL, densityR);
         const DblType density_differential =
           stk::math::abs(densityL - densityR) / min_density;
         density_upwinding_factor =

@@ -40,7 +40,6 @@ private:
   unsigned edgeFaceVelMag_{stk::mesh::InvalidOrdinal};
   unsigned Udiag_{stk::mesh::InvalidOrdinal};
   unsigned massFlowRate_{stk::mesh::InvalidOrdinal};
-  unsigned source_{stk::mesh::InvalidOrdinal};
 };
 
 } // namespace nalu

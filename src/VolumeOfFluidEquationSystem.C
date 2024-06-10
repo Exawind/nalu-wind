@@ -150,14 +150,6 @@ VolumeOfFluidEquationSystem::register_nodal_fields(
     &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "vofTmp"));
   stk::mesh::put_field_on_mesh(*vofTmp_, selector, nullptr);
 
-  levelSet_ =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "level_set"));
-  stk::mesh::put_field_on_mesh(*levelSet_, selector, nullptr);
-
-  hFunction_ =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "h_function"));
-  stk::mesh::put_field_on_mesh(*hFunction_, selector, nullptr);
-
   if (
     numStates > 2 &&
     (!realm_.restarted_simulation() || realm_.support_inconsistent_restart())) {
@@ -378,75 +370,6 @@ VolumeOfFluidEquationSystem::register_wall_bc(
   const stk::topology& /*theTopo*/,
   const WallBoundaryConditionData& /*wallBCData*/)
 {
-  /*
-  // algorithm type
-  const AlgorithmType algType = WALL;
-
-  ScalarFieldType& vofNp1 = volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType& dvofdxNone =
-    dvolumeOfFluiddx_->field_of_state(stk::mesh::StateNone);
-
-  stk::mesh::MetaData& meta_data = realm_.meta_data();
-
-  // register boundary data; vof_bc
-  ScalarFieldType* theBcField =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "vof_bc"));
-  stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
-
-  // extract the value for user specified tke and save off the AuxFunction
-  WallUserData userData = wallBCData.userData_;
-  std::string vofName = "volume_of_fluid";
-  UserDataType theDataType = get_bc_data_type(userData, vofName);
-
-  AuxFunction* theAuxFunc = NULL;
-
-  if (CONSTANT_UD == theDataType) {
-    VolumeOfFluid volumeOfFluid = userData.volumeOfFluid_;
-    std::vector<double> userSpec(1);
-    userSpec[0] = volumeOfFluid.volumeOfFluid_;
-    theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
-
-  } else if (FUNCTION_UD == theDataType) {
-    throw std::runtime_error("VolumeOfFluidEquationSystem::register_wall_bc: "
-                             "limited functions supported");
-  } else {
-    throw std::runtime_error("VolumeOfFluidEquationSystem::register_wall_bc: "
-                             "only constant functions supported");
-  }
-
-  // bc data alg
-  AuxFunctionAlgorithm* auxAlg = new AuxFunctionAlgorithm(
-    realm_, part, theBcField, theAuxFunc, stk::topology::NODE_RANK);
-
-  // how to populate the field?
-  if (userData.externalData_) {
-    // xfer will handle population; only need to populate the initial value
-    realm_.initCondAlg_.push_back(auxAlg);
-  } else {
-    // put it on bcData
-    bcDataAlg_.push_back(auxAlg);
-  }
-
-  // copy vof_bc to vof_transition np1...
-  CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
-    realm_, part, theBcField, &vofNp1, 0, 1, stk::topology::NODE_RANK);
-  bcDataMapAlg_.push_back(theCopyAlg);
-
-  // non-solver; dvofdx; allow for element-based shifted
-  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "vof_nodal_grad", &vofNp1, &dvofdxNone, edgeNodalGradient_);
-
-  // Dirichlet bc
-  std::map<AlgorithmType, SolverAlgorithm*>::iterator itd =
-    solverAlgDriver_->solverDirichAlgMap_.find(algType);
-  if (itd == solverAlgDriver_->solverDirichAlgMap_.end()) {
-    DirichletBC* theAlg =
-      new DirichletBC(realm_, this, part, &vofNp1, theBcField, 0, 1);
-    solverAlgDriver_->solverDirichAlgMap_[algType] = theAlg;
-  } else {
-    itd->second->partVec_.push_back(part);
-  }*/
-
   // algorithm type
   const AlgorithmType algType = SYMMETRY;
 
@@ -690,137 +613,6 @@ VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
 }
 
 //--------------------------------------------------------------------------
-//-------- calculate_smooth_vof --------------------------------------------
-//--------------------------------------------------------------------------
-void
-VolumeOfFluidEquationSystem::calculate_smooth_vof()
-{
-
-  const int ndim = realm_.meta_data().spatial_dimension();
-
-  using Traits = nalu_ngp::NGPMeshTraits<>;
-  using EntityInfoType = nalu_ngp::EntityInfo<stk::mesh::NgpMesh>;
-
-  const auto& ngpMesh = realm_.ngp_mesh();
-  const auto& fieldMgr = realm_.ngp_field_manager();
-
-  const double desired_interface_width =
-    realm_.solutionOptions_->interface_width_;
-
-  stk::mesh::MetaData& meta_data = realm_.meta_data();
-
-  stk::mesh::Selector sel =
-    (meta_data.locally_owned_part() | meta_data.globally_shared_part()) &
-    stk::mesh::selectField(*volumeOfFluid_);
-
-  auto ngpVof =
-    fieldMgr.get_field<double>(volumeOfFluid_->mesh_meta_data_ordinal());
-
-  auto ngpDVof =
-    fieldMgr.get_field<double>(dvolumeOfFluiddx_->mesh_meta_data_ordinal());
-
-  auto ngpLset =
-    fieldMgr.get_field<double>(levelSet_->mesh_meta_data_ordinal());
-
-  auto ngpHfun =
-    fieldMgr.get_field<double>(hFunction_->mesh_meta_data_ordinal());
-
-  auto ngpVol = fieldMgr.get_field<double>(
-    get_field_ordinal(meta_data, "dual_nodal_volume", stk::mesh::StateNP1));
-
-  nalu_ngp::run_entity_algorithm(
-    "set_level_set", ngpMesh, stk::topology::NODE_RANK, sel,
-    KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
-      const double gamma = desired_interface_width > 0.0
-                             ? 0.5 * desired_interface_width
-                             : 0.75 * stk::math::cbrt(ngpVol.get(mi, 0));
-      const double eps =
-        desired_interface_width > 0.0 ? desired_interface_width : 2.0 * gamma;
-
-      const double pi_const = 4.0 * stk::math::atan(1.0);
-
-      ngpLset.get(mi, 0) = 2.0 * (ngpVof.get(mi, 0) - 0.5) * gamma;
-
-      if (ngpLset.get(mi, 0) < -eps)
-        ngpHfun.get(mi, 0) = 0.0;
-      else if (ngpLset.get(mi, 0) > eps)
-        ngpHfun.get(mi, 0) = 1.0;
-      else
-        ngpHfun.get(mi, 0) =
-          0.5 * (1.0 + ngpLset.get(mi, 0) / eps +
-                 1.0 / pi_const *
-                   stk::math::sin(pi_const * ngpLset.get(mi, 0) / eps));
-
-      ngpHfun.get(mi, 0) = 2.0 * (ngpHfun.get(mi, 0) - 0.5);
-
-      // Re-use vof gradient routines to calculate gradient of Level set
-      const double stored_value = ngpVof.get(mi, 0);
-      ngpVof.get(mi, 0) = ngpLset.get(mi, 0);
-      ngpLset.get(mi, 0) = stored_value;
-    });
-
-  for (int _iteration = 0; _iteration < 25; ++_iteration) {
-
-    if (!managePNG_) {
-      nodalGradAlgDriver_.execute();
-    } else {
-      projectedNodalGradEqs_->solve_and_update_external();
-    }
-
-    nalu_ngp::run_entity_algorithm(
-      "smooth_level_set", ngpMesh, stk::topology::NODE_RANK, sel,
-      KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
-        const double dx = stk::math::cbrt(ngpVol.get(mi, 0));
-        const double tau = 0.1 * dx;
-
-        double interface_magnitude = 0.0;
-        for (int dim = 0; dim < 3; ++dim)
-          interface_magnitude += ngpDVof.get(mi, dim) * ngpDVof.get(mi, dim);
-
-        interface_magnitude = stk::math::sqrt(interface_magnitude);
-
-        ngpVof.get(mi, 0) +=
-          tau * ngpHfun.get(mi, 0) * (1.0 - interface_magnitude);
-      });
-  }
-
-  nalu_ngp::run_entity_algorithm(
-    "reset_vof", ngpMesh, stk::topology::NODE_RANK, sel,
-    KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
-      const double stored_lset_value = ngpVof.get(mi, 0);
-      const double gamma = desired_interface_width > 0.0
-                             ? 0.5 * desired_interface_width
-                             : 0.75 * stk::math::cbrt(ngpVol.get(mi, 0));
-      const double eps = desired_interface_width > 0.0
-                           ? desired_interface_width
-                           : 1.5 * stk::math::cbrt(ngpVol.get(mi, 0));
-      const double pi_const = 4.0 * stk::math::atan(1.0);
-
-      ngpVof.get(mi, 0) = ngpLset.get(mi, 0);
-
-      if (stored_lset_value < -eps)
-        ngpLset.get(mi, 0) = 0.0;
-      else if (stored_lset_value > eps)
-        ngpLset.get(mi, 0) = 1.0;
-      else
-        ngpLset.get(mi, 0) =
-          0.5 *
-          (1.0 + stored_lset_value / eps +
-           1.0 / pi_const * stk::math::sin(pi_const * stored_lset_value / eps));
-      // ngpLset.get(mi, 0) = 0.5 * stored_lset_value / eps + 0.5;
-    });
-
-  ngpLset.modify_on_device();
-
-  // Fill in gradient
-  if (!managePNG_) {
-    nodalGradAlgDriver_.execute();
-  } else {
-    projectedNodalGradEqs_->solve_and_update_external();
-  }
-}
-
-//--------------------------------------------------------------------------
 //-------- solve_and_update ------------------------------------------------
 //--------------------------------------------------------------------------
 void
@@ -838,7 +630,6 @@ VolumeOfFluidEquationSystem::solve_and_update()
     NaluEnv::self().naluOutputP0()
       << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
       << userSuppliedName_ << std::endl;
-    calculate_smooth_vof();
     assemble_and_solve(vofTmp_);
     solution_update(1.0, *vofTmp_, 1.0, *volumeOfFluid_);
 
