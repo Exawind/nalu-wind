@@ -247,50 +247,50 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
 
 void
 ActuatorBulkFAST::stk_turbine_search(
-  const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFineSearch=False)
+  const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine /* = false */)
 {
   //It seems point_centroids includes all actuator points across all turbines. TODO: Is that right?
   //If so, we need to build a similar list here that will be of size numberofActuators
   //that includes all hublocations. The search radius also needs to be of the same size 
   
+  // create bounding sphere and element boxes based on turbine location and search radius
+  auto points = hubLocations_.template view<ActuatorFixedMemSpace>();
+  
+  if (!onlyFine) {
   // Loop over all turbines to initialize the search radius 
   turbineSearchRadius_.modify_host();
   for (int iTurb = 0; iTurb < openFast_.get_nTurbinesGlob(); ++iTurb) {
-    // if my process contains the turbine?
+    // if my process contains the turbine
     if (NaluEnv::self().parallel_rank() == openFast_.get_procNo(iTurb)) {
-      const int nbfp = openFast_.get_numForcePtsBlade(iTurb);
+
       auto hubLoc = Kokkos::subview(actBulk_.hubLocations_, iTurb, Kokkos::ALL);
+      double turbineRadius = 0.0;
       // Approximate turbine radius to define search radius
       //
-      // TODO: is there an easier way to get this information. Is nbfp actually at the blade tip?
-      Point bladeTip = actuator_utils::get_fast_point(openFast_, iTurb, fast::BLADE, nbfp, 0);
-      double turbineRadius = 0.0;
-      for (int i = 0; i < 3; ++i) {
-        turbineRadius += std::pow(bladeTip[i] - hubLoc[i], 2.0);
-      }
-      turbineRadius = std::sqrt(turbineRadius);
-      searchRadius_.h_view(iTurb) = 1.25 * turbineRadius * std::sqrt(2); 
+      /* const int nbfp = openFast_.get_numForcePtsBlade(iTurb); */
+      /* Point bladeTip = actuator_utils::get_fast_point(openFast_, iTurb, fast::BLADE, nbfp, 0); */
+      /* for (int i = 0; i < 3; ++i) { */
+      /*   turbineRadius += std::pow(bladeTip[i] - hubLoc[i], 2.0); */
+      /* } */
+      //use the hub height as a surrogate for turbineRadius
+      turbineRadius = hubLoc[2]  //TODO: 1 or 2?
+      turbineSearchRadius_.h_view(iTurb) = 1.25 * turbineRadius * std::sqrt(2);  //TODO: Could switch to bounding boxes here instead
 
     }
   }
-  //TODO: Are we interacting with Kokkos views correctly?
-  actuator_utils::reduce_view_on_host(searchTurbineRadius_.view_host());
-  searchTurbineRadius_.sync_host();
+  actuator_utils::reduce_view_on_host(turbineSearchRadius_.view_host());
+  turbineSearchRadius_.sync_host();
 
-  // create bounding sphere and element boxes based on turbine location and search radius
-  auto points = hubLocations_.template view<ActuatorFixedMemSpace>();
   auto radius = turbineSearchRadius_.template view<ActuatorFixedMemSpace>();
 
   auto boundSpheres = CreateBoundingSpheres(points,radius);
   auto elemBoxes = CreateElementBoxes(stkBulk, actMeta.searchTargetNames_);
 
-  // need conditional behavior for executing coarse or fine search
-  // 
-
   // the coarse search now associates element boxes with turbines
   ExecuteCoarseSearch(
     boundSpheres, elemBoxes, coarseSearchPointIds_, coarseSearchElemIds_,
     actMeta.searchMethod_);
+  }
 
   // The fine search may be slower now because the number of element boxes are much larger than needed. 
   // However, we don't need to do another fine search. If it's too slow, we could do a smaller fine search

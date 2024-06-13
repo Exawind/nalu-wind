@@ -57,8 +57,8 @@ struct ActuatorBulkFAST : public ActuatorBulk
     const double fastTimeStep, const double naluTimeStep);
   
   // This is placed in ActuatorBulkFAST instead of ActuatorBulk because hublocations are needed
-  void stk_turbine_search(
-    const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk); 
+  void stk_turbine_search (
+    const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk,bool onlyFine = false) override; 
 
   virtual ~ActuatorBulkFAST();
 

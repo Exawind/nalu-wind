@@ -88,8 +88,8 @@ ActuatorBulk::stk_search_act_pnts(
   const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk)
 {
   auto points = pointCentroid_.template view<ActuatorFixedMemSpace>();
-  auto radius = searchRadius_.template view<ActuatorFixedMemSpace>();
 
+  auto radius = searchRadius_.template view<ActuatorFixedMemSpace>();
   auto boundSpheres = CreateBoundingSpheres(points, radius);
   auto elemBoxes = CreateElementBoxes(stkBulk, actMeta.searchTargetNames_);
 
@@ -103,6 +103,26 @@ ActuatorBulk::stk_search_act_pnts(
     localParallelRedundancy_);
 
   actuator_utils::reduce_view_on_host(localParallelRedundancy_);
+}
+
+void stk_turbine_search(
+  const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine /*= false*/)
+{
+    STK_ThrowErrorMsg("Turbine Search Requires ActuatorBulkFAST data");
+}
+
+void
+ActuatorBulk::stk_search(
+  const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk,bool onlyFine /*= false*/)
+{
+    if (actMeta.turbineLevelSearch_){
+      // perform turbine level search and cache to the bulk data
+      stk_turbine_search(actMeta.get(), stkBulk,onlyFine);
+    }
+    else{
+      //TODO: Does it make sense for actuator point search to have onlyFine option?
+      stk_search_act_pnts(actMeta.get(), stkBulk);
+    }
 }
 
 

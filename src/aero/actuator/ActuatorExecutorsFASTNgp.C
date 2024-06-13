@@ -55,10 +55,7 @@ ActuatorLineFastNGP::operator()()
   RunActFastUpdatePoints(actBulk_);
 
   // Execute fine and coarse search given point centroids (see next slides)
-  // Do not need to update fine and coarse search when performing turbine level search 
-  if !(actMeta_->turbineLevelSearch_) { 
-    actBulk_.stk_search_act_pnts(actMeta_, stkBulk_); // this is the fine and coarse searching. 
-  }
+  actBulk_.stk_search(actMeta_, stkBulk_); // this is the fine and coarse searching. 
 
   // call openfast and step
   actBulk_.step_fast();
@@ -130,7 +127,7 @@ ActuatorDiskFastNGP::operator()()
 
     actBulk_.update_ADM_points(actMeta_);
 
-    actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
+    actBulk_.stk_search(actMeta_, stkBulk_,true);
   }
 
   actBulk_.step_fast();
