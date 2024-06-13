@@ -42,8 +42,6 @@ public:
    */
   void set_options(TIOGA::tioga&);
 
-  bool set_resolutions() const { return setResolutions_; }
-
   bool reduce_fringes() const { return reduceFringes_; }
 
   /** Adjust resolutions for mandatory fringe nodes
