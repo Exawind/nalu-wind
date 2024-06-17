@@ -711,9 +711,8 @@ TiogaBlock::register_block(TIOGA::tioga& tg)
   tg.set_cell_iblank(meshtag_, bdata_.iblank_cell_.h_view.data());
 
   // Register cell/node resolutions for TIOGA
-  if (tiogaOpts_.set_resolutions())
-    tg.setResolutions(
-      meshtag_, bdata_.node_res_.h_view.data(), bdata_.cell_res_.h_view.data());
+  tg.setResolutions(
+    meshtag_, bdata_.node_res_.h_view.data(), bdata_.cell_res_.h_view.data());
 }
 
 void

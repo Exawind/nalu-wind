@@ -142,19 +142,15 @@ TiogaSTKIface::register_mesh()
   for (auto& tb : blocks_) {
     tb->update_coords();
     tb->update_element_volumes();
-    if (tiogaOpts_.adjust_resolutions())
-      tb->adjust_cell_resolutions();
+    tb->adjust_cell_resolutions();
   }
 
-  if (tiogaOpts_.adjust_resolutions()) {
-    auto* nodeVol =
-      meta_.get_field(stk::topology::NODE_RANK, "tioga_nodal_volume");
-    stk::mesh::parallel_max(bulk_, {nodeVol});
-  }
+  auto* nodeVol =
+    meta_.get_field(stk::topology::NODE_RANK, "tioga_nodal_volume");
+  stk::mesh::parallel_max(bulk_, {nodeVol});
 
   for (auto& tb : blocks_) {
-    if (tiogaOpts_.adjust_resolutions())
-      tb->adjust_node_resolutions();
+    tb->adjust_node_resolutions();
     tb->register_block(tg_);
   }
 }

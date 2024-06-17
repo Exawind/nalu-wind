@@ -158,6 +158,11 @@ public:
   void update_element_volumes();
 
   /** Adjust resolutions of mandatory fringe entities
+   *
+   *  The entities connected to overset sidesets have their
+   *  nodal/cell resolutions adjusted so that TIOGA will never consider these
+   *  cells as donors. This adjustment is necessary to avoid fringe/field
+   *  mismatch across domain partition boundaries.
    */
   void adjust_cell_resolutions();
 

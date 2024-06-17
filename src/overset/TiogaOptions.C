@@ -19,9 +19,6 @@ TiogaOptions::load(const YAML::Node& node)
   if (node["symmetry_direction"])
     symmetryDir_ = node["symmetry_direction"].as<int>();
 
-  if (node["set_resolutions"])
-    setResolutions_ = node["set_resolutions"].as<bool>();
-
   if (node["reduce_fringes"])
     reduceFringes_ = node["reduce_fringes"].as<bool>();
 
@@ -40,11 +37,6 @@ TiogaOptions::load(const YAML::Node& node)
   }
   if (node["node_resolution_multiplier"]) {
     nodeResMult_ = node["node_resolution_multiplier"].as<double>();
-  }
-
-  if (node["adjust_mandatory_fringe_resolutions"]) {
-    adjustResolutionsForFringes_ =
-      node["adjust_mandatory_fringe_resolutions"].as<bool>();
   }
 }
 
