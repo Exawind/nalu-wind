@@ -42,18 +42,7 @@ public:
    */
   void set_options(TIOGA::tioga&);
 
-  bool set_resolutions() const { return setResolutions_; }
-
   bool reduce_fringes() const { return reduceFringes_; }
-
-  /** Adjust resolutions for mandatory fringe nodes
-   *
-   *  If true, then the entities connected to overset sidesets have their
-   *  nodal/cell resolutions adjusted so that TIOGA will never consider these
-   *  cells as donors. This adjustment is necessary to avoid fringe/field
-   *  mismatch across domain partition boundaries.
-   */
-  bool adjust_resolutions() const { return adjustResolutionsForFringes_; }
 
   double cell_res_mult() const { return cellResMult_; }
   double node_res_mult() const { return nodeResMult_; }
@@ -94,10 +83,6 @@ private:
 
   //! Flag indicating whether user has set the mexclude variable
   bool hasMexclude_{false};
-
-  //! Flag indicating whether the node/cell resolutions should be adjusted for
-  //! mandatory fringes
-  bool adjustResolutionsForFringes_{true};
 };
 
 } // namespace tioga_nalu
