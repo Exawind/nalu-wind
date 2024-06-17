@@ -7,24 +7,25 @@
 // for more details.
 //
 
-#include <user_functions/DropletVOFAuxFunction.h>
+#include <user_functions/FlatDensityAuxFunction.h>
 #include <algorithm>
 
 // basic c++
 #include <cmath>
 #include <vector>
 #include <stdexcept>
+#include <iostream>
 
 namespace sierra {
 namespace nalu {
 
-DropletVOFAuxFunction::DropletVOFAuxFunction() : AuxFunction(0, 1)
+FlatDensityAuxFunction::FlatDensityAuxFunction() : AuxFunction(0, 1)
 {
   // does nothing
 }
 
 void
-DropletVOFAuxFunction::do_evaluate(
+FlatDensityAuxFunction::do_evaluate(
   const double* coords,
   const double /*time*/,
   const unsigned spatialDimension,
@@ -39,15 +40,13 @@ DropletVOFAuxFunction::do_evaluate(
     const double x = coords[0];
     const double y = coords[1];
     const double z = coords[2];
-    const double interface_thickness = 0.0025;
+    const double interface_thickness = 0.015;
 
     fieldPtr[0] = 0.0;
     fieldPtr[0] += -0.5 * (std::erf(y / interface_thickness) + 1.0) + 1.0;
 
-    auto radius = std::sqrt(x * x + (y - 0.25) * (y - 0.25) + z * z) - 0.1;
-    // fieldPtr[0] += -0.5 * (std::erf(radius / interface_thickness) + 1.0)
-    // + 1.0;
-    fieldPtr[0] += -0.5 * (std::erf(radius / 0.0025) + 1.0) + 1.0;
+    // air-water
+    fieldPtr[0] = 1000.0 * fieldPtr[0] + (1.0 - fieldPtr[0]);
 
     fieldPtr += fieldSize;
     coords += spatialDimension;

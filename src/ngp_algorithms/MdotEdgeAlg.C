@@ -12,6 +12,7 @@
 #include "ngp_utils/NgpFieldOps.h"
 #include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
+#include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
 #include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_mesh/base/NgpField.hpp"

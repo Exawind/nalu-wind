@@ -7,6 +7,7 @@
 // for more details.
 //
 
+#include <property_evaluator/MaterialPropertyData.h>
 #include <VolumeOfFluidEquationSystem.h>
 #include <ProjectedNodalGradientEquationSystem.h>
 #include <NaluParsing.h>
@@ -43,6 +44,7 @@
 #include "user_functions/ZalesakDiskVOFAuxFunction.h"
 #include "user_functions/ZalesakSphereVOFAuxFunction.h"
 #include "user_functions/DropletVOFAuxFunction.h"
+#include "user_functions/SloshingTankVOFAuxFunction.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldUtils.h"
@@ -81,6 +83,7 @@ VolumeOfFluidEquationSystem::VolumeOfFluidEquationSystem(
 
   // Require div(u) = 0 instead of div(density*u) = 0
   realm_.solutionOptions_->solveIncompressibleContinuity_ = true;
+  realm_.solutionOptions_->realm_has_vof_ = true;
 
   // determine nodal gradient form
   set_nodal_gradient("volume_of_fluid");
@@ -131,6 +134,11 @@ VolumeOfFluidEquationSystem::register_nodal_fields(
   stk::mesh::put_field_on_mesh(*volumeOfFluid_, selector, nullptr);
   realm_.augment_restart_variable_list("volume_of_fluid");
 
+  auto velocity_ = &(meta_data.declare_field<double>(
+    stk::topology::NODE_RANK, "velocity", numStates));
+  stk::mesh::put_field_on_mesh(*velocity_, selector, nDim, nullptr);
+  realm_.augment_restart_variable_list("velocity");
+
   dvolumeOfFluiddx_ = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "dvolume_of_fluiddx"));
   stk::mesh::put_field_on_mesh(*dvolumeOfFluiddx_, selector, nDim, nullptr);
@@ -178,6 +186,9 @@ VolumeOfFluidEquationSystem::register_edge_fields(
   auto massFlowRate_ = &(meta_data.declare_field<double>(
     stk::topology::EDGE_RANK, "mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*massFlowRate_, selector, nullptr);
+  auto massVofBalancedFlowRate_ = &(meta_data.declare_field<double>(
+    stk::topology::EDGE_RANK, "mass_vof_balanced_flow_rate"));
+  stk::mesh::put_field_on_mesh(*massVofBalancedFlowRate_, selector, nullptr);
 }
 
 //--------------------------------------------------------------------------
@@ -270,12 +281,12 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-  // register boundary data; gamma_bc
+  // register boundary data; vof_bc
   ScalarFieldType* theBcField =
     &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "vof_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
-  // extract the value for user specified tke and save off the AuxFunction
+  // extract the value for user specified vof and save off the AuxFunction
   InflowUserData userData = inflowBCData.userData_;
   std::string vofName = "volume_of_fluid";
   UserDataType theDataType = get_bc_data_type(userData, vofName);
@@ -309,12 +320,12 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
     bcDataAlg_.push_back(auxAlg);
   }
 
-  // copy vof_bc to gamma_transition np1...
+  // copy vof_bc to vof_transition np1...
   CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
     realm_, part, theBcField, &vofNp1, 0, 1, stk::topology::NODE_RANK);
   bcDataMapAlg_.push_back(theCopyAlg);
 
-  // non-solver; dgamdx; allow for element-based shifted
+  // non-solver; dvofdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
     algType, part, "vof_nodal_grad", &vofNp1, &dvofdxNone, edgeNodalGradient_);
 
@@ -347,8 +358,7 @@ VolumeOfFluidEquationSystem::register_open_bc(
 
   // non-solver; dvofdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "gamma_nodal_grad", &vofNp1, &dvofdxNone,
-    edgeNodalGradient_);
+    algType, part, "vof_nodal_grad", &vofNp1, &dvofdxNone, edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -358,10 +368,10 @@ void
 VolumeOfFluidEquationSystem::register_wall_bc(
   stk::mesh::Part* part,
   const stk::topology& /*theTopo*/,
-  const WallBoundaryConditionData& /* wallBCData */)
+  const WallBoundaryConditionData& /*wallBCData*/)
 {
   // algorithm type
-  const AlgorithmType algType = WALL;
+  const AlgorithmType algType = SYMMETRY;
 
   ScalarFieldType& vofNp1 = volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType& dvofdxNone =
@@ -369,8 +379,7 @@ VolumeOfFluidEquationSystem::register_wall_bc(
 
   // non-solver; dvofdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "gamma_nodal_grad", &vofNp1, &dvofdxNone,
-    edgeNodalGradient_);
+    algType, part, "vof_nodal_grad", &vofNp1, &dvofdxNone, edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -391,8 +400,7 @@ VolumeOfFluidEquationSystem::register_symmetry_bc(
 
   // non-solver; dvofdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "gamma_nodal_grad", &vofNp1, &dvofdxNone,
-    edgeNodalGradient_);
+    algType, part, "vof_nodal_grad", &vofNp1, &dvofdxNone, edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -469,7 +477,7 @@ void
 VolumeOfFluidEquationSystem::register_initial_condition_fcn(
   stk::mesh::Part* part,
   const std::map<std::string, std::string>& theNames,
-  const std::map<std::string, std::vector<double>>& /* theParams */)
+  const std::map<std::string, std::vector<double>>& theParams)
 {
   // iterate map and check for name
   const std::string dofName = "volume_of_fluid";
@@ -487,14 +495,22 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
                                  TurbulenceModel::SST_AMS)
                                   ? true
                                   : false;
+        VectorFieldType* velocity_ = realm_.meta_data().get_field<double>(
+          stk::topology::NODE_RANK, "velocity");
         ScalarFieldType* density_ = realm_.meta_data().get_field<double>(
           stk::topology::NODE_RANK, "density");
-        std::vector<double> userSpec(1);
+        std::vector<double> userSpec(3);
         userSpec[0] = 1.0;
+        userSpec[1] = 0.0;
+        userSpec[2] = 0.0;
         AuxFunction* constantAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
         AuxFunctionAlgorithm* constantAuxAlg = new AuxFunctionAlgorithm(
           realm_, part, density_, constantAuxFunc, stk::topology::NODE_RANK);
         realm_.initCondAlg_.push_back(constantAuxAlg);
+        AuxFunction* constantVelFunc = new ConstantAuxFunction(0, 3, userSpec);
+        AuxFunctionAlgorithm* constantVelAlg = new AuxFunctionAlgorithm(
+          realm_, part, velocity_, constantVelFunc, stk::topology::NODE_RANK);
+        realm_.initCondAlg_.push_back(constantVelAlg);
         auto VOFSetMassFlowRate =
           new ZalesakDiskMassFlowRateEdgeAlg(realm_, part, this, useAvgMdot);
         realm_.initCondAlg_.push_back(VOFSetMassFlowRate);
@@ -521,6 +537,13 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
       }
     } else if (fcnName == "droplet") {
       theAuxFunc = new DropletVOFAuxFunction();
+    } else if (fcnName == "sloshing_tank") {
+      std::map<std::string, std::vector<double>>::const_iterator iterParams =
+        theParams.find(dofName);
+      std::vector<double> fcnParams = (iterParams != theParams.end())
+                                        ? (*iterParams).second
+                                        : std::vector<double>();
+      theAuxFunc = new SloshingTankVOFAuxFunction(fcnParams);
     } else {
       throw std::runtime_error("VolumeOfFluidEquationSystem::register_initial_"
                                "condition_fcn: limited functions supported");
@@ -588,6 +611,7 @@ VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
     projectedNodalGradEqs_->solve_and_update_external();
   }
 }
+
 //--------------------------------------------------------------------------
 //-------- solve_and_update ------------------------------------------------
 //--------------------------------------------------------------------------
@@ -606,12 +630,38 @@ VolumeOfFluidEquationSystem::solve_and_update()
     NaluEnv::self().naluOutputP0()
       << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
       << userSuppliedName_ << std::endl;
-
     assemble_and_solve(vofTmp_);
     solution_update(1.0, *vofTmp_, 1.0, *volumeOfFluid_);
 
     compute_projected_nodal_gradient();
   }
+}
+
+//--------------------------------------------------------------------------
+//-------- predict_state ---------------------------------------------------
+//--------------------------------------------------------------------------
+void
+VolumeOfFluidEquationSystem::predict_state()
+{
+  // const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+
+  auto& vofN = fieldMgr.get_field<double>(
+    volumeOfFluid_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& vofNp1 = fieldMgr.get_field<double>(
+    volumeOfFluid_->field_of_state(stk::mesh::StateNP1)
+      .mesh_meta_data_ordinal());
+
+  vofN.sync_to_device();
+
+  const auto& meta = realm_.meta_data();
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part() |
+     meta.aura_part()) &
+    stk::mesh::selectField(*volumeOfFluid_);
+  nalu_ngp::field_copy(ngpMesh, sel, vofNp1, vofN, 1);
+  vofNp1.modify_on_device();
 }
 
 } // namespace nalu

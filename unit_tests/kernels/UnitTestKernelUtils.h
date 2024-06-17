@@ -1434,13 +1434,15 @@ public:
       dvolumeOfFluidDx_(&meta_->declare_field<double>(
         stk::topology::NODE_RANK, "volume_of_fluid_gradient")),
       velocity_(
-        &meta_->declare_field<double>(stk::topology::NODE_RANK, "velocity")),
+        &meta_->declare_field<double>(stk::topology::NODE_RANK, "velocity", 2)),
       density_(
         &meta_->declare_field<double>(stk::topology::NODE_RANK, "density", 2)),
       viscosity_(
         &meta_->declare_field<double>(stk::topology::NODE_RANK, "viscosity")),
       massFlowRateEdge_(&meta_->declare_field<double>(
         stk::topology::EDGE_RANK, "mass_flow_rate")),
+      vofBalancedMassFlowRateEdge_(&meta_->declare_field<double>(
+        stk::topology::EDGE_RANK, "mass_vof_balanced_flow_rate")),
       znot_(1.0),
       amf_(2.0),
       rhoPrimary_(1000.0),
@@ -1463,6 +1465,8 @@ public:
     stk::mesh::put_field_on_mesh(*viscosity_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
       *massFlowRateEdge_, meta_->universal_part(), nullptr);
+    stk::mesh::put_field_on_mesh(
+      *vofBalancedMassFlowRateEdge_, meta_->universal_part(), 1, nullptr);
   }
   virtual ~VOFKernelHex8Mesh() {}
 
@@ -1491,6 +1495,7 @@ public:
   sierra::nalu::ScalarFieldType* density_{nullptr};
   sierra::nalu::ScalarFieldType* viscosity_{nullptr};
   sierra::nalu::ScalarFieldType* massFlowRateEdge_{nullptr};
+  sierra::nalu::ScalarFieldType* vofBalancedMassFlowRateEdge_{nullptr};
   const double znot_;
   const double amf_;
   const double rhoPrimary_;
