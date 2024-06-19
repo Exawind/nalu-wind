@@ -249,21 +249,13 @@ void
 ActuatorBulkFAST::stk_turbine_search(
   const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine /* = false */)
 {
-  //It seems point_centroids includes all actuator points across all turbines. TODO: Is that right?
-  //If so, we need to build a similar list here that will be of size numberofActuators
-  //that includes all hublocations. The search radius also needs to be of the same size 
-  
-  // create bounding sphere and element boxes based on turbine location and search radius
-  auto points = hubLocations_.template view<ActuatorFixedMemSpace>();
-  
+  auto points = hubLocations_;
   if (!onlyFine) {
   // Loop over all turbines to initialize the search radius 
-  turbineSearchRadius_.modify_host();
   for (int iTurb = 0; iTurb < openFast_.get_nTurbinesGlob(); ++iTurb) {
     // if my process contains the turbine
     if (NaluEnv::self().parallel_rank() == openFast_.get_procNo(iTurb)) {
-
-      auto hubLoc = Kokkos::subview(actBulk_.hubLocations_, iTurb, Kokkos::ALL);
+      auto hubLoc = Kokkos::subview(hubLocations_, iTurb, Kokkos::ALL);
       double turbineRadius = 0.0;
       // Approximate turbine radius to define search radius
       //
@@ -273,16 +265,14 @@ ActuatorBulkFAST::stk_turbine_search(
       /*   turbineRadius += std::pow(bladeTip[i] - hubLoc[i], 2.0); */
       /* } */
       //use the hub height as a surrogate for turbineRadius
-      turbineRadius = hubLoc[2]  //TODO: 1 or 2?
-      turbineSearchRadius_.h_view(iTurb) = 1.25 * turbineRadius * std::sqrt(2);  //TODO: Could switch to bounding boxes here instead
+      turbineRadius = hubLoc[2];  //TODO: 1 or 2?
+      turbineSearchRadius_(iTurb) = 1.25 * turbineRadius * std::sqrt(2);  //TODO: Could switch to bounding boxes here instead
 
     }
   }
-  actuator_utils::reduce_view_on_host(turbineSearchRadius_.view_host());
-  turbineSearchRadius_.sync_host();
-
-  auto radius = turbineSearchRadius_.template view<ActuatorFixedMemSpace>();
-
+  //actuator_utils::reduce_view_on_host(turbineSearchRadius_.view_host());
+  //turbineSearchRadius_.sync_host();
+  auto radius = turbineSearchRadius_;
   auto boundSpheres = CreateBoundingSpheres(points,radius);
   auto elemBoxes = CreateElementBoxes(stkBulk, actMeta.searchTargetNames_);
 

@@ -105,7 +105,7 @@ ActuatorBulk::stk_search_act_pnts(
   actuator_utils::reduce_view_on_host(localParallelRedundancy_);
 }
 
-void stk_turbine_search(
+void ActuatorBulk::stk_turbine_search(
   const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine /*= false*/)
 {
     STK_ThrowErrorMsg("Turbine Search Requires ActuatorBulkFAST data");
@@ -117,11 +117,11 @@ ActuatorBulk::stk_search(
 {
     if (actMeta.turbineLevelSearch_){
       // perform turbine level search and cache to the bulk data
-      stk_turbine_search(actMeta.get(), stkBulk,onlyFine);
+      stk_turbine_search(actMeta, stkBulk,onlyFine);
     }
     else{
       //TODO: Does it make sense for actuator point search to have onlyFine option?
-      stk_search_act_pnts(actMeta.get(), stkBulk);
+      stk_search_act_pnts(actMeta, stkBulk);
     }
 }
 

@@ -164,6 +164,15 @@ using ActFastSpreadForceWhProjection = GenericLoopOverCoarseSearchResults<
   ActuatorBulkFAST,
   ActFastSpreadForceWhProjInnerLoop>;
 
+//TODO: Is there a better way to do this
+/* using ActFastComputeThrust = GenericLoopOverCoarseTurbineSearchResults< */
+/*   ActuatorBulkFAST, */
+/*   ActFastComputeThrustInnerLoop>; */
+
+/* using ActFastSpreadForceWhProjection = GenericLoopOverCoarseTurbineSearchResults< */
+/*   ActuatorBulkFAST, */
+/*   ActFastSpreadForceWhProjInnerLoop>; */
+
 } /* namespace nalu */
 } /* namespace sierra */
 

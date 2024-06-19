@@ -66,7 +66,7 @@ struct ActuatorBulkFAST : public ActuatorBulk
   ActFixVectorDbl turbineTorque_;
   ActFixVectorDbl hubLocations_;
   ActFixVectorDbl hubOrientation_;
-  ActFixVectorDbl turbineSearchRadius_; //need vector for turbine search...this will be a different size than searchRadius_ in Actuatorbulk.h
+  ActFixScalarDbl turbineSearchRadius_; //need vector for turbine search...this will be a different size than searchRadius_ in Actuatorbulk.h
 
   ActTensorDblDv orientationTensor_;
 

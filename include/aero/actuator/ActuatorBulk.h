@@ -73,7 +73,7 @@ struct ActuatorBulk
   void stk_search(
     const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine = false);
 
-  //do I need this to be virtual function so the generic stk_search can call it, even though 
+  //TODO: do I need this to be virtual function so the generic stk_search can call it, even though 
   //the turbine search only makes sense in the ActuatorBulkFast context as implemented? 
   virtual void stk_turbine_search(
     const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine = false); 

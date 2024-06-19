@@ -72,10 +72,6 @@ struct GenericLoopOverCoarseSearchResults
   // see ActuatorExecutorFASTSngp.C line 58
   void operator()(int index) const
   {
-    // TODO (GOPAL): Index gives us actuator id and element id from coarse search 
-    // coarse search associates actuator points with elements 
-    //
-    // element associates a group of points
     // properties of elements are controlled by master element
     auto pointId = actBulk_.coarseSearchPointIds_.h_view(index);
     auto elemId = actBulk_.coarseSearchElemIds_.h_view(index);
@@ -129,6 +125,7 @@ struct GenericLoopOverCoarseSearchResults
       // etc.
       //
       // pointID helps look up data from openfast
+      //
       innerLoopFunctor_(pointId, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
     }
   }

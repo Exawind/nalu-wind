@@ -10,6 +10,7 @@
 #ifndef ACTUATORFUNCTORS_H_
 #define ACTUATORFUNCTORS_H_
 
+#include <aero/actuator/ActuatorGenericTurbineSearchFunctor.h>
 #include <aero/actuator/ActuatorGenericSearchFunctor.h>
 #include <aero/actuator/ActuatorBulk.h>
 #include <FieldTypeDef.h>
@@ -66,6 +67,9 @@ struct SpreadForceInnerLoop
 
 using SpreadActuatorForce =
   GenericLoopOverCoarseSearchResults<ActuatorBulk, SpreadForceInnerLoop>;
+
+using SpreadActuatorForceTurbineSearch =
+  GenericLoopOverCoarseTurbineSearchResults<ActuatorBulk, SpreadForceInnerLoop>;
 
 } /* namespace nalu */
 } /* namespace sierra */
