@@ -246,6 +246,21 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
 }
 
 void
+ActuatorBulkFAST::stk_search(
+  const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine /* = false */)
+{
+    if (actMeta.turbineLevelSearch_){
+      // perform turbine level search and cache to the bulk data
+      stk_turbine_search(actMeta, stkBulk,onlyFine);
+    }
+    else{
+      //TODO: Does it make sense for actuator point search to have onlyFine option?
+      stk_search_act_pnts(actMeta, stkBulk);
+    }
+}
+
+
+void
 ActuatorBulkFAST::stk_turbine_search(
   const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine /* = false */)
 {
@@ -265,7 +280,7 @@ ActuatorBulkFAST::stk_turbine_search(
       /*   turbineRadius += std::pow(bladeTip[i] - hubLoc[i], 2.0); */
       /* } */
       //use the hub height as a surrogate for turbineRadius
-      turbineRadius = hubLoc[2];  //TODO: 1 or 2?
+      turbineRadius = hubLoc[2];  //TODO: Is z 1 or 2?
       turbineSearchRadius_(iTurb) = 1.25 * turbineRadius * std::sqrt(2);  //TODO: Could switch to bounding boxes here instead
 
     }
@@ -282,9 +297,6 @@ ActuatorBulkFAST::stk_turbine_search(
     actMeta.searchMethod_);
   }
 
-  // The fine search may be slower now because the number of element boxes are much larger than needed. 
-  // However, we don't need to do another fine search. If it's too slow, we could do a smaller fine search
-  // at each time step, but still just keep the one coarse search here. 
   ExecuteFineSearch(
     stkBulk, coarseSearchPointIds_, coarseSearchElemIds_, points,
     elemContainingPoint_, localCoords_, pointIsLocal_,

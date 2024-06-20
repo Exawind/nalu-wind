@@ -66,17 +66,11 @@ struct ActuatorBulk
   ActuatorBulk(const ActuatorMeta& actMeta);
   virtual ~ActuatorBulk() {}
 
-  void stk_search_act_pnts(
-    const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk);
-
-  //Generic stk search
-  void stk_search(
+  virtual void stk_search(
     const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine = false);
 
-  //TODO: do I need this to be virtual function so the generic stk_search can call it, even though 
-  //the turbine search only makes sense in the ActuatorBulkFast context as implemented? 
-  virtual void stk_turbine_search(
-    const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine = false); 
+  void stk_search_act_pnts(
+    const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk);
 
   void zero_source_terms(stk::mesh::BulkData& stkBulk);
   void parallel_sum_source_term(stk::mesh::BulkData& stkBulk);

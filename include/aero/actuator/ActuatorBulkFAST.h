@@ -56,9 +56,11 @@ struct ActuatorBulkFAST : public ActuatorBulk
   bool is_tstep_ratio_admissable(
     const double fastTimeStep, const double naluTimeStep);
   
-  // This is placed in ActuatorBulkFAST instead of ActuatorBulk because hublocations are needed
   void stk_turbine_search (
-    const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk,bool onlyFine = false) override; 
+    const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk,bool onlyFine = false); 
+
+  void stk_search(
+    const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine = false) override;
 
   virtual ~ActuatorBulkFAST();
 
