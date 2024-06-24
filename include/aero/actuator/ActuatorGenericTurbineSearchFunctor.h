@@ -125,10 +125,11 @@ struct GenericLoopOverCoarseTurbineSearchResults
       // during functor construction i.e. ActuatorBulk, flags, ActuatorMeta,
       // etc.
       //
-      //loop over actuator points. Don't need to change innerLoopFunctors
-      for (int actPtInd = 0; actPtInd < actBulk_.pointCentroids_.size(); actPtInd ++){
+      // loop over actuator points. Don't need to change innerLoopFunctors
+      for (int actPtInd = 0; actPtInd < actBulk_.pointCentroid_.extent(0); actPtInd ++){
         innerLoopFunctor_(actPtInd, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
       }
+  }
   }
 
   ActuatorBulk& actBulk_;

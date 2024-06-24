@@ -28,16 +28,15 @@ ActuatorLineFastNGP::operator()()
   //Zero the (body-force) actuator source term 
   actBulk_.zero_source_terms(stkBulk_); 
 
-  //Range for Kokkos parallel-for -- set range policy to only operating over points owned by local fast turbine
+  //set range policy to only operating over points owned by local fast turbine
   auto fastRangePolicy = actBulk_.local_range_policy();
 
-  //Interpolate velocity to actuator points. This happens before fine search? Is this from previous timestep
+  //Interpolate velocity to actuator points. 
   RunInterpActuatorVel(actBulk_, stkBulk_);
 
-  // Add FLLC correction to velocity field. Is this term treated explicitly? Also seems like it’s from previous step
+  // Add FLLC correction to velocity field. 
   apply_fllc(actBulk_);
 
-  //assign velocity data to a point and turbine ID from openfast?
   Kokkos::parallel_for(
     "assignFastVelActuatorNgpFAST", fastRangePolicy,
     ActFastAssignVel(actBulk_));
@@ -45,17 +44,17 @@ ActuatorLineFastNGP::operator()()
   // get relative velocity from openFAST
   ActFastCacheRelativeVelocities(actBulk_);
 
-  // Compute filtered lifting line correction and store in fllc(I,j)
+  // Compute filtered lifting line correction 
   compute_fllc();
 
   // Send interpolated velocities at actuator points to openFAST
   actBulk_.interpolate_velocities_to_fast();
 
-  // Get actuator point centroids (from openfast or from basis-functions?). Again, this after the interpolation step?
+  // Get actuator point centroids 
   RunActFastUpdatePoints(actBulk_);
 
-  // Execute fine and coarse search given point centroids (see next slides)
-  actBulk_.stk_search(actMeta_, stkBulk_); // this is the fine and coarse searching. 
+  // Execute fine and coarse search given point centroids 
+  actBulk_.stk_search(actMeta_, stkBulk_); 
 
   // call openfast and step
   actBulk_.step_fast();
@@ -63,8 +62,7 @@ ActuatorLineFastNGP::operator()()
   // compute the force from openfast at actuator points
   RunActFastComputeForce(actBulk_);
 
-  // Loop over all coarse points, the spread the force to. 
-  // Does this perform the loop over coarse search for each point centroid?
+  // Loop over all coarse points
   const int localSizeCoarseSearch =
     actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
@@ -80,7 +78,6 @@ ActuatorLineFastNGP::operator()()
       ActFastSpreadForceWhProjection(actBulk_, stkBulk_));
   }
 
-  // sum up force contributions
   actBulk_.parallel_sum_source_term(stkBulk_);
 
   if (actBulk_.openFast_.isDebug()) {
@@ -141,7 +138,7 @@ ActuatorDiskFastNGP::operator()()
   const int localSizeCoarseSearch =
     actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
-  if (actMeta_.turbineLevelSearch) {
+  if (actMeta_.turbineLevelSearch_) {
     Kokkos::parallel_for(
       "spreadForcesActuatorNgpFAST", HostRangePolicy(0, localSizeCoarseSearch),
       SpreadActuatorForceTurbineSearch(actBulk_, stkBulk_));
@@ -151,7 +148,6 @@ ActuatorDiskFastNGP::operator()()
       "spreadForcesActuatorNgpFAST", HostRangePolicy(0, localSizeCoarseSearch),
       SpreadActuatorForce(actBulk_, stkBulk_));
   }
-
 
   actBulk_.parallel_sum_source_term(stkBulk_);
 
