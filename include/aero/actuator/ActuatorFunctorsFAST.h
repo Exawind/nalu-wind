@@ -38,7 +38,7 @@ inline void
 RunActFastUpdatePoints(ActuatorBulkFAST& actBulk)
 {
   Kokkos::deep_copy(actBulk.pointCentroid_.view_host(), 0.0);
-  actBulk.pointCentroid_.modify_host();
+  actBulk.pointCentroid_.modify_host(); //actuator point locations in space 
   Kokkos::parallel_for(
     "ActFastUpdatePoints", actBulk.local_range_policy(),
     ActFastUpdatePoints(actBulk));
@@ -161,6 +161,14 @@ using ActFastComputeThrust = GenericLoopOverCoarseSearchResults<
   ActFastComputeThrustInnerLoop>;
 
 using ActFastSpreadForceWhProjection = GenericLoopOverCoarseSearchResults<
+  ActuatorBulkFAST,
+  ActFastSpreadForceWhProjInnerLoop>;
+
+using ActFastComputeThrustTurbineSearch = GenericLoopOverCoarseTurbineSearchResults<
+  ActuatorBulkFAST,
+  ActFastComputeThrustInnerLoop>;
+
+using ActFastSpreadForceWhProjectionTurbineSearch = GenericLoopOverCoarseTurbineSearchResults<
   ActuatorBulkFAST,
   ActFastSpreadForceWhProjInnerLoop>;
 

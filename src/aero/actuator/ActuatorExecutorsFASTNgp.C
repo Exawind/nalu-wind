@@ -25,33 +25,44 @@ ActuatorLineFastNGP::ActuatorLineFastNGP(
 void
 ActuatorLineFastNGP::operator()()
 {
-  actBulk_.zero_source_terms(stkBulk_);
+  //Zero the (body-force) actuator source term 
+  actBulk_.zero_source_terms(stkBulk_); 
 
-  // set range policy to only operating over points owned by local fast turbine
+  //set range policy to only operating over points owned by local fast turbine
   auto fastRangePolicy = actBulk_.local_range_policy();
 
+  //Interpolate velocity to actuator points. 
   RunInterpActuatorVel(actBulk_, stkBulk_);
 
+  // Add FLLC correction to velocity field. 
   apply_fllc(actBulk_);
 
   Kokkos::parallel_for(
     "assignFastVelActuatorNgpFAST", fastRangePolicy,
     ActFastAssignVel(actBulk_));
 
+  // get relative velocity from openFAST
   ActFastCacheRelativeVelocities(actBulk_);
 
+  // Compute filtered lifting line correction 
   compute_fllc();
 
+  // Send interpolated velocities at actuator points to openFAST
   actBulk_.interpolate_velocities_to_fast();
 
+  // Get actuator point centroids 
   RunActFastUpdatePoints(actBulk_);
 
-  actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
+  // Execute fine and coarse search given point centroids 
+  actBulk_.stk_search(actMeta_, stkBulk_); 
 
+  // call openfast and step
   actBulk_.step_fast();
 
+  // compute the force from openfast at actuator points
   RunActFastComputeForce(actBulk_);
 
+  // Loop over all coarse points
   const int localSizeCoarseSearch =
     actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
@@ -113,7 +124,7 @@ ActuatorDiskFastNGP::operator()()
 
     actBulk_.update_ADM_points(actMeta_);
 
-    actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
+    actBulk_.stk_search(actMeta_, stkBulk_,true);
   }
 
   actBulk_.step_fast();
@@ -127,9 +138,16 @@ ActuatorDiskFastNGP::operator()()
   const int localSizeCoarseSearch =
     actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
-  Kokkos::parallel_for(
-    "spreadForcesActuatorNgpFAST", HostRangePolicy(0, localSizeCoarseSearch),
-    SpreadActuatorForce(actBulk_, stkBulk_));
+  if (actMeta_.turbineLevelSearch_) {
+    Kokkos::parallel_for(
+      "spreadForcesActuatorNgpFAST", HostRangePolicy(0, localSizeCoarseSearch),
+      SpreadActuatorForceTurbineSearch(actBulk_, stkBulk_));
+  }
+  else {
+    Kokkos::parallel_for(
+      "spreadForcesActuatorNgpFAST", HostRangePolicy(0, localSizeCoarseSearch),
+      SpreadActuatorForce(actBulk_, stkBulk_));
+  }
 
   actBulk_.parallel_sum_source_term(stkBulk_);
 

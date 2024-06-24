@@ -14,8 +14,8 @@
 // This software is released under the BSD 3-clause license. See LICENSE file
 // for more details.
 //
-#ifndef ACTUATORGENERICSEARCHFUNCTOR_H_
-#define ACTUATORGENERICSEARCHFUNCTOR_H_
+#ifndef ACTUATORGENERICTURBINESEARCHFUNCTOR_H_
+#define ACTUATORGENERICTURBINESEARCHFUNCTOR_H_
 
 #include <aero/actuator/UtilitiesActuator.h>
 #include <aero/actuator/ActuatorTypes.h>
@@ -27,12 +27,12 @@ namespace nalu {
 
 template <typename ActuatorBulk, typename functor>
   //coarse search actuatorbulk.c L96
-struct GenericLoopOverCoarseSearchResults
+struct GenericLoopOverCoarseTurbineSearchResults
 {
   using execution_space = ActuatorFixedExecutionSpace;
 
   // ctor if functor only requires actBulk for constructor
-  GenericLoopOverCoarseSearchResults(
+  GenericLoopOverCoarseTurbineSearchResults(
     ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk)
     : actBulk_(actBulk),
       stkBulk_(stkBulk),
@@ -50,7 +50,7 @@ struct GenericLoopOverCoarseSearchResults
   }
 
   // ctor for functor constructor taking multiple args
-  GenericLoopOverCoarseSearchResults(
+  GenericLoopOverCoarseTurbineSearchResults(
     ActuatorBulk& actBulk,
     stk::mesh::BulkData& stkBulk,
     functor innerLoopFunctor)
@@ -70,9 +70,10 @@ struct GenericLoopOverCoarseSearchResults
   }
 
   // see ActuatorExecutorFASTSngp.C line 58
+  // index corresponds to turbines here
   void operator()(int index) const
   {
-    // properties of elements are controlled by master element
+
     auto pointId = actBulk_.coarseSearchPointIds_.h_view(index);
     auto elemId = actBulk_.coarseSearchElemIds_.h_view(index);
 
@@ -124,10 +125,11 @@ struct GenericLoopOverCoarseSearchResults
       // during functor construction i.e. ActuatorBulk, flags, ActuatorMeta,
       // etc.
       //
-      // pointID helps look up data from openfast
-      //
-      innerLoopFunctor_(pointId, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
-    }
+      // loop over actuator points. Don't need to change innerLoopFunctors
+      for (int actPtInd = 0; actPtInd < actBulk_.pointCentroid_.extent(0); actPtInd ++){
+        innerLoopFunctor_(actPtInd, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
+      }
+  }
   }
 
   ActuatorBulk& actBulk_;
@@ -141,4 +143,5 @@ struct GenericLoopOverCoarseSearchResults
 } // namespace nalu
 } // namespace sierra
 
-#endif /* ACTUATORGENERICSEARCHFUNCTOR_H_ */
+#endif /* ACTUATORGENERICTURBINESEARCHFUNCTOR_H_ */
+
