@@ -183,14 +183,8 @@ public:
 
   /** Update iblanks after connectivity updates
    */
-  void update_iblanks();
-  /** Update fringe and hole node vectors
-   */
-  void update_fringe_and_hole_nodes(
+  void update_iblanks(
     std::vector<stk::mesh::Entity>&, std::vector<stk::mesh::Entity>&);
-  /** Update the Tioga view of iblanks prior to donor-to-receptor interpolation
-   */
-  void update_tioga_iblanks();
 
   /** Update element iblanks after connectivity updates
    */
