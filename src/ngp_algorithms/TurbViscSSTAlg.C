@@ -136,7 +136,7 @@ TurbViscSSTAlg::execute()
 	tvisc.get(meshIdx, 0) =
 	  density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
 	  (sdr.get(meshIdx, 0));
-      } else if ((udpdx*fTwo > sThres*1.0*(1.0*1.0*1.0)/1.0) && (lamda0L<-0.0681)) { // APG model and laminar separation criterion satisfied
+      } else if (lamda0L<-0.0681) { // laminar separation criterion satisfied (this is functioning as the APG sensor)
 	tvisc.get(meshIdx, 0) =
 	  aOne * density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
 	  (sijMag * fTwo);
