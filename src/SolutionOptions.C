@@ -653,7 +653,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_cmuCs] = 0.17;
   turbModelConstantMap_[TM_Cw] = 0.325;
   turbModelConstantMap_[TM_CbTwo] = 0.35;
-  turbModelConstantMap_[TM_SDRWallFactor] = 1.0;
+  turbModelConstantMap_[TM_SDRWallFactor] = 10.0;
   turbModelConstantMap_[TM_zCV] = 0.5;
   turbModelConstantMap_[TM_ci] = 0.9;
   turbModelConstantMap_[TM_elog] = 9.8;
