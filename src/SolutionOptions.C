@@ -642,6 +642,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_cEps] = 0.845;
   turbModelConstantMap_[TM_betaStar] = 0.09;
   turbModelConstantMap_[TM_aOne] = 0.31;
+  turbModelConstantMap_[TM_sThres] = 5.0;
   turbModelConstantMap_[TM_betaOne] = 0.075;
   turbModelConstantMap_[TM_betaTwo] = 0.0828;
   turbModelConstantMap_[TM_gammaOne] = 5.0 / 9.0;

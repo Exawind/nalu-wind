@@ -42,11 +42,16 @@ private:
   unsigned tke_{stk::mesh::InvalidOrdinal};
   unsigned sdr_{stk::mesh::InvalidOrdinal};
   unsigned minDistance_{stk::mesh::InvalidOrdinal};
+  unsigned dwalldistdx_{stk::mesh::InvalidOrdinal};
+  unsigned dnDotVdx_{stk::mesh::InvalidOrdinal};
   unsigned dudx_{stk::mesh::InvalidOrdinal};
+  unsigned velocity_{stk::mesh::InvalidOrdinal};
+  unsigned dpdx_{stk::mesh::InvalidOrdinal};
   unsigned tvisc_{stk::mesh::InvalidOrdinal};
 
   const DblType aOne_;
   const DblType betaStar_;
+  const DblType sThres_;
 };
 
 } // namespace nalu

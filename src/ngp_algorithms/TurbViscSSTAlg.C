@@ -16,6 +16,7 @@
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
 
+
 namespace sierra {
 namespace nalu {
 
@@ -32,10 +33,17 @@ TurbViscSSTAlg::TurbViscSSTAlg(
     sdr_(get_field_ordinal(realm.meta_data(), "specific_dissipation_rate")),
     minDistance_(
       get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall")),
+    dwalldistdx_(
+      get_field_ordinal(realm.meta_data(), "dwalldistdx")),
+    dnDotVdx_(
+      get_field_ordinal(realm.meta_data(), "dnDotVdx")),
     dudx_(get_field_ordinal(
       realm.meta_data(), (useAverages) ? "average_dudx" : "dudx")),
+    velocity_(get_field_ordinal(realm.meta_data(), "velocity")),
+    dpdx_(get_field_ordinal(realm.meta_data(), "dpdx")),
     tvisc_(tvisc->mesh_meta_data_ordinal()),
     aOne_(realm.get_turb_model_constant(TM_aOne)),
+    sThres_(realm.get_turb_model_constant(TM_sThres)),
     betaStar_(realm.get_turb_model_constant(TM_betaStar))
 {
 }
@@ -59,12 +67,17 @@ TurbViscSSTAlg::execute()
   const auto tke = fieldMgr.get_field<double>(tke_);
   const auto sdr = fieldMgr.get_field<double>(sdr_);
   const auto minD = fieldMgr.get_field<double>(minDistance_);
+  const auto dwalldistdx = fieldMgr.get_field<double>(dwalldistdx_);
+  const auto dnDotVdx = fieldMgr.get_field<double>(dnDotVdx_);
   const auto dudx = fieldMgr.get_field<double>(dudx_);
+  const auto velocity = fieldMgr.get_field<double>(velocity_);
+  const auto dpdx = fieldMgr.get_field<double>(dpdx_);
   auto tvisc = fieldMgr.get_field<double>(tvisc_);
 
   tvisc.sync_to_device();
 
   const DblType aOne = aOne_;
+  const DblType sThres = sThres_;
   const DblType betaStar = betaStar_;
   const int nDim = meta.spatial_dimension();
 
@@ -82,6 +95,19 @@ TurbViscSSTAlg::execute()
       }
       sijMag = stk::math::sqrt(2.0 * sijMag);
 
+      // Compute udpdx
+      DblType u_mag = 0.0;
+      for (int i = 0; i < nDim; ++i) {
+	u_mag += velocity.get(meshIdx, i) * velocity.get(meshIdx, i);
+      }
+      u_mag = stk::math::sqrt(u_mag);
+      if (u_mag < 1e-8)
+	u_mag = 1e-8;
+      DblType udpdx = 0.0;
+      for (int i = 0; i < nDim; ++i) {
+	udpdx += velocity.get(meshIdx, i)/u_mag * dpdx.get(meshIdx, i);
+      }
+      
       const DblType minDSq = minD.get(meshIdx, 0) * minD.get(meshIdx, 0);
       const DblType trbDiss = stk::math::sqrt(tke.get(meshIdx, 0)) / betaStar /
                               sdr.get(meshIdx, 0) / minD.get(meshIdx, 0);
@@ -91,9 +117,35 @@ TurbViscSSTAlg::execute()
       const DblType fArgTwo = stk::math::max(2.0 * trbDiss, lamDiss);
       const DblType fTwo = stk::math::tanh(fArgTwo * fArgTwo);
 
-      tvisc.get(meshIdx, 0) =
-        aOne * density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
-        stk::math::max(aOne * sdr.get(meshIdx, 0), sijMag * fTwo);
+      // master
+      //tvisc.get(meshIdx, 0) =
+      //  aOne * density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
+      //  stk::math::max(aOne * sdr.get(meshIdx, 0), sijMag * fTwo);
+
+      DblType dvnn = 0.0;
+      DblType lamda0L = 0.0;
+
+      for (int i = 0; i < nDim; ++i) {
+	dvnn += dwalldistdx.get(meshIdx, i) * dnDotVdx.get(meshIdx, i);
+      }
+      lamda0L = -7.57e-3 * dvnn * minD.get(meshIdx, 0) * minD.get(meshIdx, 0) * density.get(meshIdx, 0) / visc.get(meshIdx, 0) + 0.0128;
+      lamda0L = stk::math::min(stk::math::max(lamda0L, -1.0), 1.0);
+
+      // udpdx sensor, but sijMag eddy viscosity
+      if (0.31 * sdr.get(meshIdx, 0) > sijMag * fTwo){ // non-APG model
+	tvisc.get(meshIdx, 0) =
+	  density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
+	  (sdr.get(meshIdx, 0));
+      } else if ((udpdx*fTwo > sThres*1.0*(1.0*1.0*1.0)/1.0) && (lamda0L<-0.0681)) { // APG model and laminar separation criterion satisfied
+	tvisc.get(meshIdx, 0) =
+	  aOne * density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
+	  (sijMag * fTwo);
+      } else { // pseudo-APG model, used in corner cases
+	tvisc.get(meshIdx, 0) =
+	  0.31 * density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
+	  (sijMag * fTwo);
+      }
+      
     });
   tvisc.modify_on_device();
 }

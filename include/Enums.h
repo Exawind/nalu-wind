@@ -245,7 +245,8 @@ enum TurbulenceModelConstant {
   TM_avgTimeCoeff = 64,
   TM_alphaInf = 65,
   TM_fsti = 66,
-  TM_END = 67
+  TM_sThres = 67,
+  TM_END = 68
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
@@ -316,6 +317,7 @@ static const std::string TurbulenceModelConstantNames[] = {
   "avgTimeCoeff",
   "alphaInf",
   "fsti",
+  "sThres",
   "END"};
 
 enum ActuatorType {

@@ -83,7 +83,7 @@ ShearStressTransportEquationSystem::ShearStressTransportEquationSystem(
 
   tkeEqSys_ = new TurbKineticEnergyEquationSystem(eqSystems);
   sdrEqSys_ = new SpecificDissipationRateEquationSystem(eqSystems);
-  if (realm_.solutionOptions_->gammaEqActive_)
+  //if (realm_.solutionOptions_->gammaEqActive_)
     gammaEqSys_ = new GammaEquationSystem(eqSystems);
 }
 
@@ -106,10 +106,10 @@ ShearStressTransportEquationSystem::load(const YAML::Node& node)
     tkeEqSys_->numOversetIters_ = numOversetIters_;
     sdrEqSys_->decoupledOverset_ = decoupledOverset_;
     sdrEqSys_->numOversetIters_ = numOversetIters_;
-    if (realm_.solutionOptions_->gammaEqActive_) {
+    //if (realm_.solutionOptions_->gammaEqActive_) {
       gammaEqSys_->decoupledOverset_ = decoupledOverset_;
       gammaEqSys_->numOversetIters_ = numOversetIters_;
-    }
+    //}
   }
 }
 
@@ -122,7 +122,7 @@ ShearStressTransportEquationSystem::initialize()
   // let equation systems that are owned some information
   tkeEqSys_->convergenceTolerance_ = convergenceTolerance_;
   sdrEqSys_->convergenceTolerance_ = convergenceTolerance_;
-  if (realm_.solutionOptions_->gammaEqActive_)
+  //if (realm_.solutionOptions_->gammaEqActive_)
     gammaEqSys_->convergenceTolerance_ = convergenceTolerance_;
 }
 
@@ -145,11 +145,11 @@ ShearStressTransportEquationSystem::register_nodal_fields(
   sdr_ = &(meta_data.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "specific_dissipation_rate", numStates));
   stk::mesh::put_field_on_mesh(*sdr_, selector, nullptr);
-  if (realm_.solutionOptions_->gammaEqActive_) {
+  //if (realm_.solutionOptions_->gammaEqActive_) {
     gamma_ = &(meta_data.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "gamma_transition", numStates));
     stk::mesh::put_field_on_mesh(*gamma_, selector, nullptr);
-  }
+  //}
 
   // SST parameters that everyone needs
   minDistanceToWall_ = &(meta_data.declare_field<ScalarFieldType>(
@@ -252,7 +252,7 @@ ShearStressTransportEquationSystem::solve_and_update()
     // compute projected nodal gradients
     tkeEqSys_->compute_projected_nodal_gradient();
     sdrEqSys_->assemble_nodal_gradient();
-    if (realm_.solutionOptions_->gammaEqActive_)
+    //if (realm_.solutionOptions_->gammaEqActive_)
       gammaEqSys_->assemble_nodal_gradient();
     clip_min_distance_to_wall();
 
@@ -279,7 +279,7 @@ ShearStressTransportEquationSystem::solve_and_update()
   // SST effective viscosity for k and omega
   tkeEqSys_->compute_effective_diff_flux_coeff();
   sdrEqSys_->compute_effective_diff_flux_coeff();
-  if (realm_.solutionOptions_->gammaEqActive_)
+  //if (realm_.solutionOptions_->gammaEqActive_)
     gammaEqSys_->compute_effective_diff_flux_coeff();
 
   // wall values
@@ -297,24 +297,24 @@ ShearStressTransportEquationSystem::solve_and_update()
       // tke and sdr assemble, load_complete and solve; Jacobi iteration
       tkeEqSys_->assemble_and_solve(tkeEqSys_->kTmp_);
       sdrEqSys_->assemble_and_solve(sdrEqSys_->wTmp_);
-      if (realm_.solutionOptions_->gammaEqActive_)
+      //if (realm_.solutionOptions_->gammaEqActive_)
         gammaEqSys_->assemble_and_solve(gammaEqSys_->gamTmp_);
 
       update_and_clip();
-      if (realm_.solutionOptions_->gammaEqActive_)
+      //if (realm_.solutionOptions_->gammaEqActive_)
         update_and_clip_gamma();
 
       if (decoupledOverset_ && realm_.hasOverset_) {
         realm_.overset_field_update(tkeEqSys_->tke_, 1, 1);
         realm_.overset_field_update(sdrEqSys_->sdr_, 1, 1);
-        if (realm_.solutionOptions_->gammaEqActive_)
+        //if (realm_.solutionOptions_->gammaEqActive_)
           realm_.overset_field_update(gammaEqSys_->gamma_, 1, 1);
       }
     }
     // compute projected nodal gradients
     tkeEqSys_->compute_projected_nodal_gradient();
     sdrEqSys_->assemble_nodal_gradient();
-    if (realm_.solutionOptions_->gammaEqActive_)
+    //if (realm_.solutionOptions_->gammaEqActive_)
       gammaEqSys_->assemble_nodal_gradient();
   }
 }
@@ -336,11 +336,11 @@ ShearStressTransportEquationSystem::initial_work()
     stk::mesh::selectField(*sdr_);
   clip_sst(ngpMesh, sel, tkeNp1, sdrNp1);
 
-  if (realm_.solutionOptions_->gammaEqActive_) {
+  //if (realm_.solutionOptions_->gammaEqActive_) {
     auto& gammaNp1 =
       fieldMgr.get_field<double>(gamma_->mesh_meta_data_ordinal());
     clip_sst_gamma(ngpMesh, sel, gammaNp1);
-  }
+  //}
 }
 
 void
@@ -358,11 +358,11 @@ ShearStressTransportEquationSystem::post_external_data_transfer_work()
     (meta.locally_owned_part() | meta.globally_shared_part());
   auto interior_sel = owned_and_shared & stk::mesh::selectField(*sdr_);
   clip_sst(ngpMesh, interior_sel, tkeNp1, sdrNp1);
-  if (realm_.solutionOptions_->gammaEqActive_) {
+  //if (realm_.solutionOptions_->gammaEqActive_) {
     auto& gammaNp1 =
       fieldMgr.get_field<double>(gamma_->mesh_meta_data_ordinal());
     clip_sst_gamma(ngpMesh, interior_sel, gammaNp1);
-  }
+  //}
 
   auto sdrBCField =
     meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "sdr_bc");
@@ -379,7 +379,7 @@ ShearStressTransportEquationSystem::post_external_data_transfer_work()
 
     clip_sst(ngpMesh, bc_sel, ngpTkeBC, ngpSdrBC);
 
-    if (realm_.solutionOptions_->gammaEqActive_) {
+    //if (realm_.solutionOptions_->gammaEqActive_) {
       auto gammaBCField =
         meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "gamma_bc");
 
@@ -387,7 +387,7 @@ ShearStressTransportEquationSystem::post_external_data_transfer_work()
         fieldMgr.get_field<double>(gammaBCField->mesh_meta_data_ordinal());
 
       clip_sst_gamma(ngpMesh, bc_sel, ngpGammaBC);
-    }
+    //}
   }
 }
 
@@ -625,14 +625,14 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
         stk::math::tanh(fArgOne * fArgOne * fArgOne * fArgOne);
 
       // Modifications of f1 blending function for the transition model
-      if (realm_.solutionOptions_->gammaEqActive_) {
+      //if (realm_.solutionOptions_->gammaEqActive_) {
         const double f1Orig = fOneBlend.get(mi, 0);
         const double ry = rho * minD * stk::math::sqrt(tke)/mu;
         const double arg = ry / 120.0;
         const double f3 = stk::math::exp(-arg*arg*arg*arg*arg*arg*arg*arg); // original
         //const double f3 = std::exp(-std::pow(arg,8)); // new
         fOneBlend.get(mi, 0) = stk::math::max(f1Orig, f3);
-      }
+      //}
 
     });
 
