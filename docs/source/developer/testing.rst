@@ -115,6 +115,8 @@ created. Also, if you are using a mesh file that doesn't exist in the mesh repo,
 update the submodule in the Nalu-Wind main repo to use the latest commit of the mesh submodule repo.
 
 
+.. _ref-testing-cdash:
+
 Adding Testing Machines to CDash
 --------------------------------
 
