@@ -68,9 +68,6 @@ struct SpreadForceInnerLoop
 using SpreadActuatorForce =
   GenericLoopOverCoarseSearchResults<ActuatorBulk, SpreadForceInnerLoop>;
 
-using SpreadActuatorForceTurbineSearch =
-  GenericLoopOverCoarseTurbineSearchResults<ActuatorBulk, SpreadForceInnerLoop>;
-
 } /* namespace nalu */
 } /* namespace sierra */
 

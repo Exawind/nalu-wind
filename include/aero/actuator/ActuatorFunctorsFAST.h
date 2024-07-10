@@ -164,14 +164,6 @@ using ActFastSpreadForceWhProjection = GenericLoopOverCoarseSearchResults<
   ActuatorBulkFAST,
   ActFastSpreadForceWhProjInnerLoop>;
 
-using ActFastComputeThrustTurbineSearch = GenericLoopOverCoarseTurbineSearchResults<
-  ActuatorBulkFAST,
-  ActFastComputeThrustInnerLoop>;
-
-using ActFastSpreadForceWhProjectionTurbineSearch = GenericLoopOverCoarseTurbineSearchResults<
-  ActuatorBulkFAST,
-  ActFastSpreadForceWhProjInnerLoop>;
-
 } /* namespace nalu */
 } /* namespace sierra */
 

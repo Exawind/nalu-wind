@@ -47,6 +47,7 @@ struct GenericLoopOverCoarseSearchResults
     actBulk_.coarseSearchElemIds_.sync_host();
     actBulk_.coarseSearchPointIds_.sync_host();
     innerLoopFunctor_.preloop();
+    //innerLoopExtent_ = actBulk_.singlePointCoarseSearch ? 1 : actBulk_.pointCentroid_.extent(0)
   }
 
   // ctor for functor constructor taking multiple args
@@ -67,6 +68,7 @@ struct GenericLoopOverCoarseSearchResults
     actBulk_.coarseSearchElemIds_.sync_host();
     actBulk_.coarseSearchPointIds_.sync_host();
     innerLoopFunctor_.preloop();
+    //innerLoopExtent_ = actBulk_.singlePointCoarseSearch ? 1 : actBulk_.pointCentroid_.extent(0)
   }
 
   // see ActuatorExecutorFASTSngp.C line 58
@@ -124,9 +126,19 @@ struct GenericLoopOverCoarseSearchResults
       // during functor construction i.e. ActuatorBulk, flags, ActuatorMeta,
       // etc.
       //
-      // pointID helps look up data from openfast
       //
-      innerLoopFunctor_(pointId, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
+      // for (int actPtInd = 0; actPtInd < innerLoopExtent_; actPtInd ++){
+      //    innerLoopFunctor_(actPtInd, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
+      //  }
+      //
+      if (actBulk_.singlePointCoarseSearch_) { 
+        innerLoopFunctor_(pointId, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
+      } else {
+        for (int actPtInd = 0; actPtInd < actBulk_.pointCentroid_.extent(0); actPtInd ++){
+          innerLoopFunctor_(actPtInd, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
+        }
+      }
+
     }
   }
 
@@ -136,6 +148,7 @@ struct GenericLoopOverCoarseSearchResults
   VectorFieldType* actuatorSource_;
   ScalarFieldType* dualNodalVolume_;
   functor innerLoopFunctor_;
+  //const size_t innerLoopExtent_;
 };
 
 } // namespace nalu

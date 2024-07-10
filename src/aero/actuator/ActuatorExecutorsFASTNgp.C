@@ -138,16 +138,9 @@ ActuatorDiskFastNGP::operator()()
   const int localSizeCoarseSearch =
     actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
-  if (actMeta_.turbineLevelSearch_) {
-    Kokkos::parallel_for(
-      "spreadForcesActuatorNgpFAST", HostRangePolicy(0, localSizeCoarseSearch),
-      SpreadActuatorForceTurbineSearch(actBulk_, stkBulk_));
-  }
-  else {
-    Kokkos::parallel_for(
-      "spreadForcesActuatorNgpFAST", HostRangePolicy(0, localSizeCoarseSearch),
-      SpreadActuatorForce(actBulk_, stkBulk_));
-  }
+  Kokkos::parallel_for(
+    "spreadForcesActuatorNgpFAST", HostRangePolicy(0, localSizeCoarseSearch),
+    SpreadActuatorForce(actBulk_, stkBulk_));
 
   actBulk_.parallel_sum_source_term(stkBulk_);
 

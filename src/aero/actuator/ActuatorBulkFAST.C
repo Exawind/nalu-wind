@@ -249,13 +249,13 @@ void
 ActuatorBulkFAST::stk_search(
   const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine /* = false */)
 {
-    if (actMeta.turbineLevelSearch_){
-      // perform turbine level search and cache to the bulk data
-      stk_turbine_search(actMeta, stkBulk,onlyFine);
-    }
-    else{
+    if (singlePointCoarseSearch_){
       //TODO: Does it make sense for actuator point search to have onlyFine option?
       stk_search_act_pnts(actMeta, stkBulk);
+    }
+    else{
+      // perform turbine level search and cache to the bulk data
+      stk_turbine_search(actMeta, stkBulk,onlyFine);
     }
 }
 

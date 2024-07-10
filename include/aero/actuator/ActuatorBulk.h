@@ -48,7 +48,6 @@ struct ActuatorMeta
   stk::search::SearchMethod searchMethod_;
   ActScalarIntDv numPointsTurbine_;
   bool useFLLC_ = false;
-  bool turbineLevelSearch_ = false; //Adding turbine level search option to meta. 
   ActVectorDblDv epsilonChord_;
   ActVectorDblDv epsilon_;
   ActFixScalarBool entityFLLC_;
@@ -103,6 +102,7 @@ struct ActuatorBulk
   ActFixElemIds elemContainingPoint_;
 
   const int localTurbineId_;
+  bool singlePointCoarseSearch_ = false; 
 };
 
 } // namespace nalu
