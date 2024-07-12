@@ -77,7 +77,6 @@ jobs:
             source ${SPACK_MANAGER}/start.sh && \
             spack-start && \
             quick-create-dev -s nalu-wind@master+tioga+hypre~trilinos-solvers && \
-            spack manager external --exclude nalu-wind gmake ${EXAWIND_MANAGER}/environments/e4s-build && \
             spack install && \
             spack cd -b nalu-wind && \
             spack build-env nalu-wind ctest -j $(nproc) -L unit --output-on-failure \
