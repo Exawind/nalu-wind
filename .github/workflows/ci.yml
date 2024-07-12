@@ -24,7 +24,7 @@ jobs:
     container:
       image: ecpe4s/exawind-snapshot
       env:
-          SPACK_MANAGER: /spack-manager
+          SPACK_MANAGER: /exawind-manager
           E4S_MACHINE: true
     steps:
       - name: Cancel previous runs
@@ -55,7 +55,7 @@ jobs:
     container:
       image: ecpe4s/exawind-snapshot
       env:
-          SPACK_MANAGER: /spack-manager
+          SPACK_MANAGER: /exawind-manager
           E4S_MACHINE: true
     steps:
       - name: Cancel previous runs
