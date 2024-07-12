@@ -43,6 +43,7 @@ jobs:
             cd ${SPACK_MANAGER}/environments/exawind && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
             source ${SPACK_MANAGER}/start.sh && \
+            spack-start && \
             quick-create-dev -s nalu-wind@master+tioga+hypre && \
             spack manager external --latest --blacklist nalu-wind gmake && \
             spack install && \
@@ -74,6 +75,7 @@ jobs:
             cd ${SPACK_MANAGER}/environments/exawind && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
             source ${SPACK_MANAGER}/start.sh && \
+            spack-start && \
             quick-create-dev -s nalu-wind@master+tioga+hypre~trilinos-solvers && \
             spack manager external --latest --blacklist nalu-wind gmake && \
             spack install && \
