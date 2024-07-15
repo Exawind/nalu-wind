@@ -26,9 +26,9 @@ void
 ActuatorLineFastNGP::operator()()
 {
   // Zero the (body-force) actuator source term
-  actBulk_.zero_source_terms(stkBulk_); 
+  actBulk_.zero_source_terms(stkBulk_);
 
-  //set range policy to only operating over points owned by local fast turbine
+  // set range policy to only operating over points owned by local fast turbine
   auto fastRangePolicy = actBulk_.local_range_policy();
 
   // Interpolate velocity to actuator points.

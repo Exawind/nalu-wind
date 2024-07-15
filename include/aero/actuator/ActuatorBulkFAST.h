@@ -55,7 +55,7 @@ struct ActuatorBulkFAST : public ActuatorBulk
   void init_epsilon(const ActuatorMetaFAST& actMeta);
   bool is_tstep_ratio_admissable(
     const double fastTimeStep, const double naluTimeStep);
-  
+
   void stk_search_collective_act_pnts(
     const ActuatorMeta& actMeta,
     stk::mesh::BulkData& stkBulk,
@@ -72,7 +72,7 @@ struct ActuatorBulkFAST : public ActuatorBulk
   ActFixVectorDbl turbineTorque_;
   ActFixVectorDbl hubLocations_;
   ActFixVectorDbl hubOrientation_;
-  ActFixScalarDbl turbineSearchRadius_; 
+  ActFixScalarDbl turbineSearchRadius_;
 
   ActTensorDblDv orientationTensor_;
 
