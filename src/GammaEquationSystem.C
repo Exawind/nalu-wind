@@ -619,8 +619,10 @@ GammaEquationSystem::assemble_nodal_gradient()
     fieldMgr.get_field<double>(dwalldistdx_->mesh_meta_data_ordinal());
   auto& nDotV =
     fieldMgr.get_field<double>(nDotV_->mesh_meta_data_ordinal());
+  const std::string velName =
+    realm_.does_mesh_move() ? "velocity_rtm" : "velocity";
   auto& vel =
-    fieldMgr.get_field<double>(get_field_ordinal(meta, "velocity"));
+    fieldMgr.get_field<double>(get_field_ordinal(meta, velName));
 
   const stk::mesh::Selector sel =
     (meta.locally_owned_part() | meta.globally_shared_part()) &
