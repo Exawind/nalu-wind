@@ -43,8 +43,6 @@ ActuatorMetaFAST::is_disk()
   return actuatorType_ == ActuatorType::ActDiskFASTNGP;
 }
 
-
-
 ActuatorBulkFAST::ActuatorBulkFAST(
   const ActuatorMetaFAST& actMeta, double naluTimeStep)
   : ActuatorBulk(actMeta),
@@ -247,61 +245,65 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
 
 void
 ActuatorBulkFAST::stk_search(
-  const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine /* = false */)
+  const ActuatorMeta& actMeta,
+  stk::mesh::BulkData& stkBulk,
+  bool onlyFine /* = false */)
 {
-    if (singlePointCoarseSearch_){
-      //TODO: Does it make sense for actuator point search to have onlyFine option?
-      stk_search_act_pnts(actMeta, stkBulk);
-    }
-    else{
-      // perform turbine level search and cache to the bulk data
-      stk_turbine_search(actMeta, stkBulk,onlyFine);
-    }
+  if (singlePointCoarseSearch_) {
+    // TODO: Does it make sense for actuator point search to have onlyFine
+    // option?
+    stk_search_act_pnts(actMeta, stkBulk);
+  } else {
+    // perform turbine level search and cache to the bulk data
+    stk_search_collective_act_pnts(actMeta, stkBulk, onlyFine);
+  }
 }
 
-
 void
-ActuatorBulkFAST::stk_turbine_search(
-  const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine /* = false */)
+ActuatorBulkFAST::stk_search_collective_act_pnts(
+  const ActuatorMeta& actMeta,
+  stk::mesh::BulkData& stkBulk,
+  bool onlyFine /* = false */)
 {
   auto points = hubLocations_;
   if (!onlyFine) {
-  // Loop over all turbines to initialize the search radius 
-  for (int iTurb = 0; iTurb < openFast_.get_nTurbinesGlob(); ++iTurb) {
-    // if my process contains the turbine
-    if (NaluEnv::self().parallel_rank() == openFast_.get_procNo(iTurb)) {
-      auto hubLoc = Kokkos::subview(hubLocations_, iTurb, Kokkos::ALL);
-      double turbineRadius = 0.0;
-      // Approximate turbine radius to define search radius
-      //
-      /* const int nbfp = openFast_.get_numForcePtsBlade(iTurb); */
-      /* Point bladeTip = actuator_utils::get_fast_point(openFast_, iTurb, fast::BLADE, nbfp, 0); */
-      /* for (int i = 0; i < 3; ++i) { */
-      /*   turbineRadius += std::pow(bladeTip[i] - hubLoc[i], 2.0); */
-      /* } */
-      //use the hub height as a surrogate for turbineRadius
-      turbineRadius = hubLoc[2];  //TODO: Is z 1 or 2?
-      turbineSearchRadius_(iTurb) = 1.25 * turbineRadius * std::sqrt(2);  //TODO: Could switch to bounding boxes here instead
-
+    // Loop over all turbines to initialize the search radius
+    for (int iTurb = 0; iTurb < openFast_.get_nTurbinesGlob(); ++iTurb) {
+      // if my process contains the turbine
+      if (NaluEnv::self().parallel_rank() == openFast_.get_procNo(iTurb)) {
+        auto hubLoc = Kokkos::subview(hubLocations_, iTurb, Kokkos::ALL);
+        double turbineRadius = 0.0;
+        // Approximate turbine radius to define search radius
+        //
+        /* const int nbfp = openFast_.get_numForcePtsBlade(iTurb); */
+        /* Point bladeTip = actuator_utils::get_fast_point(openFast_, iTurb,
+         * fast::BLADE, nbfp, 0); */
+        /* for (int i = 0; i < 3; ++i) { */
+        /*   turbineRadius += std::pow(bladeTip[i] - hubLoc[i], 2.0); */
+        /* } */
+        // use the hub height as a surrogate for turbineRadius
+        turbineRadius = hubLoc[2]; // TODO: Is z 1 or 2?
+        turbineSearchRadius_(iTurb) =
+          1.25 * turbineRadius *
+          std::sqrt(2); // TODO: Could switch to bounding boxes here instead
+      }
     }
-  }
-  //actuator_utils::reduce_view_on_host(turbineSearchRadius_.view_host());
-  //turbineSearchRadius_.sync_host();
-  auto radius = turbineSearchRadius_;
-  auto boundSpheres = CreateBoundingSpheres(points,radius);
-  auto elemBoxes = CreateElementBoxes(stkBulk, actMeta.searchTargetNames_);
+    // actuator_utils::reduce_view_on_host(turbineSearchRadius_.view_host());
+    // turbineSearchRadius_.sync_host();
+    auto radius = turbineSearchRadius_;
+    auto boundSpheres = CreateBoundingSpheres(points, radius);
+    auto elemBoxes = CreateElementBoxes(stkBulk, actMeta.searchTargetNames_);
 
-  // the coarse search now associates element boxes with turbines
-  ExecuteCoarseSearch(
-    boundSpheres, elemBoxes, coarseSearchPointIds_, coarseSearchElemIds_,
-    actMeta.searchMethod_);
+    // the coarse search now associates element boxes with turbines
+    ExecuteCoarseSearch(
+      boundSpheres, elemBoxes, coarseSearchPointIds_, coarseSearchElemIds_,
+      actMeta.searchMethod_);
   }
 
   ExecuteFineSearch(
     stkBulk, coarseSearchPointIds_, coarseSearchElemIds_, points,
     elemContainingPoint_, localCoords_, pointIsLocal_,
     localParallelRedundancy_);
-
 }
 
 Kokkos::RangePolicy<ActuatorFixedExecutionSpace>

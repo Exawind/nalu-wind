@@ -25,16 +25,16 @@ ActuatorLineFastNGP::ActuatorLineFastNGP(
 void
 ActuatorLineFastNGP::operator()()
 {
-  //Zero the (body-force) actuator source term 
+  // Zero the (body-force) actuator source term
   actBulk_.zero_source_terms(stkBulk_); 
 
   //set range policy to only operating over points owned by local fast turbine
   auto fastRangePolicy = actBulk_.local_range_policy();
 
-  //Interpolate velocity to actuator points. 
+  // Interpolate velocity to actuator points.
   RunInterpActuatorVel(actBulk_, stkBulk_);
 
-  // Add FLLC correction to velocity field. 
+  // Add FLLC correction to velocity field.
   apply_fllc(actBulk_);
 
   Kokkos::parallel_for(
@@ -44,17 +44,17 @@ ActuatorLineFastNGP::operator()()
   // get relative velocity from openFAST
   ActFastCacheRelativeVelocities(actBulk_);
 
-  // Compute filtered lifting line correction 
+  // Compute filtered lifting line correction
   compute_fllc();
 
   // Send interpolated velocities at actuator points to openFAST
   actBulk_.interpolate_velocities_to_fast();
 
-  // Get actuator point centroids 
+  // Get actuator point centroids
   RunActFastUpdatePoints(actBulk_);
 
-  // Execute fine and coarse search given point centroids 
-  actBulk_.stk_search(actMeta_, stkBulk_); 
+  // Execute fine and coarse search given point centroids
+  actBulk_.stk_search(actMeta_, stkBulk_);
 
   // call openfast and step
   actBulk_.step_fast();
@@ -124,7 +124,7 @@ ActuatorDiskFastNGP::operator()()
 
     actBulk_.update_ADM_points(actMeta_);
 
-    actBulk_.stk_search(actMeta_, stkBulk_,true);
+    actBulk_.stk_search(actMeta_, stkBulk_, true);
   }
 
   actBulk_.step_fast();

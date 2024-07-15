@@ -26,7 +26,6 @@ namespace sierra {
 namespace nalu {
 
 template <typename ActuatorBulk, typename functor>
-  //coarse search actuatorbulk.c L96
 struct GenericLoopOverCoarseSearchResults
 {
   using execution_space = ActuatorFixedExecutionSpace;
@@ -47,7 +46,6 @@ struct GenericLoopOverCoarseSearchResults
     actBulk_.coarseSearchElemIds_.sync_host();
     actBulk_.coarseSearchPointIds_.sync_host();
     innerLoopFunctor_.preloop();
-    //innerLoopExtent_ = actBulk_.singlePointCoarseSearch ? 1 : actBulk_.pointCentroid_.extent(0)
   }
 
   // ctor for functor constructor taking multiple args
@@ -68,7 +66,6 @@ struct GenericLoopOverCoarseSearchResults
     actBulk_.coarseSearchElemIds_.sync_host();
     actBulk_.coarseSearchPointIds_.sync_host();
     innerLoopFunctor_.preloop();
-    //innerLoopExtent_ = actBulk_.singlePointCoarseSearch ? 1 : actBulk_.pointCentroid_.extent(0)
   }
 
   // see ActuatorExecutorFASTSngp.C line 58
@@ -78,7 +75,7 @@ struct GenericLoopOverCoarseSearchResults
     auto pointId = actBulk_.coarseSearchPointIds_.h_view(index);
     auto elemId = actBulk_.coarseSearchElemIds_.h_view(index);
 
-    // get element topology 
+    // get element topology
     const stk::mesh::Entity elem =
       stkBulk_.get_entity(stk::topology::ELEMENT_RANK, elemId);
     const stk::topology& elemTopo = stkBulk_.bucket(elem).topology();
@@ -125,20 +122,16 @@ struct GenericLoopOverCoarseSearchResults
       // anything else that is required should be stashed on the functor
       // during functor construction i.e. ActuatorBulk, flags, ActuatorMeta,
       // etc.
-      //
-      //
-      // for (int actPtInd = 0; actPtInd < innerLoopExtent_; actPtInd ++){
-      //    innerLoopFunctor_(actPtInd, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
-      //  }
-      //
-      if (actBulk_.singlePointCoarseSearch_) { 
-        innerLoopFunctor_(pointId, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
+      if (actBulk_.singlePointCoarseSearch_) {
+        innerLoopFunctor_(
+          pointId, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
       } else {
-        for (int actPtInd = 0; actPtInd < actBulk_.pointCentroid_.extent(0); actPtInd ++){
-          innerLoopFunctor_(actPtInd, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
+        for (int actPtInd = 0; actPtInd < actBulk_.pointCentroid_.extent(0);
+             actPtInd++) {
+          innerLoopFunctor_(
+            actPtInd, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
         }
       }
-
     }
   }
 
@@ -148,7 +141,6 @@ struct GenericLoopOverCoarseSearchResults
   VectorFieldType* actuatorSource_;
   ScalarFieldType* dualNodalVolume_;
   functor innerLoopFunctor_;
-  //const size_t innerLoopExtent_;
 };
 
 } // namespace nalu

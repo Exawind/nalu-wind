@@ -91,11 +91,11 @@ SpreadForceInnerLoop::operator()(
   actuator_utils::compute_distance(
     3, nodeCoords, pointCoords.data(), &distance[0]);
 
-  //Check distance between actuator point and element centroid. Only needed if singlePointCoarseSearch_==False
-  //auto epsilonRadius = 
-  //  Kokkos::subview(actBulk_.searchRadius_.view_host(), pointId, Kokkos::ALL);
   auto epsilonRadius = actBulk_.searchRadius_.h_view(pointId);
-  if (std::sqrt(distance[0]*distance[0] + distance[1]*distance[1] + distance[2]*distance[2]) < epsilonRadius) {
+  if (
+    std::sqrt(
+      distance[0] * distance[0] + distance[1] * distance[1] +
+      distance[2] * distance[2]) < epsilonRadius) {
     const double gauss =
       actuator_utils::Gaussian_projection(3, &distance[0], epsilon.data());
 

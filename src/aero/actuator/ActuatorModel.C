@@ -145,8 +145,8 @@ ActuatorModel::init(stk::mesh::BulkData& stkBulk)
     break;
 #endif
 #else
-      //perform stk_search (coarse + fine search)
-      actBulk_->stk_search(*actMeta_.get(), stkBulk);
+    // perform stk_search (coarse + fine search)
+    actBulk_->stk_search(*actMeta_.get(), stkBulk);
     break;
 #endif
   }

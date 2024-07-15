@@ -38,7 +38,7 @@ inline void
 RunActFastUpdatePoints(ActuatorBulkFAST& actBulk)
 {
   Kokkos::deep_copy(actBulk.pointCentroid_.view_host(), 0.0);
-  actBulk.pointCentroid_.modify_host(); //actuator point locations in space 
+  actBulk.pointCentroid_.modify_host();
   Kokkos::parallel_for(
     "ActFastUpdatePoints", actBulk.local_range_policy(),
     ActFastUpdatePoints(actBulk));

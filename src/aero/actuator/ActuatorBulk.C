@@ -105,12 +105,14 @@ ActuatorBulk::stk_search_act_pnts(
   actuator_utils::reduce_view_on_host(localParallelRedundancy_);
 }
 
-void ActuatorBulk::stk_search(
-  const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk,bool onlyFine /*= false*/)
+void
+ActuatorBulk::stk_search(
+  const ActuatorMeta& actMeta,
+  stk::mesh::BulkData& stkBulk,
+  bool onlyFine /*= false*/)
 {
-      stk_search_act_pnts(actMeta, stkBulk);
+  stk_search_act_pnts(actMeta, stkBulk);
 }
-
 
 void
 ActuatorBulk::zero_source_terms(stk::mesh::BulkData& stkBulk)

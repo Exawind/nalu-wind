@@ -66,7 +66,9 @@ struct ActuatorBulk
   virtual ~ActuatorBulk() {}
 
   virtual void stk_search(
-    const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk, bool onlyFine = false);
+    const ActuatorMeta& actMeta,
+    stk::mesh::BulkData& stkBulk,
+    bool onlyFine = false);
 
   void stk_search_act_pnts(
     const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk);
@@ -102,7 +104,7 @@ struct ActuatorBulk
   ActFixElemIds elemContainingPoint_;
 
   const int localTurbineId_;
-  bool singlePointCoarseSearch_ = false; 
+  bool singlePointCoarseSearch_ = false;
 };
 
 } // namespace nalu
