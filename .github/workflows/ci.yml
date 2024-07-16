@@ -44,6 +44,8 @@ jobs:
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
             source ${SPACK_MANAGER}/start.sh && \
             spack-start && \
+            spack -e e4s-build config add view:true && \
+            spack -e e4s-build concretize && \
             quick-create-dev -s nalu-wind@master+tioga+hypre && \
             spack manager external --exclude=nalu-wind,gmake ${EXAWIND_MANAGER}/environments/e4s-build && \
             spack install && \
@@ -76,6 +78,8 @@ jobs:
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
             source ${SPACK_MANAGER}/start.sh && \
             spack-start && \
+            spack -e e4s-build config add view:true && \
+            spack -e e4s-build concretize && \
             quick-create-dev -s nalu-wind@master+tioga+hypre~trilinos-solvers && \
             spack manager external --exclude=nalu-wind,gmake ${EXAWIND_MANAGER}/environments/e4s-build && \
             spack install && \
