@@ -39,7 +39,6 @@
 #include "stk_math/StkMath.hpp"
 #include "stk_mesh/base/Bucket.hpp"
 #include "stk_mesh/base/Entity.hpp"
-#include "stk_mesh/base/FieldTraits.hpp"
 #include "stk_mesh/base/GetNgpField.hpp"
 #include "stk_mesh/base/Selector.hpp"
 #include "stk_mesh/base/Types.hpp"
@@ -151,7 +150,7 @@ TEST_F(
 {
   {
     auto host_lhs = lhs.getLocalViewHost(Tpetra::Access::ReadWrite);
-    ThrowRequire(host_lhs.extent(1) == 3u);
+    STK_ThrowRequire(host_lhs.extent(1) == 3u);
     for (const auto* ib :
          bulk.get_buckets(stk::topology::NODE_RANK, active())) {
       for (auto node : *ib) {

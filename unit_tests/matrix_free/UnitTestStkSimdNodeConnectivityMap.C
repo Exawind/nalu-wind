@@ -19,7 +19,6 @@
 #include "gtest/gtest.h"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/MeshBuilder.hpp"
-#include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/FEMHelpers.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
@@ -46,6 +45,7 @@ protected:
       bulk(*bulkPtr),
       meta(bulk.mesh_meta_data())
   {
+    meta.use_simple_fields();
     stk::topology topo(stk::topology::HEX_8);
 
     stk::mesh::Part& block_1 = meta.declare_part_with_topology("block_1", topo);
@@ -62,12 +62,13 @@ protected:
     }
 
     // set a coordinate field
-    using vector_field_type = stk::mesh::Field<double, stk::mesh::Cartesian3d>;
-    auto& coordField = meta.declare_field<vector_field_type>(
-      stk::topology::NODE_RANK, "coordinates");
-    stk::mesh::put_field_on_mesh(coordField, block_1, nullptr);
+    auto& coordField =
+      meta.declare_field<double>(stk::topology::NODE_RANK, "coordinates");
     stk::mesh::put_field_on_mesh(
-      coordField, stk::mesh::selectUnion(allSurfaces), nullptr);
+      coordField, block_1, meta.spatial_dimension(), nullptr);
+    stk::mesh::put_field_on_mesh(
+      coordField, stk::mesh::selectUnion(allSurfaces), meta.spatial_dimension(),
+      nullptr);
     meta.set_coordinate_field(&coordField);
     meta.commit();
 
@@ -81,16 +82,17 @@ protected:
         stk::topology::NODE_RANK, id, stk::mesh::PartVector{});
     }
     auto elem = stk::mesh::declare_element(bulk, block_1, 1, nodeIds);
-    stk::mesh::create_all_sides(bulk, block_1, allSurfaces, false);
 
     bulk.modification_end();
+
+    stk::mesh::create_all_sides(bulk, block_1, allSurfaces, false);
 
     auto surfaceSelector = stk::mesh::selectUnion(allSurfaces);
     stk::mesh::EntityVector all_faces;
     stk::mesh::get_selected_entities(
       surfaceSelector, bulk.get_buckets(meta.side_rank(), surfaceSelector),
       all_faces);
-    ThrowRequire(all_faces.size() == topo.num_sides());
+    STK_ThrowRequire(all_faces.size() == topo.num_sides());
 
     std::vector<std::vector<double>> nodeLocations = {
       {-1, -1, -1}, {+1, -1, -1}, {+1, +1, -1}, {-1, +1, -1},

@@ -110,6 +110,13 @@ public:
     return stk::mesh::field_data(stkField_, entity);
   }
 
+  template <typename A = ACCESS>
+  inline typename std::enable_if_t<!std::is_same_v<A, READ>, T>*
+  operator()(const stk::mesh::Bucket& bucket) const
+  {
+    return stk::mesh::field_data(stkField_, bucket);
+  }
+
   // --- Const Accessors
   template <typename A = ACCESS>
   inline const typename std::enable_if_t<std::is_same_v<A, READ>, T>*
@@ -123,6 +130,13 @@ public:
   operator()(const stk::mesh::Entity& entity) const
   {
     return stk::mesh::field_data(stkField_, entity);
+  }
+
+  template <typename A = ACCESS>
+  inline const typename std::enable_if_t<std::is_same_v<A, READ>, T>*
+  operator()(const stk::mesh::Bucket& bucket) const
+  {
+    return stk::mesh::field_data(stkField_, bucket);
   }
 
   ~SmartField()
@@ -401,9 +415,10 @@ struct MakeSmartField<LEGACY, ACCESS>
 {
   // use pointer since that is the common access type for stk::mesh::Field<T>
   template <typename T>
-  SmartField<T, LEGACY, ACCESS> operator()(T* field)
+  SmartField<stk::mesh::Field<T>, LEGACY, ACCESS>
+  operator()(stk::mesh::Field<T>* field)
   {
-    return SmartField<T, LEGACY, ACCESS>(*field);
+    return SmartField<stk::mesh::Field<T>, LEGACY, ACCESS>(*field);
   }
 };
 

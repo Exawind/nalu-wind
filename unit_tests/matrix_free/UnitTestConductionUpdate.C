@@ -26,7 +26,6 @@
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
 #include "stk_mesh/base/FieldState.hpp"
-#include "stk_mesh/base/FieldTraits.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpField.hpp"
@@ -78,8 +77,8 @@ get_ngp_field(
   std::string name,
   stk::mesh::FieldState state = stk::mesh::StateNP1)
 {
-  ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
-  ThrowAssert(
+  STK_ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
+  STK_ThrowAssert(
     meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
   return stk::mesh::get_updated_ngp_field<double>(
     *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));

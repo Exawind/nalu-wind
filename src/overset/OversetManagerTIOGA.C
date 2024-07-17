@@ -35,7 +35,7 @@ OversetManagerTIOGA::OversetManagerTIOGA(
     tiogaIface_(
       *this, oversetUserData.oversetBlocks_, realm.get_coordinates_name())
 {
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     metaData_->spatial_dimension() == 3u, "TIOGA only supports 3-D meshes.");
 }
 

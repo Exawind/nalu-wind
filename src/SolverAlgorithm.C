@@ -35,7 +35,7 @@ fix_overset_rows(
   const size_t numRows = nobj * nDim;
 
   ScalarIntFieldType* iblank =
-    meta.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
+    meta.get_field<int>(stk::topology::NODE_RANK, "iblank");
 
   for (size_t in = 0; in < nobj; in++) {
     const int* ibl = stk::mesh::field_data(*iblank, entities[in]);

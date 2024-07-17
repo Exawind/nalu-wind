@@ -5,12 +5,12 @@
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Entity.hpp>
 #include <stk_mesh/base/Field.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 
 #include "overset/TiogaOptions.h"
 #include "overset/OversetFieldData.h"
 #include "overset/OversetNGP.h"
 #include "yaml-cpp/yaml.h"
+#include "FieldTypeDef.h"
 
 #include <vector>
 #include <memory>
@@ -21,10 +21,6 @@ class tioga;
 }
 
 namespace tioga_nalu {
-
-typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
-typedef stk::mesh::Field<double> ScalarFieldType;
-typedef stk::mesh::Field<int> ScalarIntFieldType;
 
 /** Data representing an unstructured mesh block
  */
@@ -162,6 +158,11 @@ public:
   void update_element_volumes();
 
   /** Adjust resolutions of mandatory fringe entities
+   *
+   *  The entities connected to overset sidesets have their
+   *  nodal/cell resolutions adjusted so that TIOGA will never consider these
+   *  cells as donors. This adjustment is necessary to avoid fringe/field
+   *  mismatch across domain partition boundaries.
    */
   void adjust_cell_resolutions();
 
@@ -182,14 +183,8 @@ public:
 
   /** Update iblanks after connectivity updates
    */
-  void update_iblanks();
-  /** Update fringe and hole node vectors
-   */
-  void update_fringe_and_hole_nodes(
+  void update_iblanks(
     std::vector<stk::mesh::Entity>&, std::vector<stk::mesh::Entity>&);
-  /** Update the Tioga view of iblanks prior to donor-to-receptor interpolation
-   */
-  void update_tioga_iblanks();
 
   /** Update element iblanks after connectivity updates
    */

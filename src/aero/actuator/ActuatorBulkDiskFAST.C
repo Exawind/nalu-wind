@@ -25,7 +25,7 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
       "numSweptOffset", actMeta.numberOfActuators_, actMeta.maxNumPntsPerBlade_)
 {
 
-  ThrowErrorIf(!actMeta.is_disk());
+  STK_ThrowErrorIf(!actMeta.is_disk());
   compute_swept_point_count(actMeta);
   resize_arrays(actMeta);
   Kokkos::parallel_for(

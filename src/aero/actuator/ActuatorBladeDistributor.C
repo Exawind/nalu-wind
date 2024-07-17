@@ -26,7 +26,7 @@ blade_belongs_on_this_rank(
   const bool isInDivisionIncrement =
     globBladeNum >= (div * rank) && globBladeNum < div * (rank + 1);
   const bool isInRemainderIncrement = (globBladeNum - div * numRanks) == rank;
-  ThrowAssert(!(isInDivisionIncrement && isInRemainderIncrement));
+  STK_ThrowAssert(!(isInDivisionIncrement && isInRemainderIncrement));
   return isInDivisionIncrement || isInRemainderIncrement;
 }
 

@@ -22,8 +22,8 @@ public:
   // Writable element access
   inline double& operator()(int row, int col)
   {
-    ThrowRequire(row <= dim_);
-    ThrowRequire(col <= dim_);
+    STK_ThrowRequire(row <= dim_);
+    STK_ThrowRequire(col <= dim_);
     isReady_ = false;
     return AA_(row, col);
   };
@@ -31,8 +31,8 @@ public:
   // Read-only element access
   inline double operator()(int row, int col) const
   {
-    ThrowRequire(row <= dim_);
-    ThrowRequire(col <= dim_);
+    STK_ThrowRequire(row <= dim_);
+    STK_ThrowRequire(col <= dim_);
     return AA_(row, col);
   };
 
@@ -40,8 +40,8 @@ public:
   // the overloaded const operator() when possible for some reason.
   inline double value(int row, int col) const
   {
-    ThrowRequire(row <= dim_);
-    ThrowRequire(col <= dim_);
+    STK_ThrowRequire(row <= dim_);
+    STK_ThrowRequire(col <= dim_);
     return AA_(row, col);
   };
 

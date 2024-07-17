@@ -12,7 +12,6 @@
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementRepo.h"
-#include "ngp_algorithms/ViewHelper.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
 #include "ngp_utils/NgpFieldManager.h"
@@ -21,17 +20,23 @@
 #include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
 #include "stk_mesh/base/NgpMesh.hpp"
+#include "stk_mesh/base/FieldRestriction.hpp"
 
 namespace sierra {
 namespace nalu {
 
-template <typename AlgTraits, typename PhiType, typename GradPhiType>
-NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::NodalGradBndryElemAlg(
-  Realm& realm,
-  stk::mesh::Part* part,
-  PhiType* phi,
-  GradPhiType* gradPhi,
-  bool useShifted)
+template <
+  typename AlgTraits,
+  typename PhiType,
+  typename GradPhiType,
+  typename ViewHelperType>
+NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::
+  NodalGradBndryElemAlg(
+    Realm& realm,
+    stk::mesh::Part* part,
+    PhiType* phi,
+    GradPhiType* gradPhi,
+    bool useShifted)
   : Algorithm(realm, part),
     dataNeeded_(realm.meta_data()),
     phi_(phi->mesh_meta_data_ordinal()),
@@ -41,17 +46,42 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::NodalGradBndryElemAlg(
       realm_.meta_data(),
       "exposed_area_vector",
       realm_.meta_data().side_rank())),
+    phiSize_(max_extent(*phi, 0)),
+    gradPhiSize_(max_extent(*gradPhi, 0)),
     useShifted_(useShifted),
     meFC_(
       MasterElementRepo::get_surface_master_element_on_dev(AlgTraits::topo_))
 {
+  if (phiSize_ == 1u) {
+    STK_ThrowRequireMsg(
+      gradPhiSize_ == AlgTraits::nDim_,
+      "NodalGradBndryElemAlg called with scalar input field '"
+        << phi->name() << "' but with non-vector output field '"
+        << gradPhi->name() << "' of length " << gradPhiSize_ << " (should be "
+        << AlgTraits::nDim_ << ")");
+  } else if (phiSize_ == AlgTraits::nDim_) {
+    STK_ThrowRequireMsg(
+      gradPhiSize_ == AlgTraits::nDim_ * AlgTraits::nDim_,
+      "NodalGradBndryElemAlg called with vector input field '"
+        << phi->name() << "' but with non-tensor output field '"
+        << gradPhi->name() << "' of length " << gradPhiSize_ << " (should be "
+        << AlgTraits::nDim_ * AlgTraits::nDim_ << ")");
+  } else {
+    STK_ThrowErrorMsg(
+      "NodalGradBndryElemAlg called with an input field '"
+      << phi->name()
+      << "' that is not a scalar or a vector.  "
+         "Actual length = "
+      << phiSize_);
+  }
+
   dataNeeded_.add_cvfem_face_me(meFC_);
 
   const auto coordID = get_field_ordinal(
     realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());
   dataNeeded_.add_coordinates_field(
     coordID, AlgTraits::nDim_, CURRENT_COORDINATES);
-  dataNeeded_.add_gathered_nodal_field(phi_, NumComp);
+  dataNeeded_.add_gathered_nodal_field(phi_, phiSize_);
   dataNeeded_.add_gathered_nodal_field(dualNodalVol_, 1);
   dataNeeded_.add_face_field(
     exposedAreaVec_, AlgTraits::numFaceIp_, AlgTraits::nDim_);
@@ -60,14 +90,15 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::NodalGradBndryElemAlg(
   dataNeeded_.add_master_element_call(shpfcn, CURRENT_COORDINATES);
 }
 
-template <typename AlgTraits, typename PhiType, typename GradPhiType>
+template <
+  typename AlgTraits,
+  typename PhiType,
+  typename GradPhiType,
+  typename ViewHelperType>
 void
-NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
+NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::
+  execute()
 {
-  using ElemSimdDataType =
-    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
-  using ViewHelperType = nalu_ngp::ViewHelper<ElemSimdDataType, PhiType>;
-
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
   const auto ngpMesh = meshInfo.ngp_mesh();
@@ -81,6 +112,7 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   const auto dnvID = dualNodalVol_;
   const auto exposedAreaID = exposedAreaVec_;
   const auto phiID = phi_;
+  const auto phiSize = phiSize_;
   auto* meFC = meFC_;
 
   gradPhi.sync_to_device();
@@ -92,7 +124,7 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
      std::to_string(AlgTraits::topo_));
   nalu_ngp::run_elem_algorithm(
     algName, meshInfo, meta.side_rank(), dataNeeded_, sel,
-    KOKKOS_LAMBDA(ElemSimdDataType & edata) {
+    KOKKOS_LAMBDA(typename ViewHelperType::SimdDataType & edata) {
       const int* ipNodeMap = meFC->ipNodeMap();
 
       auto& scrView = edata.simdScrView;
@@ -104,7 +136,7 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
       const auto& v_shape_fcn =
         useShifted ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
-      for (int di = 0; di < NumComp; ++di) {
+      for (int di = 0; di < phiSize; ++di) {
         for (int ip = 0; ip < AlgTraits::numFaceIp_; ++ip) {
           DoubleType qIp = 0.0;
           for (int n = 0; n < AlgTraits::nodesPerFace_; ++n) {
@@ -127,11 +159,13 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
 // NOTE: Can't use BuildTemplates here because of additional template arguments
 #define INSTANTIATE_ALG(AlgTraits)                                             \
   template class NodalGradBndryElemAlg<                                        \
-    AlgTraits, ScalarFieldType, VectorFieldType>;                              \
+    AlgTraits, ScalarFieldType, VectorFieldType,                               \
+    nalu_ngp::ScalarViewHelper<                                                \
+      NodalGradBndryElemSimdDataType, ScalarFieldType>>;                       \
   template class NodalGradBndryElemAlg<                                        \
-    AlgTraits, VectorFieldType, GenericFieldType>;                             \
-  template class NodalGradBndryElemAlg<                                        \
-    AlgTraits, VectorFieldType, TensorFieldType>
+    AlgTraits, VectorFieldType, TensorFieldType,                               \
+    nalu_ngp::VectorViewHelper<                                                \
+      NodalGradBndryElemSimdDataType, VectorFieldType>>
 
 INSTANTIATE_ALG(AlgTraitsTri3);
 INSTANTIATE_ALG(AlgTraitsQuad4);

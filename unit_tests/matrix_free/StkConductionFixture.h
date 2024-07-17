@@ -17,7 +17,6 @@
 
 #include "stk_io/StkMeshIoBroker.hpp"
 #include "stk_mesh/base/BulkData.hpp"
-#include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/FEMHelpers.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
@@ -40,7 +39,7 @@ protected:
   using gid_type = typename Tpetra::Map<>::global_ordinal_type;
   static constexpr int order = 1;
   ConductionFixture(int nx, double scale);
-  stk::mesh::Field<double, stk::mesh::Cartesian3d>& coordinate_field();
+  stk::mesh::Field<double>& coordinate_field();
   std::shared_ptr<stk::mesh::BulkData> bulkPtr;
   stk::mesh::BulkData& bulk;
   stk::mesh::MetaData& meta;
@@ -63,8 +62,8 @@ protected:
   using gid_type = typename Tpetra::Map<>::global_ordinal_type;
   static constexpr int order = 2;
   ConductionFixtureP2(int nx, double scale);
-  stk::mesh::Field<double, stk::mesh::Cartesian3d>& coordinate_field();
-  stk::mesh::fixtures::Hex27Fixture fixture;
+  stk::mesh::Field<double>& coordinate_field();
+  stk::mesh::fixtures::simple_fields::Hex27Fixture fixture;
   stk::mesh::MetaData& meta;
   stk::mesh::BulkData& bulk;
   stk::io::StkMeshIoBroker io;

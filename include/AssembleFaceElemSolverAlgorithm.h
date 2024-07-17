@@ -83,7 +83,7 @@ public:
         auto& b = ngpMesh.get_bucket(sideRank, bktId);
 
 #if !defined(KOKKOS_ENABLE_GPU)
-        ThrowAssertMsg(
+        STK_ThrowAssertMsg(
           b.topology().num_nodes() == (unsigned)nodesPerFace_,
           "AssembleFaceElemSolverAlgorithm expected nodesPerEntity_ = "
             << nodesPerFace_
@@ -111,7 +111,7 @@ public:
                 stk::mesh::Entity face =
                   b[bktIndex * simdLen + numFacesProcessed + simdFaceIndex];
                 const auto ngpFaceIndex = ngpMesh.fast_mesh_index(face);
-                // ThrowAssertMsg(
+                // STK_ThrowAssertMsg(
                 //   bulk.num_elements(face) == 1,
                 //   "Expecting just 1 element attached to face!");
                 int thisElemFaceOrdinal =

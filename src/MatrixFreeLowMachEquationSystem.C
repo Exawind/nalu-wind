@@ -50,6 +50,7 @@
 #include "stk_mesh/base/Types.hpp"
 #include "stk_util/parallel/ParallelReduce.hpp"
 #include "stk_util/util/ReportHandler.hpp"
+#include "stk_io/IossBridge.hpp"
 
 #include <string>
 #include <utility>
@@ -69,10 +70,10 @@ MatrixFreeLowMachEquationSystem::MatrixFreeLowMachEquationSystem(
     meta_(realm_.meta_data())
 {
   realm_.push_equation_to_systems(this);
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     realm_.spatialDimension_ == dim,
     "Only 3D supported for matrix free heat conduction");
-  ThrowRequireMsg(realm_.matrixFree_, "Only matrix free supported");
+  STK_ThrowRequireMsg(realm_.matrixFree_, "Only matrix free supported");
   realm_.hasFluids_ = true;
 }
 
@@ -115,8 +116,8 @@ MatrixFreeLowMachEquationSystem::check_part_is_valid(
   const stk::mesh::PartVector& part_vec)
 {
   for (auto part : part_vec) {
-    ThrowRequire(part);
-    ThrowRequireMsg(
+    STK_ThrowRequire(part);
+    STK_ThrowRequireMsg(
       matrix_free::part_is_valid_for_matrix_free(polynomial_order_, *part),
       "part " + part->name() + " has invalid topology " +
         part->topology().name() + ". Only hex8/hex27 supported");
@@ -145,62 +146,66 @@ MatrixFreeLowMachEquationSystem::register_nodal_fields(
   const std::array<double, 3> x{{0, 0, 0}};
   const int dim = meta_.spatial_dimension();
   check_part_is_valid(part_vec);
-  ThrowRequire(realm_.number_of_states() == 3);
+  STK_ThrowRequire(realm_.number_of_states() == 3);
   constexpr int one_state = 1;
   constexpr int three_states = 3;
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
   {
-    auto& field = meta_.declare_field<ScalarFieldType>(
+    auto& field = meta_.declare_field<double>(
       stk::topology::NODE_RANK, names::density, three_states);
     stk::mesh::put_field_on_mesh(field, selector, &zero);
   }
   realm_.augment_restart_variable_list(names::density);
   realm_.augment_property_map(
     DENSITY_ID,
-    meta_.get_field<ScalarFieldType>(stk::topology::NODE_RANK, names::density));
+    meta_.get_field<double>(stk::topology::NODE_RANK, names::density));
   register_copy_state_algorithm(names::density, 1, part_vec);
 
   {
-    auto& field = meta_.declare_field<VectorFieldType>(
+    auto& field = meta_.declare_field<double>(
       stk::topology::NODE_RANK, names::velocity, three_states);
     stk::mesh::put_field_on_mesh(field, selector, dim, x.data());
+    stk::io::set_field_output_type(field, stk::io::FieldOutputType::VECTOR_3D);
   }
   realm_.augment_restart_variable_list(names::velocity);
   register_copy_state_algorithm(names::velocity, dim, part_vec);
   {
-    auto& field = meta_.declare_field<ScalarFieldType>(
+    auto& field = meta_.declare_field<double>(
       stk::topology::NODE_RANK, names::viscosity, one_state);
     stk::mesh::put_field_on_mesh(field, selector, &zero);
   }
   realm_.augment_property_map(
-    VISCOSITY_ID, meta_.get_field<ScalarFieldType>(
-                    stk::topology::NODE_RANK, names::viscosity));
+    VISCOSITY_ID,
+    meta_.get_field<double>(stk::topology::NODE_RANK, names::viscosity));
   {
-    auto& field = meta_.declare_field<ScalarFieldType>(
+    auto& field = meta_.declare_field<double>(
       stk::topology::NODE_RANK, names::pressure, one_state);
     stk::mesh::put_field_on_mesh(field, selector, &zero);
   }
   realm_.augment_restart_variable_list(names::pressure);
   {
-    auto& field = meta_.declare_field<ScalarFieldType>(
+    auto& field = meta_.declare_field<double>(
       stk::topology::NODE_RANK, names::scaled_filter_length, one_state);
     stk::mesh::put_field_on_mesh(field, selector, &zero);
   }
   {
-    auto& field = meta_.declare_field<VectorFieldType>(
+    auto& field = meta_.declare_field<double>(
       stk::topology::NODE_RANK, names::dpdx_tmp, one_state);
     stk::mesh::put_field_on_mesh(field, selector, dim, x.data());
+    stk::io::set_field_output_type(field, stk::io::FieldOutputType::VECTOR_3D);
   }
   {
-    auto& field = meta_.declare_field<VectorFieldType>(
+    auto& field = meta_.declare_field<double>(
       stk::topology::NODE_RANK, names::dpdx, one_state);
     stk::mesh::put_field_on_mesh(field, selector, dim, x.data());
+    stk::io::set_field_output_type(field, stk::io::FieldOutputType::VECTOR_3D);
   }
   {
-    auto& field = meta_.declare_field<VectorFieldType>(
+    auto& field = meta_.declare_field<double>(
       stk::topology::NODE_RANK, names::body_force, one_state);
     stk::mesh::put_field_on_mesh(field, selector, dim, x.data());
+    stk::io::set_field_output_type(field, stk::io::FieldOutputType::VECTOR_3D);
   }
 }
 
@@ -221,21 +226,23 @@ MatrixFreeLowMachEquationSystem::register_wall_bc(
   check_part_is_valid(stk::mesh::PartVector(1, part));
 
   auto data = bc.userData_;
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     !(data.wallFunctionApproach_ || data.ablWallFunctionApproach_),
     "Wall function not implemented");
 
   {
     constexpr int one_state = 1;
     const std::array<double, 3> x{{data.u_.ux_, data.u_.uy_, data.u_.uz_}};
-    auto& field = meta_.declare_field<VectorFieldType>(
+    auto& field = meta_.declare_field<double>(
       stk::topology::NODE_RANK, names::velocity_bc, one_state);
     stk::mesh::put_field_on_mesh(field, *part, dim, x.data());
+    stk::io::set_field_output_type(field, stk::io::FieldOutputType::VECTOR_3D);
   }
 
   auto velocity_name = std::string(names::velocity);
   auto bc_data_type = get_bc_data_type(data, velocity_name);
-  ThrowRequireMsg(bc_data_type != FUNCTION_UD, "No user functions yet enabled");
+  STK_ThrowRequireMsg(
+    bc_data_type != FUNCTION_UD, "No user functions yet enabled");
 
   auto* bc_field =
     meta_.get_field(stk::topology::NODE_RANK, names::velocity_bc);
@@ -300,7 +307,7 @@ MatrixFreeLowMachEquationSystem::compute_filter_scale() const
     stk::mesh::for_each_entity_run(
       realm_.ngp_mesh(), stk::topology::NODE_RANK, interior_selector_,
       KOKKOS_LAMBDA(stk::mesh::FastMeshIndex mi) {
-        NGP_ThrowAssert(filter_scale.get(mi, 0) > 0);
+        STK_NGP_ThrowAssert(filter_scale.get(mi, 0) > 0);
         filter_scale.get(mi, 0) =
           scaling * stk::math::cbrt(filter_scale.get(mi, 0));
       });
@@ -318,23 +325,23 @@ MatrixFreeLowMachEquationSystem::register_initial_condition_fcn(
 
   auto it = names.find(names::velocity);
   if (it != names.end()) {
-    ThrowRequireMsg(
+    STK_ThrowRequireMsg(
       (it->second == "TaylorGreen" || it->second == "SinProfileChannelFlow"),
       "Only TaylorGreen/SinProfileChannelFlow currently implemented for "
       "matrix-free");
 
     if (it->second == "TaylorGreen") {
-      auto* velocity_field = meta_.get_field<VectorFieldType>(
-        stk::topology::NODE_RANK, names::velocity);
-      ThrowRequire(velocity_field);
+      auto* velocity_field =
+        meta_.get_field<double>(stk::topology::NODE_RANK, names::velocity);
+      STK_ThrowRequire(velocity_field);
       auto* vel_func = new TaylorGreenVelocityAuxFunction(0, dim);
       auto* vel_aux_alg = new AuxFunctionAlgorithm(
         realm_, part, velocity_field, vel_func, stk::topology::NODE_RANK);
       realm_.initCondAlg_.push_back(vel_aux_alg);
     } else if (it->second == "SinProfileChannelFlow") {
-      auto* velocity_field = meta_.get_field<VectorFieldType>(
-        stk::topology::NODE_RANK, names::velocity);
-      ThrowRequire(velocity_field);
+      auto* velocity_field =
+        meta_.get_field<double>(stk::topology::NODE_RANK, names::velocity);
+      STK_ThrowRequire(velocity_field);
       auto* vel_func = new SinProfileChannelFlowVelocityAuxFunction(0, dim);
       auto* vel_aux_alg = new AuxFunctionAlgorithm(
         realm_, part, velocity_field, vel_func, stk::topology::NODE_RANK);
@@ -342,9 +349,9 @@ MatrixFreeLowMachEquationSystem::register_initial_condition_fcn(
     }
 
     if (it->second == "TaylorGreen") {
-      auto pressure_field = meta_.get_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, names::pressure);
-      ThrowRequire(pressure_field);
+      auto pressure_field =
+        meta_.get_field<double>(stk::topology::NODE_RANK, names::pressure);
+      STK_ThrowRequire(pressure_field);
       auto* pressure_func = new TaylorGreenPressureAuxFunction();
       auto* pressure_aux_alg = new AuxFunctionAlgorithm(
         realm_, part, pressure_field, pressure_func, stk::topology::NODE_RANK);
@@ -432,8 +439,8 @@ namespace {
 Kokkos::Array<double, 3>
 compute_scaled_gammas(const TimeIntegrator& ti)
 {
-  ThrowRequire(ti.get_time_step() > 0);
-  ThrowRequire(ti.get_gamma1() > 0);
+  STK_ThrowRequire(ti.get_time_step() > 0);
+  STK_ThrowRequire(ti.get_gamma1() > 0);
   return Kokkos::Array<double, 3>{
     {ti.get_gamma1() / ti.get_time_step(), ti.get_gamma2() / ti.get_time_step(),
      ti.get_gamma3() / ti.get_time_step()}};
@@ -442,8 +449,8 @@ compute_scaled_gammas(const TimeIntegrator& ti)
 double
 compute_projected_timescale(const TimeIntegrator& ti)
 {
-  ThrowRequire(ti.get_time_step() > 0);
-  ThrowRequire(ti.get_gamma1() > 0);
+  STK_ThrowRequire(ti.get_time_step() > 0);
+  STK_ThrowRequire(ti.get_gamma1() > 0);
   return ti.get_time_step() / ti.get_gamma1();
 }
 
@@ -495,10 +502,10 @@ MatrixFreeLowMachEquationSystem::get_muelu_xml_file_name()
   const auto block_name =
     equationSystems_.get_solver_block_name(names::pressure);
   auto it = solver_config_map.find(block_name);
-  ThrowRequire(it != solver_config_map.end());
+  STK_ThrowRequire(it != solver_config_map.end());
   auto precond_params = it->second->paramsPrecond();
-  ThrowRequire(precond_params);
-  ThrowRequire(precond_params->isParameter("xml parameter file"));
+  STK_ThrowRequire(precond_params);
+  STK_ThrowRequire(precond_params->isParameter("xml parameter file"));
   return precond_params->get<std::string>("xml parameter file");
 }
 
@@ -689,7 +696,7 @@ MatrixFreeLowMachEquationSystem::compute_body_force() const
     const auto it = realm_.solutionOptions_->srcTermParamMap_.find("momentum");
     if (it != realm_.solutionOptions_->srcTermParamMap_.end()) {
       const auto& force_vec = it->second;
-      ThrowRequireMsg(force_vec.size() == 3u, "Only 3d body force");
+      STK_ThrowRequireMsg(force_vec.size() == 3u, "Only 3d body force");
 
       for (int d = 0; d < 3; ++d) {
         constant_force[d] = force_vec[d];

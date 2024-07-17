@@ -17,7 +17,7 @@
 namespace unit_test_utils {
 
 double field_norm(
-  const ScalarFieldType& field,
+  const sierra::nalu::ScalarFieldType& field,
   const stk::mesh::BulkData& bulk,
   stk::mesh::Selector selector);
 

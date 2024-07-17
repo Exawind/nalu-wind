@@ -7,7 +7,6 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Bucket.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
@@ -72,8 +71,8 @@ fill_and_promote_hex_mesh(
   io.populate_bulk_data();
   stk::mesh::create_exposed_block_boundary_sides(bulk, *blockPart, {surfPart});
 
-  VectorFieldType* coords =
-    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  sierra::nalu::VectorFieldType* coords =
+    meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
   stk::mesh::PartVector baseParts = {blockPart, surfPart};
   std::vector<double> nodes(polyOrder + 1);
   for (size_t j = 0; j < polyOrder + 1; ++j) {
@@ -91,8 +90,8 @@ dump_promoted_mesh_file(stk::mesh::BulkData& bulk, int polyOrder)
   std::string fileName = "out.e";
 
   auto desc = sierra::nalu::HexNElementDescription(polyOrder);
-  VectorFieldType* coordField =
-    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  sierra::nalu::VectorFieldType* coordField =
+    meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
 
   sierra::nalu::PromotedElementIO io(
     polyOrder, meta, bulk, outParts, fileName, *coordField);
@@ -127,6 +126,7 @@ TEST(SingleHexPromotion, coords_p2)
   meshBuilder.set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA);
   auto bulk = meshBuilder.create();
   auto& meta = bulk->mesh_meta_data();
+  meta.use_simple_fields();
 
   std::string singleElemMeshSpec = "generated:1x1x1";
   fill_and_promote_hex_mesh(singleElemMeshSpec, *bulk, polynomialOrder);
@@ -141,8 +141,8 @@ TEST(SingleHexPromotion, coords_p2)
   stk::mesh::get_selected_entities(promotedElemSelector, buckets, elems);
   ASSERT_EQ(elems.size(), 1u);
 
-  VectorFieldType* coordField =
-    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  sierra::nalu::VectorFieldType* coordField =
+    meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
   for (stk::mesh::Entity elem : elems) {
     const stk::mesh::Entity* elemNodeRelations = bulk->begin_nodes(elem);
     for (unsigned k = 0; k < bulk->num_nodes(elem); ++k) {

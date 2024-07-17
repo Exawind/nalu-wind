@@ -20,7 +20,7 @@ namespace nalu {
 namespace {
 
 constexpr int dim = 3;
-using vector_field_type = stk::mesh::Field<double, stk::mesh::Cartesian3d>;
+using vector_field_type = stk::mesh::Field<double>;
 using sphere_t = LocalVolumeSearchData::sphere_t;
 using box_t = LocalVolumeSearchData::box_t;
 using ident_t = LocalVolumeSearchData::ident_t;
@@ -206,7 +206,7 @@ compute_local_coordinates(
     return compute_local_coordinates_t<AlgTraitsHex8>(
       bulk, coord_field, elem, point);
   default: {
-    ThrowRequire(topo == stk::topology::PYRAMID_5);
+    STK_ThrowRequire(topo == stk::topology::PYRAMID_5);
     return compute_local_coordinates_t<AlgTraitsPyr5>(
       bulk, coord_field, elem, point);
   }
@@ -271,7 +271,7 @@ interpolate_field(
     return interpolate_field_t<AlgTraitsHex8>(
       bulk, elem, field_prev, field, x, dtratio);
   default: {
-    ThrowRequire(topo == stk::topology::PYRAMID_5);
+    STK_ThrowRequire(topo == stk::topology::PYRAMID_5);
     return interpolate_field_t<AlgTraitsPyr5>(
       bulk, elem, field_prev, field, x, dtratio);
   }
@@ -310,9 +310,9 @@ local_field_interpolation(
   const stk::mesh::BulkData& bulk,
   const stk::mesh::Selector& active,
   const std::vector<std::array<double, 3>>& points,
-  const stk::mesh::Field<double, stk::mesh::Cartesian3d>& x_field,
-  const stk::mesh::Field<double, stk::mesh::Cartesian3d>& field_prev,
-  const stk::mesh::Field<double, stk::mesh::Cartesian3d>& field,
+  const stk::mesh::Field<double>& x_field,
+  const stk::mesh::Field<double>& field_prev,
+  const stk::mesh::Field<double>& field,
   double dtratio,
   LocalVolumeSearchData& data)
 {

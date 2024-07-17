@@ -268,7 +268,7 @@ PeriodicManager::determine_translation(
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   // fields
-  VectorFieldType* coordinates = meta_data.get_field<VectorFieldType>(
+  VectorFieldType* coordinates = meta_data.get_field<double>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name());
   const int nDim = meta_data.spatial_dimension();
 
@@ -455,7 +455,7 @@ PeriodicManager::populate_search_key_vec(
   std::vector<sphereBoundingBox> sphereBoundingBoxSlaveVec;
 
   // fields
-  VectorFieldType* coordinates = meta_data.get_field<VectorFieldType>(
+  VectorFieldType* coordinates = meta_data.get_field<double>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name());
   const int nDim = meta_data.spatial_dimension();
 
@@ -817,7 +817,7 @@ PeriodicManager::ngp_periodic_parallel_communicate_field(
     }
 #endif
     else {
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         false, "Error, unsupported field type in "
                "PeriodicManager::periodic_parallel_communicate_field.");
     }
@@ -882,7 +882,7 @@ PeriodicManager::ngp_parallel_communicate_field(
     }
 #endif
     else {
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         false, "Error, field "
                  << theField->name() << " with unsupported type ("
                  << theField->data_traits().type_info.name()
@@ -1070,7 +1070,7 @@ PeriodicManager::ngp_add_slave_to_master(
     ngp_periodic_parallel_communicate_field(theField);
   }
 
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     theField->type_is<double>(),
     "Error in PeriodicManager::add_slave_to_master, theField ("
       << theField->name() << ") is required to be double.");
@@ -1202,7 +1202,7 @@ PeriodicManager::ngp_set_slave_to_master(
     ngp_periodic_parallel_communicate_field(theField);
   }
 
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     theField->type_is<double>(),
     "Argh, theField (" << theField->name() << ") is not double.");
 

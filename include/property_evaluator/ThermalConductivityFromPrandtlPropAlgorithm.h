@@ -30,21 +30,11 @@ class ThermalConductivityFromPrandtlPropAlgorithm : public Algorithm
 {
 public:
   ThermalConductivityFromPrandtlPropAlgorithm(
-    Realm& realm,
-    const stk::mesh::PartVector& part_vec,
-    ScalarFieldType* thermalCond,
-    ScalarFieldType* specificHeat,
-    ScalarFieldType* viscosity,
-    const double Pr);
+    Realm& realm, const stk::mesh::PartVector& part_vec, const double Pr);
 
   virtual ~ThermalConductivityFromPrandtlPropAlgorithm() {}
 
   virtual void execute();
-
-  ScalarFieldType* thermalCond_;
-  ScalarFieldType* specHeat_;
-  ScalarFieldType* viscosity_;
-
   const double Pr_;
 };
 

@@ -118,7 +118,6 @@
 #include <stk_mesh/base/FieldParallel.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Comm.hpp>
 #include <stk_mesh/base/CreateEdges.hpp>
@@ -521,8 +520,8 @@ Realm::initialize_prolog()
 
   populate_boundary_data();
 
-  ScalarIntFieldType* iblank = meta_data().get_field<ScalarIntFieldType>(
-    stk::topology::NODE_RANK, "iblank");
+  ScalarIntFieldType* iblank =
+    meta_data().get_field<int>(stk::topology::NODE_RANK, "iblank");
   stk::mesh::field_fill(1, *iblank);
 
   if (solutionOptions_->meshTransformation_)
@@ -927,7 +926,7 @@ Realm::setup_nodal_fields()
     setup_field_manager();
   }
 #ifdef NALU_USES_HYPRE
-  hypreGlobalId_ = fieldManager_->register_field<HypreIDFieldType>(
+  hypreGlobalId_ = fieldManager_->register_field<HypreIntType>(
     "hypre_global_id", meta_data().get_parts());
 #endif
 #ifdef NALU_USES_TRILINOS_SOLVERS
@@ -935,10 +934,10 @@ Realm::setup_nodal_fields()
   // the manager instead
   const LinSys::GlobalOrdinal init_val =
     std::numeric_limits<LinSys::GlobalOrdinal>::max();
-  tpetGlobalId_ = fieldManager_->register_field<TpetIDFieldType>(
+  tpetGlobalId_ = fieldManager_->register_field<TpetIdType>(
     "tpet_global_id", meta_data().get_parts(), &init_val);
 #endif
-  naluGlobalId_ = fieldManager_->register_field<GlobalIdFieldType>(
+  naluGlobalId_ = fieldManager_->register_field<stk::mesh::EntityId>(
     "nalu_global_id", meta_data().get_parts());
 
   // loop over all material props targets and register nodal fields
@@ -976,10 +975,9 @@ Realm::setup_element_fields()
     const std::string sv_fieldName =
       realmUsesEdges_ ? "edge_swept_face_volume" : "swept_face_volume";
     GenericFieldType* faceVelMag =
-      &(meta_data().declare_field<GenericFieldType>(entityRank, fvm_fieldName));
-    GenericFieldType* sweptFaceVolume =
-      &(meta_data().declare_field<GenericFieldType>(
-        entityRank, sv_fieldName, numVolStates));
+      &(meta_data().declare_field<double>(entityRank, fvm_fieldName));
+    GenericFieldType* sweptFaceVolume = &(meta_data().declare_field<double>(
+      entityRank, sv_fieldName, numVolStates));
     for (auto target : targetNames) {
       auto* targetPart = meta_data().get_part(target);
       auto fieldSize = 1;
@@ -1155,7 +1153,7 @@ Realm::setup_bc()
         name, *reinterpret_cast<const ABLTopBoundaryConditionData*>(bc.get()));
       break;
     case PERIODIC_BC: {
-      ThrowAssert(
+      STK_ThrowAssert(
         reinterpret_cast<const PeriodicBoundaryConditionData*>(bc.get()) !=
         nullptr);
       const auto& pbc =
@@ -1297,13 +1295,13 @@ Realm::setup_initial_conditions()
         const ConstantInitialConditionData& genIC =
           *reinterpret_cast<const ConstantInitialConditionData*>(
             initCond.get());
-        ThrowAssert(genIC.data_.size() == genIC.fieldNames_.size());
+        STK_ThrowAssert(genIC.data_.size() == genIC.fieldNames_.size());
         for (size_t ifield = 0; ifield < genIC.fieldNames_.size(); ++ifield) {
 
           std::vector<double> genSpec = genIC.data_[ifield];
           stk::mesh::FieldBase* field = stk::mesh::get_field_by_name(
             genIC.fieldNames_[ifield], meta_data());
-          ThrowAssert(field);
+          STK_ThrowAssert(field);
 
           stk::mesh::FieldBase* fieldWithState =
             (field->number_of_states() > 1)
@@ -1473,7 +1471,7 @@ Realm::setup_property()
 
       case MIXFRAC_MAT: {
         // extract the mixture fraction field
-        ScalarFieldType* mixFrac = meta_data().get_field<ScalarFieldType>(
+        ScalarFieldType* mixFrac = meta_data().get_field<double>(
           stk::topology::NODE_RANK, "mixture_fraction");
 
         // primary and secondary
@@ -1496,7 +1494,7 @@ Realm::setup_property()
 
       case VOF_MAT: {
         // extract the volume of fluid field
-        ScalarFieldType* VOF = meta_data().get_field<ScalarFieldType>(
+        ScalarFieldType* VOF = meta_data().get_field<double>(
           stk::topology::NODE_RANK, "volume_of_fluid");
 
         // primary and secondary
@@ -1844,7 +1842,7 @@ Realm::makeSureNodesHaveValidTopology()
   // now we require all nodes are in proper node part
   if (nodes_vector.size())
     std::cout << "nodes_vector= " << nodes_vector.size() << std::endl;
-  ThrowRequire(0 == nodes_vector.size());
+  STK_ThrowRequire(0 == nodes_vector.size());
 }
 
 void
@@ -2055,6 +2053,7 @@ Realm::create_mesh()
     activateAura_ ? stk::mesh::BulkData::AUTO_AURA
                   : stk::mesh::BulkData::NO_AUTO_AURA);
   bulkData_ = meshBuilder.create();
+  bulkData_->mesh_meta_data().use_simple_fields();
   ioBroker_ = new stk::io::StkMeshIoBroker(pm);
   ioBroker_->set_auto_load_distribution_factor_per_nodeset(false);
   ioBroker_->set_bulk_data(*bulkData_);
@@ -2218,7 +2217,7 @@ Realm::create_restart_mesh()
     }
 
     // set max size for restart data base
-    ioBroker_->get_output_io_region(restartFileIndex_)
+    ioBroker_->get_output_ioss_region(restartFileIndex_)
       ->get_database()
       ->set_cycle_count(outputInfo_->restartMaxDataBaseStepSize_);
   }
@@ -2561,11 +2560,11 @@ Realm::set_current_coordinates(stk::mesh::Part* targetPart)
 {
   const int nDim = meta_data().spatial_dimension();
 
-  VectorFieldType* modelCoords = meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* currentCoords = meta_data().get_field<VectorFieldType>(
+  VectorFieldType* modelCoords =
+    meta_data().get_field<double>(stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* currentCoords = meta_data().get_field<double>(
     stk::topology::NODE_RANK, "current_coordinates");
-  VectorFieldType* displacement = meta_data().get_field<VectorFieldType>(
+  VectorFieldType* displacement = meta_data().get_field<double>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
   currentCoords->clear_sync_state();
@@ -2625,8 +2624,8 @@ Realm::compute_vrtm(const std::string& velName)
   auto vrtm = fieldMgr.get_field<double>(
     get_field_ordinal(meta_data(), velName + "_rtm"));
 
-  auto* vrtm_field = meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, velName + "_rtm");
+  auto* vrtm_field =
+    meta_data().get_field<double>(stk::topology::NODE_RANK, velName + "_rtm");
   const stk::mesh::Selector sel =
     (meta_data().locally_owned_part() | meta_data().globally_shared_part()) &
     stk::mesh::selectField(*vrtm_field);
@@ -2648,11 +2647,11 @@ Realm::init_current_coordinates()
 {
   const int nDim = meta_data().spatial_dimension();
 
-  VectorFieldType* modelCoords = meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* currentCoords = meta_data().get_field<VectorFieldType>(
+  VectorFieldType* modelCoords =
+    meta_data().get_field<double>(stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* currentCoords = meta_data().get_field<double>(
     stk::topology::NODE_RANK, "current_coordinates");
-  VectorFieldType* displacement = meta_data().get_field<VectorFieldType>(
+  VectorFieldType* displacement = meta_data().get_field<double>(
     stk::topology::NODE_RANK, "mesh_displacement");
 
   currentCoords->clear_sync_state();
@@ -2808,10 +2807,9 @@ Realm::register_wall_bc(stk::mesh::Part* part, const stk::topology& theTopo)
     MasterElementRepo::get_surface_master_element_on_host(theTopo);
   const int numScsIp = meFC->num_integration_points();
 
-  GenericFieldType* exposedAreaVec_ =
-    &(meta_data().declare_field<GenericFieldType>(
-      static_cast<stk::topology::rank_t>(meta_data().side_rank()),
-      "exposed_area_vector"));
+  GenericFieldType* exposedAreaVec_ = &(meta_data().declare_field<double>(
+    static_cast<stk::topology::rank_t>(meta_data().side_rank()),
+    "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(
     *exposedAreaVec_, *part, nDim * numScsIp, nullptr);
 
@@ -2844,10 +2842,9 @@ Realm::register_inflow_bc(stk::mesh::Part* part, const stk::topology& theTopo)
     MasterElementRepo::get_surface_master_element_on_host(theTopo);
   const int numScsIp = meFC->num_integration_points();
 
-  GenericFieldType* exposedAreaVec_ =
-    &(meta_data().declare_field<GenericFieldType>(
-      static_cast<stk::topology::rank_t>(meta_data().side_rank()),
-      "exposed_area_vector"));
+  GenericFieldType* exposedAreaVec_ = &(meta_data().declare_field<double>(
+    static_cast<stk::topology::rank_t>(meta_data().side_rank()),
+    "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(
     *exposedAreaVec_, *part, nDim * numScsIp, nullptr);
 
@@ -2880,10 +2877,9 @@ Realm::register_open_bc(stk::mesh::Part* part, const stk::topology& theTopo)
     MasterElementRepo::get_surface_master_element_on_host(theTopo);
   const int numScsIp = meFC->num_integration_points();
 
-  GenericFieldType* exposedAreaVec_ =
-    &(meta_data().declare_field<GenericFieldType>(
-      static_cast<stk::topology::rank_t>(meta_data().side_rank()),
-      "exposed_area_vector"));
+  GenericFieldType* exposedAreaVec_ = &(meta_data().declare_field<double>(
+    static_cast<stk::topology::rank_t>(meta_data().side_rank()),
+    "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(
     *exposedAreaVec_, *part, nDim * numScsIp, nullptr);
 
@@ -2915,10 +2911,9 @@ Realm::register_symmetry_bc(stk::mesh::Part* part, const stk::topology& theTopo)
     MasterElementRepo::get_surface_master_element_on_host(theTopo);
   const int numScsIp = meFC->num_integration_points();
 
-  GenericFieldType* exposedAreaVec_ =
-    &(meta_data().declare_field<GenericFieldType>(
-      static_cast<stk::topology::rank_t>(meta_data().side_rank()),
-      "exposed_area_vector"));
+  GenericFieldType* exposedAreaVec_ = &(meta_data().declare_field<double>(
+    static_cast<stk::topology::rank_t>(meta_data().side_rank()),
+    "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(
     *exposedAreaVec_, *part, nDim * numScsIp, nullptr);
 
@@ -2996,7 +2991,7 @@ void
 Realm::register_non_conformal_bc(
   stk::mesh::Part* part, const stk::topology& theTopo)
 {
-  ThrowRequire(!matrixFree_);
+  STK_ThrowRequire(!matrixFree_);
 
   // push back the part for book keeping and, later, skin mesh
   bcPartVec_.push_back(part);
@@ -3008,10 +3003,9 @@ Realm::register_non_conformal_bc(
   const int numScsIp = meFC->num_integration_points();
 
   // exposed area vector
-  GenericFieldType* exposedAreaVec_ =
-    &(meta_data().declare_field<GenericFieldType>(
-      static_cast<stk::topology::rank_t>(meta_data().side_rank()),
-      "exposed_area_vector"));
+  GenericFieldType* exposedAreaVec_ = &(meta_data().declare_field<double>(
+    static_cast<stk::topology::rank_t>(meta_data().side_rank()),
+    "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(
     *exposedAreaVec_, *part, nDim * numScsIp, nullptr);
 
@@ -3033,10 +3027,9 @@ Realm::register_overset_bc()
       const int numScsIp = meFC->num_integration_points();
 
       // exposed area vector
-      GenericFieldType* exposedAreaVec_ =
-        &(meta_data().declare_field<GenericFieldType>(
-          static_cast<stk::topology::rank_t>(meta_data().side_rank()),
-          "exposed_area_vector"));
+      GenericFieldType* exposedAreaVec_ = &(meta_data().declare_field<double>(
+        static_cast<stk::topology::rank_t>(meta_data().side_rank()),
+        "exposed_area_vector"));
       stk::mesh::put_field_on_mesh(
         *exposedAreaVec_, *part, nDim * numScsIp, nullptr);
 
@@ -3423,10 +3416,10 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
         auto* field = stk::mesh::get_field_by_name(fname, meta_data());
         if (field == nullptr)
           continue;
-
         const unsigned numStates = field->number_of_states();
         for (unsigned i = 0; i < numStates; ++i) {
           auto* fld = field->field_state(static_cast<stk::mesh::FieldState>(i));
+          fld->clear_sync_state();
           fld->modify_on_host();
           ngp_field_manager().get_field<double>(fld->mesh_meta_data_ordinal());
           fld->sync_to_device();
@@ -3715,7 +3708,7 @@ Realm::check_job(bool get_node_count)
   // set number of nodes, check job run size
   if (get_node_count) {
     size_t localNodeCount =
-      ioBroker_->get_input_io_region()->get_property("node_count").get_int();
+      ioBroker_->get_input_ioss_region()->get_property("node_count").get_int();
     stk::all_reduce_sum(
       NaluEnv::self().parallel_comm(), &localNodeCount, &nodeCount_, 1);
     NaluEnv::self().naluOutputP0()
@@ -3789,7 +3782,7 @@ Realm::check_job(bool get_node_count)
   if (meta_data().is_commit()) {
     std::vector<size_t> counts;
     stk::mesh::comm_mesh_counts(*bulkData_, counts);
-    ThrowRequire(counts.size() >= 4);
+    STK_ThrowRequire(counts.size() >= 4);
     size_t nodeCount = counts[stk::topology::NODE_RANK];
     size_t edgeCount = counts[stk::topology::EDGE_RANK];
     size_t faceCount = counts[stk::topology::FACE_RANK];
@@ -3799,10 +3792,10 @@ Realm::check_job(bool get_node_count)
     unsigned nfields = fields.size();
     for (unsigned ifld = 0; ifld < nfields; ++ifld) {
       stk::mesh::FieldBase* field = fields[ifld];
-      unsigned fszNode = field->max_size(stk::topology::NODE_RANK);
-      unsigned fszEdge = field->max_size(stk::topology::EDGE_RANK);
-      unsigned fszFace = field->max_size(stk::topology::FACE_RANK);
-      unsigned fszElem = field->max_size(stk::topology::ELEM_RANK);
+      unsigned fszNode = field->max_size();
+      unsigned fszEdge = field->max_size();
+      unsigned fszFace = field->max_size();
+      unsigned fszElem = field->max_size();
 
       memoryEstimateFields += (nodeCount * fszNode + edgeCount * fszEdge +
                                faceCount * fszFace + elemCount * fszElem) *
@@ -4779,8 +4772,8 @@ Realm::promote_mesh()
     << "Realm::promote_elements() Begin " << std::endl;
   auto timeA = stk::wall_time();
 
-  auto& coords = *meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
+  auto& coords =
+    *meta_data().get_field<double>(stk::topology::NODE_RANK, "coordinates");
   if (!restarted_simulation()) {
 #ifdef NALU_HAS_MATRIXFREE
     std::vector<double> gllNodes =
@@ -4820,8 +4813,8 @@ Realm::create_promoted_output_mesh()
       return;
     }
 
-    auto* coords = meta_data().get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "coordinates");
+    auto* coords =
+      meta_data().get_field<double>(stk::topology::NODE_RANK, "coordinates");
     promotionIO_ = std::make_unique<PromotedElementIO>(
       promotionOrder_, meta_data(), *bulkData_, meta_data().get_mesh_parts(),
       outputInfo_->outputDBName_, *coords);
@@ -5171,7 +5164,7 @@ Realm::handle_all_element_part_alias(
   if (names.size() == 1u && names.at(0) == allElementPartAlias) {
     std::vector<std::string> new_names;
     for (const auto* part : meta_data().get_mesh_parts()) {
-      ThrowRequire(part);
+      STK_ThrowRequire(part);
       if (part->topology().rank() == stk::topology::ELEMENT_RANK) {
         new_names.push_back(part->name());
       }

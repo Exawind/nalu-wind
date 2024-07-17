@@ -57,11 +57,11 @@ public:
   /// ScalarFieldType* and so on.
   ///
   template <typename T>
-  T* register_field(
+  stk::mesh::Field<T>* register_field(
     const std::string& name,
     const stk::mesh::PartVector& parts,
     const void* init_val = nullptr,
-    stk::mesh::FieldState state = stk::mesh::FieldState::StateNone)
+    stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const
   {
     const int numStates = 0;
     const int numComponents = 0;
@@ -70,7 +70,7 @@ public:
   }
 
   /// Check to see if the field has been registered.
-  bool field_exists(const std::string& name);
+  bool field_exists(const std::string& name) const;
 
   unsigned size() const { return meta_.get_fields().size(); }
   /// Register a Generic field.
@@ -83,10 +83,10 @@ public:
     const int numStates,
     const int numComponents,
     const void* init_val = nullptr,
-    stk::mesh::FieldState state = stk::mesh::FieldState::StateNone)
+    stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const
   {
     register_field(name, parts, numStates, numComponents, init_val);
-    return get_field_ptr<GenericFieldType>(name, state);
+    return get_field_ptr<GenericFieldType::value_type>(name, state);
   }
 
   // Return a field by the given name and of type T, the template parameter.
@@ -94,7 +94,7 @@ public:
   // specified by the template parameter: ScalarFieldType, VectorFieldType,
   // ScalarIntFieldType, GlobalIdFieldType,....
   template <typename T>
-  T* get_field_ptr(
+  stk::mesh::Field<T>* get_field_ptr(
     const std::string& name,
     stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const
   {
@@ -102,12 +102,10 @@ public:
       FieldRegistry::query(numDimensions_, numStates_, name);
     FieldPointerTypes pointerSet = std::visit(
       [&](auto def) -> FieldPointerTypes {
-        return &meta_
-                  .get_field<typename decltype(def)::FieldType>(def.rank, name)
-                  ->field_of_state(state);
+        return &meta_.get_field<T>(def.rank, name)->field_of_state(state);
       },
       fieldDef);
-    return std::get<T*>(pointerSet);
+    return std::get<stk::mesh::Field<T>*>(pointerSet);
   }
 
   /// Register a field with the option to override default parameters that
@@ -126,7 +124,7 @@ public:
     const stk::mesh::PartVector& parts,
     const int numStates = 0,
     const int numComponents = 0,
-    const void* init_val = nullptr);
+    const void* init_val = nullptr) const;
 
   /// Given the named field that has already been registered on the CPU
   /// return the GPU version of the same field.
@@ -139,9 +137,7 @@ public:
       FieldRegistry::query(numDimensions_, numStates_, name);
     const stk::mesh::FieldBase& stkField = std::visit(
       [&](auto def) -> stk::mesh::FieldBase& {
-        return meta_
-          .get_field<typename decltype(def)::FieldType>(def.rank, name)
-          ->field_of_state(state);
+        return meta_.get_field<T>(def.rank, name)->field_of_state(state);
       },
       fieldDef);
     stk::mesh::NgpField<T>& tmp = stk::mesh::get_updated_ngp_field<T>(stkField);
@@ -154,16 +150,16 @@ public:
     std::string name,
     stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const
   {
-    return MakeSmartField<tags::DEVICE, ACCESS>().template operator()<T>(
+    return MakeSmartField<tags::DEVICE, ACCESS>().template operator()(
       get_ngp_field_ptr<T>(name, state));
   }
 
   template <typename T, typename ACCESS>
-  SmartField<T, tags::LEGACY, ACCESS> get_legacy_smart_field(
+  SmartField<stk::mesh::Field<T>, tags::LEGACY, ACCESS> get_legacy_smart_field(
     std::string name,
     stk::mesh::FieldState state = stk::mesh::FieldState::StateNone) const
   {
-    return MakeSmartField<tags::LEGACY, ACCESS>().template operator()<T>(
+    return MakeSmartField<tags::LEGACY, ACCESS>().template operator()(
       get_field_ptr<T>(name, state));
   }
 };

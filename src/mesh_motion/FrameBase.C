@@ -110,7 +110,7 @@ FrameBase::populate_part_vec(const YAML::Node& node)
     partNamesVec.end()) {
     partNamesVec.clear();
     for (const auto* part : meta_.get_mesh_parts()) {
-      ThrowRequire(part);
+      STK_ThrowRequire(part);
       if (part->topology().rank() == stk::topology::ELEMENT_RANK) {
         partNamesVec.push_back(part->name());
       }
@@ -178,7 +178,7 @@ FrameBase::compute_centroid_on_parts(mm::ThreeDVecType& centroid)
   // get the field from the NGP mesh
   stk::mesh::NgpField<double> modelCoords =
     stk::mesh::get_updated_ngp_field<double>(
-      *meta_.get_field<VectorFieldType>(entityRank, "coordinates"));
+      *meta_.get_field<double>(entityRank, "coordinates"));
 
   // sync fields to device
   modelCoords.sync_to_device();

@@ -20,7 +20,7 @@ namespace sierra {
 namespace nalu {
 namespace matrix_free {
 
-static constexpr int invalid_offset = -1;
+inline constexpr int invalid_offset = -1;
 
 constexpr stk::mesh::FastMeshIndex invalid_mesh_index =
   stk::mesh::FastMeshIndex{

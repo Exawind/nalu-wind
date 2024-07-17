@@ -45,7 +45,7 @@ get_TpetraLinearSystem(unit_test_utils::NaluTest& naluObj)
 
   sierra::nalu::TpetraLinearSystem* tpetraLinsys =
     dynamic_cast<sierra::nalu::TpetraLinearSystem*>(linsys);
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     tpetraLinsys != nullptr, "Expected TpetraLinearSystem to be non-null");
 
   return tpetraLinsys;
@@ -63,7 +63,7 @@ create_algorithm(sierra::nalu::Realm& realm, stk::mesh::Part& part)
       *eqsys, part, eqsys->solverAlgDriver_->solverAlgorithmMap_);
 
   EXPECT_TRUE(solverAlgResult.second);
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     solverAlgResult.first != nullptr,
     "Error, failed to obtain non-null solver-algorithm object.");
 
@@ -88,11 +88,11 @@ get_AssembleElemSolverAlgorithm(unit_test_utils::NaluTest& naluObj)
   auto solverAlgMap = eqsys->solverAlgDriver_->solverAlgorithmMap_;
   EXPECT_EQ(1u, solverAlgMap.size());
   sierra::nalu::SolverAlgorithm* solverAlg = solverAlgMap.begin()->second;
-  ThrowRequireMsg(solverAlg != nullptr, "Error, null solver-algorithm");
+  STK_ThrowRequireMsg(solverAlg != nullptr, "Error, null solver-algorithm");
 
   sierra::nalu::AssembleElemSolverAlgorithm* assembleElemSolverAlgorithm =
     dynamic_cast<sierra::nalu::AssembleElemSolverAlgorithm*>(solverAlg);
-  ThrowRequireMsg(
+  STK_ThrowRequireMsg(
     assembleElemSolverAlgorithm != nullptr,
     "Error, failed to dynamic_cast to AssembleElemSolverAlgorithm.");
   return assembleElemSolverAlgorithm;

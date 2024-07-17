@@ -89,7 +89,7 @@ ActuatorBulkFAST::init_openfast(
   const int remainder = actMeta.numberOfActuators_ % nProcs;
   const int nOffset = intDivision * nProcs;
 
-  ThrowErrorMsgIf(
+  STK_ThrowErrorMsgIf(
     remainder && intDivision,
     "nalu-wind can't process more turbines than ranks.");
 
@@ -120,7 +120,7 @@ ActuatorBulkFAST::init_openfast(
 
   for (int i = 0; i < nTurb; ++i) {
     if (localTurbineId_ == openFast_.get_procNo(i)) {
-      ThrowErrorMsgIf(
+      STK_ThrowErrorMsgIf(
         actMeta.nBlades_(i) != openFast_.get_numBlades(i),
         "Mismatch in number of blades between OpenFAST and input deck."
         " InputDeck: " +
@@ -146,7 +146,8 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
 
   for (int iTurb = 0; iTurb < nTurb; iTurb++) {
     if (openFast_.get_procNo(iTurb) == NaluEnv::self().parallel_rank()) {
-      ThrowAssert(actMeta.numPointsTotal_ >= openFast_.get_numForcePts(iTurb));
+      STK_ThrowAssert(
+        actMeta.numPointsTotal_ >= openFast_.get_numForcePts(iTurb));
       const int numForcePts = actMeta.numPointsTurbine_.h_view(iTurb);
       const int offset = turbIdOffset_.h_view(iTurb);
       auto epsilonChord =
@@ -215,7 +216,7 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
         }
 
         for (int i = 0; i < 3; ++i) {
-          ThrowAssertMsg(
+          STK_ThrowAssertMsg(
             epsilonLocal(i) > 0.0,
             "Epsilon zero for point: " + std::to_string(np) + " index " +
               std::to_string(i));

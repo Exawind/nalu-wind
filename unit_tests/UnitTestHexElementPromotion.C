@@ -7,7 +7,6 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Bucket.hpp>
-#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
@@ -24,6 +23,7 @@
 #include <element_promotion/PromotedElementIO.h>
 
 #include <NaluEnv.h>
+#include <FieldTypeDef.h>
 
 #include <memory>
 #include <random>
@@ -31,10 +31,6 @@
 #include "UnitTestUtils.h"
 
 namespace {
-
-typedef stk::mesh::Field<double> ScalarFieldType;
-typedef stk::mesh::Field<int> ScalarIntFieldType;
-typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
 
 size_t
 count_nodes(
@@ -57,19 +53,19 @@ protected:
   void init(int nx, int ny, int nz, int in_polyOrder)
   {
     auto aura = stk::mesh::BulkData::NO_AUTO_AURA;
-    fixture =
-      std::make_unique<stk::mesh::fixtures::HexFixture>(comm, nx, ny, nz, aura);
+    fixture = std::make_unique<stk::mesh::fixtures::simple_fields::HexFixture>(
+      comm, nx, ny, nz, aura);
     meta = &fixture->m_meta;
     bulk = &fixture->m_bulk_data;
     surfSupPart = nullptr;
     surfSubPart = nullptr;
     topo = stk::topology::HEX_8;
     hexPart = fixture->m_elem_parts[0];
-    ThrowRequire(hexPart != nullptr);
+    STK_ThrowRequire(hexPart != nullptr);
     coordField =
-      &meta->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "coords");
-    intField = &meta->declare_field<ScalarIntFieldType>(
-      stk::topology::NODE_RANK, "integer field");
+      &meta->declare_field<double>(stk::topology::NODE_RANK, "coords");
+    intField =
+      &meta->declare_field<int>(stk::topology::NODE_RANK, "integer field");
 
     poly_order = in_polyOrder;
 
@@ -88,8 +84,9 @@ protected:
     stk::mesh::put_field_on_entire_mesh(*intField);
 
     fixture->m_meta.commit();
-    fixture->generate_mesh(stk::mesh::fixtures::FixedCartesianCoordinateMapping(
-      nx, ny, nz, nx, ny, nz));
+    fixture->generate_mesh(
+      stk::mesh::fixtures::simple_fields::FixedCartesianCoordinateMapping(
+        nx, ny, nz, nx, ny, nz));
     stk::mesh::PartVector surfParts = {surfSubPart};
     stk::mesh::skin_mesh(*bulk, surfParts);
   }
@@ -150,7 +147,7 @@ protected:
 
   stk::ParallelMachine comm;
   unsigned nDim;
-  std::unique_ptr<stk::mesh::fixtures::HexFixture> fixture;
+  std::unique_ptr<stk::mesh::fixtures::simple_fields::HexFixture> fixture;
   stk::mesh::MetaData* meta;
   stk::mesh::BulkData* bulk;
   unsigned poly_order;
@@ -163,8 +160,8 @@ protected:
   stk::mesh::Part* edgePart;
   stk::mesh::Part* facePart;
   std::unique_ptr<sierra::nalu::PromotedElementIO> io;
-  VectorFieldType* coordField;
-  ScalarIntFieldType* intField;
+  sierra::nalu::VectorFieldType* coordField;
+  sierra::nalu::ScalarIntFieldType* intField;
 };
 
 TEST_F(PromoteElementHexTest, node_count)
@@ -204,7 +201,7 @@ TEST_F(PromoteElementHexTest, node_sharing)
   init(2, 1, 1, polyOrder);
 
   promote_mesh();
-  ThrowRequire(!bulk->in_modifiable_state());
+  STK_ThrowRequire(!bulk->in_modifiable_state());
 
   stk::mesh::EntityIdVector sharedNodeIds = {2, 5, 8, 11, 21, 22, 23, 24, 33};
 

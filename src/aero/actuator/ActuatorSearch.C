@@ -49,7 +49,7 @@ CreateElementBoxes(
 
   // fields
   VectorFieldType* coordinates =
-    stkMeta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+    stkMeta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
 
   // point data structures
   Point minCorner, maxCorner;
@@ -161,13 +161,13 @@ ExecuteFineSearch(
 {
   const int nDim = 3;
 
-  ThrowAssert(isLocalPoint.extent(0) == points.extent(0));
-  ThrowAssert(coarsePointIds.extent(0) == coarseElemIds.extent(0));
+  STK_ThrowAssert(isLocalPoint.extent(0) == points.extent(0));
+  STK_ThrowAssert(coarsePointIds.extent(0) == coarseElemIds.extent(0));
 
   // extract fields
   stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
   VectorFieldType* coordinates =
-    stkMeta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+    stkMeta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
 
   for (unsigned i = 0; i < isLocalPoint.extent(0); i++) {
     isLocalPoint(i) = false;

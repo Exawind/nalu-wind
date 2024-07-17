@@ -13,7 +13,8 @@
 #include "Algorithm.h"
 #include "ElemDataRequests.h"
 #include "FieldTypeDef.h"
-
+#include "ngp_utils/NgpScratchData.h"
+#include "ngp_algorithms/ViewHelper.h"
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
@@ -21,21 +22,17 @@ namespace nalu {
 
 class MasterElement;
 
-template <typename AlgTraits, typename PhiType, typename GradPhiType>
+using NodalGradElemSimdDataType =
+  sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+
+template <
+  typename AlgTraits,
+  typename PhiType,
+  typename GradPhiType,
+  typename ViewHelperType>
 class NodalGradElemAlg : public Algorithm
 {
-  static_assert(
-    ((std::is_same<PhiType, ScalarFieldType>::value &&
-      std::is_same<GradPhiType, VectorFieldType>::value) ||
-     (std::is_same<PhiType, VectorFieldType>::value &&
-      std::is_same<GradPhiType, GenericFieldType>::value) ||
-     (std::is_same<PhiType, VectorFieldType>::value &&
-      std::is_same<GradPhiType, TensorFieldType>::value)),
-    "Improper field types passed to nodal gradient calculator");
-
 public:
-  using DblType = double;
-
   NodalGradElemAlg(
     Realm&,
     stk::mesh::Part*,
@@ -53,27 +50,34 @@ private:
   unsigned phi_{stk::mesh::InvalidOrdinal};
   unsigned gradPhi_{stk::mesh::InvalidOrdinal};
   unsigned dualNodalVol_{stk::mesh::InvalidOrdinal};
+  int phiSize_{0};
+  int gradPhiSize_{0};
 
   const bool useShifted_{false};
 
   MasterElement* meSCS_{nullptr};
-
-  static constexpr int NDimMax = 3;
-
-  static constexpr int NumComp =
-    std::is_same<PhiType, ScalarFieldType>::value ? 1 : AlgTraits::nDim_;
 };
 
 template <typename AlgTraits>
-using ScalarNodalGradElemAlg =
-  NodalGradElemAlg<AlgTraits, ScalarFieldType, VectorFieldType>;
+using ScalarNodalGradElemAlg = NodalGradElemAlg<
+  AlgTraits,
+  ScalarFieldType,
+  VectorFieldType,
+  nalu_ngp::ScalarViewHelper<NodalGradElemSimdDataType, ScalarFieldType>>;
 
 template <typename AlgTraits>
-using VectorNodalGradElemAlg =
-  NodalGradElemAlg<AlgTraits, VectorFieldType, GenericFieldType>;
+using VectorNodalGradElemAlg = NodalGradElemAlg<
+  AlgTraits,
+  VectorFieldType,
+  GenericFieldType,
+  nalu_ngp::VectorViewHelper<NodalGradElemSimdDataType, VectorFieldType>>;
+
 template <typename AlgTraits>
-using TensorNodalGradElemAlg =
-  NodalGradElemAlg<AlgTraits, VectorFieldType, TensorFieldType>;
+using TensorNodalGradElemAlg = NodalGradElemAlg<
+  AlgTraits,
+  VectorFieldType,
+  TensorFieldType,
+  nalu_ngp::VectorViewHelper<NodalGradElemSimdDataType, VectorFieldType>>;
 
 } // namespace nalu
 } // namespace sierra

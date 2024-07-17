@@ -41,13 +41,13 @@ compute_vector_divergence(
   const std::string coordName =
     hasMeshDeformation ? "current_coordinates" : "coordinates";
   VectorFieldType* coordinates =
-    meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, coordName);
+    meta.get_field<double>(stk::topology::NODE_RANK, coordName);
 
-  ScalarFieldType* dualVol = meta.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "dual_nodal_volume");
+  ScalarFieldType* dualVol =
+    meta.get_field<double>(stk::topology::NODE_RANK, "dual_nodal_volume");
 
   GenericFieldType* exposedAreaVec =
-    meta.get_field<GenericFieldType>(meta.side_rank(), "exposed_area_vector");
+    meta.get_field<double>(meta.side_rank(), "exposed_area_vector");
 
   // sync fields to host
   coordinates->sync_to_host();
@@ -196,7 +196,7 @@ compute_vector_divergence(
       int num_nodes = b->num_nodes(k);
 
       // sanity check on num nodes
-      ThrowAssert(num_nodes == nodesPerFace);
+      STK_ThrowAssert(num_nodes == nodesPerFace);
 
       for (int ni = 0; ni < num_nodes; ++ni) {
         stk::mesh::Entity node = face_node_rels[ni];

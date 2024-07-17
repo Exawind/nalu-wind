@@ -82,14 +82,14 @@ TiogaBlock::setup(stk::mesh::PartVector& bcPartVec)
   if (ovsetNames_.size() > 0)
     names_to_parts(ovsetNames_, ovsetParts_);
 
-  ScalarIntFieldType& ibf =
-    meta_.declare_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
+  sierra::nalu::ScalarIntFieldType& ibf =
+    meta_.declare_field<int>(stk::topology::NODE_RANK, "iblank");
 
-  ScalarIntFieldType& ibcell = meta_.declare_field<ScalarIntFieldType>(
-    stk::topology::ELEM_RANK, "iblank_cell");
+  sierra::nalu::ScalarIntFieldType& ibcell =
+    meta_.declare_field<int>(stk::topology::ELEM_RANK, "iblank_cell");
 
-  ScalarFieldType& nVol = meta_.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "tioga_nodal_volume");
+  sierra::nalu::ScalarFieldType& nVol =
+    meta_.declare_field<double>(stk::topology::NODE_RANK, "tioga_nodal_volume");
 
   for (auto p : blkParts_) {
     stk::mesh::put_field_on_mesh(ibf, *p, nullptr);
@@ -123,10 +123,10 @@ TiogaBlock::update_coords()
   stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts =
     bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
-  VectorFieldType* coords =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, coords_name_);
-  ScalarFieldType* nodeVol = meta_.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "dual_nodal_volume");
+  sierra::nalu::VectorFieldType* coords =
+    meta_.get_field<double>(stk::topology::NODE_RANK, coords_name_);
+  sierra::nalu::ScalarFieldType* nodeVol =
+    meta_.get_field<double>(stk::topology::NODE_RANK, "dual_nodal_volume");
 
 #if 0
   std::vector<double> bboxMin(3);
@@ -185,8 +185,8 @@ TiogaBlock::update_element_volumes()
   stk::mesh::Selector mesh_selector = get_elem_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts =
     bulk_.get_buckets(stk::topology::ELEM_RANK, mesh_selector);
-  ScalarFieldType* elemVolume = meta_.get_field<ScalarFieldType>(
-    stk::topology::ELEMENT_RANK, "element_volume");
+  sierra::nalu::ScalarFieldType* elemVolume =
+    meta_.get_field<double>(stk::topology::ELEMENT_RANK, "element_volume");
 
   auto& numverts = bdata_.num_verts_.h_view;
   auto& numcells = bdata_.num_cells_.h_view;
@@ -224,10 +224,12 @@ TiogaBlock::update_connectivity()
 }
 
 void
-TiogaBlock::update_iblanks()
+TiogaBlock::update_iblanks(
+  std::vector<stk::mesh::Entity>& holeNodes,
+  std::vector<stk::mesh::Entity>& fringeNodes)
 {
-  ScalarIntFieldType* ibf =
-    meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
+  sierra::nalu::ScalarIntFieldType* ibf =
+    meta_.get_field<int>(stk::topology::NODE_RANK, "iblank");
 
   stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts =
@@ -239,27 +241,7 @@ TiogaBlock::update_iblanks()
     int* ib = stk::mesh::field_data(*ibf, *b);
     for (size_t in = 0; in < b->size(); in++) {
       ib[in] = ibnode(ip++);
-    }
-  }
-}
 
-void
-TiogaBlock::update_fringe_and_hole_nodes(
-  std::vector<stk::mesh::Entity>& holeNodes,
-  std::vector<stk::mesh::Entity>& fringeNodes)
-{
-  ScalarIntFieldType* ibf =
-    meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
-
-  stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
-  const stk::mesh::BucketVector& mbkts =
-    bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
-
-  auto& ibnode = bdata_.iblank_.h_view;
-  int ip = 0;
-  for (auto b : mbkts) {
-    int* ib = stk::mesh::field_data(*ibf, *b);
-    for (size_t in = 0; in < b->size(); in++) {
       if (ib[in] == 0) {
         holeNodes.push_back((*b)[in]);
       } else if (ib[in] == -1) {
@@ -270,30 +252,10 @@ TiogaBlock::update_fringe_and_hole_nodes(
 }
 
 void
-TiogaBlock::update_tioga_iblanks()
-{
-  ScalarIntFieldType* ibf =
-    meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
-
-  stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
-  const stk::mesh::BucketVector& mbkts =
-    bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
-
-  auto& ibnode = bdata_.iblank_.h_view;
-  int ip = 0;
-  for (auto b : mbkts) {
-    int* ib = stk::mesh::field_data(*ibf, *b);
-    for (size_t in = 0; in < b->size(); in++) {
-      ibnode(ip++) = ib[in];
-    }
-  }
-}
-
-void
 TiogaBlock::update_iblank_cell()
 {
-  ScalarIntFieldType* ibf = meta_.get_field<ScalarIntFieldType>(
-    stk::topology::ELEM_RANK, "iblank_cell");
+  sierra::nalu::ScalarIntFieldType* ibf =
+    meta_.get_field<int>(stk::topology::ELEM_RANK, "iblank_cell");
 
   stk::mesh::Selector mesh_selector = get_elem_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts =
@@ -320,8 +282,8 @@ TiogaBlock::adjust_cell_resolutions()
   stk::mesh::Selector mesh_selector = get_node_selector(ovsetParts_);
   const stk::mesh::BucketVector& mbkts =
     bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
-  auto* nodeVol = meta_.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "tioga_nodal_volume");
+  auto* nodeVol =
+    meta_.get_field<double>(stk::topology::NODE_RANK, "tioga_nodal_volume");
 
   auto& eidmap = bdata_.eid_map_.h_view;
   auto& cellres = bdata_.cell_res_.h_view;
@@ -355,8 +317,8 @@ TiogaBlock::adjust_node_resolutions()
   stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts =
     bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
-  ScalarFieldType* nodeVol = meta_.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "tioga_nodal_volume");
+  sierra::nalu::ScalarFieldType* nodeVol =
+    meta_.get_field<double>(stk::topology::NODE_RANK, "tioga_nodal_volume");
 
   auto& eidmap = bdata_.eid_map_.h_view;
   auto& noderes = bdata_.node_res_.h_view;
@@ -467,10 +429,10 @@ TiogaBlock::process_nodes()
   stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts =
     bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
-  VectorFieldType* coords =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, coords_name_);
-  ScalarFieldType* nodeVol = meta_.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "dual_nodal_volume");
+  sierra::nalu::VectorFieldType* coords =
+    meta_.get_field<double>(stk::topology::NODE_RANK, coords_name_);
+  sierra::nalu::ScalarFieldType* nodeVol =
+    meta_.get_field<double>(stk::topology::NODE_RANK, "dual_nodal_volume");
 
   int ncount = 0;
   for (auto b : mbkts)
@@ -713,9 +675,8 @@ TiogaBlock::register_block(TIOGA::tioga& tg)
   tg.set_cell_iblank(meshtag_, bdata_.iblank_cell_.h_view.data());
 
   // Register cell/node resolutions for TIOGA
-  if (tiogaOpts_.set_resolutions())
-    tg.setResolutions(
-      meshtag_, bdata_.node_res_.h_view.data(), bdata_.cell_res_.h_view.data());
+  tg.setResolutions(
+    meshtag_, bdata_.node_res_.h_view.data(), bdata_.cell_res_.h_view.data());
 }
 
 void

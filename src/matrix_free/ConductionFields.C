@@ -28,8 +28,8 @@ get_ngp_field(
   std::string name,
   stk::mesh::FieldState state = stk::mesh::StateNP1)
 {
-  ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
-  ThrowAssert(
+  STK_ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
+  STK_ThrowAssert(
     meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
   auto field = stk::mesh::get_updated_ngp_field<double>(
     *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));

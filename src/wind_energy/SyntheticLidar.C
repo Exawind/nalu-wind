@@ -344,21 +344,17 @@ LidarLineOfSite::output(
       {seg.tail_[0] + j * dx[0], seg.tail_[1] + j * dx[1],
        seg.tail_[2] + j * dx[2]}};
   }
-  const auto& coord_field =
-    *bulk.mesh_meta_data()
-       .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-         stk::topology::NODE_RANK, coordinates_name);
+  const auto& coord_field = *bulk.mesh_meta_data().get_field<double>(
+    stk::topology::NODE_RANK, coordinates_name);
 
   const auto& velocity_field =
     bulk.mesh_meta_data()
-      .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-        stk::topology::NODE_RANK, "velocity")
+      .get_field<double>(stk::topology::NODE_RANK, "velocity")
       ->field_of_state(stk::mesh::StateNP1);
 
   const auto& velocity_prev =
     bulk.mesh_meta_data()
-      .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-        stk::topology::NODE_RANK, "velocity")
+      .get_field<double>(stk::topology::NODE_RANK, "velocity")
       ->field_of_state(stk::mesh::StateN);
 
   const double extrap_dt = predictor_ == Predictor::NEAREST ? 0 : dtratio;
@@ -521,7 +517,7 @@ LidarLineOfSite::output_cone_filtered(
   double dtratio)
 {
   const auto* radar = dynamic_cast<RadarSegmentGenerator*>(segGen.get());
-  ThrowRequire(radar);
+  STK_ThrowRequire(radar);
 
   auto seg = radar->generate(time());
   if (!(seg.valid || always_output_)) {
@@ -535,7 +531,7 @@ LidarLineOfSite::output_cone_filtered(
   const auto& rays = radar_data_.rays;
 
   const auto dn = (npoints_ - 1);
-  ThrowRequireMsg(dn >= 0, "At least two points required");
+  STK_ThrowRequireMsg(dn >= 0, "At least two points required");
 
   const vs::Vector dx(
     (seg.tip_[0] - seg.tail_[0]) / dn, (seg.tip_[1] - seg.tail_[1]) / dn,
@@ -562,21 +558,17 @@ LidarLineOfSite::output_cone_filtered(
     }
   }
 
-  const auto& coord_field =
-    *bulk.mesh_meta_data()
-       .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-         stk::topology::NODE_RANK, coordinates_name);
+  const auto& coord_field = *bulk.mesh_meta_data().get_field<double>(
+    stk::topology::NODE_RANK, coordinates_name);
 
   const auto& velocity_field =
     bulk.mesh_meta_data()
-      .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-        stk::topology::NODE_RANK, "velocity")
+      .get_field<double>(stk::topology::NODE_RANK, "velocity")
       ->field_of_state(stk::mesh::StateNP1);
 
   const auto& velocity_prev =
     bulk.mesh_meta_data()
-      .get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-        stk::topology::NODE_RANK, "velocity")
+      .get_field<double>(stk::topology::NODE_RANK, "velocity")
       ->field_of_state(stk::mesh::StateN);
 
   const double extrap_dt = predictor_ == Predictor::NEAREST ? 0 : dtratio;
@@ -621,7 +613,7 @@ LidarLineOfSite::output_cone_filtered(
         Ioss::FileInfo::create_path(name_);
       }
       // only text for now, check at parse
-      ThrowRequire(output_type_ == Output::TEXT);
+      STK_ThrowRequire(output_type_ == Output::TEXT);
       output_txt_los(time(), points, avg_line_velocity, npoints_, *file_);
     }
   }
@@ -911,7 +903,7 @@ LidarLOS::load(const YAML::Node& node, DataProbePostProcessing* probes)
     if (output_type == "dataprobes") {
       LidarLineOfSite lidarLOS;
       auto lidarDBSpec = lidarLOS.determine_line_of_site_info(node);
-      ThrowRequireMsg(
+      STK_ThrowRequireMsg(
         probes, "Lidar processing with dataprobe output "
                 "requires valid data probe object");
       probes->add_external_data_probe_spec_info(lidarDBSpec.release());
@@ -925,7 +917,7 @@ LidarLOS::load(const YAML::Node& node, DataProbePostProcessing* probes)
         double phi = 0;
         get_required(cone_grid_spec, "cone_angle", phi);
         phi = convert::degrees_to_radians(phi);
-        ThrowRequire(phi > 0);
+        STK_ThrowRequire(phi > 0);
 
         int nphi = 0;
         get_required(cone_grid_spec, "num_circles", nphi);

@@ -11,20 +11,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Check formatting
-      uses: DoozyX/clang-format-lint-action@v0.13
+      uses: DoozyX/clang-format-lint-action@v0.17
       with:
         source: 'nalu.C unit_tests.C ./include ./src ./unit_tests'
         extensions: 'H,h,cpp,C'
-        clangFormatVersion: 13
+        clangFormatVersion: 17
   CPU-Trilinos:
     needs: Formatting
     runs-on: ubuntu-latest
     container:
       image: ecpe4s/exawind-snapshot
       env:
-          SPACK_MANAGER: /spack-manager
+          EXAWIND_MANAGER: /exawind-manager
           E4S_MACHINE: true
     steps:
       - name: Cancel previous runs
@@ -38,13 +38,16 @@ jobs:
       - name: Tests
         run: |
           /bin/bash -c " \
-            source ${SPACK_MANAGER}/start.sh && \
-            mkdir -p ${SPACK_MANAGER}/environments/exawind && \
-            cd ${SPACK_MANAGER}/environments/exawind && \
+            source ${EXAWIND_MANAGER}/start.sh && \
+            mkdir -p ${EXAWIND_MANAGER}/environments/exawind && \
+            cd ${EXAWIND_MANAGER}/environments/exawind && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
-            source ${SPACK_MANAGER}/start.sh && \
+            spack-start && \
+            spack -e e4s-build config add view:true && \
+            spack -e e4s-build add cmake && \
+            spack -e e4s-build install && \
             quick-create-dev -s nalu-wind@master+tioga+hypre && \
-            spack manager external --latest --blacklist nalu-wind gmake && \
+            spack manager external ${EXAWIND_MANAGER}/environments/e4s-build --exclude nalu-wind gmake && \
             spack install && \
             spack cd -b nalu-wind && \
             spack build-env nalu-wind ctest -j $(nproc) -L unit --output-on-failure \
@@ -55,7 +58,7 @@ jobs:
     container:
       image: ecpe4s/exawind-snapshot
       env:
-          SPACK_MANAGER: /spack-manager
+          EXAWIND_MANAGER: /exawind-manager
           E4S_MACHINE: true
     steps:
       - name: Cancel previous runs
@@ -69,13 +72,16 @@ jobs:
       - name: Tests
         run: |
           /bin/bash -c " \
-            source ${SPACK_MANAGER}/start.sh && \
-            mkdir -p ${SPACK_MANAGER}/environments/exawind && \
-            cd ${SPACK_MANAGER}/environments/exawind && \
+            source ${EXAWIND_MANAGER}/start.sh && \
+            mkdir -p ${EXAWIND_MANAGER}/environments/exawind && \
+            cd ${EXAWIND_MANAGER}/environments/exawind && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
-            source ${SPACK_MANAGER}/start.sh && \
+            spack-start && \
+            spack -e e4s-build config add view:true && \
+            spack -e e4s-build add cmake && \
+            spack -e e4s-build install && \
             quick-create-dev -s nalu-wind@master+tioga+hypre~trilinos-solvers && \
-            spack manager external --latest --blacklist nalu-wind gmake && \
+            spack manager external ${EXAWIND_MANAGER}/environments/e4s-build --exclude nalu-wind gmake && \
             spack install && \
             spack cd -b nalu-wind && \
             spack build-env nalu-wind ctest -j $(nproc) -L unit --output-on-failure \

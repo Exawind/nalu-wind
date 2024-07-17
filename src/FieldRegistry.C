@@ -21,25 +21,25 @@ const std::map<std::string, FieldDefTypes>&
 Registry()
 {
   // clang-format off
-  FieldDefGeneric SingleStateElemGeneric = {stk::topology::ELEM_RANK};
-  FieldDefGeneric SingleStateEdgeGeneric = {stk::topology::EDGE_RANK};
-  FieldDefGeneric SingleStateNodeGeneric = {stk::topology::NODE_RANK};
+  FieldDefGeneric SingleStateElemGeneric = FieldDefGeneric{stk::topology::ELEM_RANK};
+  FieldDefGeneric SingleStateEdgeGeneric = FieldDefGeneric{stk::topology::EDGE_RANK};
+  FieldDefGeneric SingleStateNodeGeneric = FieldDefGeneric{stk::topology::NODE_RANK};
 
-  FieldDefScalar  SingleStateNodalScalar = {stk::topology::NODE_RANK};
-  FieldDefScalar  SingleStateElemScalar  = {stk::topology::ELEM_RANK};
-  FieldDefVector  SingleStateElemVector  = {stk::topology::ELEM_RANK, 1, NUM_DIM};
-  FieldDefScalar  MultiStateNodalScalar  = {stk::topology::NODE_RANK, NUM_STATES};
+  FieldDefScalar  SingleStateNodalScalar = FieldDefScalar{stk::topology::NODE_RANK};
+  FieldDefScalar  SingleStateElemScalar  = FieldDefScalar{stk::topology::ELEM_RANK};
+  FieldDefVector  SingleStateElemVector  = FieldDefVector{stk::topology::ELEM_RANK, 1, NUM_DIM};
+  FieldDefScalar  MultiStateNodalScalar  = FieldDefScalar{stk::topology::NODE_RANK, NUM_STATES};
 
-  FieldDefVector  SingleStateNodalVector = {stk::topology::NODE_RANK, 1, NUM_DIM};
-  FieldDefVector  SingleStateEdgeVector  = {stk::topology::EDGE_RANK, 1, NUM_DIM};
-  FieldDefVector  MultiStateNodalVector  = {stk::topology::NODE_RANK, NUM_STATES, NUM_DIM};
+  FieldDefVector  SingleStateNodalVector = FieldDefVector{stk::topology::NODE_RANK, 1, NUM_DIM};
+  FieldDefVector  SingleStateEdgeVector  = FieldDefVector{stk::topology::EDGE_RANK, 1, NUM_DIM};
+  FieldDefVector  MultiStateNodalVector  = FieldDefVector{stk::topology::NODE_RANK, NUM_STATES, NUM_DIM};
 
-  FieldDefTensor  SingleStateNodalTensor = {stk::topology::NODE_RANK, 1, NUM_DIM*NUM_DIM};
+  FieldDefTensor  SingleStateNodalTensor = FieldDefTensor{stk::topology::NODE_RANK, 1, NUM_DIM*NUM_DIM};
 
-  FieldDefTpetraId  TpetraId             = {stk::topology::NODE_RANK};
-  FieldDefGlobalId  GlobalId             = {stk::topology::NODE_RANK};
-  FieldDefHypreId   HypreId              = {stk::topology::NODE_RANK};
-  FieldDefScalarInt NodalScalarInt       = {stk::topology::NODE_RANK};
+  FieldDefTpetraId  TpetraId             = FieldDefTpetraId{stk::topology::NODE_RANK};
+  FieldDefGlobalId  GlobalId             = FieldDefGlobalId{stk::topology::NODE_RANK};
+  FieldDefHypreId   HypreId              = FieldDefHypreId{stk::topology::NODE_RANK};
+  FieldDefScalarInt NodalScalarInt       = FieldDefScalarInt{stk::topology::NODE_RANK};
 
   static const std::map<std::string, FieldDefTypes> registry = {
     {"average_dudx" ,             SingleStateNodalTensor},
@@ -83,7 +83,8 @@ Registry()
     {"pressure",                  SingleStateNodalScalar},
     {"rans_time_scale" ,          SingleStateNodalScalar},
     {"scalarQ",                   SingleStateNodalScalar},
-    {"specific_dissipation_rate", SingleStateNodalScalar},
+    {"specific_dissipation_rate", MultiStateNodalScalar},
+    {"thermal_conductivity",      SingleStateNodalScalar},
     {"specific_heat" ,            SingleStateNodalScalar},
     {"sst_f_one_blending"  ,      SingleStateNodalScalar},
     {"sst_max_length_scale",      SingleStateNodalScalar},

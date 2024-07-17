@@ -20,20 +20,22 @@ public:
     meshBuilder.set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA);
     bulk = meshBuilder.create();
     meta = &bulk->mesh_meta_data();
+    meta->use_simple_fields();
     stk::io::StkMeshIoBroker io(bulk->parallel());
 
-    test_field = &meta->declare_field<stk::mesh::Field<double>>(
-      stk::topology::NODE_RANK, "test");
+    test_field = &meta->declare_field<double>(stk::topology::NODE_RANK, "test");
     test_vector_field =
-      &meta->declare_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
-        stk::topology::NODE_RANK, "test_vector");
+      &meta->declare_field<double>(stk::topology::NODE_RANK, "test_vector");
 
     double minus_one = -1;
     stk::mesh::put_field_on_mesh(
       *test_field, meta->universal_part(), 1, &minus_one);
 
+    double minus_one_vec[3] = {-1.0, -1.0, -1.0};
     stk::mesh::put_field_on_mesh(
-      *test_vector_field, meta->universal_part(), 3, &minus_one);
+      *test_vector_field, meta->universal_part(), 3, minus_one_vec);
+    stk::io::set_field_output_type(
+      *test_vector_field, stk::io::FieldOutputType::VECTOR_3D);
 
     const std::string name = "generated:3x3x3|sideset:xXyYzZ";
     io.set_bulk_data(*bulk);
@@ -47,7 +49,7 @@ public:
   std::shared_ptr<stk::mesh::BulkData> bulk;
   // stk::io::StkMeshIoBroker io;
   stk::mesh::Field<double>* test_field;
-  stk::mesh::Field<double, stk::mesh::Cartesian3d>* test_vector_field;
+  stk::mesh::Field<double>* test_vector_field;
 };
 
 TEST_F(SideWriterFixture, side)
@@ -59,8 +61,7 @@ TEST_F(SideWriterFixture, side)
     *bulk, sides, {test_field, test_vector_field}, "test_output/file.e");
 
   auto& coord_field =
-    *static_cast<const stk::mesh::Field<double, stk::mesh::Cartesian3d>*>(
-      meta->coordinate_field());
+    *static_cast<const stk::mesh::Field<double>*>(meta->coordinate_field());
 
   const auto& all_node_buckets =
     bulk->get_buckets(stk::topology::NODE_RANK, meta->universal_part());

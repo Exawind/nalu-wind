@@ -48,10 +48,10 @@ AssemblePNGBoundarySolverAlgorithm::AssemblePNGBoundarySolverAlgorithm(
 {
   // save off fields
   stk::mesh::MetaData& meta_data = realm_.meta_data();
-  scalarQ_ = meta_data.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, independentDofName);
-  exposedAreaVec_ = meta_data.get_field<GenericFieldType>(
-    meta_data.side_rank(), "exposed_area_vector");
+  scalarQ_ =
+    meta_data.get_field<double>(stk::topology::NODE_RANK, independentDofName);
+  exposedAreaVec_ =
+    meta_data.get_field<double>(meta_data.side_rank(), "exposed_area_vector");
 }
 
 //--------------------------------------------------------------------------
@@ -146,7 +146,7 @@ AssemblePNGBoundarySolverAlgorithm::execute()
       stk::mesh::Entity const* face_node_rels = b.begin_nodes(k);
       int num_face_nodes = b.num_nodes(k);
       // sanity check on num nodes
-      ThrowAssert(num_face_nodes == nodesPerFace);
+      STK_ThrowAssert(num_face_nodes == nodesPerFace);
       for (int ni = 0; ni < num_face_nodes; ++ni) {
         // get the node and form connected_node
         stk::mesh::Entity node = face_node_rels[ni];

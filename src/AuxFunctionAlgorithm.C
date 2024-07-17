@@ -47,13 +47,13 @@ AuxFunctionAlgorithm::execute()
 {
 
   // make sure that partVec_ is size one
-  ThrowAssert(partVec_.size() == 1);
+  STK_ThrowAssert(partVec_.size() == 1);
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   const unsigned nDim = meta_data.spatial_dimension();
   const double time = realm_.get_current_time();
-  VectorFieldType* coordinates = meta_data.get_field<VectorFieldType>(
+  VectorFieldType* coordinates = meta_data.get_field<double>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name());
 
   auxFunction_->setup(time);

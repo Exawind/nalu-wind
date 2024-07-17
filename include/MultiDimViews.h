@@ -63,7 +63,7 @@ public:
       views_3D_size(0),
       views_4D_size(0)
   {
-    NGP_ThrowRequireMsg(
+    STK_NGP_ThrowRequireMsg(
       (numNeededViews.num1DViews <= maxViewsPerDim ||
        numNeededViews.num2DViews <= maxViewsPerDim ||
        numNeededViews.num3DViews <= maxViewsPerDim ||
@@ -176,7 +176,7 @@ public:
   KOKKOS_FUNCTION
   void add_1D_view(unsigned ordinal, const SharedMemView1D& view)
   {
-    NGP_ThrowRequire(ordinal < maxFieldOrdinals);
+    STK_NGP_ThrowRequire(ordinal < maxFieldOrdinals);
 #if !defined(KOKKOS_ENABLE_GPU)
     views_1D[views_1D_size] = new SharedMemView1D;
     *views_1D[views_1D_size] = view;
@@ -190,7 +190,7 @@ public:
   KOKKOS_FUNCTION
   void add_2D_view(unsigned ordinal, const SharedMemView2D& view)
   {
-    NGP_ThrowRequire(ordinal < maxFieldOrdinals);
+    STK_NGP_ThrowRequire(ordinal < maxFieldOrdinals);
 #if !defined(KOKKOS_ENABLE_GPU)
     views_2D[views_2D_size] = new SharedMemView2D;
     *views_2D[views_2D_size] = view;
@@ -204,7 +204,7 @@ public:
   KOKKOS_FUNCTION
   void add_3D_view(unsigned ordinal, const SharedMemView3D& view)
   {
-    NGP_ThrowRequire(ordinal < maxFieldOrdinals);
+    STK_NGP_ThrowRequire(ordinal < maxFieldOrdinals);
 #if !defined(KOKKOS_ENABLE_GPU)
     views_3D[views_3D_size] = new SharedMemView3D;
     *views_3D[views_3D_size] = view;
@@ -218,7 +218,7 @@ public:
   KOKKOS_FUNCTION
   void add_4D_view(unsigned ordinal, const SharedMemView4D& view)
   {
-    NGP_ThrowRequire(ordinal < maxFieldOrdinals);
+    STK_NGP_ThrowRequire(ordinal < maxFieldOrdinals);
 #if !defined(KOKKOS_ENABLE_GPU)
     views_4D[views_4D_size] = new SharedMemView4D;
     *views_4D[views_4D_size] = view;

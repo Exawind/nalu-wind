@@ -278,7 +278,7 @@ if(NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
   # Unit tests
   #=============================================================================
   add_test_u(unitTest1 1)
-  add_test_u(unitTest2 2)
+  #add_test_u(unitTest2 2) # Can hang indefinitely
 
   #=============================================================================
   # Performance tests

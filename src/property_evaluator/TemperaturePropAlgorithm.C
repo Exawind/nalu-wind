@@ -36,7 +36,7 @@ TemperaturePropAlgorithm::TemperaturePropAlgorithm(
   // extract temperature field
   stk::mesh::MetaData& meta_data = realm_.meta_data();
   temperature_ =
-    meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, tempName);
+    meta_data.get_field<double>(stk::topology::NODE_RANK, tempName);
   if (NULL == temperature_) {
     throw std::runtime_error("Realm::setup_property: TemperaturePropAlgorithm "
                              "requires temperature/bc:");
@@ -48,7 +48,7 @@ TemperaturePropAlgorithm::execute()
 {
 
   // make sure that partVec_ is size one
-  ThrowAssert(partVec_.size() == 1);
+  STK_ThrowAssert(partVec_.size() == 1);
 
   std::vector<double> indVarList(1);
 

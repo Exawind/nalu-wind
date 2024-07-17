@@ -36,10 +36,9 @@ FixPressureAtNodeAlgorithm::FixPressureAtNodeAlgorithm(
 {
   auto& meta = realm_.meta_data();
 
-  coordinates_ = meta.get_field<VectorFieldType>(
+  coordinates_ = meta.get_field<double>(
     stk::topology::NODE_RANK, realm_.get_coordinates_name());
-  pressure_ =
-    meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure");
+  pressure_ = meta.get_field<double>(stk::topology::NODE_RANK, "pressure");
 }
 
 FixPressureAtNodeAlgorithm::~FixPressureAtNodeAlgorithm() {}
@@ -59,7 +58,7 @@ FixPressureAtNodeAlgorithm::execute()
 {
 
   int numNodes = refNodeList_.size();
-  ThrowAssertMsg(
+  STK_ThrowAssertMsg(
     numNodes <= 1,
     "Invalid number of nodes encountered in FixPressureAtNodeAlgorithm");
 

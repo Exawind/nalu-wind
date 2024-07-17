@@ -87,8 +87,8 @@ template <typename T>
 inline void
 reduce_view_on_host(T view)
 {
-  ThrowAssert(view.size() > 0);
-  ThrowAssert(view.data());
+  STK_ThrowAssert(view.size() > 0);
+  STK_ThrowAssert(view.data());
   MPI_Datatype mpi_type;
   if (std::is_same<typename T::value_type, double>::value) {
     mpi_type = MPI_DOUBLE;
@@ -99,7 +99,7 @@ reduce_view_on_host(T view)
   } else if (std::is_same<typename T::value_type, uint64_t>::value) {
     mpi_type = MPI_LONG;
   } else {
-    ThrowErrorMsg("unsupported type to reduce view on host");
+    STK_ThrowErrorMsg("unsupported type to reduce view on host");
   }
 
   MPI_Allreduce(

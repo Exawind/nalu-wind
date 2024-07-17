@@ -48,7 +48,7 @@ GenericPropAlgorithm::execute()
   }
 
   // make sure that partVec_ is size one
-  ThrowAssert(partVec_.size() == 1);
+  STK_ThrowAssert(partVec_.size() == 1);
 
   // empty independet variable list; hence "Generic"
   std::vector<double> indVarList(1, 0.0);

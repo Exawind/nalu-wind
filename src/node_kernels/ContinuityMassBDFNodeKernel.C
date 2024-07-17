@@ -25,7 +25,7 @@ ContinuityMassBDFNodeKernel::ContinuityMassBDFNodeKernel(
   const auto& meta = bulk.mesh_meta_data();
 
   const ScalarFieldType* density =
-    meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
+    meta.get_field<double>(stk::topology::NODE_RANK, "density");
 
   densityNID_ = get_field_ordinal(meta, "density", stk::mesh::StateN);
 
