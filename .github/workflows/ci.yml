@@ -42,7 +42,6 @@ jobs:
             mkdir -p ${EXAWIND_MANAGER}/environments/exawind && \
             cd ${EXAWIND_MANAGER}/environments/exawind && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
-            source ${EXAWIND_MANAGER}/start.sh && \
             spack-start && \
             spack -e e4s-build config add view:true && \
             spack -e e4s-build add cmake && \
@@ -77,7 +76,6 @@ jobs:
             mkdir -p ${EXAWIND_MANAGER}/environments/exawind && \
             cd ${EXAWIND_MANAGER}/environments/exawind && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
-            source ${EXAWIND_MANAGER}/start.sh && \
             spack-start && \
             spack -e e4s-build config add view:true && \
             spack -e e4s-build add cmake && \
