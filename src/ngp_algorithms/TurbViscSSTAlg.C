@@ -12,6 +12,7 @@
 #include "ngp_utils/NgpTypes.h"
 #include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
+#include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
@@ -40,12 +41,15 @@ TurbViscSSTAlg::TurbViscSSTAlg(
     dudx_(get_field_ordinal(
       realm.meta_data(), (useAverages) ? "average_dudx" : "dudx")),
     velocity_(get_field_ordinal(realm.meta_data(), "velocity")),
+    gamma_(get_field_ordinal(realm.meta_data(), "gamma_transition")),
     dpdx_(get_field_ordinal(realm.meta_data(), "dpdx")),
     tvisc_(tvisc->mesh_meta_data_ordinal()),
     aOne_(realm.get_turb_model_constant(TM_aOne)),
     sThres_(realm.get_turb_model_constant(TM_sThres)),
-    betaStar_(realm.get_turb_model_constant(TM_betaStar))
+    betaStar_(realm.get_turb_model_constant(TM_betaStar)),
+    gammaEqActive_(realm.solutionOptions_->gammaEqActive_)
 {
+
 }
 
 void
@@ -71,6 +75,7 @@ TurbViscSSTAlg::execute()
   const auto dnDotVdx = fieldMgr.get_field<double>(dnDotVdx_);
   const auto dudx = fieldMgr.get_field<double>(dudx_);
   const auto velocity = fieldMgr.get_field<double>(velocity_);
+  const auto gamma = fieldMgr.get_field<double>(gamma_);
   const auto dpdx = fieldMgr.get_field<double>(dpdx_);
   auto tvisc = fieldMgr.get_field<double>(tvisc_);
 
@@ -131,12 +136,40 @@ TurbViscSSTAlg::execute()
       lamda0L = -7.57e-3 * dvnn * minD.get(meshIdx, 0) * minD.get(meshIdx, 0) * density.get(meshIdx, 0) / visc.get(meshIdx, 0) + 0.0128;
       lamda0L = stk::math::min(stk::math::max(lamda0L, -1.0), 1.0);
 
+      // Note that dwalldistdx is the normal vector
+      // Compute wall normal velocity magnitude: nDotV
+      DblType nDotV = 0.0;
+      for (int i = 0; i < nDim; ++i) {
+	nDotV += dwalldistdx.get(meshIdx,i)*velocity.get(meshIdx,i);
+      }
+      // compute the wall-parallel velocity
+      double u_par_vec[3];
+      for (int i = 0; i < nDim; ++i) {
+	u_par_vec[i] = velocity.get(meshIdx, i) - nDotV*dwalldistdx.get(meshIdx, i);
+      }
+      // compute magnitude of wall-parallel velocity: u_par_mag = mag(u_par_vec)
+      DblType u_par_mag = 0.0;
+      for (int i = 0; i < nDim; ++i) {
+	u_par_mag += u_par_vec[i] * u_par_vec[i];
+      }
+      u_par_mag = stk::math::sqrt(u_par_mag);
+
+      // Use Menter et al. 2016 approx theta=d_w at the center of the boundary layer
+      const DblType Re = u_par_mag*minD.get(meshIdx, 0)*density.get(meshIdx,0)/visc.get(meshIdx, 0); 
+      //const DblType Gamma = -0.04;
+      const DblType Gamma = sThres;
+      DblType lamda0L_thres = Gamma*pow(Re,0.75); // turbulent criterion
+      if (gammaEqActive_){ // linear mixture of turbulent and laminar criteria
+	const DblType lamda0L_thres_lam = -0.0681;
+	lamda0L_thres = (1-gamma.get(meshIdx, 0))*lamda0L_thres_lam + gamma.get(meshIdx, 0)*lamda0L_thres;
+      }
+      
       // udpdx sensor, but sijMag eddy viscosity
       if (0.31 * sdr.get(meshIdx, 0) > sijMag * fTwo){ // non-APG model
 	tvisc.get(meshIdx, 0) =
 	  density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
 	  (sdr.get(meshIdx, 0));
-      } else if (lamda0L<-0.0681) { // laminar separation criterion satisfied (this is functioning as the APG sensor)
+      } else if (lamda0L<lamda0L_thres) { // laminar separation criterion satisfied (this is functioning as the APG sensor)
 	tvisc.get(meshIdx, 0) =
 	  aOne * density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
 	  (sijMag * fTwo);

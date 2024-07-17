@@ -46,12 +46,14 @@ private:
   unsigned dnDotVdx_{stk::mesh::InvalidOrdinal};
   unsigned dudx_{stk::mesh::InvalidOrdinal};
   unsigned velocity_{stk::mesh::InvalidOrdinal};
+  unsigned gamma_{stk::mesh::InvalidOrdinal};
   unsigned dpdx_{stk::mesh::InvalidOrdinal};
   unsigned tvisc_{stk::mesh::InvalidOrdinal};
 
   const DblType aOne_;
   const DblType betaStar_;
   const DblType sThres_;
+  bool gammaEqActive_;
 };
 
 } // namespace nalu
