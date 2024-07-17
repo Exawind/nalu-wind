@@ -24,7 +24,7 @@ jobs:
     container:
       image: ecpe4s/exawind-snapshot
       env:
-          SPACK_MANAGER: /exawind-manager
+          EXAWIND_MANAGER: /exawind-manager
           E4S_MACHINE: true
     steps:
       - name: Cancel previous runs
@@ -38,11 +38,11 @@ jobs:
       - name: Tests
         run: |
           /bin/bash -c " \
-            source ${SPACK_MANAGER}/start.sh && \
-            mkdir -p ${SPACK_MANAGER}/environments/exawind && \
-            cd ${SPACK_MANAGER}/environments/exawind && \
+            source ${EXAWIND_MANAGER}/start.sh && \
+            mkdir -p ${EXAWIND_MANAGER}/environments/exawind && \
+            cd ${EXAWIND_MANAGER}/environments/exawind && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
-            source ${SPACK_MANAGER}/start.sh && \
+            source ${EXAWIND_MANAGER}/start.sh && \
             spack-start && \
             spack -e e4s-build config add view:true && \
             spack -e e4s-build add cmake && \
@@ -59,7 +59,7 @@ jobs:
     container:
       image: ecpe4s/exawind-snapshot
       env:
-          SPACK_MANAGER: /exawind-manager
+          EXAWIND_MANAGER: /exawind-manager
           E4S_MACHINE: true
     steps:
       - name: Cancel previous runs
@@ -73,11 +73,11 @@ jobs:
       - name: Tests
         run: |
           /bin/bash -c " \
-            source ${SPACK_MANAGER}/start.sh && \
-            mkdir -p ${SPACK_MANAGER}/environments/exawind && \
-            cd ${SPACK_MANAGER}/environments/exawind && \
+            source ${EXAWIND_MANAGER}/start.sh && \
+            mkdir -p ${EXAWIND_MANAGER}/environments/exawind && \
+            cd ${EXAWIND_MANAGER}/environments/exawind && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
-            source ${SPACK_MANAGER}/start.sh && \
+            source ${EXAWIND_MANAGER}/start.sh && \
             spack-start && \
             spack -e e4s-build config add view:true && \
             spack -e e4s-build add cmake && \
