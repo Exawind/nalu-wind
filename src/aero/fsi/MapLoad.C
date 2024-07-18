@@ -110,11 +110,11 @@ mapTowerLoad(
 
         // Find the interpolated reference position first
         linInterpVec(
-          &twrRefPos[(loadMap_bip) * 6], &twrRefPos[(loadMap_bip + 1) * 6],
+          &twrRefPos[(loadMap_bip)*6], &twrRefPos[(loadMap_bip + 1) * 6],
           loadMapInterp_bip, tmpNodePos.data());
         // Find the interpolated linear displacement
         linInterpVec(
-          &twrDef[(loadMap_bip) * 6], &twrDef[(loadMap_bip + 1) * 6],
+          &twrDef[(loadMap_bip)*6], &twrDef[(loadMap_bip + 1) * 6],
           loadMapInterp_bip, tmpNodeDisp.data());
         // Add displacement to find actual position
         for (auto idim = 0; idim < 3; idim++)
@@ -130,8 +130,8 @@ mapTowerLoad(
         // Split the force and moment into the two surrounding nodes in a
         // variationally consistent manner using the interpolation factor
         fsi::splitForceMoment(
-          tmpForceMoment.data(), loadMapInterp_bip,
-          &(twrLoad[(loadMap_bip) * 6]), &(twrLoad[(loadMap_bip + 1) * 6]));
+          tmpForceMoment.data(), loadMapInterp_bip, &(twrLoad[(loadMap_bip)*6]),
+          &(twrLoad[(loadMap_bip + 1) * 6]));
       }
     }
   }

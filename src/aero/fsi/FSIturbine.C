@@ -653,7 +653,7 @@ fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime)
         (0.5 * (brFSIdata_.bld_rloc[i + iStart + 1] -
                 brFSIdata_.bld_rloc[i + iStart - 1]));
     }
-    brFSIdata_.bld_ld[(iStart) * 6 + 4] =
+    brFSIdata_.bld_ld[(iStart)*6 + 4] =
       (0.5 * (brFSIdata_.bld_rloc[iStart + 1] - brFSIdata_.bld_rloc[iStart]));
     brFSIdata_.bld_ld[(iStart + nBldPts - 1) * 6 + 4] =
       (0.5 * (brFSIdata_.bld_rloc[iStart + nBldPts - 1] -

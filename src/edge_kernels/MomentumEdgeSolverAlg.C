@@ -68,14 +68,14 @@ MomentumEdgeSolverAlg::execute()
   const std::string dofName = "velocity";
   const DblType includeDivU = realm_.get_divU();
   const DblType alpha = realm_.get_alpha_factor(dofName);
-  const DblType alphaUpw = realm_.get_alpha_upw_factor(dofName);
+  const DblType alphaUpw_input = realm_.get_alpha_upw_factor(dofName);
   const DblType hoUpwind = realm_.get_upw_factor(dofName);
   const DblType relaxFacU =
     realm_.solutionOptions_->get_relaxation_factor(dofName);
   const bool useLimiter = realm_.primitive_uses_limiter(dofName);
 
   const DblType om_alpha = 1.0 - alpha;
-  const DblType om_alphaUpw = 1.0 - alphaUpw;
+  const DblType om_alphaUpw_input = 1.0 - alphaUpw_input;
 
   const DblType has_vof = (double)realm_.solutionOptions_->realm_has_vof_;
 
@@ -100,6 +100,12 @@ MomentumEdgeSolverAlg::execute()
       ShmemDataType & smdata, const stk::mesh::FastMeshIndex& edge,
       const stk::mesh::FastMeshIndex& nodeL,
       const stk::mesh::FastMeshIndex& nodeR) {
+      // Variables are read-only when C++ captures by value into a lambda
+      // This avoids this issue, allowing modification of upwinding parameters
+      // for VOF
+      DblType alphaUpw = alphaUpw_input;
+      DblType om_alphaUpw = om_alphaUpw_input;
+
       // Scratch work array for edgeAreaVector
       NALU_ALIGNED DblType av[NDimMax_];
       // Populate area vector work array
@@ -165,8 +171,6 @@ MomentumEdgeSolverAlg::execute()
       // at interfaces with interface
       // widths that are ~2 cells thick
       DblType density_upwinding_factor = 1.0;
-      DblType alphaUpw_w_vof = alphaUpw;
-      DblType om_alphaUpw_w_vof = 1.0 - alphaUpw_w_vof;
       if (has_vof > 0.5) {
         const DblType min_density = stk::math::min(densityL, densityR);
         const DblType density_differential =
@@ -174,9 +178,9 @@ MomentumEdgeSolverAlg::execute()
         density_upwinding_factor =
           1.0 - stk::math::erf(6.0 * density_differential);
 
-        alphaUpw_w_vof = density_upwinding_factor * alphaUpw_w_vof +
-                         (1.0 - density_upwinding_factor);
-        om_alphaUpw_w_vof = 1.0 - alphaUpw_w_vof;
+        alphaUpw = density_upwinding_factor * alphaUpw +
+                   (1.0 - density_upwinding_factor);
+        om_alphaUpw = 1.0 - alphaUpw;
         pecfac =
           1.0 - density_upwinding_factor + density_upwinding_factor * pecfac;
         om_pecfac = 1.0 - pecfac;
@@ -234,9 +238,9 @@ MomentumEdgeSolverAlg::execute()
         const DblType uiIp = 0.5 * (vel.get(nodeR, i) + vel.get(nodeL, i));
 
         // Upwind contribution
-        const DblType uiUpw =
-          (mdot > 0.0) ? (alphaUpw_w_vof * uIpL[i] + om_alphaUpw_w_vof * uiIp)
-                       : (alphaUpw_w_vof * uIpR[i] + om_alphaUpw_w_vof * uiIp);
+        const DblType uiUpw = (mdot > 0.0)
+                                ? (alphaUpw * uIpL[i] + om_alphaUpw * uiIp)
+                                : (alphaUpw * uIpR[i] + om_alphaUpw * uiIp);
 
         const DblType uiHatL = (alpha * uIpL[i] + om_alpha * uiIp);
         const DblType uiHatR = (alpha * uIpR[i] + om_alpha * uiIp);

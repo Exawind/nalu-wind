@@ -41,14 +41,15 @@
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
 #include "stk_topology/topology.hpp"
-#include "user_functions/ZalesakDiskVOFAuxFunction.h"
-#include "user_functions/ZalesakSphereVOFAuxFunction.h"
-#include "user_functions/DropletVOFAuxFunction.h"
-#include "user_functions/SloshingTankVOFAuxFunction.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldUtils.h"
 #include "stk_io/IossBridge.hpp"
+
+#include "user_functions/ZalesakDiskVOFAuxFunction.h"
+#include "user_functions/ZalesakSphereVOFAuxFunction.h"
+#include "user_functions/DropletVOFAuxFunction.h"
+#include "user_functions/SloshingTankVOFAuxFunction.h"
 
 namespace sierra {
 namespace nalu {
@@ -118,7 +119,6 @@ VolumeOfFluidEquationSystem::register_nodal_fields(
   const int nDim = meta_data.spatial_dimension();
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
 
-  // register dof; set it as a restart variable
   const int numStates = realm_.number_of_states();
 
   auto density_ = &(meta_data.declare_field<double>(
@@ -126,7 +126,6 @@ VolumeOfFluidEquationSystem::register_nodal_fields(
   stk::mesh::put_field_on_mesh(*density_, selector, nullptr);
   realm_.augment_restart_variable_list("density");
 
-  // push to property list
   realm_.augment_property_map(DENSITY_ID, density_);
 
   volumeOfFluid_ = &(meta_data.declare_field<double>(
@@ -145,7 +144,6 @@ VolumeOfFluidEquationSystem::register_nodal_fields(
   stk::io::set_field_output_type(
     *dvolumeOfFluiddx_, stk::io::FieldOutputType::VECTOR_3D);
 
-  // delta solution for linear solver; share delta since this is a split system
   vofTmp_ =
     &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "vofTmp"));
   stk::mesh::put_field_on_mesh(*vofTmp_, selector, nullptr);
@@ -273,7 +271,6 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
   const stk::topology& /* partTopo */,
   const InflowBoundaryConditionData& inflowBCData)
 {
-  // algorithm type
   const AlgorithmType algType = INFLOW;
   ScalarFieldType& vofNp1 = volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType& dvofdxNone =
@@ -281,12 +278,10 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-  // register boundary data; vof_bc
   ScalarFieldType* theBcField =
     &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "vof_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
-  // extract the value for user specified vof and save off the AuxFunction
   InflowUserData userData = inflowBCData.userData_;
   std::string vofName = "volume_of_fluid";
   UserDataType theDataType = get_bc_data_type(userData, vofName);
@@ -307,29 +302,22 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
                              "only constant functions supported");
   }
 
-  // bc data alg
   AuxFunctionAlgorithm* auxAlg = new AuxFunctionAlgorithm(
     realm_, part, theBcField, theAuxFunc, stk::topology::NODE_RANK);
 
-  // how to populate the field?
   if (userData.externalData_) {
-    // xfer will handle population; only need to populate the initial value
     realm_.initCondAlg_.push_back(auxAlg);
   } else {
-    // put it on bcData
     bcDataAlg_.push_back(auxAlg);
   }
 
-  // copy vof_bc to vof_transition np1...
   CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
     realm_, part, theBcField, &vofNp1, 0, 1, stk::topology::NODE_RANK);
   bcDataMapAlg_.push_back(theCopyAlg);
 
-  // non-solver; dvofdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
     algType, part, "vof_nodal_grad", &vofNp1, &dvofdxNone, edgeNodalGradient_);
 
-  // Dirichlet bc
   std::map<AlgorithmType, SolverAlgorithm*>::iterator itd =
     solverAlgDriver_->solverDirichAlgMap_.find(algType);
   if (itd == solverAlgDriver_->solverDirichAlgMap_.end()) {
@@ -370,7 +358,6 @@ VolumeOfFluidEquationSystem::register_wall_bc(
   const stk::topology& /*theTopo*/,
   const WallBoundaryConditionData& /*wallBCData*/)
 {
-  // algorithm type
   const AlgorithmType algType = SYMMETRY;
 
   ScalarFieldType& vofNp1 = volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
@@ -391,7 +378,6 @@ VolumeOfFluidEquationSystem::register_symmetry_bc(
   const stk::topology& /*theTopo*/,
   const SymmetryBoundaryConditionData& /* symmetryBCData */)
 {
-  // algorithm type
   const AlgorithmType algType = SYMMETRY;
 
   ScalarFieldType& vofNp1 = volumeOfFluid_->field_of_state(stk::mesh::StateNP1);
@@ -499,10 +485,8 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
           stk::topology::NODE_RANK, "velocity");
         ScalarFieldType* density_ = realm_.meta_data().get_field<double>(
           stk::topology::NODE_RANK, "density");
-        std::vector<double> userSpec(3);
-        userSpec[0] = 1.0;
-        userSpec[1] = 0.0;
-        userSpec[2] = 0.0;
+
+        std::vector<double> userSpec = {1.0, 0.0, 0.0};
         AuxFunction* constantAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
         AuxFunctionAlgorithm* constantAuxAlg = new AuxFunctionAlgorithm(
           realm_, part, density_, constantAuxFunc, stk::topology::NODE_RANK);
