@@ -142,19 +142,15 @@ TiogaSTKIface::register_mesh()
   for (auto& tb : blocks_) {
     tb->update_coords();
     tb->update_element_volumes();
-    if (tiogaOpts_.adjust_resolutions())
-      tb->adjust_cell_resolutions();
+    tb->adjust_cell_resolutions();
   }
 
-  if (tiogaOpts_.adjust_resolutions()) {
-    auto* nodeVol =
-      meta_.get_field(stk::topology::NODE_RANK, "tioga_nodal_volume");
-    stk::mesh::parallel_max(bulk_, {nodeVol});
-  }
+  auto* nodeVol =
+    meta_.get_field(stk::topology::NODE_RANK, "tioga_nodal_volume");
+  stk::mesh::parallel_max(bulk_, {nodeVol});
 
   for (auto& tb : blocks_) {
-    if (tiogaOpts_.adjust_resolutions())
-      tb->adjust_node_resolutions();
+    tb->adjust_node_resolutions();
     tb->register_block(tg_);
   }
 }
@@ -164,7 +160,8 @@ TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
 {
   for (auto& tb : blocks_) {
     // Update IBLANK information at nodes and elements
-    tb->update_iblanks();
+    tb->update_iblanks(
+      oversetManager_.holeNodes_, oversetManager_.fringeNodes_);
     tb->update_iblank_cell();
 
     // For each block determine donor elements that needs to be ghosted to other
@@ -177,17 +174,7 @@ TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
   sierra::nalu::ScalarIntFieldType* ibf =
     meta_.get_field<int>(stk::topology::NODE_RANK, "iblank");
   std::vector<const stk::mesh::FieldBase*> pvec{ibf};
-  stk::mesh::parallel_min(bulk_, {ibf});
-
-  for (auto& tb : blocks_) {
-    // Call update_iblanks again to assign holeNodes and fringeNodes vectors
-    // after iblanks on shared nodes are corrected
-    tb->update_fringe_and_hole_nodes(
-      oversetManager_.holeNodes_, oversetManager_.fringeNodes_);
-    // Return the corrected iblank field to Tioga prior to donor-to-receptor
-    // interpolation
-    tb->update_tioga_iblanks();
-  }
+  stk::mesh::copy_owned_to_shared(bulk_, pvec);
 
   post_connectivity_sync();
 

@@ -158,6 +158,11 @@ public:
   void update_element_volumes();
 
   /** Adjust resolutions of mandatory fringe entities
+   *
+   *  The entities connected to overset sidesets have their
+   *  nodal/cell resolutions adjusted so that TIOGA will never consider these
+   *  cells as donors. This adjustment is necessary to avoid fringe/field
+   *  mismatch across domain partition boundaries.
    */
   void adjust_cell_resolutions();
 
@@ -178,14 +183,8 @@ public:
 
   /** Update iblanks after connectivity updates
    */
-  void update_iblanks();
-  /** Update fringe and hole node vectors
-   */
-  void update_fringe_and_hole_nodes(
+  void update_iblanks(
     std::vector<stk::mesh::Entity>&, std::vector<stk::mesh::Entity>&);
-  /** Update the Tioga view of iblanks prior to donor-to-receptor interpolation
-   */
-  void update_tioga_iblanks();
 
   /** Update element iblanks after connectivity updates
    */
