@@ -68,17 +68,21 @@ struct GenericLoopOverCoarseSearchResults
     innerLoopFunctor_.preloop();
   }
 
+  // see ActuatorExecutorFASTSngp.C line 58
   void operator()(int index) const
   {
+    // properties of elements are controlled by master element
     auto pointId = actBulk_.coarseSearchPointIds_.h_view(index);
     auto elemId = actBulk_.coarseSearchElemIds_.h_view(index);
 
+    // get element topology
     const stk::mesh::Entity elem =
       stkBulk_.get_entity(stk::topology::ELEMENT_RANK, elemId);
     const stk::topology& elemTopo = stkBulk_.bucket(elem).topology();
     MasterElement* meSCV =
       MasterElementRepo::get_volume_master_element_on_host(elemTopo);
 
+    // element number of nodes and integration points
     const unsigned numNodes = stkBulk_.num_nodes(elem);
     const int numIp = meSCV->num_integration_points();
 
@@ -93,6 +97,7 @@ struct GenericLoopOverCoarseSearchResults
 
     stk::mesh::Entity const* elem_nod_rels = stkBulk_.begin_nodes(elem);
 
+    // get element coordinates
     for (unsigned i = 0; i < numNodes; i++) {
       const double* coords =
         stk::mesh::field_data(*coordinates_, elem_nod_rels[i]);
@@ -103,8 +108,10 @@ struct GenericLoopOverCoarseSearchResults
 
     meSCV->determinant(elemCoords, scvIp);
 
+    // relationship of element nodes to integration points
     const auto* ipNodeMap = meSCV->ipNodeMap();
 
+    // loop over integration points
     for (int nIp = 0; nIp < numIp; nIp++) {
       const int nodeIndex = ipNodeMap[nIp];
       stk::mesh::Entity node = elem_nod_rels[nodeIndex];
@@ -115,7 +122,16 @@ struct GenericLoopOverCoarseSearchResults
       // anything else that is required should be stashed on the functor
       // during functor construction i.e. ActuatorBulk, flags, ActuatorMeta,
       // etc.
-      innerLoopFunctor_(pointId, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
+      if (actBulk_.singlePointCoarseSearch_) {
+        innerLoopFunctor_(
+          pointId, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
+      } else {
+        for (int actPtInd = 0; actPtInd < actBulk_.pointCentroid_.extent(0);
+             actPtInd++) {
+          innerLoopFunctor_(
+            actPtInd, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
+        }
+      }
     }
   }
 
