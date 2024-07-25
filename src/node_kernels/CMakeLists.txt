@@ -6,6 +6,7 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBodyForceNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBodyForceBoxNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBoussinesqNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBuoyancyNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumGclNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumMassBDFNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumActuatorNodeKernel.C
