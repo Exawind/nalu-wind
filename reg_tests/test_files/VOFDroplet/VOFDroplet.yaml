@@ -120,7 +120,7 @@ realms:
 
         - source_terms:
             momentum:
-            - buoyancy
+            - buoyancy_density
 
         - user_constants:
             reference_density: 0.00
