@@ -91,6 +91,7 @@
 #include "node_kernels/MomentumBodyForceNodeKernel.h"
 #include "node_kernels/MomentumBodyForceBoxNodeKernel.h"
 #include "node_kernels/MomentumBoussinesqNodeKernel.h"
+#include "node_kernels/MomentumBuoyancyNodeKernel.h"
 #include "node_kernels/MomentumCoriolisNodeKernel.h"
 #include "node_kernels/MomentumMassBDFNodeKernel.h"
 #include "node_kernels/MomentumGclSrcNodeKernel.h"
@@ -1389,6 +1390,9 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
         bool added = true;
         if (srcName == "buoyancy_boussinesq") {
           nodeAlg.add_kernel<MomentumBoussinesqNodeKernel>(
+            realm_.bulk_data(), *realm_.solutionOptions_);
+        } else if (srcName == "buoyancy_density") {
+          nodeAlg.add_kernel<MomentumBuoyancyNodeKernel>(
             realm_.bulk_data(), *realm_.solutionOptions_);
         } else if (srcName == "body_force") {
           const auto it =
