@@ -20,7 +20,10 @@ namespace nalu {
 class DropletVelocityAuxFunction : public AuxFunction
 {
 public:
-  DropletVelocityAuxFunction(const unsigned beginPos, const unsigned endPos);
+  DropletVelocityAuxFunction(
+    const unsigned beginPos,
+    const unsigned endPos,
+    const std::vector<double>& params);
 
   virtual ~DropletVelocityAuxFunction() {}
 
@@ -34,6 +37,15 @@ public:
     const unsigned fieldSize,
     const unsigned beginPos,
     const unsigned endPos) const;
+
+  double droppos_x_;
+  double droppos_y_;
+  double droppos_z_;
+  double dropvel_x_;
+  double dropvel_y_;
+  double dropvel_z_;
+  double radius_;
+  double interface_thickness_;
 };
 
 } // namespace nalu

@@ -520,7 +520,12 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
         realm_.initCondAlg_.push_back(VOFSetMassFlowRate);
       }
     } else if (fcnName == "droplet") {
-      theAuxFunc = new DropletVOFAuxFunction();
+      std::map<std::string, std::vector<double>>::const_iterator iterParams =
+        theParams.find(dofName);
+      std::vector<double> fcnParams = (iterParams != theParams.end())
+                                        ? (*iterParams).second
+                                        : std::vector<double>();
+      theAuxFunc = new DropletVOFAuxFunction(fcnParams);
     } else if (fcnName == "sloshing_tank") {
       std::map<std::string, std::vector<double>>::const_iterator iterParams =
         theParams.find(dofName);

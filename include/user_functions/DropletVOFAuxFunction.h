@@ -20,7 +20,7 @@ namespace nalu {
 class DropletVOFAuxFunction : public AuxFunction
 {
 public:
-  DropletVOFAuxFunction();
+  DropletVOFAuxFunction(const std::vector<double>& params);
 
   virtual ~DropletVOFAuxFunction() {}
 
@@ -34,6 +34,12 @@ public:
     const unsigned fieldSize,
     const unsigned beginPos,
     const unsigned endPos) const;
+
+  double droppos_x_;
+  double droppos_y_;
+  double droppos_z_;
+  double radius_;
+  double interface_thickness_;
 };
 
 } // namespace nalu

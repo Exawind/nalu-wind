@@ -19,10 +19,36 @@ namespace sierra {
 namespace nalu {
 
 DropletVelocityAuxFunction::DropletVelocityAuxFunction(
-  const unsigned beginPos, const unsigned endPos)
-  : AuxFunction(beginPos, endPos)
+  const unsigned beginPos,
+  const unsigned endPos,
+  const std::vector<double>& params)
+  : AuxFunction(beginPos, endPos),
+    droppos_x_(0.0),
+    droppos_y_(0.0),
+    droppos_z_(0.0),
+    dropvel_x_(0.1),
+    dropvel_y_(0.1),
+    dropvel_z_(0.1),
+    radius_(0.1),
+    interface_thickness_(0.0025)
 {
-  // does nothing
+  // check size and populate
+  if (params.size() != 8 && !params.empty())
+    throw std::runtime_error("Realm::setup_initial_conditions: "
+                             "droplet (velocity) requires 8 params: 3 "
+                             "components of droplet position, 3 "
+                             "components of droplet velocity, droplet "
+                             "radius, and interface thickness");
+  if (!params.empty()) {
+    droppos_x_ = params[0];
+    droppos_y_ = params[1];
+    droppos_z_ = params[2];
+    dropvel_x_ = params[3];
+    dropvel_y_ = params[4];
+    dropvel_z_ = params[5];
+    radius_ = params[6];
+    interface_thickness_ = params[7];
+  }
 }
 
 void
@@ -41,16 +67,18 @@ DropletVelocityAuxFunction::do_evaluate(
     const double x = coords[0];
     const double y = coords[1];
     const double z = coords[2];
-    const double interface_thickness = 0.015;
 
-    auto radius = std::sqrt(x * x + y * y + z * z) - 0.075;
-    auto vof = -0.5 * (std::erf(radius / interface_thickness) + 1.0) + 1.0;
-    // assuming density ratio of 1000
-    auto dens = 1000.0 * vof + 1.0 * (1.0 - vof);
+    auto rad_pos = std::sqrt(
+                     (x - droppos_x_) * (x - droppos_x_) +
+                     (y - droppos_y_) * (y - droppos_y_) +
+                     (z - droppos_z_) * (z - droppos_z_)) -
+                   radius_;
+    auto vof = -0.5 * (std::erf(rad_pos / interface_thickness_) + 1.0) + 1.0;
 
-    fieldPtr[0] = 0.0; // vof * 1000. * 1. / dens;
-    fieldPtr[1] = 0.0; // vof * 1000. * 1. / dens;
-    fieldPtr[2] = 0.0; // vof * 1000. * 1. / dens;
+    // Approximate average velocity by scaling with vof instead of using density
+    fieldPtr[0] = vof * dropvel_x_;
+    fieldPtr[1] = vof * dropvel_y_;
+    fieldPtr[2] = vof * dropvel_z_;
 
     fieldPtr += fieldSize;
     coords += spatialDimension;

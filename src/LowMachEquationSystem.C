@@ -666,7 +666,12 @@ LowMachEquationSystem::register_initial_condition_fcn(
     } else if (fcnName == "PerturbedShearLayer") {
       theAuxFunc = new PerturbedShearLayerVelocityAuxFunction(0, nDim);
     } else if (fcnName == "droplet") {
-      theAuxFunc = new DropletVelocityAuxFunction(0, nDim);
+      std::map<std::string, std::vector<double>>::const_iterator iterParams =
+        theParams.find(dofName);
+      std::vector<double> fcnParams = (iterParams != theParams.end())
+                                        ? (*iterParams).second
+                                        : std::vector<double>();
+      theAuxFunc = new DropletVelocityAuxFunction(0, nDim, fcnParams);
     } else {
       throw std::runtime_error(
         "InitialCondFunction::non-supported velocity IC");
