@@ -57,6 +57,13 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
     get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK);
   maskNodeField_ = get_field_ordinal(
     meta, "abl_wall_no_slip_wall_func_node_mask", stk::topology::NODE_RANK);
+
+  if (realm_.solutionOptions_->realm_has_vof_) {
+    NaluEnv::self().naluOutputP0()
+      << "WARNING: volume_of_fluid is present. For stability, upwinding in the "
+         "MomentumEdgeSolverAlg is automatically turned on near the liquid-gas "
+         "interface.\n";
+  }
 }
 
 void
