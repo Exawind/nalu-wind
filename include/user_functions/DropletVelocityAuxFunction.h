@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef DropletVOFAuxFunction_h
-#define DropletVOFAuxFunction_h
+#ifndef DropletVelocityAuxFunction_h
+#define DropletVelocityAuxFunction_h
 
 #include <AuxFunction.h>
 
@@ -17,12 +17,15 @@
 namespace sierra {
 namespace nalu {
 
-class DropletVOFAuxFunction : public AuxFunction
+class DropletVelocityAuxFunction : public AuxFunction
 {
 public:
-  DropletVOFAuxFunction(const std::vector<double>& params);
+  DropletVelocityAuxFunction(
+    const unsigned beginPos,
+    const unsigned endPos,
+    const std::vector<double>& params);
 
-  virtual ~DropletVOFAuxFunction() {}
+  virtual ~DropletVelocityAuxFunction() {}
 
   using AuxFunction::do_evaluate;
   virtual void do_evaluate(
@@ -35,12 +38,12 @@ public:
     const unsigned beginPos,
     const unsigned endPos) const;
 
-  int surf_idx_;
   double droppos_x_;
   double droppos_y_;
   double droppos_z_;
-  double surf_pos_;
-  double surf_idx_dbl_;
+  double dropvel_x_;
+  double dropvel_y_;
+  double dropvel_z_;
   double radius_;
   double interface_thickness_;
 };

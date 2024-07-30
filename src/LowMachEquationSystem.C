@@ -174,6 +174,8 @@
 #include <user_functions/PerturbedShearLayerAuxFunctions.h>
 #include <user_functions/GaussJetVelocityAuxFunction.h>
 
+#include <user_functions/DropletVelocityAuxFunction.h>
+
 // deprecated
 
 // stk_util
@@ -663,6 +665,13 @@ LowMachEquationSystem::register_initial_condition_fcn(
       theAuxFunc = new SinProfileChannelFlowVelocityAuxFunction(0, nDim);
     } else if (fcnName == "PerturbedShearLayer") {
       theAuxFunc = new PerturbedShearLayerVelocityAuxFunction(0, nDim);
+    } else if (fcnName == "droplet") {
+      std::map<std::string, std::vector<double>>::const_iterator iterParams =
+        theParams.find(dofName);
+      std::vector<double> fcnParams = (iterParams != theParams.end())
+                                        ? (*iterParams).second
+                                        : std::vector<double>();
+      theAuxFunc = new DropletVelocityAuxFunction(0, nDim, fcnParams);
     } else {
       throw std::runtime_error(
         "InitialCondFunction::non-supported velocity IC");
@@ -2895,6 +2904,12 @@ ContinuityEquationSystem::register_edge_fields(
   massFlowRate_ = &(meta_data.declare_field<double>(
     stk::topology::EDGE_RANK, "mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*massFlowRate_, selector, nullptr);
+
+  if (realm_.solutionOptions_->realm_has_vof_) {
+    auto massVofBalancedFlowRate_ = &(meta_data.declare_field<double>(
+      stk::topology::EDGE_RANK, "mass_vof_balanced_flow_rate"));
+    stk::mesh::put_field_on_mesh(*massVofBalancedFlowRate_, selector, nullptr);
+  }
 }
 
 //--------------------------------------------------------------------------

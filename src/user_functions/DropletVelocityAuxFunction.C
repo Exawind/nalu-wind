@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include <user_functions/DropletVOFAuxFunction.h>
+#include <user_functions/DropletVelocityAuxFunction.h>
 #include <algorithm>
 
 // basic c++
@@ -18,43 +18,41 @@
 namespace sierra {
 namespace nalu {
 
-DropletVOFAuxFunction::DropletVOFAuxFunction(const std::vector<double>& params)
-  : AuxFunction(0, 1),
-    surf_idx_(1),
+DropletVelocityAuxFunction::DropletVelocityAuxFunction(
+  const unsigned beginPos,
+  const unsigned endPos,
+  const std::vector<double>& params)
+  : AuxFunction(beginPos, endPos),
     droppos_x_(0.0),
     droppos_y_(0.0),
     droppos_z_(0.0),
+    dropvel_x_(0.1),
+    dropvel_y_(0.1),
+    dropvel_z_(0.1),
     radius_(0.1),
-    surf_pos_(0.0),
-    surf_idx_dbl_(1.0),
     interface_thickness_(0.0025)
 {
   // check size and populate
-  if (params.size() != 7 && !params.empty())
+  if (params.size() != 8 && !params.empty())
     throw std::runtime_error("Realm::setup_initial_conditions: "
-                             "droplet (volume_of_fluid) requires 7 params: 3 "
-                             "components of droplet position, droplet "
-                             "radius, surface position, surface coordinate "
-                             "index, and interface thickness");
+                             "droplet (velocity) requires 8 params: 3 "
+                             "components of droplet position, 3 "
+                             "components of droplet velocity, droplet "
+                             "radius, and interface thickness");
   if (!params.empty()) {
     droppos_x_ = params[0];
     droppos_y_ = params[1];
     droppos_z_ = params[2];
-    radius_ = params[3];
-    surf_pos_ = params[4];
-    surf_idx_dbl_ = params[5];
-    interface_thickness_ = params[6];
-  }
-
-  if (surf_idx_dbl_ < 0.5) {
-    surf_idx_ = 0;
-  } else if (surf_idx_dbl_ > 1.5) {
-    surf_idx_ = 2;
+    dropvel_x_ = params[3];
+    dropvel_y_ = params[4];
+    dropvel_z_ = params[5];
+    radius_ = params[6];
+    interface_thickness_ = params[7];
   }
 }
 
 void
-DropletVOFAuxFunction::do_evaluate(
+DropletVelocityAuxFunction::do_evaluate(
   const double* coords,
   const double /*time*/,
   const unsigned spatialDimension,
@@ -70,22 +68,17 @@ DropletVOFAuxFunction::do_evaluate(
     const double y = coords[1];
     const double z = coords[2];
 
-    // Flat surface
-    fieldPtr[0] =
-      -0.5 * (std::erf((coords[surf_idx_] - surf_pos_) / interface_thickness_) +
-              1.0) +
-      1.0;
-
-    // Droplet
     auto rad_pos = std::sqrt(
                      (x - droppos_x_) * (x - droppos_x_) +
                      (y - droppos_y_) * (y - droppos_y_) +
                      (z - droppos_z_) * (z - droppos_z_)) -
                    radius_;
-    fieldPtr[0] +=
-      -0.5 * (std::erf(rad_pos / interface_thickness_) + 1.0) + 1.0;
+    auto vof = -0.5 * (std::erf(rad_pos / interface_thickness_) + 1.0) + 1.0;
 
-    fieldPtr[0] = std::max(0.0, std::min(1.0, fieldPtr[0]));
+    // Approximate average velocity by scaling with vof instead of using density
+    fieldPtr[0] = vof * dropvel_x_;
+    fieldPtr[1] = vof * dropvel_y_;
+    fieldPtr[2] = vof * dropvel_z_;
 
     fieldPtr += fieldSize;
     coords += spatialDimension;

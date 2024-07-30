@@ -11,6 +11,7 @@
 #include "utils/StkHelpers.h"
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
+#include "SolutionOptions.h"
 
 namespace sierra {
 namespace nalu {
@@ -89,6 +90,7 @@ ContinuityEdgeSolverAlg::execute()
       const stk::mesh::FastMeshIndex& nodeR) {
       // Scratch work array for edgeAreaVector
       NALU_ALIGNED DblType av[NDimMax_];
+
       // Populate area vector work array
       for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
@@ -131,7 +133,7 @@ ContinuityEdgeSolverAlg::execute()
         const DblType ujIp =
           0.5 * (velocity.get(nodeR, d) + velocity.get(nodeL, d));
         const DblType GjIp =
-          0.5 * (Gpdx.get(nodeR, d) / udiagR + Gpdx.get(nodeL, d) / udiagL);
+          0.5 * (Gpdx.get(nodeR, d) / (udiagR) + Gpdx.get(nodeL, d) / (udiagL));
         tmdot +=
           (interpTogether * rhoUjIp + om_interpTogether * rhoIp * ujIp + GjIp) *
             av[d] -
