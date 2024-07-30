@@ -59,7 +59,7 @@ realms:
         user_function_name:
           volume_of_fluid: droplet
         user_function_parameters:
-          volume_of_fluid: [0.0, 0.25, 0.0, 0.1, 0.0025]
+          volume_of_fluid: [0.0, 0.25, 0.0, 0.1, 0.0, 1, 0.0025]
       - constant: ic_2
         target_name: block_1
         value:

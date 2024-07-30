@@ -35,9 +35,12 @@ public:
     const unsigned beginPos,
     const unsigned endPos) const;
 
+  int surf_idx_;
   double droppos_x_;
   double droppos_y_;
   double droppos_z_;
+  double surf_pos_;
+  double surf_idx_dbl_;
   double radius_;
   double interface_thickness_;
 };

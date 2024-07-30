@@ -60,8 +60,8 @@ realms:
           volume_of_fluid: droplet
           velocity: droplet
         user_function_parameters:
-          volume_of_fluid: [0.0, 0.0, 0.0, 0.15, 0.001]
-          velocity: [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.15, 0.001]
+          volume_of_fluid: [0.0, 0.0, 0.0, 0.15, -100, 0, 0.01]
+          velocity: [0.0, 0.0, 0.0, 0.2, 0.2, 0.2, 0.15, 0.01]
       - constant: ic_2
         target_name: block_1
         value:
@@ -82,15 +82,15 @@ realms:
 
     boundary_conditions:
       - periodic_boundary_condition: bc_1
-        target_name: [surface_1, surface_4]
+        target_name: [surface_1, surface_2]
         periodic_user_data:
           search_tolerance: 0.001
       - periodic_boundary_condition: bc_2
-        target_name: [surface_2, surface_5]
+        target_name: [surface_3, surface_4]
         periodic_user_data:
           search_tolerance: 0.001
       - periodic_boundary_condition: bc_3
-        target_name: [surface_3, surface_6]
+        target_name: [surface_5, surface_6]
         periodic_user_data:
           search_tolerance: 0.001
       
@@ -125,8 +125,8 @@ Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0
-      termination_time: 0.0003
-      time_step: 0.0001
+      termination_time: 0.015
+      time_step: 0.005
       time_stepping_type: fixed
       time_step_count: 10
       second_order_accuracy: yes
