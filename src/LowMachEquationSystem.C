@@ -175,9 +175,6 @@
 #include <user_functions/GaussJetVelocityAuxFunction.h>
 
 #include <user_functions/DropletVelocityAuxFunction.h>
-#include <user_functions/DropletVelocityAuxFunction.h>
-#include <user_functions/FlatDensityAuxFunction.h>
-#include <user_functions/WaterLevelDensityAuxFunction.h>
 
 // deprecated
 
