@@ -157,9 +157,6 @@ MomentumEdgeSolverAlg::execute()
         }
       }
 
-      DblType pecfac = pecletFactor.get(edge, 0);
-      DblType om_pecfac = 1.0 - pecfac;
-
       NALU_ALIGNED DblType limitL[NDimMax_] = {1.0, 1.0, 1.0};
       NALU_ALIGNED DblType limitR[NDimMax_] = {1.0, 1.0, 1.0};
 
@@ -173,10 +170,11 @@ MomentumEdgeSolverAlg::execute()
         }
       }
 
-      // Upwinding switch for multiphase cases.
-      // Factors determined by ensuring full upwinding
-      // at interfaces with interface
-      // widths that are ~2 cells thick
+      // Upwinding switch for multiphase cases:
+      // Factors determined by ensuring full upwinding at interfaces with
+      // interface widths that are ~2 cells thick
+      DblType pecfac = pecletFactor.get(edge, 0);
+      DblType om_pecfac = 1.0 - pecfac;
       DblType density_upwinding_factor = 1.0;
       if (has_vof > 0.5) {
         const DblType min_density = stk::math::min(densityL, densityR);
