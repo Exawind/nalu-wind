@@ -193,6 +193,7 @@ if(NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
     add_test_r(taylorGreenVortex_p3 4)
     add_test_r(vortexOpen 4)
     add_test_r(VOFDroplet 4)
+    add_test_r(VOFInertialDroplet 4)
     add_test_r(VOFZalDisk 4)
 
     if (ENABLE_FFTW)
