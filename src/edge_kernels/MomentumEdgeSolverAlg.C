@@ -7,6 +7,7 @@
 // for more details.
 //
 
+#include <NaluEnv.h>
 #include "edge_kernels/MomentumEdgeSolverAlg.h"
 #include "EquationSystem.h"
 #include "PecletFunction.h"
