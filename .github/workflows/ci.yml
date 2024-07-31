@@ -47,7 +47,7 @@ jobs:
             spack -e e4s-build add cmake && \
             spack -e e4s-build install && \
             quick-create-dev -s nalu-wind@master+tioga+hypre+wind-utils && \
-            spack manager external ${EXAWIND_MANAGER}/environments/e4s-build --exclude nalu-wind gmake && \
+            spack manager external ${EXAWIND_MANAGER}/environments/e4s-build --exclude nalu-wind && \
             spack install && \
             spack cd -b nalu-wind && \
             spack build-env nalu-wind ctest -j $(nproc) -L unit --output-on-failure \
@@ -81,7 +81,7 @@ jobs:
             spack -e e4s-build add cmake && \
             spack -e e4s-build install && \
             quick-create-dev -s nalu-wind@master+tioga+hypre~trilinos-solvers+wind-utils && \
-            spack manager external ${EXAWIND_MANAGER}/environments/e4s-build --exclude nalu-wind gmake && \
+            spack manager external ${EXAWIND_MANAGER}/environments/e4s-build --exclude nalu-wind && \
             spack install && \
             spack cd -b nalu-wind && \
             spack build-env nalu-wind ctest -j $(nproc) -L unit --output-on-failure \
