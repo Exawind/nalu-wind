@@ -44,4 +44,5 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/DropletVOFAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/DropletVelocityAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SloshingTankVOFAuxFunction.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/SloshingTankPressureAuxFunction.C
 )
