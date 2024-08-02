@@ -1,6 +1,6 @@
 # Nalu-Wind 
 
-[Website](https://www.exawind.org/) | [Documentation](https://nalu-wind.readthedocs.io) | [Nightly test dashboard](http://my.cdash.org/index.php?project=Exawind) 
+[Documentation](https://nalu-wind.readthedocs.io) | [Nightly test dashboard](http://my.cdash.org/index.php?project=Exawind) 
 
 Nalu-Wind is a generalized, unstructured, massively parallel, incompressible
 flow solver for wind turbine and wind farm simulations. The codebase is a
