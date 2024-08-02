@@ -177,6 +177,7 @@
 #include <user_functions/GaussJetVelocityAuxFunction.h>
 
 #include <user_functions/DropletVelocityAuxFunction.h>
+#include <user_functions/SloshingTankPressureAuxFunction.h>
 
 // deprecated
 
