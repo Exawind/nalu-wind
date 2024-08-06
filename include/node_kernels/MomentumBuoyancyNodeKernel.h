@@ -45,11 +45,15 @@ public:
 private:
   stk::mesh::NgpField<double> dualNodalVolume_;
   stk::mesh::NgpField<double> densityNp1_;
+  stk::mesh::NgpField<double> source_;
+
   const int nDim_;
+  const bool use_balanced_buoyancy_;
   NodeKernelTraits::DblType rhoRef_;
 
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
   unsigned densityNp1ID_{stk::mesh::InvalidOrdinal};
+  unsigned sourceID_{stk::mesh::InvalidOrdinal};
 
   NALU_ALIGNED NodeKernelTraits::DblType gravity_[NodeKernelTraits::NDimMax];
 };

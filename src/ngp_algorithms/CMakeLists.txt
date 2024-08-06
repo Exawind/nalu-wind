@@ -1,5 +1,6 @@
 target_sources(nalu PRIVATE
   # Algorithms
+  ${CMAKE_CURRENT_SOURCE_DIR}/BuoyancySourceAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/CourantReAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/DynamicPressureOpenAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradEdgeAlg.C
@@ -38,6 +39,7 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/NgpAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MdotAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/NodalBuoyancyAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/TKEWallFuncAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/GeometryAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/WallFricVelAlgDriver.C
