@@ -6,24 +6,22 @@ Simulations:
 linear_solvers:
 
   - name: solve_scalar
-    type: tpetra
-    method: gmres
-    preconditioner: sgs
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
     tolerance: 1e-5
     max_iterations: 50
-    kspace: 50
+    kspace: 5
     output_level: 0
 
   - name: solve_cont
-    type: tpetra
-    method: gmres
-    preconditioner: muelu
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
     tolerance: 1e-5
     max_iterations: 50
-    kspace: 50
+    kspace: 5
     output_level: 0
-    muelu_xml_file_name: ../../xml/milestone.xml
-    summarize_muelu_timer: no
 
 realms:
 

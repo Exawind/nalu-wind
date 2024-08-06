@@ -235,7 +235,7 @@ if(NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
     add_test_r(multiElemCylinder 4)
   endif()
 
-  if(ENABLE_OPENFAST AND ENABLE_TRILINOS_SOLVERS)
+  if(ENABLE_OPENFAST AND ENABLE_HYPRE)
      add_test_r(nrel5MWactuatorLine 4)
      add_test_r(nrel5MWactuatorLineAnisoGauss 4)
      add_test_r(nrel5MWactuatorLineFllc 4)
