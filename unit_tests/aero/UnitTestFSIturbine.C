@@ -266,10 +266,10 @@ TEST_F(CylinderMesh, call_fsiTurbine_mapLoads)
   EXPECT_TRUE(fsiTurb != nullptr);
   fast::turbineDataType& params = fsiTurb->params_;
 
-  EXPECT_EQ(0, params.nBRfsiPtsTwr);
-  EXPECT_EQ(0, params.numBlades);
-
   const unsigned numNodes = set_tower_ref_pos(*bulk, *fsiTurb);
+
+  EXPECT_EQ(21, params.nBRfsiPtsTwr);
+  EXPECT_EQ(0, params.numBlades);
 
   verify_all_zeros(*bulk, *loadMap_);
   verify_all_zeros(*bulk, *loadMapInterp_);
