@@ -104,8 +104,8 @@ BuoyancySourceAlg::execute()
           2);
       }
 
-      weight_l = 1.0; // stk::math::sqrt(weight_l);
-      weight_r = 1.0; // stk::math::sqrt(weight_r);
+      weight_l = stk::math::sqrt(weight_l);
+      weight_r = stk::math::sqrt(weight_r);
 
       for (int i = 0; i < ndim; ++i) {
         sourceOps(einfo, 0, i) += weight_l * rhoIp * gravity[i];
