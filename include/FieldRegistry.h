@@ -41,7 +41,10 @@ public:
         break;
       }
       default:
-        throw std::runtime_error("Unsupported number of reference states for field " + name + " with " + std::to_string(numStates) + " states and " + std::to_string(numDim) + " dims.");
+        throw std::runtime_error(
+          "Unsupported number of reference states for field " + name +
+          " with " + std::to_string(numStates) + " states and " +
+          std::to_string(numDim) + " dims.");
       }
       break;
     }
@@ -56,7 +59,10 @@ public:
         break;
       }
       default:
-        throw std::runtime_error("Unsupported number of reference states for field " + name + " with " + std::to_string(numStates) + " states and " + std::to_string(numDim) + " dims.");
+        throw std::runtime_error(
+          "Unsupported number of reference states for field " + name +
+          " with " + std::to_string(numStates) + " states and " +
+          std::to_string(numDim) + " dims.");
       }
       break;
     }
