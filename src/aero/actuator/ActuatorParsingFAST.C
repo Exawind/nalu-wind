@@ -83,11 +83,11 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
 
   get_required(
     turbNode, "turbine_base_pos", fi.globTurbineData[iTurb].TurbineBasePos);
-  if (turbNode["turbine_hub_pos"]) {
-    NaluEnv::self().naluOutputP0()
-      << "WARNING::turbine_hub_pos is not used. "
-      << "The hub location is computed in OpenFAST and is controlled by the "
-         "ElastoDyn input file.";
+  if (turbNode["turbine_hub_pos"].IsSequence()) {
+    fi.globTurbineData[iTurb].TurbineHubPos =
+      turbNode["turbine_hub_pos"].as<std::vector<double>>();
+  } else {
+    fi.globTurbineData[iTurb].TurbineHubPos = std::vector<double>(3, 0.0);
   }
   get_required(
     turbNode, "num_force_pts_blade",
