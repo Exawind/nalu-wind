@@ -58,7 +58,7 @@ vector_from_field(
   const stk::mesh::Field<T>& field, const stk::mesh::Entity& node)
 {
   // debug only check for optimization
-  assert(field.max_size(stk::topology::NODE_RANK) == 3);
+  assert(field.max_size() == 3);
   assert(field.template type_is<T>());
   T* ptr = stk::mesh::field_data(field, node);
   return {ptr[0], ptr[1], ptr[2]};
@@ -72,7 +72,7 @@ vector_to_field(
   vs::VectorT<T> vec, stk::mesh::Field<T>& field, const stk::mesh::Entity& node)
 {
   // debug only check for optimization
-  assert(field.max_size(stk::topology::NODE_RANK) == 3);
+  assert(field.max_size() == 3);
   assert(field.template type_is<T>());
   T* ptr = stk::mesh::field_data(field, node);
   for (int i = 0; i < 3; ++i) {
