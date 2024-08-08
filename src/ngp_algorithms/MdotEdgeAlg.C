@@ -78,6 +78,23 @@ MdotEdgeAlg::execute()
   }
   auto mdot = fieldMgr.get_field<double>(massFlowRate_);
 
+  const bool add_balanced_forcing =
+    realm_.solutionOptions_->use_balanced_buoyancy_force_;
+
+  const auto& solnOptsGravity =
+    realm_.solutionOptions_->get_gravity_vector(ndim);
+  DblType gravity[3] = {};
+  if (add_balanced_forcing) {
+    for (int idim = 0; idim < ndim; ++idim) {
+      gravity[idim] = solnOptsGravity[idim];
+    }
+  }
+
+  auto source = !add_balanced_forcing
+                  ? fieldMgr.get_field<double>(Gpdx_)
+                  : fieldMgr.get_field<double>(
+                      get_field_ordinal(realm_.meta_data(), "buoyancy_source"));
+
   mdot.clear_sync_state();
   coordinates.sync_to_device();
   velocity.sync_to_device();
@@ -86,6 +103,7 @@ MdotEdgeAlg::execute()
   pressure.sync_to_device();
   udiag.sync_to_device();
   edgeAreaVec.sync_to_device();
+  source.sync_to_device();
 
   const stk::mesh::Selector sel = meta.locally_owned_part() &
                                   stk::mesh::selectUnion(partVec_) &
@@ -126,6 +144,13 @@ MdotEdgeAlg::execute()
       const DblType inv_axdx = 1.0 / axdx;
 
       DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx;
+
+      if (add_balanced_forcing) {
+        for (int d = 0; d < ndim; ++d) {
+          tmdot += projTimeScale * av[d] * gravity[d] * rhoIp;
+        }
+      }
+
       if (needs_gcl) {
         tmdot -= rhoIp * edgeFaceVelMag.get(einfo.meshIdx, 0);
       }
@@ -138,8 +163,13 @@ MdotEdgeAlg::execute()
                                        densityL * velocity.get(nodeL, d));
         const DblType ujIp =
           0.5 * (velocity.get(nodeR, d) + velocity.get(nodeL, d));
-        const DblType GjIp =
+        DblType GjIp =
           0.5 * (Gpdx.get(nodeR, d) / udiagR + Gpdx.get(nodeL, d) / udiagL);
+        if (add_balanced_forcing) {
+          GjIp -= 0.5 * ((source.get(nodeR, d)) / (udiagR) +
+                         (source.get(nodeL, d)) / (udiagL));
+        }
+
         tmdot +=
           (interpTogether * rhoUjIp + om_interpTogether * rhoIp * ujIp + GjIp) *
             av[d] -
