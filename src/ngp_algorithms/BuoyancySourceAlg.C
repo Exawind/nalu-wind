@@ -57,8 +57,7 @@ BuoyancySourceAlg::execute()
     nalu_ngp::edge_nodal_field_updater(ngpMesh, sourceweight);
 
   const stk::mesh::Selector sel =
-    meta.locally_owned_part() & stk::mesh::selectUnion(partVec_); // &
-  //!(realm_.get_inactive_selector());
+    meta.locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
   double gravity[3] = {0.0, 0.0, 0.0};
 
