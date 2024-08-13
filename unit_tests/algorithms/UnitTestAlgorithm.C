@@ -48,6 +48,7 @@ TestTurbulenceAlgorithm::declare_fields()
 
   if (!realm_->fieldManager_) {
     sierra::nalu::TimeIntegrator timeIntegrator;
+    timeIntegrator.secondOrderTimeAccurate_ = false;
     realm_->timeIntegrator_ = &timeIntegrator;
     realm_->setup_field_manager();
     realm_->timeIntegrator_ = nullptr;
