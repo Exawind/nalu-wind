@@ -58,10 +58,10 @@ ContinuityEdgeSolverAlg::execute()
   const bool add_balanced_forcing =
     realm_.solutionOptions_->use_balanced_buoyancy_force_;
 
-  const auto& solnOptsGravity =
-    realm_.solutionOptions_->get_gravity_vector(ndim);
   DblType gravity[3] = {};
   if (add_balanced_forcing) {
+    const auto& solnOptsGravity =
+      realm_.solutionOptions_->get_gravity_vector(ndim);
     for (int idim = 0; idim < ndim; ++idim) {
       gravity[idim] = solnOptsGravity[idim];
     }

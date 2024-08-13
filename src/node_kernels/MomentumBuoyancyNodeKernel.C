@@ -45,7 +45,8 @@ MomentumBuoyancyNodeKernel::setup(Realm& realm)
   const auto& fieldMgr = realm.ngp_field_manager();
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   densityNp1_ = fieldMgr.get_field<double>(densityNp1ID_);
-  source_ = fieldMgr.get_field<double>(sourceID_);
+  if (use_balanced_buoyancy_)
+    source_ = fieldMgr.get_field<double>(sourceID_);
 }
 
 KOKKOS_FUNCTION
