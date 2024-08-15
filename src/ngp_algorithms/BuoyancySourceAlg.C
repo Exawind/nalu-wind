@@ -46,10 +46,8 @@ BuoyancySourceAlg::execute()
   const int ndim = meta.spatial_dimension();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
-  const auto coordinates = fieldMgr.template get_field<double>(coordinates_);
   const auto density = fieldMgr.template get_field<double>(density_);
   const auto edgeAreaVec = fieldMgr.template get_field<double>(edgeAreaVec_);
-  const auto dualVol = fieldMgr.template get_field<double>(dualNodalVol_);
   auto source = fieldMgr.template get_field<double>(source_);
   auto sourceweight = fieldMgr.template get_field<double>(source_weight_);
   const auto sourceOps = nalu_ngp::edge_nodal_field_updater(ngpMesh, source);
@@ -78,40 +76,23 @@ BuoyancySourceAlg::execute()
       const auto nodeL = ngpMesh.fast_mesh_index(einfo.entityNodes[0]);
       const auto nodeR = ngpMesh.fast_mesh_index(einfo.entityNodes[1]);
 
-      const DblType invVolL = 1.0 / dualVol.get(nodeL, 0);
-      const DblType invVolR = 1.0 / dualVol.get(nodeR, 0);
-
       const DblType rhoIp =
         0.5 * (density.get(nodeL, 0) + density.get(nodeR, 0));
 
-      DblType cc_face[3] = {0.0, 0.0, 0.0};
-      for (int i = 0; i < ndim; ++i)
-        cc_face[i] =
-          0.5 * (coordinates.get(nodeL, i) + coordinates.get(nodeR, i));
-
-      DblType weight_l = 0.0;
-      DblType weight_r = 0.0;
+      DblType weight = 0.0;
 
       for (int i = 0; i < ndim; ++i) {
-        weight_l += stk::math::pow(
-          stk::math::abs((cc_face[i] - coordinates.get(nodeL, i)) * av[i]) *
-            invVolL,
-          2);
-        weight_r += stk::math::pow(
-          stk::math::abs((cc_face[i] - coordinates.get(nodeR, i)) * av[i]) *
-            invVolR,
-          2);
+        weight += stk::math::pow(gravity[i] * av[i], 2);
       }
 
-      weight_l = stk::math::sqrt(weight_l);
-      weight_r = stk::math::sqrt(weight_r);
+      weight = stk::math::sqrt(weight);
 
       for (int i = 0; i < ndim; ++i) {
-        sourceOps(einfo, 0, i) += weight_l * rhoIp * gravity[i];
-        sourceOps(einfo, 1, i) += weight_r * rhoIp * gravity[i];
+        sourceOps(einfo, 0, i) += weight * rhoIp * gravity[i];
+        sourceOps(einfo, 1, i) += weight * rhoIp * gravity[i];
       }
-      sourceweightOps(einfo, 0, 0) += weight_l;
-      sourceweightOps(einfo, 1, 0) += weight_r;
+      sourceweightOps(einfo, 0, 0) += weight;
+      sourceweightOps(einfo, 1, 0) += weight;
     });
   source.modify_on_device();
   sourceweight.modify_on_device();
