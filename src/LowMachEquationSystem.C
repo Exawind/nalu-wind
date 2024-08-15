@@ -122,6 +122,7 @@
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
 #include "ngp_algorithms/DynamicPressureOpenAlg.h"
 #include "ngp_algorithms/MomentumABLWallFuncMaskUtil.h"
+#include "ngp_algorithms/NodalBuoyancyFuncUtil.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpFieldUtils.h"
@@ -1103,6 +1104,9 @@ MomentumEquationSystem::initial_work()
   if (ablWallNodeMask_)
     ablWallNodeMask_->execute();
 
+  if (buoyancySrcMask_)
+    buoyancySrcMask_->execute();
+
   // proceed with a bunch of initial work; wrap in timer
   {
     const double timeA = NaluEnv::self().nalu_time();
@@ -1197,6 +1201,10 @@ MomentumEquationSystem::register_nodal_fields(
     buoyancy_source_weight_ = &(meta_data.declare_field<double>(
       stk::topology::NODE_RANK, "buoyancy_source_weight"));
     stk::mesh::put_field_on_mesh(*buoyancy_source_weight_, selector, nullptr);
+    ScalarFieldType& node_mask = realm_.meta_data().declare_field<double>(
+      stk::topology::NODE_RANK, "buoyancy_source_mask");
+    double one = 1;
+    stk::mesh::put_field_on_mesh(node_mask, selector, &one);
   }
 
   if (realm_.is_turbulent()) {
@@ -1947,6 +1955,14 @@ MomentumEquationSystem::register_wall_bc(
       &(meta_data.declare_field<double>(sideRank, "wall_normal_distance_bip"));
     stk::mesh::put_field_on_mesh(
       *wallNormalDistanceBip, *part, numScsBip, nullptr);
+
+    if (realm_.solutionOptions_->use_balanced_buoyancy_force_) {
+      if (!buoyancySrcMask_) {
+        buoyancySrcMask_.reset(new NodalBuoyancyFuncUtil(realm_, part));
+      } else {
+        buoyancySrcMask_->partVec_.push_back(part);
+      }
+    }
 
     // need wall friction velocity for TKE boundary condition
     if (RANSAblBcApproach_) {

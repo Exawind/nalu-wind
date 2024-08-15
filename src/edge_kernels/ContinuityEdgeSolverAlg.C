@@ -82,6 +82,11 @@ ContinuityEdgeSolverAlg::execute()
                   : fieldMgr.get_field<double>(
                       get_field_ordinal(realm_.meta_data(), "buoyancy_source"));
 
+  auto source_mask = !add_balanced_forcing
+                       ? fieldMgr.get_field<double>(densityNp1_)
+                       : fieldMgr.get_field<double>(get_field_ordinal(
+                           realm_.meta_data(), "buoyancy_source_mask"));
+
   stk::mesh::NgpField<double> edgeFaceVelMag;
   bool needs_gcl = false;
   if (realm_.has_mesh_deformation()) {
@@ -99,6 +104,7 @@ ContinuityEdgeSolverAlg::execute()
   udiag.sync_to_device();
   edgeAreaVec.sync_to_device();
   source.sync_to_device();
+  source_mask.sync_to_device();
 
   run_algorithm(
     realm_.bulk_data(),
@@ -139,8 +145,10 @@ ContinuityEdgeSolverAlg::execute()
       DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx;
 
       if (add_balanced_forcing) {
+        const DblType masked_weights =
+          0.5 * (source_mask.get(nodeL, 0) + source_mask.get(nodeR, 0));
         for (int d = 0; d < ndim; ++d) {
-          tmdot += projTimeScale * av[d] * gravity[d] * rhoIp;
+          tmdot += projTimeScale * av[d] * gravity[d] * rhoIp * masked_weights;
         }
       }
       if (needs_gcl) {
@@ -159,8 +167,10 @@ ContinuityEdgeSolverAlg::execute()
         DblType GjIp =
           0.5 * (Gpdx.get(nodeR, d) / (udiagR) + Gpdx.get(nodeL, d) / (udiagL));
         if (add_balanced_forcing) {
-          GjIp -= 0.5 * ((source.get(nodeR, d)) / (udiagR) +
-                         (source.get(nodeL, d)) / (udiagL));
+          GjIp -=
+            0.5 *
+            ((source_mask.get(nodeR, 0) * source.get(nodeR, d)) / (udiagR) +
+             (source_mask.get(nodeL, 0) * source.get(nodeL, d)) / (udiagL));
         }
         tmdot +=
           (interpTogether * rhoUjIp + om_interpTogether * rhoIp * ujIp + GjIp) *
