@@ -170,17 +170,19 @@ GammaEquationSystem::register_nodal_fields(
   minDistanceToWall_ = meta_data.get_field<double>(
     stk::topology::NODE_RANK,"minimum_distance_to_wall");
 
-  dwalldistdx_ = &(meta_data.declare_field<VectorFieldType>(
+  dwalldistdx_ = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "dwalldistdx"));
   stk::mesh::put_field_on_mesh(*dwalldistdx_, selector, nDim, nullptr);
+  stk::io::set_field_output_type(*dwalldistdx_, stk::io::FieldOutputType::VECTOR_3D);
 
   nDotV_ = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "nDotV"));
   stk::mesh::put_field_on_mesh(*nDotV_, selector, nullptr);
 
-  dnDotVdx_ = &(meta_data.declare_field<VectorFieldType>(
+  dnDotVdx_ = &(meta_data.declare_field<double>( 
     stk::topology::NODE_RANK, "dnDotVdx"));
   stk::mesh::put_field_on_mesh(*dnDotVdx_, selector, nDim, nullptr);
+  stk::io::set_field_output_type(*dnDotVdx_, stk::io::FieldOutputType::VECTOR_3D);
 
   visc_ = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "viscosity"));
@@ -278,7 +280,6 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 
     // Check if the user has requested CMM or LMM algorithms; if so, do not
     // include Nodal Mass algorithms
-    //
     NaluEnv::self().naluOutputP0() << "register gamma interior: " << std::endl;
 
     std::vector<std::string> checkAlgNames = {
@@ -417,8 +418,8 @@ GammaEquationSystem::register_open_bc(
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   // register boundary data; gamma_bc
-  ScalarFieldType* theBcField = &(meta_data.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "open_gamma_bc"));
+  ScalarFieldType* theBcField = 
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "open_gamma_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specified tke and save off the AuxFunction
