@@ -99,8 +99,6 @@ BLTGammaM2015NodeKernel::execute(
   const DblType minD = minD_.get(node, 0);
   const DblType dVol = dualNodalVolume_.get(node, 0);
 
-  // define the wall normal vector (for now, hardwire to NASA TM case: z = wall
-  // norm direction)
   DblType Re0c = 0.0;
   DblType Rev = 0.0;
   DblType rt = 0.0;
@@ -122,6 +120,7 @@ BLTGammaM2015NodeKernel::execute(
   const DblType caTwo = 0.06;
   const DblType ceTwo = 50.0;
 
+  // constants for the local-correlations
   const DblType Ctu1 = 100.;
   const DblType Ctu2 = 1000.;
   const DblType Ctu3 = 1.0;
@@ -142,12 +141,19 @@ BLTGammaM2015NodeKernel::execute(
   sijMag = stk::math::sqrt(2.0 * sijMag);
   vortMag = stk::math::sqrt(2.0 * vortMag);
 
+  // Computation of the turbulence intensity
+  // The original formulation computes the local turbulence intensity using the local values of k, omega, and wall distance in the boundary layer. 
+  // This approach has accuracy issues with a coarse grid. On the other hand, a constant turbulence intensity, which is mainly used in transition models 
+  // with the S-A turbulence model, gives more robust and accurate results. 
+  // Strictly speaking, however, a constant turbulence intensity is only valid for external flow simulations without any downwash 
+  // (e.g., airfoils or single turbines). The validation of each approach is completed. 
+  // Options for the selection of turbulence intensity computations will be implemented.
+
   //========= local turbulence intensity: original formualtion ========
   //TuL = stk::math::min(100.0 * stk::math::sqrt(2.0/3.0*tke) / sdr / (minD + 1.0e-10), 100.0);
-  //=========== freestream turbulence intensity  =======================
+  //====== freestream turbulence intensity from Nalu-Wind input  ======
   TuL = fsti_;
-  //====================================================================
-
+  //===================================================================
   lamda0L = -7.57e-3 * dvnn * minD * minD * density / visc + 0.0128;
   lamda0L = stk::math::min(stk::math::max(lamda0L, -1.0), 1.0);
   Re0c = Ctu1 + Ctu2 * stk::math::exp(-Ctu3 * TuL * FPG(lamda0L));
@@ -165,6 +171,9 @@ BLTGammaM2015NodeKernel::execute(
     caTwo * density * vortMag * fturb * gamint * (ceTwo * gamint - 1.0);
 
 ////========================== Exact Jacobian ================================//
+// Exact Jacobian has unphysical negative intermittecy issues, resulting in convergence stall.
+// Instead of the exact Jacobian, the positivity is applied in the implicit operator
+////==========================================================================//
 //  DblType PgammaDir =
 //    flength * density * sijMag * fonset * (1.0 - 2.0 * gamint);
 //  DblType DgammaDir =
@@ -173,7 +182,10 @@ BLTGammaM2015NodeKernel::execute(
 //  rhs(0) += (Pgamma - Dgamma) * dVol;
 //  lhs(0, 0) += (DgammaDir - PgammaDir) * dVol;
 
-//============= Jacobian with Positivity suggested by Lee (2021) =============//
+//========= Jacobian with the Positivity in the implicit operator =============//
+// The original idea by Spalart and Allmaras (1992) for the S-A turbulence model. 
+// The approach adpated by Lee (2021)
+////==========================================================================//
   DblType PgammaDir =
     flength * density * sijMag * fonset * (1.0 - gamint);
   DblType PgammaDirP =

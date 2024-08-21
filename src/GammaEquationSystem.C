@@ -604,17 +604,11 @@ GammaEquationSystem::assemble_nodal_gradient()
   nodalGradAlgDriver_.execute();
   timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
 
-  // Steps to calculate dndotVdx as written by Bumseok
-  // Step 1 - Calculate gradient of wall distance
+  // Computation of dV/dy in Eq. 11: gard(n dot V) dot n 
+  // where the V is the velocity vector and n is the wall normal vector
+  //
+  // Step 1 - Calculate the gradient of the wall distance
   wallDistGradAlgDriver_.execute();
-  // Step 2 - Normalize wall distance gradient
-  // Step 3 - Calculate dot product of normalized wall distance with velocity vector
-
-  /*  Hard questions here  are
-  1. Where to compute steps 2 and 3? Is it on the nodes, dual volume, cell center? What are those? - Answer - just nodes which are also the cell centers of the dual nodal volumes!
-  2. How to loop over all nodes in the computational domain?
-  3. How to calculate magnitude of vector and dot product? - Answer - Same as you'd do in a Fortran code!
-  */
 
   auto& dwalldistdx =
     fieldMgr.get_field<double>(dwalldistdx_->mesh_meta_data_ordinal());
@@ -637,17 +631,18 @@ GammaEquationSystem::assemble_nodal_gradient()
   "GammaTransition::compute_nDotV", ngpMesh, stk::topology::NODE_RANK, sel,
   KOKKOS_LAMBDA(const MeshIndex& mi) {
 
-    // Calculate magnitude of wall distance gradient
+  // Step 2 - Normalize the wall distance gradient
+    // Calculate a magnitude of the wall distance gradient
     double mag_wdg = 0.0;
     for (int d = 0; d < ndim; ++d)
       mag_wdg += dwalldistdx.get(mi,d) * dwalldistdx.get(mi,d) ;
     mag_wdg = stk::math::sqrt(mag_wdg);
 
-    // Normalize wall distance gradient
+    // Normalize the wall distance gradient vector: computation of n is done
     for (int d = 0; d < ndim; ++d)
       dwalldistdx.get(mi,d) /= mag_wdg;
 
-    // Compute nDotV
+  // Step 3 - Calculate the dot product of the wall normal vector and the velocity vector
     double nDotV_tmp=0.0;
     for (int d = 0; d < ndim; ++d)
       nDotV_tmp += dwalldistdx.get(mi,d)*vel.get(mi,d);
@@ -658,10 +653,10 @@ GammaEquationSystem::assemble_nodal_gradient()
   dwalldistdx.modify_on_device();
   nDotV.modify_on_device();
 
-  // Step 4 - Calculate gradient of nDotV
+  // Step 4 - Calculate the gradient of n Dot V
   nDotVGradAlgDriver_.execute();
 
-  // Step 5 - Calculate dot product of dnDotVdx with n - This is the source term - This will be done inside BLTGammaM2015NodeKernel
+  // Step 5 - Calculate the dot product of d(n Dot V)dx and n -This will be performed inside BLTGammaM2015NodeKernel
 
 
 }
