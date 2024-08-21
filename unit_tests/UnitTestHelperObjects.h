@@ -16,6 +16,7 @@
 #include <stk_topology/topology.hpp>
 
 #include <memory>
+#include <FieldManager.h>
 
 namespace unit_test_utils {
 
@@ -33,6 +34,12 @@ struct HelperObjectsBase
       eqSystem(eqSystems)
   {
     realm.bulkData_ = bulk;
+    // TODO fix this! realm should not be getting time integrator this way!!
+    naluObj->sim_.breadboard();
+    assert(naluObj->sim_.timeIntegrator_ != NULL);
+    // bread board didn't work so set integrator manually
+    realm.timeIntegrator_ = naluObj->sim_.timeIntegrator_;
+    realm.setup_field_manager();
   }
 
   virtual ~HelperObjectsBase() { delete naluObj; }

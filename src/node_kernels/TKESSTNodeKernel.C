@@ -19,29 +19,31 @@
 namespace sierra {
 namespace nalu {
 
-TKESSTNodeKernel::TKESSTNodeKernel(const stk::mesh::MetaData& meta)
-  : NGPNodeKernel<TKESSTNodeKernel>(),
-    tkeID_(get_field_ordinal(meta, "turbulent_ke")),
-    sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
-    densityID_(get_field_ordinal(meta, "density")),
-    tviscID_(get_field_ordinal(meta, "turbulent_viscosity")),
-    dudxID_(get_field_ordinal(meta, "dudx")),
-    dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
-    nDim_(meta.spatial_dimension())
+TKESSTNodeKernel::TKESSTNodeKernel(
+  const stk::mesh::MetaData& meta,
+  const FieldManager& manager,
+  stk::mesh::PartVector& parts)
+  : NGPNodeKernel<TKESSTNodeKernel>(), nDim_(meta.spatial_dimension())
 {
+  manager.register_field("turbulent_ke", parts);
+  manager.register_field("specific_dissipation_rate", parts);
+  manager.register_field("density", parts);
+  manager.register_field("turbulent_viscosity", parts);
+  manager.register_field("dudx", parts);
+  manager.register_field("dual_nodal_volume", parts);
 }
 
 void
 TKESSTNodeKernel::setup(Realm& realm)
 {
-  const auto& fieldMgr = realm.ngp_field_manager();
+  const auto& fieldMgr = *(realm.fieldManager_.get());
 
-  tke_ = fieldMgr.get_field<double>(tkeID_);
-  sdr_ = fieldMgr.get_field<double>(sdrID_);
-  density_ = fieldMgr.get_field<double>(densityID_);
-  tvisc_ = fieldMgr.get_field<double>(tviscID_);
-  dudx_ = fieldMgr.get_field<double>(dudxID_);
-  dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
+  tke_ = fieldMgr.get_ngp_field_ptr<double>("turbulent_ke");
+  sdr_ = fieldMgr.get_ngp_field_ptr<double>("specific_dissipation_rate");
+  density_ = fieldMgr.get_ngp_field_ptr<double>("density");
+  tvisc_ = fieldMgr.get_ngp_field_ptr<double>("turbulent_viscosity");
+  dudx_ = fieldMgr.get_ngp_field_ptr<double>("dudx");
+  dualNodalVolume_ = fieldMgr.get_ngp_field_ptr<double>("dual_nodal_volume");
 
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
