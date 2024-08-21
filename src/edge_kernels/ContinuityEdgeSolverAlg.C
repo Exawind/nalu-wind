@@ -55,6 +55,18 @@ ContinuityEdgeSolverAlg::execute()
   const DblType solveIncompressibleEqn = realm_.get_incompressible_solve();
   const DblType om_solveIncompressibleEqn = 1.0 - solveIncompressibleEqn;
 
+  const bool add_balanced_forcing =
+    realm_.solutionOptions_->use_balanced_buoyancy_force_;
+
+  DblType gravity[3] = {};
+  if (add_balanced_forcing) {
+    const auto& solnOptsGravity =
+      realm_.solutionOptions_->get_gravity_vector(ndim);
+    for (int idim = 0; idim < ndim; ++idim) {
+      gravity[idim] = solnOptsGravity[idim];
+    }
+  }
+
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
   auto coordinates = fieldMgr.get_field<double>(coordinates_);
@@ -64,6 +76,16 @@ ContinuityEdgeSolverAlg::execute()
   auto pressure = fieldMgr.get_field<double>(pressure_);
   auto udiag = fieldMgr.get_field<double>(Udiag_);
   auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
+
+  auto source = !add_balanced_forcing
+                  ? fieldMgr.get_field<double>(Gpdx_)
+                  : fieldMgr.get_field<double>(
+                      get_field_ordinal(realm_.meta_data(), "buoyancy_source"));
+
+  auto source_mask = !add_balanced_forcing
+                       ? fieldMgr.get_field<double>(densityNp1_)
+                       : fieldMgr.get_field<double>(get_field_ordinal(
+                           realm_.meta_data(), "buoyancy_source_mask"));
 
   stk::mesh::NgpField<double> edgeFaceVelMag;
   bool needs_gcl = false;
@@ -81,6 +103,8 @@ ContinuityEdgeSolverAlg::execute()
   pressure.sync_to_device();
   udiag.sync_to_device();
   edgeAreaVec.sync_to_device();
+  source.sync_to_device();
+  source_mask.sync_to_device();
 
   run_algorithm(
     realm_.bulk_data(),
@@ -119,6 +143,14 @@ ContinuityEdgeSolverAlg::execute()
       const DblType inv_axdx = 1.0 / axdx;
 
       DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx;
+
+      if (add_balanced_forcing) {
+        const DblType masked_weights =
+          0.5 * (source_mask.get(nodeL, 0) + source_mask.get(nodeR, 0));
+        for (int d = 0; d < ndim; ++d) {
+          tmdot += projTimeScale * av[d] * gravity[d] * rhoIp * masked_weights;
+        }
+      }
       if (needs_gcl) {
         tmdot -= rhoIp * edgeFaceVelMag.get(edge, 0);
       }
@@ -132,8 +164,14 @@ ContinuityEdgeSolverAlg::execute()
                                        densityL * velocity.get(nodeL, d));
         const DblType ujIp =
           0.5 * (velocity.get(nodeR, d) + velocity.get(nodeL, d));
-        const DblType GjIp =
+        DblType GjIp =
           0.5 * (Gpdx.get(nodeR, d) / (udiagR) + Gpdx.get(nodeL, d) / (udiagL));
+        if (add_balanced_forcing) {
+          GjIp -=
+            0.5 *
+            ((source_mask.get(nodeR, 0) * source.get(nodeR, d)) / (udiagR) +
+             (source_mask.get(nodeL, 0) * source.get(nodeL, d)) / (udiagL));
+        }
         tmdot +=
           (interpTogether * rhoUjIp + om_interpTogether * rhoIp * ujIp + GjIp) *
             av[d] -

@@ -106,6 +106,7 @@ realms:
 
     solution_options:
       name: myOptions
+      use_balanced_buoyancy_force: yes
 
       options:
         - hybrid_factor:

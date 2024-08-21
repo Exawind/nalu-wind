@@ -18,6 +18,7 @@
 #include "AMSAlgDriver.h"
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
+#include "ngp_algorithms/NodalBuoyancyAlgDriver.h"
 #include "ngp_algorithms/WallFricVelAlgDriver.h"
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 #include "ngp_algorithms/CourantReAlgDriver.h"
@@ -204,13 +205,18 @@ public:
   ScalarFieldType* evisc_;
   ScalarFieldType* iddesRansIndicator_;
 
+  VectorFieldType* buoyancy_source_;
+  ScalarFieldType* buoyancy_source_weight_;
+
   TensorNodalGradAlgDriver nodalGradAlgDriver_;
+  NodalBuoyancyAlgDriver nodalBuoyancyAlgDriver_;
   WallFricVelAlgDriver wallFuncAlgDriver_;
   NgpAlgDriver dynPressAlgDriver_;
   std::unique_ptr<EffDiffFluxCoeffAlg> diffFluxCoeffAlg_{nullptr};
   std::unique_ptr<Algorithm> tviscAlg_{nullptr};
   std::unique_ptr<Algorithm> pecletAlg_{nullptr};
   std::unique_ptr<Algorithm> ablWallNodeMask_{nullptr};
+  std::unique_ptr<Algorithm> buoyancySrcMask_{nullptr};
 
   CourantReAlgDriver cflReAlgDriver_;
   std::unique_ptr<AMSAlgDriver> AMSAlgDriver_{nullptr};

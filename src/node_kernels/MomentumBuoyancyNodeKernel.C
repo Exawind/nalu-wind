@@ -23,12 +23,15 @@ MomentumBuoyancyNodeKernel::MomentumBuoyancyNodeKernel(
   const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts)
   : NGPNodeKernel<MomentumBuoyancyNodeKernel>(),
     nDim_(bulk.mesh_meta_data().spatial_dimension()),
+    use_balanced_buoyancy_(solnOpts.use_balanced_buoyancy_force_),
     rhoRef_(solnOpts.referenceDensity_)
 {
   const auto& meta = bulk.mesh_meta_data();
 
   dualNodalVolumeID_ = get_field_ordinal(meta, "dual_nodal_volume");
   densityNp1ID_ = get_field_ordinal(meta, "density");
+  if (use_balanced_buoyancy_)
+    sourceID_ = get_field_ordinal(meta, "buoyancy_source");
 
   const std::vector<double>& solnOptsGravity =
     solnOpts.get_gravity_vector(nDim_);
@@ -42,6 +45,8 @@ MomentumBuoyancyNodeKernel::setup(Realm& realm)
   const auto& fieldMgr = realm.ngp_field_manager();
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   densityNp1_ = fieldMgr.get_field<double>(densityNp1ID_);
+  if (use_balanced_buoyancy_)
+    source_ = fieldMgr.get_field<double>(sourceID_);
 }
 
 KOKKOS_FUNCTION
@@ -55,8 +60,14 @@ MomentumBuoyancyNodeKernel::execute(
   const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);
   const double fac = (rhoNp1 - rhoRef_) * dualVolume;
 
-  for (int i = 0; i < nDim_; ++i) {
-    rhs(i) += fac * gravity_[i];
+  if (use_balanced_buoyancy_) {
+    for (int i = 0; i < nDim_; ++i) {
+      rhs(i) += source_.get(node, i) * dualVolume;
+    }
+  } else {
+    for (int i = 0; i < nDim_; ++i) {
+      rhs(i) += fac * gravity_[i];
+    }
   }
 }
 
