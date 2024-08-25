@@ -121,9 +121,6 @@ CalcLoads::execute()
   coordinates_->sync_to_host();
   dudx_->sync_to_host();
 
-  // define vector of parent topos; should always be UNITY in size
-  std::vector<stk::topology> parentTopo;
-
   const auto& bkts = bulk_->get_buckets(
     meta.side_rank(),
     meta.locally_owned_part() & stk::mesh::selectUnion(partVec_));
@@ -139,16 +136,6 @@ CalcLoads::execute()
     // mapping from ip to nodes for this ordinal; face perspective (use with
     // face_node_relations)
     const int* faceIpNodeMap = meFC->ipNodeMap();
-
-    // extract connected element topology
-    b->parent_topology(stk::topology::ELEMENT_RANK, parentTopo);
-    STK_ThrowAssert(parentTopo.size() == 1);
-    stk::topology theElemTopo = parentTopo[0];
-
-    // extract master element for this element topo
-    MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
-        theElemTopo);
 
     // algorithm related; element
     ws_pressure.resize(nodesPerFace);
@@ -194,24 +181,11 @@ CalcLoads::execute()
       const double* areaVec = stk::mesh::field_data(*exposedAreaVec_, face);
       double* tforce_scs = stk::mesh::field_data(*tforceSCS_, face);
 
-      // extract the connected element to this exposed face; should be single in
-      // size!
-      const stk::mesh::Entity* face_elem_rels = bulk_->begin_elements(face);
-      STK_ThrowAssert(bulk_->num_elements(face) == 1);
-
-      // get element; its face ordinal number
-      stk::mesh::Entity element = face_elem_rels[0];
-      const int face_ordinal = bulk_->begin_element_ordinals(face)[0];
-
-      // get the relations off of element
-      stk::mesh::Entity const* elem_node_rels = bulk_->begin_nodes(element);
-
       for (int ip = 0; ip < numScsBip; ++ip) {
 
         // offsets
         const int offSetAveraVec = ip * nDim;
         const int localFaceNode = faceIpNodeMap[ip];
-        const int opposingNode = meSCS->opposingNodes(face_ordinal, ip);
 
         // interpolate to bip
         double pBip = 0.0;
@@ -226,7 +200,6 @@ CalcLoads::execute()
 
         // extract nodal fields
         stk::mesh::Entity node = face_node_rels[localFaceNode];
-        const double* coord = stk::mesh::field_data(*coordinates_, node);
         const double* duidxj = stk::mesh::field_data(*dudx_, node);
 
         // divU and aMag
