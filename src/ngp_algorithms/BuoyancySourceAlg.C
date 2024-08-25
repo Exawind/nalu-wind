@@ -43,7 +43,7 @@ BuoyancySourceAlg::execute()
   using EntityInfoType = nalu_ngp::EntityInfo<stk::mesh::NgpMesh>;
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
-  const int ndim = meta.spatial_dimension();
+  const unsigned ndim = meta.spatial_dimension();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   const auto density = fieldMgr.template get_field<double>(density_);
@@ -60,7 +60,7 @@ BuoyancySourceAlg::execute()
   double gravity[3] = {0.0, 0.0, 0.0};
 
   if (realm_.solutionOptions_->gravity_.size() >= ndim)
-    for (int idim = 0; idim < ndim; ++idim)
+    for (unsigned idim = 0; idim < ndim; ++idim)
       gravity[idim] = realm_.solutionOptions_->gravity_[idim];
 
   source.sync_to_device();
@@ -70,7 +70,7 @@ BuoyancySourceAlg::execute()
     algName, ngpMesh, sel, KOKKOS_LAMBDA(const EntityInfoType& einfo) {
       NALU_ALIGNED DblType av[NDimMax];
 
-      for (int d = 0; d < ndim; ++d)
+      for (unsigned d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(einfo.meshIdx, d);
 
       const auto nodeL = ngpMesh.fast_mesh_index(einfo.entityNodes[0]);
@@ -81,13 +81,13 @@ BuoyancySourceAlg::execute()
 
       DblType weight = 0.0;
 
-      for (int i = 0; i < ndim; ++i) {
+      for (unsigned i = 0; i < ndim; ++i) {
         weight += stk::math::pow(gravity[i] * av[i], 2);
       }
 
       weight = stk::math::sqrt(weight);
 
-      for (int i = 0; i < ndim; ++i) {
+      for (unsigned i = 0; i < ndim; ++i) {
         sourceOps(einfo, 0, i) += weight * rhoIp * gravity[i];
         sourceOps(einfo, 1, i) += weight * rhoIp * gravity[i];
       }
