@@ -937,8 +937,8 @@ fsiTurbine::mapLoads()
 void
 fsiTurbine::computeHubForceMomentForPart(
   std::vector<double>& hubForceMoment,
-  std::vector<double>& hubPos,
-  stk::mesh::PartVector partVec)
+  std::vector<double>& /* hubPos */,
+  stk::mesh::PartVector /* partVec */)
 {
 
   auto& meta = bulk_->mesh_meta_data();
@@ -956,12 +956,12 @@ fsiTurbine::computeHubForceMomentForPart(
   tforce->sync_to_host();
 
   std::vector<double> l_hubForceMoment(6, 0.0);
-  std::array<double, 3> tmpMeshPos{
-    0.0, 0.0, 0.0}; // Vector to temporarily store mesh node location
 
   // TODO: This is looping over the wrong buckets - Nodes instead of faces
   // Is this even required anymore? Probly can delete
 
+  // std::array<double, 3> tmpMeshPos{
+  //   0.0, 0.0, 0.0}; // Vector to temporarily store mesh node location
   // stk::mesh::Selector sel(
   //   meta.locally_owned_part() & stk::mesh::selectUnion(partVec));
   // const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
