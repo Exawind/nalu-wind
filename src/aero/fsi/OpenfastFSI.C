@@ -302,10 +302,8 @@ OpenfastFSI::bcast_turbine_params(int iTurb)
       tDoubleParams[3 + i] = fsiTurbineData_[iTurb]->params_.TurbineHubPos[i];
     }
   }
-  int iError =
-    MPI_Bcast(tIntParams.data(), 7, MPI_INT, turbProc, bulk_->parallel());
-  iError =
-    MPI_Bcast(tDoubleParams.data(), 6, MPI_DOUBLE, turbProc, bulk_->parallel());
+  MPI_Bcast(tIntParams.data(), 7, MPI_INT, turbProc, bulk_->parallel());
+  MPI_Bcast(tDoubleParams.data(), 6, MPI_DOUBLE, turbProc, bulk_->parallel());
 
   if (bulk_->parallel_rank() != turbProc) {
     fsiTurbineData_[iTurb]->params_.TurbID = tIntParams[0];
@@ -351,25 +349,25 @@ OpenfastFSI::compute_mapping()
         FAST.getBladeChord(fsiTurbineData_[i]->brFSIdata_.bld_chord.data(), i);
       }
 
-      int iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.twr_ref_pos.data(),
         (fsiTurbineData_[i]->params_.nBRfsiPtsTwr) * 6, MPI_DOUBLE, turbProc,
         bulk_->parallel());
       int nTotBldNodes = fsiTurbineData_[i]->params_.nTotBRfsiPtsBlade;
       int nBlades = fsiTurbineData_[i]->params_.numBlades;
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.bld_ref_pos.data(), nTotBldNodes * 6,
         MPI_DOUBLE, turbProc, bulk_->parallel());
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.bld_root_ref_pos.data(), nBlades * 6,
         MPI_DOUBLE, turbProc, bulk_->parallel());
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.hub_ref_pos.data(), 6, MPI_DOUBLE,
         turbProc, bulk_->parallel());
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.nac_ref_pos.data(), 6, MPI_DOUBLE,
         turbProc, bulk_->parallel());
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.bld_rloc.data(), nTotBldNodes,
         MPI_DOUBLE, turbProc, bulk_->parallel());
       // No need to bcast chord
@@ -397,7 +395,7 @@ OpenfastFSI::predict_struct_timestep(const double curTime)
 }
 
 void
-OpenfastFSI::advance_struct_timestep(const double curTime)
+OpenfastFSI::advance_struct_timestep(const double /* curTime */)
 {
 
   timer_start(openFastTimer_);
@@ -414,7 +412,7 @@ OpenfastFSI::advance_struct_timestep(const double curTime)
 }
 
 void
-OpenfastFSI::send_loads(const double curTime)
+OpenfastFSI::send_loads(const double /* curTime */)
 {
 
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
@@ -426,7 +424,7 @@ OpenfastFSI::send_loads(const double curTime)
 
       int nTotBldNodes = fsiTurbineData_[i]->params_.nTotBRfsiPtsBlade;
       if (bulk_->parallel_rank() == turbProc) {
-        int iError = MPI_Reduce(
+        MPI_Reduce(
           MPI_IN_PLACE, fsiTurbineData_[i]->brFSIdata_.twr_ld.data(),
           (fsiTurbineData_[i]->params_.nBRfsiPtsTwr) * 6, MPI_DOUBLE, MPI_SUM,
           turbProc, bulk_->parallel());
@@ -435,7 +433,7 @@ OpenfastFSI::send_loads(const double curTime)
             fsiTurbineData_[i]->brFSIdata_.twr_ld[k];
         FAST.setTowerForces(fsiTurbineData_[i]->brFSIdata_.twr_ld, i);
 
-        iError = MPI_Reduce(
+        MPI_Reduce(
           MPI_IN_PLACE, fsiTurbineData_[i]->brFSIdata_.bld_ld.data(),
           nTotBldNodes * 6, MPI_DOUBLE, MPI_SUM, turbProc, bulk_->parallel());
         for (int k = 0; k < nTotBldNodes * 6; k++)
@@ -445,11 +443,11 @@ OpenfastFSI::send_loads(const double curTime)
         FAST.setBladeForces(fsiTurbineData_[i]->brFSIdata_.bld_ld, i);
 
       } else {
-        int iError = MPI_Reduce(
+        MPI_Reduce(
           fsiTurbineData_[i]->brFSIdata_.twr_ld.data(), NULL,
           (fsiTurbineData_[i]->params_.nBRfsiPtsTwr) * 6, MPI_DOUBLE, MPI_SUM,
           turbProc, bulk_->parallel());
-        iError = MPI_Reduce(
+        MPI_Reduce(
           fsiTurbineData_[i]->brFSIdata_.bld_ld.data(), NULL,
           (nTotBldNodes) * 6, MPI_DOUBLE, MPI_SUM, turbProc, bulk_->parallel());
       }
@@ -458,7 +456,7 @@ OpenfastFSI::send_loads(const double curTime)
 }
 
 void
-OpenfastFSI::get_displacements(double current_time)
+OpenfastFSI::get_displacements(double /* current_time */)
 {
 
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
@@ -484,38 +482,38 @@ OpenfastFSI::get_displacements(double current_time)
           fsiTurbineData_[i]->brFSIdata_.nac_vel.data(), i);
       }
 
-      int iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.twr_def.data(),
         (fsiTurbineData_[i]->params_.nBRfsiPtsTwr) * 6, MPI_DOUBLE, turbProc,
         bulk_->parallel());
       int numBlades = fsiTurbineData_[i]->params_.numBlades;
       int nTotBldNodes = fsiTurbineData_[i]->params_.nTotBRfsiPtsBlade;
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.bld_def.data(), nTotBldNodes * 6,
         MPI_DOUBLE, turbProc, bulk_->parallel());
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.bld_root_def.data(), numBlades * 6,
         MPI_DOUBLE, turbProc, bulk_->parallel());
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.bld_pitch.data(), numBlades, MPI_DOUBLE,
         turbProc, bulk_->parallel());
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.hub_def.data(), 6, MPI_DOUBLE, turbProc,
         bulk_->parallel());
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.nac_def.data(), 6, MPI_DOUBLE, turbProc,
         bulk_->parallel());
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.twr_vel.data(),
         (fsiTurbineData_[i]->params_.nBRfsiPtsTwr) * 6, MPI_DOUBLE, turbProc,
         bulk_->parallel());
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.bld_vel.data(), nTotBldNodes * 6,
         MPI_DOUBLE, turbProc, bulk_->parallel());
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.hub_vel.data(), 6, MPI_DOUBLE, turbProc,
         bulk_->parallel());
-      iError = MPI_Bcast(
+      MPI_Bcast(
         fsiTurbineData_[i]->brFSIdata_.nac_vel.data(), 6, MPI_DOUBLE, turbProc,
         bulk_->parallel());
 
@@ -651,19 +649,19 @@ OpenfastFSI::map_loads(const int tStep, const double curTime)
       fsiTurbineData_[i]->mapLoads();
       int nTotBldNodes = fsiTurbineData_[i]->params_.nTotBRfsiPtsBlade;
       if (bulk_->parallel_rank() == turbProc) {
-        int iError = MPI_Reduce(
+        MPI_Reduce(
           MPI_IN_PLACE, fsiTurbineData_[i]->brFSIdata_.twr_ld.data(),
           (fsiTurbineData_[i]->params_.nBRfsiPtsTwr) * 6, MPI_DOUBLE, MPI_SUM,
           turbProc, bulk_->parallel());
-        iError = MPI_Reduce(
+        MPI_Reduce(
           MPI_IN_PLACE, fsiTurbineData_[i]->brFSIdata_.bld_ld.data(),
           nTotBldNodes * 6, MPI_DOUBLE, MPI_SUM, turbProc, bulk_->parallel());
       } else {
-        int iError = MPI_Reduce(
+        MPI_Reduce(
           fsiTurbineData_[i]->brFSIdata_.twr_ld.data(), NULL,
           (fsiTurbineData_[i]->params_.nBRfsiPtsTwr) * 6, MPI_DOUBLE, MPI_SUM,
           turbProc, bulk_->parallel());
-        iError = MPI_Reduce(
+        MPI_Reduce(
           fsiTurbineData_[i]->brFSIdata_.bld_ld.data(), NULL,
           (nTotBldNodes) * 6, MPI_DOUBLE, MPI_SUM, turbProc, bulk_->parallel());
       }
