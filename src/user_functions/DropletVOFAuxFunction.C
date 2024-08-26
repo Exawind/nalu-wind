@@ -24,9 +24,9 @@ DropletVOFAuxFunction::DropletVOFAuxFunction(const std::vector<double>& params)
     droppos_x_(0.0),
     droppos_y_(0.0),
     droppos_z_(0.0),
-    radius_(0.1),
     surf_pos_(0.0),
     surf_idx_dbl_(1.0),
+    radius_(0.1),
     interface_thickness_(0.0025)
 {
   // check size and populate

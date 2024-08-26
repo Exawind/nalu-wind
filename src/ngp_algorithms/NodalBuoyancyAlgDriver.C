@@ -98,7 +98,6 @@ NodalBuoyancyAlgDriver::post_work()
   // Divide by weight here
 
   using Traits = nalu_ngp::NGPMeshTraits<>;
-  using EntityInfoType = nalu_ngp::EntityInfo<stk::mesh::NgpMesh>;
 
   const auto& ngpMesh = meshInfo.ngp_mesh();
 

@@ -35,8 +35,6 @@ mapTowerLoad(
   std::vector<double> coord_bip(3, 0.0);
   std::vector<double> coordref_bip(3, 0.0);
 
-  std::array<double, 3> face_center;
-
   std::array<double, 3> tforce_bip;
 
   std::vector<double> tmpNodePos(
