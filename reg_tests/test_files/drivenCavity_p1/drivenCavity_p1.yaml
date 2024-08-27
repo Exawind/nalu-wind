@@ -5,6 +5,7 @@ Simulations:
     error_estimator: errest_1
 
 linear_solvers:
+  # Convert to hypre
   - name: solve_scalar
     type: tpetra
     method: bicgstab
@@ -14,6 +15,7 @@ linear_solvers:
     kspace: 200
     output_level: 0
 
+  # Convert to hypre
   - name: solve_cont
     type: tpetra
     method: bicgstab

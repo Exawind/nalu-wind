@@ -9,6 +9,7 @@ Simulations:
     optimizer: opt1
 
 linear_solvers:
+  # Convert to hypre
   - name: solve_scalar
     type: tpetra
     method: gmres 
