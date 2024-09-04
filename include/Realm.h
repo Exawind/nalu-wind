@@ -510,7 +510,7 @@ public:
   bool doBalanceNodes_;
   struct BalanceNodeOptions
   {
-    BalanceNodeOptions() : target(1.0), numIters(5){};
+    BalanceNodeOptions() : target(1.0), numIters(5) {};
 
     double target;
     int numIters;

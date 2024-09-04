@@ -274,19 +274,19 @@ struct NonConformalUserData : public UserData
 
 struct WallBoundaryConditionData : public BoundaryCondition
 {
-  WallBoundaryConditionData(){};
+  WallBoundaryConditionData() {};
   WallUserData userData_;
 };
 
 struct InflowBoundaryConditionData : public BoundaryCondition
 {
-  InflowBoundaryConditionData(){};
+  InflowBoundaryConditionData() {};
   InflowUserData userData_;
 };
 
 struct OpenBoundaryConditionData : public BoundaryCondition
 {
-  OpenBoundaryConditionData(){};
+  OpenBoundaryConditionData() {};
   OpenUserData userData_;
 };
 
@@ -297,34 +297,34 @@ struct OversetBoundaryConditionData : public BoundaryCondition
     OVERSET_NONE = 1 ///< Guard for error messages
   };
 
-  OversetBoundaryConditionData(){};
+  OversetBoundaryConditionData() {};
   OversetUserData userData_;
   OversetAPI oversetConnectivityType_;
 };
 
 struct SymmetryBoundaryConditionData : public BoundaryCondition
 {
-  SymmetryBoundaryConditionData(){};
+  SymmetryBoundaryConditionData() {};
   SymmetryUserData userData_;
 };
 
 struct ABLTopBoundaryConditionData : public BoundaryCondition
 {
-  ABLTopBoundaryConditionData(){};
+  ABLTopBoundaryConditionData() {};
   ABLTopUserData userData_;
   SymmetryUserData symmetryUserData_;
 };
 
 struct PeriodicBoundaryConditionData : public BoundaryCondition
 {
-  PeriodicBoundaryConditionData(){};
+  PeriodicBoundaryConditionData() {};
   MasterSlave masterSlave_;
   PeriodicUserData userData_;
 };
 
 struct NonConformalBoundaryConditionData : public BoundaryCondition
 {
-  NonConformalBoundaryConditionData(){};
+  NonConformalBoundaryConditionData() {};
   std::vector<std::string> currentPartNameVec_;
   std::vector<std::string> opposingPartNameVec_;
   NonConformalUserData userData_;

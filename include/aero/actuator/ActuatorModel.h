@@ -56,7 +56,7 @@ struct ActuatorModel
   std::shared_ptr<ActuatorExecutor> actExec_;
 
   ActuatorModel() = default;
-  virtual ~ActuatorModel(){};
+  virtual ~ActuatorModel() {};
 
   void parse(const YAML::Node& actuatorNode);
   void setup(double timeStep, stk::mesh::BulkData& stkBulk);

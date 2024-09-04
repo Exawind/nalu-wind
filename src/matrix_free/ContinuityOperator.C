@@ -40,8 +40,7 @@ namespace {
 void
 remove_constant(Kokkos::View<double*> x, double value)
 {
-  Kokkos::parallel_for(
-    x.extent(0), KOKKOS_LAMBDA(int n) { x(n) -= value; });
+  Kokkos::parallel_for(x.extent(0), KOKKOS_LAMBDA(int n) { x(n) -= value; });
 }
 
 void

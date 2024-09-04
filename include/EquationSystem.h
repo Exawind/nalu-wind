@@ -167,7 +167,7 @@ public:
   virtual double provide_norm() const;
   virtual double provide_norm_increment() const;
   virtual bool system_is_converged() const;
-  virtual void post_external_data_transfer_work(){};
+  virtual void post_external_data_transfer_work() {};
 
   virtual void register_wall_bc(
     stk::mesh::Part* /* part */,

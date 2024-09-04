@@ -141,7 +141,7 @@ public:
     // nothing to do
   }
 
-  ~FromMesh(){};
+  ~FromMesh() {};
 
   struct BoundingBoxCompare
   {

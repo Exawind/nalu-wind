@@ -123,7 +123,7 @@ class HypreLinearSolverConfig : public LinearSolverConfig
 public:
   HypreLinearSolverConfig();
 
-  virtual ~HypreLinearSolverConfig(){};
+  virtual ~HypreLinearSolverConfig() {};
 
   //! Process and validate the user inputs and register calls to appropriate
   //! Hypre functions to configure the solver and preconditioner.

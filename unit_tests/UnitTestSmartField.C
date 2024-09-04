@@ -40,8 +40,7 @@ template <typename T>
 void
 lambda_ordinal(T& ptr)
 {
-  Kokkos::parallel_for(
-    1, KOKKOS_LAMBDA(int) { ptr.get_ordinal(); });
+  Kokkos::parallel_for(1, KOKKOS_LAMBDA(int) { ptr.get_ordinal(); });
 }
 
 template <typename T>

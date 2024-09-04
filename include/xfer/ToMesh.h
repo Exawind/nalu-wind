@@ -135,7 +135,7 @@ public:
     // nothing to do
   }
 
-  ~ToMesh(){};
+  ~ToMesh() {};
 
   struct BoundingBoxCompare
   {

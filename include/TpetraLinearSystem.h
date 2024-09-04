@@ -253,7 +253,7 @@ public:
       const SharedMemView<const double**, DeviceShmem>& lhs,
       const char* trace_tag);
 
-    void free_device_pointer(){};
+    void free_device_pointer() {};
 
     sierra::nalu::CoeffApplier* device_pointer() { return nullptr; };
 
