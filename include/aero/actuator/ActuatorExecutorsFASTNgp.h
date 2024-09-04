@@ -27,7 +27,7 @@ public:
     ActuatorBulkFAST& actBulk,
     stk::mesh::BulkData& stkBulk);
 
-  virtual ~ActuatorLineFastNGP(){};
+  virtual ~ActuatorLineFastNGP() {};
 
   void operator()() final;
 
@@ -45,7 +45,7 @@ public:
     ActuatorBulkDiskFAST& actBulk,
     stk::mesh::BulkData& stkBulk);
 
-  virtual ~ActuatorDiskFastNGP(){};
+  virtual ~ActuatorDiskFastNGP() {};
 
   void operator()() final;
 

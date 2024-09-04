@@ -30,7 +30,7 @@ namespace nalu {
 
 class LocalGraphArrays;
 
-#define GID_(gid, ndof, idof) ((ndof) * ((gid)-1) + (idof) + 1)
+#define GID_(gid, ndof, idof) ((ndof) * ((gid) - 1) + (idof) + 1)
 
 enum DOFStatus {
   DS_NotSet = 0,

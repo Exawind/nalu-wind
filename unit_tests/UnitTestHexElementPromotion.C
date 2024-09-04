@@ -48,7 +48,7 @@ count_nodes(
 class PromoteElementHexTest : public ::testing::Test
 {
 protected:
-  PromoteElementHexTest() : comm(MPI_COMM_WORLD), nDim(3){};
+  PromoteElementHexTest() : comm(MPI_COMM_WORLD), nDim(3) {};
 
   void init(int nx, int ny, int nz, int in_polyOrder)
   {

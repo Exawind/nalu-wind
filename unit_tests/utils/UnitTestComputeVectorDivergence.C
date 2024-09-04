@@ -122,7 +122,7 @@ TEST(utils, compute_vector_divergence)
         vecField[d] = vecCoeff[d] * xyz[d];
 
     } // end for loop - in index
-  }   // end for loop - bkts
+  } // end for loop - bkts
 
   // compute divergence
   stk::mesh::PartVector partVec;
@@ -145,5 +145,5 @@ TEST(utils, compute_vector_divergence)
       EXPECT_NEAR(divVal[0], coeffSum, testTol);
 
     } // end for loop - in index
-  }   // end for loop - bkts
+  } // end for loop - bkts
 }
