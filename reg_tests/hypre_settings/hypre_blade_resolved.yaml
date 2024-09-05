@@ -1,6 +1,6 @@
 hypre_simple_precon:
   bamg_max_levels: 1
-  bamg_relax_type: 12 # Use 11 for Hypre master or v2.21 and later, 8 for earlier
+  bamg_relax_type: 18 # Use 11 for Hypre master or v2.21 and later, 8 for earlier, 18 for SyCL
   bamg_num_sweeps: 2
   bamg_relax_order: 0
 
@@ -8,7 +8,7 @@ hypre_elliptic:
   bamg_max_levels: 7
   bamg_coarsen_type: 8 # 10 for CPUs (HMIS). For GPUs, use 8 (PMIS)
   bamg_interp_type: 6
-  bamg_relax_type: 11 # Use 11 for Hypre master or v2.21 and later, 8 for earlier
+  bamg_relax_type: 18 # Use 11 for Hypre master or v2.21 and later, 8 for earlier, 18 for SyCL
   #bamg_num_sweeps: 2
   bamg_num_up_sweeps: 1
   bamg_num_down_sweeps: 2
