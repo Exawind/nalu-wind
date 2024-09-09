@@ -62,7 +62,6 @@
 #include <node_kernels/TKERodiNodeKernel.h>
 #include <node_kernels/TKEKONodeKernel.h>
 
-// Transition
 #include <node_kernels/TKESSTBLTM2015NodeKernel.h>
 
 // ngp

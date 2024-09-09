@@ -53,7 +53,6 @@
 #include <node_kernels/ScalarGclNodeKernel.h>
 #include <node_kernels/SDRKONodeKernel.h>
 
-// Transition model
 #include <node_kernels/SDRSSTBLTM2015NodeKernel.h>
 
 // ngp

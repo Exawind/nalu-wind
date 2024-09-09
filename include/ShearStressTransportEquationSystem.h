@@ -92,7 +92,7 @@ public:
 
   const double tkeMinValue_{1.0e-8};
   const double sdrMinValue_{1.0e-8};
-  const double gammaMinValue_{0.02}; // 1/ce2=1/50=0.02
+  const double gammaMinValue_{0.02}; 
   const double gammaMaxValue_{1.0};
 };
 

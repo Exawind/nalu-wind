@@ -89,23 +89,8 @@ SDRSSTBLTM2015NodeKernel::execute(
 
   DblType Pk = 0.0;
   DblType crossDiff = 0.0;
-//================= original model w/o transition ================//
-//  for (int i = 0; i < nDim_; ++i) {
-//    crossDiff += dkdx_.get(node, i) * dwdx_.get(node, i);
-//    const int offset = nDim_ * i;
-//    for (int j = 0; j < nDim_; ++j) {
-//      const auto dudxij = dudx_.get(node, offset + j);
-//      Pk += dudxij * (dudxij + dudx_.get(node, j * nDim_ + i));
-//    }
-//  }
-//  Pk *= tvisc;
-//
-//  const DblType Dk = betaStar_ * density * sdr * tke;
-//
-//  // Clip production term and clip negative productions
-//  Pk = stk::math::min(tkeProdLimitRatio_ * Dk, stk::math::max(Pk, 0.0));
-//
-//==================Transition model============================//
+
+// Transition model
   DblType sijMag    = 0.0;
   DblType vortMag   = 0.0;
 
@@ -125,9 +110,8 @@ SDRSSTBLTM2015NodeKernel::execute(
   sijMag = stk::math::sqrt(2.0*sijMag);
   vortMag = stk::math::sqrt(2.0*vortMag);
 
-  Pk = tvisc * sijMag * vortMag; // Pk based on Kato-Launder formulation.
-
-//===============================================================//
+  // Pk based on Kato-Launder formulation
+  Pk = tvisc * sijMag * vortMag; 
 
   // Blend constants for SDR
   const DblType omf1 = (1.0 - fOneBlend);
@@ -165,7 +149,6 @@ SDRSSTBLTM2015NodeKernel::execute(
     gammaOne_apply = gammaOne_;
     gammaTwo_apply = gammaTwo_;
   }
-  //const DblType gamma = fOneBlend * gammaOne_apply + omf1 * gammaTwo_apply;
 
   // Production term with appropriate clipping of tvisc
   const DblType Pw = gamma * density * Pk / stk::math::max(tvisc, 1.0e-16);
