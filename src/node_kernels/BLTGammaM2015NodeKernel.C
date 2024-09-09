@@ -99,18 +99,9 @@ BLTGammaM2015NodeKernel::execute(
   const DblType minD = minD_.get(node, 0);
   const DblType dVol = dualNodalVolume_.get(node, 0);
 
-  DblType Re0c = 0.0;
-  DblType Rev = 0.0;
-  DblType rt = 0.0;
   DblType dvnn = 0.0;
   DblType TuL = 0.0;
   DblType lamda0L = 0.0;
-
-  DblType fonset = 0.0;
-  DblType fonset1 = 0.0;
-  DblType fonset2 = 0.0;
-  DblType fonset3 = 0.0;
-  DblType fturb = 0.0;
 
   DblType sijMag = 0.0;
   DblType vortMag = 0.0;
@@ -151,14 +142,15 @@ BLTGammaM2015NodeKernel::execute(
 
   lamda0L = -7.57e-3 * dvnn * minD * minD * density / visc + 0.0128;
   lamda0L = stk::math::min(stk::math::max(lamda0L, -1.0), 1.0);
-  Re0c = Ctu1 + Ctu2 * stk::math::exp(-Ctu3 * TuL * FPG(lamda0L));
-  Rev = density * minD * minD * sijMag / visc;
-  fonset1 = Rev / 2.2 / Re0c;
-  fonset2 = stk::math::min(fonset1, 2.0);
-  rt = density * tke / sdr / visc;
-  fonset3 = stk::math::max(1.0 - stk::math::pow(rt / 3.5, 3), 0.0);
-  fonset = stk::math::max(fonset2 - fonset3, 0.0);
-  fturb = stk::math::exp(-rt * rt * rt * rt / 16.0);
+
+  const DblType Re0c = Ctu1 + Ctu2 * stk::math::exp(-Ctu3 * TuL * FPG(lamda0L));
+  const DblType Rev = density * minD * minD * sijMag / visc;
+  const DblType fonset1 = Rev / 2.2 / Re0c;
+  const DblType fonset2 = stk::math::min(fonset1, 2.0);
+  const DblType rt = density * tke / sdr / visc;
+  const DblType fonset3 = stk::math::max(1.0 - stk::math::pow(rt / 3.5, 3), 0.0);
+  const DblType fonset = stk::math::max(fonset2 - fonset3, 0.0);
+  const DblType fturb = stk::math::exp(-rt * rt * rt * rt / 16.0);
 
   const DblType Pgamma =
     flength * density * sijMag * fonset * gamint * (1.0 - gamint);
