@@ -56,12 +56,23 @@ struct ActuatorBulkFAST : public ActuatorBulk
   bool is_tstep_ratio_admissable(
     const double fastTimeStep, const double naluTimeStep);
 
+  void stk_search_collective_act_pnts(
+    const ActuatorMeta& actMeta,
+    stk::mesh::BulkData& stkBulk,
+    bool onlyFine = false);
+
+  void stk_search(
+    const ActuatorMeta& actMeta,
+    stk::mesh::BulkData& stkBulk,
+    bool onlyFine = false) override;
+
   virtual ~ActuatorBulkFAST();
 
   ActFixVectorDbl turbineThrust_;
   ActFixVectorDbl turbineTorque_;
   ActFixVectorDbl hubLocations_;
   ActFixVectorDbl hubOrientation_;
+  ActFixScalarDbl turbineSearchRadius_;
 
   ActTensorDblDv orientationTensor_;
 
@@ -70,7 +81,7 @@ struct ActuatorBulkFAST : public ActuatorBulk
   ActDualViewHelper<ActuatorMemSpace> dvHelper_;
 };
 
-// helper functions to
+// helper function to
 // squash calls to std::cout from OpenFAST
 inline void
 squash_fast_output(std::function<void()> func)
