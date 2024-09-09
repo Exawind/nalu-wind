@@ -82,11 +82,9 @@ TKESSTBLTM2015NodeKernel::execute(
   const DblType CSEP = 1.0;
   const DblType Retclim = 1100.0;
 
-  DblType Pklim = 0.0;
   DblType sijMag = 1.0e-16;
   DblType vortMag = 1.0e-16;
 
-  DblType Pk = 0.0;
   for (int i = 0; i < nDim_; ++i) {
     // const int offset = nDim_ * i;
     for (int j = 0; j < nDim_; ++j) {
@@ -105,13 +103,13 @@ TKESSTBLTM2015NodeKernel::execute(
   sijMag = stk::math::sqrt(2.0 * sijMag);
   vortMag = stk::math::sqrt(2.0 * vortMag);
 
-  DblType Rev = density * dw * dw * sijMag / visc;
-  DblType Fonlim =
+  const DblType Rev = density * dw * dw * sijMag / visc;
+  const DblType Fonlim =
     stk::math::min(stk::math::max(Rev / 2.2 / Retclim - 1.0, 0.0), 3.0);
 
   // Pk based on Kato-Launder formulation
-  Pk = gamint * tvisc * sijMag * vortMag;
-  Pklim = 5.0 * Ck_BLT * stk::math::max(gamint - 0.2, 0.0) * (1.0 - gamint) *
+  const DblType Pk = gamint * tvisc * sijMag * vortMag;
+  const DblType Pklim = 5.0 * Ck_BLT * stk::math::max(gamint - 0.2, 0.0) * (1.0 - gamint) *
           Fonlim * stk::math::max(3.0 * CSEP * visc - tvisc, 0.0) * sijMag *
           vortMag;
   const DblType Dk =

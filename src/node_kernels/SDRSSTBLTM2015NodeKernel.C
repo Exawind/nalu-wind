@@ -88,7 +88,6 @@ SDRSSTBLTM2015NodeKernel::execute(
   const DblType dVol = dualNodalVolume_.get(node, 0);
   const DblType fOneBlend = fOneBlend_.get(node, 0);
 
-  DblType Pk = 0.0;
   DblType crossDiff = 0.0;
 
   DblType sijMag = 0.0;
@@ -111,7 +110,7 @@ SDRSSTBLTM2015NodeKernel::execute(
   vortMag = stk::math::sqrt(2.0 * vortMag);
 
   // Pk based on Kato-Launder formulation
-  Pk = tvisc * sijMag * vortMag;
+  const DblType Pk = tvisc * sijMag * vortMag;
 
   // Blend constants for SDR
   const DblType omf1 = (1.0 - fOneBlend);
