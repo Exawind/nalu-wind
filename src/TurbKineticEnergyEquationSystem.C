@@ -307,8 +307,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         case TurbulenceModel::SST:
           if (!realm_.solutionOptions_->gammaEqActive_) {
             nodeAlg.add_kernel<TKESSTNodeKernel>(realm_.meta_data());
-          }
-          else {
+          } else {
             nodeAlg.add_kernel<TKESSTBLTM2015NodeKernel>(realm_.meta_data());
           }
           break;

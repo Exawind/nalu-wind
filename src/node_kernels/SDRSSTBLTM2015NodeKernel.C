@@ -19,7 +19,8 @@
 namespace sierra {
 namespace nalu {
 
-SDRSSTBLTM2015NodeKernel::SDRSSTBLTM2015NodeKernel(const stk::mesh::MetaData& meta)
+SDRSSTBLTM2015NodeKernel::SDRSSTBLTM2015NodeKernel(
+  const stk::mesh::MetaData& meta)
   : NGPNodeKernel<SDRSSTBLTM2015NodeKernel>(),
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
     sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
@@ -90,32 +91,31 @@ SDRSSTBLTM2015NodeKernel::execute(
   DblType Pk = 0.0;
   DblType crossDiff = 0.0;
 
-// Transition model
-  DblType sijMag    = 0.0;
-  DblType vortMag   = 0.0;
+  DblType sijMag = 0.0;
+  DblType vortMag = 0.0;
 
-  for (int i=0; i < nDim_; ++i) {
+  for (int i = 0; i < nDim_; ++i) {
     crossDiff += dkdx_.get(node, i) * dwdx_.get(node, i);
     const int offset = nDim_ * i;
-    for (int j=0; j < nDim_; ++j) {
-     const double duidxj = dudx_.get(node, nDim_ * i + j);
-     const double dujdxi = dudx_.get(node, nDim_ * j + i);
+    for (int j = 0; j < nDim_; ++j) {
+      const double duidxj = dudx_.get(node, nDim_ * i + j);
+      const double dujdxi = dudx_.get(node, nDim_ * j + i);
 
-     const double rateOfStrain = 0.5 * (duidxj + dujdxi);
-     const double vortTensor = 0.5 * (duidxj - dujdxi);
-     sijMag += rateOfStrain * rateOfStrain;
-     vortMag += vortTensor * vortTensor;
+      const double rateOfStrain = 0.5 * (duidxj + dujdxi);
+      const double vortTensor = 0.5 * (duidxj - dujdxi);
+      sijMag += rateOfStrain * rateOfStrain;
+      vortMag += vortTensor * vortTensor;
     }
   }
-  sijMag = stk::math::sqrt(2.0*sijMag);
-  vortMag = stk::math::sqrt(2.0*vortMag);
+  sijMag = stk::math::sqrt( 2.0 * sijMag);
+  vortMag = stk::math::sqrt( 2.0 * vortMag);
 
   // Pk based on Kato-Launder formulation
-  Pk = tvisc * sijMag * vortMag; 
+  Pk = tvisc * sijMag * vortMag;
 
   // Blend constants for SDR
   const DblType omf1 = (1.0 - fOneBlend);
-  const DblType beta  = fOneBlend * betaOne_  + omf1 * betaTwo_;
+  const DblType beta = fOneBlend * betaOne_ + omf1 * betaTwo_;
   const DblType gamma = fOneBlend * gammaOne_ + omf1 * gammaTwo_;
   const DblType sigmaD = 2.0 * omf1 * sigmaWTwo_;
 

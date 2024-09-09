@@ -51,7 +51,7 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   gamint_ = fieldMgr.get_field<double>(gamintID_);
 
-  fsti_ = realm.get_turb_model_constant(TM_fsti); 
+  fsti_ = realm.get_turb_model_constant(TM_fsti);
 }
 
 KOKKOS_FUNCTION
@@ -126,7 +126,7 @@ BLTGammaM2015NodeKernel::execute(
   const DblType Ctu3 = 1.0;
 
   for (int i = 0; i < nDim_; ++i) {
-    dvnn += dwalldistdx_.get(node,i) * dnDotVdx_.get(node,i);
+    dvnn += dwalldistdx_.get(node, i) * dnDotVdx_.get(node, i);
     for (int j = 0; j < nDim_; ++j) {
       const double duidxj = dudx_.get(node, nDim_ * i + j);
       const double dujdxi = dudx_.get(node, nDim_ * j + i);
@@ -141,10 +141,11 @@ BLTGammaM2015NodeKernel::execute(
   sijMag = stk::math::sqrt(2.0 * sijMag);
   vortMag = stk::math::sqrt(2.0 * vortMag);
 
-  // local Tu 
-  //TuL = stk::math::min(100.0 * stk::math::sqrt(2.0/3.0*tke) / sdr / (minD + 1.0e-10), 100.0);
+  // local Tu
+  // TuL = stk::math::min(100.0 * stk::math::sqrt(2.0/3.0*tke) / sdr / (minD
+  // + 1.0e-10), 100.0);
   
-  // constant Tu from input 
+  // constant Tu from input
   TuL = fsti_;
 
   lamda0L = -7.57e-3 * dvnn * minD * minD * density / visc + 0.0128;
@@ -154,7 +155,7 @@ BLTGammaM2015NodeKernel::execute(
   fonset1 = Rev / 2.2 / Re0c;
   fonset2 = stk::math::min(fonset1, 2.0);
   rt = density * tke / sdr / visc;
-  fonset3 = stk::math::max(1.0 - stk::math::pow(rt/3.5, 3) , 0.0);
+  fonset3 = stk::math::max(1.0 - stk::math::pow(rt / 3.5, 3) , 0.0);
   fonset = stk::math::max(fonset2 - fonset3, 0.0);
   fturb = stk::math::exp(-rt * rt * rt * rt / 16.0);
 
@@ -163,32 +164,29 @@ BLTGammaM2015NodeKernel::execute(
   DblType Dgamma =
     caTwo * density * vortMag * fturb * gamint * (ceTwo * gamint - 1.0);
 
-//// Exact Jacobian
-//  DblType PgammaDir =
-//    flength * density * sijMag * fonset * (1.0 - 2.0 * gamint);
-//  DblType DgammaDir =
-//    caTwo * density * vortMag * fturb * (2.0 * ceTwo * gamint - 1.0);
-//
-//  rhs(0) += (Pgamma - Dgamma) * dVol;
-//  lhs(0, 0) += (DgammaDir - PgammaDir) * dVol;
+  // Exact Jacobian
+  //  DblType PgammaDir =
+  //    flength * density * sijMag * fonset * (1.0 - 2.0 * gamint);
+  //  DblType DgammaDir =
+  //    caTwo * density * vortMag * fturb * (2.0 * ceTwo * gamint - 1.0);
+  //
+  //  rhs(0) += (Pgamma - Dgamma) * dVol;
+  //  lhs(0, 0) += (DgammaDir - PgammaDir) * dVol;
 
-//// Jacobian with the Positivity in the implicit operator 
-  DblType PgammaDir =
-    flength * density * sijMag * fonset * (1.0 - gamint);
-  DblType PgammaDirP =
-    -flength * density * sijMag * fonset;
+  // Jacobian with the Positivity in the implicit operator
+  DblType PgammaDir = flength * density * sijMag * fonset * (1.0 - gamint);
+  DblType PgammaDirP = -flength * density * sijMag * fonset;
 
   DblType DgammaDir =
     caTwo * density * vortMag * fturb * (ceTwo * gamint - 1.0);
-  DblType DgammaDirP =
-    caTwo * density * vortMag * fturb * ceTwo;
+  DblType DgammaDirP = caTwo * density * vortMag * fturb * ceTwo;
 
   DblType gamma_pos1 = stk::math::max( DgammaDir  - PgammaDir  , 0.0);
   DblType gamma_pos2 = stk::math::max( DgammaDirP - PgammaDirP , 0.0);
 
   rhs(0) += (Pgamma - Dgamma) * dVol;
-  lhs(0, 0) += (gamma_pos1 + gamma_pos2*gamint) * dVol;
-//
+  lhs(0, 0) += (gamma_pos1 + gamma_pos2 * gamint) * dVol;
+  //
 
 }
 

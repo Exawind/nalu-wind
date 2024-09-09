@@ -61,7 +61,6 @@ private:
   unsigned wallDistID_{stk::mesh::InvalidOrdinal};
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
 
-
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
   NodeKernelTraits::DblType tkeAmb_;
