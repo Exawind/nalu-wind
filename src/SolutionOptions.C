@@ -136,6 +136,14 @@ SolutionOptions::load(const YAML::Node& y_node)
       y_solution_options, "use_balanced_buoyancy_force",
       use_balanced_buoyancy_force_, use_balanced_buoyancy_force_);
 
+    get_if_present(
+      y_solution_options, "vof_sharpening_scaling_factor",
+      vof_sharpening_scaling_factor_, vof_sharpening_scaling_factor_);
+
+    get_if_present(
+      y_solution_options, "vof_diffusion_scaling_factor",
+      vof_diffusion_scaling_factor_, vof_diffusion_scaling_factor_);
+
     // Solve for incompressible continuity
     get_if_present(
       y_solution_options, "solve_incompressible_continuity",

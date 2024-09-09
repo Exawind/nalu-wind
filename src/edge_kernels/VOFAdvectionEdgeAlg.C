@@ -87,6 +87,11 @@ VOFAdvectionEdgeAlg::execute()
   const int ndim = realm_.meta_data().spatial_dimension();
   const auto& meta = realm_.meta_data();
 
+  const DblType sharpening_scaling =
+    realm_.solutionOptions_->vof_sharpening_scaling_factor_;
+  const DblType diffusion_scaling =
+    realm_.solutionOptions_->vof_diffusion_scaling_factor_;
+
   const DblType alphaUpw = realm_.get_alpha_upw_factor("volume_of_fluid");
   const DblType hoUpwind = realm_.get_upw_factor("volume_of_fluid");
   const DblType relaxFac =
@@ -214,16 +219,13 @@ VOFAdvectionEdgeAlg::execute()
         axdx += av[d] * dxj;
       }
 
-      // Hard-coded values comes from Jain, 2022 to enforce
-      // VOF function bounds of [0,1] while maintaining interface
-      // thickness that is ~2 cells
-
       const DblType velocity_scale =
-        5.0 * stk::math::abs(
-                vdot /
-                stk::math::sqrt(av[0] * av[0] + av[1] * av[1] + av[2] * av[2]));
+        sharpening_scaling *
+        stk::math::abs(
+          vdot /
+          stk::math::sqrt(av[0] * av[0] + av[1] * av[1] + av[2] * av[2]));
 
-      diffusion_coef = stk::math::sqrt(diffusion_coef) * 0.3;
+      diffusion_coef = stk::math::sqrt(diffusion_coef) * diffusion_scaling;
 
       const DblType inv_axdx = 1.0 / axdx;
 
