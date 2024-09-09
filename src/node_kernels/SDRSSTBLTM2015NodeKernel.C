@@ -107,8 +107,8 @@ SDRSSTBLTM2015NodeKernel::execute(
       vortMag += vortTensor * vortTensor;
     }
   }
-  sijMag = stk::math::sqrt( 2.0 * sijMag);
-  vortMag = stk::math::sqrt( 2.0 * vortMag);
+  sijMag = stk::math::sqrt(2.0 * sijMag);
+  vortMag = stk::math::sqrt(2.0 * vortMag);
 
   // Pk based on Kato-Launder formulation
   Pk = tvisc * sijMag * vortMag;

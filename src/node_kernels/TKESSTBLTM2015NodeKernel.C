@@ -19,7 +19,8 @@
 namespace sierra {
 namespace nalu {
 
-TKESSTBLTM2015NodeKernel::TKESSTBLTM2015NodeKernel(const stk::mesh::MetaData& meta)
+TKESSTBLTM2015NodeKernel::TKESSTBLTM2015NodeKernel(
+  const stk::mesh::MetaData& meta)
   : NGPNodeKernel<TKESSTBLTM2015NodeKernel>(),
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
     sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),

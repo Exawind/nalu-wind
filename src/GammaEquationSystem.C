@@ -173,7 +173,8 @@ GammaEquationSystem::register_nodal_fields(
   dwalldistdx_ =
     &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "dwalldistdx"));
   stk::mesh::put_field_on_mesh(*dwalldistdx_, selector, nDim, nullptr);
-  stk::io::set_field_output_type(*dwalldistdx_, stk::io::FieldOutputType::VECTOR_3D);
+  stk::io::set_field_output_type(
+    *dwalldistdx_, stk::io::FieldOutputType::VECTOR_3D);
 
   nDotV_ =
     &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "nDotV"));
@@ -244,7 +245,7 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 
     nDotVGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
       algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_, edgeNodalGradient_);
-   }
+  }
   // solver; interior contribution (advection + diffusion)
   if (!realm_.solutionOptions_->useConsolidatedSolverAlg_) {
 
@@ -383,7 +384,7 @@ GammaEquationSystem::register_inflow_bc(
 
   // non-solver; dnDotVdx; allow for element-based shifted
   nDotVGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "ndotv_nodal_grad", nDotV_,  dnDotVdx_, edgeNodalGradient_);
+    algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_, edgeNodalGradient_);
 
   // Dirichlet bc
   std::map<AlgorithmType, SolverAlgorithm*>::iterator itd =
@@ -446,7 +447,7 @@ GammaEquationSystem::register_open_bc(
 
   // non-solver; dnDotVdx; allow for element-based shifted
   nDotVGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "ndotv_nodal_grad", nDotV_,  dnDotVdx_, edgeNodalGradient_);
+    algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_, edgeNodalGradient_);
 
   if (realm_.realmUsesEdges_) {
     auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
@@ -498,7 +499,7 @@ GammaEquationSystem::register_wall_bc(
 
   // non-solver; dnDotVdx; allow for element-based shifted
   nDotVGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "ndotv_nodal_grad", nDotV_,  dnDotVdx_, edgeNodalGradient_);
+    algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_, edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -530,7 +531,7 @@ GammaEquationSystem::register_symmetry_bc(
 
   // non-solver; dnDotVdx; allow for element-based shifted
   nDotVGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "ndotv_nodal_grad", nDotV_,  dnDotVdx_, edgeNodalGradient_);
+    algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_, edgeNodalGradient_);
 
 }
 

@@ -274,8 +274,9 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
           TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_ &&
           !realm_.solutionOptions_->gammaEqActive_) {
           nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
-        } else if (TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_ && 
-                  realm_.solutionOptions_->gammaEqActive_) {
+        } else if (
+          TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_ &&
+          realm_.solutionOptions_->gammaEqActive_) {
           nodeAlg.add_kernel<SDRSSTBLTM2015NodeKernel>(realm_.meta_data());
         } else if (
           TurbulenceModel::SSTLR == realm_.solutionOptions_->turbulenceModel_) {
