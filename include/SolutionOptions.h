@@ -102,6 +102,8 @@ public:
 
   bool use_balanced_buoyancy_force_{false};
   bool realm_has_vof_{false};
+  double vof_sharpening_scaling_factor_{5.0};
+  double vof_diffusion_scaling_factor_{0.6};
 
   double hybridDefault_;
   double alphaDefault_;
