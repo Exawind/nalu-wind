@@ -586,8 +586,13 @@ SolutionOptions::load(const YAML::Node& y_node)
     << TurbulenceModelNames[static_cast<int>(turbulenceModel_)] << " "
     << isTurbulent_ << std::endl;
   if (gammaEqActive_ == true) {
-    NaluEnv::self().naluOutputP0()
-      << "Transition Model is: One Equation Gamma" << std::endl;
+    if ( turbModelConstantMap_[TM_fsti] > 0 ) {
+      NaluEnv::self().naluOutputP0()
+      << "Transition Model is: One Equation Gamma w/ constant Tu" << std::endl;
+    } else {
+      NaluEnv::self().naluOutputP0()
+      << "Transition Model is: One Equation Gamma w/ local Tu" << std::endl;
+    }
   } else {
     NaluEnv::self().naluOutputP0() << "No Transition Model" << std::endl;
   }
@@ -711,7 +716,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_sdrAmb] = 0.0;
   turbModelConstantMap_[TM_avgTimeCoeff] = 1.0;
   turbModelConstantMap_[TM_alphaInf] = 0.52;
-  turbModelConstantMap_[TM_fsti] = 0.1;
+  turbModelConstantMap_[TM_fsti] = -1;
 }
 
 double

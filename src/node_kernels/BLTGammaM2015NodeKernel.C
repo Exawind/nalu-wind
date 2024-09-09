@@ -141,12 +141,12 @@ BLTGammaM2015NodeKernel::execute(
   sijMag = stk::math::sqrt(2.0 * sijMag);
   vortMag = stk::math::sqrt(2.0 * vortMag);
 
-  // local Tu
-  // TuL = stk::math::min(100.0 * stk::math::sqrt(2.0/3.0*tke) / sdr / (minD
-  // + 1.0e-10), 100.0);
-  
-  // constant Tu from input
-  TuL = fsti_;
+  if (fsti_ > 0.0) {
+    TuL = fsti_; // const. Tu from yaml
+  } else {
+    TuL = stk::math::min(100.0 * stk::math::sqrt(2.0/3.0*tke) / sdr / (minD
+    + 1.0e-10), 100.0); // local Tu
+  }
 
   lamda0L = -7.57e-3 * dvnn * minD * minD * density / visc + 0.0128;
   lamda0L = stk::math::min(stk::math::max(lamda0L, -1.0), 1.0);
