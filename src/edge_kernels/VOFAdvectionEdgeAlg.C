@@ -223,7 +223,7 @@ VOFAdvectionEdgeAlg::execute()
                 vdot /
                 stk::math::sqrt(av[0] * av[0] + av[1] * av[1] + av[2] * av[2]));
 
-      diffusion_coef = stk::math::sqrt(diffusion_coef) * 0.3;
+      diffusion_coef = stk::math::sqrt(diffusion_coef) * 0.6;
 
       const DblType inv_axdx = 1.0 / axdx;
 
