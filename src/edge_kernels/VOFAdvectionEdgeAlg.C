@@ -110,6 +110,8 @@ VOFAdvectionEdgeAlg::execute()
   const auto massVofBalancedFlowRate =
     fieldMgr.get_field<double>(massVofBalancedFlowRate_);
   const auto density = fieldMgr.get_field<double>(density_);
+  const auto density_liquid = density_liquid_;
+  const auto density_gas = density_gas_;
 
   run_algorithm(
     realm_.bulk_data(),
@@ -235,7 +237,7 @@ VOFAdvectionEdgeAlg::execute()
       smdata.rhs(1) += dlhsfac * (qNp1R - qNp1L);
 
       massVofBalancedFlowRate.get(edge, 0) =
-        dlhsfac * (qNp1R - qNp1L) * (density_liquid_ - density_gas_);
+        dlhsfac * (qNp1R - qNp1L) * (density_liquid - density_gas);
 
       smdata.lhs(0, 0) -= dlhsfac;
       smdata.lhs(0, 1) += dlhsfac;
@@ -287,7 +289,7 @@ VOFAdvectionEdgeAlg::execute()
       smdata.rhs(1) += compression;
 
       massVofBalancedFlowRate.get(edge, 0) +=
-        compression * (density_liquid_ - density_gas_);
+        compression * (density_liquid - density_gas);
 
       // Left node contribution; Lag in iterations except for central 0.5*q term
       DblType slhsfac = 0.0;
