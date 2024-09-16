@@ -5,4 +5,3 @@ User Manual
 
    Building Nalu-Wind <building.rst>
    Running Nalu-Wind <running.rst>
-   Examples <examples/index.rst>
