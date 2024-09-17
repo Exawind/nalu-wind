@@ -158,6 +158,18 @@ struct TrigFieldFunction
                              std::sin(a * pi * z));
   }
 
+  void gamint(const double* coords, double* qField) const //added: transition
+  {
+    double x = coords[0];
+    double y = coords[1];
+    double z = coords[2];
+
+    // Range should be from 0.02 to 1.0
+    qField[0] =
+      gamintnot + abs(std::cos(a * pi * x) * std::sin(a * pi * y) *
+                           std::sin(a * pi * z))/(1.0 - gamintnot);
+  }
+
   void tdr(const double* coords, double* qField) const
   {
     double x = coords[0];
@@ -290,6 +302,9 @@ private:
   /// Factor for sdr field
   static constexpr double sdrnot{1.0};
 
+  /// Factor for gamint field
+  static constexpr double gamintnot{0.02};
+
   /// Factor for tdr field
   static constexpr double tdrnot{1.0};
 
@@ -343,6 +358,8 @@ init_trigonometric_field(
     funcPtr = &TrigFieldFunction::dkdx;
   else if (fieldName == "specific_dissipation_rate")
     funcPtr = &TrigFieldFunction::sdr;
+  else if (fieldName == "gamma_transition") // added: transition
+    funcPtr = &TrigFieldFunction::gamint;
   else if (fieldName == "total_dissipation_rate")
     funcPtr = &TrigFieldFunction::tdr;
   else if (fieldName == "dwdx")
@@ -496,6 +513,15 @@ sdr_test_function(
   sierra::nalu::ScalarFieldType& sdr)
 {
   init_trigonometric_field(bulk, coordinates, sdr);
+}
+
+void
+gamint_test_function( // added: transition 
+  const stk::mesh::BulkData& bulk,
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& gamint)
+{
+  init_trigonometric_field(bulk, coordinates, gamint);
 }
 
 void

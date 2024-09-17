@@ -83,6 +83,11 @@ void sdr_test_function(
   const sierra::nalu::VectorFieldType& coordinates,
   sierra::nalu::ScalarFieldType& sdr);
 
+void gamint_test_function( //added
+  const stk::mesh::BulkData& bulk,
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& gamint);
+
 void tdr_test_function(
   const stk::mesh::BulkData& bulk,
   const sierra::nalu::VectorFieldType& coordinates,
@@ -731,6 +736,8 @@ public:
         &meta_->declare_field<double>(stk::topology::NODE_RANK, "viscosity")),
       tvisc_(&meta_->declare_field<double>(
         stk::topology::NODE_RANK, "turbulent_viscosity")),
+      gamint_(&meta_->declare_field<double>(
+        stk::topology::NODE_RANK, "gamma_transition")), //added
       maxLengthScale_(&meta_->declare_field<double>(
         stk::topology::NODE_RANK, "sst_max_length_scale")),
       minDistance_(&meta_->declare_field<double>(
@@ -759,6 +766,7 @@ public:
     stk::mesh::put_field_on_mesh(*sdrbc_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(*visc_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(*tvisc_, meta_->universal_part(), nullptr);
+    stk::mesh::put_field_on_mesh(*gamint_, meta_->universal_part(), nullptr); //added
     stk::mesh::put_field_on_mesh(
       *maxLengthScale_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
@@ -807,6 +815,7 @@ public:
       *bulk_, *coordinates_, *density_);
     unit_test_kernel_utils::tke_test_function(*bulk_, *coordinates_, *tke_);
     unit_test_kernel_utils::sdr_test_function(*bulk_, *coordinates_, *sdr_);
+    unit_test_kernel_utils::gamint_test_function(*bulk_, *coordinates_, *gamint_); // added
     unit_test_kernel_utils::minimum_distance_to_wall_test_function(
       *bulk_, *coordinates_, *minDistance_);
     unit_test_kernel_utils::sst_f_one_blending_test_function(
@@ -825,6 +834,7 @@ public:
   sierra::nalu::ScalarFieldType* sdrbc_{nullptr};
   sierra::nalu::ScalarFieldType* visc_{nullptr};
   sierra::nalu::ScalarFieldType* tvisc_{nullptr};
+  sierra::nalu::ScalarFieldType* gamint_{nullptr}; // added
   sierra::nalu::ScalarFieldType* maxLengthScale_{nullptr};
   sierra::nalu::ScalarFieldType* minDistance_{nullptr};
   sierra::nalu::ScalarFieldType* fOneBlend_{nullptr};
