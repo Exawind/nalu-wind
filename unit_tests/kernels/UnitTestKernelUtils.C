@@ -170,6 +170,44 @@ struct TrigFieldFunction
                            std::sin(a * pi * z))/(1.0 - gamintnot);
   }
 
+  void dwalldistdx(const double* coords, double* qField) const
+  {
+    const double x = coords[0];
+    const double y = coords[1];
+    const double z = coords[2];
+
+    const double a_pi = a * pi;
+    const double cosx = std::cos(a_pi * x);
+    const double sinx = std::sin(a_pi * x);
+    const double cosy = std::cos(a_pi * y);
+    const double siny = std::sin(a_pi * y);
+    const double cosz = std::cos(a_pi * z);
+    const double sinz = std::sin(a_pi * z);
+
+    qField[0] = -dwalldistdxnot * a_pi * sinx * siny * cosz;
+    qField[1] = dwalldistdxnot * a_pi * cosx * cosy * cosz;
+    qField[2] = -dwalldistdxnot * a_pi * cosx * siny * sinz;
+  }
+
+  void dnDotVdx(const double* coords, double* qField) const
+  {
+    const double x = coords[0];
+    const double y = coords[1];
+    const double z = coords[2];
+
+    const double a_pi = a * pi;
+    const double cosx = std::cos(a_pi * x);
+    const double sinx = std::sin(a_pi * x);
+    const double cosy = std::cos(a_pi * y);
+    const double siny = std::sin(a_pi * y);
+    const double cosz = std::cos(a_pi * z);
+    const double sinz = std::sin(a_pi * z);
+
+    qField[0] = -dnDotVdxnot * a_pi * sinx * siny * cosz;
+    qField[1] = dnDotVdxnot * a_pi * cosx * cosy * cosz;
+    qField[2] = -dnDotVdxnot * a_pi * cosx * siny * sinz;
+  }
+
   void tdr(const double* coords, double* qField) const
   {
     double x = coords[0];
@@ -305,6 +343,12 @@ private:
   /// Factor for gamint field
   static constexpr double gamintnot{0.02};
 
+  /// Factor for dwalldistdx field
+  static constexpr double dwalldistdxnot{1.0};
+
+  /// Factor for dnDotVdx field
+  static constexpr double dnDotVdxnot{1.0};
+
   /// Factor for tdr field
   static constexpr double tdrnot{1.0};
 
@@ -360,6 +404,10 @@ init_trigonometric_field(
     funcPtr = &TrigFieldFunction::sdr;
   else if (fieldName == "gamma_transition") // added: transition
     funcPtr = &TrigFieldFunction::gamint;
+  else if (fieldName == "dwalldistdx") // added: transition
+    funcPtr = &TrigFieldFunction::dwalldistdx;
+  else if (fieldName == "dnDotVdx") // added: transition
+    funcPtr = &TrigFieldFunction::dnDotVdx;
   else if (fieldName == "total_dissipation_rate")
     funcPtr = &TrigFieldFunction::tdr;
   else if (fieldName == "dwdx")
@@ -522,6 +570,24 @@ gamint_test_function( // added: transition
   sierra::nalu::ScalarFieldType& gamint)
 {
   init_trigonometric_field(bulk, coordinates, gamint);
+}
+
+void
+dwalldistdx_test_function(
+  const stk::mesh::BulkData& bulk,
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::VectorFieldType& dwalldistdx)
+{
+  init_trigonometric_field(bulk, coordinates, dwalldistdx);
+}
+
+void
+dnDotVdx_test_function(
+  const stk::mesh::BulkData& bulk,
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::VectorFieldType& dnDotVdx)
+{
+  init_trigonometric_field(bulk, coordinates, dnDotVdx);
 }
 
 void
