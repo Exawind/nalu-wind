@@ -1368,7 +1368,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_trans_node)
   helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTBLTM2015NodeKernel>(*meta_);
 
   helperObjs.execute();
-  //helperObjs.print_lhs_and_rhs();
 
   Kokkos::deep_copy(
     helperObjs.linsys->hostNumSumIntoCalls_,

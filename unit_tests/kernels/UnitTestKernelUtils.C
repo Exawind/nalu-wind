@@ -158,7 +158,7 @@ struct TrigFieldFunction
                              std::sin(a * pi * z));
   }
 
-  void gamint(const double* coords, double* qField) const //added: transition
+  void gamma_intermittency(const double* coords, double* qField) const
   {
     double x = coords[0];
     double y = coords[1];
@@ -166,8 +166,8 @@ struct TrigFieldFunction
 
     // Range should be from 0.02 to 1.0
     qField[0] =
-      gamintnot + abs(std::cos(a * pi * x) * std::sin(a * pi * y) *
-                           std::sin(a * pi * z))/(1.0 - gamintnot);
+      gamma_intermittencynot + abs(std::cos(a * pi * x) * std::sin(a * pi * y) *
+                           std::sin(a * pi * z))/(1.0 - gamma_intermittencynot);
   }
 
   void dwalldistdx(const double* coords, double* qField) const
@@ -340,8 +340,8 @@ private:
   /// Factor for sdr field
   static constexpr double sdrnot{1.0};
 
-  /// Factor for gamint field
-  static constexpr double gamintnot{0.02};
+  /// Factor for gamma_intermittency field
+  static constexpr double gamma_intermittencynot{0.02};
 
   /// Factor for dwalldistdx field
   static constexpr double dwalldistdxnot{1.0};
@@ -402,11 +402,11 @@ init_trigonometric_field(
     funcPtr = &TrigFieldFunction::dkdx;
   else if (fieldName == "specific_dissipation_rate")
     funcPtr = &TrigFieldFunction::sdr;
-  else if (fieldName == "gamma_transition") // added: transition
-    funcPtr = &TrigFieldFunction::gamint;
-  else if (fieldName == "dwalldistdx") // added: transition
+  else if (fieldName == "gamma_transition")
+    funcPtr = &TrigFieldFunction::gamma_intermittency;
+  else if (fieldName == "dwalldistdx")
     funcPtr = &TrigFieldFunction::dwalldistdx;
-  else if (fieldName == "dnDotVdx") // added: transition
+  else if (fieldName == "dnDotVdx")
     funcPtr = &TrigFieldFunction::dnDotVdx;
   else if (fieldName == "total_dissipation_rate")
     funcPtr = &TrigFieldFunction::tdr;
@@ -564,12 +564,12 @@ sdr_test_function(
 }
 
 void
-gamint_test_function( // added: transition 
+gamma_intermittency_test_function(
   const stk::mesh::BulkData& bulk,
   const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& gamint)
+  sierra::nalu::ScalarFieldType& gamma_intermittency)
 {
-  init_trigonometric_field(bulk, coordinates, gamint);
+  init_trigonometric_field(bulk, coordinates, gamma_intermittency);
 }
 
 void

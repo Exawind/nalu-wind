@@ -114,7 +114,7 @@ static constexpr double lhs[8][8] = {
 } // namespace hex8_golds
 } // namespace
 
-TEST_F(BLTGammaM2015KernelHex8Mesh, NGP_blt_gamma_node)
+TEST_F(SSTKernelHex8Mesh, NGP_blt_gamma_node)
 {
   // Only execute for 1 processor runs
   if (bulk_->parallel_size() > 1)
