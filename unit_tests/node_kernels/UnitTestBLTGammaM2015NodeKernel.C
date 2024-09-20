@@ -17,14 +17,7 @@ namespace {
 namespace hex8_golds {
 namespace blt_gamma {
 static constexpr double rhs[8] = {
-  0,
-  0,
-  0,
-  0.12823826807242,
-  0,
-  0,
-  -0.043287170452808,
-  0.43035793150449,
+  0, 0, 0, 0.12823826807242, 0, 0, -0.043287170452808, 0.43035793150449,
 };
 
 static constexpr double lhs[8][8] = {

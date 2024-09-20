@@ -109,9 +109,9 @@ TKESSTBLTM2015NodeKernel::execute(
 
   // Pk based on Kato-Launder formulation
   const DblType Pk = gamint * tvisc * sijMag * vortMag;
-  const DblType Pklim = 5.0 * Ck_BLT * stk::math::max(gamint - 0.2, 0.0) * (1.0 - gamint) *
-          Fonlim * stk::math::max(3.0 * CSEP * visc - tvisc, 0.0) * sijMag *
-          vortMag;
+  const DblType Pklim =
+    5.0 * Ck_BLT * stk::math::max(gamint - 0.2, 0.0) * (1.0 - gamint) * Fonlim *
+    stk::math::max(3.0 * CSEP * visc - tvisc, 0.0) * sijMag * vortMag;
   const DblType Dk =
     betaStar_ * density * sdr * tke * stk::math::max(gamint, 0.1);
 

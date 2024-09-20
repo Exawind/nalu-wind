@@ -166,8 +166,9 @@ struct TrigFieldFunction
 
     // Range should be from 0.02 to 1.0
     qField[0] =
-      gamma_intermittencynot + abs(std::cos(a * pi * x) * std::sin(a * pi * y) *
-                           std::sin(a * pi * z))/(1.0 - gamma_intermittencynot);
+      gamma_intermittencynot +
+      abs(std::cos(a * pi * x) * std::sin(a * pi * y) * std::sin(a * pi * z)) /
+        (1.0 - gamma_intermittencynot);
   }
 
   void dwalldistdx(const double* coords, double* qField) const

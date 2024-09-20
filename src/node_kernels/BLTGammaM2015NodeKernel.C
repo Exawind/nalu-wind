@@ -148,7 +148,8 @@ BLTGammaM2015NodeKernel::execute(
   const DblType fonset1 = Rev / 2.2 / Re0c;
   const DblType fonset2 = stk::math::min(fonset1, 2.0);
   const DblType rt = density * tke / sdr / visc;
-  const DblType fonset3 = stk::math::max(1.0 - stk::math::pow(rt / 3.5, 3), 0.0);
+  const DblType fonset3 =
+    stk::math::max(1.0 - stk::math::pow(rt / 3.5, 3), 0.0);
   const DblType fonset = stk::math::max(fonset2 - fonset3, 0.0);
   const DblType fturb = stk::math::exp(-rt * rt * rt * rt / 16.0);
 
@@ -167,14 +168,15 @@ BLTGammaM2015NodeKernel::execute(
   //  lhs(0, 0) += (DgammaDir - PgammaDir) * dVol;
 
   // Jacobian with the Positivity in the implicit operator
-  const DblType PgammaDir = flength * density * sijMag * fonset * (1.0 - gamint);
+  const DblType PgammaDir =
+    flength * density * sijMag * fonset * (1.0 - gamint);
   const DblType PgammaDirP = -flength * density * sijMag * fonset;
 
   const DblType DgammaDir =
     caTwo * density * vortMag * fturb * (ceTwo * gamint - 1.0);
   const DblType DgammaDirP = caTwo * density * vortMag * fturb * ceTwo;
 
-  const DblType gamma_pos1 = stk::math::max(DgammaDir  - PgammaDir, 0.0);
+  const DblType gamma_pos1 = stk::math::max(DgammaDir - PgammaDir, 0.0);
   const DblType gamma_pos2 = stk::math::max(DgammaDirP - PgammaDirP, 0.0);
 
   rhs(0) += (Pgamma - Dgamma) * dVol;
