@@ -532,7 +532,6 @@ GammaEquationSystem::register_symmetry_bc(
   // non-solver; dnDotVdx; allow for element-based shifted
   nDotVGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
     algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_, edgeNodalGradient_);
-
 }
 
 //--------------------------------------------------------------------------
