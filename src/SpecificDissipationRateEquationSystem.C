@@ -272,20 +272,23 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
         if (realm_.solutionOptions_->gammaEqActive_) {
-          if (TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_) {
-          nodeAlg.add_kernel<SDRSSTBLTM2015NodeKernel>(realm_.meta_data());
+          if (
+            TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_) {
+            nodeAlg.add_kernel<SDRSSTBLTM2015NodeKernel>(realm_.meta_data());
           } else {
             throw std::runtime_error(
-            "Invalid turbulene model: Currently the transition model only works with SST " +
-            TurbulenceModelNames[static_cast<int>(
-            realm_.solutionOptions_->turbulenceModel_)]);
+              "Invalid turbulene model: Currently the transition model only "
+              "works with SST " +
+              TurbulenceModelNames[static_cast<int>(
+                realm_.solutionOptions_->turbulenceModel_)]);
           }
         } else {
-            if (
-            TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_ ) {
+          if (
+            TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_) {
             nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
           } else if (
-            TurbulenceModel::SSTLR == realm_.solutionOptions_->turbulenceModel_) {
+            TurbulenceModel::SSTLR ==
+            realm_.solutionOptions_->turbulenceModel_) {
             nodeAlg.add_kernel<SDRSSTLRNodeKernel>(realm_.meta_data());
           } else if (
             (TurbulenceModel::SST_DES ==
