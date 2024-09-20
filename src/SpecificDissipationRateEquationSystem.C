@@ -267,42 +267,50 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
     auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
     process_ngp_node_kernels(
       solverAlgMap, realm_, part, this,
+
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
-        if (
-          TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_ &&
-          !realm_.solutionOptions_->gammaEqActive_) {
-          nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
-        } else if (
-          TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_ &&
-          realm_.solutionOptions_->gammaEqActive_) {
+        if (realm_.solutionOptions_->gammaEqActive_) {
+          if (TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_) {
           nodeAlg.add_kernel<SDRSSTBLTM2015NodeKernel>(realm_.meta_data());
-        } else if (
-          TurbulenceModel::SSTLR == realm_.solutionOptions_->turbulenceModel_) {
-          nodeAlg.add_kernel<SDRSSTLRNodeKernel>(realm_.meta_data());
-        } else if (
-          (TurbulenceModel::SST_DES ==
-           realm_.solutionOptions_->turbulenceModel_) ||
-          (TurbulenceModel::SST_IDDES ==
-           realm_.solutionOptions_->turbulenceModel_)) {
-          nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
-        } else if (
-          TurbulenceModel::SST_AMS ==
-          realm_.solutionOptions_->turbulenceModel_) {
-          nodeAlg.add_kernel<SDRSSTAMSNodeKernel>(
-            realm_.meta_data(),
-            realm_.solutionOptions_->get_coordinates_name());
-        } else if (
-          TurbulenceModel::KO == realm_.solutionOptions_->turbulenceModel_) {
-          nodeAlg.add_kernel<SDRKONodeKernel>(realm_.meta_data());
-        } else {
-          throw std::runtime_error(
-            "Invalid turbulence model in SDR equation system: " +
+          } else {
+            throw std::runtime_error(
+            "Invalid turbulene model: Currently the transition model only works with SST " +
             TurbulenceModelNames[static_cast<int>(
-              realm_.solutionOptions_->turbulenceModel_)]);
+            realm_.solutionOptions_->turbulenceModel_)]);
+          }
+        } else {
+            if (
+            TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_ ) {
+            nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
+          } else if (
+            TurbulenceModel::SSTLR == realm_.solutionOptions_->turbulenceModel_) {
+            nodeAlg.add_kernel<SDRSSTLRNodeKernel>(realm_.meta_data());
+          } else if (
+            (TurbulenceModel::SST_DES ==
+             realm_.solutionOptions_->turbulenceModel_) ||
+            (TurbulenceModel::SST_IDDES ==
+             realm_.solutionOptions_->turbulenceModel_)) {
+            nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
+          } else if (
+            TurbulenceModel::SST_AMS ==
+            realm_.solutionOptions_->turbulenceModel_) {
+            nodeAlg.add_kernel<SDRSSTAMSNodeKernel>(
+              realm_.meta_data(),
+              realm_.solutionOptions_->get_coordinates_name());
+          } else if (
+            TurbulenceModel::KO == realm_.solutionOptions_->turbulenceModel_) {
+            nodeAlg.add_kernel<SDRKONodeKernel>(realm_.meta_data());
+          } else {
+            throw std::runtime_error(
+              "Invalid turbulence model in SDR equation system: " +
+              TurbulenceModelNames[static_cast<int>(
+                realm_.solutionOptions_->turbulenceModel_)]);
+          }
         }
       },
+
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         if (srcName == "gcl") {
           nodeAlg.add_kernel<ScalarGclNodeKernel>(realm_.bulk_data(), sdr_);
