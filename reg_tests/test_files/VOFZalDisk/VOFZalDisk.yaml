@@ -5,7 +5,6 @@ Simulations:
 
 linear_solvers:
 
-  # Convert to hypre
   - name: solve_scalar
     type: hypre
     method: hypre_gmres
