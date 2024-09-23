@@ -290,7 +290,6 @@ else()
   #=============================================================================
   # Regression tests
   #=============================================================================
-  #add_test_r(BLTFlatPlateT3A 4)
 
   if (ENABLE_TRILINOS_SOLVERS)
     add_test_r(ActLineSimpleNGP 2)
