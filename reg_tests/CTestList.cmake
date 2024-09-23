@@ -264,7 +264,7 @@ if(NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
   #=============================================================================
   # Comparing solution norm tests
   #=============================================================================
-  if(ENABLE_HYPRE AND ENABLE_TRILINOS_SOLVERS)
+  if(ENABLE_HYPRE)
     add_test_v_sol_norm(convTaylorVortex 2)
   endif()
 
