@@ -147,17 +147,20 @@ TEST_F(VOFKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
 
   namespace golds = ::hex8_golds::adv_diff;
 
+  const double tol = 1e-13;
   if (numProcs == 1) {
     helperObjs.check_against_sparse_gold_values(
       golds::rowOffsets_serial, golds::cols_serial, golds::vals_serial,
-      golds::rhs_serial);
+      golds::rhs_serial, tol);
   } else {
     if (myProc == 0) {
       helperObjs.check_against_sparse_gold_values(
-        golds::rowOffsets_P0, golds::cols_P0, golds::vals_P0, golds::rhs_P0);
+        golds::rowOffsets_P0, golds::cols_P0, golds::vals_P0, golds::rhs_P0,
+        tol);
     } else {
       helperObjs.check_against_sparse_gold_values(
-        golds::rowOffsets_P1, golds::cols_P1, golds::vals_P1, golds::rhs_P1);
+        golds::rowOffsets_P1, golds::cols_P1, golds::vals_P1, golds::rhs_P1,
+        tol);
     }
   }
 }
