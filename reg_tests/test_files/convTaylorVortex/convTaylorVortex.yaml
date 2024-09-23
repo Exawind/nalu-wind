@@ -19,6 +19,8 @@ linear_solvers:
     simple_hypre_matrix_assemble: no
     dump_hypre_matrix_stats: no
     write_preassembly_matrix_files: no
+    bamg_relax_type: 18
+    bamg_max_levels: 1
 
   - name: solve_cont
     type: hypre
