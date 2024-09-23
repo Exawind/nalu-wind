@@ -41,6 +41,7 @@ TEST_F(GCLTest, rigid_rotation_elem)
   if (bulk_.parallel_size() > 1)
     return;
 
+  realm_.realmUsesEdges_ = false;
   const std::string meshDims = "3x3x3|offset:0,65,0";
   const bool secondOrder = false;
   const double deltaT = 0.003; // approx 0.25 deg motion for given omega
@@ -96,6 +97,7 @@ TEST_F(GCLTest, rigid_scaling_elem)
   if (bulk_.parallel_size() > 1)
     return;
 
+  realm_.realmUsesEdges_ = false;
   const std::string meshDims = "3x3x3|offset:0,65,0";
   const bool secondOrder = false;
   const double deltaT = 0.003; // approx 0.25 deg motion for given omega
