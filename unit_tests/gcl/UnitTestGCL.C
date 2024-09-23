@@ -317,6 +317,7 @@ TEST_F(GCLTest, mesh_airy_waves)
   if (bulk_.parallel_size() > 1)
     return;
 
+  realm_.realmUsesEdges_ = false;
   const std::string meshDims = "3x3x3";
   const bool secondOrder = true;
   const double deltaT = 0.25;
