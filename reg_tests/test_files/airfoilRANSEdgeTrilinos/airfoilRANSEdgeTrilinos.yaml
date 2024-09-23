@@ -12,7 +12,6 @@ Simulations:
 
 linear_solvers:
 
-  # Convert to hypre
   - name: solve_scalar
     type: tpetra
     method: gmres
@@ -23,7 +22,6 @@ linear_solvers:
     output_level: 0
     write_matrix_files: no
 
-  # Convert to hypre
   - name: solve_cont
     type: tpetra
     method: gmres
@@ -35,7 +33,6 @@ linear_solvers:
     muelu_xml_file_name: ../../xml/milestone_aspect_ratio_gs.xml
     write_matrix_files: no
 
-  # Convert to hypre
   - name: solve_mom
     type: tpetra
     method: gmres

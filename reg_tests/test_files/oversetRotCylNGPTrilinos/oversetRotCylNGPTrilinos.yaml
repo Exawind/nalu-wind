@@ -7,7 +7,6 @@ Simulations:
 
 linear_solvers:
 
-  # Convert to hypre
   - name: solve_scalar
     type: tpetra
     method: gmres
@@ -18,7 +17,6 @@ linear_solvers:
     output_level: 0
     reuse_linear_system: yes
 
-  # Convert to hypre
   - name: solve_cont
     type: tpetra
     method: gmres
