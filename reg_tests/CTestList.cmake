@@ -186,7 +186,6 @@ if(NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
     add_test_r(vortexOpen 4)
     add_test_r(VOFDroplet 4)
     add_test_r(VOFInertialDroplet 4)
-    add_test_r(VOFZalDisk 4)
 
     if (ENABLE_FFTW)
       add_test_r(ablHill3d_pp 4)
@@ -207,6 +206,7 @@ if(NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
     add_test_r(ablNeutralNGPHypreSegregated 2)
     add_test_r(airfoilRANSEdgeNGPHypre.rst 2)
     add_test_r(fsiTurbineSurrogate 4)
+    add_test_r(VOFZalDisk 4)
 
     if (ENABLE_TRILINOS_SOLVERS)
       add_test_r(aslNeutralEdgeSST 4)
@@ -282,7 +282,6 @@ else()
   #=============================================================================
   # Regression tests
   #=============================================================================
-  #add_test_r(BLTFlatPlateT3A 4)
 
   if (ENABLE_TRILINOS_SOLVERS)
     add_test_r(ActLineSimpleNGP 2)
@@ -302,6 +301,7 @@ else()
     add_test_r(ablNeutralNGPHypre 2)
     add_test_r(ablNeutralNGPHypreSegregated 2)
     add_test_r(multiElemCylinder 2)
+    add_test_r(VOFZalDisk 2)
   endif()
 
   if (ENABLE_TIOGA AND ENABLE_TRILINOS_SOLVERS)
