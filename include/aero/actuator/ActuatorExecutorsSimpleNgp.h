@@ -27,7 +27,7 @@ public:
     ActuatorBulkSimple& actBulk,
     stk::mesh::BulkData& stkBulk);
 
-  virtual ~ActuatorLineSimpleNGP(){};
+  virtual ~ActuatorLineSimpleNGP() {};
   void operator()() final;
 
 private:

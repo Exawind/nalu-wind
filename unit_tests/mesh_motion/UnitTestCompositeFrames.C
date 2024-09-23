@@ -200,7 +200,7 @@ TEST(meshMotion, NGP_initialize)
           cxyz(node)[d] = mxyz(node)[d];
         }
       } // end for loop - in index
-    }   // end for loop - bkts
+    } // end for loop - bkts
   }
 
   // create mesh transformation algorithm class
@@ -247,7 +247,7 @@ TEST(meshMotion, NGP_initialize)
         EXPECT_NEAR(vel(node)[1], gold_norm_vel[1], testTol);
         EXPECT_NEAR(vel(node)[2], gold_norm_vel[2], testTol);
       } // end for loop - in index
-    }   // end for loop - bkts
+    } // end for loop - bkts
   }
 }
 
@@ -308,7 +308,7 @@ TEST(meshMotion, NGP_execute)
         cxyz[d] = mxyz[d];
       }
     } // end for loop - in index
-  }   // end for loop - bkts
+  } // end for loop - bkts
 
   // create mesh transformation algorithm class
   std::unique_ptr<sierra::nalu::MeshTransformationAlg> meshTransformationAlg;
@@ -364,5 +364,5 @@ TEST(meshMotion, NGP_execute)
       EXPECT_NEAR(vel[1], gold_norm_vel[1], testTol);
       EXPECT_NEAR(vel[2], gold_norm_vel[2], testTol);
     } // end for loop - in index
-  }   // end for loop - bkts
+  } // end for loop - bkts
 }

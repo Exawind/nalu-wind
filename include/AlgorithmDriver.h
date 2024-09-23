@@ -26,9 +26,9 @@ public:
   AlgorithmDriver(Realm& realm);
   virtual ~AlgorithmDriver();
 
-  virtual void pre_work(){};
+  virtual void pre_work() {};
   virtual void execute();
-  virtual void post_work(){};
+  virtual void post_work() {};
 
   Realm& realm_;
   std::map<AlgorithmType, Algorithm*> algMap_;

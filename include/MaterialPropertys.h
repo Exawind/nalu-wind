@@ -41,7 +41,7 @@ public:
 
   void load(const YAML::Node& node);
 
-  void breadboard(){};
+  void breadboard() {};
 
   // ease of access methods to particular initial condition
   size_t size() { return materialPropertyVector_.size(); }

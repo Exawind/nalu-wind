@@ -27,7 +27,7 @@ class ActuatorExecutor
 public:
   ActuatorExecutor(const ActuatorMeta& actMeta, ActuatorBulk& actBulk);
   ActuatorExecutor() = delete;
-  virtual ~ActuatorExecutor(){};
+  virtual ~ActuatorExecutor() {};
   virtual void operator()() = 0;
   void compute_fllc();
   void apply_fllc(ActuatorBulk& actBulk);

@@ -21,8 +21,8 @@ class Converter;
 class ConverterFactory
 {
 public:
-  ConverterFactory(){};
-  ~ConverterFactory(){};
+  ConverterFactory() {};
+  ~ConverterFactory() {};
 
   Converter* create(const std::string& converterType) const;
 };
@@ -44,7 +44,7 @@ class Converter
 public:
   explicit Converter(const std::string& converterType);
 
-  virtual ~Converter(){};
+  virtual ~Converter() {};
 
   /** Get the name of the variable returned by this Converter */
   const std::string& name() const { return name_; }

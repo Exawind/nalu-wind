@@ -32,7 +32,7 @@ public:
     const ActuatorMeta& actMeta, ActuatorBulk& actBulk);
   FilteredLiftingLineCorrection() = delete;
 
-  virtual ~FilteredLiftingLineCorrection(){};
+  virtual ~FilteredLiftingLineCorrection() {};
 
   /**
    * @brief Compute the lift force distribution (G)

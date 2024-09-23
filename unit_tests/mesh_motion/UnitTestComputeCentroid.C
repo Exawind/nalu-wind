@@ -143,7 +143,7 @@ TEST(meshMotion, NGP_compute_centroid)
       for (int d = 0; d < nDim; ++d)
         gxyz[d] = mxyz[d];
     } // end for loop - in index
-  }   // end for loop - bkts
+  } // end for loop - bkts
 
   // create mesh transformation algorithm class
   sierra::nalu::MeshTransformationAlg meshTransformationAlg(
@@ -170,5 +170,5 @@ TEST(meshMotion, NGP_compute_centroid)
       EXPECT_NEAR(mxyz[1], gold_norm_xyz[1], testTol);
       EXPECT_NEAR(mxyz[2], gold_norm_xyz[2], testTol);
     } // end for loop - in index
-  }   // end for loop - bkts
+  } // end for loop - bkts
 }

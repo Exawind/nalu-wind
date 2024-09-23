@@ -41,7 +41,7 @@ perturb_coord_hex_8(stk::mesh::BulkData& bulk, double perturbSize)
   // ensure that the rng isn't machine/compiler dependent.
   struct Lcg
   {
-    Lcg(uint32_t seed) : prev(seed){};
+    Lcg(uint32_t seed) : prev(seed) {};
 
     double operator()()
     {
