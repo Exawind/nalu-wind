@@ -107,7 +107,8 @@ struct TpetraHelperObjectsBase
     const std::vector<int>& rowOffsets,
     const std::vector<int>& cols,
     const std::vector<double>& vals,
-    const std::vector<double>& rhs)
+    const std::vector<double>& rhs,
+    const double tol = 1.e-14)
   {
     auto localMatrix = linsys->getOwnedMatrix()->getLocalMatrixHost();
     auto localRhs =
@@ -126,18 +127,18 @@ struct TpetraHelperObjectsBase
         for (int j = 0; j < constRowView.length; ++j) {
           if (constRowView.colidx(j) == goldCol) {
             foundGoldCol = true;
-            EXPECT_NEAR(vals[offset], constRowView.value(j), 1.e-14)
+            EXPECT_NEAR(vals[offset], constRowView.value(j), tol)
               << "i: " << i << ", j: " << j;
           } else if (!find_col(
                        constRowView.colidx(j), cols, rowOffsets[i],
                        rowOffsets[i + 1])) {
-            EXPECT_NEAR(0.0, constRowView.value(j), 1.e-14);
+            EXPECT_NEAR(0.0, constRowView.value(j), tol);
           }
         }
         EXPECT_TRUE(foundGoldCol);
       }
 
-      EXPECT_NEAR(rhs[i], localRhs(i, 0), 1.e-14) << "i: " << i;
+      EXPECT_NEAR(rhs[i], localRhs(i, 0), tol) << "i: " << i;
     }
   }
 
