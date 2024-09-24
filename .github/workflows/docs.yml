@@ -2,9 +2,9 @@ name: Nalu-Wind-Docs
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 concurrency:
   group: ${{github.ref}}-${{github.head_ref}}-docs
