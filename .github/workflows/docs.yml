@@ -28,7 +28,7 @@ jobs:
           python3 -m pip install --upgrade pip
           pip3 install sphinx sphinx_rtd_theme
       - name: Build
-        # execute from top-level amr-wind directory
+        # execute from top-level nalu-wind directory
         run: |
           echo "::add-matcher::.github/problem-matchers/sphinx.json"
           sphinx-build -M html ./docs/sphinx ./build_docs/manual -W --keep-going -n 2>&1 | tee -a build-output.txt
