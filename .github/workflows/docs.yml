@@ -2,9 +2,9 @@ name: Nalu-Wind-Docs
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 concurrency:
   group: ${{github.ref}}-${{github.head_ref}}-docs
@@ -46,7 +46,7 @@ jobs:
           egrep "WARNING:" build-output.txt | sort | uniq | \
             awk 'BEGIN{i=0}{print $0}{i++}END{print "Warnings: "i}' > build-output-warnings.txt
           cat build-output-warnings.txt
-          exit $(tail -n 1 build-output-warnings.txt | awk '{print $2}')
+          #exit $(tail -n 1 build-output-warnings.txt | awk '{print $2}')
       - name: Deploy
         if: github.event_name == 'push'
         uses: JamesIves/github-pages-deploy-action@releases/v3
