@@ -27,9 +27,19 @@ import sys
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [ 'sphinx.ext.mathjax', 'breathe']
-
-
+extensions = [
+              'sphinx.ext.autodoc',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.intersphinx',
+              'sphinxcontrib.bibtex',
+              'breathe',
+             ]
+bibtex_bibfiles = ['references/references.bib']
+autodoc_default_flags = ['members','show-inheritance','undoc-members']
+autoclass_content = 'both'
+mathjax_path = 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
+numfig = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 #breathe_projects = {"Nalu-Wind": "../doxygen_output/xml/"}
@@ -347,6 +357,8 @@ texinfo_documents = [
 
 breathe_projects = { 'nalu-wind' : os.path.join(os.getcwd(), '..', '..', 'build_docs', 'doxygen', 'xml') }
 breathe_default_project = "nalu-wind"
+
+primary_domain = "cpp"
 
 def setup(app):
     app.add_object_type("cmakeval", "cmakeval",
