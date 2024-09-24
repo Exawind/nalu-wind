@@ -207,6 +207,7 @@ if(NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
     add_test_r(airfoilRANSEdgeNGPHypre.rst 2)
     add_test_r(fsiTurbineSurrogate 4)
     add_test_r(VOFZalDisk 4)
+    add_test_r(airfoilSST_Gamma_Trans 4)
 
     if (ENABLE_TRILINOS_SOLVERS)
       add_test_r(aslNeutralEdgeSST 4)
