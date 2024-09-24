@@ -24,7 +24,7 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends doxygen graphviz
+          sudo apt-get install -y --no-install-recommends doxygen
           python3 -m pip install --upgrade pip
           pip3 install sphinx sphinx_rtd_theme breathe
       - name: Build
