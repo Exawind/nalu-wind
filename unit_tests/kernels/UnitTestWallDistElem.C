@@ -216,7 +216,7 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist)
 
   namespace gold_values = hex8_golds::wall_dist_default;
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, 0.125);
-  unit_test_kernel_utils::expect_all_near(
+  unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, gold_values::lhs);
 }
 
@@ -250,6 +250,6 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist_shifted)
 
   namespace gold_values = hex8_golds::wall_dist_lumped;
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, 0.125);
-  unit_test_kernel_utils::expect_all_near(
+  unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, gold_values::lhs);
 }
