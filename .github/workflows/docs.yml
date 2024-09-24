@@ -30,6 +30,7 @@ jobs:
       - name: Build
         # execute from top-level nalu-wind directory
         run: |
+          mkdir -p ./build_docs/doxygen
           doxygen ./docs/doxygen/Doxyfile
           echo "::add-matcher::.github/problem-matchers/sphinx.json"
           sphinx-build -M html ./docs/sphinx ./build_docs/manual -W --keep-going -n 2>&1 | tee -a build-output.txt
