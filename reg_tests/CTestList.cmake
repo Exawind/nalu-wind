@@ -303,6 +303,7 @@ else()
     add_test_r(ablNeutralNGPHypreSegregated 2)
     add_test_r(multiElemCylinder 2)
     add_test_r(VOFZalDisk 2)
+    add_test_r(airfoilSST_Gamma_Trans 4)
   endif()
 
   if (ENABLE_TIOGA AND ENABLE_TRILINOS_SOLVERS)
