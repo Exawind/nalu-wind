@@ -134,6 +134,8 @@ GeometryAlgDriver::pre_work()
 void
 GeometryAlgDriver::mesh_motion_prework()
 {
+  using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+
   const auto& meta = realm_.meta_data();
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
@@ -176,9 +178,15 @@ GeometryAlgDriver::mesh_motion_prework()
       stk::topology::EDGE_RANK, "edge_swept_face_volume");
     const stk::mesh::Selector sel =
       stk::mesh::selectField(*sweptVolEdge) & meta.locally_owned_part();
-    nalu_ngp::field_axpby(
-      ngpMesh, sel, (gamma1 + gamma2) / dt, ngpSweptVolEdgeN, 0.0,
-      ngpFaceVelMag, 1, stk::topology::EDGE_RANK);
+
+    const auto alpha = (gamma1 + gamma2) / dt;
+    ngpFaceVelMag.sync_to_device();
+    nalu_ngp::run_entity_algorithm(
+      "ngp_field_axpby", ngpMesh, stk::topology::EDGE_RANK, sel,
+      KOKKOS_LAMBDA(const MeshIndex& mi) {
+        ngpFaceVelMag.get(mi, 0) = alpha * ngpSweptVolEdgeN.get(mi, 0);
+      });
+    ngpFaceVelMag.modify_on_device();
   }
 }
 
