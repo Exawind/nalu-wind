@@ -30,13 +30,9 @@ jobs:
       - name: Build
         # execute from top-level nalu-wind directory
         run: |
+          doxygen ./docs/doxygen/Doxyfile
           echo "::add-matcher::.github/problem-matchers/sphinx.json"
           sphinx-build -M html ./docs/sphinx ./build_docs/manual -W --keep-going -n 2>&1 | tee -a build-output.txt
-          # Doxygen output gets parsed wrong by the sphinx problem matcher so unregister it
-          echo "::remove-matcher owner=sphinx-problem-matcher-loose-no-severity::"
-          echo "::remove-matcher owner=sphinx-problem-matcher-loose::"
-          echo "::remove-matcher owner=sphinx-problem-matcher::"
-          doxygen ./docs/doxygen/Doxyfile
           mv ./build_docs/manual/html ./documentation
           mv ./build_docs/doxygen/html ./documentation/api_docs
           touch ./documentation/.nojekyll
