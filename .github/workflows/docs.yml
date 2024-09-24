@@ -26,7 +26,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends doxygen
           python3 -m pip install --upgrade pip
-          pip3 install sphinx sphinx_rtd_theme breathe
+          pip3 install sphinx sphinx_rtd_theme breathe sphinxcontrib-bibtex
       - name: Build
         # execute from top-level nalu-wind directory
         run: |
