@@ -345,7 +345,7 @@ texinfo_documents = [
 #
 # texinfo_no_detailmenu = False
 
-breathe_projects = { 'nalu-wind' : os.path.join(os.getcwd(), 'docs', 'doxygen', 'xml') }
+breathe_projects = { 'nalu-wind' : os.path.join(os.getcwd(), 'build_docs', 'doxygen', 'xml') }
 breathe_default_project = "nalu-wind"
 
 def setup(app):
