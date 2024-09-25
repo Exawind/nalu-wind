@@ -43,4 +43,5 @@ In the `Nalu-Wind repository <https://github.com/Exawind/nalu-wind>`__ checkout,
 
 If all of the main tools are found successfully, the command will
 complete successfully and the entry point to the documentation should
-be in ``build_docs/manual/html/index.html``.
+be in ``build_docs/manual/html/index.html`` for the manual and
+``build_docs/doxygen/html/index.html`` for the source code.
