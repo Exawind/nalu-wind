@@ -355,9 +355,6 @@ texinfo_documents = [
 primary_domain = "cpp"
 
 def setup(app):
-    app.add_object_type("cmakeval", "cmakeval",
-                        objname="CMake configuration value",
-                        indextemplate="pair: %s; CMake configuration")
-    app.add_object_type("input_param", "input_param",
-                        objname="Nalu-Wind input parameter",
-                        indextemplate="pair: %s; Nalu-Wind input parameter")
+    app.add_object_type("inpfile", "inpfile",
+                        objname="Nalu-Wind Input File Parameter",
+                        indextemplate="pair: %s; Nalu-Wind Input File Parameter")
