@@ -24,9 +24,9 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends doxygen
+          sudo apt-get install -y --no-install-recommends doxygen graphviz
           python3 -m pip install --upgrade pip
-          pip3 install sphinx sphinx_rtd_theme breathe sphinxcontrib-bibtex sphinxcontrib-doxylink
+          pip3 install sphinx sphinx_rtd_theme sphinxcontrib-bibtex
       - name: Build
         # execute from top-level nalu-wind directory
         run: |
@@ -35,6 +35,7 @@ jobs:
           echo "::add-matcher::.github/problem-matchers/sphinx.json"
           sphinx-build -M html ./docs/sphinx ./build_docs/manual -W --keep-going -n 2>&1 | tee -a build-output.txt
           mv ./build_docs/manual/html ./documentation
+          mv ./build_docs/doxygen/html ./documentation/api_docs
           touch ./documentation/.nojekyll
       - name: Report
         run: |

@@ -33,8 +33,6 @@ extensions = [
               'sphinx.ext.mathjax',
               'sphinx.ext.intersphinx',
               'sphinxcontrib.bibtex',
-              'sphinxcontrib.doxylink',
-              'breathe',
              ]
 bibtex_bibfiles = ['references/references.bib']
 autodoc_default_flags = ['members','show-inheritance','undoc-members']
@@ -43,8 +41,6 @@ mathjax_path = 'https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS
 numfig = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
-#breathe_projects = {"Nalu-Wind": "../doxygen_output/xml/"}
-#breathe_default_project = "Nalu-Wind"
 
 #fortran_src ='../../src/'
 #fortran_ext =[' 'F90']
@@ -355,9 +351,6 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
-
-breathe_projects = { 'nalu-wind' : os.path.join(os.getcwd(), '..', '..', 'build_docs', 'doxygen', 'xml') }
-breathe_default_project = "nalu-wind"
 
 primary_domain = "cpp"
 
