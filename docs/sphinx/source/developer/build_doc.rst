@@ -39,6 +39,7 @@ In the `Nalu-Wind repository <https://github.com/Exawind/nalu-wind>`__ checkout,
 ::
 
   sphinx-build -M html ./docs/sphinx ./build_docs/manual -W --keep-going -n
+  doxygen ./docs/doxygen/Doxyfile
 
 If all of the main tools are found successfully, the command will
 complete successfully and the entry point to the documentation should
