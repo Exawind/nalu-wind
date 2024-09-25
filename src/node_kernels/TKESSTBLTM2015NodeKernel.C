@@ -86,9 +86,7 @@ TKESSTBLTM2015NodeKernel::execute(
   DblType vortMag = 1.0e-16;
 
   for (int i = 0; i < nDim_; ++i) {
-    // const int offset = nDim_ * i;
     for (int j = 0; j < nDim_; ++j) {
-      // const auto dudxij = dudx_.get(node, offset + j);
       const double duidxj = dudx_.get(node, nDim_ * i + j);
       const double dujdxi = dudx_.get(node, nDim_ * j + i);
 
@@ -114,10 +112,6 @@ TKESSTBLTM2015NodeKernel::execute(
     stk::math::max(3.0 * CSEP * visc - tvisc, 0.0) * sijMag * vortMag;
   const DblType Dk =
     betaStar_ * density * sdr * tke * stk::math::max(gamint, 0.1);
-
-  // Clip production term and prevent Pk from being negative:
-  // Deactivated w/  Kato-Launder formulation
-  // Pk = stk::math::min(tkeProdLimitRatio_ * Dk, stk::math::max(Pk, 0.0));
 
   // SUST source term
   const DblType Dkamb = betaStar_ * density * sdrAmb_ * tkeAmb_;
