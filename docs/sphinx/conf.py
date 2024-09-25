@@ -33,6 +33,7 @@ extensions = [
               'sphinx.ext.mathjax',
               'sphinx.ext.intersphinx',
               'sphinxcontrib.bibtex',
+              'sphinxcontrib.doxylink',
               'breathe',
              ]
 bibtex_bibfiles = ['references/references.bib']
