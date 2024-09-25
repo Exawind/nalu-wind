@@ -629,8 +629,7 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
         const double ry = rho * minD * stk::math::sqrt(tke) / mu;
         const double arg = ry / 120.0;
         const double f3 = stk::math::exp(
-          -arg * arg * arg * arg * arg * arg * arg * arg); // original
-        // const double f3 = std::exp(-std::pow(arg,8)); // new
+          -arg * arg * arg * arg * arg * arg * arg * arg);
         fOneBlend.get(mi, 0) = stk::math::max(f1Orig, f3);
       }
     });
