@@ -39,7 +39,7 @@ extensions = [
 bibtex_bibfiles = ['references/references.bib']
 autodoc_default_flags = ['members','show-inheritance','undoc-members']
 autoclass_content = 'both'
-mathjax_path = 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
+mathjax_path = 'https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
 numfig = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
