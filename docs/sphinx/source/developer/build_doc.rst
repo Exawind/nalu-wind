@@ -31,30 +31,15 @@ this would look something like:
 On Linux, CMake, Python, Doxygen, and GraphViz could be installed
 using your package manager, e.g. ``sudo apt-get install cmake``.
 
-Run CMake Configure
--------------------
+Build the Docs
+--------------
 
-In the `Nalu-Wind repository <https://github.com/Exawind/nalu-wind>`__ checkout, 
-create your own or use the ``build`` directory that already exists in the repo.
-Change to your designated build directory and run CMake with ``-DENABLE_DOCUMENTATION``
-on. For example:
+In the `Nalu-Wind repository <https://github.com/Exawind/nalu-wind>`__ checkout, execute:
 
 ::
 
-  cmake -DTrilinos_DIR:PATH=$(spack location -i nalu-trilinos) \
-        -DYAML_DIR:PATH=$(spack location -i yaml-cpp) \
-        -DCMAKE_BUILD_TYPE=RELEASE \
-        -DENABLE_DOCUMENTATION:BOOL=ON \
-        ..
+  sphinx-build -M html ./docs/sphinx ./build_docs/manual -W --keep-going -n
 
-If all of the main tools are found successfully, CMake should configure with the ability
-to build the documentation. If Sphinx or Doxygen aren't found, the configure will skip
-the documentation.
-
-Make the Docs
--------------
-
-In your designated build directory, issue the command ``make docs`` which 
-should first build the Doxygen documentation and then the Sphinx documentation. 
-If this completes successfully, the entry point to
-the documentation should be in ``build/docs/html/index.html``.
+If all of the main tools are found successfully, the command will
+complete successfully and the entry point to the documentation should
+be in ``build_docs/manual/html/index.html``.
