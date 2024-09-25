@@ -856,7 +856,7 @@ where :math:`\Omega` is the earth's angular velocity and :math:`\lambda` is the 
 .. _eqn_sst_des:
 
 Laminar-Turbulent Transition Model Formulation
-++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++
 To account for the effects of the laminar-turbulent boundary layer transition, 
 Menter's one-equation :math:`\gamma` transition model :cite:`Menter:2015` is coupled with the SST model.
 The model consists of single transport equation for intermittency
