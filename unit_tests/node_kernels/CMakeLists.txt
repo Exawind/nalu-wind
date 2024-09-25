@@ -19,4 +19,5 @@ target_sources(${utest_ex_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKONodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKsgsNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestWallDistNode.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestBLTGammaM2015NodeKernel.C
 )

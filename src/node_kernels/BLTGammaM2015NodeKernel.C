@@ -27,6 +27,8 @@ BLTGammaM2015NodeKernel::BLTGammaM2015NodeKernel(
     viscID_(get_field_ordinal(meta, "viscosity")),
     dudxID_(get_field_ordinal(meta, "dudx")),
     minDID_(get_field_ordinal(meta, "minimum_distance_to_wall")),
+    dwalldistdxID_(get_field_ordinal(meta, "dwalldistdx")),
+    dnDotVdxID_(get_field_ordinal(meta, "dnDotVdx")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     gamintID_(get_field_ordinal(meta, "gamma_transition")),
     nDim_(meta.spatial_dimension())
@@ -44,16 +46,12 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   visc_ = fieldMgr.get_field<double>(viscID_);
   dudx_ = fieldMgr.get_field<double>(dudxID_);
   minD_ = fieldMgr.get_field<double>(minDID_);
+  dwalldistdx_ = fieldMgr.get_field<double>(dwalldistdxID_);
+  dnDotVdx_ = fieldMgr.get_field<double>(dnDotVdxID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   gamint_ = fieldMgr.get_field<double>(gamintID_);
 
-  // Update transition model constants
-  caOne_ = realm.get_turb_model_constant(TM_caOne);
-  caTwo_ = realm.get_turb_model_constant(TM_caTwo);
-  ceOne_ = realm.get_turb_model_constant(TM_ceOne);
-  ceTwo_ = realm.get_turb_model_constant(TM_ceTwo);
-  timeStepCount = realm.get_time_step_count();
-  maxStepCount = realm.get_max_time_step_count();
+  fsti_ = realm.get_turb_model_constant(TM_fsti);
 }
 
 KOKKOS_FUNCTION
@@ -101,30 +99,25 @@ BLTGammaM2015NodeKernel::execute(
   const DblType minD = minD_.get(node, 0);
   const DblType dVol = dualNodalVolume_.get(node, 0);
 
-  // define the wall normal vector (for now, hardwire to NASA TM case: z = wall
-  // norm direction)
-  DblType Re0c = 0.0;
-  DblType flength = 100.0;
-  DblType Rev = 0.0;
-  DblType rt = 0.0;
   DblType dvnn = 0.0;
   DblType TuL = 0.0;
   DblType lamda0L = 0.0;
 
-  DblType fonset = 0.0;
-  DblType fonset1 = 0.0;
-  DblType fonset2 = 0.0;
-  DblType fonset3 = 0.0;
-  DblType fturb = 0.0;
-
   DblType sijMag = 0.0;
   DblType vortMag = 0.0;
 
-  DblType Ctu1 = 100.;
-  DblType Ctu2 = 1000.;
-  DblType Ctu3 = 1.0;
+  // constants for the source terms
+  const DblType flength = 100.0;
+  const DblType caTwo = 0.06;
+  const DblType ceTwo = 50.0;
+
+  // constants for the local-correlations
+  const DblType Ctu1 = 100.;
+  const DblType Ctu2 = 1000.;
+  const DblType Ctu3 = 1.0;
 
   for (int i = 0; i < nDim_; ++i) {
+    dvnn += dwalldistdx_.get(node, i) * dnDotVdx_.get(node, i);
     for (int j = 0; j < nDim_; ++j) {
       const double duidxj = dudx_.get(node, nDim_ * i + j);
       const double dujdxi = dudx_.get(node, nDim_ * j + i);
@@ -139,31 +132,56 @@ BLTGammaM2015NodeKernel::execute(
   sijMag = stk::math::sqrt(2.0 * sijMag);
   vortMag = stk::math::sqrt(2.0 * vortMag);
 
-  TuL = stk::math::min(
-    81.6496580927726 * stk::math::sqrt(tke) / sdr / (minD + 1.0e-10), 100.0);
+  if (fsti_ > 0.0) {
+    TuL = fsti_; // const. Tu from yaml
+  } else {
+    TuL = stk::math::min(
+      100.0 * stk::math::sqrt(2.0 / 3.0 * tke) / sdr / (minD + 1.0e-10),
+      100.0); // local Tu
+  }
+
   lamda0L = -7.57e-3 * dvnn * minD * minD * density / visc + 0.0128;
   lamda0L = stk::math::min(stk::math::max(lamda0L, -1.0), 1.0);
-  Re0c = Ctu1 + Ctu2 * stk::math::exp(-Ctu3 * TuL * FPG(lamda0L));
-  Rev = density * minD * minD * sijMag / visc;
-  fonset1 = Rev / 2.2 / Re0c;
-  fonset2 = stk::math::min(fonset1, 2.0);
-  rt = density * tke / sdr / visc;
-  fonset3 = stk::math::max(1.0 - 0.0233236151603499 * rt * rt * rt, 0.0);
-  fonset = stk::math::max(fonset2 - fonset3, 0.0);
-  fturb = stk::math::exp(-rt * rt * rt * rt / 16.0);
 
-  DblType Pgamma =
+  const DblType Re0c = Ctu1 + Ctu2 * stk::math::exp(-Ctu3 * TuL * FPG(lamda0L));
+  const DblType Rev = density * minD * minD * sijMag / visc;
+  const DblType fonset1 = Rev / 2.2 / Re0c;
+  const DblType fonset2 = stk::math::min(fonset1, 2.0);
+  const DblType rt = density * tke / sdr / visc;
+  const DblType fonset3 =
+    stk::math::max(1.0 - stk::math::pow(rt / 3.5, 3), 0.0);
+  const DblType fonset = stk::math::max(fonset2 - fonset3, 0.0);
+  const DblType fturb = stk::math::exp(-rt * rt * rt * rt / 16.0);
+
+  const DblType Pgamma =
     flength * density * sijMag * fonset * gamint * (1.0 - gamint);
-  DblType Dgamma =
-    -caTwo_ * density * vortMag * fturb * gamint * (ceTwo_ * gamint - 1.0);
+  const DblType Dgamma =
+    caTwo * density * vortMag * fturb * gamint * (ceTwo * gamint - 1.0);
 
-  DblType PgammaDir =
-    flength * density * sijMag * fonset * (1.0 - 2.0 * gamint);
-  DblType DgammaDir =
-    -caTwo_ * density * vortMag * fturb * (2.0 * ceTwo_ * gamint - 1.0);
+  // Exact Jacobian
+  // const DblType PgammaDir =
+  //    flength * density * sijMag * fonset * (1.0 - 2.0 * gamint);
+  // const DblType DgammaDir =
+  //    caTwo * density * vortMag * fturb * (2.0 * ceTwo * gamint - 1.0);
+  //
+  //  rhs(0) += (Pgamma - Dgamma) * dVol;
+  //  lhs(0, 0) += (DgammaDir - PgammaDir) * dVol;
 
-  rhs(0) += (Pgamma + Dgamma) * dVol;
-  lhs(0, 0) -= (PgammaDir + DgammaDir) * dVol;
+  // Jacobian with the Positivity in the implicit operator
+  const DblType PgammaDir =
+    flength * density * sijMag * fonset * (1.0 - gamint);
+  const DblType PgammaDirP = -flength * density * sijMag * fonset;
+
+  const DblType DgammaDir =
+    caTwo * density * vortMag * fturb * (ceTwo * gamint - 1.0);
+  const DblType DgammaDirP = caTwo * density * vortMag * fturb * ceTwo;
+
+  const DblType gamma_pos1 = stk::math::max(DgammaDir - PgammaDir, 0.0);
+  const DblType gamma_pos2 = stk::math::max(DgammaDirP - PgammaDirP, 0.0);
+
+  rhs(0) += (Pgamma - Dgamma) * dVol;
+  lhs(0, 0) += (gamma_pos1 + gamma_pos2 * gamint) * dVol;
+  //
 }
 
 } // namespace nalu
