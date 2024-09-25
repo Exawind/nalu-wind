@@ -573,6 +573,7 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
   const double betaStar = realm_.get_turb_model_constant(TM_betaStar);
   const double sigmaWTwo = realm_.get_turb_model_constant(TM_sigmaWTwo);
   const double CDkwClip = 1.0e-10; // 2003 SST
+  const auto gammaEqActive = realm_.solutionOptions_->gammaEqActive_;
 
   const auto& tkeNp1 =
     fieldMgr.get_field<double>(tke_->mesh_meta_data_ordinal());
@@ -623,7 +624,7 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
         stk::math::tanh(fArgOne * fArgOne * fArgOne * fArgOne);
 
       // Modifications of f1 blending function for the transition model
-      if (realm_.solutionOptions_->gammaEqActive_) {
+      if (gammaEqActive) {
         const double f1Orig = fOneBlend.get(mi, 0);
         const double ry = rho * minD * stk::math::sqrt(tke) / mu;
         const double arg = ry / 120.0;
