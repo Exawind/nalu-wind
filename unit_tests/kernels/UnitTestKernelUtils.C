@@ -158,6 +158,57 @@ struct TrigFieldFunction
                              std::sin(a * pi * z));
   }
 
+  void gamma_intermittency(const double* coords, double* qField) const
+  {
+    double x = coords[0];
+    double y = coords[1];
+    double z = coords[2];
+
+    // Range should be from 0.02 to 1.0
+    qField[0] =
+      gamma_intermittencynot +
+      abs(std::cos(a * pi * x) * std::sin(a * pi * y) * std::sin(a * pi * z)) /
+        (1.0 - gamma_intermittencynot);
+  }
+
+  void dwalldistdx(const double* coords, double* qField) const
+  {
+    const double x = coords[0];
+    const double y = coords[1];
+    const double z = coords[2];
+
+    const double a_pi = a * pi;
+    const double cosx = std::cos(a_pi * x);
+    const double sinx = std::sin(a_pi * x);
+    const double cosy = std::cos(a_pi * y);
+    const double siny = std::sin(a_pi * y);
+    const double cosz = std::cos(a_pi * z);
+    const double sinz = std::sin(a_pi * z);
+
+    qField[0] = -dwalldistdxnot * a_pi * sinx * siny * cosz;
+    qField[1] = dwalldistdxnot * a_pi * cosx * cosy * cosz;
+    qField[2] = -dwalldistdxnot * a_pi * cosx * siny * sinz;
+  }
+
+  void dnDotVdx(const double* coords, double* qField) const
+  {
+    const double x = coords[0];
+    const double y = coords[1];
+    const double z = coords[2];
+
+    const double a_pi = a * pi;
+    const double cosx = std::cos(a_pi * x);
+    const double sinx = std::sin(a_pi * x);
+    const double cosy = std::cos(a_pi * y);
+    const double siny = std::sin(a_pi * y);
+    const double cosz = std::cos(a_pi * z);
+    const double sinz = std::sin(a_pi * z);
+
+    qField[0] = -dnDotVdxnot * a_pi * sinx * siny * cosz;
+    qField[1] = dnDotVdxnot * a_pi * cosx * cosy * cosz;
+    qField[2] = -dnDotVdxnot * a_pi * cosx * siny * sinz;
+  }
+
   void tdr(const double* coords, double* qField) const
   {
     double x = coords[0];
@@ -290,6 +341,15 @@ private:
   /// Factor for sdr field
   static constexpr double sdrnot{1.0};
 
+  /// Factor for gamma_intermittency field
+  static constexpr double gamma_intermittencynot{0.02};
+
+  /// Factor for dwalldistdx field
+  static constexpr double dwalldistdxnot{1.0};
+
+  /// Factor for dnDotVdx field
+  static constexpr double dnDotVdxnot{1.0};
+
   /// Factor for tdr field
   static constexpr double tdrnot{1.0};
 
@@ -343,6 +403,12 @@ init_trigonometric_field(
     funcPtr = &TrigFieldFunction::dkdx;
   else if (fieldName == "specific_dissipation_rate")
     funcPtr = &TrigFieldFunction::sdr;
+  else if (fieldName == "gamma_transition")
+    funcPtr = &TrigFieldFunction::gamma_intermittency;
+  else if (fieldName == "dwalldistdx")
+    funcPtr = &TrigFieldFunction::dwalldistdx;
+  else if (fieldName == "dnDotVdx")
+    funcPtr = &TrigFieldFunction::dnDotVdx;
   else if (fieldName == "total_dissipation_rate")
     funcPtr = &TrigFieldFunction::tdr;
   else if (fieldName == "dwdx")
@@ -496,6 +562,33 @@ sdr_test_function(
   sierra::nalu::ScalarFieldType& sdr)
 {
   init_trigonometric_field(bulk, coordinates, sdr);
+}
+
+void
+gamma_intermittency_test_function(
+  const stk::mesh::BulkData& bulk,
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& gamma_intermittency)
+{
+  init_trigonometric_field(bulk, coordinates, gamma_intermittency);
+}
+
+void
+dwalldistdx_test_function(
+  const stk::mesh::BulkData& bulk,
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::VectorFieldType& dwalldistdx)
+{
+  init_trigonometric_field(bulk, coordinates, dwalldistdx);
+}
+
+void
+dnDotVdx_test_function(
+  const stk::mesh::BulkData& bulk,
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::VectorFieldType& dnDotVdx)
+{
+  init_trigonometric_field(bulk, coordinates, dnDotVdx);
 }
 
 void

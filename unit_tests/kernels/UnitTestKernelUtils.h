@@ -83,6 +83,21 @@ void sdr_test_function(
   const sierra::nalu::VectorFieldType& coordinates,
   sierra::nalu::ScalarFieldType& sdr);
 
+void gamma_intermittency_test_function(
+  const stk::mesh::BulkData& bulk,
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::ScalarFieldType& gamma_intermittency);
+
+void dwalldistdx_test_function(
+  const stk::mesh::BulkData& bulk,
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::VectorFieldType& dwalldistdx);
+
+void dnDotVdx_test_function(
+  const stk::mesh::BulkData& bulk,
+  const sierra::nalu::VectorFieldType& coordinates,
+  sierra::nalu::VectorFieldType& dnDotVdx);
+
 void tdr_test_function(
   const stk::mesh::BulkData& bulk,
   const sierra::nalu::VectorFieldType& coordinates,
@@ -731,6 +746,12 @@ public:
         &meta_->declare_field<double>(stk::topology::NODE_RANK, "viscosity")),
       tvisc_(&meta_->declare_field<double>(
         stk::topology::NODE_RANK, "turbulent_viscosity")),
+      gamma_intermittency_(&meta_->declare_field<double>(
+        stk::topology::NODE_RANK, "gamma_transition")),
+      dwalldistdx_(
+        &meta_->declare_field<double>(stk::topology::NODE_RANK, "dwalldistdx")),
+      dnDotVdx_(
+        &meta_->declare_field<double>(stk::topology::NODE_RANK, "dnDotVdx")),
       maxLengthScale_(&meta_->declare_field<double>(
         stk::topology::NODE_RANK, "sst_max_length_scale")),
       minDistance_(&meta_->declare_field<double>(
@@ -760,6 +781,8 @@ public:
     stk::mesh::put_field_on_mesh(*visc_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(*tvisc_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
+      *gamma_intermittency_, meta_->universal_part(), nullptr);
+    stk::mesh::put_field_on_mesh(
       *maxLengthScale_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
       *minDistance_, meta_->universal_part(), nullptr);
@@ -776,6 +799,14 @@ public:
     stk::mesh::put_field_on_mesh(
       *dwdx_, meta_->universal_part(), spatialDim_, nullptr);
     stk::io::set_field_output_type(*dwdx_, stk::io::FieldOutputType::VECTOR_3D);
+    stk::mesh::put_field_on_mesh(
+      *dwalldistdx_, meta_->universal_part(), spatialDim_, nullptr);
+    stk::io::set_field_output_type(
+      *dwalldistdx_, stk::io::FieldOutputType::VECTOR_3D);
+    stk::mesh::put_field_on_mesh(
+      *dnDotVdx_, meta_->universal_part(), spatialDim_, nullptr);
+    stk::io::set_field_output_type(
+      *dnDotVdx_, stk::io::FieldOutputType::VECTOR_3D);
     double initOpenMassFlowRate[sierra::nalu::AlgTraitsQuad4::numScsIp_];
     for (int i = 0; i < sierra::nalu::AlgTraitsQuad4::numScsIp_; ++i) {
       initOpenMassFlowRate[i] = 10.0;
@@ -807,6 +838,8 @@ public:
       *bulk_, *coordinates_, *density_);
     unit_test_kernel_utils::tke_test_function(*bulk_, *coordinates_, *tke_);
     unit_test_kernel_utils::sdr_test_function(*bulk_, *coordinates_, *sdr_);
+    unit_test_kernel_utils::gamma_intermittency_test_function(
+      *bulk_, *coordinates_, *gamma_intermittency_);
     unit_test_kernel_utils::minimum_distance_to_wall_test_function(
       *bulk_, *coordinates_, *minDistance_);
     unit_test_kernel_utils::sst_f_one_blending_test_function(
@@ -817,6 +850,8 @@ public:
     stk::mesh::field_fill(0.0, *dkdx_);
     stk::mesh::field_fill(0.0, *dwdx_);
     stk::mesh::field_fill(0.0, *pecletFactor_);
+    stk::mesh::field_fill(0.0, *dwalldistdx_);
+    stk::mesh::field_fill(0.0, *dnDotVdx_);
   }
 
   sierra::nalu::ScalarFieldType* tke_{nullptr};
@@ -825,6 +860,7 @@ public:
   sierra::nalu::ScalarFieldType* sdrbc_{nullptr};
   sierra::nalu::ScalarFieldType* visc_{nullptr};
   sierra::nalu::ScalarFieldType* tvisc_{nullptr};
+  sierra::nalu::ScalarFieldType* gamma_intermittency_{nullptr};
   sierra::nalu::ScalarFieldType* maxLengthScale_{nullptr};
   sierra::nalu::ScalarFieldType* minDistance_{nullptr};
   sierra::nalu::ScalarFieldType* fOneBlend_{nullptr};
@@ -838,6 +874,8 @@ public:
   sierra::nalu::ScalarFieldType* sdrWallArea_{nullptr};
   sierra::nalu::GenericFieldType* wallFricVel_{nullptr};
   sierra::nalu::ScalarFieldType* pecletFactor_{nullptr};
+  sierra::nalu::VectorFieldType* dwalldistdx_{nullptr};
+  sierra::nalu::VectorFieldType* dnDotVdx_{nullptr};
 };
 
 /** Test Fixture for the KE Kernels
