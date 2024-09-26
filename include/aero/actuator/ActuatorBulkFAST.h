@@ -16,13 +16,12 @@
 namespace sierra {
 namespace nalu {
 
-struct
-ActuatorMetaFAST : public ActuatorMeta
+struct ActuatorMetaFAST : public ActuatorMeta
 {
   ActuatorMetaFAST(const ActuatorMeta& actMeta);
 
   // HOST ONLY
-  void set_dt_driver(const double dt){fastInputs_.dtDriver=dt;}
+  void set_dt_driver(const double dt) { fastInputs_.dtDriver = dt; }
   fast::fastInputs fastInputs_;
   std::vector<std::string> turbineNames_;
   std::vector<std::string> turbineOutputFileNames_;
