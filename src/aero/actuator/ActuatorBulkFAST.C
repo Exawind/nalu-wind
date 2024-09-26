@@ -44,7 +44,7 @@ ActuatorMetaFAST::is_disk()
 }
 
 ActuatorBulkFAST::ActuatorBulkFAST(
-  const ActuatorMetaFAST& actMeta, double naluTimeStep)
+  ActuatorMetaFAST& actMeta, double naluTimeStep)
   : ActuatorBulk(actMeta),
     turbineThrust_("turbineThrust", actMeta.numberOfActuators_),
     turbineTorque_("turbineTorque", actMeta.numberOfActuators_),
@@ -55,6 +55,7 @@ ActuatorBulkFAST::ActuatorBulkFAST(
       actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),
     tStepRatio_(std::round(naluTimeStep / actMeta.fastInputs_.dtFAST))
 {
+  actMeta.set_dt_driver(naluTimeStep);
   init_openfast(actMeta, naluTimeStep);
   init_epsilon(actMeta);
   RunActFastUpdatePoints(*this);
