@@ -286,7 +286,7 @@ Time Integration Options
 .. inpfile:: time_int.realms
 
    A list of `realms` names. The names entered here must match
-   `name` used in the :inpfile:`realms` section. Names listed here not
+   `name` used in the `realms` section. Names listed here not
    found in `realms` list will trigger an error, while realms not
    included in this list but present in `realms` will not be
    initialized and silently ignored. This can cause the code to abort if the

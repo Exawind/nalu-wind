@@ -15,6 +15,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+# import os
+#import sys
+# sys.path.insert(0, os.path.abspath('.'))
+#sys.path.append("../breathe")
 
 # -- General configuration ------------------------------------------------
 
@@ -25,20 +29,13 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-              'sphinx.ext.autodoc',
-              'sphinx.ext.autosummary',
-              'sphinx.ext.mathjax',
-              'sphinx.ext.intersphinx',
-              'sphinxcontrib.bibtex',
-             ]
-bibtex_bibfiles = ['references/references.bib']
-autodoc_default_flags = ['members','show-inheritance','undoc-members']
-autoclass_content = 'both'
-mathjax_path = 'https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
-numfig = True
+extensions = [ 'sphinx.ext.mathjax']
+
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+#breathe_projects = {"Nalu-Wind": "../doxygen_output/xml/"}
+#breathe_default_project = "Nalu-Wind"
 
 #fortran_src ='../../src/'
 #fortran_ext =[' 'F90']
@@ -350,9 +347,7 @@ texinfo_documents = [
 #
 # texinfo_no_detailmenu = False
 
-primary_domain = "cpp"
-
 def setup(app):
     app.add_object_type("inpfile", "inpfile",
-                        objname="Nalu-Wind Input File Parameter",
-                        indextemplate="pair: %s; Nalu-Wind Input File Parameter")
+                        objname="Nalu-Wind input parameter",
+                        indextemplate="pair: %s; Nalu-Wind input parameter")
