@@ -329,7 +329,7 @@ Initial conditions
 
 Nalu-Wind has the ability to initialize the internal flow fields to uniform
 conditions for all pressure, velocity, temperature, and TKE (:math:`k`) in the
-:inpfile:`input file <initial_conditions.constant>`. Nalu-Wind also provides a *user
+`input file <initial_conditions.constant>`. Nalu-Wind also provides a *user
 function* to add perturbations to the velocity field to trigger turbulence
 generation during precursor simulations. To specify more complex flow field
 conditions, a temperature profile with a capping inversion for example, users

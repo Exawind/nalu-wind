@@ -41,7 +41,7 @@ simulation to be executed.
       other realms. In this context, it acts as an *output* realm.
 
   Inclusion of an input/output realm will require the user to provide the
-  additional :inpfile:`transfers` section in the Nalu-Wind input file that defines
+  additional `transfers` section in the Nalu-Wind input file that defines
   the solution fields that are transferred between the realms. See
   :ref:`nalu_inp_realm` for detailed documentation on all Realm options.
 
@@ -58,14 +58,14 @@ simulation to be executed.
   This section configures the time integration scheme used (first/second order
   in time), the duration of simulation, fixed or adaptive timestepping based on
   Courant number constraints, etc. Each time integration section in this list
-  can accept one or more :inpfile:`realms` that are integrated in time using
+  can accept one or more `realms` that are integrated in time using
   that specific time integration scheme. See :ref:`nalu_inp_time_integrators`
   for complete documentation of all time integration options available in Nalu-Wind.
 
 **Transfers**
 
   An optional section that defines one or more solution transfer definitions
-  between the participating :inpfile:`realms` during the simulation. Each
+  between the participating `realms` during the simulation. Each
   transfer definition provides a mapping of the to and from realm, part, and the
   solution field that must be transferred at every timestep during the
   simulation. See :ref:`nalu_inp_transfers` section for complete documentation of
@@ -88,14 +88,14 @@ entries:
 
 .. note::
 
-   The variable in the :inpfile:`linear_solvers` subsection are prefixed with
+   The variable in the `linear_solvers` subsection are prefixed with
    ``linear_solvers.name`` but only the variable name after the period should
    appear in the input file.
 
 .. inpfile:: linear_solvers.name
 
    The key used to refer to the linear solver configuration in
-   :inpfile:`equation_systems.solver_system_specification` section.
+   `equation_systems.solver_system_specification` section.
 
 .. inpfile:: linear_solvers.type
 
@@ -112,7 +112,7 @@ entries:
 
    The solver used for solving the linear system.
 
-   When :inpfile:`linear_solvers.type` is ``tpetra`` the valid options are:
+   When `linear_solvers.type` is ``tpetra`` the valid options are:
    ``gmres``, ``biCgStab``, ``cg``. For ``hypre`` the valid
    options are ``hypre_boomerAMG`` and ``hypre_gmres``.
 
@@ -122,7 +122,7 @@ entries:
 
    The type of preconditioner used.
 
-   When :inpfile:`linear_solvers.type` is ``tpetra`` the valid options are
+   When `linear_solvers.type` is ``tpetra`` the valid options are
    ``sgs``, ``mt_sgs``, ``muelu``. For ``hypre`` the valid
    options are ``boomerAMG`` or ``none``.
 
@@ -152,7 +152,7 @@ entries:
 
 .. inpfile:: linear_solvers.muelu_xml_file_name
 
-   Only used when the :inpfile:`linear_solvers.preconditioner` is set to
+   Only used when the `linear_solvers.preconditioner` is set to
    ``muelu`` and specifies the path to the XML filename that contains various
    configuration parameters for Trilinos MueLu package.
 
@@ -219,7 +219,7 @@ Time Integration Options
 
 .. inpfile:: Time_Integrators
 
-   A list of time-integration options used to advance the :inpfile:`realms` in
+   A list of time-integration options used to advance the `realms` in
    time. Each list entry must contain a YAML mapping with the key indicating the
    type of time integrator. Currently only one option,
    ``StandardTimeIntegrator`` is available.
@@ -242,7 +242,7 @@ Time Integration Options
 .. inpfile:: time_int.name
 
    The lookup key for this time integration entry. This name must match the one
-   provided in :inpfile:`Simulations` section.
+   provided in `Simulations` section.
 
 .. inpfile:: time_int.termination_time
 
@@ -251,24 +251,24 @@ Time Integration Options
 .. inpfile:: time_int.termination_step_count
 
    Nalu-Wind will stop the simulation once the specified ``termination_step_count``
-   timesteps have been completed. If both :inpfile:`time_int.termination_time`
+   timesteps have been completed. If both `time_int.termination_time`
    and this parameter are provided then this parameter will prevail.
 
 .. inpfile:: time_int.time_step
 
    The time step (:math:`\Delta t`) used for the simulation. If
-   :inpfile:`time_int.time_stepping_type` is ``fixed`` this value does not
+   `time_int.time_stepping_type` is ``fixed`` this value does not
    change during the simulation.
 
 .. inpfile:: time_int.start_time
 
    The starting time step (default: ``0.0``) when starting a new simulation.
    Note that this has no effect on restart which is controlled by
-   :inpfile:`restart.restart_time` in the :inpfile:`restart` section.
+   `restart.restart_time` in the :inpfile:`restart` section.
 
 .. inpfile:: time_int.time_step_count
 
-   The starting timestep counter for a new simulation. See :inpfile:`restart`
+   The starting timestep counter for a new simulation. See `restart`
    for restarting from a previous simulation.
 
 .. inpfile:: time_int.second_order_accuracy
@@ -280,17 +280,17 @@ Time Integration Options
 
    One of ``fixed`` or ``adaptive`` indicating whether a fixed time-stepping
    scheme or an adaptive timestepping scheme is used for simulations. See
-   :inpfile:`time_step_control` for more information on max Courant number based
+   `time_step_control` for more information on max Courant number based
    adaptive time stepping.
 
 .. inpfile:: time_int.realms
 
-   A list of :inpfile:`realms` names. The names entered here must match
-   :inpfile:`name` used in the :inpfile:`realms` section. Names listed here not
-   found in :inpfile:`realms` list will trigger an error, while realms not
-   included in this list but present in :inpfile:`realms` will not be
+   A list of `realms` names. The names entered here must match
+   `name` used in the :inpfile:`realms` section. Names listed here not
+   found in `realms` list will trigger an error, while realms not
+   included in this list but present in `realms` will not be
    initialized and silently ignored. This can cause the code to abort if the
-   user attempts to access the specific realm in the :inpfile:`transfers`
+   user attempts to access the specific realm in the `transfers`
    section.
 
 .. _nalu_inp_realm:
@@ -298,7 +298,7 @@ Time Integration Options
 Physics Realm Options
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-As mentioned previously, :inpfile:`realms` is a YAML list data structure
+As mentioned previously, `realms` is a YAML list data structure
 containing at least one :ref:`nalu_inp_realm` entry that defines the
 computational domain (provided as an Exodus-II mesh), the set of physics
 equations that must be solved over this domain, along with the necessary initial
@@ -309,16 +309,16 @@ in the input file are
 =============================== =========================================================================
 Realm subsection                 Purpose
 =============================== =========================================================================
-:inpfile:`equation_systems`      Set of physics equations to be solved
-:inpfile:`initial_conditions`    Initial conditions for the various fields
-:inpfile:`boundary_conditions`   Boundary condition for the different fields
-:inpfile:`material_properties`   Material properties (e.g., fluid density, viscosity etc.)
-:inpfile:`solution_options`      Discretization and numerical stability
-:inpfile:`mesh_transformation`   Mesh transformation
-:inpfile:`mesh_motion`           Mesh motion
-:inpfile:`output`                Solution output options (file, frequency, etc.)
-:inpfile:`restart`               Optional: Restart options (restart time, checkpoint frequency etc.)
-:inpfile:`time_step_control`     Optional: Parameters determining variable timestepping
+`equation_systems`      Set of physics equations to be solved
+`initial_conditions`    Initial conditions for the various fields
+`boundary_conditions`   Boundary condition for the different fields
+`material_properties`   Material properties (e.g., fluid density, viscosity etc.)
+`solution_options`      Discretization and numerical stability
+`mesh_transformation`   Mesh transformation
+`mesh_motion`           Mesh motion
+`output`                Solution output options (file, frequency, etc.)
+`restart`               Optional: Restart options (restart time, checkpoint frequency etc.)
+`time_step_control`     Optional: Parameters determining variable timestepping
 =============================== =========================================================================
 
 In addition to the sections mentioned in the table, there are several additional
@@ -329,13 +329,13 @@ optional sections are provided below:
 ==================================== ===========================================================================
 Realm subsection                      Purpose
 ==================================== ===========================================================================
-:inpfile:`turbulence_averaging`       Generate statistics for the flow field
-:inpfile:`post_processing`            Extract integrated data from the simulation
-:inpfile:`solution_norm`              Compare the solution error to a reference solution
-:inpfile:`data_probes`                Extract data using probes
-:inpfile:`actuator`                   Model turbine blades/tower using actuator lines
-:inpfile:`abl_forcing`                Momentum source term to drive ABL flows to a desired velocity profile
-:inpfile:`boundary_layer_statistics`  Compute boundary layer statistics
+`turbulence_averaging`       Generate statistics for the flow field
+`post_processing`            Extract integrated data from the simulation
+`solution_norm`              Compare the solution error to a reference solution
+`data_probes`                Extract data using probes
+`actuator`                   Model turbine blades/tower using actuator lines
+`abl_forcing`                Momentum source term to drive ABL flows to a desired velocity profile
+`boundary_layer_statistics`  Compute boundary layer statistics
 ==================================== ===========================================================================
 
 
@@ -345,7 +345,7 @@ Common options
 .. inpfile:: name
 
    The name of the realm. The name provided here is used in the
-   :inpfile:`Time_Integrators` section to determine the time-integration scheme
+   `Time_Integrators` section to determine the time-integration scheme
    used for this computational domain.
 
 .. inpfile:: mesh
@@ -384,7 +384,7 @@ Common options
 .. inpfile:: polynomial_order
 
    An integer value indicating the polynomial order used for higher-order mesh
-   simulations. The default value is ``1``. When :inpfile:`polynomial_order` is
+   simulations. The default value is ``1``. When `polynomial_order` is
    greater than 1, the Realm has the capability to promote the mesh to
    higher-order during initialization.
 
@@ -415,8 +415,8 @@ Common options
 .. inpfile:: balance_nodes
 
    A boolean flag indicating whether node balancing is performed during
-   simulations. See also :inpfile:`balance_node_iterations` and
-   :inpfile:`balance_nodes_target`.
+   simulations. See also `balance_node_iterations` and
+   `balance_nodes_target`.
 
 .. inpfile:: balance_node_iterations
 
@@ -438,7 +438,7 @@ Equation Systems
 
 .. note::
 
-   The variable in the :inpfile:`equation_systems` subsection are prefixed with
+   The variable in the `equation_systems` subsection are prefixed with
    ``equation_systems.name`` but only the variable name after the period should
    appear in the input file.
 
@@ -465,7 +465,7 @@ Equation Systems
 
    The above example indicates that the linear systems for the enthalpy and
    momentum (velocity) equations are solved by the linear solver corresponding
-   to the tag ``solve_scalar`` in the :inpfile:`linear_systems` entry, whereas
+   to the tag ``solve_scalar`` in the `linear_systems` entry, whereas
    the continuity equation system (pressure Poisson solve) should be solved
    using the linear solver definition corresponding to the tag
    ``solve_continuity``.
@@ -549,7 +549,7 @@ Initial conditions
 
    This input parameter serves two purposes: 1. it indicates the *type*
    (``constant``), and 2. provides the custom *name* for this condition. In
-   addition to the :inpfile:`initial_conditions.target_name` this section
+   addition to the `initial_conditions.target_name` this section
    requires another entry ``value`` that contains the mapping of ``(field_name,
    value)`` as shown in the above example.
 
@@ -582,7 +582,7 @@ Boundary Conditions
      - ``non_conformal`` -- e.g., BC across sliding mesh interfaces
      - ``overset`` -- overset mesh assembly description
 
-All BC types require :inpfile:`bc.target_name` that contains a list of side sets
+All BC types require `bc.target_name` that contains a list of side sets
 where the specified BC is to be applied. Additional information necessary for
 certain BC types are provided by a sub-dictionary with the key
 ``<type>_user_data:`` that contains the parameters necessary to initialize a
@@ -642,16 +642,16 @@ details on the actual implementation.
        gravity_vector_component: 3
        reference_temperature: 300.0
 
-The entry :inpfile:`gravity_vector_component` is an integer that
+The entry `gravity_vector_component` is an integer that
 specifies the component of the gravity vector, defined in
-:inpfile:`solution_options.gravity`, that should be used in the
+`solution_options.gravity`, that should be used in the
 definition of the Monin-Obukhov length scale calculation.  The
-entry :inpfile:`reference_temperature` is the reference temperature
+entry `reference_temperature` is the reference temperature
 used in calculation of the Monin-Obukhov length scale.
 
 When there is mesh motion involved the wall boundary velocity takes the value of
-the mesh_velocity along the part represented by :inpfile:`bc.target_name`. In
-such a scenario all information under :inpfile:`bc.wall_user_data` is rendered
+the mesh_velocity along the part represented by `bc.target_name`. In
+such a scenario all information under `bc.wall_user_data` is rendered
 unused.
 
 Example of wall boundary with a custom user function for temperature at the wall
@@ -667,7 +667,7 @@ Example of wall boundary with a custom user function for temperature at the wall
 Symmetry Boundary Condition
 +++++++++++++++++++++++++++
 
-Requires no additional input other than :inpfile:`bc.target_name`.
+Requires no additional input other than `bc.target_name`.
 
 .. code-block:: yaml
 
@@ -679,11 +679,11 @@ Requires no additional input other than :inpfile:`bc.target_name`.
 Periodic Boundary Condition
 +++++++++++++++++++++++++++
 
-Unlike the other BCs described so far, the parameter :inpfile:`bc.target_name`
+Unlike the other BCs described so far, the parameter `bc.target_name`
 behaves differently for the periodic BC. This parameter must be a list
 containing exactly two entries: the boundary face pair where periodicity is
 enforced. The nodes on these planes must coincide after translation in the
-direction of periodicity. This BC also requires a :inpfile:`periodic_user_data`
+direction of periodicity. This BC also requires a `periodic_user_data`
 section that specifies the search tolerance for locating node pairs.
 
 .. inpfile:: periodic_user_data
@@ -698,7 +698,7 @@ section that specifies the search tolerance for locating node pairs.
 Non-Conformal Boundary
 ++++++++++++++++++++++
 
-Like the periodic BC, the parameter :inpfile:`bc.target_name` must be a list
+Like the periodic BC, the parameter `bc.target_name` must be a list
 with exactly two entries that specify the boundary plane pair forming the
 non-conformal boundary.
 
@@ -746,7 +746,7 @@ Material Properties
 
    A list of element blocks (*parts*) where the material properties are applied.
    This list should ideally include all the parts that are referenced by
-   :inpfile:`initial_conditions.target_name`. Using the alias ``all_blocks`` is
+   `initial_conditions.target_name`. Using the alias ``all_blocks`` is
    equivalent to listing all element blocks in the mesh.
 
 .. inpfile:: material_properties.constant_specification
@@ -824,7 +824,7 @@ Material Properties
             - species_name: Air
               coefficients: [1.7894e-5, 273.11, 110.56]
 
-      The ``species_name`` must correspond to the entry in :inpfile:`reference
+      The ``species_name`` must correspond to the entry in `reference
       quantitites <material_properties.reference_quantities>` to lookup
       molecular weight information.
 
@@ -929,7 +929,7 @@ Mesh Transformation
 .. inpfile:: mesh_transformation
 
    This subsection of the realm describes a one time stationary motion undergone
-   by the entire mesh with entries under :inpfile:`mesh_transformation` describing
+   by the entire mesh with entries under `mesh_transformation` describing
    the motions applied to different parts in a.
 
    Example:
@@ -970,7 +970,7 @@ Mesh Motion
 .. inpfile:: mesh_motion
 
    This subsection of the of the realm describes the time-dependent rigid body motion undergone
-   by the entire mesh for as described by entries under :inpfile:`mesh_motion`.
+   by the entire mesh for as described by entries under `mesh_motion`.
 
    Example:
 
@@ -1068,23 +1068,23 @@ Restart Options
 
 .. inpfile:: restart.restart_data_base_name
 
-   The filename for restart. Like :inpfile:`output`, the filename can contain a
+   The filename for restart. Like `output`, the filename can contain a
    directory and it will be created if not already present.
 
 .. inpfile:: restart.restart_time
 
    If this variable is present, it indicates that the current run will restart
-   from a previous simulation. This requires that the :inpfile:`mesh` be a
+   from a previous simulation. This requires that the `mesh` be a
    restart file with all the fields necessary for the equation sets defined in
-   the :inpfile:`equation_systems.systems`. Nalu-Wind will restart from the closest
-   time available in the :inpfile:`mesh` to ``restart_time``. The timesteps
+   the `equation_systems.systems`. Nalu-Wind will restart from the closest
+   time available in the `mesh` to ``restart_time``. The timesteps
    available in a restart file can be examined by looking at the ``time_whole``
    variable using the ``ncdump`` utility.
 
    .. note::
 
       The restart database used for restarting a simulation is the
-      :inpfile:`mesh` parameter. The :inpfile:`restart_data_base_name
+      `mesh` parameter. The :inpfile:`restart_data_base_name
       <restart.restart_data_base_name>` parameter is used exclusively for
       outputs.
 
@@ -1118,7 +1118,7 @@ Time-step Control Options
 .. inpfile:: time_step_control
 
    This optional section specifies the adpative time stepping parameters used if
-   :inpfile:`time_int.time_stepping_type` is set to ``adaptive``.
+   `time_int.time_stepping_type` is set to ``adaptive``.
 
    .. code-block:: yaml
 
@@ -1447,7 +1447,7 @@ Turbulence averaging
 
 .. note::
 
-   The variable in the :inpfile:`turbulence_averaging` subsection are
+   The variable in the `turbulence_averaging` subsection are
    prefixed with ``turbulence_averaging.name`` but only the variable
    name after the period should appear in the input file.
 
@@ -1631,7 +1631,7 @@ Data probes
 
 .. note::
 
-   The variable in the :inpfile:`data_probes` subsection are prefixed
+   The variable in the `data_probes` subsection are prefixed
    with ``data_probes.name`` but only the variable name after the
    period should appear in the input file.
 
@@ -1909,7 +1909,7 @@ Post-processing
 
 .. note::
 
-   The variable in the :inpfile:`post_processing` subsection are prefixed with
+   The variable in the `post_processing` subsection are prefixed with
    ``post_processing.name`` but only the variable name after the period should
    appear in the input file.
 
@@ -2057,7 +2057,7 @@ Transfers
 .. inpfile:: transfers
 
    Transfers section describes the search and mapping operations to be performed
-   between participating :inpfile:`realms` within a simulation.
+   between participating `realms` within a simulation.
 
 Simulations
 -----------

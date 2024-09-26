@@ -64,7 +64,7 @@ ABL Forcing
          - [100000.0, 300.0, 280.0, 310.0]
 .. note::
 
-  The variables in the :inpfile:`abl_forcing` subsection are
+  The variables in the `abl_forcing` subsection are
   prefixed with ``abl_forcing.name`` but only the variable
   name after the period should appear in the input file.
 
