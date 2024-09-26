@@ -26,6 +26,7 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
 {
 
   STK_ThrowErrorIf(!actMeta.is_disk());
+  actMeta.set_dt_driver(naluTimeStep);
   compute_swept_point_count(actMeta);
   resize_arrays(actMeta);
   Kokkos::parallel_for(

@@ -174,9 +174,6 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     get_required(y_actuator, "n_every_checkpoint", *restartFreq);
     get_required(y_actuator, "dt_fast", fi.dtFAST);
 
-    // FIXME this needs to be defined. No idea how
-    fi.dtDriver = 0.0625;
-
     get_required(y_actuator, "t_max", fi.tMax);
 
     if (y_actuator["super_controller"]) {

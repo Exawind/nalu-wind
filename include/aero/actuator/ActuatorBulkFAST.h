@@ -16,11 +16,13 @@
 namespace sierra {
 namespace nalu {
 
-struct ActuatorMetaFAST : public ActuatorMeta
+struct
+ActuatorMetaFAST : public ActuatorMeta
 {
   ActuatorMetaFAST(const ActuatorMeta& actMeta);
 
   // HOST ONLY
+  void set_dt_driver(const double dt){fastInputs_.dtDriver=dt;}
   fast::fastInputs fastInputs_;
   std::vector<std::string> turbineNames_;
   std::vector<std::string> turbineOutputFileNames_;
@@ -42,7 +44,7 @@ struct ActuatorMetaFAST : public ActuatorMeta
 
 struct ActuatorBulkFAST : public ActuatorBulk
 {
-  ActuatorBulkFAST(const ActuatorMetaFAST& actMeta, double naluTimeStep);
+  ActuatorBulkFAST(ActuatorMetaFAST& actMeta, double naluTimeStep);
 
   Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> local_range_policy();
 
