@@ -457,7 +457,7 @@ Figure :numref:`laplace-ncoc-b`.
 Given the order of accuracy results for the P1 implementation, a linear
 patch test was run. The temperature solution was simply,
 :math:`T(x,y,z) = x + y + z`; all analytical temperature gradients are
-unity. Table :numref:`_linear-patch` demonstrates the successful patch test
+unity. Table :numref:`linear-patch` demonstrates the successful patch test
 results for a P1 CVFEM implementation.
 
 Precursor-based Simulations
