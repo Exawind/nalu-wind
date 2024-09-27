@@ -309,16 +309,16 @@ in the input file are
 =============================== =========================================================================
 Realm subsection                 Purpose
 =============================== =========================================================================
-`equation_systems`      Set of physics equations to be solved
-`initial_conditions`    Initial conditions for the various fields
-`boundary_conditions`   Boundary condition for the different fields
-`material_properties`   Material properties (e.g., fluid density, viscosity etc.)
-`solution_options`      Discretization and numerical stability
-`mesh_transformation`   Mesh transformation
-`mesh_motion`           Mesh motion
-`output`                Solution output options (file, frequency, etc.)
-`restart`               Optional: Restart options (restart time, checkpoint frequency etc.)
-`time_step_control`     Optional: Parameters determining variable timestepping
+`equation_systems`              Set of physics equations to be solved
+`initial_conditions`            Initial conditions for the various fields
+`boundary_conditions`           Boundary condition for the different fields
+`material_properties`           Material properties (e.g., fluid density, viscosity etc.)
+`solution_options`              Discretization and numerical stability
+`mesh_transformation`           Mesh transformation
+`mesh_motion`                   Mesh motion
+`output`                        Solution output options (file, frequency, etc.)
+`restart`                       Optional: Restart options (restart time, checkpoint frequency etc.)
+`time_step_control`             Optional: Parameters determining variable timestepping
 =============================== =========================================================================
 
 In addition to the sections mentioned in the table, there are several additional
@@ -329,13 +329,13 @@ optional sections are provided below:
 ==================================== ===========================================================================
 Realm subsection                      Purpose
 ==================================== ===========================================================================
-`turbulence_averaging`       Generate statistics for the flow field
-`post_processing`            Extract integrated data from the simulation
-`solution_norm`              Compare the solution error to a reference solution
-`data_probes`                Extract data using probes
-`actuator`                   Model turbine blades/tower using actuator lines
-`abl_forcing`                Momentum source term to drive ABL flows to a desired velocity profile
-`boundary_layer_statistics`  Compute boundary layer statistics
+`turbulence_averaging`               Generate statistics for the flow field
+`post_processing`                    Extract integrated data from the simulation
+`solution_norm`                      Compare the solution error to a reference solution
+`data_probes`                        Extract data using probes
+`actuator`                           Model turbine blades/tower using actuator lines
+`abl_forcing`                        Momentum source term to drive ABL flows to a desired velocity profile
+`boundary_layer_statistics`          Compute boundary layer statistics
 ==================================== ===========================================================================
 
 
