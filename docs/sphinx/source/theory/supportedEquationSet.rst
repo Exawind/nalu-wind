@@ -855,6 +855,41 @@ where :math:`\Omega` is the earth's angular velocity and :math:`\lambda` is the 
 
 .. _eqn_sst_des:
 
+Laminar-Turbulent Transition Model Formulation
+++++++++++++++++++++++++++++++++++++++++++++++
+To account for the effects of the laminar-turbulent boundary layer transition, 
+Menter's one-equation :math:`\gamma` transition model :cite:`Menter:2015` is coupled with the SST model.
+The model consists of single transport equation for intermittency
+
+.. math::
+   \frac{D(\rho \gamma)}{Dt}=P_{\gamma}-D_{\gamma}+\frac{\partial }{\partial x_j}\left[ (\mu + \frac{\mu_t}{\sigma_{\gamma}} )\frac{\partial \gamma}{\partial x_j} \right]
+
+The production term, :math:`P_{\gamma}`, and destruction term, :math:`D_{\gamma}`, are as:
+
+.. math::
+   P_{\gamma}=F_{length} \rho S \gamma (1-\gamma) F_{onset}, \quad D_{\gamma}=C_{a2} \rho \Omega \gamma F_{turb} (C_{e2}\gamma-1)
+
+The model constants are:
+
+.. math::
+   F_{length}=100, \quad  c_{e2}=50, \quad  c_{a2}=0.06, \quad  \sigma_{\gamma}=1.0 
+
+The transition onset criteria of the model are defined as:
+
+.. math::
+   F_{onset1}=\frac{Re_{v}}{2.2Re_{\theta c}}, \quad F_{onset2}=(F_{onset1},2.0 ) 
+
+.. math::
+   F_{onset3}=\max \left(1- \left (\frac{R_{T}}{3.5}\right)^3,0 \right ), \quad F_{onset}=\max(F_{onset2}-F_{onset3},0)
+
+.. math::
+   F_{turb}=e^{-\left ( \frac{R_{T}}{2} \right )^{4}}, \quad R_T=\frac{\rho k}{\mu \omega}, \quad Re_v=\frac{\rho d_{w}^2S}{\mu}
+
+The transition onset occurs once the scaled vorticity Reynolds number, :math:`Re_{v}/2.2`, exceeds the critical momentum thickness Reynolds number, :math:`Re_{\theta c}`, from the empirical correlations.
+
+The output intermittency from the transition model is applied to both the production and destruction terms of the turbulent kinetic energy
+transport equation. 
+
 Detached Eddy Simulation (DES) Formulation
 ++++++++++++++++++++++++++++++++++++++++++
 

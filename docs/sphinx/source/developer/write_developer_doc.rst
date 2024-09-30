@@ -18,12 +18,3 @@ copy of the file.
 .. literalinclude:: dox_example/example.h
    :language: c++
    :caption: Sample C++ header file showing inline documentation using specially formatted comments.
-
-Once processed by Doxygen and embedded in Sphinx, the resulting documentation of
-the class looks as shown below:
-
-.. doxygenclass:: ExampleClass
-   :project: example_cpp
-   :members:
-   :private-members:
-   :protected-members:

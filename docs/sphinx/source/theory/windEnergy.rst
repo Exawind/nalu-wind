@@ -329,7 +329,7 @@ Initial conditions
 
 Nalu-Wind has the ability to initialize the internal flow fields to uniform
 conditions for all pressure, velocity, temperature, and TKE (:math:`k`) in the
-:inpfile:`input file <initial_conditions.constant>`. Nalu-Wind also provides a *user
+`input file <initial_conditions.constant>`. Nalu-Wind also provides a *user
 function* to add perturbations to the velocity field to trigger turbulence
 generation during precursor simulations. To specify more complex flow field
 conditions, a temperature profile with a capping inversion for example, users
@@ -455,11 +455,11 @@ Presently, Nalu-Wind uses an actuator line representation to model the effects o
 turbine on the flow field; however, the class hierarchy is designed with the
 potential to add other actuator source terms such as actuator disk, swept
 actuator line and actuator surface capability in the future. The
-:class:`ActuatorLineFAST <sierra::nalu::ActuatorLineFAST>` class couples Nalu-Wind
+ActuatorLineFAST class couples Nalu-Wind
 with NREL's OpenFAST for actuator line simulations of wind turbines. OpenFAST is
 a aero-hydro-servo-elastic tool to model wind turbine developed by the National
-Renewable Energy Laboratory (NREL). The :class:`ActuatorLineFAST
-<sierra::nalu::ActuatorLineFAST>` class allows Nalu-Wind to interface as an inflow
+Renewable Energy Laboratory (NREL). The ActuatorLineFAST
+class allows Nalu-Wind to interface as an inflow
 module to OpenFAST by supplying the velocity field information.
 
 Nalu-Wind -- OpenFAST Coupling Algorithm

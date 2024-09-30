@@ -16,7 +16,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 # import os
-import sys
+#import sys
 # sys.path.insert(0, os.path.abspath('.'))
 #sys.path.append("../breathe")
 
@@ -29,7 +29,8 @@ import sys
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [ 'sphinx.ext.mathjax']
+extensions = ['sphinx.ext.mathjax', 'sphinxcontrib.bibtex']
+bibtex_bibfiles = ['references/references.bib']
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -37,7 +38,7 @@ templates_path = ['_templates']
 #breathe_projects = {"Nalu-Wind": "../doxygen_output/xml/"}
 #breathe_default_project = "Nalu-Wind"
 
-fortran_src ='../../src/'
+#fortran_src ='../../src/'
 #fortran_ext =[' 'F90']
 
 # The suffix(es) of source filenames.
@@ -348,9 +349,6 @@ texinfo_documents = [
 # texinfo_no_detailmenu = False
 
 def setup(app):
-    app.add_object_type("cmakeval", "cmakeval",
-                        objname="CMake configuration value",
-                        indextemplate="pair: %s; CMake configuration")
-    app.add_object_type("input_param", "input_param",
+    app.add_object_type("inpfile", "inpfile",
                         objname="Nalu-Wind input parameter",
                         indextemplate="pair: %s; Nalu-Wind input parameter")

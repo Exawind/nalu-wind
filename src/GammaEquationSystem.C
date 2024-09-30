@@ -98,10 +98,15 @@ GammaEquationSystem::GammaEquationSystem(EquationSystems& eqSystems)
     dgamdx_(NULL),
     gamTmp_(NULL),
     minDistanceToWall_(NULL),
+    dwalldistdx_(NULL),
+    nDotV_(NULL),
+    dnDotVdx_(NULL),
     visc_(NULL),
     tvisc_(NULL),
     evisc_(NULL),
-    nodalGradAlgDriver_(realm_, "gamma_transition", "dgamdx")
+    nodalGradAlgDriver_(realm_, "gamma_transition", "dgamdx"),
+    wallDistGradAlgDriver_(realm_, "minimum_distance_to_wall", "dwalldistdx"),
+    nDotVGradAlgDriver_(realm_, "nDotV", "dnDotVdx")
 {
   dofName_ = "gamma_transition";
 
@@ -162,6 +167,25 @@ GammaEquationSystem::register_nodal_fields(
     &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "gamTmp"));
   stk::mesh::put_field_on_mesh(*gamTmp_, selector, nullptr);
 
+  minDistanceToWall_ = meta_data.get_field<double>(
+    stk::topology::NODE_RANK, "minimum_distance_to_wall");
+
+  dwalldistdx_ =
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "dwalldistdx"));
+  stk::mesh::put_field_on_mesh(*dwalldistdx_, selector, nDim, nullptr);
+  stk::io::set_field_output_type(
+    *dwalldistdx_, stk::io::FieldOutputType::VECTOR_3D);
+
+  nDotV_ =
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "nDotV"));
+  stk::mesh::put_field_on_mesh(*nDotV_, selector, nullptr);
+
+  dnDotVdx_ =
+    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "dnDotVdx"));
+  stk::mesh::put_field_on_mesh(*dnDotVdx_, selector, nDim, nullptr);
+  stk::io::set_field_output_type(
+    *dnDotVdx_, stk::io::FieldOutputType::VECTOR_3D);
+
   visc_ =
     &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "viscosity"));
   stk::mesh::put_field_on_mesh(*visc_, selector, nullptr);
@@ -200,14 +224,28 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
   ScalarFieldType& gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType& dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
 
-  if (edgeNodalGradient_ && realm_.realmUsesEdges_)
+  if (edgeNodalGradient_ && realm_.realmUsesEdges_) {
     nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone);
-  else
+
+    wallDistGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
+      algType, part, "wall_dist_nodal_grad", minDistanceToWall_, dwalldistdx_);
+
+    nDotVGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
+      algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_);
+
+  } else {
     nodalGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
       edgeNodalGradient_);
 
+    wallDistGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
+      algType, part, "wall_dist_nodal_grad", minDistanceToWall_, dwalldistdx_,
+      edgeNodalGradient_);
+
+    nDotVGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
+      algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_, edgeNodalGradient_);
+  }
   // solver; interior contribution (advection + diffusion)
   if (!realm_.solutionOptions_->useConsolidatedSolverAlg_) {
 
@@ -242,7 +280,6 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 
     // Check if the user has requested CMM or LMM algorithms; if so, do not
     // include Nodal Mass algorithms
-    //
     NaluEnv::self().naluOutputP0() << "register gamma interior: " << std::endl;
 
     std::vector<std::string> checkAlgNames = {
@@ -340,6 +377,15 @@ GammaEquationSystem::register_inflow_bc(
     algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
     edgeNodalGradient_);
 
+  // non-solver; dwalldistdx; allow for element-based shifted
+  wallDistGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "wall_dist_nodal_grad", minDistanceToWall_, dwalldistdx_,
+    edgeNodalGradient_);
+
+  // non-solver; dnDotVdx; allow for element-based shifted
+  nDotVGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_, edgeNodalGradient_);
+
   // Dirichlet bc
   std::map<AlgorithmType, SolverAlgorithm*>::iterator itd =
     solverAlgDriver_->solverDirichAlgMap_.find(algType);
@@ -358,8 +404,8 @@ GammaEquationSystem::register_inflow_bc(
 void
 GammaEquationSystem::register_open_bc(
   stk::mesh::Part* part,
-  const stk::topology& /* partTopo */,
-  const OpenBoundaryConditionData& /* openBCData */)
+  const stk::topology& partTopo,
+  const OpenBoundaryConditionData& openBCData)
 {
 
   // algorithm type
@@ -368,10 +414,60 @@ GammaEquationSystem::register_open_bc(
   ScalarFieldType& gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType& dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
 
+  stk::mesh::MetaData& meta_data = realm_.meta_data();
+
+  // register boundary data; gamma_bc
+  ScalarFieldType* theBcField = &(
+    meta_data.declare_field<double>(stk::topology::NODE_RANK, "open_gamma_bc"));
+  stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
+
+  // extract the value for user specified tke and save off the AuxFunction
+  OpenUserData userData = openBCData.userData_;
+  GammaInf gamma = userData.gamma_;
+  std::vector<double> userSpec(1);
+  userSpec[0] = gamma.gamma_;
+
+  // new it
+  ConstantAuxFunction* theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
+
+  // bc data alg
+  AuxFunctionAlgorithm* auxAlg = new AuxFunctionAlgorithm(
+    realm_, part, theBcField, theAuxFunc, stk::topology::NODE_RANK);
+  bcDataAlg_.push_back(auxAlg);
+
   // non-solver; dgamdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
     algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
     edgeNodalGradient_);
+
+  // non-solver; dwalldistdx; allow for element-based shifted
+  wallDistGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "wall_dist_nodal_grad", minDistanceToWall_, dwalldistdx_,
+    edgeNodalGradient_);
+
+  // non-solver; dnDotVdx; allow for element-based shifted
+  nDotVGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_, edgeNodalGradient_);
+
+  if (realm_.realmUsesEdges_) {
+    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+    AssembleElemSolverAlgorithm* elemSolverAlg = nullptr;
+    bool solverAlgWasBuilt = false;
+
+    std::tie(elemSolverAlg, solverAlgWasBuilt) =
+      build_or_add_part_to_face_bc_solver_alg(
+        *this, *part, solverAlgMap, "open");
+
+    auto& dataPreReqs = elemSolverAlg->dataNeededByKernels_;
+    auto& activeKernels = elemSolverAlg->activeKernels_;
+
+    build_face_topo_kernel_automatic<ScalarOpenEdgeKernel>(
+      partTopo, *this, activeKernels, "Gamma_open", realm_.meta_data(),
+      *realm_.solutionOptions_, gamma_, theBcField, dataPreReqs);
+  } else {
+    throw std::runtime_error(
+      "GAMMAEQS: Attempt to use non-NGP element open algorithm");
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -395,6 +491,15 @@ GammaEquationSystem::register_wall_bc(
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
     algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
     edgeNodalGradient_);
+
+  // non-solver; dwalldistdx; allow for element-based shifted
+  wallDistGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "wall_dist_nodal_grad", minDistanceToWall_, dwalldistdx_,
+    edgeNodalGradient_);
+
+  // non-solver; dnDotVdx; allow for element-based shifted
+  nDotVGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_, edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -418,6 +523,15 @@ GammaEquationSystem::register_symmetry_bc(
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
     algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
     edgeNodalGradient_);
+
+  // non-solver; dwalldistdx; allow for element-based shifted
+  wallDistGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "wall_dist_nodal_grad", minDistanceToWall_, dwalldistdx_,
+    edgeNodalGradient_);
+
+  // non-solver; dnDotVdx; allow for element-based shifted
+  nDotVGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_, edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -473,9 +587,68 @@ GammaEquationSystem::reinitialize_linear_system()
 void
 GammaEquationSystem::assemble_nodal_gradient()
 {
+
+  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+
+  const auto& meta = realm_.meta_data();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const int ndim = meta.spatial_dimension();
+
   const double timeA = -NaluEnv::self().nalu_time();
   nodalGradAlgDriver_.execute();
   timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+
+  // Computation of dV/dy in Eq. 11: gard(n dot V) dot n
+  // where the V is the velocity vector and n is the wall normal vector
+  // Step 1 - Calculate the gradient of the wall distance
+  wallDistGradAlgDriver_.execute();
+
+  auto& dwalldistdx =
+    fieldMgr.get_field<double>(dwalldistdx_->mesh_meta_data_ordinal());
+  auto& nDotV = fieldMgr.get_field<double>(nDotV_->mesh_meta_data_ordinal());
+  const std::string velName =
+    realm_.does_mesh_move() ? "velocity_rtm" : "velocity";
+  auto& vel = fieldMgr.get_field<double>(get_field_ordinal(meta, velName));
+
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part()) &
+    (stk::mesh::selectField(*dwalldistdx_));
+
+  dwalldistdx.sync_to_device();
+  nDotV.sync_to_device();
+  vel.sync_to_device();
+
+  nalu_ngp::run_entity_algorithm(
+    "GammaTransition::compute_nDotV", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      // Step 2 - Normalize the wall distance gradient
+      // Calculate a magnitude of the wall distance gradient
+      double mag_wdg = 0.0;
+      for (int d = 0; d < ndim; ++d)
+        mag_wdg += dwalldistdx.get(mi, d) * dwalldistdx.get(mi, d);
+      mag_wdg = stk::math::sqrt(mag_wdg);
+
+      // Normalize the wall distance gradient vector: computation of n is done
+      for (int d = 0; d < ndim; ++d)
+        dwalldistdx.get(mi, d) /= mag_wdg;
+
+      // Step 3 - Calculate the dot product of the wall normal vector and the
+      // velocity vector
+      double nDotV_tmp = 0.0;
+      for (int d = 0; d < ndim; ++d)
+        nDotV_tmp += dwalldistdx.get(mi, d) * vel.get(mi, d);
+      nDotV.get(mi, 0) = nDotV_tmp;
+    });
+
+  dwalldistdx.modify_on_device();
+  nDotV.modify_on_device();
+
+  // Step 4 - Calculate the gradient of n Dot V
+  nDotVGradAlgDriver_.execute();
+
+  // Step 5 - Calculate the dot product of d(n Dot V)dx and n -This will be
+  // performed inside BLTGammaM2015NodeKernel
 }
 
 //--------------------------------------------------------------------------
