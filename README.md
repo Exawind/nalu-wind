@@ -1,6 +1,6 @@
 # Nalu-Wind 
 
-[Documentation](https://nalu-wind.readthedocs.io) | [Nightly test dashboard](http://my.cdash.org/index.php?project=Exawind) 
+[Documentation](https://exawind.github.io/nalu-wind/) | [Nightly test dashboard](http://my.cdash.org/index.php?project=Exawind) 
 
 Nalu-Wind is a generalized, unstructured, massively parallel, incompressible
 flow solver for wind turbine and wind farm simulations. The codebase is a
@@ -34,23 +34,23 @@ please reference the following citation:
 
 ## Documentation
 
-Documentation is available online at https://nalu-wind.readthedocs.io/ and is
+Documentation is available online at https://exawind.github.io/nalu-wind/ and is
 split into the following sections:
 
-- [Theory manual](https://nalu-wind.readthedocs.io/en/latest/source/theory/index.html):
+- [Theory manual](https://exawind.github.io/nalu-wind/source/theory/index.html):
   This section provides a detailed overview of the supported equation sets, the
   discretization and time-integration schemes, turbulence models available, etc.
   
-- [Verification manual](https://nalu-wind.readthedocs.io/en/latest/source/verification/index.html):
+- [Verification manual](https://exawind.github.io/nalu-wind/source/verification/index.html):
   This section documents the results from verification studies of the spatial
   and temporal schemes available in Nalu-Wind.
   
-- [User manual](https://nalu-wind.readthedocs.io/en/latest/source/user/index.html):
+- [User manual](https://exawind.github.io/nalu-wind/source/user/index.html):
   The user manual contains detailed instructions on building the code, along
   with the required third-party libraries (TPLs) and usage.
   
 All documentation is maintained alongside the source code within the git
-repository and automatically deployed to ReadTheDocs website upon new commits.
+repository and automatically deployed to a github-hosted website upon new commits.
   
 ## Compilation and usage
 
@@ -59,7 +59,7 @@ project](https://trilinos.org), which in turn depends on several third-party
 libraries (MPI, HDF5, NetCDF, parallel NetCDF), and YAML-CPP. In addition, it
 has the following optional dependencies: hypre, TIOGA, and OpenFAST. Detailed
 build instructions are available in the [user
-manual](https://nalu-wind.readthedocs.io/en/latest/source/user/building.html).
+manual](https://exawind.github.io/nalu-wind/source/user/building.html).
 We recommend using [Spack](https://spack.io/) package manager to install
 Nalu-Wind on your system.
 
