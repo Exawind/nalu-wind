@@ -35,7 +35,7 @@ Currently Nalu-Wind supports two types of wind simulations:
 
   In this case, the wind turbine blades and tower are modeled as actuator source
   terms by coupling to the `OpenFAST
-  <https://openfast.readthedocs.io/en/master/>`_ libraries. Velocity fields are
+  <https://openfast.readthedocs.io/en/main/>`_ libraries. Velocity fields are
   sampled at the blade and tower control points within the Nalu-Wind domain and the
   blade positions and blade/tower loading is provided by OpenFAST to be used as
   source terms within the momentum equation.
