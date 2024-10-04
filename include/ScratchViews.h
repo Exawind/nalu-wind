@@ -777,9 +777,9 @@ MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new_me(
     case SCS_SHIFTED_GRAD_OP:
       STK_NGP_ThrowRequireMsg(
         meSCS != nullptr,
-        "ERROR, meSCS needs to be non-null if SCS_GRAD_OP is requested.");
+        "ERROR, meSCS needs to be non-null if SCS_SHIFTED_GRAD_OP is requested.");
       STK_NGP_ThrowRequireMsg(
-        coordsView != nullptr, "ERROR, coords null but SCS_GRAD_OP requested.");
+        coordsView != nullptr, "ERROR, coords null but SCS_SHIFTED_GRAD_OP requested.");
       meSCS->shifted_grad_op(*coordsView, dndx_shifted, deriv);
       break;
     case SCS_GIJ:

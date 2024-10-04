@@ -62,7 +62,7 @@ template <
   typename GradViewType,
   typename CoordViewType,
   typename OutputViewType>
-KOKKOS_FUNCTION KOKKOS_FUNCTION void
+KOKKOS_INLINE_FUNCTION void
 generic_grad_op(
   const GradViewType& referenceGradWeights,
   const CoordViewType& coords,
@@ -82,11 +82,11 @@ generic_grad_op(
     CoordViewType::rank == 2, "Coordinate view assumed to be rank 2");
   static_assert(OutputViewType::rank == 3, "Weight view assumed to be rank 3");
 
-  STK_ThrowAssert(
+  STK_NGP_ThrowAssert(
     AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
-  STK_ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
+  STK_NGP_ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
   for (int i = 0; i < dim; ++i)
-    STK_ThrowAssert(weights.extent(i) == referenceGradWeights.extent(i));
+    STK_NGP_ThrowAssert(weights.extent(i) == referenceGradWeights.extent(i));
 
   for (unsigned ip = 0; ip < referenceGradWeights.extent(0); ++ip) {
     NALU_ALIGNED ftype jact[dim][dim];
@@ -112,7 +112,7 @@ generic_grad_op(
     NALU_ALIGNED ftype det = ftype(0.0);
     for (int i = 0; i < dim; ++i)
       det += jact[i][0] * adjJac[i][0];
-    STK_ThrowAssertMsg(
+    STK_NGP_ThrowAssertMsg(
       stk::simd::are_any(det > tiny_positive_value()),
       "Problem with Jacobian determinant");
 
@@ -135,7 +135,7 @@ template <
   typename GradViewType,
   typename CoordViewType,
   typename OutputViewType>
-KOKKOS_FUNCTION void
+KOKKOS_INLINE_FUNCTION void
 generic_gij_3d(
   const GradViewType& referenceGradWeights,
   const CoordViewType& coords,
@@ -222,7 +222,7 @@ generic_gij_3d(
 }
 
 template <typename AlgTraits>
-KOKKOS_FUNCTION void
+KOKKOS_INLINE_FUNCTION void
 generic_Mij_2d(
   const int numIntPoints,
   const double* deriv,
@@ -319,7 +319,7 @@ template <
   typename GradViewType,
   typename CoordViewType,
   typename OutputViewType>
-KOKKOS_FUNCTION void
+KOKKOS_INLINE_FUNCTION void
 generic_Mij_2d(
   const GradViewType& referenceGradWeights,
   const CoordViewType& coords,
@@ -502,7 +502,7 @@ template <
   typename GradViewType,
   typename CoordViewType,
   typename OutputViewType>
-KOKKOS_FUNCTION void
+KOKKOS_INLINE_FUNCTION void
 generic_Mij_3d(
   const GradViewType& referenceGradWeights,
   const CoordViewType& coords,
@@ -583,7 +583,7 @@ template <
   typename GradViewType,
   typename CoordViewType,
   typename OutputViewType>
-KOKKOS_FUNCTION void
+KOKKOS_INLINE_FUNCTION void
 generic_determinant_3d(
   GradViewType referenceGradWeights, CoordViewType coords, OutputViewType detj)
 {
@@ -599,11 +599,11 @@ generic_determinant_3d(
   static_assert(OutputViewType::rank == 1, "Weight view assumed to be 1D");
   static_assert(AlgTraits::nDim_ == 3, "3D method");
 
-  STK_ThrowAssert(
+  STK_NGP_ThrowAssert(
     AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
-  STK_ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
+  STK_NGP_ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
 
-  STK_ThrowAssert(detj.extent(0) == referenceGradWeights.extent(0));
+  STK_NGP_ThrowAssert(detj.extent(0) == referenceGradWeights.extent(0));
 
   for (unsigned ip = 0; ip < referenceGradWeights.extent(0); ++ip) {
     NALU_ALIGNED ftype jac[3][3] = {
