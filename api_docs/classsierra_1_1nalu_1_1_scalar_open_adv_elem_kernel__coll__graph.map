@@ -1,0 +1,14 @@
+<map id="sierra::nalu::ScalarOpenAdvElemKernel&lt; BcAlgTraits &gt;" name="sierra::nalu::ScalarOpenAdvElemKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="Node000001" title="Symmetry kernel for scalar equation." alt="" coords="1037,47,1260,87"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="709,5,853,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="868,26,1014,45,1038,48,1037,53,1013,50,867,31"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_master_element.html" title=" " alt="" coords="680,55,883,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="896,65,1037,65,1037,70,896,70"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_peclet_function.html" title=" " alt="" coords="682,105,881,145"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="894,105,1036,82,1037,87,894,110"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1nalu_1_1_peclet_function_base.html" title="Non&#45;templated empty base class for storing pointers to templated instances." alt="" coords="5,116,236,141"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="250,120,260,119,487,117,682,120,682,125,487,123,260,125,250,125"/>
+<area shape="rect" id="Node000006" href="$classsierra_1_1nalu_1_1_peclet_function.html" title=" " alt="" coords="285,141,521,167"/>
+<area shape="poly" id="edge6_Node000006_Node000005" title=" " alt="" coords="250,138,285,141,285,146,250,143"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="535,143,656,134,682,132,682,137,656,139,535,148"/>
+</map>

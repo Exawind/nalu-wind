@@ -1,0 +1,24 @@
+<map id="HexVertexCoordinates.h" name="HexVertexCoordinates.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="100,5,280,31"/>
+<area shape="rect" id="Node000002" href="$_local_array_8h.html" title=" " alt="" coords="46,152,227,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="149,33,113,51,97,64,84,80,81,96,86,112,97,127,111,141,107,145,93,131,81,114,75,96,80,78,93,60,110,47,147,28"/>
+<area shape="rect" id="Node000008" href="$_coefficients_8h.html" title=" " alt="" coords="95,79,285,104"/>
+<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="193,31,193,65,187,65,187,31"/>
+<area shape="rect" id="Node000009" href="$_kokkos_view_types_8h.html" title=" " alt="" coords="310,79,539,104"/>
+<area shape="poly" id="edge10_Node000001_Node000009" title=" " alt="" coords="228,28,374,72,373,77,227,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,225,156,251"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="130,179,100,216,96,213,125,176"/>
+<area shape="rect" id="Node000004" href="$_kokkos_framework_8h.html" title=" " alt="" coords="232,225,465,251"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="172,175,302,218,301,223,170,180"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="153,299,245,324"/>
+<area shape="poly" id="edge7_Node000002_Node000007" title=" " alt="" coords="146,176,170,224,193,285,188,287,165,226,141,179"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="443,299,577,324"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="376,248,472,291,470,295,374,253"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="273,299,419,324"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="351,251,350,285,344,285,346,251"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="326,253,237,295,235,290,324,248"/>
+<area shape="poly" id="edge9_Node000008_Node000002" title=" " alt="" coords="183,106,156,143,151,140,179,103"/>
+<area shape="poly" id="edge11_Node000009_Node000004" title=" " alt="" coords="437,103,456,137,460,158,455,179,432,205,402,222,399,218,428,200,450,176,455,158,451,139,432,106"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="251,152,441,177"/>
+<area shape="poly" id="edge12_Node000009_Node000010" title=" " alt="" coords="414,106,371,145,367,141,410,102"/>
+</map>

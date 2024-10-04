@@ -1,0 +1,36 @@
+<map id="sierra::nalu::SideWriterContainer" name="sierra::nalu::SideWriterContainer">
+<area shape="rect" id="Node000001" title=" " alt="" coords="1455,173,1625,213"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="1159,83,1309,123"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="1323,113,1377,125,1432,140,1503,171,1501,176,1430,145,1376,130,1322,118"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_side_writer.html" title=" " alt="" coords="781,59,952,85"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="966,78,1159,94,1159,99,965,83"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="464,87,624,127"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="637,94,780,79,781,84,638,99"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="127,115,284,141"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="298,120,464,109,464,114,298,125"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="5,158,44,183"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="57,161,150,138,152,143,58,166"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="479,173,609,198"/>
+<area shape="poly" id="edge10_Node000010_Node000006" title=" " alt="" coords="58,169,479,181,479,186,58,174"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="463,15,625,55"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="640,43,781,60,781,65,639,48"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="151,22,260,47"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="274,32,462,32,462,37,274,37"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="5,22,44,47"/>
+<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="58,32,150,32,150,37,58,37"/>
+<area shape="poly" id="edge9_Node000002_Node000010" title=" " alt="" coords="604,167,649,157,790,137,930,122,1159,104,1159,109,931,127,790,142,650,163,605,172"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="773,223,960,249"/>
+<area shape="poly" id="edge14_Node000011_Node000010" title=" " alt="" coords="582,202,614,216,650,227,712,236,773,238,773,243,711,241,649,232,612,221,579,207"/>
+<area shape="rect" id="Node000014" title=" " alt="" coords="984,161,1123,186"/>
+<area shape="poly" id="edge16_Node000014_Node000010" title=" " alt="" coords="622,181,984,172,984,178,622,186"/>
+<area shape="rect" id="Node000015" title=" " alt="" coords="1147,272,1321,312"/>
+<area shape="poly" id="edge19_Node000015_Node000010" title=" " alt="" coords="577,203,663,251,717,273,774,288,873,300,973,304,1067,303,1146,298,1147,303,1067,308,973,310,872,306,773,293,716,278,661,255,574,208"/>
+<area shape="poly" id="edge11_Node000001_Node000011" title=" " alt="" coords="973,227,1454,196,1455,201,974,232"/>
+<area shape="poly" id="edge18_Node000015_Node000011" title=" " alt="" coords="948,248,984,255,1147,278,1146,284,984,260,947,254"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="501,325,587,350"/>
+<area shape="poly" id="edge12_Node000011_Node000012" title=" " alt="" coords="598,318,824,246,826,251,600,323"/>
+<area shape="rect" id="Node000013" title=" " alt="" coords="136,317,275,357"/>
+<area shape="poly" id="edge13_Node000012_Node000013" title=" " alt="" coords="289,335,500,335,500,340,289,340"/>
+<area shape="poly" id="edge15_Node000001_Node000014" title=" " alt="" coords="1137,174,1455,187,1454,193,1137,179"/>
+<area shape="poly" id="edge17_Node000001_Node000015" title=" " alt="" coords="1335,289,1383,283,1430,270,1478,243,1516,212,1520,216,1481,247,1432,274,1384,288,1336,294"/>
+</map>

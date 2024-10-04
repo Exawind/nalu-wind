@@ -1,0 +1,7 @@
+<map id="sierra::nalu::FrameBase" name="sierra::nalu::FrameBase">
+<area shape="rect" id="Node000001" title=" " alt="" coords="125,5,301,31"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_frame_moving.html" title=" " alt="" coords="5,79,197,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="185,40,121,81,118,76,182,36"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_frame_reference.html" title=" " alt="" coords="221,79,432,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="245,36,310,76,307,81,242,40"/>
+</map>

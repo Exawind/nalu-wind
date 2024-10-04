@@ -1,0 +1,41 @@
+<map id="tioga_nalu::TiogaBlock" name="tioga_nalu::TiogaBlock">
+<area shape="rect" id="Node000001" title="Interface to convert STK Mesh Part(s) to TIOGA blocks." alt="" coords="1115,211,1285,236"/>
+<area shape="rect" id="Node000002" href="$classtioga__nalu_1_1_tioga_options.html" title="Options to control TIOGA overset hole&#45;cut behavior." alt="" coords="779,5,963,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="978,22,1036,37,1065,49,1092,64,1130,98,1161,139,1183,179,1196,209,1191,211,1178,181,1156,142,1126,102,1089,68,1063,53,1035,42,976,27"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="778,136,965,161"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="979,155,1035,163,1091,175,1136,191,1175,208,1173,213,1134,196,1090,181,1034,168,978,160"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="475,91,561,116"/>
+<area shape="poly" id="edge22_Node000001_Node000004" title=" " alt="" coords="575,96,695,88,846,84,989,88,1048,96,1092,109,1126,130,1155,158,1193,209,1189,212,1151,161,1123,134,1090,114,1047,102,989,94,846,89,696,94,575,101"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="576,108,778,134,778,139,575,113"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="31,83,169,123"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="183,101,475,101,475,106,183,106"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="453,203,583,228"/>
+<area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="596,198,802,159,803,164,597,203"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="793,203,950,228"/>
+<area shape="poly" id="edge8_Node000008_Node000006" title=" " alt="" coords="596,213,792,213,792,218,596,218"/>
+<area shape="rect" id="Node000017" title=" " alt="" coords="802,252,941,277"/>
+<area shape="poly" id="edge21_Node000017_Node000006" title=" " alt="" coords="597,225,650,233,802,253,801,259,649,238,596,230"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="81,223,119,248"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="133,231,453,216,453,221,133,236"/>
+<area shape="rect" id="Node000015" title=" " alt="" coords="451,293,585,319"/>
+<area shape="poly" id="edge19_Node000015_Node000007" title=" " alt="" coords="133,238,451,292,450,297,133,243"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="964,218,993,219,1114,221,1114,226,993,225,964,224"/>
+<area shape="rect" id="Node000009" href="$structtioga__nalu_1_1_ngp_tioga_block.html" title="Data representing an unstructured mesh block." alt="" coords="773,485,969,511"/>
+<area shape="poly" id="edge9_Node000001_Node000009" title=" " alt="" coords="898,475,1089,317,1183,234,1186,238,1092,321,901,479"/>
+<area shape="rect" id="Node000010" href="$structtioga__nalu_1_1_overset_array_type.html" title=" " alt="" coords="426,415,610,455"/>
+<area shape="poly" id="edge10_Node000009_Node000010" title=" " alt="" coords="624,414,687,412,750,422,782,434,812,451,857,483,854,487,809,455,780,439,749,427,686,418,624,419"/>
+<area shape="rect" id="Node000011" href="$structtioga__nalu_1_1_overset_array_type.html" title=" " alt="" coords="5,519,195,559"/>
+<area shape="poly" id="edge11_Node000010_Node000011" title=" " alt="" coords="194,513,436,453,437,458,195,519"/>
+<area shape="rect" id="Node000012" href="$structtioga__nalu_1_1_overset_array_type.html" title=" " alt="" coords="426,519,610,559"/>
+<area shape="poly" id="edge13_Node000012_Node000011" title=" " alt="" coords="209,537,426,537,426,542,209,542"/>
+<area shape="rect" id="Node000013" href="$structtioga__nalu_1_1_overset_array_type.html" title=" " alt="" coords="411,583,625,623"/>
+<area shape="poly" id="edge15_Node000013_Node000011" title=" " alt="" coords="208,555,219,557,411,586,410,591,218,562,208,560"/>
+<area shape="poly" id="edge12_Node000009_Node000012" title=" " alt="" coords="624,546,686,546,749,539,799,526,842,508,844,513,801,531,750,545,686,551,624,551"/>
+<area shape="poly" id="edge14_Node000009_Node000013" title=" " alt="" coords="639,602,694,595,748,581,781,566,810,546,855,509,859,513,813,551,783,570,750,586,695,600,640,607"/>
+<area shape="rect" id="Node000014" title=" " alt="" coords="796,301,947,327"/>
+<area shape="poly" id="edge16_Node000001_Node000014" title=" " alt="" coords="960,302,1024,291,1090,274,1137,255,1176,234,1179,238,1139,260,1092,279,1026,296,961,307"/>
+<area shape="poly" id="edge17_Node000014_Node000015" title=" " alt="" coords="599,305,795,310,795,315,599,310"/>
+<area shape="rect" id="Node000016" title=" " alt="" coords="81,293,119,319"/>
+<area shape="poly" id="edge18_Node000015_Node000016" title=" " alt="" coords="133,303,451,303,451,309,133,309"/>
+<area shape="poly" id="edge20_Node000001_Node000017" title=" " alt="" coords="954,257,1090,242,1140,233,1140,239,1091,247,955,262"/>
+</map>

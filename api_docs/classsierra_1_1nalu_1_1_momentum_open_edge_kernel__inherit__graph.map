@@ -1,0 +1,10 @@
+<map id="sierra::nalu::MomentumOpenEdgeKernel&lt; BcAlgTraits &gt;" name="sierra::nalu::MomentumOpenEdgeKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="Node000001" title=" " alt="" coords="9,287,221,327"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="5,183,224,237"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="117,251,117,286,112,286,112,251"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="37,5,181,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="113,45,117,182,111,183,107,45"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="131,80,341,105"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="143,35,217,77,214,82,140,40"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="216,117,144,184,141,180,212,113"/>
+</map>
