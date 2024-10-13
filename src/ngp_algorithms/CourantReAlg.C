@@ -107,8 +107,6 @@ CourantReAlg<AlgTraits>::execute()
       auto& scrViews = edata.simdScrView;
       const auto& v_coords = scrViews.get_scratch_view_2D(coordID);
       const auto& v_vel = scrViews.get_scratch_view_2D(velID);
-      const auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
-      const auto& v_visc = scrViews.get_scratch_view_1D(viscID);
 
       DoubleType elemCFL = -1.0;
 
