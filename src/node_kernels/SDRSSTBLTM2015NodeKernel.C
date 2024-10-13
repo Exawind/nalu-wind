@@ -95,7 +95,6 @@ SDRSSTBLTM2015NodeKernel::execute(
 
   for (int i = 0; i < nDim_; ++i) {
     crossDiff += dkdx_.get(node, i) * dwdx_.get(node, i);
-    const int offset = nDim_ * i;
     for (int j = 0; j < nDim_; ++j) {
       const double duidxj = dudx_.get(node, nDim_ * i + j);
       const double dujdxi = dudx_.get(node, nDim_ * j + i);
