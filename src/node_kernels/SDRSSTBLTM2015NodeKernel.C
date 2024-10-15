@@ -81,7 +81,6 @@ SDRSSTBLTM2015NodeKernel::execute(
 {
   using DblType = NodeKernelTraits::DblType;
 
-  const DblType tke = tke_.get(node, 0);
   const DblType sdr = sdr_.get(node, 0);
   const DblType density = density_.get(node, 0);
   const DblType tvisc = tvisc_.get(node, 0);
@@ -116,37 +115,6 @@ SDRSSTBLTM2015NodeKernel::execute(
   const DblType beta = fOneBlend * betaOne_ + omf1 * betaTwo_;
   const DblType gamma = fOneBlend * gammaOne_ + omf1 * gammaTwo_;
   const DblType sigmaD = 2.0 * omf1 * sigmaWTwo_;
-
-  DblType gammaOne_apply;
-  DblType gammaTwo_apply;
-  // apply limiter to gamma
-  if (lengthScaleLimiter_) {
-    // calculate mixing length
-    const DblType l_t =
-      stk::math::sqrt(tke) / (stk::math::pow(betaStar_, .25) * sdr);
-
-    // calculate maximum mixing length
-    // the proportionality constant (.00027) was found by fitting to
-    // measurements of atmospheric conditions as described in ref. Kob13
-    const DblType l_e = .00027 * referenceVelocity_ / corfac_;
-
-    // apply limiter to cEpsOne -> calculate gammaOne
-    const DblType cEpsOne_one = gammaOne_ + 1.;
-    const DblType cEpsTwo_one = betaOne_ / betaStar_ + 1.;
-    const DblType cEpsOneStar_one =
-      cEpsOne_one + (cEpsTwo_one - cEpsOne_one) * (l_t / l_e);
-    gammaOne_apply = cEpsOneStar_one - 1.;
-
-    // apply limiter to cEpsTwo -> calculate gammaTwo
-    const DblType cEpsOne_two = gammaTwo_ + 1.;
-    const DblType cEpsTwo_two = betaTwo_ / betaStar_ + 1.;
-    const DblType cEpsOneStar_two =
-      cEpsOne_two + (cEpsTwo_two - cEpsOne_two) * (l_t / l_e);
-    gammaTwo_apply = cEpsOneStar_two - 1.;
-  } else {
-    gammaOne_apply = gammaOne_;
-    gammaTwo_apply = gammaTwo_;
-  }
 
   // Production term with appropriate clipping of tvisc
   const DblType Pw = gamma * density * Pk / stk::math::max(tvisc, 1.0e-16);
