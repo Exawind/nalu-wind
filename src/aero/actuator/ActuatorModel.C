@@ -70,13 +70,11 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
   if (!is_active())
     return;
 
-  // hack to surpress Wunused-parameter on non-openfast builds
-  STK_ThrowErrorIf(timeStep <= 0.0);
-
   switch (actMeta_->actuatorType_) {
   case (ActuatorType::ActLineFASTNGP): {
 #ifndef NALU_USES_OPENFAST
     STK_ThrowErrorMsg("Actuator methods require OpenFAST");
+    (void)timeStep;
 #if !defined(KOKKOS_ENABLE_GPU)
     break;
 #endif
