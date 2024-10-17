@@ -332,7 +332,9 @@ private:
                                 {0, 3, 2},  // face 2
                                 {0, 2, 1}}; // face 3
 
+#if !defined(KOKKOS_ENABLE_GPU)
   int intgExpFaceShift_[4][3][3];
+#endif
 
   template <typename DBLTYPE, typename SHMEM>
   KOKKOS_INLINE_FUNCTION void determinant_scs(

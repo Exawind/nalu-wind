@@ -85,7 +85,6 @@ VOFAdvectionEdgeAlg::execute()
   const double gradient_eps = 1.0e-9;
 
   const int ndim = realm_.meta_data().spatial_dimension();
-  const auto& meta = realm_.meta_data();
 
   const DblType sharpening_scaling =
     realm_.solutionOptions_->vof_sharpening_scaling_factor_;

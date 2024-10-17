@@ -24,13 +24,13 @@ TKESSTBLTM2015NodeKernel::TKESSTBLTM2015NodeKernel(
   : NGPNodeKernel<TKESSTBLTM2015NodeKernel>(),
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
     sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
+    gamintID_(get_field_ordinal(meta, "gamma_transition")),
     densityID_(get_field_ordinal(meta, "density")),
+    viscID_(get_field_ordinal(meta, "viscosity")),
     tviscID_(get_field_ordinal(meta, "turbulent_viscosity")),
     dudxID_(get_field_ordinal(meta, "dudx")),
-    dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
-    gamintID_(get_field_ordinal(meta, "gamma_transition")),
-    viscID_(get_field_ordinal(meta, "viscosity")),
     wallDistID_(get_field_ordinal(meta, "minimum_distance_to_wall")),
+    dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     nDim_(meta.spatial_dimension())
 {
 }

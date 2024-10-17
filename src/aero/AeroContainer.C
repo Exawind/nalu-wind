@@ -132,6 +132,8 @@ AeroContainer::update_displacements(
   }
 #else
   (void)currentTime;
+  (void)updateCC;
+  (void)predict;
 #endif
 }
 
