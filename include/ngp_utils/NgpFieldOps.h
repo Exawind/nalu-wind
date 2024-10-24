@@ -151,7 +151,7 @@ struct NodeFieldOp
       const auto& msh = obj_.ngpMesh_;
       const auto& fld = obj_.ngpField_;
       const auto* einfo = edata_.info();
-#ifdef STK_SIMD_NONE
+#ifdef USE_STK_SIMD_NONE
       fld.get(msh, einfo[0].entityNodes[ni], ic) = stk::simd::get_data(val, 0);
 #else
       for (int is = 0; is < edata_.numSimdElems; ++is) {
@@ -167,7 +167,7 @@ struct NodeFieldOp
       const auto& msh = obj_.ngpMesh_;
       const auto& fld = obj_.ngpField_;
       const auto* einfo = edata_.info();
-#ifdef STK_SIMD_NONE
+#ifdef USE_STK_SIMD_NONE
       Kokkos::atomic_add(
         &fld.get(msh, einfo[0].entityNodes[ni], ic),
         stk::simd::get_data(val, 0));
@@ -186,7 +186,7 @@ struct NodeFieldOp
       const auto& msh = obj_.ngpMesh_;
       const auto& fld = obj_.ngpField_;
       const auto* einfo = edata_.info();
-#ifdef STK_SIMD_NONE
+#ifdef USE_STK_SIMD_NONE
       fld.get(msh, einfo[0].entityNodes[ni], ic) = val;
 #else
       for (int is = 0; is < edata_.numSimdElems; ++is) {
@@ -201,7 +201,7 @@ struct NodeFieldOp
       const auto& msh = obj_.ngpMesh_;
       const auto& fld = obj_.ngpField_;
       const auto* einfo = edata_.info();
-#ifdef STK_SIMD_NONE
+#ifdef USE_STK_SIMD_NONE
       Kokkos::atomic_add(&fld.get(msh, einfo[0].entityNodes[ni], ic), val);
 #else
       for (int is = 0; is < edata_.numSimdElems; ++is) {
@@ -274,7 +274,7 @@ struct ElemFieldOp
     {
       const auto& fld = obj_.ngpField_;
       const auto* einfo = edata_.info();
-#ifdef STK_SIMD_NONE
+#ifdef USE_STK_SIMD_NONE
       fld.get(einfo[0].meshIdx, ic) = stk::simd::get_data(val, 0);
 #else
       for (int is = 0; is < edata_.numSimdElems; ++is) {
@@ -290,7 +290,7 @@ struct ElemFieldOp
       const auto* einfo = edata_.info();
 
       // No atomic_add here as only one element active per thread
-#ifdef STK_SIMD_NONE
+#ifdef USE_STK_SIMD_NONE
       fld.get(einfo[0].meshIdx, ic) += stk::simd::get_data(val, 0);
 #else
       for (int is = 0; is < edata_.numSimdElems; ++is) {
@@ -304,7 +304,7 @@ struct ElemFieldOp
     {
       const auto& fld = obj_.ngpField_;
       const auto* einfo = edata_.info();
-#ifdef STK_SIMD_NONE
+#ifdef USE_STK_SIMD_NONE
       fld.get(einfo[0].meshIdx, ic) = val;
 #else
       for (int is = 0; is < edata_.numSimdElems; ++is) {
@@ -318,7 +318,7 @@ struct ElemFieldOp
     {
       const auto& fld = obj_.ngpField_;
       const auto* einfo = edata_.info();
-#ifdef STK_SIMD_NONE
+#ifdef USE_STK_SIMD_NONE
       fld.get(einfo[0].meshIdx, ic) += val;
 #else
       for (int is = 0; is < edata_.numSimdElems; ++is) {
