@@ -133,6 +133,7 @@ realms:
         air_density: 1.225
         epsilon: [ 5.0, 5.0, 5.0 ]
         turbine_base_pos: [ 0.0, 0.0, 0.0 ]
+        turbine_hub_pos: [ 0.0, 0.0, 90.0 ]
         restart_filename: "blah"
         fast_input_filename: "nrel5mw.fst"
         turb_id:  1
