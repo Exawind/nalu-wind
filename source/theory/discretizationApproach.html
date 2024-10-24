@@ -1,0 +1,461 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3. Discretization Approach &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="4. Advection Stabilization" href="advectionStabilization.html" />
+    <link rel="prev" title="2. Supported Equation Set" href="supportedEquationSet.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Theory Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lowMachNumberDerivation.html">1. Low Mach Number Derivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html">2. Supported Equation Set</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3. Discretization Approach</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cvfem-dual-mesh">3.1. CVFEM Dual Mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edge-based-discretization">3.2. Edge-Based Discretization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#projected-nodal-gradients">3.3. Projected Nodal Gradients</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#time-and-source-terms">3.4. Time and Source Terms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#diffusion">3.5. Diffusion</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#momentum-stress">3.5.1. Momentum Stress</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="advectionStabilization.html">4. Advection Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pressureStabilization.html">5. Pressure Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html">6. RTE Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html">7. Nonlinear Stabilization Operator (NSO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html">8. Turbulence Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html">9. Supported Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overset.html">10. Overset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html">11. Property Evaluations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="couplingApproach.html">12. Coupling Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeDiscretization.html">13. Time discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiPhysics.html">14. Multi-Physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html">15. Wind Energy Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topologicalSupport.html">16. Topological Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adaptivity.html">17. Adaptivity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeAbstractions.html">18. Code Abstractions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Nalu-Wind - Theory Manual</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">3. </span>Discretization Approach</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/theory/discretizationApproach.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="discretization-approach">
+<span id="theory-discretization-approach"></span><h1><span class="section-number">3. </span>Discretization Approach<a class="headerlink" href="#discretization-approach" title="Link to this heading"></a></h1>
+<p>Nalu-Wind supports two discretizations: control volume finite element and
+(CVFEM) edge-based vertex centered (EBVC). Each are finite volume
+forumations and each solve for the primitives are are each considered
+vertex-based schemes. Considerable testing has provided a set of general
+rules as to which scheme is optimal. In general, all equations and
+boundary conditions support either equation discretization with
+exception of the solid stress equation which has only been implemented
+for the CVFEM technique.</p>
+<p>For generalized unstructured meshes that have poor quality, CVFEM has
+been shown to excell in accuracy and robustness. This is mostly due to
+the inherent accuracy limitation for the non-orthogonal correction
+terms that appear in the diffusion term and pressure stabilization for
+the EBVC scheme. For generalized unstructured meshes of decent quality,
+either scheme is ideal. Finally, for highly structured meshes with
+substantail aspect ratios, the edge-based scheme is ideal.</p>
+<p>In general, the edge-based scheme is at least two times faster per
+iteration than the element-based scheme. For some classes of flows, it
+can be up to four times faster. However, due to the lagged coupling
+between the projected nodal gradient equation and the dofs, on meshes
+with high non-orthogonality, nonlinear residual convergence can be
+delayed.</p>
+<section id="cvfem-dual-mesh">
+<span id="theory-cvfem-dual-mesh"></span><h2><span class="section-number">3.1. </span>CVFEM Dual Mesh<a class="headerlink" href="#cvfem-dual-mesh" title="Link to this heading"></a></h2>
+<p>The classic low Mach algorithm uses the finite volume technique known as
+the control volume finite element method, see
+Schneider, <span id="id1">[<a class="reference internal" href="../../zrefs.html#id15" title="G. Schneider and M. Raw. Control volume finite element method for heat transfer and fluid flow using colocated variables - 1. computational procedure. Numerial Heat Transfer, 11(4):363–390, 1987.">SR87</a>]</span>, or
+Domino, <span id="id2">[<a class="reference internal" href="../../zrefs.html#id8" title="S. Domino. Towards verification of formal time accuracy for a family of approximate projection methods using the method of manufactured solutions. In Center for Turbulence Research Summer Proceedings. 2006.">Dom06</a>]</span>. Control volumes (the mesh dual)
+are constructed about the nodes, shown in Figure <a class="reference internal" href="#cvfemnodes"><span class="std std-numref">3.1</span></a> (upper left).
+Each element contains a set of sub-faces that define control-volume
+surfaces. The sub-faces consist of line segments (2D) or surfaces (3D).
+The 2D segments are connected between the element centroid and the edge
+centroids. The 3D surfaces (not shown here) are connected between the
+element centroid, the element face centroids, and the edge centroids.
+Integration points also exist within the sub-control volume centroids.</p>
+<p>Recent work by Domino, <span id="id3">[<a class="reference internal" href="../../zrefs.html#id5" title="S. Domino. A comparison between low order and higher order low mach discretization approaches. In Center for Turbulence Research Summer Proceedings. 2014.">Dom14</a>]</span>, has provided a
+proof-of-concept higher order CVFEM implementation whereby the linear
+basis and dual mesh definition is extended to higher order. The current
+code base supports the usage of P=2 elements (quadratic) for both 2D and
+3D quad/hex topologies. This method has been formally demonstrated to be
+third-order spatially accurate and second-order in-time accurate.
+General polynomial promotion has been deployed in the higher order
+github branch. Figure <a class="reference internal" href="#cvfemnodes"><span class="std std-numref">3.1</span></a> illustrates a general polynomial
+promotion from P=1 to P=6 and demonstrated spectral convergence
+using the method of manufactured solutions in Figure <a class="reference internal" href="#cvfemconv"><span class="std std-numref">3.2</span></a>.</p>
+<figure class="align-center" id="id7">
+<span id="cvfemnodes"></span><a class="reference internal image-reference" href="../../_images/cvfem_nodes.png"><img alt="../../_images/cvfem_nodes.png" src="../../_images/cvfem_nodes.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">3.1 </span><span class="caption-text">Polynomial promotion for a canonical CVFEM quad element patch from <span class="math notranslate nohighlight">\(P=1\)</span> to <span class="math notranslate nohighlight">\(P=6\)</span>.</span><a class="headerlink" href="#id7" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id8">
+<span id="cvfemconv"></span><a class="reference internal image-reference" href="../../_images/cvfem_conv.png"><img alt="../../_images/cvfem_conv.png" src="../../_images/cvfem_conv.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">3.2 </span><span class="caption-text">A recent spectral convergence plot using the Method of Manufactured Solutions for <span class="math notranslate nohighlight">\(P=1\)</span> through <span class="math notranslate nohighlight">\(P=8\)</span>.</span><a class="headerlink" href="#id8" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>When using CVFEM, the discretized equations described in this manual are
+evaluated at either subcontrol-surface integration points (terms that
+have been integrated by parts) or at the subcontrol volume (time and
+source terms). Interpolation within the element is obtained by the
+standard elemental basis functions,</p>
+<div class="math notranslate nohighlight" id="equation-cvfem-interpolation">
+<span class="eqno">(3.1)<a class="headerlink" href="#equation-cvfem-interpolation" title="Link to this equation"></a></span>\[{\phi_{ip} = \sum N^{ip}_k \phi_k.}\]</div>
+<p>where the index <span class="math notranslate nohighlight">\(k\)</span> represents a loop over all nodes in the
+element.</p>
+<p>Gradients at the subcontrol volume surfaces are obtained by taking the
+derivative of Eq. <a class="reference internal" href="#equation-cvfem-interpolation">(3.1)</a>, to obtain,</p>
+<div class="math notranslate nohighlight" id="equation-cvfem-derivative">
+<span class="eqno">(3.2)<a class="headerlink" href="#equation-cvfem-derivative" title="Link to this equation"></a></span>\[\frac{\partial \phi_{ip}}{\partial x_j} = \sum \frac{\partial N^{ip}_{j,k}} {\partial x_j} \phi_k.\]</div>
+<p>The usage of the CVFEM methods results in the canonical 27-point stencil
+for a structured hexahedral mesh.</p>
+</section>
+<section id="edge-based-discretization">
+<h2><span class="section-number">3.2. </span>Edge-Based Discretization<a class="headerlink" href="#edge-based-discretization" title="Link to this heading"></a></h2>
+<p>In the edge-based discretization, the dual mesh defined in the CVFEM
+method is used to pre-process both dual mesh nodal volumes (needed in
+source and time terms) and edge-based area vectors (required for
+integrated-by-parts quantities, e.g., advection and diffusion terms).</p>
+<figure class="align-center" id="id9">
+<span id="cvfem-onecv"></span><a class="reference internal image-reference" href="../../_images/cvfem_onecv.png"><img alt="../../_images/cvfem_onecv.png" src="../../_images/cvfem_onecv.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">3.3 </span><span class="caption-text">A control volume centered about a finite-element node in a collection of 2-D quadrilateral elements (from <span id="id4">[<a class="reference internal" href="../../zrefs.html#id8" title="S. Domino. Towards verification of formal time accuracy for a family of approximate projection methods using the method of manufactured solutions. In Center for Turbulence Research Summer Proceedings. 2006.">Dom06</a>]</span>.)</span><a class="headerlink" href="#id9" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>Consider Figure <a class="reference internal" href="#cvfem-onecv"><span class="std std-numref">3.3</span></a>, which is the original set of CVFEM dual mesh
+quadrature points shown above in Figure <a class="reference internal" href="#cvfemnodes"><span class="std std-numref">3.1</span></a>. Specifically, there are four subcontrol
+volumes about node 5 that contribute to the nodal volume dual mesh. In
+an edge-based scheme, the time and source terms use single point
+quadrature by assembling these four subcontrol volume contributions
+(eight in 3D) into one single nodal volume. In most cases, source terms
+may include gradients that are obtained by using the larger
+element-based stencil.</p>
+<p>The same reduction of gauss points is realized for the area vector.
+Consider the edge between nodes 5 and 6. In the full CVFEM approach,
+subcontrol surfaces within the top element (5,6,9,8) and bottom element
+(2,3,6,5) are reduced to a single area vector at the edge midpoint of
+nodes 5 and 6. Therefore, advection and diffusion is now done in a
+manner very consistent with a cell centered scheme, i.e., classic
+“left”/“right” states.</p>
+<p>The consolidation of time and source terms to nodal locations along with
+advection and diffusion at the edge mid-point results in a canonical
+five-point stencil in 2D and seven in 3D. Note the ability to handle
+hybrid meshes is readily peformed one nodal volume and edge area are
+pre-processed. Edges and nodes are the sole topology that are iterated,
+thus making this scheme highly efficient, although inherantly limited to
+second order spatial order of accuracy.</p>
+<p>In general, the edge-based scheme is second order spatially accurate.
+Formal verification has been done to evaluate the accuracy of the EBVC
+relative to other implemented methods
+(Domino, <span id="id5">[<a class="reference internal" href="../../zrefs.html#id5" title="S. Domino. A comparison between low order and higher order low mach discretization approaches. In Center for Turbulence Research Summer Proceedings. 2014.">Dom14</a>]</span>). The edge-based scheme, which
+is based on dual mesh post-processing, represents a commonly used finite
+volume method in gas dynamics applications. The method also lends itself
+to psuedo-higher order methodologies by the blending of extrapolated
+values using the projected nodal gradient and gauss point values (as
+does CVFEM). This provides a fourth order accurate diffusion and
+advection operator on a structured mesh.</p>
+<p>The use of a consistent mass matrix is less apparent in edge-based
+schemes. However, if desired, the full element-based stencil can be used
+by iterating elements and assembling to the nodes.</p>
+<p>The advantage of edge-based schemes over cell centered schemes is that
+the scheme naturally allows for a mixed elemental discretization.
+Projected nodal gradients can be element- or edge-based. LES filters and
+nodal gradients can also exploit the inherant elemental basis that
+exists in the pure CVFEM approach. In our experience, the optimal scheme
+on high quality meshes uses the CVFEM for the continuity solve and EBVC
+discretization for all other equations. This combination allows for the
+full CVFEM diffusion operator for the pressure Poisson equation and the
+EBVC approach for equations where inverse Reynolds scaling reduces the
+importance of the diffusion operator. This scheme can be activated by
+the use of the <code class="docutils literal notranslate"><span class="pre">use_edges:</span> <span class="pre">yes</span></code> Realm line
+command in combination of the LowMachEOM system line command,
+<code class="docutils literal notranslate"><span class="pre">element_continuity_eqs:</span> <span class="pre">yes</span></code>.</p>
+</section>
+<section id="projected-nodal-gradients">
+<h2><span class="section-number">3.3. </span>Projected Nodal Gradients<a class="headerlink" href="#projected-nodal-gradients" title="Link to this heading"></a></h2>
+<p>In the edge or element-based algorithm, projected nodal gradients are
+commonplace. Projected nodal gradients are used in the fourth order
+pressure stabilization terms, higher order upwind methods, discontinuity
+capturing operators (DCO) and turbulence source terms. For an edge-based
+scheme, they are also used in the diffusion term when non-orthogonality
+of the mesh is noted.</p>
+<p>There are many procedures for determining the projected nodal gradient
+ranging from element-based schemes to edge-based approached. In general,
+the projected nodal gradient is viewed as an <span class="math notranslate nohighlight">\(L_2\)</span> minimization
+between the discontinuous Gauss-point value and the continuous nodal
+value. The projected nodal gradient, in an <span class="math notranslate nohighlight">\(L_2\)</span> sence is given
+by,</p>
+<div class="math notranslate nohighlight" id="equation-png1">
+<span class="eqno">(3.3)<a class="headerlink" href="#equation-png1" title="Link to this equation"></a></span>\[\int w G_j \phi {dV} = \int \frac{\partial \phi}{\partial x_j}{dV}.\]</div>
+<p>Using integration-by-parts and a piece-wise constant test function, the
+above equation is written as,</p>
+<div class="math notranslate nohighlight" id="equation-png2">
+<span class="eqno">(3.4)<a class="headerlink" href="#equation-png2" title="Link to this equation"></a></span>\[\int w_I G_j \phi {dV} = \int \phi_{ip} n_j {dS}.\]</div>
+<p>For a lumped L2 projected nodal gradient, the approach is based on a
+Green-Gauss integration,</p>
+<div class="math notranslate nohighlight" id="equation-green-gauss">
+<span class="eqno">(3.5)<a class="headerlink" href="#equation-green-gauss" title="Link to this equation"></a></span>\[G_j \phi = \frac{\int \phi_{ip} A_j}{dV}.\]</div>
+<p>In the above lumped mass matrix approach, the value at the integration
+point can either be based on the CVFEM dual mesh evaluated at the
+subcontrol surface, i.e., the line command option, <code class="docutils literal notranslate"><span class="pre">element</span></code> or
+the <code class="docutils literal notranslate"><span class="pre">edge</span></code>, which evaluates the term at the edge midpoint using
+the assemble edge area vector. In all cases, the lumped mass matrix
+approach is strickly second order accurate. When running higher order
+CVFEM, a consistent mass matrix appraoch is required to maintain design
+order of the overall discretization. This is strickly due to the
+pressure stabilization whose accuracy can be affected by the form of the
+projected nodal gradient (see the Nalu-Wind theory manual or a variety of
+SNL-based publications).</p>
+<p>In the description that follows, <span class="math notranslate nohighlight">\(\bar{G_j \phi}\)</span> represent the
+average nodal gradient evaluated at the integration point of interest.</p>
+<p>The choice of projected nodal gradients is specified in the input file
+for each dof. Keywords <code class="docutils literal notranslate"><span class="pre">element</span></code> or <code class="docutils literal notranslate"><span class="pre">edge</span></code> are used
+to define the form of the projection. The forms of the projected nodal
+gradients is arbitrary relative to the choosed underlying
+discretization. For strongly non-orthogonal meshes, it is recommended to
+use an element-based projected nodal gradient for the continuity
+equation when the EBVC method is in use. In some limited cases, e.g.,
+pressure, mixture fraction and enthalpy, the <code class="docutils literal notranslate"><span class="pre">manage-png</span></code> line
+command can be used to solve the simple linear system for the consistent
+mass matrix.</p>
+</section>
+<section id="time-and-source-terms">
+<h2><span class="section-number">3.4. </span>Time and Source Terms<a class="headerlink" href="#time-and-source-terms" title="Link to this heading"></a></h2>
+<p>Time and source terms also volumetric contributions and also use the
+dual nodal volume. In both discretization approaches, this assembly is
+achieved as a simple nodal loop. In some cases, e.g., the <span class="math notranslate nohighlight">\(k_{sgs}\)</span> partial
+differential equation, the source term can use projected nodal
+gradients.</p>
+<div class="math notranslate nohighlight">
+\[\int \frac{\partial \rho \phi }{\partial t} dV = \int S_{\phi}dV\]</div>
+</section>
+<section id="diffusion">
+<h2><span class="section-number">3.5. </span>Diffusion<a class="headerlink" href="#diffusion" title="Link to this heading"></a></h2>
+<p>As already noted, for the CVFEM method, the diffusion term at the
+subcontrol surface integration points use the the elemental shape
+functions and derivatives. For the standard diffusion term, and using
+Eq. <a class="reference internal" href="#equation-cvfem-derivative">(3.2)</a>, the CVFEM diffusion operator contribution at a
+given integration point (here simply demonstrated for a 2D edge with
+prescribed area vector) is as follows,</p>
+<div class="math notranslate nohighlight">
+\[-\int \Gamma \frac{\partial \phi}{\partial x_j} A_j =
+- \Gamma_{ip} \left[ \left(\frac{\partial N^{ip}_0}
+{\partial x} \phi_0 + \frac{\partial N^{ip}_1} {\partial x}
+\phi_1 \right) A_x + \left(\frac{\partial N^{ip}_0} {\partial y}
+\phi_0 + \frac{\partial N^{ip}_1} {\partial y} \phi_1 \right) A_y \right]\]</div>
+<p>Standard Gauss point locations at the subcontrol surfaces can be shifted
+to the edge-midpoints for a more stable (monotonic) diffusion operator
+that is better conditioned for high aspect ratio meshes.</p>
+<p>For the edge-based diffusion operator, special care is noted as there is
+no ability to use the elemental basis to define the diffusion operator.
+As with cell-centered schemes, non-orthogonal contributions for the
+diffusion operator arise due to a difference in direction between the
+assembled edge area vector and the distance vector between nodes on an
+edge. On skewed meshes, this non-orthogonality can not be ignored.</p>
+<p>Following the work of Jasek, <span id="id6">[<a class="reference internal" href="../../zrefs.html#id11" title="H. Jasek. Error analysis and estimation for the finite volume menthod with applications to fluid flow. In Ph.D. Thesis, Imperial College. 1996.">Jas96</a>]</span>, the
+over-relaxed approach is used. The form of any gradient for direction
+<span class="math notranslate nohighlight">\(j\)</span> for field <span class="math notranslate nohighlight">\(\phi\)</span> is</p>
+<div class="math notranslate nohighlight" id="equation-generalgrad">
+<span class="eqno">(3.6)<a class="headerlink" href="#equation-generalgrad" title="Link to this equation"></a></span>\[\frac{\partial \phi}{\partial x_j}_{ip} = \bar{G_j\phi}
++ \left[ \left(\phi_R - \phi_L \right)
+- \bar{G_l\phi}dx_l \right] \frac{A_j}{A_k dx_k}.\]</div>
+<p>In the above expression, we are iterating edges with a Left node
+<span class="math notranslate nohighlight">\(L\)</span> and Right node <span class="math notranslate nohighlight">\(R\)</span> along with edge-area vector,
+<span class="math notranslate nohighlight">\(A_j\)</span>. The <span class="math notranslate nohighlight">\(\bar{G_j \phi}\)</span> is simple averaging of the left
+and right nodes to the edge midpoint. In general, a standard edge-based
+diffusion term is written as,</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}-\int \Gamma \frac{\partial \phi}{\partial x_j} A_j &amp;=
+- \Gamma_{ip} \left[ \left(\bar{G_x \phi}A_x + \bar{G_y \phi}A_y \right)
++ \left( \phi_R - \phi_L \right) \frac{A_x A_x + A_y A_y}{A_x dx_x + A_y dx_y} \right. \\
+&amp;- \left. \left( \bar{G_x \phi}dx_x + \bar{G_y \phi}dx_y \right)
+\frac{A_x A_x + A_y A_y} {A_x dx_x + A_y dx_y} \right].\end{split}\]</div>
+<section id="momentum-stress">
+<h3><span class="section-number">3.5.1. </span>Momentum Stress<a class="headerlink" href="#momentum-stress" title="Link to this heading"></a></h3>
+<p>The viscous stress tensor, <span class="math notranslate nohighlight">\(\tau_{ij}\)</span> is formed based on the
+standard gradients defined above for either the edge or element-based
+discretization. The viscous force for component <span class="math notranslate nohighlight">\(i\)</span> is given by,</p>
+<div class="math notranslate nohighlight">
+\[-\int \tau_{ij} A_j = -\int \mu_{ip}\left( \frac{\partial u_i}{\partial x_j}
++ \frac{\partial u_j}{\partial x_i} \right) A_j.\]</div>
+<p>For example, the x and y-component of viscous force is
+given by,</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}F_x &amp;= - \mu_{ip} \left( \frac{\partial u_x}{ \partial x}A_x + \frac{\partial u_x}{\partial y}A_y \right )
+- \mu_{ip} \left( \frac{\partial u_x}{ \partial x}A_x + \frac{\partial u_y}{ \partial x}A_y \right), \\
+F_y &amp;= - \mu_{ip} \left( \frac{\partial u_y}{ \partial x}A_x + \frac{\partial u_y}{\partial y}A_y \right )
+- \mu_{ip} \left( \frac{\partial u_x}{ \partial y}A_x + \frac{\partial u_y}{ \partial y}A_y \right).\end{split}\]</div>
+<p>Note that the first part of the viscous stress is simply the standard
+diffusion term. Note that the so-called non-solonoidal viscous stress
+contribution is frequently written in terms of projected nodal
+gradients. However, for CVFEM this procedure is rarely used given the
+elemental basis definition. As such, the use of shape function
+derivatives is clear.</p>
+<p>The viscous stress contribution at an integration point for CVFEM (again
+using the 2D example with variable area vector) can be written as,</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}F_x &amp;= - \Gamma_{ip} \left[ \left(\frac{\partial N^{ip}_0}
+{\partial x} {u_x}_0 + \frac{\partial N^{ip}_1} {\partial x} {u_x}_1 \right) A_x
++ \left(\frac{\partial N^{ip}_0} {\partial y} {u_x}_0 + \frac{\partial N^{ip}_1}
+{\partial y} {u_x}_1 \right) A_y \right. \\
+&amp;+ \left. \left(\frac{\partial N^{ip}_0} {\partial x} {u_x}_0
++ \frac{\partial N^{ip}_1} {\partial x} {u_x}_1 \right) A_x
++ \left(\frac{\partial N^{ip}_0} {\partial y} {u_y}_0 + \frac{\partial N^{ip}_1}
+{\partial x} {u_y}_1 \right) A_y \right], \\
+F_y &amp;= - \Gamma_{ip} \left[ \left(\frac{\partial N^{ip}_0} {\partial x}
+{u_y}_0 + \frac{\partial N^{ip}_1} {\partial x} {u_y}_1 \right) A_x
++ \left(\frac{\partial N^{ip}_0} {\partial y} {u_y}_0 + \frac{\partial N^{ip}_1}
+{\partial y} {u_y}_1 \right) A_y \right. \\
+&amp;+ \left. \left(\frac{\partial N^{ip}_0} {\partial y} {u_x}_0
++ \frac{\partial N^{ip}_1} {\partial y} {u_x}_1 \right) A_x
++ \left(\frac{\partial N^{ip}_0} {\partial y} {u_y}_0 + \frac{\partial N^{ip}_1}
+{\partial x} {u_y}_1 \right) A_y \right].\end{split}\]</div>
+<p>For the edge-based diffusion operator, the value of <span class="math notranslate nohighlight">\(\phi\)</span> is
+substituted for the component of velocity, <span class="math notranslate nohighlight">\(u_i\)</span> in the
+Eq. <a class="reference internal" href="#equation-generalgrad">(3.6)</a>.</p>
+<div class="math notranslate nohighlight">
+\[\frac{\partial u_i}{\partial x_j}_{ip} = \bar{G_j u_i}
++ \left[ \left({u_i}_R - {u_i}_L \right)
+- \bar{G_l u_i}dx_l \right] \frac{A_j}{A_k dx_k}.\]</div>
+<p>Common approaches in the cell-centered community are to use
+the projected nodal gradients for the
+<span class="math notranslate nohighlight">\(\frac{\partial u_j}{\partial x_i}\)</span> stress component. However, in
+Nalu-Wind, the above form of equation is used.</p>
+<p>Substituting the relations of the velocity gradients for the x and
+y-componnet of force above provides the following expression used for
+the viscous stress contribution:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}F_x &amp;= - \mu_{ip} \left[ \left(\bar{G_x u_x}A_x + \bar{G_y u_x}A_y \right)
++ \left( {u_x}_R - {u_x}_L \right) \frac{A_x A_x + A_y A_y}{A_x dx + A_y dy} \right.  \\
+&amp;- \left. \left( \bar{G_x u_x}dx + \bar{G_y u_x}dy \right) \frac{A_x A_x + A_y A_y} {A_x dx + A_y dy} \right]  \\
+&amp;- \mu_{ip} \left[ \bar{G_x u_x}A_x + \bar{G_x u_y}A_y
++ \left({u_x}_R - {u_x}_L\right) \frac{A_x A_x} {A_x dx + A_y dy} \right. \\
+&amp;+ \left. \left({u_y}_R - {u_y}_L\right) \frac{A_x A_y} {A_x dx + A_y dy} \right. \\
+&amp;- \left. \left( \bar{G_x u_x}dx + \bar{G_y u_x}dy \right) \frac{A_x A_x} {A_x dx + A_y dy} \right. \\
+&amp;- \left. \left( \bar{G_x u_y}dx + \bar{G_y u_y}dy \right) \frac{A_x A_y} {A_x dx + A_y dy} \right],\end{split}\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}F_y &amp;= - \mu_{ip} \left[ \left(\bar{G_x u_y}A_x + \bar{G_y u_y}A_y \right)
++ \left( {u_y}_R - {u_y}_L \right) \frac{A_x A_x + A_y A_y}{A_x dx + A_y dy} \right. \\
+&amp;- \left. \left( \bar{G_x u_y}dx + \bar{G_y u_y}dy \right) \frac{A_x A_x + A_y A_y} {A_x dx + A_y dy} \right]  \\
+&amp;- \mu_{ip} \left[ \bar{G_y u_x}A_x + \bar{G_y u_y}A_y
++ \left({u_y}_R - {u_y}_L\right) \frac{A_y A_y} {A_x dx + A_y dy} \right. \\
+&amp;+ \left. \left({u_x}_R - {u_x}_L\right) \frac{A_y A_x} {A_x dx + A_y dy} \right.  \\
+&amp;- \left. \left( \bar{G_x u_y]}dx + \bar{G_y u_y}dy \right) \frac{A_y A_y} {A_x dx + A_y dy} \right. \\
+&amp;- \left. \left( \bar{G_x u_x}dx + \bar{G_y u_x}dy \right) \frac{A_y A_x} {A_x dx + A_y dy} \right],\end{split}\]</div>
+<p>where above, the first <span class="math notranslate nohighlight">\([]\)</span> and second <span class="math notranslate nohighlight">\([]\)</span> represent the
+<span class="math notranslate nohighlight">\(\frac{\partial u_i}{\partial x_j}A_j\)</span> and
+<span class="math notranslate nohighlight">\(\frac{\partial u_j}{\partial x_i}A_j\)</span> contributions,
+respectively.</p>
+<p>One can use this expression to recognize the ideal LHS sensitivities for
+row and columns for component <span class="math notranslate nohighlight">\(u_i\)</span>.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="supportedEquationSet.html" class="btn btn-neutral float-left" title="2. Supported Equation Set" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="advectionStabilization.html" class="btn btn-neutral float-right" title="4. Advection Stabilization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

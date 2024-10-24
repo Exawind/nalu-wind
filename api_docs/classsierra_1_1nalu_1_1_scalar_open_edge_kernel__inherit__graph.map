@@ -1,0 +1,6 @@
+<map id="sierra::nalu::ScalarOpenEdgeKernel&lt; BcAlgTraits &gt;" name="sierra::nalu::ScalarOpenEdgeKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="node1" title=" " alt="" coords="5,291,203,332"/>
+<area shape="rect" id="node2" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="12,185,196,241"/>
+<area shape="rect" id="node3" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="27,5,171,32"/>
+<area shape="rect" id="node4" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="120,81,331,108"/>
+</map>

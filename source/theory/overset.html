@@ -1,0 +1,359 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>10. Overset &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="11. Property Evaluations" href="propertyEvaluation.html" />
+    <link rel="prev" title="9. Supported Boundary Conditions" href="boundaryConditions.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Theory Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lowMachNumberDerivation.html">1. Low Mach Number Derivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html">2. Supported Equation Set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html">3. Discretization Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advectionStabilization.html">4. Advection Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pressureStabilization.html">5. Pressure Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html">6. RTE Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html">7. Nonlinear Stabilization Operator (NSO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html">8. Turbulence Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html">9. Supported Boundary Conditions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">10. Overset</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overset-grid-assembly-using-native-stk-search">10.1. Overset Grid Assembly using Native STK Search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#overset-grid-assembly-using-tioga">10.2. Overset Grid Assembly using TIOGA</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html">11. Property Evaluations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="couplingApproach.html">12. Coupling Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeDiscretization.html">13. Time discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiPhysics.html">14. Multi-Physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html">15. Wind Energy Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topologicalSupport.html">16. Topological Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adaptivity.html">17. Adaptivity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeAbstractions.html">18. Code Abstractions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Nalu-Wind - Theory Manual</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">10. </span>Overset</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/theory/overset.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="overset">
+<h1><span class="section-number">10. </span>Overset<a class="headerlink" href="#overset" title="Link to this heading"></a></h1>
+<p>Nalu-Wind supports simulations using an overset mesh methodology to model complex
+geometries. Currently the codebase supports two approaches to determine overset
+mesh connectivity:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Overset mesh hole-cutting algorithm based on native STK search routines, and</p></li>
+<li><p>Hole-cutting and donor/reception determination using the <a class="reference external" href="https://github.com/jsitaraman/tioga">TIOGA</a> (Topology Independent Overset Grid
+Assembly) TPL.</p></li>
+</ol>
+</div></blockquote>
+<p>The native STK based overset grid assembly (OGA) requires no additional
+packages, but is limited to simple geometries where the search and hole-cutting
+procedure works only simple rectangular boundaries (for the inner mesh) that are
+aligned along the major axes. On the other hand, TIOGA based hole cutting is
+capable of performing overset grid assembly on arbitrary mesh geometries and
+orientation, supports generalized mesh motion, and can determine donor/recipient
+status with multiple meshes overlapping in the same space. A specific use-case
+for the need to perform OGA on multiple meshes is the simulation of a wind
+turbine in an atmospheric boundary layer, where the turbine blade, nacelle, and
+the background ABL mesh might all overlap near the rotor hub.</p>
+<section id="overset-grid-assembly-using-native-stk-search">
+<h2><span class="section-number">10.1. </span>Overset Grid Assembly using Native STK Search<a class="headerlink" href="#overset-grid-assembly-using-native-stk-search" title="Link to this heading"></a></h2>
+<p>The overset descriptions begins with the basic background mesh (block 1)
+and overset mesh (block 2) depicted in Figure <a class="reference internal" href="#overset-block-one-two"><span class="std std-numref">10.1</span></a>. Also
+shown in this figure is the reduction outer surface of block 2 (light
+blue). Elements within this reduced overset block will be determined by
+a parallel search. The collection of elements within this bounding box
+will be skinned to form a surface on which orphan nodes are placed.
+Elements within this volume are set in a new internally managed inactive
+block. These mesh entities are fully removed from the overall matrix for
+each dof. Elements within this volume are provided a masking integer
+element varibale of unity to select out of the visualizattion tool.
+Therefore, orphan nodes live at the external boundary of block 2 and
+along the reduced surface. The parallel search provides the mapping of
+orphan node and owning element from which the state can be
+constructed.</p>
+<figure class="align-center" id="id1">
+<span id="overset-block-one-two"></span><a class="reference internal image-reference" href="../../_images/oversetBlockOneTwo.png"><img alt="../../_images/oversetBlockOneTwo.png" src="../../_images/oversetBlockOneTwo.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">10.1 </span><span class="caption-text">Two-block use case describing background mesh (block 1) and overset
+mesh (block 2).</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>After the full search and overset initialization, this simple example
+yields the original block 1 and 2, the newly created inactive block 3,
+the original surface of the overset mesh and the new skinned surface
+(101) of the inactive block (Figure <a class="reference internal" href="#overset-block-one-two-cut"><span class="std std-numref">10.2</span></a>).</p>
+<figure class="align-center" id="id2">
+<span id="overset-block-one-two-cut"></span><a class="reference internal image-reference" href="../../_images/oversetBlockOneTwoCut.png"><img alt="../../_images/oversetBlockOneTwoCut.png" src="../../_images/oversetBlockOneTwoCut.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">10.2 </span><span class="caption-text">Three-block and two surface, post over set initialization.</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>A simple heat conduction example is provided in Figure <a class="reference internal" href="#overset-hc"><span class="std std-numref">10.3</span></a> where
+the circular boundary is set at a temperature of 500 with all external
+boundaries set to adiabatic.</p>
+<figure class="align-center" id="id3">
+<span id="overset-hc"></span><a class="reference internal image-reference" href="../../_images/oversetHC.png"><img alt="../../_images/oversetHC.png" src="../../_images/oversetHC.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">10.3 </span><span class="caption-text">A simple heat conduction example providing the overset mesh and donor
+orphan nodes.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>As noted before, every orphan node lies within an owning element.
+Sufficient overlap is required to make the system well posed. A fully
+implicit procedure is provided by writing the orphan node value as a
+linear constraint of the owning element (Figure <a class="reference internal" href="#overset-nodes"><span class="std std-numref">10.4</span></a>).</p>
+<figure class="align-center" id="id4">
+<span id="overset-nodes"></span><a class="reference internal image-reference" href="../../_images/oversetNodes.png"><img alt="../../_images/oversetNodes.png" src="../../_images/oversetNodes.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">10.4 </span><span class="caption-text">Orphan nodes for background and overset mesh for which a fully
+implicit constraint equation is written.</span><a class="headerlink" href="#id4" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>For completeness, the constraint equation for any dof <span class="math notranslate nohighlight">\(\phi^o\)</span> is
+simply,</p>
+<div class="math notranslate nohighlight" id="equation-constraint">
+<span class="eqno">(10.1)<a class="headerlink" href="#equation-constraint" title="Link to this equation"></a></span>\[\phi^o - \sum N_k \phi_k = 0.\]</div>
+<p>As noted, full sensitivities are provided in the linear system by
+constructing a row entry with the columns of the nodes within the owning
+element and the orphan node itself.</p>
+<p>Finally, a mixed hex/tet mesh configuration example (overset mesh is tet
+while background is hex) is provided in Figure <a class="reference internal" href="#overset-sphere"><span class="std std-numref">10.5</span></a>.</p>
+<figure class="align-center" id="id5">
+<span id="overset-sphere"></span><a class="reference internal image-reference" href="../../_images/oversetSphere.png"><img alt="../../_images/oversetSphere.png" src="../../_images/oversetSphere.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">10.5 </span><span class="caption-text">Flow past a three-dimensional sphere using a hybrid topology
+(hex/tet) mesh configuration.</span><a class="headerlink" href="#id5" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="overset-grid-assembly-using-tioga">
+<h2><span class="section-number">10.2. </span>Overset Grid Assembly using TIOGA<a class="headerlink" href="#overset-grid-assembly-using-tioga" title="Link to this heading"></a></h2>
+<p>Topology Independent Overset Grid Assembler (TIOGA) is an open-source
+connectivity package that was developed as an academic/research counterpart for
+PUNDIT (the overset grid assembler used in HPCMP CREATE™ A/V program and
+HELIOS). The base library has been modified to remove the limitation where each
+MPI rank could only own one mesh block. The code has been extended to handle
+multiple mesh blocks per MPI rank to support Nalu-Wind’s mesh decomposition
+strategies.</p>
+<p>TIOGA uses a different nomenclature for overset mesh assembly. A brief
+description is provided here to familiarize users with the differences in
+nomenclature used in the previous section. When determining overset
+connectivity, TIOGA ends up assigning <code class="docutils literal notranslate"><span class="pre">IBLANK</span></code> values to the nodes in a mesh.
+The <code class="docutils literal notranslate"><span class="pre">IBLANK</span></code> field is an integer field that determines the status of the node
+which can be one of three states:</p>
+<p><strong>field point</strong></p>
+<blockquote>
+<div><p>A field point is a node that behaves as a normal mesh point, i.e., the
+equations are solved on these nodes and the linear system assembly proceeds as
+normal. The <em>field points</em> are indicated by an <code class="docutils literal notranslate"><span class="pre">IBLANK</span></code> value of 1.</p>
+</div></blockquote>
+<p><strong>fringe point</strong></p>
+<blockquote>
+<div><p>A fringe point is a receptor on the receving mesh where the solution field is
+mapped from the donor element. A fringe point is indicated by an <code class="docutils literal notranslate"><span class="pre">IBLANK</span></code>
+value of <code class="docutils literal notranslate"><span class="pre">-1</span></code>. Fringe points are how information is transferred between the
+participating meshes. Note that fringe points are referred to as <em>orphan
+points</em> in the STK based overset description.</p>
+</div></blockquote>
+<p><strong>hole point</strong></p>
+<blockquote>
+<div><p>A hole point is a node on a mesh that occurs inside a solid body being modeled
+in another mesh. These points have no valid solution for the equations solved
+and should not participate in the linear system.</p>
+</div></blockquote>
+<p>In addition to the <code class="docutils literal notranslate"><span class="pre">IBLANK</span></code> status, the following terms are useful when using
+TIOGA</p>
+<p><strong>donor element</strong></p>
+<blockquote>
+<div><p>The element that is used to <em>interpolate</em> field data from donor mesh to a
+recipient mesh. While TIOGA provides flow interpolation routines, the current
+implementation in Nalu-Wind uses the <code class="docutils literal notranslate"><span class="pre">MasterElement</span></code> classes in Nalu-Wind to maintain
+consistency between the STK and the TIOGA overset implementations.</p>
+</div></blockquote>
+<p><strong>orphan points</strong></p>
+<blockquote>
+<div><p>The term orphan point is used differently in TIOGA than the STK based overset
+implementation. TIOGA refers to nodes as orphan points when there it cannot
+find a suitable donor element for those nodes that are considered fringe
+points. This can happen when the nodes on the enclosing element are themselves
+labeled fringe points.</p>
+</div></blockquote>
+<p>Unlike the STK based hole cutting approach, that uses predefined bounding boxes
+to determine donor/receptor locations, TIOGA uses the element volume as the
+metric to determine the field and fringe points. The high level hole cutting
+algorithm can be described in the following steps:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Determine and tag hole points that are fully enclosed within solid bodies,
+tag neighboring points to be fringe points.</p></li>
+<li><p>Determine and flag all mandatory fringe points, e.g., embedded boundaries of
+interior meshes.</p></li>
+<li><p>Determine fringe locations for the exterior meshes where information is
+transferred back from interior meshes to the exterior/background mesh.</p></li>
+</ul>
+</div></blockquote>
+<p>In the current integration, only the hole-cutting and donor/receptor
+information is processed by the TIOGA library. The linear system assembly,
+specifically the constraint equations for the fringe points are managed by the
+same classes that are used with the native STK hole-cutting approach.</p>
+<p>Figure <a class="reference internal" href="#tioga-rotated-box"><span class="std std-numref">10.6</span></a> shows the field and fringe points as
+determined by TIOGA during the hole-cutting process. The central white region
+shows the mesh points of the interior mesh. The salmon colored region shows the
+overlapping field points where the flow equations are solved on both
+participating meshes. The green-ish boundary shows the mandatory fringe points
+for the interior mesh along its outer boundary. The interior boundary of the
+overlap region are the fringe points for the background mesh where information
+is transferred from the interior mesh. The extent of the overlap region is
+determined by the number of element layers necessary to ensure adequate
+separation between the fringe boundaries on the participating meshes.</p>
+<figure class="align-center" id="id6">
+<span id="tioga-rotated-box"></span><a class="reference internal image-reference" href="../../_images/rotbox_overset.png"><img alt="../../_images/rotbox_overset.png" src="../../_images/rotbox_overset.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">10.6 </span><span class="caption-text">TIOGA overset hole cutting for a rotated internal mesh configuration showing
+the field and fringe locations.</span><a class="headerlink" href="#id6" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>Figure <a class="reference internal" href="#tioga-cyl-nested"><span class="std std-numref">10.7</span></a> shows the resulting overset assembly for
+cylinder mesh and a background mesh with an intermediate refinement zone. The
+hole points (inside the cylinder) have been removed from the linear system for
+both the intermediate and background mesh. The magenta region shows the overlap
+of field points of the cylinder and the intermediate mesh. And the yellow region
+shows the overlap between the background and the intermediate mesh.</p>
+<figure class="align-center" id="id7">
+<span id="tioga-cyl-nested"></span><a class="reference internal image-reference" href="../../_images/cylinder_overset.png"><img alt="../../_images/cylinder_overset.png" src="../../_images/cylinder_overset.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">10.7 </span><span class="caption-text">Overset mesh configuration for simulating flow past a cylinder using a three
+mesh setup: near-body, body-fitted cylinder mesh, intermediate refined mesh,
+and coarse background mesh.</span><a class="headerlink" href="#id7" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>Figures <a class="reference internal" href="#tioga-cyl-velocity"><span class="std std-numref">10.8</span></a> and <a class="reference internal" href="#tioga-cyl-vorticity"><span class="std std-numref">10.9</span></a> shown the
+velocity and vorticity contours for the flow past a cylinder simulated using the
+overset mesh methodology with TIOGA overset connectivity.</p>
+<figure class="align-center" id="id8">
+<span id="tioga-cyl-velocity"></span><a class="reference internal image-reference" href="../../_images/tioga_cyl_velocity.png"><img alt="../../_images/tioga_cyl_velocity.png" src="../../_images/tioga_cyl_velocity.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">10.8 </span><span class="caption-text">Velocity field for a flow past cylinder simulating using an overset mesh
+methodology with TIOGA mesh connectivity approach.</span><a class="headerlink" href="#id8" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id9">
+<span id="tioga-cyl-vorticity"></span><a class="reference internal image-reference" href="../../_images/tioga_cyl_vorticity.png"><img alt="../../_images/tioga_cyl_vorticity.png" src="../../_images/tioga_cyl_vorticity.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">10.9 </span><span class="caption-text">Vorticity field for a flow past cylinder simulating using an overset mesh
+methodology with TIOGA mesh connectivity approach.</span><a class="headerlink" href="#id9" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="boundaryConditions.html" class="btn btn-neutral float-left" title="9. Supported Boundary Conditions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="propertyEvaluation.html" class="btn btn-neutral float-right" title="11. Property Evaluations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

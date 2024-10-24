@@ -1,0 +1,234 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exodus-II File Format &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Invoking Nalu-Wind - Command-line options" href="nalux.html" />
+    <link rel="prev" title="Running Nalu-Wind" href="../running.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../building.html">Building Nalu-Wind</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../running.html">Running Nalu-Wind</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Exodus-II File Format</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#examining-exodus-ii-files">Examining Exodus-II Files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#other-exodus-ii-utilities">Other Exodus-II Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="nalux.html">Invoking Nalu-Wind - Command-line options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nalu_inp.html">Nalu-Wind Input File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nalu_inp.html#transfers">Transfers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nalu_inp.html#simulations">Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="McAlisterLessonsLearned.html">Lessons Learned from Meshing the McAlister Case</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../theory/index.html">Theory Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Manual</a></li>
+          <li class="breadcrumb-item"><a href="../running.html">Running Nalu-Wind</a></li>
+      <li class="breadcrumb-item active">Exodus-II File Format</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/source/user/nalu_run/nalu_mesh.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="exodus-ii-file-format">
+<span id="user-run-exodus-mesh"></span><h1>Exodus-II File Format<a class="headerlink" href="#exodus-ii-file-format" title="Link to this heading"></a></h1>
+<p>Nalu-Wind requires the user to provide the computational mesh in <a class="reference external" href="http://prod.sandia.gov/techlib/access-control.cgi/1992/922137.pdf">Exodus-II</a> format.
+The output and restart files generated by Nalu-Wind are also in Exodus-II format
+where the requested fields are output along side the mesh. The restart files
+from one Nalu-Wind simulation can serve as the input file for a subsequent
+simulation.</p>
+<p>Several commercial mesh generation software support output to Exodus-II format.
+Two such software used by Nalu-Wind developers are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference external" href="https://cubit.sandia.gov/public/13.2/help_manual/WebHelp/cubit_users_manual.html">CUBIT</a></p></li>
+<li><p><a class="reference external" href="http://www.pointwise.com">Pointwise</a></p></li>
+</ul>
+</div></blockquote>
+<p>Furthermore, <a class="reference external" href="http://naluwindutils.readthedocs.io/en/latest/user/abl_mesh.html">NaluWindUtils</a> provides an
+<strong class="program">abl_mesh</strong> utility that can be used to generate simple structured
+meshes (output into Exodus-II format) for use with atmospheric boundary layer
+simulations.</p>
+<section id="examining-exodus-ii-files">
+<h2>Examining Exodus-II Files<a class="headerlink" href="#examining-exodus-ii-files" title="Link to this heading"></a></h2>
+<p>Exodus-II uses the <a class="reference external" href="http://www.unidata.ucar.edu/software/netcdf/">NetCDF</a>
+format to store data, therefore, the several NetCDF utilities can be used to
+examine the file metadata. For example, the following code snippet shows the use
+of <strong class="program">ncdump</strong> to examine the names of the mesh blocks and side sets, as
+well as the nodal fields available in a given mesh file.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ncdump<span class="w"> </span>-v<span class="w"> </span>eb_names,ss_names,name_nod_var<span class="w"> </span>channel_coarse_ic.g
+<span class="c1"># &lt;output truncated to show only relevant parts&gt;</span>
+data:
+
+<span class="w"> </span><span class="nv">eb_names</span><span class="w"> </span><span class="o">=</span>
+<span class="w">  </span><span class="s2">&quot;interior&quot;</span><span class="w"> </span><span class="p">;</span>
+
+<span class="w"> </span><span class="nv">ss_names</span><span class="w"> </span><span class="o">=</span>
+<span class="w">  </span><span class="s2">&quot;inlet&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;outlet&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;bottomwall&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;topwall&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;back&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;front&quot;</span><span class="w"> </span><span class="p">;</span>
+
+<span class="w"> </span><span class="nv">name_nod_var</span><span class="w"> </span><span class="o">=</span>
+<span class="w">  </span><span class="s2">&quot;turbulent_ke&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;velocity_x&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;velocity_y&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;velocity_z&quot;</span><span class="w"> </span><span class="p">;</span>
+</pre></div>
+</div>
+<p>For brevity, the example above has removed the NetCDF <code class="docutils literal notranslate"><span class="pre">dimensions</span></code> and
+<code class="docutils literal notranslate"><span class="pre">variables</span></code> sections to show just the contents of the variable names of
+interest. The output shows that the mesh in question contains one element block
+(<code class="docutils literal notranslate"><span class="pre">interior</span></code>) with six boundary planes (side-sets) and has two nodal fields: the
+velocity vector, and the turbulent kinetic energy scalar. <strong class="program">ncdump</strong> can
+be invoked with the <code class="docutils literal notranslate"><span class="pre">-h</span></code> flag to print just the headers. Of particular
+interest is the NetCDF <code class="docutils literal notranslate"><span class="pre">dimensions</span></code> section that contains information about
+the total number of nodes, element, boundary faces, etc. in the mesh file.</p>
+<p>Most visualization programs support loading Exodus-II mesh/solution files and
+can be used to visualize the flow fields generated by Nalu-Wind. Two open-source
+visualization programs available are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference external" href="https://www.paraview.org">ParaView</a></p></li>
+<li><p><a class="reference external" href="https://wci.llnl.gov/simulation/computer-codes/visit/">VisIt</a></p></li>
+</ul>
+</div></blockquote>
+<p>Preliminary support for in-situ visualization using <a class="reference external" href="https://www.paraview.org/in-situ/">ParaView Catalyst</a> is available within the Nalu-Wind code base and
+can be enabled by linking to Catalyst libraries during compile time. See input
+file specifications more details on setting up Cataylst for in-situ
+visualization of Nalu-Wind solution files.</p>
+</section>
+<section id="other-exodus-ii-utilities">
+<h2>Other Exodus-II Utilities<a class="headerlink" href="#other-exodus-ii-utilities" title="Link to this heading"></a></h2>
+<p>A brief description of some useful Exodus-II utilities are provided here. Please
+consult the documentation of these programs to understand the full range of
+options available.</p>
+<p><strong>decomp</strong></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">decomp</span></code> is a SEACAS utility (available from a Trilinos install) that can
+be used to decompose a mesh file acros several MPI ranks for use in a
+subsequent paralell simulation.</p>
+</div></blockquote>
+<p><strong>epu</strong></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">epu</span></code> performs the reverse action of <code class="docutils literal notranslate"><span class="pre">decomp</span></code>, i.e., it combines parallel
+decomposed files from a simulation into a single Exodus-II database. The
+simplest invocation is</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>epu<span class="w"> </span>-auto<span class="w"> </span>nalu_output.e.8.0
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">-auto</span></code> flag determines the database structured based on the file
+provided on the command line and combines the files (in the above example
+into <code class="docutils literal notranslate"><span class="pre">nalu_output.e</span></code>).</p>
+</div></blockquote>
+<p><strong>mapvar-kd</strong></p>
+<blockquote>
+<div><p>Map solution fields from one mesh to another mesh.</p>
+</div></blockquote>
+<p><strong>percept</strong></p>
+<blockquote>
+<div><p>The <a class="reference external" href="https://github.com/PerceptTools/percept">Percept</a> project provides
+various tools to perform mesh refinement, higher-order promotion, etc. See
+documentation for <code class="docutils literal notranslate"><span class="pre">mesh_adapt</span></code> to determine various options available.</p>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../running.html" class="btn btn-neutral float-left" title="Running Nalu-Wind" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nalux.html" class="btn btn-neutral float-right" title="Invoking Nalu-Wind - Command-line options" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

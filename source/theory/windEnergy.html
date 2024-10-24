@@ -1,0 +1,593 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>15. Wind Energy Modeling &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="16. Topological Support" href="topologicalSupport.html" />
+    <link rel="prev" title="14. Multi-Physics" href="multiPhysics.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Theory Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lowMachNumberDerivation.html">1. Low Mach Number Derivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html">2. Supported Equation Set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html">3. Discretization Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advectionStabilization.html">4. Advection Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pressureStabilization.html">5. Pressure Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html">6. RTE Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html">7. Nonlinear Stabilization Operator (NSO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html">8. Turbulence Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html">9. Supported Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overset.html">10. Overset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html">11. Property Evaluations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="couplingApproach.html">12. Coupling Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeDiscretization.html">13. Time discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiPhysics.html">14. Multi-Physics</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">15. Wind Energy Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#governing-equations">15.1. Governing Equations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#turbulence-modeling">15.2. Turbulence Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#numerical-discretization-stabilization">15.3. Numerical Discretization &amp; Stabilization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#time-stepping-scheme">15.4. Time stepping scheme</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#approximations-for-the-schur-complement">15.4.1. Approximations for the Schur complement</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#underrelaxation-for-momentum-and-scalar-transport">15.4.2. Underrelaxation for momentum and scalar transport</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-boundary-conditions">15.5. Initial &amp; Boundary Conditions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#initial-conditions">15.5.1. Initial conditions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#terrain-wall-boundary-condition">15.5.2. Terrain (Wall) boundary condition</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#top-boundary-condition">15.5.3. Top boundary condition</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#inlet-conditions">15.5.4. Inlet conditions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#outlet-conditions">15.5.5. Outlet conditions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#wind-turbine-modeling">15.6. Wind Turbine Modeling</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#nalu-wind-openfast-coupling-algorithm">15.6.1. Nalu-Wind – OpenFAST Coupling Algorithm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nalu-wind-actuator-disk-model-via-openfast">15.6.2. Nalu-Wind – Actuator Disk Model via OpenFAST</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="topologicalSupport.html">16. Topological Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adaptivity.html">17. Adaptivity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeAbstractions.html">18. Code Abstractions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Nalu-Wind - Theory Manual</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">15. </span>Wind Energy Modeling</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/theory/windEnergy.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="wind-energy-modeling">
+<h1><span class="section-number">15. </span>Wind Energy Modeling<a class="headerlink" href="#wind-energy-modeling" title="Link to this heading"></a></h1>
+<p>Wind energy analysis is the primary application area for the Nalu-Wind development
+team. This section describes the theoretical basis of Nalu-Wind from a wind energy
+perspective, using nomenclature familiar to wind energy experts and mapping it
+to Nalu-Wind concepts and nomenclature described in previous sections. Hopefully,
+this will provide an easier transition for users familiar with WRF and SOWFA to
+Nalu-Wind.</p>
+<p>In order to evaluate the energy output and the structural loading on wind
+turbines, the code must model: 1. the incoming turbulent wind field across the
+entire wind farm, and 2. the evolution of turbine wakes in turbulent inflow
+conditions and their interaction with the downstream turbines. First, the
+governing equations with all the terms necessary to model a wind farm are
+presented with links to implementation and verification details elsewhere in the
+theory and/or verification manuals. A brief description of Nalu-Wind’s numerical
+discretization schemes is presented next. This is followed by a brief discussion
+of the boundary conditions used to model atmospheric boundary layer (ABL) flows
+with or without wind turbines (currently modeled as actuator sources within the
+flow domain).</p>
+<p>Currently Nalu-Wind supports two types of wind simulations:</p>
+<p><strong>Precursor simulations</strong></p>
+<blockquote>
+<div><p>Precursor simulations are used in wind applications to generate time histories
+of turbulent ABL inflow profiles that are used as inlet conditions in
+subsequent wind farm simulations. The primary purpose of these simulations are
+to trigger turbulence generation and obtain velocity and temperature profiles
+that have <em>converged</em> to a statistic equilibrium.</p>
+</div></blockquote>
+<p><strong>Wind farm simulation with turbines as actuator sources</strong></p>
+<blockquote>
+<div><p>In this case, the wind turbine blades and tower are modeled as actuator source
+terms by coupling to the <a class="reference external" href="https://openfast.readthedocs.io/en/main/">OpenFAST</a> libraries. Velocity fields are
+sampled at the blade and tower control points within the Nalu-Wind domain and the
+blade positions and blade/tower loading is provided by OpenFAST to be used as
+source terms within the momentum equation.</p>
+</div></blockquote>
+<section id="governing-equations">
+<h2><span class="section-number">15.1. </span>Governing Equations<a class="headerlink" href="#governing-equations" title="Link to this heading"></a></h2>
+<p>We begin with a review of the momentum and enthalpy conservation equations
+within the context of wind farm modeling <span id="id1">[<a class="reference internal" href="../../zrefs.html#id34" title="M. J. Churchfield, S. Lee, P. K. Moriarty, L. A. Martinez, S. Leonardi, G. Vijayakumar, and J. G. Brasseur. A large-eddy simulatiion of wind-plant aerodynamics. In Proceedings of the 50th AIAA Aerospace Sciences Meeting including the New Horizons Forum and Aerospace Exposition. 9–12 Jan. 2012.">CLM+12</a>]</span>. Equation
+<a class="reference internal" href="#equation-ablmom">(15.1)</a> shows the Favre-filtered momentum conservation equation (Eq.
+<a class="reference internal" href="supportedEquationSet.html#equation-favmom">(2.1)</a>) reproduced here with all the terms required to model a wind farm.</p>
+<div class="math notranslate nohighlight" id="equation-ablmom">
+<span class="eqno">(15.1)<a class="headerlink" href="#equation-ablmom" title="Link to this equation"></a></span>\[\underbrace{\frac{\partial}{\partial t} \left(\bar{\rho}\, \widetilde{u}_i\right)}_\mathbf{I} +
+\underbrace{\frac{\partial}{\partial x_j} \left( \bar{\rho}\, \widetilde{u}_i \widetilde{u}_j \right)}_\mathbf{II} =
+  - \underbrace{\frac{\partial p'}{\partial x_j} \delta_{ij}}_\mathbf{III}
+  - \underbrace{\frac{\partial \tau_{ij}}{\partial x_j}}_\mathbf{IV}
+  - \underbrace{2\bar{\rho}\,\epsilon_{ijk}\,\Omega_ju_k}_\mathbf{V}
+  + \underbrace{\left(\bar{\rho} - \rho_\circ \right) g_i}_\mathbf{VI}
+  + \underbrace{S^{u}_{i}}_\mathbf{VII} + \underbrace{f^{T}_i}_\mathbf{VIII}\]</div>
+<p>Term <span class="math notranslate nohighlight">\(\mathbf{I}\)</span> represents the time rate of change of momentum (inertia);</p>
+<p>Term <span class="math notranslate nohighlight">\(\mathbf{II}\)</span> represents advection;</p>
+<p>Term <span class="math notranslate nohighlight">\(\mathbf{III}\)</span> represents the pressure gradient forces (deviation from
+hydrostatic and horizontal mean gradient);</p>
+<p>Term <span class="math notranslate nohighlight">\(\mathbf{IV}\)</span> represents stresses (both viscous and sub-filter scale
+(SFS)/Reynolds stresses);</p>
+<p>Term <span class="math notranslate nohighlight">\(\mathbf{V}\)</span> describes the influence Coriolis forces due to earth’s rotation – see  Sec. <a class="reference internal" href="supportedEquationSet.html#earth-coriolis-force"><span class="std std-numref">Section 2.2.1</span></a>;</p>
+<p>Term <span class="math notranslate nohighlight">\(\mathbf{VI}\)</span> describes the effects of buoyancy using the Boussinesq approximation – see <a class="reference internal" href="supportedEquationSet.html#boussinesq-buoyancy-model"><span class="std std-numref">Section 2.2.2</span></a>;</p>
+<p>Term <span class="math notranslate nohighlight">\(\mathbf{VII}\)</span> represents the source term used to drive the flow to a
+horizontal mean velocity at desired height(s) – see <a class="reference internal" href="supportedEquationSet.html#abl-forcing-term"><span class="std std-numref">Section 2.7</span></a>; and</p>
+<p>Term <span class="math notranslate nohighlight">\(\mathbf{VIII}\)</span> is an optional term representing body forces when
+modeling turbine with actuator disk or line representations – see
+<a class="reference internal" href="#act-wind-turbine-aerodynamics"><span class="std std-numref">Section 15.6</span></a>.</p>
+<p>In wind energy applications, the energy conservation equation is often written
+in terms of the Favre-filtered potential temperature, <span class="math notranslate nohighlight">\(\theta\)</span>, equation,
+as shown below</p>
+<div class="math notranslate nohighlight" id="equation-abl-pottemp">
+<span class="eqno">(15.2)<a class="headerlink" href="#equation-abl-pottemp" title="Link to this equation"></a></span>\[\frac{\partial}{\partial t} \left(\bar{\rho}\, \widetilde{\theta}\right) +
+\frac{\partial}{\partial x_j} \left(\bar{\rho}\, \widetilde{u}_j \widetilde{\theta} \right) = - \frac{\partial}{\partial x_j} \hat{q}_j\]</div>
+<p>where, <span class="math notranslate nohighlight">\(\hat{q}_j\)</span> represents the temperature transport due to molecular and SFS
+turbulence effects. Due to the high Reynolds number associated with ABL flows,
+the molecular effects are neglected everywhere except near the terrain.
+Potential temperature is related to absolute temperature by the following
+equation</p>
+<div class="math notranslate nohighlight">
+\[\theta = T \left ( \frac{\bar{p}}{p_\circ} \right)^{-\left(\frac{R}{c_p}\right)}\]</div>
+<p>Under the assumption of ideal gas conditions and constant <span class="math notranslate nohighlight">\(c_p\)</span>, the gradients in
+potential temperature are proportional to the gradients in absolute temperature,
+i.e.,</p>
+<div class="math notranslate nohighlight">
+\[\left[ \frac{\partial T}{\partial t}, \frac{\partial T}{\partial x}, \frac{\partial T}{\partial y} \right] =
+\left( \frac{\bar{p}}{p_\circ} \right)^\left(\frac{R}{c_p}\right) \left[ \frac{\partial \theta}{\partial t}, \frac{\partial \theta}{\partial x}, \frac{\partial \theta}{\partial y} \right]\]</div>
+<p>Furthermore, ignoring the pressure and viscous work terms in Eq. <a class="reference internal" href="supportedEquationSet.html#equation-fav-enth">(2.12)</a>
+and assuming constant density (incompressible flow), it can be shown that
+solving the enthalpy equation is equivalent to solving the potential temperature
+equation. The enthalpy equation solved in wind energy problems is shown below</p>
+<div class="math notranslate nohighlight" id="equation-abl-enth">
+<span class="eqno">(15.3)<a class="headerlink" href="#equation-abl-enth" title="Link to this equation"></a></span>\[\frac{\partial}{\partial t} \left(\bar{\rho}\, \widetilde{T}\right) +
+\frac{\partial}{\partial x_j} \left(\bar{\rho}\, \widetilde{u}_j \widetilde{T} \right) = - \frac{\partial}{\partial x_j} q_j\]</div>
+<p>It is noted here that the terms <span class="math notranslate nohighlight">\(\hat{q}_j\)</span> (Eq. <a class="reference internal" href="#equation-abl-pottemp">(15.2)</a>) and
+<span class="math notranslate nohighlight">\(q_j\)</span> (Eq. <a class="reference internal" href="#equation-abl-enth">(15.3)</a>) are not equivalent and must be scaled
+appropriately. User can still provide the appropriate initial and boundary
+conditions in terms of potential temperature field. Under these assumptions and
+conditions, the resulting solution can then be interpreted as the variation of
+potential temperature field in the computational domain.</p>
+</section>
+<section id="turbulence-modeling">
+<h2><span class="section-number">15.2. </span>Turbulence Modeling<a class="headerlink" href="#turbulence-modeling" title="Link to this heading"></a></h2>
+<p>LES turbulence closure is provided by the <a class="reference internal" href="supportedEquationSet.html#theory-ksgs-les-model"><span class="std std-ref">Subgrid-Scale Kinetic Energy One-Equation LES Model</span></a> or the
+standard <a class="reference internal" href="turbulenceModeling.html#theory-standard-smagorinsky-les"><span class="std std-ref">Smagorinsky</span></a> model for wind
+farm applications.</p>
+</section>
+<section id="numerical-discretization-stabilization">
+<h2><span class="section-number">15.3. </span>Numerical Discretization &amp; Stabilization<a class="headerlink" href="#numerical-discretization-stabilization" title="Link to this heading"></a></h2>
+<p>Nalu-Wind provides two discretization approaches</p>
+<p><strong>Control Volume Finite Element Method (CVFEM)</strong></p>
+<blockquote>
+<div><p>Nalu-Wind uses a <em>dual mesh</em> approach (see <a class="reference internal" href="discretizationApproach.html#theory-cvfem-dual-mesh"><span class="std std-numref">Section 3.1</span></a>) where
+the <em>control volumes</em> are constructed around the nodes of the finite elements
+within the mesh – see <a class="reference internal" href="#windenergy-cvfem-fig"><span class="std std-numref">15.1</span></a>. The equations are
+solved at the <em>integration</em> points on the <em>sub-control surfaces</em> and/or the
+<em>sub-control volumes</em>.</p>
+</div></blockquote>
+<p><strong>Edge-Based Vertex Centered Scheme</strong></p>
+<blockquote>
+<div><p>The edge-based scheme is similar to the finite-volume approach used in SOWFA
+with the nodes at the <em>cell center</em> of the dual mesh.</p>
+</div></blockquote>
+<figure class="align-center" id="id6">
+<span id="windenergy-cvfem-fig"></span><a class="reference internal image-reference" href="../../_images/we_cvfem_p1.png"><img alt="../../_images/we_cvfem_p1.png" src="../../_images/we_cvfem_p1.png" style="width: 250px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">15.1 </span><span class="caption-text">Schematic of HEX-8 mesh showing the finite elements, nodes, and the
+associated control volume dual mesh.</span><a class="headerlink" href="#id6" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>The numerical discretization approach is covered in great detail in
+<a class="reference internal" href="discretizationApproach.html#theory-discretization-approach"><span class="std std-numref">Section 3</span></a>, the advection and pressure
+stabilization approaches are documented in
+<a class="reference internal" href="advectionStabilization.html#theory-advection-stabilization"><span class="std std-numref">Section 4</span></a> and
+<a class="reference internal" href="pressureStabilization.html#theory-pressure-stabilization"><span class="std std-numref">Section 5</span></a> respectively. Users are strongly urged
+to read those sections to gain a thorough understanding of the discretization
+scheme and its impact on the simulations.</p>
+</section>
+<section id="time-stepping-scheme">
+<h2><span class="section-number">15.4. </span>Time stepping scheme<a class="headerlink" href="#time-stepping-scheme" title="Link to this heading"></a></h2>
+<p>The time stepping method in Nalu-Wind is described in the Fuego theory manual
+<span id="id2">[<a class="reference internal" href="../../zrefs.html#id36" title="SIERRA Thermal/Fluid Development Team. Sierra low mach module: fuego theory manual - version 4.42. Technical Report SAND2016-10163, Sandia National Laboratories, October 2016.">Tea16</a>]</span> for the backward Euler time discretization. The
+implementation details of the BDF2 time stepping scheme used in Nalu-Wind is
+described here. The Navier-Stokes equations are written as</p>
+<div class="math notranslate nohighlight" id="equation-fav-mom-nalu">
+<span class="eqno">(15.4)<a class="headerlink" href="#equation-fav-mom-nalu" title="Link to this equation"></a></span>\[\begin{split}{\bf F}_i (\rho^{n+1}, u_i^{n+1}, P^{n+1}) - \int \left . \frac{\partial \rho u_i}{\partial t} \right |^{n+1} {\rm d}V &amp;= 0, \\
+{\bf F}_i (\rho^{n+1}, u_i^{n+1}, P^{n+1}) - \frac{ (\gamma_1 \rho^{n+1} {u_i}^{n+1} + \gamma_2 \rho^n {u_i}^{n} + \gamma_3 \rho^n {u_i}^{n-1})}{\Delta t} \Delta V &amp;=0,\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}{\bf F}_i (\rho^{n+1} u_i^{n+1}) &amp;= - \int \rho^{n+1} u_i^{n+1} u_j^{n+1} n_j {\rm d}S  + \int \tau_{ij}^{n+1} n_j {\rm d}S - \int P^{n+1} n_i {\rm d}S - \int \left(\rho^{n+1} - \rho_{\circ} \right) g_i {\rm d}V, \\
+&amp;= - \int u_i^{n+1} \dot{m}^{n+1}  + \int \tau_{ij}^{n+1} n_j {\rm d}S  - \int P^{n+1} n_i {\rm d}S - \int \left(\rho^{n+1} - \rho_{\circ} \right) g_i {\rm d}V. \\\end{split}\]</div>
+<p>and <span class="math notranslate nohighlight">\(\gamma_i\)</span> are factors for BDF2 time discretization scheme (see
+<a class="reference internal" href="timeDiscretization.html#theory-time-discretization"><span class="std std-numref">Section 13</span></a>). As is typical of incompressible flow
+solvers, the mass flow rate through the sub-control surfaces is tracked
+independent of the velocity to maintain conservation of mass. The following
+conventions are used:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\phi^* &amp;= \textrm{ Predicted value of } \phi \textrm{ at } n+1 \textrm{ time step before linear solve} \\
+\widehat{\phi} = \phi^{**} &amp;= \textrm{ Predicted value of } \phi \textrm{ at } n+1 \textrm{ time step after linear solve}\end{split}\]</div>
+<p>The Newton’s method is used along with a linearization procedure to predict a
+solution to the Navier-Stokes equations at time step <span class="math notranslate nohighlight">\(n+1\)</span> as</p>
+<div class="math notranslate nohighlight" id="equation-fav-mom-nalu-newton">
+<span class="eqno">(15.5)<a class="headerlink" href="#equation-fav-mom-nalu-newton" title="Link to this equation"></a></span>\[\begin{split}\mathbf{A}_{ij} \; \delta u_{j} &amp;= {\bf F}_i^{*} - \frac{ (\gamma_1 \rho^{*} {u_i}^{*} + \gamma_2 \rho^n {u_i}^{n} + \gamma_3 \rho^n {u_i}^{n-1})}{\Delta t} \Delta V, \\
+\textrm{where } \delta u_{j} &amp;= u_i^{**} - u_i^*, \\
+\mathbf{A}_{ij} &amp;= \left ( \frac{ \gamma_1 \rho^{*}}{\Delta t} \Delta V \delta_{ij} - \left . \frac{\partial F_i}{\partial u_j} \right |^{*} \right ), \\
+\textrm{and } {\bf F}_i^{*} &amp;= - \int u_i^* \dot{m}^*  + \int \tau_{ij}^* n_j {\rm d}S  - \int P^* n_i {\rm d}S - \int \left(\rho^* - \rho_{\circ} \right) g_i {\rm d}V.\end{split}\]</div>
+<p>After each Newton or <em>outer</em> iteration, <span class="math notranslate nohighlight">\(\phi^{**}\)</span> is a better approximation to <span class="math notranslate nohighlight">\(\phi^{n+1}\)</span> compared to <span class="math notranslate nohighlight">\(\phi^*\)</span>. <span class="math notranslate nohighlight">\(\rho*\)</span> and <span class="math notranslate nohighlight">\(\dot{m}^*\)</span> are retained constant through each outer iteration. <span class="math notranslate nohighlight">\({\bf F} (\rho^{*} u_i^{**})\)</span> is linear in <span class="math notranslate nohighlight">\(u_i^*\)</span> and hence</p>
+<div class="math notranslate nohighlight" id="equation-linearize-f-phi-star">
+<span class="eqno">(15.6)<a class="headerlink" href="#equation-linearize-f-phi-star" title="Link to this equation"></a></span>\[{\bf F}_i^* = \left . \frac{\partial F_i}{\partial u_j} \right |^{*} u_j^{*} - \int P^{*} n_i {\rm d}S - \int \left(\rho^{*} - \rho_{\circ} \right) g_i {\rm d}V\]</div>
+<p>Applying Eq. <a class="reference internal" href="#equation-linearize-f-phi-star">(15.6)</a> to Eq. <a class="reference internal" href="#equation-fav-mom-nalu-newton">(15.5)</a>, we get the
+linearized momentum predictor equation solved in Nalu-Wind.</p>
+<div class="math notranslate nohighlight" id="equation-fav-mom-nalu-linearize-f">
+<span class="eqno">(15.7)<a class="headerlink" href="#equation-fav-mom-nalu-linearize-f" title="Link to this equation"></a></span>\[\begin{split}{\bf A}_{ij} \; \delta u_j &amp;= \left . \frac{\partial F_i}{\partial u_j} \right |^{*} u_j^{*} - \int P^{*} n_i {\rm d}S - \int \left(\rho^{*} - \rho_{\circ} \right) g_i {\rm d}V  \\
+&amp; \quad \quad  - \frac{ (\gamma_1 \rho^{*} {u_i}^{*} + \gamma_2 \rho^{n} {u_i}^{n} + \gamma_3 \rho^{n-1} {u_i}^{n-1})}{\Delta t} \Delta V \\
+{\bf A}_{ij} \; \delta u_j &amp;= \left (\frac{ \gamma_1 \rho^{*}}{\Delta t} \Delta V \delta_{ij} - \left . \frac{\partial F_i}{\partial u_j} \right |^{*} \right ) {u_j}^{*} - \int P^{*} n_i {\rm d}S - \int \left(\rho^{*} - \rho_{\circ} \right) g_i {\rm d}V \\
+&amp; \quad - \frac{ (\gamma_2 \rho^{n} {u_i}^{n} + \gamma_3 \rho^{n-1} {u_i}^{n-1})}{\Delta t} \Delta V  \\
+{\bf A}_{ij} \; \delta u_j &amp; = {\bf A}_{ij} \; u_j^{*} - \int P^{*} n_i {\rm d}S - \int \left(\rho^{*} - \rho_{\circ} \right) g_i {\rm d}V \\
+&amp; \quad - \frac{ (\gamma_2 \rho^{n} {u_i}^{n} + \gamma_3 \rho^{n-1} {u_i}^{n-1})}{\Delta t} \Delta V\end{split}\]</div>
+<p><span class="math notranslate nohighlight">\(u_i^{**}\)</span> will not satisfy the continuity equation. A correction step is
+performed at the end of each outer iteration to make <span class="math notranslate nohighlight">\(u_i^{**}\)</span>
+satisfy the continuity equation as</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}u_i^{n+1} &amp;= u_i^{**} - \frac{\tau_3}{\rho} {\bf G} \Delta P^{**} \\
+\textrm{where } \Delta P^{**} &amp;= P^{**} - P^*\end{split}\]</div>
+<p>As described in <a class="reference internal" href="couplingApproach.html#theory-errors-splitting-stabilization"><span class="std std-numref">Section 12.1</span></a>, the continuity
+equation to be satisfied along with the splitting and stabilization errors is</p>
+<div class="math notranslate nohighlight" id="equation-eq-continuity">
+<span class="eqno">(15.8)<a class="headerlink" href="#equation-eq-continuity" title="Link to this equation"></a></span>\[{\bf D } \rho u^{**} = b + \left ({\bf L_1} - {\bf D} \tau_3 {\bf G} \right ) \Delta P^{**} + \left ({\bf L_2} - {\bf D} \tau_2 {\bf G} \right ) P^{*}\]</div>
+<p>where <span class="math notranslate nohighlight">\(b\)</span> contains any source terms when the velocity field is not
+divergence free and the other terms are the errors due to pressure stabilization
+as shown by Domino <span id="id3">[<a class="reference internal" href="../../zrefs.html#id8" title="S. Domino. Towards verification of formal time accuracy for a family of approximate projection methods using the method of manufactured solutions. In Center for Turbulence Research Summer Proceedings. 2006.">Dom06</a>]</span>. The final pressure Poisson equation
+solved to enforce continuity at each outer iteration is</p>
+<div class="math notranslate nohighlight" id="equation-eq-pressure">
+<span class="eqno">(15.9)<a class="headerlink" href="#equation-eq-pressure" title="Link to this equation"></a></span>\[\begin{split}u^{n+1} &amp;= u^{**} - \frac{\tau_3}{\rho} {\bf G} \Delta P^{**} \\
+b + \left ({\bf L_1} - {\bf D} \tau_3 {\bf G} \right ) \Delta P^{**} &amp;+ \left ({\bf L_2} - {\bf D} \tau_2 {\bf G} \right ) P^{*} \\
+&amp;= {\bf D}(\rho u^{n+1}) = {\bf D} ( \rho \widehat{u}) - {\bf D }( \tau_3 {\bf G} \Delta P^{**} ) \\
+b + {\bf L_1} \Delta P^{**} &amp;= {\bf D} (\rho \widehat{u}) - \left ({\bf L_2} - {\bf D} \tau_2 {\bf G} \right ) P^{*} \\
+-{\bf L_1} \Delta P^{**} &amp;= {\bf D} \rho \widehat{u} + {\bf D} \tau_2 {\bf G} P^{*} - {\bf L_2} P^{*} \\
+-{\bf L_1} \Delta P^{**} &amp;= - {\bf D} \rho \widehat{u} - {\bf D} \tau_2 {\bf G} P^{*} + {\bf L_2} P^{*} + b\end{split}\]</div>
+<p>Thus, the final set of equations solved at each outer iteration is</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}{\bf A}_{ij} \; \delta u_j &amp; = {\bf A}_{ij} \; u_j^{*} - \int P^{*} n_i {\rm d}S - \int \left(\rho^{*} - \rho_{\circ} \right) g_i {\rm d}V \\
+&amp; \quad - \frac{ (\gamma_2 \rho^{n} {u_i}^{n} + \gamma_3 \rho^{n-1} {u_i}^{n-1})}{\Delta t} \Delta V \\
+-{\bf L_1} \Delta P^{**} &amp;= - {\bf D} \rho \widehat{u} - {\bf D} \tau_2 {\bf G} P^{*} + {\bf L_2} P^{*} + b \\
+u_i^{n+1} &amp;= u_i^{**} - \frac{\tau_3}{\rho} {\bf G} \Delta P^{**}\end{split}\]</div>
+<section id="approximations-for-the-schur-complement">
+<h3><span class="section-number">15.4.1. </span>Approximations for the Schur complement<a class="headerlink" href="#approximations-for-the-schur-complement" title="Link to this heading"></a></h3>
+<p>Nalu-Wind implements two options for approximating the Schur complement for the
+split velocity-pressure solution of the incompressible momentum and continuity
+equation. The two options are:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\tau = \tau_1 = \tau_2 = \tau_3 &amp;= \Delta t \quad \mathrm{Original implementation}\\
+&amp; = (A_{ii})^{-1} \quad \mathrm{Alternate algorithm}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(A_{ii}\)</span> is the diagonal entry of the momentum linear system. The
+latter option is similar to the SIMPLE and PIMPLE implementations in OpenFOAM
+and is used for simulations with RANS and hybrid RANS-LES models with large
+Courant numbers.</p>
+</section>
+<section id="underrelaxation-for-momentum-and-scalar-transport">
+<h3><span class="section-number">15.4.2. </span>Underrelaxation for momentum and scalar transport<a class="headerlink" href="#underrelaxation-for-momentum-and-scalar-transport" title="Link to this heading"></a></h3>
+<p>By default, Nalu-Wind applies no underrelaxation during the solution of the
+Navier-Stokes equations. However, in RANS simulations at large timesteps some
+underrelaxation might be necessary to restore the diagonal dominance of the
+transport equations. User has the option to specify underrelaxation through the
+input files. When underrelaxation is applied, the advection and diffusion
+contributions to the diagonal term are modifed by dividing these terms by the
+underrelaxation factor. It must be noted that the underrelaxation is only
+applied to the advective and viscous contributions in the diagonal term and not
+the time derivative term.</p>
+<div class="math notranslate nohighlight">
+\[A_{ii} = -\frac{\sum_{i \neq j} A_{ij}}{\omega} + \frac{\gamma_1 \rho \Delta V}{\Delta T}\]</div>
+<p>The pressure update can also be underrelaxed by specifying the appropriate
+relaxation factor in the input file. When this option is activated, the full
+pressure update, in a given Picard iteration step, is used to project the
+velocity and mass flow rate and the relaxation is applied to the pressure
+solution at the end of the Picard iteration.</p>
+</section>
+</section>
+<section id="initial-boundary-conditions">
+<h2><span class="section-number">15.5. </span>Initial &amp; Boundary Conditions<a class="headerlink" href="#initial-boundary-conditions" title="Link to this heading"></a></h2>
+<p>This section briefly describes the boundary conditions available in Nalu-Wind for
+modeling wind farm problems. The terrain and top boundary conditions are
+described first as they are common to precusor and wind farm simulations.</p>
+<section id="initial-conditions">
+<h3><span class="section-number">15.5.1. </span>Initial conditions<a class="headerlink" href="#initial-conditions" title="Link to this heading"></a></h3>
+<p>Nalu-Wind has the ability to initialize the internal flow fields to uniform
+conditions for all pressure, velocity, temperature, and TKE (<span class="math notranslate nohighlight">\(k\)</span>) in the
+<cite>input file &lt;initial_conditions.constant&gt;</cite>. Nalu-Wind also provides a <em>user
+function</em> to add perturbations to the velocity field to trigger turbulence
+generation during precursor simulations. To specify more complex flow field
+conditions, a temperature profile with a capping inversion for example, users
+are referred to pre-processing utilities available in <a class="reference external" href="http://naluwindutils.readthedocs.io/en/latest/">NaluWindUtils</a> library.</p>
+</section>
+<section id="terrain-wall-boundary-condition">
+<h3><span class="section-number">15.5.2. </span>Terrain (Wall) boundary condition<a class="headerlink" href="#terrain-wall-boundary-condition" title="Link to this heading"></a></h3>
+<p>Users are referred to <a class="reference internal" href="boundaryConditions.html#abl-surface-conditions"><span class="std std-numref">Section 9.3</span></a> for the treatment of the
+terrain BC using roughness models. For enthalpy, users can provide a surface heat
+flux for modeling stratified flows.</p>
+</section>
+<section id="top-boundary-condition">
+<h3><span class="section-number">15.5.3. </span>Top boundary condition<a class="headerlink" href="#top-boundary-condition" title="Link to this heading"></a></h3>
+<p>For problems with minimal streamline curvature near the upper boundary
+(e.g. nearly flat terrain, negligible turbine blockage), a
+<a class="reference internal" href="boundaryConditions.html#theory-strong-symmetry-bc"><span class="std std-ref">symmetry BC</span></a> (slip wall) can be when modeling
+wind farm problems. By default a zero vertical temperature gradient will
+be imposed for the enthalpy equation when the symmetry boundary condition
+is used.  If a non-zero normal temperature gradient is required to
+drive the flow to a desired temperaure profile, e.g., a capping inversion,
+then the <a class="reference internal" href="boundaryConditions.html#theory-abltop-bc"><span class="std std-ref">abltop BC</span></a> can be used.  In this case
+the user_data input normal_temperature_gradient: value will set the normal
+temperature gradient to value at the top boundary.</p>
+<p>For cases with significant terrain features or significant turbine blockage,
+the <a class="reference internal" href="boundaryConditions.html#theory-abltop-bc"><span class="std std-ref">abltop BC</span></a> can also be used to achieve an
+open boundary that allows for both inflows and outflows at the domain
+top.  See the <a class="reference internal" href="boundaryConditions.html#theory-abltop-bc"><span class="std std-ref">abltop BC</span></a> documentation for details.</p>
+</section>
+<section id="inlet-conditions">
+<h3><span class="section-number">15.5.4. </span>Inlet conditions<a class="headerlink" href="#inlet-conditions" title="Link to this heading"></a></h3>
+<p>Time histories of inflow velocity and temperaure profiles can be provided as
+inputs (via I/O transfer) to drive the wind farm simulation with the desired
+flow conditions. See <a class="reference internal" href="../verification/verification.html#verification-abl-prescribed-inflow"><span class="std std-numref">Section 8.3</span></a> for more
+details on this capability. Driving a wind farm simulation using velocity and
+temperature fields from a mesoscale (WRF) simulation would require an additional
+pre-processing steps with the <a class="reference external" href="http://naluwindutils.readthedocs.io/en/latest/user/wrftonalu.html">wrftonalu</a> utility.</p>
+</section>
+<section id="outlet-conditions">
+<h3><span class="section-number">15.5.5. </span>Outlet conditions<a class="headerlink" href="#outlet-conditions" title="Link to this heading"></a></h3>
+<p>See the description of <a class="reference internal" href="boundaryConditions.html#theory-open-bc"><span class="std std-ref">open BC</span></a> for detailed description
+of the outlet BC implementation. For wind energy problems, it is necessary to
+activate the global mass correction as a single value of pressure across the
+boundary layer is not apprpriate in the presence of buoyancy effects. It might
+also be necessary to fix the reference pressure at an interior node in order to
+ensure that the Pressure Poisson solver is well conditioned.</p>
+</section>
+</section>
+<section id="wind-turbine-modeling">
+<span id="act-wind-turbine-aerodynamics"></span><h2><span class="section-number">15.6. </span>Wind Turbine Modeling<a class="headerlink" href="#wind-turbine-modeling" title="Link to this heading"></a></h2>
+<p>Wind turbine rotor and tower aerodynamic effects are modeled using actuator
+source representations. Compared to resolving the geometry of the turbine,
+actuator modeling alleviates the need for a complex body-fitted meshes, can
+relax time step restrictions, and eliminates the need for turbulence modeling at
+the turbine surfaces. This comes at the expense of a loss of fine-scale detail,
+for example, the boundary layers of the wind turbine surfaces are not resolved.
+However, actuator methods well represent wind turbine wakes in the mid to far
+downstream regions where wake interactions are important.</p>
+<p>Actuator methods usually fall within the classes of disks, lines, surface, or
+some blend between the disk and line (i.e., the swept actuator line). Most
+commonly, the force over the actuator is computed, and then applied as a
+body-force source term, <span class="math notranslate nohighlight">\(f_i\)</span> (Term <span class="math notranslate nohighlight">\(\mathbf{VIII}\)</span>), to the
+Favre-filtered momentum equation (Eq. <a class="reference internal" href="#equation-ablmom">(15.1)</a>).</p>
+<p>The body-force term <span class="math notranslate nohighlight">\(f_i\)</span> is volumetric and is a force per unit
+volume. The actuator forces, <span class="math notranslate nohighlight">\(F'_i\)</span>, are not volumetric. They exist along
+lines or on surfaces and are force per unit length or area. Therefore, a
+projection function, <span class="math notranslate nohighlight">\(g\)</span>, is used to project the actuator forces into the
+fluid volume as volumetric forces. A simple and commonly used projection
+function is a uniform Gaussian as proposed by Sorensen and Shen
+<span id="id4">[<a class="reference internal" href="../../zrefs.html#id2" title="Jens Nørkær Sørensen and Wen Zhong Shen. Numerical modeling of wind turbine wakes. Journal of Fluids Engineering, 124(2):393–399, 05 2002. URL: http://dx.doi.org/10.1115/1.1471361.">SorensenS02</a>]</span>,</p>
+<div class="math notranslate nohighlight">
+\[g(\vec{r}) = \frac{1}{\pi^{3/2} \epsilon^3} e^{-\left( \left| \vec{r} \right|/\epsilon \right)^2},\]</div>
+<p>where <span class="math notranslate nohighlight">\(\vec{r}\)</span> is the position vector between the fluid point of
+interest to a particular point on the actuator, and <span class="math notranslate nohighlight">\(\epsilon\)</span> is
+the width of the Gaussian, that determines how diluted the body force
+become. As an example, for an actuator line extending from <span class="math notranslate nohighlight">\(l=0\)</span>
+to <span class="math notranslate nohighlight">\(L\)</span>, the body force at point <span class="math notranslate nohighlight">\((x,y,z)\)</span> due to the line is
+given by</p>
+<div class="math notranslate nohighlight" id="equation-force-integral">
+<span class="eqno">(15.10)<a class="headerlink" href="#equation-force-integral" title="Link to this equation"></a></span>\[f_i(x,y,z) = \int_0^L g\left(\vec{r}\left(l\right)\right) F'_i\left(l\right) \: \textrm{d} l.\]</div>
+<p>Here, the projection function’s position vector is a function of
+position on the actuator line. The part of the line nearest to the point in
+the fluid at <span class="math notranslate nohighlight">\((x,y,z)\)</span> has most weight.</p>
+<p>The force along an actuator line or over an actuator disk is often
+computed using blade element theory, where it is convenient to discretize
+the actuator into a set of elements. For example, with the actuator line,
+the line is broken into discrete line segments, and the force at the center
+of each element, <span class="math notranslate nohighlight">\(F_i^k\)</span>, is computed. Here, <span class="math notranslate nohighlight">\(k\)</span> is the actuator
+element index. These actuator points are independent of the fluid mesh.
+The point forces are then projected onto the fluid mesh using the Gaussian
+projection function, <span class="math notranslate nohighlight">\(g(\vec{r})\)</span>, as described above.
+This is convenient because the integral given in Equation
+<a class="reference internal" href="#equation-force-integral">(15.10)</a> can become the summation</p>
+<div class="math notranslate nohighlight" id="equation-force-summation">
+<span class="eqno">(15.11)<a class="headerlink" href="#equation-force-summation" title="Link to this equation"></a></span>\[f_i(x,y,z) = \sum_{k=0}^N g(\vec{r}^k) F_i^k.\]</div>
+<p>This summation well approximates the integral given in Equation
+<a class="reference internal" href="#equation-force-integral">(15.10)</a> so long as the ratio of actuator element size to
+projection function width <span class="math notranslate nohighlight">\(\epsilon\)</span> does not exceed a certain threshold.</p>
+<p>Presently, Nalu-Wind uses an actuator line representation to model the effects of
+turbine on the flow field; however, the class hierarchy is designed with the
+potential to add other actuator source terms such as actuator disk, swept
+actuator line and actuator surface capability in the future. The
+ActuatorLineFAST class couples Nalu-Wind
+with NREL’s OpenFAST for actuator line simulations of wind turbines. OpenFAST is
+a aero-hydro-servo-elastic tool to model wind turbine developed by the National
+Renewable Energy Laboratory (NREL). The ActuatorLineFAST
+class allows Nalu-Wind to interface as an inflow
+module to OpenFAST by supplying the velocity field information.</p>
+<section id="nalu-wind-openfast-coupling-algorithm">
+<h3><span class="section-number">15.6.1. </span>Nalu-Wind – OpenFAST Coupling Algorithm<a class="headerlink" href="#nalu-wind-openfast-coupling-algorithm" title="Link to this heading"></a></h3>
+<p>A nacelle model is implemented using a Gaussian drag body force. The model
+implements a drag force in a direction opposite to velocity field at the center
+of the Gaussian.
+The width of the Gaussian kernel is determined using the reference
+area and drag coefficient of the nacelle as shown by Martinez-Tossas.
+<span id="id5">[<a class="reference internal" href="../../zrefs.html#id37" title="Luis A Martínez-Tossas. Large Eddy Simulations and Theoretical Analysis of Wind Turbine Aerodynamics Using an Actuator Line Model. PhD thesis, Johns Hopkins University, Baltimore, MD USA, July 2017.">MartinezT17</a>]</span></p>
+<div class="math notranslate nohighlight">
+\[\epsilon_d = \sqrt{2 \, c_d \, A/ \pi}\]</div>
+<p>where <span class="math notranslate nohighlight">\(c_d\)</span> is the drag coefficient,
+and
+<span class="math notranslate nohighlight">\(A\)</span> is the reference area.
+This value of <span class="math notranslate nohighlight">\(\epsilon_d\)</span> ensures that the momentum thickness of the
+generated wake is of the right size.
+The velocity sampled at the center of the Gaussian is corrected
+to obtain the upstream velocity.</p>
+<div class="math notranslate nohighlight">
+\[{\widetilde{u}_i}_\infty = \frac{1}{1 -
+                            c_d \, A / (4 \, \pi \, \epsilon_d^2)}
+                            {\widetilde{u}_i}_c\]</div>
+<p>where <span class="math notranslate nohighlight">\(\widetilde{u_i}_c\)</span> is the velocity at the center of the Gaussian
+and <span class="math notranslate nohighlight">\({\widetilde{u}_i}_\infty\)</span> is the free-stream velocity used to compute
+the drag force.
+The drag body force is then</p>
+<div class="math notranslate nohighlight">
+\[f_d(x,y,z) = \frac{1}{2} \, c_d \, A\, {\widetilde{u}_i}_\infty^2 \,
+             \frac{1}{\pi^{3/2} \epsilon_d^3} e^{-|\vec{r}|^2/\epsilon_d^2}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\vec{r}\)</span> is the position vector between the fluid point of
+interest and the center of the Gaussian force.</p>
+<p>The actuator line implementation allows for flexible blades that are not
+necessarily straight (pre-bend and sweep). The current implementation requires a
+fixed time step when coupled to OpenFAST, but allows the time step in Nalu-Wind to be
+an integral multiple of the OpenFAST time step. At present, a simple time lagged
+FSI model is used to interface Nalu-Wind with the turbine model in OpenFAST:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The velocity at time step at time step <span class="math notranslate nohighlight">\(n\)</span> is sampled at the actuator
+points and sent to OpenFAST,</p></li>
+<li><p>OpenFAST advances the turbines up-to the next Nalu-Wind time step <span class="math notranslate nohighlight">\(n+1\)</span>,</p></li>
+<li><p>The body forces at the actuator points are converted to the source terms of the momentum
+equation to advance Nalu-Wind to the next time step <span class="math notranslate nohighlight">\(n+1\)</span>.</p></li>
+</ul>
+</div></blockquote>
+<p>This FSI algorithm is expected to be only first order accurate in time. We are
+currently working on improving the FSI coupling scheme to be second order
+accurate in time.</p>
+</section>
+<section id="nalu-wind-actuator-disk-model-via-openfast">
+<h3><span class="section-number">15.6.2. </span>Nalu-Wind – Actuator Disk Model via OpenFAST<a class="headerlink" href="#nalu-wind-actuator-disk-model-via-openfast" title="Link to this heading"></a></h3>
+<p>An actuator disk model is implemented in Nalu-Wind by using an OpenFAST actuator line to
+sample the flow and compute the forcing.  The actuator line is held stationary which leads
+to computational savings during execution because there is only 1 search operation in the
+initial setup.</p>
+<p>The forces are gathered at each actuator line point, and the total force at each discrete
+radial location (<span class="math notranslate nohighlight">\(r_j\)</span> where <span class="math notranslate nohighlight">\(j \in [1,N_R]\)</span>) is computed using
+<a class="reference internal" href="#equation-disktotalforce">(15.12)</a>.</p>
+<div class="math notranslate nohighlight" id="equation-disktotalforce">
+<span class="eqno">(15.12)<a class="headerlink" href="#equation-disktotalforce" title="Link to this equation"></a></span>\[\mathbf{F}_{total}(r_j) = \sum_{i=1}^{N_B} \mathbf{F}(r_j, \theta_i)\]</div>
+<p>where <span class="math notranslate nohighlight">\(N_B\)</span> and <span class="math notranslate nohighlight">\(N_R\)</span> are the number of blades and number of radial points
+respectively.</p>
+<p><span class="math notranslate nohighlight">\(\mathbf{F}_{total}(r_j)\)</span> is then spread evenly across the original actuator line points
+and additional ‘swept-points’ that are added in between the actuator lines. The swept-points are
+always uniformly distributed azimuthally, but the number of swept points can either be non-uniformly
+or uniformly distributed along the radial direction (left and right images in
+figure <a class="reference internal" href="#actdisk-sample-fig"><span class="std std-numref">15.2</span></a>).  The non-uniform distribution uses the distance
+between points along the embedded actuator line blades as the arc-length between points in the
+azimuthal direction.  This is the default behavior.  If uniform spacing is desired then
+<cite>num_swept_pts</cite> must be specified in the input deck.  This is the number of points between
+the actuator lines, so in figure <a class="reference internal" href="#actdisk-sample-fig"><span class="std std-numref">15.2</span></a> the <cite>num_swept_pts</cite> is 3.</p>
+<figure class="align-center" id="id7">
+<span id="actdisk-sample-fig"></span><a class="reference internal image-reference" href="../../_images/actuatorDisk.png"><img alt="../../_images/actuatorDisk.png" src="../../_images/actuatorDisk.png" style="width: 250px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">15.2 </span><span class="caption-text">Actuator Disk with non-uniform (left) and uniform (right) sampling in the azimuthal direction.</span><a class="headerlink" href="#id7" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>The force that is spread across all the points at a given radius is then calculated as
+<a class="reference internal" href="#equation-diskappliedforce">(15.13)</a>.</p>
+<div class="math notranslate nohighlight" id="equation-diskappliedforce">
+<span class="eqno">(15.13)<a class="headerlink" href="#equation-diskappliedforce" title="Link to this equation"></a></span>\[\mathbf{f}(r_j) = \frac{\mathbf{F}_{total}(r_j)}{N_B*(N_{S,j}+1)}\]</div>
+<p>where <span class="math notranslate nohighlight">\(N_{S,j}\)</span> is the number of swept points for a given radius.  The index j is used
+because this value varies between radii when non-uniform sampling is applied.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="multiPhysics.html" class="btn btn-neutral float-left" title="14. Multi-Physics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="topologicalSupport.html" class="btn btn-neutral float-right" title="16. Topological Support" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

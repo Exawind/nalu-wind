@@ -1,0 +1,11 @@
+<map id="sierra::nalu::BoundaryCondition" name="sierra::nalu::BoundaryCondition">
+<area shape="rect" id="node1" title=" " alt="" coords="5,242,232,269"/>
+<area shape="rect" id="node2" href="$structsierra_1_1nalu_1_1_a_b_l_top_boundary_condition_data.html" title=" " alt="" coords="291,5,502,47"/>
+<area shape="rect" id="node3" href="$structsierra_1_1nalu_1_1_inflow_boundary_condition_data.html" title=" " alt="" coords="295,71,499,112"/>
+<area shape="rect" id="node4" href="$structsierra_1_1nalu_1_1_non_conformal_boundary_condition_data.html" title=" " alt="" coords="298,136,495,177"/>
+<area shape="rect" id="node5" href="$structsierra_1_1nalu_1_1_open_boundary_condition_data.html" title=" " alt="" coords="297,201,496,243"/>
+<area shape="rect" id="node6" href="$structsierra_1_1nalu_1_1_overset_boundary_condition_data.html" title=" " alt="" coords="289,267,505,308"/>
+<area shape="rect" id="node7" href="$structsierra_1_1nalu_1_1_periodic_boundary_condition_data.html" title=" " alt="" coords="288,332,505,373"/>
+<area shape="rect" id="node8" href="$structsierra_1_1nalu_1_1_symmetry_boundary_condition_data.html" title=" " alt="" coords="280,397,513,439"/>
+<area shape="rect" id="node9" href="$structsierra_1_1nalu_1_1_wall_boundary_condition_data.html" title=" " alt="" coords="300,463,493,504"/>
+</map>

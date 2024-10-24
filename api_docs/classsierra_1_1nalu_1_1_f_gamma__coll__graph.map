@@ -1,0 +1,7 @@
+<map id="sierra::nalu::FGamma" name="sierra::nalu::FGamma">
+<area shape="rect" id="node1" title="Class to wrap the F_gamma() function with an interface that is compatible with our Functor implementa..." alt="" coords="183,377,346,404"/>
+<area shape="rect" id="node2" title=" " alt="" coords="109,273,284,315"/>
+<area shape="rect" id="node3" title=" " alt="" coords="250,184,415,211"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,95,135,121"/>
+<area shape="rect" id="node5" title=" " alt="" coords="51,5,89,32"/>
+</map>

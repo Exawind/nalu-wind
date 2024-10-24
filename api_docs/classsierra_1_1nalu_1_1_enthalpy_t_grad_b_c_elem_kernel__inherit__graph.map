@@ -1,0 +1,6 @@
+<map id="sierra::nalu::EnthalpyTGradBCElemKernel&lt; BcAlgTraits &gt;" name="sierra::nalu::EnthalpyTGradBCElemKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="node1" title="Enforce a prescribed normal temperature gradient at the boundary." alt="" coords="10,291,226,332"/>
+<area shape="rect" id="node2" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="5,185,231,241"/>
+<area shape="rect" id="node3" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="41,5,185,32"/>
+<area shape="rect" id="node4" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="134,81,345,108"/>
+</map>

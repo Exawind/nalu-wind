@@ -1,0 +1,11 @@
+<map id="sierra::nalu::ActuatorBulkSimple" name="sierra::nalu::ActuatorBulkSimple">
+<area shape="rect" id="node1" title=" " alt="" coords="1031,57,1217,98"/>
+<area shape="rect" id="node2" href="$structsierra_1_1nalu_1_1_actuator_bulk.html" title="Where field data is stored and accessed for actuators This object lives on host but the views can be ..." alt="" coords="679,5,866,32"/>
+<area shape="rect" id="node3" href="$structsierra_1_1nalu_1_1_act_dual_view_helper.html" title=" " alt="" coords="661,57,884,98"/>
+<area shape="rect" id="node4" href="$structsierra_1_1nalu_1_1_act_dual_view_helper.html" title=" " alt="" coords="257,57,452,98"/>
+<area shape="rect" id="node5" title=" " alt="" coords="679,123,866,149"/>
+<area shape="rect" id="node6" title=" " alt="" coords="311,123,398,149"/>
+<area shape="rect" id="node7" title=" " alt="" coords="5,114,144,155"/>
+<area shape="rect" id="node8" title=" " alt="" coords="290,177,419,204"/>
+<area shape="rect" id="node9" title=" " alt="" coords="55,180,94,207"/>
+</map>

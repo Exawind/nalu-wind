@@ -1,0 +1,8 @@
+<map id="sierra::nalu::MomentumOpenAdvDiffElemKernel&lt; BcAlgTraits &gt;" name="sierra::nalu::MomentumOpenAdvDiffElemKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="node1" title="Open adv/diff kernel for momentum equation (velocity DOF)" alt="" coords="1037,49,1284,90"/>
+<area shape="rect" id="node2" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="709,5,853,32"/>
+<area shape="rect" id="node3" href="$classsierra_1_1nalu_1_1_master_element.html" title=" " alt="" coords="680,56,883,83"/>
+<area shape="rect" id="node4" href="$classsierra_1_1nalu_1_1_peclet_function.html" title=" " alt="" coords="682,107,881,149"/>
+<area shape="rect" id="node5" href="$classsierra_1_1nalu_1_1_peclet_function_base.html" title="Non&#45;templated empty base class for storing pointers to templated instances." alt="" coords="5,119,236,145"/>
+<area shape="rect" id="node6" href="$classsierra_1_1nalu_1_1_peclet_function.html" title=" " alt="" coords="285,144,521,171"/>
+</map>

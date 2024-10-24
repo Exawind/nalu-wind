@@ -1,0 +1,52 @@
+<map id="AssembleContinuityNonConformalSolverAlgorithm.C" name="AssembleContinuityNonConformalSolverAlgorithm.C">
+<area shape="rect" id="node1" title=" " alt="" coords="3508,5,3755,47"/>
+<area shape="rect" id="node2" href="$_assemble_continuity_non_conformal_solver_algorithm_8h.html" title=" " alt="" coords="613,95,860,136"/>
+<area shape="rect" id="node6" href="$_linear_system_8h.html" title=" " alt="" coords="838,259,961,285"/>
+<area shape="rect" id="node13" href="$_field_type_def_8h.html" title=" " alt="" coords="226,259,343,285"/>
+<area shape="rect" id="node16" href="$_equation_system_8h.html" title=" " alt="" coords="1029,102,1169,129"/>
+<area shape="rect" id="node18" href="$_realm_8h.html" title=" " alt="" coords="2197,184,2273,211"/>
+<area shape="rect" id="node28" title=" " alt="" coords="3209,408,3421,435"/>
+<area shape="rect" id="node29" title=" " alt="" coords="3558,408,3774,435"/>
+<area shape="rect" id="node34" href="$_dg_info_8h.html" title=" " alt="" coords="4575,333,4653,360"/>
+<area shape="rect" id="node36" href="$_nalu_env_8h.html" title=" " alt="" coords="3616,102,3703,129"/>
+<area shape="rect" id="node40" href="$_non_conformal_info_8h.html" title=" " alt="" coords="3389,184,3543,211"/>
+<area shape="rect" id="node41" href="$_master_element_8h.html" title=" " alt="" coords="1599,259,1843,285"/>
+<area shape="rect" id="node42" title=" " alt="" coords="3936,259,4113,285"/>
+<area shape="rect" id="node47" href="$_non_conformal_manager_8h.html" title=" " alt="" coords="4151,184,4335,211"/>
+<area shape="rect" id="node48" href="$_time_integrator_8h.html" title=" " alt="" coords="2477,259,2607,285"/>
+<area shape="rect" id="node49" title=" " alt="" coords="4627,102,4809,129"/>
+<area shape="rect" id="node50" title=" " alt="" coords="4833,102,5064,129"/>
+<area shape="rect" id="node3" href="$_solver_algorithm_8h.html" title=" " alt="" coords="667,184,806,211"/>
+<area shape="rect" id="node4" href="$_kokkos_interface_8h.html" title=" " alt="" coords="661,408,799,435"/>
+<area shape="rect" id="node5" title=" " alt="" coords="636,483,824,509"/>
+<area shape="rect" id="node8" title=" " alt="" coords="711,333,890,360"/>
+<area shape="rect" id="node9" title=" " alt="" coords="1293,333,1506,360"/>
+<area shape="rect" id="node10" title=" " alt="" coords="2619,408,2681,435"/>
+<area shape="rect" id="node12" title=" " alt="" coords="316,408,525,435"/>
+<area shape="rect" id="node7" href="$_linear_solver_types_8h.html" title=" " alt="" coords="914,333,1066,360"/>
+<area shape="rect" id="node11" title=" " alt="" coords="2137,408,2195,435"/>
+<area shape="rect" id="node14" title=" " alt="" coords="5,333,220,360"/>
+<area shape="rect" id="node15" title=" " alt="" coords="296,333,383,360"/>
+<area shape="rect" id="node17" href="$_nalu_parsed_types_8h.html" title=" " alt="" coords="1810,333,1954,360"/>
+<area shape="rect" id="node31" href="$_peclet_function_8h.html" title=" " alt="" coords="463,184,592,211"/>
+<area shape="rect" id="node32" href="$_n_g_p_instance_8h.html" title=" " alt="" coords="322,184,439,211"/>
+<area shape="rect" id="node33" href="$_simd_interface_8h.html" title="STK SIMD Interface." alt="" coords="1978,333,2103,360"/>
+<area shape="rect" id="node19" href="$_enums_8h.html" title=" " alt="" coords="2483,333,2561,360"/>
+<area shape="rect" id="node20" title=" " alt="" coords="2853,408,2903,435"/>
+<area shape="rect" id="node21" href="$_boundary_conditions_8h.html" title=" " alt="" coords="2631,259,2797,285"/>
+<area shape="rect" id="node22" href="$_initial_conditions_8h.html" title=" " alt="" coords="2261,259,2401,285"/>
+<area shape="rect" id="node23" href="$_material_propertys_8h.html" title=" " alt="" coords="2821,259,2972,285"/>
+<area shape="rect" id="node24" href="$_equation_systems_8h.html" title=" " alt="" coords="1867,259,2014,285"/>
+<area shape="rect" id="node25" href="$_field_manager_8h.html" title=" " alt="" coords="1581,333,1703,360"/>
+<area shape="rect" id="node26" title=" " alt="" coords="2039,259,2237,285"/>
+<area shape="rect" id="node27" href="$_ngp_field_manager_8h.html" title="NGP Field Manager." alt="" coords="3098,333,3309,360"/>
+<area shape="rect" id="node30" href="$_ngp_mesh_info_8h.html" title="NGP mesh information objects." alt="" coords="1137,259,1320,285"/>
+<area shape="rect" id="node35" title=" " alt="" coords="4517,408,4711,435"/>
+<area shape="rect" id="node37" title=" " alt="" coords="3567,184,3626,211"/>
+<area shape="rect" id="node38" title=" " alt="" coords="3651,184,3724,211"/>
+<area shape="rect" id="node39" title=" " alt="" coords="3748,184,3837,211"/>
+<area shape="rect" id="node43" title=" " alt="" coords="4138,259,4349,285"/>
+<area shape="rect" id="node44" title=" " alt="" coords="3250,259,3461,285"/>
+<area shape="rect" id="node45" title=" " alt="" coords="3485,259,3671,285"/>
+<area shape="rect" id="node46" title=" " alt="" coords="3695,259,3912,285"/>
+</map>

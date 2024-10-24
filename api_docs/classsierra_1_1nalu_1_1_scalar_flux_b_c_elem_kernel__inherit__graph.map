@@ -1,0 +1,6 @@
+<map id="sierra::nalu::ScalarFluxBCElemKernel&lt; BcAlgTraits &gt;" name="sierra::nalu::ScalarFluxBCElemKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="node1" title=" " alt="" coords="5,291,221,332"/>
+<area shape="rect" id="node2" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="15,185,212,241"/>
+<area shape="rect" id="node3" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="36,5,180,32"/>
+<area shape="rect" id="node4" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="129,81,340,108"/>
+</map>

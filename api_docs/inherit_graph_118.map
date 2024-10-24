@@ -1,0 +1,37 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="5,860,149,887"/>
+<area shape="rect" id="node2" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="228,5,433,61"/>
+<area shape="rect" id="node4" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="225,85,436,141"/>
+<area shape="rect" id="node6" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="217,165,444,221"/>
+<area shape="rect" id="node8" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="239,245,423,301"/>
+<area shape="rect" id="node10" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="210,325,451,381"/>
+<area shape="rect" id="node12" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="222,405,439,461"/>
+<area shape="rect" id="node14" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="232,485,429,541"/>
+<area shape="rect" id="node16" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="221,565,440,621"/>
+<area shape="rect" id="node18" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="218,645,443,701"/>
+<area shape="rect" id="node20" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="197,725,464,781"/>
+<area shape="rect" id="node22" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="243,805,419,861"/>
+<area shape="rect" id="node24" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="204,885,457,941"/>
+<area shape="rect" id="node26" href="$classsierra_1_1nalu_1_1_momentum_open_adv_diff_elem_kernel.html" title="Open adv/diff kernel for momentum equation (velocity DOF)" alt="" coords="207,966,454,1007"/>
+<area shape="rect" id="node27" href="$classsierra_1_1nalu_1_1_momentum_symmetry_elem_kernel.html" title="Symmetry kernel for momentum equation (velocity DOF)" alt="" coords="207,1031,454,1073"/>
+<area shape="rect" id="node28" href="$classsierra_1_1nalu_1_1_momentum_wall_function_elem_kernel.html" title="Wall function approach momentum equation (velocity DOF)" alt="" coords="204,1097,457,1138"/>
+<area shape="rect" id="node29" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="225,1163,436,1189"/>
+<area shape="rect" id="node30" href="$classsierra_1_1nalu_1_1_scalar_flux_penalty_elem_kernel.html" title="specificed open bc (face/elem) kernel for continuity equation (pressure DOF)" alt="" coords="207,1214,454,1255"/>
+<area shape="rect" id="node31" href="$classsierra_1_1nalu_1_1_scalar_open_adv_elem_kernel.html" title="Symmetry kernel for scalar equation." alt="" coords="219,1279,442,1321"/>
+<area shape="rect" id="node32" href="$classsierra_1_1nalu_1_1_t_g_m_m_s_h_o_elem_kernel.html" title=" " alt="" coords="227,1345,434,1386"/>
+<area shape="rect" id="node33" href="$classsierra_1_1nalu_1_1_variable_density_continuity_m_m_s_h_o_elem_kernel.html" title=" " alt="" coords="223,1411,438,1467"/>
+<area shape="rect" id="node34" href="$classsierra_1_1nalu_1_1_variable_density_enthalpy_m_m_s_h_o_elem_kernel.html" title=" " alt="" coords="223,1491,439,1547"/>
+<area shape="rect" id="node35" href="$classsierra_1_1nalu_1_1_variable_density_momentum_m_m_s_h_o_elem_kernel.html" title=" " alt="" coords="213,1571,448,1627"/>
+<area shape="rect" id="node3" href="$classsierra_1_1nalu_1_1_scalar_edge_open_solver_alg.html" title=" " alt="" coords="539,13,759,54"/>
+<area shape="rect" id="node5" href="$classsierra_1_1nalu_1_1_continuity_open_edge_kernel.html" title=" " alt="" coords="534,93,765,134"/>
+<area shape="rect" id="node7" href="$classsierra_1_1nalu_1_1_scalar_face_flux_b_c_elem_kernel.html" title="This class applies the computed wall heat flux field to the boundary." alt="" coords="527,173,771,214"/>
+<area shape="rect" id="node9" href="$classsierra_1_1nalu_1_1_scalar_open_edge_kernel.html" title=" " alt="" coords="551,253,748,294"/>
+<area shape="rect" id="node11" href="$classsierra_1_1nalu_1_1_momentum_a_b_l_wall_shear_stress_edge_kernel.html" title="This class applies the computed wall shear stress field to the boundary." alt="" coords="512,333,787,374"/>
+<area shape="rect" id="node13" href="$classsierra_1_1nalu_1_1_continuity_inflow_elem_kernel.html" title="Add Int rho*uj*nj*dS." alt="" coords="531,413,768,454"/>
+<area shape="rect" id="node15" href="$classsierra_1_1nalu_1_1_scalar_flux_b_c_elem_kernel.html" title=" " alt="" coords="541,493,757,534"/>
+<area shape="rect" id="node17" href="$classsierra_1_1nalu_1_1_momentum_open_edge_kernel.html" title=" " alt="" coords="543,573,755,614"/>
+<area shape="rect" id="node19" href="$classsierra_1_1nalu_1_1_enthalpy_t_grad_b_c_elem_kernel.html" title="Enforce a prescribed normal temperature gradient at the boundary." alt="" coords="541,653,757,694"/>
+<area shape="rect" id="node21" href="$classsierra_1_1nalu_1_1_momentum_a_b_l_wall_func_edge_kernel.html" title=" " alt="" coords="534,733,765,774"/>
+<area shape="rect" id="node23" href="$classsierra_1_1nalu_1_1_wall_dist_elem_kernel.html" title=" " alt="" coords="554,813,745,854"/>
+<area shape="rect" id="node25" href="$classsierra_1_1nalu_1_1_momentum_symmetry_edge_kernel.html" title=" " alt="" coords="526,893,773,934"/>
+</map>

@@ -1,0 +1,11 @@
+<map id="sierra::nalu::DeltaGammaConverter" name="sierra::nalu::DeltaGammaConverter">
+<area shape="rect" id="node1" title="Calculates reference heat loss parameter." alt="" coords="174,395,365,436"/>
+<area shape="rect" id="node2" href="$classsierra_1_1nalu_1_1_converter.html" title="Provides arbitrary processing of input data before handing off values to a Table for interpolation." alt="" coords="430,298,597,325"/>
+<area shape="rect" id="node3" title=" " alt="" coords="569,109,655,136"/>
+<area shape="rect" id="node5" title=" " alt="" coords="420,200,607,227"/>
+<area shape="rect" id="node4" title=" " alt="" coords="543,5,681,47"/>
+<area shape="rect" id="node6" title=" " alt="" coords="154,109,283,136"/>
+<area shape="rect" id="node8" title=" " alt="" coords="182,291,357,332"/>
+<area shape="rect" id="node9" title=" " alt="" coords="5,200,171,227"/>
+<area shape="rect" id="node7" title=" " alt="" coords="199,13,238,39"/>
+</map>

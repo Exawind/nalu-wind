@@ -1,0 +1,229 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>12. Coupling Approach &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="13. Time discretization" href="timeDiscretization.html" />
+    <link rel="prev" title="11. Property Evaluations" href="propertyEvaluation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Theory Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lowMachNumberDerivation.html">1. Low Mach Number Derivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html">2. Supported Equation Set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html">3. Discretization Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advectionStabilization.html">4. Advection Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pressureStabilization.html">5. Pressure Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html">6. RTE Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html">7. Nonlinear Stabilization Operator (NSO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html">8. Turbulence Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html">9. Supported Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overset.html">10. Overset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html">11. Property Evaluations</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">12. Coupling Approach</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#errors-due-to-splitting-and-stabilization">12.1. Errors due to Splitting and Stabilization</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="timeDiscretization.html">13. Time discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiPhysics.html">14. Multi-Physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html">15. Wind Energy Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topologicalSupport.html">16. Topological Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adaptivity.html">17. Adaptivity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeAbstractions.html">18. Code Abstractions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Nalu-Wind - Theory Manual</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">12. </span>Coupling Approach</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/theory/couplingApproach.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="coupling-approach">
+<h1><span class="section-number">12. </span>Coupling Approach<a class="headerlink" href="#coupling-approach" title="Link to this heading"></a></h1>
+<p>The classic low Mach implementation uses an incremental approximate
+pressure projection scheme in which nonlinear convergence is obtained
+using outer Picard loops. Recently a full study on coupling approaches
+has been conducted using ASC Algorithm funds. In this project, coupling
+methods ranging from fully implicit, fully coupled equal order
+pressure/velocity interpolation with pressure stabilization to explicit
+advection/diffusion pressure projection schemes. A brief summary of the
+results follows.</p>
+<p>Specifically, five algorithms were considered and are as follows:</p>
+<ol class="arabic simple">
+<li><p>A monolithic scheme in which advection and diffusion are implicit using full analytical sensitivities,</p></li>
+<li><p>Monolithic momentum solve with implicit advection/diffusion in the context of a fourth order stabilized incremental pressure projection scheme,</p></li>
+<li><p>Monolithic momentum solve with explicit advection; implicit diffusion in the context of a fourth order stabilized incremental pressure projection scheme,</p></li>
+<li><p>Segregated momentum solve with implicit advection/diffusion in the context of a fourth order stabilized incremental pressure porjectin scheme, and</p></li>
+<li><p>Explicit momementum advection/diffusion predictor/corrector scheme in the context of a second order stabilized pressure-free approximate projection scheme.</p></li>
+</ol>
+<p>Each of the above algorithms has been run in the context of a transient
+uniform flow low Mach flow. The emphasis of this project is transient
+flows. As such, the numbers below are to be cast in this context. If
+steady flows are desired, conclusions may be different. The slowdown of
+each implementation is relative to the core low Mach algorith, i.e.,
+algorithm (4) above. Numbers less than unity represent a speed-up
+whereas numbers greater than unity represent a slow down: 1) 3.4x, 2)
+1.2x, 3) 0.6x, 4) 1.0x, 5) 0.7x.</p>
+<p>The above runs were made using a time step that corresponded to a CFL of
+slightly less than unity. In this particlar flow, a transitionally
+turbulent open jet, the diffusion time scale stability limit was not a
+factor. In other words, there existed no detailed boundary layer at the
+wall bounded flow at the ground plane. Results for a Reynolds number of
+<span class="math notranslate nohighlight">\(45000\)</span> back step also are similar to the above jet results.</p>
+<p>In general, although a mixture of implicit diffusion and explicit
+advection seem to be the winning combination, this scheme is very
+sensitive to time step and must be used by an educated user. In general,
+the conclusions are, thus far, that the standard segregated pressure
+projection scheme is preferred.</p>
+<p>The algorithm implemented in Nalu-Wind is a fourth order approximate
+projection scheme with monolithic momentum coupling. Evaluation of a
+predictor/corrector approach for reating flow is anticipated in the late
+FY15 time frame.</p>
+<section id="errors-due-to-splitting-and-stabilization">
+<span id="theory-errors-splitting-stabilization"></span><h2><span class="section-number">12.1. </span>Errors due to Splitting and Stabilization<a class="headerlink" href="#errors-due-to-splitting-and-stabilization" title="Link to this heading"></a></h2>
+<p>As noted in many of our papers, the error in the above method can be
+written in block form (let’s relax the variable density nuance - or
+simple fold these extra terms into our operators). Here we specifically
+partition error into both splitting (the pressure projection aspect of
+the alg that factorizes the fully coupled system) and pressure
+stabilization. Note that when we run fully coupled simulation with the
+same pressure stabilization algorithm, the answers converge to the same
+result.</p>
+<p>Below, also forgive the specific definitions of <span class="math notranslate nohighlight">\(\tau\)</span>. In
+general, they represent a choice of projection and stabilization time
+scales. Finally, the Laplace operator, e.g., <span class="math notranslate nohighlight">\({\bf L_2}\)</span>, have the
+<span class="math notranslate nohighlight">\(\tau\)</span>’s built into them.</p>
+<div class="math notranslate nohighlight" id="equation-smoothspliterror">
+<span class="eqno">(12.1)<a class="headerlink" href="#equation-smoothspliterror" title="Link to this equation"></a></span>\[\begin{split}\left[
+    \begin{array}{lr}
+      {\bf A}  &amp;  {\bf G}  \\
+      {\bf D}  &amp;  {\bf 0}
+    \end{array}
+  \right]
+%
+  \left[
+    \begin{array}{l}
+      {\bf u}^{n+1}  \\
+      p^{n+1}
+    \end{array}
+  \right] =
+%
+  \left[
+    \begin{array}{l}
+      {\bf f}  \\
+      0
+    \end{array}
+  \right]    +
+   \left[
+    \begin{array}{l}
+      ({\bf I}- \tau {\bf A } ){\bf G}(p^{n+1}-p^n) \\
+      \epsilon({\bf L_i},\tau_i, {\bf D}, {\bf G})
+  \end{array}
+  \right]\end{split}\]</div>
+<p>where the error term that appears for the discrete continuity solve is
+given by,</p>
+<div class="math notranslate nohighlight" id="equation-conterrordefined">
+<span class="eqno">(12.2)<a class="headerlink" href="#equation-conterrordefined" title="Link to this equation"></a></span>\[\begin{split}\epsilon({\bf L_i},\tau_i,{\bf D},{\bf G}) =
+ (({\bf L_1}-{\bf D}\tau_3{\bf G}) \\
+-({\bf L_2}-{\bf D}\tau_2{\bf G}))(p^{n+1}-p^{n}) \\
++ ({\bf L_2}-{\bf D}\tau_2{\bf G})p^{n+1}\end{split}\]</div>
+<p>For the sake of this write-up, let <span class="math notranslate nohighlight">\({\bf L_1} = {\bf L_2}\)</span> and
+<span class="math notranslate nohighlight">\(\tau_2 = \tau_3\)</span>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="propertyEvaluation.html" class="btn btn-neutral float-left" title="11. Property Evaluations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="timeDiscretization.html" class="btn btn-neutral float-right" title="13. Time discretization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

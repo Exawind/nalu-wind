@@ -1,0 +1,6 @@
+<map id="sierra::nalu::WallDistElemKernel&lt; AlgTraits &gt;" name="sierra::nalu::WallDistElemKernel&lt; AlgTraits &gt;">
+<area shape="rect" id="node1" title=" " alt="" coords="5,291,196,332"/>
+<area shape="rect" id="node2" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="13,185,189,241"/>
+<area shape="rect" id="node3" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="23,5,167,32"/>
+<area shape="rect" id="node4" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="117,81,327,108"/>
+</map>

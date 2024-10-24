@@ -1,0 +1,6 @@
+<map id="sierra::nalu::SegmentGenerator" name="sierra::nalu::SegmentGenerator">
+<area shape="rect" id="node1" title=" " alt="" coords="5,78,232,105"/>
+<area shape="rect" id="node2" href="$classsierra_1_1nalu_1_1_radar_segment_generator.html" title=" " alt="" coords="280,5,479,47"/>
+<area shape="rect" id="node3" href="$classsierra_1_1nalu_1_1_scanning_lidar_segment_generator.html" title=" " alt="" coords="282,71,477,112"/>
+<area shape="rect" id="node4" href="$classsierra_1_1nalu_1_1_spinner_lidar_segment_generator.html" title=" " alt="" coords="287,136,471,177"/>
+</map>

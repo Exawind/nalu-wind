@@ -1,0 +1,293 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1. Low Mach Number Derivation &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="2. Supported Equation Set" href="supportedEquationSet.html" />
+    <link rel="prev" title="Nalu-Wind - Theory Manual" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Theory Manual</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">1. Low Mach Number Derivation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#asymptotic-expansion">1.1. Asymptotic Expansion</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html">2. Supported Equation Set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html">3. Discretization Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advectionStabilization.html">4. Advection Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pressureStabilization.html">5. Pressure Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html">6. RTE Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html">7. Nonlinear Stabilization Operator (NSO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html">8. Turbulence Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html">9. Supported Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overset.html">10. Overset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html">11. Property Evaluations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="couplingApproach.html">12. Coupling Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeDiscretization.html">13. Time discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiPhysics.html">14. Multi-Physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html">15. Wind Energy Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topologicalSupport.html">16. Topological Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adaptivity.html">17. Adaptivity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeAbstractions.html">18. Code Abstractions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Nalu-Wind - Theory Manual</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">1. </span>Low Mach Number Derivation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/theory/lowMachNumberDerivation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="low-mach-number-derivation">
+<h1><span class="section-number">1. </span>Low Mach Number Derivation<a class="headerlink" href="#low-mach-number-derivation" title="Link to this heading"></a></h1>
+<p>The low Mach number equations are a subset of the fully compressible
+equations of motion (momentum, continuity and energy), admitting large
+variations in gas density while remaining acoustically incompressible.
+The low Mach number equations are preferred over the full compressible
+equations for low speed flow problems as the accoustics are of little
+consequence to the overall simulation accuracy. The technique avoids the
+need to resolve fast-moving acoustic signals. Derivations of the low
+Mach number equations can be found in found in Rehm and
+Baum, <span id="id1">[<a class="reference internal" href="../../zrefs.html#id17" title="R. G. Rehm and H. R. Baum. The equations of motion for thermally driven buoyant flows. Journal of Research of the National Bureau of Standards, 83:279, 1978.">RB78</a>]</span>, or Paolucci, <span id="id2">[<a class="reference internal" href="../../zrefs.html#id18" title="S. Paolucci. On the filtering of sound waves from the navier-stokes equations. Technical Report SAND-828257, Sandia National Laboratories, Livermore, CA, December 1982.">Pao82</a>]</span>.</p>
+<p>The equations are derived from the compressible equations using a
+perturbation expansion in terms of the lower limit of the Mach number
+squared; hence the name. The asymptotic expansion leads to a splitting
+of pressure into a spatially constant thermodynamic pressure and a
+locally varying dynamic pressure. The dynamic pressure is decoupled from
+the thermodynamic state and cannot propagate acoustic waves. The
+thermodynamic pressure is used in the equation of state and to determine
+thermophysical properties. The thermodynamic pressure can vary in time
+and can be calculated using a global energy balance.</p>
+<section id="asymptotic-expansion">
+<h2><span class="section-number">1.1. </span>Asymptotic Expansion<a class="headerlink" href="#asymptotic-expansion" title="Link to this heading"></a></h2>
+<p>The asymptotic expansion for the low Mach number equations begins with
+the full compressible equations in Cartesian coordinates. The equations
+are the minimum set required to propagate acoustic waves. The equations
+are written in divergence form using Einstein notation (summation over
+repeated indices):</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\frac{\partial \rho} {\partial t} + \frac{\partial \rho u_j}{\partial x_j} &amp; = 0 , \\
+\frac{\partial \rho u_i}{\partial t} + \frac{\partial \rho u_j u_i}{\partial x_j}
++ \frac{\partial P}{\partial x_i} &amp; =
+\frac{\partial \tau_{ij}}{\partial x_j} + \rho g_i , \\
+\frac{\partial \rho E}{\partial t} + \frac{\partial \rho u_j H}{\partial x_j} &amp; =
+- \frac{\partial q_j}{\partial x_j}
++ \frac{\partial u_i \tau_{ij}} {\partial x_j} + \rho u_i g_i .\end{split}\]</div>
+<p>The primitive variables are the velocity components, <span class="math notranslate nohighlight">\(u_i\)</span>, the
+pressure, <span class="math notranslate nohighlight">\(P\)</span>, and the temperature <span class="math notranslate nohighlight">\(T\)</span>. The viscous shear
+stress tensor is <span class="math notranslate nohighlight">\(\tau_{ij}\)</span>, the heat conduction is <span class="math notranslate nohighlight">\(q_i\)</span>,
+the total enthalpy is <span class="math notranslate nohighlight">\(H\)</span>, the total internal energy is <span class="math notranslate nohighlight">\(E\)</span>,
+the density is <span class="math notranslate nohighlight">\(\rho\)</span>, and the gravity vector is <span class="math notranslate nohighlight">\(g_i\)</span>. The
+total internal energy and total enthalpy contain the kinetic energy
+contributions. The equations are closed using the following models and
+definitions:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}P &amp; = \rho \frac{R}{W} T , \\
+E &amp; = H - P/\rho , \\
+H &amp; = h + \frac{1}{2} u_k u_k , \\
+\tau_{ij} &amp; = \mu \left( \frac{\partial u_i}{\partial x_j}
+            + \frac{\partial u_j}{\partial x_i} \right)
+            - \frac{2}{3} \mu \frac{\partial u_k}{\partial x_k}
+              \delta_{ij} , \\
+q_i &amp; = - k \frac{\partial T}{\partial x_i}\end{split}\]</div>
+<p>The mean molecular weight of the gas is <span class="math notranslate nohighlight">\(W\)</span>, the molecular
+viscosity is <span class="math notranslate nohighlight">\(\mu\)</span>, and the thermal conductivity is <span class="math notranslate nohighlight">\(k\)</span>. A
+Newtonian fluid is assumed along with the Stokes hypothesis for the
+stress tensor.</p>
+<p>The equations are scaled so that the variables are all of order one. The
+velocities, lengths, and times are nondimensionalized by a
+characteristic velocity, <span class="math notranslate nohighlight">\(U_\infty\)</span>, and a length scale,
+<span class="math notranslate nohighlight">\(L\)</span>. The pressure, density, and temperature are nondimensionalized
+by <span class="math notranslate nohighlight">\(P_\infty\)</span>, <span class="math notranslate nohighlight">\(\rho_\infty\)</span>, and <span class="math notranslate nohighlight">\(T_\infty\)</span>. The
+enthalpy and energy are nondimensionalized by
+<span class="math notranslate nohighlight">\(C_{p,\infty} T_\infty\)</span>. Dimensionless variables are noted by
+overbars. The dimensionless equations are:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}  \frac{\partial \bar{\rho}}{\partial \bar{t}}
++ \frac{\partial \bar{\rho} \bar{u}_j}{\partial \bar{x}_j} &amp; = 0 , \\
+  \frac{\partial \bar{\rho} \bar{u}_i}{\partial \bar{t}}
++ \frac{\partial \bar{\rho} \bar{u}_j \bar{u}_i}{\partial \bar{x}_j}
++ \frac{1}{{\gamma {\rm Ma}^2}}
+  \frac{\partial \bar{P}}{\partial \bar{x}_i} &amp; =
+  \frac{1}{\rm Re}\frac{\partial \bar{\tau}_{ij}}{\partial \bar{x}_j}
++ \frac{1}{{\rm Fr}_i} \bar{\rho} , \\
+  \frac{\partial \bar{\rho} \bar{h}}{\partial \bar{t}}
++ \frac{\partial \bar{\rho} \bar{u}_j \bar{h}} {\partial \bar{x}_j}
+&amp; = - \frac{1}{{\rm Pr}} \frac{1}{{\rm Re}}
+  \frac{\partial \bar{q}_j} {\partial \bar{x}_j}
++ \frac{\gamma - 1}{\gamma} \frac{\partial \bar{P}}{\partial \bar{t}} \\
+&amp; + \frac{\gamma - 1}{\gamma} \frac{{\rm Ma}^2}{\rm Re}
+  \frac{\partial \bar{u}_i \bar{\tau}_{ij}}{\partial \bar{x}_j}
++ \bar{\rho} \bar{u}_i \frac{\gamma - 1}{\gamma} \frac{{\rm Ma}^2}{{\rm Fr}_i} \\
+&amp; - \frac{\gamma - 1} {2} {\rm Ma}^2
+\left( \frac{\partial \bar{\rho} \bar{u}_k \bar{u}_k}{\partial \bar{t}}
++ \frac{\partial \bar{\rho} \bar{u}_j \bar{u}_k \bar{u}_k}{\partial \bar{x}_j} \right) .\end{split}\]</div>
+<p>The groupings of characteristic scaling terms are:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}{\rm Re} &amp; = \frac{\rho_\infty U_\infty L}{\mu_\infty},
+    \quad \quad \phantom{xxx} {\rm Reynolds number}, \\
+{\rm Pr} &amp; =  \frac{C_{p,\infty} \mu_\infty} {k_\infty},
+    \quad \quad \phantom{xxx} {\rm Prandtl number}, \\
+{\rm Fr}_i &amp; = \frac{u_\infty^2} {g_i L},
+    \quad \quad \phantom{xxxxxxi} {\rm Froude number}, \quad g_i \ne 0, \\
+{\rm Ma} &amp; = \sqrt{\frac{u^2_\infty}{\gamma R T_\infty /W}},
+    \quad \quad {\rm Mach number},\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\gamma\)</span> is the ratio of specific heats.</p>
+<p>For small Mach numbers, <span class="math notranslate nohighlight">\({\rm Ma} \ll 1\)</span>, the kinetic energy,
+viscous work, and gravity work terms can be neglected in the energy
+equation since those terms are scaled by the square of the Mach number.
+The inverse of Mach number squared remains in the momentum equations,
+suggesting singular behavior. In order to explore the singularity, the
+pressure, velocity and temperature are expanded as asymptotic series in
+terms of the parameter <span class="math notranslate nohighlight">\(\epsilon\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}  \bar{P} &amp; = \bar{P}_0     + \bar{P}_1 \epsilon     + \bar{P}_2 \epsilon^2 \ldots \\
+\bar{u}_i &amp; = \bar{u}_{i,0} + \bar{u}_{i,1} \epsilon + \bar{u}_{i,2} \epsilon^2 \ldots \\
+  \bar{T} &amp; = \bar{T}_0     + \bar{T}_1 \epsilon     + \bar{T}_2 \epsilon^2 \ldots\end{split}\]</div>
+<p>The zeroeth-order terms are collected together in each of the
+equations. The form of the continuity equation stays the same. The
+gradient of the pressure in the zeroeth-order momentum equations can
+become singular since it is divided by the characteristic Mach number
+squared. In order for the zeroeth-order momentum equations to remain
+well-behaved, the spatial variation of the <span class="math notranslate nohighlight">\(\bar{P}_0\)</span> term must
+be zero. If the magnitude of the expansion parameter is selected to be
+proportional to the square of the characteristic Mach number,
+<span class="math notranslate nohighlight">\(\epsilon = \gamma {\rm Ma}^2\)</span>, then the <span class="math notranslate nohighlight">\(\bar{P}_1\)</span> term
+can be included in the zeroeth-order momentum equation.</p>
+<div class="math notranslate nohighlight">
+\[\frac{1}{\gamma {\rm Ma}^2}
+\frac{\partial \bar{P}}{\partial x_i}  =
+\frac{\partial}{\partial x_i} \left( \frac{1}{\gamma {\rm Ma}^2} \bar{P}_0
+    + \frac{\epsilon} {\gamma {\rm Ma}^2} \bar{P}_1 + \ldots \right) =
+\frac{\partial}{\partial x_i} \left( \bar{P}_1 + \epsilon \bar{P}_2 + \ldots
+\phantom{\frac{1}{\gamma {\rm Ma}^2}} \right)\]</div>
+<p>The form of the energy equation remains the same, less the kinetic
+energy, viscous work and gravity work terms. The <span class="math notranslate nohighlight">\(P_0\)</span> term
+remains in the energy equation as a time derivative. The low Mach number
+equations are the zeroeth-order equations in the expansion including the
+<span class="math notranslate nohighlight">\(P_1\)</span> term in the momentum equations. The expansion results in two
+different types of pressure and they are considered to be split into a
+thermodynamic component and a dynamic component. The thermodynamic
+pressure is constant in space, but can change in time. The thermodynamic
+pressure is used in the equation of state. The dynamic pressure only
+arises as a gradient term in the momentum equation and acts to enforce
+continuity. The unsplit dimensional pressure is</p>
+<div class="math notranslate nohighlight">
+\[P = P_{th} + \gamma {\rm Ma}^2 P_1,\]</div>
+<p>where the dynamic pressure, <span class="math notranslate nohighlight">\(p=P-P_{th}\)</span>, is related to a
+pressure coefficient</p>
+<div class="math notranslate nohighlight">
+\[\bar{P}_1 = \frac{P - P_{th}}{\rho_\infty u^2_\infty} P_{th}.\]</div>
+<p>The resulting unscaled low Mach number equations are:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\frac{\partial \rho} {\partial t} + \frac{\partial \rho u_j}{\partial x_j} &amp; = 0, \\
+\frac{\partial \rho u_i}{\partial t} + \frac{\partial \rho u_j u_i}{\partial x_j}
++ \frac{\partial P}{\partial x_i} &amp; = \frac{\partial \tau_{ij}}{\partial x_j}
++ \left( \rho - \rho_{\circ} \right) g_i, \\
+\frac{\partial \rho h}{\partial t} + \frac{\partial \rho u_j h}{\partial x_j} &amp; =
+- \frac{\partial q_j}{\partial x_j} + \frac{\partial P_{th}}{\partial t},\end{split}\]</div>
+<p>where the ideal gas law becomes</p>
+<div class="math notranslate nohighlight">
+\[P_{th}  =  \rho \frac{R}{W} T.\]</div>
+<p>The hydrostatic pressure gradient has been subtracted from the momentum
+equation, assuming an ambient density of <span class="math notranslate nohighlight">\(\rho_{\circ}\)</span>. The
+stress tensor and heat conduction remain the same as in the original
+equations.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Nalu-Wind - Theory Manual" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="supportedEquationSet.html" class="btn btn-neutral float-right" title="2. Supported Equation Set" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

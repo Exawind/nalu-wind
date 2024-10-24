@@ -1,0 +1,6 @@
+<map id="sierra::nalu::ScalarFaceFluxBCElemKernel&lt; BcAlgTraits &gt;" name="sierra::nalu::ScalarFaceFluxBCElemKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="node1" title="This class applies the computed wall heat flux field to the boundary." alt="" coords="5,291,249,332"/>
+<area shape="rect" id="node2" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="14,185,241,241"/>
+<area shape="rect" id="node3" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="50,5,194,32"/>
+<area shape="rect" id="node4" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="143,81,354,108"/>
+</map>

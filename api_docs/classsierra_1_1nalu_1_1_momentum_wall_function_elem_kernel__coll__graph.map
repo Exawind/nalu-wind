@@ -1,0 +1,4 @@
+<map id="sierra::nalu::MomentumWallFunctionElemKernel&lt; BcAlgTraits &gt;" name="sierra::nalu::MomentumWallFunctionElemKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="node1" title="Wall function approach momentum equation (velocity DOF)" alt="" coords="5,80,259,121"/>
+<area shape="rect" id="node2" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="60,5,204,32"/>
+</map>
