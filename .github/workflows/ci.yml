@@ -39,15 +39,16 @@ jobs:
         run: |
           /bin/bash -c " \
             source ${EXAWIND_MANAGER}/start.sh && \
+            spack-start && \
             mkdir -p ${EXAWIND_MANAGER}/environments/exawind && \
             cd ${EXAWIND_MANAGER}/environments/exawind && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
-            spack-start && \
             spack -e e4s-build config add view:true && \
-            spack -e e4s-build add cmake && \
-            spack -e e4s-build install && \
+            spack -e e4s-build add cmake^zlib-ng~new_strategies && \
+            spack -e e4s-build concretize -f && \
             quick-create-dev -s nalu-wind@master+tioga+hypre && \
             spack manager external ${EXAWIND_MANAGER}/environments/e4s-build --exclude nalu-wind && \
+            spack concretize -f && \
             spack install && \
             spack cd -b nalu-wind && \
             spack build-env nalu-wind ctest -j $(nproc) -L unit --output-on-failure \
@@ -73,15 +74,16 @@ jobs:
         run: |
           /bin/bash -c " \
             source ${EXAWIND_MANAGER}/start.sh && \
+            spack-start && \
             mkdir -p ${EXAWIND_MANAGER}/environments/exawind && \
             cd ${EXAWIND_MANAGER}/environments/exawind && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
-            spack-start && \
             spack -e e4s-build config add view:true && \
-            spack -e e4s-build add cmake && \
-            spack -e e4s-build install && \
+            spack -e e4s-build add cmake^zlib-ng~new_strategies && \
+            spack -e e4s-build concretize -f && \
             quick-create-dev -s nalu-wind@master+tioga+hypre~trilinos-solvers && \
             spack manager external ${EXAWIND_MANAGER}/environments/e4s-build --exclude nalu-wind && \
+            spack concretize -f && \
             spack install && \
             spack cd -b nalu-wind && \
             spack build-env nalu-wind ctest -j $(nproc) -L unit --output-on-failure \
