@@ -415,7 +415,7 @@ HypreUVWLinearSystem::applyDirichletBCs(
     "HypreUVWLinearSystem::applyDirichletBCs", ngpMesh,
     stk::topology::NODE_RANK, selector,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
-      const auto node = (*mi.bucket)[mi.bucketOrd];
+      const auto node = ngpMesh.get_entity(stk::topology::NODE_RANK, mi);
       HypreIntType hid = hypreGID.get(ngpMesh, node, 0);
       unsigned matIndex = mat_row_start_owned(hid - iLower);
       vals(matIndex) = 1.0;
@@ -580,7 +580,7 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
       "HypreUVWLinearSystem::copy_hypre_to_stk_3D", ngpMesh,
       stk::topology::NODE_RANK, selector,
       KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
-        const auto node = (*mi.bucket)[mi.bucketOrd];
+        const auto node = ngpMesh.get_entity(stk::topology::NODE_RANK, mi);
         HypreIntType hid;
         if (periodic_node_to_hypre_id.exists(node.local_offset()))
           hid = periodic_node_to_hypre_id.value_at(
@@ -607,7 +607,7 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
       "HypreUVWLinearSystem::copy_hypre_to_stk_3D", ngpMesh,
       stk::topology::NODE_RANK, selector,
       KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
-        const auto node = (*mi.bucket)[mi.bucketOrd];
+        const auto node = ngpMesh.get_entity(stk::topology::NODE_RANK, mi);
         HypreIntType hid;
         if (periodic_node_to_hypre_id.exists(node.local_offset()))
           hid = periodic_node_to_hypre_id.value_at(

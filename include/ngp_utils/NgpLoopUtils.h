@@ -259,8 +259,8 @@ run_edge_algorithm(
   run_entity_algorithm(
     algName, mesh, rank, sel, KOKKOS_LAMBDA(MeshIndex & meshIdx) {
       algorithm(EntityInfo<Mesh>{
-        meshIdx, (*meshIdx.bucket)[meshIdx.bucketOrd],
-        mesh.get_nodes(meshIdx)});
+        meshIdx, mesh.get_entity(rank, meshIdx),
+        mesh.get_nodes(rank, meshIdx)});
     });
 }
 
@@ -293,8 +293,8 @@ run_elem_algorithm(
   run_entity_algorithm(
     algName, mesh, rank, sel, KOKKOS_LAMBDA(MeshIndex & meshIdx) {
       algorithm(EntityInfo<Mesh>{
-        meshIdx, (*meshIdx.bucket)[meshIdx.bucketOrd],
-        mesh.get_nodes(meshIdx)});
+        meshIdx, mesh.get_entity(rank, meshIdx),
+        mesh.get_nodes(rank, meshIdx)});
     });
 }
 
@@ -373,7 +373,7 @@ run_elem_algorithm(
             MeshIndex meshIdx{bkt.bucket_id(), bktOrd};
             const auto& elem = bkt[bktOrd];
             elemData.elemInfo[is] =
-              EntityInfo<Mesh>{meshIdx, elem, ngpMesh.get_nodes(meshIdx)};
+              EntityInfo<Mesh>{meshIdx, elem, ngpMesh.get_nodes(rank, meshIdx)};
 
             fill_pre_req_data(
               dataReqNGP, ngpMesh, rank, elem, *elemData.scrView[is]);
@@ -472,7 +472,7 @@ run_elem_par_reduce(
             MeshIndex meshIdx{bkt.bucket_id(), bktOrd};
             const auto& elem = bkt[bktOrd];
             elemData.elemInfo[is] =
-              EntityInfo<Mesh>{meshIdx, elem, ngpMesh.get_nodes(meshIdx)};
+              EntityInfo<Mesh>{meshIdx, elem, ngpMesh.get_nodes(rank, meshIdx)};
 
             fill_pre_req_data(
               dataReqNGP, ngpMesh, rank, elem, *elemData.scrView[is]);
