@@ -132,7 +132,7 @@ run_entity_algorithm(
       const size_t bktLen = bkt.size();
       Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, bktLen), [&](const size_t& bktIndex) {
-          MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktIndex)};
+          MeshIndex meshIdx{bkt.bucket_id(), static_cast<unsigned>(bktIndex)};
           algorithm(meshIdx);
         });
     });
@@ -181,7 +181,7 @@ run_entity_par_reduce(
       Kokkos::parallel_reduce(
         Kokkos::TeamThreadRange(team, bktLen),
         [&](const size_t& bktIndex, ReducerType& threadVal) {
-          MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktIndex)};
+          MeshIndex meshIdx{bkt.bucket_id(), static_cast<unsigned>(bktIndex)};
           algorithm(meshIdx, threadVal);
         },
         bktVal);
@@ -222,7 +222,7 @@ run_entity_par_reduce(
       Kokkos::parallel_reduce(
         Kokkos::TeamThreadRange(team, bktLen),
         [&](const size_t& bktIndex, value_type& threadVal) {
-          MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktIndex)};
+          MeshIndex meshIdx{bkt.bucket_id(), static_cast<unsigned>(bktIndex)};
           algorithm(meshIdx, threadVal);
         },
         ReducerType(bktVal));
@@ -370,7 +370,7 @@ run_elem_algorithm(
 
           for (int is = 0; is < nSimdElems; ++is) {
             const unsigned bktOrd = bktIndex * simdLen + is;
-            MeshIndex meshIdx{&bkt, bktOrd};
+            MeshIndex meshIdx{bkt.bucket_id(), bktOrd};
             const auto& elem = bkt[bktOrd];
             elemData.elemInfo[is] =
               EntityInfo<Mesh>{meshIdx, elem, ngpMesh.get_nodes(meshIdx)};
@@ -469,7 +469,7 @@ run_elem_par_reduce(
 
           for (int is = 0; is < nSimdElems; ++is) {
             const unsigned bktOrd = bktIndex * simdLen + is;
-            MeshIndex meshIdx{&bkt, bktOrd};
+            MeshIndex meshIdx{bkt.bucket_id(), bktOrd};
             const auto& elem = bkt[bktOrd];
             elemData.elemInfo[is] =
               EntityInfo<Mesh>{meshIdx, elem, ngpMesh.get_nodes(meshIdx)};
@@ -571,7 +571,7 @@ run_face_elem_algorithm(
                 break;
 
               const auto elems = ngpMesh.get_elements(sideRank, faceIdx);
-              MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktOrd)};
+              MeshIndex meshIdx{bkt.bucket_id(), static_cast<unsigned>(bktOrd)};
               const auto elem = elems[0];
               const auto elemIdx = ngpMesh.fast_mesh_index(elem);
               faceElemData.faceInfo[simdFaceIdx] = BcFaceElemInfo<Mesh>{
@@ -698,7 +698,7 @@ run_face_elem_par_reduce(
                 break;
 
               const auto elems = ngpMesh.get_elements(sideRank, faceIdx);
-              MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktOrd)};
+              MeshIndex meshIdx{bkt.bucket_id(), static_cast<unsigned>(bktOrd)};
               const auto elem = elems[0];
               const auto elemIdx = ngpMesh.fast_mesh_index(elem);
               faceElemData.faceInfo[simdFaceIdx] = BcFaceElemInfo<Mesh>{
@@ -802,7 +802,7 @@ run_face_elem_algorithm_nosimd(
       const size_t bktLen = bkt.size();
       Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, bktLen), [&](const size_t& bktIndex) {
-          MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktIndex)};
+          MeshIndex meshIdx{bkt.bucket_id(), static_cast<unsigned>(bktIndex)};
           const auto face = bkt[bktIndex];
           const auto faceIdx = ngpMesh.fast_mesh_index(face);
           const auto elements = ngpMesh.get_elements(sideRank, faceIdx);
