@@ -2444,7 +2444,7 @@ HypreLinearSystem::applyDirichletBCs(
   nalu_ngp::run_entity_algorithm(
     "HypreLinearSystem::applyDirichletBCs", ngpMesh, stk::topology::NODE_RANK,
     selector, KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
-      const auto node = (*mi.bucket)[mi.bucketOrd];
+      const auto node = ngpMesh.get_entity(stk::topology::NODE_RANK, mi);
       HypreIntType hid = hypreGID.get(ngpMesh, node, 0);
       for (unsigned d = 0; d < numDof; ++d) {
         HypreIntType lid = hid * numDof + d;
@@ -2586,7 +2586,7 @@ HypreLinearSystem::copy_hypre_to_stk(stk::mesh::FieldBase* stkField)
   nalu_ngp::run_entity_algorithm(
     "HypreLinearSystem::copy_hypre_to_stk", ngpMesh, stk::topology::NODE_RANK,
     selector, KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
-      const auto node = (*mi.bucket)[mi.bucketOrd];
+      const auto node = ngpMesh.get_entity(stk::topology::NODE_RANK, mi);
       HypreIntType hid;
       if (periodic_node_to_hypre_id.exists(node.local_offset()))
         hid = periodic_node_to_hypre_id.value_at(

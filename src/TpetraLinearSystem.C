@@ -1726,7 +1726,8 @@ TpetraLinearSystem::applyDirichletBCs(
   nalu_ngp::run_entity_algorithm(
     "TpetraLinSys::applyDirichletBCs", ngpMesh, stk::topology::NODE_RANK,
     selector, KOKKOS_LAMBDA(const MeshIndex& meshIdx) {
-      stk::mesh::Entity entity = (*meshIdx.bucket)[meshIdx.bucketOrd];
+      stk::mesh::Entity entity =
+        ngpMesh.get_entity(stk::topology::NODE_RANK, meshIdx);
       const LocalOrdinal localIdOffset = entityToLID[entity.local_offset()];
       const bool useOwned = localIdOffset < maxOwnedRowId;
       const LinSys::LocalMatrix& local_matrix =
@@ -2210,7 +2211,8 @@ TpetraLinearSystem::copy_tpetra_to_stk(
   nalu_ngp::run_entity_algorithm(
     "TpetraLinSys::copy_tpetra_to_stk", ngpMesh, stk::topology::NODE_RANK,
     selector, KOKKOS_LAMBDA(const MeshIndex& meshIdx) {
-      stk::mesh::Entity node = (*meshIdx.bucket)[meshIdx.bucketOrd];
+      stk::mesh::Entity node =
+        ngpMesh.get_entity(stk::topology::NODE_RANK, meshIdx);
       const LocalOrdinal localIdOffset = entityToLID[node.local_offset()];
       for (unsigned d = 0; d < numDof; ++d) {
         const LocalOrdinal localId = localIdOffset + d;
