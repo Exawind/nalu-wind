@@ -112,7 +112,7 @@ VOFAdvectionEdgeAlg::execute()
   const auto density_liquid = density_liquid_;
   const auto density_gas = density_gas_;
   const auto velocity = fieldMgr.get_field<double>(
-    get_field_ordinal(realm.meta_data(), "velocity", stk::mesh::StateNP1));
+    get_field_ordinal(realm_.meta_data(), "velocity", stk::mesh::StateNP1));
 
   run_algorithm(
     realm_.bulk_data(),
