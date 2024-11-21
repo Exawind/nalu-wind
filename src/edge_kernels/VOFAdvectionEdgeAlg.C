@@ -111,6 +111,8 @@ VOFAdvectionEdgeAlg::execute()
   const auto density = fieldMgr.get_field<double>(density_);
   const auto density_liquid = density_liquid_;
   const auto density_gas = density_gas_;
+  const auto velocity = fieldMgr.get_field<double>(
+    get_field_ordinal(realm_.meta_data(), "velocity", stk::mesh::StateNP1));
 
   run_algorithm(
     realm_.bulk_data(),
@@ -212,19 +214,21 @@ VOFAdvectionEdgeAlg::execute()
       DblType asq = 0.0;
       DblType diffusion_coef = 0.0;
 
+      DblType vel_mag_l = 0.0;
+      DblType vel_mag_r = 0.0;
       for (int d = 0; d < ndim; ++d) {
         const DblType dxj =
           coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         diffusion_coef += dxj * dxj;
         asq += av[d] * av[d];
         axdx += av[d] * dxj;
+        vel_mag_l += velocity.get(nodeL, d) * velocity.get(nodeL, d);
+        vel_mag_r += velocity.get(nodeR, d) * velocity.get(nodeR, d);
       }
 
       const DblType velocity_scale =
-        sharpening_scaling *
-        stk::math::abs(
-          vdot /
-          stk::math::sqrt(av[0] * av[0] + av[1] * av[1] + av[2] * av[2]));
+        sharpening_scaling * 0.5 *
+        (stk::math::sqrt(vel_mag_l) + stk::math::sqrt(vel_mag_r));
 
       diffusion_coef = stk::math::sqrt(diffusion_coef) * diffusion_scaling;
 
