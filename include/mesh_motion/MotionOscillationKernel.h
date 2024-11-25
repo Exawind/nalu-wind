@@ -50,7 +50,6 @@ private:
   double amplitude_{0.0};
   double period_2nd_{0.0};
   double amplitude_2nd_{0.0};
-
 };
 
 } // namespace nalu

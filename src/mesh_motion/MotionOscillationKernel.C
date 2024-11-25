@@ -25,10 +25,10 @@ MotionOscillationKernel::load(const YAML::Node& node)
   endTime_ = endTime_ + DBL_EPSILON;
 
   // Oscillation based on period and amplitude
-  get_required(node, "period", period_, period_); 
-  get_required(node, "amplitude", amplitude_, amplitude_);
+  get_required(node, "period", period_);
+  get_required(node, "amplitude", amplitude_);
   // Bichromatic oscillation also available
-  get_if_present(node, "period_bichromatic", period_2nd_, period_2nd_); 
+  get_if_present(node, "period_bichromatic", period_2nd_, period_2nd_);
   get_if_present(node, "amplitude_bichromatic", amplitude_2nd_, amplitude_2nd_);
 
   if (node["direction"]) {
@@ -60,10 +60,11 @@ MotionOscillationKernel::build_transformation(
   // repeat for bichromatic
   angle =
     2.0 * M_PI / period_2nd_ * (stk::math::max(0.0, motionTime - startTime_));
-  disp += amplitude_2nd_ * stk::math::sin(angle)
+  disp += amplitude_2nd_ * stk::math::sin(angle);
 
   // get magnitude of oscillation direction vector
   double mag = 0.0;
+
   for (int d = 0; d < nalu_ngp::NDimMax; d++)
     mag += direction_[d] * direction_[d];
   mag = stk::math::sqrt(mag);
