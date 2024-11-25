@@ -25,8 +25,11 @@ MotionOscillationKernel::load(const YAML::Node& node)
   endTime_ = endTime_ + DBL_EPSILON;
 
   // Oscillation based on period and amplitude
-  get_if_present(node, "period", period_, period_);
-  get_if_present(node, "amplitude", amplitude_, amplitude_);
+  get_required(node, "period", period_, period_); 
+  get_required(node, "amplitude", amplitude_, amplitude_);
+  // Bichromatic oscillation also available
+  get_if_present(node, "period_bichromatic", period_2nd_, period_2nd_); 
+  get_if_present(node, "amplitude_bichromatic", amplitude_2nd_, amplitude_2nd_);
 
   if (node["direction"]) {
     for (int d = 0; d < nalu_ngp::NDimMax; ++d)
@@ -49,10 +52,15 @@ MotionOscillationKernel::build_transformation(
   double motionTime = (time < endTime_) ? time : endTime_;
 
   // determine current angle within periodic function
-  const double angle =
+  double angle =
     2.0 * M_PI / period_ * (stk::math::max(0.0, motionTime - startTime_));
   // determine displacement along oscillation direction
-  const double disp = amplitude_ * stk::math::sin(angle);
+  double disp = amplitude_ * stk::math::sin(angle);
+
+  // repeat for bichromatic
+  angle =
+    2.0 * M_PI / period_2nd_ * (stk::math::max(0.0, motionTime - startTime_));
+  disp += amplitude_2nd_ * stk::math::sin(angle)
 
   // get magnitude of oscillation direction vector
   double mag = 0.0;
@@ -78,10 +86,15 @@ MotionOscillationKernel::compute_velocity(
     return mm::ThreeDVecType{0, 0, 0};
   else {
     // determine current angle within periodic function
-    const double omega = 2.0 * M_PI / period_;
-    const double angle = omega * time;
+    double omega = 2.0 * M_PI / period_;
+    double angle = omega * time;
     // determine velocity along oscillation direction
-    const double vel_1D = amplitude_ * omega * stk::math::cos(angle);
+    double vel_1D = amplitude_ * omega * stk::math::cos(angle);
+
+    // repeat for bichromatic
+    omega = 2.0 * M_PI / period_2nd_;
+    angle = omega * time;
+    vel_1D = amplitude_2nd_ * omega * stk::math::cos(angle);
 
     // get magnitude of oscillation direction vector
     double mag = 0.0;
