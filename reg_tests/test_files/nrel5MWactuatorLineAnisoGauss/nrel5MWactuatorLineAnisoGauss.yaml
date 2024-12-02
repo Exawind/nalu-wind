@@ -9,8 +9,8 @@ linear_solvers:
     type: hypre
     method: hypre_gmres
     preconditioner: boomerAMG
-    tolerance: 1e-5
-    max_iterations: 50
+    tolerance: 1e-12
+    max_iterations: 200
     kspace: 5
     output_level: 0
 
@@ -18,8 +18,8 @@ linear_solvers:
     type: hypre
     method: hypre_gmres
     preconditioner: boomerAMG
-    tolerance: 1e-5
-    max_iterations: 50
+    tolerance: 1e-12
+    max_iterations: 200
     kspace: 5
     output_level: 0
 
@@ -131,9 +131,10 @@ realms:
         nacelle_cd: 1.0
         nacelle_area: 8.0
         air_density: 1.225
-        epsilon: [ 5.0, 2.0, 2.0 ]
+        epsilon: [ 5.0, 4.0, 4.0 ]
         epsilon_tower: 5.0
         turbine_base_pos: [ 0.0, 0.0, 0.0 ]
+        turbine_hub_pos: [ 0.0, 0.0, 90.0 ]
         restart_filename: "blah"
         fast_input_filename: "../nrel5MWactuatorLine/nrel5mw.fst"
         turb_id:  1
