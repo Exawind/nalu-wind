@@ -58,9 +58,11 @@ MotionOscillationKernel::build_transformation(
   double disp = amplitude_ * stk::math::sin(angle);
 
   // repeat for bichromatic
-  angle =
-    2.0 * M_PI / period_2nd_ * (stk::math::max(0.0, motionTime - startTime_));
-  disp += amplitude_2nd_ * stk::math::sin(angle);
+  if (amplitude_2nd_ > 1e-8) {
+    angle =
+      2.0 * M_PI / period_2nd_ * (stk::math::max(0.0, motionTime - startTime_));
+    disp += amplitude_2nd_ * stk::math::sin(angle);
+  }
 
   // get magnitude of oscillation direction vector
   double mag = 0.0;
@@ -93,9 +95,11 @@ MotionOscillationKernel::compute_velocity(
     double vel_1D = amplitude_ * omega * stk::math::cos(angle);
 
     // repeat for bichromatic
-    omega = 2.0 * M_PI / period_2nd_;
-    angle = omega * time;
-    vel_1D = amplitude_2nd_ * omega * stk::math::cos(angle);
+    if (amplitude_2nd_ > 1e-8) {
+      omega = 2.0 * M_PI / period_2nd_;
+      angle = omega * time;
+      vel_1D += amplitude_2nd_ * omega * stk::math::cos(angle);
+    }
 
     // get magnitude of oscillation direction vector
     double mag = 0.0;
