@@ -1,0 +1,218 @@
+# -*- mode: yaml -*-
+
+Simulations:
+  - name: sim1
+    time_integrator: ti_1
+    optimizer: opt1
+
+# Hypre memory and other configurations
+hypre_config:
+    memory_pool_mbs: 1500
+    use_vendor_spgemm: no
+    use_vendor_spmv: no
+    use_vendor_sptrans: no
+
+linear_solvers:
+
+  - name: solve_mom
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-12
+    max_iterations: 200
+    kspace: 75
+    output_level: 0
+    segregated_solver: yes
+    write_matrix_files: no
+    simple_hypre_matrix_assemble: no
+    dump_hypre_matrix_stats: no
+    recompute_preconditioner_frequency: 1
+    reuse_linear_system: yes
+    write_preassembly_matrix_files: no
+
+    # File containing hypre specific configuration options
+    hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
+    # YAML node used for this linear solver
+    hypre_cfg_node: hypre_simple_precon
+
+  - name: solve_elliptic
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-12
+    max_iterations: 200
+    kspace: 75
+    output_level: 0
+    write_matrix_files: no
+    simple_hypre_matrix_assemble: no
+    dump_hypre_matrix_stats: no
+    recompute_preconditioner_frequency: 1
+    reuse_linear_system: yes
+    write_preassembly_matrix_files: no
+
+    # File containing hypre specific configuration options
+    hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
+    # YAML node used for this linear solver
+    hypre_cfg_node: hypre_elliptic
+
+realms:
+
+  - name: realm_1
+    mesh: ../../mesh/oversetCylinder.g
+    use_edges: yes
+    automatic_decomposition_type: rcb
+
+    equation_systems:
+      name: theEqSys
+      max_iterations: 2
+      decoupled_overset_solve: yes
+
+      solver_system_specification:
+        velocity: solve_mom
+        pressure: solve_elliptic
+
+      systems:
+
+        - LowMachEOM:
+            name: myLowMach
+            max_iterations: 1
+            convergence_tolerance: 1e-7
+
+    initial_conditions:
+
+      - constant: ic_1
+        target_name:
+          - Unspecified-2-HEX
+          - Unspecified-3-HEX
+        value:
+          pressure: 0.0
+          velocity: [1.0,0.0,0.0]
+
+    material_properties:
+      target_name:
+          - Unspecified-2-HEX
+          - Unspecified-3-HEX
+      specifications:
+        - name: density
+          type: constant
+          value: 1.00
+
+        - name: viscosity
+          type: constant
+          value: 0.005
+
+    boundary_conditions:
+
+    - inflow_boundary_condition: bc_1
+      target_name: inlet
+      inflow_user_data:
+        velocity: [1.0,0.0,0.0]
+        pressure: 0.0
+
+    - open_boundary_condition: bc_2
+      target_name: outlet
+      open_user_data:
+        pressure: 0.0
+        velocity: [0.0,0.0,0.0]
+
+    - symmetry_boundary_condition: bc_3
+      target_name: top
+      symmetry_user_data:
+
+    - symmetry_boundary_condition: bc_4
+      target_name: bottom
+      symmetry_user_data:
+
+    - wall_boundary_condition: bc_5
+      target_name: wall
+      wall_user_data:
+        user_function_name:
+         velocity: wind_energy
+        user_function_string_parameters:
+         velocity: [interior]
+
+    - symmetry_boundary_condition: bc_6
+      target_name: side11
+      symmetry_user_data:
+
+    - symmetry_boundary_condition: bc_7
+      target_name: side12
+      symmetry_user_data:
+
+    - symmetry_boundary_condition: bc_8
+      target_name: side21
+      symmetry_user_data:
+
+    - symmetry_boundary_condition: bc_9
+      target_name: side22
+      symmetry_user_data:
+
+    - overset_boundary_condition: bc_overset
+      overset_connectivity_type: tioga
+      overset_user_data:
+        tioga_options:
+          symmetry_direction: 2
+          set_resolutions: yes
+        mesh_group:
+          - overset_name: interior
+            mesh_parts: [ Unspecified-2-HEX ]
+            wall_parts: [ wall ]
+            ovset_parts: [ overset1 ]
+
+          - overset_name: wake
+            mesh_parts: [ Unspecified-3-HEX]
+
+    mesh_motion:
+      - name: interior
+        mesh_parts: [ Unspecified-2-HEX ]
+        motion:
+         - type: oscillation
+           period: 1.0
+           amplitude: 0.1
+           direction: [0.0, 0.0, 1.0]
+
+    solution_options:
+      name: myOptions
+
+      options:
+        - hybrid_factor:
+            velocity: 1.0
+
+        - limiter:
+            pressure: no
+            velocity: no
+
+        - projected_nodal_gradient:
+            pressure: element
+            velocity: element
+
+    restart:
+      restart_data_base_name: rst/cyl.rst
+      restart_frequency: 100
+      restart_start: 100
+
+    output:
+      output_data_base_name: out/cyl.e
+      output_frequency: 10
+      output_node_set: no
+      output_variables:
+       - velocity
+       - pressure
+       - dpdx
+       - mesh_displacement
+       - iblank
+       - iblank_cell
+
+
+Time_Integrators:
+  - StandardTimeIntegrator:
+      name: ti_1
+      start_time: 0
+      termination_step_count: 10
+      time_step: 0.003
+      time_stepping_type: fixed
+      time_step_count: 0
+      second_order_accuracy: yes
+
+      realms:
+        - realm_1
