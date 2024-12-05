@@ -246,6 +246,7 @@ if(NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
 
   if (ENABLE_TIOGA AND ENABLE_HYPRE)
     add_test_r(oversetRotCylNGPHypre 2)
+    add_test_r(oversetOscCylNGPHypre 2)
     if (ENABLE_TRILINOS_SOLVERS)
       add_test_r(oversetRotCylinderHypre 2)
       add_test_r(oversetRotCylMultiRealm 2)
