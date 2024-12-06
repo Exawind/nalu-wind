@@ -189,12 +189,12 @@ CalcLoads::execute()
 
         // interpolate to bip
         double pBip = 0.0;
-        double rhoBip = 0.0;
+        // double rhoBip = 0.0;
         double muBip = 0.0;
         for (int ic = 0; ic < nodesPerFace; ++ic) {
           const double r = p_face_shape_function(ip, ic);
           pBip += r * p_pressure[ic];
-          rhoBip += r * p_density[ic];
+          // rhoBip += r * p_density[ic];
           muBip += r * p_viscosity[ic];
         }
 
