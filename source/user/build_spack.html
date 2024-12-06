@@ -1,0 +1,319 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Building Nalu-Wind Semi-Automatically Using Spack &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Building Nalu-Wind Manually" href="build_manually.html" />
+    <link rel="prev" title="Building Nalu-Wind" href="building.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Manual</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="building.html">Building Nalu-Wind</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Building Nalu-Wind with Spack</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mac-os-x-or-linux">Mac OS X or Linux</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nrel-s-eagle-machine">NREL’s Eagle Machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#development-build-of-nalu-wind">Development Build of Nalu-Wind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#building-inside-docker-container">Building inside Docker Container</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="build_manually.html">Building Nalu-Wind Manually</a></li>
+<li class="toctree-l3"><a class="reference internal" href="verify_installation.html">Verifying that the installation of Nalu-Wind works</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="running.html">Running Nalu-Wind</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../theory/index.html">Theory Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">User Manual</a></li>
+          <li class="breadcrumb-item"><a href="building.html">Building Nalu-Wind</a></li>
+      <li class="breadcrumb-item active">Building Nalu-Wind Semi-Automatically Using Spack</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/user/build_spack.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="building-nalu-wind-semi-automatically-using-spack">
+<h1>Building Nalu-Wind Semi-Automatically Using Spack<a class="headerlink" href="#building-nalu-wind-semi-automatically-using-spack" title="Link to this heading"></a></h1>
+<section id="mac-os-x-or-linux">
+<h2>Mac OS X or Linux<a class="headerlink" href="#mac-os-x-or-linux" title="Link to this heading"></a></h2>
+<p>The following describes how to build Nalu-Wind and its dependencies
+mostly automatically on your Mac using
+<a class="reference external" href="https://spack.readthedocs.io/en/latest">Spack</a>.
+This can also be used as a template to build Nalu-Wind on any
+Linux system with Spack.</p>
+<section id="step-1">
+<h3>Step 1<a class="headerlink" href="#step-1" title="Link to this heading"></a></h3>
+<p>This assumes you have a (Homebrew) installation of GCC installed already
+(we are using GCC 7.3.0). These instructions have been tested on OSX 10.11, MacOS 10.12, and MacOS 10.13.
+MacOS 10.12/10.13 will not build CMake or Pkg-Config with GCC because they will pick up
+system header files that have objective C code in them. Therefore we build Nalu-Wind using Spack on MacOS Sierra by
+using Homebrew to install <code class="docutils literal notranslate"><span class="pre">cmake</span></code> and <code class="docutils literal notranslate"><span class="pre">pkg-config</span></code> and defining these
+as external packages in Spack (see
+<a class="reference external" href="https://github.com/exawind/build-test/blob/master/configs/machines/mac_sierra/packages.yaml">packages.yaml</a>).</p>
+</section>
+<section id="step-2">
+<h3>Step 2<a class="headerlink" href="#step-2" title="Link to this heading"></a></h3>
+<p>Checkout the official Spack repo from github (we will checkout into <code class="docutils literal notranslate"><span class="pre">${HOME}</span></code>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${HOME} &amp;&amp; git clone https://github.com/spack/spack.git
+</pre></div>
+</div>
+</section>
+<section id="step-3">
+<h3>Step 3<a class="headerlink" href="#step-3" title="Link to this heading"></a></h3>
+<p>Add Spack shell support to your <code class="docutils literal notranslate"><span class="pre">.profile</span></code> or <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> etc, by adding the lines:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export SPACK_ROOT=${HOME}/spack
+source ${SPACK_ROOT}/share/spack/setup-env.sh
+</pre></div>
+</div>
+</section>
+<section id="step-4">
+<h3>Step 4<a class="headerlink" href="#step-4" title="Link to this heading"></a></h3>
+<p>Run the <a class="reference external" href="https://github.com/exawind/build-test/blob/master/configs/setup-spack.sh">setup-spack.sh</a>
+script from the repo which tries to find out what machine you are on and then copies the corresponding <code class="docutils literal notranslate"><span class="pre">*.yaml</span></code>
+configuration files to your Spack installation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${HOME} &amp;&amp; git clone https://github.com/exawind/build-test.git
+cd ${HOME}/build-test/configs &amp;&amp; ./setup-spack.sh
+</pre></div>
+</div>
+</section>
+<section id="step-5">
+<h3>Step 5<a class="headerlink" href="#step-5" title="Link to this heading"></a></h3>
+<p>Try <code class="docutils literal notranslate"><span class="pre">spack</span> <span class="pre">info</span> <span class="pre">nalu-wind</span></code> to see if Spack works. If it does, check the
+compilers you have available by:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>machine:~ user$ spack compilers
+==&gt; Available compilers
+-- clang sierra-x86_64 ------------------------------------------
+clang@9.0.0-apple
+
+-- gcc sierra-x86_64 --------------------------------------------
+gcc@7.3.0  gcc@6.4.0  gcc@5.5.0
+</pre></div>
+</div>
+</section>
+<section id="step-6">
+<h3>Step 6<a class="headerlink" href="#step-6" title="Link to this heading"></a></h3>
+<p>Install Nalu-Wind with whatever compiler you prefer (it will default to Apple Clang) merely by
+running <code class="docutils literal notranslate"><span class="pre">spack</span> <span class="pre">install</span> <span class="pre">nalu-wind</span></code> or by editing and running the
+<code class="docutils literal notranslate"><span class="pre">install_nalu_gcc_mac.sh</span></code> script from the <a class="reference external" href="https://github.com/exawind/build-test">build-test</a> repo:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${HOME}/build-test/install_scripts &amp;&amp; ./install_nalu_gcc_mac.sh
+</pre></div>
+</div>
+<p>That should be it! When using the install script you will see that Spack will install
+using the constraints we’ve specified in <code class="docutils literal notranslate"><span class="pre">shared_constraints.sh</span></code> which specifies a much more specific
+set of Trilinos options for Nalu-Wind that can shorten the build time.</p>
+</section>
+</section>
+<section id="nrel-s-eagle-machine">
+<h2>NREL’s Eagle Machine<a class="headerlink" href="#nrel-s-eagle-machine" title="Link to this heading"></a></h2>
+<p>The following describes how to build Nalu-Wind and its dependencies
+mostly automatically on NREL’s Eagle machine using Spack. This can also be
+used as a template to help build Nalu-Wind on any Linux system with Spack.</p>
+<section id="id1">
+<h3>Step 1<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>Login to Eagle, and checkout the <code class="docutils literal notranslate"><span class="pre">https://github.com/exawind/build-test.git</span></code>
+repo (we will be cloning into the ${HOME} directory):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${HOME} &amp;&amp; git clone https://github.com/exawind/build-test.git
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Step 2<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<p>Checkout the official Spack repo from github:</p>
+<p><code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">${HOME}</span> <span class="pre">&amp;&amp;</span> <span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/spack/spack.git</span></code></p>
+</section>
+<section id="id3">
+<h3>Step 3<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<p>Configure your environment in the recommended way. You should purge all
+modules and load GCC 7.3.0 in your login script. In the example
+<a class="reference external" href="https://github.com/exawind/build-test/blob/master/configs/machines/eagle/dot_bashrc_eagle.sh">.bashrc</a>
+in the repo we also load Python. If you have problems building with Spack on
+Eagle, it is most likely your environment has deviated from this
+recommended one. Even when building with the Intel compiler in Spack,
+this is the recommended environment at login.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="n">purge</span>
+<span class="n">module</span> <span class="n">load</span> <span class="n">gcc</span><span class="o">/</span><span class="mf">7.3.0</span>
+</pre></div>
+</div>
+<p>Also add Spack shell support to your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> as shown in the example
+<a class="reference external" href="https://github.com/exawind/build-test/blob/master/configs/machines/eagle/dot_bashrc_eagle.sh">.bashrc</a>
+in the repo or the following lines:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export SPACK_ROOT=${HOME}/spack
+source ${SPACK_ROOT}/share/spack/setup-env.sh
+</pre></div>
+</div>
+<p>Log out and log back in or source your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> to get the Spack
+shell support loaded. Try <code class="docutils literal notranslate"><span class="pre">spack</span> <span class="pre">info</span> <span class="pre">nalu-wind</span></code> to see if Spack works.</p>
+</section>
+<section id="id4">
+<h3>Step 4<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<p>Configure Spack for Eagle. This is done by running the
+<a class="reference external" href="https://github.com/exawind/build-test/blob/master/configs/setup-spack.sh">setup-spack.sh</a>
+script provided which tries finding what machine you’re on and copying the corresponding <code class="docutils literal notranslate"><span class="pre">*.yaml</span></code>
+file to your Spack directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${HOME}/build-test/configs &amp;&amp; ./setup-spack.sh
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Step 5<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<p>Try <code class="docutils literal notranslate"><span class="pre">spack</span> <span class="pre">info</span> <span class="pre">nalu-wind</span></code> to see if Spack works.</p>
+</section>
+<section id="id6">
+<h3>Step 6<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<p>Note the build scripts and packages.yaml configuration files provided here adhere
+to the official versions of the third party libraries
+we test with, and that you may want to adhere to using them as well. Also note that
+when you checkout the latest Spack, it also means you will be using the latest packages
+available if you do not set constraints at install time and the newest packages
+may not have been tested to build correctly on NREL machines yet. So specifying
+versions of the TPL dependencies in your packages.yaml file for Spack is recommended.</p>
+<p>Install Nalu-Wind using a non-GPU login node with the example script
+<a class="reference external" href="https://github.com/exawind/build-test/blob/master/install_scripts/install_nalu_eagle.sh">install_nalu_eagle.sh</a>
+or edit the script to use the correct allocation and <code class="docutils literal notranslate"><span class="pre">nice</span> <span class="pre">./install_nalu_eagle.sh</span></code>.</p>
+<p>That’s it! Hopefully the <code class="docutils literal notranslate"><span class="pre">install_nalu_eagle.sh</span></code>
+script installs the entire set of dependencies and you get a working build
+of Nalu-Wind on Eagle…after several hours of waiting for it to build.</p>
+<p>To build with the Intel compiler, note the necessary change listed in the
+<a class="reference external" href="https://github.com/exawind/build-test/blob/master/install_scripts/install_nalu_eagle.sh">install_nalu_eagle.sh</a>
+batch script.</p>
+<p>To load Nalu-Wind dependencies (you will need Spack’s OpenMPI for Nalu-Wind now) into your path you
+will need to <code class="docutils literal notranslate"><span class="pre">spack</span> <span class="pre">load</span> <span class="pre">openmpi</span> <span class="pre">%compiler</span></code> and <code class="docutils literal notranslate"><span class="pre">spack</span> <span class="pre">load</span> <span class="pre">nalu-wind</span> <span class="pre">%compiler</span></code>, using
+<code class="docutils literal notranslate"><span class="pre">%gcc</span></code> or <code class="docutils literal notranslate"><span class="pre">%intel</span></code> to specify which to load.</p>
+</section>
+</section>
+<section id="development-build-of-nalu-wind">
+<h2>Development Build of Nalu-Wind<a class="headerlink" href="#development-build-of-nalu-wind" title="Link to this heading"></a></h2>
+<p>When building Nalu-Wind with Spack, Spack will cache downloaded archive files such as
+<code class="docutils literal notranslate"><span class="pre">*.tar.gz</span></code> files. However, by default Spack will also erase extracted or
+checked out (‘staged’) source files after it has built a package successfully.
+Therefore if your build succeeds, Spack will have erased the Nalu-Wind source code
+it checked out from Github.</p>
+<p>The recommended way to get a version of Nalu-Wind you can develop in
+is to checkout Nalu-Wind yourself outside of Spack and build this version
+using the dependencies Spack has built for you. To do so, checkout Nalu-Wind:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">exawind</span><span class="o">/</span><span class="n">nalu</span><span class="o">-</span><span class="n">wind</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+<p>Next, create your own directory to build in, or use the existing <code class="docutils literal notranslate"><span class="pre">build</span></code> directory in Nalu-Wind to
+run the CMake configuration. When running the CMake configuration, point Nalu-Wind to
+the dependencies by using <code class="docutils literal notranslate"><span class="pre">spack</span> <span class="pre">location</span> <span class="pre">-i</span> <span class="pre">&lt;package&gt;</span></code>. For example in the
+<code class="docutils literal notranslate"><span class="pre">build</span></code> directory run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cmake -DTrilinos_DIR:PATH=$(spack location -i trilinos) \
+      -DYAML_DIR:PATH=$(spack location -i yaml-cpp) \
+      -DCMAKE_BUILD_TYPE=RELEASE \
+      ..
+make
+</pre></div>
+</div>
+<p>There are also <code class="docutils literal notranslate"><span class="pre">do-config</span></code> scripts available for this according to machine under the configs directory <a class="reference external" href="https://github.com/exawind/build-test">here</a>. These scripts may also provide the capability to access and use pre-built dependencies from a set of modules if they are available on the machine. This should allow you to have a build of Nalu-Wind in which you are able to continuosly modify the source code and rebuild.</p>
+</section>
+<section id="building-inside-docker-container">
+<h2>Building inside Docker Container<a class="headerlink" href="#building-inside-docker-container" title="Link to this heading"></a></h2>
+<p>It is also possible to build (and run) Nalu-Wind inside a docker container with a prepared environment.
+This has the benefit of requiring less setup and usually being faster and can be useful in some situations (e.g. quickly testing something).</p>
+<p>For this, use the container <a class="reference external" href="https://hub.docker.com/r/ecpe4s/exawind-snapshot">ecpe4s/exawind-snapshot</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="n">ecpe4s</span><span class="o">/</span><span class="n">exawind</span><span class="o">-</span><span class="n">snapshot</span> <span class="n">bash</span>
+</pre></div>
+</div>
+<p>Inside the container you can directly load the pre-installed version of Nalu-Wind with spack:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">spack</span> <span class="n">load</span> <span class="n">nalu</span><span class="o">-</span><span class="n">wind</span>
+</pre></div>
+</div>
+<p><a class="reference external" href="https://github.com/Exawind/exawind-manager">ExaWind-Manager</a> is used generate the container and is pre-installed in the container.  Additional development of the code can be done through the Exawind-Manager’s developer tools.</p>
+<p>If you are uncomfortable using spack for development then you can also set up your own build workflow in more of a “roll-your-own” development environment using CMake and just utilize the pre-installed TPL’s that are available in the container through spack.  This really comes down to your development preferences and your comfort level with CMake.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="building.html" class="btn btn-neutral float-left" title="Building Nalu-Wind" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="build_manually.html" class="btn btn-neutral float-right" title="Building Nalu-Wind Manually" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

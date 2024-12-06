@@ -1,0 +1,16 @@
+<map id="Coefficients.h" name="Coefficients.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="241,5,352,31"/>
+<area shape="rect" id="Node000002" href="$_local_array_8h.html" title=" " alt="" coords="206,79,387,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="299,31,299,65,294,65,294,31"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,152,156,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="263,107,129,150,128,145,261,101"/>
+<area shape="rect" id="Node000004" href="$_kokkos_framework_8h.html" title=" " alt="" coords="180,152,413,177"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="299,104,299,138,294,138,294,104"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="403,225,495,251"/>
+<area shape="poly" id="edge7_Node000002_Node000007" title=" " alt="" coords="346,102,390,120,410,133,428,150,444,180,450,211,445,212,439,182,424,154,407,138,387,125,344,106"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="69,225,202,251"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="272,180,175,222,173,217,270,175"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="226,225,373,251"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="300,178,301,212,296,212,294,178"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="322,175,413,217,411,222,320,180"/>
+</map>

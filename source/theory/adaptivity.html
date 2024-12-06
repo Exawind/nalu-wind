@@ -1,0 +1,219 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>17. Adaptivity &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="18. Code Abstractions" href="codeAbstractions.html" />
+    <link rel="prev" title="16. Topological Support" href="topologicalSupport.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Theory Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lowMachNumberDerivation.html">1. Low Mach Number Derivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html">2. Supported Equation Set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html">3. Discretization Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advectionStabilization.html">4. Advection Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pressureStabilization.html">5. Pressure Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html">6. RTE Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html">7. Nonlinear Stabilization Operator (NSO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html">8. Turbulence Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html">9. Supported Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overset.html">10. Overset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html">11. Property Evaluations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="couplingApproach.html">12. Coupling Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeDiscretization.html">13. Time discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiPhysics.html">14. Multi-Physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html">15. Wind Energy Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topologicalSupport.html">16. Topological Support</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">17. Adaptivity</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prolongation-and-restriction">17.1. Prolongation and Restriction</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="codeAbstractions.html">18. Code Abstractions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Nalu-Wind - Theory Manual</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">17. </span>Adaptivity</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/theory/adaptivity.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="adaptivity">
+<h1><span class="section-number">17. </span>Adaptivity<a class="headerlink" href="#adaptivity" title="Link to this heading"></a></h1>
+<p>Adaptivity is supported through usage of the Percept module. However,
+this code base has not yet been deployed to the open sector. As such,
+ifdef guards are placed within the code base. A variety of choices exist
+for the manner by which hanging nodes are removed in a vertex-centered
+code base.</p>
+<p>A typical h-adapted patch of elements is shown in
+Figure <a class="reference internal" href="#hadapt-convol"><span class="std std-numref">17.1</span></a>. The “hanging nodes” do not have control volumes
+associated with them. Rather, they are constrained to be a linear
+combination of the two parent edge nodes. There is no element assembly
+procedure to compute fluxes for the “hanging sub-faces” associated with
+the hanging nodes that occur along the parent-child element boundary.</p>
+<figure class="align-center" id="id5">
+<span id="hadapt-convol"></span><a class="reference internal image-reference" href="../../_images/hadapt.pdf"><img alt="../../_images/hadapt.pdf" src="../../_images/hadapt.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">17.1 </span><span class="caption-text">Control volume definition on an h-adapted mesh with hanging nodes.
+(Four-patch of parent elements with refinement in bottom-right
+element.)</span><a class="headerlink" href="#id5" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>In general, for a vertex-centered scheme, the h-adaptive scheme is
+driven at the element level. Refinement occurs within the element and
+the topology of refined elements is the same as the parent element.</p>
+<p>Aftosmis <span id="id1">[<a class="reference internal" href="../../zrefs.html#id28" title="M. Aftosmis. Upwind method for simulation of viscous flow on adaptively refined meshes. AIAA Journal, 32(2):268–277, 1994.">Aft94</a>]</span> describes a vertex-centered
+finite-volume scheme on unstructured Cartesian meshes. A transitional
+set of control volumes are formed about the hanging nodes, shown in
+Figure <a class="reference internal" href="#aftosmis-convol"><span class="std std-numref">17.2</span></a>. on unstructured meshes. This approach would
+require a series of specialized master elements to deal with the
+different transition possibilities.</p>
+<figure class="align-center" id="id6">
+<span id="aftosmis-convol"></span><a class="reference internal image-reference" href="../../_images/hadapt2.pdf"><img alt="../../_images/hadapt2.pdf" src="../../_images/hadapt2.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">17.2 </span><span class="caption-text">Control volume definition on an h-adapted mesh with transition
+control volumes about the hanging nodes. (Four-patch of parent
+elements with refinement in bottom-right element.)</span><a class="headerlink" href="#id6" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>Kallinderis <span id="id2">[<a class="reference internal" href="../../zrefs.html#id30" title="Y. G. Kallinderis and J. R. Baron. Adaptive methods for a new navier-stokes algorithm. AIAA Journal, 27(1):37–43, 1989.">KB89</a>]</span> describes a
+vertex-centered finite-volume scheme on unstructured quad meshes.
+Hanging nodes are treated with a constraint condition. The flux
+construction for a node on a refinement boundary is based on the
+unrefined parent elements, leading to a non-conservative scheme.</p>
+<p>Kallinderis <span id="id3">[<a class="reference internal" href="../../zrefs.html#id31" title="Y. Kallinderis and P. Vijayan. Adaptive refinement-coarsening scheme for three-dimensional unstructured meshes. AIAA Journal, 31(8):1440–1447, 1993.">KV93</a>]</span> also describes a
+vertex-centered finite-volume scheme on unstructured tetrahedral meshes.
+Hanging nodes are removed by splitting the elements on the “unrefined”
+side of the refinement boundary.
+Mavriplis <span id="id4">[<a class="reference internal" href="../../zrefs.html#id29" title="D. J. Mavriplis. Adaptive meshing techniques for viscous flow calculations on mixed element unstructured meshes. International Journal for Numerical Methods in Fluids, 34(2):93–111, 2000.">Mav00</a>]</span> uses a similar technique,
+however, extends it to a general set of heterogeneous elements, shown in
+Figure <a class="reference internal" href="#kallin-convol"><span class="std std-numref">17.3</span></a>.</p>
+<figure class="align-center" id="id7">
+<span id="kallin-convol"></span><a class="reference internal image-reference" href="../../_images/hadapt3.pdf"><img alt="../../_images/hadapt3.pdf" src="../../_images/hadapt3.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">17.3 </span><span class="caption-text">Control volume definition on a heterogeneous h-adapted mesh with no
+hanging nodes. (Four-patch of parent elements with refinement in
+bottom-right element and splitting in adjacent parent elements.)</span><a class="headerlink" href="#id7" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>The future deployment of Percept will use the procedure of Mavriplis
+whereby hanging nodes are removed by neighbor topological changes. A
+variety of error indicators exists and a prototyped error transport
+equation appraoch for the one-equation <span class="math notranslate nohighlight">\(k^{sgs}\)</span> model has been
+tested for classic jet-in-crossflow configurations.</p>
+<section id="prolongation-and-restriction">
+<h2><span class="section-number">17.1. </span>Prolongation and Restriction<a class="headerlink" href="#prolongation-and-restriction" title="Link to this heading"></a></h2>
+<p>Nodal variables are interpolated between levels of the h-adapted mesh
+hierarchy using the traditional prolongation and restriction operators
+defined over an element. The prolongation operation is used to compute
+values for new nodes that arise from element sub-division. The parent
+element shape functions are used to interpolate values from the parent
+nodes to the sub-divided nodes.</p>
+<p>Prolongation and restriction operators for element variables and face
+variables are required to maintain mass flow rates that satisfy
+continuity. When adaptivity takes place, a code option to reconstruct
+the mass flow rates must be used. Whether or not a Poisson system must
+be created has been explored. More work is required to understand the
+nuances associated with prolongation, specifically with respect to
+possible dispersion errors.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="topologicalSupport.html" class="btn btn-neutral float-left" title="16. Topological Support" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="codeAbstractions.html" class="btn btn-neutral float-right" title="18. Code Abstractions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

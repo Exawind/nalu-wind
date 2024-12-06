@@ -1,0 +1,1307 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2. 2D Unsteady Uniform Property: Convecting Decaying Taylor Vortex &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="References" href="../../zrefs.html" />
+    <link rel="prev" title="1. Introduction" href="introduction.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../theory/index.html">Theory Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Verification Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="introduction.html">1. Introduction</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2. 2D Unsteady Uniform Property: Convecting Decaying Taylor Vortex</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#temporal-order-of-accuracy-results">2.1. Temporal Order Of Accuracy Results</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#higher-order-2d-steady-uniform-property-taylor-vortex">3. Higher Order 2D Steady Uniform Property: Taylor Vortex</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#source-term-quadrature">3.1. Source Term Quadrature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#projected-nodal-gradients">3.2. Projected nodal gradients</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#momentum-and-pressure">3.3. Momentum and Pressure</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#d-steady-non-isothermal-with-buoyancy">4. 3D Steady Non-isothermal with Buoyancy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#d-steady-non-uniform-with-buoyancy">5. 3D Steady Non-uniform with Buoyancy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#d-steady-laplace-operator">6. 2D Steady Laplace Operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#d-steady-laplace-operator-with-nonconformal-interface">7. 3D Steady Laplace Operator with Nonconformal Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#precursor-based-simulations">8. Precursor-based Simulations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#infrastructure-unit-test">8.1. Infrastructure Unit Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#application-verification-test-convecting-taylor-vortex">8.2. Application Verification Test; Convecting Taylor Vortex</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#application-verification-test-abl-precursor-subsequent">8.3. Application Verification Test; ABL Precursor/Subsequent</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#boussinesq-verification">9. Boussinesq Verification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#unit-tests">9.1. Unit tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stratified-mms">9.2. Stratified MMS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#d-hybrid-1x2x10-duct-specified-pressure-drop">10. 3D Hybrid 1x2x10 Duct: Specified Pressure Drop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#d-hybrid-1x1x1-cube-laplace">11. 3D Hybrid 1x1x1 Cube: Laplace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fixed-wing-verification-problem">12. Fixed Wing Verification Problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#actuator-line-simulations-coupled-to-openfast">13. Actuator line simulations coupled to OpenFAST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#open-boundary-condition-with-outflow-thermal-stratification">14. Open Boundary Condition With Outflow Thermal Stratification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#specified-normal-temperature-gradient-boundary-condition">15. Specified Normal Temperature Gradient Boundary Condition</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#simple-linear-temperature-profile-equal-and-opposite-specified-temperature-gradients">15.1. Simple Linear Temperature Profile: Equal and Opposite Specified Temperature Gradients</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parabolic-temperature-profile-equal-specified-temperature-gradients">15.2. Parabolic Temperature Profile: Equal Specified Temperature Gradients</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Nalu-Wind - Verification Manual</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">2. </span>2D Unsteady Uniform Property: Convecting Decaying Taylor Vortex</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/verification/verification.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="d-unsteady-uniform-property-convecting-decaying-taylor-vortex">
+<h1><span class="section-number">2. </span>2D Unsteady Uniform Property: Convecting Decaying Taylor Vortex<a class="headerlink" href="#d-unsteady-uniform-property-convecting-decaying-taylor-vortex" title="Link to this heading"></a></h1>
+<p>Verification of first-order and second-order temporal accuracy for the
+CVFEM and EBVC formulation in Nalu-Wind is performed using the method of
+manufactured solution (MMS) technique. For the unsteady isothermal,
+uniform laminar physics set, the exact solution of the convecting,
+decaying Taylor vortex is used.</p>
+<div class="math notranslate nohighlight" id="equation-advconvtv-u">
+<span class="eqno">(2.38)<a class="headerlink" href="#equation-advconvtv-u" title="Link to this equation"></a></span>\[u = u_o - cos(\pi(x-u_ot)) sin(\pi(y-v_ot))e^{-2.0\omega t}\]</div>
+<div class="math notranslate nohighlight" id="equation-advconvtv-v">
+<span class="eqno">(2.39)<a class="headerlink" href="#equation-advconvtv-v" title="Link to this equation"></a></span>\[v = v_o + sin(\pi(x-u_ot)) cos(\pi(y-v_ot))e^{-2.0\omega t}\]</div>
+<div class="math notranslate nohighlight" id="equation-advconvtv-p">
+<span class="eqno">(2.40)<a class="headerlink" href="#equation-advconvtv-p" title="Link to this equation"></a></span>\[p = -\frac{p_o}{4}(cos(2\pi(x-u_ot)) + cos(2\pi(y-v_ot)))e^{-4\omega t}\]</div>
+<p>In this study, the constants <span class="math notranslate nohighlight">\(u_o\)</span>, <span class="math notranslate nohighlight">\(v_o\)</span>, and <span class="math notranslate nohighlight">\(p_o\)</span>
+are all assigned values of <span class="math notranslate nohighlight">\(1.0\)</span>, and the viscosity <span class="math notranslate nohighlight">\(\mu\)</span> is
+set to a constant value of <span class="math notranslate nohighlight">\(0.001\)</span>. The value of <span class="math notranslate nohighlight">\(\omega\)</span> is
+<span class="math notranslate nohighlight">\(\pi^2\mu\)</span>. This particular viscosity value results in a maximum
+cell reynolds number of twenty.</p>
+<section id="temporal-order-of-accuracy-results">
+<h2><span class="section-number">2.1. </span>Temporal Order Of Accuracy Results<a class="headerlink" href="#temporal-order-of-accuracy-results" title="Link to this heading"></a></h2>
+<p>The temporal order of accuracy for the first order backward Euler and
+second order BDF2 are outlined in Figure <a class="reference internal" href="#fo-fourth-tstep"><span class="std std-numref">2.2</span></a> and
+Figure <a class="reference internal" href="#so-fourth-tstep"><span class="std std-numref">2.3</span></a>. Each of these simulations used a hybrid factor
+of zero to ensure pure second order central usage. A fixed Courant
+number of two was used for each of the three meshes (100x100, 200x200
+and 400x400). The simulation was run out to 0.2 seconds and <span class="math notranslate nohighlight">\(L_2\)</span>
+error norms were computed. The standard fourth order pressure
+stabilization scheme with time step scaling is used. This scheme is also
+known as the standard incremental pressure, approximate pressure
+projection scheme.</p>
+<p>Two other pressure projection schemes have been evaluated in this study.
+Each represent a simplification of the standard pressure projection
+scheme. Figure <a class="reference internal" href="#hybrid-tstep"><span class="std std-numref">2.4</span></a> outlines three projection schemes: the
+first is when the projected nodal gradient appearing in the fourth-order
+pressure stabilization is lagged while the second is the classic
+pressure-free pressure approximate projection scheme with second order
+pressure stabilization. The third is the baseline fourth-order
+incremental pressure projection scheme. The error plots demonstrate that
+lagging the projected nodal gradient for pressure retains second order
+accuracy. However, as expected the pressure free pressure projection
+scheme is confirmed to be first order accurate given the first order
+splitting error noted in this fully implicit momentum solve.</p>
+<p>The Steady Taylor Vortex will be used to verify the spatial accuracy for
+the full set of advection operators supported in Nalu-Wind.</p>
+<figure class="align-center" id="id5">
+<span id="fo-fourth-tstep"></span><a class="reference internal image-reference" href="../../_images/convTaylorVortexFO.pdf"><img alt="../../_images/convTaylorVortexFO.pdf" src="../../_images/convTaylorVortexFO.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">2.2 </span><span class="caption-text">Error norms as a function of timestep size for the <span class="math notranslate nohighlight">\(u\)</span> and
+<span class="math notranslate nohighlight">\(v\)</span> component of velocity using fourth order pressure
+stabilization with timestep scaling, backward Euler</span><a class="headerlink" href="#id5" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id6">
+<span id="so-fourth-tstep"></span><a class="reference internal image-reference" href="../../_images/convTaylorVortexSO.pdf"><img alt="../../_images/convTaylorVortexSO.pdf" src="../../_images/convTaylorVortexSO.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">2.3 </span><span class="caption-text">Error norms as a function of timestep size for the <span class="math notranslate nohighlight">\(u\)</span> and
+<span class="math notranslate nohighlight">\(v\)</span> component of velocity using fourth order pressure
+stabilization with timestep scaling, BDF2</span><a class="headerlink" href="#id6" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id7">
+<span id="hybrid-tstep"></span><a class="reference internal image-reference" href="../../_images/convTaylorVortexSO_ElemLagElemPf.pdf"><img alt="../../_images/convTaylorVortexSO_ElemLagElemPf.pdf" src="../../_images/convTaylorVortexSO_ElemLagElemPf.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">2.4 </span><span class="caption-text">Error norms as a function of timestep size for the <span class="math notranslate nohighlight">\(u\)</span> and
+<span class="math notranslate nohighlight">\(v\)</span> component of velocity using the lagged projected nodal
+pressure gradient and pressure-free pressure projection scheme; all
+with with timestep scaling, BDF2</span><a class="headerlink" href="#id7" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+<section id="higher-order-2d-steady-uniform-property-taylor-vortex">
+<h1><span class="section-number">3. </span>Higher Order 2D Steady Uniform Property: Taylor Vortex<a class="headerlink" href="#higher-order-2d-steady-uniform-property-taylor-vortex" title="Link to this heading"></a></h1>
+<p>A higher order unstructured CVFEM method has been developed by
+Domino <span id="id1">[<a class="reference internal" href="../../zrefs.html#id5" title="S. Domino. A comparison between low order and higher order low mach discretization approaches. In Center for Turbulence Research Summer Proceedings. 2014.">Dom14</a>]</span>. A 2D structured mesh study
+demonstrating second order time and third order in space scheme has been
+demonstrated. The below work has emphasis on unstructured meshes.</p>
+<section id="source-term-quadrature">
+<h2><span class="section-number">3.1. </span>Source Term Quadrature<a class="headerlink" href="#source-term-quadrature" title="Link to this heading"></a></h2>
+<p>Higher order accuracy is only demonstrated on solutions with source
+terms when a fully integrated approach is used. Lumping the source term
+evaluation is a second order error and is fully noted in the MMS study
+(not shown).</p>
+</section>
+<section id="projected-nodal-gradients">
+<h2><span class="section-number">3.2. </span>Projected nodal gradients<a class="headerlink" href="#projected-nodal-gradients" title="Link to this heading"></a></h2>
+<p>Results show that one must use design order projected nodal gradients.
+Figure <a class="reference internal" href="#png-temp-mms"><span class="std std-numref">3.4</span></a> demonstrates a code verification result for a
+steady thermal manufactured solution comparing lumped and consistent
+mass matrix approaches for the projected nodal gradient on a quadratic
+tquad mesh. In the lumped approach, a simple explicit algorithm is
+processed while for the consistent approach, a simple mass matrix
+inversion equation must be solved. The lumped approach is first order
+while the consistent approach retains the expected second order as the
+projected nodal gradient is expected to be order <span class="math notranslate nohighlight">\(P\)</span>. Both
+Dirichlet and periodic domains display the same order of convergence.</p>
+<figure class="align-center" id="id8">
+<span id="png-temp-mms"></span><a class="reference internal image-reference" href="../../_images/ho_heatCondMMM_dtdx.pdf"><img alt="../../_images/ho_heatCondMMM_dtdx.pdf" src="../../_images/ho_heatCondMMM_dtdx.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">3.4 </span><span class="caption-text">Error norms as a function of mesh size for a CMM and LMM projected
+nodal gradient on a quadratic tquad mesh.</span><a class="headerlink" href="#id8" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="momentum-and-pressure">
+<h2><span class="section-number">3.3. </span>Momentum and Pressure<a class="headerlink" href="#momentum-and-pressure" title="Link to this heading"></a></h2>
+<p>The steady taylor vortex exact solution was run on a quadratic tquad
+mesh. Figure <a class="reference internal" href="#ho-stvmms"><span class="std std-numref">3.5</span></a> demonstrates the order of accuracy for
+projected nodal gradients (pressure) and the velocity field
+(x-component). Second order accuracy for the projected nodal gradient
+(pressure) and third order for the velocity field is realized when the
+consistent mass matrix approach is used for the projected nodal pressure
+gradient. Note that this term is used in the pressure stabilization
+approach. However, order of convergence for the projected nodal pressure
+gradient and velocity field is compromised when the lumped mass matrix
+approach is used for the pressure stabilization term. Note that both
+approaches use the fully integrated pressure gradient term in the
+momentum equation (i.e., <span class="math notranslate nohighlight">\(\int p n_i dS\)</span>). Therefore, the reduced
+order of integration for the projected nodal pressure gradient has
+consequence on the velocity field order of convergence.</p>
+<p>Again, dirichlet (inflow) and periodic domains display the same order of
+convergence.</p>
+<figure class="align-center" id="id9">
+<span id="ho-stvmms"></span><a class="reference internal image-reference" href="../../_images/ho_stvUandDpDx.pdf"><img alt="../../_images/ho_stvUandDpDx.pdf" src="../../_images/ho_stvUandDpDx.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">3.5 </span><span class="caption-text">Error norms as a function of mesh size for the Steady Taylor Vortex
+momentum and pressure gradient field.</span><a class="headerlink" href="#id9" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+<section id="d-steady-non-isothermal-with-buoyancy">
+<h1><span class="section-number">4. </span>3D Steady Non-isothermal with Buoyancy<a class="headerlink" href="#d-steady-non-isothermal-with-buoyancy" title="Link to this heading"></a></h1>
+<p>Building from the basic functional form of the Taylor Vortex, a
+non-isothermal solution (momentum, pressure and static enthalpy) is
+manufactured as follows:</p>
+<div class="math notranslate nohighlight" id="equation-threed-non-iso">
+<span class="eqno">(4.11)<a class="headerlink" href="#equation-threed-non-iso" title="Link to this equation"></a></span>\[\begin{split}u &amp;= -u_o cos(a \pi x) sin(a \pi y ) sin(a \pi z)  \\
+v &amp;= +v_o sin(a \pi x) cos(a \pi y ) sin(a \pi z)  \\
+w &amp;= -w_o sin(a \pi x) sin(a \pi y ) cos(a \pi z)  \\
+p &amp;= -\frac{p_o}{4}( cos(2 a \pi x) + cos(2 a \pi y ) + cos(2 a \pi z) )   \\
+h &amp;= +h_o cos(a_h \pi x) cos(a_h \pi y ) cos(a_h \pi z)\end{split}\]</div>
+<p>The equation of state is simply the ideal gas law,</p>
+<div class="math notranslate nohighlight" id="equation-ideal-gas-eos1">
+<span class="eqno">(4.12)<a class="headerlink" href="#equation-ideal-gas-eos1" title="Link to this equation"></a></span>\[\rho = \frac{P^{ref} M}{R T}\]</div>
+<p>The simulation is run on a three-dimensional domain ranging from
+-0.05:+0.05 with constants
+<span class="math notranslate nohighlight">\(a, a_h, M, R, C_p, P^{ref}, T_{ref}, Pr, \mu\)</span> equal to (20, 10,
+30, 10, 0.01, 100, 300, 0.8, 0.00125), respectively.</p>
+<p>At reference conditions, the density is unity. The effects of buoyancy
+are also provided by an arbitrary gravity vector of magnitude of
+approximately ten, <span class="math notranslate nohighlight">\(g_i = (-5, 6, 7)^T\)</span>. On this domain, the
+enthalpy ranges from zero to unity. Given the reference values, the
+temperature field ranges from 300K to 400K which is designed to mimic a
+current LES non-isothermal validation suite.</p>
+<p>Edge- and element-based discretization (P=1) demonstrate second order
+convergence in the <span class="math notranslate nohighlight">\(L_2\)</span> norm for u, v, w and temperature. This
+test is captured within the variableDensityMMS regression test suite.</p>
+</section>
+<section id="d-steady-non-uniform-with-buoyancy">
+<h1><span class="section-number">5. </span>3D Steady Non-uniform with Buoyancy<a class="headerlink" href="#d-steady-non-uniform-with-buoyancy" title="Link to this heading"></a></h1>
+<p>Building from the basic functional form of the Taylor Vortex, a
+non-uniform solution (momentum, pressure and mixture fraction) is
+manufactured as follows:</p>
+<div class="math notranslate nohighlight" id="equation-threed-noniso">
+<span class="eqno">(5.2)<a class="headerlink" href="#equation-threed-noniso" title="Link to this equation"></a></span>\[\begin{split}u &amp;= -u_o cos(a \pi x) sin(a \pi y ) sin(a \pi z)  \\
+v &amp;= +v_o sin(a \pi x) cos(a \pi y ) sin(a \pi z)  \\
+w &amp;= -w_o sin(a \pi x) sin(a \pi y ) cos(a \pi z)  \\
+p &amp;= -\frac{p_o}{4}( cos(2 a \pi x) + cos(2 a \pi y ) + cos(2 a \pi z) )   \\
+z &amp;= +z_o cos(a_z \pi x) cos(a_z \pi y ) cos(a_z \pi z)\end{split}\]</div>
+<p>The equation of state is simply the standard inverse mixture fraction
+property expression for density,</p>
+<div class="math notranslate nohighlight" id="equation-ideal-gas-eos2">
+<span class="eqno">(5.3)<a class="headerlink" href="#equation-ideal-gas-eos2" title="Link to this equation"></a></span>\[\rho = \frac{1} {\frac{z}{rho^P} + \frac{1-z}{rho^S} }\]</div>
+<p>The simulation is run on a three-dimensional domain ranging from
+-0.05:+0.05 with constants <span class="math notranslate nohighlight">\(a, a_z, \rho^p, \rho^s, Sc, \mu\)</span> equal
+to (20, 10, 0.1, 1.0, 0.8, 0.001), respectively.</p>
+<p>At reference conditions, the density is that of the primary condition
+(0.1). The effects of buoyancy are also provided by an arbitrary gravity
+vector of magnitude of approximately ten, <span class="math notranslate nohighlight">\(g_i = (-5, 6, 7)^T\)</span>. On
+this domain, the mixture fraction ranges from zero to unity. This test
+case is designed to support the helium plume DNS study with primary and
+secondary density values of helium and air, respectively.</p>
+<p>Edge- and element-based discretization (P=1) demonstrate second order
+convergence in the <span class="math notranslate nohighlight">\(L_2\)</span> norm for u, v, w and mixture fraction.
+This test is captured within the variableDensityMMS regression test
+suite.</p>
+</section>
+<section id="d-steady-laplace-operator">
+<h1><span class="section-number">6. </span>2D Steady Laplace Operator<a class="headerlink" href="#d-steady-laplace-operator" title="Link to this heading"></a></h1>
+<p>The evaluation of the low-Mach Laplace (or diffusion operator) is of
+great interest to the core supported application space. Although the
+application space for Nalu-Wind is characterized by a highly turbulent flow,
+the usage of an approximate pressure projection scheme always makes the
+chosen Laplace form important. Although the element-based scheme is
+expected to be accurate, it can be problematic on high aspect ratio
+meshes as element-based schemes are not gauranteed to be monotonic for
+aspect ratios as low as <span class="math notranslate nohighlight">\(\sqrt{2}\)</span> for FEM-based schemes and
+<span class="math notranslate nohighlight">\(\sqrt{3}\)</span> for CVEM-based approaches (both when using standard
+Gauss point locations). Conversely, while the edge-based operator is
+accurate on high aspect ratio meshes, it suffers on skewed meshes due to
+both quadrature error and the inclusion of a non orthogonal correction
+(NOC).</p>
+<p>In order to assess the accuracy of the Laplace operator, a the
+two-dimensional MMS temperature solution is used. The functional
+temperature field takes on the following form:</p>
+<div class="math notranslate nohighlight" id="equation-adv-conv-tv-u">
+<span class="eqno">(6.17)<a class="headerlink" href="#equation-adv-conv-tv-u" title="Link to this equation"></a></span>\[T = \frac{\lambda}{4} (cos(2 a \pi x) + cos(2 a \pi y)).\]</div>
+<p>The above manufactured solution is run on three meshes of domain size of
+1x1. The domain was first meshed as a triangular mesh and then converted
+to a tquad4 mesh. Therefore, non orthogonal correction (NOC) effects are
+expected for the edge-based scheme. In this study, both <span class="math notranslate nohighlight">\(\lambda\)</span>
+and <span class="math notranslate nohighlight">\(a\)</span> are unity. Either periodic or Dirichlet conditions are
+used for boundary conditions.</p>
+<p>A brief overview of the diffusion operator tested is now provided. For
+more details, consult the theory manual. The general diffusion kernel is
+as follows:</p>
+<div class="math notranslate nohighlight" id="equation-diff-op">
+<span class="eqno">(6.18)<a class="headerlink" href="#equation-diff-op" title="Link to this equation"></a></span>\[-\int \Gamma \frac{\partial \phi}{\partial x_j} A_j.\]</div>
+<p>The choice of the gradient operator at the integration point is a
+functin of the underlying method. For CVFEM, the gradient operator is
+provided by the standard shape function derivatives,</p>
+<div class="math notranslate nohighlight" id="equation-cvfem-derivative2">
+<span class="eqno">(6.19)<a class="headerlink" href="#equation-cvfem-derivative2" title="Link to this equation"></a></span>\[\frac{\partial \phi_{ip}}{\partial x_j} = \sum \frac{\partial N^{ip}_{j,k}} {\partial x_j} \phi_k.\]</div>
+<p>For the edge-based scheme, a blending of an orthogonal gradient along the edge and a NOC is employed,</p>
+<div class="math notranslate nohighlight" id="equation-general-grad">
+<span class="eqno">(6.20)<a class="headerlink" href="#equation-general-grad" title="Link to this equation"></a></span>\[\frac{\partial \phi_{ip}}{\partial x_j} = \bar{G_j\phi} + \left[ \left(\phi_R - \phi_L \right)
+- \bar{G_l\phi}dx_l \right] \frac{A_j}{A_k dx_k}.\]</div>
+<p>In the above equation, <span class="math notranslate nohighlight">\(G_j\phi\)</span> is a projected nodal gradient. The general equation for this quantity is</p>
+<div class="math notranslate nohighlight" id="equation-png">
+<span class="eqno">(6.21)<a class="headerlink" href="#equation-png" title="Link to this equation"></a></span>\[\int w_I G_j \phi {dV} = \int w_i \frac{\partial \phi}{\partial x_j}{dV}.\]</div>
+<p>Possible forms of this include either lumped or consistent mass (the
+later requires a global equation solve) with either the full CVFEM
+stencil or the edge-based (reduced) stencil. The above equation can even
+be applied within the element itself for a simple, local integration
+step that provides a piecewise constant gradient over the element.</p>
+<p>The simulation study is run with the following diffusion operators: 1)
+the standard CVFEM operator, 2) the edge-based operator with CVFEM
+projected nodal gradients (NOC), 3) the edge-based operator with
+edge-based projected nodal gradients (NOC), 4) the edge-based operator
+without NOC correction, 5) the CVFEM operator with shifted integration
+points to the edge, and, lastly, 6) a mixed edge/element scheme in which
+the orthogonal diffuion operator is edge-based while the NOC terms are
+based on the elemental CVFEM gradient (either evaluated at the given
+integration point or integrated over the element for a piecewise
+constant form).</p>
+<p>The last operator is interesting in that it represents a candidate
+operator for the CVFEM pressure Poisson system when high aspect ratio
+meshes are used. Figure <a class="reference internal" href="#laplace-tquad-a"><span class="std std-numref">6.1</span></a> outlines the convergence
+of the five above operators; shown are all of the standard norms
+(<span class="math notranslate nohighlight">\(\infty\)</span>, <span class="math notranslate nohighlight">\(1\)</span> and <span class="math notranslate nohighlight">\(2\)</span>) for the R0, R1 and R2 mesh refinements. The results
+in the left side of the figure indicate that the edge-based scheme with
+NOC retains second-order convergence for all norms when the more
+accurate CVFEM projected nodal gradient is used (lumped only tested
+given its good results). Convergence is degraded with the edge-based
+scheme when NOC terms are either neglected or use the reduced edge-based
+projected nodal gradient. The CVFEM-based methods are second order
+accurate in the <span class="math notranslate nohighlight">\(L_1\)</span> and <span class="math notranslate nohighlight">\(L_2\)</span> norms, however, questionable
+results are noted in the <span class="math notranslate nohighlight">\(L_{\infty}\)</span> norm for all methods that
+include any shape function derivative for local or elemental piecwise
+constant gradient operators. Shifting the Gauss points from the standard
+subcontrol surface to the edges of the element (while still using shape
+function derivatives) is only problematic in the <span class="math notranslate nohighlight">\(L_{\infty}\)</span> norm
+(just as the standard CVFEM approach). The use of the mixed-approach
+with a piecewise constant gradient over the element demonstrates the
+same behavior as when using the integration point CVFEM gradient
+operator. Figure <a class="reference internal" href="#laplace-tquad-b"><span class="std std-numref">6.2</span></a> outlines two more refinement
+meshes for the CVFEM operator (R3 and R4). Results indicate that the
+<span class="math notranslate nohighlight">\(L_{\infty}\)</span> norm is approaching second order accuracy.</p>
+<figure class="align-center" id="id10">
+<span id="laplace-tquad-a"></span><a class="reference internal image-reference" href="../../_images/tquadLaplaceMMS.pdf"><img alt="../../_images/tquadLaplaceMMS.pdf" src="../../_images/tquadLaplaceMMS.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">6.1 </span><span class="caption-text">Error norms for tquad4 refinement study.
+R0, R1, and R2 refinement.</span><a class="headerlink" href="#id10" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id11">
+<span id="laplace-tquad-b"></span><a class="reference internal image-reference" href="../../_images/tquadLaplaceMMSCVFEM.pdf"><img alt="../../_images/tquadLaplaceMMSCVFEM.pdf" src="../../_images/tquadLaplaceMMSCVFEM.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">6.2 </span><span class="caption-text">Error norms for tquad4 refinement study.
+R0, R1, R2, R3, R4, and R4 refinementError for CVFEM.</span><a class="headerlink" href="#id11" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>An inspection of the magnitude of error between the exact and computed
+temperature for the R3 mesh is shown in Figure <a class="reference internal" href="#tquad-tdiff"><span class="std std-numref">6.3</span></a>. Results
+show that the CVFEM error is highest at the corner mesh nodes that form
+a reduced stencil. The edge-based scheme shows increased error at the
+higher aspect ratio dual mesh.</p>
+<figure class="align-center" id="id12">
+<span id="tquad-tdiff"></span><a class="reference internal image-reference" href="../../_images/tquadEdgeCvfemTdiff.pdf"><img alt="../../_images/tquadEdgeCvfemTdiff.pdf" src="../../_images/tquadEdgeCvfemTdiff.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">6.3 </span><span class="caption-text">Magnitude of the <span class="math notranslate nohighlight">\(L_{\infty}\)</span> temperature norm comparing the
+edge-based CVFEM (NOC) and standard CVFEM operators on the R3 mesh.</span><a class="headerlink" href="#id12" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="d-steady-laplace-operator-with-nonconformal-interface">
+<h1><span class="section-number">7. </span>3D Steady Laplace Operator with Nonconformal Interface<a class="headerlink" href="#d-steady-laplace-operator-with-nonconformal-interface" title="Link to this heading"></a></h1>
+<p>A three dimensional element-based verification study is provided to
+evaluate the DG-based CVFEM approach.</p>
+<div class="math notranslate nohighlight" id="equation-threed-t">
+<span class="eqno">(7.16)<a class="headerlink" href="#equation-threed-t" title="Link to this equation"></a></span>\[T = \frac{\lambda}{4} (cos(2 a \pi x) + cos(2 a \pi y) + cos(2 a \pi z)).\]</div>
+<p>Figure <a class="reference internal" href="#laplace-nc"><span class="std std-numref">7.1</span></a> represents the MMS field for temperature. The
+simulation study includes uniform refinement of a first- and
+second-order CVFEM basis. Both temperature field and projected nodal
+gradient norms are of interest.</p>
+<figure class="align-center" id="id13">
+<span id="laplace-nc"></span><a class="reference internal image-reference" href="../../_images/dgNonconformalCVFEM_3dTempMMS_tempField.pdf"><img alt="../../_images/dgNonconformalCVFEM_3dTempMMS_tempField.pdf" src="../../_images/dgNonconformalCVFEM_3dTempMMS_tempField.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">7.1 </span><span class="caption-text">MMS temperature field for nonconformal algorithm.</span><a class="headerlink" href="#id13" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>Figure <a class="reference internal" href="#laplace-ncoc-a"><span class="std std-numref">7.2</span></a> outlines the linear and quadratic basis.
+For P1, the CVFEM temperature field predicts between second and first
+order while for P2, third order is recovered. When using a consistent
+mass matrix for the projected nodal gradient, second order is noted, see
+Figure <a class="reference internal" href="#laplace-ncoc-b"><span class="std std-numref">7.3</span></a>.</p>
+<figure class="align-center" id="id14">
+<span id="laplace-ncoc-a"></span><a class="reference internal image-reference" href="../../_images/dgNonconformalCVFEM_3dTempMMS_OoC.pdf"><img alt="../../_images/dgNonconformalCVFEM_3dTempMMS_OoC.pdf" src="../../_images/dgNonconformalCVFEM_3dTempMMS_OoC.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">7.2 </span><span class="caption-text">MMS order of accuracy for nonconformal algorithm.
+Temperature norms for P1 and P2 elements.</span><a class="headerlink" href="#id14" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id15">
+<span id="laplace-ncoc-b"></span><a class="reference internal image-reference" href="../../_images/dgNonconformalCVFEM_3dTempMMS_OoCPNG.pdf"><img alt="../../_images/dgNonconformalCVFEM_3dTempMMS_OoCPNG.pdf" src="../../_images/dgNonconformalCVFEM_3dTempMMS_OoCPNG.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">7.3 </span><span class="caption-text">MMS order of accuracy for nonconformal algorithm.
+Projected nodal gradient norms for P1 and P2 elements.</span><a class="headerlink" href="#id15" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<span id="linear-patch"></span><table class="docutils align-default" id="id16">
+<caption><span class="caption-number">7.1 </span><span class="caption-text">Patch test</span><a class="headerlink" href="#id16" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>dof</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(L_{\infty}\)</span></p></th>
+<th class="head"><p>L1</p></th>
+<th class="head"><p>L2</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>temperature</p></td>
+<td><p>3.33067e-16</p></td>
+<td><p>2.30077e-17</p></td>
+<td><p>4.68103e-17</p></td>
+</tr>
+<tr class="row-odd"><td><p>dTdx</p></td>
+<td><p>4.13225e-13</p></td>
+<td><p>9.06848e-15</p></td>
+<td><p>1.98249e-14</p></td>
+</tr>
+<tr class="row-even"><td><p>dTdy</p></td>
+<td><p>4.15668e-13</p></td>
+<td><p>1.11256e-14</p></td>
+<td><p>2.15065e-14</p></td>
+</tr>
+<tr class="row-odd"><td><p>dTdz</p></td>
+<td><p>4.31211e-13</p></td>
+<td><p>9.60785e-15</p></td>
+<td><p>1.97517e-14</p></td>
+</tr>
+</tbody>
+</table>
+<p>Given the order of accuracy results for the P1 implementation, a linear
+patch test was run. The temperature solution was simply,
+<span class="math notranslate nohighlight">\(T(x,y,z) = x + y + z\)</span>; all analytical temperature gradients are
+unity. Table <a class="reference internal" href="#linear-patch"><span class="std std-numref">7.1</span></a> demonstrates the successful patch test
+results for a P1 CVFEM implementation.</p>
+</section>
+<section id="precursor-based-simulations">
+<h1><span class="section-number">8. </span>Precursor-based Simulations<a class="headerlink" href="#precursor-based-simulations" title="Link to this heading"></a></h1>
+<p>In the field of turbulent flow modeling and simulation, often times simulations
+may require sophisticated boundary conditions that can only be obtained
+from previously run high-fidelity simulations. For example, consider a
+typical turbulent jet simulation in which the experimental inlet condition
+was preceeded by a turbulent pipe entrance region. Furthermore, in
+most cases the ability to adequately predict the developing jet flow regime may be
+highly sensitive to proper inlet conditions. Figure <a class="reference internal" href="#inlet-pipe"><span class="std std-numref">8.1</span></a> and
+Figure <a class="reference internal" href="#inlet-pipe-jet"><span class="std std-numref">8.2</span></a> outline a process in which a high fidelity
+large-eddy simulation of a periodic pipe was used to determine a representative
+inlet condition for a turbulent round jet. Specifically, a precursor pipe flow
+simulation is run with velocity provided to an output file. This output file serves
+as the inlet velocity profile for the subsequent simulation.</p>
+<figure class="align-center" id="id17">
+<span id="inlet-pipe"></span><a class="reference internal image-reference" href="../../_images/openJetInlet.pdf"><img alt="../../_images/openJetInlet.pdf" src="../../_images/openJetInlet.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">8.1 </span><span class="caption-text">Precursor periodic pipe flow large-eddy simulation that will
+serve as the inlet boundary condition for a subsequent turbulent jet simulation.</span><a class="headerlink" href="#id17" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id18">
+<span id="inlet-pipe-jet"></span><a class="reference internal image-reference" href="../../_images/openJetFlowStill.pdf"><img alt="../../_images/openJetFlowStill.pdf" src="../../_images/openJetFlowStill.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">8.2 </span><span class="caption-text">Subsequent turbulent jet simulation using the precursor data obtained by
+a periodic pipe flow.</span><a class="headerlink" href="#id18" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>In the above use case, as with most general simulation studies, the mesh resolution
+for the precursor simulation may be different from the subsequent simulation. Moreover,
+the time scale for the precursor simulation may be much shorter than the subsequent
+simulation. Finally, the data required for the subsequent simulation will likely be at
+different time steps unless an overly restrictive rule is enforced, i.e., a fixed timestep
+for each simulation.</p>
+<p>In order to support such use cases, extensive usage of the the Sierra Toolkit infrastructure
+is expected, most notably within the IO and Transfer modules. The IO module can be used to interpolate
+the precursor simulation boundary data to the appropriate time required by the subsequent
+simulation. Specifically, the IO module linearly interpolates between the closest data interval in the
+precursor data set. A recycling offset factor is included within the IO interface that allows
+for the cycling of data over the full time scale of interest within the subsequent simulation. For
+typical statistically stationary turbulent flows, this is useful to ensure proper statistics
+are captured in subsequent runs.</p>
+<p>After the transient data set from the precursor simulation is interpolated to the proper time,
+the data is spatially interpolated and transferred to the subsequent simulation mesh using the
+STK Transfer module. Efficient coarse parallel searches (point/bounding box) provide the list of
+candidate owning elements on which the fine-scale search operates to determine the best search
+candidate. The order of spatial interpolation depends on the activated numerical discretization.
+Therefore, by combining the two STK modules, the end use case to support data transfers of
+boundary data is supported.</p>
+<p>As noted, there are many other use cases in addition to the overviewed turbulent jet simulation
+that require such temporal/spatial interpolation capabilities. For example, in typical wind
+farm simulation applications, a proper atmospheric boundary layer (ABL) configuration is required
+to capture a given energy state of the boundary layer. In this case, a periodic precusor ABL is run
+with the intent of providing the inlet condition to the subsequent wind farm domain. As with the
+previous description, the infrustructure requirements remain the same.</p>
+<p>Finally, the general creation of an “input_output” region can be useful in validation cases
+where data are provided at a subset of the overall simulation domain. Such is the case in PIV and
+PLIF experimental data sets. Although the temporal interpolation is not required, the transfer
+of this data at high time step frequency is useful for post-processing.</p>
+<p>In this verification section, a unit test approach will be referenced that is captured within the
+STK module test suite. This foundational test coverage provides confidence in the underlying IO and
+parallel search/interpolation processes. In addition to briefly describing the infrastructure testing,
+application tests are provided as further evidence of correctness. The application test first is based
+on the convecting Taylor vortex verification case while the second is the ABL precursor application space
+demonstration.</p>
+<section id="infrastructure-unit-test">
+<h2><span class="section-number">8.1. </span>Infrastructure Unit Test<a class="headerlink" href="#infrastructure-unit-test" title="Link to this heading"></a></h2>
+<p>As noted above, the Nalu-Wind application code leverages the STK unit tests within the IO and transfer
+modules. Interested parties may peruse the STK product under a cloned Trilinos cloned project,
+i.e., Trilinos/packages/stk/stk_doc_test. Under the STK product, a variety of search, transfer and
+input/output tests exist. For example, interpolation in time using the IO infrastructure is captured
+in addition to a variety of search and transfer use cases.</p>
+</section>
+<section id="application-verification-test-convecting-taylor-vortex">
+<h2><span class="section-number">8.2. </span>Application Verification Test; Convecting Taylor Vortex<a class="headerlink" href="#application-verification-test-convecting-taylor-vortex" title="Link to this heading"></a></h2>
+<p>Although the foundational infrastructure tests are useful, the application must adequately interface
+the IO and Transfer modules to support the end use case. In this section, two tests
+will be demonstrated that illustrate the precursor/subsequent simulation use case.</p>
+<p>The first test considered will be the convecting Talor vortex. In this configuration,
+a very fine mesh simulation is run with boundary conditions specified in the input file
+to be of type, “convecting_taylor_vortex”. This specifies the analytical function
+for the x-component of velocity as provided in Equation <a class="reference internal" href="#equation-advconvtv-u">(2.38)</a>. The simulation
+is run while providing output to a Realm of type “input_output” using a transfer objective,
+“input_output”. The transient data is then used
+for a series of mesh refinement studies. The viscosity is set at 0.001 while the domain is
+1x1. In this study, the edge-based scheme is activated, however, the precursor interpolation
+methodology is not sensitive to the underlying numerical method.</p>
+<p>In Figure <a class="reference internal" href="#ctv-precursor"><span class="std std-numref">8.3</span></a>, a plot between the analytical x-component of velocity
+and a nodal query of the outputted velocity component is provided. Although not immediately
+apparent, the values are exactly the same. This finding confirms that the data set output
+is consistent with the nodal exact value.</p>
+<figure class="align-center" id="id19">
+<span id="ctv-precursor"></span><a class="reference internal image-reference" href="../../_images/U_x_precursor.pdf"><img alt="../../_images/U_x_precursor.pdf" src="../../_images/U_x_precursor.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">8.3 </span><span class="caption-text">Temporal plot of the exact x-velocity component and precursor output.</span><a class="headerlink" href="#id19" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>With the precursor data base containing the full transient data, a refinement
+study can be accomplished to determine numerical errors. Although the full machinery
+for temporal and spatial interpolation is active, the data requirement at the coarse simulations
+are represented as the subsets of the full data - both in space and time. As such, no numerical
+degradation of second-order accuracy is expected. The subsequent simulations are run with an
+“external_data” transfer objective and a Realm of type, “external_data_provider”.</p>
+<p>In Figure <a class="reference internal" href="#ctv-l2"><span class="std std-numref">8.4</span></a>, a plot of <span class="math notranslate nohighlight">\(L_2\)</span> norms of the x-component of velocity are shown
+for the subsequent set of simulations that use the precursor data. Results of this study verify
+both the second-order temporal accuracy of the underlying numerical scheme and the process
+of using both space and time interpolation.</p>
+<figure class="align-center" id="id20">
+<span id="ctv-l2"></span><a class="reference internal image-reference" href="../../_images/U_x_CTV_subsequent_L2.pdf"><img alt="../../_images/U_x_CTV_subsequent_L2.pdf" src="../../_images/U_x_CTV_subsequent_L2.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">8.4 </span><span class="caption-text">Temporal accuracy plot of the x-velocity component norms using the precursor data.</span><a class="headerlink" href="#id20" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="application-verification-test-abl-precursor-subsequent">
+<span id="verification-abl-prescribed-inflow"></span><h2><span class="section-number">8.3. </span>Application Verification Test; ABL Precursor/Subsequent<a class="headerlink" href="#application-verification-test-abl-precursor-subsequent" title="Link to this heading"></a></h2>
+<p>The second, and final application test is an ABL-based simulation that first runs a precursor periodic
+solution in order to capture an appropriate ABL specification. The boundary data saved from the precursor
+simulation are then used as an inflow boundary condition for the subsequent ABL simulation. As the precurosr
+is run for a smaller time frame than the subsequent simulation, the usage of data cycling is active. This
+full integration test is captured within the regression test suite. The simulation is described as a non-isothermal
+turbulent flow.</p>
+<p>In Figure <a class="reference internal" href="#abl-susequent-cycle"><span class="std std-numref">8.5</span></a>, the transient recycling of the ABL thermal inflow boundary
+condition is captured at an arbitrary nodal location very near the wall boundary condition. The subsequent
+simulation reads the precursor data set for time zero seconds until 3000 seconds at which time it recylces
+the inlet condition back to the initial precursor simulation time, i.e., zero seconds. An interesting note in this
+study is the fact that the precursor periodic simulation, which was run at the same Courant number, was using time
+steps approximately three times greater than the subsequent inflow/open configuration.</p>
+<figure class="align-center" id="id21">
+<span id="abl-susequent-cycle"></span><a class="reference internal image-reference" href="../../_images/abl_sub_cycle_T.pdf"><img alt="../../_images/abl_sub_cycle_T.pdf" src="../../_images/abl_sub_cycle_T.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">8.5 </span><span class="caption-text">Transient recycling of the temperature inflow boundary condition for the subsequent ABL simulation. After
+3000 seconds, the inflow boundary condition is recycled from the begining of the precursor simulation.</span><a class="headerlink" href="#id21" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>In Figure <a class="reference internal" href="#abl-susequent-check-one-two"><span class="std std-numref">8.6</span></a>, (left) the subsequent simulation inflow temperature field and
+full profile over the full domain is captured at approximately 4620 seconds. On the right of the figure, the
+temperature boundary condition data that originated from the precursor simulation, which was read into the subsequent
+“external_field_provider” Realm, is shown (again at approximately 4620 seconds).</p>
+<figure class="align-center" id="id22">
+<span id="abl-susequent-check-one-two"></span><a class="reference internal image-reference" href="../../_images/abl_sub_check_one_two.png"><img alt="../../_images/abl_sub_check_one_two.png" src="../../_images/abl_sub_check_one_two.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">8.6 </span><span class="caption-text">Subsequent simulation showing the full temperature domain (left) and on the precursor inflow temperature boundary
+condition field obtained from the perspective of the subsequent “external_field_provider” Realm (right).</span><a class="headerlink" href="#id22" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+<section id="boussinesq-verification">
+<h1><span class="section-number">9. </span>Boussinesq Verification<a class="headerlink" href="#boussinesq-verification" title="Link to this heading"></a></h1>
+<section id="unit-tests">
+<h2><span class="section-number">9.1. </span>Unit tests<a class="headerlink" href="#unit-tests" title="Link to this heading"></a></h2>
+<p>Unit-level verification was performed for the Boussinesq body force term <a class="reference internal" href="../theory/supportedEquationSet.html#equation-boussbuoy">(2.9)</a> with a
+nodal source.  Proper volume integration with different element topologies is
+also tested (the “volume integration” tests in the MasterElement and HOMasterElement test cases).</p>
+</section>
+<section id="stratified-mms">
+<h2><span class="section-number">9.2. </span>Stratified MMS<a class="headerlink" href="#stratified-mms" title="Link to this heading"></a></h2>
+<p>A convergence study using the method of manufactured solutions (MMS) was also performed to assess the integration
+of the source term into the governing equations. An initial condition of a Taylor-Green vortex for velocity, a zero-
+gradient pressure field, and a linear enthalpy profile in the z-direction are imposed.</p>
+<div class="math notranslate nohighlight" id="equation-threed-boussinesq">
+<span class="eqno">(9.43)<a class="headerlink" href="#equation-threed-boussinesq" title="Link to this equation"></a></span>\[\begin{split}u &amp;= -\frac{1}{2} cos(2 \pi x) sin(2 \pi y ) sin(2 \pi z)  \\
+v &amp;=  sin(2 \pi x) cos(2 \pi y ) sin(2 \pi z)  \\
+w &amp;= -\frac{1}{2} sin(2 \pi x) sin(2 \pi y ) cos(2 \pi z)  \\
+p &amp;= 0  \\
+h &amp;= z.\end{split}\]</div>
+<p>The simulation is run on a three-dimensional domain ranging from -1/2:+1/2 with reference density,
+reference temperature and the thermal expansion coefficient to equal to 1, 300,  and 1, respectively.
+<span class="math notranslate nohighlight">\(\beta\)</span> is much larger than typical (<span class="math notranslate nohighlight">\(1 / T_{\rm ref}\)</span>)  so that the buoyancy term is a
+significant term in the MMS in this configuration.</p>
+<p>The Boussinesq buoyancy model uses a gravity vector of magnitude of ten in the z-direction
+opposing the enthalpy gradient, <span class="math notranslate nohighlight">\(g_i = (0, 0, -10)^T\)</span>. The temperature for this test ranges
+between 250K and 350K.  The test case was run with a regular hexahedral mesh, using the edge-based
+vertex centered finite volume scheme.  Each case was run with a fixed maximum Courant number of 0.8
+relative to the specified solution.</p>
+<table class="docutils align-default" id="id23">
+<caption><span class="caption-number">9.1 </span><span class="caption-text">Error in x-component of velocity</span><a class="headerlink" href="#id23" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 20.5%" />
+<col style="width: 28.8%" />
+<col style="width: 20.5%" />
+<col style="width: 20.5%" />
+<col style="width: 9.6%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>h</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(L_{\infty}\)</span></p></th>
+<th class="head"><p>L1</p></th>
+<th class="head"><p>L2</p></th>
+<th class="head"><p>Order</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1/32</p></td>
+<td><p>8.91e-3</p></td>
+<td><p>1.12e-3</p></td>
+<td><p>1.77e-3</p></td>
+<td><p>NA</p></td>
+</tr>
+<tr class="row-odd"><td><p>1/64</p></td>
+<td><p>2.03e-3</p></td>
+<td><p>3.04e-4</p></td>
+<td><p>4.27e-4</p></td>
+<td><p>2.05</p></td>
+</tr>
+<tr class="row-even"><td><p>1/128</p></td>
+<td><p>4.65e-4</p></td>
+<td><p>7.64e-5</p></td>
+<td><p>1.05e-4</p></td>
+<td><p>2.03</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id24">
+<caption><span class="caption-number">9.2 </span><span class="caption-text">Error in y-component of velocity</span><a class="headerlink" href="#id24" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 20.5%" />
+<col style="width: 28.8%" />
+<col style="width: 20.5%" />
+<col style="width: 20.5%" />
+<col style="width: 9.6%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>h</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(L_{\infty}\)</span></p></th>
+<th class="head"><p>L1</p></th>
+<th class="head"><p>L2</p></th>
+<th class="head"><p>Order</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1/32</p></td>
+<td><p>1.78e-2</p></td>
+<td><p>2.31e-3</p></td>
+<td><p>3.47e-3</p></td>
+<td><p>NA</p></td>
+</tr>
+<tr class="row-odd"><td><p>1/64</p></td>
+<td><p>4.18e-3</p></td>
+<td><p>5.92e-4</p></td>
+<td><p>8.23e-4</p></td>
+<td><p>2.06</p></td>
+</tr>
+<tr class="row-even"><td><p>1/128</p></td>
+<td><p>9.70e-4</p></td>
+<td><p>1.50e-4</p></td>
+<td><p>2.02e-4</p></td>
+<td><p>2.03</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id25">
+<caption><span class="caption-number">9.3 </span><span class="caption-text">Error in z-component of velocity</span><a class="headerlink" href="#id25" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 20.5%" />
+<col style="width: 28.8%" />
+<col style="width: 20.5%" />
+<col style="width: 20.5%" />
+<col style="width: 9.6%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>h</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(L_{\infty}\)</span></p></th>
+<th class="head"><p>L1</p></th>
+<th class="head"><p>L2</p></th>
+<th class="head"><p>Order</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1/32</p></td>
+<td><p>8.68e-2</p></td>
+<td><p>1.17e-3</p></td>
+<td><p>1.73e-3</p></td>
+<td><p>NA</p></td>
+</tr>
+<tr class="row-odd"><td><p>1/64</p></td>
+<td><p>2.00e-3</p></td>
+<td><p>2.99e-4</p></td>
+<td><p>4.22e-4</p></td>
+<td><p>2.04</p></td>
+</tr>
+<tr class="row-even"><td><p>1/128</p></td>
+<td><p>4.64e-4</p></td>
+<td><p>7.63e-5</p></td>
+<td><p>1.05e-4</p></td>
+<td><p>2.00</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id26">
+<caption><span class="caption-number">9.4 </span><span class="caption-text">Error in temperature</span><a class="headerlink" href="#id26" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 20.5%" />
+<col style="width: 28.8%" />
+<col style="width: 20.5%" />
+<col style="width: 20.5%" />
+<col style="width: 9.6%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>h</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(L_{\infty}\)</span></p></th>
+<th class="head"><p>L1</p></th>
+<th class="head"><p>L2</p></th>
+<th class="head"><p>Order</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1/32</p></td>
+<td><p>1.09e-2</p></td>
+<td><p>1.46e-3</p></td>
+<td><p>2.10e-3</p></td>
+<td><p>NA</p></td>
+</tr>
+<tr class="row-odd"><td><p>1/64</p></td>
+<td><p>2.06e-3</p></td>
+<td><p>3.13e-4</p></td>
+<td><p>4.19e-4</p></td>
+<td><p>2.32</p></td>
+</tr>
+<tr class="row-even"><td><p>1/128</p></td>
+<td><p>4.18e-4</p></td>
+<td><p>7.54e-5</p></td>
+<td><p>1.00e-4</p></td>
+<td><p>2.06</p></td>
+</tr>
+</tbody>
+</table>
+<p>This test is added to Nalu-Wind’s nightly test suite, testing that the convergence rate between
+the 1/32 and 1/64 element sizes is second order.</p>
+</section>
+</section>
+<section id="d-hybrid-1x2x10-duct-specified-pressure-drop">
+<h1><span class="section-number">10. </span>3D Hybrid 1x2x10 Duct: Specified Pressure Drop<a class="headerlink" href="#d-hybrid-1x2x10-duct-specified-pressure-drop" title="Link to this heading"></a></h1>
+<p>In this section, a specified pressure drop in a simple 1x2x10 configuration is run with
+a variety of homogeneous blocks of the following topology: hexahedral, tetrahedral, wedge,
+and thexahedral. This analytical solution is given by an infinite series and is coded
+as the “1x2x10” user function. The simulation is run with an outer wall boundary condition
+with two open boundary conditions. The specified pressure drop is 0.016 over the 10 cm
+duct. The density and viscosity are 1.0e-3 and 1.0e-4, respectively. The siumulation
+study is run a fixed Courant numbers with a mesh spacing ranging from 0.2 to 0.025.
+Figure <a class="reference internal" href="#specified-dp-flow-hex-tet"><span class="std std-numref">10.10</span></a> provides the standard velocity profile for the
+structured hexahedral and unstructured tetrahedral element type.</p>
+<figure class="align-center" id="id27">
+<span id="specified-dp-flow-hex-tet"></span><a class="reference internal image-reference" href="../../_images/hex8_tet4_one_two_ten_R0_R1.png"><img alt="../../_images/hex8_tet4_one_two_ten_R0_R1.png" src="../../_images/hex8_tet4_one_two_ten_R0_R1.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">10.10 </span><span class="caption-text">Streamwise velocity profile for specified pressure drop flow; tetrahedral and hexahedral topology.</span><a class="headerlink" href="#id27" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>The simulation study employed a variety of elemental topologies of uniform mesh spacing
+as noted above. Figure <a class="reference internal" href="#specified-dp-l2"><span class="std std-numref">10.11</span></a> outlines the convergence in the <span class="math notranslate nohighlight">\(L_2\)</span>
+norm using the low-order elemental CVFEM implementation using the recently changed tetrahedral
+and wedge element quadrature rules. Second-order accuracy is noted. Interestingly, the
+hexahedral and wedge topology provided nearly the same accuracy. Also, the tetrahedral
+accuracy was approximately four tiomes greater. Finally, the Thexahedral topology
+proved to be second-order, however, provided very poor accuracy results.</p>
+<figure class="align-center" id="id28">
+<span id="specified-dp-l2"></span><a class="reference internal image-reference" href="../../_images/Uz_L2_dp.pdf"><img alt="../../_images/Uz_L2_dp.pdf" src="../../_images/Uz_L2_dp.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">10.11 </span><span class="caption-text"><span class="math notranslate nohighlight">\(L_2\)</span> error for the CVFEM scheme on a variety of element types.</span><a class="headerlink" href="#id28" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="d-hybrid-1x1x1-cube-laplace">
+<h1><span class="section-number">11. </span>3D Hybrid 1x1x1 Cube: Laplace<a class="headerlink" href="#d-hybrid-1x1x1-cube-laplace" title="Link to this heading"></a></h1>
+<p>The standard Laplace operator is evalued on the full set of low-order hybrid topologies
+(not inlcuding the pyramid). In this example, the temperature field is again,</p>
+<div class="math notranslate nohighlight" id="equation-threed-l">
+<span class="eqno">(11.1)<a class="headerlink" href="#equation-threed-l" title="Link to this equation"></a></span>\[T = \frac{\lambda}{4} (cos(2 a \pi x) + cos(2 a \pi y) + cos(2 a \pi z)).\]</div>
+<p>Figure <a class="reference internal" href="#laplace-hybrid"><span class="std std-numref">11.1</span></a> represents the MMS field for temperature
+on a variety of mesh topologies. The thexahedral mesh is obtained from the
+standard uniform spacing tetrahedral mesh (not shown). The tetrahedral
+mesh shown is a tet-based conversion of the standard structured hexahedral
+mesh. This approach ensures that the number of nodes between the hexahedral
+and tetrahedral mesh are the same.</p>
+<figure class="align-center" id="id29">
+<span id="laplace-hybrid"></span><a class="reference internal image-reference" href="../../_images/hybrid_laplace.png"><img alt="../../_images/hybrid_laplace.png" src="../../_images/hybrid_laplace.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">11.1 </span><span class="caption-text">Temperature shadings for hexahedral, thexahedral, wedge, and tetrahedral topologies (clockwise from the upper left).</span><a class="headerlink" href="#id29" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>Figure <a class="reference internal" href="#laplace-hybrid-l2"><span class="std std-numref">11.2</span></a> provides the <span class="math notranslate nohighlight">\(L_2\)</span> norms, all of which are showing second-order accuracy.
+In Figure <a class="reference internal" href="#laplace-hybrid-lo"><span class="std std-numref">11.3</span></a>, the <span class="math notranslate nohighlight">\(L_o\)</span> error is shown. As indicated from the convergence plot,
+slight degradation in order-of-accuracy is noted for the thexahedral topology.</p>
+<figure class="align-center" id="id30">
+<span id="laplace-hybrid-l2"></span><a class="reference internal image-reference" href="../../_images/hybrid_T_L2.pdf"><img alt="../../_images/hybrid_T_L2.pdf" src="../../_images/hybrid_T_L2.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">11.2 </span><span class="caption-text"><span class="math notranslate nohighlight">\(L_2\)</span> norms for the full set of hybrid Laplace MMS study.</span><a class="headerlink" href="#id30" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id31">
+<span id="laplace-hybrid-lo"></span><a class="reference internal image-reference" href="../../_images/hybrid_T_Loo.pdf"><img alt="../../_images/hybrid_T_Loo.pdf" src="../../_images/hybrid_T_Loo.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">11.3 </span><span class="caption-text"><span class="math notranslate nohighlight">\(L_o\)</span> norms for the full set of hybrid Laplace MMS study.</span><a class="headerlink" href="#id31" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="fixed-wing-verification-problem">
+<h1><span class="section-number">12. </span>Fixed Wing Verification Problem<a class="headerlink" href="#fixed-wing-verification-problem" title="Link to this heading"></a></h1>
+<p><strong>Introduction</strong> A basic verification of the actuator line theory can
+be done by considering a fixed, 2D wing in a uniform flow. Such a test
+can be done independently of the openFAST library and can be easily
+verified by a simple algebraic calculation.</p>
+<figure class="align-center" id="id32">
+<span id="fw-bladeschematic"></span><a class="reference internal image-reference" href="../../_images/fw_bladeschematic.png"><img alt="../../_images/fw_bladeschematic.png" src="../../_images/fw_bladeschematic.png" style="width: 200px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">12.1 </span><span class="caption-text">Schematic of the fixed wing airfoil problem.</span><a class="headerlink" href="#id32" title="Link to this image"></a></p>
+<div class="legend">
+<p>An example of the fixed wing specification in the Nalu-Wind input
+file is shown below. The actuator type can be
+<code class="code docutils literal notranslate"><span class="pre">ActLineSimpleNGP</span></code> for the NGP version and
+<code class="code docutils literal notranslate"><span class="pre">ActLineSimple</span></code> for the non-NGP version (soon to be
+deprecated).</p>
+</div>
+</figcaption>
+</figure>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">actuator</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ActLineSimple</span>
+<span class="w">  </span><span class="nt">search_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stk_kdtree</span>
+<span class="w">  </span><span class="nt">search_target_part</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Unspecified-2-HEX</span>
+
+<span class="w">  </span><span class="nt">n_simpleblades</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">  </span><span class="nt">debug_output</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">  </span><span class="nt">n_turbines_glob</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">  </span><span class="nt">Blade0</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">num_force_pts_blade</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">    </span><span class="nt">epsilon</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">3.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3.0</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">p1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-25</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-4</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">p2</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-25</span><span class="p p-Indicator">,</span><span class="w">  </span><span class="nv">4</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">p1_zero_alpha_dir</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">chord_table</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1.0</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">twist_table</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.0</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">aoa_table</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-180</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">180</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">cl_table</span><span class="p">:</span><span class="w">  </span><span class="p p-Indicator">[</span><span class="nv">-19.739208802178716</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">19.739208802178716</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">cd_table</span><span class="p">:</span><span class="w">  </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<p>The fixed wing is defined between points <span class="math notranslate nohighlight">\(\mathbf{p_1}\)</span> and
+<span class="math notranslate nohighlight">\(\mathbf{p_2}\)</span> given the chord length and blade twist defined in
+<code class="code docutils literal notranslate"><span class="pre">chord_table</span></code> and <code class="code docutils literal notranslate"><span class="pre">twist_table</span></code>.  The
+direction <span class="math notranslate nohighlight">\(\mathbf{p1}_{0\alpha}\)</span> corresponding to the zero
+degree angle of attack is given in <code class="code docutils literal notranslate"><span class="pre">p1_zero_alpha_dir</span></code>.
+The lift coefficients <span class="math notranslate nohighlight">\(C_L\)</span> and drag coefficients <span class="math notranslate nohighlight">\(C_D\)</span>
+are tabulated in the <code class="code docutils literal notranslate"><span class="pre">cl_table</span></code> and <code class="code docutils literal notranslate"><span class="pre">cd_table</span></code>
+parameters, respectively, as functions of the angle of attack
+<span class="math notranslate nohighlight">\(\alpha\)</span> in <code class="code docutils literal notranslate"><span class="pre">aoa_table</span></code>.</p>
+<p>The lift <span class="math notranslate nohighlight">\(L\)</span> and drag <span class="math notranslate nohighlight">\(D\)</span> on the fixed wing can be
+calculated by infinite 2D airfoil theory using the formulas:</p>
+<div class="math notranslate nohighlight" id="equation-fixed-wing-lift">
+<span class="eqno">(12.3)<a class="headerlink" href="#equation-fixed-wing-lift" title="Link to this equation"></a></span>\[L=\frac{1}{2}{\rho}{U^2}{C_L}(\alpha)S\]</div>
+<div class="math notranslate nohighlight" id="equation-fixed-wing-drag">
+<span class="eqno">(12.4)<a class="headerlink" href="#equation-fixed-wing-drag" title="Link to this equation"></a></span>\[D=\frac{1}{2}{\rho}{U^2}{C_D}(\alpha)S\]</div>
+<p>In equations <a class="reference internal" href="#equation-fixed-wing-lift">(12.3)</a> and <a class="reference internal" href="#equation-fixed-wing-drag">(12.4)</a>, the area
+of the airfoil is given by <span class="math notranslate nohighlight">\(S\)</span>, the density is given by
+<span class="math notranslate nohighlight">\(\rho\)</span>, and the wind speed is given by <span class="math notranslate nohighlight">\(U\)</span>.</p>
+<p>For the verification problem, a simple 2D, extruded blade is used with
+span <span class="math notranslate nohighlight">\(l=\textrm{8m}\)</span> and chord <span class="math notranslate nohighlight">\(c=\textrm{1m}\)</span>, giving an
+area <span class="math notranslate nohighlight">\(S=8\textrm{m}^2\)</span>.  An isotropic force spreading value of
+<span class="math notranslate nohighlight">\(\varepsilon=3\)</span> is used, along with 20 blade stations.  The wind
+conditions are given by <span class="math notranslate nohighlight">\(\rho=1.0\textrm{ kg/m}^3\)</span> and
+<span class="math notranslate nohighlight">\(U=2\textrm{ m/s}\)</span>.</p>
+<p>The aerodynamic properties of the fixed wing are given by the linear
+lift coefficient</p>
+<div class="math notranslate nohighlight" id="equation-linear-cl">
+<span class="eqno">(12.5)<a class="headerlink" href="#equation-linear-cl" title="Link to this equation"></a></span>\[{C_L}=2\pi\alpha\]</div>
+<p>and zero drag</p>
+<div class="math notranslate nohighlight" id="equation-linear-cd">
+<span class="eqno">(12.6)<a class="headerlink" href="#equation-linear-cd" title="Link to this equation"></a></span>\[{C_D}=0.\]</div>
+<p>A comparison of total lift force calculated Nalu-Wind against the 2D
+airfoil theory is shown in Figure <a class="reference internal" href="#fw-bladeresults"><span class="std std-numref">12.2</span></a>.  As
+expected, the total lift force varies linearly with the angle of
+attack, and the agreement between theory and Nalu-Wind is good.
+Differences between the two methods were seen to be less than 0.1%
+over the range <span class="math notranslate nohighlight">\(0\le \alpha \le 5\)</span> degrees.</p>
+<figure class="align-center" id="id33">
+<span id="fw-bladeresults"></span><a class="reference internal image-reference" href="../../_images/fw_bladeresults.png"><img alt="../../_images/fw_bladeresults.png" src="../../_images/fw_bladeresults.png" style="width: 400px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">12.2 </span><span class="caption-text">Comparison of the total lift force from Nalu-Wind and from 2D
+airfoil theory.</span><a class="headerlink" href="#id33" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="actuator-line-simulations-coupled-to-openfast">
+<h1><span class="section-number">13. </span>Actuator line simulations coupled to OpenFAST<a class="headerlink" href="#actuator-line-simulations-coupled-to-openfast" title="Link to this heading"></a></h1>
+<p>We test the implementation of the actuator line algorithm in Nalu-Wind coupled to
+<a class="reference external" href="github.com/OpenFAST/OpenFAST">OpenFAST</a> by performing a simulation of a flow
+past an elliptic wing at a constant angle of attack. We compare the solution
+from the coupled simulation to that using lifting line theory
+<span id="id2">[<a class="reference internal" href="../../zrefs.html#id35" title="Joseph Katz and Allen Plotkin. Low Speed Aerodynamics. Cambridge University Press, second edition, 2002.">KP02</a>]</span>.</p>
+<p>The elliptic wing is modeled using <a class="reference external" href="github.com/OpenFAST/OpenFAST">OpenFAST</a>, a
+aero-hydro-servo-elastic tool to model wind turbines developed by the National
+Renewable Energy Laboratory (NREL). A static wind turbine model was created in
+OpenFAST with just one elliptic wing and all other systems including structural
+deformation, controls, etc. are turned off. The elliptic wing simulated in this
+work is an infinitesimally thin wing with a maximum chord (<span class="math notranslate nohighlight">\(c_0\)</span>) of
+<span class="math notranslate nohighlight">\(1m\)</span> and an aspect ratio (<span class="math notranslate nohighlight">\(b/c_0\)</span>) of 10.0. The lift-curve slope
+(<span class="math notranslate nohighlight">\(d C_l/d \alpha\)</span>) of all airfoil sections on the wing is assumed to be
+<span class="math notranslate nohighlight">\(2 \pi\)</span> with no pressure or viscous drag. Using lifting line theory
+<span id="id4">[<a class="reference internal" href="../../zrefs.html#id35" title="Joseph Katz and Allen Plotkin. Low Speed Aerodynamics. Cambridge University Press, second edition, 2002.">KP02</a>]</span>, the loads on the elliptic wing are</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\textrm{Area } S &amp;=&amp; \pi \frac{c_0}{2} \frac{b}{2},\\
+\textrm{Maximum circulation } \Gamma_{\mathrm{max}} &amp;=&amp; \frac{2 b
+                                                  U_{\infty}
+                                                  (\alpha -
+                                                  \alpha_{L0})}{1 +
+                                                  4b/2\pi
+                                                  c_0},\\
+\textrm{Lift coefficient } C_L &amp; \equiv &amp; \frac{L}{0.5 \rho U_{\infty}^2
+                              S} = \frac{\pi}{2} \frac{b}{S}
+                              \frac{\Gamma_{\mathrm{max}}}{U_{\infty}},\\
+\textrm{Lift coefficient } C_D &amp; \equiv &amp; \frac{D}{0.5 \rho U_{\infty}^2
+                              S} = \frac{\pi}{4S} \frac{\Gamma_{\mathrm{max}}^2}{U_{\infty}^2},\\
+\textrm{Constant induced downwash } w_i &amp;=&amp;
+                                       \frac{\Gamma_{\mathrm{max}}}{2b}.\end{split}\]</div>
+<div class="math notranslate nohighlight" id="equation-ew-sim-params">
+<span class="eqno">(13.1)<a class="headerlink" href="#equation-ew-sim-params" title="Link to this equation"></a></span>\[\begin{split}\textrm{Span } b = \;  &amp; 10m \\
+\textrm{Max chord } c_0 = \;  &amp; 1.0m \\
+\textrm{Angle of attack } \alpha = \;  &amp; 7^{\circ}  \\
+U_{\infty} = \;  &amp; 10.0m/s \\
+Reynolds \textrm{ number based on chord } = \; &amp; 0.66M \\
+\textrm{Number of actuator points across span } = \;  &amp; 50\end{split}\]</div>
+<p>The flow past the elliptic wing is simulated in a domain of size
+<span class="math notranslate nohighlight">\(4b \times 3b \times 3b\)</span>. Some parameters of the simulation
+are described in equation <a class="reference internal" href="#equation-ew-sim-params">(13.1)</a>. As described in the
+section <a class="reference internal" href="../theory/windEnergy.html#act-wind-turbine-aerodynamics"><span class="std std-ref">Wind Turbine Modeling</span></a>, the actuator line
+algorithm solves the momentum equation with a body force term
+spread to the nodes where <span class="math notranslate nohighlight">\(\epsilon\)</span> is the spreading width.
+It is necessary to maintain a constant <span class="math notranslate nohighlight">\(\epsilon\)</span> to observe
+convergence of the solution with grid refinement. However, we do
+expect the solution from the actuator line algorithm to be closer to
+that from lifting line theory with reducing <span class="math notranslate nohighlight">\(\epsilon\)</span>. Hence,
+we perform five numerical simulations with grid resolutions as shown
+in table shown below. Simulations <em>a,b,c</em> use <span class="math notranslate nohighlight">\(\epsilon=1m\)</span> and
+<em>d,e</em> use <span class="math notranslate nohighlight">\(\epsilon=0.5m\)</span>. We expect to see grid convergence
+with simulations <em>a,b,c</em> while we expect simulations
+<em>d,e</em> to predict a solution closer to the lifting line solution
+compared to simulations <em>a,b,c</em>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Case</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(\Delta x/c_0\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(\Delta t\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(\epsilon/\Delta\)</span></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><em>a</em></p></td>
+<td><p>0.125</p></td>
+<td><p>0.00125</p></td>
+<td><p>8.0</p></td>
+</tr>
+<tr class="row-odd"><td><p><em>b</em></p></td>
+<td><p>0.25</p></td>
+<td><p>0.0025</p></td>
+<td><p>4.0</p></td>
+</tr>
+<tr class="row-even"><td><p><em>c</em></p></td>
+<td><p>0.5</p></td>
+<td><p>0.005</p></td>
+<td><p>2.0</p></td>
+</tr>
+<tr class="row-odd"><td><p><em>d</em></p></td>
+<td><p>0.125</p></td>
+<td><p>0.00125</p></td>
+<td><p>4.0</p></td>
+</tr>
+<tr class="row-even"><td><p><em>e</em></p></td>
+<td><p>0.25</p></td>
+<td><p>0.0025</p></td>
+<td><p>2.0</p></td>
+</tr>
+</tbody>
+</table>
+<p>The data shown in <a class="reference internal" href="#ew-cl"><span class="std std-numref">13.1</span></a> - <a class="reference internal" href="#ew-aoa"><span class="std std-numref">13.5</span></a> are computed
+purely using output from OpenFAST. Unfortunately OpenFAST can only
+output data at a maximum of 9 stations along the blade. For this specific work, I
+had designed the aerodynamics module (AeroDyn) inside OpenFAST to use
+18 stations to compute the forces along the blade. However, the mesh
+mapping algorithm in OpenFAST is used to interpolate the forces per
+unit length along the blade into discrete point forces at 50 actuator
+points along the blade as described in equation <a class="reference internal" href="#equation-ew-sim-params">(13.1)</a>.</p>
+<p><a class="reference internal" href="#ew-cl"><span class="std std-numref">13.1</span></a>-<a class="reference internal" href="#ew-cd"><span class="std std-numref">13.2</span></a> shows the comparsion of lift and drag
+coefficient predicted by the actuator line simulations to the solution
+from lifting line theory. Simulations <em>d</em> and <em>e</em> are closer to the
+lifting line solution compared to <em>a,b,c</em> because of the
+smaller <span class="math notranslate nohighlight">\(\epsilon\)</span>. Simulations <em>a,b,c</em> show grid convergence
+since they use the same <span class="math notranslate nohighlight">\(\epsilon\)</span>. <a class="reference internal" href="#ew-lpul"><span class="std std-numref">13.3</span></a>-<a class="reference internal" href="#ew-dpul"><span class="std std-numref">13.4</span></a> show
+similar results through the span wise distribution of the lift and
+drag per unit length along the blade. <a class="reference internal" href="#ew-aoa"><span class="std std-numref">13.5</span></a> shows the
+comparison of the predicted angle of attack on the blade to the
+constant angle attack predicted by the lifting line theory. As
+expected, the agreement with the lifting line theory is much better near the
+mid-span region compared to the wing tips.</p>
+<figure class="align-center" id="id34">
+<span id="ew-cl"></span><a class="reference internal image-reference" href="../../_images/ew_liftcoeff.pdf"><img alt="../../_images/ew_liftcoeff.pdf" src="../../_images/ew_liftcoeff.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">13.1 </span><span class="caption-text">Comparison of lift coefficient <span class="math notranslate nohighlight">\(C_L\)</span> for an elliptic wing simulated using actuator line algorithm to solution using lifting line theory.</span><a class="headerlink" href="#id34" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id35">
+<span id="ew-cd"></span><a class="reference internal image-reference" href="../../_images/ew_dragcoeff.pdf"><img alt="../../_images/ew_dragcoeff.pdf" src="../../_images/ew_dragcoeff.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">13.2 </span><span class="caption-text">Comparison of drag coefficient <span class="math notranslate nohighlight">\(C_D\)</span> for an elliptic wing simulated using actuator line algorithm to solution using lifting line theory.</span><a class="headerlink" href="#id35" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id36">
+<span id="ew-lpul"></span><a class="reference internal image-reference" href="../../_images/ew_liftforceperunitlength.pdf"><img alt="../../_images/ew_liftforceperunitlength.pdf" src="../../_images/ew_liftforceperunitlength.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">13.3 </span><span class="caption-text">Comparison of lift coefficient <span class="math notranslate nohighlight">\(C_L\)</span> for an elliptic wing simulated using actuator line algorithm to solution using lifting line theory. Results are only shown at 9 different stations along the blade that are output from OpenFAST.</span><a class="headerlink" href="#id36" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id37">
+<span id="ew-dpul"></span><a class="reference internal image-reference" href="../../_images/ew_dragforceperunitlength.pdf"><img alt="../../_images/ew_dragforceperunitlength.pdf" src="../../_images/ew_dragforceperunitlength.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">13.4 </span><span class="caption-text">Comparison of drag coefficient <span class="math notranslate nohighlight">\(C_D\)</span> for an elliptic wing simulated using actuator line algorithm to solution using lifting line theory. Results are only shown at 9 different stations along the blade that are output from OpenFAST.</span><a class="headerlink" href="#id37" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id38">
+<span id="ew-aoa"></span><a class="reference internal image-reference" href="../../_images/ew_aoa.pdf"><img alt="../../_images/ew_aoa.pdf" src="../../_images/ew_aoa.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">13.5 </span><span class="caption-text">Comparison of angle of attack distribution on an elliptic wing simulated using actuator line algorithm to solution using lifting line theory. Results are only shown at 9 different stations along the blade that are output from OpenFAST.</span><a class="headerlink" href="#id38" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<hr class="docutils" />
+<section id="open-boundary-condition-with-outflow-thermal-stratification">
+<h1><span class="section-number">14. </span>Open Boundary Condition With Outflow Thermal Stratification<a class="headerlink" href="#open-boundary-condition-with-outflow-thermal-stratification" title="Link to this heading"></a></h1>
+<p>In situations with significant thermal stratification at the outflow of the domain, the standard open boundary
+condition alone is not adequate because it requires the specification of motion pressure at the boundary, and
+this is not known <em>a priori</em>.  Two solutions to this problem are: 1) to use the global mass flow rate correction
+option, or 2) to use the standard open boundary condition in which the buoyancy term uses a local time-averaged
+reference value, rather than a single reference value.</p>
+<p>We test these open boundary condition options on a simplified stratified flow through a channel with slip walls.  The
+flow entering the domain is non-turbulent and uniformly 8 m/s.  The temperature linearly varies from 300 K to 310 K from
+the bottom to top of the channel with compatible, opposite-sign heat flux on the two walls to maintain this profile.
+The Boussinesq buoyancy option is used, and the density is set constant to 1.17804 kg/m <span class="math notranslate nohighlight">\(^3\)</span>. This density is
+compatible with the reference pressure of 101325 Pa and a reference temperature of 300 K.  The viscosity is set to
+1.0e-5 Pa-s.  <em>The flow should keep its inflow velocity and temperature profiles throughout the length of the domain</em>.</p>
+<p>The domain is 3000 m long, 1000 m tall, and 20 m wide with 300 x 100 x 2 elements.  The upper and lower boundaries
+are symmetry with the specified normal gradient of temperature option used such that the gradient matches the initial
+temperature profile with its gradient of 0.01 K/m. Flow enters from the left and exits on the right.  The remaining
+boundaries are periodic.</p>
+<p>We test the problem on three configurations: 1) using the standard open boundary condition,
+2) using the global-mass-flow-rate-correction option, and 3) using the standard open boundary condition with a local
+moving-time-averaged reference temperature in the Boussinesq buoyancy term.</p>
+<p>Figure <a class="reference internal" href="#stratified-outflow-ux1"><span class="std std-numref">14.1</span></a> shows the across-channel profile of outflow streamwise velocity.  It is clear
+that in configuration 1, the velocity is significantly distorted from the correct solution.  Configurations 2 and 3
+remedy the problem.  However, if we reduce the range of the x-axis, as shown in Figure <a class="reference internal" href="#stratified-outflow-ux2"><span class="std std-numref">14.2</span></a>,
+we see that configuration 3, the use of the standard open boundary condition with a local moving-time-averaged
+Boussinesq reference temperature, provides a superior solution in this case.  In Figure, <a class="reference internal" href="#stratified-outflow-t1"><span class="std std-numref">14.3</span></a>,
+we also see that configuration 1 significantly distorts the temperature from the correct solution.</p>
+<figure class="align-center" id="id39">
+<span id="stratified-outflow-ux1"></span><a class="reference internal image-reference" href="../../_images/Ux_123.png"><img alt="../../_images/Ux_123.png" src="../../_images/Ux_123.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">14.1 </span><span class="caption-text">Outflow velocity profiles for the thermally stratified slip-channel flow.</span><a class="headerlink" href="#id39" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id40">
+<span id="stratified-outflow-ux2"></span><a class="reference internal image-reference" href="../../_images/Ux_23.png"><img alt="../../_images/Ux_23.png" src="../../_images/Ux_23.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">14.2 </span><span class="caption-text">Outflow velocity profiles for the thermally stratified slip-channel flow considering only the case with the
+global mass-flow-rate correction and the standard open boundary with the local moving-time-averaged Boussinesq
+reference value.</span><a class="headerlink" href="#id40" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id41">
+<span id="stratified-outflow-t1"></span><a class="reference internal image-reference" href="../../_images/T_123.png"><img alt="../../_images/T_123.png" src="../../_images/T_123.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">14.3 </span><span class="caption-text">Outflow temperature profiles for the thermally stratified slip-channel flow.</span><a class="headerlink" href="#id41" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>We also verify that the global mass-flow-rate correction of configuration 2 is correcting the outflow mass flow rate
+properly.  The output from Nalu-Wind showing the correction is correct and is shown as follows:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">Mass</span><span class="w"> </span><span class="n">Balance</span><span class="w"> </span><span class="n">Review</span><span class="o">:</span>
+<span class="n">Density</span><span class="w"> </span><span class="n">accumulation</span><span class="o">:</span><span class="w"> </span><span class="mi">0</span>
+<span class="n">Integrated</span><span class="w"> </span><span class="n">inflow</span><span class="o">:</span><span class="w">    </span><span class="mf">-188486.0356751138</span>
+<span class="n">Integrated</span><span class="w"> </span><span class="n">open</span><span class="o">:</span><span class="w">      </span><span class="mf">188486.035672821</span>
+<span class="n">Total</span><span class="w"> </span><span class="n">mass</span><span class="w"> </span><span class="n">closure</span><span class="o">:</span><span class="w">   </span><span class="mf">-2.29277e-06</span>
+<span class="n">A</span><span class="w"> </span><span class="n">mass</span><span class="w"> </span><span class="n">correction</span><span class="w"> </span><span class="n">of</span><span class="o">:</span><span class="w"> </span><span class="mf">-2.86596e-09</span><span class="w"> </span><span class="n">occurred</span><span class="w"> </span><span class="n">on</span><span class="o">:</span><span class="w"> </span><span class="mi">800</span><span class="w"> </span><span class="n">boundary</span><span class="w"> </span><span class="n">integration</span><span class="w"> </span><span class="n">points</span><span class="o">:</span>
+<span class="n">Post</span><span class="o">-</span><span class="n">corrected</span><span class="w"> </span><span class="n">integrated</span><span class="w"> </span><span class="n">open</span><span class="o">:</span><span class="w"> </span><span class="mf">188486.0356751139</span>
+</pre></div>
+</div>
+</section>
+<section id="specified-normal-temperature-gradient-boundary-condition">
+<h1><span class="section-number">15. </span>Specified Normal Temperature Gradient Boundary Condition<a class="headerlink" href="#specified-normal-temperature-gradient-boundary-condition" title="Link to this heading"></a></h1>
+<p>The motivation for adding the ability to specify the boundary-normal temperature
+gradient is atmospheric boundary layer simulation in which the upper portion of
+the domain often contains a stably stratified layer with a temperature gradient
+that extends all the way to the upper boundary.  The desire is for the simulation
+to maintain that gradient throughout the simulation duration.</p>
+<p>Our test case is a laminar infinite channel with slip walls.  In this case, the
+flow velocity is zero so the problem is simply a heat conduction through fluid.
+The density is fixed as constant, and there are no source terms including
+buoyancy.</p>
+<p>This problem has an the analytical solution for the temperature profile across
+the channel:</p>
+<div class="math notranslate nohighlight" id="equation-t-slip-channel">
+<span class="eqno">(15.14)<a class="headerlink" href="#equation-t-slip-channel" title="Link to this equation"></a></span>\[T(t,z) = T(t_0,z_0) + \frac{-g_H-g_0}{H} \kappa_{eff} (t-t_0) + g_0 (z-z_0) + \frac{-g_H-g_0}{2H} (z-z_0)^2,\]</div>
+<p>where <span class="math notranslate nohighlight">\(t_0\)</span> is the initial time; <span class="math notranslate nohighlight">\(z_0\)</span> is the height of the lower
+channel wall; <span class="math notranslate nohighlight">\(H\)</span> is the channel height; <span class="math notranslate nohighlight">\(g_0\)</span> and <span class="math notranslate nohighlight">\(g_H\)</span> are
+the wall-normal gradients of temperature at the lower and upper walls, respectively;
+<span class="math notranslate nohighlight">\(\kappa_{eff}\)</span> is the effective thermal diffusivity;
+and <span class="math notranslate nohighlight">\(z\)</span> is the distance in the cross-channel direction.  The sign of the
+temperature gradients assumes that boundary normal points inward from the boundary.
+For this solution to hold, the initial solution must be that of <a class="reference internal" href="#equation-t-slip-channel">(15.14)</a>
+with <span class="math notranslate nohighlight">\(t=t_0\)</span>.</p>
+<p>For all test cases, we use a domain that is 10 m x 10 m in the periodic (infinite) directions,
+and 100 m in the cross-channel (z) direction.  We specify a constant density of
+1 kg/m <span class="math notranslate nohighlight">\(^3\)</span>, zero velocity, no buoyancy source term, a viscosity of 1 Pa-s,
+and a laminar Prandtl number of 1.  No turbulence model is used. The value of
+<span class="math notranslate nohighlight">\(T(t_0,z_0)\)</span> is 300 K.</p>
+<section id="simple-linear-temperature-profile-equal-and-opposite-specified-temperature-gradients">
+<h2><span class="section-number">15.1. </span>Simple Linear Temperature Profile: Equal and Opposite Specified Temperature Gradients<a class="headerlink" href="#simple-linear-temperature-profile-equal-and-opposite-specified-temperature-gradients" title="Link to this heading"></a></h2>
+<p>A simple verification test that is representative of a stable atmospheric capping
+inversion is to compute the simple thermal channel with equal and opposite specified
+temperature gradients on each wall.  By setting <span class="math notranslate nohighlight">\(g_H = - g_0\)</span> in Equation
+<a class="reference internal" href="#equation-t-slip-channel">(15.14)</a>, we are left with</p>
+<div class="math notranslate nohighlight" id="equation-t-slip-channel-linear">
+<span class="eqno">(15.15)<a class="headerlink" href="#equation-t-slip-channel-linear" title="Link to this equation"></a></span>\[T(z) = T(z_0) + g_0 (z-z_0).\]</div>
+<p>In other words, if we set the initial temperature profile to that of <a class="reference internal" href="#equation-t-slip-channel-linear">(15.15)</a>,
+with <span class="math notranslate nohighlight">\(g_H = -g_0\)</span>, the profile should remain fixed for all time.  In this case,
+we set <span class="math notranslate nohighlight">\(g_0 = 0.01\)</span> K/m and <span class="math notranslate nohighlight">\(g_H = -0.01\)</span> K/m.</p>
+<p>We use a mesh that 2 elements wide in the periodic directions and 20 elements across
+the channel.  We simulate a long time period of 25,000 s. Figure <a class="reference internal" href="#t-gradbc-linear"><span class="std std-numref">15.3</span></a>
+shows that the computed and analytical solutions agree.</p>
+<figure class="align-center" id="id42">
+<span id="t-gradbc-linear"></span><a class="reference internal image-reference" href="../../_images/T_linear_gradBC.png"><img alt="../../_images/T_linear_gradBC.png" src="../../_images/T_linear_gradBC.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">15.3 </span><span class="caption-text">The analytical (black solid) and computed (red dashed) temperature profile from
+the case with <span class="math notranslate nohighlight">\(g_H = -g_0\)</span> at <span class="math notranslate nohighlight">\(t =\)</span> 25,000 s.</span><a class="headerlink" href="#id42" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="parabolic-temperature-profile-equal-specified-temperature-gradients">
+<h2><span class="section-number">15.2. </span>Parabolic Temperature Profile: Equal Specified Temperature Gradients<a class="headerlink" href="#parabolic-temperature-profile-equal-specified-temperature-gradients" title="Link to this heading"></a></h2>
+<p>Next, we verify the specified normal temperature gradient boundary condition
+option by computing the simple thermal channel with equal specified temperature
+gradients, which yields the full time-dependent solution of Equation <a class="reference internal" href="#equation-t-slip-channel">(15.14)</a>.
+Here, we set <span class="math notranslate nohighlight">\(g_0 = g_H = 0.01\)</span> K/m.</p>
+<p>We use meshes that are 2 elements wide in the periodic directions and 20, 40,
+and 80 elements across the channel.  We simulate a long time period of 25,000 s.
+Figure <a class="reference internal" href="#t-gradbc-parabolic"><span class="std std-numref">15.4</span></a> shows that the computed and analytical
+solutions agree.  There is no apparent overall solution degradation on the
+coarser meshes.</p>
+<figure class="align-center" id="id43">
+<span id="t-gradbc-parabolic"></span><a class="reference internal image-reference" href="../../_images/T_parabolic_gradBC.png"><img alt="../../_images/T_parabolic_gradBC.png" src="../../_images/T_parabolic_gradBC.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">15.4 </span><span class="caption-text">The analytical (black solid) and computed (colored) temperature profile from
+the case with <span class="math notranslate nohighlight">\(g_H = g_0\)</span> at <span class="math notranslate nohighlight">\(t =\)</span> 25,000 s.</span><a class="headerlink" href="#id43" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="introduction.html" class="btn btn-neutral float-left" title="1. Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../zrefs.html" class="btn btn-neutral float-right" title="References" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

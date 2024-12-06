@@ -1,0 +1,10 @@
+<map id="sierra::nalu::EdgeKernel" name="sierra::nalu::EdgeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,13,181,38"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_n_g_p_edge_kernel.html" title=" " alt="" coords="723,5,997,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="195,16,205,16,452,12,699,16,723,17,722,22,699,21,452,17,205,21,195,22"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_n_g_p_edge_kernel.html" title=" " alt="" coords="231,38,473,63"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="195,33,231,36,230,41,195,38"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_momentum_s_s_t_a_m_s_diff_edge_kernel.html" title=" " alt="" coords="1047,5,1300,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="1011,23,1047,23,1047,28,1011,28"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="487,51,591,50,698,45,727,43,728,48,699,51,591,56,487,56"/>
+</map>

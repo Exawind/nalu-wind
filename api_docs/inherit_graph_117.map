@@ -1,0 +1,71 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="5,847,149,872"/>
+<area shape="rect" id="Node000001" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="222,5,439,60"/>
+<area shape="poly" id="edge195_Node000000_Node000001" title=" " alt="" coords="76,833,81,678,98,449,113,331,133,222,160,132,177,97,195,70,220,50,224,54,199,73,181,99,165,134,138,223,118,332,103,450,87,678,82,833"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="225,84,436,139"/>
+<area shape="poly" id="edge197_Node000000_Node000003" title=" " alt="" coords="77,833,84,692,102,487,118,381,138,284,163,204,178,172,195,148,224,127,227,131,199,152,183,175,168,206,143,285,123,382,108,487,89,692,82,833"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="218,163,443,217"/>
+<area shape="poly" id="edge199_Node000000_Node000005" title=" " alt="" coords="77,832,87,705,107,524,123,431,142,346,166,275,180,248,195,227,216,210,220,214,199,230,185,251,171,277,148,347,128,432,113,525,92,705,83,833"/>
+<area shape="rect" id="Node000007" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="197,241,464,296"/>
+<area shape="poly" id="edge201_Node000000_Node000007" title=" " alt="" coords="78,832,90,719,112,562,128,481,147,408,169,347,195,306,208,294,212,298,199,309,174,350,152,409,133,482,118,563,95,720,83,833"/>
+<area shape="rect" id="Node000009" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="210,320,451,375"/>
+<area shape="poly" id="edge203_Node000000_Node000009" title=" " alt="" coords="79,833,93,734,117,600,133,532,152,470,172,419,195,384,209,373,212,377,199,388,177,422,157,472,138,534,123,601,98,735,84,833"/>
+<area shape="rect" id="Node000011" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="221,399,440,453"/>
+<area shape="poly" id="edge205_Node000000_Node000011" title=" " alt="" coords="76,833,80,761,96,661,111,608,132,555,160,506,196,463,220,445,223,450,199,467,164,509,137,558,116,610,101,662,85,761,81,833"/>
+<area shape="rect" id="Node000013" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="204,477,457,532"/>
+<area shape="poly" id="edge207_Node000000_Node000013" title=" " alt="" coords="78,833,87,773,107,695,122,653,141,613,166,575,196,541,210,530,213,534,199,545,170,578,146,615,127,655,112,696,92,774,83,833"/>
+<area shape="rect" id="Node000015" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="228,556,433,611"/>
+<area shape="poly" id="edge209_Node000000_Node000015" title=" " alt="" coords="82,832,95,786,118,729,151,671,171,644,196,620,227,601,229,606,199,624,175,647,155,673,122,732,100,788,87,834"/>
+<area shape="rect" id="Node000017" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="217,635,444,689"/>
+<area shape="poly" id="edge211_Node000000_Node000017" title=" " alt="" coords="88,833,130,766,160,730,196,698,215,687,218,692,199,703,164,733,134,769,93,836"/>
+<area shape="rect" id="Node000019" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="232,713,429,768"/>
+<area shape="poly" id="edge213_Node000000_Node000019" title=" " alt="" coords="104,836,146,806,196,777,231,763,233,768,198,782,149,810,107,840"/>
+<area shape="rect" id="Node000021" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="239,792,423,847"/>
+<area shape="poly" id="edge215_Node000000_Node000021" title=" " alt="" coords="162,843,238,831,239,836,163,849"/>
+<area shape="rect" id="Node000023" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="243,871,419,925"/>
+<area shape="poly" id="edge217_Node000000_Node000023" title=" " alt="" coords="163,870,243,882,242,887,162,875"/>
+<area shape="rect" id="Node000025" href="$classsierra_1_1nalu_1_1_momentum_open_adv_diff_elem_kernel.html" title="Open adv/diff kernel for momentum equation (velocity DOF)" alt="" coords="207,950,454,990"/>
+<area shape="poly" id="edge219_Node000000_Node000025" title=" " alt="" coords="107,879,148,908,198,936,231,947,229,952,196,940,146,913,104,883"/>
+<area shape="rect" id="Node000026" href="$classsierra_1_1nalu_1_1_momentum_symmetry_elem_kernel.html" title="Symmetry kernel for momentum equation (velocity DOF)" alt="" coords="207,1014,454,1054"/>
+<area shape="poly" id="edge220_Node000000_Node000026" title=" " alt="" coords="95,883,136,942,165,974,199,1000,222,1012,220,1016,196,1004,162,978,132,946,90,886"/>
+<area shape="rect" id="Node000027" href="$classsierra_1_1nalu_1_1_momentum_wall_function_elem_kernel.html" title="Wall function approach momentum equation (velocity DOF)" alt="" coords="204,1078,457,1118"/>
+<area shape="poly" id="edge221_Node000000_Node000027" title=" " alt="" coords="89,885,103,925,126,974,158,1023,177,1045,199,1064,218,1075,215,1080,196,1068,173,1049,154,1026,121,976,98,927,84,887"/>
+<area shape="rect" id="Node000028" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="225,1143,436,1168"/>
+<area shape="poly" id="edge222_Node000000_Node000028" title=" " alt="" coords="85,885,95,937,116,1004,131,1038,149,1071,172,1102,199,1128,226,1143,224,1148,196,1132,168,1105,145,1074,126,1040,111,1005,90,938,79,886"/>
+<area shape="rect" id="Node000029" href="$classsierra_1_1nalu_1_1_scalar_flux_penalty_elem_kernel.html" title="specificed open bc (face/elem) kernel for continuity equation (pressure DOF)" alt="" coords="207,1193,454,1233"/>
+<area shape="poly" id="edge223_Node000000_Node000029" title=" " alt="" coords="83,885,91,946,110,1025,125,1067,144,1108,169,1146,199,1179,216,1190,213,1195,196,1183,165,1149,140,1111,120,1069,105,1027,86,947,78,886"/>
+<area shape="rect" id="Node000030" href="$classsierra_1_1nalu_1_1_scalar_open_adv_elem_kernel.html" title="Symmetry kernel for scalar equation." alt="" coords="219,1257,442,1297"/>
+<area shape="poly" id="edge224_Node000000_Node000030" title=" " alt="" coords="81,886,85,957,101,1054,116,1105,137,1155,164,1202,199,1243,220,1257,217,1262,196,1247,160,1205,132,1158,111,1107,96,1055,80,958,76,886"/>
+<area shape="rect" id="Node000031" href="$classsierra_1_1nalu_1_1_t_g_m_m_s_h_o_elem_kernel.html" title=" " alt="" coords="227,1321,434,1361"/>
+<area shape="poly" id="edge225_Node000000_Node000031" title=" " alt="" coords="85,886,99,980,124,1107,139,1171,157,1228,177,1275,199,1307,228,1326,225,1330,195,1311,173,1278,152,1230,134,1172,118,1108,94,981,79,886"/>
+<area shape="rect" id="Node000032" href="$classsierra_1_1nalu_1_1_variable_density_continuity_m_m_s_h_o_elem_kernel.html" title=" " alt="" coords="223,1385,438,1440"/>
+<area shape="poly" id="edge226_Node000000_Node000032" title=" " alt="" coords="84,886,97,991,120,1137,136,1211,154,1278,176,1334,199,1371,225,1390,222,1394,195,1374,171,1336,149,1280,131,1212,115,1138,91,992,79,886"/>
+<area shape="rect" id="Node000033" href="$classsierra_1_1nalu_1_1_variable_density_enthalpy_m_m_s_h_o_elem_kernel.html" title=" " alt="" coords="223,1464,439,1519"/>
+<area shape="poly" id="edge227_Node000000_Node000033" title=" " alt="" coords="83,886,93,1006,115,1176,131,1263,150,1342,173,1407,185,1432,199,1451,224,1470,221,1474,195,1455,181,1435,168,1409,145,1344,125,1264,110,1177,88,1007,78,886"/>
+<area shape="rect" id="Node000034" href="$classsierra_1_1nalu_1_1_variable_density_momentum_m_m_s_h_o_elem_kernel.html" title=" " alt="" coords="213,1543,448,1597"/>
+<area shape="poly" id="edge228_Node000000_Node000034" title=" " alt="" coords="82,886,90,1020,110,1213,125,1313,145,1404,170,1479,184,1508,199,1530,215,1543,211,1547,195,1533,179,1510,165,1481,140,1405,120,1314,105,1214,85,1020,77,886"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_continuity_inflow_elem_kernel.html" title="Add Int rho*uj*nj*dS." alt="" coords="531,13,768,53"/>
+<area shape="poly" id="edge196_Node000001_Node000002" title=" " alt="" coords="453,30,531,30,531,35,453,35"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_continuity_open_edge_kernel.html" title=" " alt="" coords="534,91,765,131"/>
+<area shape="poly" id="edge198_Node000003_Node000004" title=" " alt="" coords="450,109,534,109,534,114,450,114"/>
+<area shape="rect" id="Node000006" href="$classsierra_1_1nalu_1_1_enthalpy_t_grad_b_c_elem_kernel.html" title="Enforce a prescribed normal temperature gradient at the boundary." alt="" coords="541,170,757,210"/>
+<area shape="poly" id="edge200_Node000005_Node000006" title=" " alt="" coords="457,187,541,187,541,193,457,193"/>
+<area shape="rect" id="Node000008" href="$classsierra_1_1nalu_1_1_momentum_a_b_l_wall_func_edge_kernel.html" title=" " alt="" coords="534,249,765,289"/>
+<area shape="poly" id="edge202_Node000007_Node000008" title=" " alt="" coords="478,266,534,266,534,271,478,271"/>
+<area shape="rect" id="Node000010" href="$classsierra_1_1nalu_1_1_momentum_a_b_l_wall_shear_stress_edge_kernel.html" title="This class applies the computed wall shear stress field to the boundary." alt="" coords="512,327,787,367"/>
+<area shape="poly" id="edge204_Node000009_Node000010" title=" " alt="" coords="465,345,512,345,512,350,465,350"/>
+<area shape="rect" id="Node000012" href="$classsierra_1_1nalu_1_1_momentum_open_edge_kernel.html" title=" " alt="" coords="543,406,755,446"/>
+<area shape="poly" id="edge206_Node000011_Node000012" title=" " alt="" coords="454,423,543,423,543,429,454,429"/>
+<area shape="rect" id="Node000014" href="$classsierra_1_1nalu_1_1_momentum_symmetry_edge_kernel.html" title=" " alt="" coords="526,485,773,525"/>
+<area shape="poly" id="edge208_Node000013_Node000014" title=" " alt="" coords="471,502,526,502,526,507,471,507"/>
+<area shape="rect" id="Node000016" href="$classsierra_1_1nalu_1_1_scalar_edge_open_solver_alg.html" title=" " alt="" coords="539,563,759,603"/>
+<area shape="poly" id="edge210_Node000015_Node000016" title=" " alt="" coords="447,581,539,581,539,586,447,586"/>
+<area shape="rect" id="Node000018" href="$classsierra_1_1nalu_1_1_scalar_face_flux_b_c_elem_kernel.html" title="This class applies the computed wall heat flux field to the boundary." alt="" coords="527,642,771,682"/>
+<area shape="poly" id="edge212_Node000017_Node000018" title=" " alt="" coords="458,659,527,659,527,665,458,665"/>
+<area shape="rect" id="Node000020" href="$classsierra_1_1nalu_1_1_scalar_flux_b_c_elem_kernel.html" title=" " alt="" coords="541,721,757,761"/>
+<area shape="poly" id="edge214_Node000019_Node000020" title=" " alt="" coords="443,738,541,738,541,743,443,743"/>
+<area shape="rect" id="Node000022" href="$classsierra_1_1nalu_1_1_scalar_open_edge_kernel.html" title=" " alt="" coords="551,799,748,839"/>
+<area shape="poly" id="edge216_Node000021_Node000022" title=" " alt="" coords="436,817,550,817,550,822,436,822"/>
+<area shape="rect" id="Node000024" href="$classsierra_1_1nalu_1_1_wall_dist_elem_kernel.html" title=" " alt="" coords="554,878,745,918"/>
+<area shape="poly" id="edge218_Node000023_Node000024" title=" " alt="" coords="432,895,554,895,554,901,432,901"/>
+</map>

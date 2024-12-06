@@ -1,0 +1,302 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lessons Learned from Meshing the McAlister Case &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Developer Manual" href="../../developer/index.html" />
+    <link rel="prev" title="Nalu-Wind Input File" href="nalu_inp.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../building.html">Building Nalu-Wind</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../running.html">Running Nalu-Wind</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="nalu_mesh.html">Exodus-II File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nalux.html">Invoking Nalu-Wind - Command-line options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nalu_inp.html">Nalu-Wind Input File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nalu_inp.html#transfers">Transfers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nalu_inp.html#simulations">Simulations</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Lessons Learned from Meshing the McAlister Case</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#meshes">Meshes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lessons-learned">Lessons Learned</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#general-pointwise-tips">General Pointwise Tips</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../theory/index.html">Theory Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Manual</a></li>
+          <li class="breadcrumb-item"><a href="../running.html">Running Nalu-Wind</a></li>
+      <li class="breadcrumb-item active">Lessons Learned from Meshing the McAlister Case</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/source/user/nalu_run/McAlisterLessonsLearned.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="lessons-learned-from-meshing-the-mcalister-case">
+<h1>Lessons Learned from Meshing the McAlister Case<a class="headerlink" href="#lessons-learned-from-meshing-the-mcalister-case" title="Link to this heading"></a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Chris Bruner, Dept. 01515, Sandia National Laboratories</p>
+</dd>
+</dl>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h2>
+<p>The series of wind-tunnel tests described by McAlister &amp; Takahashi <a class="reference internal" href="#mcal1991" id="id1"><span>[McAl1991]</span></a>
+have become something of a canonical test case in the rotorcraft community.
+This is because the tests are well-documented and investigate both tip
+and aspect ratio effects, and because the symmetric wing section used is
+fairly representative of those typically found on rotorcraft.</p>
+<p>This case also serves as a reasonably good test case for wind energy
+applications as there are measurements of the trailing tip vortex far
+downstream, up to 13 chords. This is important to understand the
+grid requirements of our unstructured approach to modeling a full-scale
+blade-resolved rotor and tower system.</p>
+</section>
+<section id="meshes">
+<h2>Meshes<a class="headerlink" href="#meshes" title="Link to this heading"></a></h2>
+<p>The meshes for this case are mixed structued/unstructured (hybrid)
+topologies. The mesh in the immediate vicinity of the wing uses a
+quad-dominant approach to produce mostly hexahedra in the wing boundary
+layer. This has most of the advantages of an unstructured triangular mesh
+in terms of ease of meshing and face isotropy in the interior, but has fewer
+elements for a comparable node count. A potential disadvantage is that there
+is no way to produce a mixed hex/tet mesh without the introduction of
+pyramid elements, which can cause convergence and accuracy problems. There is
+also a refined region around the tipe inside the wing box to ensure
+resolution of the formation of the wing tip vortex.</p>
+<p>Further downstream, there is a fully structured hex mesh, expanding slightly
+and covering the path of the tip vortex downstream as measured in the
+experiment.</p>
+<p>The balance of the test section mesh is unstructured tets (except as noted
+below), while another structured block is used upstream of the test section.</p>
+<p>The meshes first produced used the Discontinuous Galerkin (DG)
+non-conformal interface between the hexahedral tip vortex mesh and the
+fully unstructured test section mesh. Due to the relative novelty of the
+DG approach and our lack of familiarity with its performance in Nalu-Wind, it was
+decided that a more conservative traditional, conformal interface between
+the blocks was preferable. Therefore, the tetrahedral test section block
+interfaces to the hexahedral tip vortex block and the upstream block
+using node-matched pyramid elements.</p>
+<section id="notes-on-geometry">
+<h3>Notes on Geometry<a class="headerlink" href="#notes-on-geometry" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>The trailing edge geometry of the NACA0018 airfoil isn’t given in either
+the McAlister report nor in the original NACA publications describing it.
+Therefore, for ease of meshing, a rounded trailing edge was used.</p></li>
+<li><p>In order to capture at least the gross blockage effects, the model support
+structure in the wind tunnel is modeled, and the tunnel walls are at the
+correct locations. However, in and effort to keep the mesh size low, the
+tunnel walls and the support are modeled as slip walls and not as viscous.</p></li>
+<li><p>Most of the McAlister cases of interest were performed using a square
+wingtip. The initial mesh, however, uses the rounded tip described in
+McAlister. We will eventually produce a square tip mesh as this is both
+more interesting and has more-complete results.</p></li>
+</ul>
+</section>
+<section id="surface-mesh">
+<h3>Surface Mesh<a class="headerlink" href="#surface-mesh" title="Link to this heading"></a></h3>
+<figure class="align-default" id="id2">
+<a class="reference internal image-reference" href="../../../_images/grid07_conformal10_surf_tip.png"><img alt="../../../_images/grid07_conformal10_surf_tip.png" src="../../../_images/grid07_conformal10_surf_tip.png" style="width: 1200.0px; height: 800.0px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">2 </span><span class="caption-text">The surface mesh near the tip, as viewed from above.</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-default" id="id3">
+<a class="reference internal image-reference" href="../../../_images/grid07_conformal10_surf_tip_close.png"><img alt="../../../_images/grid07_conformal10_surf_tip_close.png" src="../../../_images/grid07_conformal10_surf_tip_close.png" style="width: 1200.0px; height: 800.0px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">3 </span><span class="caption-text">A close-up view of the tip and trailing edge, showing rounded tip
+and trailing edge and quad-dominant surface mesh.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="statistics-of-current-mesh-grid07-conformal10-exo">
+<h3>Statistics of Current Mesh (<code class="docutils literal notranslate"><span class="pre">grid07_conformal10.exo</span></code>)<a class="headerlink" href="#statistics-of-current-mesh-grid07-conformal10-exo" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>Node count:</dt><dd><p>58M</p>
+</dd>
+<dt>Element Count:</dt><dd><p>192M total, consisting of:</p>
+<ul class="simple">
+<li><p>158M tets</p></li>
+<li><p>2.5M pyramids</p></li>
+<li><p>1.1M wedges</p></li>
+<li><p>30M hexes</p></li>
+</ul>
+</dd>
+<dt>Max. Centroid Skew:</dt><dd><p>0.866; 52 &gt; 0.8</p>
+</dd>
+<dt>Max. Included Angle:</dt><dd><p>177 degrees; 7 &gt; 170 degrees</p>
+</dd>
+<dt>Max. Volume Ratio:</dt><dd><p>22; 12 &gt; 20</p>
+</dd>
+<dt>Max. Aspect Ratio:</dt><dd><p>346</p>
+</dd>
+<dt>Wall Spacing on Wing:</dt><dd><p><span class="math notranslate nohighlight">\(8.8 \times 10^{-5}\)</span> m</p>
+</dd>
+<dt>T-Rex Growth Rate:</dt><dd><p>1.2</p>
+</dd>
+<dt>Full/Max Layers in Tip Block:</dt><dd><p>19/19 (limited to preserve quality)</p>
+</dd>
+<dt>Full/Max Layers in Wing Block:</dt><dd><p>19/33</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="lessons-learned">
+<h2>Lessons Learned<a class="headerlink" href="#lessons-learned" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>We need <em>a lot</em> of resolution to resolve and advect the tip vortex: on the
+order of 2–3mm edge length.</p></li>
+<li><p>Due to the mathematics of physical space, small changes in the maximum edge
+length in a block lead to large changes in the final mesh size.  For
+example, changing the maximum edge length from 0.0025m to 0.003m produces
+nearly a factor of 2 difference in the element count in the isotropic
+portion of the mesh: <span class="math notranslate nohighlight">\((0.003/0.0025)^3 \approx 1.73\)</span>.</p></li>
+<li><p>Heuristically, volume ratios should ideally be &lt; 20. Slightly larger volume
+ratios are acceptable as long as there are no steep gradients passing
+through these elements.</p></li>
+<li><p>Aspect ratios should be &lt; 1000:1</p></li>
+<li><p>Centroid skewness is a better measure than the other skewness metrics as
+it is more even across element topologies</p>
+<ul>
+<li><p>equiangle skewness is also OK, but is stricter and can give misleadingly
+high readings for some tets</p></li>
+<li><p>equivolume skewness is useless for tets</p></li>
+</ul>
+</li>
+<li><p>Centroid skewness should be &lt; 0.8; however, skewness as high as the low
+0.9s (usually associated with topology transitions) is acceptable as long as:</p>
+<ul>
+<li><p>the skewed cells are far away from large gradients; and</p></li>
+<li><p>there are no more than a handful.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="general-pointwise-tips">
+<h2>General Pointwise Tips<a class="headerlink" href="#general-pointwise-tips" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Maximum aspect ratio for quads in domains should be <span class="math notranslate nohighlight">\(\le\)</span> 4 for
+good quality extrusions.</p></li>
+<li><p>Maximum included angle should be <span class="math notranslate nohighlight">\(\le\)</span> 170 degrees. The usual
+exceptions for
+regions with small gradients <em>should</em> apply here, but there may be
+additional restrictions due to the elliptic nature of the incompressible
+flow equations.</p></li>
+<li><p>It can be beneficial to push poor quality cells out of the boundary layer
+by increasing the minimum number of T-Rex layers.</p></li>
+<li><p>One can set the maximum number of layers to prevent different numbers of
+layers in a block and its adjacent domains. This can eliminate some
+poor-quality tetrahedra.</p></li>
+</ul>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
+<div role="list" class="citation-list">
+<div class="citation" id="mcal1991" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">McAl1991</a><span class="fn-bracket">]</span></span>
+<p>McAlister, K. W. and R. K. Takahashi. <em>NACA 0015 Wing Pressure and Trailing Vortex Measurements</em>, NASA Technical Paper 3151. 1991.</p>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="nalu_inp.html" class="btn btn-neutral float-left" title="Nalu-Wind Input File" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../developer/index.html" class="btn btn-neutral float-right" title="Developer Manual" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
