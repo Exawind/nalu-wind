@@ -1066,10 +1066,6 @@ fsiTurbine::setSampleDisplacement(double curTime)
     << "Setting Sample displacements " << std::endl;
 
   int nBlades = params_.numBlades;
-  ;
-  size_t nTotBldPts = 0;
-  for (int i = 0; i < nBlades; i++)
-    nTotBldPts += params_.nBRfsiPtsBlade[i];
 
   std::vector<double> x_axis = {1.0, 0.0, 0.0};
   std::vector<double> y_axis = {0.0, 1.0, 0.0};

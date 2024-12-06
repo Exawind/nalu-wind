@@ -72,7 +72,7 @@ private:
 
   //! Set the node and cell resolutions from Nalu-Wind instead of letting TIOGA
   //! compute it for P=1 cells. Default is true
-  bool setResolutions_{true};
+  // bool setResolutions_{true};
 
   //! Option to let TIOGA attempt to reduce fringes.
   bool reduceFringes_{false};
