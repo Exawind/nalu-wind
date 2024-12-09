@@ -5,6 +5,7 @@
 #include "mesh_motion/MotionScalingKernel.h"
 #include "mesh_motion/MotionRotationKernel.h"
 #include "mesh_motion/MotionTranslationKernel.h"
+#include "mesh_motion/MotionOscillationKernel.h"
 #include "mesh_motion/TurbineSurrogateKernel.h"
 #include "mesh_motion/MotionWavesKernel.h"
 #include "NaluParsing.h"
@@ -70,6 +71,8 @@ FrameBase::load(const YAML::Node& node)
           new MotionDeformingInteriorKernel(meta_, motion_def));
       else if (type == "rotation")
         motionKernels_[i].reset(new MotionRotationKernel(motion_def));
+      else if (type == "oscillation")
+        motionKernels_[i].reset(new MotionOscillationKernel(motion_def));
       else if (type == "scaling")
         motionKernels_[i].reset(new MotionScalingKernel(meta_, motion_def));
       else if (type == "translation")
