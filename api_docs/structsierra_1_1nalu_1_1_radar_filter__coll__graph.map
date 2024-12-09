@@ -1,0 +1,15 @@
+<map id="sierra::nalu::RadarFilter" name="sierra::nalu::RadarFilter">
+<area shape="rect" id="Node000001" title=" " alt="" coords="116,269,291,295"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,181,199,207"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="128,214,191,267,188,271,125,218"/>
+<area shape="rect" id="Node000003" href="$structvs_1_1_vector_t.html" title="Vector in 3D space." alt="" coords="7,93,139,119"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="73,132,76,156,92,179,87,182,72,158,68,133"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="129,5,168,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="131,43,85,95,81,91,127,39"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="163,93,292,119"/>
+<area shape="poly" id="edge5_Node000005_Node000004" title=" " alt="" coords="170,39,218,91,214,95,166,43"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="194,128,166,145,117,183,113,179,163,140,191,123"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="223,181,389,207"/>
+<area shape="poly" id="edge7_Node000006_Node000005" title=" " alt="" coords="260,125,279,141,293,161,303,180,299,182,289,164,275,144,257,129"/>
+<area shape="poly" id="edge6_Node000001_Node000006" title=" " alt="" coords="283,218,219,271,216,267,280,214"/>
+</map>

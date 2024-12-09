@@ -1,0 +1,16 @@
+<map id="sierra::nalu::HypreLinearSolverConfig" name="sierra::nalu::HypreLinearSolverConfig">
+<area shape="rect" id="Node000001" title="User configuration parmeters for Hypre solvers and preconditioners." alt="" coords="1019,83,1201,123"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_linear_solver_config.html" title=" " alt="" coords="651,83,835,123"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="849,100,1018,100,1018,105,849,105"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="279,39,365,65"/>
+<area shape="poly" id="edge7_Node000001_Node000003" title=" " alt="" coords="358,31,410,13,457,6,495,6,580,13,700,26,819,44,1019,81,1018,86,818,49,699,31,580,19,495,11,458,12,411,19,360,36"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="351,71,379,88,411,101,473,113,535,118,596,117,651,113,652,119,596,123,535,123,472,119,410,107,377,93,348,75"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="5,32,144,72"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="158,49,279,49,279,55,158,55"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="604,147,883,187"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="872,142,1018,116,1019,121,873,147"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="257,154,387,179"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="400,164,604,164,604,169,400,169"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="55,154,94,179"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="108,164,257,164,257,169,108,169"/>
+</map>

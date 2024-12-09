@@ -1,0 +1,252 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nalu-Wind - Theory Manual &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="1. Low Mach Number Derivation" href="lowMachNumberDerivation.html" />
+    <link rel="prev" title="Development Infrastructure" href="../developer/infra.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Theory Manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="lowMachNumberDerivation.html">1. Low Mach Number Derivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html">2. Supported Equation Set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html">3. Discretization Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advectionStabilization.html">4. Advection Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pressureStabilization.html">5. Pressure Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html">6. RTE Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html">7. Nonlinear Stabilization Operator (NSO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html">8. Turbulence Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html">9. Supported Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overset.html">10. Overset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html">11. Property Evaluations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="couplingApproach.html">12. Coupling Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeDiscretization.html">13. Time discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiPhysics.html">14. Multi-Physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html">15. Wind Energy Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topologicalSupport.html">16. Topological Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adaptivity.html">17. Adaptivity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeAbstractions.html">18. Code Abstractions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Nalu-Wind - Theory Manual</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/theory/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="nalu-wind-theory-manual">
+<h1>Nalu-Wind - Theory Manual<a class="headerlink" href="#nalu-wind-theory-manual" title="Link to this heading"></a></h1>
+<p>Nalu-Wind represents a generalized unstructured, massively parallel, variable density turbulent flow capability designed for energy applications. This code base began as an effort to prototype Sierra Toolkit, <span id="id1">[<a class="reference internal" href="../../zrefs.html#id25" title="H. Edwards, A. Williams, G. Sjaardema, D. Baur, and W. Cochran. Sierra toolkit computational mesh computational model. Technical Report SAND-20101192, Sandia National Laboratories, Albuquerque, NM, 2010.">EWS+10</a>]</span>, usage along with direct parallel matrix assembly to the Trilinos, <span id="id2">[<a class="reference internal" href="../../zrefs.html#id26" title="M. Heroux, R. Bartlett, V. Howle, R. Hoekstra, J. Hu, T. Kolda, R. Lehoucq, K. Long, R. Pawlowski, E. Phipps, A. Salinger, J. Thornquist, R. Tuminaro, J. Willenbring, and A. Williams. An overview of trilinos. Technical Report SAND-20032927, Sandia National Laboratories, Albuquerque, NM, 2003.">HBH+03</a>]</span>, Epetra and Tpetra data structure. However, the simulation tool has evolved as a tool to support a variety of research projects germane to the energy sector including wind aerodynamic prediction and traditional gas-phase combustion applications.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="lowMachNumberDerivation.html">1. Low Mach Number Derivation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="lowMachNumberDerivation.html#asymptotic-expansion">1.1. Asymptotic Expansion</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="supportedEquationSet.html">2. Supported Equation Set</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#conservation-of-mass">2.1. Conservation of Mass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#conservation-of-momentum">2.2. Conservation of Momentum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#filtered-mixture-fraction">2.3. Filtered Mixture Fraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#conservation-of-energy">2.4. Conservation of Energy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#review-of-prandtl-schmidt-and-unity-lewis-number">2.5. Review of Prandtl, Schmidt and Unity Lewis Number</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#thermal-heat-conduction">2.6. Thermal Heat Conduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#abl-forcing-source-terms">2.7. ABL Forcing Source Terms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#conservation-of-species">2.8. Conservation of Species</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#subgrid-scale-kinetic-energy-one-equation-les-model">2.9. Subgrid-Scale Kinetic Energy One-Equation LES Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#rans-model-suite">2.10. RANS Model Suite</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#laminar-turbulent-transition-model-formulation">2.11. Laminar-Turbulent Transition Model Formulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#detached-eddy-simulation-des-formulation">2.12. Detached Eddy Simulation (DES) Formulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#active-model-split-ams-formulation">2.13. Active Model Split (AMS) Formulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#solid-stress">2.14. Solid Stress</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#moving-mesh">2.15. Moving Mesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#radiative-transport-equation">2.16. Radiative Transport Equation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html#wall-distance-computation">2.17. Wall Distance Computation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="discretizationApproach.html">3. Discretization Approach</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html#cvfem-dual-mesh">3.1. CVFEM Dual Mesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html#edge-based-discretization">3.2. Edge-Based Discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html#projected-nodal-gradients">3.3. Projected Nodal Gradients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html#time-and-source-terms">3.4. Time and Source Terms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html#diffusion">3.5. Diffusion</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advectionStabilization.html">4. Advection Stabilization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pressureStabilization.html">5. Pressure Stabilization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pressureStabilization.html#the-role-of-dot-m">5.1. The Role of <span class="math notranslate nohighlight">\(\dot m\)</span></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rteStabilization.html">6. RTE Stabilization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html#definition-of-the-test-function">6.1. Definition of the test function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html#the-form-of-tau">6.2. The form of <span class="math notranslate nohighlight">\(\tau\)</span></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html#pure-edge-based-upwind-method">6.3. Pure Edge-based Upwind Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html#finite-element-supg-form">6.4. Finite Element SUPG Form</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nso.html">7. Nonlinear Stabilization Operator (NSO)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nso.html#nso-based-on-kinetic-energy-residual">7.1. NSO Based on Kinetic Energy Residual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html#local-or-projected-nso-diffusive-flux-coefficient">7.2. Local or Projected NSO Diffusive Flux Coefficient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html#general-findings">7.3. General Findings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html#nso-as-a-turbulence-model">7.4. NSO as a Turbulence Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="turbulenceModeling.html">8. Turbulence Modeling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html#standard-smagorinsky-les-model">8.1. Standard Smagorinsky LES Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html#wall-adapting-local-eddy-viscosity-wale">8.2. Wall Adapting Local Eddy-Viscosity, WALE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html#one-equation-k-sgs">8.3. One Equation <span class="math notranslate nohighlight">\(k^{sgs}\)</span></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html#rans-models">8.4. RANS Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html#hybrid-rans-les-models">8.5. Hybrid RANS/LES Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html#wall-models">8.6. Wall Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="boundaryConditions.html">9. Supported Boundary Conditions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html#inflow-boundary-condition">9.1. Inflow Boundary Condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html#wall-boundary-conditions">9.2. Wall Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html#atmospheric-boundary-layer-surface-conditions">9.3. Atmospheric Boundary Layer Surface Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html#atmospheric-boundary-layer-top-conditions">9.4. Atmospheric Boundary Layer Top Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html#turbulent-kinetic-energy-k-sgs-les-model">9.5. Turbulent Kinetic Energy, <span class="math notranslate nohighlight">\(k_{sgs}\)</span> LES model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html#sst-of-the-atmospheric-boundary-layer">9.6. SST of the Atmospheric Boundary Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html#ams-of-the-atmospheric-boundary-layer">9.7. AMS of the Atmospheric Boundary Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html#open-boundary-condition">9.8. Open Boundary Condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html#strong-symmetry-boundary-condition">9.9. Strong Symmetry Boundary Condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html#weak-symmetry-boundary-condition">9.10. Weak Symmetry Boundary Condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html#periodic-boundary-condition">9.11. Periodic Boundary Condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html#non-conformal-boundary-condition">9.12. Non-conformal Boundary Condition</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="overset.html">10. Overset</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="overset.html#overset-grid-assembly-using-native-stk-search">10.1. Overset Grid Assembly using Native STK Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overset.html#overset-grid-assembly-using-tioga">10.2. Overset Grid Assembly using TIOGA</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="propertyEvaluation.html">11. Property Evaluations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html#density">11.1. Density</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html#viscosity">11.2. Viscosity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html#specific-heat">11.3. Specific Heat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html#lame-properties">11.4. Lame Properties</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="couplingApproach.html">12. Coupling Approach</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="couplingApproach.html#errors-due-to-splitting-and-stabilization">12.1. Errors due to Splitting and Stabilization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="timeDiscretization.html">13. Time discretization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multiPhysics.html">14. Multi-Physics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="windEnergy.html">15. Wind Energy Modeling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html#governing-equations">15.1. Governing Equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html#turbulence-modeling">15.2. Turbulence Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html#numerical-discretization-stabilization">15.3. Numerical Discretization &amp; Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html#time-stepping-scheme">15.4. Time stepping scheme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html#initial-boundary-conditions">15.5. Initial &amp; Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html#wind-turbine-modeling">15.6. Wind Turbine Modeling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="topologicalSupport.html">16. Topological Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adaptivity.html">17. Adaptivity</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="adaptivity.html#prolongation-and-restriction">17.1. Prolongation and Restriction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="codeAbstractions.html">18. Code Abstractions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="codeAbstractions.html#sierra-toolkit-abstractions">18.1. Sierra Toolkit Abstractions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeAbstractions.html#high-level-nalu-wind-abstractions">18.2. High Level Nalu-Wind Abstractions</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../developer/infra.html" class="btn btn-neutral float-left" title="Development Infrastructure" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="lowMachNumberDerivation.html" class="btn btn-neutral float-right" title="1. Low Mach Number Derivation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

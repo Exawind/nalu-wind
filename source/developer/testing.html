@@ -1,0 +1,247 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testing Nalu-Wind &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Writing Developer Documentation" href="write_developer_doc.html" />
+    <link rel="prev" title="Developer Manual" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Manual</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Testing Nalu-Wind</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#running-tests-locally">Running Tests Locally</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#updating-reference-data-for-your-machine">Updating Reference Data for Your Machine</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#adding-tests-to-nalu-wind">Adding Tests to Nalu-Wind</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adding-testing-machines-to-cdash">Adding Testing Machines to CDash</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="write_developer_doc.html">How to Document Source Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="write_user_doc.html">How to Write User Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build_doc.html">Building the Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html">Developer Workflow Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="style.html">Code Style Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contrib.html">Contributing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="infra.html">Project Development Infrastructure</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../theory/index.html">Theory Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Developer Manual</a></li>
+      <li class="breadcrumb-item active">Testing Nalu-Wind</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/developer/testing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="testing-nalu-wind">
+<h1>Testing Nalu-Wind<a class="headerlink" href="#testing-nalu-wind" title="Link to this heading"></a></h1>
+<p>Nalu-Wind’s regression tests and unit tests are run nightly using the GCC and Intel
+compilers against the Trilinos master and development branches on a machine
+at NREL. The results can be seen at the <a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">CDash Nalu-Wind website</a>.</p>
+<section id="running-tests-locally">
+<h2>Running Tests Locally<a class="headerlink" href="#running-tests-locally" title="Link to this heading"></a></h2>
+<p>The nightly tests are implemented using <a class="reference external" href="https://cmake.org/cmake/help/v3.7/manual/ctest.1.html">CTest</a> and
+these same tests are available to developers to run locally as well. Due to the nature of error propagation of
+calculations in computers, results of regression testing can be difficult to keep consistent.
+Output from Nalu-Wind can vary from established reference data for the regression tests based on the compiler you
+are using, the types of optimizations set, and the versions of the third-party libraries Nalu-Wind
+utilizes, along with the blas/lapack implementation in use. Therefore it may make sense when
+you checkout Nalu-Wind to create your own reference data for the tests for the machine and
+configuration you are using, which is described later in this document. Or you can use a lower tolerance
+when running the tests. At the moment, a single tolerance is chosen in which to use for all the tests.
+The following instructions will describe how to run Nalu-Wind’s tests.</p>
+<p>Since Nalu-Wind’s tests require a large amount of data (meshes), this data is hosted in a separate repository
+from Nalu-Wind. This mesh repo is set as a submodule in the <code class="docutils literal notranslate"><span class="pre">reg_tests/mesh</span></code> directory in the main
+Nalu-Wind repository. Submodule repos are not checked out by default, so either use <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">submodule</span> <span class="pre">init</span></code>
+and then <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">submodule</span> <span class="pre">update</span></code> to clone it in your checkout of Nalu-Wind, or when you first clone Nalu-Wind you can also use
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">--recursive</span> <span class="pre">&lt;repo_url&gt;</span></code> to checkout all submodules as well.</p>
+<p>Once this submodule is intialized and cloned, you will need to configure Nalu-Wind with testing on.
+To configure Nalu-Wind with testing enabled, in Nalu-Wind’s existing <code class="docutils literal notranslate"><span class="pre">build</span></code> directory, we will run this command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cmake -DTrilinos_DIR:PATH=`spack location -i nalu-trilinos` \
+      -DYAML_DIR:PATH=`spack location -i yaml-cpp` \
+      -DENABLE_TESTS:BOOL=ON \
+      ..
+</pre></div>
+</div>
+<p>Note we have chosen to originally build Nalu-Wind with Spack in this case, hence the use
+of <code class="docutils literal notranslate"><span class="pre">spack</span> <span class="pre">location</span> <span class="pre">-i</span> <span class="pre">&lt;package&gt;</span></code> to locate our Yaml and Trilinos installations.
+Then we use <code class="docutils literal notranslate"><span class="pre">-DENABLE_TESTS:BOOL=ON</span></code> to enable CTest. Once Nalu-Wind is configured,
+you should be able to run the tests by building Nalu-Wind in the <code class="docutils literal notranslate"><span class="pre">build</span></code> directory,
+and running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test</span></code> or <code class="docutils literal notranslate"><span class="pre">ctest</span></code>. Looking at <code class="docutils literal notranslate"><span class="pre">ctest</span> <span class="pre">-h</span></code> will show you many ways
+you can run tests and choose which tests to run.</p>
+<p>There are advantages to using CTest, such as being able to run subsets of the tests, or tests
+matching a particular regular expression for example. To do so, in the <code class="docutils literal notranslate"><span class="pre">build</span></code> directory, you can run
+<code class="docutils literal notranslate"><span class="pre">ctest</span> <span class="pre">-R</span> <span class="pre">femHC</span></code> to run the test matching the <code class="docutils literal notranslate"><span class="pre">femHC</span></code> regular expression. Other useful capabilities are
+<code class="docutils literal notranslate"><span class="pre">ctest</span> <span class="pre">--output-on-failure</span></code> to see test outputs when they fail, <code class="docutils literal notranslate"><span class="pre">ctest</span> <span class="pre">--rerun-failed</span></code> to only run
+the tests that previously failed, <code class="docutils literal notranslate"><span class="pre">ctest</span> <span class="pre">--print-labels</span></code> to see the test labels, and <code class="docutils literal notranslate"><span class="pre">ctest</span> <span class="pre">-L</span> <span class="pre">unit</span></code>
+to run the tests with label ‘unit’ for example. All testing related log files and output can be seen in
+<code class="docutils literal notranslate"><span class="pre">Nalu-Wind/build/Testing/Temporary</span></code> and <code class="docutils literal notranslate"><span class="pre">Nalu-Wind/build/reg_tests</span></code> after the test have been run.</p>
+<p>To define your own tolerance for tests, at configure time, add <code class="docutils literal notranslate"><span class="pre">-DTEST_TOLERANCE=0.0001</span></code> for example
+to the Nalu-Wind CMake configure line.</p>
+<section id="updating-reference-data-for-your-machine">
+<h3>Updating Reference Data for Your Machine<a class="headerlink" href="#updating-reference-data-for-your-machine" title="Link to this heading"></a></h3>
+<p>When running the tests, the norms for each test are the output and they are ‘diffed’ against
+the ‘gold’ norms that we have established for each test. To dictate whether or not a test passes,
+we use a chosen tolerance in which we allow the results to deviate from the ‘gold’ norm.  As stated
+earlier, these ‘gold’ norms are not able to reflect every configuration of Nalu-Wind, per compiler, optimization,
+TPL versions, blas/lapack version, etc. This tolerance is currently defined in the <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>
+in Nalu-Wind’s <code class="docutils literal notranslate"><span class="pre">reg_tests</span></code> directory. This tolerance can also be passed into Nalu-Wind at configure time using
+<code class="docutils literal notranslate"><span class="pre">-DTEST_TOLERANCE=0.0000001</span></code> for example. To update the ‘gold’ norms locally to your configuration, merely
+run the tests once, and copy the <code class="docutils literal notranslate"><span class="pre">*.norm</span></code> files in the <code class="docutils literal notranslate"><span class="pre">build/reg_tests/test_files</span></code> directory
+to the corresponding test location in <code class="docutils literal notranslate"><span class="pre">reg_tests/test_files</span></code> while overwriting the current ‘gold’ norms.</p>
+<p>In regards to ‘official’ gold norms, Linux with GCC 6.4.0, netlib-blas/lapack 3.8.0, and the following
+TPL versions are officially tested:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">openmpi</span><span class="o">@</span><span class="mf">1.10.4</span>
+<span class="n">boost</span><span class="o">@</span><span class="mf">1.66.0</span>
+<span class="n">cmake</span><span class="o">@</span><span class="mf">3.9.4</span>
+<span class="n">parallel</span><span class="o">-</span><span class="n">netcdf</span><span class="o">@</span><span class="mf">1.8.0</span>
+<span class="n">yaml</span><span class="o">-</span><span class="n">cpp</span><span class="nd">@develop</span>
+<span class="n">hdf5</span><span class="o">@</span><span class="mf">1.10.1</span>
+<span class="n">netcdf</span><span class="o">@</span><span class="mf">4.4.1.1</span>
+<span class="n">zlib</span><span class="o">@</span><span class="mf">1.2.11</span>
+<span class="n">superlu</span><span class="o">@</span><span class="mf">4.3</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="adding-tests-to-nalu-wind">
+<h2>Adding Tests to Nalu-Wind<a class="headerlink" href="#adding-tests-to-nalu-wind" title="Link to this heading"></a></h2>
+<p id="add-test">The testing infrastructure is almost completely confined to the <code class="docutils literal notranslate"><span class="pre">reg_tests</span></code> directory. To add a test
+to Nalu-Wind, we need to add the test name, and create a test directory to place the input files and gold norms
+for the test. First, the test itself can be added to the list of CTest tests by adding a line to the
+<code class="docutils literal notranslate"><span class="pre">CTestList.cmake</span></code> file. For a single regression test, provided it is similar to the categories shown at
+the top of the <code class="docutils literal notranslate"><span class="pre">CTestList.cmake</span></code> file, it can likely be added with a single line using the test
+name and amount of processes you would like to run the test with and choosing the correct function to use.
+For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">add_test_r</span><span class="p">(</span><span class="n">mytest</span> <span class="mi">6</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After this has been done, in the <code class="docutils literal notranslate"><span class="pre">reg_tests/test_files</span></code> directory, you should add a directory corresponding to your
+test name and include the input file, <code class="docutils literal notranslate"><span class="pre">mytest.i</span></code>, and reference output file <code class="docutils literal notranslate"><span class="pre">mytest.norm.gold</span></code>. If you are using
+an xml file that doesn’t exist in the <code class="docutils literal notranslate"><span class="pre">xml</span></code> directory, you will need to commit that as well.</p>
+<p>To see commands used when running the tests, see the functions at the top of the <code class="docutils literal notranslate"><span class="pre">CTestList.cmake</span></code> file. These
+functions ultimately create <code class="docutils literal notranslate"><span class="pre">CTestTestFile.cmake</span></code> files in the CMake build directory at configure time.
+You can see the exact commands used for each test after configure in the
+<code class="docutils literal notranslate"><span class="pre">build/reg_tests/CTestTestFile.cmake</span></code> file.</p>
+<p>Note if your test doesn’t conform to an existing archetype, a new function in <code class="docutils literal notranslate"><span class="pre">CTestList.cmake</span></code> may need to be
+created. Also, if you are using a mesh file that doesn’t exist in the mesh repo, you will need to add it, and
+update the submodule in the Nalu-Wind main repo to use the latest commit of the mesh submodule repo.</p>
+</section>
+<section id="adding-testing-machines-to-cdash">
+<span id="ref-testing-cdash"></span><h2>Adding Testing Machines to CDash<a class="headerlink" href="#adding-testing-machines-to-cdash" title="Link to this heading"></a></h2>
+<p>To add a testing machine that will post results to CDash first means that you should have all software
+dependencies satisified for Nalu-Wind. Next the script located at
+<a class="reference external" href="https://github.com/Exawind/nalu-wind/blob/master/reg_tests/CTestNightlyScript.cmake">CTestNightlyScript.cmake</a>
+can be run for example as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>ctest \
+  -DNIGHTLY_DIR=${NALU_WIND_TESTING_DIR} \
+  -DYAML_DIR=${YAML_INSTALL_DIR} \
+  -DTRILINOS_DIR=${TRILINOS_INSTALL_DIR} \
+  -DHOST_NAME=machine.domain.com \
+  -DEXTRA_BUILD_NAME=Linux-gcc-whatever \
+  -VV -S ${NALU_WIND_DIR}/reg_tests/CTestNightlyScript.cmake
+</pre></div>
+</div>
+<p>In this case <code class="docutils literal notranslate"><span class="pre">${NALU_WIND_TESTING_DIR}</span></code> is one directory above where the Nalu-Wind repo has been checked out.
+This runs CTest in scripting mode with verbosity on and it will update the Nalu-Wind repo with the latest
+revisions, configure, build, test, and finally submit results to the CDash site. Since CTest does
+the building, it needs to know the locations of Yaml and Trilinos. For examples of nightly testing,
+refer to the testing scripts currently being run
+<a class="reference external" href="https://github.com/Exawind/build-test/tree/master/test-scripts">here</a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Developer Manual" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="write_developer_doc.html" class="btn btn-neutral float-right" title="Writing Developer Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+<map id="sierra::nalu::LinearSolverConfig" name="sierra::nalu::LinearSolverConfig">
+<area shape="rect" id="Node000001" title=" " alt="" coords="109,5,293,45"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_hypre_linear_solver_config.html" title="User configuration parmeters for Hypre solvers and preconditioners." alt="" coords="5,93,188,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="169,56,121,95,118,91,165,52"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_tpetra_linear_solver_config.html" title=" " alt="" coords="212,93,397,133"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="236,52,283,91,280,95,233,56"/>
+</map>

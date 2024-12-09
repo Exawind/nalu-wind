@@ -1,0 +1,10 @@
+<map id="sierra::nalu::MotionOscillationKernel" name="sierra::nalu::MotionOscillationKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,257,223,297"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_ngp_motion_kernel.html" title=" " alt="" coords="7,168,221,208"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="117,222,117,257,111,257,111,222"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_ngp_motion.html" title=" " alt="" coords="21,5,196,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="112,44,116,168,111,168,107,44"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_ngp_motion_kernel.html" title=" " alt="" coords="130,80,383,105"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="146,34,234,77,232,82,144,39"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="229,115,144,170,142,166,226,111"/>
+</map>

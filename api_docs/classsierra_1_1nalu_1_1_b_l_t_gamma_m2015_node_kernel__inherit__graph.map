@@ -1,0 +1,10 @@
+<map id="sierra::nalu::BLTGammaM2015NodeKernel" name="sierra::nalu::BLTGammaM2015NodeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="17,257,240,297"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="5,168,252,208"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="131,222,131,257,126,257,126,222"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_node_kernel.html" title=" " alt="" coords="34,5,213,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="127,44,131,168,125,168,121,44"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="145,80,389,105"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="160,35,245,77,243,82,158,39"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="240,115,158,170,155,166,237,111"/>
+</map>

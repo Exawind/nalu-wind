@@ -1,0 +1,1134 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>9. Supported Boundary Conditions &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="10. Overset" href="overset.html" />
+    <link rel="prev" title="8. Turbulence Modeling" href="turbulenceModeling.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Theory Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lowMachNumberDerivation.html">1. Low Mach Number Derivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html">2. Supported Equation Set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html">3. Discretization Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advectionStabilization.html">4. Advection Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pressureStabilization.html">5. Pressure Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html">6. RTE Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html">7. Nonlinear Stabilization Operator (NSO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html">8. Turbulence Modeling</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">9. Supported Boundary Conditions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#inflow-boundary-condition">9.1. Inflow Boundary Condition</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#continuity">9.1.1. Continuity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#momentum-mixture-fraction-enthalpy-species-k-sgs-k-and-omega">9.1.2. Momentum, Mixture Fraction, Enthalpy, Species, <span class="math notranslate nohighlight">\(k_{sgs}\)</span>, k and <span class="math notranslate nohighlight">\(\omega\)</span></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#wall-boundary-conditions">9.2. Wall Boundary Conditions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">9.2.1. Continuity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#momentum">9.2.2. Momentum</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mixture-fraction">9.2.3. Mixture Fraction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#enthalpy">9.2.4. Enthalpy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#thermal-heat-conduction">9.2.5. Thermal Heat Conduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#species">9.2.6. Species</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#atmospheric-boundary-layer-surface-conditions">9.3. Atmospheric Boundary Layer Surface Conditions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#monin-obukhov-theory">9.3.1. Monin-Obukhov Theory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#abl-wall-function">9.3.2. ABL Wall Function</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#atmospheric-boundary-layer-top-conditions">9.4. Atmospheric Boundary Layer Top Conditions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#inflow-outflow-capability">9.4.1. Inflow-Outflow Capability</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#temperature-gradient-capability">9.4.2. Temperature Gradient Capability</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#implementation-details">9.4.3. Implementation Details</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#turbulent-kinetic-energy-k-sgs-les-model">9.5. Turbulent Kinetic Energy, <span class="math notranslate nohighlight">\(k_{sgs}\)</span> LES model</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#turbulent-kinetic-energy-and-specific-dissipation-sst-low-reynolds-number-boundary-conditions">9.5.1. Turbulent Kinetic Energy and Specific Dissipation SST Low Reynolds Number Boundary conditions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turbulent-kinetic-energy-and-specific-dissipation-sst-high-reynolds-number-boundary-conditions">9.5.2. Turbulent Kinetic Energy and Specific Dissipation SST High Reynolds Number Boundary conditions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#solid-stress">9.5.3. Solid Stress</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#intensity">9.5.4. Intensity</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#sst-of-the-atmospheric-boundary-layer">9.6. SST of the Atmospheric Boundary Layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ams-of-the-atmospheric-boundary-layer">9.7. AMS of the Atmospheric Boundary Layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#open-boundary-condition">9.8. Open Boundary Condition</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id9">9.8.1. Continuity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id10">9.8.2. Momentum</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mixture-fraction-enthalpy-species-k-sgs-k-and-omega">9.8.3. Mixture Fraction, Enthalpy, Species, <span class="math notranslate nohighlight">\(k_{sgs}\)</span>, k and <span class="math notranslate nohighlight">\(\omega\)</span></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#strong-symmetry-boundary-condition">9.9. Strong Symmetry Boundary Condition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#weak-symmetry-boundary-condition">9.10. Weak Symmetry Boundary Condition</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#continuity-mixture-fraction-enthalpy-species-k-sgs-k-and-omega">9.10.1. Continuity, Mixture Fraction, Enthalpy, Species, <span class="math notranslate nohighlight">\(k_{sgs}\)</span>, k and <span class="math notranslate nohighlight">\(\omega\)</span></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id11">9.10.2. Momentum</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#specified-boundary-normal-temperature-gradient-option">9.10.3. Specified Boundary-Normal Temperature Gradient Option</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#periodic-boundary-condition">9.11. Periodic Boundary Condition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#non-conformal-boundary-condition">9.12. Non-conformal Boundary Condition</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="overset.html">10. Overset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html">11. Property Evaluations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="couplingApproach.html">12. Coupling Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeDiscretization.html">13. Time discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiPhysics.html">14. Multi-Physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html">15. Wind Energy Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topologicalSupport.html">16. Topological Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adaptivity.html">17. Adaptivity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeAbstractions.html">18. Code Abstractions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Nalu-Wind - Theory Manual</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">9. </span>Supported Boundary Conditions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/theory/boundaryConditions.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="supported-boundary-conditions">
+<span id="theory-boundary-conditions"></span><h1><span class="section-number">9. </span>Supported Boundary Conditions<a class="headerlink" href="#supported-boundary-conditions" title="Link to this heading"></a></h1>
+<section id="inflow-boundary-condition">
+<h2><span class="section-number">9.1. </span>Inflow Boundary Condition<a class="headerlink" href="#inflow-boundary-condition" title="Link to this heading"></a></h2>
+<section id="continuity">
+<h3><span class="section-number">9.1.1. </span>Continuity<a class="headerlink" href="#continuity" title="Link to this heading"></a></h3>
+<p>Continuity uses a flux boundary condition with the incoming mass flow
+rate based on the user specified values for velocity,</p>
+<div class="math notranslate nohighlight">
+\[\dot{m}_c = \rho^{spec} u^{spec}_j A_j.\]</div>
+<p>As this is a vertex-based code, at inflow and Dirichlet wall boundary
+locations, the continuity equation uses the specified velocity within
+the inflow boundary condition block.</p>
+</section>
+<section id="momentum-mixture-fraction-enthalpy-species-k-sgs-k-and-omega">
+<h3><span class="section-number">9.1.2. </span>Momentum, Mixture Fraction, Enthalpy, Species, <span class="math notranslate nohighlight">\(k_{sgs}\)</span>, k and <span class="math notranslate nohighlight">\(\omega\)</span><a class="headerlink" href="#momentum-mixture-fraction-enthalpy-species-k-sgs-k-and-omega" title="Link to this heading"></a></h3>
+<p>These degree-of-freedoms (DOFs) each use a Dirichlet value with the
+specified user value. For all Dirichlet values, the row is zeroed with a
+unity placed on the diagonal. The residual is zeroed and set to the
+difference between the current value and user specified value.</p>
+</section>
+</section>
+<section id="wall-boundary-conditions">
+<h2><span class="section-number">9.2. </span>Wall Boundary Conditions<a class="headerlink" href="#wall-boundary-conditions" title="Link to this heading"></a></h2>
+<section id="id1">
+<h3><span class="section-number">9.2.1. </span>Continuity<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>Continuity uses a no-op.</p>
+</section>
+<section id="momentum">
+<span id="wall-bc-momentum"></span><h3><span class="section-number">9.2.2. </span>Momentum<a class="headerlink" href="#momentum" title="Link to this heading"></a></h3>
+<p>When resolving the boundary layer, Momentum again uses a no-slip
+Dirichlet condition., e.g., <span class="math notranslate nohighlight">\(u_i = 0\)</span>.</p>
+<p>In the case of a wall model, a classic wall function is applied. The
+wall shear stress enters the discretization of the momentum equations by
+the term</p>
+<div class="math notranslate nohighlight" id="equation-wall-shear1">
+<span class="eqno">(9.1)<a class="headerlink" href="#equation-wall-shear1" title="Link to this equation"></a></span>\[\int \tau_{ij} n_j dS = -{F_w}_i .\]</div>
+<p>Wall functions are used to prescribe the value of the wall shear stress
+rather than resolving the boundary layer within the near-wall domain.
+The fundamental momentum law of the wall formulation, assuming
+fully-developed turbulent flow near a no-slip wall, can be written as,</p>
+<div class="math notranslate nohighlight" id="equation-law-wall">
+<span class="eqno">(9.2)<a class="headerlink" href="#equation-law-wall" title="Link to this equation"></a></span>\[u^+ = \frac{u_{\|}}{u_{\tau}}
+    = \frac{1}{\kappa} \ln \left(Ey^+\right) ,\]</div>
+<p>where <span class="math notranslate nohighlight">\(u^+\)</span> is defined by the the near-wall parallel velocity,
+<span class="math notranslate nohighlight">\(u_{\|}\)</span>, normalized by the wall friction velocity,
+<span class="math notranslate nohighlight">\(u_{\tau}\)</span>. The wall friction velocity is related to the turbulent
+kinetic energy by,</p>
+<div class="math notranslate nohighlight" id="equation-utau">
+<span class="eqno">(9.3)<a class="headerlink" href="#equation-utau" title="Link to this equation"></a></span>\[u_{\tau} = C_\mu^{1/4} k^{1/2}.\]</div>
+<p>by assuming that the production and dissipation of turbulence is in
+local equilibrium. The wall friction velocity is also computed given the
+density and wall shear stress,</p>
+<div class="math notranslate nohighlight">
+\[u_\tau = (\frac{\tau_w} {\rho})^{0.5}.\]</div>
+<p>The normalized perpendicular distance from the point in question to the
+wall, <span class="math notranslate nohighlight">\(y^+\)</span>, is defined as the following:</p>
+<div class="math notranslate nohighlight" id="equation-yplus">
+<span class="eqno">(9.4)<a class="headerlink" href="#equation-yplus" title="Link to this equation"></a></span>\[y^+ = \frac{ \rho Y_p}{\mu }\left(\frac{\tau_w}{\rho} \right)^{1/2}
+    = \frac{ \rho Y_p u_{\tau}} {\mu }.\]</div>
+<p>The classical law of the wall is as follows:</p>
+<div class="math notranslate nohighlight" id="equation-lawofwall1">
+<span class="eqno">(9.5)<a class="headerlink" href="#equation-lawofwall1" title="Link to this equation"></a></span>\[u^+ = \frac{1}{\kappa} \ln(y^+) + C,\]</div>
+<p>where <span class="math notranslate nohighlight">\(\kappa\)</span> is the von Karman constant and <span class="math notranslate nohighlight">\(C\)</span> is the
+dimensionless integration constant that varies based on authorship and
+surface roughness. The above expression can be re-written as,</p>
+<div class="math notranslate nohighlight" id="equation-lawofwall2">
+<span class="eqno">(9.6)<a class="headerlink" href="#equation-lawofwall2" title="Link to this equation"></a></span>\[u^+ = \frac{1}{\kappa} \ln(y^+) + \frac{1}{\kappa} \ln(\exp(\kappa C)),\]</div>
+<p>or simplified to the following expression:</p>
+<div class="math notranslate nohighlight" id="equation-lawofwall3">
+<span class="eqno">(9.7)<a class="headerlink" href="#equation-lawofwall3" title="Link to this equation"></a></span>\[\begin{split}u^+ &amp;= \frac{1}{\kappa} \left(\ln(y^+) + \ln(\exp(\kappa C))\right) \\
+&amp;= \frac{1}{\kappa} \ln(E y^+).\end{split}\]</div>
+<p>In the above equation, <span class="math notranslate nohighlight">\(E\)</span>, is referred to in the text as the
+dimensionless wall roughness parameter and is described by,</p>
+<div class="math notranslate nohighlight" id="equation-elogparam">
+<span class="eqno">(9.8)<a class="headerlink" href="#equation-elogparam" title="Link to this equation"></a></span>\[E = \exp(\kappa C).\]</div>
+<p>In Nalu-Wind, <span class="math notranslate nohighlight">\(\kappa\)</span> is set to the value of 0.42 while the value of
+<span class="math notranslate nohighlight">\(E\)</span> is set to 9.8 for smooth walls (White suggests values of
+<span class="math notranslate nohighlight">\(\kappa=0.41\)</span> and <span class="math notranslate nohighlight">\(E=7.768.\)</span>). The viscous sublayer is
+assumed to extend to a value of <span class="math notranslate nohighlight">\(y^+\)</span> = 11.63.</p>
+<p>The wall shear stress, <span class="math notranslate nohighlight">\(\tau_w\)</span>, can be expressed as,</p>
+<div class="math notranslate nohighlight" id="equation-wall-shear-trb">
+<span class="eqno">(9.9)<a class="headerlink" href="#equation-wall-shear-trb" title="Link to this equation"></a></span>\[\tau_w = \rho u_\tau^2 = \rho u_\tau {\frac{u_\|} {u^+}}
+       = \frac{\rho \kappa u_{\tau}}{\ln \left(Ey^+\right) } u_\|
+       = \lambda_w u_\| ,\]</div>
+<p>where <span class="math notranslate nohighlight">\(\lambda_w\)</span> is simply the grouping of the factors from the
+law of the wall. For values of <span class="math notranslate nohighlight">\(y^+\)</span> less than 11.63, the wall
+shear stress is given by,</p>
+<div class="math notranslate nohighlight" id="equation-wall-shear-lam">
+<span class="eqno">(9.10)<a class="headerlink" href="#equation-wall-shear-lam" title="Link to this equation"></a></span>\[\tau_w =  \mu \frac{u_\|}{Y_p} .\]</div>
+<p>The force imparted by the wall, for the <span class="math notranslate nohighlight">\(i_{th}\)</span> component of
+velocity, can be written as,</p>
+<div class="math notranslate nohighlight" id="equation-wall-force-1">
+<span class="eqno">(9.11)<a class="headerlink" href="#equation-wall-force-1" title="Link to this equation"></a></span>\[F_{w,i}= -\lambda_w A_w u_{i\|} ,\]</div>
+<p>where <span class="math notranslate nohighlight">\(A_w\)</span> is the total area over which the shear stress acts.</p>
+<p>The use of a general, non-orthogonal mesh adds a slight complexity to
+specifying the force imparted on the fluid by the wall. As shown in
+Equation <a class="reference internal" href="#equation-wall-force-1">(9.11)</a>, the velocity component parallel to the wall
+must be determined. Use of the unit normal vector, <span class="math notranslate nohighlight">\(n_j\)</span>, provides
+an easy way to determine the parallel velocity component by the
+following standard vector projection:</p>
+<div class="math notranslate nohighlight" id="equation-proj-oper">
+<span class="eqno">(9.12)<a class="headerlink" href="#equation-proj-oper" title="Link to this equation"></a></span>\[\Pi_{ij} = \left [ \delta_{ij} - n_i n_j \right].\]</div>
+<p>Carrying out the projection of a general velocity, which is not
+necessarily parallel to the wall, yields the velocity vector parallel to
+the wall,</p>
+<div class="math notranslate nohighlight" id="equation-proj-operu">
+<span class="eqno">(9.13)<a class="headerlink" href="#equation-proj-operu" title="Link to this equation"></a></span>\[u_{i\|} = \Pi_{ij} {u}_j = u_i\left(1-{n_i}^2\right)
+        -\sum_{j=1;j\neq j}^{n} u_j n_i n_j.\]</div>
+<p>Note that the component that acts on the particular <span class="math notranslate nohighlight">\(i^{th}\)</span>
+component of velocity,</p>
+<div class="math notranslate nohighlight" id="equation-implicit-shear">
+<span class="eqno">(9.14)<a class="headerlink" href="#equation-implicit-shear" title="Link to this equation"></a></span>\[-\lambda_w A_w \left(1-n_i n_i\right) u_{i\|} ,\]</div>
+<p>provides a form that can be potentially treated implicitly; i.e., in a
+way to augment the diagonal dominance of the central coefficient of the
+<span class="math notranslate nohighlight">\(i^{th}\)</span> component of velocity. The use of residual form adds a
+slight complexity to this implicit formulation only in that appropriate
+right-hand-side source terms must be added.</p>
+</section>
+<section id="mixture-fraction">
+<h3><span class="section-number">9.2.3. </span>Mixture Fraction<a class="headerlink" href="#mixture-fraction" title="Link to this heading"></a></h3>
+<p>If a value is specified for each quantity within the wall boundary
+condition block, a Dirichlet condition is applied. If no values are
+specified, a zero flux condition is applied.</p>
+</section>
+<section id="enthalpy">
+<h3><span class="section-number">9.2.4. </span>Enthalpy<a class="headerlink" href="#enthalpy" title="Link to this heading"></a></h3>
+<p>If the temperature is specified within the wall boundary condition
+block, a Dirichlet condition is always specified. Wall functions for
+enthalpy transport have not yet been implemented.</p>
+<p>The simulation tool supports multi-physics coupling via conjugate heat
+transfer and radiative heat transfer. Coupling parameters required for
+the thermal boundary condition are post processed by the fluids or PMR
+Realm. For conjugate and radiative coupling, the thermal solve provides
+the surface temperature. From the surface temperature, a wall enthalpy
+is computed and used.</p>
+</section>
+<section id="thermal-heat-conduction">
+<h3><span class="section-number">9.2.5. </span>Thermal Heat Conduction<a class="headerlink" href="#thermal-heat-conduction" title="Link to this heading"></a></h3>
+<p>If a temperature is specified in the wall block, and the surface is not
+an interface condition, then a Dirichlet approach is used. If conjugate
+heat transfer is included, then the boundary condition applied is as
+follows,</p>
+<div class="math notranslate nohighlight">
+\[-\kappa \frac{\partial T} {\partial x_j} n_j dS = h(T-T^o)dS,\]</div>
+<p>where <span class="math notranslate nohighlight">\(h\)</span> is the heat transfer coefficient and <span class="math notranslate nohighlight">\(T^o\)</span> is the
+reference temperature. The details of how these quantities are computed
+are currently omitted in this manual. In general, the quantities are
+post processed from the fluids temperature field. A surface-based
+gradient is computed on the boundary face. Nodes on the face augment a
+heat transfer coefficient field while nodes off the face contribute to a
+reference temperature.</p>
+<p>For radiative heat transfer, the boundary condition applied is as
+follows:</p>
+<div class="math notranslate nohighlight">
+\[-\kappa \frac{\partial T} {\partial x_j} n_j dS = \epsilon (\sigma T^4 - H) dS,\]</div>
+<p>where <span class="math notranslate nohighlight">\(H\)</span> is again the irradiation provided by the RTE solve.</p>
+<p>If no temperature is specified or an adiabatic line command is used, a
+zero flux condition is applied.</p>
+</section>
+<section id="species">
+<h3><span class="section-number">9.2.6. </span>Species<a class="headerlink" href="#species" title="Link to this heading"></a></h3>
+<p>If a value is specified for each quantity within the wall boundary
+condition block, a Dirichlet condition is applied. If no values are
+specified, a zero flux condition is applied.</p>
+</section>
+</section>
+<section id="atmospheric-boundary-layer-surface-conditions">
+<span id="abl-surface-conditions"></span><h2><span class="section-number">9.3. </span>Atmospheric Boundary Layer Surface Conditions<a class="headerlink" href="#atmospheric-boundary-layer-surface-conditions" title="Link to this heading"></a></h2>
+<section id="monin-obukhov-theory">
+<h3><span class="section-number">9.3.1. </span>Monin-Obukhov Theory<a class="headerlink" href="#monin-obukhov-theory" title="Link to this heading"></a></h3>
+<p>Consider atmospheric flow over a flat but non-smooth surface; the
+coordinate system convention is that flow is along the <span class="math notranslate nohighlight">\(x\)</span>-axis, while
+the <span class="math notranslate nohighlight">\(z\)</span>-axis is oriented normal to the surface.  The surface layer is
+the relatively thin layer near the surface where strong wind and
+temperature gradients exist.  Turbulence within this layer can be
+generated through mechanisms of both shear and thermal convection; the
+relative contributions of these two mechanisms is determined by the
+stability state of the atmosphere.  The stability state is
+characterized by the Monin-Obukhov length:</p>
+<div class="math notranslate nohighlight">
+\[L = - \frac{u_\tau^3 \theta_{ref}}{\kappa g (\overline{w^\prime
+  \theta^\prime})_s};\]</div>
+<p><span class="math notranslate nohighlight">\(u_\tau\)</span> is the friction velocity, defined as the
+square root of the magnitude of the Reynolds shear stress at
+the surface, or</p>
+<div class="math notranslate nohighlight">
+\[u_\tau = \left( \overline{w^\prime u^\prime}^2 + \overline{w^\prime
+v^\prime}^2 \right)^{1/4} = \sqrt{\frac{\tau_s}{\rho_s}}\]</div>
+<p><span class="math notranslate nohighlight">\(\theta_{ref}\)</span> is a reference (virtual potential) temperature associated with the air
+within the surface layer; for example, the average temperature within
+the surface layer.  <span class="math notranslate nohighlight">\(\kappa \approx 0.41\)</span> is the von Karman constant,
+and <span class="math notranslate nohighlight">\(g\)</span> is the acceleration of gravity.  <span class="math notranslate nohighlight">\(\overline{w^\prime \theta^\prime}_s\)</span>
+is the surface turbulent temperature flux.  Both the
+turbulent shear stress and turbulent temperature flux are approximately
+constant within the surface layer.</p>
+<p>Applying a gradient diffusion model for the turbulent temperature flux leads to:</p>
+<div class="math notranslate nohighlight">
+\[\overline{w^\prime \theta^\prime}_s = -k_T \frac{\partial \theta}{\partial z}\]</div>
+<p>The sign of <span class="math notranslate nohighlight">\(L\)</span> is then connected to the sign of the temperature
+gradient within the surface layer.  Three regimes are delineated:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\frac{1}{L} &gt; 0, \quad \frac{\partial \theta}{\partial z} &gt; 0\)</span>, stable stratification</p></li>
+<li><p><span class="math notranslate nohighlight">\(\frac{1}{L} = 0, \quad \frac{\partial \theta}{\partial z} = 0\)</span>, neutral stratification</p></li>
+<li><p><span class="math notranslate nohighlight">\(\frac{1}{L} &lt; 0, \quad \frac{\partial \theta}{\partial z} &lt; 0\)</span>, unstable stratification</p></li>
+</ul>
+<p>Monin-Obukhov theory postulates the following similarity laws for mean
+velocity parallel to the surface and temperature,</p>
+<div class="math notranslate nohighlight" id="equation-dudz">
+<span class="eqno">(9.15)<a class="headerlink" href="#equation-dudz" title="Link to this equation"></a></span>\[\frac{\kappa z}{u_\tau}\frac{\partial \overline{u}_{||}}{\partial z} =
+\phi_m\left(\frac{z}{L}\right),\]</div>
+<div class="math notranslate nohighlight" id="equation-dtdz">
+<span class="eqno">(9.16)<a class="headerlink" href="#equation-dtdz" title="Link to this equation"></a></span>\[\frac{\kappa z u_\tau}{\overline{w^\prime \theta^\prime}_s}
+\frac{\partial \overline{\theta}}{\partial z} = \phi_h\left(\frac{z}{L}\right),\]</div>
+<p>where the forms of the non-dimensional functions <span class="math notranslate nohighlight">\(\phi_m\)</span> and <span class="math notranslate nohighlight">\(\phi_h\)</span> are determined
+from empirical observations. Analytical functions have been fit to the
+data; these are not given here, rather, we present the integrated form
+of (<a class="reference internal" href="#equation-dudz">(9.15)</a>) and (<a class="reference internal" href="#equation-dtdz">(9.16)</a>), since these are the forms required
+by the code implementation.</p>
+<p>For neutral stratification, <span class="math notranslate nohighlight">\(\phi_m = 1\)</span> and we recover the
+logarithmic profile for a “fully rough” surface,</p>
+<div class="math notranslate nohighlight" id="equation-vel-neutral">
+<span class="eqno">(9.17)<a class="headerlink" href="#equation-vel-neutral" title="Link to this equation"></a></span>\[\overline{u}_{||}(z) = \frac{u_\tau}{\kappa}\ln\frac{z}{z_0},\]</div>
+<p>where <span class="math notranslate nohighlight">\(z_0\)</span> is the characteristic roughness height.  Note that viscous
+scaling involving surface viscosity and density properties is not
+required with this form of the logarithmic profile, since the
+roughness height is large enough to eliminate the presence of a
+laminar sublayer and buffer layer.</p>
+<p>For stable stratification, the surface layer profiles take the form</p>
+<div class="math notranslate nohighlight" id="equation-vel-stable">
+<span class="eqno">(9.18)<a class="headerlink" href="#equation-vel-stable" title="Link to this equation"></a></span>\[\overline{u}_{||}(z) = \frac{u_\tau}{\kappa}\left(\ln\frac{z}{z_0} +
+\gamma_m\frac{z}{L}\right)\]</div>
+<div class="math notranslate nohighlight" id="equation-temp-stable">
+<span class="eqno">(9.19)<a class="headerlink" href="#equation-temp-stable" title="Link to this equation"></a></span>\[\overline{\theta}(z) = \overline{\theta}(z_0) +
+\frac{\theta_*}{\kappa} \left(\alpha_h\ln\frac{z}{z_0} +
+\gamma_h\frac{z}{L}\right)\]</div>
+<p><span class="math notranslate nohighlight">\(\theta_*\)</span> is calculated from the temperature flux and friction velocity as
+<span class="math notranslate nohighlight">\(\theta_* = -\frac{\overline{w^\prime \theta^\prime}_s}{u_\tau}\)</span>, and
+<span class="math notranslate nohighlight">\(\gamma_m\)</span>, <span class="math notranslate nohighlight">\(\alpha_h\)</span>, and <span class="math notranslate nohighlight">\(\gamma_h\)</span> are constants specified below.</p>
+<p>For unstable stratification, the surface layer profiles take the form</p>
+<div class="math notranslate nohighlight" id="equation-vel-unstable">
+<span class="eqno">(9.20)<a class="headerlink" href="#equation-vel-unstable" title="Link to this equation"></a></span>\[\overline{u}_{||}(z) = \frac{u_\tau}{\kappa}\left(\ln\frac{z}{z_0} -
+\psi_m\left(\frac{z}{L}\right)\right)\]</div>
+<div class="math notranslate nohighlight" id="equation-temp-unstable">
+<span class="eqno">(9.21)<a class="headerlink" href="#equation-temp-unstable" title="Link to this equation"></a></span>\[\overline{\theta}(z) = \overline{\theta}(z_0) +
+\alpha_h\frac{\theta_*}{\kappa}\left(\ln\frac{z}{z_0} -
+\psi_h\left(\frac{z}{L}\right)\right)\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight" id="equation-psi-m">
+<span class="eqno">(9.22)<a class="headerlink" href="#equation-psi-m" title="Link to this equation"></a></span>\[\psi_m\left(\frac{z}{L}\right) = 2\ln\frac{1 + x}{2}
++ \ln\frac{1 + x^2}{2} - 2\tan^{-1}x +
+\frac{\pi}{2}, \quad x = \left(1 - \beta_m\frac{z}{L}\right)^{1/4},\]</div>
+<div class="math notranslate nohighlight" id="equation-psi-h">
+<span class="eqno">(9.23)<a class="headerlink" href="#equation-psi-h" title="Link to this equation"></a></span>\[\psi_h\left(\frac{z}{L}\right) = \ln\frac{1 + y}{2}, \quad y = \left(1 -
+\beta_h\frac{z}{L}\right)^{1/2}.\]</div>
+<p>The constants used in (<a class="reference internal" href="#equation-vel-stable">(9.18)</a>) – (<a class="reference internal" href="#equation-psi-h">(9.23)</a>) are <span id="id2">[<a class="reference internal" href="../../zrefs.html#id32" title="A. J. Dyer. A review of flux-profile relationships. Boundary-Layer Meteorology, 7:363–372, 1974.">Dye74</a>]</span></p>
+<div class="math notranslate nohighlight">
+\[\kappa = 0.41,~~\alpha_h =
+1,~~\beta_m=16,~~\beta_h=16,~~\gamma_m=5.0,~~\gamma_h=5.0.\]</div>
+</section>
+<section id="abl-wall-function">
+<span id="theory-abl-wall-function"></span><h3><span class="section-number">9.3.2. </span>ABL Wall Function<a class="headerlink" href="#abl-wall-function" title="Link to this heading"></a></h3>
+<p>The equations from the preceeding section can be used to formulate a
+wall function boundary condition for simulation of atmospheric
+boundary layers.  The user-specified inputs to this boundary condition
+are: roughness length, <span class="math notranslate nohighlight">\(z_0\)</span>, and surface heat flux, <span class="math notranslate nohighlight">\(q_s =
+\rho C_p (\overline{w^\prime \theta^\prime})_s\)</span>.  The surface layer profile
+model is evaluated for each surface boundary flux integration point;
+the wall-normal distance of the “first point off the wall” is taken
+to be one fourth of the length of the nearest edge intersecting the
+boundary face.  The boundary condition is specified weakly through the
+imposition of a surface shear stress and surface heat flux.</p>
+<p>The procedure for applying the boundary condition is as follows:</p>
+<ol class="arabic simple">
+<li><p>Determine the stratification state of the boundary layer by calculating the sign of the Monin-Obukhov length scale.</p></li>
+<li><p>Solve the appropriate profile equation, either (<a class="reference internal" href="#equation-vel-neutral">(9.17)</a>), (<a class="reference internal" href="#equation-vel-stable">(9.18)</a>), or (<a class="reference internal" href="#equation-vel-unstable">(9.20)</a>), for the friction velocity <span class="math notranslate nohighlight">\(u_\tau\)</span>.  For the neutral case, <span class="math notranslate nohighlight">\(u_\tau\)</span> can be solved for directly.  For the stable and unstable cases, <span class="math notranslate nohighlight">\(u_\tau\)</span> must be solved for iteratively because <span class="math notranslate nohighlight">\(L\)</span> appears in these equations and <span class="math notranslate nohighlight">\(L\)</span> depends on <span class="math notranslate nohighlight">\(u_\tau\)</span>.</p></li>
+<li><p>The surface shear stress is calculated as <span class="math notranslate nohighlight">\(\tau_s = \rho_s u_\tau^2\)</span>.  For calculating left-hand-side Jacobian entries, the form <a class="reference internal" href="#equation-tau-s-useful">(9.24)</a> is used, where <span class="math notranslate nohighlight">\(\psi^\prime\)</span> is zero for a neutral profile, <span class="math notranslate nohighlight">\(-\gamma_m z/L\)</span> for a stable profile, and <span class="math notranslate nohighlight">\(\psi_h(z/L)\)</span> for an unstable profile. The Jacobian entries follow directly from this form.</p></li>
+<li><p>The user specified surface heat flux is applied to the enthalpy equation. Evaluation of surface temperature is not required for the boundary condition specification. However, if surface temperature is required for evaluation of other quantities within the code, the appropriate surface layer temperature profile should be used, either (<a class="reference internal" href="#equation-temp-stable">(9.19)</a>) or (<a class="reference internal" href="#equation-temp-unstable">(9.21)</a>).</p></li>
+</ol>
+<div class="math notranslate nohighlight" id="equation-tau-s-useful">
+<span class="eqno">(9.24)<a class="headerlink" href="#equation-tau-s-useful" title="Link to this equation"></a></span>\[\tau_{s_i} = \lambda_s u_{||_i} = \frac{\kappa\rho u_\tau}{\log(z/z_0) - \psi^\prime (z/L)},\]</div>
+</section>
+</section>
+<section id="atmospheric-boundary-layer-top-conditions">
+<span id="theory-abltop-bc"></span><h2><span class="section-number">9.4. </span>Atmospheric Boundary Layer Top Conditions<a class="headerlink" href="#atmospheric-boundary-layer-top-conditions" title="Link to this heading"></a></h2>
+<p>The abltop option is intended for the upper boundary of atmospheric
+boundary layer simulations.  Currently it has two functions:
+(1) to provide a fully-automated open boundary condition that allows
+for inflows and outflows generated by terrain features or obstacles
+placed within the domain interior, and (2) to allow for mean temperature
+gradients at the upper boundary.  These two features will be described
+separately below.</p>
+<section id="inflow-outflow-capability">
+<h3><span class="section-number">9.4.1. </span>Inflow-Outflow Capability<a class="headerlink" href="#inflow-outflow-capability" title="Link to this heading"></a></h3>
+<p>The inflow-outflow capability is facilitated by a potential flow solution
+on a sub-domain consisting of a thin slab extending from the upper
+boundary a short distance into the domain.
+The vertical velocity at the slab bottom face is measured directly from
+the solution at each time step and this information is used to form a
+potential flow solution for the entire slab, which effectively provides
+all three velocity components at the main domain upper boundary.  The
+potential flow solution is achieved at very little computational cost
+via Fast Fourier Transforms.  The mathematical aspects of the boundary
+condition solution procedure are sketched below.</p>
+<p>We start by assuming that the flow near the upper boundary is either
+laminar or weakly turbulent, as is the norm in atmospheric boundary
+layer simulations due to the presence of capping inversions (a region
+of increased stability that effectively terminates the boundary layer).
+If any turbulence within the slab is weak then the flow is approximately
+irrotational and any density fluctuations are weak.  Furthermore, if the
+slab is thin (compared with the density scale height <span class="math notranslate nohighlight">\(\sim 8\)</span> km) then the
+mean density variation is also negligible.  Thus we idealize the flow
+as being irrotational and of constant density, which leads to the following
+potential flow framework</p>
+<div class="math notranslate nohighlight">
+\[\nabla^2 \phi = 0,\]</div>
+<div class="math notranslate nohighlight">
+\[\vec{u} = \nabla \phi + \langle\vec{u}\rangle,\]</div>
+<p>where <span class="math notranslate nohighlight">\(\phi\)</span> is the disturbance potential and
+<span class="math notranslate nohighlight">\(\langle\vec{u}\rangle\)</span> is the mean velocity.</p>
+<p>A Fourier transform of Laplace’s equation in <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span> leads to</p>
+<div class="math notranslate nohighlight">
+\[-(k^2+l^2)\hat{\phi} + \frac{\partial^2\hat{\phi}}{\partial z^2} = 0,\]</div>
+<p>where <span class="math notranslate nohighlight">\(k\)</span> and <span class="math notranslate nohighlight">\(l\)</span> are the wavenumber components in the
+<span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span> directions respectively, and where
+<span class="math notranslate nohighlight">\(\hat{\phi}\)</span> is the Fourier transform of <span class="math notranslate nohighlight">\(\phi\)</span>.</p>
+<p>The bounded solution to the above equation is</p>
+<div class="math notranslate nohighlight">
+\[\hat{\phi}(k,l,z) = \hat{\phi}_0\exp\left[-\sqrt{k^2+l^2}(z-z_0)\right],\]</div>
+<p>where <span class="math notranslate nohighlight">\(\hat{\phi}_0\)</span> is the Fourier transform of <span class="math notranslate nohighlight">\(\phi\)</span>
+on the horizontal plane <span class="math notranslate nohighlight">\(z=z_0\)</span>.  The vertical velocity component
+(in Fourier <span class="math notranslate nohighlight">\(x-y\)</span> space) is</p>
+<div class="math notranslate nohighlight">
+\[\hat{w}(k,l,z) = \frac{\partial\hat{\phi}}{\partial z} =
+-\sqrt{k^2+l^2}\hat{\phi}_0\exp\left[-\sqrt{k^2+l^2}(z-z_0)\right].\]</div>
+<p>When evaluated at the position <span class="math notranslate nohighlight">\(z=z_0\)</span> the above relation yields the
+following specification for <span class="math notranslate nohighlight">\(\hat{\phi}_0\)</span></p>
+<div class="math notranslate nohighlight">
+\[\hat{\phi}_0 = -\frac{1}{\sqrt{k^2+l^2}}\hat{w}_0.\]</div>
+<p>Making use of this result, the solution for <span class="math notranslate nohighlight">\(\hat{\phi}\)</span> can be written
+as</p>
+<div class="math notranslate nohighlight">
+\[\hat{\phi}(k,l,z) = -\frac{1}{\sqrt{k^2+l^2}}\hat{w}_0
+                    \exp\left[-\sqrt{k^2+l^2}(z-z_0)\right]\]</div>
+<p>If we identify <span class="math notranslate nohighlight">\(z_0\)</span> with the position of the potential flow slab lower
+face (the sampling plane), then the above prescription for
+<span class="math notranslate nohighlight">\(\hat{\phi}\)</span> yields the solution anywhere in the slab using just
+knowledge of <span class="math notranslate nohighlight">\(\hat{w}\)</span> at its lower boundary.  The three velocity
+components are</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\hat{u}(k,l,z) &amp; = &amp;\frac{\partial \hat{\phi}}{\partial x} =
+  -\frac{ik}{\sqrt{k^2+l^2}}\hat{w}_0
+  \exp\left[-\sqrt{k^2+l^2}(z-z_0)\right] + \langle u\rangle \\
+\hat{v}(k,l,z) &amp; = &amp;\frac{\partial \hat{\phi}}{\partial x} =
+  -\frac{il}{\sqrt{k^2+l^2}}\hat{w}_0
+  \exp\left[-\sqrt{k^2+l^2}(z-z_0)\right] + \langle v\rangle \\
+\hat{w}(k,l,z) &amp; = &amp;\frac{\partial \hat{\phi}}{\partial x} =
+  \hat{w}_0\exp\left[-\sqrt{k^2+l^2}(z-z_0)\right] + \langle w\rangle\end{split}\]</div>
+<p>Notice that all three velocity components contain a common
+wavenumber-dependent exponential damping term.  This feature indicates
+that high wavenumber (small-scale) information on the sampling plane is
+strongly filtered in constructing the velocity field at the upper
+boundary.  Thus the boundary condition velocity field will always be
+smoother that the velocity on the sampling plane.  The filtering also
+increases with larger separations between the sampling plane and the upper
+boundary.  This fact poses the need to compromise between the additional
+computational cost of adding a thicker potential flow region and the
+reduced filtering resulting from a thin slab.  We have found that
+a potential flow region thickness of 10% of the overall computational
+domain height provides a good compromise between these two competing
+aspects of the solution.</p>
+<p>The solution procedure is rather simple:</p>
+<ol class="arabic simple">
+<li><p>Measure <span class="math notranslate nohighlight">\(w(x,y,z=z_0)\)</span>, at the position of the sampling plane.</p></li>
+<li><p>Take the 2D Fourier transform of <span class="math notranslate nohighlight">\(w\)</span> to get <span class="math notranslate nohighlight">\(\hat{w}_0(k,l)\)</span>.</p></li>
+<li><p>Solve for the three velocity components given above using the
+computational domain upper boundary position for <span class="math notranslate nohighlight">\(z\)</span> and the sampling
+plane position for <span class="math notranslate nohighlight">\(z_0\)</span>.</p></li>
+<li><p>Inverse Fourier transform all three solution components.</p></li>
+</ol>
+<p>While this solution procedure is simple and can be computed at very low
+cost using Fast Fourier Transforms (FFTs), it does have some
+obvious restrictions, namely</p>
+<ol class="arabic simple">
+<li><p>Data must be sampled on a uniform Cartesian grid at a fixed elevation.</p></li>
+<li><p>Periodic or symmetry boundary conditions must exist in the lateral
+directions.</p></li>
+</ol>
+<p>The simplest way to achieve the first constraint is to add a Cartesian mesh
+block to the upper portion of the main computational domain.  The thickness
+of the addition can be rather small, say about 10% of the original domain
+height.  The current implementation assumes that a plane at constant
+elevation with a uniform Cartesian mesh exists near the upper boundary.
+However, if required in the future, interpolation can be used to sample the
+solution on a horizontal plane.  The BdyLayerVelocitySampler class can do
+this.</p>
+<p>While the second constraint may seem restrictive, it allows for any combination
+of periodic or inflow/outflow boundary conditions in either of the two
+lateral directions.  Half-wave instead of periodic transforms are used for
+an inflow/outflow direction.  For example, for inflow/outflow in the <span class="math notranslate nohighlight">\(x\)</span>
+direction, we take <span class="math notranslate nohighlight">\(u\sim\cos(\pi k x/xL)\)</span>,
+<span class="math notranslate nohighlight">\(v\sim\sin(\pi k x/xL)\)</span>, <span class="math notranslate nohighlight">\(w\sim\sin(\pi k x/xL)\)</span>.
+These prescriptions dictate that <span class="math notranslate nohighlight">\(\partial u/\partial x=0\)</span> at
+<span class="math notranslate nohighlight">\(x=0\)</span> (the inlet) and at <span class="math notranslate nohighlight">\(x=xL\)</span> (the outlet) and that
+<span class="math notranslate nohighlight">\(v=0\)</span>, <span class="math notranslate nohighlight">\(w=0\)</span> at the inlet and outlet.  In order to meet these
+constraints, the terrain should be horizontal for a short distance downstream
+of the inlet and a short distance upstream of the outlet.  The appropriate
+combination of half-wave and full-wave (periodic) transforms in the two
+coordinate directions allow for various combinations of inflow/outflow or
+periodic conditions in these directions.</p>
+</section>
+<section id="temperature-gradient-capability">
+<h3><span class="section-number">9.4.2. </span>Temperature Gradient Capability<a class="headerlink" href="#temperature-gradient-capability" title="Link to this heading"></a></h3>
+<p>The temperature almost always varies with height within the atmosphere.
+The temperature gradient option allows the simulation to be consistent
+with this fact specifying the rate of change in temperature at the upper
+boundary.</p>
+</section>
+<section id="implementation-details">
+<h3><span class="section-number">9.4.3. </span>Implementation Details<a class="headerlink" href="#implementation-details" title="Link to this heading"></a></h3>
+<p>The ABL top boundary condition is activated by the keyword
+abltop_boundary_condition in the input file.  The following is an
+example block of an ABL top boundary condition specification:</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line">- abltop_boundary_condition: bc_upper</div>
+<div class="line">target_name: top</div>
+<div class="line">abltop_user_data:</div>
+</div>
+<blockquote>
+<div><div class="line-block">
+<div class="line">potential_flow_bc: true</div>
+<div class="line">grid_dimensions: [121, 2, 61]</div>
+<div class="line">horizontal_bcs: [1, -1, 0, 0]</div>
+<div class="line">z_sample: 0.85</div>
+<div class="line">normal_temperature_gradient: 0.01</div>
+</div>
+</div></blockquote>
+</div></blockquote>
+<p>The potential flow and temperature gradient options can be used independently
+or together.  The Boolean input potential_flow_bc: true activates the
+potential flow feature, whereas the presence of the keyword
+normal_temperature_gradient: value activates the temperature gradient
+feature.  If only the temperature gradient feature is called for, then
+symmetry conditions (i.e. a slip wall) are used continuity and momentum
+boundary conditions at the upper boundary.  If only the potential flow
+boundary condition is called for then the condition
+<span class="math notranslate nohighlight">\(d\langle T\rangle/dz=0\)</span> is used at the upper boundary (where
+<span class="math notranslate nohighlight">\(\langle\rangle\)</span> indicates a horizontal average).</p>
+<p>If the potential flow option is selected, the user must then specify
+three additional user inputs: grid_dimensions, horizontal_bcs and z_sample.
+The grid_dimensions input specifies the number of mesh points in the
+three coordinate directions for the structured
+Cartesian portion of the domain containing the potential flow slab.  This
+may be the entire domain, or just a sub-portion of it.  The current
+implementation assumes that the grid points within the structured Cartesian
+region are tagged with a mesh index flag that indicates the relative position
+of each point within the structured mesh system.  For example, if
+(imax,jmax,kmax) are the grid dimensions in the three coordinate directions,
+then the mesh index for the point (i,j,k) is k*imax*jmax + j*imax + i.
+The abl_mesh program will include the mesh index tag in the exodus grid file.</p>
+<p>The horizontal_bcs input specifies the lateral boundary conditions in
+use in the i and j grid directions.  Inflow is specified with +1, outlfow
+-1, and periodic with zero.  Thus in the example above, inflow is used at
+the i=0 boundary, outflow at the i=imax boundary, and periodic conditions
+are used in the j direction.</p>
+<p>The input z_sample specifies the elevation of the sampling plane.  If this
+input is missing, the default position of 90% of the distance between
+the lower and upper boundary will be used.</p>
+</section>
+</section>
+<section id="turbulent-kinetic-energy-k-sgs-les-model">
+<h2><span class="section-number">9.5. </span>Turbulent Kinetic Energy, <span class="math notranslate nohighlight">\(k_{sgs}\)</span> LES model<a class="headerlink" href="#turbulent-kinetic-energy-k-sgs-les-model" title="Link to this heading"></a></h2>
+<p>When the boundary layer is assumed to be resolved, the natural boundary
+condition is a Dirichlet value of zero, <span class="math notranslate nohighlight">\(k_{sgs} = 0\)</span>.</p>
+<p>When the wall model is used, a standard wall function approach is used
+with the assumption of equal production and dissipation.</p>
+<p>The turbulent kinetic energy production term is consistent with the law
+of the wall formulation and can be expressed as,</p>
+<div class="math notranslate nohighlight" id="equation-wall-pk-1">
+<span class="eqno">(9.25)<a class="headerlink" href="#equation-wall-pk-1" title="Link to this equation"></a></span>\[{P_k}_w = \tau_w \frac{\partial u_{\|}}{\partial y}.\]</div>
+<p>The parallel velocity, <span class="math notranslate nohighlight">\(u_{\|}\)</span>, can be related to the wall shear
+stress by,</p>
+<div class="math notranslate nohighlight" id="equation-tauwall-uplus">
+<span class="eqno">(9.26)<a class="headerlink" href="#equation-tauwall-uplus" title="Link to this equation"></a></span>\[\tau_w \frac{u^+}{y^+} = \mu \frac{u_{\|}}{Y_p}.\]</div>
+<p>Taking the derivative of both sides of Equation <a class="reference internal" href="#equation-tauwall-uplus">(9.26)</a>, and
+substituting this relationship into Equation <a class="reference internal" href="#equation-wall-pk-1">(9.25)</a> yields,</p>
+<div class="math notranslate nohighlight" id="equation-wall-pk-2">
+<span class="eqno">(9.27)<a class="headerlink" href="#equation-wall-pk-2" title="Link to this equation"></a></span>\[{P_k}_w = \frac{\tau_w^2} {\mu} \frac{\partial u^+}{\partial y^+}.\]</div>
+<p>Applying the derivative of the law of the wall formulation,
+Equation <a class="reference internal" href="#equation-law-wall">(9.2)</a>, provides the functional form of
+<span class="math notranslate nohighlight">\({\partial u^+ / \partial y^+}\)</span>,</p>
+<div class="math notranslate nohighlight" id="equation-dlaw-wall">
+<span class="eqno">(9.28)<a class="headerlink" href="#equation-dlaw-wall" title="Link to this equation"></a></span>\[\frac{\partial u^+}{\partial y^+}
+      = \frac{\partial} {\partial y^+}
+       \left[\frac{1}{\kappa} \ln \left(Ey^+\right) \right]
+      = \frac{1}{\kappa y^+}.\]</div>
+<p>Substituting Equation <a class="reference internal" href="#equation-law-wall">(9.2)</a> within Equation <a class="reference internal" href="#equation-wall-pk-2">(9.27)</a> yields
+a commonly used form of the near wall production term,</p>
+<div class="math notranslate nohighlight" id="equation-wall-pk-3">
+<span class="eqno">(9.29)<a class="headerlink" href="#equation-wall-pk-3" title="Link to this equation"></a></span>\[{P_k}_w = \frac{{\tau_w}^2}{\rho\kappa u_{\tau} Y_p}.\]</div>
+<p>Assuming local equilibrium, <span class="math notranslate nohighlight">\(P_k = \rho\epsilon\)</span>, and using
+Equation <a class="reference internal" href="#equation-wall-pk-3">(9.29)</a> and Equation <a class="reference internal" href="#equation-utau">(9.3)</a> provides the form of wall
+shear stress is given by,</p>
+<div class="math notranslate nohighlight" id="equation-wall-tauw-equil">
+<span class="eqno">(9.30)<a class="headerlink" href="#equation-wall-tauw-equil" title="Link to this equation"></a></span>\[\tau_w = \rho C_\mu^{1/2} k.\]</div>
+<p>Under the above assumptions, the near wall value for turbulent kinetic
+energy, in the absence of convection, diffusion, or accumulation is
+given by,</p>
+<div class="math notranslate nohighlight" id="equation-wall-tke">
+<span class="eqno">(9.31)<a class="headerlink" href="#equation-wall-tke" title="Link to this equation"></a></span>\[k = \frac{u_\tau^2}{C_\mu^{1/2}}.\]</div>
+<p>This expression for turbulent kinetic energy is evaluated at the
+boundary faces of the exposed wall boundaries and is area-assembled to
+the nodal value for use in a Dirichlet condition.</p>
+<section id="turbulent-kinetic-energy-and-specific-dissipation-sst-low-reynolds-number-boundary-conditions">
+<h3><span class="section-number">9.5.1. </span>Turbulent Kinetic Energy and Specific Dissipation SST Low Reynolds Number Boundary conditions<a class="headerlink" href="#turbulent-kinetic-energy-and-specific-dissipation-sst-low-reynolds-number-boundary-conditions" title="Link to this heading"></a></h3>
+<p>For the turbulent kinetic energy equation, the wall boundary conditions
+follow that described for the <span class="math notranslate nohighlight">\(k_{sgs}\)</span> model, i.e., <span class="math notranslate nohighlight">\(k=0\)</span>.</p>
+<p>A Dirichlet condition is also used on <span class="math notranslate nohighlight">\(\omega\)</span>. For this boundary
+condition, the <span class="math notranslate nohighlight">\(\omega\)</span> equation depends only on the near-wall
+grid spacing. The boundary condition is given by,</p>
+<div class="math notranslate nohighlight">
+\[\omega = \frac{6 \nu} {\beta_1 y^{2}},\]</div>
+<p>which is valid for <span class="math notranslate nohighlight">\(y^{+} &lt; 3\)</span>.</p>
+</section>
+<section id="turbulent-kinetic-energy-and-specific-dissipation-sst-high-reynolds-number-boundary-conditions">
+<span id="kwsst-high-re-bc"></span><h3><span class="section-number">9.5.2. </span>Turbulent Kinetic Energy and Specific Dissipation SST High Reynolds Number Boundary conditions<a class="headerlink" href="#turbulent-kinetic-energy-and-specific-dissipation-sst-high-reynolds-number-boundary-conditions" title="Link to this heading"></a></h3>
+<p>The high Reynolds approach uses the law of the wall assumption and also
+follows the description provided in the wall modeling section with only
+a slight modification in constant syntax,</p>
+<div class="math notranslate nohighlight" id="equation-wallmodeltke">
+<span class="eqno">(9.32)<a class="headerlink" href="#equation-wallmodeltke" title="Link to this equation"></a></span>\[k = \frac{u_{\tau}^{2}}{\sqrt{\beta^*}}.\]</div>
+<p>In the case of <span class="math notranslate nohighlight">\(\omega\)</span>, an analytic expression is known in the
+log layer:</p>
+<div class="math notranslate nohighlight">
+\[\omega = \frac{u_{\tau}} {\sqrt{\beta^*} \kappa y},\]</div>
+<p>which is independent of <span class="math notranslate nohighlight">\(k\)</span>. Because all these expressions
+require <span class="math notranslate nohighlight">\(y\)</span> to be in the log layer, they should absolutely not be
+used unless it can be guaranteed that <span class="math notranslate nohighlight">\(y^{+} &gt; 10\)</span>, and
+<span class="math notranslate nohighlight">\(y^{+} &gt; 25\)</span> is preferable. Automatic blending is not currently
+supported.</p>
+</section>
+<section id="solid-stress">
+<h3><span class="section-number">9.5.3. </span>Solid Stress<a class="headerlink" href="#solid-stress" title="Link to this heading"></a></h3>
+<p>The boundary conditions applied are either force provided by a static
+pressure,</p>
+<div class="math notranslate nohighlight" id="equation-displacement">
+<span class="eqno">(9.33)<a class="headerlink" href="#equation-displacement" title="Link to this equation"></a></span>\[F^n_i = \int \bar{P} n_i dS,\]</div>
+<p>or a Dirichlet condition, i.e., <span class="math notranslate nohighlight">\(u_i = u^{spec}_i\)</span>, on the
+displacement field. Above, <span class="math notranslate nohighlight">\(F^n_i\)</span> is the force for component
+<span class="math notranslate nohighlight">\(i\)</span> due to a prescribed [static] pressure.</p>
+</section>
+<section id="intensity">
+<h3><span class="section-number">9.5.4. </span>Intensity<a class="headerlink" href="#intensity" title="Link to this heading"></a></h3>
+<p>The boundary condition for each intensity assumes a grey, diffuse
+surface as,</p>
+<div class="math notranslate nohighlight" id="equation-intbc">
+<span class="eqno">(9.34)<a class="headerlink" href="#equation-intbc" title="Link to this equation"></a></span>\[I\left(s\right) = \frac{1}{\pi} \left[ \tau \sigma T_\infty^4
+                  + \epsilon \sigma T_w^4
+                  + \left(1 - \epsilon - \tau \right) K \right].\]</div>
+</section>
+</section>
+<section id="sst-of-the-atmospheric-boundary-layer">
+<span id="sst-abl"></span><h2><span class="section-number">9.6. </span>SST of the Atmospheric Boundary Layer<a class="headerlink" href="#sst-of-the-atmospheric-boundary-layer" title="Link to this heading"></a></h2>
+<p>The following boundary conditions simulate the Atmospheric Boundary Layer, as described in Bautista, <span id="id3">[<a class="reference internal" href="../../zrefs.html#id42" title="Mary C. Bautista. Turbulence modelling of the atmospheric boundary layer over complex topography. PhD thesis, École de Technologie Supérieure Université du Québec, Montreal, CA, October 2011.">Bau11</a>]</span> and <span id="id4">[<a class="reference internal" href="../../zrefs.html#id41" title="Mary C. Bautista, Louis Dufresne, and Christian Masson. Hybrid turbulence models for atmospheric flow; a proper comparison with rans models. E3S Web of Conferences, 2015. URL: https://www.e3s-conferences.org/articles/e3sconf/abs/2015/01/e3sconf_sowe2014_03001/e3sconf_sowe2014_03001.html.">BDM15</a>]</span>. The Nalu-Wind SST RANS implementation matches the Monin-Obukhov profile when used with the model constants from Table-A I-1 (Boundreault, 2011) in <span id="id5">[<a class="reference internal" href="../../zrefs.html#id42" title="Mary C. Bautista. Turbulence modelling of the atmospheric boundary layer over complex topography. PhD thesis, École de Technologie Supérieure Université du Québec, Montreal, CA, October 2011.">Bau11</a>]</span> and the meshing method described  in <span id="id6">[<a class="reference internal" href="../../zrefs.html#id41" title="Mary C. Bautista, Louis Dufresne, and Christian Masson. Hybrid turbulence models for atmospheric flow; a proper comparison with rans models. E3S Web of Conferences, 2015. URL: https://www.e3s-conferences.org/articles/e3sconf/abs/2015/01/e3sconf_sowe2014_03001/e3sconf_sowe2014_03001.html.">BDM15</a>]</span>. The mesh described in <span id="id7">[<a class="reference internal" href="../../zrefs.html#id41" title="Mary C. Bautista, Louis Dufresne, and Christian Masson. Hybrid turbulence models for atmospheric flow; a proper comparison with rans models. E3S Web of Conferences, 2015. URL: https://www.e3s-conferences.org/articles/e3sconf/abs/2015/01/e3sconf_sowe2014_03001/e3sconf_sowe2014_03001.html.">BDM15</a>]</span> gives the Monin-Obukhov profile for roughness height 0.1. When the roughness height is decreased, the mesh must be refined near the wall. For example, for the <span id="id8">[<a class="reference internal" href="../../zrefs.html#id41" title="Mary C. Bautista, Louis Dufresne, and Christian Masson. Hybrid turbulence models for atmospheric flow; a proper comparison with rans models. E3S Web of Conferences, 2015. URL: https://www.e3s-conferences.org/articles/e3sconf/abs/2015/01/e3sconf_sowe2014_03001/e3sconf_sowe2014_03001.html.">BDM15</a>]</span> ABL test case using roughness height 0.001 instead of 0.1, the mesh size needs to be halved near the wall.</p>
+<p>The <span class="math notranslate nohighlight">\(k\)</span> and <span class="math notranslate nohighlight">\(\omega\)</span> boundary conditions are the same as in the <a class="reference internal" href="#kwsst-high-re-bc"><span class="std std-ref">Turbulent Kinetic Energy and Specific Dissipation SST High Reynolds Number Boundary Conditions</span></a>:</p>
+<div class="math notranslate nohighlight">
+\[k = \frac{u_{\tau}^{2}}{\sqrt{\beta^*}},\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight">
+\[\omega = \frac{u_{\tau}}{\sqrt{\beta^*} \kappa y}.\]</div>
+<p>The friction velocity, <span class="math notranslate nohighlight">\(u_{\tau}\)</span> is calculated from a reference velocity, <span class="math notranslate nohighlight">\(u_h\)</span>, at height, <span class="math notranslate nohighlight">\(h\)</span>. <span class="math notranslate nohighlight">\(h\)</span> and <span class="math notranslate nohighlight">\(u_h\)</span> could, for example, be the hub height of a wind turbine and the velocity measured at that height.</p>
+<div class="math notranslate nohighlight">
+\[u_{\tau} = \frac{u_h \kappa}{log((h+z_0)/z_0),\]</div>
+<p>where <span class="math notranslate nohighlight">\(\kappa\)</span> is the Von K{'a}rm{'a}n constant and <span class="math notranslate nohighlight">\(z_0\)</span> is the roughness height.</p>
+<p>The momentum boundary condition is a no-slip Dirichlet condition, <span class="math notranslate nohighlight">\(u_i=0\)</span>, as described in the <a class="reference internal" href="#wall-bc-momentum"><span class="std std-ref">momentum wall boundary conditions</span></a>.</p>
+<p>The streamwise and spanwise boundary conditions are periodic, as described in <a class="reference internal" href="#periodic-bc"><span class="std std-ref">periodic boundary conditions</span></a>.</p>
+<p>The <span class="math notranslate nohighlight">\(k\)</span>, <span class="math notranslate nohighlight">\(\omega\)</span>, and <span class="math notranslate nohighlight">\(u\)</span> wall boundary conditions are set in the input file by specifying a wall boundary condition with <code class="docutils literal notranslate"><span class="pre">RANS_abl_bc</span></code>. The input file must also specify a height and the velocity at that height with <code class="docutils literal notranslate"><span class="pre">reference_height</span></code> and <code class="docutils literal notranslate"><span class="pre">reference_velocity</span></code>.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">realms</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fluidRealm</span>
+<span class="w">    </span><span class="nt">boundary_conditions</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">wall_boundary_condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bc_lower</span>
+<span class="w">      </span><span class="nt">wall_user_data</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">RANS_abl_bc</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">        </span><span class="nt">reference_velocity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6.6</span>
+<span class="w">        </span><span class="nt">reference_height</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">90.0</span>
+</pre></div>
+</div>
+<p>Rather than specifying a momentum source term, <span class="math notranslate nohighlight">\(dp/dx\)</span>, the velocity is set to the geostrophic (freestream) value near the top of the domain using the ABL forcing method described in <a class="reference internal" href="supportedEquationSet.html#abl-forcing-term"><span class="std std-ref">ABL Forcing Source Terms</span></a>. The ABL forcing term is turned on and the desired wind velocity and height must be specified in the input file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">realms</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fluidRealm</span>
+<span class="w">    </span><span class="nt">solution_options</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">options</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source_terms</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">momentum</span><span class="p">:</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">abl_forcing</span>
+
+<span class="w">    </span><span class="nt">abl_forcing</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">output_format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;abl_%s_sources.dat&quot;</span>
+<span class="w">      </span><span class="nt">momentum</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">computed</span>
+<span class="w">        </span><span class="nt">relaxation_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">        </span><span class="nt">heights</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2500.0</span><span class="p p-Indicator">]</span>
+<span class="w">        </span><span class="nt">velocity_x</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">17.5</span><span class="p p-Indicator">]</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1000000.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">17.5</span><span class="p p-Indicator">]</span>
+
+<span class="w">        </span><span class="nt">velocity_y</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.0</span><span class="p p-Indicator">]</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1000000.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.0</span><span class="p p-Indicator">]</span>
+
+<span class="w">        </span><span class="nt">velocity_z</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.0</span><span class="p p-Indicator">]</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1000000.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.0</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+</section>
+<section id="ams-of-the-atmospheric-boundary-layer">
+<span id="theory-open-bc"></span><h2><span class="section-number">9.7. </span>AMS of the Atmospheric Boundary Layer<a class="headerlink" href="#ams-of-the-atmospheric-boundary-layer" title="Link to this heading"></a></h2>
+<p>The following boundary conditions are meant for Active Model Split (AMS) of the Atmospheric Boundary Layer (ABL) when using SST as the mean (RANS) contribution to AMS. The boundary conditions on <span class="math notranslate nohighlight">\(u_i\)</span>, <span class="math notranslate nohighlight">\(k\)</span>, and <span class="math notranslate nohighlight">\(\omega\)</span> are the same as for SST of the ABL, as described in <a class="reference internal" href="#sst-abl"><span class="std std-ref">SST of the Atmospheric Boundary Layer</span></a>. When using this boundary condition for AMS, the energy transfer (LES) components of AMS should be turned off below the sand grain roughness height, <span class="math notranslate nohighlight">\(k_s = 30 z_0\)</span>, where <span class="math notranslate nohighlight">\(z_0\)</span> is the roughness height. Below this height the solution from the boundary condition is not necessarily accurate. Therefore including energy transfer components of AMS, such as the active forcing, in this region could introduce errors.</p>
+<p>Specifically, the energy transfer components of AMS below <span class="math notranslate nohighlight">\(k_s\)</span> are turned off by setting the scaling coefficient on the energy transfer contribution to AMS to one, resolution adequacy indicator to one, and active forcing to zero. To turn off the energy transfer components the input file should include:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">realms</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fluidRealm</span>
+<span class="w">    </span><span class="nt">solution_options</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">options</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">user_constants</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">roughness_height</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3</span>
+<span class="w">          </span><span class="nt">rans_below_ks</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</pre></div>
+</div>
+</section>
+<section id="open-boundary-condition">
+<h2><span class="section-number">9.8. </span>Open Boundary Condition<a class="headerlink" href="#open-boundary-condition" title="Link to this heading"></a></h2>
+<p>Open boundary conditions require far more care. In general, open bcs are
+assembled by iterating faces and the boundary integration points on the
+exposed face. The parent element is also required since oftentimes
+gradients are used (for momentum). For an open boundary condition the
+flow can either leave or enter the domain depending on what the computed
+mass flow rate at the exposed boundary integration point is.  Two options
+are available computing the velocity of the entrained flow—either the
+normal velocity at the integration point is used or a specified normal
+velocity is used.  The tangential components are always specified.</p>
+<section id="id9">
+<h3><span class="section-number">9.8.1. </span>Continuity<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<p>For continuity, the boundary mass flow rate must also be computed. This
+value is stored and used for the other equations that require advection.
+The same formula is used for the pressure-stabilized mass flow rate.
+However, the local pressure gradient for each boundary contribution is
+based on the difference between the interior integration point and the
+user-specified pressure which takes on the boundary value. This can
+optionally be modified to be a “total pressure”—removing the kinetic
+energy associated with entrainment at the open. The interior
+integration point is determined by linear interpolation. For CVFEM, full
+elemental averaging is used while in EBVC discretization, the midpoint
+value between the nearest node and opposing node to the boundary
+integration point is used. In both discretization approaches,
+non-orthogonal corrections are required. This procedure has been very
+important for stability for CVFEM tet-based meshes where a natural
+non-orthogonality exists between the boundary and interior integration
+point.</p>
+<p>For wind energy applications, the usage of the standard open boundary mass flow
+rate expression, which includes pressure contributions, is not appropriate due
+to complex temperature/buoyancy specifications. In these cases, a global
+correction algorithm is supported. Specifically, pressure terms are dropped at
+the open boundary mass flow rate expression in favor or a pre-processing
+algorithm that uniformly distributes the continuity mass flow rate (and possible
+density accumulation) “error” over the entire set of open boundary conditions.
+The global correction scheme may perform well with single open boundary
+condition specification, e.g., multiple inflows with a single open location,
+however, it is to be avoided if the flow leaving the domain is complex in that a
+simulation includes multiple open boundary conditions. A complex situation might
+be an open jet with entrainment from the side (open boundary that allows for
+inflow) and a top open that allows for outflow. However, a routine case might be
+a backward facing step with a single inflow, side periodic, top wall and open
+boundary. Not that the ability for the continuity solve to be well conditioned
+may require an interior Dirichlet on pressure as the open pressure specification
+for the global correction algorithm is lacking. In most cases, a Dirichlet
+condition is not actually required as the nullspace of the continuity system
+may not be found in the solve.</p>
+</section>
+<section id="id10">
+<h3><span class="section-number">9.8.2. </span>Momentum<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<p>For momentum, the normal component of the stress is subtracted out we
+subtract out the normal component of the stress. The normal stress
+component for component i can be written as <span class="math notranslate nohighlight">\(F_k n_k n_i\)</span>. The
+tangential component for component i is simply,
+<span class="math notranslate nohighlight">\(F_i - F_k n_k n_i\)</span>. As an example, the tangential viscous stress
+for component x is,</p>
+<div class="math notranslate nohighlight">
+\[F^T_x = F_x - (F_x n_x + F_y n_y ) n_x,\]</div>
+<p>which can be written in general component form as,</p>
+<div class="math notranslate nohighlight">
+\[F^T_i = F_i(1-n_i n_i) - \sum_{i!=j} F_j n_i n_j.\]</div>
+<p>Finally, the normal stress contribution is applied based on the user
+specified pressure,</p>
+<div class="math notranslate nohighlight">
+\[F^N_i = P^{Spec} A_i.\]</div>
+<p>For CVFEM, the face gradient operators are used for the thermal stress
+terms. For EBVC discretization, from the boundary integration point, the
+nearest node (the “Right” state) is used as well as the opposing node
+(the “Left” state). The nearest node and opposing node are used to
+compute gradients required for any derivatives. This equation follows
+the standard gradient description in the diffusion section with
+non-orthogonal corrections used. In this formulation, the area vector is
+taken to be the exposed area vector. Non-orthogonal terms are noted when
+the area vector and edge vector are not aligned.</p>
+<p>For advection, if the flow is leaving the domain, we simply advect the
+nearest nodal value to the boundary integration point. If the flow is
+coming into the domain, we simply confine the flow to be normal to the
+open boundary integration point area vector. The value entrained can be
+the nearest node or an upstream velocity value defined by the edge
+midpoint value or by a specified value.</p>
+</section>
+<section id="mixture-fraction-enthalpy-species-k-sgs-k-and-omega">
+<h3><span class="section-number">9.8.3. </span>Mixture Fraction, Enthalpy, Species, <span class="math notranslate nohighlight">\(k_{sgs}\)</span>, k and <span class="math notranslate nohighlight">\(\omega\)</span><a class="headerlink" href="#mixture-fraction-enthalpy-species-k-sgs-k-and-omega" title="Link to this heading"></a></h3>
+<p>Open boundary conditions assume a zero normal gradient. When flow is
+entering the domain, the far-field user supplied value is used. Far
+field values are used for property evaluations. When flow is leaving the
+domain, the flow is advected out consistent with the choice of interior
+advection operator.</p>
+</section>
+</section>
+<section id="strong-symmetry-boundary-condition">
+<span id="theory-strong-symmetry-bc"></span><h2><span class="section-number">9.9. </span>Strong Symmetry Boundary Condition<a class="headerlink" href="#strong-symmetry-boundary-condition" title="Link to this heading"></a></h2>
+<p>There are two implementations of the symmetry boundary condition: strong and weak. In the strong symmetry implementation, the normal velocity is set to zero at the boundary. Strong symmetry has only been implemented for a cartesian mesh, meaning it can be used for flat surfaces that are aligned with the principle cartesian directions. It cannot be used for curved surfaces or flat surfaces that are not aligned with the principle cartesian directions. Both the strong and weak symmetry boundary conditions have an associated error. In the strong form the associated error lies not on the boundary but in the domain.</p>
+</section>
+<section id="weak-symmetry-boundary-condition">
+<span id="theory-weak-symmetry-bc"></span><h2><span class="section-number">9.10. </span>Weak Symmetry Boundary Condition<a class="headerlink" href="#weak-symmetry-boundary-condition" title="Link to this heading"></a></h2>
+<section id="continuity-mixture-fraction-enthalpy-species-k-sgs-k-and-omega">
+<h3><span class="section-number">9.10.1. </span>Continuity, Mixture Fraction, Enthalpy, Species, <span class="math notranslate nohighlight">\(k_{sgs}\)</span>, k and <span class="math notranslate nohighlight">\(\omega\)</span><a class="headerlink" href="#continuity-mixture-fraction-enthalpy-species-k-sgs-k-and-omega" title="Link to this heading"></a></h3>
+<p>Weak symmetry applies zero diffusion at the boundary for scalar quantities, which effectively sets the boundary-normal gradients of these quantities to zero. This means that, unlike for strong symmetry, in the weak symmetry implementation, normal velocity can be non-zero. This is possible because the cell averaged quantities in Nalu-Wind’s discretization are stored at the nodes and therefore reside on the boundaries. In general, a non-zero normal velocity can cause net inflow or outflow. The Poisson solve prevents this by enforcing mass conservation globally to the order of linear solver convergence.</p>
+</section>
+<section id="id11">
+<h3><span class="section-number">9.10.2. </span>Momentum<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<p>A symmetry boundary is one that is described by removal of the tangential stress. For weak symmetry this is done in the momentum equation by applying only the normal component of stress:</p>
+<div class="math notranslate nohighlight">
+\[F^n_x = (F_x n_x + F_y n_y ) n_x,\]</div>
+<p>which can be written in general component form as,</p>
+<div class="math notranslate nohighlight">
+\[F^n_i = F_j n_j n_i.\]</div>
+<p>The momentum equation also penalizes non-zero normal velocity. The strength of this penality depends on the penalty factor. One can enforce a stronger representation of the boundary by amplifying the penalty factor through the <cite>symmetry_bc_penalty_factor</cite> variable in <cite>solution_options</cite>. Its default value is 2.0 which is the minimum required for stability. Amplifying the penalty factor will enforce the boundary in a stronger sense, but can also lead to a more difficult matrix solve as with any large penalty term.</p>
+<p>Both strong and weak symmetry boundary conditions have associated error. In the weak form the error manifests as non-zero local velocities at the boundary. As the mesh is refined, the weak symmetry boundary condition converges to the strong symmetry boundary condition (zero normal velocity) with a first order rate. Note that switching from weak to strong symmetry boundary condition does not make the error go away; the error just moves off the boundary and into the domain. The errors for both weak and strong symmetry boundary conditions do go away as the mesh is refined, decreasing with first order rate.</p>
+<p>Weak symmetry has not been implemented for Active Model Split (AMS).</p>
+<p>If the symmetry type is not specified in the input file then the code defaults to weak symmetry. If the ABL top boundary condition is used and it defaults to symmetry, as described in ref:<cite>Atmospheric Boundary Layer Top Conditions &lt;theory_abltop_bc&gt;</cite>:, then strong or weak symmetry can be specified explicitly in the input file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">realms</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fluidRealm</span>
+<span class="w">    </span><span class="nt">boundary_conditions</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">abltop_boundary_condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bc_upper</span>
+<span class="w">      </span><span class="nt">target_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">upper</span>
+<span class="w">      </span><span class="nt">symmetry_user_data</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">symmetry_type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;z_direction_strong&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="specified-boundary-normal-temperature-gradient-option">
+<h3><span class="section-number">9.10.3. </span>Specified Boundary-Normal Temperature Gradient Option<a class="headerlink" href="#specified-boundary-normal-temperature-gradient-option" title="Link to this heading"></a></h3>
+<p>The standard symmetry boundary condition applies zero diffusion at the
+boundary for scalar quantities, which effectively results in those scalars
+having a zero boundary-normal gradient.  There are situations, especially
+for atmospheric flows in which the user may desire a finite boundary-normal
+gradient of temperature.  For example, the atmospheric boundary layer is
+often simulated with a stably stratified capping inversion in which the
+temperature linearly increases with height all the way to the upper
+domain boundary.  We apply symmetry conditions to this upper boundary for
+momentum, but we specify the boundary-normal temperature gradient on this
+boundary to match the capping inversion’s gradient.</p>
+<p>This is an option in the symmetry boundary condition specification, which
+appears in the input file as:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">symmetry_boundary_condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bc_upper</span>
+<span class="w">  </span><span class="nt">target_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">upper</span>
+<span class="w">  </span><span class="nt">symmetry_user_data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">normal_temperature_gradient</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-0.003</span>
+</pre></div>
+</div>
+<p>In this example, the temperature gradient normal to the symmetry boundary
+is set to -0.003 K/m, where the boundary-normal direction is pointed into
+the domain.</p>
+<p>Nalu-Wind does not solve a transport equation for temperature directly, but
+rather it solves one for enthalpy. Therfore, the boundary-normal temperature
+gradient condition is applied internally in the code through application of
+a compatible heat flux,</p>
+<div class="math notranslate nohighlight">
+\[q_n = -\kappa_{eff} c_p \frac{\partial T}{\partial n}\]</div>
+<p>where <span class="math notranslate nohighlight">\(q_n\)</span> is the heat flux at the boundary, <span class="math notranslate nohighlight">\(\kappa_{eff}\)</span> is
+the effective thermal diffusivity (the molecular and turbulent parts),
+<span class="math notranslate nohighlight">\(c_p\)</span> is the specific heat, and <span class="math notranslate nohighlight">\(\partial T / \partial n\)</span> is
+the boundary-normal temperature gradient.</p>
+</section>
+</section>
+<section id="periodic-boundary-condition">
+<span id="periodic-bc"></span><h2><span class="section-number">9.11. </span>Periodic Boundary Condition<a class="headerlink" href="#periodic-boundary-condition" title="Link to this heading"></a></h2>
+<p>A parallel multiple-periodic boundary condition is supported. Mappings
+are created between master/slave surface node pairs. The node pairs are
+obtained from a parallel search and are expected to be unique. The node
+pairs are used to map the slave global id to that of the master. This
+allows the linear system to include matrix rows for only a subset of the
+overall set of nodes. Moreover, a periodic assembly for assembled
+quantities is managed via: <span class="math notranslate nohighlight">\(m+=s\)</span> and <span class="math notranslate nohighlight">\(s=m\)</span>, where <span class="math notranslate nohighlight">\(m\)</span>
+and <span class="math notranslate nohighlight">\(s\)</span> are master/slave nodes, respectively. For each parallel
+assembled quantity, e.g., dual volume, turbulence quantities, etc., this
+procedure is used. Periodic boxes and periodic couette and channel flow
+have been simulated in this code base. Tow forms of parallel searches
+exist and are supported (one through the Boost TPL and another through
+the STK Search module).</p>
+</section>
+<section id="non-conformal-boundary-condition">
+<h2><span class="section-number">9.12. </span>Non-conformal Boundary Condition<a class="headerlink" href="#non-conformal-boundary-condition" title="Link to this heading"></a></h2>
+<p>A surface-based approach based on a DG method has been discussed in the
+2010 CTR summer proceedings by Domino, <span id="id12">[<a class="reference internal" href="../../zrefs.html#id10" title="S. Domino. Towards verification of sliding mesh algorithms for complex applications using mms. In Center for Turbulence Research Summer Proceedings. 2010.">Dom10</a>]</span>.
+Both the edge- and element-based formulation currently exists in the
+code base using the CVFEM and EBVC approaches.</p>
+<figure class="align-center" id="id14">
+<span id="domain-ab"></span><a class="reference internal image-reference" href="../../_images/twoBlockDiag.pdf"><img alt="Two-block example with one common surface" src="../../_images/twoBlockDiag.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">9.1 </span><span class="caption-text">Two-block example with one common surface, <span class="math notranslate nohighlight">\(\Gamma_{AB}\)</span>.</span><a class="headerlink" href="#id14" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>Consider two domains, <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span>, which have a common
+interface, <span class="math notranslate nohighlight">\(\Gamma_{AB}\)</span>, and a set of interfaces not in common,
+<span class="math notranslate nohighlight">\(\Gamma \backslash \Gamma_{AB}\)</span> (see Figure <a class="reference internal" href="#domain-ab"><span class="std std-numref">9.1</span></a>), and
+assume that the solution of the time-dependent advection/diffusion
+equation is to be solved in both domains. Each domain has a set of
+outwardly pointing normals. In this cartoon, the interface is well
+resolved, although in practice this may not be the case.</p>
+<p>An interior penalty approach is constructed at each integration point at
+the exposed surface set. The numerical flux for a general scalar
+<span class="math notranslate nohighlight">\(\phi\)</span> is constructed at the current integration point which is
+based on the current (<span class="math notranslate nohighlight">\(A\)</span>) and opposing (<span class="math notranslate nohighlight">\(B\)</span>) elemental
+contributions,</p>
+<div class="math notranslate nohighlight" id="equation-numericalfluxa">
+<span class="eqno">(9.35)<a class="headerlink" href="#equation-numericalfluxa" title="Link to this equation"></a></span>\[\int \hat Q^A dS = \int [\frac{(q_j^A n_j^A - q_j^B n_j^B)}{2}
+    + \lambda^A ( \phi^A - \phi^B) ]dS^A
+    + \dot m^A \frac{(\phi^A + \phi^B)}{2}
+    + \eta \frac{|\dot{m}^A|}{2} (\phi^A - \phi^B),\]</div>
+<p>where <span class="math notranslate nohighlight">\(q_j^A\)</span> and <span class="math notranslate nohighlight">\(q_j^B\)</span> are the diffusive fluxes computed using the current
+and opposing elements and normals are outward facing. The penalty coefficient <span class="math notranslate nohighlight">\(\lambda^A\)</span> contains the diffusive
+contributions averaged over the two elements,</p>
+<div class="math notranslate nohighlight" id="equation-lamdbaa2">
+<span class="eqno">(9.36)<a class="headerlink" href="#equation-lamdbaa2" title="Link to this equation"></a></span>\[\lambda^A = \frac{(\Gamma^A / L^A + \Gamma^B / L^B )}{2}.\]</div>
+<p>Above, <span class="math notranslate nohighlight">\(\Gamma^k\)</span> is the diffusive flux coefficient evaluated at current and opposing element location, respectively,
+and <span class="math notranslate nohighlight">\(L^k\)</span> is an elemental length scale normal to the surface (again for current and opposing locations, <span class="math notranslate nohighlight">\(A\)</span> and :math`B`).
+When upwinding is activated, the value of <span class="math notranslate nohighlight">\(\eta\)</span> is unity.</p>
+<p>As written in Equation <a class="reference internal" href="#equation-numericalfluxa">(9.35)</a>, the default convection and diffusion term is a
+Galerkin approach, i.e., equally averaged between the current and opposing face. The standard
+advection term is given by,</p>
+<div class="math notranslate nohighlight" id="equation-advection">
+<span class="eqno">(9.37)<a class="headerlink" href="#equation-advection" title="Link to this equation"></a></span>\[ \int \rho \hat{u}_j \phi n_j dS.\]</div>
+<p>For surface A, the form is as follows:</p>
+<div class="math notranslate nohighlight" id="equation-advection2">
+<span class="eqno">(9.38)<a class="headerlink" href="#equation-advection2" title="Link to this equation"></a></span>\[\int \rho \hat{u}_j^A \phi n_j^A dS^A = \dot m^A \frac{ \phi^A + \phi^B}{2},\]</div>
+<p>with the nonconformal mass flow rate given by,</p>
+<div class="math notranslate nohighlight" id="equation-mdota2">
+<span class="eqno">(9.39)<a class="headerlink" href="#equation-mdota2" title="Link to this equation"></a></span>\[ \dot {m}^A = [\frac{(\rho u_j^A + \gamma(\tau G_j^A p
+ -\tau \frac{\partial p^A}{\partial x_j}))n_j^A
+ - (\rho u_j^B + \gamma(\tau G_j^B p -\tau \frac{\partial p^B}{\partial x_j}))n_j^B}{2}
+ + \lambda^A ( p^A - p^B)] dS^A.\]</div>
+<p>In the above set of expressions, the consistent definition of <span class="math notranslate nohighlight">\(\hat{u}_j\)</span>, i.e., the convecting velocity including
+possible pressure stabilization terms, is retained.</p>
+<p>As with the interior advection scheme, the mass flow rate involves pressure stabilization terms. The value of
+<span class="math notranslate nohighlight">\(\gamma\)</span> defines whether or not the full pressure stabilization terms are included in the mass flow rate expression.
+Equation <a class="reference internal" href="#equation-mdota2">(9.39)</a> also forms the continuity nonconformal boundary contribution.</p>
+<p>With the substitution of <span class="math notranslate nohighlight">\(\eta\)</span> to be unity, the effective convective term is as follows:</p>
+<div class="math notranslate nohighlight" id="equation-advectionaupw">
+<span class="eqno">(9.40)<a class="headerlink" href="#equation-advectionaupw" title="Link to this equation"></a></span>\[ \int \rho \hat{u}_j \phi n_j^A dS^A =
+ \frac{ (\dot m^A + |\dot m^A|) \phi^A +  (\dot m^A - |\dot m^A|)\phi^B}{2}.\]</div>
+<p>Note that this form reduces to a standard upwind operator.</p>
+<p>Since this algorithm is a dual pass approach, a numerical flux can be
+written for the integration point on block <span class="math notranslate nohighlight">\(B\)</span>,</p>
+<div class="math notranslate nohighlight" id="equation-numericalfluxb">
+<span class="eqno">(9.41)<a class="headerlink" href="#equation-numericalfluxb" title="Link to this equation"></a></span>\[ \int \hat Q^B dS = \int [\frac{(q_j^B n_j^B - q_j^A n_j^A)}{2}
+ + \lambda^B ( \phi^B - \phi^A) ]dS^A
+ + \dot m^B \frac{(\phi^B + \phi^A)}{2}
+ + \eta \frac{|\dot{m}^B|}{2} (\phi^B - \phi^A).\]</div>
+<p>As with Equation <a class="reference internal" href="#equation-numericalfluxb">(9.41)</a>, <span class="math notranslate nohighlight">\(\dot{m}^B\)</span> (see Equation <a class="reference internal" href="#equation-mdotb">(9.42)</a>)
+is of similar form to <span class="math notranslate nohighlight">\(\dot{m}^A\)</span>,</p>
+<div class="math notranslate nohighlight" id="equation-mdotb">
+<span class="eqno">(9.42)<a class="headerlink" href="#equation-mdotb" title="Link to this equation"></a></span>\[\dot {m}^B = [\frac{(\rho u_j^B + \gamma(\tau G_j^B p -\tau \frac{\partial p^B}{\partial x_j}))n_j^B
+- (\rho u_j^A + \gamma(\tau G_j^A p -\tau \frac{\partial p^A}{\partial x_j}))n_j^A}{2}
++ \lambda^A ( p^B - p^A)] dS^B.\]</div>
+<p>For low-order meshes with curved surface, faceting will occur. In this case, the outward facing normals may
+not be (sign)-unity factors of each other. In this case, it may be adventageous to define the opposing
+outward normal as, <span class="math notranslate nohighlight">\(n_j^B = -n_j^A\)</span>.</p>
+<p>Domino, <span id="id13">[<a class="reference internal" href="../../zrefs.html#id10" title="S. Domino. Towards verification of sliding mesh algorithms for complex applications using mms. In Center for Turbulence Research Summer Proceedings. 2010.">Dom10</a>]</span> provided an overview of a FEM fluids implementation. In such a formulation, the
+interior penalty term appears, i.e.,</p>
+<div class="math notranslate nohighlight">
+\[\int_{\Gamma_{AB}} \frac {\partial w^A}{\partial x_j} n_j \lambda (\phi^A-\phi^B) d\Gamma,\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight">
+\[\int_{\Gamma_{BA}} \frac {\partial w^B}{\partial x_j} n_j \lambda (\phi^B-\phi^A) d\Gamma.\]</div>
+<p>Although the sign of this term is often debated in the literature, the above set of expressions acts
+to increase penalty term stencil to include the full element contribution.
+As the CVFEM uses a piecewise-constant test function, this term is currently neglected.</p>
+<p>Average fluxes are computed based on the current and opposing
+integration point locations. The appropriate DG terms are assembled as
+boundary conditions first with block <span class="math notranslate nohighlight">\(A\)</span> integration points as
+<span class="math notranslate nohighlight">\(current\)</span> (integrations points for block B are <span class="math notranslate nohighlight">\(opposing\)</span>)
+and then with block <span class="math notranslate nohighlight">\(B\)</span> integration points as <span class="math notranslate nohighlight">\(current\)</span>
+(surfaces for block A are, therefore, <span class="math notranslate nohighlight">\(opposing\)</span>).
+Figure <a class="reference internal" href="#domain-ab"><span class="std std-numref">9.1</span></a> graphically demonstrates the procedure in which
+integration point values of the flux and penalty term are computed on
+the block <span class="math notranslate nohighlight">\(A\)</span> surface and at the projected location of block
+<span class="math notranslate nohighlight">\(B\)</span>.</p>
+<p>A parallel search is conducted to project the current integration point
+location to the opposing element exposed face. The search, therefore,
+provides the isoparametric coordinates on the opposing element.
+Elemental shape functions and shape function derivatives are used to
+construct the numerical flux for both the edge- and element-based
+scheme. The location of the Gauss points on the current element are
+either the Gauss Labatto or Gauss Legendre locations (input file
+specification). For each equation (momentum, continuity, enthalpy, etc.)
+the numerical flux is computed at each exposed non-conformal surface.</p>
+<p>As noted, for most equations other than continuity and heat condition, the numerical flux includes advection and
+diffusion contributions. The diffusive contribution is easily provided using elemental shape function derivatives
+at the current and opposing surface.</p>
+<figure class="align-center" id="id15">
+<span id="non-conformal"></span><a class="reference internal image-reference" href="../../_images/contactSearchAndEval.pdf"><img alt="../../_images/contactSearchAndEval.pdf" src="../../_images/contactSearchAndEval.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">9.2 </span><span class="caption-text">Description of the numerical flux calculation for the DG algorithm. The
+value of fluxes and penalty values on the current block (<span class="math notranslate nohighlight">\(A\)</span>) and the opposing block (<span class="math notranslate nohighlight">\(B\)</span>) are used
+for the calculation of numerical fluxes. <span class="math notranslate nohighlight">\(\tilde \varphi\)</span> represents the projected value.</span><a class="headerlink" href="#id15" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>Above, special care is taken for the value of the mass flow rate at the non-conformal interface. Also,
+note that the above written form does not upwind the advective flux, although the code allows for an upwinded
+approach. In general, the advective term contains contributions from both elements identified at the interface,
+specifically.</p>
+<p>The penalty coefficient for the mass flow rate at the non-conformal
+boundary points is again a function of the blended inverse length scale
+at the current and opposing element surface location. The form of the
+mass flow rate above provides the continuity contribution and the form
+of the mass flow rate used in the scalar non-conformal flux
+contribution.</p>
+<p>The full connectivity for element integration and opposing elements is
+within the linear system. As such, for sliding mesh configurations, the
+linear system connectivity graph changes each time step. Recent
+prototyping of the dG-based and the overset scheme has allowed this
+method to be used across both disparate low-order topologies (see
+Figure <a class="reference internal" href="#dg-hex8-tet4"><span class="std std-numref">9.3</span></a>).</p>
+<figure class="align-center" id="id16">
+<span id="dg-hex8-tet4"></span><a class="reference internal image-reference" href="../../_images/dgHex8Tet4Duct.png"><img alt="../../_images/dgHex8Tet4Duct.png" src="../../_images/dgHex8Tet4Duct.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">9.3 </span><span class="caption-text">Discontinuous Galerkin non-conformal interface mixed topology (hex8/tet4).</span><a class="headerlink" href="#id16" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p class="rubric">Footnotes</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="turbulenceModeling.html" class="btn btn-neutral float-left" title="8. Turbulence Modeling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="overset.html" class="btn btn-neutral float-right" title="10. Overset" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

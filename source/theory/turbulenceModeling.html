@@ -1,0 +1,277 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>8. Turbulence Modeling &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="9. Supported Boundary Conditions" href="boundaryConditions.html" />
+    <link rel="prev" title="7. Nonlinear Stabilization Operator (NSO)" href="nso.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Theory Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lowMachNumberDerivation.html">1. Low Mach Number Derivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html">2. Supported Equation Set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html">3. Discretization Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advectionStabilization.html">4. Advection Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pressureStabilization.html">5. Pressure Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html">6. RTE Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html">7. Nonlinear Stabilization Operator (NSO)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">8. Turbulence Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#standard-smagorinsky-les-model">8.1. Standard Smagorinsky LES Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wall-adapting-local-eddy-viscosity-wale">8.2. Wall Adapting Local Eddy-Viscosity, WALE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#one-equation-k-sgs">8.3. One Equation <span class="math notranslate nohighlight">\(k^{sgs}\)</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rans-models">8.4. RANS Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hybrid-rans-les-models">8.5. Hybrid RANS/LES Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wall-models">8.6. Wall Models</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html">9. Supported Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overset.html">10. Overset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html">11. Property Evaluations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="couplingApproach.html">12. Coupling Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeDiscretization.html">13. Time discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiPhysics.html">14. Multi-Physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html">15. Wind Energy Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topologicalSupport.html">16. Topological Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adaptivity.html">17. Adaptivity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeAbstractions.html">18. Code Abstractions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Nalu-Wind - Theory Manual</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">8. </span>Turbulence Modeling</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/theory/turbulenceModeling.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="turbulence-modeling">
+<h1><span class="section-number">8. </span>Turbulence Modeling<a class="headerlink" href="#turbulence-modeling" title="Link to this heading"></a></h1>
+<p>Unlike a RANS approach which models most or all of the turbulent
+fluctuations, LES directly solves for all resolved turbulent length
+scales and only models the smallest scales below the grid size. In this
+way, a majority of the problem-dependent, energy-containing turbulent
+structure is directly solved in a model-free fashion. The subgrid scales
+are closer to being isotropic than the resolved scales, and they
+generally act to dissipate turbulent kinetic energy cascaded down from
+the larger scales in momentum-driven turbulent flows. Modeling of these
+small scales is generally more straightforward than RANS approaches, and
+overall solutions are usually more tolerant to LES modeling errors
+because the subgrid scales comprise such a small portion of the overall
+turbulent structure. While LES is generally accepted to be much more
+accurate than RANS approaches for complex turbulent flows, it is also
+significantly more expensive than equivalent RANS simulations due to the
+finer grid resolution required. Additionally, since LES results in a
+full unsteady solution, the simulation must be run for a long time to
+gather any desired time-averaged statistics. The tradeoff between
+accuracy and cost must be weighed before choosing one method over the
+other.</p>
+<p>The separation of turbulent length scales required for LES is obtained
+by using a spatial filter rather than the RANS temporal filter. This
+filter has the mathematical form</p>
+<div class="math notranslate nohighlight" id="equation-les-filter">
+<span class="eqno">(8.1)<a class="headerlink" href="#equation-les-filter" title="Link to this equation"></a></span>\[\overline{\phi(\boldsymbol{x},t)} \equiv \int_{-\infty}^{+\infty}
+    \phi(\boldsymbol{x}',t) G(\boldsymbol{x}' - \boldsymbol{x})\,
+    \mathrm{d}\boldsymbol{x}',\]</div>
+<p>which is a convolution integral over physical space
+<span class="math notranslate nohighlight">\(\boldsymbol{x}\)</span> with the spatially-varying filter function
+<span class="math notranslate nohighlight">\(G\)</span>. The filter function has the normalization property
+<span class="math notranslate nohighlight">\(\int_{-\infty}^{+\infty}
+G(\boldsymbol{x})\, \mathrm{d}\boldsymbol{x} = 1\)</span>, and it has a
+characteristic length scale <span class="math notranslate nohighlight">\(\Delta\)</span> so that it filters out
+turbulent length scales smaller than this size. In the present
+formulation, a simple “box filter” is used for the filter function,</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}G(\boldsymbol{x}' - \boldsymbol{x}) = \left\{ \begin{array}{l&#64;{\quad:\quad}l}
+    1/V         &amp; (\boldsymbol{x}' - \boldsymbol{x}) \in \mathcal{V} \\
+    0           &amp; \mathrm{otherwise} \\
+    \end{array} \right.,\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(V\)</span> is the volume of control volume <span class="math notranslate nohighlight">\(\mathcal{V}\)</span>
+whose central node is located at <span class="math notranslate nohighlight">\(\boldsymbol{x}\)</span>. This is
+essentially an unweighted average over the control volume. The length
+scale of this filter is approximated by <span class="math notranslate nohighlight">\(\Delta = V^\frac{1}{3}\)</span>.
+This is typically called the grid filter, as it filters out scales
+smaller than the computational grid size.</p>
+<p>Similar to the RANS temporal filter, a variable can be represented in
+terms of its filtered and subgrid fluctuating components as</p>
+<div class="math notranslate nohighlight">
+\[\phi = \bar{\phi} + \phi'.\]</div>
+<p>For most forms of the filter function <span class="math notranslate nohighlight">\(G(\boldsymbol{x})\)</span>,
+repeated applications of the grid filter to a variable do not yield the
+same result. In other words, <span class="math notranslate nohighlight">\(\bar{\bar{\phi}} \ne
+\bar{\phi}\)</span> and therefore <span class="math notranslate nohighlight">\(\overline{\phi'} \ne 0\)</span>, unlike with
+the RANS temporal averages.</p>
+<p>As with the RANS formulation, modeling is much simplified in the
+presence of large density variations if a Favre-filtered approach is
+used. A Favre-filtered variable <span class="math notranslate nohighlight">\(\tilde{\phi}\)</span> is defined as</p>
+<div class="math notranslate nohighlight">
+\[\tilde{\phi} \equiv \frac{ \overline{\rho\phi} }{ \bar{\rho} }\]</div>
+<p>and a variable can be decomposed in terms of its Favre-filtered and
+subgrid fluctuating component as</p>
+<div class="math notranslate nohighlight">
+\[\phi = \tilde{\phi} + \phi''.\]</div>
+<p>Again, note that the useful identities for the Favre-filtered RANS
+variables do not apply, so that
+<span class="math notranslate nohighlight">\(\bar{\tilde{\phi}} \ne \tilde{\phi}\)</span> and
+<span class="math notranslate nohighlight">\(\overline{\phi''} \ne 0\)</span>. The Favre-filtered approach is used for
+all LES models in Nalu-Wind.</p>
+<section id="standard-smagorinsky-les-model">
+<span id="theory-standard-smagorinsky-les"></span><h2><span class="section-number">8.1. </span>Standard Smagorinsky LES Model<a class="headerlink" href="#standard-smagorinsky-les-model" title="Link to this heading"></a></h2>
+<p>The standard Smagorinsky LES closure model approximates the subgrid
+turbulent eddy viscosity using a mixing length-type model, where the LES
+grid filter size <span class="math notranslate nohighlight">\(\Delta\)</span> provides a natural length scale. The
+subgrid eddy viscosity is modeled simply as (Smagorinsky)</p>
+<div class="math notranslate nohighlight" id="equation-mut-smag">
+<span class="eqno">(8.2)<a class="headerlink" href="#equation-mut-smag" title="Link to this equation"></a></span>\[\mu_t = \rho \left(C_s \Delta \right)^2 | \tilde {S} |,\]</div>
+<p>The constant coefficient <span class="math notranslate nohighlight">\(C_s\)</span> typically varies between 0.1 and
+0.24 and should be carefully tuned to match the problem being solved
+(Rogallo and Moin, <span id="id1">[<a class="reference internal" href="../../zrefs.html#id22" title="R. Rogallo and P. Moin. Numerical simulation of turbulent flows. Annual Review of Fluid Mechanics, 16:99–137, 1984.">RM84</a>]</span>).  The default value of 0.17 is assigned in the code base.</p>
+<p>Although this model is desirable due to its simplicity and efficiency,
+care should be taken in its application.  It is known to predict subgrid
+turbulent eddy viscosity proportional to the shear rate in the flow,
+independent of the local turbulence intensity.  Non-zero subgrid turbulent
+eddy viscosity is even predicted in completely laminar regions of the
+flow, sometimes even preventing a natural transition to turbulence. The model also
+does not asymptotically replicate near wall behavior without either dampening or a
+dynamic procedure.</p>
+</section>
+<section id="wall-adapting-local-eddy-viscosity-wale">
+<h2><span class="section-number">8.2. </span>Wall Adapting Local Eddy-Viscosity, WALE<a class="headerlink" href="#wall-adapting-local-eddy-viscosity-wale" title="Link to this heading"></a></h2>
+<p>The WALE model of Ducros el al., <span id="id2">[<a class="reference internal" href="../../zrefs.html#id23" title="F. Ducors, F. Nicoud, and T. Poinsot. Wall-adapting local eddy-viscosity models for simulations in complex geometries. In International Conference on Computational Conference, volume 50. 1998.">DNP98</a>]</span>,
+properly captures the asymptotic behavior for flows that are wall
+bounded. In this model, the turbulent viscosity is given by,</p>
+<div class="math notranslate nohighlight" id="equation-mut-wale">
+<span class="eqno">(8.3)<a class="headerlink" href="#equation-mut-wale" title="Link to this equation"></a></span>\[\mu_t = \rho \left(C_w \Delta \right)^2 \frac{\left( S^d_{ij}S^d_{ij}\right)^{3/2}}
+{\left( S_{ij}S_{ij}\right)^{5/2} + \left( S^d_{ij}S^d_{ij}\right)^{5/4}},\]</div>
+<p>with the constant <span class="math notranslate nohighlight">\(C_w\)</span> of 0.325 and a standard filter,
+<span class="math notranslate nohighlight">\(\Delta\)</span> related to the volume, <span class="math notranslate nohighlight">\(V^{\frac{1}{3}}\)</span>. The rate
+of strain tensor is defined as,</p>
+<div class="math notranslate nohighlight" id="equation-wale-sij">
+<span class="eqno">(8.4)<a class="headerlink" href="#equation-wale-sij" title="Link to this equation"></a></span>\[S_{ij} = \frac{1}{2} \left( \frac{\partial u_i}{\partial x_j} + \frac{\partial u_j}{\partial x_i} \right)\]</div>
+<p>while <span class="math notranslate nohighlight">\(S^d_{ij}\)</span> is,</p>
+<div class="math notranslate nohighlight" id="equation-wale-sdij">
+<span class="eqno">(8.5)<a class="headerlink" href="#equation-wale-sdij" title="Link to this equation"></a></span>\[S^d_{ij} = \frac{1}{2} \left( g^2_{ij} + g^2_{ji}\right) - \frac{1}{3} \delta_{ij} g^2_{kk}.\]</div>
+<p>Finally, the velocity gradient squared ters are</p>
+<div class="math notranslate nohighlight" id="equation-wale-sqij">
+<span class="eqno">(8.6)<a class="headerlink" href="#equation-wale-sqij" title="Link to this equation"></a></span>\[ g^2_{ij} = \frac{\partial u_i}{\partial x_k} \frac{\partial u_k}{\partial x_j}\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight" id="equation-wale-gsqji">
+<span class="eqno">(8.7)<a class="headerlink" href="#equation-wale-gsqji" title="Link to this equation"></a></span>\[ g^2_{ji} = \frac{\partial u_j}{\partial x_k} \frac{\partial u_k}{\partial x_i}.\]</div>
+</section>
+<section id="one-equation-k-sgs">
+<h2><span class="section-number">8.3. </span>One Equation <span class="math notranslate nohighlight">\(k^{sgs}\)</span><a class="headerlink" href="#one-equation-k-sgs" title="Link to this heading"></a></h2>
+<p>See <span class="math notranslate nohighlight">\(k^{sgs}\)</span> <a class="reference internal" href="supportedEquationSet.html#theory-ksgs-les-model"><span class="std std-ref">PDE</span></a> section.</p>
+</section>
+<section id="rans-models">
+<h2><span class="section-number">8.4. </span>RANS Models<a class="headerlink" href="#rans-models" title="Link to this heading"></a></h2>
+<p>As noted, Nalu-Wind supports several different RANS-based model (the
+reader is referred to the RANS model equation set description).</p>
+</section>
+<section id="hybrid-rans-les-models">
+<h2><span class="section-number">8.5. </span>Hybrid RANS/LES Models<a class="headerlink" href="#hybrid-rans-les-models" title="Link to this heading"></a></h2>
+<p>Nalu-Wind supports the Active Model Split (AMS) hybrid RANS/LES turbulence model <span id="id3">[<a class="reference internal" href="../../zrefs.html#id40" title="S. Haering, T. Oliver, and R. Moser. Active model split hybrid RANS/LES. Journal of Fluid Mechanics, 2020. Submitted. URL: http://arxiv.org/abs/2006.13118.">HOM20</a>]</span>.
+The reader is referred to the AMS equation set for more details.</p>
+</section>
+<section id="wall-models">
+<h2><span class="section-number">8.6. </span>Wall Models<a class="headerlink" href="#wall-models" title="Link to this heading"></a></h2>
+<p>Flows are either expected to be fully resolved or, alternatively, under-resolved
+where wall functions are used. A classic law of the wall has been implemented in
+Nalu-Wind. Wall models to handle adverse pressure gradients are planned. For more
+information of the form of wall models, please refer to the <a class="reference internal" href="boundaryConditions.html#theory-boundary-conditions"><span class="std std-ref">boundary
+condition</span></a> section of this manual.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="nso.html" class="btn btn-neutral float-left" title="7. Nonlinear Stabilization Operator (NSO)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="boundaryConditions.html" class="btn btn-neutral float-right" title="9. Supported Boundary Conditions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

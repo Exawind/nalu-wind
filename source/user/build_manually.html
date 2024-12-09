@@ -1,0 +1,549 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Building Nalu-Wind Manually &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Verifying that the installation of Nalu-Wind works" href="verify_installation.html" />
+    <link rel="prev" title="Building Nalu-Wind Semi-Automatically Using Spack" href="build_spack.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Manual</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="building.html">Building Nalu-Wind</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="build_spack.html">Building Nalu-Wind with Spack</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Building Nalu-Wind Manually</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#linux-and-osx">Linux and OSX</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="verify_installation.html">Verifying that the installation of Nalu-Wind works</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="running.html">Running Nalu-Wind</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../theory/index.html">Theory Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">User Manual</a></li>
+          <li class="breadcrumb-item"><a href="building.html">Building Nalu-Wind</a></li>
+      <li class="breadcrumb-item active">Building Nalu-Wind Manually</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/user/build_manually.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="building-nalu-wind-manually">
+<h1>Building Nalu-Wind Manually<a class="headerlink" href="#building-nalu-wind-manually" title="Link to this heading"></a></h1>
+<p>Although we recommend installing Nalu-Wind with Spack, if you prefer not to build using Spack, below are instructions which describe the process of building Nalu-Wind by hand. These instructions are an approximation, due to the many differences that can exist across machines.</p>
+<section id="linux-and-osx">
+<h2>Linux and OSX<a class="headerlink" href="#linux-and-osx" title="Link to this heading"></a></h2>
+<p>The instructions for Linux and OSX are mostly the same, except on each OS you may be able to use a package manager to install some dependencies for you. Using Homebrew on OSX is one option listed below. Compilers and MPI are expected to be already installed. If they are not, please follow the OpenMPI build instructions. Currently we are recommending OpenMPI v1.10.7 or MPICH 3.3 and GCC v7.3.0. Start by creating a <code class="docutils literal notranslate"><span class="pre">${NALU_ROOT_DIR}</span></code> to work in.</p>
+<section id="homebrew">
+<h3>Homebrew<a class="headerlink" href="#homebrew" title="Link to this heading"></a></h3>
+<p>If using OSX, you can install many dependencies using Homebrew. Install <a class="reference external" href="https://github.com/Homebrew/brew">Homebrew</a> on your local machine and reference the list below for some packages Homebrew can install for you. This allows you to skip the steps describing the build process for each of these applications. You will need to find the location of the applications in which Homebrew has installed them, to use when building Trilinos and Nalu-Wind.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">install</span> <span class="n">openmpi</span>
+<span class="n">brew</span> <span class="n">install</span> <span class="n">cmake</span>
+<span class="n">brew</span> <span class="n">install</span> <span class="n">libxml2</span>
+<span class="n">brew</span> <span class="n">install</span> <span class="n">boost</span>
+<span class="n">brew</span> <span class="n">tap</span> <span class="n">homebrew</span><span class="o">/</span><span class="n">science</span>
+<span class="n">brew</span> <span class="n">install</span> <span class="n">superlu43</span>
+</pre></div>
+</div>
+</section>
+<section id="cmake-v3-12-4">
+<h3>CMake v3.12.4<a class="headerlink" href="#cmake-v3-12-4" title="Link to this heading"></a></h3>
+<p>CMake is provided <a class="reference external" href="http://www.cmake.org/download/">here</a>.</p>
+<p>Prepare:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages
+tar xf cmake-3.12.4.tar.gz
+</pre></div>
+</div>
+<p>Build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages/cmake-3.12.4
+./configure --prefix=${NALU_ROOT_DIR}/install/cmake
+make
+make install
+</pre></div>
+</div>
+</section>
+<section id="superlu-v4-3">
+<h3>SuperLU v4.3<a class="headerlink" href="#superlu-v4-3" title="Link to this heading"></a></h3>
+<p>SuperLU is provided <a class="reference external" href="http://crd-legacy.lbl.gov/~xiaoye/SuperLU/">here</a>.</p>
+<p>Prepare:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages
+tar xf superlu_4.3.tar.gz
+</pre></div>
+</div>
+<p>Build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages/SuperLU_4.3
+cp MAKE_INC/make.linux make.inc
+</pre></div>
+</div>
+<p>To find out what the correct platform extension PLAT is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uname</span> <span class="o">-</span><span class="n">m</span>
+</pre></div>
+</div>
+<p>Edit <code class="docutils literal notranslate"><span class="pre">make.inc</span></code> as shown below (diffs shown from baseline).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>PLAT          = _x86_64
+SuperLUroot   = /your_path/install/SuperLU_4.3 i.e., ${NALU_ROOT_DIR}/install/SuperLU_4.3
+BLASLIB       = -L/usr/lib64 -lblas
+CC            = mpicc
+FORTRAN       = mpif77
+</pre></div>
+</div>
+<p>On some platforms, the <code class="docutils literal notranslate"><span class="pre">${NALU_ROOT_DIR}</span></code> may be mangled. In such cases, you may need to use the entire path to <code class="docutils literal notranslate"><span class="pre">install/SuperLU_4.3</span></code>.</p>
+<p>Next, make some new directories:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>mkdir ${NALU_ROOT_DIR}/install/SuperLU_4.3
+mkdir ${NALU_ROOT_DIR}/install/SuperLU_4.3/lib
+mkdir ${NALU_ROOT_DIR}/install/SuperLU_4.3/include
+cd ${NALU_ROOT_DIR}/packages/SuperLU_4.3
+make
+cp SRC/*.h ${NALU_ROOT_DIR}/install/SuperLU_4.3/include
+</pre></div>
+</div>
+</section>
+<section id="libxml2-v2-9-8">
+<h3>Libxml2 v2.9.8<a class="headerlink" href="#libxml2-v2-9-8" title="Link to this heading"></a></h3>
+<p>Libxml2 is found <a class="reference external" href="http://www.xmlsoft.org/sources/">here</a>.</p>
+<p>Prepare:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages
+tar -xvf libxml2-2.9.8.tar.gz
+</pre></div>
+</div>
+<p>Build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages/libxml2-2.9.8
+CC=mpicc CXX=mpicxx ./configure -without-python --prefix=${NALU_ROOT_DIR}/install/libxml2
+make
+make install
+</pre></div>
+</div>
+</section>
+<section id="boost-v1-68-0">
+<h3>Boost v1.68.0<a class="headerlink" href="#boost-v1-68-0" title="Link to this heading"></a></h3>
+<p>Boost is found <a class="reference external" href="http://www.boost.org">here</a>.</p>
+<p>Prepare:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages
+tar -zxvf boost_1_68_0.tar.gz
+</pre></div>
+</div>
+<p>Build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages/boost_1_68_0
+./bootstrap.sh --prefix=${NALU_ROOT_DIR}/install/boost --with-libraries=signals,regex,filesystem,system,mpi,serialization,thread,program_options,exception
+</pre></div>
+</div>
+<p>Next, edit <code class="docutils literal notranslate"><span class="pre">project-config.jam</span></code> and add a ‘using mpi’, e.g,</p>
+<p>using mpi: /path/to/mpi/openmpi/bin/mpicc</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">b2</span> <span class="o">-</span><span class="n">j</span> <span class="mi">4</span> <span class="mi">2</span><span class="o">&gt;&amp;</span><span class="mi">1</span> <span class="o">|</span> <span class="n">tee</span> <span class="n">boost_build_one</span>
+<span class="o">./</span><span class="n">b2</span> <span class="o">-</span><span class="n">j</span> <span class="mi">4</span> <span class="n">install</span> <span class="mi">2</span><span class="o">&gt;&amp;</span><span class="mi">1</span> <span class="o">|</span> <span class="n">tee</span> <span class="n">boost_build_intall</span>
+</pre></div>
+</div>
+</section>
+<section id="yaml-cpp-0-6-2">
+<h3>YAML-CPP 0.6.2<a class="headerlink" href="#yaml-cpp-0-6-2" title="Link to this heading"></a></h3>
+<p>YAML is provided <a class="reference external" href="https://github.com/jbeder/yaml-cpp">here</a>. Versions of Nalu before v1.1.0 used earlier versions of YAML-CPP. For brevity only the latest build instructions are discussed and the history of the Nalu-Wind git repo can be used to find older installation instructions if required.</p>
+<p>Prepare:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages
+git clone https://github.com/jbeder/yaml-cpp
+cd yaml-cpp &amp;&amp; git checkout yaml-cpp-0.6.2
+</pre></div>
+</div>
+<p>Build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages/yaml-cpp
+mkdir build
+cd build
+cmake -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_CXX_FLAGS=-std=c++11 -DCMAKE_CC_COMPILER=mpicc -DCMAKE_INSTALL_PREFIX=${NALU_ROOT_DIR}/install/yaml-cpp ..
+make
+make install
+</pre></div>
+</div>
+</section>
+<section id="zlib-v1-2-11">
+<h3>Zlib v1.2.11<a class="headerlink" href="#zlib-v1-2-11" title="Link to this heading"></a></h3>
+<p>Zlib is provided <a class="reference external" href="http://www.zlib.net">here</a>.</p>
+<p>Prepare:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages
+tar -zxvf zlib-1.2.11.tar.gz
+</pre></div>
+</div>
+<p>Build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages/zlib-1.2.11
+CC=gcc CXX=g++ CFLAGS=-O3 CXXFLAGS=-O3 ./configure --prefix=${NALU_ROOT_DIR}/install/zlib
+make
+make install
+</pre></div>
+</div>
+</section>
+<section id="hdf5-v1-10-4">
+<h3>HDF5 v1.10.4<a class="headerlink" href="#hdf5-v1-10-4" title="Link to this heading"></a></h3>
+<p>HDF5 1.10.4 is provided <a class="reference external" href="http://www.hdfgroup.org/downloads/index.html">here</a>.</p>
+<p>Prepare:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages
+tar -zxvf hdf5-1.10.4.tar.gz
+</pre></div>
+</div>
+<p>Build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages/hdf5-1.10.4
+./configure CC=mpicc FC=mpif90 CXX=mpicxx CXXFLAGS=&quot;-fPIC -O3&quot; CFLAGS=&quot;-fPIC -O3&quot; FCFLAGS=&quot;-fPIC -O3&quot; --enable-parallel --with-zlib=${NALU_ROOT_DIR}/install/zlib --prefix=${NALU_ROOT_DIR}/install/hdf5
+make
+make install
+make check
+</pre></div>
+</div>
+</section>
+<section id="netcdf-v4-6-1-and-parallel-netcdf-v1-8-0">
+<h3>NetCDF v4.6.1 and Parallel NetCDF v1.8.0<a class="headerlink" href="#netcdf-v4-6-1-and-parallel-netcdf-v1-8-0" title="Link to this heading"></a></h3>
+<p>In order to support all aspects of Nalu-Wind’s parallel models, this combination of products is required.</p>
+<section id="parallel-netcdf-v1-8-0">
+<h4>Parallel NetCDF v1.8.0<a class="headerlink" href="#parallel-netcdf-v1-8-0" title="Link to this heading"></a></h4>
+<p>Parallel NetCDF is provided on the <a class="reference external" href="https://trac.mcs.anl.gov/projects/parallel-netcdf/wiki/Download">Argon Trac Page</a>.</p>
+<p>Prepare:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages
+tar -zxvf parallel-netcdf-1.8.0.tar.gz
+</pre></div>
+</div>
+<p>Build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd parallel-netcdf-1.8.0
+./configure --prefix=${NALU_ROOT_DIR}/install/parallel-netcdf CC=mpicc FC=mpif90 CXX=mpicxx CFLAGS=-O3 CXXFLAGS=-O3 --disable-fortran
+make
+make install
+</pre></div>
+</div>
+</section>
+<section id="netcdf-v4-6-1">
+<h4>NetCDF v4.6.1<a class="headerlink" href="#netcdf-v4-6-1" title="Link to this heading"></a></h4>
+<p>NetCDF is provided <a class="reference external" href="https://github.com/Unidata/netcdf-c/releases">here</a>.</p>
+<p>Prepare:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages
+tar -zxvf netcdf-4.6.1.tar.gz
+</pre></div>
+</div>
+<p>Build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd netcdf-4.6.1
+./configure --prefix=${NALU_ROOT_DIR}/install/netcdf CC=mpicc FC=mpif90 CXX=mpicxx CFLAGS=&quot;-I${NALU_ROOT_DIR}/install/parallel-netcdf/include -O3&quot; LDFLAGS=-L${NALU_ROOT_DIR}/install/parallel-netcdf/lib --enable-pnetcdf --enable-parallel-tests --enable-netcdf-4 --disable-shared --disable-fsync --disable-cdmremote --disable-dap --disable-doxygen --disable-v2
+make -j 4
+make check
+make install
+</pre></div>
+</div>
+</section>
+</section>
+<section id="trilinos">
+<h3>Trilinos<a class="headerlink" href="#trilinos" title="Link to this heading"></a></h3>
+<p>Trilinos is managed by the <a class="reference external" href="http://www.trilinos.org">Trilinos</a> project and can be found on Github.</p>
+<p>Prepare:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd ${NALU_ROOT_DIR}/packages
+git clone https://github.com/trilinos/Trilinos.git
+cd ${NALU_ROOT_DIR}/packages/Trilinos
+mkdir build
+cd build
+</pre></div>
+</div>
+<p>Now create a <code class="docutils literal notranslate"><span class="pre">do-config-trilinos</span></code> script with the following recommended options:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>#!/bin/bash
+
+# The base directory where mpi is located.
+# From here you should be able to find include/mpi.h bin/mpicxx, bin/mpiexec, etc.
+MPI_ROOT_DIR=/PathToMPI
+NALU_ROOT_DIR=/PathToNaluProjectDir
+
+# Note: Don&#39;t forget to set your LD_LIBRARY_PATH to $mpi_base_dir/lib
+#       You may also need to add to LD_LIBRARY_PATH the lib directory for the compiler
+#       used to create the mpi executables.
+
+# TPLS needed by trilinos, possibly provided by HomeBrew on a Mac
+#BOOST_ROOT_DIR=/usr/local/Cellar/boost/1.56.0/include/boost/
+#SUPERLU_ROOT_DIR=/usr/local/Cellar/superlu/4.3
+BOOST_ROOT_DIR=${NALU_BUILD_DIR}/install/boost
+SUPERLU_ROOT_DIR=${NALU_BUILD_DIR}/install/SuperLU_4.3
+NETCDF_ROOT_DIR=${NALU_BUILD_DIR}/install/netcdf
+HDF5_ROOT_DIR=${NALU_BUILD_DIR}/install/hdf5
+PARALLEL_NETCDF_ROOT_DIR=${NALU_BUILD_DIR}/install/parallel-netcdf
+ZLIB_ROOT_DIR=${NALU_BUILD_DIR}/install/zlib
+TRILINOS_ROOT_DIR=${NALU_BUILD_DIR}/install/trilinos
+
+EXTRA_ARGS=$@
+
+# Cleanup old cache before we configure
+# Note:  This does not remove files produced by make.  Use &quot;make clean&quot; for this.
+find . -name &quot;CMakeFiles&quot; -exec rm -rf {} \;
+rm -f CMakeCache.txt
+
+cmake \
+  -DCMAKE_INSTALL_PREFIX=${TRILINOS_ROOT_DIR} \
+  -DCMAKE_BUILD_TYPE:STRING=RELEASE
+  -DMPI_USE_COMPILER_WRAPPERS:BOOL=ON
+  -DMPI_CXX_COMPILER:FILEPATH=${CXX}
+  -DKokkos_ENABLE_DEPRECATED_CODE:BOOL=OFF
+  -DTpetra_INST_SERIAL:BOOL=ON
+  -DTrilinos_ENABLE_CXX11:BOOL=ON
+  -DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON
+  -DTpetra_INST_DOUBLE:BOOL=ON
+  -DTpetra_INST_COMPLEX_DOUBLE:BOOL=OFF
+  -DTrilinos_ENABLE_TESTS:BOOL=OFF
+  -DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=OFF
+  -DTrilinos_ASSERT_MISSING_PACKAGES:BOOL=OFF
+  -DTrilinos_ALLOW_NO_PACKAGES:BOOL=OFF
+  -DTrilinos_ENABLE_Epetra:BOOL=OFF
+  -DTrilinos_ENABLE_Tpetra:BOOL=ON
+  -DTrilinos_ENABLE_KokkosKernels:BOOL=ON
+  -DTrilinos_ENABLE_ML:BOOL=OFF
+  -DTrilinos_ENABLE_MueLu:BOOL=ON
+  -DXpetra_ENABLE_Kokkos_Refactor:BOOL=ON
+  -DMueLu_ENABLE_Kokkos_Refactor:BOOL=ON
+  -DTrilinos_ENABLE_EpetraExt:BOOL=OFF
+  -DTrilinos_ENABLE_AztecOO:BOOL=OFF
+  -DTrilinos_ENABLE_Belos:BOOL=ON
+  -DTrilinos_ENABLE_Ifpack2:BOOL=ON
+  -DTrilinos_ENABLE_Amesos2:BOOL=ON
+  -DTrilinos_ENABLE_Zoltan2:BOOL=ON
+  -DTrilinos_ENABLE_Ifpack:BOOL=OFF
+  -DTrilinos_ENABLE_Amesos:BOOL=OFF
+  -DTrilinos_ENABLE_Zoltan:BOOL=ON
+  -DTrilinos_ENABLE_STK:BOOL=ON
+  -DTrilinos_ENABLE_Gtest:BOOL=ON
+  -DTrilinos_ENABLE_SEACASExodus:BOOL=ON
+  -DTrilinos_ENABLE_SEACASEpu:BOOL=ON
+  -DTrilinos_ENABLE_SEACASExodiff:BOOL=ON
+  -DTrilinos_ENABLE_SEACASNemspread:BOOL=ON
+  -DTrilinos_ENABLE_SEACASNemslice:BOOL=ON
+  -DTrilinos_ENABLE_SEACASIoss:BOOL=ON
+  -DTPL_ENABLE_MPI:BOOL=ON
+  -DTPL_ENABLE_Boost:BOOL=ON
+  -DBoostLib_INCLUDE_DIRS:PATH=${BOOST_ROOT_DIR}/include
+  -DBoostLib_LIBRARY_DIRS:PATH=${BOOST_ROOT_DIR}/lib
+  -DBoost_INCLUDE_DIRS:PATH=${BOOST_ROOT_DIR}/include
+  -DBoost_LIBRARY_DIRS:PATH=${BOOST_ROOT_DIR}/lib
+  -DTPL_ENABLE_SuperLU:BOOL=ON
+  -DSuperLU_INCLUDE_DIRS:PATH=${SUPERLU_ROOT_DIR}/include
+  -DSuperLU_LIBRARY_DIRS:PATH=${SUPERLU_ROOT_DIR}/lib
+  -DTPL_ENABLE_Netcdf:BOOL=ON
+  -DNetCDF_ROOT:PATH=${NETCDF_ROOT_DIR}
+  -DTPL_Netcdf_PARALLEL:BOOL=ON
+  -DTPL_ENABLE_Pnetcdf:BOOL=ON
+  -DPNetCDF_ROOT:PATH=${PARALLEL_NETCDF_ROOT_DIR}
+  -DPnetcdf_INCLUDE_DIRS:PATH=${PARALLEL_NETCDF_ROOT_DIR}/include
+  -DPnetcdf_LIBRARY_DIRS:PATH=${PARALLEL_NETCDF_ROOT_DIR}/lib
+  -DTPL_ENABLE_HDF5:BOOL=ON
+  -DHDF5_ROOT:PATH=${HDF5_ROOT_DIR}
+  -DHDF5_NO_SYSTEM_PATHS:BOOL=ON
+  -DTPL_ENABLE_Zlib:BOOL=ON
+  -DZlib_INCLUDE_DIRS:PATH=${ZLIB_ROOT_DIR}/include
+  -DZlib_LIBRARY_DIRS:PATH=${ZLIB_ROOT_DIR}/lib
+  -DTPL_ENABLE_BLAS:BOOL=ON
+  $EXTRA_ARGS \
+  ../
+</pre></div>
+</div>
+<section id="build">
+<h4>Build<a class="headerlink" href="#build" title="Link to this heading"></a></h4>
+<p>Place into the build directory, the <code class="docutils literal notranslate"><span class="pre">do-config-trilinos</span></code> script created from the recommended Trilinos configuration listed above.</p>
+<p><code class="docutils literal notranslate"><span class="pre">do-config-trilinos</span></code> will be used to run cmake to build trilinos correctly for Nalu-Wind.</p>
+<p>Make sure all other paths to netcdf, hdf5, etc., are correct.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">do</span><span class="o">-</span><span class="n">config</span><span class="o">-</span><span class="n">trilinos</span>
+<span class="n">make</span>
+<span class="n">make</span> <span class="n">install</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="hypre">
+<h3>HYPRE<a class="headerlink" href="#hypre" title="Link to this heading"></a></h3>
+<p>Nalu-Wind can use HYPRE solvers and preconditioners, especially for Pressure Poisson
+solves. However, this dependency is optional and is not enabled by default.
+Users wishing to use HYPRE solver and preconditioner combination must compile
+HYPRE library and link to it when building Nalu-Wind.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># 1. Clone hypre sources</span>
+https://github.com/LLNL/hypre.git
+<span class="nb">cd</span><span class="w"> </span>hypre/src
+
+<span class="c1"># 2. Configure HYPRE package and pass installation directory</span>
+./configure<span class="w"> </span>--prefix<span class="o">=</span><span class="si">${</span><span class="nv">NALU_ROOT_DIR</span><span class="si">}</span>/install/hypre<span class="w"> </span>--without-superlu<span class="w"> </span>--without-openmp<span class="w"> </span>--enable-bigint
+
+<span class="c1"># 3. Compile and install</span>
+make<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>install
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ol class="arabic simple">
+<li><p>Make sure that <code class="docutils literal notranslate"><span class="pre">--enable-bigint</span></code> option is turned on if you intend to
+run linear systems with <span class="math notranslate nohighlight">\(&gt; 2\)</span> billion rows. Otherwise, <code class="docutils literal notranslate"><span class="pre">nalu</span></code>
+executable will throw an error at runtime for large problems.</p></li>
+<li><p>Users must pass <code class="docutils literal notranslate"><span class="pre">-DENABLE_HYPRE</span></code> option to CMake during Nalu-Wind
+configuration phase. Optionally, the variable <cite>-DHYPRE_DIR`</cite> can be used
+to pass the path of HYPRE install location to CMake.</p></li>
+</ol>
+</div>
+</section>
+<section id="paraview-catalyst">
+<h3>ParaView Catalyst<a class="headerlink" href="#paraview-catalyst" title="Link to this heading"></a></h3>
+<p>Optionally enable <a class="reference external" href="https://www.paraview.org/in-situ/">ParaView Catalyst</a>
+for in-situ visualization with Nalu-Wind. These instructions can be skipped if
+you do not require in-situ visualization with Nalu-Wind. The first thing you
+will need to do is build Paraview yourself using their SuperBuild instructions.</p>
+<section id="build-nalu-wind-paraview-catalyst-adapter">
+<h4>Build Nalu-Wind ParaView Catalyst Adapter<a class="headerlink" href="#build-nalu-wind-paraview-catalyst-adapter" title="Link to this heading"></a></h4>
+<p>Next you will need to build the Catalyst adapter for Trilinos to hook into Paraview.
+The adapter is located in the Trilinos repo at <code class="docutils literal notranslate"><span class="pre">Trilinos/packages/seacas/libraries/ioss/src/visualization/ParaViewCatalystIossAdapter</span></code>. To install:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd Trilinos/packages/seacas/libraries/ioss/src/visualization/ParaViewCatalystIossAdapter
+cmake -DParaView_DIR:PATH=/path/to/paraview/lib/cmake/paraview_version -DCMAKE_INSTALL_PREFIX:PATH=${NALU_ROOT_DIR}/install
+make
+make install
+</pre></div>
+</div>
+</section>
+</section>
+<section id="nalu-wind">
+<h3>Nalu-Wind<a class="headerlink" href="#nalu-wind" title="Link to this heading"></a></h3>
+<p>Nalu-Wind is provided <a class="reference external" href="https://github.com/exawind/nalu-wind">here</a>. The master branch of Nalu-Wind typically matches with the master branch or develop branch of Trilinos. If it is necessary to build an older version of Nalu-Wind, refer to the history of the Nalu git repo for instructions on doing so.</p>
+<p>Prepare:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">Exawind</span><span class="o">/</span><span class="n">nalu</span><span class="o">-</span><span class="n">wind</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+<section id="id1">
+<h4>Build<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<p>Create a <code class="docutils literal notranslate"><span class="pre">nalu-wind/build</span></code> directory and execute something similar to following commands. The general commands for configuring and building Nalu-Wind are listed below. We show a script which uses modules which populate the &lt;PACKAGE&gt;_ROOT_DIR locations for the NREL Eagle machine, but it will need to be modified with the specific TPL locations you have used.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>#!/bin/bash -l
+
+# Instructions:
+# Make a directory in the Nalu-Wind directory for building,
+# Copy this script to that directory and edit the
+# options below to your own needs and run it.
+
+CXX_COMPILER=mpicxx
+C_COMPILER=mpicc
+FLAGS=&quot;-O2 -march=native -mtune=native&quot;
+OVERSUBSCRIBE_FLAGS=&quot;--use-hwthread-cpus --oversubscribe&quot;
+  
+set -e
+
+TRILINOS_ROOT_DIR=${NALU_ROOT_DIR}/install/trilinos
+YAML_CPP_ROOT_DIR=${NALU_ROOT_DIR}/install/yaml-cpp
+
+# Clean before cmake configure
+set +e
+rm -rf CMakeFiles
+rm -f CMakeCache.txt
+set -e
+
+# Extra TPLs that can be included in the cmake configure:
+#  -DENABLE_PARAVIEW_CATALYST:BOOL=ON \
+#  -DPARAVIEW_CATALYST_INSTALL_PATH:PATH=${CATALYST_IOSS_ADAPTER_ROOT_DIR} \
+#  -DENABLE_OPENFAST:BOOL=ON \
+#  -DOpenFAST_DIR:PATH=${OPENFAST_ROOT_DIR} \
+#  -DENABLE_HYPRE:BOOL=ON \
+#  -DHYPRE_DIR:PATH=${HYPRE_ROOT_DIR} \
+#  -DENABLE_TIOGA:BOOL=ON \
+#  -DTIOGA_DIR:PATH=${TIOGA_ROOT_DIR} \
+
+(set -x; cmake \
+  -DCMAKE_CXX_COMPILER:STRING=${CXX_COMPILER} \
+  -DCMAKE_CXX_FLAGS:STRING=&quot;${FLAGS}&quot; \
+  -DMPI_CXX_COMPILER:STRING=${CXX_COMPILER} \
+  -DMPIEXEC_PREFLAGS:STRING=&quot;${OVERSUBSCRIBE_FLAGS}&quot; \
+  -DTrilinos_DIR:PATH=${TRILINOS_ROOT_DIR} \
+  -DYAML_DIR:PATH=${YAML_CPP_ROOT_DIR} \
+  -DCMAKE_BUILD_TYPE:STRING=RELEASE \
+  -DENABLE_TESTS:BOOL=ON \
+  ..)
+
+(set -x; nice make -j 16)
+</pre></div>
+</div>
+<p>This process will create <code class="docutils literal notranslate"><span class="pre">naluX</span></code> within the <code class="docutils literal notranslate"><span class="pre">nalu-wind/build</span></code> location.</p>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="build_spack.html" class="btn btn-neutral float-left" title="Building Nalu-Wind Semi-Automatically Using Spack" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="verify_installation.html" class="btn btn-neutral float-right" title="Verifying that the installation of Nalu-Wind works" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
