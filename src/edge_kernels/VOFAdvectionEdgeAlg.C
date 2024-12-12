@@ -226,9 +226,13 @@ VOFAdvectionEdgeAlg::execute()
         vel_mag_r += velocity.get(nodeR, d) * velocity.get(nodeR, d);
       }
 
-      const DblType velocity_scale =
-        sharpening_scaling * 0.5 *
-        (stk::math::sqrt(vel_mag_l) + stk::math::sqrt(vel_mag_r));
+      const DblType face_area = stk::math::sqrt(asq);
+
+      const DblType local_velocity = stk::math::min(
+        0.5 * (stk::math::sqrt(vel_mag_l) + stk::math::sqrt(vel_mag_r)),
+        stk::math::abs(vdot) / asq);
+
+      const DblType velocity_scale = sharpening_scaling * local_velocity;
 
       diffusion_coef = stk::math::sqrt(diffusion_coef) * diffusion_scaling;
 
