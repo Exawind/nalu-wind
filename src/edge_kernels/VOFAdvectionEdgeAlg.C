@@ -230,7 +230,7 @@ VOFAdvectionEdgeAlg::execute()
 
       const DblType local_velocity = stk::math::min(
         0.5 * (stk::math::sqrt(vel_mag_l) + stk::math::sqrt(vel_mag_r)),
-        stk::math::abs(vdot) / asq);
+        stk::math::abs(vdot) / face_area);
 
       const DblType velocity_scale = sharpening_scaling * local_velocity;
 
