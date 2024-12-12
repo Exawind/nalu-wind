@@ -30,7 +30,7 @@ main(int argc, char** argv)
   cudaDeviceSetLimit(cudaLimitStackSize, nalu_stack_size);
 #elif defined(KOKKOS_ENABLE_HIP)
   const size_t nalu_stack_size = 16384;
-  hipError_t err = hipDeviceSetLimit(hipLimitMallocHeapSize, nalu_stack_size);
+  hipError_t err = hipDeviceSetLimit(hipLimitStackSize, nalu_stack_size);
   if (err != hipSuccess) {
     /*
      This might be useful at some point so keeping it and commenting out.

@@ -28,7 +28,7 @@ TEST(BasicKokkos, discover_execution_space)
 #endif
 
 #if defined(KOKKOS_ENABLE_HIP)
-    std::cout << "Kokkos::Experimental::HIP is available." << std::endl;
+    std::cout << "Kokkos::HIP is available." << std::endl;
 #endif
 
     std::cout << "Default execution space info: ";
