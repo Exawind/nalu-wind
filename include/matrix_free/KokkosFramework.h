@@ -62,12 +62,12 @@ struct ExecTraits<Kokkos::Cuda>
 
 #if defined(KOKKOS_ENABLE_HIP)
 template <>
-struct ExecTraits<Kokkos::Experimental::HIP>
+struct ExecTraits<Kokkos::HIP>
 {
   using data_type = double;
   using memory_traits =
     Kokkos::MemoryTraits<Kokkos::Restrict | Kokkos::Aligned>;
-  using memory_space = typename Kokkos::Experimental::HIP::memory_space;
+  using memory_space = typename Kokkos::HIP::memory_space;
   using layout = Kokkos::LayoutLeft;
   static constexpr int alignment = alignof(data_type);
   static constexpr int simd_len = 1;
