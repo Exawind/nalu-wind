@@ -1,0 +1,25 @@
+<map id="sierra::nalu::BSpline3D" name="sierra::nalu::BSpline3D">
+<area shape="rect" id="Node000001" title=" " alt="" coords="2024,94,2195,119"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_b_spline.html" title="Base class for B&#45;Splines." alt="" coords="420,43,572,69"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="564,38,692,15,767,6,843,3,1835,3,1873,5,1911,13,1984,37,2046,66,2090,92,2087,96,2043,71,1982,42,1910,18,1872,11,1835,8,843,8,768,11,693,20,565,43"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_b_spline2_d.html" title=" " alt="" coords="1449,155,1620,181"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="586,55,813,64,949,73,1086,85,1182,98,1256,111,1426,144,1470,153,1469,158,1425,149,1255,116,1181,103,1085,91,949,78,813,69,586,60"/>
+<area shape="rect" id="Node000006" href="$classsierra_1_1nalu_1_1_b_spline1_d.html" title="Support for B&#45;Spline of a curve." alt="" coords="759,146,929,171"/>
+<area shape="poly" id="edge7_Node000006_Node000002" title=" " alt="" coords="573,69,652,88,736,112,816,143,814,148,734,117,651,93,572,74"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="1733,148,1933,188"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="1946,148,1999,137,2070,117,2072,122,2001,143,1948,154"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="1633,165,1733,165,1733,171,1633,171"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="1109,207,1309,247"/>
+<area shape="poly" id="edge5_Node000004_Node000005" title=" " alt="" coords="1323,207,1425,189,1479,178,1480,183,1426,195,1324,212"/>
+<area shape="poly" id="edge14_Node000001_Node000006" title=" " alt="" coords="913,140,1048,116,1128,108,1208,104,1835,104,2024,104,2024,109,1835,109,1208,109,1129,113,1049,122,914,146"/>
+<area shape="poly" id="edge12_Node000004_Node000006" title=" " alt="" coords="943,157,1449,164,1449,170,943,163"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="895,173,954,189,1033,204,1109,214,1108,220,1032,209,953,195,894,178"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="413,165,579,190"/>
+<area shape="poly" id="edge8_Node000006_Node000007" title=" " alt="" coords="592,170,758,161,758,166,592,175"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="157,225,287,250"/>
+<area shape="poly" id="edge13_Node000003_Node000008" title=" " alt="" coords="279,251,379,274,437,282,495,285,1536,285,1575,282,1614,275,1689,248,1754,216,1802,186,1805,190,1756,220,1691,253,1616,280,1576,288,1536,291,495,291,436,287,378,279,278,256"/>
+<area shape="poly" id="edge11_Node000005_Node000008" title=" " alt="" coords="301,234,1109,225,1109,230,301,239"/>
+<area shape="poly" id="edge9_Node000007_Node000008" title=" " alt="" coords="294,219,437,187,438,193,295,224"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="5,225,44,250"/>
+<area shape="poly" id="edge10_Node000008_Node000009" title=" " alt="" coords="58,235,157,235,157,240,58,240"/>
+</map>

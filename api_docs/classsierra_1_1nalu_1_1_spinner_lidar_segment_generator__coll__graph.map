@@ -1,0 +1,13 @@
+<map id="sierra::nalu::SpinnerLidarSegmentGenerator" name="sierra::nalu::SpinnerLidarSegmentGenerator">
+<area shape="rect" id="Node000001" title=" " alt="" coords="840,62,1024,102"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_segment_generator.html" title=" " alt="" coords="441,5,668,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="682,17,749,23,817,34,855,45,890,59,888,64,853,50,815,39,749,28,682,22"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="467,69,642,95"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="656,79,839,79,839,85,656,85"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="157,69,280,95"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="294,79,467,79,467,85,294,85"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="5,69,44,95"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="58,79,157,79,157,85,58,85"/>
+<area shape="rect" id="Node000006" href="$structsierra_1_1nalu_1_1_spinner_lidar_segment_generator_1_1_prism_parameters.html" title=" " alt="" coords="423,122,687,162"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="700,130,815,114,872,99,873,105,817,119,701,136"/>
+</map>

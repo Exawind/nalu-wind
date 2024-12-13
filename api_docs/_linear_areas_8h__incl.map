@@ -1,0 +1,18 @@
+<map id="LinearAreas.h" name="LinearAreas.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="192,5,303,31"/>
+<area shape="rect" id="Node000002" href="$_polynomial_orders_8h.html" title=" " alt="" coords="5,79,236,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="228,33,155,74,152,69,226,28"/>
+<area shape="rect" id="Node000004" href="$_kokkos_view_types_8h.html" title=" " alt="" coords="261,79,490,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="269,28,343,69,341,74,267,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="83,225,175,251"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="124,104,130,211,125,212,119,105"/>
+<area shape="rect" id="Node000005" href="$_kokkos_framework_8h.html" title=" " alt="" coords="159,152,392,177"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="361,106,304,146,301,142,358,102"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="417,152,606,177"/>
+<area shape="poly" id="edge8_Node000004_Node000008" title=" " alt="" coords="398,102,478,143,476,148,396,106"/>
+<area shape="poly" id="edge7_Node000005_Node000003" title=" " alt="" coords="253,180,166,222,164,217,251,175"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="203,225,337,251"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="277,178,275,212,269,212,272,177"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="361,225,507,251"/>
+<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="302,175,397,217,395,222,300,180"/>
+</map>

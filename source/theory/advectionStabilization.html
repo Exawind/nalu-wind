@@ -1,0 +1,324 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>4. Advection Stabilization &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="5. Pressure Stabilization" href="pressureStabilization.html" />
+    <link rel="prev" title="3. Discretization Approach" href="discretizationApproach.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Theory Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lowMachNumberDerivation.html">1. Low Mach Number Derivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html">2. Supported Equation Set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html">3. Discretization Approach</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">4. Advection Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pressureStabilization.html">5. Pressure Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html">6. RTE Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html">7. Nonlinear Stabilization Operator (NSO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html">8. Turbulence Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html">9. Supported Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overset.html">10. Overset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html">11. Property Evaluations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="couplingApproach.html">12. Coupling Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeDiscretization.html">13. Time discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiPhysics.html">14. Multi-Physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html">15. Wind Energy Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topologicalSupport.html">16. Topological Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adaptivity.html">17. Adaptivity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeAbstractions.html">18. Code Abstractions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Nalu-Wind - Theory Manual</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">4. </span>Advection Stabilization</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/theory/advectionStabilization.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="advection-stabilization">
+<span id="theory-advection-stabilization"></span><h1><span class="section-number">4. </span>Advection Stabilization<a class="headerlink" href="#advection-stabilization" title="Link to this heading"></a></h1>
+<p>In general, advection for both the edge and element-based scheme is
+identical with standard exception of the location of the integration
+points. The full advection term is simply written as,</p>
+<div class="math notranslate nohighlight" id="equation-adv-form">
+<span class="eqno">(4.1)<a class="headerlink" href="#equation-adv-form" title="Link to this equation"></a></span>\[ADV_{\phi} = \int \rho u_j \phi_{ip} A_j = \sum \dot{m} \phi_{ip},\]</div>
+<p>where <span class="math notranslate nohighlight">\(\phi\)</span> is <span class="math notranslate nohighlight">\(u_i\)</span>, <span class="math notranslate nohighlight">\(Z\)</span>, <span class="math notranslate nohighlight">\(h\)</span>, etc.</p>
+<p>The evaluation of <span class="math notranslate nohighlight">\(\phi_{ip}\)</span> defines the advection stabilization
+choice. In general, the advection choice is a cell Peclet blending
+between higher order upwind (<span class="math notranslate nohighlight">\(\phi_{upw}\)</span>) and a generalized
+un-stabilized central (Galerkin) operator, <span class="math notranslate nohighlight">\(\phi_{gcds}\)</span>,</p>
+<div class="math notranslate nohighlight" id="equation-adv-phi-ip">
+<span class="eqno">(4.2)<a class="headerlink" href="#equation-adv-phi-ip" title="Link to this equation"></a></span>\[ \phi_{ip} = \eta \phi_{upw} + (1-\eta)\phi_{gcds}.\]</div>
+<p>In the above equation, <span class="math notranslate nohighlight">\(\eta\)</span> is a cell Peclet
+blending. The generalized central operator can take on a pure second
+order or pseudo fourth order form (see below). For the classic Peclet
+number functional form (see Equation <a class="reference internal" href="#equation-classic-pf">(4.3)</a>) a hybrid upwind
+factor, <span class="math notranslate nohighlight">\(\gamma\)</span>, can be used to ensure that no stabilization is
+added (<span class="math notranslate nohighlight">\(\eta = 0\)</span>) or that full upwind stabilization is included
+(as will be shown, even with limiter functions). The hybrid upwind
+factor allows one to modify the functional blending function; values of
+unity result in the normal blending function response in
+Figure <a class="reference internal" href="#pec-blend"><span class="std std-numref">4.1</span></a>; values of zero yield a pure central operator, i.e.,
+blending function of zero; values <span class="math notranslate nohighlight">\(&gt;&gt;\)</span> unity result in a blending
+function value of unity, i.e., pure upwind. The constant <span class="math notranslate nohighlight">\(A\)</span> is
+implemented with a value of 5. The value of this constant can not be
+changed via the input file. Note that this functional form is named the
+“classic” form within the input file.</p>
+<p>The classic cell Peclet blending function is given by</p>
+<div class="math notranslate nohighlight" id="equation-classic-pf">
+<span class="eqno">(4.3)<a class="headerlink" href="#equation-classic-pf" title="Link to this equation"></a></span>\[\eta = \frac {{\gamma \rm Pe}^2} {5 + {\gamma \rm Pe}^2}.\]</div>
+<p>The classic Peclet functional form makes it difficult to dial in the
+exact point at which the Peclet factor transitions from pure upwind to
+pure central. Therefore, an alternative form is provided that has a
+hyperbolic tangeant functional form. This form allows one to specify the
+transition point and the width of the transition (see
+Equation <a class="reference internal" href="#equation-tanhpf">(4.4)</a>). The general tanh form is as follows,</p>
+<div class="math notranslate nohighlight" id="equation-tanhpf">
+<span class="eqno">(4.4)<a class="headerlink" href="#equation-tanhpf" title="Link to this equation"></a></span>\[\eta = \frac {1}{2}[(a+b) + (b-a)tanh(\frac{\rm Pe - c_{trans}}{c_{width}})]\]</div>
+<p>Above, the constant <span class="math notranslate nohighlight">\(c_{trans}\)</span> represents the transition Peclet
+number while <span class="math notranslate nohighlight">\(c_{width}\)</span> represents the width of the transition.
+The value of <span class="math notranslate nohighlight">\(\lambda\)</span> is simply the shift between of the raw tanh
+function from zero while <span class="math notranslate nohighlight">\(\delta\)</span> is the difference between the
+max Peclet factor (unity) and the minimum value prior to normalization.
+This approach ensures that the function starts at zero and asymptotes to
+unity,</p>
+<div class="math notranslate nohighlight">
+\[\eta = \frac {1}{2}[1+tanh(\frac{\rm Pe - c_{trans}}{c_{width}})].\]</div>
+<p>The cell-Peclet number is computed for each sub-face in the element from
+the two adjacent left (L) and right (R) nodes,</p>
+<div class="math notranslate nohighlight">
+\[{\rm Pe} = \frac{\frac{1}{2} \left( u_{R,i} + u_{L,i} \right)
+           \left( x_{R,i} - x_{L,i} \right) } {\nu }.\]</div>
+<p>A dot-product is implied by repeated indices.</p>
+<figure class="align-center" id="id1">
+<span id="pec-blend"></span><a class="reference internal image-reference" href="../../_images/pecletFactor.pdf"><img alt="Cell-Peclet number blending function" src="../../_images/pecletFactor.pdf" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-number">4.1 </span><span class="caption-text">Cell-Peclet number blending function outlining classic (varying the
+hybrid factor <span class="math notranslate nohighlight">\(\gamma\)</span> from 1.0, 0.1 and 0.01; again
+<span class="math notranslate nohighlight">\(A=5\)</span>) and tanh functional form (<span class="math notranslate nohighlight">\(c_{trans}=2000\)</span> and
+<span class="math notranslate nohighlight">\(c_{width}=200\)</span>).</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>The upwind operator, <span class="math notranslate nohighlight">\(\phi_{upw}\)</span> is computed based on a blending
+of the extrapolated state (using the projected nodal gradient) and the
+linear interpolated state. Second or third order upwind is provided
+based on the value of <span class="math notranslate nohighlight">\(\alpha_{upw}\)</span> blending</p>
+<div class="math notranslate nohighlight" id="equation-phi-upwind-full">
+<span class="eqno">(4.5)<a class="headerlink" href="#equation-phi-upwind-full" title="Link to this equation"></a></span>\[\begin{split}\phi_{upw} = \alpha_{upw}\tilde \phi^L_{upw} + \left(1-\alpha_{upw}\right)\phi_{cds}; \dot m &gt; 0, \\
+             \alpha_{upw}\tilde\phi^R_{upw} + \left(1-\alpha_{upw}\right)\phi_{cds}; \dot m &lt; 0.\end{split}\]</div>
+<p>The extrapolated value based on the upwinded left (<span class="math notranslate nohighlight">\(\phi^L\)</span>) or
+right (<span class="math notranslate nohighlight">\(\phi^R\)</span>) state,</p>
+<div class="math notranslate nohighlight" id="equation-adv-upw-lr">
+<span class="eqno">(4.6)<a class="headerlink" href="#equation-adv-upw-lr" title="Link to this equation"></a></span>\[\begin{split}\tilde \phi^L_{upw} &amp;= \phi^L + d^L_j \frac{\partial \phi^L }{\partial x_j}, \\
+\tilde \phi^R_{upw} &amp;= \phi^R - d^R_j \frac{\partial \phi^R }{\partial x_j}.\end{split}\]</div>
+<p>The distance vectors are defined based on the distances between the L/R
+points and the integration point (for both edge or element-based),</p>
+<div class="math notranslate nohighlight" id="equation-distance-vec">
+<span class="eqno">(4.7)<a class="headerlink" href="#equation-distance-vec" title="Link to this equation"></a></span>\[\begin{split}d^L_j &amp;= x^{ip}_j - x^L_j, \\
+d^R_j &amp;= x^R_j - x^{ip}_j.\end{split}\]</div>
+<p>In the case of all transported quantities, a Van Leer
+limiter of the extrapolated value is supported and can be activated
+within the input file (using the solution options “limiter”
+specification).</p>
+<p>Second order central is simply written as a linear combination of the
+nodal values,</p>
+<div class="math notranslate nohighlight" id="equation-phi-central">
+<span class="eqno">(4.8)<a class="headerlink" href="#equation-phi-central" title="Link to this equation"></a></span>\[\phi_{cds} = \sum N^{ip}_k \phi_k.\]</div>
+<p>where <span class="math notranslate nohighlight">\(N^{ip}_k\)</span> is either evaluated at the subcontrol surface or
+edge midpoint. In the case of the edge-based scheme, the edge midpoint
+evaluation provides for a skew symmetric form of the operator.</p>
+<p>The generalized central difference operator is provided by blending with
+the extrapolated values and second order Galerkin,</p>
+<div class="math notranslate nohighlight" id="equation-phi4th">
+<span class="eqno">(4.9)<a class="headerlink" href="#equation-phi4th" title="Link to this equation"></a></span>\[\phi_{gcds} = \frac{1}{2} \left(  \hat\phi^L_{upw} + \hat\phi^R_{upw} \right),\]</div>
+<p>where,</p>
+<div class="math notranslate nohighlight" id="equation-adv-new4th">
+<span class="eqno">(4.10)<a class="headerlink" href="#equation-adv-new4th" title="Link to this equation"></a></span>\[\begin{split}\hat\phi^L_{upw} &amp;= \alpha \tilde \phi^L_{upw} + \left(1-\alpha\right) \phi_{cds}, \\
+\hat\phi^R_{upw} &amp;= \alpha \tilde \phi^R_{upw} + \left(1-\alpha\right) \phi_{cds}.\end{split}\]</div>
+<p>The value of <span class="math notranslate nohighlight">\(\alpha\)</span> provides the type of psuedo fourth order
+stencil and is specified in the user input file.</p>
+<p>The above set of advection operators can be used to define an idealized
+one dimensional stencil denoted by (<span class="math notranslate nohighlight">\(i-2\)</span>, <span class="math notranslate nohighlight">\(i-1\)</span>, <span class="math notranslate nohighlight">\(i\)</span>,
+<span class="math notranslate nohighlight">\(i+1\)</span>, <span class="math notranslate nohighlight">\(i+2\)</span>), where <span class="math notranslate nohighlight">\(i\)</span> represents the particular row
+for the given transported variable. Below, in the table, the
+stencil can be noted for each value of <span class="math notranslate nohighlight">\(\alpha\)</span> and
+<span class="math notranslate nohighlight">\(\alpha_{upw}\)</span>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"></th>
+<th class="head"></th>
+<th class="head"></th>
+<th class="head"></th>
+<th class="head"></th>
+<th class="head"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(i-2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(i-1\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(i\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(i+1\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(i+2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\alpha\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\alpha_{upw}\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-\frac{1}{2}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(+\frac{1}{2}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0\)</span></p></td>
+<td><p>n/a</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(+\frac{1}{8}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-\frac{6}{8}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(+\frac{6}{8}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-\frac{1}{8}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\frac{1}{2}\)</span></p></td>
+<td><p>n/a</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(+\frac{1}{12}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-\frac{8}{12}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(+\frac{8}{12}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-\frac{1}{12}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\frac{2}{3}\)</span></p></td>
+<td><p>n/a</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(+\frac{1}{4}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-\frac{5}{4}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(+\frac{3}{4}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(+\frac{1}{4}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\dot m &gt; 0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(1\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-\frac{1}{4}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-\frac{3}{4}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(+\frac{5}{4}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-\frac{1}{4}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\dot m &lt; 0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(1\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(+\frac{1}{6}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-\frac{6}{6}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(+\frac{3}{6}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(+\frac{2}{6}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\dot m &gt; 0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\frac{1}{2}\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-\frac{2}{6}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-\frac{3}{6}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(+\frac{6}{6}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-\frac{1}{6}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\dot m &lt; 0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\frac{1}{2}\)</span></p></td>
+</tr>
+</tbody>
+</table>
+<p>It is noted that by varying these numerical parameters, both high
+quality, low dissipation operators suitable for LES usage or limited,
+monotonic operators suitable for RANS modeling can be accomodated.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="discretizationApproach.html" class="btn btn-neutral float-left" title="3. Discretization Approach" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pressureStabilization.html" class="btn btn-neutral float-right" title="5. Pressure Stabilization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

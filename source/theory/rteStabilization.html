@@ -1,0 +1,336 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>6. RTE Stabilization &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="7. Nonlinear Stabilization Operator (NSO)" href="nso.html" />
+    <link rel="prev" title="5. Pressure Stabilization" href="pressureStabilization.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Theory Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lowMachNumberDerivation.html">1. Low Mach Number Derivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html">2. Supported Equation Set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html">3. Discretization Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advectionStabilization.html">4. Advection Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pressureStabilization.html">5. Pressure Stabilization</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">6. RTE Stabilization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#definition-of-the-test-function">6.1. Definition of the test function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-form-of-tau">6.2. The form of <span class="math notranslate nohighlight">\(\tau\)</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pure-edge-based-upwind-method">6.3. Pure Edge-based Upwind Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#finite-element-supg-form">6.4. Finite Element SUPG Form</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html">7. Nonlinear Stabilization Operator (NSO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html">8. Turbulence Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html">9. Supported Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overset.html">10. Overset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html">11. Property Evaluations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="couplingApproach.html">12. Coupling Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeDiscretization.html">13. Time discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiPhysics.html">14. Multi-Physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html">15. Wind Energy Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topologicalSupport.html">16. Topological Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adaptivity.html">17. Adaptivity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeAbstractions.html">18. Code Abstractions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Nalu-Wind - Theory Manual</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">6. </span>RTE Stabilization</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/theory/rteStabilization.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rte-stabilization">
+<h1><span class="section-number">6. </span>RTE Stabilization<a class="headerlink" href="#rte-stabilization" title="Link to this heading"></a></h1>
+<p>The RTE is solved using the method of discrete ordinates using the
+symmetric Thurgood quadrature set. The discrete ordinates method is one
+in which discrete directions of the intensity are solved. The quadrature
+order, <span class="math notranslate nohighlight">\(N\)</span>, defines the number of ordinate directions that are
+solved in a given iteration. In the case of non-scattering media, this
+results is a set of decoupled linear partial differential equations. For
+the symmetric Thurgood set, the number of ordinate directions is given
+by <span class="math notranslate nohighlight">\(8N^2\)</span>. Values of N that are required for suitable accuracy
+starts at <span class="math notranslate nohighlight">\(N=2\)</span> with more than adequate resolution at <span class="math notranslate nohighlight">\(N=4\)</span>.</p>
+<p>For each ordinate direction, a weight is provided, <span class="math notranslate nohighlight">\(w_k\)</span> (not to
+be confused with the test function <span class="math notranslate nohighlight">\(w\)</span>). For each intensity
+ordinate direction, <span class="math notranslate nohighlight">\(I_k\)</span>, integrated quantities such as scalar
+flux and radiative heat flux are computed as,</p>
+<div class="math notranslate nohighlight">
+\[G = \sum I_k w_k\]</div>
+<p>and,</p>
+<div class="math notranslate nohighlight">
+\[q_j = \sum I_k s_j w_k.\]</div>
+<p>The stabilization that is used in the RTE equation can be placed in the
+class of residual-based stabilization. In this particular
+implementation, the scaled residual of the RTE equation is added. This
+implementation has its roots in the classic variational multiscale
+(VMS).</p>
+<p>In the VMS framework, the degree of freedom is decomposed in terms of
+its resolved and fine scale, <span class="math notranslate nohighlight">\(I+I'\)</span>. Without specific definition
+of the test function, the weighted residual statement for the RTE within
+a VMS framework is given by,</p>
+<div class="math notranslate nohighlight" id="equation-rtevms">
+<span class="eqno">(6.1)<a class="headerlink" href="#equation-rtevms" title="Link to this equation"></a></span>\[\int w \left( s_i \frac{\partial}{\partial x_i} \left(I\left(s\right) + I'\left(s\right)\right)
++ (\mu_a + \mu_s) \left(I\left(s\right) + I'\left(s\right)\right) - \frac{\mu_a \sigma T^4}{\pi}
+- \frac{\mu_s}{4\pi}G \right) {\rm d}V = 0.\]</div>
+<p>Grouping resolved and fine scale terms results in an equation takes the
+form of a standard Galerkin contribution in addition to the fine
+structure statement,</p>
+<div class="math notranslate nohighlight" id="equation-rtevms1">
+<span class="eqno">(6.2)<a class="headerlink" href="#equation-rtevms1" title="Link to this equation"></a></span>\[\begin{split}\int w \left( s_i \frac{\partial}{\partial x_i} I\left(s\right)
++ (\mu_a + \mu_s)I - \frac{\mu_a \sigma T^4}{\pi} -\frac{\mu_s}{4\pi}G \right) {\rm d}V  \\
++ \int w \left( s_i \frac{\partial}{\partial x_i} I'\left(s\right)
++ (\mu_a + \mu_s) I' \right) {\rm d}V  = 0.\end{split}\]</div>
+<p>Note that the isotropic source term has not contributed to the VMS
+framework other than through the right hand source term.</p>
+<p>In general, gradients in the fine scale quantity are to be avoided.
+Therefore, the first term in the second line of Eq. <a class="reference internal" href="#equation-rtevms1">(6.2)</a> is
+integrated by parts to yield the following form (note the boundary term,
+<span class="math notranslate nohighlight">\(\int_\Gamma\)</span> that is shown below is frequently dropped)</p>
+<div class="math notranslate nohighlight" id="equation-rtevms2">
+<span class="eqno">(6.3)<a class="headerlink" href="#equation-rtevms2" title="Link to this equation"></a></span>\[\begin{split}\int w \left( s_i \frac{\partial}{\partial x_i} I\left(s\right)
++ (\mu_a +\mu_s)I - \frac{\mu_a \sigma T^4}{\pi} -\frac{\mu_s}{4\pi}G \right) {\rm d}V  \\
+- \int I' s_i \frac{\partial w}{\partial x_i} {\rm d}V
++ \int_{\Gamma} w s_i I' n_i {\rm d}S + \int w (\mu_a + \mu_s)I' {\rm d}V  = 0.\end{split}\]</div>
+<p>The following ansatz, which now includes the classic stabilization
+parameter, <span class="math notranslate nohighlight">\(\tau\)</span>, provides closure of the above fine scale
+equation,</p>
+<div class="math notranslate nohighlight" id="equation-finescaleclosure">
+<span class="eqno">(6.4)<a class="headerlink" href="#equation-finescaleclosure" title="Link to this equation"></a></span>\[I' = -\tau\left(s_i \frac{\partial}{\partial x_i} I\left(s\right) + (\mu_a + \mu_s)I\left(s\right)
+   - \frac{\mu_a \sigma T^4}{\pi} -\frac{\mu_s}{4\pi}G \right) = -\tau R(s)\]</div>
+<p>Substituting Eq. <a class="reference internal" href="#equation-finescaleclosure">(6.4)</a> into Eq. <a class="reference internal" href="#equation-rtevms2">(6.3)</a> yields,</p>
+<div class="math notranslate nohighlight" id="equation-rtevms3">
+<span class="eqno">(6.5)<a class="headerlink" href="#equation-rtevms3" title="Link to this equation"></a></span>\[\begin{split}\int w \left( s_i \frac{\partial}{\partial x_i} I\left(s\right)
++ (\mu_a +\mu_s)I - \frac{\mu_a \sigma T^4}{\pi} -\frac{\mu_s}{4\pi}G \right) {\rm d}V  \\
++ \int \tau s_i \frac{\partial w}{\partial x_i} R(s) {\rm d}V
+- \int_\Gamma \tau w R(s) s_i n_i {\rm d}S - \int \tau w (\mu_a + \mu_s)R(s) {\rm d}V  = 0.\end{split}\]</div>
+<p>In the above equation, the residual of the intensity equation for
+ordinate <span class="math notranslate nohighlight">\(s\)</span> is denoted by <span class="math notranslate nohighlight">\(R(s)\)</span>. A compact form of the
+equation is provided by defining a modified test function,
+<span class="math notranslate nohighlight">\(\tilde w\)</span>, (again note retention of the stabilized boundary term)</p>
+<div class="math notranslate nohighlight" id="equation-rtevmscompact">
+<span class="eqno">(6.6)<a class="headerlink" href="#equation-rtevmscompact" title="Link to this equation"></a></span>\[\begin{split}\int \tilde w \left( s_i \frac{\partial}{\partial x_i} I\left(s\right)
++ (\mu_a + \mu_s)I - \frac{\mu_a \sigma T^4}{\pi} -\frac{\mu_s}{4\pi}G \right) {\rm d}V \\
+- \beta \int_\Gamma \tau w R(s) s_i n_i {\rm d}S = 0.\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\tilde w\)</span> is simply equal to,</p>
+<div class="math notranslate nohighlight" id="equation-modw">
+<span class="eqno">(6.7)<a class="headerlink" href="#equation-modw" title="Link to this equation"></a></span>\[\tilde w  = w + \tau \left( s_j \frac{\partial w }{\partial x_j} + \alpha (\mu_a + \mu_s)w \right).\]</div>
+<p>When <span class="math notranslate nohighlight">\(\alpha = -1\)</span>, we have the above VMS derivation; for
+<span class="math notranslate nohighlight">\(\alpha = 1\)</span>, Galerkin Least Squares is realized; finally for
+<span class="math notranslate nohighlight">\(\alpha = 0\)</span>, we have SUPG. For any formulation other than VMS,
+the residual contribution at the boundaries of the domain is dropped
+(<span class="math notranslate nohighlight">\(\beta = 0\)</span>).</p>
+<p>The full residual-based equation is placed in divergence form,</p>
+<div class="math notranslate nohighlight" id="equation-rtedivform">
+<span class="eqno">(6.8)<a class="headerlink" href="#equation-rtedivform" title="Link to this equation"></a></span>\[\begin{split}\int \tilde w \left( \frac{\partial}{\partial x_i} s_i I\left(s\right)
++ (\mu_a + \mu_s) I\left(s\right) - \frac{\mu_a \sigma T^4}{\pi} -\frac{\mu_s}{4\pi}G \right) {\rm d}V \\
+- \beta \int_\Gamma \tau w R(s) s_i n_i {\rm d}S = 0.\end{split}\]</div>
+<p>and split into its Galerkin and stabilized contributions,</p>
+<div class="math notranslate nohighlight" id="equation-rtedivformsub1">
+<span class="eqno">(6.9)<a class="headerlink" href="#equation-rtedivformsub1" title="Link to this equation"></a></span>\[\begin{split}\int w \left( \frac{\partial}{\partial x_i} s_i I\left(s\right)
++ (\mu_a + \mu_s )I\left(s\right) - \frac{\mu_a \sigma T^4}{\pi} -\frac{\mu_s}{4\pi}G \right) {\rm d}V \\
++\int \tau s_j \frac{\partial w }{\partial x_j} R(s) {\rm d}V \\
++\alpha\int \tau w (\mu_a + \mu_s)R(s) {\rm d}V \\
+- \beta \int_\Gamma \tau w R(s) s_i n_i {\rm d}S = 0.\end{split}\]</div>
+<p>Note that the first term in the above equation is integrated by parts,</p>
+<div class="math notranslate nohighlight">
+\[\int w \frac{\partial}{\partial x_i} s_i I\left(s\right)
+{\rm d}V = -\int I\left(s\right) s_i \frac{\partial w}{\partial x_i} {\rm d}V
++ \int_{\Gamma} w s_i I\left(s\right) n_i {\rm d}S.\]</div>
+<p>Again, the usage of <span class="math notranslate nohighlight">\(\Gamma\)</span> provides emphasis that the
+contribution is a boundary (exposed face) condition. Therefore, the full
+VMS-based stabilized RTE equation is as follows,</p>
+<div class="math notranslate nohighlight" id="equation-rtedivformsub2">
+<span class="eqno">(6.10)<a class="headerlink" href="#equation-rtedivformsub2" title="Link to this equation"></a></span>\[\begin{split}&amp; \int \left( -I\left(s\right) s_i \frac{\partial w}{\partial x_i}
++ (\mu_a + \mu_s) I\left(s\right)
+- \frac{\mu_a \sigma T^4}{\pi} -\frac{\mu_s}{4\pi}G \right) {\rm d}V  \\
+&amp;+ \int_\Gamma w s_i I\left(s\right) n_i {\rm d}S  \\
+&amp;+\int \tau s_j \frac{\partial w }{\partial x_j} R(s) {\rm d}V \\
+&amp;+\alpha\int \tau w (\mu_a + \mu_s)R(s) {\rm d}V  \\
+&amp;- \beta \int_\Gamma \tau w R(s) s_i n_i {\rm d}S = 0.\end{split}\]</div>
+<section id="definition-of-the-test-function">
+<h2><span class="section-number">6.1. </span>Definition of the test function<a class="headerlink" href="#definition-of-the-test-function" title="Link to this heading"></a></h2>
+<p>Following the work of Martinez, <span id="id1">[<a class="reference internal" href="../../zrefs.html#id13" title="M. Martinez. Comparison of galerkin and control volume finite element for advection-diffusion problems. Int. J. Num. Meth. Fluids, 50(3):347–376, 2005.">Mar05</a>]</span>, the
+test function is chosen to be a piecewise-constant value within the
+control volume, <span class="math notranslate nohighlight">\(w = w_I\)</span> and zero outside of this control volume
+(Heaviside). A key property of this function, as pointed out by
+Martinez, is that its gradient is a distribution of delta functions on
+the control volume boundary:</p>
+<div class="math notranslate nohighlight" id="equation-eqn-gradpiecewiseconstant">
+<span class="eqno">(6.11)<a class="headerlink" href="#equation-eqn-gradpiecewiseconstant" title="Link to this equation"></a></span>\[\frac{\partial w_I}{\partial x_i} = - {\bf n}_I \delta({\bf x} - {\bf x}_{\Gamma_I})\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Gamma_I\)</span> is boundary of control volume <span class="math notranslate nohighlight">\(I\)</span> and
+<span class="math notranslate nohighlight">\({\bf n}_I\)</span> is the outward normal on that boundary. Substituting
+this relationship into the residual equation provides the final form of
+vertex-centered finite volume RTE stabilized equation,</p>
+<div class="math notranslate nohighlight" id="equation-rtesucvform1">
+<span class="eqno">(6.12)<a class="headerlink" href="#equation-rtesucvform1" title="Link to this equation"></a></span>\[\begin{split}\int I\left(s\right) s_i n_i {\rm d}S + \int \left( (\mu_a + \mu_s ) I\left(s\right)
+- \frac{\mu_a \sigma T^4}{\pi} -\frac{\mu_s}{4\pi}G \right) {\rm d}V  \\
++ \int_\Gamma s_i I\left(s\right) n_i {\rm d}S \\
+- \int \tau R(s) s_i n_i {\rm d}S +\alpha \int \tau (\mu_a +\mu_s) R(s)
+{\rm d}V -\beta \int_\Gamma \tau R(s) s_i n_i {\rm d}S= 0.\end{split}\]</div>
+<p>Given this equation, either an edge-based or element-based scheme can be
+used. For <span class="math notranslate nohighlight">\(\alpha = 0\)</span> and <span class="math notranslate nohighlight">\(\beta = 0\)</span>, it is noted that
+classic SUCV is obtained. The second line of Eq. <a class="reference internal" href="#equation-rtesucvform1">(6.12)</a>
+represents a boundary contribution. This is where the intensity boundary
+condition (Eq. <a class="reference internal" href="boundaryConditions.html#equation-intbc">(9.34)</a>) is applied. As noted in the RTE equation
+section, when <span class="math notranslate nohighlight">\(s_j n_j\)</span> is greater than zero, the interpolated
+intensity based on the surface nodal values is used. However, when
+<span class="math notranslate nohighlight">\(s_j n_j\)</span> is less than zero, the intensity boundary condition
+value is used. Since the original RTE equation was integrated by parts,
+a natural surface flux contribution is applied. In alternative
+discretization approaches, e.g., the SUPG FEM-based Sierra Thermal
+Radiation Module: Syrinx code, the RTE is not integrated by parts.
+Therefore, no boundary term exists, and, therefore, a dirichlet bc is
+applied. At corner nodes, this approach can lead to non-intuitive
+approaches since the corner node might have surface facets that are both
+incoming and outgoing. Weak integration of the flux term eliminated this
+complexity.</p>
+</section>
+<section id="the-form-of-tau">
+<h2><span class="section-number">6.2. </span>The form of <span class="math notranslate nohighlight">\(\tau\)</span><a class="headerlink" href="#the-form-of-tau" title="Link to this heading"></a></h2>
+<p>The value of the stabilization parameter <span class="math notranslate nohighlight">\(\tau\)</span> can take on a
+variety of forms. A classic derivation provides the form of <span class="math notranslate nohighlight">\(\tau\)</span>
+to be broken out into two forms, <span class="math notranslate nohighlight">\(\tau_{adv} = \frac{h}{2}\)</span> and
+<span class="math notranslate nohighlight">\(\tau_{diff} = \frac{1}{(\mu_a+\mu_s)}\)</span>. An ad-hoc blending is
+given by,</p>
+<div class="math notranslate nohighlight" id="equation-blendedtau">
+<span class="eqno">(6.13)<a class="headerlink" href="#equation-blendedtau" title="Link to this equation"></a></span>\[\tau  = \left( \frac{1} {\frac{2}{h}^2 + (\mu_a+\mu_s)^2} \right)^ \frac{1}{2}\]</div>
+<p>Finally, the classic GFEM form of <span class="math notranslate nohighlight">\(\tau\)</span> is given by use of the
+metric tensor for the element mapping is noted,</p>
+<div class="math notranslate nohighlight" id="equation-farzin">
+<span class="eqno">(6.14)<a class="headerlink" href="#equation-farzin" title="Link to this equation"></a></span>\[\tau = \beta^* [s_i g_{ij}s_j]^{-\frac{1}{2}},\]</div>
+<p>with <span class="math notranslate nohighlight">\(\beta^*\)</span> equal to unity for SUCV and
+<span class="math notranslate nohighlight">\(\frac{2}{15^{\frac{1}{2}}}\)</span> for FEM.</p>
+</section>
+<section id="pure-edge-based-upwind-method">
+<h2><span class="section-number">6.3. </span>Pure Edge-based Upwind Method<a class="headerlink" href="#pure-edge-based-upwind-method" title="Link to this heading"></a></h2>
+<p>The residual-based stabilization apporach can lead to predicting
+negative intensities. This is simply due to the fact that the
+stabilization approach (SUPG) is a linear approach. Extensions of this
+residual-based stabilization to include a discontinuity capturing
+operator (DCO) are underway. This adds a non-linear stabilization
+approach that will, hopefully, eliminate negative intensity predictions.</p>
+<p>Alternatively, a first order upwind approach has been implemented by
+using EBVC discretization. At this point, no higher order upwind
+extensions have been implemented. For the upwind implementation, the
+equation solved is,</p>
+<div class="math notranslate nohighlight" id="equation-rtesucvform2">
+<span class="eqno">(6.15)<a class="headerlink" href="#equation-rtesucvform2" title="Link to this equation"></a></span>\[\begin{split}\int I\left(s\right) s_i n_i {\rm d}S + \int \left( (\mu_a + \mu_s ) I\left(s\right)
+- \frac{\mu_a \sigma T^4}{\pi} -\frac{\mu_s}{4\pi}G \right) {\rm d}V  \\
++ \int_\Gamma s_i I\left(s\right) n_i {\rm d}S  = 0.\end{split}\]</div>
+<p>In the above equation, the “advection operator”,
+<span class="math notranslate nohighlight">\(I\left(s\right) s_i n_i {\rm d}S\)</span> is approximated as using the
+“upwind” intensity, e.g., if <span class="math notranslate nohighlight">\(s_j n_j\)</span> is greater than zero, the
+left nodal value is used.</p>
+</section>
+<section id="finite-element-supg-form">
+<h2><span class="section-number">6.4. </span>Finite Element SUPG Form<a class="headerlink" href="#finite-element-supg-form" title="Link to this heading"></a></h2>
+<p>For the FEM, the test function is the standard weighting. Assuming a pure SUPG formulation, i.e.,
+<span class="math notranslate nohighlight">\(\alpha = \beta = 0\)</span> in Equation <a class="reference internal" href="#equation-rtedivformsub2">(6.10)</a>, thereby reducing the final form to the following:</p>
+<div class="math notranslate nohighlight" id="equation-rtefemsupg">
+<span class="eqno">(6.16)<a class="headerlink" href="#equation-rtefemsupg" title="Link to this equation"></a></span>\[\begin{split}\int \left( -I\left(s\right) s_i \frac{\partial w}{\partial x_i} + w[(\mu_a + \mu_s) I\left(s\right)
+- \frac{\mu_a \sigma T^4}{\pi} -\frac{\mu_s}{4\pi}G ] \right) {\rm d}V  \\
++ \int_\Gamma w s_i I\left(s\right) n_i {\rm d}S \\
++\int \tau s_j \frac{\partial w }{\partial x_j} R(s) {\rm d}V \\\end{split}\]</div>
+<p>The weak boundary condition is applied in a similar manner as with the CVFEM and EBVC form, however,
+using the appropriate FEM test test function definition. Finally, the form of <span class="math notranslate nohighlight">\(\tau\)</span> follows the above
+CVFEM form.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pressureStabilization.html" class="btn btn-neutral float-left" title="5. Pressure Stabilization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nso.html" class="btn btn-neutral float-right" title="7. Nonlinear Stabilization Operator (NSO)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,528 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>18. Code Abstractions &mdash; Nalu-Wind 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Nalu-Wind - Verification Manual" href="../verification/index.html" />
+    <link rel="prev" title="17. Adaptivity" href="adaptivity.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Nalu-Wind
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Exawind/nalu-wind">Nalu-Wind Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Exawind">Nalu-Wind Nightly Test Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Theory Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lowMachNumberDerivation.html">1. Low Mach Number Derivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supportedEquationSet.html">2. Supported Equation Set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretizationApproach.html">3. Discretization Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advectionStabilization.html">4. Advection Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pressureStabilization.html">5. Pressure Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rteStabilization.html">6. RTE Stabilization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nso.html">7. Nonlinear Stabilization Operator (NSO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbulenceModeling.html">8. Turbulence Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boundaryConditions.html">9. Supported Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overset.html">10. Overset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propertyEvaluation.html">11. Property Evaluations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="couplingApproach.html">12. Coupling Approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeDiscretization.html">13. Time discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiPhysics.html">14. Multi-Physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="windEnergy.html">15. Wind Energy Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topologicalSupport.html">16. Topological Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adaptivity.html">17. Adaptivity</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">18. Code Abstractions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sierra-toolkit-abstractions">18.1. Sierra Toolkit Abstractions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#meta-and-bulk-data">18.1.1. Meta and Bulk Data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parallel-rules">18.1.2. Parallel Rules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#connectivity">18.1.3. Connectivity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parts">18.1.4. Parts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#selectors">18.1.5. Selectors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#buckets">18.1.6. Buckets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#field-data-registration">18.1.7. Field Data Registration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#field-data-access">18.1.8. Field Data Access</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#state">18.1.9. State</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#high-level-nalu-wind-abstractions">18.2. High Level Nalu-Wind Abstractions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#realm">18.2.1. Realm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#equationsystem">18.2.2. EquationSystem</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Nalu-Wind</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Nalu-Wind - Theory Manual</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">18. </span>Code Abstractions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/theory/codeAbstractions.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="code-abstractions">
+<h1><span class="section-number">18. </span>Code Abstractions<a class="headerlink" href="#code-abstractions" title="Link to this heading"></a></h1>
+<p>The Nalu-Wind code base is a c++ code-base that significantly leverages the
+Sierra Toolkit and Trilinos infrastructure. This section is designed to
+provide a high level overview of the underlying abstractions that the
+code base exercises. For more detailed code information, the developer
+is referred to the Trilinos project (github.com). In the sections that
+follow, only a high level overview is provided.</p>
+<p>The Nalu-Wind code base emerged as a small
+testbed unit test to evaluate the STK infrastructure. Interestingly, the
+first “algorithm” implementation was a simple <span class="math notranslate nohighlight">\(L_2\)</span> projected
+nodal gradient. This effort involved reading in a mesh, registering a
+nodal (vector) field, iterating elements and exposed surfaces to
+assemble the projected nodal gradient to the nodes of the mesh (in
+parallel). When evaluating kokkos, this algorithm was also used to learn
+about the parallel NGP abstraction provided.</p>
+<section id="sierra-toolkit-abstractions">
+<h2><span class="section-number">18.1. </span>Sierra Toolkit Abstractions<a class="headerlink" href="#sierra-toolkit-abstractions" title="Link to this heading"></a></h2>
+<p>Consider a typical mesh that consists of nodes, sides of elements and
+elements. Such a mesh, when using the Exodus standard, will liekly be
+represented by a collection of “element blocks”, “sidesets” and,
+possibly, “nodesets”. The definition of the mesh (generated by the user
+through commercial meshing packages such as pointwise or ICM-CFD) will
+provide the required spatial definitions of the volume physics and the
+required boundary conditions.</p>
+<p>An element block is a homegeneous collection of elements of the same
+underlying topology, e.g., HEXAHEDRAL-8. A sideset is a set of exposed
+element faces on which a boundary condition is to be applied. Finally, a
+nodeset is a collection of nodes. In general, nodesets are possibly
+output entities as the code does not exercise enforcing physics or
+boundary conditions on nodesets. Although Nalu-Wind supports an edge-based
+scheme, an edge, which is an entity connecting two nodes, is not part of
+the Exodus standard and must be generated within the STK infrastructure.
+Therefore, a particular discretization choice may require
+<code class="docutils literal notranslate"><span class="pre">stk::mesh::Entity</span></code> types of element, face (or side), edge and
+node.</p>
+<p>Once the mesh is read in, a variety of routine operations are generally
+required. For example, a low-Mach physics equation set may want to be
+applied to <code class="docutils literal notranslate"><span class="pre">block_1</span></code> while inflow, open, symmetry, periodic and
+wall boundary conditions can be applied to a variety of sidesets. For
+example, <code class="docutils literal notranslate"><span class="pre">surface_1</span></code> might be of an “inflow” type. Therefore, the
+high level set of requirements on a mesh infrastructure might be to
+allow one to iterate parts of the mesh and, in the end, assemble a
+quantity to a nodal or elemental field.</p>
+<section id="meta-and-bulk-data">
+<h3><span class="section-number">18.1.1. </span>Meta and Bulk Data<a class="headerlink" href="#meta-and-bulk-data" title="Link to this heading"></a></h3>
+<p>Meta and Bulk data are simply STK containers. MetaData is used to
+extract parts, extract ownership status, determine the side rank, field
+declaration, etc. BulkData is used to extract buckets, extract upward
+and downward connectivities and determine node count for a given entity.</p>
+</section>
+<section id="parallel-rules">
+<h3><span class="section-number">18.1.2. </span>Parallel Rules<a class="headerlink" href="#parallel-rules" title="Link to this heading"></a></h3>
+<p>In STK, elements are locally owned by a single rank. Elements may be
+ghosted to other parallel ranks through STK custom ghosting. Exposed
+faces are locally owned by the lower parallel rank. Nodes are also
+locally owned by the lower parallel rank and can also be shared by all
+parallel ranks touching them. Edges and internal faces
+(element:face:element connectivity) have the same rule of locally
+owned/shared and can also be ghosted. Again, edges and internal faces
+must be created by existing STK methods should the physics algorithm
+require them. In Nalu-Wind, the choice of element-based or edge-based is
+determined within the input file.</p>
+</section>
+<section id="connectivity">
+<h3><span class="section-number">18.1.3. </span>Connectivity<a class="headerlink" href="#connectivity" title="Link to this heading"></a></h3>
+<p>In an unstructured mesh, connectivity must be built from the mesh and
+can not be assumed to follow an assumed “i-j-k” data layout, i.e.,
+structured. In general, one speaks of downward and upward relationships
+between the underlying entities. For example, if one has a particular
+element, one might like to extract all of the nodes connected to the
+element. Likewise, this represents a common opporation for faces and
+edges. Such examples are those in which downward relationships are
+required. However, one might also have a node and want to extract all of
+the connected elements to this node (consider some sort of patch
+recovery algorithm). STK provides the ability to extract such
+connectivities. In general, full downward and upward connectivities are
+created.</p>
+<p>For example, consider an example in which one has a pointer to an
+element and wants to extract the nodes of this element. At this point,
+the developer has not been exposed to abstractions such as buckets,
+selectors, etc. As such, this is a very high level overview with more
+details to come in subsequent sections. Therefore, the scope below is to
+assume that from an element-k of a “bucket”, b[k] (which is a collection
+of homogeneous RANK-ed entities) we will extract the nodes of this
+element using the STK bulk data.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// extract element from this bucket</span>
+<span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Entity</span><span class="w"> </span><span class="n">elem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">k</span><span class="p">];</span>
+
+<span class="c1">// extract node relationship from bulk data</span>
+<span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Entity</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">node_rels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bulkData_</span><span class="p">.</span><span class="n">begin_nodes</span><span class="p">(</span><span class="n">elem</span><span class="p">);</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">num_nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bulkData_</span><span class="p">.</span><span class="n">num_nodes</span><span class="p">(</span><span class="n">elem</span><span class="p">);</span>
+
+<span class="c1">// iterate nodes</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ni</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">ni</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">num_nodes</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">ni</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Entity</span><span class="w"> </span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node_rels</span><span class="p">[</span><span class="n">ni</span><span class="p">];</span>
+
+<span class="w">  </span><span class="c1">// set connected nodes</span>
+<span class="w">  </span><span class="n">connected_nodes</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// gather some data, e.g., density at state Np1,</span>
+<span class="w">  </span><span class="c1">// into a local workset pointer to a std::vector</span>
+<span class="w">  </span><span class="n">p_density</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">field_data</span><span class="p">(</span><span class="n">densityNp1</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="w"> </span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="parts">
+<h3><span class="section-number">18.1.4. </span>Parts<a class="headerlink" href="#parts" title="Link to this heading"></a></h3>
+<p>As noted before, a <code class="docutils literal notranslate"><span class="pre">stk::mesh::Part</span></code> is simply an abstraction that
+describes a set of mesh entities. If one has the name of the part from
+the mesh data base, one may extract the part. Once the part is in hand,
+one may iterate the underlying set of entities, walk relations, assemble
+data, etc.</p>
+<p>The following example simply extracts a part for each vector of names
+that lives in the vector <code class="docutils literal notranslate"><span class="pre">targetNames</span></code> and provides this part to
+all of the underlying equations that have been created for purposes of
+nodal field registration. Parts of the mesh that are not included within
+the <code class="docutils literal notranslate"><span class="pre">targetNames</span></code> vector would not be included in the field
+registration and, as such, if this missing part was used to extract the
+data, an error would occur.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">itarget</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">itarget</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">targetNames</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">itarget</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Part</span><span class="w"> </span><span class="o">*</span><span class="n">targetPart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metaData_</span><span class="p">.</span><span class="n">get_part</span><span class="p">(</span><span class="n">targetNames</span><span class="p">[</span><span class="n">itarget</span><span class="p">]);</span>
+
+<span class="w">  </span><span class="c1">// check for a good part</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">targetPart</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">throw</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="p">(</span><span class="s">&quot;Trouble with part &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">targetNames</span><span class="p">[</span><span class="n">itarget</span><span class="p">]);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">EquationSystemVector</span><span class="o">::</span><span class="n">iterator</span><span class="w"> </span><span class="n">ii</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="w"> </span><span class="n">ii</span><span class="o">=</span><span class="n">equationSystemVector_</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span><span class="w"> </span><span class="n">ii</span><span class="o">!=</span><span class="n">equationSystemVector_</span><span class="p">.</span><span class="n">end</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">ii</span><span class="w"> </span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="o">*</span><span class="n">ii</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">register_nodal_fields</span><span class="p">(</span><span class="n">targetPart</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="selectors">
+<h3><span class="section-number">18.1.5. </span>Selectors<a class="headerlink" href="#selectors" title="Link to this heading"></a></h3>
+<p>In order to arrive at the precise parts of the mesh and entities on
+which one desires to operate, one needs to “select” what is useful. The
+STK selector infrastructure provides this.</p>
+<p>In the following example, it is desired to obtain a selector that
+contains all of the parts of interest to a physics algorithm that are
+locally owned and active.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// define the selector; locally owned, the parts I have served up and active</span>
+<span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Selector</span><span class="w"> </span><span class="n">s_locally_owned_union</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metaData_</span><span class="p">.</span><span class="n">locally_owned_part</span><span class="p">()</span>
+<span class="w">  </span><span class="o">&amp;</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">selectUnion</span><span class="p">(</span><span class="n">partVec_</span><span class="p">)</span>
+<span class="w">  </span><span class="o">&amp;</span><span class="w"> </span><span class="o">!</span><span class="p">(</span><span class="n">realm_</span><span class="p">.</span><span class="n">get_inactive_selector</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="buckets">
+<h3><span class="section-number">18.1.6. </span>Buckets<a class="headerlink" href="#buckets" title="Link to this heading"></a></h3>
+<p>Once a selector is defined (as above) an abstraction to provide access
+to the type of data can be defined. In STK, the mechanism to iterate
+entities on the mesh is through the <code class="docutils literal notranslate"><span class="pre">stk::mesh::bucket</span></code> interface.
+A bucket is a homogeneous collection of <code class="docutils literal notranslate"><span class="pre">stk::mesh::Entity</span></code>.</p>
+<p>In the below example, the selector is used to define the bucket of
+entities that are provided to the developer.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// given the defined selector, extract the buckets of type ``element&#39;&#39;</span>
+<span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">BucketVector</span><span class="w"> </span><span class="k">const</span><span class="o">&amp;</span><span class="w"> </span><span class="n">elem_buckets</span>
+<span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">bulkData_</span><span class="p">.</span><span class="n">get_buckets</span><span class="p">(</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="o">::</span><span class="n">ELEMENT_RANK</span><span class="p">,</span>
+<span class="w">                           </span><span class="n">s_locally_owned_union</span><span class="w"> </span><span class="p">);</span>
+
+<span class="c1">// loop over the vector of buckets</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">BucketVector</span><span class="o">::</span><span class="n">const_iterator</span><span class="w"> </span><span class="n">ib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">elem_buckets</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
+<span class="w">      </span><span class="n">ib</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">elem_buckets</span><span class="p">.</span><span class="n">end</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">ib</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Bucket</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">**</span><span class="n">ib</span><span class="w"> </span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Bucket</span><span class="o">::</span><span class="n">size_type</span><span class="w"> </span><span class="n">length</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+
+<span class="w">  </span><span class="c1">// extract master element (homogeneous over buckets)</span>
+<span class="w">  </span><span class="n">MasterElement</span><span class="w"> </span><span class="o">*</span><span class="n">meSCS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sierra</span><span class="o">::</span><span class="n">nalu</span><span class="o">::</span><span class="n">get_surface_master_element</span><span class="p">(</span><span class="n">b</span><span class="p">.</span><span class="n">topology</span><span class="p">());</span>
+
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Bucket</span><span class="o">::</span><span class="n">size_type</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">length</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">k</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// extract element from this bucket</span>
+<span class="w">    </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Entity</span><span class="w"> </span><span class="n">elem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">k</span><span class="p">];</span>
+
+<span class="w">    </span><span class="c1">// etc...</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The look-and-feel for nodes, edges, face/sides is the same, e.g.,</p>
+<p><span class="math notranslate nohighlight">\(\bullet\)</span> for nodes:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// given the defined selector, extract the buckets of type ``node&#39;&#39;</span>
+<span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">BucketVector</span><span class="w"> </span><span class="k">const</span><span class="o">&amp;</span><span class="w"> </span><span class="n">node_buckets</span>
+<span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">bulkData_</span><span class="p">.</span><span class="n">get_buckets</span><span class="p">(</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="o">::</span><span class="n">NODE_RANK</span><span class="p">,</span>
+<span class="w">                           </span><span class="n">s_locally_owned_union</span><span class="w"> </span><span class="p">);</span>
+
+<span class="c1">// loop over the vector of buckets</span>
+</pre></div>
+</div>
+<p><span class="math notranslate nohighlight">\(\bullet\)</span> for edges:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// given the defined selector, extract the buckets of type ``edge&#39;&#39;</span>
+<span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">BucketVector</span><span class="w"> </span><span class="k">const</span><span class="o">&amp;</span><span class="w"> </span><span class="n">edge_buckets</span>
+<span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">bulkData_</span><span class="p">.</span><span class="n">get_buckets</span><span class="p">(</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="o">::</span><span class="n">EDGE_RANK</span><span class="p">,</span>
+<span class="w">                           </span><span class="n">s_locally_owned_union</span><span class="w"> </span><span class="p">);</span>
+
+<span class="c1">// loop over the vector of buckets</span>
+</pre></div>
+</div>
+<p><span class="math notranslate nohighlight">\(\bullet\)</span> for faces/sides:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// given the defined selector, extract the buckets of type ``face/side&#39;&#39;</span>
+<span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">BucketVector</span><span class="w"> </span><span class="k">const</span><span class="o">&amp;</span><span class="w"> </span><span class="n">face_buckets</span>
+<span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">bulkData_</span><span class="p">.</span><span class="n">get_buckets</span><span class="p">(</span><span class="w"> </span><span class="n">metaData_</span><span class="p">.</span><span class="n">side_rank</span><span class="p">(),</span>
+<span class="w">                           </span><span class="n">s_locally_owned_union</span><span class="w"> </span><span class="p">);</span>
+
+<span class="c1">// loop over the vector of buckets</span>
+</pre></div>
+</div>
+</section>
+<section id="field-data-registration">
+<h3><span class="section-number">18.1.7. </span>Field Data Registration<a class="headerlink" href="#field-data-registration" title="Link to this heading"></a></h3>
+<p>Given a part, we would like to declare the field and put the field on
+the part of interest. The developer can register fields of type
+elemental, nodal, face and edge of desired size.</p>
+<p><span class="math notranslate nohighlight">\(\bullet\)</span> nodal field registration:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span>
+<span class="nf">LowMachEquationSystem::register_nodal_fields</span><span class="p">(</span>
+<span class="w">  </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Part</span><span class="w"> </span><span class="o">*</span><span class="n">part</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="c1">// how many states? BDF2 requires Np1, N and Nm1</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">numStates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">realm_</span><span class="p">.</span><span class="n">number_of_states</span><span class="p">();</span>
+
+<span class="w">  </span><span class="c1">// declare it</span>
+<span class="w">  </span><span class="n">density_</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="p">(</span><span class="n">metaData_</span><span class="p">.</span><span class="n">declare_field</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="o">::</span><span class="n">NODE_RANK</span><span class="p">,</span>
+<span class="w">                                                </span><span class="s">&quot;density&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">numStates</span><span class="p">));</span>
+
+<span class="w">  </span><span class="c1">// put it on this part</span>
+<span class="w">  </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">put_field_on_mesh</span><span class="p">(</span><span class="o">*</span><span class="n">density_</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">part</span><span class="p">,</span><span class="w"> </span><span class="k">nullptr</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><span class="math notranslate nohighlight">\(\bullet\)</span> edge field registration:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span>
+<span class="nf">LowMachEquationSystem::register_edge_fields</span><span class="p">(</span>
+<span class="w">  </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Part</span><span class="w"> </span><span class="o">*</span><span class="n">part</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nDim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metaData_</span><span class="p">.</span><span class="n">spatial_dimension</span><span class="p">();</span>
+<span class="w">  </span><span class="n">edgeAreaVec_</span>
+<span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="p">(</span><span class="n">metaData_</span><span class="p">.</span><span class="n">declare_field</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="o">::</span><span class="n">EDGE_RANK</span><span class="p">,</span>
+<span class="w">                                        </span><span class="s">&quot;edge_area_vector&quot;</span><span class="p">));</span>
+<span class="w">  </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">put_field_on_mesh</span><span class="p">(</span><span class="o">*</span><span class="n">edgeAreaVec_</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">part</span><span class="p">,</span><span class="w"> </span><span class="n">nDim</span><span class="p">,</span><span class="w"> </span><span class="k">nullptr</span><span class="p">);</span>
+<span class="w">  </span><span class="n">stk</span><span class="o">::</span><span class="n">io</span><span class="o">::</span><span class="n">set_field_output_type</span><span class="p">(</span><span class="o">*</span><span class="n">edgeAreaVec_</span><span class="p">,</span>
+<span class="w">                                 </span><span class="n">stk</span><span class="o">::</span><span class="n">io</span><span class="o">::</span><span class="n">FieldOutputType</span><span class="o">::</span><span class="n">VECTOR_3D</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><span class="math notranslate nohighlight">\(\bullet\)</span> side/face field registration:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span>
+<span class="nf">MomentumEquationSystem::register_wall_bc</span><span class="p">(</span>
+<span class="w">  </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Part</span><span class="w"> </span><span class="o">*</span><span class="n">part</span><span class="p">,</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="w"> </span><span class="o">&amp;</span><span class="n">theTopo</span><span class="p">,</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">WallBoundaryConditionData</span><span class="w"> </span><span class="o">&amp;</span><span class="n">wallBCData</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="c1">// Dirichlet or wall function bc</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">wallFunctionApproach</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="o">::</span><span class="n">rank_t</span><span class="w"> </span><span class="n">sideRank</span>
+<span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="o">::</span><span class="n">rank_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">metaData_</span><span class="p">.</span><span class="n">side_rank</span><span class="p">());</span>
+<span class="w">    </span><span class="n">GenericFieldType</span><span class="w"> </span><span class="o">*</span><span class="n">wallFrictionVelocityBip</span>
+<span class="w">      </span><span class="o">=</span><span class="w">  </span><span class="o">&amp;</span><span class="p">(</span><span class="n">metaData_</span><span class="p">.</span><span class="n">declare_field</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span>
+<span class="w">          </span><span class="p">(</span><span class="n">sideRank</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;wall_friction_velocity_bip&quot;</span><span class="p">));</span>
+<span class="w">    </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">put_field_on_mesh</span><span class="p">(</span><span class="o">*</span><span class="n">wallFrictionVelocityBip</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">part</span><span class="p">,</span><span class="w"> </span><span class="n">numIp</span><span class="p">,</span>
+<span class="w">                                 </span><span class="k">nullptr</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="field-data-access">
+<h3><span class="section-number">18.1.8. </span>Field Data Access<a class="headerlink" href="#field-data-access" title="Link to this heading"></a></h3>
+<p>Once we have the field registered and put on a part of the mesh, we can
+extract the field data anytime that we have the entity in hand. In the
+example below, we extract nodal field data and load a workset field.</p>
+<p>To obtain a pointer for a field that was put on a node, edge face/side
+or element field, the string name used for declaration is used in
+addition to the field template type,</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">VectorFieldType</span><span class="w"> </span><span class="o">*</span><span class="n">velocityRTM</span>
+<span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">metaData_</span><span class="p">.</span><span class="n">get_field</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="o">::</span><span class="n">NODE_RANK</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;velocity&quot;</span><span class="p">);</span>
+<span class="n">ScalarFieldType</span><span class="w"> </span><span class="o">*</span><span class="n">density</span>
+<span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">metaData_</span><span class="p">.</span><span class="n">get_field</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="o">::</span><span class="n">NODE_RANK</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;density&quot;</span><span class="p">);}</span>
+
+<span class="n">VectorFieldType</span><span class="w"> </span><span class="o">*</span><span class="n">edgeAreaVec</span>
+<span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">metaData_</span><span class="p">.</span><span class="n">get_field</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="o">::</span><span class="n">EDGE_RANK</span><span class="p">,</span>
+<span class="w">                                </span><span class="s">&quot;edge_area_vector&quot;</span><span class="p">);</span>
+
+<span class="n">GenericFieldType</span><span class="w"> </span><span class="o">*</span><span class="n">massFlowRate</span>
+<span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">metaData_</span><span class="p">.</span><span class="n">get_field</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="o">::</span><span class="n">ELEMENT_RANK</span><span class="p">,</span>
+<span class="w">                                </span><span class="s">&quot;mass_flow_rate_scs&quot;</span><span class="p">);</span>
+
+<span class="n">GenericFieldType</span><span class="w"> </span><span class="o">*</span><span class="n">wallFrictionVelocityBip_</span>
+<span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">metaData_</span><span class="p">.</span><span class="n">get_field</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">metaData_</span><span class="p">.</span><span class="n">side_rank</span><span class="p">(),</span>
+<span class="w">                                </span><span class="s">&quot;wall_friction_velocity_bip&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="state">
+<h3><span class="section-number">18.1.9. </span>State<a class="headerlink" href="#state" title="Link to this heading"></a></h3>
+<p>For fields that require state, the field should have been declared with
+the proper number of states (see field declaration section). Once the
+field pointer is in hand, the specific field with state is easily
+extracted,</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">ScalarFieldType</span><span class="w"> </span><span class="o">*</span><span class="n">density</span>
+<span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">metaData_</span><span class="p">.</span><span class="n">get_field</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="o">::</span><span class="n">NODE_RANK</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;density&quot;</span><span class="p">);</span>
+<span class="n">densityNm1_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="p">(</span><span class="n">density</span><span class="o">-&gt;</span><span class="n">field_of_state</span><span class="p">(</span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">StateNM1</span><span class="p">));</span>
+<span class="n">densityN_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="p">(</span><span class="n">density</span><span class="o">-&gt;</span><span class="n">field_of_state</span><span class="p">(</span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">StateN</span><span class="p">));</span>
+<span class="n">densityNp1_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="p">(</span><span class="n">density</span><span class="o">-&gt;</span><span class="n">field_of_state</span><span class="p">(</span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">StateNP1</span><span class="p">));</span>
+</pre></div>
+</div>
+<p>With the field pointer already in hand, obtaining the particular data is
+field the field data method.</p>
+<p><span class="math notranslate nohighlight">\(\bullet\)</span> nodal field data access:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// gather some data (density at state Np1) into a local workset pointer</span>
+<span class="n">p_density</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">field_data</span><span class="p">(</span><span class="n">densityNp1</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="w"> </span><span class="p">);</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt><span class="math notranslate nohighlight">\(\bullet\)</span> edge field data access:</dt><dd><p>(from an edge bucket loop with the same selector as defined above)</p>
+</dd>
+</dl>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">BucketVector</span><span class="w"> </span><span class="k">const</span><span class="o">&amp;</span><span class="w"> </span><span class="n">edge_buckets</span>
+<span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">bulkData_</span><span class="p">.</span><span class="n">get_buckets</span><span class="p">(</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">topology</span><span class="o">::</span><span class="n">EDGE_RANK</span><span class="p">,</span><span class="w"> </span><span class="n">s_locally_owned_union</span><span class="w"> </span><span class="p">);</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">BucketVector</span><span class="o">::</span><span class="n">const_iterator</span><span class="w"> </span><span class="n">ib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge_buckets</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
+<span class="w">      </span><span class="n">ib</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">edge_buckets</span><span class="p">.</span><span class="n">end</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">ib</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Bucket</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">**</span><span class="n">ib</span><span class="w"> </span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Bucket</span><span class="o">::</span><span class="n">size_type</span><span class="w"> </span><span class="n">length</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+
+<span class="w">  </span><span class="c1">// pointer to edge area vector and mdot (all of the buckets)</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">av</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">field_data</span><span class="p">(</span><span class="o">*</span><span class="n">edgeAreaVec_</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">mdot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">field_data</span><span class="p">(</span><span class="o">*</span><span class="n">massFlowRate_</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">stk</span><span class="o">::</span><span class="n">mesh</span><span class="o">::</span><span class="n">Bucket</span><span class="o">::</span><span class="n">size_type</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">length</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">k</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// copy edge area vector to a pointer</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nDim</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="w"> </span><span class="p">)</span>
+<span class="w">      </span><span class="n">p_areaVec</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">av</span><span class="p">[</span><span class="n">k</span><span class="o">*</span><span class="n">nDim</span><span class="o">+</span><span class="n">j</span><span class="p">];</span>
+
+<span class="w">    </span><span class="c1">// save off mass flow rate for this edge</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">tmdot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mdot</span><span class="p">[</span><span class="n">k</span><span class="p">];</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="high-level-nalu-wind-abstractions">
+<h2><span class="section-number">18.2. </span>High Level Nalu-Wind Abstractions<a class="headerlink" href="#high-level-nalu-wind-abstractions" title="Link to this heading"></a></h2>
+<section id="realm">
+<h3><span class="section-number">18.2.1. </span>Realm<a class="headerlink" href="#realm" title="Link to this heading"></a></h3>
+<p>A realm holds a particular physics set, e.g., low-Mach fluids. Realms
+are coupled loosely through a transfer operation. For example, one might
+have a turbulent fluids realm, a thermal heat conduction realm and a PMR
+realm. The realm also holds a BulkData and MetaData since a realm
+requires fields and parts to solve the desired physics set.</p>
+</section>
+<section id="equationsystem">
+<h3><span class="section-number">18.2.2. </span>EquationSystem<a class="headerlink" href="#equationsystem" title="Link to this heading"></a></h3>
+<p>An equation system holds the set of PDEs of interest. As Nalu-Wind uses a
+pressure projection scheme with split PDE systems, the pre-defined
+systems are, LowMach, MixtureFraction, Enthalpy, TurbKineticEnergy, etc.
+New monolithic equation system can be easily created and plugged into
+the set of all equation systems.</p>
+<p>In general, the creation of each equation system is of arbitrary order,
+however, in some cases fields required for MixtureFraction, e.g.,
+<code class="docutils literal notranslate"><span class="pre">mass_flow_rate</span></code> might have only been registered on the low-Mach
+equation system. As such, if MixtureFraction is created before
+LowMachEOS, an error might be noted. This can be easily resolved by
+cleaning the code base such that each equation system is “autonomous”.</p>
+<p>Each equation system has a set of virtual methods expected to be
+implemented. These include, however, are not limited to registration of
+nodal fields, edge fields, boundary conditions of fixed type, e.g.,
+wall, inflow, symmetry, etc.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="adaptivity.html" class="btn btn-neutral float-left" title="17. Adaptivity" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../verification/index.html" class="btn btn-neutral float-right" title="Nalu-Wind - Verification Manual" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
