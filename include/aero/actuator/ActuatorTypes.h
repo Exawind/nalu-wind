@@ -24,7 +24,7 @@ namespace nalu {
 using ActuatorMemSpace = Kokkos::CudaSpace;
 using ActuatorExecutionSpace = Kokkos::DefaultExecutionSpace;
 #elif defined(KOKKOS_ENABLE_HIP)
-using ActuatorMemSpace = Kokkos::Experimental::HIPSpace;
+using ActuatorMemSpace = Kokkos::HIPSpace;
 using ActuatorExecutionSpace = Kokkos::DefaultExecutionSpace;
 #else
 using ActuatorMemSpace = Kokkos::HostSpace;
