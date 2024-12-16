@@ -318,13 +318,14 @@ protected:
       "MasterElement::shape_fcn not implemented for element");
   }
 
-  KOKKOS_FUNCTION virtual void
+  KOKKOS_INLINE_FUNCTION virtual void
   shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>&)
   {
     STK_NGP_ThrowErrorMsg(
       "MasterElement::shifted_shape_fcn not implemented for element");
   }
-  virtual void shifted_shape_fcn(SharedMemView<double**, HostShmem>&)
+  KOKKOS_INLINE_FUNCTION virtual void
+  shifted_shape_fcn(SharedMemView<double**, HostShmem>&)
   {
     STK_NGP_ThrowErrorMsg(
       "MasterElement::shifted_shape_fcn not implemented for element");
