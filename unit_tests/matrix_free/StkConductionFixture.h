@@ -63,7 +63,7 @@ protected:
   static constexpr int order = 2;
   ConductionFixtureP2(int nx, double scale);
   stk::mesh::Field<double>& coordinate_field();
-  stk::mesh::fixtures::simple_fields::Hex27Fixture fixture;
+  stk::mesh::fixtures::Hex27Fixture fixture;
   stk::mesh::MetaData& meta;
   stk::mesh::BulkData& bulk;
   stk::io::StkMeshIoBroker io;
