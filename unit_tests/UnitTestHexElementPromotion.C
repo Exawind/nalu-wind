@@ -53,8 +53,8 @@ protected:
   void init(int nx, int ny, int nz, int in_polyOrder)
   {
     auto aura = stk::mesh::BulkData::NO_AUTO_AURA;
-    fixture = std::make_unique<stk::mesh::fixtures::HexFixture>(
-      comm, nx, ny, nz, aura);
+    fixture =
+      std::make_unique<stk::mesh::fixtures::HexFixture>(comm, nx, ny, nz, aura);
     meta = &fixture->m_meta;
     bulk = &fixture->m_bulk_data;
     surfSupPart = nullptr;
@@ -84,9 +84,8 @@ protected:
     stk::mesh::put_field_on_entire_mesh(*intField);
 
     fixture->m_meta.commit();
-    fixture->generate_mesh(
-      stk::mesh::fixtures::FixedCartesianCoordinateMapping(
-        nx, ny, nz, nx, ny, nz));
+    fixture->generate_mesh(stk::mesh::fixtures::FixedCartesianCoordinateMapping(
+      nx, ny, nz, nx, ny, nz));
     stk::mesh::PartVector surfParts = {surfSubPart};
     stk::mesh::skin_mesh(*bulk, surfParts);
   }
