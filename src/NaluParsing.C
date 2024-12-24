@@ -447,8 +447,8 @@ void
 operator>>(const YAML::Node& node, std::map<std::string, bool>& mapName)
 {
   for (YAML::const_iterator i = node.begin(); i != node.end(); ++i) {
-    const YAML::Node& key = i->first;
-    const YAML::Node& value = i->second;
+    const YAML::Node key = i->first;
+    const YAML::Node value = i->second;
     std::string stringName;
     stringName = key.as<std::string>();
     bool data;
@@ -461,8 +461,8 @@ void
 operator>>(const YAML::Node& node, std::map<std::string, double>& mapName)
 {
   for (YAML::const_iterator i = node.begin(); i != node.end(); ++i) {
-    const YAML::Node& key = i->first;
-    const YAML::Node& value = i->second;
+    const YAML::Node key = i->first;
+    const YAML::Node value = i->second;
     std::string stringName;
     stringName = key.as<std::string>();
     double data;
@@ -475,8 +475,8 @@ void
 operator>>(const YAML::Node& node, std::map<std::string, std::string>& mapName)
 {
   for (YAML::const_iterator i = node.begin(); i != node.end(); ++i) {
-    const YAML::Node& key = i->first;
-    const YAML::Node& value = i->second;
+    const YAML::Node key = i->first;
+    const YAML::Node value = i->second;
     std::string stringName;
     stringName = key.as<std::string>();
     std::string data;
@@ -491,8 +491,8 @@ operator>>(
   std::map<std::string, std::vector<std::string>>& mapName)
 {
   for (YAML::const_iterator i = node.begin(); i != node.end(); ++i) {
-    const YAML::Node& key = i->first;
-    const YAML::Node& targets = i->second;
+    const YAML::Node key = i->first;
+    const YAML::Node targets = i->second;
     std::string stringName;
     stringName = key.as<std::string>();
 
@@ -515,8 +515,8 @@ operator>>(
   const YAML::Node& node, std::map<std::string, std::vector<double>>& mapName)
 {
   for (YAML::const_iterator i = node.begin(); i != node.end(); ++i) {
-    const YAML::Node& key = i->first;
-    const YAML::Node& targets = i->second;
+    const YAML::Node key = i->first;
+    const YAML::Node targets = i->second;
     std::string stringName;
     stringName = key.as<std::string>();
 
@@ -890,8 +890,8 @@ convert<sierra::nalu::WallUserData>::decode(
     sierra::nalu::expect_map(node, "user_function_name", optional);
   if (userFcnNode) {
     for (const_iterator i = userFcnNode.begin(); i != userFcnNode.end(); ++i) {
-      const Node& key = i->first;
-      const Node& value = i->second;
+      const Node key = i->first;
+      const Node value = i->second;
       std::string stringName = key.as<std::string>();
       std::string data = value.as<std::string>();
       wallData.bcDataSpecifiedMap_[stringName] = true;
@@ -992,8 +992,8 @@ convert<sierra::nalu::InflowUserData>::decode(
     sierra::nalu::expect_map(node, "user_function_name", optional);
   if (userFcnNode) {
     for (const_iterator i = userFcnNode.begin(); i != userFcnNode.end(); ++i) {
-      const Node& key = i->first;
-      const Node& value = i->second;
+      const Node key = i->first;
+      const Node value = i->second;
       std::string stringName;
       stringName = key.as<std::string>();
       std::string data;
@@ -1289,8 +1289,8 @@ convert<std::map<std::string, std::vector<std::string>>>::decode(
   std::map<std::string, std::vector<std::string>>& mapName)
 {
   for (const_iterator i = node.begin(); i != node.end(); ++i) {
-    const YAML::Node& key = i->first;
-    const YAML::Node& targets = i->second;
+    const YAML::Node key = i->first;
+    const YAML::Node targets = i->second;
     std::string stringName;
     stringName = key.as<std::string>();
 
