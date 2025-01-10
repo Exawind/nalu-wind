@@ -885,7 +885,18 @@ TEST_F(NgpLoopTest, NGP_basic_node_reduce_minmax)
   fill_mesh_and_init_fields("generated:16x16x16");
 
   basic_node_reduce_minmax(*bulk, 0.0, 16.0);
+}
+
+TEST_F(NgpLoopTest, NGP_basic_node_reduce_minmax_alt)
+{
+  fill_mesh_and_init_fields("generated:16x16x16");
+
   basic_node_reduce_minmax_alt(*bulk, 0.0, 16.0);
+}
+
+TEST_F(NgpLoopTest, NGP_basic_node_reduce_minmaxsum)
+{
+  fill_mesh_and_init_fields("generated:16x16x16");
 
   stk::mesh::Selector sel = bulk->mesh_meta_data().universal_part();
   const auto& bkts = bulk->get_buckets(stk::topology::NODE_RANK, sel);
