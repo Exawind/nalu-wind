@@ -113,6 +113,10 @@ VOFAdvectionEdgeAlg::execute()
   const auto density_gas = density_gas_;
   const auto velocity = fieldMgr.get_field<double>(
     get_field_ordinal(realm_.meta_data(), "velocity", stk::mesh::StateNP1));
+  const std::string velocity_rtm_name =
+    realm_.has_mesh_deformation() ? "velocity_rtm" : "velocity";
+  const auto velocity_rtm = fieldMgr.get_field<double>(
+    get_field_ordinal(realm_.meta_data(), velocity_rtm_name));
 
   run_algorithm(
     realm_.bulk_data(),
@@ -214,21 +218,25 @@ VOFAdvectionEdgeAlg::execute()
       DblType asq = 0.0;
       DblType diffusion_coef = 0.0;
 
-      DblType vel_mag_l = 0.0;
-      DblType vel_mag_r = 0.0;
+      NALU_ALIGNED DblType mesh_velocity[NDimMax_];
+      DblType local_velocity = 0.0;
       for (int d = 0; d < ndim; ++d) {
         const DblType dxj =
           coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         diffusion_coef += dxj * dxj;
         asq += av[d] * av[d];
         axdx += av[d] * dxj;
-        vel_mag_l += velocity.get(nodeL, d) * velocity.get(nodeL, d);
-        vel_mag_r += velocity.get(nodeR, d) * velocity.get(nodeR, d);
+        mesh_velocity[d] =
+          0.5 * (velocity.get(nodeR, d) + velocity.get(nodeL, d)) -
+          0.5 * (velocity_rtm.get(nodeR, d) + velocity_rtm.get(nodeL, d));
+        local_velocity += av[d] * mesh_velocity[d];
       }
 
-      const DblType velocity_scale =
-        sharpening_scaling * 0.5 *
-        (stk::math::sqrt(vel_mag_l) + stk::math::sqrt(vel_mag_r));
+      const DblType face_area = stk::math::sqrt(asq);
+      local_velocity += vdot;
+      local_velocity = stk::math::abs(local_velocity) / face_area;
+
+      const DblType velocity_scale = sharpening_scaling * local_velocity;
 
       diffusion_coef = stk::math::sqrt(diffusion_coef) * diffusion_scaling;
 
