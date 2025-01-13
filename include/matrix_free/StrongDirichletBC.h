@@ -13,7 +13,7 @@
 #include <Tpetra_MultiVector.hpp>
 
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 
 namespace sierra {
 namespace nalu {

@@ -12,7 +12,7 @@
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/KokkosFramework.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/ShuffledAccess.h"
 
@@ -60,7 +60,7 @@ corrected_momentum_flux_coefficient(
   }
 
   for (int l = 0; l < p; ++l) {
-    LocalArray<ftype[p + 1][p + 1]> scratch;
+    ArrayND<ftype[p + 1][p + 1]> scratch;
     for (int s = 0; s < p + 1; ++s) {
       for (int r = 0; r < p + 1; ++r) {
         ftype acc = 0;
@@ -113,7 +113,7 @@ linear_advection_metric_t<p>::invoke(
   enum { XH = 0, YH = 1, ZH = 2 };
   Kokkos::parallel_for(
     DeviceRangePolicy(0, areas.extent_int(0)), KOKKOS_LAMBDA(int index) {
-      LocalArray<ftype[p + 1][p + 1][p + 1][3]> rhou_corr;
+      ArrayND<ftype[p + 1][p + 1][p + 1][3]> rhou_corr;
       for (int k = 0; k < p + 1; ++k) {
         for (int j = 0; j < p + 1; ++j) {
           for (int i = 0; i < p + 1; ++i) {

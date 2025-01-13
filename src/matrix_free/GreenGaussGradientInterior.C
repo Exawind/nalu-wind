@@ -14,7 +14,7 @@
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/ValidSimdLength.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 
 #include <KokkosInterface.h>
 #include "Kokkos_ScatterView.hpp"
@@ -43,7 +43,7 @@ gradient_residual_t<p>::invoke(
   auto range = range_type({0, 0}, {offsets.extent_int(0), 3});
   Kokkos::parallel_for(
     range, KOKKOS_LAMBDA(int index, int d) {
-      LocalArray<ftype[p + 1][p + 1][p + 1]> rhs;
+      ArrayND<ftype[p + 1][p + 1][p + 1]> rhs;
       if (lumped) {
         for (int k = 0; k < p + 1; ++k) {
           for (int j = 0; j < p + 1; ++j) {
@@ -55,7 +55,7 @@ gradient_residual_t<p>::invoke(
           }
         }
       } else {
-        LocalArray<ftype[p + 1][p + 1][p + 1]> scratch;
+        ArrayND<ftype[p + 1][p + 1][p + 1]> scratch;
         for (int k = 0; k < p + 1; ++k) {
           for (int j = 0; j < p + 1; ++j) {
             for (int i = 0; i < p + 1; ++i) {
@@ -116,7 +116,7 @@ filter_linearized_residual_t<p>::invoke(
   Kokkos::parallel_for(
     offsets.extent_int(0), KOKKOS_LAMBDA(int index) {
       const auto length = valid_offset<p>(index, offsets);
-      LocalArray<int[p + 1][p + 1][p + 1][simd_len]> idx;
+      ArrayND<int[p + 1][p + 1][p + 1][simd_len]> idx;
       for (int k = 0; k < p + 1; ++k) {
         for (int j = 0; j < p + 1; ++j) {
           for (int i = 0; i < p + 1; ++i) {
@@ -128,7 +128,7 @@ filter_linearized_residual_t<p>::invoke(
       }
 
       for (int d = 0; d < 3; ++d) {
-        LocalArray<ftype[p + 1][p + 1][p + 1]> delta;
+        ArrayND<ftype[p + 1][p + 1][p + 1]> delta;
         for (int k = 0; k < p + 1; ++k) {
           for (int j = 0; j < p + 1; ++j) {
             for (int i = 0; i < p + 1; ++i) {
@@ -139,7 +139,7 @@ filter_linearized_residual_t<p>::invoke(
           }
         }
 
-        LocalArray<ftype[p + 1][p + 1][p + 1]> rhs;
+        ArrayND<ftype[p + 1][p + 1][p + 1]> rhs;
         if (lumped) {
           for (int k = 0; k < p + 1; ++k) {
             for (int j = 0; j < p + 1; ++j) {

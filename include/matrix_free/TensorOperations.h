@@ -10,7 +10,7 @@
 #ifndef TENSOR_OPERATIONS_H
 #define TENSOR_OPERATIONS_H
 
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 
 #include "Kokkos_Macros.hpp"
 
@@ -24,7 +24,7 @@ namespace matrix_free {
 
 template <typename Scalar>
 KOKKOS_FORCEINLINE_FUNCTION Scalar
-determinant(const LocalArray<Scalar[3][3]>& jac)
+determinant(const ArrayND<Scalar[3][3]>& jac)
 {
   return jac(XH, XH) * (jac(YH, YH) * jac(ZH, ZH) - jac(YH, ZH) * jac(ZH, YH)) -
          jac(XH, YH) * (jac(YH, XH) * jac(ZH, ZH) - jac(YH, ZH) * jac(ZH, XH)) +
@@ -33,8 +33,7 @@ determinant(const LocalArray<Scalar[3][3]>& jac)
 
 template <typename Scalar>
 KOKKOS_FORCEINLINE_FUNCTION void
-adjugate_matrix(
-  const LocalArray<Scalar[3][3]>& mat, LocalArray<Scalar[3][3]>& adj)
+adjugate_matrix(const ArrayND<Scalar[3][3]>& mat, ArrayND<Scalar[3][3]>& adj)
 {
   adj(XH, XH) = mat(YH, YH) * mat(ZH, ZH) - mat(ZH, YH) * mat(YH, ZH);
   adj(XH, YH) = mat(YH, ZH) * mat(ZH, XH) - mat(ZH, ZH) * mat(YH, XH);
@@ -48,10 +47,10 @@ adjugate_matrix(
 }
 
 template <typename Scalar>
-KOKKOS_FORCEINLINE_FUNCTION LocalArray<Scalar[3][3]>
-invert_matrix(const LocalArray<Scalar[3][3]>& mat)
+KOKKOS_FORCEINLINE_FUNCTION ArrayND<Scalar[3][3]>
+invert_matrix(const ArrayND<Scalar[3][3]>& mat)
 {
-  LocalArray<Scalar[3][3]> inv;
+  ArrayND<Scalar[3][3]> inv;
   auto inv_detj = 1. / determinant(mat);
   inv(XH, XH) =
     inv_detj * (mat(YH, YH) * mat(ZH, ZH) - mat(ZH, YH) * mat(YH, ZH));
@@ -76,10 +75,10 @@ invert_matrix(const LocalArray<Scalar[3][3]>& mat)
 }
 
 template <typename Scalar>
-KOKKOS_FORCEINLINE_FUNCTION LocalArray<Scalar[3][3]>
-adjugate_matrix(const LocalArray<Scalar[3][3]>& mat)
+KOKKOS_FORCEINLINE_FUNCTION ArrayND<Scalar[3][3]>
+adjugate_matrix(const ArrayND<Scalar[3][3]>& mat)
 {
-  return LocalArray<Scalar[3][3]>{
+  return ArrayND<Scalar[3][3]>{
     {{mat(YH, YH) * mat(ZH, ZH) - mat(ZH, YH) * mat(YH, ZH),
       mat(YH, ZH) * mat(ZH, XH) - mat(ZH, ZH) * mat(YH, XH),
       mat(YH, XH) * mat(ZH, YH) - mat(ZH, XH) * mat(YH, YH)},
@@ -94,7 +93,7 @@ adjugate_matrix(const LocalArray<Scalar[3][3]>& mat)
 template <typename InpScalar, typename OutScalar>
 KOKKOS_FORCEINLINE_FUNCTION void
 transform(
-  const LocalArray<InpScalar[3][3]>& A,
+  const ArrayND<InpScalar[3][3]>& A,
   const Kokkos::Array<OutScalar, 3>& x,
   Kokkos::Array<OutScalar, 3>& y)
 {
@@ -106,9 +105,9 @@ transform(
 template <typename InpScalar, typename OutScalar>
 KOKKOS_FORCEINLINE_FUNCTION void
 transform(
-  const LocalArray<InpScalar[3][3]>& A,
-  const LocalArray<OutScalar[3][3]>& x,
-  LocalArray<OutScalar[3][3]>& y)
+  const ArrayND<InpScalar[3][3]>& A,
+  const ArrayND<OutScalar[3][3]>& x,
+  ArrayND<OutScalar[3][3]>& y)
 {
   for (int d = 0; d < 3; ++d) {
     y(d, XH) =
@@ -123,9 +122,9 @@ transform(
 template <typename InpScalar, typename OutScalar>
 KOKKOS_FORCEINLINE_FUNCTION void
 inv_transform_t(
-  const LocalArray<InpScalar[3][3]>& A,
-  const LocalArray<OutScalar[3]>& b,
-  LocalArray<OutScalar[3]>& x)
+  const ArrayND<InpScalar[3][3]>& A,
+  const ArrayND<OutScalar[3]>& b,
+  ArrayND<OutScalar[3]>& x)
 {
   auto inv_det = 1. / determinant(A);
   x(0) = ((A(YH, YH) * A(ZH, ZH) - A(YH, ZH) * A(ZH, YH)) * b(0) +
@@ -147,9 +146,9 @@ inv_transform_t(
 template <typename InpScalar, typename OutScalar>
 KOKKOS_FORCEINLINE_FUNCTION void
 inv_transform_t(
-  const LocalArray<InpScalar[3][3]>& A,
-  const LocalArray<OutScalar[3][3]>& b,
-  LocalArray<OutScalar[3][3]>& x)
+  const ArrayND<InpScalar[3][3]>& A,
+  const ArrayND<OutScalar[3][3]>& b,
+  ArrayND<OutScalar[3][3]>& x)
 {
   auto inv_det = 1. / determinant(A);
   for (int d = 0; d < 3; ++d) {
@@ -171,10 +170,10 @@ inv_transform_t(
 }
 
 template <typename Scalar>
-KOKKOS_FORCEINLINE_FUNCTION LocalArray<Scalar[3][3]>
-square(const LocalArray<Scalar[3][3]>& a)
+KOKKOS_FORCEINLINE_FUNCTION ArrayND<Scalar[3][3]>
+square(const ArrayND<Scalar[3][3]>& a)
 {
-  LocalArray<ftype[3][3]> b;
+  ArrayND<ftype[3][3]> b;
   for (int dj = 0; dj < 3; ++dj) {
     for (int di = 0; di < 3; ++di) {
       b(dj, di) =

@@ -14,7 +14,7 @@
 #include "matrix_free/ValidSimdLength.h"
 #include "matrix_free/ElementVolumeIntegral.h"
 #include "matrix_free/ElementSCSInterpolate.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include <KokkosInterface.h>
 #include <Kokkos_NumericTraits.hpp>
 #include <stk_simd/Simd.hpp>

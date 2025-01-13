@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/KokkosFramework.h"
 
 #include "StkSimdComparisons.h"
@@ -19,7 +19,7 @@ namespace matrix_free {
 
 TEST(local_array, fill_double_1)
 {
-  LocalArray<double[4]> y = {{1, 1, 1, 1}};
+  ArrayND<double[4]> y = {{1, 1, 1, 1}};
   for (int i = 0; i < 4; ++i) {
     ASSERT_DOUBLE_EQ(y(i), 1.0);
     ASSERT_DOUBLE_EQ(y(i), y[i]);
@@ -28,7 +28,7 @@ TEST(local_array, fill_double_1)
 
 TEST(local_array, fill_ftypedouble_1)
 {
-  LocalArray<ftype[4]> y = {{1, 1, 1, 1}};
+  ArrayND<ftype[4]> y = {{1, 1, 1, 1}};
   for (int i = 0; i < 4; ++i) {
     ASSERT_DOUBLETYPE_NEAR(y(i), 1.0, 1.0e-16);
     ASSERT_DOUBLETYPE_NEAR(y(i), y[i], 1.0e-16);
@@ -37,7 +37,7 @@ TEST(local_array, fill_ftypedouble_1)
 
 TEST(local_array, fill_double_2)
 {
-  LocalArray<double[3][3]> y = {{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}};
+  ArrayND<double[3][3]> y = {{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}};
   for (int j = 0; j < 3; ++j) {
     for (int i = 0; i < 3; ++i) {
       ASSERT_DOUBLE_EQ(y(j, i), (i == j) ? 1.0 : 0.0);
@@ -47,7 +47,7 @@ TEST(local_array, fill_double_2)
 
 TEST(local_array, fill_double_3)
 {
-  LocalArray<double[3][3][3]> y;
+  ArrayND<double[3][3][3]> y;
   for (int k = 0; k < 3; ++k) {
     for (int j = 0; j < 3; ++j) {
       for (int i = 0; i < 3; ++i) {
@@ -60,7 +60,7 @@ TEST(local_array, fill_double_3)
 
 TEST(local_array, fill_double_4)
 {
-  LocalArray<double[3][3][4][3]> y;
+  ArrayND<double[3][3][4][3]> y;
   for (int l = 0; l < 3; ++l) {
     for (int k = 0; k < 3; ++k) {
       for (int j = 0; j < 4; ++j) {
@@ -75,7 +75,7 @@ TEST(local_array, fill_double_4)
 
 TEST(local_array, fill_double_5)
 {
-  LocalArray<double[7][3][3][4][3]> y;
+  ArrayND<double[7][3][3][4][3]> y;
   for (int m = 0; m < 7; ++m) {
     for (int l = 0; l < 3; ++l) {
       for (int k = 0; k < 3; ++k) {
@@ -87,6 +87,49 @@ TEST(local_array, fill_double_5)
         }
       }
     }
+  }
+}
+
+TEST(local_array, static_rank)
+{
+  {
+    ArrayND<double[2]> s;
+    static_assert(decltype(s)::rank == 1);
+    static_assert(s.extent_int(0) == 2);
+  }
+
+  {
+    ArrayND<double[2][3]> s;
+    static_assert(decltype(s)::rank == 2);
+    static_assert(s.extent_int(0) == 2);
+    static_assert(s.extent_int(1) == 3);
+  }
+
+  {
+    ArrayND<double[2][3][4]> s;
+    static_assert(decltype(s)::rank == 3);
+    static_assert(s.extent_int(0) == 2);
+    static_assert(s.extent_int(1) == 3);
+    static_assert(s.extent_int(2) == 4);
+  }
+
+  {
+    ArrayND<double[2][3][4][5]> s;
+    static_assert(decltype(s)::rank == 4);
+    static_assert(s.extent_int(0) == 2);
+    static_assert(s.extent_int(1) == 3);
+    static_assert(s.extent_int(2) == 4);
+    static_assert(s.extent_int(3) == 5);
+  }
+
+  {
+    ArrayND<double[2][3][4][5][6]> s;
+    static_assert(decltype(s)::rank == 5);
+    static_assert(s.extent_int(0) == 2);
+    static_assert(s.extent_int(1) == 3);
+    static_assert(s.extent_int(2) == 4);
+    static_assert(s.extent_int(3) == 5);
+    static_assert(s.extent_int(4) == 6);
   }
 }
 

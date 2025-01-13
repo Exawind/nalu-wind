@@ -34,7 +34,7 @@ compute_volumes(const BoxArray& box, OutArray& out)
 
   for (int k = 0; k < p + 1; ++k) {
     for (int j = 0; j < p + 1; ++j) {
-      LocalArray<ftype[p + 1]> scratch;
+      ArrayND<ftype[p + 1]> scratch;
       for (int i = 0; i < p + 1; ++i) {
         scratch(i) =
           determinant<ftype>(geom::linear_hex_jacobian<p>(box, k, j, i));
@@ -50,7 +50,7 @@ compute_volumes(const BoxArray& box, OutArray& out)
   }
 
   for (int i = 0; i < p + 1; ++i) {
-    LocalArray<ftype[p + 1][p + 1]> scratch;
+    ArrayND<ftype[p + 1][p + 1]> scratch;
     for (int k = 0; k < p + 1; ++k) {
       for (int j = 0; j < p + 1; ++j) {
         ftype acc(0);
@@ -91,7 +91,7 @@ local_dual_nodal_volume_t<p>::invoke(
       const auto box = hex_vertex_coordinates<p>(index, xc);
       const auto valid_length = valid_offset<p>(index, conn);
 
-      LocalArray<ftype[p + 1][p + 1][p + 1]> vols;
+      ArrayND<ftype[p + 1][p + 1][p + 1]> vols;
       compute_volumes<p>(box, vols);
 
       for (int k = 0; k < p + 1; ++k) {

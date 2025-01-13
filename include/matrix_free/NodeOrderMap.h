@@ -10,7 +10,7 @@
 #ifndef NODEORDERMAP_H
 #define NODEORDERMAP_H
 
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 
 namespace sierra {
 namespace nalu {
@@ -24,14 +24,14 @@ struct StkNodeOrderMapping
 template <>
 struct StkNodeOrderMapping<1>
 {
-  using node_map_type = LocalArray<int[2][2][2]>;
+  using node_map_type = ArrayND<int[2][2][2]>;
   static constexpr node_map_type map = {{{{0, 1}, {3, 2}}, {{4, 5}, {7, 6}}}};
 };
 
 template <>
 struct StkNodeOrderMapping<2>
 {
-  using node_map_type = LocalArray<int[3][3][3]>;
+  using node_map_type = ArrayND<int[3][3][3]>;
   static constexpr node_map_type map = {
     {{{0, 8, 1}, {11, 21, 9}, {3, 10, 2}},
      {{12, 25, 13}, {23, 20, 24}, {15, 26, 14}},
@@ -41,7 +41,7 @@ struct StkNodeOrderMapping<2>
 template <>
 struct StkNodeOrderMapping<3>
 {
-  using node_map_type = LocalArray<int[4][4][4]>;
+  using node_map_type = ArrayND<int[4][4][4]>;
   static constexpr node_map_type map = {
     {{{0, 8, 9, 1}, {15, 32, 34, 10}, {14, 33, 35, 11}, {3, 13, 12, 2}},
      {{16, 48, 49, 18}, {40, 56, 57, 44}, {42, 58, 59, 45}, {22, 53, 52, 20}},
@@ -52,7 +52,7 @@ struct StkNodeOrderMapping<3>
 template <>
 struct StkNodeOrderMapping<4>
 {
-  using node_map_type = LocalArray<int[5][5][5]>;
+  using node_map_type = ArrayND<int[5][5][5]>;
   static constexpr node_map_type map = {
     {{{0, 8, 9, 10, 1},
       {19, 44, 47, 50, 11},
@@ -89,21 +89,21 @@ struct StkFaceNodeMapping
 template <>
 struct StkFaceNodeMapping<1>
 {
-  using node_map_type = LocalArray<int[2][2]>;
+  using node_map_type = ArrayND<int[2][2]>;
   static constexpr node_map_type map = {{{0, 1}, {3, 2}}};
 };
 
 template <>
 struct StkFaceNodeMapping<2>
 {
-  using node_map_type = LocalArray<int[3][3]>;
+  using node_map_type = ArrayND<int[3][3]>;
   static constexpr node_map_type map = {{{0, 4, 1}, {7, 8, 5}, {3, 6, 2}}};
 };
 
 template <>
 struct StkFaceNodeMapping<3>
 {
-  using node_map_type = LocalArray<int[4][4]>;
+  using node_map_type = ArrayND<int[4][4]>;
   static constexpr node_map_type map = {
     {{0, 4, 5, 1}, {11, 12, 13, 6}, {10, 14, 15, 7}, {3, 9, 8, 2}}};
 };
@@ -111,7 +111,7 @@ struct StkFaceNodeMapping<3>
 template <>
 struct StkFaceNodeMapping<4>
 {
-  using node_map_type = LocalArray<int[5][5]>;
+  using node_map_type = ArrayND<int[5][5]>;
   static constexpr node_map_type map = {
     {{0, 4, 5, 6, 1},
      {15, 16, 17, 18, 7},

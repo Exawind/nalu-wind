@@ -135,7 +135,7 @@ assemble_sparsified_edge_laplacian_t<p>::invoke(
 {
   // map from the edge ordinals to an order
   // convenient for computing the edge laplacian
-  constexpr LocalArray<int[12][2][3]> edges = {{
+  constexpr ArrayND<int[12][2][3]> edges = {{
     {{0, 0, 0}, {0, 0, 1}}, // {0,1} .
     {{0, 1, 0}, {0, 1, 1}}, // {3,2} .
     {{1, 0, 0}, {1, 0, 1}}, // {4,5} .
@@ -163,7 +163,7 @@ assemble_sparsified_edge_laplacian_t<p>::invoke(
         for (int m = 0; m < p; ++m) {
           for (int l = 0; l < p; ++l) {
             const auto box = hex_vertex_coordinates(n, m, l, elem_coords);
-            LocalArray<ftype[12][2][2]> edge_lhs;
+            ArrayND<ftype[12][2][2]> edge_lhs;
             sparsified_laplacian_edge_lhs<p>(box, edge_lhs);
             for (int e = 0; e < 12; ++e) {
               const int ln = n + edges(e, 0, 0);

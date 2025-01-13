@@ -11,7 +11,7 @@
 #define MOMENTUM_INTERIOR_H
 
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/PolynomialOrders.h"
 
 #include "Kokkos_Array.hpp"
@@ -32,7 +32,7 @@ namespace impl {
 template <int p>
 struct momentum_residual_t
 {
-  using narray = LocalArray<ftype[p + 1][p + 1][p + 1]>;
+  using narray = ArrayND<ftype[p + 1][p + 1][p + 1]>;
 
   static void invoke(
     Kokkos::Array<double, 3> gammas,
@@ -57,7 +57,7 @@ namespace impl {
 template <int p>
 struct momentum_linearized_residual_t
 {
-  using narray = LocalArray<ftype[p + 1][p + 1][p + 1]>;
+  using narray = ArrayND<ftype[p + 1][p + 1][p + 1]>;
 
   static void invoke(
     double proj_time_scale,

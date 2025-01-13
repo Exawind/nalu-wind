@@ -14,7 +14,7 @@
 
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/ShuffledAccess.h"
 
 namespace sierra {
@@ -35,7 +35,7 @@ apply_mass(
   static constexpr auto vandermonde = Coeffs<p>::W;
   for (int k = 0; k < p + 1; ++k) {
     for (int j = 0; j < p + 1; ++j) {
-      LocalArray<ftype[p + 1]> scratch;
+      ArrayND<ftype[p + 1]> scratch;
       for (int i = 0; i < p + 1; ++i) {
         scratch(i) = -gamma * vol(index, k, j, i) * delta(k, j, i);
       }
@@ -50,7 +50,7 @@ apply_mass(
   }
 
   for (int i = 0; i < p + 1; ++i) {
-    LocalArray<ftype[p + 1][p + 1]> scratch;
+    ArrayND<ftype[p + 1][p + 1]> scratch;
     for (int k = 0; k < p + 1; ++k) {
       for (int j = 0; j < p + 1; ++j) {
         ftype acc(0);
@@ -118,7 +118,7 @@ consistent_mass_time_derivative(
 
   for (int k = 0; k < p + 1; ++k) {
     for (int j = 0; j < p + 1; ++j) {
-      LocalArray<ftype[p + 1]> scratch_1d;
+      ArrayND<ftype[p + 1]> scratch_1d;
       for (int i = 0; i < p + 1; ++i) {
         scratch_1d(i) =
           -vol(index, k, j, i) *
@@ -137,7 +137,7 @@ consistent_mass_time_derivative(
   }
 
   for (int i = 0; i < p + 1; ++i) {
-    LocalArray<ftype[p + 1][p + 1]> scratch;
+    ArrayND<ftype[p + 1][p + 1]> scratch;
     for (int k = 0; k < p + 1; ++k) {
       for (int j = 0; j < p + 1; ++j) {
         scratch(k, j) = 0;

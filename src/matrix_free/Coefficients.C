@@ -8,7 +8,7 @@
 //
 
 #include "matrix_free/Coefficients.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 
 namespace sierra {
 namespace nalu {
@@ -42,10 +42,10 @@ constexpr Coeffs<4>::scs_matrix_type Coeffs<4>::Dt;
 constexpr Coeffs<4>::linear_nodal_matrix_type Coeffs<4>::Nlin;
 constexpr Coeffs<4>::linear_scs_matrix_type Coeffs<4>::Ntlin;
 
-constexpr LocalArray<double[2]> Coeffs<1>::Wl;
-constexpr LocalArray<double[3]> Coeffs<2>::Wl;
-constexpr LocalArray<double[4]> Coeffs<3>::Wl;
-constexpr LocalArray<double[5]> Coeffs<4>::Wl;
+constexpr ArrayND<double[2]> Coeffs<1>::Wl;
+constexpr ArrayND<double[3]> Coeffs<2>::Wl;
+constexpr ArrayND<double[4]> Coeffs<3>::Wl;
+constexpr ArrayND<double[5]> Coeffs<4>::Wl;
 
 } // namespace matrix_free
 } // namespace nalu

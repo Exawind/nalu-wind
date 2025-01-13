@@ -1,5 +1,6 @@
 target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTest1ElemCoordCheck.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestArrayND.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestBasicKokkos.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestCopyAndInterleave.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestCreateOnDevice.C

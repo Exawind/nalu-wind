@@ -11,13 +11,11 @@
 #define STK_SIMD_COMPARISONS_H
 
 #include "gtest/gtest.h"
-
-#include "matrix_free/KokkosViewTypes.h"
+#include "SimdInterface.h"
 
 // this allows calling the macros with a double instead of a DoubleType
 inline double
-get_simd_data_promote_double_to_doubletype(
-  sierra::nalu::matrix_free::ftype val, int ln)
+get_simd_data_promote_double_to_doubletype(sierra::nalu::DoubleType val, int ln)
 {
   return stk::simd::get_data(val, ln);
 }

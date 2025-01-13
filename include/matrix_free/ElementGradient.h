@@ -15,7 +15,7 @@
 #include "matrix_free/ElementSCSInterpolate.h"
 #include "matrix_free/GeometricFunctions.h"
 #include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/ShuffledAccess.h"
 #include "matrix_free/TensorOperations.h"
 
@@ -25,10 +25,10 @@ namespace matrix_free {
 
 template <int p, typename BoxArray, typename InpArray>
 KOKKOS_FUNCTION
-  typename std::enable_if<InpArray::Rank == 4, LocalArray<ftype[3][3]>>::type
+  typename std::enable_if<InpArray::rank == 4, ArrayND<ftype[3][3]>>::type
   gradient_nodal(const BoxArray& box, const InpArray& u, int k, int j, int i)
 {
-  LocalArray<ftype[3][3]> gu_hat;
+  ArrayND<ftype[3][3]> gu_hat;
   for (int dj = 0; dj < 3; ++dj) {
     gu_hat(dj, 0) = 0;
     gu_hat(dj, 1) = 0;
@@ -41,17 +41,17 @@ KOKKOS_FUNCTION
     }
   }
 
-  LocalArray<ftype[3][3]> gu;
+  ArrayND<ftype[3][3]> gu;
   inv_transform_t(geom::linear_hex_jacobian<p>(box, k, j, i), gu_hat, gu);
   return gu;
 }
 
 template <int p, typename BoxArray, typename InpArray>
 KOKKOS_FUNCTION
-  typename std::enable_if<InpArray::Rank == 3, LocalArray<ftype[3]>>::type
+  typename std::enable_if<InpArray::rank == 3, ArrayND<ftype[3]>>::type
   gradient_nodal(const BoxArray& box, const InpArray& u, int k, int j, int i)
 {
-  LocalArray<ftype[3]> gu_hat;
+  ArrayND<ftype[3]> gu_hat;
   gu_hat(0) = 0;
   gu_hat(1) = 0;
   gu_hat(2) = 0;
@@ -61,7 +61,7 @@ KOKKOS_FUNCTION
     gu_hat(1) += D(j, q) * u(k, q, i);
     gu_hat(2) += D(k, q) * u(q, j, i);
   }
-  LocalArray<ftype[3]> gu;
+  ArrayND<ftype[3]> gu;
   inv_transform_t(geom::linear_hex_jacobian<p>(box, k, j, i), gu_hat, gu);
   return gu;
 }
@@ -73,7 +73,7 @@ template <
   typename UArrayType,
   typename UHatArrayType>
 KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if<UArrayType::Rank == 4, LocalArray<ftype[3][3]>>::type
+  typename std::enable_if<UArrayType::rank == 4, ArrayND<ftype[3][3]>>::type
   gradient_scs(
     const BoxArrayType& box,
     const UArrayType& u,
@@ -87,7 +87,7 @@ KOKKOS_FORCEINLINE_FUNCTION
   constexpr int dir_1 = (dir == XH) ? YH : XH;
   constexpr int dir_2 = (dir == ZH) ? YH : ZH;
 
-  LocalArray<ftype[3][3]> gu_hat;
+  ArrayND<ftype[3][3]> gu_hat;
   for (int d = 0; d < 3; ++d) {
     ftype acc = 0;
     for (int q = 0; q < p + 1; ++q) {
@@ -110,7 +110,7 @@ KOKKOS_FORCEINLINE_FUNCTION
     }
     gu_hat(d, dir_2) = acc;
   }
-  LocalArray<ftype[3][3]> gu;
+  ArrayND<ftype[3][3]> gu;
   inv_transform_t(
     geom::linear_hex_jacobian_scs<p, dir>(box, l, s, r), gu_hat, gu);
   return gu;
@@ -123,7 +123,7 @@ template <
   typename UArrayType,
   typename UHatArrayType>
 KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if<UArrayType::Rank == 3, LocalArray<ftype[3]>>::type
+  typename std::enable_if<UArrayType::rank == 3, ArrayND<ftype[3]>>::type
   gradient_scs(
     const BoxArrayType& box,
     const UArrayType& u,
@@ -137,7 +137,7 @@ KOKKOS_FORCEINLINE_FUNCTION
   constexpr int dir_1 = (dir == XH) ? YH : XH;
   constexpr int dir_2 = (dir == ZH) ? YH : ZH;
 
-  LocalArray<ftype[3]> gu_hat;
+  ArrayND<ftype[3]> gu_hat;
   for (int d = 0; d < 3; ++d) {
     ftype acc = 0;
     for (int q = 0; q < p + 1; ++q) {
@@ -160,7 +160,7 @@ KOKKOS_FORCEINLINE_FUNCTION
     }
     gu_hat(dir_2) = acc;
   }
-  LocalArray<ftype[3]> gu;
+  ArrayND<ftype[3]> gu;
   inv_transform_t(
     geom::linear_hex_jacobian_scs<p, dir>(box, l, s, r), gu_hat, gu);
   return gu;

@@ -13,7 +13,7 @@
 #include "matrix_free/LobattoQuadratureRule.h"
 #include "matrix_free/TensorOperations.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 
 #include <Kokkos_Core.hpp>
 #include <stk_simd/Simd.hpp>
@@ -28,7 +28,7 @@ template <int poly>
 void
 single_affine_hex_p(bool cube)
 {
-  LocalArray<double[3][3]> jac = {{{0, 0, 1}, {1, 0, 0}, {0, 1, 0}}};
+  ArrayND<double[3][3]> jac = {{{0, 0, 1}, {1, 0, 0}, {0, 1, 0}}};
   if (!cube) {
     jac = {{{2, 1, 1.3333}, {0, 2, -1}, {1, 0, 2}}};
   }

@@ -91,9 +91,9 @@ scalar_neumann_residual_t<p>::invoke(
   Kokkos::parallel_for(
     "flux_residual", DeviceRangePolicy(0, offsets.extent_int(0)),
     KOKKOS_LAMBDA(int index) {
-      LocalArray<ftype[p + 1][p + 1]> element_rhs;
+      ArrayND<ftype[p + 1][p + 1]> element_rhs;
       {
-        LocalArray<ftype[p + 1][p + 1]> scratch;
+        ArrayND<ftype[p + 1][p + 1]> scratch;
         scalar_flux<p>(index, dqdn, areav, scratch, element_rhs);
       }
 
