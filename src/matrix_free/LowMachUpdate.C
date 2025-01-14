@@ -69,11 +69,10 @@ LowMachUpdate<p>::LowMachUpdate(
     exporter_(
       Teuchos::rcpFromRef(linsys_.owned_and_shared),
       Teuchos::rcpFromRef(linsys_.owned)),
-    offsets_(
-      create_offset_map<p>(
-        stk::mesh::get_updated_ngp_mesh(bulk_in),
-        active_in,
-        linsys_.stk_lid_to_tpetra_lid)),
+    offsets_(create_offset_map<p>(
+      stk::mesh::get_updated_ngp_mesh(bulk_in),
+      active_in,
+      linsys_.stk_lid_to_tpetra_lid)),
     field_gather_(bulk_in, active_in),
     post_process_(field_gather_),
     momentum_update_(params_mom, linsys_, exporter_, offsets_),
@@ -100,16 +99,14 @@ LowMachUpdate<p>::LowMachUpdate(
     exporter_(
       Teuchos::rcpFromRef(linsys_.owned_and_shared),
       Teuchos::rcpFromRef(linsys_.owned)),
-    offsets_(
-      create_offset_map<p>(
-        stk::mesh::get_updated_ngp_mesh(bulk_in),
-        active_in,
-        linsys_.stk_lid_to_tpetra_lid)),
-    exposed_face_offsets_(
-      face_offsets<p>(
-        stk::mesh::get_updated_ngp_mesh(bulk_in),
-        dirichlet_in,
-        linsys_.stk_lid_to_tpetra_lid)),
+    offsets_(create_offset_map<p>(
+      stk::mesh::get_updated_ngp_mesh(bulk_in),
+      active_in,
+      linsys_.stk_lid_to_tpetra_lid)),
+    exposed_face_offsets_(face_offsets<p>(
+      stk::mesh::get_updated_ngp_mesh(bulk_in),
+      dirichlet_in,
+      linsys_.stk_lid_to_tpetra_lid)),
     dirichlet_offsets_(simd_node_offsets(
       stk::mesh::get_updated_ngp_mesh(bulk_in),
       dirichlet_in,

@@ -77,12 +77,11 @@ MatrixFreeSolver::MatrixFreeSolver(
       Teuchos::rcpFromRef(op_in),
       Teuchos::rcpFromRef(lhs_vector_),
       Teuchos::rcpFromRef(rhs_vector_)),
-    solv_(
-      Belos::TpetraSolverFactory<double, mv_type, base_op_type>().create(
-        add_default_parameters_to_parameter_list(params, num_vectors_in)
-          .get<std::string>("Solver Name"),
-        Teuchos::rcpFromRef(
-          add_default_parameters_to_parameter_list(params, num_vectors_in))))
+    solv_(Belos::TpetraSolverFactory<double, mv_type, base_op_type>().create(
+      add_default_parameters_to_parameter_list(params, num_vectors_in)
+        .get<std::string>("Solver Name"),
+      Teuchos::rcpFromRef(
+        add_default_parameters_to_parameter_list(params, num_vectors_in))))
 {
   solv_->setProblem(Teuchos::rcpFromRef(problem_));
 }

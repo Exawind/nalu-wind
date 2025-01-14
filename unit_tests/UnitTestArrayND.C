@@ -13,11 +13,9 @@
 #include "StkSimdComparisons.h"
 #include <gtest/gtest.h>
 
-namespace sierra {
-namespace nalu {
-namespace matrix_free {
+namespace sierra::nalu {
 
-TEST(local_array, fill_double_1)
+TEST(array_nd, fill_double_1)
 {
   ArrayND<double[4]> y = {{1, 1, 1, 1}};
   for (int i = 0; i < 4; ++i) {
@@ -26,16 +24,16 @@ TEST(local_array, fill_double_1)
   }
 }
 
-TEST(local_array, fill_ftypedouble_1)
+TEST(array_nd, fill_ftypedouble_1)
 {
-  ArrayND<ftype[4]> y = {{1, 1, 1, 1}};
+  ArrayND<DoubleType[4]> y = {{1, 1, 1, 1}};
   for (int i = 0; i < 4; ++i) {
     ASSERT_DOUBLETYPE_NEAR(y(i), 1.0, 1.0e-16);
     ASSERT_DOUBLETYPE_NEAR(y(i), y[i], 1.0e-16);
   }
 }
 
-TEST(local_array, fill_double_2)
+TEST(array_nd, fill_double_2)
 {
   ArrayND<double[3][3]> y = {{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}};
   for (int j = 0; j < 3; ++j) {
@@ -45,7 +43,7 @@ TEST(local_array, fill_double_2)
   }
 }
 
-TEST(local_array, fill_double_3)
+TEST(array_nd, fill_double_3)
 {
   ArrayND<double[3][3][3]> y;
   for (int k = 0; k < 3; ++k) {
@@ -58,7 +56,7 @@ TEST(local_array, fill_double_3)
   }
 }
 
-TEST(local_array, fill_double_4)
+TEST(array_nd, fill_double_4)
 {
   ArrayND<double[3][3][4][3]> y;
   for (int l = 0; l < 3; ++l) {
@@ -73,7 +71,7 @@ TEST(local_array, fill_double_4)
   }
 }
 
-TEST(local_array, fill_double_5)
+TEST(array_nd, fill_double_5)
 {
   ArrayND<double[7][3][3][4][3]> y;
   for (int m = 0; m < 7; ++m) {
@@ -90,7 +88,7 @@ TEST(local_array, fill_double_5)
   }
 }
 
-TEST(local_array, static_rank)
+TEST(array_nd, static_rank)
 {
   {
     ArrayND<double[2]> s;
@@ -133,6 +131,4 @@ TEST(local_array, static_rank)
   }
 }
 
-} // namespace matrix_free
-} // namespace nalu
-} // namespace sierra
+} // namespace sierra::nalu
