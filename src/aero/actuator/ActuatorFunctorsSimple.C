@@ -195,14 +195,12 @@ ActSimpleComputeRelativeVelocity(
   Kokkos::parallel_for(
     "compute relative velocities", actBulk.local_range_policy(),
     ACTUATOR_LAMBDA(int index) {
-      auto twistTable = Kokkos::subview(
-        twistTableV, turbId, Kokkos::ALL);
-      auto p1ZeroAlphaDir = Kokkos::subview(
-        p1ZeroAlphaDirV, turbId, Kokkos::ALL);
-      auto chordNormalDir = Kokkos::subview(
-        chordNormalDirV, turbId, Kokkos::ALL);
-      auto spanDir = Kokkos::subview(
-        spanDirV, turbId, Kokkos::ALL);
+      auto twistTable = Kokkos::subview(twistTableV, turbId, Kokkos::ALL);
+      auto p1ZeroAlphaDir =
+        Kokkos::subview(p1ZeroAlphaDirV, turbId, Kokkos::ALL);
+      auto chordNormalDir =
+        Kokkos::subview(chordNormalDirV, turbId, Kokkos::ALL);
+      auto spanDir = Kokkos::subview(spanDirV, turbId, Kokkos::ALL);
       const int i = index - offset(turbId);
 
       auto vel = Kokkos::subview(velocity, index, Kokkos::ALL);
