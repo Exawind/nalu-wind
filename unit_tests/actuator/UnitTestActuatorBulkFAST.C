@@ -45,8 +45,8 @@ protected:
 TEST_F(ActuatorBulkFastTests, initializeActuatorBulk)
 {
   std::vector<std::string> modInputs(fastParseParams_);
-  modInputs[4] = "  dt_fast: 0.005\n";
-  modInputs[5] = "  t_max: 0.29\n";
+  modInputs[4] = "  dt_fast: 0.00625\n";
+  modInputs[5] = "  t_max: 0.3625\n";
   const YAML::Node y_node = actuator_unit::create_yaml_node(modInputs);
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
 
@@ -61,8 +61,8 @@ TEST_F(ActuatorBulkFastTests, initializeActuatorBulk)
 #ifdef NALU_USES_OPENFAST_FSI
   ASSERT_EQ(fi.restartFreq, 1);
 #endif
-  ASSERT_EQ(fi.dtFAST, 0.005);
-  ASSERT_EQ(fi.tMax, 0.29);
+  ASSERT_EQ(fi.dtFAST, 0.00625);
+  ASSERT_EQ(fi.tMax, 0.3625);
 
   ASSERT_EQ(fi.globTurbineData[0].FASTInputFileName, "nrel5mw.fst");
   ASSERT_EQ(fi.globTurbineData[0].FASTRestartFileName, "blah");
@@ -74,7 +74,7 @@ TEST_F(ActuatorBulkFastTests, initializeActuatorBulk)
   ASSERT_EQ(fi.globTurbineData[0].nacelle_cd, 1.0);
 
   try {
-    ActuatorBulkFAST actBulk(actMetaFast, 0.29);
+    ActuatorBulkFAST actBulk(actMetaFast, 0.3625);
     EXPECT_EQ(actBulk.tStepRatio_, 58);
     EXPECT_FALSE(actBulk.openFast_.isDebug());
   } catch (std::exception const& err) {

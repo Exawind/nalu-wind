@@ -70,7 +70,6 @@ ActuatorLineFastNGP::operator()()
   actBulk_.parallel_sum_source_term(stkBulk_);
 
   if (actBulk_.openFast_.isDebug()) {
-    ;
     actBulk_.output_torque_info(stkBulk_);
   }
 }
