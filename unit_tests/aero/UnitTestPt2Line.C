@@ -106,7 +106,6 @@ test_projectPt2Line_relative(
   auto w1 = lEnd - lStart;
   auto w2 = pt - lStart;
   auto angle = utils::degrees(vs::angle(w1, w2));
-  std::cerr << "ANGLE: " << angle << std::endl;
   EXPECT_TRUE(checker(result));
 }
 

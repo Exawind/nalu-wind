@@ -182,6 +182,10 @@ ActSimpleComputeRelativeVelocity(
   auto relVelocity = helper.get_local_view(actBulk.relativeVelocity_);
   auto alpha = helper.get_local_view(actBulk.alpha_);
   auto offset = helper.get_local_view(actBulk.turbIdOffset_);
+  auto twistTableV = helper.get_local_view(actMeta.twistTableDv_);
+  auto p1ZeroAlphaDirV = helper.get_local_view(actMeta.p1ZeroAlphaDir_);
+  auto chordNormalDirV = helper.get_local_view(actMeta.chordNormalDir_);
+  auto spanDirV = helper.get_local_view(actMeta.spanDir_);
 
   const int turbId = actBulk.localTurbineId_;
 
@@ -192,13 +196,13 @@ ActSimpleComputeRelativeVelocity(
     "compute relative velocities", actBulk.local_range_policy(),
     ACTUATOR_LAMBDA(int index) {
       auto twistTable = Kokkos::subview(
-        helper.get_local_view(actMeta.twistTableDv_), turbId, Kokkos::ALL);
+        twistTableV, turbId, Kokkos::ALL);
       auto p1ZeroAlphaDir = Kokkos::subview(
-        helper.get_local_view(actMeta.p1ZeroAlphaDir_), turbId, Kokkos::ALL);
+        p1ZeroAlphaDirV, turbId, Kokkos::ALL);
       auto chordNormalDir = Kokkos::subview(
-        helper.get_local_view(actMeta.chordNormalDir_), turbId, Kokkos::ALL);
+        chordNormalDirV, turbId, Kokkos::ALL);
       auto spanDir = Kokkos::subview(
-        helper.get_local_view(actMeta.spanDir_), turbId, Kokkos::ALL);
+        spanDirV, turbId, Kokkos::ALL);
       const int i = index - offset(turbId);
 
       auto vel = Kokkos::subview(velocity, index, Kokkos::ALL);
