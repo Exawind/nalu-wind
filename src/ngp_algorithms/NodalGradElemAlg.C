@@ -102,7 +102,6 @@ NodalGradElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::execute()
     nalu_ngp::simd_elem_nodal_field_updater(ngpMesh, gradPhi);
 
   // Bring class members into local scope for device capture
-  const bool useShifted = useShifted_;
   const auto dnvID = dualNodalVol_;
   const auto phiID = phi_;
   const auto phiSize = phiSize_;
@@ -117,6 +116,10 @@ NodalGradElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::execute()
   const std::string algName =
     (meta.get_fields()[gradPhi_]->name() + "_elem_" +
      std::to_string(AlgTraits::topo_));
+
+  const auto quad_type = useShifted_ ? QuadType::SHIFTED : QuadType::MID;
+  const auto shp = shape_fcn<AlgTraits, QuadRank::SCS>(quad_type);
+
   nalu_ngp::run_elem_algorithm(
     algName, meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
     KOKKOS_LAMBDA(typename ViewHelperType::SimdDataType & edata) {
@@ -128,14 +131,12 @@ NodalGradElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::execute()
 
       const auto& meViews = scrView.get_me_views(CURRENT_COORDINATES);
       const auto& v_areav = meViews.scs_areav;
-      const auto& v_shape_fcn =
-        useShifted ? meViews.scs_shifted_shape_fcn : meViews.scs_shape_fcn;
 
       for (int di = 0; di < phiSize; ++di) {
         for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
           DoubleType qIp = 0.0;
           for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
-            qIp += v_shape_fcn(ip, n) * v_phi(n, di);
+            qIp += shp(ip, n) * v_phi(n, di);
           }
 
           int il = lrscv[2 * ip];
