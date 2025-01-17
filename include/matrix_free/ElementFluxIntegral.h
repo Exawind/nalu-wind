@@ -13,7 +13,7 @@
 #include <cmath>
 
 #include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/ShuffledAccess.h"
 #include "matrix_free/ElementSCSInterpolate.h"
 
@@ -88,7 +88,7 @@ KOKKOS_FORCEINLINE_FUNCTION void
 scalar_flux_divergence(int index, const InArray& in, OutArray& out)
 {
   for (int l = 0; l < p; ++l) {
-    LocalArray<ftype[p + 1][p + 1]> scratch;
+    ArrayND<ftype[p + 1][p + 1]> scratch;
     for (int s = 0; s < p + 1; ++s) {
       for (int r = 0; r < p + 1; ++r) {
         ftype acc = 0;
@@ -131,7 +131,7 @@ advdiff_flux(
 {
   for (int l = 0; l < p; ++l) {
     enum { LEVEL_0 = 0, LEVEL_1 = 1 };
-    LocalArray<ftype[2][p + 1][p + 1]> scratch;
+    ArrayND<ftype[2][p + 1][p + 1]> scratch;
     for (int s = 0; s < p + 1; ++s) {
       for (int r = 0; r < p + 1; ++r) {
         ftype acc = 0;
@@ -222,7 +222,7 @@ diffusive_flux(
 {
   enum { LEVEL_0 = 0, LEVEL_1 = 1 };
   for (int l = 0; l < p; ++l) {
-    LocalArray<ftype[2][p + 1][p + 1]> scratch;
+    ArrayND<ftype[2][p + 1][p + 1]> scratch;
 
     for (int s = 0; s < p + 1; ++s) {
       for (int r = 0; r < p + 1; ++r) {
@@ -313,7 +313,7 @@ scalar_flux_vector(
 {
   enum { LEVEL_0 = 0, LEVEL_1 = 1 };
   for (int l = 0; l < p; ++l) {
-    LocalArray<ftype[2][p + 1][p + 1]> scratch;
+    ArrayND<ftype[2][p + 1][p + 1]> scratch;
     for (int s = 0; s < p + 1; ++s) {
       for (int r = 0; r < p + 1; ++r) {
         ftype in_scs(0);

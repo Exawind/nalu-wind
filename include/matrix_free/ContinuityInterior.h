@@ -11,7 +11,7 @@
 #define CONTINUITY_INTERIOR_H
 
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/PolynomialOrders.h"
 
 #include "Teuchos_RCP.hpp"
@@ -29,7 +29,7 @@ namespace impl {
 template <int p>
 struct continuity_residual_t
 {
-  using narray = LocalArray<ftype[p + 1][p + 1][p + 1]>;
+  using narray = ArrayND<ftype[p + 1][p + 1][p + 1]>;
 
   static void invoke(
     double scaling,
@@ -44,7 +44,7 @@ namespace impl {
 template <int p>
 struct continuity_linearized_residual_t
 {
-  using narray = LocalArray<ftype[p + 1][p + 1][p + 1]>;
+  using narray = ArrayND<ftype[p + 1][p + 1][p + 1]>;
 
   static void invoke(
     const_elem_offset_view<p> offsets,

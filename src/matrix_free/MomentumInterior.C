@@ -20,7 +20,7 @@
 #include "matrix_free/TensorOperations.h"
 #include "matrix_free/ValidSimdLength.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/ElementSCSInterpolate.h"
 #include <KokkosInterface.h>
 
@@ -41,13 +41,13 @@ template <
   typename AdvArrayType,
   typename ViscosityArrayType,
   typename UArrayType>
-KOKKOS_FORCEINLINE_FUNCTION LocalArray<ftype[3]>
+KOKKOS_FORCEINLINE_FUNCTION ArrayND<ftype[3]>
 momentum_flux(
   const BoxArrayType& box,
   const AdvArrayType& adv,
   const ViscosityArrayType& visc,
   const UArrayType& u,
-  const LocalArray<ftype[p + 1][p + 1][3]>& uhat,
+  const ArrayND<ftype[p + 1][p + 1][3]>& uhat,
   int l,
   int s,
   int r)
@@ -62,7 +62,7 @@ momentum_flux(
   const auto one_third_divu =
     (1. / 3.) * (gu(XH, XH) + gu(YH, YH) + gu(ZH, ZH));
 
-  LocalArray<ftype[3]> flux;
+  ArrayND<ftype[3]> flux;
   flux(0) = 2 * visc_ip *
               ((gu(XH, XH) - one_third_divu) * areav(XH) +
                0.5 * (gu(XH, YH) + gu(YH, XH)) * areav(YH) +
@@ -101,9 +101,9 @@ momentum_flux_difference(
   RHSArrayType& rhs)
 {
   for (int l = 0; l < p; ++l) {
-    LocalArray<ftype[p + 1][p + 1][3]> flux;
+    ArrayND<ftype[p + 1][p + 1][3]> flux;
     {
-      LocalArray<ftype[p + 1][p + 1][3]> uhat;
+      ArrayND<ftype[p + 1][p + 1][3]> uhat;
       for (int s = 0; s < p + 1; ++s) {
         for (int r = 0; r < p + 1; ++r) {
           for (int d = 0; d < 3; ++d) {
@@ -124,7 +124,7 @@ momentum_flux_difference(
       }
     }
     for (int d = 0; d < 3; ++d) {
-      LocalArray<ftype[p + 1][p + 1]> fbar;
+      ArrayND<ftype[p + 1][p + 1]> fbar;
       for (int s = 0; s < p + 1; ++s) {
         for (int r = 0; r < p + 1; ++r) {
           ftype acc = 0;
@@ -169,7 +169,7 @@ momentum_mass(
   static constexpr auto vandermonde = Coeffs<p>::W;
   for (int k = 0; k < p + 1; ++k) {
     for (int j = 0; j < p + 1; ++j) {
-      LocalArray<ftype[p + 1][3]> scratch;
+      ArrayND<ftype[p + 1][3]> scratch;
       for (int i = 0; i < p + 1; ++i) {
         const auto vm1_val = vm1(index, k, j, i);
         const auto vp0_val = vp0(index, k, j, i);
@@ -198,7 +198,7 @@ momentum_mass(
 
   for (int d = 0; d < 3; ++d) {
     for (int i = 0; i < p + 1; ++i) {
-      LocalArray<ftype[p + 1][p + 1]> scratch;
+      ArrayND<ftype[p + 1][p + 1]> scratch;
       for (int k = 0; k < p + 1; ++k) {
         for (int j = 0; j < p + 1; ++j) {
           ftype acc(0);
@@ -246,7 +246,7 @@ momentum_residual_t<p>::invoke(
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
   Kokkos::parallel_for(
     DeviceRangePolicy(0, offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
-      LocalArray<ftype[p + 1][p + 1][p + 1][3]> elem_rhs;
+      ArrayND<ftype[p + 1][p + 1][p + 1][3]> elem_rhs;
       if (p == 1) {
         static constexpr auto lumped = Coeffs<p>::Wl;
         for (int k = 0; k < p + 1; ++k) {
@@ -335,7 +335,7 @@ momentum_linearized_residual_t<p>::invoke(
   Kokkos::parallel_for(
     range, KOKKOS_LAMBDA(int index, int d) {
       const auto length = valid_offset<p>(index, offsets);
-      LocalArray<int[p + 1][p + 1][p + 1][simd_len]> idx;
+      ArrayND<int[p + 1][p + 1][p + 1][simd_len]> idx;
       narray delta;
       for (int k = 0; k < p + 1; ++k) {
         for (int j = 0; j < p + 1; ++j) {

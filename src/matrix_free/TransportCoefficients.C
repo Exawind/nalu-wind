@@ -41,7 +41,7 @@ namespace matrix_free {
 namespace {
 
 KOKKOS_FUNCTION ftype
-wale_gradient_invariant(const LocalArray<ftype[3][3]>& dudx)
+wale_gradient_invariant(const ArrayND<ftype[3][3]>& dudx)
 {
   const auto dudx_sq = square(dudx);
   const auto one_third_trace =
@@ -67,7 +67,7 @@ wale_gradient_invariant(const LocalArray<ftype[3][3]>& dudx)
 }
 
 KOKKOS_FUNCTION ftype
-smag_gradient_invariant(const LocalArray<ftype[3][3]>& dudx)
+smag_gradient_invariant(const ArrayND<ftype[3][3]>& dudx)
 {
   ftype sij_sq = 0;
   for (int dj = 0; dj < 3; ++dj) {

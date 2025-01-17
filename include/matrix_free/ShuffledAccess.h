@@ -11,7 +11,7 @@
 #define SHUFFLED_ACCESS_H
 
 #include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 
 #include "Kokkos_Macros.hpp"
 

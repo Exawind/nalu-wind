@@ -16,7 +16,7 @@
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 
 namespace sierra {
 namespace nalu {
@@ -42,9 +42,9 @@ jacobian_component(
 }
 
 template <typename CoeffArray>
-KOKKOS_FUNCTION LocalArray<ftype[3]>
+KOKKOS_FUNCTION ArrayND<ftype[3]>
 face_area(
-  const LocalArray<ftype[3][4]>& base_box, const CoeffArray& nlin, int j, int i)
+  const ArrayND<ftype[3][4]>& base_box, const CoeffArray& nlin, int j, int i)
 {
   enum { XH = 0, YH = 1, ZH = 2 };
   enum { DS1 = 0, DS2 = 1 };
@@ -55,7 +55,7 @@ face_area(
   const auto dy_ds2 = jacobian_component<YH, DS2>(base_box, nlin, j, i);
   const auto dz_ds1 = jacobian_component<ZH, DS1>(base_box, nlin, j, i);
   const auto dz_ds2 = jacobian_component<ZH, DS2>(base_box, nlin, j, i);
-  return LocalArray<ftype[3]>{
+  return ArrayND<ftype[3]>{
     {dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2, dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2,
      dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2}};
 }

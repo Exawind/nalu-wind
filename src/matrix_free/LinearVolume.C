@@ -13,7 +13,7 @@
 #include "matrix_free/GeometricFunctions.h"
 #include "matrix_free/KokkosFramework.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/TensorOperations.h"
 

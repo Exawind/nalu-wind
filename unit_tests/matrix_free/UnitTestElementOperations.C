@@ -20,7 +20,7 @@
 #include "matrix_free/LobattoQuadratureRule.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "StkSimdComparisons.h"
 #include "gtest/gtest.h"
 
@@ -112,7 +112,7 @@ struct TensorPoly
 TEST(element_operations, scs_interp)
 {
   constexpr int p = inst::P2;
-  LocalArray<ftype[p + 1][p + 1][p + 1]> nodal_values;
+  ArrayND<ftype[p + 1][p + 1][p + 1]> nodal_values;
 
   auto poly = TensorPoly(p);
   for (int k = 0; k < p + 1; ++k) {
@@ -124,7 +124,7 @@ TEST(element_operations, scs_interp)
     }
   }
 
-  LocalArray<ftype[3][p + 1][p + 1][p + 1]> interp_values;
+  ArrayND<ftype[3][p + 1][p + 1][p + 1]> interp_values;
   interp_scs<p>(nodal_values, Coeffs<p>::Nt, interp_values);
 
   for (int k = 0; k < p + 1; ++k) {
@@ -161,7 +161,7 @@ TEST(element_operations, scs_interp)
 TEST(element_operations, integrate_volume)
 {
   constexpr int p = inst::P2;
-  LocalArray<ftype[p + 1][p + 1][p + 1]> nodal_values;
+  ArrayND<ftype[p + 1][p + 1][p + 1]> nodal_values;
 
   auto poly = TensorPoly(p);
   for (int k = 0; k < p + 1; ++k) {
@@ -180,7 +180,7 @@ TEST(element_operations, integrate_volume)
   }
   scs_end_loc[p + 1] = +1;
 
-  LocalArray<ftype[p + 1][p + 1][p + 1]> volumes;
+  ArrayND<ftype[p + 1][p + 1][p + 1]> volumes;
   for (int k = 0; k < p + 1; ++k) {
     for (int j = 0; j < p + 1; ++j) {
       for (int i = 0; i < p + 1; ++i) {
@@ -188,7 +188,7 @@ TEST(element_operations, integrate_volume)
       }
     }
   }
-  LocalArray<ftype[p + 1][p + 1][p + 1]> scratch;
+  ArrayND<ftype[p + 1][p + 1][p + 1]> scratch;
   volume<p>(nodal_values, scratch, volumes);
 
   for (int k = 0; k < p + 1; ++k) {
@@ -206,9 +206,9 @@ TEST(element_operations, integrate_volume)
 TEST(element_operations, nodal_grad)
 {
   constexpr int p = inst::P2;
-  LocalArray<ftype[p + 1][p + 1][p + 1]> nodal_values;
+  ArrayND<ftype[p + 1][p + 1][p + 1]> nodal_values;
 
-  LocalArray<ftype[p + 1][p + 1][p + 1][3]> xc;
+  ArrayND<ftype[p + 1][p + 1][p + 1][3]> xc;
 
   auto poly = TensorPoly(p);
   for (int k = 0; k < p + 1; ++k) {
@@ -246,9 +246,9 @@ TEST(element_operations, nodal_grad)
 TEST(element_operations, fp_grad)
 {
   constexpr int p = inst::P3;
-  LocalArray<ftype[p + 1][p + 1][p + 1]> nodal_values;
+  ArrayND<ftype[p + 1][p + 1][p + 1]> nodal_values;
 
-  LocalArray<ftype[p + 1][p + 1][p + 1][3]> xc;
+  ArrayND<ftype[p + 1][p + 1][p + 1][3]> xc;
 
   auto poly = TensorPoly(p);
   for (int k = 0; k < p + 1; ++k) {
@@ -267,7 +267,7 @@ TEST(element_operations, fp_grad)
 
   auto box = hex_vertex_coordinates<p>(xc);
   for (int l = 0; l < p; ++l) {
-    LocalArray<ftype[p + 1][p + 1]> nhat;
+    ArrayND<ftype[p + 1][p + 1]> nhat;
     for (int s = 0; s < p + 1; ++s) {
       for (int r = 0; r < p + 1; ++r) {
         nhat(s, r) = interp_scs<p, 0>(nodal_values, l, s, r);
@@ -287,7 +287,7 @@ TEST(element_operations, fp_grad)
   }
 
   for (int l = 0; l < p; ++l) {
-    LocalArray<ftype[p + 1][p + 1]> nhat;
+    ArrayND<ftype[p + 1][p + 1]> nhat;
     for (int s = 0; s < p + 1; ++s) {
       for (int r = 0; r < p + 1; ++r) {
         nhat(s, r) = interp_scs<p, 1>(nodal_values, l, s, r);
@@ -306,7 +306,7 @@ TEST(element_operations, fp_grad)
     }
   }
   for (int l = 0; l < p; ++l) {
-    LocalArray<ftype[p + 1][p + 1]> nhat;
+    ArrayND<ftype[p + 1][p + 1]> nhat;
     for (int s = 0; s < p + 1; ++s) {
       for (int r = 0; r < p + 1; ++r) {
         nhat(s, r) = interp_scs<p, 2>(nodal_values, l, s, r);

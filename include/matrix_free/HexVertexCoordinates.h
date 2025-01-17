@@ -10,7 +10,7 @@
 #ifndef HEX_VERTEX_COORDINATES_H
 #define HEX_VERTEX_COORDINATES_H
 
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/KokkosViewTypes.h"
 
@@ -19,11 +19,11 @@ namespace nalu {
 namespace matrix_free {
 
 template <int p, typename ElemCoordsArray>
-KOKKOS_FUNCTION LocalArray<ftype[3][8]>
+KOKKOS_FUNCTION ArrayND<ftype[3][8]>
 hex_vertex_coordinates(const ElemCoordsArray& xc)
 {
-  static_assert(ElemCoordsArray::Rank == 4, "");
-  LocalArray<ftype[3][8]> box;
+  static_assert(ElemCoordsArray::rank == 4, "");
+  ArrayND<ftype[3][8]> box;
   for (int d = 0; d < 3; ++d) {
     box(d, 0) = xc(0, 0, 0, d);
     box(d, 1) = xc(0, 0, p, d);
@@ -38,11 +38,11 @@ hex_vertex_coordinates(const ElemCoordsArray& xc)
 }
 
 template <int p, typename ElemCoordsArray>
-KOKKOS_FUNCTION LocalArray<ftype[3][8]>
+KOKKOS_FUNCTION ArrayND<ftype[3][8]>
 hex_vertex_coordinates(int index, const ElemCoordsArray& xc)
 {
-  static_assert(ElemCoordsArray::Rank == 5, "");
-  LocalArray<ftype[3][8]> box;
+  static_assert(ElemCoordsArray::rank == 5, "");
+  ArrayND<ftype[3][8]> box;
   for (int d = 0; d < 3; ++d) {
     box(d, 0) = xc(index, 0, 0, 0, d);
     box(d, 1) = xc(index, 0, 0, p, d);
@@ -57,11 +57,11 @@ hex_vertex_coordinates(int index, const ElemCoordsArray& xc)
 }
 
 template <typename ElemCoordsArray>
-KOKKOS_FUNCTION LocalArray<ftype[3][8]>
+KOKKOS_FUNCTION ArrayND<ftype[3][8]>
 hex_vertex_coordinates(int n, int m, int l, const ElemCoordsArray& xc)
 {
-  static_assert(ElemCoordsArray::Rank == 4, "");
-  LocalArray<ftype[3][8]> box;
+  static_assert(ElemCoordsArray::rank == 4, "");
+  ArrayND<ftype[3][8]> box;
   for (int d = 0; d < 3; ++d) {
     box(d, 0) = xc(n + 0, m + 0, l + 0, d);
     box(d, 1) = xc(n + 0, m + 0, l + 1, d);
@@ -76,10 +76,10 @@ hex_vertex_coordinates(int n, int m, int l, const ElemCoordsArray& xc)
 }
 
 template <int p>
-KOKKOS_FUNCTION LocalArray<ftype[3][4]>
+KOKKOS_FUNCTION ArrayND<ftype[3][4]>
 face_vertex_coordinates(int index, const const_face_vector_view<p>& xc)
 {
-  LocalArray<ftype[3][4]> base_box;
+  ArrayND<ftype[3][4]> base_box;
   for (int d = 0; d < 3; ++d) {
     base_box(d, 0) = xc(index, 0, 0, d);
     base_box(d, 1) = xc(index, 0, p, d);

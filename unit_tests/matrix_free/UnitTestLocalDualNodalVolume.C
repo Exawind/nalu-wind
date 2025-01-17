@@ -14,7 +14,7 @@
 #include "matrix_free/LowMachFields.h"
 #include "matrix_free/StkLowMachFixture.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/StkSimdConnectivityMap.h"
 #include "matrix_free/TensorOperations.h"
 
@@ -34,7 +34,7 @@ skew_mesh(
   const stk::mesh::Selector& sel,
   stk::mesh::NgpField<double>& coords)
 {
-  LocalArray<double[3][3]> Q = {{{2, 1, 1.3333}, {0, 2, -1}, {1, 0, 2}}};
+  ArrayND<double[3][3]> Q = {{{2, 1, 1.3333}, {0, 2, -1}, {1, 0, 2}}};
   double detq = determinant(Q);
 
   stk::mesh::for_each_entity_run(

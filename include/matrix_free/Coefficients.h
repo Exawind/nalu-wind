@@ -10,7 +10,7 @@
 #ifndef CVFEM_COEFFICIENTS_H
 #define CVFEM_COEFFICIENTS_H
 
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 
 // An option to use a symmetric version of
 // the P=2 CVFEM operator.  This loses one to two orders
@@ -32,10 +32,10 @@ struct Coeffs
 template <>
 struct Coeffs<1>
 {
-  using nodal_matrix_type = LocalArray<double[2][2]>;
-  using scs_matrix_type = LocalArray<double[1][2]>;
-  using linear_nodal_matrix_type = LocalArray<double[2][2]>;
-  using linear_scs_matrix_type = LocalArray<double[2][1]>;
+  using nodal_matrix_type = ArrayND<double[2][2]>;
+  using scs_matrix_type = ArrayND<double[1][2]>;
+  using linear_nodal_matrix_type = ArrayND<double[2][2]>;
+  using linear_scs_matrix_type = ArrayND<double[2][1]>;
   static constexpr nodal_matrix_type W = {{{0.75, 0.25}, {0.25, 0.75}}};
 
   static constexpr nodal_matrix_type D = {{{-0.5, +0.5}, {-0.5, 0.5}}};
@@ -46,17 +46,17 @@ struct Coeffs<1>
   static constexpr linear_nodal_matrix_type Nlin = {{{1, 0}, {0, 1}}};
   static constexpr linear_scs_matrix_type Ntlin = {{{0.5}, {0.5}}};
 
-  static constexpr LocalArray<double[2]> Wl = {{1, 1}};
+  static constexpr ArrayND<double[2]> Wl = {{1, 1}};
 };
 
 #if USE_SYMMETRIC
 template <>
 struct Coeffs<2>
 {
-  using nodal_matrix_type = LocalArray<double[3][3]>;
-  using scs_matrix_type = LocalArray<double[2][3]>;
-  using linear_nodal_matrix_type = LocalArray<double[2][3]>;
-  using linear_scs_matrix_type = LocalArray<double[2][2]>;
+  using nodal_matrix_type = ArrayND<double[3][3]>;
+  using scs_matrix_type = ArrayND<double[2][3]>;
+  using linear_nodal_matrix_type = ArrayND<double[2][3]>;
+  using linear_scs_matrix_type = ArrayND<double[2][2]>;
 
   static constexpr nodal_matrix_type W = {
     {{0.2561728395061728395062, 0.09876543209876543209877,
@@ -87,7 +87,7 @@ struct Coeffs<2>
     {{0.8333333333333333333333, 0.1666666666666666666667},
      {0.1666666666666666666667, 0.8333333333333333333333}}};
 
-  static constexpr LocalArray<double[3]> Wl = {
+  static constexpr ArrayND<double[3]> Wl = {
     {0.3333333333333333333333, 1.333333333333333333333,
      0.3333333333333333333333}};
 };
@@ -95,10 +95,10 @@ struct Coeffs<2>
 template <>
 struct Coeffs<2>
 {
-  using nodal_matrix_type = LocalArray<double[3][3]>;
-  using scs_matrix_type = LocalArray<double[2][3]>;
-  using linear_nodal_matrix_type = LocalArray<double[2][3]>;
-  using linear_scs_matrix_type = LocalArray<double[2][2]>;
+  using nodal_matrix_type = ArrayND<double[3][3]>;
+  using scs_matrix_type = ArrayND<double[2][3]>;
+  using linear_nodal_matrix_type = ArrayND<double[2][3]>;
+  using linear_scs_matrix_type = ArrayND<double[2][2]>;
 
   static constexpr nodal_matrix_type W = {{
     {+0.301258318378354124194, +0.15346642738699932044,
@@ -129,7 +129,7 @@ struct Coeffs<2>
     {{+0.7886751345948129, +0.21132486540518708},
      {+0.21132486540518708, +0.7886751345948129}}};
 
-  static constexpr LocalArray<double[3]> Wl = {
+  static constexpr ArrayND<double[3]> Wl = {
     {0.422649730810374235491, 1.154700538379251529018,
      0.422649730810374235491}};
 };
@@ -137,10 +137,10 @@ struct Coeffs<2>
 template <>
 struct Coeffs<3>
 {
-  using nodal_matrix_type = LocalArray<double[4][4]>;
-  using scs_matrix_type = LocalArray<double[3][4]>;
-  using linear_nodal_matrix_type = LocalArray<double[2][4]>;
-  using linear_scs_matrix_type = LocalArray<double[2][3]>;
+  using nodal_matrix_type = ArrayND<double[4][4]>;
+  using scs_matrix_type = ArrayND<double[3][4]>;
+  using linear_nodal_matrix_type = ArrayND<double[2][4]>;
+  using linear_scs_matrix_type = ArrayND<double[2][3]>;
 
   static constexpr nodal_matrix_type W = {
     {{0.1583333333333333333333, 0.08527003148341972055897,
@@ -190,7 +190,7 @@ struct Coeffs<3>
      {0.1127016653792582978610, 0.5000000000000000000000,
       0.8872983346207417021390}}};
 
-  static constexpr LocalArray<double[4]> Wl = {
+  static constexpr ArrayND<double[4]> Wl = {
     {0.225403330758516622964, 0.774596669241483377036, 0.774596669241483377036,
      0.225403330758516622964}};
 };
@@ -198,10 +198,10 @@ struct Coeffs<3>
 template <>
 struct Coeffs<4>
 {
-  using nodal_matrix_type = LocalArray<double[5][5]>;
-  using scs_matrix_type = LocalArray<double[4][5]>;
-  using linear_nodal_matrix_type = LocalArray<double[2][5]>;
-  using linear_scs_matrix_type = LocalArray<double[2][4]>;
+  using nodal_matrix_type = ArrayND<double[5][5]>;
+  using scs_matrix_type = ArrayND<double[4][5]>;
+  using linear_nodal_matrix_type = ArrayND<double[2][5]>;
+  using linear_scs_matrix_type = ArrayND<double[2][4]>;
 
   static constexpr nodal_matrix_type W = {
     {{0.09695253015044793809126, 0.05331486033726615325831,
@@ -268,7 +268,7 @@ struct Coeffs<4>
      {0.06943184420297371373110, 0.3300094782075718713443,
       0.6699905217924281286557, 0.9305681557970262307578}}};
 
-  static constexpr LocalArray<double[5]> Wl = {
+  static constexpr ArrayND<double[5]> Wl = {
     {0.13886368840594742478, 0.52115526800919631042, 0.679962087169712529605,
      0.52115526800919631042, 0.13886368840594742478}};
 };

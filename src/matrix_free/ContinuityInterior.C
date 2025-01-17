@@ -12,7 +12,7 @@
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/ElementFluxIntegral.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/ValidSimdLength.h"
 
@@ -41,7 +41,7 @@ continuity_residual_t<p>::invoke(
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
   Kokkos::parallel_for(
     DeviceRangePolicy(0, offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
-      LocalArray<ftype[p + 1][p + 1][p + 1]> elem_rhs;
+      ArrayND<ftype[p + 1][p + 1][p + 1]> elem_rhs;
       for (int k = 0; k < p + 1; ++k) {
         for (int j = 0; j < p + 1; ++j) {
           for (int i = 0; i < p + 1; ++i) {
@@ -85,7 +85,7 @@ continuity_linearized_residual_t<p>::invoke(
   Kokkos::parallel_for(
     DeviceRangePolicy(0, offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
       narray delta;
-      LocalArray<int[p + 1][p + 1][p + 1][simd_len]> idx;
+      ArrayND<int[p + 1][p + 1][p + 1][simd_len]> idx;
       const auto valid_length = valid_offset<p>(index, offsets);
       for (int k = 0; k < p + 1; ++k) {
         for (int j = 0; j < p + 1; ++j) {

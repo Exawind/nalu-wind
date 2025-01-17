@@ -12,7 +12,7 @@
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/KokkosFramework.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/ValidSimdLength.h"
 
@@ -42,7 +42,7 @@ vector_component_flux(
   FaceRankOutput& out,
   int component)
 {
-  LocalArray<ftype[p + 1][p + 1]> scratch;
+  ArrayND<ftype[p + 1][p + 1]> scratch;
 
   for (int j = 0; j < p + 1; ++j) {
     for (int i = 0; i < p + 1; ++i) {
@@ -89,7 +89,7 @@ gradient_boundary_closure_t<p>::invoke(
   Kokkos::parallel_for(
     DeviceRangePolicy(0, offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
       for (int d = 0; d < 3; ++d) {
-        LocalArray<ftype[p + 1][p + 1]> rhs;
+        ArrayND<ftype[p + 1][p + 1]> rhs;
         vector_component_flux<p>(index, q, areav, rhs, d);
 
         auto accessor = yout_scatter.access();

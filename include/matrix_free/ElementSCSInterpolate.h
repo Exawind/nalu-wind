@@ -14,7 +14,7 @@
 
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/ShuffledAccess.h"
 
 namespace sierra {
@@ -62,7 +62,7 @@ grad_scs(const ScalarView& phi, int l, int s, int r)
     return val;
   }
   case dir_1: {
-    LocalArray<ftype[p + 1]> val_array;
+    ArrayND<ftype[p + 1]> val_array;
     for (int q = 0; q < p + 1; ++q) {
       val_array(q) = interp_scs<p, dir>(phi, l, s, q);
     }
@@ -75,7 +75,7 @@ grad_scs(const ScalarView& phi, int l, int s, int r)
     return val;
   }
   default: {
-    LocalArray<ftype[p + 1]> val_array;
+    ArrayND<ftype[p + 1]> val_array;
     for (int q = 0; q < p + 1; ++q) {
       val_array(q) = interp_scs<p, dir>(phi, l, q, r);
     }
@@ -108,7 +108,7 @@ grad_scs(const ScalarView& phi, int l, int s, int r, int d)
   }
 
   if (dk == dir_1) {
-    LocalArray<ftype[p + 1]> val_array;
+    ArrayND<ftype[p + 1]> val_array;
     for (int q = 0; q < p + 1; ++q) {
       val_array(q) = interp_scs<p, dir>(phi, l, s, q, d);
     }
@@ -122,7 +122,7 @@ grad_scs(const ScalarView& phi, int l, int s, int r, int d)
   }
 
   if (dk == dir_2) {
-    LocalArray<ftype[p + 1]> val_array;
+    ArrayND<ftype[p + 1]> val_array;
     for (int q = 0; q < p + 1; ++q) {
       val_array(q) = interp_scs<p, dir>(phi, l, q, r, d);
     }

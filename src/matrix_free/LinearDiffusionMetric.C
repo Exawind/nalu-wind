@@ -14,7 +14,7 @@
 #include "matrix_free/HexVertexCoordinates.h"
 #include "matrix_free/GeometricFunctions.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include "matrix_free/PolynomialOrders.h"
 
 #include <KokkosInterface.h>
@@ -38,7 +38,7 @@ diffusion_metric_t<p>::invoke(
     KOKKOS_LAMBDA(int index) {
       static constexpr auto ntilde = Coeffs<p>::Nt;
 
-      LocalArray<ftype[3][p + 1][p + 1][p + 1]> interp;
+      ArrayND<ftype[3][p + 1][p + 1][p + 1]> interp;
       {
         const auto alpha_elem = Kokkos::subview(
           alpha, index, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());

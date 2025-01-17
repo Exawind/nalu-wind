@@ -81,7 +81,7 @@ hex_jacobian_component_scs(const BoxArray& box, int l, int s, int r)
 }
 
 template <int p, int dk, typename BoxArray>
-KOKKOS_FUNCTION LocalArray<typename BoxArray::value_type[3][3]>
+KOKKOS_FUNCTION ArrayND<typename BoxArray::value_type[3][3]>
 linear_hex_jacobian_scs(const BoxArray& box, int k, int j, int i)
 {
   enum { XH = 0, YH = 1, ZH = 2 };
@@ -103,14 +103,14 @@ linear_hex_jacobian_scs(const BoxArray& box, int k, int j, int i)
 }
 
 template <int p, int dk, typename BoxArray>
-KOKKOS_FUNCTION LocalArray<typename BoxArray::value_type[3][3]>
+KOKKOS_FUNCTION ArrayND<typename BoxArray::value_type[3][3]>
 linear_hex_invjact_scs(const BoxArray& box, int k, int j, int i)
 {
   return invert_transpose_matrix(linear_hex_jacobian_scs<p, dk>(box, k, j, i));
 }
 
 template <int p, int dk, typename BoxArrayType>
-KOKKOS_FUNCTION LocalArray<ftype[3]>
+KOKKOS_FUNCTION ArrayND<ftype[3]>
 linear_area(const BoxArrayType& box, int k, int j, int i)
 {
   enum { XH = 0, YH = 1, ZH = 2 };
@@ -122,13 +122,13 @@ linear_area(const BoxArrayType& box, int k, int j, int i)
   const auto dy_ds2 = hex_jacobian_component_scs<p, dk, ds2, YH>(box, k, j, i);
   const auto dz_ds1 = hex_jacobian_component_scs<p, dk, ds1, ZH>(box, k, j, i);
   const auto dz_ds2 = hex_jacobian_component_scs<p, dk, ds2, ZH>(box, k, j, i);
-  return LocalArray<ftype[3]>{
+  return ArrayND<ftype[3]>{
     {dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2, dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2,
      dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2}};
 }
 
 template <int p, int dk, typename BoxArray>
-KOKKOS_FUNCTION LocalArray<ftype[3]>
+KOKKOS_FUNCTION ArrayND<ftype[3]>
 laplacian_metric(const BoxArray& box, int k, int j, int i)
 {
   enum { XH = 0, YH = 1, ZH = 2 };
@@ -141,7 +141,7 @@ laplacian_metric(const BoxArray& box, int k, int j, int i)
 
   switch (dk) {
   case XH: {
-    return LocalArray<ftype[3]>{
+    return ArrayND<ftype[3]>{
       {-inv_detj * (adj_jac(XH, XH) * adj_jac(XH, XH) +
                     adj_jac(XH, YH) * adj_jac(XH, YH) +
                     adj_jac(XH, ZH) * adj_jac(XH, ZH)),
@@ -153,7 +153,7 @@ laplacian_metric(const BoxArray& box, int k, int j, int i)
                     adj_jac(XH, ZH) * adj_jac(ZH, ZH))}};
   }
   case YH: {
-    return LocalArray<ftype[3]>{
+    return ArrayND<ftype[3]>{
       {-inv_detj * (adj_jac(YH, XH) * adj_jac(YH, XH) +
                     adj_jac(YH, YH) * adj_jac(YH, YH) +
                     adj_jac(YH, ZH) * adj_jac(YH, ZH)),
@@ -165,7 +165,7 @@ laplacian_metric(const BoxArray& box, int k, int j, int i)
                     adj_jac(YH, ZH) * adj_jac(ZH, ZH))}};
   }
   default:
-    return LocalArray<ftype[3]>{
+    return ArrayND<ftype[3]>{
       {-inv_detj * (adj_jac(ZH, XH) * adj_jac(ZH, XH) +
                     adj_jac(ZH, YH) * adj_jac(ZH, YH) +
                     adj_jac(ZH, ZH) * adj_jac(ZH, ZH)),
@@ -219,12 +219,12 @@ hex_jacobian_component(
 }
 
 template <int p, typename BoxArray>
-KOKKOS_FUNCTION LocalArray<typename BoxArray::value_type[3][3]>
+KOKKOS_FUNCTION ArrayND<typename BoxArray::value_type[3][3]>
 linear_hex_jacobian(const BoxArray& box, int k, int j, int i)
 {
   static constexpr auto coeff = Coeffs<p>::Nlin;
   enum { XH = 0, YH = 1, ZH = 2 };
-  LocalArray<typename BoxArray::value_type[3][3]> jac;
+  ArrayND<typename BoxArray::value_type[3][3]> jac;
   jac(0, 0) = hex_jacobian_component<p, XH, XH>(coeff, box, k, j, i);
   jac(0, 1) = hex_jacobian_component<p, XH, YH>(coeff, box, k, j, i);
   jac(0, 2) = hex_jacobian_component<p, XH, ZH>(coeff, box, k, j, i);

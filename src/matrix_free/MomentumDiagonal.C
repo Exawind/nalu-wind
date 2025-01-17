@@ -14,7 +14,7 @@
 #include "matrix_free/ValidSimdLength.h"
 #include "matrix_free/ShuffledAccess.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/LocalArray.h"
+#include "ArrayND.h"
 #include <KokkosInterface.h>
 #include <Kokkos_ScatterView.hpp>
 
@@ -81,7 +81,7 @@ advdiff_diagonal_t<p>::invoke(
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
   Kokkos::parallel_for(
     DeviceRangePolicy(0, offsets.extent_int(0)), KOKKOS_LAMBDA(int index) {
-      LocalArray<ftype[p + 1][p + 1][p + 1]> lhs;
+      ArrayND<ftype[p + 1][p + 1][p + 1]> lhs;
       // generally works better to lump the mass term to the diagonal here
       for (int k = 0; k < p + 1; ++k) {
         static constexpr auto Wl = Coeffs<p>::Wl;
