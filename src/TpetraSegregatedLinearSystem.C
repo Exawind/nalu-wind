@@ -1763,9 +1763,10 @@ TpetraSegregatedLinearSystem::checkForZeroRow(
         stk::mesh::EntityId nid = static_cast<stk::mesh::EntityId>(gid);
         stk::mesh::Entity node =
           bulkData.get_entity(stk::topology::NODE_RANK, nid);
-        stk::mesh::EntityId naluGlobalId;
-        if (bulkData.is_valid(node))
-          naluGlobalId = *stk::mesh::field_data(*realm_.naluGlobalId_, node);
+        const stk::mesh::EntityId naluGlobalId =
+          bulkData.is_valid(node)
+            ? *stk::mesh::field_data(*realm_.naluGlobalId_, node)
+            : -1;
 
         if (doPrint) {
 

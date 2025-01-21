@@ -1979,9 +1979,10 @@ TpetraLinearSystem::checkForZeroRow(bool useOwned, bool doThrow, bool doPrint)
         stk::mesh::EntityId nid = (gid - 1) / numDof_ + 1;
         stk::mesh::Entity node =
           bulkData.get_entity(stk::topology::NODE_RANK, nid);
-        stk::mesh::EntityId naluGlobalId;
-        if (bulkData.is_valid(node))
-          naluGlobalId = *stk::mesh::field_data(*realm_.naluGlobalId_, node);
+        const stk::mesh::EntityId naluGlobalId =
+          bulkData.is_valid(node)
+            ? *stk::mesh::field_data(*realm_.naluGlobalId_, node)
+            : -1;
 
         int idof = (gid - 1) % numDof_;
         GlobalOrdinal GID_check = GID_(nid, numDof_, idof);
