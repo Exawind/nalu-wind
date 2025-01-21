@@ -3,7 +3,36 @@ Simulations:
     time_integrator: ti_1
     optimizer: opt1
 
+# Hypre memory and other configurations
+hypre_config:
+    memory_pool_mbs: 1500
+    use_vendor_spgemm: no
+    use_vendor_spmv: no
+    use_vendor_sptrans: no
+
+# Specify the linear system solvers.
 linear_solvers:
+
+  - name: solve_mom
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-12
+    max_iterations: 200
+    kspace: 75
+    output_level: 0
+    segregated_solver: no
+    write_matrix_files: no
+    reuse_linear_system: yes
+    recompute_preconditioner_frequency: 100
+    simple_hypre_matrix_assemble: no
+    dump_hypre_matrix_stats: no
+    write_preassembly_matrix_files: no
+
+    # File containing hypre specific configuration options
+    hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
+    # YAML node used for this linear solver
+    hypre_cfg_node: hypre_simple_precon
 
   - name: solve_scalar
     type: hypre
@@ -11,17 +40,39 @@ linear_solvers:
     preconditioner: boomerAMG
     tolerance: 1e-12
     max_iterations: 200
-    kspace: 5
+    kspace: 75
     output_level: 0
+    write_matrix_files: no
+    reuse_linear_system: yes
+    recompute_preconditioner_frequency: 100
+    simple_hypre_matrix_assemble: no
+    dump_hypre_matrix_stats: no
+    write_preassembly_matrix_files: no
 
-  - name: solve_cont
+    # File containing hypre specific configuration options
+    hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
+    # YAML node used for this linear solver
+    hypre_cfg_node: hypre_simple_precon
+
+  - name: solve_elliptic
     type: hypre
     method: hypre_gmres
     preconditioner: boomerAMG
     tolerance: 1e-12
     max_iterations: 200
-    kspace: 5
+    kspace: 75
     output_level: 0
+    write_matrix_files: no
+    reuse_linear_system: yes
+    recompute_preconditioner_frequency: 100
+    simple_hypre_matrix_assemble: no
+    dump_hypre_matrix_stats: no
+    write_preassembly_matrix_files: no
+
+    # File containing hypre specific configuration options
+    hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
+    # YAML node used for this linear solver
+    hypre_cfg_node: hypre_elliptic
 
 realms:
 
@@ -35,8 +86,8 @@ realms:
       max_iterations: 2
 
       solver_system_specification:
-        velocity: solve_scalar
-        pressure: solve_cont
+        velocity: solve_mom
+        pressure: solve_elliptic
 
       systems:
 
