@@ -990,6 +990,8 @@ LowMachEquationSystem::predict_state()
 
   rhoN.sync_to_device();
   presN.sync_to_device();
+  rhoNp1.clear_sync_state();
+  presNp1.clear_sync_state();
 
   const auto& meta = realm_.meta_data();
   const stk::mesh::Selector sel =
