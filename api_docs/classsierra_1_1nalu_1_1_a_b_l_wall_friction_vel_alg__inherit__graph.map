@@ -1,0 +1,5 @@
+<map id="sierra::nalu::ABLWallFrictionVelAlg&lt; BcAlgTraits &gt;" name="sierra::nalu::ABLWallFrictionVelAlg&lt; BcAlgTraits &gt;">
+<area shape="rect" id="Node000001" title="Compute the wall friction velocity at integration points for the wall boundary of a given topology." alt="" coords="5,79,208,119"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_algorithm.html" title=" " alt="" coords="23,5,190,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="109,44,109,79,104,79,104,44"/>
+</map>

@@ -1,0 +1,22 @@
+<map id="sierra::nalu::RadarSegmentGenerator" name="sierra::nalu::RadarSegmentGenerator">
+<area shape="rect" id="Node000001" title=" " alt="" coords="848,85,1047,125"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_segment_generator.html" title=" " alt="" coords="460,5,687,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="701,14,763,21,825,34,876,56,919,82,917,87,874,61,823,39,762,26,700,19"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="486,60,661,85"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="674,79,848,94,848,99,674,84"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="162,87,285,112"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="298,87,313,86,485,74,486,79,314,91,298,93"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="472,115,675,140"/>
+<area shape="poly" id="edge8_Node000006_Node000004" title=" " alt="" coords="299,103,472,117,472,122,298,108"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="5,136,44,161"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="56,133,67,129,161,107,162,112,69,134,57,138"/>
+<area shape="rect" id="Node000007" href="$structvs_1_1_vector_t.html" title="Vector in 3D space." alt="" coords="157,136,289,161"/>
+<area shape="poly" id="edge7_Node000007_Node000005" title=" " alt="" coords="58,146,157,146,157,151,58,151"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="159,185,288,211"/>
+<area shape="poly" id="edge11_Node000009_Node000005" title=" " alt="" coords="58,162,69,166,114,178,159,187,158,192,113,184,67,171,56,167"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="688,128,824,123,847,121,848,126,824,129,689,133"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="303,149,436,146,504,137,505,143,436,151,303,154"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="491,171,656,196"/>
+<area shape="poly" id="edge9_Node000001_Node000008" title=" " alt="" coords="670,174,745,164,823,149,900,122,902,127,825,154,746,169,670,179"/>
+<area shape="poly" id="edge10_Node000008_Node000009" title=" " alt="" coords="302,195,436,191,490,188,491,193,436,197,302,200"/>
+</map>

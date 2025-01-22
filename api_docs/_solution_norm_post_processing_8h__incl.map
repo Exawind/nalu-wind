@@ -1,0 +1,13 @@
+<map id="SolutionNormPostProcessing.h" name="SolutionNormPostProcessing.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="39,5,260,31"/>
+<area shape="rect" id="Node000002" href="$_nalu_parsed_types_8h.html" title=" " alt="" coords="23,79,167,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="143,33,114,69,110,66,138,29"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="16,152,75,177"/>
+<area shape="poly" id="edge4_Node000001_Node000003" title=" " alt="" coords="85,33,45,51,27,64,13,80,8,94,11,110,27,140,23,142,5,111,3,94,8,77,24,60,42,46,83,28"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="111,152,174,177"/>
+<area shape="poly" id="edge5_Node000001_Node000004" title=" " alt="" coords="160,29,178,62,183,83,181,105,163,142,158,140,176,103,178,84,173,64,156,32"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="242,79,302,104"/>
+<area shape="poly" id="edge6_Node000001_Node000005" title=" " alt="" coords="171,28,242,69,239,74,168,33"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="89,106,63,142,59,139,84,103"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="105,103,130,139,125,142,101,106"/>
+</map>

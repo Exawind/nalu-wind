@@ -1,0 +1,9 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$classsierra_1_1nalu_1_1_segment_generator.html" title=" " alt="" coords="5,77,232,102"/>
+<area shape="rect" id="Node000001" href="$classsierra_1_1nalu_1_1_radar_segment_generator.html" title=" " alt="" coords="280,5,479,45"/>
+<area shape="poly" id="edge387_Node000000_Node000001" title=" " alt="" coords="184,71,296,43,298,48,185,76"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_scanning_lidar_segment_generator.html" title=" " alt="" coords="282,69,477,109"/>
+<area shape="poly" id="edge388_Node000000_Node000002" title=" " alt="" coords="246,87,282,87,282,92,246,92"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_spinner_lidar_segment_generator.html" title=" " alt="" coords="287,133,471,173"/>
+<area shape="poly" id="edge389_Node000000_Node000003" title=" " alt="" coords="185,103,298,131,296,136,184,108"/>
+</map>
