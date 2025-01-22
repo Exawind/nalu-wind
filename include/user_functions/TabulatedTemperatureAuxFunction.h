@@ -16,12 +16,13 @@
 
 namespace sierra::nalu {
 
-class TabulatedTemperatureAuxFunction final : public AuxFunction
+class TabulatedTemperatureAuxFunction : public AuxFunction
 {
 public:
   TabulatedTemperatureAuxFunction(
     std::vector<double> heights, std::vector<double> temperatures);
 
+  using AuxFunction::do_evaluate;
   void do_evaluate(
     const double* coords,
     const double time,
@@ -30,7 +31,7 @@ public:
     double* fieldPtr,
     const unsigned fieldSize,
     const unsigned beginPos,
-    const unsigned endPos) const final;
+    const unsigned endPos) const;
 
 private:
   std::vector<double> heights_;

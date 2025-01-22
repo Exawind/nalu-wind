@@ -17,11 +17,12 @@
 
 namespace sierra::nalu {
 
-class StringTimeCoordTemperatureAuxFunction final : public AuxFunction
+class StringTimeCoordTemperatureAuxFunction : public AuxFunction
 {
 public:
   StringTimeCoordTemperatureAuxFunction(std::string fcn);
 
+  using AuxFunction::do_evaluate;
   void do_evaluate(
     const double* coords,
     const double time,
@@ -30,7 +31,7 @@ public:
     double* fieldPtr,
     const unsigned fieldSize,
     const unsigned beginPos,
-    const unsigned endPos) const final;
+    const unsigned endPos) const;
 
 private:
   const StringTimeCoordFunction f_;
