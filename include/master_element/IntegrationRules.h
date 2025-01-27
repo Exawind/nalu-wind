@@ -11,7 +11,6 @@
 #define INTEGRATION_RULES_H
 
 #include "AlgTraits.h"
-#include "master_element/utils.h"
 #include "ArrayND.h"
 #include "SimdInterface.h"
 #include "KokkosInterface.h"
