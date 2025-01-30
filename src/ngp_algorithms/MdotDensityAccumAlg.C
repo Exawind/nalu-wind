@@ -89,6 +89,9 @@ MdotDensityAccumAlg<AlgTraits>::execute()
       stk::topology::NODE_RANK, "density")) &
     !(realm_.get_inactive_selector());
 
+  const auto quad_type = lumpedMass ? QuadType::SHIFTED : QuadType::MID;
+  const auto shp = shape_fcn<AlgTraits, QuadRank::SCS>(quad_type);
+
   nalu_ngp::run_elem_par_reduce(
     algName, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata, DoubleType & acc) {
@@ -99,16 +102,13 @@ MdotDensityAccumAlg<AlgTraits>::execute()
 
       const auto& meViews = scrViews.get_me_views(CURRENT_COORDINATES);
       const auto& v_scv_vol = meViews.scv_volume;
-      const auto& v_shape_fcn =
-        lumpedMass ? meViews.scv_shifted_shape_fcn : meViews.scv_shape_fcn;
-
       for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
         DoubleType rhoNm1 = 0.0;
         DoubleType rhoN = 0.0;
         DoubleType rhoNp1 = 0.0;
 
         for (int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic) {
-          const DoubleType r = v_shape_fcn(ip, ic);
+          const DoubleType r = shp(ip, ic);
           rhoNm1 += r * densityNm1(ic);
           rhoN += r * densityN(ic);
           rhoNp1 += r * densityNp1(ic);

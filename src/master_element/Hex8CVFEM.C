@@ -12,6 +12,7 @@
 #include <master_element/MasterElementFunctions.h>
 #include <master_element/TensorOps.h>
 #include <master_element/Hex8GeometryFunctions.h>
+#include <master_element/CompileTimeElements.h>
 
 #include <NaluEnv.h>
 
@@ -327,6 +328,7 @@ HexSCV::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   hex8_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
 }
+
 KOKKOS_FUNCTION void
 HexSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
@@ -409,24 +411,18 @@ void
 HexSCV::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>&)
 {
-  const SharedMemView<const double**, DeviceShmem> par_coord(
-    intgLoc_, numIntPoints_, nDim_);
-  hex8_derivative(par_coord, deriv);
-  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
+  impl::grad_op<AlgTraitsHex8, QuadRank::SCV, QuadType::MID>(coords, gradop);
 }
 
 void
 HexSCV::grad_op(
   const SharedMemView<double**>& coords,
   SharedMemView<double***>& gradop,
-  SharedMemView<double***>& deriv)
+  SharedMemView<double***>&)
 {
-  const SharedMemView<const double**, HostShmem> par_coord(
-    intgLoc_, numIntPoints_, nDim_);
-  hex8_derivative(par_coord, deriv);
-  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
+  impl::grad_op<AlgTraitsHex8, QuadRank::SCV, QuadType::MID>(coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -437,12 +433,10 @@ void
 HexSCV::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>&)
 {
-  const SharedMemView<const double**, DeviceShmem> par_coord(
-    intgLocShift_, numIntPoints_, nDim_);
-  hex8_derivative(par_coord, deriv);
-  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
+  impl::grad_op<AlgTraitsHex8, QuadRank::SCV, QuadType::SHIFTED>(
+    coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -537,40 +531,32 @@ void
 HexSCS::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>&)
 {
-  const SharedMemView<const double**, DeviceShmem> par_coord(
-    intgLoc_, numIntPoints_, nDim_);
-  hex8_derivative(par_coord, deriv);
-  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
+  impl::grad_op<AlgTraitsHex8, QuadRank::SCS, QuadType::MID>(coords, gradop);
 }
 
 void
 HexSCS::grad_op(
   const SharedMemView<double**>& coords,
   SharedMemView<double***>& gradop,
-  SharedMemView<double***>& deriv)
+  SharedMemView<double***>&)
 {
-  const SharedMemView<const double**, HostShmem> par_coord(
-    intgLoc_, numIntPoints_, nDim_);
-  hex8_derivative(par_coord, deriv);
-  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
+  impl::grad_op<AlgTraitsHex8, QuadRank::SCS, QuadType::MID>(coords, gradop);
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_grad_op -------------------------------------------------
-//--------------------------------------c------------------------------------
+//--------------------------------------------------------------------------
 KOKKOS_FUNCTION
 void
 HexSCS::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>&)
 {
-  const SharedMemView<const double**, DeviceShmem> par_coord(
-    intgLocShift_, numIntPoints_, nDim_);
-  hex8_derivative(par_coord, deriv);
-  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
+  impl::grad_op<AlgTraitsHex8, QuadRank::SCS, QuadType::SHIFTED>(
+    coords, gradop);
 }
 
 //--------------------------------------------------------------------------
