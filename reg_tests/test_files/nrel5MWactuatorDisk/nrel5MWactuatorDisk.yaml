@@ -149,8 +149,8 @@ realms:
 
     restart:
       restart_data_base_name: actuatorDisk.rst
-      restart_frequency: 10
-      restart_start: 10
+      restart_frequency: 5
+      restart_start: 0
       compression_level: 9
       compression_shuffle: yes
 

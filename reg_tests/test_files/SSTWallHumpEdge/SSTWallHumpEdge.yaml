@@ -333,7 +333,7 @@ realms:
 
     restart:
       restart_data_base_name: restart/SSTWallHumpEdge.rst
-      restart_frequency: 2500
+      restart_frequency: 5
      
     output:
       output_data_base_name: results/SSTWallHumpEdge.e
