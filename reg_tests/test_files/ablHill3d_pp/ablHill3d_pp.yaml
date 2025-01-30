@@ -163,8 +163,8 @@ realms:
     restart:
       restart_data_base_name: ablHill3d_pp.rst
 #      restart_time: 0.4
-      restart_frequency: 20
-      restart_start: 20
+      restart_frequency: 5
+      restart_start: 0
 
 
 # This defines the time step size, count, etc.

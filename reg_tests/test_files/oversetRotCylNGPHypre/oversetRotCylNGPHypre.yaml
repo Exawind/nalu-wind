@@ -187,8 +187,8 @@ realms:
 
     restart:
       restart_data_base_name: rst/cyl.rst
-      restart_frequency: 100
-      restart_start: 100
+      restart_frequency: 5
+      restart_start: 0
 
     output:
       output_data_base_name: out/cyl.e
@@ -207,7 +207,7 @@ Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0
-      termination_step_count: 10
+      termination_step_count: 5
       time_step: 0.003
       time_stepping_type: fixed
       time_step_count: 0

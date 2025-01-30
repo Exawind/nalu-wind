@@ -199,8 +199,8 @@ realms:
 
   restart:
     restart_data_base_name: actuatorLine.rst
-    restart_frequency: 10
-    restart_start: 10
+    restart_frequency: 5
+    restart_start: 0
     compression_level: 9
     compression_shuffle: yes
 
@@ -208,7 +208,7 @@ Time_Integrators:
 - StandardTimeIntegrator:
     name: ti_1
     start_time: 0
-    termination_step_count: 10
+    termination_step_count: 5
     time_step: 0.125
     time_stepping_type: fixed
     time_step_count: 0

@@ -83,7 +83,7 @@ realms:
 
     equation_systems:
       name: theEqSys
-      max_iterations: 4
+      max_iterations: 2
 
       solver_system_specification:
         velocity: solve_mom
@@ -326,7 +326,7 @@ Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0.0
-      termination_step_count: 10
+      termination_step_count: 5
       time_step: 0.5
       time_stepping_type: fixed
       time_step_count: 0

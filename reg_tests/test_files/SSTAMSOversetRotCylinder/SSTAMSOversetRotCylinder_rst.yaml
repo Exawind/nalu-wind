@@ -234,7 +234,7 @@ realms:
 
     restart:
       restart_data_base_name: SSTAMSOversetRotCylinder-ams.rst
-      restart_frequency: 10
+      restart_frequency: 5
       restart_start: 0
 
     output:
