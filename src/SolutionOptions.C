@@ -254,7 +254,7 @@ SolutionOptions::load(const YAML::Node& y_node)
         y_solution_options, "strelets_upwinding", useStreletsUpwinding_,
         useStreletsUpwinding_);
     }
-    if (turbulenceModel_ == TurbulenceModel::SST) {
+    if (turbulenceModel_ == TurbulenceModel::SST || turbulenceModel_ == TurbulenceModel::SST_IDDES ) {
       get_if_present(
         y_solution_options, "transition_model", transition_model_,
         transition_model_);
