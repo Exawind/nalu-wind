@@ -1958,14 +1958,6 @@ MomentumEquationSystem::register_wall_bc(
     stk::mesh::put_field_on_mesh(
       *wallNormalDistanceBip, *part, numScsBip, nullptr);
 
-    if (realm_.solutionOptions_->use_balanced_buoyancy_force_) {
-      if (!buoyancySrcMask_) {
-        buoyancySrcMask_.reset(new NodalBuoyancyFuncUtil(realm_, part));
-      } else {
-        buoyancySrcMask_->partVec_.push_back(part);
-      }
-    }
-
     // need wall friction velocity for TKE boundary condition
     if (RANSAblBcApproach_) {
       const AlgorithmType wfAlgType = WALL_FCN;
@@ -2102,6 +2094,14 @@ MomentumEquationSystem::register_wall_bc(
           }
         }
       }
+    }
+  }
+
+  if (realm_.solutionOptions_->use_balanced_buoyancy_force_) {
+    if (!buoyancySrcMask_) {
+      buoyancySrcMask_.reset(new NodalBuoyancyFuncUtil(realm_, part));
+    } else {
+      buoyancySrcMask_->partVec_.push_back(part);
     }
   }
 

@@ -118,6 +118,13 @@ VOFAdvectionEdgeAlg::execute()
   const auto velocity_rtm = fieldMgr.get_field<double>(
     get_field_ordinal(realm_.meta_data(), velocity_rtm_name));
 
+  const bool using_balanced_force =
+    realm_.solutionOptions_->use_balanced_buoyancy_force_;
+  const std::string wall_mask_name =
+    using_balanced_force ? "buoyancy_source_mask" : "density";
+  const auto wall_mask = fieldMgr.get_field<double>(
+    get_field_ordinal(realm_.meta_data(), wall_mask_name));
+
   run_algorithm(
     realm_.bulk_data(),
     KOKKOS_LAMBDA(
@@ -192,7 +199,6 @@ VOFAdvectionEdgeAlg::execute()
       smdata.lhs(0, 1) += alhsfac;
 
       // Compression term
-
       DblType dOmegadxMag = 0.0;
       DblType interface_gradient[3] = {0.0, 0.0, 0.0};
 
@@ -207,9 +213,15 @@ VOFAdvectionEdgeAlg::execute()
 
       dOmegadxMag = stk::math::sqrt(dOmegadxMag);
 
+      const DblType left_mask =
+        using_balanced_force ? wall_mask.get(nodeL, 0) : 1.0;
+      const DblType right_mask =
+        using_balanced_force ? wall_mask.get(nodeR, 0) : 1.0;
+
       // No gradient == no interface
-      if (dOmegadxMag < gradient_eps)
+      if (dOmegadxMag < gradient_eps) {
         return;
+      }
 
       for (int d = 0; d < ndim; ++d)
         interface_normal[d] = interface_gradient[d] / dOmegadxMag;
@@ -236,7 +248,8 @@ VOFAdvectionEdgeAlg::execute()
       local_velocity += vdot;
       local_velocity = stk::math::abs(local_velocity) / face_area;
 
-      const DblType velocity_scale = sharpening_scaling * local_velocity;
+      const DblType velocity_scale =
+        sharpening_scaling * local_velocity * left_mask * right_mask;
 
       diffusion_coef = stk::math::sqrt(diffusion_coef) * diffusion_scaling;
 
@@ -244,17 +257,19 @@ VOFAdvectionEdgeAlg::execute()
 
       const DblType dlhsfac = -velocity_scale * diffusion_coef * asq * inv_axdx;
 
-      smdata.rhs(0) -= dlhsfac * (qNp1R - qNp1L);
-      smdata.rhs(1) += dlhsfac * (qNp1R - qNp1L);
+      smdata.rhs(0) -= dlhsfac * (qNp1R - qNp1L) +
+                       inv_axdx * (1.0 - left_mask) * (qNp1R - qNp1L);
+      smdata.rhs(1) += dlhsfac * (qNp1R - qNp1L) +
+                       inv_axdx * (1.0 - right_mask) * (qNp1R - qNp1L);
 
       massVofBalancedFlowRate.get(edge, 0) =
         dlhsfac * (qNp1R - qNp1L) * (density_liquid - density_gas);
 
-      smdata.lhs(0, 0) -= dlhsfac;
-      smdata.lhs(0, 1) += dlhsfac;
+      smdata.lhs(0, 0) -= dlhsfac + inv_axdx * (1.0 - left_mask);
+      smdata.lhs(0, 1) += dlhsfac + inv_axdx * (1.0 - left_mask);
 
-      smdata.lhs(1, 0) += dlhsfac;
-      smdata.lhs(1, 1) -= dlhsfac;
+      smdata.lhs(1, 0) += dlhsfac + inv_axdx * (1.0 - right_mask);
+      smdata.lhs(1, 1) -= dlhsfac + inv_axdx * (1.0 - right_mask);
 
       const DblType omegaL =
         diffusion_coef * stk::math::log((qNp1L + eps) / (1.0 - qNp1L + eps));
@@ -295,6 +310,8 @@ VOFAdvectionEdgeAlg::execute()
           (1.0 - stk::math::tanh(0.5 * omegaIp / diffusion_coef) *
                    stk::math::tanh(0.5 * omegaIp / diffusion_coef)) *
           interface_normal[d] * av[d];
+
+      compression = compression * left_mask * right_mask;
 
       smdata.rhs(0) -= compression;
       smdata.rhs(1) += compression;
