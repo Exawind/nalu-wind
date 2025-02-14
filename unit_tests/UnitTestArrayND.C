@@ -8,6 +8,7 @@
 //
 
 #include "ArrayND.h"
+#include "master_element/CompileTimeElements.h"
 #include "matrix_free/KokkosFramework.h"
 
 #include "StkSimdComparisons.h"

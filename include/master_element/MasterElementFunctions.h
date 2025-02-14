@@ -72,7 +72,7 @@ generic_grad_op(
 
   using ftype = typename CoordViewType::value_type;
   static_assert(
-    std::is_same<ftype, typename GradViewType::value_type>::value,
+    std::is_convertible_v<typename GradViewType::value_type, ftype>,
     "Incompatiable value type for views");
   static_assert(
     std::is_same<ftype, typename OutputViewType::value_type>::value,
@@ -83,12 +83,13 @@ generic_grad_op(
   static_assert(OutputViewType::rank == 3, "Weight view assumed to be rank 3");
 
   STK_NGP_ThrowAssert(
-    AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
-  STK_NGP_ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
+    AlgTraits::nodesPerElement_ == referenceGradWeights.extent_int(1));
+  STK_NGP_ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent_int(2));
   for (int i = 0; i < dim; ++i)
-    STK_NGP_ThrowAssert(weights.extent(i) == referenceGradWeights.extent(i));
+    STK_NGP_ThrowAssert(
+      weights.extent_int(i) == referenceGradWeights.extent_int(i));
 
-  for (unsigned ip = 0; ip < referenceGradWeights.extent(0); ++ip) {
+  for (int ip = 0; ip < referenceGradWeights.extent_int(0); ++ip) {
     NALU_ALIGNED ftype jact[dim][dim];
     for (int i = 0; i < dim; ++i)
       for (int j = 0; j < dim; ++j)
@@ -154,7 +155,7 @@ generic_gij_3d(
   static_assert(OutputViewType::rank == 3, "gij view assumed to be 3D");
   static_assert(AlgTraits::nDim_ == 3, "3D method");
 
-  for (unsigned ip = 0; ip < referenceGradWeights.extent(0); ++ip) {
+  for (int ip = 0; ip < referenceGradWeights.extent_int(0); ++ip) {
 
     NALU_ALIGNED ftype jac[3][3] = {
       {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
@@ -338,7 +339,7 @@ generic_Mij_2d(
   static_assert(AlgTraits::nDim_ == 2, "2D method");
 
   const int npe = AlgTraits::nodesPerElement_;
-  const int nint = referenceGradWeights.extent(0);
+  const int nint = referenceGradWeights.extent_int(0);
 
   ftype dx_ds[2][2];
   ftype norm;
@@ -487,8 +488,8 @@ generic_Mij_3d(
 
     // At this point we have Q, the eigenvectors and D the eigenvalues of Mij^2,
     // so to create Mij, we use Q sqrt(D) Q^T
-    for (unsigned i = 0; i < 3; i++)
-      for (unsigned j = 0; j < 3; j++) {
+    for (int i = 0; i < 3; i++)
+      for (int j = 0; j < 3; j++) {
         metric[(ip * AlgTraits::nDim_ + i) * AlgTraits::nDim_ + j] =
           Q[i][0] * Q[j][0] * stk::math::sqrt(D[0][0]) +
           Q[i][1] * Q[j][1] * stk::math::sqrt(D[1][1]) +
@@ -520,7 +521,7 @@ generic_Mij_3d(
   static_assert(OutputViewType::rank == 3, "Mij view assumed to be 3D");
   static_assert(AlgTraits::nDim_ == 3, "3D method");
 
-  for (unsigned ip = 0; ip < referenceGradWeights.extent(0); ++ip) {
+  for (int ip = 0; ip < referenceGradWeights.extent_int(0); ++ip) {
 
     ftype jac[3][3] = {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
@@ -566,8 +567,8 @@ generic_Mij_3d(
 
     // At this point we have Q, the eigenvectors and D the eigenvalues of Mij^2,
     // so to create Mij, we use Q sqrt(D) Q^T
-    for (unsigned i = 0; i < 3; i++) {
-      for (unsigned j = 0; j < 3; j++) {
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
         metric(ip, i, j) = Q[i][0] * Q[j][0] * stk::math::sqrt(D[0][0]) +
                            Q[i][1] * Q[j][1] * stk::math::sqrt(D[1][1]) +
                            Q[i][2] * Q[j][2] * stk::math::sqrt(D[2][2]);
@@ -600,12 +601,12 @@ generic_determinant_3d(
   static_assert(AlgTraits::nDim_ == 3, "3D method");
 
   STK_NGP_ThrowAssert(
-    AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
-  STK_NGP_ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent(2));
+    AlgTraits::nodesPerElement_ == referenceGradWeights.extent_int(1));
+  STK_NGP_ThrowAssert(AlgTraits::nDim_ == referenceGradWeights.extent_int(2));
 
-  STK_NGP_ThrowAssert(detj.extent(0) == referenceGradWeights.extent(0));
+  STK_NGP_ThrowAssert(detj.extent_int(0) == referenceGradWeights.extent_int(0));
 
-  for (unsigned ip = 0; ip < referenceGradWeights.extent(0); ++ip) {
+  for (int ip = 0; ip < referenceGradWeights.extent_int(0); ++ip) {
     NALU_ALIGNED ftype jac[3][3] = {
       {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
