@@ -504,10 +504,6 @@ Realm::initialize_prolog()
   if (checkForMissingBcs_)
     enforce_bc_on_exposed_faces();
 
-  // output and restart files
-  create_output_mesh();
-  create_restart_mesh();
-
   // sort exposed faces only when using consolidated bc NGP approach
   if (solutionOptions_->useConsolidatedBcSolverAlg_) {
     const double timeSort = NaluEnv::self().nalu_time();
@@ -526,6 +522,10 @@ Realm::initialize_prolog()
 
   if (solutionOptions_->meshTransformation_)
     meshTransformationAlg_->initialize(get_current_time());
+
+  // output and restart files
+  create_output_mesh();
+  create_restart_mesh();
 
   if (does_mesh_move())
     init_current_coordinates();
