@@ -258,9 +258,10 @@ run_edge_algorithm(
 
   run_entity_algorithm(
     algName, mesh, rank, sel, KOKKOS_LAMBDA(MeshIndex & meshIdx) {
-      algorithm(EntityInfo<Mesh>{
-        meshIdx, mesh.get_entity(rank, meshIdx),
-        mesh.get_nodes(rank, meshIdx)});
+      algorithm(
+        EntityInfo<Mesh>{
+          meshIdx, mesh.get_entity(rank, meshIdx),
+          mesh.get_nodes(rank, meshIdx)});
     });
 }
 
@@ -292,9 +293,10 @@ run_elem_algorithm(
 
   run_entity_algorithm(
     algName, mesh, rank, sel, KOKKOS_LAMBDA(MeshIndex & meshIdx) {
-      algorithm(EntityInfo<Mesh>{
-        meshIdx, mesh.get_entity(rank, meshIdx),
-        mesh.get_nodes(rank, meshIdx)});
+      algorithm(
+        EntityInfo<Mesh>{
+          meshIdx, mesh.get_entity(rank, meshIdx),
+          mesh.get_nodes(rank, meshIdx)});
     });
 }
 
@@ -796,8 +798,6 @@ run_face_elem_algorithm_nosimd(
         team, ndim, nodesPerFace, faceDataNGP);
       typename Traits::ScratchViewsType elemViews(
         team, ndim, nodesPerElement, elemDataNGP);
-      faceViews.fill_static_meviews(faceDataNGP);
-      elemViews.fill_static_meviews(elemDataNGP);
 
       const size_t bktLen = bkt.size();
       Kokkos::parallel_for(

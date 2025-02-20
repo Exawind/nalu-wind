@@ -76,7 +76,6 @@ me_shape(stk::topology topo, QuadRank r, QuadType q)
 TEST(master_element_coeffs, interp_scs)
 {
   for (auto q : {QuadType::SHIFTED, QuadType::MID}) {
-
     {
       const auto shp = shape_fcn<AlgTraitsHex8, QuadRank::SCS>(q);
       const auto shp_ptr = &(shp.internal_data_[0][0]);
@@ -164,6 +163,8 @@ TEST(master_element_coeffs, interp_scv)
     }
   }
 }
+
+
 
 } // namespace sierra::nalu
 namespace {

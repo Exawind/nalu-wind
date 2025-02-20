@@ -35,8 +35,9 @@ ScalarFluxBCElemKernel<BcAlgTraits>::ScalarFluxBCElemKernel(
       "exposed_area_vector",
       bulk.mesh_meta_data().side_rank())),
     useShifted_(useShifted),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
-      BcAlgTraits::topo_))
+    meFC_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+        BcAlgTraits::topo_))
 {
   // Register necessary data for use in execute method
   faceDataPreReqs.add_cvfem_face_me(meFC_);
@@ -61,10 +62,6 @@ ScalarFluxBCElemKernel<BcAlgTraits>::execute(
   const auto& v_bcQ = scratchViews.get_scratch_view_1D(bcScalarQ_);
   const auto& v_areav = scratchViews.get_scratch_view_2D(exposedAreaVec_);
 
-  const auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
-  const auto& v_shape_fcn =
-    useShifted_ ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
-
   const int* ipNodeMap = meFC_->ipNodeMap();
 
   for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
@@ -79,7 +76,8 @@ ScalarFluxBCElemKernel<BcAlgTraits>::execute(
     // Interpolate desired data to the face integration points
     DoubleType fluxBip = 0.0;
     for (int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic) {
-      const DoubleType r = v_shape_fcn(ip, ic);
+      const DoubleType r = shape_fcn<BcAlgTraits, QuadRank::SCV>(
+        use_shifted_quad(useShifted_), ip, ic);
       fluxBip += r * v_bcQ(ic);
     }
 

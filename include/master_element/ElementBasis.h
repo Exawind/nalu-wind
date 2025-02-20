@@ -37,6 +37,26 @@ struct Tri3Basis
   }
 };
 
+struct LineBasis
+{
+  using traits_t = AlgTraitsEdge_2D;
+  static constexpr int N1D = 2;
+  static constexpr int DIM = 1;
+  static constexpr int NNODES = N1D;
+
+  template <typename LocT>
+  static constexpr double interpolant(int n, const LocT& x)
+  {
+    return 0.5 * (1 + (2 * n - 1) * x[0]);
+  }
+
+  template <typename LocT>
+  static constexpr auto deriv_coeff(int n, const LocT& /*x*/, int /*d*/)
+  {
+    return 0.5 * (2 * n - 1);
+  }
+};
+
 struct Quad42DBasis
 {
   using traits_t = AlgTraitsQuad4_2D;
@@ -44,40 +64,40 @@ struct Quad42DBasis
   static constexpr int DIM = traits_t::nDim_;
   static constexpr int NNODES = traits_t::nodesPerElement_;
 
-  static constexpr int tensor_map(int k, int j, int i)
+  [[nodiscard]] static constexpr int tensor_map(int k, int j, int i)
   {
     constexpr ArrayND<int[N1D][N1D][N1D]> map{
       {{{0, 1}, {3, 2}}, {{4, 5}, {7, 6}}}};
     return map(k, j, i);
   }
 
-  static constexpr ArrayND<int[2]> to_tensor(int n)
+  [[nodiscard]] static constexpr ArrayND<int[2]> to_tensor(int n)
   {
     constexpr ArrayND<int[NNODES][2]> map{{{0, 0}, {1, 0}, {1, 1}, {0, 1}}};
     return {map(n, 0), map(n, 1)};
   }
 
   template <typename LocT>
-  static constexpr auto interp_1(int l, const LocT& x)
+  [[nodiscard]] static constexpr auto interp_1(int l, const LocT& x)
   {
     return 0.5 * (1 + (2 * l - 1) * x);
   }
 
   template <typename LocT>
-  static constexpr auto deriv_1(int l, const LocT& /*unused*/)
+  [[nodiscard]] static constexpr auto deriv_1(int l, const LocT& /*unused*/)
   {
     return 0.5 * (2 * l - 1);
   }
 
   template <typename LocT>
-  static constexpr double interpolant(int n, const LocT& x)
+  [[nodiscard]] static constexpr double interpolant(int n, const LocT& x)
   {
     const auto ij = to_tensor(n);
     return interp_1(ij[0], x[0]) * interp_1(ij[1], x[1]);
   }
 
   template <typename LocT>
-  static constexpr auto deriv_coeff(int n, const LocT& x, int d)
+  [[nodiscard]] static constexpr auto deriv_coeff(int n, const LocT& x, int d)
   {
     const auto ij = to_tensor(n);
     const auto xv = (d == 0) ? deriv_1(ij(0), x[0]) : interp_1(ij(0), x[0]);
@@ -93,13 +113,14 @@ struct Quad4Basis
   static constexpr int NNODES = traits_t::nodesPerElement_;
 
   template <typename LocT>
-  static constexpr double interpolant(int n, const LocT& x)
+  [[nodiscard]] static constexpr double interpolant(int n, const LocT& x)
   {
     return (n > 0) ? x[n - 1] : 1 - (x[0] + x[1] + x[2]);
   }
 
   template <typename LocT>
-  static constexpr auto deriv_coeff(int n, const LocT& /*x*/, int d)
+  [[nodiscard]] static constexpr auto
+  deriv_coeff(int n, const LocT& /*x*/, int d)
   {
     return -1. + (n > 0) * (1. + (d == (n - 1)));
   }
@@ -112,13 +133,14 @@ struct Tet4Basis
   static constexpr int NNODES = traits_t::nodesPerElement_;
 
   template <typename LocT>
-  static constexpr double interpolant(int n, const LocT& x)
+  [[nodiscard]] static constexpr double interpolant(int n, const LocT& x)
   {
     return (n > 0) ? x[n - 1] : 1 - (x[0] + x[1] + x[2]);
   }
 
   template <typename LocT>
-  static constexpr auto deriv_coeff(int n, const LocT& /*x*/, int d)
+  [[nodiscard]] static constexpr auto
+  deriv_coeff(int n, const LocT& /*x*/, int d)
   {
     return -1. + (n > 0) * (1. + (d == (n - 1)));
   }
@@ -130,7 +152,7 @@ struct Pyr5Basis
   static constexpr int DIM = traits_t::nDim_;
   static constexpr int NNODES = traits_t::nodesPerElement_;
 
-  static constexpr int sgn(int n, int d)
+  [[nodiscard]] static constexpr int sgn(int n, int d)
   {
     constexpr auto map =
       ArrayND<int[4][2]>{{{-1, -1}, {+1, -1}, {+1, +1}, {-1, +1}}};
@@ -138,7 +160,7 @@ struct Pyr5Basis
   }
 
   template <typename LocT>
-  static constexpr double interpolant(int n, const LocT& x)
+  [[nodiscard]] static constexpr double interpolant(int n, const LocT& x)
   {
     if (n >= 4 || x[2] == val_t<LocT>(1.)) {
       return x[2];
@@ -148,7 +170,7 @@ struct Pyr5Basis
   }
 
   template <typename LocT>
-  static constexpr auto deriv_coeff(int n, const LocT& x, int d)
+  [[nodiscard]] static constexpr auto deriv_coeff(int n, const LocT& x, int d)
   {
     if (n >= 4 || x[2] == 1.) {
       return val_t<LocT>(d == 2);
@@ -169,7 +191,7 @@ struct Pyr5DegenHexBasis
   static constexpr int DIM = traits_t::nDim_;
   static constexpr int NNODES = traits_t::nodesPerElement_;
 
-  static constexpr int sgn(int n, int d)
+  [[nodiscard]] static constexpr int sgn(int n, int d)
   {
     constexpr auto map =
       ArrayND<int[4][2]>{{{-1, -1}, {+1, -1}, {+1, +1}, {-1, +1}}};
@@ -177,7 +199,7 @@ struct Pyr5DegenHexBasis
   }
 
   template <typename LocT>
-  static constexpr auto interpolant(int n, const LocT& x)
+  [[nodiscard]] static constexpr auto interpolant(int n, const LocT& x)
   {
     if (n >= 4) {
       return x[2];
@@ -186,7 +208,7 @@ struct Pyr5DegenHexBasis
   }
 
   template <typename LocT>
-  static constexpr auto deriv_coeff(int n, const LocT& x, int d)
+  [[nodiscard]] static constexpr auto deriv_coeff(int n, const LocT& x, int d)
   {
     if (n >= 4) {
       return val_t<LocT>(d == 2);
@@ -206,7 +228,7 @@ struct Wed6Basis
   static constexpr int NNODES = traits_t::nodesPerElement_;
 
   template <typename LocT>
-  static constexpr double interpolant(int n, const LocT& x)
+  [[nodiscard]] static constexpr double interpolant(int n, const LocT& x)
   {
     const ArrayND<typename LocT::value_type[3]> tri{
       1 - (x[0] + x[1]), x[0], x[1]};
@@ -214,7 +236,7 @@ struct Wed6Basis
   }
 
   template <typename LocT>
-  static constexpr auto deriv_coeff(int n, const LocT& x, int d)
+  [[nodiscard]] static constexpr auto deriv_coeff(int n, const LocT& x, int d)
   {
     const ArrayND<val_t<LocT>[3]> tri{1 - (x[0] + x[1]), x[0], x[1]};
     constexpr ArrayND<val_t<LocT>[3][3]> dtri{
@@ -232,14 +254,14 @@ struct Hex8Basis
   static constexpr int DIM = 3;
   static constexpr int NNODES = traits_t::nodesPerElement_;
 
-  static constexpr int tensor_map(int k, int j, int i)
+  [[nodiscard]] static constexpr int tensor_map(int k, int j, int i)
   {
     constexpr ArrayND<int[N1D][N1D][N1D]> map{
       {{{0, 1}, {3, 2}}, {{4, 5}, {7, 6}}}};
     return map(k, j, i);
   }
 
-  static constexpr ArrayND<int[3]> to_tensor(int n)
+  [[nodiscard]] static constexpr ArrayND<int[3]> to_tensor(int n)
   {
     constexpr ArrayND<int[NNODES][3]> map{
       {{0, 0, 0},
@@ -254,19 +276,19 @@ struct Hex8Basis
   }
 
   template <typename LocT>
-  static constexpr auto interp_1(int l, const LocT& x)
+  [[nodiscard]] static constexpr auto interp_1(int l, const LocT& x)
   {
     return 0.5 * (1 + (2 * l - 1) * x);
   }
 
   template <typename LocT>
-  static constexpr auto deriv_1(int l, const LocT& /*unused*/)
+  [[nodiscard]] static constexpr auto deriv_1(int l, const LocT& /*unused*/)
   {
     return 0.5 * (2 * l - 1);
   }
 
   template <typename LocT>
-  static constexpr double interpolant(int n, const LocT& x)
+  [[nodiscard]] static constexpr double interpolant(int n, const LocT& x)
   {
     const auto ijk = to_tensor(n);
     return interp_1(ijk[0], x[0]) * interp_1(ijk[1], x[1]) *
@@ -274,7 +296,7 @@ struct Hex8Basis
   }
 
   template <typename LocT>
-  static constexpr auto deriv_coeff(int n, const LocT& x, int d)
+  [[nodiscard]] static constexpr auto deriv_coeff(int n, const LocT& x, int d)
   {
     const auto ijk = to_tensor(n);
     const auto xv = (d == 0) ? deriv_1(ijk(0), x[0]) : interp_1(ijk(0), x[0]);
@@ -330,7 +352,7 @@ struct is_tensor_compatible<T, std::void_t<decltype(&T::interp_1)>>
 };
 
 template <typename BasisT, typename ParCoordsArrayT, typename ValArrayT>
-KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+[[nodiscard]] KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
   is_tensor_compatible<BasisT>::value,
   ArrayND<typename ValArrayT::value_type[ParCoordsArrayT::extent_int(0)]
                                         [ValArrayT::extent_int(1)]>>
@@ -339,7 +361,7 @@ interpolate(const ParCoordsArrayT& par_coords)
   constexpr int nparcoords = ParCoordsArrayT::extent_int(0);
   using res_val_t = typename ValArrayT::value_type;
 
-  ArrayND<res_val_t[nparcoords]> result;
+  ArrayND<res_val_t[nparcoords]> result{};
   for (int l = 0; l < nparcoords; ++l) {
     for (int d = 0; d < ValArrayT::extent_int(1); ++d) {
       result(l, d) = 0;
@@ -362,7 +384,7 @@ interpolate(const ParCoordsArrayT& par_coords)
 }
 
 template <typename BasisT, typename ParCoordsArrayT, typename ValArrayT>
-KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+[[nodiscard]] KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
   !is_tensor_compatible<BasisT>::value,
   ArrayND<typename ValArrayT::value_type[ParCoordsArrayT::extent_int(0)]
                                         [ValArrayT::extent_int(1)]>>
@@ -371,7 +393,8 @@ interpolate(const ParCoordsArrayT& par_coords, const ValArrayT& vals)
   constexpr int nparcoords = ParCoordsArrayT::extent_int(0);
   using res_val_t = std::decay_t<decltype(par_coords(0, 0) * vals(0, 0))>;
 
-  ArrayND<res_val_t[ParCoordsArrayT::extent_int(0)][vals.extent_int(1)]> result;
+  ArrayND<res_val_t[ParCoordsArrayT::extent_int(0)][vals.extent_int(1)]>
+    result{};
   for (int l = 0; l < nparcoords; ++l) {
 
     ArrayND<res_val_t[ParCoordsArrayT::extent_int(1)]> point;
@@ -393,7 +416,7 @@ interpolate(const ParCoordsArrayT& par_coords, const ValArrayT& vals)
 }
 
 template <typename BasisT, typename ParCoordsArrayT>
-KOKKOS_INLINE_FUNCTION constexpr ArrayND<
+[[nodiscard]] KOKKOS_INLINE_FUNCTION constexpr ArrayND<
   typename ParCoordsArrayT::value_type[ParCoordsArrayT::extent_int(0)]
                                       [BasisT::NNODES]>
 interpolants(const ParCoordsArrayT& par_coords)
@@ -416,7 +439,7 @@ interpolants(const ParCoordsArrayT& par_coords)
 }
 
 template <typename BasisT, typename ParCoordsArrayT>
-KOKKOS_INLINE_FUNCTION constexpr ArrayND<
+[[nodiscard]] KOKKOS_INLINE_FUNCTION constexpr ArrayND<
   typename ParCoordsArrayT::value_type[ParCoordsArrayT::extent_int(0)]
                                       [BasisT::NNODES][BasisT::DIM]>
 deriv_coeffs(const ParCoordsArrayT& par_coords)

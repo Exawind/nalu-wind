@@ -68,6 +68,24 @@ struct ElemDataSelector<AlgTraitsWed6, q>
 };
 
 template <QuadType q>
+struct ElemDataSelector<AlgTraitsQuad4, q>
+{
+  using elem_data_t = CVFEMData<Quad42DBasis, QuadIntegrationRule<q>>;
+};
+
+template <QuadType q>
+struct ElemDataSelector<AlgTraitsTri3, q>
+{
+  using elem_data_t = CVFEMData<Tri3Basis, TriIntegrationRule<q>>;
+};
+
+template <QuadType q>
+struct ElemDataSelector<AlgTraitsEdge_2D, q>
+{
+  using elem_data_t = CVFEMData<LineBasis, EdgeIntegrationRule<q>>;
+};
+
+template <QuadType q>
 struct ElemDataSelector<AlgTraitsPyr5, q>
 {
   using elem_data_t = CVFEMData<
@@ -178,6 +196,14 @@ grad_op(const CoordViewT& x, const GradViewT& grad_coeff)
 }
 
 } // namespace impl
+
+KOKKOS_INLINE_FUNCTION QuadType
+use_shifted_quad(bool shifted)
+{
+  return shifted ? QuadType::SHIFTED : QuadType::MID;
+}
+
+// çç
 
 } // namespace sierra::nalu
 
