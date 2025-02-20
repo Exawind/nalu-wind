@@ -48,22 +48,6 @@ check_that_values_match(
 }
 } // namespace
 
-void
-compare_old_face_shape_fcn(
-  const bool shifted,
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>&
-    fc_shape_fcn,
-  sierra::nalu::MasterElement* meFC)
-{
-  int len = fc_shape_fcn.extent(0) * fc_shape_fcn.extent(1);
-  if (shifted)
-    meFC->shifted_shape_fcn<>(fc_shape_fcn);
-  else
-    meFC->shape_fcn<>(fc_shape_fcn);
-
-  check_that_values_match(fc_shape_fcn, fc_shape_fcn.data());
-}
-
 template <typename SHMEM>
 void
 compare_old_face_grad_op(
@@ -139,15 +123,6 @@ test_MEBC_views(
           compare_old_face_grad_op(
             faceOrdinal, true, v_coords, meViews.dndx_shifted_fc_scs,
             driver.meSCS_);
-        }
-      }
-      for (sierra::nalu::ELEM_DATA_NEEDED request : face_requests) {
-        if (request == sierra::nalu::FC_SHAPE_FCN) {
-          compare_old_face_shape_fcn(false, fcViews.fc_shape_fcn, driver.meFC_);
-        }
-        if (request == sierra::nalu::FC_SHIFTED_SHAPE_FCN) {
-          compare_old_face_shape_fcn(
-            true, fcViews.fc_shifted_shape_fcn, driver.meFC_);
         }
       }
     });

@@ -126,6 +126,12 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
   const auto pstabFac =
     realm_.solutionOptions_->activateOpenMdotCorrection_ ? 0.0 : 1.0;
 
+  const auto f_shp = shape_fcn<typename AlgTraits::FaceTraits, QuadRank::SCV>(
+    use_shifted_quad(useShifted));
+
+  const auto e_shp = shape_fcn<typename AlgTraits::ElemTraits, QuadRank::SCS>(
+    use_shifted_quad(useShifted));
+
   nalu_ngp::run_face_elem_algorithm(
     algName, meshInfo, faceData_, elemData_, s_locally_owned_union,
     KOKKOS_LAMBDA(SimdDataType & fdata) {
@@ -145,10 +151,6 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
       const auto meFaceViews =
         fdata.simdFaceView.get_me_views(CURRENT_COORDINATES);
       const auto meElemViews = elemView.get_me_views(CURRENT_COORDINATES);
-      const auto v_shape_fcn = useShifted ? meFaceViews.fc_shifted_shape_fcn
-                                          : meFaceViews.fc_shape_fcn;
-      const auto e_shape_fcn = useShifted ? meElemViews.scs_shifted_shape_fcn
-                                          : meElemViews.scs_shape_fcn;
 
       const int faceOrdinal = fdata.faceOrd;
 
@@ -158,11 +160,11 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
           // evaluate pressure at opposing face.
           const int oip = meSCS->opposingFace(faceOrdinal, ip);
           for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
-            pIp += e_shape_fcn(oip, n) * elem_p_field(n);
+            pIp += e_shp(oip, n) * elem_p_field(n);
           }
         } else {
           for (int n = 0; n < AlgTraits::nodesPerFace_; ++n) {
-            pIp += v_shape_fcn(ip, n) * face_p_field(n);
+            pIp += f_shp(ip, n) * face_p_field(n);
           }
         }
 

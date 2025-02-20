@@ -22,6 +22,25 @@ namespace sierra::nalu {
 enum class QuadType { MID, SHIFTED };
 
 template <QuadType>
+struct EdgeIntegrationRule
+{
+};
+
+template <>
+struct EdgeIntegrationRule<QuadType::MID>
+{
+  static constexpr ArrayND<double[1][1]> scs{{{0}}};
+  static constexpr ArrayND<double[2][1]> scv{{{-0.5}, {0.5}}};
+};
+
+template <>
+struct EdgeIntegrationRule<QuadType::SHIFTED>
+{
+  static constexpr ArrayND<double[1][1]> scs{{{0}}};
+  static constexpr ArrayND<double[2][1]> scv{{{-1}, {+1}}};
+};
+
+template <QuadType>
 struct TriIntegrationRule
 {
 };
