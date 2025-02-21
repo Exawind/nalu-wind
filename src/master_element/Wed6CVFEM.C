@@ -7,6 +7,7 @@
 // for more details.
 //
 
+#include "master_element/CompileTimeElements.h"
 #include "master_element/Wed6CVFEM.h"
 #include "master_element/MasterElementFunctions.h"
 #include "master_element/Hex8GeometryFunctions.h"
@@ -388,10 +389,9 @@ void
 WedSCV::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>&)
 {
-  wed_deriv(numIntPoints_, &intgLoc_[0], deriv);
-  generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
+  impl::grad_op<AlgTraitsWed6, QuadRank::SCV, QuadType::MID>(coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -402,10 +402,10 @@ void
 WedSCV::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>&)
 {
-  wed_deriv(numIntPoints_, &intgLocShift_[0], deriv);
-  generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
+  impl::grad_op<AlgTraitsWed6, QuadRank::SCV, QuadType::SHIFTED>(
+    coords, gradop);
 }
 
 template <typename SCALAR, typename SHMEM>
@@ -667,20 +667,18 @@ void
 WedSCS::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>&)
 {
-  wed_deriv(numIntPoints_, &intgLoc_[0], deriv);
-  generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
+  impl::grad_op<AlgTraitsWed6, QuadRank::SCS, QuadType::MID>(coords, gradop);
 }
 
 void
 WedSCS::grad_op(
   const SharedMemView<double**>& coords,
   SharedMemView<double***>& gradop,
-  SharedMemView<double***>& deriv)
+  SharedMemView<double***>&)
 {
-  wed_deriv(numIntPoints_, &intgLoc_[0], deriv);
-  generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
+  impl::grad_op<AlgTraitsWed6, QuadRank::SCS, QuadType::MID>(coords, gradop);
 }
 
 KOKKOS_FUNCTION
@@ -688,10 +686,10 @@ void
 WedSCS::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>&)
 {
-  wed_deriv(numIntPoints_, &intgLocShift_[0], deriv);
-  generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
+  impl::grad_op<AlgTraitsWed6, QuadRank::SCS, QuadType::SHIFTED>(
+    coords, gradop);
 }
 
 //--------------------------------------------------------------------------
