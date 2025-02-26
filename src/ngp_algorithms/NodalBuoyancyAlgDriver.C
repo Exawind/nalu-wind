@@ -71,29 +71,13 @@ NodalBuoyancyAlgDriver::post_work()
   auto* sourceweight = meta.template get_field<double>(
     stk::topology::NODE_RANK, sourceweightName_);
   auto& ngpsourceweight = nalu_ngp::get_ngp_field(meshInfo, sourceweightName_);
-  ngpsourceweight.sync_to_host();
 
   auto* source =
     meta.template get_field<double>(stk::topology::NODE_RANK, sourceName_);
   auto& ngpsource = nalu_ngp::get_ngp_field(meshInfo, sourceName_);
-  ngpsource.sync_to_host();
 
-  const std::vector<NGPDoubleFieldType*> fVec{&ngpsource, &ngpsourceweight};
-  bool doFinalSyncToDevice = false;
-  stk::mesh::parallel_sum(bulk, fVec, doFinalSyncToDevice);
 
-  const int dim2 = meta.spatial_dimension();
-
-  if (realm_.hasPeriodic_) {
-    realm_.periodic_field_update(source, dim2);
-    realm_.periodic_field_update(sourceweight, 1);
-  }
-
-  ngpsource.modify_on_host();
-  ngpsource.sync_to_device();
-
-  ngpsourceweight.modify_on_host();
-  ngpsourceweight.sync_to_device();
+  comm::scatter_sum(bulk, {sourceweight, source});
 
   // Divide by weight here
 
@@ -104,6 +88,8 @@ NodalBuoyancyAlgDriver::post_work()
   stk::mesh::Selector sel =
     (meta.locally_owned_part() | meta.globally_shared_part()) &
     stk::mesh::selectField(*source);
+
+  const int dim2 = meta.spatial_dimension();
 
   nalu_ngp::run_entity_algorithm(
     "apply_weight_to_buoyancy", ngpMesh, stk::topology::NODE_RANK, sel,

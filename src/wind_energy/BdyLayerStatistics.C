@@ -370,7 +370,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
   stk::mesh::Selector sel =
     realm_.meta_data().locally_owned_part() &
     stk::mesh::selectUnion(fluidParts_) & !(realm_.get_inactive_selector()) &
-    !(stk::mesh::selectUnion(realm_.get_slave_part_vector()));
+    !(realm_.replicated_periodic_node_selector());
 
   // Reset arrays before accumulation
   Kokkos::deep_copy(d_velAvg_, 0.0);
@@ -556,7 +556,7 @@ BdyLayerStatistics::impl_compute_temperature_stats()
   stk::mesh::Selector sel =
     realm_.meta_data().locally_owned_part() &
     stk::mesh::selectUnion(fluidParts_) & !(realm_.get_inactive_selector()) &
-    !(stk::mesh::selectUnion(realm_.get_slave_part_vector()));
+    !(realm_.replicated_periodic_node_selector());
 
   // Reset arrays before accumulation
   Kokkos::deep_copy(d_thetaAvg_, 0.0);

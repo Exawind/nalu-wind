@@ -778,7 +778,7 @@ TurbulenceAveragingPostProcessing::execute()
         metaData.locally_owned_part() &
         stk::mesh::selectUnion(avInfo->partVec_) &
         !(realm_.get_inactive_selector()) &
-        !(stk::mesh::selectUnion(realm_.get_slave_part_vector()));
+        !(realm_.replicated_periodic_node_selector());
       compute_mean_resolved_ke(avInfo->name_, s_locally_owned_nodes);
     }
 

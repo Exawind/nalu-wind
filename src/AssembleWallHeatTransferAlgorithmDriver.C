@@ -124,27 +124,12 @@ AssembleWallHeatTransferAlgorithmDriver::post_work()
   stk::mesh::BulkData& bulk_data = realm_.bulk_data();
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-  std::vector<const stk::mesh::FieldBase*> fields = {
+  std::vector<stk::mesh::FieldBase*> fields = {
     assembledWallArea_, referenceTemperature_, heatTransferCoefficient_,
-    normalHeatFlux_, robinCouplingParameter_};
-  const std::vector<const stk::mesh::FieldBase*>& const_fields_ref = fields;
-
-  stk::mesh::parallel_sum(bulk_data, const_fields_ref);
-
-  // add periodic assembly piror to normalization
-  if (realm_.hasPeriodic_) {
-    const unsigned scalarSize = 1;
-    const bool bypassFieldCheck =
-      false; // nodal fields are only defined at periodic nodes
-    realm_.periodic_field_update(
-      assembledWallArea_, scalarSize, bypassFieldCheck);
-    realm_.periodic_field_update(
-      referenceTemperature_, scalarSize, bypassFieldCheck);
-    realm_.periodic_field_update(
-      heatTransferCoefficient_, scalarSize, bypassFieldCheck);
-    realm_.periodic_field_update(normalHeatFlux_, scalarSize, bypassFieldCheck);
-    realm_.periodic_field_update(
-      robinCouplingParameter_, scalarSize, bypassFieldCheck);
+    normalHeatFlux_, robinCouplingParameter_};  
+  comm::scatter_sum(bulk_data, fields);
+  for (auto* field : fields) {
+    field->sync_to_host();
   }
 
   // normalize
@@ -177,6 +162,10 @@ AssembleWallHeatTransferAlgorithmDriver::post_work()
       normalHeatFlux[k] /= ak;
       robinCouplingParameter[k] /= ak;
     }
+  }
+
+  for (auto field : fields) {
+    field->modify_on_host();
   }
 }
 

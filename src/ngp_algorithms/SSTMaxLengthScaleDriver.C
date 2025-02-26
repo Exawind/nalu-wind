@@ -55,19 +55,8 @@ SSTMaxLengthScaleDriver::post_work()
   auto* maxLengthScale = meta.template get_field<double>(
     stk::topology::NODE_RANK, "sst_max_length_scale");
 
-  // Algorithms should have marked the fields as modified, but call this here to
-  // ensure the next step does a sync to host
-  ngpMaxLengthScale.modify_on_device();
-  ngpMaxLengthScale.sync_to_host();
+  comm::scatter_max(realm_.bulk_data(), {maxLengthScale});
 
-  stk::mesh::parallel_max(realm_.bulk_data(), {maxLengthScale});
-
-  if (realm_.hasPeriodic_) {
-    const unsigned nComponents = 1;
-    realm_.periodic_field_max(maxLengthScale, nComponents);
-  }
-  ngpMaxLengthScale.modify_on_host();
-  ngpMaxLengthScale.sync_to_device();
 }
 } // namespace nalu
 } // namespace sierra

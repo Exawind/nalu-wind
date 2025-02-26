@@ -552,9 +552,7 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
     });
   ndtw.modify_on_device();
 
-  stk::mesh::parallel_max(realm_.bulk_data(), {minDistanceToWall_});
-  if (realm_.hasPeriodic_)
-    realm_.periodic_field_max(minDistanceToWall_, 1);
+  comm::scatter_max(realm_.bulk_data(), {minDistanceToWall_});
 }
 
 /** Compute f1 field with parameters appropriate for 2003 SST implementation
@@ -669,7 +667,7 @@ ShearStressTransportEquationSystem::post_iter_work()
       meta.get_field<double>(stk::topology::NODE_RANK, "iddes_rans_indicator");
 
     stk::mesh::copy_owned_to_shared(bulk, {iddesRansInd});
-    if (realm_.hasPeriodic_) {
+    if (realm_.periodic_mapping_) {
       realm_.periodic_delta_solution_update(iddesRansInd, 1);
     }
   }

@@ -57,21 +57,7 @@ FieldUpdateAlgDriver::post_work()
     fieldMgr.get_field<double>(get_field_ordinal(meta, fieldName_));
 
   ngpField.modify_on_device();
-  ngpField.sync_to_host();
-
-  stk::mesh::parallel_sum(bulk, {field});
-
-  if (realm_.hasPeriodic_) {
-    realm_.periodic_field_update(field, nDim * nDim);
-  }
-
-  if (realm_.hasOverset_) {
-    const bool doFinalSyncToDevice = false;
-    realm_.overset_field_update(field, nDim, nDim, doFinalSyncToDevice);
-  }
-
-  ngpField.modify_on_host();
-  ngpField.sync_to_device();
+  realm_.scatter_sum_with_overset({field});
 }
 
 } // namespace nalu

@@ -434,19 +434,10 @@ ComputeWallFrictionVelocityAlgorithm::normalize_nodal_fields()
   stk::mesh::BulkData& bulk_data = realm_.bulk_data();
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-  stk::mesh::parallel_sum(
-    bulk_data, {assembledWallArea_, assembledWallNormalDistance_});
+  comm::scatter_sum(bulk_data, {assembledWallArea_, assembledWallNormalDistance_});
 
-  // periodic assemble
-  if (realm_.hasPeriodic_) {
-    const unsigned fieldSize = 1;
-    const bool bypassFieldCheck =
-      false; // fields are not defined at all slave/master node pairs
-    realm_.periodic_field_update(
-      assembledWallArea_, fieldSize, bypassFieldCheck);
-    realm_.periodic_field_update(
-      assembledWallNormalDistance_, fieldSize, bypassFieldCheck);
-  }
+  assembledWallArea_->sync_to_host();
+  assembledWallNormalDistance_->sync_to_host();
 
   // normalize
   stk::mesh::Selector s_all_nodes =
@@ -467,6 +458,9 @@ ComputeWallFrictionVelocityAlgorithm::normalize_nodal_fields()
       assembledWallNormalDistance[k] /= assembledWallArea[k];
     }
   }
+
+  assembledWallArea_->modify_on_host();
+  assembledWallNormalDistance_->modify_on_host();
 }
 
 } // namespace nalu

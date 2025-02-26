@@ -14,7 +14,6 @@
 #include <FieldTypeDef.h>
 #include <DgInfo.h>
 #include <Realm.h>
-#include <PeriodicManager.h>
 #include <Simulation.h>
 #include <LinearSolver.h>
 #include <master_element/MasterElement.h>
@@ -392,7 +391,7 @@ TpetraSegregatedLinearSystem::buildNodeGraph(const stk::mesh::PartVector& parts)
 
   const stk::mesh::Selector s_owned =
     metaData.locally_owned_part() & stk::mesh::selectUnion(parts) &
-    !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
+    !(realm_.replicated_periodic_node_selector()) &
     !(realm_.get_inactive_selector());
 
   stk::mesh::BucketVector const& buckets =
@@ -651,7 +650,7 @@ TpetraSegregatedLinearSystem::copy_stk_to_tpetra(
 
   const stk::mesh::Selector selector =
     stk::mesh::selectField(*stkField) & metaData.locally_owned_part() &
-    !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
+    !(realm_.replicated_periodic_node_selector()) &
     !(realm_.get_inactive_selector());
 
   stk::mesh::BucketVector const& buckets =
@@ -1977,7 +1976,7 @@ TpetraSegregatedLinearSystem::copy_tpetra_to_stk(
 
   const stk::mesh::Selector selector =
     stk::mesh::selectField(*stkField) & metaData.locally_owned_part() &
-    !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
+    !(realm_.replicated_periodic_node_selector()) &
     !(realm_.get_inactive_selector());
 
   stk::mesh::BucketVector const& buckets =

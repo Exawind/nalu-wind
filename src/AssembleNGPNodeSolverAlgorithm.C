@@ -107,7 +107,7 @@ AssembleNGPNodeSolverAlgorithm::execute()
 
   stk::mesh::Selector sel =
     meta.locally_owned_part() & stk::mesh::selectUnion(partVec_) &
-    !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
+    !(realm_.replicated_periodic_node_selector()) &
     !(realm_.get_inactive_selector());
   const auto& buckets =
     stk::mesh::get_bucket_ids(realm_.bulk_data(), entityRank, sel);

@@ -147,7 +147,8 @@ TiogaSTKIface::register_mesh()
 
   auto* nodeVol =
     meta_.get_field(stk::topology::NODE_RANK, "tioga_nodal_volume");
-  stk::mesh::parallel_max(bulk_, {nodeVol});
+  comm::scatter_max(realm_.bulk_data(), {nodeVol});
+  nodeVol->sync_to_host();
 
   for (auto& tb : blocks_) {
     tb->adjust_node_resolutions();

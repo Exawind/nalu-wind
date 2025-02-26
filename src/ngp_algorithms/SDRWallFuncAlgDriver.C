@@ -10,7 +10,6 @@
 #include "ngp_algorithms/SDRWallFuncAlgDriver.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldUtils.h"
-#include "PeriodicManager.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
 
@@ -58,30 +57,12 @@ SDRWallFuncAlgDriver::post_work()
   bcsdr.modify_on_device();
   wallArea.modify_on_device();
 
-  // Parallel synchronization
-  const std::vector<NGPDoubleFieldType*> fields{&bcsdr, &wallArea};
-  const bool doFinalSyncToDevice = true;
-  stk::mesh::parallel_sum(realm_.bulk_data(), fields, doFinalSyncToDevice);
-
   auto* bcsdrF =
     realm_.meta_data().get_field(stk::topology::NODE_RANK, "wall_model_sdr_bc");
-  if (realm_.hasPeriodic_) {
-    // Periodic synchronization
-    const unsigned nComponents = 1;
-    const bool bypassFieldCheck = false;
-    const bool addMirrorValues = true;
-    const bool setMirrorValues = true;
+  auto* wallAreaF = realm_.meta_data().get_field(
+    stk::topology::NODE_RANK, "assembled_wall_area_sdr");
 
-    auto* wallAreaF = realm_.meta_data().get_field(
-      stk::topology::NODE_RANK, "assembled_wall_area_sdr");
-
-    auto* periodicMgr = realm_.periodicManager_;
-    periodicMgr->ngp_apply_constraints(
-      bcsdrF, nComponents, bypassFieldCheck, addMirrorValues, setMirrorValues);
-    periodicMgr->ngp_apply_constraints(
-      wallAreaF, nComponents, bypassFieldCheck, addMirrorValues,
-      setMirrorValues);
-  }
+  comm::scatter_sum(realm_.bulk_data(), {bcsdrF, wallAreaF});
 
   // Normalize the computed BC SDR
   const stk::mesh::Selector sel = (realm_.meta_data().locally_owned_part() |
