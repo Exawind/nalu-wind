@@ -1,0 +1,7 @@
+<map id="sierra::nalu::TanhFunction&lt; T &gt;" name="sierra::nalu::TanhFunction&lt; T &gt;">
+<area shape="rect" id="Node000001" title=" " alt="" coords="10,152,237,177"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_peclet_function.html" title=" " alt="" coords="5,79,241,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="126,118,126,152,121,152,121,118"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_peclet_function_base.html" title="Non&#45;templated empty base class for storing pointers to templated instances." alt="" coords="8,5,239,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="126,44,126,79,121,79,121,44"/>
+</map>
