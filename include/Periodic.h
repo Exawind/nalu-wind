@@ -7,7 +7,8 @@
 // for more details.
 //
 
-#pragma once
+#ifndef INCLUDE_PERIODIC_H_
+#define INCLUDE_PERIODIC_H_
 
 #include "KokkosInterface.h"
 
@@ -48,8 +49,7 @@ struct TranslationMapping
   stk::mesh::Selector selector_b;
 };
 
-std::optional<TranslationMapping>
-make_translation_mapping(
+std::optional<TranslationMapping> make_translation_mapping(
   const std::vector<PeriodicBCData>& data,
   stk::mesh::BulkData& mesh,
   const stk::mesh::Selector& active_not_aura,
@@ -81,3 +81,5 @@ void set_periodic_on_mesh(
   const std::optional<periodic::TranslationMapping>& periodic);
 
 } // namespace sierra::nalu::periodic
+
+#endif
