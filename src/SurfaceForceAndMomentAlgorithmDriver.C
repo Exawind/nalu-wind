@@ -122,19 +122,8 @@ SurfaceForceAndMomentAlgorithmDriver::parallel_assemble_fields()
   ScalarFieldType* yplus =
     meta_data.get_field<double>(stk::topology::NODE_RANK, "yplus");
 
-  stk::mesh::parallel_sum(
+  comm::scatter_sum(
     bulk_data, {pressureForce, viscousForce, tauWallVector, tauWall, yplus});
-
-  // periodic assemble
-  if (realm_.hasPeriodic_) {
-    const bool bypassFieldCheck =
-      false; // fields are not defined at all slave/master node pairs
-    realm_.periodic_field_update(pressureForce, nDim, bypassFieldCheck);
-    realm_.periodic_field_update(viscousForce, nDim, bypassFieldCheck);
-    realm_.periodic_field_update(tauWallVector, nDim, bypassFieldCheck);
-    realm_.periodic_field_update(tauWall, 1, bypassFieldCheck);
-    realm_.periodic_field_update(yplus, 1, bypassFieldCheck);
-  }
 }
 
 //--------------------------------------------------------------------------
@@ -153,24 +142,7 @@ SurfaceForceAndMomentAlgorithmDriver::parallel_assemble_area()
   ScalarFieldType* assembledAreaWF = meta_data.get_field<double>(
     stk::topology::NODE_RANK, "assembled_area_force_moment_wf");
 
-  // parallel assemble
-  std::vector<const stk::mesh::FieldBase*> fields;
-  if (NULL != assembledArea)
-    fields.push_back(assembledArea);
-  if (NULL != assembledAreaWF)
-    fields.push_back(assembledAreaWF);
-  const std::vector<const stk::mesh::FieldBase*>& const_fields = fields;
-  stk::mesh::parallel_sum(bulk_data, const_fields);
-
-  // periodic assemble
-  if (realm_.hasPeriodic_) {
-    const bool bypassFieldCheck =
-      false; // fields are not defined at all slave/master node pairs
-    if (NULL != assembledArea)
-      realm_.periodic_field_update(assembledArea, 1, bypassFieldCheck);
-    if (NULL != assembledAreaWF)
-      realm_.periodic_field_update(assembledAreaWF, 1, bypassFieldCheck);
-  }
+  comm::scatter_sum(bulk_data, {assembledArea, assembledAreaWF});
 }
 
 //--------------------------------------------------------------------------

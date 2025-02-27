@@ -43,7 +43,6 @@
 #include <NaluParsing.h>
 #include <NonConformalManager.h>
 #include <NonConformalInfo.h>
-#include <PeriodicManager.h>
 #include <ProjectedNodalGradientEquationSystem.h>
 #include <PostProcessingData.h>
 #include <Realm.h>
@@ -2766,7 +2765,7 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
 
     const auto sel = stk::mesh::selectField(*Udiag_) &
                      meta.locally_owned_part() &
-                     !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
+                     !(realm_.replicated_periodic_node_selector()) &
                      !(realm_.get_inactive_selector());
     const auto& ngpMesh = realm_.ngp_mesh();
     const auto& fieldMgr = realm_.ngp_field_manager();
@@ -2791,13 +2790,8 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
     std::vector<const stk::mesh::FieldBase*> fVec{Udiag_};
     stk::mesh::copy_owned_to_shared(bulk, fVec);
     stk::mesh::communicate_field_data(bulk.aura_ghosting(), fVec);
-    if (realm_.hasPeriodic_) {
-      const bool bypassFieldCheck = true;
-      const bool addMirrorNodes = false;
-      const bool setMirrorNodes = true;
-      realm_.periodicManager_->apply_constraints(
-        Udiag_, 1, bypassFieldCheck, addMirrorNodes, setMirrorNodes);
-    }
+    periodic::sync(DeviceSpace{}, bulk, *Udiag_);
+
     if (
       realm_.nonConformalManager_ != nullptr &&
       realm_.nonConformalManager_->nonConformalGhosting_ != nullptr)

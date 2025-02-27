@@ -18,6 +18,7 @@
 #include <MaterialPropertys.h>
 #include <EquationSystems.h>
 #include <FieldManager.h>
+#include <Periodic.h>
 
 #if defined(NALU_USES_PERCEPT)
 #include <Teuchos_RCP.hpp>
@@ -67,7 +68,6 @@ class FieldManager;
 class OutputInfo;
 class OversetManager;
 class PostProcessingInfo;
-class PeriodicManager;
 class Realms;
 class Simulation;
 class SolutionOptions;
@@ -238,7 +238,12 @@ public:
   void periodic_max_field_update(
     stk::mesh::FieldBase* theField, const unsigned& sizeOfField) const;
 
-  const stk::mesh::PartVector& get_slave_part_vector();
+  stk::mesh::Selector replicated_periodic_node_selector();
+
+  void scatter_sum(const std::vector<stk::mesh::FieldBase*>& fields);
+  void
+  scatter_sum_with_overset(const std::vector<stk::mesh::FieldBase*>& fields);
+  void scatter_max(const std::vector<stk::mesh::FieldBase*>& fields);
 
   void overset_field_update(
     stk::mesh::FieldBase* field,
@@ -462,10 +467,9 @@ public:
   bool hasInitializationTransfer_;
   bool hasIoTransfer_;
   bool hasExternalDataTransfer_;
-
-  PeriodicManager* periodicManager_;
-  bool hasPeriodic_;
   bool hasFluids_;
+
+  std::optional<periodic::TranslationMapping> periodic_mapping_;
 
   // global parameter list
   std::unique_ptr<stk::util::ParameterList> globalParameters_;
@@ -612,7 +616,7 @@ public:
 
   Teuchos::ParameterList solver_parameters(std::string) const;
 
-  stk::mesh::PartVector allPeriodicInteractingParts_;
+  std::vector<PeriodicBCData> allPeriodicInteractingParts_;
   stk::mesh::PartVector allNonConformalInteractingParts_;
 
   bool isFinalOuterIter_{false};
@@ -665,6 +669,17 @@ protected:
   unsigned meshModCount_{0};
   const std::string allElementPartAlias{"all_blocks"};
 };
+
+namespace comm {
+
+void scatter_sum(
+  const stk::mesh::BulkData& bulk,
+  const std::vector<stk::mesh::FieldBase*>& fields);
+
+void scatter_max(
+  const stk::mesh::BulkData& bulk,
+  const std::vector<stk::mesh::FieldBase*>& fields);
+} // namespace comm
 
 } // namespace nalu
 } // namespace sierra
