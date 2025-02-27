@@ -164,7 +164,8 @@ MatrixFreeHeatCondEquationSystem::initialize()
 {
   stk::mesh::ProfilingBlock pf("MatrixFreeHeatCondEquationSystem::initialize");
 
-  stk::mesh::Selector replica_selector =  realm_.replicated_periodic_node_selector();
+  stk::mesh::Selector replica_selector =
+    realm_.replicated_periodic_node_selector();
   {
     stk::mesh::ProfilingBlock pf_inner("fill_tpetra_id_field");
     matrix_free::populate_global_id_field(

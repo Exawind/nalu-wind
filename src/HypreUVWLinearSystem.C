@@ -546,10 +546,10 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
   stk::mesh::FieldBase* stkField, std::vector<double>& rhsNorm)
 {
   auto& meta = realm_.meta_data();
-  const auto selector =
-    stk::mesh::selectField(*stkField) & meta.locally_owned_part() &
-    !(realm_.replicated_periodic_node_selector()) &
-    !(realm_.get_inactive_selector());
+  const auto selector = stk::mesh::selectField(*stkField) &
+                        meta.locally_owned_part() &
+                        !(realm_.replicated_periodic_node_selector()) &
+                        !(realm_.get_inactive_selector());
 
   HypreUVWLinSysCoeffApplier* hcApplier =
     dynamic_cast<HypreUVWLinSysCoeffApplier*>(hostCoeffApplier.get());

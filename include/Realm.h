@@ -241,7 +241,8 @@ public:
   stk::mesh::Selector replicated_periodic_node_selector();
 
   void scatter_sum(const std::vector<stk::mesh::FieldBase*>& fields);
-  void scatter_sum_with_overset(const std::vector<stk::mesh::FieldBase*>& fields);
+  void
+  scatter_sum_with_overset(const std::vector<stk::mesh::FieldBase*>& fields);
   void scatter_max(const std::vector<stk::mesh::FieldBase*>& fields);
 
   void overset_field_update(
@@ -678,7 +679,7 @@ void scatter_sum(
 void scatter_max(
   const stk::mesh::BulkData& bulk,
   const std::vector<stk::mesh::FieldBase*>& fields);
-}
+} // namespace comm
 
 } // namespace nalu
 } // namespace sierra

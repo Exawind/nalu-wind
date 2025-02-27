@@ -434,7 +434,8 @@ ComputeWallFrictionVelocityAlgorithm::normalize_nodal_fields()
   stk::mesh::BulkData& bulk_data = realm_.bulk_data();
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-  comm::scatter_sum(bulk_data, {assembledWallArea_, assembledWallNormalDistance_});
+  comm::scatter_sum(
+    bulk_data, {assembledWallArea_, assembledWallNormalDistance_});
 
   assembledWallArea_->sync_to_host();
   assembledWallNormalDistance_->sync_to_host();

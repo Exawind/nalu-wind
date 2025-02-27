@@ -105,10 +105,10 @@ AssembleNGPNodeSolverAlgorithm::execute()
   const int bytes_per_team = 0;
   const int bytes_per_thread = calc_shmem_bytes_per_thread(rhsSize);
 
-  stk::mesh::Selector sel =
-    meta.locally_owned_part() & stk::mesh::selectUnion(partVec_) &
-    !(realm_.replicated_periodic_node_selector()) &
-    !(realm_.get_inactive_selector());
+  stk::mesh::Selector sel = meta.locally_owned_part() &
+                            stk::mesh::selectUnion(partVec_) &
+                            !(realm_.replicated_periodic_node_selector()) &
+                            !(realm_.get_inactive_selector());
   const auto& buckets =
     stk::mesh::get_bucket_ids(realm_.bulk_data(), entityRank, sel);
 

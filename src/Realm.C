@@ -1408,9 +1408,8 @@ Realm::setup_property()
           // check for species-based cp
           if (matData->cpConstMap_.size() > 0.0) {
             if (uniformFlow_) {
-              throw std::runtime_error(
-                "uniform flow cp should simply use "
-                "the single-valued constant");
+              throw std::runtime_error("uniform flow cp should simply use "
+                                       "the single-valued constant");
             } else {
               // props computed based on local mass fractions, however,
               // constant per species k
@@ -1522,10 +1521,9 @@ Realm::setup_property()
 
             if (uniformFlow_) {
               // props computed based on YkRef and Tref
-              throw std::runtime_error(
-                "Realm::setup_property: Sorry, "
-                "polynomial visc Ykref and Tref "
-                "is not supported");
+              throw std::runtime_error("Realm::setup_property: Sorry, "
+                                       "polynomial visc Ykref and Tref "
+                                       "is not supported");
             } else {
               // props computed based on Yk and Tref
               viscPropEval = new SutherlandsYkTrefPropertyEvaluator(
@@ -1659,9 +1657,8 @@ Realm::setup_property()
               rhoPropEval = new IdealGasTYkPropertyEvaluator(
                 pRef, universalR, mwVec, meta_data());
             } else {
-              throw std::runtime_error(
-                "Realm::setup_property: ideal_gas_tp "
-                "only supported for uniform flow:");
+              throw std::runtime_error("Realm::setup_property: ideal_gas_tp "
+                                       "only supported for uniform flow:");
             }
           }
 
@@ -1714,9 +1711,8 @@ Realm::setup_property()
           propertyAlg_.push_back(auxAlg);
 
         } else {
-          throw std::runtime_error(
-            "Realm::setup_property: ideal_gas_yk only "
-            "supported for density:");
+          throw std::runtime_error("Realm::setup_property: ideal_gas_yk only "
+                                   "supported for density:");
         }
       } break;
 
@@ -2112,19 +2108,16 @@ Realm::create_output_mesh()
       !outputInfo_->catalystFileName_.empty() ||
       !outputInfo_->paraviewScriptName_.empty()) {
 #ifdef NALU_USES_CATALYST
-      outputInfo_->outputPropertyManager_->add(
-        Ioss::Property(
-          "CATALYST_BLOCK_PARSE_JSON_STRING", outputInfo_->catalystParseJson_));
+      outputInfo_->outputPropertyManager_->add(Ioss::Property(
+        "CATALYST_BLOCK_PARSE_JSON_STRING", outputInfo_->catalystParseJson_));
       std::string input_deck_name = "%B";
       stk::util::filename_substitution(input_deck_name);
-      outputInfo_->outputPropertyManager_->add(
-        Ioss::Property(
-          "CATALYST_BLOCK_PARSE_INPUT_DECK_NAME", input_deck_name));
+      outputInfo_->outputPropertyManager_->add(Ioss::Property(
+        "CATALYST_BLOCK_PARSE_INPUT_DECK_NAME", input_deck_name));
 
       if (!outputInfo_->paraviewScriptName_.empty())
-        outputInfo_->outputPropertyManager_->add(
-          Ioss::Property(
-            "CATALYST_SCRIPT", outputInfo_->paraviewScriptName_.c_str()));
+        outputInfo_->outputPropertyManager_->add(Ioss::Property(
+          "CATALYST_SCRIPT", outputInfo_->paraviewScriptName_.c_str()));
 
       outputInfo_->outputPropertyManager_->add(
         Ioss::Property("CATALYST_CREATE_SIDE_SETS", 1));
@@ -3084,7 +3077,8 @@ Realm::periodic_field_update(
 }
 
 namespace {
-template <typename T> auto
+template <typename T>
+auto
 to_ngp_field_vector(const std::vector<stk::mesh::FieldBase*>& fields)
 {
   std::vector<stk::mesh::NgpField<T>*> fields_ngp;
@@ -3099,7 +3093,7 @@ to_ngp_field_vector(const std::vector<stk::mesh::FieldBase*>& fields)
     });
   return fields_ngp;
 }
-}
+} // namespace
 
 namespace comm {
 void
@@ -3119,18 +3113,20 @@ scatter_max(
   const stk::mesh::BulkData& bulk,
   const std::vector<stk::mesh::FieldBase*>& fields)
 {
-  std::vector<const stk::mesh::FieldBase*> f_c;;
+  std::vector<const stk::mesh::FieldBase*> f_c;
+  ;
   for (auto field : fields) {
     f_c.push_back(field);
   }
-  stk::mesh::parallel_max(bulk, f_c); // no NGP symmetric parallel max function in stk
+  stk::mesh::parallel_max(
+    bulk, f_c); // no NGP symmetric parallel max function in stk
   for (auto field : fields) {
     periodic::max(DeviceSpace{}, bulk, *field);
   }
   DeviceSpace{}.fence();
 }
 
-}
+} // namespace comm
 
 void
 Realm::scatter_sum(const std::vector<stk::mesh::FieldBase*>& fields)
@@ -5175,15 +5171,15 @@ Realm::get_tanh_blending(const std::string dofName)
 void
 Realm::rebalance_mesh()
 {
-  #ifndef HAVE_ZOLTAN2_PARMETIS
-    if (rebalanceMethod_ == "parmetis")
-      throw std::runtime_error(
-        "Zoltan2 is not built with parmetis enabled, "
-        "try a geometric balance method instead (rcb or rib)");
-  #endif
-    stk::balance::GraphCreationSettings rebalanceSettings;
-    rebalanceSettings.setDecompMethod(rebalanceMethod_);
-    stk::balance::balanceStkMesh(rebalanceSettings, *bulkData_);
+#ifndef HAVE_ZOLTAN2_PARMETIS
+  if (rebalanceMethod_ == "parmetis")
+    throw std::runtime_error(
+      "Zoltan2 is not built with parmetis enabled, "
+      "try a geometric balance method instead (rcb or rib)");
+#endif
+  stk::balance::GraphCreationSettings rebalanceSettings;
+  rebalanceSettings.setDecompMethod(rebalanceMethod_);
+  stk::balance::balanceStkMesh(rebalanceSettings, *bulkData_);
 }
 
 //--------------------------------------------------------------------------

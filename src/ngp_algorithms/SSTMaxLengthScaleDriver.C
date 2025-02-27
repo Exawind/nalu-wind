@@ -56,7 +56,6 @@ SSTMaxLengthScaleDriver::post_work()
     stk::topology::NODE_RANK, "sst_max_length_scale");
 
   comm::scatter_max(realm_.bulk_data(), {maxLengthScale});
-
 }
 } // namespace nalu
 } // namespace sierra

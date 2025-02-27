@@ -76,7 +76,6 @@ NodalBuoyancyAlgDriver::post_work()
     meta.template get_field<double>(stk::topology::NODE_RANK, sourceName_);
   auto& ngpsource = nalu_ngp::get_ngp_field(meshInfo, sourceName_);
 
-
   comm::scatter_sum(bulk, {sourceweight, source});
 
   // Divide by weight here

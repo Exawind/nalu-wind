@@ -126,7 +126,7 @@ AssembleWallHeatTransferAlgorithmDriver::post_work()
 
   std::vector<stk::mesh::FieldBase*> fields = {
     assembledWallArea_, referenceTemperature_, heatTransferCoefficient_,
-    normalHeatFlux_, robinCouplingParameter_};  
+    normalHeatFlux_, robinCouplingParameter_};
   comm::scatter_sum(bulk_data, fields);
   for (auto* field : fields) {
     field->sync_to_host();

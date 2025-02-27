@@ -315,10 +315,8 @@ TpetraLinearSystem::beginLinearSystemConstruction()
   DeviceSpace{}.fence();
   realm_.tpetGlobalId_->sync_to_host();
 
-
   // now sharedNotOwned:
-  for (const stk::mesh::Bucket* bptr : buckets)
-  {
+  for (const stk::mesh::Bucket* bptr : buckets) {
     const stk::mesh::Bucket& b = *bptr;
     for (stk::mesh::Entity node : b) {
       int status = getDofStatus(node);
@@ -2244,7 +2242,9 @@ getDofStatus_impl(stk::mesh::Entity node, const Realm& realm)
     has_non_matching_boundary_face_alg = false;
     hasPeriodic = false;
 
-    stk::mesh::Selector perSel = (realm.periodic_mapping_->selector_a | realm.periodic_mapping_->selector_b);
+    stk::mesh::Selector perSel =
+      (realm.periodic_mapping_->selector_a |
+       realm.periodic_mapping_->selector_b);
     stk::mesh::Selector nonConfSel =
       stk::mesh::selectUnion(realm.allNonConformalInteractingParts_);
     // std::cout << "nonConfSel= " << nonConfSel << std::endl;
