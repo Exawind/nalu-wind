@@ -16,9 +16,7 @@ option(ENABLE_HYPRE "Use HYPRE Solver library" ON)
 option(ENABLE_TRILINOS_SOLVERS "Use Trilinos Solvers" ON)
 
 option(ENABLE_OPENFAST
-       "Use OPENFAST tpl to get actuator line positions and forces" OFF)
-cmake_dependent_option(ENABLE_OPENFAST_FSI "Temporary option while FSI features are not merged into main OpenFAST"
-  OFF "ENABLE_OPENFAST" OFF)
+       "Use OPENFAST TPL to get actuator line positions and forces" OFF)
 option(ENABLE_PARAVIEW_CATALYST
       "Enable ParaView Catalyst. Requires external installation of Trilinos Catalyst IOSS adapter."
        OFF)
@@ -173,9 +171,6 @@ if(ENABLE_TRILINOS_SOLVERS)
 endif()
 
 ########################## OPENFAST ####################################
-if(ENABLE_OPENFAST_FSI)
-  target_compile_definitions(nalu PUBLIC NALU_USES_OPENFAST_FSI)
-endif()
 if(ENABLE_OPENFAST)
   set(CMAKE_PREFIX_PATH ${OpenFAST_DIR} ${CMAKE_PREFIX_PATH})
   enable_language(Fortran)
