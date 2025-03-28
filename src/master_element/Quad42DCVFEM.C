@@ -7,6 +7,7 @@
 // for more details.
 //
 
+#include "master_element/CompileTimeElements.h"
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFunctions.h>
 #include <master_element/Quad42DCVFEM.h>
@@ -215,6 +216,29 @@ Quad42DSCV::determinant(
   determinant_scv(coords, vol);
 }
 
+template <typename T, QuadRank rank>
+struct DerivBuffer
+{
+};
+
+template <typename T>
+struct DerivBuffer<T, QuadRank::SCS>
+{
+  using traits = AlgTraitsQuad4_2D;
+  T buffer[traits::nDim_ * traits::nodesPerElement_ * traits::numScsIp_];
+  SharedMemView<T***, DeviceShmem> view{
+    buffer, traits::nodesPerElement_, traits::numScsIp_, traits::nDim_};
+};
+
+template <typename T>
+struct DerivBuffer<T, QuadRank::SCV>
+{
+  using traits = AlgTraitsQuad4_2D;
+  T buffer[traits::nDim_ * traits::nodesPerElement_ * traits::numScvIp_];
+  SharedMemView<T***, DeviceShmem> view{
+    buffer, traits::nodesPerElement_, traits::numScvIp_, traits::nDim_};
+};
+
 //--------------------------------------------------------------------------
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
@@ -223,12 +247,12 @@ void
 Quad42DSCV::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
-
-  quad_derivative(intgLoc_, deriv);
+  DerivBuffer<DoubleType, QuadRank::SCV> buffer;
+  quad_derivative(intgLoc_, buffer.view);
   quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
-    deriv, coords, gradop);
+    buffer.view, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -239,12 +263,13 @@ void
 Quad42DSCV::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
+  DerivBuffer<DoubleType, QuadRank::SCV> buffer;
 
-  quad_derivative(intgLocShift_, deriv);
+  quad_derivative(intgLocShift_, buffer.view);
   quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
-    deriv, coords, gradop);
+    buffer.view, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -470,23 +495,24 @@ void
 Quad42DSCS::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
-
-  quad_derivative(intgLoc_, deriv);
+  DerivBuffer<DoubleType, QuadRank::SCS> buffer;
+  quad_derivative(intgLoc_, buffer.view);
   quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
-    deriv, coords, gradop);
+    buffer.view, coords, gradop);
 }
 void
 Quad42DSCS::grad_op(
   const SharedMemView<double**>& coords,
   SharedMemView<double***>& gradop,
-  SharedMemView<double***>& deriv)
+  SharedMemView<double***>& /*deriv*/)
 {
+  DerivBuffer<double, QuadRank::SCS> buffer;
 
-  quad_derivative(intgLoc_, deriv);
+  quad_derivative(intgLoc_, buffer.view);
   quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
-    deriv, coords, gradop);
+    buffer.view, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -497,11 +523,13 @@ void
 Quad42DSCS::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
-  quad_derivative(intgLocShift_, deriv);
+  DerivBuffer<DoubleType, QuadRank::SCS> buffer;
+
+  quad_derivative(intgLocShift_, buffer.view);
   quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
-    deriv, coords, gradop);
+    buffer.view, coords, gradop);
 }
 
 //--------------------------------------------------------------------------

@@ -154,9 +154,6 @@ ABLWallFrictionVelAlg<BcAlgTraits>::ABLWallFrictionVelAlg(
   faceData_.add_face_field(
     exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceData_.add_face_field(wallNormDist_, BcAlgTraits::numFaceIp_);
-
-  auto shp_fcn = useShifted_ ? FC_SHIFTED_SHAPE_FCN : FC_SHAPE_FCN;
-  faceData_.add_master_element_call(shp_fcn, CURRENT_COORDINATES);
 }
 
 template <typename BcAlgTraits>
@@ -201,6 +198,9 @@ ABLWallFrictionVelAlg<BcAlgTraits>::execute()
   nalu_ngp::ArraySimdDouble2 utauSum(0.0);
   Kokkos::Sum<nalu_ngp::ArraySimdDouble2> utauReducer(utauSum);
 
+  const auto shp =
+    shape_fcn<BcAlgTraits, QuadRank::SCV>(use_shifted_quad(useShifted));
+
   const std::string algName =
     "ABLWallFrictionVelAlg_" + std::to_string(BcAlgTraits::topo_);
   nalu_ngp::run_elem_par_reduce(
@@ -219,10 +219,6 @@ ABLWallFrictionVelAlg<BcAlgTraits>::execute()
       const auto& v_specHeat = scrViews.get_scratch_view_1D(specHeatID);
       const auto& v_areavec = scrViews.get_scratch_view_2D(areaVecID);
       const auto& v_wallnormdist = scrViews.get_scratch_view_1D(wDistID);
-
-      const auto meViews = scrViews.get_me_views(CURRENT_COORDINATES);
-      const auto& v_shape_fcn =
-        useShifted ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
       for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
         DoubleType aMag = 0.0;
@@ -245,7 +241,7 @@ ABLWallFrictionVelAlg<BcAlgTraits>::execute()
         DoubleType rhoIp = 0.0;
         DoubleType CpIp = 0.0;
         for (int ic = 0; ic < BcAlgTraits::nodesPerElement_; ++ic) {
-          const DoubleType r = v_shape_fcn(ip, ic);
+          const DoubleType r = shp(ip, ic);
           heatFluxIp += r * v_bcHeatFlux(ic);
           rhoIp += r * v_rho(ic);
           CpIp += r * v_specHeat(ic);
