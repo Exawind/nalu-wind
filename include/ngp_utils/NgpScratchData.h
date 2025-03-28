@@ -54,6 +54,8 @@ struct ElemSimdData
         team, ndim, nodesPerElem, dataReq));
     }
 #endif
+
+    simdScrView.fill_static_meviews(dataReq);
   }
 
   KOKKOS_DEFAULTED_FUNCTION ~ElemSimdData() = default;
@@ -112,6 +114,9 @@ struct FaceElemSimdData
         team, ndim, nodesPerElem, elemDataReqs));
     }
 #endif
+
+    simdFaceView.fill_static_meviews(faceDataReqs);
+    simdElemView.fill_static_meviews(elemDataReqs);
   }
 
   KOKKOS_DEFAULTED_FUNCTION ~FaceElemSimdData() = default;

@@ -84,7 +84,7 @@ MdotInflowAlg<BcAlgTraits>::execute()
       realm_.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK);
     edgeFaceVelMag = fieldMgr.template get_field<double>(edgeFaceVelMag_);
   }
- 
+
   DoubleType mdotInflowTotal = 0.0;
   Kokkos::Sum<DoubleType> mdotReducer(mdotInflowTotal);
   const std::string algName =
@@ -92,7 +92,7 @@ MdotInflowAlg<BcAlgTraits>::execute()
 
   const auto shp =
     shape_fcn<BcAlgTraits, QuadRank::SCV>(use_shifted_quad(useShifted));
-  
+
   nalu_ngp::run_elem_par_reduce(
     algName, meshInfo, meta.side_rank(), faceData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata, DoubleType & mdotInflow) {
