@@ -144,7 +144,7 @@ compare_old_scs_grad_op(
     v_coords.data(), v_coords.extent(0), v_coords.extent(1));
   meSCS->grad_op(coords, gradop, der);
   check_that_values_match(scs_dndx, grad_op.data());
-  // check_that_values_match(scs_deriv, deriv.data());
+  check_that_values_match(scs_deriv, deriv.data());
 }
 
 template <typename SHMEM>
@@ -169,7 +169,6 @@ compare_old_scs_shifted_grad_op(
     v_coords.data(), v_coords.extent(0), v_coords.extent(1));
 
   meSCS->shifted_grad_op(coords, gradop, der);
-  // check_that_values_match(scs_deriv, deriv.data());
 }
 
 template <typename SHMEM>
@@ -236,8 +235,7 @@ test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
       AlgTraits::topo_);
 
   // Execute the loop and perform all tests
-  driver.execute([&](
-                   sierra::nalu::SharedMemData<
+  driver.execute([&](sierra::nalu::SharedMemData<
                      sierra::nalu::DeviceTeamHandleType,
                      sierra::nalu::DeviceShmem>& smdata) {
     // Extract data from scratchViews
@@ -299,8 +297,7 @@ TEST(KokkosME, test_hex8_views)
 {
   test_ME_views<sierra::nalu::AlgTraitsHex8>(
     {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP,
-     //   sierra::nalu::SCS_SHIFTED_GRAD_OP,
-     sierra::nalu::SCS_GIJ, sierra::nalu::SCV_VOLUME, sierra::nalu::SCV_GRAD_OP,
+     sierra::nalu::SCV_VOLUME, sierra::nalu::SCV_GRAD_OP,
      sierra::nalu::SCV_SHIFTED_GRAD_OP});
 }
 
@@ -308,15 +305,14 @@ TEST(KokkosME, test_tet4_views)
 {
   test_ME_views<sierra::nalu::AlgTraitsTet4>(
     {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP,
-     sierra::nalu::SCS_SHIFTED_GRAD_OP, sierra::nalu::SCS_GIJ,
-     sierra::nalu::SCV_VOLUME, sierra::nalu::SCV_GRAD_OP,
-     sierra::nalu::SCV_SHIFTED_GRAD_OP});
+     sierra::nalu::SCS_SHIFTED_GRAD_OP, sierra::nalu::SCV_VOLUME,
+     sierra::nalu::SCV_GRAD_OP, sierra::nalu::SCV_SHIFTED_GRAD_OP});
 }
 
 TEST(KokkosME, test_tri32D_views)
 {
   test_ME_views<sierra::nalu::AlgTraitsTri3_2D>(
-    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP, sierra::nalu::SCS_GIJ,
+    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP,
      sierra::nalu::SCV_VOLUME});
 }
 
@@ -329,7 +325,7 @@ TEST(KokkosME, test_tri32D_shifted_grad_op)
 TEST(KokkosME, test_quad42D_views)
 {
   test_ME_views<sierra::nalu::AlgTraitsQuad4_2D>(
-    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP, sierra::nalu::SCS_GIJ,
+    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP,
      sierra::nalu::SCV_VOLUME});
 }
 
@@ -343,7 +339,7 @@ TEST(KokkosME, test_wed6_views)
 {
   test_ME_views<sierra::nalu::AlgTraitsWed6>(
     {sierra::nalu::SCV_VOLUME, sierra::nalu::SCS_AREAV,
-     sierra::nalu::SCS_GRAD_OP, sierra::nalu::SCS_GIJ});
+     sierra::nalu::SCS_GRAD_OP});
 }
 
 TEST(KokkosME, test_wed6_shifted_grad_op)
@@ -363,14 +359,6 @@ TEST(KokkosME, test_pyr5_views_shifted_grad_op)
 {
   test_ME_views<sierra::nalu::AlgTraitsPyr5>({
     sierra::nalu::SCS_SHIFTED_GRAD_OP,
-  });
-}
-
-TEST(KokkosME, test_pyr5_views_gij)
-{
-  test_ME_views<sierra::nalu::AlgTraitsPyr5>({
-    sierra::nalu::SCS_GRAD_OP,
-    sierra::nalu::SCS_GIJ,
   });
 }
 

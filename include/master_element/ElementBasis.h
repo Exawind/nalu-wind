@@ -64,13 +64,6 @@ struct Quad42DBasis
   static constexpr int DIM = traits_t::nDim_;
   static constexpr int NNODES = traits_t::nodesPerElement_;
 
-  [[nodiscard]] static constexpr int tensor_map(int k, int j, int i)
-  {
-    constexpr ArrayND<int[N1D][N1D][N1D]> map{
-      {{{0, 1}, {3, 2}}, {{4, 5}, {7, 6}}}};
-    return map(k, j, i);
-  }
-
   [[nodiscard]] static constexpr ArrayND<int[2]> to_tensor(int n)
   {
     constexpr ArrayND<int[NNODES][2]> map{{{0, 0}, {1, 0}, {1, 1}, {0, 1}}};
@@ -78,13 +71,13 @@ struct Quad42DBasis
   }
 
   template <typename LocT>
-  [[nodiscard]] static constexpr auto interp_1(int l, const LocT& x)
+  [[nodiscard]] static constexpr auto interp_1_2D(int l, const LocT& x)
   {
     return 0.5 * (1 + (2 * l - 1) * x);
   }
 
   template <typename LocT>
-  [[nodiscard]] static constexpr auto deriv_1(int l, const LocT& /*unused*/)
+  [[nodiscard]] static constexpr auto deriv_1_2d(int l, const LocT& /*unused*/)
   {
     return 0.5 * (2 * l - 1);
   }
@@ -93,15 +86,17 @@ struct Quad42DBasis
   [[nodiscard]] static constexpr double interpolant(int n, const LocT& x)
   {
     const auto ij = to_tensor(n);
-    return interp_1(ij[0], x[0]) * interp_1(ij[1], x[1]);
+    return interp_1_2D(ij[0], x[0]) * interp_1_2D(ij[1], x[1]);
   }
 
   template <typename LocT>
   [[nodiscard]] static constexpr auto deriv_coeff(int n, const LocT& x, int d)
   {
     const auto ij = to_tensor(n);
-    const auto xv = (d == 0) ? deriv_1(ij(0), x[0]) : interp_1(ij(0), x[0]);
-    const auto yv = (d == 1) ? deriv_1(ij(1), x[1]) : interp_1(ij(1), x[1]);
+    const auto xv =
+      (d == 0) ? deriv_1_2D(ij(0), x[0]) : interp_1_2D(ij(0), x[0]);
+    const auto yv =
+      (d == 1) ? deriv_1_2D(ij(1), x[1]) : interp_1_2D(ij(1), x[1]);
     return xv * yv;
   }
 };

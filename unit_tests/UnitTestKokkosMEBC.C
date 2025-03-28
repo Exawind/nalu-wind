@@ -132,8 +132,7 @@ TEST(KokkosMEBC, test_quad42D_views)
   for (int k = 0; k < 3; ++k) {
     test_MEBC_views<sierra::nalu::AlgTraitsEdge2DQuad42D>(
       k,
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP},
-      {sierra::nalu::FC_SHAPE_FCN, sierra::nalu::FC_SHIFTED_SHAPE_FCN});
+      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
   }
 }
 

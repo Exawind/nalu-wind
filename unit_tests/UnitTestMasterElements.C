@@ -161,10 +161,28 @@ TEST(master_element_coeffs, interp_scv)
         ASSERT_DOUBLETYPE_NEAR(shp_me[j], shp_ptr[j], 1e-12);
       }
     }
+
+    {
+      const auto shp = shape_fcn<AlgTraitsQuad4_2D, QuadRank::SCV>(q);
+      const auto shp_ptr = &(shp.internal_data_[0][0]);
+
+      auto shp_me = me_shape(stk::topology::QUAD_4_2D, QuadRank::SCV, q);
+      for (size_t j = 0; j < shp_me.size(); ++j) {
+        ASSERT_DOUBLETYPE_NEAR(shp_me[j], shp_ptr[j], 1e-12);
+      }
+    }
+
+    {
+      const auto shp = shape_fcn<AlgTraitsTri3_2D, QuadRank::SCV>(q);
+      const auto shp_ptr = &(shp.internal_data_[0][0]);
+
+      auto shp_me = me_shape(stk::topology::TRI_3_2D, QuadRank::SCV, q);
+      for (size_t j = 0; j < shp_me.size(); ++j) {
+        ASSERT_DOUBLETYPE_NEAR(shp_me[j], shp_ptr[j], 1e-12);
+      }
+    }
   }
 }
-
-
 
 } // namespace sierra::nalu
 namespace {
