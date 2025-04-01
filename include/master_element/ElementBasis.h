@@ -176,12 +176,9 @@ struct Pyr5Basis
     const auto apex = 0.25 / (1 - x[2]);
     const auto square_x = 1 + sgn(n, 0) * x[0] - x[2];
     const auto square_y = 1 + sgn(n, 1) * x[1] - x[2];
-    const ArrayND<val_t<LocT>[3]> dsquare {
-      {
-        sgn(n, 0) * square_y, square_x *sgn(n, 1), -(square_x + square_y)
-      }
-    };
-    const ArrayND<val_t<LocT>[3]> dinv_term { 0, 0, 4 * apex* apex };
+    const ArrayND<val_t<LocT>[3]> dsquare{
+      {sgn(n, 0) * square_y, square_x * sgn(n, 1), -(square_x + square_y)}};
+    const ArrayND<val_t<LocT>[3]> dinv_term{0, 0, 4 * apex * apex};
     return dsquare(d) * apex + square_x * square_y * dinv_term(d);
   }
 };
@@ -239,15 +236,11 @@ struct Wed6Basis
   template <typename LocT>
   [[nodiscard]] static constexpr auto deriv_coeff(int n, const LocT& x, int d)
   {
-    const ArrayND<val_t<LocT>[3]> tri { 1 - (x[0] + x[1]), x[0], x[1] };
-    constexpr ArrayND<val_t<LocT>[3][3]> dtri {
-      {
-        {-1, -1, 0}, {1, 0, 0}, { 0, 1, 0 }
-      }
-    };
+    const ArrayND<val_t<LocT>[3]> tri{1 - (x[0] + x[1]), x[0], x[1]};
+    constexpr ArrayND<val_t<LocT>[3][3]> dtri{
+      {{-1, -1, 0}, {1, 0, 0}, {0, 1, 0}}};
     const auto prism = 0.5 * (1 + (2 * (n > 2) - 1) * x[2]);
-    const auto dprism =
-      ArrayND<val_t<LocT>[3]> { 0, 0, 0.5 * (2 * (n > 2) - 1) };
+    const auto dprism = ArrayND<val_t<LocT>[3]>{0, 0, 0.5 * (2 * (n > 2) - 1)};
     return dtri(n % 3, d) * prism + tri(n % 3) * dprism(d);
   }
 };
