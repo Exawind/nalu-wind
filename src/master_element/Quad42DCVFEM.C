@@ -10,6 +10,7 @@
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFunctions.h>
 #include <master_element/Quad42DCVFEM.h>
+#include <master_element/CompileTimeElements.h>
 
 #include <AlgTraits.h>
 
@@ -223,12 +224,10 @@ void
 Quad42DSCV::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
-
-  quad_derivative(intgLoc_, deriv);
-  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
-    deriv, coords, gradop);
+  impl::grad_op<AlgTraitsQuad4_2D, QuadRank::SCV, QuadType::MID>(
+    coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -239,12 +238,10 @@ void
 Quad42DSCV::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
-
-  quad_derivative(intgLocShift_, deriv);
-  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
-    deriv, coords, gradop);
+  impl::grad_op<AlgTraitsQuad4_2D, QuadRank::SCV, QuadType::SHIFTED>(
+    coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -472,21 +469,18 @@ Quad42DSCS::grad_op(
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-
   quad_derivative(intgLoc_, deriv);
-  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
-    deriv, coords, gradop);
+  impl::grad_op<AlgTraitsQuad4_2D, QuadRank::SCS, QuadType::MID>(
+    coords, gradop);
 }
 void
 Quad42DSCS::grad_op(
   const SharedMemView<double**>& coords,
   SharedMemView<double***>& gradop,
-  SharedMemView<double***>& deriv)
+  SharedMemView<double***>& /*deriv*/)
 {
-
-  quad_derivative(intgLoc_, deriv);
-  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
-    deriv, coords, gradop);
+  impl::grad_op<AlgTraitsQuad4_2D, QuadRank::SCS, QuadType::MID>(
+    coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -497,11 +491,10 @@ void
 Quad42DSCS::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
-  quad_derivative(intgLocShift_, deriv);
-  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(
-    deriv, coords, gradop);
+  impl::grad_op<AlgTraitsQuad4_2D, QuadRank::SCS, QuadType::SHIFTED>(
+    coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -558,13 +551,16 @@ Quad42DSCS::gij(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
 
   const int npe = nodesPerElement_;
   const int nint = numIntPoints_;
 
   DoubleType dx_ds[2][2], ds_dx[2][2];
+
+  constexpr auto deriv =
+    elem_data_t<AlgTraitsQuad4_2D, QuadType::MID>::scs_deriv;
 
   for (int ki = 0; ki < nint; ++ki) {
     dx_ds[0][0] = 0.0;
@@ -616,9 +612,12 @@ Quad42DSCS::gij(
 // dynamic stall control.
 //--------------------------------------------------------------------------
 void
-Quad42DSCS::Mij(const double* coords, double* metric, double* deriv)
+Quad42DSCS::Mij(const double* coords, double* metric, double* /*deriv*/)
 {
-  generic_Mij_2d<AlgTraitsQuad4_2D>(numIntPoints_, deriv, coords, metric);
+  constexpr auto deriv =
+    elem_data_t<AlgTraitsQuad4_2D, QuadType::MID>::scs_deriv;
+  generic_Mij_2d<AlgTraitsQuad4_2D>(
+    numIntPoints_, deriv.data(), coords, metric);
 }
 //-------------------------------------------------------------------------
 KOKKOS_FUNCTION
@@ -626,8 +625,10 @@ void
 Quad42DSCS::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& metric,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
+  constexpr auto deriv =
+    elem_data_t<AlgTraitsQuad4_2D, QuadType::MID>::scs_deriv;
   generic_Mij_2d<AlgTraitsQuad4_2D>(deriv, coords, metric);
 }
 

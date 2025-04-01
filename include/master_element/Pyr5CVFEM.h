@@ -17,6 +17,8 @@
 // NGP-based includes
 #include "SimdInterface.h"
 #include "KokkosInterface.h"
+#include "master_element/CompileTimeElements.h"
+#include "master_element/IntegrationRules.h"
 
 #include <cstdlib>
 #include <stdexcept>
@@ -42,6 +44,9 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::shifted_grad_op;
   using MasterElement::shifted_shape_fcn;
+
+  template <QuadType q>
+  using pyr_data_t = elem_data_t<AlgTraits, q>;
 
   KOKKOS_FUNCTION
   PyrSCV();
@@ -144,6 +149,9 @@ public:
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
+
+  template <QuadType q>
+  using pyr_data_t = elem_data_t<AlgTraits, q>;
 
   KOKKOS_FUNCTION
   PyrSCS();

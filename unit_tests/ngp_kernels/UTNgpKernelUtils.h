@@ -11,6 +11,7 @@
 #include "ScratchViews.h"
 #include "kernel/Kernel.h"
 #include "utils/StkHelpers.h"
+#include "master_element/CompileTimeElements.h"
 
 namespace unit_test_ngp_kernels {
 
@@ -83,7 +84,9 @@ TestContinuityKernel<AlgTraits>::execute(
 
   auto& meViews = scratchViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
   auto& scs_areav = meViews.scs_areav;
-  auto& v_shape_fcn = meViews.scs_shape_fcn;
+  auto v_shape_fcn =
+    sierra::nalu::shape_fcn<AlgTraits, sierra::nalu::QuadRank::SCS>(
+      sierra::nalu::use_shifted_quad(false));
 
   printf(
     "ipNodeMap[2] = %d (7); SCS areav[2, 0] = %f\n", ipNodeMap[2],
