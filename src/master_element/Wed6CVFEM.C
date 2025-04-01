@@ -785,8 +785,9 @@ WedSCS::gij(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
+  constexpr auto deriv = elem_data_t<AlgTraitsWed6, QuadType::MID>::scs_deriv;
   generic_gij_3d<AlgTraitsWed6>(deriv, coords, gupper, glower);
 }
 
@@ -794,9 +795,10 @@ WedSCS::gij(
 //-------- Mij ------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-WedSCS::Mij(const double* coords, double* metric, double* deriv)
+WedSCS::Mij(const double* coords, double* metric, double* /*deriv*/)
 {
-  generic_Mij_3d<AlgTraitsWed6>(numIntPoints_, deriv, coords, metric);
+  constexpr auto deriv = elem_data_t<AlgTraitsWed6, QuadType::MID>::scs_deriv;
+  generic_Mij_3d<AlgTraitsWed6>(numIntPoints_, deriv.data(), coords, metric);
 }
 //-------------------------------------------------------------------------
 KOKKOS_FUNCTION
@@ -804,9 +806,9 @@ void
 WedSCS::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& metric,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
-  wed_deriv(numIntPoints_, &intgLoc_[0], deriv);
+  constexpr auto deriv = elem_data_t<AlgTraitsWed6, QuadType::MID>::scs_deriv;
   generic_Mij_3d<AlgTraitsWed6>(deriv, coords, metric);
 }
 

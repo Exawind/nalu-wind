@@ -705,8 +705,9 @@ TetSCS::gij(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
+  constexpr auto deriv = elem_data_t<AlgTraitsTet4, QuadType::MID>::scs_deriv;
   generic_gij_3d<AlgTraitsTet4>(deriv, coords, gupper, glower);
 }
 
@@ -714,9 +715,10 @@ TetSCS::gij(
 //-------- Mij ------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-TetSCS::Mij(const double* coords, double* metric, double* deriv)
+TetSCS::Mij(const double* coords, double* metric, double* /*deriv*/)
 {
-  generic_Mij_3d<AlgTraitsTet4>(numIntPoints_, deriv, coords, metric);
+  constexpr auto deriv = elem_data_t<AlgTraitsTet4, QuadType::MID>::scs_deriv;
+  generic_Mij_3d<AlgTraitsTet4>(numIntPoints_, deriv.data(), coords, metric);
 }
 //-------------------------------------------------------------------------
 KOKKOS_FUNCTION
@@ -724,9 +726,9 @@ void
 TetSCS::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& metric,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
-  tet_deriv(deriv);
+  constexpr auto deriv = elem_data_t<AlgTraitsTet4, QuadType::MID>::scs_deriv;
   generic_Mij_3d<AlgTraitsTet4>(deriv, coords, metric);
 }
 

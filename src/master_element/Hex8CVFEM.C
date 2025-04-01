@@ -671,11 +671,9 @@ HexSCS::gij(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
-  const SharedMemView<const double**, DeviceShmem> par_coord(
-    intgLoc_, numIntPoints_, nDim_);
-  hex8_derivative(par_coord, deriv);
+  constexpr auto deriv = elem_data_t<AlgTraitsHex8, QuadType::MID>::scs_deriv;
   generic_gij_3d<AlgTraitsHex8>(deriv, coords, gupper, glower);
 }
 
@@ -683,9 +681,10 @@ HexSCS::gij(
 //-------- Mij -------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-HexSCS::Mij(const double* coords, double* metric, double* deriv)
+HexSCS::Mij(const double* coords, double* metric, double* /*deriv*/)
 {
-  generic_Mij_3d<AlgTraitsHex8>(numIntPoints_, deriv, coords, metric);
+  constexpr auto deriv = elem_data_t<AlgTraitsHex8, QuadType::MID>::scs_deriv;
+  generic_Mij_3d<AlgTraitsHex8>(numIntPoints_, deriv.data(), coords, metric);
 }
 //-------------------------------------------------------------------------
 KOKKOS_FUNCTION
@@ -693,11 +692,9 @@ void
 HexSCS::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& metric,
-  SharedMemView<DoubleType***, DeviceShmem>& deriv)
+  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
 {
-  const SharedMemView<const double**, DeviceShmem> par_coord(
-    intgLoc_, numIntPoints_, nDim_);
-  hex8_derivative(par_coord, deriv);
+  constexpr auto deriv = elem_data_t<AlgTraitsHex8, QuadType::MID>::scs_deriv;
   generic_Mij_3d<AlgTraitsHex8>(deriv, coords, metric);
 }
 

@@ -44,6 +44,12 @@ struct ArrayND<ArrayType, enable_if_rank<ArrayType, 1>>
   {
     return internal_data_[i];
   }
+
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION const value_type*
+  data() const noexcept
+  {
+    return internal_data_;
+  }
 };
 
 template <typename ArrayType>
@@ -71,6 +77,12 @@ struct ArrayND<ArrayType, enable_if_rank<ArrayType, 2>>
   operator()(int j, int i) noexcept
   {
     return internal_data_[j][i];
+  }
+
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION const value_type*
+  data() const noexcept
+  {
+    return &(internal_data_[0][0]);
   }
 };
 
@@ -101,6 +113,12 @@ struct ArrayND<ArrayType, enable_if_rank<ArrayType, 3>>
   {
     return internal_data_[k][j][i];
   }
+
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION const value_type*
+  data() const noexcept
+  {
+    return &(internal_data_[0][0][0]);
+  }
 };
 
 template <typename ArrayType>
@@ -130,6 +148,12 @@ struct ArrayND<ArrayType, enable_if_rank<ArrayType, 4>>
   operator()(int l, int k, int j, int i) noexcept
   {
     return internal_data_[l][k][j][i];
+  }
+
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION const value_type*
+  data() const noexcept
+  {
+    return &(internal_data_[0][0][0][0]);
   }
 };
 
@@ -162,6 +186,12 @@ struct ArrayND<ArrayType, enable_if_rank<ArrayType, 5>>
   operator()(int m, int l, int k, int j, int i) noexcept
   {
     return internal_data_[m][l][k][j][i];
+  }
+
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION const value_type*
+  data() const noexcept
+  {
+    return &(internal_data_[0][0][0][0][0]);
   }
 };
 

@@ -902,7 +902,7 @@ calc_open_mass_flow_rate(
     sierra::nalu::nalu_ngp::simd_elem_field_updater(ngpMesh, ngpMdot);
 
   auto shape_fcn = sierra::nalu::shape_fcn<
-    sierra::nalu::AlgTraitsHex8, sierra::nalu::QuadRank::SCS>(
+    sierra::nalu::AlgTraitsQuad4, sierra::nalu::QuadRank::SCV>(
     sierra::nalu::use_shifted_quad(false));
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
