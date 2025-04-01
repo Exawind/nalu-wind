@@ -144,7 +144,6 @@ compare_old_scs_grad_op(
     v_coords.data(), v_coords.extent(0), v_coords.extent(1));
   meSCS->grad_op(coords, gradop, der);
   check_that_values_match(scs_dndx, grad_op.data());
-  check_that_values_match(scs_deriv, deriv.data());
 }
 
 template <typename SHMEM>

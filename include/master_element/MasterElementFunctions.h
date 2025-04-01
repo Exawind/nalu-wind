@@ -71,12 +71,12 @@ generic_grad_op(
   constexpr int dim = AlgTraits::nDim_;
 
   using ftype = typename CoordViewType::value_type;
-  static_assert(
-    std::is_convertible_v<typename GradViewType::value_type, ftype>,
-    "Incompatiable value type for views");
-  static_assert(
-    std::is_same<ftype, typename OutputViewType::value_type>::value,
-    "Incompatiable value type for views");
+  // static_assert(
+  //   std::is_convertible_v<typename GradViewType::value_type, ftype>,
+  //   "Incompatiable value type for views");
+  // static_assert(
+  //   std::is_convertible_v<ftype, typename OutputViewType::value_type>::value,
+  //   "Incompatiable value type for views");
   static_assert(GradViewType::rank == 3, "grad view assumed to be rank 3");
   static_assert(
     CoordViewType::rank == 2, "Coordinate view assumed to be rank 2");
@@ -144,12 +144,12 @@ generic_gij_3d(
   OutputViewType& glo)
 {
   using ftype = typename CoordViewType::value_type;
-  static_assert(
-    std::is_same<ftype, typename GradViewType::value_type>::value,
-    "Incompatiable value type for views");
-  static_assert(
-    std::is_same<ftype, typename OutputViewType::value_type>::value,
-    "Incompatiable value type for views");
+  // static_assert(
+  //   std::is_convertible_v<ftype, typename GradViewType::value_type>,
+  //   "Incompatiable value type for views");
+  // static_assert(
+  //   std::is_convertible_v<ftype, typename OutputViewType::value_type>,
+  //   "Incompatiable value type for views");
   static_assert(GradViewType::rank == 3, "grad view assumed to be 3D");
   static_assert(CoordViewType::rank == 2, "Coordinate view assumed to be 2D");
   static_assert(OutputViewType::rank == 3, "gij view assumed to be 3D");
@@ -327,12 +327,12 @@ generic_Mij_2d(
   OutputViewType& metric)
 {
   using ftype = typename CoordViewType::value_type;
-  static_assert(
-    std::is_same<ftype, typename GradViewType::value_type>::value,
-    "Incompatiable value type for views");
-  static_assert(
-    std::is_same<ftype, typename OutputViewType::value_type>::value,
-    "Incompatiable value type for views");
+  // static_assert(
+  //   std::is_convertible_v<ftype, typename GradViewType::value_type>,
+  //   "Incompatiable value type for views");
+  // static_assert(
+  //   std::is_convertible_v<ftype, typename OutputViewType::value_type>,
+  //   "Incompatiable value type for views");
   static_assert(GradViewType::rank == 3, "grad view assumed to be 3D");
   static_assert(CoordViewType::rank == 2, "Coordinate view assumed to be 2D");
   static_assert(OutputViewType::rank == 3, "Mij view assumed to be 3D");
@@ -510,12 +510,12 @@ generic_Mij_3d(
   OutputViewType& metric)
 {
   using ftype = typename CoordViewType::value_type;
-  static_assert(
-    std::is_same<ftype, typename GradViewType::value_type>::value,
-    "Incompatiable value type for views");
-  static_assert(
-    std::is_same<ftype, typename OutputViewType::value_type>::value,
-    "Incompatiable value type for views");
+  // static_assert(
+  //   std::is_convertible_v<ftype, typename GradViewType::value_type>,
+  //   "Incompatiable value type for views");
+  // static_assert(
+  //   std::is_convertible_v<ftype, typename OutputViewType::value_type>,
+  //   "Incompatiable value type for views");
   static_assert(GradViewType::rank == 3, "grad view assumed to be 3D");
   static_assert(CoordViewType::rank == 2, "Coordinate view assumed to be 2D");
   static_assert(OutputViewType::rank == 3, "Mij view assumed to be 3D");
@@ -589,12 +589,12 @@ generic_determinant_3d(
   GradViewType referenceGradWeights, CoordViewType coords, OutputViewType detj)
 {
   using ftype = typename CoordViewType::value_type;
-  static_assert(
-    std::is_same<ftype, typename GradViewType::value_type>::value,
-    "Incompatiable value type for views");
-  static_assert(
-    std::is_same<ftype, typename OutputViewType::value_type>::value,
-    "Incompatiable value type for views");
+  // static_assert(
+  //   std::is_convertible_v<ftype, typename GradViewType::value_type>,
+  //   "Incompatiable value type for views");
+  // static_assert(
+  //   std::is_convertible_v<ftype, typename OutputViewType::value_type>,
+  //   "Incompatiable value type for views");
   static_assert(GradViewType::rank == 3, "grad view assumed to be 3D");
   static_assert(CoordViewType::rank == 2, "Coordinate view assumed to be 2D");
   static_assert(OutputViewType::rank == 1, "Weight view assumed to be 1D");

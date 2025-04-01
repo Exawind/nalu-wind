@@ -77,7 +77,7 @@ struct Quad42DBasis
   }
 
   template <typename LocT>
-  [[nodiscard]] static constexpr auto deriv_1_2d(int l, const LocT& /*unused*/)
+  [[nodiscard]] static constexpr auto deriv_1_2D(int l, const LocT& /*unused*/)
   {
     return 0.5 * (2 * l - 1);
   }
@@ -92,12 +92,15 @@ struct Quad42DBasis
   template <typename LocT>
   [[nodiscard]] static constexpr auto deriv_coeff(int n, const LocT& x, int d)
   {
+    // for consistency in metric tensor computations, rescale back to-1/2,1/2
+    // range
+    constexpr int iso_range = 2;
+
     const auto ij = to_tensor(n);
-    const auto xv =
-      (d == 0) ? deriv_1_2D(ij(0), x[0]) : interp_1_2D(ij(0), x[0]);
-    const auto yv =
-      (d == 1) ? deriv_1_2D(ij(1), x[1]) : interp_1_2D(ij(1), x[1]);
-    return xv * yv;
+    if (d == 0) {
+      return iso_range * deriv_1_2D(ij(0), x[0]) * interp_1_2D(ij(1), x[1]);
+    }
+    return iso_range * interp_1_2D(ij(0), x[0]) * deriv_1_2D(ij(1), x[1]);
   }
 };
 
@@ -173,9 +176,12 @@ struct Pyr5Basis
     const auto apex = 0.25 / (1 - x[2]);
     const auto square_x = 1 + sgn(n, 0) * x[0] - x[2];
     const auto square_y = 1 + sgn(n, 1) * x[1] - x[2];
-    const ArrayND<val_t<LocT>[3]> dsquare{
-      {sgn(n, 0) * square_y, square_x * sgn(n, 1), -(square_x + square_y)}};
-    const ArrayND<val_t<LocT>[3]> dinv_term{0, 0, 4 * apex * apex};
+    const ArrayND<val_t<LocT>[3]> dsquare {
+      {
+        sgn(n, 0) * square_y, square_x *sgn(n, 1), -(square_x + square_y)
+      }
+    };
+    const ArrayND<val_t<LocT>[3]> dinv_term { 0, 0, 4 * apex* apex };
     return dsquare(d) * apex + square_x * square_y * dinv_term(d);
   }
 };
@@ -233,11 +239,15 @@ struct Wed6Basis
   template <typename LocT>
   [[nodiscard]] static constexpr auto deriv_coeff(int n, const LocT& x, int d)
   {
-    const ArrayND<val_t<LocT>[3]> tri{1 - (x[0] + x[1]), x[0], x[1]};
-    constexpr ArrayND<val_t<LocT>[3][3]> dtri{
-      {{-1, -1, 0}, {1, 0, 0}, {0, 1, 0}}};
+    const ArrayND<val_t<LocT>[3]> tri { 1 - (x[0] + x[1]), x[0], x[1] };
+    constexpr ArrayND<val_t<LocT>[3][3]> dtri {
+      {
+        {-1, -1, 0}, {1, 0, 0}, { 0, 1, 0 }
+      }
+    };
     const auto prism = 0.5 * (1 + (2 * (n > 2) - 1) * x[2]);
-    const auto dprism = ArrayND<val_t<LocT>[3]>{0, 0, 0.5 * (2 * (n > 2) - 1)};
+    const auto dprism =
+      ArrayND<val_t<LocT>[3]> { 0, 0, 0.5 * (2 * (n > 2) - 1) };
     return dtri(n % 3, d) * prism + tri(n % 3) * dprism(d);
   }
 };
@@ -293,11 +303,14 @@ struct Hex8Basis
   template <typename LocT>
   [[nodiscard]] static constexpr auto deriv_coeff(int n, const LocT& x, int d)
   {
+    constexpr auto iso_range =
+      2; // for historical reasons, rescale to -1/2, 1/2
+
     const auto ijk = to_tensor(n);
     const auto xv = (d == 0) ? deriv_1(ijk(0), x[0]) : interp_1(ijk(0), x[0]);
     const auto yv = (d == 1) ? deriv_1(ijk(1), x[1]) : interp_1(ijk(1), x[1]);
     const auto zv = (d == 2) ? deriv_1(ijk(2), x[2]) : interp_1(ijk(2), x[2]);
-    return xv * yv * zv;
+    return iso_range * xv * yv * zv;
   }
 };
 
