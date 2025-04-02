@@ -71,6 +71,50 @@ impl_test_WM_rotation(
   }
 }
 
+//! test rotation tensor for a given WM
+void 
+test_rotation_tensor(vs::Vector axis, double angle)
+{
+
+  // device memory
+  KVector dEnd("end", 1);
+  KVector dEndGold("end_gold", 1);
+  KVector dAxis("axis", 1);
+  KVector dPoint("point", 1);
+  KDouble dAngle("angle_in_degrees", 1);
+  // host mirrors
+  auto hEnd = Kokkos::create_mirror_view(dEnd);
+  auto hEndGold = Kokkos::create_mirror_view(dEndGold);
+  auto hAxis = Kokkos::create_mirror_view(dAxis);
+  auto hPoint = Kokkos::create_mirror_view(dPoint);
+  auto hAngle = Kokkos::create_mirror_view(dAngle);
+
+  hAxis(0) = axis;
+  hPoint(0) = point;
+  hAngle(0) = angle;
+
+  Kokkos::deep_copy(dAxis, hAxis);
+  Kokkos::deep_copy(dPoint, hPoint);
+  Kokkos::deep_copy(dAngle, hAngle);
+
+  Kokkos::parallel_for(
+    1, KOKKOS_LAMBDA(int) {
+      dEndGold(0) = dPoint(0) & vs::quaternion(dAxis(0), dAngle(0));
+
+      // WM setup
+      const auto wmAxis =
+        wmp::create_wm_param(dAxis(0), utils::radians(dAngle(0)));
+      dEnd(0) = wmp::rotation_tensor(wmAxis) & dPoint(0);
+    });
+
+  Kokkos::deep_copy(hEnd, dEnd);
+  Kokkos::deep_copy(hEndGold, dEndGold);
+
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_NEAR(hEndGold(0)[i], hEnd(0)[i], eps_test);
+  }
+}
+
 void
 impl_test_WM_compose_two_rot(
   vs::Vector point, vs::Vector v1, vs::Vector v2, double angle1, double angle2)
@@ -174,6 +218,7 @@ TEST(WienerMilenkovic, NGP_rotation_arbitrary_axis)
 {
   // test arbitrary axis rotation
   impl_test_WM_rotation(vs::Vector::one(), vs::Vector::khat(), 90.0);
+  test_rotation_tensor(vs::Vector::one(), vs::Vector::khat(), 90.0);
 }
 
 TEST(WienerMilenkovic, NGP_negative_rotation)
