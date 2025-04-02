@@ -73,7 +73,7 @@ impl_test_WM_rotation(
 
 //! test rotation tensor for a given WM
 void 
-test_rotation_tensor(vs::Vector axis, double angle)
+test_rotation_tensor(vs::Vector axis, vs::Vector point, double angle)
 {
 
   // device memory
