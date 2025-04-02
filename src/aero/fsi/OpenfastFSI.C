@@ -9,6 +9,7 @@
 
 #include "aero/fsi/OpenfastFSI.h"
 #include "aero/fsi/FSIturbine.h"
+#include <aero/aero_utils/WienerMilenkovic.h>
 #include <NaluParsing.h>
 
 #include <iostream>
