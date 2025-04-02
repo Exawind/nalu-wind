@@ -193,11 +193,7 @@ test_tensor_skewsym()
       vs::Vector v(1.0,2.0,3.0);
       vs::Vector u(4.0,5.0,6.0);
       
-      auto crossdiff = (vs::skew_sym(v) & u) - (v ^ u);
-
-      dv[0] = crossdiff[0];
-      dv[1] = crossdiff[1];
-      dv[2] = crossdiff[2];
+      dv[0] = (vs::skew_sym(v) & u) - (v ^ u);
 
     });
   dvec.modify<sierra::nalu::MemSpace>();
