@@ -20,6 +20,7 @@
 #include "MomentumBoussinesqRASrcNodeSuppAlg.h"
 #include "MovingAveragePostProcessor.h"
 #include "TimeIntegrator.h"
+#include "vs/vstraits.h"
 
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
