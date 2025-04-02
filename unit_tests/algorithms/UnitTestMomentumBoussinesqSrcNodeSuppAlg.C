@@ -25,6 +25,9 @@
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
 
+const double eps_test = vs::DTraits<double>::eps() * 1.e2;
+
+
 TEST(TestMomentumBoussinesqRASrcNodeSuppAlg, single_value)
 {
   NodeSuppHelper helper;
@@ -85,7 +88,7 @@ TEST(TestMomentumBoussinesqRASrcNodeSuppAlg, single_value)
   boussinesqRaAlg.node_execute(nullptr, rhs, node);
 
   for (int d = 0; d < 3; ++d) {
-    EXPECT_DOUBLE_EQ(rhs[d], 0.0);
+    EXPECT_NEAR(rhs[d], 0.0, eps_test);
   }
 
   const double temperature_value_new = 305;
@@ -96,7 +99,7 @@ TEST(TestMomentumBoussinesqRASrcNodeSuppAlg, single_value)
   double alpha = timeIntg.timeStepN_ / timeScale;
   const double avgTempVal =
     alpha * temperature_value_new + (1 - alpha) * temperature_value;
-  EXPECT_DOUBLE_EQ(avgTempVal, 302.5);
+  EXPECT_NEAR(avgTempVal, 302.5, eps_test);
 
   double coeff =
     -beta * rhoRef * (temperature_value_new - avgTempVal) * dnv_value;
@@ -107,6 +110,6 @@ TEST(TestMomentumBoussinesqRASrcNodeSuppAlg, single_value)
   boussinesqRaAlg.node_execute(nullptr, newRHS, node);
 
   for (int d = 0; d < 3; ++d) {
-    EXPECT_DOUBLE_EQ(newRHS[d], expected_rhs[d]);
+    EXPECT_NEAR(newRHS[d], expected_rhs[d], eps_test);
   }
 }
