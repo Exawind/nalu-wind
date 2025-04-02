@@ -480,6 +480,16 @@ OpenfastFSI::get_displacements(double /* current_time */)
         FAST.getNacelleDisplacement(
           fsiTurbineData_[i]->brFSIdata_.nac_def.data(),
           fsiTurbineData_[i]->brFSIdata_.nac_vel.data(), i);
+        
+        std::ofstream nacelle_loc_file("nacelle_loc.dat", std::ios_base::out);
+        auto nacelle_orient = vs::rotation_tensor(fsiTurbineData_[i]->brFSIdata_.nac_def);
+        for (int k = 0; k < 3; k++)
+          nacelle_loc_file << fsiTurbineData_[i]->brFSIdata_.nac_ref_pos[k] + fsiTurbineData_[i]->brFSIdata_.nac_def[k] << " " ;
+        nacelle_loc_file << std::endl;
+        nacelle_loc_file << nacelle_orient.xx() << " " << nacelle_orient.xy() << " " << nacelle_orient.xz() << " " << std::endl;
+        nacelle_loc_file << nacelle_orient.yx() << " " << nacelle_orient.yy() << " " << nacelle_orient.yz() << " " << std::endl;
+        nacelle_loc_file << nacelle_orient.zx() << " " << nacelle_orient.zy() << " " << nacelle_orient.zz() << " " << std::endl;
+        nacelle_loc_file.close();
       }
 
       MPI_Bcast(
