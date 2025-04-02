@@ -258,18 +258,18 @@ VOFAdvectionEdgeAlg::execute()
       const DblType dlhsfac = -velocity_scale * diffusion_coef * asq * inv_axdx;
 
       smdata.rhs(0) -= dlhsfac * (qNp1R - qNp1L) +
-                       inv_axdx * (1.0 - left_mask) * (qNp1R - qNp1L);
+                       inv_axdx * (1.0 - left_mask) * (qNp1R - qNp1L) * asq;
       smdata.rhs(1) += dlhsfac * (qNp1R - qNp1L) +
-                       inv_axdx * (1.0 - right_mask) * (qNp1R - qNp1L);
+                       inv_axdx * (1.0 - right_mask) * (qNp1R - qNp1L) * asq;
 
       massVofBalancedFlowRate.get(edge, 0) =
         dlhsfac * (qNp1R - qNp1L) * (density_liquid - density_gas);
 
-      smdata.lhs(0, 0) -= dlhsfac + inv_axdx * (1.0 - left_mask);
-      smdata.lhs(0, 1) += dlhsfac + inv_axdx * (1.0 - left_mask);
+      smdata.lhs(0, 0) -= dlhsfac + inv_axdx * (1.0 - left_mask) * asq;
+      smdata.lhs(0, 1) += dlhsfac + inv_axdx * (1.0 - left_mask) * asq;
 
-      smdata.lhs(1, 0) += dlhsfac + inv_axdx * (1.0 - right_mask);
-      smdata.lhs(1, 1) -= dlhsfac + inv_axdx * (1.0 - right_mask);
+      smdata.lhs(1, 0) += dlhsfac + inv_axdx * (1.0 - right_mask) * asq;
+      smdata.lhs(1, 1) -= dlhsfac + inv_axdx * (1.0 - right_mask) * asq;
 
       const DblType omegaL =
         diffusion_coef * stk::math::log((qNp1L + eps) / (1.0 - qNp1L + eps));
