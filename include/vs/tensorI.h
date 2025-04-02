@@ -189,6 +189,16 @@ operator&&(const TensorT<T>& t1, const TensorT<T>& t2)
 }
 
 template <typename T>
+KOKKOS_FORCEINLINE_FUNCTION TensorT<T>
+skew_sym(const VectorT<T>& v)
+{
+  return TensorT<T>{
+    0.0, -v[2], v[1],
+    v[2], 0.0, -v[0],
+    -v[1], v[0], 0.0};
+}
+
+template <typename T>
 KOKKOS_FORCEINLINE_FUNCTION T
 mag_sqr(const TensorT<T>& t)
 {
