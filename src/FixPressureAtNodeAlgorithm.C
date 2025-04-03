@@ -11,7 +11,6 @@
 #include "FixPressureAtNodeInfo.h"
 #include "Realm.h"
 #include "EquationSystem.h"
-#include "PeriodicManager.h"
 #include "LinearSystem.h"
 #include "SolutionOptions.h"
 
@@ -228,9 +227,9 @@ FixPressureAtNodeAlgorithm::process_pressure_fix_node(
 
   // For periodic simulations, make sure that the node doesn't lie on periodic
   // boundaries.
-  if (realm_.hasPeriodic_) {
-    stk::mesh::Selector pSel =
-      stk::mesh::selectUnion(realm_.periodicManager_->periodic_parts_vector());
+  if (realm_.periodic_mapping_) {
+    stk::mesh::Selector pSel = realm_.periodic_mapping_->selector_a |
+                               realm_.periodic_mapping_->selector_b;
     if (pSel(bulk.bucket(targetNode_))) {
       throw std::runtime_error(
         "FixPressureAtNode: Target node lies on a periodic boundary. This is "

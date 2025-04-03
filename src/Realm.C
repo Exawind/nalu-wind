@@ -33,7 +33,6 @@
 #include <PostProcessingInfo.h>
 #include <PostProcessingData.h>
 #include <PecletFunction.h>
-#include <PeriodicManager.h>
 #include <Realms.h>
 #include <SolutionOptions.h>
 #include <SideWriter.h>
@@ -116,6 +115,7 @@
 #include <stk_mesh/base/MeshBuilder.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
+#include <stk_mesh/base/NgpFieldParallel.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
 #include <stk_mesh/base/MetaData.hpp>
@@ -231,8 +231,6 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     hasInitializationTransfer_(false),
     hasIoTransfer_(false),
     hasExternalDataTransfer_(false),
-    periodicManager_(NULL),
-    hasPeriodic_(false),
     hasFluids_(false),
     globalParameters_(new stk::util::ParameterList()),
     exposedBoundaryPart_(0),
@@ -300,10 +298,6 @@ Realm::~Realm()
   // delete non-conformal related things
   if (NULL != nonConformalManager_)
     delete nonConformalManager_;
-
-  // delete periodic related things
-  if (NULL != periodicManager_)
-    delete periodicManager_;
 
   // Delete abl forcing pointer
   if (NULL != ablForcingAlg_)
@@ -530,8 +524,12 @@ Realm::initialize_prolog()
   if (does_mesh_move())
     init_current_coordinates();
 
-  if (hasPeriodic_)
-    periodicManager_->build_constraints();
+  NaluEnv::self().naluOutputP0() << "Realm::periodic" << std::endl;
+  periodic_mapping_ = periodic::make_translation_mapping(
+    allPeriodicInteractingParts_, bulk_data(),
+    (meta_data().locally_owned_part() | meta_data().globally_shared_part()),
+    meta_data().coordinate_field_name());
+  periodic::set_periodic_on_mesh(bulk_data(), periodic_mapping_);
 
   if (solutionOptions_->meshMotion_)
     meshMotionAlg_->initialize(get_current_time());
@@ -2930,23 +2928,13 @@ Realm::register_periodic_bc(
   stk::mesh::Part* masterMeshPart,
   stk::mesh::Part* slaveMeshPart,
   const double& searchTolerance,
-  const std::string& searchMethodName)
+  const std::string& /*searchMethodName*/)
 {
-  allPeriodicInteractingParts_.push_back(masterMeshPart);
-  allPeriodicInteractingParts_.push_back(slaveMeshPart);
-
-  // push back the part for book keeping and, later, skin mesh
-  bcPartVec_.push_back(masterMeshPart);
-  bcPartVec_.push_back(slaveMeshPart);
-
-  if (NULL == periodicManager_) {
-    periodicManager_ = new PeriodicManager(*this);
-    hasPeriodic_ = true;
-  }
-
-  // add the parts to the manager
-  periodicManager_->add_periodic_pair(
-    masterMeshPart, slaveMeshPart, searchTolerance, searchMethodName);
+  PeriodicBCData data;
+  data.part_a = masterMeshPart;
+  data.part_b = slaveMeshPart;
+  data.search_tol = searchTolerance;
+  allPeriodicInteractingParts_.push_back(data);
 }
 
 //--------------------------------------------------------------------------
@@ -3081,20 +3069,99 @@ Realm::setup_overset_bc(const OversetBoundaryConditionData& oversetBCData)
 void
 Realm::periodic_field_update(
   stk::mesh::FieldBase* theField,
-  const unsigned& sizeOfField,
-  const bool& bypassFieldCheck) const
+  const unsigned& /*sizeOfField*/,
+  const bool& /*bypassFieldCheck*/) const
 {
-  const bool addSlaves = true;
-  const bool setSlaves = true;
-  periodicManager_->apply_constraints(
-    theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves);
+  periodic::sum(DeviceSpace{}, bulk_data(), *theField);
+  DeviceSpace{}.fence();
+}
+
+namespace {
+template <typename T>
+auto
+to_ngp_field_vector(const std::vector<stk::mesh::FieldBase*>& fields)
+{
+  std::vector<stk::mesh::NgpField<T>*> fields_ngp;
+  fields_ngp.reserve(fields.size());
+
+  std::transform(
+    fields.begin(), fields.end(), std::back_inserter(fields_ngp),
+    [&](stk::mesh::FieldBase* f) {
+      STK_ThrowRequire(f);
+      STK_ThrowRequire(f->type_is<T>());
+      return std::addressof(stk::mesh::get_updated_ngp_field<T>(*f));
+    });
+  return fields_ngp;
+}
+} // namespace
+
+namespace comm {
+void
+scatter_sum(
+  const stk::mesh::BulkData& bulk,
+  const std::vector<stk::mesh::FieldBase*>& fields)
+{
+  stk::mesh::parallel_sum(bulk, to_ngp_field_vector<double>(fields));
+  for (auto field : fields) {
+    periodic::sum(DeviceSpace{}, bulk, *field);
+  }
+  DeviceSpace{}.fence();
+}
+
+void
+scatter_max(
+  const stk::mesh::BulkData& bulk,
+  const std::vector<stk::mesh::FieldBase*>& fields)
+{
+  std::vector<const stk::mesh::FieldBase*> f_c;
+  ;
+  for (auto field : fields) {
+    f_c.push_back(field);
+  }
+  stk::mesh::parallel_max(
+    bulk, f_c); // no NGP symmetric parallel max function in stk
+  for (auto field : fields) {
+    periodic::max(DeviceSpace{}, bulk, *field);
+  }
+  DeviceSpace{}.fence();
+}
+
+} // namespace comm
+
+void
+Realm::scatter_sum(const std::vector<stk::mesh::FieldBase*>& fields)
+{
+  comm::scatter_sum(bulk_data(), fields);
+}
+
+void
+Realm::scatter_max(const std::vector<stk::mesh::FieldBase*>& fields)
+{
+  comm::scatter_max(bulk_data(), fields);
+}
+
+void
+Realm::scatter_sum_with_overset(
+  const std::vector<stk::mesh::FieldBase*>& fields)
+{
+  comm::scatter_sum(bulk_data(), fields);
+  if (hasOverset_) {
+    for (auto field : fields) {
+      field->sync_to_host();
+      overset_field_update(
+        field, max_extent(*field, 0), max_extent(*field, 1), true);
+      field->modify_on_host();
+      field->sync_to_device();
+    }
+  }
 }
 
 void
 Realm::periodic_field_max(
-  stk::mesh::FieldBase* theField, const unsigned& sizeOfField) const
+  stk::mesh::FieldBase* theField, const unsigned& /*sizeOfField*/) const
 {
-  periodicManager_->apply_max_field(theField, sizeOfField);
+  periodic::max(DeviceSpace{}, bulk_data(), *theField);
+  DeviceSpace{}.fence();
 }
 
 //--------------------------------------------------------------------------
@@ -3104,15 +3171,11 @@ Realm::periodic_field_max(
 void
 Realm::periodic_delta_solution_update(
   stk::mesh::FieldBase* theField,
-  const unsigned& sizeOfField,
+  const unsigned& /*sizeOfField*/,
   const bool& doCommunication) const
 {
-  const bool bypassFieldCheck = true;
-  const bool addSlaves = false;
-  const bool setSlaves = true;
-  periodicManager_->ngp_apply_constraints(
-    theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves,
-    doCommunication);
+  periodic::sync(DeviceSpace{}, bulk_data(), *theField, doCommunication);
+  DeviceSpace{}.fence();
 }
 
 //--------------------------------------------------------------------------
@@ -3120,21 +3183,22 @@ Realm::periodic_delta_solution_update(
 //--------------------------------------------------------------------------
 void
 Realm::periodic_max_field_update(
-  stk::mesh::FieldBase* theField, const unsigned& sizeOfField) const
+  stk::mesh::FieldBase* theField, const unsigned& /*sizeOfField*/) const
 {
-  periodicManager_->apply_max_field(theField, sizeOfField);
+  periodic::max(DeviceSpace{}, bulk_data(), *theField);
+  DeviceSpace{}.fence();
 }
 
 //--------------------------------------------------------------------------
 //-------- get_slave_part_vector -------------------------------------------
 //--------------------------------------------------------------------------
-const stk::mesh::PartVector&
-Realm::get_slave_part_vector()
+stk::mesh::Selector
+Realm::replicated_periodic_node_selector()
 {
-  if (hasPeriodic_)
-    return periodicManager_->get_slave_part_vector();
-  else
-    return emptyPartVector_;
+  if (periodic_mapping_) {
+    return periodic_mapping_->selector_b;
+  }
+  return {};
 }
 
 void
@@ -3659,13 +3723,12 @@ Realm::set_hypre_global_id()
     nonConformalManager_->nonConformalGhosting_ != nullptr)
     stk::mesh::communicate_field_data(
       *nonConformalManager_->nonConformalGhosting_, fVec);
+  hypreGlobalId_->modify_on_host();
 
-  if (
-    periodicManager_ != nullptr &&
-    periodicManager_->periodicGhosting_ != nullptr) {
-    periodicManager_->parallel_communicate_field(hypreGlobalId_);
-    periodicManager_->periodic_parallel_communicate_field(hypreGlobalId_);
-  }
+  periodic::sync(DeviceSpace{}, bulk_data(), *hypreGlobalId_);
+  DeviceSpace{}.fence();
+  hypreGlobalId_->sync_to_host();
+
 #endif
 }
 
@@ -3903,29 +3966,6 @@ Realm::dump_simulation_time()
       << "    edge creation --  "
       << " \tavg: " << g_total_edge / double(nprocs) << " \tmin: " << g_min_edge
       << " \tmax: " << g_max_edge << std::endl;
-  }
-
-  // periodic
-  if (hasPeriodic_) {
-    double periodicSearchTime = periodicManager_->get_search_time();
-    double g_minPeriodicSearchTime = 0.0, g_maxPeriodicSearchTime = 0.0,
-           g_periodicSearchTime = 0.0;
-    stk::all_reduce_min(
-      NaluEnv::self().parallel_comm(), &periodicSearchTime,
-      &g_minPeriodicSearchTime, 1);
-    stk::all_reduce_max(
-      NaluEnv::self().parallel_comm(), &periodicSearchTime,
-      &g_maxPeriodicSearchTime, 1);
-    stk::all_reduce_sum(
-      NaluEnv::self().parallel_comm(), &periodicSearchTime,
-      &g_periodicSearchTime, 1);
-
-    NaluEnv::self().naluOutputP0() << "Timing for Periodic: " << std::endl;
-    NaluEnv::self().naluOutputP0()
-      << "           search --  "
-      << " \tavg: " << g_periodicSearchTime / double(nprocs)
-      << " \tmin: " << g_minPeriodicSearchTime
-      << " \tmax: " << g_maxPeriodicSearchTime << std::endl;
   }
 
   // nonconformal or overset

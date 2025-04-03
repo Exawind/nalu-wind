@@ -144,16 +144,8 @@ ComputeSSTMaxLengthScaleElemAlgorithm::execute()
       }
     }
   }
-
-  // parallel reduce; worry about periodic?
-  std::vector<const stk::mesh::FieldBase*> fieldVec;
-  fieldVec.push_back(maxLengthScale_);
-  stk::mesh::parallel_max(bulk_data, fieldVec);
-
-  // deal with periodicity
-  if (realm_.hasPeriodic_) {
-    realm_.periodic_field_max(maxLengthScale_, 1);
-  }
+  comm::scatter_max(bulk_data, {maxLengthScale_});
+  maxLengthScale_->sync_to_host();
 }
 
 } // namespace nalu

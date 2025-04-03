@@ -13,7 +13,6 @@
 #include <stdio.h>
 
 #include <Realm.h>
-#include <PeriodicManager.h>
 #include <NonConformalManager.h>
 #include <utils/StkHelpers.h>
 #include <LinearSolverTypes.h>

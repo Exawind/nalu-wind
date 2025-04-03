@@ -498,7 +498,7 @@ WallDistEquationSystem::compute_wall_distance()
   std::vector<const stk::mesh::FieldBase*> fVec{wallDistance_};
   stk::mesh::copy_owned_to_shared(bulk, fVec);
   stk::mesh::communicate_field_data(bulk.aura_ghosting(), fVec);
-  if (realm_.hasPeriodic_)
+  if (realm_.periodic_mapping_)
     realm_.periodic_delta_solution_update(wallDistance_, 1);
   if (
     realm_.hasNonConformal_ &&

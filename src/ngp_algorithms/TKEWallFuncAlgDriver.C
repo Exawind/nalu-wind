@@ -61,20 +61,11 @@ TKEWallFuncAlgDriver::post_work()
 
   stk::mesh::FieldBase* bcNodalTkeField =
     realm_.meta_data().get_fields()[bcNodalTke_];
-  stk::mesh::parallel_sum(realm_.bulk_data(), {bcNodalTkeField});
-
-  if (realm_.hasPeriodic_) {
-    const unsigned nComp = 1;
-    const bool bypassFieldCheck = false;
-    realm_.periodic_field_update(bcNodalTkeField, nComp, bypassFieldCheck);
-  }
-
-  ngpBcNodalTke.modify_on_host();
-  ngpBcNodalTke.sync_to_device();
+  comm::scatter_sum(realm_.bulk_data(), {bcNodalTkeField});
 
   // Normalize the computed BC TKE at integration points with assembled wall
-  // area and assign it to TKE and TKE BC fields on this sideset for use in the
-  // next solve.
+  // area and assign it to TKE and TKE BC fields on this sideset for use in
+  // the next solve.
   const stk::mesh::Selector sel =
     (realm_.meta_data().locally_owned_part() |
      realm_.meta_data().globally_shared_part()) &

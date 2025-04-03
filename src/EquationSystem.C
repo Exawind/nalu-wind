@@ -328,7 +328,7 @@ EquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
   timerSolve_ += (timeB - timeA);
   timerPrecond_ += linsys_->get_timer_precond();
 
-  if (realm_.hasPeriodic_) {
+  if (realm_.periodic_mapping_) {
     timeA = NaluEnv::self().nalu_time();
     realm_.periodic_delta_solution_update(deltaSolution, linsys_->numDof());
     timeB = NaluEnv::self().nalu_time();
