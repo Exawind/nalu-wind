@@ -259,8 +259,7 @@ VOFAdvectionEdgeAlg::execute()
 
       const DblType dlhsfac =
         -velocity_scale * diffusion_coef * asq * inv_axdx * combined_mask -
-        (1.0 - combined_mask) * diffusion_coef * asq * inv_axdx *
-          diffusion_coef * 2.0;
+        (1.0 - combined_mask) * asq * inv_axdx * diffusion_coef;
 
       smdata.rhs(0) -= dlhsfac * (qNp1R - qNp1L);
       smdata.rhs(1) += dlhsfac * (qNp1R - qNp1L);
