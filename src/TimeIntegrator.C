@@ -272,12 +272,11 @@ TimeIntegrator::prepare_for_time_integration()
 }
 
 void
-TimeIntegrator::pre_realm_advance_stage1(size_t inonlin)
+TimeIntegrator::prepare_time_step(size_t inonlin)
 {
   std::vector<Realm*>::iterator ii;
 
   if (inonlin < 1) {
-
     // negotiate time step
     if (adaptiveTimeStep_) {
       double theStep = 1.0e8;
@@ -285,8 +284,21 @@ TimeIntegrator::pre_realm_advance_stage1(size_t inonlin)
         theStep = std::min(theStep, (*ii)->compute_adaptive_time_step());
       }
       timeStepN_ = theStep;
+    } else if (overset_->is_external_overset()) {
+      // refresh value from file if externally coupled
+      timeStepN_ = timeStepFromFile_;
     }
+  }
+}
 
+void
+TimeIntegrator::pre_realm_advance_stage1(size_t inonlin)
+{
+  std::vector<Realm*>::iterator ii;
+
+  if (inonlin < 1) {
+
+    // Advance time according to time step
     currentTime_ += timeStepN_;
     timeStepCount_ += 1;
 
@@ -369,6 +381,7 @@ TimeIntegrator::integrate_realm()
   while (simulation_proceeds()) {
     const double startTime = NaluEnv::self().nalu_time();
 
+    prepare_time_step();
     pre_realm_advance_stage1();
     if (update_overset)
       overset_->update_connectivity();
@@ -532,6 +545,12 @@ TimeIntegrator::get_time_step(const NaluState& theState) const
     throw std::runtime_error("unknown state");
   }
   return dt;
+}
+
+void
+TimeIntegrator::set_time_step(const double dt)
+{
+  timeStepN_ = dt;
 }
 
 //--------------------------------------------------------------------------
