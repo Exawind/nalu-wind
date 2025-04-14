@@ -74,7 +74,7 @@ operating systems, against both the `master` and `develop` branches of
 [Trilinos](https://github.com/trilinos/Trilinos). Tests are performed both using
 flat MPI and hybrid MPI-GPU hardware configurations. The results of the nightly
 testing are publicly available on [CDash
-dashboard](http://my.cdash.org/index.php?project=Nalu-Wind).
+dashboard](http://my.cdash.org/index.php?project=Exawind).
 
 ### Contributing, reporting bugs, and requesting help
 
