@@ -18,6 +18,7 @@
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFunctions.h>
 #include <master_element/TensorOps.h>
+#include <master_element/CompileTimeElements.h>
 
 #include <NaluEnv.h>
 #include <AlgTraits.h>
@@ -26,6 +27,7 @@
 
 namespace {
 
+template <typename AlgTraits>
 std::pair<std::vector<DoubleType>, std::vector<DoubleType>>
 calculate_metric_tensor(
   sierra::nalu::MasterElement& me, std::vector<DoubleType>& ws_coords)
@@ -37,10 +39,21 @@ calculate_metric_tensor(
     elemCoords(ws_coords.data(), me.nodesPerElement_, me.nDim_);
   sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> dndx(
     ws_dndx.data(), me.num_integration_points(), me.nodesPerElement_, me.nDim_);
+
+  constexpr auto deriv_c = sierra::nalu::elem_data_t<
+    AlgTraits, sierra::nalu::QuadType::MID>::scs_deriv;
   sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> deriv(
     ws_deriv.data(), me.num_integration_points(), me.nodesPerElement_,
     me.nDim_);
   me.grad_op(elemCoords, dndx, deriv);
+
+  for (int k = 0; k < deriv.extent_int(0); ++k) {
+    for (int j = 0; j < deriv.extent_int(1); ++j) {
+      for (int i = 0; i < deriv.extent_int(2); ++i) {
+        deriv(k, j, i) = deriv_c(k, j, i);
+      }
+    }
+  }
 
   int metricSize = me.nDim_ * me.nDim_ * me.num_integration_points();
   std::vector<DoubleType> ws_contravariant_metric_tensor(metricSize);
@@ -61,9 +74,11 @@ calculate_metric_tensor(
 
 using VectorFieldType = stk::mesh::Field<double>;
 
+template <typename AlgTraits>
 void
-test_metric_for_topo_2D(stk::topology topo, double tol)
+test_metric_for_topo_2D(double tol)
 {
+  stk::topology topo = AlgTraits::topo_;
   int dim = topo.dimension();
   ASSERT_EQ(dim, 2);
 
@@ -109,7 +124,7 @@ test_metric_for_topo_2D(stk::topology topo, double tol)
   std::vector<DoubleType> contravariant_metric;
   std::vector<DoubleType> covariant_metric;
   std::tie(contravariant_metric, covariant_metric) =
-    calculate_metric_tensor(*mescs, ws_coords);
+    calculate_metric_tensor<AlgTraits>(*mescs, ws_coords);
 
   for (int ip = 0; ip < mescs->num_integration_points(); ++ip) {
     double identity[4] = {1.0, 0.0, 0.0, 1.0};
@@ -118,18 +133,20 @@ test_metric_for_topo_2D(stk::topology topo, double tol)
       &contravariant_metric[4 * ip], &covariant_metric[4 * ip],
       shouldBeIdentity);
     for (unsigned k = 0; k < 4; ++k) {
-      EXPECT_NEAR(
+      ASSERT_NEAR(
         stk::simd::get_data(contravariant_metric[4 * ip + k], 0),
         metric_exact[k], tol);
-      EXPECT_NEAR(
+      ASSERT_NEAR(
         stk::simd::get_data(shouldBeIdentity[k], 0), identity[k], tol);
     }
   }
 }
 
+template <typename AlgTraits>
 void
-test_metric_for_topo_3D(stk::topology topo, double tol)
+test_metric_for_topo_3D(double tol)
 {
+  stk::topology topo = AlgTraits::topo_;
   int dim = topo.dimension();
   ASSERT_EQ(dim, 3);
 
@@ -177,7 +194,7 @@ test_metric_for_topo_3D(stk::topology topo, double tol)
   std::vector<DoubleType> contravariant_metric;
   std::vector<DoubleType> covariant_metric;
   std::tie(contravariant_metric, covariant_metric) =
-    calculate_metric_tensor(*mescs, ws_coords);
+    calculate_metric_tensor<AlgTraits>(*mescs, ws_coords);
 
   for (int ip = 0; ip < mescs->num_integration_points(); ++ip) {
     double identity[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
@@ -187,10 +204,10 @@ test_metric_for_topo_3D(stk::topology topo, double tol)
       &contravariant_metric[9 * ip], &covariant_metric[9 * ip],
       shouldBeIdentity);
     for (unsigned k = 0; k < 9; ++k) {
-      EXPECT_NEAR(
+      ASSERT_NEAR(
         stk::simd::get_data(contravariant_metric[9 * ip + k], 0),
         metric_exact[k], tol);
-      EXPECT_NEAR(
+      ASSERT_NEAR(
         stk::simd::get_data(shouldBeIdentity[k], 0), identity[k], tol);
     }
   }
@@ -202,27 +219,28 @@ test_metric_for_topo_3D(stk::topology topo, double tol)
 
 TEST(MetricTensor, tri3)
 {
-  test_metric_for_topo_2D(stk::topology::TRIANGLE_3_2D, 1.0e-10);
+  test_metric_for_topo_2D<sierra::nalu::AlgTraitsTri3_2D>(1.0e-10);
 }
 
 TEST(MetricTensor, quad4)
 {
-  test_metric_for_topo_2D(stk::topology::QUADRILATERAL_4_2D, 1.0e-10);
+  test_metric_for_topo_2D<sierra::nalu::AlgTraitsQuad4_2D>(1.0e-10);
 }
 
 TEST(MetricTensor, tet4)
 {
-  test_metric_for_topo_3D(stk::topology::TET_4, 1.0e-10);
+  test_metric_for_topo_3D<sierra::nalu::AlgTraitsTet4>(1.0e-10);
 }
 
 TEST(MetricTensor, wedge6)
 {
-  test_metric_for_topo_3D(stk::topology::WEDGE_6, 1.0e-10);
+  test_metric_for_topo_3D<sierra::nalu::AlgTraitsWed6>(1.0e-10);
 }
 
 TEST(MetricTensor, hex8)
 {
-  test_metric_for_topo_3D(stk::topology::HEX_8, 1.0e-10);
+
+  test_metric_for_topo_3D<sierra::nalu::AlgTraitsHex8>(1.0e-10);
 }
 
 #endif // KOKKOS_ENABLE_GPU

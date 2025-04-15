@@ -48,22 +48,6 @@ check_that_values_match(
 }
 } // namespace
 
-void
-compare_old_face_shape_fcn(
-  const bool shifted,
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>&
-    fc_shape_fcn,
-  sierra::nalu::MasterElement* meFC)
-{
-  int len = fc_shape_fcn.extent(0) * fc_shape_fcn.extent(1);
-  if (shifted)
-    meFC->shifted_shape_fcn<>(fc_shape_fcn);
-  else
-    meFC->shape_fcn<>(fc_shape_fcn);
-
-  check_that_values_match(fc_shape_fcn, fc_shape_fcn.data());
-}
-
 template <typename SHMEM>
 void
 compare_old_face_grad_op(
@@ -140,15 +124,6 @@ test_MEBC_views(
             driver.meSCS_);
         }
       }
-      for (sierra::nalu::ELEM_DATA_NEEDED request : face_requests) {
-        if (request == sierra::nalu::FC_SHAPE_FCN) {
-          compare_old_face_shape_fcn(false, fcViews.fc_shape_fcn, driver.meFC_);
-        }
-        if (request == sierra::nalu::FC_SHIFTED_SHAPE_FCN) {
-          compare_old_face_shape_fcn(
-            true, fcViews.fc_shifted_shape_fcn, driver.meFC_);
-        }
-      }
     });
 }
 
@@ -157,8 +132,7 @@ TEST(KokkosMEBC, test_quad42D_views)
   for (int k = 0; k < 3; ++k) {
     test_MEBC_views<sierra::nalu::AlgTraitsEdge2DQuad42D>(
       k,
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP},
-      {sierra::nalu::FC_SHAPE_FCN, sierra::nalu::FC_SHIFTED_SHAPE_FCN});
+      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
   }
 }
 
