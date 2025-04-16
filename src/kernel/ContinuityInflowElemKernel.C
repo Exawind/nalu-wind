@@ -60,6 +60,9 @@ ContinuityInflowElemKernel<BcAlgTraits>::ContinuityInflowElemKernel(
   dataPreReqs.add_gathered_nodal_field(densityBC_, 1);
   dataPreReqs.add_face_field(
     exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+
+  auto shp_fcn = useShifted_ ? FC_SHIFTED_SHAPE_FCN : FC_SHAPE_FCN;
+  dataPreReqs.add_master_element_call(shp_fcn, CURRENT_COORDINATES);
 }
 
 template <typename BcAlgTraits>
@@ -86,6 +89,9 @@ ContinuityInflowElemKernel<BcAlgTraits>::execute(
   const auto& vf_density = scratchViews.get_scratch_view_1D(densityBC_);
   const auto& vf_exposedAreaVec =
     scratchViews.get_scratch_view_2D(exposedAreaVec_);
+  const auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
+  const auto& vf_shape_function =
+    useShifted_ ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
   const int* ipNodeMap = meFC_->ipNodeMap();
   for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
@@ -101,9 +107,7 @@ ContinuityInflowElemKernel<BcAlgTraits>::execute(
     DoubleType rhoBip = 0.0;
 
     for (int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic) {
-      const DoubleType r = shape_fcn<BcAlgTraits, QuadRank::SCV>(
-        use_shifted_quad(useShifted_), ip, ic);
-
+      const DoubleType r = vf_shape_function(ip, ic);
       const DoubleType rhoIC = vf_density(ic);
       rhoBip += r * rhoIC;
       for (int j = 0; j < BcAlgTraits::nDim_; ++j) {

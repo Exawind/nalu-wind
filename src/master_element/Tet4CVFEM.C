@@ -11,7 +11,6 @@
 #include <master_element/MasterElementFunctions.h>
 #include <master_element/Tet4CVFEM.h>
 #include <master_element/Hex8GeometryFunctions.h>
-#include "master_element/CompileTimeElements.h"
 
 #include <AlgTraits.h>
 
@@ -364,9 +363,10 @@ void
 TetSCV::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsTet4, QuadRank::SCV, QuadType::MID>(coords, gradop);
+  tet_deriv(deriv);
+  generic_grad_op<AlgTraitsTet4>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -377,10 +377,10 @@ void
 TetSCV::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsTet4, QuadRank::SCV, QuadType::SHIFTED>(
-    coords, gradop);
+  tet_deriv(deriv);
+  generic_grad_op<AlgTraitsTet4>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -638,18 +638,20 @@ void
 TetSCS::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsTet4, QuadRank::SCS, QuadType::MID>(coords, gradop);
+  tet_deriv(deriv);
+  generic_grad_op<AlgTraitsTet4>(deriv, coords, gradop);
 }
 
 void
 TetSCS::grad_op(
   const SharedMemView<double**>& coords,
   SharedMemView<double***>& gradop,
-  SharedMemView<double***>&)
+  SharedMemView<double***>& deriv)
 {
-  impl::grad_op<AlgTraitsTet4, QuadRank::SCS, QuadType::MID>(coords, gradop);
+  tet_deriv(deriv);
+  generic_grad_op<AlgTraitsTet4>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -660,10 +662,11 @@ void
 TetSCS::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsTet4, QuadRank::SCS, QuadType::SHIFTED>(
-    coords, gradop);
+  tet_deriv(deriv);
+
+  generic_grad_op<AlgTraitsTet4>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -705,9 +708,8 @@ TetSCS::gij(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
-  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  constexpr auto deriv = elem_data_t<AlgTraitsTet4, QuadType::MID>::scs_deriv;
   generic_gij_3d<AlgTraitsTet4>(deriv, coords, gupper, glower);
 }
 
@@ -715,10 +717,9 @@ TetSCS::gij(
 //-------- Mij ------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-TetSCS::Mij(const double* coords, double* metric, double* /*deriv*/)
+TetSCS::Mij(const double* coords, double* metric, double* deriv)
 {
-  constexpr auto deriv = elem_data_t<AlgTraitsTet4, QuadType::MID>::scs_deriv;
-  generic_Mij_3d<AlgTraitsTet4>(numIntPoints_, deriv.data(), coords, metric);
+  generic_Mij_3d<AlgTraitsTet4>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
 KOKKOS_FUNCTION
@@ -726,9 +727,9 @@ void
 TetSCS::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& metric,
-  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  constexpr auto deriv = elem_data_t<AlgTraitsTet4, QuadType::MID>::scs_deriv;
+  tet_deriv(deriv);
   generic_Mij_3d<AlgTraitsTet4>(deriv, coords, metric);
 }
 

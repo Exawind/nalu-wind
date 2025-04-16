@@ -57,6 +57,11 @@ DynamicPressureOpenAlg<BcAlgTraits>::DynamicPressureOpenAlg(
   faceData_.add_face_field(
     exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceData_.add_face_field(openMassFlowRate_, BcAlgTraits::numFaceIp_);
+
+  useShifted_ = realm.solutionOptions_->get_skew_symmetric("velocity") ||
+                realm.realmUsesEdges_;
+  auto shp_fcn = useShifted_ ? FC_SHIFTED_SHAPE_FCN : FC_SHAPE_FCN;
+  faceData_.add_master_element_call(shp_fcn, CURRENT_COORDINATES);
 }
 
 template <typename BcAlgTraits>
@@ -82,9 +87,6 @@ DynamicPressureOpenAlg<BcAlgTraits>::execute()
   const unsigned velID = velocity_;
   const auto useShifted = useShifted_;
 
-  const auto shp =
-    shape_fcn<BcAlgTraits, QuadRank::SCV>(use_shifted_quad(useShifted));
-
   nalu_ngp::run_elem_algorithm(
     algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
     KOKKOS_LAMBDA(ElemSimdData & edata) {
@@ -92,8 +94,10 @@ DynamicPressureOpenAlg<BcAlgTraits>::execute()
       const auto& mdot = scrViews.get_scratch_view_1D(mdotID);
       const auto& area = scrViews.get_scratch_view_2D(areavecID);
       const auto& vel = scrViews.get_scratch_view_2D(velID);
-      const auto meViews = scrViews.get_me_views(CURRENT_COORDINATES);
 
+      const auto meViews = scrViews.get_me_views(CURRENT_COORDINATES);
+      const auto& interp =
+        useShifted ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
       for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
         DoubleType asq = 0.0;
         for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
@@ -102,7 +106,7 @@ DynamicPressureOpenAlg<BcAlgTraits>::execute()
         }
         DoubleType unIp = 0;
         for (int n = 0; n < BcAlgTraits::nodesPerFace_; ++n) {
-          const auto r = shp(ip, n);
+          const auto r = interp(ip, n);
           for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
             unIp += r * area(ip, d) * vel(n, d);
           }

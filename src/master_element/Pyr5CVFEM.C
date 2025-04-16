@@ -7,7 +7,6 @@
 // for more details.
 //
 
-#include "master_element/CompileTimeElements.h"
 #include <master_element/MasterElement.h>
 #include <master_element/Pyr5CVFEM.h>
 #include <master_element/Hex8GeometryFunctions.h>
@@ -594,9 +593,10 @@ void
 PyrSCV::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsPyr5, QuadRank::SCV, QuadType::MID>(coords, gradop);
+  pyr_deriv(numIntPoints_, &intgLoc_[0], deriv);
+  generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -608,10 +608,10 @@ void
 PyrSCV::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsPyr5, QuadRank::SCV, QuadType::SHIFTED>(
-    coords, gradop);
+  shifted_pyr_deriv(numIntPoints_, &intgLocShift_[0], deriv);
+  generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
 template <typename SCALAR, typename SHMEM>
@@ -642,7 +642,6 @@ PyrSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
   shifted_shape_fcn<>(shpfc);
 }
-
 void
 PyrSCV::shifted_shape_fcn(SharedMemView<double**, HostShmem>& shpfc)
 {
@@ -922,18 +921,20 @@ void
 PyrSCS::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsPyr5, QuadRank::SCS, QuadType::MID>(coords, gradop);
+  pyr_deriv(numIntPoints_, &intgLoc_[0], deriv);
+  generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
 void
 PyrSCS::grad_op(
   const SharedMemView<double**>& coords,
   SharedMemView<double***>& gradop,
-  SharedMemView<double***>& /*deriv*/)
+  SharedMemView<double***>& deriv)
 {
-  impl::grad_op<AlgTraitsPyr5, QuadRank::SCS, QuadType::MID>(coords, gradop);
+  pyr_deriv(numIntPoints_, &intgLoc_[0], deriv);
+  generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -944,10 +945,10 @@ void
 PyrSCS::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsPyr5, QuadRank::SCS, QuadType::SHIFTED>(
-    coords, gradop);
+  shifted_pyr_deriv(numIntPoints_, &intgLocShift_[0], deriv);
+  generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------

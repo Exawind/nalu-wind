@@ -180,6 +180,10 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
     exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceData_.add_face_field(wallNormDist_, BcAlgTraits::numFaceIp_);
 
+  auto shp_fcn = useShifted_ ? FC_SHIFTED_SHAPE_FCN : FC_SHAPE_FCN;
+  faceData_.add_master_element_call(shp_fcn, CURRENT_COORDINATES);
+
+  // Load the user data from the input file.
   load(node);
 }
 
@@ -342,9 +346,6 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
                               std::to_string(BcAlgTraits::faceTopo_) + "_" +
                               std::to_string(BcAlgTraits::elemTopo_);
 
-  const auto shp = shape_fcn<typename BcAlgTraits::FaceTraits, QuadRank::SCV>(
-    use_shifted_quad(useShifted));
-
   nalu_ngp::run_face_elem_par_reduce(
     algName, meshInfo, faceData_, elemData_, sel,
     KOKKOS_LAMBDA(
@@ -374,6 +375,8 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
       const auto& v_wallnormdist = scrViewsFace.get_scratch_view_1D(wDistID);
 
       const auto meViews = scrViewsFace.get_me_views(CURRENT_COORDINATES);
+      const auto& v_shape_fcn =
+        useShifted ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
       for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
 
@@ -406,7 +409,7 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
         DoubleType tempOppNode = 0.0;
 
         for (int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic) {
-          const DoubleType r = shp(ip, ic);
+          const DoubleType r = v_shape_fcn(ip, ic);
           heatFluxIp += r * v_bcHeatFlux(ic);
           rhoIp += r * v_rho(ic);
           CpIp += r * v_specHeat(ic);

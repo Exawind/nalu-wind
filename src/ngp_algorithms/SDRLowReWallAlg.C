@@ -54,6 +54,9 @@ SDRLowReWallAlg<BcAlgTraits>::SDRLowReWallAlg(
 
   elemData_.add_coordinates_field(
     coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+
+  auto shp_fcn = useShifted_ ? FC_SHIFTED_SHAPE_FCN : FC_SHAPE_FCN;
+  faceData_.add_master_element_call(shp_fcn, CURRENT_COORDINATES);
 }
 
 template <typename BcAlgTraits>
@@ -93,9 +96,6 @@ SDRLowReWallAlg<BcAlgTraits>::execute()
                               std::to_string(BcAlgTraits::faceTopo_) + "_" +
                               std::to_string(BcAlgTraits::elemTopo_);
 
-  const auto shp = shape_fcn<typename BcAlgTraits::FaceTraits, QuadRank::SCV>(
-    use_shifted_quad(useShifted));
-
   nalu_ngp::run_face_elem_algorithm(
     algName, meshInfo, faceData_, elemData_, sel,
     KOKKOS_LAMBDA(SimdDataType & fdata) {
@@ -103,6 +103,11 @@ SDRLowReWallAlg<BcAlgTraits>::execute()
       auto& v_density = fdata.simdFaceView.get_scratch_view_1D(densityID);
       auto& v_viscosity = fdata.simdFaceView.get_scratch_view_1D(viscosityID);
       auto& v_area = fdata.simdFaceView.get_scratch_view_2D(exposedAreaVecID);
+
+      const auto& meViews =
+        fdata.simdFaceView.get_me_views(CURRENT_COORDINATES);
+      const auto& v_shape_fcn =
+        useShifted ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
       const int* faceIpNodeMap = meFC->ipNodeMap();
       for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
@@ -125,7 +130,7 @@ SDRLowReWallAlg<BcAlgTraits>::execute()
         DoubleType rhoIp = 0.0;
         DoubleType muIp = 0.0;
         for (int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic) {
-          const DoubleType r = shp(ip, ic);
+          const DoubleType r = v_shape_fcn(ip, ic);
           rhoIp += r * v_density(ic);
           muIp += r * v_viscosity(ic);
         }

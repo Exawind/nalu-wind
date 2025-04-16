@@ -117,17 +117,16 @@ MomentumEdgeSolverAlg::execute()
       // Scratch work array for edgeAreaVector
       NALU_ALIGNED DblType av[NDimMax_];
       // Populate area vector work array
-      for (int d = 0; d < ndim; ++d) {
+      for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
-      }
 
       const DblType mdot =
-        massFlowRate(edge, 0) + has_vof * massVofBalancedFlowRate(edge, 0);
+        massFlowRate.get(edge, 0) + has_vof * massVofBalancedFlowRate(edge, 0);
 
-      const DblType densityL = density(nodeL, 0);
-      const DblType densityR = density(nodeR, 0);
-      const DblType viscosityL = viscosity(nodeL, 0);
-      const DblType viscosityR = viscosity(nodeR, 0);
+      const DblType densityL = density.get(nodeL, 0);
+      const DblType densityR = density.get(nodeR, 0);
+      const DblType viscosityL = viscosity.get(nodeL, 0);
+      const DblType viscosityR = viscosity.get(nodeR, 0);
 
       const DblType viscIp = 0.5 * (viscosityL + viscosityR);
 
@@ -135,7 +134,8 @@ MomentumEdgeSolverAlg::execute()
       DblType axdx = 0.0;
       DblType asq = 0.0;
       for (int d = 0; d < ndim; ++d) {
-        const DblType dxj = coordinates(nodeR, d) - coordinates(nodeL, d);
+        const DblType dxj =
+          coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         asq += av[d] * av[d];
         axdx += av[d] * dxj;
       }

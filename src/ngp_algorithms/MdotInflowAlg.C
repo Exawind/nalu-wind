@@ -52,6 +52,9 @@ MdotInflowAlg<BcAlgTraits>::MdotInflowAlg(
   faceData_.add_gathered_nodal_field(velocityBC_, BcAlgTraits::nDim_);
   faceData_.add_face_field(
     exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+
+  auto shp_fcn = useShifted_ ? SCS_SHIFTED_SHAPE_FCN : SCS_SHAPE_FCN;
+  faceData_.add_master_element_call(shp_fcn);
 }
 
 template <typename BcAlgTraits>
@@ -89,10 +92,6 @@ MdotInflowAlg<BcAlgTraits>::execute()
   Kokkos::Sum<DoubleType> mdotReducer(mdotInflowTotal);
   const std::string algName =
     "MdotInflowAlg_" + std::to_string(BcAlgTraits::topo_);
-
-  const auto shp =
-    shape_fcn<BcAlgTraits, QuadRank::SCV>(use_shifted_quad(useShifted));
-
   nalu_ngp::run_elem_par_reduce(
     algName, meshInfo, meta.side_rank(), faceData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata, DoubleType & mdotInflow) {
@@ -104,6 +103,10 @@ MdotInflowAlg<BcAlgTraits>::execute()
       const auto& v_rho = scrView.get_scratch_view_1D(densityID);
       const auto& v_areav = scrView.get_scratch_view_2D(exposedAreaVecID);
 
+      const auto& meViews = scrView.get_me_views(CURRENT_COORDINATES);
+      const auto& v_shape_fcn =
+        useShifted ? meViews.scs_shifted_shape_fcn : meViews.scs_shape_fcn;
+
       for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
         DoubleType rhoBip = 0.0;
         for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
@@ -112,7 +115,7 @@ MdotInflowAlg<BcAlgTraits>::execute()
         }
 
         for (int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic) {
-          const DoubleType r = shp(ip, ic);
+          const DoubleType r = v_shape_fcn(ip, ic);
           rhoBip += r * v_rho(ic);
           for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
             uBip[d] += r * v_vel(ic, d);

@@ -12,7 +12,6 @@
 #include <master_element/MasterElementFunctions.h>
 #include <master_element/TensorOps.h>
 #include <master_element/Hex8GeometryFunctions.h>
-#include <master_element/CompileTimeElements.h>
 
 #include <NaluEnv.h>
 
@@ -328,7 +327,6 @@ HexSCV::shape_fcn(SharedMemView<SCALAR**, SHMEM>& shpfc)
 {
   hex8_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
 }
-
 KOKKOS_FUNCTION void
 HexSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem>& shpfc)
 {
@@ -411,18 +409,24 @@ void
 HexSCV::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsHex8, QuadRank::SCV, QuadType::MID>(coords, gradop);
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
+  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
 void
 HexSCV::grad_op(
   const SharedMemView<double**>& coords,
   SharedMemView<double***>& gradop,
-  SharedMemView<double***>&)
+  SharedMemView<double***>& deriv)
 {
-  impl::grad_op<AlgTraitsHex8, QuadRank::SCV, QuadType::MID>(coords, gradop);
+  const SharedMemView<const double**, HostShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
+  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -433,10 +437,12 @@ void
 HexSCV::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsHex8, QuadRank::SCV, QuadType::SHIFTED>(
-    coords, gradop);
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    intgLocShift_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
+  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -531,32 +537,40 @@ void
 HexSCS::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsHex8, QuadRank::SCS, QuadType::MID>(coords, gradop);
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
+  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
 void
 HexSCS::grad_op(
   const SharedMemView<double**>& coords,
   SharedMemView<double***>& gradop,
-  SharedMemView<double***>&)
+  SharedMemView<double***>& deriv)
 {
-  impl::grad_op<AlgTraitsHex8, QuadRank::SCS, QuadType::MID>(coords, gradop);
+  const SharedMemView<const double**, HostShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
+  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
 //-------- shifted_grad_op -------------------------------------------------
-//--------------------------------------------------------------------------
+//--------------------------------------c------------------------------------
 KOKKOS_FUNCTION
 void
 HexSCS::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsHex8, QuadRank::SCS, QuadType::SHIFTED>(
-    coords, gradop);
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    intgLocShift_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
+  generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -671,9 +685,11 @@ HexSCS::gij(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
-  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  constexpr auto deriv = elem_data_t<AlgTraitsHex8, QuadType::MID>::scs_deriv;
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
   generic_gij_3d<AlgTraitsHex8>(deriv, coords, gupper, glower);
 }
 
@@ -681,10 +697,9 @@ HexSCS::gij(
 //-------- Mij -------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-HexSCS::Mij(const double* coords, double* metric, double* /*deriv*/)
+HexSCS::Mij(const double* coords, double* metric, double* deriv)
 {
-  constexpr auto deriv = elem_data_t<AlgTraitsHex8, QuadType::MID>::scs_deriv;
-  generic_Mij_3d<AlgTraitsHex8>(numIntPoints_, deriv.data(), coords, metric);
+  generic_Mij_3d<AlgTraitsHex8>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
 KOKKOS_FUNCTION
@@ -692,9 +707,11 @@ void
 HexSCS::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& metric,
-  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  constexpr auto deriv = elem_data_t<AlgTraitsHex8, QuadType::MID>::scs_deriv;
+  const SharedMemView<const double**, DeviceShmem> par_coord(
+    intgLoc_, numIntPoints_, nDim_);
+  hex8_derivative(par_coord, deriv);
   generic_Mij_3d<AlgTraitsHex8>(deriv, coords, metric);
 }
 

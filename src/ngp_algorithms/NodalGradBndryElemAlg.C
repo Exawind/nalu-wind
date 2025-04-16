@@ -119,9 +119,6 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::
   const stk::mesh::Selector sel =
     meta.locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
-  const auto shp =
-    shape_fcn<AlgTraits, QuadRank::SCV>(use_shifted_quad(useShifted));
-
   const std::string algName =
     (meta.get_fields()[gradPhi_]->name() + "_bndry_" +
      std::to_string(AlgTraits::topo_));
@@ -129,16 +126,21 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::
     algName, meshInfo, meta.side_rank(), dataNeeded_, sel,
     KOKKOS_LAMBDA(typename ViewHelperType::SimdDataType & edata) {
       const int* ipNodeMap = meFC->ipNodeMap();
+
       auto& scrView = edata.simdScrView;
       const auto& v_dnv = scrView.get_scratch_view_1D(dnvID);
       const auto& v_areav = scrView.get_scratch_view_2D(exposedAreaID);
       const ViewHelperType v_phi(scrView, phiID);
 
+      const auto& meViews = scrView.get_me_views(CURRENT_COORDINATES);
+      const auto& v_shape_fcn =
+        useShifted ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
+
       for (int di = 0; di < phiSize; ++di) {
         for (int ip = 0; ip < AlgTraits::numFaceIp_; ++ip) {
           DoubleType qIp = 0.0;
           for (int n = 0; n < AlgTraits::nodesPerFace_; ++n) {
-            qIp += shp(ip, n) * v_phi(n, di);
+            qIp += v_shape_fcn(ip, n) * v_phi(n, di);
           }
 
           const int ni = ipNodeMap[ip];
