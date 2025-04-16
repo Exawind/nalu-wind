@@ -7,7 +7,6 @@
 // for more details.
 //
 
-#include "master_element/CompileTimeElements.h"
 #include "master_element/Wed6CVFEM.h"
 #include "master_element/MasterElementFunctions.h"
 #include "master_element/Hex8GeometryFunctions.h"
@@ -389,9 +388,10 @@ void
 WedSCV::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsWed6, QuadRank::SCV, QuadType::MID>(coords, gradop);
+  wed_deriv(numIntPoints_, &intgLoc_[0], deriv);
+  generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -402,10 +402,10 @@ void
 WedSCV::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsWed6, QuadRank::SCV, QuadType::SHIFTED>(
-    coords, gradop);
+  wed_deriv(numIntPoints_, &intgLocShift_[0], deriv);
+  generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
 }
 
 template <typename SCALAR, typename SHMEM>
@@ -667,18 +667,20 @@ void
 WedSCS::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsWed6, QuadRank::SCS, QuadType::MID>(coords, gradop);
+  wed_deriv(numIntPoints_, &intgLoc_[0], deriv);
+  generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
 }
 
 void
 WedSCS::grad_op(
   const SharedMemView<double**>& coords,
   SharedMemView<double***>& gradop,
-  SharedMemView<double***>&)
+  SharedMemView<double***>& deriv)
 {
-  impl::grad_op<AlgTraitsWed6, QuadRank::SCS, QuadType::MID>(coords, gradop);
+  wed_deriv(numIntPoints_, &intgLoc_[0], deriv);
+  generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
 }
 
 KOKKOS_FUNCTION
@@ -686,10 +688,10 @@ void
 WedSCS::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsWed6, QuadRank::SCS, QuadType::SHIFTED>(
-    coords, gradop);
+  wed_deriv(numIntPoints_, &intgLocShift_[0], deriv);
+  generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -785,9 +787,8 @@ WedSCS::gij(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
-  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  constexpr auto deriv = elem_data_t<AlgTraitsWed6, QuadType::MID>::scs_deriv;
   generic_gij_3d<AlgTraitsWed6>(deriv, coords, gupper, glower);
 }
 
@@ -795,10 +796,9 @@ WedSCS::gij(
 //-------- Mij ------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-WedSCS::Mij(const double* coords, double* metric, double* /*deriv*/)
+WedSCS::Mij(const double* coords, double* metric, double* deriv)
 {
-  constexpr auto deriv = elem_data_t<AlgTraitsWed6, QuadType::MID>::scs_deriv;
-  generic_Mij_3d<AlgTraitsWed6>(numIntPoints_, deriv.data(), coords, metric);
+  generic_Mij_3d<AlgTraitsWed6>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
 KOKKOS_FUNCTION
@@ -806,9 +806,9 @@ void
 WedSCS::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& metric,
-  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  constexpr auto deriv = elem_data_t<AlgTraitsWed6, QuadType::MID>::scs_deriv;
+  wed_deriv(numIntPoints_, &intgLoc_[0], deriv);
   generic_Mij_3d<AlgTraitsWed6>(deriv, coords, metric);
 }
 

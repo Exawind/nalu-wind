@@ -56,6 +56,8 @@ MdotDensityAccumAlg<AlgTraits>::MdotDensityAccumAlg(
   elemData_.add_gathered_nodal_field(rhoNm1_, 1);
 
   elemData_.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
+  const auto shp_fcn_type = lumpedMass_ ? SCV_SHIFTED_SHAPE_FCN : SCV_SHAPE_FCN;
+  elemData_.add_master_element_call(shp_fcn_type, CURRENT_COORDINATES);
 }
 
 template <typename AlgTraits>
@@ -87,9 +89,6 @@ MdotDensityAccumAlg<AlgTraits>::execute()
       stk::topology::NODE_RANK, "density")) &
     !(realm_.get_inactive_selector());
 
-  const auto shp =
-    shape_fcn<AlgTraits, QuadRank::SCS>(use_shifted_quad(lumpedMass));
-
   nalu_ngp::run_elem_par_reduce(
     algName, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata, DoubleType & acc) {
@@ -98,15 +97,18 @@ MdotDensityAccumAlg<AlgTraits>::execute()
       auto& densityN = scrViews.get_scratch_view_1D(rhoNID);
       auto& densityNm1 = scrViews.get_scratch_view_1D(rhoNm1ID);
 
-      const auto& v_scv_vol =
-        scrViews.get_me_views(CURRENT_COORDINATES).scv_volume;
+      const auto& meViews = scrViews.get_me_views(CURRENT_COORDINATES);
+      const auto& v_scv_vol = meViews.scv_volume;
+      const auto& v_shape_fcn =
+        lumpedMass ? meViews.scv_shifted_shape_fcn : meViews.scv_shape_fcn;
+
       for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
         DoubleType rhoNm1 = 0.0;
         DoubleType rhoN = 0.0;
         DoubleType rhoNp1 = 0.0;
 
         for (int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic) {
-          const DoubleType r = shp(ip, ic);
+          const DoubleType r = v_shape_fcn(ip, ic);
           rhoNm1 += r * densityNm1(ic);
           rhoN += r * densityN(ic);
           rhoNp1 += r * densityNp1(ic);

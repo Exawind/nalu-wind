@@ -10,9 +10,6 @@
 #ifndef Hex8CVFEM_h
 #define Hex8CVFEM_h
 
-#include "master_element/ElementBasis.h"
-#include "master_element/IntegrationRules.h"
-
 #include <array>
 
 #include <master_element/MasterElement.h>
@@ -25,9 +22,6 @@ namespace nalu {
 class HexSCV : public MasterElement
 {
 public:
-  using basis_t = Hex8Basis;
-  template <QuadType q>
-  using quad_t = HexIntegrationRule<q>;
   using AlgTraits = AlgTraitsHex8;
 
   KOKKOS_FUNCTION
@@ -126,9 +120,6 @@ private:
 class HexSCS : public MasterElement
 {
 public:
-  using basis_t = Hex8Basis;
-  template <QuadType q>
-  using quad_t = HexIntegrationRule<q>;
   using AlgTraits = AlgTraitsHex8;
   using AlgTraitsFace = AlgTraitsQuad4;
   using MasterElement::adjacentNodes;

@@ -13,7 +13,6 @@
 #include "ngp_utils/NgpFieldOps.h"
 #include "master_element/Hex8CVFEM.h"
 #include "master_element/Quad43DCVFEM.h"
-#include "master_element/CompileTimeElements.h"
 
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
@@ -800,6 +799,8 @@ calc_mass_flow_rate_scs(
   dataReq.add_gathered_nodal_field(density, 1);
   dataReq.add_master_element_call(
     sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
 
   sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
   const stk::mesh::Selector sel =
@@ -814,10 +815,6 @@ calc_mass_flow_rate_scs(
   const auto mdotOps =
     sierra::nalu::nalu_ngp::simd_elem_field_updater(ngpMesh, ngpMdot);
 
-  auto v_shape_fcn = sierra::nalu::shape_fcn<
-    sierra::nalu::AlgTraitsHex8, sierra::nalu::QuadRank::SCS>(
-    sierra::nalu::use_shifted_quad(false));
-
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     "unittest_calc_mdot_scs", meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData & edata) {
@@ -828,6 +825,7 @@ calc_mass_flow_rate_scs(
       auto& v_vel = scrViews.get_scratch_view_2D(velID);
       auto& meViews = scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
       auto& v_area = meViews.scs_areav;
+      auto& v_shape_fcn = meViews.scs_shape_fcn;
 
       for (int ip = 0; ip < Hex8Traits::numScsIp_; ++ip) {
         for (int d = 0; d < Hex8Traits::nDim_; ++d)
@@ -886,6 +884,8 @@ calc_open_mass_flow_rate(
   dataReq.add_face_field(
     exposedAreaVec, Quad4Traits::numFaceIp_, Quad4Traits::nDim_);
   dataReq.add_face_field(massFlowRate, Quad4Traits::numFaceIp_);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
 
   sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
   const stk::mesh::Selector sel =
@@ -901,10 +901,6 @@ calc_open_mass_flow_rate(
   const auto mdotOps =
     sierra::nalu::nalu_ngp::simd_elem_field_updater(ngpMesh, ngpMdot);
 
-  auto shape_fcn = sierra::nalu::shape_fcn<
-    sierra::nalu::AlgTraitsQuad4, sierra::nalu::QuadRank::SCV>(
-    sierra::nalu::use_shifted_quad(false));
-
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     "unittest_calc_open_mdot", meshInfo, meta.side_rank(), dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata) {
@@ -916,6 +912,7 @@ calc_open_mass_flow_rate(
       const auto& v_area = scrViews.get_scratch_view_2D(areaID);
       const auto& meViews =
         scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      const auto& shape_fcn = meViews.scs_shape_fcn;
 
       for (int ip = 0; ip < Quad4Traits::numFaceIp_; ++ip) {
         for (int d = 0; d < Quad4Traits::nDim_; ++d)

@@ -7,6 +7,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumWallFunctionElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFluxBCElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFaceFluxBCElemKernel.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFluxPenaltyElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarOpenAdvElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/WallDistElemKernel.C
 )

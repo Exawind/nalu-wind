@@ -7,8 +7,6 @@
 // for more details.
 //
 
-#include "master_element/CompileTimeElements.h"
-#include "master_element/IntegrationRules.h"
 #include <master_element/Tri32DCVFEM.h>
 #include <master_element/MasterElementFunctions.h>
 
@@ -312,9 +310,12 @@ void
 Tri32DSCV::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsTri3_2D, QuadRank::SCV, QuadType::MID>(coords, gradop);
+  tri_derivative(deriv);
+  DoubleType det[numIntPoints_];
+  SharedMemView<DoubleType*, DeviceShmem> det_j(det, numIntPoints_);
+  tri_gradient_operator(coords, deriv, gradop, det_j);
 }
 
 //--------------------------------------------------------------------------
@@ -325,10 +326,12 @@ void
 Tri32DSCV::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsTri3_2D, QuadRank::SCV, QuadType::SHIFTED>(
-    coords, gradop);
+  tri_derivative(deriv);
+  DoubleType det[numIntPoints_];
+  SharedMemView<DoubleType*, DeviceShmem> det_j(det, numIntPoints_);
+  tri_gradient_operator(coords, deriv, gradop, det_j);
 }
 
 //--------------------------------------------------------------------------
@@ -492,18 +495,24 @@ void
 Tri32DSCS::grad_op(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsTri3_2D, QuadRank::SCS, QuadType::MID>(coords, gradop);
+  tri_derivative(deriv);
+  DoubleType det[numIntPoints_];
+  SharedMemView<DoubleType*, DeviceShmem> det_j(det, numIntPoints_);
+  tri_gradient_operator(coords, deriv, gradop, det_j);
 }
 
 void
 Tri32DSCS::grad_op(
   const SharedMemView<double**>& coords,
   SharedMemView<double***>& gradop,
-  SharedMemView<double***>& /*deriv*/)
+  SharedMemView<double***>& deriv)
 {
-  impl::grad_op<AlgTraitsTri3_2D, QuadRank::SCS, QuadType::MID>(coords, gradop);
+  tri_derivative(deriv);
+  double det[numIntPoints_];
+  SharedMemView<double*> det_j(det, numIntPoints_);
+  tri_gradient_operator(coords, deriv, gradop, det_j);
 }
 
 //--------------------------------------------------------------------------
@@ -514,10 +523,12 @@ void
 Tri32DSCS::shifted_grad_op(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  impl::grad_op<AlgTraitsTri3_2D, QuadRank::SCS, QuadType::SHIFTED>(
-    coords, gradop);
+  tri_derivative(deriv);
+  DoubleType det[numIntPoints_];
+  SharedMemView<DoubleType*, DeviceShmem> det_j(det, numIntPoints_);
+  tri_gradient_operator(coords, deriv, gradop, det_j);
 }
 
 //--------------------------------------------------------------------------
@@ -558,10 +569,8 @@ Tri32DSCS::gij(
   const SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gupper,
   SharedMemView<DoubleType***, DeviceShmem>& glower,
-  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  constexpr auto deriv =
-    elem_data_t<AlgTraitsTri3_2D, QuadType::MID>::scs_deriv;
 
   const int npe = nodesPerElement_;
   const int nint = numIntPoints_;
@@ -619,11 +628,9 @@ Tri32DSCS::gij(
 // dynamic stall control.
 //--------------------------------------------------------------------------
 void
-Tri32DSCS::Mij(const double* coords, double* metric, double* /*deriv*/)
+Tri32DSCS::Mij(const double* coords, double* metric, double* deriv)
 {
-  constexpr auto deriv =
-    elem_data_t<AlgTraitsTri3_2D, QuadType::MID>::scs_deriv;
-  generic_Mij_2d<AlgTraitsTri3_2D>(numIntPoints_, deriv.data(), coords, metric);
+  generic_Mij_2d<AlgTraitsTri3_2D>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
 KOKKOS_FUNCTION
@@ -631,10 +638,8 @@ void
 Tri32DSCS::Mij(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& metric,
-  SharedMemView<DoubleType***, DeviceShmem>& /*deriv*/)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  constexpr auto deriv =
-    elem_data_t<AlgTraitsTri3_2D, QuadType::MID>::scs_deriv;
   generic_Mij_2d<AlgTraitsTri3_2D>(deriv, coords, metric);
 }
 
