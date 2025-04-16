@@ -914,7 +914,7 @@ scale, :math:`l_{DES}` is the maximum edge length scale touching a given
 node.
 
 Improved Delayed Detached Eddy Simulation (IDDES) Formulation
-++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 The IDDES model is available in Nalu-Wind in combination with the SST model :cite:`Gritskevich:2012`.
 The basic idea behind the IDDES is similar to the DES, a hybrid RANS-LES approach. 
@@ -946,7 +946,7 @@ where :math:`\tilde{f_d}` is the the empiric blending function between the RANS 
 and :math:`h_{max}` is the maximum edge length of the cell. 
 
 IDDES-:math:`\gamma` Model Formulation
-++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++
 The IDDES model is integrated with Menter's 1-eq :math:`\gamma` transition model. 
 The coupling is based on the approach proposed by Möller et al. :cite:`Muller:2024`, which modifies the source 
 terms of the turbulent kinetic energy equation in the IDDES formulation as follows:
