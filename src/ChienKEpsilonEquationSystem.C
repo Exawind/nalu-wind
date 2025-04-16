@@ -384,10 +384,8 @@ ChienKEpsilonEquationSystem::clip_min_distance_to_wall()
     });
   ndtw.modify_on_device();
 
-  stk::mesh::parallel_max(realm_.bulk_data(), {minDistanceToWall_});
-  if (realm_.hasPeriodic_) {
-    realm_.periodic_field_max(minDistanceToWall_, 1);
-  }
+  comm::scatter_max(realm_.bulk_data(), {minDistanceToWall_});
+  minDistanceToWall_->sync_to_host();
 }
 
 /** Compute non-local function of distance to wall

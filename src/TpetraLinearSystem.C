@@ -14,7 +14,6 @@
 #include <FieldTypeDef.h>
 #include <DgInfo.h>
 #include <Realm.h>
-#include <PeriodicManager.h>
 #include <Simulation.h>
 #include <LinearSolver.h>
 #include <master_element/MasterElement.h>
@@ -311,13 +310,10 @@ TpetraLinearSystem::beginLinearSystemConstruction()
     stk::mesh::communicate_field_data(
       *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
 
-  if (
-    realm_.periodicManager_ != nullptr &&
-    realm_.periodicManager_->periodicGhosting_ != nullptr) {
-    realm_.periodicManager_->parallel_communicate_field(realm_.tpetGlobalId_);
-    realm_.periodicManager_->periodic_parallel_communicate_field(
-      realm_.tpetGlobalId_);
-  }
+  realm_.tpetGlobalId_->modify_on_host();
+  periodic::sync(DeviceSpace{}, realm_.bulk_data(), *realm_.tpetGlobalId_);
+  DeviceSpace{}.fence();
+  realm_.tpetGlobalId_->sync_to_host();
 
   // now sharedNotOwned:
   for (const stk::mesh::Bucket* bptr : buckets) {
@@ -447,7 +443,7 @@ TpetraLinearSystem::buildNodeGraph(const stk::mesh::PartVector& parts)
 
   const stk::mesh::Selector s_owned =
     metaData.locally_owned_part() & stk::mesh::selectUnion(parts) &
-    !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
+    !(realm_.replicated_periodic_node_selector()) &
     !(realm_.get_inactive_selector());
 
   stk::mesh::BucketVector const& buckets =
@@ -774,7 +770,7 @@ TpetraLinearSystem::copy_stk_to_tpetra(
 
   const stk::mesh::Selector selector =
     stk::mesh::selectField(*stkField) & metaData.locally_owned_part() &
-    !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
+    !(realm_.replicated_periodic_node_selector()) &
     !(realm_.get_inactive_selector());
 
   stk::mesh::BucketVector const& buckets =
@@ -2201,7 +2197,7 @@ TpetraLinearSystem::copy_tpetra_to_stk(
 
   const stk::mesh::Selector selector =
     stk::mesh::selectField(*stkField) & metaData.locally_owned_part() &
-    !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
+    !(realm_.replicated_periodic_node_selector()) &
     !(realm_.get_inactive_selector());
 
   NGPDoubleFieldType ngpField = realm_.ngp_field_manager().get_field<double>(
@@ -2238,14 +2234,17 @@ getDofStatus_impl(stk::mesh::Entity node, const Realm& realm)
 
   bool has_non_matching_boundary_face_alg =
     realm.has_non_matching_boundary_face_alg();
-  bool hasPeriodic = realm.hasPeriodic_;
+  bool hasPeriodic = realm.periodic_mapping_.has_value();
 
-  if (realm.hasPeriodic_ && realm.has_non_matching_boundary_face_alg()) {
+  if (
+    realm.periodic_mapping_.has_value() &&
+    realm.has_non_matching_boundary_face_alg()) {
     has_non_matching_boundary_face_alg = false;
     hasPeriodic = false;
 
     stk::mesh::Selector perSel =
-      stk::mesh::selectUnion(realm.allPeriodicInteractingParts_);
+      (realm.periodic_mapping_->selector_a |
+       realm.periodic_mapping_->selector_b);
     stk::mesh::Selector nonConfSel =
       stk::mesh::selectUnion(realm.allNonConformalInteractingParts_);
     // std::cout << "nonConfSel= " << nonConfSel << std::endl;
