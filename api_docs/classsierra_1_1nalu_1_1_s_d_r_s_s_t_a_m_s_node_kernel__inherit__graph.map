@@ -1,0 +1,10 @@
+<map id="sierra::nalu::SDRSSTAMSNodeKernel" name="sierra::nalu::SDRSSTAMSNodeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,257,221,297"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="10,168,217,208"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="116,222,116,257,111,257,111,222"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_node_kernel.html" title=" " alt="" coords="19,5,197,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="111,44,115,168,110,168,106,44"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="130,80,374,105"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="145,35,230,77,228,82,142,39"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="225,115,143,170,140,166,222,111"/>
+</map>

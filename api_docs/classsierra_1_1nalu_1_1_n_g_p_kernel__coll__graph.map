@@ -1,0 +1,5 @@
+<map id="sierra::nalu::NGPKernel&lt; T &gt;" name="sierra::nalu::NGPKernel&lt; T &gt;">
+<area shape="rect" id="Node000001" title="Kernel that can be transferred to a device." alt="" coords="5,79,216,104"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="39,5,183,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="113,44,113,79,108,79,108,44"/>
+</map>

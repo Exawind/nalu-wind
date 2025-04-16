@@ -1,0 +1,19 @@
+<map id="sierra::nalu::BoundaryCondition" name="sierra::nalu::BoundaryCondition">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,237,232,262"/>
+<area shape="rect" id="Node000002" href="$structsierra_1_1nalu_1_1_a_b_l_top_boundary_condition_data.html" title=" " alt="" coords="291,5,502,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="132,223,155,186,188,140,230,94,279,55,302,43,304,48,281,60,234,98,193,144,159,189,136,226"/>
+<area shape="rect" id="Node000003" href="$structsierra_1_1nalu_1_1_inflow_boundary_condition_data.html" title=" " alt="" coords="295,69,499,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="140,225,200,172,238,143,279,119,307,107,309,112,281,124,241,148,203,176,144,229"/>
+<area shape="rect" id="Node000004" href="$structsierra_1_1nalu_1_1_non_conformal_boundary_condition_data.html" title=" " alt="" coords="298,133,495,173"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="161,229,279,183,318,171,319,176,281,188,163,234"/>
+<area shape="rect" id="Node000005" href="$structsierra_1_1nalu_1_1_open_boundary_condition_data.html" title=" " alt="" coords="297,197,496,237"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="243,232,297,226,297,231,243,238"/>
+<area shape="rect" id="Node000006" href="$structsierra_1_1nalu_1_1_overset_boundary_condition_data.html" title=" " alt="" coords="289,261,505,301"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="243,261,289,266,288,272,242,266"/>
+<area shape="rect" id="Node000007" href="$structsierra_1_1nalu_1_1_periodic_boundary_condition_data.html" title=" " alt="" coords="288,325,505,365"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="163,265,281,311,319,323,318,328,279,316,161,270"/>
+<area shape="rect" id="Node000008" href="$structsierra_1_1nalu_1_1_symmetry_boundary_condition_data.html" title=" " alt="" coords="280,389,513,429"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="144,270,203,323,241,351,281,375,309,387,307,392,279,380,238,355,200,327,140,274"/>
+<area shape="rect" id="Node000009" href="$structsierra_1_1nalu_1_1_wall_boundary_condition_data.html" title=" " alt="" coords="300,453,493,493"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="136,273,159,310,193,355,234,401,281,439,304,451,302,456,279,444,230,404,188,358,155,313,132,276"/>
+</map>
