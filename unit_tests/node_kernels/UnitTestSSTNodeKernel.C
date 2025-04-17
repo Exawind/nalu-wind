@@ -503,9 +503,10 @@ static constexpr double lhs[8][8] = {
 } // namespace tke_sst_trans
 
 namespace tke_sst_iddes_trans {
-static constexpr double rhs[8] = {
-  -0.078566371211666, -0.057734551764836, -0.0081969668080736, -0.035714172392479,
-  -0.020433593046136, -0.019416508662489, -0.017913650040436, -0.015288210620334};
+static constexpr double rhs[8] = {-0.078566371211666,  -0.057734551764836,
+                                  -0.0081969668080736, -0.035714172392479,
+                                  -0.020433593046136,  -0.019416508662489,
+                                  -0.017913650040436,  -0.015288210620334};
 
 static constexpr double lhs[8][8] = {
   {
@@ -1193,7 +1194,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_iddes_trans_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTIDDESBLTM2015NodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTIDDESBLTM2015NodeKernel>(
+    *meta_);
 
   helperObjs.execute();
 
