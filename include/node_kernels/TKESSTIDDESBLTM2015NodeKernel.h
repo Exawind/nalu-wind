@@ -19,7 +19,8 @@ namespace nalu {
 
 class Realm;
 
-class TKESSTIDDESBLTM2015NodeKernel : public NGPNodeKernel<TKESSTIDDESBLTM2015NodeKernel>
+class TKESSTIDDESBLTM2015NodeKernel
+  : public NGPNodeKernel<TKESSTIDDESBLTM2015NodeKernel>
 {
 public:
   TKESSTIDDESBLTM2015NodeKernel(const stk::mesh::MetaData&);
@@ -51,7 +52,6 @@ private:
   stk::mesh::NgpField<double> ransIndicator_;
   stk::mesh::NgpField<double> gamint_;
 
-
   unsigned tkeID_{stk::mesh::InvalidOrdinal};
   unsigned sdrID_{stk::mesh::InvalidOrdinal};
   unsigned densityID_{stk::mesh::InvalidOrdinal};
@@ -64,7 +64,6 @@ private:
   unsigned fOneBlendID_{stk::mesh::InvalidOrdinal};
   unsigned ransIndicatorID_{stk::mesh::InvalidOrdinal};
   unsigned gamintID_{stk::mesh::InvalidOrdinal};
-
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;

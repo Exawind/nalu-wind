@@ -325,9 +325,10 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
           break;
         case TurbulenceModel::SST_IDDES:
           if (!realm_.solutionOptions_->gammaEqActive_) {
-          nodeAlg.add_kernel<TKESSTIDDESNodeKernel>(realm_.meta_data());
+            nodeAlg.add_kernel<TKESSTIDDESNodeKernel>(realm_.meta_data());
           } else {
-            nodeAlg.add_kernel<TKESSTIDDESBLTM2015NodeKernel>(realm_.meta_data());
+            nodeAlg.add_kernel<TKESSTIDDESBLTM2015NodeKernel>(
+              realm_.meta_data());
           }
           break;
         case TurbulenceModel::KE:

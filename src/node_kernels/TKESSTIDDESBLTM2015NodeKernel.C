@@ -16,7 +16,8 @@
 namespace sierra {
 namespace nalu {
 
-TKESSTIDDESBLTM2015NodeKernel::TKESSTIDDESBLTM2015NodeKernel(const stk::mesh::MetaData& meta)
+TKESSTIDDESBLTM2015NodeKernel::TKESSTIDDESBLTM2015NodeKernel(
+  const stk::mesh::MetaData& meta)
   : NGPNodeKernel<TKESSTIDDESBLTM2015NodeKernel>(),
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
     sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
@@ -67,7 +68,6 @@ TKESSTIDDESBLTM2015NodeKernel::setup(Realm& realm)
   tkeAmb_ = realm.get_turb_model_constant(TM_tkeAmb);
   sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
   gamint_ = fieldMgr.get_field<double>(gamintID_);
-
 }
 
 KOKKOS_FUNCTION
@@ -90,7 +90,6 @@ TKESSTIDDESBLTM2015NodeKernel::execute(
   const DblType fOneBlend = fOneBlend_.get(node, 0);
   const DblType gamint = gamint_.get(node, 0);
 
-
   DblType Pk = 0.0;
   DblType sijSq = 1.0e-16;
   DblType omegaSq = 1.0e-16;
@@ -109,8 +108,7 @@ TKESSTIDDESBLTM2015NodeKernel::execute(
   sijSq *= 2.0;
   omegaSq *= 2.0;
   Pk = tvisc * sijSq;
-  // Pk = stk::math::sqrt(sijSq)*stk::math::sqrt(omegaSq); // Kato-Launder 
-
+  // Pk = stk::math::sqrt(sijSq)*stk::math::sqrt(omegaSq); // Kato-Launder
 
   DblType denom =
     density * kappa_ * kappa_ * dw * dw *
@@ -159,8 +157,9 @@ TKESSTIDDESBLTM2015NodeKernel::execute(
     stk::math::max(1.0e-16, ransInd * lSSTAmb + (1.0 - fdHat) * lLES);
   const DblType Dkamb = density * tkeAmb_ * sqrtTkeAmb / lIDDESAmb;
 
-  rhs(0) += (gamint * Pk - stk::math::max(gamint,0.1) * Dk + Dkamb) * dVol;
-  lhs(0, 0) += 1.5 * density / lIDDES * sqrtTke * stk::math::max(gamint,0.1) * dVol;
+  rhs(0) += (gamint * Pk - stk::math::max(gamint, 0.1) * Dk + Dkamb) * dVol;
+  lhs(0, 0) +=
+    1.5 * density / lIDDES * sqrtTke * stk::math::max(gamint, 0.1) * dVol;
 }
 
 } // namespace nalu
