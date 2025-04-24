@@ -70,7 +70,7 @@ target_sources(
    ${CMAKE_CURRENT_SOURCE_DIR}/NonConformalManager.C
    ${CMAKE_CURRENT_SOURCE_DIR}/OutputInfo.C
    ${CMAKE_CURRENT_SOURCE_DIR}/PecletFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/PeriodicManager.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/Periodic.C
    ${CMAKE_CURRENT_SOURCE_DIR}/PostProcessingInfo.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedNodalGradientEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Realm.C

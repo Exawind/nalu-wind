@@ -275,14 +275,9 @@ MatrixFreeLowMachEquationSystem::compute_filter_scale() const
     matrix_free::local_dual_nodal_volume(
       realm_.polynomial_order(), realm_.ngp_mesh(), interior_selector_, coords,
       dnv);
-
-    stk::mesh::parallel_sum<double>(realm_.bulk_data(), {&dnv}, false);
-    if (realm_.hasPeriodic_) {
-      realm_.periodic_field_update(
-        meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length),
-        1);
-    }
-    dnv.sync_to_device();
+    comm::scatter_sum(
+      realm_.bulk_data(),
+      {meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length)});
   }
 
   {
@@ -427,7 +422,7 @@ MatrixFreeLowMachEquationSystem::sync_field_on_periodic_nodes(
   std::string name, int len) const
 {
   stk::mesh::ProfilingBlock pf("sync periodic nodes");
-  if (realm_.hasPeriodic_) {
+  if (realm_.periodic_mapping_) {
     const bool doCommunication = false;
     realm_.periodic_delta_solution_update(
       meta_.get_field(stk::topology::NODE_RANK, name), len, doCommunication);

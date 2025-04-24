@@ -16,7 +16,6 @@
 
 #include "NaluEnv.h"
 #include "NaluParsing.h"
-#include "PeriodicManager.h"
 #include "Realm.h"
 #include "TimeIntegrator.h"
 #include "element_promotion/PromotedPartHelper.h"
@@ -165,11 +164,8 @@ MatrixFreeHeatCondEquationSystem::initialize()
 {
   stk::mesh::ProfilingBlock pf("MatrixFreeHeatCondEquationSystem::initialize");
 
-  stk::mesh::Selector replica_selector{};
-  if (realm_.periodicManager_ != nullptr) {
-    replica_selector =
-      stk::mesh::selectUnion(realm_.periodicManager_->get_slave_part_vector());
-  }
+  stk::mesh::Selector replica_selector =
+    realm_.replicated_periodic_node_selector();
   {
     stk::mesh::ProfilingBlock pf_inner("fill_tpetra_id_field");
     matrix_free::populate_global_id_field(
@@ -269,10 +265,10 @@ MatrixFreeHeatCondEquationSystem::provide_scaled_norm() const
 
 void
 MatrixFreeHeatCondEquationSystem::sync_field_on_periodic_nodes(
-  std::string name, int len) const
+  std::string name, int /*len*/) const
 {
   stk::mesh::ProfilingBlock pf("sync_periodic nodes");
-  if (realm_.hasPeriodic_) {
+  if (realm_.periodic_mapping_) {
     realm_.periodic_delta_solution_update(
       meta_.get_field(stk::topology::NODE_RANK, name), len);
   }

@@ -44,9 +44,9 @@ compute_volume_stats(Realm& realm, double* gVolStats)
   const auto& ngpDualVol =
     fieldMgr.template get_field<double>(dualVol->mesh_meta_data_ordinal());
 
-  const stk::mesh::Selector sel =
-    stk::mesh::selectField(*dualVol) & meta.locally_owned_part() &
-    !(stk::mesh::selectUnion(realm.get_slave_part_vector()));
+  const stk::mesh::Selector sel = stk::mesh::selectField(*dualVol) &
+                                  meta.locally_owned_part() &
+                                  !realm.replicated_periodic_node_selector();
 
   nalu_ngp::MinMaxSumScalar<double> volStats;
   nalu_ngp::MinMaxSum<double> volReducer(volStats);
@@ -233,13 +233,10 @@ GeometryAlgDriver::post_work()
   // ensure the next step does a sync to host
   for (auto* fld : fields) {
     fld->modify_on_device();
-    fld->sync_to_host();
   }
+  stk::mesh::parallel_sum(realm_.bulk_data(), fields);
 
-  bool doFinalSyncToDevice = false;
-  stk::mesh::parallel_sum(realm_.bulk_data(), fields, doFinalSyncToDevice);
-
-  if (realm_.hasPeriodic_) {
+  if (realm_.periodic_mapping_) {
     const auto& meta = realm_.meta_data();
     const unsigned nComponents = 1;
     auto* dualVol = meta.template get_field<double>(
@@ -255,11 +252,6 @@ GeometryAlgDriver::post_work()
       realm_.periodic_field_update(wallAreaF, nComponents, bypassFieldCheck);
       realm_.periodic_field_update(wallDistF, nComponents, bypassFieldCheck);
     }
-  }
-
-  for (auto* fld : fields) {
-    fld->modify_on_host();
-    fld->sync_to_device();
   }
 
   if (hasWallFunc_) {

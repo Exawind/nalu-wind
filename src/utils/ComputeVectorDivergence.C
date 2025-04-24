@@ -22,6 +22,7 @@
 #include <stk_mesh/base/GetBuckets.hpp>
 
 #include "FieldTypeDef.h"
+#include "Realm.h"
 
 namespace sierra {
 namespace nalu {
@@ -154,15 +155,11 @@ compute_vector_divergence(
       }
     }
   }
+  scalarField->modify_on_host();
 
   // sum up interior divergence values and return if boundary part not specified
   if (bndyPartVec.size() == 0) {
-    stk::mesh::parallel_sum(bulk, {scalarField});
-
-    // Synchronize fields to device
-    scalarField->modify_on_host();
-    scalarField->sync_to_device();
-
+    comm::scatter_sum(bulk, {scalarField});
     return;
   }
 
@@ -237,11 +234,8 @@ compute_vector_divergence(
     }
   }
   // parallel sum the divergence across all processors
-  stk::mesh::parallel_sum(bulk, {scalarField});
-
-  // Synchronize fields to device
   scalarField->modify_on_host();
-  scalarField->sync_to_device();
+  comm::scatter_sum(bulk, {scalarField});
 }
 
 void
@@ -285,14 +279,12 @@ compute_scalar_divergence(
       }
     }
   }
+  scalarField->modify_on_host();
 
   // sum up interior divergence values and return if boundary part not specified
   if (bndyPartVec.size() == 0) {
-    stk::mesh::parallel_sum(bulk, {scalarField});
+    comm::scatter_sum(bulk, {scalarField});
   }
-  // Synchronize fields to device
-  scalarField->modify_on_host();
-  scalarField->sync_to_device();
 
   // FIXME: Should we have contributions from cells at the boundary ?
   return;
@@ -333,12 +325,8 @@ compute_edge_scalar_divergence(
       *divMVR -= ff[k];
     }
   }
-
-  // sum up interior divergence values and return if boundary part not specified
-  stk::mesh::parallel_sum(bulk, {scalarField});
-
-  // Synchronize fields to device
   scalarField->modify_on_host();
+  comm::scatter_sum(bulk, {scalarField});
   return;
 }
 

@@ -52,23 +52,8 @@ NodalGradAlgDriver<GradPhiType>::post_work()
   auto& ngpGradPhi = nalu_ngp::get_ngp_field(meshInfo, gradPhiName_);
   ngpGradPhi.sync_to_host();
 
-  const std::vector<NGPDoubleFieldType*> fVec{&ngpGradPhi};
-  bool doFinalSyncToDevice = false;
-  stk::mesh::parallel_sum(bulk, fVec, doFinalSyncToDevice);
-
-  const int dim2 = meta.spatial_dimension();
-  const int dim1 = max_extent(*phi, 0);
-
-  if (realm_.hasPeriodic_) {
-    realm_.periodic_field_update(gradPhi, dim2 * dim1);
-  }
-
-  if (realm_.hasOverset_) {
-    realm_.overset_field_update(gradPhi, dim1, dim2, doFinalSyncToDevice);
-  }
-
-  ngpGradPhi.modify_on_host();
-  ngpGradPhi.sync_to_device();
+  // we need the overset update for diffusion terms and grad p
+  realm_.scatter_sum_with_overset({gradPhi});
 }
 
 template class NodalGradAlgDriver<VectorFieldType>;

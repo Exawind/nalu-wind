@@ -7,6 +7,7 @@
 // for more details.
 //
 
+#include "Realm.h"
 #include <aero/actuator/ActuatorBulk.h>
 #include <aero/actuator/ActuatorInfo.h>
 #include <aero/actuator/UtilitiesActuator.h>
@@ -130,8 +131,7 @@ ActuatorBulk::parallel_sum_source_term(stk::mesh::BulkData& stkBulk)
   VectorFieldType* actuatorSource =
     stkMeta.get_field<double>(stk::topology::NODE_RANK, "actuator_source");
 
-  stk::mesh::parallel_sum(stkBulk, {actuatorSource});
-  actuatorSource->modify_on_host();
+  comm::scatter_sum(stkBulk, {actuatorSource});
 }
 
 Kokkos::RangePolicy<ActuatorFixedExecutionSpace>

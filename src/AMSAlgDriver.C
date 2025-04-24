@@ -333,7 +333,7 @@ AMSAlgDriver::post_iter_work()
     meta.get_field<double>(stk::topology::NODE_RANK, "forcing_components");
 
   stk::mesh::copy_owned_to_shared(bulk, {forcingComp});
-  if (realm_.hasPeriodic_) {
+  if (realm_.periodic_mapping_) {
     realm_.periodic_delta_solution_update(forcingComp, 3);
   }
 }

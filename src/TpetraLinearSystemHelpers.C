@@ -10,7 +10,6 @@
 #include <TpetraLinearSystemHelpers.h>
 
 #include <Realm.h>
-#include <PeriodicManager.h>
 #include <NonConformalManager.h>
 #include <utils/StkHelpers.h>
 #include <LinearSolver.h>
@@ -46,9 +45,11 @@ fill_neighbor_procs(
       populate_ghost_comm_procs(bulk, bulk.aura_ghosting(), ghostCommProcs);
       add_procs_to_neighbors(ghostCommProcs, neighborProcs);
     }
-    if (realm.hasPeriodic_) {
-      add_procs_to_neighbors(
-        realm.periodicManager_->ghostCommProcs_, neighborProcs);
+    if (realm.periodic_mapping_) {
+      std::vector<int> ghostCommProcs;
+      auto& ghosting = periodic::get_ghosting(bulk);
+      populate_ghost_comm_procs(bulk, ghosting, ghostCommProcs);
+      add_procs_to_neighbors(ghostCommProcs, neighborProcs);
     }
     if (realm.nonConformalManager_) {
       add_procs_to_neighbors(

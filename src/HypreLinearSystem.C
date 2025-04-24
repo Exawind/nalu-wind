@@ -294,7 +294,7 @@ HypreLinearSystem::buildNodeGraph(const stk::mesh::PartVector& parts)
   stk::mesh::MetaData& metaData = realm_.meta_data();
   const stk::mesh::Selector s_owned =
     metaData.locally_owned_part() & stk::mesh::selectUnion(parts) &
-    !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
+    !(realm_.replicated_periodic_node_selector()) &
     !(realm_.get_inactive_selector());
 
   stk::mesh::BucketVector const& buckets =
@@ -2557,10 +2557,10 @@ double
 HypreLinearSystem::copy_hypre_to_stk(stk::mesh::FieldBase* stkField)
 {
   auto& meta = realm_.meta_data();
-  const auto selector =
-    stk::mesh::selectField(*stkField) & meta.locally_owned_part() &
-    !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
-    !(realm_.get_inactive_selector());
+  const auto selector = stk::mesh::selectField(*stkField) &
+                        meta.locally_owned_part() &
+                        !(realm_.replicated_periodic_node_selector()) &
+                        !(realm_.get_inactive_selector());
 
   HypreLinSysCoeffApplier* hcApplier =
     dynamic_cast<HypreLinSysCoeffApplier*>(hostCoeffApplier.get());
