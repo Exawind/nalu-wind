@@ -5,28 +5,100 @@ Simulations:
 
 linear_solvers:
 
-  - name: solve_scalar
-    type: tpetra
-    method: gmres
-    preconditioner: riluk
-    tolerance: 1e-5
-    max_iterations: 200
-    kspace: 200
-    output_level: 0
+- dump_hypre_matrix_stats: false
+  #hypre_cfg_file: hypre_file.yaml
+  #hypre_cfg_node: hypre_simple_precon
+  kspace: 1000
+  max_iterations: 1000
+  method: hypre_gmres
+  name: solve_mom
+  output_level: 0
+  preconditioner: boomerAMG
+  recompute_preconditioner_frequency: 1
+  reuse_linear_system: true
+  segregated_solver: true
+  simple_hypre_matrix_assemble: true
+  sync_alg: 1
+  tolerance: 1e-5
+  type: hypre
+  write_matrix_files: false
 
-  - name: solve_cont
-    type: hypre
-    method: hypre_gmres
-    preconditioner: boomerAMG
-    tolerance: 1e-5
-    max_iterations: 50
-    kspace: 75
-    output_level: 0
-    bamg_coarsen_type: 8
-    bamg_interp_type: 6
-    bamg_cycle_type: 1
-    absolute_tolerance: 1.0e-8
+  output_level: 0
+  bamg_max_levels: 1
+  bamg_relax_type: 18
+  bamg_num_sweeps: 2
+  bamg_cycle_type: 1
+  bamg_relax_order: 0
+  bamg_output_level: 0
+  bamg_debug: 0
 
+- dump_hypre_matrix_stats: false
+  #hypre_cfg_file: hypre_file.yaml
+  #hypre_cfg_node: hypre_simple_precon
+  kspace: 1000
+  max_iterations: 1000
+  method: hypre_gmres
+  name: solve_scalar
+  output_level: 0
+  preconditioner: boomerAMG
+  recompute_preconditioner_frequency: 1
+  reuse_linear_system: true
+  simple_hypre_matrix_assemble: true
+  sync_alg: 1
+  tolerance: 1e-5
+  type: hypre
+  write_matrix_files: false
+
+  output_level: 0
+  bamg_max_levels: 1
+  bamg_relax_type: 18
+  bamg_num_sweeps: 2
+  bamg_cycle_type: 1
+  bamg_relax_order: 0
+  bamg_output_level: 0
+  bamg_debug: 0
+
+- dump_hypre_matrix_stats: false
+  #hypre_cfg_file: hypre_file.yaml
+  #hypre_cfg_node: hypre_elliptic
+  kspace: 1000
+  max_iterations: 1000
+  method: hypre_gmres
+  name: solve_elliptic
+  output_level: 0
+  preconditioner: boomerAMG
+  recompute_preconditioner_frequency: 1
+  reuse_linear_system: true
+  simple_hypre_matrix_assemble: true
+  sync_alg: 1
+  tolerance: 1e-5
+  type: hypre
+  write_matrix_files: false
+
+
+  bamg_coarsen_type: 8
+  bamg_interp_type: 6
+  bamg_relax_type: 11
+  bamg_cycle_type: 1
+  bamg_relax_order: 0
+  bamg_keep_transpose: 1
+
+  bamg_num_sweeps: 2
+  #bamg_num_down_sweeps: 2
+  #bamg_num_up_sweeps: 2
+  #bamg_num_coarse_sweeps: 1
+
+  bamg_strong_threshold: 0.3243198904981685
+  bamg_trunc_factor: 0.4227143073461007
+  bamg_pmax_elmts: 3
+
+  bamg_agg_num_levels: 2
+  bamg_agg_interp_type: 7
+  bamg_agg_pmax_elmts: 3
+
+  bamg_output_level: 0
+  bamg_debug: 0
+        
 realms:
 
   - name: realm_1
@@ -43,8 +115,8 @@ realms:
         velocity: solve_scalar
         turbulent_ke: solve_scalar
         specific_dissipation_rate: solve_scalar
-        pressure: solve_cont
-        ndtw: solve_cont
+        pressure: solve_elliptic
+        ndtw: solve_elliptic
 
       systems:
         - WallDistance:
