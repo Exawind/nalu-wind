@@ -893,14 +893,14 @@ transport equation.
 Detached Eddy Simulation (DES) Formulation
 ++++++++++++++++++++++++++++++++++++++++++
 
-The DES technique is also supported in the code base when the SST model
+The DES technique is supported in the code base when the SST model
 is activated. This model seeks to formally relax the RANS-based approach
 and allows for a theoretical basis to allow for transient flows. The
 method follows the method of Temporally Filtered NS formulation as
 described by Tieszen, :cite:`Tieszen:2005`.
 
 The SST DES model simply changes the turbulent kinetic energy equation
-to include a new minimum scale that manipulates the dissipation term.
+to include a new minimum scale that manipulates the destruction term.
 
 .. math::
 
@@ -912,6 +912,51 @@ and :math:`c_{DES}` represents a blended set of DES constants:
 :math:`c_{{DES}_1} = 0.78` and :math:`c_{{DES}_2} = 0.61`. The length
 scale, :math:`l_{DES}` is the maximum edge length scale touching a given
 node.
+
+Improved Delayed Detached Eddy Simulation (IDDES) Formulation
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The IDDES model is available in Nalu-Wind in combination with the SST model :cite:`Gritskevich:2012`.
+The basic idea behind the IDDES is similar to the DES, a hybrid RANS-LES approach. 
+However, the IDDES introduces new formulations for the length scale, along with recalibrated constants specific to the SST turbulence model.
+The IDDES model modifies the destruction term of the turbulent kinetic energy equation like the DES as
+
+.. math::
+
+   D_k = \frac{\rho k^{3/2}} {l_{IDDES}},
+
+The IDDES length scale, :math:`l_{IDDES}`, is defined as
+
+.. math::
+
+   l_{IDDES}=\tilde{f_d} \cdot (1+f_e) \cdot l_{RANS} + (1-\tilde{f_d}) \cdot l_{LES}
+
+.. math::
+   l_{RANS}=\frac{\sqrt{k}}{C_{\mu}\omega}, \quad l_{LES}=C_{DES}\Delta 
+
+.. math::
+   C_{DES}=C_{DES1} \cdot F_{1} + C_{DES2} \cdot (1-F_{1})
+
+.. math::
+   \Delta = \min(C_{\omega}\max[d_{w},h_{max}],h_{max})
+
+where :math:`\tilde{f_d}` is the the empiric blending function between the RANS and LES,
+:math:`\Delta` is the LES length scale, 
+:math:`d_{w}` is the distance to the nearest wall, 
+and :math:`h_{max}` is the maximum edge length of the cell. 
+
+IDDES-:math:`\gamma` Model Formulation
++++++++++++++++++++++++++++++++++++++++++++
+The IDDES model is integrated with Menter's 1-eq :math:`\gamma` transition model. 
+The coupling is based on the approach proposed by Möller et al. :cite:`Muller:2024`, which modifies the source 
+terms of the turbulent kinetic energy equation in the IDDES formulation as follows:
+
+.. math::
+
+   \tilde{P_k} = \gamma P_k, \quad \tilde{D_k} = max(0.1,\gamma) D_k 
+
+where :math:`\gamma` is the intermittency, :math:`P_{k}` and :math:`D_{k}` are the original source terms of the IDDES formualtion.
+
 
 Active Model Split (AMS) Formulation
 ++++++++++++++++++++++++++++++++++++++++++++
