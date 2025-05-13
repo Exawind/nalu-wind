@@ -31,21 +31,8 @@ template <typename GradPhiType>
 void
 NodalGradAlgDriver<GradPhiType>::pre_work()
 {
-  const auto& meta = realm_.meta_data();
-
-  auto* gradPhi =
-    meta.template get_field<double>(stk::topology::NODE_RANK, gradPhiName_);
-
-  stk::mesh::field_fill(0.0, *gradPhi);
-
-  const auto& meshInfo = realm_.mesh_info();
-  const auto ngpMesh = meshInfo.ngp_mesh();
-  const auto& fieldMgr = meshInfo.ngp_field_manager();
-  auto ngpGradPhi =
-    fieldMgr.template get_field<double>(gradPhi->mesh_meta_data_ordinal());
-
-  ngpGradPhi.set_all(ngpMesh, 0.0);
-  ngpGradPhi.clear_sync_state();
+  auto grad_phi = nalu_ngp::get_ngp_field(realm_.mesh_info(), gradPhiName_);
+  grad_phi.set_all(stk::mesh::get_updated_ngp_mesh(realm_.bulk_data()), 0.0);
 }
 
 template <typename GradPhiType>

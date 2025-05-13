@@ -44,6 +44,7 @@ public:
   bool simulation_proceeds();
 
   void prepare_for_time_integration();
+  void prepare_time_step(size_t inonlin = 0);
   void pre_realm_advance_stage1(size_t inonlin = 0);
   void pre_realm_advance_stage2(size_t inonlin = 0);
   void post_realm_advance();
@@ -72,6 +73,7 @@ public:
 
   std::vector<Realm*> realmVec_;
 
+  void set_time_step(const double dt);
   double get_time_step(const NaluState& theState = NALU_STATE_N) const;
   double get_current_time() const;
   double get_gamma1() const;

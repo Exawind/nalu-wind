@@ -166,10 +166,8 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     // TODO Do we need this for anything in FSI?
     /* get_required(y_actuator, "restartFreq", fi.restartFreq); */
     int* restartFreq;
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
     restartFreq = &fi.restartFreq;
-#else
-    restartFreq = &fi.nEveryCheckPoint;
 #endif
     get_required(y_actuator, "n_every_checkpoint", *restartFreq);
     get_required(y_actuator, "dt_fast", fi.dtFAST);

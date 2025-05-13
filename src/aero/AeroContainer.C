@@ -9,7 +9,7 @@
 #include <aero/AeroContainer.h>
 #include <NaluEnv.h>
 #include <NaluParsingHelper.h>
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
 #include "aero/fsi/OpenfastFSI.h"
 #endif
 #include <FieldTypeDef.h>
@@ -20,7 +20,7 @@ namespace nalu {
 void
 AeroContainer::clean_up()
 {
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
   if (has_fsi())
     fsiContainer_->end_openfast();
 #endif
@@ -28,7 +28,7 @@ AeroContainer::clean_up()
 
 AeroContainer::~AeroContainer()
 {
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     delete fsiContainer_;
   }
@@ -49,7 +49,7 @@ AeroContainer::AeroContainer(const YAML::Node& node) : fsiContainer_(nullptr)
   // std::vector<const YAML::Node*> foundFsi;
   // NaluParsingHelper::find_nodes_given_key("openfast_fsi", node, foundFsi);
   if (node["openfast_fsi"]) {
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
     // if (foundFsi.size() != 1)
     //   throw std::runtime_error(
     //     "look_ahead_and_create::error: Too many openfast_fsi blocks");
@@ -88,7 +88,7 @@ AeroContainer::setup(double timeStep, std::shared_ptr<stk::mesh::BulkData> bulk)
   if (has_actuators()) {
     actuatorModel_.setup(timeStep, *bulk_);
   }
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     fsiContainer_->setup(timeStep, bulk_);
   }
@@ -101,7 +101,7 @@ AeroContainer::init(double currentTime, double restartFrequency)
   if (has_actuators()) {
     actuatorModel_.init(*bulk_);
   }
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     fsiContainer_->initialize(restartFrequency, currentTime);
   }
@@ -122,7 +122,7 @@ void
 AeroContainer::update_displacements(
   const double currentTime, bool updateCC, bool predict)
 {
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     NaluEnv::self().naluOutputP0()
       << "Calling update displacements inside AeroContainer" << std::endl;
@@ -141,7 +141,7 @@ void
 AeroContainer::predict_model_time_step(const double currentTime)
 {
   (void)currentTime;
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     fsiContainer_->predict_struct_timestep(currentTime);
   }
@@ -153,7 +153,7 @@ AeroContainer::predict_model_time_step(const double currentTime)
 void
 AeroContainer::advance_model_time_step(const double currentTime)
 {
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     fsiContainer_->advance_struct_timestep(currentTime);
   }
@@ -165,7 +165,7 @@ AeroContainer::advance_model_time_step(const double currentTime)
 void
 AeroContainer::compute_div_mesh_velocity()
 {
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     fsiContainer_->compute_div_mesh_velocity();
   }
@@ -176,7 +176,7 @@ const stk::mesh::PartVector
 AeroContainer::fsi_parts()
 {
   stk::mesh::PartVector all_part_vec;
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     auto n_turbines = fsiContainer_->get_nTurbinesGlob();
     for (auto i_turb = 0; i_turb < n_turbines; i_turb++) {
@@ -193,7 +193,7 @@ const stk::mesh::PartVector
 AeroContainer::fsi_bndry_parts()
 {
   stk::mesh::PartVector all_bndry_part_vec;
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     auto n_turbines = fsiContainer_->get_nTurbinesGlob();
     for (auto i_turb = 0; i_turb < n_turbines; i_turb++) {
@@ -211,7 +211,7 @@ const std::vector<std::string>
 AeroContainer::fsi_bndry_part_names()
 {
   std::vector<std::string> bndry_part_names;
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     auto n_turbines = fsiContainer_->get_nTurbinesGlob();
     for (auto i_turb = 0; i_turb < n_turbines; i_turb++) {
@@ -228,7 +228,7 @@ AeroContainer::fsi_bndry_part_names()
 double
 AeroContainer::openfast_accumulated_time()
 {
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
   if (has_fsi())
     return fsiContainer_->total_openfastfsi_execution_time();
   else
@@ -240,7 +240,7 @@ AeroContainer::openfast_accumulated_time()
 double
 AeroContainer::nalu_fsi_accumulated_time()
 {
-#ifdef NALU_USES_OPENFAST_FSI
+#ifdef NALU_USES_OPENFAST
   if (has_fsi())
     return fsiContainer_->total_nalu_fsi_execution_time();
   else

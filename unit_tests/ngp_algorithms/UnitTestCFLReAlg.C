@@ -70,4 +70,11 @@ TEST_F(MomentumKernelHex8Mesh, NGP_courant_reynolds)
 
   EXPECT_NEAR(helperObjs.realm.maxCourant_, cfl, 1.0e-14);
   EXPECT_NEAR(helperObjs.realm.maxReynolds_, reyNum, 1.0e-14);
+
+  // Check changing of dt
+  const auto dt_get = timeIntegrator.get_time_step();
+  EXPECT_NEAR(dt_get, dt, 1.0e-14);
+  timeIntegrator.set_time_step(dt + 1.);
+  const auto dt_get_again = timeIntegrator.get_time_step();
+  EXPECT_NEAR(dt_get_again, dt + 1.0, 1.0e-14);
 }

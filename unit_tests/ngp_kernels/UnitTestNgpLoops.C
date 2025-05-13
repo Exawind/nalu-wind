@@ -20,6 +20,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/GetNgpField.hpp"
+#include "Kokkos_DualView.hpp"
 
 #include <cmath>
 

@@ -4,7 +4,7 @@ target_sources(nalu PRIVATE
 
 add_subdirectory(actuator)
 
-if(ENABLE_OPENFAST_FSI)
+if(ENABLE_OPENFAST)
 add_subdirectory(fsi)
 endif()
 
