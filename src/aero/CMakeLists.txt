@@ -8,3 +8,4 @@ if(ENABLE_OPENFAST)
 add_subdirectory(fsi)
 endif()
 
+add_subdirectory(six_dof)

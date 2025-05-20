@@ -1023,7 +1023,7 @@ Realm::setup_interior_algorithms()
           << "Skipping registration of MeshVelocityEdgeAlg on part "
           << p->name()
           << ". GCL operations are currently only supported on HEX_8 "
-             "elemeents.\n";
+             "elements.\n";
         continue;
       }
       if (realmUsesEdges_) {

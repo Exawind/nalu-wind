@@ -63,6 +63,16 @@ if(ENABLE_CUDA)
     CUDA::nvToolsExt)
 endif()
 
+#find_package(OpenTurbine REQUIRED)
+#find_package(LAPACK REQUIRED)
+#find_package(KokkosKernels REQUIRED)
+#find_package(KLU REQUIRED)
+#find_package(LAPACK REQUIRED)
+#find_package(yaml-cpp REQUIRED)
+#find_package(NetCDF REQUIRED)
+#
+#target_link_libraries(nalu PRIVATE OpenTurbine::openturbine_library)
+
 if(ENABLE_ROCM)
   find_package(hip REQUIRED)
   message(STATUS "Found HIP = ${HIP_PATH}")
