@@ -1,23 +1,22 @@
 #ifndef OPENTURBINESIXDOF_H
 #define OPENTURBINESIXDOF_H
 
-#include "yaml-cpp/yaml.h"
-
 #include <array>
 #include <memory>
 
+#include "yaml-cpp/yaml.h"
+
 #include <stk_mesh/base/BulkData.hpp>
 
+#include <interfaces/cfd/interface.hpp>
+#include <interfaces/cfd/interface_builder.hpp>
+
 #include "FieldTypeDef.h"
+#include "aero/fsi/CalcLoads.h"
 
 namespace sierra {
 
 namespace nalu {
-
-enum BodyType {
-  Point=1,
-  NumberOfBodyTypes
-};
 
 struct Tether
 {
@@ -33,8 +32,15 @@ struct PointMass
   std::array<double,3> center_of_mass = {0.0, 0.0, 0.0};
   double mass{0.0};
   std::vector<Tether> tethers; 
-  std::vector<std::string> forcing_surfaces;
-  std::vector<std::string> moving_mesh_blocks;
+  std::vector<std::string> forcing_surface_names;
+  std::vector<std::string> moving_mesh_block_names;
+  stk::mesh::PartVector forcing_surfaces;
+  stk::mesh::PartVector moving_mesh_blocks;
+  std::string restart_file_name = "point.restart";
+  std::shared_ptr<openturbine::cfd::Interface> openturbine_interface = nullptr;
+  GenericFieldType* total_force;
+  std::shared_ptr<stk::mesh::BulkData> bulk = nullptr;
+  std::unique_ptr<CalcLoads> calc_loads = nullptr;
 };
 
 class OpenTurbineSixDof
@@ -49,27 +55,23 @@ public:
 
   void map_displacements(double, bool);
 
-  void predict_struct_states();
+  void advance_struct_timestep();
 
-  void predict_struct_timestep(const double curTime);
-
-  void advance_struct_timestep(const double curTime);
-
-  void compute_div_mesh_velocity();
-
-  void map_loads(const int tStep, const double curTime);
+  void map_loads();
 
 private:
   OpenTurbineSixDof() = delete;
   OpenTurbineSixDof(const OpenTurbineSixDof&) = delete;
 
+  void map_displacements_point(PointMass &point, bool updateCur);
+
+  void setup_point(PointMass &point, const double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk);
+
+  void map_loads_point(PointMass &point);
+
   void load_point(const YAML::Node&);
 
   void load(const YAML::Node&);
-
-  void get_displacements(double);
-
-  void compute_mapping();
 
   void send_loads(const double curTime);
   void timer_start(std::pair<double, double>& timer);
@@ -87,6 +89,8 @@ private:
     30}; // Frequency to write line loads and deflections to netcdf file
 
   int number_of_bodies_{0};
+
+  int restart_frequency_{0};
 
   std::vector<PointMass> point_bodies_;
 

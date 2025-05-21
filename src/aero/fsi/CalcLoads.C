@@ -185,6 +185,7 @@ CalcLoads::execute()
 
         // offsets
         const int offSetAveraVec = ip * nDim;
+        const int offSetForce = nDim * ip;
         const int localFaceNode = faceIpNodeMap[ip];
 
         // interpolate to bip
@@ -217,7 +218,7 @@ CalcLoads::execute()
             dflux += -muBip * (duidxj[offSetI + j] + duidxj[offSetTrans]) *
                      areaVec[offSetAveraVec + j];
           }
-          tforce_scs[offSetAveraVec + i] =
+          tforce_scs[offSetForce + i] =
             pBip * ai + dflux + 2.0 / 3.0 * muBip * divU * ai;
         }
       }
