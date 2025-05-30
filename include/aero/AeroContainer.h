@@ -16,6 +16,7 @@
 #include <stk_mesh/base/Part.hpp>
 #include <yaml-cpp/yaml.h>
 #include "aero/actuator/ActuatorModel.h"
+#include "aero/six_dof/OpenTurbineSixDof.h"
 
 namespace sierra::nalu {
 class OpenfastFSI;
@@ -53,7 +54,9 @@ public:
 
   bool is_active() { return has_actuators() || has_fsi(); }
   bool has_fsi() { return fsiContainer_ != nullptr; }
+  bool has_six_dof() {return sixDof_ != nullptr;}
 
+  const stk::mesh::PartVector six_dof_parts();
   const stk::mesh::PartVector fsi_parts();
   const stk::mesh::PartVector fsi_bndry_parts();
   const std::vector<std::string> fsi_bndry_part_names();
@@ -62,9 +65,12 @@ public:
 
 private:
   bool has_actuators() { return actuatorModel_.is_active(); }
+
+  bool has_six_dof_;
   ActuatorModel actuatorModel_;
   // TODO make this a unique_ptr
   OpenfastFSI* fsiContainer_;
+  std::shared_ptr<OpenTurbineSixDof> sixDof_;
   std::shared_ptr<stk::mesh::BulkData> bulk_;
 };
 

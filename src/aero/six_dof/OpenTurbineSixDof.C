@@ -10,7 +10,6 @@
 #include "aero/six_dof/OpenTurbineSixDof.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementRepo.h"
-#include "aero/fsi/MapLoad.h"
 
 #include <NaluParsing.h>
 

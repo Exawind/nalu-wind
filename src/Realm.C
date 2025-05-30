@@ -1017,6 +1017,13 @@ Realm::setup_interior_algorithms()
         all_part_vec.end(), fsi_part_vec.begin(), fsi_part_vec.end());
     }
 
+    if (aeroModels_->has_six_dof()) {
+      NaluEnv::self().naluOutputP0()
+        << "Inserting part vector for MeshVelocity algorithm" << std::endl;
+      auto six_dof_part_vec = aeroModels_->six_dof_parts();
+      all_part_vec.insert(all_part_vec.end(), six_dof_part_vec.begin(), six_dof_part_vec.end());
+    }
+
     for (auto p : all_part_vec) {
       if (p->topology() != stk::topology::HEX_8) {
         NaluEnv::self().naluOutputP0()
@@ -3472,7 +3479,7 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
       if (has_mesh_motion())
         meshMotionAlg_->restart_reinit(foundRestartTime);
 
-      if (aeroModels_->has_fsi()) {
+      if (aeroModels_->has_fsi() || aeroModels_->has_six_dof()) {
         NaluEnv::self().naluOutputP0()
           << "Aero models - Update displacements and set current coordinates"
           << std::endl;

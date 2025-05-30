@@ -6,9 +6,11 @@
 // This software is released under the BSD 3-clause license. See LICENSE file
 // for more details.
 //
+#include "aero/six_dof/OpenTurbineSixDof.h"
 #include <aero/AeroContainer.h>
 #include <NaluEnv.h>
 #include <NaluParsingHelper.h>
+#include <stk_mesh/base/Part.hpp>
 #ifdef NALU_USES_OPENFAST
 #include "aero/fsi/OpenfastFSI.h"
 #endif
@@ -45,6 +47,9 @@ AeroContainer::AeroContainer(const YAML::Node& node) : fsiContainer_(nullptr)
       throw std::runtime_error(
         "look_ahead_and_create::error: Too many actuator line blocks");
     actuatorModel_.parse(*foundActuator[0]);
+  }
+  if (node["openturbine_six_dof"]) {
+    sixDof_ = std::make_shared<OpenTurbineSixDof>(node["openturbine_six_dof"]);
   }
   // std::vector<const YAML::Node*> foundFsi;
   // NaluParsingHelper::find_nodes_given_key("openfast_fsi", node, foundFsi);
@@ -88,6 +93,9 @@ AeroContainer::setup(double timeStep, std::shared_ptr<stk::mesh::BulkData> bulk)
   if (has_actuators()) {
     actuatorModel_.setup(timeStep, *bulk_);
   }
+  if (has_six_dof()) {
+    sixDof_->setup(timeStep, bulk_);
+  }
 #ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     fsiContainer_->setup(timeStep, bulk_);
@@ -100,6 +108,9 @@ AeroContainer::init(double currentTime, double restartFrequency)
 {
   if (has_actuators()) {
     actuatorModel_.init(*bulk_);
+  }
+  if (has_six_dof()) {
+    sixDof_->initialize(restartFrequency, currentTime);
   }
 #ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
@@ -122,6 +133,14 @@ void
 AeroContainer::update_displacements(
   const double currentTime, bool updateCC, bool predict)
 {
+  if (has_six_dof()) {
+    NaluEnv::self().naluOutputP0()
+      << "Calling update displacements inside AeroContainer" << std::endl;
+    sixDof_->map_displacements(currentTime, updateCC);
+
+    (void)predict;
+    return;
+  }
 #ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     NaluEnv::self().naluOutputP0()
@@ -141,6 +160,9 @@ void
 AeroContainer::predict_model_time_step(const double currentTime)
 {
   (void)currentTime;
+  if (has_six_dof()) {
+    sixDof_->map_loads();
+  }
 #ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     fsiContainer_->predict_struct_timestep(currentTime);
@@ -153,6 +175,11 @@ AeroContainer::predict_model_time_step(const double currentTime)
 void
 AeroContainer::advance_model_time_step(const double currentTime)
 {
+  if (has_six_dof()) {
+    (void)currentTime;
+    sixDof_->advance_struct_timestep();
+    return;
+  }
 #ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     fsiContainer_->advance_struct_timestep(currentTime);
@@ -188,6 +215,18 @@ AeroContainer::fsi_parts()
 #endif
   return all_part_vec;
 }
+
+const stk::mesh::PartVector
+AeroContainer::six_dof_parts()
+{
+  if (has_six_dof()) {
+    return sixDof_->get_mesh_blocks();
+  }
+  stk::mesh::PartVector all_part_vec;
+  return all_part_vec;
+
+}
+
 
 const stk::mesh::PartVector
 AeroContainer::fsi_bndry_parts()

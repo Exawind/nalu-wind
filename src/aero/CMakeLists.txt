@@ -1,5 +1,6 @@
 target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/AeroContainer.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/CalcLoads.C
 )
 
 add_subdirectory(actuator)

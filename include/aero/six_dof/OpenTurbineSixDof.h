@@ -13,6 +13,7 @@
 
 #include "FieldTypeDef.h"
 #include "aero/fsi/CalcLoads.h"
+#include "aero/fsi/MapLoad.h"
 
 namespace sierra {
 
@@ -58,6 +59,17 @@ public:
   void advance_struct_timestep();
 
   void map_loads();
+
+  const stk::mesh::PartVector
+  get_mesh_blocks() {
+    stk::mesh::PartVector all_mesh_blocks;
+    for (auto && point : point_bodies_) {
+      for (auto && block : point.moving_mesh_blocks) {
+        all_mesh_blocks.push_back(block);
+      }
+    }
+    return all_mesh_blocks;
+  }
 
 private:
   OpenTurbineSixDof() = delete;
