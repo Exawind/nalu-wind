@@ -48,8 +48,9 @@ remove_constant(Tpetra::MultiVector<>& vector)
 {
   // orthogonalize wrt (1,1,..,1)^T
 
-  auto avg = KokkosBlas::sum(Kokkos::subview(
-    vector.getLocalViewDevice(Tpetra::Access::ReadOnly), Kokkos::ALL, 0));
+  auto avg = KokkosBlas::sum(
+    Kokkos::subview(
+      vector.getLocalViewDevice(Tpetra::Access::ReadOnly), Kokkos::ALL, 0));
 
   auto comm = Teuchos::getRawMpiComm(*vector.getMap()->getComm());
   MPI_Allreduce(MPI_IN_PLACE, &avg, 1, MPI_DOUBLE, MPI_SUM, comm);

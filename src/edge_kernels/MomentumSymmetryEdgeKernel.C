@@ -39,10 +39,12 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::MomentumSymmetryEdgeKernel(
       get_field_ordinal(meta, "exposed_area_vector", meta.side_rank())),
     dudx_(get_field_ordinal(meta, "dudx")),
     includeDivU_(solnOpts.includeDivU_),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
-      BcAlgTraits::FaceTraits::topo_)),
-    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
-      BcAlgTraits::ElemTraits::topo_)),
+    meFC_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+        BcAlgTraits::FaceTraits::topo_)),
+    meSCS_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+        BcAlgTraits::ElemTraits::topo_)),
     penaltyFactor_(solnOpts.symmetryBcPenaltyFactor_)
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);

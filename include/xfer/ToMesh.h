@@ -108,8 +108,9 @@ public:
     if (allFieldsAreFine) {
       return toFieldVec;
     } else {
-      throw std::runtime_error("Xfer::ToMesh:Error field registration on "
-                               "desired parts of the mesh is not complete");
+      throw std::runtime_error(
+        "Xfer::ToMesh:Error field registration on "
+        "desired parts of the mesh is not complete");
     }
   }
 

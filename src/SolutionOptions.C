@@ -203,8 +203,9 @@ SolutionOptions::load(const YAML::Node& y_node)
     else if (projected_timescale_type == "momentum_diag_inv")
       tscaleType_ = TSCALE_UDIAGINV;
     else
-      throw std::runtime_error("SolutionOptions: Invalid option provided for "
-                               "projected_timescale_type");
+      throw std::runtime_error(
+        "SolutionOptions: Invalid option provided for "
+        "projected_timescale_type");
 
     // reset running AMS averages to instantaneous quantities during
     // intialization you would want to do this when restarting from a RANS
@@ -807,8 +808,9 @@ std::vector<double>
 SolutionOptions::get_gravity_vector(const unsigned nDim) const
 {
   if (nDim != gravity_.size())
-    throw std::runtime_error("SolutionOptions::get_gravity_vector():Error "
-                             "Expected size does not equaly nDim");
+    throw std::runtime_error(
+      "SolutionOptions::get_gravity_vector():Error "
+      "Expected size does not equaly nDim");
   else
     return gravity_;
 }

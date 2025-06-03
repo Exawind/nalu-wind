@@ -69,9 +69,10 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
       break;
     }
     default: {
-      throw std::runtime_error("Incorrect density property set for VOF "
-                               "calculations. Use a constant or "
-                               "VOF property for density.");
+      throw std::runtime_error(
+        "Incorrect density property set for VOF "
+        "calculations. Use a constant or "
+        "VOF property for density.");
       break;
     }
     }

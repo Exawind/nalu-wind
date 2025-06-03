@@ -175,8 +175,9 @@ HypreDirectSolver::initSolver()
   Hypre::Hypre_Chooser chooser =
     plist->get("SolveOrPrecondition", Hypre::Solver);
   if (chooser != Hypre::Solver)
-    throw std::runtime_error("HypreDirectSolver::initParameters: Invalid "
-                             "option provided for Hypre Solver");
+    throw std::runtime_error(
+      "HypreDirectSolver::initParameters: Invalid "
+      "option provided for Hypre Solver");
 
   // Everything checks out... create the solver and preconditioner
   createSolver();

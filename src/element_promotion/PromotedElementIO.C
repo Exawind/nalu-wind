@@ -333,9 +333,10 @@ PromotedElementIO::add_fields(const std::vector<stk::mesh::FieldBase*>& fields)
           "Only (u)int32, (u)int64, and double fields supported");
       }
 
-      nodeBlock_->field_add(Ioss::Field(
-        field.name(), iossType, storage_name(field), Ioss::Field::TRANSIENT,
-        nb_size));
+      nodeBlock_->field_add(
+        Ioss::Field(
+          field.name(), iossType, storage_name(field), Ioss::Field::TRANSIENT,
+          nb_size));
     }
   }
   output_->end_mode(Ioss::STATE_DEFINE_TRANSIENT);

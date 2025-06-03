@@ -31,11 +31,12 @@ DropletVOFAuxFunction::DropletVOFAuxFunction(const std::vector<double>& params)
 {
   // check size and populate
   if (params.size() != 7 && !params.empty())
-    throw std::runtime_error("Realm::setup_initial_conditions: "
-                             "droplet (volume_of_fluid) requires 7 params: 3 "
-                             "components of droplet position, droplet "
-                             "radius, surface position, surface coordinate "
-                             "index, and interface thickness");
+    throw std::runtime_error(
+      "Realm::setup_initial_conditions: "
+      "droplet (volume_of_fluid) requires 7 params: 3 "
+      "components of droplet position, droplet "
+      "radius, surface position, surface coordinate "
+      "index, and interface thickness");
   if (!params.empty()) {
     droppos_x_ = params[0];
     droppos_y_ = params[1];

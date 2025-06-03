@@ -351,12 +351,14 @@ AssembleMomentumEdgeABLTopBC::initialize()
       "AssembleMomentumEdgeABLTopBC: zSample is not contained in the mesh");
   }
   if ((zSample_ - z0) > 0.95 * zL) {
-    throw std::runtime_error("AssembleMomentumEdgeABLTopBC: zSample is too "
-                             "close to the upper boundary");
+    throw std::runtime_error(
+      "AssembleMomentumEdgeABLTopBC: zSample is too "
+      "close to the upper boundary");
   }
   if ((zSample_ - z0) < 0.5 * zL) {
-    throw std::runtime_error("AssembleMomentumEdgeABLTopBC: zSample is too far "
-                             "away from the upper boundary");
+    throw std::runtime_error(
+      "AssembleMomentumEdgeABLTopBC: zSample is too far "
+      "away from the upper boundary");
   }
 
   // Determine the grid index for the sampling plane.

@@ -37,12 +37,13 @@ TEST_F(FieldRegistryTest, allDataNeededToDeclareFieldIsKnownThroughQuery)
   const int num_dims = 3;
   auto def = FieldRegistry::query(num_dims, num_states, key_);
 
-  ASSERT_NO_THROW(std::visit(
-    [&](auto arg) {
-      meta_->declare_field<typename decltype(arg)::DataType>(
-        arg.rank, key_, arg.num_states);
-    },
-    def));
+  ASSERT_NO_THROW(
+    std::visit(
+      [&](auto arg) {
+        meta_->declare_field<typename decltype(arg)::DataType>(
+          arg.rank, key_, arg.num_states);
+      },
+      def));
 
   const auto findFieldPtr =
     meta_->get_field<double>(stk::topology::NODE_RANK, key_);
@@ -58,13 +59,14 @@ TEST_F(FieldRegistryTest, registeredFieldPointerCanBeStored)
   std::vector<FieldPointerTypes> field_pointers;
 
   EXPECT_EQ(0, field_pointers.size());
-  ASSERT_NO_THROW(std::visit(
-    [&](auto arg) {
-      auto* ptr = &(meta_->declare_field<typename decltype(arg)::DataType>(
-        arg.rank, key_, arg.num_states));
-      field_pointers.push_back(ptr);
-    },
-    def));
+  ASSERT_NO_THROW(
+    std::visit(
+      [&](auto arg) {
+        auto* ptr = &(meta_->declare_field<typename decltype(arg)::DataType>(
+          arg.rank, key_, arg.num_states));
+        field_pointers.push_back(ptr);
+      },
+      def));
 
   // pointer storage has increased
   EXPECT_EQ(1, field_pointers.size());

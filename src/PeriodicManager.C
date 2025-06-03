@@ -669,8 +669,9 @@ add_range_nodes_to_sharers_of_domain_nodes(
     rbuf.unpack(gid);
     int proc;
     rbuf.unpack(proc);
-    sendNodes.push_back(stk::mesh::EntityProc(
-      bulk_data.get_entity(stk::topology::NODE_RANK, gid), proc));
+    sendNodes.push_back(
+      stk::mesh::EntityProc(
+        bulk_data.get_entity(stk::topology::NODE_RANK, gid), proc));
   });
 }
 
