@@ -1039,9 +1039,10 @@ EnthalpyEquationSystem::register_initial_condition_fcn(
       theAuxFunc = new TabulatedTemperatureAuxFunction(
         {0, 650.0, 750.0, 1000.0}, {300.0, 300.0, 308.0, 308.75});
     } else {
-      throw std::runtime_error("EnthalpyEquationSystem::register_initial_"
-                               "condition_fcn: limited user "
-                               "functions supported");
+      throw std::runtime_error(
+        "EnthalpyEquationSystem::register_initial_"
+        "condition_fcn: limited user "
+        "functions supported");
     }
 
     // create the algorithm
@@ -1415,8 +1416,9 @@ EnthalpyEquationSystem::temperature_bc_setup(
       theAuxFunc = new TabulatedTemperatureAuxFunction(
         {0, 650.0, 750.0, 1000.0}, {300.0, 300.0, 308.0, 308.75});
     } else {
-      throw std::runtime_error("EnthalpyEquationSystem::temperature_bc_setup; "
-                               "limited user functions supported");
+      throw std::runtime_error(
+        "EnthalpyEquationSystem::temperature_bc_setup; "
+        "limited user functions supported");
     }
   } else if (STRING_FUNCTION_UD == theDataType) {
     theAuxFunc = new StringTimeCoordTemperatureAuxFunction(

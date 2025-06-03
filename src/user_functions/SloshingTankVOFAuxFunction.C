@@ -29,9 +29,10 @@ SloshingTankVOFAuxFunction::SloshingTankVOFAuxFunction(
 {
   // check size and populate
   if (params.size() != 4 && !params.empty())
-    throw std::runtime_error("Realm::setup_initial_conditions: "
-                             "sloshing_tank requires 4 params: water level, "
-                             "amplitude, kappa, and interface thickness");
+    throw std::runtime_error(
+      "Realm::setup_initial_conditions: "
+      "sloshing_tank requires 4 params: water level, "
+      "amplitude, kappa, and interface thickness");
   if (!params.empty()) {
     water_level_ = params[0];
     amplitude_ = params[1];

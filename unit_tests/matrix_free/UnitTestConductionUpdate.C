@@ -106,13 +106,14 @@ class ConductionSimulationFixture : public ::ConductionFixture
 protected:
   ConductionSimulationFixture()
     : ConductionFixture(nx, scale),
-      update(make_updater<ConductionUpdate>(
-        order,
-        bulk,
-        Teuchos::ParameterList{},
-        meta.universal_part(),
-        stk::mesh::Selector{},
-        stk::mesh::Selector{}))
+      update(
+        make_updater<ConductionUpdate>(
+          order,
+          bulk,
+          Teuchos::ParameterList{},
+          meta.universal_part(),
+          stk::mesh::Selector{},
+          stk::mesh::Selector{}))
   {
     auto& coordField = coordinate_field();
     for (auto ib :
@@ -227,13 +228,14 @@ class QuadraticElementConductionSimulationFixture : public ::ConductionFixtureP2
 protected:
   QuadraticElementConductionSimulationFixture()
     : ConductionFixtureP2(nx / order, scale),
-      update(make_updater<ConductionUpdate>(
-        order,
-        bulk,
-        Teuchos::ParameterList{},
-        meta.universal_part(),
-        stk::mesh::Selector{},
-        stk::mesh::Selector{}))
+      update(
+        make_updater<ConductionUpdate>(
+          order,
+          bulk,
+          Teuchos::ParameterList{},
+          meta.universal_part(),
+          stk::mesh::Selector{},
+          stk::mesh::Selector{}))
   {
     auto& coordField = coordinate_field();
     for (auto ib :

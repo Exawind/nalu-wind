@@ -32,10 +32,11 @@
 #include <string>
 
 ConductionFixture::ConductionFixture(int nx, double scale)
-  : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD)
-              .set_spatial_dimension(3u)
-              .set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA)
-              .create()),
+  : bulkPtr(
+      stk::mesh::MeshBuilder(MPI_COMM_WORLD)
+        .set_spatial_dimension(3u)
+        .set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA)
+        .create()),
     meta(bulkPtr->mesh_meta_data()),
     bulk(*bulkPtr),
     io(bulk.parallel()),

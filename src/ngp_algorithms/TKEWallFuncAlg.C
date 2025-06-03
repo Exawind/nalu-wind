@@ -38,8 +38,9 @@ TKEWallFuncAlg<BcAlgTraits>::TKEWallFuncAlg(Realm& realm, stk::mesh::Part* part)
       "wall_friction_velocity_bip",
       realm.meta_data().side_rank())),
     cMu_(realm.get_turb_model_constant(TM_cMu)),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
-      BcAlgTraits::topo_))
+    meFC_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+        BcAlgTraits::topo_))
 {
   faceData_.add_cvfem_face_me(meFC_);
 

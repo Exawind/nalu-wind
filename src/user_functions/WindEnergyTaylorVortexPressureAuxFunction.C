@@ -31,10 +31,11 @@ WindEnergyTaylorVortexPressureAuxFunction::
 {
   //  check size and populate
   if (!(params.size() > 4 && params.size() < 7) && !params.empty())
-    throw std::runtime_error("Realm::setup_initial_conditions: "
-                             "wind_energy_taylor_vortex takes 5 - 6 parameters:"
-                             " centroidX, centroidY, initial vortex radius, "
-                             "utheta0, uInf,  Optionally, density");
+    throw std::runtime_error(
+      "Realm::setup_initial_conditions: "
+      "wind_energy_taylor_vortex takes 5 - 6 parameters:"
+      " centroidX, centroidY, initial vortex radius, "
+      "utheta0, uInf,  Optionally, density");
 
   if (!params.empty()) {
     centroidX_ = params[0];

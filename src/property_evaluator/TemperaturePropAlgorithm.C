@@ -38,8 +38,9 @@ TemperaturePropAlgorithm::TemperaturePropAlgorithm(
   temperature_ =
     meta_data.get_field<double>(stk::topology::NODE_RANK, tempName);
   if (NULL == temperature_) {
-    throw std::runtime_error("Realm::setup_property: TemperaturePropAlgorithm "
-                             "requires temperature/bc:");
+    throw std::runtime_error(
+      "Realm::setup_property: TemperaturePropAlgorithm "
+      "requires temperature/bc:");
   }
 }
 

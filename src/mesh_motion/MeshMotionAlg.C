@@ -45,8 +45,9 @@ void
 MeshMotionAlg::initialize(const double time)
 {
   if (isInit_)
-    throw std::runtime_error("MeshMotionAlg::initialize(): Re-initialization "
-                             "of MeshMotionAlg not valid");
+    throw std::runtime_error(
+      "MeshMotionAlg::initialize(): Re-initialization "
+      "of MeshMotionAlg not valid");
 
   for (size_t i = 0; i < movingFrameVec_.size(); i++) {
     movingFrameVec_[i]->setup();

@@ -68,8 +68,9 @@ protected:
         Teuchos::rcpFromRef(linsys.owned_and_shared),
         Teuchos::rcpFromRef(linsys.owned)),
       conn(stk_connectivity_map<order>(mesh(), meta.universal_part())),
-      offsets(create_offset_map<order>(
-        mesh(), meta.universal_part(), linsys.stk_lid_to_tpetra_lid)),
+      offsets(
+        create_offset_map<order>(
+          mesh(), meta.universal_part(), linsys.stk_lid_to_tpetra_lid)),
       field_update(Teuchos::ParameterList{}, linsys, exporter, offsets)
   {
     const auto conn =

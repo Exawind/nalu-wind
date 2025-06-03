@@ -57,8 +57,9 @@ ScalarFluxPenaltyElemKernel<BcAlgTraits>::ScalarFluxPenaltyElemKernel(
     diffFluxCoeff_(diffFluxCoeff->mesh_meta_data_ordinal()),
     penaltyFac_(2.0),
     shiftedGradOp_(solnOpts.get_shifted_grad_op("pressure")),
-    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
-      BcAlgTraits::elemTopo_))
+    meSCS_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        BcAlgTraits::elemTopo_))
 {
   coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
   exposedAreaVec_ =

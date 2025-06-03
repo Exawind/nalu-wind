@@ -262,8 +262,9 @@ operator>>(
 
   if (targetPairName) {
     if (targetPairName.size() != 2)
-      throw std::runtime_error("For non-conformal algorithms, ne must specify "
-                               "two targets, e.g., [surf_1, surf_2]");
+      throw std::runtime_error(
+        "For non-conformal algorithms, ne must specify "
+        "two targets, e.g., [surf_1, surf_2]");
     nonConformalBC.currentPartNameVec_.resize(1);
     nonConformalBC.opposingPartNameVec_.resize(1);
     nonConformalBC.currentPartNameVec_[0] = targetPairName[0].as<std::string>();
@@ -271,11 +272,13 @@ operator>>(
       targetPairName[1].as<std::string>();
   } else {
     if (!targetsCurrent)
-      throw std::runtime_error("NonConformal::Error: part definition error: "
-                               "missing current_target_name");
+      throw std::runtime_error(
+        "NonConformal::Error: part definition error: "
+        "missing current_target_name");
     if (!targetsOpposing)
-      throw std::runtime_error("NonConformal::Error: part definition error: "
-                               "missing opposing_target_name");
+      throw std::runtime_error(
+        "NonConformal::Error: part definition error: "
+        "missing opposing_target_name");
 
     // set current
     if (targetsCurrent.Type() == YAML::NodeType::Scalar) {
@@ -875,8 +878,9 @@ convert<sierra::nalu::WallUserData>::decode(
 
   // not appropriate
   if (node["specific_dissipation_rate"]) {
-    throw std::runtime_error("specific_dissipation rate at walls is provided "
-                             "by a model, not the user");
+    throw std::runtime_error(
+      "specific_dissipation rate at walls is provided "
+      "by a model, not the user");
   }
 
   if (node["heat_flux"]) {
@@ -1101,8 +1105,9 @@ convert<sierra::nalu::OpenUserData>::decode(
     if (
       openData.entrainMethod_ == sierra::nalu::EntrainmentMethod::SPECIFIED &&
       openData.totalP_) {
-      throw std::runtime_error("Specifying both total pressure and specified "
-                               "entrainment is not supported");
+      throw std::runtime_error(
+        "Specifying both total pressure and specified "
+        "entrainment is not supported");
     }
   }
   return true;

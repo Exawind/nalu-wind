@@ -601,8 +601,9 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
     bcDataMapAlg_.push_back(theCopyAlg);
 
   } else {
-    throw std::runtime_error("TKE active with wall bc, however, no value of "
-                             "tke or wall function specified");
+    throw std::runtime_error(
+      "TKE active with wall bc, however, no value of "
+      "tke or wall function specified");
   }
 
   // Dirichlet bc

@@ -86,6 +86,11 @@ enhancements, documentation updates, etc. All contributions are processed
 through pull-requests on GitHub. Please follow our [contributing
 guidelines](https://github.com/Exawind/nalu-wind/blob/master/CONTRIBUTING.md)
 when submitting pull-requests.
+
+To pass the formatting check, use this with a new version of `clang-format`:
+```
+find nalu.C unit_tests.C ./include ./src ./unit_tests \( -name "*.cpp" -o -name "*.H" -o -name "*.h" -o -name "*.C" \) -exec clang-format -i {} +
+```
   
 ## License
 

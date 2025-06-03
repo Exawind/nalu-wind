@@ -90,7 +90,7 @@ test_metric_for_topo_2D(stk::topology topo, double tol)
   // Compute eigendecomposition
   double mij_ev[2][2];
   double mij_evals[2][2];
-  double(&gij_exact_pt)[2][2] = reinterpret_cast<double(&)[2][2]>(gij_exact);
+  double (&gij_exact_pt)[2][2] = reinterpret_cast<double (&)[2][2]>(gij_exact);
   sierra::nalu::EigenDecomposition::sym_diagonalize(
     gij_exact_pt, mij_ev, mij_evals);
 
@@ -158,7 +158,7 @@ test_metric_for_topo_3D(stk::topology topo, double tol)
   // Compute eigendecomposition
   double mij_ev[3][3];
   double mij_evals[3][3];
-  double(&gij_exact_pt)[3][3] = reinterpret_cast<double(&)[3][3]>(gij_exact);
+  double (&gij_exact_pt)[3][3] = reinterpret_cast<double (&)[3][3]>(gij_exact);
   sierra::nalu::EigenDecomposition::sym_diagonalize(
     gij_exact_pt, mij_ev, mij_evals);
 
