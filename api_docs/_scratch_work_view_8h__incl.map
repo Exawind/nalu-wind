@@ -1,0 +1,20 @@
+<map id="ScratchWorkView.h" name="ScratchWorkView.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="389,5,535,31"/>
+<area shape="rect" id="Node000002" href="$_kokkos_interface_8h.html" title=" " alt="" coords="310,79,449,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="450,33,405,72,402,67,447,29"/>
+<area shape="rect" id="Node000007" href="$_simd_interface_8h.html" title="STK SIMD Interface." alt="" coords="570,79,695,104"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="490,28,593,71,591,76,488,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,152,76,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="320,107,90,154,89,149,319,101"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="100,152,288,177"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="351,107,238,149,236,145,349,102"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="471,152,621,177"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="407,102,507,144,505,149,405,106"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="313,152,446,177"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="382,104,382,138,377,138,377,104"/>
+<area shape="poly" id="edge8_Node000007_Node000005" title=" " alt="" coords="620,106,572,145,569,141,617,102"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="646,152,793,177"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="648,102,696,141,693,145,645,106"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="817,152,880,177"/>
+<area shape="poly" id="edge9_Node000007_Node000009" title=" " alt="" coords="668,101,805,146,803,151,667,107"/>
+</map>

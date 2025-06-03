@@ -1,0 +1,13 @@
+<map id="StkToTpetraComm.C" name="StkToTpetraComm.C">
+<area shape="rect" id="Node000001" title=" " alt="" coords="329,5,484,31"/>
+<area shape="rect" id="Node000002" href="$_stk_to_tpetra_comm_8h.html" title=" " alt="" coords="47,79,281,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="368,33,217,77,215,72,367,28"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="305,79,508,104"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="409,31,409,65,404,65,404,31"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="532,79,756,104"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="446,28,593,72,592,77,444,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,152,139,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="151,106,99,146,96,141,148,102"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="163,152,352,177"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="181,102,233,141,230,146,177,106"/>
+</map>

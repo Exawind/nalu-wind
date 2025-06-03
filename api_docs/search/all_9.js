@@ -1,0 +1,15 @@
+var searchData=
+[
+  ['jacobian_5fcomponent_5fxh_0',['jacobian_component_xh',['../namespacesierra_1_1nalu.html#a8cc88fce9dc93a4fbe5ffd6a2f99d615',1,'sierra::nalu']]],
+  ['jacobian_5fcomponent_5fyh_1',['jacobian_component_yh',['../namespacesierra_1_1nalu.html#a58c96f40bff50526c9027f1289caf6ce',1,'sierra::nalu']]],
+  ['jacobian_5fcomponent_5fzh_2',['jacobian_component_zh',['../namespacesierra_1_1nalu.html#a0d546b7c0d36282cd4049e0d919e1b34',1,'sierra::nalu']]],
+  ['jacobioperator_3',['jacobioperator',['../classsierra_1_1nalu_1_1matrix__free_1_1_jacobi_operator.html#a218732eca019071d2a5114bdcec058ca',1,'sierra::nalu::matrix_free::JacobiOperator::JacobiOperator()'],['../classsierra_1_1nalu_1_1matrix__free_1_1_jacobi_operator.html',1,'sierra::nalu::matrix_free::JacobiOperator&lt; p &gt;']]],
+  ['jhat_4',['jhat',['../structvs_1_1_vector_t.html#a705c5c695641daebeb3f959c8746118b',1,'vs::VectorT']]],
+  ['jlower_5f_5',['jLower_',['../classsierra_1_1nalu_1_1_hypre_linear_system.html#a1c9edb6311caa7d343150b924726eacb',1,'sierra::nalu::HypreLinearSystem']]],
+  ['jmax_5f_6',['jmax_',['../classsierra_1_1nalu_1_1_assemble_momentum_edge_a_b_l_top_b_c.html#a03657e0df1d125b7ccc61d3976ee3296',1,'sierra::nalu::AssembleMomentumEdgeABLTopBC']]],
+  ['join_7',['join',['../structsierra_1_1nalu_1_1matrix__free_1_1_pair_reduce.html#a34482816de393740b20ffd4b7dc9f20a',1,'sierra::nalu::matrix_free::PairReduce::join(value_type &amp;dst, const value_type &amp;src) const'],['../structsierra_1_1nalu_1_1matrix__free_1_1_pair_reduce.html#aa5acc1ba2cefa1a6e1d88e4053890c93',1,'sierra::nalu::matrix_free::PairReduce::join(volatile value_type &amp;dst, const volatile value_type &amp;src) const'],['../structsierra_1_1nalu_1_1_cfl_re_max.html#a479bd8eda7776f33001f21d5820eb6e1',1,'sierra::nalu::CflReMax::join(value_type &amp;dest, const value_type &amp;src) const'],['../structsierra_1_1nalu_1_1_cfl_re_max.html#ac56c29b159e8ec45816c2e3c05e8b187',1,'sierra::nalu::CflReMax::join(volatile value_type &amp;dest, const volatile value_type &amp;src) const'],['../structsierra_1_1nalu_1_1nalu__ngp_1_1_min_max_sum.html#a630b444b67a3b01d31792fb9e1c8f814',1,'sierra::nalu::nalu_ngp::MinMaxSum::join(value_type &amp;dest, const value_type &amp;src) const'],['../structsierra_1_1nalu_1_1nalu__ngp_1_1_min_max_sum.html#a2748dba883b34c86de031b8ea407cdcf',1,'sierra::nalu::nalu_ngp::MinMaxSum::join(volatile value_type &amp;dest, const volatile value_type &amp;src) const']]],
+  ['jupper_5f_8',['jUpper_',['../classsierra_1_1nalu_1_1_hypre_linear_system.html#af357600da145769fc38c54c3bdfced2e',1,'sierra::nalu::HypreLinearSystem']]],
+  ['jxy_5f_9',['Jxy_',['../classsierra_1_1nalu_1_1_coriolis_src.html#a1866e90171156ce319d5fd9c3554e7ff',1,'sierra::nalu::CoriolisSrc']]],
+  ['jxz_5f_10',['Jxz_',['../classsierra_1_1nalu_1_1_coriolis_src.html#a0ef8a1718dc309009828528e3d67414c',1,'sierra::nalu::CoriolisSrc']]],
+  ['jyz_5f_11',['Jyz_',['../classsierra_1_1nalu_1_1_coriolis_src.html#a8e3e48aa7a26215430e97196a705725b',1,'sierra::nalu::CoriolisSrc']]]
+];
