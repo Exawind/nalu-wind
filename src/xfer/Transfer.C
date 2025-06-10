@@ -104,8 +104,9 @@ Transfer::load(const YAML::Node& node)
   if (hasOld) {
     // error check to ensure old and new are not mixed
     if (hasNewFrom || hasNewTo)
-      throw std::runtime_error("XFER::Error: part definition error: can not "
-                               "mix mesh part line commands");
+      throw std::runtime_error(
+        "XFER::Error: part definition error: can not "
+        "mix mesh part line commands");
 
     // proceed safely
     const YAML::Node meshPartPairName = node["mesh_part_pair"];
@@ -189,8 +190,9 @@ Transfer::load(const YAML::Node& node)
 
   // sanity check
   if (couplingPhysicsSpecified_ && transferVariablesSpecified_)
-    throw std::runtime_error("physics set and transfer variables specified; "
-                             "will go with variables specified");
+    throw std::runtime_error(
+      "physics set and transfer variables specified; "
+      "will go with variables specified");
 
   if (!couplingPhysicsSpecified_ && !transferVariablesSpecified_)
     throw std::runtime_error(

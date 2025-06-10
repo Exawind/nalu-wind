@@ -138,8 +138,9 @@ ABLWallFrictionVelAlg<BcAlgTraits>::ABLWallFrictionVelAlg(
     Tref_(Tref),
     kappa_(kappa),
     useShifted_(useShifted),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
-      BcAlgTraits::topo_))
+    meFC_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+        BcAlgTraits::topo_))
 {
   faceData_.add_cvfem_face_me(meFC_);
 

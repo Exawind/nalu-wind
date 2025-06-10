@@ -161,8 +161,9 @@ NonConformalManager::initialize()
         << "NonConformalManager::Error() Too many coincident nodes found on "
            "NCAlg interface(s): "
         << g_problemNodes << " ...ABORTING..." << std::endl;
-      throw std::runtime_error("NonConformalManager::Error() Please remesh "
-                               "taking care to avoid coincident nodes");
+      throw std::runtime_error(
+        "NonConformalManager::Error() Please remesh "
+        "taking care to avoid coincident nodes");
     }
   }
 

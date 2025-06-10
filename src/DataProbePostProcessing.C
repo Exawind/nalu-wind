@@ -465,8 +465,9 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
         }
 
         if (probeInfo->numProbes_ < 1) {
-          throw std::runtime_error("DataProbePostProcessing: Need to have some "
-                                   "specification included");
+          throw std::runtime_error(
+            "DataProbePostProcessing: Need to have some "
+            "specification included");
         }
 
         // extract the output variables
@@ -481,12 +482,14 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
             const YAML::Node fieldSizeNode = y_output["field_size"];
 
             if (!fieldNameNode)
-              throw std::runtime_error("DataProbePostProcessing::load() Sorry, "
-                                       "field name must be provided");
+              throw std::runtime_error(
+                "DataProbePostProcessing::load() Sorry, "
+                "field name must be provided");
 
             if (!fieldSizeNode)
-              throw std::runtime_error("DataProbePostProcessing::load() Sorry, "
-                                       "field size must be provided");
+              throw std::runtime_error(
+                "DataProbePostProcessing::load() Sorry, "
+                "field size must be provided");
 
             // extract data
             std::string fieldName;
@@ -890,8 +893,9 @@ DataProbePostProcessing::create_transfer()
 
       // extract field names (homegeneous over all probes)
       for (size_t j = 0; j < probeSpec->fromToName_.size(); ++j)
-        theTransfer->transferVariablesPairName_.push_back(std::make_pair(
-          probeSpec->fromToName_[j].first, probeSpec->fromToName_[j].second));
+        theTransfer->transferVariablesPairName_.push_back(
+          std::make_pair(
+            probeSpec->fromToName_[j].first, probeSpec->fromToName_[j].second));
 
       // accumulate all of the From parts for this Specification
       for (size_t j = 0; j < probeSpec->fromTargetNames_.size(); ++j) {
@@ -1116,9 +1120,10 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
             if ((0 < gzlevel) && (gzlevel < 10)) {
               fileName = fileName + ".gz";
               outbuf.push(
-                boost::iostreams::gzip_compressor(boost::iostreams::gzip_params(
-                  gzlevel, boost::iostreams::zlib::deflated, 15, 9,
-                  boost::iostreams::zlib::huffman_only)));
+                boost::iostreams::gzip_compressor(
+                  boost::iostreams::gzip_params(
+                    gzlevel, boost::iostreams::zlib::deflated, 15, 9,
+                    boost::iostreams::zlib::huffman_only)));
             }
 #endif
 
@@ -1157,8 +1162,9 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
                 boost::iostreams::filtering_streambuf<boost::iostreams::output>
                   outstream;
                 if ((0 < gzlevel) && (gzlevel < 10)) {
-                  outstream.push(boost::iostreams::gzip_compressor(
-                    boost::iostreams::gzip_params(gzlevel)));
+                  outstream.push(
+                    boost::iostreams::gzip_compressor(
+                      boost::iostreams::gzip_params(gzlevel)));
                 }
                 std::ofstream coordfile(
                   coordFileName.c_str(), std::ios_base::out);

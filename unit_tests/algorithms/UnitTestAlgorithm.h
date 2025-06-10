@@ -112,8 +112,9 @@ struct NodeSuppHelper
   NodeSuppHelper()
     : yamlNode(unit_test_utils::get_default_inputs()),
       realmDefaultNode(unit_test_utils::get_realm_default_node()),
-      naluObj(std::unique_ptr<unit_test_utils::NaluTest>(
-        new unit_test_utils::NaluTest(yamlNode))),
+      naluObj(
+        std::unique_ptr<unit_test_utils::NaluTest>(
+          new unit_test_utils::NaluTest(yamlNode))),
       realm(naluObj->create_realm(realmDefaultNode, "multi_physics"))
   {
   }

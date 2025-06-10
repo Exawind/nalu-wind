@@ -69,8 +69,9 @@ ScalarOpenAdvElemKernel<BcAlgTraits>::ScalarOpenAdvElemKernel(
       sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         BcAlgTraits::faceTopo_)
         ->ipNodeMap()),
-    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
-      BcAlgTraits::elemTopo_)),
+    meSCS_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        BcAlgTraits::elemTopo_)),
     pecletFunction_(
       eqSystem->create_peclet_function<DoubleType>(scalarQ->name()))
 {

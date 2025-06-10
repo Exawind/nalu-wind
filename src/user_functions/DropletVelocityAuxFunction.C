@@ -34,11 +34,12 @@ DropletVelocityAuxFunction::DropletVelocityAuxFunction(
 {
   // check size and populate
   if (params.size() != 8 && !params.empty())
-    throw std::runtime_error("Realm::setup_initial_conditions: "
-                             "droplet (velocity) requires 8 params: 3 "
-                             "components of droplet position, 3 "
-                             "components of droplet velocity, droplet "
-                             "radius, and interface thickness");
+    throw std::runtime_error(
+      "Realm::setup_initial_conditions: "
+      "droplet (velocity) requires 8 params: 3 "
+      "components of droplet position, 3 "
+      "components of droplet velocity, droplet "
+      "radius, and interface thickness");
   if (!params.empty()) {
     droppos_x_ = params[0];
     droppos_y_ = params[1];

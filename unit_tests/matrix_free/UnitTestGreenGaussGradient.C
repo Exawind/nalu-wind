@@ -62,8 +62,9 @@ protected:
       exporter(
         Teuchos::rcpFromRef(linsys.owned_and_shared),
         Teuchos::rcpFromRef(linsys.owned)),
-      offsets(create_offset_map<order>(
-        mesh(), active(), linsys.stk_lid_to_tpetra_lid)),
+      offsets(
+        create_offset_map<order>(
+          mesh(), active(), linsys.stk_lid_to_tpetra_lid)),
       bc_faces(
         face_offsets<order>(mesh(), side(), linsys.stk_lid_to_tpetra_lid))
   {

@@ -111,8 +111,9 @@ protected:
         stk::mesh::get_updated_ngp_mesh(bulk),
         meta.universal_part(),
         gid_field_ngp),
-      offsets(create_offset_map<order>(
-        mesh, meta.universal_part(), linsys.stk_lid_to_tpetra_lid)),
+      offsets(
+        create_offset_map<order>(
+          mesh, meta.universal_part(), linsys.stk_lid_to_tpetra_lid)),
       mat(sparsfied_edge_test::create_edge_matrix<order>(linsys, offsets))
   {
     static_assert(nx * nx * nx % simd_len == 0, "");

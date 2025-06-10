@@ -28,9 +28,9 @@ public:
   virtual ~HypreUVWLinearSystem();
 
   // Graph/Matrix Construction
-  virtual void
-  buildNodeGraph(const stk::mesh::PartVector&
-                   parts); // for nodal assembly (e.g., lumped mass and source)
+  virtual void buildNodeGraph(
+    const stk::mesh::PartVector&
+      parts); // for nodal assembly (e.g., lumped mass and source)
   virtual void buildFaceToNodeGraph(
     const stk::mesh::PartVector& parts); // face->node assembly
   virtual void buildEdgeToNodeGraph(

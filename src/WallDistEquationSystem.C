@@ -523,8 +523,9 @@ WallDistEquationSystem::create_constraint_algorithm(
       new AssembleOversetWallDistAlgorithm(realm_, nullptr, this, theField);
     solverAlgDriver_->solverConstraintAlgMap_[algType] = theAlg;
   } else {
-    throw std::runtime_error("WallDistEquationSystem::register_overset_bc: "
-                             "Multiple invocations of overset is not allowed");
+    throw std::runtime_error(
+      "WallDistEquationSystem::register_overset_bc: "
+      "Multiple invocations of overset is not allowed");
   }
 }
 

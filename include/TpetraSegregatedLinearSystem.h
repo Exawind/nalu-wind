@@ -59,9 +59,9 @@ public:
   ~TpetraSegregatedLinearSystem();
 
   // Graph/Matrix Construction
-  void
-  buildNodeGraph(const stk::mesh::PartVector&
-                   parts); // for nodal assembly (e.g., lumped mass and source)
+  void buildNodeGraph(
+    const stk::mesh::PartVector&
+      parts); // for nodal assembly (e.g., lumped mass and source)
   void buildFaceToNodeGraph(
     const stk::mesh::PartVector& parts); // face->node assembly
   void buildEdgeToNodeGraph(

@@ -38,10 +38,12 @@ SDRWallFuncAlg<BcAlgTraits>::SDRWallFuncAlg(
     sdrbc_(get_field_ordinal(realm.meta_data(), "wall_model_sdr_bc")),
     sqrtBetaStar_(stk::math::sqrt(realm.get_turb_model_constant(TM_betaStar))),
     kappa_(realm.get_turb_model_constant(TM_kappa)),
-    meFC_(MasterElementRepo::get_surface_master_element_on_dev(
-      BcAlgTraits::FaceTraits::topo_)),
-    meSCS_(MasterElementRepo::get_surface_master_element_on_dev(
-      BcAlgTraits::ElemTraits::topo_)),
+    meFC_(
+      MasterElementRepo::get_surface_master_element_on_dev(
+        BcAlgTraits::FaceTraits::topo_)),
+    meSCS_(
+      MasterElementRepo::get_surface_master_element_on_dev(
+        BcAlgTraits::ElemTraits::topo_)),
     RANSAblBcApproach_(RANSAblBcApproach),
     z0_(z0)
 {

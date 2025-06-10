@@ -74,7 +74,7 @@ operating systems, against both the `master` and `develop` branches of
 [Trilinos](https://github.com/trilinos/Trilinos). Tests are performed both using
 flat MPI and hybrid MPI-GPU hardware configurations. The results of the nightly
 testing are publicly available on [CDash
-dashboard](http://my.cdash.org/index.php?project=Nalu-Wind).
+dashboard](http://my.cdash.org/index.php?project=Exawind).
 
 ### Contributing, reporting bugs, and requesting help
 
@@ -86,6 +86,11 @@ enhancements, documentation updates, etc. All contributions are processed
 through pull-requests on GitHub. Please follow our [contributing
 guidelines](https://github.com/Exawind/nalu-wind/blob/master/CONTRIBUTING.md)
 when submitting pull-requests.
+
+To pass the formatting check, use this with a new version of `clang-format`:
+```
+find nalu.C unit_tests.C ./include ./src ./unit_tests \( -name "*.cpp" -o -name "*.H" -o -name "*.h" -o -name "*.C" \) -exec clang-format -i {} +
+```
   
 ## License
 
