@@ -143,10 +143,8 @@ OpenfastFSI::load(const YAML::Node& node)
     // only at this point if you choose the binary file output.
 
     if (node["super_controller"]) {
-      get_required(node, "super_controller", fi.scStatus);
-      get_required(node, "sc_libFile", fi.scLibFile);
-      get_required(node, "num_sc_inputs", fi.numScInputs);
-      get_required(node, "num_sc_outputs", fi.numScOutputs);
+      throw std::runtime_error(
+        "Super controller has been removed in OpenFAST 4.1 and above");
     }
 
     fsiTurbineData_.resize(fi.nTurbinesGlob);
