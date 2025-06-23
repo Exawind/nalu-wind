@@ -24,7 +24,7 @@ val_executed_in_kernel(
 TEST(StringTimeCoordFunction, runs_on_device)
 {
   std::string func =
-    "1 + 3 * sin(t) + exp(x) + log(y) + ((z>0 && z < 1) ? z*y : x/z)";
+    "1 + 3 * sin(t) + exp(x) + exp(y) + ((z>0 && z < 1) ? z*y : x*z)";
 
   StringTimeCoordFunction f(func);
   auto val_1 = f(1, 2, 3, 4);
