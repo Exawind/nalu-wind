@@ -46,7 +46,7 @@ jobs:
             spack rm exawind && \
             spack add nalu-wind@master+hypre+openfast+tioga+trilinos-solvers && \
             spack concretize -f && \
-            spack install && \
+            spack install --reuse && \
             spack cd -b nalu-wind && \
             spack build-env nalu-wind ctest -j $(nproc) -L unit --output-on-failure \
           "
