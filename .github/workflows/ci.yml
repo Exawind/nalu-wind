@@ -44,7 +44,7 @@ jobs:
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
             spack develop --no-clone nalu-wind@=master && \
             spack rm exawind && \
-            spack add nalu-wind@master+tioga+hypre+trilinos-solvers && \
+            spack add nalu-wind@master+hypre+openfast+tioga+trilinos-solvers && \
             spack concretize -f && \
             spack install && \
             spack cd -b nalu-wind && \
@@ -76,7 +76,7 @@ jobs:
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
             spack develop --no-clone nalu-wind@=master && \
             spack rm exawind && \
-            spack add nalu-wind@master+tioga+hypre~trilinos-solvers && \
+            spack add nalu-wind@master+hypre+openfast+tioga~trilinos-solvers && \
             spack concretize -f && \
             spack install && \
             spack cd -b nalu-wind && \
