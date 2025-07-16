@@ -3578,6 +3578,8 @@ ContinuityEquationSystem::register_initial_condition_fcn(
       std::vector<double> fcnParams = (iterParams != theParams.end())
                                         ? (*iterParams).second
                                         : std::vector<double>();
+      std::vector<double> gravity = realm_.solutionOptions_->gravity_;
+      fcnParams.emplace_back(gravity[2]);
       theAuxFunc = new SloshingTankPressureAuxFunction(fcnParams);
     } else {
       throw std::runtime_error(

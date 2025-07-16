@@ -40,6 +40,7 @@ public:
   double kappa_;
   double interface_thickness_;
   double domain_height_;
+  double g_;
 };
 
 } // namespace nalu

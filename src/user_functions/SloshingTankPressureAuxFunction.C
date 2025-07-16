@@ -29,16 +29,19 @@ SloshingTankPressureAuxFunction::SloshingTankPressureAuxFunction(
     domain_height_(0.5)
 {
   // check size and populate
-  if (params.size() != 5 && !params.empty())
+  if (params.size() != 6 && params.size() != 1)
     throw std::runtime_error(
       "Realm::setup_initial_conditions: sloshing_tank requires 5 params: water "
       "level, amplitude, kappa, interface thickness, and domain height");
-  if (!params.empty()) {
+  if (params.size() == 6) {
     water_level_ = params[0];
     amplitude_ = params[1];
     kappa_ = params[2];
     interface_thickness_ = params[3];
     domain_height_ = params[4];
+    g_ = -params[5];
+  } else {
+    g_ = -params[0];
   }
 }
 
@@ -59,9 +62,7 @@ SloshingTankPressureAuxFunction::do_evaluate(
     const double y = coords[1];
     const double z0 = coords[2];
     const double z1 = domain_height_;
-
-    // These need to come from elsewhere
-    const double g = 9.81;
+    const double g = g_;
 
     const double z_init =
       water_level_ + amplitude_ * std::exp(-kappa_ * (x * x + y * y));
