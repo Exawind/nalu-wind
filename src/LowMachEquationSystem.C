@@ -177,6 +177,7 @@
 #include <user_functions/GaussJetVelocityAuxFunction.h>
 
 #include <user_functions/DropletVelocityAuxFunction.h>
+#include <user_functions/SloshingTankPressureAuxFunction.h>
 
 // deprecated
 
@@ -3571,6 +3572,15 @@ ContinuityEquationSystem::register_initial_condition_fcn(
       theAuxFunc = new TaylorGreenPressureAuxFunction();
     } else if (fcnName == "kovasznay") {
       theAuxFunc = new KovasznayPressureAuxFunction();
+    } else if (fcnName == "sloshing_tank") {
+      std::map<std::string, std::vector<double>>::const_iterator iterParams =
+        theParams.find(dofName);
+      std::vector<double> fcnParams = (iterParams != theParams.end())
+                                        ? (*iterParams).second
+                                        : std::vector<double>();
+      std::vector<double> gravity = realm_.solutionOptions_->gravity_;
+      fcnParams.emplace_back(gravity[2]);
+      theAuxFunc = new SloshingTankPressureAuxFunction(fcnParams);
     } else {
       throw std::runtime_error(
         "ContinuityEquationSystem::register_initial_"
