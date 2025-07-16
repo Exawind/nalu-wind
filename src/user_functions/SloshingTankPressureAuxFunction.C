@@ -85,7 +85,7 @@ SloshingTankPressureAuxFunction::do_evaluate(
     const double int_rho0 = 1000.0 * int_vof0 + 1.0 * (z0 - int_vof0);
     const double int_rho1 = 1000.0 * int_vof1 + 1.0 * (z1 - int_vof1);
 
-    // g * integral(rho)dz
+    // Pressure is g * integral(rho)dz
     fieldPtr[0] = g * (int_rho1 - int_rho0);
 
     fieldPtr += fieldSize;
