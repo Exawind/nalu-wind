@@ -1,0 +1,12 @@
+<map id="sierra::nalu::MomentumABLWallShearStressEdgeKernel&lt; BcAlgTraits &gt;" name="sierra::nalu::MomentumABLWallShearStressEdgeKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="Node000001" title="This class applies the computed wall shear stress field to the boundary." alt="" coords="1024,53,1299,93"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="681,5,923,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="937,45,1024,55,1024,60,936,50"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="5,21,149,47"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="163,25,173,25,415,20,657,25,681,25,681,31,657,30,415,26,173,30,163,30"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="199,47,409,72"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="163,41,199,45,198,50,163,46"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="423,60,537,60,657,54,681,51,681,57,658,59,537,65,423,66"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1nalu_1_1_master_element.html" title=" " alt="" coords="701,84,903,109"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="917,91,1000,86,1024,84,1024,89,1000,91,917,96"/>
+</map>
