@@ -133,6 +133,9 @@ do_the_test(
       sierra::nalu::SharedMemView<DoubleType*, ShmemType> simdrhs =
         sierra::nalu::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
           team, rhsSize);
+      for (int i=0; i<rhsSize; i++) {
+        simdrhs(i) = 0.0;
+      }
 
       STK_NGP_ThrowAssert(scrviews.total_bytes() != 0);
       const size_t bucketLen = b.size();
