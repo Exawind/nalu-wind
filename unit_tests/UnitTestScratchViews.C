@@ -133,7 +133,7 @@ do_the_test(
       sierra::nalu::SharedMemView<DoubleType*, ShmemType> simdrhs =
         sierra::nalu::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
           team, rhsSize);
-      for (int i=0; i<rhsSize; i++) {
+      for (int i = 0; i < rhsSize; i++) {
         simdrhs(i) = 0.0;
       }
 
