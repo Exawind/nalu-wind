@@ -103,7 +103,7 @@ do_the_test(
        lhsSize, rhsSize, rhsSize, meta.spatial_dimension(), dataNGP) +
      (rhsSize + lhsSize) * sizeof(double) * sierra::nalu::simdLen);
 
-  int numResults = 5;
+  int numResults = 7;
   IntViewType result("result", numResults);
 
   Kokkos::deep_copy(result.h_view, 0);
@@ -160,6 +160,11 @@ do_the_test(
 
           testKernel.execute(simdlhs, simdrhs, scrviews);
         });
+
+      result.d_view(5) =
+        stk::simd::get_data((simdrhs(0) - 16.0), 0) < 1.e-9 ? 1 : 0;
+      result.d_view(6) =
+        stk::simd::get_data((simdrhs(1) - 0.0), 0) < 1.e-9 ? 1 : 0;
     });
 
   result.modify<IntViewType::execution_space>();
