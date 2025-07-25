@@ -207,6 +207,13 @@ do_assemble_elem_solver_test(
   unsigned velocityOrdinal,
   unsigned pressureOrdinal)
 {
+  int numResults = 2;
+  IntViewType result("result", numResults);
+
+  Kokkos::deep_copy(result.h_view, 0);
+  result.template modify<typename IntViewType::host_mirror_space>();
+  result.template sync<typename IntViewType::execution_space>();
+
   TestKernel testKernel(velocityOrdinal, pressureOrdinal);
 
   solverAlg.run_algorithm(
@@ -220,7 +227,19 @@ do_assemble_elem_solver_test(
         "SCV volume = %f; expected = 0.125\n",
         stk::simd::get_data(scv_volume(4), 0));
       testKernel.execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
+
+      result.d_view(0) =
+        abs(stk::simd::get_data((smdata.simdrhs(0) - 2.0), 0)) < 1.e-9 ? 1 : 0;
+      result.d_view(1) =
+        abs(stk::simd::get_data((smdata.simdrhs(1) - 0.0), 0)) < 1.e-9 ? 1 : 0;
     });
+
+  result.modify<IntViewType::execution_space>();
+  result.sync<IntViewType::host_mirror_space>();
+
+  for (int i = 0; i < numResults; ++i) {
+    EXPECT_EQ(1, result.h_view(i));
+  }
 }
 
 TEST_F(Hex8MeshWithNSOFields, NGPAssembleElemSolver)
