@@ -84,8 +84,9 @@ protected:
     stk::mesh::put_field_on_entire_mesh(*intField);
 
     fixture->m_meta.commit();
-    fixture->generate_mesh(stk::mesh::fixtures::FixedCartesianCoordinateMapping(
-      nx, ny, nz, nx, ny, nz));
+    fixture->generate_mesh(
+      stk::mesh::fixtures::FixedCartesianCoordinateMapping(
+        nx, ny, nz, nx, ny, nz));
     stk::mesh::PartVector surfParts = {surfSubPart};
     stk::mesh::skin_mesh(*bulk, surfParts);
   }

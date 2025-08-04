@@ -115,8 +115,9 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
       sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
         BcAlgTraits::faceTopo_)
         ->ipNodeMap()),
-    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
-      BcAlgTraits::elemTopo_)),
+    meSCS_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        BcAlgTraits::elemTopo_)),
     meSCS_dev_(
       sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
         BcAlgTraits::elemTopo_)),

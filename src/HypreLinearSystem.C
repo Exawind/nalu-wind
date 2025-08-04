@@ -2393,8 +2393,9 @@ HypreLinearSystem::sumInto(
         hcApplier->overset_rhs_counter_++;
       }
     } else {
-      throw std::runtime_error("HypreLinearSystem::sumInto not "
-                               "yet implemented for numDof>1. Exiting.");
+      throw std::runtime_error(
+        "HypreLinearSystem::sumInto not "
+        "yet implemented for numDof>1. Exiting.");
     }
   } else {
     throw std::runtime_error(

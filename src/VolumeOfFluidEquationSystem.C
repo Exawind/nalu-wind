@@ -238,8 +238,9 @@ VolumeOfFluidEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       "lumped_volume_of_fluid_time_derivative"};
     bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
     if (elementMassAlg) {
-      throw std::runtime_error("consistent mass integration of volume of fluid "
-                               "time-derivative unavailable");
+      throw std::runtime_error(
+        "consistent mass integration of volume of fluid "
+        "time-derivative unavailable");
     }
     auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
     process_ngp_node_kernels(
@@ -295,11 +296,13 @@ VolumeOfFluidEquationSystem::register_inflow_bc(
     theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
 
   } else if (FUNCTION_UD == theDataType) {
-    throw std::runtime_error("VolumeOfFluidEquationSystem::register_inflow_bc: "
-                             "limited functions supported");
+    throw std::runtime_error(
+      "VolumeOfFluidEquationSystem::register_inflow_bc: "
+      "limited functions supported");
   } else {
-    throw std::runtime_error("VolumeOfFluidEquationSystem::register_inflow_bc: "
-                             "only constant functions supported");
+    throw std::runtime_error(
+      "VolumeOfFluidEquationSystem::register_inflow_bc: "
+      "only constant functions supported");
   }
 
   AuxFunctionAlgorithm* auxAlg = new AuxFunctionAlgorithm(
@@ -534,8 +537,9 @@ VolumeOfFluidEquationSystem::register_initial_condition_fcn(
                                         : std::vector<double>();
       theAuxFunc = new SloshingTankVOFAuxFunction(fcnParams);
     } else {
-      throw std::runtime_error("VolumeOfFluidEquationSystem::register_initial_"
-                               "condition_fcn: limited functions supported");
+      throw std::runtime_error(
+        "VolumeOfFluidEquationSystem::register_initial_"
+        "condition_fcn: limited functions supported");
     }
     // create the algorithm
     AuxFunctionAlgorithm* auxAlg = new AuxFunctionAlgorithm(
@@ -553,8 +557,9 @@ void
 VolumeOfFluidEquationSystem::manage_projected_nodal_gradient(
   EquationSystems& /* eqSystems */)
 {
-  throw std::runtime_error("VolumeOfFluidEquationSystem::manage_projected_"
-                           "nodal_gradient: Not supported");
+  throw std::runtime_error(
+    "VolumeOfFluidEquationSystem::manage_projected_"
+    "nodal_gradient: Not supported");
 }
 
 //--------------------------------------------------------------------------

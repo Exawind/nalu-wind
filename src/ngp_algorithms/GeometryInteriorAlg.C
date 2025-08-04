@@ -132,7 +132,7 @@ GeometryInteriorAlg<AlgTraits>::impl_negative_jacobian_check()
     "negative_volume_check_" + std::to_string(AlgTraits::topo_);
   nalu_ngp::run_elem_par_reduce(
     algName, meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
-    KOKKOS_LAMBDA(ElemSimdDataType & edata, size_t & threadVal) {
+    KOKKOS_LAMBDA(ElemSimdDataType & edata, size_t& threadVal) {
       auto& scrView = edata.simdScrView;
       const auto& meViews = scrView.get_me_views(CURRENT_COORDINATES);
       const auto& v_scv_vol = meViews.scv_volume;

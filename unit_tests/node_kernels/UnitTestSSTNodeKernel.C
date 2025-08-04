@@ -16,6 +16,7 @@
 #include "node_kernels/TKESSTDESNodeKernel.h"
 #include "node_kernels/TKESSTIDDESNodeKernel.h"
 #include "node_kernels/TKESSTBLTM2015NodeKernel.h"
+#include "node_kernels/TKESSTIDDESBLTM2015NodeKernel.h"
 #include "node_kernels/SDRSSTNodeKernel.h"
 #include "node_kernels/SDRSSTLRNodeKernel.h"
 #include "node_kernels/SDRSSTDESNodeKernel.h"
@@ -500,6 +501,96 @@ static constexpr double lhs[8][8] = {
   },
 };
 } // namespace tke_sst_trans
+
+namespace tke_sst_iddes_trans {
+static constexpr double rhs[8] = {-0.078566371211666,  -0.057734551764836,
+                                  -0.0081969668080736, -0.035714172392479,
+                                  -0.020433593046136,  -0.019416508662489,
+                                  -0.017913650040436,  -0.015288210620334};
+
+static constexpr double lhs[8][8] = {
+  {
+    0.05892477840875,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0.043300913823627,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0.0043771362853026,
+    0,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0.022332033598677,
+    0,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0.015325194784602,
+    0,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.014562381496867,
+    0,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.010854440854075,
+    0,
+  },
+  {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.025555610077388,
+  },
+};
+} // namespace tke_sst_iddes_trans
 
 namespace sdr_sst {
 static constexpr double rhs[8] = {
@@ -1081,6 +1172,42 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_iddes_node)
   EXPECT_EQ(helperObjs.linsys->hostNumSumIntoCalls_(0), 8u);
 
   namespace hex8_golds = hex8_golds::tke_sst_iddes;
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near<8>(
+    helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
+}
+
+TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_iddes_trans_node)
+{
+  // Only execute for 1 processor runs
+  if (bulk_->parallel_size() > 1)
+    return;
+
+  fill_mesh_and_init_fields();
+
+  // Setup solution options
+  solnOpts_.meshMotion_ = false;
+  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.initialize_turbulence_constants();
+
+  unit_test_utils::NodeHelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTIDDESBLTM2015NodeKernel>(
+    *meta_);
+
+  helperObjs.execute();
+
+  Kokkos::deep_copy(
+    helperObjs.linsys->hostNumSumIntoCalls_,
+    helperObjs.linsys->numSumIntoCalls_);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->hostNumSumIntoCalls_(0), 8u);
+
+  namespace hex8_golds = hex8_golds::tke_sst_iddes_trans;
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(

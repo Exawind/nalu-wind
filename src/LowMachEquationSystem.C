@@ -177,6 +177,7 @@
 #include <user_functions/GaussJetVelocityAuxFunction.h>
 
 #include <user_functions/DropletVelocityAuxFunction.h>
+#include <user_functions/SloshingTankPressureAuxFunction.h>
 
 // deprecated
 
@@ -644,8 +645,9 @@ LowMachEquationSystem::register_initial_condition_fcn(
         auto& fp = it->second;
         theAuxFunc = new WindEnergyPowerLawAuxFunction(0, nDim, fp);
       } else {
-        throw std::runtime_error("Wind Energy Power Law aux function missing "
-                                 "parameters in initial condition");
+        throw std::runtime_error(
+          "Wind Energy Power Law aux function missing "
+          "parameters in initial condition");
       }
     } else if (fcnName == "kovasznay") {
       theAuxFunc = new KovasznayVelocityAuxFunction(0, nDim);
@@ -1665,12 +1667,14 @@ MomentumEquationSystem::register_inflow_bc(
     } else if (fcnName == "GaussJet") {
       theAuxFunc = new GaussJetVelocityAuxFunction(0, nDim);
     } else {
-      throw std::runtime_error("MomentumEquationSystem::register_inflow_bc: "
-                               "limited functions supported");
+      throw std::runtime_error(
+        "MomentumEquationSystem::register_inflow_bc: "
+        "limited functions supported");
     }
   } else {
-    throw std::runtime_error("MomentumEquationSystem::register_inflow_bc: only "
-                             "constant and user function supported");
+    throw std::runtime_error(
+      "MomentumEquationSystem::register_inflow_bc: only "
+      "constant and user function supported");
   }
 
   // bc data alg
@@ -1888,13 +1892,15 @@ MomentumEquationSystem::register_wall_bc(
                "has been deprecated"
             << std::endl;
         } else {
-          throw std::runtime_error("MomentumEqSys::register_wall_function: "
-                                   "Only tornado user functions supported");
+          throw std::runtime_error(
+            "MomentumEqSys::register_wall_function: "
+            "Only tornado user functions supported");
         }
       }
     } else {
-      throw std::runtime_error("Invalid Wall Data Specification; must provide "
-                               "const or fcn for velocity");
+      throw std::runtime_error(
+        "Invalid Wall Data Specification; must provide "
+        "const or fcn for velocity");
     }
 
     auxAlg = new AuxFunctionAlgorithm(
@@ -2213,8 +2219,9 @@ MomentumEquationSystem::register_symmetry_bc(
 
 #ifdef NALU_USES_HYPRE
   if (dynamic_cast<HypreLinearSystem*>(linsys_) != nullptr) {
-    throw std::runtime_error("Hypre is not supported for a momentum solver "
-                             "when using strong_symmetry bc's.");
+    throw std::runtime_error(
+      "Hypre is not supported for a momentum solver "
+      "when using strong_symmetry bc's.");
   }
 #endif
 
@@ -2357,8 +2364,9 @@ MomentumEquationSystem::register_abltop_bc(
     //       faceElemSolverAlg->faceDataNeeded_,
     //       faceElemSolverAlg->elemDataNeeded_);
     // }
-    throw std::runtime_error("MomentumEqSys: Consolidated algorithm not "
-                             "supported at this time for ABL Top BC.");
+    throw std::runtime_error(
+      "MomentumEqSys: Consolidated algorithm not "
+      "supported at this time for ABL Top BC.");
   }
 #else
   throw std::runtime_error(
@@ -2855,8 +2863,9 @@ ContinuityEquationSystem::ContinuityEquationSystem(
 
   // error check
   if (!elementContinuityEqs_ && !realm_.realmUsesEdges_)
-    throw std::runtime_error("If using the non-element-based continuity "
-                             "system, edges must be active at realm level");
+    throw std::runtime_error(
+      "If using the non-element-based continuity "
+      "system, edges must be active at realm level");
 
   // extract solver name and solver object
   std::string solverName =
@@ -3147,12 +3156,14 @@ ContinuityEquationSystem::register_inflow_bc(
       } else if (fcnName == "GaussJet") {
         theAuxFunc = new GaussJetVelocityAuxFunction(0, nDim);
       } else {
-        throw std::runtime_error("ContEquationSystem::register_inflow_bc: "
-                                 "limited functions supported");
+        throw std::runtime_error(
+          "ContEquationSystem::register_inflow_bc: "
+          "limited functions supported");
       }
     } else {
-      throw std::runtime_error("ContEquationSystem::register_inflow_bc: only "
-                               "constant and user function supported");
+      throw std::runtime_error(
+        "ContEquationSystem::register_inflow_bc: only "
+        "constant and user function supported");
     }
 
     // bc data alg
@@ -3561,9 +3572,19 @@ ContinuityEquationSystem::register_initial_condition_fcn(
       theAuxFunc = new TaylorGreenPressureAuxFunction();
     } else if (fcnName == "kovasznay") {
       theAuxFunc = new KovasznayPressureAuxFunction();
+    } else if (fcnName == "sloshing_tank") {
+      std::map<std::string, std::vector<double>>::const_iterator iterParams =
+        theParams.find(dofName);
+      std::vector<double> fcnParams = (iterParams != theParams.end())
+                                        ? (*iterParams).second
+                                        : std::vector<double>();
+      std::vector<double> gravity = realm_.solutionOptions_->gravity_;
+      fcnParams.emplace_back(gravity[2]);
+      theAuxFunc = new SloshingTankPressureAuxFunction(fcnParams);
     } else {
-      throw std::runtime_error("ContinuityEquationSystem::register_initial_"
-                               "condition_fcn: limited functions supported");
+      throw std::runtime_error(
+        "ContinuityEquationSystem::register_initial_"
+        "condition_fcn: limited functions supported");
     }
 
     // create the algorithm
@@ -3623,8 +3644,9 @@ ContinuityEquationSystem::create_constraint_algorithm(
       new AssembleOversetPressureAlgorithm(realm_, nullptr, this, theField);
     solverAlgDriver_->solverConstraintAlgMap_[algType] = theAlg;
   } else {
-    throw std::runtime_error("ContinuityEquationSystem::register_overset_bc: "
-                             "Multiple invocations of overset is not allowed");
+    throw std::runtime_error(
+      "ContinuityEquationSystem::register_overset_bc: "
+      "Multiple invocations of overset is not allowed");
   }
 }
 

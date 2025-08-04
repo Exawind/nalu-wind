@@ -24,8 +24,9 @@ WindEnergyPowerLawAuxFunction::WindEnergyPowerLawAuxFunction(
 {
   // check size and populate
   if (params.size() != 9)
-    throw std::runtime_error("Realm::setup_initial_conditions: "
-                             "wind_energy_power_law requires 9 params: ");
+    throw std::runtime_error(
+      "Realm::setup_initial_conditions: "
+      "wind_energy_power_law requires 9 params: ");
   coord_dir_ = int(params[0]);
   y_offset_ = params[1];
   y_ref_ = params[2];

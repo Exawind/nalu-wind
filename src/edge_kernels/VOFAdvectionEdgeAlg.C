@@ -69,9 +69,10 @@ VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
       break;
     }
     default: {
-      throw std::runtime_error("Incorrect density property set for VOF "
-                               "calculations. Use a constant or "
-                               "VOF property for density.");
+      throw std::runtime_error(
+        "Incorrect density property set for VOF "
+        "calculations. Use a constant or "
+        "VOF property for density.");
       break;
     }
     }
@@ -255,21 +256,23 @@ VOFAdvectionEdgeAlg::execute()
 
       const DblType inv_axdx = 1.0 / axdx;
 
-      const DblType dlhsfac = -velocity_scale * diffusion_coef * asq * inv_axdx;
+      const DblType combined_mask = left_mask * right_mask;
 
-      smdata.rhs(0) -= dlhsfac * (qNp1R - qNp1L) +
-                       inv_axdx * (1.0 - left_mask) * (qNp1R - qNp1L);
-      smdata.rhs(1) += dlhsfac * (qNp1R - qNp1L) +
-                       inv_axdx * (1.0 - right_mask) * (qNp1R - qNp1L);
+      const DblType dlhsfac =
+        -velocity_scale * diffusion_coef * asq * inv_axdx * combined_mask -
+        (1.0 - combined_mask) * asq * inv_axdx * diffusion_coef;
+
+      smdata.rhs(0) -= dlhsfac * (qNp1R - qNp1L);
+      smdata.rhs(1) += dlhsfac * (qNp1R - qNp1L);
 
       massVofBalancedFlowRate.get(edge, 0) =
         dlhsfac * (qNp1R - qNp1L) * (density_liquid - density_gas);
 
-      smdata.lhs(0, 0) -= dlhsfac + inv_axdx * (1.0 - left_mask);
-      smdata.lhs(0, 1) += dlhsfac + inv_axdx * (1.0 - left_mask);
+      smdata.lhs(0, 0) -= dlhsfac;
+      smdata.lhs(0, 1) += dlhsfac;
 
-      smdata.lhs(1, 0) += dlhsfac + inv_axdx * (1.0 - right_mask);
-      smdata.lhs(1, 1) -= dlhsfac + inv_axdx * (1.0 - right_mask);
+      smdata.lhs(1, 0) += dlhsfac;
+      smdata.lhs(1, 1) -= dlhsfac;
 
       const DblType omegaL =
         diffusion_coef * stk::math::log((qNp1L + eps) / (1.0 - qNp1L + eps));

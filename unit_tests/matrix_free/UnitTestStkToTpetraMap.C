@@ -36,10 +36,11 @@ class StkMeshFixture : public ::testing::Test
 {
 protected:
   StkMeshFixture()
-    : bulkPtr(stk::mesh::MeshBuilder(MPI_COMM_WORLD)
-                .set_spatial_dimension(3u)
-                .set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA)
-                .create()),
+    : bulkPtr(
+        stk::mesh::MeshBuilder(MPI_COMM_WORLD)
+          .set_spatial_dimension(3u)
+          .set_aura_option(stk::mesh::BulkData::NO_AUTO_AURA)
+          .create()),
       bulk(*bulkPtr),
       meta(bulk.mesh_meta_data()),
       gid_field_h(
