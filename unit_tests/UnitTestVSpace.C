@@ -190,17 +190,16 @@ test_tensor_skewsym()
 
   Kokkos::parallel_for(
     1, KOKKOS_LAMBDA(int) {
-      vs::Vector v(1.0,2.0,3.0);
-      vs::Vector u(4.0,5.0,6.0);
-      
-      dv[0] = (vs::skew_sym(v) & u) - (v ^ u);
+      vs::Vector v(1.0, 2.0, 3.0);
+      vs::Vector u(4.0, 5.0, 6.0);
 
+      dv[0] = (vs::skew_sym(v) & u) - (v ^ u);
     });
   dvec.modify<sierra::nalu::MemSpace>();
   dvec.sync<DeviceVector::host_mirror_space>();
 
   for (int i = 0; i < 3; ++i)
-    EXPECT_NEAR(vs::mag(dvec.h_view(i)), 0.0, tol); 
+    EXPECT_NEAR(vs::mag(dvec.h_view(i)), 0.0, tol);
 }
 
 } // namespace

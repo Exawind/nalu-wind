@@ -72,7 +72,7 @@ impl_test_WM_rotation(
 }
 
 //! test rotation tensor for a given WM
-void 
+void
 test_rotation_tensor(vs::Vector axis, vs::Vector point, double angle)
 {
 

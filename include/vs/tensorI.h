@@ -160,24 +160,21 @@ operator&(const TensorT<T>& t1, const TensorT<T>& t2)
 
 template <typename T>
 KOKKOS_FORCEINLINE_FUNCTION TensorT<T>
-operator*(const double & s, const TensorT<T>& t1)
+operator*(const double& s, const TensorT<T>& t1)
 {
-  return TensorT<T>{
-    s * t1.vv[0], s * t1.vv[1], s * t1.vv[2],
-    s * t1.vv[3], s * t1.vv[4], s * t1.vv[5],
-    s * t1.vv[6], s * t1.vv[7], s * t1.vv[8]};
+  return TensorT<T>{s * t1.vv[0], s * t1.vv[1], s * t1.vv[2],
+                    s * t1.vv[3], s * t1.vv[4], s * t1.vv[5],
+                    s * t1.vv[6], s * t1.vv[7], s * t1.vv[8]};
 }
 
 template <typename T>
 KOKKOS_FORCEINLINE_FUNCTION TensorT<T>
-operator*(const TensorT<T>& t1, const double & s)
+operator*(const TensorT<T>& t1, const double& s)
 {
-  return TensorT<T>{
-    s * t1.vv[0], s * t1.vv[1], s * t1.vv[2],
-    s * t1.vv[3], s * t1.vv[4], s * t1.vv[5],
-    s * t1.vv[6], s * t1.vv[7], s * t1.vv[8]};
+  return TensorT<T>{s * t1.vv[0], s * t1.vv[1], s * t1.vv[2],
+                    s * t1.vv[3], s * t1.vv[4], s * t1.vv[5],
+                    s * t1.vv[6], s * t1.vv[7], s * t1.vv[8]};
 }
-
 
 template <typename T>
 KOKKOS_FORCEINLINE_FUNCTION TensorT<T>
@@ -213,10 +210,7 @@ template <typename T>
 KOKKOS_FORCEINLINE_FUNCTION TensorT<T>
 skew_sym(const VectorT<T>& v)
 {
-  return TensorT<T>{
-    0.0, -v[2], v[1],
-    v[2], 0.0, -v[0],
-    -v[1], v[0], 0.0};
+  return TensorT<T>{0.0, -v[2], v[1], v[2], 0.0, -v[0], -v[1], v[0], 0.0};
 }
 
 template <typename T>

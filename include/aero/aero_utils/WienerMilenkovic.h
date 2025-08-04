@@ -87,13 +87,14 @@ rotate(const vs::Vector wmP, const vs::Vector vec, const bool transpose = false)
 //! Return the Rotation tensor corresponding to Wiener-Milenkovic rotation 'wmP'
 KOKKOS_FORCEINLINE_FUNCTION
 vs::Tensor
-rotation_tensor(const vs::Vector wmP) 
+rotation_tensor(const vs::Vector wmP)
 {
   const double wm0 = compute_coeff_zero(wmP);
   const double nu = 2.0 / (4.0 - wm0);
   const double cosPhiO2 = 0.5 * wm0 * nu;
   auto wmp_ss = vs::skew_sym(wmP);
-  return vs::Tensor::I() + nu * cosPhiO2 * wmp_ss + 0.5 * nu * nu * (wmp_ss & wmp_ss);
+  return vs::Tensor::I() + nu * cosPhiO2 * wmp_ss +
+         0.5 * nu * nu * (wmp_ss & wmp_ss);
 }
 
 //! Compose Wiener-Milenkovic parameters 'wmP' and 'wmQ'

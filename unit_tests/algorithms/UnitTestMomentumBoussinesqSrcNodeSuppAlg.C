@@ -28,7 +28,6 @@
 
 const double eps_test = vs::DTraits<double>::eps() * 1.e2;
 
-
 TEST(TestMomentumBoussinesqRASrcNodeSuppAlg, single_value)
 {
   NodeSuppHelper helper;
