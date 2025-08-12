@@ -31,8 +31,9 @@ StringTimeCoordTemperatureAuxFunction::do_evaluate(
 {
   if (f_.spatial_dim() > int(dim)) {
     // e.g. if someone has "z" coord in 2D
-    throw std::runtime_error("Dimensional arguments to string function greater "
-                             "than simulation dimension");
+    throw std::runtime_error(
+      "Dimensional arguments to string function greater "
+      "than simulation dimension");
   }
 
   if (dim == 3) {

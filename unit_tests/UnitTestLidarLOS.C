@@ -87,10 +87,11 @@ class LidarLOSFixture : public ::testing::Test
 {
 public:
   LidarLOSFixture()
-    : bulkptr(stk::mesh::MeshBuilder(MPI_COMM_WORLD)
-                .set_aura_option((stk::mesh::BulkData::NO_AUTO_AURA))
-                .set_spatial_dimension(3U)
-                .create()),
+    : bulkptr(
+        stk::mesh::MeshBuilder(MPI_COMM_WORLD)
+          .set_aura_option((stk::mesh::BulkData::NO_AUTO_AURA))
+          .set_spatial_dimension(3U)
+          .create()),
       bulk(*bulkptr),
       meta(bulk.mesh_meta_data())
   {

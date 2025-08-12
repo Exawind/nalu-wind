@@ -9,6 +9,7 @@
 
 #include "aero/fsi/OpenfastFSI.h"
 #include "aero/fsi/FSIturbine.h"
+#include <aero/aero_utils/WienerMilenkovic.h>
 #include <NaluParsing.h>
 
 #include <iostream>
@@ -143,10 +144,8 @@ OpenfastFSI::load(const YAML::Node& node)
     // only at this point if you choose the binary file output.
 
     if (node["super_controller"]) {
-      get_required(node, "super_controller", fi.scStatus);
-      get_required(node, "sc_libFile", fi.scLibFile);
-      get_required(node, "num_sc_inputs", fi.numScInputs);
-      get_required(node, "num_sc_outputs", fi.numScOutputs);
+      throw std::runtime_error(
+        "Super controller has been removed in OpenFAST 4.1 and above");
     }
 
     fsiTurbineData_.resize(fi.nTurbinesGlob);
@@ -480,6 +479,25 @@ OpenfastFSI::get_displacements(double /* current_time */)
         FAST.getNacelleDisplacement(
           fsiTurbineData_[i]->brFSIdata_.nac_def.data(),
           fsiTurbineData_[i]->brFSIdata_.nac_vel.data(), i);
+
+        std::ofstream nacelle_loc_file("nacelle_loc.dat", std::ios_base::out);
+        vs::Vector nac_def(
+          fsiTurbineData_[i]->brFSIdata_.nac_def[0],
+          fsiTurbineData_[i]->brFSIdata_.nac_def[1],
+          fsiTurbineData_[i]->brFSIdata_.nac_def[2]);
+        auto nacelle_orient = wmp::rotation_tensor(nac_def);
+        for (int k = 0; k < 3; k++)
+          nacelle_loc_file << fsiTurbineData_[i]->brFSIdata_.nac_ref_pos[k] +
+                                fsiTurbineData_[i]->brFSIdata_.nac_def[k]
+                           << " ";
+        nacelle_loc_file << std::endl;
+        nacelle_loc_file << nacelle_orient.xx() << " " << nacelle_orient.xy()
+                         << " " << nacelle_orient.xz() << " " << std::endl;
+        nacelle_loc_file << nacelle_orient.yx() << " " << nacelle_orient.yy()
+                         << " " << nacelle_orient.yz() << " " << std::endl;
+        nacelle_loc_file << nacelle_orient.zx() << " " << nacelle_orient.zy()
+                         << " " << nacelle_orient.zz() << " " << std::endl;
+        nacelle_loc_file.close();
       }
 
       MPI_Bcast(

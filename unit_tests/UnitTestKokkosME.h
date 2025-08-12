@@ -114,9 +114,10 @@ public:
   }
 
   template <typename LambdaFunction>
-  void execute(LambdaFunction
+  void execute(
+    LambdaFunction
 #if !defined(KOKKOS_ENABLE_GPU)
-                 func
+      func
 #endif
   )
   {

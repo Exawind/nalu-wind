@@ -175,11 +175,8 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     get_required(y_actuator, "t_max", fi.tMax);
 
     if (y_actuator["super_controller"]) {
-      get_required(y_actuator, "super_controller", fi.scStatus);
-      get_required(y_actuator, "sc_libFile", fi.scLibFile);
-      // Removed inputs from fast API may want to if/def later
-      // get_required(y_actuator, "num_sc_inputs", fi.numScInputs);
-      // get_required(y_actuator, "num_sc_outputs", fi.numScOutputs);
+      throw std::runtime_error(
+        "Super controller has been removed in OpenFAST 4.1 and above");
     }
 
     fi.globTurbineData.resize(fi.nTurbinesGlob);

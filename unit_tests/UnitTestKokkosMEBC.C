@@ -119,7 +119,8 @@ test_MEBC_views(
 
   // Execute the loop and perform all tests
   driver.execute(
-    [&](sierra::nalu::SharedMemData_FaceElem<
+    [&](
+      sierra::nalu::SharedMemData_FaceElem<
         sierra::nalu::TeamHandleType, sierra::nalu::DeviceShmem>& smdata) {
       sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>&
         v_coords =

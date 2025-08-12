@@ -63,6 +63,7 @@
 #include <node_kernels/TKEKONodeKernel.h>
 
 #include <node_kernels/TKESSTBLTM2015NodeKernel.h>
+#include <node_kernels/TKESSTIDDESBLTM2015NodeKernel.h>
 
 // ngp
 #include <ngp_utils/NgpLoopUtils.h>
@@ -323,7 +324,12 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
             realm_.solutionOptions_->get_coordinates_name());
           break;
         case TurbulenceModel::SST_IDDES:
-          nodeAlg.add_kernel<TKESSTIDDESNodeKernel>(realm_.meta_data());
+          if (!realm_.solutionOptions_->gammaEqActive_) {
+            nodeAlg.add_kernel<TKESSTIDDESNodeKernel>(realm_.meta_data());
+          } else {
+            nodeAlg.add_kernel<TKESSTIDDESBLTM2015NodeKernel>(
+              realm_.meta_data());
+          }
           break;
         case TurbulenceModel::KE:
           nodeAlg.add_kernel<TKEKENodeKernel>(realm_.meta_data());
@@ -601,8 +607,9 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
     bcDataMapAlg_.push_back(theCopyAlg);
 
   } else {
-    throw std::runtime_error("TKE active with wall bc, however, no value of "
-                             "tke or wall function specified");
+    throw std::runtime_error(
+      "TKE active with wall bc, however, no value of "
+      "tke or wall function specified");
   }
 
   // Dirichlet bc

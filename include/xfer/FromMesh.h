@@ -113,8 +113,9 @@ public:
     if (allFieldsAreFine) {
       return fromFieldVec;
     } else {
-      throw std::runtime_error("Xfer::FromMesh:Error field registration on "
-                               "desired parts of the mesh is not complete");
+      throw std::runtime_error(
+        "Xfer::FromMesh:Error field registration on "
+        "desired parts of the mesh is not complete");
     }
   }
 

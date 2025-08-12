@@ -471,8 +471,9 @@ NonConformalInfo::repeat_search_if_needed(
       NaluEnv::self().naluOutputP0()
         << "Increased search tolerance 10 times and still failed to find match."
         << std::endl;
-      throw std::runtime_error("Could be an internal logic error. Try turning "
-                               "off dynamic search tolerance algorithm...");
+      throw std::runtime_error(
+        "Could be an internal logic error. Try turning "
+        "off dynamic search tolerance algorithm...");
     }
   }
 }

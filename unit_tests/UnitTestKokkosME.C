@@ -236,7 +236,8 @@ test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
       AlgTraits::topo_);
 
   // Execute the loop and perform all tests
-  driver.execute([&](sierra::nalu::SharedMemData<
+  driver.execute([&](
+                   sierra::nalu::SharedMemData<
                      sierra::nalu::DeviceTeamHandleType,
                      sierra::nalu::DeviceShmem>& smdata) {
     // Extract data from scratchViews
