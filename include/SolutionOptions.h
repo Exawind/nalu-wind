@@ -56,11 +56,11 @@ public:
   void load(const YAML::Node& node);
   void initialize_turbulence_constants();
 
-  inline bool has_mesh_motion() const { return meshMotion_; }
+  inline bool has_mesh_motion() const { return meshMotion_ || openturbineSixDof_; }
 
   inline bool has_mesh_deformation() const
   {
-    return (externalMeshDeformation_ || openfastFSI_ || openturbineSixDof_);
+    return (externalMeshDeformation_ || openfastFSI_);
   }
 
   inline bool does_mesh_move() const
