@@ -22,7 +22,7 @@ namespace nalu {
 SloshingTankVOFAuxFunction::SloshingTankVOFAuxFunction(
   const std::vector<double>& params)
   : AuxFunction(0, 1),
-    water_level_(-5.0),
+    water_level_(0.0),
     amplitude_(0.1),
     kappa_(0.25),
     interface_thickness_(0.1)
