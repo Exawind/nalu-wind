@@ -70,7 +70,7 @@ OpenTurbineSixDof::load_point(const YAML::Node& node)
   if (node["tethers_initial_length"]    || 
       node["tethers_stiffness"]         || 
       node["tethers_fairlead_position"] ||
-      node["tehers_anchor_position"]) {
+      node["tethers_anchor_position"]) {
 
     assert(node["tethers_initial_length"]);
     assert(node["tethers_stiffness"]);
@@ -97,14 +97,21 @@ OpenTurbineSixDof::load_point(const YAML::Node& node)
     }
     
   }
+  point_bodies_.emplace_back(new_body);
 
 }
 
 void
 OpenTurbineSixDof::load(const YAML::Node& node)
 {
-
+  const int ndim = 3;
   get_required(node, "number_of_bodies", number_of_bodies_);
+
+  if(node["gravity"]) {
+    for (int idim = 0; idim < ndim; ++idim) {
+      gravity_[idim] = node["gravity"][idim].as<double>();
+    }
+  }
 
   for (int ibody = 0; ibody < number_of_bodies_; ++ibody) {
     if (!node["Body" + std::to_string(ibody)]) {
@@ -139,31 +146,32 @@ OpenTurbineSixDof::setup_point(PointMass &point, const double dtNalu, std::share
     std::array{0., 0., 0., point.moments_of_inertia[6], point.moments_of_inertia[7], point.moments_of_inertia[8]}
   };
 
-  // Assuming gravity is in the negative z-direction for now. Will need to be input from a user's nalu yaml
-  std::array<double, 3> gravity{0.0, 0.0, -9.81};
-
-  // Sticking to 5 nonlinear iterations and no damping to match working example and avoid user knobs. 
-  constexpr double damping_factor = 0.0;
+  // Sticking to 5 nonlinear iterations and no-damping to match working example and avoid user knobs.
+  constexpr double damping_factor = 1.0;
   constexpr int number_of_nonlinear_iterations = 5;
-  auto interface_builder = openturbine::cfd::InterfaceBuilder{}
-    .SetGravity(gravity)
-    .SetTimeStep(dtNalu)
-    .SetDampingFactor(damping_factor)
-    .SetMaximumNonlinearIterations(number_of_nonlinear_iterations)
-    .SetFloatingPlatformPosition(
-      {point.center_of_mass[0], point.center_of_mass[1], point.center_of_mass[2], 1.0, 0.0, 0.0, 0.0})
-    .SetNumberOfMooringLines(point.tethers.size());
-  
-  for (int itether = 0; itether < point.tethers.size(); itether++) {
-    auto& tether = point.tethers[itether];
-    interface_builder = interface_builder.SetMooringLineStiffness(itether, tether.stiffness)
-                           .SetMooringLineUndeformedLength(itether, tether.initial_length)
-                           .SetMooringLineFairleadPosition(itether, tether.fairlead_position)
-                           .SetMooringLineAnchorPosition(itether, tether.anchor_position);
+
+  openturbine::cfd::InterfaceInput point_to_build;
+  point_to_build.gravity = gravity_;
+  point_to_build.time_step = dtNalu;
+  point_to_build.max_iter = number_of_nonlinear_iterations;
+  point_to_build.rho_inf = damping_factor;
+  point_to_build.turbine.floating_platform.enable = true;
+  point_to_build.turbine.floating_platform.position = std::array<double,7>{point.center_of_mass[0], point.center_of_mass[1], point.center_of_mass[2], 1.0, 0.0, 0.0, 0.0};
+  point_to_build.turbine.floating_platform.mass_matrix = mass_matrix;
+
+  point_to_build.turbine.floating_platform.mooring_lines.resize(point.tethers.size());
+
+  for (int iteth = 0; iteth < point.tethers.size(); ++iteth) {
+    auto& tether = point.tethers[iteth];
+    auto&& mooring_line = point_to_build.turbine.floating_platform.mooring_lines[iteth];
+    mooring_line.stiffness = tether.stiffness;
+    mooring_line.undeformed_length = tether.initial_length;
+    mooring_line.fairlead_position = tether.fairlead_position;
+    mooring_line.anchor_position   = tether.anchor_position;
   }
 
   point.bulk = bulk;
-  point.openturbine_interface = std::make_shared<openturbine::cfd::Interface>(std::move(interface_builder.Build()));
+  point.openturbine_interface = std::make_shared<openturbine::cfd::Interface>(point_to_build);
 
   auto& meta = bulk->mesh_meta_data();
 
@@ -175,12 +183,12 @@ OpenTurbineSixDof::setup_point(PointMass &point, const double dtNalu, std::share
 
     stk::mesh::Part* part = meta.get_part(surface_name);
     point.forcing_surfaces.push_back(part);
-
+    
     const auto the_topo = part->topology();
-    auto me_fc = MasterElementRepo::get_surface_master_element_on_host(the_topo);
-    const int numScsIp = me_fc->num_integration_points();
+    //auto me_fc = MasterElementRepo::get_surface_master_element_on_host(the_topo);
+    //const int numScsIp = me_fc->num_integration_points();
 
-    stk::mesh::put_field_on_mesh(*point.total_force, *part, numScsIp * 2 * meta.spatial_dimension(), nullptr);
+    stk::mesh::put_field_on_mesh(*point.total_force, *part, 4 * 2 * meta.spatial_dimension(), nullptr);
   }
 
   for (const auto & block_name : point.moving_mesh_block_names) {
@@ -188,7 +196,7 @@ OpenTurbineSixDof::setup_point(PointMass &point, const double dtNalu, std::share
     point.moving_mesh_blocks.push_back(part);
   }
 
-  point.calc_loads = std::make_unique<CalcLoads>(point.forcing_surfaces);
+  point.calc_loads = std::make_shared<CalcLoads>(point.forcing_surfaces);
   point.calc_loads->setup(bulk);
 
 }
@@ -268,14 +276,13 @@ void
 OpenTurbineSixDof::advance_struct_timestep()
 {
   for (auto & point : point_bodies_) {
-    point.openturbine_interface->Step();
+    auto _converged = point.openturbine_interface->Step();
   }
 }
 
 void
 OpenTurbineSixDof::map_displacements_point(PointMass &point, bool updateCur)
 {
-
   auto& meta = point.bulk->mesh_meta_data();
   const VectorFieldType* modelCoords =
     meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
@@ -294,7 +301,6 @@ OpenTurbineSixDof::map_displacements_point(PointMass &point, bool updateCur)
  
   std::array<double, 7> translation_and_rotation_position = point.openturbine_interface->turbine.floating_platform.node.position;
   std::array<double, 6> translation_and_rotation_velocities = point.openturbine_interface->turbine.floating_platform.node.velocity;
-
   std::array<double, 3> current_center_of_mass_location = {
     translation_and_rotation_position[0],
     translation_and_rotation_position[1],
@@ -388,7 +394,7 @@ OpenTurbineSixDof::map_displacements(double current_time, bool updateCurCoor)
 void
 OpenTurbineSixDof::map_loads_point(PointMass &point)
 {
-
+  point.calc_loads->initialize();
   point.calc_loads->execute();
 
   auto& meta = bulk_->mesh_meta_data();
@@ -408,7 +414,7 @@ OpenTurbineSixDof::map_loads_point(PointMass &point)
   auto forces_and_moments = 
     fsi::accumulateLoadsAndMoments(*bulk_, point.forcing_surfaces, 
       *modelCoords, *meshDisp, *(point.total_force), center_of_mass);
-      
+
   // Reduce to get full result and then feed into open turbine
   MPI_Allreduce(MPI_IN_PLACE, forces_and_moments.data(), 6, MPI_DOUBLE, MPI_SUM, bulk_->parallel());
 

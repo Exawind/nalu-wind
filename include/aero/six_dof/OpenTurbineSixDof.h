@@ -10,6 +10,7 @@
 
 #include <interfaces/cfd/interface.hpp>
 #include <interfaces/cfd/interface_builder.hpp>
+#include <interfaces/cfd/interface_input.hpp>
 
 #include "FieldTypeDef.h"
 #include "aero/fsi/CalcLoads.h"
@@ -26,9 +27,9 @@ struct Tether
   double stiffness{0.0};
   double initial_length{0.0};
 };
-
 struct PointMass 
 {
+  std::shared_ptr<openturbine::cfd::Interface> openturbine_interface = nullptr;
   std::array<double,9> moments_of_inertia = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   std::array<double,3> center_of_mass = {0.0, 0.0, 0.0};
   double mass{0.0};
@@ -38,10 +39,9 @@ struct PointMass
   stk::mesh::PartVector forcing_surfaces;
   stk::mesh::PartVector moving_mesh_blocks;
   std::string restart_file_name = "point.restart";
-  std::shared_ptr<openturbine::cfd::Interface> openturbine_interface = nullptr;
-  GenericFieldType* total_force;
+  GenericFieldType* total_force = nullptr;
   std::shared_ptr<stk::mesh::BulkData> bulk = nullptr;
-  std::unique_ptr<CalcLoads> calc_loads = nullptr;
+  std::shared_ptr<CalcLoads> calc_loads = nullptr;
 };
 
 class OpenTurbineSixDof
@@ -97,6 +97,8 @@ private:
 
   double dt_{-1.0}; // Store nalu-wind step
 
+  std::array<double, 3> gravity_ = {0.0, 0.0, 0.0};
+
   int writeFreq_{
     30}; // Frequency to write line loads and deflections to netcdf file
 
@@ -105,7 +107,7 @@ private:
   int restart_frequency_{0};
 
   std::vector<PointMass> point_bodies_;
-
+  std::vector<openturbine::cfd::Interface> point_body_interfaces_;
 };
 
 } // namespace nalu

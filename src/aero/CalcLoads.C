@@ -95,6 +95,7 @@ accumulateLoadsAndMoments(
         }
       }
 
+
       // Get reference to load map and loadMapInterp at all ips on this face
       const double* tforce = stk::mesh::field_data(tforceSCS, face);
 

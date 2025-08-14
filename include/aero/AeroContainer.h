@@ -52,7 +52,7 @@ public:
   // class
   void clean_up();
 
-  bool is_active() { return has_actuators() || has_fsi(); }
+  bool is_active() { return has_actuators() || has_fsi() || has_six_dof(); }
   bool has_fsi() { return fsiContainer_ != nullptr; }
   bool has_six_dof() {return sixDof_ != nullptr;}
 
