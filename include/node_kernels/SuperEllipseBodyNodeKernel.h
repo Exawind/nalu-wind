@@ -30,7 +30,7 @@ class SuperEllipseBodyNodeKernel
 {
 public:
   SuperEllipseBodyNodeKernel(
-    const stk::mesh::BulkData&, const SolutionOptions&, 
+    const stk::mesh::BulkData&, const SolutionOptions&,
     const SuperEllipseBodySrc& seb);
 
   SuperEllipseBodyNodeKernel() = delete;
@@ -62,11 +62,11 @@ private:
   const SuperEllipseBodySrc& seb_;
 
   // Location of the Super Ellipse center
-  vs::Vector seb_loc_; 
+  vs::Vector seb_loc_;
   // Orientation of the Super Ellipse
-  vs::Vector seb_orient_; 
+  vs::Vector seb_orient_;
   // Dimensions of the Super Ellipse
-  vs::Vector seb_dim_; 
+  vs::Vector seb_dim_;
 
   // Time step
   double dt_;

@@ -30,18 +30,18 @@ public:
   virtual ~SuperEllipseBodySrc() = default;
 
   void read_from_file();
-  
-  vs::Vector get_seb_loc() const { return seb_loc_; }
-  vs::Vector get_seb_orient() const { return seb_orient_; }
-  vs::Vector get_seb_dim() const { return seb_dim_; }
+
+  vs::Vector get_loc() const { return seb_loc_; }
+  vs::Vector get_orient() const { return seb_orient_; }
+  vs::Vector get_dim() const { return seb_dim_; }
 
 private:
 
   static constexpr int nDim_ = 3;
 
-  vs::Vector seb_loc_[nDim_];
-  vs::Vector seb_orient_[nDim_];
-  vs::Vector seb_dim_[nDim_];
+  vs::Vector seb_loc_;
+  vs::Vector seb_orient_;
+  vs::Vector seb_dim_;
 
 };
 

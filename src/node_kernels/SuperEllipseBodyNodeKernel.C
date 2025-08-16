@@ -7,10 +7,12 @@
 // for more details.
 //
 
-#include "node_kernels/SuperEllipseBodyNodeKernel.h"
 #include "Realm.h"
+#include "SolutionOptions.h"
+#include "node_kernels/SuperEllipseBodyNodeKernel.h"
 #include "utils/StkHelpers.h"
 #include "stk_mesh/base/Types.hpp"
+#include <aero/aero_utils/WienerMilenkovic.h>
 
 namespace sierra {
 namespace nalu {
@@ -18,7 +20,7 @@ namespace nalu {
 SuperEllipseBodyNodeKernel::SuperEllipseBodyNodeKernel(
   const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts,
   const SuperEllipseBodySrc& seb)
-  : NGPNodeKernel<SuperEllipseBodyNodeKernel>(), 
+  : NGPNodeKernel<SuperEllipseBodyNodeKernel>(),
     seb_(seb),
     seb_loc_(seb.get_loc()),
     seb_orient_(seb.get_orient()),
@@ -41,9 +43,9 @@ SuperEllipseBodyNodeKernel::setup(Realm& realm)
   densityNp1_ = fieldMgr.get_field<double>(densityNp1ID_);
   coordsNp1_ = fieldMgr.get_field<double>(coordinatesID_);
 
-  seb_loc_ = seb.get_loc();
-  seb_orient_ = seb.get_orient();
-  seb_dim_ = seb.get_dim();
+  seb_loc_ = seb_.get_loc();
+  seb_orient_ = seb_.get_orient();
+  seb_dim_ = seb_.get_dim();
   dt_ = realm.get_time_step();
 }
 
@@ -54,7 +56,6 @@ SuperEllipseBodyNodeKernel::execute(
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
 {
-  NALU_ALIGNED NodeKernelTraits::DblType coords[NodeKernelTraits::NDimMax];
   NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0);
   NodeKernelTraits::DblType dualVol = dualNodalVolume_.get(node, 0);
 
@@ -66,8 +67,8 @@ SuperEllipseBodyNodeKernel::execute(
 
   vs::Vector coords_t = wmp::rotate(seb_orient_, coords - seb_loc_);
 
-  if ( ( stk::math::pow(coords_t[0]/seb_dim_[0],6) 
-  + stk::math::pow(coords_t[1]/seb_dim_[1],6) 
+  if ( ( stk::math::pow(coords_t[0]/seb_dim_[0],6)
+  + stk::math::pow(coords_t[1]/seb_dim_[1],6)
   +  stk::math::pow(coords_t[2]/seb_dim_[2],6) - 1.0 ) < 0.0 ) {
     for (int i = 0; i < NodeKernelTraits::NDimMax; ++i) {
       rhs(i) += fac * velocityNp1_.get(node, i);

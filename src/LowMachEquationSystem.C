@@ -93,7 +93,7 @@
 #include "node_kernels/MomentumBoussinesqNodeKernel.h"
 #include "node_kernels/MomentumBuoyancyNodeKernel.h"
 #include "node_kernels/MomentumCoriolisNodeKernel.h"
-#include "node_kernels/MomentumSuperEllipseBodyNodeKernel.h"
+#include "node_kernels/SuperEllipseBodyNodeKernel.h"
 #include "node_kernels/MomentumMassBDFNodeKernel.h"
 #include "node_kernels/MomentumGclSrcNodeKernel.h"
 #include "node_kernels/ContinuityGclNodeKernel.h"
@@ -1474,8 +1474,8 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
           nodeAlg.add_kernel<MomentumCoriolisNodeKernel>(
             realm_.bulk_data(), *realm_.solutionOptions_);
         } else if ((srcName == "superellipsebody") || (srcName == "SuperEllipseBody")) {
-          seb_ = std::make_unique<SuperEllipseBodySrc>(); 
-          nodeAlg.add_kernel<MomentumSuperEllipseBodyNodeKernel>(
+          seb_ = std::make_unique<SuperEllipseBodySrc>();
+          nodeAlg.add_kernel<SuperEllipseBodyNodeKernel>(
             realm_.bulk_data(), *realm_.solutionOptions_, *seb_);
         } else if (srcName == "gcl") {
           nodeAlg.add_kernel<MomentumGclSrcNodeKernel>(realm_.bulk_data());
@@ -2757,7 +2757,7 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
   // If Super Ellipse Body source is enabled, then read locations and orientations from file
   if (seb_)
     seb_->read_from_file();
-    
+
   // Perform actual solve
   EquationSystem::assemble_and_solve(deltaSolution);
 

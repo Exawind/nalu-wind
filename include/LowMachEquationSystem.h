@@ -1,4 +1,3 @@
-
 // Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
 // Northwest Research Associates. Under the terms of Contract DE-NA0003525
@@ -17,6 +16,7 @@
 #include "FieldTypeDef.h"
 #include "NaluParsedTypes.h"
 #include "AMSAlgDriver.h"
+#include "SuperEllipseBodySrc.h"
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
 #include "ngp_algorithms/NodalBuoyancyAlgDriver.h"
