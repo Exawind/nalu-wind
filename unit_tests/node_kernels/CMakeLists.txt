@@ -12,6 +12,7 @@ target_sources(${utest_ex_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarGclNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarMassBDFNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumActuatorNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumSuperEllipseBodyNode.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestAMSNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTKERodiNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSSTNodeKernel.C
