@@ -64,12 +64,13 @@ MomentumSuperEllipseBodyNodeKernel::execute(
   vs::Vector coords;
   for (int i = 0; i < NodeKernelTraits::NDimMax; ++i)
     coords[i] = coordsNp1_.get(node, i);
-
   vs::Vector coords_t = wmp::rotate(seb_orient_, coords - seb_loc_);
 
-  if ( ( stk::math::pow(coords_t[0]/seb_dim_[0],6)
-  + stk::math::pow(coords_t[1]/seb_dim_[1],6)
-  +  stk::math::pow(coords_t[2]/seb_dim_[2],6) - 1.0 ) < 0.0 ) {
+  double pt_inside_seb = stk::math::pow(coords_t[0]/seb_dim_[0],6)
+      + stk::math::pow(coords_t[1]/seb_dim_[1],6)
+      +  stk::math::pow(coords_t[2]/seb_dim_[2],6) - 1.0;
+
+  if ( pt_inside_seb < 0.0 ) {
     for (int i = 0; i < NodeKernelTraits::NDimMax; ++i) {
       rhs(i) += fac * velocityNp1_.get(node, i);
       lhs(i,i) -= fac;

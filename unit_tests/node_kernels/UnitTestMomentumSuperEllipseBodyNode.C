@@ -15,38 +15,39 @@
 
 #include "node_kernels/MomentumSuperEllipseBodyNodeKernel.h"
 
-static constexpr double rhs[24] = {
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875,
-  7.875        
-};
-
 TEST_F(MomentumNodeHex8Mesh, NGP_momentum_super_ellipse)
 {
   // Only execute for 1 processor runs
   if (bulk_->parallel_size() > 1)
     return;
+
+
+  static constexpr double rhsExact[24] = {
+      7.875,
+      7.875,
+      7.875,
+      7.875,
+      7.875,
+      7.875,
+      0.0,
+      0.0,
+      0.0,
+      7.875,
+      7.875,
+      7.875,
+      7.875,
+      7.875,
+      7.875,
+      7.875,
+      7.875,
+      7.875,
+      0.0,
+      0.0,
+      0.0,
+      7.875,
+      7.875,
+      7.875
+  };
 
   fill_mesh_and_init_fields();
 
@@ -72,16 +73,16 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_super_ellipse)
 
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumSuperEllipseBodyNodeKernel>(
-    *bulk_, solnOpts_);
-
-  helperObjs.execute();
-
-  vs::Vector loc{1.0, -1.0, -1.0};
-  vs::Vector orient = wmp::create_wm_param(vs::Vector{1.0, 0.0, 0.0}, stk::math::asin(1.0)*0.5);
-  vs::Vector dim{5.0, 5.0, 5.0};
+  vs::Vector loc{1.0, 0.0, 0.0};
+  vs::Vector orient = wmp::create_wm_param(vs::Vector{0.0, 0.0, 1.0}, stk::math::asin(1.0)*0.5);
+  vs::Vector dim{1.21, 1.21, 1.21};
 
   sierra::nalu::SuperEllipseBodySrc seb(solnOpts_, loc, orient, dim);
+
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumSuperEllipseBodyNodeKernel>(
+      *bulk_, solnOpts_, seb);
+
+  helperObjs.execute();
 
   Kokkos::deep_copy(
     helperObjs.linsys->hostNumSumIntoCalls_,
@@ -92,5 +93,5 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_super_ellipse)
   EXPECT_EQ(helperObjs.linsys->hostNumSumIntoCalls_(0), 8u);
 
   unit_test_kernel_utils::expect_all_near(
-    helperObjs.linsys->rhs_, rhsExact.data());
+    helperObjs.linsys->rhs_, rhsExact);
 }
