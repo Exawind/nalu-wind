@@ -42,6 +42,8 @@ private:
 
   static constexpr int nDim_ = 3;
 
+  std::string seb_file_;
+  
   vs::Vector seb_loc_;
   vs::Vector seb_orient_;
   vs::Vector seb_dim_;

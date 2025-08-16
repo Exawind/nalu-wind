@@ -23,7 +23,8 @@ namespace nalu {
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-SuperEllipseBodySrc::SuperEllipseBodySrc(const SolutionOptions& /* solnOpts */)
+SuperEllipseBodySrc::SuperEllipseBodySrc(const SolutionOptions&  solnOpts ) :
+  seb_file_(solnOpts.superEllipseBodyFile_)
 {
   read_from_file();
 }
@@ -37,11 +38,11 @@ void SuperEllipseBodySrc::read_from_file()
 {
     // Implementation for reading location, orientation, and dimensions from file
 
-    std::ifstream fin("nacelle.dat");
+    std::ifstream fin(seb_file_.c_str());
     if (!fin.good()) {
-        std::cerr << "Input file 'nacelle.dat' does not exist: user "
+        std::cerr << "Input file does not exist: user "
                      "specified (or default) name= "
-                  << std::endl;
+                  << seb_file_ << std::endl;
     }
 
     fin >> seb_loc_.x() >> seb_loc_.y() >> seb_loc_.z();

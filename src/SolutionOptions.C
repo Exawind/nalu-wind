@@ -417,6 +417,9 @@ SolutionOptions::load(const YAML::Node& y_node)
             referenceVelocity_);
           get_if_present(
             y_user_constants, "rans_below_ks", RANSBelowKs_, RANSBelowKs_);
+          get_if_present(
+            y_user_constants, "super_ellipse_body_file", superEllipseBodyFile_,
+            superEllipseBodyFile_);
 
           if (expect_sequence(y_user_constants, "gravity", optional)) {
             const int gravSize = y_user_constants["gravity"].size();
