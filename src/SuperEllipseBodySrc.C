@@ -26,10 +26,11 @@ namespace nalu {
 SuperEllipseBodySrc::SuperEllipseBodySrc(const SolutionOptions&  solnOpts ) :
   seb_file_(solnOpts.superEllipseBodyFile_)
 {
+  std::cerr << "Super Ellipse Body File = " << seb_file_ << std::endl;
   read_from_file();
 }
 
-SuperEllipseBodySrc::SuperEllipseBodySrc(const SolutionOptions& /* solnOpts */, 
+SuperEllipseBodySrc::SuperEllipseBodySrc(const SolutionOptions& /* solnOpts */,
   vs::Vector loc, vs::Vector orient, vs::Vector dim)
     : seb_loc_(loc), seb_orient_(orient), seb_dim_(dim)
 {}

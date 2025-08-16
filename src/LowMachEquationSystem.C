@@ -1474,7 +1474,7 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
           nodeAlg.add_kernel<MomentumCoriolisNodeKernel>(
             realm_.bulk_data(), *realm_.solutionOptions_);
         } else if ((srcName == "superellipsebody") || (srcName == "super_ellipse_body")) {
-          seb_ = std::make_unique<SuperEllipseBodySrc>();
+          seb_ = std::make_unique<SuperEllipseBodySrc>(*realm_.solutionOptions_);
           nodeAlg.add_kernel<MomentumSuperEllipseBodyNodeKernel>(
             realm_.bulk_data(), *realm_.solutionOptions_, *seb_);
         } else if (srcName == "gcl") {

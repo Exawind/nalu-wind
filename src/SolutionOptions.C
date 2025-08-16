@@ -420,6 +420,7 @@ SolutionOptions::load(const YAML::Node& y_node)
           get_if_present(
             y_user_constants, "super_ellipse_body_file", superEllipseBodyFile_,
             superEllipseBodyFile_);
+          std::cerr << "super ellipse body file = " << superEllipseBodyFile_ << std::endl;
 
           if (expect_sequence(y_user_constants, "gravity", optional)) {
             const int gravSize = y_user_constants["gravity"].size();

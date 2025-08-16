@@ -59,7 +59,7 @@ MomentumSuperEllipseBodyNodeKernel::execute(
   NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0);
   NodeKernelTraits::DblType dualVol = dualNodalVolume_.get(node, 0);
 
-  const double fac = rhoNp1 * dualVol / dt_;
+  const double fac = 10.0 * rhoNp1 * dualVol / dt_;
 
   vs::Vector coords;
   for (int i = 0; i < NodeKernelTraits::NDimMax; ++i)
@@ -72,8 +72,8 @@ MomentumSuperEllipseBodyNodeKernel::execute(
 
   if ( pt_inside_seb < 0.0 ) {
     for (int i = 0; i < NodeKernelTraits::NDimMax; ++i) {
-      rhs(i) += fac * velocityNp1_.get(node, i);
-      lhs(i,i) -= fac;
+      rhs(i) -= fac * velocityNp1_.get(node, i);
+      lhs(i,i) += fac;
     }
   }
 
