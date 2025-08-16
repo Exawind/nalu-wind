@@ -1,3 +1,4 @@
+
 // Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
 // Northwest Research Associates. Under the terms of Contract DE-NA0003525
@@ -235,6 +236,7 @@ public:
 
 private:
   ScalarFieldType* Udiag_;
+  std::unique_ptr<SuperEllipseBodySrc> seb_;
 };
 
 class ContinuityEquationSystem : public EquationSystem
