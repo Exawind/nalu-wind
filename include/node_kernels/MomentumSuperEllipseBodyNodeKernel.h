@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef SUPERELLIPSEBODYSRCNODEKERNEL_H
-#define SUPERELLIPSEBODYSRCNODEKERNEL_H
+#ifndef MOMENTUMSUPERELLIPSEBODYSRCNODEKERNEL_H
+#define MOMENTUMSUPERELLIPSEBODYSRCNODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
 #include "SuperEllipseBodySrc.h"
@@ -25,18 +25,18 @@ namespace nalu {
 
 class SolutionOptions;
 
-class SuperEllipseBodyNodeKernel
-  : public NGPNodeKernel<SuperEllipseBodyNodeKernel>
+class MomentumSuperEllipseBodyNodeKernel
+  : public NGPNodeKernel<MomentumSuperEllipseBodyNodeKernel>
 {
 public:
-  SuperEllipseBodyNodeKernel(
+  MomentumSuperEllipseBodyNodeKernel(
     const stk::mesh::BulkData&, const SolutionOptions&,
     const SuperEllipseBodySrc& seb);
 
-  SuperEllipseBodyNodeKernel() = delete;
+  MomentumSuperEllipseBodyNodeKernel() = delete;
 
   KOKKOS_DEFAULTED_FUNCTION
-  virtual ~SuperEllipseBodyNodeKernel() = default;
+  virtual ~MomentumSuperEllipseBodyNodeKernel() = default;
 
   virtual void setup(Realm&) override;
 
@@ -75,4 +75,4 @@ private:
 } // namespace nalu
 } // namespace sierra
 
-#endif /* SUPERELLIPSEBODYSRCNODEKERNEL_H */
+#endif /* MOMENTUMSUPERELLIPSEBODYSRCNODEKERNEL_H */

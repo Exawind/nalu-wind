@@ -9,7 +9,7 @@
 
 #include "Realm.h"
 #include "SolutionOptions.h"
-#include "node_kernels/SuperEllipseBodyNodeKernel.h"
+#include "node_kernels/MomentumSuperEllipseBodyNodeKernel.h"
 #include "utils/StkHelpers.h"
 #include "stk_mesh/base/Types.hpp"
 #include <aero/aero_utils/WienerMilenkovic.h>
@@ -17,10 +17,10 @@
 namespace sierra {
 namespace nalu {
 
-SuperEllipseBodyNodeKernel::SuperEllipseBodyNodeKernel(
+MomentumSuperEllipseBodyNodeKernel::MomentumSuperEllipseBodyNodeKernel(
   const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts,
   const SuperEllipseBodySrc& seb)
-  : NGPNodeKernel<SuperEllipseBodyNodeKernel>(),
+  : NGPNodeKernel<MomentumSuperEllipseBodyNodeKernel>(),
     seb_(seb),
     seb_loc_(seb.get_loc()),
     seb_orient_(seb.get_orient()),
@@ -35,7 +35,7 @@ SuperEllipseBodyNodeKernel::SuperEllipseBodyNodeKernel(
 }
 
 void
-SuperEllipseBodyNodeKernel::setup(Realm& realm)
+MomentumSuperEllipseBodyNodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
@@ -51,7 +51,7 @@ SuperEllipseBodyNodeKernel::setup(Realm& realm)
 
 KOKKOS_FUNCTION
 void
-SuperEllipseBodyNodeKernel::execute(
+MomentumSuperEllipseBodyNodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)

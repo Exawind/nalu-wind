@@ -12,6 +12,7 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumActuatorNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumCoriolisNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSSTAMSForcingNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSuperEllipseBodyNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarGclNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarMassBDFNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/SDRSSTAMSNodeKernel.C
@@ -29,7 +30,6 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/SDRSSTLRNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/SDRKONodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/SDRSSTDESNodeKernel.C
-  ${CMAKE_CURRENT_SOURCE_DIR}/SuperEllipseBodyNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/WallDistNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/BLTGammaM2015NodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/TKESSTBLTM2015NodeKernel.C
