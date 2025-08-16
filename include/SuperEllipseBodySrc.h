@@ -23,6 +23,9 @@ class SuperEllipseBodySrc
 public:
   SuperEllipseBodySrc(const SolutionOptions& solnOpts);
 
+  SuperEllipseBodySrc(const SolutionOptions& solnOpts, vs::Vector loc, 
+                      vs::Vector orient, vs::Vector dim);
+
   KOKKOS_DEFAULTED_FUNCTION
   SuperEllipseBodySrc() = default;
 

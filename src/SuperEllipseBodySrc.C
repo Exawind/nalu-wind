@@ -28,6 +28,11 @@ SuperEllipseBodySrc::SuperEllipseBodySrc(const SolutionOptions& /* solnOpts */)
   read_from_file();
 }
 
+SuperEllipseBodySrc::SuperEllipseBodySrc(const SolutionOptions& /* solnOpts */, 
+  vs::Vector loc, vs::Vector orient, vs::Vector dim)
+    : seb_loc_(loc), seb_orient_(orient), seb_dim_(dim)
+{}
+
 void SuperEllipseBodySrc::read_from_file()
 {
     // Implementation for reading location, orientation, and dimensions from file
