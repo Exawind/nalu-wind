@@ -147,7 +147,7 @@ OpenTurbineSixDof::setup_point(PointMass &point, const double dtNalu, std::share
   };
 
   // Sticking to 5 nonlinear iterations and no-damping to match working example and avoid user knobs.
-  constexpr double damping_factor = 1.0;
+  constexpr double damping_factor = 0.0;
   constexpr int number_of_nonlinear_iterations = 5;
 
   openturbine::cfd::InterfaceInput point_to_build;
@@ -419,7 +419,8 @@ OpenTurbineSixDof::map_loads_point(PointMass &point)
   MPI_Allreduce(MPI_IN_PLACE, forces_and_moments.data(), 6, MPI_DOUBLE, MPI_SUM, bulk_->parallel());
 
   for (int idim = 0; idim < 6; ++idim) {
-    point.openturbine_interface->turbine.floating_platform.node.loads[idim] = forces_and_moments[idim];
+    point.openturbine_interface->turbine.floating_platform.node.loads[idim] = 0.5 * forces_and_moments[idim] +
+      0.5 * point.openturbine_interface->turbine.floating_platform.node.loads[idim];
   }
 
 }
