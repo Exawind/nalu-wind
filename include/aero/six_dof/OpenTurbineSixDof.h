@@ -29,7 +29,7 @@ struct Tether
 };
 struct PointMass 
 {
-  std::shared_ptr<openturbine::cfd::Interface> openturbine_interface = nullptr;
+  std::shared_ptr<openturbine::interfaces::cfd::Interface> openturbine_interface = nullptr;
   std::array<double,9> moments_of_inertia = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   std::array<double,3> center_of_mass = {0.0, 0.0, 0.0};
   double mass{0.0};
@@ -107,7 +107,7 @@ private:
   int restart_frequency_{0};
 
   std::vector<PointMass> point_bodies_;
-  std::vector<openturbine::cfd::Interface> point_body_interfaces_;
+  std::vector<openturbine::interfaces::cfd::Interface> point_body_interfaces_;
 };
 
 } // namespace nalu

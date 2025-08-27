@@ -150,7 +150,7 @@ OpenTurbineSixDof::setup_point(PointMass &point, const double dtNalu, std::share
   constexpr double damping_factor = 0.0;
   constexpr int number_of_nonlinear_iterations = 5;
 
-  openturbine::cfd::InterfaceInput point_to_build;
+  openturbine::interfaces::cfd::InterfaceInput point_to_build;
   point_to_build.gravity = gravity_;
   point_to_build.time_step = dtNalu;
   point_to_build.max_iter = number_of_nonlinear_iterations;
@@ -171,7 +171,7 @@ OpenTurbineSixDof::setup_point(PointMass &point, const double dtNalu, std::share
   }
 
   point.bulk = bulk;
-  point.openturbine_interface = std::make_shared<openturbine::cfd::Interface>(point_to_build);
+  point.openturbine_interface = std::make_shared<openturbine::interfaces::cfd::Interface>(point_to_build);
 
   auto& meta = bulk->mesh_meta_data();
 
