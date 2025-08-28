@@ -279,11 +279,11 @@ OpenTurbineSixDof::initialize(int restartFreqNalu, double curTime)
 }
 
 void
-OpenTurbineSixDof::advance_struct_timestep()
+OpenTurbineSixDof::advance_struct_timestep(const double dT)
 {
-  //for (auto & point : point_bodies_) {
   for (int ipoint = 0; ipoint < point_bodies_.size(); ++ipoint) {
     auto && point = point_bodies_[ipoint];
+    point.openturbine_interface->parameters.h = dT;
     auto _converged = point.openturbine_interface->Step();
     if ((point.openturbine_interface->current_timestep_ % restart_frequency_) == 0) {
       std::string file_name = std::to_string(ipoint) + "_" + point_bodies_[ipoint].restart_file_name;
