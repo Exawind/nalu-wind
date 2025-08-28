@@ -279,11 +279,11 @@ OpenTurbineSixDof::initialize(int restartFreqNalu, double curTime)
 }
 
 void
-OpenTurbineSixDof::advance_struct_timestep()
+OpenTurbineSixDof::advance_struct_timestep(const double dT)
 {
-  //for (auto & point : point_bodies_) {
   for (int ipoint = 0; ipoint < point_bodies_.size(); ++ipoint) {
     auto && point = point_bodies_[ipoint];
+    point.openturbine_interface->parameters.h = dT;
     auto _converged = point.openturbine_interface->Step();
     if ((point.openturbine_interface->current_timestep_ % restart_frequency_) == 0) {
       std::string file_name = std::to_string(ipoint) + "_" + point_bodies_[ipoint].restart_file_name;
@@ -320,8 +320,8 @@ OpenTurbineSixDof::map_displacements_point(PointMass &point, bool updateCur)
 
   auto q0 = translation_and_rotation_position[3];
   auto q1 = translation_and_rotation_position[4];
-  auto q2 = translation_and_rotation_position[4];
-  auto q3 = translation_and_rotation_position[4];
+  auto q2 = translation_and_rotation_position[5];
+  auto q3 = translation_and_rotation_position[6];
 
   std::array<std::array<double, 3>, 3> current_rotation_matrix = 
     {{{q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3, 2.0 * (q1 * q2 - q0 * q3), 2.0 * (q0 * q2 + q1 * q3)},

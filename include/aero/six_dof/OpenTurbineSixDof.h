@@ -57,7 +57,7 @@ public:
 
   void map_displacements(double, bool);
 
-  void advance_struct_timestep();
+  void advance_struct_timestep(const double);
 
   void map_loads();
 

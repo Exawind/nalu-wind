@@ -45,7 +45,7 @@ public:
     const bool updateCurCoords = true,
     const bool predict = true);
   void predict_model_time_step(const double /*currentTime*/);
-  void advance_model_time_step(const double /*currentTime*/);
+  void advance_model_time_step(const double /*currentTime*/, const double);
   void compute_div_mesh_velocity();
   // hacky function to make sure openfast is cleaned up
   // eventually all openfast pointers should be combined and moved out of this
