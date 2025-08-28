@@ -177,7 +177,7 @@ AeroContainer::advance_model_time_step(const double currentTime, const double dT
 {
   if (has_six_dof()) {
     (void)currentTime;
-    sixDof_->advance_struct_timestep(dT);
+    sixDof_->advance_struct_timestep(currentTime, dT);
     return;
   }
 #ifdef NALU_USES_OPENFAST

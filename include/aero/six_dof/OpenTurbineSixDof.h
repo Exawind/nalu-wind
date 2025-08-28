@@ -43,6 +43,7 @@ struct PointMass
   GenericFieldType* total_force = nullptr;
   std::shared_ptr<stk::mesh::BulkData> bulk = nullptr;
   std::shared_ptr<CalcLoads> calc_loads = nullptr;
+  std::string output_file_name = "";
 };
 
 class OpenTurbineSixDof
@@ -57,7 +58,7 @@ public:
 
   void map_displacements(double, bool);
 
-  void advance_struct_timestep(const double);
+  void advance_struct_timestep(const double, const double);
 
   void map_loads();
 
