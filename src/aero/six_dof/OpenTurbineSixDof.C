@@ -288,7 +288,7 @@ OpenTurbineSixDof::advance_struct_timestep(const double currentTime, const doubl
     auto && point = point_bodies_[ipoint];
     point.openturbine_interface->parameters.h = dT;
     auto _converged = point.openturbine_interface->Step();
-    if ((point.openturbine_interface->current_timestep_ % restart_frequency_) == 0) {
+    if ((point.openturbine_interface->current_timestep_ % restart_frequency_) == 0 && NaluEnv::self().parallel_rank() == 0) {
       std::string file_name = std::to_string(ipoint) + "_" + point.restart_file_name;
       point.openturbine_interface->WriteRestart(file_name);
     }
