@@ -10,7 +10,7 @@
 #include "aero/six_dof/OpenTurbineSixDof.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementRepo.h"
-
+#include <fstream>
 #include <NaluParsing.h>
 
 #include <stk_mesh/base/BulkData.hpp>
@@ -45,6 +45,9 @@ OpenTurbineSixDof::load_point(const YAML::Node& node)
   assert(node["center_of_mass"]);
   assert(node["center_of_mass"].size() == ndim);
   assert(node["mass"]);
+
+  if (node["output_file_name"])
+    new_body.output_file_name = node["output_file_name"].as<std::string>();
 
   if (node["use_restart_data"])
     new_body.use_restart_data = node["use_restart_data"].as<bool>();
@@ -279,16 +282,29 @@ OpenTurbineSixDof::initialize(int restartFreqNalu, double curTime)
 }
 
 void
-OpenTurbineSixDof::advance_struct_timestep(const double dT)
+OpenTurbineSixDof::advance_struct_timestep(const double currentTime, const double dT)
 {
   for (int ipoint = 0; ipoint < point_bodies_.size(); ++ipoint) {
     auto && point = point_bodies_[ipoint];
     point.openturbine_interface->parameters.h = dT;
     auto _converged = point.openturbine_interface->Step();
-    if ((point.openturbine_interface->current_timestep_ % restart_frequency_) == 0) {
-      std::string file_name = std::to_string(ipoint) + "_" + point_bodies_[ipoint].restart_file_name;
+    if ((point.openturbine_interface->current_timestep_ % restart_frequency_) == 0 && NaluEnv::self().parallel_rank() == 0) {
+      std::string file_name = std::to_string(ipoint) + "_" + point.restart_file_name;
       point.openturbine_interface->WriteRestart(file_name);
     }
+    // Add output here
+    if (point.output_file_name.size() > 0 && NaluEnv::self().parallel_rank() == 0) {
+      std::string delim = " ";
+      std::ofstream outfile(point.output_file_name, std::ios::app);
+      outfile << currentTime << delim;
+      for (int idir = 0; idir < 7; ++idir) 
+        outfile << point.openturbine_interface->turbine.floating_platform.node.position[idir] << delim;
+      for (int idir = 0; idir < 6; ++idir) 
+        outfile << point.openturbine_interface->turbine.floating_platform.node.velocity[idir] << delim;
+      for (int idir = 0; idir < 5; ++idir) 
+        outfile << point.openturbine_interface->turbine.floating_platform.node.loads[idir] << delim;
+      outfile << point.openturbine_interface->turbine.floating_platform.node.loads[5] << std::endl;
+    } 
   }
 }
 
