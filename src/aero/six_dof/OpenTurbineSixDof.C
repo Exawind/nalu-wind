@@ -46,6 +46,9 @@ OpenTurbineSixDof::load_point(const YAML::Node& node)
   assert(node["center_of_mass"].size() == ndim);
   assert(node["mass"]);
 
+  if (node["use_restart_data"])
+    new_body.use_restart_data = node["use_restart_data"].as<bool>();
+
   for (int d = 0; d < tensor_ndim; ++d) {
     new_body.moments_of_inertia[d] = node["moments_of_inertia"][d].as<double>();    
   }
@@ -217,11 +220,14 @@ OpenTurbineSixDof::initialize(int restartFreqNalu, double curTime)
   restart_frequency_ = restartFreqNalu;
 
   // Check for restart files and initialize values appropriately 
-  //for (int ipoint = 0; ipoint < point_bodies_.size(); ipoint++) {
-  //  if (std::filesystem::exists(std::to_string(ipoint) + "_" + point_bodies_[ipoint].restart_file_name)) {
-  //    point_bodies_[ipoint].openturbine_interface->ReadRestart(point_bodies_[ipoint].restart_file_name);
-  //  }
-  //}
+  for (int ipoint = 0; ipoint < point_bodies_.size(); ipoint++) {
+    if (point_bodies_[ipoint].use_restart_data) {
+      std::string file_name = std::to_string(ipoint) + "_" + point_bodies_[ipoint].restart_file_name;
+      if (std::filesystem::exists(file_name)) {
+        point_bodies_[ipoint].openturbine_interface->ReadRestart(file_name);
+      }
+    }
+  }
 
   map_displacements(curTime, false);
 
@@ -275,8 +281,14 @@ OpenTurbineSixDof::initialize(int restartFreqNalu, double curTime)
 void
 OpenTurbineSixDof::advance_struct_timestep()
 {
-  for (auto & point : point_bodies_) {
+  //for (auto & point : point_bodies_) {
+  for (int ipoint = 0; ipoint < point_bodies_.size(); ++ipoint) {
+    auto && point = point_bodies_[ipoint];
     auto _converged = point.openturbine_interface->Step();
+    if ((point.openturbine_interface->current_timestep_ % restart_frequency_) == 0) {
+      std::string file_name = std::to_string(ipoint) + "_" + point_bodies_[ipoint].restart_file_name;
+      point.openturbine_interface->WriteRestart(file_name);
+    }
   }
 }
 
