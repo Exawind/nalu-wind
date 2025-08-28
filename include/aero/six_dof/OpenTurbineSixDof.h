@@ -29,6 +29,7 @@ struct Tether
 };
 struct PointMass 
 {
+  bool use_restart_data = false;
   std::shared_ptr<openturbine::cfd::Interface> openturbine_interface = nullptr;
   std::array<double,9> moments_of_inertia = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   std::array<double,3> center_of_mass = {0.0, 0.0, 0.0};
