@@ -18,7 +18,8 @@ TEST(Simd, basic)
 
 TEST(Simd, whichInstructions)
 {
-  std::cout << "STK simd native type: " << typeid(kokkos_simd::simd_abi::native).name() << std::endl;
+  std::cout << "STK simd native type: "
+            << typeid(kokkos_simd::simd_abi::native).name() << std::endl;
   std::cout << "stk::simd::ndoubles = " << stk::simd::ndoubles << std::endl;
 }
 
