@@ -182,6 +182,26 @@ test_device_lists_impl()
   }
 }
 
+void
+test_tensor_skewsym()
+{
+  DeviceVector dvec("vec", 3);
+  auto dv = dvec.template view<sierra::nalu::MemSpace>();
+
+  Kokkos::parallel_for(
+    1, KOKKOS_LAMBDA(int) {
+      vs::Vector v(1.0, 2.0, 3.0);
+      vs::Vector u(4.0, 5.0, 6.0);
+
+      dv[0] = (vs::skew_sym(v) & u) - (v ^ u);
+    });
+  dvec.modify<sierra::nalu::MemSpace>();
+  dvec.sync<DeviceVector::host_mirror_space>();
+
+  for (int i = 0; i < 3; ++i)
+    EXPECT_NEAR(vs::mag(dvec.h_view(i)), 0.0, tol);
+}
+
 } // namespace
 
 TEST(VectorSpace, NGP_vector_create)
@@ -211,6 +231,8 @@ TEST(VectorSpace, NGP_vector_create)
 TEST(VectorSpace, NGP_tensor_create) { test_tensor_create_impl(); }
 
 TEST(VectorSpace, NGP_vector_rotations) { test_rotations_impl(); }
+
+TEST(VectorSpace, NGP_tensor_skewsym) { test_tensor_skewsym(); }
 
 TEST(VectorSpace, device_capture) { test_device_capture_impl(); }
 
