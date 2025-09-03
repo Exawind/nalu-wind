@@ -44,6 +44,7 @@ struct PointMass
   std::shared_ptr<stk::mesh::BulkData> bulk = nullptr;
   std::shared_ptr<CalcLoads> calc_loads = nullptr;
   std::string output_file_name = "";
+  int number_of_nonlinear_iterations = 5;
 };
 
 class OpenTurbineSixDof

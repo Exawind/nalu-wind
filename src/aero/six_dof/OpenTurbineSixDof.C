@@ -7,6 +7,7 @@
 // for more details.
 //
 
+#include "NaluEnv.h"
 #include "aero/six_dof/OpenTurbineSixDof.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementRepo.h"
@@ -51,6 +52,9 @@ OpenTurbineSixDof::load_point(const YAML::Node& node)
 
   if (node["use_restart_data"])
     new_body.use_restart_data = node["use_restart_data"].as<bool>();
+
+  if (node["number_of_nonlinear_iterations"])
+    new_body.number_of_nonlinear_iterations = node["number_of_nonlinear_iterations"].as<int>();
 
   for (int d = 0; d < tensor_ndim; ++d) {
     new_body.moments_of_inertia[d] = node["moments_of_inertia"][d].as<double>();    
@@ -152,9 +156,8 @@ OpenTurbineSixDof::setup_point(PointMass &point, const double dtNalu, std::share
     std::array{0., 0., 0., point.moments_of_inertia[6], point.moments_of_inertia[7], point.moments_of_inertia[8]}
   };
 
-  // Sticking to 5 nonlinear iterations and no-damping to match working example and avoid user knobs.
   constexpr double damping_factor = 0.0;
-  constexpr int number_of_nonlinear_iterations = 5;
+  int number_of_nonlinear_iterations = point.number_of_nonlinear_iterations;
 
   openturbine::cfd::InterfaceInput point_to_build;
   point_to_build.gravity = gravity_;
@@ -287,7 +290,13 @@ OpenTurbineSixDof::advance_struct_timestep(const double currentTime, const doubl
   for (int ipoint = 0; ipoint < point_bodies_.size(); ++ipoint) {
     auto && point = point_bodies_[ipoint];
     point.openturbine_interface->parameters.h = dT;
-    auto _converged = point.openturbine_interface->Step();
+    auto converged = point.openturbine_interface->Step();
+
+    if (!converged) {
+      NaluEnv::self().naluOutputP0() << 
+        "OpenTurbine did not converge! Consider raising number_of_nonlinear_iterations for point body " << ipoint << std::endl;
+    }
+
     if ((point.openturbine_interface->current_timestep_ % restart_frequency_) == 0 && NaluEnv::self().parallel_rank() == 0) {
       std::string file_name = std::to_string(ipoint) + "_" + point.restart_file_name;
       point.openturbine_interface->WriteRestart(file_name);
