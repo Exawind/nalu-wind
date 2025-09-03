@@ -56,6 +56,9 @@ OpenTurbineSixDof::load_point(const YAML::Node& node)
   if (node["number_of_nonlinear_iterations"])
     new_body.number_of_nonlinear_iterations = node["number_of_nonlinear_iterations"].as<int>();
 
+  if (node["damping_factor"])
+    new_body.rho_inf = node["damping_factor"].as<double>();
+
   for (int d = 0; d < tensor_ndim; ++d) {
     new_body.moments_of_inertia[d] = node["moments_of_inertia"][d].as<double>();    
   }
@@ -156,8 +159,8 @@ OpenTurbineSixDof::setup_point(PointMass &point, const double dtNalu, std::share
     std::array{0., 0., 0., point.moments_of_inertia[6], point.moments_of_inertia[7], point.moments_of_inertia[8]}
   };
 
-  constexpr double damping_factor = 0.0;
-  int number_of_nonlinear_iterations = point.number_of_nonlinear_iterations;
+  const double damping_factor = point.rho_inf;
+  const int number_of_nonlinear_iterations = point.number_of_nonlinear_iterations;
 
   openturbine::cfd::InterfaceInput point_to_build;
   point_to_build.gravity = gravity_;
@@ -456,8 +459,9 @@ OpenTurbineSixDof::map_loads_point(PointMass &point)
   MPI_Allreduce(MPI_IN_PLACE, forces_and_moments.data(), 6, MPI_DOUBLE, MPI_SUM, bulk_->parallel());
 
   for (int idim = 0; idim < 6; ++idim) {
-    point.openturbine_interface->turbine.floating_platform.node.loads[idim] = 0.5 * forces_and_moments[idim] +
-      0.5 * point.openturbine_interface->turbine.floating_platform.node.loads[idim];
+    point.openturbine_interface->turbine.floating_platform.node.loads[idim] = 0.5 * (1.0 - point.rho_inf) * forces_and_moments[idim] +
+      0.5 * (1.0 - point.rho_inf) * point.openturbine_interface->turbine.floating_platform.node.loads[idim] + 
+      point.openturbine_interface->turbine.floating_platform.node.loads[idim] * point.rho_inf; 
   }
 
 }
