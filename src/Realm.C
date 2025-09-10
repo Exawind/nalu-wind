@@ -3487,7 +3487,7 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
       init_current_coordinates();
 
       // reset the current time for the meshMotionAlgs
-      if (has_mesh_motion())
+      if (has_mesh_motion() && !aeroModels_->has_six_dof())
         meshMotionAlg_->restart_reinit(foundRestartTime);
 
       if (aeroModels_->has_fsi() || aeroModels_->has_six_dof()) {
@@ -3499,7 +3499,7 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
 
       compute_geometry();
 
-      if (has_mesh_motion())
+      if (has_mesh_motion() && !aeroModels_->has_six_dof())
         meshMotionAlg_->post_compute_geometry();
     }
   }
