@@ -96,10 +96,6 @@ public:
 
         SharedMemData<DeviceTeamHandleType, DeviceShmem> smdata(
           team, nDim, dataNeededNGP, nodesPerEntity, rhsSize);
-        set_vals(smdata.simdlhs, 0.0);
-        set_vals(smdata.simdrhs, 0.0);
-        set_vals(smdata.lhs, 0.0);
-        set_vals(smdata.rhs, 0.0);
 
         const size_t bucketLen = b.size();
         const size_t simdBucketLen = get_num_simd_groups(bucketLen);
