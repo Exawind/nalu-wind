@@ -47,7 +47,7 @@ public:
     auto& v_vel = scratchViews.get_scratch_view_2D(velocityOrdinal);
     auto& v_pres = scratchViews.get_scratch_view_1D(pressureOrdinal);
 
-    rhs(0) += v_vel(0, 0) + v_pres(0);
+    rhs(0) = v_vel(0, 0) + v_pres(0);
   }
 
 private:
