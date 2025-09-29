@@ -1,0 +1,11 @@
+<map id="sierra::nalu::SDRSSTBLTM2015NodeKernel" name="sierra::nalu::SDRSSTBLTM2015NodeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,80,227,120"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="124,183,369,223"/>
+<area shape="poly" id="edge3_Node000002_Node000001" title=" " alt="" coords="113,133,114,146,120,157,132,170,147,180,144,185,128,174,115,160,109,147,108,134"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="229,172,209,146,171,122,174,118,212,142,234,168"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_node_kernel.html" title=" " alt="" coords="191,5,369,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="278,44,253,183,247,182,273,43"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="302,87,546,113"/>
+<area shape="poly" id="edge5_Node000004_Node000003" title=" " alt="" coords="314,35,405,85,402,90,311,40"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="393,122,281,185,279,180,391,117"/>
+</map>
