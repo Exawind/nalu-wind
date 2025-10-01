@@ -56,7 +56,7 @@ get_shape_fcn_data(
   Kokkos::parallel_for(
     "get_shape_fcn_data", DeviceRangePolicy(0, 1), KOKKOS_LAMBDA(int) {
       SharedMemView<DoubleType**, DeviceShmem> ShmemView(
-        v_shape.data(), BcAlgTraits::numFaceIp_, BcAlgTraits::nodesPerFace_);
+        v_shape.data(), BcAlgTraits::numScsIp_, BcAlgTraits::nodesPerElement_);
       meSCS_dev->shape_fcn<>(ShmemView);
     });
   Kokkos::deep_copy(v_shape_function, v_shape);
@@ -78,8 +78,8 @@ get_shape_fcn_data(
   Kokkos::parallel_for(
     "get_shape_fcn_data", DeviceRangePolicy(0, 1), KOKKOS_LAMBDA(int) {
       SharedMemView<DoubleType**, DeviceShmem> ShmemView(
-        v_adv_shape.data(), BcAlgTraits::numFaceIp_,
-        BcAlgTraits::nodesPerFace_);
+        v_adv_shape.data(), BcAlgTraits::numScsIp_,
+        BcAlgTraits::nodesPerElement_);
       if (skew)
         meSCS_dev->shifted_shape_fcn<>(ShmemView);
       else
