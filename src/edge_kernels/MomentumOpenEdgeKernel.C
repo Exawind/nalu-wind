@@ -88,9 +88,9 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
   const double om_nfEntrain = 1.0 - nfEntrain_;
 
   // Work arrays
-  NALU_ALIGNED DoubleType nx[BcAlgTraits::nDim_];
-  NALU_ALIGNED DoubleType fx[BcAlgTraits::nDim_];
-  NALU_ALIGNED DoubleType duidxj[BcAlgTraits::nDim_][BcAlgTraits::nDim_];
+   DoubleType nx[BcAlgTraits::nDim_];
+   DoubleType fx[BcAlgTraits::nDim_];
+   DoubleType duidxj[BcAlgTraits::nDim_][BcAlgTraits::nDim_];
 
   // Field variables on the boundary face
   auto& v_areavec = faceScratchViews.get_scratch_view_2D(exposedAreaVec_);

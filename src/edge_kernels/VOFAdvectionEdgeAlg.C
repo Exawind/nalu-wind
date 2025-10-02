@@ -133,7 +133,7 @@ VOFAdvectionEdgeAlg::execute()
       const stk::mesh::FastMeshIndex& nodeL,
       const stk::mesh::FastMeshIndex& nodeR) {
       // Scratch work array for edgeAreaVector
-      NALU_ALIGNED DblType av[NDimMax_];
+       DblType av[NDimMax_];
 
       // Populate area vector work array
       for (int d = 0; d < ndim; ++d) {
@@ -142,18 +142,18 @@ VOFAdvectionEdgeAlg::execute()
 
       const DblType mdot = massFlowRate.get(edge, 0);
 
-      NALU_ALIGNED DblType densityL = density.get(nodeL, 0);
-      NALU_ALIGNED DblType densityR = density.get(nodeR, 0);
+       DblType densityL = density.get(nodeL, 0);
+       DblType densityR = density.get(nodeR, 0);
 
-      NALU_ALIGNED DblType rhoIp = 0.5 * (densityL + densityR);
+       DblType rhoIp = 0.5 * (densityL + densityR);
 
       const DblType vdot = mdot / rhoIp;
       const DblType qNp1L = scalarQ.get(nodeL, 0);
       const DblType qNp1R = scalarQ.get(nodeR, 0);
 
       // Compute extrapolated dq/dx
-      NALU_ALIGNED DblType dqL = 0.0;
-      NALU_ALIGNED DblType dqR = 0.0;
+       DblType dqL = 0.0;
+       DblType dqR = 0.0;
 
       for (int j = 0; j < ndim; ++j) {
         const DblType dxj =
@@ -162,8 +162,8 @@ VOFAdvectionEdgeAlg::execute()
         dqR += dxj * dqdx.get(nodeR, j);
       }
 
-      NALU_ALIGNED DblType limitL = 1.0;
-      NALU_ALIGNED DblType limitR = 1.0;
+       DblType limitL = 1.0;
+       DblType limitR = 1.0;
 
       if (useLimiter) {
         const auto dq = scalarQ.get(nodeR, 0) - scalarQ.get(nodeL, 0);
@@ -174,8 +174,8 @@ VOFAdvectionEdgeAlg::execute()
       }
 
       // Upwind extrapolation with limiter terms
-      NALU_ALIGNED DblType qIpL;
-      NALU_ALIGNED DblType qIpR;
+       DblType qIpL;
+       DblType qIpR;
       qIpL = scalarQ.get(nodeL, 0) + dqL * hoUpwind * limitL;
       qIpR = scalarQ.get(nodeR, 0) - dqR * hoUpwind * limitR;
 
@@ -231,7 +231,7 @@ VOFAdvectionEdgeAlg::execute()
       DblType asq = 0.0;
       DblType diffusion_coef = 0.0;
 
-      NALU_ALIGNED DblType mesh_velocity[NDimMax_];
+       DblType mesh_velocity[NDimMax_];
       DblType local_velocity = 0.0;
       for (int d = 0; d < ndim; ++d) {
         const DblType dxj =

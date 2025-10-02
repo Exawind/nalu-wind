@@ -85,7 +85,7 @@ MomentumSSTAMSDiffEdgeKernel::execute(
   const int ndim = nDim_;
 
   // Scratch work arrays
-  NALU_ALIGNED EdgeKernelTraits::DblType av[EdgeKernelTraits::NDimMax];
+   EdgeKernelTraits::DblType av[EdgeKernelTraits::NDimMax];
 
   for (int d = 0; d < nDim_; d++) {
     av[d] = edgeAreaVec_.get(edge, d);

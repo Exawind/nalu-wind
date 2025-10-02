@@ -53,7 +53,7 @@ private:
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
   unsigned temperatureID_{stk::mesh::InvalidOrdinal};
 
-  NALU_ALIGNED NodeKernelTraits::DblType gravity_[NodeKernelTraits::NDimMax];
+   NodeKernelTraits::DblType gravity_[NodeKernelTraits::NDimMax];
 };
 
 } // namespace nalu

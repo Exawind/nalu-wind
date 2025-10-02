@@ -42,7 +42,7 @@ MomentumCoriolisNodeKernel::execute(
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
 {
-  NALU_ALIGNED NodeKernelTraits::DblType vel[NodeKernelTraits::NDimMax];
+   NodeKernelTraits::DblType vel[NodeKernelTraits::NDimMax];
   NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0);
   NodeKernelTraits::DblType dualVol = dualNodalVolume_.get(node, 0);
 

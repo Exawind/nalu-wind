@@ -96,8 +96,8 @@ MdotInflowAlg<BcAlgTraits>::execute()
   nalu_ngp::run_elem_par_reduce(
     algName, meshInfo, meta.side_rank(), faceData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata, DoubleType & mdotInflow) {
-      NALU_ALIGNED DoubleType uBip[BcAlgTraits::nDim_];
-      NALU_ALIGNED DoubleType rhoUBip[BcAlgTraits::nDim_];
+       DoubleType uBip[BcAlgTraits::nDim_];
+       DoubleType rhoUBip[BcAlgTraits::nDim_];
 
       auto& scrView = edata.simdScrView;
       const auto& v_vel = scrView.get_scratch_view_2D(velocityBCID);

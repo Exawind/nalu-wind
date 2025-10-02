@@ -68,7 +68,7 @@ BuoyancySourceAlg::execute()
   const std::string algName = meta.get_fields()[source_]->name() + "_edge";
   nalu_ngp::run_edge_algorithm(
     algName, ngpMesh, sel, KOKKOS_LAMBDA(const EntityInfoType& einfo) {
-      NALU_ALIGNED DblType av[NDimMax];
+       DblType av[NDimMax];
 
       for (unsigned d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(einfo.meshIdx, d);

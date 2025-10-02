@@ -115,7 +115,7 @@ MomentumEdgeSolverAlg::execute()
       DblType om_alphaUpw = om_alphaUpw_input;
 
       // Scratch work array for edgeAreaVector
-      NALU_ALIGNED DblType av[NDimMax_];
+       DblType av[NDimMax_];
       // Populate area vector work array
       for (int d = 0; d < ndim; ++d) {
         av[d] = edgeAreaVec.get(edge, d);
@@ -142,8 +142,8 @@ MomentumEdgeSolverAlg::execute()
       const DblType inv_axdx = 1.0 / axdx;
 
       // Compute extrapolated du/dx
-      NALU_ALIGNED DblType duL[NDimMax_];
-      NALU_ALIGNED DblType duR[NDimMax_];
+       DblType duL[NDimMax_];
+       DblType duR[NDimMax_];
 
       for (int i = 0; i < ndim; ++i) {
         const int offset = i * ndim;
@@ -158,8 +158,8 @@ MomentumEdgeSolverAlg::execute()
         }
       }
 
-      NALU_ALIGNED DblType limitL[NDimMax_] = {1.0, 1.0, 1.0};
-      NALU_ALIGNED DblType limitR[NDimMax_] = {1.0, 1.0, 1.0};
+       DblType limitL[NDimMax_] = {1.0, 1.0, 1.0};
+       DblType limitR[NDimMax_] = {1.0, 1.0, 1.0};
 
       if (useLimiter) {
         for (int d = 0; d < ndim; ++d) {
@@ -193,8 +193,8 @@ MomentumEdgeSolverAlg::execute()
       }
 
       // Upwind extrapolation with limiter terms
-      NALU_ALIGNED DblType uIpL[NDimMax_];
-      NALU_ALIGNED DblType uIpR[NDimMax_];
+       DblType uIpL[NDimMax_];
+       DblType uIpR[NDimMax_];
       for (int d = 0; d < ndim; ++d) {
         uIpL[d] = vel.get(nodeL, d) +
                   duL[d] * hoUpwind * limitL[d] * density_upwinding_factor;
@@ -210,7 +210,7 @@ MomentumEdgeSolverAlg::execute()
         dui/dxj = GjUi +[(uiR - uiL) - GlUi*dxl]*Aj/AxDx
         where Gp is the interpolated pth nodal gradient for ui
       */
-      NALU_ALIGNED DblType duidxj[NDimMax_][NDimMax_];
+       DblType duidxj[NDimMax_][NDimMax_];
       for (int i = 0; i < ndim; ++i) {
         const auto dui = vel.get(nodeR, i) - vel.get(nodeL, i);
         const auto offset = i * ndim;

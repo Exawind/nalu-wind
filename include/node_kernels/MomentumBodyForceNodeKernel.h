@@ -43,7 +43,7 @@ public:
 private:
   stk::mesh::NgpField<double> dualNodalVolume_;
 
-  NALU_ALIGNED NodeKernelTraits::DblType
+   NodeKernelTraits::DblType
     forceVector_[NodeKernelTraits::NDimMax];
 
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};

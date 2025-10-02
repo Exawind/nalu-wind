@@ -361,8 +361,9 @@ interpolate(const ParCoordsArrayT& par_coords)
 {
   constexpr int nparcoords = ParCoordsArrayT::extent_int(0);
   using res_val_t = typename ValArrayT::value_type;
+  using array_t = res_val_t[nparcoords];
 
-  ArrayND<res_val_t[nparcoords]> result{};
+  ArrayND<array_t> result{};
   for (int l = 0; l < nparcoords; ++l) {
     for (int d = 0; d < ValArrayT::extent_int(1); ++d) {
       result(l, d) = 0;
@@ -392,10 +393,11 @@ template <typename BasisT, typename ParCoordsArrayT, typename ValArrayT>
 interpolate(const ParCoordsArrayT& par_coords, const ValArrayT& vals)
 {
   constexpr int nparcoords = ParCoordsArrayT::extent_int(0);
+  constexpr int nvals = ValArrayT::extent_int(1);
   using res_val_t = std::decay_t<decltype(par_coords(0, 0) * vals(0, 0))>;
+  using array_t = res_val_t[nparcoords][nvals];
 
-  ArrayND<res_val_t[ParCoordsArrayT::extent_int(0)][vals.extent_int(1)]>
-    result{};
+  ArrayND<array_t> result{};
   for (int l = 0; l < nparcoords; ++l) {
 
     ArrayND<res_val_t[ParCoordsArrayT::extent_int(1)]> point;

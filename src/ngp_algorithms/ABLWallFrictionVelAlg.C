@@ -207,9 +207,9 @@ ABLWallFrictionVelAlg<BcAlgTraits>::execute()
     algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
     KOKKOS_LAMBDA(ElemSimdData & edata, nalu_ngp::ArraySimdDouble2 & uSum) {
       // Unit normal vector
-      NALU_ALIGNED DoubleType nx[BcAlgTraits::nDim_];
-      NALU_ALIGNED DoubleType velIp[BcAlgTraits::nDim_];
-      NALU_ALIGNED DoubleType bcVelIp[BcAlgTraits::nDim_];
+       DoubleType nx[BcAlgTraits::nDim_];
+       DoubleType velIp[BcAlgTraits::nDim_];
+       DoubleType bcVelIp[BcAlgTraits::nDim_];
 
       auto& scrViews = edata.simdScrView;
       const auto& v_vel = scrViews.get_scratch_view_2D(velID);

@@ -570,7 +570,7 @@ calc_mdot_elem_loop(
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     "unittest_calc_mdot_elem_loop", meshInfo, stk::topology::ELEM_RANK, dataReq,
     sel, KOKKOS_LAMBDA(ElemSimdData & edata) {
-      NALU_ALIGNED Traits::DblType rhoU[Hex8Traits::nDim_];
+       Traits::DblType rhoU[Hex8Traits::nDim_];
       auto& scrViews = edata.simdScrView;
       auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
       auto& v_vel = scrViews.get_scratch_view_2D(velID);

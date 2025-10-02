@@ -63,7 +63,7 @@ AMSAvgMdotEdgeAlg::execute()
   nalu_ngp::run_edge_algorithm(
     "compute_avgMdot_edge_interior", ngpMesh, sel,
     KOKKOS_LAMBDA(const EntityInfoType& einfo) {
-      NALU_ALIGNED DblType av[NDimMax];
+       DblType av[NDimMax];
       const auto& nodes = einfo.entityNodes;
       const auto nodeL = ngpMesh.fast_mesh_index(nodes[0]);
       const auto nodeR = ngpMesh.fast_mesh_index(nodes[1]);

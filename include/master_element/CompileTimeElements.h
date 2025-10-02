@@ -203,8 +203,6 @@ use_shifted_quad(bool shifted)
   return shifted ? QuadType::SHIFTED : QuadType::MID;
 }
 
-// çç
-
 } // namespace sierra::nalu
 
 #endif

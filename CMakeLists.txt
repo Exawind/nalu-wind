@@ -77,7 +77,7 @@ endif()
 
 # Handle issues for Power9 builds
 if ((${CMAKE_SYSTEM_PROCESSOR} MATCHES "ppc") AND (NOT ENABLE_CUDA))
-  # Fix warnings regarding NALU_ALIGNED in CPU builds
+  # Fix warnings regarding  in CPU builds
   target_compile_definitions(nalu PUBLIC NALU_USE_POWER9_ALIGNMENT)
   if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") AND
       (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 9.0))

@@ -55,7 +55,7 @@ private:
   unsigned densityNp1ID_{stk::mesh::InvalidOrdinal};
   unsigned sourceID_{stk::mesh::InvalidOrdinal};
 
-  NALU_ALIGNED NodeKernelTraits::DblType gravity_[NodeKernelTraits::NDimMax];
+   NodeKernelTraits::DblType gravity_[NodeKernelTraits::NDimMax];
 };
 
 } // namespace nalu
