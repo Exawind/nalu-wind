@@ -1,3 +1,4 @@
+
 // Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
 // Northwest Research Associates. Under the terms of Contract DE-NA0003525
@@ -234,6 +235,9 @@ public:
   std::vector<std::string> dynamicBodyForceDragTarget_;
   std::string dynamicBodyForceOutFile_;
   bool dynamicBodyForceBox_{false};
+
+  // Super ellipse body file
+  std::string superEllipseBodyFile_;
 
   std::string name_;
 

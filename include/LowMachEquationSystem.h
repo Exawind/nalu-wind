@@ -16,6 +16,7 @@
 #include "FieldTypeDef.h"
 #include "NaluParsedTypes.h"
 #include "AMSAlgDriver.h"
+#include "SuperEllipseBodySrc.h"
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
 #include "ngp_algorithms/NodalBuoyancyAlgDriver.h"
@@ -235,6 +236,7 @@ public:
 
 private:
   ScalarFieldType* Udiag_;
+  std::unique_ptr<SuperEllipseBodySrc> seb_;
 };
 
 class ContinuityEquationSystem : public EquationSystem

@@ -12,6 +12,7 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumActuatorNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumCoriolisNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSSTAMSForcingNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSuperEllipseBodyNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarGclNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarMassBDFNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/SDRSSTAMSNodeKernel.C
