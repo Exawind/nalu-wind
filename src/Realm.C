@@ -413,25 +413,34 @@ void
 Realm::initialize_prolog()
 {
   NaluEnv::self().naluOutputP0() << "Realm::initialize() Begin " << std::endl;
+  NaluEnv::self().naluOutputP0() << "begin element " << std::endl;
 
   if (doPromotion_) {
     setup_element_promotion();
   }
+  NaluEnv::self().naluOutputP0() << "Memory Overview: " << std::endl;
+  NaluEnv::self().naluOutputP0() << "element \n";
 
   /* // setup OpenFAST FSI stuff */
   /* if (openfast_ != NULL) */
   /*   openfast_->setup(); */
 
+  NaluEnv::self().naluOutputP0() << "reg fields \n";
   // field registration
   setup_nodal_fields();
   setup_edge_fields();
   setup_element_fields();
 
+  NaluEnv::self().naluOutputP0() << "prop setup \n";
   // property maps and evaluation algorithms
   setup_property();
 
+  NaluEnv::self().naluOutputP0() << "Setup aero \n";
+
   if (aeroModels_->is_active())
     aeroModels_->setup(get_time_step_from_file(), bulkData_);
+
+  NaluEnv::self().naluOutputP0() << "aero setup \n";
 
   // interior algorithm creation
   setup_interior_algorithms();
@@ -613,6 +622,8 @@ Realm::look_ahead_and_creation(const YAML::Node& node)
 
   // Contains actuators and FSI data structures
   aeroModels_ = std::make_unique<AeroContainer>(node);
+  if (aeroModels_->has_six_dof())
+    solutionOptions_->openturbineSixDof_ = true;
   if (aeroModels_->has_fsi())
     solutionOptions_->openfastFSI_ = true;
 
@@ -1023,7 +1034,7 @@ Realm::setup_interior_algorithms()
           << "Skipping registration of MeshVelocityEdgeAlg on part "
           << p->name()
           << ". GCL operations are currently only supported on HEX_8 "
-             "elemeents.\n";
+             "elements.\n";
         continue;
       }
       if (realmUsesEdges_) {
@@ -3476,10 +3487,10 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
       init_current_coordinates();
 
       // reset the current time for the meshMotionAlgs
-      if (has_mesh_motion())
+      if (has_mesh_motion() && !aeroModels_->has_six_dof())
         meshMotionAlg_->restart_reinit(foundRestartTime);
 
-      if (aeroModels_->has_fsi()) {
+      if (aeroModels_->has_fsi() || aeroModels_->has_six_dof()) {
         NaluEnv::self().naluOutputP0()
           << "Aero models - Update displacements and set current coordinates"
           << std::endl;
@@ -3488,7 +3499,7 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
 
       compute_geometry();
 
-      if (has_mesh_motion())
+      if (has_mesh_motion() && !aeroModels_->has_six_dof())
         meshMotionAlg_->post_compute_geometry();
     }
   }
@@ -4665,7 +4676,7 @@ Realm::post_converged_work()
   if (aeroModels_->is_active()) {
     NaluEnv::self().naluOutputP0()
       << "Aero models - advance model timestep" << std::endl;
-    aeroModels_->advance_model_time_step(get_current_time());
+    aeroModels_->advance_model_time_step(get_current_time(), timeIntegrator_->get_time_step());
   }
 
   // FIXME: Consider a unified collection of post processing work

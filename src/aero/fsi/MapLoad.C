@@ -14,7 +14,6 @@
 namespace fsi {
 
 using namespace sierra::nalu;
-
 void
 mapTowerLoad(
   const stk::mesh::BulkData& bulk,

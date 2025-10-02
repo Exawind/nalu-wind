@@ -15,6 +15,19 @@
 // stk
 #include <stk_mesh/base/Part.hpp>
 
+#include "aero/aero_utils/ForceMoment.h"
+
+namespace fsi {
+std::array<double, 6>
+accumulateLoadsAndMoments(
+  const stk::mesh::BulkData& bulk,
+  const stk::mesh::PartVector& surface,
+  const sierra::nalu::VectorFieldType& modelCoords,
+  const sierra::nalu::VectorFieldType& meshDisp,
+  const sierra::nalu::GenericFieldType& tforceSCS,
+  std::array<double, 3> &center_of_mass);
+}
+
 namespace sierra {
 namespace nalu {
 
