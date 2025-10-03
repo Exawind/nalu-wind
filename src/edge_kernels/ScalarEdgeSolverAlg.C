@@ -89,7 +89,7 @@ ScalarEdgeSolverAlg::execute()
       const stk::mesh::FastMeshIndex& nodeL,
       const stk::mesh::FastMeshIndex& nodeR) {
       // Scratch work array for edgeAreaVector
-      NALU_ALIGNED DblType av[NDimMax_];
+      DblType av[NDimMax_];
       // Populate area vector work array
       for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(edge, d);

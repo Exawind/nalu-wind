@@ -1,4 +1,5 @@
 target_sources(nalu PRIVATE
+   ${CMAKE_CURRENT_SOURCE_DIR}/CompileTimeElements.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Hex8CVFEM.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Hex8FEM.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MasterElement.C

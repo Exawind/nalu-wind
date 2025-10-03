@@ -402,7 +402,7 @@ area_weighted_face_normal_shear_stress(
   // haven't decided on a more general way to separate out the space
   // transformation from the assembly
 
-  NALU_ALIGNED Scalar base_box[3][8];
+  Scalar base_box[3][8];
   hex_vertex_coordinates<p, Scalar>(xc, base_box);
 
   const auto& nodalInterp = ops.mat_.linearNodalInterp;
@@ -417,22 +417,19 @@ area_weighted_face_normal_shear_stress(
   ops.scs_xhat_grad(vel, gradu_scs);
   ops.scs_xhat_interp(visc, visc_scs);
   for (int k = 0; k < p + 1; ++k) {
-    NALU_ALIGNED const Scalar interpk[2] = {
-      nodalInterp(0, k), nodalInterp(1, k)};
+    const Scalar interpk[2] = {nodalInterp(0, k), nodalInterp(1, k)};
     for (int j = 0; j < p + 1; ++j) {
-      NALU_ALIGNED const Scalar interpj[2] = {
-        nodalInterp(0, j), nodalInterp(1, j)};
+      const Scalar interpj[2] = {nodalInterp(0, j), nodalInterp(1, j)};
       for (int i = 0; i < p; ++i) {
-        NALU_ALIGNED const Scalar interpi[2] = {
-          scsInterp(0, i), scsInterp(1, i)};
+        const Scalar interpi[2] = {scsInterp(0, i), scsInterp(1, i)};
 
-        NALU_ALIGNED Scalar jact[3][3];
+        Scalar jact[3][3];
         hex_jacobian_t(base_box, interpi, interpj, interpk, jact);
 
-        NALU_ALIGNED Scalar adjJac[3][3];
+        Scalar adjJac[3][3];
         adjugate_matrix33(jact, adjJac);
 
-        NALU_ALIGNED Scalar local_grad[3][3];
+        Scalar local_grad[3][3];
         for (int d = 0; d < 3; ++d) {
           local_grad[d][XH] = adjJac[XH][XH] * gradu_scs(k, j, i, d, XH) +
                               adjJac[XH][YH] * gradu_scs(k, j, i, d, YH) +
@@ -445,7 +442,7 @@ area_weighted_face_normal_shear_stress(
                               adjJac[ZH][ZH] * gradu_scs(k, j, i, d, ZH);
         }
 
-        NALU_ALIGNED Scalar areav[3];
+        Scalar areav[3];
         areav_from_jacobian_t<XH>(jact, areav);
 
         const Scalar inv_detj =
@@ -482,21 +479,19 @@ area_weighted_face_normal_shear_stress(
   ops.scs_yhat_grad(vel, gradu_scs);
   ops.scs_yhat_interp(visc, visc_scs);
   for (int k = 0; k < p + 1; ++k) {
-    NALU_ALIGNED const Scalar interpk[2] = {
-      nodalInterp(0, k), nodalInterp(1, k)};
+    const Scalar interpk[2] = {nodalInterp(0, k), nodalInterp(1, k)};
     for (int j = 0; j < p; ++j) {
-      NALU_ALIGNED const Scalar interpj[2] = {scsInterp(0, j), scsInterp(1, j)};
+      const Scalar interpj[2] = {scsInterp(0, j), scsInterp(1, j)};
       for (int i = 0; i < p + 1; ++i) {
-        NALU_ALIGNED const Scalar interpi[2] = {
-          nodalInterp(0, i), nodalInterp(1, i)};
+        const Scalar interpi[2] = {nodalInterp(0, i), nodalInterp(1, i)};
 
-        NALU_ALIGNED Scalar jact[3][3];
+        Scalar jact[3][3];
         hex_jacobian_t(base_box, interpi, interpj, interpk, jact);
 
-        NALU_ALIGNED Scalar adjJac[3][3];
+        Scalar adjJac[3][3];
         adjugate_matrix33(jact, adjJac);
 
-        NALU_ALIGNED Scalar local_grad[3][3];
+        Scalar local_grad[3][3];
         for (int d = 0; d < 3; ++d) {
           local_grad[d][XH] = adjJac[XH][XH] * gradu_scs(k, j, i, d, XH) +
                               adjJac[XH][YH] * gradu_scs(k, j, i, d, YH) +
@@ -509,7 +504,7 @@ area_weighted_face_normal_shear_stress(
                               adjJac[ZH][ZH] * gradu_scs(k, j, i, d, ZH);
         }
 
-        NALU_ALIGNED Scalar areav[3];
+        Scalar areav[3];
         areav_from_jacobian_t<YH>(jact, areav);
 
         const Scalar inv_detj =
@@ -546,21 +541,19 @@ area_weighted_face_normal_shear_stress(
   ops.scs_zhat_grad(vel, gradu_scs);
   ops.scs_zhat_interp(visc, visc_scs);
   for (int k = 0; k < p; ++k) {
-    NALU_ALIGNED const Scalar interpk[2] = {scsInterp(0, k), scsInterp(1, k)};
+    const Scalar interpk[2] = {scsInterp(0, k), scsInterp(1, k)};
     for (int j = 0; j < p + 1; ++j) {
-      NALU_ALIGNED const Scalar interpj[2] = {
-        nodalInterp(0, j), nodalInterp(1, j)};
+      const Scalar interpj[2] = {nodalInterp(0, j), nodalInterp(1, j)};
       for (int i = 0; i < p + 1; ++i) {
-        NALU_ALIGNED const Scalar interpi[2] = {
-          nodalInterp(0, i), nodalInterp(1, i)};
+        const Scalar interpi[2] = {nodalInterp(0, i), nodalInterp(1, i)};
 
-        NALU_ALIGNED Scalar jact[3][3];
+        Scalar jact[3][3];
         hex_jacobian_t(base_box, interpi, interpj, interpk, jact);
 
-        NALU_ALIGNED Scalar adjJac[3][3];
+        Scalar adjJac[3][3];
         adjugate_matrix33(jact, adjJac);
 
-        NALU_ALIGNED Scalar local_grad[3][3];
+        Scalar local_grad[3][3];
         for (int d = 0; d < 3; ++d) {
           local_grad[d][XH] = adjJac[XH][XH] * gradu_scs(k, j, i, d, XH) +
                               adjJac[XH][YH] * gradu_scs(k, j, i, d, YH) +
@@ -573,7 +566,7 @@ area_weighted_face_normal_shear_stress(
                               adjJac[ZH][ZH] * gradu_scs(k, j, i, d, ZH);
         }
 
-        NALU_ALIGNED Scalar areav[3];
+        Scalar areav[3];
         areav_from_jacobian_t<ZH>(jact, areav);
         const Scalar inv_detj =
           2 * visc_scs(k, j, i) /

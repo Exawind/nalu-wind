@@ -20,7 +20,171 @@
 #include <random>
 
 #include "UnitTestUtils.h"
+#include "StkSimdComparisons.h"
 
+namespace sierra::nalu {
+
+namespace {
+constexpr auto
+near(double x, double y)
+{
+  return (x - y) > 0 ? x - y < 1e-12 : y - x < 1e-12;
+}
+} // namespace
+
+TEST(master_element_coeffs, static_asserts)
+{
+  static constexpr auto interp_hex =
+    utils::interpolants<Hex8Basis>(HexIntegrationRule<QuadType::SHIFTED>::scv);
+
+  static_assert(near(interp_hex(0, 0), 1));
+  static_assert(near(interp_hex(1, 0), 0));
+  static_assert(near(interp_hex(1, 1), 1));
+  static_assert(near(interp_hex(2, 1), 0));
+  static_assert(near(interp_hex(2, 2), 1));
+  static_assert(near(interp_hex(5, 6), 0));
+  static_assert(near(interp_hex(7, 7), 1));
+}
+
+namespace {
+std::vector<DoubleType>
+me_shape(stk::topology topo, QuadRank r, QuadType q)
+{
+  auto me =
+    (r == QuadRank::SCS)
+      ? sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+          topo)
+      : sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(
+          topo);
+  std::vector<DoubleType> meShapeFunctions(
+    me->nodesPerElement_ * me->num_integration_points());
+  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>
+    ShmemView(
+      meShapeFunctions.data(), me->num_integration_points(),
+      me->nodesPerElement_);
+
+  if (q == QuadType::SHIFTED) {
+    me->shifted_shape_fcn<>(ShmemView);
+  } else {
+    me->shape_fcn<>(ShmemView);
+  }
+  return meShapeFunctions;
+}
+
+} // namespace
+
+TEST(master_element_coeffs, interp_scs)
+{
+  for (auto q : {QuadType::SHIFTED, QuadType::MID}) {
+    {
+      const auto shp = shape_fcn<AlgTraitsHex8, QuadRank::SCS>(q);
+      const auto shp_ptr = &(shp.internal_data_[0][0]);
+
+      auto shp_me = me_shape(stk::topology::HEX_8, QuadRank::SCS, q);
+      for (size_t j = 0; j < shp_me.size(); ++j) {
+        ASSERT_DOUBLETYPE_NEAR(shp_me[j], shp_ptr[j], 1e-12);
+      }
+    }
+
+    {
+      const auto shp = shape_fcn<AlgTraitsPyr5, QuadRank::SCS>(q);
+      const auto shp_ptr = &(shp.internal_data_[0][0]);
+
+      auto shp_me = me_shape(stk::topology::PYRAMID_5, QuadRank::SCS, q);
+      for (size_t j = 0; j < shp_me.size(); ++j) {
+        ASSERT_DOUBLETYPE_NEAR(shp_me[j], shp_ptr[j], 1e-12);
+      }
+    }
+
+    {
+      const auto shp = shape_fcn<AlgTraitsWed6, QuadRank::SCS>(q);
+      const auto shp_ptr = &(shp.internal_data_[0][0]);
+
+      auto shp_me = me_shape(stk::topology::WEDGE_6, QuadRank::SCS, q);
+      for (size_t j = 0; j < shp_me.size(); ++j) {
+        ASSERT_DOUBLETYPE_NEAR(shp_me[j], shp_ptr[j], 1e-12);
+      }
+    }
+
+    {
+      const auto shp = shape_fcn<AlgTraitsTet4, QuadRank::SCS>(q);
+      const auto shp_ptr = &(shp.internal_data_[0][0]);
+
+      auto shp_me = me_shape(stk::topology::TET_4, QuadRank::SCS, q);
+      for (size_t j = 0; j < shp_me.size(); ++j) {
+        ASSERT_DOUBLETYPE_NEAR(shp_me[j], shp_ptr[j], 1e-12);
+      }
+    }
+  }
+}
+
+TEST(master_element_coeffs, interp_scv)
+{
+  for (auto q : {QuadType::SHIFTED, QuadType::MID}) {
+
+    {
+      const auto shp = shape_fcn<AlgTraitsHex8, QuadRank::SCV>(q);
+      const auto shp_ptr = &(shp.internal_data_[0][0]);
+
+      auto shp_me = me_shape(stk::topology::HEX_8, QuadRank::SCV, q);
+      for (size_t j = 0; j < shp_me.size(); ++j) {
+        ASSERT_DOUBLETYPE_NEAR(shp_me[j], shp_ptr[j], 1e-12);
+      }
+    }
+
+    {
+      const auto shp = shape_fcn<AlgTraitsPyr5, QuadRank::SCV>(q);
+      const auto shp_ptr = &(shp.internal_data_[0][0]);
+
+      auto shp_me = me_shape(stk::topology::PYRAMID_5, QuadRank::SCV, q);
+      for (size_t j = 0; j < shp_me.size(); ++j) {
+        ASSERT_DOUBLETYPE_NEAR(shp_me[j], shp_ptr[j], 1e-12);
+      }
+    }
+
+    {
+      const auto shp = shape_fcn<AlgTraitsWed6, QuadRank::SCV>(q);
+      const auto shp_ptr = &(shp.internal_data_[0][0]);
+
+      auto shp_me = me_shape(stk::topology::WEDGE_6, QuadRank::SCV, q);
+      for (size_t j = 0; j < shp_me.size(); ++j) {
+        ASSERT_DOUBLETYPE_NEAR(shp_me[j], shp_ptr[j], 1e-12);
+      }
+    }
+
+    {
+      const auto shp = shape_fcn<AlgTraitsTet4, QuadRank::SCV>(q);
+      const auto shp_ptr = &(shp.internal_data_[0][0]);
+
+      auto shp_me = me_shape(stk::topology::TET_4, QuadRank::SCV, q);
+      for (size_t j = 0; j < shp_me.size(); ++j) {
+        ASSERT_DOUBLETYPE_NEAR(shp_me[j], shp_ptr[j], 1e-12);
+      }
+    }
+
+    {
+      const auto shp = shape_fcn<AlgTraitsQuad4_2D, QuadRank::SCV>(q);
+      const auto shp_ptr = &(shp.internal_data_[0][0]);
+
+      auto shp_me = me_shape(stk::topology::QUAD_4_2D, QuadRank::SCV, q);
+      for (size_t j = 0; j < shp_me.size(); ++j) {
+        ASSERT_DOUBLETYPE_NEAR(shp_me[j], shp_ptr[j], 1e-12);
+      }
+    }
+
+    {
+      const auto shp = shape_fcn<AlgTraitsTri3_2D, QuadRank::SCV>(q);
+      const auto shp_ptr = &(shp.internal_data_[0][0]);
+
+      auto shp_me = me_shape(stk::topology::TRI_3_2D, QuadRank::SCV, q);
+      for (size_t j = 0; j < shp_me.size(); ++j) {
+        ASSERT_DOUBLETYPE_NEAR(shp_me[j], shp_ptr[j], 1e-12);
+      }
+    }
+  }
+}
+
+} // namespace sierra::nalu
 namespace {
 
 TEST(pyramid, is_in_element)

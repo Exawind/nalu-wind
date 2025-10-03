@@ -198,16 +198,16 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
   ScratchViews<DoubleType>& elemScratchViews,
   int elemFaceOrdinal)
 {
-  NALU_ALIGNED DoubleType w_uBip[BcAlgTraits::nDim_];
-  NALU_ALIGNED DoubleType w_uScs[BcAlgTraits::nDim_];
-  NALU_ALIGNED DoubleType w_uBipExtrap[BcAlgTraits::nDim_];
-  NALU_ALIGNED DoubleType w_uspecBip[BcAlgTraits::nDim_];
-  NALU_ALIGNED DoubleType w_coordBip[BcAlgTraits::nDim_];
-  NALU_ALIGNED DoubleType w_nx[BcAlgTraits::nDim_];
-  NALU_ALIGNED DoubleType w_GuBip[BcAlgTraits::nDim_ * BcAlgTraits::nDim_];
-  NALU_ALIGNED DoubleType w_NOC[BcAlgTraits::nDim_];
-  NALU_ALIGNED DoubleType w_coordScs[BcAlgTraits::nDim_];
-  NALU_ALIGNED DoubleType w_dxBip[BcAlgTraits::nDim_];
+  DoubleType w_uBip[BcAlgTraits::nDim_];
+  DoubleType w_uScs[BcAlgTraits::nDim_];
+  DoubleType w_uBipExtrap[BcAlgTraits::nDim_];
+  DoubleType w_uspecBip[BcAlgTraits::nDim_];
+  DoubleType w_coordBip[BcAlgTraits::nDim_];
+  DoubleType w_nx[BcAlgTraits::nDim_];
+  DoubleType w_GuBip[BcAlgTraits::nDim_ * BcAlgTraits::nDim_];
+  DoubleType w_NOC[BcAlgTraits::nDim_];
+  DoubleType w_coordScs[BcAlgTraits::nDim_];
+  DoubleType w_dxBip[BcAlgTraits::nDim_];
 
   const int* face_node_ordinals = meSCS_->side_node_ordinals(elemFaceOrdinal);
 

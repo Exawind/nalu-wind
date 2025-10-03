@@ -123,7 +123,7 @@ MomentumSymmetryElemKernel<BcAlgTraits>::execute(
   for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
     const int nn = meSCS_->ipNodeMap(elemFaceOrdinal)[ip];
 
-    NALU_ALIGNED Kokkos::Array<DoubleType, 3> uIp = {{0, 0, 0}};
+    Kokkos::Array<DoubleType, 3> uIp = {{0, 0, 0}};
     DoubleType viscIp = 0.;
     for (int n = 0; n < BcAlgTraits::nodesPerFace_; ++n) {
       const auto r = vf_shape_function_(ip, n);
@@ -156,7 +156,7 @@ MomentumSymmetryElemKernel<BcAlgTraits>::execute(
       rhs(indexR) -= -penaltyFac * un * areavIp[dj] * inv_amag;
     }
 
-    NALU_ALIGNED Kokkos::Array<Kokkos::Array<DoubleType, 3>, 3> viscStressIp;
+    Kokkos::Array<Kokkos::Array<DoubleType, 3>, 3> viscStressIp;
     for (int dj = 0; dj < dim; ++dj) {
       for (int di = 0; di < dim; ++di) {
         viscStressIp[dj][di] = 0;

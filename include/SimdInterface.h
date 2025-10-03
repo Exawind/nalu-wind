@@ -30,8 +30,7 @@ typedef stk::simd::Double SimdDouble;
 typedef SimdDouble DoubleType;
 
 template <typename T>
-using AlignedVector =
-  std::vector<T, non_std::AlignedAllocator<T, KOKKOS_MEMORY_ALIGNMENT>>;
+using AlignedVector = std::vector<T>;
 
 using ScalarAlignedVector = AlignedVector<DoubleType>;
 

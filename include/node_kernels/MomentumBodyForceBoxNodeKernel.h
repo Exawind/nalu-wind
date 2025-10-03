@@ -55,10 +55,9 @@ private:
   stk::mesh::NgpField<double> coordinates_;
   stk::mesh::NgpField<double> dualNodalVolume_;
 
-  NALU_ALIGNED NodeKernelTraits::DblType
-    forceVector_[NodeKernelTraits::NDimMax];
-  NALU_ALIGNED NodeKernelTraits::DblType lo_[NodeKernelTraits::NDimMax];
-  NALU_ALIGNED NodeKernelTraits::DblType hi_[NodeKernelTraits::NDimMax];
+  NodeKernelTraits::DblType forceVector_[NodeKernelTraits::NDimMax];
+  NodeKernelTraits::DblType lo_[NodeKernelTraits::NDimMax];
+  NodeKernelTraits::DblType hi_[NodeKernelTraits::NDimMax];
   stk::mesh::Part* mdotPart_;
   GeometryAlgDriver* geometryAlgDriver_;
   MdotAlgDriver* mdotAlgDriver_;

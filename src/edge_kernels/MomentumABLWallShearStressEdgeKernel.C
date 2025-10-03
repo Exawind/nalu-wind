@@ -63,7 +63,7 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
     DeviceShmem>& /* elemScratchViews */,
   int elemFaceOrdinal)
 {
-  NALU_ALIGNED DoubleType tauWall[BcAlgTraits::nDim_];
+  DoubleType tauWall[BcAlgTraits::nDim_];
 
   const auto& v_areavec = scratchViews.get_scratch_view_2D(exposedAreaVec_);
   const auto& v_wallshearstress =

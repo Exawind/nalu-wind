@@ -117,7 +117,7 @@ MdotEdgeAlg::execute()
   nalu_ngp::run_edge_algorithm(
     "compute_mdot_edge_interior", ngpMesh, sel,
     KOKKOS_LAMBDA(const EntityInfoType& einfo) {
-      NALU_ALIGNED DblType av[NDimMax];
+      DblType av[NDimMax];
 
       for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(einfo.meshIdx, d);
