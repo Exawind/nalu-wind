@@ -116,11 +116,9 @@ MomentumSSTAMSForcingNodeKernel::execute(
   const stk::mesh::FastMeshIndex& node)
 {
   // Scratch work arrays
-   NodeKernelTraits::DblType
-    coords[NodeKernelTraits::NDimMax]; // coordinates
-   NodeKernelTraits::DblType
-    avgU[NodeKernelTraits::NDimMax]; // averageVelocity
-   NodeKernelTraits::DblType
+  NodeKernelTraits::DblType coords[NodeKernelTraits::NDimMax]; // coordinates
+  NodeKernelTraits::DblType avgU[NodeKernelTraits::NDimMax]; // averageVelocity
+  NodeKernelTraits::DblType
     fluctU[NodeKernelTraits::NDimMax]; // fluctuatingVelocity
 
   const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);

@@ -56,7 +56,7 @@ private:
   const unsigned tviscID_{stk::mesh::InvalidOrdinal};
   const unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
 
-   NodeKernelTraits::DblType gravity_[NodeKernelTraits::NDimMax];
+  NodeKernelTraits::DblType gravity_[NodeKernelTraits::NDimMax];
   NodeKernelTraits::DblType turbPr_;
   const NodeKernelTraits::DblType beta_;
   const int nDim_;

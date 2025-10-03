@@ -138,8 +138,9 @@ ABLWallFrictionVelAlg<BcAlgTraits>::ABLWallFrictionVelAlg(
     Tref_(Tref),
     kappa_(kappa),
     useShifted_(useShifted),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
-      BcAlgTraits::topo_))
+    meFC_(
+      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+        BcAlgTraits::topo_))
 {
   faceData_.add_cvfem_face_me(meFC_);
 
@@ -207,9 +208,9 @@ ABLWallFrictionVelAlg<BcAlgTraits>::execute()
     algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
     KOKKOS_LAMBDA(ElemSimdData & edata, nalu_ngp::ArraySimdDouble2 & uSum) {
       // Unit normal vector
-       DoubleType nx[BcAlgTraits::nDim_];
-       DoubleType velIp[BcAlgTraits::nDim_];
-       DoubleType bcVelIp[BcAlgTraits::nDim_];
+      DoubleType nx[BcAlgTraits::nDim_];
+      DoubleType velIp[BcAlgTraits::nDim_];
+      DoubleType bcVelIp[BcAlgTraits::nDim_];
 
       auto& scrViews = edata.simdScrView;
       const auto& v_vel = scrViews.get_scratch_view_2D(velID);

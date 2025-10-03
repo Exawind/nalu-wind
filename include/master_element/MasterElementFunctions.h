@@ -90,12 +90,12 @@ generic_grad_op(
       weights.extent_int(i) == referenceGradWeights.extent_int(i));
 
   for (int ip = 0; ip < referenceGradWeights.extent_int(0); ++ip) {
-     ftype jact[dim][dim];
+    ftype jact[dim][dim];
     for (int i = 0; i < dim; ++i)
       for (int j = 0; j < dim; ++j)
         jact[i][j] = ftype(0.0);
 
-     ftype refGrad[AlgTraits::nodesPerElement_][dim];
+    ftype refGrad[AlgTraits::nodesPerElement_][dim];
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
       for (int i = 0; i < dim; ++i) {
         refGrad[n][i] = referenceGradWeights(ip, n, i);
@@ -107,17 +107,17 @@ generic_grad_op(
       }
     }
 
-     ftype adjJac[dim][dim];
+    ftype adjJac[dim][dim];
     cofactorMatrix(adjJac, jact);
 
-     ftype det = ftype(0.0);
+    ftype det = ftype(0.0);
     for (int i = 0; i < dim; ++i)
       det += jact[i][0] * adjJac[i][0];
     STK_NGP_ThrowAssertMsg(
       stk::simd::are_any(det > tiny_positive_value()),
       "Problem with Jacobian determinant");
 
-     const ftype inv_detj = ftype(1.0) / det;
+    const ftype inv_detj = ftype(1.0) / det;
 
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
       for (int i = 0; i < dim; ++i) {
@@ -157,8 +157,7 @@ generic_gij_3d(
 
   for (int ip = 0; ip < referenceGradWeights.extent_int(0); ++ip) {
 
-     ftype jac[3][3] = {
-      {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
+    ftype jac[3][3] = {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
       jac[0][0] += referenceGradWeights(ip, n, 0) * coords(n, 0);
       jac[0][1] += referenceGradWeights(ip, n, 1) * coords(n, 0);
@@ -193,7 +192,7 @@ generic_gij_3d(
 
     // the covariant is the inverse of the contravariant by definition
     // gUpper is symmetric
-     const ftype inv_detj =
+    const ftype inv_detj =
       ftype(1.0) /
       (gup(ip, 0, 0) *
          (gup(ip, 1, 1) * gup(ip, 2, 2) - gup(ip, 1, 2) * gup(ip, 1, 2)) -
@@ -607,8 +606,7 @@ generic_determinant_3d(
   STK_NGP_ThrowAssert(detj.extent_int(0) == referenceGradWeights.extent_int(0));
 
   for (int ip = 0; ip < referenceGradWeights.extent_int(0); ++ip) {
-     ftype jac[3][3] = {
-      {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
+    ftype jac[3][3] = {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
       jac[0][0] += referenceGradWeights(ip, n, 0) * coords(n, 0);
       jac[0][1] += referenceGradWeights(ip, n, 1) * coords(n, 0);

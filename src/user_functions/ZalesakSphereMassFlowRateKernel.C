@@ -59,12 +59,12 @@ ZalesakSphereMassFlowRateEdgeAlg::execute()
       const stk::mesh::FastMeshIndex& nodeL,
       const stk::mesh::FastMeshIndex& nodeR) {
       // Scratch work array for edgeAreaVector
-       DblType av[NDimMax_];
+      DblType av[NDimMax_];
       // Populate area vector work array
       for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
 
-       DblType edge_centroid[NDimMax_];
+      DblType edge_centroid[NDimMax_];
       for (int d = 0; d < ndim; ++d)
         edge_centroid[d] =
           0.5 * coordinates.get(nodeL, d) + 0.5 * coordinates.get(nodeR, d);

@@ -160,10 +160,12 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
       "wall_normal_distance_bip",
       realm.meta_data().side_rank())),
     useShifted_(useShifted),
-    meFC_(MasterElementRepo::get_surface_master_element_on_dev(
-      BcAlgTraits::FaceTraits::topo_)),
-    meSCS_(MasterElementRepo::get_surface_master_element_on_dev(
-      BcAlgTraits::ElemTraits::topo_))
+    meFC_(
+      MasterElementRepo::get_surface_master_element_on_dev(
+        BcAlgTraits::FaceTraits::topo_)),
+    meSCS_(
+      MasterElementRepo::get_surface_master_element_on_dev(
+        BcAlgTraits::ElemTraits::topo_))
 {
   faceData_.add_cvfem_face_me(meFC_);
   elemData_.add_cvfem_surface_me(meSCS_);
@@ -350,15 +352,15 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
     KOKKOS_LAMBDA(
       FaceElemSimdData & feData, nalu_ngp::ArraySimdDouble2 & uSum) {
       // Unit normal vector
-       DoubleType nx[BcAlgTraits::nDim_];
+      DoubleType nx[BcAlgTraits::nDim_];
 
       // Velocities
-       DoubleType velIp[BcAlgTraits::nDim_];
-       DoubleType velOppNode[BcAlgTraits::nDim_];
-       DoubleType bcVelIp[BcAlgTraits::nDim_];
+      DoubleType velIp[BcAlgTraits::nDim_];
+      DoubleType velOppNode[BcAlgTraits::nDim_];
+      DoubleType bcVelIp[BcAlgTraits::nDim_];
 
       // Surface stress
-       DoubleType tauSurf_calc[BcAlgTraits::nDim_];
+      DoubleType tauSurf_calc[BcAlgTraits::nDim_];
       DoubleType utau_calc;
       DoubleType qSurf_calc;
 
@@ -427,10 +429,10 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
         DoubleType uOppNodeTangential = 0.0;
         DoubleType uAverageTangential = 0.0;
 
-         DoubleType uiIpTan[BcAlgTraits::nDim_];
-         DoubleType uiOppNodeTan[BcAlgTraits::nDim_];
-         DoubleType uiAverageTan[BcAlgTraits::nDim_];
-         DoubleType uiBcTan[BcAlgTraits::nDim_];
+        DoubleType uiIpTan[BcAlgTraits::nDim_];
+        DoubleType uiOppNodeTan[BcAlgTraits::nDim_];
+        DoubleType uiAverageTan[BcAlgTraits::nDim_];
+        DoubleType uiBcTan[BcAlgTraits::nDim_];
         for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
           uiIpTan[i] = 0.0;
           uiOppNodeTan[i] = 0.0;
@@ -521,7 +523,7 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
 
           DblType tol = 1.0E-6;
           DblType utau = 0.0;
-           DblType tauSurf[3];
+          DblType tauSurf[3];
           DblType qSurf = 0.0;
 
           // Compute fluxes with algorithm 1.

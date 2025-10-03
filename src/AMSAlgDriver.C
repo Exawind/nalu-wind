@@ -232,7 +232,7 @@ AMSAlgDriver::initial_production()
     nalu_ngp::run_entity_algorithm(
       "AMSAlgDriver_avgProd", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
-         DblType tij[nalu_ngp::NDimMax * nalu_ngp::NDimMax];
+        DblType tij[nalu_ngp::NDimMax * nalu_ngp::NDimMax];
         for (int i = 0; i < nDim; ++i) {
           for (int j = 0; j < nDim; ++j) {
             const DblType avgSij = 0.5 * (avgDudx.get(mi, i * nDim + j) +
@@ -241,7 +241,7 @@ AMSAlgDriver::initial_production()
           }
         }
 
-         DblType Pij[nalu_ngp::NDimMax * nalu_ngp::NDimMax];
+        DblType Pij[nalu_ngp::NDimMax * nalu_ngp::NDimMax];
         for (int i = 0; i < nDim; ++i) {
           for (int j = 0; j < nDim; ++j) {
             Pij[i * nDim + j] = 0.0;

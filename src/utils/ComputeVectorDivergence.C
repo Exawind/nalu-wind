@@ -20,7 +20,6 @@
 #include <stk_mesh/base/FieldParallel.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
 
-
 #include "FieldTypeDef.h"
 
 namespace sierra {

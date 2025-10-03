@@ -70,8 +70,8 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::execute(
   int elemFaceOrdinal)
 {
   // Work arrays
-   DoubleType nx[BcAlgTraits::nDim_];
-   DoubleType duidxj[BcAlgTraits::nDim_][BcAlgTraits::nDim_];
+  DoubleType nx[BcAlgTraits::nDim_];
+  DoubleType duidxj[BcAlgTraits::nDim_][BcAlgTraits::nDim_];
 
   // Field variables on the boundary face
   auto& v_visc = faceScratchViews.get_scratch_view_1D(viscosity_);

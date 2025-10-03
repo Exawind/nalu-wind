@@ -120,7 +120,7 @@ StreletsUpwindEdgeAlg::execute()
         0.5 * (sst_maxlen.get(nodeL, 0) + sst_maxlen.get(nodeR, 0));
 
       // Scratch work array for edgeAreaVector
-       DblType av[nalu_ngp::NDimMax];
+      DblType av[nalu_ngp::NDimMax];
       // Populate area vector work array
       for (int d = 0; d < nDim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
@@ -142,7 +142,7 @@ StreletsUpwindEdgeAlg::execute()
         dui/dxj = GjUi +[(uiR - uiL) - GlUi*dxl]*Aj/AxDx
         where Gp is the interpolated pth nodal gradient for ui
       */
-       DblType duidxj[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
+      DblType duidxj[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
       for (int i = 0; i < nDim; ++i) {
         const auto dui = vel.get(nodeR, i) - vel.get(nodeL, i);
         const auto offset = i * nDim;

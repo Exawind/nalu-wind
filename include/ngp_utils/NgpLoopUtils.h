@@ -258,9 +258,10 @@ run_edge_algorithm(
 
   run_entity_algorithm(
     algName, mesh, rank, sel, KOKKOS_LAMBDA(MeshIndex & meshIdx) {
-      algorithm(EntityInfo<Mesh>{
-        meshIdx, mesh.get_entity(rank, meshIdx),
-        mesh.get_nodes(rank, meshIdx)});
+      algorithm(
+        EntityInfo<Mesh>{
+          meshIdx, mesh.get_entity(rank, meshIdx),
+          mesh.get_nodes(rank, meshIdx)});
     });
 }
 
@@ -292,9 +293,10 @@ run_elem_algorithm(
 
   run_entity_algorithm(
     algName, mesh, rank, sel, KOKKOS_LAMBDA(MeshIndex & meshIdx) {
-      algorithm(EntityInfo<Mesh>{
-        meshIdx, mesh.get_entity(rank, meshIdx),
-        mesh.get_nodes(rank, meshIdx)});
+      algorithm(
+        EntityInfo<Mesh>{
+          meshIdx, mesh.get_entity(rank, meshIdx),
+          mesh.get_nodes(rank, meshIdx)});
     });
 }
 

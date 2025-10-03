@@ -20,7 +20,6 @@ double field_norm(
   const sierra::nalu::ScalarFieldType& field,
   const stk::mesh::BulkData& bulk,
   stk::mesh::Selector selector);
-
 }
 
 #endif /* UNITTESTFIELDUTILS_H */

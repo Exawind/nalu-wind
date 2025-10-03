@@ -28,40 +28,38 @@ do_the_interleave_test()
   auto team_exec =
     sierra::nalu::get_host_team_policy(1, bytes_per_team, bytes_per_thread);
 
-  Kokkos::parallel_for(
-    team_exec, KOKKOS_LAMBDA(const TeamType& team) {
-      sierra::nalu::SharedMemView<DoubleType*, ShmemType> simdView =
-        sierra::nalu::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
-          team, N);
-      sierra::nalu::SharedMemView<double*, ShmemType>
-        views[sierra::nalu::simdLen];
-      const double* data[sierra::nalu::simdLen];
-      for (int i = 0; i < sierra::nalu::simdLen; ++i) {
-        views[i] =
-          sierra::nalu::get_shmem_view_1D<double, TeamType, ShmemType>(team, N);
-      }
+  Kokkos::parallel_for(team_exec, KOKKOS_LAMBDA(const TeamType& team) {
+    sierra::nalu::SharedMemView<DoubleType*, ShmemType> simdView =
+      sierra::nalu::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(team, N);
+    sierra::nalu::SharedMemView<double*, ShmemType>
+      views[sierra::nalu::simdLen];
+    const double* data[sierra::nalu::simdLen];
+    for (int i = 0; i < sierra::nalu::simdLen; ++i) {
+      views[i] =
+        sierra::nalu::get_shmem_view_1D<double, TeamType, ShmemType>(team, N);
+    }
 
-      Kokkos::parallel_for(
-        Kokkos::TeamThreadRange(team, 1), [&](const size_t& /* index */) {
-          for (int i = 0; i < sierra::nalu::simdLen; ++i) {
-            for (int j = 0; j < N; ++j) {
-              views[i](j) = j + 1;
-            }
-            data[i] = views[i].data();
-          }
-
-          sierra::nalu::interleave(simdView, data, sierra::nalu::simdLen);
-          result.d_view(0) = 1;
-
+    Kokkos::parallel_for(
+      Kokkos::TeamThreadRange(team, 1), [&](const size_t& /* index */) {
+        for (int i = 0; i < sierra::nalu::simdLen; ++i) {
           for (int j = 0; j < N; ++j) {
-            for (int i = 0; i < sierra::nalu::simdLen; ++i) {
-              if (stk::simd::get_data(simdView(j), i) != j + 1) {
-                result.d_view(0) = 0;
-              }
+            views[i](j) = j + 1;
+          }
+          data[i] = views[i].data();
+        }
+
+        sierra::nalu::interleave(simdView, data, sierra::nalu::simdLen);
+        result.d_view(0) = 1;
+
+        for (int j = 0; j < N; ++j) {
+          for (int i = 0; i < sierra::nalu::simdLen; ++i) {
+            if (stk::simd::get_data(simdView(j), i) != j + 1) {
+              result.d_view(0) = 0;
             }
           }
-        });
-    });
+        }
+      });
+  });
 
   result.modify<IntViewType::execution_space>();
   result.sync<IntViewType::host_mirror_space>();
