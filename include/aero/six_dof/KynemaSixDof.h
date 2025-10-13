@@ -108,8 +108,8 @@ private:
 
   std::array<double, 3> gravity_ = {0.0, 0.0, 0.0};
 
-  int writeFreq_{
-    30}; // Frequency to write line loads and deflections to netcdf file
+  // Frequency to write line loads and deflections to netcdf file
+  int writeFreq_{30};
 
   int number_of_bodies_{0};
 
