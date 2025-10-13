@@ -6,13 +6,15 @@
 // This software is released under the BSD 3-clause license. See LICENSE file
 // for more details.
 //
-#include "aero/six_dof/KynemaSixDof.h"
 #include <aero/AeroContainer.h>
 #include <NaluEnv.h>
 #include <NaluParsingHelper.h>
 #include <stk_mesh/base/Part.hpp>
 #ifdef NALU_USES_OPENFAST
 #include "aero/fsi/OpenfastFSI.h"
+#endif
+#ifdef NALU_USES_KYNEMA
+#include "aero/six_dof/KynemaSixDof.h"
 #endif
 #include <FieldTypeDef.h>
 #include <stk_io/IossBridge.hpp>
@@ -49,7 +51,12 @@ AeroContainer::AeroContainer(const YAML::Node& node) : fsiContainer_(nullptr)
     actuatorModel_.parse(*foundActuator[0]);
   }
   if (node["kynema_six_dof"]) {
+#ifdef NALU_USES_KYNEMA
     sixDof_ = std::make_shared<KynemaSixDof>(node["kynema_six_dof"]);
+#else
+    throw std::runtime_error(
+      "6DOF coupling can not be used without coupling to Kynema");
+#endif
   }
   // std::vector<const YAML::Node*> foundFsi;
   // NaluParsingHelper::find_nodes_given_key("openfast_fsi", node, foundFsi);

@@ -16,10 +16,10 @@
 #include <stk_mesh/base/Part.hpp>
 #include <yaml-cpp/yaml.h>
 #include "aero/actuator/ActuatorModel.h"
-#include "aero/six_dof/KynemaSixDof.h"
 
 namespace sierra::nalu {
 class OpenfastFSI;
+class KynemaSixDof;
 
 /**
  * A container class for holding all the aerodynamic models (actuators,
