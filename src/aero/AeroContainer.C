@@ -173,7 +173,8 @@ AeroContainer::predict_model_time_step(const double currentTime)
 }
 
 void
-AeroContainer::advance_model_time_step(const double currentTime, const double dT)
+AeroContainer::advance_model_time_step(
+  const double currentTime, const double dT)
 {
   if (has_six_dof()) {
     (void)currentTime;
@@ -224,9 +225,7 @@ AeroContainer::six_dof_parts()
   }
   stk::mesh::PartVector all_part_vec;
   return all_part_vec;
-
 }
-
 
 const stk::mesh::PartVector
 AeroContainer::fsi_bndry_parts()

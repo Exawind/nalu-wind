@@ -22,19 +22,21 @@ namespace nalu {
 
 struct Tether
 {
-  std::array<double,3> fairlead_position = {0.0, 0.0, 0.0};
-  std::array<double,3> anchor_position = {0.0, 0.0, 0.0};
+  std::array<double, 3> fairlead_position = {0.0, 0.0, 0.0};
+  std::array<double, 3> anchor_position = {0.0, 0.0, 0.0};
   double stiffness{0.0};
   double initial_length{0.0};
 };
-struct PointMass 
+struct PointMass
 {
   bool use_restart_data = false;
-  std::shared_ptr<kynema::interfaces::cfd::Interface> kynema_interface = nullptr;
-  std::array<double,9> moments_of_inertia = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-  std::array<double,3> center_of_mass = {0.0, 0.0, 0.0};
+  std::shared_ptr<kynema::interfaces::cfd::Interface> kynema_interface =
+    nullptr;
+  std::array<double, 9> moments_of_inertia = {0.0, 0.0, 0.0, 0.0, 0.0,
+                                              0.0, 0.0, 0.0, 0.0};
+  std::array<double, 3> center_of_mass = {0.0, 0.0, 0.0};
   double mass{0.0};
-  std::vector<Tether> tethers; 
+  std::vector<Tether> tethers;
   std::vector<std::string> forcing_surface_names;
   std::vector<std::string> moving_mesh_block_names;
   stk::mesh::PartVector forcing_surfaces;
@@ -64,11 +66,11 @@ public:
 
   void map_loads();
 
-  const stk::mesh::PartVector
-  get_mesh_blocks() {
+  const stk::mesh::PartVector get_mesh_blocks()
+  {
     stk::mesh::PartVector all_mesh_blocks;
-    for (auto && point : point_bodies_) {
-      for (auto && block : point.moving_mesh_blocks) {
+    for (auto&& point : point_bodies_) {
+      for (auto&& block : point.moving_mesh_blocks) {
         all_mesh_blocks.push_back(block);
       }
     }
@@ -79,11 +81,14 @@ private:
   KynemaSixDof() = delete;
   KynemaSixDof(const KynemaSixDof&) = delete;
 
-  void map_displacements_point(PointMass &point, bool updateCur);
+  void map_displacements_point(PointMass& point, bool updateCur);
 
-  void setup_point(PointMass &point, const double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk);
+  void setup_point(
+    PointMass& point,
+    const double dtNalu,
+    std::shared_ptr<stk::mesh::BulkData> bulk);
 
-  void map_loads_point(PointMass &point);
+  void map_loads_point(PointMass& point);
 
   void load_point(const YAML::Node&);
 
@@ -118,4 +123,4 @@ private:
 
 } // namespace sierra
 
-#endif 
+#endif

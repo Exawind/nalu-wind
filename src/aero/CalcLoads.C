@@ -38,9 +38,10 @@ accumulateLoadsAndMoments(
   const sierra::nalu::VectorFieldType& modelCoords,
   const sierra::nalu::VectorFieldType& meshDisp,
   const sierra::nalu::GenericFieldType& tforceSCS,
-  std::array<double, 3> &center_of_mass)
+  std::array<double, 3>& center_of_mass)
 {
-  std::array<double, 6> accumulated_forces_and_moments = {0., 0., 0., 0., 0., 0.};
+  std::array<double, 6> accumulated_forces_and_moments = {0., 0., 0.,
+                                                          0., 0., 0.};
   // nodal fields to gather and store at ip's
   std::vector<double> ws_face_shape_function;
 
@@ -95,7 +96,6 @@ accumulateLoadsAndMoments(
         }
       }
 
-
       // Get reference to load map and loadMapInterp at all ips on this face
       const double* tforce = stk::mesh::field_data(tforceSCS, face);
 
@@ -116,16 +116,15 @@ accumulateLoadsAndMoments(
         // Now compute the force and moment on the interpolated reference
         // position
         fsi::computeEffForceMoment(
-          tforce_bip.data(), coord_bip.data(), accumulated_forces_and_moments.data(),
-          center_of_mass.data());
+          tforce_bip.data(), coord_bip.data(),
+          accumulated_forces_and_moments.data(), center_of_mass.data());
       }
     }
   }
 
   return accumulated_forces_and_moments;
-
 }
-}
+} // namespace fsi
 
 namespace sierra {
 namespace nalu {

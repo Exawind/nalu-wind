@@ -4676,7 +4676,8 @@ Realm::post_converged_work()
   if (aeroModels_->is_active()) {
     NaluEnv::self().naluOutputP0()
       << "Aero models - advance model timestep" << std::endl;
-    aeroModels_->advance_model_time_step(get_current_time(), timeIntegrator_->get_time_step());
+    aeroModels_->advance_model_time_step(
+      get_current_time(), timeIntegrator_->get_time_step());
   }
 
   // FIXME: Consider a unified collection of post processing work
