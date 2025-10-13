@@ -16,7 +16,7 @@
 #include <stk_mesh/base/Part.hpp>
 #include <yaml-cpp/yaml.h>
 #include "aero/actuator/ActuatorModel.h"
-#include "aero/six_dof/OpenTurbineSixDof.h"
+#include "aero/six_dof/KynemaSixDof.h"
 
 namespace sierra::nalu {
 class OpenfastFSI;
@@ -70,7 +70,7 @@ private:
   ActuatorModel actuatorModel_;
   // TODO make this a unique_ptr
   OpenfastFSI* fsiContainer_;
-  std::shared_ptr<OpenTurbineSixDof> sixDof_;
+  std::shared_ptr<KynemaSixDof> sixDof_;
   std::shared_ptr<stk::mesh::BulkData> bulk_;
 };
 

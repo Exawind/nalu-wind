@@ -6,7 +6,7 @@
 // This software is released under the BSD 3-clause license. See LICENSE file
 // for more details.
 //
-#include "aero/six_dof/OpenTurbineSixDof.h"
+#include "aero/six_dof/KynemaSixDof.h"
 #include <aero/AeroContainer.h>
 #include <NaluEnv.h>
 #include <NaluParsingHelper.h>
@@ -48,8 +48,8 @@ AeroContainer::AeroContainer(const YAML::Node& node) : fsiContainer_(nullptr)
         "look_ahead_and_create::error: Too many actuator line blocks");
     actuatorModel_.parse(*foundActuator[0]);
   }
-  if (node["openturbine_six_dof"]) {
-    sixDof_ = std::make_shared<OpenTurbineSixDof>(node["openturbine_six_dof"]);
+  if (node["kynema_six_dof"]) {
+    sixDof_ = std::make_shared<KynemaSixDof>(node["kynema_six_dof"]);
   }
   // std::vector<const YAML::Node*> foundFsi;
   // NaluParsingHelper::find_nodes_given_key("openfast_fsi", node, foundFsi);

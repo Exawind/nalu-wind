@@ -1,5 +1,5 @@
-#ifndef OPENTURBINESIXDOF_H
-#define OPENTURBINESIXDOF_H
+#ifndef KYNEMASIXDOF_H
+#define KYNEMASIXDOF_H
 
 #include <array>
 #include <memory>
@@ -30,7 +30,7 @@ struct Tether
 struct PointMass 
 {
   bool use_restart_data = false;
-  std::shared_ptr<openturbine::interfaces::cfd::Interface> openturbine_interface = nullptr;
+  std::shared_ptr<kynema::interfaces::cfd::Interface> kynema_interface = nullptr;
   std::array<double,9> moments_of_inertia = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   std::array<double,3> center_of_mass = {0.0, 0.0, 0.0};
   double mass{0.0};
@@ -48,11 +48,11 @@ struct PointMass
   double rho_inf{0.0};
 };
 
-class OpenTurbineSixDof
+class KynemaSixDof
 {
 public:
-  OpenTurbineSixDof(const YAML::Node&);
-  virtual ~OpenTurbineSixDof() = default;
+  KynemaSixDof(const YAML::Node&);
+  virtual ~KynemaSixDof() = default;
 
   void setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk);
 
@@ -76,8 +76,8 @@ public:
   }
 
 private:
-  OpenTurbineSixDof() = delete;
-  OpenTurbineSixDof(const OpenTurbineSixDof&) = delete;
+  KynemaSixDof() = delete;
+  KynemaSixDof(const KynemaSixDof&) = delete;
 
   void map_displacements_point(PointMass &point, bool updateCur);
 
@@ -111,7 +111,7 @@ private:
   int restart_frequency_{0};
 
   std::vector<PointMass> point_bodies_;
-  std::vector<openturbine::interfaces::cfd::Interface> point_body_interfaces_;
+  std::vector<kynema::interfaces::cfd::Interface> point_body_interfaces_;
 };
 
 } // namespace nalu

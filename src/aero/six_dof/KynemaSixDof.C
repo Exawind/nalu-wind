@@ -8,7 +8,7 @@
 //
 
 #include "NaluEnv.h"
-#include "aero/six_dof/OpenTurbineSixDof.h"
+#include "aero/six_dof/KynemaSixDof.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementRepo.h"
 #include <fstream>
@@ -27,14 +27,14 @@ namespace sierra {
 
 namespace nalu {
 
-OpenTurbineSixDof::OpenTurbineSixDof(const YAML::Node& node)
+KynemaSixDof::KynemaSixDof(const YAML::Node& node)
   : enable_calc_loads_(true)
 {
   load(node);
 }
 
 void
-OpenTurbineSixDof::load_point(const YAML::Node& node)
+KynemaSixDof::load_point(const YAML::Node& node)
 {
 
   PointMass new_body;
@@ -115,7 +115,7 @@ OpenTurbineSixDof::load_point(const YAML::Node& node)
 }
 
 void
-OpenTurbineSixDof::load(const YAML::Node& node)
+KynemaSixDof::load(const YAML::Node& node)
 {
   const int ndim = 3;
   get_required(node, "number_of_bodies", number_of_bodies_);
@@ -147,7 +147,7 @@ OpenTurbineSixDof::load(const YAML::Node& node)
 }
 
 void
-OpenTurbineSixDof::setup_point(PointMass &point, const double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk)
+KynemaSixDof::setup_point(PointMass &point, const double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk)
 {
 
   auto mass_matrix = std::array{
@@ -162,7 +162,7 @@ OpenTurbineSixDof::setup_point(PointMass &point, const double dtNalu, std::share
   const double damping_factor = point.rho_inf;
   const int number_of_nonlinear_iterations = point.number_of_nonlinear_iterations;
 
-  openturbine::interfaces::cfd::InterfaceInput point_to_build;
+  kynema::interfaces::cfd::InterfaceInput point_to_build;
   point_to_build.gravity = gravity_;
   point_to_build.time_step = dtNalu;
   point_to_build.max_iter = number_of_nonlinear_iterations;
@@ -183,7 +183,7 @@ OpenTurbineSixDof::setup_point(PointMass &point, const double dtNalu, std::share
   }
 
   point.bulk = bulk;
-  point.openturbine_interface = std::make_shared<openturbine::interfaces::cfd::Interface>(point_to_build);
+  point.kynema_interface = std::make_shared<kynema::interfaces::cfd::Interface>(point_to_build);
 
   auto& meta = bulk->mesh_meta_data();
 
@@ -213,7 +213,7 @@ OpenTurbineSixDof::setup_point(PointMass &point, const double dtNalu, std::share
 
 }
 void
-OpenTurbineSixDof::setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk)
+KynemaSixDof::setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk)
 {
   bulk_ = bulk;
   dt_ = dtNalu;
@@ -223,7 +223,7 @@ OpenTurbineSixDof::setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bul
 }
 
 void
-OpenTurbineSixDof::initialize(int restartFreqNalu, double curTime)
+KynemaSixDof::initialize(int restartFreqNalu, double curTime)
 {
 
   restart_frequency_ = restartFreqNalu;
@@ -233,7 +233,7 @@ OpenTurbineSixDof::initialize(int restartFreqNalu, double curTime)
     if (point_bodies_[ipoint].use_restart_data) {
       std::string file_name = std::to_string(ipoint) + "_" + point_bodies_[ipoint].restart_file_name;
       if (std::filesystem::exists(file_name)) {
-        point_bodies_[ipoint].openturbine_interface->ReadRestart(file_name);
+        point_bodies_[ipoint].kynema_interface->ReadRestart(file_name);
       }
     }
   }
@@ -288,21 +288,21 @@ OpenTurbineSixDof::initialize(int restartFreqNalu, double curTime)
 }
 
 void
-OpenTurbineSixDof::advance_struct_timestep(const double currentTime, const double dT)
+KynemaSixDof::advance_struct_timestep(const double currentTime, const double dT)
 {
   for (int ipoint = 0; ipoint < point_bodies_.size(); ++ipoint) {
     auto && point = point_bodies_[ipoint];
-    point.openturbine_interface->parameters.h = dT;
-    auto converged = point.openturbine_interface->Step();
+    point.kynema_interface->parameters.h = dT;
+    auto converged = point.kynema_interface->Step();
 
     if (!converged) {
       NaluEnv::self().naluOutputP0() << 
-        "OpenTurbine did not converge! Consider raising number_of_nonlinear_iterations for point body " << ipoint << std::endl;
+        "Kynema did not converge! Consider raising number_of_nonlinear_iterations for point body " << ipoint << std::endl;
     }
 
-    if ((point.openturbine_interface->current_timestep_ % restart_frequency_) == 0 && NaluEnv::self().parallel_rank() == 0) {
+    if ((point.kynema_interface->current_timestep_ % restart_frequency_) == 0 && NaluEnv::self().parallel_rank() == 0) {
       std::string file_name = std::to_string(ipoint) + "_" + point.restart_file_name;
-      point.openturbine_interface->WriteRestart(file_name);
+      point.kynema_interface->WriteRestart(file_name);
     }
     // Add output here
     if (point.output_file_name.size() > 0 && NaluEnv::self().parallel_rank() == 0) {
@@ -310,18 +310,18 @@ OpenTurbineSixDof::advance_struct_timestep(const double currentTime, const doubl
       std::ofstream outfile(point.output_file_name, std::ios::app);
       outfile << currentTime << delim;
       for (int idir = 0; idir < 7; ++idir) 
-        outfile << point.openturbine_interface->turbine.floating_platform.node.position[idir] << delim;
+        outfile << point.kynema_interface->turbine.floating_platform.node.position[idir] << delim;
       for (int idir = 0; idir < 6; ++idir) 
-        outfile << point.openturbine_interface->turbine.floating_platform.node.velocity[idir] << delim;
+        outfile << point.kynema_interface->turbine.floating_platform.node.velocity[idir] << delim;
       for (int idir = 0; idir < 5; ++idir) 
-        outfile << point.openturbine_interface->turbine.floating_platform.node.loads[idir] << delim;
-      outfile << point.openturbine_interface->turbine.floating_platform.node.loads[5] << std::endl;
+        outfile << point.kynema_interface->turbine.floating_platform.node.loads[idir] << delim;
+      outfile << point.kynema_interface->turbine.floating_platform.node.loads[5] << std::endl;
     } 
   }
 }
 
 void
-OpenTurbineSixDof::map_displacements_point(PointMass &point, bool updateCur)
+KynemaSixDof::map_displacements_point(PointMass &point, bool updateCur)
 {
   auto& meta = point.bulk->mesh_meta_data();
   const VectorFieldType* modelCoords =
@@ -339,8 +339,8 @@ OpenTurbineSixDof::map_displacements_point(PointMass &point, bool updateCur)
   displacement->sync_to_host();
   meshVelocity->sync_to_host();
  
-  std::array<double, 7> translation_and_rotation_position = point.openturbine_interface->turbine.floating_platform.node.position;
-  std::array<double, 6> translation_and_rotation_velocities = point.openturbine_interface->turbine.floating_platform.node.velocity;
+  std::array<double, 7> translation_and_rotation_position = point.kynema_interface->turbine.floating_platform.node.position;
+  std::array<double, 6> translation_and_rotation_velocities = point.kynema_interface->turbine.floating_platform.node.velocity;
   std::array<double, 3> current_center_of_mass_location = {
     translation_and_rotation_position[0],
     translation_and_rotation_position[1],
@@ -424,7 +424,7 @@ OpenTurbineSixDof::map_displacements_point(PointMass &point, bool updateCur)
 }
 
 void
-OpenTurbineSixDof::map_displacements(double current_time, bool updateCurCoor)
+KynemaSixDof::map_displacements(double current_time, bool updateCurCoor)
 {
   for (auto& point : point_bodies_) {
     map_displacements_point(point, updateCurCoor);
@@ -432,7 +432,7 @@ OpenTurbineSixDof::map_displacements(double current_time, bool updateCurCoor)
 }
 
 void
-OpenTurbineSixDof::map_loads_point(PointMass &point)
+KynemaSixDof::map_loads_point(PointMass &point)
 {
   point.calc_loads->initialize();
   point.calc_loads->execute();
@@ -444,7 +444,7 @@ OpenTurbineSixDof::map_loads_point(PointMass &point)
     meta.get_field<double>(stk::topology::NODE_RANK, "mesh_displacement");
 
   std::array<double, 7> translation_and_rotation_position = 
-   point.openturbine_interface->turbine.floating_platform.node.position;
+   point.kynema_interface->turbine.floating_platform.node.position;
 
   std::array<double, 3> center_of_mass = { 
     translation_and_rotation_position[0], 
@@ -459,15 +459,15 @@ OpenTurbineSixDof::map_loads_point(PointMass &point)
   MPI_Allreduce(MPI_IN_PLACE, forces_and_moments.data(), 6, MPI_DOUBLE, MPI_SUM, bulk_->parallel());
 
   for (int idim = 0; idim < 6; ++idim) {
-    point.openturbine_interface->turbine.floating_platform.node.loads[idim] = 0.5 * (1.0 - point.rho_inf) * forces_and_moments[idim] +
-      0.5 * (1.0 - point.rho_inf) * point.openturbine_interface->turbine.floating_platform.node.loads[idim] + 
-      point.openturbine_interface->turbine.floating_platform.node.loads[idim] * point.rho_inf; 
+    point.kynema_interface->turbine.floating_platform.node.loads[idim] = 0.5 * (1.0 - point.rho_inf) * forces_and_moments[idim] +
+      0.5 * (1.0 - point.rho_inf) * point.kynema_interface->turbine.floating_platform.node.loads[idim] + 
+      point.kynema_interface->turbine.floating_platform.node.loads[idim] * point.rho_inf; 
   }
 
 }
 
 void
-OpenTurbineSixDof::map_loads()
+KynemaSixDof::map_loads()
 {
   for (auto &point : point_bodies_) {
     map_loads_point(point);
