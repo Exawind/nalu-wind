@@ -229,9 +229,6 @@ KynemaSixDof::setup_point(
     point.forcing_surfaces.push_back(part);
 
     const auto the_topo = part->topology();
-    // auto me_fc =
-    // MasterElementRepo::get_surface_master_element_on_host(the_topo); const
-    // int numScsIp = me_fc->num_integration_points();
 
     stk::mesh::put_field_on_mesh(
       *point.total_force, *part, 4 * 2 * meta.spatial_dimension(), nullptr);
