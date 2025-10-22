@@ -234,7 +234,8 @@ test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
       AlgTraits::topo_);
 
   // Execute the loop and perform all tests
-  driver.execute([&](sierra::nalu::SharedMemData<
+  driver.execute([&](
+                   sierra::nalu::SharedMemData<
                      sierra::nalu::DeviceTeamHandleType,
                      sierra::nalu::DeviceShmem>& smdata) {
     // Extract data from scratchViews
@@ -310,9 +311,9 @@ TEST(KokkosME, test_tet4_views)
 
 TEST(KokkosME, test_tri32D_views)
 {
-  test_ME_views<sierra::nalu::AlgTraitsTri3_2D>({sierra::nalu::SCS_AREAV,
-                                                 sierra::nalu::SCS_GRAD_OP,
-                                                 sierra::nalu::SCV_VOLUME});
+  test_ME_views<sierra::nalu::AlgTraitsTri3_2D>(
+    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP,
+     sierra::nalu::SCV_VOLUME});
 }
 
 TEST(KokkosME, test_tri32D_shifted_grad_op)
@@ -323,9 +324,9 @@ TEST(KokkosME, test_tri32D_shifted_grad_op)
 
 TEST(KokkosME, test_quad42D_views)
 {
-  test_ME_views<sierra::nalu::AlgTraitsQuad4_2D>({sierra::nalu::SCS_AREAV,
-                                                  sierra::nalu::SCS_GRAD_OP,
-                                                  sierra::nalu::SCV_VOLUME});
+  test_ME_views<sierra::nalu::AlgTraitsQuad4_2D>(
+    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP,
+     sierra::nalu::SCV_VOLUME});
 }
 
 TEST(KokkosME, test_quad42D_shifted_grad_op)
@@ -336,9 +337,9 @@ TEST(KokkosME, test_quad42D_shifted_grad_op)
 
 TEST(KokkosME, test_wed6_views)
 {
-  test_ME_views<sierra::nalu::AlgTraitsWed6>({sierra::nalu::SCV_VOLUME,
-                                              sierra::nalu::SCS_AREAV,
-                                              sierra::nalu::SCS_GRAD_OP});
+  test_ME_views<sierra::nalu::AlgTraitsWed6>(
+    {sierra::nalu::SCV_VOLUME, sierra::nalu::SCS_AREAV,
+     sierra::nalu::SCS_GRAD_OP});
 }
 
 TEST(KokkosME, test_wed6_shifted_grad_op)
@@ -349,9 +350,9 @@ TEST(KokkosME, test_wed6_shifted_grad_op)
 
 TEST(KokkosME, test_pyr5_views)
 {
-  test_ME_views<sierra::nalu::AlgTraitsPyr5>({sierra::nalu::SCS_AREAV,
-                                              sierra::nalu::SCS_GRAD_OP,
-                                              sierra::nalu::SCV_VOLUME});
+  test_ME_views<sierra::nalu::AlgTraitsPyr5>(
+    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP,
+     sierra::nalu::SCV_VOLUME});
 }
 
 TEST(KokkosME, test_pyr5_views_shifted_grad_op)

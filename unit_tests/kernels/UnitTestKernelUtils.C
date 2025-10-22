@@ -821,7 +821,7 @@ calc_mass_flow_rate_scs(
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     "unittest_calc_mdot_scs", meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData & edata) {
-       Traits::DblType rhoU[Hex8Traits::nDim_];
+      Traits::DblType rhoU[Hex8Traits::nDim_];
 
       auto& scrViews = edata.simdScrView;
       auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
@@ -908,7 +908,7 @@ calc_open_mass_flow_rate(
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     "unittest_calc_open_mdot", meshInfo, meta.side_rank(), dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata) {
-       Traits::DblType rhoU[Quad4Traits::nDim_];
+      Traits::DblType rhoU[Quad4Traits::nDim_];
 
       auto& scrViews = edata.simdScrView;
       const auto& v_rho = scrViews.get_scratch_view_1D(rhoID);

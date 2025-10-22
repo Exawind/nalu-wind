@@ -107,11 +107,12 @@ run_parallel_for_test()
   // (as is the case for OpenMP), device_vew2D is semantically just a pointer to
   // host_view2D, and the deep_copy is a no-op. That means that the parallel_for
   // which comes next, is updating the values of host_view2D.
-  Kokkos::parallel_for(N, KOKKOS_LAMBDA(const size_t& i) {
-    for (size_t j = 0; j < M; ++j) {
-      device_view2D(i, j) *= 2;
-    }
-  });
+  Kokkos::parallel_for(
+    N, KOKKOS_LAMBDA(const size_t& i) {
+      for (size_t j = 0; j < M; ++j) {
+        device_view2D(i, j) *= 2;
+      }
+    });
 
   // This deep_copy is a no-op for OpenMP, but for Cuda it is necessary;
   // otherwise the values in host_view2D would not be updated and the following
