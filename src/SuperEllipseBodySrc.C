@@ -24,7 +24,8 @@ namespace nalu {
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 SuperEllipseBodySrc::SuperEllipseBodySrc(const SolutionOptions&  solnOpts ) :
-  seb_file_(solnOpts.superEllipseBodyFile_)
+  seb_file_(solnOpts.superEllipseBodyFile_),
+  seb_dim_(solnOpts.seb_dim_[0], solnOpts.seb_dim_[1], solnOpts.seb_dim_[2])
 {
   std::cerr << "Super Ellipse Body File = " << seb_file_ << std::endl;
   read_from_file();
@@ -48,8 +49,6 @@ void SuperEllipseBodySrc::read_from_file()
 
     fin >> seb_loc_.x() >> seb_loc_.y() >> seb_loc_.z();
     fin >> seb_orient_.x() >> seb_orient_.y() >> seb_orient_.z();
-    fin >> seb_dim_.x() >> seb_dim_.y() >> seb_dim_.z();
-
     fin.close();
 }
 } // namespace nalu

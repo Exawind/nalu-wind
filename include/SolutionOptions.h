@@ -1,4 +1,3 @@
-
 // Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
 // Northwest Research Associates. Under the terms of Contract DE-NA0003525
@@ -19,6 +18,7 @@
 #include <utility>
 #include <memory>
 #include <vector>
+#include <array>
 
 namespace YAML {
 class Node;
@@ -238,6 +238,7 @@ public:
 
   // Super ellipse body file
   std::string superEllipseBodyFile_;
+  std::array<double,3> seb_dim_{0.0,0.0,0.0};
 
   std::string name_;
 
