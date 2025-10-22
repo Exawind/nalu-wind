@@ -923,6 +923,42 @@ Solution Options
           drag_target_name: [top, bottom]
           output_file_name: forcing.dat
 
+   One can make the velocity inside a super ellipse body to go to zero
+
+   .. code-block: yaml
+
+      - source_terms:
+         momentum: super_ellipse_body
+      
+      - user_constants:
+         super_ellipse_body_file: "nacelle_loc.dat"
+
+
+   The `super_ellipse_body_file` specifies the location of the file containing the geometry 
+   of the super ellipse body as 9 parameters. The first 3 lines contain the location, 
+   the next 3 lines contain the Wiener-Milenkovic parameters that represent the transformation 
+   from inertial coordinate system to the orientation of the super ellipse and the last 3 lines 
+   contain the dimensions of the super ellipse. 
+
+   Creates a capability to stop the flow inside a super ellipse defined around a point in 
+   space $\vec{X}_{loc} = (x_{loc},y_{loc},z_{loc})$ with dimensions 
+   $X_c = (x_c, y_c, z_c)$ and orientation with respect to the inertial reference frame 
+   defined by the transformation matrix $\mathbf{R}$. The transformation matrix $\mathbf{R}$ 
+   will be prescribed using a Wiener-Milenkovic parameter instead of the full matrix. 
+   The point in the coordinate system aligned with the super ellipse will be
+   .. math::
+      (\vec{X} - \vec{X}_{loc})' = \mathbf{R} \cdot (\vec{X} - \vec{X}_{loc}).
+
+   A given point in space $\vec{X}$ will be inside the super ellipse if 
+   .. math::
+      \left (\frac{(x-x_{loc})'}{x_c} \right )^6 + \left (\frac{(y-y_{loc})'}{y_c} \right)^6 + \left (\frac{(z-z_{loc})'}{z_c} \right)^6 - 1 < 0.
+   
+   For all mesh nodes inside the super ellipse, a forcing term will be added to the momentum equation 
+   proportional to the negative of flow velocity scaled by the time step $dt$ to bring the velocity 
+   to zero as 
+   .. math::
+      f^{seb}_i = - 10.0 \rho \frac{u_i}{dt} \; \Delta V.
+
 
 Mesh Transformation
 ```````````````````

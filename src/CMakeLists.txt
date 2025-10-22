@@ -85,6 +85,7 @@ target_sources(
    ${CMAKE_CURRENT_SOURCE_DIR}/SolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SolverAlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SpecificDissipationRateEquationSystem.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/SuperEllipseBodySrc.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SupplementalAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentAlgorithmDriver.C
