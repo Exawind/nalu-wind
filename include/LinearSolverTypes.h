@@ -57,7 +57,6 @@ template <
   typename GlobalOrdinal,
   typename Node>
 class Preconditioner;
-
 }
 
 namespace sierra {

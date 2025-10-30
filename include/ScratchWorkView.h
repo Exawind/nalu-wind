@@ -36,7 +36,7 @@ struct ScratchWorkView
   value_type* data() { return data_.data(); }
   const value_type* data() const { return data_.data(); }
 
-  NALU_ALIGNED Kokkos::Array<value_type, n> data_{};
+  Kokkos::Array<value_type, n> data_{};
   ViewType view_{data_.data()};
 };
 

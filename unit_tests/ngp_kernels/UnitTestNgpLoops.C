@@ -21,6 +21,7 @@
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/GetNgpField.hpp"
 #include "Kokkos_DualView.hpp"
+#include "master_element/CompileTimeElements.h"
 
 #include <cmath>
 
@@ -562,16 +563,19 @@ calc_mdot_elem_loop(
   const auto mdotOps =
     sierra::nalu::nalu_ngp::simd_elem_field_updater(ngpMesh, ngpMdot);
 
+  auto v_shape_fcn = sierra::nalu::shape_fcn<
+    sierra::nalu::AlgTraitsHex8, sierra::nalu::QuadRank::SCS>(
+    sierra::nalu::use_shifted_quad(true));
+
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     "unittest_calc_mdot_elem_loop", meshInfo, stk::topology::ELEM_RANK, dataReq,
     sel, KOKKOS_LAMBDA(ElemSimdData & edata) {
-      NALU_ALIGNED Traits::DblType rhoU[Hex8Traits::nDim_];
+      Traits::DblType rhoU[Hex8Traits::nDim_];
       auto& scrViews = edata.simdScrView;
       auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
       auto& v_vel = scrViews.get_scratch_view_2D(velID);
       auto& meViews = scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
       auto& v_area = meViews.scs_areav;
-      auto& v_shape_fcn = meViews.scs_shifted_shape_fcn;
 
       for (int ip = 0; ip < Hex8Traits::numScsIp_; ++ip) {
         for (int d = 0; d < Hex8Traits::nDim_; ++d)

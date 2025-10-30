@@ -16,14 +16,6 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core.hpp>
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-#define NALU_ALIGNED alignas(sizeof(double))
-#elif defined(NALU_USE_POWER9_ALIGNMENT)
-#define NALU_ALIGNED alignas(16)
-#else
-#define NALU_ALIGNED alignas(KOKKOS_MEMORY_ALIGNMENT)
-#endif
-
 #if defined(__INTEL_COMPILER)
 #define POINTER_RESTRICT restrict
 #elif defined(__GNUC__)

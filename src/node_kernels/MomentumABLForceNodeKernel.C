@@ -47,7 +47,7 @@ MomentumABLForceNodeKernel::execute(
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
 {
-  NALU_ALIGNED NodeKernelTraits::DblType momSrc[NodeKernelTraits::NDimMax];
+  NodeKernelTraits::DblType momSrc[NodeKernelTraits::NDimMax];
 
   const NodeKernelTraits::DblType dualVol = dualNodalVolume_.get(node, 0);
 
