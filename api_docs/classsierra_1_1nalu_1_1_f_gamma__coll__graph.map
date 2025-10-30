@@ -1,0 +1,13 @@
+<map id="sierra::nalu::FGamma" name="sierra::nalu::FGamma">
+<area shape="rect" id="Node000001" title="Class to wrap the F_gamma() function with an interface that is compatible with our Functor implementa..." alt="" coords="5,372,168,397"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="93,181,259,207"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="139,215,105,239,91,253,80,270,72,297,73,325,85,371,79,373,68,326,67,296,75,268,87,250,102,235,136,211"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="219,269,394,309"/>
+<area shape="poly" id="edge5_Node000005_Node000002" title=" " alt="" coords="195,215,224,243,264,267,261,272,221,247,191,219"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="177,93,306,119"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="223,130,211,144,185,183,181,180,207,141,219,127"/>
+<area shape="poly" id="edge6_Node000005_Node000003" title=" " alt="" coords="277,125,290,141,304,175,311,210,311,269,306,269,305,210,299,176,286,144,273,129"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="222,5,261,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="244,45,244,93,239,93,239,45"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="251,317,115,374,113,369,249,312"/>
+</map>

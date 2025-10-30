@@ -1,0 +1,11 @@
+<map id="sierra::nalu::WallDistNodeKernel" name="sierra::nalu::WallDistNodeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,80,196,120"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="117,183,324,223"/>
+<area shape="poly" id="edge3_Node000002_Node000001" title=" " alt="" coords="91,133,91,146,95,157,107,170,122,180,119,185,104,174,90,160,85,147,86,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="204,172,184,146,148,122,151,118,188,142,208,169"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_node_kernel.html" title=" " alt="" coords="165,5,343,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="252,44,227,183,221,182,247,43"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="276,87,520,113"/>
+<area shape="poly" id="edge5_Node000004_Node000003" title=" " alt="" coords="288,35,379,85,376,90,285,40"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="367,122,255,185,253,180,365,117"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="sierra::nalu::WedIntegrationRule&lt; QuadType::SHIFTED &gt;" name="sierra::nalu::WedIntegrationRule&lt; QuadType::SHIFTED &gt;">
+<area shape="rect" id="Node000001" title=" " alt="" coords="71,211,279,251"/>
+<area shape="rect" id="Node000002" href="$structsierra_1_1nalu_1_1_array_n_d.html" title=" " alt="" coords="5,108,164,148"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="113,156,160,209,156,212,109,160"/>
+<area shape="rect" id="Node000003" href="$structsierra_1_1nalu_1_1_array_n_d.html" title=" " alt="" coords="80,5,271,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="135,56,119,71,95,109,90,106,115,68,131,52"/>
+<area shape="rect" id="Node000004" href="$structsierra_1_1nalu_1_1_array_n_d.html" title=" " alt="" coords="188,108,347,148"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="213,52,229,68,258,106,254,109,225,71,210,56"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="243,160,195,212,191,209,239,156"/>
+</map>
