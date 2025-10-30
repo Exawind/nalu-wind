@@ -19,7 +19,6 @@
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
-#include <stk_mesh/base/GetBuckets.hpp>
 
 #include "FieldTypeDef.h"
 

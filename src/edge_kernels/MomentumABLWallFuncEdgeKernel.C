@@ -76,7 +76,7 @@ MomentumABLWallFuncEdgeKernel<BcAlgTraits>::execute(
   const DoubleType Lmax = 1.0e8;
 
   // Unit normal vector
-  NALU_ALIGNED DoubleType nx[BcAlgTraits::nDim_];
+  DoubleType nx[BcAlgTraits::nDim_];
 
   const auto& v_vel = scratchViews.get_scratch_view_2D(velocityNp1_);
   const auto& v_bcvel = scratchViews.get_scratch_view_2D(bcVelocity_);

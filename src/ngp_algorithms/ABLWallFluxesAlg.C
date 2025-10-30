@@ -182,10 +182,6 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
     exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceData_.add_face_field(wallNormDist_, BcAlgTraits::numFaceIp_);
 
-  auto shp_fcn = useShifted_ ? FC_SHIFTED_SHAPE_FCN : FC_SHAPE_FCN;
-  faceData_.add_master_element_call(shp_fcn, CURRENT_COORDINATES);
-
-  // Load the user data from the input file.
   load(node);
 }
 
@@ -348,20 +344,23 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
                               std::to_string(BcAlgTraits::faceTopo_) + "_" +
                               std::to_string(BcAlgTraits::elemTopo_);
 
+  const auto shp = shape_fcn<typename BcAlgTraits::FaceTraits, QuadRank::SCV>(
+    use_shifted_quad(useShifted));
+
   nalu_ngp::run_face_elem_par_reduce(
     algName, meshInfo, faceData_, elemData_, sel,
     KOKKOS_LAMBDA(
       FaceElemSimdData & feData, nalu_ngp::ArraySimdDouble2 & uSum) {
       // Unit normal vector
-      NALU_ALIGNED DoubleType nx[BcAlgTraits::nDim_];
+      DoubleType nx[BcAlgTraits::nDim_];
 
       // Velocities
-      NALU_ALIGNED DoubleType velIp[BcAlgTraits::nDim_];
-      NALU_ALIGNED DoubleType velOppNode[BcAlgTraits::nDim_];
-      NALU_ALIGNED DoubleType bcVelIp[BcAlgTraits::nDim_];
+      DoubleType velIp[BcAlgTraits::nDim_];
+      DoubleType velOppNode[BcAlgTraits::nDim_];
+      DoubleType bcVelIp[BcAlgTraits::nDim_];
 
       // Surface stress
-      NALU_ALIGNED DoubleType tauSurf_calc[BcAlgTraits::nDim_];
+      DoubleType tauSurf_calc[BcAlgTraits::nDim_];
       DoubleType utau_calc;
       DoubleType qSurf_calc;
 
@@ -377,8 +376,6 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
       const auto& v_wallnormdist = scrViewsFace.get_scratch_view_1D(wDistID);
 
       const auto meViews = scrViewsFace.get_me_views(CURRENT_COORDINATES);
-      const auto& v_shape_fcn =
-        useShifted ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
       for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
 
@@ -411,7 +408,7 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
         DoubleType tempOppNode = 0.0;
 
         for (int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic) {
-          const DoubleType r = v_shape_fcn(ip, ic);
+          const DoubleType r = shp(ip, ic);
           heatFluxIp += r * v_bcHeatFlux(ic);
           rhoIp += r * v_rho(ic);
           CpIp += r * v_specHeat(ic);
@@ -432,10 +429,10 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
         DoubleType uOppNodeTangential = 0.0;
         DoubleType uAverageTangential = 0.0;
 
-        NALU_ALIGNED DoubleType uiIpTan[BcAlgTraits::nDim_];
-        NALU_ALIGNED DoubleType uiOppNodeTan[BcAlgTraits::nDim_];
-        NALU_ALIGNED DoubleType uiAverageTan[BcAlgTraits::nDim_];
-        NALU_ALIGNED DoubleType uiBcTan[BcAlgTraits::nDim_];
+        DoubleType uiIpTan[BcAlgTraits::nDim_];
+        DoubleType uiOppNodeTan[BcAlgTraits::nDim_];
+        DoubleType uiAverageTan[BcAlgTraits::nDim_];
+        DoubleType uiBcTan[BcAlgTraits::nDim_];
         for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
           uiIpTan[i] = 0.0;
           uiOppNodeTan[i] = 0.0;
@@ -526,7 +523,7 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
 
           DblType tol = 1.0E-6;
           DblType utau = 0.0;
-          NALU_ALIGNED DblType tauSurf[3];
+          DblType tauSurf[3];
           DblType qSurf = 0.0;
 
           // Compute fluxes with algorithm 1.

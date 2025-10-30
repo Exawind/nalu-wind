@@ -23,7 +23,6 @@ namespace overset_utils {
 
 std::vector<OversetFieldData>
 get_overset_field_data(Realm&, std::vector<std::string> fnames);
-
 }
 } // namespace nalu
 } // namespace sierra

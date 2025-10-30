@@ -84,7 +84,7 @@ NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
   const std::string algName = meta.get_fields()[gradPhi_]->name() + "_edge";
   nalu_ngp::run_edge_algorithm(
     algName, ngpMesh, sel, KOKKOS_LAMBDA(const EntityInfoType& einfo) {
-      NALU_ALIGNED DblType av[NDimMax];
+      DblType av[NDimMax];
 
       for (int d = 0; d < dim2; ++d)
         av[d] = edgeAreaVec.get(einfo.meshIdx, d);
