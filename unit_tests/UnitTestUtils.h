@@ -126,7 +126,8 @@ protected:
 
     fill_mesh(meshSpec);
 
-    partVec = std::vector<stk::mesh::Part*>{meta->get_part("block_1")};
+    partVec.clear();
+    partVec.push_back(meta->get_part("block_1"));
 
     coordField = static_cast<const sierra::nalu::VectorFieldType*>(
       meta->coordinate_field());
