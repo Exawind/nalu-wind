@@ -59,7 +59,7 @@ public:
       unit_test_utils::create_one_reference_element(*bulk_, AlgTraits::topo_);
 
     partVec_.clear();
-    partVec_.push_back(meta->get_part("block_1"));
+    partVec_.push_back(meta_->get_part("block_1"));
     coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
       meta_->coordinate_field());
 
