@@ -111,7 +111,7 @@ public:
       unit_test_utils::perturb_coord_hex_8(bulk_);
 
     partVec_.clear();
-    partVec_.push_back(meta_->get_part("block_1"));
+    partVec_.push_back(meta_.get_part("block_1"));
     coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
       meta_.coordinate_field());
     EXPECT_TRUE(coordinates_ != nullptr);
