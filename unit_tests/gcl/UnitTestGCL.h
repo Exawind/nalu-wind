@@ -110,13 +110,15 @@ public:
     if (doPerturb)
       unit_test_utils::perturb_coord_hex_8(bulk_);
 
-    partVec_ = {meta_.get_part("block_1")};
+    partVec_.clear();
+    partVec_.push_back(meta_.get_part("block_1"));
     coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
       meta_.coordinate_field());
     EXPECT_TRUE(coordinates_ != nullptr);
 
     stk::mesh::create_edges(bulk_, meta_.universal_part());
-    bndyPartVec_ = {meta_.get_part("surface_1")};
+    bndyPartVec_.clear();
+    bndyPartVec_.push_back(meta_.get_part("surface_1"));
   }
 
   void init_time_integrator(
