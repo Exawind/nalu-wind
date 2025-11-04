@@ -324,7 +324,8 @@ public:
       unit_test_utils::perturb_coord_hex_8(*bulk_, 0.125);
     }
 
-    partVec_ = {meta_->get_part("block_1")};
+    partVec_.clear();
+    partVec_.push_back(meta->get_part("block_1"));
 
     coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
       meta_->coordinate_field());

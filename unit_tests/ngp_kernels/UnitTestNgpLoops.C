@@ -67,7 +67,8 @@ public:
   fill_mesh_and_init_fields(const std::string& meshSpec = "generated:2x2x2")
   {
     unit_test_utils::fill_hex8_mesh(meshSpec, *bulk);
-    partVec = {meta->get_part("block_1")};
+    partVec.clear();
+    partVec.push_back(meta->get_part("block_1"));
 
     coordField = static_cast<const sierra::nalu::VectorFieldType*>(
       meta->coordinate_field());
