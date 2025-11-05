@@ -21,7 +21,8 @@ public:
   TestABLForcingAlg(sierra::nalu::Realm& realm) : ABLForcingAlgorithm(realm)
   {
     USource_ = {{10.0}, {10.0}, {10.0}};
-    TSource_ = {300.0};
+    TSource_.clear();
+    TSource_.push_back(300.0);
 
     std::vector<double> heights(1, 90.0);
 
