@@ -64,19 +64,6 @@ if(ENABLE_CUDA)
     CUDA::nvToolsExt)
 endif()
 
-if(ENABLE_KYNEMA_SIXDOF)
-  find_package(Kynema QUIET REQUIRED)
-  message(STATUS "Found Kynema = ${Kynema_LIBRARY_DIRS}")
-  # Do these need to be here?
-  #find_package(LAPACK REQUIRED)
-  #find_package(KokkosKernels REQUIRED)
-  #find_package(KLU REQUIRED)
-  #find_package(LAPACK REQUIRED)
-  #find_package(yaml-cpp REQUIRED)
-  #find_package(NetCDF REQUIRED)
-  target_link_libraries(nalu PRIVATE Kynema::kynema_library)
-endif()
-
 if(ENABLE_ROCM)
   find_package(hip REQUIRED)
   message(STATUS "Found HIP = ${HIP_PATH}")
@@ -193,6 +180,15 @@ if(ENABLE_OPENFAST)
   target_link_libraries(nalu PUBLIC ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
   target_include_directories(nalu SYSTEM PUBLIC ${OpenFAST_INCLUDE_DIRS})
   target_compile_definitions(nalu PUBLIC NALU_USES_OPENFAST)
+endif()
+
+########################## KYNEMA ####################################
+if(ENABLE_KYNEMA_SIXDOF)
+  set(CMAKE_PREFIX_PATH ${KYNEMA_DIR} ${CMAKE_PREFIX_PATH})
+  find_package(Kynema QUIET REQUIRED)
+  message(STATUS "Found Kynema = ${Kynema_LIBRARY_DIRS}")
+  target_link_libraries(nalu PUBLIC Kynema::kynema_library)
+  target_compile_definitions(nalu PUBLIC NALU_USES_KYNEMA)
 endif()
 
 ############################ TIOGA #####################################
