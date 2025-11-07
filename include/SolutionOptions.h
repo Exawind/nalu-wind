@@ -18,6 +18,7 @@
 #include <utility>
 #include <memory>
 #include <vector>
+#include <array>
 
 namespace YAML {
 class Node;
@@ -234,6 +235,10 @@ public:
   std::vector<std::string> dynamicBodyForceDragTarget_;
   std::string dynamicBodyForceOutFile_;
   bool dynamicBodyForceBox_{false};
+
+  // Super ellipse body file
+  std::string superEllipseBodyFile_;
+  std::array<double,3> seb_dim_{0.0,0.0,0.0};
 
   std::string name_;
 

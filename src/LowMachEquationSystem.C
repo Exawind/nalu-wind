@@ -93,6 +93,7 @@
 #include "node_kernels/MomentumBoussinesqNodeKernel.h"
 #include "node_kernels/MomentumBuoyancyNodeKernel.h"
 #include "node_kernels/MomentumCoriolisNodeKernel.h"
+#include "node_kernels/MomentumSuperEllipseBodyNodeKernel.h"
 #include "node_kernels/MomentumMassBDFNodeKernel.h"
 #include "node_kernels/MomentumGclSrcNodeKernel.h"
 #include "node_kernels/ContinuityGclNodeKernel.h"
@@ -1472,6 +1473,10 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
         } else if ((srcName == "coriolis") || (srcName == "EarthCoriolis")) {
           nodeAlg.add_kernel<MomentumCoriolisNodeKernel>(
             realm_.bulk_data(), *realm_.solutionOptions_);
+        } else if ((srcName == "superellipsebody") || (srcName == "super_ellipse_body")) {
+          seb_ = std::make_unique<SuperEllipseBodySrc>(*realm_.solutionOptions_);
+          nodeAlg.add_kernel<MomentumSuperEllipseBodyNodeKernel>(
+            realm_.bulk_data(), *realm_.solutionOptions_, *seb_);
         } else if (srcName == "gcl") {
           nodeAlg.add_kernel<MomentumGclSrcNodeKernel>(realm_.bulk_data());
         } else {
@@ -2748,6 +2753,10 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
     ngpUdiag.set_all(realm_.ngp_mesh(), projTimeScale);
     ngpUdiag.modify_on_device();
   }
+
+  // If Super Ellipse Body source is enabled, then read locations and orientations from file
+  if (seb_)
+    seb_->read_from_file();
 
   // Perform actual solve
   EquationSystem::assemble_and_solve(deltaSolution);

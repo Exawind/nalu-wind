@@ -417,6 +417,17 @@ SolutionOptions::load(const YAML::Node& y_node)
             referenceVelocity_);
           get_if_present(
             y_user_constants, "rans_below_ks", RANSBelowKs_, RANSBelowKs_);
+          get_if_present(
+            y_user_constants, "super_ellipse_body_file", superEllipseBodyFile_,
+            superEllipseBodyFile_);
+          std::cerr << "super ellipse body file = " << superEllipseBodyFile_ << std::endl;
+          if (expect_sequence(y_user_constants, "super_ellipse_dim", optional)) {
+              const int seb_dim_size = y_user_constants["super_ellipse_dim"].size();
+              // assert that seb_dim_size is 3
+              for (int i = 0; i < 3; ++i) {
+                  seb_dim_[i] = y_user_constants["super_ellipse_dim"][i].as<double>();
+              }
+          }
 
           if (expect_sequence(y_user_constants, "gravity", optional)) {
             const int gravSize = y_user_constants["gravity"].size();
