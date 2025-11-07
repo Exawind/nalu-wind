@@ -8,6 +8,7 @@ set(NALU_USES_TIOGA @ENABLE_TIOGA@)
 set(NALU_USES_OPENFAST @ENABLE_OPENFAST@)
 set(NALU_USES_FFTW @ENABLE_FFTW@)
 set(NALU_USES_BOOST @ENABLE_BOOST@)
+set(NALU_USES_KYNEMA @ENABLE_KYNEMA_SIXDOF@)
 
 # Load dependency libraries so that the targets are available
 
@@ -43,6 +44,11 @@ endif()
 if (${NALU_USES_FFTW} AND NOT ${FFTW_FOUND})
   set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "@FFTW_DIR@")
   find_package(FFTW QUIET REQUIRED)
+endif()
+
+if (${NALU_USES_KYNEMA} AND NOT ${Kynema_FOUND})
+  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "@Kynema_DIR@")
+  find_package(Kynema QUIET REQUIRED)
 endif()
 
 set_and_check(NALU_WIND_INCLUDE_DIRS "${PACKAGE_PREFIX_DIR}/include")

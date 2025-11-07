@@ -56,7 +56,7 @@ public:
   void load(const YAML::Node& node);
   void initialize_turbulence_constants();
 
-  inline bool has_mesh_motion() const { return meshMotion_; }
+  inline bool has_mesh_motion() const { return meshMotion_ || kynemaSixDof_; }
 
   inline bool has_mesh_deformation() const
   {
@@ -134,6 +134,7 @@ public:
   bool meshTransformation_;
   bool externalMeshDeformation_;
   bool openfastFSI_;
+  bool kynemaSixDof_{false};
   bool ncAlgGaussLabatto_;
   bool ncAlgUpwindAdvection_;
   bool ncAlgIncludePstab_;
