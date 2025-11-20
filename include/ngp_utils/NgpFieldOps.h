@@ -54,8 +54,15 @@ struct SimpleNodeFieldOp
    */
   struct Ops
   {
-    KOKKOS_DEFAULTED_FUNCTION
-    Ops() = default;
+    KOKKOS_INLINE_FUNCTION
+    Ops(
+      const SimpleNodeFieldOp<Mesh, Field>& obj,
+      const EntityInfo<Mesh>& einfo_in,
+      const unsigned ni_in,
+      const unsigned ic_in)
+      : obj_(obj), einfo_(einfo_in), ni(ni_in), ic(ic_in)
+    {
+    }
 
     KOKKOS_DEFAULTED_FUNCTION ~Ops() = default;
 
@@ -102,7 +109,7 @@ struct SimpleNodeFieldOp
     const unsigned n,
     const unsigned ic = 0) const
   {
-    return Ops{*this, einfo, n, ic};
+    return Ops(*this, einfo, n, ic);
   }
 
   //! NGP Mesh instance
@@ -140,8 +147,15 @@ struct NodeFieldOp
    */
   struct Ops
   {
-    KOKKOS_DEFAULTED_FUNCTION
-    Ops() = default;
+    KOKKOS_INLINE_FUNCTION
+    Ops(
+      const NodeFieldOp<Mesh, Field, SimdDataType>& obj,
+      const SimdDataType& edata_in,
+      const unsigned ni_in,
+      const unsigned ic_in)
+      : obj_(obj), edata_(edata_in), ni(ni_in), ic(ic_in)
+    {
+    }
 
     KOKKOS_DEFAULTED_FUNCTION ~Ops() = default;
 
@@ -236,7 +250,7 @@ struct NodeFieldOp
   const Ops operator()(
     const SimdDataType& edata, const unsigned n, const unsigned ic = 0) const
   {
-    return Ops{*this, edata, n, ic};
+    return Ops(*this, edata, n, ic);
   }
 
   //! NGP Mesh instance
@@ -264,8 +278,14 @@ struct ElemFieldOp
    */
   struct Ops
   {
-    KOKKOS_DEFAULTED_FUNCTION
-    Ops() = default;
+    KOKKOS_INLINE_FUNCTION
+    Ops(
+      const ElemFieldOp<Mesh, Field, SimdDataType>& obj,
+      const SimdDataType& edata_in,
+      unsigned ic_in)
+      : obj_(obj), edata_(edata_in), ic(ic_in)
+    {
+    }
 
     KOKKOS_DEFAULTED_FUNCTION ~Ops() = default;
 
@@ -346,7 +366,7 @@ struct ElemFieldOp
   KOKKOS_INLINE_FUNCTION
   const Ops operator()(const SimdDataType& edata, const unsigned ic) const
   {
-    return Ops{*this, edata, ic};
+    return Ops(*this, edata, ic);
   }
 
   //! NGP element field to be updated
