@@ -187,7 +187,7 @@ if(ENABLE_KYNEMA_SIXDOF)
   set(CMAKE_PREFIX_PATH ${KYNEMA_DIR} ${CMAKE_PREFIX_PATH})
   find_package(Kynema QUIET REQUIRED)
   message(STATUS "Found Kynema = ${Kynema_LIBRARY_DIRS}")
-  target_link_libraries(nalu PUBLIC Kynema::kynema_library)
+  target_link_libraries(nalu PRIVATE Kynema::kynema_library)
   target_compile_definitions(nalu PUBLIC NALU_USES_KYNEMA)
 endif()
 
