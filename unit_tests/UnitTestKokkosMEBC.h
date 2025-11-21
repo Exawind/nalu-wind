@@ -61,7 +61,9 @@ public:
       unit_test_utils::create_one_reference_element(
         *bulk_, BcAlgTraits::elemTopo_);
 
-    partVec_ = {meta_->get_part("surface_" + std::to_string(faceOrdinal_))};
+    partVec_.clear();
+    partVec_.push_back(
+      meta_->get_part("surface_" + std::to_string(faceOrdinal_)));
     coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
       meta_->coordinate_field());
 
