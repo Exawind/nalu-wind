@@ -413,34 +413,25 @@ void
 Realm::initialize_prolog()
 {
   NaluEnv::self().naluOutputP0() << "Realm::initialize() Begin " << std::endl;
-  NaluEnv::self().naluOutputP0() << "begin element " << std::endl;
 
   if (doPromotion_) {
     setup_element_promotion();
   }
-  NaluEnv::self().naluOutputP0() << "Memory Overview: " << std::endl;
-  NaluEnv::self().naluOutputP0() << "element \n";
 
   /* // setup OpenFAST FSI stuff */
   /* if (openfast_ != NULL) */
   /*   openfast_->setup(); */
 
-  NaluEnv::self().naluOutputP0() << "reg fields \n";
   // field registration
   setup_nodal_fields();
   setup_edge_fields();
   setup_element_fields();
 
-  NaluEnv::self().naluOutputP0() << "prop setup \n";
   // property maps and evaluation algorithms
   setup_property();
 
-  NaluEnv::self().naluOutputP0() << "Setup aero \n";
-
   if (aeroModels_->is_active())
     aeroModels_->setup(get_time_step_from_file(), bulkData_);
-
-  NaluEnv::self().naluOutputP0() << "aero setup \n";
 
   // interior algorithm creation
   setup_interior_algorithms();
