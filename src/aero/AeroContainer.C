@@ -9,7 +9,6 @@
 #include <aero/AeroContainer.h>
 #include <NaluEnv.h>
 #include <NaluParsingHelper.h>
-#include <stk_mesh/base/Part.hpp>
 #ifdef NALU_USES_OPENFAST
 #include "aero/fsi/OpenfastFSI.h"
 #endif
@@ -193,7 +192,6 @@ AeroContainer::advance_model_time_step(
 {
 #ifdef NALU_USES_KYNEMA
   if (has_six_dof()) {
-    (void)currentTime; // should this be here?
     sixDof_->advance_struct_timestep(currentTime, dT);
     return;
   }
