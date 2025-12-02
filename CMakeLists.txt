@@ -24,6 +24,7 @@ option(ENABLE_TIOGA "Use TIOGA TPL to perform overset connectivity" OFF)
 option(ENABLE_OPENMP "Enable OpenMP flags" OFF)
 option(ENABLE_BOOST  "Enable Boost libraries" OFF)
 option(ENABLE_MATRIXFREE "Enable high-order matrix-free computation" ON)
+option(ENABLE_KYNEMA_SIXDOF "Use Kynema as 6 degree-of-freedom solver" OFF)
 
 option(NALU_WIND_SAVE_GOLDS  "Save gold files to directory when running tests" OFF)
 
@@ -179,6 +180,15 @@ if(ENABLE_OPENFAST)
   target_link_libraries(nalu PUBLIC ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
   target_include_directories(nalu SYSTEM PUBLIC ${OpenFAST_INCLUDE_DIRS})
   target_compile_definitions(nalu PUBLIC NALU_USES_OPENFAST)
+endif()
+
+########################## KYNEMA ####################################
+if(ENABLE_KYNEMA_SIXDOF)
+  set(CMAKE_PREFIX_PATH ${KYNEMA_DIR} ${CMAKE_PREFIX_PATH})
+  find_package(Kynema QUIET REQUIRED)
+  message(STATUS "Found Kynema = ${Kynema_LIBRARY_DIRS}")
+  target_link_libraries(nalu PRIVATE Kynema::kynema_library)
+  target_compile_definitions(nalu PUBLIC NALU_USES_KYNEMA)
 endif()
 
 ############################ TIOGA #####################################

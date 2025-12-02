@@ -29,6 +29,103 @@
 #include <string>
 #include <vector>
 
+namespace fsi {
+using namespace sierra::nalu;
+std::array<double, 6>
+accumulateLoadsAndMoments(
+  const stk::mesh::BulkData& bulk,
+  const stk::mesh::PartVector& surface,
+  const sierra::nalu::VectorFieldType& modelCoords,
+  const sierra::nalu::VectorFieldType& meshDisp,
+  const sierra::nalu::GenericFieldType& tforceSCS,
+  std::array<double, 3>& center_of_mass)
+{
+  std::array<double, 6> accumulated_forces_and_moments = {0., 0., 0.,
+                                                          0., 0., 0.};
+  // nodal fields to gather and store at ip's
+  std::vector<double> ws_face_shape_function;
+
+  std::vector<double> ws_coordinates;
+  std::vector<double> coord_bip(3, 0.0);
+  std::vector<double> coordref_bip(3, 0.0);
+
+  std::array<double, 3> tforce_bip;
+
+  std::vector<double> tmpNodePos(
+    3, 0.0); // Vector to temporarily store a position vector
+  std::vector<double> tmpNodeDisp(
+    3, 0.0); // Vector to temporarily store a displacement vector
+
+  const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
+
+  stk::mesh::Selector sel(
+    meta.locally_owned_part() & stk::mesh::selectUnion(surface));
+  const auto& bkts = bulk.get_buckets(meta.side_rank(), sel);
+  for (auto b : bkts) {
+    // face master element
+    MasterElement* meFC =
+      MasterElementRepo::get_surface_master_element_on_host(b->topology());
+    const int nodesPerFace = meFC->nodesPerElement_;
+    const int numScsBip = meFC->num_integration_points();
+
+    // mapping from ip to nodes for this ordinal;
+    // face perspective (use with face_node_relations)
+    ws_face_shape_function.resize(numScsBip * nodesPerFace);
+
+    SharedMemView<double**, HostShmem> p_face_shape_function(
+      ws_face_shape_function.data(), numScsBip, nodesPerFace);
+
+    meFC->shape_fcn<>(p_face_shape_function);
+
+    ws_coordinates.resize(ndim * nodesPerFace);
+
+    for (size_t in = 0; in < b->size(); in++) {
+      // get face
+      stk::mesh::Entity face = (*b)[in];
+      // face node relations
+      stk::mesh::Entity const* face_node_rels = bulk.begin_nodes(face);
+      // gather nodal data off of face
+      for (int ni = 0; ni < nodesPerFace; ++ni) {
+        stk::mesh::Entity node = face_node_rels[ni];
+        // gather coordinates
+        const double* xyz = stk::mesh::field_data(modelCoords, node);
+        const double* xyz_disp = stk::mesh::field_data(meshDisp, node);
+        for (auto i = 0; i < ndim; i++) {
+          ws_coordinates[ni * ndim + i] = xyz[i] + xyz_disp[i];
+        }
+      }
+
+      // Get reference to load map and loadMapInterp at all ips on this face
+      const double* tforce = stk::mesh::field_data(tforceSCS, face);
+
+      for (int ip = 0; ip < numScsBip; ++ip) {
+        // Get coordinates and pressure force at this ip
+        for (auto i = 0; i < ndim; i++) {
+          coord_bip[i] = 0.0;
+        }
+        for (int ni = 0; ni < nodesPerFace; ni++) {
+          const double r = p_face_shape_function(ip, ni);
+          for (int i = 0; i < ndim; i++) {
+            coord_bip[i] += r * ws_coordinates[ni * ndim + i];
+          }
+        }
+        for (auto idim = 0; idim < 3; idim++)
+          tforce_bip[idim] = tforce[ip * 3 + idim];
+
+        // Now compute the force and moment on the interpolated reference
+        // position
+        fsi::computeEffForceMoment(
+          tforce_bip.data(), coord_bip.data(),
+          accumulated_forces_and_moments.data(), center_of_mass.data());
+      }
+    }
+  }
+
+  return accumulated_forces_and_moments;
+}
+} // namespace fsi
+
 namespace sierra {
 namespace nalu {
 

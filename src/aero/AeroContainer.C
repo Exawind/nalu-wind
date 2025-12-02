@@ -12,6 +12,9 @@
 #ifdef NALU_USES_OPENFAST
 #include "aero/fsi/OpenfastFSI.h"
 #endif
+#ifdef NALU_USES_KYNEMA
+#include "aero/six_dof/KynemaSixDof.h"
+#endif
 #include <FieldTypeDef.h>
 #include <stk_io/IossBridge.hpp>
 
@@ -45,6 +48,14 @@ AeroContainer::AeroContainer(const YAML::Node& node) : fsiContainer_(nullptr)
       throw std::runtime_error(
         "look_ahead_and_create::error: Too many actuator line blocks");
     actuatorModel_.parse(*foundActuator[0]);
+  }
+  if (node["kynema_six_dof"]) {
+#ifdef NALU_USES_KYNEMA
+    sixDof_ = std::make_shared<KynemaSixDof>(node["kynema_six_dof"]);
+#else
+    throw std::runtime_error(
+      "6DOF coupling can not be used without coupling to Kynema");
+#endif
   }
   // std::vector<const YAML::Node*> foundFsi;
   // NaluParsingHelper::find_nodes_given_key("openfast_fsi", node, foundFsi);
@@ -88,6 +99,11 @@ AeroContainer::setup(double timeStep, std::shared_ptr<stk::mesh::BulkData> bulk)
   if (has_actuators()) {
     actuatorModel_.setup(timeStep, *bulk_);
   }
+#ifdef NALU_USES_KYNEMA
+  if (has_six_dof()) {
+    sixDof_->setup(timeStep, bulk_);
+  }
+#endif
 #ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     fsiContainer_->setup(timeStep, bulk_);
@@ -101,6 +117,11 @@ AeroContainer::init(double currentTime, double restartFrequency)
   if (has_actuators()) {
     actuatorModel_.init(*bulk_);
   }
+#ifdef NALU_USES_KYNEMA
+  if (has_six_dof()) {
+    sixDof_->initialize(restartFrequency, currentTime);
+  }
+#endif
 #ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     fsiContainer_->initialize(restartFrequency, currentTime);
@@ -122,6 +143,17 @@ void
 AeroContainer::update_displacements(
   const double currentTime, bool updateCC, bool predict)
 {
+#ifdef NALU_USES_KYNEMA
+  if (has_six_dof()) {
+    NaluEnv::self().naluOutputP0()
+      << "Calling update displacements inside AeroContainer" << std::endl;
+    sixDof_->map_displacements(currentTime, updateCC);
+
+    (void)predict;
+    return;
+  }
+#endif
+
 #ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     NaluEnv::self().naluOutputP0()
@@ -140,7 +172,11 @@ AeroContainer::update_displacements(
 void
 AeroContainer::predict_model_time_step(const double currentTime)
 {
-  (void)currentTime;
+#ifdef NALU_USES_KYNEMA
+  if (has_six_dof()) {
+    sixDof_->map_loads();
+  }
+#endif
 #ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     fsiContainer_->predict_struct_timestep(currentTime);
@@ -151,8 +187,15 @@ AeroContainer::predict_model_time_step(const double currentTime)
 }
 
 void
-AeroContainer::advance_model_time_step(const double currentTime)
+AeroContainer::advance_model_time_step(
+  const double currentTime, const double dT)
 {
+#ifdef NALU_USES_KYNEMA
+  if (has_six_dof()) {
+    sixDof_->advance_struct_timestep(currentTime, dT);
+    return;
+  }
+#endif
 #ifdef NALU_USES_OPENFAST
   if (has_fsi()) {
     fsiContainer_->advance_struct_timestep(currentTime);
@@ -186,6 +229,18 @@ AeroContainer::fsi_parts()
     }
   }
 #endif
+  return all_part_vec;
+}
+
+const stk::mesh::PartVector
+AeroContainer::six_dof_parts()
+{
+#ifdef NALU_USES_KYNEMA
+  if (has_six_dof()) {
+    return sixDof_->get_mesh_blocks();
+  }
+#endif
+  stk::mesh::PartVector all_part_vec;
   return all_part_vec;
 }
 
