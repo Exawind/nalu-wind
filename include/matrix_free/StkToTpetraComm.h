@@ -12,6 +12,7 @@
 
 #include "Teuchos_RCP.hpp"
 #include "stk_mesh/base/Types.hpp"
+#include "stk_util/parallel/Parallel.hpp"
 
 namespace Teuchos {
 template <class OrdinalType>
