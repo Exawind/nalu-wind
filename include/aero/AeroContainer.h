@@ -66,7 +66,6 @@ public:
 private:
   bool has_actuators() { return actuatorModel_.is_active(); }
 
-  // bool has_six_dof_;
   ActuatorModel actuatorModel_;
   // TODO make this a unique_ptr
   OpenfastFSI* fsiContainer_;
