@@ -188,9 +188,10 @@ AeroContainer::predict_model_time_step(const double currentTime)
 
 void
 AeroContainer::advance_model_time_step(
-  const double currentTime, const double 
+  const double currentTime,
+  const double
 #ifdef NALU_USES_KYNEMA
-dT
+    dT
 #endif
 )
 {
