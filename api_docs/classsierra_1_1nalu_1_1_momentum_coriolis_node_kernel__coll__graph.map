@@ -1,0 +1,13 @@
+<map id="sierra::nalu::MomentumCoriolisNodeKernel" name="sierra::nalu::MomentumCoriolisNodeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="273,101,499,141"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="789,46,1040,86"/>
+<area shape="poly" id="edge3_Node000002_Node000001" title=" " alt="" coords="513,105,765,79,789,77,789,82,766,85,513,111"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="852,93,810,107,766,117,697,125,628,130,499,130,499,125,627,124,697,120,765,111,809,101,850,88"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_node_kernel.html" title=" " alt="" coords="5,5,184,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="198,12,456,13,611,20,766,34,824,43,823,49,765,39,611,26,456,19,198,18"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="264,39,508,64"/>
+<area shape="poly" id="edge5_Node000004_Node000003" title=" " alt="" coords="198,27,275,36,274,41,197,32"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="522,52,789,60,789,65,521,58"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1nalu_1_1_coriolis_src.html" title=" " alt="" coords="9,108,181,133"/>
+<area shape="poly" id="edge6_Node000001_Node000005" title=" " alt="" coords="195,118,272,118,272,123,195,123"/>
+</map>

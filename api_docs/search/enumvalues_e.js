@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['p1_0',['P1',['../namespacesierra_1_1nalu_1_1matrix__free_1_1inst.html#a49d83146a4bf4bdccc55d62d6e7f3757ab41c389594721b164d16c6650a07d0d1',1,'sierra::nalu::matrix_free::inst']]],
+  ['p2_1',['P2',['../namespacesierra_1_1nalu_1_1matrix__free_1_1inst.html#a49d83146a4bf4bdccc55d62d6e7f3757acecc066d6c1952fb577383729c19bdc8',1,'sierra::nalu::matrix_free::inst']]],
+  ['p3_2',['P3',['../namespacesierra_1_1nalu_1_1matrix__free_1_1inst.html#a49d83146a4bf4bdccc55d62d6e7f3757acc61902dd614dbe0969b955a9328c909',1,'sierra::nalu::matrix_free::inst']]],
+  ['p4_3',['P4',['../namespacesierra_1_1nalu_1_1matrix__free_1_1inst.html#a49d83146a4bf4bdccc55d62d6e7f3757a6c619190a6098e4cf4534366a057e046',1,'sierra::nalu::matrix_free::inst']]],
+  ['parasails_4',['ParaSails',['../namespace_ifpack2_1_1_hypre.html#adb4bfb8419a27dcba15ca7c732db9fc6ad2c905ad1378dedf9aaa678f9d6d485b',1,'Ifpack2::Hypre']]],
+  ['pcg_5',['PCG',['../namespace_ifpack2_1_1_hypre.html#adb4bfb8419a27dcba15ca7c732db9fc6a0617f8c2599852450ea2ca0f3f040d9b',1,'Ifpack2::Hypre']]],
+  ['periodic_5fbc_6',['PERIODIC_BC',['../namespacesierra_1_1nalu.html#a22e2d0149a928212b408db293d5b468da6b6650d0ac3cc5227f438f4681c6279d',1,'sierra::nalu']]],
+  ['plane_7',['PLANE',['../namespacesierra_1_1nalu.html#a5d14f4051c81b33ae298d5e8a5da557baad6990fc23cd957328515fde2db852a3',1,'sierra::nalu']]],
+  ['polynomial_5fmat_8',['POLYNOMIAL_MAT',['../namespacesierra_1_1nalu.html#a437004ca15cc45d0314758dd76d4cbebacae8d69af9e8460b14179844e329b3e9',1,'sierra::nalu']]],
+  ['prec_9',['Prec',['../namespace_ifpack2_1_1_hypre.html#aa0981bcec0b65b4b4876b89f182f6e45a97651d87882e8f7ff8ec8650101255d1',1,'Ifpack2::Hypre']]],
+  ['propertyidentifier_5fend_10',['PropertyIdentifier_END',['../namespacesierra_1_1nalu.html#a2f50bb5567d3bd255478c86e790c85faa85ff19aaef7ceb097408083b1ec7ac05',1,'sierra::nalu']]],
+  ['pt_5fend_11',['PT_END',['../namespacesierra_1_1nalu.html#af85bbc551515df8d47568e7a68db69daafc6554af2e797067c8cc11beee6a3a03',1,'sierra::nalu']]],
+  ['pt_5fhypre_12',['PT_HYPRE',['../namespacesierra_1_1nalu.html#af85bbc551515df8d47568e7a68db69daa9f53efc33d0538a8c7f0742ba865ef0a',1,'sierra::nalu']]],
+  ['pt_5fhypre_5fsegregated_13',['PT_HYPRE_SEGREGATED',['../namespacesierra_1_1nalu.html#af85bbc551515df8d47568e7a68db69daaf4339cc142fe005a9bfddda760a7f7ae',1,'sierra::nalu']]],
+  ['pt_5ftpetra_14',['PT_TPETRA',['../namespacesierra_1_1nalu.html#af85bbc551515df8d47568e7a68db69daac4d0b0d4de33aceddd466735bb3928cd',1,'sierra::nalu']]],
+  ['pt_5ftpetra_5fsegregated_15',['PT_TPETRA_SEGREGATED',['../namespacesierra_1_1nalu.html#af85bbc551515df8d47568e7a68db69daab03e2f9dda754eefe902a4d3e6d12712',1,'sierra::nalu']]]
+];

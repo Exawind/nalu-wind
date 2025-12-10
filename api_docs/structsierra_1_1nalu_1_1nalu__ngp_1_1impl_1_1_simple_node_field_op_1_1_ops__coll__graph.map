@@ -1,0 +1,7 @@
+<map id="sierra::nalu::nalu_ngp::impl::SimpleNodeFieldOp&lt; Mesh, Field &gt;::Ops" name="sierra::nalu::nalu_ngp::impl::SimpleNodeFieldOp&lt; Mesh, Field &gt;::Ops">
+<area shape="rect" id="Node000001" title="Implementation of supported operators for nodal fields." alt="" coords="5,211,213,265"/>
+<area shape="rect" id="Node000002" href="$structsierra_1_1nalu_1_1nalu__ngp_1_1_entity_info.html" title=" " alt="" coords="15,108,204,148"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="112,161,112,211,107,211,107,161"/>
+<area shape="rect" id="Node000003" href="$structsierra_1_1nalu_1_1nalu__ngp_1_1_entity_info.html" title="Lightweight data structure holding information of the entity in mesh loops." alt="" coords="15,5,204,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="112,59,112,108,107,108,107,59"/>
+</map>

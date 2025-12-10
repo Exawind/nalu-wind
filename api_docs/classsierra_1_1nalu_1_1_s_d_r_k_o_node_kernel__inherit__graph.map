@@ -1,0 +1,10 @@
+<map id="sierra::nalu::SDRKONodeKernel" name="sierra::nalu::SDRKONodeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,257,228,283"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="13,168,220,208"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="119,222,119,257,114,257,114,222"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_node_kernel.html" title=" " alt="" coords="22,5,201,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="115,44,119,168,113,168,109,44"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="133,80,377,105"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="148,35,233,77,231,82,146,39"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="228,115,146,170,143,166,225,111"/>
+</map>

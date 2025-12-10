@@ -1,0 +1,7 @@
+<map id="sierra::nalu::BoundaryCondition" name="sierra::nalu::BoundaryCondition">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,197,232,223"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="75,95,162,120"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="121,134,121,197,116,197,116,134"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="49,5,188,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="121,59,121,94,116,94,116,59"/>
+</map>

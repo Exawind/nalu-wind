@@ -1,0 +1,14 @@
+<map id="sierra::nalu::InitialCondition" name="sierra::nalu::InitialCondition">
+<area shape="rect" id="Node000001" title=" " alt="" coords="114,284,317,309"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="200,108,287,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="264,143,270,156,279,185,283,210,281,234,270,261,258,275,244,286,241,282,255,272,265,259,276,232,278,210,273,187,265,158,259,146"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="51,196,238,221"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="221,144,204,159,160,198,156,194,200,155,218,140"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="174,5,313,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="246,59,246,108,241,108,241,59"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="157,233,172,258,199,282,195,286,168,262,152,235"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="5,108,135,133"/>
+<area shape="poly" id="edge5_Node000004_Node000005" title=" " alt="" coords="68,147,69,160,74,171,86,184,103,194,100,198,83,188,69,173,64,161,63,148"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="51,13,89,38"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="73,52,73,108,67,108,67,52"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="sierra::nalu::SpecificDissipationRateEquationSystem" name="sierra::nalu::SpecificDissipationRateEquationSystem">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,79,232,119"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_equation_system.html" title="Base class representation of a PDE." alt="" coords="14,5,223,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="121,44,121,79,116,79,116,44"/>
+</map>

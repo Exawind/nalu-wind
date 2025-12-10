@@ -1,0 +1,7 @@
+<map id="sierra::nalu::HypreDirectSolver" name="sierra::nalu::HypreDirectSolver">
+<area shape="rect" id="Node000001" title="Nalu interface to Hypre Solvers and Preconditioners." alt="" coords="22,79,203,119"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_hypre_u_v_w_solver.html" title=" " alt="" coords="5,167,220,192"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="115,132,115,166,110,166,110,132"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_linear_solver.html" title="An abstract representation of a linear solver in Nalu." alt="" coords="21,5,205,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="115,44,115,79,110,79,110,44"/>
+</map>

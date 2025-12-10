@@ -1,0 +1,9 @@
+<map id="sierra::nalu::ActuatorInfoNGP" name="sierra::nalu::ActuatorInfoNGP">
+<area shape="rect" id="Node000001" title="Data structure to stash turbine info during parsing Data structure to stash turbine info during parsi..." alt="" coords="35,183,245,208"/>
+<area shape="rect" id="Node000002" href="$structsierra_1_1nalu_1_1_coordinates.html" title=" " alt="" coords="5,95,187,120"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="111,131,136,181,132,183,106,134"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="211,95,298,120"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="230,130,157,185,154,180,227,126"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="185,5,324,45"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="257,59,257,94,252,94,252,59"/>
+</map>

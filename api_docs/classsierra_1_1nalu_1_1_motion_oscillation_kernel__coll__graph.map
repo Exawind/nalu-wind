@@ -1,0 +1,14 @@
+<map id="sierra::nalu::MotionOscillationKernel" name="sierra::nalu::MotionOscillationKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="360,15,577,55"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_ngp_motion_kernel.html" title=" " alt="" coords="1117,43,1332,83"/>
+<area shape="poly" id="edge4_Node000002_Node000001" title=" " alt="" coords="591,19,603,19,849,17,956,20,1094,33,1136,40,1135,45,1093,39,956,25,849,22,603,24,591,24"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="1103,61,577,41,578,36,1104,56"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_ngp_motion.html" title=" " alt="" coords="381,79,556,105"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="569,85,1117,64,1117,69,570,91"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1nalu_1_1_ngp_motion_kernel.html" title=" " alt="" coords="627,126,880,151"/>
+<area shape="poly" id="edge6_Node000005_Node000003" title=" " alt="" coords="561,104,676,123,675,129,560,110"/>
+<area shape="rect" id="Node000004" href="$structsierra_1_1nalu_1_1mm_1_1_three_d_vec_type.html" title=" " alt="" coords="5,51,243,77"/>
+<area shape="poly" id="edge7_Node000001_Node000004" title=" " alt="" coords="256,50,360,41,360,47,257,55"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="226,76,267,80,381,87,381,92,266,85,226,81"/>
+<area shape="poly" id="edge5_Node000002_Node000005" title=" " alt="" coords="893,140,992,135,1093,119,1143,102,1187,80,1189,85,1145,107,1094,124,993,140,894,146"/>
+</map>

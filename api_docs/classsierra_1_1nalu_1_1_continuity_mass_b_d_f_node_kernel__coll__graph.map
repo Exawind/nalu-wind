@@ -1,0 +1,11 @@
+<map id="sierra::nalu::ContinuityMassBDFNodeKernel" name="sierra::nalu::ContinuityMassBDFNodeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,80,176,120"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="78,183,333,223"/>
+<area shape="poly" id="edge3_Node000002_Node000001" title=" " alt="" coords="77,133,76,146,80,157,92,170,107,180,104,185,88,174,75,160,70,147,72,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="189,172,169,146,134,122,137,118,173,142,193,169"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_node_kernel.html" title=" " alt="" coords="149,5,328,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="237,44,211,183,206,182,232,43"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="261,87,505,113"/>
+<area shape="poly" id="edge5_Node000004_Node000003" title=" " alt="" coords="272,35,363,85,361,90,270,40"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="352,122,240,185,237,180,349,117"/>
+</map>

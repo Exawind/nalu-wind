@@ -1,0 +1,5 @@
+<map id="sierra::nalu::MomentumOpenAdvDiffElemKernel&lt; BcAlgTraits &gt;" name="sierra::nalu::MomentumOpenAdvDiffElemKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="Node000001" title="Open adv/diff kernel for momentum equation (velocity DOF)" alt="" coords="5,79,252,119"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="57,5,201,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="131,44,131,79,126,79,126,44"/>
+</map>

@@ -1,0 +1,23 @@
+<map id="sierra::nalu::FrameReference" name="sierra::nalu::FrameReference">
+<area shape="rect" id="Node000001" title=" " alt="" coords="288,491,499,516"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_frame_base.html" title=" " alt="" coords="305,416,481,441"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="396,456,396,490,391,490,391,456"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="159,299,403,339"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="309,347,351,390,380,414,376,418,348,394,305,351"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="108,181,279,221"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="190,235,190,255,197,273,208,286,223,296,219,301,205,290,192,276,185,256,184,235"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1nalu_1_1_ngp_motion.html" title=" " alt="" coords="37,93,211,119"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="143,128,181,180,177,183,138,131"/>
+<area shape="rect" id="Node000006" href="$structsierra_1_1nalu_1_1mm_1_1_three_d_vec_type.html" title=" " alt="" coords="5,5,243,31"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="127,45,127,93,121,93,121,45"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="236,93,393,119"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="268,126,238,145,220,163,206,183,202,179,216,159,234,141,265,122"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="379,5,418,31"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="380,43,328,95,324,91,376,39"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="377,189,506,214"/>
+<area shape="poly" id="edge9_Node000009_Node000008" title=" " alt="" coords="407,44,441,188,436,189,402,45"/>
+<area shape="poly" id="edge8_Node000003_Node000009" title=" " alt="" coords="364,218,316,231,299,239,287,247,281,258,278,271,279,298,274,298,273,271,276,257,283,244,296,234,315,226,362,213"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="428,306,585,331"/>
+<area shape="poly" id="edge11_Node000010_Node000009" title=" " alt="" coords="464,223,480,244,495,276,506,305,501,306,491,278,475,247,460,226"/>
+<area shape="poly" id="edge10_Node000002_Node000010" title=" " alt="" coords="496,344,479,369,456,394,420,418,417,414,453,390,474,366,491,341"/>
+</map>

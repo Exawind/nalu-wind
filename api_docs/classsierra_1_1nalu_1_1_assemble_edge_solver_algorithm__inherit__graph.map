@@ -1,0 +1,25 @@
+<map id="sierra::nalu::AssembleEdgeSolverAlgorithm" name="sierra::nalu::AssembleEdgeSolverAlgorithm">
+<area shape="rect" id="Node000001" title=" " alt="" coords="476,229,675,269"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_assemble_edge_kernel_alg.html" title=" " alt="" coords="729,5,927,45"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="591,216,612,179,642,135,678,92,721,55,742,43,745,48,724,60,682,96,646,139,617,181,595,218"/>
+<area shape="rect" id="Node000006" href="$classsierra_1_1nalu_1_1_continuity_edge_solver_alg.html" title=" " alt="" coords="743,69,913,109"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="602,217,654,167,687,141,721,119,747,107,750,112,724,124,690,146,658,171,606,221"/>
+<area shape="rect" id="Node000007" href="$classsierra_1_1nalu_1_1_momentum_edge_solver_alg.html" title=" " alt="" coords="723,133,933,173"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="630,221,722,183,757,171,758,176,724,188,632,226"/>
+<area shape="rect" id="Node000008" href="$classsierra_1_1nalu_1_1_scalar_edge_solver_alg.html" title=" " alt="" coords="741,197,915,237"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="688,232,740,226,741,231,688,238"/>
+<area shape="rect" id="Node000009" href="$classsierra_1_1nalu_1_1_v_o_f_advection_edge_alg.html" title=" " alt="" coords="731,261,925,301"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="689,261,732,266,731,272,688,266"/>
+<area shape="rect" id="Node000010" href="$classsierra_1_1nalu_1_1_wall_dist_edge_solver_alg.html" title=" " alt="" coords="733,325,923,365"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="632,273,724,311,758,323,757,328,722,316,630,278"/>
+<area shape="rect" id="Node000011" href="$classsierra_1_1nalu_1_1_zalesak_disk_mass_flow_rate_edge_alg.html" title=" " alt="" coords="736,389,920,429"/>
+<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="606,278,658,327,690,353,724,375,750,387,747,392,721,380,687,357,654,332,602,281"/>
+<area shape="rect" id="Node000012" href="$classsierra_1_1nalu_1_1_zalesak_sphere_mass_flow_rate_edge_alg.html" title=" " alt="" coords="728,453,928,493"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="595,280,617,317,646,360,682,403,724,439,745,451,742,455,721,444,678,406,642,363,612,320,591,283"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_solver_algorithm.html" title=" " alt="" coords="220,237,428,262"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="442,247,476,247,476,252,442,252"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_algorithm.html" title=" " alt="" coords="5,237,172,262"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="186,247,220,247,220,252,186,252"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1nalu_1_1_assemble_a_m_s_edge_kernel_alg.html" title=" " alt="" coords="981,5,1209,45"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="941,23,981,23,981,28,941,28"/>
+</map>

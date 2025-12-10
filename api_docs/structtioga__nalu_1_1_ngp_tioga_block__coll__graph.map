@@ -1,0 +1,13 @@
+<map id="tioga_nalu::NgpTiogaBlock" name="tioga_nalu::NgpTiogaBlock">
+<area shape="rect" id="Node000001" title="Data representing an unstructured mesh block." alt="" coords="751,182,947,207"/>
+<area shape="rect" id="Node000002" href="$structtioga__nalu_1_1_overset_array_type.html" title=" " alt="" coords="426,67,610,107"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="614,62,671,61,700,65,728,74,766,96,799,126,841,180,837,183,795,129,763,100,726,78,699,70,671,66,615,68"/>
+<area shape="rect" id="Node000003" href="$structtioga__nalu_1_1_overset_array_type.html" title=" " alt="" coords="5,171,195,211"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="194,165,436,104,437,109,195,170"/>
+<area shape="rect" id="Node000004" href="$structtioga__nalu_1_1_overset_array_type.html" title=" " alt="" coords="426,171,610,211"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="209,188,426,188,426,193,209,193"/>
+<area shape="rect" id="Node000005" href="$structtioga__nalu_1_1_overset_array_type.html" title=" " alt="" coords="411,235,625,275"/>
+<area shape="poly" id="edge6_Node000005_Node000003" title=" " alt="" coords="208,206,219,208,411,237,410,242,218,213,208,212"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="624,190,649,191,751,192,751,197,649,196,624,196"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="639,241,726,227,808,205,809,210,727,232,640,246"/>
+</map>

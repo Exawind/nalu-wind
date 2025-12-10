@@ -1,0 +1,21 @@
+<map id="sierra::nalu::KernelBuilderLog" name="sierra::nalu::KernelBuilderLog">
+<area shape="rect" id="Node000001" title=" " alt="" coords="210,405,423,431"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="225,288,409,328"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="319,342,319,405,314,405,314,342"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="373,108,460,133"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="422,148,422,185,414,226,405,248,389,266,357,290,353,286,386,262,400,245,409,225,416,185,416,147"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="234,198,399,223"/>
+<area shape="poly" id="edge5_Node000005_Node000003" title=" " alt="" coords="395,145,332,200,328,196,391,141"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="347,5,486,45"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="419,59,419,108,414,108,414,59"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="319,237,319,288,314,288,314,237"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="185,108,294,133"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="247,146,259,170,274,185,291,195,288,200,271,189,255,174,242,148"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="187,13,225,38"/>
+<area shape="poly" id="edge7_Node000006_Node000007" title=" " alt="" coords="217,50,238,107,233,109,212,52"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="5,108,140,133"/>
+<area shape="poly" id="edge9_Node000008_Node000007" title=" " alt="" coords="187,50,145,86,101,110,99,106,142,82,184,46"/>
+<area shape="poly" id="edge8_Node000002_Node000008" title=" " alt="" coords="71,147,71,186,76,206,85,224,114,251,149,272,187,286,225,295,224,301,185,291,147,277,111,255,81,227,71,208,66,187,66,147"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="53,13,92,38"/>
+<area shape="poly" id="edge10_Node000008_Node000009" title=" " alt="" coords="75,52,75,108,70,108,70,52"/>
+</map>

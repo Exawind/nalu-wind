@@ -1,0 +1,33 @@
+<map id="vector_space.h" name="vector_space.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="217,5,337,31"/>
+<area shape="rect" id="Node000002" href="$vector_8h.html" title=" " alt="" coords="321,152,415,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="287,30,356,139,351,142,282,33"/>
+<area shape="rect" id="Node000010" href="$tensor_8h.html" title=" " alt="" coords="189,79,283,104"/>
+<area shape="poly" id="edge10_Node000001_Node000010" title=" " alt="" coords="273,32,252,68,247,65,268,30"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,299,139,324"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="371,178,368,214,361,235,348,253,322,264,273,277,153,300,152,294,272,272,320,259,345,249,356,232,363,213,366,177"/>
+<area shape="rect" id="Node000004" href="$vstraits_8h.html" title=" " alt="" coords="231,225,334,251"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="356,179,309,219,305,214,353,175"/>
+<area shape="rect" id="Node000006" href="$vector_i_8h.html" title=" " alt="" coords="409,225,508,251"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="377,175,427,215,424,219,374,179"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="253,299,312,324"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="285,251,285,285,280,285,280,251"/>
+<area shape="poly" id="edge9_Node000006_Node000002" title=" " alt="" coords="449,227,399,187,402,183,452,223"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="549,299,625,324"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="481,248,555,289,552,294,478,253"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="163,299,226,324"/>
+<area shape="poly" id="edge7_Node000006_Node000008" title=" " alt="" coords="417,253,240,301,239,295,416,248"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="355,299,525,324"/>
+<area shape="poly" id="edge8_Node000006_Node000009" title=" " alt="" coords="458,252,449,286,444,285,453,250"/>
+<area shape="poly" id="edge13_Node000010_Node000002" title=" " alt="" coords="258,102,336,143,333,148,256,106"/>
+<area shape="poly" id="edge11_Node000010_Node000003" title=" " alt="" coords="201,107,160,124,115,149,72,183,55,204,41,226,38,241,40,257,55,286,51,289,35,258,32,241,36,224,51,200,69,179,112,144,158,119,199,102"/>
+<area shape="poly" id="edge12_Node000010_Node000004" title=" " alt="" coords="242,104,277,211,272,213,237,105"/>
+<area shape="rect" id="Node000011" href="$tensor_i_8h.html" title=" " alt="" coords="144,152,243,177"/>
+<area shape="poly" id="edge14_Node000010_Node000011" title=" " alt="" coords="224,106,201,141,197,138,220,103"/>
+<area shape="poly" id="edge15_Node000011_Node000008" title=" " alt="" coords="196,178,197,285,192,285,191,178"/>
+<area shape="poly" id="edge16_Node000011_Node000010" title=" " alt="" coords="205,150,228,115,232,118,209,153"/>
+<area shape="rect" id="Node000012" href="$trig__ops_8h.html" title="Trigonometric utilities." alt="" coords="50,225,155,251"/>
+<area shape="poly" id="edge17_Node000011_Node000012" title=" " alt="" coords="180,179,130,219,127,214,177,175"/>
+<area shape="poly" id="edge19_Node000012_Node000003" title=" " alt="" coords="100,252,85,287,80,285,95,250"/>
+<area shape="poly" id="edge18_Node000012_Node000008" title=" " alt="" coords="119,249,171,288,167,292,116,253"/>
+</map>

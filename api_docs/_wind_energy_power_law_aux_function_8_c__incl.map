@@ -1,0 +1,15 @@
+<map id="WindEnergyPowerLawAuxFunction.C" name="WindEnergyPowerLawAuxFunction.C">
+<area shape="rect" id="Node000001" title=" " alt="" coords="201,5,460,31"/>
+<area shape="rect" id="Node000002" href="$_wind_energy_power_law_aux_function_8h.html" title=" " alt="" coords="77,79,275,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="309,33,227,75,224,70,307,28"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="299,86,362,111"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="333,31,333,72,328,72,328,31"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="386,86,473,111"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="347,29,406,75,402,79,344,33"/>
+<area shape="rect" id="Node000003" href="$_aux_function_8h.html" title=" " alt="" coords="5,167,120,192"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="150,121,92,161,89,156,147,117"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="145,167,207,192"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="179,119,179,153,173,153,173,119"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="232,167,288,192"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="198,117,239,155,236,159,195,121"/>
+</map>

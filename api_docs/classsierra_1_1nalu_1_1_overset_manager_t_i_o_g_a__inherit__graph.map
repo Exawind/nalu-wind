@@ -1,0 +1,5 @@
+<map id="sierra::nalu::OversetManagerTIOGA" name="sierra::nalu::OversetManagerTIOGA">
+<area shape="rect" id="Node000001" title="Overset Connectivity Algorithm using TIOGA third&#45;party library." alt="" coords="5,79,216,119"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_overset_manager.html" title="Base class for Overset connectivity manager." alt="" coords="5,5,216,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="113,44,113,79,108,79,108,44"/>
+</map>

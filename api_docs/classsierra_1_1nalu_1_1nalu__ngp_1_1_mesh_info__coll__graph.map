@@ -1,0 +1,5 @@
+<map id="sierra::nalu::nalu_ngp::MeshInfo&lt; Mesh, FieldManager &gt;" name="sierra::nalu::nalu_ngp::MeshInfo&lt; Mesh, FieldManager &gt;">
+<area shape="rect" id="Node000001" title="STK mesh object holder." alt="" coords="5,108,180,163"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1nalu__ngp_1_1_field_manager.html" title="NGP Field Manager." alt="" coords="18,5,167,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="95,59,95,108,90,108,90,59"/>
+</map>

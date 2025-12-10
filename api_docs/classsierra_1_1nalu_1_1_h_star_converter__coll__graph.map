@@ -1,0 +1,19 @@
+<map id="sierra::nalu::HStarConverter" name="sierra::nalu::HStarConverter">
+<area shape="rect" id="Node000001" title="Calculates reference heat loss parameter." alt="" coords="5,407,208,432"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_converter.html" title="Provides arbitrary processing of input data before handing off values to a Table for interpolation." alt="" coords="235,315,402,341"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="280,348,135,409,133,404,278,343"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="314,108,401,133"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="387,141,397,156,409,189,414,217,410,244,397,276,376,301,349,317,346,313,372,297,392,273,405,243,409,217,404,190,392,159,383,144"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="181,198,368,223"/>
+<area shape="poly" id="edge5_Node000005_Node000003" title=" " alt="" coords="339,145,288,199,284,196,335,141"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="288,5,427,45"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="360,59,360,108,355,108,355,59"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="286,235,317,314,312,316,281,237"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="107,108,237,133"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="187,143,208,170,249,196,246,200,205,174,183,147"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="8,249,173,275"/>
+<area shape="poly" id="edge9_Node000008_Node000006" title=" " alt="" coords="131,142,113,159,101,182,95,207,93,249,87,249,90,206,96,180,109,156,127,139"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="153,13,191,38"/>
+<area shape="poly" id="edge7_Node000006_Node000007" title=" " alt="" coords="175,52,175,108,169,108,169,52"/>
+<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="96,288,108,406,103,407,91,289"/>
+</map>

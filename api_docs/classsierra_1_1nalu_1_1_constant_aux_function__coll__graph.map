@@ -1,0 +1,11 @@
+<map id="sierra::nalu::ConstantAuxFunction" name="sierra::nalu::ConstantAuxFunction">
+<area shape="rect" id="Node000001" title=" " alt="" coords="25,269,211,309"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_aux_function.html" title=" " alt="" coords="5,181,188,207"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="105,219,116,269,111,270,100,221"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="213,181,378,207"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="263,215,155,272,153,267,260,211"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="231,93,360,119"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="298,133,298,181,293,181,293,133"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="276,5,315,31"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="298,45,298,93,293,93,293,45"/>
+</map>

@@ -1,0 +1,16 @@
+<map id="sierra::nalu::ScanningLidarSegmentGenerator" name="sierra::nalu::ScanningLidarSegmentGenerator">
+<area shape="rect" id="Node000001" title=" " alt="" coords="241,299,436,339"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_segment_generator.html" title=" " alt="" coords="5,181,232,207"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="152,211,306,296,303,301,150,216"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="256,181,421,207"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="341,220,341,298,336,298,336,220"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="306,93,435,119"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="364,133,346,182,341,180,359,131"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="426,5,465,31"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="428,43,383,95,379,91,424,39"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="465,93,588,119"/>
+<area shape="poly" id="edge7_Node000007_Node000005" title=" " alt="" coords="468,39,482,53,518,91,514,95,478,57,464,42"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="446,181,621,207"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="518,220,492,249,459,277,409,301,407,296,456,272,488,245,514,216"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="531,132,535,181,530,181,526,133"/>
+</map>

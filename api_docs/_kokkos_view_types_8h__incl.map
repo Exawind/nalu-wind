@@ -1,0 +1,13 @@
+<map id="KokkosViewTypes.h" name="KokkosViewTypes.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="279,5,428,31"/>
+<area shape="rect" id="Node000002" href="$_kokkos_framework_8h.html" title=" " alt="" coords="119,79,353,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="336,33,268,74,266,69,333,28"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="377,79,567,104"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="374,28,442,69,439,74,371,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,152,139,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="211,106,112,149,110,144,209,102"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="163,152,309,177"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="239,104,239,138,233,138,233,104"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="334,152,426,177"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="260,102,345,143,343,148,258,106"/>
+</map>

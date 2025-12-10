@@ -1,0 +1,14 @@
+<map id="sierra::nalu::DgInfo" name="sierra::nalu::DgInfo">
+<area shape="rect" id="Node000001" title=" " alt="" coords="236,372,383,397"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_master_element.html" title=" " alt="" coords="5,181,208,207"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="111,220,116,250,126,284,141,317,164,346,198,366,237,377,235,382,196,371,161,350,137,320,121,285,111,251,106,221"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="232,181,397,207"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="314,221,313,231,312,372,306,372,308,231,309,220"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="347,93,477,119"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="390,130,330,183,326,179,387,126"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="422,181,597,207"/>
+<area shape="poly" id="edge6_Node000006_Node000004" title=" " alt="" coords="437,126,498,179,494,183,434,130"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="393,5,431,31"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="415,45,415,93,409,93,409,45"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="515,220,516,250,512,285,502,320,482,350,466,360,442,368,384,379,383,374,441,363,463,355,478,346,497,317,507,284,510,250,510,220"/>
+</map>

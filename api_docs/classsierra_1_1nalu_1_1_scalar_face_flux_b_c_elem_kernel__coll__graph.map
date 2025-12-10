@@ -1,0 +1,12 @@
+<map id="sierra::nalu::ScalarFaceFluxBCElemKernel&lt; BcAlgTraits &gt;" name="sierra::nalu::ScalarFaceFluxBCElemKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="Node000001" title="This class applies the computed wall heat flux field to the boundary." alt="" coords="991,59,1235,99"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="667,5,893,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="907,48,991,60,990,65,906,53"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="5,21,149,47"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="163,25,173,25,408,20,643,25,667,25,667,31,643,30,408,26,173,30,163,30"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="199,47,409,72"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="163,41,199,45,198,50,163,46"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="423,61,530,60,642,54,666,51,667,57,643,59,530,65,423,66"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1nalu_1_1_master_element.html" title=" " alt="" coords="679,84,881,109"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="895,88,990,83,991,88,895,93"/>
+</map>

@@ -1,0 +1,11 @@
+<map id="sierra::nalu::AssembleAMSEdgeKernelAlg" name="sierra::nalu::AssembleAMSEdgeKernelAlg">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,328,233,368"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_assemble_edge_kernel_alg.html" title=" " alt="" coords="20,240,219,280"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="122,294,122,328,117,328,117,294"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_assemble_edge_solver_algorithm.html" title=" " alt="" coords="20,152,219,192"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="122,206,122,240,117,240,117,206"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_solver_algorithm.html" title=" " alt="" coords="15,79,223,104"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="122,118,122,152,117,152,117,118"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1nalu_1_1_algorithm.html" title=" " alt="" coords="36,5,203,31"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="122,44,122,79,117,79,117,44"/>
+</map>

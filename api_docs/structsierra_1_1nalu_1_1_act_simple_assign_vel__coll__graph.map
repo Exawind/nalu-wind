@@ -1,0 +1,13 @@
+<map id="sierra::nalu::ActSimpleAssignVel" name="sierra::nalu::ActSimpleAssignVel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="133,313,365,339"/>
+<area shape="rect" id="Node000002" href="$structsierra_1_1nalu_1_1_act_dual_view_helper.html" title=" " alt="" coords="5,196,261,236"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="166,244,238,311,235,315,162,247"/>
+<area shape="rect" id="Node000003" href="$structsierra_1_1nalu_1_1_act_dual_view_helper.html" title=" " alt="" coords="36,93,231,133"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="136,147,136,196,131,196,131,147"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="285,203,451,229"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="347,240,264,315,260,311,344,236"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="303,101,433,126"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="371,140,371,203,365,203,365,140"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="349,5,387,31"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="371,44,371,101,365,101,365,44"/>
+</map>
