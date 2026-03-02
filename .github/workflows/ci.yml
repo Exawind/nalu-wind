@@ -42,7 +42,7 @@ jobs:
             spack env activate e4s-build && \
             cd ${EXAWIND_MANAGER}/environments/e4s-build && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
-            spack develop --no-clone nalu-wind@=master && \
+            spack develop --no-modify-concrete-specs --no-clone nalu-wind@=master && \
             spack rm exawind && \
             spack add nalu-wind@master+hypre+openfast+tioga+trilinos-solvers && \
             spack concretize -f && \
@@ -74,7 +74,7 @@ jobs:
             spack env activate e4s-build && \
             cd ${EXAWIND_MANAGER}/environments/e4s-build && \
             ln -s ${GITHUB_WORKSPACE} nalu-wind && \
-            spack develop --no-clone nalu-wind@=master && \
+            spack develop --no-modify-concrete-specs --no-clone nalu-wind@=master && \
             spack rm exawind && \
             spack add nalu-wind@master+hypre+openfast+tioga~trilinos-solvers && \
             spack concretize -f && \
