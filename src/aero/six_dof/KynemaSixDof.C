@@ -65,6 +65,50 @@ KynemaSixDof::load_point(const YAML::Node& node)
   for (int d = 0; d < ndim; ++d) {
     new_body.center_of_mass[d] = node["center_of_mass"][d].as<double>();
   }
+  if (node["initial_displacement"]) {
+    for (int d = 0; d < ndim; ++d) {
+      new_body.disp_init[d] = node["initial_displacement"][d].as<double>();
+    }
+  }
+  std::array<double, 3> theta_init = {0.0, 0.0, 0.0};
+  if (node["initial_rotational_displacement"]) {
+    for (int d = 0; d < ndim; ++d) {
+      theta_init[d] = node["initial_rotational_displacement"][d].as<double>();
+    }
+  }
+  // Convert to quaternions (ZYX order)
+  const double c1 = cos(theta_init[2] / 2.);
+  const double s1 = sin(theta_init[2] / 2.);
+  const double c2 = cos(theta_init[1] / 2.);
+  const double s2 = sin(theta_init[1] / 2.);
+  const double c3 = cos(theta_init[0] / 2.);
+  const double s3 = sin(theta_init[0] / 2.);
+  new_body.q_init[0] = c1 * c2 * c3 - s1 * s2 * s3;
+  new_body.q_init[1] = c1 * c2 * s3 - s1 * s2 * c3;
+  new_body.q_init[2] = c1 * s2 * c3 - s1 * c2 * s3;
+  new_body.q_init[3] = s1 * c2 * c3 - c1 * s2 * s3;
+  if (node["initial_velocity"]) {
+    for (int d = 0; d < ndim; ++d) {
+      new_body.v_init[d] = node["initial_velocity"][d].as<double>();
+    }
+  }
+  if (node["initial_rotational_velocity"]) {
+    for (int d = 0; d < ndim; ++d) {
+      new_body.omega_init[d] =
+        node["initial_rotational_velocity"][d].as<double>();
+    }
+  }
+  if (node["initial_acceleration"]) {
+    for (int d = 0; d < ndim; ++d) {
+      new_body.a_init[d] = node["initial_acceleration"][d].as<double>();
+    }
+  }
+  if (node["initial_rotational_acceleration"]) {
+    for (int d = 0; d < ndim; ++d) {
+      new_body.alpha_init[d] =
+        node["initial_rotational_acceleration"][d].as<double>();
+    }
+  }
 
   new_body.mass = node["mass"].as<double>();
 
@@ -190,13 +234,19 @@ KynemaSixDof::setup_point(
   point_to_build.rho_inf = damping_factor;
   point_to_build.turbine.floating_platform.enable = true;
   point_to_build.turbine.floating_platform.position = std::array<double, 7>{
-    point.center_of_mass[0],
-    point.center_of_mass[1],
-    point.center_of_mass[2],
-    1.0,
-    0.0,
-    0.0,
-    0.0};
+    point.center_of_mass[0] + point.disp_init[0],
+    point.center_of_mass[1] + point.disp_init[1],
+    point.center_of_mass[2] + point.disp_init[2],
+    point.q_init[0],
+    point.q_init[1],
+    point.q_init[2],
+    point.q_init[3]};
+  point_to_build.turbine.floating_platform.velocity = std::array<double, 6>{
+    point.v_init[0],     point.v_init[1],     point.v_init[2],
+    point.omega_init[0], point.omega_init[1], point.omega_init[2]};
+  point_to_build.turbine.floating_platform.acceleration = std::array<double, 6>{
+    point.a_init[0],     point.a_init[1],     point.a_init[2],
+    point.alpha_init[0], point.alpha_init[1], point.alpha_init[2]};
   point_to_build.turbine.floating_platform.mass_matrix = mass_matrix;
 
   point_to_build.turbine.floating_platform.mooring_lines.resize(

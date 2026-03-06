@@ -35,6 +35,12 @@ struct PointMass
   std::array<double, 9> moments_of_inertia = {0.0, 0.0, 0.0, 0.0, 0.0,
                                               0.0, 0.0, 0.0, 0.0};
   std::array<double, 3> center_of_mass = {0.0, 0.0, 0.0};
+  std::array<double, 3> disp_init = {0.0, 0.0, 0.0};
+  std::array<double, 4> q_init = {1.0, 0.0, 0.0, 0.0};
+  std::array<double, 3> v_init = {0.0, 0.0, 0.0};
+  std::array<double, 3> omega_init = {0.0, 0.0, 0.0};
+  std::array<double, 3> a_init = {0.0, 0.0, 0.0};
+  std::array<double, 3> alpha_init = {0.0, 0.0, 0.0};
   double mass{0.0};
   std::vector<Tether> tethers;
   std::vector<std::string> forcing_surface_names;
