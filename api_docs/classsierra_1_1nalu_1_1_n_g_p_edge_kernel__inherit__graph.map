@@ -1,0 +1,9 @@
+<map id="sierra::nalu::NGPEdgeKernel&lt; T &gt;" name="sierra::nalu::NGPEdgeKernel&lt; T &gt;">
+<area shape="rect" id="Node000001" title=" " alt="" coords="21,80,264,105"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_n_g_p_edge_kernel.html" title=" " alt="" coords="5,183,280,223"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="145,119,145,182,140,182,140,119"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_edge_kernel.html" title=" " alt="" coords="55,5,231,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="145,45,145,80,140,80,140,45"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_momentum_s_s_t_a_m_s_diff_edge_kernel.html" title=" " alt="" coords="16,272,269,312"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="145,237,145,272,140,272,140,237"/>
+</map>

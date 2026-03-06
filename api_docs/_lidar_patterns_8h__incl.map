@@ -1,0 +1,27 @@
+<map id="LidarPatterns.h" name="LidarPatterns.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="459,5,578,31"/>
+<area shape="rect" id="Node000002" href="$vector_8h.html" title=" " alt="" coords="293,79,387,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="491,33,383,76,381,71,489,28"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="449,225,511,251"/>
+<area shape="poly" id="edge11_Node000001_Node000008" title=" " alt="" coords="510,33,494,53,481,80,474,114,473,150,478,212,473,212,467,150,469,114,476,78,489,51,506,29"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="491,79,547,104"/>
+<area shape="poly" id="edge10_Node000001_Node000010" title=" " alt="" coords="521,31,521,65,516,65,516,31"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="571,79,648,104"/>
+<area shape="poly" id="edge12_Node000001_Node000011" title=" " alt="" coords="535,29,585,68,582,72,532,33"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="673,79,735,104"/>
+<area shape="poly" id="edge13_Node000001_Node000012" title=" " alt="" coords="549,28,662,71,660,76,547,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,152,139,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="298,107,129,151,128,146,296,101"/>
+<area shape="rect" id="Node000004" href="$vstraits_8h.html" title=" " alt="" coords="163,152,266,177"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="321,106,248,147,246,143,319,102"/>
+<area shape="rect" id="Node000006" href="$vector_i_8h.html" title=" " alt="" coords="291,152,389,177"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="336,104,334,139,329,138,330,104"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="72,225,131,251"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="198,180,133,220,130,216,195,175"/>
+<area shape="poly" id="edge9_Node000006_Node000002" title=" " alt="" coords="344,152,346,118,351,118,350,152"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="155,225,231,251"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="318,180,231,222,228,217,315,175"/>
+<area shape="poly" id="edge7_Node000006_Node000008" title=" " alt="" coords="364,175,446,217,444,221,361,180"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="255,225,425,251"/>
+<area shape="poly" id="edge8_Node000006_Node000009" title=" " alt="" coords="343,178,343,212,337,212,337,178"/>
+</map>

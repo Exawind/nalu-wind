@@ -1,0 +1,10 @@
+<map id="sierra::nalu::ContinuityInflowElemKernel&lt; BcAlgTraits &gt;" name="sierra::nalu::ContinuityInflowElemKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="Node000001" title="Add Int rho*uj*nj*dS." alt="" coords="5,287,243,327"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="15,183,233,237"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="127,251,127,286,121,286,121,251"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="47,5,191,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="122,45,126,182,121,183,117,45"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="140,80,351,105"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="152,35,226,77,224,82,150,40"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="225,117,154,184,150,180,221,113"/>
+</map>

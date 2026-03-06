@@ -1,0 +1,10 @@
+<map id="sierra::nalu::ContinuityOpenEdgeKernel&lt; BcAlgTraits &gt;" name="sierra::nalu::ContinuityOpenEdgeKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,287,236,327"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title=" " alt="" coords="15,183,226,237"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="123,251,123,286,118,286,118,251"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1nalu_1_1_kernel.html" title="Base class for computational kernels in Nalu." alt="" coords="43,5,187,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="119,45,123,182,117,183,113,45"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1nalu_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="137,80,347,105"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="149,35,223,77,220,82,146,40"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="222,117,150,184,147,180,218,113"/>
+</map>
