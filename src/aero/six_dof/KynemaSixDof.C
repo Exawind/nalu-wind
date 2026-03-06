@@ -65,12 +65,16 @@ KynemaSixDof::load_point(const YAML::Node& node)
   for (int d = 0; d < ndim; ++d) {
     new_body.center_of_mass[d] = node["center_of_mass"][d].as<double>();
   }
-  for (int d = 0; d < ndim; ++d) {
-    new_body.disp_init[d] = node["initial_displacement"][d].as<double>();
+  if (node["initial_displacement"]) {
+    for (int d = 0; d < ndim; ++d) {
+      new_body.disp_init[d] = node["initial_displacement"][d].as<double>();
+    }
   }
   std::array<double, 3> theta_init = {0.0, 0.0, 0.0};
-  for (int d = 0; d < ndim; ++d) {
-    theta_init[d] = node["initial_rotational_displacement"][d].as<double>();
+  if (node["initial_rotational_displacement"]) {
+    for (int d = 0; d < ndim; ++d) {
+      theta_init[d] = node["initial_rotational_displacement"][d].as<double>();
+    }
   }
   // Convert to quaternions (ZYX order)
   const double c1 = cos(theta_init[2] / 2.);
@@ -83,19 +87,27 @@ KynemaSixDof::load_point(const YAML::Node& node)
   new_body.q_init[1] = c1 * c2 * s3 - s1 * s2 * c3;
   new_body.q_init[2] = c1 * s2 * c3 - s1 * c2 * s3;
   new_body.q_init[3] = s1 * c2 * c3 - c1 * s2 * s3;
-  for (int d = 0; d < ndim; ++d) {
-    new_body.v_init[d] = node["initial_velocity"][d].as<double>();
+  if (node["initial_velocity"]) {
+    for (int d = 0; d < ndim; ++d) {
+      new_body.v_init[d] = node["initial_velocity"][d].as<double>();
+    }
   }
-  for (int d = 0; d < ndim; ++d) {
-    new_body.omega_init[d] =
-      node["initial_rotational_velocity"][d].as<double>();
+  if (node["initial_rotational_velocity"]) {
+    for (int d = 0; d < ndim; ++d) {
+      new_body.omega_init[d] =
+        node["initial_rotational_velocity"][d].as<double>();
+    }
   }
-  for (int d = 0; d < ndim; ++d) {
-    new_body.a_init[d] = node["initial_acceleration"][d].as<double>();
+  if (node["initial_acceleration"]) {
+    for (int d = 0; d < ndim; ++d) {
+      new_body.a_init[d] = node["initial_acceleration"][d].as<double>();
+    }
   }
-  for (int d = 0; d < ndim; ++d) {
-    new_body.alpha_init[d] =
-      node["initial_rotational_acceleration"][d].as<double>();
+  if (node["initial_rotational_acceleration"]) {
+    for (int d = 0; d < ndim; ++d) {
+      new_body.alpha_init[d] =
+        node["initial_rotational_acceleration"][d].as<double>();
+    }
   }
 
   new_body.mass = node["mass"].as<double>();
