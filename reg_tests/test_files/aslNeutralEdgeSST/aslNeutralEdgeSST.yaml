@@ -235,7 +235,7 @@ realms:
 
     output:
       output_data_base_name: aslNeutralEdgeSST.e
-      output_frequency: 10
+      output_frequency: 6
       output_nodse_set: no
       output_variables:
        - velocity
@@ -251,7 +251,7 @@ realms:
       target_name: [ fluid_part ]
       stats_output_file: "abl_statistics.nc"
       compute_temperature_statistics: no
-      output_frequency: 10
+      output_frequency: 6
       time_hist_output_frequency: 2
 
 # This defines the time step size, count, etc.
@@ -259,7 +259,7 @@ Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0.0
-      termination_step_count: 5
+      termination_step_count: 3
       time_step: 100.0
       time_stepping_type: fixed
       time_step_count: 0
