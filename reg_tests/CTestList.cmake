@@ -200,7 +200,6 @@ if(NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
     add_test_r(taylorGreenVortex_p3 4)
   endif()
 
-
   if(ENABLE_HYPRE)
     add_test_r(ablNeutralNGPHypre 2)
     add_test_r(ablNeutralNGPHypreSegregated 2)

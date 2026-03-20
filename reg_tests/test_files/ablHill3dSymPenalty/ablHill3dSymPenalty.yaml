@@ -192,7 +192,7 @@ realms:
     restart:
       restart_data_base_name: ablHill3dSymPenalty.rst
 #      restart_time: 0.4
-      restart_frequency: 5
+      restart_frequency: 3
       restart_start: 0
 
 
@@ -201,7 +201,7 @@ Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0.0
-      termination_step_count: 5
+      termination_step_count: 3
       time_step: 0.02
       time_stepping_type: fixed
       time_step_count: 0
