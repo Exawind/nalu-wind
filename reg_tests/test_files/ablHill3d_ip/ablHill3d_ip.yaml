@@ -170,7 +170,7 @@ realms:
     restart:
       restart_data_base_name: ablHill3d_ip.rst
 #      restart_time: 0.4
-      restart_frequency: 5
+      restart_frequency: 3
       restart_start: 0
 
 
