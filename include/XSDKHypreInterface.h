@@ -55,9 +55,14 @@
 #include "Ifpack2_ConfigDefs.hpp"
 #endif
 
+#include "HYPRE_config.h"
 #include "HYPRE_IJ_mv.h"
 #include "HYPRE_parcsr_ls.h"
+#if (HYPRE_RELEASE_NUMBER >= 30000)
+#include "HYPRE_krylov.h"
+#else
 #include "krylov.h"
+#endif
 #include "_hypre_parcsr_mv.h"
 #include "_hypre_IJ_mv.h"
 #include "HYPRE_parcsr_mv.h"

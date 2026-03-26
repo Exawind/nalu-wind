@@ -16,7 +16,11 @@
 
 #ifdef HYPRE_USING_GPU
 #include "HYPRE_utilities.h"
+#if (HYPRE_RELEASE_NUMBER >= 30000)
+#include "HYPRE_krylov.h"
+#else
 #include "krylov.h"
+#endif
 #include "HYPRE.h"
 #include "_hypre_utilities.h"
 #include "_hypre_utilities.hpp"

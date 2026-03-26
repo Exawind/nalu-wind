@@ -14,10 +14,15 @@
 
 #include "XSDKHypreInterface.h"
 
+#include "HYPRE_config.h"
 #include "HYPRE_IJ_mv.h"
 #include "HYPRE_parcsr_ls.h"
 #include "HYPRE_parcsr_mv.h"
+#if (HYPRE_RELEASE_NUMBER >= 30000)
+#include "HYPRE_krylov.h"
+#else
 #include "krylov.h"
+#endif
 #include "HYPRE.h"
 
 namespace sierra {
