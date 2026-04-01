@@ -70,12 +70,6 @@ if(ENABLE_ROCM)
   target_link_libraries(nalu PUBLIC ${HIP_LIBRARIES})
 endif()
 
-if (ENABLE_UMPIRE)
-  set(CMAKE_PREFIX_PATH ${UMPIRE_DIR} ${CMAKE_PREFIX_PATH})
-  find_package(Umpire REQUIRED)
-  include_directories(SYSTEM ${UMPIRE_INCLUDE_DIRS})
-endif()
-
 # Handle issues for Power9 builds
 if ((${CMAKE_SYSTEM_PROCESSOR} MATCHES "ppc") AND (NOT ENABLE_CUDA))
   # Fix warnings regarding NALU_ALIGNED in CPU builds
@@ -164,6 +158,13 @@ if(ENABLE_HYPRE)
     message(STATUS
       "HYPRE does not enable 64-bit integer support; will fail on large problems!")
   endif()
+endif()
+
+if (ENABLE_UMPIRE)
+  set(CMAKE_PREFIX_PATH ${UMPIRE_DIR} ${CMAKE_PREFIX_PATH})
+  find_package(Umpire REQUIRED)
+  target_include_directories(nalu SYSTEM ${UMPIRE_INCLUDE_DIRS})
+  target_compile_definitions(nalu PUBLIC NALU_USES_UMPIRE)
 endif()
 
 ##################### Trilinos Solvers: tpetra,belos,muelu ##########################
