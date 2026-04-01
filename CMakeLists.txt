@@ -163,7 +163,7 @@ endif()
 if (ENABLE_UMPIRE)
   set(CMAKE_PREFIX_PATH ${UMPIRE_DIR} ${CMAKE_PREFIX_PATH})
   find_package(Umpire REQUIRED)
-  target_include_directories(nalu SYSTEM ${UMPIRE_INCLUDE_DIRS})
+  target_include_directories(nalu SYSTEM PUBLIC ${UMPIRE_INCLUDE_DIRS})
   target_compile_definitions(nalu PUBLIC NALU_USES_UMPIRE)
 endif()
 
