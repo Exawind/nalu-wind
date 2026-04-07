@@ -4,6 +4,7 @@
 #include "mesh_motion/MotionDeformingInteriorKernel.h"
 #include "mesh_motion/MotionScalingKernel.h"
 #include "mesh_motion/MotionRotationKernel.h"
+#include "mesh_motion/MotionPrescribedKernel.h"
 #include "mesh_motion/MotionTranslationKernel.h"
 #include "mesh_motion/MotionOscillationKernel.h"
 #include "mesh_motion/TurbineSurrogateKernel.h"
@@ -82,7 +83,7 @@ FrameBase::load(const YAML::Node& node)
       else if (type == "turbine_surrogate")
         motionKernels_[i].reset(new TurbineSurrogateKernel(meta_, motion_def));
       else if (type == "prescribed")
-        motionKernels_[i].reset(new MotionPrescribedKernel(meta_, motion_def));
+        motionKernels_[i].reset(new MotionPrescribedKernel(motion_def));
       else
         throw std::runtime_error(
           "FrameBase: Invalid mesh motion type: " + type);
