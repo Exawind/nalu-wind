@@ -81,6 +81,8 @@ FrameBase::load(const YAML::Node& node)
         motionKernels_[i].reset(new MotionWavesKernel(meta_, motion_def));
       else if (type == "turbine_surrogate")
         motionKernels_[i].reset(new TurbineSurrogateKernel(meta_, motion_def));
+      else if (type == "prescribed")
+        motionKernels_[i].reset(new MotionPrescribedKernel(meta_, motion_def));
       else
         throw std::runtime_error(
           "FrameBase: Invalid mesh motion type: " + type);
