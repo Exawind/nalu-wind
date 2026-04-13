@@ -30,15 +30,18 @@ MotionPrescribedKernel::load(const YAML::Node& node)
     origin_[d] = node["centroid"][d].as<double>();
   }
 
-  std::vector<std::string> variables = node["variables"].as<std::vector<std::string>>();
+  std::vector<std::string> variables =
+    node["variables"].as<std::vector<std::string>>();
   bool has_time = false;
   for (auto var : variables) {
     if (var == "time")
-    has_time = true;
+      has_time = true;
   }
 
   if (!has_time) {
-    throw std::runtime_error("Time information absent from a prescribed mesh motion block. Please append it.");
+    throw std::runtime_error(
+      "Time information absent from a prescribed mesh motion block. Please "
+      "append it.");
   }
 
   auto values = node["values"];
@@ -53,9 +56,9 @@ MotionPrescribedKernel::load(const YAML::Node& node)
     for (size_t icol = 0; icol < row_values.size(); ++icol) {
       double new_value_to_store = row_values[icol].as<double>();
       if (variables[icol] == "time")
-          new_values_to_add.time_value = new_value_to_store;
+        new_values_to_add.time_value = new_value_to_store;
       else if (variables[icol] == "x_disp")
-         new_values_to_add.x_disp[0] = new_value_to_store;
+        new_values_to_add.x_disp[0] = new_value_to_store;
       else if (variables[icol] == "y_disp")
         new_values_to_add.x_disp[1] = new_value_to_store;
       else if (variables[icol] == "z_disp")
@@ -63,30 +66,34 @@ MotionPrescribedKernel::load(const YAML::Node& node)
       else if (variables[icol] == "x_vel")
         new_values_to_add.vel[0] = new_value_to_store;
       else if (variables[icol] == "y_vel")
-        new_values_to_add.vel[1] = new_value_to_store; 
+        new_values_to_add.vel[1] = new_value_to_store;
       else if (variables[icol] == "z_vel")
-        new_values_to_add.vel[2] = new_value_to_store; 
+        new_values_to_add.vel[2] = new_value_to_store;
       else if (variables[icol] == "x_angular_vel")
         new_values_to_add.angular_vel[0] = new_value_to_store;
       else if (variables[icol] == "y_angular_vel")
-        new_values_to_add.angular_vel[1] = new_value_to_store; 
+        new_values_to_add.angular_vel[1] = new_value_to_store;
       else if (variables[icol] == "z_angular_vel")
-        new_values_to_add.angular_vel[2] = new_value_to_store; 
+        new_values_to_add.angular_vel[2] = new_value_to_store;
       else if (variables[icol] == "x_angular_disp")
         new_values_to_add.angular_disp[0] = new_value_to_store;
       else if (variables[icol] == "y_angular_disp")
-        new_values_to_add.angular_disp[1] = new_value_to_store; 
+        new_values_to_add.angular_disp[1] = new_value_to_store;
       else if (variables[icol] == "z_angular_disp")
-        new_values_to_add.angular_disp[2] = new_value_to_store; 
+        new_values_to_add.angular_disp[2] = new_value_to_store;
     }
     if (irow > 0) {
-      if (new_values_to_add.time_value < defined_motion_values.back().time_value) {
-        throw std::runtime_error("Prescribed motion must be in chronological order.");
+      if (
+        new_values_to_add.time_value <
+        defined_motion_values.back().time_value) {
+        throw std::runtime_error(
+          "Prescribed motion must be in chronological order.");
       }
     }
     defined_motion_values.push_back(new_values_to_add);
   }
-  auto defined_values_host_ = Kokkos::View<double**, Kokkos::HostSpace>("defined_motion_values_host", defined_motion_values.size(), 13);
+  auto defined_values_host_ = Kokkos::View<double**, Kokkos::HostSpace>(
+    "defined_motion_values_host", defined_motion_values.size(), 13);
   for (size_t irow = 0; irow < defined_motion_values.size(); ++irow) {
     defined_values_host_(irow, 0) = defined_motion_values[irow].time_value;
 
@@ -102,13 +109,16 @@ MotionPrescribedKernel::load(const YAML::Node& node)
     defined_values_host_(irow, 8) = defined_motion_values[irow].angular_vel[1];
     defined_values_host_(irow, 9) = defined_motion_values[irow].angular_vel[2];
 
-    defined_values_host_(irow, 10) = defined_motion_values[irow].angular_disp[0];
-    defined_values_host_(irow, 11) = defined_motion_values[irow].angular_disp[1];
-    defined_values_host_(irow, 12) = defined_motion_values[irow].angular_disp[2];
-
+    defined_values_host_(irow, 10) =
+      defined_motion_values[irow].angular_disp[0];
+    defined_values_host_(irow, 11) =
+      defined_motion_values[irow].angular_disp[1];
+    defined_values_host_(irow, 12) =
+      defined_motion_values[irow].angular_disp[2];
   }
 
-  defined_motion_values_ = Kokkos::View<double**>("defined_motion_values", defined_motion_values.size(), 13);
+  defined_motion_values_ = Kokkos::View<double**>(
+    "defined_motion_values", defined_motion_values.size(), 13);
 
   Kokkos::deep_copy(defined_motion_values_, defined_values_host_);
 }
@@ -131,54 +141,70 @@ MotionPrescribedKernel::build_transformation(
     }
   }
 
-
-
-  if (min_index == -1) 
+  if (min_index == -1)
     min_index = defined_motion_values_.extent(0) - 1;
   else
-    min_index = Kokkos::min(min_index-1,0);
+    min_index = Kokkos::min(min_index - 1, 0);
 
-  auto relevant_motion = Kokkos::subview(defined_motion_values_, min_index, Kokkos::ALL());
+  auto relevant_motion =
+    Kokkos::subview(defined_motion_values_, min_index, Kokkos::ALL());
   double current_displacement[6];
   for (int i = 0; i < 6; ++i)
     current_displacement[i] = 0.0;
 
   // Defer to specified displacements, else default back to velocities
   if (relevant_motion[1] < -1e15) {
-    current_displacement[0] = relevant_motion[4] * (motionTime - relevant_motion[0]);
-    current_displacement[1] = relevant_motion[5] * (motionTime - relevant_motion[0]);
-    current_displacement[2] = relevant_motion[6] * (motionTime - relevant_motion[0]);
+    current_displacement[0] =
+      relevant_motion[4] * (motionTime - relevant_motion[0]);
+    current_displacement[1] =
+      relevant_motion[5] * (motionTime - relevant_motion[0]);
+    current_displacement[2] =
+      relevant_motion[6] * (motionTime - relevant_motion[0]);
   } else {
-    // Interp displacement if information is available. Assume lines between motion points.
+    // Interp displacement if information is available. Assume lines between
+    // motion points.
     if (min_index == (defined_motion_values_.extent(0) - 1)) {
       current_displacement[0] = relevant_motion[1];
       current_displacement[1] = relevant_motion[2];
       current_displacement[2] = relevant_motion[3];
     } else {
-      auto next_motion = Kokkos::subview(defined_motion_values_, min_index + 1, Kokkos::ALL());
-      double interp_ratio = (motionTime - relevant_motion[0]) / (next_motion[0] - relevant_motion[0]);
-      current_displacement[0] = (1.0 - interp_ratio) * relevant_motion[1] + interp_ratio * next_motion[1];
-      current_displacement[1] = (1.0 - interp_ratio) * relevant_motion[2] + interp_ratio * next_motion[2];
-      current_displacement[2] = (1.0 - interp_ratio) * relevant_motion[3] + interp_ratio * next_motion[3];
+      auto next_motion =
+        Kokkos::subview(defined_motion_values_, min_index + 1, Kokkos::ALL());
+      double interp_ratio = (motionTime - relevant_motion[0]) /
+                            (next_motion[0] - relevant_motion[0]);
+      current_displacement[0] = (1.0 - interp_ratio) * relevant_motion[1] +
+                                interp_ratio * next_motion[1];
+      current_displacement[1] = (1.0 - interp_ratio) * relevant_motion[2] +
+                                interp_ratio * next_motion[2];
+      current_displacement[2] = (1.0 - interp_ratio) * relevant_motion[3] +
+                                interp_ratio * next_motion[3];
     }
   }
 
   if (relevant_motion[10] < -1e15) {
-    current_displacement[3] = relevant_motion[7] * (motionTime - relevant_motion[0]);
-    current_displacement[4] = relevant_motion[8] * (motionTime - relevant_motion[0]);
-    current_displacement[5] = relevant_motion[9] * (motionTime - relevant_motion[0]);
+    current_displacement[3] =
+      relevant_motion[7] * (motionTime - relevant_motion[0]);
+    current_displacement[4] =
+      relevant_motion[8] * (motionTime - relevant_motion[0]);
+    current_displacement[5] =
+      relevant_motion[9] * (motionTime - relevant_motion[0]);
   } else {
     if (min_index == defined_motion_values_.extent(0) - 1) {
       current_displacement[3] = relevant_motion[10];
       current_displacement[4] = relevant_motion[11];
       current_displacement[5] = relevant_motion[12];
     } else {
-      auto next_motion = Kokkos::subview(defined_motion_values_, min_index + 1, Kokkos::ALL());
-      double interp_ratio = (motionTime - relevant_motion[0]) / (next_motion[0] - relevant_motion[0]);
-      current_displacement[3] = (1.0 - interp_ratio) * relevant_motion[10] + interp_ratio * next_motion[10];
-      current_displacement[4] = (1.0 - interp_ratio) * relevant_motion[11] + interp_ratio * next_motion[11];
-      current_displacement[5] = (1.0 - interp_ratio) * relevant_motion[12] + interp_ratio * next_motion[12];
-    } 
+      auto next_motion =
+        Kokkos::subview(defined_motion_values_, min_index + 1, Kokkos::ALL());
+      double interp_ratio = (motionTime - relevant_motion[0]) /
+                            (next_motion[0] - relevant_motion[0]);
+      current_displacement[3] = (1.0 - interp_ratio) * relevant_motion[10] +
+                                interp_ratio * next_motion[10];
+      current_displacement[4] = (1.0 - interp_ratio) * relevant_motion[11] +
+                                interp_ratio * next_motion[11];
+      current_displacement[5] = (1.0 - interp_ratio) * relevant_motion[12] +
+                                interp_ratio * next_motion[12];
+    }
   }
 
   // Build matrix for translating object to cartesian origin
@@ -197,13 +223,16 @@ MotionPrescribedKernel::build_transformation(
   const double cr = std::cos(0.5 * rollX);
   const double sr = std::sin(0.5 * rollX);
 
-  double q0 = cr*cp*cy + sr*sp*sy;
-  double q3 = sr*cp*cy - cr*sp*sy;
-  double q1 = cr*sp*cy + sr*cp*sy;
-  double q2 = cr*cp*sy - sr*sp*cy;
+  double q0 = cr * cp * cy + sr * sp * sy;
+  double q3 = sr * cp * cy - cr * sp * sy;
+  double q1 = cr * sp * cy + sr * cp * sy;
+  double q2 = cr * cp * sy - sr * sp * cy;
 
   const double n = std::sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
-  q0 /= n; q1 /= n; q2 /= n; q3 /= n;
+  q0 /= n;
+  q1 /= n;
+  q2 /= n;
+  q3 /= n;
 
   // rotation matrix based on quaternion
   mm::TransMatType tempMat;
@@ -254,18 +283,19 @@ MotionPrescribedKernel::compute_velocity(
     }
   }
 
-  if (min_index == -1) 
+  if (min_index == -1)
     min_index = defined_motion_values_.extent(0) - 1;
   else
-    min_index = Kokkos::min(min_index-1,0);
+    min_index = Kokkos::min(min_index - 1, 0);
 
+  auto relevant_motion =
+    Kokkos::subview(defined_motion_values_, min_index, Kokkos::ALL());
 
-  auto relevant_motion = Kokkos::subview(defined_motion_values_, min_index, Kokkos::ALL());
-
-  auto motion_np1 = (min_index == (defined_motion_values_.extent(0) - 1)) ? 
-                    relevant_motion : Kokkos::subview(defined_motion_values_, min_index + 1, Kokkos::ALL());
+  auto motion_np1 =
+    (min_index == (defined_motion_values_.extent(0) - 1))
+      ? relevant_motion
+      : Kokkos::subview(defined_motion_values_, min_index + 1, Kokkos::ALL());
   double time_between = motion_np1[0] - relevant_motion[0];
-
 
   mm::ThreeDVecType transOrigin;
   for (int d = 0; d < nalu_ngp::NDimMax; d++) {
@@ -281,7 +311,9 @@ MotionPrescribedKernel::compute_velocity(
     vecOmega[d] = relevant_motion[7 + d];
   }
 
-  for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] < -1e15 && time_between > 1e-12; d++) {
+  for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] < -1e15 &&
+                  time_between > 1e-12;
+       d++) {
     relCoord[d] = cxyz[d] - transOrigin[d];
     vecOmega[d] = (motion_np1[10 + d] - relevant_motion[10 + d]) / time_between;
   }
@@ -295,7 +327,9 @@ MotionPrescribedKernel::compute_velocity(
     vecVel[d] = relevant_motion[4 + d];
   }
 
-  for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] > -1e15 && time_between > 1e-12; d++) {
+  for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] > -1e15 &&
+                  time_between > 1e-12;
+       d++) {
     vecVel[d] = (motion_np1[1 + d] - relevant_motion[1 + d]) / time_between;
   }
 
@@ -304,7 +338,6 @@ MotionPrescribedKernel::compute_velocity(
   vel[2] += vecVel[2];
 
   return vel;
-
 }
 
 } // namespace nalu
