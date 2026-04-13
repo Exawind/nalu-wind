@@ -1,5 +1,6 @@
 
 #include "mesh_motion/MotionPrescribedKernel.h"
+#include "mesh_motion/NgpMotion.h"
 
 #include <NaluEnv.h>
 #include <NaluParsing.h>
@@ -130,8 +131,12 @@ MotionPrescribedKernel::build_transformation(
     }
   }
 
+
+
   if (min_index == -1) 
     min_index = defined_motion_values_.extent(0) - 1;
+  else
+    min_index = Kokkos::min(min_index-1,0);
 
   auto relevant_motion = Kokkos::subview(defined_motion_values_, min_index, Kokkos::ALL());
   double current_displacement[6];
@@ -192,8 +197,8 @@ MotionPrescribedKernel::build_transformation(
   const double cr = std::cos(0.5 * rollX);
   const double sr = std::sin(0.5 * rollX);
 
-  double q3 = cr*cp*cy + sr*sp*sy;
-  double q0 = sr*cp*cy - cr*sp*sy;
+  double q0 = cr*cp*cy + sr*sp*sy;
+  double q3 = sr*cp*cy - cr*sp*sy;
   double q1 = cr*sp*cy + sr*cp*sy;
   double q2 = cr*cp*sy - sr*sp*cy;
 
@@ -251,6 +256,9 @@ MotionPrescribedKernel::compute_velocity(
 
   if (min_index == -1) 
     min_index = defined_motion_values_.extent(0) - 1;
+  else
+    min_index = Kokkos::min(min_index-1,0);
+
 
   auto relevant_motion = Kokkos::subview(defined_motion_values_, min_index, Kokkos::ALL());
 
@@ -283,11 +291,11 @@ MotionPrescribedKernel::compute_velocity(
   vel[2] = vecOmega[0] * relCoord[1] - vecOmega[1] * relCoord[0];
 
   mm::ThreeDVecType vecVel;
-  for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] > -1e15; d++) {
+  for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] < -1e15; d++) {
     vecVel[d] = relevant_motion[4 + d];
   }
 
-  for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] < -1e15 && time_between > 1e-12; d++) {
+  for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] > -1e15 && time_between > 1e-12; d++) {
     vecVel[d] = (motion_np1[1 + d] - relevant_motion[1 + d]) / time_between;
   }
 
