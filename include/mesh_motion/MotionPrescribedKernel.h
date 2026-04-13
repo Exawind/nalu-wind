@@ -8,7 +8,8 @@
 namespace sierra {
 namespace nalu {
 
-struct MotionValues {
+struct MotionValues
+{
   double time_value = 0.0;
   std::array<double, 3> x_disp = {-1e16, -1e16, -1e16};
   std::array<double, 3> vel = {0.0, 0.0, 0.0};
@@ -54,7 +55,6 @@ public:
 private:
   void load(const YAML::Node&);
   Kokkos::View<double**> defined_motion_values_;
-
 };
 
 } // namespace nalu
