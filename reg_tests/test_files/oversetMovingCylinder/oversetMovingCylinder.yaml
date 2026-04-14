@@ -150,13 +150,10 @@ realms:
         mesh_parts: [ Unspecified-2-HEX ]
         frame: non_inertial
         motion:
-         - type: prescribed
-           centroid: [0.0, 0.0, 0.0]
-           variables: [time, x_disp, y_disp, z_disp, x_angular_vel, y_angular_vel, z_angular_vel]
-           values:
-              - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-              - [0.1, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0]
-              - [0.2, 4.0, 15.0, 30.0, 4.5, -1.0, -5.0]
+         - type: rotation
+           omega: 1.00
+           axis: [0.0, 1.0, 0.0]
+           centroid: [5.0, 0.0, 0.0]
 
     solution_options:
       name: myOptions
