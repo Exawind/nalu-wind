@@ -134,6 +134,8 @@ MotionPrescribedKernel::build_transformation(
     return transMat;
   double motionTime = (time < endTime_) ? time : endTime_;
 
+  // min_index corresponds to trajectory index that has the minimum difference
+  // in time to current time in simulation
   int min_index = -1;
   for (int i = 0; i < defined_motion_values_.extent(0); ++i) {
     if (defined_motion_values_(i, 0) > motionTime) {
@@ -154,6 +156,7 @@ MotionPrescribedKernel::build_transformation(
 
   // Defer to specified displacements, else default back to velocities
   if (relevant_motion[1] < -1e15) {
+    // Note indices here, [0] corresponds to time
     current_displacement[0] =
       relevant_motion[4] * (motionTime - relevant_motion[0]);
     current_displacement[1] =
@@ -164,6 +167,9 @@ MotionPrescribedKernel::build_transformation(
     // Interp displacement if information is available. Assume lines between
     // motion points.
     if (min_index == (defined_motion_values_.extent(0) - 1)) {
+      // Note indices here, [1-3] corresponds to x, y, and z displacements in
+      // relevant_motion, result gets shifted over for mesh_motion API
+      // calculations
       current_displacement[0] = relevant_motion[1];
       current_displacement[1] = relevant_motion[2];
       current_displacement[2] = relevant_motion[3];
@@ -182,6 +188,7 @@ MotionPrescribedKernel::build_transformation(
   }
 
   if (relevant_motion[10] < -1e15) {
+    // Note indices here, [0] corresponds to time
     current_displacement[3] =
       relevant_motion[7] * (motionTime - relevant_motion[0]);
     current_displacement[4] =
@@ -190,6 +197,9 @@ MotionPrescribedKernel::build_transformation(
       relevant_motion[9] * (motionTime - relevant_motion[0]);
   } else {
     if (min_index == defined_motion_values_.extent(0) - 1) {
+      // Note indices here, [10-13] corresponds to x, y, and z angular
+      // displacements in relevant_motion, result gets shifted over for
+      // mesh_motion API calculations
       current_displacement[3] = relevant_motion[10];
       current_displacement[4] = relevant_motion[11];
       current_displacement[5] = relevant_motion[12];
@@ -276,6 +286,8 @@ MotionPrescribedKernel::compute_velocity(
     return vel;
 
   double motionTime = (time < endTime_) ? time : endTime_;
+  // min_index corresponds to trajectory index that has the minimum difference
+  // in time to current time in simulation
   int min_index = -1;
   for (int i = 0; i < defined_motion_values_.extent(0); ++i) {
     if (defined_motion_values_(i, 0) > motionTime) {
@@ -307,6 +319,7 @@ MotionPrescribedKernel::compute_velocity(
   mm::ThreeDVecType relCoord;
   mm::ThreeDVecType vecOmega;
   for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] > -1e15; d++) {
+    // Note the indices here, [7, 8, 9] correspond to angular velocities
     relCoord[d] = cxyz[d] - transOrigin[d];
     vecOmega[d] = relevant_motion[7 + d];
   }
@@ -314,6 +327,7 @@ MotionPrescribedKernel::compute_velocity(
   for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] < -1e15 &&
                   time_between > 1e-12;
        d++) {
+    // Note the indices here, [10, 11, 12] correspond to angular displacements
     relCoord[d] = cxyz[d] - transOrigin[d];
     vecOmega[d] = (motion_np1[10 + d] - relevant_motion[10 + d]) / time_between;
   }
@@ -324,12 +338,15 @@ MotionPrescribedKernel::compute_velocity(
 
   mm::ThreeDVecType vecVel;
   for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] < -1e15; d++) {
+    // Note the indices here, [4, 5, 6] correspond to translational velocities
     vecVel[d] = relevant_motion[4 + d];
   }
 
   for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] > -1e15 &&
                   time_between > 1e-12;
        d++) {
+    // Note the indices here, [1, 2, 3] correspond to translational
+    // displacements
     vecVel[d] = (motion_np1[1 + d] - relevant_motion[1 + d]) / time_between;
   }
 
