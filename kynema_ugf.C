@@ -20,9 +20,6 @@
 #include <stk_util/environment/perf_util.hpp>
 #include <stk_util/parallel/ParallelReduce.hpp>
 
-// teest
-
-// test
 // input params
 #include <stk_util/environment/OptionsSpecification.hpp>
 #include <stk_util/environment/ParseCommandLineArgs.hpp>
@@ -70,7 +67,7 @@ human_bytes_double(double bytes)
 int
 main(int argc, char** argv)
 {
-  namespace version = sierra::kynema_ugf::version;
+  namespace version =      sierra::kynema_ugf::version;
 
   // start up MPI
   if (MPI_SUCCESS != MPI_Init(&argc, &argv)) {
