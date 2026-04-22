@@ -113,7 +113,7 @@ public:
       algMap_[algName].reset(
         kynema_ugf_ngp::create_elem_algorithm<Algorithm, ElemAlg>(
           topo, realm_, part, std::forward<Args>(args)...));
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Created algorithm = " << algName << std::endl;
     } else {
       it->second->partVec_.push_back(part);
@@ -144,7 +144,7 @@ public:
       algMap_[algName].reset(
         kynema_ugf_ngp::create_face_algorithm<Algorithm, FaceAlg>(
           topo, realm_, part, std::forward<Args>(args)...));
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Created algorithm = " << algName << std::endl;
     } else {
       it->second->partVec_.push_back(part);
@@ -170,7 +170,7 @@ public:
       algMap_[algName].reset(
         kynema_ugf_ngp::create_face_elem_algorithm<Algorithm, FaceElemAlg>(
           topo, elemTopo, realm_, part, std::forward<Args>(args)...));
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Created algorithm = " << algName << std::endl;
     } else {
       it->second->partVec_.push_back(part);
@@ -186,7 +186,7 @@ protected:
     if (it == algMap_.end()) {
       algMap_[algName].reset(
         new KynemaUGFAlg(realm_, part, std::forward<Args>(args)...));
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Created algorithm = " << algName << std::endl;
     } else {
       it->second->partVec_.push_back(part);

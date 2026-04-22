@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <AssembleElemSolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <SolverAlgorithm.h>

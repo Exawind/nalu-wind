@@ -38,17 +38,19 @@ MotionDeformingInteriorKernel::load(const YAML::Node& node)
 
   // get lower bounds of deforming part of mesh
   if (!node["xyz_min"])
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "MotionDeformingInteriorKernel: Need to "
-                                      "define lower bounds of mesh that deform"
-                                   << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "MotionDeformingInteriorKernel: Need to "
+         "define lower bounds of mesh that deform"
+      << std::endl;
   for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
     xyzMin_[d] = node["xyz_min"][d].as<double>();
 
   // get lower bounds of deforming part of mesh
   if (!node["xyz_max"])
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "MotionDeformingInteriorKernel: Need to "
-                                      "define upper bounds of mesh that deform"
-                                   << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "MotionDeformingInteriorKernel: Need to "
+         "define upper bounds of mesh that deform"
+      << std::endl;
   for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
     xyzMax_[d] = node["xyz_max"][d].as<double>();
 

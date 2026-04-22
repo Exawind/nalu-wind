@@ -31,7 +31,8 @@ public:
   virtual ~SuppAlg() {}
 
   virtual void elem_execute(
-    stk::topology topo, sierra::kynema_ugf::ScratchViews<DoubleType>& elemData) = 0;
+    stk::topology topo,
+    sierra::kynema_ugf::ScratchViews<DoubleType>& elemData) = 0;
 };
 
 class TestSuppAlg : public SuppAlg

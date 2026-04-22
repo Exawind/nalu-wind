@@ -189,7 +189,7 @@ find_topo(
   } else if (const auto it = dev_map.find(host_ptr); it != dev_map.end()) {
     theTopo = it->second;
   } else {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " Host Master Element pointer could not be converted to device "
          "pointer."
       << " The pointer was not found in the master element database:"
@@ -206,14 +206,14 @@ find_me(
 {
   auto it = me_map.find(theTopo);
   if (it == me_map.end()) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " Topology not supported: The topology, " << theTopo.name()
       << ", was not found in the map of supported topologies." << std::endl
       << " There are " << me_map.size()
       << " supported topologies:" << std::endl;
     for (const auto& v : me_map)
-      KynemaUGFEnv::self().kynema-ugfOutputP0() << v.first.name() << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0() << v.first.name() << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " Add topology to MasterElementRepo::find_me()" << std::endl;
     STK_ThrowRequire(it != me_map.end());
   }

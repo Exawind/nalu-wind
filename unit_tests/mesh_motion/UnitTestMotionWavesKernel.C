@@ -43,8 +43,8 @@ TEST(meshMotion, airy_wave)
   YAML::Node Airy_Wave_node = YAML::Load(Airy_Wave_info);
 
   // initialize the mesh Wave motion class
-  unit_test_utils::KynemaUGFTest kynema-ugfObj;
-  sierra::kynema_ugf::Realm& realm = kynema-ugfObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
 
   sierra::kynema_ugf::MotionWavesKernel MotionWavesKernel(
     realm.meta_data(), Airy_Wave_node);
@@ -73,8 +73,8 @@ TEST(meshMotion, stokes_coefficients)
 
   YAML::Node Stokes_Wave_node = YAML::Load(Stokes_Wave_info);
   // initialize the mesh Wave motion class
-  unit_test_utils::KynemaUGFTest kynema-ugfObj;
-  sierra::kynema_ugf::Realm& realm = kynema-ugfObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
 
   sierra::kynema_ugf::MotionWavesKernel MotionWavesKernel(
     realm.meta_data(), Stokes_Wave_node);

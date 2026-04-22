@@ -80,15 +80,17 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
     stk::topology::NODE_RANK, "dual_nodal_volume", 3));
   stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
 
-  sierra::kynema_ugf::VectorFieldType* meshDisp_ = &(meta_->declare_field<double>(
-    stk::topology::NODE_RANK, "mesh_displacement", 3));
+  sierra::kynema_ugf::VectorFieldType* meshDisp_ =
+    &(meta_->declare_field<double>(
+      stk::topology::NODE_RANK, "mesh_displacement", 3));
   stk::mesh::put_field_on_mesh(
     *meshDisp_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
   stk::io::set_field_output_type(
     *meshDisp_, stk::io::FieldOutputType::VECTOR_3D);
 
-  sierra::kynema_ugf::VectorFieldType* cCoords_ = &(meta_->declare_field<double>(
-    stk::topology::NODE_RANK, "current_coordinates"));
+  sierra::kynema_ugf::VectorFieldType* cCoords_ =
+    &(meta_->declare_field<double>(
+      stk::topology::NODE_RANK, "current_coordinates"));
   stk::mesh::put_field_on_mesh(
     *cCoords_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
   stk::io::set_field_output_type(
@@ -97,14 +99,16 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
   const auto& meSCS =
     sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       stk::topology::HEX_8);
-  sierra::kynema_ugf::GenericFieldType* sweptVolume_ = &(meta_->declare_field<double>(
-    stk::topology::ELEM_RANK, "swept_face_volume", 3));
+  sierra::kynema_ugf::GenericFieldType* sweptVolume_ =
+    &(meta_->declare_field<double>(
+      stk::topology::ELEM_RANK, "swept_face_volume", 3));
   stk::mesh::put_field_on_mesh(
     *sweptVolume_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
-  sierra::kynema_ugf::GenericFieldType* faceVelMag_ = &(meta_->declare_field<double>(
-    stk::topology::ELEM_RANK, "face_velocity_mag", 2));
+  sierra::kynema_ugf::GenericFieldType* faceVelMag_ =
+    &(meta_->declare_field<double>(
+      stk::topology::ELEM_RANK, "face_velocity_mag", 2));
   stk::mesh::put_field_on_mesh(
     *faceVelMag_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
@@ -127,8 +131,9 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
   helperObjs.realm.solutionOptions_->meshMotion_ = true;
 
   sierra::kynema_ugf::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
-  geomAlgDriver.register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
-    sierra::kynema_ugf::INTERIOR, partVec_[0], "geometry");
+  geomAlgDriver
+    .register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
+      sierra::kynema_ugf::INTERIOR, partVec_[0], "geometry");
   geomAlgDriver.register_elem_algorithm<sierra::kynema_ugf::MeshVelocityAlg>(
     sierra::kynema_ugf::INTERIOR, partVec_[0], "mesh_vel");
 
@@ -220,15 +225,17 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
     stk::topology::NODE_RANK, "dual_nodal_volume", 3));
   stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
 
-  sierra::kynema_ugf::VectorFieldType* meshDisp_ = &(meta_->declare_field<double>(
-    stk::topology::NODE_RANK, "mesh_displacement", 3));
+  sierra::kynema_ugf::VectorFieldType* meshDisp_ =
+    &(meta_->declare_field<double>(
+      stk::topology::NODE_RANK, "mesh_displacement", 3));
   stk::mesh::put_field_on_mesh(
     *meshDisp_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
   stk::io::set_field_output_type(
     *meshDisp_, stk::io::FieldOutputType::VECTOR_3D);
 
-  sierra::kynema_ugf::VectorFieldType* cCoords_ = &(meta_->declare_field<double>(
-    stk::topology::NODE_RANK, "current_coordinates"));
+  sierra::kynema_ugf::VectorFieldType* cCoords_ =
+    &(meta_->declare_field<double>(
+      stk::topology::NODE_RANK, "current_coordinates"));
   stk::mesh::put_field_on_mesh(
     *cCoords_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
   stk::io::set_field_output_type(
@@ -237,14 +244,16 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
   const auto& meSCS =
     sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       stk::topology::HEX_8);
-  sierra::kynema_ugf::GenericFieldType* sweptVolume_ = &(meta_->declare_field<double>(
-    stk::topology::ELEM_RANK, "swept_face_volume", 3));
+  sierra::kynema_ugf::GenericFieldType* sweptVolume_ =
+    &(meta_->declare_field<double>(
+      stk::topology::ELEM_RANK, "swept_face_volume", 3));
   stk::mesh::put_field_on_mesh(
     *sweptVolume_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
-  sierra::kynema_ugf::GenericFieldType* faceVelMag_ = &(meta_->declare_field<double>(
-    stk::topology::ELEM_RANK, "face_velocity_mag", 2));
+  sierra::kynema_ugf::GenericFieldType* faceVelMag_ =
+    &(meta_->declare_field<double>(
+      stk::topology::ELEM_RANK, "face_velocity_mag", 2));
   stk::mesh::put_field_on_mesh(
     *faceVelMag_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
@@ -267,8 +276,9 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
   helperObjs.realm.solutionOptions_->meshMotion_ = true;
 
   sierra::kynema_ugf::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
-  geomAlgDriver.register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
-    sierra::kynema_ugf::INTERIOR, partVec_[0], "geometry");
+  geomAlgDriver
+    .register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
+      sierra::kynema_ugf::INTERIOR, partVec_[0], "geometry");
   geomAlgDriver.register_elem_algorithm<sierra::kynema_ugf::MeshVelocityAlg>(
     sierra::kynema_ugf::INTERIOR, partVec_[0], "mesh_vel");
 
@@ -360,15 +370,17 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
     stk::topology::NODE_RANK, "dual_nodal_volume", 3));
   stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
 
-  sierra::kynema_ugf::VectorFieldType* meshDisp_ = &(meta_->declare_field<double>(
-    stk::topology::NODE_RANK, "mesh_displacement", 3));
+  sierra::kynema_ugf::VectorFieldType* meshDisp_ =
+    &(meta_->declare_field<double>(
+      stk::topology::NODE_RANK, "mesh_displacement", 3));
   stk::mesh::put_field_on_mesh(
     *meshDisp_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
   stk::io::set_field_output_type(
     *meshDisp_, stk::io::FieldOutputType::VECTOR_3D);
 
-  sierra::kynema_ugf::VectorFieldType* cCoords_ = &(meta_->declare_field<double>(
-    stk::topology::NODE_RANK, "current_coordinates"));
+  sierra::kynema_ugf::VectorFieldType* cCoords_ =
+    &(meta_->declare_field<double>(
+      stk::topology::NODE_RANK, "current_coordinates"));
   stk::mesh::put_field_on_mesh(
     *cCoords_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
   stk::io::set_field_output_type(
@@ -377,14 +389,16 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
   const auto& meSCS =
     sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       stk::topology::HEX_8);
-  sierra::kynema_ugf::GenericFieldType* sweptVolume_ = &(meta_->declare_field<double>(
-    stk::topology::ELEM_RANK, "swept_face_volume", 3));
+  sierra::kynema_ugf::GenericFieldType* sweptVolume_ =
+    &(meta_->declare_field<double>(
+      stk::topology::ELEM_RANK, "swept_face_volume", 3));
   stk::mesh::put_field_on_mesh(
     *sweptVolume_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
-  sierra::kynema_ugf::GenericFieldType* faceVelMag_ = &(meta_->declare_field<double>(
-    stk::topology::ELEM_RANK, "face_velocity_mag", 2));
+  sierra::kynema_ugf::GenericFieldType* faceVelMag_ =
+    &(meta_->declare_field<double>(
+      stk::topology::ELEM_RANK, "face_velocity_mag", 2));
   stk::mesh::put_field_on_mesh(
     *faceVelMag_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
@@ -407,8 +421,9 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
   helperObjs.realm.solutionOptions_->meshMotion_ = true;
 
   sierra::kynema_ugf::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
-  geomAlgDriver.register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
-    sierra::kynema_ugf::INTERIOR, partVec_[0], "geometry");
+  geomAlgDriver
+    .register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
+      sierra::kynema_ugf::INTERIOR, partVec_[0], "geometry");
   geomAlgDriver.register_elem_algorithm<sierra::kynema_ugf::MeshVelocityAlg>(
     sierra::kynema_ugf::INTERIOR, partVec_[0], "mesh_vel");
 

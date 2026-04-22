@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <EffectiveDiffFluxCoeffAlgorithm.h>
 #include <Algorithm.h>
 #include <FieldTypeDef.h>

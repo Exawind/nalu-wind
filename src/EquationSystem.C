@@ -208,7 +208,7 @@ EquationSystem::dump_eq_time()
 
   int nprocs = KynemaUGFEnv::self().parallel_size();
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Timing for Eq: " << userSuppliedName_ << std::endl;
 
   // get max, min, and sum over processes
@@ -220,33 +220,33 @@ EquationSystem::dump_eq_time()
     KynemaUGFEnv::self().parallel_comm(), &l_timer[0], &g_max[0], 6);
 
   // output
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "             init --  "
     << " \tavg: " << g_sum[4] / double(nprocs) << " \tmin: " << g_min[4]
     << " \tmax: " << g_max[4] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "         assemble --  "
     << " \tavg: " << g_sum[0] / double(nprocs) << " \tmin: " << g_min[0]
     << " \tmax: " << g_max[0] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "    load_complete --  "
     << " \tavg: " << g_sum[1] / double(nprocs) << " \tmin: " << g_min[1]
     << " \tmax: " << g_max[1] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "            solve --  "
     << " \tavg: " << g_sum[2] / double(nprocs) << " \tmin: " << g_min[2]
     << " \tmax: " << g_max[2] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "    precond setup --  "
     << " \tavg: " << g_sum[5] / double(nprocs) << " \tmin: " << g_min[5]
     << " \tmax: " << g_max[5] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "             misc --  "
     << " \tavg: " << g_sum[3] / double(nprocs) << " \tmin: " << g_min[3]
     << " \tmax: " << g_max[3] << std::endl;
 
   if (reportLinearIterations_)
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "linear iterations -- "
       << " \tavg: " << avgLinearIterations_
       << " \tmin: " << minLinearIterations_
@@ -304,34 +304,34 @@ EquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
   int error = 0;
 
   // zero the system
-  double timeA = KynemaUGFEnv::self().kynema-ugf_time();
+  double timeA = KynemaUGFEnv::self().kynema_ugf_time();
   linsys_->zeroSystem();
-  double timeB = KynemaUGFEnv::self().kynema-ugf_time();
+  double timeB = KynemaUGFEnv::self().kynema_ugf_time();
   timerAssemble_ += (timeB - timeA);
 
   // apply all flux and dirichlet algs
-  timeA = KynemaUGFEnv::self().kynema-ugf_time();
+  timeA = KynemaUGFEnv::self().kynema_ugf_time();
   solverAlgDriver_->execute();
-  timeB = KynemaUGFEnv::self().kynema-ugf_time();
+  timeB = KynemaUGFEnv::self().kynema_ugf_time();
   timerAssemble_ += (timeB - timeA);
 
   // load complete
-  timeA = KynemaUGFEnv::self().kynema-ugf_time();
+  timeA = KynemaUGFEnv::self().kynema_ugf_time();
   linsys_->loadComplete();
-  timeB = KynemaUGFEnv::self().kynema-ugf_time();
+  timeB = KynemaUGFEnv::self().kynema_ugf_time();
   timerLoadComplete_ += (timeB - timeA);
 
   // solve the system; extract delta
-  timeA = KynemaUGFEnv::self().kynema-ugf_time();
+  timeA = KynemaUGFEnv::self().kynema_ugf_time();
   error = linsys_->solve(deltaSolution);
-  timeB = KynemaUGFEnv::self().kynema-ugf_time();
+  timeB = KynemaUGFEnv::self().kynema_ugf_time();
   timerSolve_ += (timeB - timeA);
   timerPrecond_ += linsys_->get_timer_precond();
 
   if (realm_.hasPeriodic_) {
-    timeA = KynemaUGFEnv::self().kynema-ugf_time();
+    timeA = KynemaUGFEnv::self().kynema_ugf_time();
     realm_.periodic_delta_solution_update(deltaSolution, linsys_->numDof());
-    timeB = KynemaUGFEnv::self().kynema-ugf_time();
+    timeB = KynemaUGFEnv::self().kynema_ugf_time();
     timerMisc_ += (timeB - timeA);
   }
 
@@ -339,8 +339,9 @@ EquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
   update_iteration_statistics(linsys_->linearSolveIterations());
 
   if (error > 0)
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "Error in " << userSuppliedName_
-                                   << "::solve_and_update()  " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Error in " << userSuppliedName_ << "::solve_and_update()  "
+      << std::endl;
 }
 
 //--------------------------------------------------------------------------

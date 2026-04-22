@@ -88,9 +88,11 @@ public:
 
 void
 basic_node_loop(
-  const stk::mesh::BulkData& bulk, sierra::kynema_ugf::ScalarFieldType& pressure)
+  const stk::mesh::BulkData& bulk,
+  sierra::kynema_ugf::ScalarFieldType& pressure)
 {
-  using Traits = sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits =
+    sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   const double presSet = 4.0;
 
   const auto& meta = bulk.mesh_meta_data();
@@ -123,9 +125,11 @@ basic_node_loop(
 
 void
 basic_node_reduce(
-  const stk::mesh::BulkData& bulk, sierra::kynema_ugf::ScalarFieldType& pressure)
+  const stk::mesh::BulkData& bulk,
+  sierra::kynema_ugf::ScalarFieldType& pressure)
 {
-  using Traits = sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits =
+    sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   const double presSet = 4.0;
 
   stk::mesh::field_fill(presSet, pressure);
@@ -171,7 +175,8 @@ void
 basic_node_reduce_minmax(
   const stk::mesh::BulkData& bulk, const double minGold, const double maxGold)
 {
-  using Traits = sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits =
+    sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   const auto& meta = bulk.mesh_meta_data();
   const auto& coords = meta.coordinate_field();
@@ -212,7 +217,8 @@ void
 basic_node_reduce_minmax_alt(
   const stk::mesh::BulkData& bulk, const double minGold, const double maxGold)
 {
-  using Traits = sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits =
+    sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   const auto& meta = bulk.mesh_meta_data();
   const auto& coords = meta.coordinate_field();
@@ -246,7 +252,8 @@ basic_node_reduce_minmaxsum(
   const double maxGold,
   const double sumGold)
 {
-  using Traits = sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits =
+    sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using MinMaxSum = sierra::kynema_ugf::kynema_ugf_ngp::MinMaxSum<double>;
   using value_type = typename MinMaxSum::value_type;
 
@@ -282,8 +289,8 @@ basic_node_reduce_array(
   sierra::kynema_ugf::ScalarFieldType& pressure,
   int num_nodes)
 {
-  using MeshIndex =
-    sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex = sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<
+    stk::mesh::NgpMesh>::MeshIndex;
   const double presSet = 4.0;
 
   stk::mesh::field_fill(presSet, pressure);
@@ -293,7 +300,8 @@ basic_node_reduce_array(
   stk::mesh::NgpField<double>& ngpPressure =
     stk::mesh::get_updated_ngp_field<double>(pressure);
 
-  using value_type = Kokkos::Sum<sierra::kynema_ugf::kynema_ugf_ngp::ArrayDbl2>::value_type;
+  using value_type =
+    Kokkos::Sum<sierra::kynema_ugf::kynema_ugf_ngp::ArrayDbl2>::value_type;
   value_type lsum;
   Kokkos::Sum<sierra::kynema_ugf::kynema_ugf_ngp::ArrayDbl2> sum_reducer(lsum);
 
@@ -332,7 +340,8 @@ basic_elem_loop(
   sierra::kynema_ugf::kynema_ugf_ngp::run_elem_algorithm(
     "unittest_basic_elem_loop", ngpMesh, stk::topology::ELEMENT_RANK, sel,
     KOKKOS_LAMBDA(
-      const sierra::kynema_ugf::kynema_ugf_ngp::EntityInfo<stk::mesh::NgpMesh>& einfo) {
+      const sierra::kynema_ugf::kynema_ugf_ngp::EntityInfo<stk::mesh::NgpMesh>&
+        einfo) {
       ngpMassFlowRate.get(einfo.meshIdx, 0) = flowRate;
 
       const auto& nodes = einfo.entityNodes;
@@ -386,7 +395,8 @@ basic_edge_loop(
   sierra::kynema_ugf::kynema_ugf_ngp::run_edge_algorithm(
     "unittest_basic_edge_loop", ngpMesh, sel,
     KOKKOS_LAMBDA(
-      const sierra::kynema_ugf::kynema_ugf_ngp::EntityInfo<stk::mesh::NgpMesh>& einfo) {
+      const sierra::kynema_ugf::kynema_ugf_ngp::EntityInfo<stk::mesh::NgpMesh>&
+        einfo) {
       ngpMassFlowRate.get(einfo.meshIdx, 0) = flowRate;
 
       const auto& nodes = einfo.entityNodes;
@@ -425,9 +435,11 @@ elem_loop_scratch_views(
   sierra::kynema_ugf::ScalarFieldType& pressure,
   sierra::kynema_ugf::VectorFieldType& velocity)
 {
-  using Traits = sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits =
+    sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Hex8Traits = sierra::kynema_ugf::AlgTraitsHex8;
-  using ElemSimdData = sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdData =
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
   typedef Kokkos::DualView<
     double*, Kokkos::LayoutRight, sierra::kynema_ugf::DeviceSpace>
     DoubleTypeView;
@@ -447,7 +459,8 @@ elem_loop_scratch_views(
   dataReq.add_master_element_call(
     sierra::kynema_ugf::SCV_VOLUME, sierra::kynema_ugf::CURRENT_COORDINATES);
   dataReq.add_master_element_call(
-    sierra::kynema_ugf::SCV_SHIFTED_SHAPE_FCN, sierra::kynema_ugf::CURRENT_COORDINATES);
+    sierra::kynema_ugf::SCV_SHIFTED_SHAPE_FCN,
+    sierra::kynema_ugf::CURRENT_COORDINATES);
 
   sierra::kynema_ugf::kynema_ugf_ngp::MeshInfo<> meshInfo(bulk);
   stk::mesh::Selector sel = meta.universal_part();
@@ -464,7 +477,8 @@ elem_loop_scratch_views(
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpVel = fieldMgr.get_field<double>(velID);
   const auto ngpVelOp =
-    sierra::kynema_ugf::kynema_ugf_ngp::simd_elem_nodal_field_updater(ngpMesh, ngpVel);
+    sierra::kynema_ugf::kynema_ugf_ngp::simd_elem_nodal_field_updater(
+      ngpMesh, ngpVel);
 
   const int numNodes = 8;
   DoubleTypeView volCheck("scv_volume", numNodes);
@@ -480,7 +494,8 @@ elem_loop_scratch_views(
       auto& v_pres = scrViews.get_scratch_view_1D(presID);
       auto& v_vel = scrViews.get_scratch_view_2D(velID);
       auto& scv_vol =
-        scrViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES).scv_volume;
+        scrViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES)
+          .scv_volume;
 
       test += v_vel(0, 0) + v_pres(0) * scv_vol(0);
 
@@ -530,9 +545,11 @@ calc_mdot_elem_loop(
   sierra::kynema_ugf::VectorFieldType& velocity,
   sierra::kynema_ugf::GenericFieldType& massFlowRate)
 {
-  using Traits = sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits =
+    sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Hex8Traits = sierra::kynema_ugf::AlgTraitsHex8;
-  using ElemSimdData = sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdData =
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meta = bulk.mesh_meta_data();
   sierra::kynema_ugf::ElemDataRequests dataReq(meta);
@@ -549,7 +566,8 @@ calc_mdot_elem_loop(
   dataReq.add_master_element_call(
     sierra::kynema_ugf::SCS_AREAV, sierra::kynema_ugf::CURRENT_COORDINATES);
   dataReq.add_master_element_call(
-    sierra::kynema_ugf::SCS_SHIFTED_SHAPE_FCN, sierra::kynema_ugf::CURRENT_COORDINATES);
+    sierra::kynema_ugf::SCS_SHIFTED_SHAPE_FCN,
+    sierra::kynema_ugf::CURRENT_COORDINATES);
 
   sierra::kynema_ugf::kynema_ugf_ngp::MeshInfo<> meshInfo(bulk);
   stk::mesh::Selector sel = meta.universal_part();
@@ -562,7 +580,8 @@ calc_mdot_elem_loop(
   stk::mesh::NgpField<double> ngpMdot = fieldMgr.get_field<double>(mdotID);
   // SIMD Element field operation handler
   const auto mdotOps =
-    sierra::kynema_ugf::kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, ngpMdot);
+    sierra::kynema_ugf::kynema_ugf_ngp::simd_elem_field_updater(
+      ngpMesh, ngpMdot);
 
   auto v_shape_fcn = sierra::kynema_ugf::shape_fcn<
     sierra::kynema_ugf::AlgTraitsHex8, sierra::kynema_ugf::QuadRank::SCS>(
@@ -575,7 +594,8 @@ calc_mdot_elem_loop(
       auto& scrViews = edata.simdScrView;
       auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
       auto& v_vel = scrViews.get_scratch_view_2D(velID);
-      auto& meViews = scrViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
+      auto& meViews =
+        scrViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
       auto& v_area = meViews.scs_areav;
 
       for (int ip = 0; ip < Hex8Traits::numScsIp_; ++ip) {
@@ -621,8 +641,8 @@ basic_face_elem_loop(
   sierra::kynema_ugf::ScalarFieldType& wallArea,
   sierra::kynema_ugf::ScalarFieldType& wallNormDist)
 {
-  using MeshIndex =
-    sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex = sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<
+    stk::mesh::NgpMesh>::MeshIndex;
   using FaceTraits = sierra::kynema_ugf::AlgTraitsQuad4Hex8;
   using FaceSimdData =
     sierra::kynema_ugf::kynema_ugf_ngp::FaceElemSimdData<stk::mesh::NgpMesh>;
@@ -661,9 +681,11 @@ basic_face_elem_loop(
   auto wDist =
     fieldMgr.get_field<double>(wallNormDist.mesh_meta_data_ordinal());
   const auto areaOps =
-    sierra::kynema_ugf::kynema_ugf_ngp::simd_face_elem_nodal_field_updater(ngpMesh, wArea);
+    sierra::kynema_ugf::kynema_ugf_ngp::simd_face_elem_nodal_field_updater(
+      ngpMesh, wArea);
   const auto distOps =
-    sierra::kynema_ugf::kynema_ugf_ngp::simd_face_elem_nodal_field_updater(ngpMesh, wDist);
+    sierra::kynema_ugf::kynema_ugf_ngp::simd_face_elem_nodal_field_updater(
+      ngpMesh, wDist);
 
   sierra::kynema_ugf::kynema_ugf_ngp::run_face_elem_algorithm(
     "unittest_basic_face_elem_loop", meshInfo, faceData, elemData, sel,
@@ -730,10 +752,12 @@ basic_face_elem_loop(
 
 void
 elem_loop_par_reduce(
-  const stk::mesh::BulkData& bulk, sierra::kynema_ugf::ScalarFieldType& pressure)
+  const stk::mesh::BulkData& bulk,
+  sierra::kynema_ugf::ScalarFieldType& pressure)
 {
   using Hex8Traits = sierra::kynema_ugf::AlgTraitsHex8;
-  using ElemSimdData = sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdData =
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
   const double presSet = 4.0;
 
   stk::mesh::field_fill(presSet, pressure);
@@ -970,7 +994,8 @@ TEST_F(NgpLoopTest, NGP_basic_face_elem_loop)
 
   fill_mesh_and_init_fields("generated:4x4x1|sideset:xXyYzZ");
   unit_test_kernel_utils::calc_exposed_area_vec(
-    *bulk, sierra::kynema_ugf::AlgTraitsQuad4::topo_, *coordField, exposedAreaVec);
+    *bulk, sierra::kynema_ugf::AlgTraitsQuad4::topo_, *coordField,
+    exposedAreaVec);
 
   basic_face_elem_loop(
     *bulk, *coordField, exposedAreaVec, wallArea, wallNormDist);
@@ -990,7 +1015,8 @@ TEST_F(NgpLoopTest, NGP_basic_face_elem_reduce)
 
   fill_mesh_and_init_fields("generated:4x4x1|sideset:xXyYzZ");
   unit_test_kernel_utils::calc_exposed_area_vec(
-    *bulk, sierra::kynema_ugf::AlgTraitsQuad4::topo_, *coordField, exposedAreaVec);
+    *bulk, sierra::kynema_ugf::AlgTraitsQuad4::topo_, *coordField,
+    exposedAreaVec);
 
   basic_face_elem_reduce(*bulk, *coordField, exposedAreaVec);
 }

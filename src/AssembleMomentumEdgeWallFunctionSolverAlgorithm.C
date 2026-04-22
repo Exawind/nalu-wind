@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <AssembleMomentumEdgeWallFunctionSolverAlgorithm.h>
 #include <SolverAlgorithm.h>
 #include <EquationSystem.h>

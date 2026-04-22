@@ -555,7 +555,8 @@ struct convert<sierra::kynema_ugf::Temperature>
 template <>
 struct convert<sierra::kynema_ugf::MixtureFraction>
 {
-  static bool decode(const Node& node, sierra::kynema_ugf::MixtureFraction& rhs);
+  static bool
+  decode(const Node& node, sierra::kynema_ugf::MixtureFraction& rhs);
 };
 
 template <>
@@ -573,7 +574,8 @@ struct convert<sierra::kynema_ugf::MassFraction>
 template <>
 struct convert<sierra::kynema_ugf::ReferenceTemperature>
 {
-  static bool decode(const Node& node, sierra::kynema_ugf::ReferenceTemperature& rhs);
+  static bool
+  decode(const Node& node, sierra::kynema_ugf::ReferenceTemperature& rhs);
 };
 
 template <>
@@ -628,13 +630,15 @@ struct convert<sierra::kynema_ugf::OpenUserData>
 template <>
 struct convert<sierra::kynema_ugf::OversetUserData>
 {
-  static bool decode(const Node& node, sierra::kynema_ugf::OversetUserData& rhs);
+  static bool
+  decode(const Node& node, sierra::kynema_ugf::OversetUserData& rhs);
 };
 
 template <>
 struct convert<sierra::kynema_ugf::SymmetryUserData>
 {
-  static bool decode(const Node& node, sierra::kynema_ugf::SymmetryUserData& rhs);
+  static bool
+  decode(const Node& node, sierra::kynema_ugf::SymmetryUserData& rhs);
 };
 
 template <>
@@ -646,13 +650,15 @@ struct convert<sierra::kynema_ugf::ABLTopUserData>
 template <>
 struct convert<sierra::kynema_ugf::PeriodicUserData>
 {
-  static bool decode(const Node& node, sierra::kynema_ugf::PeriodicUserData& rhs);
+  static bool
+  decode(const Node& node, sierra::kynema_ugf::PeriodicUserData& rhs);
 };
 
 template <>
 struct convert<sierra::kynema_ugf::NonConformalUserData>
 {
-  static bool decode(const Node& node, sierra::kynema_ugf::NonConformalUserData& rhs);
+  static bool
+  decode(const Node& node, sierra::kynema_ugf::NonConformalUserData& rhs);
 };
 
 template <>

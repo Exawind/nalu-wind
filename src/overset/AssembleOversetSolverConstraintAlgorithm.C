@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <overset/AssembleOversetSolverConstraintAlgorithm.h>
 #include <EquationSystem.h>
 

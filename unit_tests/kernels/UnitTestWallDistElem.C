@@ -200,7 +200,8 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist)
 
   // Initialize the kernel
   std::unique_ptr<sierra::kynema_ugf::Kernel> wallKernel(
-    new sierra::kynema_ugf::WallDistElemKernel<sierra::kynema_ugf::AlgTraitsHex8>(
+    new sierra::kynema_ugf::WallDistElemKernel<
+      sierra::kynema_ugf::AlgTraitsHex8>(
       *bulk_, solnOpts_,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 
@@ -234,7 +235,8 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist_shifted)
 
   // Initialize the kernel
   std::unique_ptr<sierra::kynema_ugf::Kernel> wallKernel(
-    new sierra::kynema_ugf::WallDistElemKernel<sierra::kynema_ugf::AlgTraitsHex8>(
+    new sierra::kynema_ugf::WallDistElemKernel<
+      sierra::kynema_ugf::AlgTraitsHex8>(
       *bulk_, solnOpts_,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 

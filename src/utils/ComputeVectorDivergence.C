@@ -83,8 +83,8 @@ compute_vector_divergence(
     wsScsArea.resize(numScsIp * nDim);
 
     ws_shape_function.resize(numScsIp * nodesPerElement);
-    sierra::kynema_ugf::SharedMemView<double**, sierra::kynema_ugf::HostShmem> ShmemView(
-      ws_shape_function.data(), numScsIp, nodesPerElement);
+    sierra::kynema_ugf::SharedMemView<double**, sierra::kynema_ugf::HostShmem>
+      ShmemView(ws_shape_function.data(), numScsIp, nodesPerElement);
     meSCS->shape_fcn<>(ShmemView);
 
     size_t length = b->size();
@@ -180,8 +180,8 @@ compute_vector_divergence(
 
     wsMeshVector.resize(nodesPerFace * nDim);
     ws_shape_function.resize(numScsIp * nodesPerFace);
-    sierra::kynema_ugf::SharedMemView<double**, sierra::kynema_ugf::HostShmem> ShmemView(
-      ws_shape_function.data(), numScsIp, nodesPerFace);
+    sierra::kynema_ugf::SharedMemView<double**, sierra::kynema_ugf::HostShmem>
+      ShmemView(ws_shape_function.data(), numScsIp, nodesPerFace);
     meFC->shape_fcn<>(ShmemView);
 
     size_t length = b->size();

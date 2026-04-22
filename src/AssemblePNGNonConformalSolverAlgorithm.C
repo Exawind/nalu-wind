@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <AssemblePNGNonConformalSolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <DgInfo.h>

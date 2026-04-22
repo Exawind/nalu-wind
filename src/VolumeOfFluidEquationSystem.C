@@ -88,7 +88,7 @@ VolumeOfFluidEquationSystem::VolumeOfFluidEquationSystem(
 
   // determine nodal gradient form
   set_nodal_gradient("volume_of_fluid");
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge projected nodal gradient for volume_of_fluid: "
     << edgeNodalGradient_ << std::endl;
 
@@ -232,7 +232,8 @@ VolumeOfFluidEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       itsi->second->partVec_.push_back(part);
     }
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "register vof interior: " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "register vof interior: " << std::endl;
     std::vector<std::string> checkAlgNames = {
       "volume_of_fluid_time_derivative",
       "lumped_volume_of_fluid_time_derivative"};
@@ -253,7 +254,8 @@ VolumeOfFluidEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
         if (srcName == "gcl") {
           nodeAlg.add_kernel<VOFGclNodeKernel>(
             realm_.bulk_data(), volumeOfFluid_);
-          KynemaUGFEnv::self().kynema-ugfOutputP0() << " - " << srcName << std::endl;
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
+            << " - " << srcName << std::endl;
         } else
           throw std::runtime_error("VOFEqSys: Invalid source term: " + srcName);
       });
@@ -598,9 +600,9 @@ VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
   ngpVof.modify_on_device();
 
   if (!managePNG_) {
-    const double timeA = -KynemaUGFEnv::self().kynema-ugf_time();
+    const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
     nodalGradAlgDriver_.execute();
-    timerMisc_ += (KynemaUGFEnv::self().kynema-ugf_time() + timeA);
+    timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
   } else {
     projectedNodalGradEqs_->solve_and_update_external();
   }
@@ -621,7 +623,7 @@ VolumeOfFluidEquationSystem::solve_and_update()
 
   for (int k = 0; k < maxIterations_; ++k) {
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
       << userSuppliedName_ << std::endl;
     assemble_and_solve(vofTmp_);

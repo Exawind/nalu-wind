@@ -23,8 +23,8 @@ constexpr double tol = 1.0e-12;
 using DeviceScalar =
   Kokkos::DualView<double*, Kokkos::LayoutRight, sierra::kynema_ugf::MemSpace>;
 
-using DeviceVector =
-  Kokkos::DualView<vs::Vector*, Kokkos::LayoutRight, sierra::kynema_ugf::MemSpace>;
+using DeviceVector = Kokkos::
+  DualView<vs::Vector*, Kokkos::LayoutRight, sierra::kynema_ugf::MemSpace>;
 
 void
 test_vector_create_impl()
@@ -96,8 +96,8 @@ test_rotations_impl()
     DeviceScalar ds("test", 1);                                                \
     ds.h_view(0) = 1.0e16;                                                     \
     ds.modify<DeviceScalar::host_mirror_space>();                              \
-    ds.sync<sierra::kynema_ugf::MemSpace>();                                         \
-    auto dv = ds.template view<sierra::kynema_ugf::MemSpace>();                      \
+    ds.sync<sierra::kynema_ugf::MemSpace>();                                   \
+    auto dv = ds.template view<sierra::kynema_ugf::MemSpace>();                \
                                                                                \
     Kokkos::parallel_for(                                                      \
       1, KOKKOS_LAMBDA(int) {                                                  \
@@ -105,7 +105,7 @@ test_rotations_impl()
         auto v2 = expr2;                                                       \
         dv(0) = vs::mag((v1 - v2));                                            \
       });                                                                      \
-    ds.modify<sierra::kynema_ugf::MemSpace>();                                       \
+    ds.modify<sierra::kynema_ugf::MemSpace>();                                 \
     ds.sync<DeviceScalar::host_mirror_space>();                                \
     EXPECT_NEAR(ds.h_view(0), 0.0, tol)                                        \
       << "LHS = " #expr1 "\nRHS = " #expr2 << std::endl;                       \

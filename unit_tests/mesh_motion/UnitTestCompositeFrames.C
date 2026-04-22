@@ -55,7 +55,8 @@ const YAML::Node transNode = rot_trans[1];
 const double testTol = 1e-12;
 
 sierra::kynema_ugf::mm::TransMatType
-eval_transformation(sierra::kynema_ugf::Realm& realm, double time, const double* xyz)
+eval_transformation(
+  sierra::kynema_ugf::Realm& realm, double time, const double* xyz)
 {
   // transform data structures to confirm to mesh motion
   sierra::kynema_ugf::mm::ThreeDVecType vecX;
@@ -63,7 +64,8 @@ eval_transformation(sierra::kynema_ugf::Realm& realm, double time, const double*
     vecX[d] = xyz[d];
 
   // perform scaling transformation
-  sierra::kynema_ugf::MotionScalingKernel scaleClass(realm.meta_data(), scaleNode);
+  sierra::kynema_ugf::MotionScalingKernel scaleClass(
+    realm.meta_data(), scaleNode);
   sierra::kynema_ugf::mm::TransMatType compTrans =
     scaleClass.build_transformation(time, vecX);
 
@@ -81,7 +83,8 @@ eval_transformation(sierra::kynema_ugf::Realm& realm, double time, const double*
 }
 
 std::vector<double>
-eval_coords(const sierra::kynema_ugf::mm::TransMatType& transMat, const double* xyz)
+eval_coords(
+  const sierra::kynema_ugf::mm::TransMatType& transMat, const double* xyz)
 {
   std::vector<double> transCoord(3, 0.0);
 
@@ -141,8 +144,8 @@ eval_vel(
 TEST(meshMotion, NGP_initialize)
 {
   // create realm
-  unit_test_utils::KynemaUGFTest kynema-ugfObj;
-  sierra::kynema_ugf::Realm& realm = kynema-ugfObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
   realm.solutionOptions_->meshTransformation_ = true;
   realm.solutionOptions_->meshMotion_ = true;
 
@@ -187,10 +190,11 @@ TEST(meshMotion, NGP_initialize)
   { // limit scope for SmartFields so sync/modify is called right after use
     // we should time this call. it might be fine to just stick in the outer
     // bucket loop
-    auto mxyz =
-      sierra::kynema_ugf::MakeSmartField<tags::LEGACY, tags::READ>()(modelCoords);
-    auto cxyz = sierra::kynema_ugf::MakeSmartField<tags::LEGACY, tags::WRITE_ALL>()(
-      modelCoordsCopy);
+    auto mxyz = sierra::kynema_ugf::MakeSmartField<tags::LEGACY, tags::READ>()(
+      modelCoords);
+    auto cxyz =
+      sierra::kynema_ugf::MakeSmartField<tags::LEGACY, tags::WRITE_ALL>()(
+        modelCoordsCopy);
     for (auto b : bkts) {
       for (size_t in = 0; in < b->size(); in++) {
 
@@ -204,7 +208,8 @@ TEST(meshMotion, NGP_initialize)
   }
 
   // create mesh transformation algorithm class
-  std::unique_ptr<sierra::kynema_ugf::MeshTransformationAlg> meshTransformationAlg;
+  std::unique_ptr<sierra::kynema_ugf::MeshTransformationAlg>
+    meshTransformationAlg;
   meshTransformationAlg.reset(new sierra::kynema_ugf::MeshTransformationAlg(
     realm.bulk_data(), mesh_transformation));
 
@@ -254,8 +259,8 @@ TEST(meshMotion, NGP_initialize)
 TEST(meshMotion, NGP_execute)
 {
   // create realm
-  unit_test_utils::KynemaUGFTest kynema-ugfObj;
-  sierra::kynema_ugf::Realm& realm = kynema-ugfObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
   realm.solutionOptions_->meshTransformation_ = true;
   realm.solutionOptions_->meshMotion_ = true;
 
@@ -311,7 +316,8 @@ TEST(meshMotion, NGP_execute)
   } // end for loop - bkts
 
   // create mesh transformation algorithm class
-  std::unique_ptr<sierra::kynema_ugf::MeshTransformationAlg> meshTransformationAlg;
+  std::unique_ptr<sierra::kynema_ugf::MeshTransformationAlg>
+    meshTransformationAlg;
   meshTransformationAlg.reset(new sierra::kynema_ugf::MeshTransformationAlg(
     realm.bulk_data(), mesh_transformation));
 

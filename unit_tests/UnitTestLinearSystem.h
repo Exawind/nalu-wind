@@ -44,10 +44,10 @@ KOKKOS_FUNCTION void
 edgeSumInto(
   unsigned numEntities,
   const stk::mesh::NgpMesh::ConnectedNodes& entities,
-  const sierra::kynema_ugf::SharedMemView<const double*, sierra::kynema_ugf::DeviceShmem>&
-    rhs,
-  const sierra::kynema_ugf::SharedMemView<const double**, sierra::kynema_ugf::DeviceShmem>&
-    lhs,
+  const sierra::kynema_ugf::
+    SharedMemView<const double*, sierra::kynema_ugf::DeviceShmem>& rhs,
+  const sierra::kynema_ugf::
+    SharedMemView<const double**, sierra::kynema_ugf::DeviceShmem>& lhs,
   unsigned numDof,
   RHSView rhs_,
   LHSView lhs_)
@@ -121,8 +121,8 @@ public:
       SharedMemView<int*, sierra::kynema_ugf::DeviceShmem>& /*localIds*/,
     const sierra::kynema_ugf::
       SharedMemView<int*, sierra::kynema_ugf::DeviceShmem>& /*sortPermutation*/,
-    const sierra::kynema_ugf::SharedMemView<const double*, sierra::kynema_ugf::DeviceShmem>&
-      rhs,
+    const sierra::kynema_ugf::
+      SharedMemView<const double*, sierra::kynema_ugf::DeviceShmem>& rhs,
     const sierra::kynema_ugf::
       SharedMemView<const double**, sierra::kynema_ugf::DeviceShmem>& lhs,
     const char* /*trace_tag*/)
@@ -279,14 +279,15 @@ public:
   virtual void sumInto(
     unsigned numEntities,
     const stk::mesh::NgpMesh::ConnectedNodes& entities,
-    const sierra::kynema_ugf::SharedMemView<const double*, sierra::kynema_ugf::DeviceShmem>&
-      rhs,
+    const sierra::kynema_ugf::
+      SharedMemView<const double*, sierra::kynema_ugf::DeviceShmem>& rhs,
     const sierra::kynema_ugf::
       SharedMemView<const double**, sierra::kynema_ugf::DeviceShmem>& lhs,
     const sierra::kynema_ugf::
       SharedMemView<int*, sierra::kynema_ugf::DeviceShmem>& /* localIds */,
-    const sierra::kynema_ugf::
-      SharedMemView<int*, sierra::kynema_ugf::DeviceShmem>& /* sortPermutation */,
+    const sierra::kynema_ugf::SharedMemView<
+      int*,
+      sierra::kynema_ugf::DeviceShmem>& /* sortPermutation */,
     const char* /* trace_tag */
     ) override
   {
@@ -401,14 +402,15 @@ public:
   virtual void sumInto(
     unsigned numEntities,
     const stk::mesh::NgpMesh::ConnectedNodes& entities,
-    const sierra::kynema_ugf::SharedMemView<const double*, sierra::kynema_ugf::DeviceShmem>&
-      rhs,
+    const sierra::kynema_ugf::
+      SharedMemView<const double*, sierra::kynema_ugf::DeviceShmem>& rhs,
     const sierra::kynema_ugf::
       SharedMemView<const double**, sierra::kynema_ugf::DeviceShmem>& lhs,
     const sierra::kynema_ugf::
       SharedMemView<int*, sierra::kynema_ugf::DeviceShmem>& /* localIds */,
-    const sierra::kynema_ugf::
-      SharedMemView<int*, sierra::kynema_ugf::DeviceShmem>& /* sortPermutation */,
+    const sierra::kynema_ugf::SharedMemView<
+      int*,
+      sierra::kynema_ugf::DeviceShmem>& /* sortPermutation */,
     const char* /* trace_tag */)
   {
     edgeSumInto(numEntities, entities, rhs, lhs, numDof_, rhs_, lhs_);

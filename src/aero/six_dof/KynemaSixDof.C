@@ -293,7 +293,8 @@ KynemaSixDof::setup_point(
   point.calc_loads->setup(bulk);
 }
 void
-KynemaSixDof::setup(double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk)
+KynemaSixDof::setup(
+  double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk)
 {
   bulk_ = bulk;
   dt_ = dtKynemaUGF;
@@ -324,7 +325,7 @@ KynemaSixDof::initialize(int restartFreqKynemaUGF, double curTime)
   // Might not need to do this, need to evaluate
   if (curTime < 1e-10) {
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Setting displacements at time steps n and n-1" << std::endl;
 
     auto& meta = bulk_->mesh_meta_data();
@@ -377,7 +378,7 @@ KynemaSixDof::advance_struct_timestep(const double currentTime, const double dT)
     auto converged = point.kynema_interface->Step();
 
     if (!converged) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Kynema did not converge! Consider raising "
            "number_of_nonlinear_iterations for point body "
         << ipoint << std::endl;

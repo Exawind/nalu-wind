@@ -46,7 +46,7 @@ TurbineSurrogateKernel::load(const YAML::Node& node)
     for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
       axis_[d] = node["axis"][d].as<double>();
   } else
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "TurbineSurrogateKernel: axis of rotation not supplied; will use 0,0,1"
       << std::endl;
 

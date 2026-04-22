@@ -48,7 +48,10 @@ public:
   void end_openfast();
 
   double total_openfastfsi_execution_time() { return openFastTimer_.second; }
-  double total_kynema-ugf_fsi_execution_time() { return kynema-ugfTimer_.second; }
+  double total_kynema_ugf_fsi_execution_time()
+  {
+    return kynema_ugfTimer_.second;
+  }
 
 private:
   OpenfastFSI() = delete;
@@ -86,8 +89,8 @@ private:
 
   std::pair<double, double> openFastTimer_{
     0.0, 0.0}; // store time taken in openfast calls
-  std::pair<double, double> kynema-ugfTimer_{
-    0.0, 0.0}; // store time taken in openfast calls
+  std::pair<double, double> kynema -
+    ugfTimer_{0.0, 0.0}; // store time taken in openfast calls
 
   int writeFreq_{
     30}; // Frequency to write line loads and deflections to netcdf file

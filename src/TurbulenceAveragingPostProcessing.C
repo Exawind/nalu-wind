@@ -101,7 +101,7 @@ TurbulenceAveragingPostProcessing::load(const YAML::Node& y_node)
       timeFilterInterval_);
     if (y_average["averaging_type"]) {
       std::string avgType = y_average["averaging_type"].as<std::string>();
-      if (avgType == "kynema-ugf_classic")
+      if (avgType == "kynema_ugf_classic")
         averagingType_ = KYNEMA_UGF_CLASSIC;
       else if (avgType == "moving_exponential")
         averagingType_ = MOVING_EXPONENTIAL;
@@ -321,7 +321,7 @@ TurbulenceAveragingPostProcessing::setup()
       stk::mesh::Part* targetPart = metaData.get_part(
         realm_.physics_part_name(avInfo->targetNames_[itarget]));
       if (NULL == targetPart) {
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Trouble with part " << avInfo->targetNames_[itarget] << std::endl;
         throw std::runtime_error(
           "Sorry, no part name found by the name: " +
@@ -595,15 +595,16 @@ void
 TurbulenceAveragingPostProcessing::review(const AveragingInfo* avInfo)
 {
   // review what will be done
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Averaging Review: " << avInfo->name_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "===========================" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "===========================" << std::endl;
   for (size_t iav = 0; iav < avInfo->reynoldsFieldVecPair_.size(); ++iav) {
     stk::mesh::FieldBase* primitiveFB =
       avInfo->reynoldsFieldVecPair_[iav].first;
     stk::mesh::FieldBase* averageFB = avInfo->reynoldsFieldVecPair_[iav].second;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Primitive/Reynolds name: " << primitiveFB->name() << "/"
       << averageFB->name() << " size " << avInfo->reynoldsFieldSizeVec_[iav]
       << std::endl;
@@ -612,7 +613,7 @@ TurbulenceAveragingPostProcessing::review(const AveragingInfo* avInfo)
   for (size_t iav = 0; iav < avInfo->favreFieldVecPair_.size(); ++iav) {
     stk::mesh::FieldBase* primitiveFB = avInfo->favreFieldVecPair_[iav].first;
     stk::mesh::FieldBase* averageFB = avInfo->favreFieldVecPair_[iav].second;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Primitive/Favre name:    " << primitiveFB->name() << "/"
       << averageFB->name() << " size " << avInfo->favreFieldSizeVec_[iav]
       << std::endl;
@@ -622,7 +623,7 @@ TurbulenceAveragingPostProcessing::review(const AveragingInfo* avInfo)
     stk::mesh::FieldBase* primitiveFB =
       avInfo->resolvedFieldVecPair_[iav].first;
     stk::mesh::FieldBase* averageFB = avInfo->resolvedFieldVecPair_[iav].second;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Primitive/Resolved name: " << primitiveFB->name() << "/"
       << averageFB->name() << " size " << avInfo->resolvedFieldSizeVec_[iav]
       << std::endl;
@@ -632,71 +633,72 @@ TurbulenceAveragingPostProcessing::review(const AveragingInfo* avInfo)
     for (const auto& fieldPair : movingAvgPP_->get_field_map()) {
       stk::mesh::FieldBase* primitiveFB = fieldPair.first;
       stk::mesh::FieldBase* averageFB = fieldPair.second;
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Primitive/Favre name:    " << primitiveFB->name() << "/"
         << averageFB->name() << std::endl;
     }
   }
 
   if (avInfo->computeTke_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "TKE will be computed; add resolved_turbulent_ke to the "
          "Reynolds/Favre block for mean"
       << std::endl;
   }
 
   if (avInfo->computeFavreTke_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Favre-TKE will be computed; add resolved_favre_turbulent_ke to the "
          "Reynolds/Favre block for mean"
       << std::endl;
   }
 
   if (avInfo->computeReynoldsStress_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Reynolds Stress will be computed; add reynolds_stress to output"
       << std::endl;
   }
 
   if (avInfo->computeFavreStress_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Favre Stress will be computed; add favre_stress to output"
       << std::endl;
   }
 
   if (avInfo->computeResolvedStress_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Resolved Stress will be computed; add resolved_stress to output"
       << std::endl;
   }
 
   if (avInfo->computeSFSStress_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Sub-filter scale Stress will be computed; add sfs_stress to output"
       << std::endl;
   }
 
   if (avInfo->computeVorticity_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Vorticity will be computed; add vorticity to output" << std::endl;
   }
 
   if (avInfo->computeQcriterion_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Q criterion will be computed; add q_criterion to output" << std::endl;
   }
 
   if (avInfo->computeLambdaCI_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Lambda CI will be computed; add lambda_ci to output" << std::endl;
   }
 
   if (avInfo->computeMeanResolvedKe_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Mean resolved kinetic energy will be computed" << std::endl;
   }
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "===========================" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "===========================" << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -716,7 +718,7 @@ TurbulenceAveragingPostProcessing::execute()
       (oldTimeFilter + dt > timeFilterInterval_) || forcedReset_;
     zeroCurrent = resetFilter ? 0.0 : 1.0;
     currentTimeFilter_ = resetFilter ? dt : oldTimeFilter + dt;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Filter Size " << currentTimeFilter_ << std::endl;
   } else if (averagingType_ == MOVING_EXPONENTIAL) {
     const double timeFilter = oldTimeFilter + dt;
@@ -823,7 +825,8 @@ TurbulenceAveragingPostProcessing::compute_averages(
   const double& zeroCurrent,
   const double& dt)
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   using FieldPair = Kokkos::pair<FieldInfoNGP, FieldInfoNGP>;
   using FieldInfoView = Kokkos::View<FieldPair*, Kokkos::LayoutRight, MemSpace>;
 
@@ -954,7 +957,8 @@ TurbulenceAveragingPostProcessing::compute_tke(
   const std::string& averageBlockName,
   stk::mesh::Selector s_all_nodes)
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   // check for precise set of names
   const std::string velocityName = isReynolds
@@ -994,7 +998,8 @@ TurbulenceAveragingPostProcessing::compute_reynolds_stress(
   const double& dt,
   stk::mesh::Selector s_all_nodes)
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const int ndim = realm_.spatialDimension_;
   const std::string velocityAName = "velocity_ra_" + averageBlockName;
@@ -1052,7 +1057,8 @@ TurbulenceAveragingPostProcessing::compute_favre_stress(
   const double& dt,
   stk::mesh::Selector s_all_nodes)
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const int ndim = realm_.spatialDimension_;
   const std::string velocityAName = "velocity_fa_" + averageBlockName;
@@ -1117,17 +1123,20 @@ TurbulenceAveragingPostProcessing::compute_temperature_resolved_flux(
   const double& dt,
   stk::mesh::Selector s_all_nodes)
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const int ndim = realm_.meta_data().spatial_dimension();
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto velocity = kynema_ugf_ngp::get_ngp_field(meshInfo, "velocity");
   const auto density = kynema_ugf_ngp::get_ngp_field(meshInfo, "density");
-  const auto temperature = kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature");
+  const auto temperature =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature");
   auto tempFlux =
     kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_resolved_flux");
-  auto tempVar = kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_variance");
+  auto tempVar =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_variance");
 
   const double currentTimeFilter = currentTimeFilter_;
 
@@ -1167,7 +1176,8 @@ TurbulenceAveragingPostProcessing::compute_resolved_stress(
   const double& dt,
   stk::mesh::Selector s_all_nodes)
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const int ndim = realm_.spatialDimension_;
   const auto& meshInfo = realm_.mesh_info();
@@ -1213,7 +1223,8 @@ TurbulenceAveragingPostProcessing::compute_sfs_stress(
   const double& dt,
   stk::mesh::Selector s_all_nodes)
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const int ndim = realm_.spatialDimension_;
   const double twoDivDim = 2.0 / static_cast<double>(ndim);
@@ -1222,12 +1233,14 @@ TurbulenceAveragingPostProcessing::compute_sfs_stress(
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto density = kynema_ugf_ngp::get_ngp_field(meshInfo, "density");
-  const auto dualVol = kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
+  const auto dualVol =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
   const auto turbVisc =
     kynema_ugf_ngp::get_ngp_field(meshInfo, "turbulent_viscosity");
   const auto dudx = kynema_ugf_ngp::get_ngp_field(meshInfo, "dudx");
   auto sfsStress = kynema_ugf_ngp::get_ngp_field(meshInfo, "sfs_stress");
-  auto sfsStressInst = kynema_ugf_ngp::get_ngp_field(meshInfo, "sfs_stress_inst");
+  auto sfsStressInst =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "sfs_stress_inst");
 
   // Special treatment for turbulent KE
   const auto* turbKEHost =
@@ -1308,7 +1321,8 @@ TurbulenceAveragingPostProcessing::compute_temperature_sfs_flux(
   const double& dt,
   stk::mesh::Selector s_all_nodes)
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const int ndim = realm_.spatialDimension_;
   const auto& meshInfo = realm_.mesh_info();
@@ -1319,8 +1333,10 @@ TurbulenceAveragingPostProcessing::compute_temperature_sfs_flux(
   const auto turbVisc =
     kynema_ugf_ngp::get_ngp_field(meshInfo, "turbulent_viscosity");
   const auto dhdx = kynema_ugf_ngp::get_ngp_field(meshInfo, "dhdx");
-  const auto specHeat = kynema_ugf_ngp::get_ngp_field(meshInfo, "specific_heat");
-  auto tempSfsFlux = kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_sfs_flux");
+  const auto specHeat =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "specific_heat");
+  auto tempSfsFlux =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_sfs_flux");
 
   kynema_ugf_ngp::run_entity_algorithm(
     "TurbPP::temp_sfs_flux", ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
@@ -1346,7 +1362,8 @@ void
 TurbulenceAveragingPostProcessing::compute_vorticity(
   const std::string& /* averageBlockName */, stk::mesh::Selector s_all_nodes)
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const int ndim = realm_.spatialDimension_;
   const auto& meshInfo = realm_.mesh_info();
@@ -1376,7 +1393,8 @@ void
 TurbulenceAveragingPostProcessing::compute_q_criterion(
   const std::string& /* averageBlockName */, stk::mesh::Selector s_all_nodes)
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const int ndim = realm_.spatialDimension_;
   const auto& meshInfo = realm_.mesh_info();
@@ -1569,14 +1587,16 @@ void
 TurbulenceAveragingPostProcessing::compute_mean_resolved_ke(
   const std::string& /* averageBlockName */, stk::mesh::Selector s_all_nodes)
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const int ndim = realm_.spatialDimension_;
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
 
   const auto velocity = kynema_ugf_ngp::get_ngp_field(meshInfo, "velocity");
-  const auto dualVol = kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
+  const auto dualVol =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
 
   kynema_ugf_ngp::ArrayDbl2 l_sum;
   Kokkos::Sum<kynema_ugf_ngp::ArrayDbl2> sum_reducer(l_sum);
@@ -1596,7 +1616,7 @@ TurbulenceAveragingPostProcessing::compute_mean_resolved_ke(
   auto comm = KynemaUGFEnv::self().parallel_comm();
   stk::all_reduce_sum(comm, l_sum.array_, g_sum, 2);
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Integrated ke and volume at time: " << g_sum[1] / g_sum[0] << " "
     << g_sum[0] << " " << realm_.get_current_time() << std::endl;
 }

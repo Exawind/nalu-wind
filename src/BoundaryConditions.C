@@ -36,35 +36,35 @@ BoundaryConditionCreator::load_single_bc_node(const YAML::Node& node)
   if (node["wall_boundary_condition"]) {
     this_bc = register_bc<WallBoundaryConditionData>(node);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Wall BC name:        " << this_bc->bcName_ << " on "
       << this_bc->targetName_ << std::endl;
 
   } else if (node["inflow_boundary_condition"]) {
     this_bc = register_bc<InflowBoundaryConditionData>(node);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Inflow BC name:        " << this_bc->bcName_ << " on "
       << this_bc->targetName_ << std::endl;
 
   } else if (node["open_boundary_condition"]) {
     this_bc = register_bc<OpenBoundaryConditionData>(node);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Open BC name:        " << this_bc->bcName_ << " on "
       << this_bc->targetName_ << std::endl;
 
   } else if (node["symmetry_boundary_condition"]) {
     this_bc = register_bc<SymmetryBoundaryConditionData>(node);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Symmetry BC name:        " << this_bc->bcName_ << " on "
       << this_bc->targetName_ << std::endl;
 
   } else if (node["abltop_boundary_condition"]) {
     this_bc = register_bc<ABLTopBoundaryConditionData>(node);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "ABLTop BC name:        " << this_bc->bcName_ << " on "
       << this_bc->targetName_ << std::endl;
 
@@ -74,7 +74,7 @@ BoundaryConditionCreator::load_single_bc_node(const YAML::Node& node)
     auto* periodicBC =
       dynamic_cast<PeriodicBoundaryConditionData*>(this_bc.get());
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Periodic BC name:    " << periodicBC->bcName_ << " between "
       << periodicBC->masterSlave_.master_ << " and "
       << periodicBC->masterSlave_.slave_ << std::endl;
@@ -82,14 +82,14 @@ BoundaryConditionCreator::load_single_bc_node(const YAML::Node& node)
   } else if (node["non_conformal_boundary_condition"]) {
     this_bc = register_bc<NonConformalBoundaryConditionData>(node);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "NonConformal BC name:    " << this_bc->bcName_ << " using "
       << this_bc->targetName_ << std::endl;
 
   } else if (node["overset_boundary_condition"]) {
     this_bc = register_bc<OversetBoundaryConditionData>(node);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Overset BC name: " << this_bc->bcName_ << std::endl;
 
   } else {

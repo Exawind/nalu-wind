@@ -136,7 +136,7 @@ AMSAlgDriver::register_edge_fields(const stk::mesh::PartVector& part_vec)
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   stk::mesh::MetaData& meta = realm_.meta_data();
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge Mdot average added in AMS " << std::endl;
   avgMdot_ = &(meta.declare_field<double>(
     stk::topology::EDGE_RANK, "average_mass_flow_rate"));

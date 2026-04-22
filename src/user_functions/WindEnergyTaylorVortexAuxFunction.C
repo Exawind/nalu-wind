@@ -55,7 +55,7 @@ WindEnergyTaylorVortexAuxFunction::WindEnergyTaylorVortexAuxFunction(
       visc_ = params[6];
     }
   } else {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "wind_energy_taylor_vortex proceeding with default parameters."
       << "\n  centroidX: " << centroidX_ << "\n  centroidY: " << centroidY_
       << "\n  rVortex: " << rVortex_ << "\n  beta: " << beta_

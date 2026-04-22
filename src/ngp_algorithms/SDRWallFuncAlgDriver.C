@@ -34,8 +34,8 @@ SDRWallFuncAlgDriver::pre_work()
   const auto& ngpMesh = realm_.ngp_mesh();
   auto& bcsdr =
     kynema_ugf_ngp::get_ngp_field(realm_.mesh_info(), "wall_model_sdr_bc");
-  auto& wallArea =
-    kynema_ugf_ngp::get_ngp_field(realm_.mesh_info(), "assembled_wall_area_sdr");
+  auto& wallArea = kynema_ugf_ngp::get_ngp_field(
+    realm_.mesh_info(), "assembled_wall_area_sdr");
 
   bcsdr.set_all(ngpMesh, 0.0);
   wallArea.set_all(ngpMesh, 0.0);
@@ -44,15 +44,16 @@ SDRWallFuncAlgDriver::pre_work()
 void
 SDRWallFuncAlgDriver::post_work()
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& ngpMesh = realm_.ngp_mesh();
 
   auto& bcsdr =
     kynema_ugf_ngp::get_ngp_field(realm_.mesh_info(), "wall_model_sdr_bc");
-  auto& wallArea =
-    kynema_ugf_ngp::get_ngp_field(realm_.mesh_info(), "assembled_wall_area_sdr");
-  auto& sdr =
-    kynema_ugf_ngp::get_ngp_field(realm_.mesh_info(), "specific_dissipation_rate");
+  auto& wallArea = kynema_ugf_ngp::get_ngp_field(
+    realm_.mesh_info(), "assembled_wall_area_sdr");
+  auto& sdr = kynema_ugf_ngp::get_ngp_field(
+    realm_.mesh_info(), "specific_dissipation_rate");
   auto& sdrWallBC = kynema_ugf_ngp::get_ngp_field(realm_.mesh_info(), "sdr_bc");
 
   bcsdr.modify_on_device();

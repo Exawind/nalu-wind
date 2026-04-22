@@ -17,8 +17,8 @@ namespace kynema_ugf {
 // TODO(psakiev) allow for anisotropic disk
 
 ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
-  ActuatorMetaFAST& actMeta, double kynema-ugfTimeStep)
-  : ActuatorBulkFAST(actMeta, kynema-ugfTimeStep),
+  ActuatorMetaFAST& actMeta, double kynema_ugfTimeStep)
+  : ActuatorBulkFAST(actMeta, kynema_ugfTimeStep),
     numSweptCount_(
       "numSweptCount", actMeta.numberOfActuators_, actMeta.maxNumPntsPerBlade_),
     numSweptOffset_(
@@ -26,7 +26,7 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
 {
 
   STK_ThrowErrorIf(!actMeta.is_disk());
-  actMeta.set_dt_driver(kynema-ugfTimeStep);
+  actMeta.set_dt_driver(kynema_ugfTimeStep);
   compute_swept_point_count(actMeta);
   resize_arrays(actMeta);
   Kokkos::parallel_for(

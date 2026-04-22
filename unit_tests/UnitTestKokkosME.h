@@ -78,8 +78,9 @@ public:
     meSCS_ =
       sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         AlgTraits::topo_);
-    meSCV_ = sierra::kynema_ugf::MasterElementRepo::get_volume_master_element_on_host(
-      AlgTraits::topo_);
+    meSCV_ =
+      sierra::kynema_ugf::MasterElementRepo::get_volume_master_element_on_host(
+        AlgTraits::topo_);
 
     // Register them to ElemDataRequests
     dataNeeded().add_cvfem_surface_me(meSCS_);
@@ -88,7 +89,8 @@ public:
     // Initialize shape function views
     DoubleType scs_data[AlgTraits::numScsIp_ * AlgTraits::nodesPerElement_];
     {
-      sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>
+      sierra::kynema_ugf::SharedMemView<
+        DoubleType**, sierra::kynema_ugf::DeviceShmem>
         ShmemView(
           &scs_data[0], AlgTraits::numScsIp_, AlgTraits::nodesPerElement_);
       meSCS_->shape_fcn<>(ShmemView);
@@ -102,7 +104,8 @@ public:
 
     DoubleType scv_data[AlgTraits::numScvIp_ * AlgTraits::nodesPerElement_];
     {
-      sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>
+      sierra::kynema_ugf::SharedMemView<
+        DoubleType**, sierra::kynema_ugf::DeviceShmem>
         ShmemView(
           &scv_data[0], AlgTraits::numScvIp_, AlgTraits::nodesPerElement_);
       meSCV_->shape_fcn<>(ShmemView);

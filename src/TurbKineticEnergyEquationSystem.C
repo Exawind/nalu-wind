@@ -102,7 +102,7 @@
 // stk_util
 #include <stk_util/parallel/ParallelReduce.hpp>
 
-// kynema-ugf utility
+// kynema_ugf utility
 #include <utils/StkHelpers.h>
 
 namespace sierra {
@@ -142,7 +142,7 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
 
   // determine nodal gradient form
   set_nodal_gradient("turbulent_ke");
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge projected nodal gradient for turbulent_ke: " << edgeNodalGradient_
     << std::endl;
 
@@ -351,7 +351,8 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         } else
           throw std::runtime_error("TKEEqSys: Invalid source term " + srcName);
 
-        KynemaUGFEnv::self().kynema-ugfOutputP0() << " -  " << srcName << std::endl;
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
+          << " -  " << srcName << std::endl;
       });
   } else {
     throw std::runtime_error("TKEEQS: Element terms not supported");
@@ -566,7 +567,7 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
   bool RANSAblBcApproach = userData.RANSAblBcApproach_;
 
   if (tkeSpecified && wallFunctionApproach) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Both wall function and tke specified; will go with dirichlet"
       << std::endl;
     wallFunctionApproach = false;
@@ -769,7 +770,7 @@ TurbKineticEnergyEquationSystem::solve_and_update()
   // start the iteration loop
   for (int k = 0; k < maxIterations_; ++k) {
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
       << userSuppliedName_ << std::endl;
 
@@ -778,9 +779,9 @@ TurbKineticEnergyEquationSystem::solve_and_update()
       assemble_and_solve(kTmp_);
 
       // update
-      double timeA = KynemaUGFEnv::self().kynema-ugf_time();
+      double timeA = KynemaUGFEnv::self().kynema_ugf_time();
       update_and_clip();
-      double timeB = KynemaUGFEnv::self().kynema-ugf_time();
+      double timeB = KynemaUGFEnv::self().kynema_ugf_time();
       timerAssemble_ += (timeB - timeA);
 
       if (decoupledOverset_ && realm_.hasOverset_)
@@ -876,9 +877,9 @@ TurbKineticEnergyEquationSystem::post_external_data_transfer_work()
 void
 TurbKineticEnergyEquationSystem::compute_effective_diff_flux_coeff()
 {
-  const double timeA = KynemaUGFEnv::self().kynema-ugf_time();
+  const double timeA = KynemaUGFEnv::self().kynema_ugf_time();
   effDiffFluxCoeffAlg_->execute();
-  timerMisc_ += (KynemaUGFEnv::self().kynema-ugf_time() - timeA);
+  timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() - timeA);
 }
 
 //--------------------------------------------------------------------------
@@ -936,7 +937,7 @@ TurbKineticEnergyEquationSystem::update_and_clip()
     stk::all_reduce_sum(comm, &numClip, &g_numClip, 1);
 
     if (g_numClip > 0) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "tke clipped " << g_numClip << " times " << std::endl;
     }
   }
@@ -989,9 +990,9 @@ void
 TurbKineticEnergyEquationSystem::compute_projected_nodal_gradient()
 {
   if (!managePNG_) {
-    const double timeA = -KynemaUGFEnv::self().kynema-ugf_time();
+    const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
     nodalGradAlgDriver_.execute();
-    timerMisc_ += (KynemaUGFEnv::self().kynema-ugf_time() + timeA);
+    timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
   } else {
     projectedNodalGradEqs_->solve_and_update_external();
   }

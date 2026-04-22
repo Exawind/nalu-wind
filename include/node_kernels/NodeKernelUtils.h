@@ -44,8 +44,9 @@ process_ngp_node_kernels(
     const auto it =
       realm.solutionOptions_->srcTermsMap_.find(eqSystem->eqnTypeName_);
     if (it != realm.solutionOptions_->srcTermsMap_.end()) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0() << "Processing user source terms for "
-                                     << eqSystem->eqnTypeName_ << std::endl;
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
+        << "Processing user source terms for " << eqSystem->eqnTypeName_
+        << std::endl;
       for (auto& srcName : it->second) {
         lambdaUsrSrc(*nodeAlg, srcName);
       }

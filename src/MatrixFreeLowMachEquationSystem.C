@@ -484,8 +484,11 @@ copy_field(
 class ScopeTimer
 {
 public:
-  ScopeTimer(double& timer) : timer_(timer), t0_(KynemaUGFEnv::self().kynema-ugf_time()) {}
-  ~ScopeTimer() { timer_ += KynemaUGFEnv::self().kynema-ugf_time() - t0_; }
+  ScopeTimer(double& timer)
+    : timer_(timer), t0_(KynemaUGFEnv::self().kynema_ugf_time())
+  {
+  }
+  ~ScopeTimer() { timer_ += KynemaUGFEnv::self().kynema_ugf_time() - t0_; }
 
 private:
   double& timer_;
@@ -654,7 +657,7 @@ MatrixFreeLowMachEquationSystem::correct_velocity(double proj_time_scale)
 std::ostream&
 MatrixFreeLowMachEquationSystem::log()
 {
-  return KynemaUGFEnv::self().kynema-ugfOutputP0();
+  return KynemaUGFEnv::self().kynema_ugfOutputP0();
 }
 
 void

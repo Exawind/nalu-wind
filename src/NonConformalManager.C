@@ -70,12 +70,13 @@ void
 NonConformalManager::initialize()
 {
 
-  const double timeA = KynemaUGFEnv::self().kynema-ugf_time();
+  const double timeA = KynemaUGFEnv::self().kynema_ugf_time();
 
   // memory diagnostic
   if (realm_.get_activate_memory_diagnostic()) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
-      << "KynemaUGFMemory::NonConformalManager::initialize() Begin: " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "KynemaUGFMemory::NonConformalManager::initialize() Begin: "
+      << std::endl;
     realm_.provide_memory_summary();
   }
 
@@ -105,13 +106,13 @@ NonConformalManager::initialize()
   stk::all_reduce_sum(KynemaUGFEnv::self().parallel_comm(), local, global, 2);
 
   if (global[0] > 0 || global[1] > 0) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "NonConformal alg will ghost a new number of entities: " << global[0]
       << " and remove " << global[1] << " entities from ghosting." << std::endl;
 
     manage_ghosting(recvGhostsToRemove);
   } else {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "NonConformal alg will NOT ghost entities. " << std::endl;
   }
 
@@ -157,7 +158,7 @@ NonConformalManager::initialize()
     stk::ParallelMachine comm = KynemaUGFEnv::self().parallel_comm();
     stk::all_reduce_sum(comm, &l_problemNodes, &g_problemNodes, 1);
     if (g_problemNodes > 0) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "NonConformalManager::Error() Too many coincident nodes found on "
            "NCAlg interface(s): "
         << g_problemNodes << " ...ABORTING..." << std::endl;
@@ -169,13 +170,14 @@ NonConformalManager::initialize()
 
   // memory diagnostic
   if (realm_.get_activate_memory_diagnostic()) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
-      << "KynemaUGFMemory::NonConformalManager::initialize() End: " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "KynemaUGFMemory::NonConformalManager::initialize() End: "
+      << std::endl;
     realm_.provide_memory_summary();
   }
 
   // end time
-  const double timeB = KynemaUGFEnv::self().kynema-ugf_time();
+  const double timeB = KynemaUGFEnv::self().kynema_ugf_time();
   realm_.timerNonconformal_ += (timeB - timeA);
 }
 
@@ -192,7 +194,7 @@ NonConformalManager::manage_ghosting(
 
   if (nonConformalGhosting_ == NULL) {
     // create new ghosting
-    std::string theGhostName = "kynema-ugf_nonConformal_ghosting";
+    std::string theGhostName = "kynema_ugf_nonConformal_ghosting";
     nonConformalGhosting_ = &bulk_data.create_ghosting(theGhostName);
   }
 

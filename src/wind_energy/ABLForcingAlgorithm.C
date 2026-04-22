@@ -186,13 +186,13 @@ void
 ABLForcingAlgorithm::initialize()
 {
   if (momSrcType_ != OFF) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "ABL Forcing active for Momentum Equations\n"
       << "\t Number of planes: " << velHeights_.size()
       << "\n\t Number of time steps: " << velXTimes_.size() << std::endl;
   }
   if (tempSrcType_ != OFF) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "ABL Forcing active for Temperature Equation\n"
       << "\t Number of planes: " << tempHeights_.size()
       << "\n\t Number of time steps: " << tempTimes_.size() << std::endl
@@ -201,7 +201,8 @@ ABLForcingAlgorithm::initialize()
 
 // Prepare output files to dump sources when computed during precursor phase
 #ifdef KYNEMA_UGF_USES_BOOST
-  if ((KynemaUGFEnv::self().parallel_rank() == 0) && (momSrcType_ == COMPUTED)) {
+  if (
+    (KynemaUGFEnv::self().parallel_rank() == 0) && (momSrcType_ == COMPUTED)) {
     std::string uxname((boost::format(outFileFmt_) % "Ux").str());
     std::string uyname((boost::format(outFileFmt_) % "Uy").str());
     std::string uzname((boost::format(outFileFmt_) % "Uz").str());

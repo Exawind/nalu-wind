@@ -36,7 +36,7 @@
 
 #include "tioga.h"
 
-namespace tioga_kynema-ugf {
+namespace tioga_kynema_ugf {
 
 TiogaSTKIface::TiogaSTKIface(
   sierra::kynema_ugf::OversetManagerTIOGA& oversetManager,
@@ -73,11 +73,11 @@ TiogaSTKIface::load(const YAML::Node& node)
       meta_, bulk_, tiogaOpts_, oset_groups[i], coordsName_, offset + i + 1));
   }
 
-  sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
+  sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "TIOGA: Using coordinates field: " << coordsName_ << std::endl;
 
   if (node["tioga_symmetry_direction"])
-    sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
+    sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "WARNING!! TiogaSTKIface: tioga_symmetry_direction is no longer "
          "supported. "
       << "Use tioga_options to specify options that control TIOGA behavior"
@@ -97,12 +97,12 @@ TiogaSTKIface::initialize()
 {
   tiogaOpts_.set_options(tg_);
 
-  sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
+  sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "TIOGA: Initializing overset mesh blocks: " << std::endl;
   for (auto& tb : blocks_) {
     tb->initialize();
   }
-  sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
+  sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "TIOGA: Initialized " << blocks_.size() << " overset blocks"
     << std::endl;
 }
@@ -215,7 +215,7 @@ TiogaSTKIface::update_ghosting()
     if (oversetManager_.oversetGhosting_ != nullptr) {
       bulk_.destroy_ghosting(*oversetManager_.oversetGhosting_);
     }
-    const std::string ghostName = "kynema-ugf_overset_ghosting";
+    const std::string ghostName = "kynema_ugf_overset_ghosting";
     oversetManager_.oversetGhosting_ = &(bulk_.create_ghosting(ghostName));
     bulk_.change_ghosting(
       *(oversetManager_.oversetGhosting_), elemsToGhost_, recvGhostsToRemove);
@@ -226,14 +226,14 @@ TiogaSTKIface::update_ghosting()
       oversetManager_.ghostCommProcs_);
 
 #if 1
-    sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
+    sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "TIOGA: Overset algorithm will ghost " << global[0] << " elements"
       << std::endl;
 #endif
   }
 #if 1
   else {
-    sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
+    sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "TIOGA: Overset ghosting unchanged for this timestep" << std::endl;
   }
 #endif
@@ -331,7 +331,7 @@ TiogaSTKIface::get_receptor_info()
     return;
 
 #if 1
-  sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
+  sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "TIOGA: Detected fringe/field mismatch on " << (nTotalEntities / 3)
     << " entities" << std::endl;
 #endif
@@ -448,7 +448,7 @@ TiogaSTKIface::populate_overset_info()
 
 #if 0
     if (nearestDistance > (1.0 + 1.0e-8))
-      sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutput()
+      sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutput()
         << "TIOGA WARNING: In pair (" << nodeID << ", " << donorID << "): "
         << "iso-parametric distance is greater than 1.0: " << nearestDistance
         << std::endl;
@@ -466,7 +466,7 @@ TiogaSTKIface::populate_overset_info()
   size_t numFringeGlobal = 0;
   stk::all_reduce_sum(bulk_.parallel(), &numFringeLocal, &numFringeGlobal, 1);
 
-  sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
+  sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "TIOGA: Num. receptor nodes = " << numFringeGlobal << std::endl;
 #endif
 }
@@ -591,10 +591,10 @@ TiogaSTKIface::post_connectivity_sync()
   auto& ngpFringes = oversetManager_.ngpFringeNodes_;
   auto& ngpHoles = oversetManager_.ngpHoleNodes_;
 
-  ngpFringes =
-    sierra::kynema_ugf::OversetManager::EntityList("ngp_fringe_list", fringes.size());
-  ngpHoles =
-    sierra::kynema_ugf::OversetManager::EntityList("ngp_hole_list", holes.size());
+  ngpFringes = sierra::kynema_ugf::OversetManager::EntityList(
+    "ngp_fringe_list", fringes.size());
+  ngpHoles = sierra::kynema_ugf::OversetManager::EntityList(
+    "ngp_hole_list", holes.size());
 
   auto h_fringes = Kokkos::create_mirror_view(ngpFringes);
   auto h_holes = Kokkos::create_mirror_view(ngpHoles);
@@ -609,6 +609,6 @@ TiogaSTKIface::post_connectivity_sync()
   Kokkos::deep_copy(ngpHoles, h_holes);
 }
 
-} // namespace tioga_kynema-ugf
+} // namespace tioga_kynema_ugf
 
 #endif // KYNEMA_UGF_USES_TIOGA

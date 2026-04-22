@@ -82,7 +82,8 @@ public:
     auto team_exec = sierra::kynema_ugf::get_device_team_policy(
       elem_buckets.size(), bytes_per_team, bytes_per_thread);
     Kokkos::parallel_for(
-      team_exec, KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
+      team_exec,
+      KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
         auto bktId = elem_buckets.device_get(team.league_rank());
         auto& b = ngpMesh.get_bucket(entityRank, bktId);
 

@@ -24,7 +24,7 @@
 
 namespace {
 
-const std::string kynema-ugfDefaultInputs =
+const std::string kynema_ugfDefaultInputs =
   "Simulations:                                                            \n"
   "  - name: sim1                                                          \n"
   "    time_integrator: ti_1                                               \n"
@@ -129,7 +129,7 @@ namespace unit_test_utils {
 YAML::Node
 get_default_inputs()
 {
-  YAML::Node doc = YAML::Load(kynema-ugfDefaultInputs);
+  YAML::Node doc = YAML::Load(kynema_ugfDefaultInputs);
 
   return doc;
 }
@@ -145,7 +145,7 @@ KynemaUGFTest::KynemaUGFTest(const YAML::Node& doc)
   : comm_(MPI_COMM_WORLD),
     spatialDim_(3),
     sim_(doc),
-    logFileName_("unittestX_kynema-ugfwrapper.log")
+    logFileName_("unittestX_kynema_ugfwrapper.log")
 {
   // KynemaUGFEnv log file
   auto testInfo = ::testing::UnitTest::GetInstance()->current_test_info();
@@ -154,7 +154,8 @@ KynemaUGFTest::KynemaUGFTest(const YAML::Node& doc)
     std::string caseInstance = testInfo->name();
     logFileName_ = caseName + "." + caseInstance + ".log";
   }
-  sierra::kynema_ugf::KynemaUGFEnv::self().set_log_file_stream(logFileName_, false);
+  sierra::kynema_ugf::KynemaUGFEnv::self().set_log_file_stream(
+    logFileName_, false);
 
   sim_.linearSolvers_ = new sierra::kynema_ugf::LinearSolvers(sim_);
   sim_.realms_ = new sierra::kynema_ugf::Realms(sim_);
@@ -216,18 +217,18 @@ verify_field_values(
   }
 }
 
-TEST(KynemaUGFMock, test_kynema-ugf_mock)
+TEST(KynemaUGFMock, test_kynema_ugf_mock)
 {
   // 1. Create dummy YAML inputs (mimics an input file)
   YAML::Node doc = get_default_inputs();
-  unit_test_utils::KynemaUGFTest kynema-ugfObj(doc);
+  unit_test_utils::KynemaUGFTest kynema_ugfObj(doc);
 
   // 2. Create a Realm input node used to fill data
   const YAML::Node realm_node = get_realm_default_node();
   // Modify the default node, if necessary, for the test
 
   // 3. Create the Realm
-  sierra::kynema_ugf::Realm& realm = kynema-ugfObj.create_realm(realm_node);
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm(realm_node);
 
   // 4. Create necessary fields...
   sierra::kynema_ugf::ScalarFieldType& maxLengthScaleField =
@@ -242,7 +243,8 @@ TEST(KynemaUGFMock, test_kynema-ugf_mock)
   stk::mesh::Part* meshPart = realm.meta_data().get_part("block_1");
 
   // 6. Initialize the Algorithm to be tested...
-  sierra::kynema_ugf::ComputeSSTMaxLengthScaleElemAlgorithm sstAlg(realm, meshPart);
+  sierra::kynema_ugf::ComputeSSTMaxLengthScaleElemAlgorithm sstAlg(
+    realm, meshPart);
 
   // 7. Perform tests
   EXPECT_TRUE(sstAlg.coordinates_ != nullptr);

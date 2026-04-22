@@ -158,11 +158,11 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::
 #define INSTANTIATE_ALG(AlgTraits)                                             \
   template class NodalGradBndryElemAlg<                                        \
     AlgTraits, ScalarFieldType, VectorFieldType,                               \
-    kynema_ugf_ngp::ScalarViewHelper<                                                \
+    kynema_ugf_ngp::ScalarViewHelper<                                          \
       NodalGradBndryElemSimdDataType, ScalarFieldType>>;                       \
   template class NodalGradBndryElemAlg<                                        \
     AlgTraits, VectorFieldType, TensorFieldType,                               \
-    kynema_ugf_ngp::VectorViewHelper<                                                \
+    kynema_ugf_ngp::VectorViewHelper<                                          \
       NodalGradBndryElemSimdDataType, VectorFieldType>>
 
 INSTANTIATE_ALG(AlgTraitsTri3);

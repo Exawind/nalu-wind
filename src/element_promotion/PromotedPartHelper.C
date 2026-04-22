@@ -49,7 +49,7 @@ check_part_topo(const stk::mesh::Part& part)
   }
 
   if (!(is_valid_side_rank || is_valid_elem_rank)) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Part " << part.name() << " has an invalid topology for promotion, "
       << topo.name() << "---only pure Hex/Quad meshes are currently supported."
       << std::endl;

@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <ComputeMdotNonConformalAlgorithm.h>
 #include <Algorithm.h>
 #include <DgInfo.h>

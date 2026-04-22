@@ -163,7 +163,8 @@ TEST(TestEigen, testeigendecomp3d_simd)
   A3d_fixed_simd[2][0] = A3d_fixed_simd[0][2];
   A3d_fixed_simd[2][1] = A3d_fixed_simd[1][2];
 
-  sierra::kynema_ugf::EigenDecomposition::sym_diagonalize(A3d_fixed_simd, Q_, D_);
+  sierra::kynema_ugf::EigenDecomposition::sym_diagonalize(
+    A3d_fixed_simd, Q_, D_);
 
   // Perform tests -- lambda evaluated in Mathematica
   const double tol = 5.e-14;
@@ -190,7 +191,8 @@ TEST(TestEigen, testeigendecomp2d_simd)
   }
   A2d_fixed_simd[1][0] = A2d_fixed_simd[0][1];
 
-  sierra::kynema_ugf::EigenDecomposition::sym_diagonalize(A2d_fixed_simd, Q_, D_);
+  sierra::kynema_ugf::EigenDecomposition::sym_diagonalize(
+    A2d_fixed_simd, Q_, D_);
 
   // Perform tests -- lambda evaluated in Mathematica
   const double tol = 5.e-14;
@@ -234,7 +236,8 @@ TEST(TestEigen, testeigendecompandreconstruct3d_simd)
   A3d_rand_simd[2][0] = A3d_rand_simd[0][2];
   A3d_rand_simd[2][1] = A3d_rand_simd[1][2];
 
-  sierra::kynema_ugf::EigenDecomposition::sym_diagonalize(A3d_rand_simd, Q_, D_);
+  sierra::kynema_ugf::EigenDecomposition::sym_diagonalize(
+    A3d_rand_simd, Q_, D_);
   sierra::kynema_ugf::EigenDecomposition::reconstruct_matrix_from_decomposition(
     D_, Q_, b_);
 
@@ -273,7 +276,8 @@ TEST(TestEigen, testeigendecompandreconstruct2d_simd)
   }
   A2d_rand_simd[1][0] = A2d_rand_simd[0][1];
 
-  sierra::kynema_ugf::EigenDecomposition::sym_diagonalize(A2d_rand_simd, Q_, D_);
+  sierra::kynema_ugf::EigenDecomposition::sym_diagonalize(
+    A2d_rand_simd, Q_, D_);
   sierra::kynema_ugf::EigenDecomposition::reconstruct_matrix_from_decomposition(
     D_, Q_, b_);
 

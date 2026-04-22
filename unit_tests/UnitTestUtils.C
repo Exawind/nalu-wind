@@ -58,7 +58,8 @@ perturb_coord_hex_8(stk::mesh::BulkData& bulk, double perturbSize)
 
   const auto& meta = bulk.mesh_meta_data();
   const sierra::kynema_ugf::VectorFieldType* coordField =
-    dynamic_cast<const sierra::kynema_ugf::VectorFieldType*>(meta.coordinate_field());
+    dynamic_cast<const sierra::kynema_ugf::VectorFieldType*>(
+      meta.coordinate_field());
   STK_ThrowRequire(coordField != nullptr);
 
   for (const auto* ib :
@@ -110,9 +111,9 @@ dump_mesh(
 }
 
 std::ostream&
-kynema-ugf_out()
+kynema_ugf_out()
 {
-  return sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutput();
+  return sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutput();
 }
 
 stk::mesh::Entity
@@ -563,9 +564,10 @@ Hex8MeshWithNSOFields::Hex8MeshWithNSOFields() : Hex8Mesh()
   sierra::kynema_ugf::HexSCS hex8SCS;
   const unsigned hex_int_pts = hex8SCS.num_integration_points();
   const unsigned quad_vec_len =
-    3 * sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
-          stk::topology::QUAD_4)
-          ->num_integration_points();
+    3 *
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+      stk::topology::QUAD_4)
+      ->num_integration_points();
   const unsigned Gju_len = 3;
   const double one = 1.0;
   const double two = 2.0;

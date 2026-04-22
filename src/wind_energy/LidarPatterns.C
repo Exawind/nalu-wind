@@ -319,7 +319,7 @@ ScanningLidarSegmentGenerator::generate(double time) const
 void
 SpinnerLidarSegmentGenerator::load(const YAML::Node& node)
 {
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "LidarLineOfSite::SpinnerLidarSegmentGenerator::load" << std::endl;
 
   STK_ThrowRequireMsg(node["center"], "Lidar center must be provided");

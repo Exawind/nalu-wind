@@ -161,10 +161,12 @@ NodalGradElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::execute()
 #define INSTANTIATE_ALG(AlgTraits)                                             \
   template class NodalGradElemAlg<                                             \
     AlgTraits, ScalarFieldType, VectorFieldType,                               \
-    kynema_ugf_ngp::ScalarViewHelper<NodalGradElemSimdDataType, ScalarFieldType>>;   \
+    kynema_ugf_ngp::ScalarViewHelper<                                          \
+      NodalGradElemSimdDataType, ScalarFieldType>>;                            \
   template class NodalGradElemAlg<                                             \
     AlgTraits, VectorFieldType, TensorFieldType,                               \
-    kynema_ugf_ngp::VectorViewHelper<NodalGradElemSimdDataType, VectorFieldType>>
+    kynema_ugf_ngp::VectorViewHelper<                                          \
+      NodalGradElemSimdDataType, VectorFieldType>>
 
 INSTANTIATE_ALG(AlgTraitsHex8);
 INSTANTIATE_ALG(AlgTraitsTet4);

@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <AssembleMomentumNonConformalSolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <DgInfo.h>
@@ -73,12 +73,12 @@ AssembleMomentumNonConformalSolverAlgorithm::
 
   // provide output to user
   if (useCurrentNormal_)
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "AssembleMomentumNonConformalSolverAlgorithm::Options: "
          "use_current_normal is active "
       << std::endl;
   if (realm_.get_nc_alg_upwind_advection())
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "AssembleMomentumNonConformalSolverAlgorithm::Options: upwind "
          "advective flux is active "
       << std::endl;

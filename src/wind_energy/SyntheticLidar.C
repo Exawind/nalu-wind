@@ -410,7 +410,7 @@ LidarLineOfSite::output(
       auto lidar_name_start = name_.find_last_of("/");
       auto lidar_name = name_.substr(lidar_name_start + 1);
 
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "LIDAR " << lidar_name << " search did not match " << not_found_count
         << " points, max individually unmatched coords: (" << max_unmatched[0]
         << ", " << max_unmatched[1] << ", " << max_unmatched[2] << ")"
@@ -1003,7 +1003,7 @@ LidarLOS::output(
       ++step_outputs;
     }
     if (step_outputs == max_output_per_step) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Warning: max lidar outputs, " << max_output_per_step
         << " per step reached";
     }
@@ -1021,7 +1021,7 @@ LidarLOS::output(
       ++step_outputs;
     }
     if (step_outputs == max_output_per_step) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Warning: max lidar outputs, " << max_output_per_step
         << " per step reached";
     }

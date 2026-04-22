@@ -238,7 +238,8 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_open_edge)
     bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 3, part, isEdge);
 
   std::unique_ptr<sierra::kynema_ugf::Kernel> kernel(
-    new sierra::kynema_ugf::MomentumOpenEdgeKernel<sierra::kynema_ugf::AlgTraitsQuad4Hex8>(
+    new sierra::kynema_ugf::MomentumOpenEdgeKernel<
+      sierra::kynema_ugf::AlgTraitsQuad4Hex8>(
       *meta_, &solnOpts_, viscosity_,
       helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
       helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_,

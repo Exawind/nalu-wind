@@ -24,7 +24,7 @@ public:
   TestAlgorithm() : comm_(MPI_COMM_WORLD)
   {
     YAML::Node doc = unit_test_utils::get_default_inputs();
-    kynema-ugfObj_.reset(new unit_test_utils::KynemaUGFTest(doc));
+    kynema_ugfObj_.reset(new unit_test_utils::KynemaUGFTest(doc));
   }
 
   virtual ~TestAlgorithm() {}
@@ -33,7 +33,7 @@ public:
     const YAML::Node& realm_node,
     const std::string realm_type = "multi_physics")
   {
-    realm_ = &kynema-ugfObj_->create_realm(realm_node, realm_type);
+    realm_ = &kynema_ugfObj_->create_realm(realm_node, realm_type);
     return *realm_;
   }
 
@@ -41,7 +41,7 @@ public:
   create_realm(const std::string realm_type = "multi_physics")
   {
     const YAML::Node realm_node = unit_test_utils::get_realm_default_node();
-    realm_ = &kynema-ugfObj_->create_realm(realm_node, realm_type);
+    realm_ = &kynema_ugfObj_->create_realm(realm_node, realm_type);
     return *realm_;
   }
 
@@ -64,7 +64,7 @@ public:
     stk::mesh::Selector* selector = nullptr);
 
   //! Reference to test KynemaUGF instance used to hold Simulation and Realm
-  std::unique_ptr<unit_test_utils::KynemaUGFTest> kynema-ugfObj_;
+  std::unique_ptr<unit_test_utils::KynemaUGFTest> kynema_ugfObj_;
 
   //! Reference to realm instance
   sierra::kynema_ugf::Realm* realm_{nullptr};
@@ -112,10 +112,10 @@ struct NodeSuppHelper
   NodeSuppHelper()
     : yamlNode(unit_test_utils::get_default_inputs()),
       realmDefaultNode(unit_test_utils::get_realm_default_node()),
-      kynema-ugfObj(
+      kynema_ugfObj(
         std::unique_ptr<unit_test_utils::KynemaUGFTest>(
           new unit_test_utils::KynemaUGFTest(yamlNode))),
-      realm(kynema-ugfObj->create_realm(realmDefaultNode, "multi_physics"))
+      realm(kynema_ugfObj->create_realm(realmDefaultNode, "multi_physics"))
   {
   }
 
@@ -130,7 +130,7 @@ struct NodeSuppHelper
 
   YAML::Node yamlNode;
   YAML::Node realmDefaultNode;
-  std::unique_ptr<unit_test_utils::KynemaUGFTest> kynema-ugfObj;
+  std::unique_ptr<unit_test_utils::KynemaUGFTest> kynema_ugfObj;
   sierra::kynema_ugf::Realm& realm;
 
   stk::mesh::Entity node;

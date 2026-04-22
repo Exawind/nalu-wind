@@ -64,21 +64,24 @@ using ScalarNodalGradBndryElemAlg = NodalGradBndryElemAlg<
   AlgTraits,
   ScalarFieldType,
   VectorFieldType,
-  kynema_ugf_ngp::ScalarViewHelper<NodalGradBndryElemSimdDataType, ScalarFieldType>>;
+  kynema_ugf_ngp::
+    ScalarViewHelper<NodalGradBndryElemSimdDataType, ScalarFieldType>>;
 
 template <typename AlgTraits>
 using VectorNodalGradBndryElemAlg = NodalGradBndryElemAlg<
   AlgTraits,
   VectorFieldType,
   GenericFieldType,
-  kynema_ugf_ngp::VectorViewHelper<NodalGradBndryElemSimdDataType, VectorFieldType>>;
+  kynema_ugf_ngp::
+    VectorViewHelper<NodalGradBndryElemSimdDataType, VectorFieldType>>;
 
 template <typename AlgTraits>
 using TensorNodalGradBndryElemAlg = NodalGradBndryElemAlg<
   AlgTraits,
   VectorFieldType,
   TensorFieldType,
-  kynema_ugf_ngp::VectorViewHelper<NodalGradBndryElemSimdDataType, VectorFieldType>>;
+  kynema_ugf_ngp::
+    VectorViewHelper<NodalGradBndryElemSimdDataType, VectorFieldType>>;
 
 } // namespace kynema_ugf
 } // namespace sierra

@@ -162,7 +162,7 @@ ActSimpleAssignVel::operator()(int index) const
   // Use this to double check the velocities and point positions
   auto point = Kokkos::subview(points_, index, Kokkos::ALL);
   if (debug_output_)
-    KynemaUGFEnv::self().kynema-ugfOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
       << "Blade " << turbId_ // LCCOUT
       << " pointId: " << pointId << std::scientific << std::setprecision(5)
       << " point: " << point(0) << " " << point(1) << " " << point(2) << " "
@@ -312,7 +312,7 @@ ActSimpleComputeForce(
       pointForce(2) = -(lift * liftdir[2] + drag * ws2Ddir[2]);
 
       if (debug_output)
-        KynemaUGFEnv::self().kynema-ugfOutput()
+        KynemaUGFEnv::self().kynema_ugfOutput()
           << "Blade " << turbId // LCCOUT
           << " pointId: " << localId << std::setprecision(5)
           << " alpha: " << alpha(index) << " ws2D: " << ws2d(0) << " "

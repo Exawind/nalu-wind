@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <AssemblePNGElemSolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <SolverAlgorithm.h>
@@ -205,7 +205,8 @@ AssemblePNGElemSolverAlgorithm::execute()
       // compute geometry
       sierra::kynema_ugf::SharedMemView<double**> elemCoords(
         p_coordinates, nodesPerElement, nDim);
-      sierra::kynema_ugf::SharedMemView<double*> areav(p_scs_areav, numScsIp * nDim);
+      sierra::kynema_ugf::SharedMemView<double*> areav(
+        p_scs_areav, numScsIp * nDim);
       sierra::kynema_ugf::SharedMemView<double*> vol(p_scv_volume, numScvIp);
       meSCS->determinant(elemCoords, areav);
       meSCV->determinant(elemCoords, vol);

@@ -26,7 +26,7 @@ create_yaml_node(const std::vector<std::string>& testFile)
   return YAML::Load(temp);
 }
 
-// Ensure errors are clear kynema-ugf errors and not yaml mysteries
+// Ensure errors are clear kynema_ugf errors and not yaml mysteries
 void
 test_wo_lines(const std::vector<std::string>& testFile)
 {

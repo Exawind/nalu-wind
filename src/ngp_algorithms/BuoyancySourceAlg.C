@@ -50,7 +50,8 @@ BuoyancySourceAlg::execute()
   const auto edgeAreaVec = fieldMgr.template get_field<double>(edgeAreaVec_);
   auto source = fieldMgr.template get_field<double>(source_);
   auto sourceweight = fieldMgr.template get_field<double>(source_weight_);
-  const auto sourceOps = kynema_ugf_ngp::edge_nodal_field_updater(ngpMesh, source);
+  const auto sourceOps =
+    kynema_ugf_ngp::edge_nodal_field_updater(ngpMesh, source);
   const auto sourceweightOps =
     kynema_ugf_ngp::edge_nodal_field_updater(ngpMesh, sourceweight);
 

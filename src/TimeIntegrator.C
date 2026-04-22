@@ -85,7 +85,7 @@ TimeIntegrator::load(const YAML::Node& node)
           maxTimeStepCount_ =
             standardTimeIntegrator_node["termination_step_count"].as<int>();
           if (terminateBasedOnTime_)
-            KynemaUGFEnv::self().kynema-ugfOutputP0()
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
               << "Both max time step and termination time provided, max step "
                  "will prevail"
               << std::endl;
@@ -119,23 +119,23 @@ TimeIntegrator::load(const YAML::Node& node)
           timeStepType);
         adaptiveTimeStep_ = (timeStepType == "fixed") ? false : true;
 
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "StandardTimeIntegrator " << std::endl
           << " name=              " << name_ << std::endl
           << " second order =     " << secondOrderTimeAccurate_ << std::endl;
         if (terminateBasedOnTime_)
-          KynemaUGFEnv::self().kynema-ugfOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << " totalSimTime =     " << totalSimTime_ << std::endl;
         else
-          KynemaUGFEnv::self().kynema-ugfOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << " maxTimeStepCount = " << maxTimeStepCount_ << std::endl;
 
         if (adaptiveTimeStep_)
-          KynemaUGFEnv::self().kynema-ugfOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << " adaptive time step is active (realm owns specifics) "
             << std::endl;
         else
-          KynemaUGFEnv::self().kynema-ugfOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << " fixed time step is active  "
             << " with time step: " << timeStepN_ << std::endl;
 
@@ -143,7 +143,7 @@ TimeIntegrator::load(const YAML::Node& node)
         int iRealm = 0;
         for (size_t irealm = 0; irealm < realms_node.size(); ++irealm) {
           std::string realm_name = realms_node[irealm].as<std::string>();
-          KynemaUGFEnv::self().kynema-ugfOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << "StandardTimeIntegrator realm_name[" << iRealm
             << "]= " << realm_name << std::endl;
           realmNamesVec_.push_back(realm_name);
@@ -306,7 +306,7 @@ TimeIntegrator::pre_realm_advance_stage1(size_t inonlin)
     if (secondOrderTimeAccurate_)
       compute_gamma();
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "*******************************************************" << std::endl
       << "Time Step Count: " << timeStepCount_
       << " Current Time: " << currentTime_ << std::endl
@@ -379,7 +379,7 @@ TimeIntegrator::integrate_realm()
   //=====================================
 
   while (simulation_proceeds()) {
-    const double startTime = KynemaUGFEnv::self().kynema-ugf_time();
+    const double startTime = KynemaUGFEnv::self().kynema_ugf_time();
 
     prepare_time_step();
     pre_realm_advance_stage1();
@@ -387,10 +387,10 @@ TimeIntegrator::integrate_realm()
       overset_->update_connectivity();
     pre_realm_advance_stage2();
 
-    const double endPreProc = KynemaUGFEnv::self().kynema-ugf_time();
+    const double endPreProc = KynemaUGFEnv::self().kynema_ugf_time();
     // nonlinear iteration loop; Picard-style
     for (int k = 0; k < nonlinearIterations_; ++k) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "   Realm Nonlinear Iteration: " << k + 1 << "/"
         << nonlinearIterations_ << std::endl
         << std::endl;
@@ -404,10 +404,10 @@ TimeIntegrator::integrate_realm()
       }
     }
 
-    const double endSolve = KynemaUGFEnv::self().kynema-ugf_time();
+    const double endSolve = KynemaUGFEnv::self().kynema_ugf_time();
     post_realm_advance();
-    const double endPostProc = KynemaUGFEnv::self().kynema-ugf_time();
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    const double endPostProc = KynemaUGFEnv::self().kynema_ugf_time();
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "WallClockTime: " << timeStepCount_
       << " Pre: " << (endPreProc - startTime)
       << " NLI: " << (endSolve - endPreProc)
@@ -416,12 +416,12 @@ TimeIntegrator::integrate_realm()
   }
 
   // inform the user that the simulation is complete
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "*******************************************************" << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Simulation Shall Complete: time/timestep: " << currentTime_ << "/"
     << timeStepCount_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "*******************************************************" << std::endl;
 
   // dump time
@@ -471,7 +471,7 @@ TimeIntegrator::provide_mean_norm()
       realmIncrement += 1.0;
     }
   }
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Mean System Norm: " << std::setprecision(16) << sumNorm / realmIncrement
     << " " << std::setprecision(6) << timeStepCount_ << " " << currentTime_
     << std::endl;

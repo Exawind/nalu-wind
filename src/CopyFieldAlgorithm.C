@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <CopyFieldAlgorithm.h>
 
 #include <Realm.h>

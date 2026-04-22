@@ -119,7 +119,7 @@ GammaEquationSystem::GammaEquationSystem(EquationSystems& eqSystems)
 
   // determine nodal gradient form
   set_nodal_gradient("gamma_transition");
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge projected nodal gradient for gamma_transition: "
     << edgeNodalGradient_ << std::endl;
 
@@ -280,7 +280,8 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 
     // Check if the user has requested CMM or LMM algorithms; if so, do not
     // include Nodal Mass algorithms
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "register gamma interior: " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "register gamma interior: " << std::endl;
 
     std::vector<std::string> checkAlgNames = {
       "gamma_transition_time_derivative",
@@ -297,7 +298,7 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
         nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), gamma_);
 
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "call BLTGammaM2015NodeKernel: " << std::endl;
 
         nodeAlg.add_kernel<BLTGammaM2015NodeKernel>(realm_.meta_data());
@@ -305,7 +306,8 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         if (srcName == "gcl") {
           nodeAlg.add_kernel<ScalarGclNodeKernel>(realm_.bulk_data(), gamma_);
-          KynemaUGFEnv::self().kynema-ugfOutputP0() << " - " << srcName << std::endl;
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
+            << " - " << srcName << std::endl;
         } else
           throw std::runtime_error("SDREqSys: Invalid source term: " + srcName);
       });
@@ -595,9 +597,9 @@ GammaEquationSystem::assemble_nodal_gradient()
   const auto& fieldMgr = realm_.ngp_field_manager();
   const int ndim = meta.spatial_dimension();
 
-  const double timeA = -KynemaUGFEnv::self().kynema-ugf_time();
+  const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
   nodalGradAlgDriver_.execute();
-  timerMisc_ += (KynemaUGFEnv::self().kynema-ugf_time() + timeA);
+  timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
 
   // Computation of dV/dy in Eq. 11: gard(n dot V) dot n
   // where the V is the velocity vector and n is the wall normal vector
@@ -657,9 +659,9 @@ GammaEquationSystem::assemble_nodal_gradient()
 void
 GammaEquationSystem::compute_effective_diff_flux_coeff()
 {
-  const double timeA = -KynemaUGFEnv::self().kynema-ugf_time();
+  const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
   effDiffFluxAlg_->execute();
-  timerMisc_ += (KynemaUGFEnv::self().kynema-ugf_time() + timeA);
+  timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
 }
 
 //--------------------------------------------------------------------------

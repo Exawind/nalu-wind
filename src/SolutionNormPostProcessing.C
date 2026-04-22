@@ -154,7 +154,7 @@ SolutionNormPostProcessing::setup()
   for (size_t itarget = 0; itarget < targetNames.size(); ++itarget) {
     stk::mesh::Part* targetPart = metaData.get_part(targetNames[itarget]);
     if (NULL == targetPart) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Trouble with part " << targetNames[itarget] << std::endl;
       throw std::runtime_error(
         "Sorry, no part name found by the name " + targetNames[itarget]);

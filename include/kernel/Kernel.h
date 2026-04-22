@@ -126,8 +126,8 @@ public:
   // The destructor does not free the deviceCopy_ instance. This is done to
   // eliminate the warnings issued when compiling with nvcc for GPU builds.
   // Instead the `deviceCopy_` is freed by explicitly calling `free_on_device`
-  // from sierra::kynema_ugf::Algorithm::~Algorithm() before freeing the host pointers
-  // stored in `activeKernels_`
+  // from sierra::kynema_ugf::Algorithm::~Algorithm() before freeing the host
+  // pointers stored in `activeKernels_`
   KOKKOS_DEFAULTED_FUNCTION virtual ~NGPKernel() = default;
 
   virtual Kernel* create_on_device() final

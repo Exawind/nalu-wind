@@ -1141,7 +1141,7 @@ WedSCS::general_face_grad_op(
   const int lerr = wed_gradient_operator(cordel, deriv, grad, det, err);
 
   if (lerr)
-    KynemaUGFEnv::self().kynema-ugfOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
       << "problem with EwedSCS::general_face_grad" << std::endl;
 }
 

@@ -75,15 +75,18 @@ public:
       partVec_[0]));
 
     elemDataNeeded().add_coordinates_field(
-      *coordinates_, BcAlgTraits::nDim_, sierra::kynema_ugf::CURRENT_COORDINATES);
+      *coordinates_, BcAlgTraits::nDim_,
+      sierra::kynema_ugf::CURRENT_COORDINATES);
     faceDataNeeded().add_coordinates_field(
-      *coordinates_, BcAlgTraits::nDim_, sierra::kynema_ugf::CURRENT_COORDINATES);
+      *coordinates_, BcAlgTraits::nDim_,
+      sierra::kynema_ugf::CURRENT_COORDINATES);
   }
 
   void init_me_data()
   {
-    meFC_ = sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
-      BcAlgTraits::faceTopo_);
+    meFC_ =
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+        BcAlgTraits::faceTopo_);
     meSCS_ =
       sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         BcAlgTraits::elemTopo_);

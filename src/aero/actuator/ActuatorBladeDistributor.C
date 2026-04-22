@@ -87,8 +87,9 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
         const int nPoints =
           actMetaFast.fastInputs_.globTurbineData[iTurb].numForcePtsBlade;
 
-        if (blade_belongs_on_this_rank(
-              numBladesTotal, globBladeNum, numRanks, rank)) {
+        if (
+          blade_belongs_on_this_rank(
+            numBladesTotal, globBladeNum, numRanks, rank)) {
           results.push_back({offset, nPoints, nNeighbors});
         }
 

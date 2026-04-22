@@ -58,8 +58,8 @@ kernel_runalg_test(
   auto* testKernel = solverAlg.activeKernels_[0]->create_on_device();
 
   solverAlg.run_algorithm(
-    bulk,
-    KOKKOS_LAMBDA(sierra::kynema_ugf::SharedMemData<TeamType, ShmemType> & smdata) {
+    bulk, KOKKOS_LAMBDA(
+            sierra::kynema_ugf::SharedMemData<TeamType, ShmemType> & smdata) {
       testKernel->execute(
         smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
     });

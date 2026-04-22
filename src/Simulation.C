@@ -48,7 +48,7 @@ Simulation::Simulation(const YAML::Node& root_node)
 {
 #if defined(KOKKOS_ENABLE_CUDA)
   cudaDeviceGetLimit(&default_stack_size, cudaLimitStackSize);
-  cudaDeviceSetLimit(cudaLimitStackSize, kynema-ugf_stack_size);
+  cudaDeviceSetLimit(cudaLimitStackSize, kynema_ugf_stack_size);
 #elif defined(KOKKOS_ENABLE_HIP)
   hipError_t err = hipDeviceGetLimit(&default_stack_size, hipLimitStackSize);
   if (err != hipSuccess) {
@@ -60,7 +60,7 @@ Simulation::Simulation(const YAML::Node& root_node)
     */
   }
 
-  err = hipDeviceSetLimit(hipLimitStackSize, kynema-ugf_stack_size);
+  err = hipDeviceSetLimit(hipLimitStackSize, kynema_ugf_stack_size);
   if (err != hipSuccess) {
     /*
      This might be useful at some point so keeping it and commenting out.
@@ -136,16 +136,20 @@ Simulation::load(const YAML::Node& node)
   realms_->load(node);
 
   // create the time integrator
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "Time Integrator Review:  " << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "=========================" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "Time Integrator Review:  " << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "=========================" << std::endl;
   timeIntegrator_ = new TimeIntegrator(this);
   timeIntegrator_->load(node);
 
   // create the transfers; mesh is already loaded in realm
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "Transfer Review:         " << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "=========================" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "Transfer Review:         " << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "=========================" << std::endl;
   transfers_ = new Transfers(*this);
   transfers_->load(node);
 }
@@ -157,10 +161,11 @@ Simulation::setSerializedIOGroupSize(int siogs)
     if (
       siogs < 0 || siogs > KynemaUGFEnv::self().parallel_size() ||
       KynemaUGFEnv::self().parallel_size() % siogs != 0) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Error: Job requested serialized_io_group_size of " << siogs
         << " which is incompatible with MPI size= "
-        << KynemaUGFEnv::self().parallel_size() << "... shutting down." << std::endl;
+        << KynemaUGFEnv::self().parallel_size() << "... shutting down."
+        << std::endl;
       throw std::runtime_error("shutdown");
     }
     serializedIOGroupSize_ = siogs;
@@ -202,13 +207,13 @@ Simulation::init_epilog()
 void
 Simulation::run()
 {
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "*******************************************************" << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Simulation Shall Commence: number of processors = "
     << KynemaUGFEnv::self().parallel_size() << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "*******************************************************" << std::endl;
 
   timeIntegrator_->integrate_realm();
@@ -232,11 +237,12 @@ Simulation::high_level_banner()
   additionalTPLs.push_back("TIOGA");
 #endif
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "======================================================================="
        "========"
     << std::endl
-    << "                                  Kynema-UGF                            "
+    << "                                  Kynema-UGF                           "
+       " "
        "        "
     << std::endl
     << "       An incompressible, turbulent computational fluid dynamics "
@@ -259,14 +265,15 @@ Simulation::high_level_banner()
     << std::endl;
 
   if (additionalTPLs.size() > 0) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "   Optional TPLs enabled: ";
+    KynemaUGFEnv::self().kynema_ugfOutputP0() << "   Optional TPLs enabled: ";
     int numTPLs = additionalTPLs.size();
     for (int i = 0; i < (numTPLs - 1); i++)
-      KynemaUGFEnv::self().kynema-ugfOutputP0() << additionalTPLs[i] << ", ";
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << additionalTPLs[numTPLs - 1] << std::endl;
+      KynemaUGFEnv::self().kynema_ugfOutputP0() << additionalTPLs[i] << ", ";
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << additionalTPLs[numTPLs - 1] << std::endl;
   }
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "   Copyright 2017 National Technology & Engineering Solutions of "
        "Sandia, LLC   "
     << std::endl
@@ -285,7 +292,7 @@ Simulation::high_level_banner()
     << "           This software is released under the BSD 3-clause license.   "
        "        "
     << std::endl
-    << "   See LICENSE file at https://github.com/exawind/kynema-ugf for more "
+    << "   See LICENSE file at https://github.com/exawind/kynema_ugf for more "
        "details.  "
     << std::endl
     << "-----------------------------------------------------------------------"
@@ -296,7 +303,7 @@ Simulation::high_level_banner()
   if (!std::is_same<DeviceSpace, Kokkos::Serial>::value) {
     // Save output from the master proc in the log file
     Kokkos::DefaultExecutionSpace{}.print_configuration(
-      KynemaUGFEnv::self().kynema-ugfOutputP0());
+      KynemaUGFEnv::self().kynema_ugfOutputP0());
     // But have everyone print out to standard error for debugging purposes
     Kokkos::DefaultExecutionSpace{}.print_configuration(std::cerr);
   }

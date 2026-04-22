@@ -48,7 +48,8 @@ using UnsignedViewHost = UnsignedView::HostMirror;
 using DoubleView = Kokkos::View<double*, sierra::kynema_ugf::MemSpace>;
 using DoubleViewHost = DoubleView::HostMirror;
 
-using HypreIntTypeView = Kokkos::View<HypreIntType*, sierra::kynema_ugf::MemSpace>;
+using HypreIntTypeView =
+  Kokkos::View<HypreIntType*, sierra::kynema_ugf::MemSpace>;
 using HypreIntTypeViewHost = HypreIntTypeView::HostMirror;
 
 // const random access views for read only, noncoalesced (texture) memory
@@ -68,16 +69,16 @@ using DoubleView2D =
 using DoubleView2DHost = DoubleView2D::HostMirror;
 
 // This 2D view needs to be LayoutLeft. Do NOT change
-using HypreIntTypeView2D =
-  Kokkos::View<HypreIntType**, Kokkos::LayoutLeft, sierra::kynema_ugf::MemSpace>;
+using HypreIntTypeView2D = Kokkos::
+  View<HypreIntType**, Kokkos::LayoutLeft, sierra::kynema_ugf::MemSpace>;
 using HypreIntTypeView2DHost = HypreIntTypeView2D::HostMirror;
 
 using HypreIntTypeViewScalar =
   Kokkos::View<HypreIntType, sierra::kynema_ugf::MemSpace>;
 using HypreIntTypeViewScalarHost = HypreIntTypeViewScalar::HostMirror;
 
-using HypreIntTypeUnorderedMap =
-  Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::kynema_ugf::MemSpace>;
+using HypreIntTypeUnorderedMap = Kokkos::
+  UnorderedMap<HypreIntType, HypreIntType, sierra::kynema_ugf::MemSpace>;
 using HypreIntTypeUnorderedMapHost = HypreIntTypeUnorderedMap::HostMirror;
 
 using MemoryMap =
@@ -85,8 +86,8 @@ using MemoryMap =
 using MemoryMapHost = MemoryMap::HostMirror;
 
 // Periodic Node Map
-using PeriodicNodeMap =
-  Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::kynema_ugf::MemSpace>;
+using PeriodicNodeMap = Kokkos::
+  UnorderedMap<HypreIntType, HypreIntType, sierra::kynema_ugf::MemSpace>;
 using PeriodicNodeMapHost = PeriodicNodeMap::HostMirror;
 
 /** KynemaUGF interface to populate a Hypre Linear System
@@ -94,10 +95,11 @@ using PeriodicNodeMapHost = PeriodicNodeMap::HostMirror;
  *  This class provides an interface to the HYPRE IJMatrix and IJVector data
  *  structures. It is responsible for creating, resetting, and destroying the
  *  Hypre data structures and provides the HypreLinearSystem::sumInto interface
- *  used by KynemaUGF Kernels and SupplementalAlgorithms to populate entries into the
- *  linear system. The HypreLinearSystem::solve method interfaces with
- *  sierra::kynema_ugf::HypreDirectSolver that is responsible for the actual solution
- *  of the system using the required solver and preconditioner combination.
+ *  used by KynemaUGF Kernels and SupplementalAlgorithms to populate entries
+ * into the linear system. The HypreLinearSystem::solve method interfaces with
+ *  sierra::kynema_ugf::HypreDirectSolver that is responsible for the actual
+ * solution of the system using the required solver and preconditioner
+ * combination.
  */
 class HypreLinearSystem : public LinearSystem
 {

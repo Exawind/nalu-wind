@@ -69,7 +69,8 @@ NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
   const auto edgeAreaVec = fieldMgr.template get_field<double>(edgeAreaVec_);
   const auto dualVol = fieldMgr.template get_field<double>(dualNodalVol_);
   auto gradPhi = fieldMgr.template get_field<double>(gradPhi_);
-  const auto gradPhiOps = kynema_ugf_ngp::edge_nodal_field_updater(ngpMesh, gradPhi);
+  const auto gradPhiOps =
+    kynema_ugf_ngp::edge_nodal_field_updater(ngpMesh, gradPhi);
 
   const stk::mesh::Selector sel = meta.locally_owned_part() &
                                   stk::mesh::selectUnion(partVec_) &

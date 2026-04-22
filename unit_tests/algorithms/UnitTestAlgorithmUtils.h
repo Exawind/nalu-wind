@@ -46,7 +46,8 @@ public:
     N_ = 0;
 
     bucket_loop_serial_only(
-      buckets, [](stk::topology topo, sierra::kynema_ugf::MasterElement& meSCS) {},
+      buckets,
+      [](stk::topology topo, sierra::kynema_ugf::MasterElement& meSCS) {},
       [&](
         stk::mesh::Entity node, stk::topology topo,
         sierra::kynema_ugf::MasterElement& meSCS) {

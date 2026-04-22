@@ -48,7 +48,8 @@ TKEWallFuncAlgDriver::pre_work()
 void
 TKEWallFuncAlgDriver::post_work()
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
   auto ngpBcNodalTke = fieldMgr.get_field<double>(bcNodalTke_);

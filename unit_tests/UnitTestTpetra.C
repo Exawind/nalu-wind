@@ -31,11 +31,12 @@
 #include <string>
 
 sierra::kynema_ugf::TpetraLinearSystem*
-get_TpetraLinearSystem(unit_test_utils::KynemaUGFTest& kynema-ugfObj)
+get_TpetraLinearSystem(unit_test_utils::KynemaUGFTest& kynema_ugfObj)
 {
-  EXPECT_NE(nullptr, kynema-ugfObj.sim_.realms_);
-  EXPECT_FALSE(kynema-ugfObj.sim_.realms_->realmVector_.empty());
-  sierra::kynema_ugf::Realm& realm = *kynema-ugfObj.sim_.realms_->realmVector_[0];
+  EXPECT_NE(nullptr, kynema_ugfObj.sim_.realms_);
+  EXPECT_FALSE(kynema_ugfObj.sim_.realms_->realmVector_.empty());
+  sierra::kynema_ugf::Realm& realm =
+    *kynema_ugfObj.sim_.realms_->realmVector_[0];
   EXPECT_FALSE(realm.equationSystems_.equationSystemVector_.empty());
   sierra::kynema_ugf::EquationSystem* eqsys =
     realm.equationSystems_.equationSystemVector_[0];
@@ -58,8 +59,8 @@ create_algorithm(sierra::kynema_ugf::Realm& realm, stk::mesh::Part& part)
     realm.equationSystems_.equationSystemVector_[0];
   EXPECT_TRUE(eqsys != nullptr);
 
-  std::pair<sierra::kynema_ugf::AssembleElemSolverAlgorithm*, bool> solverAlgResult =
-    sierra::kynema_ugf::build_or_add_part_to_solver_alg(
+  std::pair<sierra::kynema_ugf::AssembleElemSolverAlgorithm*, bool>
+    solverAlgResult = sierra::kynema_ugf::build_or_add_part_to_solver_alg(
       *eqsys, part, eqsys->solverAlgDriver_->solverAlgorithmMap_);
 
   EXPECT_TRUE(solverAlgResult.second);
@@ -76,11 +77,12 @@ create_algorithm(sierra::kynema_ugf::Realm& realm, stk::mesh::Part& part)
 }
 
 sierra::kynema_ugf::AssembleElemSolverAlgorithm*
-get_AssembleElemSolverAlgorithm(unit_test_utils::KynemaUGFTest& kynema-ugfObj)
+get_AssembleElemSolverAlgorithm(unit_test_utils::KynemaUGFTest& kynema_ugfObj)
 {
-  EXPECT_NE(nullptr, kynema-ugfObj.sim_.realms_);
-  EXPECT_FALSE(kynema-ugfObj.sim_.realms_->realmVector_.empty());
-  sierra::kynema_ugf::Realm& realm = *kynema-ugfObj.sim_.realms_->realmVector_[0];
+  EXPECT_NE(nullptr, kynema_ugfObj.sim_.realms_);
+  EXPECT_FALSE(kynema_ugfObj.sim_.realms_->realmVector_.empty());
+  sierra::kynema_ugf::Realm& realm =
+    *kynema_ugfObj.sim_.realms_->realmVector_[0];
   EXPECT_FALSE(realm.equationSystems_.equationSystemVector_.empty());
   sierra::kynema_ugf::EquationSystem* eqsys =
     realm.equationSystems_.equationSystemVector_[0];
@@ -137,8 +139,8 @@ public:
     : numNodesPerElem(elemTopo.num_nodes()),
       d_elemVals("device-elem-vals", 8, 8)
   {
-    Kokkos::View<double**, sierra::kynema_ugf::MemSpace>::HostMirror h_elemVals =
-      Kokkos::create_mirror_view(d_elemVals);
+    Kokkos::View<double**, sierra::kynema_ugf::MemSpace>::HostMirror
+      h_elemVals = Kokkos::create_mirror_view(d_elemVals);
     for (int i = 0; i < 8; ++i) {
       for (int j = 0; j < 8; ++j) {
         h_elemVals(i, j) = elemVals[i][j];
@@ -159,8 +161,10 @@ public:
   using sierra::kynema_ugf::Kernel::execute;
   KOKKOS_FUNCTION
   virtual void execute(
-    sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>& lhs,
-    sierra::kynema_ugf::SharedMemView<DoubleType*, sierra::kynema_ugf::DeviceShmem>& rhs,
+    sierra::kynema_ugf::
+      SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>& lhs,
+    sierra::kynema_ugf::
+      SharedMemView<DoubleType*, sierra::kynema_ugf::DeviceShmem>& rhs,
     sierra::kynema_ugf::ScratchViews<
       DoubleType,
       sierra::kynema_ugf::DeviceTeamHandleType,
@@ -200,7 +204,9 @@ get_gold_row_lengths(int numProcs, int localProc)
 
 void
 verify_graph_for_2_hex8_mesh(
-  int numProcs, int localProc, sierra::kynema_ugf::TpetraLinearSystem* tpetraLinsys)
+  int numProcs,
+  int localProc,
+  sierra::kynema_ugf::TpetraLinearSystem* tpetraLinsys)
 {
   unsigned expectedNumGlobalRows = 12;
   unsigned expectedNumOwnedRows = expectedNumGlobalRows;
@@ -225,7 +231,9 @@ verify_graph_for_2_hex8_mesh(
 
 void
 verify_matrix_for_2_hex8_mesh(
-  int numProcs, int localProc, sierra::kynema_ugf::TpetraLinearSystem* tpetraLinsys)
+  int numProcs,
+  int localProc,
+  sierra::kynema_ugf::TpetraLinearSystem* tpetraLinsys)
 {
   Teuchos::RCP<sierra::kynema_ugf::LinSys::Matrix> ownedMatrix =
     tpetraLinsys->getOwnedMatrix();
@@ -262,7 +270,8 @@ verify_matrix_for_2_hex8_mesh(
 
 TestKernel*
 create_and_register_kernel(
-  sierra::kynema_ugf::AssembleElemSolverAlgorithm* solverAlg, stk::topology elemTopo)
+  sierra::kynema_ugf::AssembleElemSolverAlgorithm* solverAlg,
+  stk::topology elemTopo)
 {
   TestKernel* testKernel = new TestKernel(elemTopo);
   solverAlg->dataNeededByKernels_.add_cvfem_volume_me(
@@ -273,9 +282,10 @@ create_and_register_kernel(
 }
 
 sierra::kynema_ugf::Realm&
-setup_realm(unit_test_utils::KynemaUGFTest& kynema-ugfObj, const std::string& meshSpec)
+setup_realm(
+  unit_test_utils::KynemaUGFTest& kynema_ugfObj, const std::string& meshSpec)
 {
-  sierra::kynema_ugf::Realm& realm = kynema-ugfObj.create_realm();
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
 
   sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.secondOrderTimeAccurate_ = false;
@@ -294,9 +304,9 @@ setup_realm(unit_test_utils::KynemaUGFTest& kynema-ugfObj, const std::string& me
 
 sierra::kynema_ugf::Realm&
 setup_solver_alg_and_linsys(
-  unit_test_utils::KynemaUGFTest& kynema-ugfObj, const std::string& meshSpec)
+  unit_test_utils::KynemaUGFTest& kynema_ugfObj, const std::string& meshSpec)
 {
-  sierra::kynema_ugf::Realm& realm = setup_realm(kynema-ugfObj, meshSpec);
+  sierra::kynema_ugf::Realm& realm = setup_realm(kynema_ugfObj, meshSpec);
   stk::mesh::Part& block_1 = *realm.meta_data().get_part("block_1");
   sierra::kynema_ugf::AssembleElemSolverAlgorithm* solverAlg =
     create_algorithm(realm, block_1);
@@ -312,14 +322,14 @@ TEST(Tpetra, basic)
   }
   int localProc = stk::parallel_machine_rank(MPI_COMM_WORLD);
 
-  unit_test_utils::KynemaUGFTest kynema-ugfObj;
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
   sierra::kynema_ugf::Realm& realm =
-    setup_solver_alg_and_linsys(kynema-ugfObj, "generated:1x1x2");
+    setup_solver_alg_and_linsys(kynema_ugfObj, "generated:1x1x2");
 
   sierra::kynema_ugf::TpetraLinearSystem* tpetraLinsys =
-    get_TpetraLinearSystem(kynema-ugfObj);
+    get_TpetraLinearSystem(kynema_ugfObj);
   sierra::kynema_ugf::AssembleElemSolverAlgorithm* solverAlg =
-    get_AssembleElemSolverAlgorithm(kynema-ugfObj);
+    get_AssembleElemSolverAlgorithm(kynema_ugfObj);
 
   tpetraLinsys->buildElemToNodeGraph(solverAlg->partVec_);
   tpetraLinsys->finalizeLinearSystem();

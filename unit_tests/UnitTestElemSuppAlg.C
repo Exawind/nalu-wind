@@ -92,7 +92,8 @@ public:
   {
     // add the master element
     sierra::kynema_ugf::MasterElement* meSCS =
-      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(topo);
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+        topo);
     dataNeeded.add_cvfem_surface_me(meSCS);
 
     // here are the element-data pre-requisites we want computed before

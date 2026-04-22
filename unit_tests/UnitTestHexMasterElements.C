@@ -147,7 +147,8 @@ check_interpolation(
   std::vector<double> meResult(me.num_integration_points(), 0.0);
   std::vector<DoubleType> meShapeFunctions(
     me.num_integration_points() * topo.num_nodes());
-  sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
     ShmemView(
       meShapeFunctions.data(), me.num_integration_points(), topo.num_nodes());
   me.shape_fcn<>(ShmemView);

@@ -50,15 +50,14 @@ namespace {
 std::vector<DoubleType>
 me_shape(stk::topology topo, QuadRank r, QuadType q)
 {
-  auto me =
-    (r == QuadRank::SCS)
-      ? sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
-          topo)
-      : sierra::kynema_ugf::MasterElementRepo::get_volume_master_element_on_host(
-          topo);
+  auto me = (r == QuadRank::SCS) ? sierra::kynema_ugf::MasterElementRepo::
+                                     get_surface_master_element_on_host(topo)
+                                 : sierra::kynema_ugf::MasterElementRepo::
+                                     get_volume_master_element_on_host(topo);
   std::vector<DoubleType> meShapeFunctions(
     me->nodesPerElement_ * me->num_integration_points());
-  sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
     ShmemView(
       meShapeFunctions.data(), me->num_integration_points(),
       me->nodesPerElement_);
@@ -275,7 +274,8 @@ check_interpolation_at_ips(
 
   std::vector<DoubleType> meShapeFunctions(
     me.nodesPerElement_ * me.num_integration_points());
-  sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
     ShmemView(
       meShapeFunctions.data(), me.num_integration_points(),
       me.nodesPerElement_);
@@ -408,8 +408,9 @@ check_volume_integration(
       coords_mapped(j, k) = coord_mapped[k];
     }
   }
-  const double detQR = (dim == 3) ? sierra::kynema_ugf::determinant33(QR.data())
-                                  : sierra::kynema_ugf::determinant22(QR.data());
+  const double detQR = (dim == 3)
+                         ? sierra::kynema_ugf::determinant33(QR.data())
+                         : sierra::kynema_ugf::determinant22(QR.data());
   ASSERT_TRUE(detQR > 1.0e-15);
 
   double error = 0;
@@ -531,7 +532,8 @@ check_is_in_element(
   // and derivatives
 
   bool isHexSCS = dynamic_cast<sierra::kynema_ugf::HexSCS*>(&me) != nullptr;
-  bool isQuadSCS = dynamic_cast<sierra::kynema_ugf::Quad42DSCS*>(&me) != nullptr;
+  bool isQuadSCS =
+    dynamic_cast<sierra::kynema_ugf::Quad42DSCS*>(&me) != nullptr;
   double fac = (isHexSCS || isQuadSCS) ? 2.0 : 1.0;
 
   for (int j = 0; j < me.nodesPerElement_; ++j) {
@@ -667,7 +669,8 @@ check_general_shape_fcn(
 
   // see check_is_in_element for an explanation of the factor
   bool isHexSCS = dynamic_cast<sierra::kynema_ugf::HexSCS*>(&me) != nullptr;
-  bool isQuadSCS = dynamic_cast<sierra::kynema_ugf::Quad42DSCS*>(&me) != nullptr;
+  bool isQuadSCS =
+    dynamic_cast<sierra::kynema_ugf::Quad42DSCS*>(&me) != nullptr;
   double fac = (isHexSCS || isQuadSCS) ? 2.0 : 1.0;
   std::vector<double> elem_coords(me.nodesPerElement_ * dim);
 
@@ -728,9 +731,11 @@ protected:
     meta->use_simple_fields();
     elem = unit_test_utils::create_one_reference_element(*bulk, topo);
     meSS =
-      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(topo);
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+        topo);
     meSV =
-      sierra::kynema_ugf::MasterElementRepo::get_volume_master_element_on_host(topo);
+      sierra::kynema_ugf::MasterElementRepo::get_volume_master_element_on_host(
+        topo);
   }
 
   void scs_interpolation(stk::topology topo)

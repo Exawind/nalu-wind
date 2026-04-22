@@ -124,7 +124,8 @@ MdotAlgDriver::pre_work()
     }
 
     unsigned g_numIp = 0;
-    stk::all_reduce_sum(KynemaUGFEnv::self().parallel_comm(), &numIp, &g_numIp, 1);
+    stk::all_reduce_sum(
+      KynemaUGFEnv::self().parallel_comm(), &numIp, &g_numIp, 1);
     mdotOpenIpCount_ = g_numIp;
     isInit_ = false;
   }
@@ -164,7 +165,7 @@ MdotAlgDriver::provide_output()
 {
   const double totalMassClosure = (rhoAccum_ + mdotInflow_ + mdotOpen_);
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Mass Balance Review:"
     << "\nDensity accumulation: " << std::setprecision(16) << rhoAccum_
     << "\nIntegrated inflow:    " << std::setprecision(16) << mdotInflow_
@@ -173,7 +174,7 @@ MdotAlgDriver::provide_output()
     << std::endl;
 
   if (realm_.solutionOptions_->activateOpenMdotCorrection_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "A mass correction of: " << mdotOpenCorrection_
       << " occurred on: " << mdotOpenIpCount_ << " boundary integration points."
       << std::endl

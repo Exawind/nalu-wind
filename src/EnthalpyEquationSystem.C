@@ -109,7 +109,7 @@
 // stk_util
 #include <stk_util/parallel/ParallelReduce.hpp>
 
-// kynema-ugf utility
+// kynema_ugf utility
 #include <utils/StkHelpers.h>
 
 namespace sierra {
@@ -162,7 +162,7 @@ EnthalpyEquationSystem::EnthalpyEquationSystem(
 
   // determine nodal gradient form
   set_nodal_gradient("enthalpy");
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge projected nodal gradient for enthalpy: " << edgeNodalGradient_
     << std::endl;
 
@@ -295,7 +295,7 @@ EnthalpyEquationSystem::register_nodal_fields(
   const double providedPr = realm_.get_lam_prandtl("enthalpy", prProvided);
   if (prProvided) {
     // compute thermal conductivity using Pr; create and push back the algorithm
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Laminar Prandtl provided; will compute Thermal conductivity based on "
          "this constant value"
       << std::endl;
@@ -458,7 +458,8 @@ EnthalpyEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
         }
 
         if (added)
-          KynemaUGFEnv::self().kynema-ugfOutputP0() << "  - " << srcName << std::endl;
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
+            << "  - " << srcName << std::endl;
       });
 
     std::map<AlgorithmType, SolverAlgorithm*>::iterator itsm =
@@ -495,7 +496,7 @@ EnthalpyEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
             ++nonNgpSrcSkipped;
           }
           if (suppAlg != NULL) {
-            KynemaUGFEnv::self().kynema-ugfOutputP0()
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
               << "EnthalpyNodalSrcTerms::added() " << sourceName << std::endl;
             theAlg->supplementalAlg_.push_back(suppAlg);
           }
@@ -675,7 +676,7 @@ EnthalpyEquationSystem::register_wall_bc(
   // check for engineering wall function; warn user that this is not yet
   // supported
   if (wallFunctionApproach && !ablWallFunctionApproach)
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Sorry, engineering wall function not yet supported for "
          "temperature/enthalpy; will use Dirichlet"
       << std::endl;
@@ -1107,7 +1108,7 @@ EnthalpyEquationSystem::solve_and_update()
 
   for (int k = 0; k < maxIterations_; ++k) {
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
       << userSuppliedName_ << std::endl;
 
@@ -1116,10 +1117,10 @@ EnthalpyEquationSystem::solve_and_update()
       assemble_and_solve(hTmp_);
 
       // update
-      double timeA = KynemaUGFEnv::self().kynema-ugf_time();
+      double timeA = KynemaUGFEnv::self().kynema_ugf_time();
       solution_update(
         1.0, *hTmp_, 1.0, enthalpy_->field_of_state(stk::mesh::StateNP1));
-      double timeB = KynemaUGFEnv::self().kynema-ugf_time();
+      double timeB = KynemaUGFEnv::self().kynema_ugf_time();
       timerAssemble_ += (timeB - timeA);
 
       if (decoupledOverset_ && realm_.hasOverset_)
@@ -1317,19 +1318,19 @@ EnthalpyEquationSystem::extract_temperature()
     stk::all_reduce_sum(comm, &troubleCount[0], &g_troubleCount[0], 3);
 
     if (g_troubleCount[0] > 0) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Temperature extraction failed to converge " << g_troubleCount[0]
         << " times" << std::endl;
     }
 
     if (g_troubleCount[1] > 0) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Temperature clipped to min " << g_troubleCount[1] << " times"
         << std::endl;
     }
 
     if (g_troubleCount[2] > 0) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Temperature clipped to max " << g_troubleCount[2] << " times"
         << std::endl;
     }
@@ -1499,9 +1500,9 @@ void
 EnthalpyEquationSystem::compute_projected_nodal_gradient()
 {
   if (!managePNG_) {
-    const double timeA = -KynemaUGFEnv::self().kynema-ugf_time();
+    const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
     nodalGradAlgDriver_.execute();
-    timerMisc_ += (KynemaUGFEnv::self().kynema-ugf_time() + timeA);
+    timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
   } else {
     projectedNodalGradEqs_->solve_and_update_external();
   }

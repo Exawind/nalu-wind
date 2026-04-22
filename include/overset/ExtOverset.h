@@ -13,7 +13,7 @@
 #include "TimeIntegrator.h"
 #include "stk_util/parallel/Parallel.hpp"
 
-namespace tioga_kynema-ugf {
+namespace tioga_kynema_ugf {
 class TiogaSTKIface;
 }
 

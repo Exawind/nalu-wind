@@ -195,7 +195,8 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_inflow)
   sierra::kynema_ugf::MdotAlgDriver mdotDriver(
     helperObjs.realm, elementContinuityEqs);
   mdotDriver.register_face_algorithm<sierra::kynema_ugf::MdotInflowAlg>(
-    sierra::kynema_ugf::INFLOW, surfPart, "mdot_inflow", mdotDriver, useShifted);
+    sierra::kynema_ugf::INFLOW, surfPart, "mdot_inflow", mdotDriver,
+    useShifted);
   mdotDriver.execute();
 
   EXPECT_NEAR(mdotDriver.mdot_inflow(), -1.0, 1.0e-15);

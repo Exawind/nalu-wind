@@ -70,8 +70,8 @@ NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
   }
 
   if (hasOverset_) {
-    iblankField_ =
-      kynema_ugf_ngp::get_ngp_field<int>(eqSystem->realm_.mesh_info(), "iblank");
+    iblankField_ = kynema_ugf_ngp::get_ngp_field<int>(
+      eqSystem->realm_.mesh_info(), "iblank");
   }
 }
 

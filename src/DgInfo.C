@@ -81,58 +81,70 @@ DgInfo::~DgInfo()
 void
 DgInfo::dump_info()
 {
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "------------------------------------------------- " << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "DGInfo::dump_info() for localGaussPointId_ " << localGaussPointId_
     << " On Rank " << parallelRank_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "parallelRank_ " << parallelRank_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "globalFaceId_ " << globalFaceId_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "currentGaussPointId_ " << currentGaussPointId_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput() << "currentFace_ " << currentFace_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "currentFace_ " << currentFace_ << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "currentElement_ " << currentElement_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "currentElementTopo_ " << currentElementTopo_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput() << "nDim_ " << nDim_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput() << "bestXRef_ " << bestXRef_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput() << "bestX_ " << bestX_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput() << "nDim_ " << nDim_ << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "bestXRef_ " << bestXRef_ << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput() << "bestX_ " << bestX_ << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "nearestDistance_ " << nearestDistance_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "opposingFaceIsGhosted_ " << opposingFaceIsGhosted_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "opposingFace_ " << opposingFace_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput() << "opposingElement_ " << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput() << "opposingElement_ " << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "opposingElementTopo_ " << opposingElementTopo_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "opposingFaceOrdinal_ " << opposingFaceOrdinal_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "meFCOpposing_ " << meFCOpposing_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "meSCSOpposing_ " << meSCSOpposing_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput() << "currentGaussPointCoords_ " << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "currentGaussPointCoords_ " << std::endl;
   for (size_t k = 0; k < currentGaussPointCoords_.size(); ++k)
-    KynemaUGFEnv::self().kynema-ugfOutput() << currentGaussPointCoords_[k] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput() << "currentIsoParCoords_ " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutput()
+      << currentGaussPointCoords_[k] << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "currentIsoParCoords_ " << std::endl;
   for (size_t k = 0; k < currentIsoParCoords_.size(); ++k)
-    KynemaUGFEnv::self().kynema-ugfOutput() << currentIsoParCoords_[k] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput() << "opposingIsoParCoords_ " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutput()
+      << currentIsoParCoords_[k] << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "opposingIsoParCoords_ " << std::endl;
   for (size_t k = 0; k < opposingIsoParCoords_.size(); ++k)
-    KynemaUGFEnv::self().kynema-ugfOutput() << opposingIsoParCoords_[k] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput() << "allOpposingFaceIds_ " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutput()
+      << opposingIsoParCoords_[k] << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "allOpposingFaceIds_ " << std::endl;
   for (size_t k = 0; k < allOpposingFaceIds_.size(); ++k)
-    KynemaUGFEnv::self().kynema-ugfOutput() << allOpposingFaceIds_[k] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput() << "allOpposingFaceIdsOld_ " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutput()
+      << allOpposingFaceIds_[k] << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "allOpposingFaceIdsOld_ " << std::endl;
   for (size_t k = 0; k < allOpposingFaceIdsOld_.size(); ++k)
-    KynemaUGFEnv::self().kynema-ugfOutput() << allOpposingFaceIdsOld_[k] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
+      << allOpposingFaceIdsOld_[k] << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "------------------------------------------------- " << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput() << std::endl;
 }
 
 } // namespace kynema_ugf

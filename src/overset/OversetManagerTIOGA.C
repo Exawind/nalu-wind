@@ -53,19 +53,19 @@ OversetManagerTIOGA::setup()
 void
 OversetManagerTIOGA::initialize()
 {
-  const double timeA = KynemaUGFEnv::self().kynema-ugf_time();
+  const double timeA = KynemaUGFEnv::self().kynema_ugf_time();
   if (isInit_) {
     tiogaIface_.initialize();
     isInit_ = false;
   }
-  const double timeB = KynemaUGFEnv::self().kynema-ugf_time();
+  const double timeB = KynemaUGFEnv::self().kynema_ugf_time();
   timerConnectivity_ += (timeB - timeA);
 }
 
 void
 OversetManagerTIOGA::execute(const bool isDecoupled)
 {
-  const double timeA = KynemaUGFEnv::self().kynema-ugf_time();
+  const double timeA = KynemaUGFEnv::self().kynema_ugf_time();
   if (isInit_) {
     tiogaIface_.initialize();
     isInit_ = false;
@@ -73,11 +73,11 @@ OversetManagerTIOGA::execute(const bool isDecoupled)
 
   tiogaIface_.execute(isDecoupled);
 
-  const double timeB = KynemaUGFEnv::self().kynema-ugf_time();
+  const double timeB = KynemaUGFEnv::self().kynema_ugf_time();
   timerConnectivity_ += (timeB - timeA);
 
 #if 0
-  KynemaUGFEnv::self().kynema-ugfOutputP0() 
+  KynemaUGFEnv::self().kynema_ugfOutputP0() 
       << "TIOGA connectivity updated: " << (timeB - timeA) << std::endl;
 #endif
 }

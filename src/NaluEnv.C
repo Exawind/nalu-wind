@@ -35,8 +35,9 @@ KynemaUGFEnv::KynemaUGFEnv()
     pSize_(-1),
     pRank_(-1),
     stdoutStream_(std::cout.rdbuf()),
-    kynema-ugfLogStream_(new std::ostream(std::cout.rdbuf())),
-    kynema-ugfParallelStream_(new std::ostream(&kynema-ugfParallelStreamBuffer_)),
+    kynema_ugfLogStream_(new std::ostream(std::cout.rdbuf())),
+    kynema_ugfParallelStream_(
+      new std::ostream(&kynema_ugfParallelStreamBuffer_)),
     parallelLog_(false),
     debug_(false)
 {
@@ -56,21 +57,23 @@ KynemaUGFEnv::self()
 }
 
 //--------------------------------------------------------------------------
-//-------- kynema-ugfOutputP0 ----------------------------------------------------
+//-------- kynema_ugfOutputP0
+//----------------------------------------------------
 //--------------------------------------------------------------------------
 std::ostream&
-KynemaUGFEnv::kynema-ugfOutputP0()
+KynemaUGFEnv::kynema_ugfOutputP0()
 {
-  return *kynema-ugfLogStream_;
+  return *kynema_ugfLogStream_;
 }
 
 //--------------------------------------------------------------------------
-//-------- kynema-ugfOutput ------------------------------------------------------
+//-------- kynema_ugfOutput
+//------------------------------------------------------
 //--------------------------------------------------------------------------
 std::ostream&
-KynemaUGFEnv::kynema-ugfOutput()
+KynemaUGFEnv::kynema_ugfOutput()
 {
-  return *kynema-ugfParallelStream_;
+  return *kynema_ugfParallelStream_;
 }
 
 //--------------------------------------------------------------------------
@@ -105,17 +108,17 @@ KynemaUGFEnv::parallel_comm()
 //--------------------------------------------------------------------------
 void
 KynemaUGFEnv::set_log_file_stream(
-  std::string kynema-ugfLogName, bool pprint, const bool capture_cout)
+  std::string kynema_ugfLogName, bool pprint, const bool capture_cout)
 {
   if (pRank_ == 0) {
-    kynema-ugfStreamBuffer_.open(kynema-ugfLogName.c_str(), std::ios::out);
-    kynema-ugfLogStream_->rdbuf(&kynema-ugfStreamBuffer_);
+    kynema_ugfStreamBuffer_.open(kynema_ugfLogName.c_str(), std::ios::out);
+    kynema_ugfLogStream_->rdbuf(&kynema_ugfStreamBuffer_);
   } else {
-    kynema-ugfLogStream_->rdbuf(&kynema-ugfEmptyStreamBuffer_);
+    kynema_ugfLogStream_->rdbuf(&kynema_ugfEmptyStreamBuffer_);
   }
 
   if (capture_cout)
-    std::cout.rdbuf(kynema-ugfLogStream_->rdbuf());
+    std::cout.rdbuf(kynema_ugfLogStream_->rdbuf());
 
   // default to an empty stream buffer for parallel unless pprint is set
   parallelLog_ = pprint;
@@ -127,11 +130,12 @@ KynemaUGFEnv::set_log_file_stream(
 
     // inputname.log -> inputname.log.16.02 for the rank 2 proc of a 16 proc job
     std::string parallelLogName =
-      kynema-ugfLogName + "." + std::to_string(pSize_) + "." + paddedRank.str();
-    kynema-ugfParallelStreamBuffer_.open(parallelLogName.c_str(), std::ios::out);
-    kynema-ugfParallelStream_->rdbuf(&kynema-ugfParallelStreamBuffer_);
+      kynema_ugfLogName + "." + std::to_string(pSize_) + "." + paddedRank.str();
+    kynema_ugfParallelStreamBuffer_.open(
+      parallelLogName.c_str(), std::ios::out);
+    kynema_ugfParallelStream_->rdbuf(&kynema_ugfParallelStreamBuffer_);
   } else {
-    kynema-ugfParallelStream_->rdbuf(stdoutStream_);
+    kynema_ugfParallelStream_->rdbuf(stdoutStream_);
   }
 }
 
@@ -142,10 +146,10 @@ void
 KynemaUGFEnv::close_log_file_stream()
 {
   if (pRank_ == 0) {
-    kynema-ugfStreamBuffer_.close();
+    kynema_ugfStreamBuffer_.close();
   }
   if (parallelLog_) {
-    kynema-ugfParallelStreamBuffer_.close();
+    kynema_ugfParallelStreamBuffer_.close();
   }
 }
 
@@ -155,18 +159,19 @@ KynemaUGFEnv::close_log_file_stream()
 KynemaUGFEnv::~KynemaUGFEnv()
 {
   close_log_file_stream();
-  delete kynema-ugfLogStream_;
-  delete kynema-ugfParallelStream_;
+  delete kynema_ugfLogStream_;
+  delete kynema_ugfParallelStream_;
 
   // shut down MPI
   // MPI_Finalize();
 }
 
 //--------------------------------------------------------------------------
-//-------- kynema-ugf_time -------------------------------------------------------
+//-------- kynema_ugf_time
+//-------------------------------------------------------
 //--------------------------------------------------------------------------
 double
-KynemaUGFEnv::kynema-ugf_time()
+KynemaUGFEnv::kynema_ugf_time()
 {
   return stk::wall_time();
 }

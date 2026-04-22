@@ -895,7 +895,7 @@ Tri32DSCS::general_face_grad_op(
   lerr = tri_gradient_operator(cordel, deriv, grad, det);
 
   if (lerr)
-    KynemaUGFEnv::self().kynema-ugfOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
       << "sorry, issue with face_grad_op.." << std::endl;
 }
 

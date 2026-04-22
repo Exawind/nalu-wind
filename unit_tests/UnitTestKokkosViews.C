@@ -34,7 +34,8 @@ find_max_nodes_and_ips(
     stk::topology topo = bptr->topology();
     maxNodesPerElement = std::max(maxNodesPerElement, (int)topo.num_nodes());
     sierra::kynema_ugf::MasterElement* meSCS =
-      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(topo);
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+        topo);
     maxScsIp = std::max(maxScsIp, meSCS->num_integration_points());
     numEntities += bptr->size();
   }
@@ -330,8 +331,10 @@ public:
     const int bytes_per_thread =
       sierra::kynema_ugf::SharedMemView<double**>::shmem_size(
         maxNodesPerElement, nDim) +
-      sierra::kynema_ugf::SharedMemView<double*>::shmem_size(maxNodesPerElement) +
-      sierra::kynema_ugf::SharedMemView<double**>::shmem_size(maxNumScsIp, nDim) +
+      sierra::kynema_ugf::SharedMemView<double*>::shmem_size(
+        maxNodesPerElement) +
+      sierra::kynema_ugf::SharedMemView<double**>::shmem_size(
+        maxNumScsIp, nDim) +
       sierra::kynema_ugf::SharedMemView<double**>::shmem_size(
         maxNumScsIp, maxNodesPerElement * nDim) +
       sierra::kynema_ugf::SharedMemView<double**>::shmem_size(
@@ -345,14 +348,15 @@ public:
         const stk::mesh::Bucket& bkt = *elemBuckets[team.league_rank()];
         stk::topology topo = bkt.topology();
         sierra::kynema_ugf::MasterElement& meSCS =
-          *sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
-            topo);
+          *sierra::kynema_ugf::MasterElementRepo::
+            get_surface_master_element_on_host(topo);
 
         const int nodesPerElem = topo.num_nodes();
         const int numScsIp = meSCS.num_integration_points();
 
         sierra::kynema_ugf::SharedMemView<double**> elemNodeCoords =
-          sierra::kynema_ugf::get_shmem_view_2D<double>(team, nodesPerElem, nDim);
+          sierra::kynema_ugf::get_shmem_view_2D<double>(
+            team, nodesPerElem, nDim);
         sierra::kynema_ugf::SharedMemView<double*> elemNodePressures =
           sierra::kynema_ugf::get_shmem_view_1D<double>(team, nodesPerElem);
 

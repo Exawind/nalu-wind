@@ -41,9 +41,8 @@ TEST(PecletFunction, NGP_classic_double)
   std::vector<double> pecletNumbers = {0.0, 1.0, std::sqrt(5.0), 1e5};
   std::vector<double> pecletFactors = {0.0, 1.0 / 6.0, 0.5, 1.0};
 
-  auto* pecFunc =
-    sierra::kynema_ugf::kynema_ugf_ngp::create<sierra::kynema_ugf::ClassicPecletFunction<double>>(
-      A, hybridFactor);
+  auto* pecFunc = sierra::kynema_ugf::kynema_ugf_ngp::create<
+    sierra::kynema_ugf::ClassicPecletFunction<double>>(A, hybridFactor);
 
   for (int i = 0; i < 4; i++) {
     EXPECT_NEAR(
@@ -80,8 +79,8 @@ TEST(PecletFunction, NGP_tanh_double)
   std::vector<double> pecletNumbers = {-c1 - 10.0 * c2, c1, c1 + 10.0 * c2};
   std::vector<double> pecletFactors = {0.0, 0.5, 1.0};
 
-  auto* pecFunc =
-    sierra::kynema_ugf::kynema_ugf_ngp::create<sierra::kynema_ugf::TanhFunction<double>>(c1, c2);
+  auto* pecFunc = sierra::kynema_ugf::kynema_ugf_ngp::create<
+    sierra::kynema_ugf::TanhFunction<double>>(c1, c2);
 
   for (int i = 0; i < 3; i++) {
     EXPECT_NEAR(
@@ -98,9 +97,8 @@ TEST(PecletFunction, NGP_tanh_simd)
   std::vector<DoubleType> pecletNumbers = {-10.0 * c2, c1, c1 + 10.0 * c2};
   std::vector<double> pecletFactors = {0.0, 0.5, 1.0};
 
-  auto* pecFunc =
-    sierra::kynema_ugf::kynema_ugf_ngp::create<sierra::kynema_ugf::TanhFunction<DoubleType>>(
-      c1, c2);
+  auto* pecFunc = sierra::kynema_ugf::kynema_ugf_ngp::create<
+    sierra::kynema_ugf::TanhFunction<DoubleType>>(c1, c2);
 
   for (int i = 0; i < 3; i++) {
     const DoubleType pecFac = exec_on_device(pecFunc, pecletNumbers[i]);

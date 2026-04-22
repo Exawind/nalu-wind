@@ -31,7 +31,8 @@ template <typename GradPhiType>
 void
 NodalGradAlgDriver<GradPhiType>::pre_work()
 {
-  auto grad_phi = kynema_ugf_ngp::get_ngp_field(realm_.mesh_info(), gradPhiName_);
+  auto grad_phi =
+    kynema_ugf_ngp::get_ngp_field(realm_.mesh_info(), gradPhiName_);
   grad_phi.set_all(stk::mesh::get_updated_ngp_mesh(realm_.bulk_data()), 0.0);
 }
 

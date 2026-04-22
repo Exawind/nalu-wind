@@ -35,16 +35,22 @@ calculate_metric_tensor(
   int gradSize = me.num_integration_points() * me.nodesPerElement_ * me.nDim_;
   std::vector<DoubleType> ws_dndx(gradSize);
   std::vector<DoubleType> ws_deriv(gradSize);
-  const sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>
+  const sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
     elemCoords(ws_coords.data(), me.nodesPerElement_, me.nDim_);
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem> dndx(
-    ws_dndx.data(), me.num_integration_points(), me.nodesPerElement_, me.nDim_);
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
+    dndx(
+      ws_dndx.data(), me.num_integration_points(), me.nodesPerElement_,
+      me.nDim_);
 
   constexpr auto deriv_c = sierra::kynema_ugf::elem_data_t<
     AlgTraits, sierra::kynema_ugf::QuadType::MID>::scs_deriv;
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem> deriv(
-    ws_deriv.data(), me.num_integration_points(), me.nodesPerElement_,
-    me.nDim_);
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
+    deriv(
+      ws_deriv.data(), me.num_integration_points(), me.nodesPerElement_,
+      me.nDim_);
   me.grad_op(elemCoords, dndx, deriv);
 
   for (int k = 0; k < deriv.extent_int(0); ++k) {
@@ -58,11 +64,13 @@ calculate_metric_tensor(
   int metricSize = me.nDim_ * me.nDim_ * me.num_integration_points();
   std::vector<DoubleType> ws_contravariant_metric_tensor(metricSize);
   std::vector<DoubleType> ws_covariant_metric_tensor(metricSize);
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem>
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
     contravariant_metric_tensor(
       ws_contravariant_metric_tensor.data(), me.num_integration_points(),
       me.nDim_, me.nDim_);
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem>
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
     covariant_metric_tensor(
       ws_covariant_metric_tensor.data(), me.num_integration_points(), me.nDim_,
       me.nDim_);
@@ -90,7 +98,8 @@ test_metric_for_topo_2D(double tol)
     unit_test_utils::create_one_reference_element(*bulk, topo);
 
   auto* mescs =
-    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(topo);
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+      topo);
 
   // apply some arbitrary linear map the reference element
   std::mt19937 rng;
@@ -110,7 +119,8 @@ test_metric_for_topo_2D(double tol)
   const auto& coordField = *static_cast<const VectorFieldType*>(
     bulk->mesh_meta_data().coordinate_field());
   std::vector<DoubleType> ws_coords(topo.num_nodes() * dim);
-  const sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>
+  const sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
     coords(ws_coords.data(), topo.num_nodes(), dim);
   const auto* nodes = bulk->begin_nodes(elem);
   for (unsigned j = 0; j < topo.num_nodes(); ++j) {
@@ -158,7 +168,8 @@ test_metric_for_topo_3D(double tol)
     unit_test_utils::create_one_reference_element(*bulk, topo);
 
   auto* mescs =
-    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(topo);
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+      topo);
 
   // apply some arbitrary linear map the reference element
   std::mt19937 rng;
@@ -179,7 +190,8 @@ test_metric_for_topo_3D(double tol)
     bulk->mesh_meta_data().coordinate_field());
 
   std::vector<DoubleType> ws_coords(topo.num_nodes() * dim);
-  const sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>
+  const sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
     coords(ws_coords.data(), topo.num_nodes(), dim);
   const auto* nodes = bulk->begin_nodes(elem);
   for (unsigned j = 0; j < topo.num_nodes(); ++j) {

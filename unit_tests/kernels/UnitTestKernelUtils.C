@@ -777,9 +777,11 @@ calc_mass_flow_rate_scs(
   const sierra::kynema_ugf::VectorFieldType& velocity,
   const sierra::kynema_ugf::GenericFieldType& massFlowRate)
 {
-  using Traits = sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits =
+    sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Hex8Traits = sierra::kynema_ugf::AlgTraitsHex8;
-  using ElemSimdData = sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdData =
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
@@ -812,7 +814,8 @@ calc_mass_flow_rate_scs(
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpMdot = fieldMgr.get_field<double>(mdotID);
   const auto mdotOps =
-    sierra::kynema_ugf::kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, ngpMdot);
+    sierra::kynema_ugf::kynema_ugf_ngp::simd_elem_field_updater(
+      ngpMesh, ngpMdot);
 
   auto v_shape_fcn = sierra::kynema_ugf::shape_fcn<
     sierra::kynema_ugf::AlgTraitsHex8, sierra::kynema_ugf::QuadRank::SCS>(
@@ -826,7 +829,8 @@ calc_mass_flow_rate_scs(
       auto& scrViews = edata.simdScrView;
       auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
       auto& v_vel = scrViews.get_scratch_view_2D(velID);
-      auto& meViews = scrViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
+      auto& meViews =
+        scrViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
       auto& v_area = meViews.scs_areav;
 
       for (int ip = 0; ip < Hex8Traits::numScsIp_; ++ip) {
@@ -862,7 +866,8 @@ calc_open_mass_flow_rate(
   const sierra::kynema_ugf::GenericFieldType& exposedAreaVec,
   const sierra::kynema_ugf::GenericFieldType& massFlowRate)
 {
-  using Traits = sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits =
+    sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Quad4Traits = sierra::kynema_ugf::AlgTraitsQuad4;
   using ElemSimdDataType =
     sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
@@ -899,7 +904,8 @@ calc_open_mass_flow_rate(
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpMdot = fieldMgr.get_field<double>(mdotID);
   const auto mdotOps =
-    sierra::kynema_ugf::kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, ngpMdot);
+    sierra::kynema_ugf::kynema_ugf_ngp::simd_elem_field_updater(
+      ngpMesh, ngpMdot);
 
   auto shape_fcn = sierra::kynema_ugf::shape_fcn<
     sierra::kynema_ugf::AlgTraitsQuad4, sierra::kynema_ugf::QuadRank::SCV>(
@@ -951,7 +957,8 @@ calc_edge_area_vec(
   EXPECT_EQ(ndim, 3);
 
   auto meSCS =
-    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(topo);
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+      topo);
   const auto npe = meSCS->nodesPerElement_;
   const auto numScsIp = meSCS->num_integration_points();
   const int* lrscv = meSCS->adjacentNodes();
@@ -960,7 +967,8 @@ calc_edge_area_vec(
   // Scratch arrays
   std::vector<double> w_coords(ndim * npe);
   std::vector<double> w_scs_areav(ndim * numScsIp);
-  sierra::kynema_ugf::SharedMemView<double**> coords(w_coords.data(), npe, ndim);
+  sierra::kynema_ugf::SharedMemView<double**> coords(
+    w_coords.data(), npe, ndim);
   sierra::kynema_ugf::SharedMemView<double**> scs_areav(
     w_scs_areav.data(), numScsIp, ndim);
 
@@ -1058,7 +1066,8 @@ calc_exposed_area_vec(
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto areaVec = fieldMgr.get_field<double>(areaID);
   const auto areaVecOps =
-    sierra::kynema_ugf::kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, areaVec);
+    sierra::kynema_ugf::kynema_ugf_ngp::simd_elem_field_updater(
+      ngpMesh, areaVec);
 
   sierra::kynema_ugf::kynema_ugf_ngp::run_elem_algorithm(
     "unittest_calc_exposed_area_vec", meshInfo, meta.side_rank(), dataReq, sel,

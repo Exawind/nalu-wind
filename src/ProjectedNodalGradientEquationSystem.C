@@ -364,11 +364,11 @@ ProjectedNodalGradientEquationSystem::solve_and_update_external()
     assemble_and_solve(qTmp_);
 
     // update
-    double timeA = KynemaUGFEnv::self().kynema-ugf_time();
+    double timeA = KynemaUGFEnv::self().kynema_ugf_time();
     field_axpby(
       realm_.meta_data(), realm_.bulk_data(), 1.0, *qTmp_, 1.0, *dqdx_,
       realm_.get_activate_aura());
-    double timeB = KynemaUGFEnv::self().kynema-ugf_time();
+    double timeB = KynemaUGFEnv::self().kynema_ugf_time();
     timerAssemble_ += (timeB - timeA);
   }
 }

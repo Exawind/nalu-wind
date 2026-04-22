@@ -30,7 +30,8 @@ TestAlgorithm::fill_mesh(const std::string mesh_spec)
 
 double
 TestAlgorithm::field_norm(
-  const sierra::kynema_ugf::ScalarFieldType& field, stk::mesh::Selector* selector)
+  const sierra::kynema_ugf::ScalarFieldType& field,
+  stk::mesh::Selector* selector)
 {
 
   auto& meta = this->meta();

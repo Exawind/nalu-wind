@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <AssembleScalarEigenEdgeSolverAlgorithm.h>
 #include <Enums.h>
 #include <EquationSystem.h>
@@ -112,7 +112,7 @@ AssembleScalarEigenEdgeSolverAlgorithm::AssembleScalarEigenEdgeSolverAlgorithm(
     BinvXt_[2] = 0.0;
   }
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Perturbation model active: towards/delta/tke: " << biasTowards << "/"
     << deltaB_ << "/" << perturbTurbKe_ << std::endl;
 }

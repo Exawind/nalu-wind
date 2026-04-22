@@ -13,8 +13,8 @@
 /** \file
  *  \brief STK SIMD Interface
  *
- *  KynemaUGF wrapper to provide SIMD capability for vectorizing sierra::kynema_ugf::Kernel
- *  algorithms.
+ *  KynemaUGF wrapper to provide SIMD capability for vectorizing
+ * sierra::kynema_ugf::Kernel algorithms.
  */
 
 #include "stk_simd/Simd.hpp"

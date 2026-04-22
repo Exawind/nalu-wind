@@ -30,7 +30,8 @@ public:
   virtual ~TestContinuityKernel() = default;
 
   TestContinuityKernel(
-    const stk::mesh::BulkData& bulk, sierra::kynema_ugf::ElemDataRequests& dataReq)
+    const stk::mesh::BulkData& bulk,
+    sierra::kynema_ugf::ElemDataRequests& dataReq)
   {
     auto& meta = bulk.mesh_meta_data();
 
@@ -38,8 +39,9 @@ public:
     velocity_ = sierra::kynema_ugf::get_field_ordinal(meta, "velocity");
     pressure_ = sierra::kynema_ugf::get_field_ordinal(meta, "pressure");
 
-    meSCS_ = sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
-      AlgTraits::topo_);
+    meSCS_ =
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
+        AlgTraits::topo_);
 
     dataReq.add_cvfem_surface_me(meSCS_);
 
@@ -50,7 +52,8 @@ public:
     dataReq.add_master_element_call(
       sierra::kynema_ugf::SCS_AREAV, sierra::kynema_ugf::CURRENT_COORDINATES);
     dataReq.add_master_element_call(
-      sierra::kynema_ugf::SCS_SHAPE_FCN, sierra::kynema_ugf::CURRENT_COORDINATES);
+      sierra::kynema_ugf::SCS_SHAPE_FCN,
+      sierra::kynema_ugf::CURRENT_COORDINATES);
   }
 
   using sierra::kynema_ugf::Kernel::execute;
@@ -74,7 +77,8 @@ KOKKOS_FUNCTION void
 TestContinuityKernel<AlgTraits>::execute(
   sierra::kynema_ugf::SharedMemView<DoubleType**, ShmemType>&,
   sierra::kynema_ugf::SharedMemView<DoubleType*, ShmemType>& rhs,
-  sierra::kynema_ugf::ScratchViews<DoubleType, TeamType, ShmemType>& scratchViews)
+  sierra::kynema_ugf::ScratchViews<DoubleType, TeamType, ShmemType>&
+    scratchViews)
 {
   // Get the integration point to node mapping
   const int* ipNodeMap = meSCS_->ipNodeMap(3);
@@ -82,7 +86,8 @@ TestContinuityKernel<AlgTraits>::execute(
   auto& v_velocity = scratchViews.get_scratch_view_2D(velocity_);
   auto& v_pressure = scratchViews.get_scratch_view_1D(pressure_);
 
-  auto& meViews = scratchViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
+  auto& meViews =
+    scratchViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
   auto& scs_areav = meViews.scs_areav;
   auto v_shape_fcn =
     sierra::kynema_ugf::shape_fcn<AlgTraits, sierra::kynema_ugf::QuadRank::SCS>(

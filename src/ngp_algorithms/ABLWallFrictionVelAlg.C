@@ -162,7 +162,8 @@ void
 ABLWallFrictionVelAlg<BcAlgTraits>::execute()
 {
   namespace mo = abl_monin_obukhov;
-  using ElemSimdData = sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdData =
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
@@ -192,7 +193,8 @@ ABLWallFrictionVelAlg<BcAlgTraits>::execute()
   const stk::mesh::Selector sel =
     realm_.meta_data().locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
-  const auto utauOps = kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, ngpUtau);
+  const auto utauOps =
+    kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, ngpUtau);
 
   // Reducer to accumulate the area-weighted utau sum as well as total area for
   // wall boundary of this specific topology.
@@ -206,7 +208,8 @@ ABLWallFrictionVelAlg<BcAlgTraits>::execute()
     "ABLWallFrictionVelAlg_" + std::to_string(BcAlgTraits::topo_);
   kynema_ugf_ngp::run_elem_par_reduce(
     algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
-    KOKKOS_LAMBDA(ElemSimdData & edata, kynema_ugf_ngp::ArraySimdDouble2 & uSum) {
+    KOKKOS_LAMBDA(
+      ElemSimdData & edata, kynema_ugf_ngp::ArraySimdDouble2 & uSum) {
       // Unit normal vector
       DoubleType nx[BcAlgTraits::nDim_];
       DoubleType velIp[BcAlgTraits::nDim_];

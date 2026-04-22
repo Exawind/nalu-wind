@@ -1153,7 +1153,7 @@ PyrSCS::general_face_grad_op(
   const int lerr = pyr_gradient_operator(cordel, deriv, grad, det, err);
 
   if (lerr)
-    KynemaUGFEnv::self().kynema-ugfOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
       << "PyrSCS::general_face_grad_op: issue.." << std::endl;
 }
 

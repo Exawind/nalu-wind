@@ -26,16 +26,16 @@ main(int argc, char** argv)
   int returnVal = 0;
 
 #if defined(KOKKOS_ENABLE_CUDA)
-  const size_t kynema-ugf_stack_size = 16384;
-  cudaDeviceSetLimit(cudaLimitStackSize, kynema-ugf_stack_size);
+  const size_t kynema_ugf_stack_size = 16384;
+  cudaDeviceSetLimit(cudaLimitStackSize, kynema_ugf_stack_size);
 #elif defined(KOKKOS_ENABLE_HIP)
-  const size_t kynema-ugf_stack_size = 16384;
-  hipError_t err = hipDeviceSetLimit(hipLimitStackSize, kynema-ugf_stack_size);
+  const size_t kynema_ugf_stack_size = 16384;
+  hipError_t err = hipDeviceSetLimit(hipLimitStackSize, kynema_ugf_stack_size);
   if (err != hipSuccess) {
     /*
      This might be useful at some point so keeping it and commenting out.
 
-     sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
+     sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
      << __FILE__ << " " << __FUNCTION__ << " " << __LINE__
      << " : Failure " << hipGetErrorString(err) << " in hipDeviceSetLimit\n"
      << std::endl;
@@ -48,7 +48,7 @@ main(int argc, char** argv)
   {
     // clang-format off
       namespace version = sierra::kynema_ugf::version;
-      sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
+      sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "   Kynema-UGF Version: " << version::KynemaUGFVersionTag << std::endl
         << "   Kynema-UGF GIT Commit SHA: " << version::KynemaUGFGitCommitSHA
         << ((version::RepoIsDirty == "DIRTY") ? ("-" + version::RepoIsDirty) : "") << std::endl

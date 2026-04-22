@@ -89,7 +89,8 @@ struct GenericLoopOverCoarseSearchResults
     double scvip[216];
     double elemcoords[27 * 3];
     sierra::kynema_ugf::SharedMemView<double*> scvIp(&scvip[0], 216);
-    sierra::kynema_ugf::SharedMemView<double**> elemCoords(&elemcoords[0], 27, 3);
+    sierra::kynema_ugf::SharedMemView<double**> elemCoords(
+      &elemcoords[0], 27, 3);
 
     stk::mesh::Entity const* elem_nod_rels = stkBulk_.begin_nodes(elem);
 

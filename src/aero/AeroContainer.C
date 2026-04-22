@@ -58,7 +58,8 @@ AeroContainer::AeroContainer(const YAML::Node& node) : fsiContainer_(nullptr)
 #endif
   }
   // std::vector<const YAML::Node*> foundFsi;
-  // KynemaUGFParsingHelper::find_nodes_given_key("openfast_fsi", node, foundFsi);
+  // KynemaUGFParsingHelper::find_nodes_given_key("openfast_fsi", node,
+  // foundFsi);
   if (node["openfast_fsi"]) {
 #ifdef KYNEMA_UGF_USES_OPENFAST
     // if (foundFsi.size() != 1)
@@ -145,7 +146,7 @@ AeroContainer::update_displacements(
 {
 #ifdef KYNEMA_UGF_USES_KYNEMA
   if (has_six_dof()) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Calling update displacements inside AeroContainer" << std::endl;
     sixDof_->map_displacements(currentTime, updateCC);
 
@@ -156,7 +157,7 @@ AeroContainer::update_displacements(
 
 #ifdef KYNEMA_UGF_USES_OPENFAST
   if (has_fsi()) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Calling update displacements inside AeroContainer" << std::endl;
     if (predict)
       fsiContainer_->predict_struct_states();
@@ -298,11 +299,11 @@ AeroContainer::openfast_accumulated_time()
 }
 
 double
-AeroContainer::kynema-ugf_fsi_accumulated_time()
+AeroContainer::kynema_ugf_fsi_accumulated_time()
 {
 #ifdef KYNEMA_UGF_USES_OPENFAST
   if (has_fsi())
-    return fsiContainer_->total_kynema-ugf_fsi_execution_time();
+    return fsiContainer_->total_kynema_ugf_fsi_execution_time();
   else
     return -1.0;
 #endif

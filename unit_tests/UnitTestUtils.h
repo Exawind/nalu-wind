@@ -43,7 +43,7 @@ void dump_mesh(
   std::vector<stk::mesh::FieldBase*> fields,
   std::string name = "out.e");
 
-std::ostream& kynema-ugf_out();
+std::ostream& kynema_ugf_out();
 
 stk::mesh::Entity
 create_one_reference_element(stk::mesh::BulkData& bulk, stk::topology topo);
@@ -506,7 +506,8 @@ public:
     ypSpec_ = yp;
 
     // create an object for creating SmartField's
-    sierra::kynema_ugf::MakeSmartField<tags::LEGACY, tags::READ_WRITE> smartener;
+    sierra::kynema_ugf::MakeSmartField<tags::LEGACY, tags::READ_WRITE>
+      smartener;
 
     // Assign some values to the nodal fields
     // all these fields will sync_to_host here and call modified_on_host when

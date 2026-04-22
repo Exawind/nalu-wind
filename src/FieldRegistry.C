@@ -73,7 +73,7 @@ Registry()
     {"mesh_velocity",             SingleStateNodalVector},
     {"minimum_distance_to_wall",  SingleStateNodalScalar},
     {"momentum_diag",             SingleStateNodalScalar},
-    {"kynema-ugf_global_id",            GlobalId},
+    {"kynema_ugf_global_id",            GlobalId},
     {"nodalScalarField",          SingleStateNodalScalar}, // Used in testing
     {"nodalGenericField",         SingleStateNodeGeneric}, // Used in testing
     {"nodalPressure",             SingleStateNodalScalar},

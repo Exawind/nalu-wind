@@ -108,11 +108,12 @@ TEST(meshMotion, scaling)
   YAML::Node scaleNode = YAML::Load(scaleInfo);
 
   // create realm
-  unit_test_utils::KynemaUGFTest kynema-ugfObj;
-  sierra::kynema_ugf::Realm& realm = kynema-ugfObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
 
   // initialize the mesh scaling class
-  sierra::kynema_ugf::MotionScalingKernel scaleClass(realm.meta_data(), scaleNode);
+  sierra::kynema_ugf::MotionScalingKernel scaleClass(
+    realm.meta_data(), scaleNode);
 
   // build transformation
   const double time = 0.0;
@@ -222,8 +223,8 @@ TEST(meshMotion, deform_interior_outside_node)
   YAML::Node deformNode = YAML::Load(deformInfo);
 
   // create realm
-  unit_test_utils::KynemaUGFTest kynema-ugfObj;
-  sierra::kynema_ugf::Realm& realm = kynema-ugfObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
 
   // initialize the mesh translation class
   sierra::kynema_ugf::MotionDeformingInteriorKernel deformClass(
@@ -269,8 +270,8 @@ TEST(meshMotion, deform_interior_inside_node)
   YAML::Node deformNode = YAML::Load(deformInfo);
 
   // create realm
-  unit_test_utils::KynemaUGFTest kynema-ugfObj;
-  sierra::kynema_ugf::Realm& realm = kynema-ugfObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
 
   // initialize the mesh translation class
   sierra::kynema_ugf::MotionDeformingInteriorKernel deformClass(

@@ -60,7 +60,7 @@ KernelBuilderLog::print_invalid_kernel_names(
   }
 
   for (const auto& name : badNames) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Error: No Supplemental Algorithm with name `" << name
       << "' implemented" << std::endl;
   }
@@ -81,7 +81,7 @@ KernelBuilderLog::print_valid_kernel_names(std::string kernelTypeName)
   }
   msgList = msgList.substr(0, msgList.size() - 2);
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Valid Supplemental Algorithm names for " << kernelTypeName << " are "
     << msgList << "." << std::endl;
 }
@@ -97,8 +97,9 @@ KernelBuilderLog::print_built_kernel_names(std::string kernelTypeName)
   }
   msgList = msgList.substr(0, msgList.size() - 2);
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "Built Kernels for " << kernelTypeName
-                                 << " are " << msgList << "." << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "Built Kernels for " << kernelTypeName << " are " << msgList << "."
+    << std::endl;
 }
 //--------------------------------------------------------------------------
 std::set<std::string>

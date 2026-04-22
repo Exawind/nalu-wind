@@ -28,14 +28,14 @@ class OversetManagerTIOGA;
 }
 } // namespace sierra
 
-namespace tioga_kynema-ugf {
+namespace tioga_kynema_ugf {
 
 class TiogaBlock;
 
 /** KynemaUGF interface to TIOGA (Topology Independent Overset Grid Assembly)
  *
- *  This class provides a two-way data transfer interface for TIOGA library and
- *  provides overset connectivity capability for KynemaUGF.
+ *  This class provides a two-way data transfer interface for TIOGA library
+ * and provides overset connectivity capability for KynemaUGF.
  */
 class TiogaSTKIface
 {
@@ -45,7 +45,9 @@ public:
    *  @param node YAML node containing overset inputs
    */
   TiogaSTKIface(
-    sierra::kynema_ugf::OversetManagerTIOGA&, const YAML::Node&, const std::string&);
+    sierra::kynema_ugf::OversetManagerTIOGA&,
+    const YAML::Node&,
+    const std::string&);
 
   ~TiogaSTKIface();
 
@@ -63,7 +65,8 @@ public:
    *  during mesh motion), registers the mesh blocks to TIOGA, calculate mesh
    *  connectivity information (hole, fringe, and field point determination),
    *  update the "overset inactive part" for hole elements, create the {fringe
-   *  node, donor element} mapping pair data structures for overset simulations.
+   *  node, donor element} mapping pair data structures for overset
+   * simulations.
    */
   void execute(const bool isDecoupled);
 
@@ -71,12 +74,14 @@ public:
 
   void post_connectivity_work(const bool isDecoupled = true);
 
-  int register_solution(const std::vector<sierra::kynema_ugf::OversetFieldData>&);
+  int
+  register_solution(const std::vector<sierra::kynema_ugf::OversetFieldData>&);
 
-  void update_solution(const std::vector<sierra::kynema_ugf::OversetFieldData>&);
+  void
+  update_solution(const std::vector<sierra::kynema_ugf::OversetFieldData>&);
 
-  virtual void
-  overset_update_fields(const std::vector<sierra::kynema_ugf::OversetFieldData>&);
+  virtual void overset_update_fields(
+    const std::vector<sierra::kynema_ugf::OversetFieldData>&);
 
   virtual void overset_update_field(
     stk::mesh::FieldBase* field,
@@ -88,8 +93,8 @@ private:
   TiogaSTKIface() = delete;
   TiogaSTKIface(const TiogaSTKIface&) = delete;
 
-  /** Process the input parameters and initialize all data structures necessary
-   * to call TIOGA.
+  /** Process the input parameters and initialize all data structures
+   * necessary to call TIOGA.
    */
   void load(const YAML::Node&);
 
@@ -132,8 +137,8 @@ private:
 
   TiogaOptions tiogaOpts_;
 
-  //! List of TIOGA data structures for each mesh block participating in overset
-  //! connectivity
+  //! List of TIOGA data structures for each mesh block participating in
+  //! overset connectivity
   std::vector<std::unique_ptr<TiogaBlock>> blocks_;
 
   //! Reference to the TIOGA API interface
@@ -157,6 +162,6 @@ private:
   std::string coordsName_;
 };
 
-} // namespace tioga_kynema-ugf
+} // namespace tioga_kynema_ugf
 
 #endif /* TIOGASTKIFACE_H */

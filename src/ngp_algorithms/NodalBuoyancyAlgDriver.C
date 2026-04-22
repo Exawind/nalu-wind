@@ -70,7 +70,8 @@ NodalBuoyancyAlgDriver::post_work()
 
   auto* sourceweight = meta.template get_field<double>(
     stk::topology::NODE_RANK, sourceweightName_);
-  auto& ngpsourceweight = kynema_ugf_ngp::get_ngp_field(meshInfo, sourceweightName_);
+  auto& ngpsourceweight =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, sourceweightName_);
   ngpsourceweight.sync_to_host();
 
   auto* source =

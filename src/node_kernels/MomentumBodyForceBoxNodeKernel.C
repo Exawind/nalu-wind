@@ -117,7 +117,8 @@ MomentumBodyForceBoxNodeKernel::setup(Realm& realm)
     const double mdot = -mdotAlgDriver_->mdot_inflow();
 
     // Compute area of the mdot sideset
-    using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+    using MeshIndex =
+      kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
     const auto& ngpMesh = realm.ngp_mesh();
     auto areaVec = fieldMgr.get_field<double>(exposedAreaVecID_);
     const auto& subParts = mdotPart_->subsets();
@@ -178,7 +179,8 @@ MomentumBodyForceBoxNodeKernel::setup(Realm& realm)
       },
       l_drag);
     double drag = 0.0;
-    stk::all_reduce_sum(KynemaUGFEnv::self().parallel_comm(), &l_drag, &drag, 1);
+    stk::all_reduce_sum(
+      KynemaUGFEnv::self().parallel_comm(), &l_drag, &drag, 1);
 
     // Compute forcing
     const auto& uRef = realm.solutionOptions_->dynamicBodyForceVelReference_;

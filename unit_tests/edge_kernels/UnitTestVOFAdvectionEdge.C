@@ -136,7 +136,7 @@ TEST_F(VOFKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
   const int numDof = 1;
   unit_test_utils::TpetraHelperObjectsEdge helperObjs(bulk_, numDof);
 
-  helperObjs.realm.kynema-ugfGlobalId_ = kynema-ugfGlobalId_;
+  helperObjs.realm.kynema_ugfGlobalId_ = kynema_ugfGlobalId_;
   helperObjs.realm.tpetGlobalId_ = tpetGlobalId_;
 
   helperObjs.realm.set_global_id();

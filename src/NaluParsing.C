@@ -355,7 +355,7 @@ operator>>(const YAML::Node& node, StringFunctionInitialConditionData& fcnIC)
   if (targets.Type() == YAML::NodeType::Scalar) {
     fcnIC.targetNames_.resize(1);
     fcnIC.targetNames_[0] = targets.as<std::string>();
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "constant IC: name: " << fcnIC.icName_ << " , target[" << 0
       << "] = " << fcnIC.targetNames_[0] << std::endl;
     if (fcnIC.targetNames_[0].find(',') != std::string::npos) {
@@ -388,7 +388,7 @@ operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
   if (targets.Type() == YAML::NodeType::Scalar) {
     constIC.targetNames_.resize(1);
     constIC.targetNames_[0] = targets.as<std::string>();
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "constant IC: name: " << constIC.icName_ << " , target[" << 0
       << "] = " << constIC.targetNames_[0] << std::endl;
     if (constIC.targetNames_[0].find(',') != std::string::npos) {
@@ -403,7 +403,7 @@ operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
     for (size_t i = 0; i < targets.size(); ++i) {
       constIC.targetNames_[i] = targets[i].as<std::string>();
       if (constIC.debug_)
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "constant IC: name: " << constIC.icName_ << " , target[" << i
           << "] = " << constIC.targetNames_[i] << std::endl;
     }
@@ -413,7 +413,7 @@ operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
   constIC.fieldNames_.resize(value_size);
   constIC.data_.resize(value_size);
   if (constIC.debug_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "fieldNames_.size()= " << constIC.fieldNames_.size()
       << " value.size= " << constIC.data_.size() << std::endl;
   }
@@ -429,7 +429,7 @@ operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
       for (size_t iv = 0; iv < nvals; ++iv) {
         constIC.data_[jv][iv] = value[iv].as<double>();
         if (constIC.debug_) {
-          KynemaUGFEnv::self().kynema-ugfOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << "fieldNames_= " << constIC.fieldNames_[jv]
             << " value= " << constIC.data_[jv][iv] << std::endl;
         }
@@ -438,7 +438,7 @@ operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
       constIC.data_[jv].resize(1);
       constIC.data_[jv][0] = value.as<double>();
       if (constIC.debug_) {
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "fieldNames_= " << constIC.fieldNames_[jv]
           << " value= " << constIC.data_[jv][0] << std::endl;
       }
@@ -770,10 +770,12 @@ convert<sierra::kynema_ugf::WallUserData>::decode(
   if (node["mesh_displacement"]) {
     wallData.dx_ = node["mesh_displacement"].as<sierra::kynema_ugf::Velocity>();
     wallData.bcDataSpecifiedMap_["mesh_displacement"] = true;
-    wallData.bcDataTypeMap_["mesh_displacement"] = sierra::kynema_ugf::CONSTANT_UD;
+    wallData.bcDataTypeMap_["mesh_displacement"] =
+      sierra::kynema_ugf::CONSTANT_UD;
   }
   if (node["turbulent_ke"]) {
-    wallData.tke_ = node["turbulent_ke"].as<sierra::kynema_ugf::TurbKinEnergy>();
+    wallData.tke_ =
+      node["turbulent_ke"].as<sierra::kynema_ugf::TurbKinEnergy>();
     wallData.bcDataSpecifiedMap_["turbulent_ke"] = true;
     wallData.bcDataTypeMap_["turbulent_ke"] = sierra::kynema_ugf::CONSTANT_UD;
   }
@@ -792,7 +794,8 @@ convert<sierra::kynema_ugf::WallUserData>::decode(
     } catch (const YAML::BadConversion&) {
       wallData.functions.emplace(
         "temperature", node["temperature"].as<std::string>());
-      wallData.bcDataTypeMap_["temperature"] = sierra::kynema_ugf::STRING_FUNCTION_UD;
+      wallData.bcDataTypeMap_["temperature"] =
+        sierra::kynema_ugf::STRING_FUNCTION_UD;
     }
     wallData.bcDataSpecifiedMap_["temperature"] = true;
     wallData.tempSpec_ = true;
@@ -802,7 +805,8 @@ convert<sierra::kynema_ugf::WallUserData>::decode(
     wallData.mixFrac_ =
       node["mixture_fraction"].as<sierra::kynema_ugf::MixtureFraction>();
     wallData.bcDataSpecifiedMap_["mixture_fraction"] = true;
-    wallData.bcDataTypeMap_["mixture_fraction"] = sierra::kynema_ugf::CONSTANT_UD;
+    wallData.bcDataTypeMap_["mixture_fraction"] =
+      sierra::kynema_ugf::CONSTANT_UD;
   }
 
   if (node["mass_fraction"]) {
@@ -833,7 +837,8 @@ convert<sierra::kynema_ugf::WallUserData>::decode(
 
   if (node["reference_temperature"]) {
     wallData.referenceTemperature_ =
-      node["reference_temperature"].as<sierra::kynema_ugf::ReferenceTemperature>();
+      node["reference_temperature"]
+        .as<sierra::kynema_ugf::ReferenceTemperature>();
     wallData.refTempSpec_ = true;
   }
   if (node["gravity_vector_component"]) {
@@ -841,7 +846,8 @@ convert<sierra::kynema_ugf::WallUserData>::decode(
       node["gravity_vector_component"].as<unsigned>();
   }
   if (node["roughness_height"]) {
-    wallData.z0_ = node["roughness_height"].as<sierra::kynema_ugf::RoughnessHeight>();
+    wallData.z0_ =
+      node["roughness_height"].as<sierra::kynema_ugf::RoughnessHeight>();
   }
   if (node["RANS_abl_bc"]) {
     const bool is_activated = node["RANS_abl_bc"].as<bool>();
@@ -904,15 +910,17 @@ convert<sierra::kynema_ugf::WallUserData>::decode(
     }
 
     // extract function name and parameters
-    if (sierra::kynema_ugf::expect_map(node, "user_function_parameters", true)) {
+    if (
+      sierra::kynema_ugf::expect_map(node, "user_function_parameters", true)) {
       wallData.functionParams_ =
         node["user_function_parameters"]
           .as<std::map<std::string, std::vector<double>>>();
     }
 
     // extract function name and string parameters
-    if (sierra::kynema_ugf::expect_map(
-          node, "user_function_string_parameters", true)) {
+    if (
+      sierra::kynema_ugf::expect_map(
+        node, "user_function_string_parameters", true)) {
       wallData.functionStringParams_ =
         node["user_function_string_parameters"]
           .as<std::map<std::string, std::vector<std::string>>>();
@@ -947,7 +955,8 @@ convert<sierra::kynema_ugf::InflowUserData>::decode(
     inflowData.uSpec_ = true;
   }
   if (node["turbulent_ke"]) {
-    inflowData.tke_ = node["turbulent_ke"].as<sierra::kynema_ugf::TurbKinEnergy>();
+    inflowData.tke_ =
+      node["turbulent_ke"].as<sierra::kynema_ugf::TurbKinEnergy>();
     inflowData.tkeSpec_ = true;
   }
   if (node["specific_dissipation_rate"]) {
@@ -981,7 +990,8 @@ convert<sierra::kynema_ugf::InflowUserData>::decode(
     try {
       inflowData.temperature_ =
         node["temperature"].as<sierra::kynema_ugf::Temperature>();
-      inflowData.bcDataTypeMap_["temperature"] = sierra::kynema_ugf::CONSTANT_UD;
+      inflowData.bcDataTypeMap_["temperature"] =
+        sierra::kynema_ugf::CONSTANT_UD;
     } catch (const YAML::BadConversion&) {
       inflowData.functions.emplace(
         "temperature", node["temperature"].as<std::string>());
@@ -1008,7 +1018,8 @@ convert<sierra::kynema_ugf::InflowUserData>::decode(
     }
 
     // extract function name and parameters
-    if (sierra::kynema_ugf::expect_map(node, "user_function_parameters", true)) {
+    if (
+      sierra::kynema_ugf::expect_map(node, "user_function_parameters", true)) {
       inflowData.functionParams_ =
         node["user_function_parameters"]
           .as<std::map<std::string, std::vector<double>>>();
@@ -1035,7 +1046,8 @@ convert<sierra::kynema_ugf::OpenUserData>::decode(
   }
   // optional
   if (node["turbulent_ke"]) {
-    openData.tke_ = node["turbulent_ke"].as<sierra::kynema_ugf::TurbKinEnergy>();
+    openData.tke_ =
+      node["turbulent_ke"].as<sierra::kynema_ugf::TurbKinEnergy>();
     openData.tkeSpec_ = true;
   }
   if (node["specific_dissipation_rate"]) {
@@ -1075,7 +1087,8 @@ convert<sierra::kynema_ugf::OpenUserData>::decode(
     } catch (const YAML::BadConversion&) {
       openData.functions.emplace(
         "temperature", node["temperature"].as<std::string>());
-      openData.bcDataTypeMap_["temperature"] = sierra::kynema_ugf::STRING_FUNCTION_UD;
+      openData.bcDataTypeMap_["temperature"] =
+        sierra::kynema_ugf::STRING_FUNCTION_UD;
     }
     openData.tempSpec_ = true;
   }
@@ -1103,7 +1116,8 @@ convert<sierra::kynema_ugf::OpenUserData>::decode(
       throw std::runtime_error(avail);
     }
     if (
-      openData.entrainMethod_ == sierra::kynema_ugf::EntrainmentMethod::SPECIFIED &&
+      openData.entrainMethod_ ==
+        sierra::kynema_ugf::EntrainmentMethod::SPECIFIED &&
       openData.totalP_) {
       throw std::runtime_error(
         "Specifying both total pressure and specified "

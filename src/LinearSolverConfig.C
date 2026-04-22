@@ -77,7 +77,7 @@ TpetraLinearSolverConfig::load(const YAML::Node& node)
 
   params_->set("Output Frequency", output_level);
   Teuchos::RCP<std::ostream> belosOutputStream =
-    Teuchos::rcpFromRef(KynemaUGFEnv::self().kynema-ugfOutputP0());
+    Teuchos::rcpFromRef(KynemaUGFEnv::self().kynema_ugfOutputP0());
   params_->set("Output Stream", belosOutputStream);
   params_->set("Num Blocks", kspace);
   params_->set("Maximum Restarts", std::max(1, max_iterations / kspace));

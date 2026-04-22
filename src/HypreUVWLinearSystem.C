@@ -514,7 +514,7 @@ HypreUVWLinearSystem::solve(stk::mesh::FieldBase* slnField)
       if (provideOutput_) {
         const int nameOffset = eqSysName_.length() + 10;
 
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << std::setw(nameOffset) << std::right
           << eqSysName_ + "_" + vecNames_[d] << std::setw(32 - nameOffset)
           << std::right << iters[d] << std::setw(18) << std::right << linres
@@ -528,7 +528,7 @@ HypreUVWLinearSystem::solve(stk::mesh::FieldBase* slnField)
 
     if (provideOutput_) {
       const int nameOffset = eqSysName_.length() + 8;
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << std::setw(nameOffset) << std::right << eqSysName_
         << std::setw(32 - nameOffset) << std::right << linearSolveIterations_
         << std::setw(18) << std::right << linearResidual_ << std::setw(15)

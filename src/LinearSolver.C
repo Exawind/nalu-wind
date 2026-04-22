@@ -139,8 +139,8 @@ TpetraLinearSolver::setMueLu()
     return;
 
   {
-    Teuchos::RCP<Teuchos::Time> tm =
-      Teuchos::TimeMonitor::getNewTimer("kynema-ugf MueLu preconditioner setup");
+    Teuchos::RCP<Teuchos::Time> tm = Teuchos::TimeMonitor::getNewTimer(
+      "kynema_ugf MueLu preconditioner setup");
     Teuchos::TimeMonitor timeMon(*tm);
 
     if (recomputePreconditioner_ || mueluPreconditioner_ == Teuchos::null) {
@@ -219,7 +219,7 @@ TpetraLinearSolver::solve(
   int whichNorm = 2;
   finalResidNrm = 0.0;
 
-  double time = -KynemaUGFEnv::self().kynema-ugf_time();
+  double time = -KynemaUGFEnv::self().kynema_ugf_time();
   if (activateMueLu_) {
     setMueLu();
   } else {
@@ -228,7 +228,7 @@ TpetraLinearSolver::solve(
     }
     preconditioner_->compute();
   }
-  time += KynemaUGFEnv::self().kynema-ugf_time();
+  time += KynemaUGFEnv::self().kynema_ugf_time();
 
   // Update preconditioner timer for this timestep; actual summing over
   // timesteps is handled in EquationSystem::assemble_and_solve

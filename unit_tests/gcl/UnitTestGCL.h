@@ -29,8 +29,8 @@ class GCLTest : public ::testing::Test
 {
 public:
   GCLTest()
-    : kynema-ugfObj_(),
-      realm_(kynema-ugfObj_.create_realm()),
+    : kynema_ugfObj_(),
+      realm_(kynema_ugfObj_.create_realm()),
       meta_(realm_.meta_data()),
       bulk_(realm_.bulk_data()),
       geomAlgDriver_(realm_),
@@ -60,7 +60,7 @@ public:
         stk::topology::NODE_RANK, "div_mesh_velocity")),
       dVoldt_(&meta_.declare_field<double>(stk::topology::NODE_RANK, "dvol_dt"))
   {
-    realm_.timeIntegrator_ = kynema-ugfObj_.sim_.timeIntegrator_;
+    realm_.timeIntegrator_ = kynema_ugfObj_.sim_.timeIntegrator_;
     stk::mesh::put_field_on_mesh(
       *currCoords_, meta_.universal_part(), spatialDim_, nullptr);
     stk::io::set_field_output_type(
@@ -143,20 +143,24 @@ public:
     realm_.meshMotionAlg_.reset(
       new sierra::kynema_ugf::MeshMotionAlg(bulk_, motionNode["mesh_motion"]));
 
-    geomAlgDriver_.register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
-      sierra::kynema_ugf::INTERIOR, partVec_[0], "geometry");
+    geomAlgDriver_
+      .register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
+        sierra::kynema_ugf::INTERIOR, partVec_[0], "geometry");
     if (realm_.realmUsesEdges_) {
-      geomAlgDriver_.register_elem_algorithm<sierra::kynema_ugf::MeshVelocityEdgeAlg>(
-        sierra::kynema_ugf::INTERIOR, partVec_[0], "mesh_vel");
+      geomAlgDriver_
+        .register_elem_algorithm<sierra::kynema_ugf::MeshVelocityEdgeAlg>(
+          sierra::kynema_ugf::INTERIOR, partVec_[0], "mesh_vel");
     } else {
-      geomAlgDriver_.register_elem_algorithm<sierra::kynema_ugf::MeshVelocityAlg>(
-        sierra::kynema_ugf::INTERIOR, partVec_[0], "mesh_vel");
+      geomAlgDriver_
+        .register_elem_algorithm<sierra::kynema_ugf::MeshVelocityAlg>(
+          sierra::kynema_ugf::INTERIOR, partVec_[0], "mesh_vel");
     }
 
     auto* part = meta_.get_part("surface_1");
     for (auto* surfPart : part->subsets()) {
-      geomAlgDriver_.register_face_algorithm<sierra::kynema_ugf::GeometryBoundaryAlg>(
-        sierra::kynema_ugf::BOUNDARY, surfPart, "geometry");
+      geomAlgDriver_
+        .register_face_algorithm<sierra::kynema_ugf::GeometryBoundaryAlg>(
+          sierra::kynema_ugf::BOUNDARY, surfPart, "geometry");
     }
   }
 
@@ -286,7 +290,7 @@ public:
 
   YAML::Node doc_;
   YAML::Node realmNode_;
-  unit_test_utils::KynemaUGFTest kynema-ugfObj_;
+  unit_test_utils::KynemaUGFTest kynema_ugfObj_;
   sierra::kynema_ugf::Realm& realm_;
 
   int numStates_{3};

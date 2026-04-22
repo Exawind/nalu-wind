@@ -33,8 +33,8 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_continuity_mass_node)
 
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::ContinuityMassBDFNodeKernel>(
-    *bulk_);
+  helperObjs.nodeAlg
+    ->add_kernel<sierra::kynema_ugf::ContinuityMassBDFNodeKernel>(*bulk_);
 
   helperObjs.execute();
 

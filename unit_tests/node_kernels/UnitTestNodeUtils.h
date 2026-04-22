@@ -18,7 +18,8 @@ namespace unit_test_utils {
 class TestABLForcingAlg : public sierra::kynema_ugf::ABLForcingAlgorithm
 {
 public:
-  TestABLForcingAlg(sierra::kynema_ugf::Realm& realm) : ABLForcingAlgorithm(realm)
+  TestABLForcingAlg(sierra::kynema_ugf::Realm& realm)
+    : ABLForcingAlgorithm(realm)
   {
     USource_ = {{10.0}, {10.0}, {10.0}};
     TSource_.clear();

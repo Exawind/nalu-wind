@@ -236,8 +236,8 @@ ShearStressTransportEquationSystem::register_wall_bc(
   RoughnessHeight rough = userData.z0_;
   double z0 = rough.z0_;
   realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
-    sierra::kynema_ugf::WALL, part, get_elem_topo(realm_, *part), "sst_geometry_wall",
-    RANSAblBcApproach, z0);
+    sierra::kynema_ugf::WALL, part, get_elem_topo(realm_, *part),
+    "sst_geometry_wall", RANSAblBcApproach, z0);
 }
 
 //--------------------------------------------------------------------------
@@ -289,7 +289,7 @@ ShearStressTransportEquationSystem::solve_and_update()
   // start the iteration loop
   for (int k = 0; k < maxIterations_; ++k) {
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
       << name_ << std::endl;
 

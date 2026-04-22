@@ -1339,9 +1339,10 @@ HypreLinearSystem::buildCoeffApplierPeriodicNodeToHIDMapping()
 {
   const auto& meta = realm_.meta_data();
   const stk::mesh::BulkData& bulk = realm_.bulk_data();
-  stk::mesh::Selector selector = meta.universal_part() &
-                                 stk::mesh::selectField(*realm_.kynema-ugfGlobalId_) &
-                                 !(realm_.get_inactive_selector());
+  stk::mesh::Selector selector =
+    meta.universal_part() &
+    stk::mesh::selectField(*realm_.kynema_ugfGlobalId_) &
+    !(realm_.get_inactive_selector());
 
   std::vector<HypreIntType> periodic_node(0);
   std::vector<HypreIntType> periodic_node_hypre_id(0);
@@ -1352,15 +1353,17 @@ HypreLinearSystem::buildCoeffApplierPeriodicNodeToHIDMapping()
     const stk::mesh::Bucket& b = *bptr;
     for (size_t i = 0; i < b.size(); ++i) {
       stk::mesh::Entity node = b[i];
-      const auto kynema-ugfId = *stk::mesh::field_data(*realm_.kynema-ugfGlobalId_, node);
-      const auto mnode = (kynema-ugfId == bulk.identifier(node))
-                           ? node
-                           : bulk.get_entity(stk::topology::NODE_RANK, kynema-ugfId);
+      const auto kynema_ugfId =
+        *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, node);
+      const auto mnode =
+        (kynema_ugfId == bulk.identifier(node))
+          ? node
+          : bulk.get_entity(stk::topology::NODE_RANK, kynema_ugfId);
       if (!bulk.is_valid(mnode)) {
         continue;
       }
       HypreIntType hid = *stk::mesh::field_data(*realm_.hypreGlobalId_, mnode);
-      if (kynema-ugfId != bulk.identifier(node)) {
+      if (kynema_ugfId != bulk.identifier(node)) {
         periodic_node.push_back(node.local_offset());
         periodic_node_hypre_id.push_back(hid);
       }
@@ -2461,10 +2464,12 @@ HypreIntType
 HypreLinearSystem::get_entity_hypre_id(const stk::mesh::Entity& node)
 {
   auto& bulk = realm_.bulk_data();
-  const auto kynema-ugfId = *stk::mesh::field_data(*realm_.kynema-ugfGlobalId_, node);
-  const auto mnode = (kynema-ugfId == bulk.identifier(node))
-                       ? node
-                       : bulk.get_entity(stk::topology::NODE_RANK, kynema-ugfId);
+  const auto kynema_ugfId =
+    *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, node);
+  const auto mnode =
+    (kynema_ugfId == bulk.identifier(node))
+      ? node
+      : bulk.get_entity(stk::topology::NODE_RANK, kynema_ugfId);
   HypreIntType hid = *stk::mesh::field_data(*realm_.hypreGlobalId_, mnode);
   return hid;
 }
@@ -2542,7 +2547,7 @@ HypreLinearSystem::solve(stk::mesh::FieldBase* linearSolutionField)
 
   if (provideOutput_) {
     const int nameOffset = eqSysName_.length() + 8;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << std::setw(nameOffset) << std::right << eqSysName_
       << std::setw(32 - nameOffset) << std::right << iters << std::setw(18)
       << std::right << linearResidual_ << std::setw(15) << std::right

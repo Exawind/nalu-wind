@@ -3,7 +3,7 @@
 
 #include "KokkosInterface.h"
 
-namespace tioga_kynema-ugf {
+namespace tioga_kynema_ugf {
 
 template <
   typename T,
@@ -43,6 +43,6 @@ struct OversetArrayType
   void sync_host() { Kokkos::deep_copy(h_view, d_view); }
 };
 
-} // namespace tioga_kynema-ugf
+} // namespace tioga_kynema_ugf
 
 #endif /* OVERSETNGP_H */

@@ -123,13 +123,13 @@ actuator_parse(const YAML::Node& y_node)
   // determine search method for this pair
   if (searchMethodName == "boost_rtree") {
     actMeta.searchMethod_ = stk::search::KDTREE;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Warning: search method 'boost_rtree'"
       << " is being deprecated, switching to 'stk_kdtree'" << std::endl;
   } else if (searchMethodName == "stk_kdtree")
     actMeta.searchMethod_ = stk::search::KDTREE;
   else
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Actuator::search method not declared; will use stk_kdtree"
       << std::endl;
   // extract the set of from target names; each spec is homogeneous in this

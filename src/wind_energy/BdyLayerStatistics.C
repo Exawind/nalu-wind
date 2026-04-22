@@ -145,7 +145,7 @@ BdyLayerStatistics::setup_turbulence_averaging(const double timeAvgWindow)
   if (hasTurbAvg) {
     const double diff = std::fabs(timeAvgWindow - turbAvg->timeFilterInterval_);
     if (diff > 1.0e-3)
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "WARNING:: BdyLayerStatistics: timeFilterInterval inconsistent with "
            "that requested for TurbulenceAveragingPostProcessing."
         << std::endl;
@@ -352,18 +352,21 @@ BdyLayerStatistics::interpolate_variable(
 void
 BdyLayerStatistics::impl_compute_velocity_stats()
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto density = kynema_ugf_ngp::get_ngp_field(meshInfo, "density");
   const auto velocity = kynema_ugf_ngp::get_ngp_field(meshInfo, "velocity");
   const auto velTimeAvg =
     kynema_ugf_ngp::get_ngp_field(meshInfo, "velocity_resa_abl");
-  const auto resStress = kynema_ugf_ngp::get_ngp_field(meshInfo, "resolved_stress");
+  const auto resStress =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "resolved_stress");
   const auto sfsField = kynema_ugf_ngp::get_ngp_field(meshInfo, "sfs_stress");
   const auto sfsFieldInst =
     kynema_ugf_ngp::get_ngp_field(meshInfo, "sfs_stress_inst");
-  const auto dualVol = kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
+  const auto dualVol =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
   const auto heightIndex = realm_.ngp_field_manager().get_field<int>(
     heightIndex_->mesh_meta_data_ordinal());
 
@@ -535,15 +538,18 @@ BdyLayerStatistics::impl_compute_velocity_stats()
 void
 BdyLayerStatistics::impl_compute_temperature_stats()
 {
-  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
 
   const auto density = kynema_ugf_ngp::get_ngp_field(meshInfo, "density");
   const auto velocity = kynema_ugf_ngp::get_ngp_field(meshInfo, "velocity");
   const auto theta = kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature");
-  const auto thetaA = kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_resa_abl");
-  const auto dualVol = kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
+  const auto thetaA =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_resa_abl");
+  const auto dualVol =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
   const auto thetaSFS =
     kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_sfs_flux");
   const auto thetaUj =

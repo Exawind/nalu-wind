@@ -21,7 +21,8 @@ TEST_F(TestTurbulenceAlgorithm, computesstmaxlengthscaleelemalgorithm)
   fill_mesh_and_init_fields();
 
   // Execute
-  sierra::kynema_ugf::ComputeSSTMaxLengthScaleElemAlgorithm alg(realm, meshPart_);
+  sierra::kynema_ugf::ComputeSSTMaxLengthScaleElemAlgorithm alg(
+    realm, meshPart_);
   alg.execute();
 
   // Perform tests

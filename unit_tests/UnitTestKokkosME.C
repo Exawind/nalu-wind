@@ -99,10 +99,12 @@ compare_old_scv_volume(
 {
   int len = scv_volume.extent(0);
   std::vector<DoubleType> volume(len, 0.0);
-  sierra::kynema_ugf::SharedMemView<DoubleType*, sierra::kynema_ugf::DeviceShmem> vol(
-    volume.data(), volume.size());
-  sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem> coords(
-    v_coords.data(), v_coords.extent(0), v_coords.extent(1));
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType*, sierra::kynema_ugf::DeviceShmem>
+    vol(volume.data(), volume.size());
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
+    coords(v_coords.data(), v_coords.extent(0), v_coords.extent(1));
   meSCV->determinant(coords, vol);
   check_that_values_match(scv_volume, volume.data());
 }
@@ -116,10 +118,12 @@ compare_old_scs_areav(
 {
   int len = scs_areav.extent(0) * scs_areav.extent(1);
   std::vector<DoubleType> areav(len, 0.0);
-  sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem> area(
-    areav.data(), scs_areav.extent(0), scs_areav.extent(1));
-  sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem> coords(
-    v_coords.data(), v_coords.extent(0), v_coords.extent(1));
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
+    area(areav.data(), scs_areav.extent(0), scs_areav.extent(1));
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
+    coords(v_coords.data(), v_coords.extent(0), v_coords.extent(1));
   meSCS->determinant(coords, area);
   check_that_values_match(scs_areav, areav.data());
 }
@@ -135,13 +139,19 @@ compare_old_scs_grad_op(
   int len = scs_dndx.extent(0) * scs_dndx.extent(1) * scs_dndx.extent(2);
   std::vector<DoubleType> grad_op(len, 0.0);
   std::vector<DoubleType> deriv(len, 0.0);
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem> gradop(
-    grad_op.data(), scs_dndx.extent(0), scs_dndx.extent(1), scs_dndx.extent(2));
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem> der(
-    deriv.data(), scs_deriv.extent(0), scs_deriv.extent(1),
-    scs_deriv.extent(2));
-  sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem> coords(
-    v_coords.data(), v_coords.extent(0), v_coords.extent(1));
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
+    gradop(
+      grad_op.data(), scs_dndx.extent(0), scs_dndx.extent(1),
+      scs_dndx.extent(2));
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
+    der(
+      deriv.data(), scs_deriv.extent(0), scs_deriv.extent(1),
+      scs_deriv.extent(2));
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
+    coords(v_coords.data(), v_coords.extent(0), v_coords.extent(1));
   meSCS->grad_op(coords, gradop, der);
   check_that_values_match(scs_dndx, grad_op.data());
 }
@@ -158,14 +168,20 @@ compare_old_scs_shifted_grad_op(
   std::vector<DoubleType> grad_op(len, 0.0);
   std::vector<DoubleType> deriv(len, 0.0);
 
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem> gradop(
-    grad_op.data(), scs_dndx.extent(0), scs_dndx.extent(1), scs_dndx.extent(2));
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
+    gradop(
+      grad_op.data(), scs_dndx.extent(0), scs_dndx.extent(1),
+      scs_dndx.extent(2));
 
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem> der(
-    deriv.data(), scs_deriv.extent(0), scs_deriv.extent(1),
-    scs_deriv.extent(2));
-  sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem> coords(
-    v_coords.data(), v_coords.extent(0), v_coords.extent(1));
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
+    der(
+      deriv.data(), scs_deriv.extent(0), scs_deriv.extent(1),
+      scs_deriv.extent(2));
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
+    coords(v_coords.data(), v_coords.extent(0), v_coords.extent(1));
 
   meSCS->shifted_grad_op(coords, gradop, der);
 }
@@ -184,23 +200,30 @@ compare_old_scs_gij(
   std::vector<DoubleType> grad_op(gradOpLen, 0.0);
   std::vector<DoubleType> v_deriv(gradOpLen, 0.0);
 
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem> gradop(
-    grad_op.data(), meSCS->num_integration_points(), meSCS->nodesPerElement_,
-    meSCS->nDim_);
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
+    gradop(
+      grad_op.data(), meSCS->num_integration_points(), meSCS->nodesPerElement_,
+      meSCS->nDim_);
 
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem> deriv(
-    v_deriv.data(), meSCS->num_integration_points(), meSCS->nodesPerElement_,
-    meSCS->nDim_);
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
+    deriv(
+      v_deriv.data(), meSCS->num_integration_points(), meSCS->nodesPerElement_,
+      meSCS->nDim_);
 
-  sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem> coords(
-    v_coords.data(), v_coords.extent(0), v_coords.extent(1));
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
+    coords(v_coords.data(), v_coords.extent(0), v_coords.extent(1));
 
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem>
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
     gijUpper(
       v_gijUpper.data(), v_gijUpper.extent(0), v_gijUpper.extent(1),
       v_gijUpper.extent(2));
 
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem>
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
     gijLower(
       v_gijLower.data(), v_gijLower.extent(0), v_gijLower.extent(1),
       v_gijLower.extent(2));
@@ -239,11 +262,11 @@ test_ME_views(const std::vector<sierra::kynema_ugf::ELEM_DATA_NEEDED>& requests)
                      sierra::kynema_ugf::DeviceTeamHandleType,
                      sierra::kynema_ugf::DeviceShmem>& smdata) {
     // Extract data from scratchViews
-    sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>&
-      v_coords =
-        smdata.simdPrereqData.get_scratch_view_2D(*driver.coordinates_);
-    auto& meViews =
-      smdata.simdPrereqData.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
+    sierra::kynema_ugf::SharedMemView<
+      DoubleType**, sierra::kynema_ugf::DeviceShmem>& v_coords =
+      smdata.simdPrereqData.get_scratch_view_2D(*driver.coordinates_);
+    auto& meViews = smdata.simdPrereqData.get_me_views(
+      sierra::kynema_ugf::CURRENT_COORDINATES);
 
     if (meSCS != nullptr) {
       for (sierra::kynema_ugf::ELEM_DATA_NEEDED request : requests) {

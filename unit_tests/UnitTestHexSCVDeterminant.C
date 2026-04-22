@@ -115,8 +115,9 @@ TEST(HexSCV, grandyvol)
   bulk->mesh_meta_data().use_simple_fields();
 
   unit_test_utils::fill_mesh_1_elem_per_proc_hex8(*bulk);
-  const auto& coordField = *static_cast<const sierra::kynema_ugf::VectorFieldType*>(
-    bulk->mesh_meta_data().coordinate_field());
+  const auto& coordField =
+    *static_cast<const sierra::kynema_ugf::VectorFieldType*>(
+      bulk->mesh_meta_data().coordinate_field());
 
   double v_coords[8][3];
 

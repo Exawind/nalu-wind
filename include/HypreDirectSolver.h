@@ -33,9 +33,9 @@ namespace kynema_ugf {
  *  This class is responsible creation, initialization, execution, and clean up
  *  of Hypre solver and preconditioner data structures during the simulation. It
  *  provides an abstraction layer so that the user can choose different Hypre
- *  solvers via input parameters. This class interacts with rest of KynemaUGF solely
- *  via sierra::kynema_ugf::HypreLinearSystem. The configuration of Hypre solver is
- *  controlled via user input parameters processed in
+ *  solvers via input parameters. This class interacts with rest of KynemaUGF
+ * solely via sierra::kynema_ugf::HypreLinearSystem. The configuration of Hypre
+ * solver is controlled via user input parameters processed in
  *  sierra::kynema_ugf::HypreLinearSolverConfig
  *
  *  Users are referred to the [Hypre Reference

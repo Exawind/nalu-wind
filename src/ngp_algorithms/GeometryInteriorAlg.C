@@ -80,8 +80,10 @@ GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto dualVol = fieldMgr.template get_field<double>(dualNodalVol_);
   auto elemVol = fieldMgr.template get_field<double>(elemVol_);
-  const auto dnvOps = kynema_ugf_ngp::simd_elem_nodal_field_updater(ngpMesh, dualVol);
-  const auto elemVolOps = kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, elemVol);
+  const auto dnvOps =
+    kynema_ugf_ngp::simd_elem_nodal_field_updater(ngpMesh, dualVol);
+  const auto elemVolOps =
+    kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, elemVol);
   MasterElement* meSCV = meSCV_;
   dualVol.sync_to_device();
   elemVol.sync_to_device();

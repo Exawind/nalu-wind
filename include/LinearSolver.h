@@ -153,9 +153,9 @@ private:
 
 /** An abstract representation of a linear solver in KynemaUGF
  *
- *  Defines the basic API supported by the linear solvers for use within KynemaUGF.
- *  See concrete implementations such as sierra::kynema_ugf::TpetraLinearSolver for
- *  more details.
+ *  Defines the basic API supported by the linear solvers for use within
+ * KynemaUGF. See concrete implementations such as
+ * sierra::kynema_ugf::TpetraLinearSolver for more details.
  */
 class LinearSolver
 {

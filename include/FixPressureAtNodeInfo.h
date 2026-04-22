@@ -21,11 +21,11 @@ namespace kynema_ugf {
 
 /** Input data for fixing pressure during ABL simulations.
  *
- *  This class holds the user data parsed from KynemaUGF input file to fix pressure
- *  at a spatial location for ABL simulations. This is especially necessary for
- *  precursor simulations where the inlet/outlet boundaries are periodic and the
- *  top boundary is symmetric. In this case, there is no pressure specified for
- *  the continuity solve.
+ *  This class holds the user data parsed from KynemaUGF input file to fix
+ * pressure at a spatial location for ABL simulations. This is especially
+ * necessary for precursor simulations where the inlet/outlet boundaries are
+ * periodic and the top boundary is symmetric. In this case, there is no
+ * pressure specified for the continuity solve.
  */
 struct FixPressureAtNodeInfo
 {

@@ -1043,7 +1043,7 @@ HexSCS::general_face_grad_op(
   lerr = hex_gradient_operator(cordel, deriv, grad, det, err);
 
   if (lerr)
-    KynemaUGFEnv::self().kynema-ugfOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
       << "HexSCS::general_face_grad_op: issue.." << std::endl;
 }
 

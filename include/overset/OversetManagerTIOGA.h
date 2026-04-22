@@ -24,10 +24,10 @@ struct OversetUserData;
 
 /** Overset Connectivity Algorithm using TIOGA third-party library
  *
- *  This class is a thin KynemaUGF-TIOGA wrapper to provide compatibility with KynemaUGF's
- *  built-in STK based overset connectivity algorithm. The heavy lifting is done
- *  by the TiogaSTKIface class. Please refer to the documentation of that class
- *  for actual implementation details.
+ *  This class is a thin KynemaUGF-TIOGA wrapper to provide compatibility with
+ * KynemaUGF's built-in STK based overset connectivity algorithm. The heavy
+ * lifting is done by the TiogaSTKIface class. Please refer to the documentation
+ * of that class for actual implementation details.
  */
 class OversetManagerTIOGA : public OversetManager
 {

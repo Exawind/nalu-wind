@@ -73,7 +73,7 @@ public:
         stk::mesh::get_field_by_name(fieldName, fromMetaData);
       if (NULL == fromfield) {
         allFieldsAreFine = false;
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Xfer::FromMesh:Error field: " << fieldName
           << " has not been registered anywhere within the FromRealm: "
           << fromRealm_.name() << std::endl;
@@ -99,7 +99,7 @@ public:
           // local check to make sure that the field is somewhere (delay the
           // throw)
           if (!fieldIsFine) {
-            KynemaUGFEnv::self().kynema-ugfOutputP0()
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
               << "Xfer::FromMesh:Error field: " << fromfield->name()
               << " is not registered on part: " << fromPartVec_[k]->name()
               << std::endl;

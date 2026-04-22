@@ -51,7 +51,7 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 
   actMetaSimple.dR_.modify_host();
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "In actuator_Simple_parse() " << std::endl; // LCCOUT
 
   const YAML::Node y_actuator = y_node["actuator"];
@@ -109,7 +109,7 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
       }
 
       if (actMetaSimple.debug_output_)
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Reading blade: " << iBlade << " num_force_pts_blade: "
           << actMetaSimple.numPointsTurbine_.h_view(iBlade)
           << std::endl; // LCCOUT
@@ -171,13 +171,13 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 
       // output directions
       if (actMetaSimple.debug_output_) {
-        KynemaUGFEnv::self().kynema-ugfOutputP0() // LCCOUT
+        KynemaUGFEnv::self().kynema_ugfOutputP0() // LCCOUT
           << "Blade: " << iBlade << " p1zeroAOA dir: " << p1zeroAOA.x_ << " "
           << p1zeroAOA.y_ << " " << p1zeroAOA.z_ << std::endl;
-        KynemaUGFEnv::self().kynema-ugfOutputP0() // LCCOU
+        KynemaUGFEnv::self().kynema_ugfOutputP0() // LCCOU
           << "Blade: " << iBlade << " Span dir: " << spanDir.x_ << " "
           << spanDir.y_ << " " << spanDir.z_ << std::endl;
-        KynemaUGFEnv::self().kynema-ugfOutputP0() // LCCOUT
+        KynemaUGFEnv::self().kynema_ugfOutputP0() // LCCOUT
           << "Blade: " << iBlade << " chord norm dir: " << std::setprecision(5)
           << chodrNormalDir.x_ << " " << chodrNormalDir.y_ << " "
           << chodrNormalDir.z_ << std::endl;
@@ -299,10 +299,10 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     }
   }
   if (actMetaSimple.debug_output_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " actMetaSimple.numPointsTotal_ = " << actMetaSimple.numPointsTotal_
       << std::endl; // LCCOUT
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Done actuator_Simple_parse()" << std::endl; // LCCOUT
   }
   return actMetaSimple;

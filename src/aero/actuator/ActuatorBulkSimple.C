@@ -57,7 +57,7 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
   const int remainder = actMeta.numberOfActuators_ % nProcs;
 
   if (actMeta.debug_output_)
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " nProcs: " << nProcs << " nTurb:  " << nTurb
       << " intDiv: " << intDivision << " remain: " << remainder
       << std::endl; // LCCOUT
@@ -69,7 +69,7 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
 
   for (int i = 0; i < nTurb; i++) {
     assignedProc_.h_view(i) = i;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " Turbine#: " << i << " Proc#: " << assignedProc_.h_view(i)
       << std::endl;
   }
@@ -81,7 +81,7 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
   // Double check offsets
   if (actMeta.debug_output_)
     for (int i = 0; i < actMeta.numberOfActuators_; ++i) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Offset blade: " << i << " " << turbIdOffset_.h_view(i)
         << " num_force_pts: " << num_force_pts_blade_.h_view(i)
         << std::endl; // LCCOUT
@@ -90,7 +90,7 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
   init_points(actMeta);
   init_orientation(actMeta);
   add_output_headers(actMeta);
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Done ActuatorBulkSimple Init " << std::endl; // LCCOUT
 }
 
@@ -197,7 +197,7 @@ ActuatorBulkSimple::init_points(const ActuatorMetaSimple& actMeta)
         }
 
         if (actMeta.debug_output_)
-          KynemaUGFEnv::self().kynema-ugfOutput()
+          KynemaUGFEnv::self().kynema_ugfOutput()
             << "Blade " << iBlade // LCCOUT
             << " pointId: " << np << std::scientific << std::setprecision(5)
             << " point: " << pointLocal(0) << " " << pointLocal(1) << " "

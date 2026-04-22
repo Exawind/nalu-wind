@@ -127,7 +127,8 @@ do_assemble_face_elem_solver_test(
   faceElemAlg.run_face_elem_algorithm(
     bulk, KOKKOS_LAMBDA(
             sierra::kynema_ugf::SharedMemData_FaceElem<
-              sierra::kynema_ugf::DeviceTeamHandleType, sierra::kynema_ugf::DeviceShmem> &
+              sierra::kynema_ugf::DeviceTeamHandleType,
+              sierra::kynema_ugf::DeviceShmem> &
             smdata) {
       faceElemKernel.execute(
         smdata.simdFaceViews, smdata.simdElemViews, smdata.numSimdFaces,
@@ -303,7 +304,8 @@ TEST_F(Hex8ElementWithBCFields, faceElemScalarOpen)
     elemTopo.num_nodes());
 
   auto scalarOpenAdvElemKernel =
-    new sierra::kynema_ugf::ScalarOpenAdvElemKernel<sierra::kynema_ugf::AlgTraitsQuad4Hex8>(
+    new sierra::kynema_ugf::ScalarOpenAdvElemKernel<
+      sierra::kynema_ugf::AlgTraitsQuad4Hex8>(
       *meta, solnOptions, &helperObjs.eqSystem, scalarQ, bcScalarQ, Gjq,
       viscosity, faceElemAlg.faceDataNeeded_, faceElemAlg.elemDataNeeded_);
 

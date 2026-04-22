@@ -31,7 +31,8 @@ TEST_F(EnthalpyABLKernelHex8Mesh, NGP_heat_flux_bc)
 
   // Initialize the kernel
   std::unique_ptr<sierra::kynema_ugf::Kernel> kernel(
-    new sierra::kynema_ugf::ScalarFluxBCElemKernel<sierra::kynema_ugf::AlgTraitsQuad4>(
+    new sierra::kynema_ugf::ScalarFluxBCElemKernel<
+      sierra::kynema_ugf::AlgTraitsQuad4>(
       *bulk_, heatFluxBC_, coordsName, useShifted,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 

@@ -262,7 +262,8 @@ TEST_F(CylinderMesh, call_fsiTurbine_mapLoads)
   EXPECT_EQ(1, openfastFSI.get_nTurbinesGlob());
 
   const int turbIndex = 0;
-  sierra::kynema_ugf::fsiTurbine* fsiTurb = openfastFSI.get_fsiTurbineData(turbIndex);
+  sierra::kynema_ugf::fsiTurbine* fsiTurb =
+    openfastFSI.get_fsiTurbineData(turbIndex);
   EXPECT_TRUE(fsiTurb != nullptr);
   fast::turbineDataType& params = fsiTurb->params_;
 

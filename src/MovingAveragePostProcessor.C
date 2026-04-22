@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <MovingAveragePostProcessor.h>
 #include <Algorithm.h>
 

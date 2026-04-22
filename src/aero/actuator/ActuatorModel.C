@@ -163,9 +163,9 @@ ActuatorModel::execute(double& timer)
   if (!is_active())
     return;
 
-  const double start_time = KynemaUGFEnv::self().kynema-ugf_time();
+  const double start_time = KynemaUGFEnv::self().kynema_ugf_time();
   actExec_->operator()();
-  const double end_time = KynemaUGFEnv::self().kynema-ugf_time();
+  const double end_time = KynemaUGFEnv::self().kynema_ugf_time();
   timer += end_time - start_time;
 }
 

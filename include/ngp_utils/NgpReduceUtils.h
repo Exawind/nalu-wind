@@ -192,13 +192,15 @@ struct reduction_identity<sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble2>
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble2 sum()
   {
-    return sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble2(DoubleType(0.0));
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble2(
+      DoubleType(0.0));
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble2 prod()
   {
-    return sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble2(DoubleType(1.0));
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble2(
+      DoubleType(1.0));
   }
 };
 
@@ -208,13 +210,15 @@ struct reduction_identity<sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble3>
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble3 sum()
   {
-    return sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble3(DoubleType(0.0));
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble3(
+      DoubleType(0.0));
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
   static sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble3 prod()
   {
-    return sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble3(DoubleType(1.0));
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble3(
+      DoubleType(1.0));
   }
 };
 

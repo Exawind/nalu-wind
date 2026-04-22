@@ -41,8 +41,8 @@ public:
   void execute(
     sierra::kynema_ugf::SharedMemView<DoubleType**, ShmemType>& /* lhs */,
     sierra::kynema_ugf::SharedMemView<DoubleType*, ShmemType>& rhs,
-    sierra::kynema_ugf::ScratchViews<DoubleType, TeamType, ShmemType>& scratchViews)
-    const
+    sierra::kynema_ugf::ScratchViews<DoubleType, TeamType, ShmemType>&
+      scratchViews) const
   {
     auto& v_vel = scratchViews.get_scratch_view_2D(velocityOrdinal);
     auto& v_pres = scratchViews.get_scratch_view_1D(pressureOrdinal);
@@ -55,8 +55,9 @@ private:
   unsigned pressureOrdinal;
 };
 
-typedef Kokkos::DualView<int*, Kokkos::LayoutRight, sierra::kynema_ugf::DeviceSpace>
-  IntViewType;
+typedef Kokkos::
+  DualView<int*, Kokkos::LayoutRight, sierra::kynema_ugf::DeviceSpace>
+    IntViewType;
 typedef Kokkos::
   DualView<double*, Kokkos::LayoutRight, sierra::kynema_ugf::DeviceSpace>
     DoubleTypeView;
@@ -70,7 +71,8 @@ do_the_test(
 {
   stk::topology elemTopo = stk::topology::HEX_8;
   sierra::kynema_ugf::ElemDataRequests dataReq(bulk.mesh_meta_data());
-  const int nodesPerElement = sierra::kynema_ugf::AlgTraitsHex8::nodesPerElement_;
+  const int nodesPerElement =
+    sierra::kynema_ugf::AlgTraitsHex8::nodesPerElement_;
   auto meSCV =
     sierra::kynema_ugf::MasterElementRepo::get_volume_master_element_on_dev(
       sierra::kynema_ugf::AlgTraitsHex8::topo_);
@@ -120,12 +122,14 @@ do_the_test(
     bytes_per_thread, threads_per_team);
 
   Kokkos::parallel_for(
-    team_exec, KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
+    team_exec,
+    KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
       const stk::mesh::NgpMesh::BucketType& b =
         ngpMesh.get_bucket(stk::topology::ELEM_RANK, team.league_rank());
 
-      sierra::kynema_ugf::ScratchViews<DoubleType, TeamType, ShmemType> scrviews(
-        team, ngpMesh.get_spatial_dimension(), nodesPerElement, dataNGP);
+      sierra::kynema_ugf::ScratchViews<DoubleType, TeamType, ShmemType>
+        scrviews(
+          team, ngpMesh.get_spatial_dimension(), nodesPerElement, dataNGP);
 
       sierra::kynema_ugf::SharedMemView<DoubleType**, ShmemType> simdlhs =
         sierra::kynema_ugf::get_shmem_view_2D<DoubleType, TeamType, ShmemType>(
@@ -210,10 +214,11 @@ do_assemble_elem_solver_test(
   TestKernel testKernel(velocityOrdinal, pressureOrdinal);
 
   solverAlg.run_algorithm(
-    bulk,
-    KOKKOS_LAMBDA(sierra::kynema_ugf::SharedMemData<TeamType, ShmemType> & smdata) {
+    bulk, KOKKOS_LAMBDA(
+            sierra::kynema_ugf::SharedMemData<TeamType, ShmemType> & smdata) {
       auto& scv_volume =
-        smdata.simdPrereqData.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES)
+        smdata.simdPrereqData
+          .get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES)
           .scv_volume;
 
       printf(
@@ -310,7 +315,8 @@ do_the_smdata_test(
     bytes_per_thread, threads_per_team);
 
   Kokkos::parallel_for(
-    team_exec, KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
+    team_exec,
+    KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
       const stk::mesh::NgpMesh::BucketType& b =
         ngpMesh.get_bucket(stk::topology::ELEM_RANK, team.league_rank());
 
@@ -339,9 +345,10 @@ do_the_smdata_test(
           //
           // This assumes that the test mesh has 8 (2x2x2) elements, and so we
           // save off one integration point from each element for checks on GPU.
-          auto& scv_volume = smdata.simdPrereqData
-                               .get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES)
-                               .scv_volume;
+          auto& scv_volume =
+            smdata.simdPrereqData
+              .get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES)
+              .scv_volume;
           scv_check.d_view(bktIndex % numResults) =
             stk::simd::get_data(scv_volume(bktIndex % numResults), 0);
 

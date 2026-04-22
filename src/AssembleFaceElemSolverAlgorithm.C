@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <AssembleFaceElemSolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <SolverAlgorithm.h>
@@ -97,10 +97,10 @@ AssembleFaceElemSolverAlgorithm::execute()
   double diagRelaxFactor = diagRelaxFactor_;
 
   run_face_elem_algorithm(
-    realm_.bulk_data(),
-    KOKKOS_LAMBDA(
-      sierra::kynema_ugf::SharedMemData_FaceElem<DeviceTeamHandleType, DeviceShmem> &
-      smdata) {
+    realm_.bulk_data(), KOKKOS_LAMBDA(
+                          sierra::kynema_ugf::SharedMemData_FaceElem<
+                            DeviceTeamHandleType, DeviceShmem> &
+                          smdata) {
       set_vals(smdata.simdrhs, DoubleType(0.0));
       set_vals(smdata.simdlhs, DoubleType(0.0));
 

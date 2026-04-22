@@ -318,7 +318,8 @@ MotionPrescribedKernel::compute_velocity(
   }
   mm::ThreeDVecType relCoord;
   mm::ThreeDVecType vecOmega;
-  for (int d = 0; d < kynema_ugf_ngp::NDimMax && relevant_motion[1] > -1e15; d++) {
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax && relevant_motion[1] > -1e15;
+       d++) {
     // Note the indices here, [7, 8, 9] correspond to angular velocities
     relCoord[d] = cxyz[d] - transOrigin[d];
     vecOmega[d] = relevant_motion[7 + d];
@@ -337,7 +338,8 @@ MotionPrescribedKernel::compute_velocity(
   vel[2] = vecOmega[0] * relCoord[1] - vecOmega[1] * relCoord[0];
 
   mm::ThreeDVecType vecVel;
-  for (int d = 0; d < kynema_ugf_ngp::NDimMax && relevant_motion[1] < -1e15; d++) {
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax && relevant_motion[1] < -1e15;
+       d++) {
     // Note the indices here, [4, 5, 6] correspond to translational velocities
     vecVel[d] = relevant_motion[4 + d];
   }

@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <ComputeSSTMaxLengthScaleElemAlgorithm.h>
 #include <Algorithm.h>
 

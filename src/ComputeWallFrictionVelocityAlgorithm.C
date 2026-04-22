@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <ComputeWallFrictionVelocityAlgorithm.h>
 #include <Algorithm.h>
 
@@ -416,9 +416,9 @@ ComputeWallFrictionVelocityAlgorithm::compute_utau(
 
   // report trouble
   if (!converged) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Issue with utau; not converged " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << up << " " << yp << " " << utau << std::endl;
   }
 }

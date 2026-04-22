@@ -27,15 +27,17 @@ struct HelperObjectsBase
     YAML::Node realm_node = unit_test_utils::get_realm_default_node())
     : yamlNode(yaml_node),
       realmDefaultNode(realm_node),
-      kynema-ugfObj(new unit_test_utils::KynemaUGFTest(yamlNode)),
-      realm(kynema-ugfObj->create_realm(realmDefaultNode, "multi_physics", false)),
+      kynema_ugfObj(new unit_test_utils::KynemaUGFTest(yamlNode)),
+      realm(
+        kynema -
+        ugfObj->create_realm(realmDefaultNode, "multi_physics", false)),
       eqSystems(realm),
       eqSystem(eqSystems)
   {
     realm.bulkData_ = bulk;
   }
 
-  virtual ~HelperObjectsBase() { delete kynema-ugfObj; }
+  virtual ~HelperObjectsBase() { delete kynema_ugfObj; }
 
   virtual void execute() = 0;
 
@@ -62,7 +64,7 @@ struct HelperObjectsBase
 
   YAML::Node yamlNode;
   YAML::Node realmDefaultNode;
-  unit_test_utils::KynemaUGFTest* kynema-ugfObj;
+  unit_test_utils::KynemaUGFTest* kynema_ugfObj;
   sierra::kynema_ugf::Realm& realm;
   sierra::kynema_ugf::EquationSystems eqSystems;
   sierra::kynema_ugf::EquationSystem eqSystem;
@@ -144,7 +146,8 @@ struct HelperObjects : public HelperObjectsBase
   }
 
   unit_test_utils::TestLinearSystem* linsys{nullptr};
-  sierra::kynema_ugf::AssembleElemSolverAlgorithm* assembleElemSolverAlg{nullptr};
+  sierra::kynema_ugf::AssembleElemSolverAlgorithm* assembleElemSolverAlg{
+    nullptr};
 };
 
 struct FaceElemHelperObjects : HelperObjects
@@ -177,7 +180,8 @@ struct FaceElemHelperObjects : HelperObjects
     Kokkos::deep_copy(linsys->hostrhs_, linsys->rhs_);
   }
 
-  sierra::kynema_ugf::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;
+  sierra::kynema_ugf::AssembleFaceElemSolverAlgorithm*
+    assembleFaceElemSolverAlg;
 };
 
 struct EdgeHelperObjects : public HelperObjectsBase
@@ -265,8 +269,8 @@ struct NodeHelperObjects : public HelperObjectsBase
       linsys(new TestEdgeLinearSystem(realm, numDof, &eqSystem, topo))
   {
     eqSystem.linsys_ = linsys;
-    nodeAlg.reset(
-      new sierra::kynema_ugf::AssembleNGPNodeSolverAlgorithm(realm, part, &eqSystem));
+    nodeAlg.reset(new sierra::kynema_ugf::AssembleNGPNodeSolverAlgorithm(
+      realm, part, &eqSystem));
   }
 
   virtual void execute() override

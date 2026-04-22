@@ -51,7 +51,8 @@ public:
   /** Type of time filter averaging applied
    */
   enum AveragingType {
-    KYNEMA_UGF_CLASSIC = 0,   //!< Classic KynemaUGF implementation (saw-tooth reset)
+    KYNEMA_UGF_CLASSIC =
+      0,                //!< Classic KynemaUGF implementation (saw-tooth reset)
     MOVING_EXPONENTIAL, //!< Moving exponential window averaging
   };
 

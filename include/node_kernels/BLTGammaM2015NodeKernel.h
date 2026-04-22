@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------*/
 /*  Copyright 2019 National Renewable Energy Laboratory.                  */
 /*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level KynemaUGF          */
+/*  in the file, LICENSE, which is located in the top-level KynemaUGF */
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 

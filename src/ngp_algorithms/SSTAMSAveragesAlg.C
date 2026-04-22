@@ -366,8 +366,9 @@ SSTAMSAveragesAlg::execute()
       for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i) {
         for (int j = 0; j < kynema_ugf_ngp::NDimMax; ++j) {
           for (int l = 0; l < kynema_ugf_ngp::NDimMax; ++l) {
-            Psgs[i][j] += tau[i][l] * dudx.get(mi, l * kynema_ugf_ngp::NDimMax + j) +
-                          tau[j][l] * dudx.get(mi, l * kynema_ugf_ngp::NDimMax + i);
+            Psgs[i][j] +=
+              tau[i][l] * dudx.get(mi, l * kynema_ugf_ngp::NDimMax + j) +
+              tau[j][l] * dudx.get(mi, l * kynema_ugf_ngp::NDimMax + i);
           }
           Psgs[i][j] *= 0.5;
         }

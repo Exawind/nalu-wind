@@ -52,7 +52,8 @@ const YAML::Node rotNode = rot_scl[0];
 const YAML::Node scaleNode = rot_scl[1];
 
 sierra::kynema_ugf::mm::TransMatType
-eval_transformation(sierra::kynema_ugf::Realm& realm, double time, const double* xyz)
+eval_transformation(
+  sierra::kynema_ugf::Realm& realm, double time, const double* xyz)
 {
   // transform data structures to confirm to mesh motion
   sierra::kynema_ugf::mm::ThreeDVecType vecX;
@@ -65,14 +66,16 @@ eval_transformation(sierra::kynema_ugf::Realm& realm, double time, const double*
     rotClass.build_transformation(time, vecX);
 
   // perform 2nd srotation transformation
-  sierra::kynema_ugf::MotionScalingKernel scaleClass(realm.meta_data(), scaleNode);
+  sierra::kynema_ugf::MotionScalingKernel scaleClass(
+    realm.meta_data(), scaleNode);
   sierra::kynema_ugf::mm::TransMatType tempMat =
     scaleClass.build_transformation(time, vecX);
   return scaleClass.add_motion(tempMat, compTrans);
 }
 
 std::vector<double>
-eval_coords(const sierra::kynema_ugf::mm::TransMatType& transMat, const double* xyz)
+eval_coords(
+  const sierra::kynema_ugf::mm::TransMatType& transMat, const double* xyz)
 {
   std::vector<double> transCoord(3, 0.0);
 
@@ -92,8 +95,8 @@ eval_coords(const sierra::kynema_ugf::mm::TransMatType& transMat, const double* 
 TEST(meshMotion, NGP_compute_centroid)
 {
   // create realm
-  unit_test_utils::KynemaUGFTest kynema-ugfObj;
-  sierra::kynema_ugf::Realm& realm = kynema-ugfObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
   realm.solutionOptions_->meshTransformation_ = true;
 
   sierra::kynema_ugf::TimeIntegrator timeIntegrator;

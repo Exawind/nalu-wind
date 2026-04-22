@@ -623,7 +623,8 @@ public:
    *
    *  Note that this is actually the offset into the linear system. This index
    *  must be adjusted accordingly to account for multiple degrees of freedom on
-   *  a particular node. This is performed in sierra::kynema_ugf::HypreLinearSystem.
+   *  a particular node. This is performed in
+   * sierra::kynema_ugf::HypreLinearSystem.
    */
   stk::mesh::EntityId hypreILower_;
 
@@ -631,7 +632,8 @@ public:
    *
    *  Note that this is actually the offset into the linear system. This index
    *  must be adjusted accordingly to account for multiple degrees of freedom on
-   *  a particular node. This is performed in sierra::kynema_ugf::HypreLinearSystem.
+   *  a particular node. This is performed in
+   * sierra::kynema_ugf::HypreLinearSystem.
    */
   stk::mesh::EntityId hypreIUpper_;
 
@@ -643,9 +645,9 @@ public:
 
   /** Global Row IDs for the HYPRE linear system
    *
-   *  The HYPRE IDs are different from STK IDs and Realm::kynema-ugfGlobalId_ because
-   *  HYPRE expects contiguous IDs for matrix rows and further requires that the
-   *  IDs be ordered across MPI ranks; i.e., startIdx (MPI_rank + 1) =
+   *  The HYPRE IDs are different from STK IDs and Realm::kynema-ugfGlobalId_
+   * because HYPRE expects contiguous IDs for matrix rows and further requires
+   * that the IDs be ordered across MPI ranks; i.e., startIdx (MPI_rank + 1) =
    *  endIdx(MPI_rank) + 1.
    */
   HypreIDFieldType* hypreGlobalId_{nullptr};

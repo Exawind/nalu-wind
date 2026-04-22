@@ -15,7 +15,7 @@
 
 #include <iostream>
 
-namespace tioga_kynema-ugf {
+namespace tioga_kynema_ugf {
 
 TiogaRef&
 TiogaRef::self(TIOGA::tioga* tg)
@@ -51,6 +51,6 @@ TiogaRef::~TiogaRef()
   }
 }
 
-} // namespace tioga_kynema-ugf
+} // namespace tioga_kynema_ugf
 
 #endif

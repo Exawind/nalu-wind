@@ -35,8 +35,8 @@ const double testTol = 1e-12;
 TEST(utils, compute_vector_divergence)
 {
   // create realm
-  unit_test_utils::KynemaUGFTest kynema-ugfObj;
-  sierra::kynema_ugf::Realm& realm = kynema-ugfObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
 
   // declare relevant fields
   int nDim = realm.meta_data().spatial_dimension();
@@ -89,11 +89,14 @@ TEST(utils, compute_vector_divergence)
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
 
   sierra::kynema_ugf::GeometryAlgDriver geomAlgDriver(realm);
-  geomAlgDriver.register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
-    sierra::kynema_ugf::INTERIOR, realm.meta_data().get_part("block_1"), "geometry");
-  geomAlgDriver.register_face_algorithm<sierra::kynema_ugf::GeometryBoundaryAlg>(
-    sierra::kynema_ugf::BOUNDARY, realm.meta_data().get_part("surface_1"),
-    "geometry");
+  geomAlgDriver
+    .register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
+      sierra::kynema_ugf::INTERIOR, realm.meta_data().get_part("block_1"),
+      "geometry");
+  geomAlgDriver
+    .register_face_algorithm<sierra::kynema_ugf::GeometryBoundaryAlg>(
+      sierra::kynema_ugf::BOUNDARY, realm.meta_data().get_part("surface_1"),
+      "geometry");
   geomAlgDriver.execute();
 
   // get coordinate field

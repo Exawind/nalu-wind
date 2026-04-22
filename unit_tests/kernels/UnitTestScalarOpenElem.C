@@ -139,7 +139,8 @@ TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
   std::unique_ptr<sierra::kynema_ugf::Kernel> openKernel(
-    new sierra::kynema_ugf::ScalarOpenAdvElemKernel<sierra::kynema_ugf::AlgTraitsQuad4Hex8>(
+    new sierra::kynema_ugf::ScalarOpenAdvElemKernel<
+      sierra::kynema_ugf::AlgTraitsQuad4Hex8>(
       *meta_, solnOpts_, &helperObjs.eqSystem, mixFraction_, mixFraction_,
       dzdx_, viscosity_, helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
       helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_));

@@ -99,10 +99,10 @@ HypreDirectSolver::solve(
   int& numIterations, double& finalResidualNorm, bool isFinalOuterIter)
 {
   // Initialize the solver on first entry
-  double time = -KynemaUGFEnv::self().kynema-ugf_time();
+  double time = -KynemaUGFEnv::self().kynema_ugf_time();
   if (initializeSolver_)
     initSolver();
-  time += KynemaUGFEnv::self().kynema-ugf_time();
+  time += KynemaUGFEnv::self().kynema_ugf_time();
   timerPrecond_ = time;
 
   numIterations = 0;

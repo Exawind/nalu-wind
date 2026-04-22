@@ -277,7 +277,7 @@ public:
     meta_ = &bulk_->mesh_meta_data();
     meta_->use_simple_fields();
 
-    kynema-ugfGlobalId_ = &meta_->declare_field<stk::mesh::EntityId>(
+    kynema_ugfGlobalId_ = &meta_->declare_field<stk::mesh::EntityId>(
       stk::topology::NODE_RANK, "kynema-ugf_global_id", 1);
     tpetGlobalId_ = &meta_->declare_field<sierra::kynema_ugf::TpetIdType>(
       stk::topology::NODE_RANK, "tpet_global_id", 1);
@@ -293,7 +293,7 @@ public:
       &meta_->declare_field<double>(meta_->side_rank(), "exposed_area_vector");
 
     stk::mesh::put_field_on_mesh(
-      *kynema-ugfGlobalId_, meta_->universal_part(), nullptr);
+      *kynema_ugfGlobalId_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
       *tpetGlobalId_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
@@ -335,7 +335,8 @@ public:
     stk::mesh::field_fill(0.125, *dnvField_);
     stk::mesh::field_fill(1.25, *divMeshVelField_);
     unit_test_kernel_utils::calc_edge_area_vec(
-      *bulk_, sierra::kynema_ugf::AlgTraitsHex8::topo_, *coordinates_, *edgeAreaVec_);
+      *bulk_, sierra::kynema_ugf::AlgTraitsHex8::topo_, *coordinates_,
+      *edgeAreaVec_);
     unit_test_kernel_utils::calc_exposed_area_vec(
       *bulk_, sierra::kynema_ugf::AlgTraitsQuad4::topo_, *coordinates_,
       *exposedAreaVec_);
@@ -356,7 +357,7 @@ public:
   using TpetIDFieldType = stk::mesh::Field<GlobalOrdinal>;
 
   const sierra::kynema_ugf::VectorFieldType* coordinates_{nullptr};
-  sierra::kynema_ugf::GlobalIdFieldType* kynema-ugfGlobalId_{nullptr};
+  sierra::kynema_ugf::GlobalIdFieldType* kynema_ugfGlobalId_{nullptr};
   TpetIDFieldType* tpetGlobalId_{nullptr};
   sierra::kynema_ugf::ScalarFieldType* dnvField_{nullptr};
   sierra::kynema_ugf::ScalarFieldType* divMeshVelField_{nullptr};
@@ -407,8 +408,8 @@ public:
     stk::io::set_field_output_type(
       *velocityBC_, stk::io::FieldOutputType::VECTOR_3D);
     stk::mesh::put_field_on_mesh(
-      *dynP_, meta_->universal_part(), sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_,
-      nullptr);
+      *dynP_, meta_->universal_part(),
+      sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_, nullptr);
   }
 
   virtual ~LowMachKernelHex8Mesh() {}
@@ -452,8 +453,8 @@ public:
     stk::mesh::put_field_on_mesh(
       *pressureBC_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
-      *dynP_, meta_->universal_part(), sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_,
-      nullptr);
+      *dynP_, meta_->universal_part(),
+      sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_, nullptr);
   }
 
   virtual ~ContinuityKernelHex8Mesh() {}
@@ -517,8 +518,8 @@ public:
       *openMassFlowRate_, meta_->universal_part(),
       sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(
-      *dynP_, meta_->universal_part(), sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_,
-      nullptr);
+      *dynP_, meta_->universal_part(),
+      sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(
       *openVelocityBC_, meta_->universal_part(), spatialDim_, nullptr);
     stk::io::set_field_output_type(

@@ -329,7 +329,8 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
   const stk::mesh::Selector sel =
     realm_.meta_data().locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
-  const auto utauOps = kynema_ugf_ngp::simd_face_elem_field_updater(ngpMesh, ngpUtau);
+  const auto utauOps =
+    kynema_ugf_ngp::simd_face_elem_field_updater(ngpMesh, ngpUtau);
   const auto qSurfOps =
     kynema_ugf_ngp::simd_face_elem_field_updater(ngpMesh, ngpqSurf);
   const auto tauSurfOps =

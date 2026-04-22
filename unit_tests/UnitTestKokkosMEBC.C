@@ -61,12 +61,18 @@ compare_old_face_grad_op(
   std::vector<DoubleType> grad_op(len, 0.0);
   std::vector<DoubleType> det_j(len, 0.0);
 
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem> grad(
-    grad_op.data(), scs_dndx.extent(0), scs_dndx.extent(1), scs_dndx.extent(2));
-  sierra::kynema_ugf::SharedMemView<DoubleType***, sierra::kynema_ugf::DeviceShmem> det(
-    det_j.data(), scs_dndx.extent(0), scs_dndx.extent(1), scs_dndx.extent(2));
-  sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem> coords(
-    v_coords.data(), v_coords.extent(0), v_coords.extent(1));
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
+    grad(
+      grad_op.data(), scs_dndx.extent(0), scs_dndx.extent(1),
+      scs_dndx.extent(2));
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
+    det(
+      det_j.data(), scs_dndx.extent(0), scs_dndx.extent(1), scs_dndx.extent(2));
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
+    coords(v_coords.data(), v_coords.extent(0), v_coords.extent(1));
 
   if (shifted)
     meSCS->shifted_face_grad_op(faceOrdinal, coords, grad, det);
@@ -102,38 +108,38 @@ test_MEBC_views(
   }
 
   // Execute the loop and perform all tests
-  driver.execute(
-    [&](
-      sierra::kynema_ugf::SharedMemData_FaceElem<
-        sierra::kynema_ugf::TeamHandleType, sierra::kynema_ugf::DeviceShmem>& smdata) {
-      sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>&
-        v_coords =
-          smdata.simdElemViews.get_scratch_view_2D(*driver.coordinates_);
-      auto& meViews =
-        smdata.simdElemViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
-      auto& fcViews =
-        smdata.simdFaceViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
+  driver.execute([&](
+                   sierra::kynema_ugf::SharedMemData_FaceElem<
+                     sierra::kynema_ugf::TeamHandleType,
+                     sierra::kynema_ugf::DeviceShmem>& smdata) {
+    sierra::kynema_ugf::SharedMemView<
+      DoubleType**, sierra::kynema_ugf::DeviceShmem>& v_coords =
+      smdata.simdElemViews.get_scratch_view_2D(*driver.coordinates_);
+    auto& meViews = smdata.simdElemViews.get_me_views(
+      sierra::kynema_ugf::CURRENT_COORDINATES);
+    auto& fcViews = smdata.simdFaceViews.get_me_views(
+      sierra::kynema_ugf::CURRENT_COORDINATES);
 
-      for (sierra::kynema_ugf::ELEM_DATA_NEEDED request : elem_requests) {
-        if (request == sierra::kynema_ugf::SCS_FACE_GRAD_OP) {
-          compare_old_face_grad_op(
-            faceOrdinal, false, v_coords, meViews.dndx_fc_scs, driver.meSCS_);
-        }
-        if (request == sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP) {
-          compare_old_face_grad_op(
-            faceOrdinal, true, v_coords, meViews.dndx_shifted_fc_scs,
-            driver.meSCS_);
-        }
+    for (sierra::kynema_ugf::ELEM_DATA_NEEDED request : elem_requests) {
+      if (request == sierra::kynema_ugf::SCS_FACE_GRAD_OP) {
+        compare_old_face_grad_op(
+          faceOrdinal, false, v_coords, meViews.dndx_fc_scs, driver.meSCS_);
       }
-    });
+      if (request == sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP) {
+        compare_old_face_grad_op(
+          faceOrdinal, true, v_coords, meViews.dndx_shifted_fc_scs,
+          driver.meSCS_);
+      }
+    }
+  });
 }
 
 TEST(KokkosMEBC, test_quad42D_views)
 {
   for (int k = 0; k < 3; ++k) {
     test_MEBC_views<sierra::kynema_ugf::AlgTraitsEdge2DQuad42D>(
-      k,
-      {sierra::kynema_ugf::SCS_FACE_GRAD_OP, sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
+      k, {sierra::kynema_ugf::SCS_FACE_GRAD_OP,
+          sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
   }
 }
 
@@ -141,8 +147,8 @@ TEST(KokkosMEBC, test_tri32D_views)
 {
   for (int k = 0; k < 3; ++k) {
     test_MEBC_views<sierra::kynema_ugf::AlgTraitsEdge2DTri32D>(
-      k,
-      {sierra::kynema_ugf::SCS_FACE_GRAD_OP, sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
+      k, {sierra::kynema_ugf::SCS_FACE_GRAD_OP,
+          sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
   }
 }
 
@@ -150,8 +156,8 @@ TEST(KokkosMEBC, test_hex8_views)
 {
   for (int k = 0; k < 6; ++k) {
     test_MEBC_views<sierra::kynema_ugf::AlgTraitsQuad4Hex8>(
-      k,
-      {sierra::kynema_ugf::SCS_FACE_GRAD_OP, sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
+      k, {sierra::kynema_ugf::SCS_FACE_GRAD_OP,
+          sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
   }
 }
 
@@ -159,8 +165,8 @@ TEST(KokkosMEBC, test_tet4_views)
 {
   for (int k = 0; k < 4; ++k) {
     test_MEBC_views<sierra::kynema_ugf::AlgTraitsTri3Tet4>(
-      k,
-      {sierra::kynema_ugf::SCS_FACE_GRAD_OP, sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
+      k, {sierra::kynema_ugf::SCS_FACE_GRAD_OP,
+          sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
   }
 }
 
@@ -168,14 +174,14 @@ TEST(KokkosMEBC, test_wedge4_views)
 {
   for (int k = 0; k < 3; ++k) {
     test_MEBC_views<sierra::kynema_ugf::AlgTraitsQuad4Wed6>(
-      k,
-      {sierra::kynema_ugf::SCS_FACE_GRAD_OP, sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
+      k, {sierra::kynema_ugf::SCS_FACE_GRAD_OP,
+          sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
   }
 
   for (int k = 3; k < 5; ++k) {
     test_MEBC_views<sierra::kynema_ugf::AlgTraitsTri3Wed6>(
-      k,
-      {sierra::kynema_ugf::SCS_FACE_GRAD_OP, sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
+      k, {sierra::kynema_ugf::SCS_FACE_GRAD_OP,
+          sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
   }
 }
 
@@ -186,6 +192,6 @@ TEST(KokkosMEBC, test_pyr5_views)
       k, {sierra::kynema_ugf::SCS_FACE_GRAD_OP});
   }
   test_MEBC_views<sierra::kynema_ugf::AlgTraitsQuad4Pyr5>(
-    4,
-    {sierra::kynema_ugf::SCS_FACE_GRAD_OP, sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
+    4, {sierra::kynema_ugf::SCS_FACE_GRAD_OP,
+        sierra::kynema_ugf::SCS_SHIFTED_FACE_GRAD_OP});
 }

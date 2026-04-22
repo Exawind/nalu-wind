@@ -102,13 +102,13 @@ NonConformalInfo::NonConformalInfo(
   // determine search method for this pair
   if (searchMethodName == "boost_rtree") {
     searchMethod_ = stk::search::KDTREE;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Warning: search method 'boost_rtree' has been deprecated"
       << ", Switching to 'stk_kdtree'" << std::endl;
   } else if (searchMethodName == "stk_kdtree")
     searchMethod_ = stk::search::KDTREE;
   else
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "NonConformalInfo::search method not declared; will use stk_kdtree"
       << std::endl;
 }
@@ -229,9 +229,9 @@ NonConformalInfo::construct_dgInfo()
       std::vector<DgInfo*> faceDgInfoVec(numScsBip);
       for (int ip = 0; ip < numScsBip; ++ip) {
         DgInfo* dgInfo = new DgInfo(
-          KynemaUGFEnv::self().parallel_rank(), globalFaceId, localGaussPointId++,
-          ip, face, element, currentFaceOrdinal, meFC, meSCS, currentElemTopo,
-          nDim, searchTolerance_, meFC_dev, meSCS_dev);
+          KynemaUGFEnv::self().parallel_rank(), globalFaceId,
+          localGaussPointId++, ip, face, element, currentFaceOrdinal, meFC,
+          meSCS, currentElemTopo, nDim, searchTolerance_, meFC_dev, meSCS_dev);
         faceDgInfoVec[ip] = dgInfo;
       }
 
@@ -465,10 +465,10 @@ NonConformalInfo::repeat_search_if_needed(
     ++num_iterations;
 
     if (10 < num_iterations) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "NonConformalInfo::repeat_search_if_needed issue with " << name_
         << std::endl;
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Increased search tolerance 10 times and still failed to find match."
         << std::endl;
       throw std::runtime_error(
@@ -701,15 +701,15 @@ NonConformalInfo::complete_search()
   // check for problems... will want to be more pro-active in the near future,
   // e.g., expand and search...
   if (problemDgInfoVec.size() > 0) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "NonConformalInfo::complete_search issue with " << name_
       << " Size of issue is " << problemDgInfoVec.size() << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Problem ips are as follows: " << std::endl;
     for (size_t k = 0; k < problemDgInfoVec.size(); ++k) {
       problemDgInfoVec[k]->dump_info();
     }
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
     throw std::runtime_error(
       "Try to adjust the search tolerance and re-submit...");
   }
@@ -753,18 +753,18 @@ NonConformalInfo::complete_search()
   }
 
   // global sum
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "DgInfo size overview for name: " << name_ << std::endl;
   size_t g_numberOfFacesMissing;
   stk::all_reduce_sum(
     KynemaUGFEnv::self().parallel_comm(), &numberOfFacesMissing,
     &g_numberOfFacesMissing, 1);
   if (g_numberOfFacesMissing > 0) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "  Ghosted search entries ARE NOT sufficient for re-use " << std::endl;
     canReuse_ = false;
   } else {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "  Ghosted search entries ARE sufficient for re-use " << std::endl;
     canReuse_ = true;
   }
@@ -774,12 +774,15 @@ NonConformalInfo::complete_search()
   size_t g_minOpposingSize;
   size_t g_maxOpposingSize;
   size_t l_total[2] = {totalDgInfoSize, totalOpposingFaceSize};
-  stk::all_reduce_sum(KynemaUGFEnv::self().parallel_comm(), l_total, g_total, 2);
+  stk::all_reduce_sum(
+    KynemaUGFEnv::self().parallel_comm(), l_total, g_total, 2);
   stk::all_reduce_min(
-    KynemaUGFEnv::self().parallel_comm(), &minOpposingSize, &g_minOpposingSize, 1);
+    KynemaUGFEnv::self().parallel_comm(), &minOpposingSize, &g_minOpposingSize,
+    1);
   stk::all_reduce_max(
-    KynemaUGFEnv::self().parallel_comm(), &maxOpposingSize, &g_maxOpposingSize, 1);
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().parallel_comm(), &maxOpposingSize, &g_maxOpposingSize,
+    1);
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "  Min/Max/Average opposing face size: " << g_minOpposingSize << "/"
     << g_maxOpposingSize << "/" << g_total[1] / g_total[0] << std::endl;
 }
@@ -887,10 +890,10 @@ NonConformalInfo::provide_diagnosis()
   std::vector<double> currentIsoParCoords(nDim);
   std::vector<double> opposingIsoParCoords(nDim);
 
-  KynemaUGFEnv::self().kynema-ugfOutput() << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "Non Conformal Alg review for surface: " << name_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "===================================== " << std::endl;
   std::vector<std::vector<DgInfo*>>::iterator ii;
   for (ii = dgInfoVec_.begin(); ii != dgInfoVec_.end(); ++ii) {
@@ -987,61 +990,65 @@ NonConformalInfo::provide_diagnosis()
       distanceNorm = std::sqrt(distanceNorm);
 
       // provide output...
-      KynemaUGFEnv::self().kynema-ugfOutput()
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << "Gauss Point Lid: " << localGaussPointId << " Review " << std::endl;
-      KynemaUGFEnv::self().kynema-ugfOutput() << "  encapsulated by Gid: (";
+      KynemaUGFEnv::self().kynema_ugfOutput() << "  encapsulated by Gid: (";
       for (int ni = 0; ni < current_face_num_nodes; ++ni) {
         stk::mesh::Entity node = current_face_node_rels[ni];
-        KynemaUGFEnv::self().kynema-ugfOutput() << bulk_data.identifier(node) << " ";
+        KynemaUGFEnv::self().kynema_ugfOutput()
+          << bulk_data.identifier(node) << " ";
       }
-      KynemaUGFEnv::self().kynema-ugfOutput() << ")" << std::endl;
-      KynemaUGFEnv::self().kynema-ugfOutput()
+      KynemaUGFEnv::self().kynema_ugfOutput() << ")" << std::endl;
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << "Current Gauss Point id: " << currentGaussPointId
         << " (nearest node) "
         << bulk_data.identifier(current_face_node_rels[currentGaussPointId])
         << std::endl;
 
-      KynemaUGFEnv::self().kynema-ugfOutput()
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << "  Current element Gid: " << bulk_data.identifier(currentElement)
         << " (face ordinal: " << dgInfo->currentFaceOrdinal_ << ")"
         << std::endl;
 
-      KynemaUGFEnv::self().kynema-ugfOutput() << "  has Gp coordinates: ";
+      KynemaUGFEnv::self().kynema_ugfOutput() << "  has Gp coordinates: ";
       for (int i = 0; i < nDim; ++i)
-        KynemaUGFEnv::self().kynema-ugfOutput() << currentGaussPointCoords[i] << " ";
-      KynemaUGFEnv::self().kynema-ugfOutput() << std::endl;
-      KynemaUGFEnv::self().kynema-ugfOutput() << "  The best X is: " << bX << std::endl;
-      KynemaUGFEnv::self().kynema-ugfOutput()
+        KynemaUGFEnv::self().kynema_ugfOutput()
+          << currentGaussPointCoords[i] << " ";
+      KynemaUGFEnv::self().kynema_ugfOutput() << std::endl;
+      KynemaUGFEnv::self().kynema_ugfOutput()
+        << "  The best X is: " << bX << std::endl;
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << "  Opposing element Gid: " << opElemId
         << " (face ordinal: " << dgInfo->opposingFaceOrdinal_ << ")"
         << std::endl;
-      KynemaUGFEnv::self().kynema-ugfOutput() << "  encapsulated by Gid: (";
+      KynemaUGFEnv::self().kynema_ugfOutput() << "  encapsulated by Gid: (";
       for (int ni = 0; ni < opposing_face_num_nodes; ++ni) {
         stk::mesh::Entity node = opposing_face_node_rels[ni];
-        KynemaUGFEnv::self().kynema-ugfOutput() << bulk_data.identifier(node) << " ";
+        KynemaUGFEnv::self().kynema_ugfOutput()
+          << bulk_data.identifier(node) << " ";
       }
-      KynemaUGFEnv::self().kynema-ugfOutput() << ")" << std::endl;
-      KynemaUGFEnv::self().kynema-ugfOutput()
+      KynemaUGFEnv::self().kynema_ugfOutput() << ")" << std::endl;
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << "  INTERNAL CHECK.... does current Gp and opposing found Gp match "
            "coordiantes? What error?"
         << std::endl;
-      KynemaUGFEnv::self().kynema-ugfOutput()
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << "  current and opposing Gp coordinates:        " << std::endl;
       for (int i = 0; i < nDim; ++i)
-        KynemaUGFEnv::self().kynema-ugfOutput()
+        KynemaUGFEnv::self().kynema_ugfOutput()
           << "      " << i << " " << checkCurrentFaceGaussPointCoords[i] << " "
           << checkOpposingFaceGaussPointCoords[i] << std::endl;
-      KynemaUGFEnv::self().kynema-ugfOutput()
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << "  current and opposing Gp isoPar coordinates: " << std::endl;
       for (int i = 0; i < nDim - 1; ++i)
-        KynemaUGFEnv::self().kynema-ugfOutput()
+        KynemaUGFEnv::self().kynema_ugfOutput()
           << "      " << i << " " << currentIsoParCoords[i] << " "
           << opposingIsoParCoords[i] << std::endl;
-      KynemaUGFEnv::self().kynema-ugfOutput() << std::endl;
-      KynemaUGFEnv::self().kynema-ugfOutput()
+      KynemaUGFEnv::self().kynema_ugfOutput() << std::endl;
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << " in the end, the Error Distance Norm is: " << distanceNorm
         << std::endl;
-      KynemaUGFEnv::self().kynema-ugfOutput()
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << "-------------------------------------------------------------------"
         << std::endl;
     }
@@ -1078,14 +1085,14 @@ NonConformalInfo::error_check()
 
   // report the data if problem nodes were found
   if (coindidentNodesVec.size() > 0) {
-    KynemaUGFEnv::self().kynema-ugfOutput() << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput() << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutput()
       << "Non Conformal Alg (P" << KynemaUGFEnv::self().parallel_rank()
       << ") error found on surface: " << name_ << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
       << "========================================= " << std::endl;
     for (size_t k = 0; k < coindidentNodesVec.size(); ++k)
-      KynemaUGFEnv::self().kynema-ugfOutput()
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << "coincident nodeId found: " << coindidentNodesVec[k] << std::endl;
   }
 

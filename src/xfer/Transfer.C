@@ -182,7 +182,7 @@ Transfer::load(const YAML::Node& node)
     }
 
     // warn the user...
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Specifying the transfer variables requires expert understanding; "
          "consider using coupling_physics"
       << std::endl;
@@ -315,21 +315,22 @@ Transfer::breadboard()
   if (doOutput) {
 
     // realm names
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Xfer Setup Information: " << name_ << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "the From realm name is: " << fromRealm_->name_ << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "the To realm name is: " << toRealm_->name_ << std::endl;
 
     // provide mesh part names for the user
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "From/To Part Review: " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "From/To Part Review: " << std::endl;
     for (size_t k = 0; k < fromPartVec_.size(); ++k)
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "the From mesh part name is: " << fromPartVec_[k]->name()
         << std::endl;
     for (size_t k = 0; k < toPartVec_.size(); ++k)
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "the To mesh part name is: " << toPartVec_[k]->name() << std::endl;
 
     // provide field names
@@ -337,7 +338,7 @@ Transfer::breadboard()
            i_var = transferVariablesPairName_.begin();
          i_var != transferVariablesPairName_.end(); ++i_var) {
       const std::pair<std::string, std::string> thePair = *i_var;
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "From variable " << thePair.first << " To variable "
         << thePair.second << std::endl;
     }
@@ -381,13 +382,13 @@ Transfer::allocate_stk_transfer()
   stk::search::SearchMethod searchMethod = stk::search::KDTREE;
   if (searchMethodName_ == "boost_rtree") {
     searchMethod = stk::search::KDTREE;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Warning: search method 'boost_rtree' has been deprecated"
       << ", switching to 'stk_kdtree'" << std::endl;
   } else if (searchMethodName_ == "stk_kdtree")
     searchMethod = stk::search::KDTREE;
   else
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Transfer::search method not declared; will use stk_kdtree"
       << std::endl;
   transfer_.reset(new STKTransfer(
@@ -420,12 +421,12 @@ Transfer::ghost_from_elements()
 void
 Transfer::initialize_begin()
 {
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "PROCESSING Transfer::initialize_begin() for: " << name_ << std::endl;
-  double time = -KynemaUGFEnv::self().kynema-ugf_time();
+  double time = -KynemaUGFEnv::self().kynema_ugf_time();
   allocate_stk_transfer();
   transfer_->coarse_search();
-  time += KynemaUGFEnv::self().kynema-ugf_time();
+  time += KynemaUGFEnv::self().kynema_ugf_time();
   fromRealm_->timerTransferSearch_ += time;
 }
 
@@ -443,7 +444,7 @@ Transfer::change_ghosting()
 void
 Transfer::initialize_end()
 {
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "PROCESSING Transfer::initialize_end() for: " << name_ << std::endl;
   transfer_->local_search();
 }
@@ -455,8 +456,8 @@ void
 Transfer::execute()
 {
   // do the xfer
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "PROCESSING Transfer::execute() for: " << name_ << std::endl;
 
   // provide field names
@@ -464,11 +465,11 @@ Transfer::execute()
          transferVariablesPairName_.begin();
        i_var != transferVariablesPairName_.end(); ++i_var) {
     const std::pair<std::string, std::string> thePair = *i_var;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "XFER From variable: " << thePair.first << " To variable "
       << thePair.second << std::endl;
   }
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
   transfer_->apply();
 }
 

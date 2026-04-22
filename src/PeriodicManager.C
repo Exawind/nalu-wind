@@ -47,7 +47,7 @@ PeriodicManager::PeriodicManager(Realm& realm)
   : realm_(realm),
     searchTolerance_(1.0e-8),
     periodicGhosting_(NULL),
-    ghostingName_("kynema-ugf_periodic"),
+    ghostingName_("kynema_ugf_periodic"),
     timerSearch_(0.0),
     errorCount_(0),
     maxErrorCount_(10),
@@ -101,13 +101,13 @@ PeriodicManager::add_periodic_pair(
   stk::search::SearchMethod searchMethod = stk::search::KDTREE;
   if (searchMethodName == "boost_rtree") {
     searchMethod = stk::search::KDTREE;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Warning: search method 'boost_rtree' has been deprecated"
       << ", Switching to 'stk_kdtree'" << std::endl;
   } else if (searchMethodName == "stk_kdtree")
     searchMethod = stk::search::KDTREE;
   else
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "PeriodicManager::search method not declared; will use stk_kdtree"
       << std::endl;
   searchMethodVec_.push_back(searchMethod);
@@ -140,10 +140,11 @@ PeriodicManager::build_constraints()
   if (periodicSelectorPairs_.size() == 0)
     throw std::runtime_error("PeriodiocBC::Error: No periodic pair provided");
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Periodic Review:  realm: " << realm_.name_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "=========================" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "=========================" << std::endl;
 
   augment_periodic_selector_pairs();
 
@@ -230,7 +231,7 @@ PeriodicManager::augment_periodic_selector_pairs()
   }
 
   default: {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "more than three periodic pairs assumes no common slave nodes "
       << std::endl;
     break;
@@ -303,8 +304,8 @@ PeriodicManager::determine_translation(
     KynemaUGFEnv::self().parallel_comm(), &local_sum_coords_master[0],
     &global_sum_coords_master[0], nDim);
   stk::all_reduce_sum(
-    KynemaUGFEnv::self().parallel_comm(), &numberMasterNodes, &g_numberMasterNodes,
-    1);
+    KynemaUGFEnv::self().parallel_comm(), &numberMasterNodes,
+    &g_numberMasterNodes, 1);
 
   // Slave: global_sum_coords_slave
   std::vector<double> local_sum_coords_slave(nDim, 0.0),
@@ -333,7 +334,8 @@ PeriodicManager::determine_translation(
     KynemaUGFEnv::self().parallel_comm(), &local_sum_coords_slave[0],
     &global_sum_coords_slave[0], nDim);
   stk::all_reduce_sum(
-    KynemaUGFEnv::self().parallel_comm(), &numberSlaveNodes, &g_numberSlaveNodes, 1);
+    KynemaUGFEnv::self().parallel_comm(), &numberSlaveNodes,
+    &g_numberSlaveNodes, 1);
 
   // save off translation and rotation
   for (int j = 0; j < nDim; ++j) {
@@ -343,11 +345,12 @@ PeriodicManager::determine_translation(
     rotationVector[j] = global_sum_coords_master[j] / g_numberMasterNodes;
   }
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "Translating [ ";
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << "Translating [ ";
   for (int j = 0; j < nDim; ++j) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << translationVector[j] << " ";
+    KynemaUGFEnv::self().kynema_ugfOutputP0() << translationVector[j] << " ";
   }
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "] Master/Slave pair " << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "] Master/Slave pair " << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -405,7 +408,7 @@ PeriodicManager::remove_redundant_slave_nodes()
     break;
   }
   default: {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "more than three periodic pairs assumes no common slave nodes "
       << std::endl;
     break;
@@ -523,11 +526,11 @@ PeriodicManager::populate_search_key_vec(
 
   // will want to stuff product of search to a single vector
   std::vector<std::pair<theEntityKey, theEntityKey>> searchKeyPair;
-  double timeA = KynemaUGFEnv::self().kynema-ugf_time();
+  double timeA = KynemaUGFEnv::self().kynema_ugf_time();
   stk::search::coarse_search(
     sphereBoundingBoxSlaveVec, sphereBoundingBoxMasterVec, searchMethod,
     KynemaUGFEnv::self().parallel_comm(), searchKeyPair);
-  timerSearch_ += (KynemaUGFEnv::self().kynema-ugf_time() - timeA);
+  timerSearch_ += (KynemaUGFEnv::self().kynema_ugf_time() - timeA);
 
   // populate searchKeyVector_; culmination of all master/slaves
   searchKeyVector_.insert(
@@ -558,7 +561,8 @@ PeriodicManager::error_check()
 
   // extract locally owned slave nodes from the search
   for (size_t i = 0, size = searchKeyVector_.size(); i < size; ++i) {
-    if (KynemaUGFEnv::self().parallel_rank() == searchKeyVector_[i].second.proc())
+    if (
+      KynemaUGFEnv::self().parallel_rank() == searchKeyVector_[i].second.proc())
       l_totalNumber[1] += 1;
   }
 
@@ -571,19 +575,20 @@ PeriodicManager::error_check()
   if (g_totalNumber[0] != g_totalNumber[1]) {
     // increment and report
     errorCount_++;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "_____________________________________" << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Probable issue with Search on attempt: " << errorCount_ << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "the total number of slave nodes ("
-                                   << g_totalNumber[0] << ")" << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "the total number of slave nodes (" << g_totalNumber[0] << ")"
+      << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "does not equal the product of the search (" << g_totalNumber[1] << ")"
       << std::endl;
 
     // check to see if we should try again..
     if (errorCount_ == maxErrorCount_) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "ABORT: Too many attempts; please check your mesh" << std::endl;
       throw std::runtime_error(
         "PeriodiocBC::Error: Too many attempts; please check your mesh");
@@ -592,13 +597,13 @@ PeriodicManager::error_check()
     if (g_totalNumber[0] > g_totalNumber[1]) {
       searchTolerance_ *=
         amplificationFactor_; // slave > total; increase tolerance
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "The algorithm will increase the search tolerance: "
         << searchTolerance_ << std::endl;
     } else {
       searchTolerance_ /=
         amplificationFactor_; // slave < total; reduce tolerance
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "The algorithm will reduce the search tolerance: "
         << searchTolerance_ << std::endl;
     }
@@ -606,14 +611,14 @@ PeriodicManager::error_check()
     // try again
     finalize_search();
   } else {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "---------------------------------------------------" << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Parallel consistency noted in master/slave pairings: "
       << g_totalNumber[0] << "/" << g_totalNumber[1] << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "---------------------------------------------------" << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
   }
 }
 
@@ -914,14 +919,14 @@ PeriodicManager::update_global_id_field()
     // pointer to data
     const stk::mesh::EntityId masterGlobalId = bulk_data.identifier(masterNode);
     stk::mesh::EntityId* slaveGlobalId =
-      stk::mesh::field_data(*realm_.kynema-ugfGlobalId_, slaveNode);
+      stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, slaveNode);
 
     // set new value
     *slaveGlobalId = masterGlobalId;
   }
 
   // update all shared; aura and periodic
-  parallel_communicate_field(realm_.kynema-ugfGlobalId_);
+  parallel_communicate_field(realm_.kynema_ugfGlobalId_);
 }
 
 //--------------------------------------------------------------------------

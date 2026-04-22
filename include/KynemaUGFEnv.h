@@ -34,17 +34,17 @@ public:
   int pSize_;
   int pRank_;
   std::streambuf* stdoutStream_;
-  std::ostream* kynema-ugfLogStream_;
-  std::ostream* kynema-ugfParallelStream_;
+  std::ostream* kynema_ugfLogStream_;
+  std::ostream* kynema_ugfParallelStream_;
   bool parallelLog_;
 
-  KynemaUGFEmptyStreamBuffer kynema-ugfEmptyStreamBuffer_;
-  std::filebuf kynema-ugfStreamBuffer_;
-  std::filebuf kynema-ugfParallelStreamBuffer_;
+  KynemaUGFEmptyStreamBuffer kynema_ugfEmptyStreamBuffer_;
+  std::filebuf kynema_ugfStreamBuffer_;
+  std::filebuf kynema_ugfParallelStreamBuffer_;
   bool debug_;
 
-  std::ostream& kynema-ugfOutputP0();
-  std::ostream& kynema-ugfOutput();
+  std::ostream& kynema_ugfOutputP0();
+  std::ostream& kynema_ugfOutput();
 
   MPI_Comm parallel_comm();
   int parallel_size();
@@ -62,11 +62,11 @@ public:
    *
    */
   void set_log_file_stream(
-    std::string kynema-ugfLogName,
+    std::string kynema_ugfLogName,
     bool pprint = false,
     const bool capture_cout = false);
   void close_log_file_stream();
-  double kynema-ugf_time();
+  double kynema_ugf_time();
 };
 
 } // namespace kynema_ugf

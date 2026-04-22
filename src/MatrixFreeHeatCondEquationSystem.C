@@ -314,37 +314,38 @@ MatrixFreeHeatCondEquationSystem::initialize_solve_and_update()
 void
 MatrixFreeHeatCondEquationSystem::solve_and_update()
 {
-  const auto time_start_initialize = KynemaUGFEnv::self().kynema-ugf_time();
+  const auto time_start_initialize = KynemaUGFEnv::self().kynema_ugf_time();
   initialize_solve_and_update();
-  const auto time_end_initialize = KynemaUGFEnv::self().kynema-ugf_time();
+  const auto time_end_initialize = KynemaUGFEnv::self().kynema_ugf_time();
   timerInit_ += time_end_initialize - time_start_initialize;
 
-  const auto time_start_update_states = KynemaUGFEnv::self().kynema-ugf_time();
+  const auto time_start_update_states = KynemaUGFEnv::self().kynema_ugf_time();
   grad_->reset_initial_residual();
   update_->swap_states();
   update_->update_solution_fields();
-  const auto time_end_update_states = KynemaUGFEnv::self().kynema-ugf_time();
+  const auto time_end_update_states = KynemaUGFEnv::self().kynema_ugf_time();
   timerAssemble_ += time_end_update_states - time_start_update_states;
 
-  const auto time_start_preconditioner = KynemaUGFEnv::self().kynema-ugf_time();
+  const auto time_start_preconditioner = KynemaUGFEnv::self().kynema_ugf_time();
   update_->compute_preconditioner(
     realm_.timeIntegrator_->get_gamma1() /
     realm_.timeIntegrator_->get_time_step());
-  const auto time_end_preconditioner = KynemaUGFEnv::self().kynema-ugf_time();
+  const auto time_end_preconditioner = KynemaUGFEnv::self().kynema_ugf_time();
   timerPrecond_ += time_end_preconditioner - time_start_preconditioner;
 
   for (int k = 0; k < maxIterations_; ++k) {
     nonlinear_iteration_banner(
-      k, maxIterations_, userSuppliedName_, KynemaUGFEnv::self().kynema-ugfOutputP0());
+      k, maxIterations_, userSuppliedName_,
+      KynemaUGFEnv::self().kynema_ugfOutputP0());
 
-    const auto time_start_solve = KynemaUGFEnv::self().kynema-ugf_time();
+    const auto time_start_solve = KynemaUGFEnv::self().kynema_ugf_time();
     update_->compute_update(
       compute_scaled_gammas(*realm_.timeIntegrator_),
       get_node_field(meta_, names::delta));
-    const auto time_end_solve = KynemaUGFEnv::self().kynema-ugf_time();
+    const auto time_end_solve = KynemaUGFEnv::self().kynema_ugf_time();
     timerSolve_ += time_end_solve - time_start_solve;
 
-    const auto time_start_assemble = KynemaUGFEnv::self().kynema-ugf_time();
+    const auto time_start_assemble = KynemaUGFEnv::self().kynema_ugf_time();
     sync_field_on_periodic_nodes(names::delta, 1);
 
     solution_update(
@@ -354,19 +355,19 @@ MatrixFreeHeatCondEquationSystem::solve_and_update()
         ->field_of_state(stk::mesh::StateNP1));
 
     update_->update_solution_fields();
-    const auto time_end_assemble = KynemaUGFEnv::self().kynema-ugf_time();
+    const auto time_end_assemble = KynemaUGFEnv::self().kynema_ugf_time();
     timerAssemble_ += time_end_assemble - time_start_assemble;
 
-    const auto time_start_banner = KynemaUGFEnv::self().kynema-ugf_time();
-    update_->banner(name_, KynemaUGFEnv::self().kynema-ugfOutputP0());
-    const auto time_end_banner = KynemaUGFEnv::self().kynema-ugf_time();
+    const auto time_start_banner = KynemaUGFEnv::self().kynema_ugf_time();
+    update_->banner(name_, KynemaUGFEnv::self().kynema_ugfOutputP0());
+    const auto time_end_banner = KynemaUGFEnv::self().kynema_ugf_time();
     timerMisc_ += time_end_banner - time_start_banner;
 
     grad_->gradient(
       get_node_field(meta_, names::temperature),
       get_node_field(meta_, names::dtdx));
     sync_field_on_periodic_nodes(names::dtdx, dim);
-    grad_->banner("dtdx", KynemaUGFEnv::self().kynema-ugfOutputP0());
+    grad_->banner("dtdx", KynemaUGFEnv::self().kynema_ugfOutputP0());
   }
 }
 

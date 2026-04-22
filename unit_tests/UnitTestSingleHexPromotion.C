@@ -58,7 +58,8 @@ fill_and_promote_hex_mesh(
     sierra::kynema_ugf::super_element_part_name("surface_1"),
     stk::topology::FACE_RANK);
 
-  const auto sidePartName = sierra::kynema_ugf::super_subset_part_name("surface_1");
+  const auto sidePartName =
+    sierra::kynema_ugf::super_subset_part_name("surface_1");
   auto sideTopo = stk::create_superface_topology(
     static_cast<unsigned>(elemDesc.nodesPerSide));
   stk::mesh::Part* superSidePart =

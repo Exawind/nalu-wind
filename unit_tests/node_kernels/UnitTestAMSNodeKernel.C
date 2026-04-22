@@ -315,8 +315,9 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_forcing)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::MomentumSSTAMSForcingNodeKernel>(
-    *bulk_, solnOpts_);
+  helperObjs.nodeAlg
+    ->add_kernel<sierra::kynema_ugf::MomentumSSTAMSForcingNodeKernel>(
+      *bulk_, solnOpts_);
 
   sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.currentTime_ = 0.0;

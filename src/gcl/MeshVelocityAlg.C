@@ -106,7 +106,8 @@ MeshVelocityAlg<AlgTraits>::execute()
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto faceVel = fieldMgr.template get_field<double>(faceVelMag_);
   auto ngpSweptVol = fieldMgr.template get_field<double>(sweptVolumeNp1_);
-  const auto faceVelOps = kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, faceVel);
+  const auto faceVelOps =
+    kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, faceVel);
   const auto sweptVolOps =
     kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, ngpSweptVol);
 

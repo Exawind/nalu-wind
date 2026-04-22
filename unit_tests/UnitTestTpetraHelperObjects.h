@@ -30,18 +30,20 @@ struct TpetraHelperObjectsBase
   TpetraHelperObjectsBase(std::shared_ptr<stk::mesh::BulkData> bulk, int numDof)
     : yamlNode(unit_test_utils::get_default_inputs()),
       realmDefaultNode(unit_test_utils::get_realm_default_node()),
-      kynema-ugfObj(new unit_test_utils::KynemaUGFTest(yamlNode)),
-      realm(kynema-ugfObj->create_realm(realmDefaultNode, "multi_physics", false)),
+      kynema_ugfObj(new unit_test_utils::KynemaUGFTest(yamlNode)),
+      realm(
+        kynema -
+        ugfObj->create_realm(realmDefaultNode, "multi_physics", false)),
       eqSystems(realm),
       eqSystem(eqSystems),
-      linsys(
-        new sierra::kynema_ugf::TpetraLinearSystem(realm, numDof, &eqSystem, nullptr))
+      linsys(new sierra::kynema_ugf::TpetraLinearSystem(
+        realm, numDof, &eqSystem, nullptr))
   {
     realm.bulkData_ = bulk;
     eqSystem.linsys_ = linsys;
   }
 
-  virtual ~TpetraHelperObjectsBase() { delete kynema-ugfObj; }
+  virtual ~TpetraHelperObjectsBase() { delete kynema_ugfObj; }
 
   virtual void execute() {}
 
@@ -179,7 +181,7 @@ struct TpetraHelperObjectsBase
 
   YAML::Node yamlNode;
   YAML::Node realmDefaultNode;
-  unit_test_utils::KynemaUGFTest* kynema-ugfObj;
+  unit_test_utils::KynemaUGFTest* kynema_ugfObj;
   sierra::kynema_ugf::Realm& realm;
   sierra::kynema_ugf::EquationSystems eqSystems;
   sierra::kynema_ugf::EquationSystem eqSystem;
@@ -240,7 +242,8 @@ struct TpetraHelperObjectsFaceElem : public TpetraHelperObjectsBase
       kern->free_on_device();
     assembleFaceElemSolverAlg->activeKernels_.clear();
   }
-  sierra::kynema_ugf::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;
+  sierra::kynema_ugf::AssembleFaceElemSolverAlgorithm*
+    assembleFaceElemSolverAlg;
 };
 
 struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase

@@ -43,7 +43,7 @@ struct ActuatorMetaFAST : public ActuatorMeta
 
 struct ActuatorBulkFAST : public ActuatorBulk
 {
-  ActuatorBulkFAST(ActuatorMetaFAST& actMeta, double kynema-ugfTimeStep);
+  ActuatorBulkFAST(ActuatorMetaFAST& actMeta, double kynema_ugfTimeStep);
 
   Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> local_range_policy();
 
@@ -51,11 +51,11 @@ struct ActuatorBulkFAST : public ActuatorBulk
   void step_fast();
   bool fast_is_time_zero();
   void output_torque_info(stk::mesh::BulkData& stkBulk);
-  void
-  init_openfast(const ActuatorMetaFAST& actMeta, const double kynema-ugfTimeStep);
+  void init_openfast(
+    const ActuatorMetaFAST& actMeta, const double kynema_ugfTimeStep);
   void init_epsilon(const ActuatorMetaFAST& actMeta);
   bool is_tstep_ratio_admissable(
-    const double fastTimeStep, const double kynema-ugfTimeStep);
+    const double fastTimeStep, const double kynema_ugfTimeStep);
 
   virtual ~ActuatorBulkFAST();
 

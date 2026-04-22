@@ -128,7 +128,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
   // check for any data probes
   const YAML::Node y_dataProbe = y_node["data_probes"];
   if (y_dataProbe) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "DataProbePostProcessing::load" << std::endl;
 
     // Set the output format for probes
@@ -160,7 +160,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
       } else {
         throw std::runtime_error("output_format has unrecognized format");
       }
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "DataProbePostProcessing::Adding " << formatName
         << " output format..." << std::endl;
     }
@@ -663,11 +663,11 @@ DataProbePostProcessing::initialize()
           // check if nodes exists. If they do, did the number of points match?
           if (nodesExist) {
             if (checkNumPoints != numPoints) {
-              KynemaUGFEnv::self().kynema-ugfOutput()
+              KynemaUGFEnv::self().kynema_ugfOutput()
                 << "Number of points specified within input file does not "
                    "match nodes that exists: "
                 << probePart->name() << std::endl;
-              KynemaUGFEnv::self().kynema-ugfOutput()
+              KynemaUGFEnv::self().kynema_ugfOutput()
                 << "The old and new node count is as follows: " << numPoints
                 << " " << checkNumPoints << std::endl;
               probeInfo->numPoints_[j] = checkNumPoints;
@@ -954,19 +954,22 @@ DataProbePostProcessing::execute()
   }
 
   if (isOutput) {
-    const double t1 = enablePerfTiming_ ? KynemaUGFEnv::self().kynema-ugf_time() : 0.0;
+    const double t1 =
+      enablePerfTiming_ ? KynemaUGFEnv::self().kynema_ugf_time() : 0.0;
     // execute and provide results...
     transfers_->execute();
-    const double t2 = enablePerfTiming_ ? KynemaUGFEnv::self().kynema-ugf_time() : 0.0;
+    const double t2 =
+      enablePerfTiming_ ? KynemaUGFEnv::self().kynema_ugf_time() : 0.0;
     if (useExo_) {
       provide_output_exodus(currentTime);
     }
     if (useText_) {
       provide_output_txt(currentTime);
     }
-    const double t3 = enablePerfTiming_ ? KynemaUGFEnv::self().kynema-ugf_time() : 0.0;
+    const double t3 =
+      enablePerfTiming_ ? KynemaUGFEnv::self().kynema_ugf_time() : 0.0;
     if (enablePerfTiming_)
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "DataProbePostProcessing::execute "
         << " transfer_time: " << t2 - t1 << " output_time: " << t3 - t2
         << " total_time: " << t3 - t1 << std::endl;
@@ -979,7 +982,7 @@ DataProbePostProcessing::execute()
 void
 DataProbePostProcessing::provide_output_txt(const double currentTime)
 {
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "DataProbePostProcessing::Writing dataprobes..." << std::endl;
 
   stk::mesh::MetaData& metaData = realm_.meta_data();
@@ -1019,10 +1022,10 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
                   boost::filesystem::create_directories(
                     pathdir.parent_path().string());
                 } catch (const boost::filesystem::filesystem_error& e) {
-                  KynemaUGFEnv::self().kynema-ugfOutputP0()
+                  KynemaUGFEnv::self().kynema_ugfOutputP0()
                     << "Error creating " << pathdir.parent_path().string()
                     << std::endl;
-                  KynemaUGFEnv::self().kynema-ugfOutputP0()
+                  KynemaUGFEnv::self().kynema_ugfOutputP0()
                     << e.code().message() << std::endl;
                   throw std::runtime_error(e.code().message());
                 }
@@ -1137,10 +1140,10 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
                   boost::filesystem::create_directories(
                     pathdir.parent_path().string());
                 } catch (const boost::filesystem::filesystem_error& e) {
-                  KynemaUGFEnv::self().kynema-ugfOutputP0()
+                  KynemaUGFEnv::self().kynema_ugfOutputP0()
                     << "Error creating " << pathdir.parent_path().string()
                     << std::endl;
-                  KynemaUGFEnv::self().kynema-ugfOutputP0()
+                  KynemaUGFEnv::self().kynema_ugfOutputP0()
                     << e.code().message() << std::endl;
                   throw std::runtime_error(e.code().message());
                 }
@@ -1325,7 +1328,7 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
 void
 DataProbePostProcessing::provide_output_exodus(const double currentTime)
 {
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "DataProbePostProcessing::Writing dataprobes..." << std::endl;
   io->process_output_request(fileIndex_, currentTime);
 }

@@ -58,8 +58,9 @@ StreletsUpwindEdgeAlg::StreletsUpwindEdgeAlg(
                      " upw_factor should be 1.0 when using IDDES\n";
 
   if (!error_message.empty())
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "WARNING::For the momementum equation:\n"
-                                   << error_message;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "WARNING::For the momementum equation:\n"
+      << error_message;
 }
 
 void

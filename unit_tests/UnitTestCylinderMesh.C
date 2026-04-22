@@ -49,7 +49,8 @@ test_cylinder_mesh_field_values(
   ngpTestField.sync_to_device();
 
   Kokkos::parallel_for(
-    team_exec, KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
+    team_exec,
+    KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
       auto bktId = bucketIDs.device_get(team.league_rank());
       const stk::mesh::NgpMesh::BucketType& bkt =
         ngpMesh.get_bucket(stk::topology::NODE_RANK, bktId);

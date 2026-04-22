@@ -18,7 +18,7 @@ namespace kynema_ugf {
 struct ActuatorBulkDiskFAST : public ActuatorBulkFAST
 {
 public:
-  ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double kynema-ugfTimeStep);
+  ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double kynema_ugfTimeStep);
 
   bool adm_points_need_updating = true;
   ActFixArrayInt numSweptCount_;

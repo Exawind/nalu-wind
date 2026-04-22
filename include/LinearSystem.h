@@ -139,7 +139,8 @@ public:
   /** Process nodes as belonging to a Dirichlet-type row
    *
    *  See the documentation/implementation of
-   *  sierra::kynema_ugf::FixPressureAtNodeAlgorithm for an example of this use case.
+   *  sierra::kynema_ugf::FixPressureAtNodeAlgorithm for an example of this use
+   * case.
    */
   virtual void buildDirichletNodeGraph(const std::vector<stk::mesh::Entity>&) {}
   virtual void buildDirichletNodeGraph(const stk::mesh::NgpMesh::ConnectedNodes)

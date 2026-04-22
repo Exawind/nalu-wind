@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// kynema-ugf
+// kynema_ugf
 #include <AssembleContinuityNonConformalSolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <DgInfo.h>
@@ -88,14 +88,15 @@ AssembleContinuityNonConformalSolverAlgorithm::
   ghostFieldVec_.push_back(density_);
 
   if (useCurrentNormal_)
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "AssembleContinuityNonConformalSolverAlgorithm::Options: "
          "use_current_normal is active"
       << std::endl;
   if (includePstab_)
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "AssembleContinuityNonConformalSolverAlgo"
-                                      "rithm::Options: include_pstab is active"
-                                   << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "AssembleContinuityNonConformalSolverAlgo"
+         "rithm::Options: include_pstab is active"
+      << std::endl;
 }
 
 //--------------------------------------------------------------------------

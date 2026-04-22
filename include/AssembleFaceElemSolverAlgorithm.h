@@ -78,7 +78,8 @@ public:
     auto team_exec = sierra::kynema_ugf::get_device_team_policy(
       buckets.size(), bytes_per_team, bytes_per_thread);
     Kokkos::parallel_for(
-      team_exec, KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
+      team_exec,
+      KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
         auto bktId = buckets.device_get(team.league_rank());
         auto& b = ngpMesh.get_bucket(sideRank, bktId);
 
@@ -102,7 +103,8 @@ public:
           Kokkos::TeamThreadRange(team, simdBucketLen),
           [&](const size_t& bktIndex) {
             size_t simdGroupLen =
-              sierra::kynema_ugf::get_length_of_next_simd_group(bktIndex, bucketLen);
+              sierra::kynema_ugf::get_length_of_next_simd_group(
+                bktIndex, bucketLen);
             size_t numFacesProcessed = 0;
             do {
               int elemFaceOrdinal = -1;

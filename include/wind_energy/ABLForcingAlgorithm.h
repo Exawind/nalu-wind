@@ -27,9 +27,10 @@ class Realm;
  * \brief ABL Forcing Source terms for Momentum and Temperature equations
  *
  * This class parses the user inputs and provides a common interface to the
- * momentum and temperature ABL forcing source term implementations within KynemaUGF.
- * The ABL forcing capability is turned on by the presence of a sub-section
- * titled `abl_forcing` within the Realm section of the KynemaUGF input file.
+ * momentum and temperature ABL forcing source term implementations within
+ * KynemaUGF. The ABL forcing capability is turned on by the presence of a
+ * sub-section titled `abl_forcing` within the Realm section of the KynemaUGF
+ * input file.
  *
  * ```
  *   abl_forcing:

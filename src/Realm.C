@@ -366,19 +366,19 @@ Realm::provide_memory_summary()
   stk::all_reduce(
     KynemaUGFEnv::self().parallel_comm(), stk::ReduceMax<1>(&global_hwm[1]));
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "Memory Overview: " << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
-    << "kynema-ugf memory: total (over all cores) current/high-water mark= "
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << "Memory Overview: " << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "kynema_ugf memory: total (over all cores) current/high-water mark= "
     << std::setw(15) << convert_bytes(global_now[2]) << std::setw(15)
     << convert_bytes(global_hwm[2]) << std::endl;
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
-    << "kynema-ugf memory:   min (over all cores) current/high-water mark= "
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "kynema_ugf memory:   min (over all cores) current/high-water mark= "
     << std::setw(15) << convert_bytes(global_now[0]) << std::setw(15)
     << convert_bytes(global_hwm[0]) << std::endl;
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
-    << "kynema-ugf memory:   max (over all cores) current/high-water mark= "
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "kynema_ugf memory:   max (over all cores) current/high-water mark= "
     << std::setw(15) << convert_bytes(global_now[1]) << std::setw(15)
     << convert_bytes(global_hwm[1]) << std::endl;
 }
@@ -412,7 +412,8 @@ Realm::convert_bytes(double bytes)
 void
 Realm::initialize_prolog()
 {
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "Realm::initialize() Begin " << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "Realm::initialize() Begin " << std::endl;
 
   if (doPromotion_) {
     setup_element_promotion();
@@ -450,13 +451,13 @@ Realm::initialize_prolog()
 
   // Populate_mesh fills in the entities (nodes/elements/etc) and
   // connectivities, but no field-data. Field-data is not allocated yet.
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Realm::ioBroker_->populate_mesh() Begin" << std::endl;
-  double time = -KynemaUGFEnv::self().kynema-ugf_time();
+  double time = -KynemaUGFEnv::self().kynema_ugf_time();
   ioBroker_->populate_mesh();
-  time += KynemaUGFEnv::self().kynema-ugf_time();
+  time += KynemaUGFEnv::self().kynema_ugf_time();
   timerPopulateMesh_ += time;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Realm::ioBroker_->populate_mesh() End" << std::endl;
 
   // If we want to create all internal edges, we want to do it before
@@ -474,13 +475,13 @@ Realm::initialize_prolog()
   // Now the mesh is fully populated, so we're ready to populate
   // field-data including coordinates, and attributes and/or distribution
   // factors if those exist on the input mesh file.
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Realm::ioBroker_->populate_field_data() Begin" << std::endl;
-  time = -KynemaUGFEnv::self().kynema-ugf_time();
+  time = -KynemaUGFEnv::self().kynema_ugf_time();
   ioBroker_->populate_field_data();
-  time += KynemaUGFEnv::self().kynema-ugf_time();
+  time += KynemaUGFEnv::self().kynema_ugf_time();
   timerPopulateFieldData_ += time;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Realm::ioBroker_->populate_field_data() End" << std::endl;
 
   // rebalance mesh using stk_balance
@@ -506,9 +507,10 @@ Realm::initialize_prolog()
 
   // sort exposed faces only when using consolidated bc NGP approach
   if (solutionOptions_->useConsolidatedBcSolverAlg_) {
-    const double timeSort = KynemaUGFEnv::self().kynema-ugf_time();
+    const double timeSort = KynemaUGFEnv::self().kynema_ugf_time();
     bulkData_->sort_entities(EntityExposedFaceSorter());
-    timerSortExposedFace_ += (KynemaUGFEnv::self().kynema-ugf_time() - timeSort);
+    timerSortExposedFace_ +=
+      (KynemaUGFEnv::self().kynema_ugf_time() - timeSort);
   }
 
   // variables that may come from the initial mesh
@@ -537,7 +539,8 @@ Realm::initialize_prolog()
     meshMotionAlg_->initialize(get_current_time());
 
   if (aeroModels_->is_active()) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "Initializing aero models" << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Initializing aero models" << std::endl;
     aeroModels_->init(get_current_time(), outputInfo_->restartFreq_);
   }
 
@@ -566,7 +569,8 @@ Realm::initialize_epilog()
   // check job run size after mesh creation, linear system initialization
   check_job(false);
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "Realm::initialize() End " << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "Realm::initialize() End " << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -589,7 +593,8 @@ Realm::look_ahead_and_creation(const YAML::Node& node)
 
   // look for SolutionNormPostProcessing
   std::vector<const YAML::Node*> foundNormPP;
-  KynemaUGFParsingHelper::find_nodes_given_key("solution_norm", node, foundNormPP);
+  KynemaUGFParsingHelper::find_nodes_given_key(
+    "solution_norm", node, foundNormPP);
   if (foundNormPP.size() > 0) {
     if (foundNormPP.size() != 1)
       throw std::runtime_error(
@@ -637,7 +642,8 @@ Realm::look_ahead_create_lidar(const YAML::Node& node)
   if (!lidarLOS_) {
     lidarLOS_ = std::make_unique<LidarLOS>();
   }
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "LidarLineOfSite::load" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "LidarLineOfSite::load" << std::endl;
   lidarLOS_->load(node, dataProbePostProcessing_);
 }
 
@@ -657,10 +663,11 @@ Realm::load(const YAML::Node& node)
   get_if_present(node, "type", type_, type_);
 
   // provide a high level banner
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Realm Options Review: " << name_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "===========================" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "===========================" << std::endl;
 
   get_if_present(node, "estimate_memory_only", estimateMemoryOnly_, false);
   get_if_present(
@@ -703,7 +710,7 @@ Realm::load(const YAML::Node& node)
   }
 
   if (matrixFree_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Warning: matrix free capability is experimental and only supports a "
          "limited set of use cases"
       << std::endl;
@@ -711,10 +718,10 @@ Realm::load(const YAML::Node& node)
 
   // let everyone know about core algorithm
   if (realmUsesEdges_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Edge-based scheme will be activated" << std::endl;
   } else if (matrixFree_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Matrix-free scheme will be activated" << std::endl;
   } else {
     throw std::runtime_error(
@@ -728,7 +735,7 @@ Realm::load(const YAML::Node& node)
   get_if_present(
     node, "automatic_decomposition_type", autoDecompType_, autoDecompType_);
   if ("None" != autoDecompType_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Warning: When using automatic_decomposition_type, one must have a "
          "serial file"
       << std::endl;
@@ -737,17 +744,18 @@ Realm::load(const YAML::Node& node)
   get_if_present(node, "rebalance_mesh", rebalanceMesh_, rebalanceMesh_);
   if (rebalanceMesh_) {
     get_required(node, "stk_rebalance_method", rebalanceMethod_);
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
-      << "KynemaUGF will rebalance mesh using " << rebalanceMethod_ << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "KynemaUGF will rebalance mesh using " << rebalanceMethod_
+      << std::endl;
   }
 
   // activate aura
   get_if_present(node, "activate_aura", activateAura_, activateAura_);
   if (activateAura_)
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "KynemaUGF will activate aura ghosting" << std::endl;
   else
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "KynemaUGF will deactivate aura ghosting" << std::endl;
 
   // memory diagnostic
@@ -755,7 +763,7 @@ Realm::load(const YAML::Node& node)
     node, "activate_memory_diagnostic", activateMemoryDiagnostic_,
     activateMemoryDiagnostic_);
   if (activateMemoryDiagnostic_)
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "KynemaUGF will activate detailed memory pulse" << std::endl;
 
   // allow for inconsistent restart (fields are missing)
@@ -834,29 +842,29 @@ Realm::load(const YAML::Node& node)
 
   // boundary, init, material and equation systems "load"
   if (type_ == "multi_physics") {
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Boundary Condition Review: " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "===========================" << std::endl;
     boundaryConditions_ = BoundaryConditionCreator().create_bc_vector(node);
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Initial Condition Review:  " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "===========================" << std::endl;
-    initialConditions_ =
-      InitialConditionCreator(KynemaUGFEnv::self().debug()).create_ic_vector(node);
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    initialConditions_ = InitialConditionCreator(KynemaUGFEnv::self().debug())
+                           .create_ic_vector(node);
+    KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Material Prop Review:      " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "===========================" << std::endl;
     materialPropertys_.load(node);
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "EqSys/options Review:      " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "===========================" << std::endl;
     equationSystems_.load(node);
   }
@@ -880,7 +888,7 @@ Realm::load(const YAML::Node& node)
   if (meshMotionNode) {
     // has a user stated that mesh motion is external?
     if (solutionOptions_->externalMeshDeformation_) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "mesh motion set to external (will prevail over mesh motion "
            "specification)!"
         << std::endl;
@@ -939,8 +947,8 @@ Realm::setup_nodal_fields()
   tpetGlobalId_ = fieldManager_->register_field<TpetIdType>(
     "tpet_global_id", meta_data().get_parts(), &init_val);
 #endif
-  kynema-ugfGlobalId_ = fieldManager_->register_field<stk::mesh::EntityId>(
-    "kynema-ugf_global_id", meta_data().get_parts());
+  kynema_ugfGlobalId_ = fieldManager_->register_field<stk::mesh::EntityId>(
+    "kynema_ugf_global_id", meta_data().get_parts());
 
   // loop over all material props targets and register nodal fields
   std::vector<std::string> targetNames = get_physics_target_names();
@@ -984,9 +992,8 @@ Realm::setup_element_fields()
       auto* targetPart = meta_data().get_part(target);
       auto fieldSize = 1;
       if (!realmUsesEdges_) {
-        auto* meSCS =
-          sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
-            targetPart->topology());
+        auto* meSCS = sierra::kynema_ugf::MasterElementRepo::
+          get_surface_master_element_on_host(targetPart->topology());
         fieldSize = meSCS->num_integration_points();
       }
       stk::mesh::put_field_on_mesh(
@@ -1012,7 +1019,7 @@ Realm::setup_interior_algorithms()
         all_part_vec.begin(), mmPartVec.begin(), mmPartVec.end());
     }
     if (aeroModels_->has_fsi()) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Inserting part vector for MeshVelocity algorithm" << std::endl;
       auto fsi_part_vec = aeroModels_->fsi_parts();
       all_part_vec.insert(
@@ -1021,7 +1028,7 @@ Realm::setup_interior_algorithms()
 
     for (auto p : all_part_vec) {
       if (p->topology() != stk::topology::HEX_8) {
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Skipping registration of MeshVelocityEdgeAlg on part "
           << p->name()
           << ". GCL operations are currently only supported on HEX_8 "
@@ -1059,17 +1066,17 @@ Realm::setup_post_processing_algorithms()
     PostProcessingData& theData = *(*ii);
     // type
     std::string theType = theData.type_;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "the post processing type is " << theType << std::endl;
 
     // output name
     std::string theFile = theData.outputFileName_;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "the post processing file name: " << theFile << std::endl;
 
     // physics
     std::string thePhysics = theData.physics_;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "the post processing physics name: " << thePhysics << std::endl;
 
     // target
@@ -1078,13 +1085,13 @@ Realm::setup_post_processing_algorithms()
 
     const std::vector<std::string>& targetNames = theData.targetNames_;
     for (size_t in = 0; in < targetNames.size(); ++in)
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Target name(s): " << targetNames[in] << std::endl;
 
     // params
     std::vector<double> parameters = theData.parameters_;
     for (size_t in = 0; in < parameters.size(); ++in)
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Parameters used are: " << parameters[in] << std::endl;
 
     // call through to the Eqsys
@@ -1189,9 +1196,10 @@ Realm::setup_bc()
 void
 Realm::enforce_bc_on_exposed_faces()
 {
-  double start_time = KynemaUGFEnv::self().kynema-ugf_time();
+  double start_time = KynemaUGFEnv::self().kynema_ugf_time();
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "Realm::skin_mesh(): Begin" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "Realm::skin_mesh(): Begin" << std::endl;
 
   // first, skin mesh and, therefore, populate
   stk::mesh::Selector activePart =
@@ -1208,7 +1216,7 @@ Realm::enforce_bc_on_exposed_faces()
     bulkData_->get_buckets(meta_data().side_rank(), selectRule);
 
   if (!face_buckets.empty()) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Exposed surfaces found without a boundary condition applied"
       << std::endl;
 
@@ -1222,19 +1230,19 @@ Realm::enforce_bc_on_exposed_faces()
         stk::mesh::Entity face = b[k];
 
         // report the offending face id
-        KynemaUGFEnv::self().kynema-ugfOutput()
+        KynemaUGFEnv::self().kynema_ugfOutput()
           << "Face Id: " << bulkData_->identifier(face)
           << " is not properly covered" << std::endl;
 
         // extract face nodes
         const stk::mesh::Entity* face_node_rels = bulkData_->begin_nodes(face);
         const unsigned numberOfNodes = bulkData_->num_nodes(face);
-        KynemaUGFEnv::self().kynema-ugfOutput()
+        KynemaUGFEnv::self().kynema_ugfOutput()
           << " Number of nodes connected to this face is: " << numberOfNodes
           << std::endl;
         for (unsigned n = 0; n < numberOfNodes; ++n) {
           stk::mesh::Entity node = face_node_rels[n];
-          KynemaUGFEnv::self().kynema-ugfOutput()
+          KynemaUGFEnv::self().kynema_ugfOutput()
             << " attached node Id: " << bulkData_->identifier(node)
             << std::endl;
         }
@@ -1244,13 +1252,13 @@ Realm::enforce_bc_on_exposed_faces()
         const stk::mesh::Entity* face_elem_rels =
           bulkData_->begin_elements(face);
         const unsigned numberOfElems = bulkData_->num_elements(face);
-        KynemaUGFEnv::self().kynema-ugfOutput()
+        KynemaUGFEnv::self().kynema_ugfOutput()
           << " Number of elements connected to this face is: " << numberOfElems
           << std::endl;
 
         for (unsigned faceElem = 0; faceElem < numberOfElems; ++faceElem) {
           stk::mesh::Entity element = face_elem_rels[faceElem];
-          KynemaUGFEnv::self().kynema-ugfOutput()
+          KynemaUGFEnv::self().kynema_ugfOutput()
             << " attached element Id: " << bulkData_->identifier(element)
             << std::endl;
         }
@@ -1260,12 +1268,13 @@ Realm::enforce_bc_on_exposed_faces()
       "Realm::Error: Please aply bc to problematic exposed surfaces ");
   }
 
-  const double end_time = KynemaUGFEnv::self().kynema-ugf_time();
+  const double end_time = KynemaUGFEnv::self().kynema_ugf_time();
 
   // set mesh reading
   timerSkinMesh_ = (end_time - start_time);
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "Realm::skin_mesh(): End" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "Realm::skin_mesh(): End" << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -1344,7 +1353,7 @@ Realm::setup_initial_conditions()
         break;
 
       default:
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Realm::setup_initial_conditions: unknown type: "
           << initCond->theIcType_ << std::endl;
         throw std::runtime_error(
@@ -1386,7 +1395,7 @@ Realm::setup_property()
         materialPropertys_.propertyDataMap_.find(thePropId);
       if (itf == materialPropertys_.propertyDataMap_.end()) {
         // will need to throw
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "issue with property: " << PropertyIdentifierNames[thePropId]
           << std::endl;
         throw std::runtime_error("Please add property specification ");
@@ -1563,7 +1572,7 @@ Realm::setup_property()
         } break;
 
         case ENTHALPY_ID: {
-          KynemaUGFEnv::self().kynema-ugfOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << "Enthalpy specification is not required as Cp is sufficient";
         } break;
 
@@ -1786,7 +1795,7 @@ Realm::extract_universal_constant(
   if (it == materialPropertys_.universalConstantMap_.end()) {
     // not found
     if (useDefault) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "WARNING: Reference value for " << name << " not found "
         << " using " << value << std::endl;
     } else {
@@ -1907,12 +1916,12 @@ Realm::update_graph_connectivity_and_coordinates_due_to_mesh_motion()
 void
 Realm::evaluate_properties()
 {
-  double start_time = KynemaUGFEnv::self().kynema-ugf_time();
+  double start_time = KynemaUGFEnv::self().kynema_ugf_time();
   for (size_t k = 0; k < propertyAlg_.size(); ++k) {
     propertyAlg_[k]->execute();
   }
   equationSystems_.evaluate_properties();
-  double end_time = KynemaUGFEnv::self().kynema-ugf_time();
+  double end_time = KynemaUGFEnv::self().kynema_ugf_time();
   timerPropertyEval_ += (end_time - start_time);
 }
 
@@ -1927,16 +1936,16 @@ Realm::advance_time_step()
   const bool advanceMe = (timeStepCount % solveFrequency_) == 0 ? true : false;
   if (!advanceMe)
     return;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << name_ << "::advance_time_step() " << std::endl;
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "NLI" << std::setw(8) << std::right << "Name" << std::setw(22)
     << std::right << "Linear Iter" << std::setw(16) << std::right
     << "Linear Res" << std::setw(16) << std::right << "NLinear Res"
     << std::setw(14) << std::right << "Scaled NLR" << std::endl;
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "---" << std::setw(8) << std::right << "----" << std::setw(22)
     << std::right << "-----------" << std::setw(16) << std::right
     << "----------" << std::setw(16) << std::right << "-----------"
@@ -1956,10 +1965,11 @@ Realm::advance_time_step()
 
   // check for  actuator; assemble the source terms for this step
   if (aeroModels_->is_active()) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "Aero models - Execute" << std::endl;
-    const double start_time = KynemaUGFEnv::self().kynema-ugf_time();
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Aero models - Execute" << std::endl;
+    const double start_time = KynemaUGFEnv::self().kynema_ugf_time();
     aeroModels_->execute(timerActuator_);
-    const double end_time = KynemaUGFEnv::self().kynema-ugf_time();
+    const double end_time = KynemaUGFEnv::self().kynema_ugf_time();
     timerActuator_ += end_time - start_time;
   }
   // Check for ABL forcing; estimate source terms for this time step
@@ -1975,7 +1985,7 @@ Realm::nonlinear_iterations(const int numNonLinearIterations)
 {
   for (int i = 0; i < numNonLinearIterations; ++i) {
     currentNonlinearIteration_ = i + 1;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << currentNonlinearIteration_ << "/" << numNonLinearIterations
       << std::setw(29) << std::right << "Equation System Iteration"
       << std::endl;
@@ -1988,10 +1998,10 @@ Realm::nonlinear_iterations(const int numNonLinearIterations)
     evaluate_properties();
 
     if (isConverged) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "norm convergence criteria met for all equation systems: "
         << std::endl;
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "max scaled norm is: " << equationSystems_.provide_system_norm()
         << std::endl;
       break;
@@ -2048,9 +2058,10 @@ Realm::commit()
 void
 Realm::create_mesh()
 {
-  double start_time = KynemaUGFEnv::self().kynema-ugf_time();
+  double start_time = KynemaUGFEnv::self().kynema_ugf_time();
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "Realm::create_mesh(): Begin" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "Realm::create_mesh(): Begin" << std::endl;
   stk::ParallelMachine pm = KynemaUGFEnv::self().parallel_comm();
 
   // news for mesh constructs
@@ -2088,10 +2099,11 @@ Realm::create_mesh()
   }
 
   // set mesh creation
-  const double end_time = KynemaUGFEnv::self().kynema-ugf_time();
+  const double end_time = KynemaUGFEnv::self().kynema_ugf_time();
   timerCreateMesh_ = (end_time - start_time);
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "Realm::create_mesh() End" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "Realm::create_mesh() End" << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -2104,8 +2116,8 @@ Realm::create_output_mesh()
   // exodus output file creation
   if (outputInfo_->hasOutputBlock_) {
 
-    double start_time = KynemaUGFEnv::self().kynema-ugf_time();
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    double start_time = KynemaUGFEnv::self().kynema_ugf_time();
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Realm::create_output_mesh(): Begin" << std::endl;
 
     if (outputInfo_->outputFreq_ == 0)
@@ -2161,7 +2173,7 @@ Realm::create_output_mesh()
       stk::mesh::FieldBase* theField =
         stk::mesh::get_field_by_name(varName, meta_data());
       if (NULL == theField) {
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << " Sorry, no field by the name " << varName << std::endl;
       } else {
         // 'varName' is the name that will be written to the database
@@ -2171,10 +2183,10 @@ Realm::create_output_mesh()
     }
 
     // set mesh creation
-    const double end_time = KynemaUGFEnv::self().kynema-ugf_time();
+    const double end_time = KynemaUGFEnv::self().kynema_ugf_time();
     timerCreateMesh_ = (end_time - start_time);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Realm::create_output_mesh() End" << std::endl;
   }
 }
@@ -2203,7 +2215,7 @@ Realm::create_restart_mesh()
       stk::mesh::FieldBase* theField =
         stk::mesh::get_field_by_name(varName, meta_data());
       if (NULL == theField) {
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << " Sorry, no field by the name " << varName << std::endl;
       } else {
         // add the field for a restart output
@@ -2269,7 +2281,7 @@ Realm::input_variables_from_mesh()
       stk::mesh::FieldBase* theField =
         stk::mesh::get_field_by_name(varName, meta_data());
       if (NULL == theField) {
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << " Sorry, no field by the name " << varName << std::endl;
       } else {
         ioBroker_->add_input_field(
@@ -2303,21 +2315,21 @@ Realm::augment_restart_variable_list(std::string restartFieldName)
 void
 Realm::create_edges()
 {
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Realm::create_edges(): KynemaUGF Realm: " << name_
     << " requires edge creation: Begin" << std::endl;
 
   static stk::diag::Timer timerCE_("CreateEdges", Simulation::rootTimer());
   stk::diag::TimeBlock tbCreateEdges_(timerCE_);
 
-  double start_time = KynemaUGFEnv::self().kynema-ugf_time();
+  double start_time = KynemaUGFEnv::self().kynema_ugf_time();
   stk::mesh::create_edges(*bulkData_, meta_data().universal_part(), edgesPart_);
-  double stop_time = KynemaUGFEnv::self().kynema-ugf_time();
+  double stop_time = KynemaUGFEnv::self().kynema_ugf_time();
 
   // timer close-out
   const double total_edge_time = stop_time - start_time;
   timerCreateEdges_ += total_edge_time;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Realm::create_edges(): KynemaUGF Realm: " << name_
     << " requires edge creation: End" << std::endl;
 }
@@ -2334,8 +2346,9 @@ Realm::provide_entity_count()
   std::vector<size_t> maxCounts;
   stk::mesh::comm_mesh_counts(*bulkData_, counts, minCounts, maxCounts);
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "===========================" << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "===========================" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Realm::provide_entity_count:   " << std::endl
     << "nodes,    " << counts[0] << " min/max: " << minCounts[0] << "/"
     << maxCounts[0] << std::endl
@@ -2345,7 +2358,8 @@ Realm::provide_entity_count()
     << maxCounts[2] << std::endl
     << "elements, " << counts[3] << " min/max: " << minCounts[3] << "/"
     << maxCounts[3] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "===========================" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "===========================" << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -2358,7 +2372,7 @@ Realm::delete_edges()
     std::vector<size_t> counts;
     stk::mesh::comm_mesh_counts(*bulkData_, counts);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Realm::delete_edges: before delete_edges, mesh has  " << counts[0]
       << " nodes, " << counts[1] << " edges, " << counts[2] << " faces, "
       << counts[3] << " elements" << std::endl;
@@ -2372,7 +2386,7 @@ Realm::delete_edges()
   if (KynemaUGFEnv::self().debug()) {
     size_t sz = edges.size(), g_sz = 0;
     stk::all_reduce_sum(KynemaUGFEnv::self().parallel_comm(), &sz, &g_sz, 1);
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "P[" << bulkData_->parallel_rank()
       << "] Realm::delete_edges: edge list local size= " << sz
       << " global size= " << g_sz << std::endl;
@@ -2438,7 +2452,7 @@ Realm::delete_edges()
       bulkData_->is_valid(edges[ii]) && bulkData_->bucket(edges[ii]).owned()) {
       if (!bulkData_->destroy_entity(edges[ii])) {
         unsigned num_elems = bulkData_->num_elements(edges[ii]);
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "P[" << bulkData_->parallel_rank()
           << "] deleting edge num_elems= " << num_elems << std::endl;
 
@@ -2446,7 +2460,7 @@ Realm::delete_edges()
         for (stk::mesh::EntityRank irank = stk::topology::EDGE_RANK;
              irank <= topRank; ++irank) {
           unsigned nc = bulkData_->num_connectivity(edges[ii], irank);
-          KynemaUGFEnv::self().kynema-ugfOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << "P[" << bulkData_->parallel_rank() << "] deleting edge nc["
             << irank << "]= " << nc << std::endl;
         }
@@ -2461,7 +2475,7 @@ Realm::delete_edges()
     std::vector<size_t> counts;
     stk::mesh::comm_mesh_counts(*bulkData_, counts);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "P[" << bulkData_->parallel_rank() << "] "
       << "Realm::delete_edges: after delete_edges, mesh has  " << counts[0]
       << " nodes, " << counts[1] << " edges, " << counts[2] << " faces, "
@@ -3064,9 +3078,10 @@ Realm::setup_overset_bc(const OversetBoundaryConditionData& oversetBCData)
     case OversetBoundaryConditionData::TPL_TIOGA:
 #ifdef KYNEMA_UGF_USES_TIOGA
       oversetManager_ = new OversetManagerTIOGA(*this, oversetBCData.userData_);
-      KynemaUGFEnv::self().kynema-ugfOutputP0() << "Realm::setup_overset_bc:: Selecting "
-                                        "TIOGA TPL for overset connectivity"
-                                     << std::endl;
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
+        << "Realm::setup_overset_bc:: Selecting "
+           "TIOGA TPL for overset connectivity"
+        << std::endl;
       break;
 #else
       // should not get here... we should have thrown error in input file
@@ -3156,10 +3171,10 @@ Realm::overset_field_update(
   if (!hasOverset_ || isExternalOverset_)
     return;
 
-  const double timeA = KynemaUGFEnv::self().kynema-ugf_time();
+  const double timeA = KynemaUGFEnv::self().kynema_ugf_time();
   oversetManager_->overset_update_field(
     field, nRows, nCols, doFinalSyncToDevice);
-  const double timeB = KynemaUGFEnv::self().kynema-ugf_time();
+  const double timeB = KynemaUGFEnv::self().kynema_ugf_time();
   oversetManager_->timerFieldUpdate_ += (timeB - timeA);
 }
 
@@ -3170,7 +3185,7 @@ void
 Realm::provide_output(bool forcedOutput)
 {
   stk::diag::TimeBlock mesh_output_timeblock(Simulation::outputTimer());
-  const double start_time = KynemaUGFEnv::self().kynema-ugf_time();
+  const double start_time = KynemaUGFEnv::self().kynema_ugf_time();
   const double currentTime = get_current_time();
   const int timeStepCount = get_time_step_count();
   sideWriters_->write_sides(timeStepCount, currentTime);
@@ -3189,8 +3204,8 @@ Realm::provide_output(bool forcedOutput)
       // find the max over all core
       double g_elapsedWallTime = 0.0;
       stk::all_reduce_max(
-        KynemaUGFEnv::self().parallel_comm(), &elapsedWallTime, &g_elapsedWallTime,
-        1);
+        KynemaUGFEnv::self().parallel_comm(), &elapsedWallTime,
+        &g_elapsedWallTime, 1);
       // convert to hours
       g_elapsedWallTime /= 3600.0;
       if (
@@ -3198,11 +3213,12 @@ Realm::provide_output(bool forcedOutput)
         forcedOutput) {
         forcedOutput = true;
         outputInfo_->userWallTimeResults_.first = false;
-        KynemaUGFEnv::self().kynema-ugfOutputP0() << "Realm::provide_output()::Forced "
-                                          "Result output will be processed "
-                                          "at current time: "
-                                       << currentTime << std::endl;
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
+          << "Realm::provide_output()::Forced "
+             "Result output will be processed "
+             "at current time: "
+          << currentTime << std::endl;
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << " Elapsed (max) WALL time: " << g_elapsedWallTime << " (hours)"
           << std::endl;
         // provide timer information
@@ -3215,7 +3231,7 @@ Realm::provide_output(bool forcedOutput)
                           forcedOutput;
 
     if (isOutput) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Realm shall provide output files at : currentTime/timeStepCount: "
         << currentTime << "/" << timeStepCount << " (" << name_ << ")"
         << std::endl;
@@ -3242,7 +3258,7 @@ Realm::provide_output(bool forcedOutput)
       equationSystems_.provide_output();
     }
 
-    const double stop_time = KynemaUGFEnv::self().kynema-ugf_time();
+    const double stop_time = KynemaUGFEnv::self().kynema_ugf_time();
 
     // increment time for output
     timerOutputFields_ += (stop_time - start_time);
@@ -3262,7 +3278,7 @@ Realm::provide_restart_output()
     if (outputInfo_->restartFreq_ == 0)
       return;
 
-    const double start_time = KynemaUGFEnv::self().kynema-ugf_time();
+    const double start_time = KynemaUGFEnv::self().kynema_ugf_time();
 
     // process restart via io
     const double currentTime = get_current_time();
@@ -3276,19 +3292,19 @@ Realm::provide_restart_output()
       // find the max over all core
       double g_elapsedWallTime = 0.0;
       stk::all_reduce_max(
-        KynemaUGFEnv::self().parallel_comm(), &elapsedWallTime, &g_elapsedWallTime,
-        1);
+        KynemaUGFEnv::self().parallel_comm(), &elapsedWallTime,
+        &g_elapsedWallTime, 1);
       // convert to hours
       g_elapsedWallTime /= 3600.0;
       // only force output the first time the timer is exceeded
       if (g_elapsedWallTime > outputInfo_->userWallTimeRestart_.second) {
         forcedOutput = true;
         outputInfo_->userWallTimeRestart_.first = false;
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Realm::provide_restart_output()::Forced Restart output will be "
              "processed at current time: "
           << currentTime << std::endl;
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << " Elapsed (max) WALL time: " << g_elapsedWallTime << " (hours)"
           << std::endl;
       }
@@ -3300,7 +3316,7 @@ Realm::provide_restart_output()
       forcedOutput;
 
     if (isRestartOutputStep) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Realm shall provide restart files at: currentTime/timeStepCount: "
         << currentTime << "/" << timeStepCount << " (" << name_ << ")"
         << std::endl;
@@ -3334,7 +3350,7 @@ Realm::provide_restart_output()
       ioBroker_->end_output_step(restartFileIndex_);
     }
 
-    const double stop_time = KynemaUGFEnv::self().kynema-ugf_time();
+    const double stop_time = KynemaUGFEnv::self().kynema_ugf_time();
 
     // increment time for output
     timerOutputFields_ += (stop_time - start_time);
@@ -3438,23 +3454,24 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
 
     if (missingFields.size() > 0) {
       for (size_t k = 0; k < missingFields.size(); ++k) {
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "WARNING: Restart value for Field "
           << missingFields[k].field()->name()
           << " is missing; may default to IC specification" << std::endl;
       }
       if (!supportInconsistentRestart_) {
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "The user may desire to set the "
              "support_inconsistent_multi_state_restart Realm line command"
           << std::endl;
-        KynemaUGFEnv::self().kynema-ugfOutputP0() << "This is applicable for a BDF2 "
-                                          "restart run from a previously run "
-                                          "Backward Euler simulation"
-                                       << std::endl;
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
+          << "This is applicable for a BDF2 "
+             "restart run from a previously run "
+             "Backward Euler simulation"
+          << std::endl;
       }
     }
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Realm::populate_restart() candidate restart time: "
       << foundRestartTime << " for Realm: " << name() << std::endl;
 
@@ -3482,7 +3499,7 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
         meshMotionAlg_->restart_reinit(foundRestartTime);
 
       if (aeroModels_->has_fsi() || aeroModels_->has_six_dof()) {
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Aero models - Update displacements and set current coordinates"
           << std::endl;
         aeroModels_->update_displacements(restartTime, true, false);
@@ -3513,13 +3530,13 @@ Realm::populate_variables_from_input(const double currentTime)
       solutionOptions_->inputVariablesRestorationTime_, &missingFields);
     if (missingFields.size() > 0) {
       for (size_t k = 0; k < missingFields.size(); ++k) {
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "WARNING: Realm::populate_variables_from_input for field "
           << missingFields[k].field()->name()
           << " is missing; will default to IC specification" << std::endl;
       }
     }
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Realm::populate_variables_form_input() candidate input time: "
       << foundTime << " for Realm: " << name() << std::endl;
   }
@@ -3574,11 +3591,11 @@ Realm::set_global_id()
        ib != buckets.end(); ++ib) {
     const stk::mesh::Bucket& b = **ib;
     const stk::mesh::Bucket::size_type length = b.size();
-    stk::mesh::EntityId* kynema-ugfGlobalIds =
-      stk::mesh::field_data(*kynema-ugfGlobalId_, b);
+    stk::mesh::EntityId* kynema_ugfGlobalIds =
+      stk::mesh::field_data(*kynema_ugfGlobalId_, b);
 
     for (stk::mesh::Bucket::size_type k = 0; k < length; ++k) {
-      kynema-ugfGlobalIds[k] = bulkData_->identifier(b[k]);
+      kynema_ugfGlobalIds[k] = bulkData_->identifier(b[k]);
     }
   }
 }
@@ -3698,7 +3715,7 @@ void
 Realm::output_banner()
 {
   if (hasFluids_)
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " Max Courant: " << maxCourant_ << " Max Reynolds: " << maxReynolds_
       << " (" << name_ << ")" << std::endl;
 }
@@ -3709,10 +3726,11 @@ Realm::output_banner()
 void
 Realm::check_job(bool get_node_count)
 {
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Realm memory Review:       " << name_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "===========================" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "===========================" << std::endl;
 
   // set number of nodes, check job run size
   if (get_node_count) {
@@ -3720,7 +3738,7 @@ Realm::check_job(bool get_node_count)
       ioBroker_->get_input_ioss_region()->get_property("node_count").get_int();
     stk::all_reduce_sum(
       KynemaUGFEnv::self().parallel_comm(), &localNodeCount, &nodeCount_, 1);
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Node count from meta data = " << nodeCount_ << std::endl;
 
     if (doPromotion_) {
@@ -3728,11 +3746,11 @@ Realm::check_job(bool get_node_count)
         std::vector<size_t> counts;
         stk::mesh::comm_mesh_counts(*bulkData_, counts);
         nodeCount_ = counts[0];
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Node count after promotion = " << nodeCount_ << std::endl;
       } else {
         nodeCount_ = std::pow(promotionOrder_, spatialDimension_) * nodeCount_;
-        KynemaUGFEnv::self().kynema-ugfOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "(Roughly) Estimated node count after promotion = " << nodeCount_
           << std::endl;
       }
@@ -3783,7 +3801,7 @@ Realm::check_job(bool get_node_count)
     SizeType bandwidth = BWFactor * numDof;
     memoryEstimate += MatrixStorageFactor * N * bandwidth * sizeof(double);
   }
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Total memory estimate for Matrix solve (per core)= "
     << double(memoryEstimate) / procGBScale << " GB." << std::endl;
 
@@ -3810,13 +3828,13 @@ Realm::check_job(bool get_node_count)
                                faceCount * fszFace + elemCount * fszElem) *
                               sizeof(double);
     }
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Total memory estimate for Fields (per core)= "
       << double(memoryEstimateFields) / procGBScale << " GB." << std::endl;
     memoryEstimate += memoryEstimateFields;
   }
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Total memory estimate (per core) = "
     << double(memoryEstimate) / procGBScale << " GB." << std::endl;
 
@@ -3829,7 +3847,7 @@ Realm::check_job(bool get_node_count)
   if (
     availableMemoryPerCoreGB_ != 0 &&
     double(memoryEstimate) / procGBScale > availableMemoryPerCoreGB_) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "ERROR: property available_memory_per_core_GB is set (= "
       << availableMemoryPerCoreGB_
       << ") and estimated memory (= " << double(memoryEstimate) / procGBScale
@@ -3844,12 +3862,12 @@ Realm::check_job(bool get_node_count)
 void
 Realm::dump_simulation_time()
 {
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "-------------------------------- " << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Begin Timer Overview for Realm: " << name_ << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "-------------------------------- " << std::endl;
 
   // equation system time
@@ -3867,32 +3885,35 @@ Realm::dump_simulation_time()
 
   // get min, max and sum over processes
   stk::all_reduce_min(
-    KynemaUGFEnv::self().parallel_comm(), &total_time[0], &g_min_time[0], ntimers);
+    KynemaUGFEnv::self().parallel_comm(), &total_time[0], &g_min_time[0],
+    ntimers);
   stk::all_reduce_max(
-    KynemaUGFEnv::self().parallel_comm(), &total_time[0], &g_max_time[0], ntimers);
+    KynemaUGFEnv::self().parallel_comm(), &total_time[0], &g_max_time[0],
+    ntimers);
   stk::all_reduce_sum(
-    KynemaUGFEnv::self().parallel_comm(), &total_time[0], &g_total_time[0], ntimers);
+    KynemaUGFEnv::self().parallel_comm(), &total_time[0], &g_total_time[0],
+    ntimers);
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "Timing for IO: " << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << "Timing for IO: " << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "   io create mesh --  "
     << " \tavg: " << g_total_time[0] / double(nprocs)
     << " \tmin: " << g_min_time[0] << " \tmax: " << g_max_time[0] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << " io output fields --  "
     << " \tavg: " << g_total_time[1] / double(nprocs)
     << " \tmin: " << g_min_time[1] << " \tmax: " << g_max_time[1] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << " io populate mesh --  "
     << " \tavg: " << g_total_time[4] / double(nprocs)
     << " \tmin: " << g_min_time[4] << " \tmax: " << g_max_time[4] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << " io populate fd   --  "
     << " \tavg: " << g_total_time[5] / double(nprocs)
     << " \tmin: " << g_min_time[5] << " \tmax: " << g_max_time[5] << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Timing for property evaluation:         " << std::endl;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "            props --  "
     << " \tavg: " << g_total_time[3] / double(nprocs)
     << " \tmin: " << g_min_time[3] << " \tmax: " << g_max_time[3] << std::endl;
@@ -3905,10 +3926,12 @@ Realm::dump_simulation_time()
     stk::all_reduce_max(
       KynemaUGFEnv::self().parallel_comm(), &timerCreateEdges_, &g_max_edge, 1);
     stk::all_reduce_sum(
-      KynemaUGFEnv::self().parallel_comm(), &timerCreateEdges_, &g_total_edge, 1);
+      KynemaUGFEnv::self().parallel_comm(), &timerCreateEdges_, &g_total_edge,
+      1);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "Timing for Edge: " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Timing for Edge: " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "    edge creation --  "
       << " \tavg: " << g_total_edge / double(nprocs) << " \tmin: " << g_min_edge
       << " \tmax: " << g_max_edge << std::endl;
@@ -3929,8 +3952,9 @@ Realm::dump_simulation_time()
       KynemaUGFEnv::self().parallel_comm(), &periodicSearchTime,
       &g_periodicSearchTime, 1);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "Timing for Periodic: " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Timing for Periodic: " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "           search --  "
       << " \tavg: " << g_periodicSearchTime / double(nprocs)
       << " \tmin: " << g_minPeriodicSearchTime
@@ -3942,17 +3966,18 @@ Realm::dump_simulation_time()
     double g_totalNonconformal = 0.0, g_minNonconformal = 0.0,
            g_maxNonconformal = 0.0;
     stk::all_reduce_min(
-      KynemaUGFEnv::self().parallel_comm(), &timerNonconformal_, &g_minNonconformal,
-      1);
+      KynemaUGFEnv::self().parallel_comm(), &timerNonconformal_,
+      &g_minNonconformal, 1);
     stk::all_reduce_max(
-      KynemaUGFEnv::self().parallel_comm(), &timerNonconformal_, &g_maxNonconformal,
-      1);
+      KynemaUGFEnv::self().parallel_comm(), &timerNonconformal_,
+      &g_maxNonconformal, 1);
     stk::all_reduce_sum(
       KynemaUGFEnv::self().parallel_comm(), &timerNonconformal_,
       &g_totalNonconformal, 1);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "Timing for Nonconformal: " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Timing for Nonconformal: " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "  nonconformal bc --  "
       << " \tavg: " << g_totalNonconformal / double(nprocs)
       << " \tmin: " << g_minNonconformal << " \tmax: " << g_maxNonconformal
@@ -3963,10 +3988,13 @@ Realm::dump_simulation_time()
     double connTime[2] = {
       oversetManager_->timerConnectivity_, oversetManager_->timerFieldUpdate_};
     double totTime[2], minTime[2], maxTime[2];
-    stk::all_reduce_sum(KynemaUGFEnv::self().parallel_comm(), connTime, totTime, 2);
-    stk::all_reduce_min(KynemaUGFEnv::self().parallel_comm(), connTime, minTime, 2);
-    stk::all_reduce_max(KynemaUGFEnv::self().parallel_comm(), connTime, maxTime, 2);
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    stk::all_reduce_sum(
+      KynemaUGFEnv::self().parallel_comm(), connTime, totTime, 2);
+    stk::all_reduce_min(
+      KynemaUGFEnv::self().parallel_comm(), connTime, minTime, 2);
+    stk::all_reduce_max(
+      KynemaUGFEnv::self().parallel_comm(), connTime, maxTime, 2);
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Timing for Overset:" << std::endl
       << "     connectivity --  \tavg: " << totTime[0] / double(nprocs)
       << " \tmin: " << minTime[0] << " \tmax: " << maxTime[0] << std::endl
@@ -3987,13 +4015,13 @@ Realm::dump_simulation_time()
     stk::all_reduce_sum(
       KynemaUGFEnv::self().parallel_comm(), &totalXfer[0], &g_totalXfer[0], 2);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Timing for Tranfer (fromRealm):    " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "           search --  "
       << " \tavg: " << g_totalXfer[0] / double(nprocs)
       << " \tmin: " << g_minXfer[0] << " \tmax: " << g_maxXfer[0] << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "          execute --  "
       << " \tavg: " << g_totalXfer[1] / double(nprocs)
       << " \tmin: " << g_minXfer[1] << " \tmax: " << g_maxXfer[1] << std::endl;
@@ -4009,8 +4037,9 @@ Realm::dump_simulation_time()
     stk::all_reduce_sum(
       KynemaUGFEnv::self().parallel_comm(), &timerSkinMesh_, &g_totalSkin, 1);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "Timing for skin_mesh :    " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Timing for skin_mesh :    " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "        skin_mesh --  "
       << " \tavg: " << g_totalSkin / double(nprocs) << " \tmin: " << g_minSkin
       << " \tmax: " << g_maxSkin << std::endl;
@@ -4020,15 +4049,18 @@ Realm::dump_simulation_time()
   if (doPromotion_) {
     double g_totalPromote = 0.0, g_minPromote = 0.0, g_maxPromote = 0.0;
     stk::all_reduce_min(
-      KynemaUGFEnv::self().parallel_comm(), &timerPromoteMesh_, &g_minPromote, 1);
+      KynemaUGFEnv::self().parallel_comm(), &timerPromoteMesh_, &g_minPromote,
+      1);
     stk::all_reduce_max(
-      KynemaUGFEnv::self().parallel_comm(), &timerPromoteMesh_, &g_maxPromote, 1);
+      KynemaUGFEnv::self().parallel_comm(), &timerPromoteMesh_, &g_maxPromote,
+      1);
     stk::all_reduce_sum(
-      KynemaUGFEnv::self().parallel_comm(), &timerPromoteMesh_, &g_totalPromote, 1);
+      KynemaUGFEnv::self().parallel_comm(), &timerPromoteMesh_, &g_totalPromote,
+      1);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Timing for promote_mesh :    " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "        promote_mesh --  "
       << " \tavg: " << g_totalPromote / double(nprocs)
       << " \tmin: " << g_minPromote << " \tmax: " << g_maxPromote << std::endl;
@@ -4041,10 +4073,12 @@ Realm::dump_simulation_time()
     stk::all_reduce_max(
       KynemaUGFEnv::self().parallel_comm(), &timerActuator_, &g_maxActuator, 1);
     stk::all_reduce_sum(
-      KynemaUGFEnv::self().parallel_comm(), &timerActuator_, &g_totalActuator, 1);
+      KynemaUGFEnv::self().parallel_comm(), &timerActuator_, &g_totalActuator,
+      1);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "Timing for actuator :    " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Timing for actuator :    " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "        actuator::execute --  "
       << " \tavg: " << g_totalActuator / double(nprocs)
       << " \tmin: " << g_minActuator << " \tmax: " << g_maxActuator
@@ -4052,23 +4086,27 @@ Realm::dump_simulation_time()
   }
 
   if (aeroModels_->has_fsi()) {
-    double kynema-ugfFsiTimer = aeroModels_->kynema-ugf_fsi_accumulated_time();
+    double kynema_ugfFsiTimer = aeroModels_->kynema_ugf_fsi_accumulated_time();
     double openFastFsiTimer = aeroModels_->openfast_accumulated_time();
-    // kynema-ugf fsi calculations
+    // kynema_ugf fsi calculations
     double g_totalKynemaUGF = 0.0, g_minKynemaUGF = 0.0, g_maxKynemaUGF = 0.0;
     stk::all_reduce_min(
-      KynemaUGFEnv::self().parallel_comm(), &kynema-ugfFsiTimer, &g_minKynemaUGF, 1);
+      KynemaUGFEnv::self().parallel_comm(), &kynema_ugfFsiTimer,
+      &g_minKynemaUGF, 1);
     stk::all_reduce_max(
-      KynemaUGFEnv::self().parallel_comm(), &kynema-ugfFsiTimer, &g_maxKynemaUGF, 1);
+      KynemaUGFEnv::self().parallel_comm(), &kynema_ugfFsiTimer,
+      &g_maxKynemaUGF, 1);
     stk::all_reduce_sum(
-      KynemaUGFEnv::self().parallel_comm(), &kynema-ugfFsiTimer, &g_totalKynemaUGF, 1);
+      KynemaUGFEnv::self().parallel_comm(), &kynema_ugfFsiTimer,
+      &g_totalKynemaUGF, 1);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Timing for FSI Computations :    " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "        Kynema-UGF::computations --  "
-      << " \tavg: " << g_totalKynemaUGF / double(nprocs) << " \tmin: " << g_minKynemaUGF
-      << " \tmax: " << g_maxKynemaUGF << std::endl;
+      << " \tavg: " << g_totalKynemaUGF / double(nprocs)
+      << " \tmin: " << g_minKynemaUGF << " \tmax: " << g_maxKynemaUGF
+      << std::endl;
 
     // openfast calculations (excluding data fetch operations)
     double g_totalFast = 0.0, g_minFast = 0.0, g_maxFast = 0.0;
@@ -4079,7 +4117,7 @@ Realm::dump_simulation_time()
     stk::all_reduce_sum(
       KynemaUGFEnv::self().parallel_comm(), &openFastFsiTimer, &g_totalFast, 1);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "        OpenFAST::computations --  "
       << " \tavg: " << g_totalFast / double(nprocs) << " \tmin: " << g_minFast
       << " \tmax: " << g_maxFast << std::endl;
@@ -4089,20 +4127,24 @@ Realm::dump_simulation_time()
   if (solutionOptions_->useConsolidatedSolverAlg_) {
     double g_totalSort = 0.0, g_minSort = 0.0, g_maxSort = 0.0;
     stk::all_reduce_min(
-      KynemaUGFEnv::self().parallel_comm(), &timerSortExposedFace_, &g_minSort, 1);
+      KynemaUGFEnv::self().parallel_comm(), &timerSortExposedFace_, &g_minSort,
+      1);
     stk::all_reduce_max(
-      KynemaUGFEnv::self().parallel_comm(), &timerSortExposedFace_, &g_maxSort, 1);
+      KynemaUGFEnv::self().parallel_comm(), &timerSortExposedFace_, &g_maxSort,
+      1);
     stk::all_reduce_sum(
-      KynemaUGFEnv::self().parallel_comm(), &timerSortExposedFace_, &g_totalSort, 1);
+      KynemaUGFEnv::self().parallel_comm(), &timerSortExposedFace_,
+      &g_totalSort, 1);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0() << "Timing for sort_mesh: " << std::endl;
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Timing for sort_mesh: " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "       sort_mesh  -- "
       << " \tavg: " << g_totalSort / double(nprocs) << " \tmin: " << g_minSort
       << " \tmax: " << g_maxSort << std::endl;
   }
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -4532,7 +4574,7 @@ Realm::augment_transfer_vector(
 /* void */
 /* Realm::process_init_multi_physics_transfer() */
 /* { */
-/*   double timeXfer = -KynemaUGFEnv::self().kynema-ugf_time(); */
+/*   double timeXfer = -KynemaUGFEnv::self().kynema_ugf_time(); */
 
 /*   if (!hasMultiPhysicsTransfer_) */
 /*     return; */
@@ -4541,7 +4583,7 @@ Realm::augment_transfer_vector(
 /*   for (ii = multiPhysicsTransferVec_.begin(); */
 /*        ii != multiPhysicsTransferVec_.end(); ++ii) */
 /*     (*ii)->execute(); */
-/*   timeXfer += KynemaUGFEnv::self().kynema-ugf_time(); */
+/*   timeXfer += KynemaUGFEnv::self().kynema_ugf_time(); */
 /*   timerTransferExecute_ += timeXfer; */
 /* } */
 
@@ -4552,11 +4594,11 @@ void
 Realm::process_multi_physics_transfer(bool initCall)
 {
 
-  double timeXfer = -KynemaUGFEnv::self().kynema-ugf_time();
+  double timeXfer = -KynemaUGFEnv::self().kynema_ugf_time();
 
   if (!initCall) {
     if (aeroModels_->is_active()) {
-      KynemaUGFEnv::self().kynema-ugfOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Aero models - Predict model time step" << std::endl;
       aeroModels_->predict_model_time_step(get_current_time());
     }
@@ -4572,7 +4614,7 @@ Realm::process_multi_physics_transfer(bool initCall)
       (*ii)->execute();
   }
 
-  timeXfer += KynemaUGFEnv::self().kynema-ugf_time();
+  timeXfer += KynemaUGFEnv::self().kynema_ugf_time();
   timerTransferExecute_ += timeXfer;
 }
 
@@ -4585,13 +4627,13 @@ Realm::process_initialization_transfer()
   if (!hasInitializationTransfer_)
     return;
 
-  double timeXfer = -KynemaUGFEnv::self().kynema-ugf_time();
+  double timeXfer = -KynemaUGFEnv::self().kynema_ugf_time();
   std::vector<Transfer*>::iterator ii;
   for (ii = initializationTransferVec_.begin();
        ii != initializationTransferVec_.end(); ++ii) {
     (*ii)->execute();
   }
-  timeXfer += KynemaUGFEnv::self().kynema-ugf_time();
+  timeXfer += KynemaUGFEnv::self().kynema_ugf_time();
   timerTransferExecute_ += timeXfer;
 }
 
@@ -4605,7 +4647,7 @@ Realm::process_io_transfer()
   if (!hasIoTransfer_)
     return;
 
-  double timeXfer = -KynemaUGFEnv::self().kynema-ugf_time();
+  double timeXfer = -KynemaUGFEnv::self().kynema_ugf_time();
   // only do at an IO step
   const int timeStepCount = get_time_step_count();
   const bool isOutput = (timeStepCount % outputInfo_->outputFreq_) == 0;
@@ -4614,7 +4656,7 @@ Realm::process_io_transfer()
     for (ii = ioTransferVec_.begin(); ii != ioTransferVec_.end(); ++ii)
       (*ii)->execute();
   }
-  timeXfer += KynemaUGFEnv::self().kynema-ugf_time();
+  timeXfer += KynemaUGFEnv::self().kynema_ugf_time();
   timerTransferExecute_ += timeXfer;
 }
 
@@ -4627,21 +4669,21 @@ Realm::process_external_data_transfer()
   if (!hasExternalDataTransfer_)
     return;
 
-  double timeXfer = -KynemaUGFEnv::self().kynema-ugf_time();
+  double timeXfer = -KynemaUGFEnv::self().kynema_ugf_time();
   std::vector<Transfer*>::iterator ii;
   for (ii = externalDataTransferVec_.begin();
        ii != externalDataTransferVec_.end(); ++ii)
     (*ii)->execute();
 
   equationSystems_.post_external_data_transfer_work();
-  timeXfer += KynemaUGFEnv::self().kynema-ugf_time();
+  timeXfer += KynemaUGFEnv::self().kynema_ugf_time();
   timerTransferExecute_ += timeXfer;
 }
 
 void
 Realm::output_lidar()
 {
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "LidarLineOfSite::output begin" << std::endl;
 
   const auto& velocity_field =
@@ -4653,7 +4695,8 @@ Realm::output_lidar()
   lidarLOS_->output(
     bulk_data(), sel, get_coordinates_name(), timeIntegrator_->get_time_step(),
     timeIntegrator_->get_current_time());
-  KynemaUGFEnv::self().kynema-ugfOutputP0() << "LidarLineOfSite::output end" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "LidarLineOfSite::output end" << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -4665,7 +4708,7 @@ Realm::post_converged_work()
   equationSystems_.post_converged_work();
 
   if (aeroModels_->is_active()) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Aero models - advance model timestep" << std::endl;
     aeroModels_->advance_model_time_step(
       get_current_time(), timeIntegrator_->get_time_step());
@@ -4778,7 +4821,7 @@ void
 Realm::promote_mesh()
 {
 
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Realm::promote_elements() Begin " << std::endl;
   auto timeA = stk::wall_time();
 
@@ -4805,7 +4848,7 @@ Realm::promote_mesh()
 
   auto timeB = stk::wall_time();
   timerPromoteMesh_ = timeB - timeA;
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Realm::promote_elements() End " << std::endl;
 }
 
@@ -4815,7 +4858,7 @@ Realm::promote_mesh()
 void
 Realm::create_promoted_output_mesh()
 {
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Realm::create_promoted_output_mesh() Begin " << std::endl;
 
   if (outputInfo_->hasOutputBlock_) {
@@ -4836,7 +4879,7 @@ Realm::create_promoted_output_mesh()
     }
     promotionIO_->add_fields(outputFields);
   }
-  KynemaUGFEnv::self().kynema-ugfOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Realm::create_promoted_output_mesh() End " << std::endl;
 }
 
@@ -5184,7 +5227,7 @@ Realm::handle_all_element_part_alias(
 
   if (
     std::find(names.begin(), names.end(), allElementPartAlias) != names.end()) {
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Part alias " << allElementPartAlias << " present with other parts; "
       << allElementPartAlias << " must be a valid mesh part" << std::endl;
   }

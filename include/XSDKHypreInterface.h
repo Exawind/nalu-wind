@@ -43,8 +43,8 @@
 
 // This file was copied into KynemaUGF source tree from
 // https://github.com/trilinos/xSDKTrilinos. The contents have been modified to
-// enable interfacing with KynemaUGF. The original copyright and license have been
-// retained.
+// enable interfacing with KynemaUGF. The original copyright and license have
+// been retained.
 //
 
 #ifndef XSDKHYPREINTERFACE_H
