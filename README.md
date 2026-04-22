@@ -16,7 +16,7 @@ Kynema-UGF is developed as an open-source code with the following objectives:
 - be able to leverage the high-performance leadership-class computing
   facilities available at DOE national laboratories.
 
-When disseminating technical work that includes Kynema-FMB simulations
+When disseminating technical work that includes Kynema-UGF simulations
 please reference the following citations:
 
 The following contains the introduction of Nalu-Wind as part of the ExaWind suite:
