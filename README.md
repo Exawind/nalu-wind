@@ -27,7 +27,7 @@ The following contains the introduction of Nalu-Wind as part of the ExaWind suit
 
 The following contains details for Kynema-UGF (formerly Nalu-Wind):
 
-    Sharma, A., M.J. Brazell, M.J., G. Vijayakumar, S. Ananthan, L. Cheung, N. deVelder, M.T. Henry de Frahan, N. Matula, P. Mullowney, J. Rood, P. Sakievich, A. Almgren, P.S.\ Crozier, and M.A. Sprague, 2024, ExaWind: Open-source CFD for hybrid-RANS/LES geometry-resolved wind turbine simulations in atmospheric flows. Wind Energy, 27, 225-257. https://onlinelibrary.wiley.com/doi/full/10.1002/we.2886.
+    Sharma, A., M.J. Brazell, M.J., G. Vijayakumar, S. Ananthan, L. Cheung, N. deVelder, M.T. Henry de Frahan, N. Matula, P. Mullowney, J. Rood, P. Sakievich, A. Almgren, P.S. Crozier, and M.A. Sprague, 2024, ExaWind: Open-source CFD for hybrid-RANS/LES geometry-resolved wind turbine simulations in atmospheric flows. Wind Energy, 27, 225-257. https://onlinelibrary.wiley.com/doi/full/10.1002/we.2886.
 
 ## Documentation
 
