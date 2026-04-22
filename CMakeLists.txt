@@ -42,11 +42,11 @@ if(ENABLE_MATRIXFREE AND NOT ENABLE_TRILINOS_SOLVERS)
 endif()
 
 # Create targets
-set(kynema-ugf_ex_name "kynema-ugf")
-add_executable(${kynema-ugf_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/kynema-ugf.C)
+set(kynema_ugf_ex_name "kynema-ugf")
+add_executable(${kynema_ugf_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/kynema_ugf.C)
 
 if(ENABLE_UNIT_TESTS)
-  set(utest_ex_name "unittestX")
+  set(utest_ex_name "kynema-ugf-unit-tests")
   add_executable(${utest_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.C)
 endif()
 
@@ -275,7 +275,7 @@ target_include_directories(kynema-ugf PUBLIC
   $<INSTALL_INTERFACE:include>)
 
 # Most linking, etc, is set to PUBLIC for libkynema-ugf, so we merely link to libkynema-ugf for the exes
-target_link_libraries(${kynema-ugf_ex_name} PRIVATE kynema-ugf)
+target_link_libraries(${kynema_ugf_ex_name} PRIVATE kynema-ugf)
 if(ENABLE_UNIT_TESTS)
   target_link_libraries(${utest_ex_name} PRIVATE kynema-ugf)
   target_include_directories(${utest_ex_name} PRIVATE "${CMAKE_SOURCE_DIR}/unit_tests")
@@ -302,7 +302,7 @@ if(ENABLE_UNIT_TESTS)
           ARCHIVE DESTINATION lib
           LIBRARY DESTINATION lib)
 endif()
-install(TARGETS ${kynema-ugf_ex_name} kynema-ugf
+install(TARGETS ${kynema_ugf_ex_name} kynema-ugf
         EXPORT "${PROJECT_NAME}Targets"
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
