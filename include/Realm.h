@@ -645,7 +645,7 @@ public:
 
   /** Global Row IDs for the HYPRE linear system
    *
-   *  The HYPRE IDs are different from STK IDs and Realm::kynema-ugfGlobalId_
+   *  The HYPRE IDs are different from STK IDs and Realm::kynemaUgfGlobalId_
    * because HYPRE expects contiguous IDs for matrix rows and further requires
    * that the IDs be ordered across MPI ranks; i.e., startIdx (MPI_rank + 1) =
    *  endIdx(MPI_rank) + 1.
