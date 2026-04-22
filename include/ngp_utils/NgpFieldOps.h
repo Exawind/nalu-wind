@@ -26,8 +26,8 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
-namespace nalu_ngp {
+namespace kynema_ugf {
+namespace kynema_ugf_ngp {
 namespace impl {
 
 template <typename Mesh, typename Field>
@@ -426,8 +426,8 @@ edge_nodal_field_updater(const Mesh& mesh, const Field& fld)
   return impl::SimpleNodeFieldOp<Mesh, Field>{mesh, fld};
 }
 
-} // namespace nalu_ngp
-} // namespace nalu
+} // namespace kynema_ugf_ngp
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPFIELDOPS_H */

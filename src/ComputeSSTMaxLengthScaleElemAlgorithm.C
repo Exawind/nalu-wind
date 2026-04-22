@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <ComputeSSTMaxLengthScaleElemAlgorithm.h>
 #include <Algorithm.h>
 
@@ -29,7 +29,7 @@
 #include <stk_util/parallel/ParallelReduce.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -96,7 +96,7 @@ ComputeSSTMaxLengthScaleElemAlgorithm::execute()
 
     // extract master element
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
 
     // extract master element specifics
@@ -156,5 +156,5 @@ ComputeSSTMaxLengthScaleElemAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

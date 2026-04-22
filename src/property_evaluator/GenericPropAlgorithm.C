@@ -21,7 +21,7 @@
 #include <stk_mesh/base/Selector.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 GenericPropAlgorithm::GenericPropAlgorithm(
   Realm& realm,
@@ -71,5 +71,5 @@ GenericPropAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

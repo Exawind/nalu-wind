@@ -17,7 +17,7 @@
 #include <FieldTypeDef.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ActuatorMeta::ActuatorMeta(int numTurbines, ActuatorType actuatorType)
   : numberOfActuators_(numTurbines),
@@ -63,9 +63,9 @@ ActuatorBulk::ActuatorBulk(const ActuatorMeta& actMeta)
     localParallelRedundancy_("localParallelReundancy", actMeta.numPointsTotal_),
     elemContainingPoint_("elemContainPoint", actMeta.numPointsTotal_),
     localTurbineId_(
-      NaluEnv::self().parallel_rank() >= actMeta.numberOfActuators_
+      KynemaUGFEnv::self().parallel_rank() >= actMeta.numberOfActuators_
         ? -1
-        : NaluEnv::self().parallel_rank())
+        : KynemaUGFEnv::self().parallel_rank())
 {
   compute_offsets(actMeta);
 }
@@ -137,7 +137,7 @@ ActuatorBulk::parallel_sum_source_term(stk::mesh::BulkData& stkBulk)
 Kokkos::RangePolicy<ActuatorFixedExecutionSpace>
 ActuatorBulk::local_range_policy(const ActuatorMeta& actMeta)
 {
-  auto rank = NaluEnv::self().parallel_rank();
+  auto rank = KynemaUGFEnv::self().parallel_rank();
   if (rank < turbIdOffset_.extent_int(0)) {
     const int offset = turbIdOffset_.h_view(rank);
     const int size = actMeta.numPointsTurbine_.h_view(rank);
@@ -148,5 +148,5 @@ ActuatorBulk::local_range_policy(const ActuatorMeta& actMeta)
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

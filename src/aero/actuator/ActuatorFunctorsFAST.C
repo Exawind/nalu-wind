@@ -11,11 +11,11 @@
 #include <aero/actuator/UtilitiesActuator.h>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/MetaData.hpp>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <FieldTypeDef.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 void
 ActFastCacheRelativeVelocities(ActuatorBulkFAST& actBulk)
@@ -268,5 +268,5 @@ ActFastSpreadForceWhProjInnerLoop::operator()(
   }
 }
 
-} /* namespace nalu */
+} /* namespace kynema_ugf */
 } /* namespace sierra */

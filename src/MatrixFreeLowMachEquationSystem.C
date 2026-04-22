@@ -24,8 +24,8 @@
 #include "FieldTypeDef.h"
 #include "LinearSolverConfig.h"
 #include "LinearSolvers.h"
-#include "NaluEnv.h"
-#include "NaluParsing.h"
+#include "KynemaUGFEnv.h"
+#include "KynemaUGFParsing.h"
 #include "Realm.h"
 #include "Simulation.h"
 #include "SolutionOptions.h"
@@ -59,7 +59,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Algorithm;
 
@@ -484,8 +484,11 @@ copy_field(
 class ScopeTimer
 {
 public:
-  ScopeTimer(double& timer) : timer_(timer), t0_(NaluEnv::self().nalu_time()) {}
-  ~ScopeTimer() { timer_ += NaluEnv::self().nalu_time() - t0_; }
+  ScopeTimer(double& timer)
+    : timer_(timer), t0_(KynemaUGFEnv::self().kynema_ugf_time())
+  {
+  }
+  ~ScopeTimer() { timer_ += KynemaUGFEnv::self().kynema_ugf_time() - t0_; }
 
 private:
   double& timer_;
@@ -654,7 +657,7 @@ MatrixFreeLowMachEquationSystem::correct_velocity(double proj_time_scale)
 std::ostream&
 MatrixFreeLowMachEquationSystem::log()
 {
-  return NaluEnv::self().naluOutputP0();
+  return KynemaUGFEnv::self().kynema_ugfOutputP0();
 }
 
 void
@@ -764,5 +767,5 @@ MatrixFreeLowMachEquationSystem::solve_and_update()
   compute_courant_reynolds();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

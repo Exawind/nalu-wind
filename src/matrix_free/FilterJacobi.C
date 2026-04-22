@@ -24,7 +24,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace {
@@ -130,5 +130,5 @@ FilterJacobiOperator<p>::compute_diagonal(const_scalar_view<p> vols)
 }
 INSTANTIATE_POLYCLASS(FilterJacobiOperator);
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

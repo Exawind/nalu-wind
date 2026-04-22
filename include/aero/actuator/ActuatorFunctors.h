@@ -22,7 +22,7 @@ class BulkData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct InterpActuatorVel
 {
@@ -67,7 +67,7 @@ struct SpreadForceInnerLoop
 using SpreadActuatorForce =
   GenericLoopOverCoarseSearchResults<ActuatorBulk, SpreadForceInnerLoop>;
 
-} /* namespace nalu */
+} /* namespace kynema_ugf */
 } /* namespace sierra */
 
 #endif /* ACTUATORFUNCTORS_H_ */

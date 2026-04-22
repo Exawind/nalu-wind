@@ -17,7 +17,7 @@
 #include "utils/StkHelpers.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename BcAlgTraits>
 ScalarOpenEdgeKernel<BcAlgTraits>::ScalarOpenEdgeKernel(
@@ -34,7 +34,7 @@ ScalarOpenEdgeKernel<BcAlgTraits>::ScalarOpenEdgeKernel(
       get_field_ordinal(meta, "open_mass_flow_rate", meta.side_rank())),
     relaxFac_(solnOpts.get_relaxation_factor(scalarQ->name())),
     meFC_(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
         BcAlgTraits::topo_))
 {
   faceData.add_cvfem_face_me(meFC_);
@@ -73,5 +73,5 @@ ScalarOpenEdgeKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE(ScalarOpenEdgeKernel)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

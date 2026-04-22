@@ -55,7 +55,7 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_calc_edge)
   massFlowRateEdge_->modify_on_host();
   massFlowRateEdge_->sync_to_device();
 
-  sierra::nalu::MdotEdgeAlg mdotAlg(helperObjs.realm, partVec_[0]);
+  sierra::kynema_ugf::MdotEdgeAlg mdotAlg(helperObjs.realm, partVec_[0]);
   mdotAlg.execute();
 
   const auto& fieldMgr = helperObjs.realm.ngp_field_manager();
@@ -86,7 +86,7 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_rho_accum)
   fill_mesh_and_init_fields();
 
   // Set up time integrator
-  sierra::nalu::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.secondOrderTimeAccurate_ = false;
   timeIntegrator.timeStepN_ = 0.125;
   timeIntegrator.timeStepNm1_ = 0.125;
@@ -111,17 +111,17 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_rho_accum)
   // Instantiate the algorithm driver
   const bool elementContinuityEqs = true;
   const bool lumpedMass = true;
-  sierra::nalu::MdotAlgDriver mdotDriver(
+  sierra::kynema_ugf::MdotAlgDriver mdotDriver(
     helperObjs.realm, elementContinuityEqs);
 
-  mdotDriver.register_elem_algorithm<sierra::nalu::MdotDensityAccumAlg>(
-    sierra::nalu::INTERIOR, partVec_[0], "mdot_rho_acc", mdotDriver,
+  mdotDriver.register_elem_algorithm<sierra::kynema_ugf::MdotDensityAccumAlg>(
+    sierra::kynema_ugf::INTERIOR, partVec_[0], "mdot_rho_acc", mdotDriver,
     lumpedMass);
 
   mdotDriver.execute();
 
   const double expectedValue =
-    1.0 * sierra::nalu::AlgTraitsHex8::nodesPerElement_;
+    1.0 * sierra::kynema_ugf::AlgTraitsHex8::nodesPerElement_;
   EXPECT_NEAR(mdotDriver.mdot_rho_accum(), expectedValue, 1.0e-15);
 }
 
@@ -144,10 +144,10 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_open_correction)
   auto* surfPart = part->subsets()[0];
   const bool elementContinuityEqs = true;
 
-  sierra::nalu::MdotAlgDriver mdotDriver(
+  sierra::kynema_ugf::MdotAlgDriver mdotDriver(
     helperObjs.realm, elementContinuityEqs);
   mdotDriver.register_open_mdot_corrector_alg(
-    sierra::nalu::OPEN, surfPart, "mdot_open_correction");
+    sierra::kynema_ugf::OPEN, surfPart, "mdot_open_correction");
 
   const double mdotInflow = -124.0;
   const double mdotOpen = 100.0;
@@ -192,10 +192,11 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_inflow)
   const bool elementContinuityEqs = true;
   const bool useShifted = true;
 
-  sierra::nalu::MdotAlgDriver mdotDriver(
+  sierra::kynema_ugf::MdotAlgDriver mdotDriver(
     helperObjs.realm, elementContinuityEqs);
-  mdotDriver.register_face_algorithm<sierra::nalu::MdotInflowAlg>(
-    sierra::nalu::INFLOW, surfPart, "mdot_inflow", mdotDriver, useShifted);
+  mdotDriver.register_face_algorithm<sierra::kynema_ugf::MdotInflowAlg>(
+    sierra::kynema_ugf::INFLOW, surfPart, "mdot_inflow", mdotDriver,
+    useShifted);
   mdotDriver.execute();
 
   EXPECT_NEAR(mdotDriver.mdot_inflow(), -1.0, 1.0e-15);
@@ -235,10 +236,10 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_open_edge)
   const bool needCorrection = false;
 
   helperObjs.realm.solutionOptions_->activateOpenMdotCorrection_ = true;
-  sierra::nalu::MdotAlgDriver mdotDriver(
+  sierra::kynema_ugf::MdotAlgDriver mdotDriver(
     helperObjs.realm, elementContinuityEqs);
-  mdotDriver.register_open_mdot_algorithm<sierra::nalu::MdotOpenEdgeAlg>(
-    sierra::nalu::OPEN, surfPart, stk::topology::HEX_8, "mdot_open",
+  mdotDriver.register_open_mdot_algorithm<sierra::kynema_ugf::MdotOpenEdgeAlg>(
+    sierra::kynema_ugf::OPEN, surfPart, stk::topology::HEX_8, "mdot_open",
     needCorrection, mdotDriver);
 
   mdotDriver.execute();

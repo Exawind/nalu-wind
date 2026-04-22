@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class OneTwoTenVelocityAuxFunction : public AuxFunction
 {
@@ -44,7 +44,7 @@ private:
   const double pi_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

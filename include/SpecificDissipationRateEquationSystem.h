@@ -12,7 +12,7 @@
 
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
-#include <NaluParsedTypes.h>
+#include <KynemaUGFParsedTypes.h>
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
 
@@ -21,7 +21,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class LinearSystem;
@@ -88,7 +88,7 @@ public:
   std::unique_ptr<NgpAlgDriver> wallModelAlgDriver_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

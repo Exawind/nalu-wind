@@ -20,7 +20,7 @@
 #include "stk_mesh/base/Field.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename BcAlgTraits>
 MomentumABLWallFuncEdgeKernel<BcAlgTraits>::MomentumABLWallFuncEdgeKernel(
@@ -47,7 +47,7 @@ MomentumABLWallFuncEdgeKernel<BcAlgTraits>::MomentumABLWallFuncEdgeKernel(
     Tref_(Tref),
     kappa_(kappa),
     meFC_(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
         BcAlgTraits::topo_))
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);
@@ -156,5 +156,5 @@ MomentumABLWallFuncEdgeKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE(MomentumABLWallFuncEdgeKernel)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

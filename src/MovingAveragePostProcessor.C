@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <MovingAveragePostProcessor.h>
 #include <Algorithm.h>
 
@@ -30,7 +30,7 @@
 #include <limits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //--------------------------------------------------------------------------
 ExponentialMovingAverager::ExponentialMovingAverager(
@@ -135,5 +135,5 @@ MovingAveragePostProcessor::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

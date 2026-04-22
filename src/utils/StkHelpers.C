@@ -23,7 +23,7 @@
 #include "stk_util/util/SortAndUnique.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 void
 populate_ghost_comm_procs(
@@ -243,5 +243,5 @@ max_extent(const stk::mesh::FieldBase& field, unsigned dimension)
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

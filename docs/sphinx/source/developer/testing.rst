@@ -1,9 +1,9 @@
-Testing Nalu-Wind
+Testing Kynema-UGF
 =================
 
-Nalu-Wind's regression tests and unit tests are run nightly using the GCC and Intel 
+Kynema-UGF's regression tests and unit tests are run nightly using the GCC and Intel 
 compilers against the Trilinos master and development branches on a machine 
-at NREL. The results can be seen at the `CDash Nalu-Wind website <http://my.cdash.org/index.php?project=Exawind>`__.
+at NREL. The results can be seen at the `CDash Kynema-UGF website <http://my.cdash.org/index.php?project=Exawind>`__.
 
 
 Running Tests Locally
@@ -12,34 +12,34 @@ Running Tests Locally
 The nightly tests are implemented using `CTest <https://cmake.org/cmake/help/v3.7/manual/ctest.1.html>`__ and
 these same tests are available to developers to run locally as well. Due to the nature of error propagation of 
 calculations in computers, results of regression testing can be difficult to keep consistent. 
-Output from Nalu-Wind can vary from established reference data for the regression tests based on the compiler you 
-are using, the types of optimizations set, and the versions of the third-party libraries Nalu-Wind 
+Output from Kynema-UGF can vary from established reference data for the regression tests based on the compiler you 
+are using, the types of optimizations set, and the versions of the third-party libraries Kynema-UGF 
 utilizes, along with the blas/lapack implementation in use. Therefore it may make sense when 
-you checkout Nalu-Wind to create your own reference data for the tests for the machine and 
+you checkout Kynema-UGF to create your own reference data for the tests for the machine and 
 configuration you are using, which is described later in this document. Or you can use a lower tolerance 
 when running the tests. At the moment, a single tolerance is chosen in which to use for all the tests. 
-The following instructions will describe how to run Nalu-Wind's tests.
+The following instructions will describe how to run Kynema-UGF's tests.
 
-Since Nalu-Wind's tests require a large amount of data (meshes), this data is hosted in a separate repository 
-from Nalu-Wind. This mesh repo is set as a submodule in the ``reg_tests/mesh`` directory in the main 
-Nalu-Wind repository. Submodule repos are not checked out by default, so either use ``git submodule init`` 
-and then ``git submodule update`` to clone it in your checkout of Nalu-Wind, or when you first clone Nalu-Wind you can also use 
+Since Kynema-UGF's tests require a large amount of data (meshes), this data is hosted in a separate repository 
+from Kynema-UGF. This mesh repo is set as a submodule in the ``reg_tests/mesh`` directory in the main 
+Kynema-UGF repository. Submodule repos are not checked out by default, so either use ``git submodule init`` 
+and then ``git submodule update`` to clone it in your checkout of Kynema-UGF, or when you first clone Kynema-UGF you can also use 
 ``git clone --recursive <repo_url>`` to checkout all submodules as well.
 
-Once this submodule is intialized and cloned, you will need to configure Nalu-Wind with testing on.
-To configure Nalu-Wind with testing enabled, in Nalu-Wind's existing ``build`` directory, we will run this command:
+Once this submodule is intialized and cloned, you will need to configure Kynema-UGF with testing on.
+To configure Kynema-UGF with testing enabled, in Kynema-UGF's existing ``build`` directory, we will run this command:
 
 ::
 
-   cmake -DTrilinos_DIR:PATH=`spack location -i nalu-trilinos` \
+   cmake -DTrilinos_DIR:PATH=`spack location -i kynema-ugf-trilinos` \
          -DYAML_DIR:PATH=`spack location -i yaml-cpp` \
          -DENABLE_TESTS:BOOL=ON \
          ..
 
-Note we have chosen to originally build Nalu-Wind with Spack in this case, hence the use 
+Note we have chosen to originally build Kynema-UGF with Spack in this case, hence the use 
 of ``spack location -i <package>`` to locate our Yaml and Trilinos installations. 
-Then we use ``-DENABLE_TESTS:BOOL=ON`` to enable CTest. Once Nalu-Wind is configured, 
-you should be able to run the tests by building Nalu-Wind in the ``build`` directory, 
+Then we use ``-DENABLE_TESTS:BOOL=ON`` to enable CTest. Once Kynema-UGF is configured, 
+you should be able to run the tests by building Kynema-UGF in the ``build`` directory, 
 and running ``make test`` or ``ctest``. Looking at ``ctest -h`` will show you many ways 
 you can run tests and choose which tests to run.
 
@@ -49,10 +49,10 @@ matching a particular regular expression for example. To do so, in the ``build``
 ``ctest --output-on-failure`` to see test outputs when they fail, ``ctest --rerun-failed`` to only run 
 the tests that previously failed, ``ctest --print-labels`` to see the test labels, and ``ctest -L unit`` 
 to run the tests with label 'unit' for example. All testing related log files and output can be seen in 
-``Nalu-Wind/build/Testing/Temporary`` and ``Nalu-Wind/build/reg_tests`` after the test have been run.
+``Kynema-UGF/build/Testing/Temporary`` and ``Kynema-UGF/build/reg_tests`` after the test have been run.
 
 To define your own tolerance for tests, at configure time, add ``-DTEST_TOLERANCE=0.0001`` for example 
-to the Nalu-Wind CMake configure line.
+to the Kynema-UGF CMake configure line.
 
 
 Updating Reference Data for Your Machine
@@ -61,9 +61,9 @@ Updating Reference Data for Your Machine
 When running the tests, the norms for each test are the output and they are 'diffed' against 
 the 'gold' norms that we have established for each test. To dictate whether or not a test passes, 
 we use a chosen tolerance in which we allow the results to deviate from the 'gold' norm.  As stated 
-earlier, these 'gold' norms are not able to reflect every configuration of Nalu-Wind, per compiler, optimization, 
+earlier, these 'gold' norms are not able to reflect every configuration of Kynema-UGF, per compiler, optimization, 
 TPL versions, blas/lapack version, etc. This tolerance is currently defined in the ``CMakeLists.txt`` 
-in Nalu-Wind's ``reg_tests`` directory. This tolerance can also be passed into Nalu-Wind at configure time using 
+in Kynema-UGF's ``reg_tests`` directory. This tolerance can also be passed into Kynema-UGF at configure time using 
 ``-DTEST_TOLERANCE=0.0000001`` for example. To update the 'gold' norms locally to your configuration, merely 
 run the tests once, and copy the ``*.norm`` files in the ``build/reg_tests/test_files`` directory 
 to the corresponding test location in ``reg_tests/test_files`` while overwriting the current 'gold' norms.
@@ -84,13 +84,13 @@ TPL versions are officially tested:
   superlu@4.3 
 
 
-Adding Tests to Nalu-Wind
+Adding Tests to Kynema-UGF
 -------------------------
 
 .. _add-test:
 
 The testing infrastructure is almost completely confined to the ``reg_tests`` directory. To add a test 
-to Nalu-Wind, we need to add the test name, and create a test directory to place the input files and gold norms 
+to Kynema-UGF, we need to add the test name, and create a test directory to place the input files and gold norms 
 for the test. First, the test itself can be added to the list of CTest tests by adding a line to the 
 ``CTestList.cmake`` file. For a single regression test, provided it is similar to the categories shown at 
 the top of the ``CTestList.cmake`` file, it can likely be added with a single line using the test 
@@ -112,7 +112,7 @@ You can see the exact commands used for each test after configure in the
 
 Note if your test doesn't conform to an existing archetype, a new function in ``CTestList.cmake`` may need to be 
 created. Also, if you are using a mesh file that doesn't exist in the mesh repo, you will need to add it, and 
-update the submodule in the Nalu-Wind main repo to use the latest commit of the mesh submodule repo.
+update the submodule in the Kynema-UGF main repo to use the latest commit of the mesh submodule repo.
 
 
 .. _ref-testing-cdash:
@@ -121,22 +121,22 @@ Adding Testing Machines to CDash
 --------------------------------
 
 To add a testing machine that will post results to CDash first means that you should have all software 
-dependencies satisified for Nalu-Wind. Next the script located at  
-`CTestNightlyScript.cmake <https://github.com/Exawind/nalu-wind/blob/master/reg_tests/CTestNightlyScript.cmake>`__ 
+dependencies satisified for Kynema-UGF. Next the script located at  
+`CTestNightlyScript.cmake <https://github.com/Exawind/kynema-ugf/blob/master/reg_tests/CTestNightlyScript.cmake>`__ 
 can be run for example as:
 
 ::
 
    ctest \
-     -DNIGHTLY_DIR=${NALU_WIND_TESTING_DIR} \
+     -DNIGHTLY_DIR=${KYNEMA_UGF_TESTING_DIR} \
      -DYAML_DIR=${YAML_INSTALL_DIR} \
      -DTRILINOS_DIR=${TRILINOS_INSTALL_DIR} \
      -DHOST_NAME=machine.domain.com \
      -DEXTRA_BUILD_NAME=Linux-gcc-whatever \
-     -VV -S ${NALU_WIND_DIR}/reg_tests/CTestNightlyScript.cmake
+     -VV -S ${KYNEMA_UGF_DIR}/reg_tests/CTestNightlyScript.cmake
 
-In this case ``${NALU_WIND_TESTING_DIR}`` is one directory above where the Nalu-Wind repo has been checked out. 
-This runs CTest in scripting mode with verbosity on and it will update the Nalu-Wind repo with the latest 
+In this case ``${KYNEMA_UGF_TESTING_DIR}`` is one directory above where the Kynema-UGF repo has been checked out. 
+This runs CTest in scripting mode with verbosity on and it will update the Kynema-UGF repo with the latest 
 revisions, configure, build, test, and finally submit results to the CDash site. Since CTest does 
 the building, it needs to know the locations of Yaml and Trilinos. For examples of nightly testing, 
 refer to the testing scripts currently being run 

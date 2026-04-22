@@ -10,13 +10,13 @@
 #include "aero/actuator/UtilitiesActuator.h"
 #include <aero/actuator/ActuatorTypes.h>
 #include <cmath>
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 
 namespace {
 
 TEST(ActuatorFAST, NGP_unityGaussianTest)
 {
-  sierra::nalu::Coordinates epsilon;
+  sierra::kynema_ugf::Coordinates epsilon;
 
   epsilon.x_ = std::pow(M_PI, -1.0 / 2.0);
   epsilon.y_ = std::pow(M_PI, -1.0 / 2.0);
@@ -28,10 +28,10 @@ TEST(ActuatorFAST, NGP_unityGaussianTest)
 
   int nDim = 3;
 
-  double r1 = sierra::nalu::actuator_utils::Gaussian_projection(
+  double r1 = sierra::kynema_ugf::actuator_utils::Gaussian_projection(
     nDim, distance.data(), epsilon);
 
-  double r2 = sierra::nalu::actuator_utils::Gaussian_projection(
+  double r2 = sierra::kynema_ugf::actuator_utils::Gaussian_projection(
     nDim, distance.data(), epsilon_d.data());
 
   EXPECT_NEAR(1.0, r1, 1e-12);

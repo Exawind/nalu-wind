@@ -1016,7 +1016,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::TKESSTNodeKernel>(*meta_);
 
   helperObjs.execute();
 
@@ -1051,11 +1051,13 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_sust_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  sierra::nalu::Realm& realm = helperObjs.realm;
-  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_tkeAmb] = 5.0;
-  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_sdrAmb] = 50.0;
+  sierra::kynema_ugf::Realm& realm = helperObjs.realm;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::kynema_ugf::TM_tkeAmb] =
+    5.0;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::kynema_ugf::TM_sdrAmb] =
+    50.0;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::TKESSTNodeKernel>(*meta_);
 
   helperObjs.execute();
 
@@ -1089,7 +1091,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sstlr_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTLRNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::TKESSTLRNodeKernel>(
+    *meta_);
 
   helperObjs.execute();
 
@@ -1124,7 +1127,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTDESNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::TKESSTDESNodeKernel>(
+    *meta_);
 
   helperObjs.execute();
 
@@ -1159,7 +1163,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_iddes_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTIDDESNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::TKESSTIDDESNodeKernel>(
+    *meta_);
 
   helperObjs.execute();
 
@@ -1194,8 +1199,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_iddes_trans_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTIDDESBLTM2015NodeKernel>(
-    *meta_);
+  helperObjs.nodeAlg
+    ->add_kernel<sierra::kynema_ugf::TKESSTIDDESBLTM2015NodeKernel>(*meta_);
 
   helperObjs.execute();
 
@@ -1230,11 +1235,14 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_sust_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  sierra::nalu::Realm& realm = helperObjs.realm;
-  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_tkeAmb] = 5.0;
-  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_sdrAmb] = 50.0;
+  sierra::kynema_ugf::Realm& realm = helperObjs.realm;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::kynema_ugf::TM_tkeAmb] =
+    5.0;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::kynema_ugf::TM_sdrAmb] =
+    50.0;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTDESNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::TKESSTDESNodeKernel>(
+    *meta_);
 
   helperObjs.execute();
 
@@ -1268,7 +1276,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_trans_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTBLTM2015NodeKernel>(
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::TKESSTBLTM2015NodeKernel>(
     *meta_);
 
   helperObjs.execute();
@@ -1304,7 +1312,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::SDRSSTNodeKernel>(*meta_);
 
   helperObjs.execute();
 
@@ -1339,11 +1347,13 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_sust_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  sierra::nalu::Realm& realm = helperObjs.realm;
-  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_tkeAmb] = 5.0;
-  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_sdrAmb] = 50.0;
+  sierra::kynema_ugf::Realm& realm = helperObjs.realm;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::kynema_ugf::TM_tkeAmb] =
+    5.0;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::kynema_ugf::TM_sdrAmb] =
+    50.0;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::SDRSSTNodeKernel>(*meta_);
 
   helperObjs.execute();
 
@@ -1377,7 +1387,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sstlr_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTLRNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::SDRSSTLRNodeKernel>(
+    *meta_);
 
   helperObjs.execute();
 
@@ -1412,7 +1423,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTDESNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::SDRSSTDESNodeKernel>(
+    *meta_);
 
   helperObjs.execute();
 
@@ -1448,11 +1460,14 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_sust_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  sierra::nalu::Realm& realm = helperObjs.realm;
-  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_tkeAmb] = 5.0;
-  realm.solutionOptions_->turbModelConstantMap_[sierra::nalu::TM_sdrAmb] = 50.0;
+  sierra::kynema_ugf::Realm& realm = helperObjs.realm;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::kynema_ugf::TM_tkeAmb] =
+    5.0;
+  realm.solutionOptions_->turbModelConstantMap_[sierra::kynema_ugf::TM_sdrAmb] =
+    50.0;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTDESNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::SDRSSTDESNodeKernel>(
+    *meta_);
 
   helperObjs.execute();
 
@@ -1487,7 +1502,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_trans_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTBLTM2015NodeKernel>(
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::SDRSSTBLTM2015NodeKernel>(
     *meta_);
 
   helperObjs.execute();

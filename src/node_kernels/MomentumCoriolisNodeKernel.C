@@ -13,7 +13,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MomentumCoriolisNodeKernel::MomentumCoriolisNodeKernel(
   const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts)
@@ -92,5 +92,5 @@ MomentumCoriolisNodeKernel::execute(
   lhs(2, 1) -= fac2 * cor_.Jyz_; // Jzy = - Jyz
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

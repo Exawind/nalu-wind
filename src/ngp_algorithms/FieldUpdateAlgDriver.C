@@ -17,7 +17,7 @@
 #include "utils/StkHelpers.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 FieldUpdateAlgDriver::FieldUpdateAlgDriver(
   Realm& realm, const std::string& fieldName)
@@ -74,5 +74,5 @@ FieldUpdateAlgDriver::post_work()
   ngpField.sync_to_device();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

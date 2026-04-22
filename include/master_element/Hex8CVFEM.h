@@ -19,7 +19,7 @@
 #include <master_element/MasterElementFunctions.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // Hex 8 subcontrol volume
 class HexSCV : public MasterElement
@@ -428,7 +428,7 @@ HexSCS::grad_op(
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

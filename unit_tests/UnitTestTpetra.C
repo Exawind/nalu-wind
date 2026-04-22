@@ -18,7 +18,7 @@
 #include "kernel/KernelBuilder.h"
 #include "SolverAlgorithmDriver.h"
 #include "AssembleElemSolverAlgorithm.h"
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 #include "Realms.h"
 #include "Realm.h"
 #include "EquationSystem.h"
@@ -30,36 +30,37 @@
 #include <master_element/MasterElementRepo.h>
 #include <string>
 
-sierra::nalu::TpetraLinearSystem*
-get_TpetraLinearSystem(unit_test_utils::NaluTest& naluObj)
+sierra::kynema_ugf::TpetraLinearSystem*
+get_TpetraLinearSystem(unit_test_utils::KynemaUGFTest& kynema_ugfObj)
 {
-  EXPECT_NE(nullptr, naluObj.sim_.realms_);
-  EXPECT_FALSE(naluObj.sim_.realms_->realmVector_.empty());
-  sierra::nalu::Realm& realm = *naluObj.sim_.realms_->realmVector_[0];
+  EXPECT_NE(nullptr, kynema_ugfObj.sim_.realms_);
+  EXPECT_FALSE(kynema_ugfObj.sim_.realms_->realmVector_.empty());
+  sierra::kynema_ugf::Realm& realm =
+    *kynema_ugfObj.sim_.realms_->realmVector_[0];
   EXPECT_FALSE(realm.equationSystems_.equationSystemVector_.empty());
-  sierra::nalu::EquationSystem* eqsys =
+  sierra::kynema_ugf::EquationSystem* eqsys =
     realm.equationSystems_.equationSystemVector_[0];
   EXPECT_TRUE(eqsys != nullptr);
-  sierra::nalu::LinearSystem* linsys = eqsys->linsys_;
+  sierra::kynema_ugf::LinearSystem* linsys = eqsys->linsys_;
   EXPECT_TRUE(linsys != nullptr);
 
-  sierra::nalu::TpetraLinearSystem* tpetraLinsys =
-    dynamic_cast<sierra::nalu::TpetraLinearSystem*>(linsys);
+  sierra::kynema_ugf::TpetraLinearSystem* tpetraLinsys =
+    dynamic_cast<sierra::kynema_ugf::TpetraLinearSystem*>(linsys);
   STK_ThrowRequireMsg(
     tpetraLinsys != nullptr, "Expected TpetraLinearSystem to be non-null");
 
   return tpetraLinsys;
 }
 
-sierra::nalu::AssembleElemSolverAlgorithm*
-create_algorithm(sierra::nalu::Realm& realm, stk::mesh::Part& part)
+sierra::kynema_ugf::AssembleElemSolverAlgorithm*
+create_algorithm(sierra::kynema_ugf::Realm& realm, stk::mesh::Part& part)
 {
-  sierra::nalu::EquationSystem* eqsys =
+  sierra::kynema_ugf::EquationSystem* eqsys =
     realm.equationSystems_.equationSystemVector_[0];
   EXPECT_TRUE(eqsys != nullptr);
 
-  std::pair<sierra::nalu::AssembleElemSolverAlgorithm*, bool> solverAlgResult =
-    sierra::nalu::build_or_add_part_to_solver_alg(
+  std::pair<sierra::kynema_ugf::AssembleElemSolverAlgorithm*, bool>
+    solverAlgResult = sierra::kynema_ugf::build_or_add_part_to_solver_alg(
       *eqsys, part, eqsys->solverAlgDriver_->solverAlgorithmMap_);
 
   EXPECT_TRUE(solverAlgResult.second);
@@ -75,23 +76,24 @@ create_algorithm(sierra::nalu::Realm& realm, stk::mesh::Part& part)
   return solverAlgResult.first;
 }
 
-sierra::nalu::AssembleElemSolverAlgorithm*
-get_AssembleElemSolverAlgorithm(unit_test_utils::NaluTest& naluObj)
+sierra::kynema_ugf::AssembleElemSolverAlgorithm*
+get_AssembleElemSolverAlgorithm(unit_test_utils::KynemaUGFTest& kynema_ugfObj)
 {
-  EXPECT_NE(nullptr, naluObj.sim_.realms_);
-  EXPECT_FALSE(naluObj.sim_.realms_->realmVector_.empty());
-  sierra::nalu::Realm& realm = *naluObj.sim_.realms_->realmVector_[0];
+  EXPECT_NE(nullptr, kynema_ugfObj.sim_.realms_);
+  EXPECT_FALSE(kynema_ugfObj.sim_.realms_->realmVector_.empty());
+  sierra::kynema_ugf::Realm& realm =
+    *kynema_ugfObj.sim_.realms_->realmVector_[0];
   EXPECT_FALSE(realm.equationSystems_.equationSystemVector_.empty());
-  sierra::nalu::EquationSystem* eqsys =
+  sierra::kynema_ugf::EquationSystem* eqsys =
     realm.equationSystems_.equationSystemVector_[0];
 
   auto solverAlgMap = eqsys->solverAlgDriver_->solverAlgorithmMap_;
   EXPECT_EQ(1u, solverAlgMap.size());
-  sierra::nalu::SolverAlgorithm* solverAlg = solverAlgMap.begin()->second;
+  sierra::kynema_ugf::SolverAlgorithm* solverAlg = solverAlgMap.begin()->second;
   STK_ThrowRequireMsg(solverAlg != nullptr, "Error, null solver-algorithm");
 
-  sierra::nalu::AssembleElemSolverAlgorithm* assembleElemSolverAlgorithm =
-    dynamic_cast<sierra::nalu::AssembleElemSolverAlgorithm*>(solverAlg);
+  sierra::kynema_ugf::AssembleElemSolverAlgorithm* assembleElemSolverAlgorithm =
+    dynamic_cast<sierra::kynema_ugf::AssembleElemSolverAlgorithm*>(solverAlg);
   STK_ThrowRequireMsg(
     assembleElemSolverAlgorithm != nullptr,
     "Error, failed to dynamic_cast to AssembleElemSolverAlgorithm.");
@@ -130,15 +132,15 @@ static const double lhsVals[12][12] = {
   {0.0, 0.0, 0.0, 0.0, -0.2, -0.3, -0.5, -0.4, -0.6, -0.7, 2.0, -0.8},
   {0.0, 0.0, 0.0, 0.0, -0.3, -0.4, -0.6, -0.5, -0.7, -0.8, -0.8, 2.0}};
 
-class TestKernel : public sierra::nalu::NGPKernel<TestKernel>
+class TestKernel : public sierra::kynema_ugf::NGPKernel<TestKernel>
 {
 public:
   TestKernel(stk::topology elemTopo)
     : numNodesPerElem(elemTopo.num_nodes()),
       d_elemVals("device-elem-vals", 8, 8)
   {
-    Kokkos::View<double**, sierra::nalu::MemSpace>::HostMirror h_elemVals =
-      Kokkos::create_mirror_view(d_elemVals);
+    Kokkos::View<double**, sierra::kynema_ugf::MemSpace>::HostMirror
+      h_elemVals = Kokkos::create_mirror_view(d_elemVals);
     for (int i = 0; i < 8; ++i) {
       for (int j = 0; j < 8; ++j) {
         h_elemVals(i, j) = elemVals[i][j];
@@ -156,15 +158,17 @@ public:
   {
   }
 
-  using sierra::nalu::Kernel::execute;
+  using sierra::kynema_ugf::Kernel::execute;
   KOKKOS_FUNCTION
   virtual void execute(
-    sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>& lhs,
-    sierra::nalu::SharedMemView<DoubleType*, sierra::nalu::DeviceShmem>& rhs,
-    sierra::nalu::ScratchViews<
+    sierra::kynema_ugf::
+      SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>& lhs,
+    sierra::kynema_ugf::
+      SharedMemView<DoubleType*, sierra::kynema_ugf::DeviceShmem>& rhs,
+    sierra::kynema_ugf::ScratchViews<
       DoubleType,
-      sierra::nalu::DeviceTeamHandleType,
-      sierra::nalu::DeviceShmem>& /* scratchViews */)
+      sierra::kynema_ugf::DeviceTeamHandleType,
+      sierra::kynema_ugf::DeviceShmem>& /* scratchViews */)
   {
     const bool check0 = numNodesPerElem * numNodesPerElem == lhs.size();
     const bool check1 = numNodesPerElem == rhs.size();
@@ -180,7 +184,7 @@ public:
 
 private:
   unsigned numNodesPerElem;
-  Kokkos::View<double**, sierra::nalu::MemSpace> d_elemVals;
+  Kokkos::View<double**, sierra::kynema_ugf::MemSpace> d_elemVals;
 };
 
 std::vector<unsigned>
@@ -200,7 +204,9 @@ get_gold_row_lengths(int numProcs, int localProc)
 
 void
 verify_graph_for_2_hex8_mesh(
-  int numProcs, int localProc, sierra::nalu::TpetraLinearSystem* tpetraLinsys)
+  int numProcs,
+  int localProc,
+  sierra::kynema_ugf::TpetraLinearSystem* tpetraLinsys)
 {
   unsigned expectedNumGlobalRows = 12;
   unsigned expectedNumOwnedRows = expectedNumGlobalRows;
@@ -225,9 +231,11 @@ verify_graph_for_2_hex8_mesh(
 
 void
 verify_matrix_for_2_hex8_mesh(
-  int numProcs, int localProc, sierra::nalu::TpetraLinearSystem* tpetraLinsys)
+  int numProcs,
+  int localProc,
+  sierra::kynema_ugf::TpetraLinearSystem* tpetraLinsys)
 {
-  Teuchos::RCP<sierra::nalu::LinSys::Matrix> ownedMatrix =
+  Teuchos::RCP<sierra::kynema_ugf::LinSys::Matrix> ownedMatrix =
     tpetraLinsys->getOwnedMatrix();
   EXPECT_NE(nullptr, ownedMatrix.get());
   unsigned expectedGlobalNumRows = 12;
@@ -238,21 +246,21 @@ verify_matrix_for_2_hex8_mesh(
   EXPECT_EQ(expectedGlobalNumRows, ownedMatrix->getGlobalNumRows());
   EXPECT_EQ((unsigned)expectedLocalNumRows, ownedMatrix->getLocalNumRows());
 
-  Teuchos::RCP<const sierra::nalu::LinSys::Map> rowMap =
+  Teuchos::RCP<const sierra::kynema_ugf::LinSys::Map> rowMap =
     ownedMatrix->getRowMap();
-  Teuchos::RCP<const sierra::nalu::LinSys::Map> colMap =
+  Teuchos::RCP<const sierra::kynema_ugf::LinSys::Map> colMap =
     ownedMatrix->getColMap();
 
-  for (sierra::nalu::LinSys::LocalOrdinal rowlid = 0;
+  for (sierra::kynema_ugf::LinSys::LocalOrdinal rowlid = 0;
        rowlid < expectedLocalNumRows; ++rowlid) {
-    sierra::nalu::LinSys::GlobalOrdinal rowgid =
+    sierra::kynema_ugf::LinSys::GlobalOrdinal rowgid =
       rowMap->getGlobalElement(rowlid);
     unsigned rowLength = ownedMatrix->getNumEntriesInGlobalRow(rowgid);
-    sierra::nalu::LinSys::LocalIndicesHost inds;
-    sierra::nalu::LinSys::LocalValuesHost vals;
+    sierra::kynema_ugf::LinSys::LocalIndicesHost inds;
+    sierra::kynema_ugf::LinSys::LocalValuesHost vals;
     ownedMatrix->getLocalRowView(rowlid, inds, vals);
     for (unsigned j = 0; j < rowLength; ++j) {
-      sierra::nalu::LinSys::GlobalOrdinal colgid =
+      sierra::kynema_ugf::LinSys::GlobalOrdinal colgid =
         colMap->getGlobalElement(inds[j]);
       EXPECT_NEAR(lhsVals[rowgid - 1][colgid - 1], vals[j], 1.e-9)
         << "failed for row=" << rowgid << ",col=" << colgid;
@@ -262,22 +270,24 @@ verify_matrix_for_2_hex8_mesh(
 
 TestKernel*
 create_and_register_kernel(
-  sierra::nalu::AssembleElemSolverAlgorithm* solverAlg, stk::topology elemTopo)
+  sierra::kynema_ugf::AssembleElemSolverAlgorithm* solverAlg,
+  stk::topology elemTopo)
 {
   TestKernel* testKernel = new TestKernel(elemTopo);
   solverAlg->dataNeededByKernels_.add_cvfem_volume_me(
-    sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_volume_master_element_on_host(
       elemTopo));
   solverAlg->activeKernels_.push_back(testKernel);
   return testKernel;
 }
 
-sierra::nalu::Realm&
-setup_realm(unit_test_utils::NaluTest& naluObj, const std::string& meshSpec)
+sierra::kynema_ugf::Realm&
+setup_realm(
+  unit_test_utils::KynemaUGFTest& kynema_ugfObj, const std::string& meshSpec)
 {
-  sierra::nalu::Realm& realm = naluObj.create_realm();
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
 
-  sierra::nalu::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.secondOrderTimeAccurate_ = false;
   realm.timeIntegrator_ = &timeIntegrator;
   realm.setup_field_manager();
@@ -292,13 +302,13 @@ setup_realm(unit_test_utils::NaluTest& naluObj, const std::string& meshSpec)
   return realm;
 }
 
-sierra::nalu::Realm&
+sierra::kynema_ugf::Realm&
 setup_solver_alg_and_linsys(
-  unit_test_utils::NaluTest& naluObj, const std::string& meshSpec)
+  unit_test_utils::KynemaUGFTest& kynema_ugfObj, const std::string& meshSpec)
 {
-  sierra::nalu::Realm& realm = setup_realm(naluObj, meshSpec);
+  sierra::kynema_ugf::Realm& realm = setup_realm(kynema_ugfObj, meshSpec);
   stk::mesh::Part& block_1 = *realm.meta_data().get_part("block_1");
-  sierra::nalu::AssembleElemSolverAlgorithm* solverAlg =
+  sierra::kynema_ugf::AssembleElemSolverAlgorithm* solverAlg =
     create_algorithm(realm, block_1);
   create_and_register_kernel(solverAlg, block_1.topology());
   return realm;
@@ -312,14 +322,14 @@ TEST(Tpetra, basic)
   }
   int localProc = stk::parallel_machine_rank(MPI_COMM_WORLD);
 
-  unit_test_utils::NaluTest naluObj;
-  sierra::nalu::Realm& realm =
-    setup_solver_alg_and_linsys(naluObj, "generated:1x1x2");
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm =
+    setup_solver_alg_and_linsys(kynema_ugfObj, "generated:1x1x2");
 
-  sierra::nalu::TpetraLinearSystem* tpetraLinsys =
-    get_TpetraLinearSystem(naluObj);
-  sierra::nalu::AssembleElemSolverAlgorithm* solverAlg =
-    get_AssembleElemSolverAlgorithm(naluObj);
+  sierra::kynema_ugf::TpetraLinearSystem* tpetraLinsys =
+    get_TpetraLinearSystem(kynema_ugfObj);
+  sierra::kynema_ugf::AssembleElemSolverAlgorithm* solverAlg =
+    get_AssembleElemSolverAlgorithm(kynema_ugfObj);
 
   tpetraLinsys->buildElemToNodeGraph(solverAlg->partVec_);
   tpetraLinsys->finalizeLinearSystem();
@@ -327,15 +337,15 @@ TEST(Tpetra, basic)
   verify_graph_for_2_hex8_mesh(numProcs, localProc, tpetraLinsys);
 
   auto meSCV =
-    sierra::nalu::MasterElementRepo::get_volume_master_element_on_dev(
-      sierra::nalu::AlgTraitsHex8::topo_);
+    sierra::kynema_ugf::MasterElementRepo::get_volume_master_element_on_dev(
+      sierra::kynema_ugf::AlgTraitsHex8::topo_);
   auto& dataNeeded = solverAlg->dataNeededByKernels_;
   dataNeeded.add_cvfem_volume_me(meSCV);
   auto* coordsField = realm.meta_data().coordinate_field();
   dataNeeded.add_coordinates_field(
-    *coordsField, 3, sierra::nalu::CURRENT_COORDINATES);
+    *coordsField, 3, sierra::kynema_ugf::CURRENT_COORDINATES);
   dataNeeded.add_master_element_call(
-    sierra::nalu::SCV_VOLUME, sierra::nalu::CURRENT_COORDINATES);
+    sierra::kynema_ugf::SCV_VOLUME, sierra::kynema_ugf::CURRENT_COORDINATES);
 
   solverAlg->execute();
   tpetraLinsys->loadComplete();

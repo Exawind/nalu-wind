@@ -10,19 +10,16 @@
 #include <mpi.h>
 #include <stk_util/diag/PrintTimer.hpp>
 
-// nalu
-#include <NaluParsing.h>
+// kynema_ugf
+#include <KynemaUGFParsing.h>
 #include <Simulation.h>
-#include <NaluEnv.h>
-#include <NaluVersionInfo.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFVersionInfo.h>
 
 // util
 #include <stk_util/environment/perf_util.hpp>
 #include <stk_util/parallel/ParallelReduce.hpp>
 
-// teest
-
-// test
 // input params
 #include <stk_util/environment/OptionsSpecification.hpp>
 #include <stk_util/environment/ParseCommandLineArgs.hpp>
@@ -70,45 +67,47 @@ human_bytes_double(double bytes)
 int
 main(int argc, char** argv)
 {
-  namespace version = sierra::nalu::version;
+  namespace version = sierra::kynema_ugf::version;
 
   // start up MPI
   if (MPI_SUCCESS != MPI_Init(&argc, &argv)) {
     throw std::runtime_error("MPI_Init failed");
   }
 
-  // NaluEnv singleton
-  sierra::nalu::NaluEnv& naluEnv = sierra::nalu::NaluEnv::self();
+  // KynemaUGFEnv singleton
+  sierra::kynema_ugf::KynemaUGFEnv& kynema_ugfEnv =
+    sierra::kynema_ugf::KynemaUGFEnv::self();
 
   Kokkos::initialize(argc, argv);
 
   // Hypre initialization
-  nalu_hypre::hypre_initialize();
+  kynema_ugf_hypre::hypre_initialize();
 
   {
 
     stk::diag::setEnabledTimerMetricsMask(
       stk::diag::METRICS_CPU_TIME | stk::diag::METRICS_WALL_TIME);
 
-    sierra::nalu::Simulation::rootTimer().start();
+    sierra::kynema_ugf::Simulation::rootTimer().start();
 
     // start initial time
-    double start_time = naluEnv.nalu_time();
+    double start_time = kynema_ugfEnv.kynema_ugf_time();
 
     // command line options.
     std::string inputFileName, logFileName;
     bool debug = false;
     int serializedIOGroupSize = 0;
-    const std::string naluVersion = (version::RepoIsDirty == "DIRTY")
-                                      ? (version::NaluVersionTag + "-dirty")
-                                      : version::NaluVersionTag;
+    const std::string kynema_ugfVersion =
+      (version::RepoIsDirty == "DIRTY")
+        ? (version::KynemaUGFVersionTag + "-dirty")
+        : version::KynemaUGFVersionTag;
 
-    stk::OptionsSpecification desc("Nalu Supported Options");
-    std::string naluVout = naluVersion.c_str();
+    stk::OptionsSpecification desc("KynemaUGF Supported Options");
+    std::string kynema_ugfVout = kynema_ugfVersion.c_str();
     desc.add_options()("help,h", "Help message")(
-      "version,v", naluVersion.c_str())(
+      "version,v", kynema_ugfVersion.c_str())(
       "input-deck,i", "Analysis input file",
-      stk::DefaultValue<std::string>("nalu.i"),
+      stk::DefaultValue<std::string>("kynema_ugf.i"),
       stk::TargetPointer<std::string>(&inputFileName))(
       "log-file,o", "Analysis log file",
       stk::TargetPointer<std::string>(&logFileName))(
@@ -126,14 +125,14 @@ main(int argc, char** argv)
 
     // deal with some default parameters
     if (parsedOptions.count("help")) {
-      if (!naluEnv.parallel_rank())
+      if (!kynema_ugfEnv.parallel_rank())
         std::cerr << desc << std::endl;
       return 0;
     }
 
     if (parsedOptions.count("version")) {
-      if (!naluEnv.parallel_rank())
-        std::cerr << "Version: " << naluVersion << std::endl;
+      if (!kynema_ugfEnv.parallel_rank())
+        std::cerr << "Version: " << kynema_ugfVersion << std::endl;
       return 0;
     }
 
@@ -143,7 +142,7 @@ main(int argc, char** argv)
 
     std::ifstream fin(inputFileName.c_str());
     if (!fin.good()) {
-      if (!naluEnv.parallel_rank())
+      if (!kynema_ugfEnv.parallel_rank())
         std::cerr << "Input file is not specified or does not exist: user "
                      "specified (or default) name= "
                   << inputFileName << std::endl;
@@ -168,54 +167,54 @@ main(int argc, char** argv)
     }
     // deal with log file stream
     const bool capture_stdout = true;
-    naluEnv.set_log_file_stream(logFileName, pprint, capture_stdout);
+    kynema_ugfEnv.set_log_file_stream(logFileName, pprint, capture_stdout);
 
     // proceed with reading input file "document" from YAML
     YAML::Node doc = YAML::LoadFile(inputFileName.c_str());
-    if (!naluEnv.parallel_rank()) {
+    if (!kynema_ugfEnv.parallel_rank()) {
       std::cout << std::string(20, '#') << " INPUT FILE START "
                 << std::string(20, '#') << std::endl;
-      sierra::nalu::NaluParsingHelper::emit(std::cout, doc);
+      sierra::kynema_ugf::KynemaUGFParsingHelper::emit(std::cout, doc);
       std::cout << std::string(20, '#') << " INPUT FILE END   "
                 << std::string(20, '#') << std::endl;
     }
 
     // Hypre general parameter setting
-    nalu_hypre::hypre_set_params(doc);
+    kynema_ugf_hypre::hypre_set_params(doc);
 
-    sierra::nalu::Simulation sim(doc);
+    sierra::kynema_ugf::Simulation sim(doc);
     if (serializedIOGroupSize) {
-      naluEnv.naluOutputP0()
+      kynema_ugfEnv.kynema_ugfOutputP0()
         << "Info: found non-zero serialized_io_group_size on command-line= "
         << serializedIOGroupSize << " (takes precedence over input file value)."
         << std::endl;
       sim.setSerializedIOGroupSize(serializedIOGroupSize);
     }
-    naluEnv.debug_ = debug;
+    kynema_ugfEnv.debug_ = debug;
     sim.load(doc);
     sim.breadboard();
     sim.initialize();
     sim.run();
 
     // stop timer
-    const double stop_time = naluEnv.nalu_time();
+    const double stop_time = kynema_ugfEnv.kynema_ugf_time();
     const double total_time = stop_time - start_time;
     const char* timer_name = "Total Time";
 
     // parallel reduce overall times
     double g_sum, g_min, g_max;
-    stk::all_reduce_min(naluEnv.parallel_comm(), &total_time, &g_min, 1);
-    stk::all_reduce_max(naluEnv.parallel_comm(), &total_time, &g_max, 1);
-    stk::all_reduce_sum(naluEnv.parallel_comm(), &total_time, &g_sum, 1);
-    const int nprocs = naluEnv.parallel_size();
+    stk::all_reduce_min(kynema_ugfEnv.parallel_comm(), &total_time, &g_min, 1);
+    stk::all_reduce_max(kynema_ugfEnv.parallel_comm(), &total_time, &g_max, 1);
+    stk::all_reduce_sum(kynema_ugfEnv.parallel_comm(), &total_time, &g_sum, 1);
+    const int nprocs = kynema_ugfEnv.parallel_size();
 
     // output total time
-    naluEnv.naluOutputP0() << "Timing for Simulation: nprocs= " << nprocs
-                           << std::endl;
-    naluEnv.naluOutputP0() << "           main() --  "
-                           << " \tavg: " << g_sum / double(nprocs)
-                           << " \tmin: " << g_min << " \tmax: " << g_max
-                           << std::endl;
+    kynema_ugfEnv.kynema_ugfOutputP0()
+      << "Timing for Simulation: nprocs= " << nprocs << std::endl;
+    kynema_ugfEnv.kynema_ugfOutputP0()
+      << "           main() --  "
+      << " \tavg: " << g_sum / double(nprocs) << " \tmin: " << g_min
+      << " \tmax: " << g_max << std::endl;
 
     // output memory usage
     {
@@ -226,73 +225,76 @@ main(int argc, char** argv)
       size_t global_hwm[3] = {hwm, hwm, hwm};
 
       stk::all_reduce(
-        naluEnv.parallel_comm(), stk::ReduceSum<1>(&global_now[2]));
+        kynema_ugfEnv.parallel_comm(), stk::ReduceSum<1>(&global_now[2]));
       stk::all_reduce(
-        naluEnv.parallel_comm(), stk::ReduceMin<1>(&global_now[0]));
+        kynema_ugfEnv.parallel_comm(), stk::ReduceMin<1>(&global_now[0]));
       stk::all_reduce(
-        naluEnv.parallel_comm(), stk::ReduceMax<1>(&global_now[1]));
+        kynema_ugfEnv.parallel_comm(), stk::ReduceMax<1>(&global_now[1]));
 
       stk::all_reduce(
-        naluEnv.parallel_comm(), stk::ReduceSum<1>(&global_hwm[2]));
+        kynema_ugfEnv.parallel_comm(), stk::ReduceSum<1>(&global_hwm[2]));
       stk::all_reduce(
-        naluEnv.parallel_comm(), stk::ReduceMin<1>(&global_hwm[0]));
+        kynema_ugfEnv.parallel_comm(), stk::ReduceMin<1>(&global_hwm[0]));
       stk::all_reduce(
-        naluEnv.parallel_comm(), stk::ReduceMax<1>(&global_hwm[1]));
+        kynema_ugfEnv.parallel_comm(), stk::ReduceMax<1>(&global_hwm[1]));
 
-      naluEnv.naluOutputP0() << "Memory Overview: " << std::endl;
+      kynema_ugfEnv.kynema_ugfOutputP0() << "Memory Overview: " << std::endl;
 
-      naluEnv.naluOutputP0()
-        << "nalu memory: total (over all cores) current/high-water mark= "
+      kynema_ugfEnv.kynema_ugfOutputP0()
+        << "kynema_ugf memory: total (over all cores) current/high-water mark= "
         << std::setw(15) << human_bytes_double(global_now[2]) << std::setw(15)
         << human_bytes_double(global_hwm[2]) << std::endl;
 
-      naluEnv.naluOutputP0()
-        << "nalu memory:   min (over all cores) current/high-water mark= "
+      kynema_ugfEnv.kynema_ugfOutputP0()
+        << "kynema_ugf memory:   min (over all cores) current/high-water mark= "
         << std::setw(15) << human_bytes_double(global_now[0]) << std::setw(15)
         << human_bytes_double(global_hwm[0]) << std::endl;
 
-      naluEnv.naluOutputP0()
-        << "nalu memory:   max (over all cores) current/high-water mark= "
+      kynema_ugfEnv.kynema_ugfOutputP0()
+        << "kynema_ugf memory:   max (over all cores) current/high-water mark= "
         << std::setw(15) << human_bytes_double(global_now[1]) << std::setw(15)
         << human_bytes_double(global_hwm[1]) << std::endl;
     }
 
-    sierra::nalu::Simulation::rootTimer().stop();
+    sierra::kynema_ugf::Simulation::rootTimer().stop();
 
     // output timings consistent w/ rest of Sierra
-    stk::diag::Timer& sierra_timer = sierra::nalu::Simulation::rootTimer();
+    stk::diag::Timer& sierra_timer =
+      sierra::kynema_ugf::Simulation::rootTimer();
     const double elapsed_time =
       sierra_timer.getMetric<stk::diag::WallTime>().getAccumulatedLap(false);
     stk::diag::Timer& mesh_output_timer =
-      sierra::nalu::Simulation::outputTimer();
+      sierra::kynema_ugf::Simulation::outputTimer();
     double mesh_output_time =
       mesh_output_timer.getMetric<stk::diag::WallTime>().getAccumulatedLap(
         false);
     double time_without_output = elapsed_time - mesh_output_time;
 
     stk::parallel_print_time_without_output_and_hwm(
-      naluEnv.parallel_comm(), time_without_output, naluEnv.naluOutputP0());
+      kynema_ugfEnv.parallel_comm(), time_without_output,
+      kynema_ugfEnv.kynema_ugfOutputP0());
 
-    if (!naluEnv.parallel_rank())
+    if (!kynema_ugfEnv.parallel_rank())
       stk::print_timers_and_memory(&timer_name, &total_time, 1 /*num timers*/);
 
     stk::diag::printTimersTable(
-      naluEnv.naluOutputP0(), sierra::nalu::Simulation::rootTimer(),
+      kynema_ugfEnv.kynema_ugfOutputP0(),
+      sierra::kynema_ugf::Simulation::rootTimer(),
       stk::diag::METRICS_CPU_TIME | stk::diag::METRICS_WALL_TIME, false,
-      naluEnv.parallel_comm());
+      kynema_ugfEnv.parallel_comm());
 
-    stk::diag::deleteRootTimer(sierra::nalu::Simulation::rootTimer());
+    stk::diag::deleteRootTimer(sierra::kynema_ugf::Simulation::rootTimer());
 
     // Write out Trilinos timers
     Teuchos::TimeMonitor::summarize(
-      naluEnv.naluOutputP0(), false, true, false, Teuchos::Union);
+      kynema_ugfEnv.kynema_ugfOutputP0(), false, true, false, Teuchos::Union);
 
     // Master element cleanup
-    sierra::nalu::MasterElementRepo::clear();
+    sierra::kynema_ugf::MasterElementRepo::clear();
   }
 
   // Hypre cleanup
-  nalu_hypre::hypre_finalize();
+  kynema_ugf_hypre::hypre_finalize();
 
   Kokkos::finalize();
 

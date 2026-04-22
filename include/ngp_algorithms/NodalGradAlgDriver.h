@@ -14,7 +14,7 @@
 #include "FieldTypeDef.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename GradPhiType>
 class NodalGradAlgDriver : public NgpAlgDriver
@@ -46,7 +46,7 @@ using ScalarNodalGradAlgDriver = NodalGradAlgDriver<VectorFieldType>;
 using VectorNodalGradAlgDriver = NodalGradAlgDriver<GenericFieldType>;
 using TensorNodalGradAlgDriver = NodalGradAlgDriver<TensorFieldType>;
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NODALGRADALGDRIVER_H */

@@ -1,4 +1,4 @@
-target_sources(nalu PRIVATE
+target_sources(kynema-ugf PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityGclNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityMassBDFNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/EnthalpyABLForceNodeKernel.C

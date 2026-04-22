@@ -10,7 +10,7 @@
 #include <aero/actuator/ActuatorParsing.h>
 #include <aero/actuator/ActuatorModel.h>
 
-#ifdef NALU_USES_OPENFAST
+#ifdef KYNEMA_UGF_USES_OPENFAST
 #include <aero/actuator/ActuatorParsingFAST.h>
 #include <aero/actuator/ActuatorBulkFAST.h>
 #include <aero/actuator/ActuatorExecutorsFASTNgp.h>
@@ -20,10 +20,10 @@
 #include <aero/actuator/ActuatorBulkSimple.h>
 #include <aero/actuator/ActuatorExecutorsSimpleNgp.h>
 #include <string>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 void
 ActuatorModel::parse(const YAML::Node& actuatorNode)
@@ -34,7 +34,7 @@ ActuatorModel::parse(const YAML::Node& actuatorNode)
   switch (actMetaBase.actuatorType_) {
   case ActuatorType::ActDiskFASTNGP:
   case ActuatorType::ActLineFASTNGP: {
-#ifdef NALU_USES_OPENFAST
+#ifdef KYNEMA_UGF_USES_OPENFAST
     actMeta_.reset(
       new ActuatorMetaFAST(actuator_FAST_parse(actuatorNode, actMetaBase)));
     break;
@@ -72,7 +72,7 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
 
   switch (actMeta_->actuatorType_) {
   case (ActuatorType::ActLineFASTNGP): {
-#ifndef NALU_USES_OPENFAST
+#ifndef KYNEMA_UGF_USES_OPENFAST
     STK_ThrowErrorMsg("Actuator methods require OpenFAST");
     (void)timeStep;
 #if !defined(KOKKOS_ENABLE_GPU)
@@ -91,7 +91,7 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
 #endif
   }
   case (ActuatorType::ActDiskFASTNGP): {
-#ifndef NALU_USES_OPENFAST
+#ifndef KYNEMA_UGF_USES_OPENFAST
     STK_ThrowErrorMsg("Actuator methods require OpenFAST");
 #if !defined(KOKKOS_ENABLE_GPU)
     break;
@@ -137,7 +137,7 @@ ActuatorModel::init(stk::mesh::BulkData& stkBulk)
   switch (actMeta_->actuatorType_) {
   case (ActuatorType::ActLineFASTNGP):
   case (ActuatorType::ActDiskFASTNGP): {
-#ifndef NALU_USES_OPENFAST
+#ifndef KYNEMA_UGF_USES_OPENFAST
     STK_ThrowErrorMsg("Actuator methods require OpenFAST");
 #if !defined(KOKKOS_ENABLE_GPU)
     break;
@@ -163,11 +163,11 @@ ActuatorModel::execute(double& timer)
   if (!is_active())
     return;
 
-  const double start_time = NaluEnv::self().nalu_time();
+  const double start_time = KynemaUGFEnv::self().kynema_ugf_time();
   actExec_->operator()();
-  const double end_time = NaluEnv::self().nalu_time();
+  const double end_time = KynemaUGFEnv::self().kynema_ugf_time();
   timer += end_time - start_time;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

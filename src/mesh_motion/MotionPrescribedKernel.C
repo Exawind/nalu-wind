@@ -2,12 +2,12 @@
 #include "mesh_motion/MotionPrescribedKernel.h"
 #include "mesh_motion/NgpMotion.h"
 
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 #include <stdexcept>
 #include <vector>
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MotionPrescribedKernel::MotionPrescribedKernel(const YAML::Node& node)
   : NgpMotionKernel<MotionPrescribedKernel>()
@@ -26,7 +26,7 @@ MotionPrescribedKernel::load(const YAML::Node& node)
   get_if_present(node, "end_time", endTime_, endTime_);
   endTime_ = endTime_ + DBL_EPSILON;
 
-  for (int d = 0; d < nalu_ngp::NDimMax; ++d) {
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d) {
     origin_[d] = node["centroid"][d].as<double>();
   }
 
@@ -310,7 +310,7 @@ MotionPrescribedKernel::compute_velocity(
   double time_between = motion_np1[0] - relevant_motion[0];
 
   mm::ThreeDVecType transOrigin;
-  for (int d = 0; d < nalu_ngp::NDimMax; d++) {
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++) {
     transOrigin[d] = compTrans[d * mm::matSize + 0] * origin_[0] +
                      compTrans[d * mm::matSize + 1] * origin_[1] +
                      compTrans[d * mm::matSize + 2] * origin_[2] +
@@ -318,13 +318,14 @@ MotionPrescribedKernel::compute_velocity(
   }
   mm::ThreeDVecType relCoord;
   mm::ThreeDVecType vecOmega;
-  for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] > -1e15; d++) {
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax && relevant_motion[1] > -1e15;
+       d++) {
     // Note the indices here, [7, 8, 9] correspond to angular velocities
     relCoord[d] = cxyz[d] - transOrigin[d];
     vecOmega[d] = relevant_motion[7 + d];
   }
 
-  for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] < -1e15 &&
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax && relevant_motion[1] < -1e15 &&
                   time_between > 1e-12;
        d++) {
     // Note the indices here, [10, 11, 12] correspond to angular displacements
@@ -337,12 +338,13 @@ MotionPrescribedKernel::compute_velocity(
   vel[2] = vecOmega[0] * relCoord[1] - vecOmega[1] * relCoord[0];
 
   mm::ThreeDVecType vecVel;
-  for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] < -1e15; d++) {
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax && relevant_motion[1] < -1e15;
+       d++) {
     // Note the indices here, [4, 5, 6] correspond to translational velocities
     vecVel[d] = relevant_motion[4 + d];
   }
 
-  for (int d = 0; d < nalu_ngp::NDimMax && relevant_motion[1] > -1e15 &&
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax && relevant_motion[1] > -1e15 &&
                   time_between > 1e-12;
        d++) {
     // Note the indices here, [1, 2, 3] correspond to translational
@@ -357,5 +359,5 @@ MotionPrescribedKernel::compute_velocity(
   return vel;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

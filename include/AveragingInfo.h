@@ -22,7 +22,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class AveragingInfo
 {
@@ -75,7 +75,7 @@ public:
   std::vector<unsigned> resolvedFieldSizeVec_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

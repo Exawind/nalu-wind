@@ -24,7 +24,7 @@
 #include <cassert>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // fixed for hex right now
 constexpr int NUM_IP = 19;
@@ -89,14 +89,14 @@ MeshVelocityAlg<AlgTraits>::MeshVelocityAlg(Realm& realm, stk::mesh::Part* part)
   }
   Kokkos::deep_copy(scsFaceNodeMapDeviceView_, scsFaceNodeMapHostView);
 
-} // namespace nalu
+} // namespace kynema_ugf
 
 template <typename AlgTraits>
 void
 MeshVelocityAlg<AlgTraits>::execute()
 {
   using ElemSimdDataType =
-    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
   const DoubleType dt = realm_.get_time_step();
@@ -106,9 +106,10 @@ MeshVelocityAlg<AlgTraits>::execute()
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto faceVel = fieldMgr.template get_field<double>(faceVelMag_);
   auto ngpSweptVol = fieldMgr.template get_field<double>(sweptVolumeNp1_);
-  const auto faceVelOps = nalu_ngp::simd_elem_field_updater(ngpMesh, faceVel);
+  const auto faceVelOps =
+    kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, faceVel);
   const auto sweptVolOps =
-    nalu_ngp::simd_elem_field_updater(ngpMesh, ngpSweptVol);
+    kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, ngpSweptVol);
 
   const auto modelCoordsID = modelCoords_;
   const auto meshDispNp1ID = meshDispNp1_;
@@ -131,7 +132,7 @@ MeshVelocityAlg<AlgTraits>::execute()
   ngpSweptVol.sync_to_device();
   faceVel.sync_to_device();
 
-  nalu_ngp::run_elem_algorithm(
+  kynema_ugf_ngp::run_elem_algorithm(
     algName, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       auto& scrView = edata.simdScrView;
@@ -192,5 +193,5 @@ MeshVelocityAlg<AlgTraits>::execute()
 
 INSTANTIATE_KERNEL(MeshVelocityAlg)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

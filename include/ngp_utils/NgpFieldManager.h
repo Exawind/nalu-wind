@@ -20,8 +20,8 @@
 #include "stk_mesh/base/GetNgpField.hpp"
 
 namespace sierra {
-namespace nalu {
-namespace nalu_ngp {
+namespace kynema_ugf {
+namespace kynema_ugf_ngp {
 
 /** NGP Field Manager
  *
@@ -59,8 +59,8 @@ private:
   const stk::mesh::MetaData& m_meta;
 };
 
-} // namespace nalu_ngp
-} // namespace nalu
+} // namespace kynema_ugf_ngp
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPFIELDMANAGER_H */

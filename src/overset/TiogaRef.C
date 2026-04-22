@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
 
 #include "overset/TiogaRef.h"
 
@@ -15,7 +15,7 @@
 
 #include <iostream>
 
-namespace tioga_nalu {
+namespace tioga_kynema_ugf {
 
 TiogaRef&
 TiogaRef::self(TIOGA::tioga* tg)
@@ -51,6 +51,6 @@ TiogaRef::~TiogaRef()
   }
 }
 
-} // namespace tioga_nalu
+} // namespace tioga_kynema_ugf
 
 #endif

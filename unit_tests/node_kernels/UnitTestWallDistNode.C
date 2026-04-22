@@ -24,7 +24,8 @@ TEST_F(WallDistKernelHex8Mesh, walldist_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::WallDistNodeKernel>(*bulk_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::WallDistNodeKernel>(
+    *bulk_);
 
   helperObjs.execute();
 

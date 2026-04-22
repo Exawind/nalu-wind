@@ -17,7 +17,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 KovasznayPressureAuxFunction::KovasznayPressureAuxFunction()
   : AuxFunction(0, 1), Re_(40.0) /*,
@@ -81,5 +81,5 @@ KovasznayPressureGradientAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

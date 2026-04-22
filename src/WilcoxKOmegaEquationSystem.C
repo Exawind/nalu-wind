@@ -12,8 +12,8 @@
 #include <FieldFunctions.h>
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementRepo.h>
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 #include <SpecificDissipationRateEquationSystem.h>
 #include <SolutionOptions.h>
 #include <TurbKineticEnergyEquationSystem.h>
@@ -50,7 +50,7 @@
 #include "ngp_utils/NgpFieldBLAS.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -205,7 +205,7 @@ WilcoxKOmegaEquationSystem::solve_and_update()
   // start the iteration loop
   for (int k = 0; k < maxIterations_; ++k) {
 
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
       << name_ << std::endl;
 
@@ -279,7 +279,7 @@ WilcoxKOmegaEquationSystem::post_external_data_transfer_work()
 void
 WilcoxKOmegaEquationSystem::update_and_clip()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
@@ -307,7 +307,7 @@ WilcoxKOmegaEquationSystem::update_and_clip()
   tkeNp1.sync_to_device();
   sdrNp1.sync_to_device();
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "KE::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double tkeNew = tkeNp1.get(mi, 0) + kTmp.get(mi, 0);
@@ -335,9 +335,9 @@ WilcoxKOmegaEquationSystem::clip_ko(
   const double tkeMinVal = tkeMinValue_;
   const double sdrMinVal = sdrMinValue_;
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "KE::clip", ngpMesh, stk::topology::NODE_RANK, sel,
-    KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<>::MeshIndex& mi) {
+    KOKKOS_LAMBDA(const kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex& mi) {
       const double tkeNew = tke.get(mi, 0);
       const double sdrNew = sdr.get(mi, 0);
 
@@ -354,7 +354,7 @@ WilcoxKOmegaEquationSystem::clip_ko(
 void
 WilcoxKOmegaEquationSystem::clip_min_distance_to_wall()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex;
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = meshInfo.ngp_mesh();
   const auto& meta = meshInfo.meta();
@@ -363,7 +363,7 @@ WilcoxKOmegaEquationSystem::clip_min_distance_to_wall()
   auto& ndtw =
     fieldMgr.get_field<double>(minDistanceToWall_->mesh_meta_data_ordinal());
   const auto& wallNormDist =
-    nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
 
   const stk::mesh::Selector sel =
     (meta.locally_owned_part() | meta.globally_shared_part()) &
@@ -371,7 +371,7 @@ WilcoxKOmegaEquationSystem::clip_min_distance_to_wall()
 
   ndtw.sync_to_device();
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "SST::clip_ndtw", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double minD = ndtw.get(mi, 0);
@@ -392,5 +392,5 @@ WilcoxKOmegaEquationSystem::post_iter_work()
   // nothing to do here ...
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

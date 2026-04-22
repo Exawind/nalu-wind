@@ -35,170 +35,170 @@ namespace unit_test_kernel_utils {
 
 void velocity_test_function(
   const stk::mesh::BulkData&,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& velocity);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& velocity);
 
 void dudx_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::TensorFieldType& dudx);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::TensorFieldType& dudx);
 
 void pressure_test_function(
   const stk::mesh::BulkData&,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& pressure);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& pressure);
 
 void dpdx_test_function(
   const stk::mesh::BulkData&,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& dpdx);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& dpdx);
 
 void temperature_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& temperature);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& temperature);
 
 void density_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& density);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& density);
 
 void tke_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& tke);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& tke);
 
 void alpha_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& alpha);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& alpha);
 
 void dkdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& dkdx);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& dkdx);
 
 void sdr_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& sdr);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& sdr);
 
 void gamma_intermittency_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& gamma_intermittency);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& gamma_intermittency);
 
 void dwalldistdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& dwalldistdx);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& dwalldistdx);
 
 void dnDotVdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& dnDotVdx);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& dnDotVdx);
 
 void tdr_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& tdr);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& tdr);
 
 void dwdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& dwdx);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& dwdx);
 
 void turbulent_viscosity_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& turbulent_viscosity);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& turbulent_viscosity);
 
 void tensor_turbulent_viscosity_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::GenericFieldType& mutij);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::GenericFieldType& mutij);
 
 void sst_f_one_blending_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& sst_f_one_blending);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& sst_f_one_blending);
 
 void iddes_rans_indicator_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& iddes_rans_indicator);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& iddes_rans_indicator);
 
 void minimum_distance_to_wall_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& minimum_distance_to_wall);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& minimum_distance_to_wall);
 
 void dplus_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& dplus);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& dplus);
 
 void property_from_mixture_fraction_test_function(
   const stk::mesh::BulkData&,
-  const sierra::nalu::ScalarFieldType& mixFraction,
-  sierra::nalu::ScalarFieldType& property,
+  const sierra::kynema_ugf::ScalarFieldType& mixFraction,
+  sierra::kynema_ugf::ScalarFieldType& property,
   const double primary,
   const double secondary);
 
 void inverse_property_from_mixture_fraction_test_function(
   const stk::mesh::BulkData&,
-  const sierra::nalu::ScalarFieldType& mixFraction,
-  sierra::nalu::ScalarFieldType& property,
+  const sierra::kynema_ugf::ScalarFieldType& mixFraction,
+  sierra::kynema_ugf::ScalarFieldType& property,
   const double primary,
   const double secondary);
 
 void mixture_fraction_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  const sierra::nalu::ScalarFieldType& mixFrac,
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  const sierra::kynema_ugf::ScalarFieldType& mixFrac,
   const double znot,
   const double amf);
 
 void dhdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& dhdx);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& dhdx);
 
 void calc_edge_area_vec(
   const stk::mesh::BulkData& bulk,
   const stk::topology& topo,
-  const sierra::nalu::VectorFieldType& coordinates,
-  const sierra::nalu::VectorFieldType& edgeAreaVec);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  const sierra::kynema_ugf::VectorFieldType& edgeAreaVec);
 
 void calc_exposed_area_vec(
   const stk::mesh::BulkData& bulk,
   const stk::topology& topo,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::GenericFieldType& exposedAreaVec);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::GenericFieldType& exposedAreaVec);
 
 void calc_mass_flow_rate(
   const stk::mesh::BulkData&,
-  const sierra::nalu::VectorFieldType&,
-  const sierra::nalu::ScalarFieldType&,
-  const sierra::nalu::VectorFieldType&,
-  sierra::nalu::ScalarFieldType&);
+  const sierra::kynema_ugf::VectorFieldType&,
+  const sierra::kynema_ugf::ScalarFieldType&,
+  const sierra::kynema_ugf::VectorFieldType&,
+  sierra::kynema_ugf::ScalarFieldType&);
 
 void calc_mass_flow_rate_scs(
   stk::mesh::BulkData&,
   const stk::topology&,
-  const sierra::nalu::VectorFieldType&,
-  const sierra::nalu::ScalarFieldType&,
-  const sierra::nalu::VectorFieldType&,
-  const sierra::nalu::GenericFieldType&);
+  const sierra::kynema_ugf::VectorFieldType&,
+  const sierra::kynema_ugf::ScalarFieldType&,
+  const sierra::kynema_ugf::VectorFieldType&,
+  const sierra::kynema_ugf::GenericFieldType&);
 
 void calc_open_mass_flow_rate(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
-  const sierra::nalu::VectorFieldType& coordinates,
-  const sierra::nalu::ScalarFieldType& density,
-  const sierra::nalu::VectorFieldType& velocity,
-  const sierra::nalu::GenericFieldType& exposedAreaVec,
-  const sierra::nalu::GenericFieldType& massFlowRate);
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  const sierra::kynema_ugf::ScalarFieldType& density,
+  const sierra::kynema_ugf::VectorFieldType& velocity,
+  const sierra::kynema_ugf::GenericFieldType& exposedAreaVec,
+  const sierra::kynema_ugf::GenericFieldType& massFlowRate);
 
 void expect_all_near(
   const Kokkos::View<double*>& calcValue,
@@ -277,9 +277,9 @@ public:
     meta_ = &bulk_->mesh_meta_data();
     meta_->use_simple_fields();
 
-    naluGlobalId_ = &meta_->declare_field<stk::mesh::EntityId>(
-      stk::topology::NODE_RANK, "nalu_global_id", 1);
-    tpetGlobalId_ = &meta_->declare_field<sierra::nalu::TpetIdType>(
+    kynema_ugfGlobalId_ = &meta_->declare_field<stk::mesh::EntityId>(
+      stk::topology::NODE_RANK, "kynema-ugf_global_id", 1);
+    tpetGlobalId_ = &meta_->declare_field<sierra::kynema_ugf::TpetIdType>(
       stk::topology::NODE_RANK, "tpet_global_id", 1);
     dnvField_ = &meta_->declare_field<double>(
       stk::topology::NODE_RANK, "dual_nodal_volume", 3);
@@ -293,7 +293,7 @@ public:
       &meta_->declare_field<double>(meta_->side_rank(), "exposed_area_vector");
 
     stk::mesh::put_field_on_mesh(
-      *naluGlobalId_, meta_->universal_part(), nullptr);
+      *kynema_ugfGlobalId_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
       *tpetGlobalId_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
@@ -307,7 +307,7 @@ public:
       *elementVolume_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
       *exposedAreaVec_, meta_->universal_part(),
-      spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+      spatialDim_ * sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_, nullptr);
   }
 
   virtual ~TestKernelHex8Mesh() {}
@@ -327,7 +327,7 @@ public:
     partVec_.clear();
     partVec_.push_back(meta_->get_part("block_1"));
 
-    coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
+    coordinates_ = static_cast<const sierra::kynema_ugf::VectorFieldType*>(
       meta_->coordinate_field());
 
     EXPECT_TRUE(coordinates_ != nullptr);
@@ -335,9 +335,10 @@ public:
     stk::mesh::field_fill(0.125, *dnvField_);
     stk::mesh::field_fill(1.25, *divMeshVelField_);
     unit_test_kernel_utils::calc_edge_area_vec(
-      *bulk_, sierra::nalu::AlgTraitsHex8::topo_, *coordinates_, *edgeAreaVec_);
+      *bulk_, sierra::kynema_ugf::AlgTraitsHex8::topo_, *coordinates_,
+      *edgeAreaVec_);
     unit_test_kernel_utils::calc_exposed_area_vec(
-      *bulk_, sierra::nalu::AlgTraitsQuad4::topo_, *coordinates_,
+      *bulk_, sierra::kynema_ugf::AlgTraitsQuad4::topo_, *coordinates_,
       *exposedAreaVec_);
   }
 
@@ -347,22 +348,22 @@ public:
   std::shared_ptr<stk::mesh::BulkData> bulk_;
   stk::mesh::PartVector partVec_;
 
-  sierra::nalu::SolutionOptions solnOpts_;
-#ifdef NALU_USES_TRILINOS_SOLVERS
+  sierra::kynema_ugf::SolutionOptions solnOpts_;
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
   using GlobalOrdinal = Tpetra::Details::DefaultTypes::global_ordinal_type;
 #else
   using GlobalOrdinal = int64_t;
 #endif
   using TpetIDFieldType = stk::mesh::Field<GlobalOrdinal>;
 
-  const sierra::nalu::VectorFieldType* coordinates_{nullptr};
-  sierra::nalu::GlobalIdFieldType* naluGlobalId_{nullptr};
+  const sierra::kynema_ugf::VectorFieldType* coordinates_{nullptr};
+  sierra::kynema_ugf::GlobalIdFieldType* kynema_ugfGlobalId_{nullptr};
   TpetIDFieldType* tpetGlobalId_{nullptr};
-  sierra::nalu::ScalarFieldType* dnvField_{nullptr};
-  sierra::nalu::ScalarFieldType* divMeshVelField_{nullptr};
-  sierra::nalu::VectorFieldType* edgeAreaVec_{nullptr};
-  sierra::nalu::ScalarFieldType* elementVolume_{nullptr};
-  sierra::nalu::GenericFieldType* exposedAreaVec_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* dnvField_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* divMeshVelField_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* edgeAreaVec_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* elementVolume_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* exposedAreaVec_{nullptr};
 };
 
 /** Test Fixture for Low-Mach Kernels
@@ -407,8 +408,8 @@ public:
     stk::io::set_field_output_type(
       *velocityBC_, stk::io::FieldOutputType::VECTOR_3D);
     stk::mesh::put_field_on_mesh(
-      *dynP_, meta_->universal_part(), sierra::nalu::AlgTraitsQuad4::numScsIp_,
-      nullptr);
+      *dynP_, meta_->universal_part(),
+      sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_, nullptr);
   }
 
   virtual ~LowMachKernelHex8Mesh() {}
@@ -430,13 +431,13 @@ public:
       *bulk_, *coordinates_, *velocityBC_);
   }
 
-  sierra::nalu::VectorFieldType* velocity_{nullptr};
-  sierra::nalu::VectorFieldType* dpdx_{nullptr};
-  sierra::nalu::ScalarFieldType* density_{nullptr};
-  sierra::nalu::ScalarFieldType* pressure_{nullptr};
-  sierra::nalu::ScalarFieldType* Udiag_{nullptr};
-  sierra::nalu::VectorFieldType* velocityBC_{nullptr};
-  sierra::nalu::GenericFieldType* dynP_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* velocity_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dpdx_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* density_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* pressure_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* Udiag_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* velocityBC_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* dynP_{nullptr};
 };
 
 class ContinuityKernelHex8Mesh : public LowMachKernelHex8Mesh
@@ -452,8 +453,8 @@ public:
     stk::mesh::put_field_on_mesh(
       *pressureBC_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
-      *dynP_, meta_->universal_part(), sierra::nalu::AlgTraitsQuad4::numScsIp_,
-      nullptr);
+      *dynP_, meta_->universal_part(),
+      sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_, nullptr);
   }
 
   virtual ~ContinuityKernelHex8Mesh() {}
@@ -468,8 +469,8 @@ public:
   }
 
 private:
-  sierra::nalu::ScalarFieldType* pressureBC_{nullptr};
-  sierra::nalu::GenericFieldType* dynP_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* pressureBC_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* dynP_{nullptr};
 };
 
 // Provide separate namespace for Edge kernel tests
@@ -501,7 +502,7 @@ public:
         stk::topology::NODE_RANK, "open_velocity_bc"))
   {
     const auto& meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::HEX_8);
     stk::mesh::put_field_on_mesh(
       *massFlowRate_, meta_->universal_part(), meSCS->num_integration_points(),
@@ -515,10 +516,10 @@ public:
       *temperature_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
       *openMassFlowRate_, meta_->universal_part(),
-      sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+      sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(
-      *dynP_, meta_->universal_part(), sierra::nalu::AlgTraitsQuad4::numScsIp_,
-      nullptr);
+      *dynP_, meta_->universal_part(),
+      sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(
       *openVelocityBC_, meta_->universal_part(), spatialDim_, nullptr);
     stk::io::set_field_output_type(
@@ -544,13 +545,13 @@ public:
       *exposedAreaVec_, *openMassFlowRate_);
   }
 
-  sierra::nalu::GenericFieldType* massFlowRate_{nullptr};
-  sierra::nalu::ScalarFieldType* viscosity_{nullptr};
-  sierra::nalu::TensorFieldType* dudx_{nullptr};
-  sierra::nalu::ScalarFieldType* temperature_{nullptr};
-  sierra::nalu::GenericFieldType* openMassFlowRate_{nullptr};
-  sierra::nalu::GenericFieldType* dynP_{nullptr};
-  sierra::nalu::VectorFieldType* openVelocityBC_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* massFlowRate_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* viscosity_{nullptr};
+  sierra::kynema_ugf::TensorFieldType* dudx_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* temperature_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* openMassFlowRate_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* dynP_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* openVelocityBC_{nullptr};
 };
 
 // Provide separate namespace for Edge kernel tests
@@ -588,10 +589,10 @@ public:
     ablWallNodeMask_->sync_to_device();
   }
 
-  sierra::nalu::ScalarFieldType* massFlowRateEdge_{nullptr};
-  sierra::nalu::ScalarFieldType* pecletFactor_{nullptr};
-  sierra::nalu::ScalarFieldType* maxPecletFactor_{nullptr};
-  sierra::nalu::ScalarFieldType* ablWallNodeMask_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* massFlowRateEdge_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* pecletFactor_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* maxPecletFactor_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* ablWallNodeMask_{nullptr};
 };
 
 class MomentumABLKernelHex8Mesh : public MomentumKernelHex8Mesh
@@ -667,12 +668,12 @@ public:
     tGradBC_->sync_to_device();
   }
 
-  sierra::nalu::VectorFieldType* wallVelocityBC_{nullptr};
-  sierra::nalu::ScalarFieldType* bcHeatFlux_{nullptr};
-  sierra::nalu::ScalarFieldType* specificHeat_{nullptr};
-  sierra::nalu::ScalarFieldType* wallFricVel_{nullptr};
-  sierra::nalu::ScalarFieldType* wallNormDist_{nullptr};
-  sierra::nalu::ScalarFieldType* tGradBC_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* wallVelocityBC_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* bcHeatFlux_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* specificHeat_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* wallFricVel_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* wallNormDist_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tGradBC_{nullptr};
 
   const double z0_{0.1};
   const double zh_{0.25};
@@ -722,10 +723,10 @@ public:
     stk::mesh::field_fill(100.0, *heatFluxBC_);
   }
 
-  sierra::nalu::ScalarFieldType* thermalCond_{nullptr};
-  sierra::nalu::ScalarFieldType* evisc_{nullptr};
-  sierra::nalu::ScalarFieldType* tvisc_{nullptr};
-  sierra::nalu::ScalarFieldType* heatFluxBC_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* thermalCond_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* evisc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tvisc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* heatFluxBC_{nullptr};
 };
 
 /** Test Fixture for the SST Kernels
@@ -808,13 +809,13 @@ public:
       *dnDotVdx_, meta_->universal_part(), spatialDim_, nullptr);
     stk::io::set_field_output_type(
       *dnDotVdx_, stk::io::FieldOutputType::VECTOR_3D);
-    double initOpenMassFlowRate[sierra::nalu::AlgTraitsQuad4::numScsIp_];
-    for (int i = 0; i < sierra::nalu::AlgTraitsQuad4::numScsIp_; ++i) {
+    double initOpenMassFlowRate[sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_];
+    for (int i = 0; i < sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_; ++i) {
       initOpenMassFlowRate[i] = 10.0;
     }
     stk::mesh::put_field_on_mesh(
       *openMassFlowRate_, meta_->universal_part(),
-      sierra::nalu::AlgTraitsQuad4::numScsIp_, initOpenMassFlowRate);
+      sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_, initOpenMassFlowRate);
 
     stk::mesh::put_field_on_mesh(*sdrWallbc_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
@@ -855,28 +856,28 @@ public:
     stk::mesh::field_fill(0.0, *dnDotVdx_);
   }
 
-  sierra::nalu::ScalarFieldType* tke_{nullptr};
-  sierra::nalu::ScalarFieldType* tkebc_{nullptr};
-  sierra::nalu::ScalarFieldType* sdr_{nullptr};
-  sierra::nalu::ScalarFieldType* sdrbc_{nullptr};
-  sierra::nalu::ScalarFieldType* visc_{nullptr};
-  sierra::nalu::ScalarFieldType* tvisc_{nullptr};
-  sierra::nalu::ScalarFieldType* gamma_intermittency_{nullptr};
-  sierra::nalu::ScalarFieldType* maxLengthScale_{nullptr};
-  sierra::nalu::ScalarFieldType* minDistance_{nullptr};
-  sierra::nalu::ScalarFieldType* fOneBlend_{nullptr};
-  sierra::nalu::ScalarFieldType* iddes_rans_indicator_{nullptr};
-  sierra::nalu::TensorFieldType* dudx_{nullptr};
-  sierra::nalu::VectorFieldType* dkdx_{nullptr};
-  sierra::nalu::VectorFieldType* dwdx_{nullptr};
-  sierra::nalu::GenericFieldType* openMassFlowRate_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tke_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tkebc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* sdr_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* sdrbc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* visc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tvisc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* gamma_intermittency_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* maxLengthScale_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* minDistance_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* fOneBlend_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* iddes_rans_indicator_{nullptr};
+  sierra::kynema_ugf::TensorFieldType* dudx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dkdx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dwdx_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* openMassFlowRate_{nullptr};
 
-  sierra::nalu::ScalarFieldType* sdrWallbc_{nullptr};
-  sierra::nalu::ScalarFieldType* sdrWallArea_{nullptr};
-  sierra::nalu::GenericFieldType* wallFricVel_{nullptr};
-  sierra::nalu::ScalarFieldType* pecletFactor_{nullptr};
-  sierra::nalu::VectorFieldType* dwalldistdx_{nullptr};
-  sierra::nalu::VectorFieldType* dnDotVdx_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* sdrWallbc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* sdrWallArea_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* wallFricVel_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* pecletFactor_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dwalldistdx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dnDotVdx_{nullptr};
 };
 
 /** Test Fixture for the KE Kernels
@@ -933,13 +934,13 @@ public:
     unit_test_kernel_utils::dudx_test_function(*bulk_, *coordinates_, *dudx_);
   }
 
-  sierra::nalu::ScalarFieldType* tke_{nullptr};
-  sierra::nalu::ScalarFieldType* tdr_{nullptr};
-  sierra::nalu::ScalarFieldType* visc_{nullptr};
-  sierra::nalu::ScalarFieldType* tvisc_{nullptr};
-  sierra::nalu::ScalarFieldType* minDistance_{nullptr};
-  sierra::nalu::ScalarFieldType* dplus_{nullptr};
-  sierra::nalu::TensorFieldType* dudx_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tke_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tdr_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* visc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tvisc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* minDistance_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* dplus_{nullptr};
+  sierra::kynema_ugf::TensorFieldType* dudx_{nullptr};
 };
 
 /** Test Fixture for the KO Kernels
@@ -1002,14 +1003,14 @@ public:
     stk::mesh::field_fill(0.0, *dwdx_);
   }
 
-  sierra::nalu::ScalarFieldType* tke_{nullptr};
-  sierra::nalu::ScalarFieldType* sdr_{nullptr};
-  sierra::nalu::ScalarFieldType* visc_{nullptr};
-  sierra::nalu::ScalarFieldType* tvisc_{nullptr};
-  sierra::nalu::ScalarFieldType* minDistance_{nullptr};
-  sierra::nalu::TensorFieldType* dudx_{nullptr};
-  sierra::nalu::VectorFieldType* dkdx_{nullptr};
-  sierra::nalu::VectorFieldType* dwdx_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tke_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* sdr_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* visc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tvisc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* minDistance_{nullptr};
+  sierra::kynema_ugf::TensorFieldType* dudx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dkdx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dwdx_{nullptr};
 };
 
 /** Test Fixture for the Turbulence Kernels
@@ -1080,7 +1081,7 @@ public:
       *specificHeat_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
       *wallNormDistBip_, meta_->universal_part(),
-      sierra::nalu::AlgTraitsQuad4::numFaceIp_, nullptr);
+      sierra::kynema_ugf::AlgTraitsQuad4::numFaceIp_, nullptr);
     stk::mesh::put_field_on_mesh(*wallArea_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
       *wallNormDist_, meta_->universal_part(), nullptr);
@@ -1121,23 +1122,23 @@ public:
     stk::mesh::field_fill(1000.0, *specificHeat_);
   }
 
-  sierra::nalu::ScalarFieldType* viscosity_{nullptr};
-  sierra::nalu::ScalarFieldType* tke_{nullptr};
-  sierra::nalu::ScalarFieldType* sdr_{nullptr};
-  sierra::nalu::ScalarFieldType* minDistance_{nullptr};
-  sierra::nalu::TensorFieldType* dudx_{nullptr};
-  sierra::nalu::ScalarFieldType* tvisc_{nullptr};
-  sierra::nalu::ScalarFieldType* maxLengthScale_{nullptr};
-  sierra::nalu::ScalarFieldType* fOneBlend_{nullptr};
-  sierra::nalu::ScalarFieldType* evisc_{nullptr};
-  sierra::nalu::ScalarFieldType* dualNodalVolume_{nullptr};
-  sierra::nalu::VectorFieldType* dkdx_{nullptr};
-  sierra::nalu::VectorFieldType* dwdx_{nullptr};
-  sierra::nalu::VectorFieldType* dhdx_{nullptr};
-  sierra::nalu::ScalarFieldType* specificHeat_{nullptr};
-  sierra::nalu::GenericFieldType* wallNormDistBip_{nullptr};
-  sierra::nalu::ScalarFieldType* wallArea_{nullptr};
-  sierra::nalu::ScalarFieldType* wallNormDist_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* viscosity_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tke_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* sdr_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* minDistance_{nullptr};
+  sierra::kynema_ugf::TensorFieldType* dudx_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tvisc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* maxLengthScale_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* fOneBlend_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* evisc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* dualNodalVolume_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dkdx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dwdx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dhdx_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* specificHeat_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* wallNormDistBip_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* wallArea_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* wallNormDist_{nullptr};
 };
 
 /** Test Fixture for the AMS Kernels
@@ -1246,23 +1247,23 @@ public:
     stk::mesh::field_fill(0.0, *forcingComp_);
   }
 
-  sierra::nalu::ScalarFieldType* tke_{nullptr};
-  sierra::nalu::ScalarFieldType* sdr_{nullptr};
-  sierra::nalu::ScalarFieldType* visc_{nullptr};
-  sierra::nalu::ScalarFieldType* tvisc_{nullptr};
-  sierra::nalu::ScalarFieldType* alpha_{nullptr};
-  sierra::nalu::VectorFieldType* avgVelocity_{nullptr};
-  sierra::nalu::ScalarFieldType* avgResAdeq_{nullptr};
-  sierra::nalu::ScalarFieldType* avgProd_{nullptr};
-  sierra::nalu::ScalarFieldType* avgTime_{nullptr};
-  sierra::nalu::ScalarFieldType* minDist_{nullptr};
-  sierra::nalu::GenericFieldType* Mij_{nullptr};
-  sierra::nalu::ScalarFieldType* fOneBlend_{nullptr};
-  sierra::nalu::TensorFieldType* dudx_{nullptr};
-  sierra::nalu::TensorFieldType* avgDudx_{nullptr};
-  sierra::nalu::VectorFieldType* dkdx_{nullptr};
-  sierra::nalu::VectorFieldType* dwdx_{nullptr};
-  sierra::nalu::VectorFieldType* forcingComp_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tke_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* sdr_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* visc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tvisc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* alpha_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* avgVelocity_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* avgResAdeq_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* avgProd_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* avgTime_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* minDist_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* Mij_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* fOneBlend_{nullptr};
+  sierra::kynema_ugf::TensorFieldType* dudx_{nullptr};
+  sierra::kynema_ugf::TensorFieldType* avgDudx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dkdx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dwdx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* forcingComp_{nullptr};
 };
 
 /** Test Fixture for the hybrid turbulence Kernels
@@ -1303,9 +1304,9 @@ public:
      * *alpha_); */
   }
 
-  sierra::nalu::ScalarFieldType* tke_{nullptr};
-  sierra::nalu::ScalarFieldType* alpha_{nullptr};
-  sierra::nalu::GenericFieldType* mutij_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tke_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* alpha_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* mutij_{nullptr};
 };
 
 /** Text fixture for heat conduction equation kernels
@@ -1342,8 +1343,8 @@ public:
     stk::mesh::field_fill(1.0, *thermalCond_);
   }
 
-  sierra::nalu::ScalarFieldType* temperature_{nullptr};
-  sierra::nalu::ScalarFieldType* thermalCond_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* temperature_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* thermalCond_{nullptr};
 };
 
 /** Text fixture for mixture fraction equation kernels
@@ -1387,7 +1388,7 @@ public:
       viscSecondary_(1.85e-5)
   {
     const auto& meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::HEX_8);
     stk::mesh::put_field_on_mesh(
       *mixFraction_, meta_->universal_part(), nullptr);
@@ -1404,7 +1405,7 @@ public:
       *dpdx_, meta_->universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
       *openMassFlowRate_, meta_->universal_part(),
-      sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+      sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(
       *massFlowRateEdge_, meta_->universal_part(), spatialDim_, nullptr);
   }
@@ -1434,16 +1435,16 @@ public:
       *bulk_, *velocity_, *density_, *edgeAreaVec_, *massFlowRateEdge_);
   }
 
-  sierra::nalu::ScalarFieldType* mixFraction_{nullptr};
-  sierra::nalu::VectorFieldType* velocity_{nullptr};
-  sierra::nalu::ScalarFieldType* density_{nullptr};
-  sierra::nalu::ScalarFieldType* viscosity_{nullptr};
-  sierra::nalu::ScalarFieldType* effectiveViscosity_{nullptr};
-  sierra::nalu::GenericFieldType* massFlowRate_{nullptr};
-  sierra::nalu::VectorFieldType* dzdx_{nullptr};
-  sierra::nalu::VectorFieldType* dpdx_{nullptr};
-  sierra::nalu::GenericFieldType* openMassFlowRate_{nullptr};
-  sierra::nalu::ScalarFieldType* massFlowRateEdge_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* mixFraction_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* velocity_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* density_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* viscosity_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* effectiveViscosity_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* massFlowRate_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dzdx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dpdx_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* openMassFlowRate_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* massFlowRateEdge_{nullptr};
 
   const double znot_;
   const double amf_;
@@ -1490,7 +1491,7 @@ public:
       viscSecondary_(1.e-5)
   {
     const auto& meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::HEX_8);
     stk::mesh::put_field_on_mesh(
       *volumeOfFluid_, meta_->universal_part(), nullptr);
@@ -1528,13 +1529,13 @@ public:
       *bulk_, *velocity_, *density_, *edgeAreaVec_, *massFlowRateEdge_);
   }
 
-  sierra::nalu::ScalarFieldType* volumeOfFluid_{nullptr};
-  sierra::nalu::VectorFieldType* dvolumeOfFluidDx_{nullptr};
-  sierra::nalu::VectorFieldType* velocity_{nullptr};
-  sierra::nalu::ScalarFieldType* density_{nullptr};
-  sierra::nalu::ScalarFieldType* viscosity_{nullptr};
-  sierra::nalu::ScalarFieldType* massFlowRateEdge_{nullptr};
-  sierra::nalu::ScalarFieldType* vofBalancedMassFlowRateEdge_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* volumeOfFluid_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dvolumeOfFluidDx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* velocity_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* density_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* viscosity_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* massFlowRateEdge_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* vofBalancedMassFlowRateEdge_{nullptr};
   const double znot_;
   const double amf_;
   const double rhoPrimary_;
@@ -1589,8 +1590,8 @@ public:
       act_source_lhs.data(), *actuator_source_lhs_);
   }
 
-  sierra::nalu::VectorFieldType* actuator_source_{nullptr};
-  sierra::nalu::VectorFieldType* actuator_source_lhs_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* actuator_source_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* actuator_source_lhs_{nullptr};
 };
 
 class WallDistKernelHex8Mesh : public TestKernelHex8Mesh

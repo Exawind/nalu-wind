@@ -7,13 +7,13 @@
 // for more details.
 //
 
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
 
 #include "overset/OversetManagerTIOGA.h"
 #include "overset/OversetInfo.h"
 #include "overset/OversetFieldData.h"
-#include "NaluEnv.h"
-#include "NaluParsing.h"
+#include "KynemaUGFEnv.h"
+#include "KynemaUGFParsing.h"
 #include "Realm.h"
 
 // stk_mesh/base/fem
@@ -26,7 +26,7 @@
 #include <stk_mesh/base/Selector.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 OversetManagerTIOGA::OversetManagerTIOGA(
   Realm& realm, const OversetUserData& oversetUserData)
@@ -53,19 +53,19 @@ OversetManagerTIOGA::setup()
 void
 OversetManagerTIOGA::initialize()
 {
-  const double timeA = NaluEnv::self().nalu_time();
+  const double timeA = KynemaUGFEnv::self().kynema_ugf_time();
   if (isInit_) {
     tiogaIface_.initialize();
     isInit_ = false;
   }
-  const double timeB = NaluEnv::self().nalu_time();
+  const double timeB = KynemaUGFEnv::self().kynema_ugf_time();
   timerConnectivity_ += (timeB - timeA);
 }
 
 void
 OversetManagerTIOGA::execute(const bool isDecoupled)
 {
-  const double timeA = NaluEnv::self().nalu_time();
+  const double timeA = KynemaUGFEnv::self().kynema_ugf_time();
   if (isInit_) {
     tiogaIface_.initialize();
     isInit_ = false;
@@ -73,11 +73,11 @@ OversetManagerTIOGA::execute(const bool isDecoupled)
 
   tiogaIface_.execute(isDecoupled);
 
-  const double timeB = NaluEnv::self().nalu_time();
+  const double timeB = KynemaUGFEnv::self().kynema_ugf_time();
   timerConnectivity_ += (timeB - timeA);
 
 #if 0
-  NaluEnv::self().naluOutputP0() 
+  KynemaUGFEnv::self().kynema_ugfOutputP0() 
       << "TIOGA connectivity updated: " << (timeB - timeA) << std::endl;
 #endif
 }
@@ -99,7 +99,7 @@ OversetManagerTIOGA::overset_update_field(
   tiogaIface_.overset_update_field(field, nrows, ncols, doFinalSyncToDevice);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

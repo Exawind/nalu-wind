@@ -22,7 +22,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -108,5 +108,5 @@ Transfers::parent()
   return &simulation_;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

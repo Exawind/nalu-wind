@@ -13,8 +13,8 @@
 #include <FieldFunctions.h>
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementRepo.h>
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 #include <SpecificDissipationRateEquationSystem.h>
 #include <GammaEquationSystem.h>
 #include <SolutionOptions.h>
@@ -52,7 +52,7 @@
 #include "ngp_utils/NgpFieldBLAS.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -236,8 +236,8 @@ ShearStressTransportEquationSystem::register_wall_bc(
   RoughnessHeight rough = userData.z0_;
   double z0 = rough.z0_;
   realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
-    sierra::nalu::WALL, part, get_elem_topo(realm_, *part), "sst_geometry_wall",
-    RANSAblBcApproach, z0);
+    sierra::kynema_ugf::WALL, part, get_elem_topo(realm_, *part),
+    "sst_geometry_wall", RANSAblBcApproach, z0);
 }
 
 //--------------------------------------------------------------------------
@@ -289,7 +289,7 @@ ShearStressTransportEquationSystem::solve_and_update()
   // start the iteration loop
   for (int k = 0; k < maxIterations_; ++k) {
 
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
       << name_ << std::endl;
 
@@ -394,7 +394,7 @@ ShearStressTransportEquationSystem::post_external_data_transfer_work()
 void
 ShearStressTransportEquationSystem::update_and_clip()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
@@ -422,7 +422,7 @@ ShearStressTransportEquationSystem::update_and_clip()
   tkeNp1.sync_to_device();
   sdrNp1.sync_to_device();
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "SST::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double tkeNew = tkeNp1.get(mi, 0) + kTmp.get(mi, 0);
@@ -439,7 +439,7 @@ ShearStressTransportEquationSystem::update_and_clip()
 void
 ShearStressTransportEquationSystem::update_and_clip_gamma()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
@@ -460,7 +460,7 @@ ShearStressTransportEquationSystem::update_and_clip_gamma()
 
   gammaNp1.sync_to_device();
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "SST_GammaEQActive::update_and_clip", ngpMesh, stk::topology::NODE_RANK,
     sel, KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double gammaNew = gammaNp1.get(mi, 0) + gamTmp.get(mi, 0);
@@ -485,9 +485,9 @@ ShearStressTransportEquationSystem::clip_sst(
   const double tkeMinVal = tkeMinValue_;
   const double sdrMinVal = sdrMinValue_;
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "SST::clip", ngpMesh, stk::topology::NODE_RANK, sel,
-    KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<>::MeshIndex& mi) {
+    KOKKOS_LAMBDA(const kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex& mi) {
       const double tkeNew = tke.get(mi, 0);
       const double sdrNew = sdr.get(mi, 0);
 
@@ -508,9 +508,9 @@ ShearStressTransportEquationSystem::clip_sst_gamma(
   const double gammaMinVal = gammaMinValue_;
   const double gammaMaxVal = gammaMaxValue_;
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "SST::clip", ngpMesh, stk::topology::NODE_RANK, sel,
-    KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<>::MeshIndex& mi) {
+    KOKKOS_LAMBDA(const kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex& mi) {
       const double gammaNew = gamma.get(mi, 0);
       gamma.get(mi, 0) =
         stk::math::min(stk::math::max(gammaNew, gammaMinVal), gammaMaxVal);
@@ -524,7 +524,7 @@ ShearStressTransportEquationSystem::clip_sst_gamma(
 void
 ShearStressTransportEquationSystem::clip_min_distance_to_wall()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex;
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = meshInfo.ngp_mesh();
   const auto& meta = meshInfo.meta();
@@ -536,14 +536,14 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
   auto& ndtw =
     fieldMgr.get_field<double>(minDistanceToWall_->mesh_meta_data_ordinal());
   const auto& wallNormDist =
-    nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
 
   const stk::mesh::Selector sel =
     (meta.locally_owned_part() | meta.globally_shared_part()) &
     stk::mesh::selectUnion(wallBcPart_);
 
   ndtw.sync_to_device();
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "SST::clip_ndtw", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double minD = ndtw.get(mi, 0);
@@ -562,7 +562,7 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
 void
 ShearStressTransportEquationSystem::compute_f_one_blending()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
@@ -579,8 +579,8 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
     fieldMgr.get_field<double>(tke_->mesh_meta_data_ordinal());
   const auto& sdrNp1 =
     fieldMgr.get_field<double>(sdr_->mesh_meta_data_ordinal());
-  const auto& density = nalu_ngp::get_ngp_field(meshInfo, "density");
-  const auto& viscosity = nalu_ngp::get_ngp_field(meshInfo, "viscosity");
+  const auto& density = kynema_ugf_ngp::get_ngp_field(meshInfo, "density");
+  const auto& viscosity = kynema_ugf_ngp::get_ngp_field(meshInfo, "viscosity");
   const auto& dkdx =
     fieldMgr.get_field<double>(tkeEqSys_->dkdx_->mesh_meta_data_ordinal());
   const auto& dwdx =
@@ -596,7 +596,7 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
 
   fOneBlend.sync_to_device();
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "SST::compute_fone_blending", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double tke = tkeNp1.get(mi, 0);
@@ -675,5 +675,5 @@ ShearStressTransportEquationSystem::post_iter_work()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

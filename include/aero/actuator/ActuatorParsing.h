@@ -16,7 +16,7 @@ class Node;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /*! \brief Parse parameters to construct meta data for actuator's
  *  Parse parameters and construct meta data for actuators.
@@ -37,7 +37,7 @@ ActuatorMeta actuator_parse(const YAML::Node& y_node);
 void
 epsilon_parsing(int turbId, const YAML::Node& y_node, ActuatorMeta& actMeta);
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

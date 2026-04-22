@@ -12,7 +12,7 @@
 
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
-#include <NaluParsedTypes.h>
+#include <KynemaUGFParsedTypes.h>
 
 namespace stk {
 struct topology;
@@ -22,7 +22,7 @@ class Part;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class EquationSystems;
 class AlgorithmDriver;
@@ -96,7 +96,7 @@ public:
   const double gammaMaxValue_{1.0};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

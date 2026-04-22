@@ -19,7 +19,7 @@ class Node;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -27,9 +27,10 @@ class Realm;
  * \brief ABL Forcing Source terms for Momentum and Temperature equations
  *
  * This class parses the user inputs and provides a common interface to the
- * momentum and temperature ABL forcing source term implementations within Nalu.
- * The ABL forcing capability is turned on by the presence of a sub-section
- * titled `abl_forcing` within the Realm section of the Nalu input file.
+ * momentum and temperature ABL forcing source term implementations within
+ * KynemaUGF. The ABL forcing capability is turned on by the presence of a
+ * sub-section titled `abl_forcing` within the Realm section of the KynemaUGF
+ * input file.
  *
  * ```
  *   abl_forcing:
@@ -229,7 +230,7 @@ private:
   //! Uz, T. Default is "abl_sources_%s.dat"
   std::string outFileFmt_{"abl_%s_sources.dat"};
 };
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ABLFORCINGALGORITHM_H */

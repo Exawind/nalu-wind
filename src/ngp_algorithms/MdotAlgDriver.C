@@ -24,7 +24,7 @@
 #include "stk_mesh/base/MetaData.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 inline void
@@ -124,7 +124,8 @@ MdotAlgDriver::pre_work()
     }
 
     unsigned g_numIp = 0;
-    stk::all_reduce_sum(NaluEnv::self().parallel_comm(), &numIp, &g_numIp, 1);
+    stk::all_reduce_sum(
+      KynemaUGFEnv::self().parallel_comm(), &numIp, &g_numIp, 1);
     mdotOpenIpCount_ = g_numIp;
     isInit_ = false;
   }
@@ -135,7 +136,7 @@ MdotAlgDriver::post_work()
 {
   double local[3] = {rhoAccum_, mdotInflow_, mdotOpen_};
   double global[3] = {0.0, 0.0, 0.0};
-  stk::all_reduce_sum(NaluEnv::self().parallel_comm(), local, global, 3);
+  stk::all_reduce_sum(KynemaUGFEnv::self().parallel_comm(), local, global, 3);
 
   rhoAccum_ = global[0];
   mdotInflow_ = global[1];
@@ -150,7 +151,7 @@ MdotAlgDriver::post_work()
 
     double gPost = 0.0;
     stk::all_reduce_sum(
-      NaluEnv::self().parallel_comm(), &mdotOpenPost_, &gPost, 1);
+      KynemaUGFEnv::self().parallel_comm(), &mdotOpenPost_, &gPost, 1);
     mdotOpenPost_ = gPost;
   }
 
@@ -164,7 +165,7 @@ MdotAlgDriver::provide_output()
 {
   const double totalMassClosure = (rhoAccum_ + mdotInflow_ + mdotOpen_);
 
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Mass Balance Review:"
     << "\nDensity accumulation: " << std::setprecision(16) << rhoAccum_
     << "\nIntegrated inflow:    " << std::setprecision(16) << mdotInflow_
@@ -173,7 +174,7 @@ MdotAlgDriver::provide_output()
     << std::endl;
 
   if (realm_.solutionOptions_->activateOpenMdotCorrection_) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "A mass correction of: " << mdotOpenCorrection_
       << " occurred on: " << mdotOpenIpCount_ << " boundary integration points."
       << std::endl
@@ -194,12 +195,12 @@ MdotAlgDriver::register_open_mdot_corrector_alg(
   const auto it = correctOpenMdotAlgs_.find(algName);
   if (it == correctOpenMdotAlgs_.end()) {
     correctOpenMdotAlgs_[algName].reset(
-      nalu_ngp::create_face_algorithm<Algorithm, MdotOpenCorrectorAlg>(
+      kynema_ugf_ngp::create_face_algorithm<Algorithm, MdotOpenCorrectorAlg>(
         topo, realm_, part, *this));
   } else {
     it->second->partVec_.push_back(part);
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

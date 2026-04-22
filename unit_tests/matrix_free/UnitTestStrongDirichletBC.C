@@ -41,7 +41,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class DirichletFixture : public ConductionFixture
@@ -177,5 +177,5 @@ TEST_F(DirichletFixture, linearized_bc_residual)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

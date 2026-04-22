@@ -17,7 +17,7 @@
 #include "SolutionOptions.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MomentumBuoyancyNodeKernel::MomentumBuoyancyNodeKernel(
   const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts)
@@ -71,5 +71,5 @@ MomentumBuoyancyNodeKernel::execute(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

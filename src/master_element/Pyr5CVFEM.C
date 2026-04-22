@@ -15,7 +15,7 @@
 
 #include <AlgTraits.h>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
@@ -29,7 +29,7 @@
 #include <memory>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 int
 pyr_gradient_operator(
@@ -1153,7 +1153,7 @@ PyrSCS::general_face_grad_op(
   const int lerr = pyr_gradient_operator(cordel, deriv, grad, det, err);
 
   if (lerr)
-    NaluEnv::self().naluOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
       << "PyrSCS::general_face_grad_op: issue.." << std::endl;
 }
 
@@ -1472,5 +1472,5 @@ PyrSCS::sidePcoords_to_elemPcoords(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

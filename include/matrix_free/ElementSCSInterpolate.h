@@ -18,7 +18,7 @@
 #include "matrix_free/ShuffledAccess.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <int p, int dir, typename ScalarView>
@@ -226,6 +226,6 @@ interp_scs_vector(const InArray& in, OutArray& interp)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

@@ -19,7 +19,7 @@
 #include <stk_mesh/base/Selector.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 LinearPropAlgorithm::LinearPropAlgorithm(
   Realm& realm,
@@ -65,5 +65,5 @@ LinearPropAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -14,7 +14,7 @@
 #include "PecletFunction.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class MomentumEdgeSolverAlg : public AssembleEdgeSolverAlgorithm
 {
@@ -39,7 +39,7 @@ private:
   unsigned maskNodeField_{stk::mesh::InvalidOrdinal};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOMENTUMEDGESOLVERALG_H */

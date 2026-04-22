@@ -18,7 +18,7 @@
 #include <stk_mesh/base/NgpMesh.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 EffDiffFluxCoeffAlg::EffDiffFluxCoeffAlg(
   Realm& realm,
@@ -43,7 +43,7 @@ EffDiffFluxCoeffAlg::EffDiffFluxCoeffAlg(
 void
 EffDiffFluxCoeffAlg::execute()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   const auto& meta = realm_.meta_data();
 
@@ -63,7 +63,7 @@ EffDiffFluxCoeffAlg::execute()
   const DblType invSigmaTurb = invSigmaTurb_;
 
   if (isTurbulent_) {
-    nalu_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "EffDiffFluxCoeffAlg_turbulent", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
         evisc.get(meshIdx, 0) =
@@ -71,7 +71,7 @@ EffDiffFluxCoeffAlg::execute()
            tvisc.get(meshIdx, 0) * invSigmaTurb);
       });
   } else {
-    nalu_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "EffDiffFluxCoeffAlg_laminar", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
         evisc.get(meshIdx, 0) = visc.get(meshIdx, 0) * invSigmaLam;
@@ -82,5 +82,5 @@ EffDiffFluxCoeffAlg::execute()
   evisc.modify_on_device();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

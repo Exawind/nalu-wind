@@ -6,7 +6,7 @@
 #
 # 1. Generate ABL mesh
 #
-nalu_abl_mesh:
+kynema-ugf_abl_mesh:
   output_db: ablNeutralEdgeSST_mesh.exo   # output filename
 
   spec_type: bounding_box            # Vertex input type
@@ -38,7 +38,7 @@ nalu_abl_mesh:
 #
 # 2. Preprocessing
 #
-nalu_preprocess:
+kynema-ugf_preprocess:
   input_db: ablNeutralEdgeSST_mesh.exo
   output_db: ablNeutralEdgeSST.exo
 

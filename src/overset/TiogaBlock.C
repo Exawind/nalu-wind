@@ -7,11 +7,11 @@
 // for more details.
 //
 
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
 
 #include "overset/TiogaBlock.h"
 #include "overset/OversetNGP.h"
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 
 #include <stk_util/parallel/ParallelReduce.hpp>
 
@@ -22,7 +22,7 @@
 #include <limits>
 #include <algorithm>
 
-namespace tioga_nalu {
+namespace tioga_kynema_ugf {
 
 TiogaBlock::TiogaBlock(
   stk::mesh::MetaData& meta,
@@ -82,13 +82,13 @@ TiogaBlock::setup(stk::mesh::PartVector& bcPartVec)
   if (ovsetNames_.size() > 0)
     names_to_parts(ovsetNames_, ovsetParts_);
 
-  sierra::nalu::ScalarIntFieldType& ibf =
+  sierra::kynema_ugf::ScalarIntFieldType& ibf =
     meta_.declare_field<int>(stk::topology::NODE_RANK, "iblank");
 
-  sierra::nalu::ScalarIntFieldType& ibcell =
+  sierra::kynema_ugf::ScalarIntFieldType& ibcell =
     meta_.declare_field<int>(stk::topology::ELEM_RANK, "iblank_cell");
 
-  sierra::nalu::ScalarFieldType& nVol =
+  sierra::kynema_ugf::ScalarFieldType& nVol =
     meta_.declare_field<double>(stk::topology::NODE_RANK, "tioga_nodal_volume");
 
   for (auto p : blkParts_) {
@@ -123,9 +123,9 @@ TiogaBlock::update_coords()
   stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts =
     bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
-  sierra::nalu::VectorFieldType* coords =
+  sierra::kynema_ugf::VectorFieldType* coords =
     meta_.get_field<double>(stk::topology::NODE_RANK, coords_name_);
-  sierra::nalu::ScalarFieldType* nodeVol =
+  sierra::kynema_ugf::ScalarFieldType* nodeVol =
     meta_.get_field<double>(stk::topology::NODE_RANK, "dual_nodal_volume");
 
 #if 0
@@ -171,7 +171,7 @@ TiogaBlock::update_coords()
   stk::all_reduce_min(bulk_.parallel(), bboxMin.data(), gMin.data(), 3);
   stk::all_reduce_max(bulk_.parallel(), bboxMax.data(), gMax.data(), 3);
 
-  sierra::nalu::NaluEnv::self().naluOutputP0()
+  sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "TIOGA: " << block_name_ << ": \n"
       << "\t" << gMin[0] << ", " << gMin[1] << ", " << gMin[2] << "\n"
       << "\t" << gMax[0] << ", " << gMax[1] << ", " << gMax[2] 
@@ -185,7 +185,7 @@ TiogaBlock::update_element_volumes()
   stk::mesh::Selector mesh_selector = get_elem_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts =
     bulk_.get_buckets(stk::topology::ELEM_RANK, mesh_selector);
-  sierra::nalu::ScalarFieldType* elemVolume =
+  sierra::kynema_ugf::ScalarFieldType* elemVolume =
     meta_.get_field<double>(stk::topology::ELEMENT_RANK, "element_volume");
 
   auto& numverts = bdata_.num_verts_.h_view;
@@ -228,7 +228,7 @@ TiogaBlock::update_iblanks(
   std::vector<stk::mesh::Entity>& holeNodes,
   std::vector<stk::mesh::Entity>& fringeNodes)
 {
-  sierra::nalu::ScalarIntFieldType* ibf =
+  sierra::kynema_ugf::ScalarIntFieldType* ibf =
     meta_.get_field<int>(stk::topology::NODE_RANK, "iblank");
 
   stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
@@ -254,7 +254,7 @@ TiogaBlock::update_iblanks(
 void
 TiogaBlock::update_iblank_cell()
 {
-  sierra::nalu::ScalarIntFieldType* ibf =
+  sierra::kynema_ugf::ScalarIntFieldType* ibf =
     meta_.get_field<int>(stk::topology::ELEM_RANK, "iblank_cell");
 
   stk::mesh::Selector mesh_selector = get_elem_selector(blkParts_);
@@ -317,7 +317,7 @@ TiogaBlock::adjust_node_resolutions()
   stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts =
     bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
-  sierra::nalu::ScalarFieldType* nodeVol =
+  sierra::kynema_ugf::ScalarFieldType* nodeVol =
     meta_.get_field<double>(stk::topology::NODE_RANK, "tioga_nodal_volume");
 
   auto& eidmap = bdata_.eid_map_.h_view;
@@ -352,8 +352,8 @@ TiogaBlock::get_donor_info(TIOGA::tioga& tg, stk::mesh::EntityProcVec& egvec)
   // Node index information (the last entry is the donor element ID)
   std::vector<int> inode(fcount);
   // fractions (ignored for now). This is useful if we want TIOGA to handle
-  // field interpolations. In Nalu, we will use STK + master_element calls to
-  // perform this without TIOGA's help.
+  // field interpolations. In KynemaUGF, we will use STK + master_element calls
+  // to perform this without TIOGA's help.
   std::vector<double> frac(fcount);
 
   // Populate the donor information arrays through TIOGA API call
@@ -429,9 +429,9 @@ TiogaBlock::process_nodes()
   stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts =
     bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
-  sierra::nalu::VectorFieldType* coords =
+  sierra::kynema_ugf::VectorFieldType* coords =
     meta_.get_field<double>(stk::topology::NODE_RANK, coords_name_);
-  sierra::nalu::ScalarFieldType* nodeVol =
+  sierra::kynema_ugf::ScalarFieldType* nodeVol =
     meta_.get_field<double>(stk::topology::NODE_RANK, "dual_nodal_volume");
 
   int ncount = 0;
@@ -708,7 +708,7 @@ TiogaBlock::print_summary()
   stk::all_reduce_min(bulk_.parallel(), &nidMin, &gnidMin, 1);
   stk::all_reduce_max(bulk_.parallel(), &nidMax, &gnidMax, 1);
 
-  sierra::nalu::NaluEnv::self().naluOutputP0()
+  sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "TIOGA: mesh block = " << block_name_ << "; ID min = " << gnidMin
     << "; ID max = " << gnidMax << "\n"
     << "\tBounding box: \n\t\t[" << gboxMin[0] << ", " << gboxMin[1] << ", "
@@ -720,7 +720,7 @@ TiogaBlock::print_summary()
 void
 TiogaBlock::register_solution(
   TIOGA::tioga& tg,
-  const std::vector<sierra::nalu::OversetFieldData>& fields,
+  const std::vector<sierra::kynema_ugf::OversetFieldData>& fields,
   const int ncomp)
 {
   if (num_nodes_ < 1)
@@ -762,7 +762,7 @@ TiogaBlock::register_solution(
 
 void
 TiogaBlock::register_solution(
-  TIOGA::tioga& tg, const sierra::nalu::OversetFieldData& field)
+  TIOGA::tioga& tg, const sierra::kynema_ugf::OversetFieldData& field)
 {
   if (num_nodes_ < 1)
     return;
@@ -800,7 +800,7 @@ TiogaBlock::register_solution(
 
 void
 TiogaBlock::update_solution(
-  const std::vector<sierra::nalu::OversetFieldData>& fields)
+  const std::vector<sierra::kynema_ugf::OversetFieldData>& fields)
 {
   if (num_nodes_ < 1)
     return;
@@ -827,7 +827,7 @@ TiogaBlock::update_solution(
 }
 
 void
-TiogaBlock::update_solution(const sierra::nalu::OversetFieldData& field)
+TiogaBlock::update_solution(const sierra::kynema_ugf::OversetFieldData& field)
 {
   if (num_nodes_ < 1)
     return;
@@ -850,6 +850,6 @@ TiogaBlock::update_solution(const sierra::nalu::OversetFieldData& field)
   }
 }
 
-} // namespace tioga_nalu
+} // namespace tioga_kynema_ugf
 
-#endif // NALU_USES_TIOGA
+#endif // KYNEMA_UGF_USES_TIOGA

@@ -22,7 +22,7 @@
 #include "stk_mesh/base/MetaData.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace impl {
 
@@ -117,5 +117,5 @@ gather_required_lowmach_fields_t<p>::invoke(
 INSTANTIATE_POLYSTRUCT(gather_required_lowmach_fields_t);
 } // namespace impl
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

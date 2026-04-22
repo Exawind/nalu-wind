@@ -21,7 +21,7 @@
 #include <numeric>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //   Linear 8-Node Hexahedron node locations.
 //
@@ -646,5 +646,5 @@ HexNElementDescription::set_subelement_connectivites()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

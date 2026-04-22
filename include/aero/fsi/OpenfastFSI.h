@@ -10,7 +10,7 @@
 
 namespace sierra {
 
-namespace nalu {
+namespace kynema_ugf {
 
 class OpenfastFSI
 {
@@ -18,9 +18,9 @@ public:
   OpenfastFSI(const YAML::Node&);
   virtual ~OpenfastFSI() = default;
 
-  void setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk);
+  void setup(double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk);
 
-  void initialize(int restartFreqNalu, double curTime);
+  void initialize(int restartFreqKynemaUGF, double curTime);
 
   void map_displacements(double, bool);
 
@@ -48,7 +48,10 @@ public:
   void end_openfast();
 
   double total_openfastfsi_execution_time() { return openFastTimer_.second; }
-  double total_nalu_fsi_execution_time() { return naluTimer_.second; }
+  double total_kynema_ugf_fsi_execution_time()
+  {
+    return kynema_ugfTimer_.second;
+  }
 
 private:
   OpenfastFSI() = delete;
@@ -82,11 +85,11 @@ private:
 
   int tStep_{0}; // Time step count
 
-  double dt_{-1.0}; // Store nalu-wind step
+  double dt_{-1.0}; // Store kynema-ugf step
 
   std::pair<double, double> openFastTimer_{
     0.0, 0.0}; // store time taken in openfast calls
-  std::pair<double, double> naluTimer_{
+  std::pair<double, double> kynema_ugfTimer_{
     0.0, 0.0}; // store time taken in openfast calls
 
   int writeFreq_{
@@ -99,7 +102,7 @@ private:
   void read_inputs(fast::fastInputs& fi, YAML::Node& ofNode);
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 
 } // namespace sierra
 

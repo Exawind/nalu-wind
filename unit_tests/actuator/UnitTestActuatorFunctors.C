@@ -16,7 +16,7 @@
 #include <gtest/gtest.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //-----------------------------------------------------------------
 
@@ -156,10 +156,10 @@ protected:
   stk::mesh::MetaData* stkMeta_;
   std::shared_ptr<stk::mesh::BulkData> stkBulk_;
   const double tol_;
-  const sierra::nalu::VectorFieldType* coordinates_{nullptr};
-  sierra::nalu::VectorFieldType* velocity_{nullptr};
-  sierra::nalu::VectorFieldType* actuatorForce_{nullptr};
-  sierra::nalu::ScalarFieldType* dualNodalVolume_{nullptr};
+  const sierra::kynema_ugf::VectorFieldType* coordinates_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* velocity_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* actuatorForce_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* dualNodalVolume_{nullptr};
 
   ActuatorFunctorTests() : tol_(1e-8), coordinates_(nullptr)
   {
@@ -193,7 +193,7 @@ protected:
   {
     const std::string meshSpec = "generated:5x5x5";
     unit_test_utils::fill_hex8_mesh(meshSpec, *stkBulk_);
-    coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
+    coordinates_ = static_cast<const sierra::kynema_ugf::VectorFieldType*>(
       stkMeta_->coordinate_field());
     const stk::mesh::Selector selector =
       stkMeta_->locally_owned_part() | stkMeta_->globally_shared_part();
@@ -315,5 +315,5 @@ TEST_F(ActuatorFunctorTests, NGP_testSpreadForces)
 
 } // namespace
 
-} /* namespace nalu */
+} /* namespace kynema_ugf */
 } /* namespace sierra */

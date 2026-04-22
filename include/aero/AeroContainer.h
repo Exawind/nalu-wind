@@ -17,7 +17,7 @@
 #include <yaml-cpp/yaml.h>
 #include "aero/actuator/ActuatorModel.h"
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 class OpenfastFSI;
 class KynemaSixDof;
 
@@ -61,7 +61,7 @@ public:
   const stk::mesh::PartVector fsi_bndry_parts();
   const std::vector<std::string> fsi_bndry_part_names();
   double openfast_accumulated_time();
-  double nalu_fsi_accumulated_time();
+  double kynema_ugf_fsi_accumulated_time();
 
 private:
   bool has_actuators() { return actuatorModel_.is_active(); }
@@ -73,5 +73,5 @@ private:
   std::shared_ptr<stk::mesh::BulkData> bulk_;
 };
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf
 #endif

@@ -19,7 +19,7 @@
 #include "ArrayND.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace geom {
 namespace impl {
@@ -87,5 +87,5 @@ INSTANTIATE_POLYSTRUCT(exposed_areas_t);
 } // namespace impl
 } // namespace geom
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

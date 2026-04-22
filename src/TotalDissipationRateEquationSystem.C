@@ -23,8 +23,8 @@
 #include <LinearSolvers.h>
 #include <LinearSolver.h>
 #include <LinearSystem.h>
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 #include <Realm.h>
 #include <Realms.h>
 #include <Simulation.h>
@@ -81,7 +81,7 @@
 #include <stk_util/parallel/ParallelReduce.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -117,7 +117,7 @@ TotalDissipationRateEquationSystem::TotalDissipationRateEquationSystem(
 
   // determine nodal gradient form
   set_nodal_gradient("total_dissipation_rate");
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge projected nodal gradient for total_dissipation_rate: "
     << edgeNodalGradient_ << std::endl;
 
@@ -263,7 +263,8 @@ TotalDissipationRateEquationSystem::register_interior_algorithm(
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         if (srcName == "gcl") {
           nodeAlg.add_kernel<ScalarGclNodeKernel>(realm_.bulk_data(), tdr_);
-          NaluEnv::self().naluOutputP0() << " - " << srcName << std::endl;
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
+            << " - " << srcName << std::endl;
         } else
           throw std::runtime_error("TDREqSys: Invalid source term: " + srcName);
       });
@@ -574,9 +575,9 @@ TotalDissipationRateEquationSystem::reinitialize_linear_system()
 void
 TotalDissipationRateEquationSystem::assemble_nodal_gradient()
 {
-  const double timeA = -NaluEnv::self().nalu_time();
+  const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
   nodalGradAlgDriver_.execute();
-  timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+  timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
 }
 
 //--------------------------------------------------------------------------
@@ -585,9 +586,9 @@ TotalDissipationRateEquationSystem::assemble_nodal_gradient()
 void
 TotalDissipationRateEquationSystem::compute_effective_diff_flux_coeff()
 {
-  const double timeA = -NaluEnv::self().nalu_time();
+  const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
   effDiffFluxAlg_->execute();
-  timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+  timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
 }
 
 //--------------------------------------------------------------------------
@@ -608,8 +609,8 @@ TotalDissipationRateEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*tdr_);
-  nalu_ngp::field_copy(ngpMesh, sel, tdrNp1, tdrN);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, tdrNp1, tdrN);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

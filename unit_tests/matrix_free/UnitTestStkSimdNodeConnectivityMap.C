@@ -32,7 +32,7 @@
 #include "stk_topology/topology.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class SimdNodeConnectivityFixture : public ::testing::Test
@@ -128,5 +128,5 @@ TEST_F(SimdNodeConnectivityFixture, map_has_correct_outermost_index)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

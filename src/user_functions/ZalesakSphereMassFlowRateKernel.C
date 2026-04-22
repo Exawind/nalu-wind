@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ZalesakSphereMassFlowRateEdgeAlg::ZalesakSphereMassFlowRateEdgeAlg(
   Realm& realm,
@@ -75,5 +75,5 @@ ZalesakSphereMassFlowRateEdgeAlg::execute()
     });
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

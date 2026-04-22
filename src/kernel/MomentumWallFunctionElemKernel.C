@@ -24,7 +24,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace {
 template <typename BcAlgTraits, typename T>
 void
@@ -52,7 +52,7 @@ MomentumWallFunctionElemKernel<BcAlgTraits>::MomentumWallFunctionElemKernel(
     kappa_(solnOpts.get_turb_model_constant(TM_kappa)),
     yplusCrit_(solnOpts.get_turb_model_constant(TM_yplus_crit)),
     ipNodeMap_(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         BcAlgTraits::topo_)
         ->ipNodeMap())
 {
@@ -71,10 +71,10 @@ MomentumWallFunctionElemKernel<BcAlgTraits>::MomentumWallFunctionElemKernel(
     get_field_ordinal(metaData, solnOpts.get_coordinates_name());
 
   MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       BcAlgTraits::topo_);
   MasterElement* meFC_dev =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
       BcAlgTraits::topo_);
 
   // compute and save shape function
@@ -201,5 +201,5 @@ MomentumWallFunctionElemKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE(MomentumWallFunctionElemKernel)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

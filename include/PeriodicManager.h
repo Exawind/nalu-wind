@@ -30,7 +30,7 @@
 #include <map>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -197,7 +197,7 @@ private:
     const bool& bypassFieldCheck);
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

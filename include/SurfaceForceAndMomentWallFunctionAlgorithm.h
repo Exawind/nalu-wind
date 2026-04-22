@@ -17,7 +17,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -65,7 +65,7 @@ public:
   const int w_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

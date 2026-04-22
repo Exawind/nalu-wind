@@ -20,7 +20,7 @@
 #include <stk_mesh/base/Selector.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 TemperaturePropAlgorithm::TemperaturePropAlgorithm(
   Realm& realm,
@@ -77,5 +77,5 @@ TemperaturePropAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -12,7 +12,7 @@
 #include <aero/actuator/ActuatorParsing.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 
@@ -26,7 +26,7 @@ create_yaml_node(const std::vector<std::string>& testFile)
   return YAML::Load(temp);
 }
 
-// Ensure errors are clear nalu-wind errors and not yaml mysteries
+// Ensure errors are clear kynema_ugf errors and not yaml mysteries
 void
 test_wo_lines(const std::vector<std::string>& testFile)
 {
@@ -92,5 +92,5 @@ TEST_F(ActuatorParsingTest, NGP_bareMinimumParse)
 
 } // namespace
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

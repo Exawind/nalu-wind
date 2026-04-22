@@ -12,10 +12,10 @@
 
 #include <FieldTypeDef.h>
 #include <SimdInterface.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 namespace EigenDecomposition {
@@ -345,7 +345,7 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
   const bool exit_now = stk::simd::are_all(check_one);
   if (exit_now) {
 #if !defined(KOKKOS_ENABLE_GPU)
-    NaluEnv::self().naluOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
       << "Error, complex eigenvalues in EigenDecomposition::general_eigenvalues"
       << disc << "([[" << A[0][0] << "," << A[0][1] << "," << A[0][2] << "],["
       << A[1][0] << "," << A[1][1] << "," << A[1][2] << "],[" << A[2][0] << ","
@@ -400,7 +400,7 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
 
 } // namespace EigenDecomposition
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

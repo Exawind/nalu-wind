@@ -11,7 +11,7 @@
 
 #include <AlgTraits.h>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <stk_topology/topology.hpp>
 
@@ -24,7 +24,7 @@
 #include <memory>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
@@ -391,5 +391,5 @@ Tri3DSCS::general_normal(
   normal[1] /= mag;
   normal[2] /= mag;
 }
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

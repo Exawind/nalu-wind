@@ -24,7 +24,7 @@
 #include <iosfwd>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 struct BCDirichletFields
@@ -77,7 +77,7 @@ struct gather_required_conduction_fields_t
 P_INVOKEABLE(gather_required_conduction_fields)
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

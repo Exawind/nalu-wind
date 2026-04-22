@@ -23,8 +23,8 @@ TEST_F(DofStatusHex8Mesh, getDofStatus_basic)
   if (bulk->is_valid(node1)) {
     if (bulk->bucket(node1).owned()) {
       EXPECT_EQ(
-        sierra::nalu::DS_OwnedDOF,
-        sierra::nalu::getDofStatus_impl(node1, helperObjs.realm));
+        sierra::kynema_ugf::DS_OwnedDOF,
+        sierra::kynema_ugf::getDofStatus_impl(node1, helperObjs.realm));
     }
   }
 }
@@ -45,12 +45,12 @@ TEST_F(DofStatusHex8Mesh, getDofStatus_shared)
     for (stk::mesh::Entity node : bucket) {
       if (bucket.owned()) {
         EXPECT_EQ(
-          sierra::nalu::DS_OwnedDOF,
-          sierra::nalu::getDofStatus_impl(node, helperObjs.realm));
+          sierra::kynema_ugf::DS_OwnedDOF,
+          sierra::kynema_ugf::getDofStatus_impl(node, helperObjs.realm));
       } else {
         EXPECT_EQ(
-          sierra::nalu::DS_SharedNotOwnedDOF,
-          sierra::nalu::getDofStatus_impl(node, helperObjs.realm));
+          sierra::kynema_ugf::DS_SharedNotOwnedDOF,
+          sierra::kynema_ugf::getDofStatus_impl(node, helperObjs.realm));
       }
     }
   }

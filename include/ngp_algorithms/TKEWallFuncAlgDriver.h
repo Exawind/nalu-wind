@@ -14,7 +14,7 @@
 #include "FieldTypeDef.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /** Compute nodal TKE values when using ABL wall function
  *
@@ -47,7 +47,7 @@ private:
   unsigned wallArea_{stk::mesh::InvalidOrdinal};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* TKEWALLFUNCALGDRIVER_H */

@@ -1,4 +1,4 @@
-target_sources(nalu PRIVATE
+target_sources(kynema-ugf PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/FSIturbine.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MapLoad.C
   ${CMAKE_CURRENT_SOURCE_DIR}/OpenfastFSI.C

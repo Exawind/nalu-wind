@@ -10,10 +10,10 @@
 #include "gtest/gtest.h"
 #include <yaml-cpp/yaml.h>
 #include "InitialConditions.h"
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 TEST(InitialCondition, createICs)
 {
@@ -56,5 +56,5 @@ TEST(InitialCondition, createICs)
     ASSERT_TRUE(nullptr != type_ptr);
   }
 }
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

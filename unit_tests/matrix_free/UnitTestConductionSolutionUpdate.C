@@ -47,7 +47,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace test_solution_update {
@@ -168,5 +168,5 @@ TEST_F(ConductionSolutionUpdateFixture, correct_behavior_for_linear_problem)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -23,8 +23,8 @@
 #include <LinearSolvers.h>
 #include <LinearSolver.h>
 #include <LinearSystem.h>
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 #include <Realm.h>
 #include <Realms.h>
 #include <Simulation.h>
@@ -93,7 +93,7 @@
 #include <stk_util/parallel/ParallelReduce.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -130,7 +130,7 @@ SpecificDissipationRateEquationSystem::SpecificDissipationRateEquationSystem(
 
   // determine nodal gradient form
   set_nodal_gradient("specific_dissipation_rate");
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge projected nodal gradient for specific_dissipation_rate: "
     << edgeNodalGradient_ << std::endl;
 
@@ -258,7 +258,8 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
 
     // Check if the user has requested CMM or LMM algorithms; if so, do not
     // include Nodal Mass algorithms
-    NaluEnv::self().naluOutputP0() << "register sdr interior: " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "register sdr interior: " << std::endl;
 
     std::vector<std::string> checkAlgNames = {
       "specific_dissipation_rate_time_derivative",
@@ -275,8 +276,9 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
           if (
             TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_) {
             nodeAlg.add_kernel<SDRSSTBLTM2015NodeKernel>(realm_.meta_data());
-          } else if ((TurbulenceModel::SST_IDDES ==
-                      realm_.solutionOptions_->turbulenceModel_)) {
+          } else if (
+            (TurbulenceModel::SST_IDDES ==
+             realm_.solutionOptions_->turbulenceModel_)) {
             nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
           } else {
             throw std::runtime_error(
@@ -320,7 +322,8 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         if (srcName == "gcl") {
           nodeAlg.add_kernel<ScalarGclNodeKernel>(realm_.bulk_data(), sdr_);
-          NaluEnv::self().naluOutputP0() << " - " << srcName << std::endl;
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
+            << " - " << srcName << std::endl;
         } else
           throw std::runtime_error("SDREqSys: Invalid source term: " + srcName);
       });
@@ -660,9 +663,9 @@ SpecificDissipationRateEquationSystem::reinitialize_linear_system()
 void
 SpecificDissipationRateEquationSystem::assemble_nodal_gradient()
 {
-  const double timeA = -NaluEnv::self().nalu_time();
+  const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
   nodalGradAlgDriver_.execute();
-  timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+  timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
 }
 
 //--------------------------------------------------------------------------
@@ -671,9 +674,9 @@ SpecificDissipationRateEquationSystem::assemble_nodal_gradient()
 void
 SpecificDissipationRateEquationSystem::compute_effective_diff_flux_coeff()
 {
-  const double timeA = -NaluEnv::self().nalu_time();
+  const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
   effDiffFluxAlg_->execute();
-  timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+  timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
 }
 
 //--------------------------------------------------------------------------
@@ -704,8 +707,8 @@ SpecificDissipationRateEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*sdr_);
-  nalu_ngp::field_copy(ngpMesh, sel, sdrNp1, sdrN);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, sdrNp1, sdrN);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

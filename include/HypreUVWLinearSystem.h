@@ -14,7 +14,7 @@
 #include "HypreUVWSolver.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class HypreUVWLinearSystem : public HypreLinearSystem
 {
@@ -53,7 +53,7 @@ public:
    *
    *  @param[in] entities List of nodes where Dirichlet conditions are applied
    *
-   *  \sa sierra::nalu::FixPressureAtNodeAlgorithm
+   *  \sa sierra::kynema_ugf::FixPressureAtNodeAlgorithm
    */
   virtual void buildDirichletNodeGraph(const std::vector<stk::mesh::Entity>&);
   virtual void
@@ -78,7 +78,7 @@ public:
 
   virtual unsigned numDof() const { return nDim_; }
 
-  sierra::nalu::CoeffApplier* get_coeff_applier();
+  sierra::kynema_ugf::CoeffApplier* get_coeff_applier();
 
   /***************************************************************************************************/
   /*                     Beginning of HypreLinSysCoeffApplier definition */
@@ -138,7 +138,7 @@ public:
 
     virtual void free_device_pointer();
 
-    virtual sierra::nalu::CoeffApplier* device_pointer();
+    virtual sierra::kynema_ugf::CoeffApplier* device_pointer();
   };
 
   virtual void hypreIJVectorSetAddToValues();
@@ -208,7 +208,7 @@ private:
   const unsigned nDim_{3};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* HYPREUVWLINEARSYSTEM_H */

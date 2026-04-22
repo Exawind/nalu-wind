@@ -30,7 +30,7 @@ fix_overset_rows(
   std::vector<double>& rhs,
   std::vector<double>& lhs)
 {
-  using ScalarIntFieldType = sierra::nalu::ScalarIntFieldType;
+  using ScalarIntFieldType = sierra::kynema_ugf::ScalarIntFieldType;
   const size_t nobj = entities.size();
   const size_t numRows = nobj * nDim;
 
@@ -53,7 +53,7 @@ fix_overset_rows(
 } // namespace
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
   : ngpMesh_(eqSystem->realm_.ngp_mesh()),
@@ -65,13 +65,13 @@ NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
     linSysOwnsCoeffApplier(eqSystem->linsys_->owns_coeff_applier())
 {
   if (extractDiagonal_) {
-    diagField_ = nalu_ngp::get_ngp_field(
+    diagField_ = kynema_ugf_ngp::get_ngp_field(
       eqSystem->realm_.mesh_info(), eqSystem->get_diagonal_field()->name());
   }
 
   if (hasOverset_) {
-    iblankField_ =
-      nalu_ngp::get_ngp_field<int>(eqSystem->realm_.mesh_info(), "iblank");
+    iblankField_ = kynema_ugf_ngp::get_ngp_field<int>(
+      eqSystem->realm_.mesh_info(), "iblank");
   }
 }
 
@@ -92,7 +92,7 @@ NGPApplyCoeff::extract_diagonal(
   SharedMemView<double**, DeviceShmem>& lhs) const
 {
   constexpr bool forceAtomic = std::is_same<
-    sierra::nalu::DeviceSpace, Kokkos::DefaultExecutionSpace>::value;
+    sierra::kynema_ugf::DeviceSpace, Kokkos::DefaultExecutionSpace>::value;
 
   for (unsigned i = 0u; i < nEntities; ++i) {
     auto ix = i * nDim_;
@@ -180,5 +180,5 @@ SolverAlgorithm::apply_coeff(
     eqSystem_->save_diagonal_term(sym_meshobj, scratchIds, lhs);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

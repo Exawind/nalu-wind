@@ -11,10 +11,10 @@
 #include <aero/actuator/ActuatorBulk.h>
 #include <aero/actuator/ActuatorInfo.h>
 #include <stdexcept>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /**
  * @brief General options for each actuator instance
@@ -58,7 +58,7 @@ actuator_instance_parse(ActuatorMeta& actMeta, const YAML::Node& y_actuator)
       y_instance, "fllt_num_nearest_point",
       actMeta.numNearestPointsFllcInt_.h_view(i));
   }
-} // namespace nalu
+} // namespace kynema_ugf
 
 ActuatorType
 get_backward_compatible_type(const std::string typeName)
@@ -123,13 +123,13 @@ actuator_parse(const YAML::Node& y_node)
   // determine search method for this pair
   if (searchMethodName == "boost_rtree") {
     actMeta.searchMethod_ = stk::search::KDTREE;
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Warning: search method 'boost_rtree'"
       << " is being deprecated, switching to 'stk_kdtree'" << std::endl;
   } else if (searchMethodName == "stk_kdtree")
     actMeta.searchMethod_ = stk::search::KDTREE;
   else
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Actuator::search method not declared; will use stk_kdtree"
       << std::endl;
   // extract the set of from target names; each spec is homogeneous in this
@@ -246,5 +246,5 @@ epsilon_parsing(int iTurb, const YAML::Node& turbNode, ActuatorMeta& actMeta)
     }
   }
 }
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

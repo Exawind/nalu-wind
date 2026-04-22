@@ -10,7 +10,7 @@
 #include <ElemDataRequests.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 void
 ElemDataRequests::add_gathered_nodal_field(
@@ -188,5 +188,5 @@ ElemDataRequests::add_master_element_call(
   dataEnums[cType].insert(data);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

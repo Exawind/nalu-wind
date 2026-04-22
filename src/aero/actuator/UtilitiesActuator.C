@@ -10,16 +10,16 @@
 
 #include "aero/actuator/UtilitiesActuator.h" // master elements
 
-// This is to access sierra::nalu::Coordinates
-#include "NaluParsing.h"
+// This is to access sierra::kynema_ugf::Coordinates
+#include "KynemaUGFParsing.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace actuator_utils {
 
 const double pi = M_PI;
 
-#ifdef NALU_USES_OPENFAST
+#ifdef KYNEMA_UGF_USES_OPENFAST
 // The node ordering (from FAST) is
 // Node 0 - Hub node
 // Blade 1 nodes
@@ -264,7 +264,7 @@ resize_std_vector(
 {
   const stk::topology& elemTopo = bulkData.bucket(elem).topology();
   MasterElement* meSCS =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       elemTopo);
   const int nodesPerElement = meSCS->nodesPerElement_;
   theVector.resize(nodesPerElement * sizeOfField);
@@ -327,7 +327,7 @@ interpolate_field(
   // extract master element from the bucket in which the element resides
   const stk::topology& elemTopo = bulkData.bucket(elem).topology();
   MasterElement* meSCS =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       elemTopo);
 
   // interpolate velocity to this best point
@@ -347,5 +347,5 @@ compute_distance(
 }
 
 } // namespace actuator_utils
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

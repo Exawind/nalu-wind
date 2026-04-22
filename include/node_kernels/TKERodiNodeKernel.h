@@ -22,7 +22,7 @@ class MetaData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class SolutionOptions;
@@ -62,7 +62,7 @@ private:
   const int nDim_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

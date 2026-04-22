@@ -10,7 +10,7 @@
 #ifndef DataProbePostProcessing_h
 #define DataProbePostProcessing_h
 
-#include "NaluParsedTypes.h"
+#include "KynemaUGFParsedTypes.h"
 
 #include <string>
 #include <vector>
@@ -40,7 +40,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class Transfer;
@@ -185,7 +185,7 @@ private:
   size_t precisionvar_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

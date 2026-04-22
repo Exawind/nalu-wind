@@ -17,7 +17,7 @@
 #include <SimdInterface.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 SDRSSTAMSNodeKernel::SDRSSTAMSNodeKernel(
   const stk::mesh::MetaData& meta, const std::string coordsName)
@@ -152,5 +152,5 @@ SDRSSTAMSNodeKernel::execute(
     (2.0 * beta * rho * sdr + stk::math::max(Sw / sdr, 0.0)) * dualVolume;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

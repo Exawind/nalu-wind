@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 DropletVOFAuxFunction::DropletVOFAuxFunction(const std::vector<double>& params)
   : AuxFunction(0, 1),
@@ -93,5 +93,5 @@ DropletVOFAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

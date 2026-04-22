@@ -19,7 +19,7 @@
 #include "stk_mesh/base/NgpFieldParallel.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 NodalBuoyancyAlgDriver::NodalBuoyancyAlgDriver(
   Realm& realm,
@@ -70,12 +70,13 @@ NodalBuoyancyAlgDriver::post_work()
 
   auto* sourceweight = meta.template get_field<double>(
     stk::topology::NODE_RANK, sourceweightName_);
-  auto& ngpsourceweight = nalu_ngp::get_ngp_field(meshInfo, sourceweightName_);
+  auto& ngpsourceweight =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, sourceweightName_);
   ngpsourceweight.sync_to_host();
 
   auto* source =
     meta.template get_field<double>(stk::topology::NODE_RANK, sourceName_);
-  auto& ngpsource = nalu_ngp::get_ngp_field(meshInfo, sourceName_);
+  auto& ngpsource = kynema_ugf_ngp::get_ngp_field(meshInfo, sourceName_);
   ngpsource.sync_to_host();
 
   const std::vector<NGPDoubleFieldType*> fVec{&ngpsource, &ngpsourceweight};
@@ -97,7 +98,7 @@ NodalBuoyancyAlgDriver::post_work()
 
   // Divide by weight here
 
-  using Traits = nalu_ngp::NGPMeshTraits<>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
 
   const auto& ngpMesh = meshInfo.ngp_mesh();
 
@@ -105,7 +106,7 @@ NodalBuoyancyAlgDriver::post_work()
     (meta.locally_owned_part() | meta.globally_shared_part()) &
     stk::mesh::selectField(*source);
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "apply_weight_to_buoyancy", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
       if (ngpsourceweight.get(mi, 0) > 1e-12) {
@@ -119,5 +120,5 @@ NodalBuoyancyAlgDriver::post_work()
   ngpsource.modify_on_device();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -21,7 +21,7 @@
 #include "Kokkos_Macros.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace geom {
 namespace impl {
@@ -74,5 +74,5 @@ INSTANTIATE_POLYSTRUCT(volume_metric_t);
 } // namespace impl
 } // namespace geom
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

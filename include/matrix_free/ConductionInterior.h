@@ -18,7 +18,7 @@
 #include "Tpetra_MultiVector.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 using tpetra_view_type = typename Tpetra::MultiVector<>::dual_view_type::t_dev;
@@ -60,7 +60,7 @@ struct conduction_linearized_residual_t
 } // namespace impl
 P_INVOKEABLE(conduction_linearized_residual)
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

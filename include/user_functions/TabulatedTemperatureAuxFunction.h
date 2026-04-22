@@ -14,7 +14,7 @@
 
 #include <vector>
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 
 class TabulatedTemperatureAuxFunction : public AuxFunction
 {
@@ -38,6 +38,6 @@ private:
   std::vector<double> temperatures_;
 };
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf
 
 #endif

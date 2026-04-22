@@ -31,7 +31,7 @@ struct topology;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class EquationSystems;
 class TpetraLinearSystem;
@@ -158,6 +158,6 @@ private:
   bool initialized_{false};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

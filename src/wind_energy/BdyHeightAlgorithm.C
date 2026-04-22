@@ -8,7 +8,7 @@
 //
 
 #include "wind_energy/BdyHeightAlgorithm.h"
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 #include "Realm.h"
 #include "utils/LinearInterpolation.h"
 
@@ -24,7 +24,7 @@
 #include <cstdint>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 RectilinearMeshHeightAlg::RectilinearMeshHeightAlg(
   Realm& realm, const YAML::Node& node)
@@ -141,5 +141,5 @@ RectilinearMeshHeightAlg::calc_height_levels(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

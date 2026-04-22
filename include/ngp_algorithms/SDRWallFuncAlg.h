@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /** SDR Wall function using wall friction velocity (u_tau)
  *
@@ -53,7 +53,7 @@ private:
   double z0_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* SDRWALLFUNCALG_H */

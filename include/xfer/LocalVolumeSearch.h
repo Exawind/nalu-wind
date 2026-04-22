@@ -26,7 +26,7 @@ class Selector;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // reusable allocation assuming fixed mesh graph/fixed number of points
 struct LocalVolumeSearchData
@@ -61,7 +61,7 @@ void local_field_interpolation(
   double dtratio,
   LocalVolumeSearchData& data);
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

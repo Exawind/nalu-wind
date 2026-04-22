@@ -41,7 +41,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <typename Scalar>
@@ -245,5 +245,5 @@ TEST_F(SimdGatherFixture, gathered_face_q_is_consistent)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

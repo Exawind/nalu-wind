@@ -16,7 +16,7 @@ class MetaData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 void populate_dnv_states(
   const stk::mesh::MetaData& meta,
   unsigned& nm1ID,

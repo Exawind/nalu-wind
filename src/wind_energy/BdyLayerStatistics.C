@@ -12,11 +12,11 @@
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldUtils.h"
 #include "ngp_utils/NgpFieldManager.h"
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 #include "Realm.h"
 #include "TurbulenceAveragingPostProcessing.h"
 #include "AveragingInfo.h"
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 #include "utils/LinearInterpolation.h"
 
 #include "stk_mesh/base/MetaData.hpp"
@@ -32,7 +32,7 @@
 #include <string>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 
@@ -145,7 +145,7 @@ BdyLayerStatistics::setup_turbulence_averaging(const double timeAvgWindow)
   if (hasTurbAvg) {
     const double diff = std::fabs(timeAvgWindow - turbAvg->timeFilterInterval_);
     if (diff > 1.0e-3)
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "WARNING:: BdyLayerStatistics: timeFilterInterval inconsistent with "
            "that requested for TurbulenceAveragingPostProcessing."
         << std::endl;
@@ -352,18 +352,21 @@ BdyLayerStatistics::interpolate_variable(
 void
 BdyLayerStatistics::impl_compute_velocity_stats()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
-  const auto density = nalu_ngp::get_ngp_field(meshInfo, "density");
-  const auto velocity = nalu_ngp::get_ngp_field(meshInfo, "velocity");
+  const auto density = kynema_ugf_ngp::get_ngp_field(meshInfo, "density");
+  const auto velocity = kynema_ugf_ngp::get_ngp_field(meshInfo, "velocity");
   const auto velTimeAvg =
-    nalu_ngp::get_ngp_field(meshInfo, "velocity_resa_abl");
-  const auto resStress = nalu_ngp::get_ngp_field(meshInfo, "resolved_stress");
-  const auto sfsField = nalu_ngp::get_ngp_field(meshInfo, "sfs_stress");
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "velocity_resa_abl");
+  const auto resStress =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "resolved_stress");
+  const auto sfsField = kynema_ugf_ngp::get_ngp_field(meshInfo, "sfs_stress");
   const auto sfsFieldInst =
-    nalu_ngp::get_ngp_field(meshInfo, "sfs_stress_inst");
-  const auto dualVol = nalu_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "sfs_stress_inst");
+  const auto dualVol =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
   const auto heightIndex = realm_.ngp_field_manager().get_field<int>(
     heightIndex_->mesh_meta_data_ordinal());
 
@@ -395,7 +398,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
   auto d_sfsAvg = d_sfsAvg_;
 
   const int ndim = nDim_;
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "BLStats::velocity", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const int ih = heightIndex.get(mi, 0);
@@ -535,21 +538,24 @@ BdyLayerStatistics::impl_compute_velocity_stats()
 void
 BdyLayerStatistics::impl_compute_temperature_stats()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
 
-  const auto density = nalu_ngp::get_ngp_field(meshInfo, "density");
-  const auto velocity = nalu_ngp::get_ngp_field(meshInfo, "velocity");
-  const auto theta = nalu_ngp::get_ngp_field(meshInfo, "temperature");
-  const auto thetaA = nalu_ngp::get_ngp_field(meshInfo, "temperature_resa_abl");
-  const auto dualVol = nalu_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
+  const auto density = kynema_ugf_ngp::get_ngp_field(meshInfo, "density");
+  const auto velocity = kynema_ugf_ngp::get_ngp_field(meshInfo, "velocity");
+  const auto theta = kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature");
+  const auto thetaA =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_resa_abl");
+  const auto dualVol =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
   const auto thetaSFS =
-    nalu_ngp::get_ngp_field(meshInfo, "temperature_sfs_flux");
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_sfs_flux");
   const auto thetaUj =
-    nalu_ngp::get_ngp_field(meshInfo, "temperature_resolved_flux");
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_resolved_flux");
   const auto thetaVar =
-    nalu_ngp::get_ngp_field(meshInfo, "temperature_variance");
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_variance");
   const auto heightIndex = realm_.ngp_field_manager().get_field<int>(
     heightIndex_->mesh_meta_data_ordinal());
 
@@ -577,7 +583,7 @@ BdyLayerStatistics::impl_compute_temperature_stats()
   ArrayType d_thetaUjAvg = d_thetaUjAvg_;
 
   const int ndim = nDim_;
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "BLStats::temperature", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const int ih = heightIndex.get(mi, 0);
@@ -927,5 +933,5 @@ BdyLayerStatistics::write_time_hist_file()
   ierr = nc_close(ncid);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -23,7 +23,7 @@
 #include "stk_simd/Simd.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace {
 template <
@@ -113,5 +113,5 @@ scalar_neumann_residual_t<p>::invoke(
 INSTANTIATE_POLYSTRUCT(scalar_neumann_residual_t);
 } // namespace impl
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

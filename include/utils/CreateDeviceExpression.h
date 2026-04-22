@@ -6,7 +6,7 @@
 #include <KokkosInterface.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename T>
 inline T*
@@ -33,7 +33,7 @@ create_device_expression()
     KOKKOS_LAMBDA(const int /* i */) { new (t) T(); });
   return t;
 }
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* CREATEDEVICEEXPRESSION_H */

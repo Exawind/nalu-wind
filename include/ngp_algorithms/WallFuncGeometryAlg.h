@@ -16,7 +16,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename BcAlgTraits>
 class WallFuncGeometryAlg : public Algorithm
@@ -49,7 +49,7 @@ private:
   double z0_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* WALLFUNCGEOMETRYALG_H */

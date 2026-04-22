@@ -10,7 +10,7 @@
 #include <property_evaluator/MaterialPropertyData.h>
 #include <VolumeOfFluidEquationSystem.h>
 #include <ProjectedNodalGradientEquationSystem.h>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 #include <Enums.h>
 #include <LinearSolvers.h>
 #include <LinearSolver.h>
@@ -52,7 +52,7 @@
 #include "user_functions/SloshingTankVOFAuxFunction.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -88,7 +88,7 @@ VolumeOfFluidEquationSystem::VolumeOfFluidEquationSystem(
 
   // determine nodal gradient form
   set_nodal_gradient("volume_of_fluid");
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge projected nodal gradient for volume_of_fluid: "
     << edgeNodalGradient_ << std::endl;
 
@@ -232,7 +232,8 @@ VolumeOfFluidEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       itsi->second->partVec_.push_back(part);
     }
 
-    NaluEnv::self().naluOutputP0() << "register vof interior: " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "register vof interior: " << std::endl;
     std::vector<std::string> checkAlgNames = {
       "volume_of_fluid_time_derivative",
       "lumped_volume_of_fluid_time_derivative"};
@@ -253,7 +254,8 @@ VolumeOfFluidEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
         if (srcName == "gcl") {
           nodeAlg.add_kernel<VOFGclNodeKernel>(
             realm_.bulk_data(), volumeOfFluid_);
-          NaluEnv::self().naluOutputP0() << " - " << srcName << std::endl;
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
+            << " - " << srcName << std::endl;
         } else
           throw std::runtime_error("VOFEqSys: Invalid source term: " + srcName);
       });
@@ -569,7 +571,7 @@ void
 VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
 {
 
-  using Traits = nalu_ngp::NGPMeshTraits<>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
@@ -585,7 +587,7 @@ VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
 
   ngpVof.sync_to_device();
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "vof_update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
       if (ngpVof.get(mi, 0) < 0.0) {
@@ -598,9 +600,9 @@ VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
   ngpVof.modify_on_device();
 
   if (!managePNG_) {
-    const double timeA = -NaluEnv::self().nalu_time();
+    const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
     nodalGradAlgDriver_.execute();
-    timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+    timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
   } else {
     projectedNodalGradEqs_->solve_and_update_external();
   }
@@ -621,7 +623,7 @@ VolumeOfFluidEquationSystem::solve_and_update()
 
   for (int k = 0; k < maxIterations_; ++k) {
 
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
       << userSuppliedName_ << std::endl;
     assemble_and_solve(vofTmp_);
@@ -654,9 +656,9 @@ VolumeOfFluidEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*volumeOfFluid_);
-  nalu_ngp::field_copy(ngpMesh, sel, vofNp1, vofN, 1);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, vofNp1, vofN, 1);
   vofNp1.modify_on_device();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

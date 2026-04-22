@@ -32,7 +32,7 @@
 #include "mpi.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace test_diagonal {
 static constexpr int order = 1;
@@ -84,5 +84,5 @@ TEST_F(DiagonalFixture, diagonal_executes)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

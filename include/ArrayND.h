@@ -4,7 +4,7 @@
 #include "Kokkos_Macros.hpp"
 #include <type_traits>
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 
 // stack array set to interoperate with Kokkos views
 template <typename ArrayType, typename = void>
@@ -195,6 +195,6 @@ struct ArrayND<ArrayType, enable_if_rank<ArrayType, 5>>
   }
 };
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf
 
 #endif

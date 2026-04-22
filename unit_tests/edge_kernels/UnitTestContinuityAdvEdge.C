@@ -120,13 +120,13 @@ TEST_F(ContinuityEdgeHex8Mesh, NGP_advection)
 
   unit_test_utils::EdgeHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 1);
 
-  sierra::nalu::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.gamma1_ = 1.0;
   timeIntegrator.timeStepN_ = 1.0;
   timeIntegrator.timeStepNm1_ = 1.0;
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  helperObjs.create<sierra::nalu::ContinuityEdgeSolverAlg>(partVec_[0]);
+  helperObjs.create<sierra::kynema_ugf::ContinuityEdgeSolverAlg>(partVec_[0]);
 
   helperObjs.execute();
 

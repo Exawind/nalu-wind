@@ -2,7 +2,7 @@
 name: Bug report
 about: Report a bug to help us improve
 title: 'Bug report'
-labels: "bug:nalu-wind"
+labels: "bug:kynema-ugf"
 ---
 
 ## Bug description
@@ -45,7 +45,7 @@ Steps to reproduce the behavior:
 ## Expected behavior
 <!-- A clear and concise description of what is expected behavior. -->
 
-## Nalu-Wind information
+## Kynema-UGF information
 <!-- Please provide as much detail as possible including git commit. The best information is a snapshot of the Naly-Wind header. -->
 
 ## Additional context

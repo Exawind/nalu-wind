@@ -23,9 +23,9 @@ template <typename PecFuncType, typename ValueType>
 ValueType
 exec_on_device(PecFuncType* devptr, ValueType pecNum)
 {
-  Kokkos::View<ValueType*, sierra::nalu::MemSpace> pecFacDev("pecFac", 1);
+  Kokkos::View<ValueType*, sierra::kynema_ugf::MemSpace> pecFacDev("pecFac", 1);
   Kokkos::parallel_for(
-    sierra::nalu::DeviceRangePolicy(0, 1),
+    sierra::kynema_ugf::DeviceRangePolicy(0, 1),
     KOKKOS_LAMBDA(int) { pecFacDev(0) = devptr->execute(pecNum); });
   auto pecFacHost =
     Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), pecFacDev);
@@ -41,16 +41,15 @@ TEST(PecletFunction, NGP_classic_double)
   std::vector<double> pecletNumbers = {0.0, 1.0, std::sqrt(5.0), 1e5};
   std::vector<double> pecletFactors = {0.0, 1.0 / 6.0, 0.5, 1.0};
 
-  auto* pecFunc =
-    sierra::nalu::nalu_ngp::create<sierra::nalu::ClassicPecletFunction<double>>(
-      A, hybridFactor);
+  auto* pecFunc = sierra::kynema_ugf::kynema_ugf_ngp::create<
+    sierra::kynema_ugf::ClassicPecletFunction<double>>(A, hybridFactor);
 
   for (int i = 0; i < 4; i++) {
     EXPECT_NEAR(
       exec_on_device(pecFunc, pecletNumbers[i]), pecletFactors[i], tolerance);
   }
 
-  sierra::nalu::nalu_ngp::destroy(pecFunc);
+  sierra::kynema_ugf::kynema_ugf_ngp::destroy(pecFunc);
 }
 
 TEST(PecletFunction, NGP_classic_simd)
@@ -60,8 +59,8 @@ TEST(PecletFunction, NGP_classic_simd)
   std::vector<DoubleType> pecletNumbers = {0.0, 1.0, std::sqrt(5.0), 1e5};
   std::vector<double> pecletFactors = {0.0, 1.0 / 6.0, 0.5, 1.0};
 
-  auto* pecFunc = sierra::nalu::nalu_ngp::create<
-    sierra::nalu::ClassicPecletFunction<DoubleType>>(A, hybridFactor);
+  auto* pecFunc = sierra::kynema_ugf::kynema_ugf_ngp::create<
+    sierra::kynema_ugf::ClassicPecletFunction<DoubleType>>(A, hybridFactor);
 
   for (int i = 0; i < 4; i++) {
     const DoubleType pecFac = exec_on_device(pecFunc, pecletNumbers[i]);
@@ -70,7 +69,7 @@ TEST(PecletFunction, NGP_classic_simd)
     }
   }
 
-  sierra::nalu::nalu_ngp::destroy(pecFunc);
+  sierra::kynema_ugf::kynema_ugf_ngp::destroy(pecFunc);
 }
 
 TEST(PecletFunction, NGP_tanh_double)
@@ -80,15 +79,15 @@ TEST(PecletFunction, NGP_tanh_double)
   std::vector<double> pecletNumbers = {-c1 - 10.0 * c2, c1, c1 + 10.0 * c2};
   std::vector<double> pecletFactors = {0.0, 0.5, 1.0};
 
-  auto* pecFunc =
-    sierra::nalu::nalu_ngp::create<sierra::nalu::TanhFunction<double>>(c1, c2);
+  auto* pecFunc = sierra::kynema_ugf::kynema_ugf_ngp::create<
+    sierra::kynema_ugf::TanhFunction<double>>(c1, c2);
 
   for (int i = 0; i < 3; i++) {
     EXPECT_NEAR(
       exec_on_device(pecFunc, pecletNumbers[i]), pecletFactors[i], tolerance);
   }
 
-  sierra::nalu::nalu_ngp::destroy(pecFunc);
+  sierra::kynema_ugf::kynema_ugf_ngp::destroy(pecFunc);
 }
 
 TEST(PecletFunction, NGP_tanh_simd)
@@ -98,9 +97,8 @@ TEST(PecletFunction, NGP_tanh_simd)
   std::vector<DoubleType> pecletNumbers = {-10.0 * c2, c1, c1 + 10.0 * c2};
   std::vector<double> pecletFactors = {0.0, 0.5, 1.0};
 
-  auto* pecFunc =
-    sierra::nalu::nalu_ngp::create<sierra::nalu::TanhFunction<DoubleType>>(
-      c1, c2);
+  auto* pecFunc = sierra::kynema_ugf::kynema_ugf_ngp::create<
+    sierra::kynema_ugf::TanhFunction<DoubleType>>(c1, c2);
 
   for (int i = 0; i < 3; i++) {
     const DoubleType pecFac = exec_on_device(pecFunc, pecletNumbers[i]);
@@ -109,5 +107,5 @@ TEST(PecletFunction, NGP_tanh_simd)
     }
   }
 
-  sierra::nalu::nalu_ngp::destroy(pecFunc);
+  sierra::kynema_ugf::kynema_ugf_ngp::destroy(pecFunc);
 }

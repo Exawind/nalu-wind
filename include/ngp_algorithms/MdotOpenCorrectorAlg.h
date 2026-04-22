@@ -15,7 +15,7 @@
 #include "SimdInterface.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class MdotAlgDriver;
 
@@ -35,7 +35,7 @@ private:
   const unsigned openMassFlowRate_{stk::mesh::InvalidOrdinal};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MDOTOPENCORRECTORALG_H */

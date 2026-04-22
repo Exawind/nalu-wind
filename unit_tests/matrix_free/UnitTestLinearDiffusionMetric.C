@@ -19,7 +19,7 @@
 #include "mpi.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace {
@@ -105,5 +105,5 @@ TEST(linear_diffusion_metric, single_cube_hex27)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

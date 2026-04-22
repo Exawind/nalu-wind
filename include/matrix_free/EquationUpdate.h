@@ -22,7 +22,7 @@
 #include "Tpetra_CrsMatrix_fwd.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class EquationUpdate
@@ -159,6 +159,6 @@ part_is_valid_for_matrix_free(int order, const stk::mesh::Part& part)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

@@ -10,7 +10,7 @@
 #include <SmartField.h>
 #include <FieldTypeDef.h>
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 using namespace tags;
 
 #define EXPLICIT_TYPE_INSTANTIATOR_NGP(T)                                      \
@@ -32,7 +32,7 @@ EXPLICIT_TYPE_INSTANTIATOR_NGP(stk::mesh::EntityId);
 
 // Hypre Integer types
 // What to do about HYPRE int vs long vs long long here?
-/* #ifdef NALU_USES_HYPRE */
+/* #ifdef KYNEMA_UGF_USES_HYPRE */
 /* typedef HYPRE_Int HypreIntType; */
 /* EXPLICIT_TYPE_INSTANTIATOR_NGP(HypreIntType); */
 /* EXPLICIT_TYPE_INSTANTIATOR_LEGACY(HypreIDFieldType); */
@@ -44,4 +44,4 @@ EXPLICIT_TYPE_INSTANTIATOR_LEGACY(stk::mesh::EntityId);
 EXPLICIT_TYPE_INSTANTIATOR_LEGACY(LocalId);
 EXPLICIT_TYPE_INSTANTIATOR_LEGACY(TpetIdType);
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf

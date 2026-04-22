@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wind_energy/SyntheticLidar.h"
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 #include "UnitTestUtils.h"
 #include "stk_mesh/base/MeshBuilder.hpp"
 #include "stk_mesh/base/FieldBLAS.hpp"
@@ -13,7 +13,7 @@
 #include <array>
 #include "Ioss_FileInfo.h"
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 const std::string db_spec =
   "data_probes:                                             \n"
@@ -311,5 +311,5 @@ TEST(spherical_cap_quadrature, error_improves_with_points_for_nonpoly)
   ASSERT_NEAR(error(121, 9), 0, 1e-8); // should be small with this many points
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

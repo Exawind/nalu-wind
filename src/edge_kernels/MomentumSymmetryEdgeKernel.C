@@ -20,7 +20,7 @@
 #include "stk_mesh/base/Field.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename BcAlgTraits>
 MomentumSymmetryEdgeKernel<BcAlgTraits>::MomentumSymmetryEdgeKernel(
@@ -40,10 +40,10 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::MomentumSymmetryEdgeKernel(
     dudx_(get_field_ordinal(meta, "dudx")),
     includeDivU_(solnOpts.includeDivU_),
     meFC_(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
         BcAlgTraits::FaceTraits::topo_)),
     meSCS_(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
         BcAlgTraits::ElemTraits::topo_)),
     penaltyFactor_(solnOpts.symmetryBcPenaltyFactor_)
 {
@@ -209,5 +209,5 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumSymmetryEdgeKernel)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

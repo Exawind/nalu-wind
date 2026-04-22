@@ -18,7 +18,7 @@
 #include "stk_mesh/base/FieldState.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace impl {
 
@@ -76,5 +76,5 @@ gather_required_conduction_fields_t<p>::invoke(
 INSTANTIATE_POLYSTRUCT(gather_required_conduction_fields_t);
 } // namespace impl
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -23,7 +23,7 @@
 #include "stk_mesh/base/NgpField.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename BcAlgTraits>
 MdotInflowAlg<BcAlgTraits>::MdotInflowAlg(
@@ -59,7 +59,7 @@ void
 MdotInflowAlg<BcAlgTraits>::execute()
 {
   using ElemSimdDataType =
-    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = realm_.meta_data();
@@ -93,7 +93,7 @@ MdotInflowAlg<BcAlgTraits>::execute()
   const auto shp =
     shape_fcn<BcAlgTraits, QuadRank::SCV>(use_shifted_quad(useShifted));
 
-  nalu_ngp::run_elem_par_reduce(
+  kynema_ugf_ngp::run_elem_par_reduce(
     algName, meshInfo, meta.side_rank(), faceData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata, DoubleType & mdotInflow) {
       DoubleType uBip[BcAlgTraits::nDim_];
@@ -137,5 +137,5 @@ MdotInflowAlg<BcAlgTraits>::execute()
 
 INSTANTIATE_KERNEL_FACE(MdotInflowAlg)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

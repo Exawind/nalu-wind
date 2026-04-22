@@ -20,7 +20,7 @@
 #include <master_element/TensorOps.h>
 #include <master_element/CompileTimeElements.h>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <AlgTraits.h>
 
 #include "UnitTestUtils.h"
@@ -30,21 +30,27 @@ namespace {
 template <typename AlgTraits>
 std::pair<std::vector<DoubleType>, std::vector<DoubleType>>
 calculate_metric_tensor(
-  sierra::nalu::MasterElement& me, std::vector<DoubleType>& ws_coords)
+  sierra::kynema_ugf::MasterElement& me, std::vector<DoubleType>& ws_coords)
 {
   int gradSize = me.num_integration_points() * me.nodesPerElement_ * me.nDim_;
   std::vector<DoubleType> ws_dndx(gradSize);
   std::vector<DoubleType> ws_deriv(gradSize);
-  const sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>
+  const sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
     elemCoords(ws_coords.data(), me.nodesPerElement_, me.nDim_);
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> dndx(
-    ws_dndx.data(), me.num_integration_points(), me.nodesPerElement_, me.nDim_);
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
+    dndx(
+      ws_dndx.data(), me.num_integration_points(), me.nodesPerElement_,
+      me.nDim_);
 
-  constexpr auto deriv_c = sierra::nalu::elem_data_t<
-    AlgTraits, sierra::nalu::QuadType::MID>::scs_deriv;
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> deriv(
-    ws_deriv.data(), me.num_integration_points(), me.nodesPerElement_,
-    me.nDim_);
+  constexpr auto deriv_c = sierra::kynema_ugf::elem_data_t<
+    AlgTraits, sierra::kynema_ugf::QuadType::MID>::scs_deriv;
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
+    deriv(
+      ws_deriv.data(), me.num_integration_points(), me.nodesPerElement_,
+      me.nDim_);
   me.grad_op(elemCoords, dndx, deriv);
 
   for (int k = 0; k < deriv.extent_int(0); ++k) {
@@ -58,11 +64,13 @@ calculate_metric_tensor(
   int metricSize = me.nDim_ * me.nDim_ * me.num_integration_points();
   std::vector<DoubleType> ws_contravariant_metric_tensor(metricSize);
   std::vector<DoubleType> ws_covariant_metric_tensor(metricSize);
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem>
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
     contravariant_metric_tensor(
       ws_contravariant_metric_tensor.data(), me.num_integration_points(),
       me.nDim_, me.nDim_);
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem>
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType***, sierra::kynema_ugf::DeviceShmem>
     covariant_metric_tensor(
       ws_covariant_metric_tensor.data(), me.num_integration_points(), me.nDim_,
       me.nDim_);
@@ -90,7 +98,8 @@ test_metric_for_topo_2D(double tol)
     unit_test_utils::create_one_reference_element(*bulk, topo);
 
   auto* mescs =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+      topo);
 
   // apply some arbitrary linear map the reference element
   std::mt19937 rng;
@@ -102,21 +111,22 @@ test_metric_for_topo_2D(double tol)
     1.0 + std::abs(coeff(rng))};
 
   double Qt[4];
-  sierra::nalu::transpose22(Q, Qt);
+  sierra::kynema_ugf::transpose22(Q, Qt);
 
   double metric_exact[4];
-  sierra::nalu::mxm22(Q, Qt, metric_exact);
+  sierra::kynema_ugf::mxm22(Q, Qt, metric_exact);
 
   const auto& coordField = *static_cast<const VectorFieldType*>(
     bulk->mesh_meta_data().coordinate_field());
   std::vector<DoubleType> ws_coords(topo.num_nodes() * dim);
-  const sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>
+  const sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
     coords(ws_coords.data(), topo.num_nodes(), dim);
   const auto* nodes = bulk->begin_nodes(elem);
   for (unsigned j = 0; j < topo.num_nodes(); ++j) {
     const double* coord = stk::mesh::field_data(coordField, nodes[j]);
     double tmp[2];
-    sierra::nalu::matvec22(Q, coord, tmp);
+    sierra::kynema_ugf::matvec22(Q, coord, tmp);
     coords(j, 0) = tmp[0];
     coords(j, 1) = tmp[1];
   }
@@ -129,7 +139,7 @@ test_metric_for_topo_2D(double tol)
   for (int ip = 0; ip < mescs->num_integration_points(); ++ip) {
     double identity[4] = {1.0, 0.0, 0.0, 1.0};
     DoubleType shouldBeIdentity[4];
-    sierra::nalu::mxm22(
+    sierra::kynema_ugf::mxm22(
       &contravariant_metric[4 * ip], &covariant_metric[4 * ip],
       shouldBeIdentity);
     for (unsigned k = 0; k < 4; ++k) {
@@ -158,7 +168,8 @@ test_metric_for_topo_3D(double tol)
     unit_test_utils::create_one_reference_element(*bulk, topo);
 
   auto* mescs =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+      topo);
 
   // apply some arbitrary linear map the reference element
   std::mt19937 rng;
@@ -170,22 +181,23 @@ test_metric_for_topo_3D(double tol)
                  1.0 + std::abs(coeff(rng))};
 
   double Qt[9];
-  sierra::nalu::transpose33(Q, Qt);
+  sierra::kynema_ugf::transpose33(Q, Qt);
 
   double metric_exact[9];
-  sierra::nalu::mxm33(Q, Qt, metric_exact);
+  sierra::kynema_ugf::mxm33(Q, Qt, metric_exact);
 
   const auto& coordField = *static_cast<const VectorFieldType*>(
     bulk->mesh_meta_data().coordinate_field());
 
   std::vector<DoubleType> ws_coords(topo.num_nodes() * dim);
-  const sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>
+  const sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
     coords(ws_coords.data(), topo.num_nodes(), dim);
   const auto* nodes = bulk->begin_nodes(elem);
   for (unsigned j = 0; j < topo.num_nodes(); ++j) {
     const double* coord = stk::mesh::field_data(coordField, nodes[j]);
     double tmp[3];
-    sierra::nalu::matvec33(Q, coord, tmp);
+    sierra::kynema_ugf::matvec33(Q, coord, tmp);
     coords(j, 0) = tmp[0];
     coords(j, 1) = tmp[1];
     coords(j, 2) = tmp[2];
@@ -200,7 +212,7 @@ test_metric_for_topo_3D(double tol)
     double identity[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
 
     DoubleType shouldBeIdentity[9];
-    sierra::nalu::mxm33(
+    sierra::kynema_ugf::mxm33(
       &contravariant_metric[9 * ip], &covariant_metric[9 * ip],
       shouldBeIdentity);
     for (unsigned k = 0; k < 9; ++k) {
@@ -219,28 +231,28 @@ test_metric_for_topo_3D(double tol)
 
 TEST(MetricTensor, tri3)
 {
-  test_metric_for_topo_2D<sierra::nalu::AlgTraitsTri3_2D>(1.0e-10);
+  test_metric_for_topo_2D<sierra::kynema_ugf::AlgTraitsTri3_2D>(1.0e-10);
 }
 
 TEST(MetricTensor, quad4)
 {
-  test_metric_for_topo_2D<sierra::nalu::AlgTraitsQuad4_2D>(1.0e-10);
+  test_metric_for_topo_2D<sierra::kynema_ugf::AlgTraitsQuad4_2D>(1.0e-10);
 }
 
 TEST(MetricTensor, tet4)
 {
-  test_metric_for_topo_3D<sierra::nalu::AlgTraitsTet4>(1.0e-10);
+  test_metric_for_topo_3D<sierra::kynema_ugf::AlgTraitsTet4>(1.0e-10);
 }
 
 TEST(MetricTensor, wedge6)
 {
-  test_metric_for_topo_3D<sierra::nalu::AlgTraitsWed6>(1.0e-10);
+  test_metric_for_topo_3D<sierra::kynema_ugf::AlgTraitsWed6>(1.0e-10);
 }
 
 TEST(MetricTensor, hex8)
 {
 
-  test_metric_for_topo_3D<sierra::nalu::AlgTraitsHex8>(1.0e-10);
+  test_metric_for_topo_3D<sierra::kynema_ugf::AlgTraitsHex8>(1.0e-10);
 }
 
 #endif // KOKKOS_ENABLE_GPU

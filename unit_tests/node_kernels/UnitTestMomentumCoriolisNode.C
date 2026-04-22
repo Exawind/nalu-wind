@@ -43,12 +43,13 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_coriolis)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumCoriolisNodeKernel>(
-    *bulk_, solnOpts_);
+  helperObjs.nodeAlg
+    ->add_kernel<sierra::kynema_ugf::MomentumCoriolisNodeKernel>(
+      *bulk_, solnOpts_);
 
   helperObjs.execute();
 
-  sierra::nalu::CoriolisSrc cor(solnOpts_);
+  sierra::kynema_ugf::CoriolisSrc cor(solnOpts_);
   EXPECT_NEAR(cor.upVector_[0], 0.0, tol);
   EXPECT_NEAR(cor.upVector_[1], 0.0, tol);
   EXPECT_NEAR(cor.upVector_[2], 1.0, tol);

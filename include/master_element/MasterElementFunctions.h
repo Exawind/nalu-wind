@@ -29,7 +29,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename ftype>
 KOKKOS_INLINE_FUNCTION void
@@ -624,7 +624,7 @@ generic_determinant_3d(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

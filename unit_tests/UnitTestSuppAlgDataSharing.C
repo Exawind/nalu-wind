@@ -23,7 +23,7 @@ namespace {
 
 #if !defined(KOKKOS_ENABLE_GPU)
 
-using sierra::nalu::SharedMemView;
+using sierra::kynema_ugf::SharedMemView;
 
 class SuppAlg
 {
@@ -31,7 +31,8 @@ public:
   virtual ~SuppAlg() {}
 
   virtual void elem_execute(
-    stk::topology topo, sierra::nalu::ScratchViews<DoubleType>& elemData) = 0;
+    stk::topology topo,
+    sierra::kynema_ugf::ScratchViews<DoubleType>& elemData) = 0;
 };
 
 class TestSuppAlg : public SuppAlg
@@ -39,8 +40,8 @@ class TestSuppAlg : public SuppAlg
 public:
   TestSuppAlg(
     const stk::mesh::PartVector& parts,
-    sierra::nalu::ElemDataRequests& dataNeeded,
-    sierra::nalu::FieldManager& fldMgr)
+    sierra::kynema_ugf::ElemDataRequests& dataNeeded,
+    sierra::kynema_ugf::FieldManager& fldMgr)
     : nodalScalarField(nullptr),
       nodalVectorField(nullptr),
       nodalTensorField(nullptr),
@@ -70,7 +71,7 @@ public:
   virtual ~TestSuppAlg() {}
 
   virtual void elem_execute(
-    stk::topology topo, sierra::nalu::ScratchViews<DoubleType>& elemData)
+    stk::topology topo, sierra::kynema_ugf::ScratchViews<DoubleType>& elemData)
   {
     unsigned nodesPerElem = topo.num_nodes();
 
@@ -102,12 +103,12 @@ public:
   }
 
 private:
-  const sierra::nalu::ScalarFieldType* nodalScalarField;
-  const sierra::nalu::GenericFieldType* nodalVectorField;
-  const sierra::nalu::TensorFieldType* nodalTensorField;
-  const sierra::nalu::ScalarFieldType* elemScalarField;
-  const sierra::nalu::GenericFieldType* elemVectorField;
-  const sierra::nalu::GenericFieldType* elemTensorField;
+  const sierra::kynema_ugf::ScalarFieldType* nodalScalarField;
+  const sierra::kynema_ugf::GenericFieldType* nodalVectorField;
+  const sierra::kynema_ugf::TensorFieldType* nodalTensorField;
+  const sierra::kynema_ugf::ScalarFieldType* elemScalarField;
+  const sierra::kynema_ugf::GenericFieldType* elemVectorField;
+  const sierra::kynema_ugf::GenericFieldType* elemTensorField;
 };
 
 //=========== Test class that mimics an alg with supplemental algs ========
@@ -116,7 +117,7 @@ class TestAlgorithm
 {
 public:
   TestAlgorithm(
-    sierra::nalu::FieldManager& fldManager, stk::mesh::BulkData& bulk)
+    sierra::kynema_ugf::FieldManager& fldManager, stk::mesh::BulkData& bulk)
     : suppAlgs_(),
       dataNeededByKernels_(bulk.mesh_meta_data()),
       bulkData_(bulk),
@@ -125,7 +126,7 @@ public:
     // In this unit-test we know we're working on a hex8 mesh. In real
     // algorithms, a topology would be available.
     dataNeededByKernels_.add_cvfem_surface_me(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         stk::topology::HEX_8));
   }
 
@@ -137,21 +138,21 @@ public:
       stk::topology::ELEM_RANK, meta.locally_owned_part());
 
     stk::mesh::NgpMesh ngpMesh(bulkData_);
-    sierra::nalu::ElemDataRequestsGPU dataNeededNGP(
+    sierra::kynema_ugf::ElemDataRequestsGPU dataNeededNGP(
       fieldManager, dataNeededByKernels_);
     const int bytes_per_team = 0;
     const int bytes_per_thread =
-      sierra::nalu::get_num_bytes_pre_req_data<DoubleType>(
+      sierra::kynema_ugf::get_num_bytes_pre_req_data<DoubleType>(
         dataNeededNGP, meta.spatial_dimension(),
-        sierra::nalu::ElemReqType::ELEM);
-    auto team_exec = sierra::nalu::get_host_team_policy(
+        sierra::kynema_ugf::ElemReqType::ELEM);
+    auto team_exec = sierra::kynema_ugf::get_host_team_policy(
       elemBuckets.size(), bytes_per_team, bytes_per_thread);
     Kokkos::parallel_for(
-      team_exec, [&](const sierra::nalu::TeamHandleType& team) {
+      team_exec, [&](const sierra::kynema_ugf::TeamHandleType& team) {
         const stk::mesh::Bucket& bkt = *elemBuckets[team.league_rank()];
         stk::topology topo = bkt.topology();
 
-        sierra::nalu::ScratchViews<DoubleType> prereqData(
+        sierra::kynema_ugf::ScratchViews<DoubleType> prereqData(
           team, meta.spatial_dimension(), topo.num_nodes(), dataNeededNGP);
 
         // See get_num_bytes_pre_req_data for padding
@@ -173,8 +174,8 @@ public:
   }
 
   std::vector<SuppAlg*> suppAlgs_;
-  sierra::nalu::ElemDataRequests dataNeededByKernels_;
-  sierra::nalu::FieldManager& fieldManager;
+  sierra::kynema_ugf::ElemDataRequests dataNeededByKernels_;
+  sierra::kynema_ugf::FieldManager& fieldManager;
 
 private:
   stk::mesh::BulkData& bulkData_;
@@ -184,7 +185,7 @@ TEST_F(Hex8Mesh, supp_alg_data_sharing)
 {
   const stk::mesh::Part& wholemesh = meta->universal_part();
   const stk::mesh::PartVector parts(1, &meta->universal_part());
-  sierra::nalu::FieldManager fieldManager(bulk->mesh_meta_data(), 2);
+  sierra::kynema_ugf::FieldManager fieldManager(bulk->mesh_meta_data(), 2);
   TestAlgorithm testAlgorithm(fieldManager, *bulk);
 
   // TestSuppAlg constructor says which data it needs, by inserting
@@ -202,13 +203,13 @@ TEST_F(Hex8Mesh, supp_alg_data_sharing)
 
 TEST_F(Hex8Mesh, inconsistent_field_requests)
 {
-  sierra::nalu::ScalarFieldType& nodalScalarField =
+  sierra::kynema_ugf::ScalarFieldType& nodalScalarField =
     meta->declare_field<double>(stk::topology::NODE_RANK, "nodalScalarField");
-  sierra::nalu::TensorFieldType& nodalTensorField =
+  sierra::kynema_ugf::TensorFieldType& nodalTensorField =
     meta->declare_field<double>(stk::topology::NODE_RANK, "nodalTensorField");
-  sierra::nalu::ScalarFieldType& elemScalarField =
+  sierra::kynema_ugf::ScalarFieldType& elemScalarField =
     meta->declare_field<double>(stk::topology::ELEM_RANK, "elemScalarField");
-  sierra::nalu::TensorFieldType& elemTensorField =
+  sierra::kynema_ugf::TensorFieldType& elemTensorField =
     meta->declare_field<double>(stk::topology::ELEM_RANK, "elemTensorField");
 
   const stk::mesh::Part& wholemesh = meta->universal_part();
@@ -221,7 +222,7 @@ TEST_F(Hex8Mesh, inconsistent_field_requests)
 
   fill_mesh("generated:10x10x10");
 
-  sierra::nalu::ElemDataRequests prereqData(*meta);
+  sierra::kynema_ugf::ElemDataRequests prereqData(*meta);
 
   prereqData.add_gathered_nodal_field(nodalScalarField, 1);
   EXPECT_THROW(

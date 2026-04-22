@@ -14,7 +14,7 @@
 #include <master_element/Hex8GeometryFunctions.h>
 #include <master_element/CompileTimeElements.h>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <cmath>
 #include <iostream>
@@ -22,7 +22,7 @@
 #include <limits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename DBLTYPE, typename SHMEM>
 KOKKOS_FUNCTION void
@@ -1043,7 +1043,7 @@ HexSCS::general_face_grad_op(
   lerr = hex_gradient_operator(cordel, deriv, grad, det, err);
 
   if (lerr)
-    NaluEnv::self().naluOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
       << "HexSCS::general_face_grad_op: issue.." << std::endl;
 }
 
@@ -1125,5 +1125,5 @@ HexSCS::parametric_distance(const std::array<double, 3>& x)
   return d;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

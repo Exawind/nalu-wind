@@ -25,7 +25,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace MEconstants {
 static const double realmin = std::numeric_limits<double>::min();
@@ -366,7 +366,7 @@ MasterElement::shifted_shape_fcn<double, HostShmem>(
   shifted_shape_fcn(shpfc);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

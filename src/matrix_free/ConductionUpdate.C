@@ -33,7 +33,7 @@
 #include <stk_topology/topology.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <int p>
@@ -182,5 +182,5 @@ ConductionUpdate<p>::banner(std::string name, std::ostream& stream) const
 INSTANTIATE_POLYCLASS(ConductionUpdate);
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

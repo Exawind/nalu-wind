@@ -199,8 +199,9 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist)
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   // Initialize the kernel
-  std::unique_ptr<sierra::nalu::Kernel> wallKernel(
-    new sierra::nalu::WallDistElemKernel<sierra::nalu::AlgTraitsHex8>(
+  std::unique_ptr<sierra::kynema_ugf::Kernel> wallKernel(
+    new sierra::kynema_ugf::WallDistElemKernel<
+      sierra::kynema_ugf::AlgTraitsHex8>(
       *bulk_, solnOpts_,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 
@@ -233,8 +234,9 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist_shifted)
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   // Initialize the kernel
-  std::unique_ptr<sierra::nalu::Kernel> wallKernel(
-    new sierra::nalu::WallDistElemKernel<sierra::nalu::AlgTraitsHex8>(
+  std::unique_ptr<sierra::kynema_ugf::Kernel> wallKernel(
+    new sierra::kynema_ugf::WallDistElemKernel<
+      sierra::kynema_ugf::AlgTraitsHex8>(
       *bulk_, solnOpts_,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 

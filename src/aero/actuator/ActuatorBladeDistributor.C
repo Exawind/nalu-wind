@@ -9,14 +9,14 @@
 
 #include <aero/actuator/ActuatorBladeDistributor.h>
 #include <aero/actuator/ActuatorBulkSimple.h>
-#include <NaluEnv.h>
-#ifdef NALU_USES_OPENFAST
+#include <KynemaUGFEnv.h>
+#ifdef KYNEMA_UGF_USES_OPENFAST
 #include <aero/actuator/ActuatorBulkFAST.h>
 #include <aero/actuator/UtilitiesActuator.h>
 #endif
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 bool
 blade_belongs_on_this_rank(
@@ -34,7 +34,7 @@ std::vector<BladeDistributionInfo>
 compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
 {
   std::vector<BladeDistributionInfo> results;
-  const int rank = NaluEnv::self().parallel_rank();
+  const int rank = KynemaUGFEnv::self().parallel_rank();
 
   switch (actMeta.actuatorType_) {
   case (ActuatorType::ActLineSimpleNGP): {
@@ -53,8 +53,8 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
   }
   case (ActuatorType::ActDiskFASTNGP):
   case (ActuatorType::ActLineFASTNGP): {
-#ifdef NALU_USES_OPENFAST
-    const int numRanks = NaluEnv::self().parallel_size();
+#ifdef KYNEMA_UGF_USES_OPENFAST
+    const int numRanks = KynemaUGFEnv::self().parallel_size();
     auto actMetaFast = dynamic_cast<const ActuatorMetaFAST&>(actMeta);
     int numBladesTotal = 0;
     // compute the total number of blades
@@ -87,8 +87,9 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
         const int nPoints =
           actMetaFast.fastInputs_.globTurbineData[iTurb].numForcePtsBlade;
 
-        if (blade_belongs_on_this_rank(
-              numBladesTotal, globBladeNum, numRanks, rank)) {
+        if (
+          blade_belongs_on_this_rank(
+            numBladesTotal, globBladeNum, numRanks, rank)) {
           results.push_back({offset, nPoints, nNeighbors});
         }
 
@@ -114,5 +115,5 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
   return results;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

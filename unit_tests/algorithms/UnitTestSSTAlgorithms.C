@@ -16,12 +16,13 @@
 
 TEST_F(TestTurbulenceAlgorithm, computesstmaxlengthscaleelemalgorithm)
 {
-  sierra::nalu::Realm& realm = this->create_realm();
+  sierra::kynema_ugf::Realm& realm = this->create_realm();
 
   fill_mesh_and_init_fields();
 
   // Execute
-  sierra::nalu::ComputeSSTMaxLengthScaleElemAlgorithm alg(realm, meshPart_);
+  sierra::kynema_ugf::ComputeSSTMaxLengthScaleElemAlgorithm alg(
+    realm, meshPart_);
   alg.execute();
 
   // Perform tests

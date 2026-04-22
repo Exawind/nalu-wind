@@ -20,7 +20,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -275,5 +275,5 @@ EnthalpyConstCpkPropertyEvaluator::execute(
   return sum_h;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

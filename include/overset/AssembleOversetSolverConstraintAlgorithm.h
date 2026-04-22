@@ -20,7 +20,7 @@ class FieldBase;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -43,7 +43,7 @@ private:
     const AssembleOversetSolverConstraintAlgorithm&) = delete;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

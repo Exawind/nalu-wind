@@ -23,7 +23,7 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_continuity_gcl_node)
 
   fill_mesh_and_init_fields();
 
-  sierra::nalu::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.timeStepN_ = 0.1;
   timeIntegrator.timeStepNm1_ = 0.1;
   timeIntegrator.gamma1_ = 1.0;
@@ -35,7 +35,8 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_continuity_gcl_node)
 
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::ContinuityGclNodeKernel>(*bulk_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::ContinuityGclNodeKernel>(
+    *bulk_);
 
   helperObjs.execute();
 
@@ -52,7 +53,7 @@ inline T*
 my_create(const T& hostObj)
 {
   const std::string debuggingName(typeid(T).name());
-  T* obj = sierra::nalu::kokkos_malloc_on_device<T>(debuggingName);
+  T* obj = sierra::kynema_ugf::kokkos_malloc_on_device<T>(debuggingName);
 
   // Create local copy for capture on device
   const T hostCopy(hostObj);
@@ -68,9 +69,9 @@ my_create(const T& hostObj)
 }
 
 void
-test_kernel_on_device(const sierra::nalu::ContinuityGclNodeKernel& kernel)
+test_kernel_on_device(const sierra::kynema_ugf::ContinuityGclNodeKernel& kernel)
 {
-  sierra::nalu::ContinuityGclNodeKernel* deviceKernel = my_create(kernel);
+  sierra::kynema_ugf::ContinuityGclNodeKernel* deviceKernel = my_create(kernel);
 }
 
 TEST_F(ContinuityKernelHex8Mesh, NGP_continuity_gcl_node_kernel)
@@ -81,7 +82,7 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_continuity_gcl_node_kernel)
 
   fill_mesh_and_init_fields();
 
-  sierra::nalu::ContinuityGclNodeKernel kernel(*bulk_);
+  sierra::kynema_ugf::ContinuityGclNodeKernel kernel(*bulk_);
 
   test_kernel_on_device(kernel);
 }

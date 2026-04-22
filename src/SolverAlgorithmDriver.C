@@ -14,7 +14,7 @@
 #include <SolverAlgorithm.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -144,5 +144,5 @@ SolverAlgorithmDriver::execute()
   post_work();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

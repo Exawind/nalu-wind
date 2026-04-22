@@ -22,7 +22,7 @@ class Part;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class NodeKernel;
@@ -59,7 +59,7 @@ private:
   const int rhsSize_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ASSEMBLENGPNODESOLVERALGORITHM_H */

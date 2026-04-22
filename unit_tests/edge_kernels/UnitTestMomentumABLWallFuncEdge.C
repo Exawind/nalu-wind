@@ -32,9 +32,9 @@ TEST_F(MomentumABLKernelHex8Mesh, NGP_abl_wall_func)
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, 3, part);
 
-  std::unique_ptr<sierra::nalu::Kernel> kernel(
-    new sierra::nalu::MomentumABLWallFuncEdgeKernel<
-      sierra::nalu::AlgTraitsQuad4>(
+  std::unique_ptr<sierra::kynema_ugf::Kernel> kernel(
+    new sierra::kynema_ugf::MomentumABLWallFuncEdgeKernel<
+      sierra::kynema_ugf::AlgTraitsQuad4>(
       *meta_, gravity_, z0_, Tref_, kappa_,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 

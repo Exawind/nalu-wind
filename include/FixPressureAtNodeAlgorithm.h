@@ -23,7 +23,7 @@ class Part;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 struct FixPressureAtNodeInfo;
@@ -112,7 +112,7 @@ public:
   bool fixPressureNode_{false};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* FIXPRESSUREATNODEALGORITHM_H */

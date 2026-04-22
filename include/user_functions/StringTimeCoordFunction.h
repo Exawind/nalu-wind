@@ -16,7 +16,7 @@
 
 #include <string>
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 
 namespace fcn {
 inline constexpr int UNMAPPED_INDEX = -1;
@@ -56,6 +56,6 @@ private:
   int z_index = fcn::UNMAPPED_INDEX;
 };
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf
 
 #endif

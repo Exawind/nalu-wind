@@ -10,7 +10,7 @@
 #include <aero/actuator/ActuatorFLLC.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ActuatorLineSimpleNGP::ActuatorLineSimpleNGP(
   const ActuatorMetaSimple& actMeta,
@@ -102,5 +102,5 @@ ActuatorLineSimpleNGP::operator()()
   actBulk_.parallel_sum_source_term(stkBulk_);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

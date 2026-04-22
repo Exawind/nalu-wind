@@ -12,13 +12,13 @@
 #include <master_element/MasterElementFunctions.h>
 #include <master_element/TensorOps.h>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <cmath>
 #include <iostream>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 
@@ -385,5 +385,5 @@ Hex8FEM::hex8_fem_derivative(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

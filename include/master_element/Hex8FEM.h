@@ -13,7 +13,7 @@
 #include <master_element/MasterElement.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // Hex 8 FEM; -1.0 : 1.0 range
 class Hex8FEM : public MasterElement
@@ -107,7 +107,7 @@ private:
     SharedMemView<DoubleType***, DeviceShmem> deriv);
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

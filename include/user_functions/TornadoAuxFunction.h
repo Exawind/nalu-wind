@@ -13,7 +13,7 @@
 #include <AuxFunction.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class TornadoAuxFunction : public AuxFunction
 {
@@ -37,7 +37,7 @@ private:
   const double z1_, hNot_, rNot_, uRef_, swirl_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

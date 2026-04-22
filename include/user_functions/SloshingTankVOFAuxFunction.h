@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class SloshingTankVOFAuxFunction : public AuxFunction
 {
@@ -41,7 +41,7 @@ public:
   double interface_thickness_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

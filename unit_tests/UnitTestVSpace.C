@@ -21,10 +21,10 @@ namespace {
 constexpr double tol = 1.0e-12;
 
 using DeviceScalar =
-  Kokkos::DualView<double*, Kokkos::LayoutRight, sierra::nalu::MemSpace>;
+  Kokkos::DualView<double*, Kokkos::LayoutRight, sierra::kynema_ugf::MemSpace>;
 
-using DeviceVector =
-  Kokkos::DualView<vs::Vector*, Kokkos::LayoutRight, sierra::nalu::MemSpace>;
+using DeviceVector = Kokkos::
+  DualView<vs::Vector*, Kokkos::LayoutRight, sierra::kynema_ugf::MemSpace>;
 
 void
 test_vector_create_impl()
@@ -32,8 +32,8 @@ test_vector_create_impl()
   DeviceScalar ds("test", 1);
   ds.h_view(0) = 0.0;
   ds.modify<DeviceScalar::host_mirror_space>();
-  ds.sync<sierra::nalu::MemSpace>();
-  auto ddata = ds.template view<sierra::nalu::MemSpace>();
+  ds.sync<sierra::kynema_ugf::MemSpace>();
+  auto ddata = ds.template view<sierra::kynema_ugf::MemSpace>();
   Kokkos::parallel_for(
     1, KOKKOS_LAMBDA(int) {
       auto gv1 = vs::Vector::ihat();
@@ -44,7 +44,7 @@ test_vector_create_impl()
       ddata(0) = vs::mag((gv3 - gv4));
     });
 
-  ds.modify<sierra::nalu::MemSpace>();
+  ds.modify<sierra::kynema_ugf::MemSpace>();
   ds.sync<DeviceScalar::host_mirror_space>();
 
   EXPECT_NEAR(ds.h_view(0), 0.0, tol);
@@ -56,8 +56,8 @@ test_tensor_create_impl()
   DeviceScalar ds("test", 1);
   ds.h_view(0) = 0.0;
   ds.modify<DeviceScalar::host_mirror_space>();
-  ds.sync<sierra::nalu::MemSpace>();
-  auto ddata = ds.template view<sierra::nalu::MemSpace>();
+  ds.sync<sierra::kynema_ugf::MemSpace>();
+  auto ddata = ds.template view<sierra::kynema_ugf::MemSpace>();
 
   Kokkos::parallel_for(
     1, KOKKOS_LAMBDA(int) {
@@ -69,7 +69,7 @@ test_tensor_create_impl()
       ddata(0) = vs::mag((t3 - qrot));
     });
 
-  ds.modify<sierra::nalu::MemSpace>();
+  ds.modify<sierra::kynema_ugf::MemSpace>();
   ds.sync<DeviceScalar::host_mirror_space>();
 
   EXPECT_NEAR(ds.h_view(0), 0.0, tol);
@@ -96,8 +96,8 @@ test_rotations_impl()
     DeviceScalar ds("test", 1);                                                \
     ds.h_view(0) = 1.0e16;                                                     \
     ds.modify<DeviceScalar::host_mirror_space>();                              \
-    ds.sync<sierra::nalu::MemSpace>();                                         \
-    auto dv = ds.template view<sierra::nalu::MemSpace>();                      \
+    ds.sync<sierra::kynema_ugf::MemSpace>();                                   \
+    auto dv = ds.template view<sierra::kynema_ugf::MemSpace>();                \
                                                                                \
     Kokkos::parallel_for(                                                      \
       1, KOKKOS_LAMBDA(int) {                                                  \
@@ -105,7 +105,7 @@ test_rotations_impl()
         auto v2 = expr2;                                                       \
         dv(0) = vs::mag((v1 - v2));                                            \
       });                                                                      \
-    ds.modify<sierra::nalu::MemSpace>();                                       \
+    ds.modify<sierra::kynema_ugf::MemSpace>();                                 \
     ds.sync<DeviceScalar::host_mirror_space>();                                \
     EXPECT_NEAR(ds.h_view(0), 0.0, tol)                                        \
       << "LHS = " #expr1 "\nRHS = " #expr2 << std::endl;                       \
@@ -138,8 +138,8 @@ test_device_capture_impl()
   DeviceScalar ds("test", 1);
   ds.h_view(0) = 1.0e16;
   ds.modify<DeviceScalar::host_mirror_space>();
-  ds.sync<sierra::nalu::MemSpace>();
-  auto dv = ds.template view<sierra::nalu::MemSpace>();
+  ds.sync<sierra::kynema_ugf::MemSpace>();
+  auto dv = ds.template view<sierra::kynema_ugf::MemSpace>();
 
   Kokkos::parallel_for(
     1, KOKKOS_LAMBDA(int) {
@@ -149,7 +149,7 @@ test_device_capture_impl()
       dv[0] = vs::mag((vout - vexpected));
     });
 
-  ds.modify<sierra::nalu::MemSpace>();
+  ds.modify<sierra::kynema_ugf::MemSpace>();
   ds.sync<DeviceScalar::host_mirror_space>();
 
   EXPECT_NEAR(ds.h_view(0), 0.0, tol);
@@ -159,7 +159,7 @@ void
 test_device_lists_impl()
 {
   DeviceVector dvec("vec_test", 3);
-  auto dv = dvec.template view<sierra::nalu::MemSpace>();
+  auto dv = dvec.template view<sierra::kynema_ugf::MemSpace>();
 
   Kokkos::parallel_for(
     1, KOKKOS_LAMBDA(int) {
@@ -171,7 +171,7 @@ test_device_lists_impl()
       dv[1] = v3 ^ v1;
       dv[2] = v1 ^ v2;
     });
-  dvec.modify<sierra::nalu::MemSpace>();
+  dvec.modify<sierra::kynema_ugf::MemSpace>();
   dvec.sync<DeviceVector::host_mirror_space>();
 
   std::vector<vs::Vector> htrue{
@@ -186,7 +186,7 @@ void
 test_tensor_skewsym()
 {
   DeviceVector dvec("vec", 3);
-  auto dv = dvec.template view<sierra::nalu::MemSpace>();
+  auto dv = dvec.template view<sierra::kynema_ugf::MemSpace>();
 
   Kokkos::parallel_for(
     1, KOKKOS_LAMBDA(int) {
@@ -195,7 +195,7 @@ test_tensor_skewsym()
 
       dv[0] = (vs::skew_sym(v) & u) - (v ^ u);
     });
-  dvec.modify<sierra::nalu::MemSpace>();
+  dvec.modify<sierra::kynema_ugf::MemSpace>();
   dvec.sync<DeviceVector::host_mirror_space>();
 
   for (int i = 0; i < 3; ++i)

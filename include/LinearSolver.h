@@ -15,7 +15,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 #include <Tpetra_Details_DefaultTypes.hpp>
 #include <Tpetra_Vector.hpp>
 #include <Tpetra_CrsMatrix.hpp>
@@ -26,12 +26,12 @@
 
 // Header files defining default types for template parameters.
 // These headers must be included after other MueLu/Xpetra headers.
-using Scalar = sierra::nalu::LinSys::Scalar;
-using GlobalOrdinal = sierra::nalu::LinSys::GlobalOrdinal;
-using LocalOrdinal = sierra::nalu::LinSys::LocalOrdinal;
+using Scalar = sierra::kynema_ugf::LinSys::Scalar;
+using GlobalOrdinal = sierra::kynema_ugf::LinSys::GlobalOrdinal;
+using LocalOrdinal = sierra::kynema_ugf::LinSys::LocalOrdinal;
 using STS = Teuchos::ScalarTraits<Scalar>;
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 #include <Ifpack2_Factory.hpp>
 
 using Node = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
@@ -43,17 +43,17 @@ using Node = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
 #include <MueLu_TpetraOperator.hpp>
 
 #include <MueLu_UseShortNames.hpp> // => typedef MueLu::FooClass<Scalar, LocalOrdinal, ...> Foo
-#endif                             // NALU_USES_TRILINOS_SOLVERS
+#endif                             // KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
 #include <limits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
-/** Type of solvers available in Nalu simulation **/
+/** Type of solvers available in KynemaUGF simulation **/
 enum PetraType {
-  PT_TPETRA,            //!< Nalu Tpetra interface
-  PT_TPETRA_SEGREGATED, //!< Nalu Tpetra interface Segregated solver
+  PT_TPETRA,            //!< KynemaUGF Tpetra interface
+  PT_TPETRA_SEGREGATED, //!< KynemaUGF Tpetra interface Segregated solver
   PT_HYPRE,             //!< Direct HYPRE interface
   PT_HYPRE_SEGREGATED,  //!< Direct HYPRE Segregated momentum solver
   PT_END
@@ -62,7 +62,7 @@ enum PetraType {
 class LinearSolvers;
 class Simulation;
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
 const LocalOrdinal INVALID = std::numeric_limits<LocalOrdinal>::max();
 
@@ -74,7 +74,7 @@ using ColumnIndices =
 /** LocalGraphArrays is a helper class for building the arrays describing
  * the local csr graph, rowPointers and colIndices. These arrays are passed
  * to the TpetraCrsGraph::setAllIndices method. This helper class is used
- * within nalu's TpetraLinearSystem class.
+ * within kynema-ugf's TpetraLinearSystem class.
  * See unit-tests in UnitTestLocalGraphArrays.C.
  */
 class LocalGraphArrays
@@ -149,13 +149,13 @@ private:
     }
   }
 };
-#endif // NALU_USES_TRILINOS_SOLVERS
+#endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
-/** An abstract representation of a linear solver in Nalu
+/** An abstract representation of a linear solver in KynemaUGF
  *
- *  Defines the basic API supported by the linear solvers for use within Nalu.
- *  See concrete implementations such as sierra::nalu::TpetraLinearSolver for
- *  more details.
+ *  Defines the basic API supported by the linear solvers for use within
+ * KynemaUGF. See concrete implementations such as
+ * sierra::kynema_ugf::TpetraLinearSolver for more details.
  */
 class LinearSolver
 {
@@ -175,7 +175,7 @@ public:
   //! User-friendly identifier for this particular solver instance
   std::string name_;
 
-  //! Type of solver instance as defined in sierra::nalu::PetraType
+  //! Type of solver instance as defined in sierra::kynema_ugf::PetraType
   virtual PetraType getType() = 0;
 
   /** Utility method to cleanup solvers during simulation
@@ -212,7 +212,7 @@ public:
   LinearSolverConfig* getConfig() { return config_; }
 };
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
 class TpetraLinearSolver : public LinearSolver
 {
@@ -287,9 +287,9 @@ private:
 
   std::string preconditionerType_;
 };
-#endif // NALU_USES_TRILINOS_SOLVERS
+#endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

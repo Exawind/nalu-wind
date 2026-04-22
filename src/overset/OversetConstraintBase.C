@@ -17,7 +17,7 @@
 #include "stk_mesh/base/MetaData.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 OversetConstraintBase::OversetConstraintBase(
   Realm& realm,
@@ -52,5 +52,5 @@ OversetConstraintBase::prepare_constraints()
   eqSystem_->linsys_->free_coeff_applier(coeffApplier);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

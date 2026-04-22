@@ -17,7 +17,7 @@
 #include <aero/actuator/ActuatorFunctors.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // host only examples
 inline void
@@ -151,7 +151,7 @@ TestActuatorHostDev(ActuatorBulkMod& actBulk)
   ActPostIter(actBulk);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif // UNITTESTACTUATORNGP_H_

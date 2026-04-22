@@ -8,7 +8,7 @@
 //
 
 #include <user_functions/WindEnergyTaylorVortexAuxFunction.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 // basic c++
 #include <cmath>
@@ -17,7 +17,7 @@
 #include <algorithm>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 WindEnergyTaylorVortexAuxFunction::WindEnergyTaylorVortexAuxFunction(
   const unsigned beginPos,
@@ -55,7 +55,7 @@ WindEnergyTaylorVortexAuxFunction::WindEnergyTaylorVortexAuxFunction(
       visc_ = params[6];
     }
   } else {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "wind_energy_taylor_vortex proceeding with default parameters."
       << "\n  centroidX: " << centroidX_ << "\n  centroidY: " << centroidY_
       << "\n  rVortex: " << rVortex_ << "\n  beta: " << beta_
@@ -101,5 +101,5 @@ WindEnergyTaylorVortexAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

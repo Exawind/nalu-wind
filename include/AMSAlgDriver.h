@@ -22,7 +22,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -70,7 +70,7 @@ private:
 
   bool resetAMSAverages_;
 };
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

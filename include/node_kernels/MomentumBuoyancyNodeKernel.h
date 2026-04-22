@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class SolutionOptions;
 
@@ -58,7 +58,7 @@ private:
   NodeKernelTraits::DblType gravity_[NodeKernelTraits::NDimMax];
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

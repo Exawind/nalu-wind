@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <ComputeWallFrictionVelocityAlgorithm.h>
 #include <Algorithm.h>
 
@@ -15,8 +15,8 @@
 #include <Realm.h>
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementRepo.h>
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -31,7 +31,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -158,12 +158,12 @@ ComputeWallFrictionVelocityAlgorithm::execute()
 
     // extract master element
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         theElemTopo);
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
     const int nodesPerFace = b.topology().num_nodes();
     const int numScsBip = meFC->num_integration_points();
@@ -416,9 +416,9 @@ ComputeWallFrictionVelocityAlgorithm::compute_utau(
 
   // report trouble
   if (!converged) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Issue with utau; not converged " << std::endl;
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << up << " " << yp << " " << utau << std::endl;
   }
 }
@@ -469,5 +469,5 @@ ComputeWallFrictionVelocityAlgorithm::normalize_nodal_fields()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

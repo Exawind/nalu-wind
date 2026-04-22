@@ -24,9 +24,9 @@
 #include "stk_mesh/base/Ngp.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
-namespace nalu_ngp {
+namespace kynema_ugf_ngp {
 namespace impl {
 
 /** Return a Kokkos TeamPolicy object after setting the appropriate scratch
@@ -348,7 +348,7 @@ run_elem_algorithm(
     (rank == stk::topology::ELEM_RANK) ? ElemReqType::ELEM : ElemReqType::FACE;
   const int bytes_per_team = 0;
   const int bytes_per_thread =
-    impl::ngp_calc_thread_shmem_size<sierra::nalu::DoubleType>(
+    impl::ngp_calc_thread_shmem_size<sierra::kynema_ugf::DoubleType>(
       ndim, dataReqNGP, reqType);
 
   const auto& buckets = ngpMesh.get_bucket_ids(rank, sel);
@@ -444,7 +444,7 @@ run_elem_par_reduce(
     (rank == stk::topology::ELEM_RANK) ? ElemReqType::ELEM : ElemReqType::FACE;
   const int bytes_per_team = 0;
   const int bytes_per_thread =
-    impl::ngp_calc_thread_shmem_size<sierra::nalu::DoubleType>(
+    impl::ngp_calc_thread_shmem_size<sierra::kynema_ugf::DoubleType>(
       ndim, dataReqNGP, reqType);
 
   const auto& buckets = ngpMesh.get_bucket_ids(rank, sel);
@@ -531,7 +531,7 @@ run_face_elem_algorithm(
 
   const int bytes_per_team = 0;
   const int bytes_per_thread =
-    impl::ngp_calc_thread_shmem_size<sierra::nalu::DoubleType>(
+    impl::ngp_calc_thread_shmem_size<sierra::kynema_ugf::DoubleType>(
       ndim, faceDataNGP, elemDataNGP);
 
   const auto& buckets = ngpMesh.get_bucket_ids(sideRank, sel);
@@ -655,7 +655,7 @@ run_face_elem_par_reduce(
 
   const int bytes_per_team = 0;
   const int bytes_per_thread =
-    impl::ngp_calc_thread_shmem_size<sierra::nalu::DoubleType>(
+    impl::ngp_calc_thread_shmem_size<sierra::kynema_ugf::DoubleType>(
       ndim, faceDataNGP, elemDataNGP);
 
   const auto& buckets = ngpMesh.get_bucket_ids(sideRank, sel);
@@ -828,8 +828,8 @@ run_face_elem_algorithm_nosimd(
     });
 }
 
-} // namespace nalu_ngp
-} // namespace nalu
+} // namespace kynema_ugf_ngp
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPLOOPUTILS_H */

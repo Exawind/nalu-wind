@@ -19,7 +19,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class SolutionOptions;
 
@@ -55,7 +55,7 @@ private:
   unsigned velocityNp1ID_{stk::mesh::InvalidOrdinal};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOMENTUMCORIOLISSRCNODEKERNEL_H */

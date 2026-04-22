@@ -15,7 +15,7 @@
 #include <AssembleFaceElemSolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <AlgTraits.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <kernel/KernelBuilderLog.h>
 
 #include <stk_mesh/base/BulkData.hpp>
@@ -29,7 +29,7 @@
 #include <tuple>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 class Realm;
 
 inline std::pair<AssembleElemSolverAlgorithm*, bool>
@@ -59,7 +59,7 @@ build_or_add_part_to_solver_alg(
       topo.num_nodes());
     STK_ThrowRequire(theSolverAlg != nullptr);
 
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynemaUGFOutputP0()
       << "Created the following interior elem alg: " << algName << std::endl;
     solverAlgs.insert({algName, theSolverAlg});
   } else {
@@ -349,7 +349,7 @@ build_or_add_part_to_face_elem_solver_alg(
       eqSys.realm_, &part, &eqSys, topo.num_nodes(), elemTopo.num_nodes());
     STK_ThrowRequire(theSolverAlg != nullptr);
 
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynemaUGFOutputP0()
       << "Created the following bc face/elem alg: " << algName << std::endl;
     solverAlgs.insert({algName, theSolverAlg});
   } else {
@@ -392,7 +392,7 @@ build_or_add_part_to_face_bc_solver_alg(
       topo.num_nodes());
     STK_ThrowRequire(theSolverAlg != nullptr);
 
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynemaUGFOutputP0()
       << "Created the following bc face alg: " << algName << std::endl;
     solverAlgs.insert({algName, theSolverAlg});
   } else {
@@ -409,7 +409,7 @@ build_or_add_part_to_face_bc_solver_alg(
   return {theSolverAlg, createNewAlg};
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

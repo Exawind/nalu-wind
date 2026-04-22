@@ -1,4 +1,4 @@
-name: Nalu-Wind-CI
+name: Kynema-UGF-CI
 
 on:
   push:
@@ -10,14 +10,12 @@ jobs:
   Formatting:
     runs-on: ubuntu-latest
     steps:
-    - name: Clone
-      uses: actions/checkout@v4
-    - name: Check formatting
-      uses: DoozyX/clang-format-lint-action@v0.20
+    - uses: actions/checkout@v4
+    - name: Run clang-format
+      uses: jidicula/clang-format-action@v4.18.0
       with:
-        source: 'nalu.C unit_tests.C ./include ./src ./unit_tests'
-        extensions: 'H,h,cpp,C'
-        clangFormatVersion: 20
+        clang-format-version: '22'
+        check-path: '.'
   CPU-Trilinos:
     needs: Formatting
     runs-on: ubuntu-latest
@@ -41,14 +39,14 @@ jobs:
             source ${EXAWIND_MANAGER}/start.sh && spack-start && \
             spack env activate e4s-build && \
             cd ${EXAWIND_MANAGER}/environments/e4s-build && \
-            ln -s ${GITHUB_WORKSPACE} nalu-wind && \
-            spack develop --no-modify-concrete-specs --no-clone nalu-wind@=master && \
+            ln -s ${GITHUB_WORKSPACE} kynema-ugf && \
+            spack develop --no-modify-concrete-specs --no-clone kynema-ugf@=master && \
             spack rm exawind && \
-            spack add nalu-wind@master+hypre+openfast+tioga+trilinos-solvers && \
+            spack add kynema-ugf@master+hypre+openfast+tioga+trilinos-solvers && \
             spack concretize -f && \
             spack install --reuse && \
-            spack cd -b nalu-wind && \
-            spack build-env nalu-wind ctest -j $(nproc) -L unit --output-on-failure \
+            spack cd -b kynema-ugf && \
+            spack build-env kynema-ugf ctest -j $(nproc) -L unit --output-on-failure \
           "
   CPU-Hypre-Only:
     needs: Formatting
@@ -73,12 +71,12 @@ jobs:
             source ${EXAWIND_MANAGER}/start.sh && spack-start && \
             spack env activate e4s-build && \
             cd ${EXAWIND_MANAGER}/environments/e4s-build && \
-            ln -s ${GITHUB_WORKSPACE} nalu-wind && \
-            spack develop --no-modify-concrete-specs --no-clone nalu-wind@=master && \
+            ln -s ${GITHUB_WORKSPACE} kynema-ugf && \
+            spack develop --no-modify-concrete-specs --no-clone kynema-ugf@=master && \
             spack rm exawind && \
-            spack add nalu-wind@master+hypre+openfast+tioga~trilinos-solvers && \
+            spack add kynema-ugf@master+hypre+openfast+tioga~trilinos-solvers && \
             spack concretize -f && \
             spack install && \
-            spack cd -b nalu-wind && \
-            spack build-env nalu-wind ctest -j $(nproc) -L unit --output-on-failure \
+            spack cd -b kynema-ugf && \
+            spack build-env kynema-ugf ctest -j $(nproc) -L unit --output-on-failure \
           "

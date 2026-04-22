@@ -14,7 +14,7 @@
 #include <Kokkos_DualView.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 #ifndef ACTUATOR_LAMBDA
 #define ACTUATOR_LAMBDA [=]
@@ -105,7 +105,7 @@ struct ActDualViewHelper
   // TODO create range policy
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif // INCLUDE_ACTUATOR_ACTUATORTYPES_H_

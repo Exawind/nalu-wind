@@ -1,4 +1,4 @@
-target_sources(nalu PRIVATE
+target_sources(kynema-ugf PRIVATE
   # Edge kernels
   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleEdgeKernelAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleAMSEdgeKernelAlg.C

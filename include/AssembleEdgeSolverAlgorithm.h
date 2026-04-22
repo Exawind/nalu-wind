@@ -26,7 +26,7 @@ class Part;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class AssembleEdgeSolverAlgorithm : public SolverAlgorithm
 {
@@ -108,7 +108,7 @@ protected:
   const int rhsSize_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ASSEMBLEEDGESOLVERALGORITHM_H */

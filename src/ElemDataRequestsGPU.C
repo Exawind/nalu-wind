@@ -11,7 +11,7 @@
 #include "master_element/MasterElementRepo.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 void
 ElemDataRequestsGPU::copy_to_device()
@@ -44,6 +44,6 @@ ElemDataRequestsGPU::fill_host_data_enums(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 
 } // namespace sierra

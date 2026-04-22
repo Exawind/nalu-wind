@@ -14,7 +14,7 @@
 #include <stk_mesh/base/SkinMesh.hpp>
 #include <stk_mesh/base/SkinBoundary.hpp>
 
-#ifdef NALU_HAS_MATRIXFREE
+#ifdef KYNEMA_UGF_HAS_MATRIXFREE
 #include <matrix_free/LobattoQuadratureRule.h>
 #endif
 #include <element_promotion/PromotedPartHelper.h>
@@ -22,7 +22,7 @@
 #include <element_promotion/PromotedElementIO.h>
 #include <element_promotion/HexNElementDescription.h>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <BucketLoop.h>
 
 #include <memory>
@@ -46,19 +46,20 @@ fill_and_promote_hex_mesh(
   stk::mesh::Part* surfPart =
     &meta.declare_part_with_topology("surface_1", stk::topology::QUAD_4);
 
-  auto elemDesc = sierra::nalu::HexNElementDescription(polyOrder);
+  auto elemDesc = sierra::kynema_ugf::HexNElementDescription(polyOrder);
 
   const std::string superName =
-    sierra::nalu::super_element_part_name("block_1");
+    sierra::kynema_ugf::super_element_part_name("block_1");
   stk::topology topo = stk::create_superelement_topology(
     static_cast<unsigned>(elemDesc.nodesPerElement));
   meta.declare_part_with_topology(superName, topo);
 
   stk::mesh::Part* superSuperPart = &meta.declare_part(
-    sierra::nalu::super_element_part_name("surface_1"),
+    sierra::kynema_ugf::super_element_part_name("surface_1"),
     stk::topology::FACE_RANK);
 
-  const auto sidePartName = sierra::nalu::super_subset_part_name("surface_1");
+  const auto sidePartName =
+    sierra::kynema_ugf::super_subset_part_name("surface_1");
   auto sideTopo = stk::create_superface_topology(
     static_cast<unsigned>(elemDesc.nodesPerSide));
   stk::mesh::Part* superSidePart =
@@ -71,14 +72,14 @@ fill_and_promote_hex_mesh(
   io.populate_bulk_data();
   stk::mesh::create_exposed_block_boundary_sides(bulk, *blockPart, {surfPart});
 
-  sierra::nalu::VectorFieldType* coords =
+  sierra::kynema_ugf::VectorFieldType* coords =
     meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
   stk::mesh::PartVector baseParts = {blockPart, surfPart};
   std::vector<double> nodes(polyOrder + 1);
   for (size_t j = 0; j < polyOrder + 1; ++j) {
     nodes[j] = -1 + 2. / (polyOrder)*j;
   }
-  sierra::nalu::promotion::create_tensor_product_hex_elements(
+  sierra::kynema_ugf::promotion::create_tensor_product_hex_elements(
     nodes, bulk, *coords, baseParts);
 }
 
@@ -89,11 +90,11 @@ dump_promoted_mesh_file(stk::mesh::BulkData& bulk, int polyOrder)
   const stk::mesh::PartVector& outParts = meta.get_mesh_parts();
   std::string fileName = "out.e";
 
-  auto desc = sierra::nalu::HexNElementDescription(polyOrder);
-  sierra::nalu::VectorFieldType* coordField =
+  auto desc = sierra::kynema_ugf::HexNElementDescription(polyOrder);
+  sierra::kynema_ugf::VectorFieldType* coordField =
     meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
 
-  sierra::nalu::PromotedElementIO io(
+  sierra::kynema_ugf::PromotedElementIO io(
     polyOrder, meta, bulk, outParts, fileName, *coordField);
   io.write_database_data(0.0);
 }
@@ -131,7 +132,7 @@ TEST(SingleHexPromotion, coords_p2)
   std::string singleElemMeshSpec = "generated:1x1x1";
   fill_and_promote_hex_mesh(singleElemMeshSpec, *bulk, polynomialOrder);
   const stk::mesh::PartVector promotedElemParts =
-    sierra::nalu::only_super_elem_parts(meta.get_parts());
+    sierra::kynema_ugf::only_super_elem_parts(meta.get_parts());
   const stk::mesh::Selector promotedElemSelector =
     stk::mesh::selectUnion(promotedElemParts);
   const stk::mesh::BucketVector& buckets =
@@ -141,7 +142,7 @@ TEST(SingleHexPromotion, coords_p2)
   stk::mesh::get_selected_entities(promotedElemSelector, buckets, elems);
   ASSERT_EQ(elems.size(), 1u);
 
-  sierra::nalu::VectorFieldType* coordField =
+  sierra::kynema_ugf::VectorFieldType* coordField =
     meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
   for (stk::mesh::Entity elem : elems) {
     const stk::mesh::Entity* elemNodeRelations = bulk->begin_nodes(elem);

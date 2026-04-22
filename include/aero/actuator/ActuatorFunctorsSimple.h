@@ -13,11 +13,11 @@
 #include <aero/actuator/ActuatorTypes.h>
 #include <aero/actuator/ActuatorBulkSimple.h>
 #include <aero/actuator/ActuatorFunctors.h>
-#include <NaluParsedTypes.h>
-#include <NaluEnv.h>
+#include <KynemaUGFParsedTypes.h>
+#include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct InterpActuatorDensity
 {
@@ -138,7 +138,7 @@ using ActSimpleSpreadForceWhProjection = GenericLoopOverCoarseSearchResults<
   ActuatorBulkSimple,
   ActSimpleSpreadForceWhProjInnerLoop>;
 
-} /* namespace nalu */
+} /* namespace kynema_ugf */
 } /* namespace sierra */
 
 #endif /* ACTUATORFUNCTORSSIMPLE_H_ */

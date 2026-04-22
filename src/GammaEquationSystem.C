@@ -23,8 +23,8 @@
 #include <LinearSolvers.h>
 #include <LinearSolver.h>
 #include <LinearSystem.h>
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 #include <Realm.h>
 #include <Realms.h>
 #include <Simulation.h>
@@ -81,7 +81,7 @@
 #include <stk_util/parallel/ParallelReduce.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -119,7 +119,7 @@ GammaEquationSystem::GammaEquationSystem(EquationSystems& eqSystems)
 
   // determine nodal gradient form
   set_nodal_gradient("gamma_transition");
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge projected nodal gradient for gamma_transition: "
     << edgeNodalGradient_ << std::endl;
 
@@ -280,7 +280,8 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 
     // Check if the user has requested CMM or LMM algorithms; if so, do not
     // include Nodal Mass algorithms
-    NaluEnv::self().naluOutputP0() << "register gamma interior: " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "register gamma interior: " << std::endl;
 
     std::vector<std::string> checkAlgNames = {
       "gamma_transition_time_derivative",
@@ -297,7 +298,7 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
         nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), gamma_);
 
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "call BLTGammaM2015NodeKernel: " << std::endl;
 
         nodeAlg.add_kernel<BLTGammaM2015NodeKernel>(realm_.meta_data());
@@ -305,7 +306,8 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         if (srcName == "gcl") {
           nodeAlg.add_kernel<ScalarGclNodeKernel>(realm_.bulk_data(), gamma_);
-          NaluEnv::self().naluOutputP0() << " - " << srcName << std::endl;
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
+            << " - " << srcName << std::endl;
         } else
           throw std::runtime_error("SDREqSys: Invalid source term: " + srcName);
       });
@@ -588,16 +590,16 @@ void
 GammaEquationSystem::assemble_nodal_gradient()
 {
 
-  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex;
 
   const auto& meta = realm_.meta_data();
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
   const int ndim = meta.spatial_dimension();
 
-  const double timeA = -NaluEnv::self().nalu_time();
+  const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
   nodalGradAlgDriver_.execute();
-  timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+  timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
 
   // Computation of dV/dy in Eq. 11: gard(n dot V) dot n
   // where the V is the velocity vector and n is the wall normal vector
@@ -619,7 +621,7 @@ GammaEquationSystem::assemble_nodal_gradient()
   nDotV.sync_to_device();
   vel.sync_to_device();
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "GammaTransition::compute_nDotV", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       // Step 2 - Normalize the wall distance gradient
@@ -657,9 +659,9 @@ GammaEquationSystem::assemble_nodal_gradient()
 void
 GammaEquationSystem::compute_effective_diff_flux_coeff()
 {
-  const double timeA = -NaluEnv::self().nalu_time();
+  const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
   effDiffFluxAlg_->execute();
-  timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+  timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
 }
 
 //--------------------------------------------------------------------------
@@ -680,9 +682,9 @@ GammaEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*gamma_);
-  nalu_ngp::field_copy(ngpMesh, sel, gammaNp1, gammaN);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, gammaNp1, gammaN);
   gammaNp1.modify_on_device();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

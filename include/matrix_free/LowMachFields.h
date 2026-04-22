@@ -20,7 +20,7 @@ class MetaData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <int p>
@@ -80,7 +80,7 @@ struct gather_required_lowmach_fields_t
 P_INVOKEABLE(gather_required_lowmach_fields)
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

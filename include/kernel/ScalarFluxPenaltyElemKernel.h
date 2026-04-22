@@ -19,7 +19,7 @@
 #include <Kokkos_Core.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class SolutionOptions;
 class ElemDataRequests;
@@ -72,7 +72,7 @@ private:
     vf_shape_function_{"view_face_shape_func"};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOMENTUMSYMMETRYELEMKERNEL_H */

@@ -24,7 +24,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 class MasterElement;
 struct MasterElementRepo
 {
@@ -50,7 +50,7 @@ struct MasterElementRepo
 
   static void clear();
 };
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

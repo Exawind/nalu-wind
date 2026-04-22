@@ -1,13 +1,13 @@
 #include "mesh_motion/MeshTransformationAlg.h"
 
 #include "mesh_motion/FrameReference.h"
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 
 #include <cassert>
 #include <iostream>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MeshTransformationAlg::MeshTransformationAlg(
   stk::mesh::BulkData& bulk, const YAML::Node& node)
@@ -49,5 +49,5 @@ MeshTransformationAlg::initialize(const double time)
   isInit_ = true;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -14,18 +14,18 @@ const double testTol = 1e-14;
 
 std::vector<double>
 transform(
-  const sierra::nalu::mm::TransMatType& transMat,
-  const sierra::nalu::mm::ThreeDVecType& xyz)
+  const sierra::kynema_ugf::mm::TransMatType& transMat,
+  const sierra::kynema_ugf::mm::ThreeDVecType& xyz)
 {
   std::vector<double> transCoord(3, 0.0);
 
   // perform matrix multiplication between transformation matrix
   // and original coordinates to obtain transformed coordinates
-  for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
-    transCoord[d] = transMat[d * sierra::nalu::mm::matSize + 0] * xyz[0] +
-                    transMat[d * sierra::nalu::mm::matSize + 1] * xyz[1] +
-                    transMat[d * sierra::nalu::mm::matSize + 2] * xyz[2] +
-                    transMat[d * sierra::nalu::mm::matSize + 3];
+  for (int d = 0; d < sierra::kynema_ugf::kynema_ugf_ngp::NDimMax; d++) {
+    transCoord[d] = transMat[d * sierra::kynema_ugf::mm::matSize + 0] * xyz[0] +
+                    transMat[d * sierra::kynema_ugf::mm::matSize + 1] * xyz[1] +
+                    transMat[d * sierra::kynema_ugf::mm::matSize + 2] * xyz[2] +
+                    transMat[d * sierra::kynema_ugf::mm::matSize + 3];
   }
 
   return transCoord;
@@ -42,12 +42,12 @@ TEST(meshMotion, rotation_omega)
   YAML::Node rotNode = YAML::Load(rotInfo);
 
   // initialize the mesh rotation class
-  sierra::nalu::MotionRotationKernel rotClass(rotNode);
+  sierra::kynema_ugf::MotionRotationKernel rotClass(rotNode);
 
   // build transformation
   const double time = 3.5;
-  sierra::nalu::mm::ThreeDVecType xyz{2.5, 1.5, 6.5};
-  sierra::nalu::mm::TransMatType transMat =
+  sierra::kynema_ugf::mm::ThreeDVecType xyz{2.5, 1.5, 6.5};
+  sierra::kynema_ugf::mm::TransMatType transMat =
     rotClass.build_transformation(time, xyz);
   std::vector<double> norm = transform(transMat, xyz);
 
@@ -59,8 +59,8 @@ TEST(meshMotion, rotation_omega)
   EXPECT_NEAR(norm[1], gold_norm_y, testTol);
   EXPECT_NEAR(norm[2], gold_norm_z, testTol);
 
-  sierra::nalu::mm::ThreeDVecType tmp;
-  sierra::nalu::mm::ThreeDVecType vel =
+  sierra::kynema_ugf::mm::ThreeDVecType tmp;
+  sierra::kynema_ugf::mm::ThreeDVecType vel =
     rotClass.compute_velocity(time, transMat, tmp, xyz);
 
   const double gold_norm_vx = -3.0;
@@ -81,12 +81,12 @@ TEST(meshMotion, rotation_angle)
   YAML::Node rotNode = YAML::Load(rotInfo);
 
   // initialize the mesh rotation class
-  sierra::nalu::MotionRotationKernel rotClass(rotNode);
+  sierra::kynema_ugf::MotionRotationKernel rotClass(rotNode);
 
   // build transformation
   const double time = 0.0;
-  sierra::nalu::mm::ThreeDVecType xyz{2.5, 1.5, 6.5};
-  sierra::nalu::mm::TransMatType transMat =
+  sierra::kynema_ugf::mm::ThreeDVecType xyz{2.5, 1.5, 6.5};
+  sierra::kynema_ugf::mm::TransMatType transMat =
     rotClass.build_transformation(time, xyz);
   std::vector<double> norm = transform(transMat, xyz);
 
@@ -108,16 +108,17 @@ TEST(meshMotion, scaling)
   YAML::Node scaleNode = YAML::Load(scaleInfo);
 
   // create realm
-  unit_test_utils::NaluTest naluObj;
-  sierra::nalu::Realm& realm = naluObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
 
   // initialize the mesh scaling class
-  sierra::nalu::MotionScalingKernel scaleClass(realm.meta_data(), scaleNode);
+  sierra::kynema_ugf::MotionScalingKernel scaleClass(
+    realm.meta_data(), scaleNode);
 
   // build transformation
   const double time = 0.0;
-  sierra::nalu::mm::ThreeDVecType xyz{2.5, 1.5, 6.5};
-  sierra::nalu::mm::TransMatType transMat =
+  sierra::kynema_ugf::mm::ThreeDVecType xyz{2.5, 1.5, 6.5};
+  sierra::kynema_ugf::mm::TransMatType transMat =
     scaleClass.build_transformation(time, xyz);
   std::vector<double> norm = transform(transMat, xyz);
 
@@ -140,12 +141,12 @@ TEST(meshMotion, translation_velocity)
   YAML::Node transNode = YAML::Load(transInfo);
 
   // initialize the mesh translation class
-  sierra::nalu::MotionTranslationKernel transClass(transNode);
+  sierra::kynema_ugf::MotionTranslationKernel transClass(transNode);
 
   // build transformation at t = 10.0
   double time = 10.0;
-  sierra::nalu::mm::ThreeDVecType xyz{2.5, 1.5, 6.5};
-  sierra::nalu::mm::TransMatType transMat =
+  sierra::kynema_ugf::mm::ThreeDVecType xyz{2.5, 1.5, 6.5};
+  sierra::kynema_ugf::mm::TransMatType transMat =
     transClass.build_transformation(time, xyz);
   std::vector<double> norm = transform(transMat, xyz);
 
@@ -192,12 +193,12 @@ TEST(meshMotion, translation_displacement)
   YAML::Node transNode = YAML::Load(transInfo);
 
   // initialize the mesh translation class
-  sierra::nalu::MotionTranslationKernel transClass(transNode);
+  sierra::kynema_ugf::MotionTranslationKernel transClass(transNode);
 
   // build transformation
   const double time = 0.0;
-  sierra::nalu::mm::ThreeDVecType xyz{2.5, 1.5, 6.5};
-  sierra::nalu::mm::TransMatType transMat =
+  sierra::kynema_ugf::mm::ThreeDVecType xyz{2.5, 1.5, 6.5};
+  sierra::kynema_ugf::mm::TransMatType transMat =
     transClass.build_transformation(time, xyz);
   std::vector<double> norm = transform(transMat, xyz);
 
@@ -222,17 +223,17 @@ TEST(meshMotion, deform_interior_outside_node)
   YAML::Node deformNode = YAML::Load(deformInfo);
 
   // create realm
-  unit_test_utils::NaluTest naluObj;
-  sierra::nalu::Realm& realm = naluObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
 
   // initialize the mesh translation class
-  sierra::nalu::MotionDeformingInteriorKernel deformClass(
+  sierra::kynema_ugf::MotionDeformingInteriorKernel deformClass(
     realm.meta_data(), deformNode);
 
   // build transformation
   const double time = 1.66666667;
-  sierra::nalu::mm::ThreeDVecType xyz{9, 7, 3.5};
-  sierra::nalu::mm::TransMatType transMat =
+  sierra::kynema_ugf::mm::ThreeDVecType xyz{9, 7, 3.5};
+  sierra::kynema_ugf::mm::TransMatType transMat =
     deformClass.build_transformation(time, xyz);
   std::vector<double> currCoord = transform(transMat, xyz);
 
@@ -244,8 +245,8 @@ TEST(meshMotion, deform_interior_outside_node)
   EXPECT_NEAR(currCoord[1], gold_norm_y, testTol);
   EXPECT_NEAR(currCoord[2], gold_norm_z, testTol);
 
-  sierra::nalu::mm::ThreeDVecType tmp;
-  sierra::nalu::mm::ThreeDVecType vel =
+  sierra::kynema_ugf::mm::ThreeDVecType tmp;
+  sierra::kynema_ugf::mm::ThreeDVecType vel =
     deformClass.compute_velocity(time, transMat, xyz, tmp);
 
   const double gold_norm_vx = 0.0;
@@ -269,17 +270,17 @@ TEST(meshMotion, deform_interior_inside_node)
   YAML::Node deformNode = YAML::Load(deformInfo);
 
   // create realm
-  unit_test_utils::NaluTest naluObj;
-  sierra::nalu::Realm& realm = naluObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
 
   // initialize the mesh translation class
-  sierra::nalu::MotionDeformingInteriorKernel deformClass(
+  sierra::kynema_ugf::MotionDeformingInteriorKernel deformClass(
     realm.meta_data(), deformNode);
 
   // build transformation
   const double time = 1.66666667;
-  sierra::nalu::mm::ThreeDVecType xyz{9.0, 4, 1.5};
-  sierra::nalu::mm::TransMatType transMat =
+  sierra::kynema_ugf::mm::ThreeDVecType xyz{9.0, 4, 1.5};
+  sierra::kynema_ugf::mm::TransMatType transMat =
     deformClass.build_transformation(time, xyz);
   std::vector<double> currCoord = transform(transMat, xyz);
 
@@ -291,8 +292,8 @@ TEST(meshMotion, deform_interior_inside_node)
   EXPECT_NEAR(currCoord[1], gold_norm_y, testTol);
   EXPECT_NEAR(currCoord[2], gold_norm_z, testTol);
 
-  sierra::nalu::mm::ThreeDVecType tmp;
-  sierra::nalu::mm::ThreeDVecType vel =
+  sierra::kynema_ugf::mm::ThreeDVecType tmp;
+  sierra::kynema_ugf::mm::ThreeDVecType vel =
     deformClass.compute_velocity(time, transMat, xyz, tmp);
 
   const double gold_norm_vx = 0.816209714892358;

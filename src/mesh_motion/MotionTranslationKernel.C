@@ -1,11 +1,11 @@
 #include "mesh_motion/MotionTranslationKernel.h"
 
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 #include <cmath>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MotionTranslationKernel::MotionTranslationKernel(const YAML::Node& node)
   : NgpMotionKernel<MotionTranslationKernel>()
@@ -26,12 +26,12 @@ MotionTranslationKernel::load(const YAML::Node& node)
 
   // translation could be based on velocity or displacement
   if (node["velocity"]) {
-    for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
       velocity_[d] = node["velocity"][d].as<double>();
   }
 
   if (node["displacement"]) {
-    for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
       displacement_[d] = node["displacement"][d].as<double>();
   }
 
@@ -52,10 +52,10 @@ MotionTranslationKernel::build_transformation(
 
   // determine translation based on user defined input
   if (useVelocity_) {
-    for (int d = 0; d < nalu_ngp::NDimMax; d++)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++)
       transMat[d * mm::matSize + 3] = velocity_[d] * (motionTime - startTime_);
   } else {
-    for (int d = 0; d < nalu_ngp::NDimMax; d++)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++)
       transMat[d * mm::matSize + 3] = displacement_[d];
   }
   return transMat;
@@ -75,5 +75,5 @@ MotionTranslationKernel::compute_velocity(
     return velocity_;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

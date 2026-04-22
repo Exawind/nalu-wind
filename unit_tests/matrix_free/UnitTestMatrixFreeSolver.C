@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
 #include "matrix_free/MatrixFreeSolver.h"
 #include "matrix_free/ConductionFields.h"
@@ -51,7 +51,7 @@
 #include "stk_mesh/base/MetaData.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace test_belos_solver {
@@ -145,7 +145,7 @@ TEST_F(SolverFixture, solve_harmonic)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
-#endif // NALU_USES_TRILINOS_SOLVERS
+#endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS

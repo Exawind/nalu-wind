@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 void
 add_procs_to_neighbors(
@@ -116,14 +116,15 @@ stk::mesh::Entity
 get_entity_master(
   const stk::mesh::BulkData& bulk,
   stk::mesh::Entity entity,
-  stk::mesh::EntityId naluId,
+  stk::mesh::EntityId kynema_ugfId,
   bool throwIfMasterNotFound)
 {
-  bool thisEntityIsMaster = (bulk.identifier(entity) == naluId);
+  bool thisEntityIsMaster = (bulk.identifier(entity) == kynema_ugfId);
   if (thisEntityIsMaster) {
     return entity;
   }
-  stk::mesh::Entity master = bulk.get_entity(stk::topology::NODE_RANK, naluId);
+  stk::mesh::Entity master =
+    bulk.get_entity(stk::topology::NODE_RANK, kynema_ugfId);
   if (throwIfMasterNotFound && !bulk.is_valid(master)) {
     std::ostringstream os;
     const stk::mesh::Entity* elems = bulk.begin_elements(entity);
@@ -137,7 +138,8 @@ get_entity_master(
     STK_ThrowRequireMsg(
       bulk.is_valid(master),
       "get_entity_master, P"
-        << bulk.parallel_rank() << " failed to get entity for naluId=" << naluId
+        << bulk.parallel_rank()
+        << " failed to get entity for kynema_ugfId=" << kynema_ugfId
         << ", from entity with stkId=" << bulk.identifier(entity)
         << ", owned=" << bulk.bucket(entity).owned()
         << ", shared=" << bulk.bucket(entity).shared() << ", " << os.str());
@@ -417,5 +419,5 @@ remove_invalid_indices(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

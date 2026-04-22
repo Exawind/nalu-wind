@@ -20,7 +20,7 @@
 #include "matrix_free/TensorOperations.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <int p, typename BoxArray, typename InpArray>
@@ -167,6 +167,6 @@ KOKKOS_FORCEINLINE_FUNCTION
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

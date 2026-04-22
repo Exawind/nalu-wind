@@ -28,7 +28,7 @@ class BulkData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 const auto global_ordinal_index_base = 1;
@@ -93,6 +93,6 @@ Tpetra::Map<> make_owned_shared_constrained_row_map(
   stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gids);
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

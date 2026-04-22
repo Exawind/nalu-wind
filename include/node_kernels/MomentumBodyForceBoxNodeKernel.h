@@ -26,7 +26,7 @@
 #include "ngp_algorithms/MdotInflowAlg.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class MomentumBodyForceBoxNodeKernel
   : public NGPNodeKernel<MomentumBodyForceBoxNodeKernel>
@@ -73,7 +73,7 @@ private:
   const int w_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOMENTUMBODYFORCEBOXNODEKERNEL_H */

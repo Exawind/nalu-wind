@@ -15,7 +15,7 @@
 #include "utils/StkHelpers.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MomentumGclSrcNodeKernel::MomentumGclSrcNodeKernel(
   const stk::mesh::BulkData& bulk)
@@ -100,5 +100,5 @@ MomentumGclSrcNodeKernel::execute(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

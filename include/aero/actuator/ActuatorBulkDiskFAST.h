@@ -13,12 +13,12 @@
 #include <aero/actuator/ActuatorBulkFAST.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct ActuatorBulkDiskFAST : public ActuatorBulkFAST
 {
 public:
-  ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double naluTimeStep);
+  ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double kynema_ugfTimeStep);
 
   bool adm_points_need_updating = true;
   ActFixArrayInt numSweptCount_;
@@ -32,7 +32,7 @@ private:
   void initialize_swept_points(const ActuatorMetaFAST& actMeta);
 };
 
-} /* namespace nalu */
+} /* namespace kynema_ugf */
 } /* namespace sierra */
 
 #endif /* INCLUDE_ACTUATOR_ACTUATORBULKDISKFAST_H_ */

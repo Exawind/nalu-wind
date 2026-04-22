@@ -60,7 +60,7 @@ public:
 
     partVec_.clear();
     partVec_.push_back(meta_->get_part("block_1"));
-    coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
+    coordinates_ = static_cast<const sierra::kynema_ugf::VectorFieldType*>(
       meta_->coordinate_field());
 
     EXPECT_TRUE(coordinates_ != nullptr);
@@ -69,17 +69,18 @@ public:
     helperObjs_.reset(
       new HelperObjects(bulk_, AlgTraits::topo_, numDof, partVec_[0]));
     dataNeeded().add_coordinates_field(
-      *coordinates_, AlgTraits::nDim_, sierra::nalu::CURRENT_COORDINATES);
+      *coordinates_, AlgTraits::nDim_, sierra::kynema_ugf::CURRENT_COORDINATES);
   }
 
   void init_me_data()
   {
     // Initialize both surface and volume elements
     meSCS_ =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         AlgTraits::topo_);
-    meSCV_ = sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(
-      AlgTraits::topo_);
+    meSCV_ =
+      sierra::kynema_ugf::MasterElementRepo::get_volume_master_element_on_host(
+        AlgTraits::topo_);
 
     // Register them to ElemDataRequests
     dataNeeded().add_cvfem_surface_me(meSCS_);
@@ -88,7 +89,8 @@ public:
     // Initialize shape function views
     DoubleType scs_data[AlgTraits::numScsIp_ * AlgTraits::nodesPerElement_];
     {
-      sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>
+      sierra::kynema_ugf::SharedMemView<
+        DoubleType**, sierra::kynema_ugf::DeviceShmem>
         ShmemView(
           &scs_data[0], AlgTraits::numScsIp_, AlgTraits::nodesPerElement_);
       meSCS_->shape_fcn<>(ShmemView);
@@ -102,7 +104,8 @@ public:
 
     DoubleType scv_data[AlgTraits::numScvIp_ * AlgTraits::nodesPerElement_];
     {
-      sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>
+      sierra::kynema_ugf::SharedMemView<
+        DoubleType**, sierra::kynema_ugf::DeviceShmem>
         ShmemView(
           &scv_data[0], AlgTraits::numScvIp_, AlgTraits::nodesPerElement_);
       meSCV_->shape_fcn<>(ShmemView);
@@ -130,7 +133,7 @@ public:
 #endif
   }
 
-  inline sierra::nalu::ElemDataRequests& dataNeeded()
+  inline sierra::kynema_ugf::ElemDataRequests& dataNeeded()
   {
     return helperObjs_->assembleElemSolverAlg->dataNeededByKernels_;
   }
@@ -139,18 +142,18 @@ public:
   stk::mesh::MetaData* meta_;
   std::shared_ptr<stk::mesh::BulkData> bulk_;
   stk::mesh::PartVector partVec_;
-  const sierra::nalu::VectorFieldType* coordinates_{nullptr};
+  const sierra::kynema_ugf::VectorFieldType* coordinates_{nullptr};
 
   std::unique_ptr<HelperObjects> helperObjs_{nullptr};
 
-  sierra::nalu::MasterElement* meFC_{nullptr};
-  sierra::nalu::MasterElement* meSCV_{nullptr};
-  sierra::nalu::MasterElement* meSCS_{nullptr};
+  sierra::kynema_ugf::MasterElement* meFC_{nullptr};
+  sierra::kynema_ugf::MasterElement* meSCV_{nullptr};
+  sierra::kynema_ugf::MasterElement* meSCS_{nullptr};
 
-  sierra::nalu::AlignedViewType<
+  sierra::kynema_ugf::AlignedViewType<
     DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]>
     scv_shape_fcn_{"scv_shape_function"};
-  sierra::nalu::AlignedViewType<
+  sierra::kynema_ugf::AlignedViewType<
     DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]>
     scs_shape_fcn_{"scs_shape_function"};
 };

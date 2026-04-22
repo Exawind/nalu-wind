@@ -14,7 +14,7 @@
 #include <SimdInterface.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <int n, typename ViewType>
 struct ScratchWorkView
@@ -40,7 +40,7 @@ struct ScratchWorkView
   ViewType view_{data_.data()};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

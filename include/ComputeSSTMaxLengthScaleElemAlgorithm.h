@@ -14,7 +14,7 @@
 #include <FieldTypeDef.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class ComputeSSTMaxLengthScaleElemAlgorithm : public Algorithm
@@ -29,7 +29,7 @@ public:
   ScalarFieldType* maxLengthScale_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

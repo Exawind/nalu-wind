@@ -19,7 +19,7 @@
 #include <LinearSolvers.h>
 #include <LinearSolver.h>
 #include <LinearSystem.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <Realm.h>
 #include <Realms.h>
 #include <Simulation.h>
@@ -50,7 +50,7 @@
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -364,11 +364,11 @@ ProjectedNodalGradientEquationSystem::solve_and_update_external()
     assemble_and_solve(qTmp_);
 
     // update
-    double timeA = NaluEnv::self().nalu_time();
+    double timeA = KynemaUGFEnv::self().kynema_ugf_time();
     field_axpby(
       realm_.meta_data(), realm_.bulk_data(), 1.0, *qTmp_, 1.0, *dqdx_,
       realm_.get_activate_aura());
-    double timeB = NaluEnv::self().nalu_time();
+    double timeB = KynemaUGFEnv::self().kynema_ugf_time();
     timerAssemble_ += (timeB - timeA);
   }
 }
@@ -382,5 +382,5 @@ ProjectedNodalGradientEquationSystem::deactivate_output()
   linsys_->provideOutput_ = false;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

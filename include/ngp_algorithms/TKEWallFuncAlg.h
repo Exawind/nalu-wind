@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /** Compute nodal TKE values when using ABL wall function
  *
@@ -52,7 +52,7 @@ private:
   MasterElement* meFC_{nullptr};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* TKEWALLFUNCALG_H */

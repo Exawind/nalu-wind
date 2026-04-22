@@ -9,7 +9,7 @@
 
 #include <user_functions/BoussinesqNonIsoTemperatureAuxFunction.h>
 #include <algorithm>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 // basic c++
 #include <cmath>
@@ -17,7 +17,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 BoussinesqNonIsoTemperatureAuxFunction::BoussinesqNonIsoTemperatureAuxFunction()
   : AuxFunction(0, 1), Cp_(0.01), Tref_(300.0)
@@ -50,5 +50,5 @@ BoussinesqNonIsoTemperatureAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

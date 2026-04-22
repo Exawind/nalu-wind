@@ -8,8 +8,8 @@
 //
 
 #include <OutputInfo.h>
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 
 // ioss
 #include <Ioss_PropertyManager.h>
@@ -19,7 +19,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -131,7 +131,7 @@ OutputInfo::load(const YAML::Node& y_node)
     // error checking
     if (outputCompressionShuffle_)
       if (outputCompressionLevel_ == 0)
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "OutputInfo::load() Output Warning: One should not shuffle if one "
              "is not compressing"
           << std::endl;
@@ -142,7 +142,7 @@ OutputInfo::load(const YAML::Node& y_node)
         y_output, "serialized_io_group_size", serializedIOGroupSize_,
         serializedIOGroupSize_);
       if (serializedIOGroupSize_) {
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Info: found non-zero serialized_io_group_size in input file= "
           << serializedIOGroupSize_ << std::endl;
       }
@@ -214,7 +214,7 @@ OutputInfo::load(const YAML::Node& y_node)
     // error checking
     if (restartCompressionShuffle_)
       if (restartCompressionLevel_ == 0)
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "OutputInfo::load() Restart Warning: One should not shuffle if "
              "one is not compressing"
           << std::endl;
@@ -227,7 +227,7 @@ OutputInfo::load(const YAML::Node& y_node)
 
     const YAML::Node y_vars = y_restart["restart_variables"];
     if (y_vars) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Restart variable specification has been deprecated" << std::endl;
     }
   }
@@ -262,5 +262,5 @@ OutputInfo::get_restart_shuffle()
   return restartCompressionShuffle_;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

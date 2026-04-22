@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include "edge_kernels/MomentumEdgeSolverAlg.h"
 #include "EquationSystem.h"
 #include "PecletFunction.h"
@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
@@ -60,7 +60,7 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
     meta, "abl_wall_no_slip_wall_func_node_mask", stk::topology::NODE_RANK);
 
   if (realm_.solutionOptions_->realm_has_vof_) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "WARNING: volume_of_fluid is present. For stability, upwinding in the "
          "MomentumEdgeSolverAlg is automatically turned on near the liquid-gas "
          "interface.\n";
@@ -312,5 +312,5 @@ MomentumEdgeSolverAlg::execute()
     });
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

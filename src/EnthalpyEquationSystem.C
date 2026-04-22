@@ -31,8 +31,8 @@
 #include <LinearSolvers.h>
 #include <LinearSolver.h>
 #include <LinearSystem.h>
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 #include <ProjectedNodalGradientEquationSystem.h>
 #include <Realm.h>
 #include <Realms.h>
@@ -109,11 +109,11 @@
 // stk_util
 #include <stk_util/parallel/ParallelReduce.hpp>
 
-// nalu utility
+// kynema_ugf utility
 #include <utils/StkHelpers.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -162,7 +162,7 @@ EnthalpyEquationSystem::EnthalpyEquationSystem(
 
   // determine nodal gradient form
   set_nodal_gradient("enthalpy");
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge projected nodal gradient for enthalpy: " << edgeNodalGradient_
     << std::endl;
 
@@ -295,7 +295,7 @@ EnthalpyEquationSystem::register_nodal_fields(
   const double providedPr = realm_.get_lam_prandtl("enthalpy", prProvided);
   if (prProvided) {
     // compute thermal conductivity using Pr; create and push back the algorithm
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Laminar Prandtl provided; will compute Thermal conductivity based on "
          "this constant value"
       << std::endl;
@@ -458,7 +458,8 @@ EnthalpyEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
         }
 
         if (added)
-          NaluEnv::self().naluOutputP0() << "  - " << srcName << std::endl;
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
+            << "  - " << srcName << std::endl;
       });
 
     std::map<AlgorithmType, SolverAlgorithm*>::iterator itsm =
@@ -495,7 +496,7 @@ EnthalpyEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
             ++nonNgpSrcSkipped;
           }
           if (suppAlg != NULL) {
-            NaluEnv::self().naluOutputP0()
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
               << "EnthalpyNodalSrcTerms::added() " << sourceName << std::endl;
             theAlg->supplementalAlg_.push_back(suppAlg);
           }
@@ -675,7 +676,7 @@ EnthalpyEquationSystem::register_wall_bc(
   // check for engineering wall function; warn user that this is not yet
   // supported
   if (wallFunctionApproach && !ablWallFunctionApproach)
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Sorry, engineering wall function not yet supported for "
          "temperature/enthalpy; will use Dirichlet"
       << std::endl;
@@ -1107,7 +1108,7 @@ EnthalpyEquationSystem::solve_and_update()
 
   for (int k = 0; k < maxIterations_; ++k) {
 
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
       << userSuppliedName_ << std::endl;
 
@@ -1116,10 +1117,10 @@ EnthalpyEquationSystem::solve_and_update()
       assemble_and_solve(hTmp_);
 
       // update
-      double timeA = NaluEnv::self().nalu_time();
+      double timeA = KynemaUGFEnv::self().kynema_ugf_time();
       solution_update(
         1.0, *hTmp_, 1.0, enthalpy_->field_of_state(stk::mesh::StateNP1));
-      double timeB = NaluEnv::self().nalu_time();
+      double timeB = KynemaUGFEnv::self().kynema_ugf_time();
       timerAssemble_ += (timeB - timeA);
 
       if (decoupledOverset_ && realm_.hasOverset_)
@@ -1313,23 +1314,23 @@ EnthalpyEquationSystem::extract_temperature()
   // parallel assemble not converged
   if (outputClippingDiag_) {
     size_t g_troubleCount[3] = {};
-    stk::ParallelMachine comm = NaluEnv::self().parallel_comm();
+    stk::ParallelMachine comm = KynemaUGFEnv::self().parallel_comm();
     stk::all_reduce_sum(comm, &troubleCount[0], &g_troubleCount[0], 3);
 
     if (g_troubleCount[0] > 0) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Temperature extraction failed to converge " << g_troubleCount[0]
         << " times" << std::endl;
     }
 
     if (g_troubleCount[1] > 0) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Temperature clipped to min " << g_troubleCount[1] << " times"
         << std::endl;
     }
 
     if (g_troubleCount[2] > 0) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Temperature clipped to max " << g_troubleCount[2] << " times"
         << std::endl;
     }
@@ -1371,7 +1372,7 @@ EnthalpyEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*enthalpy_);
-  nalu_ngp::field_copy(ngpMesh, sel, hNp1, hN);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, hNp1, hN);
 }
 
 //--------------------------------------------------------------------------
@@ -1499,13 +1500,13 @@ void
 EnthalpyEquationSystem::compute_projected_nodal_gradient()
 {
   if (!managePNG_) {
-    const double timeA = -NaluEnv::self().nalu_time();
+    const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
     nodalGradAlgDriver_.execute();
-    timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+    timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
   } else {
     projectedNodalGradEqs_->solve_and_update_external();
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

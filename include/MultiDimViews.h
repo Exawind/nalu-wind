@@ -13,7 +13,7 @@
 #include <KokkosInterface.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct NumNeededViews
 {
@@ -296,7 +296,7 @@ public:
   unsigned views_4D_size;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

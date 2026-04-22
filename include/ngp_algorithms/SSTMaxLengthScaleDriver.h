@@ -12,7 +12,7 @@
 
 #include "ngp_algorithms/NgpAlgDriver.h"
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -30,7 +30,7 @@ public:
   virtual void post_work() override;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* SSTMAXLENGTHSCALEDRIVER_H */

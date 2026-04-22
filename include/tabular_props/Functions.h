@@ -4,7 +4,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //============================================================================
 /**
@@ -99,7 +99,7 @@ private:
   std::vector<double> gammaMaxStoich_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -24,14 +24,14 @@ YAML::Node get_default_inputs();
 
 YAML::Node get_realm_default_node();
 
-class NaluTest
+class KynemaUGFTest
 {
 public:
-  NaluTest(const YAML::Node& doc = get_default_inputs());
+  KynemaUGFTest(const YAML::Node& doc = get_default_inputs());
 
-  ~NaluTest();
+  ~KynemaUGFTest();
 
-  sierra::nalu::Realm& create_realm(
+  sierra::kynema_ugf::Realm& create_realm(
     const YAML::Node& realm_node = get_realm_default_node(),
     const std::string realm_type = "multi_physics",
     const bool createMeshObjects = true);
@@ -39,12 +39,12 @@ public:
   YAML::Node doc_;
   stk::ParallelMachine comm_;
   unsigned spatialDim_;
-  sierra::nalu::Simulation sim_;
+  sierra::kynema_ugf::Simulation sim_;
 
   stk::mesh::PartVector partVec_;
 
 private:
-  NaluTest(const NaluTest&) = delete;
+  KynemaUGFTest(const KynemaUGFTest&) = delete;
   std::string logFileName_;
 };
 

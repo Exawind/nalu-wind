@@ -25,7 +25,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <int p>
@@ -106,5 +106,5 @@ matrix_free::ContinuitySolutionUpdate<p>::final_linear_norm() const
 INSTANTIATE_POLYCLASS(ContinuitySolutionUpdate);
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

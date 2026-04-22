@@ -8,13 +8,13 @@
 //
 
 #include <AveragingInfo.h>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 // basic c++
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -45,5 +45,5 @@ AveragingInfo::~AveragingInfo()
   // nothing to do
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

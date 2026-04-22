@@ -136,12 +136,12 @@ TEST_F(VOFKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
   const int numDof = 1;
   unit_test_utils::TpetraHelperObjectsEdge helperObjs(bulk_, numDof);
 
-  helperObjs.realm.naluGlobalId_ = naluGlobalId_;
+  helperObjs.realm.kynema_ugfGlobalId_ = kynema_ugfGlobalId_;
   helperObjs.realm.tpetGlobalId_ = tpetGlobalId_;
 
   helperObjs.realm.set_global_id();
 
-  helperObjs.create<sierra::nalu::VOFAdvectionEdgeAlg>(
+  helperObjs.create<sierra::kynema_ugf::VOFAdvectionEdgeAlg>(
     partVec_[0], volumeOfFluid_, dvolumeOfFluidDx_);
   helperObjs.execute();
 

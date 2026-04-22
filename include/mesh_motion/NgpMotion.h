@@ -13,11 +13,11 @@ class Node;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace mm {
 
-static constexpr int matSize = nalu_ngp::NDimMax + 1;
+static constexpr int matSize = kynema_ugf_ngp::NDimMax + 1;
 
 struct TransMatType
 {
@@ -76,7 +76,7 @@ struct TransMatType
 
 struct ThreeDVecType
 {
-  double Vec_[nalu_ngp::NDimMax];
+  double Vec_[kynema_ugf_ngp::NDimMax];
 
   // initialize empty vector
   KOKKOS_FORCEINLINE_FUNCTION
@@ -159,7 +159,7 @@ public:
 
   void set_computed_centroid(const mm::ThreeDVecType& centroid)
   {
-    for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
       origin_[d] = centroid[d];
   }
 
@@ -190,14 +190,14 @@ public:
   virtual NgpMotion* create_on_device() final
   {
     free_on_device();
-    deviceCopy_ = nalu_ngp::create<T>(*dynamic_cast<T*>(this));
+    deviceCopy_ = kynema_ugf_ngp::create<T>(*dynamic_cast<T*>(this));
     return deviceCopy_;
   }
 
   virtual void free_on_device() final
   {
     if (deviceCopy_ != nullptr) {
-      nalu_ngp::destroy<T>(dynamic_cast<T*>(deviceCopy_));
+      kynema_ugf_ngp::destroy<T>(dynamic_cast<T*>(deviceCopy_));
       deviceCopy_ = nullptr;
     }
   }
@@ -208,7 +208,7 @@ private:
   T* deviceCopy_{nullptr};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPMOTION_H */

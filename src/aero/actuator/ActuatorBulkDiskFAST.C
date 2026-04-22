@@ -12,13 +12,13 @@
 #include <aero/actuator/ActuatorFunctorsFAST.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 // TODO(psakiev) convert disk points to geometric series
 // TODO(psakiev) allow for anisotropic disk
 
 ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
-  ActuatorMetaFAST& actMeta, double naluTimeStep)
-  : ActuatorBulkFAST(actMeta, naluTimeStep),
+  ActuatorMetaFAST& actMeta, double kynema_ugfTimeStep)
+  : ActuatorBulkFAST(actMeta, kynema_ugfTimeStep),
     numSweptCount_(
       "numSweptCount", actMeta.numberOfActuators_, actMeta.maxNumPntsPerBlade_),
     numSweptOffset_(
@@ -26,7 +26,7 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
 {
 
   STK_ThrowErrorIf(!actMeta.is_disk());
-  actMeta.set_dt_driver(naluTimeStep);
+  actMeta.set_dt_driver(kynema_ugfTimeStep);
   compute_swept_point_count(actMeta);
   resize_arrays(actMeta);
   Kokkos::parallel_for(
@@ -64,7 +64,7 @@ ActuatorBulkDiskFAST::compute_swept_point_count(ActuatorMetaFAST& actMeta)
   actMeta.numPointsTurbine_.modify_host();
 
   for (int iTurb = 0; iTurb < openFast_.get_nTurbinesGlob(); ++iTurb) {
-    if (NaluEnv::self().parallel_rank() == openFast_.get_procNo(iTurb)) {
+    if (KynemaUGFEnv::self().parallel_rank() == openFast_.get_procNo(iTurb)) {
       const int nBlades = openFast_.get_numBlades(iTurb);
       const int nbfp = openFast_.get_numForcePtsBlade(iTurb);
 
@@ -277,5 +277,5 @@ ActuatorBulkDiskFAST::spread_forces_over_disk(const ActuatorMetaFAST& actMeta)
   }
 }
 
-} /* namespace nalu */
+} /* namespace kynema_ugf */
 } /* namespace sierra */

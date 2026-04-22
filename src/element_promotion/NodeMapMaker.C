@@ -15,7 +15,7 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 Kokkos::View<int***>
 exodus_hex27_node_map()
@@ -91,5 +91,5 @@ make_side_node_ordinal_map_hex(int p)
   return face_node_map;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

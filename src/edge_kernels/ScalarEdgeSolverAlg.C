@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ScalarEdgeSolverAlg::ScalarEdgeSolverAlg(
   Realm& realm,
@@ -205,5 +205,5 @@ ScalarEdgeSolverAlg::execute()
     });
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

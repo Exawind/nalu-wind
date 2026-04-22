@@ -13,7 +13,7 @@ namespace unit_test_utils {
 
 double
 field_norm(
-  const sierra::nalu::ScalarFieldType& field,
+  const sierra::kynema_ugf::ScalarFieldType& field,
   const stk::mesh::BulkData& bulk,
   stk::mesh::Selector selector)
 {
@@ -26,8 +26,8 @@ field_norm(
   double g_norm = 0.0;
 
   Kokkos::parallel_for(
-    sierra::nalu::HostTeamPolicy(buckets.size(), Kokkos::AUTO),
-    NONCONST_LAMBDA(const sierra::nalu::TeamHandleType& team) {
+    sierra::kynema_ugf::HostTeamPolicy(buckets.size(), Kokkos::AUTO),
+    NONCONST_LAMBDA(const sierra::kynema_ugf::TeamHandleType& team) {
       const stk::mesh::Bucket& bkt = *buckets[team.league_rank()];
       Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, bkt.size()),

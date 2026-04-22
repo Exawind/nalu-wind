@@ -14,7 +14,7 @@
 #include "FieldTypeDef.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class OversetConstraintBase : public SolverAlgorithm
 {
@@ -41,7 +41,7 @@ protected:
   ScalarFieldType* dualNodalVolume_{nullptr};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* OVERSETCONSTRAINTBASE_H */

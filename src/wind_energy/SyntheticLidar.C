@@ -9,7 +9,7 @@
 
 #include "wind_energy/SyntheticLidar.h"
 
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 #include "master_element/TensorOps.h"
 
 #include "xfer/Transfer.h"
@@ -23,7 +23,7 @@
 #include <memory>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 constexpr int dim = 3;
 
@@ -410,7 +410,7 @@ LidarLineOfSite::output(
       auto lidar_name_start = name_.find_last_of("/");
       auto lidar_name = name_.substr(lidar_name_start + 1);
 
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "LIDAR " << lidar_name << " search did not match " << not_found_count
         << " points, max individually unmatched coords: (" << max_unmatched[0]
         << ", " << max_unmatched[1] << ", " << max_unmatched[2] << ")"
@@ -645,7 +645,7 @@ LidarLineOfSite::determine_line_of_site_info(const YAML::Node& node)
   probeInfo->part_.resize(nsamples_);
   probeInfo->geomType_.resize(nsamples_);
 
-  const int numProcs = NaluEnv::self().parallel_size();
+  const int numProcs = KynemaUGFEnv::self().parallel_size();
   const int divProcProbe = std::max(numProcs / nsamples_, numProcs);
 
   for (int ilos = 0; ilos < nsamples_; ilos++) {
@@ -1003,7 +1003,7 @@ LidarLOS::output(
       ++step_outputs;
     }
     if (step_outputs == max_output_per_step) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Warning: max lidar outputs, " << max_output_per_step
         << " per step reached";
     }
@@ -1021,7 +1021,7 @@ LidarLOS::output(
       ++step_outputs;
     }
     if (step_outputs == max_output_per_step) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Warning: max lidar outputs, " << max_output_per_step
         << " per step reached";
     }
@@ -1095,5 +1095,5 @@ parse_radar_filter(const YAML::Node& node)
 }
 
 } // namespace details
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

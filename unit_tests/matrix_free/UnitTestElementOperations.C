@@ -25,7 +25,7 @@
 #include "gtest/gtest.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace {
@@ -327,5 +327,5 @@ TEST(element_operations, fp_grad)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

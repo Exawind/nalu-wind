@@ -19,7 +19,7 @@
 #include <stk_mesh/base/Selector.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 InverseDualVolumePropAlgorithm::InverseDualVolumePropAlgorithm(
   Realm& realm, stk::mesh::Part* part, stk::mesh::FieldBase* prop)
@@ -60,5 +60,5 @@ InverseDualVolumePropAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

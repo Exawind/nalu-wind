@@ -28,7 +28,7 @@ class MetaData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class IdealGasTPropertyEvaluator : public PropertyEvaluator
 {
@@ -121,7 +121,7 @@ public:
   std::vector<double> mwVec_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

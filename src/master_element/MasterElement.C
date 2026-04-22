@@ -12,7 +12,7 @@
 
 #include <AlgTraits.h>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
@@ -26,7 +26,7 @@
 #include <memory>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
@@ -73,5 +73,5 @@ MasterElement::vector_norm_sq(const double* vect, int len) const
   return norm_sq;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

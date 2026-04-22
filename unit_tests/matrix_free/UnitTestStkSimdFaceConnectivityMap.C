@@ -47,7 +47,7 @@ struct Cartesian3d;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class SimdFaceConnectivityFixture : public ::testing::Test
@@ -163,5 +163,5 @@ TEST_F(SimdFaceConnectivityFixture, map_has_at_correct_number_of_valid_entries)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

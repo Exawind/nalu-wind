@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <AssemblePNGBoundarySolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
@@ -27,7 +27,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -99,7 +99,7 @@ AssemblePNGBoundarySolverAlgorithm::execute()
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
@@ -185,5 +185,5 @@ AssemblePNGBoundarySolverAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

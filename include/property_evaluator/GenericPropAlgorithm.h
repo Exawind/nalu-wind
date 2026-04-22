@@ -20,7 +20,7 @@ class Part;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class PropertyEvaluator;
@@ -42,7 +42,7 @@ public:
   PropertyEvaluator* propEvaluator_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

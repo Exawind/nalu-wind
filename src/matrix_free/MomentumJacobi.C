@@ -11,7 +11,7 @@
 #include <KokkosInterface.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace {
@@ -128,5 +128,5 @@ MomentumJacobiOperator<p>::compute_diagonal(
 }
 INSTANTIATE_POLYCLASS(MomentumJacobiOperator);
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -200,9 +200,9 @@ TEST_F(MomentumKernelHex8Mesh, NGP_symmetry_edge)
   unit_test_utils::FaceElemHelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 3, part, isEdge);
 
-  std::unique_ptr<sierra::nalu::Kernel> kernel(
-    new sierra::nalu::MomentumSymmetryEdgeKernel<
-      sierra::nalu::AlgTraitsQuad4Hex8>(
+  std::unique_ptr<sierra::kynema_ugf::Kernel> kernel(
+    new sierra::kynema_ugf::MomentumSymmetryEdgeKernel<
+      sierra::kynema_ugf::AlgTraitsQuad4Hex8>(
       *meta_, solnOpts_, velocity_, viscosity_,
       helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
       helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_));
@@ -233,9 +233,9 @@ TEST_F(MomentumKernelHex8Mesh, NGP_symmetry_edge_penalty)
   unit_test_utils::FaceElemHelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 3, part, isEdge);
 
-  std::unique_ptr<sierra::nalu::Kernel> kernel(
-    new sierra::nalu::MomentumSymmetryEdgeKernel<
-      sierra::nalu::AlgTraitsQuad4Hex8>(
+  std::unique_ptr<sierra::kynema_ugf::Kernel> kernel(
+    new sierra::kynema_ugf::MomentumSymmetryEdgeKernel<
+      sierra::kynema_ugf::AlgTraitsQuad4Hex8>(
       *meta_, solnOpts_, velocity_, viscosity_,
       helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
       helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_));

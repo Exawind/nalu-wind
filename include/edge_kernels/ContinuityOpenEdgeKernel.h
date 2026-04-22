@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Entity.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class SolutionOptions;
 class TimeIntegrator;
@@ -77,7 +77,7 @@ private:
   const DoubleType solveInc_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* CONTINUITYOPENEDGEKERNEL_H */

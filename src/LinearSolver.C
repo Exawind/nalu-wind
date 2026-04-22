@@ -10,7 +10,7 @@
 #include <LinearSolver.h>
 #include <LinearSolvers.h>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <LinearSolverTypes.h>
 
 #include <stk_util/util/ReportHandler.hpp>
@@ -21,7 +21,7 @@
 #include <Teuchos_ParameterXMLFileReader.hpp>
 #include <Kokkos_Core.hpp>
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
 // Tpetra support
 #include <BelosLinearProblem.hpp>
@@ -43,14 +43,14 @@
 
 #include <MueLu_CreateTpetraPreconditioner.hpp>
 
-#endif // NALU_USES_TRILINOS_SOLVERS
+#endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
 #include <iostream>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
 TpetraLinearSolver::TpetraLinearSolver(
   std::string solverName,
@@ -139,8 +139,8 @@ TpetraLinearSolver::setMueLu()
     return;
 
   {
-    Teuchos::RCP<Teuchos::Time> tm =
-      Teuchos::TimeMonitor::getNewTimer("nalu MueLu preconditioner setup");
+    Teuchos::RCP<Teuchos::Time> tm = Teuchos::TimeMonitor::getNewTimer(
+      "kynema_ugf MueLu preconditioner setup");
     Teuchos::TimeMonitor timeMon(*tm);
 
     if (recomputePreconditioner_ || mueluPreconditioner_ == Teuchos::null) {
@@ -219,7 +219,7 @@ TpetraLinearSolver::solve(
   int whichNorm = 2;
   finalResidNrm = 0.0;
 
-  double time = -NaluEnv::self().nalu_time();
+  double time = -KynemaUGFEnv::self().kynema_ugf_time();
   if (activateMueLu_) {
     setMueLu();
   } else {
@@ -228,7 +228,7 @@ TpetraLinearSolver::solve(
     }
     preconditioner_->compute();
   }
-  time += NaluEnv::self().nalu_time();
+  time += KynemaUGFEnv::self().kynema_ugf_time();
 
   // Update preconditioner timer for this timestep; actual summing over
   // timesteps is handled in EquationSystem::assemble_and_solve
@@ -253,7 +253,7 @@ TpetraLinearSolver::solve(
   return status;
 }
 
-#endif // NALU_USES_TRILINOS_SOLVERS
+#endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

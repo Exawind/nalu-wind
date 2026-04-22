@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <AssembleFaceElemSolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <SolverAlgorithm.h>
@@ -39,7 +39,7 @@
 #include <CopyAndInterleave.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -88,7 +88,7 @@ AssembleFaceElemSolverAlgorithm::execute()
     kernel->setup(*realm_.timeIntegrator_);
   }
 
-  auto ngpKernels = nalu_ngp::create_ngp_view<Kernel>(activeKernels_);
+  auto ngpKernels = kynema_ugf_ngp::create_ngp_view<Kernel>(activeKernels_);
   const size_t numKernels = activeKernels_.size();
   auto coeffApplier = coeff_applier();
 
@@ -97,10 +97,10 @@ AssembleFaceElemSolverAlgorithm::execute()
   double diagRelaxFactor = diagRelaxFactor_;
 
   run_face_elem_algorithm(
-    realm_.bulk_data(),
-    KOKKOS_LAMBDA(
-      sierra::nalu::SharedMemData_FaceElem<DeviceTeamHandleType, DeviceShmem> &
-      smdata) {
+    realm_.bulk_data(), KOKKOS_LAMBDA(
+                          sierra::kynema_ugf::SharedMemData_FaceElem<
+                            DeviceTeamHandleType, DeviceShmem> &
+                          smdata) {
       set_vals(smdata.simdrhs, DoubleType(0.0));
       set_vals(smdata.simdlhs, DoubleType(0.0));
 
@@ -130,5 +130,5 @@ AssembleFaceElemSolverAlgorithm::execute()
   coeffApplier.free_coeff_applier();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class GaussJetVelocityAuxFunction : public AuxFunction
 {
@@ -39,7 +39,7 @@ private:
   const double u_m;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

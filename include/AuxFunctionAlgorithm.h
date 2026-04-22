@@ -26,7 +26,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class AuxFunction;
 
@@ -54,7 +54,7 @@ private:
   AuxFunctionAlgorithm& operator=(const AuxFunctionAlgorithm& other);
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

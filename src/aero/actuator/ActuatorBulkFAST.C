@@ -10,10 +10,10 @@
 #include <aero/actuator/ActuatorBulkFAST.h>
 #include <aero/actuator/UtilitiesActuator.h>
 #include <aero/actuator/ActuatorFunctorsFAST.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
   : ActuatorMeta(actMeta),
@@ -44,7 +44,7 @@ ActuatorMetaFAST::is_disk()
 }
 
 ActuatorBulkFAST::ActuatorBulkFAST(
-  ActuatorMetaFAST& actMeta, double naluTimeStep)
+  ActuatorMetaFAST& actMeta, double kynema_ugfTimeStep)
   : ActuatorBulk(actMeta),
     turbineThrust_("turbineThrust", actMeta.numberOfActuators_),
     turbineTorque_("turbineTorque", actMeta.numberOfActuators_),
@@ -53,10 +53,10 @@ ActuatorBulkFAST::ActuatorBulkFAST(
     orientationTensor_(
       "orientationTensor",
       actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),
-    tStepRatio_(std::round(naluTimeStep / actMeta.fastInputs_.dtFAST))
+    tStepRatio_(std::round(kynema_ugfTimeStep / actMeta.fastInputs_.dtFAST))
 {
-  actMeta.set_dt_driver(naluTimeStep);
-  init_openfast(actMeta, naluTimeStep);
+  actMeta.set_dt_driver(kynema_ugfTimeStep);
+  init_openfast(actMeta, kynema_ugfTimeStep);
   init_epsilon(actMeta);
   RunActFastUpdatePoints(*this);
 }
@@ -65,27 +65,29 @@ ActuatorBulkFAST::~ActuatorBulkFAST() { openFast_.end(); }
 
 bool
 ActuatorBulkFAST::is_tstep_ratio_admissable(
-  const double fastTimeStep, const double naluTimeStep)
+  const double fastTimeStep, const double kynema_ugfTimeStep)
 {
-  const double stepCheck = std::abs(naluTimeStep / fastTimeStep - tStepRatio_);
+  const double stepCheck =
+    std::abs(kynema_ugfTimeStep / fastTimeStep - tStepRatio_);
   return stepCheck < 1e-12;
 }
 
 void
 ActuatorBulkFAST::init_openfast(
-  const ActuatorMetaFAST& actMeta, const double naluTimeStep)
+  const ActuatorMetaFAST& actMeta, const double kynema_ugfTimeStep)
 {
   openFast_.setInputs(actMeta.fastInputs_);
-  if (!is_tstep_ratio_admissable(actMeta.fastInputs_.dtFAST, naluTimeStep)) {
+  if (!is_tstep_ratio_admissable(
+        actMeta.fastInputs_.dtFAST, kynema_ugfTimeStep)) {
     throw std::runtime_error(
-      "ActuatorFAST: Ratio of Nalu's time step is not "
+      "ActuatorFAST: Ratio of KynemaUGF's time step is not "
       "an integral multiple of FAST time step.");
   } else {
-    NaluEnv::self().naluOutputP0()
-      << "Time step ratio  dtNalu/dtFAST: " << tStepRatio_ << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Time step ratio  dtKynemaUGF/dtFAST: " << tStepRatio_ << std::endl;
   }
 
-  const int nProcs = NaluEnv::self().parallel_size();
+  const int nProcs = KynemaUGFEnv::self().parallel_size();
   const int nTurb = actMeta.numberOfActuators_;
   const int intDivision = nTurb / nProcs;
   const int remainder = actMeta.numberOfActuators_ % nProcs;
@@ -93,7 +95,7 @@ ActuatorBulkFAST::init_openfast(
 
   STK_ThrowErrorMsgIf(
     remainder && intDivision,
-    "nalu-wind can't process more turbines than ranks.");
+    "kynema_ugf can't process more turbines than ranks.");
 
   // assign turbines to processors uniformly
   for (int i = 0; i < intDivision; i++) {
@@ -112,7 +114,7 @@ ActuatorBulkFAST::init_openfast(
   }
   /* TODO update/uncomment this check once openfast adds in a way
   to get the actual time step from fast::OpenFAST
-  if (!is_tstep_ratio_admissable(openFast_.dtFAST, naluTimeStep)) {
+  if (!is_tstep_ratio_admissable(openFast_.dtFAST, kynema_ugfTimeStep)) {
     throw std::runtime_error("OpenFAST is using a different time step than "
                              "what was specified in the input deck. "
                              "Please check that your workflow is consistent "
@@ -142,12 +144,12 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
   searchRadius_.modify_host();
   const int nTurb = openFast_.get_nTurbinesGlob();
 
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Total Number of Actuator Points is: " << actMeta.numPointsTotal_
     << std::endl;
 
   for (int iTurb = 0; iTurb < nTurb; iTurb++) {
-    if (openFast_.get_procNo(iTurb) == NaluEnv::self().parallel_rank()) {
+    if (openFast_.get_procNo(iTurb) == KynemaUGFEnv::self().parallel_rank()) {
       STK_ThrowAssert(
         actMeta.numPointsTotal_ >= openFast_.get_numForcePts(iTurb));
       const int numForcePts = actMeta.numPointsTurbine_.h_view(iTurb);
@@ -247,7 +249,7 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
 Kokkos::RangePolicy<ActuatorFixedExecutionSpace>
 ActuatorBulkFAST::local_range_policy()
 {
-  auto rank = NaluEnv::self().parallel_rank();
+  auto rank = KynemaUGFEnv::self().parallel_rank();
   if (rank == openFast_.get_procNo(rank)) {
     const int offset = turbIdOffset_.h_view(rank);
     const int size = openFast_.get_numForcePts(rank);
@@ -295,7 +297,7 @@ ActuatorBulkFAST::fast_is_time_zero()
   int globalFastZero = 0;
   MPI_Allreduce(
     &localFastZero, &globalFastZero, 1, MPI_INT, MPI_SUM,
-    NaluEnv::self().parallel_comm());
+    KynemaUGFEnv::self().parallel_comm());
   return globalFastZero > 0;
 }
 
@@ -319,14 +321,14 @@ ActuatorBulkFAST::output_torque_info(stk::mesh::BulkData& stkBulk)
 
     int processorId = openFast_.get_procNo(iTurb);
 
-    if (NaluEnv::self().parallel_rank() == processorId) {
+    if (KynemaUGFEnv::self().parallel_rank() == processorId) {
       auto thrust = Kokkos::subview(turbineThrust_, iTurb, Kokkos::ALL);
       auto torque = Kokkos::subview(turbineTorque_, iTurb, Kokkos::ALL);
-      NaluEnv::self().naluOutput()
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << std::endl
         << "  Thrust[" << iTurb << "] = " << thrust(0) << " " << thrust(1)
         << " " << thrust(2) << " " << std::endl;
-      NaluEnv::self().naluOutput()
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << "  Torque[" << iTurb << "] = " << torque(0) << " " << torque(1)
         << " " << torque(2) << " " << std::endl;
 
@@ -335,11 +337,11 @@ ActuatorBulkFAST::output_torque_info(stk::mesh::BulkData& stkBulk)
 
       openFast_.computeTorqueThrust(iTurb, tmpTorque, tmpThrust);
 
-      NaluEnv::self().naluOutput()
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << "  Thrust ratio actual/correct = [" << thrust(0) / tmpThrust[0]
         << " " << thrust(1) / tmpThrust[1] << " " << thrust(2) / tmpThrust[2]
         << "] " << std::endl;
-      NaluEnv::self().naluOutput()
+      KynemaUGFEnv::self().kynema_ugfOutput()
         << "  Torque ratio actual/correct = [" << torque(0) / tmpTorque[0]
         << " " << torque(1) / tmpTorque[1] << " " << torque(2) / tmpTorque[2]
         << "] " << std::endl;
@@ -347,5 +349,5 @@ ActuatorBulkFAST::output_torque_info(stk::mesh::BulkData& stkBulk)
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

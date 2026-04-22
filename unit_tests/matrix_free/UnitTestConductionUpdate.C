@@ -40,7 +40,7 @@
 #include <memory>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace test_simulation {
 
@@ -349,5 +349,5 @@ TEST_F(
 
 } // namespace test_simulation
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

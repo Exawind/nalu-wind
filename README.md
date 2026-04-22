@@ -31,7 +31,7 @@ The following contains details for Kynema-UGF (formerly Nalu-Wind):
 
 ## Documentation
 
-Documentation is available online at https://exawind.github.io/nalu-wind/ and is
+Documentation is available online at https://exawind.github.io/kynema-ugf/ and is
 split into the following sections:
 
 - [Theory manual](https://kynema.github.io/kynema-ugf/source/theory/index.html):
@@ -40,7 +40,7 @@ split into the following sections:
   
 - [Verification manual](https://kynema.github.io/kynema-ugf/source/verification/index.html):
   This section documents the results from verification studies of the spatial
-  and temporal schemes available in Nalu-Wind.
+  and temporal schemes available in Kynema-UGF.
   
 - [User manual](https://kynema.github.io/kynema-ugf/source/user/index.html):
   The user manual contains detailed instructions on building the code, along
@@ -58,7 +58,7 @@ has the following optional dependencies: hypre, TIOGA, and OpenFAST. Detailed
 build instructions are available in the [user
 manual](https://kynema.github.io/kynema-ugf/source/user/building.html).
 We recommend using [Spack](https://spack.io/) package manager to install
-Nalu-Wind on your system.
+Kynema-UGF on your system.
 
 ### Testing and quality assurance
 
@@ -86,7 +86,7 @@ when submitting pull-requests.
 
 To pass the formatting check, use this with a new version of `clang-format`:
 ```
-find nalu.C unit_tests.C ./include ./src ./unit_tests \( -name "*.cpp" -o -name "*.H" -o -name "*.h" -o -name "*.C" \) -exec clang-format -i {} +
+find kynema-ugf.C unit_tests.C ./include ./src ./unit_tests \( -name "*.cpp" -o -name "*.H" -o -name "*.h" -o -name "*.C" \) -exec clang-format -i {} +
 ```
   
 ## License

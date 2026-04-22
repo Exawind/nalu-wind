@@ -23,7 +23,7 @@
 #include "stk_mesh/base/GetNgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <typename T = double>
@@ -420,5 +420,5 @@ LowMachUpdate<p>::create_continuity_preconditioner(
 INSTANTIATE_POLYCLASS(LowMachUpdate);
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

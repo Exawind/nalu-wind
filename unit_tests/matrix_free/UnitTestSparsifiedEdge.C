@@ -39,7 +39,7 @@
 #include <MatrixMarket_Tpetra.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace test_solution_update {
@@ -105,5 +105,5 @@ TEST_F(SparsifiedEdgeFixture, dump)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

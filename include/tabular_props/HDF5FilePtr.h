@@ -6,7 +6,7 @@
 #include <string>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // Forward declarations
 class H5IO;
@@ -49,7 +49,7 @@ public:
   /** returns the pointer to an opened HDF5 file */
   H5IO* get_H5IO();
 
-  /**  Don't need to print summary in Nalu
+  /**  Don't need to print summary in KynemaUGF
    *  Print a summary of the contained data, including independent variable
    *  mesh points, clipping values, and the contained properties.
   void print_summary() const;
@@ -72,7 +72,7 @@ private:
   H5IO* fileIO_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

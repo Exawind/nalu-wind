@@ -20,7 +20,7 @@
 #include "SolutionOptions.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
   : Algorithm(realm, part),
@@ -73,7 +73,7 @@ SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
 void
 SSTAMSAveragesAlg::execute()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   const auto& meta = realm_.meta_data();
   if (meta.spatial_dimension() != 3) {
@@ -136,7 +136,7 @@ SSTAMSAveragesAlg::execute()
     }
   }
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "SSTAMSAveragesAlg_computeAverages", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
       // Calculate alpha
@@ -171,62 +171,62 @@ SSTAMSAveragesAlg::execute()
         stk::math::max(1.0 - dt / avgTime.get(mi, 0), 0.0);
       const DblType weightInst = stk::math::min(dt / avgTime.get(mi, 0), 1.0);
 
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i)
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i)
         avgVel.get(mi, i) =
           weightAvg * avgVelN.get(mi, i) + weightInst * vel.get(mi, i);
 
       DblType tkeRes = 0.0;
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i)
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i)
         tkeRes += (vel.get(mi, i) - avgVel.get(mi, i)) *
                   (vel.get(mi, i) - avgVel.get(mi, i));
 
       avgTkeRes.get(mi, 0) =
         weightAvg * avgTkeResN.get(mi, 0) + weightInst * 0.5 * tkeRes;
 
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i) {
-        for (int j = 0; j < nalu_ngp::NDimMax; ++j) {
-          avgDudx.get(mi, i * nalu_ngp::NDimMax + j) =
-            weightAvg * avgDudxN.get(mi, i * nalu_ngp::NDimMax + j) +
-            weightInst * dudx.get(mi, i * nalu_ngp::NDimMax + j);
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i) {
+        for (int j = 0; j < kynema_ugf_ngp::NDimMax; ++j) {
+          avgDudx.get(mi, i * kynema_ugf_ngp::NDimMax + j) =
+            weightAvg * avgDudxN.get(mi, i * kynema_ugf_ngp::NDimMax + j) +
+            weightInst * dudx.get(mi, i * kynema_ugf_ngp::NDimMax + j);
         }
       }
 
       // Production averaging
-      DblType tij[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i) {
-        for (int j = 0; j < nalu_ngp::NDimMax; ++j) {
+      DblType tij[kynema_ugf_ngp::NDimMax][kynema_ugf_ngp::NDimMax];
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i) {
+        for (int j = 0; j < kynema_ugf_ngp::NDimMax; ++j) {
           const DblType avgSij =
-            0.5 * (avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
-                   avgDudx.get(mi, j * nalu_ngp::NDimMax + i));
+            0.5 * (avgDudx.get(mi, i * kynema_ugf_ngp::NDimMax + j) +
+                   avgDudx.get(mi, j * kynema_ugf_ngp::NDimMax + i));
           tij[i][j] = 2.0 * alpha * (2.0 - alpha) * tvisc.get(mi, 0) * avgSij;
         }
       }
 
-      DblType Pij[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i) {
-        for (int j = 0; j < nalu_ngp::NDimMax; ++j) {
+      DblType Pij[kynema_ugf_ngp::NDimMax][kynema_ugf_ngp::NDimMax];
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i) {
+        for (int j = 0; j < kynema_ugf_ngp::NDimMax; ++j) {
           Pij[i][j] = 0.0;
-          for (int m = 0; m < nalu_ngp::NDimMax; ++m) {
+          for (int m = 0; m < kynema_ugf_ngp::NDimMax; ++m) {
             Pij[i][j] +=
-              avgDudx.get(mi, i * nalu_ngp::NDimMax + m) * tij[j][m] +
-              avgDudx.get(mi, j * nalu_ngp::NDimMax + m) * tij[i][m];
+              avgDudx.get(mi, i * kynema_ugf_ngp::NDimMax + m) * tij[j][m] +
+              avgDudx.get(mi, j * kynema_ugf_ngp::NDimMax + m) * tij[i][m];
           }
           Pij[i][j] *= 0.5;
         }
       }
 
       DblType P_res = 0.0;
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i) {
-        for (int j = 0; j < nalu_ngp::NDimMax; ++j) {
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i) {
+        for (int j = 0; j < kynema_ugf_ngp::NDimMax; ++j) {
           P_res += density.get(mi, 0) *
-                   avgDudx.get(mi, i * nalu_ngp::NDimMax + j) *
+                   avgDudx.get(mi, i * kynema_ugf_ngp::NDimMax + j) *
                    ((avgVel.get(mi, i) - vel.get(mi, i)) *
                     (avgVel.get(mi, j) - vel.get(mi, j)));
         }
       }
 
       DblType instProd = 0.0;
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i)
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i)
         instProd += Pij[i][i];
 
       instProd -= P_res;
@@ -242,14 +242,14 @@ SSTAMSAveragesAlg::execute()
         prodWeightAvg * avgProdN.get(mi, 0) + prodWeightInst * instProd;
 
       // get Mij field_data
-      DblType p_Mij[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
-      DblType PM[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
-      DblType Q[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
-      DblType D[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
+      DblType p_Mij[kynema_ugf_ngp::NDimMax][kynema_ugf_ngp::NDimMax];
+      DblType PM[kynema_ugf_ngp::NDimMax][kynema_ugf_ngp::NDimMax];
+      DblType Q[kynema_ugf_ngp::NDimMax][kynema_ugf_ngp::NDimMax];
+      DblType D[kynema_ugf_ngp::NDimMax][kynema_ugf_ngp::NDimMax];
 
-      for (int i = 0; i < nalu_ngp::NDimMax; i++) {
-        const int iNdim = i * nalu_ngp::NDimMax;
-        for (int j = 0; j < nalu_ngp::NDimMax; j++) {
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; i++) {
+        const int iNdim = i * kynema_ugf_ngp::NDimMax;
+        for (int j = 0; j < kynema_ugf_ngp::NDimMax; j++) {
           p_Mij[i][j] = Mij.get(mi, iNdim + j);
         }
       }
@@ -258,17 +258,17 @@ SSTAMSAveragesAlg::execute()
       EigenDecomposition::sym_diagonalize<DblType>(p_Mij, Q, D);
 
       // initialize M43 to 0
-      DblType M43[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i)
-        for (int j = 0; j < nalu_ngp::NDimMax; ++j)
+      DblType M43[kynema_ugf_ngp::NDimMax][kynema_ugf_ngp::NDimMax];
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i)
+        for (int j = 0; j < kynema_ugf_ngp::NDimMax; ++j)
           M43[i][j] = 0.0;
 
       const DblType fourThirds = 4.0 / 3.0;
 
-      for (int l = 0; l < nalu_ngp::NDimMax; l++) {
+      for (int l = 0; l < kynema_ugf_ngp::NDimMax; l++) {
         const DblType D43 = stk::math::pow(D[l][l], fourThirds);
-        for (int i = 0; i < nalu_ngp::NDimMax; i++) {
-          for (int j = 0; j < nalu_ngp::NDimMax; j++) {
+        for (int i = 0; i < kynema_ugf_ngp::NDimMax; i++) {
+          for (int j = 0; j < kynema_ugf_ngp::NDimMax; j++) {
             M43[i][j] += Q[i][l] * Q[j][l] * D43;
           }
         }
@@ -282,12 +282,12 @@ SSTAMSAveragesAlg::execute()
       const DblType aspectRatio = maxEigM / minEigM;
 
       // zeroing out tensors
-      DblType tauSGRS[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
-      DblType tauSGET[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
-      DblType tau[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
-      DblType Psgs[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i) {
-        for (int j = 0; j < nalu_ngp::NDimMax; ++j) {
+      DblType tauSGRS[kynema_ugf_ngp::NDimMax][kynema_ugf_ngp::NDimMax];
+      DblType tauSGET[kynema_ugf_ngp::NDimMax][kynema_ugf_ngp::NDimMax];
+      DblType tau[kynema_ugf_ngp::NDimMax][kynema_ugf_ngp::NDimMax];
+      DblType Psgs[kynema_ugf_ngp::NDimMax][kynema_ugf_ngp::NDimMax];
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i) {
+        for (int j = 0; j < kynema_ugf_ngp::NDimMax; ++j) {
           tauSGRS[i][j] = 0.0;
           tauSGET[i][j] = 0.0;
           tau[i][j] = 0.0;
@@ -296,7 +296,7 @@ SSTAMSAveragesAlg::execute()
       }
 
       const DblType CM43 =
-        ams_utils::get_M43_constant<DblType, nalu_ngp::NDimMax>(D, CMdeg);
+        ams_utils::get_M43_constant<DblType, kynema_ugf_ngp::NDimMax>(D, CMdeg);
 
       const DblType CM43scale = stk::math::max(
         stk::math::min(stk::math::pow(avgResAdeq.get(mi, 0), 2.0), 30.0), 1.0);
@@ -310,73 +310,74 @@ SSTAMSAveragesAlg::execute()
 
       const DblType arInvScale = 1.0 - arScale;
 
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i) {
-        for (int j = 0; j < nalu_ngp::NDimMax; ++j) {
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i) {
+        for (int j = 0; j < kynema_ugf_ngp::NDimMax; ++j) {
           // Calculate tauSGRS_ij = 2*alpha*nu_t*<S_ij> where nu_t comes from
           // the SST model and <S_ij> is the strain rate tensor based on the
           // mean quantities... i.e this is (tauSGRS = alpha*tauSST)
           // The 2 in the coeff cancels with the 1/2 in the strain rate tensor
           const DblType coeffSGRS =
             alpha * (2.0 - alpha) * tvisc.get(mi, 0) / density.get(mi, 0);
-          tauSGRS[i][j] = avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
-                          avgDudx.get(mi, j * nalu_ngp::NDimMax + i);
+          tauSGRS[i][j] = avgDudx.get(mi, i * kynema_ugf_ngp::NDimMax + j) +
+                          avgDudx.get(mi, j * kynema_ugf_ngp::NDimMax + i);
           tauSGRS[i][j] *= coeffSGRS;
 
-          for (int l = 0; l < nalu_ngp::NDimMax; ++l) {
+          for (int l = 0; l < kynema_ugf_ngp::NDimMax; ++l) {
             // Calculate tauSGET_ij = CM43*<eps>^(1/3)*(M43_ik*dkuj' +
             // M43_jkdkui') where <eps> is the mean dissipation backed out from
             // the SST mean k and mean omega and dkuj' is the fluctuating
             // velocity gradients.
             const DblType coeffSGET = CM43scale * CM43 * epsilon13;
             const DblType fluctDudx_jl =
-              dudx.get(mi, j * nalu_ngp::NDimMax + l) -
-              avgDudx.get(mi, j * nalu_ngp::NDimMax + l);
+              dudx.get(mi, j * kynema_ugf_ngp::NDimMax + l) -
+              avgDudx.get(mi, j * kynema_ugf_ngp::NDimMax + l);
             const DblType fluctDudx_il =
-              dudx.get(mi, i * nalu_ngp::NDimMax + l) -
-              avgDudx.get(mi, i * nalu_ngp::NDimMax + l);
+              dudx.get(mi, i * kynema_ugf_ngp::NDimMax + l) -
+              avgDudx.get(mi, i * kynema_ugf_ngp::NDimMax + l);
             tauSGET[i][j] +=
               coeffSGET * arScale *
               (M43[i][l] * fluctDudx_jl + M43[j][l] * fluctDudx_il);
           }
           tauSGET[i][j] += arInvScale * tvisc.get(mi, 0) / density.get(mi, 0) *
-                           (dudx.get(mi, i * nalu_ngp::NDimMax + j) -
-                            avgDudx.get(mi, i * nalu_ngp::NDimMax + j) +
-                            dudx.get(mi, j * nalu_ngp::NDimMax + i) -
-                            avgDudx.get(mi, j * nalu_ngp::NDimMax + i));
+                           (dudx.get(mi, i * kynema_ugf_ngp::NDimMax + j) -
+                            avgDudx.get(mi, i * kynema_ugf_ngp::NDimMax + j) +
+                            dudx.get(mi, j * kynema_ugf_ngp::NDimMax + i) -
+                            avgDudx.get(mi, j * kynema_ugf_ngp::NDimMax + i));
         }
       }
 
       // Remove trace of tauSGET
       DblType tauSGET_tr = 0.0;
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i)
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i)
         tauSGET_tr += tauSGET[i][i];
 
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i)
-        tauSGET[i][i] -= tauSGET_tr / nalu_ngp::NDimMax;
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i)
+        tauSGET[i][i] -= tauSGET_tr / kynema_ugf_ngp::NDimMax;
 
       // Calculate the full subgrid stress including the isotropic portion
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i)
-        for (int j = 0; j < nalu_ngp::NDimMax; ++j)
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i)
+        for (int j = 0; j < kynema_ugf_ngp::NDimMax; ++j)
           tau[i][j] =
             tauSGRS[i][j] + tauSGET[i][j] -
             ((i == j) ? 2.0 / 3.0 * beta.get(mi, 0) * tke.get(mi, 0) : 0.0);
 
       // Calculate the SGS production PSGS_ij = 1/2(tau_ik*djuk + tau_jk*diuk)
       // where diuj is the instantaneous velocity gradients
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i) {
-        for (int j = 0; j < nalu_ngp::NDimMax; ++j) {
-          for (int l = 0; l < nalu_ngp::NDimMax; ++l) {
-            Psgs[i][j] += tau[i][l] * dudx.get(mi, l * nalu_ngp::NDimMax + j) +
-                          tau[j][l] * dudx.get(mi, l * nalu_ngp::NDimMax + i);
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i) {
+        for (int j = 0; j < kynema_ugf_ngp::NDimMax; ++j) {
+          for (int l = 0; l < kynema_ugf_ngp::NDimMax; ++l) {
+            Psgs[i][j] +=
+              tau[i][l] * dudx.get(mi, l * kynema_ugf_ngp::NDimMax + j) +
+              tau[j][l] * dudx.get(mi, l * kynema_ugf_ngp::NDimMax + i);
           }
           Psgs[i][j] *= 0.5;
         }
       }
 
-      for (int i = 0; i < nalu_ngp::NDimMax; ++i) {
-        for (int j = 0; j < nalu_ngp::NDimMax; ++j) {
+      for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i) {
+        for (int j = 0; j < kynema_ugf_ngp::NDimMax; ++j) {
           PM[i][j] = 0.0;
-          for (int l = 0; l < nalu_ngp::NDimMax; ++l)
+          for (int l = 0; l < kynema_ugf_ngp::NDimMax; ++l)
             PM[i][j] += Psgs[i][l] * p_Mij[l][j];
         }
       }
@@ -393,13 +394,13 @@ SSTAMSAveragesAlg::execute()
       else if ((RANSBelowKs) && (coords.get(mi, gravity_i) <= k_s)) {
         resAdeq.get(mi, 0) = 1.0;
       } else {
-        for (int i = 0; i < nalu_ngp::NDimMax; ++i)
-          for (int j = 0; j < nalu_ngp::NDimMax; ++j)
+        for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i)
+          for (int j = 0; j < kynema_ugf_ngp::NDimMax; ++j)
             PM[i][j] = PM[i][j] * PMscale;
 
         DblType PMmag = 0.0;
-        for (int i = 0; i < nalu_ngp::NDimMax; ++i)
-          for (int j = 0; j < nalu_ngp::NDimMax; ++j)
+        for (int i = 0; i < kynema_ugf_ngp::NDimMax; ++i)
+          for (int j = 0; j < kynema_ugf_ngp::NDimMax; ++j)
             PMmag += PM[i][j] * PM[i][j];
 
         PMmag = stk::math::sqrt(PMmag);
@@ -429,5 +430,5 @@ SSTAMSAveragesAlg::execute()
     });
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

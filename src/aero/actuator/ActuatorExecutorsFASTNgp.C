@@ -9,7 +9,7 @@
 #include <aero/actuator/ActuatorExecutorsFASTNgp.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ActuatorLineFastNGP::ActuatorLineFastNGP(
   const ActuatorMetaFAST& actMeta,
@@ -137,5 +137,5 @@ ActuatorDiskFastNGP::operator()()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -13,18 +13,18 @@ const double CoeffTol = 1e-4; // Reduced tolerance for the Stokes Coeffs
 
 std::vector<double>
 transform(
-  const sierra::nalu::mm::TransMatType& transMat,
-  const sierra::nalu::mm::ThreeDVecType& xyz)
+  const sierra::kynema_ugf::mm::TransMatType& transMat,
+  const sierra::kynema_ugf::mm::ThreeDVecType& xyz)
 {
   std::vector<double> transCoord(3, 0.0);
 
   // perform matrix multiplication between transformation matrix
   // and original coordinates to obtain transformed coordinates
-  for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
-    transCoord[d] = transMat[d * sierra::nalu::mm::matSize + 0] * xyz[0] +
-                    transMat[d * sierra::nalu::mm::matSize + 1] * xyz[1] +
-                    transMat[d * sierra::nalu::mm::matSize + 2] * xyz[2] +
-                    transMat[d * sierra::nalu::mm::matSize + 3];
+  for (int d = 0; d < sierra::kynema_ugf::kynema_ugf_ngp::NDimMax; d++) {
+    transCoord[d] = transMat[d * sierra::kynema_ugf::mm::matSize + 0] * xyz[0] +
+                    transMat[d * sierra::kynema_ugf::mm::matSize + 1] * xyz[1] +
+                    transMat[d * sierra::kynema_ugf::mm::matSize + 2] * xyz[2] +
+                    transMat[d * sierra::kynema_ugf::mm::matSize + 3];
   }
 
   return transCoord;
@@ -43,17 +43,17 @@ TEST(meshMotion, airy_wave)
   YAML::Node Airy_Wave_node = YAML::Load(Airy_Wave_info);
 
   // initialize the mesh Wave motion class
-  unit_test_utils::NaluTest naluObj;
-  sierra::nalu::Realm& realm = naluObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
 
-  sierra::nalu::MotionWavesKernel MotionWavesKernel(
+  sierra::kynema_ugf::MotionWavesKernel MotionWavesKernel(
     realm.meta_data(), Airy_Wave_node);
 
   // build transformation
   const double time = 1.0;
-  sierra::nalu::mm::ThreeDVecType xyz{2.5, 1.5, 0.};
+  sierra::kynema_ugf::mm::ThreeDVecType xyz{2.5, 1.5, 0.};
 
-  sierra::nalu::mm::TransMatType transMat =
+  sierra::kynema_ugf::mm::TransMatType transMat =
     MotionWavesKernel.build_transformation(time, xyz);
   std::vector<double> norm = transform(transMat, xyz);
 
@@ -73,13 +73,13 @@ TEST(meshMotion, stokes_coefficients)
 
   YAML::Node Stokes_Wave_node = YAML::Load(Stokes_Wave_info);
   // initialize the mesh Wave motion class
-  unit_test_utils::NaluTest naluObj;
-  sierra::nalu::Realm& realm = naluObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
 
-  sierra::nalu::MotionWavesKernel MotionWavesKernel(
+  sierra::kynema_ugf::MotionWavesKernel MotionWavesKernel(
     realm.meta_data(), Stokes_Wave_node);
   // Coefficients values as presented in table 2 of Fenton 1985
-  sierra::nalu::MotionWavesKernel::StokesCoeff stokes_coeff;
+  sierra::kynema_ugf::MotionWavesKernel::StokesCoeff stokes_coeff;
   MotionWavesKernel.get_StokesCoeff(&stokes_coeff);
 
   const double gold_A11 = 1.208490;

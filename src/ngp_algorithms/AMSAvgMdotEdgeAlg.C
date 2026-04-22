@@ -16,7 +16,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 AMSAvgMdotEdgeAlg::AMSAvgMdotEdgeAlg(Realm& realm, stk::mesh::Part* part)
   : Algorithm(realm, part),
@@ -41,7 +41,7 @@ AMSAvgMdotEdgeAlg::execute()
   const auto& meta = realm_.meta_data();
   const int ndim = meta.spatial_dimension();
 
-  using EntityInfoType = nalu_ngp::EntityInfo<stk::mesh::NgpMesh>;
+  using EntityInfoType = kynema_ugf_ngp::EntityInfo<stk::mesh::NgpMesh>;
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
 
@@ -60,7 +60,7 @@ AMSAvgMdotEdgeAlg::execute()
                                   stk::mesh::selectUnion(partVec_) &
                                   !(realm_.get_inactive_selector());
 
-  nalu_ngp::run_edge_algorithm(
+  kynema_ugf_ngp::run_edge_algorithm(
     "compute_avgMdot_edge_interior", ngpMesh, sel,
     KOKKOS_LAMBDA(const EntityInfoType& einfo) {
       DblType av[NDimMax];
@@ -94,5 +94,5 @@ AMSAvgMdotEdgeAlg::execute()
   avgMdot.modify_on_device();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

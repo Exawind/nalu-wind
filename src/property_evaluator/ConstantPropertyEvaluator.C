@@ -10,7 +10,7 @@
 #include <property_evaluator/ConstantPropertyEvaluator.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -44,5 +44,5 @@ ConstantPropertyEvaluator::execute(
   return value_;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

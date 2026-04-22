@@ -20,7 +20,7 @@ class FieldBase;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -46,7 +46,7 @@ public:
   virtual void execute();
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

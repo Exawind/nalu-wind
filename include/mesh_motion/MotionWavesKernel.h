@@ -12,7 +12,7 @@ class MetaData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 class MotionWavesKernel : public NgpMotionKernel<MotionWavesKernel>
 {
 public:
@@ -144,7 +144,7 @@ private:
   int meshdampingcoeff_{3};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOTIONWAVES_H */

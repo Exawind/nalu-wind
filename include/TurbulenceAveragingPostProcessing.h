@@ -10,7 +10,7 @@
 #ifndef TurbulenceAveragingPostProcessing_h
 #define TurbulenceAveragingPostProcessing_h
 
-#include <NaluParsedTypes.h>
+#include <KynemaUGFParsedTypes.h>
 #include <MovingAveragePostProcessor.h>
 
 #include <string>
@@ -30,7 +30,7 @@ class Selector;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class AveragingInfo;
@@ -51,7 +51,8 @@ public:
   /** Type of time filter averaging applied
    */
   enum AveragingType {
-    NALU_CLASSIC = 0,   //!< Classic Nalu implementation (saw-tooth reset)
+    KYNEMA_UGF_CLASSIC =
+      0,                //!< Classic KynemaUGF implementation (saw-tooth reset)
     MOVING_EXPONENTIAL, //!< Moving exponential window averaging
   };
 
@@ -167,14 +168,14 @@ public:
 
   bool forcedReset_; /* allows forhard reset */
 
-  AveragingType averagingType_{NALU_CLASSIC};
+  AveragingType averagingType_{KYNEMA_UGF_CLASSIC};
   std::unique_ptr<MovingAveragePostProcessor> movingAvgPP_;
 
   // vector of averaging information
   std::vector<AveragingInfo*> averageInfoVec_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

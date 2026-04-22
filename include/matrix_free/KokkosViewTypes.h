@@ -15,7 +15,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 using entity_row_view_type = Kokkos::View<
@@ -315,7 +315,7 @@ template <int p>
 using const_face_offset_view =
   const_view_type<p, FieldType::FACE_OFFSET, exec_space>;
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

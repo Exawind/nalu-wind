@@ -107,7 +107,7 @@ static constexpr double lhs[8][8] = {
 
 TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
 {
-  if constexpr (!sierra::nalu::isHostBuild)
+  if constexpr (!sierra::kynema_ugf::isHostBuild)
     GTEST_SKIP();
   if (bulk_->parallel_size() > 1)
     GTEST_SKIP();
@@ -132,14 +132,15 @@ TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
   unit_test_utils::FaceElemHelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 1, part);
 
-  sierra::nalu::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.gamma1_ = 1.0;
   timeIntegrator.timeStepN_ = 1.0;
   timeIntegrator.timeStepNm1_ = 1.0;
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  std::unique_ptr<sierra::nalu::Kernel> openKernel(
-    new sierra::nalu::ScalarOpenAdvElemKernel<sierra::nalu::AlgTraitsQuad4Hex8>(
+  std::unique_ptr<sierra::kynema_ugf::Kernel> openKernel(
+    new sierra::kynema_ugf::ScalarOpenAdvElemKernel<
+      sierra::kynema_ugf::AlgTraitsQuad4Hex8>(
       *meta_, solnOpts_, &helperObjs.eqSystem, mixFraction_, mixFraction_,
       dzdx_, viscosity_, helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
       helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_));

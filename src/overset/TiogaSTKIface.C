@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
 
 #include "overset/TiogaSTKIface.h"
 #include "overset/TiogaBlock.h"
@@ -18,7 +18,7 @@
 #include "utils/StkHelpers.h"
 #include "ngp_utils/NgpFieldUtils.h"
 
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 #include "Realm.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementRepo.h"
@@ -36,10 +36,10 @@
 
 #include "tioga.h"
 
-namespace tioga_nalu {
+namespace tioga_kynema_ugf {
 
 TiogaSTKIface::TiogaSTKIface(
-  sierra::nalu::OversetManagerTIOGA& oversetManager,
+  sierra::kynema_ugf::OversetManagerTIOGA& oversetManager,
   const YAML::Node& node,
   const std::string& coordsName)
   : oversetManager_(oversetManager),
@@ -73,11 +73,11 @@ TiogaSTKIface::load(const YAML::Node& node)
       meta_, bulk_, tiogaOpts_, oset_groups[i], coordsName_, offset + i + 1));
   }
 
-  sierra::nalu::NaluEnv::self().naluOutputP0()
+  sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "TIOGA: Using coordinates field: " << coordsName_ << std::endl;
 
   if (node["tioga_symmetry_direction"])
-    sierra::nalu::NaluEnv::self().naluOutputP0()
+    sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "WARNING!! TiogaSTKIface: tioga_symmetry_direction is no longer "
          "supported. "
       << "Use tioga_options to specify options that control TIOGA behavior"
@@ -97,12 +97,12 @@ TiogaSTKIface::initialize()
 {
   tiogaOpts_.set_options(tg_);
 
-  sierra::nalu::NaluEnv::self().naluOutputP0()
+  sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "TIOGA: Initializing overset mesh blocks: " << std::endl;
   for (auto& tb : blocks_) {
     tb->initialize();
   }
-  sierra::nalu::NaluEnv::self().naluOutputP0()
+  sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "TIOGA: Initialized " << blocks_.size() << " overset blocks"
     << std::endl;
 }
@@ -171,7 +171,7 @@ TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
   }
 
   // Synchronize IBLANK data for shared nodes
-  sierra::nalu::ScalarIntFieldType* ibf =
+  sierra::kynema_ugf::ScalarIntFieldType* ibf =
     meta_.get_field<int>(stk::topology::NODE_RANK, "iblank");
   std::vector<const stk::mesh::FieldBase*> pvec{ibf};
   stk::mesh::copy_owned_to_shared(bulk_, pvec);
@@ -215,32 +215,32 @@ TiogaSTKIface::update_ghosting()
     if (oversetManager_.oversetGhosting_ != nullptr) {
       bulk_.destroy_ghosting(*oversetManager_.oversetGhosting_);
     }
-    const std::string ghostName = "nalu_overset_ghosting";
+    const std::string ghostName = "kynema_ugf_overset_ghosting";
     oversetManager_.oversetGhosting_ = &(bulk_.create_ghosting(ghostName));
     bulk_.change_ghosting(
       *(oversetManager_.oversetGhosting_), elemsToGhost_, recvGhostsToRemove);
     bulk_.modification_end();
 
-    sierra::nalu::populate_ghost_comm_procs(
+    sierra::kynema_ugf::populate_ghost_comm_procs(
       bulk_, *(oversetManager_.oversetGhosting_),
       oversetManager_.ghostCommProcs_);
 
 #if 1
-    sierra::nalu::NaluEnv::self().naluOutputP0()
+    sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "TIOGA: Overset algorithm will ghost " << global[0] << " elements"
       << std::endl;
 #endif
   }
 #if 1
   else {
-    sierra::nalu::NaluEnv::self().naluOutputP0()
+    sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "TIOGA: Overset ghosting unchanged for this timestep" << std::endl;
   }
 #endif
 
   // Communicate coordinates field when populating oversetInfoVec
   if (oversetManager_.oversetGhosting_ != nullptr) {
-    sierra::nalu::VectorFieldType* coords =
+    sierra::kynema_ugf::VectorFieldType* coords =
       meta_.get_field<double>(stk::topology::NODE_RANK, coordsName_);
     std::vector<const stk::mesh::FieldBase*> fVec = {coords};
     stk::mesh::communicate_field_data(*oversetManager_.oversetGhosting_, fVec);
@@ -250,7 +250,7 @@ TiogaSTKIface::update_ghosting()
 void
 TiogaSTKIface::get_receptor_info()
 {
-  sierra::nalu::ScalarIntFieldType* ibf =
+  sierra::kynema_ugf::ScalarIntFieldType* ibf =
     meta_.get_field<int>(stk::topology::NODE_RANK, "iblank");
 
   std::vector<unsigned long> nodesToReset;
@@ -261,7 +261,7 @@ TiogaSTKIface::get_receptor_info()
   tg_.getReceptorInfo(receptors);
 
   // Process TIOGA receptors array and fill in the oversetInfoVec used for
-  // subsequent Nalu computations.
+  // subsequent KynemaUGF computations.
   //
   // TIOGA returns a integer array that contains 3 entries per receptor node:
   //   - the local node index within the tioga mesh data array
@@ -331,7 +331,7 @@ TiogaSTKIface::get_receptor_info()
     return;
 
 #if 1
-  sierra::nalu::NaluEnv::self().naluOutputP0()
+  sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "TIOGA: Detected fringe/field mismatch on " << (nTotalEntities / 3)
     << " entities" << std::endl;
 #endif
@@ -384,7 +384,7 @@ TiogaSTKIface::populate_overset_info()
   // Ensure that the oversetInfoVec has been cleared out
   STK_ThrowAssert(osetInfo.size() == 0);
 
-  sierra::nalu::VectorFieldType* coords =
+  sierra::kynema_ugf::VectorFieldType* coords =
     meta_.get_field<double>(stk::topology::NODE_RANK, coordsName_);
 
   size_t numReceptors = receptorIDs_.size();
@@ -415,8 +415,8 @@ TiogaSTKIface::populate_overset_info()
 
     // At this point, we have all the necessary information to create an
     // OversetInfo instance for this {receptor node, donor element} pair.
-    sierra::nalu::OversetInfo* oinfo =
-      new sierra::nalu::OversetInfo(node, nDim);
+    sierra::kynema_ugf::OversetInfo* oinfo =
+      new sierra::kynema_ugf::OversetInfo(node, nDim);
     osetInfo.push_back(oinfo);
 
     // Store away the coordinates for this receptor node for later use
@@ -427,8 +427,8 @@ TiogaSTKIface::populate_overset_info()
 
     const stk::topology elemTopo = bulk_.bucket(elem).topology();
     const stk::mesh::Entity* enodes = bulk_.begin_nodes(elem);
-    sierra::nalu::MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElement* meSCS =
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         elemTopo);
     int num_nodes = bulk_.num_nodes(elem);
     elemCoords.resize(nDim * num_nodes);
@@ -448,7 +448,7 @@ TiogaSTKIface::populate_overset_info()
 
 #if 0
     if (nearestDistance > (1.0 + 1.0e-8))
-      sierra::nalu::NaluEnv::self().naluOutput()
+      sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutput()
         << "TIOGA WARNING: In pair (" << nodeID << ", " << donorID << "): "
         << "iso-parametric distance is greater than 1.0: " << nearestDistance
         << std::endl;
@@ -466,14 +466,14 @@ TiogaSTKIface::populate_overset_info()
   size_t numFringeGlobal = 0;
   stk::all_reduce_sum(bulk_.parallel(), &numFringeLocal, &numFringeGlobal, 1);
 
-  sierra::nalu::NaluEnv::self().naluOutputP0()
+  sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "TIOGA: Num. receptor nodes = " << numFringeGlobal << std::endl;
 #endif
 }
 
 void
 TiogaSTKIface::overset_update_fields(
-  const std::vector<sierra::nalu::OversetFieldData>& fields)
+  const std::vector<sierra::kynema_ugf::OversetFieldData>& fields)
 {
   constexpr int row_major = 0;
   int nComp = 0;
@@ -499,7 +499,7 @@ TiogaSTKIface::overset_update_fields(
 
 int
 TiogaSTKIface::register_solution(
-  const std::vector<sierra::nalu::OversetFieldData>& fields)
+  const std::vector<sierra::kynema_ugf::OversetFieldData>& fields)
 {
   int nComp = 0;
   for (auto& f : fields) {
@@ -515,7 +515,7 @@ TiogaSTKIface::register_solution(
 
 void
 TiogaSTKIface::update_solution(
-  const std::vector<sierra::nalu::OversetFieldData>& fields)
+  const std::vector<sierra::kynema_ugf::OversetFieldData>& fields)
 {
   for (auto& tb : blocks_)
     tb->update_solution(fields);
@@ -535,7 +535,7 @@ TiogaSTKIface::overset_update_field(
   const bool doFinalSyncToDevice)
 {
   constexpr int row_major = 0;
-  sierra::nalu::OversetFieldData fdata{field, nrows, ncols};
+  sierra::kynema_ugf::OversetFieldData fdata{field, nrows, ncols};
 
   field->sync_to_host();
 
@@ -591,10 +591,10 @@ TiogaSTKIface::post_connectivity_sync()
   auto& ngpFringes = oversetManager_.ngpFringeNodes_;
   auto& ngpHoles = oversetManager_.ngpHoleNodes_;
 
-  ngpFringes =
-    sierra::nalu::OversetManager::EntityList("ngp_fringe_list", fringes.size());
-  ngpHoles =
-    sierra::nalu::OversetManager::EntityList("ngp_hole_list", holes.size());
+  ngpFringes = sierra::kynema_ugf::OversetManager::EntityList(
+    "ngp_fringe_list", fringes.size());
+  ngpHoles = sierra::kynema_ugf::OversetManager::EntityList(
+    "ngp_hole_list", holes.size());
 
   auto h_fringes = Kokkos::create_mirror_view(ngpFringes);
   auto h_holes = Kokkos::create_mirror_view(ngpHoles);
@@ -609,6 +609,6 @@ TiogaSTKIface::post_connectivity_sync()
   Kokkos::deep_copy(ngpHoles, h_holes);
 }
 
-} // namespace tioga_nalu
+} // namespace tioga_kynema_ugf
 
-#endif // NALU_USES_TIOGA
+#endif // KYNEMA_UGF_USES_TIOGA

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------*/
 /*  Copyright 2017 National Renewable Energy Laboratory.                  */
 /*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
+/*  in the file, LICENSE, which is located in the top-level KynemaUGF */
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
@@ -10,13 +10,13 @@
 #include "SolutionOptions.h"
 #include "SimdInterface.h"
 #include "utils/StkHelpers.h"
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 BLTGammaM2015NodeKernel::BLTGammaM2015NodeKernel(
   const stk::mesh::MetaData& meta)
@@ -184,5 +184,5 @@ BLTGammaM2015NodeKernel::execute(
   //
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

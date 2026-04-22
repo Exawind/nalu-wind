@@ -1,4 +1,4 @@
-nalu_abl_mesh:
+kynema-ugf_abl_mesh:
   output_db: abl_5km_5km_1km_neutral.g
 
   spec_type: bounding_box

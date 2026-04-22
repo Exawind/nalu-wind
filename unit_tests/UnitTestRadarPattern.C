@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wind_energy/LidarPatterns.h"
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 #include "UnitTestUtils.h"
 #include "master_element/TensorOps.h"
 
@@ -12,7 +12,7 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 std::array<vs::Vector, 8> box{{
   {-1, -1, -1},
@@ -503,5 +503,5 @@ TEST_F(RadarScanFixture, beam_raises_after_phase)
   ASSERT_GT(seg_phase2.tip_[2], seg_phase1.tip_[2]);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

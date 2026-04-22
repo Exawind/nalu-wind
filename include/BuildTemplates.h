@@ -22,7 +22,7 @@
 #include "master_element/Tri33DCVFEM.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 #define INSTANTIATE_KERNEL_3D(ClassName)                                       \
   template class ClassName<AlgTraitsHex8>;                                     \
@@ -79,7 +79,7 @@ namespace nalu {
   INSTANTIATE_KERNEL_FACE_ELEMENT_3D(ClassName)                                \
   INSTANTIATE_KERNEL_FACE_ELEMENT_2D(ClassName)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -15,7 +15,7 @@
 // add fields/fixed fields
 // allocate
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 
@@ -77,5 +77,5 @@ TEST(ActuatorBulk, NGP_constructor)
 }
 
 } // namespace
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

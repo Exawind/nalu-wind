@@ -10,10 +10,10 @@
 #ifndef ACTUATORINFO_H_
 #define ACTUATORINFO_H_
 
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /*! \brief Data structure to stash turbine info during parsing
  * Data structure to stash turbine info during parsing. This
@@ -30,7 +30,7 @@ struct ActuatorInfoNGP
   std::string turbineName_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

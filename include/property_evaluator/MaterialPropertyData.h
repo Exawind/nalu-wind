@@ -17,7 +17,7 @@
 #include <map>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class MaterialPropertyData
 {
@@ -51,7 +51,7 @@ public:
   std::map<std::string, double> hfConstMap_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

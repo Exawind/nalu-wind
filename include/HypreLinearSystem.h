@@ -33,71 +33,73 @@
 
 // These are all necessary for compilation
 #include "EquationSystem.h"
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 #include "NonConformalManager.h"
 #include "overset/OversetManager.h"
 #include "overset/OversetInfo.h"
 #include <utils/CreateDeviceExpression.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
-using UnsignedView = Kokkos::View<unsigned*, sierra::nalu::MemSpace>;
+using UnsignedView = Kokkos::View<unsigned*, sierra::kynema_ugf::MemSpace>;
 using UnsignedViewHost = UnsignedView::HostMirror;
 
-using DoubleView = Kokkos::View<double*, sierra::nalu::MemSpace>;
+using DoubleView = Kokkos::View<double*, sierra::kynema_ugf::MemSpace>;
 using DoubleViewHost = DoubleView::HostMirror;
 
-using HypreIntTypeView = Kokkos::View<HypreIntType*, sierra::nalu::MemSpace>;
+using HypreIntTypeView =
+  Kokkos::View<HypreIntType*, sierra::kynema_ugf::MemSpace>;
 using HypreIntTypeViewHost = HypreIntTypeView::HostMirror;
 
 // const random access views for read only, noncoalesced (texture) memory
 // fetches
 using UnsignedViewRA = Kokkos::View<
   const unsigned*,
-  sierra::nalu::MemSpace,
+  sierra::kynema_ugf::MemSpace,
   Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 using HypreIntTypeViewRA = Kokkos::View<
   const HypreIntType*,
-  sierra::nalu::MemSpace,
+  sierra::kynema_ugf::MemSpace,
   Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 // This 2D view needs to be LayoutLeft. Do NOT change
 using DoubleView2D =
-  Kokkos::View<double**, Kokkos::LayoutLeft, sierra::nalu::MemSpace>;
+  Kokkos::View<double**, Kokkos::LayoutLeft, sierra::kynema_ugf::MemSpace>;
 using DoubleView2DHost = DoubleView2D::HostMirror;
 
 // This 2D view needs to be LayoutLeft. Do NOT change
-using HypreIntTypeView2D =
-  Kokkos::View<HypreIntType**, Kokkos::LayoutLeft, sierra::nalu::MemSpace>;
+using HypreIntTypeView2D = Kokkos::
+  View<HypreIntType**, Kokkos::LayoutLeft, sierra::kynema_ugf::MemSpace>;
 using HypreIntTypeView2DHost = HypreIntTypeView2D::HostMirror;
 
 using HypreIntTypeViewScalar =
-  Kokkos::View<HypreIntType, sierra::nalu::MemSpace>;
+  Kokkos::View<HypreIntType, sierra::kynema_ugf::MemSpace>;
 using HypreIntTypeViewScalarHost = HypreIntTypeViewScalar::HostMirror;
 
-using HypreIntTypeUnorderedMap =
-  Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::nalu::MemSpace>;
+using HypreIntTypeUnorderedMap = Kokkos::
+  UnorderedMap<HypreIntType, HypreIntType, sierra::kynema_ugf::MemSpace>;
 using HypreIntTypeUnorderedMapHost = HypreIntTypeUnorderedMap::HostMirror;
 
 using MemoryMap =
-  Kokkos::UnorderedMap<HypreIntType, unsigned, sierra::nalu::MemSpace>;
+  Kokkos::UnorderedMap<HypreIntType, unsigned, sierra::kynema_ugf::MemSpace>;
 using MemoryMapHost = MemoryMap::HostMirror;
 
 // Periodic Node Map
-using PeriodicNodeMap =
-  Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::nalu::MemSpace>;
+using PeriodicNodeMap = Kokkos::
+  UnorderedMap<HypreIntType, HypreIntType, sierra::kynema_ugf::MemSpace>;
 using PeriodicNodeMapHost = PeriodicNodeMap::HostMirror;
 
-/** Nalu interface to populate a Hypre Linear System
+/** KynemaUGF interface to populate a Hypre Linear System
  *
  *  This class provides an interface to the HYPRE IJMatrix and IJVector data
  *  structures. It is responsible for creating, resetting, and destroying the
  *  Hypre data structures and provides the HypreLinearSystem::sumInto interface
- *  used by Nalu Kernels and SupplementalAlgorithms to populate entries into the
- *  linear system. The HypreLinearSystem::solve method interfaces with
- *  sierra::nalu::HypreDirectSolver that is responsible for the actual solution
- *  of the system using the required solver and preconditioner combination.
+ *  used by KynemaUGF Kernels and SupplementalAlgorithms to populate entries
+ * into the linear system. The HypreLinearSystem::solve method interfaces with
+ *  sierra::kynema_ugf::HypreDirectSolver that is responsible for the actual
+ * solution of the system using the required solver and preconditioner
+ * combination.
  */
 class HypreLinearSystem : public LinearSystem
 {
@@ -204,7 +206,7 @@ public:
    *
    *  @param[in] entities List of nodes where Dirichlet conditions are applied
    *
-   *  \sa sierra::nalu::FixPressureAtNodeAlgorithm
+   *  \sa sierra::kynema_ugf::FixPressureAtNodeAlgorithm
    */
   virtual void buildDirichletNodeGraph(const std::vector<stk::mesh::Entity>&);
   virtual void
@@ -270,7 +272,7 @@ public:
     const unsigned beginPos,
     const unsigned endPos);
 
-  sierra::nalu::CoeffApplier* get_coeff_applier();
+  sierra::kynema_ugf::CoeffApplier* get_coeff_applier();
 
   // print timings for initialize
   virtual void printTimings(std::vector<double>& time, const char* name);
@@ -371,7 +373,7 @@ public:
 
     virtual void free_device_pointer();
 
-    virtual sierra::nalu::CoeffApplier* device_pointer();
+    virtual sierra::kynema_ugf::CoeffApplier* device_pointer();
 
     //! mesh
     stk::mesh::NgpMesh ngpMesh_;
@@ -594,7 +596,7 @@ private:
   mutable HYPRE_IJVector sln_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* HYPRELINEARSYSTEM_H */

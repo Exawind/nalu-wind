@@ -25,7 +25,7 @@ class ParameterList;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 struct StkToTpetraMaps;
@@ -78,6 +78,6 @@ private:
 };
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

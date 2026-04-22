@@ -2,7 +2,7 @@
 
 #include "user_functions/StringTimeCoordFunction.h"
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 TEST(StringTimeCoordFunction, same_on_host_as_string_function)
 {
   std::string func = "1 + 3 * t + x + y + z*y";
@@ -92,4 +92,4 @@ TEST(StringTimeCoordFunction, spatial_dim)
   ASSERT_EQ(StringTimeCoordFunction{"y+z"}.spatial_dim(), 3);
 }
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf

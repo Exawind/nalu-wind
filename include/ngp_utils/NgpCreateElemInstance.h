@@ -10,7 +10,7 @@
 /** \file NgpCreateElemInstance.h
  *  Utilities to create MasterElement templated instances of element algorithms
  *
- *  The Nalu-Wind NGP design requires element algorithms to be specialized on
+ *  The Kynema-UGF NGP design requires element algorithms to be specialized on
  *  MasterElement types using AlgTraits (e.g., AlgTraitsHex8). This header
  *  contains utility functions that ease the creation of specialized instances
  *  for element, face, face-element pair based on topology of the part being
@@ -25,8 +25,8 @@
 #include "BuildTemplates.h"
 
 namespace sierra {
-namespace nalu {
-namespace nalu_ngp {
+namespace kynema_ugf {
+namespace kynema_ugf_ngp {
 
 /** Has the MasterElement for the topolgy fully transitioned to NGP?
  *
@@ -164,8 +164,8 @@ create_face_elem_algorithm(
   }
 }
 
-} // namespace nalu_ngp
-} // namespace nalu
+} // namespace kynema_ugf_ngp
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPCREATEELEMINSTANCE_H */

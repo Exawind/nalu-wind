@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Entity.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /**
  * This class applies the computed wall shear stress field to the boundary.
@@ -56,7 +56,7 @@ private:
   MasterElement* meSCS_{nullptr};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOMENTUMABLWALLFUNCEDGEKERNEL_H */

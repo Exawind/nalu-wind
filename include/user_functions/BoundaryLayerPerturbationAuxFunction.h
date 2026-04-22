@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /** Add sinusoidal perturbations to the velocity field.
  *
@@ -55,7 +55,7 @@ private:
   double uInf_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -22,7 +22,7 @@
 #include "stk_simd/Simd.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace {
 
@@ -102,5 +102,5 @@ TEST(linear_advection_metric, single_cube_hex64)
 
 } // namespace
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

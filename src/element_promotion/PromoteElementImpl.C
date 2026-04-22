@@ -39,7 +39,7 @@
 #include <limits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace impl {
 
 std::pair<stk::mesh::PartVector, stk::mesh::PartVector>
@@ -715,5 +715,5 @@ exposed_side_to_super_elem_map(
 }
 
 } // namespace impl
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

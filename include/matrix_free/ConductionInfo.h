@@ -13,7 +13,7 @@
 #include "matrix_free/LinSysInfo.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 struct conduction_info
@@ -39,7 +39,7 @@ struct conduction_info
 };
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

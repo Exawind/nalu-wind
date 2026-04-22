@@ -11,7 +11,7 @@
 #include <aero/actuator/UtilitiesActuator.h>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/MetaData.hpp>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <FieldTypeDef.h>
 #include "utils/LinearInterpolation.h"
 #include <cmath>
@@ -19,7 +19,7 @@
 #include <ostream>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 InterpActuatorDensity::InterpActuatorDensity(
   ActuatorBulkSimple& actBulk, stk::mesh::BulkData& stkBulk)
@@ -116,9 +116,9 @@ ActSimpleWriteToFile(
   auto density = helper.get_local_view(actBulk.density_);
   const int offset = actBulk.turbIdOffset_.h_view(actBulk.localTurbineId_);
 
-  if (actBulk.localTurbineId_ == NaluEnv::self().parallel_rank()) {
+  if (actBulk.localTurbineId_ == KynemaUGFEnv::self().parallel_rank()) {
     std::ofstream outFile;
-    // STK_ThrowErrorIf(NaluEnv::self().parallel_rank()!=0);
+    // STK_ThrowErrorIf(KynemaUGFEnv::self().parallel_rank()!=0);
 
     outFile.open(filename, std::ios_base::app);
     const int stop =
@@ -162,7 +162,7 @@ ActSimpleAssignVel::operator()(int index) const
   // Use this to double check the velocities and point positions
   auto point = Kokkos::subview(points_, index, Kokkos::ALL);
   if (debug_output_)
-    NaluEnv::self().naluOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
       << "Blade " << turbId_ // LCCOUT
       << " pointId: " << pointId << std::scientific << std::setprecision(5)
       << " point: " << point(0) << " " << point(1) << " " << point(2) << " "
@@ -312,7 +312,7 @@ ActSimpleComputeForce(
       pointForce(2) = -(lift * liftdir[2] + drag * ws2Ddir[2]);
 
       if (debug_output)
-        NaluEnv::self().naluOutput()
+        KynemaUGFEnv::self().kynema_ugfOutput()
           << "Blade " << turbId // LCCOUT
           << " pointId: " << localId << std::setprecision(5)
           << " alpha: " << alpha(index) << " ws2D: " << ws2d(0) << " "
@@ -369,8 +369,8 @@ ActSimpleComputeThrustInnerLoop::operator()(
 
   auto offsets = actBulk_.turbIdOffset_.view_host();
 
-  if (NaluEnv::self().parallel_rank() < actBulk_.num_blades_) {
-    int turbId = NaluEnv::self().parallel_rank();
+  if (KynemaUGFEnv::self().parallel_rank() < actBulk_.num_blades_) {
+    int turbId = KynemaUGFEnv::self().parallel_rank();
     auto thrust = Kokkos::subview(actBulk_.turbineThrust_, turbId, Kokkos::ALL);
 
     double forceTerm[3];
@@ -435,5 +435,5 @@ ActSimpleSpreadForceWhProjInnerLoop::operator()(
   }
 }
 
-} /* namespace nalu */
+} /* namespace kynema_ugf */
 } /* namespace sierra */

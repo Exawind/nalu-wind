@@ -23,7 +23,7 @@
 #include <EigenDecomposition.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 AMSMomentumEdgePecletAlg::AMSMomentumEdgePecletAlg(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
@@ -51,7 +51,7 @@ AMSMomentumEdgePecletAlg::AMSMomentumEdgePecletAlg(
 void
 AMSMomentumEdgePecletAlg::execute()
 {
-  using EntityInfoType = nalu_ngp::EntityInfo<stk::mesh::NgpMesh>;
+  using EntityInfoType = kynema_ugf_ngp::EntityInfo<stk::mesh::NgpMesh>;
   const auto& meta = realm_.meta_data();
   const auto ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
@@ -75,7 +75,7 @@ AMSMomentumEdgePecletAlg::execute()
   const auto eps = eps_;
   const auto pecScale = pecScale_;
 
-  nalu_ngp::run_edge_algorithm(
+  kynema_ugf_ngp::run_edge_algorithm(
     "compute_peclet_factor", ngpMesh, sel,
     KOKKOS_LAMBDA(const EntityInfoType& eInfo) {
       DblType udotx{0.0};
@@ -104,5 +104,5 @@ AMSMomentumEdgePecletAlg::execute()
     });
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

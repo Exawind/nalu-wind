@@ -23,7 +23,7 @@
 #include <stk_mesh/base/Selector.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 OversetManager::OversetManager(Realm& realm)
   : realm_(realm), metaData_(&realm.meta_data()), bulkData_(&realm_.bulk_data())
@@ -130,5 +130,5 @@ OversetManager::overset_orphan_node_field_update(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

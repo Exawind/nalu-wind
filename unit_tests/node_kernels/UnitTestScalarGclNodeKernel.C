@@ -33,7 +33,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_gcl_node)
 
   fill_mesh_and_init_fields();
 
-  sierra::nalu::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.timeStepN_ = 0.1;
   timeIntegrator.timeStepNm1_ = 0.1;
   timeIntegrator.gamma1_ = 1.0;
@@ -45,7 +45,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_gcl_node)
 
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::ScalarGclNodeKernel>(
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::ScalarGclNodeKernel>(
     *bulk_, mixFraction_);
 
   helperObjs.execute();

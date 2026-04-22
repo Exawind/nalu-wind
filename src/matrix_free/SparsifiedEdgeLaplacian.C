@@ -21,7 +21,7 @@
 #include <KokkosInterface.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace impl {
 
@@ -195,5 +195,5 @@ assemble_sparsified_edge_laplacian_t<p>::invoke(
 INSTANTIATE_POLYSTRUCT(assemble_sparsified_edge_laplacian_t);
 } // namespace impl
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

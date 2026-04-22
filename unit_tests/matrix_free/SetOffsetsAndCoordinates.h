@@ -16,7 +16,7 @@
 #include "gtest/gtest.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <int p>
@@ -53,5 +53,5 @@ set_offsets_and_coordinates(
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

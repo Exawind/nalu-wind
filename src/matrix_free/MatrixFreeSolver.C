@@ -9,7 +9,7 @@
 
 #include "matrix_free/MatrixFreeSolver.h"
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 #include <BelosConfigDefs.hpp>
 #include <BelosLinearProblem.hpp>
 #include <BelosMultiVecTraits.hpp>
@@ -30,7 +30,7 @@
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <typename T>
@@ -176,7 +176,7 @@ MatrixFreeSolver::rhs() const
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
-#endif // NALU_USES_TRILINOS_SOLVERS
+#endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS

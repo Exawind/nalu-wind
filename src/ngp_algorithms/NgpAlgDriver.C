@@ -14,7 +14,7 @@
 #include "Realm.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 NgpAlgDriver::NgpAlgDriver(Realm& realm) : realm_(realm) {}
 
@@ -52,5 +52,5 @@ NgpAlgDriver::post_work()
 {
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

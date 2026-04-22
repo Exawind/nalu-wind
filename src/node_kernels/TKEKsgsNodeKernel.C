@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 TKEKsgsNodeKernel::TKEKsgsNodeKernel(const stk::mesh::MetaData& meta)
   : NGPNodeKernel<TKEKsgsNodeKernel>(),
@@ -80,5 +80,5 @@ TKEKsgsNodeKernel::execute(
   lhs(0, 0) += 1.5 * cEps_ * density * stk::math::sqrt(tke) / filter * dVol;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

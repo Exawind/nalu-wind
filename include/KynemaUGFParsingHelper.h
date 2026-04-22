@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef NaluParsingHelper_h
-#define NaluParsingHelper_h
+#ifndef KynemaUGFParsingHelper_h
+#define KynemaUGFParsingHelper_h
 
 // yaml for parsing..
 #include <yaml-cpp/yaml.h>
@@ -19,9 +19,9 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
-class NaluParsingHelper
+class KynemaUGFParsingHelper
 {
 
 public:
@@ -169,6 +169,6 @@ public:
   }
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

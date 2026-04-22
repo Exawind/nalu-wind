@@ -23,14 +23,15 @@ TestAlgorithm::fill_mesh(const std::string mesh_spec)
 
   unit_test_utils::fill_hex8_mesh(mesh_spec, bulk());
   meshPart_ = meta().get_part("block_1");
-  coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
+  coordinates_ = static_cast<const sierra::kynema_ugf::VectorFieldType*>(
     meta().coordinate_field());
   EXPECT_TRUE(coordinates_ != nullptr);
 }
 
 double
 TestAlgorithm::field_norm(
-  const sierra::nalu::ScalarFieldType& field, stk::mesh::Selector* selector)
+  const sierra::kynema_ugf::ScalarFieldType& field,
+  stk::mesh::Selector* selector)
 {
 
   auto& meta = this->meta();
@@ -47,7 +48,7 @@ TestTurbulenceAlgorithm::declare_fields()
   auto spatialDim = meta.spatial_dimension();
 
   if (!realm_->fieldManager_) {
-    sierra::nalu::TimeIntegrator timeIntegrator;
+    sierra::kynema_ugf::TimeIntegrator timeIntegrator;
     timeIntegrator.secondOrderTimeAccurate_ = false;
     realm_->timeIntegrator_ = &timeIntegrator;
     realm_->setup_field_manager();
@@ -82,7 +83,7 @@ TestTurbulenceAlgorithm::declare_fields()
     const std::string& name = Field.first;
     const stk::mesh::PartVector universal(1, &meta.universal_part());
     using to_field = typename std::remove_pointer<decltype(Field.second)>::type;
-    sierra::nalu::FieldPointerTypes new_field =
+    sierra::kynema_ugf::FieldPointerTypes new_field =
       realm_->fieldManager_->register_field(name, universal, numStates);
     std::visit(
       [&](auto fld) {

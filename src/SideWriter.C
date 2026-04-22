@@ -31,7 +31,7 @@
 #include <Ioss_State.h>
 #include "Ionit_Initializer.h"
 
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 
 #include <algorithm>
 #include <iostream>
@@ -39,7 +39,7 @@
 #include <utility>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 
@@ -434,5 +434,5 @@ SideWriterContainer::write_sides(const int stepCount, const double time)
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

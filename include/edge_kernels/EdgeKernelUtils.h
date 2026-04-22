@@ -13,7 +13,7 @@
 #include "SimdInterface.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename T>
 KOKKOS_FORCEINLINE_FUNCTION T
@@ -23,7 +23,7 @@ van_leer(const T& dqm, const T& dqp, const T& eps)
          ((dqm + dqp) * (dqm + dqp) + eps);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* EDGEKERNELUTILS_H */

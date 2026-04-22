@@ -8,7 +8,7 @@
 //
 
 #include <element_promotion/PromotedPartHelper.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Part.hpp>
@@ -20,7 +20,7 @@
 #include <string>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // A set of functions to deal with part pairs having specific ending tags
 bool
@@ -49,7 +49,7 @@ check_part_topo(const stk::mesh::Part& part)
   }
 
   if (!(is_valid_side_rank || is_valid_elem_rank)) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Part " << part.name() << " has an invalid topology for promotion, "
       << topo.name() << "---only pure Hex/Quad meshes are currently supported."
       << std::endl;
@@ -365,5 +365,5 @@ face_topology_for_order(int order)
   return stk::create_superface_topology((order + 1) * (order + 1));
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -11,7 +11,7 @@
 #include "ArrayND.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 constexpr Coeffs<1>::nodal_matrix_type Coeffs<1>::W;
@@ -48,5 +48,5 @@ constexpr ArrayND<double[4]> Coeffs<3>::Wl;
 constexpr ArrayND<double[5]> Coeffs<4>::Wl;
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

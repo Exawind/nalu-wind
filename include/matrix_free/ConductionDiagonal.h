@@ -16,7 +16,7 @@
 #include <Tpetra_MultiVector.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 using tpetra_view_type = typename Tpetra::MultiVector<>::dual_view_type::t_dev;
 using const_tpetra_view_type =
@@ -37,7 +37,7 @@ struct conduction_diagonal_t
 P_INVOKEABLE(conduction_diagonal)
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

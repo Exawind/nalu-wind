@@ -24,7 +24,7 @@
 #include "stk_mesh/base/GetNgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 stk::mesh::NgpField<double>
@@ -128,5 +128,5 @@ ConductionGatheredFieldManager<p>::swap_states()
 INSTANTIATE_POLYCLASS(ConductionGatheredFieldManager);
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -14,7 +14,7 @@
 #include "SolutionOptions.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ContinuityEdgeSolverAlg::ContinuityEdgeSolverAlg(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
@@ -43,7 +43,7 @@ ContinuityEdgeSolverAlg::execute()
   const std::string dofName = "pressure";
   const DblType nocFac = (realm_.get_noc_usage(dofName) == true) ? 1.0 : 0.0;
 
-  // Classic Nalu projection timescale
+  // Classic KynemaUGF projection timescale
   const DblType dt = realm_.get_time_step();
   const DblType gamma1 = realm_.get_gamma1();
   const DblType tauScale = dt / gamma1;
@@ -194,5 +194,5 @@ ContinuityEdgeSolverAlg::execute()
     });
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -6,7 +6,7 @@
 #include <string>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // Forward declarations
 class H5IO;
@@ -342,7 +342,7 @@ private:
 
 //============================================================================
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

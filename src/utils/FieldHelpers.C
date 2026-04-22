@@ -13,7 +13,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 void
 populate_dnv_states(
   const stk::mesh::MetaData& meta,
@@ -43,5 +43,5 @@ populate_dnv_states(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

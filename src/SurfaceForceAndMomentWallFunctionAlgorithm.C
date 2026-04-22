@@ -7,14 +7,14 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <SurfaceForceAndMomentWallFunctionAlgorithm.h>
 #include <Algorithm.h>
 #include <FieldTypeDef.h>
 #include <Realm.h>
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementRepo.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -33,7 +33,7 @@
 #include <iomanip>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -117,7 +117,7 @@ SurfaceForceAndMomentWallFunctionAlgorithm::
       "post processing must be consistent");
 
   // deal with file name and banner
-  if (NaluEnv::self().parallel_rank() == 0) {
+  if (KynemaUGFEnv::self().parallel_rank() == 0) {
     std::ofstream myfile;
     myfile.open(outputFileName_.c_str());
     myfile << std::setw(w_) << "Time" << std::setw(w_) << "Fpx" << std::setw(w_)
@@ -221,7 +221,7 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
@@ -412,7 +412,7 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
   if (processMe) {
     // parallel assemble and output
     double g_force_moment[9] = {};
-    stk::ParallelMachine comm = NaluEnv::self().parallel_comm();
+    stk::ParallelMachine comm = KynemaUGFEnv::self().parallel_comm();
 
     // Parallel assembly of L2
     stk::all_reduce_sum(comm, &l_force_moment[0], &g_force_moment[0], 9);
@@ -423,7 +423,7 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
     stk::all_reduce_max(comm, &yplusMax, &g_yplusMax, 1);
 
     // deal with file name and banner
-    if (NaluEnv::self().parallel_rank() == 0) {
+    if (KynemaUGFEnv::self().parallel_rank() == 0) {
       std::ofstream myfile;
       myfile.open(outputFileName_.c_str(), std::ios_base::app);
       myfile << std::setprecision(6) << std::setw(w_) << currentTime
@@ -468,7 +468,7 @@ SurfaceForceAndMomentWallFunctionAlgorithm::pre_work()
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
     const int numScsBip = meFC->num_integration_points();
 
@@ -524,5 +524,5 @@ SurfaceForceAndMomentWallFunctionAlgorithm::cross_product(
   cross[2] = rad[0] * force[1] - rad[1] * force[0];
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

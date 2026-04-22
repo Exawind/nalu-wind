@@ -13,9 +13,9 @@
 #include "KokkosInterface.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
-namespace nalu_ngp {
+namespace kynema_ugf_ngp {
 template <class Scalar>
 struct MinMaxSumScalar
 {
@@ -115,9 +115,9 @@ public:
   bool references_scalar() const { return references_scalar_v; }
 };
 
-} // namespace nalu_ngp
+} // namespace kynema_ugf_ngp
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPREDUCERS_H */

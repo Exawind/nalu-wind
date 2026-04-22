@@ -12,13 +12,13 @@
 
 #include <aero/actuator/ActuatorBulk.h>
 #include <aero/actuator/ActuatorBulkSimple.h>
-#ifdef NALU_USES_OPENFAST
+#ifdef KYNEMA_UGF_USES_OPENFAST
 #include <aero/actuator/ActuatorBulkFAST.h>
 #endif
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace FLLC {
 
 template <typename range_type, typename helper_type>
@@ -56,7 +56,7 @@ scale_lift_force(
   }
   case (ActuatorType::ActLineFASTNGP):
   case (ActuatorType::ActDiskFASTNGP): {
-#ifndef NALU_USES_OPENFAST
+#ifndef KYNEMA_UGF_USES_OPENFAST
     STK_ThrowErrorMsg("Actuator methods require OpenFAST");
 #if !defined(KOKKOS_ENABLE_GPU)
     break;
@@ -95,6 +95,6 @@ scale_lift_force(
   }
 }
 } // namespace FLLC
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif /* ACTUATORSCALINGFLLC_H_ */

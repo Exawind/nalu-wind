@@ -11,7 +11,7 @@
 #include <element_promotion/PromotedPartHelper.h>
 #include <element_promotion/PromoteElementImpl.h>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <BucketLoop.h>
 
 #include <stk_mesh/base/BulkData.hpp>
@@ -40,7 +40,7 @@
 #include <limits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace promotion {
 
 std::pair<stk::mesh::PartVector, stk::mesh::PartVector>
@@ -63,5 +63,5 @@ create_promoted_boundary_elements(
 }
 
 } // namespace promotion
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

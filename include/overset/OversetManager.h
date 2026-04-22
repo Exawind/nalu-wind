@@ -34,7 +34,7 @@ struct Entity;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class OversetInfo;
@@ -115,7 +115,7 @@ private:
   OversetManager(const OversetManager&) = delete;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* OVERSETMANAGER_H */

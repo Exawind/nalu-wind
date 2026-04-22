@@ -21,7 +21,7 @@
 #include "master_element/MasterElementRepo.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct FieldInfoNGP
 {
@@ -261,7 +261,7 @@ template <typename T, typename U>
 auto&
 ElemDataRequestsGPU::get_coord_ptr(const T& fieldMgr, const U& iter) const
 {
-  if constexpr (std::is_same_v<T, nalu::FieldManager>)
+  if constexpr (std::is_same_v<T, kynema_ugf::FieldManager>)
     return fieldMgr.template get_ngp_field_ptr<double>(iter.second->name());
   else
     return fieldMgr.template get_field<double>(
@@ -300,7 +300,7 @@ stk::mesh::NgpField<double>&
 ElemDataRequestsGPU::get_field_ptr(
   const T& fieldMgr, const FieldInfo& finfo) const
 {
-  if constexpr (std::is_same_v<T, nalu::FieldManager>)
+  if constexpr (std::is_same_v<T, kynema_ugf::FieldManager>)
     return fieldMgr.template get_ngp_field_ptr<double>(finfo.field->name());
   else
     return fieldMgr.template get_field<double>(
@@ -327,7 +327,7 @@ ElemDataRequestsGPU::fill_host_fields(
       FieldInfoType(fld_ptr, finfo.scalarsDim1, finfo.scalarsDim2);
   }
 }
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

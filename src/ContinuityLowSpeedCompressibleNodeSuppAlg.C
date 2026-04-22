@@ -20,7 +20,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -76,5 +76,5 @@ ContinuityLowSpeedCompressibleNodeSuppAlg::node_execute(
   lhs[0] += rhoNp1 / pressure * dualVolume / dt_ / projTimeScale;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

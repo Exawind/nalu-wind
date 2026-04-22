@@ -12,10 +12,10 @@
 #include <stk_mesh/base/NgpMesh.hpp>
 #include <stk_mesh/base/Types.hpp>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename ViewType>
 KOKKOS_INLINE_FUNCTION void
@@ -459,5 +459,5 @@ template KOKKOS_FUNCTION void fill_pre_req_data(
   stk::mesh::EntityRank entityRank,
   stk::mesh::Entity entity,
   ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& prereqData);
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

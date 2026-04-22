@@ -13,12 +13,12 @@
 #include "TimeIntegrator.h"
 #include "stk_util/parallel/Parallel.hpp"
 
-namespace tioga_nalu {
+namespace tioga_kynema_ugf {
 class TiogaSTKIface;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -68,8 +68,8 @@ public:
 private:
   TimeIntegrator& time_;
 
-#ifdef NALU_USES_TIOGA
-  std::vector<tioga_nalu::TiogaSTKIface*> tgIfaceVec_;
+#ifdef KYNEMA_UGF_USES_TIOGA
+  std::vector<tioga_kynema_ugf::TiogaSTKIface*> tgIfaceVec_;
 #endif
 
   std::vector<std::string> slnFieldNames_;
@@ -87,7 +87,7 @@ private:
   bool hasOverset_{false};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* EXTOVERSET_H */

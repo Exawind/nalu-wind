@@ -13,7 +13,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // ABLProfileFunction - base class
 //==========================================================================
@@ -161,5 +161,5 @@ NeutralABLProfileFunction::temperature(const double /* znorm */) const
   return 0.0;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

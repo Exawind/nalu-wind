@@ -35,7 +35,7 @@
 #include <random>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class ConductionOperatorFixture : public ConductionFixture
@@ -204,5 +204,5 @@ TEST_F(
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

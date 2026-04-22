@@ -13,7 +13,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 WallDistNodeKernel::WallDistNodeKernel(stk::mesh::BulkData& bulk)
   : NGPNodeKernel<WallDistNodeKernel>(),
@@ -42,5 +42,5 @@ WallDistNodeKernel::execute(
   // No LHS contributions
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

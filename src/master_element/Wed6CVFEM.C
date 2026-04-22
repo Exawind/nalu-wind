@@ -11,12 +11,12 @@
 #include "master_element/Wed6CVFEM.h"
 #include "master_element/MasterElementFunctions.h"
 #include "master_element/Hex8GeometryFunctions.h"
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 int
 wed_gradient_operator(
@@ -1141,7 +1141,7 @@ WedSCS::general_face_grad_op(
   const int lerr = wed_gradient_operator(cordel, deriv, grad, det, err);
 
   if (lerr)
-    NaluEnv::self().naluOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
       << "problem with EwedSCS::general_face_grad" << std::endl;
 }
 
@@ -1200,5 +1200,5 @@ WedSCS::sidePcoords_to_elemPcoords(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

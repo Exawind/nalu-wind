@@ -22,7 +22,7 @@
 #include <math.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace {
 
@@ -86,5 +86,5 @@ TEST(linear_areas, single_cube_hex27) { area_single_cube_hex_p<2>(); }
 
 } // namespace
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

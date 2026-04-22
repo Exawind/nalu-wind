@@ -4,7 +4,7 @@
 #include "FrameMoving.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class MeshMotionAlg
 {
@@ -48,7 +48,7 @@ private:
   bool isDeforming_ = false;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MESHMOTIONALG_H */

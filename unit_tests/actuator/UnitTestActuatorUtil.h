@@ -15,7 +15,7 @@
 #include <yaml-cpp/yaml.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace actuator_unit {
 
 static std::vector<std::string> nrel5MWinputs = {
@@ -51,7 +51,7 @@ create_yaml_node(const std::vector<std::string>& testFile)
 }
 
 } // namespace actuator_unit
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif // UNIT_TESTS_ACTUATOR_UNITTESTACTUATORUTIL_H_

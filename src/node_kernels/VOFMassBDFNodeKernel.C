@@ -16,7 +16,7 @@
 #include "utils/FieldHelpers.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 VOFMassBDFNodeKernel::VOFMassBDFNodeKernel(
   const stk::mesh::BulkData& bulk, ScalarFieldType* scalarQ)
@@ -79,5 +79,5 @@ VOFMassBDFNodeKernel::execute(
   lhs(0, 0) += lhsTime;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

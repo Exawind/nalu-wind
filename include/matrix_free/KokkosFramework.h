@@ -17,7 +17,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 using exec_space = Kokkos::DefaultExecutionSpace;
@@ -79,7 +79,7 @@ static constexpr int simd_len = ExecTraits<exec_space>::simd_len;
 static constexpr int alignment = ExecTraits<exec_space>::alignment;
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

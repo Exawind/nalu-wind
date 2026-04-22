@@ -20,7 +20,7 @@ namespace TIOGA {
 class tioga;
 }
 
-namespace tioga_nalu {
+namespace tioga_kynema_ugf {
 
 /** Data representing an unstructured mesh block
  */
@@ -83,9 +83,10 @@ struct NgpTiogaBlock
    */
   OversetArrayType<int*> connect_[max_vertex_types];
 
-  //! TIOGA index lookup using local entity index. TIOGA uses 1-based indexing,
-  //! so the first entry (node/element) has the index set to 1. This must be
-  //! taken into account when dereferencing entries in TIOGA data arrays.
+  //! TIOGA index lookup using local entity index. TIOGA uses 1-based
+  //! indexing, so the first entry (node/element) has the index set to 1. This
+  //! must be taken into account when dereferencing entries in TIOGA data
+  //! arrays.
   OversetArrayType<int*> eid_map_;
 
   //! The global STK identifier for this node. Used to identify shared nodes
@@ -107,14 +108,14 @@ struct NgpTiogaBlock
  * This class provides a mapping between STK mesh parts and the concept of a
  * TIOGA mesh block. Each TIOGA mesh block is determined by a unique body tag
  * and requires information of all the nodes and elements comprising the mesh
- * block (within this MPI rank). TIOGA determines the global mesh information by
- * looking up the unique body tag across all MPI ranks. TIOGA requires
+ * block (within this MPI rank). TIOGA determines the global mesh information
+ * by looking up the unique body tag across all MPI ranks. TIOGA requires
  * information regarding the volume mesh as well as the wall and overset
  * surfaces.
  *
  * TIOGA communicates overset connectivity via IBLANK (node) and IBLANK_CELL
- * (element) masking arrays that have flags indicating whether a node/element is
- * a hole, fringe, or a field point.
+ * (element) masking arrays that have flags indicating whether a node/element
+ * is a hole, fringe, or a field point.
  */
 class TiogaBlock
 {
@@ -139,8 +140,9 @@ public:
 
   /** Update coordinates upon mesh motion
    *
-   *  Update the coordinates sent to TIOGA from STK. This assumes that the mesh
-   *  connectivity information itself does not change, i.e., no refinement, etc.
+   *  Update the coordinates sent to TIOGA from STK. This assumes that the
+   * mesh connectivity information itself does not change, i.e., no
+   * refinement, etc.
    *
    *  Updates to mesh connectivity information will require a call to
    *  TiogaBlock::update_connectivity() instead.
@@ -176,8 +178,8 @@ public:
    *
    *  The interface also allows registration of user-defined node and cell
    *  resolution information that enables the user to force a certain type of
-   *  overset holecutting that overrides the default TIOGA behavior of selecting
-   *  donor and receptor points based on local cell volume.
+   *  overset holecutting that overrides the default TIOGA behavior of
+   * selecting donor and receptor points based on local cell volume.
    */
   void register_block(TIOGA::tioga&);
 
@@ -192,24 +194,27 @@ public:
 
   /** Determine the custom ghosting elements for this mesh block
    *
-   *  Calls the TIOGA API and populates the elements that need ghosting to other
-   *  MPI ranks.
+   *  Calls the TIOGA API and populates the elements that need ghosting to
+   * other MPI ranks.
    *
    *  @param tg Reference to TIOGA API object (provided by TiogaSTKIface).
-   *  @param egvec List of {donorElement, receptorMPIRank} pairs to be populated
+   *  @param egvec List of {donorElement, receptorMPIRank} pairs to be
+   * populated
    */
   void get_donor_info(TIOGA::tioga&, stk::mesh::EntityProcVec&);
 
   void register_solution(
     TIOGA::tioga&,
-    const std::vector<sierra::nalu::OversetFieldData>&,
+    const std::vector<sierra::kynema_ugf::OversetFieldData>&,
     const int);
 
-  void register_solution(TIOGA::tioga&, const sierra::nalu::OversetFieldData&);
+  void
+  register_solution(TIOGA::tioga&, const sierra::kynema_ugf::OversetFieldData&);
 
-  void update_solution(const std::vector<sierra::nalu::OversetFieldData>&);
+  void
+  update_solution(const std::vector<sierra::kynema_ugf::OversetFieldData>&);
 
-  void update_solution(const sierra::nalu::OversetFieldData&);
+  void update_solution(const sierra::kynema_ugf::OversetFieldData&);
 
   //! Return the block name for this mesh
   const std::string& block_name() const { return block_name_; }
@@ -232,13 +237,13 @@ private:
    */
   void process_nodes();
 
-  /** Determine the local indices (into the TIOGA mesh block data structure) of
-   * all the wall boundary nodes.
+  /** Determine the local indices (into the TIOGA mesh block data structure)
+   * of all the wall boundary nodes.
    */
   void process_wallbc();
 
-  /** Determine the local indices (into the TIOGA mesh block data structure) of
-   *  all the overset boundary nodes.
+  /** Determine the local indices (into the TIOGA mesh block data structure)
+   * of all the overset boundary nodes.
    */
   void process_ovsetbc();
 
@@ -258,8 +263,8 @@ private:
 
   /** Return a selector for accessing nodes for use with TIOGA API
    *
-   *  This is necessary to avoid selecting nodes that are ghosted and can cause
-   *  issues with the hole-cutting logic.
+   *  This is necessary to avoid selecting nodes that are ghosted and can
+   * cause issues with the hole-cutting logic.
    */
   stk::mesh::Selector get_node_selector(stk::mesh::PartVector&);
 
@@ -358,6 +363,6 @@ public:
   }
 };
 
-} // namespace tioga_nalu
+} // namespace tioga_kynema_ugf
 
 #endif /* TIOGABLOCK_H */

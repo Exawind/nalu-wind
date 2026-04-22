@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <AssembleNodalGradNonConformalAlgorithm.h>
 #include <Algorithm.h>
 #include <DgInfo.h>
@@ -27,7 +27,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -199,5 +199,5 @@ AssembleNodalGradNonConformalAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

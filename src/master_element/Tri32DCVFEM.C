@@ -14,7 +14,7 @@
 
 #include <AlgTraits.h>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
@@ -28,7 +28,7 @@
 #include <memory>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //-------- tri_derivative -----------------------------------------------------
 template <typename DBLTYPE, typename SHMEM>
@@ -336,7 +336,7 @@ Tri32DSCV::shifted_grad_op(
 //--------------------------------------------------------------------------
 // This function computes the metric tensor Mij = (J J^T)^(1/2) where J is
 // the Jacobian.  This is needed for the UT-A Hybrid LES model.  For
-// reference please consult the Nalu theory manual description of the UT-A
+// reference please consult the KynemaUGF theory manual description of the UT-A
 // Hybrid LES model or S. Haering's PhD thesis: Anisotropic hybrid turbulence
 // modeling with specific application to the simulation of pulse-actuated
 // dynamic stall control.
@@ -613,7 +613,7 @@ Tri32DSCS::gij(
 //--------------------------------------------------------------------------
 // This function computes the metric tensor Mij = (J J^T)^(1/2) where J is
 // the Jacobian.  This is needed for the UT-A Hybrid LES model.  For
-// reference please consult the Nalu theory manual description of the UT-A
+// reference please consult the KynemaUGF theory manual description of the UT-A
 // Hybrid LES model or S. Haering's PhD thesis: Anisotropic hybrid turbulence
 // modeling with specific application to the simulation of pulse-actuated
 // dynamic stall control.
@@ -895,7 +895,7 @@ Tri32DSCS::general_face_grad_op(
   lerr = tri_gradient_operator(cordel, deriv, grad, det);
 
   if (lerr)
-    NaluEnv::self().naluOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
       << "sorry, issue with face_grad_op.." << std::endl;
 }
 
@@ -933,5 +933,5 @@ Tri32DSCS::sidePcoords_to_elemPcoords(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

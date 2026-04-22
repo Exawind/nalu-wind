@@ -7,12 +7,12 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <overset/AssembleOversetSolverConstraintAlgorithm.h>
 #include <EquationSystem.h>
 
 #include <LinearSystem.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <Realm.h>
 #include <TimeIntegrator.h>
 
@@ -32,7 +32,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -62,7 +62,7 @@ AssembleOversetSolverConstraintAlgorithm::execute()
   eqSystem_->extractDiagonal_ = false;
 
   // extract the rank
-  const int theRank = NaluEnv::self().parallel_rank();
+  const int theRank = KynemaUGFEnv::self().parallel_rank();
 
   stk::mesh::BulkData& bulkData = realm_.bulk_data();
 
@@ -198,5 +198,5 @@ AssembleOversetSolverConstraintAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

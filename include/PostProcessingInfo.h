@@ -10,13 +10,13 @@
 #ifndef PostProcessingInfo_h
 #define PostProcessingInfo_h
 
-#include <NaluParsedTypes.h>
+#include <KynemaUGFParsedTypes.h>
 
 #include <string>
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class PostProcessingData;
 
@@ -32,7 +32,7 @@ public:
   std::vector<PostProcessingData*> ppDataVec_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

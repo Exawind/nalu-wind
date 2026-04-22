@@ -31,7 +31,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class Transfers;
@@ -87,7 +87,7 @@ public:
   void ghost_from_elements();
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

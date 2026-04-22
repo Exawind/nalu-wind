@@ -51,7 +51,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_courant_reynolds)
   viscosity_->modify_on_host();
   viscosity_->sync_to_device();
 
-  sierra::nalu::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.timeStepN_ = dt;
   timeIntegrator.timeStepNm1_ = dt;
   timeIntegrator.gamma1_ = 1.0;
@@ -62,9 +62,9 @@ TEST_F(MomentumKernelHex8Mesh, NGP_courant_reynolds)
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  sierra::nalu::CourantReAlgDriver algDriver(helperObjs.realm);
-  algDriver.register_elem_algorithm<sierra::nalu::CourantReAlg>(
-    sierra::nalu::INTERIOR, partVec_[0], "courant_reynolds", algDriver);
+  sierra::kynema_ugf::CourantReAlgDriver algDriver(helperObjs.realm);
+  algDriver.register_elem_algorithm<sierra::kynema_ugf::CourantReAlg>(
+    sierra::kynema_ugf::INTERIOR, partVec_[0], "courant_reynolds", algDriver);
 
   algDriver.execute();
 

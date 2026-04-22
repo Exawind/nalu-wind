@@ -17,7 +17,7 @@ TEST(ElementDescriptionTestHex, node_map_P2)
                                  12, 24, 13, 22, 26, 23, 15, 25, 14,
                                  4,  16, 5,  19, 21, 17, 7,  18, 6};
 
-  auto elem = sierra::nalu::HexNElementDescription(2);
+  auto elem = sierra::kynema_ugf::HexNElementDescription(2);
   for (unsigned j = 0; j < stkNodeMap.size(); ++j) {
     EXPECT_EQ(stkNodeMap[j], elem.node_map(j));
   }
@@ -31,7 +31,7 @@ TEST(ElementDescriptionTestHex, node_map_P3)
     17, 50, 51, 19, 41, 60, 61, 46, 43, 62, 63, 47, 23, 55, 54, 21,
     4,  24, 25, 5,  31, 36, 37, 26, 30, 38, 39, 27, 7,  29, 28, 6};
 
-  auto elem = sierra::nalu::HexNElementDescription(3);
+  auto elem = sierra::kynema_ugf::HexNElementDescription(3);
   for (unsigned j = 0; j < intendedNodeMap.size(); ++j) {
     EXPECT_EQ(intendedNodeMap[j], elem.node_map(j));
   }
@@ -44,7 +44,7 @@ TEST(ElementDescriptionTestHex, side_ordinal_map_P2)
     {2, 3, 7, 6, 10, 15, 18, 14, 25}, {0, 4, 7, 3, 12, 19, 15, 11, 22},
     {0, 3, 2, 1, 11, 10, 9, 8, 20},   {4, 5, 6, 7, 16, 17, 18, 19, 21}};
 
-  auto elem = sierra::nalu::HexNElementDescription(2);
+  auto elem = sierra::kynema_ugf::HexNElementDescription(2);
   for (int side_ordinal = 0; side_ordinal < elem.numFaces; ++side_ordinal) {
     auto side_node_ordinals = elem.side_node_ordinals(side_ordinal);
     auto expected_side_node_ordinals = sideNodeMap.at(side_ordinal);
@@ -64,7 +64,7 @@ TEST(ElementDescriptionTestHex, side_ordinal_map_P3)
     {0, 3, 2, 1, 15, 14, 13, 12, 11, 10, 9, 8, 32, 33, 34, 35},
     {4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31, 36, 37, 38, 39}};
 
-  auto elem = sierra::nalu::HexNElementDescription(3);
+  auto elem = sierra::kynema_ugf::HexNElementDescription(3);
   for (int side_ordinal = 0; side_ordinal < elem.numFaces; ++side_ordinal) {
     auto side_node_ordinals = elem.side_node_ordinals(side_ordinal);
     auto expected_side_node_ordinals = sideNodeMap.at(side_ordinal);

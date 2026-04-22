@@ -16,8 +16,8 @@
 #include "SimdInterface.h"
 
 namespace sierra {
-namespace nalu {
-namespace nalu_ngp {
+namespace kynema_ugf {
+namespace kynema_ugf_ngp {
 
 /** A custom Kokkos reduction operator for array types
  *
@@ -132,105 +132,109 @@ simd_reduce_sum(double& out, const DoubleType& inp, int len)
     out += stk::simd::get_data(inp, i);
 }
 
-} // namespace nalu_ngp
-} // namespace nalu
+} // namespace kynema_ugf_ngp
+} // namespace kynema_ugf
 } // namespace sierra
 
 namespace Kokkos {
 
 template <>
-struct reduction_identity<sierra::nalu::DoubleType>
+struct reduction_identity<sierra::kynema_ugf::DoubleType>
 {
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::DoubleType sum() { return DoubleType(0.0); }
+  static sierra::kynema_ugf::DoubleType sum() { return DoubleType(0.0); }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::DoubleType prod() { return DoubleType(1.0); }
+  static sierra::kynema_ugf::DoubleType prod() { return DoubleType(1.0); }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::DoubleType max() { return DoubleType(-DBL_MAX); }
+  static sierra::kynema_ugf::DoubleType max() { return DoubleType(-DBL_MAX); }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::DoubleType min() { return DoubleType(DBL_MAX); }
+  static sierra::kynema_ugf::DoubleType min() { return DoubleType(DBL_MAX); }
 };
 
 template <>
-struct reduction_identity<sierra::nalu::nalu_ngp::ArrayDbl2>
+struct reduction_identity<sierra::kynema_ugf::kynema_ugf_ngp::ArrayDbl2>
 {
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::nalu_ngp::ArrayDbl2 sum()
+  static sierra::kynema_ugf::kynema_ugf_ngp::ArrayDbl2 sum()
   {
-    return sierra::nalu::nalu_ngp::ArrayDbl2(0.0);
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArrayDbl2(0.0);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::nalu_ngp::ArrayDbl2 prod()
+  static sierra::kynema_ugf::kynema_ugf_ngp::ArrayDbl2 prod()
   {
-    return sierra::nalu::nalu_ngp::ArrayDbl2(1.0);
-  }
-};
-
-template <>
-struct reduction_identity<sierra::nalu::nalu_ngp::ArrayDbl3>
-{
-  KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::nalu_ngp::ArrayDbl3 sum()
-  {
-    return sierra::nalu::nalu_ngp::ArrayDbl3(0.0);
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::nalu_ngp::ArrayDbl3 prod()
-  {
-    return sierra::nalu::nalu_ngp::ArrayDbl3(1.0);
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArrayDbl2(1.0);
   }
 };
 
 template <>
-struct reduction_identity<sierra::nalu::nalu_ngp::ArraySimdDouble2>
+struct reduction_identity<sierra::kynema_ugf::kynema_ugf_ngp::ArrayDbl3>
 {
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::nalu_ngp::ArraySimdDouble2 sum()
+  static sierra::kynema_ugf::kynema_ugf_ngp::ArrayDbl3 sum()
   {
-    return sierra::nalu::nalu_ngp::ArraySimdDouble2(DoubleType(0.0));
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArrayDbl3(0.0);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::nalu_ngp::ArraySimdDouble2 prod()
+  static sierra::kynema_ugf::kynema_ugf_ngp::ArrayDbl3 prod()
   {
-    return sierra::nalu::nalu_ngp::ArraySimdDouble2(DoubleType(1.0));
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArrayDbl3(1.0);
   }
 };
 
 template <>
-struct reduction_identity<sierra::nalu::nalu_ngp::ArraySimdDouble3>
+struct reduction_identity<sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble2>
 {
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::nalu_ngp::ArraySimdDouble3 sum()
+  static sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble2 sum()
   {
-    return sierra::nalu::nalu_ngp::ArraySimdDouble3(DoubleType(0.0));
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble2(
+      DoubleType(0.0));
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::nalu_ngp::ArraySimdDouble3 prod()
+  static sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble2 prod()
   {
-    return sierra::nalu::nalu_ngp::ArraySimdDouble3(DoubleType(1.0));
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble2(
+      DoubleType(1.0));
   }
 };
 
 template <>
-struct reduction_identity<sierra::nalu::nalu_ngp::ArrayInt2>
+struct reduction_identity<sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble3>
 {
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::nalu_ngp::ArrayInt2 sum()
+  static sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble3 sum()
   {
-    return sierra::nalu::nalu_ngp::ArrayInt2(0);
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble3(
+      DoubleType(0.0));
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  static sierra::nalu::nalu_ngp::ArrayInt2 prod()
+  static sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble3 prod()
   {
-    return sierra::nalu::nalu_ngp::ArrayInt2(1);
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArraySimdDouble3(
+      DoubleType(1.0));
+  }
+};
+
+template <>
+struct reduction_identity<sierra::kynema_ugf::kynema_ugf_ngp::ArrayInt2>
+{
+  KOKKOS_FORCEINLINE_FUNCTION
+  static sierra::kynema_ugf::kynema_ugf_ngp::ArrayInt2 sum()
+  {
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArrayInt2(0);
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  static sierra::kynema_ugf::kynema_ugf_ngp::ArrayInt2 prod()
+  {
+    return sierra::kynema_ugf::kynema_ugf_ngp::ArrayInt2(1);
   }
 };
 

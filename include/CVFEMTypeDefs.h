@@ -17,7 +17,7 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename ArrayType>
 using ViewType = Kokkos::View<
@@ -171,7 +171,7 @@ using node_map_view = Kokkos::View<int*>;
           typename x::matrix##_##view;                                         \
   using matrix##_##vector##_##view = typename x::matrix##_##vector##_##view
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

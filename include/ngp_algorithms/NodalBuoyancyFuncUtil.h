@@ -21,7 +21,7 @@
 #include <ngp_utils/NgpFieldUtils.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -38,7 +38,7 @@ public:
   void execute() override
   {
 
-    using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+    using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
     const auto& meta = realm_.meta_data();
     const auto ngpMesh = realm_.ngp_mesh();
@@ -49,7 +49,7 @@ public:
       (meta.locally_owned_part() | meta.globally_shared_part()) &
       stk::mesh::selectUnion(partVec_) & !(realm_.get_inactive_selector());
 
-    nalu_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "BuoyancySourceFuncMaskUtil", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
         myNodeMask.get(meshIdx, 0) = 0;
@@ -60,6 +60,6 @@ public:
 private:
   unsigned maskNodeIndex_{stk::mesh::InvalidOrdinal};
 };
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

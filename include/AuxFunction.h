@@ -11,7 +11,7 @@
 #define AuxFunction_h
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class AuxFunction
 {
@@ -95,7 +95,7 @@ protected:
   const unsigned endPos_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

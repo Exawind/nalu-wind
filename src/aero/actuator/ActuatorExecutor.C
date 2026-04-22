@@ -10,7 +10,7 @@
 #include <aero/actuator/ActuatorExecutor.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ActuatorExecutor::ActuatorExecutor(
   const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
@@ -51,5 +51,5 @@ ActuatorExecutor::apply_fllc(ActuatorBulk& actBulk)
     });
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 VariableDensityPressureAuxFunction::VariableDensityPressureAuxFunction()
   : AuxFunction(0, 1), pnot_(1.0), a_(20.0), pi_(acos(-1.0))
@@ -50,5 +50,5 @@ VariableDensityPressureAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

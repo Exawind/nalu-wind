@@ -36,7 +36,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class SimdConnectivityFixture : public ::testing::Test
@@ -186,5 +186,5 @@ TEST_F(SimdConnectivityFixture, map_is_in_tensor_product_form)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

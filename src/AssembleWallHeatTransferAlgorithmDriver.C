@@ -23,7 +23,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -180,5 +180,5 @@ AssembleWallHeatTransferAlgorithmDriver::post_work()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -20,13 +20,13 @@
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementRepo.h>
 #include <EquationSystem.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <utils/StkHelpers.h>
 #include <utils/CreateDeviceExpression.h>
 #include <ngp_utils/NgpLoopUtils.h>
 #include <ngp_utils/NgpFieldManager.h>
 
-#ifdef NALU_HAS_MATRIXFREE
+#ifdef KYNEMA_UGF_HAS_MATRIXFREE
 #include <matrix_free/NodeOrderMap.h>
 #endif
 
@@ -78,7 +78,7 @@
 #include <sstream>
 #define KK_MAP
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ///====================================================================================================================================
 ///======== T P E T R A
@@ -110,20 +110,21 @@ TpetraLinearSystem::~TpetraLinearSystem()
 struct CompareEntityEqualById
 {
   const stk::mesh::BulkData& m_mesh;
-  const GlobalIdFieldType* m_naluGlobalId;
+  const GlobalIdFieldType* m_kynema_ugfGlobalId;
 
   CompareEntityEqualById(
-    const stk::mesh::BulkData& mesh, const GlobalIdFieldType* naluGlobalId)
-    : m_mesh(mesh), m_naluGlobalId(naluGlobalId)
+    const stk::mesh::BulkData& mesh,
+    const GlobalIdFieldType* kynema_ugfGlobalId)
+    : m_mesh(mesh), m_kynema_ugfGlobalId(kynema_ugfGlobalId)
   {
   }
 
   bool operator()(const stk::mesh::Entity& e0, const stk::mesh::Entity& e1)
   {
     const stk::mesh::EntityId e0Id =
-      *stk::mesh::field_data(*m_naluGlobalId, e0);
+      *stk::mesh::field_data(*m_kynema_ugfGlobalId, e0);
     const stk::mesh::EntityId e1Id =
-      *stk::mesh::field_data(*m_naluGlobalId, e1);
+      *stk::mesh::field_data(*m_kynema_ugfGlobalId, e1);
     return e0Id == e1Id;
   }
 };
@@ -131,35 +132,36 @@ struct CompareEntityEqualById
 struct CompareEntityById
 {
   const stk::mesh::BulkData& m_mesh;
-  const GlobalIdFieldType* m_naluGlobalId;
+  const GlobalIdFieldType* m_kynema_ugfGlobalId;
 
   CompareEntityById(
-    const stk::mesh::BulkData& mesh, const GlobalIdFieldType* naluGlobalId)
-    : m_mesh(mesh), m_naluGlobalId(naluGlobalId)
+    const stk::mesh::BulkData& mesh,
+    const GlobalIdFieldType* kynema_ugfGlobalId)
+    : m_mesh(mesh), m_kynema_ugfGlobalId(kynema_ugfGlobalId)
   {
   }
 
   bool operator()(const stk::mesh::Entity& e0, const stk::mesh::Entity& e1)
   {
     const stk::mesh::EntityId e0Id =
-      *stk::mesh::field_data(*m_naluGlobalId, e0);
+      *stk::mesh::field_data(*m_kynema_ugfGlobalId, e0);
     const stk::mesh::EntityId e1Id =
-      *stk::mesh::field_data(*m_naluGlobalId, e1);
+      *stk::mesh::field_data(*m_kynema_ugfGlobalId, e1);
     return e0Id < e1Id;
   }
   bool operator()(const Connection& c0, const Connection& c1)
   {
     const stk::mesh::EntityId c0firstId =
-      *stk::mesh::field_data(*m_naluGlobalId, c0.first);
+      *stk::mesh::field_data(*m_kynema_ugfGlobalId, c0.first);
     const stk::mesh::EntityId c1firstId =
-      *stk::mesh::field_data(*m_naluGlobalId, c1.first);
+      *stk::mesh::field_data(*m_kynema_ugfGlobalId, c1.first);
     if (c0firstId != c1firstId) {
       return c0firstId < c1firstId;
     }
     const stk::mesh::EntityId c0secondId =
-      *stk::mesh::field_data(*m_naluGlobalId, c0.second);
+      *stk::mesh::field_data(*m_kynema_ugfGlobalId, c0.second);
     const stk::mesh::EntityId c1secondId =
-      *stk::mesh::field_data(*m_naluGlobalId, c1.second);
+      *stk::mesh::field_data(*m_kynema_ugfGlobalId, c1.second);
     return c0secondId < c1secondId;
   }
 };
@@ -204,8 +206,8 @@ TpetraLinearSystem::beginLinearSystemConstruction()
   // num_sharedNotOwned_nodes = num_nodes - num_owned_nodes)
   // KOKKOS: BucketLoop parallel "reduce" is accumulating 4 sums
   kokkos_parallel_for(
-    "Nalu::TpetraLinearSystem::beginLinearSystemConstructionA", buckets.size(),
-    [&](const int& ib) {
+    "KynemaUGF::TpetraLinearSystem::beginLinearSystemConstructionA",
+    buckets.size(), [&](const int& ib) {
       stk::mesh::Bucket& b = *buckets[ib];
       const stk::mesh::Bucket::size_type length = b.size();
       // KOKKOS: intra BucketLoop parallel reduce
@@ -264,7 +266,7 @@ TpetraLinearSystem::beginLinearSystemConstruction()
 
   std::sort(
     owned_nodes.begin(), owned_nodes.end(),
-    CompareEntityById(bulkData, realm_.naluGlobalId_));
+    CompareEntityById(bulkData, realm_.kynema_ugfGlobalId_));
 
   // use the Contiguous Map constructor.
 
@@ -284,7 +286,7 @@ TpetraLinearSystem::beginLinearSystemConstruction()
 
   for (stk::mesh::Entity entity : owned_nodes) {
     const stk::mesh::EntityId entityId =
-      *stk::mesh::field_data(*realm_.naluGlobalId_, entity);
+      *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, entity);
     myLIDs_[entityId] = numDof_ * localId++;
     auto* thisgid = stk::mesh::field_data(*realm_.tpetGlobalId_, entity);
     auto basegid = gomin + numDof_ * gstart;
@@ -330,18 +332,18 @@ TpetraLinearSystem::beginLinearSystemConstruction()
   }
   std::sort(
     shared_not_owned_nodes.begin(), shared_not_owned_nodes.end(),
-    CompareEntityById(bulkData, realm_.naluGlobalId_));
+    CompareEntityById(bulkData, realm_.kynema_ugfGlobalId_));
   std::vector<stk::mesh::Entity>::iterator iter = std::unique(
     shared_not_owned_nodes.begin(), shared_not_owned_nodes.end(),
-    CompareEntityEqualById(bulkData, realm_.naluGlobalId_));
+    CompareEntityEqualById(bulkData, realm_.kynema_ugfGlobalId_));
   shared_not_owned_nodes.erase(iter, shared_not_owned_nodes.end());
 
   for (unsigned inode = 0; inode < shared_not_owned_nodes.size(); ++inode) {
     stk::mesh::Entity entity = shared_not_owned_nodes[inode];
-    const stk::mesh::EntityId naluId =
-      *stk::mesh::field_data(*realm_.naluGlobalId_, entity);
-    auto masterentity = get_entity_master(bulkData, entity, naluId);
-    myLIDs_[naluId] = numDof_ * localId++;
+    const stk::mesh::EntityId kynema_ugfId =
+      *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, entity);
+    auto masterentity = get_entity_master(bulkData, entity, kynema_ugfId);
+    myLIDs_[kynema_ugfId] = numDof_ * localId++;
     int owner = bulkData.parallel_owner_rank(masterentity);
     auto basegid = *stk::mesh::field_data(*realm_.tpetGlobalId_, masterentity);
 
@@ -397,14 +399,14 @@ TpetraLinearSystem::insert_connection(stk::mesh::Entity a, stk::mesh::Entity b)
 
   bool correctEntity = ownedAndSharedNodes_[idx] == a;
   if (!correctEntity) {
-    const stk::mesh::EntityId naluid_a =
-      *stk::mesh::field_data(*realm_.naluGlobalId_, a);
+    const stk::mesh::EntityId kynema_ugfid_a =
+      *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, a);
     stk::mesh::Entity master =
-      get_entity_master(realm_.bulk_data(), a, naluid_a);
-    const stk::mesh::EntityId naluid_master =
-      *stk::mesh::field_data(*realm_.naluGlobalId_, master);
-    correctEntity =
-      ownedAndSharedNodes_[idx] == master || naluid_a == naluid_master;
+      get_entity_master(realm_.bulk_data(), a, kynema_ugfid_a);
+    const stk::mesh::EntityId kynema_ugfid_master =
+      *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, master);
+    correctEntity = ownedAndSharedNodes_[idx] == master ||
+                    kynema_ugfid_a == kynema_ugfid_master;
   }
   STK_ThrowRequireMsg(
     correctEntity,
@@ -424,13 +426,13 @@ TpetraLinearSystem::addConnections(
   for (size_t a = 0; a < num_entities; ++a) {
     const stk::mesh::Entity entity_a = entities[a];
     const stk::mesh::EntityId id_a =
-      *stk::mesh::field_data(*realm_.naluGlobalId_, entity_a);
+      *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, entity_a);
     insert_connection(entity_a, entity_a);
 
     for (size_t b = a + 1; b < num_entities; ++b) {
       const stk::mesh::Entity entity_b = entities[b];
       const stk::mesh::EntityId id_b =
-        *stk::mesh::field_data(*realm_.naluGlobalId_, entity_b);
+        *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, entity_b);
       const bool a_then_b = id_a < id_b;
       const stk::mesh::Entity entity_min = a_then_b ? entity_a : entity_b;
       const stk::mesh::Entity entity_max = a_then_b ? entity_b : entity_a;
@@ -527,7 +529,7 @@ TpetraLinearSystem::buildReducedElemToNodeGraph(
 
     // extract master element
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
     // extract master element specifics
     const int numScsIp = meSCS->num_integration_points();
@@ -607,7 +609,7 @@ TpetraLinearSystem::buildSparsifiedEdgeElemToNodeGraph(
                 const auto sub_m_index = m + edge_conn[iedge][lr][1];
                 const auto sub_l_index = l + edge_conn[iedge][lr][2];
 
-#ifdef NALU_HAS_MATRIXFREE
+#ifdef KYNEMA_UGF_HAS_MATRIXFREE
                 auto node_index = matrix_free::node_map(
                   poly, sub_n_index, sub_m_index, sub_l_index);
 #else
@@ -725,7 +727,7 @@ TpetraLinearSystem::buildOversetNodeGraph(
   const stk::mesh::PartVector& /* parts */)
 {
   // extract the rank
-  const int theRank = NaluEnv::self().parallel_rank();
+  const int theRank = KynemaUGFEnv::self().parallel_rank();
 
   stk::mesh::BulkData& bulkData = realm_.bulk_data();
   beginLinearSystemConstruction();
@@ -834,11 +836,11 @@ TpetraLinearSystem::compute_send_lengths(
     colEntityIds.resize(numColEntities);
     for (size_t j = 0; j < colEntities.size(); ++j) {
       colEntityIds[j] =
-        *stk::mesh::field_data(*realm_.naluGlobalId_, colEntities[j]);
+        *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, colEntities[j]);
     }
 
     const stk::mesh::EntityId entityId_a =
-      *stk::mesh::field_data(*realm_.naluGlobalId_, entity_a);
+      *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, entity_a);
     const int entity_a_status = getDofStatus(entity_a);
     const bool entity_a_shared = entity_a_status & DS_SharedNotOwnedDOF;
 
@@ -904,13 +906,13 @@ TpetraLinearSystem::compute_graph_row_lengths(
     for (size_t j = 0; j < numColEntities; ++j) {
       stk::mesh::Entity colEntity = colEntities[j];
       colEntityIds[j] =
-        *stk::mesh::field_data(*realm_.naluGlobalId_, colEntity);
+        *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, colEntity);
       colOwners[j] = bulk.parallel_owner_rank(
         get_entity_master(bulk, colEntity, colEntityIds[j]));
     }
 
     const stk::mesh::EntityId entityId_a =
-      *stk::mesh::field_data(*realm_.naluGlobalId_, entity_a);
+      *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, entity_a);
 
     const int entity_a_status = getDofStatus(entity_a);
     const bool entity_a_owned = entity_a_status & DS_OwnedDOF;
@@ -1029,7 +1031,7 @@ TpetraLinearSystem::fill_entity_to_row_LID_mapping()
   for (const stk::mesh::Bucket* bptr : nodeBuckets) {
     const stk::mesh::Bucket& b = *bptr;
     const stk::mesh::EntityId* nodeIds =
-      stk::mesh::field_data(*realm_.naluGlobalId_, b);
+      stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, b);
     for (size_t i = 0; i < b.size(); ++i) {
       stk::mesh::Entity node = b[i];
 
@@ -1066,7 +1068,7 @@ TpetraLinearSystem::fill_entity_to_col_LID_mapping()
   for (const stk::mesh::Bucket* bptr : nodeBuckets) {
     const stk::mesh::Bucket& b = *bptr;
     const stk::mesh::EntityId* nodeIds =
-      stk::mesh::field_data(*realm_.naluGlobalId_, b);
+      stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, b);
     for (size_t i = 0; i < b.size(); ++i) {
       stk::mesh::Entity node = b[i];
 
@@ -1118,9 +1120,10 @@ TpetraLinearSystem::storeOwnersForShared()
     for (stk::mesh::Entity node : bkt) {
       int status = getDofStatus(node);
       if (status & DS_SharedNotOwnedDOF) {
-        stk::mesh::EntityId naluId =
-          *stk::mesh::field_data(*realm_.naluGlobalId_, node);
-        stk::mesh::Entity master = get_entity_master(bulkData, node, naluId);
+        stk::mesh::EntityId kynema_ugfId =
+          *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, node);
+        stk::mesh::Entity master =
+          get_entity_master(bulkData, node, kynema_ugfId);
         GlobalOrdinal gidbase =
           *stk::mesh::field_data(*realm_.tpetGlobalId_, master);
         STK_ThrowRequire(gidbase != 0);
@@ -1302,7 +1305,7 @@ sum_into_row_vec_3(
   // assumes that the flattened column indices for block matrices are all stored
   // sequentially specialized for numDof == 3
   constexpr bool forceAtomic =
-    !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
+    !std::is_same<sierra::kynema_ugf::DeviceSpace, Kokkos::Serial>::value;
   const LocalOrdinal length = row_view.length;
 
   LocalOrdinal offset = 0;
@@ -1351,7 +1354,7 @@ sum_into_row(
   }
 
   constexpr bool forceAtomic =
-    !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
+    !std::is_same<sierra::kynema_ugf::DeviceSpace, Kokkos::Serial>::value;
   const LocalOrdinal length = row_view.length;
 
   const int numCols = num_entities * numDof;
@@ -1405,7 +1408,7 @@ sum_into(
   unsigned numDof)
 {
   constexpr bool forceAtomic =
-    !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
+    !std::is_same<sierra::kynema_ugf::DeviceSpace, Kokkos::Serial>::value;
 
   const int n_obj = numEntities;
   const int numRows = n_obj * numDof;
@@ -1519,7 +1522,7 @@ reset_rows(
   }
 }
 
-sierra::nalu::CoeffApplier*
+sierra::kynema_ugf::CoeffApplier*
 TpetraLinearSystem::get_coeff_applier()
 {
   auto ownedLocalMatrix = getOwnedLocalMatrix();
@@ -1548,7 +1551,7 @@ void
 TpetraLinearSystem::free_coeff_applier(CoeffApplier* coeffApplier)
 {
   if (coeffApplier != nullptr) {
-    sierra::nalu::kokkos_free_on_device(coeffApplier);
+    sierra::kynema_ugf::kokkos_free_on_device(coeffApplier);
   }
 }
 
@@ -1698,7 +1701,7 @@ TpetraLinearSystem::applyDirichletBCs(
     stk::mesh::selectUnion(parts) & stk::mesh::selectField(*solutionField) &
     !(realm_.get_inactive_selector());
 
-  using Traits = nalu_ngp::NGPMeshTraits<>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
   using MeshIndex = typename Traits::MeshIndex;
 
   stk::mesh::NgpMesh ngpMesh = realm_.ngp_mesh();
@@ -1723,7 +1726,7 @@ TpetraLinearSystem::applyDirichletBCs(
   // Suppress unused variable warning on non-debug builds
   (void)maxSharedNotOwnedRowId;
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "TpetraLinSys::applyDirichletBCs", ngpMesh, stk::topology::NODE_RANK,
     selector, KOKKOS_LAMBDA(const MeshIndex& meshIdx) {
       stk::mesh::Entity entity =
@@ -1815,7 +1818,7 @@ TpetraLinearSystem::solve(stk::mesh::FieldBase* linearSolutionField)
   TpetraLinearSolver* linearSolver =
     reinterpret_cast<TpetraLinearSolver*>(linearSolver_);
 
-  if (NaluEnv::self().debug()) {
+  if (KynemaUGFEnv::self().debug()) {
     checkForNaN(true);
     if (checkForZeroRow(true, false, true)) {
       throw std::runtime_error("ERROR checkForZeroRow in solve()");
@@ -1832,8 +1835,8 @@ TpetraLinearSystem::solve(stk::mesh::FieldBase* linearSolutionField)
 
   // memory diagnostic
   if (realm_.get_activate_memory_diagnostic()) {
-    NaluEnv::self().naluOutputP0()
-      << "NaluMemory::TpetraLinearSystem::solve() PreSolve: " << eqSysName_
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "KynemaUGFMemory::TpetraLinearSystem::solve() PreSolve: " << eqSysName_
       << std::endl;
     realm_.provide_memory_summary();
   }
@@ -1867,7 +1870,7 @@ TpetraLinearSystem::solve(stk::mesh::FieldBase* linearSolutionField)
 
   if (provideOutput_) {
     const int nameOffset = eqSysName_.length() + 8;
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << std::setw(nameOffset) << std::right << eqSysName_
       << std::setw(32 - nameOffset) << std::right << iters << std::setw(18)
       << std::right << finalResidNorm << std::setw(15) << std::right
@@ -1931,7 +1934,7 @@ TpetraLinearSystem::checkForZeroRow(bool useOwned, bool doThrow, bool doPrint)
   GlobalOrdinal max_gid = 0, g_max_gid = 0;
   // KOKKOS: Loop parallel reduce
   kokkos_parallel_for(
-    "Nalu::TpetraLinearSystem::checkForZeroRowA", n, [&](const size_t& i) {
+    "KynemaUGF::TpetraLinearSystem::checkForZeroRowA", n, [&](const size_t& i) {
       GlobalOrdinal gid = matrix->getGraph()->getRowMap()->getGlobalElement(i);
       max_gid = std::max(gid, max_gid);
     });
@@ -1969,7 +1972,8 @@ TpetraLinearSystem::checkForZeroRow(bool useOwned, bool doThrow, bool doPrint)
   bool found = false;
   // KOKKOS: Loop parallel
   kokkos_parallel_for(
-    "Nalu::TpetraLinearSystem::checkForZeroRowC", nrowG, [&](const size_t& ii) {
+    "KynemaUGF::TpetraLinearSystem::checkForZeroRowC", nrowG,
+    [&](const size_t& ii) {
       double row_sum = global_row_sums[ii];
       if (
         global_row_exists[ii] && bulkData.parallel_rank() == 0 &&
@@ -1979,9 +1983,9 @@ TpetraLinearSystem::checkForZeroRow(bool useOwned, bool doThrow, bool doPrint)
         stk::mesh::EntityId nid = (gid - 1) / numDof_ + 1;
         stk::mesh::Entity node =
           bulkData.get_entity(stk::topology::NODE_RANK, nid);
-        const stk::mesh::EntityId naluGlobalId =
+        const stk::mesh::EntityId kynema_ugfGlobalId =
           bulkData.is_valid(node)
-            ? *stk::mesh::field_data(*realm_.naluGlobalId_, node)
+            ? *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, node)
             : -1;
 
         int idof = (gid - 1) % numDof_;
@@ -1992,15 +1996,16 @@ TpetraLinearSystem::checkForZeroRow(bool useOwned, bool doThrow, bool doPrint)
 
           std::cout << "P[" << bulkData.parallel_rank() << "] LHS zero: " << ii
                     << " GID= " << gid << " GID_check= " << GID_check
-                    << " nid= " << nid << " naluGlobalId " << naluGlobalId
+                    << " nid= " << nid << " kynema_ugfGlobalId "
+                    << kynema_ugfGlobalId
                     << " is_valid= " << bulkData.is_valid(node)
                     << " idof= " << idof << " numDof_= " << numDof_
                     << " row_sum= " << row_sum << " dualVolume= " << dualVolume
                     << std::endl;
-          NaluEnv::self().naluOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << "P[" << bulkData.parallel_rank() << "] LHS zero: " << ii
             << " GID= " << gid << " GID_check= " << GID_check << " nid= " << nid
-            << " naluGlobalId " << naluGlobalId
+            << " kynema_ugfGlobalId " << kynema_ugfGlobalId
             << " is_valid= " << bulkData.is_valid(node) << " idof= " << idof
             << " numDof_= " << numDof_ << " row_sum= " << row_sum
             << " dualVolume= " << dualVolume << std::endl;
@@ -2117,7 +2122,7 @@ TpetraLinearSystem::printInfo(bool useOwned)
               << " :: N N NZ= " << matrix->getRangeMap()->getGlobalNumElements()
               << " " << matrix->getDomainMap()->getGlobalNumElements() << " "
               << matrix->getGlobalNumEntries() << std::endl;
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "\nMatrix for system: " << eqSysName_
       << " :: N N NZ= " << matrix->getRangeMap()->getGlobalNumElements() << " "
       << matrix->getDomainMap()->getGlobalNumElements() << " "
@@ -2185,7 +2190,7 @@ TpetraLinearSystem::copy_tpetra_to_stk(
   const Teuchos::RCP<LinSys::MultiVector> tpetraField,
   stk::mesh::FieldBase* stkField)
 {
-  using Traits = nalu_ngp::NGPMeshTraits<>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
   using MeshIndex = typename Traits::MeshIndex;
 
   const stk::mesh::MetaData& metaData = realm_.meta_data();
@@ -2209,7 +2214,7 @@ TpetraLinearSystem::copy_tpetra_to_stk(
 
   stk::mesh::NgpMesh ngpMesh = realm_.ngp_mesh();
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "TpetraLinSys::copy_tpetra_to_stk", ngpMesh, stk::topology::NODE_RANK,
     selector, KOKKOS_LAMBDA(const MeshIndex& meshIdx) {
       stk::mesh::Entity node =
@@ -2291,8 +2296,8 @@ getDofStatus_impl(stk::mesh::Entity node, const Realm& realm)
 
   if (hasPeriodic) {
     const stk::mesh::EntityId stkId = bulkData.identifier(node);
-    const stk::mesh::EntityId naluId =
-      *stk::mesh::field_data(*realm.naluGlobalId_, node);
+    const stk::mesh::EntityId kynema_ugfId =
+      *stk::mesh::field_data(*realm.kynema_ugfGlobalId_, node);
 
     // bool for type of ownership for this node
     const bool nodeOwned = bulkData.bucket(node).owned();
@@ -2305,7 +2310,7 @@ getDofStatus_impl(stk::mesh::Entity node, const Realm& realm)
     }
 
     // bool to see if this is possibly a periodic node
-    const bool isSlaveNode = (stkId != naluId);
+    const bool isSlaveNode = (stkId != kynema_ugfId);
 
     if (!isSlaveNode) {
       if (nodeOwned)
@@ -2317,7 +2322,7 @@ getDofStatus_impl(stk::mesh::Entity node, const Realm& realm)
     } else {
       // I am a slave node.... get the master entity
       stk::mesh::Entity masterEntity =
-        bulkData.get_entity(stk::topology::NODE_RANK, naluId);
+        bulkData.get_entity(stk::topology::NODE_RANK, kynema_ugfId);
       if (bulkData.is_valid(masterEntity)) {
         const bool masterEntityOwned = bulkData.bucket(masterEntity).owned();
         const bool masterEntityShared = bulkData.bucket(masterEntity).shared();
@@ -2342,5 +2347,5 @@ getDofStatus_impl(stk::mesh::Entity node, const Realm& realm)
 #endif
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

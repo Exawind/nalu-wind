@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 RayleighTaylorMixFracAuxFunction::RayleighTaylorMixFracAuxFunction()
   : AuxFunction(0, 1),
@@ -67,5 +67,5 @@ RayleighTaylorMixFracAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

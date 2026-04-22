@@ -25,12 +25,12 @@
 #include <master_element/MasterElementRepo.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class TimeIntegrator;
 class SolutionOptions;
 
-/** Base class for computational kernels in Nalu
+/** Base class for computational kernels in KynemaUGF
  *
  * A kernel represents an atomic unit of computation applied over a given set of
  * nodes, elements, etc. using STK and Kokkos looping constructs.
@@ -126,21 +126,21 @@ public:
   // The destructor does not free the deviceCopy_ instance. This is done to
   // eliminate the warnings issued when compiling with nvcc for GPU builds.
   // Instead the `deviceCopy_` is freed by explicitly calling `free_on_device`
-  // from sierra::nalu::Algorithm::~Algorithm() before freeing the host pointers
-  // stored in `activeKernels_`
+  // from sierra::kynema_ugf::Algorithm::~Algorithm() before freeing the host
+  // pointers stored in `activeKernels_`
   KOKKOS_DEFAULTED_FUNCTION virtual ~NGPKernel() = default;
 
   virtual Kernel* create_on_device() final
   {
     free_on_device();
-    deviceCopy_ = nalu_ngp::create<T>(*dynamic_cast<T*>(this));
+    deviceCopy_ = kynema_ugf_ngp::create<T>(*dynamic_cast<T*>(this));
     return deviceCopy_;
   }
 
   virtual void free_on_device() final
   {
     if (deviceCopy_ != nullptr) {
-      nalu_ngp::destroy<T>(dynamic_cast<T*>(deviceCopy_));
+      kynema_ugf_ngp::destroy<T>(dynamic_cast<T*>(deviceCopy_));
       deviceCopy_ = nullptr;
     }
   }
@@ -151,7 +151,7 @@ protected:
   T* deviceCopy_{nullptr};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* KERNEL_H */

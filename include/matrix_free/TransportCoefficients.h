@@ -16,7 +16,7 @@
 #include "matrix_free/LowMachInfo.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace impl {
@@ -42,6 +42,6 @@ struct transport_coefficients_t
 P_INVOKEABLE(transport_coefficients)
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

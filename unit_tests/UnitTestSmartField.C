@@ -81,7 +81,7 @@ lambda_loop_performance(
 //*****************************************************************************
 // Tests
 //*****************************************************************************
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 using namespace tags;
 
 TEST_F(TestSmartField, device_read_write_mod_sync_with_lambda)
@@ -170,7 +170,7 @@ TEST_F(TestSmartField, update_field_on_device_check_on_host)
     int counter = 0;
     auto* field = fieldManager->get_field_ptr<double>("scalarQ");
     auto fieldRef =
-      sierra::nalu::MakeSmartField<tags::LEGACY, tags::READ>()(field);
+      sierra::kynema_ugf::MakeSmartField<tags::LEGACY, tags::READ>()(field);
     stk::mesh::Selector sel = stk::mesh::selectUnion(partVec);
     const auto& buckets = bulk->get_buckets(stk::topology::NODE_RANK, sel);
     for (auto b : buckets) {
@@ -189,4 +189,4 @@ TEST_F(TestSmartField, update_field_on_device_check_on_host)
   EXPECT_EQ(initSyncsHost_ + 1, ngpField_->num_syncs_to_host());
 }
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf

@@ -25,7 +25,7 @@ class MetaData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class ReferencePropertyData;
 
@@ -85,7 +85,7 @@ public:
   std::vector<double> cpVec_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

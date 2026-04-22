@@ -127,7 +127,7 @@ get_mesh_bounding_box(
 
 unsigned
 set_tower_ref_pos(
-  const stk::mesh::BulkData& mesh, sierra::nalu::fsiTurbine& fsiTurb)
+  const stk::mesh::BulkData& mesh, sierra::kynema_ugf::fsiTurbine& fsiTurb)
 {
   fast::turbineDataType& params = fsiTurb.params_;
   vs::Vector minCoords, maxCoords;
@@ -222,7 +222,7 @@ TEST_F(CylinderMesh, construct_FSIturbine)
   fill_mesh_and_initialize_test_fields(20, 20, 20, innerRadius, outerRadius);
 
   YAML::Node yamlNode = create_fsi_yaml_node();
-  sierra::nalu::fsiTurbine fsiTurb(0, yamlNode);
+  sierra::kynema_ugf::fsiTurbine fsiTurb(0, yamlNode);
   EXPECT_NO_THROW(fsiTurb.setup(bulk));
 }
 
@@ -237,9 +237,9 @@ TEST_F(CylinderMesh, construct_OpenfastFSI)
   fill_mesh_and_initialize_test_fields(20, 20, 20, innerRadius, outerRadius);
 
   YAML::Node yamlNode = create_openfastFSI_yaml_node();
-  sierra::nalu::OpenfastFSI openfastFSI(yamlNode);
-  const double dtNalu = 6.25e-3;
-  EXPECT_NO_THROW(openfastFSI.setup(dtNalu, bulk));
+  sierra::kynema_ugf::OpenfastFSI openfastFSI(yamlNode);
+  const double dtKynemaUGF = 6.25e-3;
+  EXPECT_NO_THROW(openfastFSI.setup(dtKynemaUGF, bulk));
   EXPECT_NO_THROW(openfastFSI.end_openfast());
 }
 
@@ -254,15 +254,16 @@ TEST_F(CylinderMesh, call_fsiTurbine_mapLoads)
   fill_mesh_and_initialize_test_fields(20, 20, 20, innerRadius, outerRadius);
 
   YAML::Node yamlNode = create_openfastFSI_yaml_node();
-  sierra::nalu::OpenfastFSI openfastFSI(yamlNode);
-  const double dtNalu = 6.25e-3;
-  EXPECT_NO_THROW(openfastFSI.setup(dtNalu, bulk));
+  sierra::kynema_ugf::OpenfastFSI openfastFSI(yamlNode);
+  const double dtKynemaUGF = 6.25e-3;
+  EXPECT_NO_THROW(openfastFSI.setup(dtKynemaUGF, bulk));
   std::cout << "nTurbinesGlob: " << openfastFSI.get_nTurbinesGlob()
             << std::endl;
   EXPECT_EQ(1, openfastFSI.get_nTurbinesGlob());
 
   const int turbIndex = 0;
-  sierra::nalu::fsiTurbine* fsiTurb = openfastFSI.get_fsiTurbineData(turbIndex);
+  sierra::kynema_ugf::fsiTurbine* fsiTurb =
+    openfastFSI.get_fsiTurbineData(turbIndex);
   EXPECT_TRUE(fsiTurb != nullptr);
   fast::turbineDataType& params = fsiTurb->params_;
 

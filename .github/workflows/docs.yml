@@ -1,4 +1,4 @@
-name: Nalu-Wind-Docs
+name: Kynema-UGF-Docs
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
           python3 -m pip install --upgrade pip
           pip3 install sphinx sphinx_rtd_theme sphinxcontrib-bibtex
       - name: Build
-        # execute from top-level nalu-wind directory
+        # execute from top-level kynema-ugf directory
         run: |
           mkdir -p ./build_docs/doxygen
           doxygen ./docs/doxygen/Doxyfile

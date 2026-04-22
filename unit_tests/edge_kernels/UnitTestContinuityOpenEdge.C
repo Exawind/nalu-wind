@@ -124,15 +124,15 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_open_edge)
   unit_test_utils::FaceElemHelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, numDof, part, isEdge);
 
-  sierra::nalu::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.gamma1_ = 1.0;
   timeIntegrator.timeStepN_ = 1.0;
   timeIntegrator.timeStepNm1_ = 1.0;
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  std::unique_ptr<sierra::nalu::Kernel> kernel(
-    new sierra::nalu::ContinuityOpenEdgeKernel<
-      sierra::nalu::AlgTraitsQuad4Hex8>(
+  std::unique_ptr<sierra::kynema_ugf::Kernel> kernel(
+    new sierra::kynema_ugf::ContinuityOpenEdgeKernel<
+      sierra::kynema_ugf::AlgTraitsQuad4Hex8>(
       *meta_, &solnOpts_, helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
       helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_));
 

@@ -11,7 +11,7 @@
 
 #include <Enums.h>
 #include <Realm.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 // props; algs, evaluators and data
 #include <property_evaluator/MaterialPropertyData.h>
@@ -20,14 +20,14 @@
 
 // yaml for parsing..
 #include <yaml-cpp/yaml.h>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 // basic c++
 #include <stdexcept>
 #include <map>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -164,7 +164,7 @@ MaterialPropertys::load(const YAML::Node& node)
             double theValue = 0.0;
             theValue = standardConst.as<double>();
             matData->constValue_ = theValue;
-            NaluEnv::self().naluOutputP0()
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
               << thePropName << " is a constant property: " << theValue
               << std::endl;
           } else {
@@ -196,7 +196,7 @@ MaterialPropertys::load(const YAML::Node& node)
                     theValue = hfs.as<double>();
                     matData->hfConstMap_[speciesName] = theValue;
                   } else {
-                    NaluEnv::self().naluOutputP0()
+                    KynemaUGFEnv::self().kynema_ugfOutputP0()
                       << "default heat of formation set to zero" << std::endl;
                     matData->hfConstMap_[speciesName] = 0.0;
                   }
@@ -216,7 +216,7 @@ MaterialPropertys::load(const YAML::Node& node)
           matData->type_ = MIXFRAC_MAT;
           matData->primary_ = primaryVal;
           matData->secondary_ = secondaryVal;
-          NaluEnv::self().naluOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << thePropName << " is a mix frac prop: " << primaryVal << " "
             << secondaryVal << std::endl;
         } else if (thePropType == "volume_of_fluid") {
@@ -227,7 +227,7 @@ MaterialPropertys::load(const YAML::Node& node)
           matData->type_ = VOF_MAT;
           matData->primary_ = primaryVal;
           matData->secondary_ = secondaryVal;
-          NaluEnv::self().naluOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << thePropName << " is a vof prop: " << primaryVal << " "
             << secondaryVal << std::endl;
         } else if (thePropType == "polynomial") {
@@ -276,29 +276,29 @@ MaterialPropertys::load(const YAML::Node& node)
           }
         } else if (thePropType == "ideal_gas_t") {
           matData->type_ = IDEAL_GAS_T_MAT;
-          NaluEnv::self().naluOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << thePropName
             << " is an ideal gas property (function of T, Pref and mwRef): "
             << std::endl;
         } else if (thePropType == "ideal_gas_t_p") {
           matData->type_ = IDEAL_GAS_T_P_MAT;
-          NaluEnv::self().naluOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << thePropName
             << " is an ideal gas property (function of T, mwRef and P): "
             << std::endl;
         } else if (thePropType == "ideal_gas_yk") {
           matData->type_ = IDEAL_GAS_YK_MAT;
-          NaluEnv::self().naluOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << thePropName
             << " is an ideal gas property (function of mw, Tref, and Pref): "
             << std::endl;
         } else if (thePropType == "geometric") {
           matData->type_ = GEOMETRIC_MAT;
-          NaluEnv::self().naluOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << thePropName << " is a geometric property: " << std::endl;
         } else if (thePropType == "hdf5table") {
           matData->type_ = HDF5_TABLE_MAT;
-          NaluEnv::self().naluOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << thePropName
             << " is a hdf5 table look-up property: " << std::endl;
 
@@ -359,5 +359,5 @@ MaterialPropertys::load(const YAML::Node& node)
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -2,7 +2,7 @@
 
 #include "user_functions/TabulatedTemperatureAuxFunction.h"
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 TEST(TabulatedTemperatureAuxFunction, end_of_range)
 {
   TabulatedTemperatureAuxFunction func({0, 1, 2}, {2, 3, 4});
@@ -43,4 +43,4 @@ TEST(TabulatedTemperatureAuxFunction, before_ranges)
   ASSERT_DOUBLE_EQ(temperature, 2);
 }
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf

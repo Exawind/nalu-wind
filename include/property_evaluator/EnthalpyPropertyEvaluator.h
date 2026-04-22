@@ -25,7 +25,7 @@ struct Entity;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class ReferencePropertyData;
 
@@ -103,7 +103,7 @@ public:
   std::vector<double> hfVec_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

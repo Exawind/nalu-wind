@@ -15,7 +15,7 @@
 #include "mpi.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 
@@ -338,5 +338,5 @@ local_field_interpolation(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

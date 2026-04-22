@@ -9,7 +9,7 @@
 #include <cassert>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 void
 FrameReference::update_coordinates(const double time)
@@ -18,7 +18,7 @@ FrameReference::update_coordinates(const double time)
 
   // create NGP view of motion kernels
   const size_t numKernels = motionKernels_.size();
-  auto ngpKernels = nalu_ngp::create_ngp_view<NgpMotion>(motionKernels_);
+  auto ngpKernels = kynema_ugf_ngp::create_ngp_view<NgpMotion>(motionKernels_);
 
   // define mesh entities
   const int nDim = meta_.spatial_dimension();
@@ -39,10 +39,10 @@ FrameReference::update_coordinates(const double time)
     (meta_.locally_owned_part() | meta_.globally_shared_part());
 
   // NGP for loop to update coordinates
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "FrameReference_update_coordinates", ngpMesh, entityRank, sel,
     KOKKOS_LAMBDA(
-      const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
+      const kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
       // temporary model coords for a generic 2D and 3D implementation
       mm::ThreeDVecType mX;
 
@@ -78,5 +78,5 @@ FrameReference::update_coordinates(const double time)
   modelCoords.modify_on_device();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

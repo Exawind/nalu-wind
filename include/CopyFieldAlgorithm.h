@@ -27,7 +27,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class CopyFieldAlgorithm : public Algorithm
 {
@@ -67,7 +67,7 @@ private:
   CopyFieldAlgorithm& operator=(const CopyFieldAlgorithm& other);
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

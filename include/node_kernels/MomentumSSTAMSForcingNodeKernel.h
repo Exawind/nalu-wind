@@ -17,11 +17,11 @@
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
 
-using DoubleView = Kokkos::View<double*, sierra::nalu::MemSpace>;
+using DoubleView = Kokkos::View<double*, sierra::kynema_ugf::MemSpace>;
 using DoubleViewHost = DoubleView::HostMirror;
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class SolutionOptions;
 
@@ -100,7 +100,7 @@ private:
   DoubleView northVector_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOMENTUMSSTAMSFORCINGNODEKERNEL_H */

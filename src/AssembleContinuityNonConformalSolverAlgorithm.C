@@ -7,13 +7,13 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <AssembleContinuityNonConformalSolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <DgInfo.h>
 #include <FieldTypeDef.h>
 #include <LinearSystem.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <NonConformalInfo.h>
 #include <NonConformalManager.h>
 #include <Realm.h>
@@ -28,7 +28,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -88,14 +88,15 @@ AssembleContinuityNonConformalSolverAlgorithm::
   ghostFieldVec_.push_back(density_);
 
   if (useCurrentNormal_)
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "AssembleContinuityNonConformalSolverAlgorithm::Options: "
          "use_current_normal is active"
       << std::endl;
   if (includePstab_)
-    NaluEnv::self().naluOutputP0() << "AssembleContinuityNonConformalSolverAlgo"
-                                      "rithm::Options: include_pstab is active"
-                                   << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "AssembleContinuityNonConformalSolverAlgo"
+         "rithm::Options: include_pstab is active"
+      << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -123,7 +124,7 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
   const double interpTogether = realm_.get_mdot_interp();
   const double om_interpTogether = 1.0 - interpTogether;
 
-  // Classic Nalu projection timescale
+  // Classic KynemaUGF projection timescale
   const double dt = realm_.get_time_step();
   const double gamma1 = realm_.get_gamma1();
   const double tauScale = dt / gamma1;
@@ -692,5 +693,5 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

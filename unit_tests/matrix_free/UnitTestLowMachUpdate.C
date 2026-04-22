@@ -30,7 +30,7 @@
 #include <stk_mesh/base/GetNgpField.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 constexpr int nx = 16;
@@ -137,5 +137,5 @@ TEST_F(LowMachSimulationFixture, reduce_peak_velocity)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

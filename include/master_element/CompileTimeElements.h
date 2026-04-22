@@ -19,7 +19,7 @@
 
 #include "ElementBasis.h"
 
-namespace sierra::nalu::impl {
+namespace sierra::kynema_ugf::impl {
 
 template <typename BasisT, typename IntgT>
 struct CVFEMData
@@ -93,17 +93,17 @@ struct ElemDataSelector<AlgTraitsPyr5, q>
     PyrIntegrationRule<q>>;
 };
 
-} // namespace sierra::nalu::impl
+} // namespace sierra::kynema_ugf::impl
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 
 template <typename AlgTraits, QuadType q>
 using elem_data_t = typename impl::ElemDataSelector<AlgTraits, q>::elem_data_t;
 
 enum class QuadRank { SCS, SCV };
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 template <typename AlgTraits, QuadRank rank>
 std::enable_if_t<rank == QuadRank::SCS, double>
 shape_fcn(QuadType quad, int ip, int n)
@@ -203,6 +203,6 @@ use_shifted_quad(bool shifted)
   return shifted ? QuadType::SHIFTED : QuadType::MID;
 }
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf
 
 #endif

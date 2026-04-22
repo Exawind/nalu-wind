@@ -16,9 +16,9 @@
 
 namespace {
 using KVector =
-  Kokkos::View<vs::Vector*, Kokkos::LayoutRight, sierra::nalu::MemSpace>;
+  Kokkos::View<vs::Vector*, Kokkos::LayoutRight, sierra::kynema_ugf::MemSpace>;
 using KDouble =
-  Kokkos::View<double*, Kokkos::LayoutRight, sierra::nalu::MemSpace>;
+  Kokkos::View<double*, Kokkos::LayoutRight, sierra::kynema_ugf::MemSpace>;
 const double eps_test = vs::DTraits<double>::eps() * 1.e2;
 
 //! compare WM rotation to standard tensor rotation

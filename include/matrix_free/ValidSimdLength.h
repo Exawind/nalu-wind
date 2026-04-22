@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 inline constexpr int invalid_offset = -1;
@@ -116,6 +116,6 @@ valid_offset(int index, const const_elem_mesh_index_view<p>& offsets)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

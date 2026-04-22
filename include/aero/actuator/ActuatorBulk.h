@@ -22,7 +22,7 @@ class BulkData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct ActuatorInfoNGP;
 
@@ -100,6 +100,6 @@ struct ActuatorBulk
   const int localTurbineId_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

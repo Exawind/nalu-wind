@@ -53,13 +53,13 @@ double
 do_shape_test(Shape* s)
 {
   Shape* s_dev =
-    sierra::nalu::create_device_expression<T>(*dynamic_cast<T*>(s));
+    sierra::kynema_ugf::create_device_expression<T>(*dynamic_cast<T*>(s));
   double area = 0.0;
   Kokkos::parallel_reduce(
-    sierra::nalu::DeviceRangePolicy(0, 1),
+    sierra::kynema_ugf::DeviceRangePolicy(0, 1),
     KOKKOS_LAMBDA(int, double& a) { a = s_dev->area(); }, area);
 
-  sierra::nalu::kokkos_free_on_device(s_dev);
+  sierra::kynema_ugf::kokkos_free_on_device(s_dev);
   return area;
 }
 

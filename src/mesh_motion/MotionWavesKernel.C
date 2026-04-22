@@ -1,13 +1,13 @@
 #include "mesh_motion/MotionWavesKernel.h"
 
 #include <FieldTypeDef.h>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/FieldBLAS.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MotionWavesKernel::MotionWavesKernel(
   stk::mesh::MetaData& meta, const YAML::Node& node)
@@ -90,7 +90,7 @@ MotionWavesKernel::load(const YAML::Node& node)
       node, "rampup_start_time", rampup_start_time_, rampup_start_time_);
     get_if_present(node, "rampup_period", rampup_period_, rampup_period_);
   }
-} // namespace nalu
+} // namespace kynema_ugf
 
 KOKKOS_FUNCTION
 mm::TransMatType
@@ -154,7 +154,7 @@ MotionWavesKernel::build_transformation(
   transMat[1 * mm::matSize + 3] = disp[1] * fac;
   transMat[2 * mm::matSize + 3] = disp[2] * fac;
   return transMat;
-} // namespace nalu
+} // namespace kynema_ugf
 
 KOKKOS_FUNCTION
 mm::ThreeDVecType
@@ -428,5 +428,5 @@ MotionWavesKernel::get_StokesCoeff(StokesCoeff* stokes)
   stokes->e4 = e4_;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

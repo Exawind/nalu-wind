@@ -26,7 +26,7 @@ class BulkData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <int p, int simd_len>
@@ -98,7 +98,7 @@ void field_gather(
   node_vector_view);
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

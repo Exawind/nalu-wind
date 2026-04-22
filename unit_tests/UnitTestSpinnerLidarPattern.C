@@ -11,7 +11,7 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 const auto lidarSpec =
   R"(lidar_specifications:
@@ -198,5 +198,5 @@ TEST(Spinner, invalid_predictor_throws)
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 DropletVelocityAuxFunction::DropletVelocityAuxFunction(
   const unsigned beginPos,
@@ -86,5 +86,5 @@ DropletVelocityAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

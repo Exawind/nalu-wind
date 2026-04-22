@@ -18,7 +18,7 @@
 #include <numeric>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 int
 tensor_edge_index(int p, int i, int j, int edge_ordinal)
@@ -284,5 +284,5 @@ QuadNElementDescription::set_side_node_ordinals()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

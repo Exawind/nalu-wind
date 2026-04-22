@@ -22,7 +22,7 @@
 #include "UnitTestUtils.h"
 #include "StkSimdComparisons.h"
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 
 namespace {
 constexpr auto
@@ -50,15 +50,14 @@ namespace {
 std::vector<DoubleType>
 me_shape(stk::topology topo, QuadRank r, QuadType q)
 {
-  auto me =
-    (r == QuadRank::SCS)
-      ? sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
-          topo)
-      : sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(
-          topo);
+  auto me = (r == QuadRank::SCS) ? sierra::kynema_ugf::MasterElementRepo::
+                                     get_surface_master_element_on_host(topo)
+                                 : sierra::kynema_ugf::MasterElementRepo::
+                                     get_volume_master_element_on_host(topo);
   std::vector<DoubleType> meShapeFunctions(
     me->nodesPerElement_ * me->num_integration_points());
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
     ShmemView(
       meShapeFunctions.data(), me->num_integration_points(),
       me->nodesPerElement_);
@@ -184,7 +183,7 @@ TEST(master_element_coeffs, interp_scv)
   }
 }
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf
 namespace {
 
 TEST(pyramid, is_in_element)
@@ -194,7 +193,7 @@ TEST(pyramid, is_in_element)
      2.1}};
   std::array<double, 3> point = {{3.5, 6.5, 1.5}};
   std::array<double, 3> mePt;
-  auto dist = sierra::nalu::PyrSCS().isInElement(
+  auto dist = sierra::kynema_ugf::PyrSCS().isInElement(
     coords.data(), point.data(), mePt.data());
   ASSERT_TRUE(std::isfinite(dist));
 }
@@ -250,7 +249,7 @@ void
 check_interpolation_at_ips(
   const stk::mesh::Entity* node_rels,
   const VectorFieldType& coordField,
-  sierra::nalu::MasterElement& me)
+  sierra::kynema_ugf::MasterElement& me)
 {
   // Check that we can interpolate a random 3D polynomial
   // to the integration points
@@ -275,7 +274,8 @@ check_interpolation_at_ips(
 
   std::vector<DoubleType> meShapeFunctions(
     me.nodesPerElement_ * me.num_integration_points());
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>
+  sierra::kynema_ugf::SharedMemView<
+    DoubleType**, sierra::kynema_ugf::DeviceShmem>
     ShmemView(
       meShapeFunctions.data(), me.num_integration_points(),
       me.nodesPerElement_);
@@ -298,7 +298,7 @@ void
 check_derivatives_at_ips(
   const stk::mesh::Entity* node_rels,
   const VectorFieldType& coordField,
-  sierra::nalu::MasterElement& me)
+  sierra::kynema_ugf::MasterElement& me)
 {
   // Check that we can interpolate a random 3D linear field
   int dim = me.nDim_;
@@ -316,7 +316,7 @@ check_derivatives_at_ips(
 
   std::vector<double> ws_field(me.nodesPerElement_);
   std::vector<double> ws_coords(me.nodesPerElement_ * dim);
-  sierra::nalu::SharedMemView<double**> elemCoords(
+  sierra::kynema_ugf::SharedMemView<double**> elemCoords(
     ws_coords.data(), me.nodesPerElement_, dim);
   for (int j = 0; j < me.nodesPerElement_; ++j) {
     const double* coords = stk::mesh::field_data(coordField, node_rels[j]);
@@ -332,9 +332,9 @@ check_derivatives_at_ips(
   std::vector<double> meDeriv(
     me.num_integration_points() * me.nodesPerElement_ * dim);
 
-  sierra::nalu::SharedMemView<double***> gradop(
+  sierra::kynema_ugf::SharedMemView<double***> gradop(
     meGrad.data(), me.num_integration_points(), me.nodesPerElement_, dim);
-  sierra::nalu::SharedMemView<double***> deriv(
+  sierra::kynema_ugf::SharedMemView<double***> deriv(
     meDeriv.data(), me.num_integration_points(), me.nodesPerElement_, dim);
   me.grad_op(elemCoords, gradop, deriv);
 
@@ -355,7 +355,7 @@ void
 check_scv_shifted_ips_are_nodal(
   const stk::mesh::Entity* node_rels,
   const VectorFieldType& coordField,
-  sierra::nalu::MasterElement& meSV)
+  sierra::kynema_ugf::MasterElement& meSV)
 {
   // check that the subcontrol volume ips are at the nodes for the shifted ips
 
@@ -381,14 +381,14 @@ void
 check_volume_integration(
   const stk::mesh::Entity* node_rels,
   const VectorFieldType& coordField,
-  sierra::nalu::MasterElement& meSV)
+  sierra::kynema_ugf::MasterElement& meSV)
 {
   int dim = meSV.nDim_;
   std::vector<double> ws_coords_mapped(meSV.nodesPerElement_ * dim, 0.0);
   std::vector<double> ws_coords(meSV.nodesPerElement_ * dim, 0.0);
-  sierra::nalu::SharedMemView<double**> coords_mapped(
+  sierra::kynema_ugf::SharedMemView<double**> coords_mapped(
     ws_coords_mapped.data(), meSV.nodesPerElement_, dim);
-  sierra::nalu::SharedMemView<double**> coords(
+  sierra::kynema_ugf::SharedMemView<double**> coords(
     ws_coords.data(), meSV.nodesPerElement_, dim);
   std::mt19937 rng;
   rng.seed(0);
@@ -398,9 +398,9 @@ check_volume_integration(
     const double* coord = stk::mesh::field_data(coordField, node_rels[j]);
     std::vector<double> coord_mapped(dim);
     if (dim == 3) {
-      sierra::nalu::matvec33(QR.data(), coord, coord_mapped.data());
+      sierra::kynema_ugf::matvec33(QR.data(), coord, coord_mapped.data());
     } else {
-      sierra::nalu::matvec22(QR.data(), coord, coord_mapped.data());
+      sierra::kynema_ugf::matvec22(QR.data(), coord, coord_mapped.data());
     }
 
     for (int k = 0; k < dim; ++k) {
@@ -408,20 +408,21 @@ check_volume_integration(
       coords_mapped(j, k) = coord_mapped[k];
     }
   }
-  const double detQR = (dim == 3) ? sierra::nalu::determinant33(QR.data())
-                                  : sierra::nalu::determinant22(QR.data());
+  const double detQR = (dim == 3)
+                         ? sierra::kynema_ugf::determinant33(QR.data())
+                         : sierra::kynema_ugf::determinant22(QR.data());
   ASSERT_TRUE(detQR > 1.0e-15);
 
   double error = 0;
   std::vector<double> volume_integration_weights(meSV.num_integration_points());
-  sierra::nalu::SharedMemView<double*> integration_weights(
+  sierra::kynema_ugf::SharedMemView<double*> integration_weights(
     volume_integration_weights.data(), meSV.num_integration_points());
   meSV.determinant(coords, integration_weights);
   ASSERT_DOUBLE_EQ(error, 0);
 
   std::vector<double> skewed_volume_integration_weights(
     meSV.num_integration_points());
-  sierra::nalu::SharedMemView<double*> skewed_integration_weights(
+  sierra::kynema_ugf::SharedMemView<double*> skewed_integration_weights(
     skewed_volume_integration_weights.data(), meSV.num_integration_points());
   meSV.determinant(coords_mapped, skewed_integration_weights);
   ASSERT_DOUBLE_EQ(error, 0);
@@ -437,7 +438,7 @@ check_volume_integration(
 void check_exposed_face_shifted_ips_are_nodal(
   const stk::mesh::Entity* node_rels,
   const VectorFieldType& coordField,
-  sierra::nalu::MasterElement& meSS)
+  sierra::kynema_ugf::MasterElement& meSS)
 {
   // check that the subcontrol volume ips are at the nodes for the shifted ips
 
@@ -501,7 +502,7 @@ void
 check_is_in_element(
   const stk::mesh::Entity* node_rels,
   const VectorFieldType& coordField,
-  sierra::nalu::MasterElement& me)
+  sierra::kynema_ugf::MasterElement& me)
 {
   // Check that the isoparametric coordinates are the same as the physical point
   // for the reference element
@@ -530,8 +531,9 @@ check_is_in_element(
   // but self-consistent reference element compared to the core shape functions
   // and derivatives
 
-  bool isHexSCS = dynamic_cast<sierra::nalu::HexSCS*>(&me) != nullptr;
-  bool isQuadSCS = dynamic_cast<sierra::nalu::Quad42DSCS*>(&me) != nullptr;
+  bool isHexSCS = dynamic_cast<sierra::kynema_ugf::HexSCS*>(&me) != nullptr;
+  bool isQuadSCS =
+    dynamic_cast<sierra::kynema_ugf::Quad42DSCS*>(&me) != nullptr;
   double fac = (isHexSCS || isQuadSCS) ? 2.0 : 1.0;
 
   for (int j = 0; j < me.nodesPerElement_; ++j) {
@@ -554,7 +556,7 @@ void
 check_is_not_in_element(
   const stk::mesh::Entity* node_rels,
   const VectorFieldType& coordField,
-  sierra::nalu::MasterElement& me)
+  sierra::kynema_ugf::MasterElement& me)
 {
   // check that we correctly report that a point outside of an element is
   // outside of the element
@@ -584,7 +586,7 @@ void
 check_particle_interp(
   const stk::mesh::Entity* node_rels,
   const VectorFieldType& coordField,
-  sierra::nalu::MasterElement& me)
+  sierra::kynema_ugf::MasterElement& me)
 {
   // Check that, for a distorted element, we can find and interpolate values to
   // a random located point inside of the element
@@ -648,7 +650,7 @@ void
 check_general_shape_fcn(
   const stk::mesh::Entity* node_rels,
   const VectorFieldType& coordField,
-  sierra::nalu::MasterElement& me)
+  sierra::kynema_ugf::MasterElement& me)
 {
   const int dim = me.nDim_;
 
@@ -666,8 +668,9 @@ check_general_shape_fcn(
   // 2. Extract iso-parametric coordinates for this random point w.r.t element
 
   // see check_is_in_element for an explanation of the factor
-  bool isHexSCS = dynamic_cast<sierra::nalu::HexSCS*>(&me) != nullptr;
-  bool isQuadSCS = dynamic_cast<sierra::nalu::Quad42DSCS*>(&me) != nullptr;
+  bool isHexSCS = dynamic_cast<sierra::kynema_ugf::HexSCS*>(&me) != nullptr;
+  bool isQuadSCS =
+    dynamic_cast<sierra::kynema_ugf::Quad42DSCS*>(&me) != nullptr;
   double fac = (isHexSCS || isQuadSCS) ? 2.0 : 1.0;
   std::vector<double> elem_coords(me.nodesPerElement_ * dim);
 
@@ -728,9 +731,11 @@ protected:
     meta->use_simple_fields();
     elem = unit_test_utils::create_one_reference_element(*bulk, topo);
     meSS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+        topo);
     meSV =
-      sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(topo);
+      sierra::kynema_ugf::MasterElementRepo::get_volume_master_element_on_host(
+        topo);
   }
 
   void scs_interpolation(stk::topology topo)
@@ -807,8 +812,8 @@ protected:
   stk::mesh::MetaData* meta;
   std::shared_ptr<stk::mesh::BulkData> bulk;
   stk::mesh::Entity elem;
-  sierra::nalu::MasterElement* meSS;
-  sierra::nalu::MasterElement* meSV;
+  sierra::kynema_ugf::MasterElement* meSS;
+  sierra::kynema_ugf::MasterElement* meSV;
 };
 
 #ifndef KOKKOS_ENABLE_GPU

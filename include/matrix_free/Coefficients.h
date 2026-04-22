@@ -22,7 +22,7 @@
 #endif
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 template <int p>
 struct Coeffs
@@ -274,7 +274,7 @@ struct Coeffs<4>
 };
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

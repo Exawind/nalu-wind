@@ -58,7 +58,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_momentum_mass_node)
 
   const unsigned nDofs = 3;
 
-  sierra::nalu::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.timeStepN_ = 0.1;
   timeIntegrator.timeStepNm1_ = 0.1;
   timeIntegrator.gamma1_ = 1.0;
@@ -70,7 +70,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_momentum_mass_node)
 
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumMassBDFNodeKernel>(
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::MomentumMassBDFNodeKernel>(
     *bulk_);
 
   helperObjs.execute();

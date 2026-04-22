@@ -23,7 +23,7 @@ class FieldBase;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -41,7 +41,7 @@ public:
   std::vector<OversetFieldData> fields_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* UPDATEOVERSETFRINGEALGORITHMDRIVER_H */

@@ -25,7 +25,7 @@
 #include <stk_mesh/base/GetNgpField.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class LowMachGatheredFieldManagerFixture : public LowMachFixture
@@ -90,7 +90,7 @@ sum_field(vector_view<p> qp1)
 {
   double sum_prev = 0;
   Kokkos::parallel_reduce(
-    sierra::nalu::DeviceRangePolicy(0, qp1.extent_int(0)),
+    sierra::kynema_ugf::DeviceRangePolicy(0, qp1.extent_int(0)),
     KOKKOS_LAMBDA(int index, double& sumval) {
       for (int k = 0; k < p + 1; ++k) {
         for (int j = 0; j < p + 1; ++j) {
@@ -147,5 +147,5 @@ TEST_F(LowMachGatheredFieldManagerFixture, update_solution)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

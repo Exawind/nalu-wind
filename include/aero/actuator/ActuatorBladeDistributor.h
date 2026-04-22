@@ -14,7 +14,7 @@
 #include <utility>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct ActuatorBulk;
 struct ActuatorMeta;
@@ -53,7 +53,7 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk);
  */
 bool blade_belongs_on_this_rank(
   int totalNumBlades, int globBladeNum, int numRanks, int ranks);
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ACTUATORBLADEDISTRIBUTOR_H_ */

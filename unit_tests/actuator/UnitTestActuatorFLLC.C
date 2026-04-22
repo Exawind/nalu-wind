@@ -16,7 +16,7 @@
 #include <yaml-cpp/yaml.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 const char* actuatorParameters = R"act(actuator:
@@ -271,5 +271,5 @@ TEST_F(ActuatorFLLC, NGP_ComputeInducedVelocity_Eq_5_7)
 }
 
 } // namespace
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -16,7 +16,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace abl_impl {
 
@@ -190,7 +190,7 @@ private:
   unsigned numPts_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ABLSRCINTERP_H */

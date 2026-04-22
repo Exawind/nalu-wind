@@ -13,7 +13,7 @@
 #include <stk_topology/topology.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class HexSCS;
 class HexSCV;
@@ -200,7 +200,7 @@ using AlgTraitsQuad4Hex8 = AlgTraitsFaceElem<AlgTraitsQuad4, AlgTraitsHex8>;
 using AlgTraitsQuad4Pyr5 = AlgTraitsFaceElem<AlgTraitsQuad4, AlgTraitsPyr5>;
 using AlgTraitsQuad4Wed6 = AlgTraitsFaceElem<AlgTraitsQuad4, AlgTraitsWed6>;
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -15,7 +15,7 @@
 #include <stk_mesh/base/Types.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class VOFAdvectionEdgeAlg : public AssembleEdgeSolverAlgorithm
 {
@@ -46,7 +46,7 @@ private:
   double density_gas_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* VOFADVECTIONEDGEALG_H */

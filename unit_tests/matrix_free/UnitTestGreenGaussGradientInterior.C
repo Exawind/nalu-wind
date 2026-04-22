@@ -18,7 +18,7 @@
 #include "mpi.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace test_gradient {
 
@@ -80,5 +80,5 @@ TEST_F(GradientResidualFixture, linearized_residual_executes)
     rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

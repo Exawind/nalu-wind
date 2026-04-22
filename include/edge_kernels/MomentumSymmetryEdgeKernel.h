@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Entity.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class SolutionOptions;
 class ElemDataRequests;
@@ -67,7 +67,7 @@ private:
   const double penaltyFactor_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOMENTUMSYMMETRYEDGEKERNEL_H */

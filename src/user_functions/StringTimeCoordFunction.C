@@ -12,7 +12,7 @@
 
 #include <stdexcept>
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 
 StringTimeCoordFunction::StringTimeCoordFunction(std::string fcn)
 {
@@ -99,4 +99,4 @@ StringTimeCoordFunction::operator()(
   return parsed_eval.evaluate(var_map);
 }
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf

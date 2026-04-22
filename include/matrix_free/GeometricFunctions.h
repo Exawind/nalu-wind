@@ -16,7 +16,7 @@
 #include "Kokkos_Macros.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace geom {
 
@@ -239,7 +239,7 @@ linear_hex_jacobian(const BoxArray& box, int k, int j, int i)
 
 } // namespace geom
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

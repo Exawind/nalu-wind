@@ -14,7 +14,7 @@
 #include "FieldTypeDef.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class FieldUpdateAlgDriver : public NgpAlgDriver
 {
@@ -35,7 +35,7 @@ private:
   const std::string fieldName_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* FIELDUPDATEALGDRIVER_H */

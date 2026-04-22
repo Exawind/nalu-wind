@@ -12,7 +12,7 @@
 #include "edge_kernels/MomentumSSTAMSDiffEdgeKernel.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 AssembleAMSEdgeKernelAlg::AssembleAMSEdgeKernelAlg(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
@@ -23,5 +23,5 @@ AssembleAMSEdgeKernelAlg::AssembleAMSEdgeKernelAlg(
     realm_.bulk_data(), *realm_.solutionOptions_);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

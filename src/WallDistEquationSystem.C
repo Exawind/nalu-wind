@@ -22,7 +22,7 @@
 #include "LinearSolver.h"
 #include "LinearSolvers.h"
 #include "LinearSystem.h"
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 #include "NonConformalManager.h"
 #include "Realm.h"
 #include "Realms.h"
@@ -64,7 +64,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 WallDistEquationSystem::WallDistEquationSystem(EquationSystems& eqSystems)
   : EquationSystem(eqSystems, "WallDistEQS", "ndtw"),
@@ -80,7 +80,7 @@ WallDistEquationSystem::WallDistEquationSystem(EquationSystems& eqSystems)
     solverName, realm_.name(), EQ_WALL_DISTANCE);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge projected nodal gradient for minimum distance to wall: "
     << edgeNodalGradient_ << std::endl;
 
@@ -433,7 +433,7 @@ WallDistEquationSystem::solve_and_update()
     wdistPhi.set_all(realm_.ngp_mesh(), 0.0);
   }
 
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << " 1/1" << std::setw(15) << std::right << userSuppliedName_ << std::endl;
 
   // Since this is purely geometric, we need at least two coupling iterations to
@@ -458,7 +458,7 @@ WallDistEquationSystem::solve_and_update()
 void
 WallDistEquationSystem::compute_wall_distance()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
   using MeshIndex = Traits::MeshIndex;
 
   auto& meta = realm_.meta_data();
@@ -476,7 +476,7 @@ WallDistEquationSystem::compute_wall_distance()
   const stk::mesh::Selector sel = stk::mesh::selectField(*wallDistPhi_);
 
   wdist.sync_to_device();
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "compute_wall_dist", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       double dpdxsq = 0.0;
@@ -529,5 +529,5 @@ WallDistEquationSystem::create_constraint_algorithm(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

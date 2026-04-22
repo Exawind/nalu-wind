@@ -9,14 +9,14 @@
 
 #include <DgInfo.h>
 #include <master_element/MasterElement.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
 #include <stk_topology/topology.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -81,59 +81,71 @@ DgInfo::~DgInfo()
 void
 DgInfo::dump_info()
 {
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "------------------------------------------------- " << std::endl;
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "DGInfo::dump_info() for localGaussPointId_ " << localGaussPointId_
     << " On Rank " << parallelRank_ << std::endl;
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "parallelRank_ " << parallelRank_ << std::endl;
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "globalFaceId_ " << globalFaceId_ << std::endl;
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "currentGaussPointId_ " << currentGaussPointId_ << std::endl;
-  NaluEnv::self().naluOutput() << "currentFace_ " << currentFace_ << std::endl;
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "currentFace_ " << currentFace_ << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "currentElement_ " << currentElement_ << std::endl;
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "currentElementTopo_ " << currentElementTopo_ << std::endl;
-  NaluEnv::self().naluOutput() << "nDim_ " << nDim_ << std::endl;
-  NaluEnv::self().naluOutput() << "bestXRef_ " << bestXRef_ << std::endl;
-  NaluEnv::self().naluOutput() << "bestX_ " << bestX_ << std::endl;
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput() << "nDim_ " << nDim_ << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "bestXRef_ " << bestXRef_ << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput() << "bestX_ " << bestX_ << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "nearestDistance_ " << nearestDistance_ << std::endl;
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "opposingFaceIsGhosted_ " << opposingFaceIsGhosted_ << std::endl;
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "opposingFace_ " << opposingFace_ << std::endl;
-  NaluEnv::self().naluOutput() << "opposingElement_ " << std::endl;
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput() << "opposingElement_ " << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "opposingElementTopo_ " << opposingElementTopo_ << std::endl;
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "opposingFaceOrdinal_ " << opposingFaceOrdinal_ << std::endl;
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "meFCOpposing_ " << meFCOpposing_ << std::endl;
-  NaluEnv::self().naluOutput()
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "meSCSOpposing_ " << meSCSOpposing_ << std::endl;
-  NaluEnv::self().naluOutput() << "currentGaussPointCoords_ " << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "currentGaussPointCoords_ " << std::endl;
   for (size_t k = 0; k < currentGaussPointCoords_.size(); ++k)
-    NaluEnv::self().naluOutput() << currentGaussPointCoords_[k] << std::endl;
-  NaluEnv::self().naluOutput() << "currentIsoParCoords_ " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutput()
+      << currentGaussPointCoords_[k] << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "currentIsoParCoords_ " << std::endl;
   for (size_t k = 0; k < currentIsoParCoords_.size(); ++k)
-    NaluEnv::self().naluOutput() << currentIsoParCoords_[k] << std::endl;
-  NaluEnv::self().naluOutput() << "opposingIsoParCoords_ " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutput()
+      << currentIsoParCoords_[k] << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "opposingIsoParCoords_ " << std::endl;
   for (size_t k = 0; k < opposingIsoParCoords_.size(); ++k)
-    NaluEnv::self().naluOutput() << opposingIsoParCoords_[k] << std::endl;
-  NaluEnv::self().naluOutput() << "allOpposingFaceIds_ " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutput()
+      << opposingIsoParCoords_[k] << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "allOpposingFaceIds_ " << std::endl;
   for (size_t k = 0; k < allOpposingFaceIds_.size(); ++k)
-    NaluEnv::self().naluOutput() << allOpposingFaceIds_[k] << std::endl;
-  NaluEnv::self().naluOutput() << "allOpposingFaceIdsOld_ " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutput()
+      << allOpposingFaceIds_[k] << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
+    << "allOpposingFaceIdsOld_ " << std::endl;
   for (size_t k = 0; k < allOpposingFaceIdsOld_.size(); ++k)
-    NaluEnv::self().naluOutput() << allOpposingFaceIdsOld_[k] << std::endl;
-  NaluEnv::self().naluOutput()
+    KynemaUGFEnv::self().kynema_ugfOutput()
+      << allOpposingFaceIdsOld_[k] << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput()
     << "------------------------------------------------- " << std::endl;
-  NaluEnv::self().naluOutput() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutput() << std::endl;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

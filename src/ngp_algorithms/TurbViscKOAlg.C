@@ -17,7 +17,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 TurbViscKOAlg::TurbViscKOAlg(
   Realm& realm,
@@ -43,7 +43,7 @@ TurbViscKOAlg::TurbViscKOAlg(
 void
 TurbViscKOAlg::execute()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   const auto& meta = realm_.meta_data();
 
@@ -65,7 +65,7 @@ TurbViscKOAlg::execute()
 
   const int nDim = meta.spatial_dimension();
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "TurbViscKOAlg", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
       DblType sijMag = 0.0;
@@ -93,5 +93,5 @@ TurbViscKOAlg::execute()
   tvisc.modify_on_device();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

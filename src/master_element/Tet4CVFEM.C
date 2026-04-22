@@ -15,7 +15,7 @@
 
 #include <AlgTraits.h>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
@@ -29,7 +29,7 @@
 #include <memory>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //-------- tet_deriv -------------------------------------------------------
 template <typename DerivType>
@@ -1052,5 +1052,5 @@ TetSCS::parametric_distance(const double* x)
   return dist;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

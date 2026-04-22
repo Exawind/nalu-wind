@@ -13,8 +13,8 @@
 #include "aero/fsi/MapLoad.h"
 #include "aero/aero_utils/Pt2Line.h"
 #include "utils/ComputeVectorDivergence.h"
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 
 #include "stk_util/parallel/ParallelReduce.hpp"
 #include "stk_mesh/base/FieldParallel.hpp"
@@ -33,7 +33,7 @@
 
 namespace sierra {
 
-namespace nalu {
+namespace kynema_ugf {
 
 inline void
 check_nc_error(int code, std::string msg)
@@ -57,14 +57,14 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     const auto& tparts = node["tower_parts"];
     twrPartNames_ = tparts.as<std::vector<std::string>>();
   } else
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Tower part name(s) not specified for turbine " << iTurb_ << std::endl;
 
   if (node["nacelle_parts"]) {
     const auto& nparts = node["nacelle_parts"];
     nacellePartNames_ = nparts.as<std::vector<std::string>>();
   } else
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Nacelle part name(s) not specified for turbine " << iTurb_
       << std::endl;
 
@@ -72,7 +72,7 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     const auto& hparts = node["hub_parts"];
     hubPartNames_ = hparts.as<std::vector<std::string>>();
   } else
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Hub part name(s) not specified for turbine " << iTurb_ << std::endl;
 
   if (node["blade_parts"]) {
@@ -117,7 +117,7 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
     defParams.thetaRampSpan_ = utils::radians(defParams.thetaRampSpan_);
     // --------------------------------------------------------------------------
   } else
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Blade part names not specified for turbine " << iTurb_ << std::endl;
 
   if (node["tower_boundary_parts"]) {
@@ -127,7 +127,7 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
       bndryPartNames_.begin(), twrBndyPartNames_.begin(),
       twrBndyPartNames_.end());
   } else
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Tower boundary part name(s) not specified for turbine " << iTurb_
       << std::endl;
 
@@ -138,7 +138,7 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
       bndryPartNames_.end(), nacelleBndyPartNames_.begin(),
       nacelleBndyPartNames_.end());
   } else
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Nacelle boundary part name(s) not specified for turbine " << iTurb_
       << std::endl;
 
@@ -149,7 +149,7 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
       bndryPartNames_.begin(), hubBndyPartNames_.begin(),
       hubBndyPartNames_.end());
   } else
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Hub boundary part name(s) not specified for turbine " << iTurb_
       << std::endl;
 
@@ -166,7 +166,7 @@ fsiTurbine::fsiTurbine(int iTurb, const YAML::Node& node)
         bladeBndyPartNames_[iBlade].end());
     }
   } else
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Blade boundary part names not specified for turbine " << iTurb_
       << std::endl;
 }
@@ -241,8 +241,8 @@ fsiTurbine::setup(std::shared_ptr<stk::mesh::BulkData> bulk)
   // turbineInProc_ to True/False
 
   // TODO:: Figure out a way to check the consistency between the number of
-  // blades specified in the Nalu input file and the number of blades in the
-  // OpenFAST model.
+  // blades specified in the KynemaUGF input file and the number of blades in
+  // the OpenFAST model.
 
   bulk_ = bulk;
   auto& meta = bulk_->mesh_meta_data();
@@ -997,7 +997,7 @@ fsiTurbine::setRotationDisplacement(
   double theta = omega * curTime;
   double twopi = 2.0 * M_PI;
   theta = std::fmod(theta, twopi);
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Setting rotation of " << theta * 180.0 / M_PI << " degrees about ["
     << axis[0] << "," << axis[1] << "," << axis[2] << "]" << std::endl;
 
@@ -1062,7 +1062,7 @@ fsiTurbine::setSampleDisplacement(double curTime)
      WM parameters for each blade node
   */
 
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Setting Sample displacements " << std::endl;
 
   int nBlades = params_.numBlades;
@@ -2128,6 +2128,6 @@ fsiTurbine::compute_div_mesh_velocity()
     *bulk_, partVec_, bndyPartVec_, faceVelMag, divMeshVel);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 
 } // namespace sierra

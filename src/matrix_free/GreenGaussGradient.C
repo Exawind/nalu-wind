@@ -36,7 +36,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <int p>
@@ -178,5 +178,5 @@ ComputeGradient<p>::gradient(
 INSTANTIATE_POLYCLASS(ComputeGradient);
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

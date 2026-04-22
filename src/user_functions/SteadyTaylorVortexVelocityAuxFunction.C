@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 SteadyTaylorVortexVelocityAuxFunction::SteadyTaylorVortexVelocityAuxFunction(
   const unsigned beginPos, const unsigned endPos)
@@ -53,5 +53,5 @@ SteadyTaylorVortexVelocityAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -11,7 +11,7 @@
 #include "EquationSystem.h"
 #include "FieldTypeDef.h"
 #include "LinearSystem.h"
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 #include "Realm.h"
 #include "SolverAlgorithm.h"
 #include "TimeIntegrator.h"
@@ -29,7 +29,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 AssembleOversetWallDistAlgorithm::AssembleOversetWallDistAlgorithm(
   Realm& realm,
@@ -47,7 +47,7 @@ AssembleOversetWallDistAlgorithm::execute()
   prepare_constraints();
 
   // extract the rank
-  const int theRank = NaluEnv::self().parallel_rank();
+  const int theRank = KynemaUGFEnv::self().parallel_rank();
 
   stk::mesh::BulkData& bulkData = realm_.bulk_data();
 
@@ -179,5 +179,5 @@ AssembleOversetWallDistAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

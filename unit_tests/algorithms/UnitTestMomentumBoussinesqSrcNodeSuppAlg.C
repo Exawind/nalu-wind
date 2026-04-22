@@ -43,7 +43,7 @@ TEST(TestMomentumBoussinesqRASrcNodeSuppAlg, single_value)
   stk::mesh::put_field_on_mesh(temperature, meta.universal_part(), nullptr);
 
   std::string avgTempFieldName =
-    sierra::nalu::MovingAveragePostProcessor::filtered_field_name(
+    sierra::kynema_ugf::MovingAveragePostProcessor::filtered_field_name(
       "temperature");
   auto& raTemperature =
     meta.declare_field<double>(stk::topology::NODE_RANK, avgTempFieldName);
@@ -73,17 +73,17 @@ TEST(TestMomentumBoussinesqRASrcNodeSuppAlg, single_value)
   const double timeScale = 2;
   solnOpts.raBoussinesqTimeScale_ = timeScale;
 
-  sierra::nalu::TimeIntegrator timeIntg;
+  sierra::kynema_ugf::TimeIntegrator timeIntg;
   timeIntg.currentTime_ = 0;
   timeIntg.timeStepN_ = 1;
-  sierra::nalu::MovingAveragePostProcessor avgPP(bulk, timeIntg, false);
+  sierra::kynema_ugf::MovingAveragePostProcessor avgPP(bulk, timeIntg, false);
   avgPP.add_fields({"temperature"});
   avgPP.set_time_scale(solnOpts.raBoussinesqTimeScale_);
   avgPP.execute();
 
   double rhs[3] = {0, 0, 0};
   auto boussinesqRaAlg =
-    sierra::nalu::MomentumBoussinesqRASrcNodeSuppAlg(helper.realm);
+    sierra::kynema_ugf::MomentumBoussinesqRASrcNodeSuppAlg(helper.realm);
   boussinesqRaAlg.setup();
   boussinesqRaAlg.node_execute(nullptr, rhs, node);
 

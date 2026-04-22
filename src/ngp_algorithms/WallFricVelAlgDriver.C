@@ -14,7 +14,7 @@
 #include "stk_util/parallel/ParallelReduce.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 WallFricVelAlgDriver::WallFricVelAlgDriver(Realm& realm) : NgpAlgDriver(realm)
 {
@@ -44,11 +44,11 @@ WallFricVelAlgDriver::post_work()
   }
 
   stk::all_reduce_sum(
-    NaluEnv::self().parallel_comm(), utauSumLocal, utauSumGlobal, 2);
+    KynemaUGFEnv::self().parallel_comm(), utauSumLocal, utauSumGlobal, 2);
 
   double utau_average = utauSumGlobal[0] / utauSumGlobal[1];
   realm_.bdyLayerStats_->set_utau_avg(utau_average);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -77,7 +77,7 @@ private:
   typename Kokkos::View<double[152]>::HostMirror isoCoordsShapeFcnHostView_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MESHVELOCITYEDGEALG_H */

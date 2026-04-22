@@ -14,7 +14,7 @@
 #include "Kokkos_Array.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 template <int n>
 struct GLL
@@ -53,6 +53,6 @@ double gauss_lobatto_legendre_abscissae(int p, int n);
 std::vector<double> gauss_lobatto_legendre_abscissae(int p);
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

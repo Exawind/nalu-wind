@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Ngp.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace impl {
 template <int p>
@@ -40,7 +40,7 @@ struct face_offsets_t
 } // namespace impl
 P_INVOKEABLE(face_offsets)
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

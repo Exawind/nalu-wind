@@ -15,7 +15,7 @@
 #include "utils/StkHelpers.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ContinuityGclNodeKernel::ContinuityGclNodeKernel(
   const stk::mesh::BulkData& bulk)
@@ -82,5 +82,5 @@ ContinuityGclNodeKernel::execute(
   // lhs(0, 0) += 0.0;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

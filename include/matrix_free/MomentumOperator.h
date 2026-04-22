@@ -26,7 +26,7 @@
 #include "stk_util/util/ReportHandler.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <int p>
@@ -137,6 +137,6 @@ private:
 };
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

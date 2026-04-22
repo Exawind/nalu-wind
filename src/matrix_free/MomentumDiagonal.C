@@ -21,7 +21,7 @@
 #include <stk_simd/Simd.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace impl {
 namespace {
@@ -116,5 +116,5 @@ advdiff_diagonal_t<p>::invoke(
 INSTANTIATE_POLYSTRUCT(advdiff_diagonal_t);
 } // namespace impl
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

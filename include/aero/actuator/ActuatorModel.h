@@ -39,7 +39,7 @@ dcast_and_check_pointer(IN* input)
 } // namespace dcast
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /**
  * @brief This is the interface class for running all the kokkos based actuator
@@ -65,7 +65,7 @@ struct ActuatorModel
   inline bool is_active() { return actMeta_ != nullptr; }
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ACTUATORMODEL_H_ */

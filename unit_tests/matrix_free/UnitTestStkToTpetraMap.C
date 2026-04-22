@@ -29,7 +29,7 @@ class Part;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class StkMeshFixture : public ::testing::Test
@@ -232,5 +232,5 @@ TEST_F(EntityLidFixture, all_active_stk_entities_have_a_unique_tpetra_lid)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

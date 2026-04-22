@@ -24,7 +24,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -198,5 +198,5 @@ SurfaceForceAndMomentAlgorithmDriver::execute()
   parallel_assemble_fields();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -16,7 +16,7 @@
 #include "utils/FieldHelpers.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ContinuityMassBDFNodeKernel::ContinuityMassBDFNodeKernel(
   const stk::mesh::BulkData& bulk)
@@ -83,5 +83,5 @@ ContinuityMassBDFNodeKernel::execute(
             dt_ * (gamma1_ / dt_);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

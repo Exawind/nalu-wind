@@ -25,7 +25,7 @@ class SolverManager;
 } // namespace Belos
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class MatrixFreeSolver
@@ -61,6 +61,6 @@ private:
 };
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

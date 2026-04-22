@@ -10,7 +10,7 @@
 #include <user_functions/StringTimeCoordTemperatureAuxFunction.h>
 #include <algorithm>
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 
 StringTimeCoordTemperatureAuxFunction::StringTimeCoordTemperatureAuxFunction(
   std::string fcn)
@@ -48,4 +48,4 @@ StringTimeCoordTemperatureAuxFunction::do_evaluate(
   }
 }
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf

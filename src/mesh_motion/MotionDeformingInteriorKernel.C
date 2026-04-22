@@ -1,6 +1,6 @@
 #include "mesh_motion/MotionDeformingInteriorKernel.h"
 
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 #include "utils/ComputeVectorDivergence.h"
 
 // stk_mesh/base/fem
@@ -9,7 +9,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MotionDeformingInteriorKernel::MotionDeformingInteriorKernel(
   stk::mesh::MetaData& meta, const YAML::Node& node)
@@ -38,35 +38,37 @@ MotionDeformingInteriorKernel::load(const YAML::Node& node)
 
   // get lower bounds of deforming part of mesh
   if (!node["xyz_min"])
-    NaluEnv::self().naluOutputP0() << "MotionDeformingInteriorKernel: Need to "
-                                      "define lower bounds of mesh that deform"
-                                   << std::endl;
-  for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "MotionDeformingInteriorKernel: Need to "
+         "define lower bounds of mesh that deform"
+      << std::endl;
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
     xyzMin_[d] = node["xyz_min"][d].as<double>();
 
   // get lower bounds of deforming part of mesh
   if (!node["xyz_max"])
-    NaluEnv::self().naluOutputP0() << "MotionDeformingInteriorKernel: Need to "
-                                      "define upper bounds of mesh that deform"
-                                   << std::endl;
-  for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "MotionDeformingInteriorKernel: Need to "
+         "define upper bounds of mesh that deform"
+      << std::endl;
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
     xyzMax_[d] = node["xyz_max"][d].as<double>();
 
   // get amplitude it was defined
   if (node["amplitude"]) {
-    for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
       amplitude_[d] = node["amplitude"][d].as<double>();
   }
 
   // get frequency it was defined
   if (node["frequency"]) {
-    for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
       frequency_[d] = node["frequency"][d].as<double>();
   }
 
   // get origin based on if it was defined or is to be computed
   if (node["centroid"]) {
-    for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
       origin_[d] = node["centroid"][d].as<double>();
   }
 }
@@ -101,7 +103,7 @@ MotionDeformingInteriorKernel::build_transformation(
 
   // Build matrix for scaling object
   mm::TransMatType tempMat;
-  for (int d = 0; d < nalu_ngp::NDimMax; d++) {
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++) {
     radius[d] = stk::math::abs(xyz[d] - origin_[d]);
 
     curr_radius[d] =
@@ -150,7 +152,7 @@ MotionDeformingInteriorKernel::compute_velocity(
   mm::ThreeDVecType radius;
   mm::ThreeDVecType osclVelocity;
 
-  for (int d = 0; d < nalu_ngp::NDimMax; d++) {
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++) {
     radius[d] = stk::math::abs(mxyz[d] - origin_[d]);
 
     osclVelocity[d] = amplitude_[d] *
@@ -165,5 +167,5 @@ MotionDeformingInteriorKernel::compute_velocity(
   return vel;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

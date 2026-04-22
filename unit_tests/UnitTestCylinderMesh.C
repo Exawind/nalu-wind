@@ -35,7 +35,7 @@ test_cylinder_mesh_field_values(
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = 0;
-  auto team_exec = sierra::nalu::get_device_team_policy(
+  auto team_exec = sierra::kynema_ugf::get_device_team_policy(
     nodeBuckets.size(), bytes_per_team, bytes_per_thread);
 
   const auto& bucketIDs =
@@ -49,7 +49,8 @@ test_cylinder_mesh_field_values(
   ngpTestField.sync_to_device();
 
   Kokkos::parallel_for(
-    team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team) {
+    team_exec,
+    KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
       auto bktId = bucketIDs.device_get(team.league_rank());
       const stk::mesh::NgpMesh::BucketType& bkt =
         ngpMesh.get_bucket(stk::topology::NODE_RANK, bktId);

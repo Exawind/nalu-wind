@@ -16,7 +16,7 @@
 #include <stk_mesh/base/Entity.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -43,7 +43,7 @@ public:
   std::vector<double> gravity;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -216,7 +216,7 @@ TEST_F(KOKernelHex8Mesh, NGP_tke_ko_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKEKONodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::TKEKONodeKernel>(*meta_);
 
   helperObjs.execute();
 
@@ -251,7 +251,7 @@ TEST_F(KOKernelHex8Mesh, NGP_sdr_ko_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRKONodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::SDRKONodeKernel>(*meta_);
 
   helperObjs.execute();
 

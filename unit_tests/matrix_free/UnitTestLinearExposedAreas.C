@@ -18,7 +18,7 @@
 #include "mpi.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <int p>
@@ -62,5 +62,5 @@ single_cube_hex_p()
 TEST(linear_exposed_areas, single_cube_hex8) { single_cube_hex_p<1>(); }
 TEST(linear_exposed_areas, single_cube_hex27) { single_cube_hex_p<2>(); }
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

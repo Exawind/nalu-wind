@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <AssembleMomentumEdgeABLTopBC.h>
 #include <SolverAlgorithm.h>
 #include <EquationSystem.h>
@@ -33,7 +33,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -1079,5 +1079,5 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowInflow(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

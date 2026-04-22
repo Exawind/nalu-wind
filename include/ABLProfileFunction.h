@@ -11,7 +11,7 @@
 #define ABLProfileFunction_h
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class ABLProfileFunction
 {
@@ -58,7 +58,7 @@ public:
   double temperature(const double znorm) const;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

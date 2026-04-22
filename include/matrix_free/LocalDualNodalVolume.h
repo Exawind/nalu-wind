@@ -22,7 +22,7 @@
 #include "stk_mesh/base/Selector.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace impl {
@@ -39,6 +39,6 @@ struct local_dual_nodal_volume_t
 SWITCH_INVOKEABLE(local_dual_nodal_volume)
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

@@ -14,7 +14,7 @@
 #include "stk_mesh/base/MetaData.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 TKESSTIDDESNodeKernel::TKESSTIDDESNodeKernel(const stk::mesh::MetaData& meta)
   : NGPNodeKernel<TKESSTIDDESNodeKernel>(),
@@ -156,5 +156,5 @@ TKESSTIDDESNodeKernel::execute(
   lhs(0, 0) += 1.5 * density / lIDDES * sqrtTke * dVol;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

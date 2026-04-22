@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <AssemblePNGNonConformalSolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <DgInfo.h>
@@ -26,7 +26,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -476,5 +476,5 @@ AssemblePNGNonConformalSolverAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

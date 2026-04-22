@@ -22,7 +22,7 @@
 #include "stk_mesh/base/Selector.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class NoAuraDeviceMatrix
@@ -68,6 +68,6 @@ P_INVOKEABLE(assemble_sparsified_edge_laplacian)
 SWITCH_INVOKEABLE(assemble_sparsified_edge_laplacian)
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

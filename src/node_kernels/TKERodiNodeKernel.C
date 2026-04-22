@@ -19,7 +19,7 @@
 #include <stk_mesh/base/Types.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -87,5 +87,5 @@ TKERodiNodeKernel::execute(
   rhs(0) += beta_ * tvisc / turbPr_ * sum / specificHeat * dualVolume;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

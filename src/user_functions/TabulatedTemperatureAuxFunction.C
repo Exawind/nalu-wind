@@ -9,7 +9,7 @@
 
 #include <user_functions/TabulatedTemperatureAuxFunction.h>
 #include <algorithm>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include "utils/LinearInterpolation.h"
 
 #include <stk_util/util/ReportHandler.hpp>
@@ -18,7 +18,7 @@
 #include <vector>
 #include <stdexcept>
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 
 TabulatedTemperatureAuxFunction::TabulatedTemperatureAuxFunction(
   std::vector<double> heights, std::vector<double> temperatures)
@@ -43,4 +43,4 @@ TabulatedTemperatureAuxFunction::do_evaluate(
   }
 }
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf

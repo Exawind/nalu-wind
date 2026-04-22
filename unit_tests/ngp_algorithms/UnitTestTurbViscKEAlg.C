@@ -26,7 +26,7 @@ TEST_F(KEKernelHex8Mesh, NGP_turb_visc_ke_alg)
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  sierra::nalu::TurbViscKEAlg TurbViscKEAlg(
+  sierra::kynema_ugf::TurbViscKEAlg TurbViscKEAlg(
     helperObjs.realm, partVec_[0], tvisc_);
 
   TurbViscKEAlg.execute();

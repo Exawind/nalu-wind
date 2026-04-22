@@ -16,8 +16,8 @@
 #include <Simulation.h>
 #include <SolutionOptions.h>
 #include <FieldTypeDef.h>
-#include <NaluParsing.h>
-#include <NaluEnv.h>
+#include <KynemaUGFParsing.h>
+#include <KynemaUGFEnv.h>
 #include <LinearSystem.h>
 #include <ConstantAuxFunction.h>
 #include <Enums.h>
@@ -38,7 +38,7 @@
 #include <stk_util/parallel/ParallelReduce.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 EquationSystem::EquationSystem(
   EquationSystems& eqSystems,
@@ -110,7 +110,7 @@ EquationSystem::~EquationSystem()
   }
 
   for (auto* pecFunc : ngpPecletFunctions_)
-    nalu_ngp::destroy(pecFunc);
+    kynema_ugf_ngp::destroy(pecFunc);
 }
 
 void
@@ -206,47 +206,47 @@ EquationSystem::dump_eq_time()
   double g_max[6] = {};
   double g_sum[6] = {};
 
-  int nprocs = NaluEnv::self().parallel_size();
+  int nprocs = KynemaUGFEnv::self().parallel_size();
 
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Timing for Eq: " << userSuppliedName_ << std::endl;
 
   // get max, min, and sum over processes
   stk::all_reduce_sum(
-    NaluEnv::self().parallel_comm(), &l_timer[0], &g_sum[0], 6);
+    KynemaUGFEnv::self().parallel_comm(), &l_timer[0], &g_sum[0], 6);
   stk::all_reduce_min(
-    NaluEnv::self().parallel_comm(), &l_timer[0], &g_min[0], 6);
+    KynemaUGFEnv::self().parallel_comm(), &l_timer[0], &g_min[0], 6);
   stk::all_reduce_max(
-    NaluEnv::self().parallel_comm(), &l_timer[0], &g_max[0], 6);
+    KynemaUGFEnv::self().parallel_comm(), &l_timer[0], &g_max[0], 6);
 
   // output
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "             init --  "
     << " \tavg: " << g_sum[4] / double(nprocs) << " \tmin: " << g_min[4]
     << " \tmax: " << g_max[4] << std::endl;
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "         assemble --  "
     << " \tavg: " << g_sum[0] / double(nprocs) << " \tmin: " << g_min[0]
     << " \tmax: " << g_max[0] << std::endl;
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "    load_complete --  "
     << " \tavg: " << g_sum[1] / double(nprocs) << " \tmin: " << g_min[1]
     << " \tmax: " << g_max[1] << std::endl;
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "            solve --  "
     << " \tavg: " << g_sum[2] / double(nprocs) << " \tmin: " << g_min[2]
     << " \tmax: " << g_max[2] << std::endl;
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "    precond setup --  "
     << " \tavg: " << g_sum[5] / double(nprocs) << " \tmin: " << g_min[5]
     << " \tmax: " << g_max[5] << std::endl;
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "             misc --  "
     << " \tavg: " << g_sum[3] / double(nprocs) << " \tmin: " << g_min[3]
     << " \tmax: " << g_max[3] << std::endl;
 
   if (reportLinearIterations_)
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "linear iterations -- "
       << " \tavg: " << avgLinearIterations_
       << " \tmin: " << minLinearIterations_
@@ -304,34 +304,34 @@ EquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
   int error = 0;
 
   // zero the system
-  double timeA = NaluEnv::self().nalu_time();
+  double timeA = KynemaUGFEnv::self().kynema_ugf_time();
   linsys_->zeroSystem();
-  double timeB = NaluEnv::self().nalu_time();
+  double timeB = KynemaUGFEnv::self().kynema_ugf_time();
   timerAssemble_ += (timeB - timeA);
 
   // apply all flux and dirichlet algs
-  timeA = NaluEnv::self().nalu_time();
+  timeA = KynemaUGFEnv::self().kynema_ugf_time();
   solverAlgDriver_->execute();
-  timeB = NaluEnv::self().nalu_time();
+  timeB = KynemaUGFEnv::self().kynema_ugf_time();
   timerAssemble_ += (timeB - timeA);
 
   // load complete
-  timeA = NaluEnv::self().nalu_time();
+  timeA = KynemaUGFEnv::self().kynema_ugf_time();
   linsys_->loadComplete();
-  timeB = NaluEnv::self().nalu_time();
+  timeB = KynemaUGFEnv::self().kynema_ugf_time();
   timerLoadComplete_ += (timeB - timeA);
 
   // solve the system; extract delta
-  timeA = NaluEnv::self().nalu_time();
+  timeA = KynemaUGFEnv::self().kynema_ugf_time();
   error = linsys_->solve(deltaSolution);
-  timeB = NaluEnv::self().nalu_time();
+  timeB = KynemaUGFEnv::self().kynema_ugf_time();
   timerSolve_ += (timeB - timeA);
   timerPrecond_ += linsys_->get_timer_precond();
 
   if (realm_.hasPeriodic_) {
-    timeA = NaluEnv::self().nalu_time();
+    timeA = KynemaUGFEnv::self().kynema_ugf_time();
     realm_.periodic_delta_solution_update(deltaSolution, linsys_->numDof());
-    timeB = NaluEnv::self().nalu_time();
+    timeB = KynemaUGFEnv::self().kynema_ugf_time();
     timerMisc_ += (timeB - timeA);
   }
 
@@ -339,8 +339,9 @@ EquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
   update_iteration_statistics(linsys_->linearSolveIterations());
 
   if (error > 0)
-    NaluEnv::self().naluOutputP0() << "Error in " << userSuppliedName_
-                                   << "::solve_and_update()  " << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Error in " << userSuppliedName_ << "::solve_and_update()  "
+      << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -568,7 +569,7 @@ EquationSystem::solution_update(
      meta.aura_part()) &
     stk::mesh::selectField(field);
 
-  nalu_ngp::field_axpby(
+  kynema_ugf_ngp::field_axpby(
     meshInfo, sel, delta_frac, delta, field_frac, field, numComponents, rank);
 }
 
@@ -582,5 +583,5 @@ EquationSystem::register_abltop_bc(
   register_symmetry_bc(part, theTopo, simData);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -19,7 +19,7 @@
 #include <stk_simd/Simd.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace {
@@ -83,5 +83,5 @@ TEST(linear_volume, single_cube_hex8) { single_affine_hex_p<1>(true); }
 TEST(linear_volume, single_cube_hex27) { single_affine_hex_p<2>(false); }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

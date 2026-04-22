@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Entity.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename BcAlgTraits>
 class MomentumABLWallFuncEdgeKernel
@@ -74,7 +74,7 @@ private:
   MasterElement* meFC_{nullptr};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOMENTUMABLWALLFUNCEDGEKERNEL_H */

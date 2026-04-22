@@ -18,7 +18,7 @@
 
 namespace sierra {
 
-namespace nalu {
+namespace kynema_ugf {
 
 struct Tether
 {
@@ -62,9 +62,9 @@ public:
   KynemaSixDof(const YAML::Node&);
   virtual ~KynemaSixDof() = default;
 
-  void setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk);
+  void setup(double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk);
 
-  void initialize(int restartFreqNalu, double curTime);
+  void initialize(int restartFreqKynemaUGF, double curTime);
 
   void map_displacements(double, bool);
 
@@ -91,7 +91,7 @@ private:
 
   void setup_point(
     PointMass& point,
-    const double dtNalu,
+    const double dtKynemaUGF,
     std::shared_ptr<stk::mesh::BulkData> bulk);
 
   void map_loads_point(PointMass& point);
@@ -110,7 +110,7 @@ private:
 
   int tStep_{0}; // Time step count
 
-  double dt_{-1.0}; // Store nalu-wind step
+  double dt_{-1.0}; // Store kynema-ugf step
 
   std::array<double, 3> gravity_ = {0.0, 0.0, 0.0};
 
@@ -125,7 +125,7 @@ private:
   std::vector<kynema::interfaces::cfd::Interface> point_body_interfaces_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 
 } // namespace sierra
 

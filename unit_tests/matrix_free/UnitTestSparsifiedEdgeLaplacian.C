@@ -34,7 +34,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace sparsfied_edge_test {
@@ -211,5 +211,5 @@ TEST_F(SparsifiedEdgeLaplacianFixture, sample_for_positive_definiteness)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

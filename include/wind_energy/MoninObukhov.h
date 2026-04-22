@@ -14,7 +14,7 @@
 #include "SimdInterface.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace abl_monin_obukhov {
 
 /**
@@ -64,7 +64,7 @@ psih_unstable(const T& zeta, const T gamma = 16.0)
 }
 
 } // namespace abl_monin_obukhov
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MONINOBUKHOV_H */

@@ -126,7 +126,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_tke_ksgs_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKEKsgsNodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::TKEKsgsNodeKernel>(*meta_);
 
   helperObjs.execute();
 

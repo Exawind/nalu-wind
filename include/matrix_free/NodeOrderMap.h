@@ -13,7 +13,7 @@
 #include "ArrayND.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <int>
@@ -123,6 +123,6 @@ struct StkFaceNodeMapping<4>
 int node_map(int poly, int n, int m, int l);
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

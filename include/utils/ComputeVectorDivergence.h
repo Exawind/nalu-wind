@@ -21,7 +21,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 void compute_vector_divergence(
   stk::mesh::BulkData&,
@@ -45,7 +45,7 @@ void compute_edge_scalar_divergence(
   GenericFieldType*,
   stk::mesh::FieldBase*);
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* COMPUTEVECTORDIVERGENCE_H */

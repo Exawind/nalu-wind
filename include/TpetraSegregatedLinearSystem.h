@@ -34,7 +34,7 @@ class CommNeighbors;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class EquationSystem;
@@ -230,7 +230,7 @@ public:
 
     void free_device_pointer() {}
 
-    sierra::nalu::CoeffApplier* device_pointer() { return nullptr; }
+    sierra::kynema_ugf::CoeffApplier* device_pointer() { return nullptr; }
 
   private:
     LinSys::LocalMatrix ownedLocalMatrix_, sharedNotOwnedLocalMatrix_;
@@ -330,7 +330,7 @@ private:
 
 int getDofStatus_impl(stk::mesh::Entity node, const Realm& realm);
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

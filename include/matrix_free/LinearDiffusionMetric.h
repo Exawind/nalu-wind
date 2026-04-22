@@ -14,7 +14,7 @@
 #include "matrix_free/PolynomialOrders.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace geom {
 
@@ -32,7 +32,7 @@ P_INVOKEABLE(diffusion_metric)
 
 } // namespace geom
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

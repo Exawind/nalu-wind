@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 static constexpr int invalid_lid = -1;
@@ -31,7 +31,7 @@ make_stk_lid_to_tpetra_lid_map(
   const Tpetra::Map<>::local_map_type& local_oas_map);
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

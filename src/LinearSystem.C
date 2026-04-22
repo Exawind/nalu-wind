@@ -13,14 +13,14 @@
 #include <Simulation.h>
 #include <LinearSolver.h>
 #include <master_element/MasterElement.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
-#ifdef NALU_USES_HYPRE
+#ifdef KYNEMA_UGF_USES_HYPRE
 #include "HypreLinearSystem.h"
 #include "HypreUVWLinearSystem.h"
 #endif
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 #include <TpetraLinearSystem.h>
 #include <TpetraSegregatedLinearSystem.h>
 #endif
@@ -46,7 +46,7 @@
 #include <sstream>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -94,7 +94,7 @@ LinearSystem::get_timer_precond()
 bool
 LinearSystem::debug()
 {
-  if (NaluEnv::self().debug())
+  if (KynemaUGFEnv::self().debug())
     return true;
   return false;
 }
@@ -122,7 +122,7 @@ LinearSystem::create(
   LinearSolver* solver)
 {
   switch (solver->getType()) {
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
   case PT_TPETRA:
     return new TpetraLinearSystem(realm, numDof, eqSys, solver);
 // Avoid nvcc unreachable statement warnings
@@ -136,9 +136,9 @@ LinearSystem::create(
 #ifndef __CUDACC__
     break;
 #endif
-#endif // NALU_USES_TRILINOS_SOLVERS
+#endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
-#ifdef NALU_USES_HYPRE
+#ifdef KYNEMA_UGF_USES_HYPRE
   case PT_HYPRE:
     realm.hypreIsActive_ = true;
     return new HypreLinearSystem(realm, numDof, eqSys, solver);
@@ -168,5 +168,5 @@ LinearSystem::sync_field(const stk::mesh::FieldBase* field)
   stk::mesh::copy_owned_to_shared(realm_.bulk_data(), ngpFields);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

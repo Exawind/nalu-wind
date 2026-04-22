@@ -4,7 +4,7 @@
 #include "NgpMotion.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class MotionOscillationKernel : public NgpMotionKernel<MotionOscillationKernel>
 {
@@ -52,7 +52,7 @@ private:
   double amplitude_2nd_{0.0};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOTIONOscillationKERNEL_H */

@@ -21,7 +21,7 @@
 #include "stk_topology/topology.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 void
@@ -258,5 +258,5 @@ make_owned_shared_constrained_row_map(
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

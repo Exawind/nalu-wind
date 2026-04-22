@@ -11,7 +11,7 @@
 
 #include "tioga.h"
 
-namespace tioga_nalu {
+namespace tioga_kynema_ugf {
 
 void
 TiogaOptions::load(const YAML::Node& node)
@@ -52,4 +52,4 @@ TiogaOptions::set_options(TIOGA::tioga& tg)
     tg.setNfringe(&nFringe_);
 }
 
-} // namespace tioga_nalu
+} // namespace tioga_kynema_ugf

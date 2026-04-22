@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class SolutionOptions;
 
@@ -81,7 +81,7 @@ private:
   NodeKernelTraits::DblType gammaTwo_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* SDRSSTAMSNODEKERNEL_H */

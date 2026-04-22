@@ -22,7 +22,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename AlgTraits>
 MeshVelocityEdgeAlg<AlgTraits>::MeshVelocityEdgeAlg(
@@ -88,7 +88,7 @@ void
 MeshVelocityEdgeAlg<AlgTraits>::execute()
 {
   using ElemSimdDataType =
-    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
@@ -119,7 +119,7 @@ MeshVelocityEdgeAlg<AlgTraits>::execute()
 
   const std::string algName =
     "compute_mesh_vel_" + std::to_string(AlgTraits::topo_);
-  nalu_ngp::run_elem_algorithm(
+  kynema_ugf_ngp::run_elem_algorithm(
     algName, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       const int* lrscv = meSCS->adjacentNodes();
@@ -207,5 +207,5 @@ MeshVelocityEdgeAlg<AlgTraits>::execute()
 
 INSTANTIATE_KERNEL(MeshVelocityEdgeAlg)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

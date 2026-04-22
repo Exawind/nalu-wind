@@ -14,8 +14,8 @@
 #include "matrix_free/ConductionUpdate.h"
 #include "matrix_free/GreenGaussGradient.h"
 
-#include "NaluEnv.h"
-#include "NaluParsing.h"
+#include "KynemaUGFEnv.h"
+#include "KynemaUGFParsing.h"
 #include "PeriodicManager.h"
 #include "Realm.h"
 #include "TimeIntegrator.h"
@@ -28,7 +28,7 @@
 #include <stk_io/IossBridge.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MatrixFreeHeatCondEquationSystem::MatrixFreeHeatCondEquationSystem(
   EquationSystems& eqSystems)
@@ -314,37 +314,38 @@ MatrixFreeHeatCondEquationSystem::initialize_solve_and_update()
 void
 MatrixFreeHeatCondEquationSystem::solve_and_update()
 {
-  const auto time_start_initialize = NaluEnv::self().nalu_time();
+  const auto time_start_initialize = KynemaUGFEnv::self().kynema_ugf_time();
   initialize_solve_and_update();
-  const auto time_end_initialize = NaluEnv::self().nalu_time();
+  const auto time_end_initialize = KynemaUGFEnv::self().kynema_ugf_time();
   timerInit_ += time_end_initialize - time_start_initialize;
 
-  const auto time_start_update_states = NaluEnv::self().nalu_time();
+  const auto time_start_update_states = KynemaUGFEnv::self().kynema_ugf_time();
   grad_->reset_initial_residual();
   update_->swap_states();
   update_->update_solution_fields();
-  const auto time_end_update_states = NaluEnv::self().nalu_time();
+  const auto time_end_update_states = KynemaUGFEnv::self().kynema_ugf_time();
   timerAssemble_ += time_end_update_states - time_start_update_states;
 
-  const auto time_start_preconditioner = NaluEnv::self().nalu_time();
+  const auto time_start_preconditioner = KynemaUGFEnv::self().kynema_ugf_time();
   update_->compute_preconditioner(
     realm_.timeIntegrator_->get_gamma1() /
     realm_.timeIntegrator_->get_time_step());
-  const auto time_end_preconditioner = NaluEnv::self().nalu_time();
+  const auto time_end_preconditioner = KynemaUGFEnv::self().kynema_ugf_time();
   timerPrecond_ += time_end_preconditioner - time_start_preconditioner;
 
   for (int k = 0; k < maxIterations_; ++k) {
     nonlinear_iteration_banner(
-      k, maxIterations_, userSuppliedName_, NaluEnv::self().naluOutputP0());
+      k, maxIterations_, userSuppliedName_,
+      KynemaUGFEnv::self().kynema_ugfOutputP0());
 
-    const auto time_start_solve = NaluEnv::self().nalu_time();
+    const auto time_start_solve = KynemaUGFEnv::self().kynema_ugf_time();
     update_->compute_update(
       compute_scaled_gammas(*realm_.timeIntegrator_),
       get_node_field(meta_, names::delta));
-    const auto time_end_solve = NaluEnv::self().nalu_time();
+    const auto time_end_solve = KynemaUGFEnv::self().kynema_ugf_time();
     timerSolve_ += time_end_solve - time_start_solve;
 
-    const auto time_start_assemble = NaluEnv::self().nalu_time();
+    const auto time_start_assemble = KynemaUGFEnv::self().kynema_ugf_time();
     sync_field_on_periodic_nodes(names::delta, 1);
 
     solution_update(
@@ -354,21 +355,21 @@ MatrixFreeHeatCondEquationSystem::solve_and_update()
         ->field_of_state(stk::mesh::StateNP1));
 
     update_->update_solution_fields();
-    const auto time_end_assemble = NaluEnv::self().nalu_time();
+    const auto time_end_assemble = KynemaUGFEnv::self().kynema_ugf_time();
     timerAssemble_ += time_end_assemble - time_start_assemble;
 
-    const auto time_start_banner = NaluEnv::self().nalu_time();
-    update_->banner(name_, NaluEnv::self().naluOutputP0());
-    const auto time_end_banner = NaluEnv::self().nalu_time();
+    const auto time_start_banner = KynemaUGFEnv::self().kynema_ugf_time();
+    update_->banner(name_, KynemaUGFEnv::self().kynema_ugfOutputP0());
+    const auto time_end_banner = KynemaUGFEnv::self().kynema_ugf_time();
     timerMisc_ += time_end_banner - time_start_banner;
 
     grad_->gradient(
       get_node_field(meta_, names::temperature),
       get_node_field(meta_, names::dtdx));
     sync_field_on_periodic_nodes(names::dtdx, dim);
-    grad_->banner("dtdx", NaluEnv::self().naluOutputP0());
+    grad_->banner("dtdx", KynemaUGFEnv::self().kynema_ugfOutputP0());
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

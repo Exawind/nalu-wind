@@ -7,12 +7,12 @@
 // for more details.
 //
 
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 #include "aero/six_dof/KynemaSixDof.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementRepo.h"
 #include <fstream>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/MetaData.hpp>
@@ -25,7 +25,7 @@
 
 namespace sierra {
 
-namespace nalu {
+namespace kynema_ugf {
 
 KynemaSixDof::KynemaSixDof(const YAML::Node& node) : enable_calc_loads_(true)
 {
@@ -205,7 +205,7 @@ KynemaSixDof::load(const YAML::Node& node)
 void
 KynemaSixDof::setup_point(
   PointMass& point,
-  const double dtNalu,
+  const double dtKynemaUGF,
   std::shared_ptr<stk::mesh::BulkData> bulk)
 {
 
@@ -229,7 +229,7 @@ KynemaSixDof::setup_point(
 
   kynema::interfaces::cfd::InterfaceInput point_to_build;
   point_to_build.gravity = gravity_;
-  point_to_build.time_step = dtNalu;
+  point_to_build.time_step = dtKynemaUGF;
   point_to_build.max_iter = number_of_nonlinear_iterations;
   point_to_build.rho_inf = damping_factor;
   point_to_build.turbine.floating_platform.enable = true;
@@ -293,20 +293,21 @@ KynemaSixDof::setup_point(
   point.calc_loads->setup(bulk);
 }
 void
-KynemaSixDof::setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk)
+KynemaSixDof::setup(
+  double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk)
 {
   bulk_ = bulk;
-  dt_ = dtNalu;
+  dt_ = dtKynemaUGF;
   for (auto& point : point_bodies_) {
-    setup_point(point, dtNalu, bulk);
+    setup_point(point, dtKynemaUGF, bulk);
   }
 }
 
 void
-KynemaSixDof::initialize(int restartFreqNalu, double curTime)
+KynemaSixDof::initialize(int restartFreqKynemaUGF, double curTime)
 {
 
-  restart_frequency_ = restartFreqNalu;
+  restart_frequency_ = restartFreqKynemaUGF;
 
   // Check for restart files and initialize values appropriately
   for (int ipoint = 0; ipoint < point_bodies_.size(); ipoint++) {
@@ -324,7 +325,7 @@ KynemaSixDof::initialize(int restartFreqNalu, double curTime)
   // Might not need to do this, need to evaluate
   if (curTime < 1e-10) {
 
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Setting displacements at time steps n and n-1" << std::endl;
 
     auto& meta = bulk_->mesh_meta_data();
@@ -377,7 +378,7 @@ KynemaSixDof::advance_struct_timestep(const double currentTime, const double dT)
     auto converged = point.kynema_interface->Step();
 
     if (!converged) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Kynema did not converge! Consider raising "
            "number_of_nonlinear_iterations for point body "
         << ipoint << std::endl;
@@ -385,7 +386,7 @@ KynemaSixDof::advance_struct_timestep(const double currentTime, const double dT)
 
     if (
       (point.kynema_interface->current_timestep_ % restart_frequency_) == 0 &&
-      NaluEnv::self().parallel_rank() == 0) {
+      KynemaUGFEnv::self().parallel_rank() == 0) {
       std::string file_name =
         std::to_string(ipoint) + "_" + point.restart_file_name;
       point.kynema_interface->WriteRestart(file_name);
@@ -393,7 +394,7 @@ KynemaSixDof::advance_struct_timestep(const double currentTime, const double dT)
     // Add output here
     if (
       point.output_file_name.size() > 0 &&
-      NaluEnv::self().parallel_rank() == 0) {
+      KynemaUGFEnv::self().parallel_rank() == 0) {
       std::string delim = " ";
       std::ofstream outfile(point.output_file_name, std::ios::app);
       outfile << currentTime << delim;
@@ -575,6 +576,6 @@ KynemaSixDof::map_loads()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 
 } // namespace sierra

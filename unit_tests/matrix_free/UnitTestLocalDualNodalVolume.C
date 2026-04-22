@@ -24,7 +24,7 @@
 #include "gtest/gtest.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace {
@@ -87,5 +87,5 @@ TEST_F(LocalDualNodalVolumeFixture, correct_volume_for_affine_block)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

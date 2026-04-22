@@ -10,8 +10,8 @@
 /*------------------------------------------------------------------------*/
 
 #include "edge_kernels/MomentumOpenEdgeKernel.h"
-#include <NaluParsing.h>
-#include <NaluEnv.h>
+#include <KynemaUGFParsing.h>
+#include <KynemaUGFEnv.h>
 #include <Simulation.h>
 #include <Enums.h>
 
@@ -25,7 +25,7 @@
 #include <algorithm>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 const YAML::Node
 expect_type(
@@ -42,12 +42,12 @@ expect_type(
     const YAML::Node value = node[key];
 
     if ((value.Type() != type)) {
-      if (!NaluEnv::self().parallel_rank()) {
+      if (!KynemaUGFEnv::self().parallel_rank()) {
         err_msg << "Error: parsing expected type " << types[type]
                 << " got type = " << types[value.Type()] << " for key= " << key
-                << " at " << NaluParsingHelper::line_info(node)
+                << " at " << KynemaUGFParsingHelper::line_info(node)
                 << " node= " << std::endl;
-        NaluParsingHelper::emit(err_msg, node);
+        KynemaUGFParsingHelper::emit(err_msg, node);
         err_msg << "Check indentation of input file.";
         std::cout << err_msg.str() << std::endl;
       }
@@ -57,12 +57,12 @@ expect_type(
   } else {
 
     if ((!optional)) {
-      if (!NaluEnv::self().parallel_rank()) {
+      if (!KynemaUGFEnv::self().parallel_rank()) {
         err_msg << "Error: parsing expected required value " << key
                 << " but it was not found at"
-                << NaluParsingHelper::line_info(node)
+                << KynemaUGFParsingHelper::line_info(node)
                 << " for Node= " << std::endl;
-        NaluParsingHelper::emit(err_msg, node);
+        KynemaUGFParsingHelper::emit(err_msg, node);
         std::cout << err_msg.str() << std::endl;
       }
       throw std::runtime_error(err_msg.str());
@@ -147,7 +147,7 @@ operator>>(const YAML::Node& node, OversetBoundaryConditionData& oversetBC)
     std::string ogaName = node["overset_connectivity_type"].as<std::string>();
 
     if (ogaName == "tioga") {
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
       oversetBC.oversetConnectivityType_ =
         OversetBoundaryConditionData::TPL_TIOGA;
 #else
@@ -157,7 +157,7 @@ operator>>(const YAML::Node& node, OversetBoundaryConditionData& oversetBC)
 #endif
     } else {
       throw std::runtime_error(
-        "Nalu-Wind supports only one overset connectivity package: 'tioga'. "
+        "Kynema-UGF supports only one overset connectivity package: 'tioga'. "
         "Value in input file: " +
         ogaName);
     }
@@ -165,7 +165,7 @@ operator>>(const YAML::Node& node, OversetBoundaryConditionData& oversetBC)
 
   switch (oversetBC.oversetConnectivityType_) {
   case OversetBoundaryConditionData::TPL_TIOGA:
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
     oversetBC.userData_.oversetBlocks_ = node["overset_user_data"];
     break;
 #else
@@ -319,7 +319,7 @@ operator>>(
 void
 operator>>(const YAML::Node& node, UserFunctionInitialConditionData& fcnIC)
 {
-  fcnIC.theIcType_ = sierra::nalu::FUNCTION_UD;
+  fcnIC.theIcType_ = sierra::kynema_ugf::FUNCTION_UD;
   fcnIC.icName_ = node["user_function"].as<std::string>();
 
   const YAML::Node& targets = node["target_name"];
@@ -348,14 +348,14 @@ operator>>(const YAML::Node& node, UserFunctionInitialConditionData& fcnIC)
 void
 operator>>(const YAML::Node& node, StringFunctionInitialConditionData& fcnIC)
 {
-  fcnIC.theIcType_ = sierra::nalu::STRING_FUNCTION_UD;
+  fcnIC.theIcType_ = sierra::kynema_ugf::STRING_FUNCTION_UD;
   fcnIC.icName_ = node["string_function"].as<std::string>();
   const YAML::Node& targets = node["target_name"];
 
   if (targets.Type() == YAML::NodeType::Scalar) {
     fcnIC.targetNames_.resize(1);
     fcnIC.targetNames_[0] = targets.as<std::string>();
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "constant IC: name: " << fcnIC.icName_ << " , target[" << 0
       << "] = " << fcnIC.targetNames_[0] << std::endl;
     if (fcnIC.targetNames_[0].find(',') != std::string::npos) {
@@ -381,14 +381,14 @@ operator>>(const YAML::Node& node, StringFunctionInitialConditionData& fcnIC)
 void
 operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
 {
-  constIC.theIcType_ = sierra::nalu::CONSTANT_UD;
+  constIC.theIcType_ = sierra::kynema_ugf::CONSTANT_UD;
   constIC.icName_ = node["constant"].as<std::string>();
   const YAML::Node& targets = node["target_name"];
 
   if (targets.Type() == YAML::NodeType::Scalar) {
     constIC.targetNames_.resize(1);
     constIC.targetNames_[0] = targets.as<std::string>();
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "constant IC: name: " << constIC.icName_ << " , target[" << 0
       << "] = " << constIC.targetNames_[0] << std::endl;
     if (constIC.targetNames_[0].find(',') != std::string::npos) {
@@ -403,7 +403,7 @@ operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
     for (size_t i = 0; i < targets.size(); ++i) {
       constIC.targetNames_[i] = targets[i].as<std::string>();
       if (constIC.debug_)
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "constant IC: name: " << constIC.icName_ << " , target[" << i
           << "] = " << constIC.targetNames_[i] << std::endl;
     }
@@ -413,7 +413,7 @@ operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
   constIC.fieldNames_.resize(value_size);
   constIC.data_.resize(value_size);
   if (constIC.debug_) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "fieldNames_.size()= " << constIC.fieldNames_.size()
       << " value.size= " << constIC.data_.size() << std::endl;
   }
@@ -429,7 +429,7 @@ operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
       for (size_t iv = 0; iv < nvals; ++iv) {
         constIC.data_[jv][iv] = value[iv].as<double>();
         if (constIC.debug_) {
-          NaluEnv::self().naluOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << "fieldNames_= " << constIC.fieldNames_[jv]
             << " value= " << constIC.data_[jv][iv] << std::endl;
         }
@@ -438,7 +438,7 @@ operator>>(const YAML::Node& node, ConstantInitialConditionData& constIC)
       constIC.data_[jv].resize(1);
       constIC.data_[jv][0] = value.as<double>();
       if (constIC.debug_) {
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "fieldNames_= " << constIC.fieldNames_[jv]
           << " value= " << constIC.data_[jv][0] << std::endl;
       }
@@ -545,14 +545,14 @@ case_insensitive_compare(std::string s1, std::string s2)
   return (s1 == s2);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 namespace YAML {
 
 bool
-convert<sierra::nalu::Velocity>::decode(
-  const Node& node, sierra::nalu::Velocity& v)
+convert<sierra::kynema_ugf::Velocity>::decode(
+  const Node& node, sierra::kynema_ugf::Velocity& v)
 {
   if (!node.IsSequence() || node.size() < 2) {
     return false;
@@ -567,8 +567,8 @@ convert<sierra::nalu::Velocity>::decode(
 }
 
 bool
-convert<sierra::nalu::Coordinates>::decode(
-  const Node& node, sierra::nalu::Coordinates& cx)
+convert<sierra::kynema_ugf::Coordinates>::decode(
+  const Node& node, sierra::kynema_ugf::Coordinates& cx)
 {
   if (!node.IsSequence() || node.size() < 2) {
     return false;
@@ -583,8 +583,8 @@ convert<sierra::nalu::Coordinates>::decode(
 }
 
 bool
-convert<sierra::nalu::Pressure>::decode(
-  const Node& node, sierra::nalu::Pressure& p)
+convert<sierra::kynema_ugf::Pressure>::decode(
+  const Node& node, sierra::kynema_ugf::Pressure& p)
 {
   if (!node.IsScalar()) {
     return false;
@@ -596,8 +596,8 @@ convert<sierra::nalu::Pressure>::decode(
 }
 
 bool
-convert<sierra::nalu::TurbKinEnergy>::decode(
-  const Node& node, sierra::nalu::TurbKinEnergy& tke)
+convert<sierra::kynema_ugf::TurbKinEnergy>::decode(
+  const Node& node, sierra::kynema_ugf::TurbKinEnergy& tke)
 {
   if (!node.IsScalar()) {
     return false;
@@ -609,8 +609,8 @@ convert<sierra::nalu::TurbKinEnergy>::decode(
 }
 
 bool
-convert<sierra::nalu::SpecDissRate>::decode(
-  const Node& node, sierra::nalu::SpecDissRate& sdr)
+convert<sierra::kynema_ugf::SpecDissRate>::decode(
+  const Node& node, sierra::kynema_ugf::SpecDissRate& sdr)
 {
   if (!node.IsScalar()) {
     return false;
@@ -622,8 +622,8 @@ convert<sierra::nalu::SpecDissRate>::decode(
 }
 
 bool
-convert<sierra::nalu::TotDissRate>::decode(
-  const Node& node, sierra::nalu::TotDissRate& tdr)
+convert<sierra::kynema_ugf::TotDissRate>::decode(
+  const Node& node, sierra::kynema_ugf::TotDissRate& tdr)
 {
   if (!node.IsScalar()) {
     return false;
@@ -635,8 +635,8 @@ convert<sierra::nalu::TotDissRate>::decode(
 }
 
 bool
-convert<sierra::nalu::GammaInf>::decode(
-  const Node& node, sierra::nalu::GammaInf& gamma)
+convert<sierra::kynema_ugf::GammaInf>::decode(
+  const Node& node, sierra::kynema_ugf::GammaInf& gamma)
 {
   if (!node.IsScalar()) {
     return false;
@@ -648,8 +648,8 @@ convert<sierra::nalu::GammaInf>::decode(
 }
 
 bool
-convert<sierra::nalu::Temperature>::decode(
-  const Node& node, sierra::nalu::Temperature& t)
+convert<sierra::kynema_ugf::Temperature>::decode(
+  const Node& node, sierra::kynema_ugf::Temperature& t)
 {
   if (!node.IsScalar()) {
     return false;
@@ -661,8 +661,8 @@ convert<sierra::nalu::Temperature>::decode(
 }
 
 bool
-convert<sierra::nalu::MixtureFraction>::decode(
-  const Node& node, sierra::nalu::MixtureFraction& z)
+convert<sierra::kynema_ugf::MixtureFraction>::decode(
+  const Node& node, sierra::kynema_ugf::MixtureFraction& z)
 {
   if (!node.IsScalar()) {
     return false;
@@ -674,8 +674,8 @@ convert<sierra::nalu::MixtureFraction>::decode(
 }
 
 bool
-convert<sierra::nalu::VolumeOfFluid>::decode(
-  const Node& node, sierra::nalu::VolumeOfFluid& vof)
+convert<sierra::kynema_ugf::VolumeOfFluid>::decode(
+  const Node& node, sierra::kynema_ugf::VolumeOfFluid& vof)
 {
   if (!node.IsScalar()) {
     return false;
@@ -687,8 +687,8 @@ convert<sierra::nalu::VolumeOfFluid>::decode(
 }
 
 bool
-convert<sierra::nalu::MassFraction>::decode(
-  const Node& node, sierra::nalu::MassFraction& yk)
+convert<sierra::kynema_ugf::MassFraction>::decode(
+  const Node& node, sierra::kynema_ugf::MassFraction& yk)
 {
   if (!node.IsSequence()) {
     return false;
@@ -704,8 +704,8 @@ convert<sierra::nalu::MassFraction>::decode(
 }
 
 bool
-convert<sierra::nalu::RoughnessHeight>::decode(
-  const Node& node, sierra::nalu::RoughnessHeight& z0)
+convert<sierra::kynema_ugf::RoughnessHeight>::decode(
+  const Node& node, sierra::kynema_ugf::RoughnessHeight& z0)
 {
   if (!node.IsScalar()) {
     return false;
@@ -717,8 +717,8 @@ convert<sierra::nalu::RoughnessHeight>::decode(
 }
 
 bool
-convert<sierra::nalu::NormalHeatFlux>::decode(
-  const Node& node, sierra::nalu::NormalHeatFlux& q)
+convert<sierra::kynema_ugf::NormalHeatFlux>::decode(
+  const Node& node, sierra::kynema_ugf::NormalHeatFlux& q)
 {
   if (!node.IsScalar()) {
     return false;
@@ -730,8 +730,8 @@ convert<sierra::nalu::NormalHeatFlux>::decode(
 }
 
 bool
-convert<sierra::nalu::NormalTemperatureGradient>::decode(
-  const Node& node, sierra::nalu::NormalTemperatureGradient& tempGrad)
+convert<sierra::kynema_ugf::NormalTemperatureGradient>::decode(
+  const Node& node, sierra::kynema_ugf::NormalTemperatureGradient& tempGrad)
 {
   if (!node.IsScalar()) {
     return false;
@@ -743,8 +743,8 @@ convert<sierra::nalu::NormalTemperatureGradient>::decode(
 }
 
 bool
-convert<sierra::nalu::ReferenceTemperature>::decode(
-  const Node& node, sierra::nalu::ReferenceTemperature& rt)
+convert<sierra::kynema_ugf::ReferenceTemperature>::decode(
+  const Node& node, sierra::kynema_ugf::ReferenceTemperature& rt)
 {
   if (!node.IsScalar()) {
     return false;
@@ -756,43 +756,46 @@ convert<sierra::nalu::ReferenceTemperature>::decode(
 }
 
 bool
-convert<sierra::nalu::WallUserData>::decode(
-  const Node& node, sierra::nalu::WallUserData& wallData)
+convert<sierra::kynema_ugf::WallUserData>::decode(
+  const Node& node, sierra::kynema_ugf::WallUserData& wallData)
 {
 
   // constant data; all optional
   if (node["velocity"]) {
-    wallData.u_ = node["velocity"].as<sierra::nalu::Velocity>();
+    wallData.u_ = node["velocity"].as<sierra::kynema_ugf::Velocity>();
     wallData.bcDataSpecifiedMap_["velocity"] = true;
-    wallData.bcDataTypeMap_["velocity"] = sierra::nalu::CONSTANT_UD;
+    wallData.bcDataTypeMap_["velocity"] = sierra::kynema_ugf::CONSTANT_UD;
   }
 
   if (node["mesh_displacement"]) {
-    wallData.dx_ = node["mesh_displacement"].as<sierra::nalu::Velocity>();
+    wallData.dx_ = node["mesh_displacement"].as<sierra::kynema_ugf::Velocity>();
     wallData.bcDataSpecifiedMap_["mesh_displacement"] = true;
-    wallData.bcDataTypeMap_["mesh_displacement"] = sierra::nalu::CONSTANT_UD;
+    wallData.bcDataTypeMap_["mesh_displacement"] =
+      sierra::kynema_ugf::CONSTANT_UD;
   }
   if (node["turbulent_ke"]) {
-    wallData.tke_ = node["turbulent_ke"].as<sierra::nalu::TurbKinEnergy>();
+    wallData.tke_ =
+      node["turbulent_ke"].as<sierra::kynema_ugf::TurbKinEnergy>();
     wallData.bcDataSpecifiedMap_["turbulent_ke"] = true;
-    wallData.bcDataTypeMap_["turbulent_ke"] = sierra::nalu::CONSTANT_UD;
+    wallData.bcDataTypeMap_["turbulent_ke"] = sierra::kynema_ugf::CONSTANT_UD;
   }
   if (node["total_dissipation_rate"]) {
     wallData.tdr_ =
-      node["total_dissipation_rate"].as<sierra::nalu::TotDissRate>();
+      node["total_dissipation_rate"].as<sierra::kynema_ugf::TotDissRate>();
     wallData.bcDataSpecifiedMap_["total_dissipation_rate"] = true;
     wallData.bcDataTypeMap_["total_dissipation_rate"] =
-      sierra::nalu::CONSTANT_UD;
+      sierra::kynema_ugf::CONSTANT_UD;
   }
   if (node["temperature"]) {
     try {
       wallData.temperature_ =
-        node["temperature"].as<sierra::nalu::Temperature>();
-      wallData.bcDataTypeMap_["temperature"] = sierra::nalu::CONSTANT_UD;
+        node["temperature"].as<sierra::kynema_ugf::Temperature>();
+      wallData.bcDataTypeMap_["temperature"] = sierra::kynema_ugf::CONSTANT_UD;
     } catch (const YAML::BadConversion&) {
       wallData.functions.emplace(
         "temperature", node["temperature"].as<std::string>());
-      wallData.bcDataTypeMap_["temperature"] = sierra::nalu::STRING_FUNCTION_UD;
+      wallData.bcDataTypeMap_["temperature"] =
+        sierra::kynema_ugf::STRING_FUNCTION_UD;
     }
     wallData.bcDataSpecifiedMap_["temperature"] = true;
     wallData.tempSpec_ = true;
@@ -800,23 +803,24 @@ convert<sierra::nalu::WallUserData>::decode(
 
   if (node["mixture_fraction"]) {
     wallData.mixFrac_ =
-      node["mixture_fraction"].as<sierra::nalu::MixtureFraction>();
+      node["mixture_fraction"].as<sierra::kynema_ugf::MixtureFraction>();
     wallData.bcDataSpecifiedMap_["mixture_fraction"] = true;
-    wallData.bcDataTypeMap_["mixture_fraction"] = sierra::nalu::CONSTANT_UD;
+    wallData.bcDataTypeMap_["mixture_fraction"] =
+      sierra::kynema_ugf::CONSTANT_UD;
   }
 
   if (node["mass_fraction"]) {
     wallData.massFraction_ =
-      node["mass_fraction"].as<sierra::nalu::MassFraction>();
+      node["mass_fraction"].as<sierra::kynema_ugf::MassFraction>();
     wallData.bcDataSpecifiedMap_["mass_fraction"] = true;
-    wallData.bcDataTypeMap_["mass_fraction"] = sierra::nalu::CONSTANT_UD;
+    wallData.bcDataTypeMap_["mass_fraction"] = sierra::kynema_ugf::CONSTANT_UD;
   }
 
   if (node["volume_of_fluid"]) {
     wallData.volumeOfFluid_ =
-      node["volume_of_fluid"].as<sierra::nalu::VolumeOfFluid>();
+      node["volume_of_fluid"].as<sierra::kynema_ugf::VolumeOfFluid>();
     wallData.bcDataSpecifiedMap_["volume_of_fluid"] = true;
-    wallData.bcDataTypeMap_["mass_fraction"] = sierra::nalu::CONSTANT_UD;
+    wallData.bcDataTypeMap_["mass_fraction"] = sierra::kynema_ugf::CONSTANT_UD;
   }
 
   if (node["adiabatic"]) {
@@ -833,7 +837,8 @@ convert<sierra::nalu::WallUserData>::decode(
 
   if (node["reference_temperature"]) {
     wallData.referenceTemperature_ =
-      node["reference_temperature"].as<sierra::nalu::ReferenceTemperature>();
+      node["reference_temperature"]
+        .as<sierra::kynema_ugf::ReferenceTemperature>();
     wallData.refTempSpec_ = true;
   }
   if (node["gravity_vector_component"]) {
@@ -841,7 +846,8 @@ convert<sierra::nalu::WallUserData>::decode(
       node["gravity_vector_component"].as<unsigned>();
   }
   if (node["roughness_height"]) {
-    wallData.z0_ = node["roughness_height"].as<sierra::nalu::RoughnessHeight>();
+    wallData.z0_ =
+      node["roughness_height"].as<sierra::kynema_ugf::RoughnessHeight>();
   }
   if (node["RANS_abl_bc"]) {
     const bool is_activated = node["RANS_abl_bc"].as<bool>();
@@ -867,9 +873,9 @@ convert<sierra::nalu::WallUserData>::decode(
     wallData.ablWallFunctionNode_ = node["abl_wall_function"];
   }
   if (node["pressure"]) {
-    wallData.pressure_ = node["pressure"].as<sierra::nalu::Pressure>();
+    wallData.pressure_ = node["pressure"].as<sierra::kynema_ugf::Pressure>();
     wallData.bcDataSpecifiedMap_["pressure"] = true;
-    wallData.bcDataTypeMap_["pressure"] = sierra::nalu::CONSTANT_UD;
+    wallData.bcDataTypeMap_["pressure"] = sierra::kynema_ugf::CONSTANT_UD;
   }
 
   if (node["fsi_interface"]) {
@@ -884,14 +890,14 @@ convert<sierra::nalu::WallUserData>::decode(
   }
 
   if (node["heat_flux"]) {
-    wallData.q_ = node["heat_flux"].as<sierra::nalu::NormalHeatFlux>();
+    wallData.q_ = node["heat_flux"].as<sierra::kynema_ugf::NormalHeatFlux>();
     wallData.heatFluxSpec_ = true;
   }
 
   // function data
   const bool optional = true;
   const Node userFcnNode =
-    sierra::nalu::expect_map(node, "user_function_name", optional);
+    sierra::kynema_ugf::expect_map(node, "user_function_name", optional);
   if (userFcnNode) {
     for (const_iterator i = userFcnNode.begin(); i != userFcnNode.end(); ++i) {
       const Node key = i->first;
@@ -899,20 +905,22 @@ convert<sierra::nalu::WallUserData>::decode(
       std::string stringName = key.as<std::string>();
       std::string data = value.as<std::string>();
       wallData.bcDataSpecifiedMap_[stringName] = true;
-      wallData.bcDataTypeMap_[stringName] = sierra::nalu::FUNCTION_UD;
+      wallData.bcDataTypeMap_[stringName] = sierra::kynema_ugf::FUNCTION_UD;
       wallData.userFunctionMap_[stringName] = data;
     }
 
     // extract function name and parameters
-    if (sierra::nalu::expect_map(node, "user_function_parameters", true)) {
+    if (
+      sierra::kynema_ugf::expect_map(node, "user_function_parameters", true)) {
       wallData.functionParams_ =
         node["user_function_parameters"]
           .as<std::map<std::string, std::vector<double>>>();
     }
 
     // extract function name and string parameters
-    if (sierra::nalu::expect_map(
-          node, "user_function_string_parameters", true)) {
+    if (
+      sierra::kynema_ugf::expect_map(
+        node, "user_function_string_parameters", true)) {
       wallData.functionStringParams_ =
         node["user_function_string_parameters"]
           .as<std::map<std::string, std::vector<std::string>>>();
@@ -923,8 +931,8 @@ convert<sierra::nalu::WallUserData>::decode(
 }
 
 bool
-convert<sierra::nalu::MasterSlave>::decode(
-  const Node& node, sierra::nalu::MasterSlave& ms)
+convert<sierra::kynema_ugf::MasterSlave>::decode(
+  const Node& node, sierra::kynema_ugf::MasterSlave& ms)
 {
 
   if (!node.IsSequence() || node.size() != 2) {
@@ -938,62 +946,64 @@ convert<sierra::nalu::MasterSlave>::decode(
 }
 
 bool
-convert<sierra::nalu::InflowUserData>::decode(
-  const Node& node, sierra::nalu::InflowUserData& inflowData)
+convert<sierra::kynema_ugf::InflowUserData>::decode(
+  const Node& node, sierra::kynema_ugf::InflowUserData& inflowData)
 {
   // optional
   if (node["velocity"]) {
-    inflowData.u_ = node["velocity"].as<sierra::nalu::Velocity>();
+    inflowData.u_ = node["velocity"].as<sierra::kynema_ugf::Velocity>();
     inflowData.uSpec_ = true;
   }
   if (node["turbulent_ke"]) {
-    inflowData.tke_ = node["turbulent_ke"].as<sierra::nalu::TurbKinEnergy>();
+    inflowData.tke_ =
+      node["turbulent_ke"].as<sierra::kynema_ugf::TurbKinEnergy>();
     inflowData.tkeSpec_ = true;
   }
   if (node["specific_dissipation_rate"]) {
     inflowData.sdr_ =
-      node["specific_dissipation_rate"].as<sierra::nalu::SpecDissRate>();
+      node["specific_dissipation_rate"].as<sierra::kynema_ugf::SpecDissRate>();
     inflowData.sdrSpec_ = true;
   }
   if (node["total_dissipation_rate"]) {
     inflowData.tdr_ =
-      node["total_dissipation_rate"].as<sierra::nalu::TotDissRate>();
+      node["total_dissipation_rate"].as<sierra::kynema_ugf::TotDissRate>();
     inflowData.tdrSpec_ = true;
   }
   if (node["mixture_fraction"]) {
     inflowData.mixFrac_ =
-      node["mixture_fraction"].as<sierra::nalu::MixtureFraction>();
+      node["mixture_fraction"].as<sierra::kynema_ugf::MixtureFraction>();
     inflowData.mixFracSpec_ = true;
   }
 
   if (node["volume_of_fluid"]) {
     inflowData.volumeOfFluid_ =
-      node["volume_of_fluid"].as<sierra::nalu::VolumeOfFluid>();
+      node["volume_of_fluid"].as<sierra::kynema_ugf::VolumeOfFluid>();
     inflowData.bcDataSpecifiedMap_["volume_of_fluid"] = true;
   }
 
   if (node["mass_fraction"]) {
     inflowData.massFraction_ =
-      node["mass_fraction"].as<sierra::nalu::MassFraction>();
+      node["mass_fraction"].as<sierra::kynema_ugf::MassFraction>();
     inflowData.massFractionSpec_ = true;
   }
   if (node["temperature"]) {
     try {
       inflowData.temperature_ =
-        node["temperature"].as<sierra::nalu::Temperature>();
-      inflowData.bcDataTypeMap_["temperature"] = sierra::nalu::CONSTANT_UD;
+        node["temperature"].as<sierra::kynema_ugf::Temperature>();
+      inflowData.bcDataTypeMap_["temperature"] =
+        sierra::kynema_ugf::CONSTANT_UD;
     } catch (const YAML::BadConversion&) {
       inflowData.functions.emplace(
         "temperature", node["temperature"].as<std::string>());
       inflowData.bcDataTypeMap_["temperature"] =
-        sierra::nalu::STRING_FUNCTION_UD;
+        sierra::kynema_ugf::STRING_FUNCTION_UD;
     }
     inflowData.tempSpec_ = true;
   }
 
   const bool optional = true;
   const Node userFcnNode =
-    sierra::nalu::expect_map(node, "user_function_name", optional);
+    sierra::kynema_ugf::expect_map(node, "user_function_name", optional);
   if (userFcnNode) {
     for (const_iterator i = userFcnNode.begin(); i != userFcnNode.end(); ++i) {
       const Node key = i->first;
@@ -1003,12 +1013,13 @@ convert<sierra::nalu::InflowUserData>::decode(
       std::string data;
       data = value.as<std::string>();
       inflowData.bcDataSpecifiedMap_[stringName] = true;
-      inflowData.bcDataTypeMap_[stringName] = sierra::nalu::FUNCTION_UD;
+      inflowData.bcDataTypeMap_[stringName] = sierra::kynema_ugf::FUNCTION_UD;
       inflowData.userFunctionMap_[stringName] = data;
     }
 
     // extract function name and parameters
-    if (sierra::nalu::expect_map(node, "user_function_parameters", true)) {
+    if (
+      sierra::kynema_ugf::expect_map(node, "user_function_parameters", true)) {
       inflowData.functionParams_ =
         node["user_function_parameters"]
           .as<std::map<std::string, std::vector<double>>>();
@@ -1024,58 +1035,60 @@ convert<sierra::nalu::InflowUserData>::decode(
 }
 
 bool
-convert<sierra::nalu::OpenUserData>::decode(
-  const Node& node, sierra::nalu::OpenUserData& openData)
+convert<sierra::kynema_ugf::OpenUserData>::decode(
+  const Node& node, sierra::kynema_ugf::OpenUserData& openData)
 {
 
   // optional
   if (node["velocity"]) {
-    openData.u_ = node["velocity"].as<sierra::nalu::Velocity>();
+    openData.u_ = node["velocity"].as<sierra::kynema_ugf::Velocity>();
     openData.uSpec_ = true;
   }
   // optional
   if (node["turbulent_ke"]) {
-    openData.tke_ = node["turbulent_ke"].as<sierra::nalu::TurbKinEnergy>();
+    openData.tke_ =
+      node["turbulent_ke"].as<sierra::kynema_ugf::TurbKinEnergy>();
     openData.tkeSpec_ = true;
   }
   if (node["specific_dissipation_rate"]) {
     openData.sdr_ =
-      node["specific_dissipation_rate"].as<sierra::nalu::SpecDissRate>();
+      node["specific_dissipation_rate"].as<sierra::kynema_ugf::SpecDissRate>();
     openData.sdrSpec_ = true;
   }
   if (node["total_dissipation_rate"]) {
     openData.tdr_ =
-      node["total_dissipation_rate"].as<sierra::nalu::TotDissRate>();
+      node["total_dissipation_rate"].as<sierra::kynema_ugf::TotDissRate>();
     openData.tdrSpec_ = true;
   }
   if (node["pressure"]) {
-    openData.p_ = node["pressure"].as<sierra::nalu::Pressure>();
+    openData.p_ = node["pressure"].as<sierra::kynema_ugf::Pressure>();
     openData.pSpec_ = true;
   }
   if (node["mixture_fraction"]) {
     openData.mixFrac_ =
-      node["mixture_fraction"].as<sierra::nalu::MixtureFraction>();
+      node["mixture_fraction"].as<sierra::kynema_ugf::MixtureFraction>();
     openData.mixFracSpec_ = true;
   }
   if (node["volume_of_fluid"]) {
     openData.volumeOfFluid_ =
-      node["volume_of_fluid"].as<sierra::nalu::VolumeOfFluid>();
+      node["volume_of_fluid"].as<sierra::kynema_ugf::VolumeOfFluid>();
     openData.bcDataSpecifiedMap_["volume_of_fluid"] = true;
   }
   if (node["mass_fraction"]) {
     openData.massFraction_ =
-      node["mass_fraction"].as<sierra::nalu::MassFraction>();
+      node["mass_fraction"].as<sierra::kynema_ugf::MassFraction>();
     openData.massFractionSpec_ = true;
   }
   if (node["temperature"]) {
     try {
       openData.temperature_ =
-        node["temperature"].as<sierra::nalu::Temperature>();
-      openData.bcDataTypeMap_["temperature"] = sierra::nalu::CONSTANT_UD;
+        node["temperature"].as<sierra::kynema_ugf::Temperature>();
+      openData.bcDataTypeMap_["temperature"] = sierra::kynema_ugf::CONSTANT_UD;
     } catch (const YAML::BadConversion&) {
       openData.functions.emplace(
         "temperature", node["temperature"].as<std::string>());
-      openData.bcDataTypeMap_["temperature"] = sierra::nalu::STRING_FUNCTION_UD;
+      openData.bcDataTypeMap_["temperature"] =
+        sierra::kynema_ugf::STRING_FUNCTION_UD;
     }
     openData.tempSpec_ = true;
   }
@@ -1087,7 +1100,7 @@ convert<sierra::nalu::OpenUserData>::decode(
   if (node["entrainment_method"]) {
     const auto ent_meth = node["entrainment_method"].as<std::string>();
     bool found = false;
-    for (auto& nameMethPair : sierra::nalu::EntrainmentMethodMap) {
+    for (auto& nameMethPair : sierra::kynema_ugf::EntrainmentMethodMap) {
       if (ent_meth == nameMethPair.first) {
         openData.entrainMethod_ = nameMethPair.second;
         found = true;
@@ -1097,13 +1110,14 @@ convert<sierra::nalu::OpenUserData>::decode(
     if (!found) {
       std::string avail =
         "Unknown entrainment method " + ent_meth + ". Available methods are";
-      for (auto& nameMethPair : sierra::nalu::EntrainmentMethodMap) {
+      for (auto& nameMethPair : sierra::kynema_ugf::EntrainmentMethodMap) {
         avail += " " + nameMethPair.first;
       }
       throw std::runtime_error(avail);
     }
     if (
-      openData.entrainMethod_ == sierra::nalu::EntrainmentMethod::SPECIFIED &&
+      openData.entrainMethod_ ==
+        sierra::kynema_ugf::EntrainmentMethod::SPECIFIED &&
       openData.totalP_) {
       throw std::runtime_error(
         "Specifying both total pressure and specified "
@@ -1114,8 +1128,8 @@ convert<sierra::nalu::OpenUserData>::decode(
 }
 
 bool
-convert<sierra::nalu::OversetUserData>::decode(
-  const Node& node, sierra::nalu::OversetUserData& oversetData)
+convert<sierra::kynema_ugf::OversetUserData>::decode(
+  const Node& node, sierra::kynema_ugf::OversetUserData& oversetData)
 {
   // nothing is optional
   if (node["percent_overlap"]) {
@@ -1177,8 +1191,8 @@ convert<sierra::nalu::OversetUserData>::decode(
 }
 
 bool
-convert<sierra::nalu::SymmetryUserData>::decode(
-  const Node& node, sierra::nalu::SymmetryUserData& /* symmetryData */)
+convert<sierra::kynema_ugf::SymmetryUserData>::decode(
+  const Node& node, sierra::kynema_ugf::SymmetryUserData& /* symmetryData */)
 {
   // Normal temperature gradient for ABL top BC is now implemented in
   // abltop_boundary_condition. Throw error to inform user of the change
@@ -1190,15 +1204,15 @@ convert<sierra::nalu::SymmetryUserData>::decode(
 }
 
 bool
-convert<sierra::nalu::ABLTopUserData>::decode(
-  const Node& node, sierra::nalu::ABLTopUserData& abltopData)
+convert<sierra::kynema_ugf::ABLTopUserData>::decode(
+  const Node& node, sierra::kynema_ugf::ABLTopUserData& abltopData)
 {
   // This allows the user to set a fixed noraml temperature gradient that is
   // achieved through application of a compatible normal  heat flux.
   if (node["normal_temperature_gradient"]) {
     abltopData.normalTemperatureGradient_ =
       node["normal_temperature_gradient"]
-        .as<sierra::nalu::NormalTemperatureGradient>();
+        .as<sierra::kynema_ugf::NormalTemperatureGradient>();
     abltopData.normalTemperatureGradientSpec_ = true;
   }
   abltopData.ABLTopBC_ = false;
@@ -1216,8 +1230,8 @@ convert<sierra::nalu::ABLTopUserData>::decode(
 }
 
 bool
-convert<sierra::nalu::PeriodicUserData>::decode(
-  const Node& node, sierra::nalu::PeriodicUserData& periodicData)
+convert<sierra::kynema_ugf::PeriodicUserData>::decode(
+  const Node& node, sierra::kynema_ugf::PeriodicUserData& periodicData)
 {
   // nothing is optional
   if (node["search_tolerance"]) {
@@ -1234,8 +1248,8 @@ convert<sierra::nalu::PeriodicUserData>::decode(
 }
 
 bool
-convert<sierra::nalu::NonConformalUserData>::decode(
-  const Node& node, sierra::nalu::NonConformalUserData& nonConformalData)
+convert<sierra::kynema_ugf::NonConformalUserData>::decode(
+  const Node& node, sierra::kynema_ugf::NonConformalUserData& nonConformalData)
 {
 
   // everything is optional
@@ -1263,8 +1277,8 @@ convert<sierra::nalu::NonConformalUserData>::decode(
 }
 
 bool
-convert<sierra::nalu::BoundaryConditionOptions>::decode(
-  const Node& node, sierra::nalu::BoundaryConditionOptions& bcOptions)
+convert<sierra::kynema_ugf::BoundaryConditionOptions>::decode(
+  const Node& node, sierra::kynema_ugf::BoundaryConditionOptions& bcOptions)
 {
 
   bcOptions.bcSetName_ = node["boundary_conditions"].as<std::string>();
@@ -1281,8 +1295,8 @@ convert<sierra::nalu::BoundaryConditionOptions>::decode(
 }
 
 bool
-convert<sierra::nalu::MeshInput>::decode(
-  const Node& node, sierra::nalu::MeshInput& meshInput)
+convert<sierra::kynema_ugf::MeshInput>::decode(
+  const Node& node, sierra::kynema_ugf::MeshInput& meshInput)
 {
   meshInput.meshName_ = node["mesh_name"].as<std::string>();
   return true;

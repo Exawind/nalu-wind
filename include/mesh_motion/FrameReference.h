@@ -9,7 +9,7 @@
 #include <float.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class FrameReference : public FrameBase
 {
@@ -28,7 +28,7 @@ private:
   FrameReference(const FrameReference&) = delete;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* FRAMEREFERENCE_H */

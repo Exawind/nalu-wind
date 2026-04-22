@@ -11,8 +11,8 @@
 #include <AuxFunctionAlgorithm.h>
 #include <EquationSystems.h>
 #include <EquationSystem.h>
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 #include <Realm.h>
 #include <PostProcessingData.h>
 #include <Simulation.h>
@@ -23,7 +23,7 @@
 #include <EnthalpyEquationSystem.h>
 #include <LowMachEquationSystem.h>
 
-#ifdef NALU_HAS_MATRIXFREE
+#ifdef KYNEMA_UGF_HAS_MATRIXFREE
 #include <MatrixFreeHeatCondEquationSystem.h>
 #include <MatrixFreeLowMachEquationSystem.h>
 #endif
@@ -45,7 +45,7 @@
 #include <stk_topology/topology.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -115,15 +115,15 @@ EquationSystems::load(const YAML::Node& y_node)
 
         if (expect_map(y_system, "LowMachEOM", true)) {
           y_eqsys = expect_map(y_system, "LowMachEOM", true);
-          if (NaluEnv::self().debug())
-            NaluEnv::self().naluOutputP0()
+          if (KynemaUGFEnv::self().debug())
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
               << "eqSys = LowMachEOM " << std::endl;
           bool elemCont = (realm_.realmUsesEdges_) ? false : true;
           get_if_present_no_default(
             y_eqsys, "element_continuity_eqs", elemCont);
 
           if (realm_.matrix_free()) {
-#ifdef NALU_HAS_MATRIXFREE
+#ifdef KYNEMA_UGF_HAS_MATRIXFREE
             eqSys = new MatrixFreeLowMachEquationSystem(*this);
 #endif
           } else {
@@ -132,35 +132,40 @@ EquationSystems::load(const YAML::Node& y_node)
         } else if (expect_map(y_system, "VolumeOfFluid", true)) {
 
           y_eqsys = expect_map(y_system, "VolumeOfFluid", true);
-          if (NaluEnv::self().debug())
-            NaluEnv::self().naluOutputP0()
+          if (KynemaUGFEnv::self().debug())
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
               << "eqSys = VolumeOfFluid" << std::endl;
           eqSys = new VolumeOfFluidEquationSystem(*this);
 
         } else if (expect_map(y_system, "ShearStressTransport", true)) {
           y_eqsys = expect_map(y_system, "ShearStressTransport", true);
-          if (NaluEnv::self().debug())
-            NaluEnv::self().naluOutputP0() << "eqSys = tke/sdr " << std::endl;
+          if (KynemaUGFEnv::self().debug())
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
+              << "eqSys = tke/sdr " << std::endl;
           eqSys = new ShearStressTransportEquationSystem(*this);
         } else if (expect_map(y_system, "ChienKEpsilon", true)) {
           y_eqsys = expect_map(y_system, "ChienKEpsilon", true);
-          if (NaluEnv::self().debug())
-            NaluEnv::self().naluOutputP0() << "eqSys = tke/tdr " << std::endl;
+          if (KynemaUGFEnv::self().debug())
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
+              << "eqSys = tke/tdr " << std::endl;
           eqSys = new ChienKEpsilonEquationSystem(*this);
         } else if (expect_map(y_system, "WilcoxKOmega", true)) {
           y_eqsys = expect_map(y_system, "WilcoxKOmega", true);
-          if (NaluEnv::self().debug())
-            NaluEnv::self().naluOutputP0() << "eqSys = tke/sdr " << std::endl;
+          if (KynemaUGFEnv::self().debug())
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
+              << "eqSys = tke/sdr " << std::endl;
           eqSys = new WilcoxKOmegaEquationSystem(*this);
         } else if (expect_map(y_system, "TurbKineticEnergy", true)) {
           y_eqsys = expect_map(y_system, "TurbKineticEnergy", true);
-          if (NaluEnv::self().debug())
-            NaluEnv::self().naluOutputP0() << "eqSys = tke " << std::endl;
+          if (KynemaUGFEnv::self().debug())
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
+              << "eqSys = tke " << std::endl;
           eqSys = new TurbKineticEnergyEquationSystem(*this);
         } else if (expect_map(y_system, "Enthalpy", true)) {
           y_eqsys = expect_map(y_system, "Enthalpy", true);
-          if (NaluEnv::self().debug())
-            NaluEnv::self().naluOutputP0() << "eqSys = enthalpy " << std::endl;
+          if (KynemaUGFEnv::self().debug())
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
+              << "eqSys = enthalpy " << std::endl;
           double minT = 250.0;
           double maxT = 3000.0;
           get_if_present_no_default(y_eqsys, "minimum_temperature", minT);
@@ -171,10 +176,10 @@ EquationSystems::load(const YAML::Node& y_node)
           eqSys = new EnthalpyEquationSystem(*this, minT, maxT, ouputClipDiag);
         } else if (expect_map(y_system, "HeatConduction", true)) {
           y_eqsys = expect_map(y_system, "HeatConduction", true);
-          if (NaluEnv::self().debug())
-            NaluEnv::self().naluOutputP0()
+          if (KynemaUGFEnv::self().debug())
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
               << "eqSys = HeatConduction " << std::endl;
-#ifdef NALU_HAS_MATRIXFREE
+#ifdef KYNEMA_UGF_HAS_MATRIXFREE
           if (realm_.matrix_free()) {
             eqSys = new MatrixFreeHeatCondEquationSystem(*this);
           } else {
@@ -186,11 +191,11 @@ EquationSystems::load(const YAML::Node& y_node)
           y_eqsys = expect_map(y_system, "WallDistance", true);
           eqSys = new WallDistEquationSystem(*this);
         } else {
-          if (!NaluEnv::self().parallel_rank()) {
+          if (!KynemaUGFEnv::self().parallel_rank()) {
             std::cout << "Error: parsing at "
-                      << NaluParsingHelper::info(y_system)
-                      << "... at parent ... " << NaluParsingHelper::info(y_node)
-                      << std::endl;
+                      << KynemaUGFParsingHelper::info(y_system)
+                      << "... at parent ... "
+                      << KynemaUGFParsingHelper::info(y_node) << std::endl;
           }
           throw std::runtime_error(
             "parser error EquationSystem::load: unknown equation system type");
@@ -222,7 +227,7 @@ EquationSystems::get_solver_block_name(const std::string eqName) const
   if (iter != solverSpecMap_.end()) {
     solverName = (*iter).second;
   } else {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Missed equation solver block specification for " << eqName
       << std::endl;
     throw std::runtime_error("issue with solver name mapping; none supplied");
@@ -259,7 +264,7 @@ create_part_vec(
   for (const auto& part_name : targetNames) {
     part_vec.push_back(meta_data.get_part(part_name));
     if (nullptr == part_vec.back()) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Trouble with part " << part_name << std::endl;
       throw std::runtime_error(
         "Sorry, no part name found by the name " + part_name);
@@ -373,7 +378,7 @@ EquationSystems::register_wall_bc(
 
   stk::mesh::Part* targetPart = meta_data.get_part(targetName);
   if (NULL == targetPart) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Sorry, no part name found by the name " << targetName << std::endl;
   } else {
     // found the part
@@ -385,7 +390,7 @@ EquationSystems::register_wall_bc(
       const stk::topology the_topo = part->topology();
 
       if (!(meta_data.side_rank() == part->primary_entity_rank())) {
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Sorry, part is not a face " << targetName;
       } else {
         realm_.register_wall_bc(part, the_topo);
@@ -409,7 +414,7 @@ EquationSystems::register_inflow_bc(
 
   stk::mesh::Part* targetPart = meta_data.get_part(targetName);
   if (NULL == targetPart) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Sorry, no part name found by the name " << targetName << std::endl;
   } else {
     // found the part
@@ -420,7 +425,7 @@ EquationSystems::register_inflow_bc(
       const stk::topology the_topo = part->topology();
 
       if (!(meta_data.side_rank() == part->primary_entity_rank())) {
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Sorry, part is not a face " << targetName;
       } else {
         realm_.register_inflow_bc(part, the_topo);
@@ -444,7 +449,7 @@ EquationSystems::register_open_bc(
 
   stk::mesh::Part* targetPart = meta_data.get_part(targetName);
   if (NULL == targetPart) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Sorry, no part name found by the name " << targetName << std::endl;
   } else {
     // found the part
@@ -454,7 +459,7 @@ EquationSystems::register_open_bc(
       stk::mesh::Part* const part = *i;
       const stk::topology the_topo = part->topology();
       if (!(meta_data.side_rank() == part->primary_entity_rank())) {
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Sorry, part is not a face " << targetName;
       } else {
         realm_.register_open_bc(part, the_topo);
@@ -479,7 +484,7 @@ EquationSystems::register_symmetry_bc(
 
   stk::mesh::Part* targetPart = meta_data.get_part(targetName);
   if (NULL == targetPart) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Sorry, no part name found by the name " << targetName << std::endl;
     throw std::runtime_error("Symmetry::fatal_error()");
   } else {
@@ -490,7 +495,7 @@ EquationSystems::register_symmetry_bc(
       stk::mesh::Part* const part = *i;
       const stk::topology the_topo = part->topology();
       if (!(meta_data.side_rank() == part->primary_entity_rank())) {
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Sorry, part is not a face " << targetName;
         throw std::runtime_error("Symmetry::fatal_error()");
       } else {
@@ -515,7 +520,7 @@ EquationSystems::register_abltop_bc(
 
   stk::mesh::Part* targetPart = meta_data.get_part(targetName);
   if (NULL == targetPart) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Sorry, no part name found by the name " << targetName << std::endl;
     throw std::runtime_error("ABLTop::fatal_error()");
   } else {
@@ -526,7 +531,7 @@ EquationSystems::register_abltop_bc(
       stk::mesh::Part* const part = *i;
       const stk::topology the_topo = part->topology();
       if (!(meta_data.side_rank() == part->primary_entity_rank())) {
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Sorry, part is not a face " << targetName;
         throw std::runtime_error("ABLTop::fatal_error()");
       } else {
@@ -554,12 +559,14 @@ EquationSystems::register_periodic_bc(
   stk::mesh::Part* masterMeshPart = meta_data.get_part(targetNameMaster);
   stk::mesh::Part* slaveMeshPart = meta_data.get_part(targetNameSlave);
   if (NULL == masterMeshPart) {
-    NaluEnv::self().naluOutputP0() << "Sorry, no part name found by the name "
-                                   << targetNameMaster << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Sorry, no part name found by the name " << targetNameMaster
+      << std::endl;
     throw std::runtime_error("EquationSystems::fatal_error()");
   } else if (NULL == slaveMeshPart) {
-    NaluEnv::self().naluOutputP0() << "Sorry, no part name found by the name "
-                                   << targetNameSlave << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Sorry, no part name found by the name " << targetNameSlave
+      << std::endl;
     throw std::runtime_error("EquationSystems::fatal_error()");
   } else {
     // error check on size of subsets
@@ -569,14 +576,15 @@ EquationSystems::register_periodic_bc(
       slaveMeshPart->subsets();
 
     if (masterMeshParts.size() != slaveMeshParts.size())
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Mesh part subsets for master slave do not match in size"
         << std::endl;
 
     if (masterMeshParts.size() > 1)
-      NaluEnv::self().naluOutputP0() << "Surface has subsets active; please "
-                                        "make sure that the topologies match"
-                                     << std::endl;
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
+        << "Surface has subsets active; please "
+           "make sure that the topologies match"
+        << std::endl;
 
     // extract data and search tolerance
     PeriodicUserData userData = periodicBCData.userData_;
@@ -602,7 +610,7 @@ EquationSystems::register_non_conformal_bc(
     stk::mesh::Part* currentMeshPart =
       meta_data.get_part(nonConformalBCData.currentPartNameVec_[k]);
     if (NULL == currentMeshPart) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Sorry, no part name found by the name "
         << nonConformalBCData.currentPartNameVec_[k] << std::endl;
     }
@@ -615,7 +623,7 @@ EquationSystems::register_non_conformal_bc(
     stk::mesh::Part* opposingMeshPart =
       meta_data.get_part(nonConformalBCData.opposingPartNameVec_[k]);
     if (NULL == opposingMeshPart) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Sorry, no part name found by the name "
         << nonConformalBCData.opposingPartNameVec_[k] << std::endl;
     }
@@ -637,7 +645,7 @@ EquationSystems::register_non_conformal_bc(
       stk::mesh::Part* const part = *i;
       const stk::topology the_topo = part->topology();
       if (!(meta_data.side_rank() == part->primary_entity_rank())) {
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Sorry, part is not a face " << part->name();
         throw std::runtime_error("NonConformal::fatal_error()");
       } else {
@@ -678,7 +686,7 @@ EquationSystems::register_surface_pp_algorithm(
   for (size_t in = 0; in < targetNames.size(); ++in) {
     stk::mesh::Part* targetPart = meta_data.get_part(targetNames[in]);
     if (NULL == targetPart) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "SurfacePP: can not find part with name: " << targetNames[in];
     } else {
       // found the part
@@ -687,7 +695,7 @@ EquationSystems::register_surface_pp_algorithm(
            i != mesh_parts.end(); ++i) {
         stk::mesh::Part* const part = *i;
         if (!(meta_data.side_rank() == part->primary_entity_rank())) {
-          NaluEnv::self().naluOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << "SurfacePP: part is not a face: " << targetNames[in];
         }
         partVector.push_back(part);
@@ -730,34 +738,34 @@ EquationSystems::register_initial_condition_string_function(
 void
 EquationSystems::initialize()
 {
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "EquationSystems::initialize(): Begin " << std::endl;
-  double start_time = NaluEnv::self().nalu_time();
+  double start_time = KynemaUGFEnv::self().kynema_ugf_time();
   for (EquationSystem* eqSys : equationSystemVector_) {
     if (realm_.get_activate_memory_diagnostic()) {
-      NaluEnv::self().naluOutputP0()
-        << "NaluMemory::EquationSystems::initialize(): " << eqSys->name_
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
+        << "KynemaUGFMemory::EquationSystems::initialize(): " << eqSys->name_
         << std::endl;
       realm_.provide_memory_summary();
     }
-    double start_time_eq = NaluEnv::self().nalu_time();
+    double start_time_eq = KynemaUGFEnv::self().kynema_ugf_time();
     eqSys->initialize();
-    double end_time_eq = NaluEnv::self().nalu_time();
+    double end_time_eq = KynemaUGFEnv::self().kynema_ugf_time();
     eqSys->timerInit_ += (end_time_eq - start_time_eq);
   }
-  double end_time = NaluEnv::self().nalu_time();
+  double end_time = KynemaUGFEnv::self().kynema_ugf_time();
   realm_.timerInitializeEqs_ += (end_time - start_time);
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "EquationSystems::initialize(): End " << std::endl;
 
   if (realm_.hasOverset_) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "EquationSystems: overset solution strategy" << std::endl;
     for (auto* eqsys : equationSystemVector_) {
       // Skip wrapper equations LowMach, SST etc.
       if (eqsys->linsys_ == nullptr)
         continue;
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << " - " << eqsys->eqnTypeName_ << ": "
         << (eqsys->decoupledOverset_ ? "decoupled" : "coupled") << std::endl;
     }
@@ -771,14 +779,14 @@ EquationSystems::initialize()
 void
 EquationSystems::reinitialize_linear_system()
 {
-  double start_time = NaluEnv::self().nalu_time();
+  double start_time = KynemaUGFEnv::self().kynema_ugf_time();
   for (EquationSystem* eqSys : equationSystemVector_) {
-    double start_time_eq = NaluEnv::self().nalu_time();
+    double start_time_eq = KynemaUGFEnv::self().kynema_ugf_time();
     eqSys->reinitialize_linear_system();
-    double end_time_eq = NaluEnv::self().nalu_time();
+    double end_time_eq = KynemaUGFEnv::self().kynema_ugf_time();
     eqSys->timerInit_ += (end_time_eq - start_time_eq);
   }
-  double end_time = NaluEnv::self().nalu_time();
+  double end_time = KynemaUGFEnv::self().kynema_ugf_time();
   realm_.timerInitializeEqs_ += (end_time - start_time);
 }
 
@@ -825,8 +833,8 @@ EquationSystems::solve_and_update()
 
   // memory diagnostic
   if (realm_.get_activate_memory_diagnostic()) {
-    NaluEnv::self().naluOutputP0()
-      << "NaluMemory::EquationSystem::solve_and_update()" << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "KynemaUGFMemory::EquationSystem::solve_and_update()" << std::endl;
     realm_.provide_memory_summary();
   }
 
@@ -1043,5 +1051,5 @@ EquationSystems::all_systems_decoupled() const
   return hasDecoupled;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -17,12 +17,12 @@
 
 TEST_F(TestTurbulenceAlgorithm, turbviscsmagorinskyalgorithm)
 {
-  sierra::nalu::Realm& realm = this->create_realm();
+  sierra::kynema_ugf::Realm& realm = this->create_realm();
 
   fill_mesh_and_init_fields();
 
   // Execute
-  sierra::nalu::TurbViscSmagorinskyAlgorithm alg(realm, meshPart_);
+  sierra::kynema_ugf::TurbViscSmagorinskyAlgorithm alg(realm, meshPart_);
   alg.execute();
 
   // Perform tests
@@ -34,12 +34,12 @@ TEST_F(TestTurbulenceAlgorithm, turbviscsmagorinskyalgorithm)
 
 TEST_F(TestTurbulenceAlgorithm, turbviscwalealgorithm)
 {
-  sierra::nalu::Realm& realm = this->create_realm();
+  sierra::kynema_ugf::Realm& realm = this->create_realm();
 
   fill_mesh_and_init_fields();
 
   // Execute
-  sierra::nalu::TurbViscWaleAlgorithm alg(realm, meshPart_);
+  sierra::kynema_ugf::TurbViscWaleAlgorithm alg(realm, meshPart_);
   alg.execute();
 
   // Perform tests

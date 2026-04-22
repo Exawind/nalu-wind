@@ -18,7 +18,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename BcAlgTraits>
 SDRWallFuncAlg<BcAlgTraits>::SDRWallFuncAlg(
@@ -64,7 +64,7 @@ template <typename BcAlgTraits>
 void
 SDRWallFuncAlg<BcAlgTraits>::execute()
 {
-  using SimdDataType = nalu_ngp::FaceElemSimdData<stk::mesh::NgpMesh>;
+  using SimdDataType = kynema_ugf_ngp::FaceElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meta = realm_.meta_data();
 
@@ -74,9 +74,9 @@ SDRWallFuncAlg<BcAlgTraits>::execute()
   auto& warea = fieldMgr.template get_field<double>(wallArea_);
   auto& sdrbc = fieldMgr.template get_field<double>(sdrbc_);
   const auto areaOps =
-    nalu_ngp::simd_face_elem_nodal_field_updater(ngpMesh, warea);
+    kynema_ugf_ngp::simd_face_elem_nodal_field_updater(ngpMesh, warea);
   const auto sdrbcOps =
-    nalu_ngp::simd_face_elem_nodal_field_updater(ngpMesh, sdrbc);
+    kynema_ugf_ngp::simd_face_elem_nodal_field_updater(ngpMesh, sdrbc);
 
   // Bring class members into local scope for device capture
   const auto coordsID = coordinates_;
@@ -97,7 +97,7 @@ SDRWallFuncAlg<BcAlgTraits>::execute()
                               std::to_string(BcAlgTraits::faceTopo_) + "_" +
                               std::to_string(BcAlgTraits::elemTopo_);
 
-  nalu_ngp::run_face_elem_algorithm(
+  kynema_ugf_ngp::run_face_elem_algorithm(
     algName, meshInfo, faceData_, elemData_, sel,
     KOKKOS_LAMBDA(SimdDataType & fdata) {
       auto& v_coord = fdata.simdElemView.get_scratch_view_2D(coordsID);
@@ -143,5 +143,5 @@ SDRWallFuncAlg<BcAlgTraits>::execute()
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(SDRWallFuncAlg)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

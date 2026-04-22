@@ -19,7 +19,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class MasterElement;
 
@@ -50,7 +50,7 @@ public:
   std::vector<double> nodalCoords_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

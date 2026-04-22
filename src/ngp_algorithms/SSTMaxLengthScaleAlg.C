@@ -21,7 +21,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename AlgTraits>
 SSTMaxLengthScaleAlg<AlgTraits>::SSTMaxLengthScaleAlg(
@@ -40,7 +40,7 @@ template <typename AlgTraits>
 void
 SSTMaxLengthScaleAlg<AlgTraits>::execute()
 {
-  using ElemInfoType = nalu_ngp::EntityInfo<stk::mesh::NgpMesh>;
+  using ElemInfoType = kynema_ugf_ngp::EntityInfo<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
@@ -56,7 +56,7 @@ SSTMaxLengthScaleAlg<AlgTraits>::execute()
 
   const std::string algName =
     "compute_sst_max_length_scale_" + std::to_string(AlgTraits::topo_);
-  nalu_ngp::run_elem_algorithm(
+  kynema_ugf_ngp::run_elem_algorithm(
     algName, ngpMesh, stk::topology::ELEM_RANK, sel,
     KOKKOS_LAMBDA(const ElemInfoType& einfo) {
       const stk::mesh::Entity entity = einfo.entity;
@@ -93,5 +93,5 @@ SSTMaxLengthScaleAlg<AlgTraits>::execute()
 
 INSTANTIATE_KERNEL(SSTMaxLengthScaleAlg)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

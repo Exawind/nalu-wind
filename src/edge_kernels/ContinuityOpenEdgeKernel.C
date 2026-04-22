@@ -20,7 +20,7 @@
 #include "stk_mesh/base/Field.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename BcAlgTraits>
 ContinuityOpenEdgeKernel<BcAlgTraits>::ContinuityOpenEdgeKernel(
@@ -46,10 +46,10 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::ContinuityOpenEdgeKernel(
     pstabFac_(solnOpts->activateOpenMdotCorrection_ ? 0.0 : 1.0),
     nocFac_(solnOpts_->get_noc_usage("pressure")),
     meFC_(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
         BcAlgTraits::FaceTraits::topo_)),
     meSCS_(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
         BcAlgTraits::ElemTraits::topo_)),
     solveInc_(solnOpts_->solveIncompressibleContinuity_ ? 1.0 : 0.0)
 {
@@ -156,5 +156,5 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(ContinuityOpenEdgeKernel)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -15,7 +15,7 @@
 #include "FieldTypeDef.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class MdotAlgDriver;
@@ -45,7 +45,7 @@ private:
   MasterElement* meFC_{nullptr};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MDOTINFLOWALG_H */

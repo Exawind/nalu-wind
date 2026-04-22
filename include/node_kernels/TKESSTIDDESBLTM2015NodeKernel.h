@@ -15,7 +15,7 @@
 #include "stk_mesh/base/Ngp.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -81,7 +81,7 @@ private:
   const int nDim_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* TKESSTIDDESNODEBLTM2015KERNEL_H */

@@ -11,7 +11,7 @@
 #include "UnitTestRealm.h"
 #include "UnitTestUtils.h"
 
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 #include "LinearSolvers.h"
 #include "Realms.h"
 #include "Realm.h"
@@ -24,7 +24,7 @@
 
 namespace {
 
-const std::string naluDefaultInputs =
+const std::string kynema_ugfDefaultInputs =
   "Simulations:                                                            \n"
   "  - name: sim1                                                          \n"
   "    time_integrator: ti_1                                               \n"
@@ -32,7 +32,7 @@ const std::string naluDefaultInputs =
   "                                                                        \n"
   "linear_solvers:                                                         \n"
   "                                                                        \n"
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
   "  - name: solve_scalar                                                  \n"
   "    type: tpetra                                                        \n"
   "    method: gmres                                                       \n"
@@ -52,7 +52,7 @@ const std::string naluDefaultInputs =
   "    output_level: 0                                                     \n"
   "    recompute_preconditioner: no                                        \n"
   "    muelu_xml_file_name: milestone.xml                                  \n"
-#else // NALU_USES_HYPRE
+#else // KYNEMA_UGF_USES_HYPRE
   "  - name: solve_scalar                                                  \n"
   "    type: hypre                                                         \n"
   "    method: hypre_gmres                                                 \n"
@@ -129,7 +129,7 @@ namespace unit_test_utils {
 YAML::Node
 get_default_inputs()
 {
-  YAML::Node doc = YAML::Load(naluDefaultInputs);
+  YAML::Node doc = YAML::Load(kynema_ugfDefaultInputs);
 
   return doc;
 }
@@ -141,44 +141,45 @@ get_realm_default_node()
   return node[0];
 }
 
-NaluTest::NaluTest(const YAML::Node& doc)
+KynemaUGFTest::KynemaUGFTest(const YAML::Node& doc)
   : comm_(MPI_COMM_WORLD),
     spatialDim_(3),
     sim_(doc),
-    logFileName_("unittestX_naluwrapper.log")
+    logFileName_("unittestX_kynema_ugfwrapper.log")
 {
-  // NaluEnv log file
+  // KynemaUGFEnv log file
   auto testInfo = ::testing::UnitTest::GetInstance()->current_test_info();
   if (testInfo) {
     std::string caseName = testInfo->test_case_name();
     std::string caseInstance = testInfo->name();
     logFileName_ = caseName + "." + caseInstance + ".log";
   }
-  sierra::nalu::NaluEnv::self().set_log_file_stream(logFileName_, false);
+  sierra::kynema_ugf::KynemaUGFEnv::self().set_log_file_stream(
+    logFileName_, false);
 
-  sim_.linearSolvers_ = new sierra::nalu::LinearSolvers(sim_);
-  sim_.realms_ = new sierra::nalu::Realms(sim_);
-  sim_.timeIntegrator_ = new sierra::nalu::TimeIntegrator(&sim_);
+  sim_.linearSolvers_ = new sierra::kynema_ugf::LinearSolvers(sim_);
+  sim_.realms_ = new sierra::kynema_ugf::Realms(sim_);
+  sim_.timeIntegrator_ = new sierra::kynema_ugf::TimeIntegrator(&sim_);
 
   sim_.linearSolvers_->load(doc);
   sim_.timeIntegrator_->load(doc);
 }
 
-NaluTest::~NaluTest() { unlink(logFileName_.c_str()); }
+KynemaUGFTest::~KynemaUGFTest() { unlink(logFileName_.c_str()); }
 
-sierra::nalu::Realm&
-NaluTest::create_realm(
+sierra::kynema_ugf::Realm&
+KynemaUGFTest::create_realm(
   const YAML::Node& realm_node,
   const std::string realm_type,
   const bool createMeshObjects)
 {
-  sierra::nalu::Realm* realm = nullptr;
+  sierra::kynema_ugf::Realm* realm = nullptr;
   if (realm_type == "multi_physics") {
-    realm = new sierra::nalu::Realm(*sim_.realms_, realm_node);
+    realm = new sierra::kynema_ugf::Realm(*sim_.realms_, realm_node);
     realm->solutionOptions_->load(realm_node);
     realm->equationSystems_.load(realm_node);
   } else {
-    realm = new sierra::nalu::InputOutputRealm(*sim_.realms_, realm_node);
+    realm = new sierra::kynema_ugf::InputOutputRealm(*sim_.realms_, realm_node);
     realm->solutionOptions_->load(realm_node);
   }
 
@@ -197,7 +198,7 @@ NaluTest::create_realm(
 void
 verify_field_values(
   double expectedValue,
-  sierra::nalu::ScalarFieldType* maxLengthScaleField,
+  sierra::kynema_ugf::ScalarFieldType* maxLengthScaleField,
   const stk::mesh::BulkData& mesh)
 {
   const stk::mesh::BucketVector& nodeBuckets =
@@ -216,21 +217,21 @@ verify_field_values(
   }
 }
 
-TEST(NaluMock, test_nalu_mock)
+TEST(KynemaUGFMock, test_kynema_ugf_mock)
 {
   // 1. Create dummy YAML inputs (mimics an input file)
   YAML::Node doc = get_default_inputs();
-  unit_test_utils::NaluTest naluObj(doc);
+  unit_test_utils::KynemaUGFTest kynema_ugfObj(doc);
 
   // 2. Create a Realm input node used to fill data
   const YAML::Node realm_node = get_realm_default_node();
   // Modify the default node, if necessary, for the test
 
   // 3. Create the Realm
-  sierra::nalu::Realm& realm = naluObj.create_realm(realm_node);
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm(realm_node);
 
   // 4. Create necessary fields...
-  sierra::nalu::ScalarFieldType& maxLengthScaleField =
+  sierra::kynema_ugf::ScalarFieldType& maxLengthScaleField =
     realm.meta_data().declare_field<double>(
       stk::topology::NODE_RANK, "sst_max_length_scale");
   double zero = 0.0;
@@ -242,7 +243,8 @@ TEST(NaluMock, test_nalu_mock)
   stk::mesh::Part* meshPart = realm.meta_data().get_part("block_1");
 
   // 6. Initialize the Algorithm to be tested...
-  sierra::nalu::ComputeSSTMaxLengthScaleElemAlgorithm sstAlg(realm, meshPart);
+  sierra::kynema_ugf::ComputeSSTMaxLengthScaleElemAlgorithm sstAlg(
+    realm, meshPart);
 
   // 7. Perform tests
   EXPECT_TRUE(sstAlg.coordinates_ != nullptr);

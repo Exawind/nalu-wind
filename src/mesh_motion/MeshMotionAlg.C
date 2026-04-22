@@ -2,13 +2,13 @@
 
 #include "mesh_motion/FrameMoving.h"
 
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 
 #include <cassert>
 #include <iostream>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MeshMotionAlg::MeshMotionAlg(stk::mesh::BulkData& bulk, const YAML::Node& node)
 {
@@ -99,5 +99,5 @@ MeshMotionAlg::get_partvec()
   return fpartVec;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

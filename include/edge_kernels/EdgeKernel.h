@@ -26,7 +26,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -78,14 +78,14 @@ public:
   virtual EdgeKernel* create_on_device() final
   {
     free_on_device();
-    deviceCopy_ = nalu_ngp::create<T>(*dynamic_cast<T*>(this));
+    deviceCopy_ = kynema_ugf_ngp::create<T>(*dynamic_cast<T*>(this));
     return deviceCopy_;
   }
 
   virtual void free_on_device() final
   {
     if (deviceCopy_ != nullptr) {
-      nalu_ngp::destroy<T>(dynamic_cast<T*>(deviceCopy_));
+      kynema_ugf_ngp::destroy<T>(dynamic_cast<T*>(deviceCopy_));
       deviceCopy_ = nullptr;
     }
   }
@@ -96,7 +96,7 @@ private:
   T* deviceCopy_{nullptr};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* EDGEKERNEL_H */

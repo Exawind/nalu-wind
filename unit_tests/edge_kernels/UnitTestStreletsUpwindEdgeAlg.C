@@ -12,10 +12,10 @@
 #include "UnitTestHelperObjects.h"
 
 #include "edge_kernels/StreletsUpwindEdgeAlg.h"
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
 {
@@ -165,14 +165,14 @@ TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
 
   // so finally our expected value is tanh(1.0) from eq 9
 
-  sierra::nalu::StreletsUpwindEdgeAlg streletsUpw(
+  sierra::kynema_ugf::StreletsUpwindEdgeAlg streletsUpw(
     helperObjs.realm, partVec_[0]);
   ASSERT_NO_THROW(streletsUpw.execute());
 
   pecletFactor_->sync_to_host();
 
   // check on host for values
-  const auto rank = NaluEnv::self().parallel_rank();
+  const auto rank = KynemaUGFEnv::self().parallel_rank();
   for (const auto* ib : bulk_->get_buckets(
          stk::topology::EDGE_RANK, meta_->locally_owned_part())) {
     const auto& b = *ib;
@@ -197,5 +197,5 @@ TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -15,7 +15,7 @@
 
 #include <vector>
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 
 class StringTimeCoordTemperatureAuxFunction : public AuxFunction
 {
@@ -37,6 +37,6 @@ private:
   const StringTimeCoordFunction f_;
 };
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf
 
 #endif

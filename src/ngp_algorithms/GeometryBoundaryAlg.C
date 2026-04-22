@@ -21,7 +21,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename AlgTraits>
 GeometryBoundaryAlg<AlgTraits>::GeometryBoundaryAlg(
@@ -46,7 +46,7 @@ void
 GeometryBoundaryAlg<AlgTraits>::execute()
 {
   using ElemSimdDataType =
-    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
@@ -54,19 +54,19 @@ GeometryBoundaryAlg<AlgTraits>::execute()
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto exposedAreaVec = fieldMgr.template get_field<double>(exposedAreaVec_);
   const auto areaVecOps =
-    nalu_ngp::simd_elem_field_updater(ngpMesh, exposedAreaVec);
+    kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, exposedAreaVec);
 
   const stk::mesh::Selector sel =
     meta.locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
   const std::string algName =
     "GeometryBoundaryAlg_" + std::to_string(AlgTraits::topo_);
-  sierra::nalu::nalu_ngp::run_elem_algorithm(
+  sierra::kynema_ugf::kynema_ugf_ngp::run_elem_algorithm(
     algName, meshInfo, meta.side_rank(), dataNeeded_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       auto& scrViews = edata.simdScrView;
       const auto& meViews =
-        scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+        scrViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
       const auto& v_area = meViews.scs_areav;
 
       for (int ip = 0; ip < AlgTraits::numFaceIp_; ++ip) {
@@ -80,5 +80,5 @@ GeometryBoundaryAlg<AlgTraits>::execute()
 
 INSTANTIATE_KERNEL_FACE(GeometryBoundaryAlg)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

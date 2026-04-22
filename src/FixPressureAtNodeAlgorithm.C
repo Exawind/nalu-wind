@@ -26,7 +26,7 @@
 #include <limits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 FixPressureAtNodeAlgorithm::FixPressureAtNodeAlgorithm(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
@@ -246,5 +246,5 @@ FixPressureAtNodeAlgorithm::process_pressure_fix_node(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

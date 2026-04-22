@@ -11,7 +11,7 @@
 #include "ArrayND.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 constexpr StkNodeOrderMapping<1>::node_map_type StkNodeOrderMapping<1>::map;
 constexpr StkNodeOrderMapping<2>::node_map_type StkNodeOrderMapping<2>::map;
@@ -38,5 +38,5 @@ node_map(int p, int n, int m, int l)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

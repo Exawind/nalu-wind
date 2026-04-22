@@ -36,7 +36,7 @@ class BulkData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class ToMesh
 {
@@ -69,7 +69,7 @@ public:
         stk::mesh::get_field_by_name(fieldName, toMetaData);
       if (NULL == tofield) {
         allFieldsAreFine = false;
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Xfer::ToMesh:Error field: " << fieldName
           << " has not been registered anywhere within the ToRealm: "
           << toRealm_.name() << std::endl;
@@ -94,7 +94,7 @@ public:
           // local check to make sure that the field is somewhere (delay the
           // throw)
           if (!fieldIsFine) {
-            NaluEnv::self().naluOutputP0()
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
               << "Xfer::ToMesh:Error field: " << tofield->name()
               << " is not registered on part: " << toPartVec_[k]->name()
               << std::endl;
@@ -208,7 +208,7 @@ public:
   TransferInfo TransferInfo_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

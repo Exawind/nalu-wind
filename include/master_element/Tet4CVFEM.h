@@ -13,7 +13,7 @@
 #include <master_element/MasterElement.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // Tet 4 subcontrol volume
 class TetSCV : public MasterElement
@@ -343,7 +343,7 @@ private:
     SharedMemView<DBLTYPE**, SHMEM>& areav) const;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

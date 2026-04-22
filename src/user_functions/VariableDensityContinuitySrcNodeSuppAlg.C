@@ -20,7 +20,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -145,5 +145,5 @@ VariableDensityContinuitySrcNodeSuppAlg::node_execute(
   rhs[0] += src * dualVolume / projTimeScale_;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

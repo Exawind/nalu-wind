@@ -60,7 +60,7 @@ class Preconditioner;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class TpetraLinearSolver;
 
@@ -110,7 +110,7 @@ struct LinSys
   using ConstEntityToLIDHostView = typename ConstEntityToLIDView::HostMirror;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

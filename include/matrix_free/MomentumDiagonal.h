@@ -15,7 +15,7 @@
 #include "matrix_free/LinSysInfo.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace impl {
@@ -34,7 +34,7 @@ struct advdiff_diagonal_t
 } // namespace impl
 P_INVOKEABLE(advdiff_diagonal)
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

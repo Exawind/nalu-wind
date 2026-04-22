@@ -10,8 +10,8 @@
 #include "wind_energy/LidarPatterns.h"
 #include "vs/vector.h"
 
-#include "NaluParsedTypes.h"
-#include "NaluParsing.h"
+#include "KynemaUGFParsedTypes.h"
+#include "KynemaUGFParsing.h"
 #include "master_element/TensorOps.h"
 
 #include "xfer/Transfer.h"
@@ -20,7 +20,7 @@
 
 #include <memory>
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 
 SegmentType
 segment_generator_types(std::string name)
@@ -319,7 +319,7 @@ ScanningLidarSegmentGenerator::generate(double time) const
 void
 SpinnerLidarSegmentGenerator::load(const YAML::Node& node)
 {
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "LidarLineOfSite::SpinnerLidarSegmentGenerator::load" << std::endl;
 
   STK_ThrowRequireMsg(node["center"], "Lidar center must be provided");
@@ -738,4 +738,4 @@ RadarSegmentGenerator::generate(double time) const
   return {seg.tip_, seg.tail_, true};
 }
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf

@@ -12,13 +12,13 @@
 
 #include <Algorithm.h>
 #include <FieldTypeDef.h>
-#include <NaluParsedTypes.h>
+#include <KynemaUGFParsedTypes.h>
 
 // stk
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -69,7 +69,7 @@ public:
   double z0_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

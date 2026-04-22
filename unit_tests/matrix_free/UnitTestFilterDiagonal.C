@@ -34,7 +34,7 @@
 #include "mpi.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 using tpetra_view_type = typename Tpetra::MultiVector<>::dual_view_type::t_dev;
 
@@ -83,5 +83,5 @@ TEST_F(FilterDiagonal, diagonal_executes)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -20,7 +20,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class MasterElement;
 
@@ -117,7 +117,7 @@ public:
   std::vector<uint64_t> allOpposingFaceIdsOld_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

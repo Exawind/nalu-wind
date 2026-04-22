@@ -13,7 +13,7 @@
 #include "KokkosInterface.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /** Non-templated empty base class for storing pointers to templated instances
  */
@@ -54,7 +54,7 @@ public:
   T c2_; // width of the transtion
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

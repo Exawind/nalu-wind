@@ -19,7 +19,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /** Compute the wall friction velocity at integration points for the wall
  *  boundary of a given topology.
@@ -86,7 +86,7 @@ private:
   MasterElement* meFC_{nullptr};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ABLWALLFRICTIONVELALG_H */

@@ -16,7 +16,7 @@
 #include <SimdInterface.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MomentumSSTAMSForcingNodeKernel::MomentumSSTAMSForcingNodeKernel(
   const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts)
@@ -258,5 +258,5 @@ MomentumSSTAMSForcingNodeKernel::execute(
   rhs(2) += dualVolume * gZ;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

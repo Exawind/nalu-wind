@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 SteadyTaylorVortexGradPressureAuxFunction::
   SteadyTaylorVortexGradPressureAuxFunction(
@@ -50,5 +50,5 @@ SteadyTaylorVortexGradPressureAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

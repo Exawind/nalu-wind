@@ -13,7 +13,7 @@
 #include "KokkosInterface.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct CflRe
 {
@@ -103,7 +103,7 @@ public:
   bool references_scalar() const { return references_scalar_v; }
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* COURANTREREDUCEHELPER_H */

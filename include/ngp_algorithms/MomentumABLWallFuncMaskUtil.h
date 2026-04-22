@@ -14,7 +14,7 @@
 #include <stk_mesh/base/Types.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -29,6 +29,6 @@ private:
   unsigned maskNodeIndex_{stk::mesh::InvalidOrdinal};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif /* MOMENTUMABLWALLFUNCMASKUTIL_H_ */

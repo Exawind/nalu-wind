@@ -18,7 +18,7 @@
 #include <stk_mesh/base/NgpMesh.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 EnthalpyEffDiffFluxCoeffAlg::EnthalpyEffDiffFluxCoeffAlg(
   Realm& realm,
@@ -46,7 +46,7 @@ EnthalpyEffDiffFluxCoeffAlg::EnthalpyEffDiffFluxCoeffAlg(
 void
 EnthalpyEffDiffFluxCoeffAlg::execute()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   const auto& meta = realm_.meta_data();
 
@@ -64,7 +64,7 @@ EnthalpyEffDiffFluxCoeffAlg::execute()
 
   if (isTurbulent_) {
     const auto tvisc = fieldMgr.get_field<double>(tvisc_);
-    nalu_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "EnthalpyEffDiffFluxCoeffAlg_turbulent", ngpMesh,
       stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
@@ -73,7 +73,7 @@ EnthalpyEffDiffFluxCoeffAlg::execute()
            tvisc.get(meshIdx, 0) * invSigmaTurb);
       });
   } else {
-    nalu_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "EnthalpyEffDiffFluxCoeffAlg_laminar", ngpMesh, stk::topology::NODE_RANK,
       sel, KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
         evisc.get(meshIdx, 0) =
@@ -84,5 +84,5 @@ EnthalpyEffDiffFluxCoeffAlg::execute()
   evisc.modify_on_device();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

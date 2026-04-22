@@ -14,7 +14,7 @@
 #include "FieldTypeDef.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class NodalBuoyancyAlgDriver : public NgpAlgDriver
 {
@@ -35,7 +35,7 @@ private:
   const std::string sourceweightName_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NODALBUOYANCYALGDRIVER_H */

@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 TaylorGreenPressureAuxFunction::TaylorGreenPressureAuxFunction()
   : AuxFunction(0, 1), uNot_(1.0), pNot_(1.0), rhoNot_(1.0), L_(1.0)
@@ -50,5 +50,5 @@ TaylorGreenPressureAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

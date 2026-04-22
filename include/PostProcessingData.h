@@ -14,7 +14,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class PostProcessingData
 {
@@ -34,7 +34,7 @@ public:
   std::vector<std::string> targetNames_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

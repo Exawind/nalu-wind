@@ -16,7 +16,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 class KernelBuilderLog
 {
 public:
@@ -44,7 +44,7 @@ private:
   std::map<std::string, std::set<std::string>> builtKernelNames_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

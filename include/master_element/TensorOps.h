@@ -19,7 +19,7 @@
 #include <SimdInterface.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 KOKKOS_INLINE_FUNCTION constexpr double
 tiny_positive_value()
@@ -330,7 +330,7 @@ transpose33(const ScalarType* A, ScalarType* At)
   At[ZY] = A[YZ];
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

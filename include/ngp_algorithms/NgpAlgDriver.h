@@ -18,11 +18,11 @@
 #include "AlgTraits.h"
 #include "BuildTemplates.h"
 #include "Enums.h"
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 #include "ngp_utils/NgpCreateElemInstance.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -111,9 +111,9 @@ public:
     const auto it = algMap_.find(algName);
     if (it == algMap_.end()) {
       algMap_[algName].reset(
-        nalu_ngp::create_elem_algorithm<Algorithm, ElemAlg>(
+        kynema_ugf_ngp::create_elem_algorithm<Algorithm, ElemAlg>(
           topo, realm_, part, std::forward<Args>(args)...));
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Created algorithm = " << algName << std::endl;
     } else {
       it->second->partVec_.push_back(part);
@@ -142,9 +142,9 @@ public:
     const auto it = algMap_.find(algName);
     if (it == algMap_.end()) {
       algMap_[algName].reset(
-        nalu_ngp::create_face_algorithm<Algorithm, FaceAlg>(
+        kynema_ugf_ngp::create_face_algorithm<Algorithm, FaceAlg>(
           topo, realm_, part, std::forward<Args>(args)...));
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Created algorithm = " << algName << std::endl;
     } else {
       it->second->partVec_.push_back(part);
@@ -168,9 +168,9 @@ public:
     const auto it = algMap_.find(algName);
     if (it == algMap_.end()) {
       algMap_[algName].reset(
-        nalu_ngp::create_face_elem_algorithm<Algorithm, FaceElemAlg>(
+        kynema_ugf_ngp::create_face_elem_algorithm<Algorithm, FaceElemAlg>(
           topo, elemTopo, realm_, part, std::forward<Args>(args)...));
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Created algorithm = " << algName << std::endl;
     } else {
       it->second->partVec_.push_back(part);
@@ -178,15 +178,15 @@ public:
   }
 
 protected:
-  template <typename NaluAlg, class... Args>
+  template <typename KynemaUGFAlg, class... Args>
   void register_algorithm_impl(
     stk::mesh::Part* part, const std::string& algName, Args&&... args)
   {
     const auto it = algMap_.find(algName);
     if (it == algMap_.end()) {
       algMap_[algName].reset(
-        new NaluAlg(realm_, part, std::forward<Args>(args)...));
-      NaluEnv::self().naluOutputP0()
+        new KynemaUGFAlg(realm_, part, std::forward<Args>(args)...));
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Created algorithm = " << algName << std::endl;
     } else {
       it->second->partVec_.push_back(part);
@@ -203,7 +203,7 @@ protected:
   Realm& realm_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPALGDRIVER_H */

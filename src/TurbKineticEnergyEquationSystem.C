@@ -24,8 +24,8 @@
 #include <LinearSolvers.h>
 #include <LinearSolver.h>
 #include <LinearSystem.h>
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 #include <ProjectedNodalGradientEquationSystem.h>
 #include <Realm.h>
 #include <Realms.h>
@@ -102,11 +102,11 @@
 // stk_util
 #include <stk_util/parallel/ParallelReduce.hpp>
 
-// nalu utility
+// kynema_ugf utility
 #include <utils/StkHelpers.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -142,7 +142,7 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
 
   // determine nodal gradient form
   set_nodal_gradient("turbulent_ke");
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge projected nodal gradient for turbulent_ke: " << edgeNodalGradient_
     << std::endl;
 
@@ -351,7 +351,8 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         } else
           throw std::runtime_error("TKEEqSys: Invalid source term " + srcName);
 
-        NaluEnv::self().naluOutputP0() << " -  " << srcName << std::endl;
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
+          << " -  " << srcName << std::endl;
       });
   } else {
     throw std::runtime_error("TKEEQS: Element terms not supported");
@@ -566,7 +567,7 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
   bool RANSAblBcApproach = userData.RANSAblBcApproach_;
 
   if (tkeSpecified && wallFunctionApproach) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Both wall function and tke specified; will go with dirichlet"
       << std::endl;
     wallFunctionApproach = false;
@@ -769,7 +770,7 @@ TurbKineticEnergyEquationSystem::solve_and_update()
   // start the iteration loop
   for (int k = 0; k < maxIterations_; ++k) {
 
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
       << userSuppliedName_ << std::endl;
 
@@ -778,9 +779,9 @@ TurbKineticEnergyEquationSystem::solve_and_update()
       assemble_and_solve(kTmp_);
 
       // update
-      double timeA = NaluEnv::self().nalu_time();
+      double timeA = KynemaUGFEnv::self().kynema_ugf_time();
       update_and_clip();
-      double timeB = NaluEnv::self().nalu_time();
+      double timeB = KynemaUGFEnv::self().kynema_ugf_time();
       timerAssemble_ += (timeB - timeA);
 
       if (decoupledOverset_ && realm_.hasOverset_)
@@ -798,7 +799,7 @@ TurbKineticEnergyEquationSystem::solve_and_update()
 void
 TurbKineticEnergyEquationSystem::initial_work()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using MeshIndex = typename Traits::MeshIndex;
 
   // do not let the user specify a negative field
@@ -814,7 +815,7 @@ TurbKineticEnergyEquationSystem::initial_work()
 
   ngpTke.sync_to_device();
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "clip_tke", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       if (ngpTke.get(mi, 0) < 0.0)
@@ -827,7 +828,7 @@ TurbKineticEnergyEquationSystem::initial_work()
 void
 TurbKineticEnergyEquationSystem::post_external_data_transfer_work()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using MeshIndex = typename Traits::MeshIndex;
 
   // do not let the user specify a negative field
@@ -843,7 +844,7 @@ TurbKineticEnergyEquationSystem::post_external_data_transfer_work()
 
   ngpTke.sync_to_device();
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "clip_tke", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       if (ngpTke.get(mi, 0) < 0.0)
@@ -860,7 +861,7 @@ TurbKineticEnergyEquationSystem::post_external_data_transfer_work()
     auto ngpTkeBC = realm_.ngp_field_manager().get_field<double>(
       tkeBCField->mesh_meta_data_ordinal());
     ngpTkeBC.sync_to_device();
-    nalu_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "clip_tke_bc", ngpMesh, stk::topology::NODE_RANK, bc_sel,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         if (ngpTkeBC.get(mi, 0) < 0.0)
@@ -876,9 +877,9 @@ TurbKineticEnergyEquationSystem::post_external_data_transfer_work()
 void
 TurbKineticEnergyEquationSystem::compute_effective_diff_flux_coeff()
 {
-  const double timeA = NaluEnv::self().nalu_time();
+  const double timeA = KynemaUGFEnv::self().kynema_ugf_time();
   effDiffFluxCoeffAlg_->execute();
-  timerMisc_ += (NaluEnv::self().nalu_time() - timeA);
+  timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() - timeA);
 }
 
 //--------------------------------------------------------------------------
@@ -897,7 +898,7 @@ TurbKineticEnergyEquationSystem::compute_wall_model_parameters()
 void
 TurbKineticEnergyEquationSystem::update_and_clip()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
   const double clipValue = 1.0e-16;
   size_t numClip = 0;
 
@@ -915,7 +916,7 @@ TurbKineticEnergyEquationSystem::update_and_clip()
 
   ngpTke.sync_to_device();
 
-  nalu_ngp::run_entity_par_reduce(
+  kynema_ugf_ngp::run_entity_par_reduce(
     "tke_update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi, size_t& nClip) {
       const double tmp = ngpTke.get(mi, 0) + ngpKTmp.get(mi, 0);
@@ -930,13 +931,13 @@ TurbKineticEnergyEquationSystem::update_and_clip()
   ngpTke.modify_on_device();
 
   // parallel assemble clipped value
-  if (NaluEnv::self().debug()) {
+  if (KynemaUGFEnv::self().debug()) {
     size_t g_numClip = 0;
-    stk::ParallelMachine comm = NaluEnv::self().parallel_comm();
+    stk::ParallelMachine comm = KynemaUGFEnv::self().parallel_comm();
     stk::all_reduce_sum(comm, &numClip, &g_numClip, 1);
 
     if (g_numClip > 0) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "tke clipped " << g_numClip << " times " << std::endl;
     }
   }
@@ -958,7 +959,7 @@ TurbKineticEnergyEquationSystem::predict_state()
      meta.aura_part()) &
     stk::mesh::selectField(*tke_);
   tkeNp1.sync_to_device();
-  nalu_ngp::field_copy(ngpMesh, sel, tkeNp1, tkeN);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, tkeNp1, tkeN);
   tkeNp1.modify_on_device();
 }
 
@@ -989,13 +990,13 @@ void
 TurbKineticEnergyEquationSystem::compute_projected_nodal_gradient()
 {
   if (!managePNG_) {
-    const double timeA = -NaluEnv::self().nalu_time();
+    const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
     nodalGradAlgDriver_.execute();
-    timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+    timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
   } else {
     projectedNodalGradEqs_->solve_and_update_external();
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

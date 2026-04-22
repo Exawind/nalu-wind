@@ -1,6 +1,6 @@
 
 We have added MueLu milestone.xml files that demonstrate the best performance
-(strong scaling) and lowest run times on Peregrine and Cori for Nalu cases:
+(strong scaling) and lowest run times on Peregrine and Cori for KynemaUGF cases:
 
 ABL: milestone_ABL.xml (copy into milestone.xml read as default input file)
 

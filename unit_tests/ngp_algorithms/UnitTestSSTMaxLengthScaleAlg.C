@@ -36,10 +36,10 @@ TEST_F(SSTKernelHex8Mesh, NGP_SST_Max_Length_Scale)
   auto& ngpMaxLen =
     fieldMgr.get_field<double>(maxLengthScale_->mesh_meta_data_ordinal());
 
-  sierra::nalu::SSTMaxLengthScaleDriver AlgDriver(helperObjs.realm);
+  sierra::kynema_ugf::SSTMaxLengthScaleDriver AlgDriver(helperObjs.realm);
 
-  AlgDriver.register_elem_algorithm<sierra::nalu::SSTMaxLengthScaleAlg>(
-    sierra::nalu::INTERIOR, partVec_[0], "SSTMaxLen");
+  AlgDriver.register_elem_algorithm<sierra::kynema_ugf::SSTMaxLengthScaleAlg>(
+    sierra::kynema_ugf::INTERIOR, partVec_[0], "SSTMaxLen");
 
   AlgDriver.execute();
 

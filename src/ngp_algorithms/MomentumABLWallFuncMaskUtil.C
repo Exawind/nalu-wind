@@ -17,7 +17,7 @@
 #include <ngp_utils/NgpFieldUtils.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MomentumABLWallFuncMaskUtil::MomentumABLWallFuncMaskUtil(
   Realm& realm, stk::mesh::Part* part)
@@ -32,7 +32,7 @@ MomentumABLWallFuncMaskUtil::MomentumABLWallFuncMaskUtil(
 void
 MomentumABLWallFuncMaskUtil::execute()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   const auto& meta = realm_.meta_data();
   const auto ngpMesh = realm_.ngp_mesh();
@@ -43,7 +43,7 @@ MomentumABLWallFuncMaskUtil::execute()
     (meta.locally_owned_part() | meta.globally_shared_part()) &
     stk::mesh::selectUnion(partVec_) & !(realm_.get_inactive_selector());
 
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "MomentumABLWallFuncMaskUtil", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
       myNodeMask.get(meshIdx, 0) = 0;
@@ -51,5 +51,5 @@ MomentumABLWallFuncMaskUtil::execute()
   myNodeMask.modify_on_device();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -40,10 +40,11 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
   auto& ngpElemVol =
     fieldMgr.get_field<double>(elementVolume_->mesh_meta_data_ordinal());
 
-  sierra::nalu::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
+  sierra::kynema_ugf::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
 
-  geomAlgDriver.register_elem_algorithm<sierra::nalu::GeometryInteriorAlg>(
-    sierra::nalu::INTERIOR, partVec_[0], "geometry");
+  geomAlgDriver
+    .register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
+      sierra::kynema_ugf::INTERIOR, partVec_[0], "geometry");
 
   geomAlgDriver.execute();
 
@@ -123,9 +124,10 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
 
   auto* part = meta_->get_part("surface_5");
   auto* surfPart = part->subsets()[0];
-  sierra::nalu::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
-  geomAlgDriver.register_face_algorithm<sierra::nalu::GeometryBoundaryAlg>(
-    sierra::nalu::WALL, surfPart, "geometry");
+  sierra::kynema_ugf::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
+  geomAlgDriver
+    .register_face_algorithm<sierra::kynema_ugf::GeometryBoundaryAlg>(
+      sierra::kynema_ugf::WALL, surfPart, "geometry");
 
   geomAlgDriver.execute();
 
@@ -142,11 +144,12 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
     for (const auto* b : bkts)
       for (const auto face : *b) {
         const double* areaVec = stk::mesh::field_data(*exposedAreaVec_, face);
-        for (int ip = 0; ip < sierra::nalu::AlgTraitsQuad4::numFaceIp_; ++ip) {
+        for (int ip = 0; ip < sierra::kynema_ugf::AlgTraitsQuad4::numFaceIp_;
+             ++ip) {
           double aMagSqr = 0.0;
           for (int i = 0; i < 3; i++) {
             const double av =
-              areaVec[ip * sierra::nalu::AlgTraitsQuad4::nDim_ + i];
+              areaVec[ip * sierra::kynema_ugf::AlgTraitsQuad4::nDim_ + i];
             aMagSqr += av * av;
           }
 
@@ -175,10 +178,12 @@ TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
 
   auto* part = meta_->get_part("surface_5");
   auto* surfPart = part->subsets()[0];
-  sierra::nalu::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
-  geomAlgDriver.register_wall_func_algorithm<sierra::nalu::WallFuncGeometryAlg>(
-    sierra::nalu::WALL, surfPart,
-    sierra::nalu::get_elem_topo(helperObjs.realm, *surfPart), "geometry");
+  sierra::kynema_ugf::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
+  geomAlgDriver
+    .register_wall_func_algorithm<sierra::kynema_ugf::WallFuncGeometryAlg>(
+      sierra::kynema_ugf::WALL, surfPart,
+      sierra::kynema_ugf::get_elem_topo(helperObjs.realm, *surfPart),
+      "geometry");
 
   geomAlgDriver.execute();
 

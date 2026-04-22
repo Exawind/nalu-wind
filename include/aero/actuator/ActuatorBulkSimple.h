@@ -13,7 +13,7 @@
 #include <aero/actuator/ActuatorBulk.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct ActuatorMetaSimple : public ActuatorMeta
 {
@@ -82,7 +82,7 @@ struct ActuatorBulkSimple : public ActuatorBulk
   std::vector<std::string> output_cache_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ACTUATORBULKSIMPLE_H_ */

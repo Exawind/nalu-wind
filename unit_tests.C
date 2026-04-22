@@ -12,8 +12,8 @@
 #include "Kokkos_Core.hpp"
 #include "stk_util/parallel/Parallel.hpp"
 
-#include "NaluVersionInfo.h"
-#include "NaluEnv.h"
+#include "KynemaUGFVersionInfo.h"
+#include "KynemaUGFEnv.h"
 #include "master_element/MasterElementRepo.h"
 
 int
@@ -21,21 +21,21 @@ main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
 
-  sierra::nalu::NaluEnv::self();
+  sierra::kynema_ugf::KynemaUGFEnv::self();
   Kokkos::initialize(argc, argv);
   int returnVal = 0;
 
 #if defined(KOKKOS_ENABLE_CUDA)
-  const size_t nalu_stack_size = 16384;
-  cudaDeviceSetLimit(cudaLimitStackSize, nalu_stack_size);
+  const size_t kynema_ugf_stack_size = 16384;
+  cudaDeviceSetLimit(cudaLimitStackSize, kynema_ugf_stack_size);
 #elif defined(KOKKOS_ENABLE_HIP)
-  const size_t nalu_stack_size = 16384;
-  hipError_t err = hipDeviceSetLimit(hipLimitStackSize, nalu_stack_size);
+  const size_t kynema_ugf_stack_size = 16384;
+  hipError_t err = hipDeviceSetLimit(hipLimitStackSize, kynema_ugf_stack_size);
   if (err != hipSuccess) {
     /*
      This might be useful at some point so keeping it and commenting out.
 
-     sierra::nalu::NaluEnv::self().naluOutputP0()
+     sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
      << __FILE__ << " " << __FUNCTION__ << " " << __LINE__
      << " : Failure " << hipGetErrorString(err) << " in hipDeviceSetLimit\n"
      << std::endl;
@@ -47,10 +47,10 @@ main(int argc, char** argv)
   // cleared out before Kokkos::finalize is called.
   {
     // clang-format off
-      namespace version = sierra::nalu::version;
-      sierra::nalu::NaluEnv::self().naluOutputP0()
-        << "   Nalu-Wind Version: " << version::NaluVersionTag << std::endl
-        << "   Nalu-Wind GIT Commit SHA: " << version::NaluGitCommitSHA
+      namespace version = sierra::kynema_ugf::version;
+      sierra::kynema_ugf::KynemaUGFEnv::self().kynema_ugfOutputP0()
+        << "   Kynema-UGF Version: " << version::KynemaUGFVersionTag << std::endl
+        << "   Kynema-UGF GIT Commit SHA: " << version::KynemaUGFGitCommitSHA
         << ((version::RepoIsDirty == "DIRTY") ? ("-" + version::RepoIsDirty) : "") << std::endl
         << "   Trilinos Version: " << version::TrilinosVersionTag << std::endl << std::endl;
     // clang-format on
@@ -63,7 +63,7 @@ main(int argc, char** argv)
     // when specific unit tests are run using the gtest_filter option that
     // provides no mechanism for call the destructors of the master elements
     // created for those tests.
-    sierra::nalu::MasterElementRepo::clear();
+    sierra::kynema_ugf::MasterElementRepo::clear();
   }
 
   Kokkos::finalize();

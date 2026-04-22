@@ -21,7 +21,7 @@
 #include "ngp_utils/NgpLoopUtils.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 VOFAdvectionEdgeAlg::VOFAdvectionEdgeAlg(
   Realm& realm,
@@ -337,5 +337,5 @@ VOFAdvectionEdgeAlg::execute()
     });
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -14,7 +14,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 constexpr Kokkos::Array<double, 2> GLL<1>::nodes;
 constexpr Kokkos::Array<double, 3> GLL<2>::nodes;
@@ -47,5 +47,5 @@ gauss_lobatto_legendre_abscissae(int p)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

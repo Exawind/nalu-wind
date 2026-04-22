@@ -23,7 +23,7 @@ class BulkData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 node_mesh_index_view
@@ -34,7 +34,7 @@ node_offset_view simd_node_offsets(
   ra_entity_row_view_type);
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

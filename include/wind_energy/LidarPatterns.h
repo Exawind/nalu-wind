@@ -22,7 +22,7 @@ class Node;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct Segment
 {
@@ -157,7 +157,7 @@ std::pair<bool, Segment> line_intersection_with_box(
   std::array<vs::Vector, 8> box, vs::Vector origin, vs::Vector line);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -42,11 +42,11 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_lowRE)
 
   auto* part = meta_->get_part("surface_5");
   auto* surfPart = part->subsets()[0];
-  sierra::nalu::SDRWallFuncAlgDriver algDriver(helperObjs.realm);
-  algDriver.register_face_elem_algorithm<sierra::nalu::SDRLowReWallAlg>(
-    sierra::nalu::WALL, surfPart,
-    sierra::nalu::get_elem_topo(helperObjs.realm, *surfPart), "sdr_lowre_wall",
-    useShifted);
+  sierra::kynema_ugf::SDRWallFuncAlgDriver algDriver(helperObjs.realm);
+  algDriver.register_face_elem_algorithm<sierra::kynema_ugf::SDRLowReWallAlg>(
+    sierra::kynema_ugf::WALL, surfPart,
+    sierra::kynema_ugf::get_elem_topo(helperObjs.realm, *surfPart),
+    "sdr_lowre_wall", useShifted);
 
   algDriver.execute();
 
@@ -70,9 +70,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_lowRE)
     auto& realm = helperObjs.realm;
     const double ypSqr = 0.25 * 0.25;
     const double wallFactor =
-      realm.get_turb_model_constant(sierra::nalu::TM_SDRWallFactor);
+      realm.get_turb_model_constant(sierra::kynema_ugf::TM_SDRWallFactor);
     const double betaOne =
-      realm.get_turb_model_constant(sierra::nalu::TM_betaOne);
+      realm.get_turb_model_constant(sierra::kynema_ugf::TM_betaOne);
     const double nu = viscosity / rho;
     const double sdrGold = wallFactor * 6.0 * nu / (betaOne * ypSqr);
 
@@ -108,10 +108,11 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_func)
 
   auto* part = meta_->get_part("surface_5");
   auto* surfPart = part->subsets()[0];
-  sierra::nalu::SDRWallFuncAlgDriver algDriver(helperObjs.realm);
-  algDriver.register_face_elem_algorithm<sierra::nalu::SDRWallFuncAlg>(
-    sierra::nalu::WALL, surfPart,
-    sierra::nalu::get_elem_topo(helperObjs.realm, *surfPart), "sdr_lowre_wall");
+  sierra::kynema_ugf::SDRWallFuncAlgDriver algDriver(helperObjs.realm);
+  algDriver.register_face_elem_algorithm<sierra::kynema_ugf::SDRWallFuncAlg>(
+    sierra::kynema_ugf::WALL, surfPart,
+    sierra::kynema_ugf::get_elem_topo(helperObjs.realm, *surfPart),
+    "sdr_lowre_wall");
 
   algDriver.execute();
 
@@ -134,9 +135,10 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_func)
 
     auto& realm = helperObjs.realm;
     const double yplus = 0.25;
-    const double kappa = realm.get_turb_model_constant(sierra::nalu::TM_kappa);
+    const double kappa =
+      realm.get_turb_model_constant(sierra::kynema_ugf::TM_kappa);
     const double sqrtBetaStar =
-      std::sqrt(realm.get_turb_model_constant(sierra::nalu::TM_betaStar));
+      std::sqrt(realm.get_turb_model_constant(sierra::kynema_ugf::TM_betaStar));
     const double sdrGold = utau / (sqrtBetaStar * kappa * yplus);
 
     for (const auto* b : bkts)

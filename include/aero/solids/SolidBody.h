@@ -10,7 +10,7 @@
 #ifndef SOLIDBODY_H_
 #define SOLIDBODY_H_
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 /** A parent class for implementing a solid body for aero dynamics applications
  * This class should become the owner of surface post processing algorithms
  * and instances will live inside the AeroContainer class
@@ -23,6 +23,6 @@ class SolidBody
   // std::unique_ptr<SurfaceFMPostProcessing> surfacePostProcessor;
 };
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf
 
 #endif

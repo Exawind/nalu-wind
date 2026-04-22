@@ -17,7 +17,7 @@
 #include <aero/actuator/ActuatorExecutor.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class ActuatorLineFastNGP : public ActuatorExecutor
 {
@@ -55,7 +55,7 @@ private:
   stk::mesh::BulkData& stkBulk_;
 };
 
-} /* namespace nalu */
+} /* namespace kynema_ugf */
 } /* namespace sierra */
 
 #endif /* ACTUATORLINEFASTNGP_H_ */

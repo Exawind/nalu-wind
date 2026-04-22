@@ -17,7 +17,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 inline int
@@ -93,7 +93,7 @@ AssembleNGPNodeSolverAlgorithm::execute()
   for (auto& kern : nodeKernels_)
     kern->setup(realm_);
 
-  auto ngpKernels = nalu_ngp::create_ngp_view<NodeKernel>(nodeKernels_);
+  auto ngpKernels = kynema_ugf_ngp::create_ngp_view<NodeKernel>(nodeKernels_);
   auto coeffApplier = coeff_applier();
 
   const auto& meta = realm_.meta_data();
@@ -145,5 +145,5 @@ AssembleNGPNodeSolverAlgorithm::execute()
   coeffApplier.free_coeff_applier();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

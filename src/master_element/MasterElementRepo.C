@@ -20,7 +20,7 @@
 #include "master_element/Edge22DCVFEM.h"
 #include "master_element/Tri33DCVFEM.h"
 
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 #include "utils/CreateDeviceExpression.h"
 
 #include <stk_util/util/ReportHandler.hpp>
@@ -31,7 +31,7 @@
 #include <memory>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 
@@ -189,7 +189,7 @@ find_topo(
   } else if (const auto it = dev_map.find(host_ptr); it != dev_map.end()) {
     theTopo = it->second;
   } else {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " Host Master Element pointer could not be converted to device "
          "pointer."
       << " The pointer was not found in the master element database:"
@@ -206,14 +206,14 @@ find_me(
 {
   auto it = me_map.find(theTopo);
   if (it == me_map.end()) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " Topology not supported: The topology, " << theTopo.name()
       << ", was not found in the map of supported topologies." << std::endl
       << " There are " << me_map.size()
       << " supported topologies:" << std::endl;
     for (const auto& v : me_map)
-      NaluEnv::self().naluOutputP0() << v.first.name() << std::endl;
-    NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0() << v.first.name() << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " Add topology to MasterElementRepo::find_me()" << std::endl;
     STK_ThrowRequire(it != me_map.end());
   }
@@ -287,5 +287,5 @@ MasterElementRepo::clear()
   for (auto val : volume_topo_to_me_dev())
     kokkos_free_on_device(val.second);
 }
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

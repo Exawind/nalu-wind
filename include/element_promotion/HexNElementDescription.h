@@ -17,7 +17,7 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct HexNElementDescription
 {
@@ -97,7 +97,7 @@ private:
   std::array<std::vector<int>, numFaces> sideOrdinalMap;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

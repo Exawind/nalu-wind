@@ -9,7 +9,7 @@
 #include "tabular_props/H5IO.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // Forward declarations
 // class Realm;
@@ -247,7 +247,7 @@ private:
 
 // typedef SharedPtr<const HDF5Table> ConstHDF5TablePtr;
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

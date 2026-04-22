@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 SDRKONodeKernel::SDRKONodeKernel(const stk::mesh::MetaData& meta)
   : NGPNodeKernel<SDRKONodeKernel>(),
@@ -139,5 +139,5 @@ SDRKONodeKernel::execute(
   lhs(0, 0) += 2.0 * beta * density * sdr * dVol;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

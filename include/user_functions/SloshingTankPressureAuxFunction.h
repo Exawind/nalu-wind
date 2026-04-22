@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class SloshingTankPressureAuxFunction : public AuxFunction
 {
@@ -43,7 +43,7 @@ public:
   double g_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

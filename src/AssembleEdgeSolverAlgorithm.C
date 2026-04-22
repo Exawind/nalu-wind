@@ -13,7 +13,7 @@
 #include "Realm.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 AssembleEdgeSolverAlgorithm::AssembleEdgeSolverAlgorithm(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
@@ -29,5 +29,5 @@ AssembleEdgeSolverAlgorithm::initialize_connectivity()
   eqSystem_->linsys_->buildEdgeToNodeGraph(partVec_);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

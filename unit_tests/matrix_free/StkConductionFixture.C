@@ -42,26 +42,26 @@ ConductionFixture::ConductionFixture(int nx, double scale)
     io(bulk.parallel()),
     q_field(meta.declare_field<double>(
       stk::topology::NODE_RANK,
-      sierra::nalu::matrix_free::conduction_info::q_name,
+      sierra::kynema_ugf::matrix_free::conduction_info::q_name,
       3)),
     qbc_field(meta.declare_field<double>(
       stk::topology::NODE_RANK,
-      sierra::nalu::matrix_free::conduction_info::qbc_name)),
+      sierra::kynema_ugf::matrix_free::conduction_info::qbc_name)),
     flux_field(meta.declare_field<double>(
       stk::topology::NODE_RANK,
-      sierra::nalu::matrix_free::conduction_info::flux_name)),
+      sierra::kynema_ugf::matrix_free::conduction_info::flux_name)),
     qtmp_field(meta.declare_field<double>(
       stk::topology::NODE_RANK,
-      sierra::nalu::matrix_free::conduction_info::qtmp_name)),
+      sierra::kynema_ugf::matrix_free::conduction_info::qtmp_name)),
     alpha_field(meta.declare_field<double>(
       stk::topology::NODE_RANK,
-      sierra::nalu::matrix_free::conduction_info::volume_weight_name)),
+      sierra::kynema_ugf::matrix_free::conduction_info::volume_weight_name)),
     lambda_field(meta.declare_field<double>(
       stk::topology::NODE_RANK,
-      sierra::nalu::matrix_free::conduction_info::diffusion_weight_name)),
+      sierra::kynema_ugf::matrix_free::conduction_info::diffusion_weight_name)),
     gid_field(meta.declare_field<typename Tpetra::Map<>::global_ordinal_type>(
       stk::topology::NODE_RANK,
-      sierra::nalu::matrix_free::conduction_info::gid_name))
+      sierra::kynema_ugf::matrix_free::conduction_info::gid_name))
 {
   meta.use_simple_fields();
   stk::mesh::put_field_on_mesh(gid_field, meta.universal_part(), nullptr);
@@ -108,7 +108,7 @@ ConductionFixture::ConductionFixture(int nx, double scale)
   }
   mesh = stk::mesh::get_updated_ngp_mesh(bulk);
   gid_field_ngp = stk::mesh::get_updated_ngp_field<gid_type>(gid_field);
-  sierra::nalu::matrix_free::populate_global_id_field(
+  sierra::kynema_ugf::matrix_free::populate_global_id_field(
     mesh, meta.universal_part(), gid_field_ngp);
 }
 
@@ -125,21 +125,21 @@ ConductionFixtureP2::ConductionFixtureP2(int nx, double scale)
     io(bulk.parallel()),
     q_field(meta.declare_field<double>(
       stk::topology::NODE_RANK,
-      sierra::nalu::matrix_free::conduction_info::q_name,
+      sierra::kynema_ugf::matrix_free::conduction_info::q_name,
       3)),
     qtmp_field(meta.declare_field<double>(
       stk::topology::NODE_RANK,
-      sierra::nalu::matrix_free::conduction_info::qtmp_name,
+      sierra::kynema_ugf::matrix_free::conduction_info::qtmp_name,
       3)),
     alpha_field(meta.declare_field<double>(
       stk::topology::NODE_RANK,
-      sierra::nalu::matrix_free::conduction_info::volume_weight_name)),
+      sierra::kynema_ugf::matrix_free::conduction_info::volume_weight_name)),
     lambda_field(meta.declare_field<double>(
       stk::topology::NODE_RANK,
-      sierra::nalu::matrix_free::conduction_info::diffusion_weight_name)),
+      sierra::kynema_ugf::matrix_free::conduction_info::diffusion_weight_name)),
     gid_field(meta.declare_field<typename Tpetra::Map<>::global_ordinal_type>(
       stk::topology::NODE_RANK,
-      sierra::nalu::matrix_free::conduction_info::gid_name))
+      sierra::kynema_ugf::matrix_free::conduction_info::gid_name))
 {
   for (auto* part : fixture.m_elem_parts) {
     stk::io::put_io_part_attribute(*part);
@@ -180,7 +180,7 @@ ConductionFixtureP2::ConductionFixtureP2(int nx, double scale)
   io.set_bulk_data(bulk);
   mesh = stk::mesh::get_updated_ngp_mesh(bulk);
   gid_field_ngp = stk::mesh::get_updated_ngp_field<gid_type>(gid_field);
-  sierra::nalu::matrix_free::populate_global_id_field(
+  sierra::kynema_ugf::matrix_free::populate_global_id_field(
     mesh, meta.universal_part(), gid_field_ngp);
 }
 

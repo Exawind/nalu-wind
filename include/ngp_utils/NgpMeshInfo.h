@@ -20,18 +20,18 @@
 #include "ngp_utils/NgpFieldManager.h"
 
 namespace sierra {
-namespace nalu {
-namespace nalu_ngp {
+namespace kynema_ugf {
+namespace kynema_ugf_ngp {
 
 /** STK mesh object holder
  *
  *  This lightweight class carries information regarding the STK meshes both the
  *  non-NGP versions (MetaData/BulkData) as well as the `stk::mesh::NgpMesh` and
- *  `nalu_ngp::FieldManager` instances.
+ *  `kynema_ugf_ngp::FieldManager` instances.
  */
 template <
   typename Mesh = stk::mesh::NgpMesh,
-  typename FieldManager = nalu_ngp::FieldManager>
+  typename FieldManager = kynema_ugf_ngp::FieldManager>
 class MeshInfo
 {
 public:
@@ -75,8 +75,8 @@ private:
   const FieldManager ngpFieldMgr_;
 };
 
-} // namespace nalu_ngp
-} // namespace nalu
+} // namespace kynema_ugf_ngp
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPMESHINFO_H */

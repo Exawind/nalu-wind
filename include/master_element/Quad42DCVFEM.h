@@ -24,7 +24,7 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // 2D Quad 4 subcontrol volume
 class Quad42DSCV : public MasterElement
@@ -314,7 +314,7 @@ private:
     SharedMemView<DBLTYPE**, SHMEM>& areav) const;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

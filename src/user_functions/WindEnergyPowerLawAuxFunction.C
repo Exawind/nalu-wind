@@ -14,7 +14,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 WindEnergyPowerLawAuxFunction::WindEnergyPowerLawAuxFunction(
   const unsigned beginPos,
@@ -80,5 +80,5 @@ WindEnergyPowerLawAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

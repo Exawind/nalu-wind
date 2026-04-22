@@ -24,7 +24,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 struct StkToTpetraMaps;
@@ -111,5 +111,5 @@ GradientSolutionUpdate<p>::final_linear_norm() const
 
 INSTANTIATE_POLYCLASS(GradientSolutionUpdate);
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

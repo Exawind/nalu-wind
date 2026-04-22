@@ -32,7 +32,7 @@ class BulkData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace promotion {
 
 std::pair<stk::mesh::PartVector, stk::mesh::PartVector>
@@ -46,7 +46,7 @@ stk::mesh::PartVector create_promoted_boundary_elements(
   int p, stk::mesh::BulkData& bulk, const stk::mesh::PartVector& meshParts);
 
 } // namespace promotion
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

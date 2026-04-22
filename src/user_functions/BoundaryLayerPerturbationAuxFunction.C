@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 BoundaryLayerPerturbationAuxFunction::BoundaryLayerPerturbationAuxFunction(
   const unsigned beginPos,
@@ -78,5 +78,5 @@ BoundaryLayerPerturbationAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

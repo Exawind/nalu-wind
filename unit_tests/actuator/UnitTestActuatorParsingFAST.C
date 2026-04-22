@@ -10,11 +10,11 @@
 #include <aero/actuator/ActuatorParsingFAST.h>
 #include <aero/actuator/ActuatorBulkFAST.h>
 #include <aero/actuator/ActuatorParsing.h>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 #include <gtest/gtest.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace {
 
 YAML::Node
@@ -27,7 +27,7 @@ create_yaml_node(const std::vector<std::string>& testFile)
   return YAML::Load(temp);
 }
 
-// Ensure errors are clear nalu-wind errors and not yaml mysteries
+// Ensure errors are clear kynema_ugf errors and not yaml mysteries
 void
 test_wo_lines(
   const std::vector<std::string>& testFile, const ActuatorMeta& actMeta)
@@ -186,5 +186,5 @@ TEST_F(ActuatorParsingFastTests, useFLLC)
 }
 
 } // namespace
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

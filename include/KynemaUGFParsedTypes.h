@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef NALUPARSEDTYPES_H
-#define NALUPARSEDTYPES_H
+#ifndef KYNEMA_UGFPARSEDTYPES_H
+#define KYNEMA_UGFPARSEDTYPES_H
 
 #include <string>
 #include <vector>
@@ -18,7 +18,7 @@ class Node;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // our data types
 struct Velocity
@@ -130,7 +130,7 @@ struct NonConformalBoundaryConditionData;
 class PostProcessingData;
 struct UserFunctionInitialConditionData;
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
-#endif /* NALUPARSEDTYPES_H */
+#endif /* KYNEMA_UGFPARSEDTYPES_H */

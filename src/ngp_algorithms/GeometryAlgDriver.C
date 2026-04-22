@@ -24,7 +24,7 @@
 #include <stk_mesh/base/NgpMesh.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 
@@ -33,7 +33,7 @@ void
 compute_volume_stats(Realm& realm, double* gVolStats)
 {
   using Traits =
-    nalu_ngp::NGPMeshTraits<typename Realm::NgpMeshInfo::NgpMeshType>;
+    kynema_ugf_ngp::NGPMeshTraits<typename Realm::NgpMeshInfo::NgpMeshType>;
 
   const auto& meshInfo = realm.mesh_info();
   const auto& meta = meshInfo.meta();
@@ -48,15 +48,15 @@ compute_volume_stats(Realm& realm, double* gVolStats)
     stk::mesh::selectField(*dualVol) & meta.locally_owned_part() &
     !(stk::mesh::selectUnion(realm.get_slave_part_vector()));
 
-  nalu_ngp::MinMaxSumScalar<double> volStats;
-  nalu_ngp::MinMaxSum<double> volReducer(volStats);
+  kynema_ugf_ngp::MinMaxSumScalar<double> volStats;
+  kynema_ugf_ngp::MinMaxSum<double> volReducer(volStats);
 
-  nalu_ngp::run_entity_par_reduce(
+  kynema_ugf_ngp::run_entity_par_reduce(
     "GeometryAlgDriver::compute_volume_stats", ngpMesh,
     stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(
       const typename Traits::MeshIndex& mi,
-      nalu_ngp::MinMaxSumScalar<double>& threadVal) {
+      kynema_ugf_ngp::MinMaxSumScalar<double>& threadVal) {
       const double dVol = ngpDualVol.get(mi, 0);
 
       if (dVol < threadVal.min_val)
@@ -76,7 +76,7 @@ compute_volume_stats(Realm& realm, double* gVolStats)
   stk::all_reduce_sum(
     meshInfo.bulk().parallel(), &lVolStats[2], &gVolStats[2], 1);
 
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << " DualNodalVolume min: " << gVolStats[0] << " max: " << gVolStats[1]
     << " total: " << gVolStats[2] << std::endl;
 }
@@ -134,7 +134,8 @@ GeometryAlgDriver::pre_work()
 void
 GeometryAlgDriver::mesh_motion_prework()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const auto& meta = realm_.meta_data();
   const auto& meshInfo = realm_.mesh_info();
@@ -146,7 +147,7 @@ GeometryAlgDriver::mesh_motion_prework()
     realm_.realmUsesEdges_ ? "edge_face_velocity_mag" : "face_velocity_mag";
 
   auto ngpFaceVelMag =
-    nalu_ngp::get_ngp_field(realm_.mesh_info(), fvmFieldName, entityRank);
+    kynema_ugf_ngp::get_ngp_field(realm_.mesh_info(), fvmFieldName, entityRank);
 
   ngpFaceVelMag.clear_sync_state();
   ngpFaceVelMag.set_all(ngpMesh, 0.0);
@@ -157,7 +158,7 @@ GeometryAlgDriver::mesh_motion_prework()
     realm_.realmUsesEdges_ ? "edge_swept_face_volume" : "swept_face_volume";
 
   auto ngpSweptVol =
-    nalu_ngp::get_ngp_field(realm_.mesh_info(), svFieldName, entityRank);
+    kynema_ugf_ngp::get_ngp_field(realm_.mesh_info(), svFieldName, entityRank);
 
   ngpSweptVol.clear_sync_state();
   ngpSweptVol.set_all(ngpMesh, 0.0);
@@ -170,7 +171,7 @@ GeometryAlgDriver::mesh_motion_prework()
     const double dt = realm_.get_time_step();
     const double gamma1 = realm_.get_gamma1();
     const double gamma2 = realm_.get_gamma2();
-    auto ngpSweptVolEdgeN = nalu_ngp::get_ngp_field(
+    auto ngpSweptVolEdgeN = kynema_ugf_ngp::get_ngp_field(
       realm_.mesh_info(), "edge_swept_face_volume", stk::mesh::StateN,
       stk::topology::EDGE_RANK);
 
@@ -181,7 +182,7 @@ GeometryAlgDriver::mesh_motion_prework()
 
     const auto alpha = (gamma1 + gamma2) / dt;
     ngpFaceVelMag.sync_to_device();
-    nalu_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "ngp_field_axpby", ngpMesh, stk::topology::EDGE_RANK, sel,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         ngpFaceVelMag.get(mi, 0) = alpha * ngpSweptVolEdgeN.get(mi, 0);
@@ -193,28 +194,30 @@ GeometryAlgDriver::mesh_motion_prework()
 void
 GeometryAlgDriver::post_work()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex =
+    kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
   std::vector<NGPDoubleFieldType*> fields;
 
-  auto& ngpDualVol = nalu_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
+  auto& ngpDualVol =
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
   fields.push_back(&ngpDualVol);
 
   const auto entityRank = realm_.realmUsesEdges_ ? stk::topology::EDGE_RANK
                                                  : stk::topology::ELEM_RANK;
 
   if (realm_.realmUsesEdges_) {
-    auto& ngpEdgeArea = nalu_ngp::get_ngp_field(
+    auto& ngpEdgeArea = kynema_ugf_ngp::get_ngp_field(
       meshInfo, "edge_area_vector", stk::topology::EDGE_RANK);
     fields.push_back(&ngpEdgeArea);
 
     if (realm_.has_mesh_deformation()) {
-      auto& ngpedgeFaceVel =
-        nalu_ngp::get_ngp_field(meshInfo, "edge_face_velocity_mag", entityRank);
-      auto& ngpedgeSweptVol =
-        nalu_ngp::get_ngp_field(meshInfo, "edge_swept_face_volume", entityRank);
+      auto& ngpedgeFaceVel = kynema_ugf_ngp::get_ngp_field(
+        meshInfo, "edge_face_velocity_mag", entityRank);
+      auto& ngpedgeSweptVol = kynema_ugf_ngp::get_ngp_field(
+        meshInfo, "edge_swept_face_volume", entityRank);
       fields.push_back(&ngpedgeFaceVel);
       fields.push_back(&ngpedgeSweptVol);
     }
@@ -222,9 +225,9 @@ GeometryAlgDriver::post_work()
 
   if (hasWallFunc_) {
     auto& wallAreaF =
-      nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_area_wf");
+      kynema_ugf_ngp::get_ngp_field(meshInfo, "assembled_wall_area_wf");
     auto& wallDistF =
-      nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
+      kynema_ugf_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
     fields.push_back(&wallAreaF);
     fields.push_back(&wallDistF);
   }
@@ -272,10 +275,11 @@ GeometryAlgDriver::post_work()
       stk::mesh::selectField(*wallDistF);
 
     auto wdist =
-      nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
-    auto warea = nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_area_wf");
+      kynema_ugf_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
+    auto warea =
+      kynema_ugf_ngp::get_ngp_field(meshInfo, "assembled_wall_area_wf");
 
-    sierra::nalu::nalu_ngp::run_entity_algorithm(
+    sierra::kynema_ugf::kynema_ugf_ngp::run_entity_algorithm(
       "GeometryAlgDriver_wdist_normalize", ngpMesh, stk::topology::NODE_RANK,
       sel, KOKKOS_LAMBDA(const MeshIndex& mi) {
         wdist.get(mi, 0) /= warea.get(mi, 0);
@@ -289,5 +293,5 @@ GeometryAlgDriver::post_work()
   compute_volume_stats(realm_, volStats_);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

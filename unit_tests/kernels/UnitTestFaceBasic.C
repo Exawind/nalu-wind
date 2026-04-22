@@ -9,25 +9,25 @@
 
 #include <gtest/gtest.h>
 
-class TestFaceKernel : public sierra::nalu::Kernel
+class TestFaceKernel : public sierra::kynema_ugf::Kernel
 {
 public:
   TestFaceKernel(
     stk::topology topo,
-    sierra::nalu::ScalarFieldType* scalarQ,
-    sierra::nalu::ElemDataRequests& dataNeeded)
+    sierra::kynema_ugf::ScalarFieldType* scalarQ,
+    sierra::kynema_ugf::ElemDataRequests& dataNeeded)
     : numTimesExecuted_(0), topo_(topo), scalarQ_(scalarQ)
   {
     dataNeeded.add_gathered_nodal_field(*scalarQ, 1);
   }
 
-  using sierra::nalu::Kernel::execute;
+  using sierra::kynema_ugf::Kernel::execute;
   virtual void execute(
-    sierra::nalu::SharedMemView<DoubleType**>& /* lhs */,
-    sierra::nalu::SharedMemView<DoubleType*>& /* rhs */,
-    sierra::nalu::ScratchViews<DoubleType>& faceViews)
+    sierra::kynema_ugf::SharedMemView<DoubleType**>& /* lhs */,
+    sierra::kynema_ugf::SharedMemView<DoubleType*>& /* rhs */,
+    sierra::kynema_ugf::ScratchViews<DoubleType>& faceViews)
   {
-    sierra::nalu::SharedMemView<DoubleType*>& scalarQview =
+    sierra::kynema_ugf::SharedMemView<DoubleType*>& scalarQview =
       faceViews.get_scratch_view_1D(*scalarQ_);
     EXPECT_EQ(topo_.num_nodes(), scalarQview.size());
     ++numTimesExecuted_;
@@ -37,7 +37,7 @@ public:
 
 private:
   stk::topology topo_;
-  sierra::nalu::ScalarFieldType* scalarQ_;
+  sierra::kynema_ugf::ScalarFieldType* scalarQ_;
 };
 
 #ifndef KOKKOS_ENABLE_GPU
@@ -59,8 +59,8 @@ TEST_F(Hex8Mesh, faceBasic)
   verify_faces_exist(*bulk);
 
   stk::topology faceTopo = stk::topology::QUAD_4;
-  sierra::nalu::MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+  sierra::kynema_ugf::MasterElement* meFC =
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       faceTopo);
 
   stk::mesh::Part* surface1 = meta->get_part("surface_1");

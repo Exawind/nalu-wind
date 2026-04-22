@@ -33,10 +33,10 @@ class NodeBlock;
 class SideBlock;
 } // namespace Ioss
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 class PromoteElement;
 struct ElementDescription;
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 namespace stk {
@@ -50,7 +50,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class PromotedElementIO
 {
@@ -119,7 +119,7 @@ private:
   Ioss::DatabaseIO* databaseIO;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

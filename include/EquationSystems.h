@@ -11,7 +11,7 @@
 #define EquationSystems_h
 
 #include <Enums.h>
-#include "NaluParsedTypes.h"
+#include "KynemaUGFParsedTypes.h"
 
 // stk
 namespace stk {
@@ -34,7 +34,7 @@ class Node;
 #include <string>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class EquationSystem;
@@ -216,7 +216,7 @@ public:
   bool decoupledOversetGlobalFlag_{false};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

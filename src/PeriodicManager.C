@@ -9,7 +9,7 @@
 
 #include <PeriodicManager.h>
 #include <LinearSolverTypes.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <Realm.h>
 #include <utils/StkHelpers.h>
 #include <KokkosInterface.h>
@@ -41,13 +41,13 @@
 #include <string>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 PeriodicManager::PeriodicManager(Realm& realm)
   : realm_(realm),
     searchTolerance_(1.0e-8),
     periodicGhosting_(NULL),
-    ghostingName_("nalu_periodic"),
+    ghostingName_("kynema_ugf_periodic"),
     timerSearch_(0.0),
     errorCount_(0),
     maxErrorCount_(10),
@@ -101,13 +101,13 @@ PeriodicManager::add_periodic_pair(
   stk::search::SearchMethod searchMethod = stk::search::KDTREE;
   if (searchMethodName == "boost_rtree") {
     searchMethod = stk::search::KDTREE;
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Warning: search method 'boost_rtree' has been deprecated"
       << ", Switching to 'stk_kdtree'" << std::endl;
   } else if (searchMethodName == "stk_kdtree")
     searchMethod = stk::search::KDTREE;
   else
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "PeriodicManager::search method not declared; will use stk_kdtree"
       << std::endl;
   searchMethodVec_.push_back(searchMethod);
@@ -140,10 +140,11 @@ PeriodicManager::build_constraints()
   if (periodicSelectorPairs_.size() == 0)
     throw std::runtime_error("PeriodiocBC::Error: No periodic pair provided");
 
-  NaluEnv::self().naluOutputP0() << std::endl;
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Periodic Review:  realm: " << realm_.name_ << std::endl;
-  NaluEnv::self().naluOutputP0() << "=========================" << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "=========================" << std::endl;
 
   augment_periodic_selector_pairs();
 
@@ -162,7 +163,7 @@ PeriodicManager::build_constraints()
   // search and constraint mapping
   finalize_search();
 
-  // provide Nalu id update
+  // provide KynemaUGF id update
   update_global_id_field();
 }
 
@@ -230,7 +231,7 @@ PeriodicManager::augment_periodic_selector_pairs()
   }
 
   default: {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "more than three periodic pairs assumes no common slave nodes "
       << std::endl;
     break;
@@ -300,11 +301,11 @@ PeriodicManager::determine_translation(
     }
   }
   stk::all_reduce_sum(
-    NaluEnv::self().parallel_comm(), &local_sum_coords_master[0],
+    KynemaUGFEnv::self().parallel_comm(), &local_sum_coords_master[0],
     &global_sum_coords_master[0], nDim);
   stk::all_reduce_sum(
-    NaluEnv::self().parallel_comm(), &numberMasterNodes, &g_numberMasterNodes,
-    1);
+    KynemaUGFEnv::self().parallel_comm(), &numberMasterNodes,
+    &g_numberMasterNodes, 1);
 
   // Slave: global_sum_coords_slave
   std::vector<double> local_sum_coords_slave(nDim, 0.0),
@@ -330,10 +331,11 @@ PeriodicManager::determine_translation(
     }
   }
   stk::all_reduce_sum(
-    NaluEnv::self().parallel_comm(), &local_sum_coords_slave[0],
+    KynemaUGFEnv::self().parallel_comm(), &local_sum_coords_slave[0],
     &global_sum_coords_slave[0], nDim);
   stk::all_reduce_sum(
-    NaluEnv::self().parallel_comm(), &numberSlaveNodes, &g_numberSlaveNodes, 1);
+    KynemaUGFEnv::self().parallel_comm(), &numberSlaveNodes,
+    &g_numberSlaveNodes, 1);
 
   // save off translation and rotation
   for (int j = 0; j < nDim; ++j) {
@@ -343,11 +345,12 @@ PeriodicManager::determine_translation(
     rotationVector[j] = global_sum_coords_master[j] / g_numberMasterNodes;
   }
 
-  NaluEnv::self().naluOutputP0() << "Translating [ ";
+  KynemaUGFEnv::self().kynema_ugfOutputP0() << "Translating [ ";
   for (int j = 0; j < nDim; ++j) {
-    NaluEnv::self().naluOutputP0() << translationVector[j] << " ";
+    KynemaUGFEnv::self().kynema_ugfOutputP0() << translationVector[j] << " ";
   }
-  NaluEnv::self().naluOutputP0() << "] Master/Slave pair " << std::endl;
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
+    << "] Master/Slave pair " << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -405,7 +408,7 @@ PeriodicManager::remove_redundant_slave_nodes()
     break;
   }
   default: {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "more than three periodic pairs assumes no common slave nodes "
       << std::endl;
     break;
@@ -477,7 +480,7 @@ PeriodicManager::populate_search_key_vec(
       stk::mesh::Entity node = b[k];
       // setup ident
       theEntityKey theIdent(
-        bulk_data.entity_key(node), NaluEnv::self().parallel_rank());
+        bulk_data.entity_key(node), KynemaUGFEnv::self().parallel_rank());
 
       // define offset for all nodal fields that are of nDim
       const size_t offSet = k * nDim;
@@ -507,7 +510,7 @@ PeriodicManager::populate_search_key_vec(
       stk::mesh::Entity node = b[k];
       // setup ident
       theEntityKey theIdent(
-        bulk_data.entity_key(node), NaluEnv::self().parallel_rank());
+        bulk_data.entity_key(node), KynemaUGFEnv::self().parallel_rank());
       // define offset for all nodal fields that are of nDim
       const size_t offSet = k * nDim;
 
@@ -523,11 +526,11 @@ PeriodicManager::populate_search_key_vec(
 
   // will want to stuff product of search to a single vector
   std::vector<std::pair<theEntityKey, theEntityKey>> searchKeyPair;
-  double timeA = NaluEnv::self().nalu_time();
+  double timeA = KynemaUGFEnv::self().kynema_ugf_time();
   stk::search::coarse_search(
     sphereBoundingBoxSlaveVec, sphereBoundingBoxMasterVec, searchMethod,
-    NaluEnv::self().parallel_comm(), searchKeyPair);
-  timerSearch_ += (NaluEnv::self().nalu_time() - timeA);
+    KynemaUGFEnv::self().parallel_comm(), searchKeyPair);
+  timerSearch_ += (KynemaUGFEnv::self().kynema_ugf_time() - timeA);
 
   // populate searchKeyVector_; culmination of all master/slaves
   searchKeyVector_.insert(
@@ -558,32 +561,34 @@ PeriodicManager::error_check()
 
   // extract locally owned slave nodes from the search
   for (size_t i = 0, size = searchKeyVector_.size(); i < size; ++i) {
-    if (NaluEnv::self().parallel_rank() == searchKeyVector_[i].second.proc())
+    if (
+      KynemaUGFEnv::self().parallel_rank() == searchKeyVector_[i].second.proc())
       l_totalNumber[1] += 1;
   }
 
   // parallel sum and check
   size_t g_totalNumber[2] = {0, 0};
   stk::all_reduce_sum(
-    NaluEnv::self().parallel_comm(), l_totalNumber, g_totalNumber, 2);
+    KynemaUGFEnv::self().parallel_comm(), l_totalNumber, g_totalNumber, 2);
 
   // hard error check
   if (g_totalNumber[0] != g_totalNumber[1]) {
     // increment and report
     errorCount_++;
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "_____________________________________" << std::endl;
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Probable issue with Search on attempt: " << errorCount_ << std::endl;
-    NaluEnv::self().naluOutputP0() << "the total number of slave nodes ("
-                                   << g_totalNumber[0] << ")" << std::endl;
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "the total number of slave nodes (" << g_totalNumber[0] << ")"
+      << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "does not equal the product of the search (" << g_totalNumber[1] << ")"
       << std::endl;
 
     // check to see if we should try again..
     if (errorCount_ == maxErrorCount_) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "ABORT: Too many attempts; please check your mesh" << std::endl;
       throw std::runtime_error(
         "PeriodiocBC::Error: Too many attempts; please check your mesh");
@@ -592,13 +597,13 @@ PeriodicManager::error_check()
     if (g_totalNumber[0] > g_totalNumber[1]) {
       searchTolerance_ *=
         amplificationFactor_; // slave > total; increase tolerance
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "The algorithm will increase the search tolerance: "
         << searchTolerance_ << std::endl;
     } else {
       searchTolerance_ /=
         amplificationFactor_; // slave < total; reduce tolerance
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "The algorithm will reduce the search tolerance: "
         << searchTolerance_ << std::endl;
     }
@@ -606,14 +611,14 @@ PeriodicManager::error_check()
     // try again
     finalize_search();
   } else {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "---------------------------------------------------" << std::endl;
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Parallel consistency noted in master/slave pairings: "
       << g_totalNumber[0] << "/" << g_totalNumber[1] << std::endl;
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "---------------------------------------------------" << std::endl;
-    NaluEnv::self().naluOutputP0() << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
   }
 }
 
@@ -629,7 +634,7 @@ add_range_nodes_to_sharers_of_domain_nodes(
   stk::CommSparse commSparse(bulk_data.parallel());
 
   auto packingLambda = [&]() {
-    int theRank = NaluEnv::self().parallel_rank();
+    int theRank = KynemaUGFEnv::self().parallel_rank();
     std::vector<int> sharingProcs;
     for (size_t i = 0; i < searchKeyVector.size(); ++i) {
       int domainProc = searchKeyVector[i].first.proc();
@@ -679,7 +684,7 @@ void
 PeriodicManager::manage_ghosting_object()
 {
   stk::mesh::BulkData& bulk_data = realm_.bulk_data();
-  unsigned theRank = NaluEnv::self().parallel_rank();
+  unsigned theRank = KynemaUGFEnv::self().parallel_rank();
 
   std::vector<stk::mesh::EntityProc> sendNodes;
   std::vector<stk::mesh::EntityProc> sendElems;
@@ -722,7 +727,7 @@ PeriodicManager::manage_ghosting_object()
   size_t numNodes = sendNodes.size();
   size_t g_numNodes = 0;
   stk::all_reduce_sum(
-    NaluEnv::self().parallel_comm(), &numNodes, &g_numNodes, 1);
+    KynemaUGFEnv::self().parallel_comm(), &numNodes, &g_numNodes, 1);
   if (g_numNodes > 0) {
     // check if we need to ghost
     bulk_data.modification_begin();
@@ -790,7 +795,7 @@ PeriodicManager::ngp_periodic_parallel_communicate_field(
   stk::mesh::FieldBase* theField) const
 {
   if (NULL != periodicGhosting_) {
-    const nalu_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
+    const kynema_ugf_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
     unsigned fieldOrd = theField->mesh_meta_data_ordinal();
 
     if (theField->type_is<double>()) {
@@ -810,7 +815,7 @@ PeriodicManager::ngp_periodic_parallel_communicate_field(
         1, &fieldMgr.get_field<LinSys::GlobalOrdinal>(fieldOrd));
       stk::mesh::communicate_field_data(*periodicGhosting_, fieldVec);
     }
-#ifdef NALU_USES_HYPRE
+#ifdef KYNEMA_UGF_USES_HYPRE
     else if (theField->type_is<HypreIntType>()) {
       std::vector<stk::mesh::NgpField<HypreIntType>*> fieldVec(
         1, &fieldMgr.get_field<HypreIntType>(fieldOrd));
@@ -850,7 +855,7 @@ PeriodicManager::ngp_parallel_communicate_field(
   const stk::mesh::BulkData& bulk_data = realm_.bulk_data();
   const unsigned pSize = bulk_data.parallel_size();
   if (pSize > 1) {
-    const nalu_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
+    const kynema_ugf_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
     unsigned fieldOrd = theField->mesh_meta_data_ordinal();
 
     if (theField->type_is<double>()) {
@@ -874,7 +879,7 @@ PeriodicManager::ngp_parallel_communicate_field(
       stk::mesh::copy_owned_to_shared(bulk_data, fieldVec, false);
       stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
     }
-#ifdef NALU_USES_HYPRE
+#ifdef KYNEMA_UGF_USES_HYPRE
     else if (theField->type_is<HypreIntType>()) {
       std::vector<stk::mesh::NgpField<HypreIntType>*> fieldVec(
         1, &fieldMgr.get_field<HypreIntType>(fieldOrd));
@@ -914,14 +919,14 @@ PeriodicManager::update_global_id_field()
     // pointer to data
     const stk::mesh::EntityId masterGlobalId = bulk_data.identifier(masterNode);
     stk::mesh::EntityId* slaveGlobalId =
-      stk::mesh::field_data(*realm_.naluGlobalId_, slaveNode);
+      stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, slaveNode);
 
     // set new value
     *slaveGlobalId = masterGlobalId;
   }
 
   // update all shared; aura and periodic
-  parallel_communicate_field(realm_.naluGlobalId_);
+  parallel_communicate_field(realm_.kynema_ugfGlobalId_);
 }
 
 //--------------------------------------------------------------------------
@@ -1267,5 +1272,5 @@ PeriodicManager::ngp_set_slave_to_master(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

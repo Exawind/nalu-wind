@@ -31,7 +31,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_kenetic_energy_Rodi)
     bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   // set solution options
-  sierra::nalu::SolutionOptions* solnOpts =
+  sierra::kynema_ugf::SolutionOptions* solnOpts =
     helperObjs.nodeAlg->realm_.solutionOptions_;
   solnOpts->gravity_.resize(3);
   solnOpts->gravity_[0] = 10.0;
@@ -47,7 +47,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_kenetic_energy_Rodi)
   solnOpts_.turbPrMap_["enthalpy"] = 0.60;
   solnOpts_.thermalExpansionCoeff_ = 3.0e-3;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKERodiNodeKernel>(
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::TKERodiNodeKernel>(
     bulk_->mesh_meta_data(), *solnOpts);
 
   helperObjs.execute();

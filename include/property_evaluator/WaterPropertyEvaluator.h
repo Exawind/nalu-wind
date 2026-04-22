@@ -28,7 +28,7 @@ class MetaData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class WaterDensityTPropertyEvaluator : public PropertyEvaluator
 {
@@ -109,7 +109,7 @@ public:
   const double cw_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

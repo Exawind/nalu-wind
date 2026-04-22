@@ -1,4 +1,4 @@
-target_sources(nalu PRIVATE
+target_sources(kynema-ugf PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ConstantPropertyEvaluator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/EnthalpyPropertyEvaluator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/GenericPropAlgorithm.C

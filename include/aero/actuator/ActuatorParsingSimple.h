@@ -15,7 +15,7 @@ class Node;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct ActuatorMeta;
 struct ActuatorMetaSimple;
@@ -23,7 +23,7 @@ struct ActuatorMetaSimple;
 ActuatorMetaSimple
 actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta);
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ACTUATORPARSINGSIMPLE_H_ */

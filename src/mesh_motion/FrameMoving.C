@@ -10,7 +10,7 @@
 #include <cassert>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 void
 FrameMoving::update_coordinates_velocity(const double time)
@@ -19,7 +19,7 @@ FrameMoving::update_coordinates_velocity(const double time)
 
   // create NGP view of motion kernels
   const size_t numKernels = motionKernels_.size();
-  auto ngpKernels = nalu_ngp::create_ngp_view<NgpMotion>(motionKernels_);
+  auto ngpKernels = kynema_ugf_ngp::create_ngp_view<NgpMotion>(motionKernels_);
 
   // define mesh entities
   const int nDim = meta_.spatial_dimension();
@@ -52,19 +52,19 @@ FrameMoving::update_coordinates_velocity(const double time)
   meshVelocity.sync_to_device();
 
   // always reset velocity field
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "FrameMoving_reset_velocity", ngpMesh, entityRank, sel,
     KOKKOS_LAMBDA(
-      const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
+      const kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
       for (int d = 0; d < nDim; ++d)
         meshVelocity.get(mi, d) = 0.0;
     });
 
   // NGP for loop to update coordinates and velocity
-  nalu_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "FrameMoving_update_coordinates_velocity", ngpMesh, entityRank, sel,
     KOKKOS_LAMBDA(
-      const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
+      const kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
       // temporary current and model coords for a generic 2D and 3D
       // implementation
       mm::ThreeDVecType mX;
@@ -151,7 +151,7 @@ FrameMoving::post_compute_geometry()
     // is computed for the aggregated mesh velocity
     break;
   }
-} // namespace nalu
+} // namespace kynema_ugf
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

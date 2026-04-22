@@ -17,7 +17,7 @@ class FieldBase;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct OversetFieldData
 {
@@ -32,7 +32,7 @@ struct OversetFieldData
   int sizeCol_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* OVERSETFIELDDATA_H */

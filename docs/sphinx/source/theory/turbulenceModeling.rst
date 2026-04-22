@@ -82,7 +82,7 @@ Again, note that the useful identities for the Favre-filtered RANS
 variables do not apply, so that
 :math:`\bar{\tilde{\phi}} \ne \tilde{\phi}` and
 :math:`\overline{\phi''} \ne 0`. The Favre-filtered approach is used for
-all LES models in Nalu-Wind.
+all LES models in Kynema-UGF.
 
 .. _theory_standard_smagorinsky_les:
 
@@ -169,13 +169,13 @@ See :math:`k^{sgs}` :ref:`PDE <theory_ksgs_les_model>` section.
 RANS Models
 +++++++++++
 
-As noted, Nalu-Wind supports several different RANS-based model (the
+As noted, Kynema-UGF supports several different RANS-based model (the
 reader is referred to the RANS model equation set description).
 
 Hybrid RANS/LES Models
 ++++++++++++++++++++++
 
-Nalu-Wind supports the Active Model Split (AMS) hybrid RANS/LES turbulence model :cite:`Haering-etal:2020`. 
+Kynema-UGF supports the Active Model Split (AMS) hybrid RANS/LES turbulence model :cite:`Haering-etal:2020`. 
 The reader is referred to the AMS equation set for more details.
 
 Wall Models
@@ -183,6 +183,6 @@ Wall Models
 
 Flows are either expected to be fully resolved or, alternatively, under-resolved
 where wall functions are used. A classic law of the wall has been implemented in
-Nalu-Wind. Wall models to handle adverse pressure gradients are planned. For more
+Kynema-UGF. Wall models to handle adverse pressure gradients are planned. For more
 information of the form of wall models, please refer to the :ref:`boundary
 condition <theory_boundary_conditions>` section of this manual.

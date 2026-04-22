@@ -26,7 +26,7 @@
 #include <stk_mesh/base/NgpMesh.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename AlgTraits>
 CourantReAlg<AlgTraits>::CourantReAlg(
@@ -63,7 +63,7 @@ template <typename AlgTraits>
 void
 CourantReAlg<AlgTraits>::execute()
 {
-  using ElemSimdDataType = nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdDataType = kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = meshInfo.ngp_mesh();
@@ -82,8 +82,8 @@ CourantReAlg<AlgTraits>::execute()
   auto numScsIp = AlgTraits::numScsIp_;
   auto nDim = AlgTraits::nDim_;
 
-  const auto cflOps = nalu_ngp::simd_elem_field_updater(ngpMesh, ngpCFL);
-  const auto reyOps = nalu_ngp::simd_elem_field_updater(ngpMesh, ngpRe);
+  const auto cflOps = kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, ngpCFL);
+  const auto reyOps = kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, ngpRe);
 
   const stk::mesh::Selector sel = realm_.meta_data().locally_owned_part() &
                                   stk::mesh::selectUnion(partVec_) &
@@ -101,7 +101,7 @@ CourantReAlg<AlgTraits>::execute()
   const std::string algNameRE =
     "CourantReAlg_RE_" + std::to_string(AlgTraits::topo_);
 
-  nalu_ngp::run_elem_par_reduce(
+  kynema_ugf_ngp::run_elem_par_reduce(
     algNameCFL, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata, double& cflMax) {
       auto& scrViews = edata.simdScrView;
@@ -137,7 +137,7 @@ CourantReAlg<AlgTraits>::execute()
     },
     cflReducer);
 
-  nalu_ngp::run_elem_par_reduce(
+  kynema_ugf_ngp::run_elem_par_reduce(
     algNameRE, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata, double& reMax) {
       auto& scrViews = edata.simdScrView;
@@ -186,7 +186,7 @@ CourantReAlg<AlgTraits>::execute()
 
   const std::string algName =
     "CourantReAlg_" + std::to_string(AlgTraits::topo_);
-  nalu_ngp::run_elem_par_reduce(
+  kynema_ugf_ngp::run_elem_par_reduce(
     algName, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata, CflRe & threadVal) {
       auto& scrViews = edata.simdScrView;
@@ -242,5 +242,5 @@ CourantReAlg<AlgTraits>::execute()
 
 INSTANTIATE_KERNEL(CourantReAlg)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

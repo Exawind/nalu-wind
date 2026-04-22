@@ -13,10 +13,10 @@
 #include <aero/actuator/ActuatorTypes.h>
 #include <aero/actuator/ActuatorBulkFAST.h>
 #include <aero/actuator/ActuatorFunctors.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 void ActFastCacheRelativeVelocities(ActuatorBulkFAST& actBulk);
 
@@ -164,7 +164,7 @@ using ActFastSpreadForceWhProjection = GenericLoopOverCoarseSearchResults<
   ActuatorBulkFAST,
   ActFastSpreadForceWhProjInnerLoop>;
 
-} /* namespace nalu */
+} /* namespace kynema_ugf */
 } /* namespace sierra */
 
 #endif /* ACTUATORFUNCTORSFAST_H_ */

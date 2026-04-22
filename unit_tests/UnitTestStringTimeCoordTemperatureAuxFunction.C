@@ -2,7 +2,7 @@
 
 #include "user_functions/StringTimeCoordTemperatureAuxFunction.h"
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 TEST(StringTimeCoordTemperatureAuxFunction, only_z)
 {
   StringTimeCoordTemperatureAuxFunction func("z");
@@ -33,4 +33,4 @@ TEST(StringTimeCoordTemperatureAuxFunction, full)
   ASSERT_DOUBLE_EQ(temperature, 1 + exp(1) * log(2));
 }
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf

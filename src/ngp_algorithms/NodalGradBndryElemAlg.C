@@ -23,7 +23,7 @@
 #include "stk_mesh/base/FieldRestriction.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <
   typename AlgTraits,
@@ -105,7 +105,7 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto gradPhi = fieldMgr.template get_field<double>(gradPhi_);
   const auto gradPhiOps =
-    nalu_ngp::simd_elem_nodal_field_updater(ngpMesh, gradPhi);
+    kynema_ugf_ngp::simd_elem_nodal_field_updater(ngpMesh, gradPhi);
 
   // Bring class members into local scope for device capture
   const bool useShifted = useShifted_;
@@ -125,7 +125,7 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::
   const std::string algName =
     (meta.get_fields()[gradPhi_]->name() + "_bndry_" +
      std::to_string(AlgTraits::topo_));
-  nalu_ngp::run_elem_algorithm(
+  kynema_ugf_ngp::run_elem_algorithm(
     algName, meshInfo, meta.side_rank(), dataNeeded_, sel,
     KOKKOS_LAMBDA(typename ViewHelperType::SimdDataType & edata) {
       const int* ipNodeMap = meFC->ipNodeMap();
@@ -158,16 +158,16 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::
 #define INSTANTIATE_ALG(AlgTraits)                                             \
   template class NodalGradBndryElemAlg<                                        \
     AlgTraits, ScalarFieldType, VectorFieldType,                               \
-    nalu_ngp::ScalarViewHelper<                                                \
+    kynema_ugf_ngp::ScalarViewHelper<                                          \
       NodalGradBndryElemSimdDataType, ScalarFieldType>>;                       \
   template class NodalGradBndryElemAlg<                                        \
     AlgTraits, VectorFieldType, TensorFieldType,                               \
-    nalu_ngp::VectorViewHelper<                                                \
+    kynema_ugf_ngp::VectorViewHelper<                                          \
       NodalGradBndryElemSimdDataType, VectorFieldType>>
 
 INSTANTIATE_ALG(AlgTraitsTri3);
 INSTANTIATE_ALG(AlgTraitsQuad4);
 INSTANTIATE_ALG(AlgTraitsEdge_2D);
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

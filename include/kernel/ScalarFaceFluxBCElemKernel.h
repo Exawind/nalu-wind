@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Entity.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class ElemDataRequests;
 class MasterElement;
@@ -65,7 +65,7 @@ private:
   MasterElement* meFC_{nullptr};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* SCALARFLUXBCELEMKERNEL_H */

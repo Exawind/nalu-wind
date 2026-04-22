@@ -13,7 +13,7 @@
 #include <SimdInterface.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace ams_utils {
 
@@ -61,7 +61,7 @@ get_M43_constant(T D[dim][dim], const double CMdeg)
 
 } // namespace ams_utils
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* AMSUTILS_H */

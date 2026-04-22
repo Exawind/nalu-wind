@@ -9,7 +9,7 @@
 
 #include <user_functions/VariableDensityNonIsoTemperatureAuxFunction.h>
 #include <algorithm>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 // basic c++
 #include <cmath>
@@ -17,7 +17,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 VariableDensityNonIsoTemperatureAuxFunction::
   VariableDensityNonIsoTemperatureAuxFunction()
@@ -55,5 +55,5 @@ VariableDensityNonIsoTemperatureAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

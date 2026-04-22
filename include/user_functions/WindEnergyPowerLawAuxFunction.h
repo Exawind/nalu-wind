@@ -15,7 +15,7 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /** Create power law velocity profile aux function for wind energy applications
  *
@@ -59,7 +59,7 @@ private:
   double u_max_; // Maximum velocity to cut off power law
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* WINDENERGYPOWERLAWAUXFUNCTION_H */

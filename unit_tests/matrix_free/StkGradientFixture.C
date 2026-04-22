@@ -36,7 +36,7 @@
 #include "stk_unit_test_utils/stk_mesh_fixtures/HexFixture.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 GradientFixture::GradientFixture(int nx, double scale)
   : bulkPtr(
@@ -110,5 +110,5 @@ GradientFixture::GradientFixture(int nx, double scale)
   populate_global_id_field(mesh(), meta.universal_part(), gid_field_ngp);
 }
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

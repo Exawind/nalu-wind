@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <TurbViscSmagorinskyAlgorithm.h>
 #include <Algorithm.h>
 #include <FieldTypeDef.h>
@@ -22,7 +22,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -103,5 +103,5 @@ TurbViscSmagorinskyAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

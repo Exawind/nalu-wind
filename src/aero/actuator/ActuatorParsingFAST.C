@@ -8,13 +8,13 @@
 //
 #include <aero/actuator/ActuatorBulk.h>
 #include <aero/actuator/ActuatorBulkFAST.h>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 #include <aero/actuator/ActuatorParsingFAST.h>
 #include <aero/actuator/ActuatorParsing.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 void
@@ -138,7 +138,7 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 {
   ActuatorMetaFAST actMetaFAST(actMeta);
   fast::fastInputs& fi = actMetaFAST.fastInputs_;
-  fi.comm = NaluEnv::self().parallel_comm();
+  fi.comm = KynemaUGFEnv::self().parallel_comm();
   fi.nTurbinesGlob = actMetaFAST.numberOfActuators_;
 
   const YAML::Node y_actuator = y_node["actuator"];
@@ -166,7 +166,7 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     // TODO Do we need this for anything in FSI?
     /* get_required(y_actuator, "restartFreq", fi.restartFreq); */
     int* restartFreq;
-#ifdef NALU_USES_OPENFAST
+#ifdef KYNEMA_UGF_USES_OPENFAST
     restartFreq = &fi.restartFreq;
 #endif
     get_required(y_actuator, "n_every_checkpoint", *restartFreq);
@@ -200,5 +200,5 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
   return actMetaFAST;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

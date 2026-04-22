@@ -17,7 +17,7 @@
 #include <CVFEMTypeDefs.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace tensor_assembly {
 
 template <int poly_order, typename Scalar>
@@ -679,6 +679,6 @@ momentum_advdiff_rhs(
 }
 
 } // namespace tensor_assembly
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

@@ -17,7 +17,7 @@
 #include <stk_mesh/base/MetaData.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -81,5 +81,5 @@ CoriolisSrc::CoriolisSrc(const SolutionOptions& solnOpts)
      (upVector_[1] * eastVector_[2] - eastVector_[1] * upVector_[2]) * cosphi_);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

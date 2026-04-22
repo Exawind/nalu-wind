@@ -20,7 +20,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -182,5 +182,5 @@ VariableDensityMixFracSrcNodeSuppAlg::node_execute(
   rhs[0] += src * dualVolume;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

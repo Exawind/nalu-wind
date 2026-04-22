@@ -22,7 +22,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -94,5 +94,5 @@ MomentumBoussinesqRASrcNodeSuppAlg::node_execute(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

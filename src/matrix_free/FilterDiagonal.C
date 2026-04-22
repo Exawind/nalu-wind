@@ -22,7 +22,7 @@
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace impl {
@@ -83,5 +83,5 @@ filter_diagonal_t<p>::invoke(
 INSTANTIATE_POLYSTRUCT(filter_diagonal_t);
 } // namespace impl
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

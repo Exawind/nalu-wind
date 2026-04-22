@@ -20,7 +20,7 @@ call_projectPt2Line_on_device(
 {
   double result = 0;
   Kokkos::parallel_reduce(
-    sierra::nalu::DeviceRangePolicy(0, 1),
+    sierra::kynema_ugf::DeviceRangePolicy(0, 1),
     KOKKOS_LAMBDA(const unsigned& i, double& localResult) {
       localResult = fsi::projectPt2Line(pt, lStart, lEnd);
     },
@@ -60,7 +60,7 @@ call_perpProjectDist_Pt2Line_on_device(
 {
   double result = 0;
   Kokkos::parallel_reduce(
-    sierra::nalu::DeviceRangePolicy(0, 1),
+    sierra::kynema_ugf::DeviceRangePolicy(0, 1),
     KOKKOS_LAMBDA(const unsigned& i, double& localResult) {
       localResult = fsi::perpProjectDist_Pt2Line(pt, lStart, lEnd);
     },

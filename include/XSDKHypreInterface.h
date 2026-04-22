@@ -41,17 +41,17 @@
 // ***********************************************************************
 // @HEADER
 
-// This file was copied into Nalu source tree from
+// This file was copied into KynemaUGF source tree from
 // https://github.com/trilinos/xSDKTrilinos. The contents have been modified to
-// enable interfacing with Nalu. The original copyright and license have been
-// retained.
+// enable interfacing with KynemaUGF. The original copyright and license have
+// been retained.
 //
 
 #ifndef XSDKHYPREINTERFACE_H
 #define XSDKHYPREINTERFACE_H
 
 #include "FieldTypeDef.h"
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 #include "Ifpack2_ConfigDefs.hpp"
 #endif
 
@@ -68,7 +68,7 @@
 #include "HYPRE_parcsr_mv.h"
 #include "HYPRE.h"
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 #include "Ifpack2_Preconditioner.hpp"
 #include "Ifpack2_Condest.hpp"
 #endif
@@ -108,7 +108,7 @@ enum Hypre_Chooser { Solver, Prec };
 //! function. Use this class to call Hypre's internal parameters.
 class FunctionParameter
 {
-  using HypreIntType = sierra::nalu::HypreIntType;
+  using HypreIntType = sierra::kynema_ugf::HypreIntType;
 
 public:
   //! Single int constructor.

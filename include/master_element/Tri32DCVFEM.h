@@ -24,7 +24,7 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // 2D Tri 3 subcontrol volume
 class Tri32DSCV : public MasterElement
@@ -321,7 +321,7 @@ private:
     SharedMemView<DBLTYPE**, SHMEM>& areav) const;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

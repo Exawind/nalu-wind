@@ -8,7 +8,7 @@
 //
 
 #include <InputOutputRealm.h>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 #include <Realm.h>
 #include <SolutionOptions.h>
 
@@ -29,7 +29,7 @@
 #include <string>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -209,18 +209,18 @@ InputOutputRealm::populate_external_variables_from_input(
       ioBroker_->read_defined_input_fields(currentTime, &missingFields);
     if (missingFields.size() > 0) {
       for (size_t k = 0; k < missingFields.size(); ++k) {
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "WARNING: Realm::populate_external_variables_from_input for field "
           << missingFields[k].field()->name()
           << " is missing; will default to IC specification" << std::endl;
       }
     }
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Realm::populate_external_variables_from_input() candidate input "
          "time: "
       << foundTime << " for Realm: " << name() << std::endl;
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

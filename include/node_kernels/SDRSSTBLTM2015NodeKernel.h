@@ -19,7 +19,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -78,7 +78,7 @@ private:
   NodeKernelTraits::DblType referenceVelocity_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* SDRSSTBLTM2015NODEKERNEL_H */

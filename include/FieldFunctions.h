@@ -20,7 +20,7 @@ class BulkData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /*
    A note on design:
@@ -93,7 +93,7 @@ void field_index_copy(
   const bool auraIsActive,
   const stk::topology::rank_t entityRankValue = stk::topology::NODE_RANK);
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

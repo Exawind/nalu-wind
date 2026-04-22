@@ -12,15 +12,15 @@
 #include "overset/OversetManagerTIOGA.h"
 #include "overset/UpdateOversetFringeAlgorithmDriver.h"
 #include "overset/overset_utils.h"
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 #include "Realm.h"
 
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
 #include "tioga.h"
 #endif
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ExtOverset::ExtOverset(TimeIntegrator& time) : time_(time) {}
 
@@ -29,10 +29,10 @@ ExtOverset::~ExtOverset() = default;
 void
 ExtOverset::set_communicator()
 {
-#ifdef NALU_USES_TIOGA
-  auto& tg = tioga_nalu::TiogaRef::self().get();
+#ifdef KYNEMA_UGF_USES_TIOGA
+  auto& tg = tioga_kynema_ugf::TiogaRef::self().get();
 
-  auto& env = NaluEnv::self();
+  auto& env = KynemaUGFEnv::self();
   tg.setCommunicator(
     env.parallel_comm(), env.parallel_rank(), env.parallel_size());
 #endif
@@ -79,7 +79,7 @@ ExtOverset::initialize()
   if (!hasOverset_)
     return;
 
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
   for (auto* realm : time_.realmVec_) {
     if (!realm->hasOverset_)
       continue;
@@ -98,8 +98,8 @@ ExtOverset::update_connectivity()
   if (!hasOverset_)
     return;
 
-#ifdef NALU_USES_TIOGA
-  auto& tg = tioga_nalu::TiogaRef::self().get();
+#ifdef KYNEMA_UGF_USES_TIOGA
+  auto& tg = tioga_kynema_ugf::TiogaRef::self().get();
 
   for (auto* tgiface : tgIfaceVec_) {
     tgiface->register_mesh();
@@ -120,7 +120,7 @@ ExtOverset::pre_overset_conn_work()
   if (!hasOverset_)
     return;
 
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
   for (auto* tgiface : tgIfaceVec_) {
     tgiface->register_mesh();
   }
@@ -133,7 +133,7 @@ ExtOverset::post_overset_conn_work()
   if (!hasOverset_)
     return;
 
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
   for (auto* tgiface : tgIfaceVec_) {
     tgiface->post_connectivity_work(isDecoupled_);
   }
@@ -146,9 +146,9 @@ ExtOverset::exchange_solution()
   if (!hasOverset_)
     return;
 
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
   const int row_major = 0;
-  auto& tg = tioga_nalu::TiogaRef::self().get();
+  auto& tg = tioga_kynema_ugf::TiogaRef::self().get();
 
   int ncomp = 0;
   for (auto* realm : time_.realmVec_) {
@@ -185,7 +185,7 @@ ExtOverset::register_solution(const std::vector<std::string>& fnames)
   // Store field names for update solution phase
   slnFieldNames_ = fnames;
 
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
   for (auto* realm : time_.realmVec_) {
     if (!realm->hasOverset_)
       continue;
@@ -208,7 +208,7 @@ ExtOverset::update_solution()
 
   STK_ThrowAssert(slnFieldNames_.size() > 0u);
 
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
   for (auto* realm : time_.realmVec_) {
     if (!realm->hasOverset_)
       continue;
@@ -222,5 +222,5 @@ ExtOverset::update_solution()
 #endif
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

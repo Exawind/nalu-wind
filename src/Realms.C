@@ -15,10 +15,10 @@
 
 // yaml for parsing..
 #include <yaml-cpp/yaml.h>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -93,5 +93,5 @@ Realms::parent()
   return &simulation_;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 
@@ -51,7 +51,7 @@ TEST_F(ActuatorBulkFastTests, initializeActuatorBulk)
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
 
   const fast::fastInputs& fi = actMetaFast.fastInputs_;
-  ASSERT_EQ(fi.comm, NaluEnv::self().parallel_comm());
+  ASSERT_EQ(fi.comm, KynemaUGFEnv::self().parallel_comm());
   ASSERT_EQ(fi.globTurbineData.size(), 1);
   ASSERT_EQ(fi.debug, false);
   ASSERT_EQ(fi.dryRun, false);
@@ -121,5 +121,5 @@ TEST_F(ActuatorBulkFastTests, epsilonTowerAndAnisotropicEpsilon)
 
 } // namespace
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

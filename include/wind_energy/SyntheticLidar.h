@@ -21,7 +21,7 @@
 #include <optional>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct RadarFilter
 {
@@ -146,7 +146,7 @@ private:
   std::vector<LidarLineOfSite> radars_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

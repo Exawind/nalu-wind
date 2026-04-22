@@ -34,7 +34,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class GradientBoundaryFixture : public GradientFixture
@@ -116,5 +116,5 @@ TEST_F(GradientBoundaryFixture, bc_residual)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

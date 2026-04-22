@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ConvectingTaylorVortexVelocityAuxFunction::
   ConvectingTaylorVortexVelocityAuxFunction(
@@ -57,5 +57,5 @@ ConvectingTaylorVortexVelocityAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

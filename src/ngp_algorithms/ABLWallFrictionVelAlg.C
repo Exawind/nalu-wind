@@ -26,7 +26,7 @@
 #include <stk_mesh/base/NgpMesh.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 
@@ -139,7 +139,7 @@ ABLWallFrictionVelAlg<BcAlgTraits>::ABLWallFrictionVelAlg(
     kappa_(kappa),
     useShifted_(useShifted),
     meFC_(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
         BcAlgTraits::topo_))
 {
   faceData_.add_cvfem_face_me(meFC_);
@@ -162,7 +162,8 @@ void
 ABLWallFrictionVelAlg<BcAlgTraits>::execute()
 {
   namespace mo = abl_monin_obukhov;
-  using ElemSimdData = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdData =
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
@@ -192,21 +193,23 @@ ABLWallFrictionVelAlg<BcAlgTraits>::execute()
   const stk::mesh::Selector sel =
     realm_.meta_data().locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
-  const auto utauOps = nalu_ngp::simd_elem_field_updater(ngpMesh, ngpUtau);
+  const auto utauOps =
+    kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, ngpUtau);
 
   // Reducer to accumulate the area-weighted utau sum as well as total area for
   // wall boundary of this specific topology.
-  nalu_ngp::ArraySimdDouble2 utauSum(0.0);
-  Kokkos::Sum<nalu_ngp::ArraySimdDouble2> utauReducer(utauSum);
+  kynema_ugf_ngp::ArraySimdDouble2 utauSum(0.0);
+  Kokkos::Sum<kynema_ugf_ngp::ArraySimdDouble2> utauReducer(utauSum);
 
   const auto shp =
     shape_fcn<BcAlgTraits, QuadRank::SCV>(use_shifted_quad(useShifted));
 
   const std::string algName =
     "ABLWallFrictionVelAlg_" + std::to_string(BcAlgTraits::topo_);
-  nalu_ngp::run_elem_par_reduce(
+  kynema_ugf_ngp::run_elem_par_reduce(
     algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
-    KOKKOS_LAMBDA(ElemSimdData & edata, nalu_ngp::ArraySimdDouble2 & uSum) {
+    KOKKOS_LAMBDA(
+      ElemSimdData & edata, kynema_ugf_ngp::ArraySimdDouble2 & uSum) {
       // Unit normal vector
       DoubleType nx[BcAlgTraits::nDim_];
       DoubleType velIp[BcAlgTraits::nDim_];
@@ -318,5 +321,5 @@ ABLWallFrictionVelAlg<BcAlgTraits>::execute()
 
 INSTANTIATE_KERNEL_FACE(ABLWallFrictionVelAlg)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

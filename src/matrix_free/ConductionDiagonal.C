@@ -21,7 +21,7 @@
 #include <stk_simd/Simd.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace impl {
 namespace {
@@ -122,5 +122,5 @@ INSTANTIATE_POLYSTRUCT(conduction_diagonal_t);
 } // namespace impl
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

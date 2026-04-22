@@ -14,7 +14,7 @@
 #include "FieldTypeDef.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /** Wrapper class to handle computation of omega wall parameters
  *
@@ -36,7 +36,7 @@ public:
   virtual void post_work() override;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* SDRWALLFUNCALGDRIVER_H */

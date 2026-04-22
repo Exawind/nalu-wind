@@ -50,7 +50,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class GradientSolveFixture : public GradientFixture
@@ -289,5 +289,5 @@ TEST_F(ComputeGradientFixture, error_in_gradient_is_smallish_for_harmonic_field)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

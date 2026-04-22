@@ -14,7 +14,7 @@
 #include "gtest/gtest.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <int p>
@@ -61,5 +61,5 @@ TEST(MatrixFreeMaxCourantReynolds, gives_correct_values_on_one_element)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

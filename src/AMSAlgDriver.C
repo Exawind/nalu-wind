@@ -29,7 +29,7 @@
 #include <stk_mesh/base/FieldParallel.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -136,7 +136,7 @@ AMSAlgDriver::register_edge_fields(const stk::mesh::PartVector& part_vec)
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(part_vec);
   stk::mesh::MetaData& meta = realm_.meta_data();
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge Mdot average added in AMS " << std::endl;
   avgMdot_ = &(meta.declare_field<double>(
     stk::topology::EDGE_RANK, "average_mass_flow_rate"));
@@ -192,21 +192,21 @@ AMSAlgDriver::initial_work()
         .mesh_meta_data_ordinal());
     const unsigned velocityID = get_field_ordinal(meta, "velocity");
     const auto& U = fieldMgr.get_field<double>(velocityID);
-    nalu_ngp::field_copy(ngpMesh, sel, avgU, U, nDim);
+    kynema_ugf_ngp::field_copy(ngpMesh, sel, avgU, U, nDim);
 
     // Copy dudx to average dudx
     auto avgDudx =
       fieldMgr.get_field<double>(avgDudx_->mesh_meta_data_ordinal());
     const auto& dudx =
       fieldMgr.get_field<double>(get_field_ordinal(meta, "dudx"));
-    nalu_ngp::field_copy(ngpMesh, sel, avgDudx, dudx, nDim * nDim);
+    kynema_ugf_ngp::field_copy(ngpMesh, sel, avgDudx, dudx, nDim * nDim);
   }
 }
 
 void
 AMSAlgDriver::initial_production()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   // Initialize average_production (after tvisc)
   // We don't want to do this on restart where AMS fields are present
@@ -229,10 +229,10 @@ AMSAlgDriver::initial_production()
     // Compute average production
     auto avgProd =
       fieldMgr.get_field<double>(avgProduction_->mesh_meta_data_ordinal());
-    nalu_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "AMSAlgDriver_avgProd", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
-        DblType tij[nalu_ngp::NDimMax * nalu_ngp::NDimMax];
+        DblType tij[kynema_ugf_ngp::NDimMax * kynema_ugf_ngp::NDimMax];
         for (int i = 0; i < nDim; ++i) {
           for (int j = 0; j < nDim; ++j) {
             const DblType avgSij = 0.5 * (avgDudx.get(mi, i * nDim + j) +
@@ -241,7 +241,7 @@ AMSAlgDriver::initial_production()
           }
         }
 
-        DblType Pij[nalu_ngp::NDimMax * nalu_ngp::NDimMax];
+        DblType Pij[kynema_ugf_ngp::NDimMax * kynema_ugf_ngp::NDimMax];
         for (int i = 0; i < nDim; ++i) {
           for (int j = 0; j < nDim; ++j) {
             Pij[i * nDim + j] = 0.0;
@@ -285,7 +285,7 @@ AMSAlgDriver::initial_mdot()
       stk::mesh::selectField(
         *meta.get_field(stk::topology::EDGE_RANK, "average_mass_flow_rate"));
 
-    nalu_ngp::field_copy(
+    kynema_ugf_ngp::field_copy(
       ngpMesh, sel, avgMdot, massFlowRate, 1, stk::topology::EDGE_RANK);
   }
 }
@@ -380,14 +380,14 @@ AMSAlgDriver::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*avgVelocity_);
-  nalu_ngp::field_copy(
+  kynema_ugf_ngp::field_copy(
     ngpMesh, sel, avgVelNp1, avgVelN, meta.spatial_dimension());
-  nalu_ngp::field_copy(
+  kynema_ugf_ngp::field_copy(
     ngpMesh, sel, avgDudxNp1, avgDudxN,
     meta.spatial_dimension() * meta.spatial_dimension());
-  nalu_ngp::field_copy(ngpMesh, sel, avgProdNp1, avgProdN, 1);
-  nalu_ngp::field_copy(ngpMesh, sel, avgTkeResNp1, avgTkeResN, 1);
-  nalu_ngp::field_copy(ngpMesh, sel, avgResAdeqNp1, avgResAdeqN, 1);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, avgProdNp1, avgProdN, 1);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, avgTkeResNp1, avgTkeResN, 1);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, avgResAdeqNp1, avgResAdeqN, 1);
   avgVelNp1.modify_on_device();
   avgDudxNp1.modify_on_device();
   avgProdNp1.modify_on_device();
@@ -395,5 +395,5 @@ AMSAlgDriver::predict_state()
   avgResAdeqNp1.modify_on_device();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

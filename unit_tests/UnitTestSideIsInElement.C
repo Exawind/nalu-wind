@@ -12,7 +12,7 @@
 #include <stk_mesh/base/GetEntities.hpp>
 #include <stk_mesh/base/SkinMesh.hpp>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <master_element/MasterElementRepo.h>
 #include <memory>
@@ -89,9 +89,8 @@ check_side_is_in_element(stk::topology topo)
     for (const auto* ib : face_buckets) {
       const auto& b = *ib;
 
-      auto* meSide =
-        sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
-          b.topology());
+      auto* meSide = sierra::kynema_ugf::MasterElementRepo::
+        get_surface_master_element_on_host(b.topology());
 
       for (size_t k = 0; k < b.size(); ++k) {
         auto face = b[k];

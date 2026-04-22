@@ -9,8 +9,8 @@
 
 #include <DataProbePostProcessing.h>
 #include <FieldTypeDef.h>
-#include <NaluParsing.h>
-#include <NaluEnv.h>
+#include <KynemaUGFParsing.h>
+#include <KynemaUGFEnv.h>
 #include <Realm.h>
 #include <Simulation.h>
 
@@ -45,7 +45,7 @@
 #include <iostream>
 
 // boost
-#ifdef NALU_USES_BOOST
+#ifdef KYNEMA_UGF_USES_BOOST
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
@@ -53,7 +53,7 @@
 #endif
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -128,7 +128,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
   // check for any data probes
   const YAML::Node y_dataProbe = y_node["data_probes"];
   if (y_dataProbe) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "DataProbePostProcessing::load" << std::endl;
 
     // Set the output format for probes
@@ -160,7 +160,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
       } else {
         throw std::runtime_error("output_format has unrecognized format");
       }
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "DataProbePostProcessing::Adding " << formatName
         << " output format..." << std::endl;
     }
@@ -273,7 +273,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
           probeInfo->onlyOutputField_.resize(numProbes);
 
           // deal with processors... Distribute each probe over subsequent procs
-          const int numProcs = NaluEnv::self().parallel_size();
+          const int numProcs = KynemaUGFEnv::self().parallel_size();
           const int divProcProbe = std::max(numProcs / numProbes, numProcs);
 
           for (size_t ilos = 0; ilos < y_loss.size(); ilos++) {
@@ -307,7 +307,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
             const YAML::Node tipCoord = y_los["tip_coordinates"];
             if (tipCoord)
               probeInfo->tipCoordinates_[ilos] =
-                tipCoord.as<sierra::nalu::Coordinates>();
+                tipCoord.as<sierra::kynema_ugf::Coordinates>();
             else
               throw std::runtime_error(
                 "DataProbePostProcessing: lacking tip coordinates");
@@ -316,7 +316,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
             const YAML::Node tailCoord = y_los["tail_coordinates"];
             if (tailCoord)
               probeInfo->tailCoordinates_[ilos] =
-                tailCoord.as<sierra::nalu::Coordinates>();
+                tailCoord.as<sierra::kynema_ugf::Coordinates>();
             else
               throw std::runtime_error(
                 "DataProbePostProcessing: lacking tail coordinates");
@@ -355,7 +355,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
           probeInfo->onlyOutputField_.resize(numProbes);
 
           // deal with processors... Distribute each probe over subsequent procs
-          const int numProcs = NaluEnv::self().parallel_size();
+          const int numProcs = KynemaUGFEnv::self().parallel_size();
           const int divProcProbe = std::max(
             numProcs / numProbes,
             numProcs); // unnecessary, divProcProbe = numProcs
@@ -402,7 +402,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
             const YAML::Node cornerCoord = y_planenode["corner_coordinates"];
             if (cornerCoord)
               probeInfo->cornerCoordinates_[iplane + offset] =
-                cornerCoord.as<sierra::nalu::Coordinates>();
+                cornerCoord.as<sierra::kynema_ugf::Coordinates>();
             else
               throw std::runtime_error(
                 "DataProbePostProcessing: lacking corner coordinates");
@@ -411,7 +411,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
             const YAML::Node edge1Vector = y_planenode["edge1_vector"];
             if (edge1Vector)
               probeInfo->edge1Vector_[iplane + offset] =
-                edge1Vector.as<sierra::nalu::Coordinates>();
+                edge1Vector.as<sierra::kynema_ugf::Coordinates>();
             else
               throw std::runtime_error(
                 "DataProbePostProcessing: lacking edge 1 vector");
@@ -420,7 +420,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
             const YAML::Node edge2Vector = y_planenode["edge2_vector"];
             if (edge2Vector)
               probeInfo->edge2Vector_[iplane + offset] =
-                edge2Vector.as<sierra::nalu::Coordinates>();
+                edge2Vector.as<sierra::kynema_ugf::Coordinates>();
             else
               throw std::runtime_error(
                 "DataProbePostProcessing: lacking edge 2 vector");
@@ -429,7 +429,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
             const YAML::Node offsetDir = y_planenode["offset_vector"];
             if (offsetDir)
               probeInfo->offsetDir_[iplane + offset] =
-                offsetDir.as<sierra::nalu::Coordinates>();
+                offsetDir.as<sierra::kynema_ugf::Coordinates>();
             else {
               probeInfo->offsetDir_[iplane + offset].x_ = 0.0;
               probeInfo->offsetDir_[iplane + offset].y_ = 0.0;
@@ -637,7 +637,7 @@ DataProbePostProcessing::initialize()
             stk::topology::NODE_RANK, numPoints, availableNodeIds);
 
         // check to see if part has nodes on it already
-        if (processorId == NaluEnv::self().parallel_rank()) {
+        if (processorId == KynemaUGFEnv::self().parallel_rank()) {
 
           // set some data
           int checkNumPoints = 0;
@@ -663,11 +663,11 @@ DataProbePostProcessing::initialize()
           // check if nodes exists. If they do, did the number of points match?
           if (nodesExist) {
             if (checkNumPoints != numPoints) {
-              NaluEnv::self().naluOutput()
+              KynemaUGFEnv::self().kynema_ugfOutput()
                 << "Number of points specified within input file does not "
                    "match nodes that exists: "
                 << probePart->name() << std::endl;
-              NaluEnv::self().naluOutput()
+              KynemaUGFEnv::self().kynema_ugfOutput()
                 << "The old and new node count is as follows: " << numPoints
                 << " " << checkNumPoints << std::endl;
               probeInfo->numPoints_[j] = checkNumPoints;
@@ -954,19 +954,22 @@ DataProbePostProcessing::execute()
   }
 
   if (isOutput) {
-    const double t1 = enablePerfTiming_ ? NaluEnv::self().nalu_time() : 0.0;
+    const double t1 =
+      enablePerfTiming_ ? KynemaUGFEnv::self().kynema_ugf_time() : 0.0;
     // execute and provide results...
     transfers_->execute();
-    const double t2 = enablePerfTiming_ ? NaluEnv::self().nalu_time() : 0.0;
+    const double t2 =
+      enablePerfTiming_ ? KynemaUGFEnv::self().kynema_ugf_time() : 0.0;
     if (useExo_) {
       provide_output_exodus(currentTime);
     }
     if (useText_) {
       provide_output_txt(currentTime);
     }
-    const double t3 = enablePerfTiming_ ? NaluEnv::self().nalu_time() : 0.0;
+    const double t3 =
+      enablePerfTiming_ ? KynemaUGFEnv::self().kynema_ugf_time() : 0.0;
     if (enablePerfTiming_)
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "DataProbePostProcessing::execute "
         << " transfer_time: " << t2 - t1 << " output_time: " << t3 - t2
         << " total_time: " << t3 - t1 << std::endl;
@@ -979,7 +982,7 @@ DataProbePostProcessing::execute()
 void
 DataProbePostProcessing::provide_output_txt(const double currentTime)
 {
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "DataProbePostProcessing::Writing dataprobes..." << std::endl;
 
   stk::mesh::MetaData& metaData = realm_.meta_data();
@@ -1007,11 +1010,11 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
           const std::string fileName =
             probeInfo->partName_[inp] + "_" + ss.str() + ".dat";
           std::ofstream myfile;
-          if (processorId == NaluEnv::self().parallel_rank()) {
+          if (processorId == KynemaUGFEnv::self().parallel_rank()) {
 
             // Get the path to the file name, and create any directories
             // necessary
-#ifdef NALU_USES_BOOST
+#ifdef KYNEMA_UGF_USES_BOOST
             boost::filesystem::path pathdir{fileName};
             if (pathdir.has_parent_path()) {
               if (!boost::filesystem::exists(pathdir.parent_path().string())) {
@@ -1019,10 +1022,10 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
                   boost::filesystem::create_directories(
                     pathdir.parent_path().string());
                 } catch (const boost::filesystem::filesystem_error& e) {
-                  NaluEnv::self().naluOutputP0()
+                  KynemaUGFEnv::self().kynema_ugfOutputP0()
                     << "Error creating " << pathdir.parent_path().string()
                     << std::endl;
-                  NaluEnv::self().naluOutputP0()
+                  KynemaUGFEnv::self().kynema_ugfOutputP0()
                     << e.code().message() << std::endl;
                   throw std::runtime_error(e.code().message());
                 }
@@ -1107,14 +1110,14 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
           ss << "_" << processorId;
           std::string fileName =
             probeInfo->partName_[inp] + "_" + ss.str() + ".dat";
-          if (processorId == NaluEnv::self().parallel_rank()) {
+          if (processorId == KynemaUGFEnv::self().parallel_rank()) {
 
             const int N1 = probeInfo->edge1NumPoints_[inp];
             const int N2 = probeInfo->edge2NumPoints_[inp];
             const int pointsPerPlane = N1 * N2;
 
 // Use gzip compression when writing
-#ifdef NALU_USES_BOOST
+#ifdef KYNEMA_UGF_USES_BOOST
             boost::iostreams::filtering_streambuf<boost::iostreams::output>
               outbuf;
             if ((0 < gzlevel) && (gzlevel < 10)) {
@@ -1129,7 +1132,7 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
 
             // Get the path to the file name, and create any directories
             // necessary
-#ifdef NALU_USES_BOOST
+#ifdef KYNEMA_UGF_USES_BOOST
             boost::filesystem::path pathdir{fileName};
             if (pathdir.has_parent_path()) {
               if (!boost::filesystem::exists(pathdir.parent_path().string())) {
@@ -1137,10 +1140,10 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
                   boost::filesystem::create_directories(
                     pathdir.parent_path().string());
                 } catch (const boost::filesystem::filesystem_error& e) {
-                  NaluEnv::self().naluOutputP0()
+                  KynemaUGFEnv::self().kynema_ugfOutputP0()
                     << "Error creating " << pathdir.parent_path().string()
                     << std::endl;
-                  NaluEnv::self().naluOutputP0()
+                  KynemaUGFEnv::self().kynema_ugfOutputP0()
                     << e.code().message() << std::endl;
                   throw std::runtime_error(e.code().message());
                 }
@@ -1158,7 +1161,7 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
                 std::ifstream(coordFileName.c_str()) ? false : true;
               if (addCoordFile) {
                 // -- Add the coordinate file
-#ifdef NALU_USES_BOOST
+#ifdef KYNEMA_UGF_USES_BOOST
                 boost::iostreams::filtering_streambuf<boost::iostreams::output>
                   outstream;
                 if ((0 < gzlevel) && (gzlevel < 10)) {
@@ -1215,7 +1218,7 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
             }
 
             std::ofstream file(fileName.c_str(), std::ios_base::out);
-#ifdef NALU_USES_BOOST
+#ifdef KYNEMA_UGF_USES_BOOST
             outbuf.push(file);
 #endif
             std::string filestring;
@@ -1307,7 +1310,7 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
               // row complete
               filestring += '\n';
             }
-#ifdef NALU_USES_BOOST
+#ifdef KYNEMA_UGF_USES_BOOST
             // done with file output
             std::ostream fileout(&outbuf);
             fileout << filestring;
@@ -1315,7 +1318,7 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
 #endif
             file.close();
 
-          } // END if ( processorId == NaluEnv::self().parallel_rank())
+          } // END if ( processorId == KynemaUGFEnv::self().parallel_rank())
         }
       }
     }
@@ -1325,7 +1328,7 @@ DataProbePostProcessing::provide_output_txt(const double currentTime)
 void
 DataProbePostProcessing::provide_output_exodus(const double currentTime)
 {
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "DataProbePostProcessing::Writing dataprobes..." << std::endl;
   io->process_output_request(fileIndex_, currentTime);
 }
@@ -1339,5 +1342,5 @@ DataProbePostProcessing::get_inactive_selector()
   return inactiveSelector_;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

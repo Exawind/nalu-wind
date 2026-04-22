@@ -14,7 +14,7 @@
 #include "PecletFunction.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class ScalarEdgeSolverAlg : public AssembleEdgeSolverAlgorithm
 {
@@ -48,7 +48,7 @@ private:
   std::string dofName_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* SCALAREDGESOLVERALG_H */

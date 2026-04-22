@@ -16,7 +16,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class BuoyancySourceAlg : public Algorithm
 {
@@ -46,7 +46,7 @@ private:
   static constexpr int NDimMax = 3;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NODALGRADEDGEALG_H */

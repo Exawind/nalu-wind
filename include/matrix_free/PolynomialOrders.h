@@ -14,31 +14,31 @@
 
 #include <type_traits>
 
-#ifndef NALU_POLYNOMIAL_ORDER1
-#define NALU_POLYNOMIAL_ORDER1 1
+#ifndef KYNEMA_UGF_POLYNOMIAL_ORDER1
+#define KYNEMA_UGF_POLYNOMIAL_ORDER1 1
 #endif
 
-#ifndef NALU_POLYNOMIAL_ORDER2
-#define NALU_POLYNOMIAL_ORDER2 2
+#ifndef KYNEMA_UGF_POLYNOMIAL_ORDER2
+#define KYNEMA_UGF_POLYNOMIAL_ORDER2 2
 #endif
 
-#ifndef NALU_POLYNOMIAL_ORDER3
-#define NALU_POLYNOMIAL_ORDER3 3
+#ifndef KYNEMA_UGF_POLYNOMIAL_ORDER3
+#define KYNEMA_UGF_POLYNOMIAL_ORDER3 3
 #endif
 
-#ifndef NALU_POLYNOMIAL_ORDER4
-#define NALU_POLYNOMIAL_ORDER4 4
+#ifndef KYNEMA_UGF_POLYNOMIAL_ORDER4
+#define KYNEMA_UGF_POLYNOMIAL_ORDER4 4
 #endif
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace inst {
 enum {
-  P1 = NALU_POLYNOMIAL_ORDER1,
-  P2 = NALU_POLYNOMIAL_ORDER2,
-  P3 = NALU_POLYNOMIAL_ORDER3,
-  P4 = NALU_POLYNOMIAL_ORDER4
+  P1 = KYNEMA_UGF_POLYNOMIAL_ORDER1,
+  P2 = KYNEMA_UGF_POLYNOMIAL_ORDER2,
+  P3 = KYNEMA_UGF_POLYNOMIAL_ORDER3,
+  P4 = KYNEMA_UGF_POLYNOMIAL_ORDER4
 };
 }
 
@@ -80,7 +80,7 @@ enum {
   }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

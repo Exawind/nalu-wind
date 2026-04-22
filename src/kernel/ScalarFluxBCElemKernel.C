@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Field.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename BcAlgTraits>
 ScalarFluxBCElemKernel<BcAlgTraits>::ScalarFluxBCElemKernel(
@@ -36,7 +36,7 @@ ScalarFluxBCElemKernel<BcAlgTraits>::ScalarFluxBCElemKernel(
       bulk.mesh_meta_data().side_rank())),
     useShifted_(useShifted),
     meFC_(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
         BcAlgTraits::topo_))
 {
   // Register necessary data for use in execute method
@@ -87,5 +87,5 @@ ScalarFluxBCElemKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE(ScalarFluxBCElemKernel)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -1,11 +1,11 @@
-#ifdef NALU_USES_HYPRE
+#ifdef KYNEMA_UGF_USES_HYPRE
 
 #include "HypreDirectSolver.h"
 #include "XSDKHypreInterface.h"
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 // This anonymous namespace contains wrapper methods to HYPRE solver creation
@@ -99,10 +99,10 @@ HypreDirectSolver::solve(
   int& numIterations, double& finalResidualNorm, bool isFinalOuterIter)
 {
   // Initialize the solver on first entry
-  double time = -NaluEnv::self().nalu_time();
+  double time = -KynemaUGFEnv::self().kynema_ugf_time();
   if (initializeSolver_)
     initSolver();
-  time += NaluEnv::self().nalu_time();
+  time += KynemaUGFEnv::self().kynema_ugf_time();
   timerPrecond_ = time;
 
   numIterations = 0;
@@ -110,7 +110,7 @@ HypreDirectSolver::solve(
 
   // Can use the return value from solverSolvePtr_. However, Hypre seems to
   // return a non-zero value and that causes spurious error message output in
-  // Nalu.
+  // KynemaUGF.
   int status = 0;
 
   if (isFinalOuterIter)
@@ -385,7 +385,7 @@ HypreDirectSolver::createPrecond()
   isPrecondSetup_ = true;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

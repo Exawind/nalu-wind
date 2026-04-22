@@ -11,7 +11,7 @@
 #include "Realm.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace overset_utils {
 
 std::vector<OversetFieldData>
@@ -33,5 +33,5 @@ get_overset_field_data(Realm& realm, std::vector<std::string> fnames)
 }
 
 } // namespace overset_utils
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

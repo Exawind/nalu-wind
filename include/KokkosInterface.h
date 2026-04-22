@@ -33,7 +33,7 @@
 #endif
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 #if defined(KOKKOS_ENABLE_CUDA)
 typedef Kokkos::CudaSpace MemSpace;
@@ -253,7 +253,7 @@ set_vals(ViewType& view, const T& val)
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* INCLUDE_KOKKOSINTERFACE_H_ */

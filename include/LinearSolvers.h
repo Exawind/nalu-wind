@@ -21,7 +21,7 @@ class Node;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class LinearSolver;
 class TpetraLinearSolverConfig;
@@ -30,7 +30,7 @@ class Simulation;
 
 /** Collection of solvers and their associated configuration
  *
- *  This class performs the following actions within a Nalu simulation:
+ *  This class performs the following actions within a KynemaUGF simulation:
  *
  *  - Parse the `linear_solvers` section and create a mapping of user-defined
  *    configurations.
@@ -43,7 +43,7 @@ public:
   LinearSolvers(Simulation& sim);
   ~LinearSolvers();
 
-  /** Parse the `linear_solvers` section from Nalu input file
+  /** Parse the `linear_solvers` section from KynemaUGF input file
    */
   void load(const YAML::Node& node);
 
@@ -84,13 +84,13 @@ public:
   //! input file when `type` is `hypre` or `tpetra_hypre`
   HypreSolverConfigMap solverHypreConfig_;
 
-  //! Reference to the sierra::nalu::Simulation instance
+  //! Reference to the sierra::kynema_ugf::Simulation instance
   Simulation& sim_;
 
 private:
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

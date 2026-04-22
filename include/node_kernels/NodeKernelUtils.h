@@ -19,7 +19,7 @@
 #include <map>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename LambdaGeneral, typename LambdaUserSrc>
 void
@@ -44,8 +44,9 @@ process_ngp_node_kernels(
     const auto it =
       realm.solutionOptions_->srcTermsMap_.find(eqSystem->eqnTypeName_);
     if (it != realm.solutionOptions_->srcTermsMap_.end()) {
-      NaluEnv::self().naluOutputP0() << "Processing user source terms for "
-                                     << eqSystem->eqnTypeName_ << std::endl;
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
+        << "Processing user source terms for " << eqSystem->eqnTypeName_
+        << std::endl;
       for (auto& srcName : it->second) {
         lambdaUsrSrc(*nodeAlg, srcName);
       }
@@ -55,7 +56,7 @@ process_ngp_node_kernels(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NODEKERNELUTILS_H */

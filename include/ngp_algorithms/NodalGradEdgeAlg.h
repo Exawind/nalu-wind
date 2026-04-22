@@ -16,7 +16,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename PhiType, typename GradPhiType>
 class NodalGradEdgeAlg : public Algorithm
@@ -54,7 +54,7 @@ using VectorNodalGradEdgeAlg =
 using TensorNodalGradEdgeAlg =
   NodalGradEdgeAlg<VectorFieldType, TensorFieldType>;
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NODALGRADEDGEALG_H */

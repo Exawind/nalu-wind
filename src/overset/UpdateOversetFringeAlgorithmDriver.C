@@ -9,14 +9,14 @@
 
 #include "overset/UpdateOversetFringeAlgorithmDriver.h"
 #include "Realm.h"
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 #include "overset/OversetManager.h"
 #include "ngp_utils/NgpFieldUtils.h"
 
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 UpdateOversetFringeAlgorithmDriver::UpdateOversetFringeAlgorithmDriver(
   Realm& realm)
@@ -39,7 +39,7 @@ UpdateOversetFringeAlgorithmDriver::execute()
   if (realm_.isExternalOverset_)
     return;
 
-  const double timeA = NaluEnv::self().nalu_time();
+  const double timeA = KynemaUGFEnv::self().kynema_ugf_time();
   auto* oversetManager = realm_.oversetManager_;
   if (oversetManager->oversetGhosting_ != nullptr) {
 #if !defined(KOKKOS_ENABLE_GPU)
@@ -53,9 +53,9 @@ UpdateOversetFringeAlgorithmDriver::execute()
   }
 
   oversetManager->overset_update_fields(fields_);
-  const double timeB = NaluEnv::self().nalu_time();
+  const double timeB = KynemaUGFEnv::self().kynema_ugf_time();
   oversetManager->timerFieldUpdate_ += (timeB - timeA);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

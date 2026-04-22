@@ -6,37 +6,42 @@
 #include <limits>
 #include <vector>
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
 TEST(LocalGraphArrays, compute_row_pointers)
 {
   unsigned N = 5;
   size_t nnz = 0;
-  Kokkos::View<size_t*, sierra::nalu::HostSpace> rowLengths("rowLengths", N);
+  Kokkos::View<size_t*, sierra::kynema_ugf::HostSpace> rowLengths(
+    "rowLengths", N);
   for (unsigned i = 0; i < N; ++i) {
     rowLengths(i) = i + 2;
     nnz += rowLengths(i);
   }
 
-  Kokkos::View<size_t*, sierra::nalu::HostSpace> rowPointers("rowPtrs", N + 1);
-  sierra::nalu::LocalGraphArrays::compute_row_pointers(rowPointers, rowLengths);
+  Kokkos::View<size_t*, sierra::kynema_ugf::HostSpace> rowPointers(
+    "rowPtrs", N + 1);
+  sierra::kynema_ugf::LocalGraphArrays::compute_row_pointers(
+    rowPointers, rowLengths);
   EXPECT_EQ(nnz, rowPointers(N));
 }
 
-Teuchos::RCP<sierra::nalu::LocalGraphArrays>
+Teuchos::RCP<sierra::kynema_ugf::LocalGraphArrays>
 create_graph(const std::vector<size_t>& rowLens)
 {
   unsigned N = rowLens.size();
-  Kokkos::View<size_t*, sierra::nalu::HostSpace> rowLengths("rowLengths", N);
+  Kokkos::View<size_t*, sierra::kynema_ugf::HostSpace> rowLengths(
+    "rowLengths", N);
   for (unsigned i = 0; i < N; ++i) {
     rowLengths(i) = rowLens[i];
   }
-  return Teuchos::rcp(new sierra::nalu::LocalGraphArrays(rowLengths));
+  return Teuchos::rcp(new sierra::kynema_ugf::LocalGraphArrays(rowLengths));
 }
 
 TEST(LocalGraphArrays, construct)
 {
-  Teuchos::RCP<sierra::nalu::LocalGraphArrays> csg = create_graph({2, 3, 4});
+  Teuchos::RCP<sierra::kynema_ugf::LocalGraphArrays> csg =
+    create_graph({2, 3, 4});
   EXPECT_EQ(2u, csg->get_row_length(0));
   EXPECT_EQ(3u, csg->get_row_length(1));
   EXPECT_EQ(4u, csg->get_row_length(2));
@@ -47,7 +52,8 @@ TEST(LocalGraphArrays, construct)
 
 TEST(LocalGraphArrays, insertIndicesNumDof1)
 {
-  Teuchos::RCP<sierra::nalu::LocalGraphArrays> csg = create_graph({2, 3, 4});
+  Teuchos::RCP<sierra::kynema_ugf::LocalGraphArrays> csg =
+    create_graph({2, 3, 4});
 
   int numDof = 1;
 
@@ -78,7 +84,8 @@ TEST(LocalGraphArrays, insertIndicesNumDof1)
 
 TEST(LocalGraphArrays, insertIndicesNumDof3)
 {
-  Teuchos::RCP<sierra::nalu::LocalGraphArrays> csg = create_graph({6, 9, 12});
+  Teuchos::RCP<sierra::kynema_ugf::LocalGraphArrays> csg =
+    create_graph({6, 9, 12});
 
   int numDof = 3;
 
@@ -109,4 +116,4 @@ TEST(LocalGraphArrays, insertIndicesNumDof3)
   }
 }
 
-#endif // NALU_USES_TRILINOS_SOLVERS
+#endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS

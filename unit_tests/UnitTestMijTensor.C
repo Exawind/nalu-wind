@@ -21,7 +21,7 @@
 
 #include <AlgTraits.h>
 #include <EigenDecomposition.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include "UnitTestUtils.h"
 
@@ -31,16 +31,16 @@ namespace {
 
 std::vector<double>
 calculate_mij_tensor(
-  sierra::nalu::MasterElement& me, std::vector<double>& ws_coords)
+  sierra::kynema_ugf::MasterElement& me, std::vector<double>& ws_coords)
 {
   int gradSize = me.num_integration_points() * me.nodesPerElement_ * me.nDim_;
   std::vector<double> ws_dndx(gradSize);
   std::vector<double> ws_deriv(gradSize);
-  const sierra::nalu::SharedMemView<double**> coords(
+  const sierra::kynema_ugf::SharedMemView<double**> coords(
     ws_coords.data(), me.nodesPerElement_, me.nDim_);
-  sierra::nalu::SharedMemView<double***> dndx(
+  sierra::kynema_ugf::SharedMemView<double***> dndx(
     ws_dndx.data(), me.num_integration_points(), me.nodesPerElement_, me.nDim_);
-  sierra::nalu::SharedMemView<double***> deriv(
+  sierra::kynema_ugf::SharedMemView<double***> deriv(
     ws_deriv.data(), me.num_integration_points(), me.nodesPerElement_,
     me.nDim_);
   me.grad_op(coords, dndx, deriv);
@@ -70,7 +70,8 @@ test_metric_for_topo_2D(stk::topology topo, double tol)
     unit_test_utils::create_one_reference_element(*bulk, topo);
 
   auto* mescs =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+      topo);
 
   // apply some arbitrary linear map the reference element
   std::mt19937 rng;
@@ -82,16 +83,16 @@ test_metric_for_topo_2D(stk::topology topo, double tol)
     1.0 + std::abs(coeff(rng))};
 
   double Qt[4];
-  sierra::nalu::transpose22(Q, Qt);
+  sierra::kynema_ugf::transpose22(Q, Qt);
 
   double gij_exact[4];
-  sierra::nalu::mxm22(Q, Qt, gij_exact);
+  sierra::kynema_ugf::mxm22(Q, Qt, gij_exact);
 
   // Compute eigendecomposition
   double mij_ev[2][2];
   double mij_evals[2][2];
   double (&gij_exact_pt)[2][2] = reinterpret_cast<double (&)[2][2]>(gij_exact);
-  sierra::nalu::EigenDecomposition::sym_diagonalize(
+  sierra::kynema_ugf::EigenDecomposition::sym_diagonalize(
     gij_exact_pt, mij_ev, mij_evals);
 
   // Construct Mij
@@ -108,7 +109,7 @@ test_metric_for_topo_2D(stk::topology topo, double tol)
   const auto* nodes = bulk->begin_nodes(elem);
   for (unsigned j = 0; j < topo.num_nodes(); ++j) {
     const double* coords = stk::mesh::field_data(coordField, nodes[j]);
-    sierra::nalu::matvec22(Q, coords, &ws_coords[j * dim]);
+    sierra::kynema_ugf::matvec22(Q, coords, &ws_coords[j * dim]);
   }
 
   std::vector<double> mij_tensor = calculate_mij_tensor(*mescs, ws_coords);
@@ -138,7 +139,8 @@ test_metric_for_topo_3D(stk::topology topo, double tol)
     unit_test_utils::create_one_reference_element(*bulk, topo);
 
   auto* mescs =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+      topo);
 
   // apply some arbitrary linear map the reference element
   std::mt19937 rng;
@@ -150,16 +152,16 @@ test_metric_for_topo_3D(stk::topology topo, double tol)
                  1.0 + std::abs(coeff(rng))};
 
   double Qt[9];
-  sierra::nalu::transpose33(Q, Qt);
+  sierra::kynema_ugf::transpose33(Q, Qt);
 
   double gij_exact[9];
-  sierra::nalu::mxm33(Q, Qt, gij_exact);
+  sierra::kynema_ugf::mxm33(Q, Qt, gij_exact);
 
   // Compute eigendecomposition
   double mij_ev[3][3];
   double mij_evals[3][3];
   double (&gij_exact_pt)[3][3] = reinterpret_cast<double (&)[3][3]>(gij_exact);
-  sierra::nalu::EigenDecomposition::sym_diagonalize(
+  sierra::kynema_ugf::EigenDecomposition::sym_diagonalize(
     gij_exact_pt, mij_ev, mij_evals);
 
   // Construct Mij
@@ -177,7 +179,7 @@ test_metric_for_topo_3D(stk::topology topo, double tol)
   const auto* nodes = bulk->begin_nodes(elem);
   for (unsigned j = 0; j < topo.num_nodes(); ++j) {
     const double* coords = stk::mesh::field_data(coordField, nodes[j]);
-    sierra::nalu::matvec33(Q, coords, &ws_coords[j * dim]);
+    sierra::kynema_ugf::matvec33(Q, coords, &ws_coords[j * dim]);
   }
 
   std::vector<double> mij_tensor = calculate_mij_tensor(*mescs, ws_coords);

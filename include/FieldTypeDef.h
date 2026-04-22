@@ -14,17 +14,17 @@
 #include <stk_mesh/base/Ngp.hpp>
 #include <stk_mesh/base/NgpField.hpp>
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 #include <Tpetra_Details_DefaultTypes.hpp>
 #endif
 #include <functional>
 
-#ifdef NALU_USES_HYPRE
+#ifdef KYNEMA_UGF_USES_HYPRE
 #include "HYPRE_utilities.h"
 #endif
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 using ScalarFieldType = stk::mesh::Field<double>;
 using GlobalIdFieldType = stk::mesh::Field<stk::mesh::EntityId>;
@@ -43,13 +43,13 @@ using GenericIntFieldType = stk::mesh::Field<int>;
 using LocalId = unsigned;
 using LocalIdFieldType = stk::mesh::Field<LocalId>;
 
-#ifdef NALU_USES_HYPRE
+#ifdef KYNEMA_UGF_USES_HYPRE
 using HypreIntType = HYPRE_Int;
 #else
 using HypreIntType = int;
 #endif
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 using TpetIdType = Tpetra::Details::DefaultTypes::global_ordinal_type;
 #else
 using TpetIdType = int64_t;
@@ -59,7 +59,7 @@ using TpetIDFieldType = stk::mesh::Field<TpetIdType>;
 using HypreIDFieldType = stk::mesh::Field<HypreIntType>;
 using NGPHypreIDFieldType = stk::mesh::NgpField<HypreIntType>;
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

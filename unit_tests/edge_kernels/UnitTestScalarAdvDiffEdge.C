@@ -176,14 +176,14 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
   const int numDof = 1;
   unit_test_utils::TpetraHelperObjectsEdge helperObjs(bulk_, numDof);
 
-  helperObjs.realm.naluGlobalId_ = naluGlobalId_;
+  helperObjs.realm.kynema_ugfGlobalId_ = kynema_ugfGlobalId_;
   helperObjs.realm.tpetGlobalId_ = tpetGlobalId_;
 
   helperObjs.realm.set_global_id();
 
   bool useAvgMdot_ = false;
 
-  helperObjs.create<sierra::nalu::ScalarEdgeSolverAlg>(
+  helperObjs.create<sierra::kynema_ugf::ScalarEdgeSolverAlg>(
     partVec_[0], mixFraction_, dzdx_, viscosity_, useAvgMdot_);
 
   helperObjs.execute();
@@ -240,7 +240,8 @@ TEST_F(
   const int numDof = 1;
   unit_test_utils::TpetraHelperObjectsEdge helperObjs(bulk_, numDof);
 
-  sierra::nalu::SolutionOptions* solnOpts = helperObjs.realm.solutionOptions_;
+  sierra::kynema_ugf::SolutionOptions* solnOpts =
+    helperObjs.realm.solutionOptions_;
 
   // Setup solution options for default advection kernel
   solnOpts->meshMotion_ = false;
@@ -249,23 +250,24 @@ TEST_F(
   solnOpts->alphaUpwMap_["mixture_fraction"] = 0.0;
   solnOpts->upwMap_["mixture_fraction"] = 0.0;
 
-  solnOpts->fixPressureInfo_.reset(new sierra::nalu::FixPressureAtNodeInfo);
+  solnOpts->fixPressureInfo_.reset(
+    new sierra::kynema_ugf::FixPressureAtNodeInfo);
   solnOpts->fixPressureInfo_->refPressure_ = 1.0;
   solnOpts->fixPressureInfo_->lookupType_ =
-    sierra::nalu::FixPressureAtNodeInfo::STK_NODE_ID;
+    sierra::kynema_ugf::FixPressureAtNodeInfo::STK_NODE_ID;
   solnOpts->fixPressureInfo_->stkNodeId_ = 1;
 
-  helperObjs.realm.naluGlobalId_ = naluGlobalId_;
+  helperObjs.realm.kynema_ugfGlobalId_ = kynema_ugfGlobalId_;
   helperObjs.realm.tpetGlobalId_ = tpetGlobalId_;
 
   helperObjs.realm.set_global_id();
 
-  helperObjs.create<sierra::nalu::ScalarEdgeSolverAlg>(
+  helperObjs.create<sierra::kynema_ugf::ScalarEdgeSolverAlg>(
     partVec_[0], mixFraction_, dzdx_, viscosity_);
 
   helperObjs.execute();
 
-  sierra::nalu::FixPressureAtNodeAlgorithm fixPressure(
+  sierra::kynema_ugf::FixPressureAtNodeAlgorithm fixPressure(
     helperObjs.realm, partVec_[0], &helperObjs.eqSystem);
 
   fixPressure.pressure_ =
@@ -303,7 +305,8 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra_dirichlet)
   const int numDof = 1;
   unit_test_utils::TpetraHelperObjectsEdge helperObjs(bulk_, numDof);
 
-  sierra::nalu::SolutionOptions* solnOpts = helperObjs.realm.solutionOptions_;
+  sierra::kynema_ugf::SolutionOptions* solnOpts =
+    helperObjs.realm.solutionOptions_;
 
   // Setup solution options for default advection kernel
   solnOpts->meshMotion_ = false;
@@ -312,18 +315,19 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra_dirichlet)
   solnOpts->alphaUpwMap_["mixture_fraction"] = 0.0;
   solnOpts->upwMap_["mixture_fraction"] = 0.0;
 
-  solnOpts->fixPressureInfo_.reset(new sierra::nalu::FixPressureAtNodeInfo);
+  solnOpts->fixPressureInfo_.reset(
+    new sierra::kynema_ugf::FixPressureAtNodeInfo);
   solnOpts->fixPressureInfo_->refPressure_ = 1.0;
   solnOpts->fixPressureInfo_->lookupType_ =
-    sierra::nalu::FixPressureAtNodeInfo::STK_NODE_ID;
+    sierra::kynema_ugf::FixPressureAtNodeInfo::STK_NODE_ID;
   solnOpts->fixPressureInfo_->stkNodeId_ = 1;
 
-  helperObjs.realm.naluGlobalId_ = naluGlobalId_;
+  helperObjs.realm.kynema_ugfGlobalId_ = kynema_ugfGlobalId_;
   helperObjs.realm.tpetGlobalId_ = tpetGlobalId_;
 
   helperObjs.realm.set_global_id();
 
-  helperObjs.create<sierra::nalu::ScalarEdgeSolverAlg>(
+  helperObjs.create<sierra::kynema_ugf::ScalarEdgeSolverAlg>(
     partVec_[0], mixFraction_, dzdx_, viscosity_);
 
   helperObjs.execute();

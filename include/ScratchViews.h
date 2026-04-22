@@ -27,7 +27,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename FieldInfoViewType>
 KOKKOS_INLINE_FUNCTION NumNeededViews
@@ -1000,8 +1000,8 @@ get_num_bytes_pre_req_data(
 
 template <
   typename ELEMDATAREQUESTSTYPE,
-  typename TEAMTYPE = sierra::nalu::DeviceTeamHandleType,
-  typename SHMEM = sierra::nalu::DeviceShmem>
+  typename TEAMTYPE = sierra::kynema_ugf::DeviceTeamHandleType,
+  typename SHMEM = sierra::kynema_ugf::DeviceShmem>
 inline int
 calculate_shared_mem_bytes_per_thread(
   int lhsSize,
@@ -1035,8 +1035,8 @@ calc_shmem_bytes_per_thread_edge(int rhsSize)
 
 template <
   typename ELEMDATAREQUESTSTYPE,
-  typename TEAMTYPE = sierra::nalu::DeviceTeamHandleType,
-  typename SHMEM = sierra::nalu::DeviceShmem>
+  typename TEAMTYPE = sierra::kynema_ugf::DeviceTeamHandleType,
+  typename SHMEM = sierra::kynema_ugf::DeviceShmem>
 inline int
 calculate_shared_mem_bytes_per_thread(
   int lhsSize,
@@ -1048,9 +1048,9 @@ calculate_shared_mem_bytes_per_thread(
 {
   int bytes_per_thread =
     (rhsSize + lhsSize) * sizeof(double) + (2 * scratchIdsSize) * sizeof(int) +
-    sierra::nalu::get_num_bytes_pre_req_data<double>(
+    sierra::kynema_ugf::get_num_bytes_pre_req_data<double>(
       faceDataNeeded, nDim, ElemReqType::FACE) +
-    sierra::nalu::get_num_bytes_pre_req_data<double>(
+    sierra::kynema_ugf::get_num_bytes_pre_req_data<double>(
       elemDataNeeded, nDim, ElemReqType::FACE_ELEM) +
     MultiDimViews<double, TEAMTYPE, SHMEM>::bytes_needed(
       faceDataNeeded.get_total_num_fields(),
@@ -1063,7 +1063,7 @@ calculate_shared_mem_bytes_per_thread(
   return bytes_per_thread;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

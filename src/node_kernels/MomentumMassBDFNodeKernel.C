@@ -16,7 +16,7 @@
 #include "utils/StkHelpers.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MomentumMassBDFNodeKernel::MomentumMassBDFNodeKernel(
   const stk::mesh::BulkData& bulk)
@@ -106,5 +106,5 @@ MomentumMassBDFNodeKernel::execute(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -26,7 +26,7 @@ typedef std::vector<Bucket*> BucketVector;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 bool part_vector_is_valid_and_nonempty(const stk::mesh::PartVector& parts);
 
@@ -78,7 +78,7 @@ stk::topology get_promoted_elem_topo(int dim, int order);
 
 stk::topology face_topology_for_order(int order);
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

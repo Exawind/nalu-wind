@@ -16,7 +16,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename PhiType, typename GradPhiType>
 NodalGradEdgeAlg<PhiType, GradPhiType>::NodalGradEdgeAlg(
@@ -59,7 +59,7 @@ template <typename PhiType, typename GradPhiType>
 void
 NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
 {
-  using EntityInfoType = nalu_ngp::EntityInfo<stk::mesh::NgpMesh>;
+  using EntityInfoType = kynema_ugf_ngp::EntityInfo<stk::mesh::NgpMesh>;
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
   const auto ngpMesh = meshInfo.ngp_mesh();
@@ -69,7 +69,8 @@ NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
   const auto edgeAreaVec = fieldMgr.template get_field<double>(edgeAreaVec_);
   const auto dualVol = fieldMgr.template get_field<double>(dualNodalVol_);
   auto gradPhi = fieldMgr.template get_field<double>(gradPhi_);
-  const auto gradPhiOps = nalu_ngp::edge_nodal_field_updater(ngpMesh, gradPhi);
+  const auto gradPhiOps =
+    kynema_ugf_ngp::edge_nodal_field_updater(ngpMesh, gradPhi);
 
   const stk::mesh::Selector sel = meta.locally_owned_part() &
                                   stk::mesh::selectUnion(partVec_) &
@@ -82,7 +83,7 @@ NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
   gradPhi.sync_to_device();
 
   const std::string algName = meta.get_fields()[gradPhi_]->name() + "_edge";
-  nalu_ngp::run_edge_algorithm(
+  kynema_ugf_ngp::run_edge_algorithm(
     algName, ngpMesh, sel, KOKKOS_LAMBDA(const EntityInfoType& einfo) {
       DblType av[NDimMax];
 
@@ -112,5 +113,5 @@ NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
 
 template class NodalGradEdgeAlg<ScalarFieldType, VectorFieldType>;
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

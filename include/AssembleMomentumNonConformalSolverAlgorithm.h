@@ -20,7 +20,7 @@ class Part;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -51,7 +51,7 @@ public:
   std::vector<const stk::mesh::FieldBase*> ghostFieldVec_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

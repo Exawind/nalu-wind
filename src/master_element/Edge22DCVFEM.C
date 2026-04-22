@@ -13,7 +13,7 @@
 
 #include <AlgTraits.h>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
@@ -27,7 +27,7 @@
 #include <memory>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
@@ -254,5 +254,5 @@ Edge2DSCS::general_normal(
   normal[0] = dy / mag;
   normal[1] = -dx / mag;
 }
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

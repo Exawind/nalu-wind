@@ -15,7 +15,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // free functions for vector operations
 inline double
@@ -210,5 +210,5 @@ FilteredLiftingLineCorrection::is_active()
   return actMeta_.useFLLC_;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

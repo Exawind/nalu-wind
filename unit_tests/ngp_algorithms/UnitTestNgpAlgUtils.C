@@ -31,7 +31,7 @@ linear_scalar_field(
   stk::mesh::EntityVector nodes;
   bulk.get_entities(stk::topology::NODE_RANK, sel, nodes);
 
-  const unsigned fieldLength = sierra::nalu::max_extent(field, 0);
+  const unsigned fieldLength = sierra::kynema_ugf::max_extent(field, 0);
   if (fieldLength == 1) {
     for (stk::mesh::Entity& node : nodes) {
       double* fieldData = stk::mesh::field_data(field, node);

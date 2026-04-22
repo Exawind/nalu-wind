@@ -26,10 +26,10 @@ namespace {
 
 void
 element_discrete_laplacian_kernel_3d(
-  sierra::nalu::MasterElement& meSCS,
-  const sierra::nalu::ScalarFieldType* discreteLaplacianOfPressure,
-  const sierra::nalu::ScalarFieldType* nodalPressureField,
-  sierra::nalu::ScratchViews<DoubleType>& elemData)
+  sierra::kynema_ugf::MasterElement& meSCS,
+  const sierra::kynema_ugf::ScalarFieldType* discreteLaplacianOfPressure,
+  const sierra::kynema_ugf::ScalarFieldType* nodalPressureField,
+  sierra::kynema_ugf::ScratchViews<DoubleType>& elemData)
 {
   const int nDim = 3;
   const int nodesPerElem = meSCS.nodesPerElement_;
@@ -37,12 +37,12 @@ element_discrete_laplacian_kernel_3d(
 
   const int* lrscv = meSCS.adjacentNodes();
 
-  sierra::nalu::SharedMemView<DoubleType*>& elemNodePressures =
+  sierra::kynema_ugf::SharedMemView<DoubleType*>& elemNodePressures =
     elemData.get_scratch_view_1D(*nodalPressureField);
-  sierra::nalu::SharedMemView<DoubleType**>& scs_areav =
-    elemData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
-  sierra::nalu::SharedMemView<DoubleType***>& dndx =
-    elemData.get_me_views(sierra::nalu::CURRENT_COORDINATES).dndx;
+  sierra::kynema_ugf::SharedMemView<DoubleType**>& scs_areav =
+    elemData.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES).scs_areav;
+  sierra::kynema_ugf::SharedMemView<DoubleType***>& dndx =
+    elemData.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES).dndx;
   stk::mesh::NgpMesh::ConnectedNodes elemNodes = elemData.elemNodes;
 
   for (int ip = 0; ip < numScsIp; ++ip) {
@@ -74,35 +74,36 @@ public:
 
   virtual void elem_execute(
     stk::topology topo,
-    sierra::nalu::MasterElement& meSCS,
-    sierra::nalu::ScratchViews<DoubleType>& elemData) = 0;
+    sierra::kynema_ugf::MasterElement& meSCS,
+    sierra::kynema_ugf::ScratchViews<DoubleType>& elemData) = 0;
 };
 
 class DiscreteLaplacianSuppAlg : public SuppAlg
 {
 public:
   DiscreteLaplacianSuppAlg(
-    sierra::nalu::ElemDataRequests& dataNeeded,
-    const sierra::nalu::VectorFieldType* coordField,
-    const sierra::nalu::ScalarFieldType* discreteLaplacianOfPressure,
-    const sierra::nalu::ScalarFieldType* nodalPressureField,
+    sierra::kynema_ugf::ElemDataRequests& dataNeeded,
+    const sierra::kynema_ugf::VectorFieldType* coordField,
+    const sierra::kynema_ugf::ScalarFieldType* discreteLaplacianOfPressure,
+    const sierra::kynema_ugf::ScalarFieldType* nodalPressureField,
     const stk::topology& topo)
     : discreteLaplacianOfPressure_(discreteLaplacianOfPressure),
       nodalPressureField_(nodalPressureField)
   {
     // add the master element
-    sierra::nalu::MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
+    sierra::kynema_ugf::MasterElement* meSCS =
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+        topo);
     dataNeeded.add_cvfem_surface_me(meSCS);
 
     // here are the element-data pre-requisites we want computed before
     // our elem_execute method is called.
     dataNeeded.add_coordinates_field(
-      *coordField, 3, sierra::nalu::CURRENT_COORDINATES);
+      *coordField, 3, sierra::kynema_ugf::CURRENT_COORDINATES);
     dataNeeded.add_master_element_call(
-      sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
+      sierra::kynema_ugf::SCS_AREAV, sierra::kynema_ugf::CURRENT_COORDINATES);
     dataNeeded.add_master_element_call(
-      sierra::nalu::SCS_GRAD_OP, sierra::nalu::CURRENT_COORDINATES);
+      sierra::kynema_ugf::SCS_GRAD_OP, sierra::kynema_ugf::CURRENT_COORDINATES);
     dataNeeded.add_gathered_nodal_field(*nodalPressureField, 1);
   }
 
@@ -110,16 +111,16 @@ public:
 
   virtual void elem_execute(
     stk::topology /* topo */,
-    sierra::nalu::MasterElement& meSCS,
-    sierra::nalu::ScratchViews<DoubleType>& elemData)
+    sierra::kynema_ugf::MasterElement& meSCS,
+    sierra::kynema_ugf::ScratchViews<DoubleType>& elemData)
   {
     element_discrete_laplacian_kernel_3d(
       meSCS, discreteLaplacianOfPressure_, nodalPressureField_, elemData);
   }
 
 private:
-  const sierra::nalu::ScalarFieldType* discreteLaplacianOfPressure_;
-  const sierra::nalu::ScalarFieldType* nodalPressureField_;
+  const sierra::kynema_ugf::ScalarFieldType* discreteLaplacianOfPressure_;
+  const sierra::kynema_ugf::ScalarFieldType* nodalPressureField_;
 };
 
 //=========== Test class that mimics an element alg with supplemental alg and
@@ -130,7 +131,7 @@ class TestElemAlgorithmWithSuppAlgViews
 public:
   TestElemAlgorithmWithSuppAlgViews(
     stk::mesh::BulkData& bulk,
-    std::shared_ptr<sierra::nalu::FieldManager> fieldMgr)
+    std::shared_ptr<sierra::kynema_ugf::FieldManager> fieldMgr)
     : suppAlgs_(),
       dataNeededByKernels_(bulk.mesh_meta_data()),
       fieldManager(fieldMgr),
@@ -148,23 +149,23 @@ public:
     stk::mesh::NgpMesh ngpMesh(bulkData_);
     const int num_states = 2;
 
-    sierra::nalu::ElemDataRequestsGPU dataNeededNGP(
+    sierra::kynema_ugf::ElemDataRequestsGPU dataNeededNGP(
       *fieldManager, dataNeededByKernels_);
     const int bytes_per_team = 0;
     const int bytes_per_thread =
-      sierra::nalu::get_num_bytes_pre_req_data<DoubleType>(
+      sierra::kynema_ugf::get_num_bytes_pre_req_data<DoubleType>(
         dataNeededNGP, meta.spatial_dimension(),
-        sierra::nalu::ElemReqType::ELEM);
-    auto team_exec = sierra::nalu::get_host_team_policy(
+        sierra::kynema_ugf::ElemReqType::ELEM);
+    auto team_exec = sierra::kynema_ugf::get_host_team_policy(
       elemBuckets.size(), bytes_per_team, bytes_per_thread);
     Kokkos::parallel_for(
-      team_exec, [&](const sierra::nalu::TeamHandleType& team) {
+      team_exec, [&](const sierra::kynema_ugf::TeamHandleType& team) {
         const stk::mesh::Bucket& bkt = *elemBuckets[team.league_rank()];
         stk::topology topo = bkt.topology();
-        sierra::nalu::MasterElement* meSCS =
+        sierra::kynema_ugf::MasterElement* meSCS =
           dataNeededNGP.get_cvfem_surface_me();
 
-        sierra::nalu::ScratchViews<DoubleType> prereqData(
+        sierra::kynema_ugf::ScratchViews<DoubleType> prereqData(
           team, meta.spatial_dimension(), topo.num_nodes(), dataNeededNGP);
 
         Kokkos::parallel_for(
@@ -182,8 +183,8 @@ public:
   }
 
   std::vector<SuppAlg*> suppAlgs_;
-  sierra::nalu::ElemDataRequests dataNeededByKernels_;
-  std::shared_ptr<sierra::nalu::FieldManager> fieldManager;
+  sierra::kynema_ugf::ElemDataRequests dataNeededByKernels_;
+  std::shared_ptr<sierra::kynema_ugf::FieldManager> fieldManager;
 
 private:
   stk::mesh::BulkData& bulkData_;

@@ -34,7 +34,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class DgInfo;
@@ -141,7 +141,7 @@ private:
     std::vector<std::pair<theKey, theKey>>& searchKeyPair) const;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

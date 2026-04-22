@@ -12,7 +12,7 @@
 #include <functional>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // Registry object is where all the fully quantified field definitions live
 // This is the starting point for adding a new field
@@ -73,7 +73,7 @@ Registry()
     {"mesh_velocity",             SingleStateNodalVector},
     {"minimum_distance_to_wall",  SingleStateNodalScalar},
     {"momentum_diag",             SingleStateNodalScalar},
-    {"nalu_global_id",            GlobalId},
+    {"kynema_ugf_global_id",            GlobalId},
     {"nodalScalarField",          SingleStateNodalScalar}, // Used in testing
     {"nodalGenericField",         SingleStateNodeGeneric}, // Used in testing
     {"nodalPressure",             SingleStateNodalScalar},
@@ -108,5 +108,5 @@ FieldRegistry::FieldRegistry()
 {
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

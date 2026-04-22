@@ -7,13 +7,13 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <AssembleScalarEigenEdgeSolverAlgorithm.h>
 #include <Enums.h>
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
 #include <LinearSystem.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <PecletFunction.h>
 #include <Realm.h>
 #include <SolutionOptions.h>
@@ -27,7 +27,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -112,7 +112,7 @@ AssembleScalarEigenEdgeSolverAlgorithm::AssembleScalarEigenEdgeSolverAlgorithm(
     BinvXt_[2] = 0.0;
   }
 
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Perturbation model active: towards/delta/tke: " << biasTowards << "/"
     << deltaB_ << "/" << perturbTurbKe_ << std::endl;
 }
@@ -559,5 +559,5 @@ AssembleScalarEigenEdgeSolverAlgorithm::perturb(double (&D)[3][3])
   D[rowMap_[2]][rowMap_[2]] = pLamdba3;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -8,11 +8,11 @@
 //
 
 #include <actuator/UnitTestActuatorNGP.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <gtest/gtest.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 TEST(ActuatorNGP, NGP_testExecuteOnHostOnly)
@@ -57,5 +57,5 @@ TEST(ActuatorNGP, NGP_testExecuteOnHostAndDevice)
 
 } // namespace
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

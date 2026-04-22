@@ -22,7 +22,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename AlgTraits>
 MetricTensorElemAlg<AlgTraits>::MetricTensorElemAlg(
@@ -54,14 +54,15 @@ void
 MetricTensorElemAlg<AlgTraits>::execute()
 {
   using ElemSimdDataType =
-    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto Mij = fieldMgr.template get_field<double>(nodalMij_);
-  const auto MijOps = nalu_ngp::simd_elem_nodal_field_updater(ngpMesh, Mij);
+  const auto MijOps =
+    kynema_ugf_ngp::simd_elem_nodal_field_updater(ngpMesh, Mij);
 
   // Bring class members into local scope for device capture
   const auto dnvID = dualNodalVol_;
@@ -71,7 +72,7 @@ MetricTensorElemAlg<AlgTraits>::execute()
                                   stk::mesh::selectUnion(partVec_) &
                                   !(realm_.get_inactive_selector());
 
-  nalu_ngp::run_elem_algorithm(
+  kynema_ugf_ngp::run_elem_algorithm(
     "computeMetricTensorAlg", meshInfo, stk::topology::ELEM_RANK, dataNeeded_,
     sel, KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       auto& scrView = edata.simdScrView;
@@ -95,5 +96,5 @@ MetricTensorElemAlg<AlgTraits>::execute()
 
 INSTANTIATE_KERNEL(MetricTensorElemAlg)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

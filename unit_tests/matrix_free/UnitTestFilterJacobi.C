@@ -33,7 +33,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class FilterJacobiFixture : public GradientFixture
@@ -96,5 +96,5 @@ TEST_F(FilterJacobiFixture, jacobi_operator_is_stricly_positive_for_mass)
   }
 }
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

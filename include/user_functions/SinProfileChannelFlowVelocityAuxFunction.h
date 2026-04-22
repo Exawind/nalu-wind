@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class SinProfileChannelFlowVelocityAuxFunction : public AuxFunction
 {
@@ -40,7 +40,7 @@ private:
   const double u_m;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

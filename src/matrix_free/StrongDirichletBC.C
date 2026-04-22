@@ -20,7 +20,7 @@
 #include "stk_util/util/ReportHandler.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 void
@@ -132,5 +132,5 @@ dirichlet_diagonal(
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

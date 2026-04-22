@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wind_energy/LidarPatterns.h"
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 #include "UnitTestUtils.h"
 #include "master_element/TensorOps.h"
 
@@ -12,7 +12,7 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class ScanningLidarFixture : public ::testing::Test
 {
@@ -224,5 +224,5 @@ TEST_F(ScanningLidarFixture, stares_at_end)
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

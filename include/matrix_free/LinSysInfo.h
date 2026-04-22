@@ -16,7 +16,7 @@
 #include "stk_mesh/base/GetNgpField.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 using lid_type = typename Tpetra::Map<>::local_ordinal_type;
@@ -42,7 +42,7 @@ struct linsys_info
 };
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

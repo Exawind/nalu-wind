@@ -249,7 +249,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_ams_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTAMSNodeKernel>(
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::TKESSTAMSNodeKernel>(
     *meta_, solnOpts_.get_coordinates_name());
 
   helperObjs.execute();
@@ -281,7 +281,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_sdr_ams_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTAMSNodeKernel>(
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::SDRSSTAMSNodeKernel>(
     *meta_, solnOpts_.get_coordinates_name());
 
   helperObjs.execute();
@@ -315,10 +315,11 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_forcing)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumSSTAMSForcingNodeKernel>(
-    *bulk_, solnOpts_);
+  helperObjs.nodeAlg
+    ->add_kernel<sierra::kynema_ugf::MomentumSSTAMSForcingNodeKernel>(
+      *bulk_, solnOpts_);
 
-  sierra::nalu::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.currentTime_ = 0.0;
   timeIntegrator.timeStepN_ = 0.1;
   timeIntegrator.timeStepNm1_ = 0.1;

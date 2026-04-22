@@ -14,7 +14,7 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
@@ -494,5 +494,5 @@ Quad3DSCS::general_normal(
   normal[2] = detXY / det;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

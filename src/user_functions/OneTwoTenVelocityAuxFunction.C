@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 OneTwoTenVelocityAuxFunction::OneTwoTenVelocityAuxFunction(
   const unsigned beginPos, const unsigned endPos)
@@ -65,5 +65,5 @@ OneTwoTenVelocityAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

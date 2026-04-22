@@ -15,7 +15,7 @@
 #include "matrix_free/KokkosViewTypes.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <int p, typename ElemCoordsArray>
@@ -90,6 +90,6 @@ face_vertex_coordinates(int index, const const_face_vector_view<p>& xc)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

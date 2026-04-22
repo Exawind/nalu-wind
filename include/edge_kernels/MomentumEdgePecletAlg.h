@@ -15,7 +15,7 @@
 #include "PecletFunction.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class EquationSystem;
@@ -48,7 +48,7 @@ void determine_max_peclet_factor(
 void determine_max_peclet_number(
   stk::mesh::BulkData& bulk, const stk::mesh::MetaData& meta);
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOMENTUMEDGEPECLETKERNEL_H_ */

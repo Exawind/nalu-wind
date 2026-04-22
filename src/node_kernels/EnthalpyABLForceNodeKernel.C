@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 EnthalpyABLForceNodeKernel::EnthalpyABLForceNodeKernel(
   const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts)
@@ -56,5 +56,5 @@ EnthalpyABLForceNodeKernel::execute(
   rhs(0) += dualVol * tempSrc;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

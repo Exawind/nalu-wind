@@ -19,12 +19,12 @@
 
 #include <memory>
 
-using TeamType = sierra::nalu::DeviceTeamHandleType;
-using ShmemType = sierra::nalu::DeviceShmem;
+using TeamType = sierra::kynema_ugf::DeviceTeamHandleType;
+using ShmemType = sierra::kynema_ugf::DeviceShmem;
 
 TEST_F(Hex8MeshWithNSOFields, NGPKernelBasic)
 {
-  using AlgTraitsHex8 = sierra::nalu::AlgTraitsHex8;
+  using AlgTraitsHex8 = sierra::kynema_ugf::AlgTraitsHex8;
   using TestContinuityKernel =
     unit_test_ngp_kernels::TestContinuityKernel<AlgTraitsHex8>;
 
@@ -53,13 +53,13 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelBasic)
 void
 kernel_runalg_test(
   stk::mesh::BulkData& bulk,
-  sierra::nalu::AssembleElemSolverAlgorithm& solverAlg)
+  sierra::kynema_ugf::AssembleElemSolverAlgorithm& solverAlg)
 {
   auto* testKernel = solverAlg.activeKernels_[0]->create_on_device();
 
   solverAlg.run_algorithm(
-    bulk,
-    KOKKOS_LAMBDA(sierra::nalu::SharedMemData<TeamType, ShmemType> & smdata) {
+    bulk, KOKKOS_LAMBDA(
+            sierra::kynema_ugf::SharedMemData<TeamType, ShmemType> & smdata) {
       testKernel->execute(
         smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
     });
@@ -69,7 +69,7 @@ kernel_runalg_test(
 
 TEST_F(Hex8MeshWithNSOFields, NGPKernelRunAlg)
 {
-  using AlgTraitsHex8 = sierra::nalu::AlgTraitsHex8;
+  using AlgTraitsHex8 = sierra::kynema_ugf::AlgTraitsHex8;
   using TestContinuityKernel =
     unit_test_ngp_kernels::TestContinuityKernel<AlgTraitsHex8>;
 
@@ -93,7 +93,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelRunAlg)
 
 TEST_F(Hex8MeshWithNSOFields, NGPKernelExecute)
 {
-  using AlgTraitsHex8 = sierra::nalu::AlgTraitsHex8;
+  using AlgTraitsHex8 = sierra::kynema_ugf::AlgTraitsHex8;
   using TestContinuityKernel =
     unit_test_ngp_kernels::TestContinuityKernel<AlgTraitsHex8>;
 

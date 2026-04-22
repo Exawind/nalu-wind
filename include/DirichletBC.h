@@ -19,7 +19,7 @@ class FieldBase;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class EquationSystem;
 class Realm;
@@ -53,7 +53,7 @@ private:
   DirichletBC& operator=(const DirichletBC& other);
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

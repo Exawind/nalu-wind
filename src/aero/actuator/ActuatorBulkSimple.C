@@ -9,10 +9,10 @@
 
 #include <aero/actuator/ActuatorBulkSimple.h>
 #include <aero/actuator/UtilitiesActuator.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ActuatorMetaSimple::ActuatorMetaSimple(const ActuatorMeta& actMeta)
   : ActuatorMeta(actMeta),
@@ -51,13 +51,13 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
 
 {
   // Allocate blades to turbines
-  const int nProcs = NaluEnv::self().parallel_size();
+  const int nProcs = KynemaUGFEnv::self().parallel_size();
   const int nTurb = actMeta.numberOfActuators_;
   const int intDivision = nTurb / nProcs;
   const int remainder = actMeta.numberOfActuators_ % nProcs;
 
   if (actMeta.debug_output_)
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " nProcs: " << nProcs << " nTurb:  " << nTurb
       << " intDiv: " << intDivision << " remain: " << remainder
       << std::endl; // LCCOUT
@@ -69,7 +69,7 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
 
   for (int i = 0; i < nTurb; i++) {
     assignedProc_.h_view(i) = i;
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " Turbine#: " << i << " Proc#: " << assignedProc_.h_view(i)
       << std::endl;
   }
@@ -81,7 +81,7 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
   // Double check offsets
   if (actMeta.debug_output_)
     for (int i = 0; i < actMeta.numberOfActuators_; ++i) {
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Offset blade: " << i << " " << turbIdOffset_.h_view(i)
         << " num_force_pts: " << num_force_pts_blade_.h_view(i)
         << std::endl; // LCCOUT
@@ -90,7 +90,7 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
   init_points(actMeta);
   init_orientation(actMeta);
   add_output_headers(actMeta);
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Done ActuatorBulkSimple Init " << std::endl; // LCCOUT
 }
 
@@ -101,7 +101,7 @@ ActuatorBulkSimple::add_output_headers(const ActuatorMetaSimple& actMeta)
     return;
   std::string filename = actMeta.output_filenames_[localTurbineId_];
 
-  if (localTurbineId_ == NaluEnv::self().parallel_rank()) {
+  if (localTurbineId_ == KynemaUGFEnv::self().parallel_rank()) {
     std::ofstream outFile;
 
     outFile.open(filename, std::ios_base::out);
@@ -123,7 +123,7 @@ ActuatorBulkSimple::init_epsilon(const ActuatorMetaSimple& actMeta)
   const int nBlades = actMeta.n_simpleblades_;
   for (int iBlade = 0; iBlade < nBlades; iBlade++) {
     // LCC test this for non-isotropic
-    if (NaluEnv::self().parallel_rank() == assignedProc_.h_view(iBlade)) {
+    if (KynemaUGFEnv::self().parallel_rank() == assignedProc_.h_view(iBlade)) {
       const int numForcePts = actMeta.num_force_pts_blade_.h_view(iBlade);
       const int offset = turbIdOffset_.h_view(iBlade);
       auto epsilonChord =
@@ -172,7 +172,7 @@ ActuatorBulkSimple::init_points(const ActuatorMetaSimple& actMeta)
 
   const int nBlades = actMeta.n_simpleblades_;
   for (int iBlade = 0; iBlade < nBlades; iBlade++) {
-    if (NaluEnv::self().parallel_rank() == assignedProc_.h_view(iBlade)) {
+    if (KynemaUGFEnv::self().parallel_rank() == assignedProc_.h_view(iBlade)) {
       const int numForcePts = actMeta.num_force_pts_blade_.h_view(iBlade);
       const int offset = turbIdOffset_.h_view(iBlade);
       const double denom = (double)numForcePts;
@@ -197,7 +197,7 @@ ActuatorBulkSimple::init_points(const ActuatorMetaSimple& actMeta)
         }
 
         if (actMeta.debug_output_)
-          NaluEnv::self().naluOutput()
+          KynemaUGFEnv::self().kynema_ugfOutput()
             << "Blade " << iBlade // LCCOUT
             << " pointId: " << np << std::scientific << std::setprecision(5)
             << " point: " << pointLocal(0) << " " << pointLocal(1) << " "
@@ -221,7 +221,7 @@ ActuatorBulkSimple::init_orientation(const ActuatorMetaSimple& actMeta)
   orientationTensor_.modify_host();
   const int nBlades = actMeta.n_simpleblades_;
   for (int iBlade = 0; iBlade < nBlades; iBlade++) {
-    if (NaluEnv::self().parallel_rank() == assignedProc_.h_view(iBlade)) {
+    if (KynemaUGFEnv::self().parallel_rank() == assignedProc_.h_view(iBlade)) {
       const int numForcePts = actMeta.num_force_pts_blade_.h_view(iBlade);
       const int offset = turbIdOffset_.h_view(iBlade);
 
@@ -247,7 +247,7 @@ ActuatorBulkSimple::init_orientation(const ActuatorMetaSimple& actMeta)
 Kokkos::RangePolicy<ActuatorFixedExecutionSpace>
 ActuatorBulkSimple::local_range_policy()
 {
-  auto rank = NaluEnv::self().parallel_rank();
+  auto rank = KynemaUGFEnv::self().parallel_rank();
   if (rank < num_blades_) {
     const int offset = turbIdOffset_.h_view(rank);
     const int size = num_force_pts_blade_.h_view(rank);
@@ -274,5 +274,5 @@ ActuatorBulkSimple::zero_actuator_views()
 #endif
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

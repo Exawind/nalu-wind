@@ -20,7 +20,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -55,5 +55,5 @@ EnthalpyPmrSrcNodeSuppAlg::node_execute(
   lhs[0] += 0.0;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -375,7 +375,7 @@ template <typename T>
 void
 init_trigonometric_field(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
   T& qField)
 {
   using FieldInitFunction =
@@ -476,8 +476,8 @@ namespace unit_test_kernel_utils {
 void
 velocity_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& velocity)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& velocity)
 {
   // Add additional test functions in future?
   init_trigonometric_field(bulk, coordinates, velocity);
@@ -486,8 +486,8 @@ velocity_test_function(
 void
 dudx_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::TensorFieldType& dudx)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::TensorFieldType& dudx)
 {
   // Add additional test functions in future?
   init_trigonometric_field(bulk, coordinates, dudx);
@@ -496,8 +496,8 @@ dudx_test_function(
 void
 pressure_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& pressure)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& pressure)
 {
   init_trigonometric_field(bulk, coordinates, pressure);
 }
@@ -505,8 +505,8 @@ pressure_test_function(
 void
 dpdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& dpdx)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& dpdx)
 {
   init_trigonometric_field(bulk, coordinates, dpdx);
 }
@@ -514,8 +514,8 @@ dpdx_test_function(
 void
 temperature_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& temperature)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& temperature)
 {
   init_trigonometric_field(bulk, coordinates, temperature);
 }
@@ -523,8 +523,8 @@ temperature_test_function(
 void
 density_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& density)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& density)
 {
   init_trigonometric_field(bulk, coordinates, density);
 }
@@ -532,8 +532,8 @@ density_test_function(
 void
 tke_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& tke)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& tke)
 {
   init_trigonometric_field(bulk, coordinates, tke);
 }
@@ -541,8 +541,8 @@ tke_test_function(
 void
 alpha_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& alpha)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& alpha)
 {
   init_trigonometric_field(bulk, coordinates, alpha);
 }
@@ -550,8 +550,8 @@ alpha_test_function(
 void
 dkdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& dkdx)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& dkdx)
 {
   init_trigonometric_field(bulk, coordinates, dkdx);
 }
@@ -559,8 +559,8 @@ dkdx_test_function(
 void
 sdr_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& sdr)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& sdr)
 {
   init_trigonometric_field(bulk, coordinates, sdr);
 }
@@ -568,8 +568,8 @@ sdr_test_function(
 void
 gamma_intermittency_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& gamma_intermittency)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& gamma_intermittency)
 {
   init_trigonometric_field(bulk, coordinates, gamma_intermittency);
 }
@@ -577,8 +577,8 @@ gamma_intermittency_test_function(
 void
 dwalldistdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& dwalldistdx)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& dwalldistdx)
 {
   init_trigonometric_field(bulk, coordinates, dwalldistdx);
 }
@@ -586,8 +586,8 @@ dwalldistdx_test_function(
 void
 dnDotVdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& dnDotVdx)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& dnDotVdx)
 {
   init_trigonometric_field(bulk, coordinates, dnDotVdx);
 }
@@ -595,8 +595,8 @@ dnDotVdx_test_function(
 void
 tdr_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& tdr)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& tdr)
 {
   init_trigonometric_field(bulk, coordinates, tdr);
 }
@@ -604,8 +604,8 @@ tdr_test_function(
 void
 dwdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& dwdx)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& dwdx)
 {
   init_trigonometric_field(bulk, coordinates, dwdx);
 }
@@ -613,8 +613,8 @@ dwdx_test_function(
 void
 turbulent_viscosity_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& turbulent_viscosity)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& turbulent_viscosity)
 {
   init_trigonometric_field(bulk, coordinates, turbulent_viscosity);
 }
@@ -622,8 +622,8 @@ turbulent_viscosity_test_function(
 void
 tensor_turbulent_viscosity_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::GenericFieldType& mutij)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::GenericFieldType& mutij)
 {
   init_trigonometric_field(bulk, coordinates, mutij);
 }
@@ -631,8 +631,8 @@ tensor_turbulent_viscosity_test_function(
 void
 sst_f_one_blending_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& sst_f_one_blending)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& sst_f_one_blending)
 {
   init_trigonometric_field(bulk, coordinates, sst_f_one_blending);
 }
@@ -640,8 +640,8 @@ sst_f_one_blending_test_function(
 void
 iddes_rans_indicator_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& iddes_rans_indicator)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& iddes_rans_indicator)
 {
   init_trigonometric_field(bulk, coordinates, iddes_rans_indicator);
 }
@@ -649,8 +649,8 @@ iddes_rans_indicator_test_function(
 void
 minimum_distance_to_wall_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& minimum_distance_to_wall)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& minimum_distance_to_wall)
 {
   init_trigonometric_field(bulk, coordinates, minimum_distance_to_wall);
 }
@@ -658,8 +658,8 @@ minimum_distance_to_wall_test_function(
 void
 dplus_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::ScalarFieldType& dplus)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::ScalarFieldType& dplus)
 {
   init_trigonometric_field(bulk, coordinates, dplus);
 }
@@ -667,8 +667,8 @@ dplus_test_function(
 void
 property_from_mixture_fraction_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::ScalarFieldType& mixFraction,
-  sierra::nalu::ScalarFieldType& property,
+  const sierra::kynema_ugf::ScalarFieldType& mixFraction,
+  sierra::kynema_ugf::ScalarFieldType& property,
   const double primary,
   const double secondary)
 {
@@ -682,8 +682,8 @@ property_from_mixture_fraction_test_function(
 void
 inverse_property_from_mixture_fraction_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::ScalarFieldType& mixFraction,
-  sierra::nalu::ScalarFieldType& property,
+  const sierra::kynema_ugf::ScalarFieldType& mixFraction,
+  sierra::kynema_ugf::ScalarFieldType& property,
   const double primary,
   const double secondary)
 {
@@ -697,8 +697,8 @@ inverse_property_from_mixture_fraction_test_function(
 void
 mixture_fraction_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  const sierra::nalu::ScalarFieldType& mixtureFrac,
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  const sierra::kynema_ugf::ScalarFieldType& mixtureFrac,
   const double znot,
   const double amf)
 {
@@ -716,8 +716,8 @@ mixture_fraction_test_function(
 void
 dhdx_test_function(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::VectorFieldType& dhdx)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::VectorFieldType& dhdx)
 {
   init_trigonometric_field(bulk, coordinates, dhdx);
 }
@@ -725,18 +725,18 @@ dhdx_test_function(
 void
 calc_mass_flow_rate(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& velocity,
-  const sierra::nalu::ScalarFieldType& density,
-  const sierra::nalu::VectorFieldType& edgeAreaVec,
-  sierra::nalu::ScalarFieldType& massFlowRate)
+  const sierra::kynema_ugf::VectorFieldType& velocity,
+  const sierra::kynema_ugf::ScalarFieldType& density,
+  const sierra::kynema_ugf::VectorFieldType& edgeAreaVec,
+  sierra::kynema_ugf::ScalarFieldType& massFlowRate)
 {
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
   EXPECT_EQ(ndim, 3);
 
-  const sierra::nalu::ScalarFieldType& densityNp1 =
+  const sierra::kynema_ugf::ScalarFieldType& densityNp1 =
     density.field_of_state(stk::mesh::StateNP1);
-  const sierra::nalu::VectorFieldType& velocityNp1 =
+  const sierra::kynema_ugf::VectorFieldType& velocityNp1 =
     velocity.field_of_state(stk::mesh::StateNP1);
 
   const stk::mesh::Selector selector =
@@ -772,14 +772,16 @@ void
 calc_mass_flow_rate_scs(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
-  const sierra::nalu::VectorFieldType& coordinates,
-  const sierra::nalu::ScalarFieldType& density,
-  const sierra::nalu::VectorFieldType& velocity,
-  const sierra::nalu::GenericFieldType& massFlowRate)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  const sierra::kynema_ugf::ScalarFieldType& density,
+  const sierra::kynema_ugf::VectorFieldType& velocity,
+  const sierra::kynema_ugf::GenericFieldType& massFlowRate)
 {
-  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
-  using Hex8Traits = sierra::nalu::AlgTraitsHex8;
-  using ElemSimdData = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using Traits =
+    sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Hex8Traits = sierra::kynema_ugf::AlgTraitsHex8;
+  using ElemSimdData =
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
@@ -788,20 +790,20 @@ calc_mass_flow_rate_scs(
   EXPECT_EQ(topo.num_nodes(), npe);
 
   // Register necessary data for element gathers
-  sierra::nalu::ElemDataRequests dataReq(meta);
+  sierra::kynema_ugf::ElemDataRequests dataReq(meta);
   auto meSCS =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
       Hex8Traits::topo_);
   dataReq.add_cvfem_surface_me(meSCS);
 
   dataReq.add_coordinates_field(
-    coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+    coordinates, ndim, sierra::kynema_ugf::CURRENT_COORDINATES);
   dataReq.add_gathered_nodal_field(velocity, ndim);
   dataReq.add_gathered_nodal_field(density, 1);
   dataReq.add_master_element_call(
-    sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
+    sierra::kynema_ugf::SCS_AREAV, sierra::kynema_ugf::CURRENT_COORDINATES);
 
-  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  sierra::kynema_ugf::kynema_ugf_ngp::MeshInfo<> meshInfo(bulk);
   const stk::mesh::Selector sel =
     meta.locally_owned_part() | meta.globally_shared_part();
 
@@ -812,13 +814,14 @@ calc_mass_flow_rate_scs(
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpMdot = fieldMgr.get_field<double>(mdotID);
   const auto mdotOps =
-    sierra::nalu::nalu_ngp::simd_elem_field_updater(ngpMesh, ngpMdot);
+    sierra::kynema_ugf::kynema_ugf_ngp::simd_elem_field_updater(
+      ngpMesh, ngpMdot);
 
-  auto v_shape_fcn = sierra::nalu::shape_fcn<
-    sierra::nalu::AlgTraitsHex8, sierra::nalu::QuadRank::SCS>(
-    sierra::nalu::use_shifted_quad(false));
+  auto v_shape_fcn = sierra::kynema_ugf::shape_fcn<
+    sierra::kynema_ugf::AlgTraitsHex8, sierra::kynema_ugf::QuadRank::SCS>(
+    sierra::kynema_ugf::use_shifted_quad(false));
 
-  sierra::nalu::nalu_ngp::run_elem_algorithm(
+  sierra::kynema_ugf::kynema_ugf_ngp::run_elem_algorithm(
     "unittest_calc_mdot_scs", meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData & edata) {
       Traits::DblType rhoU[Hex8Traits::nDim_];
@@ -826,7 +829,8 @@ calc_mass_flow_rate_scs(
       auto& scrViews = edata.simdScrView;
       auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
       auto& v_vel = scrViews.get_scratch_view_2D(velID);
-      auto& meViews = scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      auto& meViews =
+        scrViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
       auto& v_area = meViews.scs_areav;
 
       for (int ip = 0; ip < Hex8Traits::numScsIp_; ++ip) {
@@ -856,16 +860,17 @@ void
 calc_open_mass_flow_rate(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
-  const sierra::nalu::VectorFieldType& coordinates,
-  const sierra::nalu::ScalarFieldType& density,
-  const sierra::nalu::VectorFieldType& velocity,
-  const sierra::nalu::GenericFieldType& exposedAreaVec,
-  const sierra::nalu::GenericFieldType& massFlowRate)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  const sierra::kynema_ugf::ScalarFieldType& density,
+  const sierra::kynema_ugf::VectorFieldType& velocity,
+  const sierra::kynema_ugf::GenericFieldType& exposedAreaVec,
+  const sierra::kynema_ugf::GenericFieldType& massFlowRate)
 {
-  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
-  using Quad4Traits = sierra::nalu::AlgTraitsQuad4;
+  using Traits =
+    sierra::kynema_ugf::kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Quad4Traits = sierra::kynema_ugf::AlgTraitsQuad4;
   using ElemSimdDataType =
-    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
@@ -874,20 +879,20 @@ calc_open_mass_flow_rate(
   EXPECT_EQ(topo.num_nodes(), npe);
 
   // Register necessary element data gathers
-  sierra::nalu::ElemDataRequests dataReq(meta);
+  sierra::kynema_ugf::ElemDataRequests dataReq(meta);
   auto meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
       Quad4Traits::topo_);
   dataReq.add_cvfem_surface_me(meFC);
   dataReq.add_coordinates_field(
-    coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+    coordinates, ndim, sierra::kynema_ugf::CURRENT_COORDINATES);
   dataReq.add_gathered_nodal_field(velocity, ndim);
   dataReq.add_gathered_nodal_field(density, 1);
   dataReq.add_face_field(
     exposedAreaVec, Quad4Traits::numFaceIp_, Quad4Traits::nDim_);
   dataReq.add_face_field(massFlowRate, Quad4Traits::numFaceIp_);
 
-  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  sierra::kynema_ugf::kynema_ugf_ngp::MeshInfo<> meshInfo(bulk);
   const stk::mesh::Selector sel =
     meta.locally_owned_part() | meta.globally_shared_part();
 
@@ -899,13 +904,14 @@ calc_open_mass_flow_rate(
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpMdot = fieldMgr.get_field<double>(mdotID);
   const auto mdotOps =
-    sierra::nalu::nalu_ngp::simd_elem_field_updater(ngpMesh, ngpMdot);
+    sierra::kynema_ugf::kynema_ugf_ngp::simd_elem_field_updater(
+      ngpMesh, ngpMdot);
 
-  auto shape_fcn = sierra::nalu::shape_fcn<
-    sierra::nalu::AlgTraitsQuad4, sierra::nalu::QuadRank::SCV>(
-    sierra::nalu::use_shifted_quad(false));
+  auto shape_fcn = sierra::kynema_ugf::shape_fcn<
+    sierra::kynema_ugf::AlgTraitsQuad4, sierra::kynema_ugf::QuadRank::SCV>(
+    sierra::kynema_ugf::use_shifted_quad(false));
 
-  sierra::nalu::nalu_ngp::run_elem_algorithm(
+  sierra::kynema_ugf::kynema_ugf_ngp::run_elem_algorithm(
     "unittest_calc_open_mdot", meshInfo, meta.side_rank(), dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       Traits::DblType rhoU[Quad4Traits::nDim_];
@@ -915,7 +921,7 @@ calc_open_mass_flow_rate(
       const auto& v_vel = scrViews.get_scratch_view_2D(velID);
       const auto& v_area = scrViews.get_scratch_view_2D(areaID);
       const auto& meViews =
-        scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+        scrViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
 
       for (int ip = 0; ip < Quad4Traits::numFaceIp_; ++ip) {
         for (int d = 0; d < Quad4Traits::nDim_; ++d)
@@ -943,15 +949,16 @@ void
 calc_edge_area_vec(
   const stk::mesh::BulkData& bulk,
   const stk::topology& topo,
-  const sierra::nalu::VectorFieldType& coordinates,
-  const sierra::nalu::VectorFieldType& edgeAreaVec)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  const sierra::kynema_ugf::VectorFieldType& edgeAreaVec)
 {
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
   EXPECT_EQ(ndim, 3);
 
   auto meSCS =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(topo);
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+      topo);
   const auto npe = meSCS->nodesPerElement_;
   const auto numScsIp = meSCS->num_integration_points();
   const int* lrscv = meSCS->adjacentNodes();
@@ -960,8 +967,9 @@ calc_edge_area_vec(
   // Scratch arrays
   std::vector<double> w_coords(ndim * npe);
   std::vector<double> w_scs_areav(ndim * numScsIp);
-  sierra::nalu::SharedMemView<double**> coords(w_coords.data(), npe, ndim);
-  sierra::nalu::SharedMemView<double**> scs_areav(
+  sierra::kynema_ugf::SharedMemView<double**> coords(
+    w_coords.data(), npe, ndim);
+  sierra::kynema_ugf::SharedMemView<double**> scs_areav(
     w_scs_areav.data(), numScsIp, ndim);
 
   // Reset edge area vector to zero
@@ -1023,12 +1031,12 @@ void
 calc_exposed_area_vec(
   const stk::mesh::BulkData& bulk,
   const stk::topology& topo,
-  const sierra::nalu::VectorFieldType& coordinates,
-  sierra::nalu::GenericFieldType& exposedAreaVec)
+  const sierra::kynema_ugf::VectorFieldType& coordinates,
+  sierra::kynema_ugf::GenericFieldType& exposedAreaVec)
 {
-  using Quad4Traits = sierra::nalu::AlgTraitsQuad4;
+  using Quad4Traits = sierra::kynema_ugf::AlgTraitsQuad4;
   using ElemSimdDataType =
-    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
@@ -1037,19 +1045,19 @@ calc_exposed_area_vec(
   EXPECT_EQ(topo.num_nodes(), npe);
 
   // Register necessary element data gathers
-  sierra::nalu::ElemDataRequests dataReq(meta);
+  sierra::kynema_ugf::ElemDataRequests dataReq(meta);
   auto meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
       Quad4Traits::topo_);
   dataReq.add_cvfem_surface_me(meFC);
   dataReq.add_coordinates_field(
-    coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+    coordinates, ndim, sierra::kynema_ugf::CURRENT_COORDINATES);
   dataReq.add_face_field(
     exposedAreaVec, Quad4Traits::numFaceIp_, Quad4Traits::nDim_);
   dataReq.add_master_element_call(
-    sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
+    sierra::kynema_ugf::SCS_AREAV, sierra::kynema_ugf::CURRENT_COORDINATES);
 
-  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  sierra::kynema_ugf::kynema_ugf_ngp::MeshInfo<> meshInfo(bulk);
   const stk::mesh::Selector sel =
     meta.locally_owned_part() | meta.globally_shared_part();
 
@@ -1058,14 +1066,15 @@ calc_exposed_area_vec(
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto areaVec = fieldMgr.get_field<double>(areaID);
   const auto areaVecOps =
-    sierra::nalu::nalu_ngp::simd_elem_field_updater(ngpMesh, areaVec);
+    sierra::kynema_ugf::kynema_ugf_ngp::simd_elem_field_updater(
+      ngpMesh, areaVec);
 
-  sierra::nalu::nalu_ngp::run_elem_algorithm(
+  sierra::kynema_ugf::kynema_ugf_ngp::run_elem_algorithm(
     "unittest_calc_exposed_area_vec", meshInfo, meta.side_rank(), dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       auto& scrViews = edata.simdScrView;
       const auto& meViews =
-        scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+        scrViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
       const auto& v_area = meViews.scs_areav;
 
       for (int ip = 0; ip < Quad4Traits::numFaceIp_; ++ip)

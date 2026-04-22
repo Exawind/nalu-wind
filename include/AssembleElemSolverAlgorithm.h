@@ -29,7 +29,7 @@ class Topology;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class MasterElement;
 
@@ -55,7 +55,7 @@ public:
     const int scratchIdsSize = rhsSize_;
 
     const stk::mesh::NgpMesh& ngpMesh = realm_.ngp_mesh();
-    const nalu_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
+    const kynema_ugf_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
     ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeededByKernels_);
 
     const auto reqType = (entityRank_ == stk::topology::ELEM_RANK)
@@ -79,10 +79,11 @@ public:
     const auto nodesPerEntity = nodesPerEntity_;
     const auto rhsSize = rhsSize_;
 
-    auto team_exec = sierra::nalu::get_device_team_policy(
+    auto team_exec = sierra::kynema_ugf::get_device_team_policy(
       elem_buckets.size(), bytes_per_team, bytes_per_thread);
     Kokkos::parallel_for(
-      team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team) {
+      team_exec,
+      KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
         auto bktId = elem_buckets.device_get(team.league_rank());
         auto& b = ngpMesh.get_bucket(entityRank, bktId);
 
@@ -139,7 +140,7 @@ public:
   int rhsSize_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

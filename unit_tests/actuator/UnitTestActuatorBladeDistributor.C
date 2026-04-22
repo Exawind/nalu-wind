@@ -11,7 +11,7 @@
 #include <gtest/gtest.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace {
 
 struct TestInputs
@@ -69,8 +69,9 @@ TEST_P(BladeDistributorTest, allBladesAreUsedOnlyOnce)
   std::vector<int> counter(GetParam().nTotalBlades_);
   for (int r = 0; r < GetParam().numRanks_; r++) {
     for (int b = 0; b < GetParam().nTotalBlades_; b++) {
-      if (blade_belongs_on_this_rank(
-            GetParam().nTotalBlades_, b, GetParam().numRanks_, r)) {
+      if (
+        blade_belongs_on_this_rank(
+          GetParam().nTotalBlades_, b, GetParam().numRanks_, r)) {
         counter[b]++;
       }
     }
@@ -81,5 +82,5 @@ TEST_P(BladeDistributorTest, allBladesAreUsedOnlyOnce)
 }
 
 } // namespace
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

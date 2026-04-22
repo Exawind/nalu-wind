@@ -12,7 +12,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 AssembleEdgeKernelAlg::AssembleEdgeKernelAlg(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
@@ -37,7 +37,7 @@ AssembleEdgeKernelAlg::execute()
   for (auto& kern : edgeKernels_)
     kern->setup(realm_);
 
-  auto ngpKernels = nalu_ngp::create_ngp_view<EdgeKernel>(edgeKernels_);
+  auto ngpKernels = kynema_ugf_ngp::create_ngp_view<EdgeKernel>(edgeKernels_);
 
   run_algorithm(
     realm_.bulk_data(), KOKKOS_LAMBDA(
@@ -52,5 +52,5 @@ AssembleEdgeKernelAlg::execute()
     });
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

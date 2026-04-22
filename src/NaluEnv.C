@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <mpi.h>
 #include <fstream>
@@ -20,23 +20,24 @@
 #include <stk_util/environment/WallTime.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
 //==========================================================================
-// NaluEnv - manage parallel and parallel output in Nalu
+// KynemaUGFEnv - manage parallel and parallel output in KynemaUGF
 //==========================================================================
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-NaluEnv::NaluEnv()
+KynemaUGFEnv::KynemaUGFEnv()
   : parallelCommunicator_(MPI_COMM_WORLD),
     pSize_(-1),
     pRank_(-1),
     stdoutStream_(std::cout.rdbuf()),
-    naluLogStream_(new std::ostream(std::cout.rdbuf())),
-    naluParallelStream_(new std::ostream(&naluParallelStreamBuffer_)),
+    kynema_ugfLogStream_(new std::ostream(std::cout.rdbuf())),
+    kynema_ugfParallelStream_(
+      new std::ostream(&kynema_ugfParallelStreamBuffer_)),
     parallelLog_(false),
     debug_(false)
 {
@@ -48,36 +49,38 @@ NaluEnv::NaluEnv()
 //--------------------------------------------------------------------------
 //-------- self ------------------------------------------------------------
 //--------------------------------------------------------------------------
-NaluEnv&
-NaluEnv::self()
+KynemaUGFEnv&
+KynemaUGFEnv::self()
 {
-  static NaluEnv s;
+  static KynemaUGFEnv s;
   return s;
 }
 
 //--------------------------------------------------------------------------
-//-------- naluOutputP0 ----------------------------------------------------
+//-------- kynema_ugfOutputP0
+//----------------------------------------------------
 //--------------------------------------------------------------------------
 std::ostream&
-NaluEnv::naluOutputP0()
+KynemaUGFEnv::kynema_ugfOutputP0()
 {
-  return *naluLogStream_;
+  return *kynema_ugfLogStream_;
 }
 
 //--------------------------------------------------------------------------
-//-------- naluOutput ------------------------------------------------------
+//-------- kynema_ugfOutput
+//------------------------------------------------------
 //--------------------------------------------------------------------------
 std::ostream&
-NaluEnv::naluOutput()
+KynemaUGFEnv::kynema_ugfOutput()
 {
-  return *naluParallelStream_;
+  return *kynema_ugfParallelStream_;
 }
 
 //--------------------------------------------------------------------------
 //-------- parallel_size ---------------------------------------------------
 //--------------------------------------------------------------------------
 int
-NaluEnv::parallel_size()
+KynemaUGFEnv::parallel_size()
 {
   return pSize_;
 }
@@ -86,7 +89,7 @@ NaluEnv::parallel_size()
 //-------- parallel_rank ---------------------------------------------------
 //--------------------------------------------------------------------------
 int
-NaluEnv::parallel_rank()
+KynemaUGFEnv::parallel_rank()
 {
   return pRank_;
 }
@@ -95,7 +98,7 @@ NaluEnv::parallel_rank()
 //-------- parallel_comm ---------------------------------------------------
 //--------------------------------------------------------------------------
 MPI_Comm
-NaluEnv::parallel_comm()
+KynemaUGFEnv::parallel_comm()
 {
   return parallelCommunicator_;
 }
@@ -104,18 +107,18 @@ NaluEnv::parallel_comm()
 //-------- set_log_file_stream ---------------------------------------------
 //--------------------------------------------------------------------------
 void
-NaluEnv::set_log_file_stream(
-  std::string naluLogName, bool pprint, const bool capture_cout)
+KynemaUGFEnv::set_log_file_stream(
+  std::string kynema_ugfLogName, bool pprint, const bool capture_cout)
 {
   if (pRank_ == 0) {
-    naluStreamBuffer_.open(naluLogName.c_str(), std::ios::out);
-    naluLogStream_->rdbuf(&naluStreamBuffer_);
+    kynema_ugfStreamBuffer_.open(kynema_ugfLogName.c_str(), std::ios::out);
+    kynema_ugfLogStream_->rdbuf(&kynema_ugfStreamBuffer_);
   } else {
-    naluLogStream_->rdbuf(&naluEmptyStreamBuffer_);
+    kynema_ugfLogStream_->rdbuf(&kynema_ugfEmptyStreamBuffer_);
   }
 
   if (capture_cout)
-    std::cout.rdbuf(naluLogStream_->rdbuf());
+    std::cout.rdbuf(kynema_ugfLogStream_->rdbuf());
 
   // default to an empty stream buffer for parallel unless pprint is set
   parallelLog_ = pprint;
@@ -127,11 +130,12 @@ NaluEnv::set_log_file_stream(
 
     // inputname.log -> inputname.log.16.02 for the rank 2 proc of a 16 proc job
     std::string parallelLogName =
-      naluLogName + "." + std::to_string(pSize_) + "." + paddedRank.str();
-    naluParallelStreamBuffer_.open(parallelLogName.c_str(), std::ios::out);
-    naluParallelStream_->rdbuf(&naluParallelStreamBuffer_);
+      kynema_ugfLogName + "." + std::to_string(pSize_) + "." + paddedRank.str();
+    kynema_ugfParallelStreamBuffer_.open(
+      parallelLogName.c_str(), std::ios::out);
+    kynema_ugfParallelStream_->rdbuf(&kynema_ugfParallelStreamBuffer_);
   } else {
-    naluParallelStream_->rdbuf(stdoutStream_);
+    kynema_ugfParallelStream_->rdbuf(stdoutStream_);
   }
 }
 
@@ -139,37 +143,38 @@ NaluEnv::set_log_file_stream(
 //-------- close_log_file_stream -------------------------------------------
 //--------------------------------------------------------------------------
 void
-NaluEnv::close_log_file_stream()
+KynemaUGFEnv::close_log_file_stream()
 {
   if (pRank_ == 0) {
-    naluStreamBuffer_.close();
+    kynema_ugfStreamBuffer_.close();
   }
   if (parallelLog_) {
-    naluParallelStreamBuffer_.close();
+    kynema_ugfParallelStreamBuffer_.close();
   }
 }
 
 //--------------------------------------------------------------------------
 //-------- destructor ------------------------------------------------------
 //--------------------------------------------------------------------------
-NaluEnv::~NaluEnv()
+KynemaUGFEnv::~KynemaUGFEnv()
 {
   close_log_file_stream();
-  delete naluLogStream_;
-  delete naluParallelStream_;
+  delete kynema_ugfLogStream_;
+  delete kynema_ugfParallelStream_;
 
   // shut down MPI
   // MPI_Finalize();
 }
 
 //--------------------------------------------------------------------------
-//-------- nalu_time -------------------------------------------------------
+//-------- kynema_ugf_time
+//-------------------------------------------------------
 //--------------------------------------------------------------------------
 double
-NaluEnv::nalu_time()
+KynemaUGFEnv::kynema_ugf_time()
 {
   return stk::wall_time();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

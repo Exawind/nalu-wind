@@ -34,7 +34,7 @@ struct SixDOF;
 
 namespace sierra {
 
-namespace nalu {
+namespace kynema_ugf {
 
 struct DeflectionRampingParams
 {
@@ -347,7 +347,7 @@ private:
   std::vector<std::string> bndryPartNames_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 
 } // namespace sierra
 

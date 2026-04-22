@@ -12,7 +12,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 WallDistEdgeSolverAlg::WallDistEdgeSolverAlg(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
@@ -65,5 +65,5 @@ WallDistEdgeSolverAlg::execute()
     });
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

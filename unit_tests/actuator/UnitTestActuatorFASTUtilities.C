@@ -15,7 +15,7 @@
 #include <sstream>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 
@@ -148,5 +148,5 @@ TEST(ActuatorSweptPointLocator, NGP_PointsOnACircle)
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

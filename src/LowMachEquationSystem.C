@@ -13,7 +13,7 @@
 #include <aero/AeroContainer.h>
 #include <AssembleContinuityNonConformalSolverAlgorithm.h>
 #include <AssembleMomentumEdgeWallFunctionSolverAlgorithm.h>
-#ifdef NALU_USES_FFTW
+#ifdef KYNEMA_UGF_USES_FFTW
 #include <AssembleMomentumEdgeABLTopBC.h>
 #endif
 #include <AssembleMomentumNonConformalSolverAlgorithm.h>
@@ -39,8 +39,8 @@
 #include <master_element/MasterElementRepo.h>
 #include <MomentumBuoyancySrcNodeSuppAlg.h>
 #include <MomentumBoussinesqRASrcNodeSuppAlg.h>
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 #include <NonConformalManager.h>
 #include <NonConformalInfo.h>
 #include <PeriodicManager.h>
@@ -60,7 +60,7 @@
 #include <FixPressureAtNodeAlgorithm.h>
 #include <FixPressureAtNodeInfo.h>
 
-#ifdef NALU_USES_HYPRE
+#ifdef KYNEMA_UGF_USES_HYPRE
 #include <HypreLinearSystem.h>
 #endif
 
@@ -209,7 +209,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -370,7 +370,7 @@ LowMachEquationSystem::register_element_fields(
   if (elementContinuityEqs_) {
     // extract master element and get scs points
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         theTopo);
     const int numScsIp = meSCS->num_integration_points();
     GenericFieldType* massFlowRate = &(meta_data.declare_field<double>(
@@ -473,7 +473,7 @@ LowMachEquationSystem::register_open_bc(
     bcDataAlg_.push_back(auxAlgPbc);
   } else {
     if (userData.pSpec_)
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "LowMachEqs::register_open_bc Error: Pressure specified at an open "
            "bc while global correction algorithm has been activated"
         << std::endl;
@@ -481,7 +481,7 @@ LowMachEquationSystem::register_open_bc(
 
   // mdot at open bc; register field
   MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       theTopo);
   const int numScsBip = meFC->num_integration_points();
   GenericFieldType* mdotBip = &(metaData.declare_field<double>(
@@ -709,9 +709,9 @@ LowMachEquationSystem::solve_and_update()
   double timeA, timeB;
   if (isInit_) {
     continuityEqSys_->compute_projected_nodal_gradient();
-    timeA = NaluEnv::self().nalu_time();
+    timeA = KynemaUGFEnv::self().kynema_ugf_time();
     continuityEqSys_->mdotAlgDriver_->execute();
-    timeB = NaluEnv::self().nalu_time();
+    timeB = KynemaUGFEnv::self().kynema_ugf_time();
     continuityEqSys_->timerMisc_ += (timeB - timeA);
 
     if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS) {
@@ -725,16 +725,16 @@ LowMachEquationSystem::solve_and_update()
     continuityEqSys_->assemble_and_solve(continuityEqSys_->pTmp_);
 
     // update pressure
-    timeA = NaluEnv::self().nalu_time();
+    timeA = KynemaUGFEnv::self().kynema_ugf_time();
     solution_update(
       1.0, *continuityEqSys_->pTmp_, 1.0, *continuityEqSys_->pressure_);
-    timeB = NaluEnv::self().nalu_time();
+    timeB = KynemaUGFEnv::self().kynema_ugf_time();
     continuityEqSys_->timerAssemble_ += (timeB - timeA);
 
     // compute mdot
-    timeA = NaluEnv::self().nalu_time();
+    timeA = KynemaUGFEnv::self().kynema_ugf_time();
     continuityEqSys_->mdotAlgDriver_->execute();
-    timeB = NaluEnv::self().nalu_time();
+    timeB = KynemaUGFEnv::self().kynema_ugf_time();
     continuityEqSys_->timerMisc_ += (timeB - timeA);
 
     // project nodal velocity
@@ -745,12 +745,12 @@ LowMachEquationSystem::solve_and_update()
     const double relaxFP =
       realm_.solutionOptions_->get_relaxation_factor(dofName);
     if (std::fabs(1.0 - relaxFP) > 1.0e-3) {
-      timeA = NaluEnv::self().nalu_time();
+      timeA = KynemaUGFEnv::self().kynema_ugf_time();
       solution_update(
         (relaxFP - 1.0), *continuityEqSys_->pTmp_, 1.0,
         *continuityEqSys_->pressure_);
       continuityEqSys_->compute_projected_nodal_gradient();
-      timeB = NaluEnv::self().nalu_time();
+      timeB = KynemaUGFEnv::self().kynema_ugf_time();
       continuityEqSys_->timerAssemble_ += (timeB - timeA);
     }
   }
@@ -761,7 +761,7 @@ LowMachEquationSystem::solve_and_update()
   // start the iteration loop
   for (int k = 0; k < maxIterations_; ++k) {
 
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
       << userSuppliedName_ << std::endl;
 
@@ -771,12 +771,12 @@ LowMachEquationSystem::solve_and_update()
         momentumEqSys_->pecletAlg_->execute();
       momentumEqSys_->assemble_and_solve(momentumEqSys_->uTmp_);
 
-      timeA = NaluEnv::self().nalu_time();
+      timeA = KynemaUGFEnv::self().kynema_ugf_time();
       solution_update(
         1.0, *momentumEqSys_->uTmp_, 1.0,
         momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1),
         realm_.meta_data().spatial_dimension());
-      timeB = NaluEnv::self().nalu_time();
+      timeB = KynemaUGFEnv::self().kynema_ugf_time();
       momentumEqSys_->timerAssemble_ += (timeB - timeA);
 
       if (momentumEqSys_->decoupledOverset_ && realm_.hasOverset_)
@@ -790,19 +790,19 @@ LowMachEquationSystem::solve_and_update()
 
     // activate global correction scheme
     if (realm_.solutionOptions_->activateOpenMdotCorrection_) {
-      timeA = NaluEnv::self().nalu_time();
+      timeA = KynemaUGFEnv::self().kynema_ugf_time();
       continuityEqSys_->mdotAlgDriver_->execute();
-      timeB = NaluEnv::self().nalu_time();
+      timeB = KynemaUGFEnv::self().kynema_ugf_time();
       continuityEqSys_->timerMisc_ += (timeB - timeA);
     }
 
     for (int oi = 0; oi < continuityEqSys_->numOversetIters_; ++oi) {
       continuityEqSys_->assemble_and_solve(continuityEqSys_->pTmp_);
 
-      timeA = NaluEnv::self().nalu_time();
+      timeA = KynemaUGFEnv::self().kynema_ugf_time();
       solution_update(
         1.0, *continuityEqSys_->pTmp_, 1.0, *continuityEqSys_->pressure_);
-      timeB = NaluEnv::self().nalu_time();
+      timeB = KynemaUGFEnv::self().kynema_ugf_time();
       continuityEqSys_->timerAssemble_ += (timeB - timeA);
 
       if (continuityEqSys_->decoupledOverset_ && realm_.hasOverset_)
@@ -810,9 +810,9 @@ LowMachEquationSystem::solve_and_update()
     }
 
     // compute mdot
-    timeA = NaluEnv::self().nalu_time();
+    timeA = KynemaUGFEnv::self().kynema_ugf_time();
     continuityEqSys_->mdotAlgDriver_->execute();
-    timeB = NaluEnv::self().nalu_time();
+    timeB = KynemaUGFEnv::self().kynema_ugf_time();
     continuityEqSys_->timerMisc_ += (timeB - timeA);
 
     // project nodal velocity
@@ -822,7 +822,7 @@ LowMachEquationSystem::solve_and_update()
     const std::string dofName = "pressure";
     const double relaxFP =
       realm_.solutionOptions_->get_relaxation_factor(dofName);
-    timeA = NaluEnv::self().nalu_time();
+    timeA = KynemaUGFEnv::self().kynema_ugf_time();
     if (std::fabs(1.0 - relaxFP) > 1.0e-3) {
       // Take care of the possibility that we have multiple overset correctors
       // and we need to do a pressure update that is the sum of all the deltaP
@@ -844,14 +844,14 @@ LowMachEquationSystem::solve_and_update()
       }
 
       continuityEqSys_->compute_projected_nodal_gradient();
-      timeB = NaluEnv::self().nalu_time();
+      timeB = KynemaUGFEnv::self().kynema_ugf_time();
       continuityEqSys_->timerAssemble_ += (timeB - timeA);
     }
     // Pressure isn't actually a state, we do this to support multiple overset
     // correctors when the relaxation factor is not 1.0. So copy the current
     // pressure into `StateN` so that we can perform solution update correction
     // with the correct relaxation factor
-    nalu_ngp::field_copy(
+    kynema_ugf_ngp::field_copy(
       realm_.mesh_info(),
       continuityEqSys_->pressure_->field_of_state(stk::mesh::StateN),
       continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1));
@@ -865,9 +865,9 @@ LowMachEquationSystem::solve_and_update()
     // solve/update since dudx is required for tke
     // production
     momentumEqSys_->compute_projected_nodal_gradient();
-    timeA = NaluEnv::self().nalu_time();
+    timeA = KynemaUGFEnv::self().kynema_ugf_time();
     momentumEqSys_->compute_wall_function_params();
-    timeB = NaluEnv::self().nalu_time();
+    timeB = KynemaUGFEnv::self().kynema_ugf_time();
     momentumEqSys_->timerMisc_ += (timeB - timeA);
   }
 
@@ -904,7 +904,7 @@ LowMachEquationSystem::project_nodal_velocity()
   {
     const stk::mesh::Selector sel =
       stk::mesh::selectField(*continuityEqSys_->dpdx_);
-    nalu_ngp::field_copy(ngpMesh, sel, uTmp, dpdx, nDim);
+    kynema_ugf_ngp::field_copy(ngpMesh, sel, uTmp, dpdx, nDim);
   }
 
   //==========================================================
@@ -922,12 +922,12 @@ LowMachEquationSystem::project_nodal_velocity()
   // project u, u^n+1 = u^k+1 - dt/rho*(Gjp^N+1 - uTmp);
   //==========================================================
   {
-    using Traits = nalu_ngp::NGPMeshTraits<>;
+    using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
     using MeshIndex = Traits::MeshIndex;
     const stk::mesh::Selector sel =
       ((!stk::mesh::selectUnion(momentumEqSys_->notProjectedPart_)) &
        stk::mesh::selectField(*continuityEqSys_->dpdx_));
-    nalu_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "nodal_velocity_projection", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         // Scaling factor
@@ -939,7 +939,7 @@ LowMachEquationSystem::project_nodal_velocity()
       });
     const stk::mesh::Selector selX =
       (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[0]));
-    nalu_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "nodal_velocity_projection_strongX", ngpMesh, stk::topology::NODE_RANK,
       selX, KOKKOS_LAMBDA(const MeshIndex& mi) {
         // Scaling factor
@@ -949,7 +949,7 @@ LowMachEquationSystem::project_nodal_velocity()
       });
     const stk::mesh::Selector selY =
       (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[1]));
-    nalu_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "nodal_velocity_project_strongY", ngpMesh, stk::topology::NODE_RANK, selY,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         // Scaling factor
@@ -960,7 +960,7 @@ LowMachEquationSystem::project_nodal_velocity()
     if (nDim == 3) {
       const stk::mesh::Selector selZ =
         (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[2]));
-      nalu_ngp::run_entity_algorithm(
+      kynema_ugf_ngp::run_entity_algorithm(
         "nodal_velocity_projection_strongZ", ngpMesh, stk::topology::NODE_RANK,
         selZ, KOKKOS_LAMBDA(const MeshIndex& mi) {
           // Scaling factor
@@ -986,9 +986,9 @@ LowMachEquationSystem::predict_state()
   auto& rhoNp1 = fieldMgr.get_field<double>(
     density_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
   auto& presN =
-    nalu_ngp::get_ngp_field(meshInfo, "pressure", stk::mesh::StateN);
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "pressure", stk::mesh::StateN);
   auto& presNp1 =
-    nalu_ngp::get_ngp_field(meshInfo, "pressure", stk::mesh::StateNP1);
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "pressure", stk::mesh::StateNP1);
 
   rhoN.sync_to_device();
   presN.sync_to_device();
@@ -1000,8 +1000,8 @@ LowMachEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*density_);
-  nalu_ngp::field_copy(ngpMesh, sel, rhoNp1, rhoN, 1);
-  nalu_ngp::field_copy(ngpMesh, sel, presNp1, presN, 1);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, rhoNp1, rhoN, 1);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, presNp1, presN, 1);
   rhoNp1.modify_on_device();
   presNp1.modify_on_device();
 }
@@ -1076,7 +1076,7 @@ MomentumEquationSystem::MomentumEquationSystem(EquationSystems& eqSystems)
 
   // determine nodal gradient form
   set_nodal_gradient("velocity");
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge projected nodal gradient for velocity: " << edgeNodalGradient_
     << std::endl;
 
@@ -1113,9 +1113,9 @@ MomentumEquationSystem::initial_work()
 
   // proceed with a bunch of initial work; wrap in timer
   {
-    const double timeA = NaluEnv::self().nalu_time();
+    const double timeA = KynemaUGFEnv::self().kynema_ugf_time();
     realm_.compute_vrtm();
-    const double timeB = NaluEnv::self().nalu_time();
+    const double timeB = KynemaUGFEnv::self().kynema_ugf_time();
     timerMisc_ += (timeB - timeA);
   }
 
@@ -1125,14 +1125,14 @@ MomentumEquationSystem::initial_work()
     AMSAlgDriver_->initial_work();
 
   {
-    const double timeA = NaluEnv::self().nalu_time();
+    const double timeA = KynemaUGFEnv::self().kynema_ugf_time();
     compute_wall_function_params();
     compute_turbulence_parameters();
     if (pecletAlg_)
       pecletAlg_->execute();
     cflReAlgDriver_.execute();
 
-    const double timeB = NaluEnv::self().nalu_time();
+    const double timeB = KynemaUGFEnv::self().kynema_ugf_time();
     timerMisc_ += (timeB - timeA);
   }
 
@@ -1279,7 +1279,7 @@ MomentumEquationSystem::register_nodal_fields(
     stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_node_mask");
   double one = 1;
   stk::mesh::put_field_on_mesh(node_mask, selector, &one);
-} // namespace nalu
+} // namespace kynema_ugf
 
 //--------------------------------------------------------------------------
 //-------- register_element_fields -----------------------------------------
@@ -1481,7 +1481,8 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
         }
 
         if (added)
-          NaluEnv::self().naluOutputP0() << "  - " << srcName << std::endl;
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
+            << "  - " << srcName << std::endl;
       });
 
     // Process non-NGP nodal source terms via legacy interface
@@ -1517,7 +1518,7 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
             ++nonNgpSrcSkipped;
           }
           if (suppAlg != NULL) {
-            NaluEnv::self().naluOutputP0()
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
               << "MomentumNodalSrcTerms::added() " << sourceName << std::endl;
             theAlg->supplementalAlg_.push_back(suppAlg);
           }
@@ -1645,7 +1646,7 @@ MomentumEquationSystem::register_inflow_bc(
     std::vector<double> theParams =
       get_bc_function_params(userData, velocityName);
     if (theParams.size() == 0)
-      NaluEnv::self().naluOutputP0()
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "function parameter size is zero" << std::endl;
     // switch on the name found...
     if (fcnName == "convecting_taylor_vortex") {
@@ -1842,7 +1843,7 @@ MomentumEquationSystem::register_wall_bc(
 
   // if mesh motion is enabled ...
   if (realm_.does_mesh_move()) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "MomentumEquationSystem::register_wall_bc(): Mesh motion active! "
          "Velocity definition under wall_user_data will be ignored"
       << std::endl;
@@ -1887,7 +1888,7 @@ MomentumEquationSystem::register_wall_bc(
         if (fcnName == "tornado") {
           theAuxFunc = new TornadoAuxFunction(0, nDim);
         } else if (fcnName == "wind_energy") {
-          NaluEnv::self().naluOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << "MomentumEqSys: WARNING! mesh_motion user function for wall BC "
                "has been deprecated"
             << std::endl;
@@ -1947,7 +1948,7 @@ MomentumEquationSystem::register_wall_bc(
 
     // integration point; size it based on number of boundary integration points
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         partTopo);
     const int numScsBip = meFC->num_integration_points();
 
@@ -2130,7 +2131,7 @@ MomentumEquationSystem::register_wall_bc(
   if (userData.isFsiInterface_) {
     // FIXME: need p^n+1/2; requires "old" pressure... need a utility to save it
     // and compute it...
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Warning: Second-order FSI requires p^n+1/2; BC is using p^n+1"
       << std::endl;
   }
@@ -2217,7 +2218,7 @@ MomentumEquationSystem::register_symmetry_bc(
     break;
   }
 
-#ifdef NALU_USES_HYPRE
+#ifdef KYNEMA_UGF_USES_HYPRE
   if (dynamic_cast<HypreLinearSystem*>(linsys_) != nullptr) {
     throw std::runtime_error(
       "Hypre is not supported for a momentum solver "
@@ -2230,7 +2231,7 @@ MomentumEquationSystem::register_symmetry_bc(
     notProjectedDir_[beginPos].push_back(part);
   }
   if (linsys_->useSegregatedSolver()) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Warning: You are currently using a segregated solver with a strong "
          "symmetry boundary "
       << "condition. This leads to an approximation of the momentum equation "
@@ -2297,7 +2298,7 @@ MomentumEquationSystem::register_abltop_bc(
     return;
   }
 
-#ifdef NALU_USES_FFTW
+#ifdef KYNEMA_UGF_USES_FFTW
   auto& meta_data = realm_.meta_data();
   // algorithm type
   const AlgorithmType algType = TOP_ABL;
@@ -2371,7 +2372,7 @@ MomentumEquationSystem::register_abltop_bc(
 #else
   throw std::runtime_error(
     "Cannot initialize ABL top BC because FFTW support is mising.\n Set "
-    "ENABLE_FFTW to ON in nalu-wind/CMakeLists.txt, reconfigure and "
+    "ENABLE_FFTW to ON in kynema_ugf/CMakeLists.txt, reconfigure and "
     "recompile.");
 #endif
 }
@@ -2392,7 +2393,7 @@ MomentumEquationSystem::register_non_conformal_bc(
 
   // mdot at nc bc; register field; require topo and num ips
   MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       theTopo);
   const int numScsBip = meFC->num_integration_points();
 
@@ -2513,7 +2514,8 @@ MomentumEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*velocity_);
-  nalu_ngp::field_copy(ngpMesh, sel, velNp1, velN, meta.spatial_dimension());
+  kynema_ugf_ngp::field_copy(
+    ngpMesh, sel, velNp1, velN, meta.spatial_dimension());
   velNp1.modify_on_device();
 
   if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
@@ -2559,12 +2561,12 @@ void
 MomentumEquationSystem::compute_projected_nodal_gradient()
 {
   if (!managePNG_) {
-    const double timeA = -NaluEnv::self().nalu_time();
+    const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
     nodalGradAlgDriver_.execute();
     if (realm_.solutionOptions_->use_balanced_buoyancy_force_) {
       nodalBuoyancyAlgDriver_.execute();
     }
-    timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+    timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
   } else {
     // this option is more complex... Rather than solving a nDim*nDim system, we
     // copy each velocity component i to the expected dof for the PNG system;
@@ -2633,7 +2635,7 @@ MomentumEquationSystem::compute_projected_nodal_gradient()
       std::max(std::numeric_limits<double>::epsilon(), firstPNGResidual_);
     std::string pngName = projectedNodalGradEqs_->linsys_->name();
     const int nameOffset = pngName.length() + 8;
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << std::setw(nameOffset) << std::right << pngName
       << std::setw(32 - nameOffset) << std::right
       << sumLinearIterations / (int)nDim << std::setw(18) << std::right
@@ -2659,9 +2661,9 @@ MomentumEquationSystem::save_diagonal_term(
   const int offset = nEntities * nDim;
 
   for (int in = 0; in < nEntities; in++) {
-    const auto naluID =
-      *stk::mesh::field_data(*realm_.naluGlobalId_, entities[in]);
-    const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, naluID);
+    const auto kynema_ugfID =
+      *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, entities[in]);
+    const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, kynema_ugfID);
     int ix = in * nDim * (offset + 1);
     double* diagVal = stk::mesh::field_data(*Udiag_, mnode);
     diagVal[0] += lhs[ix];
@@ -2677,12 +2679,12 @@ MomentumEquationSystem::save_diagonal_term(
   auto& bulk = realm_.bulk_data();
   const int nDim = realm_.spatialDimension_;
   constexpr bool forceAtomic =
-    !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
+    !std::is_same<sierra::kynema_ugf::DeviceSpace, Kokkos::Serial>::value;
 
   for (unsigned in = 0; in < nEntities; in++) {
-    const auto naluID =
-      *stk::mesh::field_data(*realm_.naluGlobalId_, entities[in]);
-    const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, naluID);
+    const auto kynema_ugfID =
+      *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, entities[in]);
+    const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, kynema_ugfID);
     int ix = in * nDim;
     double* diagVal = stk::mesh::field_data(*Udiag_, mnode);
     if (forceAtomic)
@@ -2702,12 +2704,12 @@ MomentumEquationSystem::save_diagonal_term(
   auto& bulk = realm_.bulk_data();
   const int nDim = realm_.spatialDimension_;
   constexpr bool forceAtomic =
-    !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
+    !std::is_same<sierra::kynema_ugf::DeviceSpace, Kokkos::Serial>::value;
 
   for (unsigned in = 0; in < nEntities; in++) {
-    const auto naluID =
-      *stk::mesh::field_data(*realm_.naluGlobalId_, entities[in]);
-    const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, naluID);
+    const auto kynema_ugfID =
+      *stk::mesh::field_data(*realm_.kynema_ugfGlobalId_, entities[in]);
+    const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, kynema_ugfID);
     int ix = in * nDim;
     double* diagVal = stk::mesh::field_data(*Udiag_, mnode);
     if (forceAtomic)
@@ -2729,7 +2731,7 @@ MomentumEquationSystem::save_diagonal_term(
 void
 MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex;
   auto& meta = realm_.meta_data();
   auto& bulk = realm_.bulk_data();
 
@@ -2784,7 +2786,7 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
       fieldMgr.get_field<double>(dualVol->mesh_meta_data_ordinal());
 
     // Remove momentum relaxation factor from diagonal term
-    nalu_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "LowMach::udiag_post_processing", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         double udiagTmp =
@@ -2857,7 +2859,7 @@ ContinuityEquationSystem::ContinuityEquationSystem(
 
   // message to user
   if (realm_.realmUsesEdges_ && elementContinuityEqs_)
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Edge scheme active (all scalars); element-based (continuity)!"
       << std::endl;
 
@@ -2876,7 +2878,7 @@ ContinuityEquationSystem::ContinuityEquationSystem(
 
   // determine nodal gradient form
   set_nodal_gradient("pressure");
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Edge projected nodal gradient for pressure: " << edgeNodalGradient_
     << std::endl;
 
@@ -3036,7 +3038,8 @@ ContinuityEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
           }
 
           if (added)
-            NaluEnv::self().naluOutputP0() << " - " << srcName << std::endl;
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
+              << " - " << srcName << std::endl;
         });
     }
     const AlgorithmType algMass = SRC;
@@ -3063,7 +3066,7 @@ ContinuityEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
           ++nonNgpSrcSkipped;
         }
         if (suppAlg != NULL) {
-          NaluEnv::self().naluOutputP0()
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
             << "ContinuityNodalSrcTerms::added " << sourceName << std::endl;
           theAlg->supplementalAlg_.push_back(suppAlg);
         }
@@ -3134,7 +3137,7 @@ ContinuityEquationSystem::register_inflow_bc(
       std::vector<double> theParams =
         get_bc_function_params(userData, velocityName);
       if (theParams.size() == 0)
-        NaluEnv::self().naluOutputP0()
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "function parameter size is zero" << std::endl;
       // switch on the name found...
       if (fcnName == "convecting_taylor_vortex") {
@@ -3350,7 +3353,7 @@ ContinuityEquationSystem::register_abltop_bc(
     return;
   }
 
-#ifdef NALU_USES_FFTW
+#ifdef KYNEMA_UGF_USES_FFTW
   // algorithm type
   const AlgorithmType algType = TOP_ABL;
 
@@ -3397,7 +3400,7 @@ ContinuityEquationSystem::register_abltop_bc(
 #else
   throw std::runtime_error(
     "Cannot initialize ABL top BC because FFTW support is mising.\n Set "
-    "ENABLE_FFTW to ON in nalu-wind/CMakeLists.txt, reconfigure and "
+    "ENABLE_FFTW to ON in kynema_ugf/CMakeLists.txt, reconfigure and "
     "recompile.");
 #endif
 }
@@ -3415,7 +3418,7 @@ ContinuityEquationSystem::register_non_conformal_bc(
 
   // mdot at nc bc; register field; require topo and num ips
   MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       theTopo);
   const int numScsBip = meFC->num_integration_points();
 
@@ -3624,9 +3627,9 @@ void
 ContinuityEquationSystem::compute_projected_nodal_gradient()
 {
   if (!managePNG_) {
-    const double timeA = -NaluEnv::self().nalu_time();
+    const double timeA = -KynemaUGFEnv::self().kynema_ugf_time();
     nodalGradAlgDriver_.execute();
-    timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+    timerMisc_ += (KynemaUGFEnv::self().kynema_ugf_time() + timeA);
   } else {
     projectedNodalGradEqs_->solve_and_update_external();
   }
@@ -3650,5 +3653,5 @@ ContinuityEquationSystem::create_constraint_algorithm(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

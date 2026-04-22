@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 TKESSTBLTM2015NodeKernel::TKESSTBLTM2015NodeKernel(
   const stk::mesh::MetaData& meta)
@@ -120,5 +120,5 @@ TKESSTBLTM2015NodeKernel::execute(
   lhs(0, 0) += betaStar_ * density * sdr * stk::math::max(gamint, 0.1) * dVol;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

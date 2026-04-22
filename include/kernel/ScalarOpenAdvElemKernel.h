@@ -24,7 +24,7 @@
 #include <Kokkos_Core.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class ElemDataRequests;
 class EquationSystem;
@@ -94,7 +94,7 @@ private:
     vf_adv_shape_function_{"vf_adv_shape_function"};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ScalarOpenAdvElemKernel_h */

@@ -29,7 +29,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename ViewType>
 KOKKOS_FUNCTION void
@@ -389,15 +389,15 @@ hex_jacobian_component(
   const Scalar interpk[2])
 {
 
-  return (dj == XH) ? (-interpi[0] * interpk[0] * base_box[di][0] -
-                       interpi[1] * interpk[0] * base_box[di][1] +
-                       interpi[1] * interpk[0] * base_box[di][2] +
-                       interpi[0] * interpk[0] * base_box[di][3] -
-                       interpi[0] * interpk[1] * base_box[di][4] -
-                       interpi[1] * interpk[1] * base_box[di][5] +
-                       interpi[1] * interpk[1] * base_box[di][6] +
-                       interpi[0] * interpk[1] * base_box[di][7]) *
-                        0.5
+  return (dj == XH)   ? (-interpi[0] * interpk[0] * base_box[di][0] -
+                         interpi[1] * interpk[0] * base_box[di][1] +
+                         interpi[1] * interpk[0] * base_box[di][2] +
+                         interpi[0] * interpk[0] * base_box[di][3] -
+                         interpi[0] * interpk[1] * base_box[di][4] -
+                         interpi[1] * interpk[1] * base_box[di][5] +
+                         interpi[1] * interpk[1] * base_box[di][6] +
+                         interpi[0] * interpk[1] * base_box[di][7]) *
+                          0.5
          : (dj == YH) ? (-interpi[0] * interpk[0] * base_box[di][0] -
                          interpi[1] * interpk[0] * base_box[di][1] +
                          interpi[1] * interpk[0] * base_box[di][2] +
@@ -557,7 +557,7 @@ hex_vertex_coordinates(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

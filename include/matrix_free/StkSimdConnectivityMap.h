@@ -16,7 +16,7 @@
 #include "stk_mesh/base/Selector.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace impl {
@@ -41,7 +41,7 @@ struct create_offset_map_t
 } // namespace impl
 P_INVOKEABLE(create_offset_map)
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

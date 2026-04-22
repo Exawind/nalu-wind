@@ -22,7 +22,7 @@ class Node;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class Simulation;
@@ -49,7 +49,7 @@ struct InitialConditionCreator
   const bool debug_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

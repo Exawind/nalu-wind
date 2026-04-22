@@ -7,13 +7,13 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <aero/fsi/CalcLoads.h>
 #include <Algorithm.h>
 #include <FieldTypeDef.h>
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementRepo.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -30,14 +30,14 @@
 #include <vector>
 
 namespace fsi {
-using namespace sierra::nalu;
+using namespace sierra::kynema_ugf;
 std::array<double, 6>
 accumulateLoadsAndMoments(
   const stk::mesh::BulkData& bulk,
   const stk::mesh::PartVector& surface,
-  const sierra::nalu::VectorFieldType& modelCoords,
-  const sierra::nalu::VectorFieldType& meshDisp,
-  const sierra::nalu::GenericFieldType& tforceSCS,
+  const sierra::kynema_ugf::VectorFieldType& modelCoords,
+  const sierra::kynema_ugf::VectorFieldType& meshDisp,
+  const sierra::kynema_ugf::GenericFieldType& tforceSCS,
   std::array<double, 3>& center_of_mass)
 {
   std::array<double, 6> accumulated_forces_and_moments = {0., 0., 0.,
@@ -127,7 +127,7 @@ accumulateLoadsAndMoments(
 } // namespace fsi
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -225,7 +225,7 @@ CalcLoads::execute()
 
     // face master element
     MasterElement* meFC =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b->topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
@@ -323,5 +323,5 @@ CalcLoads::execute()
   tforceSCS_->modify_on_host();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

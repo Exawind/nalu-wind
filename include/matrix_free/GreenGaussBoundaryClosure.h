@@ -17,7 +17,7 @@
 #include "Tpetra_MultiVector.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 using tpetra_view_type = typename Tpetra::MultiVector<>::dual_view_type::t_dev;
 using ra_tpetra_view_type =
@@ -36,6 +36,6 @@ struct gradient_boundary_closure_t
 } // namespace impl
 P_INVOKEABLE(gradient_boundary_closure)
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

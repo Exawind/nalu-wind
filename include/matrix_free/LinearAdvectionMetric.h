@@ -14,7 +14,7 @@
 #include "matrix_free/KokkosViewTypes.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace geom {
 
@@ -39,7 +39,7 @@ P_INVOKEABLE(linear_advection_metric)
 
 } // namespace geom
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

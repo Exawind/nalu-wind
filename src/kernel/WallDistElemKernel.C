@@ -21,7 +21,7 @@
 #include "stk_mesh/base/BulkData.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename AlgTraits>
 WallDistElemKernel<AlgTraits>::WallDistElemKernel(
@@ -89,5 +89,5 @@ WallDistElemKernel<AlgTraits>::execute(
 
 INSTANTIATE_KERNEL(WallDistElemKernel)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -18,10 +18,10 @@
 
 #include "stk_mesh/base/Types.hpp"
 
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /** Simultaneously compute the wall shear stress and heat flux/surface
  *  temperature.  This boundary condition follows the algorithms outlined
@@ -177,7 +177,7 @@ private:
   MasterElement* meSCS_{nullptr};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ABLWALLFLUXESALG_H */

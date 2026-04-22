@@ -40,14 +40,15 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_inflow)
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, 1, part);
 
-  sierra::nalu::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.gamma1_ = 1.0;
   timeIntegrator.timeStepN_ = 1.0;
   timeIntegrator.timeStepNm1_ = 1.0;
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  std::unique_ptr<sierra::nalu::Kernel> inflowKernel(
-    new sierra::nalu::ContinuityInflowElemKernel<sierra::nalu::AlgTraitsQuad4>(
+  std::unique_ptr<sierra::kynema_ugf::Kernel> inflowKernel(
+    new sierra::kynema_ugf::ContinuityInflowElemKernel<
+      sierra::kynema_ugf::AlgTraitsQuad4>(
       *bulk_, solnOpts_, true,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 

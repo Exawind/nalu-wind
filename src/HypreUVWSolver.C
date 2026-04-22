@@ -9,10 +9,10 @@
 
 #include "HypreUVWSolver.h"
 #include "XSDKHypreInterface.h"
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 HypreUVWSolver::HypreUVWSolver(
   std::string name,
@@ -29,10 +29,10 @@ HypreUVWSolver::solve(
   int dim, int& numIterations, double& finalResidualNorm, bool isFinalOuterIter)
 {
   // Initialize the solver on first entry
-  double time = -NaluEnv::self().nalu_time();
+  double time = -KynemaUGFEnv::self().kynema_ugf_time();
   if (initializeSolver_)
     initSolver();
-  time += NaluEnv::self().nalu_time();
+  time += KynemaUGFEnv::self().kynema_ugf_time();
   timerPrecond_ = time;
 
   numIterations = 0;
@@ -40,7 +40,7 @@ HypreUVWSolver::solve(
 
   // Can use the return value from solverSolvePtr_. However, Hypre seems to
   // return a non-zero value and that causes spurious error message output in
-  // Nalu.
+  // KynemaUGF.
   int status = 0;
 
   if (isFinalOuterIter)
@@ -68,5 +68,5 @@ HypreUVWSolver::setupSolver()
   solverSetupPtr_(solver_, parMat_, parRhsU_[0], parSlnU_[0]);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -20,7 +20,7 @@
 #include <stk_mesh/base/Selector.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 AuxFunctionAlgorithm::AuxFunctionAlgorithm(
   Realm& realm,
@@ -85,5 +85,5 @@ AuxFunctionAlgorithm::execute()
   field_->sync_to_device();
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

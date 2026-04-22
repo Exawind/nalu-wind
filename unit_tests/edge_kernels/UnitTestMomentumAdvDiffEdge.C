@@ -245,7 +245,7 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_advection_diffusion)
 
   unit_test_utils::EdgeHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 3);
 
-  helperObjs.create<sierra::nalu::MomentumEdgeSolverAlg>(partVec_[0]);
+  helperObjs.create<sierra::kynema_ugf::MomentumEdgeSolverAlg>(partVec_[0]);
 
   helperObjs.execute();
 

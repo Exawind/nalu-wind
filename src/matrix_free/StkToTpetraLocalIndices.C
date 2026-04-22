@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 Kokkos::View<typename Tpetra::Map<>::local_ordinal_type*>
@@ -43,5 +43,5 @@ make_stk_lid_to_tpetra_lid_map(
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

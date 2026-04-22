@@ -10,7 +10,7 @@
 #include "aero/fsi/OpenfastFSI.h"
 #include "aero/fsi/FSIturbine.h"
 #include <aero/aero_utils/WienerMilenkovic.h>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 #include <iostream>
 #include <fstream>
@@ -19,7 +19,7 @@
 
 namespace sierra {
 
-namespace nalu {
+namespace kynema_ugf {
 
 OpenfastFSI::OpenfastFSI(const YAML::Node& node)
   : mesh_motion_(false), enable_calc_loads_(true)
@@ -120,7 +120,7 @@ void
 OpenfastFSI::load(const YAML::Node& node)
 {
 
-  fi.comm = NaluEnv::self().parallel_comm();
+  fi.comm = KynemaUGFEnv::self().parallel_comm();
 
   get_required(node, "n_turbines_glob", fi.nTurbinesGlob);
 
@@ -168,10 +168,11 @@ OpenfastFSI::load(const YAML::Node& node)
 }
 
 void
-OpenfastFSI::setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk)
+OpenfastFSI::setup(
+  double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk)
 {
   bulk_ = bulk;
-  dt_ = dtNalu;
+  dt_ = dtKynemaUGF;
 
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (int i = 0; i < nTurbinesGlob; i++) {
@@ -180,15 +181,15 @@ OpenfastFSI::setup(double dtNalu, std::shared_ptr<stk::mesh::BulkData> bulk)
       fsiTurbineData_[i]->setup(bulk_);
   }
   FAST.allocateTurbinesToProcsSimple();
-  FAST.setDriverTimeStep(dtNalu);
+  FAST.setDriverTimeStep(dtKynemaUGF);
   FAST.init();
 }
 
 void
-OpenfastFSI::initialize(int restartFreqNalu, double curTime)
+OpenfastFSI::initialize(int restartFreqKynemaUGF, double curTime)
 {
 
-  FAST.setDriverCheckpoint(restartFreqNalu);
+  FAST.setDriverCheckpoint(restartFreqKynemaUGF);
   // TODO: Check here on the processor containing the turbine that the number of
   // blades on the turbine is the same as the number of blade parts specified in
   // the input file.
@@ -236,7 +237,7 @@ OpenfastFSI::initialize(int restartFreqNalu, double curTime)
 
   if (curTime < 1e-10) {
 
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Setting displacements at time steps n and n-1" << std::endl;
 
     auto& meta = bulk_->mesh_meta_data();
@@ -537,7 +538,8 @@ OpenfastFSI::get_displacements(double /* current_time */)
 
       if (bulk_->parallel_rank() == turbProc) {
         std::ofstream bld_bm_mesh;
-        bld_bm_mesh.open("blade_beam_mesh_naluwind.csv", std::ios_base::out);
+        bld_bm_mesh.open(
+          "blade_beam_mesh_kynema_ugfwind.csv", std::ios_base::out);
         for (int k = 0; k < nTotBldNodes; k++) {
           bld_bm_mesh
             << fsiTurbineData_[i]->brFSIdata_.bld_ref_pos[k * 6] << ","
@@ -583,13 +585,13 @@ OpenfastFSI::compute_div_mesh_velocity()
 {
 
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
-  timer_start(naluTimer_);
+  timer_start(kynema_ugfTimer_);
   for (int i = 0; i < nTurbinesGlob; i++) {
     if (fsiTurbineData_[i] != NULL) // This may not be a turbine intended for
                                     // blade-resolved simulation
       fsiTurbineData_[i]->compute_div_mesh_velocity();
   }
-  timer_stop(naluTimer_);
+  timer_stop(kynema_ugfTimer_);
 }
 
 void
@@ -608,7 +610,7 @@ void
 OpenfastFSI::map_displacements(double current_time, bool updateCurCoor)
 {
 
-  timer_start(naluTimer_);
+  timer_start(kynema_ugfTimer_);
   get_displacements(current_time);
 
   stk::mesh::Selector sel;
@@ -652,13 +654,13 @@ OpenfastFSI::map_displacements(double current_time, bool updateCurCoor)
     curCoords->modify_on_host();
     curCoords->sync_to_device();
   }
-  timer_stop(naluTimer_);
+  timer_stop(kynema_ugfTimer_);
 }
 
 void
 OpenfastFSI::map_loads(const int tStep, const double curTime)
 {
-  timer_start(naluTimer_);
+  timer_start(kynema_ugfTimer_);
   int nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (int i = 0; i < nTurbinesGlob; i++) {
     if (fsiTurbineData_[i] != nullptr) { // This may not be a turbine intended
@@ -687,22 +689,22 @@ OpenfastFSI::map_loads(const int tStep, const double curTime)
       fsiTurbineData_[i]->write_nc_def_loads(tStep, curTime);
     }
   }
-  timer_stop(naluTimer_);
+  timer_stop(kynema_ugfTimer_);
 }
 
 void
 OpenfastFSI::timer_start(std::pair<double, double>& timer)
 {
-  timer.first = NaluEnv::self().nalu_time();
+  timer.first = KynemaUGFEnv::self().kynema_ugf_time();
 }
 
 void
 OpenfastFSI::timer_stop(std::pair<double, double>& timer)
 {
-  timer.first = NaluEnv::self().nalu_time() - timer.first;
+  timer.first = KynemaUGFEnv::self().kynema_ugf_time() - timer.first;
   timer.second += timer.first;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 
 } // namespace sierra

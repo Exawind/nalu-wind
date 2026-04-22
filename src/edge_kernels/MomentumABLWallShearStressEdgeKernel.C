@@ -20,7 +20,7 @@
 #include "stk_mesh/base/Field.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename BcAlgTraits>
 MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::
@@ -94,5 +94,5 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumABLWallShearStressEdgeKernel)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

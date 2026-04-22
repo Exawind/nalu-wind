@@ -21,7 +21,7 @@
 #include <KokkosInterface.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 node_mesh_index_view
@@ -82,5 +82,5 @@ simd_node_offsets(
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

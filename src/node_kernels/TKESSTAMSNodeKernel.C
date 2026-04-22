@@ -17,7 +17,7 @@
 #include <SimdInterface.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 TKESSTAMSNodeKernel::TKESSTAMSNodeKernel(
   const stk::mesh::MetaData& meta, const std::string coordsName)
@@ -76,5 +76,5 @@ TKESSTAMSNodeKernel::execute(
   lhs(0, 0) += tkeFac * dualVolume;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

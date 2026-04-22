@@ -56,13 +56,13 @@ typedef std::vector<EntityId> EntityIdVector;
 }
 } // namespace stk
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 struct ElementDescription;
 }
 } // namespace sierra
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 struct HexNElementDescription;
 
 namespace impl {
@@ -173,6 +173,6 @@ stk::mesh::PartVector create_boundary_elements(
   int p, stk::mesh::BulkData& bulk, const stk::mesh::PartVector& parts);
 
 } // namespace impl
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

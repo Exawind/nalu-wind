@@ -13,7 +13,7 @@
 #include <Enums.h>
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
-#include <NaluParsedTypes.h>
+#include <KynemaUGFParsedTypes.h>
 
 #include <stk_mesh/base/FieldBase.hpp>
 
@@ -22,7 +22,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Realm;
 class AssembleNodalGradAlgorithmDriver;
@@ -107,7 +107,7 @@ public:
   VectorFieldType* qTmp_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

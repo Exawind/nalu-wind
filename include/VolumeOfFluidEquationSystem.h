@@ -14,7 +14,7 @@
 
 #include "EquationSystem.h"
 #include "FieldTypeDef.h"
-#include "NaluParsedTypes.h"
+#include "KynemaUGFParsedTypes.h"
 #include "AMSAlgDriver.h"
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
@@ -29,7 +29,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class AlgorithmDriver;
 class Realm;
@@ -106,7 +106,7 @@ public:
   bool isInit_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

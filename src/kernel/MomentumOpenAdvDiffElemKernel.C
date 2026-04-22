@@ -26,7 +26,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 template <typename BcAlgTraits, typename T, typename S>
@@ -112,14 +112,14 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
     shiftedGradOp_(solnOpts.get_shifted_grad_op(velocity->name())),
     entrain_(method),
     faceIpNodeMap_(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         BcAlgTraits::faceTopo_)
         ->ipNodeMap()),
     meSCS_(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         BcAlgTraits::elemTopo_)),
     meSCS_dev_(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
         BcAlgTraits::elemTopo_)),
     pecletFunction_(
       eqSystem->create_peclet_function<DoubleType>(velocity->name()))
@@ -141,10 +141,10 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
 
   // extract master elements
   MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       BcAlgTraits::faceTopo_);
   MasterElement* meFC_dev =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
       BcAlgTraits::faceTopo_);
 
   // add master elements
@@ -536,5 +536,5 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumOpenAdvDiffElemKernel)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

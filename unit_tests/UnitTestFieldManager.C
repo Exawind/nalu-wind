@@ -15,7 +15,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace {
 
 class FieldManagerTest : public testing::Test
@@ -145,5 +145,5 @@ TEST_F(TestFieldManagerWithElems, minimalSmartFieldCreation)
     fieldManager->get_legacy_smart_field<double, tags::READ>(name);
 }
 } // namespace
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

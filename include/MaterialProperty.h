@@ -17,7 +17,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class MaterialPropertys;
 
@@ -38,7 +38,7 @@ public:
   MaterialPropertys& matPropertys_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

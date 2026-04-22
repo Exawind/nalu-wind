@@ -11,7 +11,7 @@
 
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementRepo.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -23,19 +23,19 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Part.hpp>
 #include <stk_search/Point.hpp>
-#ifdef NALU_USES_OPENFAST
+#ifdef KYNEMA_UGF_USES_OPENFAST
 #include <OpenFAST.H>
 #endif
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct Coordinates;
 using Point = stk::search::Point<double>;
 
 namespace actuator_utils {
 
-#ifdef NALU_USES_OPENFAST
+#ifdef KYNEMA_UGF_USES_OPENFAST
 
 Point get_fast_point(
   fast::OpenFAST& fast,
@@ -104,7 +104,7 @@ reduce_view_on_host(T view)
 
   MPI_Allreduce(
     MPI_IN_PLACE, view.data(), view.size(), mpi_type, MPI_SUM,
-    NaluEnv::self().parallel_comm());
+    KynemaUGFEnv::self().parallel_comm());
 }
 
 // A Gaussian projection function
@@ -147,7 +147,7 @@ void compute_distance(
   const double* pointCentroid,
   double* distance);
 } // namespace actuator_utils
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

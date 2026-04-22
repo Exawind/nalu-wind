@@ -15,7 +15,7 @@
 #include <gtest/gtest.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 
@@ -55,7 +55,7 @@ TEST_F(ActuatorFunctorFastTests, runUpdatePoints)
     if (i != actMetaFast.get_fast_index(fast::TOWER, 0, 0)) {
       EXPECT_TRUE(points(i, 0) != 0 || points(i, 1) != 0 || points(i, 2) != 0)
         << "Index failure: " << i
-        << " on rank: " << NaluEnv::self().parallel_rank();
+        << " on rank: " << KynemaUGFEnv::self().parallel_rank();
     }
   }
 
@@ -218,5 +218,5 @@ TEST_F(ActuatorFunctorFastTests, spreadForceWhProjIdentity)
 
 } // namespace
 
-} /* namespace nalu */
+} /* namespace kynema_ugf */
 } /* namespace sierra */

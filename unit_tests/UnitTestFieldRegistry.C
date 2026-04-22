@@ -14,7 +14,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace {
 
 class FieldRegistryTest : public testing::Test
@@ -78,5 +78,5 @@ TEST_F(FieldRegistryTest, registeredFieldPointerCanBeStored)
 }
 
 } // namespace
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

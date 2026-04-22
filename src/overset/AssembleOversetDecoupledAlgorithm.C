@@ -11,14 +11,14 @@
 #include "overset/OversetInfo.h"
 #include "EquationSystem.h"
 #include "LinearSystem.h"
-#include "NaluEnv.h"
+#include "KynemaUGFEnv.h"
 #include "Realm.h"
 
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/Field.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 AssembleOversetDecoupledAlgorithm::AssembleOversetDecoupledAlgorithm(
   Realm& realm,
@@ -46,5 +46,5 @@ AssembleOversetDecoupledAlgorithm::execute()
   eqSystem_->linsys_->free_coeff_applier(coeffApplier);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

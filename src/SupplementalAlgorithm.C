@@ -13,7 +13,7 @@
 #include <stk_mesh/base/Entity.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -28,5 +28,5 @@ SupplementalAlgorithm::SupplementalAlgorithm(Realm& realm) : realm_(realm)
   // nothing to do
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

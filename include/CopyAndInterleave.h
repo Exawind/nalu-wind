@@ -16,7 +16,7 @@
 #include <MultiDimViews.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename SimdViewType, typename ViewType>
 KOKKOS_FUNCTION void
@@ -151,7 +151,7 @@ extract_vector_lane(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------*/
 /*  Copyright 2019 National Renewable Energy Laboratory.                  */
 /*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
+/*  in the file, LICENSE, which is located in the top-level KynemaUGF */
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
@@ -16,7 +16,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 /*------------------------------------------------------------------------*/
 /* BLTGammaM2015NodeKernel is a correlation-based transition model        */
@@ -80,7 +80,7 @@ private:
   const int nDim_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -8,19 +8,19 @@
 //
 
 #include <LinearSolverConfig.h>
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 #include <yaml-cpp/yaml.h>
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_RCP.hpp>
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 #include <BelosTypes.hpp>
 #endif
 
 #include <ostream>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 LinearSolverConfig::LinearSolverConfig()
   : params_(Teuchos::rcp(new Teuchos::ParameterList)),
@@ -28,7 +28,7 @@ LinearSolverConfig::LinearSolverConfig()
 {
 }
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
 TpetraLinearSolverConfig::TpetraLinearSolverConfig() : LinearSolverConfig() {}
 
@@ -77,7 +77,7 @@ TpetraLinearSolverConfig::load(const YAML::Node& node)
 
   params_->set("Output Frequency", output_level);
   Teuchos::RCP<std::ostream> belosOutputStream =
-    Teuchos::rcpFromRef(NaluEnv::self().naluOutputP0());
+    Teuchos::rcpFromRef(KynemaUGFEnv::self().kynema_ugfOutputP0());
   params_->set("Output Stream", belosOutputStream);
   params_->set("Num Blocks", kspace);
   params_->set("Maximum Restarts", std::max(1, max_iterations / kspace));
@@ -139,7 +139,7 @@ TpetraLinearSolverConfig::load(const YAML::Node& node)
     reuseLinSysIfPossible_);
 }
 
-#endif // NALU_USES_TRILINOS_SOLVERS
+#endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -14,7 +14,7 @@
 #include <map>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 enum AlgorithmType {
   INTERIOR = 0,
@@ -156,7 +156,7 @@ enum MaterialPropertyType {
   MaterialPropertyType_END
 };
 
-enum NaluState { NALU_STATE_N = 0, NALU_STATE_NM1 = 1 };
+enum KynemaUGFState { KYNEMA_UGF_STATE_N = 0, KYNEMA_UGF_STATE_NM1 = 1 };
 
 enum class TurbulenceModel {
   LAMINAR,
@@ -347,7 +347,7 @@ static std::map<std::string, EntrainmentMethod> EntrainmentMethodMap{
   {"computed", EntrainmentMethod::COMPUTED},
   {"specified", EntrainmentMethod::SPECIFIED}};
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

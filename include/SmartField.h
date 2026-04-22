@@ -29,7 +29,7 @@ struct LEGACY{};
 // clang-format on
 } // namespace tags
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 
 using namespace tags;
 /* SmartField is a type that is designed to automatically handle field syncs
@@ -450,6 +450,6 @@ template <typename T, typename ACCESS>
 using SmartHostField = SmartField<T, HOST, ACCESS>;
 template <typename T, typename ACCESS>
 using SmartLegacyField = SmartField<T, LEGACY, ACCESS>;
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf
 
 #endif

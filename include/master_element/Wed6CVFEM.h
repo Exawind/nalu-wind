@@ -15,7 +15,7 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 // Wedge 6 subcontrol volume
 class WedSCV : public MasterElement
@@ -354,7 +354,7 @@ private:
     SharedMemView<DBLTYPE**, SHMEM>& areav) const;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* WED6CVFEM_H */

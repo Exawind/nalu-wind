@@ -24,7 +24,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace {
 template <typename BcAlgTraits, typename T>
 void
@@ -58,7 +58,7 @@ ScalarFluxPenaltyElemKernel<BcAlgTraits>::ScalarFluxPenaltyElemKernel(
     penaltyFac_(2.0),
     shiftedGradOp_(solnOpts.get_shifted_grad_op("pressure")),
     meSCS_(
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         BcAlgTraits::elemTopo_))
 {
   coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
@@ -67,10 +67,10 @@ ScalarFluxPenaltyElemKernel<BcAlgTraits>::ScalarFluxPenaltyElemKernel(
 
   // extract master elements
   MasterElement* meFC =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       BcAlgTraits::faceTopo_);
   MasterElement* meFC_dev =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_dev(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
       BcAlgTraits::faceTopo_);
 
   // add master elements
@@ -211,5 +211,5 @@ ScalarFluxPenaltyElemKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(ScalarFluxPenaltyElemKernel)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -10,11 +10,11 @@
 #include <aero/actuator/ActuatorSearch.h>
 #include <stk_search/CoarseSearch.hpp>
 #include <FieldTypeDef.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <aero/actuator/UtilitiesActuator.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 VecBoundSphere
 CreateBoundingSpheres(ActFixVectorDbl points, ActFixScalarDbl radius)
@@ -194,7 +194,7 @@ ExecuteFineSearch(
     const stk::mesh::Bucket& theBucket = stkBulk.bucket(elem);
     const stk::topology& elemTopo = theBucket.topology();
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         elemTopo);
     const int nodesPerElement = meSCS->nodesPerElement_;
 
@@ -221,5 +221,5 @@ ExecuteFineSearch(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -14,7 +14,7 @@
 
 #include <AlgTraits.h>
 
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
@@ -28,7 +28,7 @@
 #include <memory>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //-------- quad_derivative -----------------------------------------------------
 template <typename DBLTYPE, typename SHMEM>
@@ -308,7 +308,7 @@ Quad42DSCV::quad_shape_fcn(
 //--------------------------------------------------------------------------
 // This function computes the metric tensor Mij = (J J^T)^(1/2) where J is
 // the Jacobian.  This is needed for the UT-A Hybrid LES model.  For
-// reference please consult the Nalu theory manual description of the UT-A
+// reference please consult the KynemaUGF theory manual description of the UT-A
 // Hybrid LES model or S. Haering's PhD thesis: Anisotropic hybrid turbulence
 // modeling with specific application to the simulation of pulse-actuated
 // dynamic stall control.
@@ -606,7 +606,7 @@ Quad42DSCS::gij(
 //--------------------------------------------------------------------------
 // This function computes the metric tensor Mij = (J J^T)^(1/2) where J is
 // the Jacobian.  This is needed for the UT-A Hybrid LES model.  For
-// reference please consult the Nalu theory manual description of the UT-A
+// reference please consult the KynemaUGF theory manual description of the UT-A
 // Hybrid LES model or S. Haering's PhD thesis: Anisotropic hybrid turbulence
 // modeling with specific application to the simulation of pulse-actuated
 // dynamic stall control.
@@ -940,5 +940,5 @@ Quad42DSCS::sidePcoords_to_elemPcoords(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

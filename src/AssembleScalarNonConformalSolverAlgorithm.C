@@ -7,13 +7,13 @@
 // for more details.
 //
 
-// nalu
+// kynema_ugf
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <DgInfo.h>
 #include <FieldTypeDef.h>
 #include <LinearSystem.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <NonConformalInfo.h>
 #include <NonConformalManager.h>
 #include <Realm.h>
@@ -29,7 +29,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -73,11 +73,12 @@ AssembleScalarNonConformalSolverAlgorithm::
 
   // provide output to user
   if (useCurrentNormal_)
-    NaluEnv::self().naluOutputP0() << "AssembleScalarNonConformalSolverAlgorith"
-                                      "m::Options: use_current_normal is active"
-                                   << std::endl;
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "AssembleScalarNonConformalSolverAlgorith"
+         "m::Options: use_current_normal is active"
+      << std::endl;
   if (realm_.get_nc_alg_upwind_advection())
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "AssembleScalarNonConformalSolverAlgorithm::Options: upwind advective "
          "flux is active "
       << std::endl;
@@ -542,5 +543,5 @@ AssembleScalarNonConformalSolverAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

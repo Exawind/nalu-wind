@@ -22,7 +22,7 @@
 #include "gtest/gtest.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class TransportCoefficientsFixture : public LowMachFixture
@@ -287,5 +287,5 @@ TEST_F(TransportCoefficientsFixture, coefficients_are_updated)
   }
 }
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -11,13 +11,13 @@
 #define EquationSystem_h
 
 #include "KokkosInterface.h"
-#include "NaluParsedTypes.h"
+#include "KynemaUGFParsedTypes.h"
 #include "Realm.h"
 #include "PecletFunction.h"
 #include "NGPInstance.h"
 #include "SimdInterface.h"
 
-#include <NaluParsedTypes.h>
+#include <KynemaUGFParsedTypes.h>
 
 #include <stk_mesh/base/Ngp.hpp>
 #include <stk_mesh/base/NgpMesh.hpp>
@@ -32,7 +32,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class Algorithm;
 class AlgorithmDriver;
@@ -405,18 +405,18 @@ EquationSystem::ngp_create_peclet_function(const std::string& dofName)
     const T hybridFactor = realm_.get_hybrid_factor(dofName);
     const T A = 5.0;
     pecletFunction =
-      nalu_ngp::create<ClassicPecletFunction<T>>(A, hybridFactor);
+      kynema_ugf_ngp::create<ClassicPecletFunction<T>>(A, hybridFactor);
   } else {
     const T c1 = realm_.get_tanh_trans(dofName);
     const T c2 = realm_.get_tanh_width(dofName);
-    pecletFunction = nalu_ngp::create<TanhFunction<T>>(c1, c2);
+    pecletFunction = kynema_ugf_ngp::create<TanhFunction<T>>(c1, c2);
   }
 
   ngpPecletFunctions_.push_back(pecletFunction);
   return pecletFunction;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

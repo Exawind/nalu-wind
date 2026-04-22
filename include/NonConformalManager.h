@@ -22,7 +22,7 @@
 #include <map>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class DgInfo;
 class Realm;
@@ -71,7 +71,7 @@ private:
   void manage_ghosting(std::vector<stk::mesh::EntityKey>& recvGhostsToRemove);
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

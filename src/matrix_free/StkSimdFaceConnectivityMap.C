@@ -21,7 +21,7 @@
 #include "Kokkos_Macros.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace impl {
 
@@ -99,5 +99,5 @@ face_offsets_t<p>::invoke(
 INSTANTIATE_POLYSTRUCT(face_offsets_t);
 } // namespace impl
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

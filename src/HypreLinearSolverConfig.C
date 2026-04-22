@@ -7,16 +7,16 @@
 // for more details.
 //
 
-#ifdef NALU_USES_HYPRE
+#ifdef KYNEMA_UGF_USES_HYPRE
 
 #include <LinearSolverConfig.h>
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 #include <yaml-cpp/yaml.h>
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_RCP.hpp>
 
-#ifdef NALU_USES_TRILINOS_SOLVERS
+#ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 #include <BelosTypes.hpp>
 #include <Ifpack2_Preconditioner.hpp>
 #endif
@@ -26,7 +26,7 @@
 #include <ostream>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 HypreLinearSolverConfig::HypreLinearSolverConfig() : LinearSolverConfig() {}
 
@@ -89,7 +89,7 @@ HypreLinearSolverConfig::load(const YAML::Node& node)
   get_if_present_no_default(node, "hypre_cfg_file", hypreOptsFile);
   YAML::Node doc, hnode;
   if (hypreOptsFile.empty()) {
-    // No hypre configuration file provided, parse options from Nalu-Wind input
+    // No hypre configuration file provided, parse options from Kynema-UGF input
     // file
     hnode = node;
   } else {
@@ -657,7 +657,7 @@ HypreLinearSolverConfig::configure_hypre_solver(const YAML::Node& node)
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

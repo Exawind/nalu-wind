@@ -15,7 +15,7 @@
 #include "utils/StkHelpers.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ScalarGclNodeKernel::ScalarGclNodeKernel(
   const stk::mesh::BulkData& bulk, ScalarFieldType* scalarQ)
@@ -88,5 +88,5 @@ ScalarGclNodeKernel::execute(
   rhs(0) -= rhoNp1 * scalarQNp1 * (divV - (volRate - divV)) * dualNdVolNp1;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

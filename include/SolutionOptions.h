@@ -24,7 +24,7 @@ class Node;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 struct FixPressureAtNodeInfo;
 
@@ -42,7 +42,7 @@ enum ErrorIndicatorType {
  *
  */
 enum ProjTScaleType {
-  TSCALE_DEFAULT = 0,  //!< Original Nalu implementation
+  TSCALE_DEFAULT = 0,  //!< Original KynemaUGF implementation
   TSCALE_UDIAGINV = 1, //!< 1/diag(A_p) implementation
   NUM_TSCALE_TYPES
 };
@@ -241,7 +241,7 @@ public:
   bool newHO_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

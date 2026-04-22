@@ -17,7 +17,7 @@
 #include <iostream>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 SloshingTankVOFAuxFunction::SloshingTankVOFAuxFunction(
   const std::vector<double>& params)
@@ -68,5 +68,5 @@ SloshingTankVOFAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

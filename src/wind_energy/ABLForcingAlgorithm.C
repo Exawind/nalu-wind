@@ -1,6 +1,6 @@
 
 #include "wind_energy/ABLForcingAlgorithm.h"
-#include "NaluParsing.h"
+#include "KynemaUGFParsing.h"
 #include "Realm.h"
 #include "xfer/Transfer.h"
 #include "xfer/Transfers.h"
@@ -20,7 +20,7 @@
 
 #include <stk_util/parallel/ParallelReduce.hpp>
 
-#ifdef NALU_USES_BOOST
+#ifdef KYNEMA_UGF_USES_BOOST
 #include <boost/format.hpp>
 #endif
 #include <fstream>
@@ -28,7 +28,7 @@
 #include <iomanip>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ABLForcingAlgorithm::ABLForcingAlgorithm(Realm& realm, const YAML::Node& node)
   : realm_(realm),
@@ -186,13 +186,13 @@ void
 ABLForcingAlgorithm::initialize()
 {
   if (momSrcType_ != OFF) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "ABL Forcing active for Momentum Equations\n"
       << "\t Number of planes: " << velHeights_.size()
       << "\n\t Number of time steps: " << velXTimes_.size() << std::endl;
   }
   if (tempSrcType_ != OFF) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "ABL Forcing active for Temperature Equation\n"
       << "\t Number of planes: " << tempHeights_.size()
       << "\n\t Number of time steps: " << tempTimes_.size() << std::endl
@@ -200,8 +200,9 @@ ABLForcingAlgorithm::initialize()
   }
 
 // Prepare output files to dump sources when computed during precursor phase
-#ifdef NALU_USES_BOOST
-  if ((NaluEnv::self().parallel_rank() == 0) && (momSrcType_ == COMPUTED)) {
+#ifdef KYNEMA_UGF_USES_BOOST
+  if (
+    (KynemaUGFEnv::self().parallel_rank() == 0) && (momSrcType_ == COMPUTED)) {
     std::string uxname((boost::format(outFileFmt_) % "Ux").str());
     std::string uyname((boost::format(outFileFmt_) % "Uy").str());
     std::string uzname((boost::format(outFileFmt_) % "Uz").str());
@@ -277,10 +278,10 @@ ABLForcingAlgorithm::compute_momentum_sources()
     }
   }
 
-#ifdef NALU_USES_BOOST
+#ifdef KYNEMA_UGF_USES_BOOST
   const int tcount = realm_.get_time_step_count();
   if (
-    (NaluEnv::self().parallel_rank() == 0) && (momSrcType_ == COMPUTED) &&
+    (KynemaUGFEnv::self().parallel_rank() == 0) && (momSrcType_ == COMPUTED) &&
     (tcount % outputFreq_ == 0)) {
     std::string uxname((boost::format(outFileFmt_) % "Ux").str());
     std::string uyname((boost::format(outFileFmt_) % "Uy").str());
@@ -330,10 +331,10 @@ ABLForcingAlgorithm::compute_temperature_sources()
     }
   }
 
-#ifdef NALU_USES_BOOST
+#ifdef KYNEMA_UGF_USES_BOOST
   const int tcount = realm_.get_time_step_count();
   if (
-    (NaluEnv::self().parallel_rank() == 0) && (tempSrcType_ == COMPUTED) &&
+    (KynemaUGFEnv::self().parallel_rank() == 0) && (tempSrcType_ == COMPUTED) &&
     (tcount % outputFreq_ == 0)) {
     std::string fname((boost::format(outFileFmt_) % "T").str());
     std::fstream tFile;
@@ -378,5 +379,5 @@ ABLForcingAlgorithm::eval_temperature_source(const double zp, double& tempSrc)
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

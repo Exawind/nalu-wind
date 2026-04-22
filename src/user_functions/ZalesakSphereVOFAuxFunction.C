@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 ZalesakSphereVOFAuxFunction::ZalesakSphereVOFAuxFunction() : AuxFunction(0, 1)
 {
@@ -65,5 +65,5 @@ ZalesakSphereVOFAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 # Instructions:
-# Make a directory in the Nalu-Wind directory for building,
+# Make a directory in the Kynema-UGF directory for building,
 # Copy this script to that directory and edit the
 # options below to your own needs and run it.
 
@@ -12,8 +12,8 @@ OVERSUBSCRIBE_FLAGS="--use-hwthread-cpus --oversubscribe"
   
 set -e
 
-TRILINOS_ROOT_DIR=${NALU_ROOT_DIR}/install/trilinos
-YAML_CPP_ROOT_DIR=${NALU_ROOT_DIR}/install/yaml-cpp
+TRILINOS_ROOT_DIR=${KYNEMA_UGF_ROOT_DIR}/install/trilinos
+YAML_CPP_ROOT_DIR=${KYNEMA_UGF_ROOT_DIR}/install/yaml-cpp
 
 # Clean before cmake configure
 set +e

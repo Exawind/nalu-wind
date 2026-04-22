@@ -26,7 +26,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class MatrixFreeHeatCondEquationSystem final : public EquationSystem
 {
@@ -55,7 +55,7 @@ private:
   {
     static constexpr auto temperature = "temperature";
     static constexpr auto delta = "tTmp";
-    static constexpr auto nalu_gid = "nalu_global_id";
+    static constexpr auto kynema_ugf_gid = "kynema_ugf_global_id";
     static constexpr auto tpetra_gid = "tpet_global_id";
     static constexpr auto qbc = "temperature_bc";
     static constexpr auto flux = "heat_flux_bc";
@@ -83,6 +83,6 @@ private:
   bool initialized_{false};
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

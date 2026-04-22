@@ -22,7 +22,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -92,7 +92,7 @@ template <typename AlgTraits>
 void
 NodalGradPOpenBoundary<AlgTraits>::execute()
 {
-  using SimdDataType = nalu_ngp::FaceElemSimdData<stk::mesh::NgpMesh>;
+  using SimdDataType = kynema_ugf_ngp::FaceElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta_data = meshInfo.meta();
@@ -111,7 +111,7 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
   const auto ngpMesh = meshInfo.ngp_mesh();
   auto gradP = fieldMgr.template get_field<double>(gradP_);
   const auto gradPOps =
-    nalu_ngp::simd_face_elem_nodal_field_updater(ngpMesh, gradP);
+    kynema_ugf_ngp::simd_face_elem_nodal_field_updater(ngpMesh, gradP);
 
   MasterElement* meFC = meFC_;
   MasterElement* meSCS = meSCS_;
@@ -132,7 +132,7 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
   const auto e_shp = shape_fcn<typename AlgTraits::ElemTraits, QuadRank::SCS>(
     use_shifted_quad(useShifted));
 
-  nalu_ngp::run_face_elem_algorithm(
+  kynema_ugf_ngp::run_face_elem_algorithm(
     algName, meshInfo, faceData_, elemData_, s_locally_owned_union,
     KOKKOS_LAMBDA(SimdDataType & fdata) {
       const int* ipNodeMap = meFC->ipNodeMap();
@@ -184,5 +184,5 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(NodalGradPOpenBoundary)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

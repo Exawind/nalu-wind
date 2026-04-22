@@ -15,7 +15,7 @@
 #include <gtest/gtest.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 namespace {
 
@@ -40,7 +40,7 @@ TEST_F(ActuatorBulkDiskFastTest, fastPointIndexLocator)
 
   fast::OpenFAST& fast = actBulk.openFast_;
 
-  if (NaluEnv::self().parallel_rank() == 0) {
+  if (KynemaUGFEnv::self().parallel_rank() == 0) {
     const int nPntsBlade = fast.get_numForcePtsBlade(0);
     const int nPntsTower = fast.get_numForcePtsTwr(0);
     {
@@ -93,7 +93,7 @@ TEST_F(ActuatorBulkDiskFastTest, sweptPointsPopulatedUniform)
   ASSERT_TRUE(myMeta.useUniformAziSampling_(0));
   ActuatorBulkDiskFAST actBulk(myMeta, 0.0625);
 
-  if (NaluEnv::self().parallel_rank() == 0) {
+  if (KynemaUGFEnv::self().parallel_rank() == 0) {
     const int nPntsBlade = actBulk.openFast_.get_numForcePtsBlade(0);
     ASSERT_EQ(nPntsBlade, actBulk.numSweptCount_.size());
     ASSERT_EQ(nPntsBlade, actBulk.numSweptOffset_.size());
@@ -127,7 +127,7 @@ TEST_F(ActuatorBulkDiskFastTest, sweptPointsPopulatedVaried)
   ASSERT_FALSE(myMeta.useUniformAziSampling_(0));
   ActuatorBulkDiskFAST actBulk(myMeta, 0.0625);
 
-  if (NaluEnv::self().parallel_rank() == 0) {
+  if (KynemaUGFEnv::self().parallel_rank() == 0) {
     const int nPntsBlade = actBulk.openFast_.get_numForcePtsBlade(0);
     ASSERT_EQ(nPntsBlade, actBulk.numSweptCount_.size());
     ASSERT_EQ(nPntsBlade, actBulk.numSweptOffset_.size());
@@ -156,5 +156,5 @@ TEST_F(ActuatorBulkDiskFastTest, sweptPointsPopulatedVaried)
 
 } // namespace
 
-} /* namespace nalu */
+} /* namespace kynema_ugf */
 } /* namespace sierra */

@@ -23,7 +23,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace {
 template <typename BcAlgTraits, typename T>
 void
@@ -206,5 +206,5 @@ MomentumSymmetryElemKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumSymmetryElemKernel)
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

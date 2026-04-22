@@ -21,7 +21,7 @@
 #include <KokkosInterface.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace impl {
@@ -112,5 +112,5 @@ local_dual_nodal_volume_t<p>::invoke(
 INSTANTIATE_POLYSTRUCT(local_dual_nodal_volume_t);
 } // namespace impl
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

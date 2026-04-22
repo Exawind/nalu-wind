@@ -1,13 +1,13 @@
 
 #include "mesh_motion/TurbineSurrogateKernel.h"
 
-#include <NaluEnv.h>
-#include <NaluParsing.h>
+#include <KynemaUGFEnv.h>
+#include <KynemaUGFParsing.h>
 #include <stk_mesh/base/FieldBLAS.hpp>
 #include <FieldTypeDef.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 TurbineSurrogateKernel::TurbineSurrogateKernel(
   stk::mesh::MetaData& meta, const YAML::Node& node)
@@ -43,16 +43,16 @@ TurbineSurrogateKernel::load(const YAML::Node& node)
   useOmega_ = (node["angle"] ? false : true);
 
   if (node["axis"]) {
-    for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
       axis_[d] = node["axis"][d].as<double>();
   } else
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "TurbineSurrogateKernel: axis of rotation not supplied; will use 0,0,1"
       << std::endl;
 
   // get origin based on if it was defined or is to be computed
   if (node["centroid"]) {
-    for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
       origin_[d] = node["centroid"][d].as<double>();
   }
 }
@@ -83,7 +83,7 @@ TurbineSurrogateKernel::build_transformation(
   // Build matrix for rotating object
   // compute magnitude of axis around which to rotate
   double mag = 0.0;
-  for (int d = 0; d < nalu_ngp::NDimMax; d++)
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++)
     mag += axis_[d] * axis_[d];
   mag = stk::math::sqrt(mag);
 
@@ -140,7 +140,7 @@ TurbineSurrogateKernel::compute_velocity(
   mm::ThreeDVecType unitVec;
 
   double mag = 0.0;
-  for (int d = 0; d < nalu_ngp::NDimMax; d++)
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++)
     mag += axis_[d] * axis_[d];
   mag = stk::math::sqrt(mag);
 
@@ -150,7 +150,7 @@ TurbineSurrogateKernel::compute_velocity(
 
   // transform the origin of the rotating body
   mm::ThreeDVecType transOrigin;
-  for (int d = 0; d < nalu_ngp::NDimMax; d++) {
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++) {
     transOrigin[d] = compTrans[d * mm::matSize + 0] * origin_[0] +
                      compTrans[d * mm::matSize + 1] * origin_[1] +
                      compTrans[d * mm::matSize + 2] * origin_[2] +
@@ -161,7 +161,7 @@ TurbineSurrogateKernel::compute_velocity(
   // product
   mm::ThreeDVecType relCoord;
   mm::ThreeDVecType vecOmega;
-  for (int d = 0; d < nalu_ngp::NDimMax; d++) {
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++) {
     relCoord[d] = cxyz[d] - transOrigin[d];
     vecOmega[d] = omega_ * unitVec[d];
   }
@@ -173,5 +173,5 @@ TurbineSurrogateKernel::compute_velocity(
   return vel;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

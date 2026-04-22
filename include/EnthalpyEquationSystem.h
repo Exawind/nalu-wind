@@ -14,7 +14,7 @@
 
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
-#include <NaluParsedTypes.h>
+#include <KynemaUGFParsedTypes.h>
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
 #include "ngp_algorithms/EnthalpyEffDiffFluxCoeffAlg.h"
@@ -24,7 +24,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class AlgorithmDriver;
 class Realm;
@@ -147,7 +147,7 @@ public:
   std::vector<Algorithm*> bcCopyStateAlg_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -17,7 +17,7 @@
 
 #include "ElementBasis.h"
 
-namespace sierra::nalu {
+namespace sierra::kynema_ugf {
 
 enum class QuadType { MID, SHIFTED };
 
@@ -303,5 +303,5 @@ struct PyrIntegrationRule<QuadType::SHIFTED>
     {{-1, -1, +0}, {+1, -1, +0}, {+1, +1, +0}, {-1, +1, +0}, {+0, +0, +1}}};
 };
 
-} // namespace sierra::nalu
+} // namespace sierra::kynema_ugf
 #endif

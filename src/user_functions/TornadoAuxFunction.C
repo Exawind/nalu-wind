@@ -14,7 +14,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 TornadoAuxFunction::TornadoAuxFunction(
   const unsigned beginPos, const unsigned endPos)
@@ -60,5 +60,5 @@ TornadoAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

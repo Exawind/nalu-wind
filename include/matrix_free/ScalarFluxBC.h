@@ -17,7 +17,7 @@
 #include "ArrayND.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 using tpetra_view_type = typename Tpetra::MultiVector<>::dual_view_type::t_dev;
@@ -35,7 +35,7 @@ struct scalar_neumann_residual_t
 } // namespace impl
 P_INVOKEABLE(scalar_neumann_residual)
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

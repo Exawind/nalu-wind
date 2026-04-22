@@ -1,7 +1,7 @@
 #include "mesh_motion/MotionScalingKernel.h"
 
 #include <FieldTypeDef.h>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/FieldBLAS.hpp>
@@ -9,7 +9,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 MotionScalingKernel::MotionScalingKernel(
   stk::mesh::MetaData& meta, const YAML::Node& node)
@@ -40,7 +40,7 @@ MotionScalingKernel::load(const YAML::Node& node)
 
   // translation could be based on rate or factor
   if (node["rate"]) {
-    for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
       rate_[d] = node["rate"][d].as<double>();
   }
 
@@ -48,13 +48,13 @@ MotionScalingKernel::load(const YAML::Node& node)
   useRate_ = (node["rate"] ? true : false);
 
   if (node["factor"]) {
-    for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
       factor_[d] = node["factor"][d].as<double>();
   }
 
   // get origin based on if it was defined or is to be computed
   if (node["centroid"]) {
-    for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
       origin_[d] = node["centroid"][d].as<double>();
   }
 }
@@ -78,10 +78,10 @@ MotionScalingKernel::build_transformation(
   // Determine scaling based on user defined input
   mm::TransMatType tempMat;
   if (useRate_) {
-    for (int d = 0; d < nalu_ngp::NDimMax; d++)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++)
       tempMat[d * mm::matSize + d] = rate_[d] * (motionTime - startTime_) + 1.0;
   } else {
-    for (int d = 0; d < nalu_ngp::NDimMax; d++)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++)
       tempMat[d * mm::matSize + d] = factor_[d];
   }
 
@@ -113,18 +113,18 @@ MotionScalingKernel::compute_velocity(
 
   // transform the origin of the scaling body
   mm::ThreeDVecType transOrigin;
-  for (int d = 0; d < nalu_ngp::NDimMax; d++) {
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++) {
     transOrigin[d] = compTrans[d * mm::matSize + 0] * origin_[0] +
                      compTrans[d * mm::matSize + 1] * origin_[1] +
                      compTrans[d * mm::matSize + 2] * origin_[2] +
                      compTrans[d * mm::matSize + 3];
   }
 
-  for (int d = 0; d < nalu_ngp::NDimMax; d++)
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++)
     vel[d] = rate_[d] * (mxyz[d] - transOrigin[d]);
 
   return vel;
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

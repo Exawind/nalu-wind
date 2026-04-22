@@ -16,7 +16,7 @@
 #include "Kokkos_Macros.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace impl {
@@ -169,6 +169,6 @@ shuffled_access(ViewType& v, int k, int j, int i, int d)
 }
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

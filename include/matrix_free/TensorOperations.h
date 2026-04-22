@@ -15,7 +15,7 @@
 #include "Kokkos_Macros.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 namespace matrix_free {
 
 #define XH 0
@@ -188,7 +188,7 @@ square(const ArrayND<Scalar[3][3]>& a)
 #undef ZH
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

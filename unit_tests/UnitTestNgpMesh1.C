@@ -36,35 +36,38 @@ test_ngp_mesh_1(
   }
   unsigned expectedNodesPerElem = elemTopo.num_nodes();
 
-  Kokkos::View<unsigned*, sierra::nalu::MemSpace> ngpResults("ngpResults", 2);
-  Kokkos::View<unsigned*, sierra::nalu::MemSpace>::HostMirror hostResults =
-    Kokkos::create_mirror_view(ngpResults);
+  Kokkos::View<unsigned*, sierra::kynema_ugf::MemSpace> ngpResults(
+    "ngpResults", 2);
+  Kokkos::View<unsigned*, sierra::kynema_ugf::MemSpace>::HostMirror
+    hostResults = Kokkos::create_mirror_view(ngpResults);
   Kokkos::deep_copy(ngpResults, hostResults);
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = 0;
-  auto team_exec = sierra::nalu::get_device_team_policy(
+  auto team_exec = sierra::kynema_ugf::get_device_team_policy(
     elemBuckets.size(), bytes_per_team, bytes_per_thread);
 
   Kokkos::parallel_for(
-    team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team) {
+    team_exec,
+    KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
       const stk::mesh::NgpMesh::BucketType& b =
         ngpMesh.get_bucket(stk::topology::ELEM_RANK, team.league_rank());
       ++ngpResults(0);
 
       const size_t bucketLen = b.size();
-      const size_t simdBucketLen = sierra::nalu::get_num_simd_groups(bucketLen);
+      const size_t simdBucketLen =
+        sierra::kynema_ugf::get_num_simd_groups(bucketLen);
 
       Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, simdBucketLen),
         [&](const size_t& bktIndex) {
-          int numSimdElems =
-            sierra::nalu::get_length_of_next_simd_group(bktIndex, bucketLen);
+          int numSimdElems = sierra::kynema_ugf::get_length_of_next_simd_group(
+            bktIndex, bucketLen);
 
           for (int simdElemIndex = 0; simdElemIndex < numSimdElems;
                ++simdElemIndex) {
             stk::mesh::Entity element =
-              b[bktIndex * sierra::nalu::simdLen + simdElemIndex];
+              b[bktIndex * sierra::kynema_ugf::simdLen + simdElemIndex];
             stk::mesh::FastMeshIndex elemIndex =
               ngpMesh.fast_mesh_index(element);
             if (
@@ -86,8 +89,8 @@ TEST(NgpMesh, NGPMesh)
 {
   const std::string meshSpec("generated:2x2x2");
 
-  unit_test_utils::NaluTest naluObj;
-  sierra::nalu::Realm& realm = naluObj.create_realm();
+  unit_test_utils::KynemaUGFTest kynema_ugfObj;
+  sierra::kynema_ugf::Realm& realm = kynema_ugfObj.create_realm();
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
 
   test_ngp_mesh_1(realm.bulk_data(), realm.ngp_mesh());
@@ -95,10 +98,10 @@ TEST(NgpMesh, NGPMesh)
 
 void
 test_ngp_mesh_field_values(
-  sierra::nalu::FieldManager& fieldManager,
+  sierra::kynema_ugf::FieldManager& fieldManager,
   const stk::mesh::BulkData& bulk,
-  sierra::nalu::VectorFieldType* velocity,
-  sierra::nalu::GenericFieldType* massFlowRate)
+  sierra::kynema_ugf::VectorFieldType* velocity,
+  sierra::kynema_ugf::GenericFieldType* massFlowRate)
 {
   const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
   stk::mesh::Selector all_local =
@@ -115,7 +118,7 @@ test_ngp_mesh_field_values(
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = 0;
-  auto team_exec = sierra::nalu::get_device_team_policy(
+  auto team_exec = sierra::kynema_ugf::get_device_team_policy(
     elemBuckets.size(), bytes_per_team, bytes_per_thread);
 
   const double xVel = 1.0;
@@ -124,23 +127,25 @@ test_ngp_mesh_field_values(
   const double flowRate = 4.0;
 
   Kokkos::parallel_for(
-    team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team) {
+    team_exec,
+    KOKKOS_LAMBDA(const sierra::kynema_ugf::DeviceTeamHandleType& team) {
       const stk::mesh::NgpMesh::BucketType& b =
         ngpMesh.get_bucket(stk::topology::ELEM_RANK, team.league_rank());
 
       const size_t bucketLen = b.size();
-      const size_t simdBucketLen = sierra::nalu::get_num_simd_groups(bucketLen);
+      const size_t simdBucketLen =
+        sierra::kynema_ugf::get_num_simd_groups(bucketLen);
 
       Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, simdBucketLen),
         [&](const size_t& bktIndex) {
-          int numSimdElems =
-            sierra::nalu::get_length_of_next_simd_group(bktIndex, bucketLen);
+          int numSimdElems = sierra::kynema_ugf::get_length_of_next_simd_group(
+            bktIndex, bucketLen);
 
           for (int simdElemIndex = 0; simdElemIndex < numSimdElems;
                ++simdElemIndex) {
             stk::mesh::Entity element =
-              b[bktIndex * sierra::nalu::simdLen + simdElemIndex];
+              b[bktIndex * sierra::kynema_ugf::simdLen + simdElemIndex];
             stk::mesh::FastMeshIndex elemIndex =
               ngpMesh.fast_mesh_index(element);
             ngpMassFlowRate.get(elemIndex, 0) = flowRate;
@@ -223,7 +228,7 @@ test_ngp_field_placement_new()
 
   int constructionFinished = 0;
   Kokkos::parallel_reduce(
-    sierra::nalu::DeviceRangePolicy(0, 1),
+    sierra::kynema_ugf::DeviceRangePolicy(0, 1),
     KOKKOS_LAMBDA(const unsigned& i, int& localFinished) {
       new (devicePtr) TestKernelWithNgpField(hostObj);
       localFinished = 1;
@@ -233,7 +238,7 @@ test_ngp_field_placement_new()
 
   int numFromDevice = 0;
   Kokkos::parallel_reduce(
-    sierra::nalu::DeviceRangePolicy(0, 1),
+    sierra::kynema_ugf::DeviceRangePolicy(0, 1),
     KOKKOS_LAMBDA(const unsigned& i, int& localNum) {
       localNum = devicePtr->get_num();
     },

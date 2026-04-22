@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class KovasznayPressureAuxFunction : public AuxFunction
 {
@@ -62,7 +62,7 @@ private:
   double Re_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

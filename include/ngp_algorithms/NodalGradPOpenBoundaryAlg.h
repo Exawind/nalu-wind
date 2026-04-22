@@ -15,7 +15,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 template <typename AlgTraits>
 class NodalGradPOpenBoundary : public Algorithm
@@ -46,7 +46,7 @@ public:
   ElemDataRequests elemData_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

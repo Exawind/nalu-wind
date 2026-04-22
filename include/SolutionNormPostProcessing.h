@@ -10,7 +10,7 @@
 #ifndef SolutionNormPostProcessing_h
 #define SolutionNormPostProcessing_h
 
-#include <NaluParsedTypes.h>
+#include <KynemaUGFParsedTypes.h>
 
 #include <string>
 #include <vector>
@@ -28,7 +28,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class AuxFunctionAlgorithm;
 class Realm;
@@ -89,7 +89,7 @@ public:
   std::vector<AuxFunctionAlgorithm*> populateExactNodalFieldAlg_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

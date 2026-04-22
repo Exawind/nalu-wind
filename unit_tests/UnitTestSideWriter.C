@@ -8,7 +8,7 @@
 #include <yaml-cpp/yaml.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 class SideWriterFixture : public ::testing::Test
 {
 public:
@@ -116,5 +116,5 @@ TEST(SideWriterContainerTest, load)
   EXPECT_EQ(container.number_of_writers(), 2);
 }
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra

@@ -29,7 +29,7 @@ class MetaData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema_ugf {
 
 class ReferencePropertyData;
 
@@ -86,7 +86,7 @@ public:
   const double tRef_;
 };
 
-} // namespace nalu
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

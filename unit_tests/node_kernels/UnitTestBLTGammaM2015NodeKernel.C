@@ -123,7 +123,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_blt_gamma_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::BLTGammaM2015NodeKernel>(*meta_);
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::BLTGammaM2015NodeKernel>(
+    *meta_);
 
   helperObjs.execute();
 
