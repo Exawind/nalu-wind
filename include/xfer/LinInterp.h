@@ -21,7 +21,7 @@
 #include <master_element/MasterElementRepo.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 template <class FROM, class TO>
 class LinInterp
@@ -97,7 +97,7 @@ LinInterp<FROM, TO>::filter_to_nearest(
       const stk::mesh::Bucket& theBucket = fromBulkData.bucket(theElem);
       const stk::topology& theElemTopo = theBucket.topology();
       MasterElement* meSCS =
-        sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+        sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
           theElemTopo);
 
       // load nodal coordinates from element
@@ -147,16 +147,16 @@ LinInterp<FROM, TO>::filter_to_nearest(
   stk::all_reduce_max(
     FromElem.comm(), &maxCandidateBoundingBox, &g_maxCandidateBoundngBox, 1);
 
-  NaluEnv::self().naluOutputP0() << std::endl;
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema-ugfOutputP0() << std::endl;
+  KynemaUGFEnv::self().kynema-ugfOutputP0()
     << "XFER::LinInterp::fine_search() Overview:" << std::endl;
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema-ugfOutputP0()
     << "  Maximum normalized distance found is: " << g_maxBestX
     << " (should be unity or less)" << std::endl;
-  NaluEnv::self().naluOutputP0() << "  Maximum number of candidate bounding "
+  KynemaUGFEnv::self().kynema-ugfOutputP0() << "  Maximum number of candidate bounding "
                                     "boxes found for a single point is: "
                                  << g_maxCandidateBoundngBox << std::endl;
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema-ugfOutputP0()
     << "  Should max normalized distance and/or candidate bounding box size be "
        "too large, please check setup"
     << std::endl;
@@ -190,7 +190,7 @@ LinInterp<FROM, TO>::apply(
     const stk::mesh::Bucket& theBucket = fromBulkData.bucket(theElem);
     const stk::topology& theElemTopo = theBucket.topology();
     MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
         theElemTopo);
 
     stk::mesh::Entity const* elem_node_rels = fromBulkData.begin_nodes(theElem);
@@ -233,7 +233,7 @@ LinInterp<FROM, TO>::apply(
   }
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

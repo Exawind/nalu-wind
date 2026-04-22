@@ -25,7 +25,7 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 // edge 2d
 class Edge2DSCS : public MasterElement
@@ -108,7 +108,7 @@ private:
     SharedMemView<DBLTYPE**, SHMEM>& area) const;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

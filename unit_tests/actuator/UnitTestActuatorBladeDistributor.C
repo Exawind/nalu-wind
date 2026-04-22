@@ -11,7 +11,7 @@
 #include <gtest/gtest.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 namespace {
 
 struct TestInputs
@@ -81,5 +81,5 @@ TEST_P(BladeDistributorTest, allBladesAreUsedOnlyOnce)
 }
 
 } // namespace
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

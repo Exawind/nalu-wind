@@ -1,4 +1,4 @@
-target_sources(nalu PRIVATE
+target_sources(kynema-ugf PRIVATE
   # Algorithms
   ${CMAKE_CURRENT_SOURCE_DIR}/MeshVelocityAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MeshVelocityEdgeAlg.C

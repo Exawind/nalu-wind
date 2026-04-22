@@ -1,7 +1,7 @@
 Building the Documentation
 ==========================
 
-This document describes how to build Nalu-Wind's documentation.
+This document describes how to build Kynema-UGF's documentation.
 The documentation is based on the use of Doxygen, Sphinx,
 and Doxylink. Therefore we will need to install these tools
 as well as some extensions of Sphinx that are utilized.
@@ -13,7 +13,7 @@ Install CMake, Doxygen, Sphinx, Doxylink, and the
 extensions used. Doxygen uses the ``dot`` application
 installed with GraphViz. Sphinx uses a combination
 of extensions installed with ``pip install`` as well as some
-that come with Nalu-Wind located in the ``_extensions``
+that come with Kynema-UGF located in the ``_extensions``
 directory. Using Homebrew on Mac OS X, 
 this would look something like:
 
@@ -34,7 +34,7 @@ using your package manager, e.g. ``sudo apt-get install cmake``.
 Build the Docs
 --------------
 
-In the `Nalu-Wind repository <https://github.com/Exawind/nalu-wind>`__ checkout, execute:
+In the `Kynema-UGF repository <https://github.com/Exawind/kynema-ugf>`__ checkout, execute:
 
 ::
 

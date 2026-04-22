@@ -21,13 +21,13 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
-namespace nalu_ngp {
+namespace kynema-ugf {
+namespace kynema-ugf_ngp {
 
 template <
   typename T = double,
   typename Mesh = stk::mesh::NgpMesh,
-  typename FieldManager = nalu_ngp::FieldManager>
+  typename FieldManager = kynema-ugf_ngp::FieldManager>
 inline stk::mesh::NgpField<T>&
 get_ngp_field(
   const MeshInfo<Mesh, FieldManager>& meshInfo,
@@ -41,7 +41,7 @@ get_ngp_field(
 template <
   typename T = double,
   typename Mesh = stk::mesh::NgpMesh,
-  typename FieldManager = nalu_ngp::FieldManager>
+  typename FieldManager = kynema-ugf_ngp::FieldManager>
 inline stk::mesh::NgpField<T>&
 get_ngp_field(
   const MeshInfo<Mesh, FieldManager>& meshInfo,
@@ -53,8 +53,8 @@ get_ngp_field(
     get_field_ordinal(meshInfo.meta(), fieldName, state, rank));
 }
 
-} // namespace nalu_ngp
-} // namespace nalu
+} // namespace kynema-ugf_ngp
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* NGPFIELDUTILS_H */

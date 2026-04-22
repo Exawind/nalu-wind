@@ -16,13 +16,13 @@ namespace TIOGA {
 class tioga;
 }
 
-namespace tioga_nalu {
+namespace tioga_kynema-ugf {
 
 /** Manager for the TIOGA handle
  *
  *  This class manages access to the global TIOGA instance across multiple
- *  realms as well as across multi-solver interfaces (e.g., amr-wind/nalu-wind
- *  coupling). This class allows both use-cases: 1. nalu-wind only run where
+ *  realms as well as across multi-solver interfaces (e.g., amr-wind/kynema-ugf
+ *  coupling). This class allows both use-cases: 1. kynema-ugf only run where
  *  overset might be coupling within just one realm or multiple realms but owns
  *  the TIOGA reference, 2. hybrid solver run where an external code interface
  *  owns the TIOGA reference.
@@ -61,6 +61,6 @@ private:
   bool owned_{false};
 };
 
-} // namespace tioga_nalu
+} // namespace tioga_kynema-ugf
 
 #endif /* TIOGAREF_H */

@@ -9,7 +9,7 @@
 #include <float.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class FrameMoving : public FrameBase
 {
@@ -30,7 +30,7 @@ private:
   FrameMoving(const FrameMoving&) = delete;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* FRAMEMOVING_H */

@@ -13,7 +13,7 @@
 #include "AssembleEdgeKernelAlg.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class Realm;
 
@@ -23,7 +23,7 @@ public:
   AssembleAMSEdgeKernelAlg(Realm&, stk::mesh::Part*, EquationSystem*);
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* ASSEMBLEAMSEDGEKERNEL_H */

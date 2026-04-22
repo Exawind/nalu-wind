@@ -1,10 +1,10 @@
-Nalu-Wind Documentation
+Kynema-UGF Documentation
 =======================
 .. toctree::
    :maxdepth: 2
 
-   Nalu-Wind Homepage <https://github.com/Exawind/nalu-wind>
-   Nalu-Wind Nightly Test Results <http://my.cdash.org/index.php?project=Exawind>
+   Kynema-UGF Homepage <https://github.com/Exawind/kynema-ugf>
+   Kynema-UGF Nightly Test Results <http://my.cdash.org/index.php?project=Exawind>
    User Manual <source/user/index.rst>
    Developer Manual <source/developer/index.rst>
    Theory Manual <source/theory/index.rst>

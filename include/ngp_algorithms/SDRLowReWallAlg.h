@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 /** Specific Dissipation Rate low-Reynolds number wall boundary value
  *
@@ -52,7 +52,7 @@ private:
   MasterElement* meSCS_{nullptr};
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* SDRLOWREWALLFUNCALG_H */

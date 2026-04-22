@@ -13,7 +13,7 @@
 #include <variant>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 enum class FieldLayout { SCALAR, VECTOR, TENSOR, ARRAY };
 
@@ -81,7 +81,7 @@ using FieldPointerTypes = std::conditional<
     stk::mesh::Field<TpetIdType>*,
     stk::mesh::Field<HypreIntType>*>>::type;
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* FIELDDEFINITIONS_H_ */

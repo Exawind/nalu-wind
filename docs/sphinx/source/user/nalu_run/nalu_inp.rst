@@ -1,20 +1,20 @@
-.. _user_nalu_input_file:
+.. _user_kynema-ugf_input_file:
 
-Nalu-Wind Input File
+Kynema-UGF Input File
 --------------------
 
-Nalu-Wind requires the user to provide an input file, in YAML format, during
-invocation at the command line using the :option:`naluX -i` flag. By default,
-:program:`naluX` will look for :file:`nalu.i` in the current working directory
+Kynema-UGF requires the user to provide an input file, in YAML format, during
+invocation at the command line using the :option:`kynema-ugf -i` flag. By default,
+:program:`kynema-ugf` will look for :file:`kynema-ugf.i` in the current working directory
 to determine the mesh file as well as the run setup for execution. A sample
-:download:`nalu.i` is shown below:
+:download:`kynema-ugf.i` is shown below:
 
-.. literalinclude:: nalu.i
+.. literalinclude:: kynema-ugf.i
    :language: yaml
-   :caption: Sample Nalu-Wind input file for the Heat Conduction problem
+   :caption: Sample Kynema-UGF input file for the Heat Conduction problem
    :emphasize-lines: 6, 11, 21, 91
 
-Nalu-Wind input file contains the following top-level sections that describe the
+Kynema-UGF input file contains the following top-level sections that describe the
 simulation to be executed.
 
 **Realms**
@@ -41,16 +41,16 @@ simulation to be executed.
       other realms. In this context, it acts as an *output* realm.
 
   Inclusion of an input/output realm will require the user to provide the
-  additional `transfers` section in the Nalu-Wind input file that defines
+  additional `transfers` section in the Kynema-UGF input file that defines
   the solution fields that are transferred between the realms. See
-  :ref:`nalu_inp_realm` for detailed documentation on all Realm options.
+  :ref:`kynema-ugf_inp_realm` for detailed documentation on all Realm options.
 
 **Linear Solvers**
 
   This section configures the solvers and preconditioners used to solve the
-  resulting linear system of equations within Nalu-Wind. The linear system
+  resulting linear system of equations within Kynema-UGF. The linear system
   convergence tolerance and other controls are set here and can be used with
-  multiple systems across different realms. See :ref:`nalu_inp_linear_solvers`
+  multiple systems across different realms. See :ref:`kynema-ugf_inp_linear_solvers`
   for more details.
 
 **Time Integrators**
@@ -59,8 +59,8 @@ simulation to be executed.
   in time), the duration of simulation, fixed or adaptive timestepping based on
   Courant number constraints, etc. Each time integration section in this list
   can accept one or more `realms` that are integrated in time using
-  that specific time integration scheme. See :ref:`nalu_inp_time_integrators`
-  for complete documentation of all time integration options available in Nalu-Wind.
+  that specific time integration scheme. See :ref:`kynema-ugf_inp_time_integrators`
+  for complete documentation of all time integration options available in Kynema-UGF.
 
 **Transfers**
 
@@ -68,15 +68,15 @@ simulation to be executed.
   between the participating `realms` during the simulation. Each
   transfer definition provides a mapping of the to and from realm, part, and the
   solution field that must be transferred at every timestep during the
-  simulation. See :ref:`nalu_inp_transfers` section for complete documentation of
-  all transfer options available in Nalu-Wind.
+  simulation. See :ref:`kynema-ugf_inp_transfers` section for complete documentation of
+  all transfer options available in Kynema-UGF.
 
 **Simulations**
 
   Simulations provides the top-level architecture that orchestrates the
   time-stepping across all the realms and the required equation sets.
 
-.. _nalu_inp_linear_solvers:
+.. _kynema-ugf_inp_linear_solvers:
 
 Linear Solvers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -212,7 +212,7 @@ Hypre's BoomerAMG preconditioner.
 
    See ``HYPRE_BoomerAMGSetStrongThreshold``. Default: 0.25
 
-.. _nalu_inp_time_integrators:
+.. _kynema-ugf_inp_time_integrators:
 
 Time Integration Options
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -246,11 +246,11 @@ Time Integration Options
 
 .. inpfile:: time_int.termination_time
 
-   Nalu-Wind will stop the simulation once the ``termination_time`` has reached.
+   Kynema-UGF will stop the simulation once the ``termination_time`` has reached.
 
 .. inpfile:: time_int.termination_step_count
 
-   Nalu-Wind will stop the simulation once the specified ``termination_step_count``
+   Kynema-UGF will stop the simulation once the specified ``termination_step_count``
    timesteps have been completed. If both `time_int.termination_time`
    and this parameter are provided then this parameter will prevail.
 
@@ -293,13 +293,13 @@ Time Integration Options
    user attempts to access the specific realm in the `transfers`
    section.
 
-.. _nalu_inp_realm:
+.. _kynema-ugf_inp_realm:
 
 Physics Realm Options
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 As mentioned previously, `realms` is a YAML list data structure
-containing at least one :ref:`nalu_inp_realm` entry that defines the
+containing at least one :ref:`kynema-ugf_inp_realm` entry that defines the
 computational domain (provided as an Exodus-II mesh), the set of physics
 equations that must be solved over this domain, along with the necessary initial
 and boundary conditions. Each list entry is a YAML dictionary mapping that is
@@ -1027,18 +1027,18 @@ Output Options
 .. inpfile:: output.output_data_base_name
 
    The name of the output Exodus-II database. Can specify a directory relative
-   to the run directory, e.g., ``out/nalu_results.e``. The directory will be
+   to the run directory, e.g., ``out/kynema-ugf_results.e``. The directory will be
    created automatically if one doesn't exist. Default: ``output.e``
 
 .. inpfile:: output.output_frequency
 
-   Nalu-Wind will write the output file every ``output_frequency`` timesteps. Note
+   Kynema-UGF will write the output file every ``output_frequency`` timesteps. Note
    that currently there is no option to output results at a specified simulation
    time. Default: ``1``.
 
 .. inpfile:: output.output_start
 
-   Nalu-Wind will start writing output past the ``output_start`` timestep. Default: ``0``.
+   Kynema-UGF will start writing output past the ``output_start`` timestep. Default: ``0``.
 
 .. inpfile:: output.output_forced_wall_time
 
@@ -1076,7 +1076,7 @@ Restart Options
    If this variable is present, it indicates that the current run will restart
    from a previous simulation. This requires that the `mesh` be a
    restart file with all the fields necessary for the equation sets defined in
-   the `equation_systems.systems`. Nalu-Wind will restart from the closest
+   the `equation_systems.systems`. Kynema-UGF will restart from the closest
    time available in the `mesh` to ``restart_time``. The timesteps
    available in a restart file can be examined by looking at the ``time_whole``
    variable using the ``ncdump`` utility.
@@ -1094,7 +1094,7 @@ Restart Options
 
 .. inpfile:: restart.restart_start
 
-   Nalu-Wind will write a restart file after ``restart_start`` timesteps have elapsed.
+   Kynema-UGF will write a restart file after ``restart_start`` timesteps have elapsed.
 
 .. inpfile:: restart.restart_forced_wall_time
 
@@ -1276,7 +1276,7 @@ Actuator Turbine Model
 .. inpfile:: actuator.air_density
 
    The air density. This is only used to compute the nacelle force. It should
-   match the density being used in both Nalu and OpenFAST.
+   match the density being used in both KynemaUGF and OpenFAST.
 
 .. inpfile:: actuator.epsilon
 
@@ -1405,7 +1405,7 @@ Fluid-Structure Interaction
    The start time of the FSI simulation.  This should be an
    integer multiple of ``dt_FAST``, and should match ``t_end``
    in the OpenFAST driver file.  Note that OpenFAST and
-   Nalu-Wind record time differently, so this variable will
+   Kynema-UGF record time differently, so this variable will
    not necessarily fit with the parameters in the
    ``Time_Integrators`` section.
 
@@ -1425,7 +1425,7 @@ Fluid-Structure Interaction
 
    The timestep used by OpenFAST for the FSI simulation.  This should
    match ``DT`` in the OpenFAST input file (with extension .fst).
-   Commonly, this is 1/4 of the driver/Nalu/AMR-Wind timestep.
+   Commonly, this is 1/4 of the driver/KynemaUGF/AMR-Wind timestep.
 
 .. inpfile:: turbine_name
 
@@ -1488,10 +1488,10 @@ Fluid-Structure Interaction
 
    Real variable (in radians) indicating the mean angular position for the load blending.
    The loads provided to BeamDyn are a weighted average of the loads
-   provided by AeroDyn and the true CFD loads provided by Nalu-Wind
+   provided by AeroDyn and the true CFD loads provided by Kynema-UGF
    during startup to help with stability while the CFD flow field develops around
    the turbine structure.
-   The weight of the Nalu-Wind contribution takes the form
+   The weight of the Kynema-UGF contribution takes the form
    :math:`\frac{1}{2} \left[1+\text{tanh}\left(\left(\phi-\phi_\text{mean}\right)/\phi_\text{delta}\right)\right]`,
    where :math:`\phi` is the angle that the turbine has rotated through
    (including any initial OpenFAST runs),
@@ -1535,7 +1535,7 @@ Fluid-Structure Interaction
 .. inpfile:: turbine_name.deflection_ramping
 
    The ``deflection_ramping`` sub-subsection controls the temporal and spatial
-   ramping of blade deflections applied in Nalu-Wind.  The temporal ramping enables a smooth
+   ramping of blade deflections applied in Kynema-UGF.  The temporal ramping enables a smooth
    transition for the blades from a rigid body motion based on the hub motion to the
    full blade deflections, and improves the stability of the simulation
    during startup.  The span ramping enables the root section
@@ -1568,7 +1568,7 @@ Fluid-Structure Interaction
 
    Real variable indicating the time at which temporal ramping should begin.
    Prior to this time, zero blade deflections will be provided.  Note that this
-   should correspond to time as recorded by Nalu-Wind and described in the
+   should correspond to time as recorded by Kynema-UGF and described in the
    ``Time_Integrators`` section, not as recorded by OpenFAST.  Hence, this will
    not correspond to ``t_start`` above.
 
@@ -1576,7 +1576,7 @@ Fluid-Structure Interaction
 
    Real variable indicating the time at which temporal ramping should end.
    After this time, full blade deflections will be provided.  Note that this
-   should correspond to time as recorded by Nalu-Wind and described in the
+   should correspond to time as recorded by Kynema-UGF and described in the
    ``Time_Integrators`` section, not as recorded by OpenFAST.
 
 .. inpfile:: deflection_ramping.theta_ramp_span
@@ -1617,7 +1617,7 @@ Turbulence averaging
         forced_reset: no
         time_filter_interval: 100000.0
 
-        averaging_type: nalu_classic/moving_exponential
+        averaging_type: kynema-ugf_classic/moving_exponential
 
         specifications:
 
@@ -1657,7 +1657,7 @@ Turbulence averaging
    This parameter sets the choice of the running average type. Possible
    values are:
 
-   ``nalu_classic``
+   ``kynema-ugf_classic``
      "Sawtooth" average. The running average is set to zero each time the time
      filter width is reached and a new average is calculated for the next time
      interval.
@@ -2148,7 +2148,7 @@ Post-processing
 
    A list of element blocks (parts) where to do the post-processing
 
-.. _nalu_inp_transfers:
+.. _kynema-ugf_inp_transfers:
 
 ABL Forcing
 ```````````
@@ -2411,6 +2411,6 @@ Simulations
 
 .. inpfile:: simulations
 
-   This is the top-level section that orchestrates the entire execution of Nalu-Wind.
+   This is the top-level section that orchestrates the entire execution of Kynema-UGF.
 
 

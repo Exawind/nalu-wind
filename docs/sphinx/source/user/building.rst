@@ -1,10 +1,10 @@
-.. _building_nalu:
+.. _building_kynema-ugf:
 
-Building Nalu-Wind
+Building Kynema-UGF
 ==================
 .. toctree::
    :maxdepth: 2
 
-   Building Nalu-Wind with Spack <build_spack.rst>
-   Building Nalu-Wind Manually <build_manually.rst>
-   Verifying that the installation of Nalu-Wind works <verify_installation.rst>
+   Building Kynema-UGF with Spack <build_spack.rst>
+   Building Kynema-UGF Manually <build_manually.rst>
+   Verifying that the installation of Kynema-UGF works <verify_installation.rst>

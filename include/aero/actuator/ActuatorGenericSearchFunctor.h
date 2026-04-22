@@ -23,7 +23,7 @@
 #include <FieldTypeDef.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 template <typename ActuatorBulk, typename functor>
 struct GenericLoopOverCoarseSearchResults
@@ -88,8 +88,8 @@ struct GenericLoopOverCoarseSearchResults
 
     double scvip[216];
     double elemcoords[27 * 3];
-    sierra::nalu::SharedMemView<double*> scvIp(&scvip[0], 216);
-    sierra::nalu::SharedMemView<double**> elemCoords(&elemcoords[0], 27, 3);
+    sierra::kynema-ugf::SharedMemView<double*> scvIp(&scvip[0], 216);
+    sierra::kynema-ugf::SharedMemView<double**> elemCoords(&elemcoords[0], 27, 3);
 
     stk::mesh::Entity const* elem_nod_rels = stkBulk_.begin_nodes(elem);
 
@@ -127,7 +127,7 @@ struct GenericLoopOverCoarseSearchResults
   functor innerLoopFunctor_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* ACTUATORGENERICSEARCHFUNCTOR_H_ */

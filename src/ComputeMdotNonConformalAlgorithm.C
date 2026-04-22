@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// nalu
+// kynema-ugf
 #include <ComputeMdotNonConformalAlgorithm.h>
 #include <Algorithm.h>
 #include <DgInfo.h>
@@ -26,7 +26,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 //==========================================================================
 // Class Definition
@@ -581,5 +581,5 @@ ComputeMdotNonConformalAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

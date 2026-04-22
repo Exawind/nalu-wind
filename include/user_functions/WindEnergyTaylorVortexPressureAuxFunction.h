@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class WindEnergyTaylorVortexPressureAuxFunction : public AuxFunction
 {
@@ -76,7 +76,7 @@ private:
   double visc_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

@@ -11,7 +11,7 @@
 #include <array>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class Realm;
 
@@ -104,7 +104,7 @@ get_node_field(
 //
 unsigned max_extent(const stk::mesh::FieldBase& field, unsigned dimension);
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* STKHELPERS_H */

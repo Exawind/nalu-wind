@@ -1,6 +1,6 @@
 # -*- mode: yaml -*-
 #
-# Example Nalu input file for a heat conduction problem
+# Example KynemaUGF input file for a heat conduction problem
 #
 
 Simulations:

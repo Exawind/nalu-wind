@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 TaylorGreenVelocityAuxFunction::TaylorGreenVelocityAuxFunction(
   const unsigned beginPos, const unsigned endPos)
@@ -54,5 +54,5 @@ TaylorGreenVelocityAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

@@ -1,9 +1,9 @@
-Running Nalu-Wind
+Running Kynema-UGF
 =================
 
-This section describes the general process of setting up and executing Nalu-Wind,
+This section describes the general process of setting up and executing Kynema-UGF,
 understanding the various input file options available to the user, and how to
-extract results and analyze them. For the simplest case, Nalu-Wind requires the user
+extract results and analyze them. For the simplest case, Kynema-UGF requires the user
 to provide a YAML input file with the options that control the run along with a
 computational mesh in Exodus-II format. More complex setups might require
 additional files:
@@ -16,7 +16,7 @@ additional files:
 .. toctree::
    :maxdepth: 4
 
-   nalu_run/nalu_mesh
-   nalu_run/nalux
-   nalu_run/nalu_inp
-   nalu_run/McAlisterLessonsLearned
+   kynema-ugf_run/kynema-ugf_mesh
+   kynema-ugf_run/kynema-ugfx
+   kynema-ugf_run/kynema-ugf_inp
+   kynema-ugf_run/McAlisterLessonsLearned

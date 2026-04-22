@@ -30,8 +30,8 @@ TEST_F(EnthalpyABLKernelHex8Mesh, NGP_heat_flux_bc)
   const bool useShifted = false;
 
   // Initialize the kernel
-  std::unique_ptr<sierra::nalu::Kernel> kernel(
-    new sierra::nalu::ScalarFluxBCElemKernel<sierra::nalu::AlgTraitsQuad4>(
+  std::unique_ptr<sierra::kynema-ugf::Kernel> kernel(
+    new sierra::kynema-ugf::ScalarFluxBCElemKernel<sierra::kynema-ugf::AlgTraitsQuad4>(
       *bulk_, heatFluxBC_, coordsName, useShifted,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 

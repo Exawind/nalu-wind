@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// nalu
+// kynema-ugf
 #include <EffectiveDiffFluxCoeffAlgorithm.h>
 #include <Algorithm.h>
 #include <FieldTypeDef.h>
@@ -21,7 +21,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 //==========================================================================
 // Class Definition
@@ -100,5 +100,5 @@ EffectiveDiffFluxCoeffAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

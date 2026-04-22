@@ -21,7 +21,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class CoeffApplier;
 class EquationSystem;
@@ -100,7 +100,7 @@ protected:
   EquationSystem* eqSystem_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

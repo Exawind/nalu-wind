@@ -10,14 +10,14 @@ else()
   message(FATAL_ERROR "You need to set the HOST_NAME variable. CMake will exit." )
 endif()
 
-if(NOT "${NALU_DIR}" STREQUAL "")
-  message("NALU_DIR is ${NALU_DIR}")
+if(NOT "${KYNEMA_UGF_DIR}" STREQUAL "")
+  message("KYNEMA_UGF_DIR is ${KYNEMA_UGF_DIR}")
 else()
-  message(FATAL_ERROR "You need to set the NALU_DIR variable. CMake will exit." )
+  message(FATAL_ERROR "You need to set the KYNEMA_UGF_DIR variable. CMake will exit." )
 endif()
 
 if("${BUILD_DIR}" STREQUAL "" )
-  set(BUILD_DIR "${NALU_DIR}/build")
+  set(BUILD_DIR "${KYNEMA_UGF_DIR}/build")
 endif()
 
 # -----------------------------------------------------------
@@ -26,8 +26,8 @@ endif()
 
 # Set important configuration variables
 set(CTEST_SITE "${HOST_NAME}")
-set(CTEST_BUILD_NAME "Nalu-Wind-${CMAKE_SYSTEM_NAME}${EXTRA_BUILD_NAME}")
-set(CTEST_SOURCE_DIRECTORY "${NALU_DIR}")
+set(CTEST_BUILD_NAME "Kynema-UGF-${CMAKE_SYSTEM_NAME}${EXTRA_BUILD_NAME}")
+set(CTEST_SOURCE_DIRECTORY "${KYNEMA_UGF_DIR}")
 set(CTEST_BINARY_DIRECTORY "${BUILD_DIR}")
 set(CTEST_START_WITH_EMPTY_BINARY_DIRECTORY TRUE)
 find_program(CTEST_GIT_COMMAND NAMES git)

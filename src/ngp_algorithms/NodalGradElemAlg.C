@@ -23,7 +23,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 template <
   typename AlgTraits,
@@ -99,7 +99,7 @@ NodalGradElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::execute()
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto gradPhi = fieldMgr.template get_field<double>(gradPhi_);
   const auto gradPhiOps =
-    nalu_ngp::simd_elem_nodal_field_updater(ngpMesh, gradPhi);
+    kynema-ugf_ngp::simd_elem_nodal_field_updater(ngpMesh, gradPhi);
 
   // Bring class members into local scope for device capture
   const auto dnvID = dualNodalVol_;
@@ -120,7 +120,7 @@ NodalGradElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::execute()
   const auto quad_type = useShifted_ ? QuadType::SHIFTED : QuadType::MID;
   const auto shp = shape_fcn<AlgTraits, QuadRank::SCS>(quad_type);
 
-  nalu_ngp::run_elem_algorithm(
+  kynema-ugf_ngp::run_elem_algorithm(
     algName, meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
     KOKKOS_LAMBDA(typename ViewHelperType::SimdDataType & edata) {
       const int* lrscv = meSCS->adjacentNodes();
@@ -161,10 +161,10 @@ NodalGradElemAlg<AlgTraits, PhiType, GradPhiType, ViewHelperType>::execute()
 #define INSTANTIATE_ALG(AlgTraits)                                             \
   template class NodalGradElemAlg<                                             \
     AlgTraits, ScalarFieldType, VectorFieldType,                               \
-    nalu_ngp::ScalarViewHelper<NodalGradElemSimdDataType, ScalarFieldType>>;   \
+    kynema-ugf_ngp::ScalarViewHelper<NodalGradElemSimdDataType, ScalarFieldType>>;   \
   template class NodalGradElemAlg<                                             \
     AlgTraits, VectorFieldType, TensorFieldType,                               \
-    nalu_ngp::VectorViewHelper<NodalGradElemSimdDataType, VectorFieldType>>
+    kynema-ugf_ngp::VectorViewHelper<NodalGradElemSimdDataType, VectorFieldType>>
 
 INSTANTIATE_ALG(AlgTraitsHex8);
 INSTANTIATE_ALG(AlgTraitsTet4);
@@ -173,5 +173,5 @@ INSTANTIATE_ALG(AlgTraitsWed6);
 INSTANTIATE_ALG(AlgTraitsTri3_2D);
 INSTANTIATE_ALG(AlgTraitsQuad4_2D);
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

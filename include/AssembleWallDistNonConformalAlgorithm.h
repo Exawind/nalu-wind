@@ -20,7 +20,7 @@ class Part;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class Realm;
 
@@ -58,7 +58,7 @@ private:
   const bool useCurrentNormal_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* ASSEMBLEWALLDISTNONCONFORMALALGORITHM_H */

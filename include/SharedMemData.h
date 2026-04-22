@@ -19,7 +19,7 @@
 #include <memory>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 template <typename TEAMHANDLETYPE, typename SHMEM>
 struct SharedMemData
@@ -167,7 +167,7 @@ struct SharedMemData_Edge
   SharedMemView<int*, SHMEM> scratchIds;
   SharedMemView<int*, SHMEM> sortPermutation;
 };
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

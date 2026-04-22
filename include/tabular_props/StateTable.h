@@ -14,7 +14,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class StateTable
 {
@@ -27,7 +27,7 @@ public:
   std::vector<std::vector<double>>* get_entry();
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

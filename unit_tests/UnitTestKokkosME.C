@@ -15,7 +15,7 @@
 template <typename DBLTYPE, typename SHMEM>
 void
 check_that_values_match(
-  const sierra::nalu::SharedMemView<DoubleType*, SHMEM>& values,
+  const sierra::kynema-ugf::SharedMemView<DoubleType*, SHMEM>& values,
   const DBLTYPE* oldValues)
 {
   for (size_t i = 0; i < values.extent(0); ++i) {
@@ -29,7 +29,7 @@ check_that_values_match(
 template <typename DBLTYPE, typename SHMEM>
 void
 check_that_values_match(
-  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& values,
+  const sierra::kynema-ugf::SharedMemView<DoubleType**, SHMEM>& values,
   const DBLTYPE* oldValues)
 {
   int counter = 0;
@@ -46,7 +46,7 @@ check_that_values_match(
 template <typename DBLTYPE, typename SHMEM>
 void
 check_that_values_match(
-  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& values,
+  const sierra::kynema-ugf::SharedMemView<DoubleType***, SHMEM>& values,
   const DBLTYPE* oldValues)
 {
   int counter = 0;
@@ -65,7 +65,7 @@ check_that_values_match(
 template <typename SHMEM>
 void
 copy_DoubleType0_to_double(
-  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& view,
+  const sierra::kynema-ugf::SharedMemView<DoubleType**, SHMEM>& view,
   std::vector<double>& vec)
 {
   const DoubleType* viewValues = view.data();
@@ -79,7 +79,7 @@ copy_DoubleType0_to_double(
 template <typename SHMEM>
 void
 copy_DoubleType0_to_double(
-  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& view,
+  const sierra::kynema-ugf::SharedMemView<DoubleType***, SHMEM>& view,
   std::vector<double>& vec)
 {
   const DoubleType* viewValues = view.data();
@@ -93,15 +93,15 @@ copy_DoubleType0_to_double(
 template <typename SHMEM>
 void
 compare_old_scv_volume(
-  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType*, SHMEM>& scv_volume,
-  sierra::nalu::MasterElement* meSCV)
+  const sierra::kynema-ugf::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::kynema-ugf::SharedMemView<DoubleType*, SHMEM>& scv_volume,
+  sierra::kynema-ugf::MasterElement* meSCV)
 {
   int len = scv_volume.extent(0);
   std::vector<DoubleType> volume(len, 0.0);
-  sierra::nalu::SharedMemView<DoubleType*, sierra::nalu::DeviceShmem> vol(
+  sierra::kynema-ugf::SharedMemView<DoubleType*, sierra::kynema-ugf::DeviceShmem> vol(
     volume.data(), volume.size());
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(
+  sierra::kynema-ugf::SharedMemView<DoubleType**, sierra::kynema-ugf::DeviceShmem> coords(
     v_coords.data(), v_coords.extent(0), v_coords.extent(1));
   meSCV->determinant(coords, vol);
   check_that_values_match(scv_volume, volume.data());
@@ -110,15 +110,15 @@ compare_old_scv_volume(
 template <typename SHMEM>
 void
 compare_old_scs_areav(
-  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& scs_areav,
-  sierra::nalu::MasterElement* meSCS)
+  const sierra::kynema-ugf::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::kynema-ugf::SharedMemView<DoubleType**, SHMEM>& scs_areav,
+  sierra::kynema-ugf::MasterElement* meSCS)
 {
   int len = scs_areav.extent(0) * scs_areav.extent(1);
   std::vector<DoubleType> areav(len, 0.0);
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> area(
+  sierra::kynema-ugf::SharedMemView<DoubleType**, sierra::kynema-ugf::DeviceShmem> area(
     areav.data(), scs_areav.extent(0), scs_areav.extent(1));
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(
+  sierra::kynema-ugf::SharedMemView<DoubleType**, sierra::kynema-ugf::DeviceShmem> coords(
     v_coords.data(), v_coords.extent(0), v_coords.extent(1));
   meSCS->determinant(coords, area);
   check_that_values_match(scs_areav, areav.data());
@@ -127,20 +127,20 @@ compare_old_scs_areav(
 template <typename SHMEM>
 void
 compare_old_scs_grad_op(
-  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_dndx,
-  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_deriv,
-  sierra::nalu::MasterElement* meSCS)
+  const sierra::kynema-ugf::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::kynema-ugf::SharedMemView<DoubleType***, SHMEM>& scs_dndx,
+  const sierra::kynema-ugf::SharedMemView<DoubleType***, SHMEM>& scs_deriv,
+  sierra::kynema-ugf::MasterElement* meSCS)
 {
   int len = scs_dndx.extent(0) * scs_dndx.extent(1) * scs_dndx.extent(2);
   std::vector<DoubleType> grad_op(len, 0.0);
   std::vector<DoubleType> deriv(len, 0.0);
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> gradop(
+  sierra::kynema-ugf::SharedMemView<DoubleType***, sierra::kynema-ugf::DeviceShmem> gradop(
     grad_op.data(), scs_dndx.extent(0), scs_dndx.extent(1), scs_dndx.extent(2));
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> der(
+  sierra::kynema-ugf::SharedMemView<DoubleType***, sierra::kynema-ugf::DeviceShmem> der(
     deriv.data(), scs_deriv.extent(0), scs_deriv.extent(1),
     scs_deriv.extent(2));
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(
+  sierra::kynema-ugf::SharedMemView<DoubleType**, sierra::kynema-ugf::DeviceShmem> coords(
     v_coords.data(), v_coords.extent(0), v_coords.extent(1));
   meSCS->grad_op(coords, gradop, der);
   check_that_values_match(scs_dndx, grad_op.data());
@@ -149,22 +149,22 @@ compare_old_scs_grad_op(
 template <typename SHMEM>
 void
 compare_old_scs_shifted_grad_op(
-  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_dndx,
-  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_deriv,
-  sierra::nalu::MasterElement* meSCS)
+  const sierra::kynema-ugf::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::kynema-ugf::SharedMemView<DoubleType***, SHMEM>& scs_dndx,
+  const sierra::kynema-ugf::SharedMemView<DoubleType***, SHMEM>& scs_deriv,
+  sierra::kynema-ugf::MasterElement* meSCS)
 {
   int len = scs_dndx.extent(0) * scs_dndx.extent(1) * scs_dndx.extent(2);
   std::vector<DoubleType> grad_op(len, 0.0);
   std::vector<DoubleType> deriv(len, 0.0);
 
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> gradop(
+  sierra::kynema-ugf::SharedMemView<DoubleType***, sierra::kynema-ugf::DeviceShmem> gradop(
     grad_op.data(), scs_dndx.extent(0), scs_dndx.extent(1), scs_dndx.extent(2));
 
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> der(
+  sierra::kynema-ugf::SharedMemView<DoubleType***, sierra::kynema-ugf::DeviceShmem> der(
     deriv.data(), scs_deriv.extent(0), scs_deriv.extent(1),
     scs_deriv.extent(2));
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(
+  sierra::kynema-ugf::SharedMemView<DoubleType**, sierra::kynema-ugf::DeviceShmem> coords(
     v_coords.data(), v_coords.extent(0), v_coords.extent(1));
 
   meSCS->shifted_grad_op(coords, gradop, der);
@@ -173,34 +173,34 @@ compare_old_scs_shifted_grad_op(
 template <typename SHMEM>
 void
 compare_old_scs_gij(
-  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& v_gijUpper,
-  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& v_gijLower,
-  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& /* v_deriv */,
-  sierra::nalu::MasterElement* meSCS)
+  const sierra::kynema-ugf::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::kynema-ugf::SharedMemView<DoubleType***, SHMEM>& v_gijUpper,
+  const sierra::kynema-ugf::SharedMemView<DoubleType***, SHMEM>& v_gijLower,
+  const sierra::kynema-ugf::SharedMemView<DoubleType***, SHMEM>& /* v_deriv */,
+  sierra::kynema-ugf::MasterElement* meSCS)
 {
   int gradOpLen =
     meSCS->nodesPerElement_ * meSCS->num_integration_points() * meSCS->nDim_;
   std::vector<DoubleType> grad_op(gradOpLen, 0.0);
   std::vector<DoubleType> v_deriv(gradOpLen, 0.0);
 
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> gradop(
+  sierra::kynema-ugf::SharedMemView<DoubleType***, sierra::kynema-ugf::DeviceShmem> gradop(
     grad_op.data(), meSCS->num_integration_points(), meSCS->nodesPerElement_,
     meSCS->nDim_);
 
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> deriv(
+  sierra::kynema-ugf::SharedMemView<DoubleType***, sierra::kynema-ugf::DeviceShmem> deriv(
     v_deriv.data(), meSCS->num_integration_points(), meSCS->nodesPerElement_,
     meSCS->nDim_);
 
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(
+  sierra::kynema-ugf::SharedMemView<DoubleType**, sierra::kynema-ugf::DeviceShmem> coords(
     v_coords.data(), v_coords.extent(0), v_coords.extent(1));
 
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem>
+  sierra::kynema-ugf::SharedMemView<DoubleType***, sierra::kynema-ugf::DeviceShmem>
     gijUpper(
       v_gijUpper.data(), v_gijUpper.extent(0), v_gijUpper.extent(1),
       v_gijUpper.extent(2));
 
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem>
+  sierra::kynema-ugf::SharedMemView<DoubleType***, sierra::kynema-ugf::DeviceShmem>
     gijLower(
       v_gijLower.data(), v_gijLower.extent(0), v_gijLower.extent(1),
       v_gijLower.extent(2));
@@ -213,7 +213,7 @@ compare_old_scs_gij(
 
 template <typename AlgTraits>
 void
-test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
+test_ME_views(const std::vector<sierra::kynema-ugf::ELEM_DATA_NEEDED>& requests)
 {
   unit_test_utils::KokkosMEViews<AlgTraits> driver(true, true);
 
@@ -221,54 +221,54 @@ test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
   // driver.fill_mesh_and_init_data(/* doPerturb = */ false);
 
   // Register ME data requests
-  for (sierra::nalu::ELEM_DATA_NEEDED request : requests) {
+  for (sierra::kynema-ugf::ELEM_DATA_NEEDED request : requests) {
     driver.dataNeeded().add_master_element_call(
-      request, sierra::nalu::CURRENT_COORDINATES);
+      request, sierra::kynema-ugf::CURRENT_COORDINATES);
   }
 
-  sierra::nalu::MasterElement* meSCS =
-    sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+  sierra::kynema-ugf::MasterElement* meSCS =
+    sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
       AlgTraits::topo_);
-  sierra::nalu::MasterElement* meSCV =
-    sierra::nalu::MasterElementRepo::get_volume_master_element_on_host(
+  sierra::kynema-ugf::MasterElement* meSCV =
+    sierra::kynema-ugf::MasterElementRepo::get_volume_master_element_on_host(
       AlgTraits::topo_);
 
   // Execute the loop and perform all tests
   driver.execute([&](
-                   sierra::nalu::SharedMemData<
-                     sierra::nalu::DeviceTeamHandleType,
-                     sierra::nalu::DeviceShmem>& smdata) {
+                   sierra::kynema-ugf::SharedMemData<
+                     sierra::kynema-ugf::DeviceTeamHandleType,
+                     sierra::kynema-ugf::DeviceShmem>& smdata) {
     // Extract data from scratchViews
-    sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>&
+    sierra::kynema-ugf::SharedMemView<DoubleType**, sierra::kynema-ugf::DeviceShmem>&
       v_coords =
         smdata.simdPrereqData.get_scratch_view_2D(*driver.coordinates_);
     auto& meViews =
-      smdata.simdPrereqData.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      smdata.simdPrereqData.get_me_views(sierra::kynema-ugf::CURRENT_COORDINATES);
 
     if (meSCS != nullptr) {
-      for (sierra::nalu::ELEM_DATA_NEEDED request : requests) {
-        if (request == sierra::nalu::SCS_AREAV) {
+      for (sierra::kynema-ugf::ELEM_DATA_NEEDED request : requests) {
+        if (request == sierra::kynema-ugf::SCS_AREAV) {
           compare_old_scs_areav(v_coords, meViews.scs_areav, meSCS);
         }
-        if (request == sierra::nalu::SCS_GRAD_OP) {
+        if (request == sierra::kynema-ugf::SCS_GRAD_OP) {
           compare_old_scs_grad_op(v_coords, meViews.dndx, meViews.deriv, meSCS);
         }
-        if (request == sierra::nalu::SCS_SHIFTED_GRAD_OP) {
+        if (request == sierra::kynema-ugf::SCS_SHIFTED_GRAD_OP) {
           compare_old_scs_shifted_grad_op(
             v_coords, meViews.dndx_shifted, meViews.deriv, meSCS);
         }
-        if (request == sierra::nalu::SCS_GIJ) {
+        if (request == sierra::kynema-ugf::SCS_GIJ) {
           compare_old_scs_gij(
             v_coords, meViews.gijUpper, meViews.gijLower, meViews.deriv, meSCS);
         }
       }
     }
     if (meSCV != nullptr) {
-      for (sierra::nalu::ELEM_DATA_NEEDED request : requests) {
-        if (request == sierra::nalu::SCV_VOLUME) {
+      for (sierra::kynema-ugf::ELEM_DATA_NEEDED request : requests) {
+        if (request == sierra::kynema-ugf::SCV_VOLUME) {
           compare_old_scv_volume(v_coords, meViews.scv_volume, meSCV);
         }
-        if (request == sierra::nalu::SCV_GRAD_OP) {
+        if (request == sierra::kynema-ugf::SCV_GRAD_OP) {
           if (AlgTraits::topo_ == stk::topology::HEX_8) {
             check_that_values_match(
               meViews.dndx_scv, &kokkos_me_gold::hex8_scv_grad_op[0]);
@@ -277,7 +277,7 @@ test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
               meViews.dndx_scv, &kokkos_me_gold::tet4_scv_grad_op[0]);
           }
         }
-        if (request == sierra::nalu::SCV_SHIFTED_GRAD_OP) {
+        if (request == sierra::kynema-ugf::SCV_SHIFTED_GRAD_OP) {
           if (AlgTraits::topo_ == stk::topology::HEX_8) {
             check_that_values_match(
               meViews.dndx_scv_shifted,
@@ -295,70 +295,70 @@ test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
 #ifndef KOKKOS_ENABLE_GPU
 TEST(KokkosME, test_hex8_views)
 {
-  test_ME_views<sierra::nalu::AlgTraitsHex8>(
-    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP,
-     sierra::nalu::SCV_VOLUME, sierra::nalu::SCV_GRAD_OP,
-     sierra::nalu::SCV_SHIFTED_GRAD_OP});
+  test_ME_views<sierra::kynema-ugf::AlgTraitsHex8>(
+    {sierra::kynema-ugf::SCS_AREAV, sierra::kynema-ugf::SCS_GRAD_OP,
+     sierra::kynema-ugf::SCV_VOLUME, sierra::kynema-ugf::SCV_GRAD_OP,
+     sierra::kynema-ugf::SCV_SHIFTED_GRAD_OP});
 }
 
 TEST(KokkosME, test_tet4_views)
 {
-  test_ME_views<sierra::nalu::AlgTraitsTet4>(
-    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP,
-     sierra::nalu::SCS_SHIFTED_GRAD_OP, sierra::nalu::SCV_VOLUME,
-     sierra::nalu::SCV_GRAD_OP, sierra::nalu::SCV_SHIFTED_GRAD_OP});
+  test_ME_views<sierra::kynema-ugf::AlgTraitsTet4>(
+    {sierra::kynema-ugf::SCS_AREAV, sierra::kynema-ugf::SCS_GRAD_OP,
+     sierra::kynema-ugf::SCS_SHIFTED_GRAD_OP, sierra::kynema-ugf::SCV_VOLUME,
+     sierra::kynema-ugf::SCV_GRAD_OP, sierra::kynema-ugf::SCV_SHIFTED_GRAD_OP});
 }
 
 TEST(KokkosME, test_tri32D_views)
 {
-  test_ME_views<sierra::nalu::AlgTraitsTri3_2D>(
-    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP,
-     sierra::nalu::SCV_VOLUME});
+  test_ME_views<sierra::kynema-ugf::AlgTraitsTri3_2D>(
+    {sierra::kynema-ugf::SCS_AREAV, sierra::kynema-ugf::SCS_GRAD_OP,
+     sierra::kynema-ugf::SCV_VOLUME});
 }
 
 TEST(KokkosME, test_tri32D_shifted_grad_op)
 {
-  test_ME_views<sierra::nalu::AlgTraitsTri3_2D>(
-    {sierra::nalu::SCS_SHIFTED_GRAD_OP});
+  test_ME_views<sierra::kynema-ugf::AlgTraitsTri3_2D>(
+    {sierra::kynema-ugf::SCS_SHIFTED_GRAD_OP});
 }
 
 TEST(KokkosME, test_quad42D_views)
 {
-  test_ME_views<sierra::nalu::AlgTraitsQuad4_2D>(
-    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP,
-     sierra::nalu::SCV_VOLUME});
+  test_ME_views<sierra::kynema-ugf::AlgTraitsQuad4_2D>(
+    {sierra::kynema-ugf::SCS_AREAV, sierra::kynema-ugf::SCS_GRAD_OP,
+     sierra::kynema-ugf::SCV_VOLUME});
 }
 
 TEST(KokkosME, test_quad42D_shifted_grad_op)
 {
-  test_ME_views<sierra::nalu::AlgTraitsQuad4_2D>(
-    {sierra::nalu::SCS_SHIFTED_GRAD_OP});
+  test_ME_views<sierra::kynema-ugf::AlgTraitsQuad4_2D>(
+    {sierra::kynema-ugf::SCS_SHIFTED_GRAD_OP});
 }
 
 TEST(KokkosME, test_wed6_views)
 {
-  test_ME_views<sierra::nalu::AlgTraitsWed6>(
-    {sierra::nalu::SCV_VOLUME, sierra::nalu::SCS_AREAV,
-     sierra::nalu::SCS_GRAD_OP});
+  test_ME_views<sierra::kynema-ugf::AlgTraitsWed6>(
+    {sierra::kynema-ugf::SCV_VOLUME, sierra::kynema-ugf::SCS_AREAV,
+     sierra::kynema-ugf::SCS_GRAD_OP});
 }
 
 TEST(KokkosME, test_wed6_shifted_grad_op)
 {
-  test_ME_views<sierra::nalu::AlgTraitsWed6>(
-    {sierra::nalu::SCS_SHIFTED_GRAD_OP});
+  test_ME_views<sierra::kynema-ugf::AlgTraitsWed6>(
+    {sierra::kynema-ugf::SCS_SHIFTED_GRAD_OP});
 }
 
 TEST(KokkosME, test_pyr5_views)
 {
-  test_ME_views<sierra::nalu::AlgTraitsPyr5>(
-    {sierra::nalu::SCS_AREAV, sierra::nalu::SCS_GRAD_OP,
-     sierra::nalu::SCV_VOLUME});
+  test_ME_views<sierra::kynema-ugf::AlgTraitsPyr5>(
+    {sierra::kynema-ugf::SCS_AREAV, sierra::kynema-ugf::SCS_GRAD_OP,
+     sierra::kynema-ugf::SCV_VOLUME});
 }
 
 TEST(KokkosME, test_pyr5_views_shifted_grad_op)
 {
-  test_ME_views<sierra::nalu::AlgTraitsPyr5>({
-    sierra::nalu::SCS_SHIFTED_GRAD_OP,
+  test_ME_views<sierra::kynema-ugf::AlgTraitsPyr5>({
+    sierra::kynema-ugf::SCS_SHIFTED_GRAD_OP,
   });
 }
 

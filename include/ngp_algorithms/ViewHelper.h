@@ -16,9 +16,9 @@
 #include "ScratchViews.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
-namespace nalu_ngp {
+namespace kynema-ugf_ngp {
 
 template <typename ElemSimdDataType, typename ScalarFieldType>
 struct ScalarViewHelper
@@ -72,8 +72,8 @@ struct VectorViewHelper
   const ViewDataType& v_phi_;
 };
 
-} // namespace nalu_ngp
-} // namespace nalu
+} // namespace kynema-ugf_ngp
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* VIEWHELPER_H */

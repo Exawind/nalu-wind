@@ -29,8 +29,8 @@ class GCLTest : public ::testing::Test
 {
 public:
   GCLTest()
-    : naluObj_(),
-      realm_(naluObj_.create_realm()),
+    : kynema-ugfObj_(),
+      realm_(kynema-ugfObj_.create_realm()),
       meta_(realm_.meta_data()),
       bulk_(realm_.bulk_data()),
       geomAlgDriver_(realm_),
@@ -60,7 +60,7 @@ public:
         stk::topology::NODE_RANK, "div_mesh_velocity")),
       dVoldt_(&meta_.declare_field<double>(stk::topology::NODE_RANK, "dvol_dt"))
   {
-    realm_.timeIntegrator_ = naluObj_.sim_.timeIntegrator_;
+    realm_.timeIntegrator_ = kynema-ugfObj_.sim_.timeIntegrator_;
     stk::mesh::put_field_on_mesh(
       *currCoords_, meta_.universal_part(), spatialDim_, nullptr);
     stk::io::set_field_output_type(
@@ -73,7 +73,7 @@ public:
       *edgeAreaVec_, stk::io::FieldOutputType::VECTOR_3D);
     stk::mesh::put_field_on_mesh(
       *exposedAreaVec_, meta_.universal_part(),
-      spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+      spatialDim_ * sierra::kynema-ugf::AlgTraitsQuad4::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(
       *meshDisp_, meta_.universal_part(), spatialDim_, nullptr);
     stk::io::set_field_output_type(
@@ -84,10 +84,10 @@ public:
       *meshVel_, stk::io::FieldOutputType::VECTOR_3D);
     stk::mesh::put_field_on_mesh(
       *sweptVol_, meta_.universal_part(),
-      sierra::nalu::AlgTraitsHex8::numScsIp_, nullptr);
+      sierra::kynema-ugf::AlgTraitsHex8::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(
       *faceVelMag_, meta_.universal_part(),
-      sierra::nalu::AlgTraitsHex8::numScsIp_, nullptr);
+      sierra::kynema-ugf::AlgTraitsHex8::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(
       *edgeSweptVol_, meta_.universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
@@ -112,7 +112,7 @@ public:
 
     partVec_.clear();
     partVec_.push_back(meta_.get_part("block_1"));
-    coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
+    coordinates_ = static_cast<const sierra::kynema-ugf::VectorFieldType*>(
       meta_.coordinate_field());
     EXPECT_TRUE(coordinates_ != nullptr);
 
@@ -141,22 +141,22 @@ public:
     realm_.solutionOptions_->meshMotion_ = true;
     const YAML::Node motionNode = YAML::Load(motion_options);
     realm_.meshMotionAlg_.reset(
-      new sierra::nalu::MeshMotionAlg(bulk_, motionNode["mesh_motion"]));
+      new sierra::kynema-ugf::MeshMotionAlg(bulk_, motionNode["mesh_motion"]));
 
-    geomAlgDriver_.register_elem_algorithm<sierra::nalu::GeometryInteriorAlg>(
-      sierra::nalu::INTERIOR, partVec_[0], "geometry");
+    geomAlgDriver_.register_elem_algorithm<sierra::kynema-ugf::GeometryInteriorAlg>(
+      sierra::kynema-ugf::INTERIOR, partVec_[0], "geometry");
     if (realm_.realmUsesEdges_) {
-      geomAlgDriver_.register_elem_algorithm<sierra::nalu::MeshVelocityEdgeAlg>(
-        sierra::nalu::INTERIOR, partVec_[0], "mesh_vel");
+      geomAlgDriver_.register_elem_algorithm<sierra::kynema-ugf::MeshVelocityEdgeAlg>(
+        sierra::kynema-ugf::INTERIOR, partVec_[0], "mesh_vel");
     } else {
-      geomAlgDriver_.register_elem_algorithm<sierra::nalu::MeshVelocityAlg>(
-        sierra::nalu::INTERIOR, partVec_[0], "mesh_vel");
+      geomAlgDriver_.register_elem_algorithm<sierra::kynema-ugf::MeshVelocityAlg>(
+        sierra::kynema-ugf::INTERIOR, partVec_[0], "mesh_vel");
     }
 
     auto* part = meta_.get_part("surface_1");
     for (auto* surfPart : part->subsets()) {
-      geomAlgDriver_.register_face_algorithm<sierra::nalu::GeometryBoundaryAlg>(
-        sierra::nalu::BOUNDARY, surfPart, "geometry");
+      geomAlgDriver_.register_face_algorithm<sierra::kynema-ugf::GeometryBoundaryAlg>(
+        sierra::kynema-ugf::BOUNDARY, surfPart, "geometry");
     }
   }
 
@@ -194,10 +194,10 @@ public:
   void compute_div_mesh_vel()
   {
     if (realm_.realmUsesEdges_) {
-      sierra::nalu::compute_edge_scalar_divergence(
+      sierra::kynema-ugf::compute_edge_scalar_divergence(
         bulk_, partVec_, bndyPartVec_, edgeFaceVelMag_, divMeshVel_);
     } else {
-      sierra::nalu::compute_scalar_divergence(
+      sierra::kynema-ugf::compute_scalar_divergence(
         bulk_, partVec_, bndyPartVec_, faceVelMag_, divMeshVel_);
     }
   }
@@ -286,31 +286,31 @@ public:
 
   YAML::Node doc_;
   YAML::Node realmNode_;
-  unit_test_utils::NaluTest naluObj_;
-  sierra::nalu::Realm& realm_;
+  unit_test_utils::KynemaUGFTest kynema-ugfObj_;
+  sierra::kynema-ugf::Realm& realm_;
 
   int numStates_{3};
   const unsigned spatialDim_{3};
   stk::mesh::MetaData& meta_;
   stk::mesh::BulkData& bulk_;
-  sierra::nalu::GeometryAlgDriver geomAlgDriver_;
+  sierra::kynema-ugf::GeometryAlgDriver geomAlgDriver_;
   stk::mesh::PartVector partVec_;
   stk::mesh::PartVector bndyPartVec_;
 
-  const sierra::nalu::VectorFieldType* coordinates_{nullptr};
-  sierra::nalu::VectorFieldType* currCoords_{nullptr};
-  sierra::nalu::ScalarFieldType* dualVol_{nullptr};
-  sierra::nalu::ScalarFieldType* elemVol_{nullptr};
-  sierra::nalu::VectorFieldType* edgeAreaVec_{nullptr};
-  sierra::nalu::GenericFieldType* exposedAreaVec_{nullptr};
-  sierra::nalu::VectorFieldType* meshDisp_{nullptr};
-  sierra::nalu::VectorFieldType* meshVel_{nullptr};
-  sierra::nalu::GenericFieldType* sweptVol_{nullptr};
-  sierra::nalu::GenericFieldType* faceVelMag_{nullptr};
-  sierra::nalu::GenericFieldType* edgeSweptVol_{nullptr};
-  sierra::nalu::GenericFieldType* edgeFaceVelMag_{nullptr};
-  sierra::nalu::ScalarFieldType* divMeshVel_{nullptr};
-  sierra::nalu::ScalarFieldType* dVoldt_{nullptr};
+  const sierra::kynema-ugf::VectorFieldType* coordinates_{nullptr};
+  sierra::kynema-ugf::VectorFieldType* currCoords_{nullptr};
+  sierra::kynema-ugf::ScalarFieldType* dualVol_{nullptr};
+  sierra::kynema-ugf::ScalarFieldType* elemVol_{nullptr};
+  sierra::kynema-ugf::VectorFieldType* edgeAreaVec_{nullptr};
+  sierra::kynema-ugf::GenericFieldType* exposedAreaVec_{nullptr};
+  sierra::kynema-ugf::VectorFieldType* meshDisp_{nullptr};
+  sierra::kynema-ugf::VectorFieldType* meshVel_{nullptr};
+  sierra::kynema-ugf::GenericFieldType* sweptVol_{nullptr};
+  sierra::kynema-ugf::GenericFieldType* faceVelMag_{nullptr};
+  sierra::kynema-ugf::GenericFieldType* edgeSweptVol_{nullptr};
+  sierra::kynema-ugf::GenericFieldType* edgeFaceVelMag_{nullptr};
+  sierra::kynema-ugf::ScalarFieldType* divMeshVel_{nullptr};
+  sierra::kynema-ugf::ScalarFieldType* dVoldt_{nullptr};
 };
 
 } // namespace

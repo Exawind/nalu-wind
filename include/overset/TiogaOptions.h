@@ -16,7 +16,7 @@ namespace TIOGA {
 class tioga;
 }
 
-namespace tioga_nalu {
+namespace tioga_kynema-ugf {
 
 // Notes:
 //
@@ -28,7 +28,7 @@ namespace tioga_nalu {
  *
  *  This class is a simple structure that holds the different options that can
  *  be used to control the behavior of TIOGA during holecuts. These options can
- *  be set from the Nalu-Wind input file within the overset boundary condition
+ *  be set from the Kynema-UGF input file within the overset boundary condition
  *  section and are passed to TIOGA during runtime.
  */
 class TiogaOptions
@@ -70,7 +70,7 @@ private:
    */
   int mExclude_{3};
 
-  //! Set the node and cell resolutions from Nalu-Wind instead of letting TIOGA
+  //! Set the node and cell resolutions from Kynema-UGF instead of letting TIOGA
   //! compute it for P=1 cells. Default is true
   // bool setResolutions_{true};
 
@@ -85,6 +85,6 @@ private:
   bool hasMexclude_{false};
 };
 
-} // namespace tioga_nalu
+} // namespace tioga_kynema-ugf
 
 #endif /* TIOGAOPTIONS_H */

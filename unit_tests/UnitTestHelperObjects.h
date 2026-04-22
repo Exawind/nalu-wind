@@ -27,15 +27,15 @@ struct HelperObjectsBase
     YAML::Node realm_node = unit_test_utils::get_realm_default_node())
     : yamlNode(yaml_node),
       realmDefaultNode(realm_node),
-      naluObj(new unit_test_utils::NaluTest(yamlNode)),
-      realm(naluObj->create_realm(realmDefaultNode, "multi_physics", false)),
+      kynema-ugfObj(new unit_test_utils::KynemaUGFTest(yamlNode)),
+      realm(kynema-ugfObj->create_realm(realmDefaultNode, "multi_physics", false)),
       eqSystems(realm),
       eqSystem(eqSystems)
   {
     realm.bulkData_ = bulk;
   }
 
-  virtual ~HelperObjectsBase() { delete naluObj; }
+  virtual ~HelperObjectsBase() { delete kynema-ugfObj; }
 
   virtual void execute() = 0;
 
@@ -62,10 +62,10 @@ struct HelperObjectsBase
 
   YAML::Node yamlNode;
   YAML::Node realmDefaultNode;
-  unit_test_utils::NaluTest* naluObj;
-  sierra::nalu::Realm& realm;
-  sierra::nalu::EquationSystems eqSystems;
-  sierra::nalu::EquationSystem eqSystem;
+  unit_test_utils::KynemaUGFTest* kynema-ugfObj;
+  sierra::kynema-ugf::Realm& realm;
+  sierra::kynema-ugf::EquationSystems eqSystems;
+  sierra::kynema-ugf::EquationSystem eqSystem;
 };
 
 struct HelperObjects : public HelperObjectsBase
@@ -83,7 +83,7 @@ struct HelperObjects : public HelperObjectsBase
         realm, numDof, &eqSystem, topo, isEdge))
   {
     eqSystem.linsys_ = linsys;
-    assembleElemSolverAlg = new sierra::nalu::AssembleElemSolverAlgorithm(
+    assembleElemSolverAlg = new sierra::kynema-ugf::AssembleElemSolverAlgorithm(
       realm, part, &eqSystem, topo.rank(), topo.num_nodes());
   }
 
@@ -144,7 +144,7 @@ struct HelperObjects : public HelperObjectsBase
   }
 
   unit_test_utils::TestLinearSystem* linsys{nullptr};
-  sierra::nalu::AssembleElemSolverAlgorithm* assembleElemSolverAlg{nullptr};
+  sierra::kynema-ugf::AssembleElemSolverAlgorithm* assembleElemSolverAlg{nullptr};
 };
 
 struct FaceElemHelperObjects : HelperObjects
@@ -159,7 +159,7 @@ struct FaceElemHelperObjects : HelperObjects
     : HelperObjects(bulk, elemTopo, numDof, part, isEdge)
   {
     assembleFaceElemSolverAlg =
-      new sierra::nalu::AssembleFaceElemSolverAlgorithm(
+      new sierra::kynema-ugf::AssembleFaceElemSolverAlgorithm(
         realm, part, &eqSystem, faceTopo.num_nodes(), elemTopo.num_nodes());
   }
 
@@ -177,7 +177,7 @@ struct FaceElemHelperObjects : HelperObjects
     Kokkos::deep_copy(linsys->hostrhs_, linsys->rhs_);
   }
 
-  sierra::nalu::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;
+  sierra::kynema-ugf::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;
 };
 
 struct EdgeHelperObjects : public HelperObjectsBase
@@ -219,7 +219,7 @@ struct EdgeHelperObjects : public HelperObjectsBase
   }
 
   unit_test_utils::TestEdgeLinearSystem* linsys{nullptr};
-  sierra::nalu::AssembleEdgeSolverAlgorithm* edgeAlg{nullptr};
+  sierra::kynema-ugf::AssembleEdgeSolverAlgorithm* edgeAlg{nullptr};
 };
 
 struct EdgeKernelHelperObjects : public HelperObjectsBase
@@ -234,7 +234,7 @@ struct EdgeKernelHelperObjects : public HelperObjectsBase
   {
     eqSystem.linsys_ = linsys;
     edgeAlg.reset(
-      new sierra::nalu::AssembleAMSEdgeKernelAlg(realm, part, &eqSystem));
+      new sierra::kynema-ugf::AssembleAMSEdgeKernelAlg(realm, part, &eqSystem));
   }
 
   virtual void execute() override
@@ -251,7 +251,7 @@ struct EdgeKernelHelperObjects : public HelperObjectsBase
   }
 
   unit_test_utils::TestEdgeLinearSystem* linsys{nullptr};
-  std::unique_ptr<sierra::nalu::AssembleAMSEdgeKernelAlg> edgeAlg;
+  std::unique_ptr<sierra::kynema-ugf::AssembleAMSEdgeKernelAlg> edgeAlg;
 };
 
 struct NodeHelperObjects : public HelperObjectsBase
@@ -266,7 +266,7 @@ struct NodeHelperObjects : public HelperObjectsBase
   {
     eqSystem.linsys_ = linsys;
     nodeAlg.reset(
-      new sierra::nalu::AssembleNGPNodeSolverAlgorithm(realm, part, &eqSystem));
+      new sierra::kynema-ugf::AssembleNGPNodeSolverAlgorithm(realm, part, &eqSystem));
   }
 
   virtual void execute() override
@@ -284,7 +284,7 @@ struct NodeHelperObjects : public HelperObjectsBase
   }
 
   unit_test_utils::TestEdgeLinearSystem* linsys{nullptr};
-  std::unique_ptr<sierra::nalu::AssembleNGPNodeSolverAlgorithm> nodeAlg;
+  std::unique_ptr<sierra::kynema-ugf::AssembleNGPNodeSolverAlgorithm> nodeAlg;
 };
 
 } // namespace unit_test_utils

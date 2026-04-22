@@ -8,9 +8,9 @@ outlined in the 2010 paper by Jaegle et al, "Implementation Methods of Wall Func
 
 The rest of the setup matches the ablNeutralEdge regression test.
 
-- To build the mesh, use NaluWindUtils abl_mesh with nalu_abl_mesh.yaml
-- To initialze the fiels, use NaluWindUtils nalu_preprocess with 
-  nalu_preprocess.yaml
+- To build the mesh, use KynemaUGFUtils abl_mesh with kynema-ugf_abl_mesh.yaml
+- To initialze the fiels, use KynemaUGFUtils kynema-ugf_preprocess with 
+  kynema-ugf_preprocess.yaml
 
 Domain: 
   - x: 0 m - 5000 m

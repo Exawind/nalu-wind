@@ -7,44 +7,44 @@
 // for more details.
 //
 
-#ifndef NaluEnv_h
-#define NaluEnv_h
+#ifndef KynemaUGFEnv_h
+#define KynemaUGFEnv_h
 
 #include <mpi.h>
 #include <fstream>
 #include <streambuf>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
-class NaluEmptyStreamBuffer : public std::filebuf
+class KynemaUGFEmptyStreamBuffer : public std::filebuf
 {
 public:
   int overflow(int c) { return c; }
 };
 
-class NaluEnv
+class KynemaUGFEnv
 {
 public:
-  NaluEnv();
-  ~NaluEnv();
+  KynemaUGFEnv();
+  ~KynemaUGFEnv();
 
-  static NaluEnv& self();
+  static KynemaUGFEnv& self();
   MPI_Comm parallelCommunicator_;
   int pSize_;
   int pRank_;
   std::streambuf* stdoutStream_;
-  std::ostream* naluLogStream_;
-  std::ostream* naluParallelStream_;
+  std::ostream* kynema-ugfLogStream_;
+  std::ostream* kynema-ugfParallelStream_;
   bool parallelLog_;
 
-  NaluEmptyStreamBuffer naluEmptyStreamBuffer_;
-  std::filebuf naluStreamBuffer_;
-  std::filebuf naluParallelStreamBuffer_;
+  KynemaUGFEmptyStreamBuffer kynema-ugfEmptyStreamBuffer_;
+  std::filebuf kynema-ugfStreamBuffer_;
+  std::filebuf kynema-ugfParallelStreamBuffer_;
   bool debug_;
 
-  std::ostream& naluOutputP0();
-  std::ostream& naluOutput();
+  std::ostream& kynema-ugfOutputP0();
+  std::ostream& kynema-ugfOutput();
 
   MPI_Comm parallel_comm();
   int parallel_size();
@@ -53,7 +53,7 @@ public:
 
   /** Redirect output to a log file
    *
-   *  \param naluLogName Name of the file where outputs are redirected
+   *  \param kynema-ugfLogName Name of the file where outputs are redirected
    *
    *  \param pprint (Parallel print) If true, all MPI ranks output to their own
    * file
@@ -62,14 +62,14 @@ public:
    *
    */
   void set_log_file_stream(
-    std::string naluLogName,
+    std::string kynema-ugfLogName,
     bool pprint = false,
     const bool capture_cout = false);
   void close_log_file_stream();
-  double nalu_time();
+  double kynema-ugf_time();
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

@@ -15,7 +15,7 @@
 #include <stk_mesh/base/EntitySorterBase.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 //=============================================================================
 // Class Definition
@@ -50,7 +50,7 @@ public:
   }
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

@@ -22,7 +22,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 SDRWallFuncAlgDriver::SDRWallFuncAlgDriver(Realm& realm) : NgpAlgDriver(realm)
 {
@@ -33,9 +33,9 @@ SDRWallFuncAlgDriver::pre_work()
 {
   const auto& ngpMesh = realm_.ngp_mesh();
   auto& bcsdr =
-    nalu_ngp::get_ngp_field(realm_.mesh_info(), "wall_model_sdr_bc");
+    kynema-ugf_ngp::get_ngp_field(realm_.mesh_info(), "wall_model_sdr_bc");
   auto& wallArea =
-    nalu_ngp::get_ngp_field(realm_.mesh_info(), "assembled_wall_area_sdr");
+    kynema-ugf_ngp::get_ngp_field(realm_.mesh_info(), "assembled_wall_area_sdr");
 
   bcsdr.set_all(ngpMesh, 0.0);
   wallArea.set_all(ngpMesh, 0.0);
@@ -44,16 +44,16 @@ SDRWallFuncAlgDriver::pre_work()
 void
 SDRWallFuncAlgDriver::post_work()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex = kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& ngpMesh = realm_.ngp_mesh();
 
   auto& bcsdr =
-    nalu_ngp::get_ngp_field(realm_.mesh_info(), "wall_model_sdr_bc");
+    kynema-ugf_ngp::get_ngp_field(realm_.mesh_info(), "wall_model_sdr_bc");
   auto& wallArea =
-    nalu_ngp::get_ngp_field(realm_.mesh_info(), "assembled_wall_area_sdr");
+    kynema-ugf_ngp::get_ngp_field(realm_.mesh_info(), "assembled_wall_area_sdr");
   auto& sdr =
-    nalu_ngp::get_ngp_field(realm_.mesh_info(), "specific_dissipation_rate");
-  auto& sdrWallBC = nalu_ngp::get_ngp_field(realm_.mesh_info(), "sdr_bc");
+    kynema-ugf_ngp::get_ngp_field(realm_.mesh_info(), "specific_dissipation_rate");
+  auto& sdrWallBC = kynema-ugf_ngp::get_ngp_field(realm_.mesh_info(), "sdr_bc");
 
   bcsdr.modify_on_device();
   wallArea.modify_on_device();
@@ -88,7 +88,7 @@ SDRWallFuncAlgDriver::post_work()
                                    realm_.meta_data().globally_shared_part()) &
                                   stk::mesh::selectField(*bcsdrF);
 
-  nalu_ngp::run_entity_algorithm(
+  kynema-ugf_ngp::run_entity_algorithm(
     "SDRWallFuncAlgDriver_normalize", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double warea = wallArea.get(mi, 0);
@@ -105,5 +105,5 @@ SDRWallFuncAlgDriver::post_work()
   sdr.modify_on_device();
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

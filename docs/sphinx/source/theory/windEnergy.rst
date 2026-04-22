@@ -2,12 +2,12 @@
 Wind Energy Modeling
 ====================
 
-Wind energy analysis is the primary application area for the Nalu-Wind development
-team. This section describes the theoretical basis of Nalu-Wind from a wind energy
+Wind energy analysis is the primary application area for the Kynema-UGF development
+team. This section describes the theoretical basis of Kynema-UGF from a wind energy
 perspective, using nomenclature familiar to wind energy experts and mapping it
-to Nalu-Wind concepts and nomenclature described in previous sections. Hopefully,
+to Kynema-UGF concepts and nomenclature described in previous sections. Hopefully,
 this will provide an easier transition for users familiar with WRF and SOWFA to
-Nalu-Wind.
+Kynema-UGF.
 
 In order to evaluate the energy output and the structural loading on wind
 turbines, the code must model: 1. the incoming turbulent wind field across the
@@ -15,13 +15,13 @@ entire wind farm, and 2. the evolution of turbine wakes in turbulent inflow
 conditions and their interaction with the downstream turbines. First, the
 governing equations with all the terms necessary to model a wind farm are
 presented with links to implementation and verification details elsewhere in the
-theory and/or verification manuals. A brief description of Nalu-Wind's numerical
+theory and/or verification manuals. A brief description of Kynema-UGF's numerical
 discretization schemes is presented next. This is followed by a brief discussion
 of the boundary conditions used to model atmospheric boundary layer (ABL) flows
 with or without wind turbines (currently modeled as actuator sources within the
 flow domain).
 
-Currently Nalu-Wind supports two types of wind simulations:
+Currently Kynema-UGF supports two types of wind simulations:
 
 **Precursor simulations**
 
@@ -36,7 +36,7 @@ Currently Nalu-Wind supports two types of wind simulations:
   In this case, the wind turbine blades and tower are modeled as actuator source
   terms by coupling to the `OpenFAST
   <https://openfast.readthedocs.io/en/main/>`_ libraries. Velocity fields are
-  sampled at the blade and tower control points within the Nalu-Wind domain and the
+  sampled at the blade and tower control points within the Kynema-UGF domain and the
   blade positions and blade/tower loading is provided by OpenFAST to be used as
   source terms within the momentum equation.
 
@@ -137,11 +137,11 @@ farm applications.
 Numerical Discretization & Stabilization
 ----------------------------------------
 
-Nalu-Wind provides two discretization approaches
+Kynema-UGF provides two discretization approaches
 
 **Control Volume Finite Element Method (CVFEM)**
 
-  Nalu-Wind uses a *dual mesh* approach (see :numref:`theory_cvfem_dual_mesh`) where
+  Kynema-UGF uses a *dual mesh* approach (see :numref:`theory_cvfem_dual_mesh`) where
   the *control volumes* are constructed around the nodes of the finite elements
   within the mesh -- see :numref:`windenergy_cvfem_fig`. The equations are
   solved at the *integration* points on the *sub-control surfaces* and/or the
@@ -172,13 +172,13 @@ scheme and its impact on the simulations.
 Time stepping scheme
 --------------------
 
-The time stepping method in Nalu-Wind is described in the Fuego theory manual
+The time stepping method in Kynema-UGF is described in the Fuego theory manual
 :cite:`FuegoTheoryManual:2016` for the backward Euler time discretization. The
-implementation details of the BDF2 time stepping scheme used in Nalu-Wind is
+implementation details of the BDF2 time stepping scheme used in Kynema-UGF is
 described here. The Navier-Stokes equations are written as 
 
 .. math::
-   :label: fav-mom-nalu
+   :label: fav-mom-kynema-ugf
 
    {\bf F}_i (\rho^{n+1}, u_i^{n+1}, P^{n+1}) - \int \left . \frac{\partial \rho u_i}{\partial t} \right |^{n+1} {\rm d}V &= 0, \\
    {\bf F}_i (\rho^{n+1}, u_i^{n+1}, P^{n+1}) - \frac{ (\gamma_1 \rho^{n+1} {u_i}^{n+1} + \gamma_2 \rho^n {u_i}^{n} + \gamma_3 \rho^n {u_i}^{n-1})}{\Delta t} \Delta V &=0,
@@ -207,7 +207,7 @@ The Newton's method is used along with a linearization procedure to predict a
 solution to the Navier-Stokes equations at time step :math:`n+1` as
 
 .. math::
-   :label: fav-mom-nalu-newton
+   :label: fav-mom-kynema-ugf-newton
 
    \mathbf{A}_{ij} \; \delta u_{j} &= {\bf F}_i^{*} - \frac{ (\gamma_1 \rho^{*} {u_i}^{*} + \gamma_2 \rho^n {u_i}^{n} + \gamma_3 \rho^n {u_i}^{n-1})}{\Delta t} \Delta V, \\
    \textrm{where } \delta u_{j} &= u_i^{**} - u_i^*, \\
@@ -222,11 +222,11 @@ After each Newton or *outer* iteration, :math:`\phi^{**}` is a better approximat
 
    {\bf F}_i^* = \left . \frac{\partial F_i}{\partial u_j} \right |^{*} u_j^{*} - \int P^{*} n_i {\rm d}S - \int \left(\rho^{*} - \rho_{\circ} \right) g_i {\rm d}V
 
-Applying Eq. :eq:`linearize-f-phi-star` to Eq. :eq:`fav-mom-nalu-newton`, we get the
-linearized momentum predictor equation solved in Nalu-Wind.
+Applying Eq. :eq:`linearize-f-phi-star` to Eq. :eq:`fav-mom-kynema-ugf-newton`, we get the
+linearized momentum predictor equation solved in Kynema-UGF.
 
 .. math::
-   :label: fav-mom-nalu-linearize-f
+   :label: fav-mom-kynema-ugf-linearize-f
 
    {\bf A}_{ij} \; \delta u_j &= \left . \frac{\partial F_i}{\partial u_j} \right |^{*} u_j^{*} - \int P^{*} n_i {\rm d}S - \int \left(\rho^{*} - \rho_{\circ} \right) g_i {\rm d}V  \\
    & \quad \quad  - \frac{ (\gamma_1 \rho^{*} {u_i}^{*} + \gamma_2 \rho^{n} {u_i}^{n} + \gamma_3 \rho^{n-1} {u_i}^{n-1})}{\Delta t} \Delta V \\
@@ -280,7 +280,7 @@ Thus, the final set of equations solved at each outer iteration is
 Approximations for the Schur complement
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Nalu-Wind implements two options for approximating the Schur complement for the
+Kynema-UGF implements two options for approximating the Schur complement for the
 split velocity-pressure solution of the incompressible momentum and continuity
 equation. The two options are:
 
@@ -297,7 +297,7 @@ Courant numbers.
 Underrelaxation for momentum and scalar transport
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, Nalu-Wind applies no underrelaxation during the solution of the
+By default, Kynema-UGF applies no underrelaxation during the solution of the
 Navier-Stokes equations. However, in RANS simulations at large timesteps some
 underrelaxation might be necessary to restore the diagonal dominance of the
 transport equations. User has the option to specify underrelaxation through the
@@ -320,21 +320,21 @@ solution at the end of the Picard iteration.
 Initial & Boundary Conditions
 -----------------------------
 
-This section briefly describes the boundary conditions available in Nalu-Wind for
+This section briefly describes the boundary conditions available in Kynema-UGF for
 modeling wind farm problems. The terrain and top boundary conditions are
 described first as they are common to precusor and wind farm simulations.
 
 Initial conditions
 ~~~~~~~~~~~~~~~~~~
 
-Nalu-Wind has the ability to initialize the internal flow fields to uniform
+Kynema-UGF has the ability to initialize the internal flow fields to uniform
 conditions for all pressure, velocity, temperature, and TKE (:math:`k`) in the
-`input file <initial_conditions.constant>`. Nalu-Wind also provides a *user
+`input file <initial_conditions.constant>`. Kynema-UGF also provides a *user
 function* to add perturbations to the velocity field to trigger turbulence
 generation during precursor simulations. To specify more complex flow field
 conditions, a temperature profile with a capping inversion for example, users
-are referred to pre-processing utilities available in `NaluWindUtils
-<http://naluwindutils.readthedocs.io/en/latest/>`_ library.
+are referred to pre-processing utilities available in `KynemaUGFUtils
+<http://kynema-ugfwindutils.readthedocs.io/en/latest/>`_ library.
 
 Terrain (Wall) boundary condition
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -370,8 +370,8 @@ inputs (via I/O transfer) to drive the wind farm simulation with the desired
 flow conditions. See :numref:`verification_abl_prescribed_inflow` for more
 details on this capability. Driving a wind farm simulation using velocity and
 temperature fields from a mesoscale (WRF) simulation would require an additional
-pre-processing steps with the `wrftonalu
-<http://naluwindutils.readthedocs.io/en/latest/user/wrftonalu.html>`_ utility.
+pre-processing steps with the `wrftokynema-ugf
+<http://kynema-ugfwindutils.readthedocs.io/en/latest/user/wrftokynema-ugf.html>`_ utility.
 
 Outlet conditions
 ~~~~~~~~~~~~~~~~~
@@ -451,18 +451,18 @@ This summation well approximates the integral given in Equation
 :eq:`force-integral` so long as the ratio of actuator element size to
 projection function width :math:`\epsilon` does not exceed a certain threshold.
 
-Presently, Nalu-Wind uses an actuator line representation to model the effects of
+Presently, Kynema-UGF uses an actuator line representation to model the effects of
 turbine on the flow field; however, the class hierarchy is designed with the
 potential to add other actuator source terms such as actuator disk, swept
 actuator line and actuator surface capability in the future. The
-ActuatorLineFAST class couples Nalu-Wind
+ActuatorLineFAST class couples Kynema-UGF
 with NREL's OpenFAST for actuator line simulations of wind turbines. OpenFAST is
 a aero-hydro-servo-elastic tool to model wind turbine developed by the National
 Renewable Energy Laboratory (NREL). The ActuatorLineFAST
-class allows Nalu-Wind to interface as an inflow
+class allows Kynema-UGF to interface as an inflow
 module to OpenFAST by supplying the velocity field information.
 
-Nalu-Wind -- OpenFAST Coupling Algorithm
+Kynema-UGF -- OpenFAST Coupling Algorithm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A nacelle model is implemented using a Gaussian drag body force. The model
@@ -508,24 +508,24 @@ interest and the center of the Gaussian force.
 
 The actuator line implementation allows for flexible blades that are not
 necessarily straight (pre-bend and sweep). The current implementation requires a
-fixed time step when coupled to OpenFAST, but allows the time step in Nalu-Wind to be
+fixed time step when coupled to OpenFAST, but allows the time step in Kynema-UGF to be
 an integral multiple of the OpenFAST time step. At present, a simple time lagged
-FSI model is used to interface Nalu-Wind with the turbine model in OpenFAST:
+FSI model is used to interface Kynema-UGF with the turbine model in OpenFAST:
 
   + The velocity at time step at time step :math:`n` is sampled at the actuator
     points and sent to OpenFAST,
-  + OpenFAST advances the turbines up-to the next Nalu-Wind time step :math:`n+1`,
+  + OpenFAST advances the turbines up-to the next Kynema-UGF time step :math:`n+1`,
   + The body forces at the actuator points are converted to the source terms of the momentum 
-    equation to advance Nalu-Wind to the next time step :math:`n+1`.
+    equation to advance Kynema-UGF to the next time step :math:`n+1`.
     
 This FSI algorithm is expected to be only first order accurate in time. We are
 currently working on improving the FSI coupling scheme to be second order
 accurate in time.
 
-Nalu-Wind -- Actuator Disk Model via OpenFAST
+Kynema-UGF -- Actuator Disk Model via OpenFAST
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An actuator disk model is implemented in Nalu-Wind by using an OpenFAST actuator line to 
+An actuator disk model is implemented in Kynema-UGF by using an OpenFAST actuator line to 
 sample the flow and compute the forcing.  The actuator line is held stationary which leads
 to computational savings during execution because there is only 1 search operation in the 
 initial setup.

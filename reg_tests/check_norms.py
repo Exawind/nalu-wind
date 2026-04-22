@@ -25,7 +25,7 @@ from shutil import copyfile
 def parse_arguments():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
-        description="Nalu-Wind regression test check utility")
+        description="Kynema-UGF regression test check utility")
     parser.add_argument(
         '--abs-tol', type=float, default=1.0e-15,
         help="Tolerance for absolute error")

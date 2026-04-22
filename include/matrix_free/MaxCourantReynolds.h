@@ -15,7 +15,7 @@
 #include "ArrayND.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 namespace matrix_free {
 
 namespace impl {
@@ -109,6 +109,6 @@ private:
 };
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 #endif

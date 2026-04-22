@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class RayleighTaylorMixFracAuxFunction : public AuxFunction
 {
@@ -43,7 +43,7 @@ private:
   const double pi_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

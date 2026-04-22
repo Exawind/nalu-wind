@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Nalu-Wind documentation build configuration file
+# Kynema-UGF documentation build configuration file
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -35,8 +35,8 @@ bibtex_bibfiles = ['references/references.bib']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
-#breathe_projects = {"Nalu-Wind": "../doxygen_output/xml/"}
-#breathe_default_project = "Nalu-Wind"
+#breathe_projects = {"Kynema-UGF": "../doxygen_output/xml/"}
+#breathe_default_project = "Kynema-UGF"
 
 #fortran_src ='../../src/'
 #fortran_ext =[' 'F90']
@@ -55,7 +55,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Nalu-Wind'
+project = u'Kynema-UGF'
 copyright = u'ExaWind team'
 author = u'ExaWind team'
 
@@ -143,7 +143,7 @@ html_theme = 'sphinx_rtd_theme'
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
 #
-# html_title = u'Nalu-Wind v0.01'
+# html_title = u'Kynema-UGF v0.01'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #
@@ -244,7 +244,7 @@ html_show_copyright = False
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'nalu-wind-doc'
+htmlhelp_basename = 'kynema-ugf-doc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -270,7 +270,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'nalu_wind.tex', u'Nalu-Wind Documentation',
+    (master_doc, 'kynema-ugf_wind.tex', u'Kynema-UGF Documentation',
      author, 'manual'),
 ]
 
@@ -312,7 +312,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'nalu-wind', u'Nalu-Wind Documentation',
+    (master_doc, 'kynema-ugf', u'Kynema-UGF Documentation',
      [author], 1)
 ]
 
@@ -327,8 +327,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'nalu_wind', u'Nalu-Wind Documentation',
-     author, 'Nalu-Wind', 'One line description of project.',
+    (master_doc, 'kynema-ugf_wind', u'Kynema-UGF Documentation',
+     author, 'Kynema-UGF', 'One line description of project.',
      'Miscellaneous'),
 ]
 
@@ -350,5 +350,5 @@ texinfo_documents = [
 
 def setup(app):
     app.add_object_type("inpfile", "inpfile",
-                        objname="Nalu-Wind input parameter",
-                        indextemplate="pair: %s; Nalu-Wind input parameter")
+                        objname="Kynema-UGF input parameter",
+                        indextemplate="pair: %s; Kynema-UGF input parameter")

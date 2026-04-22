@@ -1,4 +1,4 @@
-target_sources(nalu PRIVATE
+target_sources(kynema-ugf PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/HexNElementDescription.C
    ${CMAKE_CURRENT_SOURCE_DIR}/NodeMapMaker.C
    ${CMAKE_CURRENT_SOURCE_DIR}/PromoteElement.C

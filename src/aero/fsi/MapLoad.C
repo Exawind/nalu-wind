@@ -13,17 +13,17 @@
 
 namespace fsi {
 
-using namespace sierra::nalu;
+using namespace sierra::kynema-ugf;
 
 void
 mapTowerLoad(
   const stk::mesh::BulkData& bulk,
   const stk::mesh::PartVector& twrBndyParts,
-  const sierra::nalu::VectorFieldType& modelCoords,
-  const sierra::nalu::VectorFieldType& meshDisp,
-  const sierra::nalu::GenericIntFieldType& loadMap,
-  const sierra::nalu::GenericFieldType& loadMapInterp,
-  const sierra::nalu::GenericFieldType& tforceSCS,
+  const sierra::kynema-ugf::VectorFieldType& modelCoords,
+  const sierra::kynema-ugf::VectorFieldType& meshDisp,
+  const sierra::kynema-ugf::GenericIntFieldType& loadMap,
+  const sierra::kynema-ugf::GenericFieldType& loadMapInterp,
+  const sierra::kynema-ugf::GenericFieldType& tforceSCS,
   std::vector<double>& twrRefPos,
   std::vector<double>& twrDef,
   std::vector<double>& twrLoad)
@@ -139,11 +139,11 @@ void
 mapBladeLoad(
   const stk::mesh::BulkData& bulk,
   const stk::mesh::PartVector& bldBndyParts,
-  const sierra::nalu::VectorFieldType& modelCoords,
-  const sierra::nalu::VectorFieldType& meshDisp,
-  const sierra::nalu::GenericIntFieldType& loadMap,
-  const sierra::nalu::GenericFieldType& loadMapInterp,
-  const sierra::nalu::GenericFieldType& tforceSCS,
+  const sierra::kynema-ugf::VectorFieldType& modelCoords,
+  const sierra::kynema-ugf::VectorFieldType& meshDisp,
+  const sierra::kynema-ugf::GenericIntFieldType& loadMap,
+  const sierra::kynema-ugf::GenericFieldType& loadMapInterp,
+  const sierra::kynema-ugf::GenericFieldType& tforceSCS,
   int nPtsBlade,
   int iStart,
   std::vector<double>& bldRloc,

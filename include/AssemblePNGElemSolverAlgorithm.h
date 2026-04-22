@@ -20,7 +20,7 @@ class Part;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class Realm;
 
@@ -42,7 +42,7 @@ public:
   VectorFieldType* coordinates_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

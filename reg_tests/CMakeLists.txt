@@ -1,5 +1,5 @@
 #=============================================================================
-# Nalu Testing
+# KynemaUGF Testing
 #=============================================================================
 
 # Check if mesh submodule is populated
@@ -12,15 +12,15 @@ if(RES_LEN EQUAL 0)
  before running the tests.")
 endif()
 
-set(NALU_WIND_REFERENCE_GOLDS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test_files" CACHE PATH
+set(KYNEMA_UGF_REFERENCE_GOLDS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test_files" CACHE PATH
   "Custom directory for checking gold norms")
 
-if (NOT "${NALU_WIND_REFERENCE_GOLDS_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/test_files")
-  if(EXISTS ${NALU_WIND_REFERENCE_GOLDS_DIR})
-    set(NALU_WIND_REFERENCE_GOLDS_DIR "${NALU_WIND_REFERENCE_GOLDS_DIR}/${CMAKE_SYSTEM_NAME}/${CMAKE_CXX_COMPILER_ID}/${CMAKE_CXX_COMPILER_VERSION}")
-    message(STATUS "Reference gold files will be expected here: ${NALU_WIND_REFERENCE_GOLDS_DIR}")
+if (NOT "${KYNEMA_UGF_REFERENCE_GOLDS_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/test_files")
+  if(EXISTS ${KYNEMA_UGF_REFERENCE_GOLDS_DIR})
+    set(KYNEMA_UGF_REFERENCE_GOLDS_DIR "${KYNEMA_UGF_REFERENCE_GOLDS_DIR}/${CMAKE_SYSTEM_NAME}/${CMAKE_CXX_COMPILER_ID}/${CMAKE_CXX_COMPILER_VERSION}")
+    message(STATUS "Reference gold files will be expected here: ${KYNEMA_UGF_REFERENCE_GOLDS_DIR}")
   else()
-    message(FATAL_ERROR "Reference gold files path does not exist: ${NALU_WIND_REFERENCE_GOLDS_DIR}")
+    message(FATAL_ERROR "Reference gold files path does not exist: ${KYNEMA_UGF_REFERENCE_GOLDS_DIR}")
   endif()
   if("${TEST_ABS_TOL}" STREQUAL "")
     set(TEST_ABS_TOL "1.0e-15")
@@ -39,15 +39,15 @@ if("${TEST_REL_TOL}" STREQUAL "")
 endif()
 message(STATUS "Using test tolerance: abs = ${TEST_ABS_TOL}, rel = ${TEST_REL_TOL}")
 
-if(NALU_WIND_SAVE_GOLDS)
-  if("${NALU_WIND_SAVED_GOLDS_DIR}" STREQUAL "")
-    message(FATAL_ERROR "To save gold files, NALU_WIND_SAVED_GOLDS_DIR must be set and the directory exist")
+if(KYNEMA_UGF_SAVE_GOLDS)
+  if("${KYNEMA_UGF_SAVED_GOLDS_DIR}" STREQUAL "")
+    message(FATAL_ERROR "To save gold files, KYNEMA_UGF_SAVED_GOLDS_DIR must be set and the directory exist")
   else()
-    if(EXISTS ${NALU_WIND_SAVED_GOLDS_DIR})
-      set(SAVED_GOLDS_DIR ${NALU_WIND_SAVED_GOLDS_DIR}/${CMAKE_SYSTEM_NAME}/${CMAKE_CXX_COMPILER_ID}/${CMAKE_CXX_COMPILER_VERSION})
+    if(EXISTS ${KYNEMA_UGF_SAVED_GOLDS_DIR})
+      set(SAVED_GOLDS_DIR ${KYNEMA_UGF_SAVED_GOLDS_DIR}/${CMAKE_SYSTEM_NAME}/${CMAKE_CXX_COMPILER_ID}/${CMAKE_CXX_COMPILER_VERSION})
       message(STATUS "Gold files will be saved to: ${SAVED_GOLDS_DIR}")
     else()
-      message(FATAL_ERROR "Specified directory for saving gold files does not exist: ${NALU_WIND_SAVED_GOLDS_DIR}")
+      message(FATAL_ERROR "Specified directory for saving gold files does not exist: ${KYNEMA_UGF_SAVED_GOLDS_DIR}")
     endif()
   endif()
 endif()

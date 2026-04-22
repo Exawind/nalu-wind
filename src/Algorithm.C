@@ -13,7 +13,7 @@
 #include <kernel/Kernel.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 //==========================================================================
 // Class Definition
@@ -56,5 +56,5 @@ Algorithm::~Algorithm()
   }
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

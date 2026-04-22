@@ -30,8 +30,8 @@ TEST_F(EnthalpyABLKernelHex8Mesh, NGP_tgrad_bc)
   const bool useShifted = false;
 
   // Initialize the kernel
-  std::unique_ptr<sierra::nalu::Kernel> kernel(
-    new sierra::nalu::EnthalpyTGradBCElemKernel<sierra::nalu::AlgTraitsQuad4>(
+  std::unique_ptr<sierra::kynema-ugf::Kernel> kernel(
+    new sierra::kynema-ugf::EnthalpyTGradBCElemKernel<sierra::kynema-ugf::AlgTraitsQuad4>(
       *bulk_, tGradBC_, viscosity_, specificHeat_, coordsName, useShifted,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
 

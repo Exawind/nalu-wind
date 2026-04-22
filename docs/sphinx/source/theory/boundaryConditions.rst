@@ -127,7 +127,7 @@ dimensionless wall roughness parameter and is described by,
    E = \exp(\kappa C).
 
 
-In Nalu-Wind, :math:`\kappa` is set to the value of 0.42 while the value of
+In Kynema-UGF, :math:`\kappa` is set to the value of 0.42 while the value of
 :math:`E` is set to 9.8 for smooth walls (White suggests values of
 :math:`\kappa=0.41` and :math:`E=7.768.`). The viscous sublayer is
 assumed to extend to a value of :math:`y^+` = 11.63.
@@ -801,7 +801,7 @@ surface as,
 SST of the Atmospheric Boundary Layer
 +++++++++++++++++++++++++++++++++++++
 
-The following boundary conditions simulate the Atmospheric Boundary Layer, as described in Bautista, :cite:`Bautista:2011` and :cite:`Bautista:2015`. The Nalu-Wind SST RANS implementation matches the Monin-Obukhov profile when used with the model constants from Table-A I-1 (Boundreault, 2011) in :cite:`Bautista:2011` and the meshing method described  in :cite:`Bautista:2015`. The mesh described in :cite:`Bautista:2015` gives the Monin-Obukhov profile for roughness height 0.1. When the roughness height is decreased, the mesh must be refined near the wall. For example, for the :cite:`Bautista:2015` ABL test case using roughness height 0.001 instead of 0.1, the mesh size needs to be halved near the wall. 
+The following boundary conditions simulate the Atmospheric Boundary Layer, as described in Bautista, :cite:`Bautista:2011` and :cite:`Bautista:2015`. The Kynema-UGF SST RANS implementation matches the Monin-Obukhov profile when used with the model constants from Table-A I-1 (Boundreault, 2011) in :cite:`Bautista:2011` and the meshing method described  in :cite:`Bautista:2015`. The mesh described in :cite:`Bautista:2015` gives the Monin-Obukhov profile for roughness height 0.1. When the roughness height is decreased, the mesh must be refined near the wall. For example, for the :cite:`Bautista:2015` ABL test case using roughness height 0.001 instead of 0.1, the mesh size needs to be halved near the wall. 
     
 The :math:`k` and :math:`\omega` boundary conditions are the same as in the :ref:`Turbulent Kinetic Energy and Specific Dissipation SST High Reynolds Number Boundary Conditions <kwsst_high_re_bc>`:
 
@@ -959,7 +959,7 @@ Weak Symmetry Boundary Condition
 Continuity, Mixture Fraction, Enthalpy, Species, :math:`k_{sgs}`, k and :math:`\omega`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Weak symmetry applies zero diffusion at the boundary for scalar quantities, which effectively sets the boundary-normal gradients of these quantities to zero. This means that, unlike for strong symmetry, in the weak symmetry implementation, normal velocity can be non-zero. This is possible because the cell averaged quantities in Nalu-Wind's discretization are stored at the nodes and therefore reside on the boundaries. In general, a non-zero normal velocity can cause net inflow or outflow. The Poisson solve prevents this by enforcing mass conservation globally to the order of linear solver convergence. 
+Weak symmetry applies zero diffusion at the boundary for scalar quantities, which effectively sets the boundary-normal gradients of these quantities to zero. This means that, unlike for strong symmetry, in the weak symmetry implementation, normal velocity can be non-zero. This is possible because the cell averaged quantities in Kynema-UGF's discretization are stored at the nodes and therefore reside on the boundaries. In general, a non-zero normal velocity can cause net inflow or outflow. The Poisson solve prevents this by enforcing mass conservation globally to the order of linear solver convergence. 
 
 Momentum
 ~~~~~~~~
@@ -1011,7 +1011,7 @@ In this example, the temperature gradient normal to the symmetry boundary
 is set to -0.003 K/m, where the boundary-normal direction is pointed into 
 the domain.
 
-Nalu-Wind does not solve a transport equation for temperature directly, but 
+Kynema-UGF does not solve a transport equation for temperature directly, but 
 rather it solves one for enthalpy. Therfore, the boundary-normal temperature 
 gradient condition is applied internally in the code through application of 
 a compatible heat flux,

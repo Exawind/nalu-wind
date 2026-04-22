@@ -1,4 +1,4 @@
-target_sources(nalu PRIVATE
+target_sources(kynema-ugf PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/FrameBase.C
    ${CMAKE_CURRENT_SOURCE_DIR}/FrameMoving.C
    ${CMAKE_CURRENT_SOURCE_DIR}/FrameReference.C

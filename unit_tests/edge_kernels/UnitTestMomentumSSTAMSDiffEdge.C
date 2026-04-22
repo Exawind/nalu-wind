@@ -539,7 +539,7 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_diff)
   unit_test_utils::EdgeKernelHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
-  helperObjs.edgeAlg->add_kernel<sierra::nalu::MomentumSSTAMSDiffEdgeKernel>(
+  helperObjs.edgeAlg->add_kernel<sierra::kynema-ugf::MomentumSSTAMSDiffEdgeKernel>(
     *bulk_, solnOpts_);
 
   helperObjs.execute();

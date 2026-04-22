@@ -20,7 +20,7 @@
 #include <stk_mesh/base/Selector.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 //==========================================================================
 // Class Definition
@@ -73,5 +73,5 @@ ThermalConductivityFromPrandtlPropAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

@@ -17,11 +17,11 @@
 #include <string>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 /** Input data for fixing pressure during ABL simulations.
  *
- *  This class holds the user data parsed from Nalu input file to fix pressure
+ *  This class holds the user data parsed from KynemaUGF input file to fix pressure
  *  at a spatial location for ABL simulations. This is especially necessary for
  *  precursor simulations where the inlet/outlet boundaries are periodic and the
  *  top boundary is symmetric. In this case, there is no pressure specified for
@@ -69,7 +69,7 @@ struct FixPressureAtNodeInfo
   stk::mesh::EntityId stkNodeId_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* FIXPRESSUREATNODEINFO_H */

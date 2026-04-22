@@ -13,7 +13,7 @@
 /** \file
  *  \brief STK SIMD Interface
  *
- *  Nalu wrapper to provide SIMD capability for vectorizing sierra::nalu::Kernel
+ *  KynemaUGF wrapper to provide SIMD capability for vectorizing sierra::kynema-ugf::Kernel
  *  algorithms.
  */
 
@@ -23,7 +23,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 typedef stk::simd::Double SimdDouble;
 
@@ -62,8 +62,8 @@ get_length_of_next_simd_group(int index, int length)
   return nextLength;
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
-typedef sierra::nalu::DoubleType DoubleType;
+typedef sierra::kynema-ugf::DoubleType DoubleType;
 #endif /* SIMDINTERFACE_H */

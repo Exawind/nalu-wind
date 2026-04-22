@@ -1,18 +1,18 @@
 # -*- mode: yaml -*-
 #
-# Nalu Preprocessing utility
+# KynemaUGF Preprocessing utility
 #
 # Generate a temperature profile with capping inversion for use with ablNeutralEdge case
 #
 
-# Mandatory section for Nalu preprocessing
-nalu_preprocess:
+# Mandatory section for KynemaUGF preprocessing
+kynema-ugf_preprocess:
   # Name of the input exodus database
   input_db: ./abl_5km_5km_1km_neutral.g
   # Name of the output exodus database
   output_db: ./abl_5km_5km_1km_neutral.g
 
-  # Nalu preprocessor expects a list of tasks to be performed on the mesh and
+  # KynemaUGF preprocessor expects a list of tasks to be performed on the mesh and
   # field data structures
   tasks:
     - init_abl_fields

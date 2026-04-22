@@ -14,7 +14,7 @@
 #include "FieldTypeDef.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class Realm;
 
@@ -82,7 +82,7 @@ private:
   double volStats_[3] = {0.0, 0.0, 0.0};
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* GEOMETRYALGDRIVER_H */

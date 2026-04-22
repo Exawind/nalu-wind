@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class BoussinesqNonIsoTemperatureAuxFunction : public AuxFunction
 {
@@ -40,7 +40,7 @@ private:
   const double Tref_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

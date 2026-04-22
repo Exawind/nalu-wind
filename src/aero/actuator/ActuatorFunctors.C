@@ -13,7 +13,7 @@
 #include <FieldTypeDef.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 InterpActuatorVel::InterpActuatorVel(
   ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk)
@@ -103,5 +103,5 @@ SpreadForceInnerLoop::operator()(
   }
 }
 
-} /* namespace nalu */
+} /* namespace kynema-ugf */
 } /* namespace sierra */

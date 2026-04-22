@@ -19,7 +19,7 @@
 #include <SimdInterface.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 MomentumSSTAMSDiffEdgeKernel::MomentumSSTAMSDiffEdgeKernel(
   const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts)
@@ -308,5 +308,5 @@ MomentumSSTAMSDiffEdgeKernel::execute(
   }
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

@@ -20,7 +20,7 @@ namespace TIOGA {
 class tioga;
 }
 
-namespace tioga_nalu {
+namespace tioga_kynema-ugf {
 
 /** Data representing an unstructured mesh block
  */
@@ -202,14 +202,14 @@ public:
 
   void register_solution(
     TIOGA::tioga&,
-    const std::vector<sierra::nalu::OversetFieldData>&,
+    const std::vector<sierra::kynema-ugf::OversetFieldData>&,
     const int);
 
-  void register_solution(TIOGA::tioga&, const sierra::nalu::OversetFieldData&);
+  void register_solution(TIOGA::tioga&, const sierra::kynema-ugf::OversetFieldData&);
 
-  void update_solution(const std::vector<sierra::nalu::OversetFieldData>&);
+  void update_solution(const std::vector<sierra::kynema-ugf::OversetFieldData>&);
 
-  void update_solution(const sierra::nalu::OversetFieldData&);
+  void update_solution(const sierra::kynema-ugf::OversetFieldData&);
 
   //! Return the block name for this mesh
   const std::string& block_name() const { return block_name_; }
@@ -358,6 +358,6 @@ public:
   }
 };
 
-} // namespace tioga_nalu
+} // namespace tioga_kynema-ugf
 
 #endif /* TIOGABLOCK_H */

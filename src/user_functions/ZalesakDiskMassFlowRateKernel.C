@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 ZalesakDiskMassFlowRateEdgeAlg::ZalesakDiskMassFlowRateEdgeAlg(
   Realm& realm,
@@ -68,5 +68,5 @@ ZalesakDiskMassFlowRateEdgeAlg::execute()
     });
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

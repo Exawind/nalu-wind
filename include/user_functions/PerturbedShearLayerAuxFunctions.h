@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class PerturbedShearLayerVelocityAuxFunction : public AuxFunction
 {
@@ -56,7 +56,7 @@ public:
     const unsigned endPos) const;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

@@ -1,5 +1,5 @@
 # -*- mode: yaml -*-
-# NALU-WIND PARAMETERS
+# KYNEMA_UGF-WIND PARAMETERS
 # This simulation will converge to the same results as figure 8 
 # in Martinez-Tossas and Meneveau, 2019, Filtered lifting line theory and application to the actuator line model 
 # This was confirmed by running with 600 actuator points on a 50x50x50 grid

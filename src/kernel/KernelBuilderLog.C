@@ -8,7 +8,7 @@
 //
 
 #include <kernel/KernelBuilderLog.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <map>
 #include <set>
@@ -16,7 +16,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 //--------------------------------------------------------------------------
 KernelBuilderLog&
 KernelBuilderLog::self()
@@ -60,7 +60,7 @@ KernelBuilderLog::print_invalid_kernel_names(
   }
 
   for (const auto& name : badNames) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema-ugfOutputP0()
       << "Error: No Supplemental Algorithm with name `" << name
       << "' implemented" << std::endl;
   }
@@ -81,7 +81,7 @@ KernelBuilderLog::print_valid_kernel_names(std::string kernelTypeName)
   }
   msgList = msgList.substr(0, msgList.size() - 2);
 
-  NaluEnv::self().naluOutputP0()
+  KynemaUGFEnv::self().kynema-ugfOutputP0()
     << "Valid Supplemental Algorithm names for " << kernelTypeName << " are "
     << msgList << "." << std::endl;
 }
@@ -97,7 +97,7 @@ KernelBuilderLog::print_built_kernel_names(std::string kernelTypeName)
   }
   msgList = msgList.substr(0, msgList.size() - 2);
 
-  NaluEnv::self().naluOutputP0() << "Built Kernels for " << kernelTypeName
+  KynemaUGFEnv::self().kynema-ugfOutputP0() << "Built Kernels for " << kernelTypeName
                                  << " are " << msgList << "." << std::endl;
 }
 //--------------------------------------------------------------------------
@@ -121,5 +121,5 @@ KernelBuilderLog::built_kernel_names(std::string kernelTypeName)
   return it->second;
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

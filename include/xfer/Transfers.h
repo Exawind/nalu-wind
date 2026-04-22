@@ -21,7 +21,7 @@ class Node;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class Simulation;
 class Transfer;
@@ -43,7 +43,7 @@ public:
   std::vector<Transfer*> transferVector_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

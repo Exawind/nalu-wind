@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 
 #include <stk_io/StkMeshIoBroker.hpp>
 #include <stk_mesh/base/BulkData.hpp>
@@ -57,8 +57,8 @@ perturb_coord_hex_8(stk::mesh::BulkData& bulk, double perturbSize)
   Lcg lcg(bulk.parallel_rank() + 1);
 
   const auto& meta = bulk.mesh_meta_data();
-  const sierra::nalu::VectorFieldType* coordField =
-    dynamic_cast<const sierra::nalu::VectorFieldType*>(meta.coordinate_field());
+  const sierra::kynema-ugf::VectorFieldType* coordField =
+    dynamic_cast<const sierra::kynema-ugf::VectorFieldType*>(meta.coordinate_field());
   STK_ThrowRequire(coordField != nullptr);
 
   for (const auto* ib :
@@ -110,9 +110,9 @@ dump_mesh(
 }
 
 std::ostream&
-nalu_out()
+kynema-ugf_out()
 {
-  return sierra::nalu::NaluEnv::self().naluOutput();
+  return sierra::kynema-ugf::KynemaUGFEnv::self().kynema-ugfOutput();
 }
 
 stk::mesh::Entity
@@ -383,8 +383,8 @@ global_norm(
 double
 initialize_linear_scalar_field(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordField,
-  const sierra::nalu::ScalarFieldType& qField)
+  const sierra::kynema-ugf::VectorFieldType& coordField,
+  const sierra::kynema-ugf::ScalarFieldType& qField)
 {
   // q = a + b^T x
   std::mt19937 rng;
@@ -417,8 +417,8 @@ initialize_linear_scalar_field(
 double
 initialize_quadratic_scalar_field(
   const stk::mesh::BulkData& bulk,
-  const sierra::nalu::VectorFieldType& coordField,
-  const sierra::nalu::ScalarFieldType& qField)
+  const sierra::kynema-ugf::VectorFieldType& coordField,
+  const sierra::kynema-ugf::ScalarFieldType& qField)
 {
   // q = a + b^T x + 1/2 x^T H x
   std::mt19937 rng;
@@ -513,7 +513,7 @@ random_linear_transformation(int dim, double scale, std::mt19937& rng)
     std::array<double, 9> rot = random_rotation_matrix(dim, rng);
 
     std::array<double, 9> QR = {{}};
-    sierra::nalu::mxm33(Q.data(), rot.data(), QR.data());
+    sierra::kynema-ugf::mxm33(Q.data(), rot.data(), QR.data());
 
     return QR;
   } else {
@@ -531,7 +531,7 @@ random_linear_transformation(int dim, double scale, std::mt19937& rng)
     std::array<double, 9> rot = random_rotation_matrix(dim, rng);
 
     std::array<double, 9> QR = {{}};
-    sierra::nalu::mxm22(Q.data(), rot.data(), QR.data());
+    sierra::kynema-ugf::mxm22(Q.data(), rot.data(), QR.data());
 
     return QR;
   }
@@ -560,10 +560,10 @@ Hex8Mesh::check_discrete_laplacian(double exactLaplacian)
 
 Hex8MeshWithNSOFields::Hex8MeshWithNSOFields() : Hex8Mesh()
 {
-  sierra::nalu::HexSCS hex8SCS;
+  sierra::kynema-ugf::HexSCS hex8SCS;
   const unsigned hex_int_pts = hex8SCS.num_integration_points();
   const unsigned quad_vec_len =
-    3 * sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+    3 * sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
           stk::topology::QUAD_4)
           ->num_integration_points();
   const unsigned Gju_len = 3;

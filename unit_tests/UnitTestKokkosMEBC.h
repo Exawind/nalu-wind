@@ -64,7 +64,7 @@ public:
     partVec_.clear();
     partVec_.push_back(
       meta_->get_part("surface_" + std::to_string(faceOrdinal_)));
-    coordinates_ = static_cast<const sierra::nalu::VectorFieldType*>(
+    coordinates_ = static_cast<const sierra::kynema-ugf::VectorFieldType*>(
       meta_->coordinate_field());
 
     EXPECT_TRUE(coordinates_ != nullptr);
@@ -75,17 +75,17 @@ public:
       partVec_[0]));
 
     elemDataNeeded().add_coordinates_field(
-      *coordinates_, BcAlgTraits::nDim_, sierra::nalu::CURRENT_COORDINATES);
+      *coordinates_, BcAlgTraits::nDim_, sierra::kynema-ugf::CURRENT_COORDINATES);
     faceDataNeeded().add_coordinates_field(
-      *coordinates_, BcAlgTraits::nDim_, sierra::nalu::CURRENT_COORDINATES);
+      *coordinates_, BcAlgTraits::nDim_, sierra::kynema-ugf::CURRENT_COORDINATES);
   }
 
   void init_me_data()
   {
-    meFC_ = sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+    meFC_ = sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
       BcAlgTraits::faceTopo_);
     meSCS_ =
-      sierra::nalu::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
         BcAlgTraits::elemTopo_);
     // Register them to ElemDataRequests
     faceDataNeeded().add_cvfem_face_me(meFC_);
@@ -107,18 +107,18 @@ public:
       "part does not contain side-ranked elements");
 
 #if !defined(KOKKOS_ENABLE_GPU)
-    sierra::nalu::AssembleFaceElemSolverAlgorithm& alg =
+    sierra::kynema-ugf::AssembleFaceElemSolverAlgorithm& alg =
       *(helperObjs_->assembleFaceElemSolverAlg);
     alg.run_face_elem_algorithm(*bulk_, func);
 #endif
   }
 
-  sierra::nalu::ElemDataRequests& faceDataNeeded()
+  sierra::kynema-ugf::ElemDataRequests& faceDataNeeded()
   {
     return helperObjs_->assembleFaceElemSolverAlg->faceDataNeeded_;
   }
 
-  sierra::nalu::ElemDataRequests& elemDataNeeded()
+  sierra::kynema-ugf::ElemDataRequests& elemDataNeeded()
   {
     return helperObjs_->assembleFaceElemSolverAlg->elemDataNeeded_;
   }
@@ -128,13 +128,13 @@ public:
   std::shared_ptr<stk::mesh::BulkData> bulk_;
   int faceOrdinal_;
   stk::mesh::PartVector partVec_;
-  const sierra::nalu::VectorFieldType* coordinates_{nullptr};
+  const sierra::kynema-ugf::VectorFieldType* coordinates_{nullptr};
 
   std::unique_ptr<FaceElemHelperObjects> helperObjs_;
 
-  sierra::nalu::MasterElement* meFC_{nullptr};
-  sierra::nalu::MasterElement* meSCV_{nullptr};
-  sierra::nalu::MasterElement* meSCS_{nullptr};
+  sierra::kynema-ugf::MasterElement* meFC_{nullptr};
+  sierra::kynema-ugf::MasterElement* meSCV_{nullptr};
+  sierra::kynema-ugf::MasterElement* meSCS_{nullptr};
 };
 
 } // namespace unit_test_utils

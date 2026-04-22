@@ -223,7 +223,7 @@ realms:
 
         - turbulence_model_constants:
             kappa: 0.40
-            tkeProdLimitRatio: 10.0 # 2015 Masson paper's c1 (I think based on comparing Nalu-Wind implementation eqns. and 2011 thesis)
+            tkeProdLimitRatio: 10.0 # 2015 Masson paper's c1 (I think based on comparing Kynema-UGF implementation eqns. and 2011 thesis)
             betaStar: 0.03
             cMu: 0.03
             aOne: 0.31

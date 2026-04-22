@@ -3,18 +3,18 @@
 
 #include "KokkosInterface.h"
 
-namespace tioga_nalu {
+namespace tioga_kynema-ugf {
 
 template <
   typename T,
   typename Layout = Kokkos::LayoutRight,
-  typename Space = sierra::nalu::MemSpace>
+  typename Space = sierra::kynema-ugf::MemSpace>
 using OversetArrayViewType = Kokkos::View<T, Layout, Space>;
 
 template <
   typename T,
   typename Layout = Kokkos::LayoutRight,
-  typename Space = sierra::nalu::MemSpace>
+  typename Space = sierra::kynema-ugf::MemSpace>
 struct OversetArrayType
 {
   using ArrayType = OversetArrayViewType<T, Layout, Space>;
@@ -43,6 +43,6 @@ struct OversetArrayType
   void sync_host() { Kokkos::deep_copy(h_view, d_view); }
 };
 
-} // namespace tioga_nalu
+} // namespace tioga_kynema-ugf
 
 #endif /* OVERSETNGP_H */

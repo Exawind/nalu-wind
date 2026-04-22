@@ -21,7 +21,7 @@ namespace stk::mesh {
 class MetaData;
 } // namespace stk::mesh
 
-namespace sierra::nalu {
+namespace sierra::kynema-ugf {
 
 class FieldManager
 {
@@ -163,6 +163,6 @@ public:
       get_field_ptr<T>(name, state));
   }
 };
-} // namespace sierra::nalu
+} // namespace sierra::kynema-ugf
 
 #endif /* FIELDMANAGER_H_ */

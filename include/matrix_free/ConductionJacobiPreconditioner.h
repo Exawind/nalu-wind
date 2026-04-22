@@ -17,7 +17,7 @@
 #include "matrix_free/KokkosViewTypes.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 namespace matrix_free {
 
 template <int p>
@@ -84,7 +84,7 @@ private:
 };
 
 } // namespace matrix_free
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

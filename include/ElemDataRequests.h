@@ -21,7 +21,7 @@
 #include <map>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class MasterElement;
 
@@ -247,7 +247,7 @@ private:
   MasterElement* meFEM_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

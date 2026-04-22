@@ -15,7 +15,7 @@
 #include <FieldTypeDef.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class Realm;
 
@@ -47,7 +47,7 @@ private:
   const DblType sigmaTwo_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

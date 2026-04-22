@@ -6,7 +6,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 struct MotionValues
 {
@@ -57,7 +57,7 @@ private:
   Kokkos::View<double**> defined_motion_values_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* MOTIONPRESCRIBEDKERNEL_H */

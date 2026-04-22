@@ -18,7 +18,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 EffSSTDiffFluxCoeffAlg::EffSSTDiffFluxCoeffAlg(
   Realm& realm,
@@ -42,7 +42,7 @@ EffSSTDiffFluxCoeffAlg::EffSSTDiffFluxCoeffAlg(
 void
 EffSSTDiffFluxCoeffAlg::execute()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   const auto& meta = realm_.meta_data();
 
@@ -61,7 +61,7 @@ EffSSTDiffFluxCoeffAlg::execute()
   const DblType sigmaOne = sigmaOne_;
   const DblType sigmaTwo = sigmaTwo_;
 
-  nalu_ngp::run_entity_algorithm(
+  kynema-ugf_ngp::run_entity_algorithm(
     "EffSSTDiffFluxCoeffAlg", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
       const DblType blendedConstant =
@@ -75,5 +75,5 @@ EffSSTDiffFluxCoeffAlg::execute()
   evisc.modify_on_device();
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

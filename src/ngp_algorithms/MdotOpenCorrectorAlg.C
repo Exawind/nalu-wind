@@ -18,7 +18,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 template <typename BcAlgTraits>
 MdotOpenCorrectorAlg<BcAlgTraits>::MdotOpenCorrectorAlg(
@@ -36,7 +36,7 @@ template <typename BcAlgTraits>
 void
 MdotOpenCorrectorAlg<BcAlgTraits>::execute()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex = kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
@@ -49,7 +49,7 @@ MdotOpenCorrectorAlg<BcAlgTraits>::execute()
   double mdotSum = 0.0;
   const std::string algName =
     "correct_open_mdot_" + std::to_string(BcAlgTraits::topo_);
-  nalu_ngp::run_entity_par_reduce(
+  kynema-ugf_ngp::run_entity_par_reduce(
     algName, ngpMesh, realm_.meta_data().side_rank(), sel,
     KOKKOS_LAMBDA(const MeshIndex& mi, double& pSum) {
       for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
@@ -65,5 +65,5 @@ MdotOpenCorrectorAlg<BcAlgTraits>::execute()
 
 INSTANTIATE_KERNEL_FACE(MdotOpenCorrectorAlg)
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

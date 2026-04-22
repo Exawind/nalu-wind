@@ -7,16 +7,16 @@
 // for more details.
 //
 
-#ifndef NaluParsing_h
-#define NaluParsing_h
+#ifndef KynemaUGFParsing_h
+#define KynemaUGFParsing_h
 
 #include <BoundaryConditions.h>
 #include <Enums.h>
 #include <InitialConditions.h>
 #include <MaterialPropertys.h>
-#include <NaluParsedTypes.h>
-#include <NaluParsingHelper.h>
-#include <NaluEnv.h>
+#include <KynemaUGFParsedTypes.h>
+#include <KynemaUGFParsingHelper.h>
+#include <KynemaUGFEnv.h>
 
 // yaml for parsing..
 #include <yaml-cpp/yaml.h>
@@ -27,7 +27,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 // base class
 struct UserData
@@ -192,7 +192,7 @@ struct OversetUserData : public UserData
   /// List of part names for the interior meshes
   std::vector<std::string> oversetBlockVec_;
 
-#ifdef NALU_USES_TIOGA
+#ifdef KYNEMA_UGF_USES_TIOGA
   YAML::Node oversetBlocks_;
 #endif
 
@@ -434,12 +434,12 @@ get_required(const YAML::Node& node, const std::string& key, T& result)
   if (node[key]) {
     result = get_yaml_value<T>(node[key]);
   } else {
-    if (!NaluEnv::self().parallel_rank()) {
+    if (!KynemaUGFEnv::self().parallel_rank()) {
       std::ostringstream err_msg;
       err_msg << "\n\nError: parsing missing required key: " << key << " at "
-              << NaluParsingHelper::line_info(node)
+              << KynemaUGFParsingHelper::line_info(node)
               << " for node= " << std::endl;
-      NaluParsingHelper::emit(err_msg, node);
+      KynemaUGFParsingHelper::emit(err_msg, node);
       std::cout << err_msg.str() << std::endl;
     }
     throw std::runtime_error("Error: parsing missing required key: " + key);
@@ -499,173 +499,173 @@ void operator>>(
 
 bool case_insensitive_compare(std::string s1, std::string s2);
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 namespace YAML {
 
 template <>
-struct convert<sierra::nalu::Velocity>
+struct convert<sierra::kynema-ugf::Velocity>
 {
-  static bool decode(const Node& node, sierra::nalu::Velocity& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::Velocity& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::Coordinates>
+struct convert<sierra::kynema-ugf::Coordinates>
 {
-  static bool decode(const Node& node, sierra::nalu::Coordinates& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::Coordinates& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::Pressure>
+struct convert<sierra::kynema-ugf::Pressure>
 {
-  static bool decode(const Node& node, sierra::nalu::Pressure& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::Pressure& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::TurbKinEnergy>
+struct convert<sierra::kynema-ugf::TurbKinEnergy>
 {
-  static bool decode(const Node& node, sierra::nalu::TurbKinEnergy& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::TurbKinEnergy& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::SpecDissRate>
+struct convert<sierra::kynema-ugf::SpecDissRate>
 {
-  static bool decode(const Node& node, sierra::nalu::SpecDissRate& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::SpecDissRate& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::TotDissRate>
+struct convert<sierra::kynema-ugf::TotDissRate>
 {
-  static bool decode(const Node& node, sierra::nalu::TotDissRate& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::TotDissRate& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::GammaInf>
+struct convert<sierra::kynema-ugf::GammaInf>
 {
-  static bool decode(const Node& node, sierra::nalu::GammaInf& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::GammaInf& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::Temperature>
+struct convert<sierra::kynema-ugf::Temperature>
 {
-  static bool decode(const Node& node, sierra::nalu::Temperature& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::Temperature& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::MixtureFraction>
+struct convert<sierra::kynema-ugf::MixtureFraction>
 {
-  static bool decode(const Node& node, sierra::nalu::MixtureFraction& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::MixtureFraction& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::VolumeOfFluid>
+struct convert<sierra::kynema-ugf::VolumeOfFluid>
 {
-  static bool decode(const Node& node, sierra::nalu::VolumeOfFluid& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::VolumeOfFluid& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::MassFraction>
+struct convert<sierra::kynema-ugf::MassFraction>
 {
-  static bool decode(const Node& node, sierra::nalu::MassFraction& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::MassFraction& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::ReferenceTemperature>
+struct convert<sierra::kynema-ugf::ReferenceTemperature>
 {
-  static bool decode(const Node& node, sierra::nalu::ReferenceTemperature& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::ReferenceTemperature& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::UserData>
+struct convert<sierra::kynema-ugf::UserData>
 {
-  static bool decode(const Node& node, sierra::nalu::UserData& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::UserData& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::RoughnessHeight>
+struct convert<sierra::kynema-ugf::RoughnessHeight>
 {
-  static bool decode(const Node& node, sierra::nalu::RoughnessHeight& z0);
+  static bool decode(const Node& node, sierra::kynema-ugf::RoughnessHeight& z0);
 };
 
 template <>
-struct convert<sierra::nalu::NormalHeatFlux>
+struct convert<sierra::kynema-ugf::NormalHeatFlux>
 {
-  static bool decode(const Node& node, sierra::nalu::NormalHeatFlux& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::NormalHeatFlux& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::NormalTemperatureGradient>
+struct convert<sierra::kynema-ugf::NormalTemperatureGradient>
 {
   static bool
-  decode(const Node& node, sierra::nalu::NormalTemperatureGradient& rhs);
+  decode(const Node& node, sierra::kynema-ugf::NormalTemperatureGradient& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::MasterSlave>
+struct convert<sierra::kynema-ugf::MasterSlave>
 {
-  static bool decode(const Node& node, sierra::nalu::MasterSlave& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::MasterSlave& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::WallUserData>
+struct convert<sierra::kynema-ugf::WallUserData>
 {
-  static bool decode(const Node& node, sierra::nalu::WallUserData& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::WallUserData& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::InflowUserData>
+struct convert<sierra::kynema-ugf::InflowUserData>
 {
-  static bool decode(const Node& node, sierra::nalu::InflowUserData& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::InflowUserData& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::OpenUserData>
+struct convert<sierra::kynema-ugf::OpenUserData>
 {
-  static bool decode(const Node& node, sierra::nalu::OpenUserData& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::OpenUserData& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::OversetUserData>
+struct convert<sierra::kynema-ugf::OversetUserData>
 {
-  static bool decode(const Node& node, sierra::nalu::OversetUserData& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::OversetUserData& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::SymmetryUserData>
+struct convert<sierra::kynema-ugf::SymmetryUserData>
 {
-  static bool decode(const Node& node, sierra::nalu::SymmetryUserData& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::SymmetryUserData& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::ABLTopUserData>
+struct convert<sierra::kynema-ugf::ABLTopUserData>
 {
-  static bool decode(const Node& node, sierra::nalu::ABLTopUserData& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::ABLTopUserData& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::PeriodicUserData>
+struct convert<sierra::kynema-ugf::PeriodicUserData>
 {
-  static bool decode(const Node& node, sierra::nalu::PeriodicUserData& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::PeriodicUserData& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::NonConformalUserData>
+struct convert<sierra::kynema-ugf::NonConformalUserData>
 {
-  static bool decode(const Node& node, sierra::nalu::NonConformalUserData& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::NonConformalUserData& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::BoundaryConditionOptions>
+struct convert<sierra::kynema-ugf::BoundaryConditionOptions>
 {
   static bool
-  decode(const Node& node, sierra::nalu::BoundaryConditionOptions& rhs);
+  decode(const Node& node, sierra::kynema-ugf::BoundaryConditionOptions& rhs);
 };
 
 template <>
-struct convert<sierra::nalu::MeshInput>
+struct convert<sierra::kynema-ugf::MeshInput>
 {
-  static bool decode(const Node& node, sierra::nalu::MeshInput& rhs);
+  static bool decode(const Node& node, sierra::kynema-ugf::MeshInput& rhs);
 };
 
 template <>

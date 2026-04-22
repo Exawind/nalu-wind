@@ -7,7 +7,7 @@
 // for more details.
 //
 
-// nalu
+// kynema-ugf
 #include <AssembleNodeSolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <SolverAlgorithm.h>
@@ -27,7 +27,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 //==========================================================================
 // Class Definition
@@ -119,5 +119,5 @@ AssembleNodeSolverAlgorithm::execute()
   }
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

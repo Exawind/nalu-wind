@@ -1,7 +1,7 @@
 Development Infrastructure
 ==========================
 
-This document describes the development infrastructure used by the nalu-wind project.
+This document describes the development infrastructure used by the kynema-ugf project.
 
 Docker Container
 ----------------
@@ -22,7 +22,7 @@ There are currently two different systems the continuously check the code of thi
 GitHub Actions
 ^^^^^^^^^^^^^^
 
-The `github actions workflow <https://github.com/Exawind/nalu-wind/blob/master/.github/workflows/ci.yml>`_
+The `github actions workflow <https://github.com/Exawind/kynema-ugf/blob/master/.github/workflows/ci.yml>`_
 runs on every pull request towards master as well as all commits on master.
 
 It does the following things:
@@ -31,7 +31,7 @@ It does the following things:
 * Run the unit tests
 
   * Uses the docker container to allow to reuse the third party libraries
-  * Rebuilds nalu-wind with the source from the commit on which the ci is run
+  * Rebuilds kynema-ugf with the source from the commit on which the ci is run
   * Run all test with `unit` in the label using ctest
 
 Daily Regression Tests

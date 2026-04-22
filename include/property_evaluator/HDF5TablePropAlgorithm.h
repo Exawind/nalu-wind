@@ -19,7 +19,7 @@ class MetaData;
 } // namespace stk
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 // Forward declarations
 class Realm;
@@ -93,7 +93,7 @@ private:
 // typedef SharedPtr<const HDF5TablePropAlgorithm>
 // ConstHDF5TablePropAlgorithmPtr;
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

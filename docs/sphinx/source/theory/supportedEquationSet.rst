@@ -17,7 +17,7 @@ The continuity equation is always solved in the variable density form.
    \int \frac{\partial \bar{\rho}} {\partial t}\, dV
    + \int \bar{\rho} \widetilde{u}_i  n_i\, dS = 0
 
-Since Nalu-Wind uses equal-order interpolation (variables are collocated)
+Since Kynema-UGF uses equal-order interpolation (variables are collocated)
 stabilization is required. The stabilization choice will be developed in
 the pressure stabilization section.
 
@@ -164,7 +164,7 @@ vertical component of the acceleration is small relative to gravity,
 such that the terms containing :math:`\cos\phi` are neglected.  However,
 there is evidence that this so-called traditional approximation is not
 valid for some mesoscale atmospheric phenomena \cite{Gerkema_etal:08},
-and so the full Coriolis term is retained in Nalu-Wind. The implementation
+and so the full Coriolis term is retained in Kynema-UGF. The implementation
 proceeds by first finding the velocity vector in the East-North-Up
 coordinate system, then calculating the Coriolis acceleration vector
 (:eq:`coracc`), then transforming this vector back to the model
@@ -447,7 +447,7 @@ ABL Forcing Source Terms
 
 In LES of wind plant atmospheric flows, it is often necessary to
 drive the flow to a predetermined vertical velocity and/or temperature profile.
-In Nalu-Wind, this is achieved by adding appropriate
+In Kynema-UGF, this is achieved by adding appropriate
 source terms :math:`\mathrm{f}_i` to the
 momentum equation :eq:`favmom` and
 :math:`S_\theta` to the enthalpy equation :eq:`fav-enth`.
@@ -513,7 +513,7 @@ such that the body force is only a
 function of height :math:`z` and time :math:`t`.
 The implementation allows the
 user to prescribe relaxation factors :math:`\alpha_u` for the source terms that are
-applied. Nalu-Wind uses a default value of 1.0 for the relaxation factors if no
+applied. Kynema-UGF uses a default value of 1.0 for the relaxation factors if no
 values are defined in the input file during initialization.
 
 The enthalpy source term works similarly to the momentum source term.
@@ -688,7 +688,7 @@ For simulations in which a buoyancy source term is desired, the code supports th
 RANS Model Suite
 ++++++++++++++++
 
-Although Nalu-Wind is primarily expected to be a LES simulation tool,
+Although Kynema-UGF is primarily expected to be a LES simulation tool,
 RANS modeling is supported through the activation of different
 two-equation RANS models: the Chien :math:`k-\epsilon` model
 :cite:`chien1982predictions`, the Wilcox 1998 :math:`k-\omega` model
@@ -916,7 +916,7 @@ node.
 Improved Delayed Detached Eddy Simulation (IDDES) Formulation
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The IDDES model is available in Nalu-Wind in combination with the SST model :cite:`Gritskevich:2012`.
+The IDDES model is available in Kynema-UGF in combination with the SST model :cite:`Gritskevich:2012`.
 The basic idea behind the IDDES is similar to the DES, a hybrid RANS-LES approach. 
 However, the IDDES introduces new formulations for the length scale, along with recalibrated constants specific to the SST turbulence model.
 The IDDES model modifies the destruction term of the turbulent kinetic energy equation like the DES as
@@ -1149,7 +1149,7 @@ length scale associated with the model production.  It takes the form,
 
    r_k = \left( \frac{3}{2 \langle \overline{v}^2 \rangle} \right)^{3/2} \max_{\lambda}(\mathcal{P}_{ik}^{SGS} \mathcal{M}_{kj}).
 
-For the RANS models used in Nalu-Wind, :math:`\langle \overline{v}^2 \rangle
+For the RANS models used in Kynema-UGF, :math:`\langle \overline{v}^2 \rangle
 \approx 5\nu_{RANS}/T_{RANS}`.  :math:`\mathcal{P}_{ij}^{SGS} =
 \frac{1}{2} ( \tau_{ik} \partial \overline{u}_k / \partial x_j +
 \tau_{jk} \partial \overline{u}_k / \partial x_i)` is the full subgrid
@@ -1502,7 +1502,7 @@ distance* for computing various turbulence parameters. For static mesh
 simulations this field can be generated using a pre-processing step and provided
 as an input in the mesh database. However, for moving mesh simulations, e.g.,
 blade resolved wind turbine simulations, this field must be computed throughout
-the course of the simulation. Nalu-Wind implements a Poisson equation
+the course of the simulation. Kynema-UGF implements a Poisson equation
 (:cite:`Tucker2003`) to determine the wall distance :math:`d` using the
 gradients of a field :math:`\phi`.
 

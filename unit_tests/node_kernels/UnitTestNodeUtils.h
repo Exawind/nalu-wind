@@ -15,10 +15,10 @@
 
 namespace unit_test_utils {
 
-class TestABLForcingAlg : public sierra::nalu::ABLForcingAlgorithm
+class TestABLForcingAlg : public sierra::kynema-ugf::ABLForcingAlgorithm
 {
 public:
-  TestABLForcingAlg(sierra::nalu::Realm& realm) : ABLForcingAlgorithm(realm)
+  TestABLForcingAlg(sierra::kynema-ugf::Realm& realm) : ABLForcingAlgorithm(realm)
   {
     USource_ = {{10.0}, {10.0}, {10.0}};
     TSource_.clear();
@@ -27,9 +27,9 @@ public:
     std::vector<double> heights(1, 90.0);
 
     USrcInterp_.reset(
-      new sierra::nalu::ABLVectorInterpolator(heights, USource_));
+      new sierra::kynema-ugf::ABLVectorInterpolator(heights, USource_));
     TSrcInterp_.reset(
-      new sierra::nalu::ABLScalarInterpolator(heights, TSource_));
+      new sierra::kynema-ugf::ABLScalarInterpolator(heights, TSource_));
   }
 };
 

@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class TaylorGreenPressureAuxFunction : public AuxFunction
 {
@@ -42,7 +42,7 @@ private:
   double L_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

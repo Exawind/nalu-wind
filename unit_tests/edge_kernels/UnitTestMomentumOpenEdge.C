@@ -237,12 +237,12 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_open_edge)
   unit_test_utils::FaceElemHelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 3, part, isEdge);
 
-  std::unique_ptr<sierra::nalu::Kernel> kernel(
-    new sierra::nalu::MomentumOpenEdgeKernel<sierra::nalu::AlgTraitsQuad4Hex8>(
+  std::unique_ptr<sierra::kynema-ugf::Kernel> kernel(
+    new sierra::kynema-ugf::MomentumOpenEdgeKernel<sierra::kynema-ugf::AlgTraitsQuad4Hex8>(
       *meta_, &solnOpts_, viscosity_,
       helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
       helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_,
-      sierra::nalu::EntrainmentMethod::COMPUTED));
+      sierra::kynema-ugf::EntrainmentMethod::COMPUTED));
 
   helperObjs.assembleFaceElemSolverAlg->activeKernels_.push_back(kernel.get());
 

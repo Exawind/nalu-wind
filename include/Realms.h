@@ -23,7 +23,7 @@ class Node;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 typedef std::vector<Realm*> RealmVector;
 
@@ -66,7 +66,7 @@ public:
   RealmVector realmVector_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

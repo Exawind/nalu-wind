@@ -13,10 +13,10 @@
 
 // yaml for parsing..
 #include <yaml-cpp/yaml.h>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 //==========================================================================
 // Class Definition
@@ -49,5 +49,5 @@ MaterialProperty::load(const YAML::Node& /* node */)
   // nothing...
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

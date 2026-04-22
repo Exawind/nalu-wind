@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 BoussinesqNonIsoVelocityAuxFunction::BoussinesqNonIsoVelocityAuxFunction(
   const unsigned beginPos, const unsigned endPos)
@@ -57,5 +57,5 @@ BoussinesqNonIsoVelocityAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

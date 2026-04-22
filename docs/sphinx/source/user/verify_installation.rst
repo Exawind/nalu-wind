@@ -1,7 +1,7 @@
-Verifying that the installation of Nalu-Wind works
+Verifying that the installation of Kynema-UGF works
 ==================================================
 
-To verify that the build was successful and that your installation of Nalu-Wind works you can run the unit tests and one of the regression test cases.
+To verify that the build was successful and that your installation of Kynema-UGF works you can run the unit tests and one of the regression test cases.
 
 Unit Tests
 ----------
@@ -10,7 +10,7 @@ Running
 ~~~~~~~
 
 Create a new folder and change into it (the following command creates various files, and this makes it easier to delete them again)
-Then, run the binary :code:`unittestX` contained in your installation of Nalu-Wind.
+Then, run the binary :code:`unittestX` contained in your installation of Kynema-UGF.
 
 Expected result
 ~~~~~~~~~~~~~~~
@@ -37,16 +37,16 @@ First download the submodule `reg_tests/mesh`:
 Running
 ~~~~~~~
 
-Change to the directory `reg_tests/test_files/ablNeutralEdge` and run `naluX` on the input there:
+Change to the directory `reg_tests/test_files/ablNeutralEdge` and run `kynema-ugf` on the input there:
 
 ::
 
     cd reg_tests/test_files/ablNeutralEdge
-    naluX -i ablNeutralEdge.yaml
+    kynema-ugf -i ablNeutralEdge.yaml
 
 Expected result
 ~~~~~~~~~~~~~~~
 
-Nalu-Wind will now run (should take a moment).
+Kynema-UGF will now run (should take a moment).
 It should log nothing or at most a few informational lines and exit cleanly (exit code 0).
 Various new files should be created.

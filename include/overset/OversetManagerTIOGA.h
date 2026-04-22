@@ -16,7 +16,7 @@
 #include <stk_mesh/base/FieldBase.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class Realm;
 class OversetInfo;
@@ -24,7 +24,7 @@ struct OversetUserData;
 
 /** Overset Connectivity Algorithm using TIOGA third-party library
  *
- *  This class is a thin Nalu-TIOGA wrapper to provide compatibility with Nalu's
+ *  This class is a thin KynemaUGF-TIOGA wrapper to provide compatibility with KynemaUGF's
  *  built-in STK based overset connectivity algorithm. The heavy lifting is done
  *  by the TiogaSTKIface class. Please refer to the documentation of that class
  *  for actual implementation details.
@@ -56,13 +56,13 @@ public:
 
   /// Tioga-STK interface instance that performs the necessary translation
   /// between TIOGA and STK data structures.
-  tioga_nalu::TiogaSTKIface tiogaIface_;
+  tioga_kynema-ugf::TiogaSTKIface tiogaIface_;
 
   /// Flag tracking initialization phase for part registration
   bool isInit_{true};
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* OVERSETMANAGERTIOGA_H */

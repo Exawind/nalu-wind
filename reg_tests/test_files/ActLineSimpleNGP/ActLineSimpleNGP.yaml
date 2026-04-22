@@ -4,13 +4,13 @@
 # FIXED WING REGRESSION TEST
 # ------
 # For details of the verification problem, see
-# https://nalu-wind.readthedocs.io/en/latest/source/verification/verification.html#fixed-wing-verification-problem
+# https://kynema-ugf.readthedocs.io/en/latest/source/verification/verification.html#fixed-wing-verification-problem
 #
 
 # MESH PARAMETERS
 # ------
 # Use abl_mesh preprocessing tool to generate the mesh
-nalu_abl_mesh:
+kynema-ugf_abl_mesh:
   output_db: mesh_actlinesimple.exo
   spec_type: bounding_box
   fluid_part_name: Unspecified-2-HEX
@@ -27,7 +27,7 @@ nalu_abl_mesh:
   zmin_boundary_name: lower
   zmax_boundary_name: upper
 
-# NALU-WIND PARAMETERS
+# KYNEMA_UGF-WIND PARAMETERS
 # ------
 Simulations:
 - name: sim1

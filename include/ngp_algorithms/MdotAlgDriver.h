@@ -15,7 +15,7 @@
 #include "SimdInterface.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class Realm;
 
@@ -129,7 +129,7 @@ private:
   bool isInit_{true};
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* MDOTALGDRIVER_H */

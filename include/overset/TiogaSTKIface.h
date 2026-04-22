@@ -22,30 +22,30 @@ class tioga;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class OversetManagerTIOGA;
 }
 } // namespace sierra
 
-namespace tioga_nalu {
+namespace tioga_kynema-ugf {
 
 class TiogaBlock;
 
-/** Nalu interface to TIOGA (Topology Independent Overset Grid Assembly)
+/** KynemaUGF interface to TIOGA (Topology Independent Overset Grid Assembly)
  *
  *  This class provides a two-way data transfer interface for TIOGA library and
- *  provides overset connectivity capability for Nalu.
+ *  provides overset connectivity capability for KynemaUGF.
  */
 class TiogaSTKIface
 {
 public:
   /**
-   *  @param oversetManager Reference to Nalu OversetManager object
+   *  @param oversetManager Reference to KynemaUGF OversetManager object
    *  @param node YAML node containing overset inputs
    */
   TiogaSTKIface(
-    sierra::nalu::OversetManagerTIOGA&, const YAML::Node&, const std::string&);
+    sierra::kynema-ugf::OversetManagerTIOGA&, const YAML::Node&, const std::string&);
 
   ~TiogaSTKIface();
 
@@ -71,12 +71,12 @@ public:
 
   void post_connectivity_work(const bool isDecoupled = true);
 
-  int register_solution(const std::vector<sierra::nalu::OversetFieldData>&);
+  int register_solution(const std::vector<sierra::kynema-ugf::OversetFieldData>&);
 
-  void update_solution(const std::vector<sierra::nalu::OversetFieldData>&);
+  void update_solution(const std::vector<sierra::kynema-ugf::OversetFieldData>&);
 
   virtual void
-  overset_update_fields(const std::vector<sierra::nalu::OversetFieldData>&);
+  overset_update_fields(const std::vector<sierra::kynema-ugf::OversetFieldData>&);
 
   virtual void overset_update_field(
     stk::mesh::FieldBase* field,
@@ -121,8 +121,8 @@ private:
   //! Synchronize modified fields after performing overset connectivity
   void post_connectivity_sync();
 
-  //! Reference to Nalu OversetManager object
-  sierra::nalu::OversetManagerTIOGA& oversetManager_;
+  //! Reference to KynemaUGF OversetManager object
+  sierra::kynema-ugf::OversetManagerTIOGA& oversetManager_;
 
   //! Reference to the STK MetaData object
   stk::mesh::MetaData& meta_;
@@ -157,6 +157,6 @@ private:
   std::string coordsName_;
 };
 
-} // namespace tioga_nalu
+} // namespace tioga_kynema-ugf
 
 #endif /* TIOGASTKIFACE_H */

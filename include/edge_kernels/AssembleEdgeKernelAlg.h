@@ -16,7 +16,7 @@
 #include <memory>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class Realm;
 class EdgeKernel;
@@ -43,7 +43,7 @@ protected:
   EdgeKernelVecType edgeKernels_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* ASSEMBLEEDGEKERNEL_H */

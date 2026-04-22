@@ -4,7 +4,7 @@ ActLineSimpleNGP version
 
 For details of the verification problem that corresponds to this
 regression test, see
-https://nalu-wind.readthedocs.io/en/latest/source/verification/verification.html#fixed-wing-verification-problem
+https://kynema-ugf.readthedocs.io/en/latest/source/verification/verification.html#fixed-wing-verification-problem
 
 Domain: 
 	- x: -50 m to +50 m

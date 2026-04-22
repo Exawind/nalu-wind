@@ -1,4 +1,4 @@
-target_sources(nalu PRIVATE
+target_sources(kynema-ugf PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/ABLForcingAlgorithm.C
   ${CMAKE_CURRENT_SOURCE_DIR}/BdyHeightAlgorithm.C
   ${CMAKE_CURRENT_SOURCE_DIR}/BdyLayerStatistics.C

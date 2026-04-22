@@ -15,7 +15,7 @@
 #include "utils/StkHelpers.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 MomentumBodyForceNodeKernel::MomentumBodyForceNodeKernel(
   const stk::mesh::BulkData& bulk, const std::vector<double>& params)
@@ -52,5 +52,5 @@ MomentumBodyForceNodeKernel::execute(
   // No LHS contributions
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

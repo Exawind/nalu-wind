@@ -8,28 +8,28 @@
 //
 
 #include <InitialConditions.h>
-#include <NaluEnv.h>
+#include <KynemaUGFEnv.h>
 #include <Realm.h>
 
 // yaml for parsing..
 #include <yaml-cpp/yaml.h>
-#include <NaluParsing.h>
+#include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 std::unique_ptr<InitialCondition>
 InitialConditionCreator::load_single(const YAML::Node& node)
 {
   if (node["constant"]) {
-    NaluEnv::self().naluOutputP0() << "Initial Is Type constant " << std::endl;
+    KynemaUGFEnv::self().kynema-ugfOutputP0() << "Initial Is Type constant " << std::endl;
     std::unique_ptr<InitialCondition> ic =
       std::make_unique<ConstantInitialConditionData>(debug_);
     auto* constIC = dynamic_cast<ConstantInitialConditionData*>(ic.get());
     node >> *constIC;
     return ic;
   } else if (node["user_function"]) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema-ugfOutputP0()
       << "Initial Is Type user-function " << std::endl;
     std::unique_ptr<InitialCondition> ic =
       std::make_unique<UserFunctionInitialConditionData>();
@@ -37,7 +37,7 @@ InitialConditionCreator::load_single(const YAML::Node& node)
     node >> *fcnIC;
     return ic;
   } else if (node["string_function"]) {
-    NaluEnv::self().naluOutputP0()
+    KynemaUGFEnv::self().kynema-ugfOutputP0()
       << "Initial Is Type string-function " << std::endl;
     auto string_func = std::make_unique<StringFunctionInitialConditionData>();
     node >> *string_func;
@@ -72,5 +72,5 @@ InitialConditionCreator::create_ic_vector(const YAML::Node& node)
   return vec;
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

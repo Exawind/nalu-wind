@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class MomentumBodyForceNodeKernel
   : public NGPNodeKernel<MomentumBodyForceNodeKernel>
@@ -50,7 +50,7 @@ private:
   const int nDim_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* MOMENTUMBODYFORCENODEKERNEL_H */

@@ -23,7 +23,7 @@
 #include "FieldTypeDef.h"
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 void
 compute_vector_divergence(
@@ -83,7 +83,7 @@ compute_vector_divergence(
     wsScsArea.resize(numScsIp * nDim);
 
     ws_shape_function.resize(numScsIp * nodesPerElement);
-    sierra::nalu::SharedMemView<double**, sierra::nalu::HostShmem> ShmemView(
+    sierra::kynema-ugf::SharedMemView<double**, sierra::kynema-ugf::HostShmem> ShmemView(
       ws_shape_function.data(), numScsIp, nodesPerElement);
     meSCS->shape_fcn<>(ShmemView);
 
@@ -106,9 +106,9 @@ compute_vector_divergence(
       }
 
       // compute geometry
-      sierra::nalu::SharedMemView<double**> elemCoords(
+      sierra::kynema-ugf::SharedMemView<double**> elemCoords(
         wsCoordinates.data(), nodesPerElement, nDim);
-      sierra::nalu::SharedMemView<double**> areav(
+      sierra::kynema-ugf::SharedMemView<double**> areav(
         wsScsArea.data(), numScsIp, nDim);
       meSCS->determinant(elemCoords, areav);
 
@@ -180,7 +180,7 @@ compute_vector_divergence(
 
     wsMeshVector.resize(nodesPerFace * nDim);
     ws_shape_function.resize(numScsIp * nodesPerFace);
-    sierra::nalu::SharedMemView<double**, sierra::nalu::HostShmem> ShmemView(
+    sierra::kynema-ugf::SharedMemView<double**, sierra::kynema-ugf::HostShmem> ShmemView(
       ws_shape_function.data(), numScsIp, nodesPerFace);
     meFC->shape_fcn<>(ShmemView);
 
@@ -341,5 +341,5 @@ compute_edge_scalar_divergence(
   return;
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

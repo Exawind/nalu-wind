@@ -23,7 +23,7 @@ class Node;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class LinearSolverConfig
 {
@@ -203,7 +203,7 @@ private:
   void configure_hypre_solver(const YAML::Node&);
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

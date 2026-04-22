@@ -7,7 +7,7 @@
 #include <utility>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 namespace utils {
 
 struct OutOfBounds
@@ -147,7 +147,7 @@ linear_interp(
 }
 
 } // namespace utils
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* LINEARINTERPOLATION_H */

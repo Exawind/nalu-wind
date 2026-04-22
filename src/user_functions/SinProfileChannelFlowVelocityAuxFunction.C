@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 SinProfileChannelFlowVelocityAuxFunction::
   SinProfileChannelFlowVelocityAuxFunction(
@@ -55,5 +55,5 @@ SinProfileChannelFlowVelocityAuxFunction::do_evaluate(
   }
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra

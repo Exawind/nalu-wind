@@ -4,7 +4,7 @@
 #include <stk_util/util/ReportHandler.hpp>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 /**
  *  @class LU
@@ -84,7 +84,7 @@ private:
   SparseMatrix AA_;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

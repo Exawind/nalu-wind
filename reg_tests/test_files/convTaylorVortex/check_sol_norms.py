@@ -13,7 +13,7 @@ from shutil import copyfile
 def parse_arguments():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
-        description="Nalu-Wind verification test check utility")
+        description="Kynema-UGF verification test check utility")
     parser.add_argument(
         "test_name", help="Verification test name")
     parser.add_argument(

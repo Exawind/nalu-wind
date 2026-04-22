@@ -29,7 +29,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 template <typename ViewType>
 KOKKOS_FUNCTION void
@@ -557,7 +557,7 @@ hex_vertex_coordinates(
   }
 }
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif

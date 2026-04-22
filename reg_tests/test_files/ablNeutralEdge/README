@@ -14,9 +14,9 @@ layer.  Because of constant density used here, because we do not include
 pressure work term in the enthalpy equation, and becuase we use Boussinesq
 buoyancy, temperature is potential temperature.
 
-- To build the mesh, use NaluWindUtils abl_mesh with nalu_abl_mesh.yaml
-- To initialze the fiels, use NaluWindUtils nalu_preprocess with 
-  nalu_preprocess.yaml
+- To build the mesh, use KynemaUGFUtils abl_mesh with kynema-ugf_abl_mesh.yaml
+- To initialze the fiels, use KynemaUGFUtils kynema-ugf_preprocess with 
+  kynema-ugf_preprocess.yaml
 
 Domain: 
   - x: 0 m - 5000 m

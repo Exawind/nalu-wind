@@ -1,0 +1,4 @@
+#!/bin/bash
+KYNEMA_UGFX_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export CATALYST_ADAPTER_INSTALL_DIR=@PARAVIEW_CATALYST_INSTALL_PATH@
+${KYNEMA_UGFX_DIR}/kynema-ugf "$@"

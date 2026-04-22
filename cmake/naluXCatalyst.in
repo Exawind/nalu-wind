@@ -1,4 +1,0 @@
-#!/bin/bash
-NALUX_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export CATALYST_ADAPTER_INSTALL_DIR=@PARAVIEW_CATALYST_INSTALL_PATH@
-${NALUX_DIR}/naluX "$@"

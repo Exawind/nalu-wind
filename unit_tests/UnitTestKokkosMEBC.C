@@ -14,7 +14,7 @@ namespace {
 template <typename SHMEM>
 void
 check_that_values_match(
-  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& values,
+  const sierra::kynema-ugf::SharedMemView<DoubleType***, SHMEM>& values,
   const DoubleType* oldValues)
 {
   int counter = 0;
@@ -33,7 +33,7 @@ check_that_values_match(
 template <typename SHMEM>
 void
 check_that_values_match(
-  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& values,
+  const sierra::kynema-ugf::SharedMemView<DoubleType**, SHMEM>& values,
   const DoubleType* oldValues)
 {
   int counter = 0;
@@ -53,19 +53,19 @@ void
 compare_old_face_grad_op(
   const int faceOrdinal,
   const bool shifted,
-  const sierra::nalu::SharedMemView<DoubleType**, SHMEM>& v_coords,
-  const sierra::nalu::SharedMemView<DoubleType***, SHMEM>& scs_dndx,
-  sierra::nalu::MasterElement* meSCS)
+  const sierra::kynema-ugf::SharedMemView<DoubleType**, SHMEM>& v_coords,
+  const sierra::kynema-ugf::SharedMemView<DoubleType***, SHMEM>& scs_dndx,
+  sierra::kynema-ugf::MasterElement* meSCS)
 {
   int len = scs_dndx.extent(0) * scs_dndx.extent(1) * scs_dndx.extent(2);
   std::vector<DoubleType> grad_op(len, 0.0);
   std::vector<DoubleType> det_j(len, 0.0);
 
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> grad(
+  sierra::kynema-ugf::SharedMemView<DoubleType***, sierra::kynema-ugf::DeviceShmem> grad(
     grad_op.data(), scs_dndx.extent(0), scs_dndx.extent(1), scs_dndx.extent(2));
-  sierra::nalu::SharedMemView<DoubleType***, sierra::nalu::DeviceShmem> det(
+  sierra::kynema-ugf::SharedMemView<DoubleType***, sierra::kynema-ugf::DeviceShmem> det(
     det_j.data(), scs_dndx.extent(0), scs_dndx.extent(1), scs_dndx.extent(2));
-  sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem> coords(
+  sierra::kynema-ugf::SharedMemView<DoubleType**, sierra::kynema-ugf::DeviceShmem> coords(
     v_coords.data(), v_coords.extent(0), v_coords.extent(1));
 
   if (shifted)
@@ -80,9 +80,9 @@ template <typename BcAlgTraits>
 void
 test_MEBC_views(
   int faceOrdinal,
-  const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& elem_requests,
-  const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& face_requests =
-    std::vector<sierra::nalu::ELEM_DATA_NEEDED>())
+  const std::vector<sierra::kynema-ugf::ELEM_DATA_NEEDED>& elem_requests,
+  const std::vector<sierra::kynema-ugf::ELEM_DATA_NEEDED>& face_requests =
+    std::vector<sierra::kynema-ugf::ELEM_DATA_NEEDED>())
 {
   unit_test_utils::KokkosMEBC<BcAlgTraits> driver(faceOrdinal, true, true);
   ASSERT_TRUE(
@@ -92,34 +92,34 @@ test_MEBC_views(
      driver.bulk_->buckets(stk::topology::EDGE_RANK).size() > 0));
 
   // Register ME data requests
-  for (sierra::nalu::ELEM_DATA_NEEDED request : elem_requests) {
+  for (sierra::kynema-ugf::ELEM_DATA_NEEDED request : elem_requests) {
     driver.elemDataNeeded().add_master_element_call(
-      request, sierra::nalu::CURRENT_COORDINATES);
+      request, sierra::kynema-ugf::CURRENT_COORDINATES);
   }
-  for (sierra::nalu::ELEM_DATA_NEEDED request : face_requests) {
+  for (sierra::kynema-ugf::ELEM_DATA_NEEDED request : face_requests) {
     driver.faceDataNeeded().add_master_element_call(
-      request, sierra::nalu::CURRENT_COORDINATES);
+      request, sierra::kynema-ugf::CURRENT_COORDINATES);
   }
 
   // Execute the loop and perform all tests
   driver.execute(
     [&](
-      sierra::nalu::SharedMemData_FaceElem<
-        sierra::nalu::TeamHandleType, sierra::nalu::DeviceShmem>& smdata) {
-      sierra::nalu::SharedMemView<DoubleType**, sierra::nalu::DeviceShmem>&
+      sierra::kynema-ugf::SharedMemData_FaceElem<
+        sierra::kynema-ugf::TeamHandleType, sierra::kynema-ugf::DeviceShmem>& smdata) {
+      sierra::kynema-ugf::SharedMemView<DoubleType**, sierra::kynema-ugf::DeviceShmem>&
         v_coords =
           smdata.simdElemViews.get_scratch_view_2D(*driver.coordinates_);
       auto& meViews =
-        smdata.simdElemViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+        smdata.simdElemViews.get_me_views(sierra::kynema-ugf::CURRENT_COORDINATES);
       auto& fcViews =
-        smdata.simdFaceViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+        smdata.simdFaceViews.get_me_views(sierra::kynema-ugf::CURRENT_COORDINATES);
 
-      for (sierra::nalu::ELEM_DATA_NEEDED request : elem_requests) {
-        if (request == sierra::nalu::SCS_FACE_GRAD_OP) {
+      for (sierra::kynema-ugf::ELEM_DATA_NEEDED request : elem_requests) {
+        if (request == sierra::kynema-ugf::SCS_FACE_GRAD_OP) {
           compare_old_face_grad_op(
             faceOrdinal, false, v_coords, meViews.dndx_fc_scs, driver.meSCS_);
         }
-        if (request == sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP) {
+        if (request == sierra::kynema-ugf::SCS_SHIFTED_FACE_GRAD_OP) {
           compare_old_face_grad_op(
             faceOrdinal, true, v_coords, meViews.dndx_shifted_fc_scs,
             driver.meSCS_);
@@ -131,61 +131,61 @@ test_MEBC_views(
 TEST(KokkosMEBC, test_quad42D_views)
 {
   for (int k = 0; k < 3; ++k) {
-    test_MEBC_views<sierra::nalu::AlgTraitsEdge2DQuad42D>(
+    test_MEBC_views<sierra::kynema-ugf::AlgTraitsEdge2DQuad42D>(
       k,
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+      {sierra::kynema-ugf::SCS_FACE_GRAD_OP, sierra::kynema-ugf::SCS_SHIFTED_FACE_GRAD_OP});
   }
 }
 
 TEST(KokkosMEBC, test_tri32D_views)
 {
   for (int k = 0; k < 3; ++k) {
-    test_MEBC_views<sierra::nalu::AlgTraitsEdge2DTri32D>(
+    test_MEBC_views<sierra::kynema-ugf::AlgTraitsEdge2DTri32D>(
       k,
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+      {sierra::kynema-ugf::SCS_FACE_GRAD_OP, sierra::kynema-ugf::SCS_SHIFTED_FACE_GRAD_OP});
   }
 }
 
 TEST(KokkosMEBC, test_hex8_views)
 {
   for (int k = 0; k < 6; ++k) {
-    test_MEBC_views<sierra::nalu::AlgTraitsQuad4Hex8>(
+    test_MEBC_views<sierra::kynema-ugf::AlgTraitsQuad4Hex8>(
       k,
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+      {sierra::kynema-ugf::SCS_FACE_GRAD_OP, sierra::kynema-ugf::SCS_SHIFTED_FACE_GRAD_OP});
   }
 }
 
 TEST(KokkosMEBC, test_tet4_views)
 {
   for (int k = 0; k < 4; ++k) {
-    test_MEBC_views<sierra::nalu::AlgTraitsTri3Tet4>(
+    test_MEBC_views<sierra::kynema-ugf::AlgTraitsTri3Tet4>(
       k,
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+      {sierra::kynema-ugf::SCS_FACE_GRAD_OP, sierra::kynema-ugf::SCS_SHIFTED_FACE_GRAD_OP});
   }
 }
 
 TEST(KokkosMEBC, test_wedge4_views)
 {
   for (int k = 0; k < 3; ++k) {
-    test_MEBC_views<sierra::nalu::AlgTraitsQuad4Wed6>(
+    test_MEBC_views<sierra::kynema-ugf::AlgTraitsQuad4Wed6>(
       k,
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+      {sierra::kynema-ugf::SCS_FACE_GRAD_OP, sierra::kynema-ugf::SCS_SHIFTED_FACE_GRAD_OP});
   }
 
   for (int k = 3; k < 5; ++k) {
-    test_MEBC_views<sierra::nalu::AlgTraitsTri3Wed6>(
+    test_MEBC_views<sierra::kynema-ugf::AlgTraitsTri3Wed6>(
       k,
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+      {sierra::kynema-ugf::SCS_FACE_GRAD_OP, sierra::kynema-ugf::SCS_SHIFTED_FACE_GRAD_OP});
   }
 }
 
 TEST(KokkosMEBC, test_pyr5_views)
 {
   for (int k = 0; k < 4; ++k) {
-    test_MEBC_views<sierra::nalu::AlgTraitsTri3Pyr5>(
-      k, {sierra::nalu::SCS_FACE_GRAD_OP});
+    test_MEBC_views<sierra::kynema-ugf::AlgTraitsTri3Pyr5>(
+      k, {sierra::kynema-ugf::SCS_FACE_GRAD_OP});
   }
-  test_MEBC_views<sierra::nalu::AlgTraitsQuad4Pyr5>(
+  test_MEBC_views<sierra::kynema-ugf::AlgTraitsQuad4Pyr5>(
     4,
-    {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+    {sierra::kynema-ugf::SCS_FACE_GRAD_OP, sierra::kynema-ugf::SCS_SHIFTED_FACE_GRAD_OP});
 }

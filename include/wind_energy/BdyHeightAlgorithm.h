@@ -19,7 +19,7 @@ class Node;
 }
 
 namespace sierra {
-namespace nalu {
+namespace kynema-ugf {
 
 class Realm;
 
@@ -74,7 +74,7 @@ private:
   RectilinearMeshHeightAlg(const RectilinearMeshHeightAlg&) = delete;
 };
 
-} // namespace nalu
+} // namespace kynema-ugf
 } // namespace sierra
 
 #endif /* BDYHEIGHTALGORITHM_H */
