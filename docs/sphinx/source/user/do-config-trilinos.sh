@@ -12,13 +12,13 @@ KYNEMA_UGF_ROOT_DIR=/PathToKynemaUGFProjectDir
 # TPLS needed by trilinos, possibly provided by HomeBrew on a Mac
 #BOOST_ROOT_DIR=/usr/local/Cellar/boost/1.56.0/include/boost/
 #SUPERLU_ROOT_DIR=/usr/local/Cellar/superlu/4.3
-BOOST_ROOT_DIR=${KYNEMA_UGF_BUILD_DIR}/install/boost
-SUPERLU_ROOT_DIR=${KYNEMA_UGF_BUILD_DIR}/install/SuperLU_4.3
-NETCDF_ROOT_DIR=${KYNEMA_UGF_BUILD_DIR}/install/netcdf
-HDF5_ROOT_DIR=${KYNEMA_UGF_BUILD_DIR}/install/hdf5
-PARALLEL_NETCDF_ROOT_DIR=${KYNEMA_UGF_BUILD_DIR}/install/parallel-netcdf
-ZLIB_ROOT_DIR=${KYNEMA_UGF_BUILD_DIR}/install/zlib
-TRILINOS_ROOT_DIR=${KYNEMA_UGF_BUILD_DIR}/install/trilinos
+BOOST_ROOT_DIR=${KYNEMA_UGF_ROOT_DIR}/install/boost
+SUPERLU_ROOT_DIR=${KYNEMA_UGF_ROOT_DIR}/install/SuperLU_4.3
+NETCDF_ROOT_DIR=${KYNEMA_UGF_ROOT_DIR}/install/netcdf
+HDF5_ROOT_DIR=${KYNEMA_UGF_ROOT_DIR}/install/hdf5
+PARALLEL_NETCDF_ROOT_DIR=${KYNEMA_UGF_ROOT_DIR}/install/parallel-netcdf
+ZLIB_ROOT_DIR=${KYNEMA_UGF_ROOT_DIR}/install/zlib
+TRILINOS_ROOT_DIR=${KYNEMA_UGF_ROOT_DIR}/install/trilinos
 
 EXTRA_ARGS=$@
 
