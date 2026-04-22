@@ -395,7 +395,7 @@ public:
   size_t restartFileIndex_;
 
   // kynema-ugf field data
-  GlobalIdFieldType* kynema-ugfGlobalId_;
+  GlobalIdFieldType* kynemaUgfGlobalId_;
 
   // algorithm drivers managed by region
   std::unique_ptr<GeometryAlgDriver> geometryAlgDriver_;
