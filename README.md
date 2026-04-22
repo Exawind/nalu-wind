@@ -100,9 +100,9 @@ the source code repository for more details.
 Kynema-UGF was originally developed with funding from Department of Energy's
 (DOE) Office of Science [Exascale Computing Project
 (ECP)](https://www.exascaleproject.org/) and Energy Efficiency and Renewable
-Energy (EERE) Wind Energy Technology Office (WETO).  It is currently supported by the 
+Energy (EERE) Wind Energy Technology Office (WETO).  It is currently supported by the
 DOE Office of Critical Minerals and Energy Innovation (CMEI). 
 
 Please see [authors
 file](https://github.com/kynema/kynema-ugf/blob/master/AUTHORS) for a 
-list of contributors to Kynema-UGF, formerly Nalu-Wind. 
+list of contributors to Kynema-UGF, formerly Nalu-Wind.
