@@ -89,8 +89,8 @@ private:
 
   std::pair<double, double> openFastTimer_{
     0.0, 0.0}; // store time taken in openfast calls
-  std::pair<double, double> kynema -
-    ugfTimer_{0.0, 0.0}; // store time taken in openfast calls
+  std::pair<double, double> kynema_ugfTimer_{
+    0.0, 0.0}; // store time taken in openfast calls
 
   int writeFreq_{
     30}; // Frequency to write line loads and deflections to netcdf file
