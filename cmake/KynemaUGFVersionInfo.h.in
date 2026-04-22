@@ -31,8 +31,8 @@ const std::string RepoIsDirty = "UNKNOWN";
 #endif
 
 }  // version
-}  // kynema-ugf
+}  // kynema_ugf
 }  // sierra
 
 
-#endif /* KYNEMA_UGFVERSIONINFO.H_H */
+#endif /* KYNEMA_UGFVERSIONINFO_H */
