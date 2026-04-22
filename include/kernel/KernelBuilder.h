@@ -59,7 +59,7 @@ build_or_add_part_to_solver_alg(
       topo.num_nodes());
     STK_ThrowRequire(theSolverAlg != nullptr);
 
-    KynemaUGFEnv::self().kynema-ugfOutputP0()
+    KynemaUGFEnv::self().kynemaUGFOutputP0()
       << "Created the following interior elem alg: " << algName << std::endl;
     solverAlgs.insert({algName, theSolverAlg});
   } else {
