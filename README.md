@@ -1,6 +1,6 @@
 # Kynema-UGF 
 
-[Documentation](https://kynema.github.io/kynema-ugf/) | [Nightly test dashboard](http://my.cdash.org/index.php?project=Exawind) 
+[Documentation](https://kynema.github.io/kynema-ugf/) | [Nightly test dashboard](http://my.cdash.org/index.php?project=Kynema) 
 
 Kynema-UGF, wherein UGF stands for unstructured-grid fluid dynamics, is a generalized, unstructured-grid, massively parallel, incompressible-flow solver. The codebase was initiated in 2018 from [NaluCFD](https://github.com/NaluCFD/Nalu), which was developed by Sandia National Laboratories. Kynema-UGF is being actively
 developed and maintained by a dedicated, multi-institutional team from [National Laboratory of the Rockies](https://nlr.gov) and [Sandia National Laboratories](https://sandia.gov).
@@ -71,7 +71,7 @@ operating systems, against both the `master` and `develop` branches of
 [Trilinos](https://github.com/trilinos/Trilinos). Tests are performed both using
 flat MPI and hybrid MPI-GPU hardware configurations. The results of the nightly
 testing are publicly available on [CDash
-dashboard](http://my.cdash.org/index.php?project=Exawind).
+dashboard](http://my.cdash.org/index.php?project=Kynema).
 
 ### Contributing, reporting bugs, and requesting help
 
