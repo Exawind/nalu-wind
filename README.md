@@ -13,7 +13,7 @@ Kynema-UGF is developed as an open-source code with the following objectives:
   models for modeling flow physics relevant to energy systems that are
   backed by a comprehensive verification and validation (V&V) process;
 
-- be able to leverage the high-performance leadership-class computating
+- be able to leverage the high-performance leadership-class computing
   facilities available at DOE national laboratories.
 
 When disseminating technical work that includes Kynema-FMB simulations
