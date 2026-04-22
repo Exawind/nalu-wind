@@ -9,15 +9,21 @@ on:
 jobs:
   Formatting:
     runs-on: ubuntu-latest
+    name: Formatting Check
+    strategy:
+      matrix:
+        path:
+          - 'include'
+          - 'src'
+          - 'unit_tests'
     steps:
     - name: Clone
       uses: actions/checkout@v4
-    - name: Check formatting
-      uses: DoozyX/clang-format-lint-action@v0.20
+    - name: Run clang-format
+      uses: jidicula/clang-format-action@v4.18.0
       with:
-        source: 'kynema-ugf.C unit_tests.C ./include ./src ./unit_tests'
-        extensions: 'H,h,cpp,C'
-        clangFormatVersion: 20
+        clang-format-version: '22'
+        check-path: ${{ matrix.path }}
   CPU-Trilinos:
     needs: Formatting
     runs-on: ubuntu-latest
