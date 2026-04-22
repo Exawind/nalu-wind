@@ -67,7 +67,7 @@ human_bytes_double(double bytes)
 int
 main(int argc, char** argv)
 {
-  namespace version =      sierra::kynema_ugf::version;
+  namespace version = sierra::kynema_ugf::version;
 
   // start up MPI
   if (MPI_SUCCESS != MPI_Init(&argc, &argv)) {
