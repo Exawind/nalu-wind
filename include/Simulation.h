@@ -59,7 +59,7 @@ public:
 private:
 #if defined(KOKKOS_ENABLE_GPU)
   size_t default_stack_size;
-  const size_t kynema-ugf_stack_size = 16384;
+  const size_t kynema_ugf_stack_size = 16384;
 #endif
 };
 
