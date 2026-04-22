@@ -105,4 +105,4 @@ DOE Office of Critical Minerals and Energy Innovation (CMEI).
 
 Please see [authors
 file](https://github.com/kynema/kynema-ugf/blob/master/AUTHORS) for a 
-list of contributors to Nalu-Wind. 
+list of contributors to Kynema-UGF, formerly Nalu-Wind. 
