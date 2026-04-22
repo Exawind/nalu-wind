@@ -12,7 +12,7 @@
 #include <Enums.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
@@ -36,5 +36,5 @@ ReferencePropertyData::~ReferencePropertyData()
   // nothing
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

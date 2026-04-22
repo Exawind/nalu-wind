@@ -4,7 +4,7 @@
 #include "NgpMotion.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class MotionRotationKernel : public NgpMotionKernel<MotionRotationKernel>
 {
@@ -52,7 +52,7 @@ private:
   bool useOmega_ = true;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOTIONROTATIONKERNEL_H */

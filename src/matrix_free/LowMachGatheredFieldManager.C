@@ -38,7 +38,7 @@
 #include <stk_util/util/ReportHandler.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <typename T = double>
@@ -209,5 +209,5 @@ LowMachGatheredFieldManager<p>::swap_states()
 INSTANTIATE_POLYCLASS(LowMachGatheredFieldManager);
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -20,7 +20,7 @@
 #include <KokkosInterface.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace geom {
 namespace impl {
@@ -109,5 +109,5 @@ INSTANTIATE_POLYSTRUCT(diffusion_metric_t);
 } // namespace impl
 } // namespace geom
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

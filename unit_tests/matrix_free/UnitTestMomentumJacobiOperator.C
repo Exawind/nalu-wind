@@ -47,7 +47,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class MomentumJacobiOperatorFixture : public LowMachFixture
@@ -105,5 +105,5 @@ TEST_F(MomentumJacobiOperatorFixture, diagonal_positive)
 }
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

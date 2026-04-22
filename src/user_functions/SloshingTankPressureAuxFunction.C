@@ -17,7 +17,7 @@
 #include <iostream>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 SloshingTankPressureAuxFunction::SloshingTankPressureAuxFunction(
   const std::vector<double>& params)
@@ -94,5 +94,5 @@ SloshingTankPressureAuxFunction::do_evaluate(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

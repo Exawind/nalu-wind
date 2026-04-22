@@ -15,7 +15,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -44,7 +44,7 @@ private:
   unsigned velocity_{stk::mesh::InvalidOrdinal};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* STRELETSUPWINDEDGEALG_H_ */

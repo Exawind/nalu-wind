@@ -13,7 +13,7 @@
 #include "AssembleEdgeSolverAlgorithm.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class WallDistEdgeSolverAlg : public AssembleEdgeSolverAlgorithm
 {
@@ -29,7 +29,7 @@ private:
   unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* WALLDISTEDGESOLVERALG_H */

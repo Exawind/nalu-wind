@@ -4,7 +4,7 @@
 #include "FrameReference.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class MeshTransformationAlg
 {
@@ -36,7 +36,7 @@ private:
   bool isInit_ = false;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MESHTRANSFORMATIONALG_H */

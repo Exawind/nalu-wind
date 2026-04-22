@@ -25,7 +25,7 @@
 
 namespace sierra {
 
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 KynemaSixDof::KynemaSixDof(const YAML::Node& node) : enable_calc_loads_(true)
 {
@@ -575,6 +575,6 @@ KynemaSixDof::map_loads()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 
 } // namespace sierra

@@ -20,7 +20,7 @@ class Node;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class LinearSolvers;
 class TimeIntegrator;
@@ -63,7 +63,7 @@ private:
 #endif
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

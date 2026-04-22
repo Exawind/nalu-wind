@@ -81,7 +81,7 @@
 #include <stk_util/parallel/ParallelReduce.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -588,7 +588,7 @@ void
 GammaEquationSystem::assemble_nodal_gradient()
 {
 
-  using MeshIndex = kynema-ugf_ngp::NGPMeshTraits<>::MeshIndex;
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex;
 
   const auto& meta = realm_.meta_data();
   const auto& ngpMesh = realm_.ngp_mesh();
@@ -619,7 +619,7 @@ GammaEquationSystem::assemble_nodal_gradient()
   nDotV.sync_to_device();
   vel.sync_to_device();
 
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "GammaTransition::compute_nDotV", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       // Step 2 - Normalize the wall distance gradient
@@ -680,9 +680,9 @@ GammaEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*gamma_);
-  kynema-ugf_ngp::field_copy(ngpMesh, sel, gammaNp1, gammaN);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, gammaNp1, gammaN);
   gammaNp1.modify_on_device();
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

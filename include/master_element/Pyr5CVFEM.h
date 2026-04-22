@@ -29,7 +29,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 struct ElementDescription;
 class MasterElement;
@@ -437,7 +437,7 @@ private:
     SharedMemView<DBLTYPE**, SHMEM>& areav);
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

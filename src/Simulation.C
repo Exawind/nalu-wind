@@ -23,7 +23,7 @@
 #include <Ioss_SerializeIO.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -301,5 +301,5 @@ Simulation::high_level_banner()
     Kokkos::DefaultExecutionSpace{}.print_configuration(std::cerr);
   }
 }
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

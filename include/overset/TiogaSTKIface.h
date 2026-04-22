@@ -22,7 +22,7 @@ class tioga;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class OversetManagerTIOGA;
 }
@@ -45,7 +45,7 @@ public:
    *  @param node YAML node containing overset inputs
    */
   TiogaSTKIface(
-    sierra::kynema-ugf::OversetManagerTIOGA&, const YAML::Node&, const std::string&);
+    sierra::kynema_ugf::OversetManagerTIOGA&, const YAML::Node&, const std::string&);
 
   ~TiogaSTKIface();
 
@@ -71,12 +71,12 @@ public:
 
   void post_connectivity_work(const bool isDecoupled = true);
 
-  int register_solution(const std::vector<sierra::kynema-ugf::OversetFieldData>&);
+  int register_solution(const std::vector<sierra::kynema_ugf::OversetFieldData>&);
 
-  void update_solution(const std::vector<sierra::kynema-ugf::OversetFieldData>&);
+  void update_solution(const std::vector<sierra::kynema_ugf::OversetFieldData>&);
 
   virtual void
-  overset_update_fields(const std::vector<sierra::kynema-ugf::OversetFieldData>&);
+  overset_update_fields(const std::vector<sierra::kynema_ugf::OversetFieldData>&);
 
   virtual void overset_update_field(
     stk::mesh::FieldBase* field,
@@ -122,7 +122,7 @@ private:
   void post_connectivity_sync();
 
   //! Reference to KynemaUGF OversetManager object
-  sierra::kynema-ugf::OversetManagerTIOGA& oversetManager_;
+  sierra::kynema_ugf::OversetManagerTIOGA& oversetManager_;
 
   //! Reference to the STK MetaData object
   stk::mesh::MetaData& meta_;

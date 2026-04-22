@@ -12,7 +12,7 @@
 #include <aero/actuator/ActuatorFunctorsFAST.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 // TODO(psakiev) convert disk points to geometric series
 // TODO(psakiev) allow for anisotropic disk
 
@@ -277,5 +277,5 @@ ActuatorBulkDiskFAST::spread_forces_over_disk(const ActuatorMetaFAST& actMeta)
   }
 }
 
-} /* namespace kynema-ugf */
+} /* namespace kynema_ugf */
 } /* namespace sierra */

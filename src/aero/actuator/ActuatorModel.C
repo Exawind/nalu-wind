@@ -23,7 +23,7 @@
 #include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 void
 ActuatorModel::parse(const YAML::Node& actuatorNode)
@@ -169,5 +169,5 @@ ActuatorModel::execute(double& timer)
   timer += end_time - start_time;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

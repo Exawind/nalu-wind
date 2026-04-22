@@ -20,7 +20,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 TKEWallFuncAlgDriver::TKEWallFuncAlgDriver(Realm& realm) : NgpAlgDriver(realm)
 {
@@ -48,7 +48,7 @@ TKEWallFuncAlgDriver::pre_work()
 void
 TKEWallFuncAlgDriver::post_work()
 {
-  using MeshIndex = kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
   auto ngpBcNodalTke = fieldMgr.get_field<double>(bcNodalTke_);
@@ -81,7 +81,7 @@ TKEWallFuncAlgDriver::post_work()
     stk::mesh::selectField(*realm_.meta_data().get_field(
       stk::topology::NODE_RANK, "wall_model_tke_bc"));
 
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "TKEWallFuncAlgDriver_normalize", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double warea = ngpWallArea.get(mi, 0);
@@ -96,5 +96,5 @@ TKEWallFuncAlgDriver::post_work()
   ngpTke.modify_on_device();
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

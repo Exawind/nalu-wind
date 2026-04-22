@@ -27,7 +27,7 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
@@ -254,5 +254,5 @@ Edge2DSCS::general_normal(
   normal[0] = dy / mag;
   normal[1] = -dx / mag;
 }
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

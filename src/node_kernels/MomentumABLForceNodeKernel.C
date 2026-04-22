@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 MomentumABLForceNodeKernel::MomentumABLForceNodeKernel(
   const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts)
@@ -57,5 +57,5 @@ MomentumABLForceNodeKernel::execute(
     rhs(i) += dualVol * momSrc[i];
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

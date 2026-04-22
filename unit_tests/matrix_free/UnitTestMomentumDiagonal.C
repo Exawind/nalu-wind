@@ -28,7 +28,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace test_momentum_diag {
 
@@ -100,5 +100,5 @@ TEST_F(MomentumDiagonalFixture, diagonal_executes)
 }
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

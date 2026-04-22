@@ -154,11 +154,11 @@ KynemaUGFTest::KynemaUGFTest(const YAML::Node& doc)
     std::string caseInstance = testInfo->name();
     logFileName_ = caseName + "." + caseInstance + ".log";
   }
-  sierra::kynema-ugf::KynemaUGFEnv::self().set_log_file_stream(logFileName_, false);
+  sierra::kynema_ugf::KynemaUGFEnv::self().set_log_file_stream(logFileName_, false);
 
-  sim_.linearSolvers_ = new sierra::kynema-ugf::LinearSolvers(sim_);
-  sim_.realms_ = new sierra::kynema-ugf::Realms(sim_);
-  sim_.timeIntegrator_ = new sierra::kynema-ugf::TimeIntegrator(&sim_);
+  sim_.linearSolvers_ = new sierra::kynema_ugf::LinearSolvers(sim_);
+  sim_.realms_ = new sierra::kynema_ugf::Realms(sim_);
+  sim_.timeIntegrator_ = new sierra::kynema_ugf::TimeIntegrator(&sim_);
 
   sim_.linearSolvers_->load(doc);
   sim_.timeIntegrator_->load(doc);
@@ -166,19 +166,19 @@ KynemaUGFTest::KynemaUGFTest(const YAML::Node& doc)
 
 KynemaUGFTest::~KynemaUGFTest() { unlink(logFileName_.c_str()); }
 
-sierra::kynema-ugf::Realm&
+sierra::kynema_ugf::Realm&
 KynemaUGFTest::create_realm(
   const YAML::Node& realm_node,
   const std::string realm_type,
   const bool createMeshObjects)
 {
-  sierra::kynema-ugf::Realm* realm = nullptr;
+  sierra::kynema_ugf::Realm* realm = nullptr;
   if (realm_type == "multi_physics") {
-    realm = new sierra::kynema-ugf::Realm(*sim_.realms_, realm_node);
+    realm = new sierra::kynema_ugf::Realm(*sim_.realms_, realm_node);
     realm->solutionOptions_->load(realm_node);
     realm->equationSystems_.load(realm_node);
   } else {
-    realm = new sierra::kynema-ugf::InputOutputRealm(*sim_.realms_, realm_node);
+    realm = new sierra::kynema_ugf::InputOutputRealm(*sim_.realms_, realm_node);
     realm->solutionOptions_->load(realm_node);
   }
 
@@ -197,7 +197,7 @@ KynemaUGFTest::create_realm(
 void
 verify_field_values(
   double expectedValue,
-  sierra::kynema-ugf::ScalarFieldType* maxLengthScaleField,
+  sierra::kynema_ugf::ScalarFieldType* maxLengthScaleField,
   const stk::mesh::BulkData& mesh)
 {
   const stk::mesh::BucketVector& nodeBuckets =
@@ -227,10 +227,10 @@ TEST(KynemaUGFMock, test_kynema-ugf_mock)
   // Modify the default node, if necessary, for the test
 
   // 3. Create the Realm
-  sierra::kynema-ugf::Realm& realm = kynema-ugfObj.create_realm(realm_node);
+  sierra::kynema_ugf::Realm& realm = kynema-ugfObj.create_realm(realm_node);
 
   // 4. Create necessary fields...
-  sierra::kynema-ugf::ScalarFieldType& maxLengthScaleField =
+  sierra::kynema_ugf::ScalarFieldType& maxLengthScaleField =
     realm.meta_data().declare_field<double>(
       stk::topology::NODE_RANK, "sst_max_length_scale");
   double zero = 0.0;
@@ -242,7 +242,7 @@ TEST(KynemaUGFMock, test_kynema-ugf_mock)
   stk::mesh::Part* meshPart = realm.meta_data().get_part("block_1");
 
   // 6. Initialize the Algorithm to be tested...
-  sierra::kynema-ugf::ComputeSSTMaxLengthScaleElemAlgorithm sstAlg(realm, meshPart);
+  sierra::kynema_ugf::ComputeSSTMaxLengthScaleElemAlgorithm sstAlg(realm, meshPart);
 
   // 7. Perform tests
   EXPECT_TRUE(sstAlg.coordinates_ != nullptr);

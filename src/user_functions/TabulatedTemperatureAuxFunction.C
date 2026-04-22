@@ -18,7 +18,7 @@
 #include <vector>
 #include <stdexcept>
 
-namespace sierra::kynema-ugf {
+namespace sierra::kynema_ugf {
 
 TabulatedTemperatureAuxFunction::TabulatedTemperatureAuxFunction(
   std::vector<double> heights, std::vector<double> temperatures)
@@ -43,4 +43,4 @@ TabulatedTemperatureAuxFunction::do_evaluate(
   }
 }
 
-} // namespace sierra::kynema-ugf
+} // namespace sierra::kynema_ugf

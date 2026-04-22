@@ -17,7 +17,7 @@
 #include "SolutionOptions.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 MomentumBoussinesqNodeKernel::MomentumBoussinesqNodeKernel(
   const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts)
@@ -62,5 +62,5 @@ MomentumBoussinesqNodeKernel::execute(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -28,7 +28,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace test_momentum {
 
@@ -118,5 +118,5 @@ TEST_F(MomentumResidualFixture, linearized_residual_executes)
     rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

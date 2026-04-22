@@ -13,7 +13,7 @@
 #include "HypreDirectSolver.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class HypreUVWSolver : public HypreDirectSolver
 {
@@ -39,7 +39,7 @@ private:
   HypreUVWSolver(const HypreUVWSolver&) = delete;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* HYPREUVWSOLVER_H */

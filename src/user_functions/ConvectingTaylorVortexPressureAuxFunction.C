@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 ConvectingTaylorVortexPressureAuxFunction::
   ConvectingTaylorVortexPressureAuxFunction()
@@ -99,5 +99,5 @@ ConvectingTaylorVortexPressureGradAuxFunction::do_evaluate(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

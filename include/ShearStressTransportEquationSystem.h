@@ -22,7 +22,7 @@ class Part;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class EquationSystems;
 class AlgorithmDriver;
@@ -96,7 +96,7 @@ public:
   const double gammaMaxValue_{1.0};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

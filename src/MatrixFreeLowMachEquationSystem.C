@@ -59,7 +59,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Algorithm;
 
@@ -764,5 +764,5 @@ MatrixFreeLowMachEquationSystem::solve_and_update()
   compute_courant_reynolds();
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

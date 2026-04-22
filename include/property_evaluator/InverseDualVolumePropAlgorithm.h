@@ -21,7 +21,7 @@ class Part;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -39,7 +39,7 @@ public:
   ScalarFieldType* dualNodalVolume_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

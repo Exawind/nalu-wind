@@ -22,7 +22,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 template <typename AlgTraits>
 MdotDensityAccumAlg<AlgTraits>::MdotDensityAccumAlg(
@@ -63,7 +63,7 @@ void
 MdotDensityAccumAlg<AlgTraits>::execute()
 {
   using ElemSimdDataType =
-    sierra::kynema-ugf::kynema-ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
 
@@ -90,7 +90,7 @@ MdotDensityAccumAlg<AlgTraits>::execute()
   const auto shp =
     shape_fcn<AlgTraits, QuadRank::SCS>(use_shifted_quad(lumpedMass));
 
-  kynema-ugf_ngp::run_elem_par_reduce(
+  kynema_ugf_ngp::run_elem_par_reduce(
     algName, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata, DoubleType & acc) {
       auto& scrViews = edata.simdScrView;
@@ -123,5 +123,5 @@ MdotDensityAccumAlg<AlgTraits>::execute()
 
 INSTANTIATE_KERNEL(MdotDensityAccumAlg)
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -72,7 +72,7 @@
 #include <sstream>
 #define KK_MAP
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 ///====================================================================================================================================
 ///======== T P E T R A
@@ -475,7 +475,7 @@ TpetraSegregatedLinearSystem::buildReducedElemToNodeGraph(
 
     // extract master element
     MasterElement* meSCS =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
     // extract master element specifics
     const int numScsIp = meSCS->num_integration_points();
@@ -1128,7 +1128,7 @@ segregated_sum_into_row(
 {
 
   constexpr bool forceAtomic =
-    !std::is_same<sierra::kynema-ugf::DeviceSpace, Kokkos::Serial>::value;
+    !std::is_same<sierra::kynema_ugf::DeviceSpace, Kokkos::Serial>::value;
   const LocalOrdinal length = row_view.length;
 
   const int numCols = num_entities;
@@ -1183,7 +1183,7 @@ segregated_sum_into(
   unsigned numDof)
 {
   constexpr bool forceAtomic =
-    !std::is_same<sierra::kynema-ugf::DeviceSpace, Kokkos::Serial>::value;
+    !std::is_same<sierra::kynema_ugf::DeviceSpace, Kokkos::Serial>::value;
 
   const int n_obj = numEntities;
   const int numRows = n_obj;
@@ -1294,7 +1294,7 @@ reset_rows(
   }
 }
 
-sierra::kynema-ugf::CoeffApplier*
+sierra::kynema_ugf::CoeffApplier*
 TpetraSegregatedLinearSystem::get_coeff_applier()
 {
   auto ownedLocalMatrix = getOwnedLocalMatrix();
@@ -1323,7 +1323,7 @@ void
 TpetraSegregatedLinearSystem::free_coeff_applier(CoeffApplier* coeffApplier)
 {
   if (coeffApplier != nullptr) {
-    sierra::kynema-ugf::kokkos_free_on_device(coeffApplier);
+    sierra::kynema_ugf::kokkos_free_on_device(coeffApplier);
   }
 }
 
@@ -2028,5 +2028,5 @@ TpetraSegregatedLinearSystem::copy_tpetra_to_stk(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

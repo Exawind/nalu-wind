@@ -166,7 +166,7 @@
 #endif
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -985,7 +985,7 @@ Realm::setup_element_fields()
       auto fieldSize = 1;
       if (!realmUsesEdges_) {
         auto* meSCS =
-          sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+          sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
             targetPart->topology());
         fieldSize = meSCS->num_integration_points();
       }
@@ -2620,7 +2620,7 @@ Realm::compute_vrtm(const std::string& velName)
   if (!does_mesh_move())
     return;
 
-  using Traits = kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using MeshIndex = Traits::MeshIndex;
 
   const int nDim = meta_data().spatial_dimension();
@@ -2638,7 +2638,7 @@ Realm::compute_vrtm(const std::string& velName)
   const stk::mesh::Selector sel =
     (meta_data().locally_owned_part() | meta_data().globally_shared_part()) &
     stk::mesh::selectField(*vrtm_field);
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "compute_vrtm", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       for (int d = 0; d < nDim; ++d)
@@ -5221,5 +5221,5 @@ Realm::solver_parameters(std::string name) const
     equationSystems_.get_solver_block_name(name));
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -24,7 +24,7 @@
 #include <iomanip>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 TimeIntegrator::TimeIntegrator() {}
 
@@ -640,5 +640,5 @@ TimeIntegrator::get_max_time_step_count()
     return -1;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

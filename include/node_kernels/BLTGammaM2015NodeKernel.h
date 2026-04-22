@@ -16,7 +16,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 /*------------------------------------------------------------------------*/
 /* BLTGammaM2015NodeKernel is a correlation-based transition model        */
@@ -80,7 +80,7 @@ private:
   const int nDim_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

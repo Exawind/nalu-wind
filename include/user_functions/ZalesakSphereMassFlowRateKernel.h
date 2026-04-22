@@ -13,7 +13,7 @@
 #include "AssembleEdgeSolverAlgorithm.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class ZalesakSphereMassFlowRateEdgeAlg : public AssembleEdgeSolverAlgorithm
 {
@@ -32,7 +32,7 @@ private:
   unsigned massFlowRate_{stk::mesh::InvalidOrdinal};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ZALESAKSPHEREMASSFLOWRATEALG_H */

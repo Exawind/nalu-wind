@@ -16,7 +16,7 @@
 #include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 void ActFastCacheRelativeVelocities(ActuatorBulkFAST& actBulk);
 
@@ -164,7 +164,7 @@ using ActFastSpreadForceWhProjection = GenericLoopOverCoarseSearchResults<
   ActuatorBulkFAST,
   ActFastSpreadForceWhProjInnerLoop>;
 
-} /* namespace kynema-ugf */
+} /* namespace kynema_ugf */
 } /* namespace sierra */
 
 #endif /* ACTUATORFUNCTORSFAST_H_ */

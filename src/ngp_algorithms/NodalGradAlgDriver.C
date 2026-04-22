@@ -18,7 +18,7 @@
 #include "stk_mesh/base/NgpFieldParallel.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 template <typename GradPhiType>
 NodalGradAlgDriver<GradPhiType>::NodalGradAlgDriver(
@@ -31,7 +31,7 @@ template <typename GradPhiType>
 void
 NodalGradAlgDriver<GradPhiType>::pre_work()
 {
-  auto grad_phi = kynema-ugf_ngp::get_ngp_field(realm_.mesh_info(), gradPhiName_);
+  auto grad_phi = kynema_ugf_ngp::get_ngp_field(realm_.mesh_info(), gradPhiName_);
   grad_phi.set_all(stk::mesh::get_updated_ngp_mesh(realm_.bulk_data()), 0.0);
 }
 
@@ -49,7 +49,7 @@ NodalGradAlgDriver<GradPhiType>::post_work()
 
   auto* gradPhi =
     meta.template get_field<double>(stk::topology::NODE_RANK, gradPhiName_);
-  auto& ngpGradPhi = kynema-ugf_ngp::get_ngp_field(meshInfo, gradPhiName_);
+  auto& ngpGradPhi = kynema_ugf_ngp::get_ngp_field(meshInfo, gradPhiName_);
   ngpGradPhi.sync_to_host();
 
   const std::vector<NGPDoubleFieldType*> fVec{&ngpGradPhi};
@@ -73,5 +73,5 @@ NodalGradAlgDriver<GradPhiType>::post_work()
 
 template class NodalGradAlgDriver<VectorFieldType>;
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

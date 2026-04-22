@@ -19,7 +19,7 @@
 
 namespace sierra {
 
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 OpenfastFSI::OpenfastFSI(const YAML::Node& node)
   : mesh_motion_(false), enable_calc_loads_(true)
@@ -703,6 +703,6 @@ OpenfastFSI::timer_stop(std::pair<double, double>& timer)
   timer.second += timer.first;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 
 } // namespace sierra

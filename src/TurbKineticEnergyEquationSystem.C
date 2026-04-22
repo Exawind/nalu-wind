@@ -106,7 +106,7 @@
 #include <utils/StkHelpers.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -798,7 +798,7 @@ TurbKineticEnergyEquationSystem::solve_and_update()
 void
 TurbKineticEnergyEquationSystem::initial_work()
 {
-  using Traits = kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using MeshIndex = typename Traits::MeshIndex;
 
   // do not let the user specify a negative field
@@ -814,7 +814,7 @@ TurbKineticEnergyEquationSystem::initial_work()
 
   ngpTke.sync_to_device();
 
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "clip_tke", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       if (ngpTke.get(mi, 0) < 0.0)
@@ -827,7 +827,7 @@ TurbKineticEnergyEquationSystem::initial_work()
 void
 TurbKineticEnergyEquationSystem::post_external_data_transfer_work()
 {
-  using Traits = kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using MeshIndex = typename Traits::MeshIndex;
 
   // do not let the user specify a negative field
@@ -843,7 +843,7 @@ TurbKineticEnergyEquationSystem::post_external_data_transfer_work()
 
   ngpTke.sync_to_device();
 
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "clip_tke", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       if (ngpTke.get(mi, 0) < 0.0)
@@ -860,7 +860,7 @@ TurbKineticEnergyEquationSystem::post_external_data_transfer_work()
     auto ngpTkeBC = realm_.ngp_field_manager().get_field<double>(
       tkeBCField->mesh_meta_data_ordinal());
     ngpTkeBC.sync_to_device();
-    kynema-ugf_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "clip_tke_bc", ngpMesh, stk::topology::NODE_RANK, bc_sel,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         if (ngpTkeBC.get(mi, 0) < 0.0)
@@ -897,7 +897,7 @@ TurbKineticEnergyEquationSystem::compute_wall_model_parameters()
 void
 TurbKineticEnergyEquationSystem::update_and_clip()
 {
-  using Traits = kynema-ugf_ngp::NGPMeshTraits<>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
   const double clipValue = 1.0e-16;
   size_t numClip = 0;
 
@@ -915,7 +915,7 @@ TurbKineticEnergyEquationSystem::update_and_clip()
 
   ngpTke.sync_to_device();
 
-  kynema-ugf_ngp::run_entity_par_reduce(
+  kynema_ugf_ngp::run_entity_par_reduce(
     "tke_update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi, size_t& nClip) {
       const double tmp = ngpTke.get(mi, 0) + ngpKTmp.get(mi, 0);
@@ -958,7 +958,7 @@ TurbKineticEnergyEquationSystem::predict_state()
      meta.aura_part()) &
     stk::mesh::selectField(*tke_);
   tkeNp1.sync_to_device();
-  kynema-ugf_ngp::field_copy(ngpMesh, sel, tkeNp1, tkeN);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, tkeNp1, tkeN);
   tkeNp1.modify_on_device();
 }
 
@@ -997,5 +997,5 @@ TurbKineticEnergyEquationSystem::compute_projected_nodal_gradient()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

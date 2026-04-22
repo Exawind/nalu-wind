@@ -24,7 +24,7 @@ class Node;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realms;
 
@@ -81,7 +81,7 @@ public:
   std::vector<InputOutputInfo*> inputOutputFieldInfo_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

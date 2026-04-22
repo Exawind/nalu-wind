@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class TaylorGreenVelocityAuxFunction : public AuxFunction
 {
@@ -41,7 +41,7 @@ private:
   double L_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

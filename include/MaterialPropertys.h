@@ -21,7 +21,7 @@ class Node;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 class MaterialProperty;
@@ -61,7 +61,7 @@ public:
   std::map<std::string, ReferencePropertyData*> tablePropertyMap_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 void
 add_procs_to_neighbors(
@@ -417,5 +417,5 @@ remove_invalid_indices(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

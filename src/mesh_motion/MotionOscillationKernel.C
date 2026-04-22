@@ -5,7 +5,7 @@
 #include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 MotionOscillationKernel::MotionOscillationKernel(const YAML::Node& node)
   : NgpMotionKernel<MotionOscillationKernel>()
@@ -32,7 +32,7 @@ MotionOscillationKernel::load(const YAML::Node& node)
   get_if_present(node, "amplitude_bichromatic", amplitude_2nd_, amplitude_2nd_);
 
   if (node["direction"]) {
-    for (int d = 0; d < kynema-ugf_ngp::NDimMax; ++d)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; ++d)
       direction_[d] = node["direction"][d].as<double>();
   } else
     KynemaUGFEnv::self().kynema-ugfOutputP0() << "MotionOscillationKernel: direction of "
@@ -67,12 +67,12 @@ MotionOscillationKernel::build_transformation(
   // get magnitude of oscillation direction vector
   double mag = 0.0;
 
-  for (int d = 0; d < kynema-ugf_ngp::NDimMax; d++)
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++)
     mag += direction_[d] * direction_[d];
   mag = stk::math::sqrt(mag);
 
   // determine translation in each direction
-  for (int d = 0; d < kynema-ugf_ngp::NDimMax; d++)
+  for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++)
     transMat[d * mm::matSize + 3] = disp * direction_[d] / mag;
   return transMat;
 }
@@ -103,17 +103,17 @@ MotionOscillationKernel::compute_velocity(
 
     // get magnitude of oscillation direction vector
     double mag = 0.0;
-    for (int d = 0; d < kynema-ugf_ngp::NDimMax; d++)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++)
       mag += direction_[d] * direction_[d];
     mag = stk::math::sqrt(mag);
 
     // determine translation in each direction
     mm::ThreeDVecType mesh_vel{0, 0, 0};
-    for (int d = 0; d < kynema-ugf_ngp::NDimMax; d++)
+    for (int d = 0; d < kynema_ugf_ngp::NDimMax; d++)
       mesh_vel[d] = vel_1D * direction_[d] / mag;
     return mesh_vel;
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

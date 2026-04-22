@@ -17,7 +17,7 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class ActuatorLineSimpleNGP : public ActuatorExecutor
 {
@@ -38,7 +38,7 @@ private:
   const bool useSpreadActuatorForce_;
 };
 
-} /* namespace kynema-ugf */
+} /* namespace kynema_ugf */
 } /* namespace sierra */
 
 #endif /* ACTUATORLINESIMPLENGP_H_ */

@@ -18,7 +18,7 @@
 
 namespace sierra {
 
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 struct Tether
 {
@@ -125,7 +125,7 @@ private:
   std::vector<kynema::interfaces::cfd::Interface> point_body_interfaces_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 
 } // namespace sierra
 

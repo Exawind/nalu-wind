@@ -39,7 +39,7 @@
 #include <utility>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 namespace {
 
@@ -434,5 +434,5 @@ SideWriterContainer::write_sides(const int stepCount, const double time)
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

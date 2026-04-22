@@ -18,7 +18,7 @@
 #include <utility>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -850,5 +850,5 @@ SolutionOptions::has_set_boussinesq_time_scale()
   return (raBoussinesqTimeScale_ > std::numeric_limits<double>::min());
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

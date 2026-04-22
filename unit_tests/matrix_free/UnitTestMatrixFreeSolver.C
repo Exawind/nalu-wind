@@ -51,7 +51,7 @@
 #include "stk_mesh/base/MetaData.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace test_belos_solver {
@@ -145,7 +145,7 @@ TEST_F(SolverFixture, solve_harmonic)
 }
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS

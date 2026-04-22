@@ -24,7 +24,7 @@
 #include <cstdint>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 RectilinearMeshHeightAlg::RectilinearMeshHeightAlg(
   Realm& realm, const YAML::Node& node)
@@ -141,5 +141,5 @@ RectilinearMeshHeightAlg::calc_height_levels(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

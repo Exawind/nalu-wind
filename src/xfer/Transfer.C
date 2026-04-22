@@ -35,7 +35,7 @@
 #include <stk_search/SearchMethod.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -483,5 +483,5 @@ Transfer::parent()
   return &transfers_;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

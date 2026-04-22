@@ -21,7 +21,7 @@ main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
 
-  sierra::kynema-ugf::KynemaUGFEnv::self();
+  sierra::kynema_ugf::KynemaUGFEnv::self();
   Kokkos::initialize(argc, argv);
   int returnVal = 0;
 
@@ -35,7 +35,7 @@ main(int argc, char** argv)
     /*
      This might be useful at some point so keeping it and commenting out.
 
-     sierra::kynema-ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
+     sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
      << __FILE__ << " " << __FUNCTION__ << " " << __LINE__
      << " : Failure " << hipGetErrorString(err) << " in hipDeviceSetLimit\n"
      << std::endl;
@@ -47,8 +47,8 @@ main(int argc, char** argv)
   // cleared out before Kokkos::finalize is called.
   {
     // clang-format off
-      namespace version = sierra::kynema-ugf::version;
-      sierra::kynema-ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
+      namespace version = sierra::kynema_ugf::version;
+      sierra::kynema_ugf::KynemaUGFEnv::self().kynema-ugfOutputP0()
         << "   Kynema-UGF Version: " << version::KynemaUGFVersionTag << std::endl
         << "   Kynema-UGF GIT Commit SHA: " << version::KynemaUGFGitCommitSHA
         << ((version::RepoIsDirty == "DIRTY") ? ("-" + version::RepoIsDirty) : "") << std::endl
@@ -63,7 +63,7 @@ main(int argc, char** argv)
     // when specific unit tests are run using the gtest_filter option that
     // provides no mechanism for call the destructors of the master elements
     // created for those tests.
-    sierra::kynema-ugf::MasterElementRepo::clear();
+    sierra::kynema_ugf::MasterElementRepo::clear();
   }
 
   Kokkos::finalize();

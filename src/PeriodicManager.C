@@ -41,7 +41,7 @@
 #include <string>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 PeriodicManager::PeriodicManager(Realm& realm)
   : realm_(realm),
@@ -790,7 +790,7 @@ PeriodicManager::ngp_periodic_parallel_communicate_field(
   stk::mesh::FieldBase* theField) const
 {
   if (NULL != periodicGhosting_) {
-    const kynema-ugf_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
+    const kynema_ugf_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
     unsigned fieldOrd = theField->mesh_meta_data_ordinal();
 
     if (theField->type_is<double>()) {
@@ -850,7 +850,7 @@ PeriodicManager::ngp_parallel_communicate_field(
   const stk::mesh::BulkData& bulk_data = realm_.bulk_data();
   const unsigned pSize = bulk_data.parallel_size();
   if (pSize > 1) {
-    const kynema-ugf_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
+    const kynema_ugf_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
     unsigned fieldOrd = theField->mesh_meta_data_ordinal();
 
     if (theField->type_is<double>()) {
@@ -1267,5 +1267,5 @@ PeriodicManager::ngp_set_slave_to_master(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

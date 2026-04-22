@@ -19,7 +19,7 @@
 #include "stk_mesh/base/GetNgpMesh.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 FrameBase::FrameBase(stk::mesh::BulkData& bulk, const YAML::Node& node)
   : bulk_(bulk), meta_(bulk.mesh_meta_data())
@@ -192,15 +192,15 @@ FrameBase::compute_centroid_on_parts(mm::ThreeDVecType& centroid)
   // select all nodes in the parts
   stk::mesh::Selector sel = stk::mesh::selectUnion(partVec_);
 
-  kynema-ugf_ngp::MinMaxSumScalar<double> xCoord, yCoord, zCoord;
-  kynema-ugf_ngp::MinMaxSum<double> xReducer(xCoord), yReducer(yCoord),
+  kynema_ugf_ngp::MinMaxSumScalar<double> xCoord, yCoord, zCoord;
+  kynema_ugf_ngp::MinMaxSum<double> xReducer(xCoord), yReducer(yCoord),
     zReducer(zCoord);
 
-  kynema-ugf_ngp::run_entity_par_reduce(
+  kynema_ugf_ngp::run_entity_par_reduce(
     "FrameBase::compute_x_centroid_on_parts", ngpMesh, entityRank, sel,
     KOKKOS_LAMBDA(
-      const kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi,
-      kynema-ugf_ngp::MinMaxSumScalar<double>& threadVal) {
+      const kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi,
+      kynema_ugf_ngp::MinMaxSumScalar<double>& threadVal) {
       const double xc = modelCoords.get(mi, 0);
 
       if (xc < threadVal.min_val)
@@ -209,12 +209,12 @@ FrameBase::compute_centroid_on_parts(mm::ThreeDVecType& centroid)
         threadVal.max_val = xc;
     },
     xReducer);
-  kynema-ugf_ngp::run_entity_par_reduce(
+  kynema_ugf_ngp::run_entity_par_reduce(
     "FrameBase::compute_y_centroid_on_parts", ngpMesh, stk::topology::NODE_RANK,
     sel,
     KOKKOS_LAMBDA(
-      const kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi,
-      kynema-ugf_ngp::MinMaxSumScalar<double>& threadVal) {
+      const kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi,
+      kynema_ugf_ngp::MinMaxSumScalar<double>& threadVal) {
       const double yc = modelCoords.get(mi, 1);
 
       if (yc < threadVal.min_val)
@@ -223,12 +223,12 @@ FrameBase::compute_centroid_on_parts(mm::ThreeDVecType& centroid)
         threadVal.max_val = yc;
     },
     yReducer);
-  kynema-ugf_ngp::run_entity_par_reduce(
+  kynema_ugf_ngp::run_entity_par_reduce(
     "FrameBase::compute_z_centroid_on_parts", ngpMesh, stk::topology::NODE_RANK,
     sel,
     KOKKOS_LAMBDA(
-      const kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi,
-      kynema-ugf_ngp::MinMaxSumScalar<double>& threadVal) {
+      const kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi,
+      kynema_ugf_ngp::MinMaxSumScalar<double>& threadVal) {
       const double zc = modelCoords.get(mi, 2);
 
       if (zc < threadVal.min_val)
@@ -258,5 +258,5 @@ FrameBase::compute_centroid_on_parts(mm::ThreeDVecType& centroid)
   centroid[2] = 0.5 * (gZC[0] + gZC[1]);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

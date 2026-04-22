@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class KovasznayVelocityAuxFunction : public AuxFunction
 {
@@ -41,7 +41,7 @@ private:
   double ky_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -16,7 +16,7 @@
 #include <map>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 class SolverAlgorithm;
@@ -39,7 +39,7 @@ public:
   std::map<AlgorithmType, SolverAlgorithm*> solverDirichAlgMap_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

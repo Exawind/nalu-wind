@@ -34,7 +34,7 @@ class Node;
 #include <string>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 class EquationSystem;
@@ -216,7 +216,7 @@ public:
   bool decoupledOversetGlobalFlag_{false};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

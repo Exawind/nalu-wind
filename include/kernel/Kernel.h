@@ -25,7 +25,7 @@
 #include <master_element/MasterElementRepo.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class TimeIntegrator;
 class SolutionOptions;
@@ -126,21 +126,21 @@ public:
   // The destructor does not free the deviceCopy_ instance. This is done to
   // eliminate the warnings issued when compiling with nvcc for GPU builds.
   // Instead the `deviceCopy_` is freed by explicitly calling `free_on_device`
-  // from sierra::kynema-ugf::Algorithm::~Algorithm() before freeing the host pointers
+  // from sierra::kynema_ugf::Algorithm::~Algorithm() before freeing the host pointers
   // stored in `activeKernels_`
   KOKKOS_DEFAULTED_FUNCTION virtual ~NGPKernel() = default;
 
   virtual Kernel* create_on_device() final
   {
     free_on_device();
-    deviceCopy_ = kynema-ugf_ngp::create<T>(*dynamic_cast<T*>(this));
+    deviceCopy_ = kynema_ugf_ngp::create<T>(*dynamic_cast<T*>(this));
     return deviceCopy_;
   }
 
   virtual void free_on_device() final
   {
     if (deviceCopy_ != nullptr) {
-      kynema-ugf_ngp::destroy<T>(dynamic_cast<T*>(deviceCopy_));
+      kynema_ugf_ngp::destroy<T>(dynamic_cast<T*>(deviceCopy_));
       deviceCopy_ = nullptr;
     }
   }
@@ -151,7 +151,7 @@ protected:
   T* deviceCopy_{nullptr};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* KERNEL_H */

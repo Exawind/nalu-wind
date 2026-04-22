@@ -19,7 +19,7 @@
 #include <Kokkos_Core.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class SolutionOptions;
 class MasterElement;
@@ -70,7 +70,7 @@ private:
     vf_shape_function_{"vf_shape_function"};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MomentumWallFunctionElemKernel_h */

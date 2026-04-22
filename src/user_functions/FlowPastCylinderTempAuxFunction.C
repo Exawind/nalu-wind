@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 FlowPastCylinderTempAuxFunction::FlowPastCylinderTempAuxFunction()
   : AuxFunction(0, 1),
@@ -190,5 +190,5 @@ FlowPastCylinderTempAuxFunction::local_interpolation(
   return y0 + (y1 - y0) * (z - x0) / (x1 - x0);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

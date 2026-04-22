@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class SolutionOptions;
 
@@ -84,7 +84,7 @@ private:
   double relaxFacU_{1.0};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOMENTUMSSTAMSDIFFEDGEKERNEL_H */

@@ -16,7 +16,7 @@
 #include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -49,5 +49,5 @@ MaterialProperty::load(const YAML::Node& /* node */)
   // nothing...
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

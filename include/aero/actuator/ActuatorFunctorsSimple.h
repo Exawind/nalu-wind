@@ -17,7 +17,7 @@
 #include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 struct InterpActuatorDensity
 {
@@ -138,7 +138,7 @@ using ActSimpleSpreadForceWhProjection = GenericLoopOverCoarseSearchResults<
   ActuatorBulkSimple,
   ActSimpleSpreadForceWhProjInnerLoop>;
 
-} /* namespace kynema-ugf */
+} /* namespace kynema_ugf */
 } /* namespace sierra */
 
 #endif /* ACTUATORFUNCTORSSIMPLE_H_ */

@@ -22,7 +22,7 @@
 #include <limits>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 template <typename DBLTYPE, typename SHMEM>
 KOKKOS_FUNCTION void
@@ -1125,5 +1125,5 @@ HexSCS::parametric_distance(const std::array<double, 3>& x)
   return d;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

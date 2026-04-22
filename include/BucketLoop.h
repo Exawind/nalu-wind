@@ -13,7 +13,7 @@
 #include <stk_mesh/base/Bucket.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 template <class LOOP_BODY>
 void
@@ -27,7 +27,7 @@ bucket_loop(const stk::mesh::BucketVector& buckets, LOOP_BODY inner_loop_body)
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

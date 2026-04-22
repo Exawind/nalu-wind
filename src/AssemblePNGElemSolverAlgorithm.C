@@ -26,7 +26,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -112,10 +112,10 @@ AssemblePNGElemSolverAlgorithm::execute()
 
     // extract master element
     MasterElement* meSCS =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
     MasterElement* meSCV =
-      sierra::kynema-ugf::MasterElementRepo::get_volume_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_volume_master_element_on_host(
         b.topology());
 
     // extract master element specifics
@@ -203,10 +203,10 @@ AssemblePNGElemSolverAlgorithm::execute()
       }
 
       // compute geometry
-      sierra::kynema-ugf::SharedMemView<double**> elemCoords(
+      sierra::kynema_ugf::SharedMemView<double**> elemCoords(
         p_coordinates, nodesPerElement, nDim);
-      sierra::kynema-ugf::SharedMemView<double*> areav(p_scs_areav, numScsIp * nDim);
-      sierra::kynema-ugf::SharedMemView<double*> vol(p_scv_volume, numScvIp);
+      sierra::kynema_ugf::SharedMemView<double*> areav(p_scs_areav, numScsIp * nDim);
+      sierra::kynema_ugf::SharedMemView<double*> vol(p_scv_volume, numScvIp);
       meSCS->determinant(elemCoords, areav);
       meSCV->determinant(elemCoords, vol);
 
@@ -294,5 +294,5 @@ AssemblePNGElemSolverAlgorithm::execute()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

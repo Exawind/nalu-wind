@@ -15,7 +15,7 @@
 #include "PecletFunction.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 class EquationSystem;
@@ -44,7 +44,7 @@ private:
   PecletFunction<DblType>* pecletFunction_{nullptr};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* AMSMOMENTUMEDGEPECLETKERNEL_H_ */

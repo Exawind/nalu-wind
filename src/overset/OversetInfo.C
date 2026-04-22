@@ -14,7 +14,7 @@
 #include <stk_mesh/base/Entity.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -43,5 +43,5 @@ OversetInfo::~OversetInfo()
   // nothing to delete
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

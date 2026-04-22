@@ -31,7 +31,7 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 namespace {
 
@@ -287,5 +287,5 @@ MasterElementRepo::clear()
   for (auto val : volume_topo_to_me_dev())
     kokkos_free_on_device(val.second);
 }
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

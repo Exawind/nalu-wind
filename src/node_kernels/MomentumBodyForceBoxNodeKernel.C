@@ -27,7 +27,7 @@
 #include <iomanip>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 MomentumBodyForceBoxNodeKernel::MomentumBodyForceBoxNodeKernel(
   Realm& realm,
@@ -117,7 +117,7 @@ MomentumBodyForceBoxNodeKernel::setup(Realm& realm)
     const double mdot = -mdotAlgDriver_->mdot_inflow();
 
     // Compute area of the mdot sideset
-    using MeshIndex = kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+    using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
     const auto& ngpMesh = realm.ngp_mesh();
     auto areaVec = fieldMgr.get_field<double>(exposedAreaVecID_);
     const auto& subParts = mdotPart_->subsets();
@@ -133,7 +133,7 @@ MomentumBodyForceBoxNodeKernel::setup(Realm& realm)
       const auto ndim = nDim_;
 
       double ma = 0.0;
-      kynema-ugf_ngp::run_entity_par_reduce(
+      kynema_ugf_ngp::run_entity_par_reduce(
         algName, ngpMesh, realm.meta_data().side_rank(), sel,
         KOKKOS_LAMBDA(const MeshIndex& mi, double& sum) {
           for (int ip = 0; ip < numScsIp; ++ip) {
@@ -171,7 +171,7 @@ MomentumBodyForceBoxNodeKernel::setup(Realm& realm)
     }
     const stk::mesh::Selector sel = realm.meta_data().locally_owned_part() &
                                     stk::mesh::selectUnion(dragPartVec);
-    kynema-ugf_ngp::run_entity_par_reduce(
+    kynema_ugf_ngp::run_entity_par_reduce(
       algName, ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const MeshIndex& mi, double& total_force_x) {
         total_force_x += pForce.get(mi, 0) + vForce.get(mi, 0);
@@ -231,5 +231,5 @@ MomentumBodyForceBoxNodeKernel::execute(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

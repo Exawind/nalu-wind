@@ -40,7 +40,7 @@
 #include <algorithm>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class DgInfo;
 
@@ -194,16 +194,16 @@ NonConformalInfo::construct_dgInfo()
 
     // volume and surface master element
     MasterElement* meSCS =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         currentElemTopo);
     MasterElement* meFC =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
     MasterElement* meSCS_dev =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_dev(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
         currentElemTopo);
     MasterElement* meFC_dev =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_dev(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
         b.topology());
 
     // master element-specific values
@@ -619,7 +619,7 @@ NonConformalInfo::complete_search()
             // extract the topo from this face element...
             const stk::topology theFaceTopo =
               bulk_data.bucket(opposingFace).topology();
-            MasterElement* meFC = sierra::kynema-ugf::MasterElementRepo::
+            MasterElement* meFC = sierra::kynema_ugf::MasterElementRepo::
               get_surface_master_element_on_host(theFaceTopo);
 
             // extract the connected element to the opposing face
@@ -631,7 +631,7 @@ NonConformalInfo::complete_search()
             // extract the opposing element topo and associated master element
             const stk::topology theOpposingElementTopo =
               bulk_data.bucket(opposingElement).topology();
-            MasterElement* meSCS = sierra::kynema-ugf::MasterElementRepo::
+            MasterElement* meSCS = sierra::kynema_ugf::MasterElementRepo::
               get_surface_master_element_on_host(theOpposingElementTopo);
 
             // possible reuse
@@ -1092,5 +1092,5 @@ NonConformalInfo::error_check()
   return coindidentNodesVec.size();
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

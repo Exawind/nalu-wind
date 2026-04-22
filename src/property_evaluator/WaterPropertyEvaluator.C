@@ -17,7 +17,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -229,5 +229,5 @@ WaterThermalCondTPropertyEvaluator::execute(
   return lambdaW; // W/m-K; T in K
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -29,7 +29,7 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 int
 pyr_gradient_operator(
@@ -1472,5 +1472,5 @@ PyrSCS::sidePcoords_to_elemPcoords(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

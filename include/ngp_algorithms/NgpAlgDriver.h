@@ -22,7 +22,7 @@
 #include "ngp_utils/NgpCreateElemInstance.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -111,7 +111,7 @@ public:
     const auto it = algMap_.find(algName);
     if (it == algMap_.end()) {
       algMap_[algName].reset(
-        kynema-ugf_ngp::create_elem_algorithm<Algorithm, ElemAlg>(
+        kynema_ugf_ngp::create_elem_algorithm<Algorithm, ElemAlg>(
           topo, realm_, part, std::forward<Args>(args)...));
       KynemaUGFEnv::self().kynema-ugfOutputP0()
         << "Created algorithm = " << algName << std::endl;
@@ -142,7 +142,7 @@ public:
     const auto it = algMap_.find(algName);
     if (it == algMap_.end()) {
       algMap_[algName].reset(
-        kynema-ugf_ngp::create_face_algorithm<Algorithm, FaceAlg>(
+        kynema_ugf_ngp::create_face_algorithm<Algorithm, FaceAlg>(
           topo, realm_, part, std::forward<Args>(args)...));
       KynemaUGFEnv::self().kynema-ugfOutputP0()
         << "Created algorithm = " << algName << std::endl;
@@ -168,7 +168,7 @@ public:
     const auto it = algMap_.find(algName);
     if (it == algMap_.end()) {
       algMap_[algName].reset(
-        kynema-ugf_ngp::create_face_elem_algorithm<Algorithm, FaceElemAlg>(
+        kynema_ugf_ngp::create_face_elem_algorithm<Algorithm, FaceElemAlg>(
           topo, elemTopo, realm_, part, std::forward<Args>(args)...));
       KynemaUGFEnv::self().kynema-ugfOutputP0()
         << "Created algorithm = " << algName << std::endl;
@@ -203,7 +203,7 @@ protected:
   Realm& realm_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPALGDRIVER_H */

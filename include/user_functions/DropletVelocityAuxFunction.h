@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class DropletVelocityAuxFunction : public AuxFunction
 {
@@ -48,7 +48,7 @@ public:
   double interface_thickness_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

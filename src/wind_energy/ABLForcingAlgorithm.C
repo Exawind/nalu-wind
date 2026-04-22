@@ -28,7 +28,7 @@
 #include <iomanip>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 ABLForcingAlgorithm::ABLForcingAlgorithm(Realm& realm, const YAML::Node& node)
   : realm_(realm),
@@ -378,5 +378,5 @@ ABLForcingAlgorithm::eval_temperature_source(const double zp, double& tempSrc)
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

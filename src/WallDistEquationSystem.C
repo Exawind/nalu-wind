@@ -64,7 +64,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 WallDistEquationSystem::WallDistEquationSystem(EquationSystems& eqSystems)
   : EquationSystem(eqSystems, "WallDistEQS", "ndtw"),
@@ -458,7 +458,7 @@ WallDistEquationSystem::solve_and_update()
 void
 WallDistEquationSystem::compute_wall_distance()
 {
-  using Traits = kynema-ugf_ngp::NGPMeshTraits<>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
   using MeshIndex = Traits::MeshIndex;
 
   auto& meta = realm_.meta_data();
@@ -476,7 +476,7 @@ WallDistEquationSystem::compute_wall_distance()
   const stk::mesh::Selector sel = stk::mesh::selectField(*wallDistPhi_);
 
   wdist.sync_to_device();
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "compute_wall_dist", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       double dpdxsq = 0.0;
@@ -529,5 +529,5 @@ WallDistEquationSystem::create_constraint_algorithm(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -53,7 +53,7 @@
 #endif
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -307,7 +307,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
             const YAML::Node tipCoord = y_los["tip_coordinates"];
             if (tipCoord)
               probeInfo->tipCoordinates_[ilos] =
-                tipCoord.as<sierra::kynema-ugf::Coordinates>();
+                tipCoord.as<sierra::kynema_ugf::Coordinates>();
             else
               throw std::runtime_error(
                 "DataProbePostProcessing: lacking tip coordinates");
@@ -316,7 +316,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
             const YAML::Node tailCoord = y_los["tail_coordinates"];
             if (tailCoord)
               probeInfo->tailCoordinates_[ilos] =
-                tailCoord.as<sierra::kynema-ugf::Coordinates>();
+                tailCoord.as<sierra::kynema_ugf::Coordinates>();
             else
               throw std::runtime_error(
                 "DataProbePostProcessing: lacking tail coordinates");
@@ -402,7 +402,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
             const YAML::Node cornerCoord = y_planenode["corner_coordinates"];
             if (cornerCoord)
               probeInfo->cornerCoordinates_[iplane + offset] =
-                cornerCoord.as<sierra::kynema-ugf::Coordinates>();
+                cornerCoord.as<sierra::kynema_ugf::Coordinates>();
             else
               throw std::runtime_error(
                 "DataProbePostProcessing: lacking corner coordinates");
@@ -411,7 +411,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
             const YAML::Node edge1Vector = y_planenode["edge1_vector"];
             if (edge1Vector)
               probeInfo->edge1Vector_[iplane + offset] =
-                edge1Vector.as<sierra::kynema-ugf::Coordinates>();
+                edge1Vector.as<sierra::kynema_ugf::Coordinates>();
             else
               throw std::runtime_error(
                 "DataProbePostProcessing: lacking edge 1 vector");
@@ -420,7 +420,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
             const YAML::Node edge2Vector = y_planenode["edge2_vector"];
             if (edge2Vector)
               probeInfo->edge2Vector_[iplane + offset] =
-                edge2Vector.as<sierra::kynema-ugf::Coordinates>();
+                edge2Vector.as<sierra::kynema_ugf::Coordinates>();
             else
               throw std::runtime_error(
                 "DataProbePostProcessing: lacking edge 2 vector");
@@ -429,7 +429,7 @@ DataProbePostProcessing::load(const YAML::Node& y_node)
             const YAML::Node offsetDir = y_planenode["offset_vector"];
             if (offsetDir)
               probeInfo->offsetDir_[iplane + offset] =
-                offsetDir.as<sierra::kynema-ugf::Coordinates>();
+                offsetDir.as<sierra::kynema_ugf::Coordinates>();
             else {
               probeInfo->offsetDir_[iplane + offset].x_ = 0.0;
               probeInfo->offsetDir_[iplane + offset].y_ = 0.0;
@@ -1339,5 +1339,5 @@ DataProbePostProcessing::get_inactive_selector()
   return inactiveSelector_;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

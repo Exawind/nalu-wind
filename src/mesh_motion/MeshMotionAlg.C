@@ -8,7 +8,7 @@
 #include <iostream>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 MeshMotionAlg::MeshMotionAlg(stk::mesh::BulkData& bulk, const YAML::Node& node)
 {
@@ -99,5 +99,5 @@ MeshMotionAlg::get_partvec()
   return fpartVec;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

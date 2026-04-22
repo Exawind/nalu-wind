@@ -21,14 +21,14 @@ namespace fsi {
 std::array<double, 6> accumulateLoadsAndMoments(
   const stk::mesh::BulkData& bulk,
   const stk::mesh::PartVector& surface,
-  const sierra::kynema-ugf::VectorFieldType& modelCoords,
-  const sierra::kynema-ugf::VectorFieldType& meshDisp,
-  const sierra::kynema-ugf::GenericFieldType& tforceSCS,
+  const sierra::kynema_ugf::VectorFieldType& modelCoords,
+  const sierra::kynema_ugf::VectorFieldType& meshDisp,
+  const sierra::kynema_ugf::GenericFieldType& tforceSCS,
   std::array<double, 3>& center_of_mass);
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -60,7 +60,7 @@ public:
   GenericFieldType* tforceSCS_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

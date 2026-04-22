@@ -15,7 +15,7 @@
 #include "Kokkos_Core.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class SolutionOptions;
 class MasterElement;
@@ -48,7 +48,7 @@ private:
   const bool shiftPoisson_{false};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* WALLDISTELEMKERNEL_H */

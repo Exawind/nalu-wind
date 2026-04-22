@@ -33,7 +33,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -1079,5 +1079,5 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowInflow(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -21,7 +21,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class CoeffApplier;
 class EquationSystem;
@@ -100,7 +100,7 @@ protected:
   EquationSystem* eqSystem_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

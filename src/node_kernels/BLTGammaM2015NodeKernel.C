@@ -16,7 +16,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 BLTGammaM2015NodeKernel::BLTGammaM2015NodeKernel(
   const stk::mesh::MetaData& meta)
@@ -184,5 +184,5 @@ BLTGammaM2015NodeKernel::execute(
   //
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

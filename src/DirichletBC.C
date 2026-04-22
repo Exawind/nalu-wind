@@ -14,7 +14,7 @@
 #include <Realm.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 DirichletBC::DirichletBC(
   Realm& realm,
@@ -46,5 +46,5 @@ DirichletBC::execute()
     field_, bcValues_, partVec_, beginPos_, endPos_);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

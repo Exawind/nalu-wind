@@ -17,7 +17,7 @@
 #include "SolutionOptions.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 BuoyancySourceAlg::BuoyancySourceAlg(
   Realm& realm,
@@ -40,7 +40,7 @@ BuoyancySourceAlg::BuoyancySourceAlg(
 void
 BuoyancySourceAlg::execute()
 {
-  using EntityInfoType = kynema-ugf_ngp::EntityInfo<stk::mesh::NgpMesh>;
+  using EntityInfoType = kynema_ugf_ngp::EntityInfo<stk::mesh::NgpMesh>;
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
   const unsigned ndim = meta.spatial_dimension();
@@ -50,9 +50,9 @@ BuoyancySourceAlg::execute()
   const auto edgeAreaVec = fieldMgr.template get_field<double>(edgeAreaVec_);
   auto source = fieldMgr.template get_field<double>(source_);
   auto sourceweight = fieldMgr.template get_field<double>(source_weight_);
-  const auto sourceOps = kynema-ugf_ngp::edge_nodal_field_updater(ngpMesh, source);
+  const auto sourceOps = kynema_ugf_ngp::edge_nodal_field_updater(ngpMesh, source);
   const auto sourceweightOps =
-    kynema-ugf_ngp::edge_nodal_field_updater(ngpMesh, sourceweight);
+    kynema_ugf_ngp::edge_nodal_field_updater(ngpMesh, sourceweight);
 
   const stk::mesh::Selector sel =
     meta.locally_owned_part() & stk::mesh::selectUnion(partVec_);
@@ -66,7 +66,7 @@ BuoyancySourceAlg::execute()
   source.sync_to_device();
 
   const std::string algName = meta.get_fields()[source_]->name() + "_edge";
-  kynema-ugf_ngp::run_edge_algorithm(
+  kynema_ugf_ngp::run_edge_algorithm(
     algName, ngpMesh, sel, KOKKOS_LAMBDA(const EntityInfoType& einfo) {
       DblType av[NDimMax];
 
@@ -98,5 +98,5 @@ BuoyancySourceAlg::execute()
   sourceweight.modify_on_device();
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

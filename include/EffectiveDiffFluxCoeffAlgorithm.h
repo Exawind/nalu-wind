@@ -15,7 +15,7 @@
 #include <FieldTypeDef.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -42,7 +42,7 @@ public:
   const bool isTurbulent_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -13,7 +13,7 @@
 #include "matrix_free/LinSysInfo.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 
 enum class GradTurbModel { LAM, WALE, SMAG };
@@ -35,7 +35,7 @@ struct lowmach_info
 };
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

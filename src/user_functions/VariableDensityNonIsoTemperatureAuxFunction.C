@@ -17,7 +17,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 VariableDensityNonIsoTemperatureAuxFunction::
   VariableDensityNonIsoTemperatureAuxFunction()
@@ -55,5 +55,5 @@ VariableDensityNonIsoTemperatureAuxFunction::do_evaluate(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

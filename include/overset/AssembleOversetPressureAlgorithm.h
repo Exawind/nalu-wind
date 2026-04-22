@@ -20,7 +20,7 @@ class FieldBase;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -48,7 +48,7 @@ public:
   ScalarFieldType* Udiag_{nullptr};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

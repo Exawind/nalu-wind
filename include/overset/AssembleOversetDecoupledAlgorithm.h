@@ -18,7 +18,7 @@ class FieldBase;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -36,7 +36,7 @@ public:
   virtual void execute() override;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ASSEMBLEOVERSETDECOUPLEDALGORITHM_H */

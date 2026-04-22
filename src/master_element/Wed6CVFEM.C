@@ -16,7 +16,7 @@
 #include <array>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 int
 wed_gradient_operator(
@@ -1200,5 +1200,5 @@ WedSCS::sidePcoords_to_elemPcoords(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

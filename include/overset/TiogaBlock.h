@@ -202,14 +202,14 @@ public:
 
   void register_solution(
     TIOGA::tioga&,
-    const std::vector<sierra::kynema-ugf::OversetFieldData>&,
+    const std::vector<sierra::kynema_ugf::OversetFieldData>&,
     const int);
 
-  void register_solution(TIOGA::tioga&, const sierra::kynema-ugf::OversetFieldData&);
+  void register_solution(TIOGA::tioga&, const sierra::kynema_ugf::OversetFieldData&);
 
-  void update_solution(const std::vector<sierra::kynema-ugf::OversetFieldData>&);
+  void update_solution(const std::vector<sierra::kynema_ugf::OversetFieldData>&);
 
-  void update_solution(const sierra::kynema-ugf::OversetFieldData&);
+  void update_solution(const sierra::kynema_ugf::OversetFieldData&);
 
   //! Return the block name for this mesh
   const std::string& block_name() const { return block_name_; }

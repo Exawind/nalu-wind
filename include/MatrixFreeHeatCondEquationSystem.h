@@ -26,7 +26,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class MatrixFreeHeatCondEquationSystem final : public EquationSystem
 {
@@ -83,6 +83,6 @@ private:
   bool initialized_{false};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

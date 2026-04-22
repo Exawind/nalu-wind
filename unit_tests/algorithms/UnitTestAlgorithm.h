@@ -29,7 +29,7 @@ public:
 
   virtual ~TestAlgorithm() {}
 
-  inline sierra::kynema-ugf::Realm& create_realm(
+  inline sierra::kynema_ugf::Realm& create_realm(
     const YAML::Node& realm_node,
     const std::string realm_type = "multi_physics")
   {
@@ -37,7 +37,7 @@ public:
     return *realm_;
   }
 
-  inline sierra::kynema-ugf::Realm&
+  inline sierra::kynema_ugf::Realm&
   create_realm(const std::string realm_type = "multi_physics")
   {
     const YAML::Node realm_node = unit_test_utils::get_realm_default_node();
@@ -49,7 +49,7 @@ public:
 
   virtual void declare_fields() = 0;
 
-  inline sierra::kynema-ugf::Realm& realm() const
+  inline sierra::kynema_ugf::Realm& realm() const
   {
     assert(realm_ != nullptr);
     return *realm_;
@@ -60,17 +60,17 @@ public:
   inline stk::mesh::BulkData& bulk() const { return realm().bulk_data(); }
 
   double field_norm(
-    const sierra::kynema-ugf::ScalarFieldType& field,
+    const sierra::kynema_ugf::ScalarFieldType& field,
     stk::mesh::Selector* selector = nullptr);
 
   //! Reference to test KynemaUGF instance used to hold Simulation and Realm
   std::unique_ptr<unit_test_utils::KynemaUGFTest> kynema-ugfObj_;
 
   //! Reference to realm instance
-  sierra::kynema-ugf::Realm* realm_{nullptr};
+  sierra::kynema_ugf::Realm* realm_{nullptr};
 
   stk::mesh::Part* meshPart_{nullptr};
-  const sierra::kynema-ugf::VectorFieldType* coordinates_{nullptr};
+  const sierra::kynema_ugf::VectorFieldType* coordinates_{nullptr};
   stk::ParallelMachine comm_;
 };
 
@@ -86,25 +86,25 @@ public:
   virtual void
   fill_mesh_and_init_fields(const std::string mesh_spec = "generated:10x10x10");
 
-  sierra::kynema-ugf::ScalarFieldType* density_{nullptr};
-  sierra::kynema-ugf::ScalarFieldType* viscosity_{nullptr};
-  sierra::kynema-ugf::ScalarFieldType* tke_{nullptr};
-  sierra::kynema-ugf::ScalarFieldType* sdr_{nullptr};
-  sierra::kynema-ugf::ScalarFieldType* minDistance_{nullptr};
-  sierra::kynema-ugf::TensorFieldType* dudx_{nullptr};
-  sierra::kynema-ugf::GenericFieldType* openMassFlowRate_{nullptr};
-  sierra::kynema-ugf::ScalarFieldType* tvisc_{nullptr};
-  sierra::kynema-ugf::ScalarFieldType* maxLengthScale_{nullptr};
-  sierra::kynema-ugf::ScalarFieldType* fOneBlend_{nullptr};
-  sierra::kynema-ugf::ScalarFieldType* evisc_{nullptr};
-  sierra::kynema-ugf::ScalarFieldType* dualNodalVolume_{nullptr};
-  sierra::kynema-ugf::VectorFieldType* dkdx_{nullptr};
-  sierra::kynema-ugf::VectorFieldType* dwdx_{nullptr};
-  sierra::kynema-ugf::VectorFieldType* dhdx_{nullptr};
-  sierra::kynema-ugf::ScalarFieldType* specificHeat_{nullptr};
-  sierra::kynema-ugf::ScalarFieldType* tkebc_{nullptr};
-  sierra::kynema-ugf::TensorFieldType* avgDudx_{nullptr};
-  sierra::kynema-ugf::ScalarFieldType* avgTime_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* density_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* viscosity_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tke_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* sdr_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* minDistance_{nullptr};
+  sierra::kynema_ugf::TensorFieldType* dudx_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* openMassFlowRate_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tvisc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* maxLengthScale_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* fOneBlend_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* evisc_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* dualNodalVolume_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dkdx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dwdx_{nullptr};
+  sierra::kynema_ugf::VectorFieldType* dhdx_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* specificHeat_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* tkebc_{nullptr};
+  sierra::kynema_ugf::TensorFieldType* avgDudx_{nullptr};
+  sierra::kynema_ugf::ScalarFieldType* avgTime_{nullptr};
 };
 
 struct NodeSuppHelper
@@ -131,7 +131,7 @@ struct NodeSuppHelper
   YAML::Node yamlNode;
   YAML::Node realmDefaultNode;
   std::unique_ptr<unit_test_utils::KynemaUGFTest> kynema-ugfObj;
-  sierra::kynema-ugf::Realm& realm;
+  sierra::kynema_ugf::Realm& realm;
 
   stk::mesh::Entity node;
 };

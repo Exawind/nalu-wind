@@ -19,7 +19,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -262,5 +262,5 @@ OutputInfo::get_restart_shuffle()
   return restartCompressionShuffle_;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

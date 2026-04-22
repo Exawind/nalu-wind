@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 GaussJetVelocityAuxFunction::GaussJetVelocityAuxFunction(
   const unsigned beginPos, const unsigned endPos)
@@ -63,5 +63,5 @@ GaussJetVelocityAuxFunction::do_evaluate(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

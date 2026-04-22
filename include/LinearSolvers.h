@@ -21,7 +21,7 @@ class Node;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class LinearSolver;
 class TpetraLinearSolverConfig;
@@ -84,13 +84,13 @@ public:
   //! input file when `type` is `hypre` or `tpetra_hypre`
   HypreSolverConfigMap solverHypreConfig_;
 
-  //! Reference to the sierra::kynema-ugf::Simulation instance
+  //! Reference to the sierra::kynema_ugf::Simulation instance
   Simulation& sim_;
 
 private:
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

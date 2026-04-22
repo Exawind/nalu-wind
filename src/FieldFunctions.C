@@ -20,7 +20,7 @@
 #include <algorithm>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 void
 field_axpby(
@@ -193,5 +193,5 @@ field_index_copy(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -20,7 +20,7 @@
 #include <stk_util/environment/WallTime.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -171,5 +171,5 @@ KynemaUGFEnv::kynema-ugf_time()
   return stk::wall_time();
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

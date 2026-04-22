@@ -12,7 +12,7 @@
 #include <aero/actuator/ActuatorParsing.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 namespace {
 
@@ -92,5 +92,5 @@ TEST_F(ActuatorParsingTest, NGP_bareMinimumParse)
 
 } // namespace
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

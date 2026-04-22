@@ -18,7 +18,7 @@
 #include "matrix_free/ShuffledAccess.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 
 //
@@ -236,6 +236,6 @@ lumped_mass_term(
 }
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

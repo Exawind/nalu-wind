@@ -16,7 +16,7 @@
 #include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 StreletsUpwindEdgeAlg::StreletsUpwindEdgeAlg(
   Realm& realm, stk::mesh::Part* part)
@@ -65,7 +65,7 @@ StreletsUpwindEdgeAlg::StreletsUpwindEdgeAlg(
 void
 StreletsUpwindEdgeAlg::execute()
 {
-  using EntityInfoType = kynema-ugf_ngp::EntityInfo<stk::mesh::NgpMesh>;
+  using EntityInfoType = kynema_ugf_ngp::EntityInfo<stk::mesh::NgpMesh>;
   stk::mesh::MetaData& meta = realm_.meta_data();
   const int nDim = meta.spatial_dimension();
 
@@ -100,7 +100,7 @@ StreletsUpwindEdgeAlg::execute()
                                   stk::mesh::selectUnion(partVec_) &
                                   !(realm_.get_inactive_selector());
 
-  kynema-ugf_ngp::run_edge_algorithm(
+  kynema_ugf_ngp::run_edge_algorithm(
     "compute_streletes_des_alpha_upw", ngpMesh, sel,
     KOKKOS_LAMBDA(const EntityInfoType& eInfo) {
       const auto& nodes = eInfo.entityNodes;
@@ -120,7 +120,7 @@ StreletsUpwindEdgeAlg::execute()
         0.5 * (sst_maxlen.get(nodeL, 0) + sst_maxlen.get(nodeR, 0));
 
       // Scratch work array for edgeAreaVector
-      DblType av[kynema-ugf_ngp::NDimMax];
+      DblType av[kynema_ugf_ngp::NDimMax];
       // Populate area vector work array
       for (int d = 0; d < nDim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
@@ -142,7 +142,7 @@ StreletsUpwindEdgeAlg::execute()
         dui/dxj = GjUi +[(uiR - uiL) - GlUi*dxl]*Aj/AxDx
         where Gp is the interpolated pth nodal gradient for ui
       */
-      DblType duidxj[kynema-ugf_ngp::NDimMax][kynema-ugf_ngp::NDimMax];
+      DblType duidxj[kynema_ugf_ngp::NDimMax][kynema_ugf_ngp::NDimMax];
       for (int i = 0; i < nDim; ++i) {
         const auto dui = vel.get(nodeR, i) - vel.get(nodeL, i);
         const auto offset = i * nDim;
@@ -200,5 +200,5 @@ StreletsUpwindEdgeAlg::execute()
   pecFactor.modify_on_device();
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

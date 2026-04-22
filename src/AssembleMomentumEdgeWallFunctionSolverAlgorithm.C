@@ -30,7 +30,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -117,7 +117,7 @@ AssembleMomentumEdgeWallFunctionSolverAlgorithm::execute()
 
     // face master element
     MasterElement* meFC =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
@@ -239,5 +239,5 @@ AssembleMomentumEdgeWallFunctionSolverAlgorithm::execute()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

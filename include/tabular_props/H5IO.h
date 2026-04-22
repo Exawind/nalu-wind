@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //============================================================================
 /**
@@ -120,7 +120,7 @@ private:
   int fileVersion_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

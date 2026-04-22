@@ -23,7 +23,7 @@
 #include <yaml-cpp/yaml.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 LinearSolvers::LinearSolvers(Simulation& sim) : sim_(sim) {}
 LinearSolvers::~LinearSolvers()
@@ -173,5 +173,5 @@ LinearSolvers::reinitialize_solver(
   return create_solver(solverBlockName, realmName, theEQ);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

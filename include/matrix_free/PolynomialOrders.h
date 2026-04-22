@@ -31,7 +31,7 @@
 #endif
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace inst {
 enum {
@@ -80,7 +80,7 @@ enum {
   }
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

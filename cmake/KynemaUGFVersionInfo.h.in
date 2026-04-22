@@ -10,7 +10,7 @@
 #include <string>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace version{
 
 #cmakedefine KYNEMA_UGF_HAVE_GIT_INFO

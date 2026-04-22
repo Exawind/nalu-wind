@@ -13,7 +13,7 @@
 #include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
   : ActuatorMeta(actMeta),
@@ -347,5 +347,5 @@ ActuatorBulkFAST::output_torque_info(stk::mesh::BulkData& stkBulk)
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

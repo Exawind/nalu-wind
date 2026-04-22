@@ -27,7 +27,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -559,5 +559,5 @@ AssembleScalarEigenEdgeSolverAlgorithm::perturb(double (&D)[3][3])
   D[rowMap_[2]][rowMap_[2]] = pLamdba3;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

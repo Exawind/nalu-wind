@@ -46,7 +46,7 @@
 #include <sstream>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -168,5 +168,5 @@ LinearSystem::sync_field(const stk::mesh::FieldBase* field)
   stk::mesh::copy_owned_to_shared(realm_.bulk_data(), ngpFields);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

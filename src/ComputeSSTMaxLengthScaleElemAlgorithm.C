@@ -29,7 +29,7 @@
 #include <stk_util/parallel/ParallelReduce.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -96,7 +96,7 @@ ComputeSSTMaxLengthScaleElemAlgorithm::execute()
 
     // extract master element
     MasterElement* meSCS =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
 
     // extract master element specifics
@@ -156,5 +156,5 @@ ComputeSSTMaxLengthScaleElemAlgorithm::execute()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

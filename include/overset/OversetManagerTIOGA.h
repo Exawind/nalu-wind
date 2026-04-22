@@ -16,7 +16,7 @@
 #include <stk_mesh/base/FieldBase.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 class OversetInfo;
@@ -56,13 +56,13 @@ public:
 
   /// Tioga-STK interface instance that performs the necessary translation
   /// between TIOGA and STK data structures.
-  tioga_kynema-ugf::TiogaSTKIface tiogaIface_;
+  tioga_kynema_ugf::TiogaSTKIface tiogaIface_;
 
   /// Flag tracking initialization phase for part registration
   bool isInit_{true};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* OVERSETMANAGERTIOGA_H */

@@ -20,7 +20,7 @@
 #endif
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 ExtOverset::ExtOverset(TimeIntegrator& time) : time_(time) {}
 
@@ -30,7 +30,7 @@ void
 ExtOverset::set_communicator()
 {
 #ifdef KYNEMA_UGF_USES_TIOGA
-  auto& tg = tioga_kynema-ugf::TiogaRef::self().get();
+  auto& tg = tioga_kynema_ugf::TiogaRef::self().get();
 
   auto& env = KynemaUGFEnv::self();
   tg.setCommunicator(
@@ -99,7 +99,7 @@ ExtOverset::update_connectivity()
     return;
 
 #ifdef KYNEMA_UGF_USES_TIOGA
-  auto& tg = tioga_kynema-ugf::TiogaRef::self().get();
+  auto& tg = tioga_kynema_ugf::TiogaRef::self().get();
 
   for (auto* tgiface : tgIfaceVec_) {
     tgiface->register_mesh();
@@ -148,7 +148,7 @@ ExtOverset::exchange_solution()
 
 #ifdef KYNEMA_UGF_USES_TIOGA
   const int row_major = 0;
-  auto& tg = tioga_kynema-ugf::TiogaRef::self().get();
+  auto& tg = tioga_kynema_ugf::TiogaRef::self().get();
 
   int ncomp = 0;
   for (auto* realm : time_.realmVec_) {
@@ -222,5 +222,5 @@ ExtOverset::update_solution()
 #endif
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

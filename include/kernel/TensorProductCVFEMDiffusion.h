@@ -16,7 +16,7 @@
 #include <CVFEMTypeDefs.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace tensor_assembly {
 
 template <int poly_order, typename Scalar>
@@ -422,7 +422,7 @@ scalar_diffusion_rhs(
 }
 
 } // namespace tensor_assembly
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -32,7 +32,7 @@ class Part;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class SideWriter
 {
@@ -69,6 +69,6 @@ private:
   std::vector<std::vector<std::string>> sideNames_;
   std::vector<std::vector<std::string>> fieldNames_;
 };
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

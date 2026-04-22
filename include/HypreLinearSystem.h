@@ -40,53 +40,53 @@
 #include <utils/CreateDeviceExpression.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
-using UnsignedView = Kokkos::View<unsigned*, sierra::kynema-ugf::MemSpace>;
+using UnsignedView = Kokkos::View<unsigned*, sierra::kynema_ugf::MemSpace>;
 using UnsignedViewHost = UnsignedView::HostMirror;
 
-using DoubleView = Kokkos::View<double*, sierra::kynema-ugf::MemSpace>;
+using DoubleView = Kokkos::View<double*, sierra::kynema_ugf::MemSpace>;
 using DoubleViewHost = DoubleView::HostMirror;
 
-using HypreIntTypeView = Kokkos::View<HypreIntType*, sierra::kynema-ugf::MemSpace>;
+using HypreIntTypeView = Kokkos::View<HypreIntType*, sierra::kynema_ugf::MemSpace>;
 using HypreIntTypeViewHost = HypreIntTypeView::HostMirror;
 
 // const random access views for read only, noncoalesced (texture) memory
 // fetches
 using UnsignedViewRA = Kokkos::View<
   const unsigned*,
-  sierra::kynema-ugf::MemSpace,
+  sierra::kynema_ugf::MemSpace,
   Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 using HypreIntTypeViewRA = Kokkos::View<
   const HypreIntType*,
-  sierra::kynema-ugf::MemSpace,
+  sierra::kynema_ugf::MemSpace,
   Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 // This 2D view needs to be LayoutLeft. Do NOT change
 using DoubleView2D =
-  Kokkos::View<double**, Kokkos::LayoutLeft, sierra::kynema-ugf::MemSpace>;
+  Kokkos::View<double**, Kokkos::LayoutLeft, sierra::kynema_ugf::MemSpace>;
 using DoubleView2DHost = DoubleView2D::HostMirror;
 
 // This 2D view needs to be LayoutLeft. Do NOT change
 using HypreIntTypeView2D =
-  Kokkos::View<HypreIntType**, Kokkos::LayoutLeft, sierra::kynema-ugf::MemSpace>;
+  Kokkos::View<HypreIntType**, Kokkos::LayoutLeft, sierra::kynema_ugf::MemSpace>;
 using HypreIntTypeView2DHost = HypreIntTypeView2D::HostMirror;
 
 using HypreIntTypeViewScalar =
-  Kokkos::View<HypreIntType, sierra::kynema-ugf::MemSpace>;
+  Kokkos::View<HypreIntType, sierra::kynema_ugf::MemSpace>;
 using HypreIntTypeViewScalarHost = HypreIntTypeViewScalar::HostMirror;
 
 using HypreIntTypeUnorderedMap =
-  Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::kynema-ugf::MemSpace>;
+  Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::kynema_ugf::MemSpace>;
 using HypreIntTypeUnorderedMapHost = HypreIntTypeUnorderedMap::HostMirror;
 
 using MemoryMap =
-  Kokkos::UnorderedMap<HypreIntType, unsigned, sierra::kynema-ugf::MemSpace>;
+  Kokkos::UnorderedMap<HypreIntType, unsigned, sierra::kynema_ugf::MemSpace>;
 using MemoryMapHost = MemoryMap::HostMirror;
 
 // Periodic Node Map
 using PeriodicNodeMap =
-  Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::kynema-ugf::MemSpace>;
+  Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::kynema_ugf::MemSpace>;
 using PeriodicNodeMapHost = PeriodicNodeMap::HostMirror;
 
 /** KynemaUGF interface to populate a Hypre Linear System
@@ -96,7 +96,7 @@ using PeriodicNodeMapHost = PeriodicNodeMap::HostMirror;
  *  Hypre data structures and provides the HypreLinearSystem::sumInto interface
  *  used by KynemaUGF Kernels and SupplementalAlgorithms to populate entries into the
  *  linear system. The HypreLinearSystem::solve method interfaces with
- *  sierra::kynema-ugf::HypreDirectSolver that is responsible for the actual solution
+ *  sierra::kynema_ugf::HypreDirectSolver that is responsible for the actual solution
  *  of the system using the required solver and preconditioner combination.
  */
 class HypreLinearSystem : public LinearSystem
@@ -204,7 +204,7 @@ public:
    *
    *  @param[in] entities List of nodes where Dirichlet conditions are applied
    *
-   *  \sa sierra::kynema-ugf::FixPressureAtNodeAlgorithm
+   *  \sa sierra::kynema_ugf::FixPressureAtNodeAlgorithm
    */
   virtual void buildDirichletNodeGraph(const std::vector<stk::mesh::Entity>&);
   virtual void
@@ -270,7 +270,7 @@ public:
     const unsigned beginPos,
     const unsigned endPos);
 
-  sierra::kynema-ugf::CoeffApplier* get_coeff_applier();
+  sierra::kynema_ugf::CoeffApplier* get_coeff_applier();
 
   // print timings for initialize
   virtual void printTimings(std::vector<double>& time, const char* name);
@@ -371,7 +371,7 @@ public:
 
     virtual void free_device_pointer();
 
-    virtual sierra::kynema-ugf::CoeffApplier* device_pointer();
+    virtual sierra::kynema_ugf::CoeffApplier* device_pointer();
 
     //! mesh
     stk::mesh::NgpMesh ngpMesh_;
@@ -594,7 +594,7 @@ private:
   mutable HYPRE_IJVector sln_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* HYPRELINEARSYSTEM_H */

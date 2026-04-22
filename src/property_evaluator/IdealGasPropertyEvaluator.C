@@ -17,7 +17,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -244,5 +244,5 @@ IdealGasYkPropertyEvaluator::compute_mw(const double* massFraction)
   return 1.0 / sum;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

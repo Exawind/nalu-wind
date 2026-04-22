@@ -113,7 +113,7 @@
 #include <utils/StkHelpers.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -1371,7 +1371,7 @@ EnthalpyEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*enthalpy_);
-  kynema-ugf_ngp::field_copy(ngpMesh, sel, hNp1, hN);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, hNp1, hN);
 }
 
 //--------------------------------------------------------------------------
@@ -1507,5 +1507,5 @@ EnthalpyEquationSystem::compute_projected_nodal_gradient()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

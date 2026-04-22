@@ -22,7 +22,7 @@ class PropertyManager;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class OutputInfo
 {
@@ -78,7 +78,7 @@ public:
   std::set<std::string> restartFieldNameSet_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

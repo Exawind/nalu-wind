@@ -33,7 +33,7 @@
 
 namespace sierra {
 
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 inline void
 check_nc_error(int code, std::string msg)
@@ -2128,6 +2128,6 @@ fsiTurbine::compute_div_mesh_velocity()
     *bulk_, partVec_, bndyPartVec_, faceVelMag, divMeshVel);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 
 } // namespace sierra

@@ -4,7 +4,7 @@
 #include "NgpMotion.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class MotionDeformingInteriorKernel
   : public NgpMotionKernel<MotionDeformingInteriorKernel>
@@ -63,7 +63,7 @@ private:
   mm::ThreeDVecType frequency_{0.0, 0.0, 0.0};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOTIONDEFORMINGINTERIORKERNEL_H */

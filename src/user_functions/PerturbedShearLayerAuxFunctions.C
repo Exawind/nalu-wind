@@ -17,7 +17,7 @@
 #include <random>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 PerturbedShearLayerVelocityAuxFunction::PerturbedShearLayerVelocityAuxFunction(
   const unsigned beginPos, const unsigned endPos)
@@ -125,5 +125,5 @@ PerturbedShearLayerMixFracAuxFunction::do_evaluate(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

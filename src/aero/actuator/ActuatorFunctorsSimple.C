@@ -19,7 +19,7 @@
 #include <ostream>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 InterpActuatorDensity::InterpActuatorDensity(
   ActuatorBulkSimple& actBulk, stk::mesh::BulkData& stkBulk)
@@ -435,5 +435,5 @@ ActSimpleSpreadForceWhProjInnerLoop::operator()(
   }
 }
 
-} /* namespace kynema-ugf */
+} /* namespace kynema_ugf */
 } /* namespace sierra */

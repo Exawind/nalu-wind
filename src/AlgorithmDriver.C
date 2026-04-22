@@ -13,7 +13,7 @@
 #include <Enums.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -59,5 +59,5 @@ AlgorithmDriver::execute()
   post_work();
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -29,7 +29,7 @@
 #include <tuple>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 class Realm;
 
 inline std::pair<AssembleElemSolverAlgorithm*, bool>
@@ -409,7 +409,7 @@ build_or_add_part_to_face_bc_solver_alg(
   return {theSolverAlg, createNewAlg};
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

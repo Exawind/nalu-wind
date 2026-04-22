@@ -28,7 +28,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -112,7 +112,7 @@ ComputeHeatTransferEdgeWallAlgorithm::execute()
     STK_ThrowAssert(parentTopo.size() == 1);
     stk::topology theElemTopo = parentTopo[0];
     MasterElement* meSCS =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         theElemTopo);
 
     // size some things that are useful
@@ -242,5 +242,5 @@ ComputeHeatTransferEdgeWallAlgorithm::compute_coupling_parameter(
   return A * kappa / h;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

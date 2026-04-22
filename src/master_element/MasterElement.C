@@ -26,7 +26,7 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
@@ -73,5 +73,5 @@ MasterElement::vector_norm_sq(const double* vect, int len) const
   return norm_sq;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

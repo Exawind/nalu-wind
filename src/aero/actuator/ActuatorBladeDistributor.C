@@ -16,7 +16,7 @@
 #endif
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 bool
 blade_belongs_on_this_rank(
@@ -114,5 +114,5 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
   return results;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -12,7 +12,7 @@
 #include <array>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class ScanningLidarFixture : public ::testing::Test
 {
@@ -224,5 +224,5 @@ TEST_F(ScanningLidarFixture, stares_at_end)
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

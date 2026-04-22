@@ -24,7 +24,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class AlgorithmDriver;
 class Realm;
@@ -147,7 +147,7 @@ public:
   std::vector<Algorithm*> bcCopyStateAlg_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

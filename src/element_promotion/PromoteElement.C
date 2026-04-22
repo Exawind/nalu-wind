@@ -40,7 +40,7 @@
 #include <limits>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace promotion {
 
 std::pair<stk::mesh::PartVector, stk::mesh::PartVector>
@@ -63,5 +63,5 @@ create_promoted_boundary_elements(
 }
 
 } // namespace promotion
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

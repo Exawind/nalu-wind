@@ -17,7 +17,7 @@
 namespace unit_test_utils {
 
 double field_norm(
-  const sierra::kynema-ugf::ScalarFieldType& field,
+  const sierra::kynema_ugf::ScalarFieldType& field,
   const stk::mesh::BulkData& bulk,
   stk::mesh::Selector selector);
 }

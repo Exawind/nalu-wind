@@ -31,7 +31,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -158,12 +158,12 @@ ComputeWallFrictionVelocityAlgorithm::execute()
 
     // extract master element
     MasterElement* meSCS =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         theElemTopo);
 
     // face master element
     MasterElement* meFC =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
     const int nodesPerFace = b.topology().num_nodes();
     const int numScsBip = meFC->num_integration_points();
@@ -469,5 +469,5 @@ ComputeWallFrictionVelocityAlgorithm::normalize_nodal_fields()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

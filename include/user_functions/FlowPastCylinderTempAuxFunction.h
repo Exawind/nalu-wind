@@ -13,7 +13,7 @@
 #include <AuxFunction.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class FlowPastCylinderTempAuxFunction : public AuxFunction
 {
@@ -47,7 +47,7 @@ private:
   int iMax_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

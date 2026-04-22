@@ -31,7 +31,7 @@ public:
 
   ~KynemaUGFTest();
 
-  sierra::kynema-ugf::Realm& create_realm(
+  sierra::kynema_ugf::Realm& create_realm(
     const YAML::Node& realm_node = get_realm_default_node(),
     const std::string realm_type = "multi_physics",
     const bool createMeshObjects = true);
@@ -39,7 +39,7 @@ public:
   YAML::Node doc_;
   stk::ParallelMachine comm_;
   unsigned spatialDim_;
-  sierra::kynema-ugf::Simulation sim_;
+  sierra::kynema_ugf::Simulation sim_;
 
   stk::mesh::PartVector partVec_;
 

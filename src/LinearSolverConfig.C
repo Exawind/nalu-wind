@@ -20,7 +20,7 @@
 #include <ostream>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 LinearSolverConfig::LinearSolverConfig()
   : params_(Teuchos::rcp(new Teuchos::ParameterList)),
@@ -141,5 +141,5 @@ TpetraLinearSolverConfig::load(const YAML::Node& node)
 
 #endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -45,7 +45,7 @@ private:
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* WALLDISTNODEKERNEL_H */

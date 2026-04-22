@@ -14,7 +14,7 @@
 #include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 namespace {
 void
@@ -200,5 +200,5 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
   return actMetaFAST;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -26,7 +26,7 @@
 #include <stk_mesh/base/Selector.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 OversetManagerTIOGA::OversetManagerTIOGA(
   Realm& realm, const OversetUserData& oversetUserData)
@@ -99,7 +99,7 @@ OversetManagerTIOGA::overset_update_field(
   tiogaIface_.overset_update_field(field, nrows, ncols, doFinalSyncToDevice);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

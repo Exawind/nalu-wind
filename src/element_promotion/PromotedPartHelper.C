@@ -20,7 +20,7 @@
 #include <string>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 // A set of functions to deal with part pairs having specific ending tags
 bool
@@ -365,5 +365,5 @@ face_topology_for_order(int order)
   return stk::create_superface_topology((order + 1) * (order + 1));
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

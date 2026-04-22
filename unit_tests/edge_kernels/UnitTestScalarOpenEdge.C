@@ -124,9 +124,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_edge_open_solver_alg)
     bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 1, part);
 
   std::unique_ptr<
-    sierra::kynema-ugf::ScalarEdgeOpenSolverAlg<sierra::kynema-ugf::AlgTraitsQuad4Hex8>>
-    kernel(new sierra::kynema-ugf::ScalarEdgeOpenSolverAlg<
-           sierra::kynema-ugf::AlgTraitsQuad4Hex8>(
+    sierra::kynema_ugf::ScalarEdgeOpenSolverAlg<sierra::kynema_ugf::AlgTraitsQuad4Hex8>>
+    kernel(new sierra::kynema_ugf::ScalarEdgeOpenSolverAlg<
+           sierra::kynema_ugf::AlgTraitsQuad4Hex8>(
       *meta_, solnOpts_, tke_, tkebc_, dkdx_, tvisc_,
       helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
       helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_));
@@ -176,8 +176,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_open_edge)
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, 1, part);
 
-  std::unique_ptr<sierra::kynema-ugf::Kernel> kernel(
-    new sierra::kynema-ugf::ScalarOpenEdgeKernel<sierra::kynema-ugf::AlgTraitsQuad4>(
+  std::unique_ptr<sierra::kynema_ugf::Kernel> kernel(
+    new sierra::kynema_ugf::ScalarOpenEdgeKernel<sierra::kynema_ugf::AlgTraitsQuad4>(
       *meta_, solnOpts_, tke_, tkebc_,
       helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());

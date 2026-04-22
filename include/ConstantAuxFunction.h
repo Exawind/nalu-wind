@@ -16,7 +16,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class ConstantAuxFunction : public AuxFunction
 {
@@ -44,7 +44,7 @@ private:
   const std::vector<double> values_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

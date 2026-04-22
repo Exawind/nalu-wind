@@ -17,22 +17,22 @@
 
 void
 do_the_test_gpu(
-  const sierra::kynema-ugf::ElemDataRequests& dataReq,
+  const sierra::kynema_ugf::ElemDataRequests& dataReq,
   stk::mesh::BulkData& bulk,
-  std::shared_ptr<sierra::kynema-ugf::FieldManager> fieldMgr)
+  std::shared_ptr<sierra::kynema_ugf::FieldManager> fieldMgr)
 {
-  sierra::kynema-ugf::ElemDataRequestsGPU ngpDataReq(*fieldMgr, dataReq);
+  sierra::kynema_ugf::ElemDataRequestsGPU ngpDataReq(*fieldMgr, dataReq);
 
   unsigned numCorrectTests = 0;
   int threadsPerTeam = 1;
   size_t bytesPerTeam = 0;
   size_t bytesPerThread = 0;
-  auto team_exec = sierra::kynema-ugf::get_device_team_policy(
+  auto team_exec = sierra::kynema_ugf::get_device_team_policy(
     1, bytesPerTeam, bytesPerThread, threadsPerTeam);
   Kokkos::parallel_reduce(
     team_exec,
     KOKKOS_LAMBDA(
-      const sierra::kynema-ugf::DeviceTeamHandleType& /* team */,
+      const sierra::kynema_ugf::DeviceTeamHandleType& /* team */,
       unsigned& localNumTests) {
       if (ngpDataReq.get_fields().size() == 3) {
         ++localNumTests;
@@ -48,13 +48,13 @@ do_the_test_gpu(
 
       if (
         ngpDataReq.get_coordinates_types()(0) ==
-        sierra::kynema-ugf::CURRENT_COORDINATES) {
+        sierra::kynema_ugf::CURRENT_COORDINATES) {
         ++localNumTests;
       }
 
       if (
         ngpDataReq.get_coordinates_types()(1) ==
-        sierra::kynema-ugf::MODEL_COORDINATES) {
+        sierra::kynema_ugf::MODEL_COORDINATES) {
         ++localNumTests;
       }
     },
@@ -68,9 +68,9 @@ TEST_F(Hex8MeshWithNSOFields, NGPElemDataRequests)
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
   stk::topology elemTopo = stk::topology::HEX_8;
 
-  sierra::kynema-ugf::ElemDataRequests dataReq(bulk->mesh_meta_data());
+  sierra::kynema_ugf::ElemDataRequests dataReq(bulk->mesh_meta_data());
   auto meSCV =
-    sierra::kynema-ugf::MasterElementRepo::get_volume_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_volume_master_element_on_host(
       elemTopo);
   dataReq.add_cvfem_volume_me(meSCV);
 
@@ -79,10 +79,10 @@ TEST_F(Hex8MeshWithNSOFields, NGPElemDataRequests)
 
   dataReq.add_coordinates_field(
     *bulk->mesh_meta_data().coordinate_field(), 3,
-    sierra::kynema-ugf::CURRENT_COORDINATES);
+    sierra::kynema_ugf::CURRENT_COORDINATES);
   dataReq.add_coordinates_field(
     *bulk->mesh_meta_data().coordinate_field(), 3,
-    sierra::kynema-ugf::MODEL_COORDINATES);
+    sierra::kynema_ugf::MODEL_COORDINATES);
 
   EXPECT_EQ(3u, dataReq.get_fields().size());
 

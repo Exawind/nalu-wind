@@ -21,7 +21,7 @@
 
 namespace unit_test_me_ngp {
 
-using namespace sierra::kynema-ugf;
+using namespace sierra::kynema_ugf;
 
 template <typename T>
 void

@@ -30,7 +30,7 @@
 #include <numeric>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class ConductionFieldsFixture : public ::testing::Test
@@ -163,5 +163,5 @@ TEST_F(ConductionFieldsFixture, gather)
 }
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

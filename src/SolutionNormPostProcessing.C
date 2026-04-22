@@ -47,7 +47,7 @@
 #include <iomanip>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -415,5 +415,5 @@ SolutionNormPostProcessing::execute()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

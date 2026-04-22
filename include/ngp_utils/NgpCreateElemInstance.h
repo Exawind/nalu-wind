@@ -25,8 +25,8 @@
 #include "BuildTemplates.h"
 
 namespace sierra {
-namespace kynema-ugf {
-namespace kynema-ugf_ngp {
+namespace kynema_ugf {
+namespace kynema_ugf_ngp {
 
 /** Has the MasterElement for the topolgy fully transitioned to NGP?
  *
@@ -164,8 +164,8 @@ create_face_elem_algorithm(
   }
 }
 
-} // namespace kynema-ugf_ngp
-} // namespace kynema-ugf
+} // namespace kynema_ugf_ngp
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPCREATEELEMINSTANCE_H */

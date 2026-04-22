@@ -15,9 +15,9 @@
 #include <type_traits>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
-namespace kynema-ugf_ngp {
+namespace kynema_ugf_ngp {
 
 template <class T>
 inline T*
@@ -130,9 +130,9 @@ create_ngp_view(const Container& hostVec)
   return ngpVec;
 }
 
-} // namespace kynema-ugf_ngp
+} // namespace kynema_ugf_ngp
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPINSTANCE_H */

@@ -17,7 +17,7 @@
 #include <algorithm>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 WindEnergyTaylorVortexAuxFunction::WindEnergyTaylorVortexAuxFunction(
   const unsigned beginPos,
@@ -101,5 +101,5 @@ WindEnergyTaylorVortexAuxFunction::do_evaluate(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -24,7 +24,7 @@ class Node;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 struct FixPressureAtNodeInfo;
 
@@ -241,7 +241,7 @@ public:
   bool newHO_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

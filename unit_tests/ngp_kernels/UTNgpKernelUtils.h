@@ -17,11 +17,11 @@ namespace unit_test_ngp_kernels {
 
 template <typename AlgTraits>
 class TestContinuityKernel
-  : public sierra::kynema-ugf::NGPKernel<TestContinuityKernel<AlgTraits>>
+  : public sierra::kynema_ugf::NGPKernel<TestContinuityKernel<AlgTraits>>
 {
 public:
-  using TeamType = sierra::kynema-ugf::DeviceTeamHandleType;
-  using ShmemType = sierra::kynema-ugf::DeviceShmem;
+  using TeamType = sierra::kynema_ugf::DeviceTeamHandleType;
+  using ShmemType = sierra::kynema_ugf::DeviceShmem;
 
   KOKKOS_DEFAULTED_FUNCTION
   TestContinuityKernel() = default;
@@ -30,51 +30,51 @@ public:
   virtual ~TestContinuityKernel() = default;
 
   TestContinuityKernel(
-    const stk::mesh::BulkData& bulk, sierra::kynema-ugf::ElemDataRequests& dataReq)
+    const stk::mesh::BulkData& bulk, sierra::kynema_ugf::ElemDataRequests& dataReq)
   {
     auto& meta = bulk.mesh_meta_data();
 
-    coordinates_ = sierra::kynema-ugf::get_field_ordinal(meta, "coordinates");
-    velocity_ = sierra::kynema-ugf::get_field_ordinal(meta, "velocity");
-    pressure_ = sierra::kynema-ugf::get_field_ordinal(meta, "pressure");
+    coordinates_ = sierra::kynema_ugf::get_field_ordinal(meta, "coordinates");
+    velocity_ = sierra::kynema_ugf::get_field_ordinal(meta, "velocity");
+    pressure_ = sierra::kynema_ugf::get_field_ordinal(meta, "pressure");
 
-    meSCS_ = sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_dev(
+    meSCS_ = sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
       AlgTraits::topo_);
 
     dataReq.add_cvfem_surface_me(meSCS_);
 
     dataReq.add_coordinates_field(
-      coordinates_, AlgTraits::nDim_, sierra::kynema-ugf::CURRENT_COORDINATES);
+      coordinates_, AlgTraits::nDim_, sierra::kynema_ugf::CURRENT_COORDINATES);
     dataReq.add_gathered_nodal_field(velocity_, AlgTraits::nDim_);
     dataReq.add_gathered_nodal_field(pressure_, 1);
     dataReq.add_master_element_call(
-      sierra::kynema-ugf::SCS_AREAV, sierra::kynema-ugf::CURRENT_COORDINATES);
+      sierra::kynema_ugf::SCS_AREAV, sierra::kynema_ugf::CURRENT_COORDINATES);
     dataReq.add_master_element_call(
-      sierra::kynema-ugf::SCS_SHAPE_FCN, sierra::kynema-ugf::CURRENT_COORDINATES);
+      sierra::kynema_ugf::SCS_SHAPE_FCN, sierra::kynema_ugf::CURRENT_COORDINATES);
   }
 
-  using sierra::kynema-ugf::Kernel::execute;
+  using sierra::kynema_ugf::Kernel::execute;
 
   KOKKOS_FUNCTION
   void execute(
-    sierra::kynema-ugf::SharedMemView<DoubleType**, ShmemType>&,
-    sierra::kynema-ugf::SharedMemView<DoubleType*, ShmemType>&,
-    sierra::kynema-ugf::ScratchViews<DoubleType, TeamType, ShmemType>&);
+    sierra::kynema_ugf::SharedMemView<DoubleType**, ShmemType>&,
+    sierra::kynema_ugf::SharedMemView<DoubleType*, ShmemType>&,
+    sierra::kynema_ugf::ScratchViews<DoubleType, TeamType, ShmemType>&);
 
 private:
   unsigned coordinates_{stk::mesh::InvalidOrdinal};
   unsigned velocity_{stk::mesh::InvalidOrdinal};
   unsigned pressure_{stk::mesh::InvalidOrdinal};
 
-  sierra::kynema-ugf::MasterElement* meSCS_;
+  sierra::kynema_ugf::MasterElement* meSCS_;
 };
 
 template <typename AlgTraits>
 KOKKOS_FUNCTION void
 TestContinuityKernel<AlgTraits>::execute(
-  sierra::kynema-ugf::SharedMemView<DoubleType**, ShmemType>&,
-  sierra::kynema-ugf::SharedMemView<DoubleType*, ShmemType>& rhs,
-  sierra::kynema-ugf::ScratchViews<DoubleType, TeamType, ShmemType>& scratchViews)
+  sierra::kynema_ugf::SharedMemView<DoubleType**, ShmemType>&,
+  sierra::kynema_ugf::SharedMemView<DoubleType*, ShmemType>& rhs,
+  sierra::kynema_ugf::ScratchViews<DoubleType, TeamType, ShmemType>& scratchViews)
 {
   // Get the integration point to node mapping
   const int* ipNodeMap = meSCS_->ipNodeMap(3);
@@ -82,11 +82,11 @@ TestContinuityKernel<AlgTraits>::execute(
   auto& v_velocity = scratchViews.get_scratch_view_2D(velocity_);
   auto& v_pressure = scratchViews.get_scratch_view_1D(pressure_);
 
-  auto& meViews = scratchViews.get_me_views(sierra::kynema-ugf::CURRENT_COORDINATES);
+  auto& meViews = scratchViews.get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES);
   auto& scs_areav = meViews.scs_areav;
   auto v_shape_fcn =
-    sierra::kynema-ugf::shape_fcn<AlgTraits, sierra::kynema-ugf::QuadRank::SCS>(
-      sierra::kynema-ugf::use_shifted_quad(false));
+    sierra::kynema_ugf::shape_fcn<AlgTraits, sierra::kynema_ugf::QuadRank::SCS>(
+      sierra::kynema_ugf::use_shifted_quad(false));
 
   printf(
     "ipNodeMap[2] = %d (7); SCS areav[2, 0] = %f\n", ipNodeMap[2],

@@ -16,7 +16,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 //--------------------------------------------------------------------------
 KernelBuilderLog&
 KernelBuilderLog::self()
@@ -121,5 +121,5 @@ KernelBuilderLog::built_kernel_names(std::string kernelTypeName)
   return it->second;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

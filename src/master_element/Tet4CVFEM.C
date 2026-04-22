@@ -29,7 +29,7 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //-------- tet_deriv -------------------------------------------------------
 template <typename DerivType>
@@ -1052,5 +1052,5 @@ TetSCS::parametric_distance(const double* x)
   return dist;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

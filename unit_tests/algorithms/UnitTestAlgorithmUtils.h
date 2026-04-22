@@ -46,10 +46,10 @@ public:
     N_ = 0;
 
     bucket_loop_serial_only(
-      buckets, [](stk::topology topo, sierra::kynema-ugf::MasterElement& meSCS) {},
+      buckets, [](stk::topology topo, sierra::kynema_ugf::MasterElement& meSCS) {},
       [&](
         stk::mesh::Entity node, stk::topology topo,
-        sierra::kynema-ugf::MasterElement& meSCS) {
+        sierra::kynema_ugf::MasterElement& meSCS) {
         for (size_t i = 0; i < activeSuppAlgs_.size(); ++i) {
           double lhs_value = 0.0;
           double rhs_value = 0.0;
@@ -73,7 +73,7 @@ public:
     return unit_test_utils::global_norm(rhs_norm_, N_, bulk_.parallel());
   }
 
-  std::vector<sierra::kynema-ugf::SupplementalAlgorithm*> activeSuppAlgs_;
+  std::vector<sierra::kynema_ugf::SupplementalAlgorithm*> activeSuppAlgs_;
 
 private:
   const stk::mesh::BulkData& bulk_;

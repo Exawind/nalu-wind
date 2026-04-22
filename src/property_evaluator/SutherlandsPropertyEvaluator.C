@@ -19,7 +19,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -236,5 +236,5 @@ SutherlandsYkTrefPropertyEvaluator::execute(
   return sum_mu;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

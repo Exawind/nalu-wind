@@ -35,7 +35,7 @@ struct TpetraHelperObjectsBase
       eqSystems(realm),
       eqSystem(eqSystems),
       linsys(
-        new sierra::kynema-ugf::TpetraLinearSystem(realm, numDof, &eqSystem, nullptr))
+        new sierra::kynema_ugf::TpetraLinearSystem(realm, numDof, &eqSystem, nullptr))
   {
     realm.bulkData_ = bulk;
     eqSystem.linsys_ = linsys;
@@ -50,10 +50,10 @@ struct TpetraHelperObjectsBase
     auto oldPrec = std::cerr.precision();
     std::cerr.precision(14);
 
-    using MatrixType = sierra::kynema-ugf::LinSys::LocalMatrix;
+    using MatrixType = sierra::kynema_ugf::LinSys::LocalMatrix;
     const MatrixType& localMatrix = linsys->getOwnedLocalMatrix();
 
-    using VectorType = sierra::kynema-ugf::LinSys::LocalVector;
+    using VectorType = sierra::kynema_ugf::LinSys::LocalVector;
     const VectorType& localRhs = linsys->getOwnedLocalRhs();
 
     int localProc = realm.bulkData_->parallel_rank();
@@ -180,10 +180,10 @@ struct TpetraHelperObjectsBase
   YAML::Node yamlNode;
   YAML::Node realmDefaultNode;
   unit_test_utils::KynemaUGFTest* kynema-ugfObj;
-  sierra::kynema-ugf::Realm& realm;
-  sierra::kynema-ugf::EquationSystems eqSystems;
-  sierra::kynema-ugf::EquationSystem eqSystem;
-  sierra::kynema-ugf::TpetraLinearSystem* linsys;
+  sierra::kynema_ugf::Realm& realm;
+  sierra::kynema_ugf::EquationSystems eqSystems;
+  sierra::kynema_ugf::EquationSystem eqSystem;
+  sierra::kynema_ugf::TpetraLinearSystem* linsys;
 };
 
 struct TpetraHelperObjectsElem : public TpetraHelperObjectsBase
@@ -194,7 +194,7 @@ struct TpetraHelperObjectsElem : public TpetraHelperObjectsBase
     int numDof,
     stk::mesh::Part* part)
     : TpetraHelperObjectsBase(bulk, numDof),
-      assembleElemSolverAlg(new sierra::kynema-ugf::AssembleElemSolverAlgorithm(
+      assembleElemSolverAlg(new sierra::kynema_ugf::AssembleElemSolverAlgorithm(
         realm, part, &eqSystem, topo.rank(), topo.num_nodes()))
   {
   }
@@ -211,7 +211,7 @@ struct TpetraHelperObjectsElem : public TpetraHelperObjectsBase
     assembleElemSolverAlg->activeKernels_.clear();
   }
 
-  sierra::kynema-ugf::AssembleElemSolverAlgorithm* assembleElemSolverAlg;
+  sierra::kynema_ugf::AssembleElemSolverAlgorithm* assembleElemSolverAlg;
 };
 
 struct TpetraHelperObjectsFaceElem : public TpetraHelperObjectsBase
@@ -224,7 +224,7 @@ struct TpetraHelperObjectsFaceElem : public TpetraHelperObjectsBase
     stk::mesh::Part* part)
     : TpetraHelperObjectsBase(bulk, numDof),
       assembleFaceElemSolverAlg(
-        new sierra::kynema-ugf::AssembleFaceElemSolverAlgorithm(
+        new sierra::kynema_ugf::AssembleFaceElemSolverAlgorithm(
           realm, part, &eqSystem, faceTopo.num_nodes(), elemTopo.num_nodes()))
   {
   }
@@ -240,7 +240,7 @@ struct TpetraHelperObjectsFaceElem : public TpetraHelperObjectsBase
       kern->free_on_device();
     assembleFaceElemSolverAlg->activeKernels_.clear();
   }
-  sierra::kynema-ugf::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;
+  sierra::kynema_ugf::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;
 };
 
 struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase
@@ -274,7 +274,7 @@ struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase
     edgeAlg->activeKernels_.clear();
   }
 
-  sierra::kynema-ugf::AssembleEdgeSolverAlgorithm* edgeAlg;
+  sierra::kynema_ugf::AssembleEdgeSolverAlgorithm* edgeAlg;
 };
 
 } // namespace unit_test_utils

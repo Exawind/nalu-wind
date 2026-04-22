@@ -101,7 +101,7 @@ void
 check_interpolation(
   const stk::mesh::BulkData& bulk,
   const stk::topology& topo,
-  sierra::kynema-ugf::MasterElement& me,
+  sierra::kynema_ugf::MasterElement& me,
   unsigned poly_order,
   bool /* usingNGP */ = false)
 {
@@ -147,7 +147,7 @@ check_interpolation(
   std::vector<double> meResult(me.num_integration_points(), 0.0);
   std::vector<DoubleType> meShapeFunctions(
     me.num_integration_points() * topo.num_nodes());
-  sierra::kynema-ugf::SharedMemView<DoubleType**, sierra::kynema-ugf::DeviceShmem>
+  sierra::kynema_ugf::SharedMemView<DoubleType**, sierra::kynema_ugf::DeviceShmem>
     ShmemView(
       meShapeFunctions.data(), me.num_integration_points(), topo.num_nodes());
   me.shape_fcn<>(ShmemView);
@@ -169,7 +169,7 @@ void
 check_derivatives(
   const stk::mesh::BulkData& bulk,
   const stk::topology& topo,
-  sierra::kynema-ugf::MasterElement& me,
+  sierra::kynema_ugf::MasterElement& me,
   unsigned poly_order)
 {
   // Check that we can interpolate a random 3D polynomial
@@ -208,7 +208,7 @@ check_derivatives(
   }
 
   std::vector<double> ws_coords(topo.num_nodes() * dim);
-  sierra::kynema-ugf::SharedMemView<double**> elemCoords(
+  sierra::kynema_ugf::SharedMemView<double**> elemCoords(
     ws_coords.data(), topo.num_nodes(), dim);
   const auto* nodes = bulk.begin_nodes(elem);
   for (unsigned j = 0; j < topo.num_nodes(); ++j) {
@@ -223,11 +223,11 @@ check_derivatives(
   std::vector<double> meResult(me.num_integration_points() * dim, 0.0);
   std::vector<double> meGrad(
     me.num_integration_points() * topo.num_nodes() * dim);
-  sierra::kynema-ugf::SharedMemView<double***> gradop(
+  sierra::kynema_ugf::SharedMemView<double***> gradop(
     meGrad.data(), me.num_integration_points(), topo.num_nodes(), dim);
   std::vector<double> meDeriv(
     me.num_integration_points() * topo.num_nodes() * dim);
-  sierra::kynema-ugf::SharedMemView<double***> deriv(
+  sierra::kynema_ugf::SharedMemView<double***> deriv(
     meDeriv.data(), me.num_integration_points(), topo.num_nodes(), dim);
 
   me.grad_op(elemCoords, gradop, deriv);
@@ -293,7 +293,7 @@ TEST_F(MasterElementHexSerial, hex8_scs_interpolation)
 {
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_1_hex_8();
-    sierra::kynema-ugf::HexSCS hexscs;
+    sierra::kynema_ugf::HexSCS hexscs;
     check_interpolation(*bulk, topo, hexscs, poly_order);
   }
 }
@@ -302,7 +302,7 @@ TEST_F(MasterElementHexSerial, hex8_scv_interpolation)
 {
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_1_hex_8();
-    sierra::kynema-ugf::HexSCV hexscv;
+    sierra::kynema_ugf::HexSCV hexscv;
     check_interpolation(*bulk, topo, hexscv, poly_order);
   }
 }
@@ -311,7 +311,7 @@ TEST_F(MasterElementHexSerial, hex8_scs_derivatives)
 {
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_1_hex_8();
-    sierra::kynema-ugf::HexSCS hexscs;
+    sierra::kynema_ugf::HexSCS hexscs;
     check_derivatives(*bulk, topo, hexscs, poly_order);
   }
 }

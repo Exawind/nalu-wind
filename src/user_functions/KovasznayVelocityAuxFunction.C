@@ -17,7 +17,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 KovasznayVelocityAuxFunction::KovasznayVelocityAuxFunction(
   const unsigned beginPos, const unsigned endPos)
@@ -54,5 +54,5 @@ KovasznayVelocityAuxFunction::do_evaluate(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

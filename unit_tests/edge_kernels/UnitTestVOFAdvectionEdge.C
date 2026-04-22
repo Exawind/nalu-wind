@@ -141,7 +141,7 @@ TEST_F(VOFKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
 
   helperObjs.realm.set_global_id();
 
-  helperObjs.create<sierra::kynema-ugf::VOFAdvectionEdgeAlg>(
+  helperObjs.create<sierra::kynema_ugf::VOFAdvectionEdgeAlg>(
     partVec_[0], volumeOfFluid_, dvolumeOfFluidDx_);
   helperObjs.execute();
 

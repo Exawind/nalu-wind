@@ -13,7 +13,7 @@
 /** \file
  *  \brief STK SIMD Interface
  *
- *  KynemaUGF wrapper to provide SIMD capability for vectorizing sierra::kynema-ugf::Kernel
+ *  KynemaUGF wrapper to provide SIMD capability for vectorizing sierra::kynema_ugf::Kernel
  *  algorithms.
  */
 
@@ -23,7 +23,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 typedef stk::simd::Double SimdDouble;
 
@@ -62,8 +62,8 @@ get_length_of_next_simd_group(int index, int length)
   return nextLength;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
-typedef sierra::kynema-ugf::DoubleType DoubleType;
+typedef sierra::kynema_ugf::DoubleType DoubleType;
 #endif /* SIMDINTERFACE_H */

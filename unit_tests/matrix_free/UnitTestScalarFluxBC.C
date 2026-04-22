@@ -40,7 +40,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class FluxFixture : public ConductionFixture
@@ -129,5 +129,5 @@ TEST_F(FluxFixture, bc_residual)
 }
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

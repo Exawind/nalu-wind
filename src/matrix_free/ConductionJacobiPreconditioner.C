@@ -22,7 +22,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace {
 
@@ -125,5 +125,5 @@ JacobiOperator<p>::compute_diagonal()
 }
 INSTANTIATE_POLYCLASS(JacobiOperator);
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

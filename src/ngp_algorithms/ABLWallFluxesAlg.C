@@ -29,7 +29,7 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 namespace {
 
@@ -264,7 +264,7 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
 {
   namespace mo = abl_monin_obukhov;
   using FaceElemSimdData =
-    sierra::kynema-ugf::kynema-ugf_ngp::FaceElemSimdData<stk::mesh::NgpMesh>;
+    sierra::kynema_ugf::kynema_ugf_ngp::FaceElemSimdData<stk::mesh::NgpMesh>;
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
@@ -329,16 +329,16 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
   const stk::mesh::Selector sel =
     realm_.meta_data().locally_owned_part() & stk::mesh::selectUnion(partVec_);
 
-  const auto utauOps = kynema-ugf_ngp::simd_face_elem_field_updater(ngpMesh, ngpUtau);
+  const auto utauOps = kynema_ugf_ngp::simd_face_elem_field_updater(ngpMesh, ngpUtau);
   const auto qSurfOps =
-    kynema-ugf_ngp::simd_face_elem_field_updater(ngpMesh, ngpqSurf);
+    kynema_ugf_ngp::simd_face_elem_field_updater(ngpMesh, ngpqSurf);
   const auto tauSurfOps =
-    kynema-ugf_ngp::simd_face_elem_field_updater(ngpMesh, ngptauSurf);
+    kynema_ugf_ngp::simd_face_elem_field_updater(ngpMesh, ngptauSurf);
 
   // Reducer to accumulate the area-weighted utau sum as well as total area for
   // wall boundary of this specific topology.
-  kynema-ugf_ngp::ArraySimdDouble2 utauSum(0.0);
-  Kokkos::Sum<kynema-ugf_ngp::ArraySimdDouble2> utauReducer(utauSum);
+  kynema_ugf_ngp::ArraySimdDouble2 utauSum(0.0);
+  Kokkos::Sum<kynema_ugf_ngp::ArraySimdDouble2> utauReducer(utauSum);
 
   const std::string algName = "ABLWallFluxesAlg_" +
                               std::to_string(BcAlgTraits::faceTopo_) + "_" +
@@ -347,10 +347,10 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
   const auto shp = shape_fcn<typename BcAlgTraits::FaceTraits, QuadRank::SCV>(
     use_shifted_quad(useShifted));
 
-  kynema-ugf_ngp::run_face_elem_par_reduce(
+  kynema_ugf_ngp::run_face_elem_par_reduce(
     algName, meshInfo, faceData_, elemData_, sel,
     KOKKOS_LAMBDA(
-      FaceElemSimdData & feData, kynema-ugf_ngp::ArraySimdDouble2 & uSum) {
+      FaceElemSimdData & feData, kynema_ugf_ngp::ArraySimdDouble2 & uSum) {
       // Unit normal vector
       DoubleType nx[BcAlgTraits::nDim_];
 
@@ -630,5 +630,5 @@ ABLWallFluxesAlg<BcAlgTraits>::execute()
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(ABLWallFluxesAlg)
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

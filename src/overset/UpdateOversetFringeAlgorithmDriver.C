@@ -16,7 +16,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 UpdateOversetFringeAlgorithmDriver::UpdateOversetFringeAlgorithmDriver(
   Realm& realm)
@@ -57,5 +57,5 @@ UpdateOversetFringeAlgorithmDriver::execute()
   oversetManager->timerFieldUpdate_ += (timeB - timeA);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

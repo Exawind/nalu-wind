@@ -9,10 +9,10 @@
 #include <CopyAndInterleave.h>
 #include <MultiDimViews.h>
 
-using TeamType = sierra::kynema-ugf::TeamHandleType;
-using ShmemType = sierra::kynema-ugf::HostShmem;
+using TeamType = sierra::kynema_ugf::TeamHandleType;
+using ShmemType = sierra::kynema_ugf::HostShmem;
 
-typedef Kokkos::DualView<int*, Kokkos::LayoutRight, sierra::kynema-ugf::HostSpace>
+typedef Kokkos::DualView<int*, Kokkos::LayoutRight, sierra::kynema_ugf::HostSpace>
   IntViewType;
 
 void
@@ -24,37 +24,37 @@ do_the_interleave_test()
   IntViewType result("result", numResults);
 
   int N = 4;
-  int bytes_per_thread = sizeof(double) * N * sierra::kynema-ugf::simdLen * 2;
+  int bytes_per_thread = sizeof(double) * N * sierra::kynema_ugf::simdLen * 2;
   auto team_exec =
-    sierra::kynema-ugf::get_host_team_policy(1, bytes_per_team, bytes_per_thread);
+    sierra::kynema_ugf::get_host_team_policy(1, bytes_per_team, bytes_per_thread);
 
   Kokkos::parallel_for(
     team_exec, KOKKOS_LAMBDA(const TeamType& team) {
-      sierra::kynema-ugf::SharedMemView<DoubleType*, ShmemType> simdView =
-        sierra::kynema-ugf::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
+      sierra::kynema_ugf::SharedMemView<DoubleType*, ShmemType> simdView =
+        sierra::kynema_ugf::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
           team, N);
-      sierra::kynema-ugf::SharedMemView<double*, ShmemType>
-        views[sierra::kynema-ugf::simdLen];
-      const double* data[sierra::kynema-ugf::simdLen];
-      for (int i = 0; i < sierra::kynema-ugf::simdLen; ++i) {
+      sierra::kynema_ugf::SharedMemView<double*, ShmemType>
+        views[sierra::kynema_ugf::simdLen];
+      const double* data[sierra::kynema_ugf::simdLen];
+      for (int i = 0; i < sierra::kynema_ugf::simdLen; ++i) {
         views[i] =
-          sierra::kynema-ugf::get_shmem_view_1D<double, TeamType, ShmemType>(team, N);
+          sierra::kynema_ugf::get_shmem_view_1D<double, TeamType, ShmemType>(team, N);
       }
 
       Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, 1), [&](const size_t& /* index */) {
-          for (int i = 0; i < sierra::kynema-ugf::simdLen; ++i) {
+          for (int i = 0; i < sierra::kynema_ugf::simdLen; ++i) {
             for (int j = 0; j < N; ++j) {
               views[i](j) = j + 1;
             }
             data[i] = views[i].data();
           }
 
-          sierra::kynema-ugf::interleave(simdView, data, sierra::kynema-ugf::simdLen);
+          sierra::kynema_ugf::interleave(simdView, data, sierra::kynema_ugf::simdLen);
           result.d_view(0) = 1;
 
           for (int j = 0; j < N; ++j) {
-            for (int i = 0; i < sierra::kynema-ugf::simdLen; ++i) {
+            for (int i = 0; i < sierra::kynema_ugf::simdLen; ++i) {
               if (stk::simd::get_data(simdView(j), i) != j + 1) {
                 result.d_view(0) = 0;
               }
@@ -78,7 +78,7 @@ check_view(const ViewType& v)
   unsigned len = v.size();
   typename ViewType::pointer_type ptr = v.data();
   for (unsigned i = 0; i < len; ++i) {
-    for (unsigned j = 0; j < sierra::kynema-ugf::simdLen; ++j) {
+    for (unsigned j = 0; j < sierra::kynema_ugf::simdLen; ++j) {
       if (stk::simd::get_data(ptr[i], j) != j + 1) {
         return false;
       }
@@ -94,100 +94,100 @@ do_the_multidimviews_test()
   int numResults = totalNumFields;
   IntViewType result("result", numResults);
 
-  sierra::kynema-ugf::NumNeededViews numNeededViews = {2, 2, 2, 0};
+  sierra::kynema_ugf::NumNeededViews numNeededViews = {2, 2, 2, 0};
 
   int N = 4;
   const int bytes_per_team = 0;
   int bytes_per_thread =
-    sizeof(double) * 2 * (N + N * N + N * N * N) * sierra::kynema-ugf::simdLen * 2 +
-    sierra::kynema-ugf::MultiDimViews<double, TeamType, ShmemType>::bytes_needed(
+    sizeof(double) * 2 * (N + N * N + N * N * N) * sierra::kynema_ugf::simdLen * 2 +
+    sierra::kynema_ugf::MultiDimViews<double, TeamType, ShmemType>::bytes_needed(
       totalNumFields, numNeededViews) +
-    sierra::kynema-ugf::simdLen *
-      sierra::kynema-ugf::MultiDimViews<DoubleType, TeamType, ShmemType>::
+    sierra::kynema_ugf::simdLen *
+      sierra::kynema_ugf::MultiDimViews<DoubleType, TeamType, ShmemType>::
         bytes_needed(totalNumFields, numNeededViews);
   std::cout << "bytes_per_thread = " << bytes_per_thread << std::endl;
 
   auto team_exec =
-    sierra::kynema-ugf::get_host_team_policy(1, bytes_per_team, bytes_per_thread);
+    sierra::kynema_ugf::get_host_team_policy(1, bytes_per_team, bytes_per_thread);
 
-  std::cout << "simdLen = " << sierra::kynema-ugf::simdLen << std::endl;
+  std::cout << "simdLen = " << sierra::kynema_ugf::simdLen << std::endl;
 
   Kokkos::parallel_for(team_exec, [=](const TeamType& team) {
     unsigned maxOrdinal = totalNumFields - 1;
-    sierra::kynema-ugf::MultiDimViews<DoubleType, TeamType, ShmemType>
+    sierra::kynema_ugf::MultiDimViews<DoubleType, TeamType, ShmemType>
       simdMultiDimViews(team, maxOrdinal, numNeededViews);
 
     simdMultiDimViews.add_1D_view(
-      0, sierra::kynema-ugf::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
+      0, sierra::kynema_ugf::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
            team, N));
     simdMultiDimViews.add_1D_view(
-      1, sierra::kynema-ugf::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
+      1, sierra::kynema_ugf::get_shmem_view_1D<DoubleType, TeamType, ShmemType>(
            team, N));
     simdMultiDimViews.add_2D_view(
-      2, sierra::kynema-ugf::get_shmem_view_2D<DoubleType, TeamType, ShmemType>(
+      2, sierra::kynema_ugf::get_shmem_view_2D<DoubleType, TeamType, ShmemType>(
            team, N, N));
     simdMultiDimViews.add_2D_view(
-      3, sierra::kynema-ugf::get_shmem_view_2D<DoubleType, TeamType, ShmemType>(
+      3, sierra::kynema_ugf::get_shmem_view_2D<DoubleType, TeamType, ShmemType>(
            team, N, N));
     simdMultiDimViews.add_3D_view(
-      4, sierra::kynema-ugf::get_shmem_view_3D<DoubleType, TeamType, ShmemType>(
+      4, sierra::kynema_ugf::get_shmem_view_3D<DoubleType, TeamType, ShmemType>(
            team, N, N, N));
     simdMultiDimViews.add_3D_view(
-      5, sierra::kynema-ugf::get_shmem_view_3D<DoubleType, TeamType, ShmemType>(
+      5, sierra::kynema_ugf::get_shmem_view_3D<DoubleType, TeamType, ShmemType>(
            team, N, N, N));
 
-    std::unique_ptr<sierra::kynema-ugf::MultiDimViews<double, TeamType, ShmemType>>
-      multiDimViews[sierra::kynema-ugf::simdLen];
-    for (int i = 0; i < sierra::kynema-ugf::simdLen; ++i) {
+    std::unique_ptr<sierra::kynema_ugf::MultiDimViews<double, TeamType, ShmemType>>
+      multiDimViews[sierra::kynema_ugf::simdLen];
+    for (int i = 0; i < sierra::kynema_ugf::simdLen; ++i) {
       multiDimViews[i] = std::unique_ptr<
-        sierra::kynema-ugf::MultiDimViews<double, TeamType, ShmemType>>(
-        new sierra::kynema-ugf::MultiDimViews<double, TeamType, ShmemType>(
+        sierra::kynema_ugf::MultiDimViews<double, TeamType, ShmemType>>(
+        new sierra::kynema_ugf::MultiDimViews<double, TeamType, ShmemType>(
           team, maxOrdinal, numNeededViews));
 
       multiDimViews[i]->add_1D_view(
         0,
-        sierra::kynema-ugf::get_shmem_view_1D<double, TeamType, ShmemType>(team, N));
+        sierra::kynema_ugf::get_shmem_view_1D<double, TeamType, ShmemType>(team, N));
       multiDimViews[i]->add_1D_view(
         1,
-        sierra::kynema-ugf::get_shmem_view_1D<double, TeamType, ShmemType>(team, N));
+        sierra::kynema_ugf::get_shmem_view_1D<double, TeamType, ShmemType>(team, N));
       multiDimViews[i]->add_2D_view(
-        2, sierra::kynema-ugf::get_shmem_view_2D<double, TeamType, ShmemType>(
+        2, sierra::kynema_ugf::get_shmem_view_2D<double, TeamType, ShmemType>(
              team, N, N));
       multiDimViews[i]->add_2D_view(
-        3, sierra::kynema-ugf::get_shmem_view_2D<double, TeamType, ShmemType>(
+        3, sierra::kynema_ugf::get_shmem_view_2D<double, TeamType, ShmemType>(
              team, N, N));
       multiDimViews[i]->add_3D_view(
-        4, sierra::kynema-ugf::get_shmem_view_3D<double, TeamType, ShmemType>(
+        4, sierra::kynema_ugf::get_shmem_view_3D<double, TeamType, ShmemType>(
              team, N, N, N));
       multiDimViews[i]->add_3D_view(
-        5, sierra::kynema-ugf::get_shmem_view_3D<double, TeamType, ShmemType>(
+        5, sierra::kynema_ugf::get_shmem_view_3D<double, TeamType, ShmemType>(
              team, N, N, N));
     }
 
     Kokkos::parallel_for(
       Kokkos::TeamThreadRange(team, 1), [&](const size_t& /* index */) {
-        for (int i = 0; i < sierra::kynema-ugf::simdLen; ++i) {
-          sierra::kynema-ugf::set_vals(
+        for (int i = 0; i < sierra::kynema_ugf::simdLen; ++i) {
+          sierra::kynema_ugf::set_vals(
             multiDimViews[i]->get_scratch_view_1D(0), i + 1);
-          sierra::kynema-ugf::set_vals(
+          sierra::kynema_ugf::set_vals(
             multiDimViews[i]->get_scratch_view_1D(1), i + 1);
-          sierra::kynema-ugf::set_vals(
+          sierra::kynema_ugf::set_vals(
             multiDimViews[i]->get_scratch_view_2D(2), i + 1);
-          sierra::kynema-ugf::set_vals(
+          sierra::kynema_ugf::set_vals(
             multiDimViews[i]->get_scratch_view_2D(3), i + 1);
-          sierra::kynema-ugf::set_vals(
+          sierra::kynema_ugf::set_vals(
             multiDimViews[i]->get_scratch_view_3D(4), i + 1);
-          sierra::kynema-ugf::set_vals(
+          sierra::kynema_ugf::set_vals(
             multiDimViews[i]->get_scratch_view_3D(5), i + 1);
         }
 
-        const sierra::kynema-ugf::MultiDimViews<double, TeamType, ShmemType>*
-          multiDimViewPtrs[sierra::kynema-ugf::simdLen] = {nullptr};
-        for (int i = 0; i < sierra::kynema-ugf::simdLen; ++i) {
+        const sierra::kynema_ugf::MultiDimViews<double, TeamType, ShmemType>*
+          multiDimViewPtrs[sierra::kynema_ugf::simdLen] = {nullptr};
+        for (int i = 0; i < sierra::kynema_ugf::simdLen; ++i) {
           multiDimViewPtrs[i] = multiDimViews[i].get();
         }
-        sierra::kynema-ugf::copy_and_interleave(
-          multiDimViewPtrs, sierra::kynema-ugf::simdLen, simdMultiDimViews);
+        sierra::kynema_ugf::copy_and_interleave(
+          multiDimViewPtrs, sierra::kynema_ugf::simdLen, simdMultiDimViews);
 
         result.d_view(0) =
           check_view(simdMultiDimViews.get_scratch_view_1D(0)) ? 1 : 0;

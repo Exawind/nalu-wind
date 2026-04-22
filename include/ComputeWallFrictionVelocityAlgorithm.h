@@ -18,7 +18,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -69,7 +69,7 @@ public:
   double z0_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

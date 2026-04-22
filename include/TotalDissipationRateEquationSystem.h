@@ -21,7 +21,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 class LinearSystem;
@@ -87,7 +87,7 @@ public:
   std::unique_ptr<NgpAlgDriver> wallModelAlgDriver_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -8,13 +8,13 @@ namespace tioga_kynema-ugf {
 template <
   typename T,
   typename Layout = Kokkos::LayoutRight,
-  typename Space = sierra::kynema-ugf::MemSpace>
+  typename Space = sierra::kynema_ugf::MemSpace>
 using OversetArrayViewType = Kokkos::View<T, Layout, Space>;
 
 template <
   typename T,
   typename Layout = Kokkos::LayoutRight,
-  typename Space = sierra::kynema-ugf::MemSpace>
+  typename Space = sierra::kynema_ugf::MemSpace>
 struct OversetArrayType
 {
   using ArrayType = OversetArrayViewType<T, Layout, Space>;

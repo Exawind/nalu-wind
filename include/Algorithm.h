@@ -19,7 +19,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace mesh
 } // namespace stk
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 class MasterElement;
@@ -50,7 +50,7 @@ public:
   std::vector<Kernel*> activeKernels_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

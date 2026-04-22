@@ -26,9 +26,9 @@
 
 // Header files defining default types for template parameters.
 // These headers must be included after other MueLu/Xpetra headers.
-using Scalar = sierra::kynema-ugf::LinSys::Scalar;
-using GlobalOrdinal = sierra::kynema-ugf::LinSys::GlobalOrdinal;
-using LocalOrdinal = sierra::kynema-ugf::LinSys::LocalOrdinal;
+using Scalar = sierra::kynema_ugf::LinSys::Scalar;
+using GlobalOrdinal = sierra::kynema_ugf::LinSys::GlobalOrdinal;
+using LocalOrdinal = sierra::kynema_ugf::LinSys::LocalOrdinal;
 using STS = Teuchos::ScalarTraits<Scalar>;
 
 #ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
@@ -48,7 +48,7 @@ using Node = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
 #include <limits>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 /** Type of solvers available in KynemaUGF simulation **/
 enum PetraType {
@@ -154,7 +154,7 @@ private:
 /** An abstract representation of a linear solver in KynemaUGF
  *
  *  Defines the basic API supported by the linear solvers for use within KynemaUGF.
- *  See concrete implementations such as sierra::kynema-ugf::TpetraLinearSolver for
+ *  See concrete implementations such as sierra::kynema_ugf::TpetraLinearSolver for
  *  more details.
  */
 class LinearSolver
@@ -175,7 +175,7 @@ public:
   //! User-friendly identifier for this particular solver instance
   std::string name_;
 
-  //! Type of solver instance as defined in sierra::kynema-ugf::PetraType
+  //! Type of solver instance as defined in sierra::kynema_ugf::PetraType
   virtual PetraType getType() = 0;
 
   /** Utility method to cleanup solvers during simulation
@@ -289,7 +289,7 @@ private:
 };
 #endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

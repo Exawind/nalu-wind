@@ -21,7 +21,7 @@
 #include <master_element/MasterElementRepo.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 template <class FROM, class TO>
 class LinInterp
@@ -97,7 +97,7 @@ LinInterp<FROM, TO>::filter_to_nearest(
       const stk::mesh::Bucket& theBucket = fromBulkData.bucket(theElem);
       const stk::topology& theElemTopo = theBucket.topology();
       MasterElement* meSCS =
-        sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+        sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
           theElemTopo);
 
       // load nodal coordinates from element
@@ -190,7 +190,7 @@ LinInterp<FROM, TO>::apply(
     const stk::mesh::Bucket& theBucket = fromBulkData.bucket(theElem);
     const stk::topology& theElemTopo = theBucket.topology();
     MasterElement* meSCS =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         theElemTopo);
 
     stk::mesh::Entity const* elem_node_rels = fromBulkData.begin_nodes(theElem);
@@ -233,7 +233,7 @@ LinInterp<FROM, TO>::apply(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

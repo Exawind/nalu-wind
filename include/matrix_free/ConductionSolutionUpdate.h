@@ -27,7 +27,7 @@ class ParameterList;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 
 struct BCDirichletFields;
@@ -95,6 +95,6 @@ private:
 };
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

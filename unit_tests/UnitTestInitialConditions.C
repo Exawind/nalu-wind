@@ -13,7 +13,7 @@
 #include "KynemaUGFParsing.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 TEST(InitialCondition, createICs)
 {
@@ -56,5 +56,5 @@ TEST(InitialCondition, createICs)
     ASSERT_TRUE(nullptr != type_ptr);
   }
 }
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

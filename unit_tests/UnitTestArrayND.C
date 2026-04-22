@@ -14,7 +14,7 @@
 #include "StkSimdComparisons.h"
 #include <gtest/gtest.h>
 
-namespace sierra::kynema-ugf {
+namespace sierra::kynema_ugf {
 
 TEST(array_nd, fill_double_1)
 {
@@ -132,4 +132,4 @@ TEST(array_nd, static_rank)
   }
 }
 
-} // namespace sierra::kynema-ugf
+} // namespace sierra::kynema_ugf

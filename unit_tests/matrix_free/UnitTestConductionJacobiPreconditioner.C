@@ -30,7 +30,7 @@
 #include <algorithm>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 
 class JacobiFixture : public ConductionFixture
@@ -91,5 +91,5 @@ TEST_F(JacobiFixture, jacobi_operator_is_stricly_positive_for_laplacian)
   }
 }
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

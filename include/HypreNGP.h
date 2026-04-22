@@ -29,7 +29,7 @@
 #include "KynemaUGFParsing.h"
 #include <yaml-cpp/yaml.h>
 
-namespace kynema-ugf_hypre {
+namespace kynema_ugf_hypre {
 
 #ifdef HYPRE_USING_GPU
 
@@ -58,22 +58,22 @@ hypre_set_params(YAML::Node nodes)
   if (node) {
 #ifdef HYPRE_USING_DEVICE_POOL
     int memory_pool_mbs = 2000;
-    sierra::kynema-ugf::get_if_present(
+    sierra::kynema_ugf::get_if_present(
       node, "memory_pool_mbs", memory_pool_mbs, memory_pool_mbs);
     mempool_max_cached_bytes = ((size_t)memory_pool_mbs) * 1024 * 1024;
 #endif
 #if defined(HYPRE_USING_UMPIRE_DEVICE)
     int memory_pool_mbs = 4096;
-    sierra::kynema-ugf::get_if_present(
+    sierra::kynema_ugf::get_if_present(
       node, "umpire_device_pool_mbs", memory_pool_mbs, memory_pool_mbs);
     device_pool_size = ((long long)memory_pool_mbs) * 1024 * 1024;
 #endif
 
-    sierra::kynema-ugf::get_if_present(
+    sierra::kynema_ugf::get_if_present(
       node, "use_vendor_spgemm", use_vendor_spgemm, use_vendor_spgemm);
-    sierra::kynema-ugf::get_if_present(
+    sierra::kynema_ugf::get_if_present(
       node, "use_vendor_spmv", use_vendor_spmv, use_vendor_spmv);
-    sierra::kynema-ugf::get_if_present(
+    sierra::kynema_ugf::get_if_present(
       node, "use_vendor_sptrans", use_vendor_sptrans, use_vendor_sptrans);
   }
 
@@ -153,6 +153,6 @@ hypre_finalize()
 }
 
 #endif
-} // namespace kynema-ugf_hypre
+} // namespace kynema_ugf_hypre
 
 #endif /* HYPRENGP_H */

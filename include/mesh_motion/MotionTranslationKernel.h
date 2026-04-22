@@ -4,7 +4,7 @@
 #include "NgpMotion.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class MotionTranslationKernel : public NgpMotionKernel<MotionTranslationKernel>
 {
@@ -50,7 +50,7 @@ private:
   bool useVelocity_ = false;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOTIONTRANSLATIONKERNEL_H */

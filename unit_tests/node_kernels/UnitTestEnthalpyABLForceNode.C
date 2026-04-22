@@ -31,7 +31,7 @@ TEST_F(EnthalpyABLKernelHex8Mesh, NGP_abl_force)
   helperObjs.realm.ablForcingAlg_ =
     new unit_test_utils::TestABLForcingAlg(helperObjs.realm);
 
-  helperObjs.nodeAlg->add_kernel<sierra::kynema-ugf::EnthalpyABLForceNodeKernel>(
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::EnthalpyABLForceNodeKernel>(
     *bulk_, solnOpts_);
 
   helperObjs.execute();

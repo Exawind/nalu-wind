@@ -22,7 +22,7 @@
 #include "stk_simd/Simd.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace impl {
 
@@ -181,5 +181,5 @@ field_gather(
 }
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

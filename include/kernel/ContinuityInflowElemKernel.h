@@ -18,7 +18,7 @@
 #include <Kokkos_Core.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class ElemDataRequests;
 class MasterElement;
@@ -70,7 +70,7 @@ private:
   MasterElement* meFC_{nullptr};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ContinuityInflowElemKernel_h */

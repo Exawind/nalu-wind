@@ -48,7 +48,7 @@
 #include <iostream>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 #ifdef KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
@@ -255,5 +255,5 @@ TpetraLinearSolver::solve(
 
 #endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

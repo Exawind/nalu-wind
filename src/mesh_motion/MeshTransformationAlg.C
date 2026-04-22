@@ -7,7 +7,7 @@
 #include <iostream>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 MeshTransformationAlg::MeshTransformationAlg(
   stk::mesh::BulkData& bulk, const YAML::Node& node)
@@ -49,5 +49,5 @@ MeshTransformationAlg::initialize(const double time)
   isInit_ = true;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

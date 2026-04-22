@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 namespace {
 TEST(ActuatorNGP, NGP_testExecuteOnHostOnly)
@@ -57,5 +57,5 @@ TEST(ActuatorNGP, NGP_testExecuteOnHostAndDevice)
 
 } // namespace
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

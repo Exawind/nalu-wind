@@ -13,7 +13,7 @@
 #include "AlgTraits.h"
 #include "ArrayND.h"
 
-namespace sierra::kynema-ugf {
+namespace sierra::kynema_ugf {
 
 template <typename ViewLikeT>
 using val_t = typename ViewLikeT::value_type;
@@ -337,9 +337,9 @@ struct BasisSelector<AlgTraitsHex8>
 template <typename AlgTraits>
 using alg_basis_t = typename impl::BasisSelector<AlgTraits>::basis_t;
 
-} // namespace sierra::kynema-ugf
+} // namespace sierra::kynema_ugf
 
-namespace sierra::kynema-ugf::utils {
+namespace sierra::kynema_ugf::utils {
 
 template <class T, class = void>
 struct is_tensor_compatible : std::false_type
@@ -468,6 +468,6 @@ deriv_coeffs(const ParCoordsArrayT& par_coords)
   return result;
 }
 
-} // namespace sierra::kynema-ugf::utils
+} // namespace sierra::kynema_ugf::utils
 
 #endif

@@ -17,7 +17,7 @@
 #include <string>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 /** Input data for fixing pressure during ABL simulations.
  *
@@ -69,7 +69,7 @@ struct FixPressureAtNodeInfo
   stk::mesh::EntityId stkNodeId_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* FIXPRESSUREATNODEINFO_H */

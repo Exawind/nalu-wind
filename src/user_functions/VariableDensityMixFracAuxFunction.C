@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 VariableDensityMixFracAuxFunction::VariableDensityMixFracAuxFunction()
   : AuxFunction(0, 1), znot_(1.0), amf_(10.0), pi_(acos(-1.0))
@@ -49,5 +49,5 @@ VariableDensityMixFracAuxFunction::do_evaluate(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

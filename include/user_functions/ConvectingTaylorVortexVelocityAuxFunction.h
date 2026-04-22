@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class ConvectingTaylorVortexVelocityAuxFunction : public AuxFunction
 {
@@ -43,7 +43,7 @@ private:
   double pi_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

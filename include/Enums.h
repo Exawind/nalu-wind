@@ -14,7 +14,7 @@
 #include <map>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 enum AlgorithmType {
   INTERIOR = 0,
@@ -347,7 +347,7 @@ static std::map<std::string, EntrainmentMethod> EntrainmentMethodMap{
   {"computed", EntrainmentMethod::COMPUTED},
   {"specified", EntrainmentMethod::SPECIFIED}};
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

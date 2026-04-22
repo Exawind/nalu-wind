@@ -14,7 +14,7 @@
 #include "OpenFAST.H"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 struct ActuatorMetaFAST : public ActuatorMeta
 {
@@ -83,7 +83,7 @@ squash_fast_output(std::function<void()> func)
   std::cout.rdbuf(sHoldCout);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ACTUATORBULKFAST_H_ */

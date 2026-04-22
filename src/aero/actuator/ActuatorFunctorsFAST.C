@@ -15,7 +15,7 @@
 #include <FieldTypeDef.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 void
 ActFastCacheRelativeVelocities(ActuatorBulkFAST& actBulk)
@@ -268,5 +268,5 @@ ActFastSpreadForceWhProjInnerLoop::operator()(
   }
 }
 
-} /* namespace kynema-ugf */
+} /* namespace kynema_ugf */
 } /* namespace sierra */

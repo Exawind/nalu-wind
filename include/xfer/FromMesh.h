@@ -39,7 +39,7 @@ class BulkData;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class FromMesh
 {
@@ -272,7 +272,7 @@ public:
   stk::mesh::EntityProcVec ghosting_map_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -12,7 +12,7 @@
 #include "Teuchos_DefaultMpiComm.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 
 Teuchos::RCP<const Teuchos::Comm<int>>
@@ -23,5 +23,5 @@ teuchos_communicator(const stk::ParallelMachine& pm)
 }
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

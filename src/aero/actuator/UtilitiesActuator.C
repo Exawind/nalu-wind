@@ -10,11 +10,11 @@
 
 #include "aero/actuator/UtilitiesActuator.h" // master elements
 
-// This is to access sierra::kynema-ugf::Coordinates
+// This is to access sierra::kynema_ugf::Coordinates
 #include "KynemaUGFParsing.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace actuator_utils {
 
 const double pi = M_PI;
@@ -264,7 +264,7 @@ resize_std_vector(
 {
   const stk::topology& elemTopo = bulkData.bucket(elem).topology();
   MasterElement* meSCS =
-    sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       elemTopo);
   const int nodesPerElement = meSCS->nodesPerElement_;
   theVector.resize(nodesPerElement * sizeOfField);
@@ -327,7 +327,7 @@ interpolate_field(
   // extract master element from the bucket in which the element resides
   const stk::topology& elemTopo = bulkData.bucket(elem).topology();
   MasterElement* meSCS =
-    sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       elemTopo);
 
   // interpolate velocity to this best point
@@ -347,5 +347,5 @@ compute_distance(
 }
 
 } // namespace actuator_utils
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

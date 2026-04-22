@@ -94,9 +94,9 @@ protected:
   void setup_promotion()
   {
     // declare super parts mirroring the orginal parts
-    sierra::kynema-ugf::HexNElementDescription desc(poly_order);
+    sierra::kynema_ugf::HexNElementDescription desc(poly_order);
     const auto superName =
-      sierra::kynema-ugf::super_element_part_name(hexPart->name());
+      sierra::kynema_ugf::super_element_part_name(hexPart->name());
     topo = stk::create_superelement_topology(
       static_cast<unsigned>(desc.nodesPerElement));
     const stk::mesh::Part* superPart =
@@ -104,11 +104,11 @@ protected:
     superParts.push_back(superPart);
 
     stk::mesh::Part* superSuperPart = &meta->declare_part(
-      sierra::kynema-ugf::super_element_part_name(surfSupPart->name()),
+      sierra::kynema_ugf::super_element_part_name(surfSupPart->name()),
       stk::topology::FACE_RANK);
 
     const auto sidePartName =
-      sierra::kynema-ugf::super_subset_part_name(surfSubPart->name());
+      sierra::kynema_ugf::super_subset_part_name(surfSubPart->name());
     auto sideTopo =
       stk::create_superface_topology(static_cast<unsigned>(desc.nodesPerSide));
     stk::mesh::Part* superSidePart =
@@ -123,7 +123,7 @@ protected:
     for (size_t j = 0; j < poly_order + 1; ++j) {
       xloc[j] = -1 + 2. / poly_order * j;
     }
-    sierra::kynema-ugf::promotion::create_tensor_product_hex_elements(
+    sierra::kynema_ugf::promotion::create_tensor_product_hex_elements(
       xloc, *bulk, *coordField, baseParts);
   }
 
@@ -132,7 +132,7 @@ protected:
     const stk::mesh::PartVector& outParts = {hexPart};
     std::string fileName = "hv2.e";
 
-    io = std::make_unique<sierra::kynema-ugf::PromotedElementIO>(
+    io = std::make_unique<sierra::kynema_ugf::PromotedElementIO>(
       poly_order, *meta, *bulk, outParts, fileName, *coordField);
     io->write_database_data(0.0);
   }
@@ -159,9 +159,9 @@ protected:
   stk::mesh::ConstPartVector superParts;
   stk::mesh::Part* edgePart;
   stk::mesh::Part* facePart;
-  std::unique_ptr<sierra::kynema-ugf::PromotedElementIO> io;
-  sierra::kynema-ugf::VectorFieldType* coordField;
-  sierra::kynema-ugf::ScalarIntFieldType* intField;
+  std::unique_ptr<sierra::kynema_ugf::PromotedElementIO> io;
+  sierra::kynema_ugf::VectorFieldType* coordField;
+  sierra::kynema_ugf::ScalarIntFieldType* intField;
 };
 
 TEST_F(PromoteElementHexTest, node_count)

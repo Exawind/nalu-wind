@@ -33,7 +33,7 @@
 #include "mpi.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace test_conduction {
 
@@ -110,5 +110,5 @@ TEST_F(ConductionResidualFixture, linearized_residual_executes)
     rhs.getLocalViewDevice(Tpetra::Access::ReadWrite));
 }
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -30,7 +30,7 @@ using SearchKeyPair = std::pair<theKey, theKey>;
 using VecSearchKeyPair = std::vector<SearchKeyPair>;
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 VecBoundSphere
 CreateBoundingSpheres(ActFixVectorDbl points, ActFixScalarDbl searchRadius);
@@ -55,7 +55,7 @@ void ExecuteFineSearch(
   ActFixScalarBool isLocalPoint,
   ActFixScalarInt localParallelRedundancy);
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif // ACTUATORSEARCH_H_

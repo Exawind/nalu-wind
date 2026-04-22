@@ -30,7 +30,7 @@
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <typename T>
@@ -176,7 +176,7 @@ MatrixFreeSolver::rhs() const
 }
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif // KYNEMA_UGF_USES_TRILINOS_SOLVERS

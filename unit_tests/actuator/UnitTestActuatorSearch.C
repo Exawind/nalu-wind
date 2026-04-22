@@ -14,7 +14,7 @@
 #include <UnitTestUtils.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 // These functions are only designed to run on host
 
@@ -186,5 +186,5 @@ TEST_F(ActuatorSearchTest, NGP_executeFineSearch)
 
 } // namespace
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -13,7 +13,7 @@
 #include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 /*! \brief Data structure to stash turbine info during parsing
  * Data structure to stash turbine info during parsing. This
@@ -30,7 +30,7 @@ struct ActuatorInfoNGP
   std::string turbineName_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

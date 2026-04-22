@@ -13,7 +13,7 @@
 #include <kernel/Kernel.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -56,5 +56,5 @@ Algorithm::~Algorithm()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -20,7 +20,7 @@
 
 #include <memory>
 
-namespace sierra::kynema-ugf {
+namespace sierra::kynema_ugf {
 
 SegmentType
 segment_generator_types(std::string name)
@@ -738,4 +738,4 @@ RadarSegmentGenerator::generate(double time) const
   return {seg.tip_, seg.tail_, true};
 }
 
-} // namespace sierra::kynema-ugf
+} // namespace sierra::kynema_ugf

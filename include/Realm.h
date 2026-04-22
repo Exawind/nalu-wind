@@ -53,7 +53,7 @@ class Node;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Algorithm;
 class AlgorithmDriver;
@@ -99,7 +99,7 @@ class Realm
 {
 public:
   using NgpMeshInfo =
-    kynema-ugf_ngp::MeshInfo<stk::mesh::NgpMesh, kynema-ugf_ngp::FieldManager>;
+    kynema_ugf_ngp::MeshInfo<stk::mesh::NgpMesh, kynema_ugf_ngp::FieldManager>;
 
   Realm(Realms&, const YAML::Node& node);
   virtual ~Realm();
@@ -350,7 +350,7 @@ public:
 
   inline const stk::mesh::NgpMesh& ngp_mesh() { return mesh_info().ngp_mesh(); }
 
-  inline const kynema-ugf_ngp::FieldManager& ngp_field_manager()
+  inline const kynema_ugf_ngp::FieldManager& ngp_field_manager()
   {
     return mesh_info().ngp_field_manager();
   }
@@ -623,7 +623,7 @@ public:
    *
    *  Note that this is actually the offset into the linear system. This index
    *  must be adjusted accordingly to account for multiple degrees of freedom on
-   *  a particular node. This is performed in sierra::kynema-ugf::HypreLinearSystem.
+   *  a particular node. This is performed in sierra::kynema_ugf::HypreLinearSystem.
    */
   stk::mesh::EntityId hypreILower_;
 
@@ -631,7 +631,7 @@ public:
    *
    *  Note that this is actually the offset into the linear system. This index
    *  must be adjusted accordingly to account for multiple degrees of freedom on
-   *  a particular node. This is performed in sierra::kynema-ugf::HypreLinearSystem.
+   *  a particular node. This is performed in sierra::kynema_ugf::HypreLinearSystem.
    */
   stk::mesh::EntityId hypreIUpper_;
 
@@ -666,7 +666,7 @@ protected:
   const std::string allElementPartAlias{"all_blocks"};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* REALM_H */

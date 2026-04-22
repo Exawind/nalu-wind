@@ -19,7 +19,7 @@ struct Entity;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class ConstantPropertyEvaluator : public PropertyEvaluator
 {
@@ -32,7 +32,7 @@ public:
   double value_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

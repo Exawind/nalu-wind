@@ -22,7 +22,7 @@
 #include "stk_mesh/base/Field.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 AssembleWallDistNonConformalAlgorithm::AssembleWallDistNonConformalAlgorithm(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
@@ -257,5 +257,5 @@ AssembleWallDistNonConformalAlgorithm::execute()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

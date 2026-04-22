@@ -42,7 +42,7 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 namespace {
 size_t
@@ -379,5 +379,5 @@ PromotedElementIO::storage_name(const stk::mesh::FieldBase& field) const
   return storageType;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

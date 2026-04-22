@@ -28,7 +28,7 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //-------- quad_derivative -----------------------------------------------------
 template <typename DBLTYPE, typename SHMEM>
@@ -940,5 +940,5 @@ Quad42DSCS::sidePcoords_to_elemPcoords(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

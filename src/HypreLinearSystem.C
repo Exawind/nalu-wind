@@ -13,7 +13,7 @@
 #include <fstream>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 HypreLinearSystem::HypreLinearSystem(
   Realm& realm,
@@ -1932,7 +1932,7 @@ HypreLinearSystem::zeroSystem()
   hypreMatrixVectorsCreated_ = true;
 }
 
-sierra::kynema-ugf::CoeffApplier*
+sierra::kynema_ugf::CoeffApplier*
 HypreLinearSystem::get_coeff_applier()
 {
   /* call this before getting the device coeff applier
@@ -2334,21 +2334,21 @@ HypreLinearSystem::HypreLinSysCoeffApplier::free_device_pointer()
 {
 #if defined(KOKKOS_ENABLE_GPU)
   if (this != devicePointer_) {
-    sierra::kynema-ugf::kokkos_free_on_device(devicePointer_);
+    sierra::kynema_ugf::kokkos_free_on_device(devicePointer_);
     devicePointer_ = nullptr;
   }
 #endif
 }
 
-sierra::kynema-ugf::CoeffApplier*
+sierra::kynema_ugf::CoeffApplier*
 HypreLinearSystem::HypreLinSysCoeffApplier::device_pointer()
 {
 #if defined(KOKKOS_ENABLE_GPU)
   if (devicePointer_ != nullptr) {
-    sierra::kynema-ugf::kokkos_free_on_device(devicePointer_);
+    sierra::kynema_ugf::kokkos_free_on_device(devicePointer_);
     devicePointer_ = nullptr;
   }
-  devicePointer_ = sierra::kynema-ugf::create_device_expression(*this);
+  devicePointer_ = sierra::kynema_ugf::create_device_expression(*this);
   return devicePointer_;
 #else
   return this;
@@ -2430,7 +2430,7 @@ HypreLinearSystem::applyDirichletBCs(
     realm_.ngp_field_manager().get_field<double>(
       bcValuesField->mesh_meta_data_ordinal());
 
-  using Traits = kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   /* data from hcApplier */
   const auto& ngpMesh = hcApplier->ngpMesh_;
@@ -2442,7 +2442,7 @@ HypreLinearSystem::applyDirichletBCs(
   auto numDof = numDof_;
   auto iLower = iLower_;
 
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "HypreLinearSystem::applyDirichletBCs", ngpMesh, stk::topology::NODE_RANK,
     selector, KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
       const auto node = ngpMesh.get_entity(stk::topology::NODE_RANK, mi);
@@ -2566,7 +2566,7 @@ HypreLinearSystem::copy_hypre_to_stk(stk::mesh::FieldBase* stkField)
   HypreLinSysCoeffApplier* hcApplier =
     dynamic_cast<HypreLinSysCoeffApplier*>(hostCoeffApplier.get());
 
-  using Traits = kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   auto ngpField = realm_.ngp_field_manager().get_field<double>(
     stkField->mesh_meta_data_ordinal());
   auto ngpHypreGlobalId = hcApplier->ngpHypreGlobalId_;
@@ -2584,7 +2584,7 @@ HypreLinearSystem::copy_hypre_to_stk(stk::mesh::FieldBase* stkField)
    * vector */
   double* sln_data = hypre_VectorData(
     hypre_ParVectorLocalVector((hypre_ParVector*)hypre_IJVectorObject(sln_)));
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "HypreLinearSystem::copy_hypre_to_stk", ngpMesh, stk::topology::NODE_RANK,
     selector, KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
       const auto node = ngpMesh.get_entity(stk::topology::NODE_RANK, mi);
@@ -2748,5 +2748,5 @@ HypreLinearSystem::scanSharedIndicesForBadValues(
 }
 #endif
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

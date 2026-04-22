@@ -22,7 +22,7 @@
 #include <stk_util/util/ReportHandler.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //--------------------------------------------------------------------------
 //-------- Constructor for MomentumOpenEdgeKernel --------------------------
@@ -50,10 +50,10 @@ MomentumOpenEdgeKernel<BcAlgTraits>::MomentumOpenEdgeKernel(
     entrain_(method),
     turbModel_(solnOpts->turbulenceModel_),
     meFC_(
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_dev(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
         BcAlgTraits::FaceTraits::topo_)),
     meSCS_(
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_dev(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_dev(
         BcAlgTraits::ElemTraits::topo_))
 {
   faceData.add_cvfem_face_me(meFC_);
@@ -277,5 +277,5 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumOpenEdgeKernel)
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

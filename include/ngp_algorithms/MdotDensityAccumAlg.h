@@ -15,7 +15,7 @@
 #include "SimdInterface.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class MdotAlgDriver;
 
@@ -43,7 +43,7 @@ private:
   const bool lumpedMass_{false};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MDOTDENSITYACCUMALG_H */

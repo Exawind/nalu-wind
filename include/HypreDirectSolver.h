@@ -26,7 +26,7 @@
 #include "HYPRE.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 /** KynemaUGF interface to Hypre Solvers and Preconditioners
  *
@@ -34,9 +34,9 @@ namespace kynema-ugf {
  *  of Hypre solver and preconditioner data structures during the simulation. It
  *  provides an abstraction layer so that the user can choose different Hypre
  *  solvers via input parameters. This class interacts with rest of KynemaUGF solely
- *  via sierra::kynema-ugf::HypreLinearSystem. The configuration of Hypre solver is
+ *  via sierra::kynema_ugf::HypreLinearSystem. The configuration of Hypre solver is
  *  controlled via user input parameters processed in
- *  sierra::kynema-ugf::HypreLinearSolverConfig
+ *  sierra::kynema_ugf::HypreLinearSolverConfig
  *
  *  Users are referred to the [Hypre Reference
  *  Manual](https://computation.llnl.gov/projects/hypre-scalable-linear-solvers-multigrid-methods/software)
@@ -151,7 +151,7 @@ private:
   HypreDirectSolver(const HypreDirectSolver&) = delete;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* HYPREDIRECTSOLVER_H */

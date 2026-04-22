@@ -14,7 +14,7 @@
 #include "SolutionOptions.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 ContinuityEdgeSolverAlg::ContinuityEdgeSolverAlg(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
@@ -194,5 +194,5 @@ ContinuityEdgeSolverAlg::execute()
     });
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -13,7 +13,7 @@
 #include "AssembleEdgeSolverAlgorithm.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class ContinuityEdgeSolverAlg : public AssembleEdgeSolverAlgorithm
 {
@@ -35,7 +35,7 @@ private:
   unsigned Udiag_{stk::mesh::InvalidOrdinal};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* CONTINUITYEDGESOLVERALG_H */

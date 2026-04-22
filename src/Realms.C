@@ -18,7 +18,7 @@
 #include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -93,5 +93,5 @@ Realms::parent()
   return &simulation_;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

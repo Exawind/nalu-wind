@@ -48,7 +48,7 @@
 #include <type_traits>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 
 namespace test_continuity_solution_update {
@@ -142,5 +142,5 @@ TEST_F(ContinuitySolutionUpdateFixture, solve_is_reasonable)
 }
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -18,7 +18,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace FLLC {
 
 template <typename range_type, typename helper_type>
@@ -95,6 +95,6 @@ scale_lift_force(
   }
 }
 } // namespace FLLC
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 #endif /* ACTUATORSCALINGFLLC_H_ */

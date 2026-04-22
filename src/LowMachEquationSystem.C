@@ -209,7 +209,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -370,7 +370,7 @@ LowMachEquationSystem::register_element_fields(
   if (elementContinuityEqs_) {
     // extract master element and get scs points
     MasterElement* meSCS =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         theTopo);
     const int numScsIp = meSCS->num_integration_points();
     GenericFieldType* massFlowRate = &(meta_data.declare_field<double>(
@@ -481,7 +481,7 @@ LowMachEquationSystem::register_open_bc(
 
   // mdot at open bc; register field
   MasterElement* meFC =
-    sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       theTopo);
   const int numScsBip = meFC->num_integration_points();
   GenericFieldType* mdotBip = &(metaData.declare_field<double>(
@@ -851,7 +851,7 @@ LowMachEquationSystem::solve_and_update()
     // correctors when the relaxation factor is not 1.0. So copy the current
     // pressure into `StateN` so that we can perform solution update correction
     // with the correct relaxation factor
-    kynema-ugf_ngp::field_copy(
+    kynema_ugf_ngp::field_copy(
       realm_.mesh_info(),
       continuityEqSys_->pressure_->field_of_state(stk::mesh::StateN),
       continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1));
@@ -904,7 +904,7 @@ LowMachEquationSystem::project_nodal_velocity()
   {
     const stk::mesh::Selector sel =
       stk::mesh::selectField(*continuityEqSys_->dpdx_);
-    kynema-ugf_ngp::field_copy(ngpMesh, sel, uTmp, dpdx, nDim);
+    kynema_ugf_ngp::field_copy(ngpMesh, sel, uTmp, dpdx, nDim);
   }
 
   //==========================================================
@@ -922,12 +922,12 @@ LowMachEquationSystem::project_nodal_velocity()
   // project u, u^n+1 = u^k+1 - dt/rho*(Gjp^N+1 - uTmp);
   //==========================================================
   {
-    using Traits = kynema-ugf_ngp::NGPMeshTraits<>;
+    using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
     using MeshIndex = Traits::MeshIndex;
     const stk::mesh::Selector sel =
       ((!stk::mesh::selectUnion(momentumEqSys_->notProjectedPart_)) &
        stk::mesh::selectField(*continuityEqSys_->dpdx_));
-    kynema-ugf_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "nodal_velocity_projection", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         // Scaling factor
@@ -939,7 +939,7 @@ LowMachEquationSystem::project_nodal_velocity()
       });
     const stk::mesh::Selector selX =
       (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[0]));
-    kynema-ugf_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "nodal_velocity_projection_strongX", ngpMesh, stk::topology::NODE_RANK,
       selX, KOKKOS_LAMBDA(const MeshIndex& mi) {
         // Scaling factor
@@ -949,7 +949,7 @@ LowMachEquationSystem::project_nodal_velocity()
       });
     const stk::mesh::Selector selY =
       (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[1]));
-    kynema-ugf_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "nodal_velocity_project_strongY", ngpMesh, stk::topology::NODE_RANK, selY,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         // Scaling factor
@@ -960,7 +960,7 @@ LowMachEquationSystem::project_nodal_velocity()
     if (nDim == 3) {
       const stk::mesh::Selector selZ =
         (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[2]));
-      kynema-ugf_ngp::run_entity_algorithm(
+      kynema_ugf_ngp::run_entity_algorithm(
         "nodal_velocity_projection_strongZ", ngpMesh, stk::topology::NODE_RANK,
         selZ, KOKKOS_LAMBDA(const MeshIndex& mi) {
           // Scaling factor
@@ -986,9 +986,9 @@ LowMachEquationSystem::predict_state()
   auto& rhoNp1 = fieldMgr.get_field<double>(
     density_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
   auto& presN =
-    kynema-ugf_ngp::get_ngp_field(meshInfo, "pressure", stk::mesh::StateN);
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "pressure", stk::mesh::StateN);
   auto& presNp1 =
-    kynema-ugf_ngp::get_ngp_field(meshInfo, "pressure", stk::mesh::StateNP1);
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "pressure", stk::mesh::StateNP1);
 
   rhoN.sync_to_device();
   presN.sync_to_device();
@@ -1000,8 +1000,8 @@ LowMachEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*density_);
-  kynema-ugf_ngp::field_copy(ngpMesh, sel, rhoNp1, rhoN, 1);
-  kynema-ugf_ngp::field_copy(ngpMesh, sel, presNp1, presN, 1);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, rhoNp1, rhoN, 1);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, presNp1, presN, 1);
   rhoNp1.modify_on_device();
   presNp1.modify_on_device();
 }
@@ -1279,7 +1279,7 @@ MomentumEquationSystem::register_nodal_fields(
     stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_node_mask");
   double one = 1;
   stk::mesh::put_field_on_mesh(node_mask, selector, &one);
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 
 //--------------------------------------------------------------------------
 //-------- register_element_fields -----------------------------------------
@@ -1947,7 +1947,7 @@ MomentumEquationSystem::register_wall_bc(
 
     // integration point; size it based on number of boundary integration points
     MasterElement* meFC =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         partTopo);
     const int numScsBip = meFC->num_integration_points();
 
@@ -2392,7 +2392,7 @@ MomentumEquationSystem::register_non_conformal_bc(
 
   // mdot at nc bc; register field; require topo and num ips
   MasterElement* meFC =
-    sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       theTopo);
   const int numScsBip = meFC->num_integration_points();
 
@@ -2513,7 +2513,7 @@ MomentumEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*velocity_);
-  kynema-ugf_ngp::field_copy(ngpMesh, sel, velNp1, velN, meta.spatial_dimension());
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, velNp1, velN, meta.spatial_dimension());
   velNp1.modify_on_device();
 
   if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
@@ -2677,7 +2677,7 @@ MomentumEquationSystem::save_diagonal_term(
   auto& bulk = realm_.bulk_data();
   const int nDim = realm_.spatialDimension_;
   constexpr bool forceAtomic =
-    !std::is_same<sierra::kynema-ugf::DeviceSpace, Kokkos::Serial>::value;
+    !std::is_same<sierra::kynema_ugf::DeviceSpace, Kokkos::Serial>::value;
 
   for (unsigned in = 0; in < nEntities; in++) {
     const auto kynema-ugfID =
@@ -2702,7 +2702,7 @@ MomentumEquationSystem::save_diagonal_term(
   auto& bulk = realm_.bulk_data();
   const int nDim = realm_.spatialDimension_;
   constexpr bool forceAtomic =
-    !std::is_same<sierra::kynema-ugf::DeviceSpace, Kokkos::Serial>::value;
+    !std::is_same<sierra::kynema_ugf::DeviceSpace, Kokkos::Serial>::value;
 
   for (unsigned in = 0; in < nEntities; in++) {
     const auto kynema-ugfID =
@@ -2729,7 +2729,7 @@ MomentumEquationSystem::save_diagonal_term(
 void
 MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
 {
-  using MeshIndex = kynema-ugf_ngp::NGPMeshTraits<>::MeshIndex;
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex;
   auto& meta = realm_.meta_data();
   auto& bulk = realm_.bulk_data();
 
@@ -2784,7 +2784,7 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
       fieldMgr.get_field<double>(dualVol->mesh_meta_data_ordinal());
 
     // Remove momentum relaxation factor from diagonal term
-    kynema-ugf_ngp::run_entity_algorithm(
+    kynema_ugf_ngp::run_entity_algorithm(
       "LowMach::udiag_post_processing", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         double udiagTmp =
@@ -3415,7 +3415,7 @@ ContinuityEquationSystem::register_non_conformal_bc(
 
   // mdot at nc bc; register field; require topo and num ips
   MasterElement* meFC =
-    sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       theTopo);
   const int numScsBip = meFC->num_integration_points();
 
@@ -3650,5 +3650,5 @@ ContinuityEquationSystem::create_constraint_algorithm(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -14,7 +14,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -45,5 +45,5 @@ AveragingInfo::~AveragingInfo()
   // nothing to do
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

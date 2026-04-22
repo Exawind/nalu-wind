@@ -14,7 +14,7 @@
 #include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 /**
  * @brief General options for each actuator instance
@@ -58,7 +58,7 @@ actuator_instance_parse(ActuatorMeta& actMeta, const YAML::Node& y_actuator)
       y_instance, "fllt_num_nearest_point",
       actMeta.numNearestPointsFllcInt_.h_view(i));
   }
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 
 ActuatorType
 get_backward_compatible_type(const std::string typeName)
@@ -246,5 +246,5 @@ epsilon_parsing(int iTurb, const YAML::Node& turbNode, ActuatorMeta& actMeta)
     }
   }
 }
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

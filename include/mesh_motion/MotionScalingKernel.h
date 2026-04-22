@@ -10,7 +10,7 @@ class MetaData;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class MotionScalingKernel : public NgpMotionKernel<MotionScalingKernel>
 {
@@ -56,7 +56,7 @@ private:
   bool useRate_ = false;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* MOTIONSCALING_H */

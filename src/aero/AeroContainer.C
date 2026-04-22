@@ -19,7 +19,7 @@
 #include <stk_io/IossBridge.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 void
 AeroContainer::clean_up()
 {
@@ -309,5 +309,5 @@ AeroContainer::kynema-ugf_fsi_accumulated_time()
   return -1.0;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

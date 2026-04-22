@@ -34,7 +34,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class EquationSystem;
 class Realm;
@@ -139,7 +139,7 @@ public:
   /** Process nodes as belonging to a Dirichlet-type row
    *
    *  See the documentation/implementation of
-   *  sierra::kynema-ugf::FixPressureAtNodeAlgorithm for an example of this use case.
+   *  sierra::kynema_ugf::FixPressureAtNodeAlgorithm for an example of this use case.
    */
   virtual void buildDirichletNodeGraph(const std::vector<stk::mesh::Entity>&) {}
   virtual void buildDirichletNodeGraph(const stk::mesh::NgpMesh::ConnectedNodes)
@@ -255,7 +255,7 @@ public:
   bool provideOutput_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

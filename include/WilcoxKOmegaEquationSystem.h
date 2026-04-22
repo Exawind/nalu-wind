@@ -22,7 +22,7 @@ class Part;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class EquationSystems;
 class AlgorithmDriver;
@@ -81,7 +81,7 @@ public:
   const double sdrMinValue_{1.0e-8};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

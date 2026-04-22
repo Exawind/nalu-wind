@@ -57,12 +57,12 @@ check_HexSCV_determinant(const stk::mesh::BulkData& bulk)
   const unsigned spatialDim = bulk.mesh_meta_data().spatial_dimension();
   std::vector<double> hex8_node_coords(hex8.num_nodes() * spatialDim, 0.0);
   std::vector<double> hex8_scvolumes(hex8.num_nodes(), 0.0);
-  sierra::kynema-ugf::SharedMemView<double**> node_coords(
+  sierra::kynema_ugf::SharedMemView<double**> node_coords(
     hex8_node_coords.data(), hex8.num_nodes(), spatialDim);
-  sierra::kynema-ugf::SharedMemView<double*> scvolumes(
+  sierra::kynema_ugf::SharedMemView<double*> scvolumes(
     hex8_scvolumes.data(), hex8.num_nodes());
 
-  sierra::kynema-ugf::HexSCV hexSCV;
+  sierra::kynema_ugf::HexSCV hexSCV;
   double error[1] = {0};
   for (stk::mesh::Entity elem : elems) {
     EXPECT_EQ(hex8, bulk.bucket(elem).topology());
@@ -115,7 +115,7 @@ TEST(HexSCV, grandyvol)
   bulk->mesh_meta_data().use_simple_fields();
 
   unit_test_utils::fill_mesh_1_elem_per_proc_hex8(*bulk);
-  const auto& coordField = *static_cast<const sierra::kynema-ugf::VectorFieldType*>(
+  const auto& coordField = *static_cast<const sierra::kynema_ugf::VectorFieldType*>(
     bulk->mesh_meta_data().coordinate_field());
 
   double v_coords[8][3];
@@ -146,7 +146,7 @@ TEST(HexSCV, grandyvol)
 
       double exactVol = detQ;
       // start caliper
-      double volGrandy = sierra::kynema-ugf::hex_volume_grandy(v_coords);
+      double volGrandy = sierra::kynema_ugf::hex_volume_grandy(v_coords);
       // end caliper
       EXPECT_NEAR(volGrandy, exactVol, tol);
     }

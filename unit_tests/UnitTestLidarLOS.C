@@ -13,7 +13,7 @@
 #include <array>
 #include "Ioss_FileInfo.h"
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 const std::string db_spec =
   "data_probes:                                             \n"
@@ -311,5 +311,5 @@ TEST(spherical_cap_quadrature, error_improves_with_points_for_nonpoly)
   ASSERT_NEAR(error(121, 9), 0, 1e-8); // should be small with this many points
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -12,7 +12,7 @@
 #include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 ActuatorMetaSimple::ActuatorMetaSimple(const ActuatorMeta& actMeta)
   : ActuatorMeta(actMeta),
@@ -274,5 +274,5 @@ ActuatorBulkSimple::zero_actuator_views()
 #endif
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

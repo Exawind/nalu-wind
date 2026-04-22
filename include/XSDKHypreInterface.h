@@ -108,7 +108,7 @@ enum Hypre_Chooser { Solver, Prec };
 //! function. Use this class to call Hypre's internal parameters.
 class FunctionParameter
 {
-  using HypreIntType = sierra::kynema-ugf::HypreIntType;
+  using HypreIntType = sierra::kynema_ugf::HypreIntType;
 
 public:
   //! Single int constructor.

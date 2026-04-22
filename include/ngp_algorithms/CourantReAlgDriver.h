@@ -13,7 +13,7 @@
 #include "ngp_algorithms/NgpAlgDriver.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class CourantReAlgDriver : public NgpAlgDriver
 {
@@ -33,7 +33,7 @@ private:
   double maxRe_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* COURANTREALGDRIVER_H */

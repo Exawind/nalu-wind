@@ -20,7 +20,7 @@ class Node;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 class Simulation;
@@ -90,7 +90,7 @@ public:
   std::unique_ptr<ExtOverset> overset_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -29,7 +29,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 AssembleOversetPressureAlgorithm::AssembleOversetPressureAlgorithm(
   Realm& realm,
@@ -186,5 +186,5 @@ AssembleOversetPressureAlgorithm::execute()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

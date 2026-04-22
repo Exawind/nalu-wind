@@ -27,18 +27,18 @@ namespace {
 
 std::vector<double>
 transform(
-  const sierra::kynema-ugf::mm::TransMatType& transMat,
-  const sierra::kynema-ugf::mm::ThreeDVecType& xyz)
+  const sierra::kynema_ugf::mm::TransMatType& transMat,
+  const sierra::kynema_ugf::mm::ThreeDVecType& xyz)
 {
   std::vector<double> transCoord(3, 0.0);
 
   // perform matrix multiplication between transformation matrix
   // and original coordinates to obtain transformed coordinates
-  for (int d = 0; d < sierra::kynema-ugf::kynema-ugf_ngp::NDimMax; d++) {
-    transCoord[d] = transMat[d * sierra::kynema-ugf::mm::matSize + 0] * xyz[0] +
-                    transMat[d * sierra::kynema-ugf::mm::matSize + 1] * xyz[1] +
-                    transMat[d * sierra::kynema-ugf::mm::matSize + 2] * xyz[2] +
-                    transMat[d * sierra::kynema-ugf::mm::matSize + 3];
+  for (int d = 0; d < sierra::kynema_ugf::kynema_ugf_ngp::NDimMax; d++) {
+    transCoord[d] = transMat[d * sierra::kynema_ugf::mm::matSize + 0] * xyz[0] +
+                    transMat[d * sierra::kynema_ugf::mm::matSize + 1] * xyz[1] +
+                    transMat[d * sierra::kynema_ugf::mm::matSize + 2] * xyz[2] +
+                    transMat[d * sierra::kynema_ugf::mm::matSize + 3];
   }
 
   return transCoord;
@@ -80,14 +80,14 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
     stk::topology::NODE_RANK, "dual_nodal_volume", 3));
   stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
 
-  sierra::kynema-ugf::VectorFieldType* meshDisp_ = &(meta_->declare_field<double>(
+  sierra::kynema_ugf::VectorFieldType* meshDisp_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "mesh_displacement", 3));
   stk::mesh::put_field_on_mesh(
     *meshDisp_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
   stk::io::set_field_output_type(
     *meshDisp_, stk::io::FieldOutputType::VECTOR_3D);
 
-  sierra::kynema-ugf::VectorFieldType* cCoords_ = &(meta_->declare_field<double>(
+  sierra::kynema_ugf::VectorFieldType* cCoords_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "current_coordinates"));
   stk::mesh::put_field_on_mesh(
     *cCoords_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
@@ -95,15 +95,15 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
     *cCoords_, stk::io::FieldOutputType::VECTOR_3D);
 
   const auto& meSCS =
-    sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       stk::topology::HEX_8);
-  sierra::kynema-ugf::GenericFieldType* sweptVolume_ = &(meta_->declare_field<double>(
+  sierra::kynema_ugf::GenericFieldType* sweptVolume_ = &(meta_->declare_field<double>(
     stk::topology::ELEM_RANK, "swept_face_volume", 3));
   stk::mesh::put_field_on_mesh(
     *sweptVolume_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
-  sierra::kynema-ugf::GenericFieldType* faceVelMag_ = &(meta_->declare_field<double>(
+  sierra::kynema_ugf::GenericFieldType* faceVelMag_ = &(meta_->declare_field<double>(
     stk::topology::ELEM_RANK, "face_velocity_mag", 2));
   stk::mesh::put_field_on_mesh(
     *faceVelMag_, meta_->universal_part(), meSCS->num_integration_points(),
@@ -114,7 +114,7 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  sierra::kynema-ugf::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.timeStepN_ = 0.5;   // first time step size
   timeIntegrator.timeStepNm1_ = 0.0; // second time step size
   timeIntegrator.currentTime_ = 0.5; // current time
@@ -126,11 +126,11 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
   helperObjs.realm.realmUsesEdges_ = false;
   helperObjs.realm.solutionOptions_->meshMotion_ = true;
 
-  sierra::kynema-ugf::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
-  geomAlgDriver.register_elem_algorithm<sierra::kynema-ugf::GeometryInteriorAlg>(
-    sierra::kynema-ugf::INTERIOR, partVec_[0], "geometry");
-  geomAlgDriver.register_elem_algorithm<sierra::kynema-ugf::MeshVelocityAlg>(
-    sierra::kynema-ugf::INTERIOR, partVec_[0], "mesh_vel");
+  sierra::kynema_ugf::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
+  geomAlgDriver.register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
+    sierra::kynema_ugf::INTERIOR, partVec_[0], "geometry");
+  geomAlgDriver.register_elem_algorithm<sierra::kynema_ugf::MeshVelocityAlg>(
+    sierra::kynema_ugf::INTERIOR, partVec_[0], "mesh_vel");
 
   // First set the mesh displacement corresponding to rotation about x-axis
   // create a yaml node describing rotation
@@ -138,13 +138,13 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
                               "axis: [1.0,0.0,0.0]        \n"
                               "centroid: [0.5,0.5,0.5]    \n";
   YAML::Node rotNode = YAML::Load(rotInfo);
-  sierra::kynema-ugf::MotionRotationKernel rotClass(rotNode);
+  sierra::kynema_ugf::MotionRotationKernel rotClass(rotNode);
 
-  sierra::kynema-ugf::VectorFieldType* meshDispNp1 =
+  sierra::kynema_ugf::VectorFieldType* meshDispNp1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNP1));
-  sierra::kynema-ugf::VectorFieldType* meshDispN =
+  sierra::kynema_ugf::VectorFieldType* meshDispN =
     &(meshDisp_->field_of_state(stk::mesh::StateN));
-  sierra::kynema-ugf::VectorFieldType* meshDispNm1 =
+  sierra::kynema_ugf::VectorFieldType* meshDispNm1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNM1));
 
   {
@@ -162,11 +162,11 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
         dispNm1[2] = 0.0;
 
         // transform data structures to confirm to mesh motion
-        sierra::kynema-ugf::mm::ThreeDVecType mX;
-        for (int d = 0; d < sierra::kynema-ugf::kynema-ugf_ngp::NDimMax; ++d)
+        sierra::kynema_ugf::mm::ThreeDVecType mX;
+        for (int d = 0; d < sierra::kynema_ugf::kynema_ugf_ngp::NDimMax; ++d)
           mX[d] = mcoord[d];
 
-        sierra::kynema-ugf::mm::TransMatType transMat =
+        sierra::kynema_ugf::mm::TransMatType transMat =
           rotClass.build_transformation(0.0, mX);
         std::vector<double> rot_xyz = transform(transMat, mX);
 
@@ -220,14 +220,14 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
     stk::topology::NODE_RANK, "dual_nodal_volume", 3));
   stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
 
-  sierra::kynema-ugf::VectorFieldType* meshDisp_ = &(meta_->declare_field<double>(
+  sierra::kynema_ugf::VectorFieldType* meshDisp_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "mesh_displacement", 3));
   stk::mesh::put_field_on_mesh(
     *meshDisp_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
   stk::io::set_field_output_type(
     *meshDisp_, stk::io::FieldOutputType::VECTOR_3D);
 
-  sierra::kynema-ugf::VectorFieldType* cCoords_ = &(meta_->declare_field<double>(
+  sierra::kynema_ugf::VectorFieldType* cCoords_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "current_coordinates"));
   stk::mesh::put_field_on_mesh(
     *cCoords_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
@@ -235,15 +235,15 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
     *cCoords_, stk::io::FieldOutputType::VECTOR_3D);
 
   const auto& meSCS =
-    sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       stk::topology::HEX_8);
-  sierra::kynema-ugf::GenericFieldType* sweptVolume_ = &(meta_->declare_field<double>(
+  sierra::kynema_ugf::GenericFieldType* sweptVolume_ = &(meta_->declare_field<double>(
     stk::topology::ELEM_RANK, "swept_face_volume", 3));
   stk::mesh::put_field_on_mesh(
     *sweptVolume_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
-  sierra::kynema-ugf::GenericFieldType* faceVelMag_ = &(meta_->declare_field<double>(
+  sierra::kynema_ugf::GenericFieldType* faceVelMag_ = &(meta_->declare_field<double>(
     stk::topology::ELEM_RANK, "face_velocity_mag", 2));
   stk::mesh::put_field_on_mesh(
     *faceVelMag_, meta_->universal_part(), meSCS->num_integration_points(),
@@ -254,7 +254,7 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  sierra::kynema-ugf::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.timeStepN_ = 0.5;   // first time step size
   timeIntegrator.timeStepNm1_ = 0.0; // second time step size
   timeIntegrator.currentTime_ = 0.5; // current time
@@ -266,11 +266,11 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
   helperObjs.realm.realmUsesEdges_ = false;
   helperObjs.realm.solutionOptions_->meshMotion_ = true;
 
-  sierra::kynema-ugf::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
-  geomAlgDriver.register_elem_algorithm<sierra::kynema-ugf::GeometryInteriorAlg>(
-    sierra::kynema-ugf::INTERIOR, partVec_[0], "geometry");
-  geomAlgDriver.register_elem_algorithm<sierra::kynema-ugf::MeshVelocityAlg>(
-    sierra::kynema-ugf::INTERIOR, partVec_[0], "mesh_vel");
+  sierra::kynema_ugf::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
+  geomAlgDriver.register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
+    sierra::kynema_ugf::INTERIOR, partVec_[0], "geometry");
+  geomAlgDriver.register_elem_algorithm<sierra::kynema_ugf::MeshVelocityAlg>(
+    sierra::kynema_ugf::INTERIOR, partVec_[0], "mesh_vel");
 
   // First set the mesh displacement corresponding to rotation about x-axis
   // create a yaml node describing rotation
@@ -278,13 +278,13 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
                               "axis: [0.0,1.0,0.0]        \n"
                               "centroid: [0.5,0.5,0.5]    \n";
   YAML::Node rotNode = YAML::Load(rotInfo);
-  sierra::kynema-ugf::MotionRotationKernel rotClass(rotNode);
+  sierra::kynema_ugf::MotionRotationKernel rotClass(rotNode);
 
-  sierra::kynema-ugf::VectorFieldType* meshDispNp1 =
+  sierra::kynema_ugf::VectorFieldType* meshDispNp1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNP1));
-  sierra::kynema-ugf::VectorFieldType* meshDispN =
+  sierra::kynema_ugf::VectorFieldType* meshDispN =
     &(meshDisp_->field_of_state(stk::mesh::StateN));
-  sierra::kynema-ugf::VectorFieldType* meshDispNm1 =
+  sierra::kynema_ugf::VectorFieldType* meshDispNm1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNM1));
 
   {
@@ -302,11 +302,11 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
         dispNm1[2] = 0.0;
 
         // transform data structures to confirm to mesh motion
-        sierra::kynema-ugf::mm::ThreeDVecType mX;
-        for (int d = 0; d < sierra::kynema-ugf::kynema-ugf_ngp::NDimMax; ++d)
+        sierra::kynema_ugf::mm::ThreeDVecType mX;
+        for (int d = 0; d < sierra::kynema_ugf::kynema_ugf_ngp::NDimMax; ++d)
           mX[d] = mcoord[d];
 
-        sierra::kynema-ugf::mm::TransMatType transMat =
+        sierra::kynema_ugf::mm::TransMatType transMat =
           rotClass.build_transformation(0.0, mX);
         std::vector<double> rot_xyz = transform(transMat, mX);
 
@@ -360,14 +360,14 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
     stk::topology::NODE_RANK, "dual_nodal_volume", 3));
   stk::mesh::put_field_on_mesh(*dnvField_, meta_->universal_part(), nullptr);
 
-  sierra::kynema-ugf::VectorFieldType* meshDisp_ = &(meta_->declare_field<double>(
+  sierra::kynema_ugf::VectorFieldType* meshDisp_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "mesh_displacement", 3));
   stk::mesh::put_field_on_mesh(
     *meshDisp_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
   stk::io::set_field_output_type(
     *meshDisp_, stk::io::FieldOutputType::VECTOR_3D);
 
-  sierra::kynema-ugf::VectorFieldType* cCoords_ = &(meta_->declare_field<double>(
+  sierra::kynema_ugf::VectorFieldType* cCoords_ = &(meta_->declare_field<double>(
     stk::topology::NODE_RANK, "current_coordinates"));
   stk::mesh::put_field_on_mesh(
     *cCoords_, meta_->universal_part(), meta_->spatial_dimension(), nullptr);
@@ -375,15 +375,15 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
     *cCoords_, stk::io::FieldOutputType::VECTOR_3D);
 
   const auto& meSCS =
-    sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
       stk::topology::HEX_8);
-  sierra::kynema-ugf::GenericFieldType* sweptVolume_ = &(meta_->declare_field<double>(
+  sierra::kynema_ugf::GenericFieldType* sweptVolume_ = &(meta_->declare_field<double>(
     stk::topology::ELEM_RANK, "swept_face_volume", 3));
   stk::mesh::put_field_on_mesh(
     *sweptVolume_, meta_->universal_part(), meSCS->num_integration_points(),
     nullptr);
 
-  sierra::kynema-ugf::GenericFieldType* faceVelMag_ = &(meta_->declare_field<double>(
+  sierra::kynema_ugf::GenericFieldType* faceVelMag_ = &(meta_->declare_field<double>(
     stk::topology::ELEM_RANK, "face_velocity_mag", 2));
   stk::mesh::put_field_on_mesh(
     *faceVelMag_, meta_->universal_part(), meSCS->num_integration_points(),
@@ -394,7 +394,7 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  sierra::kynema-ugf::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.timeStepN_ = 0.25;   // first time step size
   timeIntegrator.timeStepNm1_ = 0.0;  // second time step size
   timeIntegrator.currentTime_ = 0.25; // current time
@@ -406,11 +406,11 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
   helperObjs.realm.realmUsesEdges_ = false;
   helperObjs.realm.solutionOptions_->meshMotion_ = true;
 
-  sierra::kynema-ugf::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
-  geomAlgDriver.register_elem_algorithm<sierra::kynema-ugf::GeometryInteriorAlg>(
-    sierra::kynema-ugf::INTERIOR, partVec_[0], "geometry");
-  geomAlgDriver.register_elem_algorithm<sierra::kynema-ugf::MeshVelocityAlg>(
-    sierra::kynema-ugf::INTERIOR, partVec_[0], "mesh_vel");
+  sierra::kynema_ugf::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
+  geomAlgDriver.register_elem_algorithm<sierra::kynema_ugf::GeometryInteriorAlg>(
+    sierra::kynema_ugf::INTERIOR, partVec_[0], "geometry");
+  geomAlgDriver.register_elem_algorithm<sierra::kynema_ugf::MeshVelocityAlg>(
+    sierra::kynema_ugf::INTERIOR, partVec_[0], "mesh_vel");
 
   // First set the mesh displacement corresponding to rotation about x-axis
   // create a yaml node describing rotation
@@ -418,13 +418,13 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
                               "axis: [0.0,1.0,0.0]        \n"
                               "centroid: [0.5,0.5,0.75]   \n";
   YAML::Node rotNode = YAML::Load(rotInfo);
-  sierra::kynema-ugf::MotionRotationKernel rotClass(rotNode);
+  sierra::kynema_ugf::MotionRotationKernel rotClass(rotNode);
 
-  sierra::kynema-ugf::VectorFieldType* meshDispNp1 =
+  sierra::kynema_ugf::VectorFieldType* meshDispNp1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNP1));
-  sierra::kynema-ugf::VectorFieldType* meshDispN =
+  sierra::kynema_ugf::VectorFieldType* meshDispN =
     &(meshDisp_->field_of_state(stk::mesh::StateN));
-  sierra::kynema-ugf::VectorFieldType* meshDispNm1 =
+  sierra::kynema_ugf::VectorFieldType* meshDispNm1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNM1));
 
   {
@@ -442,11 +442,11 @@ TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
         dispNm1[2] = 0.0;
 
         // transform data structures to confirm to mesh motion
-        sierra::kynema-ugf::mm::ThreeDVecType mX;
-        for (int d = 0; d < sierra::kynema-ugf::kynema-ugf_ngp::NDimMax; ++d)
+        sierra::kynema_ugf::mm::ThreeDVecType mX;
+        for (int d = 0; d < sierra::kynema_ugf::kynema_ugf_ngp::NDimMax; ++d)
           mX[d] = mcoord[d];
 
-        sierra::kynema-ugf::mm::TransMatType transMat =
+        sierra::kynema_ugf::mm::TransMatType transMat =
           rotClass.build_transformation(0.0, mX);
         std::vector<double> rot_xyz = transform(transMat, mX);
 

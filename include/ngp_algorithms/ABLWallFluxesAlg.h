@@ -21,7 +21,7 @@
 #include "KynemaUGFParsing.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 /** Simultaneously compute the wall shear stress and heat flux/surface
  *  temperature.  This boundary condition follows the algorithms outlined
@@ -177,7 +177,7 @@ private:
   MasterElement* meSCS_{nullptr};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ABLWALLFLUXESALG_H */

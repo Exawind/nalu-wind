@@ -15,7 +15,7 @@
 #include <map>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 class Algorithm;
@@ -34,7 +34,7 @@ public:
   std::map<AlgorithmType, Algorithm*> algMap_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

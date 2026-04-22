@@ -38,7 +38,7 @@
 #include <stk_util/parallel/ParallelReduce.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 EquationSystem::EquationSystem(
   EquationSystems& eqSystems,
@@ -110,7 +110,7 @@ EquationSystem::~EquationSystem()
   }
 
   for (auto* pecFunc : ngpPecletFunctions_)
-    kynema-ugf_ngp::destroy(pecFunc);
+    kynema_ugf_ngp::destroy(pecFunc);
 }
 
 void
@@ -568,7 +568,7 @@ EquationSystem::solution_update(
      meta.aura_part()) &
     stk::mesh::selectField(field);
 
-  kynema-ugf_ngp::field_axpby(
+  kynema_ugf_ngp::field_axpby(
     meshInfo, sel, delta_frac, delta, field_frac, field, numComponents, rank);
 }
 
@@ -582,5 +582,5 @@ EquationSystem::register_abltop_bc(
   register_symmetry_bc(part, theTopo, simData);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

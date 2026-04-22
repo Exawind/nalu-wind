@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 namespace {
 
@@ -121,5 +121,5 @@ TEST_F(ActuatorBulkFastTests, epsilonTowerAndAnisotropicEpsilon)
 
 } // namespace
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -15,7 +15,7 @@
 #include "utils/StkHelpers.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 VOFGclNodeKernel::VOFGclNodeKernel(
   const stk::mesh::BulkData& bulk, ScalarFieldType* scalarQ)
@@ -82,5 +82,5 @@ VOFGclNodeKernel::execute(
   rhs(0) -= scalarQNp1 * (divV - (volRate - divV)) * dualNdVolNp1;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

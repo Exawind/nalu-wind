@@ -33,7 +33,7 @@
 #include <iomanip>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -221,7 +221,7 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
 
     // face master element
     MasterElement* meFC =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsBip = meFC->num_integration_points();
@@ -468,7 +468,7 @@ SurfaceForceAndMomentWallFunctionAlgorithm::pre_work()
 
     // face master element
     MasterElement* meFC =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
     const int numScsBip = meFC->num_integration_points();
 
@@ -524,5 +524,5 @@ SurfaceForceAndMomentWallFunctionAlgorithm::cross_product(
   cross[2] = rad[0] * force[1] - rad[1] * force[0];
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

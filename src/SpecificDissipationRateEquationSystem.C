@@ -93,7 +93,7 @@
 #include <stk_util/parallel/ParallelReduce.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -704,8 +704,8 @@ SpecificDissipationRateEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*sdr_);
-  kynema-ugf_ngp::field_copy(ngpMesh, sel, sdrNp1, sdrN);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, sdrNp1, sdrN);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

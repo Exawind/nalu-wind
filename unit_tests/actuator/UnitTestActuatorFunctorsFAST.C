@@ -15,7 +15,7 @@
 #include <gtest/gtest.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 namespace {
 
@@ -218,5 +218,5 @@ TEST_F(ActuatorFunctorFastTests, spreadForceWhProjIdentity)
 
 } // namespace
 
-} /* namespace kynema-ugf */
+} /* namespace kynema_ugf */
 } /* namespace sierra */

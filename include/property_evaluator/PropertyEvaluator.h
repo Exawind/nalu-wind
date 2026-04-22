@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class PropertyEvaluator
 {
@@ -27,7 +27,7 @@ public:
   execute(double* indVarList, stk::mesh::Entity node = stk::mesh::Entity()) = 0;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

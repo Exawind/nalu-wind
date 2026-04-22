@@ -78,7 +78,7 @@
 #include <sstream>
 #define KK_MAP
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 ///====================================================================================================================================
 ///======== T P E T R A
@@ -527,7 +527,7 @@ TpetraLinearSystem::buildReducedElemToNodeGraph(
 
     // extract master element
     MasterElement* meSCS =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
     // extract master element specifics
     const int numScsIp = meSCS->num_integration_points();
@@ -1302,7 +1302,7 @@ sum_into_row_vec_3(
   // assumes that the flattened column indices for block matrices are all stored
   // sequentially specialized for numDof == 3
   constexpr bool forceAtomic =
-    !std::is_same<sierra::kynema-ugf::DeviceSpace, Kokkos::Serial>::value;
+    !std::is_same<sierra::kynema_ugf::DeviceSpace, Kokkos::Serial>::value;
   const LocalOrdinal length = row_view.length;
 
   LocalOrdinal offset = 0;
@@ -1351,7 +1351,7 @@ sum_into_row(
   }
 
   constexpr bool forceAtomic =
-    !std::is_same<sierra::kynema-ugf::DeviceSpace, Kokkos::Serial>::value;
+    !std::is_same<sierra::kynema_ugf::DeviceSpace, Kokkos::Serial>::value;
   const LocalOrdinal length = row_view.length;
 
   const int numCols = num_entities * numDof;
@@ -1405,7 +1405,7 @@ sum_into(
   unsigned numDof)
 {
   constexpr bool forceAtomic =
-    !std::is_same<sierra::kynema-ugf::DeviceSpace, Kokkos::Serial>::value;
+    !std::is_same<sierra::kynema_ugf::DeviceSpace, Kokkos::Serial>::value;
 
   const int n_obj = numEntities;
   const int numRows = n_obj * numDof;
@@ -1519,7 +1519,7 @@ reset_rows(
   }
 }
 
-sierra::kynema-ugf::CoeffApplier*
+sierra::kynema_ugf::CoeffApplier*
 TpetraLinearSystem::get_coeff_applier()
 {
   auto ownedLocalMatrix = getOwnedLocalMatrix();
@@ -1548,7 +1548,7 @@ void
 TpetraLinearSystem::free_coeff_applier(CoeffApplier* coeffApplier)
 {
   if (coeffApplier != nullptr) {
-    sierra::kynema-ugf::kokkos_free_on_device(coeffApplier);
+    sierra::kynema_ugf::kokkos_free_on_device(coeffApplier);
   }
 }
 
@@ -1698,7 +1698,7 @@ TpetraLinearSystem::applyDirichletBCs(
     stk::mesh::selectUnion(parts) & stk::mesh::selectField(*solutionField) &
     !(realm_.get_inactive_selector());
 
-  using Traits = kynema-ugf_ngp::NGPMeshTraits<>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
   using MeshIndex = typename Traits::MeshIndex;
 
   stk::mesh::NgpMesh ngpMesh = realm_.ngp_mesh();
@@ -1723,7 +1723,7 @@ TpetraLinearSystem::applyDirichletBCs(
   // Suppress unused variable warning on non-debug builds
   (void)maxSharedNotOwnedRowId;
 
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "TpetraLinSys::applyDirichletBCs", ngpMesh, stk::topology::NODE_RANK,
     selector, KOKKOS_LAMBDA(const MeshIndex& meshIdx) {
       stk::mesh::Entity entity =
@@ -2185,7 +2185,7 @@ TpetraLinearSystem::copy_tpetra_to_stk(
   const Teuchos::RCP<LinSys::MultiVector> tpetraField,
   stk::mesh::FieldBase* stkField)
 {
-  using Traits = kynema-ugf_ngp::NGPMeshTraits<>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
   using MeshIndex = typename Traits::MeshIndex;
 
   const stk::mesh::MetaData& metaData = realm_.meta_data();
@@ -2209,7 +2209,7 @@ TpetraLinearSystem::copy_tpetra_to_stk(
 
   stk::mesh::NgpMesh ngpMesh = realm_.ngp_mesh();
 
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "TpetraLinSys::copy_tpetra_to_stk", ngpMesh, stk::topology::NODE_RANK,
     selector, KOKKOS_LAMBDA(const MeshIndex& meshIdx) {
       stk::mesh::Entity node =
@@ -2342,5 +2342,5 @@ getDofStatus_impl(stk::mesh::Entity node, const Realm& realm)
 #endif
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

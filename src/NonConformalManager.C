@@ -29,7 +29,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -204,5 +204,5 @@ NonConformalManager::manage_ghosting(
   populate_ghost_comm_procs(bulk_data, *nonConformalGhosting_, ghostCommProcs_);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

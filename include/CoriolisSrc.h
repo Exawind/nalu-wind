@@ -13,7 +13,7 @@
 #include "KokkosInterface.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class SolutionOptions;
 
@@ -43,7 +43,7 @@ public:
   double pi_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

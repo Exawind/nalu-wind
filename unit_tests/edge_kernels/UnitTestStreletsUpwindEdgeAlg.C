@@ -15,7 +15,7 @@
 #include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
 {
@@ -165,7 +165,7 @@ TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
 
   // so finally our expected value is tanh(1.0) from eq 9
 
-  sierra::kynema-ugf::StreletsUpwindEdgeAlg streletsUpw(
+  sierra::kynema_ugf::StreletsUpwindEdgeAlg streletsUpw(
     helperObjs.realm, partVec_[0]);
   ASSERT_NO_THROW(streletsUpw.execute());
 
@@ -197,5 +197,5 @@ TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

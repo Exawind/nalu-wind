@@ -16,7 +16,7 @@
 #include <stk_mesh/base/Entity.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -50,7 +50,7 @@ public:
   double projTimeScale_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

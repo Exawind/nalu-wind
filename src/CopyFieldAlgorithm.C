@@ -23,7 +23,7 @@
 #include <stk_mesh/base/Part.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -76,11 +76,11 @@ CopyFieldAlgorithm::execute()
     fieldMgr.get_field<double>(fromField_->mesh_meta_data_ordinal());
   fromField.sync_to_device();
   toField.sync_to_device();
-  kynema-ugf_ngp::field_copy(
+  kynema_ugf_ngp::field_copy(
     realm_.ngp_mesh(), selector, toField, fromField, beginPos_, endPos_,
     entityRank_);
   toField.modify_on_device();
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

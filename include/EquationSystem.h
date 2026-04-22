@@ -32,7 +32,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Algorithm;
 class AlgorithmDriver;
@@ -405,18 +405,18 @@ EquationSystem::ngp_create_peclet_function(const std::string& dofName)
     const T hybridFactor = realm_.get_hybrid_factor(dofName);
     const T A = 5.0;
     pecletFunction =
-      kynema-ugf_ngp::create<ClassicPecletFunction<T>>(A, hybridFactor);
+      kynema_ugf_ngp::create<ClassicPecletFunction<T>>(A, hybridFactor);
   } else {
     const T c1 = realm_.get_tanh_trans(dofName);
     const T c2 = realm_.get_tanh_width(dofName);
-    pecletFunction = kynema-ugf_ngp::create<TanhFunction<T>>(c1, c2);
+    pecletFunction = kynema_ugf_ngp::create<TanhFunction<T>>(c1, c2);
   }
 
   ngpPecletFunctions_.push_back(pecletFunction);
   return pecletFunction;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -45,7 +45,7 @@
 #include <stk_topology/topology.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -1043,5 +1043,5 @@ EquationSystems::all_systems_decoupled() const
   return hasDecoupled;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

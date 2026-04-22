@@ -13,7 +13,7 @@
 #include <aero/actuator/ActuatorBulkFAST.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 struct ActuatorBulkDiskFAST : public ActuatorBulkFAST
 {
@@ -32,7 +32,7 @@ private:
   void initialize_swept_points(const ActuatorMetaFAST& actMeta);
 };
 
-} /* namespace kynema-ugf */
+} /* namespace kynema_ugf */
 } /* namespace sierra */
 
 #endif /* INCLUDE_ACTUATOR_ACTUATORBULKDISKFAST_H_ */

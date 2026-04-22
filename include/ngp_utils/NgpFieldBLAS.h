@@ -16,8 +16,8 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
-namespace kynema-ugf_ngp {
+namespace kynema_ugf {
+namespace kynema_ugf_ngp {
 
 /** Operation: `y = alpha * x + beta * y`
  *
@@ -45,7 +45,7 @@ field_axpby(
 
   yField.sync_to_device();
 
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "ngp_field_axpby", ngpMesh, rank, sel, KOKKOS_LAMBDA(const MeshIndex& mi) {
       for (unsigned d = 0; d < numComponents; ++d)
         yField.get(mi, d) =
@@ -70,7 +70,7 @@ field_copy(
   using Traits = NGPMeshTraits<Mesh>;
   using MeshIndex = typename Traits::MeshIndex;
 
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "ngp_field_copy", ngpMesh, rank, sel, KOKKOS_LAMBDA(const MeshIndex& mi) {
       for (unsigned d = start; d < end; ++d)
         dest.get(mi, d) = src.get(mi, d);
@@ -165,8 +165,8 @@ vector_field_axpby(
   field_axpby(meshInfo, sel, alpha, xField, beta, yField, nComp, rank);
 }
 
-} // namespace kynema-ugf_ngp
-} // namespace kynema-ugf
+} // namespace kynema_ugf_ngp
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPFIELDBLAS_H */

@@ -13,7 +13,7 @@ class Node;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class FrameBase
 {
@@ -77,7 +77,7 @@ private:
   void populate_part_vec(const YAML::Node&);
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* FRAMEBASE_H */

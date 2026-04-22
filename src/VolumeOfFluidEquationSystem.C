@@ -52,7 +52,7 @@
 #include "user_functions/SloshingTankVOFAuxFunction.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -569,7 +569,7 @@ void
 VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
 {
 
-  using Traits = kynema-ugf_ngp::NGPMeshTraits<>;
+  using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
@@ -585,7 +585,7 @@ VolumeOfFluidEquationSystem::compute_projected_nodal_gradient()
 
   ngpVof.sync_to_device();
 
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "vof_update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
       if (ngpVof.get(mi, 0) < 0.0) {
@@ -654,9 +654,9 @@ VolumeOfFluidEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() |
      meta.aura_part()) &
     stk::mesh::selectField(*volumeOfFluid_);
-  kynema-ugf_ngp::field_copy(ngpMesh, sel, vofNp1, vofN, 1);
+  kynema_ugf_ngp::field_copy(ngpMesh, sel, vofNp1, vofN, 1);
   vofNp1.modify_on_device();
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

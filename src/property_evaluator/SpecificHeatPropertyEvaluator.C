@@ -19,7 +19,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -226,5 +226,5 @@ SpecificHeatConstCpkPropertyEvaluator::execute(
   return sum_cp;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

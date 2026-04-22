@@ -24,7 +24,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 template <typename BcAlgTraits>
 ContinuityInflowElemKernel<BcAlgTraits>::ContinuityInflowElemKernel(
@@ -125,5 +125,5 @@ ContinuityInflowElemKernel<BcAlgTraits>::execute(
 
 INSTANTIATE_KERNEL_FACE(ContinuityInflowElemKernel)
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

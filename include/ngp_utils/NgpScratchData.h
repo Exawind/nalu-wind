@@ -20,9 +20,9 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
-namespace kynema-ugf_ngp {
+namespace kynema_ugf_ngp {
 
 /** Element connectivity and gathered scratch data for element
  *
@@ -149,8 +149,8 @@ struct FaceElemSimdData
   int numSimdElems;
 };
 
-} // namespace kynema-ugf_ngp
-} // namespace kynema-ugf
+} // namespace kynema_ugf_ngp
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPSCRATCHDATA_H */

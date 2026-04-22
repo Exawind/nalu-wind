@@ -70,7 +70,7 @@ human_bytes_double(double bytes)
 int
 main(int argc, char** argv)
 {
-  namespace version = sierra::kynema-ugf::version;
+  namespace version = sierra::kynema_ugf::version;
 
   // start up MPI
   if (MPI_SUCCESS != MPI_Init(&argc, &argv)) {
@@ -78,19 +78,19 @@ main(int argc, char** argv)
   }
 
   // KynemaUGFEnv singleton
-  sierra::kynema-ugf::KynemaUGFEnv& kynema-ugfEnv = sierra::kynema-ugf::KynemaUGFEnv::self();
+  sierra::kynema_ugf::KynemaUGFEnv& kynema-ugfEnv = sierra::kynema_ugf::KynemaUGFEnv::self();
 
   Kokkos::initialize(argc, argv);
 
   // Hypre initialization
-  kynema-ugf_hypre::hypre_initialize();
+  kynema_ugf_hypre::hypre_initialize();
 
   {
 
     stk::diag::setEnabledTimerMetricsMask(
       stk::diag::METRICS_CPU_TIME | stk::diag::METRICS_WALL_TIME);
 
-    sierra::kynema-ugf::Simulation::rootTimer().start();
+    sierra::kynema_ugf::Simulation::rootTimer().start();
 
     // start initial time
     double start_time = kynema-ugfEnv.kynema-ugf_time();
@@ -175,15 +175,15 @@ main(int argc, char** argv)
     if (!kynema-ugfEnv.parallel_rank()) {
       std::cout << std::string(20, '#') << " INPUT FILE START "
                 << std::string(20, '#') << std::endl;
-      sierra::kynema-ugf::KynemaUGFParsingHelper::emit(std::cout, doc);
+      sierra::kynema_ugf::KynemaUGFParsingHelper::emit(std::cout, doc);
       std::cout << std::string(20, '#') << " INPUT FILE END   "
                 << std::string(20, '#') << std::endl;
     }
 
     // Hypre general parameter setting
-    kynema-ugf_hypre::hypre_set_params(doc);
+    kynema_ugf_hypre::hypre_set_params(doc);
 
-    sierra::kynema-ugf::Simulation sim(doc);
+    sierra::kynema_ugf::Simulation sim(doc);
     if (serializedIOGroupSize) {
       kynema-ugfEnv.kynema-ugfOutputP0()
         << "Info: found non-zero serialized_io_group_size on command-line= "
@@ -257,14 +257,14 @@ main(int argc, char** argv)
         << human_bytes_double(global_hwm[1]) << std::endl;
     }
 
-    sierra::kynema-ugf::Simulation::rootTimer().stop();
+    sierra::kynema_ugf::Simulation::rootTimer().stop();
 
     // output timings consistent w/ rest of Sierra
-    stk::diag::Timer& sierra_timer = sierra::kynema-ugf::Simulation::rootTimer();
+    stk::diag::Timer& sierra_timer = sierra::kynema_ugf::Simulation::rootTimer();
     const double elapsed_time =
       sierra_timer.getMetric<stk::diag::WallTime>().getAccumulatedLap(false);
     stk::diag::Timer& mesh_output_timer =
-      sierra::kynema-ugf::Simulation::outputTimer();
+      sierra::kynema_ugf::Simulation::outputTimer();
     double mesh_output_time =
       mesh_output_timer.getMetric<stk::diag::WallTime>().getAccumulatedLap(
         false);
@@ -277,22 +277,22 @@ main(int argc, char** argv)
       stk::print_timers_and_memory(&timer_name, &total_time, 1 /*num timers*/);
 
     stk::diag::printTimersTable(
-      kynema-ugfEnv.kynema-ugfOutputP0(), sierra::kynema-ugf::Simulation::rootTimer(),
+      kynema-ugfEnv.kynema-ugfOutputP0(), sierra::kynema_ugf::Simulation::rootTimer(),
       stk::diag::METRICS_CPU_TIME | stk::diag::METRICS_WALL_TIME, false,
       kynema-ugfEnv.parallel_comm());
 
-    stk::diag::deleteRootTimer(sierra::kynema-ugf::Simulation::rootTimer());
+    stk::diag::deleteRootTimer(sierra::kynema_ugf::Simulation::rootTimer());
 
     // Write out Trilinos timers
     Teuchos::TimeMonitor::summarize(
       kynema-ugfEnv.kynema-ugfOutputP0(), false, true, false, Teuchos::Union);
 
     // Master element cleanup
-    sierra::kynema-ugf::MasterElementRepo::clear();
+    sierra::kynema_ugf::MasterElementRepo::clear();
   }
 
   // Hypre cleanup
-  kynema-ugf_hypre::hypre_finalize();
+  kynema_ugf_hypre::hypre_finalize();
 
   Kokkos::finalize();
 

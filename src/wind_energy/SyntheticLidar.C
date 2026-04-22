@@ -23,7 +23,7 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 constexpr int dim = 3;
 
@@ -1095,5 +1095,5 @@ parse_radar_filter(const YAML::Node& node)
 }
 
 } // namespace details
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

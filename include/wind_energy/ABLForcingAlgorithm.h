@@ -19,7 +19,7 @@ class Node;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -229,7 +229,7 @@ private:
   //! Uz, T. Default is "abl_sources_%s.dat"
   std::string outFileFmt_{"abl_%s_sources.dat"};
 };
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ABLFORCINGALGORITHM_H */

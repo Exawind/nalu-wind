@@ -26,7 +26,7 @@
 #include <stk_mesh/base/FieldState.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 template <typename BcAlgTraits>
 DynamicPressureOpenAlg<BcAlgTraits>::DynamicPressureOpenAlg(
@@ -63,14 +63,14 @@ template <typename BcAlgTraits>
 void
 DynamicPressureOpenAlg<BcAlgTraits>::execute()
 {
-  using ElemSimdData = kynema-ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdData = kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
   const auto& meta = realm_.meta_data();
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
 
   auto dynPress = fieldMgr.template get_field<double>(dynPress_);
-  auto dynPressOps = kynema-ugf_ngp::simd_elem_field_updater(ngpMesh, dynPress);
+  auto dynPressOps = kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, dynPress);
 
   const stk::mesh::Selector sel =
     meta.locally_owned_part() & stk::mesh::selectUnion(partVec_);
@@ -85,7 +85,7 @@ DynamicPressureOpenAlg<BcAlgTraits>::execute()
   const auto shp =
     shape_fcn<BcAlgTraits, QuadRank::SCV>(use_shifted_quad(useShifted));
 
-  kynema-ugf_ngp::run_elem_algorithm(
+  kynema_ugf_ngp::run_elem_algorithm(
     algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
     KOKKOS_LAMBDA(ElemSimdData & edata) {
       auto& scrViews = edata.simdScrView;
@@ -117,5 +117,5 @@ DynamicPressureOpenAlg<BcAlgTraits>::execute()
 
 INSTANTIATE_KERNEL_FACE(DynamicPressureOpenAlg)
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

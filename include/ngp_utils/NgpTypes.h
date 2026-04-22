@@ -22,12 +22,12 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 template <typename T1, typename T2, typename T3>
 class ScratchViews;
 
-namespace kynema-ugf_ngp {
+namespace kynema_ugf_ngp {
 
 //! maximum number of dimensions for arrays
 constexpr int NDimMax = 3;
@@ -84,7 +84,7 @@ template <typename Mesh = stk::mesh::NgpMesh>
 struct NGPMeshTraits
 {
   //! SIMD data type used in element data structures
-  using DblType = ::sierra::kynema-ugf::DoubleType;
+  using DblType = ::sierra::kynema_ugf::DoubleType;
 
   //! Default scalar type for field data
   using FieldScalarType = double;
@@ -107,8 +107,8 @@ struct NGPMeshTraits
   using BcFaceElemInfoType = BcFaceElemInfo<Mesh>;
 };
 
-} // namespace kynema-ugf_ngp
-} // namespace kynema-ugf
+} // namespace kynema_ugf_ngp
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NGPTYPES_H */

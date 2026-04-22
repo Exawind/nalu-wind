@@ -17,7 +17,7 @@
 #include "stk_mesh/base/Entity.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class ElemDataRequests;
 class MasterElement;
@@ -70,7 +70,7 @@ private:
   MasterElement* meFC_{nullptr};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* ENTHALPYTGRADBCELEMKERNEL_H */

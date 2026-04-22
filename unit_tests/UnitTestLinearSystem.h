@@ -44,9 +44,9 @@ KOKKOS_FUNCTION void
 edgeSumInto(
   unsigned numEntities,
   const stk::mesh::NgpMesh::ConnectedNodes& entities,
-  const sierra::kynema-ugf::SharedMemView<const double*, sierra::kynema-ugf::DeviceShmem>&
+  const sierra::kynema_ugf::SharedMemView<const double*, sierra::kynema_ugf::DeviceShmem>&
     rhs,
-  const sierra::kynema-ugf::SharedMemView<const double**, sierra::kynema-ugf::DeviceShmem>&
+  const sierra::kynema_ugf::SharedMemView<const double**, sierra::kynema_ugf::DeviceShmem>&
     lhs,
   unsigned numDof,
   RHSView rhs_,
@@ -75,7 +75,7 @@ using UnsignedView = Kokkos::View<unsigned*>;
 using LHSView = Kokkos::View<double**>;
 using RHSView = Kokkos::View<double*>;
 
-class TestCoeffApplier : public sierra::kynema-ugf::CoeffApplier
+class TestCoeffApplier : public sierra::kynema_ugf::CoeffApplier
 {
 public:
   KOKKOS_FUNCTION
@@ -117,14 +117,14 @@ public:
   void operator()(
     unsigned numEntities,
     const stk::mesh::NgpMesh::ConnectedNodes& entities,
-    const sierra::kynema-ugf::
-      SharedMemView<int*, sierra::kynema-ugf::DeviceShmem>& /*localIds*/,
-    const sierra::kynema-ugf::
-      SharedMemView<int*, sierra::kynema-ugf::DeviceShmem>& /*sortPermutation*/,
-    const sierra::kynema-ugf::SharedMemView<const double*, sierra::kynema-ugf::DeviceShmem>&
+    const sierra::kynema_ugf::
+      SharedMemView<int*, sierra::kynema_ugf::DeviceShmem>& /*localIds*/,
+    const sierra::kynema_ugf::
+      SharedMemView<int*, sierra::kynema_ugf::DeviceShmem>& /*sortPermutation*/,
+    const sierra::kynema_ugf::SharedMemView<const double*, sierra::kynema_ugf::DeviceShmem>&
       rhs,
-    const sierra::kynema-ugf::
-      SharedMemView<const double**, sierra::kynema-ugf::DeviceShmem>& lhs,
+    const sierra::kynema_ugf::
+      SharedMemView<const double**, sierra::kynema_ugf::DeviceShmem>& lhs,
     const char* /*trace_tag*/)
   {
     if (isEdge_) {
@@ -140,18 +140,18 @@ public:
   void free_device_pointer()
   {
     if (this != devicePointer_) {
-      sierra::kynema-ugf::kokkos_free_on_device(devicePointer_);
+      sierra::kynema_ugf::kokkos_free_on_device(devicePointer_);
       devicePointer_ = nullptr;
     }
   }
 
-  sierra::kynema-ugf::CoeffApplier* device_pointer()
+  sierra::kynema_ugf::CoeffApplier* device_pointer()
   {
     if (devicePointer_ != nullptr) {
-      sierra::kynema-ugf::kokkos_free_on_device(devicePointer_);
+      sierra::kynema_ugf::kokkos_free_on_device(devicePointer_);
       devicePointer_ = nullptr;
     }
-    devicePointer_ = sierra::kynema-ugf::create_device_expression(*this);
+    devicePointer_ = sierra::kynema_ugf::create_device_expression(*this);
     return devicePointer_;
   }
 
@@ -165,16 +165,16 @@ private:
   unsigned numDof_;
 };
 
-class TestLinearSystem : public sierra::kynema-ugf::LinearSystem
+class TestLinearSystem : public sierra::kynema_ugf::LinearSystem
 {
 public:
   TestLinearSystem(
-    sierra::kynema-ugf::Realm& realm,
+    sierra::kynema_ugf::Realm& realm,
     const unsigned numDof,
-    sierra::kynema-ugf::EquationSystem* eqSys,
+    sierra::kynema_ugf::EquationSystem* eqSys,
     stk::topology topo,
     bool isEdge = false)
-    : sierra::kynema-ugf::LinearSystem(realm, numDof, eqSys, nullptr),
+    : sierra::kynema_ugf::LinearSystem(realm, numDof, eqSys, nullptr),
       numDof_(numDof),
       isEdge_(isEdge)
   {
@@ -241,10 +241,10 @@ public:
   virtual void sumInto(
     unsigned /* numEntities */,
     const stk::mesh::Entity* /* entities */,
-    const sierra::kynema-ugf::SharedMemView<const double*>& rhs,
-    const sierra::kynema-ugf::SharedMemView<const double**>& lhs,
-    const sierra::kynema-ugf::SharedMemView<int*>& /* localIds */,
-    const sierra::kynema-ugf::SharedMemView<int*>& /* sortPermutation */,
+    const sierra::kynema_ugf::SharedMemView<const double*>& rhs,
+    const sierra::kynema_ugf::SharedMemView<const double**>& lhs,
+    const sierra::kynema_ugf::SharedMemView<int*>& /* localIds */,
+    const sierra::kynema_ugf::SharedMemView<int*>& /* sortPermutation */,
     const char* /* trace_tag */
   )
   {
@@ -254,7 +254,7 @@ public:
     Kokkos::atomic_add(&numSumIntoCalls_(0), 1u);
   }
 
-  virtual sierra::kynema-ugf::CoeffApplier* get_coeff_applier() override
+  virtual sierra::kynema_ugf::CoeffApplier* get_coeff_applier() override
   {
     auto lhs = lhs_;
     auto rhs = rhs_;
@@ -263,7 +263,7 @@ public:
     auto numDof = numDof_;
 
     auto newDeviceCoeffApplier =
-      sierra::kynema-ugf::kokkos_malloc_on_device<TestCoeffApplier>(
+      sierra::kynema_ugf::kokkos_malloc_on_device<TestCoeffApplier>(
         "deviceCoeffApplier");
 
     Kokkos::parallel_for(1, [=] KOKKOS_FUNCTION(const int&) {
@@ -279,14 +279,14 @@ public:
   virtual void sumInto(
     unsigned numEntities,
     const stk::mesh::NgpMesh::ConnectedNodes& entities,
-    const sierra::kynema-ugf::SharedMemView<const double*, sierra::kynema-ugf::DeviceShmem>&
+    const sierra::kynema_ugf::SharedMemView<const double*, sierra::kynema_ugf::DeviceShmem>&
       rhs,
-    const sierra::kynema-ugf::
-      SharedMemView<const double**, sierra::kynema-ugf::DeviceShmem>& lhs,
-    const sierra::kynema-ugf::
-      SharedMemView<int*, sierra::kynema-ugf::DeviceShmem>& /* localIds */,
-    const sierra::kynema-ugf::
-      SharedMemView<int*, sierra::kynema-ugf::DeviceShmem>& /* sortPermutation */,
+    const sierra::kynema_ugf::
+      SharedMemView<const double**, sierra::kynema_ugf::DeviceShmem>& lhs,
+    const sierra::kynema_ugf::
+      SharedMemView<int*, sierra::kynema_ugf::DeviceShmem>& /* localIds */,
+    const sierra::kynema_ugf::
+      SharedMemView<int*, sierra::kynema_ugf::DeviceShmem>& /* sortPermutation */,
     const char* /* trace_tag */
     ) override
   {
@@ -388,9 +388,9 @@ class TestEdgeLinearSystem : public TestLinearSystem
 {
 public:
   TestEdgeLinearSystem(
-    sierra::kynema-ugf::Realm& realm,
+    sierra::kynema_ugf::Realm& realm,
     const unsigned numDof,
-    sierra::kynema-ugf::EquationSystem* eqSys,
+    sierra::kynema_ugf::EquationSystem* eqSys,
     stk::topology topo)
     : TestLinearSystem(realm, numDof, eqSys, topo, true /*isEdge*/),
       numDof_(numDof)
@@ -401,14 +401,14 @@ public:
   virtual void sumInto(
     unsigned numEntities,
     const stk::mesh::NgpMesh::ConnectedNodes& entities,
-    const sierra::kynema-ugf::SharedMemView<const double*, sierra::kynema-ugf::DeviceShmem>&
+    const sierra::kynema_ugf::SharedMemView<const double*, sierra::kynema_ugf::DeviceShmem>&
       rhs,
-    const sierra::kynema-ugf::
-      SharedMemView<const double**, sierra::kynema-ugf::DeviceShmem>& lhs,
-    const sierra::kynema-ugf::
-      SharedMemView<int*, sierra::kynema-ugf::DeviceShmem>& /* localIds */,
-    const sierra::kynema-ugf::
-      SharedMemView<int*, sierra::kynema-ugf::DeviceShmem>& /* sortPermutation */,
+    const sierra::kynema_ugf::
+      SharedMemView<const double**, sierra::kynema_ugf::DeviceShmem>& lhs,
+    const sierra::kynema_ugf::
+      SharedMemView<int*, sierra::kynema_ugf::DeviceShmem>& /* localIds */,
+    const sierra::kynema_ugf::
+      SharedMemView<int*, sierra::kynema_ugf::DeviceShmem>& /* sortPermutation */,
     const char* /* trace_tag */)
   {
     edgeSumInto(numEntities, entities, rhs, lhs, numDof_, rhs_, lhs_);

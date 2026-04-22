@@ -50,7 +50,7 @@
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -382,5 +382,5 @@ ProjectedNodalGradientEquationSystem::deactivate_output()
   linsys_->provideOutput_ = false;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

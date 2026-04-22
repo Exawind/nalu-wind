@@ -16,7 +16,7 @@
 #include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 std::unique_ptr<InitialCondition>
 InitialConditionCreator::load_single(const YAML::Node& node)
@@ -72,5 +72,5 @@ InitialConditionCreator::create_ic_vector(const YAML::Node& node)
   return vec;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

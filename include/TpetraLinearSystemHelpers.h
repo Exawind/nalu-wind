@@ -26,7 +26,7 @@ class CommNeighbors;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class LocalGraphArrays;
 
@@ -136,7 +136,7 @@ sync_dual_view_host_to_device(ViewType viewToSync)
   viewToSync.template sync<typename ViewType::execution_space>();
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -16,7 +16,7 @@
 #include <stk_topology/topology.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -135,5 +135,5 @@ DgInfo::dump_info()
   KynemaUGFEnv::self().kynema-ugfOutput() << std::endl;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

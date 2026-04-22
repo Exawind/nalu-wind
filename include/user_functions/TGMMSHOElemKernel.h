@@ -22,7 +22,7 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 class ElemDataRequests;
@@ -51,7 +51,7 @@ private:
   CVFEMOperators<AlgTraits::polyOrder_> ops_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

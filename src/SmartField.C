@@ -10,7 +10,7 @@
 #include <SmartField.h>
 #include <FieldTypeDef.h>
 
-namespace sierra::kynema-ugf {
+namespace sierra::kynema_ugf {
 using namespace tags;
 
 #define EXPLICIT_TYPE_INSTANTIATOR_NGP(T)                                      \
@@ -44,4 +44,4 @@ EXPLICIT_TYPE_INSTANTIATOR_LEGACY(stk::mesh::EntityId);
 EXPLICIT_TYPE_INSTANTIATOR_LEGACY(LocalId);
 EXPLICIT_TYPE_INSTANTIATOR_LEGACY(TpetIdType);
 
-} // namespace sierra::kynema-ugf
+} // namespace sierra::kynema_ugf

@@ -15,7 +15,7 @@
 #include <sstream>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 namespace {
 
@@ -148,5 +148,5 @@ TEST(ActuatorSweptPointLocator, NGP_PointsOnACircle)
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

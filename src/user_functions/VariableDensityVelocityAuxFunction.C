@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 VariableDensityVelocityAuxFunction::VariableDensityVelocityAuxFunction(
   const unsigned beginPos, const unsigned endPos)
@@ -59,5 +59,5 @@ VariableDensityVelocityAuxFunction::do_evaluate(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

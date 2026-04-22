@@ -15,7 +15,7 @@
 #include "FieldTypeDef.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class SolutionOptions;
 
@@ -54,7 +54,7 @@ private:
   MasterElement* meFC_{nullptr};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* SCALAROPENEDGEKERNEL_H */

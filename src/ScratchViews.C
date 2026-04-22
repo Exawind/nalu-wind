@@ -15,7 +15,7 @@
 #include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 template <typename ViewType>
 KOKKOS_INLINE_FUNCTION void
@@ -459,5 +459,5 @@ template KOKKOS_FUNCTION void fill_pre_req_data(
   stk::mesh::EntityRank entityRank,
   stk::mesh::Entity entity,
   ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& prereqData);
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

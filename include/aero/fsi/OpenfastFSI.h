@@ -10,7 +10,7 @@
 
 namespace sierra {
 
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class OpenfastFSI
 {
@@ -99,7 +99,7 @@ private:
   void read_inputs(fast::fastInputs& fi, YAML::Node& ofNode);
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 
 } // namespace sierra
 

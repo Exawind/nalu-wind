@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Field.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 AssembleOversetDecoupledAlgorithm::AssembleOversetDecoupledAlgorithm(
   Realm& realm,
@@ -46,5 +46,5 @@ AssembleOversetDecoupledAlgorithm::execute()
   eqSystem_->linsys_->free_coeff_applier(coeffApplier);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

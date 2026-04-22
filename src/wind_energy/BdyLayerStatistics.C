@@ -32,7 +32,7 @@
 #include <string>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 namespace {
 
@@ -352,18 +352,18 @@ BdyLayerStatistics::interpolate_variable(
 void
 BdyLayerStatistics::impl_compute_velocity_stats()
 {
-  using MeshIndex = kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
-  const auto density = kynema-ugf_ngp::get_ngp_field(meshInfo, "density");
-  const auto velocity = kynema-ugf_ngp::get_ngp_field(meshInfo, "velocity");
+  const auto density = kynema_ugf_ngp::get_ngp_field(meshInfo, "density");
+  const auto velocity = kynema_ugf_ngp::get_ngp_field(meshInfo, "velocity");
   const auto velTimeAvg =
-    kynema-ugf_ngp::get_ngp_field(meshInfo, "velocity_resa_abl");
-  const auto resStress = kynema-ugf_ngp::get_ngp_field(meshInfo, "resolved_stress");
-  const auto sfsField = kynema-ugf_ngp::get_ngp_field(meshInfo, "sfs_stress");
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "velocity_resa_abl");
+  const auto resStress = kynema_ugf_ngp::get_ngp_field(meshInfo, "resolved_stress");
+  const auto sfsField = kynema_ugf_ngp::get_ngp_field(meshInfo, "sfs_stress");
   const auto sfsFieldInst =
-    kynema-ugf_ngp::get_ngp_field(meshInfo, "sfs_stress_inst");
-  const auto dualVol = kynema-ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "sfs_stress_inst");
+  const auto dualVol = kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
   const auto heightIndex = realm_.ngp_field_manager().get_field<int>(
     heightIndex_->mesh_meta_data_ordinal());
 
@@ -395,7 +395,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
   auto d_sfsAvg = d_sfsAvg_;
 
   const int ndim = nDim_;
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "BLStats::velocity", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const int ih = heightIndex.get(mi, 0);
@@ -535,21 +535,21 @@ BdyLayerStatistics::impl_compute_velocity_stats()
 void
 BdyLayerStatistics::impl_compute_temperature_stats()
 {
-  using MeshIndex = kynema-ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
 
-  const auto density = kynema-ugf_ngp::get_ngp_field(meshInfo, "density");
-  const auto velocity = kynema-ugf_ngp::get_ngp_field(meshInfo, "velocity");
-  const auto theta = kynema-ugf_ngp::get_ngp_field(meshInfo, "temperature");
-  const auto thetaA = kynema-ugf_ngp::get_ngp_field(meshInfo, "temperature_resa_abl");
-  const auto dualVol = kynema-ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
+  const auto density = kynema_ugf_ngp::get_ngp_field(meshInfo, "density");
+  const auto velocity = kynema_ugf_ngp::get_ngp_field(meshInfo, "velocity");
+  const auto theta = kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature");
+  const auto thetaA = kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_resa_abl");
+  const auto dualVol = kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
   const auto thetaSFS =
-    kynema-ugf_ngp::get_ngp_field(meshInfo, "temperature_sfs_flux");
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_sfs_flux");
   const auto thetaUj =
-    kynema-ugf_ngp::get_ngp_field(meshInfo, "temperature_resolved_flux");
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_resolved_flux");
   const auto thetaVar =
-    kynema-ugf_ngp::get_ngp_field(meshInfo, "temperature_variance");
+    kynema_ugf_ngp::get_ngp_field(meshInfo, "temperature_variance");
   const auto heightIndex = realm_.ngp_field_manager().get_field<int>(
     heightIndex_->mesh_meta_data_ordinal());
 
@@ -577,7 +577,7 @@ BdyLayerStatistics::impl_compute_temperature_stats()
   ArrayType d_thetaUjAvg = d_thetaUjAvg_;
 
   const int ndim = nDim_;
-  kynema-ugf_ngp::run_entity_algorithm(
+  kynema_ugf_ngp::run_entity_algorithm(
     "BLStats::temperature", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const int ih = heightIndex.get(mi, 0);
@@ -927,5 +927,5 @@ BdyLayerStatistics::write_time_hist_file()
   ierr = nc_close(ncid);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

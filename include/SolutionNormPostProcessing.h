@@ -28,7 +28,7 @@ typedef std::vector<Part*> PartVector;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class AuxFunctionAlgorithm;
 class Realm;
@@ -89,7 +89,7 @@ public:
   std::vector<AuxFunctionAlgorithm*> populateExactNodalFieldAlg_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

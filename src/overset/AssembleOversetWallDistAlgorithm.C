@@ -29,7 +29,7 @@
 #include <cmath>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 AssembleOversetWallDistAlgorithm::AssembleOversetWallDistAlgorithm(
   Realm& realm,
@@ -179,5 +179,5 @@ AssembleOversetWallDistAlgorithm::execute()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

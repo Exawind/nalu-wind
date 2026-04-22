@@ -12,7 +12,7 @@
 #include "KynemaUGFEnv.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 HypreUVWSolver::HypreUVWSolver(
   std::string name,
@@ -68,5 +68,5 @@ HypreUVWSolver::setupSolver()
   solverSetupPtr_(solver_, parMat_, parRhsU_[0], parSlnU_[0]);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

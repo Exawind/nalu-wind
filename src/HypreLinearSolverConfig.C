@@ -26,7 +26,7 @@
 #include <ostream>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 HypreLinearSolverConfig::HypreLinearSolverConfig() : LinearSolverConfig() {}
 
@@ -657,7 +657,7 @@ HypreLinearSolverConfig::configure_hypre_solver(const YAML::Node& node)
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

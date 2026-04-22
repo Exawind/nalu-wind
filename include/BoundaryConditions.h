@@ -22,7 +22,7 @@ class Node;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class BoundaryCondition
 {
@@ -44,7 +44,7 @@ public:
   std::unique_ptr<BoundaryCondition>
   load_single_bc_node(const YAML::Node& node);
 };
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

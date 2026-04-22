@@ -19,7 +19,7 @@
 #include <map>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 template <typename LambdaGeneral, typename LambdaUserSrc>
 void
@@ -55,7 +55,7 @@ process_ngp_node_kernels(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NODEKERNELUTILS_H */

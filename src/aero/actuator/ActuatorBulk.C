@@ -17,7 +17,7 @@
 #include <FieldTypeDef.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 ActuatorMeta::ActuatorMeta(int numTurbines, ActuatorType actuatorType)
   : numberOfActuators_(numTurbines),
@@ -148,5 +148,5 @@ ActuatorBulk::local_range_policy(const ActuatorMeta& actMeta)
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

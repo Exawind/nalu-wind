@@ -18,12 +18,12 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class MasterElement;
 
 using NodalGradBndryElemSimdDataType =
-  sierra::kynema-ugf::kynema-ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
 template <
   typename AlgTraits,
@@ -64,23 +64,23 @@ using ScalarNodalGradBndryElemAlg = NodalGradBndryElemAlg<
   AlgTraits,
   ScalarFieldType,
   VectorFieldType,
-  kynema-ugf_ngp::ScalarViewHelper<NodalGradBndryElemSimdDataType, ScalarFieldType>>;
+  kynema_ugf_ngp::ScalarViewHelper<NodalGradBndryElemSimdDataType, ScalarFieldType>>;
 
 template <typename AlgTraits>
 using VectorNodalGradBndryElemAlg = NodalGradBndryElemAlg<
   AlgTraits,
   VectorFieldType,
   GenericFieldType,
-  kynema-ugf_ngp::VectorViewHelper<NodalGradBndryElemSimdDataType, VectorFieldType>>;
+  kynema_ugf_ngp::VectorViewHelper<NodalGradBndryElemSimdDataType, VectorFieldType>>;
 
 template <typename AlgTraits>
 using TensorNodalGradBndryElemAlg = NodalGradBndryElemAlg<
   AlgTraits,
   VectorFieldType,
   TensorFieldType,
-  kynema-ugf_ngp::VectorViewHelper<NodalGradBndryElemSimdDataType, VectorFieldType>>;
+  kynema_ugf_ngp::VectorViewHelper<NodalGradBndryElemSimdDataType, VectorFieldType>>;
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* NODALGRADBNDRYELEMALG_H */

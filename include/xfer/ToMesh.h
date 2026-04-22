@@ -36,7 +36,7 @@ class BulkData;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class ToMesh
 {
@@ -208,7 +208,7 @@ public:
   TransferInfo TransferInfo_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -28,7 +28,7 @@
 #include <stk_io/IossBridge.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 MatrixFreeHeatCondEquationSystem::MatrixFreeHeatCondEquationSystem(
   EquationSystems& eqSystems)
@@ -370,5 +370,5 @@ MatrixFreeHeatCondEquationSystem::solve_and_update()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

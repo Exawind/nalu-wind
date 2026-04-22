@@ -13,7 +13,7 @@
 #include "Kokkos_Array.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 template <int n>
 struct LGL
@@ -48,6 +48,6 @@ struct LGL<5>
      +0.8611363115940526}};
 };
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

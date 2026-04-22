@@ -31,7 +31,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_abl_force)
   helperObjs.realm.ablForcingAlg_ =
     new unit_test_utils::TestABLForcingAlg(helperObjs.realm);
 
-  helperObjs.nodeAlg->add_kernel<sierra::kynema-ugf::MomentumABLForceNodeKernel>(
+  helperObjs.nodeAlg->add_kernel<sierra::kynema_ugf::MomentumABLForceNodeKernel>(
     *bulk_, solnOpts_);
 
   helperObjs.execute();

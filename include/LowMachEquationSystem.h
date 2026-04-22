@@ -30,7 +30,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class AlgorithmDriver;
 class Realm;
@@ -44,8 +44,8 @@ class NgpAlgDriver;
 
 /** Low-Mach formulation of the Navier-Stokes Equations
  *
- *  This class is a thin-wrapper around sierra::kynema-ugf::ContinuityEquationSystem
- *  and sierra::kynema-ugf::MomentumEquationSystem that orchestrates the interactions
+ *  This class is a thin-wrapper around sierra::kynema_ugf::ContinuityEquationSystem
+ *  and sierra::kynema_ugf::MomentumEquationSystem that orchestrates the interactions
  *  between the velocity and the pressure Possion solves in the
  *  LowMachEquationSystem::solve_and_update method.
  */
@@ -313,7 +313,7 @@ public:
   ProjectedNodalGradientEquationSystem* projectedNodalGradEqs_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

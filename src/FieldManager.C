@@ -11,7 +11,7 @@
 #include "stk_io/IossBridge.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 FieldManager::FieldManager(stk::mesh::MetaData& meta, const int numStates)
   : meta_(meta), numStates_(numStates), numDimensions_(meta.spatial_dimension())
@@ -75,5 +75,5 @@ FieldManager::register_field(
     },
     definition);
 }
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

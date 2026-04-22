@@ -14,7 +14,7 @@
 #include <KynemaUGFEnv.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 namespace {
 
@@ -308,5 +308,5 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
   return actMetaSimple;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

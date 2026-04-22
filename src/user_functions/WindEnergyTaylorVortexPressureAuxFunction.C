@@ -17,7 +17,7 @@
 #include <algorithm>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 WindEnergyTaylorVortexPressureAuxFunction::
   WindEnergyTaylorVortexPressureAuxFunction(const std::vector<double>& params)
@@ -164,5 +164,5 @@ WindEnergyTaylorVortexPressureGradAuxFunction::do_evaluate(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

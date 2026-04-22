@@ -17,7 +17,7 @@
 #include <yaml-cpp/yaml.h>
 #include "aero/actuator/ActuatorModel.h"
 
-namespace sierra::kynema-ugf {
+namespace sierra::kynema_ugf {
 class OpenfastFSI;
 class KynemaSixDof;
 
@@ -73,5 +73,5 @@ private:
   std::shared_ptr<stk::mesh::BulkData> bulk_;
 };
 
-} // namespace sierra::kynema-ugf
+} // namespace sierra::kynema_ugf
 #endif

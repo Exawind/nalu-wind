@@ -18,7 +18,7 @@ class TiogaSTKIface;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 
@@ -69,7 +69,7 @@ private:
   TimeIntegrator& time_;
 
 #ifdef KYNEMA_UGF_USES_TIOGA
-  std::vector<tioga_kynema-ugf::TiogaSTKIface*> tgIfaceVec_;
+  std::vector<tioga_kynema_ugf::TiogaSTKIface*> tgIfaceVec_;
 #endif
 
   std::vector<std::string> slnFieldNames_;
@@ -87,7 +87,7 @@ private:
   bool hasOverset_{false};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* EXTOVERSET_H */

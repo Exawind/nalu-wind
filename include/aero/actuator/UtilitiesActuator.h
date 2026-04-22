@@ -28,7 +28,7 @@
 #endif
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 struct Coordinates;
 using Point = stk::search::Point<double>;
@@ -147,7 +147,7 @@ void compute_distance(
   const double* pointCentroid,
   double* distance);
 } // namespace actuator_utils
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

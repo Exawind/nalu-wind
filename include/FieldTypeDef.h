@@ -24,7 +24,7 @@
 #endif
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 using ScalarFieldType = stk::mesh::Field<double>;
 using GlobalIdFieldType = stk::mesh::Field<stk::mesh::EntityId>;
@@ -59,7 +59,7 @@ using TpetIDFieldType = stk::mesh::Field<TpetIdType>;
 using HypreIDFieldType = stk::mesh::Field<HypreIntType>;
 using NGPHypreIDFieldType = stk::mesh::NgpField<HypreIntType>;
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

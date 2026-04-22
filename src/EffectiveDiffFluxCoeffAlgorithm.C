@@ -21,7 +21,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -100,5 +100,5 @@ EffectiveDiffFluxCoeffAlgorithm::execute()
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

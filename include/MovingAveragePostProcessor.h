@@ -22,7 +22,7 @@ class BulkData;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class TimeIntegrator;
 
@@ -76,7 +76,7 @@ private:
   std::map<std::string, ExponentialMovingAverager> averagers_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

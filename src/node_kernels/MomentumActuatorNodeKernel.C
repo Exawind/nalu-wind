@@ -17,7 +17,7 @@
 #include "SolutionOptions.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 MomentumActuatorNodeKernel::MomentumActuatorNodeKernel(
   const stk::mesh::MetaData& meta)
@@ -56,5 +56,5 @@ MomentumActuatorNodeKernel::execute(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

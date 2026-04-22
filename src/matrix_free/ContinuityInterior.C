@@ -23,7 +23,7 @@
 #include "stk_simd/Simd.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 namespace impl {
 
@@ -128,5 +128,5 @@ INSTANTIATE_POLYSTRUCT(continuity_linearized_residual_t);
 
 } // namespace impl
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

@@ -18,7 +18,7 @@
 #include "matrix_free/ElementSCSInterpolate.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 namespace matrix_free {
 
 template <
@@ -351,6 +351,6 @@ scalar_flux_vector(
 }
 
 } // namespace matrix_free
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 #endif

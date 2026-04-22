@@ -15,7 +15,7 @@
 #include <KynemaUGFParsing.h>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 // helper function for reducing code duplication in the construction process
 template <typename T>
@@ -119,5 +119,5 @@ BoundaryConditionCreator::create_bc_vector(const YAML::Node& node)
   return bc_vector;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

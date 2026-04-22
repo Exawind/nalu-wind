@@ -45,7 +45,7 @@ check_elem_to_side_coords(stk::topology topo)
   auto elem = unit_test_utils::create_one_reference_element(*bulk, topo);
   const stk::mesh::Entity* elem_node_rels = bulk->begin_nodes(elem);
   auto* meSCS =
-    sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(topo);
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(topo);
 
   using VectorFieldType = stk::mesh::Field<double>;
   const VectorFieldType& coordField =
@@ -67,7 +67,7 @@ check_elem_to_side_coords(stk::topology topo)
     const auto& b = *ib;
 
     auto* meSide =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
         b.topology());
 
     for (size_t k = 0; k < b.size(); ++k) {

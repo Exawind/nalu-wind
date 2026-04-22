@@ -17,7 +17,7 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 class EquationSystems;
@@ -96,7 +96,7 @@ private:
   bool forceInitOnRestart_{false};
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* WALLDISTEQUATIONSYSTEM_H */

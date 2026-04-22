@@ -16,7 +16,7 @@
 #include "FieldDefinitions.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 /* A class that contains definitions for all the available fields that can be
  * registered in kynema-ugf
@@ -99,7 +99,7 @@ private:
   const std::map<std::string, FieldDefTypes>& database_3D_3_state_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* FIELDREGISTRY_H_ */

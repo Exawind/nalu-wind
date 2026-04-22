@@ -12,7 +12,7 @@
 #include <functional>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 // Registry object is where all the fully quantified field definitions live
 // This is the starting point for adding a new field
@@ -108,5 +108,5 @@ FieldRegistry::FieldRegistry()
 {
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

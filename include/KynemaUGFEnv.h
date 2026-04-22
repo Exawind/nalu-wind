@@ -15,7 +15,7 @@
 #include <streambuf>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class KynemaUGFEmptyStreamBuffer : public std::filebuf
 {
@@ -69,7 +69,7 @@ public:
   double kynema-ugf_time();
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

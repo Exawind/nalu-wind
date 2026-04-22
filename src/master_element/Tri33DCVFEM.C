@@ -24,7 +24,7 @@
 #include <memory>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
@@ -391,5 +391,5 @@ Tri3DSCS::general_normal(
   normal[1] /= mag;
   normal[2] /= mag;
 }
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

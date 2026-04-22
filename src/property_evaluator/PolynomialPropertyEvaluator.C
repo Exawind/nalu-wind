@@ -14,7 +14,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 //==========================================================================
 // Class Definition
@@ -85,5 +85,5 @@ PolynomialPropertyEvaluator::~PolynomialPropertyEvaluator()
   // nothing
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

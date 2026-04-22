@@ -5,7 +5,7 @@
 #include "KynemaUGFEnv.h"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 namespace {
 // This anonymous namespace contains wrapper methods to HYPRE solver creation
@@ -385,7 +385,7 @@ HypreDirectSolver::createPrecond()
   isPrecondSetup_ = true;
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class BoussinesqNonIsoVelocityAuxFunction : public AuxFunction
 {
@@ -37,7 +37,7 @@ public:
     const unsigned endPos) const;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

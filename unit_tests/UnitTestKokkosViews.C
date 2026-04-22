@@ -33,8 +33,8 @@ find_max_nodes_and_ips(
   for (const stk::mesh::Bucket* bptr : buckets) {
     stk::topology topo = bptr->topology();
     maxNodesPerElement = std::max(maxNodesPerElement, (int)topo.num_nodes());
-    sierra::kynema-ugf::MasterElement* meSCS =
-      sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(topo);
+    sierra::kynema_ugf::MasterElement* meSCS =
+      sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(topo);
     maxScsIp = std::max(maxScsIp, meSCS->num_integration_points());
     numEntities += bptr->size();
   }
@@ -49,9 +49,9 @@ class TestElemAlgorithmWithVectors
 public:
   TestElemAlgorithmWithVectors(
     stk::mesh::BulkData& bulk,
-    const sierra::kynema-ugf::VectorFieldType* coord,
-    sierra::kynema-ugf::ScalarFieldType* discreteLaplacian,
-    sierra::kynema-ugf::ScalarFieldType* nodalPressure)
+    const sierra::kynema_ugf::VectorFieldType* coord,
+    sierra::kynema_ugf::ScalarFieldType* discreteLaplacian,
+    sierra::kynema_ugf::ScalarFieldType* nodalPressure)
     : bulkData_(bulk),
       discreteLaplacianOfPressure(discreteLaplacian),
       nodalPressureField(nodalPressure),
@@ -89,13 +89,13 @@ public:
 
     bucket_loop_serial_only(
       elemBuckets,
-      [&](stk::topology topo, sierra::kynema-ugf::MasterElement& meSCS) {
+      [&](stk::topology topo, sierra::kynema_ugf::MasterElement& meSCS) {
         const int nodesPerElem = topo.num_nodes();
         resizer(nodesPerElem, meSCS.num_integration_points());
       },
       [&](
         stk::mesh::Entity elem, stk::topology topo,
-        sierra::kynema-ugf::MasterElement& meSCS) {
+        sierra::kynema_ugf::MasterElement& meSCS) {
         const stk::mesh::Entity* elemNodes = bulkData_.begin_nodes(elem);
 
         double* p_elemNodeCoords = elemNodeCoords.data();
@@ -108,13 +108,13 @@ public:
 
         const int numScsIp = meSCS.num_integration_points();
         const int nodesPerElem = topo.num_nodes();
-        sierra::kynema-ugf::SharedMemView<double**> NodeCoords(
+        sierra::kynema_ugf::SharedMemView<double**> NodeCoords(
           p_elemNodeCoords, nodesPerElem, nDim);
-        sierra::kynema-ugf::SharedMemView<double**> areav(
+        sierra::kynema_ugf::SharedMemView<double**> areav(
           p_scs_areav, numScsIp, nDim);
-        sierra::kynema-ugf::SharedMemView<double***> dNdX(
+        sierra::kynema_ugf::SharedMemView<double***> dNdX(
           p_dndx, numScsIp, nodesPerElem, nDim);
-        sierra::kynema-ugf::SharedMemView<double***> der(
+        sierra::kynema_ugf::SharedMemView<double***> der(
           p_deriv, numScsIp, nodesPerElem, nDim);
         for (int n = 0; n < nodesPerElem; ++n) {
           const double* nodeCoords =
@@ -155,9 +155,9 @@ public:
 
 private:
   stk::mesh::BulkData& bulkData_;
-  sierra::kynema-ugf::ScalarFieldType* discreteLaplacianOfPressure;
-  sierra::kynema-ugf::ScalarFieldType* nodalPressureField;
-  const sierra::kynema-ugf::VectorFieldType* coordField;
+  sierra::kynema_ugf::ScalarFieldType* discreteLaplacianOfPressure;
+  sierra::kynema_ugf::ScalarFieldType* nodalPressureField;
+  const sierra::kynema_ugf::VectorFieldType* coordField;
 };
 
 //======= templated element kernel function ==================
@@ -167,10 +167,10 @@ void
 element_discrete_laplacian_kernel_3d(
   stk::mesh::BulkData& bulkData,
   stk::mesh::Entity elem,
-  sierra::kynema-ugf::MasterElement& meSCS,
-  sierra::kynema-ugf::ScalarFieldType* discreteLaplacianOfPressure,
-  sierra::kynema-ugf::ScalarFieldType* nodalPressureField,
-  const sierra::kynema-ugf::VectorFieldType* coordField)
+  sierra::kynema_ugf::MasterElement& meSCS,
+  sierra::kynema_ugf::ScalarFieldType* discreteLaplacianOfPressure,
+  sierra::kynema_ugf::ScalarFieldType* nodalPressureField,
+  const sierra::kynema_ugf::VectorFieldType* coordField)
 {
   const int nDim = 3;
   const stk::mesh::Entity* elemNodes = bulkData.begin_nodes(elem);
@@ -183,7 +183,7 @@ element_discrete_laplacian_kernel_3d(
   double p_deriv[nDim * numScsIp * nodesPerElem];
   const int* lrscv = meSCS.adjacentNodes();
 
-  sierra::kynema-ugf::SharedMemView<double**> elemNodeCoords(
+  sierra::kynema_ugf::SharedMemView<double**> elemNodeCoords(
     &p_elemNodeCoords[0], nodesPerElem, nDim);
   for (int n = 0; n < nodesPerElem; ++n) {
     const double* nodeCoords = stk::mesh::field_data(*coordField, elemNodes[n]);
@@ -194,11 +194,11 @@ element_discrete_laplacian_kernel_3d(
       stk::mesh::field_data(*nodalPressureField, elemNodes[n]);
     p_elemNodePressures[n] = nodePressure[0];
   }
-  sierra::kynema-ugf::SharedMemView<double**> scs_areav(
+  sierra::kynema_ugf::SharedMemView<double**> scs_areav(
     &p_scs_areav[0], numScsIp, nDim);
-  sierra::kynema-ugf::SharedMemView<double***> dNdX(
+  sierra::kynema_ugf::SharedMemView<double***> dNdX(
     &p_dndx[0], numScsIp, nodesPerElem, nDim);
-  sierra::kynema-ugf::SharedMemView<double***> der(
+  sierra::kynema_ugf::SharedMemView<double***> der(
     &p_deriv[0], numScsIp, nodesPerElem, nDim);
 
   meSCS.determinant(elemNodeCoords, scs_areav);
@@ -233,9 +233,9 @@ class TestElemAlgorithmWithTemplate
 public:
   TestElemAlgorithmWithTemplate(
     stk::mesh::BulkData& bulk,
-    const sierra::kynema-ugf::VectorFieldType* coord,
-    sierra::kynema-ugf::ScalarFieldType* discreteLaplacian,
-    sierra::kynema-ugf::ScalarFieldType* nodalPressure)
+    const sierra::kynema_ugf::VectorFieldType* coord,
+    sierra::kynema_ugf::ScalarFieldType* discreteLaplacian,
+    sierra::kynema_ugf::ScalarFieldType* nodalPressure)
     : bulkData_(bulk),
       discreteLaplacianOfPressure(discreteLaplacian),
       nodalPressureField(nodalPressure),
@@ -253,7 +253,7 @@ public:
     kokkos_thread_team_bucket_loop_with_topo(
       elemBuckets, [&](
                      stk::mesh::Entity elem, stk::topology topo,
-                     sierra::kynema-ugf::MasterElement& meSCS) {
+                     sierra::kynema_ugf::MasterElement& meSCS) {
         // this is an incomplete switch, doesn't handle all possible
         // topologies... just an illustration for this test.
         switch (topo) {
@@ -291,9 +291,9 @@ public:
 
 private:
   stk::mesh::BulkData& bulkData_;
-  sierra::kynema-ugf::ScalarFieldType* discreteLaplacianOfPressure;
-  sierra::kynema-ugf::ScalarFieldType* nodalPressureField;
-  const sierra::kynema-ugf::VectorFieldType* coordField;
+  sierra::kynema_ugf::ScalarFieldType* discreteLaplacianOfPressure;
+  sierra::kynema_ugf::ScalarFieldType* nodalPressureField;
+  const sierra::kynema_ugf::VectorFieldType* coordField;
 };
 
 //=========== Test class that mimics an element algorithm ==============
@@ -304,9 +304,9 @@ class TestElemAlgorithmWithViews
 public:
   TestElemAlgorithmWithViews(
     stk::mesh::BulkData& bulk,
-    const sierra::kynema-ugf::VectorFieldType* coord,
-    sierra::kynema-ugf::ScalarFieldType* discreteLaplacian,
-    sierra::kynema-ugf::ScalarFieldType* nodalPressure)
+    const sierra::kynema_ugf::VectorFieldType* coord,
+    sierra::kynema_ugf::ScalarFieldType* discreteLaplacian,
+    sierra::kynema_ugf::ScalarFieldType* nodalPressure)
     : bulkData_(bulk),
       discreteLaplacianOfPressure(discreteLaplacian),
       nodalPressureField(nodalPressure),
@@ -328,41 +328,41 @@ public:
 
     const int bytes_per_team = 0;
     const int bytes_per_thread =
-      sierra::kynema-ugf::SharedMemView<double**>::shmem_size(
+      sierra::kynema_ugf::SharedMemView<double**>::shmem_size(
         maxNodesPerElement, nDim) +
-      sierra::kynema-ugf::SharedMemView<double*>::shmem_size(maxNodesPerElement) +
-      sierra::kynema-ugf::SharedMemView<double**>::shmem_size(maxNumScsIp, nDim) +
-      sierra::kynema-ugf::SharedMemView<double**>::shmem_size(
+      sierra::kynema_ugf::SharedMemView<double*>::shmem_size(maxNodesPerElement) +
+      sierra::kynema_ugf::SharedMemView<double**>::shmem_size(maxNumScsIp, nDim) +
+      sierra::kynema_ugf::SharedMemView<double**>::shmem_size(
         maxNumScsIp, maxNodesPerElement * nDim) +
-      sierra::kynema-ugf::SharedMemView<double**>::shmem_size(
+      sierra::kynema_ugf::SharedMemView<double**>::shmem_size(
         maxNumScsIp, maxNodesPerElement * nDim) +
-      sierra::kynema-ugf::SharedMemView<double*>::shmem_size(maxNumScsIp);
+      sierra::kynema_ugf::SharedMemView<double*>::shmem_size(maxNumScsIp);
 
-    auto team_exec = sierra::kynema-ugf::get_host_team_policy(
+    auto team_exec = sierra::kynema_ugf::get_host_team_policy(
       elemBuckets.size(), bytes_per_team, bytes_per_thread);
     Kokkos::parallel_for(
-      team_exec, [&](const sierra::kynema-ugf::TeamHandleType& team) {
+      team_exec, [&](const sierra::kynema_ugf::TeamHandleType& team) {
         const stk::mesh::Bucket& bkt = *elemBuckets[team.league_rank()];
         stk::topology topo = bkt.topology();
-        sierra::kynema-ugf::MasterElement& meSCS =
-          *sierra::kynema-ugf::MasterElementRepo::get_surface_master_element_on_host(
+        sierra::kynema_ugf::MasterElement& meSCS =
+          *sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
             topo);
 
         const int nodesPerElem = topo.num_nodes();
         const int numScsIp = meSCS.num_integration_points();
 
-        sierra::kynema-ugf::SharedMemView<double**> elemNodeCoords =
-          sierra::kynema-ugf::get_shmem_view_2D<double>(team, nodesPerElem, nDim);
-        sierra::kynema-ugf::SharedMemView<double*> elemNodePressures =
-          sierra::kynema-ugf::get_shmem_view_1D<double>(team, nodesPerElem);
+        sierra::kynema_ugf::SharedMemView<double**> elemNodeCoords =
+          sierra::kynema_ugf::get_shmem_view_2D<double>(team, nodesPerElem, nDim);
+        sierra::kynema_ugf::SharedMemView<double*> elemNodePressures =
+          sierra::kynema_ugf::get_shmem_view_1D<double>(team, nodesPerElem);
 
-        sierra::kynema-ugf::SharedMemView<double**> scs_areav =
-          sierra::kynema-ugf::get_shmem_view_2D<double>(team, numScsIp, nDim);
-        sierra::kynema-ugf::SharedMemView<double***> dndx =
-          sierra::kynema-ugf::get_shmem_view_3D<double>(
+        sierra::kynema_ugf::SharedMemView<double**> scs_areav =
+          sierra::kynema_ugf::get_shmem_view_2D<double>(team, numScsIp, nDim);
+        sierra::kynema_ugf::SharedMemView<double***> dndx =
+          sierra::kynema_ugf::get_shmem_view_3D<double>(
             team, numScsIp, nodesPerElem, nDim);
-        sierra::kynema-ugf::SharedMemView<double***> deriv =
-          sierra::kynema-ugf::get_shmem_view_3D<double>(
+        sierra::kynema_ugf::SharedMemView<double***> deriv =
+          sierra::kynema_ugf::get_shmem_view_3D<double>(
             team, numScsIp, nodesPerElem, nDim);
 
         Kokkos::parallel_for(
@@ -412,9 +412,9 @@ public:
 
 private:
   stk::mesh::BulkData& bulkData_;
-  sierra::kynema-ugf::ScalarFieldType* discreteLaplacianOfPressure;
-  sierra::kynema-ugf::ScalarFieldType* nodalPressureField;
-  const sierra::kynema-ugf::VectorFieldType* coordField;
+  sierra::kynema_ugf::ScalarFieldType* discreteLaplacianOfPressure;
+  sierra::kynema_ugf::ScalarFieldType* nodalPressureField;
+  const sierra::kynema_ugf::VectorFieldType* coordField;
 };
 
 //========= below are the test 'main's... ===============

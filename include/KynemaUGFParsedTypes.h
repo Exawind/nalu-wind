@@ -18,7 +18,7 @@ class Node;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 // our data types
 struct Velocity
@@ -130,7 +130,7 @@ struct NonConformalBoundaryConditionData;
 class PostProcessingData;
 struct UserFunctionInitialConditionData;
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif /* KYNEMA_UGFPARSEDTYPES_H */

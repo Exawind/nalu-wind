@@ -51,38 +51,38 @@ const YAML::Node rot_scl = mesh_transformation_gold[0]["motion"];
 const YAML::Node rotNode = rot_scl[0];
 const YAML::Node scaleNode = rot_scl[1];
 
-sierra::kynema-ugf::mm::TransMatType
-eval_transformation(sierra::kynema-ugf::Realm& realm, double time, const double* xyz)
+sierra::kynema_ugf::mm::TransMatType
+eval_transformation(sierra::kynema_ugf::Realm& realm, double time, const double* xyz)
 {
   // transform data structures to confirm to mesh motion
-  sierra::kynema-ugf::mm::ThreeDVecType vecX;
-  for (int d = 0; d < sierra::kynema-ugf::kynema-ugf_ngp::NDimMax; d++)
+  sierra::kynema_ugf::mm::ThreeDVecType vecX;
+  for (int d = 0; d < sierra::kynema_ugf::kynema_ugf_ngp::NDimMax; d++)
     vecX[d] = xyz[d];
 
   // perform 1st rotation transformation
-  sierra::kynema-ugf::MotionRotationKernel rotClass(rotNode);
-  sierra::kynema-ugf::mm::TransMatType compTrans =
+  sierra::kynema_ugf::MotionRotationKernel rotClass(rotNode);
+  sierra::kynema_ugf::mm::TransMatType compTrans =
     rotClass.build_transformation(time, vecX);
 
   // perform 2nd srotation transformation
-  sierra::kynema-ugf::MotionScalingKernel scaleClass(realm.meta_data(), scaleNode);
-  sierra::kynema-ugf::mm::TransMatType tempMat =
+  sierra::kynema_ugf::MotionScalingKernel scaleClass(realm.meta_data(), scaleNode);
+  sierra::kynema_ugf::mm::TransMatType tempMat =
     scaleClass.build_transformation(time, vecX);
   return scaleClass.add_motion(tempMat, compTrans);
 }
 
 std::vector<double>
-eval_coords(const sierra::kynema-ugf::mm::TransMatType& transMat, const double* xyz)
+eval_coords(const sierra::kynema_ugf::mm::TransMatType& transMat, const double* xyz)
 {
   std::vector<double> transCoord(3, 0.0);
 
   // perform matrix multiplication between transformation matrix
   // and original coordinates to obtain transformed coordinates
-  for (int d = 0; d < sierra::kynema-ugf::kynema-ugf_ngp::NDimMax; d++) {
-    transCoord[d] = transMat[d * sierra::kynema-ugf::mm::matSize + 0] * xyz[0] +
-                    transMat[d * sierra::kynema-ugf::mm::matSize + 1] * xyz[1] +
-                    transMat[d * sierra::kynema-ugf::mm::matSize + 2] * xyz[2] +
-                    transMat[d * sierra::kynema-ugf::mm::matSize + 3];
+  for (int d = 0; d < sierra::kynema_ugf::kynema_ugf_ngp::NDimMax; d++) {
+    transCoord[d] = transMat[d * sierra::kynema_ugf::mm::matSize + 0] * xyz[0] +
+                    transMat[d * sierra::kynema_ugf::mm::matSize + 1] * xyz[1] +
+                    transMat[d * sierra::kynema_ugf::mm::matSize + 2] * xyz[2] +
+                    transMat[d * sierra::kynema_ugf::mm::matSize + 3];
   }
 
   return transCoord;
@@ -93,10 +93,10 @@ TEST(meshMotion, NGP_compute_centroid)
 {
   // create realm
   unit_test_utils::KynemaUGFTest kynema-ugfObj;
-  sierra::kynema-ugf::Realm& realm = kynema-ugfObj.create_realm();
+  sierra::kynema_ugf::Realm& realm = kynema-ugfObj.create_realm();
   realm.solutionOptions_->meshTransformation_ = true;
 
-  sierra::kynema-ugf::TimeIntegrator timeIntegrator;
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
   timeIntegrator.secondOrderTimeAccurate_ = false;
   realm.timeIntegrator_ = &timeIntegrator;
 
@@ -108,7 +108,7 @@ TEST(meshMotion, NGP_compute_centroid)
   // NOTE: This is done to allow computation of gold values later on
   // because mesh_transformation changes the field - coordinates
   int nDim = realm.meta_data().spatial_dimension();
-  sierra::kynema-ugf::VectorFieldType* modelCoordsGold =
+  sierra::kynema_ugf::VectorFieldType* modelCoordsGold =
     &(realm.meta_data().declare_field<double>(
       stk::topology::NODE_RANK, "coordinates_gold"));
   stk::mesh::put_field_on_mesh(
@@ -129,7 +129,7 @@ TEST(meshMotion, NGP_compute_centroid)
     realm.bulk_data().get_buckets(stk::topology::NODE_RANK, sel);
 
   // get model coordinate fields
-  sierra::kynema-ugf::VectorFieldType* modelCoords =
+  sierra::kynema_ugf::VectorFieldType* modelCoords =
     realm.meta_data().get_field<double>(
       stk::topology::NODE_RANK, "coordinates");
 
@@ -146,7 +146,7 @@ TEST(meshMotion, NGP_compute_centroid)
   } // end for loop - bkts
 
   // create mesh transformation algorithm class
-  sierra::kynema-ugf::MeshTransformationAlg meshTransformationAlg(
+  sierra::kynema_ugf::MeshTransformationAlg meshTransformationAlg(
     realm.bulk_data(), mesh_transformation);
   const double time = 0.0;
   meshTransformationAlg.initialize(time);
@@ -161,7 +161,7 @@ TEST(meshMotion, NGP_compute_centroid)
       double* gxyz = stk::mesh::field_data(*modelCoordsGold, node);
       double* mxyz = stk::mesh::field_data(*modelCoords, node);
 
-      sierra::kynema-ugf::mm::TransMatType transMat =
+      sierra::kynema_ugf::mm::TransMatType transMat =
         eval_transformation(realm, time, gxyz);
 
       std::vector<double> gold_norm_xyz = eval_coords(transMat, gxyz);

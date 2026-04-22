@@ -22,7 +22,7 @@ struct topology;
 }
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class Realm;
 class AssembleNodalGradAlgorithmDriver;
@@ -107,7 +107,7 @@ public:
   VectorFieldType* qTmp_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

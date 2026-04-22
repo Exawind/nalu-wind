@@ -24,7 +24,7 @@ struct Entity;
 } // namespace stk
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 class ReferencePropertyData;
 
@@ -50,7 +50,7 @@ public:
   std::vector<std::vector<double>> highPolynomialCoeffs_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

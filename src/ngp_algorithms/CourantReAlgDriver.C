@@ -15,7 +15,7 @@
 #include "stk_util/parallel/ParallelReduce.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 CourantReAlgDriver::CourantReAlgDriver(Realm& realm) : NgpAlgDriver(realm) {}
 
@@ -45,5 +45,5 @@ CourantReAlgDriver::post_work()
   realm_.maxReynolds_ = global[1];
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

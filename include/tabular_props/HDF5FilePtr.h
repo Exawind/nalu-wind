@@ -6,7 +6,7 @@
 #include <string>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 // Forward declarations
 class H5IO;
@@ -72,7 +72,7 @@ private:
   H5IO* fileIO_;
 };
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
 
 #endif

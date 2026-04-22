@@ -14,7 +14,7 @@
 #include "stk_util/parallel/ParallelReduce.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 WallFricVelAlgDriver::WallFricVelAlgDriver(Realm& realm) : NgpAlgDriver(realm)
 {
@@ -50,5 +50,5 @@ WallFricVelAlgDriver::post_work()
   realm_.bdyLayerStats_->set_utau_avg(utau_average);
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

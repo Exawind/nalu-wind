@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 ZalesakDiskVOFAuxFunction::ZalesakDiskVOFAuxFunction() : AuxFunction(0, 1)
 {
@@ -51,5 +51,5 @@ ZalesakDiskVOFAuxFunction::do_evaluate(
   }
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra

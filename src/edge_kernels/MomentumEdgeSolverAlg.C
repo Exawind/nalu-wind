@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
-namespace kynema-ugf {
+namespace kynema_ugf {
 
 MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
@@ -312,5 +312,5 @@ MomentumEdgeSolverAlg::execute()
     });
 }
 
-} // namespace kynema-ugf
+} // namespace kynema_ugf
 } // namespace sierra
