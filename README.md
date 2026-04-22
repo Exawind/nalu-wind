@@ -31,7 +31,7 @@ The following contains details for Kynema-UGF (formerly Nalu-Wind):
 
 ## Documentation
 
-Documentation is available online at https://exawind.github.io/kynema-ugf/ and is
+Documentation is available online at https://kynema.github.io/kynema-ugf/ and is
 split into the following sections:
 
 - [Theory manual](https://kynema.github.io/kynema-ugf/source/theory/index.html):
