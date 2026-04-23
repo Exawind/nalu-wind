@@ -1,6 +1,6 @@
 
 Invoking Kynema-UGF - Command-line options
------------------------------------------
+------------------------------------------
 
 Kynema-UGF's runtime behavior can be controlled by using several command line input
 options during invocation. Users can invoke ``-h`` to determine the

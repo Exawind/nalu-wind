@@ -16,7 +16,7 @@ additional files:
 .. toctree::
    :maxdepth: 4
 
-   kynema_ugf_run/kynema_ugf_mesh
-   kynema_ugf_run/kynema_ugfx
-   kynema_ugf_run/kynema_ugf_inp
-   kynema_ugf_run/McAlisterLessonsLearned
+   kynema-ugf-run/kynema-ugf-mesh
+   kynema-ugf-run/kynema-ugfx
+   kynema-ugf-run/kynema-ugf-inp
+   kynema-ugf-run/McAlisterLessonsLearned

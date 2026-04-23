@@ -1,7 +1,7 @@
 .. _user_kynema-ugf_input_file:
 
 Kynema-UGF Input File
---------------------
+---------------------
 
 Kynema-UGF requires the user to provide an input file, in YAML format, during
 invocation at the command line using the :option:`kynema-ugf -i` flag. By default,
