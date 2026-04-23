@@ -1,4 +1,4 @@
-target_sources(kynema-ugf PRIVATE
+target_sources(${kynema_ugf_lib_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleOversetDecoupledAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleOversetPressureAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleOversetSolverConstraintAlgorithm.C
@@ -12,7 +12,7 @@ target_sources(kynema-ugf PRIVATE
 )
 
 if(ENABLE_TIOGA)
-   target_sources(kynema-ugf PRIVATE
+   target_sources(${kynema_ugf_lib_name} PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/OversetManagerTIOGA.C
       ${CMAKE_CURRENT_SOURCE_DIR}/TiogaOptions.C
       ${CMAKE_CURRENT_SOURCE_DIR}/TiogaBlock.C

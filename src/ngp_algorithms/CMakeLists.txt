@@ -1,4 +1,4 @@
-target_sources(kynema-ugf PRIVATE
+target_sources(${kynema_ugf_lib_name} PRIVATE
   # Algorithms
   ${CMAKE_CURRENT_SOURCE_DIR}/BuoyancySourceAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/CourantReAlg.C

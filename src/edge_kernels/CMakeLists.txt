@@ -1,4 +1,4 @@
-target_sources(kynema-ugf PRIVATE
+target_sources(${kynema_ugf_lib_name} PRIVATE
   # Edge kernels
   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleEdgeKernelAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleAMSEdgeKernelAlg.C

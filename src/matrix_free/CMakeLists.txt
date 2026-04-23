@@ -1,4 +1,4 @@
-target_sources(kynema-ugf PRIVATE
+target_sources(${kynema_ugf_lib_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/Coefficients.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ConductionDiagonal.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ConductionFields.C

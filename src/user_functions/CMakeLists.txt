@@ -1,4 +1,4 @@
-target_sources(kynema-ugf PRIVATE
+target_sources(${kynema_ugf_lib_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/BoundaryLayerPerturbationAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/BoussinesqNonIsoEnthalpySrcNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/BoussinesqNonIsoMomentumSrcNodeSuppAlg.C
