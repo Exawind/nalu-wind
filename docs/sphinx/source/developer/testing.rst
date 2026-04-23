@@ -1,5 +1,5 @@
 Testing Kynema-UGF
-=================
+==================
 
 Kynema-UGF's regression tests and unit tests are run nightly using the GCC and Intel 
 compilers against the Trilinos master and development branches on a machine 
@@ -85,7 +85,7 @@ TPL versions are officially tested:
 
 
 Adding Tests to Kynema-UGF
--------------------------
+--------------------------
 
 .. _add-test:
 

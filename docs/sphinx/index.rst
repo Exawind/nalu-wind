@@ -1,5 +1,5 @@
 Kynema-UGF Documentation
-=======================
+========================
 .. toctree::
    :maxdepth: 2
 

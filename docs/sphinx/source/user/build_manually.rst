@@ -1,5 +1,5 @@
 Building Kynema-UGF Manually
-===========================
+============================
 
 Although we recommend installing Kynema-UGF with Spack, if you prefer not to build using Spack, below are instructions which describe the process of building Kynema-UGF by hand. These instructions are an approximation, due to the many differences that can exist across machines.
 
@@ -333,7 +333,7 @@ you do not require in-situ visualization with Kynema-UGF. The first thing you
 will need to do is build Paraview yourself using their SuperBuild instructions.
 
 Build Kynema-UGF ParaView Catalyst Adapter
-*****************************************
+******************************************
 
 Next you will need to build the Catalyst adapter for Trilinos to hook into Paraview.
 The adapter is located in the Trilinos repo at ``Trilinos/packages/seacas/libraries/ioss/src/visualization/ParaViewCatalystIossAdapter``. To install:
@@ -346,7 +346,7 @@ The adapter is located in the Trilinos repo at ``Trilinos/packages/seacas/librar
     make install
 
 Kynema-UGF
-~~~~~~~~~
+~~~~~~~~~~
 
 Kynema-UGF is provided `here <https://github.com/exawind/kynema-ugf>`__. The master branch of Kynema-UGF typically matches with the master branch or develop branch of Trilinos. If it is necessary to build an older version of Kynema-UGF, refer to the history of the KynemaUGF git repo for instructions on doing so.
 

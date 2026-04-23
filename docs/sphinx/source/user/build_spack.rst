@@ -1,5 +1,5 @@
 Building Kynema-UGF Semi-Automatically Using Spack
-=================================================
+==================================================
 
 Mac OS X or Linux
 -----------------
@@ -181,7 +181,7 @@ will need to ``spack load openmpi %compiler`` and ``spack load kynema-ugf %compi
 ``%gcc`` or ``%intel`` to specify which to load.
 
 Development Build of Kynema-UGF
-------------------------------
+-------------------------------
 
 When building Kynema-UGF with Spack, Spack will cache downloaded archive files such as
 ``*.tar.gz`` files. However, by default Spack will also erase extracted or

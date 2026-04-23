@@ -1,5 +1,5 @@
 Verifying that the installation of Kynema-UGF works
-==================================================
+===================================================
 
 To verify that the build was successful and that your installation of Kynema-UGF works you can run the unit tests and one of the regression test cases.
 

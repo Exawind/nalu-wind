@@ -463,7 +463,7 @@ class allows Kynema-UGF to interface as an inflow
 module to OpenFAST by supplying the velocity field information.
 
 Kynema-UGF -- OpenFAST Coupling Algorithm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A nacelle model is implemented using a Gaussian drag body force. The model
 implements a drag force in a direction opposite to velocity field at the center
@@ -523,7 +523,7 @@ currently working on improving the FSI coupling scheme to be second order
 accurate in time.
 
 Kynema-UGF -- Actuator Disk Model via OpenFAST
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An actuator disk model is implemented in Kynema-UGF by using an OpenFAST actuator line to 
 sample the flow and compute the forcing.  The actuator line is held stationary which leads

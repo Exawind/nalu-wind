@@ -1,5 +1,5 @@
 KynemaUGF Style Guide
-================
+=====================
 
 1. No tabs. Remove them from your editor. Better yet, use eclipse and follow the xml style. Use the format `here <https://github.com/exawind/kynema-ugf/blob/master/SQA/kynema-ugfEclipseFormat.xml>`__.
 

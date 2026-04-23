@@ -1,7 +1,7 @@
 .. _building_kynema-ugf:
 
 Building Kynema-UGF
-==================
+===================
 .. toctree::
    :maxdepth: 2
 
