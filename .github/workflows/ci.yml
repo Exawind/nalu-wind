@@ -2,9 +2,9 @@ name: Kynema-UGF-CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   Formatting:
@@ -40,9 +40,9 @@ jobs:
             spack env activate e4s-build && \
             cd ${EXAWIND_MANAGER}/environments/e4s-build && \
             ln -s ${GITHUB_WORKSPACE} kynema-ugf && \
-            spack develop --no-modify-concrete-specs --no-clone kynema-ugf@=master && \
+            spack develop --no-modify-concrete-specs --no-clone kynema-ugf@=main && \
             spack rm exawind && \
-            spack add kynema-ugf@master+hypre+openfast+tioga+trilinos-solvers && \
+            spack add kynema-ugf@main+hypre+openfast+tioga+trilinos-solvers && \
             spack concretize -f && \
             spack install --reuse && \
             spack cd -b kynema-ugf && \
@@ -72,9 +72,9 @@ jobs:
             spack env activate e4s-build && \
             cd ${EXAWIND_MANAGER}/environments/e4s-build && \
             ln -s ${GITHUB_WORKSPACE} kynema-ugf && \
-            spack develop --no-modify-concrete-specs --no-clone kynema-ugf@=master && \
+            spack develop --no-modify-concrete-specs --no-clone kynema-ugf@=main && \
             spack rm exawind && \
-            spack add kynema-ugf@master+hypre+openfast+tioga~trilinos-solvers && \
+            spack add kynema-ugf@main+hypre+openfast+tioga~trilinos-solvers && \
             spack concretize -f && \
             spack install && \
             spack cd -b kynema-ugf && \

@@ -2,9 +2,9 @@ name: Kynema-UGF-Docs
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 concurrency:
   group: ${{github.ref}}-${{github.head_ref}}-docs
