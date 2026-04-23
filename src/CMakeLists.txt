@@ -1,5 +1,5 @@
 target_sources(
-  kynema-ugf
+  ${kynema_ugf_lib_name}
   PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ABLProfileFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.C
@@ -102,12 +102,12 @@ target_sources(
 
 if(ENABLE_FFTW)
   target_sources(
-    kynema-ugf PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumEdgeABLTopBC.C)
+    ${kynema_ugf_lib_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumEdgeABLTopBC.C)
 endif(ENABLE_FFTW)
 
 if(ENABLE_HYPRE)
   target_sources(
-    kynema-ugf
+    ${kynema_ugf_lib_name}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/HypreDirectSolver.C
             ${CMAKE_CURRENT_SOURCE_DIR}/HypreUVWSolver.C
             ${CMAKE_CURRENT_SOURCE_DIR}/HypreLinearSolverConfig.C
@@ -117,13 +117,13 @@ endif(ENABLE_HYPRE)
 
 if(ENABLE_MATRIXFREE)
   target_sources(
-    kynema-ugf PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/MatrixFreeHeatCondEquationSystem.C
+    ${kynema_ugf_lib_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/MatrixFreeHeatCondEquationSystem.C
                  ${CMAKE_CURRENT_SOURCE_DIR}/MatrixFreeLowMachEquationSystem.C)
   add_subdirectory(matrix_free)
 endif(ENABLE_MATRIXFREE)
 
 if(ENABLE_TRILINOS_SOLVERS)
-   target_sources(kynema-ugf PRIVATE
+   target_sources(${kynema_ugf_lib_name} PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystem.C
       ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystemHelpers.C
       ${CMAKE_CURRENT_SOURCE_DIR}/TpetraSegregatedLinearSystem.C

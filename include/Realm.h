@@ -395,7 +395,7 @@ public:
   size_t restartFileIndex_;
 
   // kynema-ugf field data
-  GlobalIdFieldType* kynemaUgfGlobalId_;
+  GlobalIdFieldType* kynema_ugfGlobalId_;
 
   // algorithm drivers managed by region
   std::unique_ptr<GeometryAlgDriver> geometryAlgDriver_;
@@ -645,7 +645,7 @@ public:
 
   /** Global Row IDs for the HYPRE linear system
    *
-   *  The HYPRE IDs are different from STK IDs and Realm::kynemaUgfGlobalId_
+   *  The HYPRE IDs are different from STK IDs and Realm::kynema_ugfGlobalId_
    * because HYPRE expects contiguous IDs for matrix rows and further requires
    * that the IDs be ordered across MPI ranks; i.e., startIdx (MPI_rank + 1) =
    *  endIdx(MPI_rank) + 1.
