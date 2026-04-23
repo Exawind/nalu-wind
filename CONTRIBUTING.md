@@ -40,7 +40,7 @@ Contributions can take the form of bug fixes, feature enhancements,
 documentation updates. All updates to the repository are managed via [pull
 requests](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests).
 One of the easiest ways to get started is by looking at [open
-issues](https://github.com/Exawind/kynema-ugf/issues) and contributing fixes,
+issues](https://github.com/Kynema/kynema-ugf/issues) and contributing fixes,
 enhancements that address those issues. If your code contribution involves large
 changes or additions to the codebase, we recommend opening an issue first and
 discussing your proposed changes with the core development team to ensure that

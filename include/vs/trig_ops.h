@@ -7,7 +7,7 @@
 // for more details.
 //
 // Original implementation of this code by Shreyas Ananthan for AMR-Wind
-// - (https://github.com/Exawind/amr-wind)
+// - (https://github.com/Kynema/amr-wind)
 //
 // Adapted to use Kokkos
 

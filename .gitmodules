@@ -1,7 +1,7 @@
 [submodule "reg_tests/mesh"]
 	path = reg_tests/mesh
-	url = https://github.com/Exawind/meshes.git
+	url = https://github.com/Kynema/meshes.git
         ignore = dirty
 [submodule "wind-utils"]
 	path = wind-utils
-	url = https://github.com/Exawind/wind-utils.git
+	url = https://github.com/Kynema/wind-utils.git

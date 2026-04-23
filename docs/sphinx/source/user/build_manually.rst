@@ -354,7 +354,7 @@ Prepare:
 
 ::
 
-    git clone https://github.com/Exawind/kynema-ugf.git
+    git clone https://github.com/Kynema/kynema-ugf.git
 
 
 Build

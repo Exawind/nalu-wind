@@ -3,7 +3,7 @@ Testing Kynema-UGF
 
 Kynema-UGF's regression tests and unit tests are run nightly using the GCC and Intel 
 compilers against the Trilinos master and development branches on a machine 
-at NREL. The results can be seen at the `CDash Kynema-UGF website <http://my.cdash.org/index.php?project=Exawind>`__.
+at NREL. The results can be seen at the `CDash Kynema-UGF website <http://my.cdash.org/index.php?project=Kynema>`__.
 
 
 Running Tests Locally
@@ -122,7 +122,7 @@ Adding Testing Machines to CDash
 
 To add a testing machine that will post results to CDash first means that you should have all software 
 dependencies satisified for Kynema-UGF. Next the script located at  
-`CTestNightlyScript.cmake <https://github.com/Exawind/kynema-ugf/blob/master/reg_tests/CTestNightlyScript.cmake>`__ 
+`CTestNightlyScript.cmake <https://github.com/Kynema/kynema-ugf/blob/master/reg_tests/CTestNightlyScript.cmake>`__ 
 can be run for example as:
 
 ::
@@ -140,4 +140,4 @@ This runs CTest in scripting mode with verbosity on and it will update the Kynem
 revisions, configure, build, test, and finally submit results to the CDash site. Since CTest does 
 the building, it needs to know the locations of Yaml and Trilinos. For examples of nightly testing, 
 refer to the testing scripts currently being run 
-`here <https://github.com/Exawind/build-test/tree/master/test-scripts>`__.
+`here <https://github.com/Kynema/build-test/tree/master/test-scripts>`__.

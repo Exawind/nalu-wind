@@ -22,7 +22,7 @@ There are currently two different systems the continuously check the code of thi
 GitHub Actions
 ^^^^^^^^^^^^^^
 
-The `github actions workflow <https://github.com/Exawind/kynema-ugf/blob/master/.github/workflows/ci.yml>`_
+The `github actions workflow <https://github.com/Kynema/kynema-ugf/blob/master/.github/workflows/ci.yml>`_
 runs on every pull request towards master as well as all commits on master.
 
 It does the following things:
@@ -38,5 +38,5 @@ Daily Regression Tests
 ^^^^^^^^^^^^^^^^^^^^^^
 
 Additionally, the project is tested more extensively on some machines at NREL.
-The results are collected at `CDash <https://my.cdash.org/index.php?project=Exawind>`_.
+The results are collected at `CDash <https://my.cdash.org/index.php?project=Kynema>`_.
 For more info see :ref:`ref-testing-cdash`.

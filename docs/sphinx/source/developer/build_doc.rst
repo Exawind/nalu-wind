@@ -34,7 +34,7 @@ using your package manager, e.g. ``sudo apt-get install cmake``.
 Build the Docs
 --------------
 
-In the `Kynema-UGF repository <https://github.com/Exawind/kynema-ugf>`__ checkout, execute:
+In the `Kynema-UGF repository <https://github.com/Kynema/kynema-ugf>`__ checkout, execute:
 
 ::
 
