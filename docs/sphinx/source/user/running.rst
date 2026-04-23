@@ -17,6 +17,6 @@ additional files:
    :maxdepth: 4
 
    kynema-ugf-run/kynema-ugf-mesh
-   kynema-ugf-run/kynema-ugfx
+   kynema-ugf-run/kynema-ugf
    kynema-ugf-run/kynema-ugf-inp
    kynema-ugf-run/McAlisterLessonsLearned
