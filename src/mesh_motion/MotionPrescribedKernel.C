@@ -237,7 +237,7 @@ MotionPrescribedKernel::build_transformation(
   double q2 = factor * pitchY;
   double q3 = factor * yawZ;
 
-  const double n = std::sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+  const double n = Kokkos::sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
   q0 /= n;
   q1 /= n;
   q2 /= n;
