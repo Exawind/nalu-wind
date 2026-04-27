@@ -12,8 +12,8 @@
 #ifdef KYNEMA_UGF_USES_OPENFAST
 #include "aero/fsi/OpenfastFSI.h"
 #endif
-#ifdef KYNEMA_UGF_USES_KYNEMA
-#include "aero/six_dof/KynemaSixDof.h"
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
+#include "aero/six_dof/KynemaFMBSixDof.h"
 #endif
 #include <FieldTypeDef.h>
 #include <stk_io/IossBridge.hpp>
@@ -49,12 +49,12 @@ AeroContainer::AeroContainer(const YAML::Node& node) : fsiContainer_(nullptr)
         "look_ahead_and_create::error: Too many actuator line blocks");
     actuatorModel_.parse(*foundActuator[0]);
   }
-  if (node["kynema_six_dof"]) {
-#ifdef KYNEMA_UGF_USES_KYNEMA
-    sixDof_ = std::make_shared<KynemaSixDof>(node["kynema_six_dof"]);
+  if (node["fmb_six_dof"]) {
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
+    sixDof_ = std::make_shared<KynemaFMBSixDof>(node["fmb_six_dof"]);
 #else
     throw std::runtime_error(
-      "6DOF coupling can not be used without coupling to Kynema");
+      "6DOF coupling can not be used without coupling to Kynema-FMB");
 #endif
   }
   // std::vector<const YAML::Node*> foundFsi;
@@ -100,7 +100,7 @@ AeroContainer::setup(double timeStep, std::shared_ptr<stk::mesh::BulkData> bulk)
   if (has_actuators()) {
     actuatorModel_.setup(timeStep, *bulk_);
   }
-#ifdef KYNEMA_UGF_USES_KYNEMA
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   if (has_six_dof()) {
     sixDof_->setup(timeStep, bulk_);
   }
@@ -118,7 +118,7 @@ AeroContainer::init(double currentTime, double restartFrequency)
   if (has_actuators()) {
     actuatorModel_.init(*bulk_);
   }
-#ifdef KYNEMA_UGF_USES_KYNEMA
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   if (has_six_dof()) {
     sixDof_->initialize(restartFrequency, currentTime);
   }
@@ -144,7 +144,7 @@ void
 AeroContainer::update_displacements(
   const double currentTime, bool updateCC, bool predict)
 {
-#ifdef KYNEMA_UGF_USES_KYNEMA
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   if (has_six_dof()) {
     KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Calling update displacements inside AeroContainer" << std::endl;
@@ -173,7 +173,7 @@ AeroContainer::update_displacements(
 void
 AeroContainer::predict_model_time_step(const double currentTime)
 {
-#ifdef KYNEMA_UGF_USES_KYNEMA
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   if (has_six_dof()) {
     sixDof_->map_loads();
   }
@@ -191,12 +191,12 @@ void
 AeroContainer::advance_model_time_step(
   const double currentTime,
   const double
-#ifdef KYNEMA_UGF_USES_KYNEMA
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
     dT
 #endif
 )
 {
-#ifdef KYNEMA_UGF_USES_KYNEMA
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   if (has_six_dof()) {
     sixDof_->advance_struct_timestep(currentTime, dT);
     return;
@@ -241,7 +241,7 @@ AeroContainer::fsi_parts()
 const stk::mesh::PartVector
 AeroContainer::six_dof_parts()
 {
-#ifdef KYNEMA_UGF_USES_KYNEMA
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   if (has_six_dof()) {
     return sixDof_->get_mesh_blocks();
   }

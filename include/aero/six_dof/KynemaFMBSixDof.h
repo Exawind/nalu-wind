@@ -1,5 +1,5 @@
-#ifndef KYNEMASIXDOF_H
-#define KYNEMASIXDOF_H
+#ifndef KYNEMAFMBSIXDOF_H
+#define KYNEMAFMBSIXDOF_H
 
 #include <array>
 #include <memory>
@@ -56,11 +56,11 @@ struct PointMass
   double rho_inf{0.0};
 };
 
-class KynemaSixDof
+class KynemaFMBSixDof
 {
 public:
-  KynemaSixDof(const YAML::Node&);
-  virtual ~KynemaSixDof() = default;
+  KynemaFMBSixDof(const YAML::Node&);
+  virtual ~KynemaFMBSixDof() = default;
 
   void setup(double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk);
 
@@ -84,8 +84,8 @@ public:
   }
 
 private:
-  KynemaSixDof() = delete;
-  KynemaSixDof(const KynemaSixDof&) = delete;
+  KynemaFMBSixDof() = delete;
+  KynemaFMBSixDof(const KynemaFMBSixDof&) = delete;
 
   void map_displacements_point(PointMass& point, bool updateCur);
 

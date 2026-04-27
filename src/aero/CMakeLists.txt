@@ -9,6 +9,6 @@ if(ENABLE_OPENFAST)
 add_subdirectory(fsi)
 endif()
 
-if(ENABLE_KYNEMA_SIXDOF)
+if(ENABLE_KYNEMA_FMB_SIXDOF)
 add_subdirectory(six_dof)
 endif()

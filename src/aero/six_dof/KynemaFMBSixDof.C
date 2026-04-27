@@ -8,7 +8,7 @@
 //
 
 #include "KynemaUGFEnv.h"
-#include "aero/six_dof/KynemaSixDof.h"
+#include "aero/six_dof/KynemaFMBSixDof.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementRepo.h"
 #include <fstream>
@@ -27,13 +27,13 @@ namespace sierra {
 
 namespace kynema_ugf {
 
-KynemaSixDof::KynemaSixDof(const YAML::Node& node) : enable_calc_loads_(true)
+KynemaFMBSixDof::KynemaFMBSixDof(const YAML::Node& node) : enable_calc_loads_(true)
 {
   load(node);
 }
 
 void
-KynemaSixDof::load_point(const YAML::Node& node)
+KynemaFMBSixDof::load_point(const YAML::Node& node)
 {
 
   PointMass new_body;
@@ -169,7 +169,7 @@ KynemaSixDof::load_point(const YAML::Node& node)
 }
 
 void
-KynemaSixDof::load(const YAML::Node& node)
+KynemaFMBSixDof::load(const YAML::Node& node)
 {
   const int ndim = 3;
   get_required(node, "number_of_bodies", number_of_bodies_);
@@ -203,7 +203,7 @@ KynemaSixDof::load(const YAML::Node& node)
 }
 
 void
-KynemaSixDof::setup_point(
+KynemaFMBSixDof::setup_point(
   PointMass& point,
   const double dtKynemaUGF,
   std::shared_ptr<stk::mesh::BulkData> bulk)
@@ -293,7 +293,7 @@ KynemaSixDof::setup_point(
   point.calc_loads->setup(bulk);
 }
 void
-KynemaSixDof::setup(
+KynemaFMBSixDof::setup(
   double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk)
 {
   bulk_ = bulk;
@@ -304,7 +304,7 @@ KynemaSixDof::setup(
 }
 
 void
-KynemaSixDof::initialize(int restartFreqKynemaUGF, double curTime)
+KynemaFMBSixDof::initialize(int restartFreqKynemaUGF, double curTime)
 {
 
   restart_frequency_ = restartFreqKynemaUGF;
@@ -370,7 +370,7 @@ KynemaSixDof::initialize(int restartFreqKynemaUGF, double curTime)
 }
 
 void
-KynemaSixDof::advance_struct_timestep(const double currentTime, const double dT)
+KynemaFMBSixDof::advance_struct_timestep(const double currentTime, const double dT)
 {
   for (int ipoint = 0; ipoint < point_bodies_.size(); ++ipoint) {
     auto&& point = point_bodies_[ipoint];
@@ -417,7 +417,7 @@ KynemaSixDof::advance_struct_timestep(const double currentTime, const double dT)
 }
 
 void
-KynemaSixDof::map_displacements_point(PointMass& point, bool updateCur)
+KynemaFMBSixDof::map_displacements_point(PointMass& point, bool updateCur)
 {
   auto& meta = point.bulk->mesh_meta_data();
   const VectorFieldType* modelCoords =
@@ -523,7 +523,7 @@ KynemaSixDof::map_displacements_point(PointMass& point, bool updateCur)
 }
 
 void
-KynemaSixDof::map_displacements(double current_time, bool updateCurCoor)
+KynemaFMBSixDof::map_displacements(double current_time, bool updateCurCoor)
 {
   for (auto& point : point_bodies_) {
     map_displacements_point(point, updateCurCoor);
@@ -531,7 +531,7 @@ KynemaSixDof::map_displacements(double current_time, bool updateCurCoor)
 }
 
 void
-KynemaSixDof::map_loads_point(PointMass& point)
+KynemaFMBSixDof::map_loads_point(PointMass& point)
 {
   point.calc_loads->initialize();
   point.calc_loads->execute();
@@ -569,7 +569,7 @@ KynemaSixDof::map_loads_point(PointMass& point)
 }
 
 void
-KynemaSixDof::map_loads()
+KynemaFMBSixDof::map_loads()
 {
   for (auto& point : point_bodies_) {
     map_loads_point(point);

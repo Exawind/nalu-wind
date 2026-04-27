@@ -19,7 +19,7 @@
 
 namespace sierra::kynema_ugf {
 class OpenfastFSI;
-class KynemaSixDof;
+class KynemaFMBSixDof;
 
 /**
  * A container class for holding all the aerodynamic models (actuators,
@@ -69,7 +69,7 @@ private:
   ActuatorModel actuatorModel_;
   // TODO make this a unique_ptr
   OpenfastFSI* fsiContainer_;
-  std::shared_ptr<KynemaSixDof> sixDof_;
+  std::shared_ptr<KynemaFMBSixDof> sixDof_;
   std::shared_ptr<stk::mesh::BulkData> bulk_;
 };
 

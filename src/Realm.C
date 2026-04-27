@@ -619,7 +619,7 @@ Realm::look_ahead_and_creation(const YAML::Node& node)
   // Contains actuators and FSI data structures
   aeroModels_ = std::make_unique<AeroContainer>(node);
   if (aeroModels_->has_six_dof())
-    solutionOptions_->kynemaSixDof_ = true;
+    solutionOptions_->kynemaFMBSixDof_ = true;
   if (aeroModels_->has_fsi())
     solutionOptions_->openfastFSI_ = true;
 
