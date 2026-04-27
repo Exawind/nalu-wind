@@ -226,17 +226,16 @@ MotionPrescribedKernel::build_transformation(
   const double pitchY = current_displacement[4];
   const double yawZ = current_displacement[5];
 
-  const double cy = std::cos(0.5 * yawZ);
-  const double sy = std::sin(0.5 * yawZ);
-  const double cp = std::cos(0.5 * pitchY);
-  const double sp = std::sin(0.5 * pitchY);
-  const double cr = std::cos(0.5 * rollX);
-  const double sr = std::sin(0.5 * rollX);
+  const double angle =
+    Kokkos::sqrt((rollX * rollX) + (pitchY * pitchY) + (yawZ * yawZ));
+  const double cos_angle = Kokkos::cos(angle / 2.);
+  const double factor =
+    (Kokkos::abs(angle) < 1.e-12) ? 0.0 : Kokkos::sin(angle / 2.) / angle;
 
-  double q0 = cr * cp * cy + sr * sp * sy;
-  double q3 = sr * cp * cy - cr * sp * sy;
-  double q1 = cr * sp * cy + sr * cp * sy;
-  double q2 = cr * cp * sy - sr * sp * cy;
+  double q0 = cos_angle;
+  double q1 = factor * rollX;
+  double q2 = factor * pitchY;
+  double q3 = factor * yawZ;
 
   const double n = std::sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
   q0 /= n;
