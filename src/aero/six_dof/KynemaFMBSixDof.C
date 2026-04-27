@@ -371,7 +371,8 @@ KynemaFMBSixDof::initialize(int restartFreqKynemaUGF, double curTime)
 }
 
 void
-KynemaFMBSixDof::advance_struct_timestep(const double currentTime, const double dT)
+KynemaFMBSixDof::advance_struct_timestep(
+  const double currentTime, const double dT)
 {
   for (int ipoint = 0; ipoint < point_bodies_.size(); ++ipoint) {
     auto&& point = point_bodies_[ipoint];
