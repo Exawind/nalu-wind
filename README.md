@@ -90,7 +90,7 @@ when submitting pull-requests.
 
 To pass the formatting check, use this with a new version of `clang-format`:
 ```
-find kynema-ugf.C unit_tests.C ./include ./src ./unit_tests \( -name "*.cpp" -o -name "*.H" -o -name "*.h" -o -name "*.C" \) -exec clang-format -i {} +
+find kynema_ugf.C unit_tests.C ./include ./src ./unit_tests \( -name "*.cpp" -o -name "*.H" -o -name "*.h" -o -name "*.C" \) -exec clang-format -i {} +
 ```
   
 ## License

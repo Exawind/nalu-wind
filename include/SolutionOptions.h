@@ -56,7 +56,10 @@ public:
   void load(const YAML::Node& node);
   void initialize_turbulence_constants();
 
-  inline bool has_mesh_motion() const { return meshMotion_ || kynemaFMBSixDof_; }
+  inline bool has_mesh_motion() const
+  {
+    return meshMotion_ || kynemaFMBSixDof_;
+  }
 
   inline bool has_mesh_deformation() const
   {
