@@ -49,9 +49,9 @@ AeroContainer::AeroContainer(const YAML::Node& node) : fsiContainer_(nullptr)
         "look_ahead_and_create::error: Too many actuator line blocks");
     actuatorModel_.parse(*foundActuator[0]);
   }
-  if (node["fmb_six_dof"]) {
+  if (node["kynema_fmb_six_dof"]) {
 #ifdef KYNEMA_UGF_USES_KYNEMA_FMB
-    sixDof_ = std::make_shared<KynemaFMBSixDof>(node["fmb_six_dof"]);
+    sixDof_ = std::make_shared<KynemaFMBSixDof>(node["kynema_fmb_six_dof"]);
 #else
     throw std::runtime_error(
       "6DOF coupling can not be used without coupling to Kynema-FMB");
