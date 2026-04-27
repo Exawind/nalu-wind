@@ -222,20 +222,21 @@ MotionPrescribedKernel::build_transformation(
   transMat[1 * mm::matSize + 3] = -origin_[1];
   transMat[2 * mm::matSize + 3] = -origin_[2];
 
-  const double rollX = current_displacement[3];
-  const double pitchY = current_displacement[4];
-  const double yawZ = current_displacement[5];
+  const double vector_angle_0 = current_displacement[3];
+  const double vector_angle_1 = current_displacement[4];
+  const double vector_angle_2 = current_displacement[5];
 
-  const double angle =
-    Kokkos::sqrt((rollX * rollX) + (pitchY * pitchY) + (yawZ * yawZ));
+  const double angle = Kokkos::sqrt(
+    (vector_angle_0 * vector_angle_0) + (vector_angle_1 * vector_angle_1) +
+    (vector_angle_2 * vector_angle_2));
   const double cos_angle = Kokkos::cos(angle / 2.);
   const double factor =
     (Kokkos::abs(angle) < 1.e-12) ? 0.0 : Kokkos::sin(angle / 2.) / angle;
 
   double q0 = cos_angle;
-  double q1 = factor * rollX;
-  double q2 = factor * pitchY;
-  double q3 = factor * yawZ;
+  double q1 = factor * vector_angle_0;
+  double q2 = factor * vector_angle_1;
+  double q3 = factor * vector_angle_2;
 
   const double n = Kokkos::sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
   q0 /= n;
