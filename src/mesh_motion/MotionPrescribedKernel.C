@@ -230,8 +230,9 @@ MotionPrescribedKernel::build_transformation(
     (vector_angle_0 * vector_angle_0) + (vector_angle_1 * vector_angle_1) +
     (vector_angle_2 * vector_angle_2));
   const double cos_angle = Kokkos::cos(angle / 2.);
-  const double factor =
-    (Kokkos::abs(angle) < 1.e-12) ? 0.0 : Kokkos::sin(angle / 2.) / angle;
+  const double factor = (Kokkos::abs(angle) < 1.e-12)
+                          ? (0.5 - (angle * angle) / 48.0)
+                          : Kokkos::sin(angle / 2.) / angle;
 
   double q0 = cos_angle;
   double q1 = factor * vector_angle_0;
