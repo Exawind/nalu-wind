@@ -30,7 +30,7 @@ struct Tether
 struct PointMass
 {
   bool use_restart_data = false;
-  std::shared_ptr<kynema::interfaces::cfd::Interface> kynema_interface =
+  std::shared_ptr<kynema_fmb::interfaces::cfd::Interface> kynema_interface =
     nullptr;
   std::array<double, 9> moments_of_inertia = {0.0, 0.0, 0.0, 0.0, 0.0,
                                               0.0, 0.0, 0.0, 0.0};
@@ -122,7 +122,7 @@ private:
   int restart_frequency_{0};
 
   std::vector<PointMass> point_bodies_;
-  std::vector<kynema::interfaces::cfd::Interface> point_body_interfaces_;
+  std::vector<kynema_fmb::interfaces::cfd::Interface> point_body_interfaces_;
 };
 
 } // namespace kynema_ugf

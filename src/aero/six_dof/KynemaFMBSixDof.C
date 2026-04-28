@@ -228,7 +228,7 @@ KynemaFMBSixDof::setup_point(
   const int number_of_nonlinear_iterations =
     point.number_of_nonlinear_iterations;
 
-  kynema::interfaces::cfd::InterfaceInput point_to_build;
+  kynema_fmb::interfaces::cfd::InterfaceInput point_to_build;
   point_to_build.gravity = gravity_;
   point_to_build.time_step = dtKynemaUGF;
   point_to_build.max_iter = number_of_nonlinear_iterations;
@@ -265,7 +265,7 @@ KynemaFMBSixDof::setup_point(
 
   point.bulk = bulk;
   point.kynema_interface =
-    std::make_shared<kynema::interfaces::cfd::Interface>(point_to_build);
+    std::make_shared<kynema_fmb::interfaces::cfd::Interface>(point_to_build);
 
   auto& meta = bulk->mesh_meta_data();
 
