@@ -37,12 +37,12 @@ First download the submodule `reg_tests/mesh`:
 Running
 ~~~~~~~
 
-Change to the directory `reg_tests/test_files/ablNeutralEdge` and run `kynema-ugf` on the input there:
+Change to the directory `reg_tests/test_files/ablNeutralEdge` and run `kynema_ugf` on the input there:
 
 ::
 
     cd reg_tests/test_files/ablNeutralEdge
-    kynema-ugf -i ablNeutralEdge.yaml
+    kynema_ugf -i ablNeutralEdge.yaml
 
 Expected result
 ~~~~~~~~~~~~~~~

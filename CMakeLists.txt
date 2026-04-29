@@ -42,15 +42,15 @@ if(ENABLE_MATRIXFREE AND NOT ENABLE_TRILINOS_SOLVERS)
 endif()
 
 # Create targets
-set(kynema_ugf_ex_name "kynema-ugf")
+set(kynema_ugf_ex_name "kynema_ugf")
 add_executable(${kynema_ugf_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/kynema_ugf.C)
 
 if(ENABLE_UNIT_TESTS)
-  set(utest_ex_name "kynema-ugf-unit-tests")
+  set(utest_ex_name "kynema_ugf_unit_tests")
   add_executable(${utest_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.C)
 endif()
 
-set(kynema_ugf_lib_name "kynema-ugf-lib")
+set(kynema_ugf_lib_name "kynema_ugf_lib")
 add_library(${kynema_ugf_lib_name} "")
 
 if(ENABLE_CUDA)
@@ -275,7 +275,7 @@ target_include_directories(${kynema_ugf_lib_name} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 
-# Most linking, etc, is set to PUBLIC for libkynema-ugf, so we merely link to libkynema-ugf for the exes
+# Most linking, etc, is set to PUBLIC for libkynema_ugf, so we merely link to libkynema_ugf for the exes
 target_link_libraries(${kynema_ugf_ex_name} PRIVATE ${kynema_ugf_lib_name})
 if(ENABLE_UNIT_TESTS)
   target_link_libraries(${utest_ex_name} PRIVATE ${kynema_ugf_lib_name})

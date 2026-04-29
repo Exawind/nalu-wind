@@ -316,7 +316,7 @@ HYPRE library and link to it when building Kynema-UGF.
 .. note::
 
    #. Make sure that ``--enable-bigint`` option is turned on if you intend to
-      run linear systems with :math:`> 2` billion rows. Otherwise, ``kynema-ugf``
+      run linear systems with :math:`> 2` billion rows. Otherwise, ``kynema_ugf``
       executable will throw an error at runtime for large problems.
 
    #. Users must pass ``-DENABLE_HYPRE`` option to CMake during Kynema-UGF
@@ -364,5 +364,5 @@ Create a ``kynema-ugf/build`` directory and execute something similar to followi
 
 .. literalinclude:: do-config-kynema-ugf.sh
 
-This process will create ``kynema-ugf`` within the ``kynema-ugf/build`` location.
+This process will create ``kynema_ugf`` within the ``kynema-ugf/build`` location.
 

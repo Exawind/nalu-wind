@@ -4,12 +4,12 @@ Kynema-UGF Input File
 ---------------------
 
 Kynema-UGF requires the user to provide an input file, in YAML format, during
-invocation at the command line using the :option:`kynema-ugf -i` flag. By default,
-:program:`kynema-ugf` will look for :file:`kynema-ugf.i` in the current working directory
+invocation at the command line using the :option:`kynema_ugf -i` flag. By default,
+:program:`kynema_ugf` will look for :file:`kynema_ugf.i` in the current working directory
 to determine the mesh file as well as the run setup for execution. A sample
-:download:`kynema-ugf.i` is shown below:
+:download:`kynema_ugf.i` is shown below:
 
-.. literalinclude:: kynema-ugf.i
+.. literalinclude:: kynema_ugf.i
    :language: yaml
    :caption: Sample Kynema-UGF input file for the Heat Conduction problem
    :emphasize-lines: 6, 11, 21, 91
