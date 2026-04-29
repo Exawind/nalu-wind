@@ -20,9 +20,9 @@ jobs:
     needs: Formatting
     runs-on: ubuntu-latest
     container:
-      image: ecpe4s/exawind-snapshot
+      image: ecpe4s/kynema-snapshot
       env:
-          EXAWIND_MANAGER: /exawind-manager
+          KYNEMA_MANAGER: /kynema-manager
           E4S_MACHINE: true
     steps:
       - name: Cancel previous runs
@@ -36,12 +36,12 @@ jobs:
       - name: Tests
         run: |
           /bin/bash -c " \
-            source ${EXAWIND_MANAGER}/start.sh && spack-start && \
+            source ${KYNEMA_MANAGER}/start.sh && spack-start && \
             spack env activate e4s-build && \
-            cd ${EXAWIND_MANAGER}/environments/e4s-build && \
+            cd ${KYNEMA_MANAGER}/environments/e4s-build && \
             ln -s ${GITHUB_WORKSPACE} kynema-ugf && \
             spack develop --no-modify-concrete-specs --no-clone kynema-ugf@=main && \
-            spack rm exawind && \
+            spack rm kynema && \
             spack add kynema-ugf@main+hypre+openfast+tioga+trilinos-solvers && \
             spack concretize -f && \
             spack install --reuse && \
@@ -52,9 +52,9 @@ jobs:
     needs: Formatting
     runs-on: ubuntu-latest
     container:
-      image: ecpe4s/exawind-snapshot
+      image: ecpe4s/kynema-snapshot
       env:
-          EXAWIND_MANAGER: /exawind-manager
+          KYNEMA_MANAGER: /kynema-manager
           E4S_MACHINE: true
     steps:
       - name: Cancel previous runs
@@ -68,12 +68,12 @@ jobs:
       - name: Tests
         run: |
           /bin/bash -c " \
-            source ${EXAWIND_MANAGER}/start.sh && spack-start && \
+            source ${KYNEMA_MANAGER}/start.sh && spack-start && \
             spack env activate e4s-build && \
-            cd ${EXAWIND_MANAGER}/environments/e4s-build && \
+            cd ${KYNEMA_MANAGER}/environments/e4s-build && \
             ln -s ${GITHUB_WORKSPACE} kynema-ugf && \
             spack develop --no-modify-concrete-specs --no-clone kynema-ugf@=main && \
-            spack rm exawind && \
+            spack rm kynema && \
             spack add kynema-ugf@main+hypre+openfast+tioga~trilinos-solvers && \
             spack concretize -f && \
             spack install && \
