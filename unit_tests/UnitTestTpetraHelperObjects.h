@@ -32,8 +32,7 @@ struct TpetraHelperObjectsBase
       realmDefaultNode(unit_test_utils::get_realm_default_node()),
       kynema_ugfObj(new unit_test_utils::KynemaUGFTest(yamlNode)),
       realm(
-        kynema -
-        ugfObj->create_realm(realmDefaultNode, "multi_physics", false)),
+        kynema_ugfObj->create_realm(realmDefaultNode, "multi_physics", false)),
       eqSystems(realm),
       eqSystem(eqSystems),
       linsys(new sierra::kynema_ugf::TpetraLinearSystem(
