@@ -8,6 +8,7 @@
 //
 
 #include "FieldTypeDef.h"
+#include "node_kernels/ScalarContResidNodeKernel.h"
 #include <TurbKineticEnergyEquationSystem.h>
 #include <AlgorithmDriver.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
@@ -294,12 +295,18 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
     std::vector<std::string> checkAlgNames = {
       "turbulent_ke_time_derivative", "lumped_turbulent_ke_time_derivative"};
     bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
+    auto use_cont_res = realm_.include_continuity_residual();
+
     auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
     process_ngp_node_kernels(
       solverAlgMap, realm_, part, this,
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), tke_);
+
+        if (use_cont_res) {
+          nodeAlg.add_kernel<ScalarContResNodeKernel>(realm_.bulk_data(), tke_);
+        }
 
         switch (turbulenceModel_) {
         case TurbulenceModel::KSGS:

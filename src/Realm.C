@@ -4491,6 +4491,12 @@ Realm::is_turbulent()
   return solutionOptions_->isTurbulent_;
 }
 
+bool
+Realm::include_continuity_residual() const
+{
+  return solutionOptions_->includeContinuityResidual_;
+}
+
 //--------------------------------------------------------------------------
 //-------- is_turbulent ----------------------------------------------------
 //--------------------------------------------------------------------------

@@ -186,6 +186,7 @@ if(NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
     add_test_r(vortexOpen 4)
     add_test_r(VOFDroplet 4)
     add_test_r(VOFInertialDroplet 4)
+    add_test_r(hybridMeshDeformation 4)
 
     if (ENABLE_FFTW)
       add_test_r(ablHill3d_pp 4)

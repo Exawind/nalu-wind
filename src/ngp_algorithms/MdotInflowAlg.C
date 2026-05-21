@@ -15,6 +15,7 @@
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpReduceUtils.h"
 #include "ngp_utils/NgpFieldManager.h"
+#include "ngp_utils/NgpFieldOps.h"
 #include "Realm.h"
 #include "ScratchViews.h"
 #include "SolutionOptions.h"
@@ -38,6 +39,10 @@ MdotInflowAlg<BcAlgTraits>::MdotInflowAlg(
     density_(get_field_ordinal(realm.meta_data(), "density")),
     exposedAreaVec_(get_field_ordinal(
       realm.meta_data(), "exposed_area_vector", realm.meta_data().side_rank())),
+    inflowMdot_(get_field_ordinal(
+      realm.meta_data(),
+      "inflow_mass_flow_rate",
+      realm.meta_data().side_rank())),
     useShifted_(useShifted),
     meFC_(
       MasterElementRepo::get_surface_master_element_on_dev(BcAlgTraits::topo_))
@@ -58,8 +63,7 @@ template <typename BcAlgTraits>
 void
 MdotInflowAlg<BcAlgTraits>::execute()
 {
-  using ElemSimdDataType =
-    sierra::kynema_ugf::kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdData = kynema_ugf_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = realm_.meta_data();
@@ -77,14 +81,6 @@ MdotInflowAlg<BcAlgTraits>::execute()
   const DoubleType interpTogether = realm_.solutionOptions_->get_mdot_interp();
   const DoubleType om_interpTogether = (1.0 - interpTogether);
 
-  stk::mesh::NgpField<double> edgeFaceVelMag;
-
-  if (realm_.has_mesh_deformation()) {
-    edgeFaceVelMag_ = get_field_ordinal(
-      realm_.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK);
-    edgeFaceVelMag = fieldMgr.template get_field<double>(edgeFaceVelMag_);
-  }
-
   DoubleType mdotInflowTotal = 0.0;
   Kokkos::Sum<DoubleType> mdotReducer(mdotInflowTotal);
   const std::string algName =
@@ -93,9 +89,14 @@ MdotInflowAlg<BcAlgTraits>::execute()
   const auto shp =
     shape_fcn<BcAlgTraits, QuadRank::SCV>(use_shifted_quad(useShifted));
 
+  auto inflowMdot = fieldMgr.template get_field<double>(inflowMdot_);
+
+  auto mdotField = fieldMgr.template get_field<double>(inflowMdot_);
+  auto mdotOps = kynema_ugf_ngp::simd_elem_field_updater(ngpMesh, mdotField);
+
   kynema_ugf_ngp::run_elem_par_reduce(
     algName, meshInfo, meta.side_rank(), faceData_, sel,
-    KOKKOS_LAMBDA(ElemSimdDataType & edata, DoubleType & mdotInflow) {
+    KOKKOS_LAMBDA(ElemSimdData & edata, DoubleType & mdotInflow) {
       DoubleType uBip[BcAlgTraits::nDim_];
       DoubleType rhoUBip[BcAlgTraits::nDim_];
 
@@ -127,12 +128,14 @@ MdotInflowAlg<BcAlgTraits>::execute()
                   v_areav(ip, d);
         }
 
+        mdotOps(edata, ip) = mdot;
         mdotInflow += mdot;
       }
     },
     mdotReducer);
 
   mdotDriver_.add_inflow_mdot(mdotInflowTotal);
+  mdotField.modify_on_device();
 }
 
 INSTANTIATE_KERNEL_FACE(MdotInflowAlg)

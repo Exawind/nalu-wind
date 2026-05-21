@@ -22,6 +22,8 @@
 #include "ngp_algorithms/WallFricVelAlgDriver.h"
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 #include "ngp_algorithms/CourantReAlgDriver.h"
+#include "ngp_algorithms/FluxDivAlgDriver.h"
+#include "ngp_algorithms/ContinuityResidualAlgDriver.h"
 
 #include "stk_mesh/base/NgpMesh.hpp"
 
@@ -69,6 +71,11 @@ public:
   virtual void register_element_fields(
     const stk::mesh::PartVector& part_vec,
     const stk::topology& theTopo) override;
+
+  virtual void register_inflow_bc(
+    stk::mesh::Part*,
+    const stk::topology&,
+    const InflowBoundaryConditionData&) override;
 
   virtual void register_open_bc(
     stk::mesh::Part* part,
@@ -306,11 +313,14 @@ public:
   ScalarFieldType* massFlowRate_;
   ScalarFieldType* massVOFBalancedFlowRate_;
   VectorFieldType* coordinates_;
+  ScalarFieldType* divMdot_;
 
   ScalarFieldType* pTmp_;
 
   ScalarNodalGradAlgDriver nodalGradAlgDriver_;
   std::unique_ptr<MdotAlgDriver> mdotAlgDriver_;
+  ContinuityResidualAlgDriver contResidualAlgDriver_;
+
   ProjectedNodalGradientEquationSystem* projectedNodalGradEqs_;
 };
 
