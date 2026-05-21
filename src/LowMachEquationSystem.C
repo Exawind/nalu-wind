@@ -1223,7 +1223,9 @@ MomentumEquationSystem::register_nodal_fields(
       AMSAlgDriver_->register_nodal_fields(part_vec);
 
     if (
-      realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_IDDES) {
+      realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_IDDES ||
+      realm_.solutionOptions_->turbulenceModel_ ==
+        TurbulenceModel::SST_IDDES_SIMPLE) {
       iddesRansIndicator_ = &(meta_data.declare_field<double>(
         stk::topology::NODE_RANK, "iddes_rans_indicator"));
       stk::mesh::put_field_on_mesh(*iddesRansIndicator_, selector, nullptr);
@@ -1561,6 +1563,7 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       case TurbulenceModel::SST:
       case TurbulenceModel::SST_DES:
       case TurbulenceModel::SST_IDDES:
+      case TurbulenceModel::SST_IDDES_SIMPLE:
 
         tviscAlg_.reset(new TurbViscSSTAlg(realm_, part, tvisc_));
         break;
