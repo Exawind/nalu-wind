@@ -265,6 +265,18 @@ SolutionOptions::load(const YAML::Node& y_node)
       if (transition_model_ == true)
         gammaEqActive_ = true;
     }
+    if (
+      turbulenceModel_ == TurbulenceModel::SST_IDDES_SIMPLE) {
+      bool transitionModel = false;
+      get_if_present(
+        y_solution_options, "transition_model", transitionModel,
+        transitionModel);
+      if (transitionModel) {
+        throw std::runtime_error(
+          "Invalid configuration: transition_model is not supported for "
+          "sst_iddes_simple");
+      }
+    }
     // initialize turbulence constants since some laminar models may need such
     // variables, e.g., kappa
     initialize_turbulence_constants();

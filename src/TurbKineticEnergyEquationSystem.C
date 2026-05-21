@@ -339,7 +339,8 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
             nodeAlg.add_kernel<TKESSTIDDESSIMPLENodeKernel>(
               realm_.meta_data());
           } else {
-            std::runtime_error("IDDES_SIMPLE w/ Gamma: Invalid turbulence model");
+            throw std::runtime_error(
+              "IDDES_SIMPLE does not support transition_model");
           }
           break;
         case TurbulenceModel::KE:
@@ -349,8 +350,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<TKEKONodeKernel>(realm_.meta_data());
           break;
         default:
-          std::runtime_error("TKEEqSys: Invalid turbulence model");
-          break;
+          throw std::runtime_error("TKEEqSys: Invalid turbulence model");
         }
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
