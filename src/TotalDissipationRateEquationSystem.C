@@ -265,7 +265,6 @@ TotalDissipationRateEquationSystem::register_interior_algorithm(
         if (use_cont_res) {
           nodeAlg.add_kernel<ScalarContResNodeKernel>(realm_.bulk_data(), tdr_);
         }
-        
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         if (srcName == "gcl") {
