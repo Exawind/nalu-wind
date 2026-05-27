@@ -496,6 +496,8 @@ public:
         &meta_->declare_field<double>(stk::topology::NODE_RANK, "temperature")),
       openMassFlowRate_(&meta_->declare_field<double>(
         meta_->side_rank(), "open_mass_flow_rate")),
+      inflowMassFlowRate_(&meta_->declare_field<double>(
+        meta_->side_rank(), "inflow_mass_flow_rate")),
       dynP_(
         &meta_->declare_field<double>(meta_->side_rank(), "dynamic_pressure")),
       openVelocityBC_(&meta_->declare_field<double>(
@@ -516,6 +518,9 @@ public:
       *temperature_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(
       *openMassFlowRate_, meta_->universal_part(),
+      sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *inflowMassFlowRate_, meta_->universal_part(),
       sierra::kynema_ugf::AlgTraitsQuad4::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(
       *dynP_, meta_->universal_part(),
@@ -550,6 +555,7 @@ public:
   sierra::kynema_ugf::TensorFieldType* dudx_{nullptr};
   sierra::kynema_ugf::ScalarFieldType* temperature_{nullptr};
   sierra::kynema_ugf::GenericFieldType* openMassFlowRate_{nullptr};
+  sierra::kynema_ugf::GenericFieldType* inflowMassFlowRate_{nullptr};
   sierra::kynema_ugf::GenericFieldType* dynP_{nullptr};
   sierra::kynema_ugf::VectorFieldType* openVelocityBC_{nullptr};
 };
