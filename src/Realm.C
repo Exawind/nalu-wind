@@ -1030,8 +1030,7 @@ Realm::setup_interior_algorithms()
       if (p->topology() != stk::topology::HEX_8) {
         KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Skipping registration of MeshVelocityEdgeAlg on part "
-          << p->name()
-          << ". Algorithm is only registered for hex blocks\n";
+          << p->name() << ". Algorithm is only registered for hex blocks\n";
         continue;
       }
       if (realmUsesEdges_) {
