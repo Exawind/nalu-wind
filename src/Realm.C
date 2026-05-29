@@ -1031,8 +1031,7 @@ Realm::setup_interior_algorithms()
         KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Skipping registration of MeshVelocityEdgeAlg on part "
           << p->name()
-          << ". GCL operations are currently only supported on HEX_8 "
-             "elements.\n";
+          << ". Algorithm is only registered for hex blocks\n";
         continue;
       }
       if (realmUsesEdges_) {

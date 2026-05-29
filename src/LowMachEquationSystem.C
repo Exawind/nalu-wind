@@ -740,6 +740,13 @@ LowMachEquationSystem::solve_and_update()
     timeB = KynemaUGFEnv::self().kynema_ugf_time();
     continuityEqSys_->timerMisc_ += (timeB - timeA);
 
+    if (realm_.include_continuity_residual()) {
+      timeA = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->contResidualAlgDriver_.execute();
+      timeB = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->timerMisc_ += (timeB - timeA);
+    }
+
     if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS) {
       momentumEqSys_->AMSAlgDriver_->initial_mdot();
     }
@@ -762,6 +769,13 @@ LowMachEquationSystem::solve_and_update()
     continuityEqSys_->mdotAlgDriver_->execute();
     timeB = KynemaUGFEnv::self().kynema_ugf_time();
     continuityEqSys_->timerMisc_ += (timeB - timeA);
+
+    if (realm_.include_continuity_residual()) {
+      timeA = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->contResidualAlgDriver_.execute();
+      timeB = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->timerMisc_ += (timeB - timeA);
+    }
 
     // project nodal velocity
     project_nodal_velocity();
@@ -792,6 +806,14 @@ LowMachEquationSystem::solve_and_update()
       << userSuppliedName_ << std::endl;
 
     for (int oi = 0; oi < momentumEqSys_->numOversetIters_; ++oi) {
+
+      if (realm_.include_continuity_residual()) {
+        timeA = KynemaUGFEnv::self().kynema_ugf_time();
+        continuityEqSys_->contResidualAlgDriver_.execute();
+        timeB = KynemaUGFEnv::self().kynema_ugf_time();
+        continuityEqSys_->timerMisc_ += (timeB - timeA);
+      }
+
       momentumEqSys_->dynPressAlgDriver_.execute();
       if (momentumEqSys_->pecletAlg_)
         momentumEqSys_->pecletAlg_->execute();
@@ -818,6 +840,13 @@ LowMachEquationSystem::solve_and_update()
     if (realm_.solutionOptions_->activateOpenMdotCorrection_) {
       timeA = KynemaUGFEnv::self().kynema_ugf_time();
       continuityEqSys_->mdotAlgDriver_->execute();
+      timeB = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->timerMisc_ += (timeB - timeA);
+    }
+
+    if (realm_.include_continuity_residual()) {
+      timeA = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->contResidualAlgDriver_.execute();
       timeB = KynemaUGFEnv::self().kynema_ugf_time();
       continuityEqSys_->timerMisc_ += (timeB - timeA);
     }

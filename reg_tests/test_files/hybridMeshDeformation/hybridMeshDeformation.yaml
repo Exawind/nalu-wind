@@ -122,6 +122,7 @@ realms:
       name: myOptions
       turbulence_model: laminar
       projected_timescale_type: momentum_diag_inv
+      include_continuity_residual: yes
 
       options:
         - source_terms:
