@@ -44,9 +44,10 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
       break;
     if (rank == actBulk.localTurbineId_) {
       const int iBlade = actBulk.localTurbineId_;
-      const int offset = actBulk.turbIdOffset_.h_view(iBlade);
-      const int nPoints = actMetaSimp.num_force_pts_blade_.h_view(iBlade);
-      const int nNeighbor = actMetaSimp.numNearestPointsFllcInt_.h_view(iBlade);
+      const int offset = actBulk.turbIdOffset_.view_host()(iBlade);
+      const int nPoints = actMetaSimp.num_force_pts_blade_.view_host()(iBlade);
+      const int nNeighbor =
+        actMetaSimp.numNearestPointsFllcInt_.view_host()(iBlade);
       results.push_back({offset, nPoints, nNeighbor});
     }
     break;
@@ -73,9 +74,10 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
       if (!actMeta.entityFLLC_(iTurb))
         continue;
 
-      const int turbOffset = actBulk.turbIdOffset_.h_view(iTurb);
+      const int turbOffset = actBulk.turbIdOffset_.view_host()(iTurb);
       const int nBlades = actMetaFast.nBlades_(iTurb);
-      const int nNeighbors = actMeta.numNearestPointsFllcInt_.h_view(iTurb);
+      const int nNeighbors =
+        actMeta.numNearestPointsFllcInt_.view_host()(iTurb);
 
       for (int iBlade = 0; iBlade < nBlades; ++iBlade) {
         const int bladeStart = actuator_utils::get_fast_point_index(

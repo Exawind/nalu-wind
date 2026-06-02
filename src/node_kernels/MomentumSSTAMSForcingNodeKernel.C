@@ -66,8 +66,8 @@ MomentumSSTAMSForcingNodeKernel::MomentumSSTAMSForcingNodeKernel(
   // setup vectors
   if (solnOpts.RANSBelowKs_) {
     if (!solnOpts.eastVector_.empty() && !solnOpts.northVector_.empty()) {
-      DoubleView::HostMirror eastHost("eastHost", nDim_);
-      DoubleView::HostMirror northHost("northHost", nDim_);
+      DoubleView::host_mirror_type eastHost("eastHost", nDim_);
+      DoubleView::host_mirror_type northHost("northHost", nDim_);
       for (int i = 0; i < nDim_; i++) {
         eastHost(i) = solnOpts.eastVector_[i];
         northHost(i) = solnOpts.northVector_[i];

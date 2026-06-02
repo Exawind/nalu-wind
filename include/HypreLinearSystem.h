@@ -43,14 +43,14 @@ namespace sierra {
 namespace kynema_ugf {
 
 using UnsignedView = Kokkos::View<unsigned*, sierra::kynema_ugf::MemSpace>;
-using UnsignedViewHost = UnsignedView::HostMirror;
+using UnsignedViewHost = UnsignedView::host_mirror_type;
 
 using DoubleView = Kokkos::View<double*, sierra::kynema_ugf::MemSpace>;
-using DoubleViewHost = DoubleView::HostMirror;
+using DoubleViewHost = DoubleView::host_mirror_type;
 
 using HypreIntTypeView =
   Kokkos::View<HypreIntType*, sierra::kynema_ugf::MemSpace>;
-using HypreIntTypeViewHost = HypreIntTypeView::HostMirror;
+using HypreIntTypeViewHost = HypreIntTypeView::host_mirror_type;
 
 // const random access views for read only, noncoalesced (texture) memory
 // fetches
@@ -66,29 +66,29 @@ using HypreIntTypeViewRA = Kokkos::View<
 // This 2D view needs to be LayoutLeft. Do NOT change
 using DoubleView2D =
   Kokkos::View<double**, Kokkos::LayoutLeft, sierra::kynema_ugf::MemSpace>;
-using DoubleView2DHost = DoubleView2D::HostMirror;
+using DoubleView2DHost = DoubleView2D::host_mirror_type;
 
 // This 2D view needs to be LayoutLeft. Do NOT change
 using HypreIntTypeView2D = Kokkos::
   View<HypreIntType**, Kokkos::LayoutLeft, sierra::kynema_ugf::MemSpace>;
-using HypreIntTypeView2DHost = HypreIntTypeView2D::HostMirror;
+using HypreIntTypeView2DHost = HypreIntTypeView2D::host_mirror_type;
 
 using HypreIntTypeViewScalar =
   Kokkos::View<HypreIntType, sierra::kynema_ugf::MemSpace>;
-using HypreIntTypeViewScalarHost = HypreIntTypeViewScalar::HostMirror;
+using HypreIntTypeViewScalarHost = HypreIntTypeViewScalar::host_mirror_type;
 
 using HypreIntTypeUnorderedMap = Kokkos::
   UnorderedMap<HypreIntType, HypreIntType, sierra::kynema_ugf::MemSpace>;
-using HypreIntTypeUnorderedMapHost = HypreIntTypeUnorderedMap::HostMirror;
+using HypreIntTypeUnorderedMapHost = HypreIntTypeUnorderedMap::host_mirror_type;
 
 using MemoryMap =
   Kokkos::UnorderedMap<HypreIntType, unsigned, sierra::kynema_ugf::MemSpace>;
-using MemoryMapHost = MemoryMap::HostMirror;
+using MemoryMapHost = MemoryMap::host_mirror_type;
 
 // Periodic Node Map
 using PeriodicNodeMap = Kokkos::
   UnorderedMap<HypreIntType, HypreIntType, sierra::kynema_ugf::MemSpace>;
-using PeriodicNodeMapHost = PeriodicNodeMap::HostMirror;
+using PeriodicNodeMapHost = PeriodicNodeMap::host_mirror_type;
 
 /** KynemaUGF interface to populate a Hypre Linear System
  *

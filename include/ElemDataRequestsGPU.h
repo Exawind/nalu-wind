@@ -152,23 +152,23 @@ public:
   KOKKOS_FUNCTION
   const FieldInfoView& get_fields() const { return fields; }
 
-  const DataEnumView::HostMirror&
+  const DataEnumView::host_mirror_type&
   get_host_data_enums(const COORDS_TYPES cType) const
   {
     return hostDataEnums[cType];
   }
 
-  const FieldView::HostMirror& get_host_coordinates_fields() const
+  const FieldView::host_mirror_type& get_host_coordinates_fields() const
   {
     return hostCoordsFields_;
   }
 
-  const CoordsTypesView::HostMirror& get_host_coordinates_types() const
+  const CoordsTypesView::host_mirror_type& get_host_coordinates_types() const
   {
     return hostCoordsFieldsTypes_;
   }
 
-  const FieldInfoView::HostMirror& get_host_fields() const
+  const FieldInfoView::host_mirror_type& get_host_fields() const
   {
     return hostFields;
   }
@@ -206,16 +206,16 @@ private:
   fill_host_coords_fields(const ElemDataRequests& dataReq, const T& fieldMgr);
 
   DataEnumView dataEnums[MAX_COORDS_TYPES];
-  DataEnumView::HostMirror hostDataEnums[MAX_COORDS_TYPES];
+  DataEnumView::host_mirror_type hostDataEnums[MAX_COORDS_TYPES];
 
   FieldView coordsFields_;
-  FieldView::HostMirror hostCoordsFields_;
+  FieldView::host_mirror_type hostCoordsFields_;
   CoordsTypesView coordsFieldsTypes_;
-  CoordsTypesView::HostMirror hostCoordsFieldsTypes_;
+  CoordsTypesView::host_mirror_type hostCoordsFieldsTypes_;
 
   unsigned totalNumFields;
   FieldInfoView fields;
-  FieldInfoView::HostMirror hostFields;
+  FieldInfoView::host_mirror_type hostFields;
 
   MasterElement* meFC_;
   MasterElement* meSCS_;

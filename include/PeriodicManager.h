@@ -181,7 +181,7 @@ private:
   // vector of masterEntity:slaveEntity
   std::vector<EntityPair> masterSlaveCommunicator_;
   KokkosEntityPairView deviceMasterSlaves_;
-  KokkosEntityPairView::HostMirror hostMasterSlaves_;
+  KokkosEntityPairView::host_mirror_type hostMasterSlaves_;
 
   // culmination of all searches
   SearchKeyVector searchKeyVector_;

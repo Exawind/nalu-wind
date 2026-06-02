@@ -18,7 +18,7 @@
 #include "stk_mesh/base/Types.hpp"
 
 using DoubleView = Kokkos::View<double*, sierra::kynema_ugf::MemSpace>;
-using DoubleViewHost = DoubleView::HostMirror;
+using DoubleViewHost = DoubleView::host_mirror_type;
 
 namespace sierra {
 namespace kynema_ugf {

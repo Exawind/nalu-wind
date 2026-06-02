@@ -38,7 +38,7 @@ test_ngp_mesh_1(
 
   Kokkos::View<unsigned*, sierra::kynema_ugf::MemSpace> ngpResults(
     "ngpResults", 2);
-  Kokkos::View<unsigned*, sierra::kynema_ugf::MemSpace>::HostMirror
+  Kokkos::View<unsigned*, sierra::kynema_ugf::MemSpace>::host_mirror_type
     hostResults = Kokkos::create_mirror_view(ngpResults);
   Kokkos::deep_copy(ngpResults, hostResults);
 

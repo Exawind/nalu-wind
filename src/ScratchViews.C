@@ -243,7 +243,7 @@ get_num_scalars_pre_req_data(
 
   int numScalars = 0;
 
-  const ElemDataRequestsGPU::FieldInfoView::HostMirror& neededFields =
+  const ElemDataRequestsGPU::FieldInfoView::host_mirror_type& neededFields =
     dataNeeded.get_host_fields();
   for (unsigned f = 0; f < neededFields.size(); ++f) {
     const FieldInfoNGP& fieldInfo = neededFields(f);
@@ -263,11 +263,11 @@ get_num_scalars_pre_req_data(
   const int numScvIp = num_integration_points(dataNeeded, METype::SCV);
   const int numFemIp = num_integration_points(dataNeeded, METype::FEM);
 
-  const ElemDataRequestsGPU::CoordsTypesView::HostMirror& coordsTypes =
+  const ElemDataRequestsGPU::CoordsTypesView::host_mirror_type& coordsTypes =
     dataNeeded.get_host_coordinates_types();
   for (unsigned i = 0; i < coordsTypes.size(); ++i) {
     auto cType = coordsTypes(i);
-    const ElemDataRequestsGPU::DataEnumView::HostMirror& dataEnums =
+    const ElemDataRequestsGPU::DataEnumView::host_mirror_type& dataEnums =
       dataNeeded.get_host_data_enums(cType);
     int dndxLength = 0, dndxLengthFC = 0, gUpperLength = 0, gLowerLength = 0;
 

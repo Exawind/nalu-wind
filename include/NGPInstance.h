@@ -119,7 +119,7 @@ create_ngp_view(const Container& hostVec)
   const std::string debuggingName = "NGP" + clsName + "View";
   NGPInfoView ngpVec(debuggingName, numObjects);
 
-  typename NGPInfoView::HostMirror hostNgpView =
+  typename NGPInfoView::host_mirror_type hostNgpView =
     Kokkos::create_mirror_view(ngpVec);
 
   for (size_t i = 0; i < numObjects; ++i)
