@@ -114,6 +114,8 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
 
   // zero out fields
   stk::mesh::field_fill(0.0, *exposedAreaVec_);
+  exposedAreaVec_->modify_on_host();
+  exposedAreaVec_->sync_to_device();
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
