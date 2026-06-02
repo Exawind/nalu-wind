@@ -20,7 +20,7 @@ jobs:
     needs: Formatting
     runs-on: ubuntu-latest
     container:
-      image: roodj/kynema
+      image: roodj/kynema:latest
       env:
           KYNEMA_MANAGER: /kynema-manager
           E4S_MACHINE: true
@@ -52,7 +52,7 @@ jobs:
     needs: Formatting
     runs-on: ubuntu-latest
     container:
-      image: roodj/kynema
+      image: roodj/kynema:latest
       env:
           KYNEMA_MANAGER: /kynema-manager
           E4S_MACHINE: true
