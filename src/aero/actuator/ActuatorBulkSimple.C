@@ -46,7 +46,7 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
     debug_output_(actMeta.debug_output_),
     output_cache_(
       actMeta.has_output_file_
-        ? actMeta.numPointsTurbine_.h_view(localTurbineId_)
+        ? actMeta.numPointsTurbine_.view_host()(localTurbineId_)
         : 0)
 
 {
@@ -68,22 +68,23 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
     throw std::runtime_error(" ERROR: more blades than ranks");
 
   for (int i = 0; i < nTurb; i++) {
-    assignedProc_.h_view(i) = i;
+    assignedProc_.view_host()(i) = i;
     KynemaUGFEnv::self().kynema_ugfOutputP0()
-      << " Turbine#: " << i << " Proc#: " << assignedProc_.h_view(i)
+      << " Turbine#: " << i << " Proc#: " << assignedProc_.view_host()(i)
       << std::endl;
   }
 
   // Set up num_force_pts_blade_
   for (int i = 0; i < actMeta.numberOfActuators_; ++i) {
-    num_force_pts_blade_.h_view(i) = actMeta.num_force_pts_blade_.h_view(i);
+    num_force_pts_blade_.view_host()(i) =
+      actMeta.num_force_pts_blade_.view_host()(i);
   }
   // Double check offsets
   if (actMeta.debug_output_)
     for (int i = 0; i < actMeta.numberOfActuators_; ++i) {
       KynemaUGFEnv::self().kynema_ugfOutputP0()
-        << "Offset blade: " << i << " " << turbIdOffset_.h_view(i)
-        << " num_force_pts: " << num_force_pts_blade_.h_view(i)
+        << "Offset blade: " << i << " " << turbIdOffset_.view_host()(i)
+        << " num_force_pts: " << num_force_pts_blade_.view_host()(i)
         << std::endl; // LCCOUT
     }
   init_epsilon(actMeta);
@@ -123,9 +124,11 @@ ActuatorBulkSimple::init_epsilon(const ActuatorMetaSimple& actMeta)
   const int nBlades = actMeta.n_simpleblades_;
   for (int iBlade = 0; iBlade < nBlades; iBlade++) {
     // LCC test this for non-isotropic
-    if (KynemaUGFEnv::self().parallel_rank() == assignedProc_.h_view(iBlade)) {
-      const int numForcePts = actMeta.num_force_pts_blade_.h_view(iBlade);
-      const int offset = turbIdOffset_.h_view(iBlade);
+    if (
+      KynemaUGFEnv::self().parallel_rank() ==
+      assignedProc_.view_host()(iBlade)) {
+      const int numForcePts = actMeta.num_force_pts_blade_.view_host()(iBlade);
+      const int offset = turbIdOffset_.view_host()(iBlade);
       auto epsilonChord =
         Kokkos::subview(actMeta.epsilonChord_.view_host(), iBlade, Kokkos::ALL);
       auto epsilonRef =
@@ -136,7 +139,7 @@ ActuatorBulkSimple::init_epsilon(const ActuatorMetaSimple& actMeta)
         auto epsilonOpt =
           Kokkos::subview(epsilonOpt_.view_host(), np + offset, Kokkos::ALL);
 
-        double chord = actMeta.chord_tableDv_.h_view(iBlade, np);
+        double chord = actMeta.chord_tableDv_.view_host()(iBlade, np);
         for (int i = 0; i < 3; i++) {
           // Define the optimal epsilon
           epsilonOpt(i) = epsilonChord(i) * chord;
@@ -147,7 +150,7 @@ ActuatorBulkSimple::init_epsilon(const ActuatorMetaSimple& actMeta)
         //
         // This is the length where the value of the Gaussian becomes
         // 0.1 % (1.0 / .001 = 1000) of the value at the center of the Gaussian
-        searchRadius_.h_view(np + offset) =
+        searchRadius_.view_host()(np + offset) =
           std::max(
             epsilonLocal(0), std::max(epsilonLocal(1), epsilonLocal(2))) *
           sqrt(log(1.e3));
@@ -172,9 +175,11 @@ ActuatorBulkSimple::init_points(const ActuatorMetaSimple& actMeta)
 
   const int nBlades = actMeta.n_simpleblades_;
   for (int iBlade = 0; iBlade < nBlades; iBlade++) {
-    if (KynemaUGFEnv::self().parallel_rank() == assignedProc_.h_view(iBlade)) {
-      const int numForcePts = actMeta.num_force_pts_blade_.h_view(iBlade);
-      const int offset = turbIdOffset_.h_view(iBlade);
+    if (
+      KynemaUGFEnv::self().parallel_rank() ==
+      assignedProc_.view_host()(iBlade)) {
+      const int numForcePts = actMeta.num_force_pts_blade_.view_host()(iBlade);
+      const int offset = turbIdOffset_.view_host()(iBlade);
       const double denom = (double)numForcePts;
 
       // Get p1 and p2 and dx for blade geometry
@@ -182,8 +187,8 @@ ActuatorBulkSimple::init_points(const ActuatorMetaSimple& actMeta)
       double p2[3];
       double dx[3];
       for (int j = 0; j < 3; j++) {
-        p1[j] = actMeta.p1_.h_view(iBlade, j);
-        p2[j] = actMeta.p2_.h_view(iBlade, j);
+        p1[j] = actMeta.p1_.view_host()(iBlade, j);
+        p2[j] = actMeta.p2_.view_host()(iBlade, j);
         dx[j] = (p2[j] - p1[j]) / denom;
       }
 
@@ -221,9 +226,11 @@ ActuatorBulkSimple::init_orientation(const ActuatorMetaSimple& actMeta)
   orientationTensor_.modify_host();
   const int nBlades = actMeta.n_simpleblades_;
   for (int iBlade = 0; iBlade < nBlades; iBlade++) {
-    if (KynemaUGFEnv::self().parallel_rank() == assignedProc_.h_view(iBlade)) {
-      const int numForcePts = actMeta.num_force_pts_blade_.h_view(iBlade);
-      const int offset = turbIdOffset_.h_view(iBlade);
+    if (
+      KynemaUGFEnv::self().parallel_rank() ==
+      assignedProc_.view_host()(iBlade)) {
+      const int numForcePts = actMeta.num_force_pts_blade_.view_host()(iBlade);
+      const int offset = turbIdOffset_.view_host()(iBlade);
 
       // set every pointCentroid
       for (int np = 0; np < numForcePts; np++) {
@@ -249,8 +256,8 @@ ActuatorBulkSimple::local_range_policy()
 {
   auto rank = KynemaUGFEnv::self().parallel_rank();
   if (rank < num_blades_) {
-    const int offset = turbIdOffset_.h_view(rank);
-    const int size = num_force_pts_blade_.h_view(rank);
+    const int offset = turbIdOffset_.view_host()(rank);
+    const int size = num_force_pts_blade_.view_host()(rank);
     return Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(
       offset, offset + size);
   } else {

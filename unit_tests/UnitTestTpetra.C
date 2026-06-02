@@ -139,7 +139,7 @@ public:
     : numNodesPerElem(elemTopo.num_nodes()),
       d_elemVals("device-elem-vals", 8, 8)
   {
-    Kokkos::View<double**, sierra::kynema_ugf::MemSpace>::HostMirror
+    Kokkos::View<double**, sierra::kynema_ugf::MemSpace>::host_mirror_type
       h_elemVals = Kokkos::create_mirror_view(d_elemVals);
     for (int i = 0; i < 8; ++i) {
       for (int j = 0; j < 8; ++j) {

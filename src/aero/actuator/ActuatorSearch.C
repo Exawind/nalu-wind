@@ -143,8 +143,8 @@ ExecuteCoarseSearch(
   coarseElemIds.modify_host();
 
   for (std::size_t i = 0; i < numLocalMatches; i++) {
-    coarsePointIds.h_view(i) = searchKeyPair[i].first.id();
-    coarseElemIds.h_view(i) = searchKeyPair[i].second.id();
+    coarsePointIds.view_host()(i) = searchKeyPair[i].first.id();
+    coarseElemIds.view_host()(i) = searchKeyPair[i].second.id();
   }
 }
 
@@ -177,8 +177,8 @@ ExecuteFineSearch(
   // now proceed with the standard search
   for (unsigned i = 0; i < coarseElemIds.extent(0); i++) {
 
-    const uint64_t thePt = coarsePointIds.h_view(i);
-    const uint64_t theBox = coarseElemIds.h_view(i);
+    const uint64_t thePt = coarsePointIds.view_host()(i);
+    const uint64_t theBox = coarseElemIds.view_host()(i);
 
     auto pointCoords = Kokkos::subview(points, thePt, Kokkos::ALL);
     auto localPntCrds = Kokkos::subview(localCoords, thePt, Kokkos::ALL);

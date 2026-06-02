@@ -18,7 +18,7 @@ template <
 struct OversetArrayType
 {
   using ArrayType = OversetArrayViewType<T, Layout, Space>;
-  using HostArrayType = typename ArrayType::HostMirror;
+  using HostArrayType = typename ArrayType::host_mirror_type;
 
   ArrayType d_view;
   HostArrayType h_view;

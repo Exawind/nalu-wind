@@ -108,7 +108,7 @@ do_the_test(
   int numResults = 7;
   IntViewType result("result", numResults);
 
-  Kokkos::deep_copy(result.h_view, 0);
+  Kokkos::deep_copy(result.view_host(), 0);
   result.template modify<typename IntViewType::host_mirror_space>();
   result.template sync<typename IntViewType::execution_space>();
 
@@ -151,23 +151,23 @@ do_the_test(
             dataNGP, ngpMesh, stk::topology::ELEM_RANK, element, scrviews);
           auto& velocityView = scrviews.get_scratch_view_2D(velocityOrdinal);
           auto& pressureView = scrviews.get_scratch_view_1D(pressureOrdinal);
-          result.d_view(0) =
+          result.view_device()(0) =
             stk::simd::get_data((pressureView(0) - 1.0), 0) < 1.e-9 ? 1 : 0;
-          result.d_view(1) =
+          result.view_device()(1) =
             stk::simd::get_data((pressureView(7) - 1.0), 0) < 1.e-9 ? 1 : 0;
-          result.d_view(2) =
+          result.view_device()(2) =
             stk::simd::get_data((velocityView(6, 0) - 1.0), 0) < 1.e-9 ? 1 : 0;
-          result.d_view(3) =
+          result.view_device()(3) =
             stk::simd::get_data((velocityView(6, 1) - 0.0), 0) < 1.e-9 ? 1 : 0;
-          result.d_view(4) =
+          result.view_device()(4) =
             stk::simd::get_data((velocityView(6, 2) - 0.0), 0) < 1.e-9 ? 1 : 0;
 
           testKernel.execute(simdlhs, simdrhs, scrviews);
         });
 
-      result.d_view(5) =
+      result.view_device()(5) =
         stk::simd::get_data((simdrhs(0) - 16.0), 0) < 1.e-9 ? 1 : 0;
-      result.d_view(6) =
+      result.view_device()(6) =
         stk::simd::get_data((simdrhs(1) - 0.0), 0) < 1.e-9 ? 1 : 0;
     });
 
@@ -175,7 +175,7 @@ do_the_test(
   result.sync<IntViewType::host_mirror_space>();
 
   for (int i = 0; i < numResults; ++i) {
-    EXPECT_EQ(1, result.h_view(i));
+    EXPECT_EQ(1, result.view_host()(i));
   }
 }
 
@@ -301,7 +301,7 @@ do_the_smdata_test(
 
   int numResults = sierra::kynema_ugf::AlgTraitsHex8::numScvIp_;
   DoubleTypeView scv_check("scv_volume", numResults);
-  Kokkos::deep_copy(scv_check.h_view, 0.0);
+  Kokkos::deep_copy(scv_check.view_host(), 0.0);
   scv_check.template modify<typename DoubleTypeView::host_mirror_space>();
   scv_check.template sync<typename DoubleTypeView::execution_space>();
 
@@ -349,7 +349,7 @@ do_the_smdata_test(
             smdata.simdPrereqData
               .get_me_views(sierra::kynema_ugf::CURRENT_COORDINATES)
               .scv_volume;
-          scv_check.d_view(bktIndex % numResults) =
+          scv_check.view_device()(bktIndex % numResults) =
             stk::simd::get_data(scv_volume(bktIndex % numResults), 0);
 
           testKernel.execute(
@@ -361,7 +361,7 @@ do_the_smdata_test(
   scv_check.sync<DoubleTypeView::host_mirror_space>();
 
   for (int i = 0; i < numResults; ++i)
-    EXPECT_NEAR(scv_check.h_view(i), 0.125, 1.0e-8);
+    EXPECT_NEAR(scv_check.view_host()(i), 0.125, 1.0e-8);
 }
 
 TEST_F(Hex8MeshWithNSOFields, NGPSharedMemData)

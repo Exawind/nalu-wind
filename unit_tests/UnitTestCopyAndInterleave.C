@@ -54,12 +54,12 @@ do_the_interleave_test()
 
           sierra::kynema_ugf::interleave(
             simdView, data, sierra::kynema_ugf::simdLen);
-          result.d_view(0) = 1;
+          result.view_device()(0) = 1;
 
           for (int j = 0; j < N; ++j) {
             for (int i = 0; i < sierra::kynema_ugf::simdLen; ++i) {
               if (stk::simd::get_data(simdView(j), i) != j + 1) {
-                result.d_view(0) = 0;
+                result.view_device()(0) = 0;
               }
             }
           }
@@ -69,7 +69,7 @@ do_the_interleave_test()
   result.modify<IntViewType::execution_space>();
   result.sync<IntViewType::host_mirror_space>();
 
-  EXPECT_EQ(1, result.h_view(0));
+  EXPECT_EQ(1, result.view_host()(0));
 }
 
 TEST(CopyAndInterleave, interleave_1D) { do_the_interleave_test(); }
@@ -194,17 +194,17 @@ do_the_multidimviews_test()
         sierra::kynema_ugf::copy_and_interleave(
           multiDimViewPtrs, sierra::kynema_ugf::simdLen, simdMultiDimViews);
 
-        result.d_view(0) =
+        result.view_device()(0) =
           check_view(simdMultiDimViews.get_scratch_view_1D(0)) ? 1 : 0;
-        result.d_view(1) =
+        result.view_device()(1) =
           check_view(simdMultiDimViews.get_scratch_view_1D(1)) ? 1 : 0;
-        result.d_view(2) =
+        result.view_device()(2) =
           check_view(simdMultiDimViews.get_scratch_view_2D(2)) ? 1 : 0;
-        result.d_view(3) =
+        result.view_device()(3) =
           check_view(simdMultiDimViews.get_scratch_view_2D(3)) ? 1 : 0;
-        result.d_view(4) =
+        result.view_device()(4) =
           check_view(simdMultiDimViews.get_scratch_view_3D(4)) ? 1 : 0;
-        result.d_view(5) =
+        result.view_device()(5) =
           check_view(simdMultiDimViews.get_scratch_view_3D(5)) ? 1 : 0;
       });
   });
@@ -213,7 +213,7 @@ do_the_multidimviews_test()
   result.sync<IntViewType::host_mirror_space>();
 
   for (int i = 0; i < numResults; ++i) {
-    EXPECT_EQ(1, result.h_view(i));
+    EXPECT_EQ(1, result.view_host()(i));
   }
 }
 

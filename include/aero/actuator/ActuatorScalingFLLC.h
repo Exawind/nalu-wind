@@ -43,7 +43,7 @@ scale_lift_force(
     auto rho = helper.get_local_view(actBulkSimple.density_);
 
     const int turbId = actBulkSimple.localTurbineId_;
-    double dR = actMetaSimple.dR_.h_view(turbId);
+    double dR = actMetaSimple.dR_.view_host()(turbId);
 
     Kokkos::parallel_for(
       "scale G", rangePolicy, ACTUATOR_LAMBDA(int i) {

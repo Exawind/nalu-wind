@@ -101,9 +101,9 @@ private:
   Array1D yinp_;
 
   //! Height array (host view)
-  Array1D::HostMirror xinpHost_;
+  Array1D::host_mirror_type xinpHost_;
   //! Source array (host view)
-  Array1D::HostMirror yinpHost_;
+  Array1D::host_mirror_type yinpHost_;
 
   //! Number of user-specified heights
   unsigned numPts_;
@@ -183,8 +183,8 @@ private:
   //! Source vector array (2-D device view)
   Array2D yinp_;
 
-  Array1D::HostMirror xinpHost_;
-  Array2D::HostMirror yinpHost_;
+  Array1D::host_mirror_type xinpHost_;
+  Array2D::host_mirror_type yinpHost_;
 
   //! Number of user-specified heights
   unsigned numPts_;

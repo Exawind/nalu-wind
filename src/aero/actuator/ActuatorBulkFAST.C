@@ -152,8 +152,8 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
     if (openFast_.get_procNo(iTurb) == KynemaUGFEnv::self().parallel_rank()) {
       STK_ThrowAssert(
         actMeta.numPointsTotal_ >= openFast_.get_numForcePts(iTurb));
-      const int numForcePts = actMeta.numPointsTurbine_.h_view(iTurb);
-      const int offset = turbIdOffset_.h_view(iTurb);
+      const int numForcePts = actMeta.numPointsTurbine_.view_host()(iTurb);
+      const int offset = turbIdOffset_.view_host()(iTurb);
       auto epsilonChord =
         Kokkos::subview(actMeta.epsilonChord_.view_host(), iTurb, Kokkos::ALL);
       auto epsilonRef =
@@ -172,7 +172,7 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
         case fast::HUB: {
           // if epsilonHub hasn't already been set use model
           // of the wake (Martinez-Tossas PhD Thesis 2017)
-          if (actMeta.epsilonHub_.h_view(iTurb, 0) <= 0) {
+          if (actMeta.epsilonHub_.view_host()(iTurb, 0) <= 0) {
             float nac_cd = openFast_.get_nacelleCd(iTurb);
             // Compute epsilon only if drag coefficient is greater than zero
             if (nac_cd > 0) {
@@ -231,7 +231,7 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
         //
         // This is the length where the value of the Gaussian becomes
         // 0.1 % (1.0 / .001 = 1000) of the value at the center of the Gaussian
-        searchRadius_.h_view(np + offset) =
+        searchRadius_.view_host()(np + offset) =
           std::max(
             epsilonLocal(0), std::max(epsilonLocal(1), epsilonLocal(2))) *
           2.6282608848784661; // sqrt(log(1000))
@@ -251,7 +251,7 @@ ActuatorBulkFAST::local_range_policy()
 {
   auto rank = KynemaUGFEnv::self().parallel_rank();
   if (rank == openFast_.get_procNo(rank)) {
-    const int offset = turbIdOffset_.h_view(rank);
+    const int offset = turbIdOffset_.view_host()(rank);
     const int size = openFast_.get_numForcePts(rank);
     return Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(
       offset, offset + size);

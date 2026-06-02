@@ -482,7 +482,7 @@ elem_loop_scratch_views(
 
   const int numNodes = 8;
   DoubleTypeView volCheck("scv_volume", numNodes);
-  Kokkos::deep_copy(volCheck.h_view, 0.0);
+  Kokkos::deep_copy(volCheck.view_host(), 0.0);
   volCheck.template modify<typename DoubleTypeView::host_mirror_space>();
   volCheck.template sync<typename DoubleTypeView::execution_space>();
 
@@ -500,7 +500,7 @@ elem_loop_scratch_views(
       test += v_vel(0, 0) + v_pres(0) * scv_vol(0);
 
       for (int i = 0; i < numNodes; ++i) {
-        volCheck.d_view(i) = stk::simd::get_data(scv_vol(i), 0);
+        volCheck.view_device()(i) = stk::simd::get_data(scv_vol(i), 0);
 
         // Scatter SIMD value to nodes
         ngpVelOp(edata, i, 0) = xVel;
@@ -516,7 +516,7 @@ elem_loop_scratch_views(
   volCheck.sync<DoubleTypeView::host_mirror_space>();
 
   for (int i = 0; i < numNodes; ++i)
-    EXPECT_NEAR(volCheck.h_view(i), 0.125, 1.0e-12);
+    EXPECT_NEAR(volCheck.view_host()(i), 0.125, 1.0e-12);
 
   {
     const double xVel = 1.0;

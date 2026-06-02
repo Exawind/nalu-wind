@@ -369,11 +369,11 @@ public:
   }
 
   UnsignedView numSumIntoCalls_;
-  UnsignedView::HostMirror hostNumSumIntoCalls_;
+  UnsignedView::host_mirror_type hostNumSumIntoCalls_;
   LHSView lhs_;
-  LHSView::HostMirror hostlhs_;
+  LHSView::host_mirror_type hostlhs_;
   RHSView rhs_;
-  RHSView::HostMirror hostrhs_;
+  RHSView::host_mirror_type hostrhs_;
   unsigned numDof_;
   bool isEdge_;
 

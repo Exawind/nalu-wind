@@ -55,8 +55,8 @@ public:
   {
     faceDataNeeded.add_gathered_nodal_field(*idField, 1);
     elemDataNeeded.add_gathered_nodal_field(*idField, 1);
-    result_.h_view(CORRECTNESS) = 0;
-    result_.h_view(NUM_TIMES_EXECUTED) = 0;
+    result_.view_host()(CORRECTNESS) = 0;
+    result_.view_host()(NUM_TIMES_EXECUTED) = 0;
     result_.modify_host();
     result_.sync_device();
   }
@@ -77,10 +77,10 @@ public:
     auto& faceNodeIds = faceViews.get_scratch_view_1D(idFieldOrdinal_);
     auto& elemNodeIds = elemViews.get_scratch_view_1D(idFieldOrdinal_);
     if (faceTopo_.num_nodes() != faceNodeIds.size()) {
-      result_.d_view(CORRECTNESS) = 2;
+      result_.view_device()(CORRECTNESS) = 2;
     }
     if (elemTopo_.num_nodes() != elemNodeIds.size()) {
-      result_.d_view(CORRECTNESS) = 2;
+      result_.view_device()(CORRECTNESS) = 2;
     }
 
     int faceNodeOrdinals[100];
@@ -92,16 +92,18 @@ public:
         DoubleType elemNodeId = elemNodeIds(faceNodeOrdinals[i]);
         double diff = stk::simd::get_data(faceNodeId, simdIndex) -
                       stk::simd::get_data(elemNodeId, simdIndex);
-        if ((diff < 1.e-9) && (diff > -1.e-9) && (result_.d_view(0) == 0)) {
-          result_.d_view(CORRECTNESS) = 1;
+        if (
+          (diff < 1.e-9) && (diff > -1.e-9) &&
+          (result_.view_device()(0) == 0)) {
+          result_.view_device()(CORRECTNESS) = 1;
         }
         if ((diff > 1.e-9) || (diff < -1.e-9)) {
-          result_.d_view(CORRECTNESS) = 2;
+          result_.view_device()(CORRECTNESS) = 2;
         }
       }
     }
 
-    Kokkos::atomic_add(&result_.d_view(NUM_TIMES_EXECUTED), 1);
+    Kokkos::atomic_add(&result_.view_device()(NUM_TIMES_EXECUTED), 1);
   }
 
   stk::topology faceTopo_;
@@ -141,11 +143,11 @@ do_assemble_face_elem_solver_test(
   int expectedGoodResult = 1;
   EXPECT_EQ(
     expectedGoodResult,
-    faceElemKernel.result_.h_view(TestFaceElemKernel::CORRECTNESS));
+    faceElemKernel.result_.view_host()(TestFaceElemKernel::CORRECTNESS));
   int expectedNumTimesExecuted = 6;
   EXPECT_EQ(
     expectedNumTimesExecuted,
-    faceElemKernel.result_.h_view(TestFaceElemKernel::NUM_TIMES_EXECUTED));
+    faceElemKernel.result_.view_host()(TestFaceElemKernel::NUM_TIMES_EXECUTED));
 }
 
 TEST_F(Hex8Mesh, NGP_faceElemBasic)

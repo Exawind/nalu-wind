@@ -43,7 +43,7 @@ class BdyLayerStatistics
 {
 public:
   using ArrayType = Kokkos::View<double*, Kokkos::LayoutRight, MemSpace>;
-  using HostArrayType = typename ArrayType::HostMirror;
+  using HostArrayType = typename ArrayType::host_mirror_type;
 
   BdyLayerStatistics(Realm&, const YAML::Node&);
 
