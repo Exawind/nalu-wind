@@ -23,6 +23,13 @@ TEST_F(SSTKernelHex8Mesh, NGP_SST_Max_Length_Scale)
 
   fill_mesh_and_init_fields();
 
+  // Sync input fields to device
+  edgeAreaVec_->modify_on_host();
+  edgeAreaVec_->sync_to_device();
+
+  dnvField_->modify_on_host();
+  dnvField_->sync_to_device();
+
   // zero out fields
   stk::mesh::field_fill(0.0, *maxLengthScale_);
   maxLengthScale_->modify_on_host();
