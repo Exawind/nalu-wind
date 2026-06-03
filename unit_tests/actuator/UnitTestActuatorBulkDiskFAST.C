@@ -70,7 +70,7 @@ TEST_F(ActuatorBulkDiskFastTest, computeSweptPointCountUniform)
   ASSERT_TRUE(myMeta.useUniformAziSampling_(0));
   ActuatorBulkDiskFAST actBulk(myMeta, 0.0625);
   EXPECT_EQ(101, myMeta.numPointsTotal_);
-  EXPECT_EQ(101, myMeta.numPointsTurbine_.h_view(0));
+  EXPECT_EQ(101, myMeta.numPointsTurbine_.view_host()(0));
 }
 
 TEST_F(ActuatorBulkDiskFastTest, computeSweptPointCountVaried)
@@ -82,7 +82,7 @@ TEST_F(ActuatorBulkDiskFastTest, computeSweptPointCountVaried)
   ASSERT_FALSE(myMeta.useUniformAziSampling_(0));
   ActuatorBulkDiskFAST actBulk(myMeta, 0.0625);
   EXPECT_EQ(296, myMeta.numPointsTotal_);
-  EXPECT_EQ(296, myMeta.numPointsTurbine_.h_view(0));
+  EXPECT_EQ(296, myMeta.numPointsTurbine_.view_host()(0));
 }
 
 TEST_F(ActuatorBulkDiskFastTest, sweptPointsPopulatedUniform)

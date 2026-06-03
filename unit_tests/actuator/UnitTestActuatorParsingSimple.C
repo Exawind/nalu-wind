@@ -89,38 +89,39 @@ TEST_F(ActuatorParsingSimpleTests, NGP_minimumRequired)
   try {
     auto y_node = create_yaml_node(inputFileLines_);
     auto actMetaSimple = actuator_Simple_parse(y_node, actMeta);
-    EXPECT_EQ(10, actMetaSimple.num_force_pts_blade_.h_view(0));
+    EXPECT_EQ(10, actMetaSimple.num_force_pts_blade_.view_host()(0));
     // Check epsilon
-    EXPECT_DOUBLE_EQ(3.0, actMetaSimple.epsilon_.h_view(0, 0));
-    EXPECT_DOUBLE_EQ(3.0, actMetaSimple.epsilon_.h_view(0, 1));
-    EXPECT_DOUBLE_EQ(3.0, actMetaSimple.epsilon_.h_view(0, 2));
+    EXPECT_DOUBLE_EQ(3.0, actMetaSimple.epsilon_.view_host()(0, 0));
+    EXPECT_DOUBLE_EQ(3.0, actMetaSimple.epsilon_.view_host()(0, 1));
+    EXPECT_DOUBLE_EQ(3.0, actMetaSimple.epsilon_.view_host()(0, 2));
     // Check p1_ and p2_ values
-    EXPECT_DOUBLE_EQ(-25.0, actMetaSimple.p1_.h_view(0, 0));
-    EXPECT_DOUBLE_EQ(-4.0, actMetaSimple.p1_.h_view(0, 1));
-    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.p1_.h_view(0, 2));
-    EXPECT_DOUBLE_EQ(-25.0, actMetaSimple.p2_.h_view(0, 0));
-    EXPECT_DOUBLE_EQ(+4.0, actMetaSimple.p2_.h_view(0, 1));
-    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.p2_.h_view(0, 2));
+    EXPECT_DOUBLE_EQ(-25.0, actMetaSimple.p1_.view_host()(0, 0));
+    EXPECT_DOUBLE_EQ(-4.0, actMetaSimple.p1_.view_host()(0, 1));
+    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.p1_.view_host()(0, 2));
+    EXPECT_DOUBLE_EQ(-25.0, actMetaSimple.p2_.view_host()(0, 0));
+    EXPECT_DOUBLE_EQ(+4.0, actMetaSimple.p2_.view_host()(0, 1));
+    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.p2_.view_host()(0, 2));
     // Check p1ZeroAlphaDir_
-    EXPECT_DOUBLE_EQ(1.0, actMetaSimple.p1ZeroAlphaDir_.h_view(0, 0));
-    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.p1ZeroAlphaDir_.h_view(0, 1));
-    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.p1ZeroAlphaDir_.h_view(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, actMetaSimple.p1ZeroAlphaDir_.view_host()(0, 0));
+    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.p1ZeroAlphaDir_.view_host()(0, 1));
+    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.p1ZeroAlphaDir_.view_host()(0, 2));
 
     // Check the chord/twist tables (DV)
-    for (int i = 0; i < actMetaSimple.num_force_pts_blade_.h_view(0); i++) {
-      EXPECT_DOUBLE_EQ(1.0, actMetaSimple.chord_tableDv_.h_view(0, i));
-      EXPECT_DOUBLE_EQ(0.0, actMetaSimple.twistTableDv_.h_view(0, i));
+    for (int i = 0; i < actMetaSimple.num_force_pts_blade_.view_host()(0);
+         i++) {
+      EXPECT_DOUBLE_EQ(1.0, actMetaSimple.chord_tableDv_.view_host()(0, i));
+      EXPECT_DOUBLE_EQ(0.0, actMetaSimple.twistTableDv_.view_host()(0, i));
     }
     // Check the polar tables
     for (int i = 0; i < 3; i++) {
-      EXPECT_DOUBLE_EQ(0.0, actMetaSimple.cdPolarTableDv_.h_view(0, i));
+      EXPECT_DOUBLE_EQ(0.0, actMetaSimple.cdPolarTableDv_.view_host()(0, i));
     }
-    EXPECT_DOUBLE_EQ(-10.0, actMetaSimple.clPolarTableDv_.h_view(0, 0));
-    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.clPolarTableDv_.h_view(0, 1));
-    EXPECT_DOUBLE_EQ(10.0, actMetaSimple.clPolarTableDv_.h_view(0, 2));
-    EXPECT_DOUBLE_EQ(-180.0, actMetaSimple.aoaPolarTableDv_.h_view(0, 0));
-    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.aoaPolarTableDv_.h_view(0, 1));
-    EXPECT_DOUBLE_EQ(180.0, actMetaSimple.aoaPolarTableDv_.h_view(0, 2));
+    EXPECT_DOUBLE_EQ(-10.0, actMetaSimple.clPolarTableDv_.view_host()(0, 0));
+    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.clPolarTableDv_.view_host()(0, 1));
+    EXPECT_DOUBLE_EQ(10.0, actMetaSimple.clPolarTableDv_.view_host()(0, 2));
+    EXPECT_DOUBLE_EQ(-180.0, actMetaSimple.aoaPolarTableDv_.view_host()(0, 0));
+    EXPECT_DOUBLE_EQ(0.0, actMetaSimple.aoaPolarTableDv_.view_host()(0, 1));
+    EXPECT_DOUBLE_EQ(180.0, actMetaSimple.aoaPolarTableDv_.view_host()(0, 2));
 
   } catch (std::exception const& err) {
     FAIL() << err.what();

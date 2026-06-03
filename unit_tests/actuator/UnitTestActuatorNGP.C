@@ -24,21 +24,21 @@ TEST(ActuatorNGP, NGP_testExecuteOnHostOnly)
   actMeta.add_turbine(infoTurb0);
   ActuatorBulk actBulk(actMeta);
   ASSERT_NO_THROW(TestActuatorHostOnly(actBulk));
-  EXPECT_DOUBLE_EQ(3.0, actBulk.epsilon_.h_view(1, 0));
-  EXPECT_DOUBLE_EQ(6.0, actBulk.epsilon_.h_view(1, 1));
-  EXPECT_DOUBLE_EQ(9.0, actBulk.epsilon_.h_view(1, 2));
+  EXPECT_DOUBLE_EQ(3.0, actBulk.epsilon_.view_host()(1, 0));
+  EXPECT_DOUBLE_EQ(6.0, actBulk.epsilon_.view_host()(1, 1));
+  EXPECT_DOUBLE_EQ(9.0, actBulk.epsilon_.view_host()(1, 2));
 
-  EXPECT_DOUBLE_EQ(1.0, actBulk.pointCentroid_.h_view(1, 0));
-  EXPECT_DOUBLE_EQ(0.5, actBulk.pointCentroid_.h_view(1, 1));
-  EXPECT_DOUBLE_EQ(0.25, actBulk.pointCentroid_.h_view(1, 2));
+  EXPECT_DOUBLE_EQ(1.0, actBulk.pointCentroid_.view_host()(1, 0));
+  EXPECT_DOUBLE_EQ(0.5, actBulk.pointCentroid_.view_host()(1, 1));
+  EXPECT_DOUBLE_EQ(0.25, actBulk.pointCentroid_.view_host()(1, 2));
 
-  EXPECT_DOUBLE_EQ(2.5, actBulk.velocity_.h_view(1, 0));
-  EXPECT_DOUBLE_EQ(5.0, actBulk.velocity_.h_view(1, 1));
-  EXPECT_DOUBLE_EQ(7.5, actBulk.velocity_.h_view(1, 2));
+  EXPECT_DOUBLE_EQ(2.5, actBulk.velocity_.view_host()(1, 0));
+  EXPECT_DOUBLE_EQ(5.0, actBulk.velocity_.view_host()(1, 1));
+  EXPECT_DOUBLE_EQ(7.5, actBulk.velocity_.view_host()(1, 2));
 
-  EXPECT_DOUBLE_EQ(3.1, actBulk.actuatorForce_.h_view(1, 0));
-  EXPECT_DOUBLE_EQ(6.2, actBulk.actuatorForce_.h_view(1, 1));
-  EXPECT_DOUBLE_EQ(9.3, actBulk.actuatorForce_.h_view(1, 2));
+  EXPECT_DOUBLE_EQ(3.1, actBulk.actuatorForce_.view_host()(1, 0));
+  EXPECT_DOUBLE_EQ(6.2, actBulk.actuatorForce_.view_host()(1, 1));
+  EXPECT_DOUBLE_EQ(9.3, actBulk.actuatorForce_.view_host()(1, 2));
 }
 
 TEST(ActuatorNGP, NGP_testExecuteOnHostAndDevice)
@@ -50,9 +50,9 @@ TEST(ActuatorNGP, NGP_testExecuteOnHostAndDevice)
   actMeta.add_turbine(infoTurb0);
   ActuatorBulkMod actBulk(actMeta);
   ASSERT_NO_THROW(TestActuatorHostDev(actBulk));
-  const double expectVal =
-    actBulk.velocity_.h_view(1, 1) * actBulk.pointCentroid_.h_view(1, 0);
-  EXPECT_DOUBLE_EQ(expectVal, actBulk.scalar_.h_view(1));
+  const double expectVal = actBulk.velocity_.view_host()(1, 1) *
+                           actBulk.pointCentroid_.view_host()(1, 0);
+  EXPECT_DOUBLE_EQ(expectVal, actBulk.scalar_.view_host()(1));
 }
 
 } // namespace

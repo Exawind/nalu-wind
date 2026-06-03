@@ -92,12 +92,12 @@ TEST_F(ActuatorParsingFastTests, NGP_minimumRequired)
   try {
     auto y_node = create_yaml_node(inputFileLines_);
     auto actMetaFAST = actuator_FAST_parse(y_node, actMeta);
-    EXPECT_DOUBLE_EQ(1.0, actMetaFAST.epsilonTower_.h_view(0, 0));
-    EXPECT_DOUBLE_EQ(0.5, actMetaFAST.epsilonTower_.h_view(0, 1));
-    EXPECT_DOUBLE_EQ(2.0, actMetaFAST.epsilonTower_.h_view(0, 2));
-    EXPECT_DOUBLE_EQ(1.0, actMetaFAST.epsilon_.h_view(0, 0));
-    EXPECT_DOUBLE_EQ(0.5, actMetaFAST.epsilon_.h_view(0, 1));
-    EXPECT_DOUBLE_EQ(2.0, actMetaFAST.epsilon_.h_view(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, actMetaFAST.epsilonTower_.view_host()(0, 0));
+    EXPECT_DOUBLE_EQ(0.5, actMetaFAST.epsilonTower_.view_host()(0, 1));
+    EXPECT_DOUBLE_EQ(2.0, actMetaFAST.epsilonTower_.view_host()(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, actMetaFAST.epsilon_.view_host()(0, 0));
+    EXPECT_DOUBLE_EQ(0.5, actMetaFAST.epsilon_.view_host()(0, 1));
+    EXPECT_DOUBLE_EQ(2.0, actMetaFAST.epsilon_.view_host()(0, 2));
   } catch (std::exception const& err) {
     FAIL() << err.what();
   }
@@ -141,10 +141,10 @@ TEST_F(ActuatorParsingFastTests, NGP_epsilonTower)
     auto y_node = create_yaml_node(inputFileLines_);
     auto actMetaFAST = actuator_FAST_parse(y_node, actMeta);
     for (int i = 0; i < 3; i++)
-      EXPECT_DOUBLE_EQ(5.0, actMetaFAST.epsilonTower_.h_view(0, i));
-    EXPECT_DOUBLE_EQ(1.0, actMetaFAST.epsilon_.h_view(0, 0));
-    EXPECT_DOUBLE_EQ(0.5, actMetaFAST.epsilon_.h_view(0, 1));
-    EXPECT_DOUBLE_EQ(2.0, actMetaFAST.epsilon_.h_view(0, 2));
+      EXPECT_DOUBLE_EQ(5.0, actMetaFAST.epsilonTower_.view_host()(0, i));
+    EXPECT_DOUBLE_EQ(1.0, actMetaFAST.epsilon_.view_host()(0, 0));
+    EXPECT_DOUBLE_EQ(0.5, actMetaFAST.epsilon_.view_host()(0, 1));
+    EXPECT_DOUBLE_EQ(2.0, actMetaFAST.epsilon_.view_host()(0, 2));
   } catch (std::exception const& err) {
     FAIL() << err.what();
   }

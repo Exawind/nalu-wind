@@ -140,8 +140,8 @@ TEST_F(ActuatorSearchTest, NGP_executeCoarseSearch)
       << "Coarse Search result size: "
       << coarsePointIds.view_host().extent_int(0) << " on rank: " << myRank;
     for (unsigned i = 0; i < coarsePointIds.extent(0); i++) {
-      const uint64_t thePt = coarsePointIds.h_view(i);
-      const uint64_t theElem = coarseElemIds.h_view(i);
+      const uint64_t thePt = coarsePointIds.view_host()(i);
+      const uint64_t theElem = coarseElemIds.view_host()(i);
       EXPECT_EQ(thePt + 1, theElem)
         << "rank: " << myRank << " point: " << thePt << " elem: " << theElem;
     }
