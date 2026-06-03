@@ -69,6 +69,8 @@ TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
   std::function<void(bool, bool)> run_alg = [&](
                                               bool zeroGrad, bool useShifted) {
     stk::mesh::field_fill(0.0, *dpdx_);
+    dpdx_->modify_on_host();
+    dpdx_->sync_to_device();
     helperObjs.realm.solutionOptions_->explicitlyZeroOpenPressureGradient_ =
       zeroGrad;
     sierra::kynema_ugf::ScalarNodalGradAlgDriver algDriver(

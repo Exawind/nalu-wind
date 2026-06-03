@@ -1,5 +1,5 @@
 ############################ BASE ######################################
-cmake_minimum_required (VERSION 3.17.0 FATAL_ERROR)
+cmake_minimum_required (VERSION 3.27.0 FATAL_ERROR)
 project(Kynema-UGF CXX)
 include(CMakeDependentOption)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -28,7 +28,7 @@ option(ENABLE_KYNEMA_FMB_SIXDOF "Use Kynema as 6 degree-of-freedom solver" OFF)
 
 option(KYNEMA_UGF_SAVE_GOLDS  "Save gold files to directory when running tests" OFF)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 
