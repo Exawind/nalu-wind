@@ -82,10 +82,8 @@ SSTMaxLengthScaleAlg<AlgTraits>::execute()
         double& maxLengthL = maxLengthScale.get(nodeL, 0);
         double& maxLengthR = maxLengthScale.get(nodeR, 0);
 
-        if (maxLengthL < dx)
-          Kokkos::atomic_add(&maxLengthL, dx - maxLengthL);
-        if (maxLengthR < dx)
-          Kokkos::atomic_add(&maxLengthR, dx - maxLengthR);
+        Kokkos::atomic_max(&maxLengthL, dx);
+        Kokkos::atomic_max(&maxLengthR, dx);
       }
     });
   maxLengthScale.modify_on_device();
