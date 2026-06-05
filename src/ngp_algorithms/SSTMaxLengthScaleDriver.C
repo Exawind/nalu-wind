@@ -40,6 +40,7 @@ SSTMaxLengthScaleDriver::pre_work()
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpMaxLengthScale = fieldMgr.template get_field<double>(
     maxLengthScale->mesh_meta_data_ordinal());
+  ngpMaxLengthScale.clear_sync_state();
   ngpMaxLengthScale.set_all(ngpMesh, 0.0);
 }
 

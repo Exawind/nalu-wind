@@ -338,6 +338,7 @@ compute_edge_scalar_divergence(
 
   // Synchronize fields to device
   scalarField->modify_on_host();
+  scalarField->sync_to_device();
   return;
 }
 
