@@ -120,7 +120,7 @@ TEST_F(ActuatorFunctorFastTests, runAssignVelAndComputeForces)
 
   if (fast.get_procNo(turbineID) == turbineID) {
     std::vector<double> tempForce(3);
-    const int offset = actBulk.turbIdOffset_.h_view(turbineID);
+    const int offset = actBulk.turbIdOffset_.view_host()(turbineID);
 
     for (int i = offset; i < fast.get_numForcePts(turbineID) + offset; ++i) {
       fast.getForce(tempForce, i - offset, turbineID);
