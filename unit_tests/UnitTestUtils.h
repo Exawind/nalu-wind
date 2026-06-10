@@ -531,7 +531,7 @@ public:
         double* bcVel = smrtBcVelocity(node);
         bcVel[0] = 0.0;
         bcVel[1] = 0.0;
-        bcVel[3] = 0.0;
+        bcVel[2] = 0.0;
         *smrtBcHeatFlux(node) = 0.0;
         *smrtSpecificHeat(node) = 1000.0;
       }
