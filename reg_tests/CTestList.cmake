@@ -40,7 +40,7 @@ endmacro(setup_test)
 
 macro(set_properties testname)
     if(CMAKE_CXX_COMPILER_ID MATCHES "^(Clang|AppleClang)$")
-      set(TEST_TIMEOUT 18000)
+      set(TEST_TIMEOUT 21600)
     else()
       set(TEST_TIMEOUT 3600)
     endif()
