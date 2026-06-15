@@ -137,7 +137,7 @@ MotionPrescribedKernel::build_transformation(
   // min_index corresponds to trajectory index that has the minimum difference
   // in time to current time in simulation
   int min_index = -1;
-  for (int i = 0; i < defined_motion_values_.extent(0); ++i) {
+  for (int i = 0; i < static_cast<int>(defined_motion_values_.extent(0)); ++i) {
     if (defined_motion_values_(i, 0) > motionTime) {
       min_index = i;
     }
@@ -166,7 +166,7 @@ MotionPrescribedKernel::build_transformation(
   } else {
     // Interp displacement if information is available. Assume lines between
     // motion points.
-    if (min_index == (defined_motion_values_.extent(0) - 1)) {
+    if (min_index == (static_cast<int>(defined_motion_values_.extent(0)) - 1)) {
       // Note indices here, [1-3] corresponds to x, y, and z displacements in
       // relevant_motion, result gets shifted over for mesh_motion API
       // calculations
@@ -196,7 +196,7 @@ MotionPrescribedKernel::build_transformation(
     current_displacement[5] =
       relevant_motion[9] * (motionTime - relevant_motion[0]);
   } else {
-    if (min_index == defined_motion_values_.extent(0) - 1) {
+    if (min_index == static_cast<int>(defined_motion_values_.extent(0)) - 1) {
       // Note indices here, [10-13] corresponds to x, y, and z angular
       // displacements in relevant_motion, result gets shifted over for
       // mesh_motion API calculations
@@ -290,7 +290,7 @@ MotionPrescribedKernel::compute_velocity(
   // min_index corresponds to trajectory index that has the minimum difference
   // in time to current time in simulation
   int min_index = -1;
-  for (int i = 0; i < defined_motion_values_.extent(0); ++i) {
+  for (int i = 0; i < static_cast<int>(defined_motion_values_.extent(0)); ++i) {
     if (defined_motion_values_(i, 0) > motionTime) {
       min_index = i;
     }
@@ -305,7 +305,7 @@ MotionPrescribedKernel::compute_velocity(
     Kokkos::subview(defined_motion_values_, min_index, Kokkos::ALL());
 
   auto motion_np1 =
-    (min_index == (defined_motion_values_.extent(0) - 1))
+    (min_index == (static_cast<int>(defined_motion_values_.extent(0)) - 1))
       ? relevant_motion
       : Kokkos::subview(defined_motion_values_, min_index + 1, Kokkos::ALL());
   double time_between = motion_np1[0] - relevant_motion[0];
