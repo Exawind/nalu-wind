@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{github.ref}}-${{github.head_ref}}-ci
+  cancel-in-progress: true
+
 jobs:
   Formatting:
     runs-on: ubuntu-latest
@@ -16,24 +20,20 @@ jobs:
       with:
         clang-format-version: '22'
         check-path: '.'
-  CPU-Trilinos:
+  CPU:
     needs: Formatting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container:
-      image: roodj/kynema:latest
+      image: roodj/kynema-snapshot:latest
       env:
           KYNEMA_MANAGER: /kynema-manager
           E4S_MACHINE: true
     steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.6.0
-        with:
-          access_token: ${{github.token}}
       - name: Clone
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           submodules: true
-      - name: Tests
+      - name: Test
         run: |
           /bin/bash -c " \
             source ${KYNEMA_MANAGER}/start.sh && spack-start && \
@@ -44,39 +44,7 @@ jobs:
             spack rm kynema && \
             spack add kynema-ugf@main+hypre+openfast+tioga+trilinos-solvers && \
             spack concretize -f && \
-            spack install --reuse && \
-            spack cd -b kynema-ugf && \
-            spack build-env kynema-ugf ctest -j $(nproc) -L unit --output-on-failure \
-          "
-  CPU-Hypre-Only:
-    needs: Formatting
-    runs-on: ubuntu-latest
-    container:
-      image: roodj/kynema:latest
-      env:
-          KYNEMA_MANAGER: /kynema-manager
-          E4S_MACHINE: true
-    steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.6.0
-        with:
-          access_token: ${{github.token}}
-      - name: Clone
-        uses: actions/checkout@v3
-        with:
-          submodules: true
-      - name: Tests
-        run: |
-          /bin/bash -c " \
-            source ${KYNEMA_MANAGER}/start.sh && spack-start && \
-            spack env activate e4s-build && \
-            cd ${KYNEMA_MANAGER}/environments/e4s-build && \
-            ln -s ${GITHUB_WORKSPACE} kynema-ugf && \
-            spack develop --no-modify-concrete-specs --no-clone kynema-ugf@=main && \
-            spack rm kynema && \
-            spack add kynema-ugf@main+hypre+openfast+tioga~trilinos-solvers && \
-            spack concretize -f && \
             spack install && \
             spack cd -b kynema-ugf && \
-            spack build-env kynema-ugf ctest -j $(nproc) -L unit --output-on-failure \
+            spack build-env kynema-ugf ctest -L unit --output-on-failure \
           "
