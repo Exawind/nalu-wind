@@ -82,18 +82,21 @@ TurbViscSSTAlg::execute()
       }
       sijMag = stk::math::sqrt(2.0 * sijMag);
 
-      const DblType minDSq = minD.get(meshIdx, 0) * minD.get(meshIdx, 0);
-      const DblType trbDiss = stk::math::sqrt(tke.get(meshIdx, 0)) / betaStar /
-                              sdr.get(meshIdx, 0) / minD.get(meshIdx, 0);
+      // Guard against zero wall distance (e.g. at wall nodes) and zero sdr
+      const DblType minDist = stk::math::max(minD.get(meshIdx, 0), 1.0e-16);
+      const DblType sdrSafe = stk::math::max(sdr.get(meshIdx, 0), 1.0e-16);
+      const DblType minDSq = minDist * minDist;
+
+      const DblType trbDiss =
+        stk::math::sqrt(tke.get(meshIdx, 0)) / betaStar / sdrSafe / minDist;
       const DblType lamDiss = 500.0 * visc.get(meshIdx, 0) /
-                              density.get(meshIdx, 0) / sdr.get(meshIdx, 0) /
-                              minDSq;
+                              density.get(meshIdx, 0) / sdrSafe / minDSq;
       const DblType fArgTwo = stk::math::max(2.0 * trbDiss, lamDiss);
       const DblType fTwo = stk::math::tanh(fArgTwo * fArgTwo);
 
-      tvisc.get(meshIdx, 0) =
-        aOne * density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
-        stk::math::max(aOne * sdr.get(meshIdx, 0), sijMag * fTwo);
+      tvisc.get(meshIdx, 0) = aOne * density.get(meshIdx, 0) *
+                              tke.get(meshIdx, 0) /
+                              stk::math::max(aOne * sdrSafe, sijMag * fTwo);
     });
   tvisc.modify_on_device();
 }
