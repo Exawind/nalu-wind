@@ -8,7 +8,6 @@ False                  Echo        - Echo the input to "<rootname>.AD.ech"? (fla
 0                      TwrShadow   - Calculate tower influence on wind based on downstream tower shadow (switch) {0=none, 1=Powles model, 2=Eames model}
 True                   TwrAero     - Calculate tower aerodynamic loads? (flag)
 False                  CavitCheck  - Perform cavitation check? (flag) [UA_Mod must be 0 when CavitCheck=true]
-False                  Buoyancy    - Include buoyancy effects? (flag)
 False                  NacelleDrag - Include Nacelle Drag effects? (flag)
 False                  CompAA      - Flag to compute AeroAcoustics calculation [used only when Wake_Mod = 1 or 2]
 "unused"               AA_InputFile - AeroAcoustics input file [used only when CompAA=true]
@@ -48,7 +47,6 @@ default                SectAvgPsiFwd - Forward azimuth relative to blade where t
 True                   AoA34       - Sample the angle of attack (AoA) at the 3/4 chord or the AC point {default=True} [always used]
 2                      UA_Mod      - Unsteady Aero Model Switch (switch) {0=Quasi-steady (no UA), 2=B-L Gonzalez, 3=B-L Minnema/Pierce, 4=B-L HGM 4-states, 5=B-L HGM+vortex 5 states, 6=Oye, 7=Boeing-Vertol}
 True                   FLookup     - Flag to indicate whether a lookup for f' will be calculated (TRUE) or whether best-fit exponential equations will be used (FALSE); if FALSE S1-S4 must be provided in airfoil input files (flag) [used only when UA_Mod>0]
-3               IntegrationMethod  - Switch to indicate which integration method UA uses (1=RK4, 2=AB4, 3=ABM4, 4=BDF2)
 0                      UAStartRad  - Starting radius for dynamic stall (fraction of rotor radius [0.0,1.0]) [used only when UA_Mod>0; if line is missing UAStartRad=0]
 1                      UAEndRad    - Ending radius for dynamic stall (fraction of rotor radius [0.0,1.0]) [used only when UA_Mod>0; if line is missing UAEndRad=1]
 ======  Airfoil Information =========================================================================
@@ -72,191 +70,47 @@ True                   UseBlCm     - Include aerodynamic pitching moment in calc
 "NRELOffshrBsline5MW_AeroDyn_blade.dat" ADBlFile(1) - Name of file containing distributed aerodynamic properties for Blade #1 (-)
 "NRELOffshrBsline5MW_AeroDyn_blade.dat" ADBlFile(2) - Name of file containing distributed aerodynamic properties for Blade #2 (-) [unused if NumBl < 2]
 "NRELOffshrBsline5MW_AeroDyn_blade.dat" ADBlFile(3) - Name of file containing distributed aerodynamic properties for Blade #3 (-) [unused if NumBl < 3]
-======  Hub Properties ============================================================================== [used only when Buoyancy=True]
+======  Hub Properties ============================================================================== [used only when MHK=1 or 2]
 0                      VolHub      - Hub volume (m^3)
 0                      HubCenBx    - Hub center of buoyancy x direction offset (m)
-======  Nacelle Properties ========================================================================== [used only when Buoyancy=True or NacelleDrag=True]
+======  Nacelle Properties ========================================================================== [used only when MHK=1 or 2 or when NacelleDrag=True]
 0                      VolNac      - Nacelle volume (m^3)
-0.0, 0.0, 0.0   NacCenB            - Position of nacelle center of buoyancy from yaw bearing in nacelle coordinates (m)
-0, 0, 0      NacArea        - Projected area of the nacelle in X, Y, Z in the nacelle coordinate system (m^2)
-0, 0, 0   NacCd          - Drag coefficient for the nacelle areas defined above (-)
-0, 0, 0         NacDragAC          - Position of aerodynamic center of nacelle drag in nacelle coordinates (m)
+0.0, 0.0, 0.0          NacCenB     - Position of nacelle center of buoyancy from yaw bearing in nacelle coordinates (m)
+0, 0, 0                NacArea     - Projected area of the nacelle in X, Y, Z in the nacelle coordinate system (m^2)
+0, 0, 0                NacCd       - Drag coefficient for the nacelle areas defined above (-)
+0, 0, 0                NacDragAC   - Position of aerodynamic center of nacelle drag in nacelle coordinates (m)
 ======  Tail Fin Aerodynamics =======================================================================
 False                  TFinAero    - Calculate tail fin aerodynamics model (flag)
 "unused"               TFinFile    - Input file for tail fin aerodynamics [used only when TFinAero=True]
-======  Tower Influence and Aerodynamics ============================================================ [used only when TwrPotent/=0, TwrShadow/=0, TwrAero=True, or Buoyancy=True]
-12                     NumTwrNds   - Number of tower nodes used in the analysis (-) [used only when TwrPotent/=0, TwrShadow/=0, TwrAero=True, or Buoyancy=True]
-TwrElev        TwrDiam        TwrCd          TwrTI          TwrCb         ! TwrTI used only when TwrShadow=2; TwrCb used only when Buoyancy=True
-(m)            (m)            (-)            (-)            (-)           
-0.0000000E+00  6.0000000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00
-8.5261000E+00  5.7870000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00
-1.7053000E+01  5.5740000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00
-2.5579000E+01  5.3610000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00
-3.4105000E+01  5.1480000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00
-4.2633000E+01  4.9350000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00
-5.1158000E+01  4.7220000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00
-5.9685000E+01  4.5090000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00
-6.8211000E+01  4.2960000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00
-7.6738000E+01  4.0830000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00
-8.5268000E+01  3.8700000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00
-8.7600000E+01  3.8700000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00
+======  Tower Influence and Aerodynamics ============================================================ [used only when TwrPotent/=0, TwrShadow/=0, TwrAero=True, or MHK=1 or 2]
+12                     NumTwrNds   - Number of tower nodes used in the analysis (-) [used only when TwrPotent/=0, TwrShadow/=0, TwrAero=True, or MHK=1 or 2]
+TwrElev        TwrDiam        TwrCd          TwrTI          TwrCb          TwrCp          TwrCa !TwrTI used only with TwrShadow=2, TwrCb/TwrCp/TwrCa used only with MHK=1 or 2
+(m)            (m)            (-)            (-)            (-)            (-)            (-)
+0.0000000E+00  6.0000000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+8.5261000E+00  5.7870000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+1.7053000E+01  5.5740000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+2.5579000E+01  5.3610000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+3.4105000E+01  5.1480000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+4.2633000E+01  4.9350000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+5.1158000E+01  4.7220000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+5.9685000E+01  4.5090000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+6.8211000E+01  4.2960000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+7.6738000E+01  4.0830000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+8.5268000E+01  3.8700000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+8.7600000E+01  3.8700000E+00  1.0000000E+00  1.0000000E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
 ======  Outputs  ====================================================================================
 True                   SumPrint    - Generate a summary file listing input options and interpolated properties to "<rootname>.AD.sum"? (flag)
-7                      NBlOuts     - Number of blade node outputs [0 - 9] (-)
-1, 2, 3, 4, 5, 6, 7    BlOutNd     - Blade nodes whose values will be output (-)
-9                      NTwOuts     - Number of tower node outputs [0 - 9] (-)
-1, 3, 5, 7, 8, 9, 10, 11, 12 TwOutNd     - Tower nodes whose values will be output (-)
+0                      NBlOuts     - Number of blade node outputs [0 - 9] (-)
+1, 9, 19               BlOutNd     - Blade nodes whose values will be output (-)
+0                      NTwOuts     - Number of tower node outputs [0 - 9] (-)
+1, 2, 6                TwOutNd     - Tower nodes whose values will be output (-)
                        OutList     - The next line(s) contains a list of output parameters.  See OutListParameters.xlsx for a listing of available output channels, (-)
-TwN1VUndx 
-TwN1VUndy 
-TwN1VUndz
-TwN2VUndx 
-TwN2VUndy 
-TwN2VUndz
-TwN3VUndx 
-TwN3VUndy 
-TwN3VUndz
-TwN4VUndx 
-TwN4VUndy 
-TwN4VUndz
-TwN5VUndx 
-TwN5VUndy 
-TwN5VUndz
-TwN6VUndx 
-TwN6VUndy 
-TwN6VUndz
-TwN7VUndx 
-TwN7VUndy 
-TwN7VUndz
-TwN8VUndx 
-TwN8VUndy 
-TwN8VUndz
-TwN9VUndx 
-TwN9VUndy 
-TwN9VUndz
-B1N1VUndx 
-B1N2VUndx 
-B1N3VUndx 
-B1N4VUndx 
-B1N5VUndx 
-B1N6VUndx 
-B1N7VUndx
-B1N1VUndy 
-B1N2VUndy 
-B1N3VUndy 
-B1N4VUndy 
-B1N5VUndy 
-B1N6VUndy 
-B1N7VUndy
-B1N1VUndz 
-B1N2VUndz 
-B1N3VUndz 
-B1N4VUndz 
-B1N5VUndz 
-B1N6VUndz 
-B1N7VUndz
-B2N1VUndx 
-B2N2VUndx 
-B2N3VUndx 
-B2N4VUndx 
-B2N5VUndx 
-B2N6VUndx 
-B2N7VUndx
-B2N1VUndy 
-B2N2VUndy 
-B2N3VUndy 
-B2N4VUndy 
-B2N5VUndy 
-B2N6VUndy 
-B2N7VUndy
-B2N1VUndz 
-B2N2VUndz 
-B2N3VUndz 
-B2N4VUndz 
-B2N5VUndz 
-B2N6VUndz 
-B2N7VUndz
-B3N1VUndx 
-B3N2VUndx 
-B3N3VUndx 
-B3N4VUndx 
-B3N5VUndx 
-B3N6VUndx 
-B3N7VUndx
-B3N1VUndy 
-B3N2VUndy 
-B3N3VUndy 
-B3N4VUndy 
-B3N5VUndy 
-B3N6VUndy 
-B3N7VUndy
-B3N1VUndz 
-B3N2VUndz 
-B3N3VUndz 
-B3N4VUndz 
-B3N5VUndz 
-B3N6VUndz 
-B3N7VUndz
-B1Azimuth 
-B2Azimuth 
-B3Azimuth
-B1N1Fx 
-B1N2Fx 
-B1N3Fx 
-B1N4Fx 
-B1N5Fx 
-B1N6Fx 
-B1N7Fx
-B2N1Fx 
-B2N2Fx 
-B2N3Fx 
-B2N4Fx 
-B2N5Fx 
-B2N6Fx 
-B2N7Fx
-B3N1Fx 
-B3N2Fx 
-B3N3Fx 
-B3N4Fx 
-B3N5Fx 
-B3N6Fx 
-B3N7Fx
-B1N1Fy 
-B1N2Fy 
-B1N3Fy 
-B1N4Fy 
-B1N5Fy 
-B1N6Fy 
-B1N7Fy
-B2N1Fy 
-B2N2Fy 
-B2N3Fy 
-B2N4Fy 
-B2N5Fy 
-B2N6Fy 
-B2N7Fy
-B3N1Fy 
-B3N2Fy 
-B3N3Fy 
-B3N4Fy 
-B3N5Fy 
-B3N6Fy 
-B3N7Fy
-END of input file (the word "END" must appear in the first 3 columns of this last OutList line)
-====== Outputs for all blade stations (same ending as above for B1N1.... =========================== [optional section]
-1                      BldNd_BladesOut - Number of blades to output all node information at. Up to number of blades on turbine. (-)
-"All"                  BldNd_BlOutNd - Future feature will allow selecting a portion of the nodes to output. Not implemented yet. (-)
+
+END of OutList section (the word "END" must appear in the first 3 columns of the last OutList line)
+---------------------- NODE OUTPUTS --------------------------------------------
+1                      BldNd_BladesOut  - Number of blades to output all node information at.  Up to number of blades on turbine. (-)
+ALL                    BldNd_BlOutNd   - Specify a portion of the nodes to output. {"ALL", "Tip", "Root", or a list of node numbers} (-)
                        OutList_Nodal - The next line(s) contains a list of output parameters.  See OutListParameters.xlsx for a listing of available output channels, (-)
-"Fx, Fy"
-"Vx, Vy"
-Vrel
-TnInd
-AxInd
-Theta
-Phi
-Vindx
-Vindy
-Alpha
-Fl
-Fd
+
 END (the word "END" must appear in the first 3 columns of this last OutList line in the optional nodal output section)
+====================================================================================================
