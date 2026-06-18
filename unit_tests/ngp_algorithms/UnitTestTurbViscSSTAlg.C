@@ -76,7 +76,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sstlr_alg)
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  sierra::kynema_ugf::TurbViscSSTAlg TurbViscSSTLRAlg(
+  sierra::kynema_ugf::TurbViscSSTLRAlg TurbViscSSTLRAlg(
     helperObjs.realm, partVec_[0], tvisc_);
 
   TurbViscSSTLRAlg.execute();
