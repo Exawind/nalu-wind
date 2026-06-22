@@ -263,7 +263,8 @@ ShearStressTransportEquationSystem::solve_and_update()
     // deal with DES option
     if (
       (TurbulenceModel::SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
-      (TurbulenceModel::SST_IDDES == realm_.solutionOptions_->turbulenceModel_) ||
+      (TurbulenceModel::SST_IDDES ==
+       realm_.solutionOptions_->turbulenceModel_) ||
       (TurbulenceModel::SST_IDDES_SIMPLE ==
        realm_.solutionOptions_->turbulenceModel_))
       sstMaxLengthScaleAlgDriver_->execute();
@@ -275,7 +276,8 @@ ShearStressTransportEquationSystem::solve_and_update()
 
     if (
       (TurbulenceModel::SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
-      (TurbulenceModel::SST_IDDES == realm_.solutionOptions_->turbulenceModel_) ||
+      (TurbulenceModel::SST_IDDES ==
+       realm_.solutionOptions_->turbulenceModel_) ||
       (TurbulenceModel::SST_IDDES_SIMPLE ==
        realm_.solutionOptions_->turbulenceModel_))
       sstMaxLengthScaleAlgDriver_->execute();

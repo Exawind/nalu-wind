@@ -276,9 +276,8 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
           if (
             TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_) {
             nodeAlg.add_kernel<SDRSSTBLTM2015NodeKernel>(realm_.meta_data());
-          } else if (
-            (TurbulenceModel::SST_IDDES ==
-             realm_.solutionOptions_->turbulenceModel_)) {
+          } else if ((TurbulenceModel::SST_IDDES ==
+                      realm_.solutionOptions_->turbulenceModel_)) {
             nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
           } else {
             throw std::runtime_error(
@@ -299,7 +298,7 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
             (TurbulenceModel::SST_DES ==
              realm_.solutionOptions_->turbulenceModel_) ||
             (TurbulenceModel::SST_IDDES ==
-               realm_.solutionOptions_->turbulenceModel_) ||
+             realm_.solutionOptions_->turbulenceModel_) ||
             (TurbulenceModel::SST_IDDES_SIMPLE ==
              realm_.solutionOptions_->turbulenceModel_)) {
             nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());

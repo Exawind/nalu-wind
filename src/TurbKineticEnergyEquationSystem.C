@@ -336,8 +336,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
           break;
         case TurbulenceModel::SST_IDDES_SIMPLE:
           if (!realm_.solutionOptions_->gammaEqActive_) {
-            nodeAlg.add_kernel<TKESSTIDDESSIMPLENodeKernel>(
-              realm_.meta_data());
+            nodeAlg.add_kernel<TKESSTIDDESSIMPLENodeKernel>(realm_.meta_data());
           } else {
             throw std::runtime_error(
               "IDDES_SIMPLE does not support transition_model");
