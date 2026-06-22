@@ -224,8 +224,8 @@ SolutionOptions::load(const YAML::Node& y_node)
     bool matchedTurbulenceModel = false;
     for (int k = 0; k < static_cast<int>(TurbulenceModel::TurbulenceModel_END);
          ++k) {
-      if (case_insensitive_compare(
-            specifiedTurbModel, TurbulenceModelNames[k])) {
+      if (
+        case_insensitive_compare(specifiedTurbModel, TurbulenceModelNames[k])) {
         turbulenceModel_ = TurbulenceModel(k);
         matchedTurbulenceModel = true;
         break;
@@ -338,23 +338,23 @@ SolutionOptions::load(const YAML::Node& y_node)
           ySrc >> elemSrcTermsMap_;
         } else if (expect_map(y_option, "source_term_parameters", optional)) {
           y_option["source_term_parameters"] >> srcTermParamMap_;
-        } else if (expect_map(
-                     y_option, "element_source_term_parameters", optional)) {
+        } else if (
+          expect_map(y_option, "element_source_term_parameters", optional)) {
           y_option["element_source_term_parameters"] >> elemSrcTermParamMap_;
         } else if (expect_map(y_option, "projected_nodal_gradient", optional)) {
           y_option["projected_nodal_gradient"] >> nodalGradMap_;
         } else if (expect_map(y_option, "noc_correction", optional)) {
           y_option["noc_correction"] >> nocMap_;
-        } else if (expect_map(
-                     y_option, "shifted_gradient_operator", optional)) {
+        } else if (
+          expect_map(y_option, "shifted_gradient_operator", optional)) {
           y_option["shifted_gradient_operator"] >> shiftedGradOpMap_;
         } else if (expect_map(y_option, "skew_symmetric_advection", optional)) {
           y_option["skew_symmetric_advection"] >> skewSymmetricMap_;
-        } else if (expect_map(
-                     y_option, "input_variables_from_file", optional)) {
+        } else if (
+          expect_map(y_option, "input_variables_from_file", optional)) {
           y_option["input_variables_from_file"] >> inputVarFromFileMap_;
-        } else if (expect_map(
-                     y_option, "turbulence_model_constants", optional)) {
+        } else if (
+          expect_map(y_option, "turbulence_model_constants", optional)) {
           std::map<std::string, double> turbConstMap;
           y_option["turbulence_model_constants"] >> turbConstMap;
           // iterate the parsed map
@@ -484,11 +484,11 @@ SolutionOptions::load(const YAML::Node& y_node)
             y_nc, "include_png_penalty", ncAlgPngPenalty_, ncAlgPngPenalty_);
         } else if (expect_map(y_option, "peclet_function_form", optional)) {
           y_option["peclet_function_form"] >> tanhFormMap_;
-        } else if (expect_map(
-                     y_option, "peclet_function_tanh_transition", optional)) {
+        } else if (
+          expect_map(y_option, "peclet_function_tanh_transition", optional)) {
           y_option["peclet_function_tanh_transition"] >> tanhTransMap_;
-        } else if (expect_map(
-                     y_option, "peclet_function_tanh_width", optional)) {
+        } else if (
+          expect_map(y_option, "peclet_function_tanh_width", optional)) {
           y_option["peclet_function_tanh_width"] >> tanhWidthMap_;
         }
         // overload line command, however, push to the same tanh data structure
@@ -498,11 +498,11 @@ SolutionOptions::load(const YAML::Node& y_node)
           y_option["tanh_transition"] >> tanhTransMap_;
         } else if (expect_map(y_option, "tanh_width", optional)) {
           y_option["tanh_width"] >> tanhWidthMap_;
-        } else if (expect_map(
-                     y_option, "consistent_mass_matrix_png", optional)) {
+        } else if (
+          expect_map(y_option, "consistent_mass_matrix_png", optional)) {
           y_option["consistent_mass_matrix_png"] >> consistentMassMatrixPngMap_;
-        } else if (expect_map(
-                     y_option, "dynamic_body_force_box_parameters", optional)) {
+        } else if (
+          expect_map(y_option, "dynamic_body_force_box_parameters", optional)) {
           const YAML::Node yDyn = y_option["dynamic_body_force_box_parameters"];
           get_required(yDyn, "forcing_direction", dynamicBodyForceDir_);
           get_required(
