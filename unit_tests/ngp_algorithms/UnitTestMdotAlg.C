@@ -136,6 +136,8 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_open_correction)
   fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
   stk::mesh::field_fill(0.0, *openMassFlowRate_);
+  openMassFlowRate_->modify_on_host();
+  openMassFlowRate_->sync_to_device();
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);

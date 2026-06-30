@@ -30,7 +30,7 @@ void
 test_vector_create_impl()
 {
   DeviceScalar ds("test", 1);
-  ds.h_view(0) = 0.0;
+  ds.view_host()(0) = 0.0;
   ds.modify<DeviceScalar::host_mirror_space>();
   ds.sync<sierra::kynema_ugf::MemSpace>();
   auto ddata = ds.template view<sierra::kynema_ugf::MemSpace>();
@@ -47,14 +47,14 @@ test_vector_create_impl()
   ds.modify<sierra::kynema_ugf::MemSpace>();
   ds.sync<DeviceScalar::host_mirror_space>();
 
-  EXPECT_NEAR(ds.h_view(0), 0.0, tol);
+  EXPECT_NEAR(ds.view_host()(0), 0.0, tol);
 }
 
 void
 test_tensor_create_impl()
 {
   DeviceScalar ds("test", 1);
-  ds.h_view(0) = 0.0;
+  ds.view_host()(0) = 0.0;
   ds.modify<DeviceScalar::host_mirror_space>();
   ds.sync<sierra::kynema_ugf::MemSpace>();
   auto ddata = ds.template view<sierra::kynema_ugf::MemSpace>();
@@ -72,7 +72,7 @@ test_tensor_create_impl()
   ds.modify<sierra::kynema_ugf::MemSpace>();
   ds.sync<DeviceScalar::host_mirror_space>();
 
-  EXPECT_NEAR(ds.h_view(0), 0.0, tol);
+  EXPECT_NEAR(ds.view_host()(0), 0.0, tol);
 }
 
 void
@@ -94,7 +94,7 @@ test_rotations_impl()
 #define CHECK_ON_GPU(expr1, expr2)                                             \
   {                                                                            \
     DeviceScalar ds("test", 1);                                                \
-    ds.h_view(0) = 1.0e16;                                                     \
+    ds.view_host()(0) = 1.0e16;                                                \
     ds.modify<DeviceScalar::host_mirror_space>();                              \
     ds.sync<sierra::kynema_ugf::MemSpace>();                                   \
     auto dv = ds.template view<sierra::kynema_ugf::MemSpace>();                \
@@ -107,7 +107,7 @@ test_rotations_impl()
       });                                                                      \
     ds.modify<sierra::kynema_ugf::MemSpace>();                                 \
     ds.sync<DeviceScalar::host_mirror_space>();                                \
-    EXPECT_NEAR(ds.h_view(0), 0.0, tol)                                        \
+    EXPECT_NEAR(ds.view_host()(0), 0.0, tol)                                   \
       << "LHS = " #expr1 "\nRHS = " #expr2 << std::endl;                       \
   }
 
@@ -136,7 +136,7 @@ test_device_capture_impl()
   auto v1 = vs::Vector::ihat();
   auto vexpected = vs::Vector::khat();
   DeviceScalar ds("test", 1);
-  ds.h_view(0) = 1.0e16;
+  ds.view_host()(0) = 1.0e16;
   ds.modify<DeviceScalar::host_mirror_space>();
   ds.sync<sierra::kynema_ugf::MemSpace>();
   auto dv = ds.template view<sierra::kynema_ugf::MemSpace>();
@@ -152,7 +152,7 @@ test_device_capture_impl()
   ds.modify<sierra::kynema_ugf::MemSpace>();
   ds.sync<DeviceScalar::host_mirror_space>();
 
-  EXPECT_NEAR(ds.h_view(0), 0.0, tol);
+  EXPECT_NEAR(ds.view_host()(0), 0.0, tol);
 }
 
 void
@@ -178,7 +178,7 @@ test_device_lists_impl()
     vs::Vector::ihat(), vs::Vector::jhat(), vs::Vector::khat()};
 
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR(vs::mag(htrue[i] - dvec.h_view(i)), 0.0, tol);
+    EXPECT_NEAR(vs::mag(htrue[i] - dvec.view_host()(i)), 0.0, tol);
   }
 }
 
@@ -199,7 +199,7 @@ test_tensor_skewsym()
   dvec.sync<DeviceVector::host_mirror_space>();
 
   for (int i = 0; i < 3; ++i)
-    EXPECT_NEAR(vs::mag(dvec.h_view(i)), 0.0, tol);
+    EXPECT_NEAR(vs::mag(dvec.view_host()(i)), 0.0, tol);
 }
 
 } // namespace

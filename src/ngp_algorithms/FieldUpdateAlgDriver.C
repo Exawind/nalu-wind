@@ -38,6 +38,7 @@ FieldUpdateAlgDriver::pre_work()
     meta.get_field<double>(stk::topology::NODE_RANK, fieldName_);
   stk::mesh::field_fill(0.0, *nonngpField);
 
+  field.clear_sync_state();
   field.set_all(ngpMesh, 0.0);
 }
 

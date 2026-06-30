@@ -32,11 +32,11 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
   Kokkos::parallel_for(
     "ZeroArrays", HostRangePolicy(0, actMeta.numPointsTotal_), [&](int index) {
       for (int j = 0; j < 3; j++) {
-        pointCentroid_.h_view(index, j) = 0;
-        epsilon_.h_view(index, j) = 0;
-        epsilonOpt_.h_view(index, j) = 0;
+        pointCentroid_.view_host()(index, j) = 0;
+        epsilon_.view_host()(index, j) = 0;
+        epsilonOpt_.view_host()(index, j) = 0;
       }
-      searchRadius_.h_view(index) = 0;
+      searchRadius_.view_host()(index) = 0;
     });
   compute_offsets(actMeta);
   init_epsilon(actMeta);
@@ -118,7 +118,7 @@ ActuatorBulkDiskFAST::compute_swept_point_count(ActuatorMetaFAST& actMeta)
   actuator_utils::reduce_view_on_host(numSweptOffset_);
 
   for (int i = 0; i < nAddedPoints.extent_int(0); ++i) {
-    actMeta.numPointsTurbine_.h_view(i) += nAddedPoints(i);
+    actMeta.numPointsTurbine_.view_host()(i) += nAddedPoints(i);
     actMeta.numPointsTotal_ += nAddedPoints(i);
   }
 }
@@ -164,8 +164,8 @@ ActuatorBulkDiskFAST::initialize_swept_points(const ActuatorMetaFAST& actMeta)
 
     const int nForcePtsBlade =
       actMeta.fastInputs_.globTurbineData[iTurb].numForcePtsBlade;
-    const int turbOffset = turbIdOffset_.h_view(iTurb);
-    const int turbTotal = actMeta.numPointsTurbine_.h_view(iTurb);
+    const int turbOffset = turbIdOffset_.view_host()(iTurb);
+    const int turbTotal = actMeta.numPointsTurbine_.view_host()(iTurb);
     const int nForcePtsFast =
       1 + actMeta.get_fast_index(
             fast::TOWER, iTurb,
@@ -224,8 +224,8 @@ ActuatorBulkDiskFAST::spread_forces_over_disk(const ActuatorMetaFAST& actMeta)
   for (int iTurb = 0; iTurb < actMeta.numberOfActuators_; iTurb++) {
     const int nForcePtsBlade =
       actMeta.fastInputs_.globTurbineData[iTurb].numForcePtsBlade;
-    const int turbOffset = turbIdOffset_.h_view(iTurb);
-    const int turbTotal = actMeta.numPointsTurbine_.h_view(iTurb);
+    const int turbOffset = turbIdOffset_.view_host()(iTurb);
+    const int turbTotal = actMeta.numPointsTurbine_.view_host()(iTurb);
     const int nForcePtsFast =
       1 + actMeta.get_fast_index(
             fast::TOWER, iTurb,

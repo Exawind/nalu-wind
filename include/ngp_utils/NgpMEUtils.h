@@ -73,7 +73,7 @@ nodes_per_entity(const DataReqType& dataReq, const METype meType)
   Kokkos::parallel_for(
     "get_nodes_per_element", DeviceRangePolicy(0, 1),
     KOKKOS_LAMBDA(const int i) { npe(i) = me->nodesPerElement_; });
-  Kokkos::View<int*, sierra::kynema_ugf::MemSpace>::HostMirror npe_host(
+  Kokkos::View<int*, sierra::kynema_ugf::MemSpace>::host_mirror_type npe_host(
     "npe", 1);
   Kokkos::deep_copy(npe_host, npe);
   return npe_host(0);
@@ -93,7 +93,7 @@ num_integration_points(const DataReqType& dataReq, const METype meType)
   Kokkos::parallel_for(
     "get_num_integration_points", DeviceRangePolicy(0, 1),
     KOKKOS_LAMBDA(const int i) { nips(i) = me->num_integration_points(); });
-  Kokkos::View<int*, sierra::kynema_ugf::MemSpace>::HostMirror nips_host(
+  Kokkos::View<int*, sierra::kynema_ugf::MemSpace>::host_mirror_type nips_host(
     "nips", 1);
   Kokkos::deep_copy(nips_host, nips);
   return nips_host(0);

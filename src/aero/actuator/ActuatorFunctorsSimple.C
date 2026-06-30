@@ -114,7 +114,7 @@ ActSimpleWriteToFile(
   auto force = helper.get_local_view(actBulk.actuatorForce_);
   auto relVel = helper.get_local_view(actBulk.relativeVelocity_);
   auto density = helper.get_local_view(actBulk.density_);
-  const int offset = actBulk.turbIdOffset_.h_view(actBulk.localTurbineId_);
+  const int offset = actBulk.turbIdOffset_.view_host()(actBulk.localTurbineId_);
 
   if (actBulk.localTurbineId_ == KynemaUGFEnv::self().parallel_rank()) {
     std::ofstream outFile;
@@ -122,7 +122,7 @@ ActSimpleWriteToFile(
 
     outFile.open(filename, std::ios_base::app);
     const int stop =
-      offset + actMeta.numPointsTurbine_.h_view(actBulk.localTurbineId_);
+      offset + actMeta.numPointsTurbine_.view_host()(actBulk.localTurbineId_);
 
     for (int index = offset; index < stop; ++index) {
       const int i = index - offset;
@@ -240,7 +240,7 @@ ActSimpleComputeForce(
   auto spanDirection = helper.get_local_view(actMeta.spanDir_);
 
   const int turbId = actBulk.localTurbineId_;
-  const unsigned nPolarTable = actMeta.polarTableSize_.h_view(turbId);
+  const unsigned nPolarTable = actMeta.polarTableSize_.view_host()(turbId);
 
   const int debug_output = actBulk.debug_output_;
   std::vector<std::string>* cache = &actBulk.output_cache_;

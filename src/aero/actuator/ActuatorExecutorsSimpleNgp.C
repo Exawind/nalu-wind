@@ -43,10 +43,11 @@ ActuatorLineSimpleNGP::operator()()
   double p1[3];
   double p2[3];
   for (int j = 0; j < 3; j++) {
-    p1[j] = actMeta_.p1_.h_view(actBulk_.localTurbineId_, j);
-    p2[j] = actMeta_.p2_.h_view(actBulk_.localTurbineId_, j);
+    p1[j] = actMeta_.p1_.view_host()(actBulk_.localTurbineId_, j);
+    p2[j] = actMeta_.p2_.view_host()(actBulk_.localTurbineId_, j);
   }
-  int nPts = actMeta_.num_force_pts_blade_.h_view(actBulk_.localTurbineId_);
+  int nPts =
+    actMeta_.num_force_pts_blade_.view_host()(actBulk_.localTurbineId_);
   // -- functor to update points --
   Kokkos::parallel_for(
     "updatePointLocationsActuatorNgpSimple", localRangePolicy,

@@ -43,7 +43,7 @@ TEST(BasicKokkos, simple_views_1D)
   const double tolerance = 0.0000001;
   const size_t N = 10;
   Kokkos::View<double*> device_view1D("device_view1D", N);
-  Kokkos::View<double*>::HostMirror host_view1D =
+  Kokkos::View<double*>::host_mirror_type host_view1D =
     Kokkos::create_mirror_view(device_view1D);
   for (size_t i = 0; i < N; ++i) {
     host_view1D(i) = i + 1;
@@ -51,7 +51,7 @@ TEST(BasicKokkos, simple_views_1D)
 
   Kokkos::deep_copy(device_view1D, host_view1D);
 
-  Kokkos::View<double*>::HostMirror host_view1D_2("host_view1D_2", N);
+  Kokkos::View<double*>::host_mirror_type host_view1D_2("host_view1D_2", N);
   Kokkos::deep_copy(host_view1D_2, device_view1D);
 
   for (size_t i = 0; i < N; ++i) {
@@ -65,7 +65,7 @@ TEST(BasicKokkos, simple_views_2D)
   const size_t N = 10;
   const size_t M = 20;
   Kokkos::View<double**> device_view2D("device_view2D", N, M);
-  Kokkos::View<double**>::HostMirror host_view2D =
+  Kokkos::View<double**>::host_mirror_type host_view2D =
     Kokkos::create_mirror_view(device_view2D);
   for (size_t i = 0; i < N; ++i) {
     for (size_t j = 0; j < M; ++j) {
@@ -75,7 +75,7 @@ TEST(BasicKokkos, simple_views_2D)
 
   Kokkos::deep_copy(device_view2D, host_view2D);
 
-  Kokkos::View<double**>::HostMirror host_view2D_2("host_view2D_2", N, M);
+  Kokkos::View<double**>::host_mirror_type host_view2D_2("host_view2D_2", N, M);
   Kokkos::deep_copy(host_view2D_2, device_view2D);
 
   for (size_t i = 0; i < N; ++i) {
@@ -92,7 +92,7 @@ run_parallel_for_test()
   const size_t N = 10;
   const size_t M = 20;
   Kokkos::View<double**> device_view2D("host_view2D", N, M);
-  Kokkos::View<double**>::HostMirror host_view2D =
+  Kokkos::View<double**>::host_mirror_type host_view2D =
     Kokkos::create_mirror_view(device_view2D);
 
   for (size_t i = 0; i < N; ++i) {
@@ -119,7 +119,7 @@ run_parallel_for_test()
   // EXPECT_NEAR checks would fail.
   Kokkos::deep_copy(host_view2D, device_view2D);
 
-  Kokkos::View<double**>::HostMirror host_result("host_result", N, M);
+  Kokkos::View<double**>::host_mirror_type host_result("host_result", N, M);
   Kokkos::deep_copy(host_result, device_view2D);
 
   for (size_t i = 0; i < N; ++i) {
@@ -138,7 +138,7 @@ run_nested_parallel_for_thread_teams_test()
   const size_t N = 8;
   const size_t M = 8;
   Kokkos::View<double**> device_view2D("device_view2D", N, M);
-  Kokkos::View<double**>::HostMirror host_view2D =
+  Kokkos::View<double**>::host_mirror_type host_view2D =
     Kokkos::create_mirror_view(device_view2D);
 
   for (size_t i = 0; i < N; ++i) {
@@ -173,7 +173,7 @@ run_nested_parallel_for_thread_teams_test()
   // EXPECT_NEAR checks would fail.
   Kokkos::deep_copy(host_view2D, device_view2D);
 
-  Kokkos::View<double**>::HostMirror host_result("host_result", N, M);
+  Kokkos::View<double**>::host_mirror_type host_result("host_result", N, M);
   Kokkos::deep_copy(host_result, device_view2D);
 
   for (size_t i = 0; i < N; ++i) {

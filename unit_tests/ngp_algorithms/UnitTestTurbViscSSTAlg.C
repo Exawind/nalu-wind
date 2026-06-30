@@ -76,7 +76,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sstlr_alg)
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  sierra::kynema_ugf::TurbViscSSTAlg TurbViscSSTLRAlg(
+  sierra::kynema_ugf::TurbViscSSTLRAlg TurbViscSSTLRAlg(
     helperObjs.realm, partVec_[0], tvisc_);
 
   TurbViscSSTLRAlg.execute();
@@ -93,9 +93,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sstlr_alg)
       0.82554938136626144,
       0.33398788772269555,
       0.58778525229247314,
-      0.34549150281252627,
+      0.17412848496705169,
       0.32219673776462515,
-      0.19411612710296283};
+      0.13137855541068333};
 
     const double tol = 1.0e-15;
 

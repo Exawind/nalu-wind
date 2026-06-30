@@ -36,7 +36,7 @@ ActuatorMeta::ActuatorMeta(int numTurbines, ActuatorType actuatorType)
 void
 ActuatorMeta::add_turbine(const ActuatorInfoNGP& info)
 {
-  numPointsTurbine_.h_view(info.turbineId_) = info.numPoints_;
+  numPointsTurbine_.view_host()(info.turbineId_) = info.numPoints_;
   numPointsTotal_ += info.numPoints_;
 }
 
@@ -78,8 +78,8 @@ ActuatorBulk::compute_offsets(const ActuatorMeta& actMeta)
   const int numTurbs = actMeta.numberOfActuators_;
 
   for (int i = 1; i < numTurbs; ++i) {
-    turbIdOffset_.h_view(i) =
-      turbIdOffset_.h_view(i - 1) + actMeta.numPointsTurbine_.h_view(i - 1);
+    turbIdOffset_.view_host()(i) = turbIdOffset_.view_host()(i - 1) +
+                                   actMeta.numPointsTurbine_.view_host()(i - 1);
   }
 }
 
@@ -139,8 +139,8 @@ ActuatorBulk::local_range_policy(const ActuatorMeta& actMeta)
 {
   auto rank = KynemaUGFEnv::self().parallel_rank();
   if (rank < turbIdOffset_.extent_int(0)) {
-    const int offset = turbIdOffset_.h_view(rank);
-    const int size = actMeta.numPointsTurbine_.h_view(rank);
+    const int offset = turbIdOffset_.view_host()(rank);
+    const int size = actMeta.numPointsTurbine_.view_host()(rank);
     return Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(
       offset, offset + size);
   } else {

@@ -70,8 +70,8 @@ struct GenericLoopOverCoarseSearchResults
 
   void operator()(int index) const
   {
-    auto pointId = actBulk_.coarseSearchPointIds_.h_view(index);
-    auto elemId = actBulk_.coarseSearchElemIds_.h_view(index);
+    auto pointId = actBulk_.coarseSearchPointIds_.view_host()(index);
+    auto elemId = actBulk_.coarseSearchElemIds_.view_host()(index);
 
     const stk::mesh::Entity elem =
       stkBulk_.get_entity(stk::topology::ELEMENT_RANK, elemId);

@@ -45,18 +45,18 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
     if (epsilon_tower.Type() == YAML::NodeType::Scalar) {
       double epsilonTower = epsilon_tower.as<double>();
       for (int j = 0; j < 3; j++) {
-        actMetaFAST.epsilonTower_.h_view(iTurb, j) = epsilonTower;
+        actMetaFAST.epsilonTower_.view_host()(iTurb, j) = epsilonTower;
       }
     } else {
       epsilonTemp = epsilon_tower.as<std::vector<double>>();
       for (int j = 0; j < 3; j++) {
-        actMetaFAST.epsilonTower_.h_view(iTurb, j) = epsilonTemp[j];
+        actMetaFAST.epsilonTower_.view_host()(iTurb, j) = epsilonTemp[j];
       }
     }
   } else {
     for (int j = 0; j < 3; j++) {
-      actMetaFAST.epsilonTower_.h_view(iTurb, j) =
-        actMetaFAST.epsilon_.h_view(iTurb, j);
+      actMetaFAST.epsilonTower_.view_host()(iTurb, j) =
+        actMetaFAST.epsilon_.view_host()(iTurb, j);
     }
   }
   const YAML::Node epsilon_hub = turbNode["epsilon_hub"];
@@ -64,12 +64,12 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
     if (epsilon_hub.Type() == YAML::NodeType::Scalar) {
       const double epsilonHub = epsilon_hub.as<double>();
       for (int j = 0; j < 3; j++) {
-        actMetaFAST.epsilonHub_.h_view(iTurb, j) = epsilonHub;
+        actMetaFAST.epsilonHub_.view_host()(iTurb, j) = epsilonHub;
       }
     } else {
       epsilonTemp = epsilon_hub.as<std::vector<double>>();
       for (int j = 0; j < 3; j++) {
-        actMetaFAST.epsilonHub_.h_view(iTurb, j) = epsilonTemp[j];
+        actMetaFAST.epsilonHub_.view_host()(iTurb, j) = epsilonTemp[j];
       }
     }
   }
@@ -125,11 +125,12 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
                        "turbine, but a 2 bladed turbine was supplied.");
   }
 
-  actMetaFAST.numPointsTurbine_.h_view(iTurb) =
+  actMetaFAST.numPointsTurbine_.view_host()(iTurb) =
     1 // hub
     + fi.globTurbineData[iTurb].numForcePtsTwr +
     fi.globTurbineData[iTurb].numForcePtsBlade * (*numBlades);
-  actMetaFAST.numPointsTotal_ += actMetaFAST.numPointsTurbine_.h_view(iTurb);
+  actMetaFAST.numPointsTotal_ +=
+    actMetaFAST.numPointsTurbine_.view_host()(iTurb);
 }
 } // namespace
 
