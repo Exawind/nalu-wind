@@ -1030,9 +1030,7 @@ Realm::setup_interior_algorithms()
       if (p->topology() != stk::topology::HEX_8) {
         KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Skipping registration of MeshVelocityEdgeAlg on part "
-          << p->name()
-          << ". GCL operations are currently only supported on HEX_8 "
-             "elements.\n";
+          << p->name() << ". Algorithm is only registered for hex blocks\n";
         continue;
       }
       if (realmUsesEdges_) {
@@ -4489,6 +4487,12 @@ bool
 Realm::is_turbulent()
 {
   return solutionOptions_->isTurbulent_;
+}
+
+bool
+Realm::include_continuity_residual() const
+{
+  return solutionOptions_->includeContinuityResidual_;
 }
 
 //--------------------------------------------------------------------------

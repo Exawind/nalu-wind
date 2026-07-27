@@ -65,6 +65,7 @@
 #include "ngp_algorithms/SDRWallFuncAlg.h"
 #include "ngp_algorithms/SDRLowReWallAlg.h"
 #include "ngp_algorithms/SDRWallFuncAlgDriver.h"
+#include "node_kernels/ScalarContResidNodeKernel.h"
 #include "utils/StkHelpers.h"
 
 // UT Austin Hybrid AMS kernel
@@ -265,6 +266,8 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
       "specific_dissipation_rate_time_derivative",
       "lumped_specific_dissipation_rate_time_derivative"};
     bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
+
+    auto use_cont_res = realm_.include_continuity_residual();
     auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
     process_ngp_node_kernels(
       solverAlgMap, realm_, part, this,
@@ -272,6 +275,10 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
+
+        if (use_cont_res) {
+          nodeAlg.add_kernel<ScalarContResNodeKernel>(realm_.bulk_data(), sdr_);
+        }
         if (realm_.solutionOptions_->gammaEqActive_) {
           if (
             TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_) {

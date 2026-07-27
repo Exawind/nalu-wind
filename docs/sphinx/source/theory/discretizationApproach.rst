@@ -401,5 +401,3 @@ respectively.
 
 One can use this expression to recognize the ideal LHS sensitivities for
 row and columns for component :math:`u_i`.
-
-

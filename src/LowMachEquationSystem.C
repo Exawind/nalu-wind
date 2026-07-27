@@ -97,6 +97,7 @@
 #include "node_kernels/MomentumGclSrcNodeKernel.h"
 #include "node_kernels/ContinuityGclNodeKernel.h"
 #include "node_kernels/ContinuityMassBDFNodeKernel.h"
+#include "node_kernels/MomentumContResidNodeKernel.h"
 
 // ngp
 #include "ngp_algorithms/ABLWallFrictionVelAlg.h"
@@ -109,6 +110,8 @@
 #include "ngp_algorithms/MdotDensityAccumAlg.h"
 #include "ngp_algorithms/MdotInflowAlg.h"
 #include "ngp_algorithms/MdotOpenEdgeAlg.h"
+#include "ngp_algorithms/FluxDivEdgeAlg.h"
+#include "ngp_algorithms/FluxDivBndryElemAlg.h"
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
@@ -330,6 +333,9 @@ LowMachEquationSystem::register_nodal_fields(
   if (numVolStates > 1)
     realm_.augment_restart_variable_list("dual_nodal_volume");
 
+  dualNodalVolume_ = &(meta_data.declare_field<double>(
+    stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates));
+
   // make sure all states are properly populated (restart can handle this)
   if (
     numStates > 2 &&
@@ -412,6 +418,26 @@ LowMachEquationSystem::register_edge_fields(
     stk::io::set_field_output_type(
       *edgeAreaVec_, stk::io::FieldOutputType::VECTOR_3D);
   }
+}
+
+//--------------------------------------------------------------------------
+//-------- register_open_bc ------------------------------------------------
+//--------------------------------------------------------------------------
+void
+LowMachEquationSystem::register_inflow_bc(
+  stk::mesh::Part* part,
+  const stk::topology& theTopo,
+  const InflowBoundaryConditionData&)
+{
+  stk::mesh::MetaData& metaData = realm_.meta_data();
+  MasterElement* meFC =
+    sierra::kynema_ugf::MasterElementRepo::get_surface_master_element_on_host(
+      theTopo);
+  const int numScsBip = meFC->num_integration_points();
+  GenericFieldType* mdotBip = &(metaData.declare_field<double>(
+    static_cast<stk::topology::rank_t>(metaData.side_rank()),
+    "inflow_mass_flow_rate"));
+  stk::mesh::put_field_on_mesh(*mdotBip, *part, numScsBip, nullptr);
 }
 
 //--------------------------------------------------------------------------
@@ -714,6 +740,13 @@ LowMachEquationSystem::solve_and_update()
     timeB = KynemaUGFEnv::self().kynema_ugf_time();
     continuityEqSys_->timerMisc_ += (timeB - timeA);
 
+    if (realm_.include_continuity_residual()) {
+      timeA = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->contResidualAlgDriver_.execute();
+      timeB = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->timerMisc_ += (timeB - timeA);
+    }
+
     if (realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS) {
       momentumEqSys_->AMSAlgDriver_->initial_mdot();
     }
@@ -736,6 +769,13 @@ LowMachEquationSystem::solve_and_update()
     continuityEqSys_->mdotAlgDriver_->execute();
     timeB = KynemaUGFEnv::self().kynema_ugf_time();
     continuityEqSys_->timerMisc_ += (timeB - timeA);
+
+    if (realm_.include_continuity_residual()) {
+      timeA = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->contResidualAlgDriver_.execute();
+      timeB = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->timerMisc_ += (timeB - timeA);
+    }
 
     // project nodal velocity
     project_nodal_velocity();
@@ -766,6 +806,14 @@ LowMachEquationSystem::solve_and_update()
       << userSuppliedName_ << std::endl;
 
     for (int oi = 0; oi < momentumEqSys_->numOversetIters_; ++oi) {
+
+      if (realm_.include_continuity_residual()) {
+        timeA = KynemaUGFEnv::self().kynema_ugf_time();
+        continuityEqSys_->contResidualAlgDriver_.execute();
+        timeB = KynemaUGFEnv::self().kynema_ugf_time();
+        continuityEqSys_->timerMisc_ += (timeB - timeA);
+      }
+
       momentumEqSys_->dynPressAlgDriver_.execute();
       if (momentumEqSys_->pecletAlg_)
         momentumEqSys_->pecletAlg_->execute();
@@ -796,6 +844,13 @@ LowMachEquationSystem::solve_and_update()
       continuityEqSys_->timerMisc_ += (timeB - timeA);
     }
 
+    if (realm_.include_continuity_residual()) {
+      timeA = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->contResidualAlgDriver_.execute();
+      timeB = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->timerMisc_ += (timeB - timeA);
+    }
+
     for (int oi = 0; oi < continuityEqSys_->numOversetIters_; ++oi) {
       continuityEqSys_->assemble_and_solve(continuityEqSys_->pTmp_);
 
@@ -814,6 +869,13 @@ LowMachEquationSystem::solve_and_update()
     continuityEqSys_->mdotAlgDriver_->execute();
     timeB = KynemaUGFEnv::self().kynema_ugf_time();
     continuityEqSys_->timerMisc_ += (timeB - timeA);
+
+    if (realm_.include_continuity_residual()) {
+      timeA = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->contResidualAlgDriver_.execute();
+      timeB = KynemaUGFEnv::self().kynema_ugf_time();
+      continuityEqSys_->timerMisc_ += (timeB - timeA);
+    }
 
     // project nodal velocity
     project_nodal_velocity();
@@ -1415,6 +1477,7 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 
     // Process NGP-ready nodal source terms first
     auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
+    auto use_cont_res = realm_.include_continuity_residual();
     process_ngp_node_kernels(
       solverAlgMap, realm_, part, this,
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
@@ -1424,6 +1487,9 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
           realm_.solutionOptions_->turbulenceModel_ == TurbulenceModel::SST_AMS)
           nodeAlg.add_kernel<MomentumSSTAMSForcingNodeKernel>(
             realm_.bulk_data(), *realm_.solutionOptions_);
+        if (use_cont_res) {
+          nodeAlg.add_kernel<MomentumContResNodeKernel>(realm_.bulk_data());
+        }
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         bool added = true;
@@ -1602,7 +1668,6 @@ MomentumEquationSystem::register_inflow_bc(
   const stk::topology& /*theTopo*/,
   const InflowBoundaryConditionData& inflowBCData)
 {
-
   // push mesh part
   notProjectedPart_.push_back(part);
 
@@ -2853,6 +2918,7 @@ ContinuityEquationSystem::ContinuityEquationSystem(
     pTmp_(NULL),
     nodalGradAlgDriver_(realm_, "pressure", "dpdx"),
     mdotAlgDriver_(new MdotAlgDriver(realm_, elementContinuityEqs)),
+    contResidualAlgDriver_(realm_),
     projectedNodalGradEqs_(NULL)
 {
   dofName_ = "pressure";
@@ -2929,6 +2995,14 @@ ContinuityEquationSystem::register_nodal_fields(
   stk::mesh::put_field_on_mesh(*coordinates_, selector, nDim, nullptr);
   stk::io::set_field_output_type(
     *coordinates_, stk::io::FieldOutputType::VECTOR_3D);
+
+  divMdot_ =
+    &meta_data.declare_field<double>(stk::topology::NODE_RANK, "div_mdot");
+  stk::mesh::put_field_on_mesh(*divMdot_, selector, nullptr);
+  stk::mesh::put_field_on_mesh(
+    meta_data.declare_field<double>(
+      stk::topology::NODE_RANK, "continuity_residual"),
+    selector, nullptr);
 }
 
 //--------------------------------------------------------------------------
@@ -3082,9 +3156,19 @@ ContinuityEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 
   // Register density accumulation calculations if the user has requested
   // density time derivative terms.
-  if (hasMass)
+  if (hasMass) {
     mdotAlgDriver_->register_elem_algorithm<MdotDensityAccumAlg>(
       algType, part, "mdot_rho_accum", *mdotAlgDriver_, lumpedMass);
+  }
+
+  if (!elementContinuityEqs_) {
+    contResidualAlgDriver_.register_edge_algorithm<FluxDivEdgeAlg>(
+      algType, part, "div_mdot_interior", massFlowRate_, divMdot_);
+  } else {
+    STK_ThrowRequireMsg(
+      !realm_.include_continuity_residual(),
+      "Continuity residual only implemented for edges");
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -3197,6 +3281,13 @@ ContinuityEquationSystem::register_inflow_bc(
   mdotAlgDriver_->register_face_algorithm<MdotInflowAlg>(
     algType, part, "mdot_inflow", *mdotAlgDriver_, useShifted);
 
+  stk::topology::rank_t sideRank =
+    static_cast<stk::topology::rank_t>(realm_.meta_data().side_rank());
+  auto* mdot_inflow =
+    realm_.meta_data().get_field<double>(sideRank, "inflow_mass_flow_rate");
+  contResidualAlgDriver_.register_face_algorithm<FluxDivBndryElemAlg>(
+    algType, part, "div_mdot_inflow", mdot_inflow, divMdot_);
+
   // solver; lhs
   if (
     realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ||
@@ -3260,6 +3351,13 @@ ContinuityEquationSystem::register_open_bc(
       algType, part, get_elem_topo(realm_, *part), "mdot_open_edge",
       realm_.solutionOptions_->activateOpenMdotCorrection_, *mdotAlgDriver_);
 
+    stk::topology::rank_t sideRank =
+      static_cast<stk::topology::rank_t>(realm_.meta_data().side_rank());
+    auto* mdot_open =
+      realm_.meta_data().get_field<double>(sideRank, "open_mass_flow_rate");
+    contResidualAlgDriver_.register_face_algorithm<FluxDivBndryElemAlg>(
+      algType, part, "div_mdot_open", mdot_open, divMdot_);
+
     {
       auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
 
@@ -3282,6 +3380,7 @@ ContinuityEquationSystem::register_open_bc(
           faceElemSolverAlg->faceDataNeeded_,
           faceElemSolverAlg->elemDataNeeded_);
     }
+
   } else {
     throw std::runtime_error(
       "ContinuityEQS: Attempt to use element open algorithm");
@@ -3397,6 +3496,7 @@ ContinuityEquationSystem::register_abltop_bc(
       partTopo, *this, activeKernels, "continuity_inflow", realm_.bulk_data(),
       *realm_.solutionOptions_, useShifted, dataPreReqs);
   }
+
 #else
   throw std::runtime_error(
     "Cannot initialize ABL top BC because FFTW support is mising.\n Set "
@@ -3458,6 +3558,10 @@ ContinuityEquationSystem::register_non_conformal_bc(
   } else {
     itsi->second->partVec_.push_back(part);
   }
+
+  STK_ThrowRequireMsg(
+    !realm_.include_continuity_residual(),
+    "Continuity residual not implemented for nonconformal");
 }
 //--------------------------------------------------------------------------
 //-------- register_overset_bc ---------------------------------------------

@@ -428,7 +428,6 @@ public:
   std::unique_ptr<MeshMotionAlg> meshMotionAlg_;
   std::unique_ptr<MeshTransformationAlg> meshTransformationAlg_;
   std::unique_ptr<LidarLOS> lidarLOS_;
-
   std::vector<Algorithm*> propertyAlg_;
   std::map<PropertyIdentifier, ScalarFieldType*> propertyMap_;
   std::vector<Algorithm*> initCondAlg_;
@@ -580,6 +579,8 @@ public:
   double get_turb_model_constant(const TurbulenceModelConstant turbModelEnum);
 
   TurbulenceModel get_turbulence_model() const;
+
+  bool include_continuity_residual() const;
 
   // element promotion options
   bool doPromotion_; // conto
