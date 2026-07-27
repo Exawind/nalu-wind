@@ -105,7 +105,7 @@ enum class QuadRank { SCS, SCV };
 
 namespace sierra::kynema_ugf {
 template <typename AlgTraits, QuadRank rank>
-std::enable_if_t<rank == QuadRank::SCS, double>
+KOKKOS_FUNCTION std::enable_if_t<rank == QuadRank::SCS, double>
 shape_fcn(QuadType quad, int ip, int n)
 {
   if (quad == QuadType::SHIFTED) {
@@ -120,7 +120,7 @@ shape_fcn(QuadType quad, int ip, int n)
 }
 
 template <typename AlgTraits, QuadRank rank>
-std::enable_if_t<rank == QuadRank::SCV, double>
+KOKKOS_FUNCTION std::enable_if_t<rank == QuadRank::SCV, double>
 shape_fcn(QuadType quad, int ip, int n)
 {
   if (quad == QuadType::SHIFTED) {
