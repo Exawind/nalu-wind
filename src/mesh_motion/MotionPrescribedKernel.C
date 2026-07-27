@@ -140,13 +140,14 @@ MotionPrescribedKernel::build_transformation(
   for (int i = 0; i < defined_motion_values_.extent(0); ++i) {
     if (defined_motion_values_(i, 0) > motionTime) {
       min_index = i;
+      break;
     }
   }
 
   if (min_index == -1)
     min_index = defined_motion_values_.extent(0) - 1;
   else
-    min_index = Kokkos::min(min_index - 1, 0);
+    min_index = Kokkos::max(min_index - 1, 0);
 
   auto relevant_motion =
     Kokkos::subview(defined_motion_values_, min_index, Kokkos::ALL());
@@ -293,13 +294,14 @@ MotionPrescribedKernel::compute_velocity(
   for (int i = 0; i < defined_motion_values_.extent(0); ++i) {
     if (defined_motion_values_(i, 0) > motionTime) {
       min_index = i;
+      break;
     }
   }
 
   if (min_index == -1)
     min_index = defined_motion_values_.extent(0) - 1;
   else
-    min_index = Kokkos::min(min_index - 1, 0);
+    min_index = Kokkos::max(min_index - 1, 0);
 
   auto relevant_motion =
     Kokkos::subview(defined_motion_values_, min_index, Kokkos::ALL());
