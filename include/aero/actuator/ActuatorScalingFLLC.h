@@ -45,13 +45,12 @@ scale_lift_force(
     const int turbId = actBulkSimple.localTurbineId_;
     double dR = actMetaSimple.dR_.view_host()(turbId);
 
-    Kokkos::parallel_for(
-      "scale G", rangePolicy, [=, *this](int i) {
-        const double denom = rho(i) * dR;
-        for (int j = 0; j < 3; ++j) {
-          G(i, j) /= denom;
-        }
-      });
+    Kokkos::parallel_for("scale G", rangePolicy, [=, *this](int i) {
+      const double denom = rho(i) * dR;
+      for (int j = 0; j < 3; ++j) {
+        G(i, j) /= denom;
+      }
+    });
     break;
   }
   case (ActuatorType::ActLineFASTNGP):
