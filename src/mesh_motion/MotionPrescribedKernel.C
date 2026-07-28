@@ -137,7 +137,8 @@ MotionPrescribedKernel::build_transformation(
   // min_index corresponds to trajectory index that has the minimum difference
   // in time to current time in simulation
   int min_index = -1;
-  for (int i = 0; i < defined_motion_values_.extent(0); ++i) {
+  const int n_rows = static_cast<int>(defined_motion_values_.extent(0));
+  for (int i = 0; i < n_rows; ++i) {
     if (defined_motion_values_(i, 0) > motionTime) {
       min_index = i;
       break;
@@ -167,7 +168,7 @@ MotionPrescribedKernel::build_transformation(
   } else {
     // Interp displacement if information is available. Assume lines between
     // motion points.
-    if (min_index == (defined_motion_values_.extent(0) - 1)) {
+    if (min_index == (static_cast<int>(defined_motion_values_.extent(0)) - 1)) {
       // Note indices here, [1-3] corresponds to x, y, and z displacements in
       // relevant_motion, result gets shifted over for mesh_motion API
       // calculations
@@ -291,7 +292,8 @@ MotionPrescribedKernel::compute_velocity(
   // min_index corresponds to trajectory index that has the minimum difference
   // in time to current time in simulation
   int min_index = -1;
-  for (int i = 0; i < defined_motion_values_.extent(0); ++i) {
+  const int n_rows = static_cast<int>(defined_motion_values_.extent(0));
+  for (int i = 0; i < n_rows; ++i) {
     if (defined_motion_values_(i, 0) > motionTime) {
       min_index = i;
       break;

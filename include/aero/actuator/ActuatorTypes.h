@@ -17,7 +17,7 @@ namespace sierra {
 namespace kynema_ugf {
 
 #ifndef ACTUATOR_LAMBDA
-#define ACTUATOR_LAMBDA [=]
+#define ACTUATOR_LAMBDA [=, *this]
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
