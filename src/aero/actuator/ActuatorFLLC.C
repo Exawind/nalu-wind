@@ -63,7 +63,7 @@ FilteredLiftingLineCorrection::compute_lift_force_distribution()
 
     // surrogate for equation 5.3
     Kokkos::parallel_for(
-      "extract lift", range_policy, ACTUATOR_LAMBDA(int i) {
+      "extract lift", range_policy, [=, *this](int i) {
         auto v = Kokkos::subview(vel, i, Kokkos::ALL);
         auto f = Kokkos::subview(force, i, Kokkos::ALL);
 
@@ -105,7 +105,7 @@ FilteredLiftingLineCorrection::grad_lift_force_distribution()
 
     // equations 5.4 and 5.5 a/b
     Kokkos::parallel_for(
-      "compute dG", range_policy, ACTUATOR_LAMBDA(int i) {
+      "compute dG", range_policy, [=, *this](int i) {
         const int index = i - offset;
         for (int j = 0; j < 3; ++j) {
           if (index == 0) {
@@ -161,7 +161,7 @@ FilteredLiftingLineCorrection::compute_induced_velocities()
       Kokkos::RangePolicy<exec_space>(offset, offset + nPoints);
 
     Kokkos::parallel_for(
-      "compute flucs", range_policy, ACTUATOR_LAMBDA(int index) {
+      "compute flucs", range_policy, [=, *this](int index) {
         double optInd[3] = {0, 0, 0};
         double lesInd[3] = {0, 0, 0};
 

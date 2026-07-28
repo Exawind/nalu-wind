@@ -46,7 +46,7 @@ scale_lift_force(
     double dR = actMetaSimple.dR_.view_host()(turbId);
 
     Kokkos::parallel_for(
-      "scale G", rangePolicy, ACTUATOR_LAMBDA(int i) {
+      "scale G", rangePolicy, [=, *this](int i) {
         const double denom = rho(i) * dR;
         for (int j = 0; j < 3; ++j) {
           G(i, j) /= denom;
@@ -65,7 +65,7 @@ scale_lift_force(
     auto G = helper.get_local_view(actBulk.liftForceDistribution_);
     auto point = helper.get_local_view(actBulk.pointCentroid_);
     Kokkos::parallel_for(
-      "scale G FAST outputs", rangePolicy, ACTUATOR_LAMBDA(int i) {
+      "scale G FAST outputs", rangePolicy, [=, *this](int i) {
         double dr = 0;
         if (i == offset) {
           for (int j = 0; j < 3; ++j) {
