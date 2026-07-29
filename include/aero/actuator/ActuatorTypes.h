@@ -16,10 +16,6 @@
 namespace sierra {
 namespace kynema_ugf {
 
-#ifndef ACTUATOR_LAMBDA
-#define ACTUATOR_LAMBDA [=]
-#endif
-
 #if defined(KOKKOS_ENABLE_CUDA)
 using ActuatorMemSpace = Kokkos::CudaSpace;
 using ActuatorExecutionSpace = Kokkos::DefaultExecutionSpace;
