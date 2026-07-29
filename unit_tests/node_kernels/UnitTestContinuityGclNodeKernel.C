@@ -68,10 +68,21 @@ my_create(const T& hostObj)
   return obj;
 }
 
+template <class T>
+inline void
+my_destroy(T* obj)
+{
+  Kokkos::parallel_for(
+    "destroy", 1, KOKKOS_LAMBDA(const int) { obj->~T(); });
+  Kokkos::fence();
+  sierra::kynema_ugf::kokkos_free_on_device(obj);
+}
+
 void
 test_kernel_on_device(const sierra::kynema_ugf::ContinuityGclNodeKernel& kernel)
 {
   sierra::kynema_ugf::ContinuityGclNodeKernel* deviceKernel = my_create(kernel);
+  my_destroy(deviceKernel);
 }
 
 TEST_F(ContinuityKernelHex8Mesh, NGP_continuity_gcl_node_kernel)
