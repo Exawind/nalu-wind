@@ -60,6 +60,14 @@ MomentumBodyForceBoxNodeKernel::MomentumBodyForceBoxNodeKernel(
     geometryAlgDriver_ = realm.geometryAlgDriver_.get();
     const AlgorithmType algType = BOUNDARY;
     const auto& subParts = mdotPart_->subsets();
+    auto sideRank =
+      static_cast<stk::topology::rank_t>(realm.meta_data().side_rank());
+    GenericFieldType* inflowMdot =
+      realm.meta_data().get_field<double>(sideRank, "inflow_mass_flow_rate");
+    if (inflowMdot == nullptr) {
+      inflowMdot = &(realm.meta_data().declare_field<double>(
+        sideRank, "inflow_mass_flow_rate"));
+    }
     for (auto* part : subParts) {
       const auto topo = part->topology();
       MasterElement* meFC =
@@ -71,6 +79,7 @@ MomentumBodyForceBoxNodeKernel::MomentumBodyForceBoxNodeKernel(
           "exposed_area_vector"));
       stk::mesh::put_field_on_mesh(
         *exposedAreaVec_, *part, nDim_ * numScsIp, nullptr);
+      stk::mesh::put_field_on_mesh(*inflowMdot, *part, numScsIp, nullptr);
       geometryAlgDriver_->register_face_algorithm<GeometryBoundaryAlg>(
         algType, part, "geometry");
     }
