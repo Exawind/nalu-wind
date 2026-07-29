@@ -31,7 +31,7 @@ ActFastCacheRelativeVelocities(ActuatorBulkFAST& actBulk)
   auto offset = helper.get_local_view(actBulk.turbIdOffset_);
   const int turbId = actBulk.localTurbineId_;
 
-  Kokkos::parallel_for("cache rel vel", range_policy, [=, *this](int i) {
+  Kokkos::parallel_for("cache rel vel", range_policy, [=](int i) {
     int index = i - offset(turbId);
     auto rV = Kokkos::subview(relVel, i, Kokkos::ALL);
     fast->getRelativeVelForceNode(rV.data(), index, turbId);
