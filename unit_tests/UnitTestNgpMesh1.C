@@ -247,9 +247,7 @@ test_ngp_field_placement_new()
 
   Kokkos::parallel_for(
     sierra::kynema_ugf::DeviceRangePolicy(0, 1),
-    KOKKOS_LAMBDA(const unsigned& i) {
-      devicePtr->~TestKernelWithNgpField();
-    });
+    KOKKOS_LAMBDA(const unsigned& i) { devicePtr->~TestKernelWithNgpField(); });
   Kokkos::fence();
   Kokkos::kokkos_free<stk::ngp::MemSpace>(devicePtr);
 }

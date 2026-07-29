@@ -72,8 +72,7 @@ template <class T>
 inline void
 my_destroy(T* obj)
 {
-  Kokkos::parallel_for(
-    "destroy", 1, KOKKOS_LAMBDA(const int) { obj->~T(); });
+  Kokkos::parallel_for("destroy", 1, KOKKOS_LAMBDA(const int) { obj->~T(); });
   Kokkos::fence();
   sierra::kynema_ugf::kokkos_free_on_device(obj);
 }
