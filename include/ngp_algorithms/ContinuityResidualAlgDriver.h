@@ -48,31 +48,31 @@ public:
 
   template <template <typename> class ElemAlg, class... Args>
   void register_elem_algorithm(
-    AlgorithmType algType,
-    stk::mesh::Part* part,
-    const std::string& algSuffix,
-    Args&&... args)
+    AlgorithmType /*algType*/,
+    stk::mesh::Part* /*part*/,
+    const std::string& /*algSuffix*/,
+    Args&&... /*args*/)
   {
     STK_ThrowRequire(false);
   }
 
   template <typename Algorithm, class... Args>
   void register_legacy_algorithm(
-    AlgorithmType algType,
-    stk::mesh::Part* part,
-    const std::string& algSuffix,
-    Args&&... args)
+    AlgorithmType /*algType*/,
+    stk::mesh::Part* /*part*/,
+    const std::string& /*algSuffix*/,
+    Args&&... /*args*/)
   {
     STK_ThrowRequire(false);
   }
 
   template <template <typename> class FaceElemAlg, class... Args>
   void register_face_elem_algorithm(
-    AlgorithmType algType,
-    stk::mesh::Part* part,
-    const stk::topology elemTopo,
-    const std::string& algSuffix,
-    Args&&... args)
+    AlgorithmType /*algType*/,
+    stk::mesh::Part* /*part*/,
+    const stk::topology /*elemTopo*/,
+    const std::string& /*algSuffix*/,
+    Args&&... /*args*/)
   {
     STK_ThrowRequire(false);
   }
