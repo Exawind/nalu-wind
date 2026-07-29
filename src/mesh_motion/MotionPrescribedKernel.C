@@ -198,7 +198,7 @@ MotionPrescribedKernel::build_transformation(
     current_displacement[5] =
       relevant_motion[9] * (motionTime - relevant_motion[0]);
   } else {
-    if (min_index == defined_motion_values_.extent(0) - 1) {
+    if (min_index == static_cast<int>(defined_motion_values_.extent(0)) - 1) {
       // Note indices here, [10-13] corresponds to x, y, and z angular
       // displacements in relevant_motion, result gets shifted over for
       // mesh_motion API calculations
@@ -309,7 +309,7 @@ MotionPrescribedKernel::compute_velocity(
     Kokkos::subview(defined_motion_values_, min_index, Kokkos::ALL());
 
   auto motion_np1 =
-    (min_index == (defined_motion_values_.extent(0) - 1))
+    (min_index == (static_cast<int>(defined_motion_values_.extent(0)) - 1))
       ? relevant_motion
       : Kokkos::subview(defined_motion_values_, min_index + 1, Kokkos::ALL());
   double time_between = motion_np1[0] - relevant_motion[0];
