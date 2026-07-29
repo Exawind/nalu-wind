@@ -49,7 +49,7 @@ public:
     ASSERT_EQ(slabSize, (unsigned)nx(0) * nx(1));
     ASSERT_EQ(static_cast<unsigned>(nPoints), (int)slabSize * nProcs);
     Kokkos::parallel_for(
-      "populateValues", ActFixRangePolicy(0, nPoints), [=, *this](int i) {
+      "populateValues", ActFixRangePolicy(0, nPoints), [=, this](int i) {
         // place point in center of elements for easy parallel mapping
         points(i, 0) = i % nx(0) + 0.5;
         points(i, 1) = (i / nx(0)) % nx(1) + 0.5;
