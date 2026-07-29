@@ -45,7 +45,7 @@ scale_lift_force(
     const int turbId = actBulkSimple.localTurbineId_;
     double dR = actMetaSimple.dR_.view_host()(turbId);
 
-    Kokkos::parallel_for("scale G", rangePolicy, [=, *this](int i) {
+    Kokkos::parallel_for("scale G", rangePolicy, [=](int i) {
       const double denom = rho(i) * dR;
       for (int j = 0; j < 3; ++j) {
         G(i, j) /= denom;
@@ -63,28 +63,27 @@ scale_lift_force(
 #else
     auto G = helper.get_local_view(actBulk.liftForceDistribution_);
     auto point = helper.get_local_view(actBulk.pointCentroid_);
-    Kokkos::parallel_for(
-      "scale G FAST outputs", rangePolicy, [=, *this](int i) {
-        double dr = 0;
-        if (i == offset) {
-          for (int j = 0; j < 3; ++j) {
-            dr += std::pow(point(i, j) - point(i + 1, j), 2.0);
-          }
-        } else if (i == offset + nPoints - 1) {
-          for (int j = 0; j < 3; ++j) {
-            dr += std::pow(point(i, j) - point(i - 1, j), 2.0);
-          }
-        } else {
-          for (int j = 0; j < 3; ++j) {
-            dr += std::pow(point(i - 1, j) - point(i + 1, j), 2.0);
-          }
-        }
-        // dr is computed using central difference
-        dr = 0.5 * std::sqrt(dr);
+    Kokkos::parallel_for("scale G FAST outputs", rangePolicy, [=](int i) {
+      double dr = 0;
+      if (i == offset) {
         for (int j = 0; j < 3; ++j) {
-          G(i, j) /= dr;
+          dr += std::pow(point(i, j) - point(i + 1, j), 2.0);
         }
-      });
+      } else if (i == offset + nPoints - 1) {
+        for (int j = 0; j < 3; ++j) {
+          dr += std::pow(point(i, j) - point(i - 1, j), 2.0);
+        }
+      } else {
+        for (int j = 0; j < 3; ++j) {
+          dr += std::pow(point(i - 1, j) - point(i + 1, j), 2.0);
+        }
+      }
+      // dr is computed using central difference
+      dr = 0.5 * std::sqrt(dr);
+      for (int j = 0; j < 3; ++j) {
+        G(i, j) /= dr;
+      }
+    });
     break;
 #endif
   }
