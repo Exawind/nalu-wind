@@ -145,7 +145,6 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
         faceView.get_scratch_view_1D(exposedPressureField);
       const auto dyn_p_field = faceView.get_scratch_view_1D(dynPID);
 
-      const auto v_coord = faceView.get_scratch_view_2D(coordsID);
       const auto elem_p_field = elemView.get_scratch_view_1D(pressureField);
 
       const auto meFaceViews =
