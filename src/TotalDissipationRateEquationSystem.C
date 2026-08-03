@@ -56,7 +56,6 @@
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
-#include "node_kernels/ScalarContResidNodeKernel.h"
 #include "utils/StkHelpers.h"
 
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
@@ -248,7 +247,6 @@ TotalDissipationRateEquationSystem::register_interior_algorithm(
       "total_dissipation_rate_time_derivative",
       "lumped_total_dissipation_rate_time_derivative"};
     bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
-    auto use_cont_res = realm_.include_continuity_residual();
     auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
     process_ngp_node_kernels(
       solverAlgMap, realm_, part, this,
@@ -260,10 +258,6 @@ TotalDissipationRateEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<TDRKENodeKernel>(realm_.meta_data());
         } else {
           nodeAlg.add_kernel<TDRKENodeKernel>(realm_.meta_data());
-        }
-
-        if (use_cont_res) {
-          nodeAlg.add_kernel<ScalarContResNodeKernel>(realm_.bulk_data(), tdr_);
         }
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {

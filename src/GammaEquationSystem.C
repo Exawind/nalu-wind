@@ -49,7 +49,6 @@
 #include <node_kernels/ScalarMassBDFNodeKernel.h>
 #include <node_kernels/ScalarGclNodeKernel.h>
 #include <node_kernels/BLTGammaM2015NodeKernel.h>
-#include <node_kernels/ScalarContResidNodeKernel.h>
 
 // ngp
 #include "ngp_utils/NgpFieldBLAS.h"
@@ -293,17 +292,11 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
         "consistent mass integration of gamma time-derivative unavailable");
     }
 
-    auto use_cont_res = realm_.include_continuity_residual();
     auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
     process_ngp_node_kernels(
       solverAlgMap, realm_, part, this,
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
         nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), gamma_);
-
-        if (use_cont_res) {
-          nodeAlg.add_kernel<ScalarContResNodeKernel>(
-            realm_.bulk_data(), gamma_);
-        }
 
         KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "call BLTGammaM2015NodeKernel: " << std::endl;

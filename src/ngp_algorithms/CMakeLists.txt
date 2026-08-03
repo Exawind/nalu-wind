@@ -3,8 +3,6 @@ target_sources(${kynema_ugf_lib_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/BuoyancySourceAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/CourantReAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/DynamicPressureOpenAlg.C
-  ${CMAKE_CURRENT_SOURCE_DIR}/FluxDivEdgeAlg.C
-  ${CMAKE_CURRENT_SOURCE_DIR}/FluxDivBndryElemAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradEdgeAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradElemAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradBndryElemAlg.C
@@ -36,10 +34,8 @@ target_sources(${kynema_ugf_lib_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/SSTMaxLengthScaleAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumABLWallFuncMaskUtil.C
   # Algorithm Drivers
-  ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityResidualAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/CourantReAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/FieldUpdateAlgDriver.C
-  ${CMAKE_CURRENT_SOURCE_DIR}/FluxDivAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NgpAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MdotAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradAlgDriver.C

@@ -80,7 +80,6 @@ SolutionOptions::SolutionOptions()
     raBoussinesqTimeScale_(-1.0),
     symmetryBcPenaltyFactor_(0.0),
     useStreletsUpwinding_(false),
-    includeContinuityResidual_(false),
     activateOpenMdotCorrection_(false),
     mdotAlgOpenCorrection_(0.0),
     explicitlyZeroOpenPressureGradient_(false),
@@ -194,10 +193,6 @@ SolutionOptions::load(const YAML::Node& y_node)
     get_if_present(
       y_solution_options, "eigenvalue_perturbation_turbulent_ke",
       eigenvaluePerturbTurbKe_);
-
-    get_if_present(
-      y_solution_options, "include_continuity_residual",
-      includeContinuityResidual_, includeContinuityResidual_);
 
     std::string projected_timescale_type = "default";
     get_if_present(
