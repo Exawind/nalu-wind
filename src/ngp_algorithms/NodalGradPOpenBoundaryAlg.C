@@ -104,7 +104,6 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
   const unsigned dualNodalVol = dualNodalVol_;
   const unsigned exposedPressureField = exposedPressureField_;
   const unsigned pressureField = pressureField_;
-  const unsigned coordsID = coordinates_;
   const unsigned dynPID = dynPress_;
 
   const auto& fieldMgr = meshInfo.ngp_field_manager();
