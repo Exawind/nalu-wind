@@ -68,19 +68,3 @@ When the mixed CVFEM/EBVC scheme is used, the continuity equation solves
 for a subcontrol-surface value of the mass flow rate. These values are
 assembled to the edge for use in the EBVC discretization approach.
 Therefore, the storage for mass flow rate is higher.
-
-
-Continuity residual correction
-++++++++++++++++++++++++++++++
-
-An optional continuity residual correction adds a discrete continuity residual term to the right-hand side, which for transport of a conserved scalar, :math:`\phi`,
-is
-
-.. math::
-
-  V^{n+1} {\rm Res}_c \phi_i = \left( \frac{1}{\Delta t}\sum_n \gamma^n \rho_i^n V_i^n + \sum_{e \in {\rm edge}(i)} \dot m_e \operatorname{sgn}_{e,i} \right) \phi_i.
-
-In the event that mass is not discretely conserved, most notably with non-exact handling of the geometric conservation law, then this term will be non-zero
-and cancel the mass error (free-stream preservation error in the context of the GCL). An alternative view is that the term is the error for writing the material derivative in conservation form. 
-For hex elements, a geometric conserving formulation already exists and this term is discretely zero on those blocks for divergence-free flow.
-For non-divergence free flow, this term will be active until nonlinear convergence is reached. The term also does not account for any continuity source terms. The method is similar in spirit to :cite:`yu:2011`.

@@ -39,7 +39,6 @@ private:
   unsigned density_{stk::mesh::InvalidOrdinal};
   unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
   unsigned edgeFaceVelMag_{stk::mesh::InvalidOrdinal};
-  unsigned inflowMdot_{stk::mesh::InvalidOrdinal};
 
   bool useShifted_;
 

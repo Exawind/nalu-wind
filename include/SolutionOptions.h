@@ -162,7 +162,6 @@ public:
   double raBoussinesqTimeScale_;
   double symmetryBcPenaltyFactor_;
   bool useStreletsUpwinding_;
-  bool includeContinuityResidual_;
 
   // global mdot correction alg
   bool activateOpenMdotCorrection_;
