@@ -3197,18 +3197,6 @@ ContinuityEquationSystem::register_inflow_bc(
   mdotAlgDriver_->register_face_algorithm<MdotInflowAlg>(
     algType, part, "mdot_inflow", *mdotAlgDriver_, useShifted);
 
-  if (realm_.include_continuity_residual()) {
-    stk::topology::rank_t sideRank =
-      static_cast<stk::topology::rank_t>(realm_.meta_data().side_rank());
-    auto* mdot_inflow =
-      realm_.meta_data().get_field<double>(sideRank, "inflow_mass_flow_rate");
-    STK_ThrowRequireMsg(
-      mdot_inflow != nullptr,
-      "Continuity residual: inflow_mass_flow_rate field not registered");
-    contResidualAlgDriver_.register_face_algorithm<FluxDivBndryElemAlg>(
-      algType, part, "div_mdot_inflow", mdot_inflow, divMdot_);
-  }
-
   // solver; lhs
   if (
     realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ||
@@ -3271,18 +3259,6 @@ ContinuityEquationSystem::register_open_bc(
     mdotAlgDriver_->register_open_mdot_algorithm<MdotOpenEdgeAlg>(
       algType, part, get_elem_topo(realm_, *part), "mdot_open_edge",
       realm_.solutionOptions_->activateOpenMdotCorrection_, *mdotAlgDriver_);
-
-    if (realm_.include_continuity_residual()) {
-      stk::topology::rank_t sideRank =
-        static_cast<stk::topology::rank_t>(realm_.meta_data().side_rank());
-      auto* mdot_open =
-        realm_.meta_data().get_field<double>(sideRank, "open_mass_flow_rate");
-      STK_ThrowRequireMsg(
-        mdot_open != nullptr,
-        "Continuity residual: open_mass_flow_rate field not registered");
-      contResidualAlgDriver_.register_face_algorithm<FluxDivBndryElemAlg>(
-        algType, part, "div_mdot_open", mdot_open, divMdot_);
-    }
 
     {
       auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
