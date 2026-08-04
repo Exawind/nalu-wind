@@ -46,9 +46,6 @@ ThermalConductivityFromPrandtlPropAlgorithm::
 void
 ThermalConductivityFromPrandtlPropAlgorithm::execute()
 {
-  // make sure that partVec_ is size one
-  STK_ThrowAssert(partVec_.size() == 1);
-
   stk::mesh::Selector selector = stk::mesh::selectUnion(partVec_);
 
   stk::mesh::BucketVector const& node_buckets =
