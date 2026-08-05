@@ -15,6 +15,7 @@
 #include "FieldTypeDef.h"
 #include "aero/fsi/CalcLoads.h"
 #include "aero/fsi/MapLoad.h"
+#include "aero/fmb/KynemaFMBBase.h"
 
 namespace sierra {
 
@@ -56,23 +57,23 @@ struct PointMass
   double rho_inf{0.0};
 };
 
-class KynemaFMBSixDof
+class KynemaFMBSixDof : public KynemaFMBBase
 {
 public:
   KynemaFMBSixDof(const YAML::Node&);
-  virtual ~KynemaFMBSixDof() = default;
+  virtual ~KynemaFMBSixDof() override = default;
 
-  void setup(double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk);
+  void setup(double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk) override;
 
-  void initialize(int restartFreqKynemaUGF, double curTime);
+  void initialize(int restartFreqKynemaUGF, double curTime) override;
 
-  void map_displacements(double, bool);
+  void map_displacements(double, bool) override;
 
-  void advance_struct_timestep(const double, const double);
+  void advance_struct_timestep(const double, const double) override;
 
-  void map_loads();
+  void map_loads(const double) override;
 
-  const stk::mesh::PartVector get_mesh_blocks()
+  stk::mesh::PartVector get_mesh_blocks() const override
   {
     stk::mesh::PartVector all_mesh_blocks;
     for (auto&& point : point_bodies_) {

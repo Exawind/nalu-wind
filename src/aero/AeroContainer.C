@@ -175,7 +175,7 @@ AeroContainer::predict_model_time_step(const double currentTime)
 {
 #ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   if (has_six_dof()) {
-    sixDof_->map_loads();
+    sixDof_->map_loads(currentTime);
   }
 #endif
 #ifdef KYNEMA_UGF_USES_OPENFAST

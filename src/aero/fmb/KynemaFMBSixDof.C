@@ -571,7 +571,7 @@ KynemaFMBSixDof::map_loads_point(PointMass& point)
 }
 
 void
-KynemaFMBSixDof::map_loads()
+KynemaFMBSixDof::map_loads(const double)
 {
   for (auto& point : point_bodies_) {
     map_loads_point(point);
