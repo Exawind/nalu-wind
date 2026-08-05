@@ -230,7 +230,7 @@ sym_diagonalize(const T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
     jrL = stk::math::if_then_else((m[1] > m[2]) && (m[1] > m[0]), jr[1], jrL);
     jrL = stk::math::if_then_else((m[2] > m[1]) && (m[2] > m[0]), jr[2], jrL);
 
-    jr[3] = stk::math::sqrt(1.0f - jrL * jrL);
+    jr[3] = stk::math::sqrt(1.0 - jrL * jrL);
 
     const auto check_one = jr[3] == 1.0;
     const bool exit_now = stk::simd::are_all(check_one);
@@ -243,10 +243,15 @@ sym_diagonalize(const T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
     q[2] = (q[3] * jr[2] + q[0] * jr[1] - q[1] * jr[0] + q[2] * jr[3]);
     q[3] = (q[3] * jr[3] - q[0] * jr[0] - q[1] * jr[1] - q[2] * jr[2]);
     mq = stk::math::sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
-    q[0] /= mq;
-    q[1] /= mq;
-    q[2] /= mq;
-    q[3] /= mq;
+    // Guard against divide-by-zero for already-converged/degenerate SIMD lanes.
+    // are_all() keeps every lane iterating until all lanes converge, so a lane
+    // with mq == 0 must not trigger a floating point divide-by-zero.
+    const T inv_mq = stk::math::if_then_else(
+      mq > std::numeric_limits<T>::min(), 1.0 / mq, 0.0);
+    q[0] = q[0] * inv_mq;
+    q[1] = q[1] * inv_mq;
+    q[2] = q[2] * inv_mq;
+    q[3] = q[3] * inv_mq;
   }
 }
 

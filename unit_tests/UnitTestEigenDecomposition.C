@@ -256,7 +256,62 @@ TEST(TestEigen, testeigendecompandreconstruct3d_simd)
   }
 }
 
-TEST(TestEigen, testeigendecompandreconstruct2d_simd)
+TEST(TestEigen, testeigendecomp3d_simd_mixed_diagonal_and_zero)
+{
+  // Regression test: some SIMD lanes hold a non-diagonal matrix while others
+  // hold an already-diagonal matrix (including lanes with a zero eigenvalue).
+  // Before the fix, the quaternion normalization could divide by zero for the
+  // already-converged lanes, triggering SIGFPE.
+
+  DoubleType A[3][3], Q_[3][3], D_[3][3];
+
+  // Per-lane expected diagonal eigenvalues
+  // Lane 0: identity matrix  -> eigenvalues {1, 1, 1}
+  // Lane 1: non-diagonal A3d_fixed -> known eigenvalues
+  // (for ndoubles == 1 only lane 0 is exercised; the test still passes)
+  const double diag_eig[3] = {1.0, 1.0, 1.0};
+  const double nondiag_eig[3] = {
+    0.056736539229635605, 0.46782517604126655, -0.45581171527090225};
+
+  for (unsigned is = 0; is < stk::simd::ndoubles; ++is) {
+    if (is % 2 == 0) {
+      // Already-diagonal: identity matrix (zero off-diagonal, zero eigenvalue
+      // corner case covered by the 0.0 entries)
+      A[0][0][is] = 1.0;
+      A[0][1][is] = 0.0;
+      A[0][2][is] = 0.0;
+      A[1][0][is] = 0.0;
+      A[1][1][is] = 1.0;
+      A[1][2][is] = 0.0;
+      A[2][0][is] = 0.0;
+      A[2][1][is] = 0.0;
+      A[2][2][is] = 1.0;
+    } else {
+      // Non-diagonal matrix that requires Jacobi iterations
+      A[0][0][is] = A3d_fixed[0][0];
+      A[0][1][is] = A3d_fixed[0][1];
+      A[0][2][is] = A3d_fixed[0][2];
+      A[1][0][is] = A3d_fixed[1][0];
+      A[1][1][is] = A3d_fixed[1][1];
+      A[1][2][is] = A3d_fixed[1][2];
+      A[2][0][is] = A3d_fixed[2][0];
+      A[2][1][is] = A3d_fixed[2][1];
+      A[2][2][is] = A3d_fixed[2][2];
+    }
+  }
+
+  // This call must not raise SIGFPE
+  sierra::kynema_ugf::EigenDecomposition::sym_diagonalize(A, Q_, D_);
+
+  const double tol = 5.e-13;
+  for (unsigned j = 0; j < 3; ++j) {
+    for (unsigned is = 0; is < stk::simd::ndoubles; ++is) {
+      const double expected = (is % 2 == 0) ? diag_eig[j] : nondiag_eig[j];
+      EXPECT_NEAR(stk::simd::get_data(D_[j][j], is), expected, tol);
+    }
+  }
+}
+
 {
   DoubleType b_[2][2], Q_[2][2], D_[2][2];
 
