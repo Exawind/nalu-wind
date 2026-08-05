@@ -8,7 +8,7 @@
 //
 
 #include "KynemaUGFEnv.h"
-#include "aero/six_dof/KynemaFMBSixDof.h"
+#include "aero/fmb/KynemaFMBSixDof.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementRepo.h"
 #include <fstream>

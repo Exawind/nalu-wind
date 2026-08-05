@@ -10,5 +10,5 @@ add_subdirectory(fsi)
 endif()
 
 if(ENABLE_KYNEMA_FMB_SIXDOF)
-add_subdirectory(six_dof)
+add_subdirectory(fmb)
 endif()
