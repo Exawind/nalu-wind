@@ -13,7 +13,7 @@
 #include "aero/fsi/OpenfastFSI.h"
 #endif
 #ifdef KYNEMA_UGF_USES_KYNEMA_FMB
-#include "aero/six_dof/KynemaFMBSixDof.h"
+#include "aero/fmb/KynemaFMBSixDof.h"
 #endif
 #include <FieldTypeDef.h>
 #include <stk_io/IossBridge.hpp>
