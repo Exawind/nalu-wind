@@ -312,6 +312,7 @@ TEST(TestEigen, testeigendecomp3d_simd_mixed_diagonal_and_zero)
   }
 }
 
+TEST(TestEigen, testeigendecomp2d_simd_mixed_diagonal_and_zero)
 {
   DoubleType b_[2][2], Q_[2][2], D_[2][2];
 
