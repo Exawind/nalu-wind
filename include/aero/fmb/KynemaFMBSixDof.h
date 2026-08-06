@@ -50,25 +50,7 @@ struct PointMassInterface
   double rho_inf{0.0};
 };
 
-struct PointData
-{
-  std::array<double, 7> pos;
-  std::array<double, 6> vel;
-  std::array<double, 6> loads;
-  std::array<double, 3> center_of_mass;
-};
 
-struct PointMass
-{
-  std::vector<std::string> forcing_surface_names;
-  std::vector<std::string> moving_mesh_block_names;
-  stk::mesh::PartVector forcing_surfaces;
-  stk::mesh::PartVector moving_mesh_blocks;
-  GenericFieldType* total_force = nullptr;
-  std::shared_ptr<stk::mesh::BulkData> bulk = nullptr;
-  std::shared_ptr<CalcLoads> calc_loads = nullptr;
-  PointData p_data;
-};
 
 class KynemaFMBSixDof : public KynemaFMBBase
 {
@@ -101,15 +83,11 @@ private:
   KynemaFMBSixDof() = delete;
   KynemaFMBSixDof(const KynemaFMBSixDof&) = delete;
 
-  void map_displacements_point(PointMass& point, bool updateCur);
-
   void setup_point(
     PointMass& point,
     PointMassInterface& iface,
     const double dtKynemaUGF,
     std::shared_ptr<stk::mesh::BulkData> bulk);
-
-  void map_loads_point(PointMass& point);
 
   void load_point(const YAML::Node&);
 
@@ -136,7 +114,6 @@ private:
 
   int restart_frequency_{0};
 
-  std::vector<PointMass> point_bodies_;
   std::vector<PointMassInterface> point_interfaces_;
 };
 
