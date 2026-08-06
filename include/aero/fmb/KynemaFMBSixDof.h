@@ -13,6 +13,7 @@
 #include <interfaces/cfd/interface_input.hpp>
 
 #include "FieldTypeDef.h"
+#include "aero/fmb/KynemaFMBBase.h"
 #include "aero/fsi/CalcLoads.h"
 #include "aero/fsi/MapLoad.h"
 
@@ -27,7 +28,7 @@ struct Tether
   double stiffness{0.0};
   double initial_length{0.0};
 };
-struct PointMass
+struct PointMassInterface
 {
   bool use_restart_data = false;
   std::shared_ptr<kynema_fmb::interfaces::cfd::Interface> kynema_interface =
@@ -43,36 +44,30 @@ struct PointMass
   std::array<double, 3> alpha_init = {0.0, 0.0, 0.0};
   double mass{0.0};
   std::vector<Tether> tethers;
-  std::vector<std::string> forcing_surface_names;
-  std::vector<std::string> moving_mesh_block_names;
-  stk::mesh::PartVector forcing_surfaces;
-  stk::mesh::PartVector moving_mesh_blocks;
   std::string restart_file_name = "point.restart";
-  GenericFieldType* total_force = nullptr;
-  std::shared_ptr<stk::mesh::BulkData> bulk = nullptr;
-  std::shared_ptr<CalcLoads> calc_loads = nullptr;
   std::string output_file_name = "";
   int number_of_nonlinear_iterations = 5;
   double rho_inf{0.0};
 };
 
-class KynemaFMBSixDof
+class KynemaFMBSixDof : public KynemaFMBBase
 {
 public:
   KynemaFMBSixDof(const YAML::Node&);
-  virtual ~KynemaFMBSixDof() = default;
+  virtual ~KynemaFMBSixDof() override = default;
 
-  void setup(double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk);
+  void
+  setup(double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk) override;
 
-  void initialize(int restartFreqKynemaUGF, double curTime);
+  void initialize(int restartFreqKynemaUGF, double curTime) override;
 
-  void map_displacements(double, bool);
+  void map_displacements(double, bool) override;
 
-  void advance_struct_timestep(const double, const double);
+  void advance_struct_timestep(const double, const double) override;
 
-  void map_loads();
+  void map_loads(const double) override;
 
-  const stk::mesh::PartVector get_mesh_blocks()
+  stk::mesh::PartVector get_mesh_blocks() const override
   {
     stk::mesh::PartVector all_mesh_blocks;
     for (auto&& point : point_bodies_) {
@@ -87,14 +82,11 @@ private:
   KynemaFMBSixDof() = delete;
   KynemaFMBSixDof(const KynemaFMBSixDof&) = delete;
 
-  void map_displacements_point(PointMass& point, bool updateCur);
-
   void setup_point(
     PointMass& point,
+    PointMassInterface& iface,
     const double dtKynemaUGF,
     std::shared_ptr<stk::mesh::BulkData> bulk);
-
-  void map_loads_point(PointMass& point);
 
   void load_point(const YAML::Node&);
 
@@ -121,8 +113,7 @@ private:
 
   int restart_frequency_{0};
 
-  std::vector<PointMass> point_bodies_;
-  std::vector<kynema_fmb::interfaces::cfd::Interface> point_body_interfaces_;
+  std::vector<PointMassInterface> point_interfaces_;
 };
 
 } // namespace kynema_ugf

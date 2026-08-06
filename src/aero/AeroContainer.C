@@ -6,9 +6,9 @@
 // This software is released under the BSD 3-clause license. See LICENSE file
 // for more details.
 //
-#include <aero/AeroContainer.h>
 #include <KynemaUGFEnv.h>
 #include <KynemaUGFParsingHelper.h>
+#include <aero/AeroContainer.h>
 #ifdef KYNEMA_UGF_USES_OPENFAST
 #include "aero/fsi/OpenfastFSI.h"
 #endif
@@ -175,7 +175,7 @@ AeroContainer::predict_model_time_step(const double currentTime)
 {
 #ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   if (has_six_dof()) {
-    sixDof_->map_loads();
+    sixDof_->map_loads(currentTime);
   }
 #endif
 #ifdef KYNEMA_UGF_USES_OPENFAST
