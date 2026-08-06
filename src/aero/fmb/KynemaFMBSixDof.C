@@ -62,7 +62,8 @@ KynemaFMBSixDof::load_point(const YAML::Node& node)
     new_iface.rho_inf = node["damping_factor"].as<double>();
 
   for (int d = 0; d < tensor_ndim; ++d) {
-    new_iface.moments_of_inertia[d] = node["moments_of_inertia"][d].as<double>();
+    new_iface.moments_of_inertia[d] =
+      node["moments_of_inertia"][d].as<double>();
   }
   for (int d = 0; d < ndim; ++d) {
     new_iface.center_of_mass[d] = node["center_of_mass"][d].as<double>();
@@ -317,8 +318,8 @@ KynemaFMBSixDof::initialize(int restartFreqKynemaUGF, double curTime)
   // Check for restart files and initialize values appropriately
   for (int ipoint = 0; ipoint < point_bodies_.size(); ipoint++) {
     if (point_interfaces_[ipoint].use_restart_data) {
-      std::string file_name =
-        std::to_string(ipoint) + "_" + point_interfaces_[ipoint].restart_file_name;
+      std::string file_name = std::to_string(ipoint) + "_" +
+                              point_interfaces_[ipoint].restart_file_name;
       if (std::filesystem::exists(file_name)) {
         point_interfaces_[ipoint].kynema_interface->ReadRestart(file_name);
       }
@@ -427,8 +428,12 @@ void
 KynemaFMBSixDof::map_displacements(double current_time, bool updateCurCoor)
 {
   for (int i = 0; i < (int)point_bodies_.size(); ++i) {
-    point_bodies_[i].p_data.pos = point_interfaces_[i].kynema_interface->turbine.floating_platform.node.position;
-    point_bodies_[i].p_data.vel = point_interfaces_[i].kynema_interface->turbine.floating_platform.node.velocity;
+    point_bodies_[i].p_data.pos =
+      point_interfaces_[i]
+        .kynema_interface->turbine.floating_platform.node.position;
+    point_bodies_[i].p_data.vel =
+      point_interfaces_[i]
+        .kynema_interface->turbine.floating_platform.node.velocity;
     map_displacements_point(point_bodies_[i], updateCurCoor);
   }
 }
@@ -439,14 +444,13 @@ KynemaFMBSixDof::map_loads(const double)
   for (int i = 0; i < (int)point_bodies_.size(); ++i) {
     map_loads_point(point_bodies_[i]);
 
-    auto & forces_and_moments = point_bodies_[i].p_data.loads;
-    auto & iface = point_interfaces_[i];
-    auto & loads = iface.kynema_interface->turbine.floating_platform.node.loads;
+    auto& forces_and_moments = point_bodies_[i].p_data.loads;
+    auto& iface = point_interfaces_[i];
+    auto& loads = iface.kynema_interface->turbine.floating_platform.node.loads;
     for (int idim = 0; idim < 6; ++idim) {
-      loads[idim] =
-        0.5 * (1.0 - iface.rho_inf) * forces_and_moments[idim] +
-        0.5 * (1.0 - iface.rho_inf) * loads[idim] +
-        loads[idim] * iface.rho_inf;
+      loads[idim] = 0.5 * (1.0 - iface.rho_inf) * forces_and_moments[idim] +
+                    0.5 * (1.0 - iface.rho_inf) * loads[idim] +
+                    loads[idim] * iface.rho_inf;
     }
   }
 }

@@ -29,7 +29,7 @@ struct PointMass
   std::shared_ptr<CalcLoads> calc_loads = nullptr;
   PointData p_data;
 };
-  
+
 class KynemaFMBBase
 {
 public:
@@ -54,7 +54,6 @@ public:
   virtual stk::mesh::PartVector get_mesh_blocks() const = 0;
 
   std::vector<PointMass> point_bodies_;
-
 };
 
 } // namespace kynema_ugf

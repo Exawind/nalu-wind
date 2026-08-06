@@ -50,15 +50,14 @@ struct PointMassInterface
   double rho_inf{0.0};
 };
 
-
-
 class KynemaFMBSixDof : public KynemaFMBBase
 {
 public:
   KynemaFMBSixDof(const YAML::Node&);
   virtual ~KynemaFMBSixDof() override = default;
 
-  void setup(double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk) override;
+  void
+  setup(double dtKynemaUGF, std::shared_ptr<stk::mesh::BulkData> bulk) override;
 
   void initialize(int restartFreqKynemaUGF, double curTime) override;
 

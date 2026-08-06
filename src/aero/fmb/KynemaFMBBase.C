@@ -25,10 +25,8 @@ KynemaFMBBase::map_displacements_point(PointMass& point, bool updateCur)
   displacement->sync_to_host();
   meshVelocity->sync_to_host();
 
-  std::array<double, 7> translation_and_rotation_position =
-    point.p_data.pos;
-  std::array<double, 6> translation_and_rotation_velocities =
-    point.p_data.vel;
+  std::array<double, 7> translation_and_rotation_position = point.p_data.pos;
+  std::array<double, 6> translation_and_rotation_velocities = point.p_data.vel;
   std::array<double, 3> current_center_of_mass_location = {
     translation_and_rotation_position[0], translation_and_rotation_position[1],
     translation_and_rotation_position[2]};
@@ -124,8 +122,7 @@ KynemaFMBBase::map_loads_point(PointMass& point)
   const VectorFieldType* meshDisp =
     meta.get_field<double>(stk::topology::NODE_RANK, "mesh_displacement");
 
-  std::array<double, 7> translation_and_rotation_position =
-    point.p_data.pos;
+  std::array<double, 7> translation_and_rotation_position = point.p_data.pos;
 
   std::array<double, 3> center_of_mass = {
     translation_and_rotation_position[0], translation_and_rotation_position[1],
@@ -141,8 +138,7 @@ KynemaFMBBase::map_loads_point(PointMass& point)
     point.bulk->parallel());
 
   point.p_data.loads = forces_and_moments;
-
 }
 
-}
-}
+} // namespace kynema_ugf
+} // namespace sierra
