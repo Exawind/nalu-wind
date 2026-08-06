@@ -28,7 +28,7 @@ struct Tether
   double stiffness{0.0};
   double initial_length{0.0};
 };
-struct PointMass
+struct PointMassInterface
 {
   bool use_restart_data = false;
   std::shared_ptr<kynema_fmb::interfaces::cfd::Interface> kynema_interface =
@@ -44,17 +44,30 @@ struct PointMass
   std::array<double, 3> alpha_init = {0.0, 0.0, 0.0};
   double mass{0.0};
   std::vector<Tether> tethers;
+  std::string restart_file_name = "point.restart";
+  std::string output_file_name = "";
+  int number_of_nonlinear_iterations = 5;
+  double rho_inf{0.0};
+};
+
+struct PointData
+{
+  std::array<double, 7> pos;
+  std::array<double, 6> vel;
+  std::array<double, 6> loads;
+  std::array<double, 3> center_of_mass;
+};
+
+struct PointMass
+{
   std::vector<std::string> forcing_surface_names;
   std::vector<std::string> moving_mesh_block_names;
   stk::mesh::PartVector forcing_surfaces;
   stk::mesh::PartVector moving_mesh_blocks;
-  std::string restart_file_name = "point.restart";
   GenericFieldType* total_force = nullptr;
   std::shared_ptr<stk::mesh::BulkData> bulk = nullptr;
   std::shared_ptr<CalcLoads> calc_loads = nullptr;
-  std::string output_file_name = "";
-  int number_of_nonlinear_iterations = 5;
-  double rho_inf{0.0};
+  PointData p_data;
 };
 
 class KynemaFMBSixDof : public KynemaFMBBase
@@ -92,6 +105,7 @@ private:
 
   void setup_point(
     PointMass& point,
+    PointMassInterface& iface,
     const double dtKynemaUGF,
     std::shared_ptr<stk::mesh::BulkData> bulk);
 
@@ -123,7 +137,7 @@ private:
   int restart_frequency_{0};
 
   std::vector<PointMass> point_bodies_;
-  std::vector<kynema_fmb::interfaces::cfd::Interface> point_body_interfaces_;
+  std::vector<PointMassInterface> point_interfaces_;
 };
 
 } // namespace kynema_ugf
