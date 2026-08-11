@@ -37,6 +37,7 @@ void
 KynemaFMBSixDof::load_point(const YAML::Node& node)
 {
 
+  PointMassInterface new_iface;
   PointMass new_body;
   const int ndim = 3;
   const int tensor_ndim = ndim * ndim;
@@ -48,27 +49,29 @@ KynemaFMBSixDof::load_point(const YAML::Node& node)
   assert(node["mass"]);
 
   if (node["output_file_name"])
-    new_body.output_file_name = node["output_file_name"].as<std::string>();
+    new_iface.output_file_name = node["output_file_name"].as<std::string>();
 
   if (node["use_restart_data"])
-    new_body.use_restart_data = node["use_restart_data"].as<bool>();
+    new_iface.use_restart_data = node["use_restart_data"].as<bool>();
 
   if (node["number_of_nonlinear_iterations"])
-    new_body.number_of_nonlinear_iterations =
+    new_iface.number_of_nonlinear_iterations =
       node["number_of_nonlinear_iterations"].as<int>();
 
   if (node["damping_factor"])
-    new_body.rho_inf = node["damping_factor"].as<double>();
+    new_iface.rho_inf = node["damping_factor"].as<double>();
 
   for (int d = 0; d < tensor_ndim; ++d) {
-    new_body.moments_of_inertia[d] = node["moments_of_inertia"][d].as<double>();
+    new_iface.moments_of_inertia[d] =
+      node["moments_of_inertia"][d].as<double>();
   }
   for (int d = 0; d < ndim; ++d) {
-    new_body.center_of_mass[d] = node["center_of_mass"][d].as<double>();
+    new_iface.center_of_mass[d] = node["center_of_mass"][d].as<double>();
+    new_body.p_data.center_of_mass[d] = node["center_of_mass"][d].as<double>();
   }
   if (node["initial_displacement"]) {
     for (int d = 0; d < ndim; ++d) {
-      new_body.disp_init[d] = node["initial_displacement"][d].as<double>();
+      new_iface.disp_init[d] = node["initial_displacement"][d].as<double>();
     }
   }
   std::array<double, 3> theta_init = {0.0, 0.0, 0.0};
@@ -84,34 +87,34 @@ KynemaFMBSixDof::load_point(const YAML::Node& node)
   const double s2 = sin(theta_init[1] / 2.);
   const double c3 = cos(theta_init[0] / 2.);
   const double s3 = sin(theta_init[0] / 2.);
-  new_body.q_init[0] = c1 * c2 * c3 - s1 * s2 * s3;
-  new_body.q_init[1] = c1 * c2 * s3 - s1 * s2 * c3;
-  new_body.q_init[2] = c1 * s2 * c3 - s1 * c2 * s3;
-  new_body.q_init[3] = s1 * c2 * c3 - c1 * s2 * s3;
+  new_iface.q_init[0] = c1 * c2 * c3 - s1 * s2 * s3;
+  new_iface.q_init[1] = c1 * c2 * s3 - s1 * s2 * c3;
+  new_iface.q_init[2] = c1 * s2 * c3 - s1 * c2 * s3;
+  new_iface.q_init[3] = s1 * c2 * c3 - c1 * s2 * s3;
   if (node["initial_velocity"]) {
     for (int d = 0; d < ndim; ++d) {
-      new_body.v_init[d] = node["initial_velocity"][d].as<double>();
+      new_iface.v_init[d] = node["initial_velocity"][d].as<double>();
     }
   }
   if (node["initial_rotational_velocity"]) {
     for (int d = 0; d < ndim; ++d) {
-      new_body.omega_init[d] =
+      new_iface.omega_init[d] =
         node["initial_rotational_velocity"][d].as<double>();
     }
   }
   if (node["initial_acceleration"]) {
     for (int d = 0; d < ndim; ++d) {
-      new_body.a_init[d] = node["initial_acceleration"][d].as<double>();
+      new_iface.a_init[d] = node["initial_acceleration"][d].as<double>();
     }
   }
   if (node["initial_rotational_acceleration"]) {
     for (int d = 0; d < ndim; ++d) {
-      new_body.alpha_init[d] =
+      new_iface.alpha_init[d] =
         node["initial_rotational_acceleration"][d].as<double>();
     }
   }
 
-  new_body.mass = node["mass"].as<double>();
+  new_iface.mass = node["mass"].as<double>();
 
   if (node["forcing_surfaces"]) {
     for (std::size_t isurf = 0; isurf < node["forcing_surfaces"].size();
@@ -152,8 +155,8 @@ KynemaFMBSixDof::load_point(const YAML::Node& node)
 
     for (int itether = 0; itether < number_of_tethers; ++itether) {
 
-      new_body.tethers.emplace_back(Tether());
-      auto&& tether = new_body.tethers.back();
+      new_iface.tethers.emplace_back(Tether());
+      auto&& tether = new_iface.tethers.back();
 
       tether.stiffness = node["tethers_stiffness"][itether].as<double>();
       tether.initial_length =
@@ -167,6 +170,7 @@ KynemaFMBSixDof::load_point(const YAML::Node& node)
     }
   }
   point_bodies_.emplace_back(new_body);
+  point_interfaces_.emplace_back(new_iface);
 }
 
 void
@@ -206,27 +210,28 @@ KynemaFMBSixDof::load(const YAML::Node& node)
 void
 KynemaFMBSixDof::setup_point(
   PointMass& point,
+  PointMassInterface& iface,
   const double dtKynemaUGF,
   std::shared_ptr<stk::mesh::BulkData> bulk)
 {
 
   auto mass_matrix = std::array{
-    std::array{point.mass, 0., 0., 0., 0., 0.},
-    std::array{0., point.mass, 0., 0., 0., 0.},
-    std::array{0., 0., point.mass, 0., 0., 0.},
+    std::array{iface.mass, 0., 0., 0., 0., 0.},
+    std::array{0., iface.mass, 0., 0., 0., 0.},
+    std::array{0., 0., iface.mass, 0., 0., 0.},
     std::array{
-      0., 0., 0., point.moments_of_inertia[0], point.moments_of_inertia[1],
-      point.moments_of_inertia[2]},
+      0., 0., 0., iface.moments_of_inertia[0], iface.moments_of_inertia[1],
+      iface.moments_of_inertia[2]},
     std::array{
-      0., 0., 0., point.moments_of_inertia[3], point.moments_of_inertia[4],
-      point.moments_of_inertia[5]},
+      0., 0., 0., iface.moments_of_inertia[3], iface.moments_of_inertia[4],
+      iface.moments_of_inertia[5]},
     std::array{
-      0., 0., 0., point.moments_of_inertia[6], point.moments_of_inertia[7],
-      point.moments_of_inertia[8]}};
+      0., 0., 0., iface.moments_of_inertia[6], iface.moments_of_inertia[7],
+      iface.moments_of_inertia[8]}};
 
-  const double damping_factor = point.rho_inf;
+  const double damping_factor = iface.rho_inf;
   const int number_of_nonlinear_iterations =
-    point.number_of_nonlinear_iterations;
+    iface.number_of_nonlinear_iterations;
 
   kynema_fmb::interfaces::cfd::InterfaceInput point_to_build;
   point_to_build.gravity = gravity_;
@@ -235,26 +240,26 @@ KynemaFMBSixDof::setup_point(
   point_to_build.rho_inf = damping_factor;
   point_to_build.turbine.floating_platform.enable = true;
   point_to_build.turbine.floating_platform.position = std::array<double, 7>{
-    point.center_of_mass[0] + point.disp_init[0],
-    point.center_of_mass[1] + point.disp_init[1],
-    point.center_of_mass[2] + point.disp_init[2],
-    point.q_init[0],
-    point.q_init[1],
-    point.q_init[2],
-    point.q_init[3]};
+    iface.center_of_mass[0] + iface.disp_init[0],
+    iface.center_of_mass[1] + iface.disp_init[1],
+    iface.center_of_mass[2] + iface.disp_init[2],
+    iface.q_init[0],
+    iface.q_init[1],
+    iface.q_init[2],
+    iface.q_init[3]};
   point_to_build.turbine.floating_platform.velocity = std::array<double, 6>{
-    point.v_init[0],     point.v_init[1],     point.v_init[2],
-    point.omega_init[0], point.omega_init[1], point.omega_init[2]};
+    iface.v_init[0],     iface.v_init[1],     iface.v_init[2],
+    iface.omega_init[0], iface.omega_init[1], iface.omega_init[2]};
   point_to_build.turbine.floating_platform.acceleration = std::array<double, 6>{
-    point.a_init[0],     point.a_init[1],     point.a_init[2],
-    point.alpha_init[0], point.alpha_init[1], point.alpha_init[2]};
+    iface.a_init[0],     iface.a_init[1],     iface.a_init[2],
+    iface.alpha_init[0], iface.alpha_init[1], iface.alpha_init[2]};
   point_to_build.turbine.floating_platform.mass_matrix = mass_matrix;
 
   point_to_build.turbine.floating_platform.mooring_lines.resize(
-    point.tethers.size());
+    iface.tethers.size());
 
-  for (int iteth = 0; iteth < point.tethers.size(); ++iteth) {
-    auto& tether = point.tethers[iteth];
+  for (int iteth = 0; iteth < iface.tethers.size(); ++iteth) {
+    auto& tether = iface.tethers[iteth];
     auto&& mooring_line =
       point_to_build.turbine.floating_platform.mooring_lines[iteth];
     mooring_line.stiffness = tether.stiffness;
@@ -264,7 +269,7 @@ KynemaFMBSixDof::setup_point(
   }
 
   point.bulk = bulk;
-  point.kynema_interface =
+  iface.kynema_interface =
     std::make_shared<kynema_fmb::interfaces::cfd::Interface>(point_to_build);
 
   auto& meta = bulk->mesh_meta_data();
@@ -299,8 +304,8 @@ KynemaFMBSixDof::setup(
 {
   bulk_ = bulk;
   dt_ = dtKynemaUGF;
-  for (auto& point : point_bodies_) {
-    setup_point(point, dtKynemaUGF, bulk);
+  for (int i = 0; i < (int)point_bodies_.size(); ++i) {
+    setup_point(point_bodies_[i], point_interfaces_[i], dtKynemaUGF, bulk);
   }
 }
 
@@ -312,11 +317,11 @@ KynemaFMBSixDof::initialize(int restartFreqKynemaUGF, double curTime)
 
   // Check for restart files and initialize values appropriately
   for (int ipoint = 0; ipoint < point_bodies_.size(); ipoint++) {
-    if (point_bodies_[ipoint].use_restart_data) {
-      std::string file_name =
-        std::to_string(ipoint) + "_" + point_bodies_[ipoint].restart_file_name;
+    if (point_interfaces_[ipoint].use_restart_data) {
+      std::string file_name = std::to_string(ipoint) + "_" +
+                              point_interfaces_[ipoint].restart_file_name;
       if (std::filesystem::exists(file_name)) {
-        point_bodies_[ipoint].kynema_interface->ReadRestart(file_name);
+        point_interfaces_[ipoint].kynema_interface->ReadRestart(file_name);
       }
     }
   }
@@ -376,8 +381,9 @@ KynemaFMBSixDof::advance_struct_timestep(
 {
   for (int ipoint = 0; ipoint < point_bodies_.size(); ++ipoint) {
     auto&& point = point_bodies_[ipoint];
-    point.kynema_interface->parameters.h = dT;
-    auto converged = point.kynema_interface->Step();
+    auto&& iface = point_interfaces_[ipoint];
+    iface.kynema_interface->parameters.h = dT;
+    auto converged = iface.kynema_interface->Step();
 
     if (!converged) {
       KynemaUGFEnv::self().kynema_ugfOutputP0()
@@ -387,194 +393,65 @@ KynemaFMBSixDof::advance_struct_timestep(
     }
 
     if (
-      (point.kynema_interface->current_timestep_ % restart_frequency_) == 0 &&
+      (iface.kynema_interface->current_timestep_ % restart_frequency_) == 0 &&
       KynemaUGFEnv::self().parallel_rank() == 0) {
       std::string file_name =
-        std::to_string(ipoint) + "_" + point.restart_file_name;
-      point.kynema_interface->WriteRestart(file_name);
+        std::to_string(ipoint) + "_" + iface.restart_file_name;
+      iface.kynema_interface->WriteRestart(file_name);
     }
     // Add output here
     if (
-      point.output_file_name.size() > 0 &&
+      iface.output_file_name.size() > 0 &&
       KynemaUGFEnv::self().parallel_rank() == 0) {
       std::string delim = " ";
-      std::ofstream outfile(point.output_file_name, std::ios::app);
+      std::ofstream outfile(iface.output_file_name, std::ios::app);
       outfile << currentTime << delim;
       for (int idir = 0; idir < 7; ++idir)
-        outfile << point.kynema_interface->turbine.floating_platform.node
+        outfile << iface.kynema_interface->turbine.floating_platform.node
                      .position[idir]
                 << delim;
       for (int idir = 0; idir < 6; ++idir)
-        outfile << point.kynema_interface->turbine.floating_platform.node
+        outfile << iface.kynema_interface->turbine.floating_platform.node
                      .velocity[idir]
                 << delim;
       for (int idir = 0; idir < 5; ++idir)
         outfile
-          << point.kynema_interface->turbine.floating_platform.node.loads[idir]
+          << iface.kynema_interface->turbine.floating_platform.node.loads[idir]
           << delim;
-      outfile << point.kynema_interface->turbine.floating_platform.node.loads[5]
+      outfile << iface.kynema_interface->turbine.floating_platform.node.loads[5]
               << std::endl;
     }
   }
 }
 
 void
-KynemaFMBSixDof::map_displacements_point(PointMass& point, bool updateCur)
-{
-  auto& meta = point.bulk->mesh_meta_data();
-  const VectorFieldType* modelCoords =
-    meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* curCoords =
-    meta.get_field<double>(stk::topology::NODE_RANK, "current_coordinates");
-  VectorFieldType* displacement =
-    meta.get_field<double>(stk::topology::NODE_RANK, "mesh_displacement");
-
-  VectorFieldType* meshVelocity =
-    meta.get_field<double>(stk::topology::NODE_RANK, "mesh_velocity");
-
-  modelCoords->sync_to_host();
-  curCoords->sync_to_host();
-  displacement->sync_to_host();
-  meshVelocity->sync_to_host();
-
-  std::array<double, 7> translation_and_rotation_position =
-    point.kynema_interface->turbine.floating_platform.node.position;
-  std::array<double, 6> translation_and_rotation_velocities =
-    point.kynema_interface->turbine.floating_platform.node.velocity;
-  std::array<double, 3> current_center_of_mass_location = {
-    translation_and_rotation_position[0], translation_and_rotation_position[1],
-    translation_and_rotation_position[2]};
-
-  auto q0 = translation_and_rotation_position[3];
-  auto q1 = translation_and_rotation_position[4];
-  auto q2 = translation_and_rotation_position[5];
-  auto q3 = translation_and_rotation_position[6];
-
-  std::array<std::array<double, 3>, 3> current_rotation_matrix = {
-    {{q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3, 2.0 * (q1 * q2 - q0 * q3),
-      2.0 * (q0 * q2 + q1 * q3)},
-     {2.0 * (q1 * q2 + q0 * q3), q0 * q0 - q1 * q1 + q2 * q2 - q3 * q3,
-      2.0 * (q2 * q3 - q0 * q1)},
-     {2.0 * (q1 * q3 - q0 * q2), 2.0 * (q0 * q1 + q2 * q3),
-      q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3}}};
-
-  std::array<double, 3> new_point = {0.0, 0.0, 0.0};
-  std::array<double, 3> current_point = {0.0, 0.0, 0.0};
-  std::array<double, 3> new_velocity = {0.0, 0.0, 0.0};
-  std::array<double, 3> lever_arm = {0.0, 0.0, 0.0};
-
-  stk::mesh::Selector sel(stk::mesh::selectUnion(point.moving_mesh_blocks));
-  const auto& bkts = bulk_->get_buckets(stk::topology::NODE_RANK, sel);
-
-  auto cross_product = [](double* a, double* b, double* axb) {
-    axb[0] = a[1] * b[2] - a[2] * b[1];
-    axb[1] = a[2] * b[0] - a[0] * b[2];
-    axb[2] = a[0] * b[1] - a[1] * b[0];
-  };
-
-  for (auto b : bkts) {
-    for (size_t in = 0; in < b->size(); in++) {
-      auto node = (*b)[in];
-      double* modelc = stk::mesh::field_data(*modelCoords, node);
-      double* disp = stk::mesh::field_data(*displacement, node);
-      double* currc = stk::mesh::field_data(*curCoords, node);
-      double* meshv = stk::mesh::field_data(*meshVelocity, node);
-
-      for (int row = 0; row < 3; ++row) {
-        current_point[row] = modelc[row] - point.center_of_mass[row];
-      }
-
-      for (int row = 0; row < 3; ++row) {
-        new_point[row] = 0.0;
-        for (int col = 0; col < 3; ++col) {
-          new_point[row] +=
-            current_rotation_matrix[row][col] * current_point[col];
-        }
-        new_point[row] += current_center_of_mass_location[row];
-      }
-
-      for (int row = 0; row < 3; ++row) {
-        disp[row] = new_point[row] - modelc[row];
-        lever_arm[row] = new_point[row] - current_center_of_mass_location[row];
-      }
-
-      cross_product(
-        &translation_and_rotation_velocities[3], lever_arm.data(),
-        new_velocity.data());
-
-      for (int row = 0; row < 3; ++row) {
-        new_velocity[row] += translation_and_rotation_velocities[row];
-        meshv[row] = new_velocity[row];
-      }
-
-      if (updateCur) {
-        for (int row = 0; row < 3; ++row) {
-          currc[row] = new_point[row];
-        }
-      }
-    }
-  }
-
-  // Note this syncs too much as is. Ideally above is done on device.
-  curCoords->modify_on_host();
-  displacement->modify_on_host();
-  meshVelocity->modify_on_host();
-  curCoords->sync_to_device();
-  displacement->sync_to_device();
-  meshVelocity->sync_to_device();
-}
-
-void
 KynemaFMBSixDof::map_displacements(double current_time, bool updateCurCoor)
 {
-  for (auto& point : point_bodies_) {
-    map_displacements_point(point, updateCurCoor);
+  for (int i = 0; i < (int)point_bodies_.size(); ++i) {
+    point_bodies_[i].p_data.pos =
+      point_interfaces_[i]
+        .kynema_interface->turbine.floating_platform.node.position;
+    point_bodies_[i].p_data.vel =
+      point_interfaces_[i]
+        .kynema_interface->turbine.floating_platform.node.velocity;
+    map_displacements_point(point_bodies_[i], updateCurCoor);
   }
 }
 
 void
-KynemaFMBSixDof::map_loads_point(PointMass& point)
+KynemaFMBSixDof::map_loads(const double)
 {
-  point.calc_loads->initialize();
-  point.calc_loads->execute();
+  for (int i = 0; i < (int)point_bodies_.size(); ++i) {
+    map_loads_point(point_bodies_[i]);
 
-  auto& meta = bulk_->mesh_meta_data();
-  const VectorFieldType* modelCoords =
-    meta.get_field<double>(stk::topology::NODE_RANK, "coordinates");
-  const VectorFieldType* meshDisp =
-    meta.get_field<double>(stk::topology::NODE_RANK, "mesh_displacement");
-
-  std::array<double, 7> translation_and_rotation_position =
-    point.kynema_interface->turbine.floating_platform.node.position;
-
-  std::array<double, 3> center_of_mass = {
-    translation_and_rotation_position[0], translation_and_rotation_position[1],
-    translation_and_rotation_position[2]};
-
-  auto forces_and_moments = fsi::accumulateLoadsAndMoments(
-    *bulk_, point.forcing_surfaces, *modelCoords, *meshDisp,
-    *(point.total_force), center_of_mass);
-
-  // Reduce to get full result and then feed into open turbine
-  MPI_Allreduce(
-    MPI_IN_PLACE, forces_and_moments.data(), 6, MPI_DOUBLE, MPI_SUM,
-    bulk_->parallel());
-
-  for (int idim = 0; idim < 6; ++idim) {
-    point.kynema_interface->turbine.floating_platform.node.loads[idim] =
-      0.5 * (1.0 - point.rho_inf) * forces_and_moments[idim] +
-      0.5 * (1.0 - point.rho_inf) *
-        point.kynema_interface->turbine.floating_platform.node.loads[idim] +
-      point.kynema_interface->turbine.floating_platform.node.loads[idim] *
-        point.rho_inf;
-  }
-}
-
-void
-KynemaFMBSixDof::map_loads()
-{
-  for (auto& point : point_bodies_) {
-    map_loads_point(point);
+    auto& forces_and_moments = point_bodies_[i].p_data.loads;
+    auto& iface = point_interfaces_[i];
+    auto& loads = iface.kynema_interface->turbine.floating_platform.node.loads;
+    for (int idim = 0; idim < 6; ++idim) {
+      loads[idim] = 0.5 * (1.0 - iface.rho_inf) * forces_and_moments[idim] +
+                    0.5 * (1.0 - iface.rho_inf) * loads[idim] +
+                    loads[idim] * iface.rho_inf;
+    }
   }
 }
 
