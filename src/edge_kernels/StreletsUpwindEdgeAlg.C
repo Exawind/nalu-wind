@@ -185,7 +185,7 @@ StreletsUpwindEdgeAlg::execute()
 
       const DblType B = ch3 * omegaMag * stk::math::max(sijMag, omegaMag) /
                         stk::math::max(ssq_p_osq_o2, 1e-20);
-      const DblType g = stk::math::tanh(B * B * B * B);
+      const DblType g = stk::math::max(stk::math::tanh(B * B * B * B), 1e-20);
       const DblType K = stk::math::max(std::sqrt(ssq_p_osq_o2), 0.1 / tau_des);
       const DblType l_turb = stk::math::max(
         (muEdge + turbMuEdge) / rhoEdge /
