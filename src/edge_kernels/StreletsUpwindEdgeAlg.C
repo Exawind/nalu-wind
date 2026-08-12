@@ -7,6 +7,7 @@
 // for more details.
 //
 
+#include <limits>
 #include <edge_kernels/StreletsUpwindEdgeAlg.h>
 #include <Realm.h>
 #include "stk_mesh/base/NgpField.hpp"
