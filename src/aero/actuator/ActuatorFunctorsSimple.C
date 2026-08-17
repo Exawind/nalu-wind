@@ -194,7 +194,7 @@ ActSimpleComputeRelativeVelocity(
 
   Kokkos::parallel_for(
     "compute relative velocities", actBulk.local_range_policy(),
-    ACTUATOR_LAMBDA(int index) {
+    [=](int index) {
       auto twistTable = Kokkos::subview(twistTableV, turbId, Kokkos::ALL);
       auto p1ZeroAlphaDir =
         Kokkos::subview(p1ZeroAlphaDirV, turbId, Kokkos::ALL);
@@ -246,8 +246,7 @@ ActSimpleComputeForce(
   std::vector<std::string>* cache = &actBulk.output_cache_;
 
   Kokkos::parallel_for(
-    "ActSimpleComputeForce", actBulk.local_range_policy(),
-    ACTUATOR_LAMBDA(int index) {
+    "ActSimpleComputeForce", actBulk.local_range_policy(), [=](int index) {
       auto pointForce = Kokkos::subview(force, index, Kokkos::ALL);
       const int localId = index - offset(turbId);
 

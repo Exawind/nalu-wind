@@ -104,7 +104,6 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
   const unsigned dualNodalVol = dualNodalVol_;
   const unsigned exposedPressureField = exposedPressureField_;
   const unsigned pressureField = pressureField_;
-  const unsigned coordsID = coordinates_;
   const unsigned dynPID = dynPress_;
 
   const auto& fieldMgr = meshInfo.ngp_field_manager();
@@ -145,7 +144,6 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
         faceView.get_scratch_view_1D(exposedPressureField);
       const auto dyn_p_field = faceView.get_scratch_view_1D(dynPID);
 
-      const auto v_coord = faceView.get_scratch_view_2D(coordsID);
       const auto elem_p_field = elemView.get_scratch_view_1D(pressureField);
 
       const auto meFaceViews =

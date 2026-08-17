@@ -7,6 +7,7 @@
 // for more details.
 //
 
+#include <limits>
 #include <edge_kernels/StreletsUpwindEdgeAlg.h>
 #include <Realm.h>
 #include "stk_mesh/base/NgpField.hpp"
@@ -183,8 +184,9 @@ StreletsUpwindEdgeAlg::execute()
       sijMag = stk::math::sqrt(2.0 * sijMag);
       omegaMag = stk::math::sqrt(2.0 * omegaMag);
 
-      const DblType B = ch3 * omegaMag * stk::math::max(sijMag, omegaMag) /
-                        stk::math::max(ssq_p_osq_o2, 1e-20);
+      const DblType B =
+        ch3 * omegaMag * stk::math::max(sijMag, omegaMag) /
+        stk::math::max(ssq_p_osq_o2, std::numeric_limits<DblType>::epsilon());
       const DblType g = stk::math::tanh(B * B * B * B);
       const DblType K = stk::math::max(std::sqrt(ssq_p_osq_o2), 0.1 / tau_des);
       const DblType l_turb = stk::math::max(
@@ -192,8 +194,10 @@ StreletsUpwindEdgeAlg::execute()
           stk::math::sqrt(cmu * stk::math::sqrt(cmu) * K),
         stk::math::sqrt(tkeEdge) / (cmu * sdrEdge));
       const DblType cdes = cdes_ke + fOneEdge * (cdes_kw - cdes_ke);
+      const DblType g_div =
+        stk::math::max(g, std::numeric_limits<DblType>::epsilon());
       const DblType A =
-        ch2 * stk::math::max(cdes * sstMaxLenEdge / l_turb / g - 0.5, 0.0);
+        ch2 * stk::math::max(cdes * sstMaxLenEdge / l_turb / g_div - 0.5, 0.0);
 
       pecFactor.get(edge, 0) =
         sigmaMax * stk::math::tanh(stk::math::pow(A, ch1));

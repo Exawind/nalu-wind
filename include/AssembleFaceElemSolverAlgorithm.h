@@ -85,9 +85,9 @@ public:
 
 #if !defined(KOKKOS_ENABLE_GPU)
         STK_ThrowAssertMsg(
-          b.topology().num_nodes() == (unsigned)nodesPerFace_,
-          "AssembleFaceElemSolverAlgorithm expected nodesPerEntity_ = "
-            << nodesPerFace_
+          b.topology().num_nodes() == (unsigned)nodesPerFace,
+          "AssembleFaceElemSolverAlgorithm expected nodesPerEntity = "
+            << nodesPerFace
             << ", but b.topology().num_nodes() = " << b.topology().num_nodes());
 #endif
 

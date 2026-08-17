@@ -57,7 +57,7 @@ TpetraLinearSolverConfig::load(const YAML::Node& node)
   if (method_ == "sstep_gmres") {
     method_ = "TPETRA GMRES S-STEP";
 
-    int step_size;
+    int step_size = 0;
     get_if_present(node, "krylov_step_size", step_size, step_size);
     params_->set("Step Size", step_size);
 
