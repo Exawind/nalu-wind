@@ -52,7 +52,6 @@ private:
   stk::mesh::NgpField<double> dwdx_;
   stk::mesh::NgpField<double> dualNodalVolume_;
   stk::mesh::NgpField<double> fOneBlend_;
-  stk::mesh::NgpField<double> cellLengthScale_;
 
   unsigned tkeID_{stk::mesh::InvalidOrdinal};
   unsigned sdrID_{stk::mesh::InvalidOrdinal};
@@ -63,7 +62,6 @@ private:
   unsigned dwdxID_{stk::mesh::InvalidOrdinal};
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
   unsigned fOneBlendID_{stk::mesh::InvalidOrdinal};
-  unsigned cellLengthScaleID_{stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
@@ -72,8 +70,6 @@ private:
   NodeKernelTraits::DblType betaTwo_;
   NodeKernelTraits::DblType gammaOne_;
   NodeKernelTraits::DblType gammaTwo_;
-  NodeKernelTraits::DblType cDESke_;
-  NodeKernelTraits::DblType cDESkw_;
   NodeKernelTraits::DblType sdrAmb_;
 
   const int nDim_;
