@@ -109,15 +109,10 @@ TKESSTIDDESSIMPLENodeKernel::execute(
   DblType denom =
     density * kappa_ * kappa_ * dw * dw *
     stk::math::max(stk::math::sqrt(0.5 * (sijSq + omegaSq)), 1e-10);
-  DblType rdl = visc / denom;
+  // Simplified IDDES: elevation function f_e = 0, so skip its computation
   DblType rdt = tvisc / denom;
-  DblType fl = stk::math::tanh(stk::math::pow(iddes_Cl_ * iddes_Cl_ * rdl, 10));
-  DblType ft = stk::math::tanh(stk::math::pow(iddes_Ct_ * iddes_Ct_ * rdt, 3));
   DblType alpha = 0.25 - dw / maxLenScale;
-  DblType fe1 = (alpha < 0) ? 2.0 * stk::math::exp(-9.0 * alpha * alpha)
-                            : 2.0 * stk::math::exp(-11.09 * alpha * alpha);
-  DblType fe2 = 1.0 - stk::math::max(ft, fl);
-  DblType fe = fe2 * stk::math::max((fe1 - 1.0), 0.0);
+  DblType fe = 0.0;
   DblType fb = stk::math::min(2.0 * stk::math::exp(-9.0 * alpha * alpha), 1.0);
   DblType fdt =
     1.0 - stk::math::tanh(stk::math::pow(iddes_Cdt1_ * rdt, iddes_Cdt2_));
