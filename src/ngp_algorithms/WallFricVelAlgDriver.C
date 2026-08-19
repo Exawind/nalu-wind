@@ -46,7 +46,12 @@ WallFricVelAlgDriver::post_work()
   stk::all_reduce_sum(
     KynemaUGFEnv::self().parallel_comm(), utauSumLocal, utauSumGlobal, 2);
 
-  double utau_average = utauSumGlobal[0] / utauSumGlobal[1];
+  // Guard against divide-by-zero when no wall area was accumulated
+  // (e.g. a rank/config with no wall faces contributing to the sum).
+  double utau_average = 0.0;
+  if (utauSumGlobal[1] != 0.0) {
+    utau_average = utauSumGlobal[0] / utauSumGlobal[1];
+  }
   realm_.bdyLayerStats_->set_utau_avg(utau_average);
 }
 
