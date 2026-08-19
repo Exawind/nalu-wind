@@ -80,7 +80,6 @@ TKESSTIDDESSIMPLENodeKernel::execute(
   const DblType tke = tke_.get(node, 0);
   const DblType sdr = sdr_.get(node, 0);
   const DblType density = density_.get(node, 0);
-  const DblType visc = visc_.get(node, 0);
   const DblType tvisc = tvisc_.get(node, 0);
   const DblType dVol = dualNodalVolume_.get(node, 0);
   const DblType dw = wallDist_.get(node, 0);
