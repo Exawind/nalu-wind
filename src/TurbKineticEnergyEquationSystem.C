@@ -56,6 +56,7 @@
 #include <node_kernels/TKEKsgsNodeKernel.h>
 #include <node_kernels/TKESSTDESNodeKernel.h>
 #include <node_kernels/TKESSTIDDESNodeKernel.h>
+#include <node_kernels/TKESSTIDDESSIMPLENodeKernel.h>
 #include <node_kernels/TKESSTNodeKernel.h>
 #include <node_kernels/TKESSTLRNodeKernel.h>
 #include <node_kernels/TKEKENodeKernel.h>
@@ -153,7 +154,8 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
   if (!check_for_valid_turblence_model(turbulenceModel_)) {
     throw std::runtime_error(
       "User has requested TurbKinEnergyEqs, however, turbulence model is not "
-      "KSGS, SST, SSTLR, SST_DES, SST_IDDES, SST_AMS, KE, or KO");
+      "KSGS, SST, SSTLR, SST_DES, SST_IDDES, SST_IDDES_SIMPLE, SST_AMS, KE, "
+      "or KO");
   }
 
   // create projected nodal gradient equation system
@@ -173,6 +175,7 @@ TurbKineticEnergyEquationSystem::check_for_valid_turblence_model(
   case TurbulenceModel::SST_DES:
   case TurbulenceModel::SST_AMS:
   case TurbulenceModel::SST_IDDES:
+  case TurbulenceModel::SST_IDDES_SIMPLE:
   case TurbulenceModel::KE:
   case TurbulenceModel::KO:
     return true;
@@ -331,6 +334,14 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
               realm_.meta_data());
           }
           break;
+        case TurbulenceModel::SST_IDDES_SIMPLE:
+          if (!realm_.solutionOptions_->gammaEqActive_) {
+            nodeAlg.add_kernel<TKESSTIDDESSIMPLENodeKernel>(realm_.meta_data());
+          } else {
+            throw std::runtime_error(
+              "IDDES_SIMPLE does not support transition_model");
+          }
+          break;
         case TurbulenceModel::KE:
           nodeAlg.add_kernel<TKEKENodeKernel>(realm_.meta_data());
           break;
@@ -338,8 +349,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<TKEKONodeKernel>(realm_.meta_data());
           break;
         default:
-          std::runtime_error("TKEEqSys: Invalid turbulence model");
-          break;
+          throw std::runtime_error("TKEEqSys: Invalid turbulence model");
         }
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
@@ -373,7 +383,8 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
     case TurbulenceModel::SSTLR:
     case TurbulenceModel::SST_DES:
     case TurbulenceModel::SST_AMS:
-    case TurbulenceModel::SST_IDDES: {
+    case TurbulenceModel::SST_IDDES:
+    case TurbulenceModel::SST_IDDES_SIMPLE: {
       const double sigmaKOne = realm_.get_turb_model_constant(TM_sigmaKOne);
       const double sigmaKTwo = realm_.get_turb_model_constant(TM_sigmaKTwo);
       effDiffFluxCoeffAlg_.reset(new EffSSTDiffFluxCoeffAlg(

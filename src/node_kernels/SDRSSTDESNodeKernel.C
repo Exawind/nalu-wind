@@ -30,7 +30,6 @@ SDRSSTDESNodeKernel::SDRSSTDESNodeKernel(const stk::mesh::MetaData& meta)
     dwdxID_(get_field_ordinal(meta, "dwdx")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     fOneBlendID_(get_field_ordinal(meta, "sst_f_one_blending")),
-    cellLengthScaleID_(get_field_ordinal(meta, "sst_max_length_scale")),
     nDim_(meta.spatial_dimension())
 {
 }
@@ -49,7 +48,6 @@ SDRSSTDESNodeKernel::setup(Realm& realm)
   dwdx_ = fieldMgr.get_field<double>(dwdxID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   fOneBlend_ = fieldMgr.get_field<double>(fOneBlendID_);
-  cellLengthScale_ = fieldMgr.get_field<double>(cellLengthScaleID_);
 
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
@@ -59,8 +57,6 @@ SDRSSTDESNodeKernel::setup(Realm& realm)
   betaTwo_ = realm.get_turb_model_constant(TM_betaTwo);
   gammaOne_ = realm.get_turb_model_constant(TM_gammaOne);
   gammaTwo_ = realm.get_turb_model_constant(TM_gammaTwo);
-  cDESke_ = realm.get_turb_model_constant(TM_cDESke);
-  cDESkw_ = realm.get_turb_model_constant(TM_cDESkw);
   sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
 }
 
@@ -97,19 +93,12 @@ SDRSSTDESNodeKernel::execute(
   const DblType beta = fOneBlend * betaOne_ + omf1 * betaTwo_;
   const DblType gamma = fOneBlend * gammaOne_ + omf1 * gammaTwo_;
   const DblType sigmaD = 2.0 * omf1 * sigmaWTwo_;
-  const DblType cDES = omf1 * cDESke_ + fOneBlend * cDESkw_;
 
   const DblType small = 1.0e-16;
-  const DblType eddyLengthRANS =
-    stk::math::sqrt(tke) / stk::math::max(betaStar_ * sdr, small);
-  const DblType eddyLengthLES = cDES * cellLengthScale_.get(node, 0);
-  const DblType eddyLengthDES = stk::math::min(eddyLengthRANS, eddyLengthLES);
-
-  const DblType Dk =
-    density * stk::math::sqrt(tke) * tke / stk::math::max(eddyLengthDES, small);
 
   // Clip production term
-  Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk);
+  DblType Pklim = tkeProdLimitRatio_ * betaStar_ * density * sdr * tke;
+  Pk = stk::math::min(Pklim, stk::math::max(Pk, 0.0));
 
   // Production term with appropriate clipping of tvisc
   const DblType Pw = gamma * density * Pk / stk::math::max(tvisc, small);

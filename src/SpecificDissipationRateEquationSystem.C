@@ -282,8 +282,8 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
             nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
           } else {
             throw std::runtime_error(
-              "Invalid turbulene model: Currently the transition model only "
-              "works with SST " +
+              "Invalid turbulence model for transition_model: supported "
+              "models are SST and SST_IDDES; requested " +
               TurbulenceModelNames[static_cast<int>(
                 realm_.solutionOptions_->turbulenceModel_)]);
           }
@@ -299,6 +299,8 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
             (TurbulenceModel::SST_DES ==
              realm_.solutionOptions_->turbulenceModel_) ||
             (TurbulenceModel::SST_IDDES ==
+             realm_.solutionOptions_->turbulenceModel_) ||
+            (TurbulenceModel::SST_IDDES_SIMPLE ==
              realm_.solutionOptions_->turbulenceModel_)) {
             nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
           } else if (

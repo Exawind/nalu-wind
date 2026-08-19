@@ -249,7 +249,9 @@ SolutionOptions::load(const YAML::Node& y_node)
     if (turbulenceModel_ != TurbulenceModel::LAMINAR) {
       isTurbulent_ = true;
     }
-    if (turbulenceModel_ == TurbulenceModel::SST_IDDES) {
+    if (
+      turbulenceModel_ == TurbulenceModel::SST_IDDES ||
+      turbulenceModel_ == TurbulenceModel::SST_IDDES_SIMPLE) {
       get_if_present(
         y_solution_options, "strelets_upwinding", useStreletsUpwinding_,
         useStreletsUpwinding_);
@@ -262,6 +264,17 @@ SolutionOptions::load(const YAML::Node& y_node)
         transition_model_);
       if (transition_model_ == true)
         gammaEqActive_ = true;
+    }
+    if (turbulenceModel_ == TurbulenceModel::SST_IDDES_SIMPLE) {
+      bool transitionModel = false;
+      get_if_present(
+        y_solution_options, "transition_model", transitionModel,
+        transitionModel);
+      if (transitionModel) {
+        throw std::runtime_error(
+          "Invalid configuration: transition_model is not supported for "
+          "sst_iddes_simple");
+      }
     }
     // initialize turbulence constants since some laminar models may need such
     // variables, e.g., kappa
@@ -662,7 +675,8 @@ SolutionOptions::initialize_turbulence_constants()
      turbulenceModel_ == TurbulenceModel::SSTLR ||
      turbulenceModel_ == TurbulenceModel::SST_DES ||
      turbulenceModel_ == TurbulenceModel::SST_AMS ||
-     turbulenceModel_ == TurbulenceModel::SST_IDDES)
+     turbulenceModel_ == TurbulenceModel::SST_IDDES ||
+     turbulenceModel_ == TurbulenceModel::SST_IDDES_SIMPLE)
       ? 10.0
       : 500.0;
   turbModelConstantMap_[TM_cmuEps] = 0.0856;
