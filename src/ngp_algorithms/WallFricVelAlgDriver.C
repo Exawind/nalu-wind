@@ -7,7 +7,6 @@
 // for more details.
 //
 
-#include <limits>
 #include "ngp_algorithms/WallFricVelAlgDriver.h"
 #include "ngp_algorithms/WallFricVelAlgDriver.h"
 #include "Realm.h"
@@ -51,7 +50,7 @@ WallFricVelAlgDriver::post_work()
   // Guard against divide-by-zero when no wall area was accumulated
   // (e.g. a rank/config with no wall faces contributing to the sum).
   double utau_average = 0.0;
-  if (utauSumGlobal[1] > std::numeric_limits<double>::min()) {
+  if (utauSumGlobal[1] != 0.0) {
     utau_average = utauSumGlobal[0] / utauSumGlobal[1];
   }
   realm_.bdyLayerStats_->set_utau_avg(utau_average);
