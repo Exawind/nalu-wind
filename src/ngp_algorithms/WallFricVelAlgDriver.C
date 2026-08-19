@@ -7,6 +7,8 @@
 // for more details.
 //
 
+#include <limits>
+#include "ngp_algorithms/WallFricVelAlgDriver.h"
 #include "ngp_algorithms/WallFricVelAlgDriver.h"
 #include "Realm.h"
 #include "wind_energy/BdyLayerStatistics.h"
