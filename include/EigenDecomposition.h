@@ -203,8 +203,9 @@ sym_diagonalize(const T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
     // if oLarge == 0.0, then we are already diagonal
     // we need to be able to divide by thet, so set to 1.0 temporarily and
     // catch c at the end and correct it to 1 to handle the diagonal case
+    const T oLargeSafe = stk::math::if_then_else(oLarge == T(0.0), T(1.0), oLarge);
     thet =
-      stk::math::if_then_else(oLarge == 0.0, 1.0, (dDiff) / (2.0 * oLarge));
+      stk::math::if_then_else(oLarge == 0.0, 1.0, (dDiff) / (2.0 * oLargeSafe));
     sgn = stk::math::if_then_else(thet > 0.0, 1.0, -1.0);
     thet = thet * sgn;
     // sign(T)/(|T|+sqrt(T^2+1))
