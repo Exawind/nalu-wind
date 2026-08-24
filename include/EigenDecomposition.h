@@ -368,28 +368,42 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
   const T linCoef = coFacA - trA * trA / 3.0;
   const T constCoef = coFacA * trA / 3.0 - 2.0 * trA * trA * trA / 27.0 - detA;
 
+  // Guard against the degenerate case linCoef == 0 (triple/repeated eigenvalue,
+  // e.g. a scalar multiple of the identity).  When linCoef is zero the
+  // depressed cubic is t^3 = 0, so all three depressed roots are 0 and every
+  // eigenvalue equals trA/3.  We detect this with a scaled tolerance and use
+  // if_then_else so the code is safe for both scalar and SIMD types.
+  //
+  // linCoefSafe is a non-zero fallback used only inside expressions that divide
+  // by linCoef; it is never actually selected in the degenerate branch so no
+  // incorrect value propagates to the result (mirrors oLargeSafe / thetSafe in
+  // sym_diagonalize above).
+  const T matScale = stk::math::abs(trA) + stk::math::abs(coFacA) + machEps;
+  const auto isDegenerate = stk::math::abs(linCoef) < machEps * matScale;
+  const T linCoefSafe =
+    stk::math::if_then_else(isDegenerate, T(-1.0), linCoef);
+
+  // acos argument; clamp to [-1, 1] to guard against floating-point noise
+  // pushing it just outside the valid domain.
+  const T acosArg = stk::math::max(
+    T(-1.0),
+    stk::math::min(
+      T(1.0),
+      3.0 * constCoef * stk::math::sqrt(-3.0 / linCoefSafe) /
+        (2.0 * linCoefSafe)));
+  const T acosVal = stk::math::acos(acosArg);
+  const T sqrtFac = 2.0 * stk::math::sqrt(-linCoefSafe / 3.0);
+
   // Solve roots of depressed cubic polynomial analytically (Francois Viete
-  // formula)
-  const T t1 =
-    2.0 * stk::math::sqrt(-linCoef / 3.0) *
-    stk::math::cos(
-      stk::math::acos(
-        3.0 * constCoef * stk::math::sqrt(-3.0 / linCoef) / (2.0 * linCoef)) /
-      3.0);
-  const T t2 =
-    2.0 * stk::math::sqrt(-linCoef / 3.0) *
-    stk::math::cos(
-      stk::math::acos(
-        3.0 * constCoef * stk::math::sqrt(-3.0 / linCoef) / (2.0 * linCoef)) /
-        3.0 -
-      2.0 * pi / 3.0);
-  const T t3 =
-    2.0 * stk::math::sqrt(-linCoef / 3.0) *
-    stk::math::cos(
-      stk::math::acos(
-        3.0 * constCoef * stk::math::sqrt(-3.0 / linCoef) / (2.0 * linCoef)) /
-        3.0 -
-      4.0 * pi / 3.0);
+  // formula); fall back to 0 in the degenerate case.
+  const T t1 = stk::math::if_then_else(
+    isDegenerate, T(0.0), sqrtFac * stk::math::cos(acosVal / 3.0));
+  const T t2 = stk::math::if_then_else(
+    isDegenerate, T(0.0),
+    sqrtFac * stk::math::cos(acosVal / 3.0 - 2.0 * pi / 3.0));
+  const T t3 = stk::math::if_then_else(
+    isDegenerate, T(0.0),
+    sqrtFac * stk::math::cos(acosVal / 3.0 - 4.0 * pi / 3.0));
 
   // Convert roots of depressed polynomial back to the eigenvalues
   D[0][0] = t1 + trA / 3.0;

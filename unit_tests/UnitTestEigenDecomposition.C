@@ -295,3 +295,56 @@ TEST(TestEigen, testeigendecompandreconstruct2d_simd)
     }
   }
 }
+
+// Test that general_eigenvalues handles the degenerate case (linCoef == 0)
+// without a divide-by-zero / FPE.  A scalar multiple of the identity has a
+// triple repeated eigenvalue equal to the diagonal value.
+TEST(TestEigen, testGeneralEigenvaluesDegenerateTripleRoot)
+{
+  const double tol = 1.e-12;
+
+  // scalar * I  ->  all eigenvalues == scalar
+  {
+    const double scalar = 3.7;
+    double A[3][3] = {
+      {scalar, 0.0, 0.0},
+      {0.0, scalar, 0.0},
+      {0.0, 0.0, scalar},
+    };
+    double Q[3][3], D[3][3];
+    sierra::kynema_ugf::EigenDecomposition::general_eigenvalues(A, Q, D);
+    EXPECT_NEAR(D[0][0], scalar, tol);
+    EXPECT_NEAR(D[1][1], scalar, tol);
+    EXPECT_NEAR(D[2][2], scalar, tol);
+  }
+
+  // zero matrix  ->  all eigenvalues == 0
+  {
+    double A[3][3] = {};
+    double Q[3][3], D[3][3];
+    sierra::kynema_ugf::EigenDecomposition::general_eigenvalues(A, Q, D);
+    EXPECT_NEAR(D[0][0], 0.0, tol);
+    EXPECT_NEAR(D[1][1], 0.0, tol);
+    EXPECT_NEAR(D[2][2], 0.0, tol);
+  }
+
+  // non-degenerate matrix:  confirm the three eigenvalues match the known
+  // values (computed independently via numpy.linalg.eigvals)
+  {
+    double A[3][3] = {
+      {2.0, 1.0, 0.0},
+      {0.0, 3.0, 1.0},
+      {0.0, 0.0, 4.0},
+    };
+    double Q[3][3], D[3][3];
+    sierra::kynema_ugf::EigenDecomposition::general_eigenvalues(A, Q, D);
+    // eigenvalues of this upper-triangular matrix are simply 2, 3, 4
+    const double expected[3] = {2.0, 3.0, 4.0};
+    // sort D diagonals for comparison
+    double got[3] = {D[0][0], D[1][1], D[2][2]};
+    std::sort(got, got + 3);
+    for (int i = 0; i < 3; ++i) {
+      EXPECT_NEAR(got[i], expected[i], 1.e-10);
+    }
+  }
+}
