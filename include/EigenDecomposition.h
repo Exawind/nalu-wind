@@ -371,8 +371,11 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
   // Guard against the degenerate case linCoef == 0 (triple/repeated eigenvalue,
   // e.g. a scalar multiple of the identity).  When linCoef is zero the
   // depressed cubic is t^3 = 0, so all three depressed roots are 0 and every
-  // eigenvalue equals trA/3.  We detect this with a scaled tolerance and use
-  // if_then_else so the code is safe for both scalar and SIMD types.
+  // eigenvalue equals trA/3.  We detect this with a threshold of
+  // std::numeric_limits<T>::min() (smallest positive normalised value, not
+  // machine epsilon) scaled by the matrix magnitude, which effectively catches
+  // exact zeros and subnormal values.  We use if_then_else so the code is safe
+  // for both scalar and SIMD types.
   //
   // linCoefSafe is a non-zero fallback used only inside expressions that divide
   // by linCoef; it is never actually selected in the degenerate branch so no
@@ -380,17 +383,14 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
   // sym_diagonalize above).
   const T matScale = stk::math::abs(trA) + stk::math::abs(coFacA) + machEps;
   const auto isDegenerate = stk::math::abs(linCoef) < machEps * matScale;
-  const T linCoefSafe =
-    stk::math::if_then_else(isDegenerate, T(-1.0), linCoef);
+  const T linCoefSafe = stk::math::if_then_else(isDegenerate, T(-1.0), linCoef);
 
   // acos argument; clamp to [-1, 1] to guard against floating-point noise
   // pushing it just outside the valid domain.
   const T acosArg = stk::math::max(
-    T(-1.0),
-    stk::math::min(
-      T(1.0),
-      3.0 * constCoef * stk::math::sqrt(-3.0 / linCoefSafe) /
-        (2.0 * linCoefSafe)));
+    T(-1.0), stk::math::min(
+               T(1.0), 3.0 * constCoef * stk::math::sqrt(-3.0 / linCoefSafe) /
+                         (2.0 * linCoefSafe)));
   const T acosVal = stk::math::acos(acosArg);
   const T sqrtFac = 2.0 * stk::math::sqrt(-linCoefSafe / 3.0);
 
