@@ -43,7 +43,7 @@ TimeIntegrator::TimeIntegrator(Simulation* sim)
     secondOrderTimeAccurate_(false),
     adaptiveTimeStep_(false),
     terminateBasedOnTime_(false),
-    nonlinearIterations_(1),
+    multiPhysicsIterations_(1),
     overset_(new ExtOverset(*this))
 {
   // does nothing
@@ -105,8 +105,8 @@ TimeIntegrator::load(const YAML::Node& node)
           standardTimeIntegrator_node, "second_order_accuracy",
           secondOrderTimeAccurate_, secondOrderTimeAccurate_);
         get_if_present(
-          standardTimeIntegrator_node, "nonlinear_iterations",
-          nonlinearIterations_, nonlinearIterations_);
+          standardTimeIntegrator_node, "multiphysics_iterations",
+          multiPhysicsIterations_, multiPhysicsIterations_);
 
         // set n and nm1 time step; restart will override
         timeStepN_ = timeStepFromFile_;
@@ -272,11 +272,11 @@ TimeIntegrator::prepare_for_time_integration()
 }
 
 void
-TimeIntegrator::prepare_time_step(size_t inonlin)
+TimeIntegrator::prepare_time_step(size_t imultphys)
 {
   std::vector<Realm*>::iterator ii;
 
-  if (inonlin < 1) {
+  if (imultphys < 1) {
     // negotiate time step
     if (adaptiveTimeStep_) {
       double theStep = 1.0e8;
@@ -292,11 +292,11 @@ TimeIntegrator::prepare_time_step(size_t inonlin)
 }
 
 void
-TimeIntegrator::pre_realm_advance_stage1(size_t inonlin)
+TimeIntegrator::pre_realm_advance_stage1(size_t imultphys)
 {
   std::vector<Realm*>::iterator ii;
 
-  if (inonlin < 1) {
+  if (imultphys < 1) {
 
     // Advance time according to time step
     currentTime_ += timeStepN_;
@@ -332,14 +332,14 @@ TimeIntegrator::pre_realm_advance_stage1(size_t inonlin)
 }
 
 void
-TimeIntegrator::pre_realm_advance_stage2(size_t inonlin)
+TimeIntegrator::pre_realm_advance_stage2(size_t imultphys)
 {
 
   for (auto realm : realmVec_) {
     realm->update_graph_connectivity_and_coordinates_due_to_mesh_motion();
   }
 
-  if (inonlin < 1) {
+  if (imultphys < 1) {
     std::vector<Realm*>::iterator ii;
 
     // populate boundary data
@@ -388,11 +388,11 @@ TimeIntegrator::integrate_realm()
     pre_realm_advance_stage2();
 
     const double endPreProc = KynemaUGFEnv::self().kynema_ugf_time();
-    // nonlinear iteration loop; Picard-style
-    for (int k = 0; k < nonlinearIterations_; ++k) {
+    // multi physics iteration loop; Picard-style
+    for (int k = 0; k < multiPhysicsIterations_; ++k) {
       KynemaUGFEnv::self().kynema_ugfOutputP0()
-        << "   Realm Nonlinear Iteration: " << k + 1 << "/"
-        << nonlinearIterations_ << std::endl
+        << "   Realm Multi-Physics Iteration: " << k + 1 << "/"
+        << multiPhysicsIterations_ << std::endl
         << std::endl;
 
       // update overset and geometry as needed
@@ -445,7 +445,7 @@ TimeIntegrator::post_realm_advance()
     (*ii)->process_io_transfer();
   }
 
-  // provide output/restart after nonlinear iteration
+  // provide output/restart after multi physics iteration
   for (ii = realmVec_.begin(); ii != realmVec_.end(); ++ii) {
     (*ii)->output_converged_results();
   }
@@ -479,11 +479,11 @@ TimeIntegrator::provide_mean_norm()
 
 //--------------------------------------------------------------------------
 void
-TimeIntegrator::interstep_updates(int nonLinearIterationIndex)
+TimeIntegrator::interstep_updates(int multiPhysicsIterationIndex)
 {
   // hard code as false for now. We want to only trigger this when there is
   // FSI so we need to add an indicator for fsi
-  const bool updateGeomInsideNL = nonLinearIterationIndex > 0 && false;
+  const bool updateGeomInsideNL = multiPhysicsIterationIndex > 0 && false;
 
   // perform mesh motion, recompute geometry, etc fsi
   if (updateGeomInsideNL) {
