@@ -349,10 +349,10 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
   // The discriminant terms are all O(matEntry^6), so the floating-point
   // error is proportional to machEps times the sum of those term magnitudes.
   const T discScale = stk::math::abs(trA * trA * coFacA * coFacA) +
-                      stk::math::abs(coFacA * coFacA * coFacA) +
-                      stk::math::abs(trA * trA * trA * detA) +
-                      stk::math::abs(detA * detA) +
-                      stk::math::abs(trA * coFacA * detA) + T(1.0);
+                      T(4.0) * stk::math::abs(coFacA * coFacA * coFacA) +
+                      T(4.0) * stk::math::abs(trA * trA * trA * detA) +
+                      T(27.0) * stk::math::abs(detA * detA) +
+                      T(18.0) * stk::math::abs(trA * coFacA * detA) + T(1.0)
   const auto check_one = disc < -machEps * discScale;
   const bool exit_now = stk::simd::are_all(check_one);
   if (exit_now) {
@@ -388,11 +388,12 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
   // by linCoef; it is never actually selected in the degenerate branch so no
   // incorrect value propagates to the result (mirrors oLargeSafe / thetSafe in
   // sym_diagonalize above).
-  const T matScale =
-    stk::math::abs(trA * trA) + stk::math::abs(coFacA) + T(1.0);
-  const auto isDegenerate = stk::math::abs(linCoef) <= machEps * matScale;
-  const T linCoefSafe = stk::math::if_then_else(isDegenerate, T(-1.0), linCoef);
-
+  const T matScale = stk::math::abs(trA * trA) + stk::math::abs(coFacA) + T(1.0);
+  const T constScale = stk::math::abs(coFacA * trA) + stk::math::abs(trA * trA * trA) +
+                       stk::math::abs(detA) + T(1.0);
+  const auto isDegenerate = (stk::math::abs(linCoef) <= machEps * matScale) &&
+                            (stk::math::abs(constCoef) <= machEps * constScale);
+  const T linCoefSafe = stk::math::if_then_else(isDegenerate, T(-1.0), linCoef)
   // acos argument; clamp to [-1, 1] to guard against floating-point noise
   // pushing it just outside the valid domain.
   const T acosArg = stk::math::max(
