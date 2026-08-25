@@ -2772,6 +2772,7 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
       realm_.solutionOptions_->get_relaxation_factor(dofName);
 
     // Sum up contributions on the nodes shared amongst processors
+    ngpUdiag.sync_to_host();
     stk::mesh::parallel_sum(realm_.bulk_data(), {Udiag_});
     Udiag_->modify_on_host();
     ngpUdiag.sync_to_device();
