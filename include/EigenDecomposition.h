@@ -379,7 +379,8 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
   // by linCoef; it is never actually selected in the degenerate branch so no
   // incorrect value propagates to the result (mirrors oLargeSafe / thetSafe in
   // sym_diagonalize above).
-  const T matScale = stk::math::abs(trA) + stk::math::abs(coFacA) + T(1.0);
+  const T matScale =
+    stk::math::abs(trA * trA) + stk::math::abs(coFacA) + T(1.0);
   const auto isDegenerate = stk::math::abs(linCoef) <= machEps * matScale;
   const T linCoefSafe = stk::math::if_then_else(isDegenerate, T(-1.0), linCoef);
 
