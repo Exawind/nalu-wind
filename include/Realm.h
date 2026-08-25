@@ -84,7 +84,9 @@ class TurbulenceAveragingPostProcessing;
 class DataProbePostProcessing;
 class LidarLOS;
 class AeroContainer;
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
 class KynemaContainer;
+#endif
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
 
@@ -423,7 +425,9 @@ public:
   TurbulenceAveragingPostProcessing* turbulenceAveragingPostProcessing_;
   DataProbePostProcessing* dataProbePostProcessing_;
   std::unique_ptr<AeroContainer> aeroModels_;
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   std::unique_ptr<KynemaContainer> kynemaModels_;
+#endif
   ABLForcingAlgorithm* ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
   std::unique_ptr<FieldManager> fieldManager_;

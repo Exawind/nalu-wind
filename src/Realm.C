@@ -67,7 +67,9 @@
 
 // actuator line/fsi
 #include <aero/AeroContainer.h>
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
 #include <aero/KynemaContainer.h>
+#endif
 
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <wind_energy/SyntheticLidar.h>
@@ -435,8 +437,10 @@ Realm::initialize_prolog()
   if (aeroModels_->is_active())
     aeroModels_->setup(get_time_step_from_file(), bulkData_);
 
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   if (kynemaModels_->is_active())
     kynemaModels_->setup(get_time_step_from_file(), bulkData_);
+#endif
 
   // interior algorithm creation
   setup_interior_algorithms();
@@ -548,11 +552,13 @@ Realm::initialize_prolog()
     aeroModels_->init(get_current_time(), outputInfo_->restartFreq_);
   }
 
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   if (kynemaModels_->is_active()) {
     KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Initializing Kynema models" << std::endl;
     kynemaModels_->init(get_current_time(), outputInfo_->restartFreq_);
   }
+#endif
 
   compute_geometry();
 
@@ -632,9 +638,15 @@ Realm::look_ahead_and_creation(const YAML::Node& node)
     solutionOptions_->openfastFSI_ = true;
 
   // Contains Kynema-FMB structural models
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   kynemaModels_ = std::make_unique<KynemaContainer>(node);
   if (kynemaModels_->has_six_dof())
     solutionOptions_->kynemaFMBSixDof_ = true;
+#else
+  if (node["kynema_fmb_six_dof"])
+    throw std::runtime_error(
+      "6DOF coupling can not be used without coupling to Kynema-FMB");
+#endif
 
   // Boundary Layer Statistics post-processing
   if (node["boundary_layer_statistics"]) {
@@ -1882,9 +1894,11 @@ Realm::update_geometry_due_to_mesh_motion()
       aeroModels_->update_displacements(get_current_time());
     }
 
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
     if (kynemaModels_->is_active()) {
       kynemaModels_->update_displacements(get_current_time());
     }
+#endif
 
     if (solutionOptions_->externalMeshDeformation_) {
       std::vector<std::string> targetNames = get_physics_target_names();
@@ -3506,13 +3520,19 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
 
     if (does_mesh_move()) {
 
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
+      const bool hasSixDof = kynemaModels_->has_six_dof();
+#else
+      const bool hasSixDof = false;
+#endif
+
       // Redo all the mesh and motionAlg setup after reading files from the
       // restart reset the current_coordinate and mesh_velocity fields after
       // reading them
       init_current_coordinates();
 
       // reset the current time for the meshMotionAlgs
-      if (has_mesh_motion() && !kynemaModels_->has_six_dof())
+      if (has_mesh_motion() && !hasSixDof)
         meshMotionAlg_->restart_reinit(foundRestartTime);
 
       if (aeroModels_->has_fsi()) {
@@ -3522,16 +3542,18 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
         aeroModels_->update_displacements(restartTime, true, false);
       }
 
-      if (kynemaModels_->has_six_dof()) {
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
+      if (hasSixDof) {
         KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Kynema models - Update displacements and set current coordinates"
           << std::endl;
         kynemaModels_->update_displacements(restartTime, true);
       }
+#endif
 
       compute_geometry();
 
-      if (has_mesh_motion() && !kynemaModels_->has_six_dof())
+      if (has_mesh_motion() && !hasSixDof)
         meshMotionAlg_->post_compute_geometry();
     }
   }
@@ -4626,11 +4648,13 @@ Realm::process_multi_physics_transfer(bool initCall)
         << "Aero models - Predict model time step" << std::endl;
       aeroModels_->predict_model_time_step(get_current_time());
     }
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
     if (kynemaModels_->is_active()) {
       KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Kynema models - Predict model time step" << std::endl;
       kynemaModels_->predict_model_time_step(get_current_time());
     }
+#endif
   }
 
   /* if (openfast_ != NULL) */
@@ -4743,12 +4767,14 @@ Realm::post_converged_work()
       get_current_time(), timeIntegrator_->get_time_step());
   }
 
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   if (kynemaModels_->is_active()) {
     KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Kynema models - advance model timestep" << std::endl;
     kynemaModels_->advance_model_time_step(
       get_current_time(), timeIntegrator_->get_time_step());
   }
+#endif
 
   // FIXME: Consider a unified collection of post processing work
   if (NULL != solutionNormPostProcessing_)
