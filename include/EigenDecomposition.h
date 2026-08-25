@@ -326,7 +326,7 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
 {
 
   const T pi = stk::math::acos(-1.0);
-  const T machEps = std::numeric_limits<T>::min();
+  const T machEps = std::numeric_limits<T>::epsilon();
 
   // Characteristic equation for A is ax^3 + bx^2 + cx + d = 0 where x are the
   // eigenvalues and a = 1, b = -trA, c = coFacA, d = -detA
@@ -372,17 +372,15 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
   // e.g. a scalar multiple of the identity).  When linCoef is zero the
   // depressed cubic is t^3 = 0, so all three depressed roots are 0 and every
   // eigenvalue equals trA/3.  We detect this with a threshold of
-  // std::numeric_limits<T>::min() (smallest positive normalised value, not
-  // machine epsilon) scaled by the matrix magnitude, which effectively catches
-  // exact zeros and subnormal values.  We use if_then_else so the code is safe
-  // for both scalar and SIMD types.
+  // machine epsilon scaled by the matrix magnitude. We use if_then_else so the
+  // code is safe for both scalar and SIMD types.
   //
   // linCoefSafe is a non-zero fallback used only inside expressions that divide
   // by linCoef; it is never actually selected in the degenerate branch so no
   // incorrect value propagates to the result (mirrors oLargeSafe / thetSafe in
   // sym_diagonalize above).
-  const T matScale = stk::math::abs(trA) + stk::math::abs(coFacA) + machEps;
-  const auto isDegenerate = stk::math::abs(linCoef) < machEps * matScale;
+  const T matScale = stk::math::abs(trA) + stk::math::abs(coFacA) + T(1.0);
+  const auto isDegenerate = stk::math::abs(linCoef) <= machEps * matScale;
   const T linCoefSafe = stk::math::if_then_else(isDegenerate, T(-1.0), linCoef);
 
   // acos argument; clamp to [-1, 1] to guard against floating-point noise
