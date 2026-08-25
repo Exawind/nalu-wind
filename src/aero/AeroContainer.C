@@ -151,9 +151,7 @@ AeroContainer::predict_model_time_step(const double currentTime)
 }
 
 void
-AeroContainer::advance_model_time_step(
-  const double currentTime,
-  const double)
+AeroContainer::advance_model_time_step(const double currentTime, const double)
 {
 #ifdef KYNEMA_UGF_USES_OPENFAST
   if (has_fsi()) {
