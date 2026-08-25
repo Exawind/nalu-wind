@@ -67,6 +67,7 @@
 
 // actuator line/fsi
 #include <aero/AeroContainer.h>
+#include <aero/KynemaContainer.h>
 
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <wind_energy/SyntheticLidar.h>
@@ -434,6 +435,9 @@ Realm::initialize_prolog()
   if (aeroModels_->is_active())
     aeroModels_->setup(get_time_step_from_file(), bulkData_);
 
+  if (kynemaModels_->is_active())
+    kynemaModels_->setup(get_time_step_from_file(), bulkData_);
+
   // interior algorithm creation
   setup_interior_algorithms();
 
@@ -544,6 +548,12 @@ Realm::initialize_prolog()
     aeroModels_->init(get_current_time(), outputInfo_->restartFreq_);
   }
 
+  if (kynemaModels_->is_active()) {
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Initializing Kynema models" << std::endl;
+    kynemaModels_->init(get_current_time(), outputInfo_->restartFreq_);
+  }
+
   compute_geometry();
 
   if (solutionOptions_->meshMotion_)
@@ -618,10 +628,13 @@ Realm::look_ahead_and_creation(const YAML::Node& node)
 
   // Contains actuators and FSI data structures
   aeroModels_ = std::make_unique<AeroContainer>(node);
-  if (aeroModels_->has_six_dof())
-    solutionOptions_->kynemaFMBSixDof_ = true;
   if (aeroModels_->has_fsi())
     solutionOptions_->openfastFSI_ = true;
+
+  // Contains Kynema-FMB structural models
+  kynemaModels_ = std::make_unique<KynemaContainer>(node);
+  if (kynemaModels_->has_six_dof())
+    solutionOptions_->kynemaFMBSixDof_ = true;
 
   // Boundary Layer Statistics post-processing
   if (node["boundary_layer_statistics"]) {
@@ -1867,6 +1880,10 @@ Realm::update_geometry_due_to_mesh_motion()
   if (does_mesh_move()) {
     if (aeroModels_->is_active()) {
       aeroModels_->update_displacements(get_current_time());
+    }
+
+    if (kynemaModels_->is_active()) {
+      kynemaModels_->update_displacements(get_current_time());
     }
 
     if (solutionOptions_->externalMeshDeformation_) {
@@ -3495,19 +3512,26 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
       init_current_coordinates();
 
       // reset the current time for the meshMotionAlgs
-      if (has_mesh_motion() && !aeroModels_->has_six_dof())
+      if (has_mesh_motion() && !kynemaModels_->has_six_dof())
         meshMotionAlg_->restart_reinit(foundRestartTime);
 
-      if (aeroModels_->has_fsi() || aeroModels_->has_six_dof()) {
+      if (aeroModels_->has_fsi()) {
         KynemaUGFEnv::self().kynema_ugfOutputP0()
           << "Aero models - Update displacements and set current coordinates"
           << std::endl;
         aeroModels_->update_displacements(restartTime, true, false);
       }
 
+      if (kynemaModels_->has_six_dof()) {
+        KynemaUGFEnv::self().kynema_ugfOutputP0()
+          << "Kynema models - Update displacements and set current coordinates"
+          << std::endl;
+        kynemaModels_->update_displacements(restartTime, true);
+      }
+
       compute_geometry();
 
-      if (has_mesh_motion() && !aeroModels_->has_six_dof())
+      if (has_mesh_motion() && !kynemaModels_->has_six_dof())
         meshMotionAlg_->post_compute_geometry();
     }
   }
@@ -4602,6 +4626,11 @@ Realm::process_multi_physics_transfer(bool initCall)
         << "Aero models - Predict model time step" << std::endl;
       aeroModels_->predict_model_time_step(get_current_time());
     }
+    if (kynemaModels_->is_active()) {
+      KynemaUGFEnv::self().kynema_ugfOutputP0()
+        << "Kynema models - Predict model time step" << std::endl;
+      kynemaModels_->predict_model_time_step(get_current_time());
+    }
   }
 
   /* if (openfast_ != NULL) */
@@ -4711,6 +4740,13 @@ Realm::post_converged_work()
     KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "Aero models - advance model timestep" << std::endl;
     aeroModels_->advance_model_time_step(
+      get_current_time(), timeIntegrator_->get_time_step());
+  }
+
+  if (kynemaModels_->is_active()) {
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Kynema models - advance model timestep" << std::endl;
+    kynemaModels_->advance_model_time_step(
       get_current_time(), timeIntegrator_->get_time_step());
   }
 

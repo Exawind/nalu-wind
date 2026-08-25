@@ -84,6 +84,7 @@ class TurbulenceAveragingPostProcessing;
 class DataProbePostProcessing;
 class LidarLOS;
 class AeroContainer;
+class KynemaContainer;
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
 
@@ -422,6 +423,7 @@ public:
   TurbulenceAveragingPostProcessing* turbulenceAveragingPostProcessing_;
   DataProbePostProcessing* dataProbePostProcessing_;
   std::unique_ptr<AeroContainer> aeroModels_;
+  std::unique_ptr<KynemaContainer> kynemaModels_;
   ABLForcingAlgorithm* ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
   std::unique_ptr<FieldManager> fieldManager_;

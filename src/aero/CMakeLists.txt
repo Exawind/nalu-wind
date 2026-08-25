@@ -1,5 +1,6 @@
 target_sources(${kynema_ugf_lib_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/AeroContainer.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/KynemaContainer.C
   ${CMAKE_CURRENT_SOURCE_DIR}/CalcLoads.C
 )
 
