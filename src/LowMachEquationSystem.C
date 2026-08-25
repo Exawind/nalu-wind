@@ -126,7 +126,7 @@
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpFieldUtils.h"
-#include "stk_mesh/base/NgpFieldParallel.hpp"
+#include "ngp_utils/NgpFieldParallelCompat.h"
 #include "ngp_utils/NgpTypes.h"
 
 // UT Austin Hybrid AMS kernels
@@ -2773,9 +2773,10 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
 
     // Sum up contributions on the nodes shared amongst processors
     const std::vector<NGPDoubleFieldType*> fVecNgp{&ngpUdiag};
-    bool doFinalSyncBackToDevice = true;
-    stk::mesh::parallel_sum(
-      realm_.bulk_data(), fVecNgp, doFinalSyncBackToDevice);
+    const std::vector<const stk::mesh::FieldBase*> fVecHost{Udiag_};
+    constexpr bool syncResultToHost = false;
+    kynema_ugf_ngp::parallel_sum(
+      realm_.bulk_data(), fVecNgp, fVecHost, syncResultToHost);
 
     const auto sel = stk::mesh::selectField(*Udiag_) &
                      meta.locally_owned_part() &

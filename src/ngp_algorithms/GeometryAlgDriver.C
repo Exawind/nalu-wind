@@ -20,7 +20,7 @@
 #include "stk_mesh/base/FieldParallel.hpp"
 #include "stk_mesh/base/FieldBLAS.hpp"
 #include "stk_mesh/base/MetaData.hpp"
-#include "stk_mesh/base/NgpFieldParallel.hpp"
+#include "ngp_utils/NgpFieldParallelCompat.h"
 #include <stk_mesh/base/NgpMesh.hpp>
 
 namespace sierra {
@@ -199,11 +199,15 @@ GeometryAlgDriver::post_work()
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& meta = realm_.meta_data();
   std::vector<NGPDoubleFieldType*> fields;
+  std::vector<const stk::mesh::FieldBase*> hostFields;
 
   auto& ngpDualVol =
     kynema_ugf_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
   fields.push_back(&ngpDualVol);
+  hostFields.push_back(
+    meta.get_field<double>(stk::topology::NODE_RANK, "dual_nodal_volume"));
 
   const auto entityRank = realm_.realmUsesEdges_ ? stk::topology::EDGE_RANK
                                                  : stk::topology::ELEM_RANK;
@@ -212,6 +216,8 @@ GeometryAlgDriver::post_work()
     auto& ngpEdgeArea = kynema_ugf_ngp::get_ngp_field(
       meshInfo, "edge_area_vector", stk::topology::EDGE_RANK);
     fields.push_back(&ngpEdgeArea);
+    hostFields.push_back(
+      meta.get_field<double>(stk::topology::EDGE_RANK, "edge_area_vector"));
 
     if (realm_.has_mesh_deformation()) {
       auto& ngpedgeFaceVel = kynema_ugf_ngp::get_ngp_field(
@@ -220,6 +226,10 @@ GeometryAlgDriver::post_work()
         meshInfo, "edge_swept_face_volume", entityRank);
       fields.push_back(&ngpedgeFaceVel);
       fields.push_back(&ngpedgeSweptVol);
+      hostFields.push_back(
+        meta.get_field<double>(entityRank, "edge_face_velocity_mag"));
+      hostFields.push_back(
+        meta.get_field<double>(entityRank, "edge_swept_face_volume"));
     }
   }
 
@@ -230,6 +240,10 @@ GeometryAlgDriver::post_work()
       kynema_ugf_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
     fields.push_back(&wallAreaF);
     fields.push_back(&wallDistF);
+    hostFields.push_back(meta.get_field<double>(
+      stk::topology::NODE_RANK, "assembled_wall_area_wf"));
+    hostFields.push_back(meta.get_field<double>(
+      stk::topology::NODE_RANK, "assembled_wall_normal_distance"));
   }
 
   // Algorithms should have marked the fields as modified, but call this here to
@@ -239,11 +253,11 @@ GeometryAlgDriver::post_work()
     fld->sync_to_host();
   }
 
-  bool doFinalSyncToDevice = false;
-  stk::mesh::parallel_sum(realm_.bulk_data(), fields, doFinalSyncToDevice);
+  constexpr bool syncResultToHost = true;
+  kynema_ugf_ngp::parallel_sum(
+    realm_.bulk_data(), fields, hostFields, syncResultToHost);
 
   if (realm_.hasPeriodic_) {
-    const auto& meta = realm_.meta_data();
     const unsigned nComponents = 1;
     auto* dualVol = meta.template get_field<double>(
       stk::topology::NODE_RANK, "dual_nodal_volume");
