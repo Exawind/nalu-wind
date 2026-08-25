@@ -276,7 +276,11 @@ MatrixFreeLowMachEquationSystem::compute_filter_scale() const
       realm_.polynomial_order(), realm_.ngp_mesh(), interior_selector_, coords,
       dnv);
 
-    stk::mesh::parallel_sum<double>(realm_.bulk_data(), {&dnv}, false);
+    dnv.sync_to_host();
+    auto* dnvHostField =
+      meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length);
+    stk::mesh::parallel_sum(realm_.bulk_data(), {dnvHostField});
+    dnvHostField->modify_on_host();
     if (realm_.hasPeriodic_) {
       realm_.periodic_field_update(
         meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length),

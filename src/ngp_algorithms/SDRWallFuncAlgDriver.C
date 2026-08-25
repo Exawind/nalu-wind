@@ -60,21 +60,23 @@ SDRWallFuncAlgDriver::post_work()
   wallArea.modify_on_device();
 
   // Parallel synchronization
-  const std::vector<NGPDoubleFieldType*> fields{&bcsdr, &wallArea};
-  const bool doFinalSyncToDevice = true;
-  stk::mesh::parallel_sum(realm_.bulk_data(), fields, doFinalSyncToDevice);
-
+  bcsdr.sync_to_host();
+  wallArea.sync_to_host();
   auto* bcsdrF =
     realm_.meta_data().get_field(stk::topology::NODE_RANK, "wall_model_sdr_bc");
+  auto* wallAreaF = realm_.meta_data().get_field(
+    stk::topology::NODE_RANK, "assembled_wall_area_sdr");
+  stk::mesh::parallel_sum(realm_.bulk_data(), {bcsdrF, wallAreaF});
+  bcsdrF->modify_on_host();
+  bcsdr.sync_to_device();
+  wallAreaF->modify_on_host();
+  wallArea.sync_to_device();
   if (realm_.hasPeriodic_) {
     // Periodic synchronization
     const unsigned nComponents = 1;
     const bool bypassFieldCheck = false;
     const bool addMirrorValues = true;
     const bool setMirrorValues = true;
-
-    auto* wallAreaF = realm_.meta_data().get_field(
-      stk::topology::NODE_RANK, "assembled_wall_area_sdr");
 
     auto* periodicMgr = realm_.periodicManager_;
     periodicMgr->ngp_apply_constraints(

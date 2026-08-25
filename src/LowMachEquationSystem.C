@@ -2772,10 +2772,9 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
       realm_.solutionOptions_->get_relaxation_factor(dofName);
 
     // Sum up contributions on the nodes shared amongst processors
-    const std::vector<NGPDoubleFieldType*> fVecNgp{&ngpUdiag};
-    bool doFinalSyncBackToDevice = true;
-    stk::mesh::parallel_sum(
-      realm_.bulk_data(), fVecNgp, doFinalSyncBackToDevice);
+    stk::mesh::parallel_sum(realm_.bulk_data(), {Udiag_});
+    Udiag_->modify_on_host();
+    ngpUdiag.sync_to_device();
 
     const auto sel = stk::mesh::selectField(*Udiag_) &
                      meta.locally_owned_part() &
