@@ -348,12 +348,11 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
   // terms to avoid false positives from floating-point cancellation errors.
   // The discriminant terms are all O(matEntry^6), so the floating-point
   // error is proportional to machEps times the sum of those term magnitudes.
-  const T discScale =
-    stk::math::abs(trA * trA * coFacA * coFacA) +
-    stk::math::abs(coFacA * coFacA * coFacA) +
-    stk::math::abs(trA * trA * trA * detA) +
-    stk::math::abs(detA * detA) +
-    stk::math::abs(trA * coFacA * detA) + T(1.0);
+  const T discScale = stk::math::abs(trA * trA * coFacA * coFacA) +
+                      stk::math::abs(coFacA * coFacA * coFacA) +
+                      stk::math::abs(trA * trA * trA * detA) +
+                      stk::math::abs(detA * detA) +
+                      stk::math::abs(trA * coFacA * detA) + T(1.0);
   const auto check_one = disc < -machEps * discScale;
   const bool exit_now = stk::simd::are_all(check_one);
   if (exit_now) {
