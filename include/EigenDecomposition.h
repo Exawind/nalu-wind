@@ -326,7 +326,7 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
 {
 
   const T pi = stk::math::acos(-1.0);
-  const T machEps = std::numeric_limits<T>::epsilon();
+  const T machEps = T(std::numeric_limits<double>::epsilon());
 
   // Characteristic equation for A is ax^3 + bx^2 + cx + d = 0 where x are the
   // eigenvalues and a = 1, b = -trA, c = coFacA, d = -detA
@@ -344,7 +344,17 @@ general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
                  4.0 * trA * trA * trA * detA - 27.0 * detA * detA +
                  18.0 * trA * coFacA * detA;
 
-  const auto check_one = disc < -machEps;
+  // Scale the discriminant tolerance by the magnitude of the discriminant
+  // terms to avoid false positives from floating-point cancellation errors.
+  // The discriminant terms are all O(matEntry^6), so the floating-point
+  // error is proportional to machEps times the sum of those term magnitudes.
+  const T discScale =
+    stk::math::abs(trA * trA * coFacA * coFacA) +
+    stk::math::abs(coFacA * coFacA * coFacA) +
+    stk::math::abs(trA * trA * trA * detA) +
+    stk::math::abs(detA * detA) +
+    stk::math::abs(trA * coFacA * detA) + T(1.0);
+  const auto check_one = disc < -machEps * discScale;
   const bool exit_now = stk::simd::are_all(check_one);
   if (exit_now) {
 #if !defined(KOKKOS_ENABLE_GPU)
