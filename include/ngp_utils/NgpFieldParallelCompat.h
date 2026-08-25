@@ -32,7 +32,7 @@ parallel_sum(
   if constexpr (requires {
                   stk::mesh::parallel_sum<DeviceSpace>(bulk, hostFields, true);
                 }) {
-    constexpr bool deterministic = true;
+    constexpr bool deterministic = false;
     stk::mesh::parallel_sum<DeviceSpace>(bulk, hostFields, deterministic);
 
     for (auto* field : ngpFields) {
