@@ -226,8 +226,10 @@ GeometryAlgDriver::post_work()
         meshInfo, "edge_swept_face_volume", entityRank);
       fields.push_back(&ngpedgeFaceVel);
       fields.push_back(&ngpedgeSweptVol);
-      hostFields.push_back(meta.get_field(entityRank, "edge_face_velocity_mag"));
-      hostFields.push_back(meta.get_field(entityRank, "edge_swept_face_volume"));
+      hostFields.push_back(
+        meta.get_field(entityRank, "edge_face_velocity_mag"));
+      hostFields.push_back(
+        meta.get_field(entityRank, "edge_swept_face_volume"));
     }
   }
 
@@ -240,8 +242,8 @@ GeometryAlgDriver::post_work()
     fields.push_back(&wallDistF);
     hostFields.push_back(
       meta.get_field(stk::topology::NODE_RANK, "assembled_wall_area_wf"));
-    hostFields.push_back(
-      meta.get_field(stk::topology::NODE_RANK, "assembled_wall_normal_distance"));
+    hostFields.push_back(meta.get_field(
+      stk::topology::NODE_RANK, "assembled_wall_normal_distance"));
   }
 
   // Algorithms should have marked the fields as modified, but call this here to
