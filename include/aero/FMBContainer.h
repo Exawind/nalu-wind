@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef KYNEMACONTAINER_H_
-#define KYNEMACONTAINER_H_
+#ifndef FMBCONTAINER_H_
+#define FMBCONTAINER_H_
 
 #include <memory>
 #include <stk_mesh/base/BulkData.hpp>
@@ -23,15 +23,15 @@ class KynemaFMBSixDof;
  * A container class for holding all the Kynema-FMB structural models
  * (six-dof bodies, etc)
  */
-class KynemaContainer
+class FMBContainer
 {
 public:
-  KynemaContainer() = delete;
-  KynemaContainer operator=(KynemaContainer&) = delete;
-  KynemaContainer(KynemaContainer&) = delete;
+  FMBContainer() = delete;
+  FMBContainer operator=(FMBContainer&) = delete;
+  FMBContainer(FMBContainer&) = delete;
 
-  KynemaContainer(const YAML::Node& node);
-  ~KynemaContainer();
+  FMBContainer(const YAML::Node& node);
+  ~FMBContainer();
 
   void setup(double timeStep, std::shared_ptr<stk::mesh::BulkData> stkBulk);
   void init(double currentTime, double restartFrequency);

@@ -85,7 +85,7 @@ class DataProbePostProcessing;
 class LidarLOS;
 class AeroContainer;
 #ifdef KYNEMA_UGF_USES_KYNEMA_FMB
-class KynemaContainer;
+class FMBContainer;
 #endif
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
@@ -426,7 +426,7 @@ public:
   DataProbePostProcessing* dataProbePostProcessing_;
   std::unique_ptr<AeroContainer> aeroModels_;
 #ifdef KYNEMA_UGF_USES_KYNEMA_FMB
-  std::unique_ptr<KynemaContainer> kynemaModels_;
+  std::unique_ptr<FMBContainer> fmbModels_;
 #endif
   ABLForcingAlgorithm* ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};

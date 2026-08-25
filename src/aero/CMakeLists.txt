@@ -5,7 +5,7 @@ target_sources(${kynema_ugf_lib_name} PRIVATE
 
 if(ENABLE_KYNEMA_FMB_SIXDOF)
 target_sources(${kynema_ugf_lib_name} PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/KynemaContainer.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/FMBContainer.C
 )
 endif()
 

@@ -7,16 +7,16 @@
 // for more details.
 //
 // This file is only compiled when ENABLE_KYNEMA_FMB_SIXDOF is on.
-#include <aero/KynemaContainer.h>
+#include <aero/FMBContainer.h>
 #include <KynemaUGFEnv.h>
 #include "aero/fmb/KynemaFMBSixDof.h"
 
 namespace sierra {
 namespace kynema_ugf {
 
-KynemaContainer::~KynemaContainer() = default;
+FMBContainer::~FMBContainer() = default;
 
-KynemaContainer::KynemaContainer(const YAML::Node& node)
+FMBContainer::FMBContainer(const YAML::Node& node)
 {
   if (node["kynema_fmb_six_dof"]) {
     sixDof_ = std::make_shared<KynemaFMBSixDof>(node["kynema_fmb_six_dof"]);
@@ -24,8 +24,7 @@ KynemaContainer::KynemaContainer(const YAML::Node& node)
 }
 
 void
-KynemaContainer::setup(
-  double timeStep, std::shared_ptr<stk::mesh::BulkData> bulk)
+FMBContainer::setup(double timeStep, std::shared_ptr<stk::mesh::BulkData> bulk)
 {
   bulk_ = bulk;
   if (has_six_dof()) {
@@ -34,7 +33,7 @@ KynemaContainer::setup(
 }
 
 void
-KynemaContainer::init(double currentTime, double restartFrequency)
+FMBContainer::init(double currentTime, double restartFrequency)
 {
   if (has_six_dof()) {
     sixDof_->initialize(restartFrequency, currentTime);
@@ -42,17 +41,17 @@ KynemaContainer::init(double currentTime, double restartFrequency)
 }
 
 void
-KynemaContainer::update_displacements(const double currentTime, bool updateCC)
+FMBContainer::update_displacements(const double currentTime, bool updateCC)
 {
   if (has_six_dof()) {
     KynemaUGFEnv::self().kynema_ugfOutputP0()
-      << "Calling update displacements inside KynemaContainer" << std::endl;
+      << "Calling update displacements inside FMBContainer" << std::endl;
     sixDof_->map_displacements(currentTime, updateCC);
   }
 }
 
 void
-KynemaContainer::predict_model_time_step(const double currentTime)
+FMBContainer::predict_model_time_step(const double currentTime)
 {
   if (has_six_dof()) {
     sixDof_->map_loads(currentTime);
@@ -60,8 +59,7 @@ KynemaContainer::predict_model_time_step(const double currentTime)
 }
 
 void
-KynemaContainer::advance_model_time_step(
-  const double currentTime, const double dT)
+FMBContainer::advance_model_time_step(const double currentTime, const double dT)
 {
   if (has_six_dof()) {
     sixDof_->advance_struct_timestep(currentTime, dT);
@@ -69,7 +67,7 @@ KynemaContainer::advance_model_time_step(
 }
 
 const stk::mesh::PartVector
-KynemaContainer::six_dof_parts()
+FMBContainer::six_dof_parts()
 {
   if (has_six_dof()) {
     return sixDof_->get_mesh_blocks();
