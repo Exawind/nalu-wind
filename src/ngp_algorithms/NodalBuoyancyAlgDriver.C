@@ -79,9 +79,10 @@ NodalBuoyancyAlgDriver::post_work()
   auto& ngpsource = kynema_ugf_ngp::get_ngp_field(meshInfo, sourceName_);
   ngpsource.sync_to_host();
 
-  const std::vector<NGPDoubleFieldType*> fVec{&ngpsource, &ngpsourceweight};
+  const std::vector<const stk::mesh::FieldBase*> fVec{source, sourceweight};
   bool doFinalSyncToDevice = false;
-  stk::mesh::parallel_sum(bulk, fVec, doFinalSyncToDevice);
+  stk::mesh::parallel_sum<sierra::kynema_ugf::DeviceSpace>(
+    bulk, fVec, doFinalSyncToDevice);
 
   const int dim2 = meta.spatial_dimension();
 

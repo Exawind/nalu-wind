@@ -53,9 +53,10 @@ NodalGradAlgDriver<GradPhiType>::post_work()
   auto& ngpGradPhi = kynema_ugf_ngp::get_ngp_field(meshInfo, gradPhiName_);
   ngpGradPhi.sync_to_host();
 
-  const std::vector<NGPDoubleFieldType*> fVec{&ngpGradPhi};
+  const std::vector<const stk::mesh::FieldBase*> fVec{gradPhi};
   bool doFinalSyncToDevice = false;
-  stk::mesh::parallel_sum(bulk, fVec, doFinalSyncToDevice);
+  stk::mesh::parallel_sum<sierra::kynema_ugf::DeviceSpace>(
+    bulk, fVec, doFinalSyncToDevice);
 
   const int dim2 = meta.spatial_dimension();
   const int dim1 = max_extent(*phi, 0);
