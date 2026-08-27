@@ -265,8 +265,6 @@ GeometryAlgDriver::post_work()
 
   if (realm_.hasPeriodic_) {
     const unsigned nComponents = 1;
-    auto* dualVol = meta.template get_field<double>(
-      stk::topology::NODE_RANK, "dual_nodal_volume");
     realm_.periodic_field_update(dualVol, nComponents);
 
     if (hasWallFunc_) {
