@@ -2776,6 +2776,7 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
     bool doFinalSyncBackToDevice = true;
     stk::mesh::parallel_sum<stk::ngp::DeviceSpace>(
       realm_.bulk_data(), fVecNgp, doFinalSyncBackToDevice);
+    ngpUdiag.sync_to_device();
 
     const auto sel = stk::mesh::selectField(*Udiag_) &
                      meta.locally_owned_part() &
