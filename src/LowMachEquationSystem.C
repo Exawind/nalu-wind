@@ -926,7 +926,8 @@ LowMachEquationSystem::project_nodal_velocity()
     using MeshIndex = Traits::MeshIndex;
     const stk::mesh::Selector sel =
       ((!stk::mesh::selectUnion(momentumEqSys_->notProjectedPart_)) &
-       stk::mesh::selectField(*continuityEqSys_->dpdx_));
+       stk::mesh::selectField(*continuityEqSys_->dpdx_) &
+       realm_.meta_data().locally_owned_part());
     kynema_ugf_ngp::run_entity_algorithm(
       "nodal_velocity_projection", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
