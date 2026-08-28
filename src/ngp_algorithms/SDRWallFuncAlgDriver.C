@@ -68,6 +68,8 @@ SDRWallFuncAlgDriver::post_work()
   const bool doFinalSyncToDevice = true;
   stk::mesh::parallel_sum<stk::ngp::DeviceSpace>(
     realm_.bulk_data(), fields, doFinalSyncToDevice);
+  bcsdr.sync_to_device();
+  wallArea.sync_to_device();
 
   if (realm_.hasPeriodic_) {
     // Periodic synchronization
