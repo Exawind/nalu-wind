@@ -55,7 +55,7 @@ NodalGradAlgDriver<GradPhiType>::post_work()
 
   const std::vector<const stk::mesh::FieldBase*> fVec{gradPhi};
   bool doFinalSyncToDevice = false;
-  stk::mesh::parallel_sum<sierra::kynema_ugf::DeviceSpace>(
+  stk::mesh::parallel_sum<stk::ngp::DeviceSpace>(
     bulk, fVec, doFinalSyncToDevice);
 
   const int dim2 = meta.spatial_dimension();

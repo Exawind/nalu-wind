@@ -66,7 +66,7 @@ SDRWallFuncAlgDriver::post_work()
     stk::topology::NODE_RANK, "assembled_wall_area_sdr");
   const std::vector<const stk::mesh::FieldBase*> fields{bcsdrF, wallAreaF};
   const bool doFinalSyncToDevice = true;
-  stk::mesh::parallel_sum<sierra::kynema_ugf::DeviceSpace>(
+  stk::mesh::parallel_sum<stk::ngp::DeviceSpace>(
     realm_.bulk_data(), fields, doFinalSyncToDevice);
 
   if (realm_.hasPeriodic_) {

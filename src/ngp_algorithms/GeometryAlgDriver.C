@@ -222,10 +222,10 @@ GeometryAlgDriver::post_work()
     hostFields.push_back(edgeAreaVec);
 
     if (realm_.has_mesh_deformation()) {
-      auto* edgeFaceVelMag = meta.template get_field<double>(
-        entityRank, "edge_face_velocity_mag");
-      auto* edgeSweptVol = meta.template get_field<double>(
-        entityRank, "edge_swept_face_volume");
+      auto* edgeFaceVelMag =
+        meta.template get_field<double>(entityRank, "edge_face_velocity_mag");
+      auto* edgeSweptVol =
+        meta.template get_field<double>(entityRank, "edge_swept_face_volume");
       auto& ngpedgeFaceVel = kynema_ugf_ngp::get_ngp_field(
         meshInfo, "edge_face_velocity_mag", entityRank);
       auto& ngpedgeSweptVol = kynema_ugf_ngp::get_ngp_field(
@@ -260,7 +260,7 @@ GeometryAlgDriver::post_work()
   }
 
   bool doFinalSyncToDevice = false;
-  stk::mesh::parallel_sum<sierra::kynema_ugf::DeviceSpace>(
+  stk::mesh::parallel_sum<stk::ngp::DeviceSpace>(
     realm_.bulk_data(), hostFields, doFinalSyncToDevice);
 
   if (realm_.hasPeriodic_) {
