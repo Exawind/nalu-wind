@@ -279,14 +279,14 @@ MatrixFreeLowMachEquationSystem::compute_filter_scale() const
     dnv.modify_on_device();
     dnv.sync_to_host();
 
-    const std::vector<const stk::mesh::FieldBase*> fields{
-      meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length)};
+    auto* filterScaleNP1 =
+      meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length)
+        ->field_state(stk::mesh::StateNP1);
+    const std::vector<const stk::mesh::FieldBase*> fields{filterScaleNP1};
     stk::mesh::parallel_sum<stk::ngp::DeviceSpace>(
       realm_.bulk_data(), fields, false);
     if (realm_.hasPeriodic_) {
-      realm_.periodic_field_update(
-        meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length),
-        1);
+      realm_.periodic_field_update(filterScaleNP1, 1);
     }
     dnv.modify_on_host();
     dnv.sync_to_device();
