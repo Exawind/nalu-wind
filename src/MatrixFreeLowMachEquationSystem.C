@@ -276,6 +276,8 @@ MatrixFreeLowMachEquationSystem::compute_filter_scale() const
     matrix_free::local_dual_nodal_volume(
       realm_.polynomial_order(), realm_.ngp_mesh(), interior_selector_, coords,
       dnv);
+    dnv.modify_on_device();
+    dnv.sync_to_host();
 
     const std::vector<const stk::mesh::FieldBase*> fields{
       meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length)};
@@ -286,6 +288,7 @@ MatrixFreeLowMachEquationSystem::compute_filter_scale() const
         meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length),
         1);
     }
+    dnv.modify_on_host();
     dnv.sync_to_device();
   }
 
