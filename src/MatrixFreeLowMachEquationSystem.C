@@ -54,6 +54,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 #include <iomanip>
 #include <ostream>
 #include <stdexcept>
@@ -276,7 +277,10 @@ MatrixFreeLowMachEquationSystem::compute_filter_scale() const
       realm_.polynomial_order(), realm_.ngp_mesh(), interior_selector_, coords,
       dnv);
 
-    stk::mesh::parallel_sum<double>(realm_.bulk_data(), {&dnv}, false);
+    const std::vector<const stk::mesh::FieldBase*> fields{
+      meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length)};
+    stk::mesh::parallel_sum<stk::ngp::DeviceSpace>(
+      realm_.bulk_data(), fields, false);
     if (realm_.hasPeriodic_) {
       realm_.periodic_field_update(
         meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length),
