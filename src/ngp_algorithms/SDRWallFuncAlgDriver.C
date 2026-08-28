@@ -68,8 +68,6 @@ SDRWallFuncAlgDriver::post_work()
   const bool doFinalSyncToDevice = true;
   stk::mesh::parallel_sum<stk::ngp::DeviceSpace>(
     realm_.bulk_data(), fields, doFinalSyncToDevice);
-  bcsdr.sync_to_device();
-  wallArea.sync_to_device();
 
   if (realm_.hasPeriodic_) {
     // Periodic synchronization
@@ -85,6 +83,8 @@ SDRWallFuncAlgDriver::post_work()
       wallAreaF, nComponents, bypassFieldCheck, addMirrorValues,
       setMirrorValues);
   }
+  bcsdr.sync_to_device();
+  wallArea.sync_to_device();
 
   // Normalize the computed BC SDR
   const stk::mesh::Selector sel = (realm_.meta_data().locally_owned_part() |
