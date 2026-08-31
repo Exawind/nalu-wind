@@ -15,4 +15,3 @@ compile_commands.json
 .clangd
 spack*
 *.cache
-Testing/Temporary/LastTest.log
