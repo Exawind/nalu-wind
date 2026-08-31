@@ -45,6 +45,8 @@
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/NgpFieldParallel.hpp"
+#include "stk_mesh/base/FieldParallel.hpp"
+#include "stk_util/ngp/NgpSpaces.hpp"
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
 #include "stk_mesh/base/Part.hpp"
 #include "stk_mesh/base/Types.hpp"
@@ -272,22 +274,29 @@ MatrixFreeLowMachEquationSystem::compute_filter_scale() const
     coords.sync_to_device();
     // compute the dual node volume first, then overwrite the field
     auto dnv = get_node_field(meta_, names::scaled_filter_length);
+    dnv.sync_to_device();
     matrix_free::local_dual_nodal_volume(
       realm_.polynomial_order(), realm_.ngp_mesh(), interior_selector_, coords,
       dnv);
 
-    stk::mesh::parallel_sum<double>(realm_.bulk_data(), {&dnv}, false);
+    stk::mesh::parallel_sum<stk::ngp::DeviceSpace>(
+      realm_.bulk_data(),
+      {meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length)});
+    dnv.sync_to_device();
     if (realm_.hasPeriodic_) {
+      dnv.sync_to_host();
       realm_.periodic_field_update(
         meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length),
         1);
+      dnv.modify_on_host();
+      dnv.sync_to_device();
     }
-    dnv.sync_to_device();
   }
 
   {
     stk::mesh::ProfilingBlock pf("compute filter scale from dnv");
     auto filter_scale = get_node_field(meta_, names::scaled_filter_length);
+    filter_scale.sync_to_device();
 
     double scaling = 0;
     switch (realm_.get_turbulence_model()) {

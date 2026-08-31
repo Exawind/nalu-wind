@@ -17,6 +17,7 @@
 #include "stk_mesh/base/FieldBLAS.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/NgpFieldParallel.hpp"
+#include "stk_util/ngp/NgpSpaces.hpp"
 
 namespace sierra {
 namespace kynema_ugf {
@@ -79,9 +80,8 @@ NodalBuoyancyAlgDriver::post_work()
   auto& ngpsource = kynema_ugf_ngp::get_ngp_field(meshInfo, sourceName_);
   ngpsource.sync_to_host();
 
-  const std::vector<NGPDoubleFieldType*> fVec{&ngpsource, &ngpsourceweight};
-  bool doFinalSyncToDevice = false;
-  stk::mesh::parallel_sum(bulk, fVec, doFinalSyncToDevice);
+  const std::vector<const stk::mesh::FieldBase*> fVec{source, sourceweight};
+  stk::mesh::parallel_sum<stk::ngp::HostSpace>(bulk, fVec);
 
   const int dim2 = meta.spatial_dimension();
 
