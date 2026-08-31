@@ -127,6 +127,7 @@
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpFieldUtils.h"
 #include "stk_mesh/base/NgpFieldParallel.hpp"
+#include "stk_util/ngp/NgpSpaces.hpp"
 #include "ngp_utils/NgpTypes.h"
 
 // UT Austin Hybrid AMS kernels
@@ -2466,6 +2467,7 @@ MomentumEquationSystem::initialize()
     stk::mesh::field_fill(gamma1 / dt, *Udiag_);
 
     Udiag_->modify_on_host();
+    Udiag_->sync_to_device();
   }
 }
 
@@ -2743,6 +2745,7 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
     Udiag_->mesh_meta_data_ordinal());
   // Reset timescale field before momentum solve
   {
+    Udiag_->sync_to_device();
     double projTimeScale = 0.0;
     if (realm_.solutionOptions_->tscaleType_ == TSCALE_DEFAULT) {
       const double dt = realm_.get_time_step();
@@ -2756,6 +2759,7 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
 
   // Perform actual solve
   EquationSystem::assemble_and_solve(deltaSolution);
+  ngpUdiag.sync_to_device();
 
   // Post-process the Udiag term
   ScalarFieldType* dualVol =
@@ -2772,10 +2776,9 @@ MomentumEquationSystem::assemble_and_solve(stk::mesh::FieldBase* deltaSolution)
       realm_.solutionOptions_->get_relaxation_factor(dofName);
 
     // Sum up contributions on the nodes shared amongst processors
-    const std::vector<NGPDoubleFieldType*> fVecNgp{&ngpUdiag};
-    bool doFinalSyncBackToDevice = true;
-    stk::mesh::parallel_sum(
-      realm_.bulk_data(), fVecNgp, doFinalSyncBackToDevice);
+    const std::vector<const stk::mesh::FieldBase*> fVecNgp{Udiag_};
+    stk::mesh::parallel_sum<stk::ngp::DeviceSpace>(realm_.bulk_data(), fVecNgp);
+    ngpUdiag.sync_to_device();
 
     const auto sel = stk::mesh::selectField(*Udiag_) &
                      meta.locally_owned_part() &

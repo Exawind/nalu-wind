@@ -16,6 +16,7 @@
 #include "stk_mesh/base/FieldBLAS.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/NgpFieldParallel.hpp"
+#include "stk_util/ngp/NgpSpaces.hpp"
 
 namespace sierra {
 namespace kynema_ugf {
@@ -53,9 +54,9 @@ NodalGradAlgDriver<GradPhiType>::post_work()
   auto& ngpGradPhi = kynema_ugf_ngp::get_ngp_field(meshInfo, gradPhiName_);
   ngpGradPhi.sync_to_host();
 
-  const std::vector<NGPDoubleFieldType*> fVec{&ngpGradPhi};
-  bool doFinalSyncToDevice = false;
-  stk::mesh::parallel_sum(bulk, fVec, doFinalSyncToDevice);
+  const std::vector<const stk::mesh::FieldBase*> fVec{gradPhi};
+  stk::mesh::parallel_sum<stk::ngp::HostSpace>(bulk, fVec);
+  const bool doFinalSyncToDevice = false;
 
   const int dim2 = meta.spatial_dimension();
   const int dim1 = max_extent(*phi, 0);

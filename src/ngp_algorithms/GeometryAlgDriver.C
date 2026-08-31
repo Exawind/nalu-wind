@@ -21,6 +21,7 @@
 #include "stk_mesh/base/FieldBLAS.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/NgpFieldParallel.hpp"
+#include "stk_util/ngp/NgpSpaces.hpp"
 #include <stk_mesh/base/NgpMesh.hpp>
 
 namespace sierra {
@@ -239,11 +240,16 @@ GeometryAlgDriver::post_work()
     fld->sync_to_host();
   }
 
-  bool doFinalSyncToDevice = false;
-  stk::mesh::parallel_sum(realm_.bulk_data(), fields, doFinalSyncToDevice);
+  const auto& meta = realm_.meta_data();
+  const auto& metaFields = meta.get_fields();
+  std::vector<const stk::mesh::FieldBase*> fieldBases;
+  fieldBases.reserve(fields.size());
+  for (const auto* field : fields) {
+    fieldBases.push_back(metaFields[field->get_ordinal()]);
+  }
+  stk::mesh::parallel_sum<stk::ngp::HostSpace>(realm_.bulk_data(), fieldBases);
 
   if (realm_.hasPeriodic_) {
-    const auto& meta = realm_.meta_data();
     const unsigned nComponents = 1;
     auto* dualVol = meta.template get_field<double>(
       stk::topology::NODE_RANK, "dual_nodal_volume");
