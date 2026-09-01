@@ -892,15 +892,13 @@ LowMachEquationSystem::project_nodal_velocity()
   //==========================================================
   {
     const auto& fieldMgr = realm_.ngp_field_manager();
+    auto& uTmp = fieldMgr.get_field<double>(
+      momentumEqSys_->uTmp_->mesh_meta_data_ordinal());
+    auto& dpdx = fieldMgr.get_field<double>(
+      continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
     const stk::mesh::Selector sel =
       stk::mesh::selectField(*continuityEqSys_->dpdx_);
-    kynema_ugf_ngp::field_copy(
-      ngpMesh, sel,
-      fieldMgr.get_field<double>(
-        momentumEqSys_->uTmp_->mesh_meta_data_ordinal()),
-      fieldMgr.get_field<double>(
-        continuityEqSys_->dpdx_->mesh_meta_data_ordinal()),
-      nDim);
+    kynema_ugf_ngp::field_copy(ngpMesh, sel, uTmp, dpdx, nDim);
   }
 
   //==========================================================
@@ -908,51 +906,29 @@ LowMachEquationSystem::project_nodal_velocity()
   //==========================================================
   continuityEqSys_->compute_projected_nodal_gradient();
 
-  // NOTE: re-acquire field handles AFTER the PNG update; handles obtained
+  // NOTE: re-acquire field references AFTER the PNG update; handles obtained
   // beforehand may be invalidated by field-data reallocation inside
   // compute_projected_nodal_gradient() (e.g. when projected_timescale_type is
-  // momentum_diag_inv with a periodic boundary).
-  //
-  // sync_to_device() may itself reallocate the internal NgpField object, so
-  // we perform all syncs via temporary references and then re-acquire
-  // by-value copies for the Kokkos lambda captures; a captured `auto&`
-  // reference would become dangling if reallocation occurs during sync.
-  {
-    const auto& fieldMgr = realm_.ngp_field_manager();
-    fieldMgr.get_field<double>(momentumEqSys_->uTmp_->mesh_meta_data_ordinal())
-      .sync_to_device();
-    fieldMgr
-      .get_field<double>(continuityEqSys_->dpdx_->mesh_meta_data_ordinal())
-      .sync_to_device();
-    fieldMgr
-      .get_field<double>(
-        momentumEqSys_->get_diagonal_field()->mesh_meta_data_ordinal())
-      .sync_to_device();
-    fieldMgr
-      .get_field<double>(
-        momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1)
-          .mesh_meta_data_ordinal())
-      .sync_to_device();
-    fieldMgr
-      .get_field<double>(
-        density_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal())
-      .sync_to_device();
-  }
-
-  // Re-acquire fresh by-value copies after all syncs are complete; these are
-  // safe to capture in the Kokkos lambdas below.
+  // momentum_diag_inv with a periodic boundary), causing a stale-pointer
+  // SIGFPE in the Kokkos lambdas below.
   const auto& fieldMgr = realm_.ngp_field_manager();
-  auto uTmp = fieldMgr.get_field<double>(
+  auto& uTmp = fieldMgr.get_field<double>(
     momentumEqSys_->uTmp_->mesh_meta_data_ordinal());
-  auto dpdx = fieldMgr.get_field<double>(
+  auto& dpdx = fieldMgr.get_field<double>(
     continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
-  auto Udiag = fieldMgr.get_field<double>(
+  auto& Udiag = fieldMgr.get_field<double>(
     momentumEqSys_->get_diagonal_field()->mesh_meta_data_ordinal());
-  auto velNp1 = fieldMgr.get_field<double>(
+  auto& velNp1 = fieldMgr.get_field<double>(
     momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1)
       .mesh_meta_data_ordinal());
-  auto rhoNp1 = fieldMgr.get_field<double>(
+  auto& rhoNp1 = fieldMgr.get_field<double>(
     density_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
+  uTmp.sync_to_device();
+  dpdx.sync_to_device();
+  Udiag.sync_to_device();
+  velNp1.sync_to_device();
+  rhoNp1.sync_to_device();
 
   //==========================================================
   // project u, u^n+1 = u^k+1 - dt/rho*(Gjp^N+1 - uTmp);
