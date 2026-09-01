@@ -933,6 +933,17 @@ LowMachEquationSystem::project_nodal_velocity()
   //==========================================================
   // project u, u^n+1 = u^k+1 - dt/rho*(Gjp^N+1 - uTmp);
   //==========================================================
+  // When using TSCALE_UDIAGINV, Udiag is assembled from the momentum-system
+  // diagonal; slave/halo/periodic nodes excluded from that assembly retain the
+  // zero initialisation value set before the solve.  Guard against the
+  // resulting divide-by-zero by clamping Udiag to the default timescale floor
+  // (gamma1/dt) for those nodes.  dt > 0 here because
+  // project_nodal_velocity() is only called from solve_and_update() after the
+  // time integrator has set a valid time step.
+  const double projTimeScale =
+    realm_.get_gamma1() / realm_.get_time_step();
+  const bool extractDiag =
+    (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV);
   {
     using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
     using MeshIndex = Traits::MeshIndex;
@@ -942,8 +953,12 @@ LowMachEquationSystem::project_nodal_velocity()
     kynema_ugf_ngp::run_entity_algorithm(
       "nodal_velocity_projection", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
-        // Scaling factor
-        const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+        // Clamp Udiag to projTimeScale when using the diagonal timescale to
+        // guard against zero values on excluded (slave/halo/periodic) nodes.
+        const double udiag = extractDiag
+                               ? Kokkos::max(Udiag.get(mi, 0), projTimeScale)
+                               : Udiag.get(mi, 0);
+        const double fac = 1.0 / (rhoNp1.get(mi, 0) * udiag);
         // Projection step
         for (int d = 0; d < nDim; ++d) {
           velNp1.get(mi, d) -= fac * (dpdx.get(mi, d) - uTmp.get(mi, d));
@@ -954,8 +969,10 @@ LowMachEquationSystem::project_nodal_velocity()
     kynema_ugf_ngp::run_entity_algorithm(
       "nodal_velocity_projection_strongX", ngpMesh, stk::topology::NODE_RANK,
       selX, KOKKOS_LAMBDA(const MeshIndex& mi) {
-        // Scaling factor
-        const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+        const double udiag = extractDiag
+                               ? Kokkos::max(Udiag.get(mi, 0), projTimeScale)
+                               : Udiag.get(mi, 0);
+        const double fac = 1.0 / (rhoNp1.get(mi, 0) * udiag);
         //  undo Projection step
         velNp1.get(mi, 0) += fac * (dpdx.get(mi, 0) - uTmp.get(mi, 0));
       });
@@ -964,8 +981,10 @@ LowMachEquationSystem::project_nodal_velocity()
     kynema_ugf_ngp::run_entity_algorithm(
       "nodal_velocity_project_strongY", ngpMesh, stk::topology::NODE_RANK, selY,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
-        // Scaling factor
-        const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+        const double udiag = extractDiag
+                               ? Kokkos::max(Udiag.get(mi, 0), projTimeScale)
+                               : Udiag.get(mi, 0);
+        const double fac = 1.0 / (rhoNp1.get(mi, 0) * udiag);
         //  undo Projection step
         velNp1.get(mi, 1) += fac * (dpdx.get(mi, 1) - uTmp.get(mi, 1));
       });
@@ -975,8 +994,10 @@ LowMachEquationSystem::project_nodal_velocity()
       kynema_ugf_ngp::run_entity_algorithm(
         "nodal_velocity_projection_strongZ", ngpMesh, stk::topology::NODE_RANK,
         selZ, KOKKOS_LAMBDA(const MeshIndex& mi) {
-          // Scaling factor
-          const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+          const double udiag = extractDiag
+                                 ? Kokkos::max(Udiag.get(mi, 0), projTimeScale)
+                                 : Udiag.get(mi, 0);
+          const double fac = 1.0 / (rhoNp1.get(mi, 0) * udiag);
           //  undo Projection step
           velNp1.get(mi, 2) += fac * (dpdx.get(mi, 2) - uTmp.get(mi, 2));
         });
