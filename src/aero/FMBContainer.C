@@ -43,7 +43,7 @@ FMBContainer::update_displacements(const double currentTime, bool updateCC)
 }
 
 void
-FMBContainer::predict_model_time_step(const double currentTime)
+FMBContainer::map_loads(const double currentTime)
 {
   if (has_six_dof()) {
     sixDof_->map_loads(currentTime);

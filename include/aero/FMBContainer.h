@@ -28,7 +28,7 @@ public:
   void init(double currentTime, double restartFrequency);
   void update_displacements(
     const double currentTime, const bool updateCurCoords = true);
-  void predict_model_time_step(const double /*currentTime*/);
+  void map_loads(const double /*currentTime*/);
   void advance_model_time_step(const double /*currentTime*/, const double);
 
   bool is_active() { return has_six_dof(); }
