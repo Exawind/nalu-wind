@@ -886,23 +886,16 @@ LowMachEquationSystem::project_nodal_velocity()
   const int nDim = meta_data.spatial_dimension();
 
   const auto& ngpMesh = realm_.ngp_mesh();
-  const auto& fieldMgr = realm_.ngp_field_manager();
-  auto uTmp =
-    fieldMgr.get_field<double>(momentumEqSys_->uTmp_->mesh_meta_data_ordinal());
-  auto dpdx = fieldMgr.get_field<double>(
-    continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
-  auto Udiag = fieldMgr.get_field<double>(
-    momentumEqSys_->get_diagonal_field()->mesh_meta_data_ordinal());
-  auto velNp1 = fieldMgr.get_field<double>(
-    momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1)
-      .mesh_meta_data_ordinal());
-  auto rhoNp1 = fieldMgr.get_field<double>(
-    density_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
 
   //==========================================================
   // save off dpdx to uTmp (do it everywhere)
   //==========================================================
   {
+    const auto& fieldMgr = realm_.ngp_field_manager();
+    auto& uTmp = fieldMgr.get_field<double>(
+      momentumEqSys_->uTmp_->mesh_meta_data_ordinal());
+    auto& dpdx = fieldMgr.get_field<double>(
+      continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
     const stk::mesh::Selector sel =
       stk::mesh::selectField(*continuityEqSys_->dpdx_);
     kynema_ugf_ngp::field_copy(ngpMesh, sel, uTmp, dpdx, nDim);
@@ -912,6 +905,24 @@ LowMachEquationSystem::project_nodal_velocity()
   // safe to update pressure gradient
   //==========================================================
   continuityEqSys_->compute_projected_nodal_gradient();
+
+  // NOTE: re-acquire field references AFTER the PNG update; handles obtained
+  // beforehand may be invalidated by field-data reallocation inside
+  // compute_projected_nodal_gradient() (e.g. when projected_timescale_type is
+  // momentum_diag_inv with a periodic boundary), causing a stale-pointer
+  // SIGFPE in the Kokkos lambdas below.
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  auto& uTmp = fieldMgr.get_field<double>(
+    momentumEqSys_->uTmp_->mesh_meta_data_ordinal());
+  auto& dpdx = fieldMgr.get_field<double>(
+    continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
+  auto& Udiag = fieldMgr.get_field<double>(
+    momentumEqSys_->get_diagonal_field()->mesh_meta_data_ordinal());
+  auto& velNp1 = fieldMgr.get_field<double>(
+    momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1)
+      .mesh_meta_data_ordinal());
+  auto& rhoNp1 = fieldMgr.get_field<double>(
+    density_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
 
   uTmp.sync_to_device();
   dpdx.sync_to_device();
