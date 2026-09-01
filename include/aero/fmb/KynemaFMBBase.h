@@ -47,7 +47,7 @@ public:
   virtual void
   advance_struct_timestep(const double currentTime, const double dT) = 0;
 
-  virtual void map_loads(const double currentTime) = 0;
+  virtual void map_loads() = 0;
 
   void map_loads_point(PointMass& point);
 

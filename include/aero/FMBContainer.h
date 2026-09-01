@@ -28,8 +28,9 @@ public:
   void init(double currentTime, double restartFrequency);
   void update_displacements(
     const double currentTime, const bool updateCurCoords = true);
-  void map_loads(const double /*currentTime*/);
-  void advance_model_time_step(const double /*currentTime*/, const double);
+  void map_loads();
+  void advance_struct_time_step(const double /*currentTime*/, const double);
+  void finalize_struct_timestep();
 
   bool is_active() { return has_six_dof(); }
   bool has_six_dof() { return sixDof_ != nullptr; }

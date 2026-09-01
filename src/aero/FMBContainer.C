@@ -43,18 +43,28 @@ FMBContainer::update_displacements(const double currentTime, bool updateCC)
 }
 
 void
-FMBContainer::map_loads(const double currentTime)
+FMBContainer::map_loads()
 {
   if (has_six_dof()) {
-    sixDof_->map_loads(currentTime);
+    sixDof_->map_loads();
   }
 }
 
 void
-FMBContainer::advance_model_time_step(const double currentTime, const double dT)
+FMBContainer::advance_struct_time_step(const double currentTime, const double dT)
 {
   if (has_six_dof()) {
+    sixDof_->predict_loads();
+    sixDof_->send_loads(currentTime);
     sixDof_->advance_struct_timestep(currentTime, dT);
+  }
+}
+
+void
+FMBContainer::finalize_struct_timestep()
+{
+  if (has_six_dof()) {
+    sixDof_->finalize_struct_timestep();
   }
 }
 

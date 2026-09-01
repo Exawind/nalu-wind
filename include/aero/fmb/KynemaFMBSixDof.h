@@ -21,6 +21,7 @@ namespace sierra {
 
 namespace kynema_ugf {
 
+
 struct Tether
 {
   std::array<double, 3> fairlead_position = {0.0, 0.0, 0.0};
@@ -48,6 +49,11 @@ struct PointMassInterface
   std::string output_file_name = "";
   int number_of_nonlinear_iterations = 5;
   double rho_inf{0.0};
+
+  enum lts { NM1 = 0, N = 1, NP1 = 2};
+  std::array<std::array<double, 6>,3> loads = {std::array<double, 6>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                    std::array<double, 6>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                    std::array<double, 6>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
 };
 
 class KynemaFMBSixDof : public KynemaFMBBase
@@ -65,7 +71,13 @@ public:
 
   void advance_struct_timestep(const double, const double) override;
 
-  void map_loads(const double) override;
+  void finalize_struct_timestep();
+
+  void predict_loads();
+
+  void send_loads(const double curTime);
+
+  void map_loads() override;
 
   stk::mesh::PartVector get_mesh_blocks() const override
   {
@@ -92,7 +104,6 @@ private:
 
   void load(const YAML::Node&);
 
-  void send_loads(const double curTime);
   void timer_start(std::pair<double, double>& timer);
   void timer_stop(std::pair<double, double>& timer);
 

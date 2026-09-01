@@ -1896,8 +1896,7 @@ Realm::update_geometry_due_to_mesh_motion()
 
 #ifdef KYNEMA_UGF_USES_KYNEMA_FMB
     if (fmbModels_->is_active()) {
-      fmbModels_->map_loads(get_current_time());
-      fmbModels_->advance_model_time_step(get_current_time(), get_time_step_size());
+      fmbModels_->advance_struct_time_step(get_current_time(), get_time_step());
       fmbModels_->update_displacements(get_current_time());
     }
 #endif
@@ -4762,6 +4761,13 @@ Realm::post_converged_work()
     aeroModels_->advance_model_time_step(
       get_current_time(), timeIntegrator_->get_time_step());
   }
+
+#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
+  if (fmbModels_->is_active()) {
+    fmbModels_->map_loads();
+    fmbModels_->finalize_struct_timestep();
+  }
+#endif
 
   // FIXME: Consider a unified collection of post processing work
   if (NULL != solutionNormPostProcessing_)
