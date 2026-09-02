@@ -254,9 +254,7 @@ endif()
 unset(TRILINOS_REPO_VERSION_FILE)
 foreach(_dir
     "${Trilinos_DIR}"
-    "${Trilinos_DIR}/.."
     "${Trilinos_PREFIX}"
-    "${Trilinos_PREFIX}/.."
     "${Trilinos_INSTALL_DIR}")
   if(_dir AND EXISTS "${_dir}/TrilinosRepoVersion.txt")
     get_filename_component(TRILINOS_REPO_VERSION_FILE
