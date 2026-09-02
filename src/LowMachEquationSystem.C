@@ -908,8 +908,8 @@ LowMachEquationSystem::project_nodal_velocity()
 
   // NOTE: re-acquire field references AFTER the PNG update
   const auto& fieldMgr = realm_.ngp_field_manager();
-  auto& uTmp = fieldMgr.get_field<double>(
-    momentumEqSys_->uTmp_->mesh_meta_data_ordinal());
+  auto& uTmp =
+    fieldMgr.get_field<double>(momentumEqSys_->uTmp_->mesh_meta_data_ordinal());
   auto& dpdx = fieldMgr.get_field<double>(
     continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
   auto& Udiag = fieldMgr.get_field<double>(
@@ -934,8 +934,7 @@ LowMachEquationSystem::project_nodal_velocity()
   // zero initialisation value set before the solve.  Guard against
   // possible divide-by-zero by substituting the default timescale
   // (gamma1/dt) only for those zero-valued nodes.
-  const double projTimeScale =
-    realm_.get_gamma1() / realm_.get_time_step();
+  const double projTimeScale = realm_.get_gamma1() / realm_.get_time_step();
   const bool extractDiag =
     (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV);
   {
