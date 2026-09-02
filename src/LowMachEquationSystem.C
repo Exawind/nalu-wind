@@ -906,11 +906,7 @@ LowMachEquationSystem::project_nodal_velocity()
   //==========================================================
   continuityEqSys_->compute_projected_nodal_gradient();
 
-  // NOTE: re-acquire field references AFTER the PNG update; handles obtained
-  // beforehand may be invalidated by field-data reallocation inside
-  // compute_projected_nodal_gradient() (e.g. when projected_timescale_type is
-  // momentum_diag_inv with a periodic boundary), causing a stale-pointer
-  // SIGFPE in the Kokkos lambdas below.
+  // NOTE: re-acquire field references AFTER the PNG update
   const auto& fieldMgr = realm_.ngp_field_manager();
   auto& uTmp = fieldMgr.get_field<double>(
     momentumEqSys_->uTmp_->mesh_meta_data_ordinal());
@@ -935,12 +931,9 @@ LowMachEquationSystem::project_nodal_velocity()
   //==========================================================
   // When using TSCALE_UDIAGINV, Udiag is assembled from the momentum-system
   // diagonal; slave/halo/periodic nodes excluded from that assembly retain the
-  // zero initialisation value set before the solve.  Guard against the
-  // resulting divide-by-zero by substituting the default timescale
-  // (gamma1/dt) only for those zero-valued nodes, leaving all other nodes
-  // numerically unchanged.  dt > 0 here because project_nodal_velocity() is
-  // only called from solve_and_update() after the time integrator has set a
-  // valid time step.
+  // zero initialisation value set before the solve.  Guard against
+  // possible divide-by-zero by substituting the default timescale
+  // (gamma1/dt) only for those zero-valued nodes.
   const double projTimeScale =
     realm_.get_gamma1() / realm_.get_time_step();
   const bool extractDiag =
