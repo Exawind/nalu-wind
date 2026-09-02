@@ -886,23 +886,16 @@ LowMachEquationSystem::project_nodal_velocity()
   const int nDim = meta_data.spatial_dimension();
 
   const auto& ngpMesh = realm_.ngp_mesh();
-  const auto& fieldMgr = realm_.ngp_field_manager();
-  auto uTmp =
-    fieldMgr.get_field<double>(momentumEqSys_->uTmp_->mesh_meta_data_ordinal());
-  auto dpdx = fieldMgr.get_field<double>(
-    continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
-  auto Udiag = fieldMgr.get_field<double>(
-    momentumEqSys_->get_diagonal_field()->mesh_meta_data_ordinal());
-  auto velNp1 = fieldMgr.get_field<double>(
-    momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1)
-      .mesh_meta_data_ordinal());
-  auto rhoNp1 = fieldMgr.get_field<double>(
-    density_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
 
   //==========================================================
   // save off dpdx to uTmp (do it everywhere)
   //==========================================================
   {
+    const auto& fieldMgr = realm_.ngp_field_manager();
+    auto& uTmp = fieldMgr.get_field<double>(
+      momentumEqSys_->uTmp_->mesh_meta_data_ordinal());
+    auto& dpdx = fieldMgr.get_field<double>(
+      continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
     const stk::mesh::Selector sel =
       stk::mesh::selectField(*continuityEqSys_->dpdx_);
     kynema_ugf_ngp::field_copy(ngpMesh, sel, uTmp, dpdx, nDim);
@@ -913,6 +906,20 @@ LowMachEquationSystem::project_nodal_velocity()
   //==========================================================
   continuityEqSys_->compute_projected_nodal_gradient();
 
+  // NOTE: re-acquire field references AFTER the PNG update
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  auto& uTmp =
+    fieldMgr.get_field<double>(momentumEqSys_->uTmp_->mesh_meta_data_ordinal());
+  auto& dpdx = fieldMgr.get_field<double>(
+    continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
+  auto& Udiag = fieldMgr.get_field<double>(
+    momentumEqSys_->get_diagonal_field()->mesh_meta_data_ordinal());
+  auto& velNp1 = fieldMgr.get_field<double>(
+    momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1)
+      .mesh_meta_data_ordinal());
+  auto& rhoNp1 = fieldMgr.get_field<double>(
+    density_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
   uTmp.sync_to_device();
   dpdx.sync_to_device();
   Udiag.sync_to_device();
@@ -922,6 +929,14 @@ LowMachEquationSystem::project_nodal_velocity()
   //==========================================================
   // project u, u^n+1 = u^k+1 - dt/rho*(Gjp^N+1 - uTmp);
   //==========================================================
+  // When using TSCALE_UDIAGINV, Udiag is assembled from the momentum-system
+  // diagonal; slave/halo/periodic nodes excluded from that assembly retain the
+  // zero initialisation value set before the solve.  Guard against
+  // possible divide-by-zero by substituting the default timescale
+  // (gamma1/dt) only for those zero-valued nodes.
+  const double projTimeScale = realm_.get_gamma1() / realm_.get_time_step();
+  const bool extractDiag =
+    (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV);
   {
     using Traits = kynema_ugf_ngp::NGPMeshTraits<>;
     using MeshIndex = Traits::MeshIndex;
@@ -931,8 +946,12 @@ LowMachEquationSystem::project_nodal_velocity()
     kynema_ugf_ngp::run_entity_algorithm(
       "nodal_velocity_projection", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
-        // Scaling factor
-        const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+        // Substitute projTimeScale only where the assembled diagonal is zero
+        // (excluded slave/halo/periodic nodes) to avoid divide-by-zero.
+        const double udiagRaw = Udiag.get(mi, 0);
+        const double udiag =
+          (extractDiag && udiagRaw == 0.0) ? projTimeScale : udiagRaw;
+        const double fac = 1.0 / (rhoNp1.get(mi, 0) * udiag);
         // Projection step
         for (int d = 0; d < nDim; ++d) {
           velNp1.get(mi, d) -= fac * (dpdx.get(mi, d) - uTmp.get(mi, d));
@@ -943,8 +962,10 @@ LowMachEquationSystem::project_nodal_velocity()
     kynema_ugf_ngp::run_entity_algorithm(
       "nodal_velocity_projection_strongX", ngpMesh, stk::topology::NODE_RANK,
       selX, KOKKOS_LAMBDA(const MeshIndex& mi) {
-        // Scaling factor
-        const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+        const double udiagRaw = Udiag.get(mi, 0);
+        const double udiag =
+          (extractDiag && udiagRaw == 0.0) ? projTimeScale : udiagRaw;
+        const double fac = 1.0 / (rhoNp1.get(mi, 0) * udiag);
         //  undo Projection step
         velNp1.get(mi, 0) += fac * (dpdx.get(mi, 0) - uTmp.get(mi, 0));
       });
@@ -953,8 +974,10 @@ LowMachEquationSystem::project_nodal_velocity()
     kynema_ugf_ngp::run_entity_algorithm(
       "nodal_velocity_project_strongY", ngpMesh, stk::topology::NODE_RANK, selY,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
-        // Scaling factor
-        const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+        const double udiagRaw = Udiag.get(mi, 0);
+        const double udiag =
+          (extractDiag && udiagRaw == 0.0) ? projTimeScale : udiagRaw;
+        const double fac = 1.0 / (rhoNp1.get(mi, 0) * udiag);
         //  undo Projection step
         velNp1.get(mi, 1) += fac * (dpdx.get(mi, 1) - uTmp.get(mi, 1));
       });
@@ -964,8 +987,10 @@ LowMachEquationSystem::project_nodal_velocity()
       kynema_ugf_ngp::run_entity_algorithm(
         "nodal_velocity_projection_strongZ", ngpMesh, stk::topology::NODE_RANK,
         selZ, KOKKOS_LAMBDA(const MeshIndex& mi) {
-          // Scaling factor
-          const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+          const double udiagRaw = Udiag.get(mi, 0);
+          const double udiag =
+            (extractDiag && udiagRaw == 0.0) ? projTimeScale : udiagRaw;
+          const double fac = 1.0 / (rhoNp1.get(mi, 0) * udiag);
           //  undo Projection step
           velNp1.get(mi, 2) += fac * (dpdx.get(mi, 2) - uTmp.get(mi, 2));
         });
