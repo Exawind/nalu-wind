@@ -452,8 +452,7 @@ KynemaFMBSixDof::map_loads()
   }
 }
 
-
-void 
+void
 KynemaFMBSixDof::predict_loads()
 {
   for (int i = 0; i < (int)point_bodies_.size(); ++i) {
@@ -477,7 +476,8 @@ KynemaFMBSixDof::send_loads(const double)
   }
 }
 
-void KynemaFMBSixDof::finalize_struct_timestep()
+void
+KynemaFMBSixDof::finalize_struct_timestep()
 {
   for (int i = 0; i < (int)point_bodies_.size(); ++i) {
     auto& iface = point_interfaces_[i];
@@ -489,6 +489,5 @@ void KynemaFMBSixDof::finalize_struct_timestep()
 }
 
 } // namespace kynema_ugf
-
 
 } // namespace sierra

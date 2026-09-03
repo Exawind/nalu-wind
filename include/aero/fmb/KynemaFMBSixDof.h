@@ -21,7 +21,6 @@ namespace sierra {
 
 namespace kynema_ugf {
 
-
 struct Tether
 {
   std::array<double, 3> fairlead_position = {0.0, 0.0, 0.0};
@@ -50,10 +49,11 @@ struct PointMassInterface
   int number_of_nonlinear_iterations = 5;
   double rho_inf{0.0};
 
-  enum lts { NM1 = 0, N = 1, NP1 = 2};
-  std::array<std::array<double, 6>,3> loads = {std::array<double, 6>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                                    std::array<double, 6>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                                    std::array<double, 6>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+  enum lts { NM1 = 0, N = 1, NP1 = 2 };
+  std::array<std::array<double, 6>, 3> loads = {
+    std::array<double, 6>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+    std::array<double, 6>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+    std::array<double, 6>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
 };
 
 class KynemaFMBSixDof : public KynemaFMBBase
