@@ -111,8 +111,7 @@ TurbViscSSTLRAlg::execute()
       const DblType tviscSST =
         aOne * density.get(meshIdx, 0) * tkeSafe /
         stk::math::max(aOne * sdr.get(meshIdx, 0), sijMag * fTwo);
-      const DblType tviscKW = aStar * density.get(meshIdx, 0) *
-                              tkeSafe /
+      const DblType tviscKW = aStar * density.get(meshIdx, 0) * tkeSafe /
                               stk::math::max(omegaHat, 1.e-8);
       tvisc.get(meshIdx, 0) = fOne * tviscKW + (1 - fOne) * tviscSST;
     });
