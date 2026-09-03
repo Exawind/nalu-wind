@@ -472,11 +472,8 @@ KynemaFMBSixDof::send_loads(const double)
   for (int i = 0; i < (int)point_bodies_.size(); ++i) {
     auto& iface = point_interfaces_[i];
     auto& loads = iface.kynema_interface->turbine.floating_platform.node.loads;
-    for (int idim = 0; idim < 6; ++idim) {
-      loads[idim] = 0.5 * (1.0 - iface.rho_inf) * iface.loads[iface.lts::NP1][idim] +
-                    0.5 * (1.0 - iface.rho_inf) * loads[idim] +
-                    loads[idim] * iface.rho_inf;      
-    }
+    for (int idim = 0; idim < 6; ++idim)
+      loads[idim] = iface.loads[iface.lts::NP1][idim];
   }
 }
 
