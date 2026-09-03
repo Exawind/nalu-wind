@@ -85,7 +85,9 @@ endif()
 ########################## TRILINOS ####################################
 set(CMAKE_PREFIX_PATH ${Trilinos_DIR} ${CMAKE_PREFIX_PATH})
 find_package(Trilinos QUIET REQUIRED)
-message(STATUS "Found Trilinos = ${Trilinos_LIBRARY_DIRS}")
+get_filename_component(Trilinos_PREFIX "${Trilinos_DIR}/../../.." ABSOLUTE)
+message(STATUS "Found Trilinos = ${Trilinos_PREFIX}")
+message(STATUS "Trilinos version: ${Trilinos_VERSION}")
 target_link_libraries(${kynema_ugf_lib_name} PUBLIC ${Trilinos_LIBRARIES})
 target_include_directories(${kynema_ugf_lib_name} SYSTEM PUBLIC ${Trilinos_INCLUDE_DIRS})
 target_include_directories(${kynema_ugf_lib_name} SYSTEM PUBLIC ${Trilinos_TPL_INCLUDE_DIRS})
@@ -249,21 +251,27 @@ if (KYNEMA_UGF_GIT_COMMIT_SHA)
   endif()
 endif()
 
-find_file(TRILINOS_HAVE_GIT_INFO
-  "TrilinosRepoVersion.txt"
-  PATHS "${Trilinos_DIR}/../../../"
-  DOC "Check if Trilinos Git version info exists"
-  NO_DEFAULT_PATH)
-if (NOT ${TRILINOS_HAVE_GIT_INFO} MATCHES ".*-NOTFOUND")
-  file(STRINGS "${Trilinos_DIR}/../../../TrilinosRepoVersion.txt"
-    TRILINOS_REPO_VERSION_TXT LIMIT_INPUT 1024)
+unset(TRILINOS_REPO_VERSION_FILE)
+foreach(_dir
+    "${Trilinos_DIR}"
+    "${Trilinos_PREFIX}"
+    "${Trilinos_INSTALL_DIR}")
+  if(_dir AND EXISTS "${_dir}/TrilinosRepoVersion.txt")
+    get_filename_component(TRILINOS_REPO_VERSION_FILE
+      "${_dir}/TrilinosRepoVersion.txt" ABSOLUTE)
+    break()
+  endif()
+endforeach()
+
+if(TRILINOS_REPO_VERSION_FILE)
+  file(STRINGS "${TRILINOS_REPO_VERSION_FILE}" TRILINOS_REPO_VERSION_TXT LIMIT_INPUT 1024)
   list(GET TRILINOS_REPO_VERSION_TXT 1 TRILINOS_REPO_COMMIT_STR)
-  string(REGEX MATCH "^[a-z0-9]+" TRILINOS_GIT_COMMIT_SHA ${TRILINOS_REPO_COMMIT_STR})
+  string(REGEX MATCH "^[a-f0-9]+" TRILINOS_GIT_COMMIT_SHA "${TRILINOS_REPO_COMMIT_STR}")
   set(TRILINOS_VERSION_TAG "${Trilinos_VERSION}-g${TRILINOS_GIT_COMMIT_SHA}")
   message(STATUS "Trilinos git commit = ${TRILINOS_GIT_COMMIT_SHA}")
 else()
   set(TRILINOS_VERSION_TAG "${Trilinos_VERSION}")
-  message(STATUS "Cannot determine Trilinos git commit")
+  message(STATUS "Cannot determine Trilinos git commit (no TrilinosRepoVersion.txt near ${Trilinos_DIR}, therefore Trilinos may not have been installed from a git repo)")
 endif()
 string(TIMESTAMP KYNEMA_UGF_VERSION_TIMESTAMP "%Y-%m-%d %H:%M:%S (UTC)" UTC)
 configure_file("${CMAKE_SOURCE_DIR}/cmake/KynemaUGFVersionInfo.h.in"
