@@ -143,10 +143,10 @@ Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0
-      termination_time: 0.0003
+      termination_time: 0.0002
       time_step: 0.0001
       time_stepping_type: fixed
-      time_step_count: 10
+      time_step_count: 5
       second_order_accuracy: yes
 
 
