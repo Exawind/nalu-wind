@@ -51,7 +51,8 @@ FMBContainer::map_loads()
 }
 
 void
-FMBContainer::advance_struct_time_step(const double currentTime, const double dT)
+FMBContainer::advance_struct_time_step(
+  const double currentTime, const double dT)
 {
   if (has_six_dof()) {
     sixDof_->predict_loads();
