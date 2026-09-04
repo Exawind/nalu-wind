@@ -40,15 +40,19 @@ struct BeamDataT
   using load_view_type = Kokkos::View<double* [6], Space>;
 
   scalar_view_type bary_weights; // Barycentric weights for interpolation nodes
-  scalar_view_type node_xi; // Non-dimensional location of each node along the beam
-  pos_view_type pos;       // First 3 are position, last 4 are quaternion orientation
-  pos_view_type disp;      // First 3 are translational displacement, last 4 are quaternion rotations
-  vel_view_type vel;       // First 3 are translational velocity, last 3 are rotational velocity
-  load_view_type loads;     // First 3 are forces, last 3 are moments
+  scalar_view_type
+    node_xi;          // Non-dimensional location of each node along the beam
+  pos_view_type pos;  // First 3 are position, last 4 are quaternion orientation
+  pos_view_type disp; // First 3 are translational displacement, last 4 are
+                      // quaternion rotations
+  vel_view_type
+    vel; // First 3 are translational velocity, last 3 are rotational velocity
+  load_view_type loads; // First 3 are forces, last 3 are moments
 
   BeamDataT() = default;
 
-  explicit BeamDataT(const std::size_t nNodes, const std::string& labelPrefix = "beam")
+  explicit BeamDataT(
+    const std::size_t nNodes, const std::string& labelPrefix = "beam")
   {
     resize(nNodes, labelPrefix);
   }
@@ -64,7 +68,6 @@ struct BeamDataT
   }
 
   std::size_t size() const { return node_xi.extent(0); }
-
 };
 
 using BeamDataDevice = BeamDataT<MemSpace>;
@@ -87,9 +90,7 @@ struct BeamBody
   GenericFieldType* total_force = nullptr;
   std::shared_ptr<stk::mesh::BulkData> bulk = nullptr;
   std::shared_ptr<CalcLoadsAssembled> calc_loads = nullptr;
-
 };
-
 
 class KynemaFMBBase
 {

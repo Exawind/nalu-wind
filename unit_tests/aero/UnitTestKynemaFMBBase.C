@@ -40,41 +40,46 @@ protected:
       stk::topology::NODE_RANK, "current_coordinates");
     meshDisp_ = &meta_->declare_field<double>(
       stk::topology::NODE_RANK, "mesh_displacement");
-    meshVelocity_ = &meta_->declare_field<double>(
-      stk::topology::NODE_RANK, "mesh_velocity");
-    beamXi_ = &meta_->declare_field<double>(
-      stk::topology::NODE_RANK, "beam_xi");
-    pressure_ = &meta_->declare_field<double>(
-      stk::topology::NODE_RANK, "pressure");
-    density_ = &meta_->declare_field<double>(
-      stk::topology::NODE_RANK, "density", 3);
+    meshVelocity_ =
+      &meta_->declare_field<double>(stk::topology::NODE_RANK, "mesh_velocity");
+    beamXi_ =
+      &meta_->declare_field<double>(stk::topology::NODE_RANK, "beam_xi");
+    pressure_ =
+      &meta_->declare_field<double>(stk::topology::NODE_RANK, "pressure");
+    density_ =
+      &meta_->declare_field<double>(stk::topology::NODE_RANK, "density", 3);
     viscosity_ = &meta_->declare_field<double>(
       stk::topology::NODE_RANK, "effective_viscosity_u");
     dudx_ = &meta_->declare_field<double>(stk::topology::NODE_RANK, "dudx");
     tforce_ = &meta_->declare_field<double>(stk::topology::NODE_RANK, "tforce");
-    exposedArea_ = &meta_->declare_field<double>(
-      meta_->side_rank(), "exposed_area_vector");
-    tforceScs_ = &meta_->declare_field<double>(
-      meta_->side_rank(), "tforce_scs");
+    exposedArea_ =
+      &meta_->declare_field<double>(meta_->side_rank(), "exposed_area_vector");
+    tforceScs_ =
+      &meta_->declare_field<double>(meta_->side_rank(), "tforce_scs");
 
     const double zero[3] = {0.0, 0.0, 0.0};
-    stk::mesh::put_field_on_mesh(*currentCoords_, meta_->universal_part(), 3, zero);
+    stk::mesh::put_field_on_mesh(
+      *currentCoords_, meta_->universal_part(), 3, zero);
     stk::mesh::put_field_on_mesh(*meshDisp_, meta_->universal_part(), 3, zero);
-    stk::mesh::put_field_on_mesh(*meshVelocity_, meta_->universal_part(), 3, zero);
+    stk::mesh::put_field_on_mesh(
+      *meshVelocity_, meta_->universal_part(), 3, zero);
     stk::mesh::put_field_on_mesh(*beamXi_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(*pressure_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(*density_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(*viscosity_, meta_->universal_part(), nullptr);
     stk::mesh::put_field_on_mesh(*dudx_, meta_->universal_part(), 9, nullptr);
     stk::mesh::put_field_on_mesh(*tforce_, meta_->universal_part(), 3, zero);
-    stk::mesh::put_field_on_mesh(*exposedArea_, meta_->universal_part(), 12, nullptr);
-    stk::mesh::put_field_on_mesh(*tforceScs_, meta_->universal_part(), 12, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *exposedArea_, meta_->universal_part(), 12, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *tforceScs_, meta_->universal_part(), 12, nullptr);
 
     unit_test_utils::fill_hex8_mesh("generated:1x1x1|sideset:xXyYzZ", *bulk_);
     forcingSurface_ = meta_->get_part("surface_1");
-  EXPECT_NE(nullptr, forcingSurface_);
+    EXPECT_NE(nullptr, forcingSurface_);
 
-    const auto* coordinates = static_cast<const VectorFieldType*>(meta_->coordinate_field());
+    const auto* coordinates =
+      static_cast<const VectorFieldType*>(meta_->coordinate_field());
     for (const auto* bucket : bulk_->get_buckets(
            stk::topology::NODE_RANK, meta_->locally_owned_part())) {
       for (const auto node : *bucket) {
@@ -89,7 +94,8 @@ protected:
       }
     }
     for (const auto* bucket : bulk_->get_buckets(
-           meta_->side_rank(), meta_->locally_owned_part() & *forcingSurface_)) {
+           meta_->side_rank(),
+           meta_->locally_owned_part() & *forcingSurface_)) {
       for (const auto face : *bucket) {
         double* area = stk::mesh::field_data(*exposedArea_, face);
         for (int ip = 0; ip < 4; ++ip) {
@@ -114,7 +120,8 @@ protected:
     point.moving_mesh_blocks = {&meta_->universal_part()};
     point.forcing_surfaces = {forcingSurface_};
     point.total_force = tforceScs_;
-    point.calc_loads = std::make_shared<sierra::kynema_ugf::CalcLoads>(point.forcing_surfaces);
+    point.calc_loads =
+      std::make_shared<sierra::kynema_ugf::CalcLoads>(point.forcing_surfaces);
     point.calc_loads->setup(bulk_);
     return point;
   }
@@ -128,7 +135,8 @@ protected:
     beam.beam_data_host.resize(beam.n_nodes);
     beam.moving_mesh_blocks = {&meta_->universal_part()};
     beam.forcing_surfaces = {forcingSurface_};
-    beam.calc_loads = std::make_shared<sierra::kynema_ugf::CalcLoadsAssembled>(beam.forcing_surfaces);
+    beam.calc_loads = std::make_shared<sierra::kynema_ugf::CalcLoadsAssembled>(
+      beam.forcing_surfaces);
     beam.calc_loads->setup(bulk_);
     beam.beam_data_host.node_xi(0) = 0.0;
     beam.beam_data_host.node_xi(1) = 1.0;
@@ -183,7 +191,8 @@ TEST_F(KynemaFMBBaseTest, MapsPointDisplacementVelocityAndCurrentCoordinates)
   point.p_data.center_of_mass = {0.0, 0.0, 0.0};
 
   fmb_.map_displacements_point(point, false);
-  const auto* coordinates = static_cast<const VectorFieldType*>(meta_->coordinate_field());
+  const auto* coordinates =
+    static_cast<const VectorFieldType*>(meta_->coordinate_field());
   for (const auto* bucket : bulk_->get_buckets(
          stk::topology::NODE_RANK, meta_->locally_owned_part())) {
     for (const auto node : *bucket) {
@@ -224,7 +233,8 @@ TEST_F(KynemaFMBBaseTest, MapsBeamDisplacementsAfterComputingBeamCoordinates)
   fmb_.compute_mapping_beam(beam);
   fmb_.map_displacements_beam(beam, false);
   currentCoords_->sync_to_host();
-  const auto* coordinates = static_cast<const VectorFieldType*>(meta_->coordinate_field());
+  const auto* coordinates =
+    static_cast<const VectorFieldType*>(meta_->coordinate_field());
   for (const auto* bucket : bulk_->get_buckets(
          stk::topology::NODE_RANK, meta_->locally_owned_part())) {
     for (const auto node : *bucket) {

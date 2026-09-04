@@ -150,7 +150,7 @@ KynemaFMBBase::map_loads_point(PointMass& point)
 void
 KynemaFMBBase::compute_mapping_beam(BeamBody& beam)
 {
-  
+
   Kokkos::deep_copy(beam.beam_data.node_xi, beam.beam_data_host.node_xi);
   Kokkos::deep_copy(beam.beam_data.pos, beam.beam_data_host.pos);
 
@@ -159,9 +159,10 @@ KynemaFMBBase::compute_mapping_beam(BeamBody& beam)
   auto n_nodes = beam.n_nodes;
   // Precompute barycentric weights for interpolation on xi-space nodes
   ComputeBarycentricWeights(
-      node_xi_host.data(), static_cast<int>(n_nodes), beam.beam_data_host.bary_weights.data()
-  );
-  Kokkos::deep_copy(beam.beam_data.bary_weights, beam.beam_data_host.bary_weights);
+    node_xi_host.data(), static_cast<int>(n_nodes),
+    beam.beam_data_host.bary_weights.data());
+  Kokkos::deep_copy(
+    beam.beam_data.bary_weights, beam.beam_data_host.bary_weights);
 
   auto& meta = beam.bulk->mesh_meta_data();
   const auto& ngpMesh = stk::mesh::get_updated_ngp_mesh(*(beam.bulk));
@@ -189,8 +190,8 @@ KynemaFMBBase::compute_mapping_beam(BeamBody& beam)
     "KynemaFMBBeam_compute_mapping", ngpMesh, entityRank, sel,
     KOKKOS_LAMBDA(
       const kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
-
-      const double query_point[3] = {modelCoords(mi, 0), modelCoords(mi, 1), modelCoords(mi, 2)};
+      const double query_point[3] = {
+        modelCoords(mi, 0), modelCoords(mi, 1), modelCoords(mi, 2)};
       double scratch_weights[kMaxInterpolationNodes];
       double scratch_dweights[kMaxInterpolationNodes];
       double closest_position[3] = {0.0, 0.0, 0.0};
@@ -198,23 +199,14 @@ KynemaFMBBase::compute_mapping_beam(BeamBody& beam)
       double dist2 = 0.0;
 
       FindClosestPointOnBlade(
-          query_point,
-          node_xi.data(),
-          positions.data(),
-          n_nodes,
-          bary_weights.data(),
-          scratch_weights,
-          scratch_dweights,
-          xi,
-          closest_position,
-          dist2
-      );
+        query_point, node_xi.data(), positions.data(), n_nodes,
+        bary_weights.data(), scratch_weights, scratch_dweights, xi,
+        closest_position, dist2);
 
-      beam_xi.get(mi,0) = xi;
+      beam_xi.get(mi, 0) = xi;
     });
 
   beam_xi.modify_on_device();
-
 }
 
 void
@@ -223,7 +215,6 @@ KynemaFMBBase::map_displacements_beam(BeamBody& beam, bool updateCur)
 
   Kokkos::deep_copy(beam.beam_data.disp, beam.beam_data_host.disp);
   Kokkos::deep_copy(beam.beam_data.vel, beam.beam_data_host.vel);
-
 
   constexpr int kMaxInterpolationNodes = 32;
 
@@ -270,44 +261,23 @@ KynemaFMBBase::map_displacements_beam(BeamBody& beam, bool updateCur)
     "KynemaFMBBeam_map_displacements", ngpMesh, entityRank, sel,
     KOKKOS_LAMBDA(
       const kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
-
       double scratch_weights[kMaxInterpolationNodes];
       double pos[7] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
       double disp[7] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
       double vel[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
       const double xi = beam_xi.get(mi, 0);
-      double qp[3] = {modelCoords(mi, 0), modelCoords(mi, 1), modelCoords(mi, 2)};
+      double qp[3] = {
+        modelCoords(mi, 0), modelCoords(mi, 1), modelCoords(mi, 2)};
 
       InterpolateFieldAtPoint(
-          xi,
-          node_xi.data(),
-          positions.data(),
-          n_nodes,
-          7,
-          bary_weights.data(),
-          scratch_weights,
-          pos
-      );
+        xi, node_xi.data(), positions.data(), n_nodes, 7, bary_weights.data(),
+        scratch_weights, pos);
       InterpolateFieldAtPoint(
-          xi,
-          node_xi.data(),
-          displacements.data(),
-          n_nodes,
-          7,
-          bary_weights.data(),
-          scratch_weights,
-          disp
-      );
-        InterpolateFieldAtPoint(
-          xi,
-          node_xi.data(),
-          velocities.data(),
-          n_nodes,
-          6,
-          bary_weights.data(),
-          scratch_weights,
-          vel
-        );
+        xi, node_xi.data(), displacements.data(), n_nodes, 7,
+        bary_weights.data(), scratch_weights, disp);
+      InterpolateFieldAtPoint(
+        xi, node_xi.data(), velocities.data(), n_nodes, 6, bary_weights.data(),
+        scratch_weights, vel);
 
       double rel_pos_g[3] = {qp[0] - pos[0], qp[1] - pos[1], qp[2] - pos[2]};
       double rel_pos_l[3] = {0.0, 0.0, 0.0};
@@ -351,24 +321,22 @@ KynemaFMBBase::map_loads_beam(BeamBody& beam)
   beam.calc_loads->initialize();
   beam.calc_loads->execute();
 
-
   auto& meta = beam.bulk->mesh_meta_data();
   const auto& ngpMesh = stk::mesh::get_updated_ngp_mesh(*(beam.bulk));
   const stk::mesh::EntityRank entityRank = stk::topology::NODE_RANK;
-    
+
   // get the parts in the current motion frame
   stk::mesh::Selector sel =
     stk::mesh::selectUnion(beam.forcing_surfaces) &
     (meta.locally_owned_part() | meta.globally_shared_part());
   stk::mesh::NgpField<double> modelCoords =
     stk::mesh::get_updated_ngp_field<double>(
-      *meta.get_field<double>(entityRank, "coordinates"));    
-  stk::mesh::NgpField<double> tforce =
-    stk::mesh::get_updated_ngp_field<double>(
-      *meta.get_field<double>(entityRank, "tforce"));
+      *meta.get_field<double>(entityRank, "coordinates"));
+  stk::mesh::NgpField<double> tforce = stk::mesh::get_updated_ngp_field<double>(
+    *meta.get_field<double>(entityRank, "tforce"));
   stk::mesh::NgpField<double> beam_xi =
     stk::mesh::get_updated_ngp_field<double>(
-      *meta.get_field<double>(entityRank, "beam_xi"));      
+      *meta.get_field<double>(entityRank, "beam_xi"));
 
   tforce.sync_to_device();
   beam_xi.sync_to_device();
@@ -391,52 +359,42 @@ KynemaFMBBase::map_loads_beam(BeamBody& beam)
     "KynemaFMBBeam_map_loads", ngpMesh, entityRank, sel,
     KOKKOS_LAMBDA(
       const kynema_ugf_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
-
-      const double query_point[3] = {modelCoords(mi, 0), modelCoords(mi, 1), modelCoords(mi, 2)};
+      const double query_point[3] = {
+        modelCoords(mi, 0), modelCoords(mi, 1), modelCoords(mi, 2)};
       double scratch_weights[kMaxInterpolationNodes];
       double closest_position[7] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
       double xi = beam_xi.get(mi, 0);
       const double force[3] = {tforce(mi, 0), tforce(mi, 1), tforce(mi, 2)};
       double moment[3] = {0.0, 0.0, 0.0};
 
-      // Get the closest position on the beam to the query point and compute the relative position vector
-      // Relative position vector is expected to not change with beam deformation
+      // Get the closest position on the beam to the query point and compute the
+      // relative position vector Relative position vector is expected to not
+      // change with beam deformation
       InterpolateFieldAtPoint(
-          xi,
-          node_xi.data(),
-          positions.data(),
-          n_nodes,
-          7,
-          bary_weights.data(),
-          scratch_weights,
-          closest_position
-      );
+        xi, node_xi.data(), positions.data(), n_nodes, 7, bary_weights.data(),
+        scratch_weights, closest_position);
 
       double rel_pos[3] = {
-        query_point[0] - closest_position[0], 
-        query_point[1] - closest_position[1], 
+        query_point[0] - closest_position[0],
+        query_point[1] - closest_position[1],
         query_point[2] - closest_position[2]};
-      
+
       // Transferring force from beam surface to beam node will add moment
       CrossProduct3(rel_pos, force, moment);
 
-      // Compute all shape functions for the current xi value to distribute the force and moment to all beam nodes
+      // Compute all shape functions for the current xi value to distribute the
+      // force and moment to all beam nodes
       LagrangePolynomialInterpWeights(
-          xi,
-          node_xi.data(),
-          bary_weights.data(),
-          n_nodes,
-          scratch_weights
-      );
+        xi, node_xi.data(), bary_weights.data(), n_nodes, scratch_weights);
 
-      // Multiply the force and moment by the shape function weights and add to the loads on each beam node
+      // Multiply the force and moment by the shape function weights and add to
+      // the loads on each beam node
       for (std::size_t i = 0; i < n_nodes; ++i) {
         for (std::size_t j = 0; j < 3; ++j) {
-          Kokkos::atomic_add(&loads(i,j), scratch_weights[i] * force[j]);
-          Kokkos::atomic_add(&loads(i,j+3), scratch_weights[i] * moment[j]);
+          Kokkos::atomic_add(&loads(i, j), scratch_weights[i] * force[j]);
+          Kokkos::atomic_add(&loads(i, j + 3), scratch_weights[i] * moment[j]);
         }
       }
-
     });
 
   Kokkos::fence();
@@ -444,9 +402,8 @@ KynemaFMBBase::map_loads_beam(BeamBody& beam)
 
   // Sum the loads across all ranks to get the total load on each beam node
   MPI_Allreduce(
-    MPI_IN_PLACE, beam.beam_data_host.loads.data(), 6 * beam.n_nodes, MPI_DOUBLE, MPI_SUM,
-    beam.bulk->parallel());
-
+    MPI_IN_PLACE, beam.beam_data_host.loads.data(), 6 * beam.n_nodes,
+    MPI_DOUBLE, MPI_SUM, beam.bulk->parallel());
 }
 
 } // namespace kynema_ugf
