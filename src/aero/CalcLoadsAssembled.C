@@ -39,8 +39,7 @@ namespace kynema_ugf {
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 CalcLoadsAssembled::CalcLoadsAssembled(
-  stk::mesh::PartVector& partVec,
-  bool useShifted)
+  stk::mesh::PartVector& partVec, bool useShifted)
   : partVec_(partVec),
     useShifted_(useShifted),
     coordinates_(NULL),
@@ -198,7 +197,7 @@ CalcLoadsAssembled::execute()
         // extract nodal fields
         stk::mesh::Entity node = face_node_rels[localFaceNode];
         const double* duidxj = stk::mesh::field_data(*dudx_, node);
-        double * tforce = stk::mesh::field_data(*tforce_, node);
+        double* tforce = stk::mesh::field_data(*tforce_, node);
 
         // divU and aMag
         double divU = 0.0;
@@ -215,8 +214,7 @@ CalcLoadsAssembled::execute()
             dflux += -muBip * (duidxj[offSetI + j] + duidxj[offSetTrans]) *
                      areaVec[offSetAveraVec + j];
           }
-          tforce[i] =
-            pBip * ai + dflux + 2.0 / 3.0 * muBip * divU * ai;
+          tforce[i] = pBip * ai + dflux + 2.0 / 3.0 * muBip * divU * ai;
         }
       }
     }

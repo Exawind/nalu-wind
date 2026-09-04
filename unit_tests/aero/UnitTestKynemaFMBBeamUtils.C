@@ -108,11 +108,13 @@ TEST(KynemaFMBBeamUtils, ComputesShapeFunctionsAndInterpolatesFields)
     linearNodes.data(), 2, linearBarycentricWeights.data());
   InterpolateFieldAtPoint(
     0.25, linearNodes.data(), field.data(), 2, 2,
-    linearBarycentricWeights.data(), scratchWeights.data(), interpolated.data());
+    linearBarycentricWeights.data(), scratchWeights.data(),
+    interpolated.data());
 
   for (int row = 0; row < 3; ++row) {
     for (int column = 0; column < 3; ++column) {
-      EXPECT_DOUBLE_EQ(row == column ? 1.0 : 0.0, shapeFunctions[3 * row + column]);
+      EXPECT_DOUBLE_EQ(
+        row == column ? 1.0 : 0.0, shapeFunctions[3 * row + column]);
     }
   }
   EXPECT_NEAR(1.25, interpolated[0], kTolerance);
@@ -122,9 +124,8 @@ TEST(KynemaFMBBeamUtils, ComputesShapeFunctionsAndInterpolatesFields)
 TEST(KynemaFMBBeamUtils, EvaluatesBladeDistanceAndDerivative)
 {
   const std::array<double, 2> nodes = {-1.0, 1.0};
-  const std::array<double, 14> positions = {
-    -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
-     1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
+  const std::array<double, 14> positions = {-1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+                                            1.0,  0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
   const std::array<double, 3> query = {0.25, 2.0, -1.0};
   std::array<double, 2> barycentricWeights{};
   std::array<double, 2> scratchWeights{};
@@ -134,25 +135,28 @@ TEST(KynemaFMBBeamUtils, EvaluatesBladeDistanceAndDerivative)
   ComputeBarycentricWeights(nodes.data(), 2, barycentricWeights.data());
   const double distanceSquared = BladePointDistanceSquaredAtXi(
     0.25, query.data(), nodes.data(), positions.data(), 2,
-    barycentricWeights.data(), scratchWeights.data(), interpolatedPosition.data());
+    barycentricWeights.data(), scratchWeights.data(),
+    interpolatedPosition.data());
   const double derivative = BladePointFPrimeAtXi(
     0.0, query.data(), nodes.data(), positions.data(), 2,
-    barycentricWeights.data(), scratchWeights.data(), scratchDerivatives.data());
+    barycentricWeights.data(), scratchWeights.data(),
+    scratchDerivatives.data());
 
   EXPECT_NEAR(5.0, distanceSquared, kTolerance);
   EXPECT_NEAR(0.25, interpolatedPosition[0], kTolerance);
   EXPECT_NEAR(0.0, interpolatedPosition[1], kTolerance);
   EXPECT_NEAR(0.0, interpolatedPosition[2], kTolerance);
   EXPECT_NEAR(-0.5, derivative, kTolerance);
-  EXPECT_NEAR(5.0, SquaredDistance3(interpolatedPosition.data(), query.data()), kTolerance);
+  EXPECT_NEAR(
+    5.0, SquaredDistance3(interpolatedPosition.data(), query.data()),
+    kTolerance);
 }
 
 TEST(KynemaFMBBeamUtils, FindsInteriorAndEndpointClosestPoints)
 {
   const std::array<double, 2> nodes = {-1.0, 1.0};
-  const std::array<double, 14> positions = {
-    -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
-     1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
+  const std::array<double, 14> positions = {-1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+                                            1.0,  0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
   std::array<double, 2> barycentricWeights{};
   std::array<double, 2> scratchWeights{};
   std::array<double, 2> scratchDerivatives{};
