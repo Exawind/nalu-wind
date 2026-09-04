@@ -1896,6 +1896,7 @@ Realm::update_geometry_due_to_mesh_motion()
 
 #ifdef KYNEMA_UGF_USES_KYNEMA_FMB
     if (fmbModels_->is_active()) {
+      fmbModels_->advance_struct_time_step(get_current_time(), get_time_step());
       fmbModels_->update_displacements(get_current_time());
     }
 #endif
@@ -4649,13 +4650,6 @@ Realm::process_multi_physics_transfer(bool initCall)
         << "Aero models - Predict model time step" << std::endl;
       aeroModels_->predict_model_time_step(get_current_time());
     }
-#ifdef KYNEMA_UGF_USES_KYNEMA_FMB
-    if (fmbModels_->is_active()) {
-      KynemaUGFEnv::self().kynema_ugfOutputP0()
-        << "Kynema-FMB models - Predict model time step" << std::endl;
-      fmbModels_->predict_model_time_step(get_current_time());
-    }
-#endif
   }
 
   /* if (openfast_ != NULL) */
@@ -4770,10 +4764,8 @@ Realm::post_converged_work()
 
 #ifdef KYNEMA_UGF_USES_KYNEMA_FMB
   if (fmbModels_->is_active()) {
-    KynemaUGFEnv::self().kynema_ugfOutputP0()
-      << "Kynema-FMB models - advance model timestep" << std::endl;
-    fmbModels_->advance_model_time_step(
-      get_current_time(), timeIntegrator_->get_time_step());
+    fmbModels_->map_loads();
+    fmbModels_->finalize_struct_timestep();
   }
 #endif
 
