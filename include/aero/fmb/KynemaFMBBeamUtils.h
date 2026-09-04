@@ -1,3 +1,5 @@
+ #include <Kokkos_Core.hpp>
+
 namespace sierra {
 namespace kynema_ugf {
 
@@ -464,6 +466,11 @@ FindClosestPointOnBlade(
       const double fprime_new = BladePointFPrimeAtXi(
         xi_new, query_point, node_xi, node_positions, num_nodes, bary_weights,
         scratch_weights, scratch_dweights);
+      if (std::abs(fprime_new) < 1.e-14) {
+        a = xi_new;
+        b = xi_new;
+        break;
+      }
       // Narrow the bracket.
       if (fprime_new * fprime_a < 0.0) {
         b = xi_new;
