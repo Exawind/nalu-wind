@@ -1,0 +1,10 @@
+<map id="sierra::kynema_ugf::MomentumSSTAMSDiffEdgeKernel" name="sierra::kynema_ugf::MomentumSSTAMSDiffEdgeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="27,316,280,356"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_edge_kernel.html" title=" " alt="" coords="5,212,301,267"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="156,281,156,315,151,315,151,281"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_edge_kernel.html" title=" " alt="" coords="75,5,221,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="151,59,155,212,150,212,146,59"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_edge_kernel.html" title=" " alt="" coords="170,95,339,135"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="184,52,233,92,230,97,180,56"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="232,147,177,214,173,210,228,144"/>
+</map>

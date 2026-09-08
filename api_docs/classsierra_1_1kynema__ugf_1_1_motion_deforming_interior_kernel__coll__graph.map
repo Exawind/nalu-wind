@@ -1,0 +1,14 @@
+<map id="sierra::kynema_ugf::MotionDeformingInteriorKernel" name="sierra::kynema_ugf::MotionDeformingInteriorKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="295,28,527,68"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_ngp_motion_kernel.html" title=" " alt="" coords="985,53,1256,107"/>
+<area shape="poly" id="edge4_Node000002_Node000001" title=" " alt="" coords="540,34,551,33,666,29,756,30,847,36,962,48,985,51,985,56,961,53,846,41,756,35,666,35,551,39,541,39"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="972,76,527,56,527,51,972,71"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_ngp_motion.html" title=" " alt="" coords="337,92,484,132"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="498,105,985,83,985,89,498,111"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1kynema__ugf_1_1_ngp_motion_kernel.html" title=" " alt="" coords="576,143,756,183"/>
+<area shape="poly" id="edge6_Node000005_Node000003" title=" " alt="" coords="498,127,576,142,575,147,497,132"/>
+<area shape="rect" id="Node000004" href="$structsierra_1_1kynema__ugf_1_1mm_1_1_three_d_vec_type.html" title=" " alt="" coords="5,61,169,101"/>
+<area shape="poly" id="edge7_Node000001_Node000004" title=" " alt="" coords="183,69,294,57,295,63,183,74"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="183,93,194,95,337,106,337,111,193,100,183,99"/>
+<area shape="poly" id="edge5_Node000002_Node000005" title=" " alt="" coords="769,167,863,165,913,160,961,151,1020,131,1072,105,1075,110,1022,136,962,156,913,165,864,170,770,172"/>
+</map>

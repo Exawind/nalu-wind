@@ -1,0 +1,14 @@
+<map id="sierra::kynema_ugf::MomentumOpenAdvDiffElemKernel&lt; BcAlgTraits &gt;" name="sierra::kynema_ugf::MomentumOpenAdvDiffElemKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="Node000001" title="Open adv/diff kernel for momentum equation (velocity DOF)" alt="" coords="919,62,1180,117"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_kernel.html" title="Base class for computational kernels in KynemaUGF." alt="" coords="575,5,722,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="736,31,895,52,933,59,932,65,894,57,735,36"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_master_element.html" title=" " alt="" coords="575,69,722,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="736,87,919,87,919,92,736,92"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_peclet_function.html" title=" " alt="" coords="533,133,764,173"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="777,130,918,108,919,113,778,136"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1kynema__ugf_1_1_peclet_function_base.html" title="Non&#45;templated empty base class for storing pointers to templated instances." alt="" coords="5,140,163,180"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="176,153,332,148,509,147,533,147,533,152,509,152,332,153,176,158"/>
+<area shape="rect" id="Node000006" href="$classsierra_1_1kynema__ugf_1_1_peclet_function.html" title=" " alt="" coords="212,168,375,208"/>
+<area shape="poly" id="edge6_Node000006_Node000005" title=" " alt="" coords="177,170,212,175,212,180,176,175"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="388,176,533,162,533,167,388,181"/>
+</map>

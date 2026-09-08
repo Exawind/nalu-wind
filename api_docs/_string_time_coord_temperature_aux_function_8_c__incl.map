@@ -1,0 +1,19 @@
+<map id="StringTimeCoordTemperatureAuxFunction.C" name="StringTimeCoordTemperatureAuxFunction.C">
+<area shape="rect" id="Node000001" title=" " alt="" coords="281,5,494,45"/>
+<area shape="rect" id="Node000002" href="$_string_time_coord_temperature_aux_function_8h.html" title=" " alt="" coords="178,93,413,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="369,48,327,86,324,82,365,44"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="437,101,522,126"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="410,44,458,89,455,93,406,48"/>
+<area shape="rect" id="Node000003" href="$_aux_function_8h.html" title=" " alt="" coords="57,181,171,207"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="253,136,154,178,152,173,251,131"/>
+<area shape="rect" id="Node000004" href="$_string_time_coord_function_8h.html" title=" " alt="" coords="196,181,395,207"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="298,134,298,167,293,167,293,134"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="419,181,481,207"/>
+<area shape="poly" id="edge7_Node000002_Node000008" title=" " alt="" coords="334,131,416,173,414,177,331,136"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="5,255,204,280"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="266,209,150,252,148,247,264,204"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="229,255,362,280"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="298,207,298,241,293,241,293,207"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="386,255,445,280"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="316,204,385,245,382,250,313,209"/>
+</map>

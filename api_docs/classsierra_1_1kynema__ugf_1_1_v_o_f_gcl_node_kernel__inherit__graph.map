@@ -1,0 +1,10 @@
+<map id="sierra::kynema_ugf::VOFGclNodeKernel" name="sierra::kynema_ugf::VOFGclNodeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="44,301,197,341"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="5,197,236,252"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="123,266,123,301,118,301,118,266"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_node_kernel.html" title=" " alt="" coords="42,5,189,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="119,59,123,197,117,197,114,59"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="137,95,307,135"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="151,52,201,92,197,97,147,56"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="197,147,147,199,143,195,193,143"/>
+</map>

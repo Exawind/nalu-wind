@@ -1,0 +1,11 @@
+<map id="sierra::kynema_ugf::MomentumActuatorNodeKernel" name="sierra::kynema_ugf::MomentumActuatorNodeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,95,240,135"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="119,197,398,252"/>
+<area shape="poly" id="edge3_Node000002_Node000001" title=" " alt="" coords="121,148,123,161,129,172,155,195,152,199,125,175,118,162,116,149"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="239,187,218,161,180,137,183,132,222,157,243,183"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_node_kernel.html" title=" " alt="" coords="220,5,367,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="290,59,266,197,261,196,285,58"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="315,95,485,135"/>
+<area shape="poly" id="edge5_Node000004_Node000003" title=" " alt="" coords="329,52,379,92,375,97,325,56"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="366,145,295,199,291,195,363,141"/>
+</map>

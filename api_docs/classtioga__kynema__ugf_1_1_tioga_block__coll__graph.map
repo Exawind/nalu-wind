@@ -1,0 +1,41 @@
+<map id="tioga_kynema_ugf::TiogaBlock" name="tioga_kynema_ugf::TiogaBlock">
+<area shape="rect" id="Node000001" title="Interface to convert STK Mesh Part(s) to TIOGA blocks." alt="" coords="1224,211,1445,236"/>
+<area shape="rect" id="Node000002" href="$classtioga__kynema__ugf_1_1_tioga_options.html" title="Options to control TIOGA overset hole&#45;cut behavior." alt="" coords="844,5,1079,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="1093,26,1149,40,1201,64,1246,98,1283,139,1311,179,1329,209,1324,212,1306,182,1278,142,1242,102,1199,68,1147,45,1091,31"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="868,136,1055,161"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="1069,154,1134,163,1201,175,1255,191,1302,208,1301,213,1253,196,1199,181,1133,168,1068,160"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="527,91,614,116"/>
+<area shape="poly" id="edge22_Node000001_Node000004" title=" " alt="" coords="628,97,759,90,925,86,1086,90,1152,98,1201,110,1241,131,1276,158,1325,209,1321,212,1273,162,1238,135,1199,115,1151,103,1085,96,925,91,759,95,628,102"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="628,107,868,135,868,141,627,112"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="48,83,187,123"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="201,101,527,101,527,106,201,106"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="506,203,635,228"/>
+<area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="649,199,886,159,887,164,649,205"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="883,203,1040,228"/>
+<area shape="poly" id="edge8_Node000008_Node000006" title=" " alt="" coords="649,213,883,213,883,218,649,218"/>
+<area shape="rect" id="Node000017" title=" " alt="" coords="892,252,1031,277"/>
+<area shape="poly" id="edge21_Node000017_Node000006" title=" " alt="" coords="649,223,720,233,892,254,891,259,720,238,648,229"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="98,223,137,248"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="150,231,506,215,506,221,151,237"/>
+<area shape="rect" id="Node000015" title=" " alt="" coords="503,293,638,319"/>
+<area shape="poly" id="edge19_Node000015_Node000007" title=" " alt="" coords="151,238,504,293,503,298,150,243"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="1054,218,1103,219,1224,221,1224,226,1103,225,1053,223"/>
+<area shape="rect" id="Node000009" href="$structtioga__kynema__ugf_1_1_ngp_tioga_block.html" title="Data representing an unstructured mesh block." alt="" coords="856,478,1067,518"/>
+<area shape="poly" id="edge9_Node000001_Node000009" title=" " alt="" coords="999,468,1315,234,1318,238,1002,472"/>
+<area shape="rect" id="Node000010" href="$structtioga__kynema__ugf_1_1_overset_array_type.html" title=" " alt="" coords="471,415,671,455"/>
+<area shape="poly" id="edge10_Node000009_Node000010" title=" " alt="" coords="685,415,752,413,821,422,852,432,882,446,933,476,930,480,880,451,850,437,819,427,752,418,685,420"/>
+<area shape="rect" id="Node000011" href="$structtioga__kynema__ugf_1_1_overset_array_type.html" title=" " alt="" coords="5,519,229,559"/>
+<area shape="poly" id="edge11_Node000010_Node000011" title=" " alt="" coords="218,514,482,453,483,458,220,519"/>
+<area shape="rect" id="Node000012" href="$structtioga__kynema__ugf_1_1_overset_array_type.html" title=" " alt="" coords="471,519,671,559"/>
+<area shape="poly" id="edge13_Node000012_Node000011" title=" " alt="" coords="243,537,470,537,470,542,243,542"/>
+<area shape="rect" id="Node000013" href="$structtioga__kynema__ugf_1_1_overset_array_type.html" title=" " alt="" coords="445,583,696,623"/>
+<area shape="poly" id="edge15_Node000013_Node000011" title=" " alt="" coords="243,555,254,557,445,584,445,589,253,562,243,560"/>
+<area shape="poly" id="edge12_Node000009_Node000012" title=" " alt="" coords="684,546,752,546,820,539,865,529,908,516,910,521,867,534,820,545,752,551,685,551"/>
+<area shape="poly" id="edge14_Node000009_Node000013" title=" " alt="" coords="710,601,765,594,819,581,852,568,883,551,933,516,936,521,885,555,854,572,821,586,766,599,710,606"/>
+<area shape="rect" id="Node000014" title=" " alt="" coords="886,301,1037,327"/>
+<area shape="poly" id="edge16_Node000001_Node000014" title=" " alt="" coords="1050,302,1123,290,1199,273,1256,254,1305,234,1307,238,1258,259,1201,278,1124,295,1051,307"/>
+<area shape="poly" id="edge17_Node000014_Node000015" title=" " alt="" coords="652,305,886,310,886,315,652,310"/>
+<area shape="rect" id="Node000016" title=" " alt="" coords="98,293,137,319"/>
+<area shape="poly" id="edge18_Node000015_Node000016" title=" " alt="" coords="150,303,503,303,503,309,150,309"/>
+<area shape="poly" id="edge20_Node000001_Node000017" title=" " alt="" coords="1044,257,1200,242,1260,233,1260,239,1200,247,1045,262"/>
+</map>

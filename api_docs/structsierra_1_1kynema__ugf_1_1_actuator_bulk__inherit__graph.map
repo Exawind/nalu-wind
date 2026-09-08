@@ -1,0 +1,9 @@
+<map id="sierra::kynema_ugf::ActuatorBulk" name="sierra::kynema_ugf::ActuatorBulk">
+<area shape="rect" id="Node000001" title="Where field data is stored and accessed for actuators This object lives on host but the views can be ..." alt="" coords="107,5,254,45"/>
+<area shape="rect" id="Node000002" href="$structsierra_1_1kynema__ugf_1_1_actuator_bulk_f_a_s_t.html" title=" " alt="" coords="19,93,166,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="153,57,114,95,110,91,149,53"/>
+<area shape="rect" id="Node000004" href="$structsierra_1_1kynema__ugf_1_1_actuator_bulk_simple.html" title=" " alt="" coords="191,93,349,133"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="212,53,252,91,248,95,209,57"/>
+<area shape="rect" id="Node000003" href="$structsierra_1_1kynema__ugf_1_1_actuator_bulk_disk_f_a_s_t.html" title=" " alt="" coords="5,181,180,221"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="95,147,95,181,90,181,90,147"/>
+</map>

@@ -1,0 +1,19 @@
+<map id="sierra::kynema_ugf::HStarConverter" name="sierra::kynema_ugf::HStarConverter">
+<area shape="rect" id="Node000001" title="Calculates reference heat loss parameter." alt="" coords="31,407,177,447"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_converter.html" title="Provides arbitrary processing of input data before handing off values to a Table for interpolation." alt="" coords="232,308,379,348"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="255,356,144,409,142,404,253,351"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="311,108,398,133"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="384,141,394,156,400,163,408,167,423,177,426,189,423,208,389,276,373,296,352,310,349,306,369,292,384,273,418,206,421,189,419,180,405,172,396,167,390,159,380,144"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="179,198,365,223"/>
+<area shape="poly" id="edge5_Node000005_Node000003" title=" " alt="" coords="337,145,285,199,281,196,333,141"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="285,5,424,45"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="357,59,357,108,352,108,352,59"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="282,236,302,307,297,308,277,237"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="105,108,234,133"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="184,143,206,170,246,196,243,200,202,174,180,147"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="5,249,171,275"/>
+<area shape="poly" id="edge9_Node000008_Node000006" title=" " alt="" coords="128,142,110,159,99,182,92,207,90,249,85,249,87,206,94,180,106,156,124,139"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="150,13,189,38"/>
+<area shape="poly" id="edge7_Node000006_Node000007" title=" " alt="" coords="172,52,172,108,167,108,167,52"/>
+<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="93,288,105,406,99,407,88,289"/>
+</map>

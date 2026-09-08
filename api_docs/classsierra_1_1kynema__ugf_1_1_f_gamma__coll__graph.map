@@ -1,0 +1,13 @@
+<map id="sierra::kynema_ugf::FGamma" name="sierra::kynema_ugf::FGamma">
+<area shape="rect" id="Node000001" title="Class to wrap the F_gamma() function with an interface that is compatible with our Functor implementa..." alt="" coords="5,372,152,412"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="85,181,251,207"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="131,215,97,239,83,253,72,270,64,296,64,323,74,371,69,372,58,324,59,295,67,268,79,250,94,235,128,211"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="211,269,386,309"/>
+<area shape="poly" id="edge5_Node000005_Node000002" title=" " alt="" coords="187,215,216,243,256,267,253,272,213,247,183,219"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="169,93,298,119"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="215,130,203,144,177,183,173,180,199,141,211,127"/>
+<area shape="poly" id="edge6_Node000005_Node000003" title=" " alt="" coords="269,125,282,141,296,175,303,210,303,269,298,269,297,210,291,176,278,144,265,129"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="214,5,253,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="236,45,236,93,231,93,231,45"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="246,318,121,374,119,370,244,313"/>
+</map>
