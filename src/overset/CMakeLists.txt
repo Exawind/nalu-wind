@@ -19,7 +19,7 @@ if(ENABLE_TIOGA)
       ${CMAKE_CURRENT_SOURCE_DIR}/TiogaSTKIface.C
       ${CMAKE_CURRENT_SOURCE_DIR}/TiogaRef.C
    )
-   if(ENABLE_CUDA AND CMAKE_CXX_COMPILER MATCHES "nvcc_wrapper")
+   if(ENABLE_CUDA)
       # Work around nvcc/cudafe++ ICE (CUDA 12.8 + GCC 12.5) in TiogaOptions.C.
       set_source_files_properties(
          ${CMAKE_CURRENT_SOURCE_DIR}/TiogaOptions.C PROPERTIES COMPILE_OPTIONS
