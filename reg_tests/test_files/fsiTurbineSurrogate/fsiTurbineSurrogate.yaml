@@ -495,7 +495,7 @@ Time_Integrators:
       time_stepping_type: fixed
       time_step_count: 0
       second_order_accuracy: yes
-      nonlinear_iterations: 1
+      multiphysics_iterations: 1
 
       realms:
         - mesh_motion_path
