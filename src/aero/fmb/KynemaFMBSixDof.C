@@ -439,18 +439,51 @@ KynemaFMBSixDof::map_displacements(double current_time, bool updateCurCoor)
 }
 
 void
-KynemaFMBSixDof::map_loads(const double)
+KynemaFMBSixDof::map_loads()
 {
   for (int i = 0; i < (int)point_bodies_.size(); ++i) {
     map_loads_point(point_bodies_[i]);
 
     auto& forces_and_moments = point_bodies_[i].p_data.loads;
     auto& iface = point_interfaces_[i];
-    auto& loads = iface.kynema_interface->turbine.floating_platform.node.loads;
     for (int idim = 0; idim < 6; ++idim) {
-      loads[idim] = 0.5 * (1.0 - iface.rho_inf) * forces_and_moments[idim] +
-                    0.5 * (1.0 - iface.rho_inf) * loads[idim] +
-                    loads[idim] * iface.rho_inf;
+      iface.loads[iface.lts::NP1][idim] = forces_and_moments[idim];
+    }
+  }
+}
+
+void
+KynemaFMBSixDof::predict_loads()
+{
+  for (int i = 0; i < (int)point_bodies_.size(); ++i) {
+    auto& iface = point_interfaces_[i];
+    for (int idim = 0; idim < 6; ++idim) {
+      iface.loads[iface.lts::NP1][idim] =
+        2.0 * iface.loads[iface.lts::N][idim] -
+        iface.loads[iface.lts::NM1][idim];
+    }
+  }
+}
+
+void
+KynemaFMBSixDof::send_loads(const double)
+{
+  for (int i = 0; i < (int)point_bodies_.size(); ++i) {
+    auto& iface = point_interfaces_[i];
+    auto& loads = iface.kynema_interface->turbine.floating_platform.node.loads;
+    for (int idim = 0; idim < 6; ++idim)
+      loads[idim] = iface.loads[iface.lts::NP1][idim];
+  }
+}
+
+void
+KynemaFMBSixDof::finalize_struct_timestep()
+{
+  for (int i = 0; i < (int)point_bodies_.size(); ++i) {
+    auto& iface = point_interfaces_[i];
+    for (int idim = 0; idim < 6; ++idim) {
+      iface.loads[iface.lts::NM1][idim] = iface.loads[iface.lts::N][idim];
+      iface.loads[iface.lts::N][idim] = iface.loads[iface.lts::NP1][idim];
     }
   }
 }
