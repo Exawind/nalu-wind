@@ -44,11 +44,11 @@ public:
   bool simulation_proceeds();
 
   void prepare_for_time_integration();
-  void prepare_time_step(size_t inonlin = 0);
-  void pre_realm_advance_stage1(size_t inonlin = 0);
-  void pre_realm_advance_stage2(size_t inonlin = 0);
+  void prepare_time_step(size_t imultphys = 0);
+  void pre_realm_advance_stage1(size_t imultphys = 0);
+  void pre_realm_advance_stage2(size_t imultphys = 0);
   void post_realm_advance();
-  void interstep_updates(int nonLinearIterationIndex);
+  void interstep_updates(int multiPhysicsIterationIndex);
 
   Simulation* sim_{nullptr};
 
@@ -65,7 +65,7 @@ public:
   bool secondOrderTimeAccurate_;
   bool adaptiveTimeStep_;
   bool terminateBasedOnTime_;
-  int nonlinearIterations_;
+  int multiPhysicsIterations_;
 
   std::string name_;
 
