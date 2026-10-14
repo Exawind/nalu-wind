@@ -43,6 +43,8 @@
 namespace sierra {
 namespace kynema_ugf {
 
+struct HypreDeterministicAssemblyData;
+
 using UnsignedView = Kokkos::View<unsigned*, sierra::kynema_ugf::MemSpace>;
 using UnsignedViewHost = UnsignedView::host_mirror_type;
 
@@ -283,7 +285,7 @@ public:
   virtual void hypreIJMatrixSetAddToValues();
   virtual void hypreIJVectorSetAddToValues();
   void
-  hypreIJVectorSetDeterministicValues(HYPRE_IJVector rhs, unsigned component);
+  hypreIJVectorSetDeterministicValues(HYPRE_IJVector* rhs, unsigned components);
   virtual void buildCoeffApplierDeviceOwnedDataStructures();
   virtual void buildCoeffApplierDeviceSharedDataStructures();
   virtual void buildCoeffApplierDeviceDataStructures();
@@ -537,7 +539,8 @@ public:
   }
 
 protected:
-  std::unique_ptr<HypreDeterministicAssembly> deterministicAssembly_;
+  std::unique_ptr<HypreDeterministicAssemblyData> deterministicMatrixAssembly_;
+  std::unique_ptr<HypreDeterministicAssemblyData> deterministicRhsAssembly_;
 
   /** Prepare the instance for system construction
    *

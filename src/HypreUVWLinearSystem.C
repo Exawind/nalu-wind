@@ -173,7 +173,6 @@ HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
     }
 
     if (config->deterministicAssembly()) {
-      hypreIJVectorSetDeterministicValues(rhs_[i], i);
       continue;
     }
 
@@ -205,6 +204,8 @@ HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
 #endif
     }
   }
+  if (config->deterministicAssembly())
+    hypreIJVectorSetDeterministicValues(rhs_.data(), nDim_);
 }
 
 void
