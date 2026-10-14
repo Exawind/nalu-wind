@@ -13,6 +13,12 @@
 #include "_hypre_utilities.h"
 #endif
 
+#if (HYPRE_RELEASE_NUMBER < 22500) && defined(HYPRE_USING_CUDA)
+#include <cuda_runtime_api.h>
+#elif (HYPRE_RELEASE_NUMBER < 22500) && defined(HYPRE_USING_HIP)
+#include <hip/hip_runtime_api.h>
+#endif
+
 #include <iostream>
 #include <fstream>
 
@@ -1724,8 +1730,12 @@ HypreLinearSystem::hypreIJMatrixSetAddToValues()
     // Hypre may use a different GPU stream; finish before reusing the buffers.
 #if defined(HYPRE_USING_GPU) && (HYPRE_RELEASE_NUMBER >= 23300)
     hypre_ForceSyncComputeStream();
-#elif defined(HYPRE_USING_GPU)
+#elif defined(HYPRE_USING_GPU) && (HYPRE_RELEASE_NUMBER >= 22500)
     hypre_ForceSyncComputeStream(hypre_handle());
+#elif defined(HYPRE_USING_CUDA)
+    cudaDeviceSynchronize();
+#elif defined(HYPRE_USING_HIP)
+    hipDeviceSynchronize();
 #endif
     Kokkos::fence();
     return;
@@ -1864,8 +1874,12 @@ HypreLinearSystem::hypreIJVectorSetDeterministicValues(
   }
 #if defined(HYPRE_USING_GPU) && (HYPRE_RELEASE_NUMBER >= 23300)
   hypre_ForceSyncComputeStream();
-#elif defined(HYPRE_USING_GPU)
+#elif defined(HYPRE_USING_GPU) && (HYPRE_RELEASE_NUMBER >= 22500)
   hypre_ForceSyncComputeStream(hypre_handle());
+#elif defined(HYPRE_USING_CUDA)
+  cudaDeviceSynchronize();
+#elif defined(HYPRE_USING_HIP)
+  hipDeviceSynchronize();
 #endif
   Kokkos::fence();
 }
