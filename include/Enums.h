@@ -85,6 +85,8 @@ enum EquationType {
   EQ_VOLUME_OF_FLUID = 19,
   EQ_SA_NUTILDA = 20,
   EQ_PNG_SA_NUTILDA = 21,
+  EQ_AFT_N_TILDA = 22,
+  EQ_AFT_GAMMA_TILDA = 23,
   EquationSystemType_END
 };
 
@@ -110,7 +112,9 @@ static const std::string EquationTypeMap[] = {
   "Gamma_Transition",
   "Volume_of_Fluid",
   "SA_NuTilda",
-  "PNG_SA_NuTilda"};
+  "PNG_SA_NuTilda",
+  "AFT_N_Tilda",
+  "AFT_Gamma_Tilda"};
 
 enum UserDataType {
   CONSTANT_UD = 0,

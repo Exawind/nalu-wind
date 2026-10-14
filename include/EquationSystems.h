@@ -38,6 +38,8 @@ namespace kynema_ugf {
 
 class Realm;
 class EquationSystem;
+class AFTNTildaEquationSystem;
+class AFTGammaTildaEquationSystem;
 class Simulation;
 class AlgorithmDriver;
 class UpdateOversetFringeAlgorithmDriver;

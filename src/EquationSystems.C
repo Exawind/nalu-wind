@@ -31,6 +31,8 @@
 #include <ChienKEpsilonEquationSystem.h>
 #include <WilcoxKOmegaEquationSystem.h>
 #include <SpalartAllmarasEquationSystem.h>
+#include <AFTNTildaEquationSystem.h>
+#include <AFTGammaTildaEquationSystem.h>
 #include <TurbKineticEnergyEquationSystem.h>
 #include <WallDistEquationSystem.h>
 #include <VolumeOfFluidEquationSystem.h>
@@ -162,6 +164,18 @@ EquationSystems::load(const YAML::Node& y_node)
             KynemaUGFEnv::self().kynema_ugfOutputP0()
               << "eqSys = SpalartAllmaras " << std::endl;
           eqSys = new SpalartAllmarasEquationSystem(*this);
+        } else if (expect_map(y_system, "AFTNTilda", true)) {
+          y_eqsys = expect_map(y_system, "AFTNTilda", true);
+          if (KynemaUGFEnv::self().debug())
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
+              << "eqSys = AFT n-tilde " << std::endl;
+          eqSys = new AFTNTildaEquationSystem(*this);
+        } else if (expect_map(y_system, "AFTGammaTilda", true)) {
+          y_eqsys = expect_map(y_system, "AFTGammaTilda", true);
+          if (KynemaUGFEnv::self().debug())
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
+              << "eqSys = AFT gamma-tilde " << std::endl;
+          eqSys = new AFTGammaTildaEquationSystem(*this);
         } else if (expect_map(y_system, "TurbKineticEnergy", true)) {
           y_eqsys = expect_map(y_system, "TurbKineticEnergy", true);
           if (KynemaUGFEnv::self().debug())

@@ -32,6 +32,7 @@
 
 // node kernels
 #include <node_kernels/SANuTildaNodeKernel.h>
+#include <node_kernels/SANuTildaAFTNodeKernel.h>
 #include <node_kernels/NodeKernelUtils.h>
 #include <node_kernels/ScalarMassBDFNodeKernel.h>
 #include <node_kernels/ScalarGclNodeKernel.h>
@@ -318,6 +319,9 @@ SpalartAllmarasEquationSystem::register_interior_algorithm(
       "sa_nu_tilda_time_derivative",
       "lumped_sa_nu_tilda_time_derivative"};
     bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
+    const bool useAftTransition =
+      realm_.meta_data().get_field<double>(
+        stk::topology::NODE_RANK, "aft_gamma_tilda") != nullptr;
     auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
     process_ngp_node_kernels(
       solverAlgMap, realm_, part, this,
@@ -326,7 +330,11 @@ SpalartAllmarasEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(
             realm_.bulk_data(), nuTilda_);
 
-        nodeAlg.add_kernel<SANuTildaNodeKernel>(realm_.meta_data());
+        if (useAftTransition) {
+          nodeAlg.add_kernel<SANuTildaAFTNodeKernel>(realm_.meta_data());
+        } else {
+          nodeAlg.add_kernel<SANuTildaNodeKernel>(realm_.meta_data());
+        }
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         if (srcName == "gcl") {
