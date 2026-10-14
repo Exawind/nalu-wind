@@ -55,6 +55,20 @@ if(ENABLE_TRILINOS_SOLVERS)
   add_subdirectory(actuator)
 endif()
 
+if(ENABLE_HYPRE AND NOT ENABLE_CUDA AND NOT ENABLE_ROCM)
+  add_executable(hypre_assembly_unit_tests UnitTestHypreDeterministicAssembly.C)
+  target_link_libraries(hypre_assembly_unit_tests PRIVATE ${kynema_ugf_lib_name})
+  if(ENABLE_TESTS)
+    foreach(np 1 4 8)
+      add_test(NAME hypre_assembly_np${np}
+        COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np}
+          ${MPIEXEC_PREFLAGS} $<TARGET_FILE:hypre_assembly_unit_tests> ${MPIEXEC_POSTFLAGS})
+      set_tests_properties(hypre_assembly_np${np} PROPERTIES
+        LABELS "unit" PROCESSORS ${np} TIMEOUT 60)
+    endforeach()
+  endif()
+endif()
+
 add_subdirectory(aero)
 add_subdirectory(algorithms)
 add_subdirectory(kernels)

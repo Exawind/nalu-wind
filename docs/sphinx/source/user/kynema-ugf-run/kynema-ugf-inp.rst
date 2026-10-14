@@ -172,6 +172,21 @@ entries:
 
 **Additional parameters for Hypre Solver/Preconditioners**
 
+.. inpfile:: linear_solvers.deterministic_assembly
+
+   Combine shared matrix and RHS entries on their owning rank before passing
+   owned rows to hypre. Local contributions are summed first, followed by
+   contributions in ascending source-rank and sender-buffer order. Default:
+   ``yes``. Applies to both coupled and segregated hypre systems.
+
+   This prevents message-arrival order from changing floating-point sums for
+   identical pre-assembly inputs and a fixed MPI partition. It does not promise
+   identical results across different partitions or make nondeterministic
+   local assembly deterministic. The exchange uses host buffers, including
+   on GPU builds, with additional memory and communication overhead. Set to
+   ``no`` to use the legacy hypre off-processor ``AddToValues`` assembly.
+   Pre-assembly and assembled matrix/vector dumps remain available.
+
 The user is referred to `Hypre Reference Manual
 <https://computation.llnl.gov/projects/hypre-scalable-linear-solvers-multigrid-methods/software>`_
 for full details on the usage of the parameters described briefly below.

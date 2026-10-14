@@ -152,6 +152,12 @@ HypreLinearSystem::beginLinearSystemConstruction()
   maxRowID_ = realm_.hypreNumNodes_ * numDof_ - 1;
   globalNumRows_ = maxRowID_ + 1;
 
+  auto* config =
+    static_cast<HypreLinearSolverConfig*>(linearSolver_->getConfig());
+  if (config->deterministicAssembly())
+    deterministicAssembly_.reset(new HypreDeterministicAssembly(
+      realm_.bulk_data().parallel(), iLower_, iUpper_));
+
 #if 0
   if (numDof_ > 0)
     std::cerr << rank_ << "\t" << numDof_ << "\t"
@@ -1570,6 +1576,38 @@ HypreLinearSystem::hypreIJMatrixSetAddToValues()
     MPI_Barrier(realm_.bulk_data().parallel());
   }
 
+  if (config->deterministicAssembly()) {
+    auto values = Kokkos::create_mirror_view_and_copy(
+      Kokkos::HostSpace(), hcApplier->values_dev_);
+    auto cols = Kokkos::create_mirror_view_and_copy(
+      Kokkos::HostSpace(), hcApplier->cols_dev_);
+    auto owned = deterministicAssembly_->reduce(
+      num_nonzeros_owned, num_nonzeros_shared, rows_host_.data(), cols.data(),
+      values.data());
+    const auto count = owned.rows.size();
+    HypreIntTypeView rows("deterministic rows", count);
+    HypreIntTypeView columns("deterministic columns", count);
+    DoubleView coefficients("deterministic coefficients", count);
+    auto hostRows = Kokkos::create_mirror_view(rows);
+    auto hostCols = Kokkos::create_mirror_view(columns);
+    auto hostValues = Kokkos::create_mirror_view(coefficients);
+    for (size_t i = 0; i < count; ++i) {
+      hostRows(i) = owned.rows[i];
+      hostCols(i) = owned.cols[i];
+      hostValues(i) = owned.values[i];
+    }
+    Kokkos::deep_copy(rows, hostRows);
+    Kokkos::deep_copy(columns, hostCols);
+    Kokkos::deep_copy(coefficients, hostValues);
+    if (count)
+      HYPRE_IJMatrixSetValues2(
+        mat_, count, nullptr, rows.data(), nullptr, columns.data(),
+        coefficients.data());
+    // Keep buffers alive until hypre's asynchronous HIP copies finish.
+    Kokkos::fence();
+    return;
+  }
+
   if (num_nonzeros_owned) {
     /* Set the owned part */
     HYPRE_IJMatrixSetValues2(
@@ -1663,6 +1701,11 @@ HypreLinearSystem::hypreIJVectorSetAddToValues()
     MPI_Barrier(realm_.bulk_data().parallel());
   }
 
+  if (config->deterministicAssembly()) {
+    hypreIJVectorSetDeterministicValues(rhs_, 0);
+    return;
+  }
+
   if (num_rows_owned) {
     /* Set the owned part */
     HYPRE_IJVectorSetValues(
@@ -1675,6 +1718,35 @@ HypreLinearSystem::hypreIJVectorSetAddToValues()
       rhs_, num_rows_shared, rhs_rows_dev_.data() + num_rows_owned,
       hcApplier->rhs_dev_.data() + num_rows_owned);
   }
+}
+
+void
+HypreLinearSystem::hypreIJVectorSetDeterministicValues(
+  HYPRE_IJVector rhs, unsigned component)
+{
+  auto* hcApplier =
+    dynamic_cast<HypreLinSysCoeffApplier*>(hostCoeffApplier.get());
+  auto values = Kokkos::create_mirror_view_and_copy(
+    Kokkos::HostSpace(), hcApplier->rhs_dev_);
+  const size_t offset = component * rhs_rows_dev_.extent(0);
+  auto owned = deterministicAssembly_->reduce(
+    hcApplier->num_rows_owned_, hcApplier->num_rows_shared_,
+    rhs_rows_host_.data() + offset, nullptr, values.data() + offset);
+  const auto count = owned.rows.size();
+  HypreIntTypeView rows("deterministic rhs rows", count);
+  DoubleView coefficients("deterministic rhs coefficients", count);
+  auto hostRows = Kokkos::create_mirror_view(rows);
+  auto hostValues = Kokkos::create_mirror_view(coefficients);
+  for (size_t i = 0; i < count; ++i) {
+    hostRows(i) = owned.rows[i];
+    hostValues(i) = owned.values[i];
+  }
+  Kokkos::deep_copy(rows, hostRows);
+  Kokkos::deep_copy(coefficients, hostValues);
+  if (count)
+    HYPRE_IJVectorSetValues(rhs, count, rows.data(), coefficients.data());
+  // Keep buffers alive until hypre's asynchronous HIP copies finish.
+  Kokkos::fence();
 }
 
 void

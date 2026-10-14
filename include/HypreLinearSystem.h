@@ -24,6 +24,7 @@
 #include <Kokkos_UnorderedMap.hpp>
 #include "LinearSystem.h"
 #include "HypreDirectSolver.h"
+#include "HypreDeterministicAssembly.h"
 
 // This is needed fro get_gpu_memory_info
 #include "stk_util/environment/memory_util.hpp"
@@ -281,6 +282,8 @@ public:
   virtual void finishCoupledOversetAssembly();
   virtual void hypreIJMatrixSetAddToValues();
   virtual void hypreIJVectorSetAddToValues();
+  void
+  hypreIJVectorSetDeterministicValues(HYPRE_IJVector rhs, unsigned component);
   virtual void buildCoeffApplierDeviceOwnedDataStructures();
   virtual void buildCoeffApplierDeviceSharedDataStructures();
   virtual void buildCoeffApplierDeviceDataStructures();
@@ -534,6 +537,8 @@ public:
   }
 
 protected:
+  std::unique_ptr<HypreDeterministicAssembly> deterministicAssembly_;
+
   /** Prepare the instance for system construction
    *
    *  During initialization, this creates the hypre data structures via API

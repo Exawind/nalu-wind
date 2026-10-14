@@ -138,6 +138,8 @@ public:
 
   inline bool dumpHypreMatrixStats() const { return dumpHypreMatrixStats_; }
 
+  bool deterministicAssembly() const { return deterministicAssembly_; }
+
   inline bool getWritePreassemblyMatrixFiles() const
   {
     return writePreassemblyMatrixFiles_;
@@ -185,6 +187,7 @@ protected:
   bool simpleHypreMatrixAssemble_{false};
   bool dumpHypreMatrixStats_{false};
   bool writePreassemblyMatrixFiles_{false};
+  bool deterministicAssembly_{true};
 
 private:
   void boomerAMG_solver_config(const YAML::Node&);
