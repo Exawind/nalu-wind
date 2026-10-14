@@ -103,7 +103,7 @@ struct HypreDeterministicAssemblyData
           input[owned + entry + component * componentStride];
       });
     Kokkos::deep_copy(sharedHost, sharedValues);
-    assembly.exchangeShared(sharedHost.data(), sharedHost.stride_1());
+    assembly.exchangeShared(sharedHost.data(), sharedHost.stride(1));
     const auto& received = assembly.receivedValues();
     for (size_t i = 0; i < received.size(); ++i)
       receivedHost(i) = received[i];
@@ -1864,13 +1864,13 @@ HypreLinearSystem::hypreIJVectorSetDeterministicValues(
     hcApplier->num_rows_owned_, hcApplier->num_rows_shared_,
     rhs_rows_host_.data(), nullptr, components);
   data.exchangeAndReduce(
-    hcApplier->rhs_dev_.data(), hcApplier->rhs_dev_.stride_1());
+    hcApplier->rhs_dev_.data(), hcApplier->rhs_dev_.stride(1));
   const auto count = data.rows.extent(0);
   if (count) {
     for (unsigned component = 0; component < components; ++component)
       HYPRE_IJVectorSetValues(
         rhs[component], count, data.rows.data(),
-        data.coefficients.data() + component * data.coefficients.stride_1());
+        data.coefficients.data() + component * data.coefficients.stride(1));
   }
 #if defined(HYPRE_USING_GPU) && (HYPRE_RELEASE_NUMBER >= 23300)
   hypre_ForceSyncComputeStream();
