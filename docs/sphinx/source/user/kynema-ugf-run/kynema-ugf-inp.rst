@@ -182,9 +182,13 @@ entries:
    This prevents message-arrival order from changing floating-point sums for
    identical pre-assembly inputs and a fixed MPI partition. It does not promise
    identical results across different partitions or make nondeterministic
-   local assembly deterministic. The exchange uses host buffers, including
-   on GPU builds, with additional memory and communication overhead. Set to
-   ``no`` to use the legacy hypre off-processor ``AddToValues`` assembly.
+   local assembly deterministic. Routing and insertion slots are cached per
+   graph build. Subsequent assemblies exchange only shared values with neighbor
+   ranks, batching segregated RHS components into one exchange. Shared values
+   use reusable host communication buffers, including on GPU builds; owned
+   values remain on the device. This requires additional storage for the cached
+   plan and reduced values. Set to ``no`` to use the legacy hypre off-processor
+   ``AddToValues`` assembly.
    Pre-assembly and assembled matrix/vector dumps remain available.
 
 The user is referred to `Hypre Reference Manual
@@ -2427,5 +2431,4 @@ Simulations
 .. inpfile:: simulations
 
    This is the top-level section that orchestrates the entire execution of Kynema-UGF.
-
 
