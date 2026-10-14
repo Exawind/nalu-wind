@@ -30,6 +30,7 @@
 #include <ShearStressTransportEquationSystem.h>
 #include <ChienKEpsilonEquationSystem.h>
 #include <WilcoxKOmegaEquationSystem.h>
+#include <SpalartAllmarasEquationSystem.h>
 #include <TurbKineticEnergyEquationSystem.h>
 #include <WallDistEquationSystem.h>
 #include <VolumeOfFluidEquationSystem.h>
@@ -155,6 +156,12 @@ EquationSystems::load(const YAML::Node& y_node)
             KynemaUGFEnv::self().kynema_ugfOutputP0()
               << "eqSys = tke/sdr " << std::endl;
           eqSys = new WilcoxKOmegaEquationSystem(*this);
+        } else if (expect_map(y_system, "SpalartAllmaras", true)) {
+          y_eqsys = expect_map(y_system, "SpalartAllmaras", true);
+          if (KynemaUGFEnv::self().debug())
+            KynemaUGFEnv::self().kynema_ugfOutputP0()
+              << "eqSys = SpalartAllmaras " << std::endl;
+          eqSys = new SpalartAllmarasEquationSystem(*this);
         } else if (expect_map(y_system, "TurbKineticEnergy", true)) {
           y_eqsys = expect_map(y_system, "TurbKineticEnergy", true);
           if (KynemaUGFEnv::self().debug())

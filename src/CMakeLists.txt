@@ -77,6 +77,7 @@ target_sources(
    ${CMAKE_CURRENT_SOURCE_DIR}/Realms.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScratchViews.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ShearStressTransportEquationSystem.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/SpalartAllmarasEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SideWriter.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Simulation.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SmartField.C

@@ -741,6 +741,18 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_avgTimeCoeff] = 1.0;
   turbModelConstantMap_[TM_alphaInf] = 0.52;
   turbModelConstantMap_[TM_fsti] = -1;
+
+  // Spalart-Allmaras constants (from NASA TMR)
+  turbModelConstantMap_[TM_saCV1] = 7.1;
+  turbModelConstantMap_[TM_saCV2] = 0.7;
+  turbModelConstantMap_[TM_saCV3] = 0.9;
+  turbModelConstantMap_[TM_saCb1] = 0.1355;
+  turbModelConstantMap_[TM_saCb2] = 0.622;
+  turbModelConstantMap_[TM_saSigma] = 2.0 / 3.0;
+  turbModelConstantMap_[TM_saCw2] = 0.3;
+  turbModelConstantMap_[TM_saCw3] = 2.0;
+  turbModelConstantMap_[TM_saCt3] = 1.2;
+  turbModelConstantMap_[TM_saCt4] = 0.5;
 }
 
 double

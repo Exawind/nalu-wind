@@ -1,0 +1,293 @@
+# -*- mode: yaml -*-
+#
+# 2-D RANS (Spalart-Allmaras) simulation of airfoils
+#
+# U = 15 m/s; aoa = 4 deg; Re = 2.0e6
+# nuTilda_freestream = 3*nu = 3e-5 (NASA TMR recommendation)
+#
+
+Simulations:
+- name: sim1
+  time_integrator: ti_1
+  optimizer: opt1
+
+# Hypre memory and other configurations
+hypre_config:
+    memory_pool_mbs: 3000
+    use_vendor_sgemm: no
+
+linear_solvers:
+  # solver for the momentum
+  - name: solve_mom
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-5
+    max_iterations: 100
+    kspace: 20
+    segregated_solver: yes
+    write_matrix_files: no
+    recompute_preconditioner_frequency: 1
+    reuse_linear_system: yes
+    simple_hypre_matrix_assemble: yes
+    dump_hypre_matrix_stats: no
+
+    bamg_max_levels: 1
+    bamg_relax_type: 12
+    bamg_num_sweeps: 2
+    bamg_cycle_type: 1
+    bamg_relax_order: 0
+
+    bamg_output_level: 0
+    bamg_debug: 0
+    output_level: 0
+
+  # solver for the scalar (SA nuTilda)
+  - name: solve_scalar
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-5
+    max_iterations: 100
+    kspace: 20
+    write_matrix_files: no
+    recompute_preconditioner_frequency: 1
+    reuse_linear_system: yes
+    simple_hypre_matrix_assemble: yes
+    dump_hypre_matrix_stats: no
+
+    bamg_max_levels: 1
+    bamg_relax_type: 12
+    bamg_num_sweeps: 2
+    bamg_cycle_type: 1
+    bamg_relax_order: 0
+
+    bamg_output_level: 0
+    bamg_debug: 0
+    output_level: 0
+
+  # solver for the pressure
+  - name: solve_elliptic
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-5
+    max_iterations: 100
+    kspace: 40
+    write_matrix_files:  no
+    recompute_preconditioner_frequency: 1
+    reuse_linear_system: yes
+    simple_hypre_matrix_assemble: yes
+    dump_hypre_matrix_stats: no
+
+    #bamg_max_levels: 7
+    bamg_coarsen_type: 8
+    bamg_interp_type: 6
+    bamg_relax_type: 11
+    bamg_cycle_type: 1
+    bamg_relax_order: 0
+    bamg_keep_transpose: 1
+
+    bamg_num_sweeps: 2
+
+    bamg_strong_threshold: 0.3243198904981685
+    bamg_trunc_factor: 0.4227143073461007
+    bamg_pmax_elmts: 3
+
+    bamg_agg_num_levels: 1
+    bamg_agg_interp_type: 7
+    bamg_agg_pmax_elmts: 3
+
+    bamg_output_level: 0
+    bamg_debug: 0
+    output_level: 0
+
+  # solver for the wall distance
+  - name: solve_wall
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-5
+    max_iterations: 100
+    kspace: 40
+    write_matrix_files:  no
+    recompute_preconditioner_frequency: 1
+    reuse_linear_system: yes
+    simple_hypre_matrix_assemble: yes
+    dump_hypre_matrix_stats: no
+
+    bamg_max_levels: 7
+    bamg_coarsen_type: 8
+    bamg_interp_type: 6
+    bamg_relax_type: 11
+    bamg_num_sweeps: 2
+    bamg_cycle_type: 1
+    bamg_relax_order: 0
+    bamg_trunc_factor: 0.1
+    bamg_agg_num_levels: 2
+    bamg_agg_interp_type: 5
+    bamg_agg_pmax_elmts: 3
+    bamg_pmax_elmts: 3
+    bamg_strong_threshold: 0.25
+
+    bamg_output_level: 0
+    bamg_debug: 0
+    output_level: 0
+
+realms:
+
+  - name: realm_1
+    mesh: du91w2_airfoil.exo
+    automatic_decomposition_type: rcb
+    rebalance_mesh: yes
+    stk_rebalance_method: parmetis
+    check_jacobians: true
+    use_edges: yes
+
+    time_step_control:
+     target_courant: 1000.0
+     time_step_change_factor: 1.05
+
+    equation_systems:
+      name: theEqSys
+      max_iterations: 4
+
+      solver_system_specification:
+        velocity: solve_mom
+        sa_nu_tilda: solve_scalar
+        pressure: solve_elliptic
+        ndtw: solve_wall
+
+      systems:
+
+        - WallDistance:
+            name: myNDTW
+            max_iterations: 1
+            convergence_tolerance: 1e-8
+
+        - LowMachEOM:
+            name: myLowMach
+            max_iterations: 1
+            convergence_tolerance: 1e-8
+
+        - SpalartAllmaras:
+            name: mySA
+            max_iterations: 1
+            convergence_tolerance: 1e-8
+
+    initial_conditions:
+      - constant: ic_1
+        target_name: [Flow-QUAD]
+        value:
+          pressure: 0
+          velocity: [15.0, 0.0]
+          sa_nu_tilda: 3.0e-5
+
+    material_properties:
+      target_name: [Flow-QUAD]
+      specifications:
+        - name: density
+          type: constant
+          value: 1.225
+        - name: viscosity
+          type: constant
+          value: 1.0e-5
+
+    boundary_conditions:
+
+    - wall_boundary_condition: bc_wall
+      target_name: airfoil
+      wall_user_data:
+        velocity: [0,0]
+        use_wall_function: no
+
+    - inflow_boundary_condition: bc_inflow
+      target_name: inflow
+      inflow_user_data:
+        velocity: [15.0, 0.0]
+        sa_nu_tilda: 3.0e-5
+
+    - open_boundary_condition: bc_open
+      target_name: outflow
+      open_user_data:
+        velocity: [0,0]
+        pressure: 0.0
+        sa_nu_tilda: 3.0e-5
+
+    solution_options:
+      name: myOptions
+      turbulence_model: sa
+      projected_timescale_type: momentum_diag_inv
+
+      options:
+        - hybrid_factor:
+            velocity: 1.0
+            sa_nu_tilda: 1.0
+
+        - upw_factor:
+            velocity: 1.0
+            sa_nu_tilda: 0.0
+
+        - alpha_upw:
+            velocity: 1.0
+            sa_nu_tilda: 1.0
+
+        - noc_correction:
+            pressure: yes
+
+        - limiter:
+            pressure: no
+            velocity: yes
+            sa_nu_tilda: yes
+
+        - projected_nodal_gradient:
+            velocity: element
+            pressure: element
+            sa_nu_tilda: element
+
+        - relaxation_factor:
+            velocity: 0.7
+            pressure: 0.3
+            sa_nu_tilda: 0.7
+
+    #Use this to set the mean angle of attack
+    mesh_transformation:
+      - name: interior
+        mesh_parts: [ Flow-QUAD ]
+        motion:
+         - type: rotation
+           angle: 10.0
+           axis: [0.0, 0.0, -1.0]
+           centroid: [0.25, 0.0, 0.0]
+
+    post_processing:
+    - type: surface
+      physics: surface_force_and_moment
+      output_file_name: results/forces.dat
+      frequency: 1
+      parameters: [0.25, 0]
+      target_name: airfoil
+
+    output:
+      output_data_base_name: results/du91w2.e
+      output_frequency: 5000
+      output_node_set: no
+      output_variables:
+       - velocity
+       - pressure
+       - sa_nu_tilda
+       - turbulent_viscosity
+       - minimum_distance_to_wall
+
+Time_Integrators:
+  - StandardTimeIntegrator:
+      name: ti_1
+      start_time: 0
+      time_step: 0.016666666666666666
+      termination_step_count: 10000
+      time_stepping_type: fixed
+      time_step_count: 0
+      second_order_accuracy: yes
+
+      realms:
+        - realm_1

@@ -83,6 +83,8 @@ enum EquationType {
   EQ_WALL_DISTANCE = 17,
   EQ_GAMMA_TRANS = 18,
   EQ_VOLUME_OF_FLUID = 19,
+  EQ_SA_NUTILDA = 20,
+  EQ_PNG_SA_NUTILDA = 21,
   EquationSystemType_END
 };
 
@@ -106,7 +108,9 @@ static const std::string EquationTypeMap[] = {
   "PNG_TKE",
   "Wall_Distance",
   "Gamma_Transition",
-  "Volume_of_Fluid"};
+  "Volume_of_Fluid",
+  "SA_NuTilda",
+  "PNG_SA_NuTilda"};
 
 enum UserDataType {
   CONSTANT_UD = 0,
@@ -171,13 +175,14 @@ enum class TurbulenceModel {
   SST_IDDES_SIMPLE,
   KE,
   KO,
+  SA,
   TurbulenceModel_END
 };
 
 // matching string name index into above enums (must match PERFECTLY)
 static const std::string TurbulenceModelNames[] = {
   "laminar", "ksgs",      "smagorinsky",      "wale", "sst", "sstlr", "sst_des",
-  "sst_ams", "sst_iddes", "sst_iddes_simple", "ke",   "ko"};
+  "sst_ams", "sst_iddes", "sst_iddes_simple", "ke",   "ko",   "sa"};
 
 enum TurbulenceModelConstant {
   TM_cMu = 0,
@@ -247,7 +252,17 @@ enum TurbulenceModelConstant {
   TM_avgTimeCoeff = 64,
   TM_alphaInf = 65,
   TM_fsti = 66,
-  TM_END = 67
+  TM_saCV1 = 67,
+  TM_saCV2 = 68,
+  TM_saCV3 = 69,
+  TM_saCb1 = 70,
+  TM_saCb2 = 71,
+  TM_saSigma = 72,
+  TM_saCw2 = 73,
+  TM_saCw3 = 74,
+  TM_saCt3 = 75,
+  TM_saCt4 = 76,
+  TM_END = 77
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
@@ -318,6 +333,16 @@ static const std::string TurbulenceModelConstantNames[] = {
   "avgTimeCoeff",
   "alphaInf",
   "fsti",
+  "saCV1",
+  "saCV2",
+  "saCV3",
+  "saCb1",
+  "saCb2",
+  "saSigma",
+  "saCw2",
+  "saCw3",
+  "saCt3",
+  "saCt4",
   "END"};
 
 enum ActuatorType {
