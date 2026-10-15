@@ -1,0 +1,5 @@
+<map id="sierra::kynema_ugf::EffDiffFluxCoeffAlg" name="sierra::kynema_ugf::EffDiffFluxCoeffAlg">
+<area shape="rect" id="Node000001" title="Compute effective diffusive flux coefficient." alt="" coords="5,93,159,133"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_algorithm.html" title=" " alt="" coords="9,5,155,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="85,59,85,93,79,93,79,59"/>
+</map>

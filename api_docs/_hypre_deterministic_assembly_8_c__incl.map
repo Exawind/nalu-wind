@@ -1,0 +1,22 @@
+<map id="HypreDeterministicAssembly.C" name="HypreDeterministicAssembly.C">
+<area shape="rect" id="Node000001" title=" " alt="" coords="384,5,608,31"/>
+<area shape="rect" id="Node000002" href="$_hypre_deterministic_assembly_8h.html" title=" " alt="" coords="109,79,331,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="452,33,279,78,277,73,451,28"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="333,152,403,177"/>
+<area shape="poly" id="edge7_Node000001_Node000005" title=" " alt="" coords="465,33,428,52,410,65,395,80,380,109,373,139,368,138,375,107,391,77,407,61,425,47,462,28"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="405,79,491,104"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="490,33,466,69,461,66,486,30"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="515,79,573,104"/>
+<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="506,30,531,66,526,69,502,33"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="598,79,685,104"/>
+<area shape="poly" id="edge9_Node000001_Node000009" title=" " alt="" coords="521,28,607,70,604,75,518,33"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="709,79,769,104"/>
+<area shape="poly" id="edge10_Node000001_Node000010" title=" " alt="" coords="536,28,696,75,695,80,534,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,152,139,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="197,106,110,148,107,144,195,102"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="163,152,221,177"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="218,105,204,140,199,138,213,103"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="245,102,333,144,330,148,243,106"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="246,152,309,177"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="232,103,261,139,257,143,227,106"/>
+</map>

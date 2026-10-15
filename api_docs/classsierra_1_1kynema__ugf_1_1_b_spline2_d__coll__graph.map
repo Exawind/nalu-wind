@@ -1,0 +1,18 @@
+<map id="sierra::kynema_ugf::BSpline2D" name="sierra::kynema_ugf::BSpline2D">
+<area shape="rect" id="Node000001" title=" " alt="" coords="1333,49,1480,89"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_b_spline.html" title="Base class for B&#45;Splines." alt="" coords="423,5,569,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="583,23,759,27,1034,34,1155,41,1310,53,1333,56,1333,61,1309,59,1155,46,1034,40,759,32,583,29"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_b_spline1_d.html" title="Support for B&#45;Spline of a curve." alt="" coords="783,68,929,108"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="583,31,669,42,759,57,792,65,790,71,758,63,668,47,582,36"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="1043,118,1193,173"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="1206,125,1309,100,1350,87,1352,92,1310,105,1207,131"/>
+<area shape="poly" id="edge9_Node000001_Node000004" title=" " alt="" coords="943,82,1333,69,1333,74,943,88"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="943,104,1043,126,1042,132,942,109"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="413,97,579,122"/>
+<area shape="poly" id="edge5_Node000004_Node000005" title=" " alt="" coords="592,108,673,107,758,101,782,99,783,104,759,107,674,112,592,113"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="157,131,287,157"/>
+<area shape="poly" id="edge8_Node000003_Node000006" title=" " alt="" coords="301,141,1042,143,1042,148,301,147"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="300,131,413,117,413,122,301,137"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="5,131,44,157"/>
+<area shape="poly" id="edge7_Node000006_Node000007" title=" " alt="" coords="58,141,157,141,157,147,58,147"/>
+</map>

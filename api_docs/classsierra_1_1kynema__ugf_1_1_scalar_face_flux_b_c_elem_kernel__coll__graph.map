@@ -1,0 +1,12 @@
+<map id="sierra::kynema_ugf::ScalarFaceFluxBCElemKernel&lt; BcAlgTraits &gt;" name="sierra::kynema_ugf::ScalarFaceFluxBCElemKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="Node000001" title="This class applies the computed wall heat flux field to the boundary." alt="" coords="933,60,1152,115"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="605,5,836,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="850,52,934,66,933,71,849,57"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_kernel.html" title="Base class for computational kernels in KynemaUGF." alt="" coords="5,15,152,55"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="166,28,356,22,581,22,605,23,605,28,581,27,356,27,166,34"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="201,43,348,83"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="166,45,201,50,201,56,166,50"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="362,61,467,58,581,51,605,49,605,54,582,57,467,64,362,66"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1kynema__ugf_1_1_master_element.html" title=" " alt="" coords="647,85,794,125"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="807,97,933,91,933,96,808,103"/>
+</map>

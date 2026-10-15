@@ -1,0 +1,12 @@
+<map id="sierra::kynema_ugf::MomentumSymmetryEdgeKernel&lt; BcAlgTraits &gt;" name="sierra::kynema_ugf::MomentumSymmetryEdgeKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="Node000001" title=" " alt="" coords="991,53,1237,108"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="632,5,889,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="903,49,991,61,990,67,902,55"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_kernel.html" title="Base class for computational kernels in KynemaUGF." alt="" coords="5,15,152,55"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="166,28,368,22,608,22,632,23,632,28,608,27,368,27,166,34"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="201,43,348,83"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="166,45,201,50,201,56,166,50"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="361,61,478,59,608,51,632,49,632,54,608,57,479,64,362,66"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1kynema__ugf_1_1_master_element.html" title=" " alt="" coords="687,85,834,125"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="848,97,966,90,990,88,991,94,967,95,848,103"/>
+</map>

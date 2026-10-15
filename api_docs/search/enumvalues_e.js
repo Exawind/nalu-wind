@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['p1_0',['P1',['../namespacesierra_1_1kynema__ugf_1_1matrix__free_1_1inst.html#a2d800c5735e7d0863240a0af28267272aba730fc9f5adea465e52aaaba95fd98c',1,'sierra::kynema_ugf::matrix_free::inst']]],
+  ['p2_1',['P2',['../namespacesierra_1_1kynema__ugf_1_1matrix__free_1_1inst.html#a2d800c5735e7d0863240a0af28267272a58f0c8f67df09f5faf979566d22b31ed',1,'sierra::kynema_ugf::matrix_free::inst']]],
+  ['p3_2',['P3',['../namespacesierra_1_1kynema__ugf_1_1matrix__free_1_1inst.html#a2d800c5735e7d0863240a0af28267272acc1865e86159054f18ea21d3c7d3fb80',1,'sierra::kynema_ugf::matrix_free::inst']]],
+  ['p4_3',['P4',['../namespacesierra_1_1kynema__ugf_1_1matrix__free_1_1inst.html#a2d800c5735e7d0863240a0af28267272a974a263f6f424f5b803858ba178a75e7',1,'sierra::kynema_ugf::matrix_free::inst']]],
+  ['parasails_4',['ParaSails',['../namespace_ifpack2_1_1_hypre.html#adb4bfb8419a27dcba15ca7c732db9fc6ad2c905ad1378dedf9aaa678f9d6d485b',1,'Ifpack2::Hypre']]],
+  ['pcg_5',['PCG',['../namespace_ifpack2_1_1_hypre.html#adb4bfb8419a27dcba15ca7c732db9fc6a0617f8c2599852450ea2ca0f3f040d9b',1,'Ifpack2::Hypre']]],
+  ['periodic_5fbc_6',['PERIODIC_BC',['../namespacesierra_1_1kynema__ugf.html#a7f5dfcb98e2cfd59da29a8d6d48ca33ca2a76d2090ede96b3a62c4e58d5d013c5',1,'sierra::kynema_ugf']]],
+  ['plane_7',['PLANE',['../namespacesierra_1_1kynema__ugf.html#a4a88ff7bf51344818f8f79098e9e2ac4aad6990fc23cd957328515fde2db852a3',1,'sierra::kynema_ugf']]],
+  ['polynomial_5fmat_8',['POLYNOMIAL_MAT',['../namespacesierra_1_1kynema__ugf.html#a910829df3a4008ee403ded3eaa1ca731a453277ac2e5a4e3b38132b98602b0b9d',1,'sierra::kynema_ugf']]],
+  ['prec_9',['Prec',['../namespace_ifpack2_1_1_hypre.html#aa0981bcec0b65b4b4876b89f182f6e45a97651d87882e8f7ff8ec8650101255d1',1,'Ifpack2::Hypre']]],
+  ['propertyidentifier_5fend_10',['PropertyIdentifier_END',['../namespacesierra_1_1kynema__ugf.html#aeed1ccf2313befd245d94ea72f305747ab826571141418d9ffd4204f7f9772405',1,'sierra::kynema_ugf']]],
+  ['pt_5fend_11',['PT_END',['../namespacesierra_1_1kynema__ugf.html#af3a387517a20dbf110a9d2a736bf2661ad5768055c8643409987dacd25cf8291e',1,'sierra::kynema_ugf']]],
+  ['pt_5fhypre_12',['PT_HYPRE',['../namespacesierra_1_1kynema__ugf.html#af3a387517a20dbf110a9d2a736bf2661a4285287ce9960d7c87add2278d305396',1,'sierra::kynema_ugf']]],
+  ['pt_5fhypre_5fsegregated_13',['PT_HYPRE_SEGREGATED',['../namespacesierra_1_1kynema__ugf.html#af3a387517a20dbf110a9d2a736bf2661a9ab1c94e3ca5416c566a60e4b978e060',1,'sierra::kynema_ugf']]],
+  ['pt_5ftpetra_14',['PT_TPETRA',['../namespacesierra_1_1kynema__ugf.html#af3a387517a20dbf110a9d2a736bf2661a127ffd0c8f6175c38afb027b10d41226',1,'sierra::kynema_ugf']]],
+  ['pt_5ftpetra_5fsegregated_15',['PT_TPETRA_SEGREGATED',['../namespacesierra_1_1kynema__ugf.html#af3a387517a20dbf110a9d2a736bf2661aec4d6bdff6a696e69cf3feee51f3901d',1,'sierra::kynema_ugf']]]
+];

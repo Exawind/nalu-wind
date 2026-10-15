@@ -1,0 +1,9 @@
+<map id="WindEnergyPowerLawAuxFunction.h" name="WindEnergyPowerLawAuxFunction.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="47,5,305,31"/>
+<area shape="rect" id="Node000002" href="$_aux_function_8h.html" title=" " alt="" coords="5,79,120,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="159,33,94,74,91,69,156,28"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="145,79,207,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="179,31,179,65,173,65,173,31"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="232,79,288,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="191,29,237,67,234,72,188,33"/>
+</map>

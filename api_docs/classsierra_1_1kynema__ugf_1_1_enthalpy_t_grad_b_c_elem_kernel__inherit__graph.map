@@ -1,0 +1,10 @@
+<map id="sierra::kynema_ugf::EnthalpyTGradBCElemKernel&lt; BcAlgTraits &gt;" name="sierra::kynema_ugf::EnthalpyTGradBCElemKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="Node000001" title="Enforce a prescribed normal temperature gradient at the boundary." alt="" coords="11,316,230,371"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="5,212,236,267"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="123,280,123,316,118,316,118,280"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_kernel.html" title="Base class for computational kernels in KynemaUGF." alt="" coords="42,5,189,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="119,59,123,212,117,212,113,59"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="137,95,283,135"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="148,53,191,93,188,97,144,57"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="190,148,142,213,138,210,186,145"/>
+</map>

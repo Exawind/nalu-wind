@@ -1,0 +1,13 @@
+<map id="sierra::kynema_ugf::SpinnerLidarSegmentGenerator" name="sierra::kynema_ugf::SpinnerLidarSegmentGenerator">
+<area shape="rect" id="Node000001" title=" " alt="" coords="811,69,1045,109"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_segment_generator.html" title=" " alt="" coords="463,5,617,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="631,24,707,30,787,41,876,67,874,72,786,47,707,35,630,30"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="453,74,627,99"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="641,85,681,85,811,86,811,91,681,91,641,90"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="157,74,280,99"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="294,84,452,84,452,89,294,89"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="5,74,44,99"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="58,84,157,84,157,89,58,89"/>
+<area shape="rect" id="Node000006" href="$structsierra_1_1kynema__ugf_1_1_spinner_lidar_segment_generator_1_1_prism_parameters.html" title=" " alt="" coords="423,123,657,178"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="671,136,786,120,849,107,851,112,787,125,672,141"/>
+</map>

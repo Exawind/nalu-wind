@@ -1,0 +1,7 @@
+<map id="sierra::kynema_ugf::kynema_ugf_ngp::impl::SimpleNodeFieldOp&lt; Mesh, Field &gt;::Ops" name="sierra::kynema_ugf::kynema_ugf_ngp::impl::SimpleNodeFieldOp&lt; Mesh, Field &gt;::Ops">
+<area shape="rect" id="Node000001" title="Implementation of supported operators for nodal fields." alt="" coords="5,240,217,309"/>
+<area shape="rect" id="Node000002" href="$structsierra_1_1kynema__ugf_1_1kynema__ugf__ngp_1_1_entity_info.html" title=" " alt="" coords="5,123,217,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="114,191,114,240,109,240,109,191"/>
+<area shape="rect" id="Node000003" href="$structsierra_1_1kynema__ugf_1_1kynema__ugf__ngp_1_1_entity_info.html" title="Lightweight data structure holding information of the entity in mesh loops." alt="" coords="5,5,217,60"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="114,74,114,122,109,122,109,74"/>
+</map>

@@ -1,0 +1,13 @@
+<map id="sierra::kynema_ugf::MomentumCoriolisNodeKernel" name="sierra::kynema_ugf::MomentumCoriolisNodeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="232,104,461,144"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="743,37,1015,91"/>
+<area shape="poly" id="edge3_Node000002_Node000001" title=" " alt="" coords="475,107,742,77,743,82,475,112"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="789,98,719,115,653,123,586,128,462,131,461,125,586,123,653,118,718,109,788,93"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_node_kernel.html" title=" " alt="" coords="5,5,152,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="166,16,176,16,208,16,464,16,576,21,719,35,743,38,742,43,718,40,575,26,464,21,208,21,176,21,166,22"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="261,33,432,73"/>
+<area shape="poly" id="edge5_Node000004_Node000003" title=" " alt="" coords="166,32,261,42,261,47,165,37"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="446,53,743,59,743,64,446,58"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1kynema__ugf_1_1_coriolis_src.html" title=" " alt="" coords="5,104,152,144"/>
+<area shape="poly" id="edge6_Node000001_Node000005" title=" " alt="" coords="166,121,232,121,232,127,166,127"/>
+</map>

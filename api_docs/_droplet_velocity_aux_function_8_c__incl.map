@@ -1,0 +1,16 @@
+<map id="DropletVelocityAuxFunction.C" name="DropletVelocityAuxFunction.C">
+<area shape="rect" id="Node000001" title=" " alt="" coords="237,5,451,31"/>
+<area shape="rect" id="Node000002" href="$_droplet_velocity_aux_function_8h.html" title=" " alt="" coords="5,79,227,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="312,33,184,77,183,72,310,28"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="215,167,278,192"/>
+<area shape="poly" id="edge6_Node000001_Node000004" title=" " alt="" coords="333,33,312,54,292,80,271,118,257,155,252,153,266,116,287,77,308,50,329,29"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="301,86,387,111"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="347,31,347,72,341,72,341,31"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="411,86,474,111"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="360,29,419,75,416,79,357,33"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="498,86,585,111"/>
+<area shape="poly" id="edge7_Node000001_Node000007" title=" " alt="" coords="374,28,501,78,499,83,372,33"/>
+<area shape="rect" id="Node000003" href="$_aux_function_8h.html" title=" " alt="" coords="59,167,173,192"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="119,119,119,153,113,153,113,119"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="149,117,217,157,214,162,146,121"/>
+</map>

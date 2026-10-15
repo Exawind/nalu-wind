@@ -1,0 +1,18 @@
+<map id="PromoteElement.h" name="PromoteElement.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="265,5,408,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,152,220,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="266,27,233,33,199,44,167,59,140,81,130,93,123,108,117,139,111,138,118,107,126,91,136,77,165,55,197,39,232,28,265,21"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="151,79,344,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="324,33,274,72,271,68,321,29"/>
+<area shape="rect" id="Node000004" href="$_field_type_def_8h.html" title=" " alt="" coords="369,79,486,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="353,29,403,68,400,72,350,33"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="511,79,573,104"/>
+<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="371,28,498,72,497,77,369,33"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="377,107,177,152,176,146,376,101"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="245,152,423,177"/>
+<area shape="poly" id="edge5_Node000004_Node000005" title=" " alt="" coords="414,106,362,146,358,141,411,102"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="448,152,657,177"/>
+<area shape="poly" id="edge6_Node000004_Node000006" title=" " alt="" coords="449,102,522,143,519,147,446,106"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="681,152,768,177"/>
+<area shape="poly" id="edge7_Node000004_Node000007" title=" " alt="" coords="476,101,668,147,667,152,474,107"/>
+</map>

@@ -1,0 +1,71 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$classsierra_1_1kynema__ugf_1_1_kernel.html" title="Base class for computational kernels in KynemaUGF." alt="" coords="5,839,152,879"/>
+<area shape="rect" id="Node000001" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="237,5,457,60"/>
+<area shape="poly" id="edge196_Node000000_Node000001" title=" " alt="" coords="78,825,83,666,100,440,115,324,136,217,163,130,180,96,198,70,215,55,235,44,238,49,218,59,202,73,184,98,168,132,141,219,121,325,105,440,88,666,83,826"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="239,84,454,139"/>
+<area shape="poly" id="edge198_Node000000_Node000003" title=" " alt="" coords="78,825,86,681,105,478,120,374,141,280,166,202,181,171,198,148,217,133,238,122,240,126,219,137,202,152,186,174,171,204,146,281,126,375,110,478,91,681,84,826"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="231,163,462,217"/>
+<area shape="poly" id="edge200_Node000000_Node000005" title=" " alt="" coords="79,825,89,695,110,516,126,425,145,342,169,274,183,247,198,227,229,204,233,209,202,231,187,250,174,276,150,343,131,426,115,517,94,695,84,826"/>
+<area shape="rect" id="Node000007" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="225,241,468,296"/>
+<area shape="poly" id="edge202_Node000000_Node000007" title=" " alt="" coords="80,825,92,709,115,553,131,475,150,404,172,346,198,306,224,286,227,291,202,309,177,348,155,406,136,476,121,554,98,709,86,825"/>
+<area shape="rect" id="Node000009" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="202,320,491,375"/>
+<area shape="poly" id="edge204_Node000000_Node000009" title=" " alt="" coords="81,825,96,724,121,592,137,526,155,467,175,418,198,384,211,373,215,377,202,388,180,420,160,469,142,528,126,593,101,725,87,826"/>
+<area shape="rect" id="Node000011" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="219,399,474,453"/>
+<area shape="poly" id="edge206_Node000000_Node000011" title=" " alt="" coords="77,825,82,751,99,653,115,602,136,551,163,504,198,463,217,448,221,452,202,467,167,507,140,554,120,603,105,654,88,751,83,826"/>
+<area shape="rect" id="Node000013" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="218,477,475,532"/>
+<area shape="poly" id="edge208_Node000000_Node000013" title=" " alt="" coords="80,825,90,764,110,688,125,648,145,609,169,573,198,541,216,528,219,533,202,545,173,576,149,612,130,650,115,690,95,765,86,826"/>
+<area shape="rect" id="Node000015" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="237,556,457,611"/>
+<area shape="poly" id="edge210_Node000000_Node000015" title=" " alt="" coords="85,825,99,779,122,724,154,668,175,642,198,620,235,599,238,604,202,624,179,646,159,671,126,726,104,781,90,827"/>
+<area shape="rect" id="Node000017" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="231,635,462,689"/>
+<area shape="poly" id="edge212_Node000000_Node000017" title=" " alt="" coords="94,826,135,761,164,727,199,698,230,682,232,687,201,703,168,731,139,764,98,828"/>
+<area shape="rect" id="Node000019" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="230,713,463,768"/>
+<area shape="poly" id="edge214_Node000000_Node000019" title=" " alt="" coords="114,829,154,802,199,777,229,765,231,770,201,782,157,806,117,833"/>
+<area shape="rect" id="Node000021" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="237,792,457,847"/>
+<area shape="poly" id="edge216_Node000000_Node000021" title=" " alt="" coords="165,844,236,833,237,838,166,849"/>
+<area shape="rect" id="Node000023" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="225,871,468,925"/>
+<area shape="poly" id="edge218_Node000000_Node000023" title=" " alt="" coords="166,869,226,878,225,883,165,874"/>
+<area shape="rect" id="Node000025" href="$classsierra_1_1kynema__ugf_1_1_momentum_open_adv_diff_elem_kernel.html" title="Open adv/diff kernel for momentum equation (velocity DOF)" alt="" coords="216,949,477,1004"/>
+<area shape="poly" id="edge220_Node000000_Node000025" title=" " alt="" coords="118,885,157,912,201,936,230,947,228,952,199,940,154,916,115,890"/>
+<area shape="rect" id="Node000026" href="$classsierra_1_1kynema__ugf_1_1_momentum_symmetry_elem_kernel.html" title="Symmetry kernel for momentum equation (velocity DOF)" alt="" coords="223,1028,470,1083"/>
+<area shape="poly" id="edge221_Node000000_Node000026" title=" " alt="" coords="99,890,140,954,168,987,202,1014,225,1027,222,1032,198,1019,165,991,136,957,94,893"/>
+<area shape="rect" id="Node000027" href="$classsierra_1_1kynema__ugf_1_1_momentum_wall_function_elem_kernel.html" title="Wall function approach momentum equation (velocity DOF)" alt="" coords="236,1107,457,1161"/>
+<area shape="poly" id="edge222_Node000000_Node000027" title=" " alt="" coords="90,892,104,938,127,992,159,1047,179,1072,202,1093,237,1113,234,1118,198,1097,175,1075,155,1050,122,995,99,940,85,894"/>
+<area shape="rect" id="Node000028" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="273,1186,420,1226"/>
+<area shape="poly" id="edge223_Node000000_Node000028" title=" " alt="" coords="85,892,94,953,114,1029,129,1069,149,1107,173,1142,202,1172,236,1192,274,1201,273,1207,234,1196,198,1176,169,1145,144,1109,125,1071,109,1031,89,954,80,893"/>
+<area shape="rect" id="Node000029" href="$classsierra_1_1kynema__ugf_1_1_scalar_flux_penalty_elem_kernel.html" title="specificed open bc (face/elem) kernel for continuity equation (pressure DOF)" alt="" coords="236,1251,457,1305"/>
+<area shape="poly" id="edge224_Node000000_Node000029" title=" " alt="" coords="83,893,89,965,107,1057,122,1106,142,1153,169,1197,202,1236,218,1249,237,1259,234,1263,215,1253,198,1240,164,1200,138,1156,117,1108,102,1058,84,965,78,894"/>
+<area shape="rect" id="Node000030" href="$classsierra_1_1kynema__ugf_1_1_scalar_open_adv_elem_kernel.html" title="Symmetry kernel for scalar equation." alt="" coords="245,1329,448,1384"/>
+<area shape="poly" id="edge225_Node000000_Node000030" title=" " alt="" coords="87,892,102,990,127,1118,143,1181,161,1238,180,1285,202,1316,222,1332,246,1343,244,1347,220,1336,198,1320,176,1287,156,1240,138,1182,122,1119,97,991,82,893"/>
+<area shape="rect" id="Node000031" href="$classsierra_1_1kynema__ugf_1_1_t_g_m_m_s_h_o_elem_kernel.html" title=" " alt="" coords="259,1408,434,1463"/>
+<area shape="poly" id="edge226_Node000000_Node000031" title=" " alt="" coords="86,893,98,1005,121,1156,137,1232,156,1301,177,1357,202,1395,229,1414,260,1426,258,1431,226,1419,198,1399,173,1359,151,1303,132,1233,116,1157,93,1006,80,893"/>
+<area shape="rect" id="Node000032" href="$classsierra_1_1kynema__ugf_1_1_variable_density_continuity_m_m_s_h_o_elem_kernel.html" title=" " alt="" coords="229,1487,464,1541"/>
+<area shape="poly" id="edge227_Node000000_Node000032" title=" " alt="" coords="85,893,95,1021,116,1195,132,1283,151,1364,175,1429,188,1454,202,1473,231,1494,228,1499,198,1477,183,1457,170,1431,146,1365,127,1284,111,1196,90,1021,79,893"/>
+<area shape="rect" id="Node000033" href="$classsierra_1_1kynema__ugf_1_1_variable_density_enthalpy_m_m_s_h_o_elem_kernel.html" title=" " alt="" coords="209,1565,484,1620"/>
+<area shape="poly" id="edge228_Node000000_Node000033" title=" " alt="" coords="84,893,92,1035,111,1233,127,1334,147,1426,172,1501,186,1530,202,1552,214,1563,210,1567,198,1556,182,1533,167,1503,141,1427,121,1335,106,1234,86,1035,78,893"/>
+<area shape="rect" id="Node000034" href="$classsierra_1_1kynema__ugf_1_1_variable_density_momentum_m_m_s_h_o_elem_kernel.html" title=" " alt="" coords="200,1644,493,1699"/>
+<area shape="poly" id="edge229_Node000000_Node000034" title=" " alt="" coords="83,893,89,1049,106,1271,121,1385,142,1488,169,1573,184,1606,202,1631,214,1642,210,1646,198,1634,180,1609,164,1575,137,1490,116,1385,101,1272,84,1050,78,893"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_continuity_inflow_elem_kernel.html" title="Add Int rho*uj*nj*dS." alt="" coords="566,5,777,60"/>
+<area shape="poly" id="edge197_Node000001_Node000002" title=" " alt="" coords="470,30,566,30,566,35,470,35"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_continuity_open_edge_kernel.html" title=" " alt="" coords="569,84,773,139"/>
+<area shape="poly" id="edge199_Node000003_Node000004" title=" " alt="" coords="468,109,569,109,569,114,468,114"/>
+<area shape="rect" id="Node000006" href="$classsierra_1_1kynema__ugf_1_1_enthalpy_t_grad_b_c_elem_kernel.html" title="Enforce a prescribed normal temperature gradient at the boundary." alt="" coords="562,163,781,217"/>
+<area shape="poly" id="edge201_Node000005_Node000006" title=" " alt="" coords="476,187,562,187,562,193,476,193"/>
+<area shape="rect" id="Node000008" href="$classsierra_1_1kynema__ugf_1_1_momentum_a_b_l_wall_func_edge_kernel.html" title=" " alt="" coords="541,241,801,296"/>
+<area shape="poly" id="edge203_Node000007_Node000008" title=" " alt="" coords="482,266,541,266,541,271,482,271"/>
+<area shape="rect" id="Node000010" href="$classsierra_1_1kynema__ugf_1_1_momentum_a_b_l_wall_shear_stress_edge_kernel.html" title="This class applies the computed wall shear stress field to the boundary." alt="" coords="554,320,789,375"/>
+<area shape="poly" id="edge205_Node000009_Node000010" title=" " alt="" coords="505,345,554,345,554,350,505,350"/>
+<area shape="rect" id="Node000012" href="$classsierra_1_1kynema__ugf_1_1_momentum_open_edge_kernel.html" title=" " alt="" coords="565,399,777,453"/>
+<area shape="poly" id="edge207_Node000011_Node000012" title=" " alt="" coords="488,423,565,423,565,429,488,429"/>
+<area shape="rect" id="Node000014" href="$classsierra_1_1kynema__ugf_1_1_momentum_symmetry_edge_kernel.html" title=" " alt="" coords="548,477,795,532"/>
+<area shape="poly" id="edge209_Node000013_Node000014" title=" " alt="" coords="489,502,548,502,548,507,489,507"/>
+<area shape="rect" id="Node000016" href="$classsierra_1_1kynema__ugf_1_1_scalar_edge_open_solver_alg.html" title=" " alt="" coords="572,556,771,611"/>
+<area shape="poly" id="edge211_Node000015_Node000016" title=" " alt="" coords="471,581,572,581,572,586,471,586"/>
+<area shape="rect" id="Node000018" href="$classsierra_1_1kynema__ugf_1_1_scalar_face_flux_b_c_elem_kernel.html" title="This class applies the computed wall heat flux field to the boundary." alt="" coords="562,635,781,689"/>
+<area shape="poly" id="edge213_Node000017_Node000018" title=" " alt="" coords="476,659,562,659,562,665,476,665"/>
+<area shape="rect" id="Node000020" href="$classsierra_1_1kynema__ugf_1_1_scalar_flux_b_c_elem_kernel.html" title=" " alt="" coords="576,713,767,768"/>
+<area shape="poly" id="edge215_Node000019_Node000020" title=" " alt="" coords="477,738,576,738,576,743,477,743"/>
+<area shape="rect" id="Node000022" href="$classsierra_1_1kynema__ugf_1_1_scalar_open_edge_kernel.html" title=" " alt="" coords="583,792,760,847"/>
+<area shape="poly" id="edge217_Node000021_Node000022" title=" " alt="" coords="471,817,582,817,582,822,471,822"/>
+<area shape="rect" id="Node000024" href="$classsierra_1_1kynema__ugf_1_1_wall_dist_elem_kernel.html" title=" " alt="" coords="592,871,751,925"/>
+<area shape="poly" id="edge219_Node000023_Node000024" title=" " alt="" coords="482,895,592,895,592,901,482,901"/>
+</map>

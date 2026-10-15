@@ -1,0 +1,25 @@
+<map id="sierra::kynema_ugf::AssembleEdgeSolverAlgorithm" name="sierra::kynema_ugf::AssembleEdgeSolverAlgorithm">
+<area shape="rect" id="Node000001" title=" " alt="" coords="395,229,625,269"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_assemble_edge_kernel_alg.html" title=" " alt="" coords="709,5,897,45"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="527,216,552,178,585,135,625,91,672,55,708,39,710,44,675,60,629,95,589,138,556,181,532,219"/>
+<area shape="rect" id="Node000006" href="$classsierra_1_1kynema__ugf_1_1_continuity_edge_solver_alg.html" title=" " alt="" coords="707,69,898,109"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="539,218,598,167,634,141,672,119,706,106,708,110,674,124,637,146,601,171,543,222"/>
+<area shape="rect" id="Node000007" href="$classsierra_1_1kynema__ugf_1_1_momentum_edge_solver_alg.html" title=" " alt="" coords="703,133,902,173"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="569,221,672,183,714,171,715,176,674,188,571,226"/>
+<area shape="rect" id="Node000008" href="$classsierra_1_1kynema__ugf_1_1_scalar_edge_solver_alg.html" title=" " alt="" coords="721,197,885,237"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="639,233,720,224,721,229,639,238"/>
+<area shape="rect" id="Node000009" href="$classsierra_1_1kynema__ugf_1_1_v_o_f_advection_edge_alg.html" title=" " alt="" coords="716,261,889,301"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="639,261,716,269,716,275,639,266"/>
+<area shape="rect" id="Node000010" href="$classsierra_1_1kynema__ugf_1_1_wall_dist_edge_solver_alg.html" title=" " alt="" coords="713,325,892,365"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="571,272,674,311,715,323,714,328,672,316,569,277"/>
+<area shape="rect" id="Node000011" href="$classsierra_1_1kynema__ugf_1_1_zalesak_disk_mass_flow_rate_edge_alg.html" title=" " alt="" coords="673,389,932,429"/>
+<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="543,277,601,328,637,353,675,375,704,387,702,392,672,380,634,358,598,332,539,281"/>
+<area shape="rect" id="Node000012" href="$classsierra_1_1kynema__ugf_1_1_zalesak_sphere_mass_flow_rate_edge_alg.html" title=" " alt="" coords="691,454,914,509"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="532,280,557,316,590,359,629,402,675,439,697,451,694,456,672,444,626,406,585,363,552,320,528,282"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_solver_algorithm.html" title=" " alt="" coords="200,229,347,269"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="360,247,395,247,395,252,360,252"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_algorithm.html" title=" " alt="" coords="5,229,152,269"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="166,247,200,247,200,252,166,252"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1kynema__ugf_1_1_assemble_a_m_s_edge_kernel_alg.html" title=" " alt="" coords="980,5,1197,45"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="911,23,980,23,980,28,911,28"/>
+</map>

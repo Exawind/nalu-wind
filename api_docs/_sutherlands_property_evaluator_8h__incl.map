@@ -1,0 +1,22 @@
+<map id="SutherlandsPropertyEvaluator.h" name="SutherlandsPropertyEvaluator.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="385,5,611,31"/>
+<area shape="rect" id="Node000002" href="$_property_evaluator_8h.html" title=" " alt="" coords="171,79,326,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="463,33,323,77,321,72,461,28"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="217,167,280,192"/>
+<area shape="poly" id="edge9_Node000001_Node000004" title=" " alt="" coords="482,33,280,161,277,157,479,28"/>
+<area shape="rect" id="Node000005" href="$_field_type_def_8h.html" title=" " alt="" coords="530,86,647,111"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="513,29,567,75,563,79,510,33"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="671,86,722,111"/>
+<area shape="poly" id="edge10_Node000001_Node000010" title=" " alt="" coords="533,28,660,76,664,78,662,83,658,81,531,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,167,193,192"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="214,121,135,162,132,158,212,116"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="251,119,251,153,246,153,246,119"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="304,167,519,192"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="564,114,451,164,448,159,562,109"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="543,167,722,192"/>
+<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="597,110,622,153,617,156,593,113"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="747,167,956,192"/>
+<area shape="poly" id="edge7_Node000005_Node000008" title=" " alt="" coords="628,109,801,160,799,165,626,114"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="980,167,1067,192"/>
+<area shape="poly" id="edge8_Node000005_Node000009" title=" " alt="" coords="629,109,660,116,744,132,811,141,967,164,966,169,811,146,743,137,659,121,628,114"/>
+</map>

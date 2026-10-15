@@ -1,0 +1,12 @@
+<map id="EdgeKernel.h" name="EdgeKernel.h">
+<area shape="rect" id="Node000001" title="Kernel&#45;style implementation of Edge algorithms." alt="" coords="138,5,245,31"/>
+<area shape="rect" id="Node000002" href="$_assemble_a_m_s_edge_kernel_alg_8_c.html" title=" " alt="" coords="5,152,228,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="137,38,107,55,84,80,80,98,85,117,108,150,103,153,80,119,75,98,80,77,104,51,134,34"/>
+<area shape="rect" id="Node000003" href="$_assemble_edge_kernel_alg_8_c.html" title=" " alt="" coords="95,79,288,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="194,44,194,79,189,79,189,44"/>
+<area shape="rect" id="Node000004" href="$_momentum_s_s_t_a_m_s_diff_edge_kernel_8h.html" title=" " alt="" coords="312,79,569,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="245,32,401,76,400,81,244,37"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="376,110,170,154,169,149,375,104"/>
+<area shape="rect" id="Node000005" href="$_momentum_s_s_t_a_m_s_diff_edge_kernel_8_c.html" title=" " alt="" coords="311,152,570,177"/>
+<area shape="poly" id="edge5_Node000004_Node000005" title=" " alt="" coords="443,118,443,152,438,152,438,118"/>
+</map>

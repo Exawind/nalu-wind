@@ -1,0 +1,13 @@
+<map id="sierra::kynema_ugf::ActSimpleAssignVel" name="sierra::kynema_ugf::ActSimpleAssignVel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="872,46,1031,86"/>
+<area shape="rect" id="Node000002" href="$structsierra_1_1kynema__ugf_1_1_act_dual_view_helper.html" title=" " alt="" coords="557,5,771,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="785,44,872,54,871,59,784,49"/>
+<area shape="rect" id="Node000003" href="$structsierra_1_1kynema__ugf_1_1_act_dual_view_helper.html" title=" " alt="" coords="157,5,313,60"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="327,30,557,30,557,35,327,35"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="581,84,747,109"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="760,96,848,90,882,83,883,89,848,95,761,101"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="171,84,300,109"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="314,94,581,94,581,99,314,99"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="5,84,44,109"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="58,94,170,94,170,99,58,99"/>
+</map>

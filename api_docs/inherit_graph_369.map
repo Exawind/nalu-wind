@@ -1,0 +1,17 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$classsierra_1_1kynema__ugf_1_1_peclet_function_base.html" title="Non&#45;templated empty base class for storing pointers to templated instances." alt="" coords="5,133,163,173"/>
+<area shape="rect" id="Node000001" href="$classsierra_1_1kynema__ugf_1_1_peclet_function.html" title=" " alt="" coords="225,5,431,45"/>
+<area shape="poly" id="edge366_Node000000_Node000001" title=" " alt="" coords="115,122,158,87,209,55,238,43,240,48,212,60,161,91,118,126"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_peclet_function.html" title=" " alt="" coords="229,69,427,109"/>
+<area shape="poly" id="edge367_Node000000_Node000002" title=" " alt="" coords="173,127,251,107,252,112,175,132"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_peclet_function.html" title=" " alt="" coords="213,133,443,173"/>
+<area shape="poly" id="edge368_Node000000_Node000003" title=" " alt="" coords="177,151,213,151,213,156,177,156"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_peclet_function.html" title=" " alt="" coords="211,198,445,253"/>
+<area shape="poly" id="edge369_Node000000_Node000004" title=" " alt="" coords="166,175,236,195,234,201,165,180"/>
+<area shape="rect" id="Node000005" href="$classsierra_1_1kynema__ugf_1_1_peclet_function.html" title=" " alt="" coords="247,277,409,317"/>
+<area shape="poly" id="edge370_Node000000_Node000005" title=" " alt="" coords="114,182,158,223,212,262,247,277,245,282,209,266,154,227,110,185"/>
+<area shape="rect" id="Node000006" href="$classsierra_1_1kynema__ugf_1_1_classic_peclet_function.html" title=" " alt="" coords="493,245,703,285"/>
+<area shape="poly" id="edge371_Node000005_Node000006" title=" " alt="" coords="423,283,493,275,494,280,424,289"/>
+<area shape="rect" id="Node000007" href="$classsierra_1_1kynema__ugf_1_1_tanh_function.html" title=" " alt="" coords="521,309,675,349"/>
+<area shape="poly" id="edge372_Node000005_Node000007" title=" " alt="" coords="423,306,521,318,521,323,423,311"/>
+</map>

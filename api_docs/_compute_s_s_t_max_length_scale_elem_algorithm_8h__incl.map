@@ -1,0 +1,17 @@
+<map id="ComputeSSTMaxLengthScaleElemAlgorithm.h" name="ComputeSSTMaxLengthScaleElemAlgorithm.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="123,5,335,45"/>
+<area shape="rect" id="Node000002" href="$_algorithm_8h.html" title=" " alt="" coords="114,93,213,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="215,47,184,84,180,81,211,44"/>
+<area shape="rect" id="Node000004" href="$_field_type_def_8h.html" title=" " alt="" coords="362,93,479,119"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="276,43,381,86,379,91,274,48"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,167,68,192"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="144,121,71,162,68,157,142,116"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="92,167,307,192"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="386,121,249,165,247,160,384,116"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="331,167,510,192"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="423,119,423,153,418,153,418,119"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="535,167,744,192"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="457,116,592,160,590,165,455,121"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="768,167,855,192"/>
+<area shape="poly" id="edge7_Node000004_Node000008" title=" " alt="" coords="480,115,755,164,754,169,479,120"/>
+</map>

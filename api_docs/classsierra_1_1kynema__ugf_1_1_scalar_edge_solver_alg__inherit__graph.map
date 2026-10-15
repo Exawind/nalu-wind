@@ -1,0 +1,9 @@
+<map id="sierra::kynema_ugf::ScalarEdgeSolverAlg" name="sierra::kynema_ugf::ScalarEdgeSolverAlg">
+<area shape="rect" id="Node000001" title=" " alt="" coords="39,269,203,309"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_assemble_edge_solver_algorithm.html" title=" " alt="" coords="5,181,236,221"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="123,235,123,269,118,269,118,235"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_solver_algorithm.html" title=" " alt="" coords="47,93,194,133"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="123,147,123,181,118,181,118,147"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_algorithm.html" title=" " alt="" coords="47,5,194,45"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="123,59,123,93,118,93,118,59"/>
+</map>

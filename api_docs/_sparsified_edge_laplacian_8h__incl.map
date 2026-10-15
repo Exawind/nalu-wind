@@ -1,0 +1,19 @@
+<map id="SparsifiedEdgeLaplacian.h" name="SparsifiedEdgeLaplacian.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="561,5,753,31"/>
+<area shape="rect" id="Node000002" href="$_polynomial_orders_8h.html" title=" " alt="" coords="5,79,236,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="571,33,221,80,220,74,570,28"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="261,79,394,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="604,33,394,78,393,73,603,28"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="418,79,551,104"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="630,33,526,76,524,71,628,28"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="575,79,738,104"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="659,31,659,65,654,65,654,31"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="762,79,941,104"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="689,28,808,71,806,76,687,33"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="965,79,1175,104"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="724,28,990,74,989,79,723,33"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="1199,79,1403,104"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="753,27,1185,75,1184,80,752,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="75,152,167,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="123,104,123,138,118,138,118,104"/>
+</map>

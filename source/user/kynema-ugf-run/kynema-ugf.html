@@ -1,0 +1,174 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoking Kynema-UGF - Command-line options &mdash; Kynema-UGF 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Kynema-UGF Input File" href="kynema-ugf-inp.html" />
+    <link rel="prev" title="Exodus-II File Format" href="kynema-ugf-mesh.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Kynema-UGF
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Kynema/kynema-ugf">Kynema-UGF Homepage</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://my.cdash.org/index.php?project=Kynema">Kynema-UGF Nightly Test Results</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../building.html">Building Kynema-UGF</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../running.html">Running Kynema-UGF</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="kynema-ugf-mesh.html">Exodus-II File Format</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Invoking Kynema-UGF - Command-line options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="kynema-ugf-inp.html">Kynema-UGF Input File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="kynema-ugf-inp.html#transfers">Transfers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="kynema-ugf-inp.html#simulations">Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="McAlisterLessonsLearned.html">Lessons Learned from Meshing the McAlister Case</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer/index.html">Developer Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../theory/index.html">Theory Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verification/index.html">Verification Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../zrefs.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Kynema-UGF</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Manual</a></li>
+          <li class="breadcrumb-item"><a href="../running.html">Running Kynema-UGF</a></li>
+      <li class="breadcrumb-item active">Invoking Kynema-UGF - Command-line options</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/source/user/kynema-ugf-run/kynema-ugf.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="invoking-kynema-ugf-command-line-options">
+<h1>Invoking Kynema-UGF - Command-line options<a class="headerlink" href="#invoking-kynema-ugf-command-line-options" title="Link to this heading"></a></h1>
+<p>Kynema-UGF’s runtime behavior can be controlled by using several command line input
+options during invocation. Users can invoke <code class="docutils literal notranslate"><span class="pre">-h</span></code> to determine the
+various options available.</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-kynema_ugf-h">
+<span id="cmdoption-kynema_ugf-help"></span><span class="sig-name descname"><span class="pre">-h</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--help</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-kynema_ugf-h" title="Link to this definition"></a></dt>
+<dd><p>Print the help message describing all Kynema-UGF options and exit</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-kynema_ugf-i">
+<span id="cmdoption-kynema_ugf-input-deck"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--input-deck</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-kynema_ugf-i" title="Link to this definition"></a></dt>
+<dd><p>Use the filename provided as the input file. If this option is not provided,
+<strong class="program">kynema_ugf</strong> will attempt to load a file called <code class="file docutils literal notranslate"><span class="pre">kynema_ugf.i</span></code> in the
+current working directory as the input file.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-kynema_ugf-o">
+<span id="cmdoption-kynema_ugf-log-file"></span><span class="sig-name descname"><span class="pre">-o</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--log-file</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-kynema_ugf-o" title="Link to this definition"></a></dt>
+<dd><p>The log file where the output generated by Kynema-UGF is directed to. If no file is
+provided, then <strong class="program">kynema_ugf</strong> will use the base name of the Kynema-UGF input file
+with the extension <code class="docutils literal notranslate"><span class="pre">.log</span></code> as the output file. For example, if
+<strong class="program">kynema_ugf</strong> was invoked as <code class="docutils literal notranslate"><span class="pre">kynema_ugf</span> <span class="pre">-i</span> <span class="pre">ABL.neutral.i</span></code> then the output
+will be redirected to a file named <code class="file docutils literal notranslate"><span class="pre">ABL.neutral.log</span></code>. Note that the
+file is overwritten if it already exists.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-kynema_ugf-v">
+<span id="cmdoption-kynema_ugf-version"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--version</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-kynema_ugf-v" title="Link to this definition"></a></dt>
+<dd><p>Print the Kynema-UGF version string.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-kynema_ugf-p">
+<span id="cmdoption-kynema_ugf-pprint"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--pprint</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-kynema_ugf-p" title="Link to this definition"></a></dt>
+<dd><p>Enable parallel printing from all MPI ranks.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-kynema_ugf-D">
+<span id="cmdoption-kynema_ugf-debug"></span><span class="sig-name descname"><span class="pre">-D</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--debug</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-kynema_ugf-D" title="Link to this definition"></a></dt>
+<dd><p>Enable verbose debug printing to log file.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="kynema-ugf-mesh.html" class="btn btn-neutral float-left" title="Exodus-II File Format" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="kynema-ugf-inp.html" class="btn btn-neutral float-right" title="Kynema-UGF Input File" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

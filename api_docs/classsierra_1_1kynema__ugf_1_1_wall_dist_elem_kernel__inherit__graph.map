@@ -1,0 +1,10 @@
+<map id="sierra::kynema_ugf::WallDistElemKernel&lt; AlgTraits &gt;" name="sierra::kynema_ugf::WallDistElemKernel&lt; AlgTraits &gt;">
+<area shape="rect" id="Node000001" title=" " alt="" coords="47,316,206,371"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="5,212,248,267"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="129,280,129,316,124,316,124,280"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_kernel.html" title="Base class for computational kernels in KynemaUGF." alt="" coords="48,5,195,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="125,59,129,212,123,212,119,59"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="143,95,289,135"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="154,53,197,93,194,97,150,57"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="196,148,148,213,144,210,192,145"/>
+</map>

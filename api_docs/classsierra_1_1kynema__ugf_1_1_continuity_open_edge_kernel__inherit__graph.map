@@ -1,0 +1,10 @@
+<map id="sierra::kynema_ugf::ContinuityOpenEdgeKernel&lt; BcAlgTraits &gt;" name="sierra::kynema_ugf::ContinuityOpenEdgeKernel&lt; BcAlgTraits &gt;">
+<area shape="rect" id="Node000001" title=" " alt="" coords="11,316,215,371"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title=" " alt="" coords="5,212,220,267"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="115,280,115,316,110,316,110,280"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_kernel.html" title="Base class for computational kernels in KynemaUGF." alt="" coords="34,5,181,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="111,59,115,212,109,212,105,59"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_kernel.html" title="Kernel that can be transferred to a device." alt="" coords="129,95,275,135"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="140,53,183,93,180,97,136,57"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="182,148,134,213,130,210,178,145"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="sierra::kynema_ugf::EdgeKernel" name="sierra::kynema_ugf::EdgeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,13,152,53"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_edge_kernel.html" title=" " alt="" coords="620,5,916,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="166,25,176,25,386,17,596,19,620,20,620,26,596,25,386,22,176,30,166,30"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_edge_kernel.html" title=" " alt="" coords="201,41,371,81"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="166,42,202,47,201,52,165,47"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_momentum_s_s_t_a_m_s_diff_edge_kernel.html" title=" " alt="" coords="965,13,1219,53"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="930,30,965,30,965,35,930,35"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="385,57,596,49,619,47,620,52,596,54,385,62"/>
+</map>

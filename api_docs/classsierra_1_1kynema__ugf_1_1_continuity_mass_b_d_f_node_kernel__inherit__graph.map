@@ -1,0 +1,10 @@
+<map id="sierra::kynema_ugf::ContinuityMassBDFNodeKernel" name="sierra::kynema_ugf::ContinuityMassBDFNodeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,301,239,341"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="15,197,229,252"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="125,266,125,301,119,301,119,266"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_node_kernel.html" title=" " alt="" coords="43,5,190,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="120,59,124,197,119,197,115,59"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="138,95,309,135"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="152,52,202,92,199,97,149,56"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="198,147,149,199,145,195,194,143"/>
+</map>

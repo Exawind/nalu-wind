@@ -1,0 +1,10 @@
+<map id="sierra::kynema_ugf::ScalarGclNodeKernel" name="sierra::kynema_ugf::ScalarGclNodeKernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="27,301,193,341"/>
+<area shape="rect" id="Node000002" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="5,197,215,252"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="113,266,113,301,107,301,107,266"/>
+<area shape="rect" id="Node000003" href="$classsierra_1_1kynema__ugf_1_1_node_kernel.html" title=" " alt="" coords="31,5,178,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="108,59,112,197,107,197,103,59"/>
+<area shape="rect" id="Node000004" href="$classsierra_1_1kynema__ugf_1_1_n_g_p_node_kernel.html" title=" " alt="" coords="126,95,297,135"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="140,52,190,92,187,97,137,56"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="186,147,137,199,133,195,182,143"/>
+</map>

@@ -1,0 +1,19 @@
+<map id="sierra::kynema_ugf::UserData" name="sierra::kynema_ugf::UserData">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,229,152,269"/>
+<area shape="rect" id="Node000002" href="$structsierra_1_1kynema__ugf_1_1_a_b_l_top_user_data.html" title=" " alt="" coords="219,5,366,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="90,215,107,178,131,135,161,92,198,55,218,43,220,48,202,59,165,96,135,138,112,181,95,217"/>
+<area shape="rect" id="Node000003" href="$structsierra_1_1kynema__ugf_1_1_inflow_user_data.html" title=" " alt="" coords="219,69,366,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="100,216,142,167,169,141,199,119,221,107,224,112,201,124,173,145,146,171,104,220"/>
+<area shape="rect" id="Node000004" href="$structsierra_1_1kynema__ugf_1_1_non_conformal_user_data.html" title=" " alt="" coords="200,133,385,173"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="125,220,199,183,229,171,231,176,201,188,127,225"/>
+<area shape="rect" id="Node000005" href="$structsierra_1_1kynema__ugf_1_1_open_user_data.html" title=" " alt="" coords="219,197,366,237"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="165,234,219,226,220,231,166,239"/>
+<area shape="rect" id="Node000006" href="$structsierra_1_1kynema__ugf_1_1_overset_user_data.html" title=" " alt="" coords="219,261,366,301"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="166,260,220,268,219,273,165,265"/>
+<area shape="rect" id="Node000007" href="$structsierra_1_1kynema__ugf_1_1_periodic_user_data.html" title=" " alt="" coords="219,325,366,365"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="127,274,201,311,231,323,229,328,199,316,125,278"/>
+<area shape="rect" id="Node000008" href="$structsierra_1_1kynema__ugf_1_1_symmetry_user_data.html" title=" " alt="" coords="213,389,372,429"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="104,279,146,328,173,353,201,375,224,387,221,392,199,380,169,357,142,332,100,282"/>
+<area shape="rect" id="Node000009" href="$structsierra_1_1kynema__ugf_1_1_wall_user_data.html" title=" " alt="" coords="219,453,366,493"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="95,281,112,318,135,360,165,403,202,439,220,451,218,456,198,443,161,406,131,363,107,321,90,284"/>
+</map>
