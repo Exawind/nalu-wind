@@ -71,6 +71,9 @@ HypreLinearSolverConfig::load(const YAML::Node& node)
   get_if_present(
     node, "write_preassembly_matrix_files", writePreassemblyMatrixFiles_,
     writePreassemblyMatrixFiles_);
+  get_if_present(
+    node, "deterministic_assembly", deterministicAssembly_,
+    deterministicAssembly_);
 
   if (node["absolute_tolerance"]) {
     hasAbsTol_ = true;

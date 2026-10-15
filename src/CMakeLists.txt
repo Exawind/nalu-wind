@@ -109,6 +109,7 @@ if(ENABLE_HYPRE)
   target_sources(
     ${kynema_ugf_lib_name}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/HypreDirectSolver.C
+            ${CMAKE_CURRENT_SOURCE_DIR}/HypreDeterministicAssembly.C
             ${CMAKE_CURRENT_SOURCE_DIR}/HypreUVWSolver.C
             ${CMAKE_CURRENT_SOURCE_DIR}/HypreLinearSolverConfig.C
             ${CMAKE_CURRENT_SOURCE_DIR}/HypreLinearSystem.C
