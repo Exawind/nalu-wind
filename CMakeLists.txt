@@ -61,8 +61,7 @@ if(ENABLE_CUDA)
     CUDA::cusparse
     CUDA::curand
     CUDA::cudart
-    CUDA::cublas
-    CUDA::nvToolsExt)
+    CUDA::cublas)
 endif()
 
 if(ENABLE_ROCM)
