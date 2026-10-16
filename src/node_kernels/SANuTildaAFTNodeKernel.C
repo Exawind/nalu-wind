@@ -79,6 +79,36 @@ SANuTildaAFTNodeKernel::execute(
 
   const DblType nu = mu / rho;
 
+  DblType Omega = 0.0;
+  for (int i = 0; i < nDim_; ++i) {
+    for (int j = 0; j < nDim_; ++j) {
+      const DblType Wij =
+        0.5 * (dudx_.get(node, nDim_ * i + j) -
+               dudx_.get(node, nDim_ * j + i));
+      Omega += 2.0 * Wij * Wij;
+    }
+  }
+  Omega = stk::math::sqrt(Omega);
+
+  DblType dnutdx_sq = 0.0;
+  for (int i = 0; i < nDim_; ++i) {
+    const DblType dnutdxi = dnutdx_.get(node, i);
+    dnutdx_sq += dnutdxi * dnutdxi;
+  }
+  const DblType S_cb2 = (1.0 / sigma_) * Cb2_ * dnutdx_sq;
+
+  // SA-neg negative branch uses the standard Ct3, not the AFT-modified ft2
+  if (nuTilda < 0.0) {
+    const DblType P_neg = Cb1_ * (1.0 - Ct3_) * Omega * nuTilda;
+    const DblType D_neg = -Cw1_ * (nuTilda / d) * (nuTilda / d);
+    rhs(0) += (P_neg - D_neg + S_cb2) * rho * dVol;
+
+    const DblType jac =
+      -Cb1_ * (1.0 - Ct3_) * Omega - 2.0 * Cw1_ * nuTilda / (d * d);
+    lhs(0, 0) += stk::math::max(jac, 0.0) * rho * dVol;
+    return;
+  }
+
   const DblType chi = nuTilda / nu;
   const DblType chi2 = chi * chi;
   const DblType chi3 = chi2 * chi;
@@ -93,17 +123,6 @@ SANuTildaAFTNodeKernel::execute(
   const DblType dfv2dChi =
     -(1.0 - chi2 * dfv1dChi) / (onePlusChiFv1 * onePlusChiFv1);
   const DblType dfv2dNuTilda = dfv2dChi / nu;
-
-  DblType Omega = 0.0;
-  for (int i = 0; i < nDim_; ++i) {
-    for (int j = 0; j < nDim_; ++j) {
-      const DblType Wij =
-        0.5 * (dudx_.get(node, nDim_ * i + j) -
-               dudx_.get(node, nDim_ * j + i));
-      Omega += 2.0 * Wij * Wij;
-    }
-  }
-  Omega = stk::math::sqrt(Omega);
 
   const DblType kappa2d2 = kappa_ * kappa_ * d * d;
   const DblType Sbar = nuTilda * fv2 / kappa2d2;
@@ -151,19 +170,12 @@ SANuTildaAFTNodeKernel::execute(
     stk::math::pow(g6 + Cw3_6, 7.0 / 6.0);
   const DblType dfwdNuTilda = dfwdg * dgdNuTilda;
 
-  DblType dnutdx_sq = 0.0;
-  for (int i = 0; i < nDim_; ++i) {
-    const DblType dnutdxi = dnutdx_.get(node, i);
-    dnutdx_sq += dnutdxi * dnutdxi;
-  }
-
   const DblType ft2 = Ct3_ * (1.0 - stk::math::exp(gammaTilda));
   const DblType invKappa2 = 1.0 / (kappa_ * kappa_);
 
   const DblType P_sa = Cb1_ * STilda * nuTilda * (1.0 - ft2);
   const DblType D_sa =
     (Cw1_ * fw - Cb1_ * invKappa2 * ft2) * (nuTilda / d) * (nuTilda / d);
-  const DblType S_cb2 = (1.0 / sigma_) * Cb2_ * dnutdx_sq;
 
   rhs(0) += (P_sa - D_sa + S_cb2) * rho * dVol;
 

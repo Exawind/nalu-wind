@@ -715,7 +715,7 @@ SpalartAllmarasEquationSystem::solve_and_update()
 
       // update
       double timeA = KynemaUGFEnv::self().kynema_ugf_time();
-      update_and_clip();
+      update_nu_tilda();
       double timeB = KynemaUGFEnv::self().kynema_ugf_time();
       timerAssemble_ += (timeB - timeA);
 
@@ -725,51 +725,6 @@ SpalartAllmarasEquationSystem::solve_and_update()
 
     // projected nodal gradient
     compute_projected_nodal_gradient();
-  }
-}
-
-//--------------------------------------------------------------------------
-//-------- initial_work ----------------------------------------------------
-//--------------------------------------------------------------------------
-void
-SpalartAllmarasEquationSystem::initial_work()
-{
-  const auto& meshInfo = realm_.mesh_info();
-  const auto& meta = meshInfo.meta();
-  const auto& ngpMesh = meshInfo.ngp_mesh();
-  const auto& fieldMgr = meshInfo.ngp_field_manager();
-
-  auto& nuTildaNp1 =
-    fieldMgr.get_field<double>(nuTilda_->mesh_meta_data_ordinal());
-  const stk::mesh::Selector sel =
-    (meta.locally_owned_part() | meta.globally_shared_part()) &
-    stk::mesh::selectField(*nuTilda_);
-  clip_nu_tilda(ngpMesh, sel, nuTildaNp1);
-}
-
-void
-SpalartAllmarasEquationSystem::post_external_data_transfer_work()
-{
-  const auto& meshInfo = realm_.mesh_info();
-  const auto& meta = meshInfo.meta();
-  const auto& ngpMesh = meshInfo.ngp_mesh();
-  const auto& fieldMgr = meshInfo.ngp_field_manager();
-
-  auto& nuTildaNp1 =
-    fieldMgr.get_field<double>(nuTilda_->mesh_meta_data_ordinal());
-
-  const stk::mesh::Selector owned_and_shared =
-    (meta.locally_owned_part() | meta.globally_shared_part());
-  auto interior_sel = owned_and_shared & stk::mesh::selectField(*nuTilda_);
-  clip_nu_tilda(ngpMesh, interior_sel, nuTildaNp1);
-
-  auto nuTildaBCField =
-    meta.get_field<double>(stk::topology::NODE_RANK, "sa_nu_tilda_bc");
-  if (nuTildaBCField != nullptr) {
-    auto bc_sel = owned_and_shared & stk::mesh::selectField(*nuTildaBCField);
-    auto ngpNuTildaBC =
-      fieldMgr.get_field<double>(nuTildaBCField->mesh_meta_data_ordinal());
-    clip_nu_tilda(ngpMesh, bc_sel, ngpNuTildaBC);
   }
 }
 
@@ -835,7 +790,7 @@ SpalartAllmarasEquationSystem::compute_projected_nodal_gradient()
 }
 
 void
-SpalartAllmarasEquationSystem::update_and_clip()
+SpalartAllmarasEquationSystem::update_nu_tilda()
 {
   using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex;
 
@@ -856,37 +811,15 @@ SpalartAllmarasEquationSystem::update_and_clip()
     (meta.locally_owned_part() | meta.globally_shared_part()) &
     stk::mesh::selectField(*turbViscosity);
 
-  const double nuTildaMinVal = nuTildaMinValue_;
-
   nuTildaNp1.sync_to_device();
 
   kynema_ugf_ngp::run_entity_algorithm(
-    "SA::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
+    "SA::update_nu_tilda", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
-      const double nuTildaNew = nuTildaNp1.get(mi, 0) + nuTmp.get(mi, 0);
-      nuTildaNp1.get(mi, 0) = stk::math::max(nuTildaNew, nuTildaMinVal);
+      nuTildaNp1.get(mi, 0) += nuTmp.get(mi, 0);
     });
 
   nuTildaNp1.modify_on_device();
-}
-
-void
-SpalartAllmarasEquationSystem::clip_nu_tilda(
-  const stk::mesh::NgpMesh& ngpMesh,
-  const stk::mesh::Selector& sel,
-  stk::mesh::NgpField<double>& nuTilda)
-{
-  nuTilda.sync_to_device();
-
-  const double nuTildaMinVal = nuTildaMinValue_;
-
-  kynema_ugf_ngp::run_entity_algorithm(
-    "SA::clip", ngpMesh, stk::topology::NODE_RANK, sel,
-    KOKKOS_LAMBDA(const kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex& mi) {
-      const double nuTildaNew = nuTilda.get(mi, 0);
-      nuTilda.get(mi, 0) = stk::math::max(nuTildaNew, nuTildaMinVal);
-    });
-  nuTilda.modify_on_device();
 }
 
 void

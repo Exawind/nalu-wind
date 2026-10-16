@@ -753,6 +753,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_saCw3] = 2.0;
   turbModelConstantMap_[TM_saCt3] = 1.2;
   turbModelConstantMap_[TM_saCt4] = 0.5;
+  turbModelConstantMap_[TM_saCn1] = 16.0;
 }
 
 double

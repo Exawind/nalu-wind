@@ -72,7 +72,7 @@ SANuTildaNodeKernel::execute(
   using DblType = NodeKernelTraits::DblType;
 
   // Reference: https://turbmodels.larc.nasa.gov/spalart.html
-  // Standard SA model (SA-noft2)
+  // SA-neg (ICCFD7-1902): standard SA for nuTilda >= 0, negative branch otherwise
 
   const DblType nuTilda = nuTilda_.get(node, 0);
   const DblType rho = density_.get(node, 0);
@@ -82,6 +82,42 @@ SANuTildaNodeKernel::execute(
 
   // Kinematic viscosity
   const DblType nu = mu / rho;
+
+  // Vorticity magnitude
+  DblType Omega = 0.0;
+  for (int i = 0; i < nDim_; ++i) {
+    for (int j = 0; j < nDim_; ++j) {
+      const DblType Wij =
+        0.5 * (dudx_.get(node, nDim_ * i + j) -
+               dudx_.get(node, nDim_ * j + i));
+      Omega += 2.0 * Wij * Wij;
+    }
+  }
+  Omega = stk::math::sqrt(Omega);
+
+  // dnutdx dot dnutdx (for Cb2 term)
+  DblType dnutdx_sq = 0.0;
+  for (int i = 0; i < nDim_; ++i) {
+    const DblType dnutdxi = dnutdx_.get(node, i);
+    dnutdx_sq += dnutdxi * dnutdxi;
+  }
+
+  // Cb2 term from the non-conservative diffusion form; the conservative part is
+  // handled by the edge solver with the effective viscosity.
+  const DblType S_cb2 = (1.0 / sigma_) * Cb2_ * dnutdx_sq;
+
+  if (nuTilda < 0.0) {
+    // Negative branch: P = Cb1 (1 - Ct3) Omega nuTilda, D = -Cw1 (nuTilda / d)^2
+    const DblType P_neg = Cb1_ * (1.0 - Ct3_) * Omega * nuTilda;
+    const DblType D_neg = -Cw1_ * (nuTilda / d) * (nuTilda / d);
+    rhs(0) += (P_neg - D_neg + S_cb2) * rho * dVol;
+
+    // -d(P - D)/dnuTilda is non-negative for Ct3 > 1 and nuTilda < 0
+    const DblType jac =
+      -Cb1_ * (1.0 - Ct3_) * Omega - 2.0 * Cw1_ * nuTilda / (d * d);
+    lhs(0, 0) += stk::math::max(jac, 0.0) * rho * dVol;
+    return;
+  }
 
   // chi = nuTilda / nu
   const DblType chi = nuTilda / nu;
@@ -100,18 +136,6 @@ SANuTildaNodeKernel::execute(
   const DblType dfv2dChi =
     -(1.0 - chi2 * dfv1dChi) / (onePlusChiFv1 * onePlusChiFv1);
   const DblType dfv2dNuTilda = dfv2dChi / nu;
-
-  // Vorticity magnitude
-  DblType Omega = 0.0;
-  for (int i = 0; i < nDim_; ++i) {
-    for (int j = 0; j < nDim_; ++j) {
-      const DblType Wij =
-        0.5 * (dudx_.get(node, nDim_ * i + j) -
-               dudx_.get(node, nDim_ * j + i));
-      Omega += 2.0 * Wij * Wij;
-    }
-  }
-  Omega = stk::math::sqrt(Omega);
 
   // STilda = Omega + nuTilda / (kappa^2 * d^2) * fv2
   // With clipping to prevent negative STilda: ICCFD7-1902
@@ -165,38 +189,31 @@ SANuTildaNodeKernel::execute(
     stk::math::pow(g6 + Cw3_6, 7.0 / 6.0);
   const DblType dfwdNuTilda = dfwdg * dgdNuTilda;
 
-  // dnutdx dot dnutdx (for Cb2 term)
-  DblType dnutdx_sq = 0.0;
-  for (int i = 0; i < nDim_; ++i) {
-    const DblType dnutdxi = dnutdx_.get(node, i);
-    dnutdx_sq += dnutdxi * dnutdxi;
-  }
+  // ft2 = Ct3 * exp(-Ct4 * chi^2)
+  const DblType ft2 = Ct3_ * stk::math::exp(-Ct4_ * chi2);
+  const DblType dft2dNuTilda = -2.0 * Ct4_ * chi / nu * ft2;
+  const DblType invKappa2 = 1.0 / (kappa_ * kappa_);
 
-  // Production: Cb1 * STilda * nuTilda
-  const DblType P_sa = Cb1_ * STilda * nuTilda;
+  // Production: Cb1 * (1 - ft2) * STilda * nuTilda
+  const DblType P_sa = Cb1_ * (1.0 - ft2) * STilda * nuTilda;
 
-  // Destruction: Cw1 * fw * (nuTilda / d)^2
-  const DblType D_sa = Cw1_ * fw * (nuTilda / d) * (nuTilda / d);
+  // Destruction: (Cw1 * fw - Cb1 / kappa^2 * ft2) * (nuTilda / d)^2
+  const DblType destCoeff = Cw1_ * fw - Cb1_ * invKappa2 * ft2;
+  const DblType D_sa = destCoeff * (nuTilda / d) * (nuTilda / d);
 
-  // Source from Cb2 term: (1/sigma) * Cb2 * dnutdx_i * dnutdx_i
-  // (Note: this term arises from the non-conservative diffusion formulation
-  //  and is added as a source. The conservative diffusion part 
-  //  (1/sigma) * d/dx_j[(nu + nuTilda) * dnutdx_j] is handled by the
-  //  edge solver with the effective viscosity.)
-  const DblType S_cb2 = (1.0 / sigma_) * Cb2_ * dnutdx_sq;
-
-  // RHS = (P_sa - D_sa + S_cb2) * rho * dVol
-  // Linearize destruction term into LHS
   rhs(0) += (P_sa - D_sa + S_cb2) * rho * dVol;
 
   // LHS linearization using the Positivity recommended by Spalart and Allmaras (1992)
-  const DblType PsdNuTilda = Cb1_ * STilda;
-  const DblType DsdNuTilda = Cw1_ * fw * nuTilda / (d * d);
+  const DblType PsdNuTilda = Cb1_ * (1.0 - ft2) * STilda;
+  const DblType DsdNuTilda = destCoeff * nuTilda / (d * d);
   const DblType lhsFac1 = stk::math::max(DsdNuTilda - PsdNuTilda, 0.0);
 
-  const DblType dPsdNuTilda = Cb1_ * dSTildadNuTilda;
+  const DblType dPsdNuTilda =
+    Cb1_ * ((1.0 - ft2) * dSTildadNuTilda - STilda * dft2dNuTilda);
   const DblType dDsdNuTilda =
-    Cw1_ / (d * d) * (fw + nuTilda * dfwdNuTilda);
+    (destCoeff +
+     nuTilda * (Cw1_ * dfwdNuTilda - Cb1_ * invKappa2 * dft2dNuTilda)) /
+    (d * d);
   const DblType lhsFac2 = stk::math::max((dDsdNuTilda - dPsdNuTilda) * nuTilda, 0.0);
 
   // Only add positive contributions to lhs for stability / positivity

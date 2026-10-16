@@ -26,7 +26,8 @@ class Realm;
  *    (1/sigma) * div[ (mu + rho*nuTilda) * grad(nuTilda) ]
  *
  *  Therefore the effective diffusivity is:
- *    evisc = (mu + rho * nuTilda) / sigma
+ *    evisc = (mu + rho * nuTilda * fn) / sigma
+ *  with fn = 1 for nuTilda >= 0 and the SA-neg fn otherwise.
  *
  *  This differs from the standard EffDiffFluxCoeffAlg which computes
  *    evisc = mu/sigma_lam + mu_t/sigma_turb
@@ -66,6 +67,9 @@ private:
 
   //! 1/sigma
   const DblType invSigma_;
+
+  //! SA-neg constant for fn in the negative branch
+  const DblType Cn1_;
 };
 
 } // namespace kynema_ugf

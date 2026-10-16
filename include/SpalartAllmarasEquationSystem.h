@@ -86,18 +86,12 @@ public:
 
   virtual void solve_and_update();
 
-  void initial_work();
-  virtual void post_external_data_transfer_work();
   virtual void predict_state();
 
   void compute_effective_diff_flux_coeff();
   void compute_wall_model_parameters();
   void compute_projected_nodal_gradient();
-  void update_and_clip();
-  void clip_nu_tilda(
-    const stk::mesh::NgpMesh& ngpMesh,
-    const stk::mesh::Selector& sel,
-    stk::mesh::NgpField<double>& nuTilda);
+  void update_nu_tilda();
   void clip_min_distance_to_wall();
   void manage_projected_nodal_gradient(EquationSystems& eqSystems);
 
@@ -118,8 +112,6 @@ public:
 
   // saved of mesh parts that are for wall bcs
   std::vector<stk::mesh::Part*> wallBcPart_;
-
-  const double nuTildaMinValue_{1.0e-16};
 };
 
 } // namespace kynema_ugf

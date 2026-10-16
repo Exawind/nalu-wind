@@ -32,7 +32,8 @@ EffDiffFluxCoeffSAAlg::EffDiffFluxCoeffSAAlg(
     density_(get_field_ordinal(realm.meta_data(), "density")),
     nuTilda_(get_field_ordinal(realm.meta_data(), "sa_nu_tilda")),
     evisc_(evisc->mesh_meta_data_ordinal()),
-    invSigma_(1.0 / sigma)
+    invSigma_(1.0 / sigma),
+    Cn1_(realm.get_turb_model_constant(TM_saCn1))
 {
 }
 
@@ -56,15 +57,22 @@ EffDiffFluxCoeffSAAlg::execute()
   auto evisc = fieldMgr.get_field<double>(evisc_);
 
   const DblType invSigma = invSigma_;
+  const DblType Cn1 = Cn1_;
 
-  // evisc = (mu + rho * nuTilda) / sigma
+  // evisc = (mu + rho * nuTilda * fn) / sigma, fn = 1 for nuTilda >= 0
   kynema_ugf_ngp::run_entity_algorithm(
     "EffDiffFluxCoeffSAAlg", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
       const DblType mu = visc.get(meshIdx, 0);
       const DblType rho = density.get(meshIdx, 0);
       const DblType nuT = nuTilda.get(meshIdx, 0);
-      evisc.get(meshIdx, 0) = (mu + rho * nuT) * invSigma;
+      DblType fn = 1.0;
+      if (nuT < 0.0) {
+        const DblType chi = rho * nuT / mu;
+        const DblType chi3 = chi * chi * chi;
+        fn = (Cn1 + chi3) / (Cn1 - chi3);
+      }
+      evisc.get(meshIdx, 0) = (mu + rho * nuT * fn) * invSigma;
     });
 
   evisc.modify_on_device();

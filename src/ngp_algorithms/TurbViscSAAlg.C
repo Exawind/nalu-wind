@@ -62,6 +62,12 @@ TurbViscSAAlg::execute()
       const DblType nu = mu / rho;
       const DblType nuT = nuTilda.get(meshIdx, 0);
 
+      // SA-neg: mu_t = 0 when nuTilda < 0
+      if (nuT < 0.0) {
+        tvisc.get(meshIdx, 0) = 0.0;
+        return;
+      }
+
       // chi = nuTilda / nu
       const DblType chi = nuT / nu;
       const DblType chi3 = chi * chi * chi;
