@@ -9,11 +9,145 @@
 
 #include "HypreLinearSystem.h"
 
+#ifdef HYPRE_USING_GPU
+#include "_hypre_utilities.h"
+#endif
+
+#if (HYPRE_RELEASE_NUMBER < 22500) && defined(HYPRE_USING_CUDA)
+#include <cuda_runtime_api.h>
+#elif (HYPRE_RELEASE_NUMBER < 22500) && defined(HYPRE_USING_HIP)
+#include <hip/hip_runtime_api.h>
+#endif
+
 #include <iostream>
 #include <fstream>
 
 namespace sierra {
 namespace kynema_ugf {
+
+struct HypreDeterministicAssemblyData
+{
+  using IndexView = Kokkos::View<size_t*, MemSpace>;
+  using RangePolicy =
+    Kokkos::RangePolicy<DeviceSpace, Kokkos::IndexType<size_t>>;
+
+  HypreDeterministicAssemblyData(
+    MPI_Comm comm, HYPRE_Int lower, HYPRE_Int upper)
+    : assembly(comm, lower, upper)
+  {
+  }
+
+  template <typename T>
+  static Kokkos::View<T*, MemSpace>
+  copyToDevice(const std::string& label, const std::vector<T>& input)
+  {
+    Kokkos::View<T*, MemSpace> result(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, label), input.size());
+    Kokkos::View<
+      const T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+      host(input.data(), input.size());
+    Kokkos::deep_copy(result, host);
+    return result;
+  }
+
+  void setup(
+    size_t owned,
+    size_t shared,
+    const HYPRE_Int* inputRows,
+    const HYPRE_Int* inputCols,
+    unsigned components = 1)
+  {
+    if (assembly.isSetup())
+      return;
+    assembly.setup(owned, shared, inputRows, inputCols, components);
+    numOwned = owned;
+    rows = copyToDevice("deterministic rows", assembly.entries().rows);
+    columns = copyToDevice("deterministic columns", assembly.entries().cols);
+    localOffsets =
+      copyToDevice("deterministic local offsets", assembly.localOffsets());
+    localIndices =
+      copyToDevice("deterministic local indices", assembly.localIndices());
+    receiveOffsets =
+      copyToDevice("deterministic receive offsets", assembly.receiveOffsets());
+    receiveIndices =
+      copyToDevice("deterministic receive indices", assembly.receiveIndices());
+    sharedValues = DoubleView2D(
+      Kokkos::view_alloc(
+        Kokkos::WithoutInitializing, "deterministic shared values"),
+      shared, components);
+    sharedHost = Kokkos::create_mirror_view(sharedValues);
+    receivedValues = DoubleView(
+      Kokkos::view_alloc(
+        Kokkos::WithoutInitializing, "deterministic received values"),
+      assembly.receivedValues().size());
+    receivedHost = Kokkos::create_mirror_view(receivedValues);
+    coefficients = DoubleView2D(
+      Kokkos::view_alloc(
+        Kokkos::WithoutInitializing, "deterministic coefficients"),
+      rows.extent(0), components);
+  }
+
+  void exchangeAndReduce(const double* input, size_t componentStride)
+  {
+    const auto shared = sharedValues;
+    const size_t owned = numOwned;
+    const size_t numShared = shared.extent(0);
+    const unsigned components = shared.extent(1);
+    // Pack only the shared portion; RHS subviews have a noncontiguous stride.
+    Kokkos::parallel_for(
+      "pack deterministic shared values",
+      RangePolicy(0, numShared * components), KOKKOS_LAMBDA(const size_t i) {
+        const size_t component = i / numShared;
+        const size_t entry = i % numShared;
+        shared(entry, component) =
+          input[owned + entry + component * componentStride];
+      });
+    Kokkos::deep_copy(sharedHost, sharedValues);
+    assembly.exchangeShared(sharedHost.data(), sharedHost.stride(1));
+    const auto& received = assembly.receivedValues();
+    for (size_t i = 0; i < received.size(); ++i)
+      receivedHost(i) = received[i];
+    Kokkos::deep_copy(receivedValues, receivedHost);
+
+    const auto localOff = localOffsets;
+    const auto localIdx = localIndices;
+    const auto receiveOff = receiveOffsets;
+    const auto receiveIdx = receiveIndices;
+    const auto receive = receivedValues;
+    const auto result = coefficients;
+    const size_t count = rows.extent(0);
+    Kokkos::parallel_for(
+      "reduce deterministic owned values", RangePolicy(0, count * components),
+      KOKKOS_LAMBDA(const size_t i) {
+        const size_t component = i / count;
+        const size_t slot = i % count;
+        size_t local = localOff(slot);
+        size_t remote = receiveOff(slot);
+        double value;
+        // Start with the first contribution, not zero, to preserve signed zero.
+        if (local != localOff(slot + 1)) {
+          value = input[localIdx(local++) + component * componentStride];
+          for (; local != localOff(slot + 1); ++local)
+            value += input[localIdx(local) + component * componentStride];
+        } else {
+          value = receive(receiveIdx(remote++) * components + component);
+        }
+        for (; remote != receiveOff(slot + 1); ++remote)
+          value += receive(receiveIdx(remote) * components + component);
+        result(slot, component) = value;
+      });
+    Kokkos::fence();
+  }
+
+  HypreDeterministicAssembly assembly;
+  size_t numOwned{0};
+  HypreIntTypeView rows, columns;
+  IndexView localOffsets, localIndices, receiveOffsets, receiveIndices;
+  DoubleView2D sharedValues, coefficients;
+  DoubleView2DHost sharedHost;
+  DoubleView receivedValues;
+  DoubleViewHost receivedHost;
+};
 
 HypreLinearSystem::HypreLinearSystem(
   Realm& realm,
@@ -151,6 +285,17 @@ HypreLinearSystem::beginLinearSystemConstruction()
   // Total number of global rows in the system
   maxRowID_ = realm_.hypreNumNodes_ * numDof_ - 1;
   globalNumRows_ = maxRowID_ + 1;
+
+  auto* config =
+    static_cast<HypreLinearSolverConfig*>(linearSolver_->getConfig());
+  deterministicMatrixAssembly_.reset();
+  deterministicRhsAssembly_.reset();
+  if (config->deterministicAssembly()) {
+    deterministicMatrixAssembly_.reset(new HypreDeterministicAssemblyData(
+      realm_.bulk_data().parallel(), iLower_, iUpper_));
+    deterministicRhsAssembly_.reset(new HypreDeterministicAssemblyData(
+      realm_.bulk_data().parallel(), iLower_, iUpper_));
+  }
 
 #if 0
   if (numDof_ > 0)
@@ -1570,6 +1715,32 @@ HypreLinearSystem::hypreIJMatrixSetAddToValues()
     MPI_Barrier(realm_.bulk_data().parallel());
   }
 
+  if (config->deterministicAssembly()) {
+    auto& data = *deterministicMatrixAssembly_;
+    data.setup(
+      num_nonzeros_owned, num_nonzeros_shared, rows_host_.data(),
+      cols_host_.data());
+    data.exchangeAndReduce(hcApplier->values_dev_.data(), 0);
+    const auto count = data.rows.extent(0);
+    if (count) {
+      HYPRE_IJMatrixSetValues2(
+        mat_, count, nullptr, data.rows.data(), nullptr, data.columns.data(),
+        data.coefficients.data());
+    }
+    // Hypre may use a different GPU stream; finish before reusing the buffers.
+#if defined(HYPRE_USING_GPU) && (HYPRE_RELEASE_NUMBER >= 23300)
+    hypre_ForceSyncComputeStream();
+#elif defined(HYPRE_USING_GPU) && (HYPRE_RELEASE_NUMBER >= 22500)
+    hypre_ForceSyncComputeStream(hypre_handle());
+#elif defined(HYPRE_USING_CUDA)
+    cudaDeviceSynchronize();
+#elif defined(HYPRE_USING_HIP)
+    hipDeviceSynchronize();
+#endif
+    Kokkos::fence();
+    return;
+  }
+
   if (num_nonzeros_owned) {
     /* Set the owned part */
     HYPRE_IJMatrixSetValues2(
@@ -1663,6 +1834,11 @@ HypreLinearSystem::hypreIJVectorSetAddToValues()
     MPI_Barrier(realm_.bulk_data().parallel());
   }
 
+  if (config->deterministicAssembly()) {
+    hypreIJVectorSetDeterministicValues(&rhs_, 1);
+    return;
+  }
+
   if (num_rows_owned) {
     /* Set the owned part */
     HYPRE_IJVectorSetValues(
@@ -1675,6 +1851,37 @@ HypreLinearSystem::hypreIJVectorSetAddToValues()
       rhs_, num_rows_shared, rhs_rows_dev_.data() + num_rows_owned,
       hcApplier->rhs_dev_.data() + num_rows_owned);
   }
+}
+
+void
+HypreLinearSystem::hypreIJVectorSetDeterministicValues(
+  HYPRE_IJVector* rhs, unsigned components)
+{
+  auto* hcApplier =
+    dynamic_cast<HypreLinSysCoeffApplier*>(hostCoeffApplier.get());
+  auto& data = *deterministicRhsAssembly_;
+  data.setup(
+    hcApplier->num_rows_owned_, hcApplier->num_rows_shared_,
+    rhs_rows_host_.data(), nullptr, components);
+  data.exchangeAndReduce(
+    hcApplier->rhs_dev_.data(), hcApplier->rhs_dev_.stride(1));
+  const auto count = data.rows.extent(0);
+  if (count) {
+    for (unsigned component = 0; component < components; ++component)
+      HYPRE_IJVectorSetValues(
+        rhs[component], count, data.rows.data(),
+        data.coefficients.data() + component * data.coefficients.stride(1));
+  }
+#if defined(HYPRE_USING_GPU) && (HYPRE_RELEASE_NUMBER >= 23300)
+  hypre_ForceSyncComputeStream();
+#elif defined(HYPRE_USING_GPU) && (HYPRE_RELEASE_NUMBER >= 22500)
+  hypre_ForceSyncComputeStream(hypre_handle());
+#elif defined(HYPRE_USING_CUDA)
+  cudaDeviceSynchronize();
+#elif defined(HYPRE_USING_HIP)
+  hipDeviceSynchronize();
+#endif
+  Kokkos::fence();
 }
 
 void

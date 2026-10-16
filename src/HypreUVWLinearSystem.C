@@ -172,6 +172,10 @@ HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
       MPI_Barrier(realm_.bulk_data().parallel());
     }
 
+    if (config->deterministicAssembly()) {
+      continue;
+    }
+
     if (num_rows_owned) {
       /* Set the owned part */
       HYPRE_IJVectorSetValues(
@@ -200,6 +204,8 @@ HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
 #endif
     }
   }
+  if (config->deterministicAssembly())
+    hypreIJVectorSetDeterministicValues(rhs_.data(), nDim_);
 }
 
 void

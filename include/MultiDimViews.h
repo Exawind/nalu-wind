@@ -53,15 +53,7 @@ public:
     const TEAMHANDLETYPE& /*team*/,
     unsigned /* maxOrdinal */,
     const NumNeededViews& numNeededViews)
-    : indices(),
-      views_1D(),
-      views_2D(),
-      views_3D(),
-      views_4D(),
-      views_1D_size(0),
-      views_2D_size(0),
-      views_3D_size(0),
-      views_4D_size(0)
+    : views_1D_size(0), views_2D_size(0), views_3D_size(0), views_4D_size(0)
   {
     STK_NGP_ThrowRequireMsg(
       (numNeededViews.num1DViews <= maxViewsPerDim ||
