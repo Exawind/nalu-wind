@@ -112,6 +112,8 @@ public:
 
   // saved of mesh parts that are for wall bcs
   std::vector<stk::mesh::Part*> wallBcPart_;
+
+  bool wallFunctionWarningIssued_{false};
 };
 
 } // namespace kynema_ugf

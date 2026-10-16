@@ -94,6 +94,13 @@ AFTGammaTildaEquationSystem::AFTGammaTildaEquationSystem(
   if (managePNG_)
     throw std::runtime_error(
       "AFTGammaTildaEquationSystem::Error managePNG is not complete");
+
+  // AFT has no k/omega to compute a local Tu, so a constant Tu is required
+  if (realm_.get_turb_model_constant(TM_fsti) <= 0.0)
+    throw std::runtime_error(
+      "AFTGammaTildaEquationSystem: the AFT transition model requires a "
+      "positive freestream turbulence intensity; set user_constants: fsti: "
+      "<Tu in %> in solution_options");
 }
 
 AFTGammaTildaEquationSystem::~AFTGammaTildaEquationSystem() = default;

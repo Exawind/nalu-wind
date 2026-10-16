@@ -568,6 +568,13 @@ SpalartAllmarasEquationSystem::register_wall_bc(
   stk::mesh::put_field_on_mesh(wallNormDistBip, *part, numScsBip, nullptr);
 
   WallUserData userData = wallBCData.userData_;
+  if (userData.wallFunctionApproach_ && !wallFunctionWarningIssued_) {
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "WARNING: use_wall_function is not supported by the SA model and is "
+         "ignored; nuTilda = 0 is imposed at walls"
+      << std::endl;
+    wallFunctionWarningIssued_ = true;
+  }
   bool RANSAblBcApproach = userData.RANSAblBcApproach_;
   RoughnessHeight rough = userData.z0_;
   double z0 = rough.z0_;

@@ -596,6 +596,16 @@ SolutionOptions::load(const YAML::Node& y_node)
     }
   }
 
+  // AFT is enabled via its equation systems, not a solution option
+  bool aftEqActive = false;
+  const YAML::Node y_eq_systems = y_node["equation_systems"];
+  if (y_eq_systems && y_eq_systems["systems"]) {
+    for (const auto& y_system : y_eq_systems["systems"]) {
+      if (y_system["AFTGammaTilda"])
+        aftEqActive = true;
+    }
+  }
+
   KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
   KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Turbulence Model Review:   " << std::endl;
@@ -614,6 +624,9 @@ SolutionOptions::load(const YAML::Node& y_node)
       KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Transition Model is: One Equation Gamma w/ local Tu" << std::endl;
     }
+  } else if (aftEqActive) {
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Transition Model is: SA-AFT2019b w/ constant Tu" << std::endl;
   } else {
     KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "No Transition Model" << std::endl;
