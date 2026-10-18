@@ -980,7 +980,7 @@ The transition onset criteria are defined as:
    F_{turb}=e^{-\left ( \frac{R_{T}}{2} \right )^{4}}, \quad R_T=\frac{\mu_t}{\mu}, \quad
    N_{crit} = -8.43 - 2.4 \ln \left( \frac{\tau}{100} \right), \quad \tau = 2.5 \tanh \left( \frac{Tu}{2.5} \right)
 
-where the freestream turbulence intensity, :math:`Tu` (%), is required as the user constant ``fsti``.
+where the freestream turbulence intensity, :math:`Tu` (%), is required as ``fsti`` in ``turbulence_model_constants``.
 The model constants are:
 
 .. math::

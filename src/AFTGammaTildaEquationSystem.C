@@ -99,8 +99,8 @@ AFTGammaTildaEquationSystem::AFTGammaTildaEquationSystem(
   if (realm_.get_turb_model_constant(TM_fsti) <= 0.0)
     throw std::runtime_error(
       "AFTGammaTildaEquationSystem: the AFT transition model requires a "
-      "positive freestream turbulence intensity; set user_constants: fsti: "
-      "<Tu in %> in solution_options");
+      "positive freestream turbulence intensity; set "
+      "turbulence_model_constants: fsti: <Tu in %> in solution_options");
 }
 
 AFTGammaTildaEquationSystem::~AFTGammaTildaEquationSystem() = default;
