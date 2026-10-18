@@ -63,6 +63,12 @@ struct GammaInf
   GammaInf() : gamma_(1.0) {}
 };
 
+struct SANuTilda
+{
+  double saNuTilda_;
+  SANuTilda() : saNuTilda_(0.0) {}
+};
+
 struct Temperature
 {
   double temperature_;
