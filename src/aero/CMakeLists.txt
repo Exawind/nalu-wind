@@ -1,6 +1,7 @@
 target_sources(${kynema_ugf_lib_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/AeroContainer.C
   ${CMAKE_CURRENT_SOURCE_DIR}/CalcLoads.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/CalcLoadsAssembled.C
 )
 
 if(ENABLE_KYNEMA_FMB_SIXDOF)

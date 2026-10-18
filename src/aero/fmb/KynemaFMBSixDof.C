@@ -439,7 +439,7 @@ KynemaFMBSixDof::map_displacements(double current_time, bool updateCurCoor)
 }
 
 void
-KynemaFMBSixDof::map_loads(const double)
+KynemaFMBSixDof::map_loads(const double /* current_time */)
 {
   for (int i = 0; i < (int)point_bodies_.size(); ++i) {
     map_loads_point(point_bodies_[i]);

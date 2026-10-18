@@ -65,7 +65,7 @@ public:
 
   void advance_struct_timestep(const double, const double) override;
 
-  void map_loads(const double) override;
+  void map_loads(const double currentTime) override;
 
   stk::mesh::PartVector get_mesh_blocks() const override
   {
