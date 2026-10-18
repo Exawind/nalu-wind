@@ -144,7 +144,8 @@ AFTGammaTildaEquationSystem::register_nodal_fields(
   if (
     numStates > 2 &&
     (!realm_.restarted_simulation() || realm_.support_inconsistent_restart())) {
-    ScalarFieldType& gammaTildaN = gammaTilda_->field_of_state(stk::mesh::StateN);
+    ScalarFieldType& gammaTildaN =
+      gammaTilda_->field_of_state(stk::mesh::StateN);
     ScalarFieldType& gammaTildaNp1 =
       gammaTilda_->field_of_state(stk::mesh::StateNP1);
 
@@ -166,12 +167,11 @@ AFTGammaTildaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 
   if (edgeNodalGradient_ && realm_.realmUsesEdges_) {
     nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
-      algType, part, "aft_gammatilda_nodal_grad", &gammaTildaNp1,
-      &dgtdxNone);
+      algType, part, "aft_gammatilda_nodal_grad", &gammaTildaNp1, &dgtdxNone);
   } else {
     nodalGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
-      algType, part, "aft_gammatilda_nodal_grad", &gammaTildaNp1,
-      &dgtdxNone, edgeNodalGradient_);
+      algType, part, "aft_gammatilda_nodal_grad", &gammaTildaNp1, &dgtdxNone,
+      edgeNodalGradient_);
   }
 
   if (!realm_.solutionOptions_->useConsolidatedSolverAlg_) {
@@ -187,7 +187,8 @@ AFTGammaTildaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       }
       solverAlgDriver_->solverAlgMap_[algType] = theAlg;
 
-      auto isrc = realm_.solutionOptions_->elemSrcTermsMap_.find("aft_gamma_tilda");
+      auto isrc =
+        realm_.solutionOptions_->elemSrcTermsMap_.find("aft_gamma_tilda");
       if (isrc != realm_.solutionOptions_->elemSrcTermsMap_.end()) {
         throw std::runtime_error(
           "AFTGammaTildaEquationSystem::Error can not use element source terms "
@@ -226,8 +227,7 @@ AFTGammaTildaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 
   if (!effDiffFluxAlg_) {
     effDiffFluxAlg_.reset(new EffDiffFluxCoeffAlg(
-      realm_, part, visc_, tvisc_, evisc_, 1.0, 1.0,
-      realm_.is_turbulent()));
+      realm_, part, visc_, tvisc_, evisc_, 1.0, 1.0, realm_.is_turbulent()));
   } else {
     effDiffFluxAlg_->partVec_.push_back(part);
   }
@@ -263,8 +263,7 @@ AFTGammaTildaEquationSystem::register_inflow_bc(
     bcDataAlg_.push_back(auxAlg);
 
   CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
-    realm_, part, theBcField, &gammaTildaNp1, 0, 1,
-    stk::topology::NODE_RANK);
+    realm_, part, theBcField, &gammaTildaNp1, 0, 1, stk::topology::NODE_RANK);
   bcDataMapAlg_.push_back(theCopyAlg);
 
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
@@ -295,8 +294,8 @@ AFTGammaTildaEquationSystem::register_open_bc(
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-  ScalarFieldType* theBcField = &(
-    meta_data.declare_field<double>(stk::topology::NODE_RANK, "open_aft_gamma_tilda_bc"));
+  ScalarFieldType* theBcField = &(meta_data.declare_field<double>(
+    stk::topology::NODE_RANK, "open_aft_gamma_tilda_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   std::vector<double> userSpec(1, 0.0);
@@ -405,8 +404,8 @@ AFTGammaTildaEquationSystem::solve_and_update()
 
   for (int k = 0; k < maxIterations_; ++k) {
     KynemaUGFEnv::self().kynema_ugfOutputP0()
-      << " " << k + 1 << "/" << maxIterations_ << std::setw(15)
-      << std::right << userSuppliedName_ << std::endl;
+      << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
+      << userSuppliedName_ << std::endl;
 
     for (int oi = 0; oi < numOversetIters_; ++oi) {
       assemble_and_solve(gammaTmp_);

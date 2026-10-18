@@ -72,7 +72,8 @@ SANuTildaNodeKernel::execute(
   using DblType = NodeKernelTraits::DblType;
 
   // Reference: https://turbmodels.larc.nasa.gov/spalart.html
-  // SA-neg (ICCFD7-1902): standard SA for nuTilda >= 0, negative branch otherwise
+  // SA-neg (ICCFD7-1902): standard SA for nuTilda >= 0, negative branch
+  // otherwise
 
   const DblType nuTilda = nuTilda_.get(node, 0);
   const DblType rho = density_.get(node, 0);
@@ -88,8 +89,7 @@ SANuTildaNodeKernel::execute(
   for (int i = 0; i < nDim_; ++i) {
     for (int j = 0; j < nDim_; ++j) {
       const DblType Wij =
-        0.5 * (dudx_.get(node, nDim_ * i + j) -
-               dudx_.get(node, nDim_ * j + i));
+        0.5 * (dudx_.get(node, nDim_ * i + j) - dudx_.get(node, nDim_ * j + i));
       Omega += 2.0 * Wij * Wij;
     }
   }
@@ -107,7 +107,8 @@ SANuTildaNodeKernel::execute(
   const DblType S_cb2 = (1.0 / sigma_) * Cb2_ * dnutdx_sq;
 
   if (nuTilda < 0.0) {
-    // Negative branch: P = Cb1 (1 - Ct3) Omega nuTilda, D = -Cw1 (nuTilda / d)^2
+    // Negative branch: P = Cb1 (1 - Ct3) Omega nuTilda, D = -Cw1 (nuTilda /
+    // d)^2
     const DblType P_neg = Cb1_ * (1.0 - Ct3_) * Omega * nuTilda;
     const DblType D_neg = -Cw1_ * (nuTilda / d) * (nuTilda / d);
     rhs(0) += (P_neg - D_neg + S_cb2) * rho * dVol;
@@ -184,9 +185,8 @@ SANuTildaNodeKernel::execute(
   const DblType fwRatio = (1.0 + Cw3_6) / (g6 + Cw3_6);
   const DblType fwPow = stk::math::pow(fwRatio, 1.0 / 6.0);
   const DblType fw = g * fwPow;
-  const DblType dfwdg =
-    stk::math::pow(1.0 + Cw3_6, 1.0 / 6.0) * Cw3_6 /
-    stk::math::pow(g6 + Cw3_6, 7.0 / 6.0);
+  const DblType dfwdg = stk::math::pow(1.0 + Cw3_6, 1.0 / 6.0) * Cw3_6 /
+                        stk::math::pow(g6 + Cw3_6, 7.0 / 6.0);
   const DblType dfwdNuTilda = dfwdg * dgdNuTilda;
 
   // ft2 = Ct3 * exp(-Ct4 * chi^2)
@@ -203,7 +203,8 @@ SANuTildaNodeKernel::execute(
 
   rhs(0) += (P_sa - D_sa + S_cb2) * rho * dVol;
 
-  // LHS linearization using the Positivity recommended by Spalart and Allmaras (1992)
+  // LHS linearization using the Positivity recommended by Spalart and Allmaras
+  // (1992)
   const DblType PsdNuTilda = Cb1_ * (1.0 - ft2) * STilda;
   const DblType DsdNuTilda = destCoeff * nuTilda / (d * d);
   const DblType lhsFac1 = stk::math::max(DsdNuTilda - PsdNuTilda, 0.0);
@@ -214,7 +215,8 @@ SANuTildaNodeKernel::execute(
     (destCoeff +
      nuTilda * (Cw1_ * dfwdNuTilda - Cb1_ * invKappa2 * dft2dNuTilda)) /
     (d * d);
-  const DblType lhsFac2 = stk::math::max((dDsdNuTilda - dPsdNuTilda) * nuTilda, 0.0);
+  const DblType lhsFac2 =
+    stk::math::max((dDsdNuTilda - dPsdNuTilda) * nuTilda, 0.0);
 
   // Only add positive contributions to lhs for stability / positivity
   lhs(0, 0) += (lhsFac1 + lhsFac2) * rho * dVol;

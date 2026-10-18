@@ -250,12 +250,10 @@ SpalartAllmarasEquationSystem::register_nodal_fields(
     numStates > 2 &&
     (!realm_.restarted_simulation() || realm_.support_inconsistent_restart())) {
     ScalarFieldType& nuTildaN = nuTilda_->field_of_state(stk::mesh::StateN);
-    ScalarFieldType& nuTildaNp1 =
-      nuTilda_->field_of_state(stk::mesh::StateNP1);
+    ScalarFieldType& nuTildaNp1 = nuTilda_->field_of_state(stk::mesh::StateNP1);
 
     CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
-      realm_, part_vec, &nuTildaNp1, &nuTildaN, 0, 1,
-      stk::topology::NODE_RANK);
+      realm_, part_vec, &nuTildaNp1, &nuTildaN, 0, 1, stk::topology::NODE_RANK);
     copyStateAlg_.push_back(theCopyAlg);
   }
 }
@@ -316,8 +314,7 @@ SpalartAllmarasEquationSystem::register_interior_algorithm(
     // Check if the user has requested CMM or LMM algorithms; if so, do not
     // include Nodal Mass algorithms
     std::vector<std::string> checkAlgNames = {
-      "sa_nu_tilda_time_derivative",
-      "lumped_sa_nu_tilda_time_derivative"};
+      "sa_nu_tilda_time_derivative", "lumped_sa_nu_tilda_time_derivative"};
     bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
     const bool useAftTransition =
       realm_.meta_data().get_field<double>(
@@ -338,12 +335,11 @@ SpalartAllmarasEquationSystem::register_interior_algorithm(
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         if (srcName == "gcl") {
-          nodeAlg.add_kernel<ScalarGclNodeKernel>(
-            realm_.bulk_data(), nuTilda_);
-          KynemaUGFEnv::self().kynema_ugfOutputP0() << " - " << srcName << std::endl;
+          nodeAlg.add_kernel<ScalarGclNodeKernel>(realm_.bulk_data(), nuTilda_);
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
+            << " - " << srcName << std::endl;
         } else
-          throw std::runtime_error(
-            "SA_EQS: Invalid source term: " + srcName);
+          throw std::runtime_error("SA_EQS: Invalid source term: " + srcName);
       });
   } else {
     throw std::runtime_error("SA_EQS: Element terms not supported");
@@ -355,8 +351,8 @@ SpalartAllmarasEquationSystem::register_interior_algorithm(
   // (mu + mu_t) / sigma form (since mu_t = rho*nuTilda*fv1 != rho*nuTilda)
   if (!effDiffFluxAlg_) {
     const double sigma = realm_.get_turb_model_constant(TM_saSigma);
-    effDiffFluxAlg_.reset(new EffDiffFluxCoeffSAAlg(
-      realm_, part, visc_, evisc_, sigma));
+    effDiffFluxAlg_.reset(
+      new EffDiffFluxCoeffSAAlg(realm_, part, visc_, evisc_, sigma));
   } else {
     effDiffFluxAlg_->partVec_.push_back(part);
   }
@@ -380,8 +376,8 @@ SpalartAllmarasEquationSystem::register_inflow_bc(
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   // register boundary data; nuTilda_bc
-  ScalarFieldType* theBcField =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "sa_nu_tilda_bc"));
+  ScalarFieldType* theBcField = &(meta_data.declare_field<double>(
+    stk::topology::NODE_RANK, "sa_nu_tilda_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specification
@@ -391,8 +387,7 @@ SpalartAllmarasEquationSystem::register_inflow_bc(
   userSpec[0] = saNuTilda.saNuTilda_;
 
   // new it
-  ConstantAuxFunction* theAuxFunc =
-    new ConstantAuxFunction(0, 1, userSpec);
+  ConstantAuxFunction* theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
 
   // bc data alg
   AuxFunctionAlgorithm* auxAlg = new AuxFunctionAlgorithm(
@@ -449,8 +444,8 @@ SpalartAllmarasEquationSystem::register_open_bc(
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   // register boundary data; nuTilda_bc
-  ScalarFieldType* theBcField =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "sa_nu_tilda_bc"));
+  ScalarFieldType* theBcField = &(meta_data.declare_field<double>(
+    stk::topology::NODE_RANK, "sa_nu_tilda_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specification
@@ -460,8 +455,7 @@ SpalartAllmarasEquationSystem::register_open_bc(
   userSpec[0] = saNuTilda.saNuTilda_;
 
   // new it
-  ConstantAuxFunction* theAuxFunc =
-    new ConstantAuxFunction(0, 1, userSpec);
+  ConstantAuxFunction* theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
 
   // bc data alg
   AuxFunctionAlgorithm* auxAlg = new AuxFunctionAlgorithm(
@@ -518,14 +512,13 @@ SpalartAllmarasEquationSystem::register_wall_bc(
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   // register boundary data; nuTilda_bc = 0 at wall (standard SA)
-  ScalarFieldType* theBcField =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "sa_nu_tilda_bc"));
+  ScalarFieldType* theBcField = &(meta_data.declare_field<double>(
+    stk::topology::NODE_RANK, "sa_nu_tilda_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // nuTilda = 0 at wall
   std::vector<double> userSpec(1, 0.0);
-  ConstantAuxFunction* theAuxFunc =
-    new ConstantAuxFunction(0, 1, userSpec);
+  ConstantAuxFunction* theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
 
   AuxFunctionAlgorithm* auxAlg = new AuxFunctionAlgorithm(
     realm_, part, theBcField, theAuxFunc, stk::topology::NODE_RANK);
@@ -561,8 +554,8 @@ SpalartAllmarasEquationSystem::register_wall_bc(
   auto& assembledWallNormDist = meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "assembled_wall_normal_distance");
   stk::mesh::put_field_on_mesh(assembledWallNormDist, *part, nullptr);
-  auto& wallNormDistBip =
-    meta_data.declare_field<double>(meta_data.side_rank(), "wall_normal_distance_bip");
+  auto& wallNormDistBip = meta_data.declare_field<double>(
+    meta_data.side_rank(), "wall_normal_distance_bip");
   auto* meFC = MasterElementRepo::get_surface_master_element_on_host(partTopo);
   const int numScsBip = meFC->num_integration_points();
   stk::mesh::put_field_on_mesh(wallNormDistBip, *part, numScsBip, nullptr);

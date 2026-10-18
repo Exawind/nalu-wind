@@ -18,8 +18,7 @@
 namespace sierra {
 namespace kynema_ugf {
 
-SANuTildaAFTNodeKernel::SANuTildaAFTNodeKernel(
-  const stk::mesh::MetaData& meta)
+SANuTildaAFTNodeKernel::SANuTildaAFTNodeKernel(const stk::mesh::MetaData& meta)
   : NGPNodeKernel<SANuTildaAFTNodeKernel>(),
     nuTildaID_(get_field_ordinal(meta, "sa_nu_tilda")),
     aftGammaTildaID_(get_field_ordinal(meta, "aft_gamma_tilda")),
@@ -83,8 +82,7 @@ SANuTildaAFTNodeKernel::execute(
   for (int i = 0; i < nDim_; ++i) {
     for (int j = 0; j < nDim_; ++j) {
       const DblType Wij =
-        0.5 * (dudx_.get(node, nDim_ * i + j) -
-               dudx_.get(node, nDim_ * j + i));
+        0.5 * (dudx_.get(node, nDim_ * i + j) - dudx_.get(node, nDim_ * j + i));
       Omega += 2.0 * Wij * Wij;
     }
   }
@@ -165,9 +163,8 @@ SANuTildaAFTNodeKernel::execute(
   const DblType fwRatio = (1.0 + Cw3_6) / (g6 + Cw3_6);
   const DblType fwPow = stk::math::pow(fwRatio, 1.0 / 6.0);
   const DblType fw = g * fwPow;
-  const DblType dfwdg =
-    stk::math::pow(1.0 + Cw3_6, 1.0 / 6.0) * Cw3_6 /
-    stk::math::pow(g6 + Cw3_6, 7.0 / 6.0);
+  const DblType dfwdg = stk::math::pow(1.0 + Cw3_6, 1.0 / 6.0) * Cw3_6 /
+                        stk::math::pow(g6 + Cw3_6, 7.0 / 6.0);
   const DblType dfwdNuTilda = dfwdg * dgdNuTilda;
 
   const DblType ft2 = Ct3_ * (1.0 - stk::math::exp(gammaTilda));

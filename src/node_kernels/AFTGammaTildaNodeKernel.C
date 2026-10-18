@@ -84,23 +84,24 @@ AFTGammaTildaNodeKernel::execute(
   const DblType nCritical = -8.43 - 2.4 * stk::math::log(tau / 100.0);
   const DblType FonsetOne = nTilda / nCritical;
   const DblType FonsetTwo = stk::math::min(FonsetOne, 2.0);
-  const DblType FonsetThree = stk::math::max(
-    1.0 - stk::math::pow(turbulenceReynolds / 3.5, 3.0), 0.0);
+  const DblType FonsetThree =
+    stk::math::max(1.0 - stk::math::pow(turbulenceReynolds / 3.5, 3.0), 0.0);
   const DblType Fonset = stk::math::max(FonsetTwo - FonsetThree, 0.0);
-  const DblType fTurb = stk::math::exp(
-    -stk::math::pow(turbulenceReynolds / 2.0, 4.0));
+  const DblType fTurb =
+    stk::math::exp(-stk::math::pow(turbulenceReynolds / 2.0, 4.0));
 
   const DblType intermittency = stk::math::exp(gammaTilda);
   const DblType productionCoefficient = 100.0 * rho * strainMagnitude * Fonset;
   const DblType destructionCoefficient =
     0.06 * rho * vorticityMagnitude * fTurb;
   const DblType production = productionCoefficient * (1.0 - intermittency);
-  const DblType destruction = destructionCoefficient * (50.0 * intermittency - 1.0);
+  const DblType destruction =
+    destructionCoefficient * (50.0 * intermittency - 1.0);
 
   rhs(0) += (production - destruction) * dualVolume;
-  lhs(0, 0) +=
-    intermittency * (productionCoefficient + 50.0 * destructionCoefficient) *
-    dualVolume;
+  lhs(0, 0) += intermittency *
+               (productionCoefficient + 50.0 * destructionCoefficient) *
+               dualVolume;
 }
 
 } // namespace kynema_ugf

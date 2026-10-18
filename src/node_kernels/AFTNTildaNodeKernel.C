@@ -83,34 +83,28 @@ AFTNTildaNodeKernel::execute(
 
   const DblType hLocal =
     wallDistance * wallDistance * dvnn / stk::math::max(nu, 1.0e-16);
-  const DblType h12 = stk::math::min(
-    stk::math::max(0.26 * hLocal + 2.4, 2.2), 20.0);
+  const DblType h12 =
+    stk::math::min(stk::math::max(0.26 * hLocal + 2.4, 2.2), 20.0);
   const DblType h12MinusOne = stk::math::max(h12 - 1.0, 1.0e-16);
 
   const DblType reThetaZero = stk::math::pow(
-    10.0,
-    0.7 * stk::math::tanh(14.0 / h12MinusOne - 9.24) +
-      2.492 / stk::math::pow(h12MinusOne, 0.43) + 0.62);
-  const DblType kV =
-    1.0 / (0.4036 * h12 * h12 - 2.5394 * h12 + 4.3273);
+    10.0, 0.7 * stk::math::tanh(14.0 / h12MinusOne - 9.24) +
+            2.492 / stk::math::pow(h12MinusOne, 0.43) + 0.62);
+  const DblType kV = 1.0 / (0.4036 * h12 * h12 - 2.5394 * h12 + 4.3273);
   const DblType reVZero = kV * reThetaZero;
-  const DblType reV =
-    rho * strainMagnitude * wallDistance * wallDistance /
-    stk::math::max(mu + muT, 1.0e-16);
+  const DblType reV = rho * strainMagnitude * wallDistance * wallDistance /
+                      stk::math::max(mu + muT, 1.0e-16);
   const DblType fCrit = (reV >= reVZero) ? 1.0 : 0.0;
 
-  const DblType lH12 = stk::math::max(
-    (6.54 * h12 - 14.07) / (h12 * h12), 1.0e-16);
+  const DblType lH12 =
+    stk::math::max((6.54 * h12 - 14.07) / (h12 * h12), 1.0e-16);
   const DblType DH12 = 2.4 * h12 / h12MinusOne;
   const DblType mH12 =
-    (0.058 * (h12 - 4.0) * (h12 - 4.0) / h12MinusOne - 0.068) /
-    lH12;
-  const DblType fgrowth =
-    DH12 * (1.0 + mH12) * 0.5 * lH12;
+    (0.058 * (h12 - 4.0) * (h12 - 4.0) / h12MinusOne - 0.068) / lH12;
+  const DblType fgrowth = DH12 * (1.0 + mH12) * 0.5 * lH12;
   const DblType dnDReTheta =
     0.028 * h12MinusOne -
-    0.0345 * stk::math::exp(
-               -stk::math::pow(3.87 / h12MinusOne - 2.52, 2.0));
+    0.0345 * stk::math::exp(-stk::math::pow(3.87 / h12MinusOne - 2.52, 2.0));
 
   const DblType production =
     rho * vorticityMagnitude * fCrit * fgrowth * dnDReTheta;

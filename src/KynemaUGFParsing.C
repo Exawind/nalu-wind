@@ -1000,7 +1000,8 @@ convert<sierra::kynema_ugf::InflowUserData>::decode(
     inflowData.massFractionSpec_ = true;
   }
   if (node["sa_nu_tilda"]) {
-    inflowData.saNuTilda_ = node["sa_nu_tilda"].as<sierra::kynema_ugf::SANuTilda>();
+    inflowData.saNuTilda_ =
+      node["sa_nu_tilda"].as<sierra::kynema_ugf::SANuTilda>();
     inflowData.saNuTildaSpec_ = true;
   }
   if (node["temperature"]) {
@@ -1097,7 +1098,8 @@ convert<sierra::kynema_ugf::OpenUserData>::decode(
     openData.massFractionSpec_ = true;
   }
   if (node["sa_nu_tilda"]) {
-    openData.saNuTilda_ = node["sa_nu_tilda"].as<sierra::kynema_ugf::SANuTilda>();
+    openData.saNuTilda_ =
+      node["sa_nu_tilda"].as<sierra::kynema_ugf::SANuTilda>();
     openData.saNuTildaSpec_ = true;
   }
   if (node["temperature"]) {

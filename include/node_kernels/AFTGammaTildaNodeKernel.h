@@ -17,8 +17,7 @@ namespace kynema_ugf {
 
 class Realm;
 
-class AFTGammaTildaNodeKernel
-  : public NGPNodeKernel<AFTGammaTildaNodeKernel>
+class AFTGammaTildaNodeKernel : public NGPNodeKernel<AFTGammaTildaNodeKernel>
 {
 public:
   AFTGammaTildaNodeKernel(const stk::mesh::MetaData&);

@@ -186,7 +186,7 @@ enum class TurbulenceModel {
 // matching string name index into above enums (must match PERFECTLY)
 static const std::string TurbulenceModelNames[] = {
   "laminar", "ksgs",      "smagorinsky",      "wale", "sst", "sstlr", "sst_des",
-  "sst_ams", "sst_iddes", "sst_iddes_simple", "ke",   "ko",   "sa"};
+  "sst_ams", "sst_iddes", "sst_iddes_simple", "ke",   "ko",  "sa"};
 
 enum TurbulenceModelConstant {
   TM_cMu = 0,

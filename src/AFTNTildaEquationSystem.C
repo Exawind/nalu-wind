@@ -92,8 +92,8 @@ AFTNTildaEquationSystem::AFTNTildaEquationSystem(EquationSystems& eqSystems)
 
   set_nodal_gradient("aft_n_tilda");
   KynemaUGFEnv::self().kynema_ugfOutputP0()
-    << "Edge projected nodal gradient for aft_n_tilda: "
-    << edgeNodalGradient_ << std::endl;
+    << "Edge projected nodal gradient for aft_n_tilda: " << edgeNodalGradient_
+    << std::endl;
 
   realm_.push_equation_to_systems(this);
 
@@ -205,8 +205,8 @@ AFTNTildaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
     if (itsi == solverAlgDriver_->solverAlgMap_.end()) {
       SolverAlgorithm* theAlg = NULL;
       if (realm_.realmUsesEdges_) {
-        theAlg = new ScalarEdgeSolverAlg(
-          realm_, part, this, nTilda_, dntdx_, evisc_);
+        theAlg =
+          new ScalarEdgeSolverAlg(realm_, part, this, nTilda_, dntdx_, evisc_);
       } else {
         throw std::runtime_error(
           "AFTNTILDA: Attempt to use non-NGP element solver algorithm");
@@ -232,7 +232,8 @@ AFTNTildaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       solverAlgMap, realm_, part, this,
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
         if (!elementMassAlg)
-          nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), nTilda_);
+          nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(
+            realm_.bulk_data(), nTilda_);
         nodeAlg.add_kernel<AFTNTildaNodeKernel>(realm_.meta_data());
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
@@ -249,8 +250,7 @@ AFTNTildaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 
   if (!effDiffFluxAlg_) {
     effDiffFluxAlg_.reset(new EffDiffFluxCoeffAlg(
-      realm_, part, visc_, tvisc_, evisc_, 1.0, 1.0,
-      realm_.is_turbulent()));
+      realm_, part, visc_, tvisc_, evisc_, 1.0, 1.0, realm_.is_turbulent()));
   } else {
     effDiffFluxAlg_->partVec_.push_back(part);
   }
@@ -269,8 +269,8 @@ AFTNTildaEquationSystem::register_inflow_bc(
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-  ScalarFieldType* theBcField =
-    &(meta_data.declare_field<double>(stk::topology::NODE_RANK, "aft_n_tilda_bc"));
+  ScalarFieldType* theBcField = &(meta_data.declare_field<double>(
+    stk::topology::NODE_RANK, "aft_n_tilda_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   std::vector<double> userSpec(1, 0.0);
@@ -322,8 +322,8 @@ AFTNTildaEquationSystem::register_open_bc(
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-  ScalarFieldType* theBcField = &(
-    meta_data.declare_field<double>(stk::topology::NODE_RANK, "open_aft_n_tilda_bc"));
+  ScalarFieldType* theBcField = &(meta_data.declare_field<double>(
+    stk::topology::NODE_RANK, "open_aft_n_tilda_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   std::vector<double> userSpec(1, 0.0);
@@ -451,8 +451,8 @@ AFTNTildaEquationSystem::solve_and_update()
 
   for (int k = 0; k < maxIterations_; ++k) {
     KynemaUGFEnv::self().kynema_ugfOutputP0()
-      << " " << k + 1 << "/" << maxIterations_ << std::setw(15)
-      << std::right << userSuppliedName_ << std::endl;
+      << " " << k + 1 << "/" << maxIterations_ << std::setw(15) << std::right
+      << userSuppliedName_ << std::endl;
 
     for (int oi = 0; oi < numOversetIters_; ++oi) {
       assemble_and_solve(nTmp_);
@@ -476,8 +476,10 @@ AFTNTildaEquationSystem::update_and_clip()
   const auto& ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
 
-  auto& nTildaNp1 = fieldMgr.get_field<double>(nTilda_->mesh_meta_data_ordinal());
-  const auto& nTmp = fieldMgr.get_field<double>(nTmp_->mesh_meta_data_ordinal());
+  auto& nTildaNp1 =
+    fieldMgr.get_field<double>(nTilda_->mesh_meta_data_ordinal());
+  const auto& nTmp =
+    fieldMgr.get_field<double>(nTmp_->mesh_meta_data_ordinal());
   auto* turbViscosity =
     meta.get_field<double>(stk::topology::NODE_RANK, "turbulent_viscosity");
 
@@ -539,8 +541,7 @@ AFTNTildaEquationSystem::assemble_nodal_gradient()
 
       double nDotV_tmp = 0.0;
       for (int d = 0; d < ndim; ++d)
-        nDotV_tmp +=
-          dwalldistdx.get(mi, d) * vel.get(mi, d);
+        nDotV_tmp += dwalldistdx.get(mi, d) * vel.get(mi, d);
       nDotV.get(mi, 0) = nDotV_tmp;
     });
 

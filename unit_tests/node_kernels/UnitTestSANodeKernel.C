@@ -93,8 +93,7 @@ public:
     stk::mesh::field_fill_component(dudx, *dudx_);
     stk::mesh::field_fill_component(dnutdx, *dnutdx_);
 
-    for (stk::mesh::FieldBase* fld :
-         std::vector<stk::mesh::FieldBase*>{
+    for (stk::mesh::FieldBase* fld : std::vector<stk::mesh::FieldBase*>{
            density_, nuTilda_, gammaTilda_, visc_, minDistance_, dudx_,
            dnutdx_}) {
       fld->modify_on_host();
