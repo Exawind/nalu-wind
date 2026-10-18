@@ -105,6 +105,7 @@ struct InflowUserData : public UserData
   VolumeOfFluid volumeOfFluid_;
   MassFraction massFraction_;
   GammaInf gamma_;
+  SANuTilda saNuTilda_;
 
   bool uSpec_;
   bool tkeSpec_;
@@ -113,6 +114,7 @@ struct InflowUserData : public UserData
   bool mixFracSpec_;
   bool massFractionSpec_;
   bool gammaSpec_;
+  bool saNuTildaSpec_;
 
   InflowUserData()
     : UserData(),
@@ -122,7 +124,8 @@ struct InflowUserData : public UserData
       tdrSpec_(false),
       mixFracSpec_(false),
       massFractionSpec_(false),
-      gammaSpec_(false)
+      gammaSpec_(false),
+      saNuTildaSpec_(false)
   {
   }
 };
@@ -138,6 +141,7 @@ struct OpenUserData : public UserData
   VolumeOfFluid volumeOfFluid_;
   MassFraction massFraction_;
   GammaInf gamma_;
+  SANuTilda saNuTilda_;
 
   bool uSpec_;
   bool pSpec_;
@@ -148,6 +152,7 @@ struct OpenUserData : public UserData
   bool massFractionSpec_;
   bool totalP_;
   bool gammaSpec_;
+  bool saNuTildaSpec_;
   EntrainmentMethod entrainMethod_;
 
   OpenUserData()
@@ -161,6 +166,7 @@ struct OpenUserData : public UserData
       massFractionSpec_(false),
       totalP_{false},
       gammaSpec_(false),
+      saNuTildaSpec_(false),
       entrainMethod_{EntrainmentMethod::COMPUTED}
   {
   }
@@ -544,6 +550,12 @@ template <>
 struct convert<sierra::kynema_ugf::GammaInf>
 {
   static bool decode(const Node& node, sierra::kynema_ugf::GammaInf& rhs);
+};
+
+template <>
+struct convert<sierra::kynema_ugf::SANuTilda>
+{
+  static bool decode(const Node& node, sierra::kynema_ugf::SANuTilda& rhs);
 };
 
 template <>

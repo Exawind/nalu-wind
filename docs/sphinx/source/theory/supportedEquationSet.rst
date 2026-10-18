@@ -692,12 +692,13 @@ Although Kynema-UGF is primarily expected to be a LES simulation tool,
 RANS modeling is supported through the activation of different
 two-equation RANS models: the Chien :math:`k-\epsilon` model
 :cite:`chien1982predictions`, the Wilcox 1998 :math:`k-\omega` model
-:cite:`wilcox1998turbulence`, and the SST model. For the first two
+:cite:`wilcox1998turbulence`, and the SST model, as well as the
+one-equation Spalart-Allmaras (SA) model. For the first two
 models, the reader is referred to the reference papers and the NASA
 Turbulence Modeling Resource for the `Chien
 <https://turbmodels.larc.nasa.gov/ke-chien.html>`_ and `Wilcox
-<https://turbmodels.larc.nasa.gov/wilcox.html>`_ models. The SST model
-is explained in more details below.
+<https://turbmodels.larc.nasa.gov/wilcox.html>`_ models. The SST and SA
+models are explained in more details below.
 
 Shear Stress Transport (SST) Formulation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -853,6 +854,56 @@ where :math:`G` is the geostrophic (freestream) velocity and :math:`f_c` is the 
 
 where :math:`\Omega` is the earth's angular velocity and :math:`\lambda` is the latitude. 
 
+Spalart-Allmaras (SA-neg) Formulation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The one-equation Spalart-Allmaras model :cite:`SpalartAllmaras:1994` is supported in its
+negative form, SA-neg :cite:`Allmaras:2012`, which allows negative values of the working
+variable :math:`\tilde{\nu}` without clipping. The transport equation is
+
+.. math::
+   \frac{D(\rho \tilde{\nu})}{Dt} = P - D + \frac{1}{\sigma} \left[ \frac{\partial}{\partial x_j}
+   \left( (\mu + \rho \tilde{\nu} f_n) \frac{\partial \tilde{\nu}}{\partial x_j} \right)
+   + c_{b2} \rho \frac{\partial \tilde{\nu}}{\partial x_i} \frac{\partial \tilde{\nu}}{\partial x_i} \right]
+
+For :math:`\tilde{\nu} \ge 0`, the standard SA model is recovered with :math:`f_n = 1`:
+
+.. math::
+   P = c_{b1} (1 - f_{t2}) \rho \tilde{S} \tilde{\nu}, \quad
+   D = \left( c_{w1} f_w - \frac{c_{b1}}{\kappa^2} f_{t2} \right) \rho \left( \frac{\tilde{\nu}}{d_w} \right)^2, \quad
+   \mu_t = \rho \tilde{\nu} f_{v1}
+
+.. math::
+   f_{v1} = \frac{\chi^3}{\chi^3 + c_{v1}^3}, \quad \chi = \frac{\rho \tilde{\nu}}{\mu}, \quad
+   f_{t2} = c_{t3} e^{-c_{t4} \chi^2}, \quad
+   \tilde{S} = \Omega + \bar{S}, \quad \bar{S} = \frac{\tilde{\nu} f_{v2}}{\kappa^2 d_w^2}, \quad
+   f_{v2} = 1 - \frac{\chi}{1 + \chi f_{v1}}
+
+.. math::
+   f_w = g \left[ \frac{1 + c_{w3}^6}{g^6 + c_{w3}^6} \right]^{1/6}, \quad
+   g = r + c_{w2} (r^6 - r), \quad
+   r = \min \left( \frac{\tilde{\nu}}{\tilde{S} \kappa^2 d_w^2}, 10 \right)
+
+where :math:`\Omega` is the vorticity magnitude. When :math:`\bar{S} < -c_2 \Omega`, :math:`\tilde{S}`
+is replaced by :math:`\Omega + \Omega (c_2^2 \Omega + c_3 \bar{S}) / ((c_3 - 2 c_2) \Omega - \bar{S})`
+:cite:`Allmaras:2012`. For :math:`\tilde{\nu} < 0`, the SA-neg branch is used:
+
+.. math::
+   P = c_{b1} (1 - c_{t3}) \rho \Omega \tilde{\nu}, \quad
+   D = -c_{w1} \rho \left( \frac{\tilde{\nu}}{d_w} \right)^2, \quad
+   f_n = \frac{c_{n1} + \chi^3}{c_{n1} - \chi^3}, \quad \mu_t = 0
+
+The model constants are:
+
+.. math::
+   c_{b1}=0.1355, \quad c_{b2}=0.622, \quad \sigma=2/3, \quad \kappa=0.41, \quad c_{v1}=7.1, \quad
+   c_{w2}=0.3, \quad c_{w3}=2, \quad c_{t3}=1.2, \quad c_{t4}=0.5, \quad
+   c_2=0.7, \quad c_3=0.9, \quad c_{n1}=16, \quad c_{w1}=\frac{c_{b1}}{\kappa^2}+\frac{1+c_{b2}}{\sigma}
+
+:math:`\tilde{\nu} = 0` is imposed at walls (wall functions are not supported), and
+:math:`\tilde{\nu}_{\infty} = 3\nu_{\infty}` to :math:`5\nu_{\infty}` is recommended at the freestream
+for fully turbulent simulations.
+
 .. _eqn_sst_des:
 
 Laminar-Turbulent Transition Model Formulation
@@ -889,6 +940,57 @@ The transition onset occurs once the scaled vorticity Reynolds number, :math:`Re
 
 The output intermittency from the transition model is applied to both the production and destruction terms of the turbulent kinetic energy
 transport equation. 
+
+Amplification Factor Transport (AFT) Transition Model Formulation
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+The SA-AFT2019b transition model :cite:`Coder:2019` is coupled with the SA-neg model.
+The model solves transport equations for the amplification factor, :math:`\tilde{n}`, and the
+logarithm of the intermittency, :math:`\tilde{\gamma} = \ln \gamma`:
+
+.. math::
+   \frac{D(\rho \tilde{n})}{Dt} = \rho \Omega F_{crit} F_{growth} \frac{d\tilde{n}}{dRe_{\theta}}
+   + \frac{\partial}{\partial x_j} \left[ \sigma_n (\mu + \mu_t) \frac{\partial \tilde{n}}{\partial x_j} \right]
+
+.. math::
+   \frac{D(\rho \tilde{\gamma})}{Dt} = c_1 \rho S F_{onset} \left[ 1 - e^{\tilde{\gamma}} \right]
+   - c_2 \rho \Omega F_{turb} \left[ c_3 e^{\tilde{\gamma}} - 1 \right]
+   + \frac{\partial}{\partial x_j} \left[ \left( \mu + \frac{\mu_t}{\sigma_{\gamma}} \right) \frac{\partial \tilde{\gamma}}{\partial x_j} \right]
+
+The source terms of the :math:`\tilde{n}` equation depend on the shape factor estimated from the local flow,
+
+.. math::
+   H_L = \frac{d_w^2}{\nu} \left[ \frac{\partial}{\partial x_i} \left( u_j \frac{\partial d_w}{\partial x_j} \right) \right] \frac{\partial d_w}{\partial x_i}, \quad
+   H_{12} = 0.26 H_L + 2.4
+
+where :math:`H_{12}` is limited to :math:`[2.2, 20]`. Growth starts once the vorticity Reynolds number exceeds its critical value,
+
+.. math::
+   F_{crit} = \begin{cases} 1, & Re_V \ge k_V Re_{\theta,0} \\ 0, & \text{otherwise} \end{cases}, \quad
+   Re_V = \frac{\rho S d_w^2}{\mu + \mu_t}, \quad
+   k_V = \frac{1}{0.4036 H_{12}^2 - 2.5394 H_{12} + 4.3273}
+
+and :math:`Re_{\theta,0}`, :math:`F_{growth}`, and :math:`d\tilde{n}/dRe_{\theta}` are empirical functions of :math:`H_{12}` :cite:`Coder:2019`.
+The transition onset criteria are defined as:
+
+.. math::
+   F_{onset1}=\frac{\tilde{n}}{N_{crit}}, \quad F_{onset2}=\min(F_{onset1},2), \quad
+   F_{onset3}=\max \left(1- \left (\frac{R_{T}}{3.5}\right)^3,0 \right ), \quad F_{onset}=\max(F_{onset2}-F_{onset3},0)
+
+.. math::
+   F_{turb}=e^{-\left ( \frac{R_{T}}{2} \right )^{4}}, \quad R_T=\frac{\mu_t}{\mu}, \quad
+   N_{crit} = -8.43 - 2.4 \ln \left( \frac{\tau}{100} \right), \quad \tau = 2.5 \tanh \left( \frac{Tu}{2.5} \right)
+
+where the freestream turbulence intensity, :math:`Tu` (%), is required as ``fsti`` in ``turbulence_model_constants``.
+The model constants are:
+
+.. math::
+   \sigma_n=1.0, \quad c_1=100, \quad c_2=0.06, \quad c_3=50, \quad \sigma_{\gamma}=1.0
+
+The AFT model is coupled with the SA-neg model by replacing :math:`f_{t2}` with
+:math:`c_{t3} \left[ 1 - e^{\tilde{\gamma}} \right]` for :math:`\tilde{\nu} \ge 0`; the SA-neg branch is
+unchanged for :math:`\tilde{\nu} < 0`. Both :math:`\tilde{n}` and :math:`\tilde{\gamma}` are zero at the
+freestream with zero-gradient conditions at walls, and are limited to :math:`\tilde{n} \ge 0` and
+:math:`\tilde{\gamma} \le 0`. A freestream value of :math:`\tilde{\nu}_{\infty} = 0.1 \nu_{\infty}` is recommended.
 
 Detached Eddy Simulation (DES) Formulation
 ++++++++++++++++++++++++++++++++++++++++++
