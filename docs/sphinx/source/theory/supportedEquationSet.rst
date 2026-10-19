@@ -908,13 +908,29 @@ for fully turbulent simulations.
 
 Laminar-Turbulent Transition Model Formulation
 ++++++++++++++++++++++++++++++++++++++++++++++
-To account for the effects of the laminar-turbulent boundary layer transition, 
-Menter's one-equation :math:`\gamma` transition model :cite:`Menter:2015` is coupled with the SST model.
-The model consists of single transport equation for intermittency
+To account for the effects of the laminar-turbulent boundary layer transition, two one-equation
+:math:`\gamma` transition models are available with the SST model: Menter's model :cite:`Menter:2015`
+and the DLR-:math:`\gamma` model :cite:`Francois:2023`. Both models solve a single transport equation for
+the intermittency, :math:`\gamma`,
 
 .. math::
    \frac{D(\rho \gamma)}{Dt}=P_{\gamma}-D_{\gamma}+\frac{\partial }{\partial x_j}\left[ (\mu + \frac{\mu_t}{\sigma_{\gamma}} )\frac{\partial \gamma}{\partial x_j} \right]
 
+and differ in the source terms, :math:`P_{\gamma}` and :math:`D_{\gamma}`, the transition onset criteria, and the
+coupling with the SST model. The transition model is activated with ``transition_model: true`` and selected
+with ``transition_model_type`` (``m2015``, the default, or ``dlr_gamma``):
+
+.. code-block:: yaml
+
+   solution_options:
+     turbulence_model: sst
+     transition_model: true
+     transition_model_type: m2015   # or dlr_gamma
+     turbulence_model_constants:
+       fsti: 0.1   # optional; local Tu is used if omitted
+
+Menter's One-Equation :math:`\gamma` Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The production term, :math:`P_{\gamma}`, and destruction term, :math:`D_{\gamma}`, are as:
 
 .. math::
@@ -940,6 +956,88 @@ The transition onset occurs once the scaled vorticity Reynolds number, :math:`Re
 
 The output intermittency from the transition model is applied to both the production and destruction terms of the turbulent kinetic energy
 transport equation. 
+
+.. _eqn_dlr_gamma:
+
+DLR One-Equation :math:`\gamma` Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The DLR-:math:`\gamma` model :cite:`Francois:2023` is a stability-based alternative to Menter's
+model, targeting natural (Tollmien-Schlichting) transition at low freestream turbulence including
+pressure-gradient and compressibility effects. It is selected with ``transition_model_type: dlr_gamma``.
+
+The production term, :math:`P_{\gamma}`, and destruction term, :math:`D_{\gamma}`, are as:
+
+.. math::
+   P_{\gamma}=F_{length} \rho S (1-\gamma) F_{onset}, \quad D_{\gamma}=C_{a2} \rho \Omega \gamma F_{turb} (C_{e2}\gamma-1)
+
+The model constants are:
+
+.. math::
+   F_{length}=14, \quad  c_{e2}=50, \quad  c_{a2}=0.06, \quad  \sigma_{\gamma}=1.0
+
+The transition onset criteria are defined as:
+
+.. math::
+   F_{onset1}=\frac{Re_{\theta}}{Re_{\theta t}}, \quad Re_{\theta}=\frac{Re_{v}}{\Pi(H_{12})}, \quad
+   F_{onset2}=\min \left( \max(F_{onset1}, F_{onset1}^4), 2.0 \right)
+
+.. math::
+   F_{onset3}=\max \left(1- \left (\frac{R_{T}}{2}\right)^3,0 \right ), \quad F_{onset}=\max(F_{onset2}-F_{onset3},0)
+
+.. math::
+   F_{turb}=e^{-\left ( \frac{R_{T}}{4} \right )^{4}}, \quad R_T=\frac{\mu_t}{\mu}, \quad Re_v=\frac{\rho d_{w}^2S}{\mu}
+
+The transition onset momentum thickness Reynolds number follows a compressible, stability-based correlation:
+
+.. math::
+   Re_{\theta t}=-\left(177 M_e^2 - 22 M_e + 210\right) \ln \left( \frac{(7 M_e + 4.8)\,Tu}{100} \right) e^{(5 M_e + 27)\lambda_{\theta}}
+
+where :math:`Tu` (%) is ``fsti`` if specified, or otherwise the local value
+:math:`Tu = 100\sqrt{2k/3}/(\omega d_w)`. The ratio :math:`\Pi = Re_{v,max}/Re_{\theta}` and the shape factor
+:math:`H_{12}` are obtained from the pressure-gradient parameter, :math:`\lambda_{\theta}`,
+
+.. math::
+   H_{12}=\begin{cases} 4.02923-\sqrt{-8838.4\lambda_{\theta}^4+1105.1\lambda_{\theta}^3-67.962\lambda_{\theta}^2+17.574\lambda_{\theta}+2.0593}, & \lambda_{\theta} \ge 0 \\ 2.072+\frac{0.0731}{\lambda_{\theta}+0.14}, & \lambda_{\theta} < 0 \end{cases}
+
+.. math::
+   \Pi(H_{12})=0.071665 H_{12}^3 - 0.73186 H_{12}^2 + 4.2563 H_{12} - 5.1743
+
+.. math::
+   \lambda_{\theta}=\frac{\theta^2}{\nu_e}\frac{dU_e}{ds}, \quad \theta=\frac{Re_{\theta}\,\nu_e}{U_e}, \quad
+   \frac{dU_e}{ds}=\frac{u_i}{|\mathbf{u}|}\frac{\partial U_e}{\partial x_i}, \quad
+   \frac{\partial U_e}{\partial x_i}=-\frac{1}{\rho U_e}\left(\frac{p}{p_{\infty}}\right)^{-1/\kappa}\frac{\partial p}{\partial x_i}
+
+Since :math:`H_{12}` and :math:`\lambda_{\theta}` depend on each other, they are solved locally with a fixed-point
+iteration, and :math:`\lambda_{\theta}` is limited to :math:`[-0.068253, 0.1]`. On moving meshes, the velocity
+relative to the mesh is used for the streamwise direction.
+
+The boundary layer edge quantities are reconstructed from the local pressure with isentropic relations,
+
+.. math::
+   M_e^2=\frac{2}{\kappa-1}\left[ \left(1+\frac{\kappa-1}{2}M_{\infty}^2\right)\left(\frac{p}{p_{\infty}}\right)^{-\frac{\kappa-1}{\kappa}}-1 \right], \quad
+   U_e^2=U_{\infty}^2+\frac{2\kappa}{\kappa-1}\frac{p_{\infty}}{\rho}\left[1-\left(\frac{p}{p_{\infty}}\right)^{\frac{\kappa-1}{\kappa}}\right]
+
+.. math::
+   \rho_e=\rho\left(\frac{p}{p_{\infty}}\right)^{\frac{1}{\kappa}}, \quad
+   T_e=T_{\infty}\left(\frac{p}{p_{\infty}}\right)^{\frac{\kappa-1}{\kappa}}, \quad
+   \nu_e=\frac{\mu}{\rho_e}\left(\frac{T_e}{T_{\infty}}\right)^{3/2}\frac{T_{\infty}+110.4}{T_e+110.4}
+
+where :math:`\kappa=1.4`, :math:`p_{\infty}=101325` Pa, :math:`T_{\infty}=p_{\infty}/(R\rho)`,
+and :math:`p` is the pressure field relative to :math:`p_{\infty}`. The freestream velocity, :math:`U_{\infty}`, is the
+magnitude of the constant ``velocity`` initial condition, and :math:`M_{\infty}=U_{\infty}/\sqrt{\kappa p_{\infty}/\rho}`.
+Therefore, dimensional inputs are required.
+
+The intermittency is applied to the turbulent kinetic energy transport equation as:
+
+.. math::
+   P_k^{*}=\gamma \min \left( \mu_t S^2, c_{1} \beta^{*} \rho \omega k \right), \quad
+   D_k^{*}=\min \left( \max(\gamma, 0.1), 1.0 \right) \beta^{*} \rho \omega k
+
+where :math:`c_1` is the production limiter ratio (``tkeProdLimitRatio``),
+while the specific dissipation rate equation is the unmodified SST model.
+Unlike Menter's model, the DLR-:math:`\gamma` model is not Galilean invariant because the edge quantities are
+reconstructed from global freestream reference values. Care is needed for flows with multiple relative motions
+(e.g., rotors or multiple moving bodies), where a single freestream reference is an approximation.
 
 Amplification Factor Transport (AFT) Transition Model Formulation
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
