@@ -264,6 +264,38 @@ SolutionOptions::load(const YAML::Node& y_node)
         transition_model_);
       if (transition_model_ == true)
         gammaEqActive_ = true;
+
+      std::string transitionModelName =
+        TransitionModelNames[static_cast<int>(transitionModel_)];
+      get_if_present(
+        y_solution_options, "transition_model_type", transitionModelName,
+        transitionModelName);
+      bool foundTransitionModel = false;
+      for (int k = 0;
+           k < static_cast<int>(TransitionModel::TransitionModel_END); ++k) {
+        if (transitionModelName == TransitionModelNames[k]) {
+          transitionModel_ = TransitionModel(k);
+          foundTransitionModel = true;
+          break;
+        }
+      }
+      if (!foundTransitionModel) {
+        std::string msg = "Transition model `" + transitionModelName +
+                          "' not implemented.\n  Available transition "
+                          "models are: ";
+        for (int k = 0;
+             k < static_cast<int>(TransitionModel::TransitionModel_END); ++k) {
+          msg += "`" + TransitionModelNames[k] + "' ";
+        }
+        throw std::runtime_error(msg);
+      }
+      if (
+        gammaEqActive_ && transitionModel_ == TransitionModel::DLR_GAMMA &&
+        turbulenceModel_ != TurbulenceModel::SST) {
+        throw std::runtime_error(
+          "Invalid configuration: transition_model_type dlr_gamma is only "
+          "supported for sst");
+      }
     }
     if (turbulenceModel_ == TurbulenceModel::SST_IDDES_SIMPLE) {
       bool transitionModel = false;
@@ -616,6 +648,9 @@ SolutionOptions::load(const YAML::Node& y_node)
     << TurbulenceModelNames[static_cast<int>(turbulenceModel_)] << " "
     << isTurbulent_ << std::endl;
   if (gammaEqActive_ == true) {
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Transition Model type is: "
+      << TransitionModelNames[static_cast<int>(transitionModel_)] << std::endl;
     if (turbModelConstantMap_[TM_fsti] > 0) {
       KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Transition Model is: One Equation Gamma w/ constant Tu"

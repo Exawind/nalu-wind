@@ -188,6 +188,11 @@ static const std::string TurbulenceModelNames[] = {
   "laminar", "ksgs",      "smagorinsky",      "wale", "sst", "sstlr", "sst_des",
   "sst_ams", "sst_iddes", "sst_iddes_simple", "ke",   "ko",  "sa"};
 
+enum class TransitionModel { M2015 = 0, DLR_GAMMA, TransitionModel_END };
+
+// matching string name index into above enums (must match PERFECTLY)
+static const std::string TransitionModelNames[] = {"m2015", "dlr_gamma"};
+
 enum TurbulenceModelConstant {
   TM_cMu = 0,
   TM_kappa = 1,
