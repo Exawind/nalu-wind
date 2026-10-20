@@ -18,19 +18,14 @@ namespace {
 namespace hex8_golds {
 namespace blt_gamma_dlr {
 static constexpr double rhs[8] = {
-  0,
-  0,
-  0,
-  0.31832700181246892,
-  0,
-  0,
-  -0.064653649267864766,
-  -0.0078747043112279737,
+  -1.4306095661062649e-05, 0.033424724793313161,    -0.0013458547205905725,
+  1.0726508150463012,      -0.00076602322758146366, -0.00050015690497141191,
+  -0.068983801450428234,   0.34183310309836412,
 };
 static constexpr double lhs_diag[8] = {
-  0.013860345093887486, 0.0047886314559874143, 0.0047886314559874143,
-  0.32647790271535759,  0.0081469064378713978, 0.0028146869484932352,
-  0.19079800579660589,  0.039147127209395671,
+  0.015188586988184124, 0.039899977055432904, 0.041789900705710578,
+  1.1453933743929345,   0.036435248656047969, 0.018757468269784631,
+  0.20666513345739709,  0.62135173133906096,
 };
 } // namespace blt_gamma_dlr
 
@@ -64,7 +59,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_blt_gamma_dlr_node)
   if (bulk_->parallel_size() > 1)
     return;
 
-  fill_mesh_and_init_fields();
+  // Avoid dUe/ds = 0 nodes, where H12(lambda) switches branches
+  fill_mesh_and_init_fields(true);
+  stk::mesh::field_fill(1.0, *velocity_);
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
