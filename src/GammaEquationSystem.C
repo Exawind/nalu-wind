@@ -28,6 +28,8 @@
 #include <Realm.h>
 #include <Realms.h>
 #include <Simulation.h>
+
+#include <cmath>
 #include <SolutionOptions.h>
 #include <TimeIntegrator.h>
 #include <SolverAlgorithmDriver.h>
@@ -49,6 +51,7 @@
 #include <node_kernels/ScalarMassBDFNodeKernel.h>
 #include <node_kernels/ScalarGclNodeKernel.h>
 #include <node_kernels/BLTGammaM2015NodeKernel.h>
+#include <node_kernels/BLTGammaDLRNodeKernel.h>
 
 // ngp
 #include "ngp_utils/NgpFieldBLAS.h"
@@ -298,10 +301,42 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
         nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), gamma_);
 
-        KynemaUGFEnv::self().kynema_ugfOutputP0()
-          << "call BLTGammaM2015NodeKernel: " << std::endl;
-
-        nodeAlg.add_kernel<BLTGammaM2015NodeKernel>(realm_.meta_data());
+        if (
+          realm_.solutionOptions_->transitionModel_ ==
+          TransitionModel::DLR_GAMMA) {
+          // freestream speed from the constant velocity initial condition
+          double uInf = 0.0;
+          for (const auto& ic : realm_.initialConditions_) {
+            if (ic->theIcType_ != CONSTANT_UD)
+              continue;
+            const auto& constIC =
+              static_cast<const ConstantInitialConditionData&>(*ic);
+            for (size_t k = 0; k < constIC.fieldNames_.size(); ++k) {
+              if (constIC.fieldNames_[k] != "velocity")
+                continue;
+              double uMagSq = 0.0;
+              for (const double u : constIC.data_[k])
+                uMagSq += u * u;
+              uInf = std::sqrt(uMagSq);
+              break;
+            }
+            if (uInf > 0.0)
+              break;
+          }
+          if (uInf <= 0.0)
+            throw std::runtime_error(
+              "GammaEqSys: dlr_gamma requires a nonzero constant velocity "
+              "initial condition");
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
+            << "call BLTGammaDLRNodeKernel: Uinf = " << uInf << std::endl;
+          nodeAlg.add_kernel<BLTGammaDLRNodeKernel>(
+            realm_.meta_data(),
+            realm_.does_mesh_move() ? "velocity_rtm" : "velocity", uInf);
+        } else {
+          KynemaUGFEnv::self().kynema_ugfOutputP0()
+            << "call BLTGammaM2015NodeKernel: " << std::endl;
+          nodeAlg.add_kernel<BLTGammaM2015NodeKernel>(realm_.meta_data());
+        }
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         if (srcName == "gcl") {

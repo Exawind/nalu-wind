@@ -264,6 +264,38 @@ SolutionOptions::load(const YAML::Node& y_node)
         transition_model_);
       if (transition_model_ == true)
         gammaEqActive_ = true;
+
+      std::string transitionModelName =
+        TransitionModelNames[static_cast<int>(transitionModel_)];
+      get_if_present(
+        y_solution_options, "transition_model_type", transitionModelName,
+        transitionModelName);
+      bool foundTransitionModel = false;
+      for (int k = 0;
+           k < static_cast<int>(TransitionModel::TransitionModel_END); ++k) {
+        if (transitionModelName == TransitionModelNames[k]) {
+          transitionModel_ = TransitionModel(k);
+          foundTransitionModel = true;
+          break;
+        }
+      }
+      if (!foundTransitionModel) {
+        std::string msg = "Transition model `" + transitionModelName +
+                          "' not implemented.\n  Available transition "
+                          "models are: ";
+        for (int k = 0;
+             k < static_cast<int>(TransitionModel::TransitionModel_END); ++k) {
+          msg += "`" + TransitionModelNames[k] + "' ";
+        }
+        throw std::runtime_error(msg);
+      }
+      if (
+        gammaEqActive_ && transitionModel_ == TransitionModel::DLR_GAMMA &&
+        turbulenceModel_ != TurbulenceModel::SST) {
+        throw std::runtime_error(
+          "Invalid configuration: transition_model_type dlr_gamma is only "
+          "supported for sst");
+      }
     }
     if (turbulenceModel_ == TurbulenceModel::SST_IDDES_SIMPLE) {
       bool transitionModel = false;
@@ -596,6 +628,16 @@ SolutionOptions::load(const YAML::Node& y_node)
     }
   }
 
+  // AFT is enabled via its equation systems, not a solution option
+  bool aftEqActive = false;
+  const YAML::Node y_eq_systems = y_node["equation_systems"];
+  if (y_eq_systems && y_eq_systems["systems"]) {
+    for (const auto& y_system : y_eq_systems["systems"]) {
+      if (y_system["AFTGammaTilda"])
+        aftEqActive = true;
+    }
+  }
+
   KynemaUGFEnv::self().kynema_ugfOutputP0() << std::endl;
   KynemaUGFEnv::self().kynema_ugfOutputP0()
     << "Turbulence Model Review:   " << std::endl;
@@ -606,6 +648,9 @@ SolutionOptions::load(const YAML::Node& y_node)
     << TurbulenceModelNames[static_cast<int>(turbulenceModel_)] << " "
     << isTurbulent_ << std::endl;
   if (gammaEqActive_ == true) {
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Transition Model type is: "
+      << TransitionModelNames[static_cast<int>(transitionModel_)] << std::endl;
     if (turbModelConstantMap_[TM_fsti] > 0) {
       KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Transition Model is: One Equation Gamma w/ constant Tu"
@@ -614,6 +659,9 @@ SolutionOptions::load(const YAML::Node& y_node)
       KynemaUGFEnv::self().kynema_ugfOutputP0()
         << "Transition Model is: One Equation Gamma w/ local Tu" << std::endl;
     }
+  } else if (aftEqActive) {
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "Transition Model is: SA-AFT2019b w/ constant Tu" << std::endl;
   } else {
     KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "No Transition Model" << std::endl;
@@ -741,6 +789,19 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_avgTimeCoeff] = 1.0;
   turbModelConstantMap_[TM_alphaInf] = 0.52;
   turbModelConstantMap_[TM_fsti] = -1;
+
+  // Spalart-Allmaras constants (from NASA TMR)
+  turbModelConstantMap_[TM_saCV1] = 7.1;
+  turbModelConstantMap_[TM_saCV2] = 0.7;
+  turbModelConstantMap_[TM_saCV3] = 0.9;
+  turbModelConstantMap_[TM_saCb1] = 0.1355;
+  turbModelConstantMap_[TM_saCb2] = 0.622;
+  turbModelConstantMap_[TM_saSigma] = 2.0 / 3.0;
+  turbModelConstantMap_[TM_saCw2] = 0.3;
+  turbModelConstantMap_[TM_saCw3] = 2.0;
+  turbModelConstantMap_[TM_saCt3] = 1.2;
+  turbModelConstantMap_[TM_saCt4] = 0.5;
+  turbModelConstantMap_[TM_saCn1] = 16.0;
 }
 
 double
