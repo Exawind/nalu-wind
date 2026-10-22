@@ -25,6 +25,9 @@
 #include "FieldTypeDef.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
+#include "ngp_algorithms/NodalGradBndryElemAlg.h"
+#include "ngp_algorithms/NodalGradEdgeAlg.h"
+#include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
@@ -76,7 +79,9 @@ ShearStressTransportEquationSystem::ShearStressTransportEquationSystem(
     maxLengthScale_(NULL),
     isInit_(true),
     sstMaxLengthScaleAlgDriver_(NULL),
-    resetAMSAverages_(realm_.solutionOptions_->resetAMSAverages_)
+    resetAMSAverages_(realm_.solutionOptions_->resetAMSAverages_),
+    wallDistGradAlgDriver_(realm_, "minimum_distance_to_wall", "dwalldistdx"),
+    nDotVGradAlgDriver_(realm_, "nDotV", "dnDotVdx")
 {
   // push back EQ to manager
   realm_.push_equation_to_systems(this);
@@ -85,6 +90,11 @@ ShearStressTransportEquationSystem::ShearStressTransportEquationSystem(
   sdrEqSys_ = new SpecificDissipationRateEquationSystem(eqSystems);
   if (realm_.solutionOptions_->gammaEqActive_)
     gammaEqSys_ = new GammaEquationSystem(eqSystems);
+
+  if (
+    realm_.solutionOptions_->gammaEqActive_ ||
+    realm_.solutionOptions_->apgCorrection_)
+    set_nodal_gradient("gamma_transition");
 }
 
 //--------------------------------------------------------------------------
@@ -155,6 +165,29 @@ ShearStressTransportEquationSystem::register_nodal_fields(
   minDistanceToWall_ = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "minimum_distance_to_wall"));
   stk::mesh::put_field_on_mesh(*minDistanceToWall_, selector, nullptr);
+  if (
+    realm_.solutionOptions_->gammaEqActive_ ||
+    realm_.solutionOptions_->apgCorrection_) {
+    const int nDim = meta_data.spatial_dimension();
+    dwalldistdx_ = &meta_data.declare_field<double>(
+      stk::topology::NODE_RANK, "dwalldistdx");
+    stk::mesh::put_field_on_mesh(*dwalldistdx_, selector, nDim, nullptr);
+    stk::io::set_field_output_type(
+      *dwalldistdx_, stk::io::FieldOutputType::VECTOR_3D);
+    nDotV_ =
+      &meta_data.declare_field<double>(stk::topology::NODE_RANK, "nDotV");
+    stk::mesh::put_field_on_mesh(*nDotV_, selector, nullptr);
+    dnDotVdx_ = &meta_data.declare_field<double>(
+      stk::topology::NODE_RANK, "dnDotVdx");
+    stk::mesh::put_field_on_mesh(*dnDotVdx_, selector, nDim, nullptr);
+    stk::io::set_field_output_type(
+      *dnDotVdx_, stk::io::FieldOutputType::VECTOR_3D);
+  }
+  if (realm_.solutionOptions_->apgCorrection_) {
+    auto& sensor =
+      meta_data.declare_field<double>(stk::topology::NODE_RANK, "lamda0L");
+    stk::mesh::put_field_on_mesh(sensor, selector, nullptr);
+  }
   fOneBlending_ = &(meta_data.declare_field<double>(
     stk::topology::NODE_RANK, "sst_f_one_blending"));
   stk::mesh::put_field_on_mesh(*fOneBlending_, selector, nullptr);
@@ -185,6 +218,22 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
 
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
+  if (dwalldistdx_) {
+    if (edgeNodalGradient_ && realm_.realmUsesEdges_) {
+      wallDistGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
+        algType, part, "wall_dist_nodal_grad", minDistanceToWall_,
+        dwalldistdx_);
+      nDotVGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
+        algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_);
+    } else {
+      wallDistGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
+        algType, part, "wall_dist_nodal_grad", minDistanceToWall_,
+        dwalldistdx_, edgeNodalGradient_);
+      nDotVGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
+        algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_,
+        edgeNodalGradient_);
+    }
+  }
   if (
     (TurbulenceModel::SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
     (TurbulenceModel::SST_IDDES == realm_.solutionOptions_->turbulenceModel_) ||
@@ -217,6 +266,7 @@ ShearStressTransportEquationSystem::register_wall_bc(
   const stk::topology& partTopo,
   const WallBoundaryConditionData& wallBCData)
 {
+  register_wall_normal_gradient_bc(WALL, part);
   // determine if using RANS for ABL
   WallUserData userData = wallBCData.userData_;
   bool RANSAblBcApproach = userData.RANSAblBcApproach_;
@@ -244,6 +294,90 @@ ShearStressTransportEquationSystem::register_wall_bc(
     "sst_geometry_wall", RANSAblBcApproach, z0);
 }
 
+void
+ShearStressTransportEquationSystem::register_wall_normal_gradient_bc(
+  AlgorithmType algType, stk::mesh::Part* part)
+{
+  if (!dwalldistdx_)
+    return;
+
+  wallDistGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "wall_dist_nodal_grad", minDistanceToWall_, dwalldistdx_,
+    edgeNodalGradient_);
+  nDotVGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_, edgeNodalGradient_);
+}
+
+void
+ShearStressTransportEquationSystem::register_inflow_bc(
+  stk::mesh::Part* part,
+  const stk::topology&,
+  const InflowBoundaryConditionData&)
+{
+  register_wall_normal_gradient_bc(INFLOW, part);
+}
+
+void
+ShearStressTransportEquationSystem::register_open_bc(
+  stk::mesh::Part* part,
+  const stk::topology&,
+  const OpenBoundaryConditionData&)
+{
+  register_wall_normal_gradient_bc(OPEN, part);
+}
+
+void
+ShearStressTransportEquationSystem::register_symmetry_bc(
+  stk::mesh::Part* part,
+  const stk::topology&,
+  const SymmetryBoundaryConditionData&)
+{
+  register_wall_normal_gradient_bc(SYMMETRY, part);
+}
+
+void
+ShearStressTransportEquationSystem::compute_wall_normal_gradients()
+{
+  if (!dwalldistdx_)
+    return;
+
+  using MeshIndex = kynema_ugf_ngp::NGPMeshTraits<>::MeshIndex;
+  wallDistGradAlgDriver_.execute();
+  const auto& meta = realm_.meta_data();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const int ndim = meta.spatial_dimension();
+  auto& normal =
+    fieldMgr.get_field<double>(dwalldistdx_->mesh_meta_data_ordinal());
+  auto& nDotV = fieldMgr.get_field<double>(nDotV_->mesh_meta_data_ordinal());
+  const std::string velName =
+    realm_.does_mesh_move() ? "velocity_rtm" : "velocity";
+  auto& vel = fieldMgr.get_field<double>(get_field_ordinal(meta, velName));
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part()) &
+    stk::mesh::selectField(*dwalldistdx_);
+  normal.sync_to_device();
+  nDotV.sync_to_device();
+  vel.sync_to_device();
+  kynema_ugf_ngp::run_entity_algorithm(
+    "SST::compute_nDotV", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      double magnitude = 0.0;
+      for (int d = 0; d < ndim; ++d)
+        magnitude += normal.get(mi, d) * normal.get(mi, d);
+      magnitude = stk::math::max(stk::math::sqrt(magnitude), 1.0e-16);
+      double normalVelocity = 0.0;
+      for (int d = 0; d < ndim; ++d) {
+        normal.get(mi, d) /= magnitude;
+        normalVelocity += normal.get(mi, d) * vel.get(mi, d);
+      }
+      nDotV.get(mi, 0) = normalVelocity;
+    });
+  normal.modify_on_device();
+  nDotV.modify_on_device();
+  nDotVGradAlgDriver_.execute();
+}
+
 //--------------------------------------------------------------------------
 //-------- solve_and_update ------------------------------------------------
 //--------------------------------------------------------------------------
@@ -256,6 +390,7 @@ ShearStressTransportEquationSystem::solve_and_update()
     // compute projected nodal gradients
     tkeEqSys_->compute_projected_nodal_gradient();
     sdrEqSys_->assemble_nodal_gradient();
+    compute_wall_normal_gradients();
     if (realm_.solutionOptions_->gammaEqActive_)
       gammaEqSys_->assemble_nodal_gradient();
     clip_min_distance_to_wall();
@@ -324,6 +459,7 @@ ShearStressTransportEquationSystem::solve_and_update()
     // compute projected nodal gradients
     tkeEqSys_->compute_projected_nodal_gradient();
     sdrEqSys_->assemble_nodal_gradient();
+    compute_wall_normal_gradients();
     if (realm_.solutionOptions_->gammaEqActive_)
       gammaEqSys_->assemble_nodal_gradient();
   }

@@ -172,6 +172,7 @@ public:
   bool transition_model_;
   TransitionModel transitionModel_{TransitionModel::M2015};
   bool gammaEqActive_;
+  bool apgCorrection_{false};
   bool lengthScaleLimiter_;
   double referenceVelocity_;
   double roughnessHeight_;

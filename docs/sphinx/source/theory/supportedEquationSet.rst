@@ -904,6 +904,58 @@ The model constants are:
 :math:`\tilde{\nu}_{\infty} = 3\nu_{\infty}` to :math:`5\nu_{\infty}` is recommended at the freestream
 for fully turbulent simulations.
 
+.. _sst_apg_correction:
+
+Optional SST APG Correction
++++++++++++++++++++++++++++
+
+The opt-in ``solution_options.apg_correction`` switch applies an
+adverse-pressure-gradient correction to the SST eddy viscosity, either for
+fully turbulent SST or with Menter's one-equation :math:`\gamma` transition
+model (``transition_model_type: m2015``). It does not change the turbulence
+transport equations. Define the wall normal and wall-parallel speed by
+
+.. math::
+   \boldsymbol{n} = \frac{\nabla d_w}{|\nabla d_w|}, \qquad
+   U_\parallel =
+   |\boldsymbol{u} - (\boldsymbol{n}\cdot\boldsymbol{u})\boldsymbol{n}|.
+
+The APG sensor and fully turbulent threshold are
+
+.. math::
+   \lambda_{0L} =
+   \min\left(1,\max\left(-1,
+   -7.57\times10^{-3}\,
+   \boldsymbol{n}\cdot\nabla(\boldsymbol{n}\cdot\boldsymbol{u})
+   \frac{\rho d_w^2}{\mu} + 0.0128\right)\right),
+   \qquad
+   \lambda_{\mathrm{turb}} =
+   -5\times10^{-4}
+   \left(\frac{\rho U_\parallel d_w}{\mu}\right)^{0.75}.
+
+For SST-:math:`\gamma` (M2015), the threshold is blended with the laminar separation
+criterion:
+
+.. math::
+   \lambda_{\mathrm{crit}} =
+   (1-\gamma)(-0.0681) + \gamma\lambda_{\mathrm{turb}}.
+
+For fully turbulent SST, :math:`\lambda_{\mathrm{crit}} =
+\lambda_{\mathrm{turb}}`. When :math:`a_1\omega \le S F_2` and
+:math:`\lambda_{0L} < \lambda_{\mathrm{crit}}`, the corrected viscosity is
+
+.. math::
+   \mu_t = \frac{0.275\,\rho k}{S F_2}.
+
+Otherwise the standard SST eddy viscosity is retained. Here :math:`S` is
+the strain-rate magnitude and :math:`F_2` is the SST blending function.
+The existing configurable :math:`a_1` (default 0.31) remains in the standard
+SST viscosity and limiter comparison. On moving meshes, velocities are
+relative to the mesh, consistent with the transition model's normal-velocity
+gradient. The implementation guards normalization at zero wall-distance
+gradient and retains the standard viscosity's zero-distance and
+zero-frequency safeguards.
+
 .. _eqn_sst_des:
 
 Laminar-Turbulent Transition Model Formulation

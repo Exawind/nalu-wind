@@ -308,6 +308,19 @@ SolutionOptions::load(const YAML::Node& y_node)
           "sst_iddes_simple");
       }
     }
+    get_if_present(
+      y_solution_options, "apg_correction", apgCorrection_, apgCorrection_);
+    if (apgCorrection_ && turbulenceModel_ != TurbulenceModel::SST) {
+      throw std::runtime_error(
+        "Invalid configuration: apg_correction is only supported for sst");
+    }
+    if (
+      apgCorrection_ && gammaEqActive_ &&
+      transitionModel_ != TransitionModel::M2015) {
+      throw std::runtime_error(
+        "Invalid configuration: apg_correction with transition_model is only "
+        "supported for transition_model_type m2015");
+    }
     // initialize turbulence constants since some laminar models may need such
     // variables, e.g., kappa
     initialize_turbulence_constants();
@@ -665,6 +678,10 @@ SolutionOptions::load(const YAML::Node& y_node)
   } else {
     KynemaUGFEnv::self().kynema_ugfOutputP0()
       << "No Transition Model" << std::endl;
+  }
+  if (apgCorrection_) {
+    KynemaUGFEnv::self().kynema_ugfOutputP0()
+      << "SST APG correction enabled" << std::endl;
   }
 
   // over view PPE specifications

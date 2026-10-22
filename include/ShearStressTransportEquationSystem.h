@@ -13,6 +13,7 @@
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
 #include <KynemaUGFParsedTypes.h>
+#include "ngp_algorithms/NodalGradAlgDriver.h"
 
 namespace stk {
 struct topology;
@@ -37,23 +38,36 @@ public:
   ShearStressTransportEquationSystem(EquationSystems& equationSystems);
   virtual ~ShearStressTransportEquationSystem();
 
-  virtual void load(const YAML::Node&);
+  void load(const YAML::Node&) override;
 
-  virtual void initialize();
+  void initialize() override;
 
-  virtual void register_nodal_fields(const stk::mesh::PartVector& part_vec);
+  void register_nodal_fields(const stk::mesh::PartVector& part_vec) override;
 
-  virtual void register_wall_bc(
+  void register_wall_bc(
     stk::mesh::Part* part,
     const stk::topology& theTopo,
-    const WallBoundaryConditionData& wallBCData);
+    const WallBoundaryConditionData& wallBCData) override;
 
-  virtual void register_interior_algorithm(stk::mesh::Part* part);
+  void register_interior_algorithm(stk::mesh::Part* part) override;
 
-  virtual void solve_and_update();
+  void register_inflow_bc(
+    stk::mesh::Part* part,
+    const stk::topology&,
+    const InflowBoundaryConditionData&) override;
+  void register_open_bc(
+    stk::mesh::Part* part,
+    const stk::topology&,
+    const OpenBoundaryConditionData&) override;
+  void register_symmetry_bc(
+    stk::mesh::Part* part,
+    const stk::topology&,
+    const SymmetryBoundaryConditionData&) override;
 
-  void initial_work();
-  virtual void post_external_data_transfer_work();
+  void solve_and_update() override;
+
+  void initial_work() override;
+  void post_external_data_transfer_work() override;
   void post_iter_work() final;
   void pre_iter_work() final;
 
@@ -94,6 +108,16 @@ public:
   const double sdrMinValue_{1.0e-8};
   const double gammaMinValue_{0.02};
   const double gammaMaxValue_{1.0};
+
+private:
+  void register_wall_normal_gradient_bc(AlgorithmType, stk::mesh::Part*);
+  void compute_wall_normal_gradients();
+
+  VectorFieldType* dwalldistdx_{nullptr};
+  ScalarFieldType* nDotV_{nullptr};
+  VectorFieldType* dnDotVdx_{nullptr};
+  ScalarNodalGradAlgDriver wallDistGradAlgDriver_;
+  ScalarNodalGradAlgDriver nDotVGradAlgDriver_;
 };
 
 } // namespace kynema_ugf
