@@ -330,6 +330,9 @@ TEST(SolutionOptions, apg_correction_constants)
 
 TEST(KynemaUGFMock, apg_sst_fields_without_gamma_equation)
 {
+  // Declared first so it outlives the realm that points to it.
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
+  timeIntegrator.secondOrderTimeAccurate_ = true;
   KynemaUGFTest kynema_ugfObj(get_default_inputs());
   YAML::Node node = get_realm_default_node();
   node["solution_options"]["turbulence_model"] = "sst";
@@ -339,6 +342,8 @@ TEST(KynemaUGFMock, apg_sst_fields_without_gamma_equation)
   node["equation_systems"]["solver_system_specification"]
       ["specific_dissipation_rate"] = "solve_scalar";
   auto& realm = kynema_ugfObj.create_realm(node);
+  // number_of_states() used during field registration reads the integrator.
+  realm.timeIntegrator_ = &timeIntegrator;
   auto* sst = new sierra::kynema_ugf::ShearStressTransportEquationSystem(
     realm.equationSystems_);
   EXPECT_EQ(sst->gammaEqSys_, nullptr);

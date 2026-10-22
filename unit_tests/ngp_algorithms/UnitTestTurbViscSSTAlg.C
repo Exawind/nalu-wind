@@ -24,17 +24,12 @@ class APGTurbViscSSTTest
 public:
   APGTurbViscSSTTest()
     : sensor_(&meta_->declare_field<double>(
-        stk::topology::NODE_RANK, "lamda0L")),
-      apgVelocity_(&meta_->declare_field<double>(
-        stk::topology::NODE_RANK, "velocity"))
+        stk::topology::NODE_RANK, "lamda0L"))
   {
     stk::mesh::put_field_on_mesh(*sensor_, meta_->universal_part(), nullptr);
-    stk::mesh::put_field_on_mesh(
-      *apgVelocity_, meta_->universal_part(), spatialDim_, nullptr);
   }
 
   sierra::kynema_ugf::ScalarFieldType* sensor_;
-  sierra::kynema_ugf::VectorFieldType* apgVelocity_;
 
   struct Case
   {
@@ -70,11 +65,11 @@ public:
       const double strain[9]{2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
       stk::mesh::field_fill_component(normal, *dwalldistdx_);
       stk::mesh::field_fill_component(gradient, *dnDotVdx_);
-      stk::mesh::field_fill_component(velocity, *apgVelocity_);
+      stk::mesh::field_fill_component(velocity, *velocity_);
       stk::mesh::field_fill_component(strain, *dudx_);
       for (auto* field :
            {density_, visc_, tke_, sdr_, minDistance_, gamma_intermittency_,
-            dwalldistdx_, dnDotVdx_, apgVelocity_, dudx_}) {
+            dwalldistdx_, dnDotVdx_, velocity_, dudx_}) {
         field->modify_on_host();
         field->sync_to_device();
       }
