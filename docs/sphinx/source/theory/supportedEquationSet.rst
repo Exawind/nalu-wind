@@ -930,7 +930,7 @@ The APG sensor and fully turbulent threshold are
    \frac{\rho d_w^2}{\mu} + 0.0128\right)\right),
    \qquad
    \lambda_{\mathrm{turb}} =
-   -5\times10^{-4}
+   s_{\mathrm{thres}}
    \left(\frac{\rho U_\parallel d_w}{\mu}\right)^{0.75}.
 
 For SST-:math:`\gamma` (M2015), the threshold is blended with the laminar separation
@@ -945,10 +945,13 @@ For fully turbulent SST, :math:`\lambda_{\mathrm{crit}} =
 :math:`\lambda_{0L} < \lambda_{\mathrm{crit}}`, the corrected viscosity is
 
 .. math::
-   \mu_t = \frac{0.275\,\rho k}{S F_2}.
+   \mu_t = \frac{a_{1,\mathrm{APG}}\,\rho k}{S F_2}.
 
 Otherwise the standard SST eddy viscosity is retained. Here :math:`S` is
 the strain-rate magnitude and :math:`F_2` is the SST blending function.
+The APG constants are set in ``turbulence_model_constants`` as
+``aOne_apg`` (:math:`a_{1,\mathrm{APG}}`, default 0.275) and ``sThres_apg``
+(:math:`s_{\mathrm{thres}}`, default :math:`-5\times10^{-4}`).
 The existing configurable :math:`a_1` (default 0.31) remains in the standard
 SST viscosity and limiter comparison. On moving meshes, velocities are
 relative to the mesh, consistent with the transition model's normal-velocity

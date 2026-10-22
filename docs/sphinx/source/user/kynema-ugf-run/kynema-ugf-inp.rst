@@ -945,6 +945,18 @@ Solution Options
    Nalu-Wind implementation. This diagnostic is recomputed rather than
    restarted. See :ref:`sst_apg_correction` for the correction equations.
 
+   Two APG constants can be set under ``turbulence_model_constants``:
+   ``aOne_apg`` (default ``0.275``) is the coefficient of the corrected eddy
+   viscosity, and ``sThres_apg`` (default ``-5e-4``) scales the fully
+   turbulent sensor threshold:
+
+   .. code-block:: yaml
+
+      options:
+        - turbulence_model_constants:
+            aOne_apg: 0.275
+            sThres_apg: -5e-4
+
 .. inpfile:: solution_options.options
 
    This subsection defines additional options for the solution options.

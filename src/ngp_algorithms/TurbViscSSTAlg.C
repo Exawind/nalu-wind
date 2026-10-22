@@ -38,6 +38,8 @@ TurbViscSSTAlg::TurbViscSSTAlg(
     tvisc_(tvisc->mesh_meta_data_ordinal()),
     aOne_(realm.get_turb_model_constant(TM_aOne)),
     betaStar_(realm.get_turb_model_constant(TM_betaStar)),
+    aOneApg_(realm.get_turb_model_constant(TM_aOneApg)),
+    sThresApg_(realm.get_turb_model_constant(TM_sThresApg)),
     apgCorrection_(realm.solutionOptions_->apgCorrection_),
     gammaEqActive_(realm.solutionOptions_->gammaEqActive_)
 {
@@ -95,6 +97,8 @@ TurbViscSSTAlg::execute()
 
   const DblType aOne = aOne_;
   const DblType betaStar = betaStar_;
+  const DblType aOneApg = aOneApg_;
+  const DblType sThresApg = sThresApg_;
   const int nDim = meta.spatial_dimension();
   const bool apgCorrection = apgCorrection_;
   const bool gammaEqActive = gammaEqActive_;
@@ -157,7 +161,7 @@ TurbViscSSTAlg::execute()
         const DblType reBuri = stk::math::sqrt(parallelSpeedSq) * distance *
                                density.get(meshIdx, 0) /
                                visc.get(meshIdx, 0);
-        DblType threshold = -5.0e-4 * stk::math::pow(reBuri, 0.75);
+        DblType threshold = sThresApg * stk::math::pow(reBuri, 0.75);
         if (gammaEqActive) {
           const DblType intermittency = gamma.get(meshIdx, 0);
           threshold =
@@ -165,7 +169,7 @@ TurbViscSSTAlg::execute()
         }
         if (aOne * sdrSafe <= sijMag * fTwo && lambda < threshold) {
           tvisc.get(meshIdx, 0) =
-            0.275 * density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
+            aOneApg * density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
             (sijMag * fTwo);
         }
       }

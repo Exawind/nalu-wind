@@ -819,6 +819,10 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_saCt3] = 1.2;
   turbModelConstantMap_[TM_saCt4] = 0.5;
   turbModelConstantMap_[TM_saCn1] = 16.0;
+
+  // SST APG correction constants
+  turbModelConstantMap_[TM_aOneApg] = 0.275;
+  turbModelConstantMap_[TM_sThresApg] = -5.0e-4;
 }
 
 double

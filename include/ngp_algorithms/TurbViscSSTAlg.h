@@ -52,6 +52,8 @@ private:
 
   const DblType aOne_;
   const DblType betaStar_;
+  const DblType aOneApg_;
+  const DblType sThresApg_;
   const bool apgCorrection_;
   const bool gammaEqActive_;
 };

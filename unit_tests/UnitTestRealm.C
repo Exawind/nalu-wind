@@ -306,6 +306,28 @@ TEST(SolutionOptions, apg_correction)
   EXPECT_THROW(invalid.load(node), YAML::Exception);
 }
 
+TEST(SolutionOptions, apg_correction_constants)
+{
+  using namespace sierra::kynema_ugf;
+  YAML::Node node = get_realm_default_node();
+  node["solution_options"]["turbulence_model"] = "sst";
+  node["solution_options"]["apg_correction"] = true;
+
+  SolutionOptions defaults;
+  defaults.load(node);
+  EXPECT_DOUBLE_EQ(defaults.turbModelConstantMap_[TM_aOneApg], 0.275);
+  EXPECT_DOUBLE_EQ(defaults.turbModelConstantMap_[TM_sThresApg], -5.0e-4);
+
+  YAML::Node constants;
+  constants["turbulence_model_constants"]["aOne_apg"] = 0.25;
+  constants["turbulence_model_constants"]["sThres_apg"] = -1.0e-3;
+  node["solution_options"]["options"].push_back(constants);
+  SolutionOptions user;
+  user.load(node);
+  EXPECT_DOUBLE_EQ(user.turbModelConstantMap_[TM_aOneApg], 0.25);
+  EXPECT_DOUBLE_EQ(user.turbModelConstantMap_[TM_sThresApg], -1.0e-3);
+}
+
 TEST(KynemaUGFMock, apg_sst_fields_without_gamma_equation)
 {
   KynemaUGFTest kynema_ugfObj(get_default_inputs());
