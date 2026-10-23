@@ -5,6 +5,8 @@ target_sources(
    ${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AMSAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/AFTNTildaEquationSystem.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/AFTGammaTildaEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityNonConformalSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleFaceElemSolverAlgorithm.C
@@ -77,6 +79,7 @@ target_sources(
    ${CMAKE_CURRENT_SOURCE_DIR}/Realms.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScratchViews.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ShearStressTransportEquationSystem.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/SpalartAllmarasEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SideWriter.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Simulation.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SmartField.C

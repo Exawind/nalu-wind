@@ -906,6 +906,57 @@ Solution Options
 
    Turbulence model used in simulation.
 
+.. inpfile:: solution_options.apg_correction
+
+   Enable the adverse-pressure-gradient (APG) eddy-viscosity correction.
+   This boolean defaults to ``false`` and is supported only with
+   ``turbulence_model: sst``. Enabling it for any other turbulence model
+   produces an input error.
+
+   Fully turbulent SST does not require a gamma equation, gamma initial or
+   boundary conditions, or a gamma linear solver:
+
+   .. code-block:: yaml
+
+      solution_options:
+        name: solution_options
+        turbulence_model: sst
+        apg_correction: true
+
+   To use the intermittency-blended APG criterion with SST-gamma, retain the
+   usual transition-model setup and add the same option:
+
+   .. code-block:: yaml
+
+      solution_options:
+        name: solution_options
+        turbulence_model: sst
+        transition_model: true
+        transition_model_type: m2015
+        apg_correction: true
+
+   With the transition model, only ``transition_model_type: m2015`` is
+   supported; combining the switch with ``dlr_gamma`` produces an input
+   error. Omitting the switch or setting it to ``false`` retains the
+   uncorrected SST viscosity.
+
+   When enabled, the scalar sensor field ``lamda0L`` can be added to
+   ``output.output_variables``. Its spelling is retained from the original
+   Nalu-Wind implementation. This diagnostic is recomputed rather than
+   restarted. See :ref:`sst_apg_correction` for the correction equations.
+
+   Two APG constants can be set under ``turbulence_model_constants``:
+   ``aOne_apg`` (default ``0.275``) is the coefficient of the corrected eddy
+   viscosity, and ``sThres_apg`` (default ``-5e-4``) scales the fully
+   turbulent sensor threshold:
+
+   .. code-block:: yaml
+
+      options:
+        - turbulence_model_constants:
+            aOne_apg: 0.275
+            sThres_apg: -5e-4
+
 .. inpfile:: solution_options.options
 
    This subsection defines additional options for the solution options.
@@ -2431,4 +2482,3 @@ Simulations
 .. inpfile:: simulations
 
    This is the top-level section that orchestrates the entire execution of Kynema-UGF.
-

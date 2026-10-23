@@ -19,6 +19,7 @@
 #include "SolutionOptions.h"
 #include "TimeIntegrator.h"
 #include "ComputeSSTMaxLengthScaleElemAlgorithm.h"
+#include "ShearStressTransportEquationSystem.h"
 
 #include <string>
 
@@ -256,6 +257,107 @@ TEST(KynemaUGFMock, test_kynema_ugf_mock)
   // ones...
   double expectedValue = 1.0;
   verify_field_values(expectedValue, &maxLengthScaleField, realm.bulk_data());
+}
+
+TEST(SolutionOptions, apg_correction)
+{
+  using namespace sierra::kynema_ugf;
+  for (const std::string model :
+       {"sst", "laminar", "ksgs", "sst_des", "sst_iddes", "sst_ams", "sstlr"}) {
+    YAML::Node node = get_realm_default_node();
+    auto settings = node["solution_options"];
+    settings["turbulence_model"] = model;
+    SolutionOptions defaults;
+    EXPECT_NO_THROW(defaults.load(node));
+    EXPECT_FALSE(defaults.apgCorrection_);
+
+    settings["apg_correction"] = false;
+    SolutionOptions disabled;
+    EXPECT_NO_THROW(disabled.load(node));
+    EXPECT_FALSE(disabled.apgCorrection_);
+
+    settings["apg_correction"] = true;
+    SolutionOptions enabled;
+    if (model == "sst") {
+      EXPECT_NO_THROW(enabled.load(node));
+      EXPECT_TRUE(enabled.apgCorrection_);
+      EXPECT_FALSE(enabled.gammaEqActive_);
+      settings["transition_model"] = true;
+      settings["transition_model_type"] = "m2015";
+      SolutionOptions transitioning;
+      EXPECT_NO_THROW(transitioning.load(node));
+      EXPECT_TRUE(transitioning.apgCorrection_);
+      EXPECT_TRUE(transitioning.gammaEqActive_);
+
+      settings["transition_model_type"] = "dlr_gamma";
+      SolutionOptions dlrGamma;
+      EXPECT_THROW(dlrGamma.load(node), std::runtime_error);
+
+      settings["apg_correction"] = false;
+      SolutionOptions dlrGammaWithoutApg;
+      EXPECT_NO_THROW(dlrGammaWithoutApg.load(node));
+    } else {
+      EXPECT_THROW(enabled.load(node), std::runtime_error);
+    }
+  }
+  YAML::Node node = get_realm_default_node();
+  node["solution_options"]["apg_correction"] = "not-a-boolean";
+  SolutionOptions invalid;
+  EXPECT_THROW(invalid.load(node), YAML::Exception);
+}
+
+TEST(SolutionOptions, apg_correction_constants)
+{
+  using namespace sierra::kynema_ugf;
+  YAML::Node node = get_realm_default_node();
+  node["solution_options"]["turbulence_model"] = "sst";
+  node["solution_options"]["apg_correction"] = true;
+
+  SolutionOptions defaults;
+  defaults.load(node);
+  EXPECT_DOUBLE_EQ(defaults.turbModelConstantMap_[TM_aOneApg], 0.275);
+  EXPECT_DOUBLE_EQ(defaults.turbModelConstantMap_[TM_sThresApg], -5.0e-4);
+
+  YAML::Node constants;
+  constants["turbulence_model_constants"]["aOne_apg"] = 0.25;
+  constants["turbulence_model_constants"]["sThres_apg"] = -1.0e-3;
+  node["solution_options"]["options"].push_back(constants);
+  SolutionOptions user;
+  user.load(node);
+  EXPECT_DOUBLE_EQ(user.turbModelConstantMap_[TM_aOneApg], 0.25);
+  EXPECT_DOUBLE_EQ(user.turbModelConstantMap_[TM_sThresApg], -1.0e-3);
+}
+
+TEST(KynemaUGFMock, apg_sst_fields_without_gamma_equation)
+{
+  // Declared first so it outlives the realm that points to it.
+  sierra::kynema_ugf::TimeIntegrator timeIntegrator;
+  timeIntegrator.secondOrderTimeAccurate_ = true;
+  KynemaUGFTest kynema_ugfObj(get_default_inputs());
+  YAML::Node node = get_realm_default_node();
+  node["solution_options"]["turbulence_model"] = "sst";
+  node["solution_options"]["apg_correction"] = true;
+  node["equation_systems"]["solver_system_specification"]["turbulent_ke"] =
+    "solve_scalar";
+  node["equation_systems"]["solver_system_specification"]
+      ["specific_dissipation_rate"] = "solve_scalar";
+  auto& realm = kynema_ugfObj.create_realm(node);
+  // number_of_states() used during field registration reads the integrator.
+  realm.timeIntegrator_ = &timeIntegrator;
+  auto* sst = new sierra::kynema_ugf::ShearStressTransportEquationSystem(
+    realm.equationSystems_);
+  EXPECT_EQ(sst->gammaEqSys_, nullptr);
+  sst->register_nodal_fields({&realm.meta_data().universal_part()});
+  for (const std::string name :
+       {"dwalldistdx", "nDotV", "dnDotVdx", "lamda0L"}) {
+    EXPECT_NE(
+      realm.meta_data().get_field<double>(stk::topology::NODE_RANK, name),
+      nullptr);
+  }
+  EXPECT_EQ(
+    realm.meta_data().get_field<double>(
+      stk::topology::NODE_RANK, "gamma_transition"),
+    nullptr);
 }
 
 } // namespace unit_test_utils

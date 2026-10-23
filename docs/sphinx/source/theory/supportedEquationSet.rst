@@ -692,12 +692,13 @@ Although Kynema-UGF is primarily expected to be a LES simulation tool,
 RANS modeling is supported through the activation of different
 two-equation RANS models: the Chien :math:`k-\epsilon` model
 :cite:`chien1982predictions`, the Wilcox 1998 :math:`k-\omega` model
-:cite:`wilcox1998turbulence`, and the SST model. For the first two
+:cite:`wilcox1998turbulence`, and the SST model, as well as the
+one-equation Spalart-Allmaras (SA) model. For the first two
 models, the reader is referred to the reference papers and the NASA
 Turbulence Modeling Resource for the `Chien
 <https://turbmodels.larc.nasa.gov/ke-chien.html>`_ and `Wilcox
-<https://turbmodels.larc.nasa.gov/wilcox.html>`_ models. The SST model
-is explained in more details below.
+<https://turbmodels.larc.nasa.gov/wilcox.html>`_ models. The SST and SA
+models are explained in more details below.
 
 Shear Stress Transport (SST) Formulation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -853,17 +854,138 @@ where :math:`G` is the geostrophic (freestream) velocity and :math:`f_c` is the 
 
 where :math:`\Omega` is the earth's angular velocity and :math:`\lambda` is the latitude. 
 
+Spalart-Allmaras (SA-neg) Formulation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The one-equation Spalart-Allmaras model :cite:`SpalartAllmaras:1994` is supported in its
+negative form, SA-neg :cite:`Allmaras:2012`, which allows negative values of the working
+variable :math:`\tilde{\nu}` without clipping. The transport equation is
+
+.. math::
+   \frac{D(\rho \tilde{\nu})}{Dt} = P - D + \frac{1}{\sigma} \left[ \frac{\partial}{\partial x_j}
+   \left( (\mu + \rho \tilde{\nu} f_n) \frac{\partial \tilde{\nu}}{\partial x_j} \right)
+   + c_{b2} \rho \frac{\partial \tilde{\nu}}{\partial x_i} \frac{\partial \tilde{\nu}}{\partial x_i} \right]
+
+For :math:`\tilde{\nu} \ge 0`, the standard SA model is recovered with :math:`f_n = 1`:
+
+.. math::
+   P = c_{b1} (1 - f_{t2}) \rho \tilde{S} \tilde{\nu}, \quad
+   D = \left( c_{w1} f_w - \frac{c_{b1}}{\kappa^2} f_{t2} \right) \rho \left( \frac{\tilde{\nu}}{d_w} \right)^2, \quad
+   \mu_t = \rho \tilde{\nu} f_{v1}
+
+.. math::
+   f_{v1} = \frac{\chi^3}{\chi^3 + c_{v1}^3}, \quad \chi = \frac{\rho \tilde{\nu}}{\mu}, \quad
+   f_{t2} = c_{t3} e^{-c_{t4} \chi^2}, \quad
+   \tilde{S} = \Omega + \bar{S}, \quad \bar{S} = \frac{\tilde{\nu} f_{v2}}{\kappa^2 d_w^2}, \quad
+   f_{v2} = 1 - \frac{\chi}{1 + \chi f_{v1}}
+
+.. math::
+   f_w = g \left[ \frac{1 + c_{w3}^6}{g^6 + c_{w3}^6} \right]^{1/6}, \quad
+   g = r + c_{w2} (r^6 - r), \quad
+   r = \min \left( \frac{\tilde{\nu}}{\tilde{S} \kappa^2 d_w^2}, 10 \right)
+
+where :math:`\Omega` is the vorticity magnitude. When :math:`\bar{S} < -c_2 \Omega`, :math:`\tilde{S}`
+is replaced by :math:`\Omega + \Omega (c_2^2 \Omega + c_3 \bar{S}) / ((c_3 - 2 c_2) \Omega - \bar{S})`
+:cite:`Allmaras:2012`. For :math:`\tilde{\nu} < 0`, the SA-neg branch is used:
+
+.. math::
+   P = c_{b1} (1 - c_{t3}) \rho \Omega \tilde{\nu}, \quad
+   D = -c_{w1} \rho \left( \frac{\tilde{\nu}}{d_w} \right)^2, \quad
+   f_n = \frac{c_{n1} + \chi^3}{c_{n1} - \chi^3}, \quad \mu_t = 0
+
+The model constants are:
+
+.. math::
+   c_{b1}=0.1355, \quad c_{b2}=0.622, \quad \sigma=2/3, \quad \kappa=0.41, \quad c_{v1}=7.1, \quad
+   c_{w2}=0.3, \quad c_{w3}=2, \quad c_{t3}=1.2, \quad c_{t4}=0.5, \quad
+   c_2=0.7, \quad c_3=0.9, \quad c_{n1}=16, \quad c_{w1}=\frac{c_{b1}}{\kappa^2}+\frac{1+c_{b2}}{\sigma}
+
+:math:`\tilde{\nu} = 0` is imposed at walls (wall functions are not supported), and
+:math:`\tilde{\nu}_{\infty} = 3\nu_{\infty}` to :math:`5\nu_{\infty}` is recommended at the freestream
+for fully turbulent simulations.
+
+.. _sst_apg_correction:
+
+Optional SST APG Correction
++++++++++++++++++++++++++++
+
+The opt-in ``solution_options.apg_correction`` switch applies an
+adverse-pressure-gradient correction to the SST eddy viscosity, either for
+fully turbulent SST or with Menter's one-equation :math:`\gamma` transition
+model (``transition_model_type: m2015``). It does not change the turbulence
+transport equations. Define the wall normal and wall-parallel speed by
+
+.. math::
+   \boldsymbol{n} = \frac{\nabla d_w}{|\nabla d_w|}, \qquad
+   U_\parallel =
+   |\boldsymbol{u} - (\boldsymbol{n}\cdot\boldsymbol{u})\boldsymbol{n}|.
+
+The APG sensor and fully turbulent threshold are
+
+.. math::
+   \lambda_{0L} =
+   \min\left(1,\max\left(-1,
+   -7.57\times10^{-3}\,
+   \boldsymbol{n}\cdot\nabla(\boldsymbol{n}\cdot\boldsymbol{u})
+   \frac{\rho d_w^2}{\mu} + 0.0128\right)\right),
+   \qquad
+   \lambda_{\mathrm{turb}} =
+   s_{\mathrm{thres}}
+   \left(\frac{\rho U_\parallel d_w}{\mu}\right)^{0.75}.
+
+For SST-:math:`\gamma` (M2015), the threshold is blended with the laminar separation
+criterion:
+
+.. math::
+   \lambda_{\mathrm{crit}} =
+   (1-\gamma)(-0.0681) + \gamma\lambda_{\mathrm{turb}}.
+
+For fully turbulent SST, :math:`\lambda_{\mathrm{crit}} =
+\lambda_{\mathrm{turb}}`. When :math:`a_1\omega \le S F_2` and
+:math:`\lambda_{0L} < \lambda_{\mathrm{crit}}`, the corrected viscosity is
+
+.. math::
+   \mu_t = \frac{a_{1,\mathrm{APG}}\,\rho k}{S F_2}.
+
+Otherwise the standard SST eddy viscosity is retained. Here :math:`S` is
+the strain-rate magnitude and :math:`F_2` is the SST blending function.
+The APG constants are set in ``turbulence_model_constants`` as
+``aOne_apg`` (:math:`a_{1,\mathrm{APG}}`, default 0.275) and ``sThres_apg``
+(:math:`s_{\mathrm{thres}}`, default :math:`-5\times10^{-4}`).
+The existing configurable :math:`a_1` (default 0.31) remains in the standard
+SST viscosity and limiter comparison. On moving meshes, velocities are
+relative to the mesh, consistent with the transition model's normal-velocity
+gradient. The implementation guards normalization at zero wall-distance
+gradient and retains the standard viscosity's zero-distance and
+zero-frequency safeguards.
+
 .. _eqn_sst_des:
 
 Laminar-Turbulent Transition Model Formulation
 ++++++++++++++++++++++++++++++++++++++++++++++
-To account for the effects of the laminar-turbulent boundary layer transition, 
-Menter's one-equation :math:`\gamma` transition model :cite:`Menter:2015` is coupled with the SST model.
-The model consists of single transport equation for intermittency
+To account for the effects of the laminar-turbulent boundary layer transition, two one-equation
+:math:`\gamma` transition models are available with the SST model: Menter's model :cite:`Menter:2015`
+and the DLR-:math:`\gamma` model :cite:`Francois:2023`. Both models solve a single transport equation for
+the intermittency, :math:`\gamma`,
 
 .. math::
    \frac{D(\rho \gamma)}{Dt}=P_{\gamma}-D_{\gamma}+\frac{\partial }{\partial x_j}\left[ (\mu + \frac{\mu_t}{\sigma_{\gamma}} )\frac{\partial \gamma}{\partial x_j} \right]
 
+and differ in the source terms, :math:`P_{\gamma}` and :math:`D_{\gamma}`, the transition onset criteria, and the
+coupling with the SST model. The transition model is activated with ``transition_model: true`` and selected
+with ``transition_model_type`` (``m2015``, the default, or ``dlr_gamma``):
+
+.. code-block:: yaml
+
+   solution_options:
+     turbulence_model: sst
+     transition_model: true
+     transition_model_type: m2015   # or dlr_gamma
+     turbulence_model_constants:
+       fsti: 0.1   # optional; local Tu is used if omitted
+
+Menter's One-Equation :math:`\gamma` Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The production term, :math:`P_{\gamma}`, and destruction term, :math:`D_{\gamma}`, are as:
 
 .. math::
@@ -889,6 +1011,139 @@ The transition onset occurs once the scaled vorticity Reynolds number, :math:`Re
 
 The output intermittency from the transition model is applied to both the production and destruction terms of the turbulent kinetic energy
 transport equation. 
+
+.. _eqn_dlr_gamma:
+
+DLR One-Equation :math:`\gamma` Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The DLR-:math:`\gamma` model :cite:`Francois:2023` is a stability-based alternative to Menter's
+model, targeting natural (Tollmien-Schlichting) transition at low freestream turbulence including
+pressure-gradient and compressibility effects. It is selected with ``transition_model_type: dlr_gamma``.
+
+The production term, :math:`P_{\gamma}`, and destruction term, :math:`D_{\gamma}`, are as:
+
+.. math::
+   P_{\gamma}=F_{length} \rho S (1-\gamma) F_{onset}, \quad D_{\gamma}=C_{a2} \rho \Omega \gamma F_{turb} (C_{e2}\gamma-1)
+
+The model constants are:
+
+.. math::
+   F_{length}=14, \quad  c_{e2}=50, \quad  c_{a2}=0.06, \quad  \sigma_{\gamma}=1.0
+
+The transition onset criteria are defined as:
+
+.. math::
+   F_{onset1}=\frac{Re_{\theta}}{Re_{\theta t}}, \quad Re_{\theta}=\frac{Re_{v}}{\Pi(H_{12})}, \quad
+   F_{onset2}=\min \left( \max(F_{onset1}, F_{onset1}^4), 2.0 \right)
+
+.. math::
+   F_{onset3}=\max \left(1- \left (\frac{R_{T}}{2}\right)^3,0 \right ), \quad F_{onset}=\max(F_{onset2}-F_{onset3},0)
+
+.. math::
+   F_{turb}=e^{-\left ( \frac{R_{T}}{4} \right )^{4}}, \quad R_T=\frac{\mu_t}{\mu}, \quad Re_v=\frac{\rho d_{w}^2S}{\mu}
+
+The transition onset momentum thickness Reynolds number follows a compressible, stability-based correlation:
+
+.. math::
+   Re_{\theta t}=-\left(177 M_e^2 - 22 M_e + 210\right) \ln \left( \frac{(7 M_e + 4.8)\,Tu}{100} \right) e^{(5 M_e + 27)\lambda_{\theta}}
+
+where :math:`Tu` (%) is ``fsti`` if specified, or otherwise the local value
+:math:`Tu = 100\sqrt{2k/3}/(\omega d_w)`. The ratio :math:`\Pi = Re_{v,max}/Re_{\theta}` and the shape factor
+:math:`H_{12}` are obtained from the pressure-gradient parameter, :math:`\lambda_{\theta}`,
+
+.. math::
+   H_{12}=\begin{cases} 4.02923-\sqrt{-8838.4\lambda_{\theta}^4+1105.1\lambda_{\theta}^3-67.962\lambda_{\theta}^2+17.574\lambda_{\theta}+2.0593}, & \lambda_{\theta} \ge 0 \\ 2.072+\frac{0.0731}{\lambda_{\theta}+0.14}, & \lambda_{\theta} < 0 \end{cases}
+
+.. math::
+   \Pi(H_{12})=0.071665 H_{12}^3 - 0.73186 H_{12}^2 + 4.2563 H_{12} - 5.1743
+
+.. math::
+   \lambda_{\theta}=\frac{\theta^2}{\nu_e}\frac{dU_e}{ds}, \quad \theta=\frac{Re_{\theta}\,\nu_e}{U_e}, \quad
+   \frac{dU_e}{ds}=\frac{u_i}{|\mathbf{u}|}\frac{\partial U_e}{\partial x_i}, \quad
+   \frac{\partial U_e}{\partial x_i}=-\frac{1}{\rho U_e}\left(\frac{p}{p_{\infty}}\right)^{-1/\kappa}\frac{\partial p}{\partial x_i}
+
+Since :math:`H_{12}` and :math:`\lambda_{\theta}` depend on each other, they are solved locally with a fixed-point
+iteration, and :math:`\lambda_{\theta}` is limited to :math:`[-0.068253, 0.1]`. On moving meshes, the velocity
+relative to the mesh is used for the streamwise direction.
+
+The boundary layer edge quantities are reconstructed from the local pressure with isentropic relations,
+
+.. math::
+   M_e^2=\frac{2}{\kappa-1}\left[ \left(1+\frac{\kappa-1}{2}M_{\infty}^2\right)\left(\frac{p}{p_{\infty}}\right)^{-\frac{\kappa-1}{\kappa}}-1 \right], \quad
+   U_e^2=U_{\infty}^2+\frac{2\kappa}{\kappa-1}\frac{p_{\infty}}{\rho}\left[1-\left(\frac{p}{p_{\infty}}\right)^{\frac{\kappa-1}{\kappa}}\right]
+
+.. math::
+   \rho_e=\rho\left(\frac{p}{p_{\infty}}\right)^{\frac{1}{\kappa}}, \quad
+   T_e=T_{\infty}\left(\frac{p}{p_{\infty}}\right)^{\frac{\kappa-1}{\kappa}}, \quad
+   \nu_e=\frac{\mu}{\rho_e}\left(\frac{T_e}{T_{\infty}}\right)^{3/2}\frac{T_{\infty}+110.4}{T_e+110.4}
+
+where :math:`\kappa=1.4`, :math:`p_{\infty}=101325` Pa, :math:`T_{\infty}=p_{\infty}/(R\rho)`,
+and :math:`p` is the pressure field relative to :math:`p_{\infty}`. The freestream velocity, :math:`U_{\infty}`, is the
+magnitude of the constant ``velocity`` initial condition, and :math:`M_{\infty}=U_{\infty}/\sqrt{\kappa p_{\infty}/\rho}`.
+Therefore, dimensional inputs are required.
+
+The intermittency is applied to the turbulent kinetic energy transport equation as:
+
+.. math::
+   P_k^{*}=\gamma \min \left( \mu_t S^2, c_{1} \beta^{*} \rho \omega k \right), \quad
+   D_k^{*}=\min \left( \max(\gamma, 0.1), 1.0 \right) \beta^{*} \rho \omega k
+
+where :math:`c_1` is the production limiter ratio (``tkeProdLimitRatio``),
+while the specific dissipation rate equation is the unmodified SST model.
+Unlike Menter's model, the DLR-:math:`\gamma` model is not Galilean invariant because the edge quantities are
+reconstructed from global freestream reference values. Care is needed for flows with multiple relative motions
+(e.g., rotors or multiple moving bodies), where a single freestream reference is an approximation.
+
+Amplification Factor Transport (AFT) Transition Model Formulation
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+The SA-AFT2019b transition model :cite:`Coder:2019` is coupled with the SA-neg model.
+The model solves transport equations for the amplification factor, :math:`\tilde{n}`, and the
+logarithm of the intermittency, :math:`\tilde{\gamma} = \ln \gamma`:
+
+.. math::
+   \frac{D(\rho \tilde{n})}{Dt} = \rho \Omega F_{crit} F_{growth} \frac{d\tilde{n}}{dRe_{\theta}}
+   + \frac{\partial}{\partial x_j} \left[ \sigma_n (\mu + \mu_t) \frac{\partial \tilde{n}}{\partial x_j} \right]
+
+.. math::
+   \frac{D(\rho \tilde{\gamma})}{Dt} = c_1 \rho S F_{onset} \left[ 1 - e^{\tilde{\gamma}} \right]
+   - c_2 \rho \Omega F_{turb} \left[ c_3 e^{\tilde{\gamma}} - 1 \right]
+   + \frac{\partial}{\partial x_j} \left[ \left( \mu + \frac{\mu_t}{\sigma_{\gamma}} \right) \frac{\partial \tilde{\gamma}}{\partial x_j} \right]
+
+The source terms of the :math:`\tilde{n}` equation depend on the shape factor estimated from the local flow,
+
+.. math::
+   H_L = \frac{d_w^2}{\nu} \left[ \frac{\partial}{\partial x_i} \left( u_j \frac{\partial d_w}{\partial x_j} \right) \right] \frac{\partial d_w}{\partial x_i}, \quad
+   H_{12} = 0.26 H_L + 2.4
+
+where :math:`H_{12}` is limited to :math:`[2.2, 20]`. Growth starts once the vorticity Reynolds number exceeds its critical value,
+
+.. math::
+   F_{crit} = \begin{cases} 1, & Re_V \ge k_V Re_{\theta,0} \\ 0, & \text{otherwise} \end{cases}, \quad
+   Re_V = \frac{\rho S d_w^2}{\mu + \mu_t}, \quad
+   k_V = \frac{1}{0.4036 H_{12}^2 - 2.5394 H_{12} + 4.3273}
+
+and :math:`Re_{\theta,0}`, :math:`F_{growth}`, and :math:`d\tilde{n}/dRe_{\theta}` are empirical functions of :math:`H_{12}` :cite:`Coder:2019`.
+The transition onset criteria are defined as:
+
+.. math::
+   F_{onset1}=\frac{\tilde{n}}{N_{crit}}, \quad F_{onset2}=\min(F_{onset1},2), \quad
+   F_{onset3}=\max \left(1- \left (\frac{R_{T}}{3.5}\right)^3,0 \right ), \quad F_{onset}=\max(F_{onset2}-F_{onset3},0)
+
+.. math::
+   F_{turb}=e^{-\left ( \frac{R_{T}}{2} \right )^{4}}, \quad R_T=\frac{\mu_t}{\mu}, \quad
+   N_{crit} = -8.43 - 2.4 \ln \left( \frac{\tau}{100} \right), \quad \tau = 2.5 \tanh \left( \frac{Tu}{2.5} \right)
+
+where the freestream turbulence intensity, :math:`Tu` (%), is required as ``fsti`` in ``turbulence_model_constants``.
+The model constants are:
+
+.. math::
+   \sigma_n=1.0, \quad c_1=100, \quad c_2=0.06, \quad c_3=50, \quad \sigma_{\gamma}=1.0
+
+The AFT model is coupled with the SA-neg model by replacing :math:`f_{t2}` with
+:math:`c_{t3} \left[ 1 - e^{\tilde{\gamma}} \right]` for :math:`\tilde{\nu} \ge 0`; the SA-neg branch is
+unchanged for :math:`\tilde{\nu} < 0`. Both :math:`\tilde{n}` and :math:`\tilde{\gamma}` are zero at the
+freestream with zero-gradient conditions at walls, and are limited to :math:`\tilde{n} \ge 0` and
+:math:`\tilde{\gamma} \le 0`. A freestream value of :math:`\tilde{\nu}_{\infty} = 0.1 \nu_{\infty}` is recommended.
 
 Detached Eddy Simulation (DES) Formulation
 ++++++++++++++++++++++++++++++++++++++++++

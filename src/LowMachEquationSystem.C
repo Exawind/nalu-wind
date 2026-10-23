@@ -119,6 +119,7 @@
 #include "ngp_algorithms/TurbViscSSTLRAlg.h"
 #include "ngp_algorithms/TurbViscKEAlg.h"
 #include "ngp_algorithms/TurbViscKOAlg.h"
+#include "ngp_algorithms/TurbViscSAAlg.h"
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
 #include "ngp_algorithms/DynamicPressureOpenAlg.h"
 #include "ngp_algorithms/MomentumABLWallFuncMaskUtil.h"
@@ -1608,6 +1609,10 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 
       case TurbulenceModel::SSTLR:
         tviscAlg_.reset(new TurbViscSSTLRAlg(realm_, part, tvisc_));
+        break;
+
+      case TurbulenceModel::SA:
+        tviscAlg_.reset(new TurbViscSAAlg(realm_, part, tvisc_));
         break;
 
       default:

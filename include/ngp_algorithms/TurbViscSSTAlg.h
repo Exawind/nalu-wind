@@ -44,9 +44,18 @@ private:
   unsigned minDistance_{stk::mesh::InvalidOrdinal};
   unsigned dudx_{stk::mesh::InvalidOrdinal};
   unsigned tvisc_{stk::mesh::InvalidOrdinal};
+  unsigned dwalldistdx_{stk::mesh::InvalidOrdinal};
+  unsigned dnDotVdx_{stk::mesh::InvalidOrdinal};
+  unsigned velocity_{stk::mesh::InvalidOrdinal};
+  unsigned gamma_{stk::mesh::InvalidOrdinal};
+  unsigned lamda0L_{stk::mesh::InvalidOrdinal};
 
   const DblType aOne_;
   const DblType betaStar_;
+  const DblType aOneApg_;
+  const DblType sThresApg_;
+  const bool apgCorrection_;
+  const bool gammaEqActive_;
 };
 
 } // namespace kynema_ugf

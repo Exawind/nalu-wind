@@ -648,6 +648,19 @@ convert<sierra::kynema_ugf::GammaInf>::decode(
 }
 
 bool
+convert<sierra::kynema_ugf::SANuTilda>::decode(
+  const Node& node, sierra::kynema_ugf::SANuTilda& saNuTilda)
+{
+  if (!node.IsScalar()) {
+    return false;
+  }
+
+  saNuTilda.saNuTilda_ = node.as<double>();
+
+  return true;
+}
+
+bool
 convert<sierra::kynema_ugf::Temperature>::decode(
   const Node& node, sierra::kynema_ugf::Temperature& t)
 {
@@ -986,6 +999,11 @@ convert<sierra::kynema_ugf::InflowUserData>::decode(
       node["mass_fraction"].as<sierra::kynema_ugf::MassFraction>();
     inflowData.massFractionSpec_ = true;
   }
+  if (node["sa_nu_tilda"]) {
+    inflowData.saNuTilda_ =
+      node["sa_nu_tilda"].as<sierra::kynema_ugf::SANuTilda>();
+    inflowData.saNuTildaSpec_ = true;
+  }
   if (node["temperature"]) {
     try {
       inflowData.temperature_ =
@@ -1078,6 +1096,11 @@ convert<sierra::kynema_ugf::OpenUserData>::decode(
     openData.massFraction_ =
       node["mass_fraction"].as<sierra::kynema_ugf::MassFraction>();
     openData.massFractionSpec_ = true;
+  }
+  if (node["sa_nu_tilda"]) {
+    openData.saNuTilda_ =
+      node["sa_nu_tilda"].as<sierra::kynema_ugf::SANuTilda>();
+    openData.saNuTildaSpec_ = true;
   }
   if (node["temperature"]) {
     try {

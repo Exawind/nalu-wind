@@ -7,6 +7,7 @@ target_sources(${kynema_ugf_lib_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradElemAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradBndryElemAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/EffDiffFluxCoeffAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/EffDiffFluxCoeffSAAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/EffSSTDiffFluxCoeffAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/EnthalpyEffDiffFluxCoeffAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MdotEdgeAlg.C
@@ -22,6 +23,7 @@ target_sources(${kynema_ugf_lib_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscSSTLRAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscKEAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscKOAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscSAAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/WallFuncGeometryAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/ABLWallFrictionVelAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/ABLWallFluxesAlg.C

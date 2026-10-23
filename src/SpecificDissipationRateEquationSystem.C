@@ -275,7 +275,13 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         if (realm_.solutionOptions_->gammaEqActive_) {
           if (
             TurbulenceModel::SST == realm_.solutionOptions_->turbulenceModel_) {
-            nodeAlg.add_kernel<SDRSSTBLTM2015NodeKernel>(realm_.meta_data());
+            // DLR-gamma uses the unmodified SST-2003 omega equation
+            if (
+              realm_.solutionOptions_->transitionModel_ ==
+              TransitionModel::DLR_GAMMA)
+              nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
+            else
+              nodeAlg.add_kernel<SDRSSTBLTM2015NodeKernel>(realm_.meta_data());
           } else if (
             (TurbulenceModel::SST_IDDES ==
              realm_.solutionOptions_->turbulenceModel_)) {

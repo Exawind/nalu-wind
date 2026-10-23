@@ -72,16 +72,10 @@ public:
   ScalarFieldType* gamma_;
   VectorFieldType* dgamdx_;
   ScalarFieldType* gamTmp_;
-  ScalarFieldType* minDistanceToWall_;
-  VectorFieldType* dwalldistdx_;
-  ScalarFieldType* nDotV_;
-  VectorFieldType* dnDotVdx_;
   ScalarFieldType* visc_;
   ScalarFieldType* tvisc_;
   ScalarFieldType* evisc_;
   ScalarNodalGradAlgDriver nodalGradAlgDriver_;
-  ScalarNodalGradAlgDriver wallDistGradAlgDriver_;
-  ScalarNodalGradAlgDriver nDotVGradAlgDriver_;
 
   std::unique_ptr<Algorithm> effDiffFluxAlg_;
 };

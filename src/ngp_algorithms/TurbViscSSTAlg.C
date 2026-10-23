@@ -12,6 +12,7 @@
 #include "ngp_utils/NgpTypes.h"
 #include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
+#include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
@@ -36,8 +37,22 @@ TurbViscSSTAlg::TurbViscSSTAlg(
       realm.meta_data(), (useAverages) ? "average_dudx" : "dudx")),
     tvisc_(tvisc->mesh_meta_data_ordinal()),
     aOne_(realm.get_turb_model_constant(TM_aOne)),
-    betaStar_(realm.get_turb_model_constant(TM_betaStar))
+    betaStar_(realm.get_turb_model_constant(TM_betaStar)),
+    aOneApg_(realm.get_turb_model_constant(TM_aOneApg)),
+    sThresApg_(realm.get_turb_model_constant(TM_sThresApg)),
+    apgCorrection_(realm.solutionOptions_->apgCorrection_),
+    gammaEqActive_(realm.solutionOptions_->gammaEqActive_)
 {
+  if (apgCorrection_) {
+    const auto& meta = realm.meta_data();
+    dwalldistdx_ = get_field_ordinal(meta, "dwalldistdx");
+    dnDotVdx_ = get_field_ordinal(meta, "dnDotVdx");
+    velocity_ = get_field_ordinal(
+      meta, realm.does_mesh_move() ? "velocity_rtm" : "velocity");
+    lamda0L_ = get_field_ordinal(meta, "lamda0L");
+    if (gammaEqActive_)
+      gamma_ = get_field_ordinal(meta, "gamma_transition");
+  }
 }
 
 void
@@ -61,12 +76,32 @@ TurbViscSSTAlg::execute()
   const auto minD = fieldMgr.get_field<double>(minDistance_);
   const auto dudx = fieldMgr.get_field<double>(dudx_);
   auto tvisc = fieldMgr.get_field<double>(tvisc_);
+  stk::mesh::NgpField<double> normal, normalVelocityGradient, velocity, gamma,
+    sensor;
+  if (apgCorrection_) {
+    normal = fieldMgr.get_field<double>(dwalldistdx_);
+    normalVelocityGradient = fieldMgr.get_field<double>(dnDotVdx_);
+    velocity = fieldMgr.get_field<double>(velocity_);
+    sensor = fieldMgr.get_field<double>(lamda0L_);
+    normal.sync_to_device();
+    normalVelocityGradient.sync_to_device();
+    velocity.sync_to_device();
+    sensor.sync_to_device();
+    if (gammaEqActive_) {
+      gamma = fieldMgr.get_field<double>(gamma_);
+      gamma.sync_to_device();
+    }
+  }
 
   tvisc.sync_to_device();
 
   const DblType aOne = aOne_;
   const DblType betaStar = betaStar_;
+  const DblType aOneApg = aOneApg_;
+  const DblType sThresApg = sThresApg_;
   const int nDim = meta.spatial_dimension();
+  const bool apgCorrection = apgCorrection_;
+  const bool gammaEqActive = gammaEqActive_;
 
   kynema_ugf_ngp::run_entity_algorithm(
     "TurbViscSSTAlg", ngpMesh, stk::topology::NODE_RANK, sel,
@@ -97,8 +132,47 @@ TurbViscSSTAlg::execute()
       tvisc.get(meshIdx, 0) = aOne * density.get(meshIdx, 0) *
                               tke.get(meshIdx, 0) /
                               stk::math::max(aOne * sdrSafe, sijMag * fTwo);
+      if (apgCorrection) {
+        DblType dvnn = 0.0;
+        DblType normalVelocity = 0.0;
+        for (int i = 0; i < nDim; ++i) {
+          dvnn +=
+            normal.get(meshIdx, i) * normalVelocityGradient.get(meshIdx, i);
+          normalVelocity += normal.get(meshIdx, i) * velocity.get(meshIdx, i);
+        }
+        // Use the physical wall distance for the sensor (zero at the wall).
+        const DblType distance = minD.get(meshIdx, 0);
+        const DblType lambda = stk::math::min(
+          stk::math::max(
+            -7.57e-3 * dvnn * distance * distance * density.get(meshIdx, 0) /
+                visc.get(meshIdx, 0) +
+              0.0128,
+            -1.0),
+          1.0);
+        sensor.get(meshIdx, 0) = lambda;
+        DblType parallelSpeedSq = 0.0;
+        for (int i = 0; i < nDim; ++i) {
+          const DblType parallelVelocity =
+            velocity.get(meshIdx, i) - normalVelocity * normal.get(meshIdx, i);
+          parallelSpeedSq += parallelVelocity * parallelVelocity;
+        }
+        const DblType reBuri = stk::math::sqrt(parallelSpeedSq) * distance *
+                               density.get(meshIdx, 0) / visc.get(meshIdx, 0);
+        DblType threshold = sThresApg * stk::math::pow(reBuri, 0.75);
+        if (gammaEqActive) {
+          const DblType intermittency = gamma.get(meshIdx, 0);
+          threshold =
+            (1.0 - intermittency) * -0.0681 + intermittency * threshold;
+        }
+        if (aOne * sdrSafe <= sijMag * fTwo && lambda < threshold) {
+          tvisc.get(meshIdx, 0) = aOneApg * density.get(meshIdx, 0) *
+                                  tke.get(meshIdx, 0) / (sijMag * fTwo);
+        }
+      }
     });
   tvisc.modify_on_device();
+  if (apgCorrection_)
+    sensor.modify_on_device();
 }
 
 } // namespace kynema_ugf
