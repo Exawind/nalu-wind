@@ -136,17 +136,16 @@ TurbViscSSTAlg::execute()
         DblType dvnn = 0.0;
         DblType normalVelocity = 0.0;
         for (int i = 0; i < nDim; ++i) {
-          dvnn += normal.get(meshIdx, i) *
-                  normalVelocityGradient.get(meshIdx, i);
-          normalVelocity +=
-            normal.get(meshIdx, i) * velocity.get(meshIdx, i);
+          dvnn +=
+            normal.get(meshIdx, i) * normalVelocityGradient.get(meshIdx, i);
+          normalVelocity += normal.get(meshIdx, i) * velocity.get(meshIdx, i);
         }
         // Use the physical wall distance for the sensor (zero at the wall).
         const DblType distance = minD.get(meshIdx, 0);
         const DblType lambda = stk::math::min(
           stk::math::max(
-            -7.57e-3 * dvnn * distance * distance *
-                density.get(meshIdx, 0) / visc.get(meshIdx, 0) +
+            -7.57e-3 * dvnn * distance * distance * density.get(meshIdx, 0) /
+                visc.get(meshIdx, 0) +
               0.0128,
             -1.0),
           1.0);
@@ -154,13 +153,11 @@ TurbViscSSTAlg::execute()
         DblType parallelSpeedSq = 0.0;
         for (int i = 0; i < nDim; ++i) {
           const DblType parallelVelocity =
-            velocity.get(meshIdx, i) -
-            normalVelocity * normal.get(meshIdx, i);
+            velocity.get(meshIdx, i) - normalVelocity * normal.get(meshIdx, i);
           parallelSpeedSq += parallelVelocity * parallelVelocity;
         }
         const DblType reBuri = stk::math::sqrt(parallelSpeedSq) * distance *
-                               density.get(meshIdx, 0) /
-                               visc.get(meshIdx, 0);
+                               density.get(meshIdx, 0) / visc.get(meshIdx, 0);
         DblType threshold = sThresApg * stk::math::pow(reBuri, 0.75);
         if (gammaEqActive) {
           const DblType intermittency = gamma.get(meshIdx, 0);
@@ -168,9 +165,8 @@ TurbViscSSTAlg::execute()
             (1.0 - intermittency) * -0.0681 + intermittency * threshold;
         }
         if (aOne * sdrSafe <= sijMag * fTwo && lambda < threshold) {
-          tvisc.get(meshIdx, 0) =
-            aOneApg * density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
-            (sijMag * fTwo);
+          tvisc.get(meshIdx, 0) = aOneApg * density.get(meshIdx, 0) *
+                                  tke.get(meshIdx, 0) / (sijMag * fTwo);
         }
       }
     });

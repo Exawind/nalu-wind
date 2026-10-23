@@ -210,7 +210,6 @@ GammaEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
     nodalGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
       edgeNodalGradient_);
-
   }
   // solver; interior contribution (advection + diffusion)
   if (!realm_.solutionOptions_->useConsolidatedSolverAlg_) {
@@ -473,7 +472,6 @@ GammaEquationSystem::register_wall_bc(
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
     algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
     edgeNodalGradient_);
-
 }
 
 //--------------------------------------------------------------------------
@@ -497,7 +495,6 @@ GammaEquationSystem::register_symmetry_bc(
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
     algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
     edgeNodalGradient_);
-
 }
 
 //--------------------------------------------------------------------------

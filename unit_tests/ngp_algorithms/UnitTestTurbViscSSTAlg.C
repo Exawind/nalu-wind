@@ -17,14 +17,13 @@
 
 namespace {
 
-class APGTurbViscSSTTest
-  : public SSTKernelHex8Mesh,
-    public ::testing::WithParamInterface<bool>
+class APGTurbViscSSTTest : public SSTKernelHex8Mesh,
+                           public ::testing::WithParamInterface<bool>
 {
 public:
   APGTurbViscSSTTest()
-    : sensor_(&meta_->declare_field<double>(
-        stk::topology::NODE_RANK, "lamda0L"))
+    : sensor_(
+        &meta_->declare_field<double>(stk::topology::NODE_RANK, "lamda0L"))
   {
     stk::mesh::put_field_on_mesh(*sensor_, meta_->universal_part(), nullptr);
   }
@@ -36,8 +35,8 @@ public:
     double dvnn, gamma, sdr, distance, sensor, plainVisc, transitionVisc;
   };
 
-  void run_cases(
-    sierra::kynema_ugf::Realm& realm, const std::vector<Case>& cases)
+  void
+  run_cases(sierra::kynema_ugf::Realm& realm, const std::vector<Case>& cases)
   {
     sierra::kynema_ugf::TurbViscSSTAlg alg(realm, partVec_[0], tvisc_);
     const auto& fieldMgr = realm.ngp_field_manager();
@@ -48,9 +47,10 @@ public:
     const auto& buckets =
       bulk_->get_buckets(stk::topology::NODE_RANK, meta_->universal_part());
     for (const auto& c : cases) {
-      SCOPED_TRACE(::testing::Message()
-                   << "dvnn=" << c.dvnn << ", gamma=" << c.gamma
-                   << ", sdr=" << c.sdr << ", distance=" << c.distance);
+      SCOPED_TRACE(
+        ::testing::Message()
+        << "dvnn=" << c.dvnn << ", gamma=" << c.gamma << ", sdr=" << c.sdr
+        << ", distance=" << c.distance);
       stk::mesh::field_fill(1.0, *density_);
       stk::mesh::field_fill(1.0, *visc_);
       stk::mesh::field_fill(1.0, *tke_);
@@ -108,18 +108,17 @@ TEST_P(APGTurbViscSSTTest, sensor_and_viscosity)
   const double baseline = 0.31 / std::sqrt(8.0);
   const double corrected = 0.275 / std::sqrt(8.0);
   run_cases(
-    helperObjs.realm,
-    {
-      {20.0, 1.0, 1.0, 1.0, -0.1386, corrected, corrected},
-      {0.0, 1.0, 1.0, 1.0, 0.0128, baseline, baseline},
-      {20.0, 1.0, 100.0, 1.0, -0.1386, 0.01, 0.01},
-      {6.0, 0.0, 1.0, 1.0, -0.03262, corrected, baseline},
-      {6.0, 1.0, 1.0, 1.0, -0.03262, corrected, corrected},
-      {6.0, 0.5, 1.0, 1.0, -0.03262, corrected, baseline},
-      {1000.0, 1.0, 1.0, 1.0, -1.0, corrected, corrected},
-      {-1000.0, 1.0, 1.0, 1.0, 1.0, baseline, baseline},
-      {20.0, 1.0, 0.0, 0.0, 0.0128, baseline, baseline},
-    });
+    helperObjs.realm, {
+                        {20.0, 1.0, 1.0, 1.0, -0.1386, corrected, corrected},
+                        {0.0, 1.0, 1.0, 1.0, 0.0128, baseline, baseline},
+                        {20.0, 1.0, 100.0, 1.0, -0.1386, 0.01, 0.01},
+                        {6.0, 0.0, 1.0, 1.0, -0.03262, corrected, baseline},
+                        {6.0, 1.0, 1.0, 1.0, -0.03262, corrected, corrected},
+                        {6.0, 0.5, 1.0, 1.0, -0.03262, corrected, baseline},
+                        {1000.0, 1.0, 1.0, 1.0, -1.0, corrected, corrected},
+                        {-1000.0, 1.0, 1.0, 1.0, 1.0, baseline, baseline},
+                        {20.0, 1.0, 0.0, 0.0, 0.0128, baseline, baseline},
+                      });
 }
 
 TEST_P(APGTurbViscSSTTest, user_constants)
@@ -147,8 +146,7 @@ TEST_P(APGTurbViscSSTTest, user_constants)
                       });
 }
 
-INSTANTIATE_TEST_SUITE_P(
-  SSTAndSSTGamma, APGTurbViscSSTTest, ::testing::Bool());
+INSTANTIATE_TEST_SUITE_P(SSTAndSSTGamma, APGTurbViscSSTTest, ::testing::Bool());
 
 } // namespace
 

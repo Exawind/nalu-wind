@@ -169,16 +169,16 @@ ShearStressTransportEquationSystem::register_nodal_fields(
     realm_.solutionOptions_->gammaEqActive_ ||
     realm_.solutionOptions_->apgCorrection_) {
     const int nDim = meta_data.spatial_dimension();
-    dwalldistdx_ = &meta_data.declare_field<double>(
-      stk::topology::NODE_RANK, "dwalldistdx");
+    dwalldistdx_ =
+      &meta_data.declare_field<double>(stk::topology::NODE_RANK, "dwalldistdx");
     stk::mesh::put_field_on_mesh(*dwalldistdx_, selector, nDim, nullptr);
     stk::io::set_field_output_type(
       *dwalldistdx_, stk::io::FieldOutputType::VECTOR_3D);
     nDotV_ =
       &meta_data.declare_field<double>(stk::topology::NODE_RANK, "nDotV");
     stk::mesh::put_field_on_mesh(*nDotV_, selector, nullptr);
-    dnDotVdx_ = &meta_data.declare_field<double>(
-      stk::topology::NODE_RANK, "dnDotVdx");
+    dnDotVdx_ =
+      &meta_data.declare_field<double>(stk::topology::NODE_RANK, "dnDotVdx");
     stk::mesh::put_field_on_mesh(*dnDotVdx_, selector, nDim, nullptr);
     stk::io::set_field_output_type(
       *dnDotVdx_, stk::io::FieldOutputType::VECTOR_3D);
@@ -227,8 +227,8 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
         algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_);
     } else {
       wallDistGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
-        algType, part, "wall_dist_nodal_grad", minDistanceToWall_,
-        dwalldistdx_, edgeNodalGradient_);
+        algType, part, "wall_dist_nodal_grad", minDistanceToWall_, dwalldistdx_,
+        edgeNodalGradient_);
       nDotVGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
         algType, part, "ndotv_nodal_grad", nDotV_, dnDotVdx_,
         edgeNodalGradient_);
@@ -319,9 +319,7 @@ ShearStressTransportEquationSystem::register_inflow_bc(
 
 void
 ShearStressTransportEquationSystem::register_open_bc(
-  stk::mesh::Part* part,
-  const stk::topology&,
-  const OpenBoundaryConditionData&)
+  stk::mesh::Part* part, const stk::topology&, const OpenBoundaryConditionData&)
 {
   register_wall_normal_gradient_bc(OPEN, part);
 }
